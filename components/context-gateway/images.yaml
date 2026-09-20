@@ -101,7 +101,18 @@ context-gateway:
     # of being accepted and ignored (T-2334, EP-61), only an object is an entity a read may serve
     # (T-2335), and roughly 12 000 lines of edge-case suites over the auth, PDP, geo, projection,
     # reaper, translator and rate-limit rules (T-1895..T-1962). On top of 0b6bd13.
-    digest: 'sha256:5432fd96105ba2f961758413c4135706b8e553a9429881f699578d68d3c0bc19'
+    # platform 6d0e0a3: refusals that were reachable and are not any more. The agent proxy's
+    # packages route followed a registry's redirect to any host on the internet, past the
+    # allow-list it had already passed, and now goes through the fetch route's own checks so every
+    # hop is held to the profile's hosts (T-1695, AG-50); a CQL2 name or value carrying a double
+    # quote became structure inside the NGSI-LD `q`, which made the filter unbalanced so the
+    # evaluator dropped it whole and the caller got the rows it asked not to see (T-2348, EP-35);
+    # a pipeline step read the runner's own environment through a `file` processor and through
+    # `${! … }` in any field, both now refused at validation (T-1701, T-1702, PL-16); and a preview
+    # could answer on a tenant `main` already serves through an endpoint no space manifest names
+    # (T-1709, PF-83). With them: the MCP schema surface answers what REST answers (T-1858,
+    # T-2299), and the edge-case suites T-1863..T-1871, T-1948, T-2139..T-2228. On top of 6028a06.
+    digest: 'sha256:f6f3f3c2c7d062bc3282f3de1b49851b8cf272a3e8dfaaa7f339ea602a4d8228'
   # git-sync keeps the gateway's checkout of the configuration repository current (T-0278).
   git-sync:
     repository: 'registry.k8s.io/git-sync/git-sync'

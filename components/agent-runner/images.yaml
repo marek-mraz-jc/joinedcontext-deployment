@@ -56,4 +56,4 @@ agent-runner:
     # platform 0b6bd13: 1682 lines of edge-case suites over the ten deciding functions of the
     # edge and the PDP (T-1905..T-1914) — tests only, no behaviour change — on top of the image
     # lane that now queues instead of cancelling itself (T-2318). On top of b2aab3f.
-    digest: 'sha256:5432fd96105ba2f961758413c4135706b8e553a9429881f699578d68d3c0bc19'
+    digest: 'sha256:f6f3f3c2c7d062bc3282f3de1b49851b8cf272a3e8dfaaa7f339ea602a4d8228'

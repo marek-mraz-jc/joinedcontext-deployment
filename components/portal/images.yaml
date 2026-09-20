@@ -191,4 +191,10 @@ portal:
     # endpoint names the policies the gateway will evaluate for it and expands each CIM 009 group
     # into the operations it covers (T-2282, GW34), the ui-parts sweep (T-1837..T-1846), and the
     # spaces golden at 1920x1080 zoom 1.5 carrying the one-control row (T-2348). On top of d04988a.
-    digest: 'sha256:411f61a8526f511fc71641871ede0fcadf31c6d33296b50f2f88eb5444e1cb99'
+    # portal b6da73c: a Policy is authored through a form like every other kind — the five CIM 009
+    # groups first, their members read from the shared vocabulary rather than retyped, a
+    # prohibition that reads louder than a permission, four locales, axe and the keyboard
+    # (T-2326, R8, GW34, UI-44). With it: the ops routes and the agent access rules keep their
+    # refusals under attack (T-1689, T-1690, T-2081..T-2090), and the bento processor catalogue
+    # loses `file` in step with the platform (T-1701). On top of a12297a.
+    digest: 'sha256:51b4870230f795ed8ef99d4ebd6fd19d0b6c6479666a620d65bae0a355ddf661'
