@@ -205,4 +205,11 @@ portal:
     # contrast in both themes (T-2323, T-2324); a Role and a Group are authored through their
     # fields (T-2400); and the T-2136 gates hold every module, control and route. On top of
     # b6da73c.
-    digest: 'sha256:1f1261cbf75c8ba9f2238093f184167318a0b4ce501d3ea6c75ba2cd76434f3b'
+    # portal 4cafa0b: the stream renderer writes the source space where a mapping reads
+    # `env("JC_SOURCE_SPACE")` (T-2445). Without it an indicator pipeline's `derivedFrom` rendered
+    # `urn:ngsi-ld:Endpoint:hel.fi:<nil>:<nil>`, the broker refused every indicator with "object
+    # must be a URI" while the stream reported a 2xx for the batch, and both Slovak indicator
+    # spaces stayed empty with no failure to read anywhere. With it: the whole worker sweep of
+    # 2026-09-20 (T-1254, T-1759..T-1766, T-2422) and the fast lane's `ui` budget (T-2447). On
+    # top of b284f73.
+    digest: 'sha256:1569e0b79056ed7debe79389b63a94259f620b9415f2958f8d19e5037d7bed21'
