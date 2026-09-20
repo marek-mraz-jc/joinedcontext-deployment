@@ -89,7 +89,19 @@ context-gateway:
     # platform 0b6bd13: 1682 lines of edge-case suites over the ten deciding functions of the
     # edge and the PDP (T-1905..T-1914) — tests only, no behaviour change — on top of the image
     # lane that now queues instead of cancelling itself (T-2318). On top of b2aab3f.
-    digest: 'sha256:e9c8828f713d30321598b960e801ec4a8840b805bc109c36af99105defdfb202'
+    # platform 6028a06: three refusals at the edge and the suites that found them. A forwarded
+    # path that is not absolute no longer becomes another authority — `@evil.example/x` glued onto
+    # the broker's address made it the userinfo of somebody else's host (T-2337, GW20); a `bbox` of
+    # `nan` or `inf` is refused instead of reaching the broker as a `geoQ` of nulls it cannot
+    # honour, which a caller would read as a filter that was never applied (T-2339); a `datetime`
+    # interval compares its two ends as moments, so an offset no longer inverts an interval that is
+    # perfectly ordered (T-2347); and `query::decode` no longer panics on a percent before a
+    # multi-byte character, which was an unauthenticated crash of the handler (T-2338, T-1946).
+    # With them: a `hiddenAttributes` entry the gateway always serves is refused by jc-core instead
+    # of being accepted and ignored (T-2334, EP-61), only an object is an entity a read may serve
+    # (T-2335), and roughly 12 000 lines of edge-case suites over the auth, PDP, geo, projection,
+    # reaper, translator and rate-limit rules (T-1895..T-1962). On top of 0b6bd13.
+    digest: 'sha256:5432fd96105ba2f961758413c4135706b8e553a9429881f699578d68d3c0bc19'
   # git-sync keeps the gateway's checkout of the configuration repository current (T-0278).
   git-sync:
     repository: 'registry.k8s.io/git-sync/git-sync'
