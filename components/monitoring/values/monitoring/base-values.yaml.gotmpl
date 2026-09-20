@@ -1,0 +1,90 @@
+---
+{{- $root := .Values }}
+{{- $components := $root.components | default list }}
+# Checklist:
+# - [x] No workload of its own -> the chart renders Prometheus Operator custom resources only
+# - [x] Metrics ports stay inside the cluster -> no APISIX route, no ingress, no egress
+# - [x] Named service ports -> a renamed port breaks the monitor instead of scraping the wrong one
+# - [x] One scrape interval for the whole platform (OPS-16)
+#
+# Every entry is guarded by the component it scrapes: an instance that does not deploy the
+# pipeline runner must not carry a monitor for a Service that will never exist, because a
+# monitor with no target is a silent gap in the dashboards rather than a visible failure.
+
+interval: 15s
+scrapeTimeout: 10s
+
+serviceMonitors:
+  {{- if has "context-gateway" $components }}
+  - name: context-gateway
+    namespace: {{ index $root "context-gateway" "gateway" "namespace" }}
+    selector:
+      app.kubernetes.io/name: context-gateway-gateway
+    port: http
+  {{- end }}
+  {{- if has "context-broker" $components }}
+  - name: context-broker
+    namespace: {{ index $root "context-broker" "broker" "namespace" }}
+    selector:
+      app.kubernetes.io/name: context-broker-broker
+    port: http
+    # Antares serves its Prometheus text under the `/q` surface beside /q/health and
+    # /q/ready, not at the root /metrics this template defaults to (T-0463). The recorder is
+    # armed by ANTARES_TELEMETRY in components/context-broker; without it this path answers
+    # 404 as well.
+    path: /q/metrics
+  {{- end }}
+  {{- if has "portal" $components }}
+  - name: portal
+    namespace: {{ index $root "portal" "portal" "namespace" }}
+    selector:
+      app.kubernetes.io/name: portal-portal
+    port: http
+  {{- end }}
+  {{- if has "observability" $components }}
+  - name: observability-collector
+    namespace: {{ index $root "observability" "collector" "namespace" }}
+    selector:
+      app.kubernetes.io/name: observability-collector
+    # The collector's own telemetry, on its own port: how much it received, dropped and
+    # failed to export is the only way to see that the Activity stream has gone quiet
+    # because nothing happened rather than because the pipeline broke (OPS-16).
+    port: metrics
+  {{- end }}
+  {{- if has "pipeline-runner" $components }}
+  - name: pipeline-runner
+    namespace: {{ index $root "pipeline-runner" "runner" "namespace" }}
+    selector:
+      app.kubernetes.io/name: pipeline-runner-runner
+    # Bento serves its Prometheus text on the same port as its API (PL-24).
+    port: http
+  {{- end }}
+
+# APISIX is deliberately absent: its own chart renders a ServiceMonitor for port 9091
+# (/apisix/prometheus/metrics) as soon as global.metrics.enabled is set, on the same 15s
+# interval. A second monitor here would scrape the edge twice and double every counter.
+
+alertGroups:
+  {{- if has "apisix" $components }}
+  # Copied from the runbook in docs Deployment/10 section 7, unchanged: the two failures that
+  # make the edge stop serving without the pods ever going unready.
+  - name: apisix-edge
+    rules:
+      - alert: APISIXConfigReloadFailed
+        # A standalone APISIX silently keeps its last good configuration when the new
+        # apisix.yaml is invalid (a missing #END marker is the usual cause), so nothing else
+        # reports it: routes simply stay stale.
+        expr: apisix_yaml_configuration_load_status == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'APISIX standalone failed to reload apisix.yaml (check the #END marker)'
+      - alert: APISIXHigh5xxRate
+        expr: sum(rate(apisix_http_status{status=~"5.."}[5m])) / sum(rate(apisix_http_status[5m])) > 0.01
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'APISIX edge 5xx error rate exceeded 1%'
+  {{- end }}

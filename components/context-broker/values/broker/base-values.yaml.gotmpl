@@ -1,0 +1,73 @@
+---
+{{- $global := .Values.global }}
+# Checklist:
+# - [x] Containers run as non-root with `readOnlyRootFilesystem`
+# - [x] Health probes -> /q/ready and /q/health
+# - [x] Graceful shutdown
+# - [x] Standard labels
+# - [x] ServiceAccount with least privilege where required
+# - [x] Named ports -> 9090 container mapped to 8080 service
+# - [ ] Ingress with TLS -> not applicable, broker is cluster-internal only
+
+fullnameOverride: context-broker
+nameOverride: context-broker-broker
+
+{{- $images := index .Values.images "context-broker" "broker" }}
+image:
+  repository: {{ $images.repository }}
+  tag: {{ $images.tag | quote }}
+  digest: {{ $images.digest }}
+  pullPolicy: IfNotPresent
+
+containerPort: 9090
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 8080
+  targetPort: 9090
+  name: http
+
+probes:
+  readiness:
+    path: /q/ready
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+  liveness:
+    path: /q/health
+    periodSeconds: 15
+    timeoutSeconds: 3
+    failureThreshold: 3
+    initialDelaySeconds: 10
+
+envSecret:
+  PGPASSWORD:
+    secret: db-antares
+    key: password
+
+# ponytail: no NATS on the cluster, so the broker runs its matcher in-process. Antares
+# refuses that combination with a postgres store unless the deployment is a single
+# process, because two matchers on one database fire every notification twice. One
+# replica is the ceiling until a NATS component lands and ANTARES_BUS becomes "nats".
+# Kubernetes expands $(VAR) references in container env definitions when the referenced variable appears earlier in the list.
+env:
+  # The Prometheus recorder and /q/metrics with it: Antares constructs neither by default, so
+  # without this the ServiceMonitor of components/monitoring scrapes a 404 (OPS-16).
+  ANTARES_TELEMETRY: "1"
+  ANTARES_STORE: "postgres"
+  ANTARES_BUS: "local"
+  ANTARES_ALLOW_SHARED_LOCAL: "1"
+  ANTARES_REQUIRE_RLS: "1"
+  ANTARES_MAX_CONNECTIONS: "512"
+  ANTARES_DATABASE_URL: "postgresql://antares:$(PGPASSWORD)@postgres-cluster-rw.{{ .Values.postgres.cluster.namespace }}.svc.cluster.local:5432/antares"
+
+podSecurityContext:
+  {{ .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}
+  runAsUser: 65532
+
+securityContext:
+  {{ .Values.securityDefaults.securityContext | toYaml | nindent 2 }}
+
+serviceMesh:
+  enabled: {{ and ($global.serviceMesh.enable | default false) (eq ($global.serviceMesh.type | default "") "linkerd") }}

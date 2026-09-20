@@ -1,0 +1,6 @@
+---
+demo-feeds:
+  nats:
+    chart: ../../charts/workload
+  feed:
+    chart: ../../charts/workload

@@ -1,0 +1,20 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Project
+metadata:
+  name: banskabystrica
+  namespace: org
+  title: { sk: "Banská Bystrica", en: "Banská Bystrica" }
+spec:
+  organizationRef: hel
+  # The smaller tenant of the same node, tighter still (PF-73), and `publicEndpoints` is exactly
+  # what it publishes today (`public-air`): the endpoints page of this project is where the
+  # pre-emptive quota warning of T-1594 is true and can be read, on dev and in the demo.
+  quotas:
+    contextSpaces: 2
+    residentPipelines: 2
+    publicEndpoints: 1
+    apps: 1
+    ingestEventsPerSecond: 50
+    agentRunsPerDay: 20
+    entitiesPerSpace: 10000
+    requestsPerMinute: 600

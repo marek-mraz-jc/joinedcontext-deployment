@@ -1,0 +1,4 @@
+---
+component: context-gateway
+parts:
+  - name: gateway

@@ -1,0 +1,94 @@
+# file in this folder -> its path in the configuration repository (jc-core PATH_TEMPLATEs), read
+# by the gateway's development values (flat /repo, every file under its own name) and by the
+# forge bootstrap's seed (this layout). One list, two consumers.
+# The organization itself and the settings the whole repository shares (PF-02, PF-41, DM-19):
+# one repository, one Organization, and every project below it names it.
+helsinki-org.yaml: org.yaml
+helsinki-platform-settings.yaml: platform-settings.yaml
+helsinki-project.yaml: projects/helsinki/project.yaml
+helsinki-mobility-project.yaml: projects/helsinki-mobility/project.yaml
+helsinki-space.yaml: projects/helsinki/spaces/helsinki/space.yaml
+helsinki-datamodel.yaml: projects/helsinki/spaces/helsinki/datamodels/helsinki.yaml
+helsinki.linkml.yaml: projects/helsinki/spaces/helsinki/datamodels/helsinki.linkml.yaml
+helsinki.v1.schema.json: projects/helsinki/spaces/helsinki/datamodels/helsinki.v1.schema.json
+helsinki.v1.context.jsonld: projects/helsinki/spaces/helsinki/datamodels/helsinki.v1.context.jsonld
+helsinki.v1.example.jsonld: projects/helsinki/spaces/helsinki/datamodels/helsinki.v1.example.jsonld
+helsinki.v1.md: projects/helsinki/spaces/helsinki/datamodels/helsinki.v1.md
+helsinki-endpoint-events.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-events.yaml
+helsinki-endpoint-bikes.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-bikes.yaml
+helsinki-endpoint-bikes-ops.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-bikes-ops.yaml
+helsinki-endpoint-transport.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-transport.yaml
+helsinki-endpoint-all.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-all.yaml
+helsinki-endpoint-news.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-news.yaml
+helsinki-endpoint-weather.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-weather.yaml
+helsinki-endpoint-alerts.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-alerts.yaml
+helsinki-policy-public-events.yaml: projects/helsinki/spaces/helsinki/policies/public-events.yaml
+helsinki-policy-public-bikes.yaml: projects/helsinki/spaces/helsinki/policies/public-bikes.yaml
+helsinki-policy-bikes-ops-steward.yaml: projects/helsinki/spaces/helsinki/policies/bikes-ops-steward.yaml
+helsinki-policy-public-transport.yaml: projects/helsinki/spaces/helsinki/policies/public-transport.yaml
+helsinki-policy-public-all.yaml: projects/helsinki/spaces/helsinki/policies/public-all.yaml
+helsinki-policy-public-news.yaml: projects/helsinki/spaces/helsinki/policies/public-news.yaml
+helsinki-policy-public-weather.yaml: projects/helsinki/spaces/helsinki/policies/public-weather.yaml
+helsinki-policy-public-alerts.yaml: projects/helsinki/spaces/helsinki/policies/public-alerts.yaml
+helsinki-policy-pipelines-write.yaml: projects/helsinki/spaces/helsinki/policies/pipelines-write.yaml
+helsinki-kpi-space.yaml: projects/helsinki/spaces/helsinki-kpi/space.yaml
+helsinki-endpoint-kpi.yaml: projects/helsinki/spaces/helsinki-kpi/endpoints/helsinki-kpi.yaml
+helsinki-policy-kpi-pipelines-write.yaml: projects/helsinki/spaces/helsinki-kpi/policies/kpi-pipelines-write.yaml
+helsinki-policy-kpi-read.yaml: projects/helsinki/spaces/helsinki-kpi/policies/kpi-read.yaml
+helsinki-serviceaccount-pipelines.yaml: projects/helsinki/access/serviceaccounts/pipelines.yaml
+helsinki-serviceaccount-agent-proxy.yaml: projects/helsinki/access/serviceaccounts/agent-proxy.yaml
+helsinki-datasource-events.yaml: projects/helsinki/datasources/hel-linked-events.yaml
+helsinki-datasource-bikes.yaml: projects/helsinki/datasources/hsl-citybikes-gbfs.yaml
+helsinki-datasource-bikes-info.yaml: projects/helsinki/datasources/hsl-citybikes-gbfs-info.yaml
+helsinki-datasource-hfp.yaml: projects/helsinki/datasources/hsl-hfp.yaml
+helsinki-datasource-vehicles-live.yaml: projects/helsinki/datasources/helsinki-vehicles-live.yaml
+helsinki-datasource-news-rss.yaml: projects/helsinki/datasources/hel-news-rss.yaml
+helsinki-datasource-road-weather.yaml: projects/helsinki/datasources/digitraffic-road-weather.yaml
+helsinki-datasource-traffic-messages.yaml: projects/helsinki/datasources/digitraffic-traffic-messages.yaml
+helsinki-pipeline-events.yaml: projects/helsinki/pipelines/linked-events/pipeline.yaml
+helsinki-pipeline-bikes.yaml: projects/helsinki/pipelines/citybikes-gbfs/pipeline.yaml
+helsinki-pipeline-bikes-info.yaml: projects/helsinki/pipelines/citybikes-gbfs-info/pipeline.yaml
+helsinki-pipeline-hfp.yaml: projects/helsinki/pipelines/hsl-hfp-vehicles/pipeline.yaml
+helsinki-pipeline-vehicles-reaper.yaml: projects/helsinki/pipelines/vehicles-reaper/pipeline.yaml
+helsinki-pipeline-news.yaml: projects/helsinki/pipelines/hel-news/pipeline.yaml
+helsinki-pipeline-road-weather.yaml: projects/helsinki/pipelines/road-weather/pipeline.yaml
+helsinki-pipeline-traffic-messages.yaml: projects/helsinki/pipelines/traffic-messages/pipeline.yaml
+# The mapping of each pipeline, native Bento beside its manifest (PL-03): the reconciler renders
+# it into the resident stream (T-0647), so no stream is written twice.
+helsinki-pipeline-events-bento.yaml: projects/helsinki/pipelines/linked-events/bento.yaml
+helsinki-pipeline-bikes-bento.yaml: projects/helsinki/pipelines/citybikes-gbfs/bento.yaml
+helsinki-pipeline-bikes-info-bento.yaml: projects/helsinki/pipelines/citybikes-gbfs-info/bento.yaml
+helsinki-pipeline-hfp-bento.yaml: projects/helsinki/pipelines/hsl-hfp-vehicles/bento.yaml
+helsinki-pipeline-vehicles-reaper-bento.yaml: projects/helsinki/pipelines/vehicles-reaper/bento.yaml
+helsinki-pipeline-news-bento.yaml: projects/helsinki/pipelines/hel-news/bento.yaml
+helsinki-pipeline-road-weather-bento.yaml: projects/helsinki/pipelines/road-weather/bento.yaml
+helsinki-pipeline-traffic-messages-bento.yaml: projects/helsinki/pipelines/traffic-messages/bento.yaml
+helsinki-ckan-hel-fi.yaml: projects/helsinki/ckan/hel-fi.yaml
+helsinki-blueprint-http-json-feed.yaml: blueprints/http-json-feed/blueprint.yaml
+helsinki-blueprint-gbfs-stations.yaml: blueprints/gbfs-stations/blueprint.yaml
+helsinki-blueprint-mqtt-feed.yaml: blueprints/mqtt-feed/blueprint.yaml
+helsinki-uischema-endpoint.yaml: portal/forms/endpoint.uischema.yaml
+helsinki-mobility-space.yaml: projects/helsinki-mobility/spaces/mobility/space.yaml
+helsinki-mobility-shared-bikes.yaml: projects/helsinki-mobility/shared/city-bikes.yaml
+helsinki-role-steward.yaml: users/roles/steward.yaml
+helsinki-role-org-admin.yaml: users/roles/org-admin.yaml
+helsinki-role-model-editor.yaml: users/roles/model-editor.yaml
+helsinki-role-pipeline-editor.yaml: users/roles/pipeline-editor.yaml
+helsinki-role-endpoint-editor.yaml: users/roles/endpoint-editor.yaml
+helsinki-role-app-editor.yaml: users/roles/app-editor.yaml
+helsinki-role-approver.yaml: users/roles/approver.yaml
+helsinki-role-viewer.yaml: users/roles/viewer.yaml
+helsinki-rolebinding-stewards.yaml: users/assignments/stewards.yaml
+helsinki-rolebinding-admins.yaml: users/assignments/admins.yaml
+helsinki-rolebinding-approvers.yaml: users/assignments/approvers.yaml
+helsinki-rolebinding-viewers.yaml: users/assignments/viewers.yaml
+# The hub (T-1209, Architecture/04 §5a): a space of registrations, one Endpoint over it, and
+# the identity a forward carries.
+helsinki-hub-space.yaml: projects/helsinki/spaces/helsinki-hub/space.yaml
+helsinki-endpoint-hub.yaml: projects/helsinki/spaces/helsinki-hub/endpoints/helsinki-hub.yaml
+helsinki-policy-public-hub.yaml: projects/helsinki/spaces/helsinki-hub/policies/public-hub.yaml
+helsinki-csr-transport.yaml: projects/helsinki/spaces/helsinki-hub/registrations/transport.yaml
+helsinki-csr-indicators.yaml: projects/helsinki/spaces/helsinki-hub/registrations/indicators.yaml
+helsinki-serviceaccount-hub-reader.yaml: projects/helsinki/access/serviceaccounts/hub-reader.yaml
+helsinki-layer-bikes.yaml: projects/helsinki/dashboards/bike-stations.yaml
+helsinki-dashboard-bikes.yaml: projects/helsinki/dashboards/city-bikes.yaml

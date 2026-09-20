@@ -1,0 +1,17 @@
+# file in this folder -> its path in the configuration repository (jc-core PATH_TEMPLATEs), read
+# by the forge bootstrap's seed (components/gitea/values/bootstrap/development-values). The
+# conformance project: one space, its published model with the artifacts beside it, one public
+# endpoint, the anonymous reader's policy and the writing account with its policy (T-0263,
+# T-0277, T-0278). The smoke run and the ETSI suite write through `public-air`.
+project.yaml: projects/banskabystrica/project.yaml
+space.yaml: projects/banskabystrica/spaces/ovzdusie/space.yaml
+datamodel.yaml: projects/banskabystrica/spaces/ovzdusie/datamodels/bb-air-quality.yaml
+bb-air-quality.linkml.yaml: projects/banskabystrica/spaces/ovzdusie/datamodels/bb-air-quality.linkml.yaml
+bb-air-quality.v1.schema.json: projects/banskabystrica/spaces/ovzdusie/datamodels/bb-air-quality.v1.schema.json
+bb-air-quality.v1.context.jsonld: projects/banskabystrica/spaces/ovzdusie/datamodels/bb-air-quality.v1.context.jsonld
+bb-air-quality.v1.example.jsonld: projects/banskabystrica/spaces/ovzdusie/datamodels/bb-air-quality.v1.example.jsonld
+bb-air-quality.v1.md: projects/banskabystrica/spaces/ovzdusie/datamodels/bb-air-quality.v1.md
+endpoint.yaml: projects/banskabystrica/spaces/ovzdusie/endpoints/public-air.yaml
+policy-public-read.yaml: projects/banskabystrica/spaces/ovzdusie/policies/public-read.yaml
+policy-conformance-write.yaml: projects/banskabystrica/spaces/ovzdusie/policies/conformance-write.yaml
+serviceaccount.yaml: projects/banskabystrica/access/serviceaccounts/conformance.yaml

@@ -1,0 +1,21 @@
+---
+# Human demo logins (DEMO.md), seeded into the realm by the development profile only; every
+# other identity is a ServiceAccount client. Each user's password is generated per cluster
+# into Secret keycloak-user-<name> (defaults/environment/secrets.yaml.gotmpl) and reaches
+# keycloak-config-cli through the environment, never through Git.
+demo.steward:
+  firstName: Demo
+  lastName: Steward
+  # A realm role names the person only; what they may do is the RoleBinding under users/
+  # in the configuration repository (seed/helsinki/helsinki-rolebinding-*.yaml, PF-50).
+  realmRoles: [portal-approver]
+demo.viewer:
+  firstName: Demo
+  lastName: Viewer
+  realmRoles: []
+# A second approver, so a change one demo person proposes can be approved by another on
+# camera: the Portal refuses an approval of one's own proposal (CC-34).
+demo.approver:
+  firstName: Demo
+  lastName: Approver
+  realmRoles: [portal-approver]

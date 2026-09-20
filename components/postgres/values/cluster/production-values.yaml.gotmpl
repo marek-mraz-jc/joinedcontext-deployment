@@ -1,0 +1,35 @@
+---
+{{- $this := .Values.postgres.cluster -}}
+{{- $global := .Values.global }}
+# - [x] Resources (requests and limits)
+# - [x] Larger Storage
+# - [x] 2+ Replicas or HorizontalPodAutoscaler
+# - [x] Rolling updates `maxUnavailable: 0`, `maxSurge: 25%` -> automatic in CloudNativePG
+# - [x] PodDisruptionBudget (at least `minAvailable: 1`) -> automatic in CloudNativePG
+
+cluster:
+  instances: 3
+
+  resources:
+    requests:
+      cpu: "2"
+      memory: "8Gi"
+    limits:
+      cpu: "2"
+      memory: "8Gi"
+
+  storage:
+    size: 50Gi
+
+  affinity:
+    enablePodAntiAffinity: true
+    podAntiAffinityType: required
+    topologyKey: kubernetes.io/hostname
+
+  postgresql:
+    parameters:
+      max_connections: "500"
+      max_worker_processes: "4"
+
+  monitoring:
+    enablePodMonitor: true

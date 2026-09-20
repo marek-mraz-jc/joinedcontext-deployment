@@ -1,0 +1,70 @@
+name: reusable manifest lint
+# Kubernetes manifests against their JSON Schemas, then the platform's own Rego gate
+# (TS-18, TS-19, CC-12). Both tools are pinned by release and verified by checksum, the way
+# an image is pinned by digest.
+on:
+  workflow_call:
+    inputs:
+      manifests:
+        description: "path or glob the manifests are read from"
+        type: string
+        default: "rendered.yaml"
+      policies:
+        description: "directory holding the Rego policies"
+        type: string
+        default: "policies"
+      kubernetes-version:
+        description: "the API version the schemas are taken from"
+        type: string
+        default: "1.31.0"
+      kubeconform-version:
+        type: string
+        default: "v0.8.0"
+      kubeconform-checksum:
+        type: string
+        default: "9bc2bffbf71f261128533edaf912153948b7ff238f9a531ae6d34466ec287883"
+      conftest-version:
+        type: string
+        default: "0.69.0"
+      conftest-checksum:
+        type: string
+        default: "96fc2fbf11f0afde51256647127e6f00a64ce839a4d9a0a1aef2426c0e6f4b3f"
+permissions: { contents: read }
+jobs:
+  manifest-lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: install kubeconform and conftest
+        env:
+          KUBECONFORM_VERSION: "${{ inputs.kubeconform-version }}"
+          KUBECONFORM_CHECKSUM: "${{ inputs.kubeconform-checksum }}"
+          CONFTEST_VERSION: "${{ inputs.conftest-version }}"
+          CONFTEST_CHECKSUM: "${{ inputs.conftest-checksum }}"
+        run: |
+          set -eu
+          curl -sSLo kubeconform.tar.gz \
+            "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz"
+          echo "${KUBECONFORM_CHECKSUM}  kubeconform.tar.gz" | sha256sum --check --status
+          tar xzf kubeconform.tar.gz kubeconform
+          sudo install -m 0755 kubeconform /usr/local/bin/kubeconform
+          curl -sSLo conftest.tar.gz \
+            "https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz"
+          echo "${CONFTEST_CHECKSUM}  conftest.tar.gz" | sha256sum --check --status
+          tar xzf conftest.tar.gz conftest
+          sudo install -m 0755 conftest /usr/local/bin/conftest
+          rm -f kubeconform.tar.gz conftest.tar.gz kubeconform conftest
+      - name: kubeconform
+        env:
+          MANIFESTS: "${{ inputs.manifests }}"
+          KUBERNETES_VERSION: "${{ inputs.kubernetes-version }}"
+        # `-strict` refuses an unknown field, which is how a typo in a values file reaches a
+        # cluster as a silently ignored setting. CRDs the schema set does not carry are
+        # skipped rather than failed; the Rego gate below reads them all the same.
+        run: kubeconform -strict -summary -kubernetes-version "$KUBERNETES_VERSION" -ignore-missing-schemas $MANIFESTS
+      - name: conftest
+        env:
+          MANIFESTS: "${{ inputs.manifests }}"
+          POLICIES: "${{ inputs.policies }}"
+        run: conftest test --all-namespaces -p "$POLICIES" $MANIFESTS

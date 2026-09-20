@@ -1,0 +1,780 @@
+"""T-0231: scripts/smoke.sh must assert exact statuses and fail on anything else.
+
+The script talks to a cluster and to the outside world, so the suite runs it against
+stub `curl`/`kubectl`/`wait-rollouts.sh` on PATH inside a throwaway copy of `scripts/`.
+"""
+
+import json
+import os
+import subprocess
+from pathlib import Path
+
+import pytest
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+SMOKE = PROJECT_ROOT / "scripts" / "smoke.sh"
+
+CURL_STUB = '''#!/usr/bin/env python3
+import json, os, sys
+spec = json.load(open(os.environ["STUB_SPEC"]))
+args = sys.argv[1:]
+# The method, the headers and the request body all separate two calls to one URL
+# (anonymous vs bearer, create vs delete), so the whole command line is the key.
+line = " ".join(args)
+
+DEFAULT_HEADERS = (
+    "HTTP/2 200\\r\\nserver: APISIX\\r\\n"
+    "strict-transport-security: max-age=31536000; includeSubDomains; preload\\r\\n"
+    "x-content-type-options: nosniff\\r\\nx-frame-options: SAMEORIGIN\\r\\n"
+    "referrer-policy: strict-origin-when-cross-origin\\r\\n"
+)
+
+
+def lookup(table, default):
+    for match, value in spec.get(table, []):
+        needles = match if isinstance(match, list) else [match]
+        if all(n in line for n in needles):
+            return value
+    return default
+
+
+if "--tls-max" in line:
+    sys.exit(spec.get("tls11", 1))
+elif "-sSI" in args:
+    sys.stdout.write(lookup("headers", spec.get("defaultHeaders", DEFAULT_HEADERS)))
+elif "%{http_code}" in args:
+    sys.stdout.write(str(lookup("statuses", 200)))
+else:
+    sys.stdout.write(lookup("bodies", ""))
+'''
+
+KUBECTL_STUB = '''#!/usr/bin/env python3
+import base64, itertools, json, os, sys
+spec = json.load(open(os.environ["STUB_SPEC"]))
+args = sys.argv[1:]
+line = " ".join(args)
+if args[0] == "get" and args[1] == "configmap" and args[2] == "gitea-bootstrap-seed" and "endpoints__helsinki-" in line:
+    # The Helsinki seed's slugs, one per endpoint name (T-0478); nothing seeded by default,
+    # because the checks behind them wait up to 210 s for data to flow.
+    name = "".join(itertools.takewhile(str.isalnum, line.split("endpoints__helsinki-", 1)[1]))
+    seeded = spec.get("helsinkiSeed", {}).get(name)
+    sys.stdout.write("spec:\\n  slug: %s\\n" % seeded if seeded else "")
+elif args[0] == "get" and args[1] == "configmap" and args[2] == "gitea-bootstrap-seed" and "jsonpath={.data}" in line:
+    # The seed's file names, for the residue count (T-0667): one Helsinki endpoint per seeded slug.
+    keys = ["projects__helsinki__spaces__helsinki__endpoints__helsinki-%s.yaml" % n for n in spec.get("helsinkiSeed", {})]
+    if spec.get("helsinkiSeed"):
+        # Two pipelines and two spaces beside the endpoints (T-0750): counted the same way.
+        keys += ["projects__helsinki__pipelines__hel-news__pipeline.yaml",
+                 "projects__helsinki__pipelines__citybikes-gbfs__pipeline.yaml",
+                 "projects__helsinki__spaces__helsinki__space.yaml",
+                 "projects__helsinki__spaces__helsinki-kpi__space.yaml"]
+    sys.stdout.write(json.dumps({k: "" for k in keys}))
+elif args[0] == "get" and args[1] == "configmap" and args[2] == "gitea-bootstrap-seed":
+    # The seeded Endpoint manifest the smoke reads the slug from (T-0282, T-0278); "" = nothing seeded.
+    sys.stdout.write(spec.get("seedEndpoint", "spec:\\n  slug: mluyob4nz52lok3ssk7pgn5vwt\\n"))
+elif args[0] == "get" and args[1] == "configmap" and args[2] == "portal-branding":
+    # The block both the Portal and the catalogue theme are served (OPS-46).
+    sys.stdout.write(spec.get("branding", "instanceName: Example Context\\ncolours:\\n  primary: '#0000bf'\\n"))
+elif args[0] == "get" and args[1] == "configmap":
+    routes = "".join("  - id: %s\\n" % r for r in spec.get("routes", []))
+    sys.stdout.write("routes:\\n" + routes)
+    # A credential copied into a rendered config is a credential in `kubectl get -o yaml`
+    # (T-0935); the default instance has none, and a test that plants one asserts the catch.
+    if spec.get("leakedCredential"):
+        sys.stdout.write("  password: %s\\n" % spec["leakedCredential"])
+elif args[0] == "get" and args[1] == "deployment" and args[2] == "apisix":
+    sys.exit(0 if spec.get("edge", True) else 1)
+elif args[0] == "logs":
+    # One access-log line for the beacon path, from whoever the edge thinks called (T-0929).
+    caller = spec.get("edgeCaller", "203.0.113.7")
+    if caller:
+        sys.stdout.write('%s - - [17/Sep/2026:08:00:03 +0000] host "GET /smoke-caller HTTP/1.1" 404 0\\n' % caller)
+elif args[0] == "get" and args[1] == "statefulset" and args[2] == "artifact-store":
+    # The store itself (T-0925, T-0933); an instance without it skips the whole section.
+    sys.exit(0 if spec.get("artifactStore", True) else 1)
+elif args[0] == "get" and args[1] == "secret" and "artifact-store-role=reader" in line:
+    sys.stdout.write("".join("%s " % n for n in spec.get("artifactReaders", ["artifact-store-reader-helsinki"])))
+elif args[0] == "get" and args[1] == "secret" and "artifact-store-role=writer" in line:
+    # The writer must exist nowhere: the default is an empty list, and a test that hands one
+    # over is asserting that the smoke catches it.
+    sys.stdout.write("".join("%s " % n for n in spec.get("artifactWriters", [])))
+elif args[0] == "get" and args[1] == "secret" and args[2].startswith("artifact-store-reader-"):
+    held = spec.get("artifactReaderKeys", {}).get(args[2], ["ACCESS_KEY_ID", "ACCESS_SECRET_KEY"])
+    key = line.rsplit(".data.", 1)[1].rstrip("}")
+    sys.stdout.write(base64.b64encode(b"a-credential").decode() if key in held else "")
+elif args[0] == "get" and args[1] == "secret" and args[2] == "pipeline-secrets":
+    # The one Secret the Portal writes for the runner (T-0927, T-0935). `None` is the instance
+    # where no pipeline declares a secretRef at all, and the whole section skips.
+    resolved = spec.get("pipelineSecrets", {"DEMO_FEED_PASSWORD": "a-credential"})
+    if resolved is None:
+        sys.exit(1)
+    if "go-template" in line:
+        sys.stdout.write("".join("%s\\n" % name for name in resolved))
+    elif ".data." in line:
+        value = resolved.get(line.rsplit(".data.", 1)[1].rstrip("}"), "")
+        sys.stdout.write(base64.b64encode(value.encode()).decode() if value else "")
+elif args[0] == "exec":
+    # `sh -c [ -n "$NAME" ]`: the runner has the variable, or it does not. The value is never
+    # printed, here or in the script.
+    named = next((a.split("$", 1)[1].strip('" ]') for a in args if "$" in a), "")
+    sys.exit(1 if named in spec.get("runnerEnvMissing", []) else 0)
+elif args[0] == "get" and args[1] == "secret" and args[2].startswith("keycloak-user-"):
+    # A demo user's generated password (T-0248); "" = no demo users seeded.
+    secret = spec.get("demoPassword", "Passw0rd-demo")
+    if not secret:
+        sys.exit(1)
+    sys.stdout.write(base64.b64encode(secret.encode()).decode())
+elif args[0] == "get" and args[1] == "secret":
+    secret = spec.get("clientSecret", "s3cr3t")
+    if not secret:
+        sys.exit(1)
+    sys.stdout.write(base64.b64encode(secret.encode()).decode())
+elif args[0] == "get" and args[1] == "deployment" and args[2] == "jc-functions":
+    sys.exit(0 if spec.get("functions", True) else 1)
+elif args[0] == "get" and args[1] == "service" and args[2] == "jc-functions":
+    sys.stdout.write("10.43.0.99")
+elif args[0] == "port-forward":
+    sys.exit(0)
+elif args[0] == "run" and args[1].startswith("smoke-functions") and args[1].endswith("-portal"):
+    # The probe carrying the Portal's label: the policy's own positive control (T-0686).
+    sys.exit(0 if spec.get("functionsPortalReaches", True) else 1)
+elif args[0] == "run" and args[1].startswith("smoke-functions"):
+    sys.exit(0 if spec.get("functionsReachable") else 1)
+elif args[0] == "run" and args[1].startswith("smoke-egress"):
+    # The egress probe reports by what it prints, not by its exit status, so the stub prints
+    # what the spec says it saw: how long the controller took to program the pod's chains
+    # (T-0459), then the destinations that still answered. `egressProbeRan: False` is the pod
+    # that never started -- no output at all, which must not read as "the policy stopped it".
+    settled = spec.get("egressSettled", 4)
+    if settled is not None:
+        sys.stdout.write("SETTLED-AFTER=%ds\\n" % settled)
+    for destination in spec.get("egressReached", []):
+        sys.stdout.write("REACHED-%s\\n" % destination)
+    if spec.get("egressProbeRan", True):
+        sys.stdout.write("PROBE-RAN\\n")
+elif args[0] == "run":
+    sys.exit(0 if spec.get("netpolReachable") else 1)
+else:
+    sys.exit(1)
+'''
+
+OPENSSL_STUB = '''#!/usr/bin/env python3
+import json, os, sys
+spec = json.load(open(os.environ["STUB_SPEC"]))
+sys.stdout.write("New, (NONE), Cipher is (NONE)\\n" if spec.get("cbcRefused", True)
+                 else "New, TLSv1.2, Cipher is ECDHE-RSA-AES128-SHA256\\n")
+'''
+
+ROLLOUTS_STUB = "#!/bin/sh\nexit 0\n"
+
+
+def sandbox(tmp_path: Path, spec: dict) -> dict:
+    """A copy of the script with stubbed neighbours; returns the env to run it with."""
+    scripts = tmp_path / "scripts"
+    scripts.mkdir(parents=True, exist_ok=True)
+    (scripts / "smoke.sh").write_text(SMOKE.read_text())
+    (scripts / "smoke.sh").chmod(0o755)
+    (scripts / "wait-rollouts.sh").write_text(ROLLOUTS_STUB)
+    (scripts / "wait-rollouts.sh").chmod(0o755)
+
+    stub_bin = tmp_path / "bin"
+    stub_bin.mkdir(parents=True, exist_ok=True)
+    for name, body in (("curl", CURL_STUB), ("kubectl", KUBECTL_STUB), ("openssl", OPENSSL_STUB)):
+        (stub_bin / name).write_text(body)
+        (stub_bin / name).chmod(0o755)
+
+    spec_file = tmp_path / "spec.json"
+    spec_file.write_text(json.dumps(spec))
+
+    env = dict(os.environ)
+    env["PATH"] = f"{stub_bin}:{env['PATH']}"
+    env["STUB_SPEC"] = str(spec_file)
+    return env
+
+
+def run(tmp_path: Path, spec: dict, *args: str) -> subprocess.CompletedProcess:
+    env = sandbox(tmp_path, spec)
+    return subprocess.run(
+        ["scripts/smoke.sh", *args],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+
+
+# What the Portal's /api/v1/auth/login answers: the Keycloak authorization URL carrying the
+# callback the portal-api client lists (T-0270), on the Portal host (ADR-N-019).
+LOGIN_REDIRECT = ("https://idm.example.test/realms/dev/protocol/openid-connect/auth?client_id=portal-api"
+                  "&redirect_uri=https%3A%2F%2Fportal.example.test%2Fapi%2Fv1%2Fauth%2Fcallback&state=s")
+# What the edge login answers an anonymous visitor of the Portal host: lua-resty-openidc's
+# authorization URL with the `edge` client and the callback that client lists (AP-27).
+EDGE_REDIRECT = ("https://idm.example.test/realms/dev/protocol/openid-connect/auth?response_type=code"
+                 "&client_id=edge&state=s&redirect_uri=https%3A%2F%2Fportal.example.test%2Fcallback"
+                 "&nonce=n&scope=openid&code_challenge=c&code_challenge_method=S256")
+
+# First match wins, so the narrower keys come first.
+HEALTHY_STATUSES = [
+    ["/invoke", 401],
+    ["pipelines/test", 200],
+    ["/entities?", 200],
+    ["/ckan", 302],
+    ["-X DELETE", 204],
+    ["someone-else.sk", 400],
+    ["entities/urn", 200],
+    ["/entities", 201],
+    [["Bearer", ".forged"], 401],
+    ["eyJleHAiOjF9", 401],
+    [["Bearer", "/api/v1/auth/me"], 200],
+    ["/api/v1/auth/me", 401],
+    ["/api/v1/health", 200],
+    # The configuration repository is private: without a session the forge serves nothing (PF-79).
+    ["configuration/raw/branch", 404],
+]
+
+# What a branded CKAN front page looks like from outside: the instance's own name and its
+# own primary colour, both from the block above and neither of them in any image (OPS-47).
+CATALOGUE_PAGE = (
+    "<html><head><title>Example Context</title>"
+    "<style>:root { --jc-primary: #0000bf; }</style></head><body>Example Context</body></html>"
+)
+
+# The Helsinki seed's slugs (T-0478), one per endpoint name, and the answers a healthy space
+# gives: the policy slice is empty on the bikes endpoint, every type flows on `all`. The flow
+# checks return the moment an entity answers, so a healthy instance never waits.
+HELSINKI_SEED = {"events": "hsevents", "bikes": "hsbikes", "transport": "hstransport", "all": "hsall"}
+
+# What jc-functions answers the smoke's function when the gateway answered it (T-0686).
+FUNCTION_ANSWER = '{"status":200,"body":{"gateway":200},"logs":["smoke"]}'
+
+HEALTHY = {
+    "routes": ["portal-ui", "portal-api", "context-space", "context-endpoint", "gitea-forge", "ckan"],
+    "helsinkiSeed": HELSINKI_SEED,
+    "bodies": [[["Bearer", "/invoke"], FUNCTION_ANSWER],
+               ["clients?clientId=edge", '[{"protocolMappers":[{"config":{"included.client.audience": "portal-api"}}]}]'],
+               ["clients?clientId=helsinki-agent-proxy",
+                '[{"protocolMappers":[{"config":{"included.custom.audience": "context-gateway"}}]}]'],
+               # The access document each endpoint answers, which is where the probe reads the
+               # type it may ask for (T-1211, EP-55): `retrieveOps` grants entity reads and not
+               # the type list, so a probe that asked for the type list would be a 403.
+               ["hsevents/access", '{"permissions":[{"resource":{"type":"Event"}}]}'],
+               ["hsbikes/access", '{"permissions":[{"resource":{"type":"BikeHireDockingStation"}}]}'],
+               ["hstransport/access", '{"permissions":[{"resource":{"type":"Vehicle"}}]}'],
+               ["hsall/access", '{"permissions":[{"resource":{"type":"Event"}}]}'],
+               ["hsbikes/ngsi-ld/v1/entities?type=Event", "[]"],
+               ["hsall/ngsi-ld/v1/entities?type=", '[{"id":"urn:ngsi-ld:x"}]'],
+               # What the endpoint's space lists, so the smoke can retrieve each of them by id
+               # (T-0945). A healthy space serves everything it lists.
+               ["entities?type=AirQualityObserved",
+                '[{"id":"urn:ngsi-ld:AirQualityObserved:example.test:ovzdusie:1"},'
+                '{"id":"urn:ngsi-ld:AirQualityObserved:example.test:ovzdusie:2"}]'],
+               ["openid-configuration", '{"jwks_uri":"https://idm/certs"}'],
+               ["/token", '{"access_token":"a.b.c"}'],
+               ["/api/v1/auth/login", LOGIN_REDIRECT],
+               ["/api/v1/projects/helsinki/spaces", json.dumps({"items": [{"kind": "ContextSpace", "metadata": {"name": n}} for n in ("helsinki", "helsinki-kpi")]})],
+               ["/api/v1/projects/helsinki/pipelines", json.dumps({"items": [{"kind": "Pipeline"} for _ in range(2)]})],
+               ["/api/v1/projects/helsinki/endpoints", json.dumps({"items": [{"kind": "Endpoint"} for _ in HELSINKI_SEED]})],
+               [["%{redirect_url}", "https://portal.example.test/"], EDGE_REDIRECT],
+               [["%{redirect_url}", "https://example.test/"], "https://portal.example.test/"],
+               ["datasources?dryRun=All", '{"valid": true, "probe": {"skipped": "the feed could not be reached: connection refused"}}'],
+               ["api_token_list", '{"help": "", "success": true, "result": []}'],
+               # The forge's teams (PF-79, PF-80): the administrators' own team and the one a
+               # person signed in with Keycloak lands in. Gitea answers "none" as the summary
+               # permission of any unit map it did not mint itself, so the map is what the
+               # smoke reads.
+               ["/api/v1/orgs/joinedcontext/teams", json.dumps([
+                   {"name": "Owners", "permission": "owner",
+                    "units_map": {"repo.code": "owner", "repo.issues": "owner"}},
+                   {"name": "readers", "permission": "none",
+                    "units_map": {"repo.code": "read", "repo.issues": "read", "repo.pulls": "read"}},
+               ], separators=(",", ":"))],
+               ["data.example.test/", CATALOGUE_PAGE]],
+    "statuses": HEALTHY_STATUSES,
+}
+
+
+def test_a_datasource_check_that_reaches_inside_the_cluster_fails(tmp_path):
+    """T-0752: a Check of an in-cluster address or the metadata service must answer unreachable;
+    a status from the address, or an answer without a refusal, is the runner's egress letting a
+    typed URL in."""
+    spec = dict(HEALTHY)
+    spec["bodies"] = [
+        [["datasources?dryRun=All", "kubernetes.default.svc"], '{"valid": true, "probe": {"skipped": "the feed answered 200 OK"}}'],
+        [["datasources?dryRun=All", "169.254.169.254"], '{"valid": true, "probe": {"records": 1, "bytes": 90}}'],
+        *HEALTHY["bodies"],
+    ]
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1, result.stdout
+    assert "FAIL  a probe of https://kubernetes.default.svc/version reached it: the feed answered 200 OK" in result.stdout
+    assert "FAIL  a probe of https://169.254.169.254/hetzner/v1/metadata answered no refusal" in result.stdout
+    assert "ok    a probe of http://context-broker.dev.svc:8080/ngsi-ld/v1/types stays outside the cluster" in result.stdout
+    assert "2 failed, 0 skipped" in result.stdout
+
+
+def test_missing_arguments_are_refused(tmp_path):
+    """Both URLs are mandatory: a one-argument call must not silently smoke half a platform."""
+    result = run(tmp_path, HEALTHY, "https://example.test")
+    assert result.returncode != 0
+    assert "usage: smoke.sh" in result.stderr
+
+
+def test_full_platform_passes(tmp_path):
+    result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 0, result.stdout
+    assert "0 failed, 0 skipped" in result.stdout
+    assert "ok    portal host sends an anonymous visitor to the edge login" in result.stdout
+    assert "ok    apex redirects to the portal host" in result.stdout
+    assert "ok    portal API answers a bearer call through the edge (200)" in result.stdout
+    assert "client_credentials token" in result.stdout
+    assert "ok    demo user demo.viewer@hel.fi logs in with a password grant" in result.stdout
+    assert "entity create through the endpoint (201)" in result.stdout
+    assert "write with a foreign URN prefix is refused (400)" in result.stdout
+    assert "git forge answers under the /git prefix (200)" in result.stdout
+    assert "catalogue front page carries the instance name" in result.stdout
+    assert "ok    pipeline test runs a candidate on the runner and captures the output (200)" in result.stdout
+    assert "ok    helsinki lists 4 endpoints for 4 seeded (no residue)" in result.stdout
+    assert "ok    helsinki lists 2 pipelines for 2 seeded (no residue)" in result.stdout
+    assert "ok    helsinki lists 2 spaces for 2 seeded (no residue)" in result.stdout
+    assert "ok    agent proxy client mints tokens with audience context-gateway" in result.stdout
+    assert "ok    helsinki-bikes does not serve events" in result.stdout
+    assert "ok    city bike stations are flowing into the space" in result.stdout
+    assert "ok    buses are flowing into the space" in result.stdout
+    assert "catalogue front page carries the branded primary colour" in result.stdout
+    assert "ok    the publisher's CKAN API token authenticates as the site administrator" in result.stdout
+    assert "postgres refuses a pod outside the allowed selectors" in result.stdout
+    assert "ok    jc-functions refuses an invocation without the Portal's token (401)" in result.stdout
+    assert "ok    jc-functions runs a function for the Portal's token and the function reads the gateway" in result.stdout
+    assert "ok    a pod with the Portal's label reaches jc-functions:8080" in result.stdout
+    assert "ok    jc-functions refuses a pod that is not the Portal" in result.stdout
+    assert "security response headers present" in result.stdout
+    assert "the edge refuses TLS 1.1" in result.stdout
+    assert "the edge refuses CBC and 3DES suites" in result.stdout
+
+
+def test_an_instance_without_the_helsinki_seed_skips_its_checks(tmp_path):
+    """No seed, no 210 s wait for data that will never come: the section is a skip."""
+    result = run(tmp_path, dict(HEALTHY, helsinkiSeed={}), "https://example.test", "https://idm.example.test")
+    assert "skip  helsinki endpoints (no Helsinki seed on the gateway in this instance)" in result.stdout
+
+
+def test_pipeline_residue_beyond_one_take_fails_the_run(tmp_path):
+    """Pipelines and spaces are counted the way endpoints are (T-0750)."""
+    listed = json.dumps({"items": [{"kind": "Pipeline"} for _ in range(4)]})
+    spec = dict(HEALTHY, bodies=[["/api/v1/projects/helsinki/pipelines", listed]] + HEALTHY["bodies"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode != 0
+    assert "FAIL  helsinki lists 4 pipelines for 2 seeded: residue of takes or e2e (T-0667)" in result.stdout
+
+
+def test_endpoint_residue_beyond_one_take_fails_the_run(tmp_path):
+    """Two endpoints more than the seed commits is residue of takes or e2e (T-0667)."""
+    listed = json.dumps({"items": [{"kind": "Endpoint"} for _ in range(len(HELSINKI_SEED) + 2)]})
+    spec = dict(HEALTHY, bodies=[["/api/v1/projects/helsinki/endpoints", listed]] + HEALTHY["bodies"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode != 0
+    assert "FAIL  helsinki lists 6 endpoints for 4 seeded: residue of takes or e2e (T-0667)" in result.stdout
+
+
+def test_an_endpoint_list_that_does_not_answer_is_not_called_clean(tmp_path):
+    """No endpoints at all for a seeded instance is a list that failed, not a clean one (T-0667)."""
+    spec = dict(HEALTHY, bodies=[["/api/v1/projects/helsinki/endpoints", "{}"]] + HEALTHY["bodies"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode != 0
+    assert "FAIL  helsinki lists no endpoints for 4 seeded: the list did not answer" in result.stdout
+
+
+def test_an_agent_proxy_without_the_gateway_audience_fails_the_run(tmp_path):
+    """Seeded slugs alone never name an endpoint approved later: the kit pass reads 401 (T-0666)."""
+    slugs_only = '[{"protocolMappers":[{"config":{"included.custom.audience": "si6epqkx364lprho5uaigutk274r5grb"}}]}]'
+    spec = dict(HEALTHY, bodies=[["clients?clientId=helsinki-agent-proxy", slugs_only]] + HEALTHY["bodies"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode != 0
+    assert "FAIL  agent proxy client has no context-gateway audience" in result.stdout
+    spec = dict(HEALTHY, bodies=[["clients?clientId=helsinki-agent-proxy", "[]"]] + HEALTHY["bodies"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert "skip  agent proxy audience (no helsinki-agent-proxy client in realm dev)" in result.stdout
+
+
+def test_a_function_that_cannot_read_the_gateway_fails_the_run(tmp_path):
+    """Status 0 from the host request is the runtime's egress to the gateway refused (T-0686)."""
+    cut_off = '{"status":200,"body":{"gateway":0},"logs":["smoke"]}'
+    spec = dict(HEALTHY, bodies=[[["Bearer", "/invoke"], cut_off]] + HEALTHY["bodies"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode != 0
+    assert "FAIL  jc-functions did not answer the smoke function with the gateway's 200: " + cut_off in result.stdout
+
+
+def test_jc_functions_open_to_any_pod_or_closed_to_the_portal_fails_the_run(tmp_path):
+    """The unlabelled probe must be refused, and the Portal-labelled one must get through, or the
+    refusal only measured a pod that could not dial (T-0686)."""
+    result = run(tmp_path, dict(HEALTHY, functionsReachable=True), "https://example.test", "https://idm.example.test")
+    assert result.returncode != 0
+    assert "FAIL  an unlabelled pod reached jc-functions:8080" in result.stdout
+    result = run(tmp_path, dict(HEALTHY, functionsPortalReaches=False), "https://example.test", "https://idm.example.test")
+    assert result.returncode != 0
+    assert "FAIL  a pod with the Portal's label cannot reach jc-functions:8080" in result.stdout
+
+
+def test_an_instance_without_jc_functions_skips_the_functions_checks(tmp_path):
+    result = run(tmp_path, dict(HEALTHY, functions=False), "https://example.test", "https://idm.example.test")
+    assert "skip  functions (jc-functions is not deployed in this instance)" in result.stdout
+    assert "jc-functions refuses" not in result.stdout
+
+
+def test_a_ckan_token_that_no_longer_authenticates_fails_the_run(tmp_path):
+    """A token signed with a key the catalogue lost reads as anonymous and is refused (T-0493)."""
+    refused = '{"success": false, "error": {"__type": "Authorization Error"}}'
+    spec = dict(HEALTHY, bodies=[["api_token_list", refused]] + HEALTHY["bodies"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode != 0
+    assert "FAIL  the CKAN API token in ckan-api-token no longer authenticates (T-0493)" in result.stdout
+
+
+def test_wrong_status_fails_the_run(tmp_path):
+    """An authenticated route that answers an anonymous call must turn the run red."""
+    spec = dict(HEALTHY, statuses=[[["Bearer", "/api/v1/auth/me"], 200], ["/api/v1/auth/me", 200]])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  portal API rejects an unauthenticated call (expected 401, got 200)" in result.stdout
+
+
+def test_accepted_tampered_token_fails_the_run(tmp_path):
+    """APISIX no longer verifies tokens, so the Portal accepting a forged signature is the
+    regression this suite exists to catch."""
+    statuses = [[["Bearer", ".forged"], 200]] + HEALTHY_STATUSES
+    spec = dict(HEALTHY, statuses=statuses)
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  portal API refuses a tampered token (expected 401, got 200)" in result.stdout
+
+
+def test_login_redirect_with_another_callback_fails_the_run(tmp_path):
+    """The redirect_uri the Portal sends must be the one the client lists, exactly: the
+    old /auth/callback is the defect T-0270 fixed, and Keycloak refuses it with a 400 page
+    no status check ever sees."""
+    bodies = [["/api/v1/auth/login", LOGIN_REDIRECT.replace("%2Fapi%2Fv1%2Fauth%2Fcallback", "%2Fauth%2Fcallback")]]
+    spec = dict(HEALTHY, bodies=bodies + HEALTHY["bodies"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  portal login redirect is not keycloak with redirect_uri=" in result.stdout
+
+
+# The edge checks need no endpoint: without the context-endpoint route the run skips the
+# endpoint blocks and their polling deadlines, and the edge is judged in a second.
+EDGE_ONLY = dict(HEALTHY, routes=[r for r in HEALTHY["routes"] if r != "context-endpoint"])
+
+
+def test_the_edge_login_is_asserted_on_a_healthy_platform(tmp_path):
+    """ADR-N-019: the Portal host sends an anonymous visitor to Keycloak with the `edge`
+    client, the apex redirects to the Portal host, and a bearer call reaches the Portal
+    through the edge on the new host."""
+    result = run(tmp_path, EDGE_ONLY, "https://example.test", "https://idm.example.test")
+    assert "ok    portal host sends an anonymous visitor to the edge login" in result.stdout
+    assert "ok    apex redirects to the portal host" in result.stdout
+    assert "ok    portal API answers a bearer call through the edge (200)" in result.stdout
+    assert "ok    portal login redirects to keycloak with the callback the client lists" in result.stdout
+    assert "0 failed" in result.stdout, result.stdout
+
+
+def test_a_portal_host_without_the_edge_login_fails_the_run(tmp_path):
+    """ADR-N-019: an anonymous visitor of the Portal host is sent to Keycloak by the edge. A
+    Portal that answers the page itself (no plugin in front), or a redirect to Keycloak with
+    another client or callback (which Keycloak refuses with a 400 nobody sees), is red."""
+    for body in ("", EDGE_REDIRECT.replace("client_id=edge", "client_id=portal-ui"),
+                 EDGE_REDIRECT.replace("%2Fcallback", "%2Fother")):
+        bodies = [[["%{redirect_url}", "https://portal.example.test/"], body]] + HEALTHY["bodies"]
+        result = run(tmp_path, dict(EDGE_ONLY, bodies=bodies), "https://example.test", "https://idm.example.test")
+        assert result.returncode != 0
+        assert "FAIL  portal host does not redirect to the edge login with client_id=edge" in result.stdout
+
+
+def test_an_apex_that_does_not_redirect_to_the_portal_fails_the_run(tmp_path):
+    bodies = [[["%{redirect_url}", "https://example.test/"], ""]] + HEALTHY["bodies"]
+    result = run(tmp_path, dict(EDGE_ONLY, bodies=bodies), "https://example.test", "https://idm.example.test")
+    assert result.returncode != 0
+    assert "FAIL  apex does not redirect to https://portal.example.test/ (got: none)" in result.stdout
+
+
+def test_endpoint_round_trip_uses_the_seeded_slug_and_the_conformance_token(tmp_path):
+    """T-0282: the slug is the seed's, not a literal, and the writes carry the token of the
+    account the policy names — the Portal's token would be refused."""
+    result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
+    assert "ok    client_credentials token for banskabystrica-conformance" in result.stdout
+    assert "ok    entity create through the endpoint (201)" in result.stdout
+    assert "0 failed, 0 skipped" in result.stdout
+
+
+def test_every_listed_entity_is_retrieved_by_id(tmp_path):
+    """T-0945: a healthy space serves what it lists, and the smoke says how many it read."""
+    result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
+    assert "ok    every listed entity retrieves by id (2 of them)" in result.stdout
+
+
+def test_an_entity_that_lists_but_never_retrieves_fails_the_run(tmp_path):
+    """The drift T-0945 is about: the broker holds a row the gateway refuses on retrieve, so
+    nobody can read or correct it. The smoke names the id, and fails."""
+    spec = dict(HEALTHY, statuses=[["entities/urn:ngsi-ld:AirQualityObserved", 400]] + HEALTHY_STATUSES)
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  listed but not retrievable" in result.stdout
+    assert "urn:ngsi-ld:AirQualityObserved:example.test:ovzdusie:1(400)" in result.stdout
+
+
+def test_a_space_holding_nothing_skips_the_retrieval(tmp_path):
+    """An empty space is not a broken one: skip, never a silent pass."""
+    spec = dict(HEALTHY, bodies=[["entities?type=AirQualityObserved", ""]] + HEALTHY["bodies"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert "skip  every listed entity retrieves by id (the space holds none)" in result.stdout
+
+
+def test_unseeded_gateway_skips_the_round_trip(tmp_path):
+    """An instance whose gateway seeds no Endpoint has nothing to round-trip: skip, never pass."""
+    spec = dict(HEALTHY, seedEndpoint="")
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert "skip  endpoint round trip (no Endpoint seeded" in result.stdout
+    assert "0 failed, 1 skipped" in result.stdout
+
+
+def test_endpoint_not_found_fails_the_run(tmp_path):
+    """The 404 that hid behind a slug the gateway could never serve is a failure, not a skip."""
+    spec = dict(HEALTHY, statuses=[["/entities", 404]] + HEALTHY_STATUSES)
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  entity create through the endpoint (expected 201, got 404)" in result.stdout
+
+
+def test_refused_demo_login_fails_the_run(tmp_path):
+    """T-0248: a seeded demo user Keycloak refuses (wrong password, required action, policy)
+    is a red run, because DEMO.md step 1 starts with exactly this login."""
+    # The script reads the token out of the body, so a refusal is a body without one.
+    spec = dict(HEALTHY, bodies=[["grant_type=password", '{"error":"invalid_grant"}']] + HEALTHY["bodies"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  demo user demo.viewer@hel.fi cannot log in with a password grant" in result.stdout
+
+
+def test_instance_without_demo_users_skips_the_login(tmp_path):
+    """Production seeds no demo users: the login is skipped, never passed."""
+    spec = dict(HEALTHY, demoPassword="")
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 0
+    assert "skip  demo user login (no demo users seeded" in result.stdout
+    assert "skip  portal space list (no demo user token)" in result.stdout
+    assert "0 failed, 2 skipped" in result.stdout
+
+
+def test_absent_routes_skip_instead_of_passing(tmp_path):
+    """A component this instance does not deploy must be reported as skipped, never as a pass."""
+    spec = dict(HEALTHY, routes=["keycloak"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 0
+    assert "skip  portal API (route portal-api not configured" in result.stdout
+    assert "skip  endpoint round trip (route context-endpoint not configured" in result.stdout
+    assert "skip  portal host (route portal-ui not configured" in result.stdout
+    assert "skip  helsinki endpoints (route context-endpoint not configured" in result.stdout
+    assert "skip  git forge (route gitea-forge not configured" in result.stdout
+    assert "skip  catalogue (route ckan not configured" in result.stdout
+    assert "skip  chunked body (route portal-api not configured" in result.stdout
+    assert "7 skipped" in result.stdout
+
+
+def test_an_unbranded_catalogue_fails_the_run(tmp_path):
+    """The whole claim of OPS-46/OPS-47 is that the catalogue a visitor sees is the
+    instance's own. A CKAN serving the stock theme answers 200 all the same, so only the
+    page content can catch a theme that did not load."""
+    spec = dict(HEALTHY, bodies=[["data.example.test/", "<html><body>CKAN</body></html>"]] + HEALTHY["bodies"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  catalogue front page does not carry the instance name" in result.stdout
+    assert "FAIL  catalogue front page does not carry the branded primary colour" in result.stdout
+
+
+def test_reachable_database_fails_the_run(tmp_path):
+    """The NetworkPolicy check is inverted: the probe pod connecting is the failure."""
+    spec = dict(HEALTHY, netpolReachable=True)
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  an unlabelled pod reached postgres-cluster-rw:5432" in result.stdout
+
+
+def test_reachable_coredns_fails_the_run(tmp_path):
+    """T-0454: default-deny is Ingress and Egress, and a controller enforcing only ingress
+    passes every other check in this suite. CoreDNS is the leg that discriminates: it is up
+    and it is reachable the moment the egress half stops being enforced."""
+    spec = dict(HEALTHY, egressReached=["DNS"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  an unlabelled pod reached CoreDNS" in result.stdout
+
+
+def test_reachable_internet_fails_the_run(tmp_path):
+    """The other leg, and the one a break-in actually uses."""
+    spec = dict(HEALTHY, egressReached=["NET"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  an unlabelled pod reached 1.1.1.1:443" in result.stdout
+
+
+def test_both_egress_legs_are_named_when_both_reach(tmp_path):
+    spec = dict(HEALTHY, egressReached=["DNS", "NET"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  an unlabelled pod reached CoreDNS 1.1.1.1:443" in result.stdout
+
+
+def test_an_egress_probe_that_never_ran_fails_the_run(tmp_path):
+    """A pod that never started produces exactly the same silence as a pod the policy
+    stopped. Without this the check would go green the day the image or the namespace
+    changes, which is the failure mode this whole task exists to prevent."""
+    spec = dict(HEALTHY, egressProbeRan=False)
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  the egress probe never ran" in result.stdout
+
+
+def test_an_enforced_egress_policy_passes(tmp_path):
+    spec = dict(HEALTHY)
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 0
+    assert "ok    an unlabelled pod reaches neither CoreDNS nor the internet" in result.stdout
+
+
+def test_the_pass_line_reports_how_long_the_controller_took(tmp_path):
+    """T-0459: the controller programs a NEW pod's egress chains a few seconds after the pod
+    is running, so a probe that calls out at container start measures that gap and not the
+    policy. The probe settles first and prints how long it waited; the number is on the pass
+    line so a window that grows is visible instead of silent."""
+    spec = dict(HEALTHY, egressSettled=8)
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 0
+    assert "(settled after 8s)" in result.stdout
+
+
+def test_a_pod_filtered_from_its_first_packet_settles_at_zero(tmp_path):
+    """What a plugin that programs policy before the pod joins the network would produce, and
+    the reading that says the window has been closed rather than merely waited out."""
+    spec = dict(HEALTHY, egressSettled=0)
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 0
+    assert "(settled after 0s)" in result.stdout
+
+
+def test_a_window_that_never_closes_still_fails_the_run(tmp_path):
+    """The settle loop is bounded, so a pod that is never filtered runs the measurement anyway
+    and fails on it. Waiting forever for a refusal that is not coming would turn the check into
+    a hang, which reads as a broken suite rather than as an open control."""
+    spec = dict(HEALTHY, egressSettled=72, egressReached=["NET"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  an unlabelled pod reached 1.1.1.1:443" in result.stdout
+
+
+def test_missing_client_secret_fails_the_run(tmp_path):
+    """No token means the suite proved nothing about authentication; it must not pass."""
+    spec = dict(HEALTHY, clientSecret="")
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  no client secret for apisix-gateway" in result.stdout
+
+
+def test_missing_security_header_fails_the_run(tmp_path):
+    """A route that stops emitting HSTS is a silent regression; the suite must catch it."""
+    spec = dict(HEALTHY, defaultHeaders="HTTP/2 200\r\nserver: APISIX\r\nx-frame-options: DENY\r\n")
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  response headers missing: strict-transport-security" in result.stdout
+
+
+def test_legacy_tls_and_ciphers_fail_the_run(tmp_path):
+    """BSI TR-02102 is asserted against the live listener, so both halves must be able to fail."""
+    spec = dict(HEALTHY, tls11=0, cbcRefused=False)
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  the edge negotiated TLS 1.1" in result.stdout
+    assert "FAIL  the edge negotiated a CBC or 3DES suite" in result.stdout
+
+
+def test_an_instance_without_the_store_skips_the_section(tmp_path):
+    """A component this instance does not deploy is skipped, never passed (T-0925)."""
+    result = run(tmp_path, {**HEALTHY, "artifactStore": False}, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 0, result.stdout
+    assert "skip  artifact store (the component is not deployed in this instance)" in result.stdout
+
+
+def test_a_store_no_organization_can_read_fails(tmp_path):
+    """The reconciler minting nothing, or handing nothing over, is what T-0933 looked like from
+    the outside: the store runs and no serving namespace can read it."""
+    result = run(tmp_path, {**HEALTHY, "artifactReaders": []}, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1, result.stdout
+    assert "FAIL  no organization has a reader credential" in result.stdout
+
+
+def test_a_reader_missing_a_key_fails(tmp_path):
+    """Half a credential is a pod that starts and cannot authenticate."""
+    spec = {**HEALTHY, "artifactReaderKeys": {"artifact-store-reader-helsinki": ["ACCESS_KEY_ID"]}}
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1, result.stdout
+    assert "FAIL  a reader Secret is missing a key: artifact-store-reader-helsinki/ACCESS_SECRET_KEY" in result.stdout
+
+
+def test_a_writer_credential_in_the_cluster_fails(tmp_path):
+    """The writer publishes. A Secret carrying it hands a serving pod the power to replace an
+    artifact, which is the one thing the two roles exist to keep apart (PF-32)."""
+    spec = {**HEALTHY, "artifactWriters": ["artifact-store-writer-helsinki"]}
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1, result.stdout
+    assert "FAIL  a writer credential was written into the cluster:artifact-store-writer-helsinki" in result.stdout
+
+
+def test_an_edge_that_logs_a_pod_address_fails(tmp_path):
+    """Every caller arriving as the ingress pod is one rate-limit bucket for the internet."""
+    result = run(tmp_path, {**HEALTHY, "edgeCaller": "10.42.0.125"}, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1, result.stdout
+    assert "FAIL  the edge logged the caller as 10.42.0.125, a pod address" in result.stdout
+
+
+def test_an_instance_without_the_edge_skips_the_caller_check(tmp_path):
+    result = run(tmp_path, {**HEALTHY, "edge": False}, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 0, result.stdout
+    assert "skip  edge caller (no APISIX in this instance)" in result.stdout
+
+
+def test_a_request_that_never_reached_the_access_log_skips(tmp_path):
+    """A log the smoke cannot read is not a passing check."""
+    result = run(tmp_path, {**HEALTHY, "edgeCaller": ""}, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 0, result.stdout
+    assert "skip  edge caller (the request did not reach the edge's access log)" in result.stdout
+
+
+def test_an_instance_where_no_pipeline_asks_for_a_credential_skips(tmp_path):
+    """No `pipeline-secrets` Secret is the installation whose pipelines name no credential,
+    not a broken resolver (T-0935)."""
+    result = run(tmp_path, {**HEALTHY, "pipelineSecrets": None}, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 0, result.stdout
+    assert "skip  pipeline credentials (no pipeline on this instance declares a secretRef)" in result.stdout
+
+
+def test_a_credential_the_runner_never_receives_fails_the_run(tmp_path):
+    """The Secret written and the process not carrying it is a stream that reads an empty
+    password and a broker that refuses it — with every manifest looking correct."""
+    spec = {**HEALTHY, "runnerEnvMissing": ["DEMO_FEED_PASSWORD"]}
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1, result.stdout
+    assert "FAIL  the runner's environment is missing a resolved credential: DEMO_FEED_PASSWORD" in result.stdout
+
+
+def test_a_credential_copied_into_a_configmap_fails_the_run(tmp_path):
+    """A credential in a ConfigMap is a credential in `kubectl get -o yaml`, which is the one
+    thing the whole resolution path exists to avoid (CC-06)."""
+    spec = {**HEALTHY, "leakedCredential": "a-credential"}
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1, result.stdout
+    assert "FAIL  a resolved credential is written in plaintext into a ConfigMap: DEMO_FEED_PASSWORD" in result.stdout
+
+
+def test_a_resolver_that_refused_everything_fails_the_run(tmp_path):
+    """An empty Secret is every reference refused: the runner has nothing, and the pipelines
+    that named a credential are not running."""
+    result = run(tmp_path, {**HEALTHY, "pipelineSecrets": {}}, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1, result.stdout
+    assert "FAIL  pipeline-secrets is empty" in result.stdout

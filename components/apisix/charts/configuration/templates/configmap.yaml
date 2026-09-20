@@ -1,0 +1,65 @@
+{{- /*
+  Renders the standalone APISIX rule file. Every component contributes routes and plugin
+  configs through components/<c>/apisix-routes.yaml and apisix-plugins.yaml; jcctl will
+  later render Endpoint and App routes into the same ConfigMap (docs Deployment/10).
+  The `#END` marker is required by APISIX standalone mode.
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apisix-standalone-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "configuration.labels" . | nindent 4 }}
+data:
+  apisix.yaml: |
+    plugin_configs:
+{{- range $id, $config := .Values.plugins }}
+      - id: {{ $id }}
+        desc: {{ $config.description | default $config.name | quote }}
+        plugins:
+{{ ($config.plugins | default dict) | toYaml | replace "${REALM}" $.Values.realm | replace "${DOMAIN}" $.Values.domain | replace "${APISIX_GATEWAY_CLIENT_SECRET}" "${{APISIX_GATEWAY_CLIENT_SECRET}}" | replace "${OIDC_SESSION_SECRET}" "${{OIDC_SESSION_SECRET}}" | replace "${EDGE_CLIENT_SECRET}" "${{EDGE_CLIENT_SECRET}}" | indent 10 }}
+{{- end }}
+    upstreams:
+{{- range $id, $config := .Values.routes }}
+      - id: {{ $id }}
+        type: roundrobin
+        {{- if hasKey $config "scheme" }}
+        scheme: {{ $config.scheme }}
+        pass_host: {{ $config.passHost | default "pass" }}
+        {{- end }}
+        nodes:
+          {{ $config.upstream | quote }}: 1
+        timeout:
+          connect: {{ ($config.timeout | default dict).connect | default 6 }}
+          send: {{ ($config.timeout | default dict).send | default 30 }}
+          read: {{ ($config.timeout | default dict).read | default 30 }}
+        {{- with $config.keepalivePool }}
+        keepalive_pool:
+          size: {{ .size | default 320 }}
+          idle_timeout: {{ .idleTimeout | default 60 }}
+          requests: {{ .requests | default 1000 }}
+        {{- end }}
+{{- end }}
+    routes:
+{{- range $id, $config := .Values.routes }}
+      - id: {{ $id }}
+        name: {{ $config.name | quote }}
+        desc: {{ $config.description | default $config.name | quote }}
+        uri: {{ $config.uri | quote }}
+        {{- if hasKey $config "priority" }}
+        priority: {{ $config.priority }}
+        {{- end }}
+        {{- if hasKey $config "subDomain" }}
+        host: {{ printf "%s.%s" $config.subDomain $.Values.domain | quote }}
+        {{- else if hasKey $config "hosts" }}
+        hosts: {{ $config.hosts | toJson }}
+        {{- else if hasKey $config "host" }}
+        host: {{ $config.host | quote }}
+        {{- end }}
+        upstream_id: {{ $id }}
+        {{- if hasKey $.Values.plugins $id }}
+        plugin_config_id: {{ $id }}
+        {{- end }}
+{{- end }}
+    #END

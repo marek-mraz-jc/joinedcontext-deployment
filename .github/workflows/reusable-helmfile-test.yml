@@ -1,0 +1,64 @@
+name: reusable helmfile test
+# Renders the deployment for each environment and runs the cluster's own admission policies
+# over the result, so a manifest that Kyverno would reject fails the pull request instead of
+# the rollout (OPS-40, TS-19).
+on:
+  workflow_call:
+    inputs:
+      environments:
+        description: "JSON array of helmfile environments to render"
+        type: string
+        default: '["dev", "production"]'
+      helmfile:
+        type: string
+        default: "deployment/helmfile.yaml"
+      policies:
+        description: "directory of Kyverno policies applied to the rendered output"
+        type: string
+        default: "components/runtime-policies/charts/runtime-policies/templates"
+      kyverno-version:
+        type: string
+        default: "v1.19.0"
+      kyverno-checksum:
+        type: string
+        default: "f5b4dc73c8e2f3f66e8e0034dc370e6eb6c4617eff7d5ae3838d2200034eb421"
+permissions: { contents: read }
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: ${{ fromJSON(inputs.environments) }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: helmfile/helmfile-action@1f44bcb43e5fb17ecb2685d8b6081ec5f6aa5fcf # v2.4.7
+        with: { helmfile-args: version }
+      - name: install the kyverno cli
+        env:
+          KYVERNO_VERSION: "${{ inputs.kyverno-version }}"
+          KYVERNO_CHECKSUM: "${{ inputs.kyverno-checksum }}"
+        run: |
+          set -eu
+          curl -sSLo kyverno.tar.gz \
+            "https://github.com/kyverno/kyverno/releases/download/${KYVERNO_VERSION}/kyverno-cli_${KYVERNO_VERSION}_linux_x86_64.tar.gz"
+          echo "${KYVERNO_CHECKSUM}  kyverno.tar.gz" | sha256sum --check --status
+          tar xzf kyverno.tar.gz kyverno
+          sudo install -m 0755 kyverno /usr/local/bin/kyverno
+          rm -f kyverno.tar.gz kyverno
+      - name: helmfile template
+        env:
+          HELMFILE: "${{ inputs.helmfile }}"
+          ENVIRONMENT: "${{ matrix.environment }}"
+        run: |
+          set -eu
+          helmfile -f "$HELMFILE" -e "$ENVIRONMENT" repos
+          helmfile -f "$HELMFILE" -e "$ENVIRONMENT" template --skip-deps > rendered.yaml
+          test -s rendered.yaml
+      - name: kyverno apply
+        env:
+          POLICIES: "${{ inputs.policies }}"
+        # `--audit-warn` is deliberately absent: an Audit policy that fires here is a policy
+        # that will fire on the cluster, and the point of the gate is to see it before then.
+        run: kyverno apply "$POLICIES" --resource rendered.yaml --detailed-results

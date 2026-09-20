@@ -1,0 +1,67 @@
+---
+{{- $global := .Values.global }}
+{{- $this := .Values.ckan.catalogue }}
+{{- $images := index .Values.images "ckan" }}
+{{- $branding := $global.branding | default dict }}
+# Checklist:
+# - [x] Containers run as non-root with `readOnlyRootFilesystem`
+# - [x] Health probes -> /api/3/action/status_show
+# - [x] Standard labels
+# - [x] Named ports -> 5000 container mapped to 5000 service
+# - [ ] Ingress with TLS -> not applicable, the catalogue is fronted by APISIX
+
+# The public URL every link in the catalogue is built from. It has to be the host the edge
+# serves (components/ckan/apisix-routes.yaml), or every dataset page links somewhere else.
+siteUrl: https://{{ $this.subDomain }}.{{ $global.domain }}
+
+ckan:
+  image:
+    repository: {{ index $images "catalogue" "repository" }}
+    tag: {{ index $images "catalogue" "tag" | quote }}
+    digest: {{ index $images "catalogue" "digest" }}
+    pullPolicy: IfNotPresent
+  storage:
+    storageClass: "{{ $global.storage.storageClass.rwo | default "" }}"
+  # Keycloak login needs an OIDC authenticator, which the stock CKAN image does not carry: the
+  # image this repository builds (`images/ckan/Dockerfile`) does. `global.ckan.sso` turns on the
+  # plugin here and the egress to the realm in the NetworkPolicy together — one flag, and the
+  # image pinned above has to be the one that carries the extension (T-0403).
+  sso:
+    enabled: {{ $global.ckan.sso | default false }}
+    clientId: ckan
+    issuer: "https://idm.{{ $global.domain }}/realms/{{ $global.instanceSlug }}"
+
+solr:
+  image:
+    repository: {{ index $images "solr" "repository" }}
+    tag: {{ index $images "solr" "tag" | quote }}
+    digest: {{ index $images "solr" "digest" }}
+    pullPolicy: IfNotPresent
+  storage:
+    storageClass: "{{ $global.storage.storageClass.rwo | default "" }}"
+
+redis:
+  image:
+    repository: {{ index $images "redis" "repository" }}
+    tag: {{ index $images "redis" "tag" | quote }}
+    digest: {{ index $images "redis" "digest" }}
+    pullPolicy: IfNotPresent
+
+database:
+  host: postgres-cluster-rw.{{ .Values.postgres.cluster.namespace }}.svc.cluster.local
+  port: 5432
+
+# One image serves every installation: the identity is mounted, not built in (OPS-46,
+# OPS-47). The theme reads this block and nothing else, so a rebrand is a values edit and an
+# apply — the same block the Portal serves at /api/v1/branding.
+branding:
+  {{- $branding | toYaml | nindent 2 }}
+
+podSecurityContext:
+  {{ .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}
+
+securityContext:
+  {{ .Values.securityDefaults.securityContext | toYaml | nindent 2 }}
+
+serviceMesh:
+  enabled: {{ and ($global.serviceMesh.enable | default false) (eq ($global.serviceMesh.type | default "") "linkerd") }}

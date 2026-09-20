@@ -1,0 +1,13 @@
+---
+# Grafana itself, and nothing beside it: the dashboards are provisioned from ConfigMaps this
+# component renders, so no sidecar fetches anything at start-up. Re-pin the digest with:
+#   S="service=registry.docker.io&scope=repository:grafana/grafana:pull"
+#   T=$(curl -s "https://auth.docker.io/token?$S" | jq -r .token)
+#   curl -sI -H "Authorization: Bearer $T" \
+#     -H 'Accept: application/vnd.oci.image.index.v1+json' \
+#     https://registry-1.docker.io/v2/grafana/grafana/manifests/<tag> | grep -i docker-content-digest
+grafana:
+  grafana:
+    repository: 'docker.io/grafana/grafana'
+    tag: '12.3.1'
+    digest: 'sha256:2175aaa91c96733d86d31cf270d5310b278654b03f5718c59de12a865380a31f'

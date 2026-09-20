@@ -1,0 +1,22 @@
+---
+# Re-pin a digest with: docker buildx imagetools inspect <repository>:<tag>
+# and copy the Digest of the image index.
+postgres:
+  # The operator image is also the reference the operator writes into every instance pod's
+  # bootstrap init container (OPERATOR_IMAGE_NAME), so pinning it here pins that one too.
+  operator:
+    repository: ghcr.io/cloudnative-pg/cloudnative-pg
+    tag: '1.30.0'
+    digest: 'sha256:a2701eb97cdd2a34b1fdb2cb51987f544b706e40bec72ae7146cd8580efefebb'
+  # The role-setup Job runs `psql` against an already-running cluster, so it needs a client
+  # and nothing else. It was the one container of this deployment still running a mutable tag
+  # (`postgres:16-alpine`, hard-coded in the chart), which `scripts/ci/check-image-digests.py`
+  # now refuses.
+  roleJob:
+    repository: docker.io/library/postgres
+    tag: '16-alpine'
+    digest: 'sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685'
+  cluster:
+    repository: ghcr.io/cloudnative-pg/postgis
+    tag: 16-3.6-system-trixie
+    digest: 'sha256:9d597fcf4350e4bae9ff40cbe0e4383746a9c7f9c60da72483b0e966e4c20765'

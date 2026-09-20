@@ -1,0 +1,410 @@
+"""NetworkPolicy peers say which namespace they mean, or they are not rendered at all.
+
+A peer that carries only a `podSelector` is valid YAML, passes kubeconform and means
+something quite specific to Kubernetes: pods with those labels *in the policy's own
+namespace*. So a reference that fails to resolve does not blow up — it silently rewrites
+the rule to something narrower than what was written, and only a broken connection between
+two namespaces, months later, says so.
+"""
+
+import shutil
+import subprocess
+from pathlib import Path
+
+import pytest
+import yaml
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+COMPONENTS = PROJECT_ROOT / "components"
+ENVIRONMENTS = ("local", "production", "dev")
+
+# The tree `just _dev-assemble` needs, plus the roots the assembled helmfile reaches back into.
+TREE = ("components", "defaults", ".ci", "scripts", "helmfile-root.yaml.gotmpl",
+        "helmfile-components.yaml.gotmpl")
+
+
+def peers(doc):
+    """Every (policy name, direction, peer) in one NetworkPolicy document."""
+    for direction, key in (("ingress", "from"), ("egress", "to")):
+        for rule in (doc["spec"].get(direction) or []):
+            yield direction, key, rule
+
+
+def policy_files():
+    return sorted(COMPONENTS.glob("*/networkpolicies*.yaml"))
+
+
+@pytest.mark.parametrize("env", ENVIRONMENTS)
+def test_no_peer_selects_pods_without_naming_its_namespace(rendered, env):
+    offenders = []
+    for doc in rendered(env):
+        if doc.get("kind") != "NetworkPolicy":
+            continue
+        for direction, key, rule in peers(doc):
+            for peer in (rule.get(key) or []):
+                if "podSelector" in peer and "namespaceSelector" not in peer:
+                    offenders.append(f"{doc['metadata']['name']}.{direction}: {peer['podSelector']}")
+    assert not offenders, "peers that quietly mean 'this namespace only':\n" + "\n".join(offenders)
+
+
+@pytest.mark.parametrize("env", ENVIRONMENTS)
+def test_no_rule_lists_an_empty_peer_set(rendered, env):
+    """An empty `from`/`to` is not "no sources" to Kubernetes, it is every source."""
+    offenders = []
+    for doc in rendered(env):
+        if doc.get("kind") != "NetworkPolicy":
+            continue
+        for direction, key, rule in peers(doc):
+            if key in rule and not rule[key]:
+                offenders.append(f"{doc['metadata']['name']}.{direction}")
+    assert not offenders, "rules that open to everything:\n" + "\n".join(offenders)
+
+
+def test_every_component_namespace_reference_names_a_component_that_exists():
+    """The render drops a peer whose component is absent from the environment, so a typo
+    would look exactly like a component that is merely switched off. Catch it here."""
+    unknown = []
+    for path in policy_files():
+        for policy in (yaml.safe_load(path.read_text()) or {}).values():
+            refs = [policy.get("componentNamespace")]
+            for _, key, rule in peers({"spec": policy}):
+                refs += [p.get("componentNamespace") for p in (rule.get(key) or [])]
+            for ref in filter(None, refs):
+                component = ref.split(".")[0]
+                if not (COMPONENTS / component).is_dir():
+                    unknown.append(f"{path.relative_to(PROJECT_ROOT)}: {ref}")
+    assert not unknown, "componentNamespace naming no component:\n" + "\n".join(unknown)
+
+
+def test_the_broker_rule_names_the_gateway_peer_the_moment_the_component_is_deployed(rendered):
+    """dev deploys the context-gateway since T-0263, so the broker's rule for it is rendered
+    with both peers. While dev left the component out, this test was the proof that a peer
+    naming an absent component is dropped rather than rendered empty; that half of the
+    guard now lives only in the test below, which makes the render abort on the wrong case."""
+    broker = [d for d in rendered("dev")
+              if d.get("kind") == "NetworkPolicy" and d["metadata"]["name"] == "context-broker"]
+    assert broker, "the dev render lost the context-broker policy entirely"
+    selectors = [str(peer) for _, key, rule in peers(broker[0]) for peer in (rule.get(key) or [])]
+    assert any("context-gateway" in s for s in selectors), selectors
+    assert any("portal" in s for s in selectors), selectors
+
+
+def test_a_deployed_component_that_resolves_to_no_namespace_aborts_the_render(tmp_path):
+    """The other half of the same guard: dropping the peer is right only when the component
+    is genuinely not here. A reference into a component that IS deployed and still resolves
+    to nothing is a mistake, and the render has to stop rather than narrow the rule."""
+    if shutil.which("helmfile") is None:
+        pytest.skip("helmfile not installed")
+    for entry in TREE:
+        source = PROJECT_ROOT / entry
+        (shutil.copytree if source.is_dir() else shutil.copy)(source, tmp_path / entry)
+    shutil.copytree(tmp_path / "defaults/deployment", tmp_path / "deployment")
+    shutil.copy(tmp_path / ".ci/example-deployments/helmfile.yaml", tmp_path / "deployment/helmfile.yaml")
+    shutil.copytree(tmp_path / ".ci/example-deployments/environments",
+                    tmp_path / "deployment/environments", dirs_exist_ok=True)
+
+    # A peer, not the policy-level key: an unresolvable policy namespace drops the whole
+    # release, which is fail-closed and a different question. `portal` is deployed in local.
+    broken = tmp_path / "components/context-broker/networkpolicies.yaml"
+    text = broken.read_text()
+    assert text.count("componentNamespace: portal\n") == 1, "fixture moved, pick another peer"
+    broken.write_text(text.replace("componentNamespace: portal\n",
+                                   "componentNamespace: portal.no-such-part\n"))
+
+    result = subprocess.run(
+        ["helmfile", "-f", "deployment/helmfile.yaml", "-e", "local", "template",
+         "--skip-deps", "-q", "--selector", "component=networkpolicies"],
+        cwd=str(tmp_path), capture_output=True, text=True,
+    )
+    assert result.returncode != 0, "a dangling reference into a deployed component rendered fine"
+    assert "resolves to no namespace" in result.stderr + result.stdout
+
+
+def egress_rules_by_selector(docs):
+    """Every egress rule in the render, grouped by the pods it applies to.
+
+    A workload's egress is spread over several policies on purpose — the plain one next to
+    the component, the mesh one that only exists when Linkerd is on — and Kubernetes unions
+    them, so the group is the unit worth asserting about. Grouping on the exact selector is
+    deliberate: two egress policies written for the same workload have to agree on which
+    pods they cover, or one of them is quietly governing a different set."""
+    groups: dict[frozenset, list] = {}
+    for doc in docs:
+        if doc.get("kind") != "NetworkPolicy" or "Egress" not in (doc["spec"].get("policyTypes") or []):
+            continue
+        key = frozenset(((doc["spec"].get("podSelector") or {}).get("matchLabels") or {}).items())
+        groups.setdefault(key, []).extend(doc["spec"].get("egress") or [])
+    return groups
+
+
+@pytest.mark.parametrize("env", ENVIRONMENTS)
+def test_default_deny_closes_both_directions(rendered, env):
+    """Ingress-only default-deny leaves a compromised pod free to reach the database, the
+    identity provider or an address on the internet (OPS-38, SEC-GAP-05)."""
+    denies = [d for d in rendered(env)
+              if d.get("kind") == "NetworkPolicy" and d["metadata"]["name"].startswith("default-deny-")]
+    assert denies, "no default-deny policy in the render at all"
+    for doc in denies:
+        spec = doc["spec"]
+        assert spec.get("policyTypes") == ["Ingress", "Egress"], doc["metadata"]["name"]
+        assert spec.get("podSelector") == {}, f"{doc['metadata']['name']} does not cover every pod"
+        assert not spec.get("ingress") and not spec.get("egress"), \
+            f"{doc['metadata']['name']} carries rules — a default-deny allows nothing"
+
+
+@pytest.mark.parametrize("env", ENVIRONMENTS)
+def test_every_workload_under_an_egress_policy_can_still_resolve_dns(rendered, env):
+    """The first thing egress default-deny breaks, and the least obvious: without CoreDNS
+    every rule below it is dead too, because they all name Services."""
+    missing = []
+    for selector, rules in egress_rules_by_selector(rendered(env)).items():
+        if not selector:
+            continue  # the default-deny itself
+        resolves = any(
+            peer.get("podSelector", {}).get("matchLabels", {}).get("k8s-app") == "kube-dns"
+            and any(p["port"] == 53 for p in (rule.get("ports") or []))
+            for rule in rules for peer in (rule.get("to") or [])
+        )
+        if not resolves:
+            missing.append(dict(selector))
+    assert not missing, f"egress policies with no route to CoreDNS: {missing}"
+
+
+@pytest.mark.parametrize("env", ENVIRONMENTS)
+def test_no_egress_rule_opens_a_wildcard_destination(rendered, env):
+    """Explicit allow-lists only: a peer says which namespace, and an address range says
+    which ports. `namespaceSelector: {}` is every namespace; a portless ipBlock is every
+    port on the internet."""
+    offenders = []
+    for doc in rendered(env):
+        if doc.get("kind") != "NetworkPolicy":
+            continue
+        for rule in (doc["spec"].get("egress") or []):
+            for peer in (rule.get("to") or []):
+                where = doc["metadata"]["name"]
+                if peer.get("namespaceSelector") == {}:
+                    offenders.append(f"{where}: namespaceSelector {{}} — every namespace")
+                if "ipBlock" in peer and not rule.get("ports"):
+                    offenders.append(f"{where}: {peer['ipBlock']['cidr']} on every port")
+    assert not offenders, "\n".join(offenders)
+
+
+@pytest.mark.parametrize("env", ENVIRONMENTS)
+def test_every_policy_fits_a_helm_release_name(rendered, env):
+    """One release per policy, named `networkpolicies-<policy>`. Helm rejects anything over
+    53 characters, and it does it at sync time, long after the render looked fine."""
+    too_long = [n for n in (d["metadata"]["name"] for d in rendered(env)
+                            if d.get("kind") == "NetworkPolicy")
+                if len(f"networkpolicies-{n}") > 53]
+    assert not too_long, f"policy names that helm will refuse: {too_long}"
+
+
+@pytest.mark.parametrize("env", ENVIRONMENTS)
+def test_keycloak_accepts_the_gateway_without_the_mesh(rendered, env):
+    """The gateway fetches the realm's JWKS over the in-cluster Service at start-up and exits
+    when it cannot. The Linkerd mirror lets it in on 4143; this is the plain 8080 path the
+    unmeshed k3d variants take, which crash-looped the gateway in ci-full three runs long."""
+    docs = [d for d in rendered(env) if d.get("kind") == "NetworkPolicy"
+            and d["spec"].get("podSelector", {}).get("matchLabels", {}).get("app.kubernetes.io/instance") == "keycloak-app"
+            and "Ingress" in d["spec"].get("policyTypes", [])
+            and not d["metadata"]["name"].endswith("linkerd")]
+    if not docs:
+        pytest.skip("keycloak not deployed in this environment")
+    peers = [peer.get("podSelector", {}).get("matchLabels", {}).get("app.kubernetes.io/name")
+             for d in docs for rule in d["spec"].get("ingress") or [] for peer in rule.get("from") or []]
+    assert "context-gateway-gateway" in peers, peers
+
+
+MESH_PORTS = {4143, 4190, 4191}
+CONTROL_PLANE_PORTS = {8080, 8086, 8090}
+INFRA_PORTS = MESH_PORTS | CONTROL_PLANE_PORTS | {53}
+
+
+# Peers that answer on their service port without the mesh, so an egress rule to them needs no
+# companion 4143 rule. Each one is a workload the mesh does not inject, not a workload whose
+# companion rule was forgotten: the difference is the whole point of the test below.
+UNMESHED_PEERS: list[dict] = []
+
+
+@pytest.mark.parametrize("env", ["dev"])
+def test_a_meshed_egress_to_a_pod_peer_also_allows_that_peer_s_inbound_proxy(rendered, env):
+    """Meshed traffic lands on the peer's Linkerd inbound proxy on 4143, not on the service
+    port, so an egress rule naming only the service port allows a connection the proxy never
+    makes. The pod resolves the peer, opens a connection that dies with "server closed the
+    connection unexpectedly", and retries until something upstream gives up.
+
+    That is what `database-role-setup` did: it allowed 5432 to the CNPG pods and nothing on
+    4143, so the CKAN DataStore role Job could never reach the database and the post-upgrade
+    hook timed out, failing the whole release. Every other meshed workload here already carries
+    the companion rule; this asserts none is forgotten again.
+    """
+    policies = [d for d in rendered(env) if d.get("kind") == "NetworkPolicy"]
+
+    def peer_key(peer):
+        """One peer, as the pair of selectors that identifies it in a rule."""
+        return repr(
+            (
+                sorted((peer.get("podSelector", {}).get("matchLabels") or {}).items()),
+                sorted((peer.get("namespaceSelector", {}).get("matchLabels") or {}).items()),
+            )
+        )
+
+    # Which peers does each policy's subject get 4143 egress to? Keyed by the peer itself, not
+    # by "any peer": a pod that reaches the gateway's proxy is not thereby able to reach the
+    # store's, which is exactly how the reconciler lost the artifact store (T-0933).
+    mesh_reach: dict[str, set[str]] = {}
+    for policy in policies:
+        subject = policy["spec"].get("podSelector", {}).get("matchLabels") or {}
+        if not subject:
+            continue
+        for rule in policy["spec"].get("egress", []):
+            ports = {p.get("port") for p in rule.get("ports", [])}
+            if 4143 not in ports:
+                continue
+            reached = mesh_reach.setdefault(repr(sorted(subject.items())), set())
+            reached.update(peer_key(peer) for peer in rule.get("to", []))
+
+    failures = []
+    for policy in policies:
+        spec = policy["spec"]
+        subject = spec.get("podSelector", {}).get("matchLabels") or {}
+        if not subject:
+            continue
+        key = repr(sorted(subject.items()))
+        for rule in spec.get("egress", []):
+            ports = {p.get("port") for p in rule.get("ports", [])}
+            if not ports or ports <= INFRA_PORTS:
+                continue
+            # An egress to a pod peer inside the cluster, on a service port.
+            peers = [t for t in rule.get("to", []) if "podSelector" in t]
+            if not peers:
+                continue
+            for peer in peers:
+                labels = peer["podSelector"].get("matchLabels") or {}
+                # A peer with no labels selects a whole namespace rather than one workload —
+                # an egress to something outside the mesh's reach, which needs no companion.
+                if not labels or labels in UNMESHED_PEERS:
+                    continue
+                if peer_key(peer) not in mesh_reach.get(key, set()):
+                    failures.append(
+                        f"{policy['metadata']['name']} lets {subject} reach {labels} on "
+                        f"{sorted(ports)} and nothing gives it 4143 to that peer"
+                    )
+    assert not failures, "meshed egress without the peer's inbound proxy:\n" + "\n".join(failures)
+
+
+# The ranges a delivery must never reach: the pod and service networks, the node's own
+# addresses, and the link-local address every cloud puts its metadata service on.
+PRIVATE_RANGES = {"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "169.254.0.0/16", "127.0.0.0/8"}
+
+
+@pytest.mark.parametrize("env", ENVIRONMENTS)
+def test_only_the_broker_reaches_the_gateway_s_delivery_path(rendered, env):
+    """`POST /api/endpoint/{slug}/egress/notifications` carries no token, because the broker
+    delivering a notification holds none (R46). A NetworkPolicy cannot see a path, so what it
+    can say is which pods reach the port the path is served on, and the answer is one pod."""
+    names_in_render = {d["metadata"]["name"] for d in rendered(env) if d.get("kind") == "NetworkPolicy"}
+    if "context-gateway" not in names_in_render:
+        pytest.skip("context-gateway not deployed in this environment")
+    # Deployed and the policy gone is the case worth failing on: the delivery path would
+    # then be open to whatever else already reaches the gateway's port.
+    assert "context-gateway-notification-egress" in names_in_render
+    docs = [d for d in rendered(env) if d.get("kind") == "NetworkPolicy"
+            and d["metadata"]["name"] == "context-gateway-notification-egress"]
+    rules = docs[0]["spec"]["ingress"]
+    names = [peer.get("podSelector", {}).get("matchLabels", {}).get("app.kubernetes.io/name")
+             for rule in rules for peer in rule["from"]]
+    assert names == ["context-broker-broker"], names
+    assert [p["port"] for rule in rules for p in rule.get("ports") or []] == [8080]
+
+
+@pytest.mark.parametrize("env", ENVIRONMENTS)
+def test_the_gateway_delivers_to_public_addresses_only(rendered, env):
+    """A subscriber's address arrives in a subscription, so the delivery allowance is a range
+    rather than a peer. Excepting every private range is what stops a subscription from
+    steering the gateway back into the cluster, at the node, or at a metadata service."""
+    groups = egress_rules_by_selector(rendered(env))
+    gateway = next((rules for selector, rules in groups.items()
+                    if dict(selector).get("app.kubernetes.io/name") == "context-gateway-gateway"),
+                   None)
+    if gateway is None:
+        pytest.skip("context-gateway not deployed in this environment")
+    delivery = [rule for rule in gateway if any("ipBlock" in peer for peer in rule.get("to") or [])]
+    assert delivery, "the gateway has no route to a subscriber at all"
+    for rule in delivery:
+        assert {p["port"] for p in rule.get("ports") or []} <= {80, 443}, rule.get("ports")
+        for peer in rule["to"]:
+            reached = set(peer["ipBlock"].get("except") or [])
+            assert reached >= PRIVATE_RANGES, f"reaches {PRIVATE_RANGES - reached}"
+
+
+@pytest.mark.parametrize("env", ENVIRONMENTS)
+def test_the_pipeline_runner_reaches_public_addresses_and_the_ingress_controller_only(rendered, env):
+    """A check probes the URL of a DataSource a person typed on the runner (MF-39), so what the
+    runner may reach over HTTPS is what that URL may reach: every public address, and inside the
+    cluster only the ingress controller the public host is rewritten to. The Kubernetes API, a
+    webhook, Keycloak's own port and a metadata service are none of them (T-0752)."""
+    groups = egress_rules_by_selector(rendered(env))
+    runner = next((rules for selector, rules in groups.items()
+                   if dict(selector).get("app.kubernetes.io/name") == "pipeline-runner-runner"), None)
+    if runner is None:
+        pytest.skip("pipeline-runner not deployed in this environment")
+    ranges = [rule for rule in runner if any("ipBlock" in peer for peer in rule.get("to") or [])]
+    assert ranges, "the runner reaches no feed at all"
+    for rule in ranges:
+        for peer in rule["to"]:
+            excepted = set(peer["ipBlock"].get("except") or [])
+            assert excepted >= PRIVATE_RANGES, f"the runner reaches {PRIVATE_RANGES - excepted}"
+    https = {443, 8443}
+    for rule in runner:
+        if not https & {p.get("port") for p in rule.get("ports") or []}:
+            continue
+        for peer in rule.get("to") or []:
+            if "ipBlock" in peer:
+                continue
+            names = {value for expression in peer.get("podSelector", {}).get("matchExpressions", [])
+                     for value in expression["values"]}
+            names |= set(peer.get("podSelector", {}).get("matchLabels", {}).values())
+            assert names <= {"traefik", "ingress-nginx"}, f"the runner reaches {names} over HTTPS"
+
+
+@pytest.mark.parametrize("env", ENVIRONMENTS)
+def test_the_portal_reaches_the_api_server_on_the_port_the_service_dnats_to(rendered, env):
+    """The reconciler writes to the cluster — an App's objects, the artifact store's reader
+    Secret, a pipeline's credentials — through `kubernetes.default.svc:443`. kube-proxy rewrites
+    that to the node's 6443 before the egress filter runs, so 443 alone leaves every one of those
+    writes refused inside the pod, with `cannot reach the API server` as the only trace (T-0938).
+    """
+    groups = egress_rules_by_selector(rendered(env))
+    portal = next((rules for selector, rules in groups.items()
+                   if dict(selector).get("app.kubernetes.io/name") == "portal-portal"), None)
+    if portal is None:
+        pytest.skip("portal not deployed in this environment")
+    reachable = {port.get("port")
+                 for rule in portal
+                 for peer in rule.get("to") or []
+                 if "ipBlock" in peer
+                 for port in rule.get("ports") or []}
+    assert 6443 in reachable, f"the portal reaches {sorted(p for p in reachable if p)} and not the API server"
+
+
+@pytest.mark.parametrize("env", ENVIRONMENTS)
+def test_the_portal_s_internal_listener_answers_the_runners_and_the_gateway_only(rendered, env):
+    """Port 9090 carries the agent proxy's callbacks, a pipeline test's capture and the list of
+    running workspace previews (Architecture/06 §7.2). None of them is on the edge, and the
+    preview list carries no token, so who reaches the port is the whole of its access rule."""
+    docs = [d for d in rendered(env) if d.get("kind") == "NetworkPolicy"
+            and (d["spec"].get("podSelector") or {}).get("matchLabels", {}).get("app.kubernetes.io/name") == "portal-portal"]
+    if not docs:
+        pytest.skip("portal not deployed in this environment")
+    reaching = set()
+    for doc in docs:
+        for rule in doc["spec"].get("ingress") or []:
+            if 9090 not in [p.get("port") for p in rule.get("ports") or []]:
+                continue
+            for peer in rule["from"]:
+                reaching.add(peer.get("podSelector", {}).get("matchLabels", {}).get("app.kubernetes.io/name"))
+    assert reaching <= {"agent-runner-proxy", "pipeline-runner-runner", "context-gateway-gateway"}, reaching
+    names = {d["metadata"]["name"] for d in rendered(env) if d.get("kind") == "NetworkPolicy"}
+    if "context-gateway" in names:
+        assert "context-gateway-gateway" in reaching

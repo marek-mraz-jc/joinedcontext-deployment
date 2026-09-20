@@ -1,0 +1,178 @@
+---
+{{- $this := .Values.keycloak.app }}
+{{- $global := .Values.global }}
+# Checklist:
+# - [x] Containers run as non-root with `readOnlyRootFilesystem`
+# - [x] Health probes -> default in base chart
+# - [ ] Graceful shutdown
+# - [ ] Standard labels
+# - [ ] ServiceAccount with least privilege where required
+# - [ ] Named ports
+# - [x] Ingress with TLS
+
+securityContext:
+  {{ .Values.securityDefaults.securityContext | toYaml | nindent 2 }}
+
+podSecurityContext:
+  {{ .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}
+
+podAnnotations:
+  config.linkerd.io/skip-outbound-ports: "25,465,587,7800,57800"
+  config.linkerd.io/skip-inbound-ports: "7800,57800"
+
+
+image:
+{{- with .Values.images.keycloak.app }}
+  repository: {{ .repository }}
+  # The chart copies `tag` verbatim into the `app.kubernetes.io/version` label, where `@` and
+  # `:` are illegal, so the digest cannot ride in the tag: `helm upgrade` is refused by the
+  # API server. `digest` is the chart's own field and still pins the pull (AR-4); the tag
+  # stays a plain version so the label renders and `kubectl get pod` reads the version.
+  tag: {{ .tag }}
+  digest: {{ .digest }}
+{{- end }}
+  pullPolicy: IfNotPresent
+extraEnv: |
+  - name: KC_HOSTNAME_STRICT
+    value: "false"
+  - name: JGROUPS_DISCOVERY_PROTOCOL
+    value: kubernetes.KUBE_PING
+  - name: JGROUPS_DISCOVERY_PROPERTIES
+    value: dump_requests=true,port_range=0,namespace={{ $this.namespace }}
+  - name: KC_BOOTSTRAP_ADMIN_USERNAME
+    value: {{ $this.admin.username }}
+  - name: KC_HOSTNAME
+    value: 'https://{{ .Values.routes.keycloak.subDomain }}.{{ $global.domain }}'
+  - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: keycloak-admin-user
+        key: password
+
+serviceAccount:
+  # Peers are discovered over the database (KC_CACHE_STACK=jdbc-ping, set by the chart),
+  # never through the Kubernetes API, and the chart grants no pod-read RBAC
+  # (allowReadPods stays false). Nothing here needs a token (BSI TR-03187 AUT-3).
+  automountServiceAccountToken: false
+
+ingress:
+  enabled: false
+  console:
+    enabled: false
+dbchecker:
+  enabled: true
+  image:
+    {{- with .Values.images.keycloak.dbchecker }}
+    repository: {{ .repository }}
+    tag: {{ .tag }}@{{ .digest }}
+    {{- end }}
+  resources:
+    # resources are hardcoded, because dbchecker won't need more resources, even when the platform scales up
+    requests:
+      cpu: "20m"
+      memory: "32Mi"
+    limits:
+      cpu: "20m"
+      memory: "32Mi"
+  securityContext:
+    {{ .Values.securityDefaults.securityContext | toYaml | nindent 4 }}
+    runAsUser: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+
+database:
+  vendor: postgres
+  hostname: {{ .Values.databases.keycloak.hostServiceName }}.{{ .Values.postgres.cluster.namespace }}.svc.cluster.local
+  port: {{ .Values.databases.keycloak.port }}
+  database: {{ .Values.databases.keycloak.name }}
+  username: {{ .Values.databases.keycloak.user }}
+  existingSecret: {{ .Values.databases.keycloak.secret.name }}
+  existingSecretKey: "password"
+service:
+  sessionAffinity: "ClientIP"
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 3600
+proxy:
+  enabled: true
+  mode: xforwarded
+  http:
+    enabled: true
+metrics:
+  enabled: {{ $global.metrics.enabled }}
+serviceMonitor:
+  enabled: {{ $global.metrics.enabled }}
+  namespace: {{ $this.namespace }}
+
+command:
+  - "/opt/keycloak/bin/kc.sh"
+  - "start"
+  - "--optimized"
+http:
+  relativePath: '{{ $this.pathPrefix }}'
+
+livenessProbe: |
+  httpGet:
+    path: '{{ $this.pathPrefix | trimSuffix "/" }}/realms/master'
+    port: 'http'
+    scheme: 'HTTP'
+  initialDelaySeconds: 0
+  timeoutSeconds: 5
+readinessProbe: |
+  httpGet:
+    path: '{{ $this.pathPrefix | trimSuffix "/" }}/realms/master'
+    port: 'http'
+    scheme: 'HTTP'
+  initialDelaySeconds: 10
+  timeoutSeconds: 1
+startupProbe: |
+  httpGet:
+    path: '{{ $this.pathPrefix | trimSuffix "/" }}/realms/master'
+    port: 'http'
+    scheme: 'HTTP'
+  initialDelaySeconds: 15
+  timeoutSeconds: 1
+  failureThreshold: 60
+  periodSeconds: 5
+health:
+  enabled: true
+
+# Config for readOnlyRootFilesystem
+# see: https://github.com/keycloak/keycloak/issues/11286
+extraInitContainers: |
+  - name: build-keycloak
+    image: {{ .Values.images.keycloak.app.repository }}:{{ .Values.images.keycloak.app.tag }}@{{ .Values.images.keycloak.app.digest }}
+    imagePullPolicy: IfNotPresent
+    securityContext:
+      {{ .Values.securityDefaults.securityContext | toYaml | nindent 6 }}
+    command:
+      - sh
+      - -c
+    args:
+      - |
+        cp -R /opt/keycloak/* /app/
+        /app/bin/kc.sh build --db=postgres --health-enabled=true --metrics-enabled=true --http-relative-path={{ $this.pathPrefix }}
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "256Mi"
+      limits:
+        cpu: "1000m"
+        memory: "1Gi"
+    volumeMounts:
+      - name: workspace
+        mountPath: /app
+      - name: tmp
+        mountPath: /tmp
+
+extraVolumeMounts: |
+  - name: workspace
+    mountPath: /opt/keycloak
+  - name: tmp
+    mountPath: /tmp
+
+extraVolumes: |
+  - name: workspace
+    emptyDir: {}
+  - name: tmp
+    emptyDir: {}

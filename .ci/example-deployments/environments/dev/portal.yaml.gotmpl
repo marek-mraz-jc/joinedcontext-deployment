@@ -1,0 +1,17 @@
+---
+portal:
+  portal:
+    # dev decrypts a Pipeline's `secretRef` with SOPS and an age identity (T-0935, CC-06,
+    # ADR-N-012). One node, one tenant: OpenBao's server and its Kubernetes auth method buy
+    # nothing here and cost ~256 MB on a 16 GB box, and the multi-tenant installations that
+    # need it configure `JC_PORTAL_OPENBAO_ADDR` instead — never both.
+    #
+    # The Secret is operator-supplied and created once, from the identity kept in `.secrets/`:
+    #
+    #   kubectl -n dev create secret generic portal-age-identity \
+    #     --from-file=keys.txt=.secrets/age-dev.key
+    #
+    # Its public recipient is what encrypts the `*.enc.yaml` files of the configuration
+    # repository the Portal stages. Without the Secret the mount is empty and every reference
+    # is refused with "the age identity is unreadable", which is the same fail-closed answer.
+    sopsAgeSecret: portal-age-identity

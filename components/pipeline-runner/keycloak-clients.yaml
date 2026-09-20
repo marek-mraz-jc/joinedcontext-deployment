@@ -1,0 +1,50 @@
+---
+# The ingestion pipelines' identity on the endpoint surface (PF-45, PF-46). A workload never
+# gets a static key: it is a confidential client with a service account, and the gateway maps
+# the token's `azp` to the ServiceAccount manifest of the same name (`{project}-{name}`, so
+# `helsinki-pipelines` is the account `pipelines` of project `helsinki` in the development
+# seed, components/context-gateway/seed/helsinki). The audience mappers bind every token to the
+# endpoints the streams write through, `helsinki-all` (the space) and `helsinki-kpi` (the
+# indicator space the KPI pipelines write, PL-45): the gateway accepts it there and on no other
+# slug. The slugs are the endpoint manifests'; the runner's values name the first once more.
+helsinki-pipelines:
+  name: Helsinki ingestion pipelines
+  description: Service account of the Bento streams of the Helsinki demo; client_credentials only, no browser flow
+  subdomain: ''
+  redirectPath: /
+  componentNamespaces:
+    - pipeline-runner
+  rawValues:
+    publicClient: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: true
+    protocolMappers:
+      - name: helsinki-all-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: si6epqkx364lprho5uaigutk274r5grb
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: portal-internal-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        # The capture route of the Portal's internal listener, which the pipeline-test harness posts
+        # to with this client's own token (T-2271, AG-52): the test's 130-bit id stays a capability
+        # and the caller is named as well.
+        config:
+          included.custom.audience: portal-internal
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-kpi-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: kpi4h6q2wz7xr3nv5tj6pb3mydk2s4fa
+          access.token.claim: 'true'
+          id.token.claim: 'false'

@@ -1,0 +1,13 @@
+# The demo steward (DEMO.md) is also the organization's administrator, so the demonstration
+# can delete and can change roles; a person with the steward role alone cannot (PF-56).
+apiVersion: joinedcontext.com/v1alpha1
+kind: RoleBinding
+metadata:
+  name: admins
+  namespace: org
+spec:
+  subjects:
+    - user: demo.steward@hel.fi
+  role: org-admin
+  scope:
+    organization: hel

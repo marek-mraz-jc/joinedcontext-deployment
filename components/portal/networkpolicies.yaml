@@ -1,0 +1,136 @@
+---
+portal:
+  podSelector:
+    app.kubernetes.io/name: portal-portal
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: apisix
+          componentNamespace: apisix
+      ports:
+        - protocol: TCP
+          port: 8080
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: postgres-cluster
+          componentNamespace: postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: keycloak-app
+          componentNamespace: keycloak
+      ports:
+        - protocol: TCP
+          port: 8080
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: context-gateway-gateway
+          componentNamespace: context-gateway
+      ports:
+        - protocol: TCP
+          port: 8080
+    # The hub's registrations (T-0345, PF-48). A ContextSourceRegistration is a control-plane
+    # act with no gateway operation behind it, so the reconciler writes it straight into the
+    # hub space's tenant on the broker's own API port. The broker's ingress already names this
+    # pod; this is the other half.
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: context-broker-broker
+          componentNamespace: context-broker
+      ports:
+        - protocol: TCP
+          port: 9090
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: model-tools-tools
+          componentNamespace: model-tools
+      ports:
+        - protocol: TCP
+          port: 8080
+    # The reconciler mints one scoped writer and one scoped reader per Organization in the
+    # artifact store's own IAM (T-0422, PF-32). It is the only caller of that admin API, and
+    # the store's ingress policy already names this pod as the one workload it answers.
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: store
+          componentNamespace: artifact-store
+      ports:
+        - protocol: TCP
+          port: 9000
+    # The pipeline test creates and deletes an ephemeral stream on the runner (PL-43).
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: pipeline-runner-runner
+          componentNamespace: pipeline-runner
+      ports:
+        - protocol: TCP
+          port: 4195
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # The portal makes outbound HTTPS calls by design: OIDC discovery against the public
+    # issuer URL — the `iss` claim carries the public host, so pointing it at the in-cluster
+    # Keycloak service fails issuer validation — and merge requests against the Git forge.
+    # Egress is therefore 443 and nothing else.
+    #
+    # Two things follow from kube-proxy DNATing before the egress filter runs, and both cost
+    # an hour to find. First, no `except` for the pod and service CIDRs, however tempting: the
+    # issuer URL resolves to the node's external address and is rewritten to the ingress
+    # controller's POD IP before this rule is evaluated, so excluding 10.42.0.0/16 does not
+    # narrow the rule to "the internet" — it kills every Service-mediated call, the portal's
+    # own login discovery included. Second, the port this rule sees is the controller's
+    # CONTAINER port, not 443: ingress-nginx binds 443 itself, Traefik binds 8443.
+    # The same DNAT rewrites the API server: the reconciler dials `kubernetes.default.svc:443`
+    # and kube-proxy sends it to the node's 6443, which is the port this rule sees (T-0938).
+    # Without 6443 every write the Portal makes to the cluster — an App's objects, the artifact
+    # store's reader Secret, a pipeline's credentials — is refused before it leaves the pod, and
+    # the Portal can only say "cannot reach the API server".
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 8443
+        - protocol: TCP
+          port: 6443
+
+postgres-from-portal:
+  componentNamespace: postgres
+  podSelector:
+    cnpg.io/cluster: postgres-cluster
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: portal-portal
+          componentNamespace: portal
+      ports:
+        - protocol: TCP
+          port: 5432

@@ -1,0 +1,16 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Policy
+metadata:
+  name: public-all
+  namespace: helsinki
+  title: { en: "Public read: everything in the space" }
+spec:
+  contextSpaceRef: { kind: ContextSpace, name: helsinki }
+  assigner: did:web:{orgDomain}
+  assignee: { kind: role, id: public }
+  operations: [retrieveOps]
+  information:
+    - entities:
+        - type: Event
+        - type: BikeHireDockingStation
+        - type: Vehicle

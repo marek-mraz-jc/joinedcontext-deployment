@@ -1,0 +1,9 @@
+# Fingerprints of findings in the history that are not secrets (commit:file:rule:line).
+# tests/test_reusable_workflows.py once held the four leak-shaped fixtures as literals; the
+# file builds them from parts now (T-0542), and history is never rewritten.
+9ad6cee132efec5774355345cd800a2cb745f7d7:tests/test_reusable_workflows.py:jc-argon2id-hash:31
+9ad6cee132efec5774355345cd800a2cb745f7d7:tests/test_reusable_workflows.py:jc-jwt-bearer-token:32
+9ad6cee132efec5774355345cd800a2cb745f7d7:tests/test_reusable_workflows.py:jwt:32
+# tests/test_ckan_api_token.py held a JWT-shaped fixture of a fake CKAN token (T-0493); built from
+# parts now.
+cb239c90751c0c49bb3dbbc93388afb9649a769d:tests/test_ckan_api_token.py:jc-jwt-bearer-token:17

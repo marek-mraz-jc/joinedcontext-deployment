@@ -1,0 +1,26 @@
+---
+environments:
+  default:
+    values:
+      - defaults/environment/*.yaml.gotmpl
+  {{- range .Values.environments }}
+  {{ . }}:
+    values:
+      - defaults/environment/*.yaml.gotmpl
+      - deployment/environments/{{ . }}/*.yaml.gotmpl
+  {{- end }}
+---
+helmfiles:
+        {{- $root := . }}
+  {{- range .Values.components }}
+  {{- $component := . }}
+  {{- $addonPath := printf "./deployment/addons/%s" $component }}
+  {{- $componentPath := printf "./components/%s/helmfile.yaml.gotmpl" $component }}
+  {{- $helmfilePath := $componentPath }}
+  {{- if isDir $addonPath }}
+    {{- $helmfilePath = printf "%s/helmfile.yaml.gotmpl" $addonPath }}
+  {{- end }}
+  - path: {{ $helmfilePath | quote }}
+    values:
+      - {{ toYaml $root.Values | nindent 8 }}
+  {{- end }}

@@ -1,0 +1,74 @@
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: justify-api-token-access
+  annotations:
+    # Evaluate the live Pod only: patching the pod template of a Deployment would
+    # rewrite an object Helm owns, and every sync would then see drift.
+    pod-policies.kyverno.io/autogen-controllers: none
+    policies.kyverno.io/title: API Token Access Must Be Justified
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      A mounted service account token turns one compromised container into a
+      Kubernetes API client (BSI TR-03187 AUT-3). Most workloads never call the
+      API: they read their config from files and their peers from DNS. This
+      policy makes "no token" the default for every Pod in the namespaces this
+      deployment owns, and keeps the exceptions visible. A Pod that genuinely
+      needs the API - a controller, or an instance manager watching its own
+      custom resource - declares why in the
+      security.joinedcontext.com/api-access-reason annotation and keeps its
+      token; anything else that asks for one explicitly is refused. Upstream
+      charts that expose no automountServiceAccountToken field are why this is
+      a mutation and not only a rule: the field is set on the Pod on its way in.
+spec:
+  background: false
+  rules:
+    - name: default-api-token-off
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              operations: [CREATE]
+              namespaces: KYVERNO_NAMESPACES
+      preconditions:
+        all:
+          - key: '{{ request.object.metadata.annotations."security.joinedcontext.com/api-access-reason"
+              || '''' }}'
+            operator: Equals
+            value: ''
+      mutate:
+        patchStrategicMerge:
+          spec:
+            # add-if-absent: a Pod that asks for a token explicitly is left as it is,
+            # so the rule below can refuse it instead of the mutation hiding it.
+            +(automountServiceAccountToken): false
+
+    - name: api-token-needs-a-reason
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              operations: [CREATE, UPDATE]
+              namespaces: KYVERNO_NAMESPACES
+      preconditions:
+        all:
+          - key: '{{ request.object.metadata.annotations."security.joinedcontext.com/api-access-reason"
+              || '''' }}'
+            operator: Equals
+            value: ''
+      validate:
+        failureAction: KYVERNO_FAILURE_ACTION
+        message: >-
+          Pod mounts a Kubernetes API token without a justification. Set
+          spec.automountServiceAccountToken to false, or explain why this
+          workload must reach the API in the annotation
+          security.joinedcontext.com/api-access-reason.
+        deny:
+          conditions:
+            all:
+              - key: '{{ to_string(request.object.spec.automountServiceAccountToken) }}'
+                operator: NotEquals
+                value: 'false'

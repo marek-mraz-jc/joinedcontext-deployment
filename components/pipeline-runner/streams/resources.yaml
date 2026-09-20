@@ -1,0 +1,25 @@
+# Shared resources of the streams next to this file. Bento's streams mode rejects
+# `*_resources` blocks inside a stream file, so they live here and the runner loads the file
+# with `-r` (values/runner/base-values.yaml.gotmpl), which makes every label below visible to
+# every stream.
+
+cache_resources:
+  # hsl-hfp-vehicles: the 30-bus cap. A bus keeps the slot it was given for as long as it
+  # keeps reporting.
+  - label: fleet
+    memory:
+      default_ttl: 30m
+      compaction_interval: 60s
+  # ponytail: one position per bus per 15 s keeps the broker's temporal table at a few
+  # entries a second; drop the ttl when the demo wants smoother movement and the disk allows.
+  - label: throttle
+    memory:
+      default_ttl: 15s
+      compaction_interval: 5s
+
+rate_limit_resources:
+  # Every stream's writes to the gateway share this budget.
+  - label: pipeline_egress
+    local:
+      count: 500
+      interval: 1s

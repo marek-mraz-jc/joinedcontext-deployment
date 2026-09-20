@@ -1,0 +1,55 @@
+# A resident Bento flow on an MQTT topic tree (PL-01, PL-03, CC-23..CC-27): what the HSL
+# trunk-line feed is, as a card. Push-based, so no schedule: the runner keeps the subscription.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Blueprint
+metadata:
+  name: mqtt-feed
+  namespace: org
+  title: { en: "Subscribe to an MQTT feed", fi: "Tilaa MQTT-syöte" }
+spec:
+  version: 1.0.0
+  category: ingestion
+  riskClass: yellow
+  allowedRoles: [portal-approver]
+  parameterSchema:
+    type: object
+    required: [name, brokerUrl, topic, entityType]
+    additionalProperties: false
+    properties:
+      name: { type: string, title: "Flow name", pattern: "^[a-z][a-z0-9-]{1,40}$" }
+      brokerUrl: { type: string, title: "Broker URL", default: "wss://mqtt.hsl.fi:443/", description: "tls://host:8883 or wss://host:443/; the cluster lets 443 out." }
+      topic: { type: string, title: "Topic filter", default: "/hfp/v2/journey/ongoing/vp/bus/+/+/2510/#" }
+      entityType: { type: string, title: "Entity type written", pattern: "^[A-Z][A-Za-z0-9]+$", default: Vehicle }
+      targetEndpoint: { type: string, title: "Endpoint the flow writes through", default: "urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all" }
+  templates:
+    - name: datasource
+      template: |
+        apiVersion: joinedcontext.com/v1alpha1
+        kind: DataSource
+        metadata:
+          name: "{{ name }}"
+          title: { en: "MQTT {{ topic }}" }
+        spec:
+          type: mqtt
+          mqtt:
+            urls:
+              - "{{ brokerUrl }}"
+            topics:
+              - "{{ topic }}"
+            qos: 0
+            cleanSession: true
+    - name: pipeline
+      template: |
+        apiVersion: joinedcontext.com/v1alpha1
+        kind: Pipeline
+        metadata:
+          name: "{{ name }}"
+          title: { en: "{{ entityType }} from {{ name }}" }
+        spec:
+          class: auto
+          source:
+            dataSourceRef: { kind: DataSource, name: "{{ name }}" }
+          targetEndpoint: "{{ targetEndpoint }}"
+          quotas:
+            maxMemoryMb: 128
+            cpuMillicores: 250

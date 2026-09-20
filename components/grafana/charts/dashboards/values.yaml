@@ -1,0 +1,7 @@
+---
+# The ConfigMap the Grafana release mounts through `dashboardsConfigMaps`. The name is a
+# contract between the two releases of this component.
+configMapName: grafana-dashboards
+
+# The dashboard provider the files belong to, which decides the folder they appear in.
+provider: platform

@@ -1,0 +1,13 @@
+---
+global:
+  domain: staging.example.org
+  profile: production
+  instanceSlug: staging
+  serviceMesh:
+    # nginx ingress lives in the host cluster, outside this vcluster's mesh,
+    # so it can't present a Linkerd mTLS identity to the APISIX data plane.
+    allowUnauthenticatedIngress: true
+  ingress:
+    enabled: true
+    clusterIssuer: 'letsencrypt-prod'
+    ingressClass: 'nginx'

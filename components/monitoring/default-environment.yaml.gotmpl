@@ -1,0 +1,7 @@
+---
+monitoring:
+  monitoring:
+    # Scrape configuration is only useful where a Prometheus Operator is watching, which is
+    # what global.metrics.enabled says (OPS-16).
+    enabled: {{ .Values.global.metrics.enabled }}
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "monitoring") }}

@@ -1,0 +1,17 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: linked-events
+  namespace: helsinki
+  title: { en: "Today's events from the Linked Events API" }
+spec:
+  class: auto
+  period: 30m
+  schedule: "*/30 * * * *"
+  source:
+    dataSourceRef: { kind: DataSource, name: hel-linked-events }
+  # Every stream writes through the one endpoint that evaluates the pipelines-write Policy.
+  targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all
+  quotas:
+    maxMemoryMb: 128
+    cpuMillicores: 100

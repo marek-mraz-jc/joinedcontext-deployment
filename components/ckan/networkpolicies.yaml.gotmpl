@@ -1,0 +1,25 @@
+{{- /* The catalogue reaches the realm only when it signs people in through it (T-0403,
+       OPS-26). With `global.ckan.sso` off there is nothing on the internet CKAN calls, and
+       this file renders empty — the egress opens with the feature and not before it. */}}
+{{- if .Values.global.ckan.sso }}
+ckan-sso:
+  podSelector:
+    app.kubernetes.io/name: ckan
+    app.kubernetes.io/instance: ckan-catalogue
+    app.kubernetes.io/component: ckan
+  policyTypes:
+    - Egress
+  egress:
+    # The realm's discovery document, its token endpoint and its userinfo endpoint. The
+    # issuer is a public host, so it is named by address: 443 for the edge, and 8443 for the
+    # kube-proxy DNAT a request from inside the cluster to its own public address takes (the
+    # forge's policy documents the same pair).
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 8443
+{{- end }}

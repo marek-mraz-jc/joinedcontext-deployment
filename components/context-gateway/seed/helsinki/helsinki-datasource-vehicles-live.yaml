@@ -1,0 +1,17 @@
+# The transport endpoint read back by the reaper (PL-03): every Vehicle the space holds, read
+# in-cluster through the gateway, where the public-transport Policy answers an anonymous read.
+# The gateway host comes in as JC_GATEWAY_HOST from the runner's environment (Bento resolves
+# `${VAR}` when the stream is loaded), so the seed carries no namespace of any installation.
+apiVersion: joinedcontext.com/v1alpha1
+kind: DataSource
+metadata:
+  name: helsinki-vehicles-live
+  namespace: helsinki
+  title: { en: "Buses the space holds right now (read back for expiry)" }
+spec:
+  type: http
+  http:
+    url: http://${JC_GATEWAY_HOST}/api/endpoint/ajaezssvx3bwqgejgepmq4ig3frgan4e/ngsi-ld/v1/entities?type=Vehicle&limit=1000&options=sysAttrs
+    verb: GET
+    headers: { Accept: application/json }
+    timeout: 20s

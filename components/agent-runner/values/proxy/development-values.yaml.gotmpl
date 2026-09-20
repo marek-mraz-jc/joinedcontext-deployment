@@ -1,0 +1,16 @@
+---
+{{- $global := .Values.global }}
+# Checklist:
+# - [x] Minimal Resources -> a Rust proxy that streams; the model's answers pass through
+# - [x] Minimal storage -> stateless
+# - [x] 1 Replica
+
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi

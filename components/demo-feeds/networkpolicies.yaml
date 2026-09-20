@@ -1,0 +1,77 @@
+---
+demo-nats:
+  podSelector:
+    app.kubernetes.io/name: demo-feeds-nats
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: demo-feeds-feed
+          componentNamespace: demo-feeds.feed
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: pipeline-runner-runner
+          componentNamespace: pipeline-runner.runner
+      ports:
+        - protocol: TCP
+          port: 4222
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+
+demo-feed:
+  podSelector:
+    app.kubernetes.io/name: demo-feeds-feed
+  policyTypes:
+    - Ingress
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: demo-feeds-nats
+          componentNamespace: demo-feeds.nats
+      ports:
+        - protocol: TCP
+          port: 4222
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+
+pipeline-runner-to-demo-nats:
+  componentNamespace: pipeline-runner.runner
+  podSelector:
+    app.kubernetes.io/name: pipeline-runner-runner
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: demo-feeds-nats
+          componentNamespace: demo-feeds.nats
+      ports:
+        - protocol: TCP
+          port: 4222

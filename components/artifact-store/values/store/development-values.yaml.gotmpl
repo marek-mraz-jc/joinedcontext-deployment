@@ -1,0 +1,14 @@
+---
+# Checklist:
+# - [x] Minimal Resources
+# - [x] Minimal storage -> 10Gi, the default: a development instance renders a handful of
+#       schemas and caches a few downloads
+# - [x] 1 Replica -> one node, one volume
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1024Mi

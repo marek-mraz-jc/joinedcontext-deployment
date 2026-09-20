@@ -1,0 +1,17 @@
+---
+agent-runner:
+  proxy:
+    enabled: true
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "agent-runner") }}
+    # The project whose endpoints the proxy's own client may read: its Keycloak client is
+    # `{project}-agent-proxy`, the ServiceAccount manifest of the same name in that project
+    # is what the gateway resolves the token to (PF-46).
+    project: helsinki
+    # The model behind the builder profile (AG-26). An OpenAI-compatible API by default;
+    # `anthropic` switches the proxy to the Messages API.
+    modelBase: https://openrouter.ai/api/v1
+    modelProvider: openai-compatible
+    # The model key is an operator-supplied credential (docs/secrets: SOPS + age, or a Secret
+    # created out of band): one key `key` in this Secret, in the proxy's namespace. Never
+    # generated, never committed.
+    modelKeySecret: agent-runner-model-key

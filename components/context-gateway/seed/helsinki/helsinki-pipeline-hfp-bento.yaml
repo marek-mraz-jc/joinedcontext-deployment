@@ -1,0 +1,84 @@
+# The mapping of the hsl-hfp-vehicles pipeline (PL-03): HSL buses of four trunk lines from the
+# high-frequency positioning broker, capped at thirty buses and one position per bus every
+# fifteen seconds (PL-22). The reconciler renders the MQTT input of the hsl-hfp DataSource in
+# front and the endpoint upsert after (PL-39, PL-16); the `fleet` and `throttle` caches are the
+# runner's resources.
+
+pipeline:
+  processors:
+    # One topic tree carries several frame kinds; only a VP frame is a position report.
+    - mapping: |
+        root = if this.exists("VP") { this.VP } else { deleted() }
+
+    # The bus this frame belongs to: operator and vehicle number, the local part of its URN.
+    - mapping: |
+        meta vehicle = "%v-%v".format(this.oper, this.veh)
+
+    # The cap. The cache is the state; counter() hands out the slots in arrival order.
+    - branch:
+        request_map: 'root = ""'
+        processors:
+          - cache:
+              resource: fleet
+              operator: get
+              key: '${! meta("vehicle") }'
+          - catch:
+              - mapping: 'root = counter()'
+              - cache:
+                  resource: fleet
+                  operator: set
+                  key: '${! meta("vehicle") }'
+                  value: '${! content() }'
+        result_map: 'meta slot = content().string()'
+    - mapping: |
+        root = if meta("slot").number() > 30 { deleted() } else { this }
+
+    # The throttle: a bus seen in the last fifteen seconds writes nothing this time.
+    - branch:
+        request_map: 'root = ""'
+        processors:
+          - try:
+              - cache:
+                  resource: throttle
+                  operator: get
+                  key: '${! meta("vehicle") }'
+              - mapping: 'root = "seen"'
+          - catch:
+              - cache:
+                  resource: throttle
+                  operator: set
+                  key: '${! meta("vehicle") }'
+                  value: "1"
+              - mapping: 'root = "fresh"'
+        result_map: 'meta throttle = content().string()'
+    - mapping: |
+        root = if meta("throttle") == "seen" { deleted() } else { this }
+
+    # The entity. The domain comes from the deployment, never from this file (PF-44, PF-42).
+    - mapping: |
+        let domain = env("JC_ORG_DOMAIN")
+        let id = "urn:ngsi-ld:%v:%v:%v:%v".format("Vehicle", $domain, env("JC_SPACE"), meta("vehicle"))
+        root = {
+          "id": $id,
+          "type": "Vehicle",
+          "location": {
+            "type": "GeoProperty",
+            "value": { "type": "Point", "coordinates": [ this.long.number(), this.lat.number() ] },
+            "observedAt": this.tst
+          },
+          "speed": {
+            "type": "Property",
+            "value": this.spd.number(),
+            "unitCode": "MTS",
+            "observedAt": this.tst
+          },
+          "heading": {
+            "type": "Property",
+            "value": this.hdg.number(),
+            "unitCode": "DD",
+            "observedAt": this.tst
+          },
+          "route": { "type": "Property", "value": this.route.string(), "observedAt": this.tst },
+          "vehicleType": { "type": "Property", "value": "bus" },
+          "fleetVehicleId": { "type": "Property", "value": meta("vehicle") }
+        }

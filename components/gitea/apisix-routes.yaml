@@ -1,0 +1,15 @@
+---
+gitea-forge:
+  name: gitea-forge
+  description: Internal Git forge for pull requests and CI pipelines
+  upstream: gitea-http.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "gitea") }}.svc.cluster.local:3000 # yamllint disable-line rule:line-length
+  uri: '/git/*'
+  # The forge shares the primary host with the portal, whose `/*` route sits at priority 1.
+  host: '{{ .Values.global.domain }}'
+  priority: 10
+  # Git pushes and repository archives are neither of them a web page; the portal's
+  # defaults would cut a large clone off mid-transfer.
+  timeout:
+    connect: 6
+    send: 60
+    read: 60

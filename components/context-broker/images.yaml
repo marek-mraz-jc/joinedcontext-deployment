@@ -1,0 +1,6 @@
+---
+context-broker:
+  broker:
+    repository: 'ghcr.io/marek-mraz/antares-broker'
+    tag: 'dev-173'
+    digest: 'sha256:a3a3431976b1bb6fd26f43630a120d19a3961d6c5445d81e04bce404eed712d4'

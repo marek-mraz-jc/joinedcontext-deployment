@@ -1,0 +1,7 @@
+---
+component: demo-feeds
+parts:
+  - name: nats
+  - name: feed
+    needs:
+      - demo-feeds.nats

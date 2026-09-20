@@ -1,0 +1,14 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: helsinki-alerts
+  namespace: helsinki
+  title: { en: "Helsinki traffic alerts" }
+spec:
+  contextSpaceRef: helsinki
+  slug: dhiw4735mzyvwkrmszljpxcvvgv32q33
+  audience: public
+  # The one Policy this endpoint evaluates: the slice of the space it publishes (EP-14).
+  policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki:public-alerts
+  enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, zip, mcp]
+  rateLimits: { requestsPerMinute: 600, burst: 50 }

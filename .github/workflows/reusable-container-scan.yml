@@ -1,0 +1,67 @@
+name: reusable container scan
+# Trivy over the source tree and over the built image, plus the CycloneDX bill of materials
+# that says what is inside it (TS-23, OPS-41).
+on:
+  workflow_call:
+    inputs:
+      image:
+        description: "image reference to scan, by digest; empty scans only the source tree"
+        type: string
+        default: ""
+      severity:
+        type: string
+        default: "CRITICAL,HIGH"
+      sbom-name:
+        description: "artifact name the bill of materials is uploaded under"
+        type: string
+        default: "sbom"
+permissions: { contents: read }
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      # Filesystem mode reads the lock files, so a vulnerable dependency is named before an
+      # image exists to carry it.
+      - name: trivy filesystem
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: "${{ inputs.severity }}"
+          exit-code: "1"
+          ignore-unfixed: true
+      - name: trivy image
+        if: inputs.image != ''
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: "${{ inputs.image }}"
+          severity: "${{ inputs.severity }}"
+          exit-code: "1"
+          ignore-unfixed: true
+      # The bill of materials is written whether or not the scan found anything, and it
+      # describes the image when there is one: what shipped, not what the tree held.
+      - name: cyclonedx bill of materials of the image
+        if: inputs.image != ''
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: "${{ inputs.image }}"
+          format: cyclonedx
+          output: sbom.cdx.json
+      - name: cyclonedx bill of materials of the source tree
+        if: inputs.image == ''
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: cyclonedx
+          output: sbom.cdx.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: "${{ inputs.sbom-name }}"
+          path: sbom.cdx.json
+          if-no-files-found: error
+          retention-days: 90

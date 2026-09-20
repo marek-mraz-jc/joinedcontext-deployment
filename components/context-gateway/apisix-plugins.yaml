@@ -1,0 +1,245 @@
+---
+context-space:
+  name: context-space
+  description: Context space direct NGSI-LD security and filtering
+  plugins:
+    request-id:
+      include_in_response: true
+    # SSE and large GeoJSON/CSV exports must reach the client as they are produced; with
+    # nginx buffering on, a 300 s read timeout only means the client waits 300 s for the
+    # first byte.
+    proxy-buffering:
+      disable_proxy_buffering: true
+    serverless-pre-function:
+      phase: rewrite
+      functions:
+        - >-
+          return function()
+            local forged = {
+              "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
+              "X-Endpoint-Slug", "X-Consumer-Identity",
+              "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
+              "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
+            }
+            for _, header in ipairs(forged) do
+              ngx.req.clear_header(header)
+            end
+          end
+    # Class 2 (authenticated API): 1,200 requests per minute per client identity.
+    limit-count:
+      count: 1200
+      time_window: 60
+      key_type: var
+      key: http_authorization
+      rejected_code: 429
+      policy: local
+      show_limit_quota_header: true
+    # No openid-connect here: the realm signs ES256 only (TR-03187 AR-11) and the plugin
+    # (lua-resty-openidc) verifies RS/HS signatures only, so it would refuse every token.
+    # The upstream verifies the bearer token itself (docs Deployment/10 §4, OPS-33).
+    proxy-rewrite:
+      headers:
+        set:
+          X-Forwarded-Proto: https
+          X-Forwarded-Port: '443'
+    response-rewrite:
+      headers:
+        set:
+          Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+          X-Content-Type-Options: "nosniff"
+          X-Frame-Options: "DENY"
+          Referrer-Policy: "strict-origin-when-cross-origin"
+          Cache-Control: "no-store, no-cache, must-revalidate"
+
+context-endpoint:
+  name: context-endpoint
+  description: Context endpoint representation surface filtering
+  plugins:
+    request-id:
+      include_in_response: true
+    # SSE and large GeoJSON/CSV exports must reach the client as they are produced; with
+    # nginx buffering on, a 300 s read timeout only means the client waits 300 s for the
+    # first byte.
+    proxy-buffering:
+      disable_proxy_buffering: true
+    serverless-pre-function:
+      phase: rewrite
+      functions:
+        - >-
+          return function()
+            -- The notification delivery path is the one gateway surface that carries no
+            -- token: the broker calling it holds none (R46). It is reached in-cluster, where
+            -- the NetworkPolicy of T-0429 says only the broker may, and JC_GATEWAY_EGRESS_URL
+            -- is what makes the broker dial the Service rather than this edge. Published here
+            -- it would be a delivery-forging surface open to the internet, and a policy that
+            -- governs pods can say nothing about a request that arrives through the ingress.
+            if ngx.re.find(ngx.var.uri, [[^/api/endpoint/[^/]+/egress/]], "jo") then
+              return ngx.exit(403)
+            end
+            local forged = {
+              "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
+              "X-Endpoint-Slug", "X-Consumer-Identity",
+              "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
+              "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
+            }
+            for _, header in ipairs(forged) do
+              ngx.req.clear_header(header)
+            end
+          end
+    # Class 3 (high-throughput streams): 5,000 requests per minute. The endpoint surface is
+    # what the pipeline runners write telemetry to, so it carries the stream ceiling rather
+    # than the 1,200 API one; separating a Class 2 caller from a Class 3 one needs the stable
+    # client identity APISIX cannot key on yet (see portal-api).
+    limit-count:
+      count: 5000
+      time_window: 60
+      key_type: var_combination
+      key: '$http_authorization $remote_addr'
+      rejected_code: 429
+      policy: local
+      show_limit_quota_header: true
+    # Class 4 (bulk file exports): 10 concurrent requests per client. A GeoJSON or CSV export
+    # holds its connection for minutes, so a count per minute does not bound them — concurrency does.
+    limit-conn:
+      conn: 10
+      burst: 0
+      default_conn_delay: 0.1
+      key_type: var_combination
+      key: '$http_authorization $remote_addr'
+      rejected_code: 429
+    # No openid-connect here: the realm signs ES256 only (TR-03187 AR-11) and the plugin
+    # (lua-resty-openidc) verifies RS/HS signatures only, so it would refuse every token.
+    # Anonymous and bearer requests both reach the gateway PEP, which verifies the token itself and decides between a public representation and 401 (docs Deployment/10 §4, OPS-33).
+    cors:
+      # A browser may call the endpoint surface from any app served under this platform's
+      # domain, and from nowhere else. `allow_origins: '*'` would also hand the response to
+      # a page on an attacker's host.
+      allow_origins_by_regex:
+        - '^https://.+\.${DOMAIN}$'
+      allow_methods: 'GET,HEAD,OPTIONS'
+      allow_headers: 'Authorization,Content-Type'
+      allow_credential: false
+    proxy-rewrite:
+      headers:
+        set:
+          X-Forwarded-Proto: https
+          X-Forwarded-Port: '443'
+    response-rewrite:
+      headers:
+        set:
+          Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+          X-Content-Type-Options: "nosniff"
+          X-Frame-Options: "DENY"
+          Referrer-Policy: "strict-origin-when-cross-origin"
+          Cache-Control: "no-store, no-cache, must-revalidate"
+
+context-endpoint-portal:
+  name: context-endpoint-portal
+  description: Context endpoint surface on the Portal host, the edge session as the bearer
+  plugins:
+    request-id:
+      include_in_response: true
+    # SSE and large GeoJSON/CSV exports must reach the client as they are produced; with
+    # nginx buffering on, a 300 s read timeout only means the client waits 300 s for the
+    # first byte.
+    proxy-buffering:
+      disable_proxy_buffering: true
+    serverless-pre-function:
+      phase: rewrite
+      functions:
+        - >-
+          return function()
+            -- The notification delivery path is the one gateway surface that carries no
+            -- token: the broker calling it holds none (R46). It is reached in-cluster, where
+            -- the NetworkPolicy of T-0429 says only the broker may, and JC_GATEWAY_EGRESS_URL
+            -- is what makes the broker dial the Service rather than this edge. Published here
+            -- it would be a delivery-forging surface open to the internet, and a policy that
+            -- governs pods can say nothing about a request that arrives through the ingress.
+            if ngx.re.find(ngx.var.uri, [[^/api/endpoint/[^/]+/egress/]], "jo") then
+              return ngx.exit(403)
+            end
+            local forged = {
+              "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
+              "X-Endpoint-Slug", "X-Consumer-Identity",
+              "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
+              "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
+            }
+            for _, header in ipairs(forged) do
+              ngx.req.clear_header(header)
+            end
+          end
+    # Class 3 (high-throughput streams): 5,000 requests per minute. The endpoint surface is
+    # what the pipeline runners write telemetry to, so it carries the stream ceiling rather
+    # than the 1,200 API one; separating a Class 2 caller from a Class 3 one needs the stable
+    # client identity APISIX cannot key on yet (see portal-api).
+    limit-count:
+      count: 5000
+      time_window: 60
+      key_type: var_combination
+      key: '$http_authorization $remote_addr'
+      rejected_code: 429
+      policy: local
+      show_limit_quota_header: true
+    # Class 4 (bulk file exports): 10 concurrent requests per client. A GeoJSON or CSV export
+    # holds its connection for minutes, so a count per minute does not bound them — concurrency does.
+    limit-conn:
+      conn: 10
+      burst: 0
+      default_conn_delay: 0.1
+      key_type: var_combination
+      key: '$http_authorization $remote_addr'
+      rejected_code: 429
+    # No openid-connect here: the realm signs ES256 only (TR-03187 AR-11) and the plugin
+    # (lua-resty-openidc) verifies RS/HS signatures only, so it would refuse every token.
+    # Anonymous and bearer requests both reach the gateway PEP, which verifies the token itself and decides between a public representation and 401 (docs Deployment/10 §4, OPS-33).
+    cors:
+      # A browser may call the endpoint surface from any app served under this platform's
+      # domain, and from nowhere else. `allow_origins: '*'` would also hand the response to
+      # a page on an attacker's host.
+      allow_origins_by_regex:
+        - '^https://.+\.${DOMAIN}$'
+      allow_methods: 'GET,HEAD,OPTIONS'
+      allow_headers: 'Authorization,Content-Type'
+      allow_credential: false
+    # The edge session as the bearer the gateway verifies (ADR-N-019, AP-62): `pass` leaves an
+    # anonymous visitor anonymous and a presented bearer untouched, like portal-api.
+    openid-connect:
+      client_id: edge
+      client_secret: ${EDGE_CLIENT_SECRET}
+      discovery: https://idm.${DOMAIN}/realms/${REALM}/.well-known/openid-configuration
+      bearer_only: false
+      use_jwks: false
+      use_pkce: true
+      ssl_verify: true
+      unauth_action: pass
+      redirect_uri: https://portal.${DOMAIN}/callback
+      logout_path: /logout
+      post_logout_redirect_uri: https://portal.${DOMAIN}/
+      set_userinfo_header: false
+      set_access_token_header: true
+      access_token_in_authorization_header: true
+      set_id_token_header: false
+      set_refresh_token_header: false
+      session:
+        secret: ${OIDC_SESSION_SECRET}
+        cookie_name: jc_edge
+        cookie_path: /
+        cookie_secure: true
+        cookie_http_only: true
+        cookie_same_site: Lax
+        idling_timeout: 3600
+        rolling_timeout: 3600
+        absolute_timeout: 36000
+    proxy-rewrite:
+      headers:
+        set:
+          X-Forwarded-Proto: https
+          X-Forwarded-Port: '443'
+    response-rewrite:
+      headers:
+        set:
+          Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+          X-Content-Type-Options: "nosniff"
+          X-Frame-Options: "DENY"
+          Referrer-Policy: "strict-origin-when-cross-origin"
+          Cache-Control: "no-store, no-cache, must-revalidate"

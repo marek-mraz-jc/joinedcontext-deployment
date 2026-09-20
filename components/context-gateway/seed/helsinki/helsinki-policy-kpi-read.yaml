@@ -1,0 +1,16 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Policy
+metadata:
+  name: kpi-read
+  namespace: helsinki
+  title: { en: "Public read: indicators" }
+spec:
+  contextSpaceRef: { kind: ContextSpace, name: helsinki-kpi }
+  assigner: did:web:{orgDomain}
+  assignee: { kind: role, id: public }
+  operations: [retrieveOps]
+  # The indicator type, named: a grant that names no type is matched against nothing on a
+  # read, and the steward saw an empty Explore (PL-45).
+  information:
+    - entities:
+        - type: KeyPerformanceIndicator

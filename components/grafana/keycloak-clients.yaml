@@ -1,0 +1,16 @@
+---
+# Browser login for the dashboards. Confidential, authorization-code with PKCE, and no
+# service account: Grafana acts for the person who logged in and never on its own.
+grafana:
+  name: Grafana
+  description: Confidential client of the Grafana addon for operator login
+  subdomain: ''
+  redirectPath: /grafana/login/generic_oauth
+  componentNamespaces:
+    - grafana
+  rawValues:
+    publicClient: false
+    standardFlowEnabled: true
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: false

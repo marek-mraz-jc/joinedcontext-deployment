@@ -1,0 +1,658 @@
+---
+{{- $this := .Values.keycloak.config }}
+{{- $global := .Values.global }}
+# Checklist:
+# - [ ] Containers run as non-root with `readOnlyRootFilesystem` -> does not work yet with config-cli
+# - [x] Health probes -> not applicable for jobs
+# - [ ] Graceful shutdown
+# - [ ] Standard labels
+# - [x] ServiceAccount with least privilege where required -> keycloak-app-keycloakx, no token mounted
+# - [ ] Named ports
+# - [ ] Ingress with TLS
+
+containerSecurityContext:
+  {{ .Values.securityDefaults.securityContext | toYaml | nindent 2 }}
+
+securityContext:
+  {{ .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}
+
+# The chart can only name a ServiceAccount, it cannot create one and has no
+# `automountServiceAccountToken` key, so the Job would otherwise run under the namespace's
+# `default` account with its token mounted (TS-19, CC-12). Keycloak's own account sits in the
+# same namespace and already sets `automountServiceAccountToken: false`, so naming it hands
+# this Job no token at all -- which is what it wants, because it configures Keycloak over
+# HTTP and never calls the API server. The release fullname is hardcoded the same way the
+# `KEYCLOAK_URL` Service name below is.
+serviceAccount: keycloak-app-keycloakx
+
+image:
+  {{- with .Values.images.keycloak.configCli }}
+  repository: {{ .repository }}
+  tag: {{ .tag }}@{{ .digest }}
+  {{- end }}
+backoffLimit: 2
+# resources are hardcoded since config-cli is a job which won't need more resources, even when the platform scales up
+resources:
+  limits:
+    cpu: "400m"
+    memory: "1024Mi"
+  requests:
+    cpu: "100m"
+    memory: "512Mi"
+
+env:
+  KEYCLOAK_AVAILABILITYCHECK_ENABLED: "true"
+  KEYCLOAK_AVAILABILITYCHECK_RETRIES: 10s
+  KEYCLOAK_URL: http://keycloak-app-keycloakx-http.{{ .Values.keycloak.app.namespace }}.svc.cluster.local:80{{ .Values.keycloak.app.pathPrefix | trimSuffix "/" }}
+  KEYCLOAK_USER: "{{ .Values.keycloak.app.admin.username }}"
+  IMPORT_FILES_LOCATIONS: /config/*
+  IMPORT_VARSUBSTITUTION_ENABLED: "true"
+  IMPORT_VARSUBSTITUTION_NESTED: "false"
+
+existingSecret: keycloak-admin-user
+existingSecretKey: password
+
+{{- $smtp := $this.smtp | default dict }}
+extraEnv:
+{{- if $smtp.enabled }}
+{{- range $var, $key := dict "SMTP_HOST" "host" "SMTP_PORT" "port" "SMTP_FROM" "from" "SMTP_USER" "user" "SMTP_PASSWORD" "password" }}
+  - name: {{ $var }}
+    valueFrom:
+      secretKeyRef:
+        name: {{ $smtp.existingSecret | default "keycloak-smtp" }}
+        key: {{ $key }}
+{{- end }}
+{{- end }}
+  {{- range $name, $_ := $this.demoUsers | default dict }}
+  - name: USER_PASSWORD_{{ $name | upper | replace "." "_" }}
+    valueFrom:
+      secretKeyRef:
+        name: keycloak-user-{{ $name | replace "." "-" }}
+        key: password
+  {{- end }}
+  {{- range $clientId, $client := .Values.keycloakClients }}
+  {{- $rawValues := index $client "rawValues" | default dict }}
+  {{- $isPublicClient := false }}
+  {{- if hasKey $rawValues "publicClient" }}
+  {{- $isPublicClient = index $rawValues "publicClient" }}
+  {{- end }}
+  {{- if not $isPublicClient }}
+  - name: CLIENT_SECRET_{{ $clientId | upper | replace "-" "_" }}
+    valueFrom:
+      secretKeyRef:
+        name: {{ printf "keycloak-client-%s" $clientId }}
+        key: client-secret
+  {{- end }}
+  {{- end }}
+
+config:
+  {{ $global.instanceSlug }}:
+    inline:
+      id: {{ $global.instanceSlug }}
+      realm: "{{ $global.instanceSlug }}"
+      notBefore: 0
+      # TR-03187 AR-11: Use ES256 for token signatures
+      defaultSignatureAlgorithm: ES256
+      revokeRefreshToken: false
+      refreshTokenMaxReuse: 0
+      accessTokenLifespan: 300
+      accessTokenLifespanForImplicitFlow: 900
+      # TR-03187 AR-6/W-8: 60min idle timeout
+      ssoSessionIdleTimeout: 3600
+      ssoSessionMaxLifespan: 36000
+      ssoSessionIdleTimeoutRememberMe: 0
+      ssoSessionMaxLifespanRememberMe: 0
+      offlineSessionIdleTimeout: 2592000
+      offlineSessionMaxLifespanEnabled: false
+      offlineSessionMaxLifespan: 5184000
+      clientSessionIdleTimeout: 0
+      clientSessionMaxLifespan: 0
+      clientOfflineSessionIdleTimeout: 0
+      clientOfflineSessionMaxLifespan: 0
+      accessCodeLifespan: 60
+      accessCodeLifespanUserAction: 300
+      accessCodeLifespanLogin: 1800
+      actionTokenGeneratedByAdminLifespan: 43200
+      actionTokenGeneratedByUserLifespan: 300
+      # TR-03187 AR-11: Keycloak 26 defaults to Argon2id for password hashing — no config override needed
+      # TR-03187 AUT-9: Keycloak 26 account console requires password re-entry for sensitive profile changes (incl. email) by default
+      # TR-03187 AR-13: Certificate chain validation handled by Linkerd mTLS at infrastructure level — no realm config needed
+      enabled: true
+      sslRequired: external
+      registrationAllowed: false
+      registrationEmailAsUsername: true
+      rememberMe: false
+      verifyEmail: true
+      loginWithEmailAllowed: true
+      duplicateEmailsAllowed: false
+      resetPasswordAllowed: true
+      editUsernameAllowed: true
+      # TR-03187: Brute force protection enabled, lockout after 10 attempts
+      bruteForceProtected: true
+      permanentLockout: false
+      maxFailureWaitSeconds: 900
+      minimumQuickLoginWaitSeconds: 60
+      waitIncrementSeconds: 60
+      quickLoginCheckMilliSeconds: 1000
+      maxDeltaTimeSeconds: 43200
+      failureFactor: 10
+      defaultRoles:
+        - offline_access
+        - uma_authorization
+      # TR-03187 AUT-7: Password policy — min 12 chars, upper, lower, digit
+      passwordPolicy: "length(12) and upperCase(1) and lowerCase(1) and digits(1)"
+      requiredCredentials:
+        - password
+      otpPolicyType: totp
+      # TR-03187 AR-11: Use SHA256 for OTP
+      otpPolicyAlgorithm: HmacSHA256
+      otpPolicyInitialCounter: 0
+      otpPolicyDigits: 6
+      otpPolicyLookAheadWindow: 1
+      otpPolicyPeriod: 30
+      otpSupportedApplications:
+        - FreeOTP
+        - Google Authenticator
+      webAuthnPolicyRpEntityName: keycloak
+      webAuthnPolicySignatureAlgorithms:
+        - ES256
+      webAuthnPolicyRpId: ""
+      webAuthnPolicyAttestationConveyancePreference: not specified
+      webAuthnPolicyAuthenticatorAttachment: not specified
+      webAuthnPolicyRequireResidentKey: not specified
+      webAuthnPolicyUserVerificationRequirement: not specified
+      webAuthnPolicyCreateTimeout: 0
+      webAuthnPolicyAvoidSameAuthenticatorRegister: false
+      webAuthnPolicyAcceptableAaguids: []
+      webAuthnPolicyPasswordlessRpEntityName: keycloak
+      webAuthnPolicyPasswordlessSignatureAlgorithms:
+        - ES256
+      webAuthnPolicyPasswordlessRpId: ""
+      webAuthnPolicyPasswordlessAttestationConveyancePreference: not specified
+      webAuthnPolicyPasswordlessAuthenticatorAttachment: not specified
+      webAuthnPolicyPasswordlessRequireResidentKey: not specified
+      webAuthnPolicyPasswordlessUserVerificationRequirement: not specified
+      webAuthnPolicyPasswordlessCreateTimeout: 0
+      webAuthnPolicyPasswordlessAvoidSameAuthenticatorRegister: false
+      webAuthnPolicyPasswordlessAcceptableAaguids: []
+      browserSecurityHeaders:
+        contentSecurityPolicyReportOnly: ""
+        xContentTypeOptions: nosniff
+        xRobotsTag: none
+        xFrameOptions: SAMEORIGIN
+        contentSecurityPolicy: frame-src 'self'; frame-ancestors 'self'; object-src 'none';
+        xXSSProtection: 1; mode=block
+        strictTransportSecurity: max-age=31536000; includeSubDomains
+{{- if $smtp.enabled }}
+      smtpServer:
+        # The values come from the Secret above through config-cli variable substitution.
+        password: "$(SMTP_PASSWORD)"
+        host: "$(SMTP_HOST)"
+        port: "$(SMTP_PORT)"
+        from: "$(SMTP_FROM)"
+        user: "$(SMTP_USER)"
+        starttls: "true"
+        auth: "true"
+        ssl: "false"
+{{- end }}
+      loginTheme: keycloak
+      accountTheme: keycloak
+      adminTheme: keycloak
+      emailTheme: keycloak
+      eventsEnabled: true
+      eventsExpiration: 2592000
+      eventsListeners:
+        - jboss-logging
+      enabledEventTypes:
+        - SEND_RESET_PASSWORD
+        - UPDATE_CONSENT_ERROR
+        - GRANT_CONSENT
+        - VERIFY_PROFILE_ERROR
+        - REMOVE_TOTP
+        - REVOKE_GRANT
+        - UPDATE_TOTP
+        - LOGIN_ERROR
+        - CLIENT_LOGIN
+        - RESET_PASSWORD_ERROR
+        - IMPERSONATE_ERROR
+        - CODE_TO_TOKEN_ERROR
+        - CUSTOM_REQUIRED_ACTION
+        - OAUTH2_DEVICE_CODE_TO_TOKEN_ERROR
+        - RESTART_AUTHENTICATION
+        - IMPERSONATE
+        - UPDATE_PROFILE_ERROR
+        - LOGIN
+        - OAUTH2_DEVICE_VERIFY_USER_CODE
+        - UPDATE_PASSWORD_ERROR
+        - CLIENT_INITIATED_ACCOUNT_LINKING
+        - TOKEN_EXCHANGE
+        - AUTHREQID_TO_TOKEN
+        - LOGOUT
+        - REGISTER
+        - DELETE_ACCOUNT_ERROR
+        - CLIENT_REGISTER
+        - IDENTITY_PROVIDER_LINK_ACCOUNT
+        - DELETE_ACCOUNT
+        - UPDATE_PASSWORD
+        - CLIENT_DELETE
+        - FEDERATED_IDENTITY_LINK_ERROR
+        - IDENTITY_PROVIDER_FIRST_LOGIN
+        - CLIENT_DELETE_ERROR
+        - VERIFY_EMAIL
+        - CLIENT_LOGIN_ERROR
+        - RESTART_AUTHENTICATION_ERROR
+        - EXECUTE_ACTIONS
+        - REMOVE_FEDERATED_IDENTITY_ERROR
+        - TOKEN_EXCHANGE_ERROR
+        - PERMISSION_TOKEN
+        - SEND_IDENTITY_PROVIDER_LINK_ERROR
+        - EXECUTE_ACTION_TOKEN_ERROR
+        - SEND_VERIFY_EMAIL
+        - OAUTH2_DEVICE_AUTH
+        - EXECUTE_ACTIONS_ERROR
+        - REMOVE_FEDERATED_IDENTITY
+        - OAUTH2_DEVICE_CODE_TO_TOKEN
+        - IDENTITY_PROVIDER_POST_LOGIN
+        - IDENTITY_PROVIDER_LINK_ACCOUNT_ERROR
+        - OAUTH2_DEVICE_VERIFY_USER_CODE_ERROR
+        - UPDATE_EMAIL
+        - REGISTER_ERROR
+        - REVOKE_GRANT_ERROR
+        - EXECUTE_ACTION_TOKEN
+        - LOGOUT_ERROR
+        - UPDATE_EMAIL_ERROR
+        - CLIENT_UPDATE_ERROR
+        - AUTHREQID_TO_TOKEN_ERROR
+        - UPDATE_PROFILE
+        - CLIENT_REGISTER_ERROR
+        - FEDERATED_IDENTITY_LINK
+        - SEND_IDENTITY_PROVIDER_LINK
+        - SEND_VERIFY_EMAIL_ERROR
+        - RESET_PASSWORD
+        - CLIENT_INITIATED_ACCOUNT_LINKING_ERROR
+        - OAUTH2_DEVICE_AUTH_ERROR
+        - UPDATE_CONSENT
+        - REMOVE_TOTP_ERROR
+        - VERIFY_EMAIL_ERROR
+        - SEND_RESET_PASSWORD_ERROR
+        - CLIENT_UPDATE
+        - CUSTOM_REQUIRED_ACTION_ERROR
+        - IDENTITY_PROVIDER_POST_LOGIN_ERROR
+        - UPDATE_TOTP_ERROR
+        - CODE_TO_TOKEN
+        - VERIFY_PROFILE
+        - GRANT_CONSENT_ERROR
+        - IDENTITY_PROVIDER_FIRST_LOGIN_ERROR
+      adminEventsEnabled: true
+      adminEventsDetailsEnabled: true
+      internationalizationEnabled: true
+      supportedLocales:
+        - de
+        - en
+      defaultLocale: en
+      # TR-03187 AUT-2: Custom browser flow with conditional 2FA
+      browserFlow: custom browser
+      registrationFlow: registration
+      directGrantFlow: direct grant
+      resetCredentialsFlow: reset credentials
+      clientAuthenticationFlow: clients
+      dockerAuthenticationFlow: docker auth
+      attributes:
+        clientOfflineSessionMaxLifespan: "0"
+        clientSessionIdleTimeout: "0"
+        clientSessionMaxLifespan: "0"
+        clientOfflineSessionIdleTimeout: "0"
+      userManagedAccessAllowed: false
+      # TR-03187 AR-11: ES256 token signing by default (defaultSignatureAlgorithm above).
+      # Explicitly declare the realm key providers so keycloak-config-cli manages them
+      # authoritatively.
+      components:
+        org.keycloak.keys.KeyProvider:
+          # ES256 signing key — the default signature provider, highest priority.
+          - name: ecdsa-generated
+            providerId: ecdsa-generated
+            config:
+              priority:
+                - "100"
+              enabled:
+                - "true"
+              active:
+                - "true"
+              ecdsaEllipticCurveKey:
+                - "P-256"
+          # RS256 signing key, active at a lower priority than the ES256 key: the realm
+          # default stays ES256 and only a client that asks for RS256 by per-client override
+          # (`access.token.signed.response.alg`, `id.token.signed.response.alg`) is signed
+          # with it. The one that does is `edge`, the APISIX openid-connect client of the edge
+          # login: lua-resty-openidc verifies RS- and HS-family signatures only (ADR-N-019,
+          # AP-27, T-0252). 4096 bits: BSI TR-02102-1 asks for RSA moduli of 3000 bits or more.
+          - name: rsa-generated
+            providerId: rsa-generated
+            config:
+              priority:
+                - "50"
+              enabled:
+                - "true"
+              active:
+                - "true"
+              algorithm:
+                - "RS256"
+              keySize:
+                - "4096"
+          # Disable the auto-generated HS512 signing key.
+          - name: hmac-generated
+            providerId: hmac-generated
+            config:
+              priority:
+                - "-100"
+              enabled:
+                - "false"
+              active:
+                - "false"
+              algorithm:
+                - "HS512"
+          # Keep RSA-OAEP encryption key (use=enc, not used for token signatures).
+          - name: rsa-enc-generated
+            providerId: rsa-enc-generated
+            config:
+              priority:
+                - "100"
+              enabled:
+                - "true"
+              active:
+                - "true"
+              algorithm:
+                - "RSA-OAEP"
+          # Keep AES encryption key (use=enc, not used for token signatures).
+          - name: aes-generated
+            providerId: aes-generated
+            config:
+              priority:
+                - "100"
+              enabled:
+                - "true"
+              active:
+                - "true"
+      # The Portal MCP route accepts a bearer whose `aud` names the Portal (AG-60, RFC 9728,
+      # docs Architecture/07 §1). An MCP client asks for this optional scope on the
+      # `mcp-mobile` or `edge` client and its token gains the audience; nothing else on the
+      # token changes. The scope stays optional until RFC 8707 resource indicators land.
+      clientScopes:
+        - name: mcp:portal
+          description: Audience of the Portal MCP server at /api/v1/mcp
+          protocol: openid-connect
+          attributes:
+            include.in.token.scope: 'true'
+            display.on.consent.screen: 'false'
+          protocolMappers:
+            - name: portal-api-audience
+              protocol: openid-connect
+              protocolMapper: oidc-audience-mapper
+              consentRequired: false
+              config:
+                included.client.audience: portal-api
+                access.token.claim: 'true'
+                id.token.claim: 'false'
+      # Machine identities (jcctl, pipelines, connector) are Keycloak service accounts
+      # created from ServiceAccount manifests. The only realm users are the demo logins of
+      # the development profile (keycloak.config.demoUsers); their passwords are the
+      # cluster-generated Secrets substituted by keycloak-config-cli at import time.
+      users:
+        {{- /* A confidential client's service account is a realm user named
+               `service-account-{clientId}`; a client role is mapped onto that user and never
+               onto the client, so a client that needs one declares it and the user appears
+               here. The Portal's is the only one so far: it creates and retires the OIDC
+               client of every app on demand (AP-27). */}}
+        {{- $serviceAccounts := dict }}
+        {{- range $clientId, $client := .Values.keycloakClients }}
+        {{- if index $client "serviceAccountClientRoles" }}
+        {{- $_ := set $serviceAccounts $clientId (index $client "serviceAccountClientRoles") }}
+        {{- end }}
+        {{- end }}
+        {{- range $clientId, $roles := $serviceAccounts }}
+        - username: service-account-{{ $clientId }}
+          enabled: true
+          serviceAccountClientId: {{ $clientId }}
+          clientRoles:
+            {{- toYaml $roles | nindent 12 }}
+        {{- end }}
+        {{- range $name, $user := $this.demoUsers | default dict }}
+        {{- /* `registrationEmailAsUsername` is set above, so Keycloak stores the email as the
+               username. Seeding a different username creates the user once and then aborts
+               every later import with "username and email is different while 'email as
+               username' is enabled", leaving the account without a password (T-0366). */}}
+        - username: {{ $name }}@{{ $global.orgDomain }}
+          enabled: true
+          emailVerified: true
+          email: {{ $name }}@{{ $global.orgDomain }}
+          firstName: {{ $user.firstName | quote }}
+          lastName: {{ $user.lastName | quote }}
+          requiredActions: []
+          credentials:
+            - type: password
+              value: "$(USER_PASSWORD_{{ $name | upper | replace "." "_" }})"
+              temporary: false
+          realmRoles:
+            {{- toYaml ($user.realmRoles | default list) | nindent 12 }}
+          groups:
+            - /platform-readers
+            {{- range (index $user "groups" | default list) }}
+            - /{{ . }}
+            {{- end }}
+        {{- end }}
+        {{- if and (not ($this.demoUsers | default dict)) (not $serviceAccounts) }}
+        []
+        {{- end }}
+      clients:
+        {{- range $clientId, $client := .Values.keycloakClients }}
+        {{- /* Host of the client. `subdomain: ""` puts the client on the apex domain
+               (the portal and everything else served from https://{host}); omitting
+               `subdomain` keeps the historical default of a subdomain named after the
+               client id. */}}
+        {{- $host := $global.domain }}
+        {{- if hasKey $client "subdomain" }}
+        {{- if $client.subdomain }}
+        {{- $host = printf "%s.%s" $client.subdomain $global.domain }}
+        {{- end }}
+        {{- else }}
+        {{- $host = printf "%s.%s" $clientId $global.domain }}
+        {{- end }}
+        {{- /* `index` and not `.redirectPath`: a client that logs nobody in declares no
+               redirect path at all, and a field access on a map without the key stops the
+               whole render (T-0866). */}}
+        {{- $redirectPath := index $client "redirectPath" | default "/*" }}
+        {{- /* Build the redirect URI list: start with the primary redirectPath, then append any additionalRedirectPaths */}}
+        {{- $redirectUris := list (printf "https://%s%s" $host $redirectPath) }}
+        {{- range (index $client "additionalRedirectPaths" | default list) }}
+        {{- $redirectUris = append $redirectUris (printf "https://%s%s" $host .) }}
+        {{- end }}
+        {{- /* Redirect URIs on another host of the platform domain: the edge client logs
+               people in on the Portal host and on the apex (ADR-N-019, AP-27). An empty
+               subdomain is the apex. */}}
+        {{- range (index $client "additionalRedirectUris" | default list) }}
+        {{- $uriHost := $global.domain }}
+        {{- if index . "subdomain" }}
+        {{- $uriHost = printf "%s.%s" (index . "subdomain") $global.domain }}
+        {{- end }}
+        {{- $redirectUris = append $redirectUris (printf "https://%s%s" $uriHost (index . "path")) }}
+        {{- end }}
+        # Opt-in ":443" variant for apps that emit the default HTTPS port in their
+        # redirect_uri; Keycloak does strict port matching.
+        {{- if index $client "includePort443Variant" | default false }}
+        {{- $port443Uris := list }}
+        {{- range $redirectUris }}
+        {{- $port443Uris = append $port443Uris (. | replace (printf "https://%s/" $host) (printf "https://%s:443/" $host)) }}
+        {{- end }}
+        {{- $redirectUris = concat $redirectUris $port443Uris }}
+        {{- end }}
+        {{- $rawValues := index $client "rawValues" | default dict }}
+        {{- $isPublicClient := false }}
+        {{- if hasKey $rawValues "publicClient" }}
+        {{- $isPublicClient = index $rawValues "publicClient" }}
+        {{- end }}
+        {{- $clientDefaults := dict
+          "clientId" $clientId
+          "name" ($client.name | default $clientId)
+          "description" (index $client "description" | default "")
+          "enabled" true
+          "protocol" "openid-connect"
+          "publicClient" false
+          "rootUrl" (printf "https://%s" $host)
+          "baseUrl" (printf "https://%s" $host)
+          "bearerOnly" false
+          "standardFlowEnabled" true
+          "implicitFlowEnabled" false
+          "directAccessGrantsEnabled" true
+          "serviceAccountsEnabled" false
+          "authorizationServicesEnabled" false
+          "webOrigins" (list (printf "https://%s" $host))
+          "defaultClientScopes" (list "basic" "email" "profile" "roles" "web-origins")
+          "optionalClientScopes" (list "address" "phone" "offline_access" "microprofile-jwt")
+        }}
+        {{- /* Redirect URIs and PKCE belong to every browser client. A public client has
+               no secret to fall back on, so leaving them out of that branch left it
+               unable to complete a login at all. Only the secret is confidential-only. */}}
+        {{- $_ := set $clientDefaults "redirectUris" $redirectUris }}
+        {{- $_ := set $clientDefaults "attributes" (dict "post.logout.redirect.uris" "+" "pkce.code.challenge.method" "S256") }}
+        {{- if not $isPublicClient }}
+        {{- $_ := set $clientDefaults "secret" (printf "$(CLIENT_SECRET_%s)" ($clientId | upper | replace "-" "_")) }}
+        {{- end }}
+        {{- $finalClient := mergeOverwrite $clientDefaults ($rawValues | default dict) }}
+        {{- /* Who the caller is, on every client the platform trusts: a `RoleBinding` names a
+               group and the Portal checks the binding (PF-50, PF-61), and the forge maps the
+               same claim onto its teams (PF-79). Identity, never permission. A client's own
+               mappers are added to this one, because `mergeOverwrite` would otherwise drop
+               the list the client did not repeat. Short names, not paths: the Portal strips a
+               leading slash either way, the forge's team map does not. */}}
+        {{- $groupsMapper := dict
+          "name" "groups"
+          "protocol" "openid-connect"
+          "protocolMapper" "oidc-group-membership-mapper"
+          "consentRequired" false
+          "config" (dict
+            "claim.name" "groups"
+            "full.path" "false"
+            "access.token.claim" "true"
+            "id.token.claim" "true"
+            "userinfo.token.claim" "true")
+        }}
+        {{- $_ := set $finalClient "protocolMappers" (concat (list $groupsMapper) (index $rawValues "protocolMappers" | default list)) }}
+        - {{ $finalClient | toYaml | nindent 10 }}
+        {{- end }}
+      # The forge reads group membership from the `groups` claim and maps it onto its teams
+      # (docs Architecture/12 §2, PF-79). `platform-readers` is the forge mirror of the
+      # `viewer` binding every signed-in person of the organization carries (PF-61): it
+      # grants nothing in the platform, where permission comes from the RoleBindings in the
+      # configuration repository, and only lands the person in the forge team that reads.
+      # The reconciler never touches it: it manages only the groups it marks itself (PF-63).
+      groups:
+        - name: platform-readers
+          path: /platform-readers
+      defaultGroups:
+        - /platform-readers
+      roles:
+        realm:
+          # Checked by the Portal (src/api/changes.rs) before a user may approve a change
+          # proposal; a user without it can browse and propose only.
+          - name: portal-approver
+            description: May approve and merge change proposals in the Portal
+        client:
+          {{- range $clientId, $client := .Values.keycloakClients }}
+          {{- if index $client "roles" }}
+          {{ $clientId }}:
+            {{- index $client "roles" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- end }}
+      # TR-03187 AUT-2: Custom browser flow with optional MFA (conditional on user config)
+      # If a user has TOTP or WebAuthn configured, they are prompted. Otherwise login proceeds without MFA.
+      authenticationFlows:
+        - alias: "custom browser"
+          description: "Custom browser flow with conditional 2FA per TR-03187"
+          providerId: "basic-flow"
+          topLevel: true
+          builtIn: false
+          authenticationExecutions:
+            - authenticator: "auth-cookie"
+              authenticatorFlow: false
+              requirement: "ALTERNATIVE"
+              priority: 10
+              userSetupAllowed: false
+              autheticatorFlow: false
+            - authenticator: "identity-provider-redirector"
+              authenticatorFlow: false
+              requirement: "ALTERNATIVE"
+              priority: 20
+              userSetupAllowed: false
+              autheticatorFlow: false
+            - authenticatorFlow: true
+              requirement: "ALTERNATIVE"
+              priority: 30
+              flowAlias: "custom browser forms"
+              userSetupAllowed: false
+              autheticatorFlow: true
+        - alias: "custom browser forms"
+          description: "Username/password + conditional 2FA"
+          providerId: "basic-flow"
+          topLevel: false
+          builtIn: false
+          authenticationExecutions:
+            - authenticator: "auth-username-password-form"
+              authenticatorFlow: false
+              requirement: "REQUIRED"
+              priority: 10
+              userSetupAllowed: false
+              autheticatorFlow: false
+            - authenticatorFlow: true
+              requirement: "CONDITIONAL"
+              priority: 20
+              flowAlias: "custom browser 2fa"
+              userSetupAllowed: false
+              autheticatorFlow: true
+        - alias: "custom browser 2fa"
+          description: "Conditional 2FA — prompts only if user has TOTP or WebAuthn configured"
+          providerId: "basic-flow"
+          topLevel: false
+          builtIn: false
+          authenticationExecutions:
+            - authenticator: "conditional-user-configured"
+              authenticatorFlow: false
+              requirement: "REQUIRED"
+              priority: 10
+              userSetupAllowed: false
+              autheticatorFlow: false
+            - authenticator: "auth-otp-form"
+              authenticatorFlow: false
+              requirement: "ALTERNATIVE"
+              priority: 20
+              userSetupAllowed: false
+              autheticatorFlow: false
+            - authenticator: "webauthn-authenticator"
+              authenticatorFlow: false
+              requirement: "ALTERNATIVE"
+              priority: 30
+              userSetupAllowed: false
+              autheticatorFlow: false
+  # TR-03187: Harden master realm — admin accounts are highest-value targets
+  master:
+    inline:
+      realm: master
+      # TR-03187 AR-11: Use ES256 for token signatures
+      defaultSignatureAlgorithm: ES256
+      # TR-03187: 30min idle timeout for admin sessions
+      ssoSessionIdleTimeout: 1800
+      ssoSessionMaxLifespan: 36000
+      rememberMe: false
+      # TR-03187: Brute force protection enabled, lockout after 10 attempts
+      bruteForceProtected: true
+      permanentLockout: false
+      maxFailureWaitSeconds: 900
+      minimumQuickLoginWaitSeconds: 60
+      waitIncrementSeconds: 60
+      quickLoginCheckMilliSeconds: 1000
+      maxDeltaTimeSeconds: 43200
+      failureFactor: 10
+      # TR-03187: Stricter password policy for admin accounts — 20 chars, upper, lower, digit, special
+      passwordPolicy: "length(20) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1)"
+      # TR-03187 AR-11: Use SHA256 for OTP
+      otpPolicyAlgorithm: HmacSHA256
+

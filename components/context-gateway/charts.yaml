@@ -1,0 +1,4 @@
+---
+context-gateway:
+  gateway:
+    chart: ../../charts/workload

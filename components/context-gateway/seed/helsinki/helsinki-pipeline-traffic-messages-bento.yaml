@@ -1,0 +1,41 @@
+# The mapping of the traffic-messages pipeline (PL-03): one Alert per Fintraffic situation
+# (a road work or a traffic announcement) whose primary point lies in Helsinki, Espoo or
+# Vantaa, from the country-wide GeoJSON document. The announcement text is Finnish, and is
+# published as such.
+
+pipeline:
+  processors:
+    - mapping: |
+        root = this.features
+    - unarchive:
+        format: json_array
+
+    - mapping: |
+        let domain = env("JC_ORG_DOMAIN")
+        let announcement = this.properties.announcements.or([]).index(0).catch({})
+        let municipality = $announcement.locationDetails.roadAddressLocation.primaryPoint.municipality.or("")
+        let where = $announcement.location.description.or("").string().trim()
+        let starts = $announcement.timeAndDuration.startTime.or(null)
+        let ends = $announcement.timeAndDuration.endTime.or(null)
+        let geometry = this.geometry.or(null)
+        root = if !["Helsinki", "Espoo", "Vantaa"].contains($municipality) || $geometry == null { deleted() } else {
+          {
+            "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Alert", $domain, env("JC_SPACE"), this.properties.situationId),
+            "type": "Alert",
+            "category": { "type": "Property", "value": "traffic" },
+            "subCategory": { "type": "Property", "value": this.properties.situationType.string() },
+            "name": { "type": "LanguageProperty", "languageMap": { "fi": $announcement.title.or("").string().trim() } },
+            "description": if $where == "" { null } else {
+              { "type": "LanguageProperty", "languageMap": { "fi": $where } }
+            },
+            "location": { "type": "GeoProperty", "value": $geometry },
+            "address": { "type": "Property", "value": $municipality },
+            "dateIssued": { "type": "Property", "value": this.properties.releaseTime },
+            "validFrom": if $starts == null { null } else { { "type": "Property", "value": $starts } },
+            "validTo": if $ends == null { null } else { { "type": "Property", "value": $ends } },
+            "source": { "type": "Property", "value": "https://tie.digitraffic.fi/api/traffic-message/v1/messages" }
+          }.filter(entry -> entry.value != null)
+        }
+
+    - archive:
+        format: json_array

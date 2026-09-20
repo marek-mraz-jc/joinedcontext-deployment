@@ -1,0 +1,14 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: helsinki-weather
+  namespace: helsinki
+  title: { en: "Helsinki road weather" }
+spec:
+  contextSpaceRef: helsinki
+  slug: 6wrymzu5x2uwjo2xqei66ppw53mafvbu
+  audience: public
+  # The one Policy this endpoint evaluates: the slice of the space it publishes (EP-14).
+  policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki:public-weather
+  enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, zip, mcp]
+  rateLimits: { requestsPerMinute: 600, burst: 50 }

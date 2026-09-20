@@ -1,0 +1,85 @@
+---
+context-gateway:
+  gateway:
+    # One image per repository: the platform image carries both context-gateway and jcctl.
+    # Its entrypoint is /usr/local/bin/context-gateway, so `command` only makes the choice
+    # explicit.
+    repository: 'ghcr.io/marek-mraz/joinedcontext-platform'
+    tag: 'main'
+    # platform 2276b1f: `jcctl drift` no longer reports every declared resource as missing
+    # against a platform that is not a store (T-1216), a unit carries its QUDT anchor and a
+    # mapping under an undeclared prefix stops generation (T-1180), and the SDM importer reads
+    # the unit the catalogue writes in prose (T-1100). On top of f9f704d: the hub's MCP surface says what it federates and what an answer is a
+    # union over (T-0346), a federated read carries `NGSILD-EntityMap` in both directions
+    # (T-1183, T-1184), a workspace's own headers reach neither the gateway nor the forge
+    # (T-1065, T-1072, T-1074), a tool's read-only is derived from what it does (T-1066), and
+    # the pipeline-test harness fetches a URL sample once (T-1192). On top of b73d19a.
+    # One image for the gateway, the proxy and jc-functions, so a token is never minted and
+    # verified by two builds. Digest read from the registry for the tag named after the commit;
+    # the `main` tag moves.
+    # platform 7694c99: the agent proxy refuses any path that would leave its upstream base
+    # (encoded, backslash, dot segment; T-1300, T-1301), and a service-account client id two
+    # accounts derive, or a platform client's, resolves to nobody (T-1454). On top of 2276b1f.
+    # platform 666bc7c: a notification endpoint inside the platform's networks is refused at
+    # creation and at delivery (T-1302), and a Pipeline may be v1alpha2, sources, steps and
+    # outputs (T-1468). On top of 7694c99.
+    # platform 9ced50e: the gateway serves the running workspace previews beside main, each
+    # Endpoint on a slug minted from its prefix (T-1239), and `jcctl workspace render|diff`
+    # (T-1238). On top of 666bc7c.
+    # platform 94a45ea: SensorThings Observations refuse a page deeper than the lastN cap by
+    # name instead of answering with cut rows (T-1474, GW26). On top of 9ced50e.
+    # platform 3294576: a projection's slots are described per class, so no door offers a type an
+    # attribute another type owns (T-2132), and a read is judged by the type of the answer rather
+    # than by what the broker was asked (T-2130). On top of 94a45ea.
+    # platform 446162c: a view endpoint judges the answer in the class the broker holds, so it
+    # stops answering an empty list (T-2241, my own regression from T-2130); a secret reference
+    # names a secret and never carries one, on every data source type (T-2238); the runner
+    # catalog calls a bearer token a secret (T-2239); a projection's slots are described per
+    # class (T-2132); a read is judged by the type of the answer (T-2130). On top of 94a45ea.
+    # platform b793bfc: the schema index says only that something was kept back from this caller,
+    # never which class or slot — naming a hidden attribute published what the projection exists
+    # to hide (T-2133, EP-47), and a caller who may read everything is told nothing at all.
+    # On top of 446162c.
+    # platform 01b9682: the discovery surface is narrowed like the data it describes, so a hidden
+    # name is not found instead of answering 200 where an unknown one answers 404, and an allowed
+    # type keeps its attributeDetails (T-2134); a narrowed answer carries no broker count, because
+    # the difference was the number of entities withheld (T-2131); the batch query body is narrowed
+    # like the query string it replaces, so a filter written there cannot be bisected into a hidden
+    # value (T-2259); a broker failure explains itself in the gateway's own words rather than
+    # quoting what the broker was holding (T-2260); a notification is projected per type like a
+    # read, and an answer says which types the filter rule left out (T-1862). On top of b793bfc.
+    # platform a83e794: the leak sweep reaches the space surface as well as the endpoint one, and
+    # every answer of this gateway says `Cache-Control: private, no-store` and `Vary: Authorization`
+    # itself instead of relying on the edge, so one caller's narrowed answer is never served to
+    # another (EP-26, R9, TS-19, T-2261). On top of 01b9682.
+    # platform 5454593: only the run's own mesh identity passes the proxy's second factor, so a
+    # workload of another run can no longer spend this run's budget with a token it holds
+    # (T-1477, AG-52); `jcctl export` and `jcctl import` walk with the loader's containment rule,
+    # so a symlink out of the tree reads and writes nothing outside it (T-1478, CC-08). On top of
+    # a83e794.
+    # platform 8170e32: the preview poller presents the gateway's own workload token, minted with
+    # client_credentials on the client above and held until shortly before it expires (T-1500,
+    # PF-46, AG-52). Applied together with the Portal image that requires it. On top of 5454593.
+    # platform 83c5750: jc-core carries the grid configuration as one shared type, so a
+    # Dashboard widget may be the entity grid (T-1440, SDK-30, UI-71). Nothing this workload
+    # runs changes; the pin moves because the gateway, the proxy and jc-functions are one
+    # image and their three pins are kept equal (T-2270).
+    # platform c0195bc: the gateway asks the realm for its own token where the deployment says
+    # (JC_OIDC_TOKEN_URL), not at the issuer a browser uses — a pod cannot dial this node's own
+    # ingress hostname, so no workspace preview was served at all (T-2272, PF-46, AG-52).
+    # platform ae5053a: the credential proxy presents a token of its own client on the Portal's
+    # internal listener instead of the bearer both sides held, and the pipeline-test harness
+    # mints the runner's own for the capture (T-2271, AG-52, PF-46). Applied together with the
+    # Portal image that requires it, and with the two audience mappers of this commit.
+    # platform 18585b0: the gateway refuses a notification whose `data` is not a list of entities,
+    # so a forged delivery cannot carry an entity of an unserved type past the per-type filter
+    # (T-2284); the agent proxy answers every refused credential with one sentence, so a pair of
+    # 401s no longer tells a caller which run ids are live (T-2285); and the edge cases of the
+    # identity table, the API keys, run authentication and the proxy's router came with them
+    # (T-1890 to T-1894, T-1872, T-1873).
+    digest: 'sha256:0d2b810106dbd1c98adb4d92904a8ae1b40ed679d8a32df8fd4fce337118a5b4'
+  # git-sync keeps the gateway's checkout of the configuration repository current (T-0278).
+  git-sync:
+    repository: 'registry.k8s.io/git-sync/git-sync'
+    tag: 'v4.5.0'
+    digest: 'sha256:0e64aedb0d0ae0a3bab880349a5109b2a31891d646dd61e433ca36ed220dff1f'

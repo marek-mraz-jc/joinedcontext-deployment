@@ -1,0 +1,19 @@
+---
+# Re-pin a digest with: docker buildx imagetools inspect <repository>:<tag>
+# and copy the Digest of the image index.
+keycloak:
+  db:
+  app:
+    repository: 'quay.io/keycloak/keycloak'
+    tag: '26.6.4'
+    # The keycloakx chart drops the tag when it is given a digest, so the values file
+    # keeps both by hand: `repository:tag@sha256:...` (BSI TR-03187 AR-4).
+    digest: 'sha256:0aae0de7fca85525f727d3354df17896092de8bb26ae4c12d89c77e5df8cbce4'
+  configCli:
+    repository: 'docker.io/adorsys/keycloak-config-cli'
+    tag: '6.5.1-26'
+    digest: 'sha256:1b22dfaa9ae0c71f74b0342f9221a6510f272da5def683dbba26a98e6b1b1411'
+  dbchecker:
+    repository: 'docker.io/busybox'
+    tag: '1.38'
+    digest: 'sha256:dc2d74b28e4cf8984fa52af1f39bc7c3d9c73760b41a74d629f5d11b1ab28616'

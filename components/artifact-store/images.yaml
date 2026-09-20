@@ -1,0 +1,12 @@
+---
+artifact-store:
+  store:
+    repository: 'docker.io/rustfs/rustfs'
+    tag: '1.0.0-rc.5'
+    digest: 'sha256:c36b3efea3d1e503f1a2581abd0e7611e0e5820dd30e1850a52384b3fc52bda4'
+  # The bucket bootstrap runs the S3 API from a shell; it is not a part of its own, it is a
+  # hook of the store's release.
+  bootstrap:
+    repository: 'docker.io/amazon/aws-cli'
+    tag: '2.36.40'
+    digest: 'sha256:b6aeb95d19d7f5a8cae4eb814cb16739b6b2a4f2f46f427ada6a8c9a20d9881d'

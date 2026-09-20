@@ -1,0 +1,66 @@
+---
+bases:
+  - "../../defaults/helm-defaults.yaml"
+---
+{{- $root := .Values }}
+{{- $linkerdEnabled := and ($root.global.serviceMesh.enable | default false) (eq ($root.global.serviceMesh.type | default "") "linkerd") }}
+{{- $failureAction := index ($root.global.runtimePolicies | default dict) "failureAction" | default "Audit" }}
+{{- $enabled := index ($root.global.runtimePolicies | default dict) "enabled" | default false }}
+{{- $namespace := index $root "runtime-policies" "runtime-policies" "namespace" }}
+{{- /* Operator namespaces, used to pin the reverse label-protection rules to the
+       full operator SA username. Fall back to the release namespace if the
+       component is not deployed. */}}
+{{- $cnpgOperatorNamespace := ((($root.postgres | default dict).operator | default dict).namespace | default $namespace) }}
+{{- /* These are cluster-scoped ClusterPolicy objects with fixed names, so they must
+       be created ONCE per cluster. Render them in the shared operator layer (and the
+       legacy all-in-one deployment, deployLayer ""), but NOT per instance — otherwise
+       every instance's release would fight over the same cluster-scoped resources. */}}
+{{- $layer := $root.deployLayer | default "" }}
+{{- /* The namespaces this deployment puts workloads in, collected the same way
+       components/networkpolicies resolves a component's namespace: every part of every
+       enabled component that declares one. The Pod Security policies are scoped to these,
+       so they never reach the namespaces the cluster distribution owns. */}}
+{{- $podSecurityNamespaces := list }}
+{{- range $componentName := ($root.components | default list) }}
+  {{- $componentData := index $root $componentName | default dict }}
+  {{- if not $componentData }}
+    {{- $parts := splitList "-" $componentName }}
+    {{- $camelCase := index $parts 0 }}
+    {{- range $i, $part := $parts }}
+      {{- if gt $i 0 }}
+        {{- $camelCase = printf "%s%s" $camelCase ($part | title) }}
+      {{- end }}
+    {{- end }}
+    {{- $componentData = index $root $camelCase | default dict }}
+  {{- end }}
+  {{- range $partKey, $partData := $componentData }}
+    {{- if and (kindIs "map" $partData) (hasKey $partData "namespace") }}
+      {{- $podSecurityNamespaces = append $podSecurityNamespaces (index $partData "namespace") }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- $podSecurityNamespaces = $podSecurityNamespaces | uniq | sortAlpha }}
+
+releases:
+  {{- if or (eq $layer "") (eq $layer "operators") }}
+  - name: runtime-policies
+    namespace: {{ $namespace }}
+    chart: ./charts/runtime-policies
+    createNamespace: {{ $root.global.createNamespaces }}
+    installed: {{ $enabled }}
+    values:
+      - operators:
+          enabled: true
+        cnpgOperatorNamespace: {{ $cnpgOperatorNamespace }}
+        linkerd:
+          enabled: {{ $linkerdEnabled }}
+        failureAction: {{ $failureAction }}
+        podSecurity:
+          namespaces:
+            {{- range $ns := $podSecurityNamespaces }}
+            - {{ $ns | quote }}
+            {{- end }}
+  {{- end }}
+
+commonLabels:
+  component: runtime-policies

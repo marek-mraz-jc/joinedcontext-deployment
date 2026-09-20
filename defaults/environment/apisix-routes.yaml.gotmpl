@@ -1,0 +1,2 @@
+routes:
+{{ include "jc.configFiles" (dict "components" .Values.components "file" "apisix-routes.yaml" "global" .) | nindent 2 }}

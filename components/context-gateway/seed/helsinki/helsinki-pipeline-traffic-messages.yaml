@@ -1,0 +1,16 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: traffic-messages
+  namespace: helsinki
+  title: { en: "Road works and traffic announcements in the capital region" }
+spec:
+  class: auto
+  period: 10m
+  schedule: "*/10 * * * *"
+  source:
+    dataSourceRef: { kind: DataSource, name: digitraffic-traffic-messages }
+  targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all
+  quotas:
+    maxMemoryMb: 128
+    cpuMillicores: 100

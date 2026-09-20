@@ -1,0 +1,23 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: helsinki-events
+  namespace: helsinki
+  title: { en: "Helsinki events" }
+spec:
+  contextSpaceRef: helsinki
+  slug: gx2knuus75alkjgc24kjz7llte6q5jkk
+  audience: public
+  # The one Policy this endpoint evaluates: the slice of the space it publishes (EP-14).
+  policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki:public-events
+  enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, zip, mcp]
+  # The organizer's contact line stays in the space for the city's own coordination and is
+  # served by no public endpoint (EP-61). A projection only narrows.
+  projection: { hiddenAttributes: [contactPoint] }
+  rateLimits: { requestsPerMinute: 600, burst: 50 }
+  # The catalogue entry (EP-62..EP-65): one dataset in the hel-fi catalogue, one resource per
+  # representation, and a DataStore mirror of the CSV rows reloaded on every publish run.
+  publish:
+    ckan:
+      instanceRef: { kind: CkanInstance, name: hel-fi }
+      datastore: { representation: csv, refresh: onReconcile }

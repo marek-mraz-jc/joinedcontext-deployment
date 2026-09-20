@@ -1,0 +1,50 @@
+name: image-ckan
+# The catalogue image: stock CKAN plus `ckanext-oauth2` (T-0403). Dispatch only, because the
+# Actions minutes of this private repository are metered (T-0402, T-0521) and the base image
+# changes a few times a year. Put these back when they are restored:
+#   push: { branches: [main], paths: ["images/ckan/**", ".github/workflows/image-ckan.yml"] }
+#   schedule: [{ cron: "0 4 1 * *" }]
+on:
+  workflow_dispatch:
+permissions: { contents: read, packages: write, id-token: write }
+concurrency: { group: "image-ckan", cancel-in-progress: true }
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with: { registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}" }
+      - id: push
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: images/ckan
+          file: images/ckan/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/joinedcontext-ckan:2.11.6
+            ghcr.io/${{ github.repository_owner }}/joinedcontext-ckan:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: true
+          sbom: true
+      - uses: sigstore/cosign-installer@7e8b541eb2e61bf99390e1afd4be13a184e9ebc5 # v3.10.1
+      # Signed like every image this platform deploys: the cluster's policy verifies the
+      # signature, so an unsigned catalogue image would be refused at admission (OPS-27).
+      - run: cosign sign --yes ghcr.io/${{ github.repository_owner }}/joinedcontext-ckan@${{ steps.push.outputs.digest }}
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: "ghcr.io/${{ github.repository_owner }}/joinedcontext-ckan@${{ steps.push.outputs.digest }}"
+          severity: "HIGH,CRITICAL"
+          exit-code: "1"
+          ignore-unfixed: true
+      # The digest to pin in components/ckan/images.yaml; nothing deploys until it is pinned.
+      - run: |
+          echo "pin this in components/ckan/images.yaml:" >> "$GITHUB_STEP_SUMMARY"
+          echo '```yaml' >> "$GITHUB_STEP_SUMMARY"
+          echo "    repository: 'ghcr.io/${{ github.repository_owner }}/joinedcontext-ckan'" >> "$GITHUB_STEP_SUMMARY"
+          echo "    tag: '2.11.6'" >> "$GITHUB_STEP_SUMMARY"
+          echo "    digest: '${{ steps.push.outputs.digest }}'" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"

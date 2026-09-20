@@ -1,0 +1,42 @@
+---
+# Standalone APISIX configuration (ADR-N-007): rendered into the ConfigMap
+# `apisix-standalone-config` as apisix.yaml, consumed by APISIX in
+# deployment.mode=standalone. Secrets are referenced as ${{ENV_VAR}} and injected
+# into the APISIX pod as environment variables (components/apisix/values/apisix).
+plugins: {}
+  # keycloak:
+  #   name: keycloak
+  #   description: Keycloak pass-through
+  #   plugins:
+  #     request-id: { include_in_response: true }
+
+routes: {}
+  # keycloak:
+  #   name: keycloak
+  #   upstream: keycloak-app-keycloakx-http.dev.svc.cluster.local:80
+  #   subDomain: idm
+  #   uri: '/*'
+  #   priority: 10
+  #   scheme: http
+
+domain: 'example.com'
+# Always overridden per instance (global.instanceSlug).
+realm: ''
+
+# Public edge TLS (T-0044, T-0045): the certificate covering every host APISIX answers on
+# and, on Traefik, the cipher policy of the listener in front of it.
+edge:
+  enabled: false
+  secretName: apisix-edge-tls
+  clusterIssuer: ''
+  ingressClass: ''
+  hosts: []
+
+# Service mesh integration: a Linkerd `Server` marks the APISIX data plane as the
+# public edge reachable by the ingress controller.
+serviceMesh:
+  enabled: false
+  podSelector:
+    app.kubernetes.io/name: apisix
+  dataPlanePort: 9080
+  allowUnauthenticatedIngress: false

@@ -1,0 +1,24 @@
+---
+{{- $this := .Values.postgres.cluster -}}
+{{- $global := .Values.global }}
+# - [x] Minimal Resources
+# - [x] Minimal storage
+# - [x] 1 Replica
+
+cluster:
+  instances: 1
+
+  # One instance carries the Portal, the broker, Keycloak, Gitea and CKAN. At 512Mi the
+  # kernel killed it seven times in a week, every time under a recording (a checkpoint or a
+  # broker statement on top of ~460Mi resident), and each kill took Gitea's git-sync and the
+  # Portal's reconciler lock with it. 1Gi leaves headroom on the 16 GB node.
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+  storage:
+    size: 1Gi

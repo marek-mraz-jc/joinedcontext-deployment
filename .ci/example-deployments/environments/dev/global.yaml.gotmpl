@@ -1,0 +1,107 @@
+---
+# The live `dev` cluster: single-node Hetzner k3s created by hetzner-kit (kube-hetzner).
+# The kit already ships Traefik, cert-manager (letsencrypt-prod), Kyverno, Linkerd and
+# the local-path StorageClass, so this environment only points the platform at them.
+# 8 vCPU / 15 GiB allocatable on one node -> development profile, single replicas.
+
+components:
+  - prepare
+  - secrets
+  - networkpolicies
+  - runtime-policies
+  - postgres
+  # The S3 API for everything the platform renders: schemas, compiled mappings, dumps,
+  # export bundles, app builds and the gateway's file cache (PF-29, Architecture/17).
+  # Before the Portal, whose reconciler mints a writer and a reader per Organization from
+  # the root credential both namespaces hold (T-0422).
+  - artifact-store
+  - keycloak
+  - apisix
+  # After Keycloak and the edge: the forge's init registers its OIDC login against
+  # idm.<domain> through APISIX (`gitea admin auth add-oauth` fetches the discovery document),
+  # and a fresh cluster has neither yet (T-0653). Still before the two components that read a
+  # token it mints (gitea-token-portal, gitea-token-gateway).
+  - gitea
+  - context-broker
+  - context-gateway
+  - pipeline-runner
+  # The broker a `nats` DataSource reads on dev (PL-50, T-0477).
+  - demo-feeds
+  # The credential proxy of the builder runs (AG-49); before the portal, which reads the
+  # proxy's namespace for its address and mounts the token both share.
+  - agent-runner
+  # The generator behind the LinkML editor; before the portal, which takes its address.
+  - model-tools
+  # The runtime of generated applications' functions; before the portal, which takes its address.
+  - functions
+  - portal
+  # The open-data catalogue (EP-62..67). It is the demo instance's public face, so dev
+  # carries it; other environments opt in the same way.
+  - ckan
+
+global:
+  domain: {{ env "JC_DEV_DOMAIN" | default "2.28.67.127.sslip.io" }}
+
+  instanceSlug: dev
+
+  # The URN segment of every entity on this cluster (urn:ngsi-ld:{Type}:hel.fi:{space}:{id});
+  # the gateway checks it on every write (PF-42), the realm's demo users carry it as their
+  # email domain. Moved to Helsinki with the demo data (T-0343) while the broker held no
+  # entity, so nothing was renamed.
+  orgDomain: hel.fi
+
+  # What this installation is called and what it looks like (OPS-46, UI-30, T-0342).
+  # A demo instance of the platform for the Helsinki region: the name, the colours and the
+  # languages are the only difference from any other installation, and nothing below is
+  # baked into an image. The colours are Helsinki Design System values (brand blue, bus blue,
+  # engel, black-90). The name and the mark are the platform's own, joinedcontext (owner's
+  # decision): the data is Helsinki's, the product on screen is joinedcontext.
+  branding:
+    instanceName: joinedcontext
+    shortName: joinedcontext
+    city: Helsinki
+    organisation: City of Helsinki (demo instance, not affiliated)
+    # The publisher's own domain, which is what a DCAT-AP record and a did:web name. The
+    # URN segment above is separate and stays until the demo data moves with it (T-0343).
+    orgDomain: hel.fi
+    domain: {{ env "JC_DEV_DOMAIN" | default "2.28.67.127.sslip.io" }}
+    contactEmail: {{ env "JC_DEV_CONTACT_EMAIL" | default "hello@joinedcontext.com" }}
+    licenseDefault: CC-BY-4.0
+    logo: logo.svg
+    favicon: logo.svg
+    logoSvg: |
+{{ readFile "branding/logo.svg" | indent 6 }}
+    colours:
+      primary: '#0000bf'
+      secondary: '#0072c6'
+      accent: '#ffe977'
+      background: '#ffffff'
+      text: '#1a1a1a'
+    fonts:
+      # Self-hosted or system only: nothing on a page fetches from a third-party origin.
+      heading: HelsinkiGrotesk, system-ui, sans-serif
+      body: system-ui, sans-serif
+    # English only, for now, by the owner's decision: the Portal ships no Finnish or Swedish
+    # bundle, so offering them showed a switcher that fell back to another language. The
+    # Portal and the catalogue both take this block.
+    languages:
+      default: en
+      offered:
+        - en
+
+  profile: development
+
+  serviceMesh:
+    # Traefik is installed by the kit outside the mesh and has no Linkerd identity,
+    # so the APISIX data-plane edge must accept plaintext traffic from it.
+    allowUnauthenticatedIngress: true
+
+  ingress:
+    enabled: true
+    clusterIssuer: 'letsencrypt-prod'
+    ingressClass: 'traefik'
+
+  storage:
+    storageClass:
+      rwo: 'local-path'
+      loc: 'local-path'

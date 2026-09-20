@@ -1,0 +1,30 @@
+---
+{{- $this := .Values.postgres.databases -}}
+{{- $global := .Values.global }}
+{{- $images := index .Values.images "postgres" }}
+
+cluster:
+  name: {{ .Values.postgres.cluster.name }}
+
+roleJob:
+  image: {{ index $images "roleJob" "repository" }}@{{ index $images "roleJob" "digest" }}
+
+# The role-setup Job is a workload like any other and the cluster's Kyverno policies judge it:
+# drop-all-capabilities, require-ro-rootfs and require-run-as-nonroot all refused it while it
+# carried no securityContext, and `dev-apply` failed on the post-upgrade hook (T-0419).
+securityDefaults:
+  podSecurityContext:
+    {{ .Values.securityDefaults.podSecurityContext | toYaml | nindent 4 }}
+  securityContext:
+    {{ .Values.securityDefaults.securityContext | toYaml | nindent 4 }}
+
+databases:
+{{- range $component, $config := .Values.databases }}
+  {{- if eq $config.embedded true }}
+  {{ $component }}:
+    name: "{{ $config.name }}"
+    user: "{{ $config.user }}"
+    extensions: {{ index $config "extensions" | toYaml | nindent 6 }}
+    additionalRoles: {{ index $config "additionalRoles" | toYaml | nindent 6 }}
+  {{- end }}
+{{- end }}

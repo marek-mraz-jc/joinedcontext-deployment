@@ -1,0 +1,137 @@
+---
+context-gateway:
+  podSelector:
+    app.kubernetes.io/name: context-gateway-gateway
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: apisix
+          componentNamespace: apisix
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: pipeline-runner-runner
+          componentNamespace: pipeline-runner
+      ports:
+        - protocol: TCP
+          port: 8080
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: context-broker-broker
+          componentNamespace: context-broker
+      ports:
+        - protocol: TCP
+          port: 9090
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: keycloak-app
+          componentNamespace: keycloak
+      ports:
+        - protocol: TCP
+          port: 8080
+    # The running workspace previews, read from the Portal's internal listener
+    # (Architecture/06 §7.2); the other half is portal-internal-from-context-gateway.
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: portal-portal
+          componentNamespace: portal
+      ports:
+        - protocol: TCP
+          port: 9090
+    # The git-sync sidecar clones the configuration repository out of the forge (T-0278).
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: gitea
+              app.kubernetes.io/instance: gitea-forge
+          componentNamespace: gitea
+      ports:
+        - protocol: TCP
+          port: 3000
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # A notification leaves the platform here (R46). The subscriber's address is user data:
+    # it arrives in a subscription and no manifest in this repository can name it, so the
+    # allowance is written as what it is, public addresses on the two ports a webhook uses.
+    # Port 80 is what the dispatcher speaks today; 443 is there for the moment it speaks TLS.
+    # Every private range is excepted, so a subscription cannot steer the gateway back into
+    # the cluster, at the node, or at a cloud metadata service: a subscriber that lives in
+    # this cluster needs its own rule naming its pods, which is visible rather than implied.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              - 169.254.0.0/16
+              - 127.0.0.0/8
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 443
+
+# The delivery path, and the only peer that may use it (R46, PL-23).
+#
+# `POST /api/endpoint/{slug}/egress/notifications` is the one gateway surface that carries
+# no token: the broker calling it has none to present. Who may reach it is therefore a
+# network question rather than a PEP one, and this policy is the answer: the broker, and
+# nothing else. It is a policy of its own rather than another peer on the rule above so
+# that the peer set of the delivery path is one object with a name, which a reader and a
+# test can both point at.
+#
+# What a NetworkPolicy can say here is which pods reach the port; it cannot see the path,
+# and the gateway serves everything on 8080. The path-level half is the gateway's own: the
+# stored subscription decides both the projection and the target, so a forged delivery can
+# neither widen what is sent nor choose where it goes.
+context-gateway-notification-egress:
+  podSelector:
+    app.kubernetes.io/name: context-gateway-gateway
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: context-broker-broker
+          componentNamespace: context-broker
+      ports:
+        - protocol: TCP
+          port: 8080
+
+# The gateway reads the running workspace previews from the Portal's internal listener
+# (Architecture/06 §7.2). The list holds manifests with `secretRef`s and no secret, and this
+# policy is who may ask for it: the gateway and nothing else.
+portal-internal-from-context-gateway:
+  componentNamespace: portal
+  podSelector:
+    app.kubernetes.io/name: portal-portal
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: context-gateway-gateway
+          componentNamespace: context-gateway
+      ports:
+        - protocol: TCP
+          port: 9090

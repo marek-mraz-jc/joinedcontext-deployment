@@ -1,0 +1,59 @@
+# The gallery card of the application builder (AP-56, T-0524): "Generate your own app" in the
+# Portal starts an agent run of the `app-builder` profile (POST …/agent-runs), and the form shows
+# only where this Blueprint exists. The template is the App manifest a run files once the app
+# is built, so a Flows run of this card yields the same manifest by hand.
+#
+# The contract every generated app has to meet (ADR-N-019, AP-23, AP-40), stated here where
+# the builder and its reviewer both read it:
+#   - the app is served behind the platform edge under /apps/{name}/;
+#   - the signed-in person arrives as X-Userinfo (base64 JSON); every endpoint call carries
+#     X-Access-Token; a write without it is answered 401;
+#   - no login, session, OIDC, PKCE or token-refresh code, and no OIDC library;
+#   - it listens on JC_BIND_ADDRESS and serves /healthz;
+#   - apps/air-quality in the Portal repository is the model.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Blueprint
+metadata:
+  name: app-from-prompt
+  namespace: org
+  title: { en: "An application from a prompt", fi: "Sovellus kehotteesta" }
+  description:
+    en: "Describe what the app should show; the builder reads the endpoint's schema and writes it. The app runs behind the edge login: it reads X-Userinfo, calls its endpoint with X-Access-Token, and carries no login, session or token code of its own."
+spec:
+  version: 1.0.0
+  category: application
+  riskClass: yellow
+  allowedRoles: [portal-approver]
+  parameterSchema:
+    type: object
+    required: [name, kind, prompt, endpoint]
+    additionalProperties: false
+    properties:
+      name: { type: string, title: "App name", pattern: "^[a-z][a-z0-9-]{1,40}$", description: "The path the app is served at: /apps/{name}/." }
+      kind: { type: string, title: "How it is built and served", enum: [static, service, fullstack], default: static }
+      prompt: { type: string, title: "What should the app do", minLength: 10, maxLength: 2000 }
+      endpoint: { type: string, title: "Endpoint it reads", pattern: "^[a-z][a-z0-9-]{1,60}$", description: "An Endpoint of this project; the app reads only what it publishes (AP-44)." }
+      contextSpace: { type: string, title: "Context Space behind the endpoint", pattern: "^[a-z][a-z0-9-]{1,60}$", default: helsinki }
+  templates:
+    - name: app
+      template: |
+        apiVersion: joinedcontext.com/v1alpha1
+        kind: App
+        metadata:
+          name: "{{ name }}"
+          title: { en: "{{ name }}" }
+          annotations:
+            joinedcontext.com/prompt: "{{ prompt }}"
+            joinedcontext.com/endpoint: "{{ endpoint }}"
+        spec:
+          kind: "{{ kind }}"
+          source:
+            path: "apps/{{ name }}"
+          build: { node: "22" }
+          visibility: organization
+          lifecycle: draft
+          dataNeeds:
+            - contextSpaceRef: { kind: ContextSpace, name: "{{ contextSpace }}" }
+              types: []
+              attrs: []
+              operations: [queryEntity, retrieveEntity]

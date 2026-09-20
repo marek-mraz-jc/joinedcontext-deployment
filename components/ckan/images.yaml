@@ -1,0 +1,29 @@
+---
+# Three images, one release: CKAN itself, the Solr the CKAN project ships with CKAN's own
+# schema already loaded, and a Redis for the cache and the job queue. Re-pin a digest with:
+#   T=$(curl -s "https://auth.docker.io/token?service=registry.docker.io&scope=repository:<repo>:pull" | jq -r .token)
+#   curl -sI -H "Authorization: Bearer $T" \
+#     -H 'Accept: application/vnd.oci.image.index.v1+json' \
+#     https://registry-1.docker.io/v2/<repo>/manifests/<tag> | grep -i docker-content-digest
+ckan:
+  catalogue:
+    # The stock image, because the patched one this repository builds cannot be pulled by the
+    # node: `images/ckan/Dockerfile` is CKAN plus the OIDC authenticator a Keycloak login needs
+    # and `.github/workflows/image-ckan.yml` publishes it as
+    # ghcr.io/marek-mraz/joinedcontext-ckan:2.11.6@sha256:96433e6763d32bae146e630ed63d8ff34567efee1605638dda5bca0c70a3d7b5,
+    # signed, but a package of a private repository is private and an anonymous pull answers 401
+    # (T-0403). This pin and `global.ckan.sso` travel together: the plugin list names `oidc_pkce`
+    # only when the flag is on, and CKAN exits on a plugin it cannot import.
+    repository: 'docker.io/ckan/ckan-base'
+    tag: '2.11.6'
+    digest: 'sha256:fc040c5b1e6e04de76187b478b3037c8c6c4e97ef4b7f1c03cbc6b0008e04ce7'
+  solr:
+    # A plain Solr cannot index CKAN: the collection needs CKAN's schema, and this image is
+    # the one that carries it. Its minor version tracks the CKAN one above.
+    repository: 'docker.io/ckan/ckan-solr'
+    tag: '2.11-solr9'
+    digest: 'sha256:ef8e5d3e6be1678cfe50ceb14a8ebf16c36d44aac2de1086a285ce6807af64e6'
+  redis:
+    repository: 'docker.io/library/redis'
+    tag: '7-alpine'
+    digest: 'sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf'

@@ -1,0 +1,7 @@
+---
+component: keycloak
+parts:
+  - name: app
+  - name: config
+    needs:
+      - keycloak.app

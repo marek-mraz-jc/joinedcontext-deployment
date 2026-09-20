@@ -1,0 +1,11 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: ContextSpace
+metadata:
+  name: ovzdusie
+  namespace: banskabystrica
+  title: { sk: "Ovzdušie", en: "Air quality" }
+spec:
+  # Pinned so no entity id changes: the space predates rendered segments (PF-84).
+  urnSegment: ovzdusie
+  isSandbox: false
+  defaultLocale: sk

@@ -1,0 +1,14 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: helsinki-news
+  namespace: helsinki
+  title: { en: "Helsinki city news" }
+spec:
+  contextSpaceRef: helsinki
+  slug: t2vph7knk35vyjoxzqwhjldnls6nhcmj
+  audience: public
+  # The one Policy this endpoint evaluates: the slice of the space it publishes (EP-14).
+  policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki:public-news
+  enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, zip, mcp]
+  rateLimits: { requestsPerMinute: 600, burst: 50 }

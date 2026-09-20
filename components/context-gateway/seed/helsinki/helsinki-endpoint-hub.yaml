@@ -1,0 +1,17 @@
+# One door over two spaces. An ordinary Endpoint in every respect — the same slug, the same
+# policy set, the same representations — and what differs is only what its broker tenant holds
+# (EP-70). The MCP representation is why the hub exists at all for an assistant: one connector,
+# one dataset, and a `jc:source` on every answer saying which city system said what (EP-71).
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: helsinki-hub
+  namespace: helsinki
+  title: { en: "Helsinki, all of it" }
+spec:
+  contextSpaceRef: helsinki-hub
+  slug: hub7kq3zr5mx2vwt6nbc4pjd7fgs3a2y
+  audience: public
+  policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki-hub:public-hub
+  enabledRepresentations: [ngsi-ld, geojson, csv, mcp]
+  rateLimits: { requestsPerMinute: 300, burst: 50 }

@@ -1,0 +1,27 @@
+---
+operators:
+  enabled: true
+
+# Namespaces the operators run in — used to build the full service-account
+# username (system:serviceaccount:<ns>:<name>) the reverse label-protection
+# rules pin to. Supplied by the helmfile; empty falls back to .Release.Namespace.
+cnpgOperatorNamespace: ''
+
+linkerd:
+  enabled: true
+
+# Kyverno failureAction for all policies: Audit (log only) or Enforce (block)
+failureAction: Audit
+
+# Pod Security Standards (T-0008, OPS-29, OPS-30). The policies are the vendored upstream
+# copies in files/upstream; `namespaces` is supplied by the helmfile and is every namespace
+# this deployment puts workloads in. Empty means the policies are not rendered at all —
+# a policy matching every namespace would judge the cluster distribution's own components.
+podSecurity:
+  enabled: true
+  namespaces: []
+  policies:
+    - require-drop-all
+    - require-ro-rootfs
+    - require-run-as-non-root-user
+    - require-run-as-nonroot

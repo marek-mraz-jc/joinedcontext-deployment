@@ -1,0 +1,11 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Policy
+metadata:
+  name: conformance-write
+  namespace: banskabystrica
+  title: { sk: "Zápis konformančnej sady", en: "Conformance suite writes" }
+spec:
+  contextSpaceRef: { kind: ContextSpace, name: ovzdusie }
+  assigner: did:web:banskabystrica.sk
+  assignee: { kind: serviceAccount, id: conformance }
+  operations: [redirectionOps, createBatch, deleteBatch, queryBatch]

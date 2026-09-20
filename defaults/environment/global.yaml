@@ -1,0 +1,214 @@
+---
+# Internal orchestration flag (do not edit here). Set by the dedicated entrypoints:
+#   ""         -> deploy everything in one pass (legacy single-instance behaviour)
+#   "operators"-> only the shared cluster operators (deployment/helmfile-operators.yaml)
+#   "instance" -> everything except the operators (deployment/helmfile-instance.yaml.gotmpl)
+deployLayer: ''
+
+global:
+  # The DNS domain for all services
+  # e.g. this would build the keycloak domain: idm.joinedcontext.test
+  domain: joinedcontext.test
+
+  # Unique identifier for this deployment instance (used as namespace and keycloak realm)
+  instanceSlug: dev
+
+  # The organization's own DNS name: the org-domain segment of every entity URN
+  # (urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}), which the Context Gateway checks on
+  # every write (PF-42). Not the platform's domain above.
+  orgDomain: joinedcontext.test
+
+  # Email of the initial user with admin rights
+  initialUserEmail: admin@joinedcontext.test
+
+  # The one repository that holds this installation's configuration (CC-02, CC-08). The Portal
+  # proposes and merges into it and the Context Gateway projects its endpoint table from a
+  # checkout of it, so both of them read the name from here rather than carrying one of their
+  # own (OPS-46). The gitea component creates it, and the organization above it, on the first
+  # apply; nothing else in the platform may assume a different name.
+  configRepo:
+    owner: joinedcontext
+    name: configuration
+    branch: main
+
+  # Deployment profile: "development" or "production"
+  # Controls resource limits, replica counts, scaling
+  profile: development
+
+  # Whether Helmfile should create the namespaces automatically
+  createNamespaces: true
+
+  # Namespace strategy:
+  #   true  = all components in a single namespace (e.g. "dev")
+  #   false = each component in its own namespace (e.g. "dev-postgres", "dev-keycloak")
+  singleNamespace: true
+
+  # Shared cluster operators (CloudNativePG).
+  # Enables running the operators ONCE per cluster while deploying arbitrarily
+  # many instances.
+  operators:
+    # Namespace for the shared cluster operators. Override it per environment by setting
+    # this key in deployment/environments/<env>/global.yaml.gotmpl; both the operator and
+    # the instance entrypoints read the same value, so they always agree.
+    #   "" (this default):
+    #     - multi-instance (deploy-operators / deploy-instance) -> resolves to the
+    #       built-in default namespace "jc-operators"
+    #     - legacy all-in-one deployment                        -> operators run in the
+    #       instance namespace (single-instance behaviour)
+    #   "<name>": use this exact namespace for the shared operators.
+    # With multiple instances on the cluster it must differ from every instanceSlug
+    # (else destroying that instance tears down the shared operators). For a single
+    # instance, setting it to that instanceSlug is fine (operators + instance in one namespace).
+    namespace: ''
+    # true -> operators watch ALL namespaces (CNPG clusterWide),
+    # so a single operator deployment serves every instance on the cluster.
+    # The operator entrypoint sets this automatically; leave it false here.
+    watchAllNamespaces: false
+
+  # The catalogue's Keycloak login (T-0403, OPS-26). It is a global flag and not a value of the
+  # component alone, because two files turn on together: the CKAN release, which loads
+  # `ckanext-oidc-pkce` and needs the image that carries it, and the NetworkPolicy that lets the
+  # catalogue reach the realm on 443. One is useless without the other.
+  ckan:
+    # Off until the image the login needs can be pulled: `ghcr.io/marek-mraz/joinedcontext-ckan`
+    # is published by this repository, which is private, so the package is private too and the
+    # node's anonymous pull is a 401 (T-0403). Turning this on without a pullable image is a
+    # CKAN that never starts; the pair is checked by `test_the_plugin_list_and_the_image_cannot_disagree`.
+    sso: false
+
+  # Service mesh configuration
+  serviceMesh:
+    enable: true
+    type: linkerd
+    # Auto-inject Linkerd sidecars into namespaces
+    patchNamespaces: true
+    # mTLS enforcement level, applied as the namespace's Linkerd
+    # `config.linkerd.io/default-inbound-policy` annotation:
+    #   all-unauthenticated   - opportunistic mTLS (Linkerd default): meshed-to-meshed
+    #                           traffic is encrypted, but plaintext/unmeshed inbound is
+    #                           still accepted.
+    #   cluster-authenticated - mandatory mTLS: only authenticated, meshed clients from
+    #                           within this cluster may connect (recommended).
+    #   all-authenticated     - mandatory mTLS from any valid mesh identity.
+    #   audit                 - log-only; reports what *would* be denied without enforcing
+    #                           (use as a safe rollout step before switching to enforce).
+    # Kubelet liveness/readiness probes are auto-authorized by Linkerd regardless of this
+    # setting. Genuinely public/unmeshed edges (the APISIX data plane behind the ingress)
+    # are carved out explicitly via Linkerd `Server` policies, so mandatory mTLS does not
+    # break ingress.
+    defaultInboundPolicy: cluster-authenticated
+    # Whether the cluster's ingress controller may reach the APISIX data
+    # plane WITHOUT mTLS. This drives the `accessPolicy` of the APISIX `Server`:
+    #   true  - ingress is unmeshed; the data-plane edge is `all-unauthenticated`
+    #           so plaintext ingress traffic is accepted.
+    #   false - the ingress controller is meshed; ingress->APISIX is mTLS, so the
+    #           data-plane edge is `all-authenticated` and rejects plaintext (default).
+    # Defaults to mandatory mTLS on the ingress edge: the ingress controller
+    # must be meshed (Linkerd-injected). Environments with an unmeshed ingress
+    # (e.g. the CI vcluster, whose ingress lives in the host cluster) must override
+    # this to true.
+    allowUnauthenticatedIngress: false
+
+  ingress:
+    # Whether this environment is published behind an ingress controller. Off by default:
+    # a cluster without one has nothing to issue the edge certificate for.
+    enabled: false
+    # Use your available cluster issuer for production, e.g. 'letsencrypt-prod'
+    clusterIssuer: 'selfsigned-ca'
+    ingressClass: 'nginx'
+
+  # Storage class mappings (leave empty to use cluster defaults)
+  storage:
+    storageClass:
+      # ReadWriteOnce (databases)
+      rwo: ''
+      # ReadWriteMany (shared volumes, currently not used)
+      rwx: ''
+      # Local storage
+      loc: ''
+
+  # What this installation is called and what it looks like (OPS-46, UI-30).
+  # Every name, colour, logo and contact a user sees comes from here; no chart, image or
+  # template carries a city literal. The Portal serves it at GET /api/v1/branding and the
+  # CKAN theme renders the same block, so a rebrand is a values change and an apply.
+  # Colours are hex triplets or sextets: they reach a browser as CSS custom properties.
+  branding:
+    instanceName: joinedcontext
+    shortName: joinedcontext
+    city: ''
+    organisation: ''
+    orgDomain: ''
+    domain: ''
+    contactEmail: ''
+    licenseDefault: CC-BY-4.0
+    # File names, never URLs: both are served from the platform's own origin.
+    logo: ''
+    favicon: ''
+    # The logo file itself, so one values block carries the whole identity and every
+    # consumer (Portal, CKAN) mounts the same bytes. Empty means no logo.
+    logoSvg: ''
+    colours:
+      primary: '#1d4ed8'
+      secondary: '#0f766e'
+      accent: '#f59e0b'
+      background: '#ffffff'
+      text: '#0f172a'
+    fonts:
+      heading: system-ui, sans-serif
+      body: system-ui, sans-serif
+    languages:
+      default: en
+      offered:
+        - en
+
+  # Prometheus metrics scraping
+  metrics:
+    enabled: false
+
+  # Kyverno runtime policy enforcement mode
+  # Audit: log violations only; Enforce: block violating resources
+  runtimePolicies:
+    enabled: true
+    failureAction: Enforce
+
+# List of components to deploy (order matters for dependencies)
+# To "disable" a component, remove it from the list.
+# To add custom components/addons, add them to the list.
+# This is not under the "global" key, but its own root key!
+components:
+  - prepare
+  - secrets
+  - networkpolicies
+  - runtime-policies
+  - postgres
+  # The S3 API for everything the platform renders: schemas, compiled mappings, dumps, export
+  # bundles, app builds and the gateway's file cache (PF-29, PF-30, Architecture/17).
+  - artifact-store
+  - keycloak
+  - apisix
+  # After Keycloak and the edge: the forge's init registers its OIDC login against
+  # idm.<domain> through APISIX (`gitea admin auth add-oauth` fetches the discovery document),
+  # and a fresh cluster has neither yet (T-0653). Still before the two components that read a
+  # token it mints: its bootstrap Job creates the configuration repository and writes
+  # `gitea-token-portal` and `gitea-token-gateway`, and a pod whose `secretKeyRef` names a
+  # Secret that does not exist yet stays in CreateContainerConfigError until it does. It
+  # recovers on its own, but a first apply that looks broken for a minute is a first apply
+  # people debug.
+  - gitea
+  - context-broker
+  - pipeline-runner
+  - context-gateway
+  # The generator behind the LinkML editor; before the portal, which takes its address.
+  - model-tools
+  - portal
+  # After the portal: the collector posts activity events to it and takes its token from
+  # Keycloak, so both have to exist before it is worth starting.
+  - observability
+  # Ships the audit stream of the gateway, Keycloak and the forge to append-only storage
+  # (OPS-42). It reads the node's log files, so it needs nothing above it to be running.
+  - audit-logging
+  # Deletes sandbox namespaces past their Time-To-Live (OPS-44, PF-19). It reads namespaces
+  # rather than any component above it, so its position in this list does not matter.
+  - sandbox-reaper
+  # Last on purpose: it scrapes the components above, so it is rendered once they are known.
+  - monitoring

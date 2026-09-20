@@ -1,0 +1,90 @@
+name: reusable gitleaks
+# Secret detection over the whole history of every repository of the platform (OPS-37, CC-06,
+# TS-24). gitleaks is installed by release and verified by checksum, the way an image is
+# pinned by digest.
+#
+# The ruleset below is a copy of `.ci/shared/gitleaks.toml` and
+# `tests/test_reusable_workflows.py` fails when the two drift; a repository with its own
+# `.gitleaks.toml` uses that one instead.
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "gitleaks release"
+        type: string
+        default: "8.29.0"
+      checksum:
+        description: "sha256 of the linux x64 tarball of that release"
+        type: string
+        default: "39e07ad810336fd0ae80d0bd61c60d0521f628173e7583583b5df4a38738522c"
+permissions: { contents: read }
+jobs:
+  gitleaks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # The whole history: a credential deleted in the last commit is still a credential.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with: { fetch-depth: 0 }
+      - name: install gitleaks
+        env:
+          VERSION: "${{ inputs.version }}"
+          CHECKSUM: "${{ inputs.checksum }}"
+        run: |
+          set -eu
+          curl -sSLo gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz"
+          echo "${CHECKSUM}  gitleaks.tar.gz" | sha256sum --check --status
+          tar xzf gitleaks.tar.gz gitleaks
+          sudo install -m 0755 gitleaks /usr/local/bin/gitleaks
+          rm -f gitleaks.tar.gz gitleaks
+      - name: the platform ruleset, for a repository that ships none
+        run: |
+          if [ -f .gitleaks.toml ]; then
+            echo "using this repository's own .gitleaks.toml"
+            exit 0
+          fi
+          cat > .gitleaks.toml <<'JCLEAKS'
+          # The secret patterns every repository of the platform is scanned for (OPS-37, CC-06, TS-24).
+          # `useDefault` keeps gitleaks' own ruleset and adds the four shapes this platform produces and
+          # its own rules would otherwise miss.
+          #
+          # The copy embedded in `.github/workflows/reusable-gitleaks.yml` is generated from this file
+          # and `tests/test_reusable_workflows.py` fails when the two drift.
+          [extend]
+          useDefault = true
+
+          [[rules]]
+          id = "jc-keycloak-client-secret"
+          description = "Keycloak client secret"
+          # Keycloak writes client secrets as a 32-character UUID-shaped or base64 string. Every one of
+          # them belongs in a Secret the reconciler resolves by `secretRef`, never in Git (CC-06).
+          regex = '''(?i)client[_-]?secret["'\s:=]+([A-Za-z0-9_\-+/]{20,})'''
+          secretGroup = 1
+          keywords = ["client_secret", "clientSecret", "client-secret"]
+
+          [[rules]]
+          id = "jc-argon2id-hash"
+          description = "Argon2id password hash"
+          # A hash is not a password, but the ones this platform writes are Keycloak and Gitea admin
+          # credentials at rest, and an offline attack on a committed hash is a real attack.
+          regex = '''\$argon2id\$v=\d+\$m=\d+,t=\d+,p=\d+\$[A-Za-z0-9+/]+\$[A-Za-z0-9+/]+'''
+          keywords = ["argon2id"]
+
+          [[rules]]
+          id = "jc-age-secret-key"
+          description = "age secret key (SOPS)"
+          # The SOPS identity that decrypts every environment secret of a deployment.
+          regex = '''AGE-SECRET-KEY-1[0-9A-Z]{58}'''
+          keywords = ["AGE-SECRET-KEY-1"]
+
+          [[rules]]
+          id = "jc-jwt-bearer-token"
+          description = "JWT bearer token"
+          # An audience-bound access token is short-lived, and a committed one is still a live
+          # credential for as long as it lives, plus a map of the claims the issuer hands out.
+          regex = '''eyJ[A-Za-z0-9_\-=]{8,}\.eyJ[A-Za-z0-9_\-=]{8,}\.[A-Za-z0-9_\-+/=]{8,}'''
+          keywords = ["eyJ"]
+          JCLEAKS
+      # `detect` reads the git history; the config it just wrote is untracked and not scanned.
+      - run: gitleaks detect --config .gitleaks.toml --verbose --redact --exit-code 1

@@ -1,0 +1,17 @@
+---
+{{- $this := .Values.keycloak.app }}
+{{- $global := .Values.global }}
+# Checklist:
+# - [x] Minimal Resources
+# - [x] Minimal storage -> not applicable, uses external database
+# - [x] 1 Replica
+
+replicas: 1
+
+resources:
+  requests:
+    cpu: "500m"
+    memory: "1024Mi"
+  limits:
+    cpu: "1000m"
+    memory: "2048Mi"

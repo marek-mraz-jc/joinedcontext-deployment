@@ -1,0 +1,32 @@
+---
+grafana:
+  # The committed dashboards, as one ConfigMap the Grafana release mounts by name.
+  dashboards:
+    enabled: false
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "grafana") }}
+    configMapName: grafana-dashboards
+    provider: platform
+
+  grafana:
+    # Off until a Prometheus is named. The component's whole purpose is drawing a time series
+    # somebody already collects; an addon with an empty datasource is a login page in front of
+    # four panels that all say "No data" (OPS-16).
+    enabled: false
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "grafana") }}
+
+    # The Prometheus that scrapes this installation, as a URL reachable from inside the
+    # cluster. This repository deploys no Prometheus: the monitoring component renders the
+    # scrape configuration and the alert rules for an Operator that is already there
+    # (components/monitoring/README.md), and this is the same Prometheus read back.
+    prometheusUrl: ''
+
+    # The namespace the Prometheus above runs in, for the egress policy. A URL is a name the
+    # policy cannot read, so the one hop out of this namespace is named separately.
+    prometheusNamespace: 'monitoring'
+    prometheusPort: 9090
+
+    # Grafana keeps its own state — the session of a logged-in operator, the starred
+    # dashboards — in an embedded database. Everything this component provisions comes from
+    # ConfigMaps at start-up, so the state that is lost with the pod is the state nobody
+    # authored, and a volume is one more thing to back up for nothing.
+    persistence: false

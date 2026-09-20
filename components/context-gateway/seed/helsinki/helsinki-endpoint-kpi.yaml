@@ -1,0 +1,17 @@
+# The one door of the indicator space: pipelines write indicators through it with the
+# runner's service account, people, dashboards and the open web read them (PL-45).
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: helsinki-kpi
+  namespace: helsinki
+  title: { en: "Helsinki indicators" }
+spec:
+  contextSpaceRef: helsinki-kpi
+  slug: kpi4h6q2wz7xr3nv5tj6pb3mydk2s4fa
+  # Public: the indicators are open data, and the gateway synthesises the `public` role
+  # only on a public endpoint, so the kpi-read grant (role public) applies to a signed-in
+  # steward and a dashboard alike (EP-16, GW22). On an organization endpoint nobody held it.
+  audience: public
+  enabledRepresentations: [ngsi-ld, csv, json]
+  rateLimits: { requestsPerMinute: 300, burst: 50 }

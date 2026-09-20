@@ -1,0 +1,7 @@
+---
+component: apisix
+parts:
+  - name: configuration
+  - name: apisix
+    needs:
+      - apisix.configuration

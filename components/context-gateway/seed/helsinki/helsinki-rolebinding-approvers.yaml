@@ -1,0 +1,15 @@
+# The demo approver (DEMO.md, components/keycloak/demo-users.yaml) approves across the
+# organization and proposes nothing, so a change the steward proposes is approved by another
+# person on camera (CC-34). The Keycloak realm role `portal-approver` only names the person;
+# what they may do is this binding (PF-50, PF-56).
+apiVersion: joinedcontext.com/v1alpha1
+kind: RoleBinding
+metadata:
+  name: approvers
+  namespace: org
+spec:
+  subjects:
+    - user: demo.approver@hel.fi
+  role: approver
+  scope:
+    organization: hel

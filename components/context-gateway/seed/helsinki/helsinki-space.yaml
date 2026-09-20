@@ -1,0 +1,13 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: ContextSpace
+metadata:
+  name: helsinki
+  namespace: helsinki
+  title: { en: "Helsinki city context", fi: "Helsingin kaupunkikonteksti" }
+  description:
+    en: "Today's events, the city bike stations and the buses of four trunk lines, in one space"
+spec:
+  # Pinned so no entity id changes: the space predates rendered segments (PF-84).
+  urnSegment: helsinki
+  isSandbox: false
+  defaultLocale: en

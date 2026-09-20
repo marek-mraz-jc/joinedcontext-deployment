@@ -1,0 +1,29 @@
+# The mapping of the citybikes-gbfs-info pipeline (PL-03): the static half of a station, name
+# and position, from the GBFS station_information feed once a day. The reconciler renders the
+# poll of the hsl-citybikes-gbfs-info DataSource in front and the endpoint upsert after (PL-39,
+# PL-16).
+
+pipeline:
+  processors:
+    - mapping: |
+        root = this.data.stations
+    - unarchive:
+        format: json_array
+
+    - mapping: |
+        let domain = env("JC_ORG_DOMAIN")
+        let id = "urn:ngsi-ld:%v:%v:%v:%v".format(
+          "BikeHireDockingStation", $domain, env("JC_SPACE"), this.station_id)
+        root = {
+          "id": $id,
+          "type": "BikeHireDockingStation",
+          "name": { "type": "LanguageProperty", "languageMap": { "fi": this.name.string() } },
+          "location": {
+            "type": "GeoProperty",
+            "value": { "type": "Point", "coordinates": [ this.lon.number(), this.lat.number() ] }
+          },
+          "source": { "type": "Property", "value": "https://www.hsl.fi/en/citybikes" }
+        }
+
+    - archive:
+        format: json_array

@@ -1,0 +1,18 @@
+.idea
+tests/.venv
+/deployment
+.env
+.gitlab-ci-local/
+__pycache__/
+.secrets/
+dev-deployment/.ssl/jc.key
+dev-deployment/.ssl/jc.crl
+dev-deployment/.ssl/jc.crl.pem
+dev-deployment/.ssl/index.txt*
+dev-deployment/.ssl/crlnumber*
+
+# Agent worktrees, never part of the repository
+.claude/
+
+# pytest leaves this behind when the suite runs in the checkout
+.pytest_cache/

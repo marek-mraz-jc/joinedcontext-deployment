@@ -1,0 +1,166 @@
+{
+  "@context": {
+    "@vocab": "https://smartdatamodels.org/",
+    "Alert": {
+      "@id": "sdm:Alert"
+    },
+    "BikeHireDockingStation": {
+      "@id": "sdm:BikeHireDockingStation"
+    },
+    "Entity": {
+      "@id": "ngsi-ld:Entity"
+    },
+    "Event": {
+      "@id": "sdm:Event"
+    },
+    "NewsArticle": {
+      "@id": "schema:NewsArticle"
+    },
+    "Vehicle": {
+      "@id": "sdm:Vehicle"
+    },
+    "WeatherObserved": {
+      "@id": "sdm:WeatherObserved"
+    },
+    "address": {
+      "@id": "schema:address"
+    },
+    "availableBikeNumber": {
+      "@id": "sdm:availableBikeNumber",
+      "@type": "xsd:integer"
+    },
+    "category": {
+      "@id": "sdm:category"
+    },
+    "contactPoint": {
+      "@id": "schema:contactPoint"
+    },
+    "dateIssued": {
+      "@id": "sdm:dateIssued",
+      "@type": "xsd:dateTime"
+    },
+    "dateModified": {
+      "@id": "sdm:dateModified",
+      "@type": "xsd:dateTime"
+    },
+    "dateObserved": {
+      "@id": "sdm:dateObserved",
+      "@type": "xsd:dateTime"
+    },
+    "datePublished": {
+      "@id": "schema:datePublished",
+      "@type": "xsd:dateTime"
+    },
+    "description": {
+      "@container": "@language",
+      "@id": "schema:description"
+    },
+    "endDate": {
+      "@id": "schema:endDate",
+      "@type": "xsd:dateTime"
+    },
+    "eventStatus": {
+      "@id": "schema:eventStatus"
+    },
+    "fleetVehicleId": {
+      "@id": "sdm:fleetVehicleId"
+    },
+    "freeSlotNumber": {
+      "@id": "sdm:freeSlotNumber",
+      "@type": "xsd:integer"
+    },
+    "geojson": "https://purl.org/geojson/vocab#",
+    "heading": {
+      "@id": "sdm:heading",
+      "@type": "xsd:float"
+    },
+    "id": "@id",
+    "image": {
+      "@id": "schema:image",
+      "@type": "xsd:anyURI"
+    },
+    "linkml": "https://w3id.org/linkml/",
+    "location": {
+      "@id": "geojson:geometry"
+    },
+    "name": {
+      "@container": "@language",
+      "@id": "schema:name"
+    },
+    "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
+    "observedAt": {
+      "@id": "ngsi-ld:observedAt",
+      "@type": "xsd:dateTime"
+    },
+    "precipitation": {
+      "@id": "sdm:precipitation",
+      "@type": "xsd:float"
+    },
+    "relativeHumidity": {
+      "@id": "sdm:relativeHumidity",
+      "@type": "xsd:float"
+    },
+    "roadSurfaceTemperature": {
+      "@id": "sdm:roadSurfaceTemperature",
+      "@type": "xsd:float"
+    },
+    "route": {
+      "@id": "sdm:route"
+    },
+    "schema": "http://schema.org/",
+    "sdm": "https://smartdatamodels.org/",
+    "shex": "http://www.w3.org/ns/shex#",
+    "source": {
+      "@id": "sdm:source",
+      "@type": "xsd:anyURI"
+    },
+    "speed": {
+      "@id": "sdm:speed",
+      "@type": "xsd:float"
+    },
+    "startDate": {
+      "@id": "schema:startDate",
+      "@type": "xsd:dateTime"
+    },
+    "status": {
+      "@id": "sdm:status"
+    },
+    "subCategory": {
+      "@id": "sdm:subCategory"
+    },
+    "temperature": {
+      "@id": "sdm:temperature",
+      "@type": "xsd:float"
+    },
+    "totalSlotNumber": {
+      "@id": "sdm:totalSlotNumber",
+      "@type": "xsd:integer"
+    },
+    "type": "@type",
+    "url": {
+      "@id": "schema:url",
+      "@type": "xsd:anyURI"
+    },
+    "validFrom": {
+      "@id": "sdm:validFrom",
+      "@type": "xsd:dateTime"
+    },
+    "validTo": {
+      "@id": "sdm:validTo",
+      "@type": "xsd:dateTime"
+    },
+    "vehicleType": {
+      "@id": "sdm:vehicleType"
+    },
+    "windDirection": {
+      "@id": "sdm:windDirection",
+      "@type": "xsd:float"
+    },
+    "windSpeed": {
+      "@id": "sdm:windSpeed",
+      "@type": "xsd:float"
+    },
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "x-generator-version": "linkml-1.11.1"
+}

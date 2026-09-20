@@ -1,0 +1,12 @@
+---
+gitea:
+  forge:
+    # The chart builds the reference as `<registry>/<repository>:<tag>-rootless@<digest>`,
+    # so this digest is the one of docker.gitea.com/gitea:1.27.0-rootless, not of the
+    # root-based tag. Re-pin both together:
+    #   curl -sI -H 'Accept: application/vnd.oci.image.index.v1+json' \
+    #     https://docker.gitea.com/v2/gitea/manifests/<tag>-rootless | grep -i docker-content-digest
+    registry: 'docker.gitea.com'
+    repository: 'gitea'
+    tag: '1.27.0'
+    digest: 'sha256:414ba5b2b1163480e9ed4213a989cd798579cfa88582a2359303273009b2b852'

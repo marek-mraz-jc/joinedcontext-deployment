@@ -1,0 +1,19 @@
+---
+{{- $global := .Values.global }}
+# Checklist:
+# - [x] Minimal Resources
+# - [x] Minimal storage -> stateless gateway
+# - [x] 1 Replica
+
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: '1'
+    memory: 512Mi
+
+# The endpoint table comes out of the forge's repository (base-values, T-0278); the demo
+# manifests it serves are the seed the forge bootstrap commits (seed/helsinki, seed/banskabystrica).

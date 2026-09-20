@@ -1,0 +1,25 @@
+# HSL's high-frequency positioning broker, public. Four trunk lines rather than the whole fleet:
+# the topic is the filter, so the runner never sees the six hundred buses it would drop anyway.
+# Route ids carry the municipality prefix (2 = Espoo, 4 = Vantaa): 2510, 2550, 4560 and 4570 are
+# lines 510, 550, 560 and 570.
+apiVersion: joinedcontext.com/v1alpha1
+kind: DataSource
+metadata:
+  name: hsl-hfp
+  namespace: helsinki
+  title: { en: "HSL high-frequency positioning, trunk lines", fi: "HSL:n suurtaajuinen paikannus, runkolinjat" }
+spec:
+  type: mqtt
+  mqtt:
+    # MQTT over WebSocket on 443, not MQTT over TLS on 8883: the cluster's firewall
+    # (kube-hetzner's outbound defaults) lets 443 out and nothing on 8883, and HSL serves the
+    # same broker on both. `wss://` renders the stream's TLS block.
+    urls:
+      - wss://mqtt.hsl.fi:443/
+    topics:
+      - /hfp/v2/journey/ongoing/vp/bus/+/+/2510/#
+      - /hfp/v2/journey/ongoing/vp/bus/+/+/2550/#
+      - /hfp/v2/journey/ongoing/vp/bus/+/+/4560/#
+      - /hfp/v2/journey/ongoing/vp/bus/+/+/4570/#
+    qos: 0
+    cleanSession: true

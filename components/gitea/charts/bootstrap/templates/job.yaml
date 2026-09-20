@@ -1,0 +1,301 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "bootstrap.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bootstrap.labels" . | nindent 4 }}
+  annotations:
+    # A Job's pod template is immutable, so the Job is recreated on every apply rather than
+    # updated. That is also what makes it the convergence step: it runs, finds everything in
+    # place and exits.
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "10"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  ttlSecondsAfterFinished: 600
+  backoffLimit: 6
+  template:
+    metadata:
+      labels:
+        {{- include "bootstrap.selectorLabels" . | nindent 8 }}
+      annotations:
+        security.joinedcontext.com/api-access-reason: >-
+          Forge bootstrap: writes the two access tokens it mints in the forge into the
+          Secrets named in its Role, which is the only way a token minted at run time
+          reaches the Portal and the gateway.
+        {{- if .Values.serviceMesh.enabled }}
+        # The proxy has to be told to exit, or the pod stays Running after the script ends
+        # and the Job never completes.
+        linkerd.io/inject: enabled
+        config.alpha.linkerd.io/proxy-enable-native-sidecar: "true"
+        {{- end }}
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ include "bootstrap.fullname" . }}
+      automountServiceAccountToken: true
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: bootstrap
+          image: {{ include "bootstrap.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: GITEA_URL
+              value: {{ .Values.giteaUrl | quote }}
+            - name: ORG
+              value: {{ .Values.repo.owner | quote }}
+            - name: REPO
+              value: {{ .Values.repo.name | quote }}
+            - name: BRANCH
+              value: {{ .Values.repo.branch | quote }}
+            - name: TEAMS
+              value: {{ .Values.teams | keys | sortAlpha | join " " | quote }}
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef: { fieldPath: metadata.namespace }
+            - name: ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.adminSecret.name | quote }}
+                  key: {{ .Values.adminSecret.usernameKey | quote }}
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.adminSecret.name | quote }}
+                  key: {{ .Values.adminSecret.passwordKey | quote }}
+            - name: PORTAL_SECRET
+              value: {{ .Values.tokens.portal.secret | quote }}
+            - name: PORTAL_SCOPES
+              value: {{ .Values.tokens.portal.scopes | toJson | quote }}
+            - name: PORTAL_NAMESPACES
+              value: {{ .Values.tokens.portal.namespaces | uniq | sortAlpha | join " " | quote }}
+            - name: GATEWAY_SECRET
+              value: {{ .Values.tokens.gateway.secret | quote }}
+            - name: GATEWAY_SCOPES
+              value: {{ .Values.tokens.gateway.scopes | toJson | quote }}
+            - name: GATEWAY_NAMESPACES
+              value: {{ .Values.tokens.gateway.namespaces | uniq | sortAlpha | join " " | quote }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            {{- if .Values.seed }}
+            - name: seed
+              mountPath: /seed
+              readOnly: true
+            {{- end }}
+          command: [/bin/sh, -c]
+          args:
+            - |
+              set -eu
+
+              KAPI=https://kubernetes.default.svc
+              SA=/var/run/secrets/kubernetes.io/serviceaccount
+
+              # Every call is judged by its status code. Nothing here parses a response body
+              # except the one field a token lives in, and that one is checked before it is
+              # used: this image has no jq, and a regex over JSON is only honest when the
+              # value it pulls out has a shape you can assert.
+              forge_code() {
+                method=$1; path=$2; shift 2
+                curl -sS -o /tmp/body -w '%{http_code}' -X "$method" \
+                  -u "$ADMIN_USER:$ADMIN_PASSWORD" -H 'content-type: application/json' \
+                  "$@" "$GITEA_URL$path"
+              }
+
+              kube() {
+                curl -sS --cacert "$SA/ca.crt" -H "Authorization: Bearer $(cat "$SA/token")" \
+                  -H 'content-type: application/json' "$@"
+              }
+
+              # 1. The forge answers before anything is asked of it. The release `needs` the
+              #    forge, so this is the gap between "the Deployment is ready" and "Gitea has
+              #    finished its own migrations", not a substitute for ordering.
+              tries=0
+              until [ "$(curl -sS -o /dev/null -w '%{http_code}' "$GITEA_URL/api/healthz")" = 200 ]; do
+                tries=$((tries + 1))
+                if [ "$tries" -ge 60 ]; then
+                  echo "the forge did not answer /api/healthz after five minutes" >&2
+                  exit 1
+                fi
+                echo "waiting for the forge ($tries/60)"
+                sleep 5
+              done
+
+              # 2. The organization. 404 means absent; anything else means it is there or the
+              #    credential is wrong, and creating over it would be the wrong repair.
+              status=$(forge_code GET "/api/v1/orgs/$ORG")
+              if [ "$status" = 404 ]; then
+                status=$(forge_code POST /api/v1/orgs \
+                  -d "{\"username\":\"$ORG\",\"visibility\":\"private\"}")
+                [ "$status" = 201 ] || { echo "creating the organization failed: $status" >&2; cat /tmp/body >&2; exit 1; }
+                echo "organization $ORG created"
+              elif [ "$status" = 200 ]; then
+                echo "organization $ORG is already there"
+              else
+                echo "the forge answered $status for the organization" >&2; cat /tmp/body >&2; exit 1
+              fi
+
+              # 3. The repository. `auto_init` is what makes the default branch exist: an empty
+              #    repository has no ref, and a clone of one is not a checkout the gateway can
+              #    read or the Portal can branch from.
+              status=$(forge_code GET "/api/v1/repos/$ORG/$REPO")
+              if [ "$status" = 404 ]; then
+                status=$(forge_code POST "/api/v1/orgs/$ORG/repos" \
+                  -d "{\"name\":\"$REPO\",\"private\":true,\"auto_init\":true,\"default_branch\":\"$BRANCH\"}")
+                [ "$status" = 201 ] || { echo "creating the repository failed: $status" >&2; cat /tmp/body >&2; exit 1; }
+                echo "repository $ORG/$REPO created"
+              elif [ "$status" = 200 ]; then
+                echo "repository $ORG/$REPO is already there"
+              else
+                echo "the forge answered $status for the repository" >&2; cat /tmp/body >&2; exit 1
+              fi
+
+              # 3b. The teams a signed-in person lands in (PF-79). The forge's OpenID Connect
+              #     source maps the `groups` claim onto these names; a group whose team does
+              #     not exist maps onto nothing, which is the 404 a person meets today. Read
+              #     only, on the units a review needs, and `includes_all_repositories` so a
+              #     repository added later is readable without a second step (PF-80). Owners
+              #     stays the administrator alone.
+              for team in $TEAMS; do
+                status=$(forge_code GET "/api/v1/orgs/$ORG/teams/search?q=$team")
+                case "$status" in
+                  200)
+                    # `search` answers 200 with an empty list when nothing matches, so the
+                    # body decides, not the code.
+                    if grep -q "\"name\": *\"$team\"" /tmp/body; then
+                      echo "team $team is already there"
+                      continue
+                    fi ;;
+                  *)
+                    echo "the forge answered $status searching for team $team" >&2; cat /tmp/body >&2; exit 1 ;;
+                esac
+                status=$(forge_code POST "/api/v1/orgs/$ORG/teams" -d "{
+                  \"name\":\"$team\",
+                  \"description\":\"Reads the configuration repository (PF-79)\",
+                  \"permission\":\"read\",
+                  \"includes_all_repositories\":true,
+                  \"can_create_org_repo\":false,
+                  \"units\":[\"repo.code\",\"repo.issues\",\"repo.pulls\"]
+                }")
+                [ "$status" = 201 ] || { echo "creating team $team failed: $status" >&2; cat /tmp/body >&2; exit 1; }
+                echo "team $team created"
+              done
+
+              # 4. The tokens. A forge token is minted by the forge and shown once, so it can
+              #    neither be generated by the secrets component nor read back later. The Job
+              #    therefore keeps the Secret as the record: if what is in it still
+              #    authenticates, nothing happens; if it does not, the named token is dropped
+              #    and a new one replaces both it and the Secret. That is what makes running
+              #    this twice a no-op and running it after a restore a repair.
+              # read_secret <namespace> <name>
+              read_secret() {
+                # -f so a 404 is a failure and not an empty file the sed below would read as
+                # "there is no token", which is the same answer for the wrong reason.
+                kube -f -o /tmp/secret "$KAPI/api/v1/namespaces/$1/secrets/$2" >/dev/null 2>&1 || return 1
+                sed -n 's/.*"token": *"\([A-Za-z0-9+/=]*\)".*/\1/p' /tmp/secret | base64 -d 2>/dev/null || return 1
+              }
+
+              # write_secret <namespace> <name> <token>
+              write_secret() {
+                encoded=$(printf '%s' "$3" | base64 | tr -d '\n')
+                body="{\"apiVersion\":\"v1\",\"kind\":\"Secret\",\"metadata\":{\"name\":\"$2\"},\"type\":\"Opaque\",\"data\":{\"token\":\"$encoded\"}}"
+                code=$(kube -o /tmp/body -w '%{http_code}' -X PUT -d "$body" \
+                  "$KAPI/api/v1/namespaces/$1/secrets/$2")
+                if [ "$code" = 404 ]; then
+                  code=$(kube -o /tmp/body -w '%{http_code}' -X POST -d "$body" \
+                    "$KAPI/api/v1/namespaces/$1/secrets")
+                fi
+                case "$code" in
+                  20*) : ;;
+                  *) echo "writing Secret $2 in $1 failed: $code" >&2; cat /tmp/body >&2; exit 1 ;;
+                esac
+              }
+
+              # ensure_token <secret name> <token name> <scopes json> <namespaces...>
+              ensure_token() {
+                secret=$1; name=$2; scopes=$3; shift 3
+                first=$1
+                existing=$(read_secret "$first" "$secret" || true)
+                # Checked against the repository, not against /api/v1/user: the gateway's token
+                # carries `read:repository` and nothing else, so /user answers 403 for a token
+                # that is perfectly good and the step would re-mint on every apply, churning a
+                # credential a running pod is already holding.
+                if [ -n "$existing" ] && [ "$(curl -sS -o /dev/null -w '%{http_code}' \
+                    -H "Authorization: token $existing" "$GITEA_URL/api/v1/repos/$ORG/$REPO")" = 200 ]; then
+                  echo "the token in $secret still authenticates"
+                  token=$existing
+                else
+                  forge_code DELETE "/api/v1/users/$ADMIN_USER/tokens/$name" >/dev/null || true
+                  status=$(forge_code POST "/api/v1/users/$ADMIN_USER/tokens" \
+                    -d "{\"name\":\"$name\",\"scopes\":$scopes}")
+                  [ "$status" = 201 ] || { echo "minting $name failed: $status" >&2; exit 1; }
+                  token=$(sed -n 's/.*"sha1": *"\([0-9a-f]\{40\}\)".*/\1/p' /tmp/body)
+                  if [ "${#token}" -ne 40 ]; then
+                    echo "the forge did not return a token for $name" >&2
+                    exit 1
+                  fi
+                  echo "minted $name"
+                fi
+                # Written to every namespace that reads it, every run: the first one is the
+                # record the check above trusts, and a second namespace whose copy went missing
+                # is repaired without touching the token itself.
+                for ns in "$@"; do
+                  write_secret "$ns" "$secret" "$token"
+                done
+              }
+
+              ensure_token "$PORTAL_SECRET" "jc-portal" "$PORTAL_SCOPES" $PORTAL_NAMESPACES
+              ensure_token "$GATEWAY_SECRET" "jc-gateway" "$GATEWAY_SCOPES" $GATEWAY_NAMESPACES
+
+              # 5. The seed: the manifests the gateway serves from its own ConfigMap, committed
+              #    under the paths the Portal reads, so the two halves of the platform agree on
+              #    where configuration lives (T-0478, CC-02, CC-08). A key's `__` is a `/`.
+              #    Judged file by file against what the branch holds: same content, nothing;
+              #    different, an update over the blob's sha; absent, a create. The forge
+              #    answers base64 without line breaks and so does this image's base64 once the
+              #    newlines are stripped, which is what makes the comparison honest.
+              seeded=0
+              for f in /seed/*; do
+                [ -f "$f" ] || continue
+                path=$(basename "$f" | sed 's|__|/|g')
+                encoded=$(base64 < "$f" | tr -d '\n')
+                status=$(forge_code GET "/api/v1/repos/$ORG/$REPO/contents/$path?ref=$BRANCH")
+                case "$status" in
+                  200)
+                    current=$(grep -o '"content": *"[^"]*"' /tmp/body | head -1 | sed 's/^"content": *"//; s/"$//; s/\\n//g')
+                    [ "$current" = "$encoded" ] && continue
+                    sha=$(grep -o '"sha": *"[0-9a-f]\{40\}"' /tmp/body | head -1 | grep -o '[0-9a-f]\{40\}')
+                    status=$(forge_code PUT "/api/v1/repos/$ORG/$REPO/contents/$path" \
+                      -d "{\"branch\":\"$BRANCH\",\"sha\":\"$sha\",\"content\":\"$encoded\",\"message\":\"seed: update $path\"}")
+                    [ "$status" = 200 ] || { echo "updating $path failed: $status" >&2; cat /tmp/body >&2; exit 1; }
+                    echo "seed: updated $path" ;;
+                  404)
+                    status=$(forge_code POST "/api/v1/repos/$ORG/$REPO/contents/$path" \
+                      -d "{\"branch\":\"$BRANCH\",\"content\":\"$encoded\",\"message\":\"seed: add $path\"}")
+                    [ "$status" = 201 ] || { echo "creating $path failed: $status" >&2; cat /tmp/body >&2; exit 1; }
+                    echo "seed: created $path" ;;
+                  *)
+                    echo "the forge answered $status for $path" >&2; cat /tmp/body >&2; exit 1 ;;
+                esac
+                seeded=$((seeded + 1))
+              done
+              echo "seed: $seeded file(s) written, the rest already matched"
+
+              # The body file has held a token; the volume is an emptyDir that dies with the
+              # pod, but leaving it readable for the seconds a mesh proxy takes to shut down
+              # is free to avoid.
+              rm -f /tmp/body /tmp/secret
+              echo "the configuration repository is ready at $ORG/$REPO"
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        {{- if .Values.seed }}
+        - name: seed
+          configMap:
+            name: {{ include "bootstrap.fullname" . }}-seed
+        {{- end }}

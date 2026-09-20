@@ -1,0 +1,28 @@
+---
+# The catalogue on its own host. `subDomain` also puts data.{domain} on the edge Ingress
+# and in the certificate SAN list, both derived from this map.
+ckan:
+  name: ckan
+  description: Open-data catalogue (CKAN)
+  upstream: ckan.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "ckan") }}.svc.cluster.local:5000 # yamllint disable-line rule:line-length
+  subDomain: data
+  uri: '/*'
+  # Harvesting a large resource and rendering a dataset page with fifty resources are both
+  # slower than a portal page; the platform defaults would cut them off mid-response.
+  timeout:
+    connect: 6
+    send: 60
+    read: 60
+
+# One stable path on the primary host that leads to the catalogue, for the people who only
+# ever learn one hostname. It answers a redirect and never proxies (see apisix-plugins.yaml),
+# because CKAN renders every link from its site URL and would emit data.{domain} links from
+# a /ckan page anyway.
+ckan-redirect:
+  name: ckan-redirect
+  description: /ckan on the primary host redirects to the catalogue host
+  upstream: ckan.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "ckan") }}.svc.cluster.local:5000 # yamllint disable-line rule:line-length
+  host: '{{ .Values.global.domain }}'
+  uri: '/ckan*'
+  # Above the portal UI's `/*` at priority 1, below its API routes.
+  priority: 5

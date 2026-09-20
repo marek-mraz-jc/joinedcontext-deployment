@@ -1,0 +1,20 @@
+---
+gitea:
+  forge:
+    enabled: true
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "gitea") }}
+    # Public path prefix on the primary host (docs Deployment/10 section 2). It ends up in
+    # ROOT_URL, which is where every URL Gitea renders comes from, and in the OIDC callback.
+    pathPrefix: /git
+    # Keycloak group -> forge teams of the organization (PF-79). Read-only teams (PF-80);
+    # the bootstrap Job creates every team named here, under `global.configRepo.owner`.
+    groupTeams:
+      platform-readers:
+        - readers
+    # The Keycloak group whose members administer the forge (`--admin-group`, T-1421), so an
+    # operator no longer needs the local `gitea_admin` password. Nobody is in it by default:
+    # add a person in Keycloak. Empty or absent renders no admin group.
+    adminGroup: forge-admins
+  bootstrap:
+    enabled: true
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "gitea") }}

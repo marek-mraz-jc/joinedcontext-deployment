@@ -1,0 +1,104 @@
+---
+keycloak:
+  podSelector:
+    app.kubernetes.io/instance: keycloak-app
+  policyTypes:
+    - Ingress
+    - Egress
+  egress:
+    # CoreDNS. Every rule below names a Service, and a Service name is worth nothing
+    # without this one.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: postgres-cluster
+          componentNamespace: postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+    # Infinispan's JGroups cluster: the same two ports the ingress rule below opens, seen
+    # from the other end. A StatefulSet of one still forms a cluster with itself.
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: keycloak-app
+              app.kubernetes.io/name: keycloakx
+          componentNamespace: keycloak
+      ports:
+        - protocol: TCP
+          port: 7800
+        - protocol: TCP
+          port: 57800
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: apisix
+          componentNamespace: apisix
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: keycloak-config-cli
+          componentNamespace: keycloak
+        # The Context Gateway loads the realm's signing keys over the in-cluster Service and
+        # exits when it cannot (platform main.rs: no keys, no process). Without the mesh
+        # that is a plain connection to 8080, and this list is what lets it through; the
+        # Linkerd mirror next door already carried the gateway on 4143, which is why dev
+        # (meshed) worked while the unmeshed k3d variant crash-looped.
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: context-gateway-gateway
+          componentNamespace: context-gateway
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: keycloak-app
+              app.kubernetes.io/name: keycloakx
+          componentNamespace: keycloak
+      ports:
+        - protocol: TCP
+          port: 7800
+        - protocol: TCP
+          port: 57800
+
+# The realm import job (a post-install/post-upgrade hook). It reads its realm files from a
+# ConfigMap and pushes them over the admin API; the only thing it ever dials is Keycloak.
+keycloak-config-cli:
+  podSelector:
+    app.kubernetes.io/name: keycloak-config-cli
+  policyTypes:
+    - Egress
+  egress:
+    # CoreDNS. Every rule below names a Service, and a Service name is worth nothing
+    # without this one.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: keycloak-app
+          componentNamespace: keycloak
+      ports:
+        - protocol: TCP
+          port: 8080

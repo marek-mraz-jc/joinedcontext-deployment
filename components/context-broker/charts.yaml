@@ -1,0 +1,4 @@
+---
+context-broker:
+  broker:
+    chart: ../../charts/workload

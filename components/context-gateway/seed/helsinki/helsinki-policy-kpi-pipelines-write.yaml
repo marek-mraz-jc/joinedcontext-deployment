@@ -1,0 +1,16 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Policy
+metadata:
+  name: kpi-pipelines-write
+  namespace: helsinki
+  title: { en: "The KPI pipelines write the indicator space" }
+spec:
+  contextSpaceRef: { kind: ContextSpace, name: helsinki-kpi }
+  assigner: did:web:{orgDomain}
+  assignee: { kind: serviceAccount, id: pipelines }
+  operations: [upsertBatch, createBatch, queryBatch]
+  # The indicator type, named: a grant that names no type is matched against nothing on a
+  # read, and the steward saw an empty Explore (PL-45).
+  information:
+    - entities:
+        - type: KeyPerformanceIndicator

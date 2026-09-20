@@ -1,0 +1,46 @@
+---
+# The environment the optional add-ons render in.
+#
+# An add-on is opt-in per installation (docs Deployment/04 section 2): it is registered by
+# adding it to this list, and nothing else in the repository turns it on. So an add-on that
+# is in no environment is in no render, and a component nobody renders is a component nobody
+# checks. This environment is that render — the smallest installation an add-on needs around
+# it (the edge that routes to it, the realm that logs into it, the generator that mints its
+# credentials, the default-deny it has to declare through) and then the add-ons themselves.
+#
+# It is a render surface and not a deployment: no cluster is described here, and the values
+# below are the ones an operator would have to supply, written out as the worked example of
+# supplying them.
+components:
+  - prepare
+  - secrets
+  - networkpolicies
+  # The realm's own database. Keycloak addresses it by name in its values, so the render
+  # needs the component even though nothing here is deployed.
+  - postgres
+  - keycloak
+  - apisix
+  # Operational dashboards (OPS-16). The Prometheus is named below; without it the component
+  # refuses to render rather than serving four panels that all say "No data".
+  - grafana
+
+global:
+  domain: addons.example.org
+  profile: production
+  instanceSlug: addons
+  ingress:
+    enabled: true
+    clusterIssuer: 'letsencrypt-prod'
+    ingressClass: 'nginx'
+  metrics:
+    enabled: true
+
+grafana:
+  dashboards:
+    enabled: true
+  grafana:
+    enabled: true
+    # The Prometheus that scrapes this installation. This repository deploys none: the
+    # monitoring component writes scrape configuration and alert rules for an Operator that
+    # is already on the cluster, and this is that same Prometheus, read back.
+    prometheusUrl: 'http://prometheus-operated.monitoring.svc.cluster.local:9090'

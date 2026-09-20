@@ -1,0 +1,24 @@
+---
+# What every workload this platform deploys already looks like: non-root, no capabilities,
+# nothing writable outside its volumes.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hardened-pod
+  namespace: dev
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: app
+      image: nginx:1.27
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 1000
+        capabilities:
+          drop: [ALL]

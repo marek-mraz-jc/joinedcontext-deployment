@@ -1,0 +1,59 @@
+name: reusable container sign
+# Signs an image keylessly with cosign and hands back the digest the deployment pins
+# (OPS-28, TS-23). The signature is verified in the same job: a signing step whose result is
+# never read proves only that the command exited zero.
+on:
+  workflow_call:
+    inputs:
+      image:
+        description: "the image to sign, named by digest (repository@sha256:...)"
+        type: string
+        required: true
+    outputs:
+      digest:
+        description: "the sha256 digest that was signed"
+        value: ${{ jobs.sign.outputs.digest }}
+permissions: { contents: read }
+jobs:
+  sign:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: write
+      # The OIDC token is the identity cosign signs with; there is no key to store or rotate.
+      id-token: write
+    outputs:
+      digest: ${{ steps.reference.outputs.digest }}
+    steps:
+      - name: the image has to be named by digest
+        id: reference
+        env:
+          IMAGE: "${{ inputs.image }}"
+        # A tag is mutable, so signing one signs whatever it pointed at this minute
+        # (SEC-GAP-03). Refuse before the signature exists rather than publish a claim about
+        # bytes that can change.
+        run: |
+          set -eu
+          case "$IMAGE" in
+            *@sha256:*) ;;
+            *) echo "::error::'$IMAGE' is not pinned by digest; sign repository@sha256:..." >&2; exit 1 ;;
+          esac
+          echo "digest=${IMAGE##*@}" >> "$GITHUB_OUTPUT"
+      - uses: sigstore/cosign-installer@7e8b541eb2e61bf99390e1afd4be13a184e9ebc5 # v3.10.1
+      - name: cosign sign
+        env:
+          IMAGE: "${{ inputs.image }}"
+        run: cosign sign --yes "$IMAGE"
+      - name: cosign verify
+        env:
+          IMAGE: "${{ inputs.image }}"
+          IDENTITY: "^https://github.com/${{ github.repository }}/"
+        run: |
+          cosign verify \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+            --certificate-identity-regexp "$IDENTITY" \
+            "$IMAGE" > /dev/null
+      - env:
+          IMAGE: "${{ inputs.image }}"
+        run: echo "signed \`$IMAGE\`" >> "$GITHUB_STEP_SUMMARY"

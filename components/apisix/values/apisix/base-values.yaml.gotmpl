@@ -1,0 +1,251 @@
+---
+{{- $this := .Values.apisix.apisix }}
+{{- $image := .Values.images.apisix.apisix.gateway }}
+{{- $global := .Values.global }}
+# Checklist:
+# - [ ] Containers run as non-root with `readOnlyRootFilesystem`
+# - [x] Health probes -> enabled by default in chart
+# - [x] Graceful shutdown -> handled by chart
+# - [ ] Standard labels
+# - [x] ServiceAccount with least privilege where required
+# - [x] Named ports -> handled by chart
+# - [ ] Ingress with TLS -> not applicable, APISIX is the gateway itself
+
+fullnameOverride: apisix
+
+# Container images
+image:
+  repository: {{ $image.repository }}
+  # The chart has no digest field and builds `repository:tag`; a tag that carries the
+  # digest makes that one pinned reference (BSI TR-03187 AR-4).
+  tag: {{ $image.tag }}@{{ $image.digest }}
+  pullPolicy: IfNotPresent
+
+service:
+  type: "ClusterIP"
+  externalTrafficPolicy: null
+
+serviceAccount:
+  create: true
+
+rbac:
+  create: false
+
+podSecurityContext:
+  {{ .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}
+
+securityContext:
+  {{ .Values.securityDefaults.securityContext | toYaml | nindent 2 }}
+
+# Standalone file mode (ADR-N-007): no etcd, no Admin API. Routes, upstreams and plugin
+# configs come from the ConfigMap rendered by the `configuration` chart (apisix.yaml, #END).
+etcd:
+  enabled: false
+
+# Secrets referenced from apisix.yaml through APISIX environment-variable substitution.
+# Every name here is repeated in `apisix.nginx.envs` below, or the workers never see it.
+extraEnvVars:
+  - name: OIDC_SESSION_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: apisix-oidc-session
+        key: secret
+  # The confidential `edge` client of the edge login (ADR-N-019, AP-27): the secret reaches
+  # APISIX only this way, from the Secret the secrets component generates for the client
+  # declared in keycloak-clients.yaml, never through the rule file in Git.
+  - name: EDGE_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: keycloak-client-edge
+        key: client-secret
+
+# The openid-connect plugin dials the PUBLIC issuer host (discovery, token, JWKS, userinfo):
+# the `iss` claim carries it, and CoreDNS points it back at the cluster's own ingress
+# controller. A meshed pod's outbound proxy builds an HTTP balancer for that hop and resets
+# the connection, and the Portal hit exactly this on the same hop (T-0400). Taking 443 out of
+# the outbound redirect makes the hop what it is anyway: the gateway's own TLS to a host that
+# terminates public TLS, which the mesh never protected. Every in-cluster upstream is on
+# another port and stays meshed.
+podAnnotations:
+  config.linkerd.io/skip-outbound-ports: "443"
+
+# Config to ensure functionality with read-only filesystem
+# Ensures that /usr/local/apisix/conf and /tmp are writable, while also preserving
+# the default configuration by copying it in an init container.
+{{- $writableVolumes := dict
+  "conf" "/usr/local/apisix/conf"
+  "tmp" "/tmp"
+  "body-tmp" "/usr/local/apisix/client_body_temp"
+  "proxy-tmp" "/usr/local/apisix/proxy_temp"
+  "fastcgi-tmp" "/usr/local/apisix/fastcgi_temp"
+  "uwsgi-tmp" "/usr/local/apisix/uwsgi_temp"
+  "scgi-tmp" "/usr/local/apisix/scgi_temp"
+  "logs" "/usr/local/apisix/logs"
+}}
+
+extraVolumes:
+{{- range $name, $path := $writableVolumes }}
+  - name: apisix-{{ $name }}-writable
+    emptyDir: { }
+{{- end }}
+
+extraVolumeMounts:
+{{- range $name, $path := $writableVolumes }}
+  - name: apisix-{{ $name }}-writable
+    mountPath: {{ $path }}
+{{- end }}
+
+extraInitContainers:
+  - name: copy-apisix-conf
+    image: {{ $image.repository }}:{{ $image.tag }}@{{ $image.digest }}
+    imagePullPolicy: IfNotPresent
+    command: ["/bin/sh", "-c"]
+    args:
+      # The chart symlinks the standalone ConfigMap to conf/apisix.yaml on startup,
+      # so the default file copied out of the image has to go, or the link fails
+      # with "File exists" and the gateway crash-loops.
+      - cp -r /usr/local/apisix/conf/* /mnt/apisix-conf/ && rm -f /mnt/apisix-conf/apisix.yaml ;
+    volumeMounts:
+      - name: apisix-conf-writable
+        mountPath: /mnt/apisix-conf
+    securityContext:
+      {{ .Values.securityDefaults.securityContext | toYaml | nindent 8 }}
+    resources:
+      requests:
+        cpu: "10m"
+        memory: "16Mi"
+      limits:
+        cpu: "10m"
+        memory: "16Mi"
+
+# APISIX Gateway configuration
+apisix:
+  prometheus:
+    enabled: {{ $global.metrics.enabled }}
+  {{- if eq ($global.ingress.clusterIssuer | default "") "selfsigned-ca" }}
+  # A self-signed platform CA (the k3d variants of ci-full): the openid-connect plugin fetches
+  # the realm's discovery document over https://idm.{domain} with `ssl_verify: true`, and
+  # without the CA in its trust store every login route answers 500. The chart writes
+  # `ssl_trusted_certificate` only under `ssl.enabled`, so the 9443 listener comes along; the
+  # Ingress keeps terminating TLS and forwarding to 9080. The Secret is the one the prepare
+  # component distributes to every namespace from cert-manager/ca-secret (T-0651).
+  ssl:
+    enabled: true
+    existingCASecret: custom-ca-cert
+    certCAFilename: ca.crt
+  {{- end }}
+  admin:
+    enabled: false
+  deployment:
+    # Both keys are needed: the chart picks the container command from `mode` but
+    # writes `deployment.role` / `role_data_plane.config_provider` into config.yaml
+    # from `role`. With only `mode`, APISIX still boots as a traditional node and
+    # dies trying to reach etcd on 127.0.0.1:2379.
+    mode: standalone
+    role: data_plane
+    standalone:
+      existingConfigMap: apisix-standalone-config
+  trustedAddresses:
+    - 127.0.0.1
+    - 10.0.0.0/8
+    - 172.16.0.0/12
+    - 192.168.0.0/16
+  nginx:
+    # nginx workers inherit nothing: a variable not declared here is invisible to
+    # `os.getenv`, so every secret placeholder in apisix.yaml resolves to nothing and the
+    # whole rule file is rejected with "can't find environment variable" — APISIX then keeps
+    # serving the last file that parsed, which makes route changes look silently ignored.
+    envs:
+      - OIDC_SESSION_SECRET
+      - EDGE_CLIENT_SECRET
+    configurationSnippet:
+      httpEnd: |
+        proxy_buffer_size 32k;
+        proxy_buffers 4 32k;
+        client_header_buffer_size 16k;
+        large_client_header_buffers 4 16k;
+        # Who the caller is (T-0929, EP-20, SP-22). APISIX is a ClusterIP behind the ingress
+        # controller, and the chart writes `set_real_ip_from 127.0.0.1` only, so without this
+        # line `$remote_addr` is the ingress pod for every caller on the internet: one address
+        # in the access log, and one `limit-count` bucket the first caller empties for
+        # everybody. `set_real_ip_from` is the one realip directive that may be repeated — the
+        # chart's `real_ip_header X-Real-IP` and `real_ip_recursive off` are already in this
+        # http block, and nginx refuses to start on a second one of either (the first attempt
+        # at this fix crash-looped the pod, and the retry's "File exists" on the config symlink
+        # hid the reason). X-Real-IP is what the header rewrite then reads, which the ingress
+        # controller sets to the address it accepted the connection from and overwrites on
+        # every request, so a client cannot forge it.
+        set_real_ip_from {{ $this.trustedProxyCidr }};
+      # The body ceiling belongs here, in the server block, and not above: APISIX's own
+      # `client_max_body_size 0` is already in the http block and nginx refuses to start on a
+      # duplicate in the same block (T-2263). `0` reads as "no limit" for a body with a
+      # Content-Length, but nginx's chunked filter compares `content_length_n + chunk`
+      # against the same number with no zero guard, so with `0` every streamed body is over
+      # the limit: dev answered `413` to a 435-byte Portal write with
+      # `client intended to send too large chunked body: 0+435 bytes`. 16m is above every
+      # limit a service enforces for itself (the Portal's pipeline test accepts 11 MB,
+      # functions 8 MB, the agent proxy 4 MB), so each service stays the authority over its
+      # own bodies and the edge only stops the absurd ones.
+      httpSrv: |
+        client_max_body_size 16m;
+ingress:
+  enabled: true
+  className: {{ $global.ingress.ingressClass }}
+  annotations:
+    ingress.kubernetes.io/affinity: cookie
+    # No `cert-manager.io/cluster-issuer` here: the certificate is an explicit resource in
+    # the configuration chart (T-0045). The ingress-shim would issue a second one for the
+    # same Secret.
+    {{- if eq $global.ingress.ingressClass "traefik" }}
+    # BSI TR-02102 listener policy (T-0044); Traefik addresses a TLSOption as
+    # <namespace>-<name>@kubernetescrd.
+    traefik.ingress.kubernetes.io/router.tls.options: {{ printf "%s-bsi-tr-02102@kubernetescrd" $this.namespace | quote }}
+    {{- else }}
+    # The same policy for ingress-nginx. The protocol floor is a property of the controller
+    # (its `ssl-protocols` ConfigMap key, TLSv1.2+TLSv1.3 by default), not of one Ingress.
+    nginx.ingress.kubernetes.io/ssl-ciphers: "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384"
+    nginx.ingress.kubernetes.io/ssl-prefer-server-ciphers: "true"
+    {{- end }}
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+    nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+    nginx.ingress.kubernetes.io/proxy-busy-buffers-size: "24k"
+  {{- /* One rule per hostname: several routes share a subdomain (the Portal's three), and
+         the same list feeds the certificate's SAN list in the configuration chart. */}}
+  {{- $subDomains := list }}
+  {{- range $component, $config := .Values.routes }}
+    {{- if hasKey $config "subDomain" }}
+    {{- $subDomains = append $subDomains $config.subDomain }}
+    {{- end }}
+  {{- end }}
+  {{- $subDomains = $subDomains | uniq | sortAlpha }}
+  hosts:
+    # The apex carries the shared surfaces (apps, forge, context) and the redirect to the
+    # Portal; those routes match on `host: <domain>` and would never be reached without a
+    # rule for it here.
+    - host: {{ $global.domain }}
+      paths:
+        - '/'
+  {{- range $subDomains }}
+    - host: {{ . }}.{{ $global.domain }}
+      paths:
+        - '/'
+  {{- end }}
+  tls:
+    # Its own Secret, not the `apisix-tls` cert-manager's ingress-shim used to fill: two
+    # Certificates cannot share one Secret, and an upgrade that renamed the owner instead of
+    # the Secret would deadlock until someone deleted the old Certificate by hand.
+    - secretName: apisix-edge-tls
+      hosts:
+        - {{ $global.domain }}
+      {{- range $subDomains }}
+        - {{ . }}.{{ $global.domain }}
+      {{- end }}
+
+# Ingress Controller
+ingress-controller:
+  enabled: false
+
+# Metrics
+metrics:
+  serviceMonitor:
+    enabled: {{ $global.metrics.enabled }}

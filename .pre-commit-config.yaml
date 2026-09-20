@@ -1,0 +1,93 @@
+---
+repos:
+  # General file hygiene
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '\.gotmpl$'
+      - id: end-of-file-fixer
+        exclude: '\.gotmpl$'
+      - id: check-yaml
+        args: ['--allow-multiple-documents']
+        exclude: '\.gotmpl$|^components/.*/charts/.*/templates/.*\.yaml$'
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+
+  # Filename and directory naming validation
+  - repo: https://github.com/ahmet-enes-demir/pre-commit-filename-linter.git
+    rev: v1.3.0
+    hooks:
+      - id: check-file-names
+        args: ['--config', '.ci/configs/.naming-convention.yaml']
+        # System tests use language-specific naming conventions (Java PascalCase,
+        # Robot Framework resources) that don't follow kebab-case
+        exclude: '^tests/system/'
+
+      - id: check-directory-names
+        args: ['--config', '.ci/configs/.naming-convention.yaml']
+      - id: check-empty-files
+        args: ['--config', '.ci/configs/.naming-convention.yaml']
+      - id: check-duplicate-files
+        args: ['--config', '.ci/configs/.naming-convention.yaml']
+
+  # YAML/JSON formatting
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0-alpha.8
+    hooks:
+      - id: prettier
+        args: ['--config', '.ci/configs/.prettierrc']
+        # types_or: [yaml, json, markdown]
+        types_or: [yaml, json]
+        exclude: '\.gotmpl$|^components/.*/charts/.*/templates/.*\.yaml$' # gotmpl can't be formatted
+        additional_dependencies:
+          - prettier@3.3.0
+
+  # YAML linting
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.37.1
+    hooks:
+      - id: yamllint
+        args: ['-c', '.ci/configs/.yamllint.yaml', '--strict'] # Added --strict
+        exclude: '\.gotmpl$|^components/.*/charts/.*/templates/.*\.yaml$'
+
+  # Markdown linting
+  # - repo: https://github.com/igorshubovych/markdownlint-cli
+  #   rev: v0.45.0
+  #   hooks:
+  #     - id: markdownlint
+  #       args: ['--fix', '--config', '.ci/configs/.markdownlint.yaml']
+
+  # Helm chart linting
+  - repo: https://github.com/gruntwork-io/pre-commit
+    rev: v0.1.30
+    hooks:
+      - id: helmlint
+
+  - repo: local
+    hooks:
+      - id: helmfile-lint
+        name: Validate Helmfile
+        entry: helmfile lint -f deployment/helmfile.yaml -e local
+        language: system
+        # TODO: re-add pass_filenames when helmfile supports it
+        # files: 'deployment/helmfile\.ya?ml\.gotmpl$'
+        # pass_filenames: true
+
+      - id: helmfile-template
+        name: Render Helmfile
+        # TODO: clean up entry to use pass_filenames again
+        entry: sh -c "helmfile template -f deployment/helmfile.yaml > /dev/null"
+        language: system
+        # pass_filenames: true
+        # files: 'deployment/helmfile\.ya?ml$'
+
+      # TODO: Fix policy checking
+      # - id: check-policies
+      #   name: Check Policies
+      #   entry: make verify-policies
+      #   language: system

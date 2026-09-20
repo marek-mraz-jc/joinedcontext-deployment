@@ -1,0 +1,60 @@
+# The mapping of the linked-events pipeline (PL-03): today's events of the City of Helsinki from
+# the Linked Events register, one fetch is one page. The reconciler renders the poll of the
+# hel-linked-events DataSource in front and the endpoint upsert after (PL-39, PL-16).
+
+pipeline:
+  processors:
+    - mapping: |
+        root = this.data
+    - unarchive:
+        format: json_array
+
+    # Two rows the register really contains and a map cannot use: an event whose place has no
+    # position, and one whose start year is mistyped ("0026-09-23"), which would answer every
+    # time query wrongly for two thousand years. Both are dropped rather than guessed at.
+    - mapping: |
+        let position = this.location.position.or(null)
+        let year = this.start_time.or("").slice(0, 4).number().catch(0)
+        root = if $position == null || $year < 2000 { deleted() } else { this }
+
+    - mapping: |
+        # The domain comes from the deployment, never from this file (PF-44). A Linked Events
+        # id is `helsinki:agpg4hzprq`; the colon would open a segment inside the URN's own
+        # separator, so it becomes a hyphen.
+        let domain = env("JC_ORG_DOMAIN")
+        let id = "urn:ngsi-ld:%v:%v:%v:%v".format(
+          "Event", $domain, env("JC_SPACE"), this.id.replace_all(":", "-"))
+        let names = this.name.or({}).filter(entry -> entry.value.type() == "string" && entry.value != "")
+        let summaries = this.short_description.or({}).filter(entry -> entry.value.type() == "string" && entry.value != "")
+        let street = this.location.street_address.or({}).fi.or(null)
+        let contact = this.provider_contact_info.or(null)
+        root = {
+          "id": $id,
+          "type": "Event",
+          "name": if $names.length() > 0 {
+            { "type": "LanguageProperty", "languageMap": $names }
+          } else { null },
+          "description": if $summaries.length() > 0 {
+            { "type": "LanguageProperty", "languageMap": $summaries }
+          } else { null },
+          "startDate": { "type": "Property", "value": this.start_time },
+          "endDate": if this.end_time.or(null) == null { null } else {
+            { "type": "Property", "value": this.end_time }
+          },
+          "eventStatus": { "type": "Property", "value": this.event_status },
+          "location": { "type": "GeoProperty", "value": this.location.position },
+          "address": if $street == null { null } else {
+            { "type": "Property", "value": $street + ", Helsinki" }
+          },
+          "contactPoint": if $contact == null || $contact == "" { null } else {
+            { "type": "Property", "value": $contact }
+          },
+          "source": { "type": "Property", "value": "https://api.hel.fi/linkedevents/v1/" }
+        }
+        # The register writes a field it does not have as null or as an empty string in every
+        # language. Copying either through would publish an attribute with nothing in it.
+        root = root.filter(entry -> entry.value != null)
+
+    # One request per fetch rather than one per event.
+    - archive:
+        format: json_array

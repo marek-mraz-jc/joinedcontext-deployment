@@ -1,0 +1,37 @@
+name: reusable rust ci
+# The fast Rust gate, written once and called by every Rust repository of the platform
+# (TS-01, TS-04, OPS-40). Actions are pinned by commit, not by tag: a tag is mutable and a
+# supply-chain gate that trusts a mutable reference is not a gate.
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        description: "the workspace root, when it is not the repository root"
+        type: string
+        default: "."
+      toolchain:
+        description: "rust toolchain, e.g. stable or 1.90.0"
+        type: string
+        default: "stable"
+      test-args:
+        description: "arguments to `cargo test`; the default is gate-unit-backend"
+        type: string
+        default: "--workspace --lib"
+permissions: { contents: read }
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults: { run: { working-directory: "${{ inputs.working-directory }}" } }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+        with: { toolchain: "${{ inputs.toolchain }}", components: "rustfmt, clippy" }
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with: { workspaces: "${{ inputs.working-directory }}" }
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      # The arguments travel through the environment rather than into the command line, so a
+      # caller cannot extend the shell command by writing one.
+      - env: { TEST_ARGS: "${{ inputs.test-args }}" }
+        run: cargo test $TEST_ARGS

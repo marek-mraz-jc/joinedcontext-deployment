@@ -1,0 +1,15 @@
+# The project's indicator space (PF-54): every KPI a pipeline or the assistant computes for
+# helsinki is one KeyPerformanceIndicator entity here, never in the data space it reads.
+apiVersion: joinedcontext.com/v1alpha1
+kind: ContextSpace
+metadata:
+  name: helsinki-kpi
+  namespace: helsinki
+  title: { en: "Helsinki indicators" }
+  description:
+    en: "Key performance indicators computed from the city context: one entity per indicator, with its formula and its sources"
+spec:
+  # Pinned so no entity id changes: the space predates rendered segments (PF-84).
+  urnSegment: helsinki-kpi
+  isSandbox: false
+  defaultLocale: en

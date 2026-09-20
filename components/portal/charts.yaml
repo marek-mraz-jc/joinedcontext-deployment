@@ -1,0 +1,4 @@
+---
+portal:
+  portal:
+    chart: ../../charts/workload

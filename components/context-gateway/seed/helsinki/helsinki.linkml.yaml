@@ -1,0 +1,358 @@
+id: https://hel.fi/models/helsinki/helsinki
+name: helsinki
+title: Helsinki city context
+description: >-
+  What the Helsinki demonstration space carries side by side (DM-01, DM-09): the events of the
+  city's Linked Events register, the HSL city bike docking stations, the HSL buses of four
+  trunk lines, the city's news, Fintraffic's road weather stations and its traffic alerts. One model, one space, four endpoints that each publish a slice of it. The IRIs
+  are Smart Data Models' and ETSI's, cited rather than minted, so a reader who knows those
+  vocabularies reads the same terms here (DM-04, DM-16).
+license: https://joinedcontext.com/licenses/cc-by-4.0
+prefixes:
+  linkml: https://w3id.org/linkml/
+  sdm: https://smartdatamodels.org/
+  ngsi-ld: https://uri.etsi.org/ngsi-ld/
+default_prefix: sdm
+default_range: string
+imports:
+  - linkml:types
+  - ngsi-ld-core
+
+slots:
+  name:
+    slot_uri: schema:name
+    description: The name, per language.
+    annotations:
+      ngsi_ld_kind: LanguageProperty
+      upstream_source: https://schema.org/name
+  description:
+    slot_uri: schema:description
+    description: A short description, per language.
+    annotations:
+      ngsi_ld_kind: LanguageProperty
+      upstream_source: https://schema.org/description
+  startDate:
+    slot_uri: schema:startDate
+    description: When the event starts, ISO 8601 with a time zone.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Event
+  endDate:
+    slot_uri: schema:endDate
+    description: When the event ends; absent while the register does not say.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Event
+  eventStatus:
+    slot_uri: schema:eventStatus
+    description: The register's status of the event, EventScheduled, EventCancelled or EventPostponed.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/eventStatus
+  address:
+    slot_uri: schema:address
+    description: The street address of the venue, one line.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/address
+  contactPoint:
+    slot_uri: schema:contactPoint
+    description: >-
+      The organizer's contact line as the register carries it, often a named person with a
+      phone number. The space keeps it for the city's own coordination; no public endpoint
+      serves it.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/contactPoint
+  source:
+    slot_uri: sdm:source
+    description: The open-data service the entity was read from.
+    range: uri
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
+  availableBikeNumber:
+    slot_uri: sdm:availableBikeNumber
+    description: Bikes ready to rent at the station right now.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  freeSlotNumber:
+    slot_uri: sdm:freeSlotNumber
+    description: Empty docks a bike can be returned to right now.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  totalSlotNumber:
+    slot_uri: sdm:totalSlotNumber
+    description: Bikes plus free docks, the station's working size.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  status:
+    slot_uri: sdm:status
+    description: working while the station rents and takes returns, otherwise outOfService.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  dateModified:
+    slot_uri: sdm:dateModified
+    description: When the station last reported.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
+  speed:
+    slot_uri: sdm:speed
+    description: Ground speed of the bus.
+    range: float
+    minimum_value: 0
+    unit:
+      ucum_code: m/s
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  heading:
+    slot_uri: sdm:heading
+    description: Compass heading of the bus, degrees clockwise from north.
+    range: float
+    minimum_value: 0
+    maximum_value: 360
+    unit:
+      ucum_code: deg
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  route:
+    slot_uri: sdm:route
+    description: The HSL route id the bus is serving, four digits with the municipality prefix.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  vehicleType:
+    slot_uri: sdm:vehicleType
+    description: The kind of vehicle; bus on every entity of this space.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  fleetVehicleId:
+    slot_uri: sdm:fleetVehicleId
+    description: The operator and vehicle number HSL publishes, operator-vehicle.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  url:
+    slot_uri: schema:url
+    description: Where the item is published in full.
+    range: uri
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/url
+  datePublished:
+    slot_uri: schema:datePublished
+    description: When the item was published, ISO 8601 with a time zone.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/datePublished
+  image:
+    slot_uri: schema:image
+    description: The item's picture, when the feed carries one.
+    range: uri
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/image
+  dateObserved:
+    slot_uri: sdm:dateObserved
+    description: When the station's readings were taken.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  temperature:
+    slot_uri: sdm:temperature
+    description: Air temperature at the station.
+    range: float
+    unit:
+      ucum_code: Cel
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  roadSurfaceTemperature:
+    slot_uri: sdm:roadSurfaceTemperature
+    description: Temperature of the road surface at the station.
+    range: float
+    unit:
+      ucum_code: Cel
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  relativeHumidity:
+    slot_uri: sdm:relativeHumidity
+    description: Relative humidity of the air, 0 to 1.
+    range: float
+    minimum_value: 0
+    maximum_value: 1
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  windSpeed:
+    slot_uri: sdm:windSpeed
+    description: Mean wind speed at the station.
+    range: float
+    minimum_value: 0
+    unit:
+      ucum_code: m/s
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  windDirection:
+    slot_uri: sdm:windDirection
+    description: Where the wind comes from, degrees clockwise from north.
+    range: float
+    minimum_value: 0
+    maximum_value: 360
+    unit:
+      ucum_code: deg
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  precipitation:
+    slot_uri: sdm:precipitation
+    description: Precipitation intensity at the station, millimetres per hour.
+    range: float
+    minimum_value: 0
+    unit:
+      ucum_code: mm/h
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  category:
+    slot_uri: sdm:category
+    description: The alert's domain; traffic for everything Fintraffic publishes.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Alert
+  subCategory:
+    slot_uri: sdm:subCategory
+    description: Fintraffic's situation type, ROAD_WORK or TRAFFIC_ANNOUNCEMENT.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Alert
+  dateIssued:
+    slot_uri: sdm:dateIssued
+    description: When the situation was published.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Alert
+  validFrom:
+    slot_uri: sdm:validFrom
+    description: When the situation starts.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Alert
+  validTo:
+    slot_uri: sdm:validTo
+    description: When the situation ends; absent while open-ended.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Alert
+
+classes:
+  Event:
+    class_uri: sdm:Event
+    description: One event of the City of Helsinki's Linked Events register.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Event
+    slots:
+      - name
+      - description
+      - startDate
+      - endDate
+      - eventStatus
+      - address
+      - contactPoint
+      - source
+  BikeHireDockingStation:
+    class_uri: sdm:BikeHireDockingStation
+    description: One HSL city bike station, its position and what it holds right now.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+    slots:
+      - name
+      - availableBikeNumber
+      - freeSlotNumber
+      - totalSlotNumber
+      - status
+      - dateModified
+      - source
+  Vehicle:
+    class_uri: sdm:Vehicle
+    description: One HSL bus on a trunk line, where it is and how fast it moves.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+    slots:
+      - speed
+      - heading
+      - route
+      - vehicleType
+      - fleetVehicleId
+  NewsArticle:
+    class_uri: schema:NewsArticle
+    description: One item of the City of Helsinki's news feed.
+    is_a: Entity
+    annotations:
+      upstream_source: https://schema.org/NewsArticle
+    slots:
+      - name
+      - description
+      - url
+      - datePublished
+      - image
+      - source
+  WeatherObserved:
+    class_uri: sdm:WeatherObserved
+    description: One Fintraffic road weather station around Helsinki and its latest readings.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+    slots:
+      - name
+      - dateObserved
+      - temperature
+      - roadSurfaceTemperature
+      - relativeHumidity
+      - windSpeed
+      - windDirection
+      - precipitation
+      - source
+  Alert:
+    class_uri: sdm:Alert
+    description: One road work or traffic announcement of Fintraffic in the capital region.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Alert
+    slots:
+      - name
+      - description
+      - category
+      - subCategory
+      - address
+      - dateIssued
+      - validFrom
+      - validTo
+      - source

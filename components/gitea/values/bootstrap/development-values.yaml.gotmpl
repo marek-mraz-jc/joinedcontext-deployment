@@ -1,0 +1,35 @@
+---
+# The Job does the same work in every profile: it either finds the repository or creates it.
+# What differs between installations is the repository's name, and that is global.configRepo.
+
+
+# The Helsinki seed, committed where the Portal reads it (T-0478): the same files the gateway
+# mounts, so the Portal's store and the gateway's table cannot disagree. The index maps each
+# file to its repository path; `/` becomes `__` because a ConfigMap key cannot hold a slash and
+# the Job turns it back.
+#
+# Every file of the seed goes in, the DataSource, Pipeline and CkanInstance manifests included:
+# the Portal image of portal 47a97de carries jc-core 0.7.1 and knows every kind. (The image
+# before it refused the whole repository over one manifest of a kind it did not know, which
+# is why T-0479 held those eight files back for a day.)
+seed:
+{{- range $file, $path := readFile "../../../context-gateway/seed/helsinki/index.yaml" | fromYaml }}
+  {{ $path | replace "/" "__" }}: |
+{{ readFile (printf "../../../context-gateway/seed/helsinki/%s" $file) | indent 4 }}
+{{- end }}
+  # The conformance project (`ovzdusie`, its public endpoint, the two policies, the writing
+  # account and the published model with its artifacts): what the gateway's own ConfigMap
+  # carried until the checkout replaced it (T-0278). The smoke run and the ETSI suite write
+  # through this endpoint.
+{{- range $file, $path := readFile "../../../context-gateway/seed/banskabystrica/index.yaml" | fromYaml }}
+  {{ $path | replace "/" "__" }}: |
+{{ readFile (printf "../../../context-gateway/seed/banskabystrica/%s" $file) | indent 4 }}
+{{- end }}
+{{- if has "agent-runner" .Values.components }}
+  # The builder profile the Portal loads for every agent run (AG-26): organization scope,
+  # so it is committed by the forge seed and not by the gateway's own table.
+{{- range $file, $path := readFile "../../../agent-runner/seed/index.yaml" | fromYaml }}
+  {{ $path | replace "/" "__" }}: |
+{{ readFile (printf "../../../agent-runner/seed/%s" $file) | indent 4 }}
+{{- end }}
+{{- end }}

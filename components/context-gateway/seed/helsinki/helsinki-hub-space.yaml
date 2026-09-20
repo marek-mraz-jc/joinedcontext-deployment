@@ -1,0 +1,17 @@
+# The hub (Architecture/04 §5a): a space that holds no entities of its own, only registrations
+# to the spaces that do. "What is happening in Helsinki right now" spans the live context and
+# the indicators derived from it, and asking it should not mean two endpoints and a join in the
+# caller (EP-70).
+apiVersion: joinedcontext.com/v1alpha1
+kind: ContextSpace
+metadata:
+  name: helsinki-hub
+  namespace: helsinki
+  title: { en: "Helsinki, all of it" }
+  description:
+    en: "One question over the city's live context and its indicators: this space holds registrations, never entities"
+spec:
+  # Pinned so no entity id changes: the space predates rendered segments (PF-84).
+  urnSegment: helsinki-hub
+  isSandbox: false
+  defaultLocale: en

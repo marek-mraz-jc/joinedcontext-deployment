@@ -1,0 +1,6 @@
+---
+pipeline-runner:
+  runner:
+    repository: 'ghcr.io/warpstreamlabs/bento'
+    tag: '1.21.1'
+    digest: 'sha256:656c55de3f8deddd4ee743f3c76f3b497e67324e940f2bc1769693cd8b906364'

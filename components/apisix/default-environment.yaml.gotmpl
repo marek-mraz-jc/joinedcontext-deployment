@@ -1,0 +1,15 @@
+---
+apisix:
+  apisix:
+    enabled: true
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "apisix") }}
+    subdomain: "apisix"
+    pathPrefix: "/"
+    # Where the hop in front of APISIX lives, so nginx rewrites the caller's address out of
+    # `X-Forwarded-For` instead of logging and rate-limiting the ingress controller's pod
+    # (T-0929). k3s and kube-hetzner both hand pods 10.42.0.0/16; a cluster with another pod
+    # network overrides this in its environment.
+    trustedProxyCidr: "10.42.0.0/16"
+  configuration:
+    enabled: true
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "apisix") }}

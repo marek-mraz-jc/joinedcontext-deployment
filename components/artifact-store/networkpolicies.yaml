@@ -1,0 +1,72 @@
+---
+# The store has no ingress route and no reason to call anything: it is a volume with an S3 API
+# that two workloads read (Architecture/17 §3). Writers — `jcctl` and CI — run outside the
+# cluster and reach it through the same mesh boundary, which today means they do not reach it
+# at all until a route exists for them; that is the strict end of PF-32 rather than a gap.
+artifact-store:
+  podSelector:
+    app.kubernetes.io/component: store
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: context-gateway-gateway
+          componentNamespace: context-gateway
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: portal-portal
+          componentNamespace: portal
+        # The bucket bootstrap, which creates the bucket and its object-lock configuration
+        # from inside this namespace after every apply.
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: bucket
+          componentNamespace: artifact-store
+      ports:
+        - protocol: TCP
+          port: 9000
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+
+# The bootstrap talks to one address and resolves one name.
+artifact-store-bucket:
+  podSelector:
+    app.kubernetes.io/component: bucket
+  policyTypes:
+    - Ingress
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: store
+          componentNamespace: artifact-store
+      ports:
+        - protocol: TCP
+          port: 9000
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53

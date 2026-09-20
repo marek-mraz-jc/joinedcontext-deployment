@@ -1,0 +1,34 @@
+---
+environments:
+  # empty environments must exist. When no environments are defined and one is set via CLI,
+  # helmfile will error out.
+  testing:
+    values: []
+  local:
+    values: []
+  production:
+    values: []
+  staging:
+    values: []
+  smoke-test:
+    values: []
+  dev:
+    values: []
+  recovery-test:
+    values: []
+  # The render surface of the optional add-ons; see environments/addons/global.yaml.gotmpl.
+  addons:
+    values: []
+---
+helmfiles:
+  - path: '../helmfile-root.yaml.gotmpl'
+    values:
+      - environments:
+          - testing
+          - local
+          - production
+          - staging
+          - smoke-test
+          - dev
+          - recovery-test
+          - addons

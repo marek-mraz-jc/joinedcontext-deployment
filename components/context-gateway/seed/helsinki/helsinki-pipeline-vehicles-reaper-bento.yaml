@@ -1,0 +1,37 @@
+# The mapping of the vehicles-reaper pipeline (PL-03): the expiry HSL's positions do not carry.
+# NGSI-LD has no entity lifetime and `expiresAt` is the broker's own member, so every minute
+# the reaper reads the buses back, keeps the ids whose position is older than ten minutes and
+# deletes them in one batch through the endpoint (deleteBatch of the pipelines-write Policy).
+# Nothing reaches the rendered upsert output: the last mapping drops the message.
+
+pipeline:
+  processors:
+    - unarchive:
+        format: json_array
+
+    - mapping: |
+        let seen = this.location.observedAt.or(this.dateObserved.value).or(this.modifiedAt).or("1970-01-01T00:00:00Z")
+        let age = now().ts_unix() - $seen.ts_parse("2006-01-02T15:04:05Z07:00").ts_unix().catch(0)
+        root = if $age > 600 { { "id": this.id } } else { deleted() }
+
+    - archive:
+        format: json_array
+
+    # The batch delete takes the bare ids; an empty batch is nothing to delete.
+    - mapping: |
+        root = if this.length() == 0 { deleted() } else { this.map_each(entity -> entity.id) }
+
+    - http:
+        url: ${JC_GATEWAY_URL}/api/endpoint/si6epqkx364lprho5uaigutk274r5grb/ngsi-ld/v1/entityOperations/delete
+        verb: POST
+        headers:
+          Content-Type: application/json
+        oauth2:
+          enabled: true
+          client_key: ${JC_CLIENT_ID}
+          client_secret: ${JC_CLIENT_SECRET}
+          token_url: ${JC_TOKEN_URL}
+        timeout: 30s
+        rate_limit: pipeline_egress
+
+    - mapping: root = deleted()

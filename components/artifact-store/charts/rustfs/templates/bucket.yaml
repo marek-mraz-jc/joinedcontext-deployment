@@ -1,0 +1,108 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "rustfs.fullname" . }}-bucket
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "rustfs.labels" . | nindent 4 }}
+  annotations:
+    # Object lock can only be turned on when the bucket is created and can never be added
+    # later (PF-33), so the bucket is made here rather than by the first writer. The Job is
+    # idempotent: it runs after every apply, finds everything in place and exits.
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "10"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  ttlSecondsAfterFinished: 600
+  backoffLimit: 6
+  template:
+    metadata:
+      labels:
+        {{- include "rustfs.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: bucket
+      {{- if .Values.serviceMesh.enabled }}
+      annotations:
+        # The proxy must be a native sidecar or it keeps running after the script ends and
+        # the Job never completes.
+        linkerd.io/inject: enabled
+        config.alpha.linkerd.io/proxy-enable-native-sidecar: "true"
+      {{- end }}
+    spec:
+      restartPolicy: OnFailure
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: bucket
+          image: {{ include "rustfs.bootstrapImage" . | quote }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              endpoint="$ENDPOINT"
+              {{- if .Values.objectLock.enabled }}
+              lock="--object-lock-enabled-for-bucket"
+              {{- else }}
+              lock=""
+              {{- end }}
+              until aws --endpoint-url "$endpoint" s3api list-buckets >/dev/null 2>&1; do
+                echo "waiting for the artifact store at $endpoint"
+                sleep 2
+              done
+              if aws --endpoint-url "$endpoint" s3api head-bucket --bucket "$BUCKET" 2>/dev/null; then
+                echo "bucket $BUCKET is already there"
+              else
+                # Object lock at creation, which also turns versioning on: a published
+                # artifact is a promise to a partner and the storage keeps it (PF-33, DM-26).
+                aws --endpoint-url "$endpoint" s3api create-bucket --bucket "$BUCKET" $lock
+                echo "created bucket $BUCKET"
+              fi
+              {{- if and .Values.objectLock.enabled (gt (int .Values.objectLock.defaultRetentionDays) 0) }}
+              aws --endpoint-url "$endpoint" s3api put-object-lock-configuration --bucket "$BUCKET" \
+                --object-lock-configuration '{"ObjectLockEnabled":"Enabled","Rule":{"DefaultRetention":{"Mode":"COMPLIANCE","Days":{{ int .Values.objectLock.defaultRetentionDays }}}}}'
+              echo "default retention: COMPLIANCE for {{ int .Values.objectLock.defaultRetentionDays }} days"
+              {{- end }}
+              # Cached file downloads are the one thing here that is not kept (PF-33).
+              aws --endpoint-url "$endpoint" s3api put-bucket-lifecycle-configuration --bucket "$BUCKET" \
+                --lifecycle-configuration '{"Rules":[{"ID":"file-cache","Status":"Enabled","Filter":{"Prefix":"{{ .Values.fileCache.prefix }}"},"Expiration":{"Days":{{ int .Values.fileCache.expiryDays }}}}]}'
+              echo "lifecycle: {{ .Values.fileCache.prefix }} expires after {{ int .Values.fileCache.expiryDays }} day(s)"
+          env:
+            - name: ENDPOINT
+              value: {{ include "rustfs.endpoint" . | quote }}
+            - name: BUCKET
+              value: {{ .Values.bucket | quote }}
+            - name: AWS_DEFAULT_REGION
+              value: {{ .Values.region | quote }}
+            # The store is not on EC2 and there is no instance metadata to ask; without this
+            # every call waits for a timeout that will never answer.
+            - name: AWS_EC2_METADATA_DISABLED
+              value: "true"
+            # aws-cli writes its own configuration next to $HOME, which is not writable here.
+            - name: HOME
+              value: /tmp
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.credentialsSecret | quote }}
+                  key: {{ .Values.accessKeyIdKey | quote }}
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.credentialsSecret | quote }}
+                  key: {{ .Values.secretAccessKeyKey | quote }}
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

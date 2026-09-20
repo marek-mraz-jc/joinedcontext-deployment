@@ -1,0 +1,57 @@
+# A Bento flow that polls a JSON resource and writes one entity type into a space (PL-01,
+# PL-04, CC-23..CC-27). The gallery card the steward runs from the Flows view; it renders the
+# DataSource and the Pipeline of one fetch, the same pair the Linked Events feed is made of.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Blueprint
+metadata:
+  name: http-json-feed
+  namespace: org
+  title: { en: "Poll a JSON feed into a Context Space", fi: "Lue JSON-syöte kontekstitilaan" }
+spec:
+  version: 1.0.0
+  category: ingestion
+  riskClass: yellow
+  allowedRoles: [portal-approver]
+  parameterSchema:
+    type: object
+    required: [name, url, entityType, period]
+    additionalProperties: false
+    properties:
+      name: { type: string, title: "Flow name", pattern: "^[a-z][a-z0-9-]{1,40}$", description: "Names the DataSource and the Pipeline, one word with hyphens." }
+      url: { type: string, title: "URL of the JSON resource", format: uri }
+      entityType: { type: string, title: "Entity type written", pattern: "^[A-Z][A-Za-z0-9]+$", default: Event }
+      period: { type: string, title: "Poll every", enum: [1m, 5m, 15m, 30m, 1h, 1d], default: 30m }
+      schedule: { type: string, title: "Cron schedule", default: "*/30 * * * *", description: "The cron line of the period above." }
+      targetEndpoint: { type: string, title: "Endpoint the flow writes through", default: "urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all" }
+  templates:
+    - name: datasource
+      template: |
+        apiVersion: joinedcontext.com/v1alpha1
+        kind: DataSource
+        metadata:
+          name: "{{ name }}"
+          title: { en: "{{ name }} ({{ entityType }})" }
+        spec:
+          type: http
+          http:
+            url: "{{ url }}"
+            verb: GET
+            headers: { Accept: application/json }
+            timeout: 30s
+    - name: pipeline
+      template: |
+        apiVersion: joinedcontext.com/v1alpha1
+        kind: Pipeline
+        metadata:
+          name: "{{ name }}"
+          title: { en: "{{ entityType }} from {{ name }}" }
+        spec:
+          class: auto
+          period: "{{ period }}"
+          schedule: "{{ schedule }}"
+          source:
+            dataSourceRef: { kind: DataSource, name: "{{ name }}" }
+          targetEndpoint: "{{ targetEndpoint }}"
+          quotas:
+            maxMemoryMb: 128
+            cpuMillicores: 100

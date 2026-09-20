@@ -1,0 +1,9 @@
+---
+component: gitea
+parts:
+  - name: forge
+  # After the forge, because it talks to it. `needs` is the ordering; the Job's own wait loop
+  # only covers the gap between a ready Deployment and a Gitea that has finished migrating.
+  - name: bootstrap
+    needs:
+      - gitea.forge

@@ -1,0 +1,270 @@
+{{- $part := "ckan" }}
+{{- $full := include "ckan.fullname" . }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $full }}-storage
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "ckan.labels" (dict "root" . "part" $part) | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- if .Values.ckan.storage.storageClass }}
+  storageClassName: {{ .Values.ckan.storage.storageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.ckan.storage.size }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $full }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "ckan.labels" (dict "root" . "part" $part) | nindent 4 }}
+spec:
+  # The uploads claim is ReadWriteOnce, so a second replica would not schedule beside the
+  # first on a single-node cluster. Scaling CKAN needs an RWX volume or object storage.
+  replicas: {{ .Values.ckan.replicaCount }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "ckan.selectorLabels" (dict "root" . "part" $part) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ckan.selectorLabels" (dict "root" . "part" $part) | nindent 8 }}
+      annotations:
+        # The theme is a mounted file, so a rebrand has to restart the pod to be seen.
+        checksum/theme: {{ include (print $.Template.BasePath "/theme.yaml") . | sha256sum }}
+        checksum/startup: {{ include (print $.Template.BasePath "/startup.yaml") . | sha256sum }}
+        {{- with (include "ckan.podAnnotations" .) }}
+        {{- . | nindent 8 }}
+        {{- end }}
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        # `start_ckan.sh` edits $CKAN_INI in place with `ckan config-tool`; it never creates
+        # it. The file it expects is the one `ckan generate config` wrote when the image was
+        # built, at /srv/app/ckan.ini — and that path is read-only here, so $CKAN_INI points
+        # at the emptyDir instead and the shipped file has to be copied there first. Without
+        # this the entrypoint logs "Path '/tmp/ckan.ini' does not exist" four times, prerun
+        # fails to init the database and uWSGI serves 500 until the liveness probe kills it.
+        - name: seed-config
+          image: {{ include "ckan.image" .Values.ckan.image }}
+          imagePullPolicy: {{ .Values.ckan.image.pullPolicy }}
+          command: ["cp", "/srv/app/ckan.ini", "/tmp/ckan.ini"]
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            {{- toYaml .Values.ckan.resources | nindent 12 }}
+      containers:
+        - name: ckan
+          image: {{ include "ckan.image" .Values.ckan.image }}
+          imagePullPolicy: {{ .Values.ckan.image.pullPolicy }}
+          env:
+            # The emptyDir copy the init container placed there, not the read-only one in the
+            # image: the entrypoint edits this file in place with `ckan config-tool` on every
+            # start, and the root filesystem is read-only.
+            - name: CKAN_INI
+              value: /tmp/ckan.ini
+            - name: CKAN_SITE_URL
+              value: {{ .Values.siteUrl | quote }}
+            - name: CKAN__PLUGINS
+              # `oidc_pkce` is listed only when the login is on: CKAN exits on a plugin it
+              # cannot import, so the list and the image have to agree (T-0403).
+              value: {{ if .Values.ckan.sso.enabled }}{{ printf "%s oidc_pkce" .Values.ckan.plugins | quote }}{{ else }}{{ .Values.ckan.plugins | quote }}{{ end }}
+            - name: CKAN_STORAGE_PATH
+              value: /var/lib/ckan
+            - name: PYTHONPATH
+              value: /srv/theme
+            - name: JC_BRANDING_FILE
+              value: /etc/jc/branding/branding.json
+            - name: CKAN_SOLR_URL
+              value: http://{{ $full }}-solr.{{ .Release.Namespace }}.svc.cluster.local:8983/solr/ckan
+            - name: CKAN_REDIS_URL
+              value: redis://{{ $full }}-redis.{{ .Release.Namespace }}.svc.cluster.local:6379/0
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secret.name }}
+                  key: {{ .Values.database.secret.key }}
+            - name: CKAN_SQLALCHEMY_URL
+              value: postgresql://{{ .Values.database.user }}:$(PGPASSWORD)@{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.name }}
+            - name: CKAN_DATASTORE_WRITE_URL
+              value: postgresql://{{ .Values.database.user }}:$(PGPASSWORD)@{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.datastoreName }}
+            - name: DATASTORE_READ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.datastoreRead.secret.name }}
+                  key: {{ .Values.database.datastoreRead.secret.key }}
+            # A different role from the write URL above, and one that holds SELECT and
+            # nothing else. CKAN checks this at startup and refuses to run when the two are
+            # the same, because `datastore_search_sql` runs caller-supplied SQL on it.
+            - name: CKAN_DATASTORE_READ_URL
+              value: postgresql://{{ .Values.database.datastoreRead.user }}:$(DATASTORE_READ_PASSWORD)@{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.datastoreName }}
+            # Read by files/startup/00-secret-key.sh, not by CKAN: 2.11 has no
+            # `CKAN___<OPTION>` env override, and a variable named `CKAN_*` would land in the
+            # config under its own literal name instead of the option it looks like.
+            - name: JC_CKAN_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.session.name }}
+                  key: {{ .Values.secrets.session.key }}
+            - name: CKAN_SYSADMIN_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.admin.name }}
+                  key: {{ .Values.secrets.admin.userKey }}
+            - name: CKAN_SYSADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.admin.name }}
+                  key: {{ .Values.secrets.admin.passwordKey }}
+            - name: CKAN_SYSADMIN_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.admin.name }}
+                  key: {{ .Values.secrets.admin.emailKey }}
+            {{- if .Values.ckan.sso.enabled }}
+            {{- $issuer := urlParse .Values.ckan.sso.issuer }}
+            # Keycloak login through `ckanext-oidc-pkce`, which the image built from
+            # `images/ckan/Dockerfile` carries and the stock one does not. The extension reads
+            # these three from the environment itself (`os.environ.get` in its `config.py`);
+            # every other option it reads from the ini only, so 01-oidc.sh writes those.
+            - name: CKANEXT_OIDC_PKCE_BASE_URL
+              value: {{ printf "%s://%s" $issuer.scheme $issuer.host | quote }}
+            - name: CKANEXT_OIDC_PKCE_CLIENT_ID
+              value: {{ .Values.ckan.sso.clientId | quote }}
+            # The client stays confidential: its secret is only ever this reference, never a
+            # value in the ini, an image layer or a log line.
+            - name: CKANEXT_OIDC_PKCE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-client-{{ .Values.ckan.sso.clientId }}
+                  key: client-secret
+            # Read by files/startup/01-oidc.sh, not by CKAN — same reason as the secret key
+            # above: 2.11 has no `CKAN___<OPTION>` env override.
+            - name: JC_OIDC_REALM_PATH
+              value: {{ $issuer.path | quote }}
+            - name: JC_OIDC_SCOPE
+              value: {{ .Values.ckan.sso.scope | quote }}
+            {{- end }}
+            {{- range $name, $value := .Values.ckan.env }}
+            - name: {{ $name }}
+              value: {{ $value | quote }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: 5000
+          readinessProbe:
+            httpGet:
+              path: /api/3/action/status_show
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /api/3/action/status_show
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+            initialDelaySeconds: 60
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          volumeMounts:
+            - name: storage
+              mountPath: /var/lib/ckan
+            - name: tmp
+              mountPath: /tmp
+            - name: branding
+              mountPath: /etc/jc/branding
+              readOnly: true
+            # `start_ckan.sh` sources every *.sh here after it has minted its own
+            # secrets and before uWSGI starts. Mounted as a directory, not with a
+            # subPath, because the entrypoint globs it.
+            - name: startup
+              mountPath: /docker-entrypoint.d
+              readOnly: true
+            # A CKAN plugin is found through its entry point, so the package and the
+            # `dist-info` that declares it are mounted file by file into one directory on
+            # PYTHONPATH. A ConfigMap has no directories of its own, which is why each file
+            # names its own subPath.
+            - name: theme
+              mountPath: /srv/theme/ckanext_jc_theme/__init__.py
+              subPath: __init__.py
+              readOnly: true
+            - name: theme
+              mountPath: /srv/theme/ckanext_jc_theme/plugin.py
+              subPath: plugin.py
+              readOnly: true
+            - name: theme
+              mountPath: /srv/theme/ckanext_jc_theme/templates/header.html
+              subPath: header.html
+              readOnly: true
+            - name: theme
+              mountPath: /srv/theme/ckanext_jc_theme/templates/footer.html
+              subPath: footer.html
+              readOnly: true
+            - name: theme
+              mountPath: /srv/theme/ckanext_jc_theme-0.1.0.dist-info/METADATA
+              subPath: METADATA
+              readOnly: true
+            - name: theme
+              mountPath: /srv/theme/ckanext_jc_theme-0.1.0.dist-info/entry_points.txt
+              subPath: entry_points.txt
+              readOnly: true
+            {{- if and (.Values.branding.logoSvg | default "") (.Values.branding.logo | default "") }}
+            # CKAN serves the logo from the theme's public directory, so `ckan.site_logo`
+            # is a path on this origin and no page fetches an asset from anywhere else.
+            - name: theme
+              mountPath: /srv/theme/ckanext_jc_theme/public/{{ .Values.branding.logo }}
+              subPath: {{ .Values.branding.logo }}
+              readOnly: true
+            {{- end }}
+          resources:
+            {{- toYaml .Values.ckan.resources | nindent 12 }}
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: {{ $full }}-storage
+        - name: tmp
+          emptyDir: {}
+        - name: branding
+          configMap:
+            name: {{ $full }}-theme
+            items:
+              - key: branding.json
+                path: branding.json
+        - name: theme
+          configMap:
+            name: {{ $full }}-theme
+        - name: startup
+          configMap:
+            name: {{ $full }}-startup
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $full }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "ckan.labels" (dict "root" . "part" $part) | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "ckan.selectorLabels" (dict "root" . "part" $part) | nindent 4 }}
+  ports:
+    - name: http
+      port: 5000
+      targetPort: http

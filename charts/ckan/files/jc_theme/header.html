@@ -1,0 +1,31 @@
+{% ckan_extends %}
+
+{% block header_wrapper %}
+{# One stylesheet of custom properties, filled from the branding block and nothing else:
+   a second installation reuses this file unchanged (OPS-47). #}
+<style>
+  :root {
+    --jc-primary: {{ h.jc_branding().colours.primary }};
+    --jc-primary-fg: {{ h.jc_branding().primaryForeground }};
+    --jc-secondary: {{ h.jc_branding().colours.secondary }};
+    --jc-accent: {{ h.jc_branding().colours.accent }};
+    --jc-background: {{ h.jc_branding().colours.background }};
+    --jc-text: {{ h.jc_branding().colours.text }};
+    --jc-font-heading: {{ h.jc_branding().fonts.heading }};
+    --jc-font-body: {{ h.jc_branding().fonts.body }};
+  }
+  body { background: var(--jc-background); color: var(--jc-text); font-family: var(--jc-font-body); }
+  h1, h2, h3, .navbar-brand { font-family: var(--jc-font-heading); }
+  .account-masthead, .masthead, .navbar { background: var(--jc-primary); color: var(--jc-primary-fg); }
+  .masthead a, .navbar a, .navbar-brand { color: var(--jc-primary-fg); }
+  .btn-primary { background: var(--jc-primary); border-color: var(--jc-primary); color: var(--jc-primary-fg); }
+  .homepage .module-content h1 { color: var(--jc-primary); }
+  .site-footer { background: var(--jc-secondary); color: #ffffff; }
+  .badge, .label-default { background: var(--jc-accent); color: var(--jc-text); }
+</style>
+{{ super() }}
+{% endblock %}
+
+{% block header_site_navigation_tabs %}
+  {{ super() }}
+{% endblock %}

@@ -1,0 +1,15 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Policy
+metadata:
+  name: pipelines-write
+  namespace: helsinki
+  title: { en: "The ingestion pipelines write the space" }
+spec:
+  contextSpaceRef: { kind: ContextSpace, name: helsinki }
+  assigner: did:web:{orgDomain}
+  assignee: { kind: serviceAccount, id: pipelines }
+  # Upsert is what a feed poll does; create and query are what a stream needs to start from
+  # nothing and to check itself. deleteBatch is the vehicles-reaper's: a bus whose position is
+  # older than ten minutes is removed by the pipeline that reads it back, because NGSI-LD has no
+  # entity lifetime. A feed that merely stops publishing a thing still leaves it in place.
+  operations: [upsertBatch, createBatch, queryBatch, deleteBatch]

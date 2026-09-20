@@ -1,0 +1,65 @@
+---
+# The Portal lives on its own host, portal.{domain} (ADR-N-019). `subDomain` puts the host on
+# the edge Ingress and in the certificate SAN list, both derived from this map; the apex keeps
+# the shared surfaces (/apps/*, /git/*, /cs/*, /api/endpoint/*) and redirects the rest here.
+portal-ui:
+  name: portal-ui
+  description: Portal user interface
+  upstream: portal.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "portal") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/*'
+  subDomain: portal
+  priority: 1
+
+# The Portal's Prometheus surface is on the same port the UI is published on, so the edge is
+# what keeps it inside the cluster (OPS-16, and components/monitoring/README.md). The route
+# terminates at APISIX and never dials the upstream, the way ckan-redirect does; the
+# ServiceMonitor reaches the pod directly and is unaffected.
+portal-metrics:
+  name: portal-metrics
+  description: /metrics is scraped inside the cluster and refused at the edge
+  upstream: portal.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "portal") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/metrics'
+  subDomain: portal
+  # Above the UI's `/*`, below the API routes, which do not match this path anyway.
+  priority: 5
+
+# RFC 9728 discovery is unauthenticated by definition: an MCP client reads the Portal's
+# protected-resource metadata before it holds a token (AG-60, AG-32). No login in front; the
+# Portal answers a JSON document on this path and nothing else.
+portal-well-known:
+  name: portal-well-known
+  description: OAuth protected-resource metadata of the Portal MCP server, public
+  upstream: portal.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "portal") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/.well-known/oauth-protected-resource*'
+  subDomain: portal
+  priority: 5
+
+portal-api:
+  name: portal-api
+  description: Portal REST API
+  upstream: portal.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "portal") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/api/v1/*'
+  subDomain: portal
+  priority: 10
+
+# The shared apps surface on the apex (AP-26): static bundles served by the Portal behind the
+# edge login. jcctl renders the `app-{name}` routes (`/apps/{name}/*`) at priority 30, above
+# this one; every other apex surface sits below it on a path it never matches.
+apps-surface:
+  name: apps-surface
+  description: Static apps on demand
+  upstream: portal.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "portal") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/apps/*'
+  host: '{{ .Values.global.domain }}'
+  priority: 25
+
+# The lowest-priority apex route: whatever no other apex route serves is sent to the Portal
+# host (see apisix-plugins.yaml). Bound to the apex, or it would also match idm.<domain> and
+# swallow the login pages.
+portal-redirect:
+  name: portal-redirect
+  description: The apex redirects to the Portal host
+  upstream: portal.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "portal") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/*'
+  host: '{{ .Values.global.domain }}'
+  priority: 1

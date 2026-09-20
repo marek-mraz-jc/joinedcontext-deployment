@@ -1,0 +1,15 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: hsl-hfp-vehicles
+  namespace: helsinki
+  title: { en: "HSL trunk-line buses into the space" }
+spec:
+  class: auto
+  source:
+    dataSourceRef: { kind: DataSource, name: hsl-hfp }
+  # Every stream writes through the one endpoint that evaluates the pipelines-write Policy.
+  targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all
+  quotas:
+    maxMemoryMb: 128
+    cpuMillicores: 250

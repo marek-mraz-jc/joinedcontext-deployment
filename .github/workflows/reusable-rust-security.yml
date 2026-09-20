@@ -1,0 +1,66 @@
+name: reusable rust security
+# `cargo audit` against the RustSec database and `cargo deny` over advisories, bans, licences
+# and sources (TS-04, TS-24, OPS-41; BSI TR-03187 AR-4, CT-6).
+#
+# The repository's own `deny.toml` wins when it has one, because an exception needs a reason
+# written beside it. The baseline below is what applies when there is none. It is a copy of
+# `.ci/shared/deny.toml` and `tests/test_reusable_workflows.py` fails when the two drift; it
+# lives inside the workflow because a caller's GITHUB_TOKEN cannot check out a second private
+# repository to read it from.
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        description: "the workspace root, when it is not the repository root"
+        type: string
+        default: "."
+permissions: { contents: read }
+jobs:
+  supply-chain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults: { run: { working-directory: "${{ inputs.working-directory }}" } }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+        with: { toolchain: stable }
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with: { workspaces: "${{ inputs.working-directory }}" }
+      # Prebuilt binaries: building both from source is four minutes this gate does not have.
+      - uses: taiki-e/install-action@84f5ac3124727fb3d284d4d22ee9ab3654fd09a6 # v2.87.7
+        with: { tool: "cargo-audit,cargo-deny" }
+      - name: the baseline configuration, for a repository that ships none
+        run: |
+          if [ -f deny.toml ]; then
+            echo "using this repository's own deny.toml"
+            exit 0
+          fi
+          echo "::notice::no deny.toml in this repository; the platform baseline applies"
+          cat > deny.toml <<'JCDENY'
+          # The baseline `cargo deny` configuration every Rust repository of the platform is held to
+          # (TS-04, TS-24, OPS-41). A repository that ships its own `deny.toml` uses that one instead,
+          # because an exception needs a reason written next to it; this is what applies when there is
+          # none.
+          #
+          # The copy embedded in `.github/workflows/reusable-rust-security.yml` is generated from this
+          # file and `tests/test_reusable_workflows.py` fails when the two drift.
+          [advisories]
+          db-urls = ["https://github.com/rustsec/advisory-db"]
+          yanked = "deny"
+          ignore = []
+          [licenses]
+          # Permissive and weak-copyleft only. A strong copyleft licence (GPL, AGPL, LGPL) on a crate
+          # linked into a distributed binary changes what the platform may be shipped under, which is a
+          # decision no pull request makes on its own.
+          allow = ["MIT", "Apache-2.0", "Apache-2.0 WITH LLVM-exception", "BSD-2-Clause", "BSD-3-Clause", "ISC", "Unicode-3.0", "Zlib", "MPL-2.0", "EUPL-1.2", "CC0-1.0", "MIT-0", "OpenSSL"]
+          confidence-threshold = 0.9
+          [bans]
+          multiple-versions = "warn"
+          wildcards = "deny"
+          [sources]
+          unknown-registry = "deny"
+          unknown-git = "deny"
+          allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+          JCDENY
+      - run: cargo audit --deny warnings
+      - run: cargo deny check advisories bans licenses sources

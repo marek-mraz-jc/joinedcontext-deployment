@@ -1,0 +1,132 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":configMigration",
+    "customManagers:dockerfileVersions"
+  ],
+  "baseBranchPatterns": [
+    "staging"
+  ],
+  "enabledManagers": [
+    "custom.regex",
+    "dockerfile",
+    "gitlabci"
+  ],
+  "labels": [
+    "renovate",
+    "v::2",
+    "team devops"
+  ],
+  "prConcurrentLimit": 10,
+  "prHourlyLimit": 5,
+  "osvVulnerabilityAlerts": true,
+  "vulnerabilityAlerts": {
+    "labels": [
+      "renovate",
+      "security",
+      "v::2",
+      "team devops"
+    ]
+  },
+  "separateMajorMinor": true,
+  "separateMultipleMajor": true,
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Helm charts from HTTP(S) repos in components/**/charts.yaml; the helmfile repository alias is stripped because chart names in the repo index do not contain it",
+      "managerFilePatterns": [
+        "/^components/.+/charts\\.yaml$/"
+      ],
+      "matchStrings": [
+        "repository:\\s*['\"]?(?<registryUrl>https?://[^\\s'\"]+)['\"]?\\s*\\n\\s*chart:\\s*['\"]?(?:[^\\s/'\"]+/)?(?<depName>[^\\s/'\"]+)['\"]?\\s*\\n\\s*version:\\s*['\"]?(?<currentValue>[^'\"\\n]+)['\"]?"
+      ],
+      "datasourceTemplate": "helm"
+    },
+    {
+      "customType": "regex",
+      "description": "OCI Helm charts in components/**/charts.yaml (resolved as docker tags)",
+      "managerFilePatterns": [
+        "/^components/.+/charts\\.yaml$/"
+      ],
+      "matchStrings": [
+        "chart:\\s*['\"]?oci://(?<depName>[^\\s'\"]+)['\"]?\\s*\\n\\s*version:\\s*['\"]?(?<currentValue>[^'\"\\n]+)['\"]?"
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "description": "Container images in components/**/images.yaml; tag must directly follow repository",
+      "managerFilePatterns": [
+        "/^components/.+/images\\.yaml$/"
+      ],
+      "matchStrings": [
+        "repository:\\s*['\"]?(?<depName>[^\\s'\"]+)['\"]?\\s*\\n\\s*tag:\\s*['\"]?(?<currentValue>[^'\"\\n]+)['\"]?"
+      ],
+      "datasourceTemplate": "docker"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Label update type: major",
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "addLabels": [
+        "major"
+      ]
+    },
+    {
+      "description": "Label update type: minor",
+      "matchUpdateTypes": [
+        "minor"
+      ],
+      "addLabels": [
+        "minor"
+      ]
+    },
+    {
+      "description": "Label update type: patch",
+      "matchUpdateTypes": [
+        "patch"
+      ],
+      "addLabels": [
+        "patch"
+      ]
+    },
+    {
+      "description": "Label Helm chart updates (incl. OCI charts, which use the docker datasource)",
+      "matchFileNames": [
+        "components/**/charts.yaml"
+      ],
+      "addLabels": [
+        "helm"
+      ]
+    },
+    {
+      "description": "Label container image updates (component images, base images, CI images)",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchFileNames": [
+        "components/**/images.yaml",
+        "container-images/**",
+        ".gitlab-ci.yml"
+      ],
+      "addLabels": [
+        "docker"
+      ]
+    },
+    {
+      "description": "Label tool versions pinned via renovate comments (GitHub releases/tags in containerfiles)",
+      "matchDatasources": [
+        "github-releases",
+        "github-tags"
+      ],
+      "addLabels": [
+        "github"
+      ]
+    }
+  ]
+}

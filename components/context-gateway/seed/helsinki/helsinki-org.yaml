@@ -1,0 +1,35 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Organization
+metadata:
+  name: hel
+  namespace: org
+  title: { en: "City of Helsinki", sk: "Mesto Helsinki" }
+spec:
+  domain: hel.fi
+  locales: [en, sk]
+  defaultLocale: en
+  projects:
+    # Every signed-in person of the organization holds the seeded viewer role (PF-61), and a
+    # project is opened by whoever holds propose on Project (PF-65).
+    visibility: organization
+    creation: org-admin
+    # What a project of this organization starts from (PF-73). The numbers are what the one
+    # cpx42 node (16 GB, 76 % of its memory in use on 2026-09-19) honestly holds, above what
+    # the seed already declares: helsinki holds 3 context spaces, 9 resident pipelines and 9
+    # public endpoints, and the demo adds a KPI pipeline and a space or two. A project may
+    # carry its own, tighter quota; helsinki runs on these.
+    quota:
+      contextSpaces: 6
+      residentPipelines: 12
+      publicEndpoints: 12
+      # One application preview is a pod with a build behind it; two is what is left.
+      apps: 2
+      # The busiest feed is the HFP MQTT stream of four trunk lines.
+      ingestEventsPerSecond: 200
+      # A recording session is a handful of runs; a day of demos is well under this.
+      agentRunsPerDay: 50
+      # The bike space holds about 460 stations and the vehicle space a few thousand.
+      entitiesPerSpace: 50000
+      # Every seeded endpoint asks for 600 or 300 a minute, and the form's "open" class
+      # (6000) is more than this node serves: an endpoint asking for it is refused, by design.
+      requestsPerMinute: 600

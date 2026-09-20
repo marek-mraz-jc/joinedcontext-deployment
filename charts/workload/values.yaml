@@ -1,0 +1,115 @@
+---
+# Default values for workload chart.
+# Shared workload template for platform microservices following Pod Security Standards (Restricted).
+
+nameOverride: ''
+fullnameOverride: ''
+replicaCount: 1
+
+# Rolling update surge, as a share of the desired replicas (OPS-07). maxUnavailable is always 0
+# and is not a value: a workload that may go below its replica count during a rollout is not
+# highly available, whatever the number says.
+maxSurge: 25%
+
+image:
+  repository: ''
+  tag: ''
+  digest: ''          # sha256:... ; when set the reference becomes repo:tag@digest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+command: []
+args: []
+
+env: {}               # name -> value, always rendered as a quoted string
+envSecret: {}         # name -> {secret: <secret name>, key: <key>}  -> secretKeyRef
+envFrom: []           # raw list, passed through
+
+enableServiceLinks: false
+terminationGracePeriodSeconds: 30
+
+serviceAccount:
+  create: true
+  name: ''
+  automountServiceAccountToken: false
+
+# A namespaced Role and its binding, rendered only when there are rules to grant. `namespace`
+# defaults to the release's own; a workload that writes into another one names it. Empty here
+# on purpose: a workload grants nothing until an environment says what it needs.
+rbac:
+  rules: []
+  namespace: ''
+
+podAnnotations: {}
+podLabels: {}
+podSecurityContext: {}     # filled from .Values.securityDefaults.podSecurityContext
+securityContext: {}        # filled from .Values.securityDefaults.securityContext
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: '1'
+    memory: 512Mi
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+  name: http
+  extraPorts: []      # raw list of {name, port, targetPort, protocol}
+  annotations: {}     # e.g. config.linkerd.io/opaque-ports for server-speaks-first protocols
+
+containerPort: 8080
+
+metrics:
+  enabled: false
+  port: 4195
+  name: metrics
+
+probes:
+  readiness:
+    path: /
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+  liveness:
+    path: /
+    periodSeconds: 15
+    timeoutSeconds: 3
+    failureThreshold: 3
+    initialDelaySeconds: 10
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+configMap:
+  enabled: false
+  name: ''            # defaults to <fullname>
+  mountPath: ''
+  data: {}            # filename -> file content
+
+# A files volume of the workload's own (PL-50): a PersistentVolumeClaim mounted at `mountPath`,
+# the place a runner reads a dropped CSV from. Off unless a component asks.
+persistence:
+  enabled: false
+  size: 1Gi
+  mountPath: /data
+  storageClass: ''    # '' -> the cluster default
+  accessMode: ReadWriteOnce
+extraVolumes: []
+extraInitContainers: []   # raw container specs, run before the workload (a one-time git-sync checkout)
+extraContainers: []       # raw container specs beside the workload (a git-sync sidecar)
+extraVolumeMounts: []
+tmpDir: true          # emptyDir mounted at /tmp, required by readOnlyRootFilesystem
+serviceMesh:
+  enabled: false      # true -> pod annotation linkerd.io/inject: enabled

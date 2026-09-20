@@ -1,0 +1,123 @@
+---
+{{- $thisRunner := index .Values "pipeline-runner" "runner" -}}
+{{- $global := .Values.global }}
+# Checklist:
+# - [x] Containers run as non-root with `readOnlyRootFilesystem`
+# - [x] Health probes -> /ready and /ping
+# - [x] Graceful shutdown
+# - [x] Standard labels
+# - [x] ServiceAccount with least privilege where required
+# - [x] Named ports -> 4195, the single port Bento serves everything on
+# - [ ] Ingress with TLS -> not applicable, internal pipeline runner
+
+fullnameOverride: pipeline-runner
+nameOverride: pipeline-runner-runner
+
+{{- $images := index .Values.images "pipeline-runner" "runner" }}
+image:
+  repository: {{ $images.repository }}
+  tag: {{ $images.tag | quote }}
+  digest: {{ $images.digest }}
+  pullPolicy: IfNotPresent
+
+command:
+  # The image's entrypoint is /bento and the root directory is not on PATH, so a bare
+  # `bento` here is "executable file not found in $PATH".
+  - /bento
+args:
+  # -w and -r are global flags, not `streams` ones, and they must come before the subcommand.
+  # -w reloads a changed stream file in place, which is what PL-09 asks for. -r loads the
+  # shared resources (caches, rate limits): streams mode rejects a `*_resources` block inside
+  # a stream file. The streams are named one by one rather than as the directory: a ConfigMap
+  # volume keeps a `..<timestamp>` copy next to the files, and the directory walk would run
+  # every stream twice. There is no shell here to expand a glob.
+  - -w
+  - -r
+  - /streams/resources.yaml
+  - streams
+{{- range $name, $_ := $thisRunner.streams | default dict }}
+  - /streams/{{ $name }}
+{{- end }}
+
+configMap:
+  enabled: true
+  name: pipeline-runner-{{ $thisRunner.project }}-streams
+  mountPath: /streams
+  data:
+    {{- $thisRunner.streams | default dict | toYaml | nindent 4 }}
+
+# The files volume a `csv`, `file`, `file_tail` or `parquet` DataSource reads from (PL-50,
+# Architecture/08 §6): a manifest names paths under /data/, a file gets there with
+# `kubectl cp <file> -n <ns> <runner pod>:/data/` today, the Portal's upload later.
+persistence:
+  enabled: true
+  size: 1Gi
+  mountPath: /data
+  storageClass: {{ $global.storage.storageClass.rwo | quote }}
+
+# Every call the runner makes on 443 is its own TLS to a host outside the mesh: the feeds
+# and the realm's token endpoint on the cluster's public host, the hop the Portal's values
+# describe (the proxy builds an HTTP balancer for it and resets the connection). The port
+# bypasses the proxy the way the Portal's does; the gateway on 8080 stays meshed.
+podAnnotations:
+  config.linkerd.io/skip-outbound-ports: "443"
+
+containerPort: 4195
+
+# What a Pipeline's `secretRef`s resolve to (T-0927, PL-15). The Portal's reconciler writes
+# the Secret `pipeline-secrets` into this namespace on every sync and rolls this Deployment
+# by its `joinedcontext.com/pipeline-secrets` annotation when a value changes, so nothing
+# here names a key: a stream reads `${MQTT_PASSWORD}` and the environment carries it.
+# `optional` keeps the runner starting before the first sync has written the Secret, and in
+# an environment where no pipeline asks for a credential at all.
+envFrom:
+  - secretRef:
+      name: pipeline-secrets
+      optional: true
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 4195
+  targetPort: 4195
+  name: http
+
+# Bento serves /metrics, /ready and /ping on the same 4195 port as its stream API, so the
+# workload's separate metrics port would only duplicate the container port entry.
+metrics:
+  enabled: false
+
+probes:
+  # Readiness is the process, not the sources: Bento's /ready answers 503 while any stream's
+  # input is disconnected (an upstream MQTT broker resetting connections took the whole runner
+  # off its Service for hours, and with it the metrics every pipeline's Live status reads). One
+  # stream's source is that stream's health, shown per pipeline in the Portal; /ping says the
+  # runner itself is up.
+  readiness:
+    path: /ping
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+  liveness:
+    path: /ping
+    periodSeconds: 15
+    timeoutSeconds: 3
+    failureThreshold: 3
+    initialDelaySeconds: 10
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1024Mi
+
+podSecurityContext:
+  {{ .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}
+
+securityContext:
+  {{ .Values.securityDefaults.securityContext | toYaml | nindent 2 }}
+
+serviceMesh:
+  enabled: {{ and ($global.serviceMesh.enable | default false) (eq ($global.serviceMesh.type | default "") "linkerd") }}

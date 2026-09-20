@@ -1,0 +1,10 @@
+# The settings the whole organization shares (Architecture/06 §1). Not a manifest: a plain
+# document read by jcctl and by the Portal, reviewed like every other file of this repository.
+modelTools:
+  # The image the Portal's preview and a CI step both run, pinned by digest (DM-19). Bumping it
+  # is one commit that also carries every artifact the new generator renders differently.
+  image: ghcr.io/marek-mraz/joinedcontext-platform/model-tools@sha256:bbfc7c289a68ff526b3bf95b878a2cc3cb1eabde58dfbb0535bb94396a499d45
+  generatorVersion: linkml-1.11.1
+retention:
+  # How long the temporal history of an entity is kept before the partitions are pruned.
+  history: 90d

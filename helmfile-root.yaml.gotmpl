@@ -1,0 +1,21 @@
+---
+# This Helmfile must be included by your custom Helmfile and should not be applied directly or edited
+# It loads values before loading components, so that components can use those values
+environments:
+  default:
+    values:
+      - defaults/environment/global.yaml
+  # We need to iterate over all environments even the file is always the same, because as soon as an environment is defined,
+  # helmfile will not fall back to default environment automatically
+  {{- range .Values.environments }}
+  {{ . }}:
+    values:
+      - defaults/environment/global.yaml
+      - deployment/environments/{{ . }}/global.yaml.gotmpl
+  {{- end }}
+---
+helmfiles:
+  # We need to move this into a separate file, because we cannot load values and use them as variables in the same helmfile
+  - path: "./helmfile-components.yaml.gotmpl"
+    values:
+      - {{ toYaml .Values | nindent 8 }}

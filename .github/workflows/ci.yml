@@ -1,0 +1,142 @@
+name: ci
+# The one lane of this private repository (Actions minutes are metered): render and gate every
+# environment in a single job, run the tests in another, scan the history for secrets. Every
+# tool is downloaded once; the environments loop inside the job instead of a matrix, which
+# paid the setup four times over.
+on:
+  pull_request:
+  push:
+    branches: [main]
+    paths-ignore: ["**.md"]
+permissions: { contents: read }
+concurrency: { group: "ci-${{ github.ref }}", cancel-in-progress: true }
+env:
+  CONFTEST_VERSION: "0.69.0"
+  CONFTEST_CHECKSUM: "96fc2fbf11f0afde51256647127e6f00a64ce839a4d9a0a1aef2426c0e6f4b3f"
+  GITLEAKS_VERSION: "8.29.0"
+  GITLEAKS_CHECKSUM: "39e07ad810336fd0ae80d0bd61c60d0521f628173e7583583b5df4a38738522c"
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: helmfile/helmfile-action@1f44bcb43e5fb17ecb2685d8b6081ec5f6aa5fcf # v2.4.7
+        with: { helmfile-args: version }
+      - uses: extractions/setup-just@f8a3cce218d9f83db3a2ecd90e41ac3de6cdfd9b # v3.1.0
+      - name: kubeconform, conftest, gitleaks
+        run: |
+          set -eu
+          curl -sSL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | tar xz
+          curl -sSLo conftest.tar.gz "https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz"
+          echo "${CONFTEST_CHECKSUM}  conftest.tar.gz" | sha256sum --check --status
+          tar xzf conftest.tar.gz conftest
+          curl -sSLo gitleaks.tar.gz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_CHECKSUM}  gitleaks.tar.gz" | sha256sum --check --status
+          tar xzf gitleaks.tar.gz gitleaks
+          rm -f conftest.tar.gz gitleaks.tar.gz
+      - run: just _dev-assemble
+      - name: render and gate every environment
+        # Per environment: helmfile template, kubeconform -strict, every container pinned by
+        # digest (OPS-28, SEC-GAP-03), the four security properties Kyverno asserts at admission
+        # (policies/workloads.rego: TS-18, TS-19, CC-12), no legacy name, no plaintext secret,
+        # generated secrets long enough.
+        run: |
+          set -eu
+          mkdir -p /tmp/scan
+          for env in local production dev addons; do
+            echo "::group::${env}"
+            helmfile -f deployment/helmfile.yaml -e "${env}" repos
+            scripts/render.sh "${env}" "rendered-${env}.yaml"
+            ./kubeconform -strict -ignore-missing-schemas -summary "rendered-${env}.yaml"
+            python3 scripts/ci/check-image-digests.py "rendered-${env}.yaml"
+            ./conftest test --all-namespaces -p policies "rendered-${env}.yaml"
+            ! grep -i -E 'civitas' "rendered-${env}.yaml"
+            python3 scripts/check-rendered-secrets.py "rendered-${env}.yaml" /tmp/scan/rendered.yaml
+            ./gitleaks detect --no-git --source /tmp/scan --config .ci/gitleaks-rendered.toml --redact --exit-code 1
+            python3 scripts/check-secrets.py "rendered-${env}.yaml"
+            echo "::endgroup::"
+          done
+      - name: rendered objects match the golden list
+        run: |
+          scripts/render.sh local golden-check.yaml --deployed >/dev/null
+          python3 .ci/golden/list-objects.py golden-check.yaml > golden-now.txt
+          diff -u .ci/golden/local.txt golden-now.txt || {
+            echo "::error::the rendered local environment changed. Review the diff and run 'just golden-update'."
+            exit 1
+          }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: rendered
+          path: rendered-*.yaml
+          retention-days: 3
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env: { KYVERNO_VERSION: v1.19.0, SOPS_VERSION: v3.13.3, AGE_VERSION: v1.2.1 }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        # The whole history: a credential deleted in the last commit is still a credential.
+        with: { fetch-depth: 0 }
+      - uses: helmfile/helmfile-action@1f44bcb43e5fb17ecb2685d8b6081ec5f6aa5fcf # v2.4.7
+        with: { helmfile-args: version }
+      - uses: extractions/setup-just@f8a3cce218d9f83db3a2ecd90e41ac3de6cdfd9b # v3.1.0
+      - name: kyverno cli
+        run: |
+          curl -sSL "https://github.com/kyverno/kyverno/releases/download/${KYVERNO_VERSION}/kyverno-cli_${KYVERNO_VERSION}_linux_x86_64.tar.gz" | tar xz kyverno
+          sudo install -m 0755 kyverno /usr/local/bin/kyverno
+      - name: sops + age
+        # tests/test_secrets.py round-trips a SOPS-encrypted environment secret; without
+        # these two binaries that test would skip and the integration would go unproven.
+        run: |
+          curl -sSL -o sops "https://github.com/getsops/sops/releases/download/${SOPS_VERSION}/sops-${SOPS_VERSION}.linux.amd64"
+          sudo install -m 0755 sops /usr/local/bin/sops
+          curl -sSL "https://github.com/FiloSottile/age/releases/download/${AGE_VERSION}/age-${AGE_VERSION}-linux-amd64.tar.gz" | tar xz
+          sudo install -m 0755 age/age age/age-keygen /usr/local/bin/
+      - name: gitleaks + conftest
+        # tests/test_reusable_workflows.py runs the shared secret ruleset against the shapes it
+        # exists for and the Rego gate against its fixtures; without these two binaries both
+        # would skip, and a skipped gate reads exactly like a passing one.
+        run: |
+          set -eu
+          curl -sSLo gitleaks.tar.gz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_CHECKSUM}  gitleaks.tar.gz" | sha256sum --check --status
+          tar xzf gitleaks.tar.gz gitleaks
+          sudo install -m 0755 gitleaks /usr/local/bin/gitleaks
+          curl -sSLo conftest.tar.gz "https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz"
+          echo "${CONFTEST_CHECKSUM}  conftest.tar.gz" | sha256sum --check --status
+          tar xzf conftest.tar.gz conftest
+          sudo install -m 0755 conftest /usr/local/bin/conftest
+          rm -f gitleaks.tar.gz conftest.tar.gz gitleaks conftest
+      - name: gitleaks over the whole history
+        # Was the `gitleaks` job (reusable-gitleaks.yml); same ruleset, same scope, one billed
+        # job fewer on a metered private repository (T-0521). The reusable workflow stays for
+        # the other repositories.
+        run: gitleaks detect --source . --config .ci/shared/gitleaks.toml --redact --exit-code 1
+      - run: pip install --quiet pytest pyyaml
+      - name: the two collector images the tests run
+        # tests/test_observability_collector.py runs `otelcol validate` on the rendered
+        # config and one record through the allow-list (T-0349); tests/test_audit_logging.py
+        # runs `vector validate` and `vector test` on the rendered audit transform (T-0052).
+        # Pulled here so a registry failure reads as a registry failure rather than as a red
+        # test.
+        run: |
+          python3 - <<'EOF' > /tmp/test-images
+          import yaml
+          for component, part in (("observability", "collector"), ("audit-logging", "collector")):
+              i = yaml.safe_load(open(f"components/{component}/images.yaml"))[component][part]
+              print(f"{i['repository']}:{i['tag']}@{i['digest']}")
+          EOF
+          xargs -r -n1 docker pull --quiet < /tmp/test-images
+      - name: assemble deployment dir and add the chart repos
+        # Both environments: `addons` pulls chart repositories no core component uses, and a
+        # test that renders it would fail on a missing repository rather than on its subject.
+        run: |
+          just _dev-assemble
+          helmfile -f deployment/helmfile.yaml -e local repos
+          helmfile -f deployment/helmfile.yaml -e addons repos
+      - name: kyverno policy unit tests
+        # Was the slow lane's `policies` job; the unit tests take seconds, the rest of that job
+        # (Kyverno on the rendered output) runs from a clone, see .github/workflows/README.md.
+        run: kyverno test .ci/policies
+      - run: pytest tests -q

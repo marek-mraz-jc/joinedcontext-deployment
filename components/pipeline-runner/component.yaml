@@ -1,0 +1,7 @@
+---
+component: pipeline-runner
+parts:
+  - name: runner
+  # The scheduled half of PL-04: pipelines slower than the thirty-second rule are CronJobs
+  # that exist only while they run, not streams in the resident pod.
+  - name: scheduled

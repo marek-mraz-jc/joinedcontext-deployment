@@ -1,0 +1,11 @@
+---
+observability:
+  collector:
+    # The contrib distribution, because the config uses `filter`, `transform` and
+    # `oauth2client`, and none of the three is in the core distribution.
+    repository: 'otel/opentelemetry-collector-contrib'
+    tag: '0.140.0'
+    # otelcol-contrib 0.140.1. Verified against this exact digest: `otelcol validate` accepts
+    # the rendered config and the allow-list drops an unnamed attribute
+    # (tests/test_observability_collector.py).
+    digest: 'sha256:ffc818ee108d0b934fd14207fd87ff247c9b64f344ed349d0b66c166c18a2312'

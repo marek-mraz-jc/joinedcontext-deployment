@@ -1,0 +1,57 @@
+---
+# The forge the Job talks to, in-cluster. Not the public URL: under a self-signed cluster
+# issuer that host is served with the cluster CA and curl in this image trusts only the
+# Mozilla bundle.
+giteaUrl: ''
+
+# What the repository is called. Filled from global.configRepo.
+# The forge teams a signed-in person lands in, keyed by name so the environment's
+# group -> teams map and this list cannot drift (PF-79). Every team reads, none writes.
+teams: {}
+
+repo:
+  owner: ''
+  name: ''
+  branch: main
+
+# The forge administrator, the only credential that can mint a token.
+adminSecret:
+  name: gitea-admin-credentials
+  usernameKey: username
+  passwordKey: password
+
+# Where the two minted tokens are written. Each holds one key, `token`.
+tokens:
+  portal:
+    secret: gitea-token-portal
+    # Read and write one repository: the Portal opens branches, writes files and merges.
+    scopes: ['write:repository', 'read:user']
+    # Where the Secret is written. One entry under `singleNamespace: true`, one per consumer
+    # otherwise.
+    namespaces: []
+  gateway:
+    secret: gitea-token-gateway
+    # The gateway only ever clones.
+    scopes: ['read:repository']
+    namespaces: []
+
+# Files committed into the repository after it exists, keyed by their path with `/` written as
+# `__` (a ConfigMap key cannot hold a slash): the manifests the gateway already serves, under the
+# paths the Portal reads (T-0478). Idempotent: a file whose committed content matches is left
+# alone, one that differs is updated, one that is missing is created; nothing is ever deleted.
+seed: {}
+
+image:
+  repository: ''
+  tag: ''
+  digest: ''
+  pullPolicy: IfNotPresent
+
+resources:
+  requests: { cpu: 50m, memory: 64Mi }
+  limits: { cpu: 500m, memory: 128Mi }
+
+podSecurityContext: {}
+securityContext: {}
+serviceMesh:
+  enabled: false

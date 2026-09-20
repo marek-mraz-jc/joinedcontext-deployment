@@ -1,0 +1,48 @@
+---
+{{- $global := .Values.global }}
+# Checklist:
+# - [x] Minimal Resources -> PL-11 mandates 100m/256Mi requests and 1000m/1024Mi limits
+# - [x] Minimal storage -> stateless runner pods with stream ConfigMap
+# - [x] 1 Replica
+
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1024Mi
+
+# The Helsinki demo's feeds (DEMO.md step 3) are the seeded Pipeline manifests and the
+# bento.yaml beside each (../../context-gateway/seed/helsinki/): the Portal's reconciler renders
+# them into resident streams on this runner (PL-47, T-0647), each writing into the `helsinki`
+# space through the `helsinki-all` endpoint with the `helsinki-pipelines` client's token
+# (../../keycloak-clients.yaml). Everything a rendered stream needs from the deployment comes
+# in as an environment variable, so no manifest carries a host, a slug or a credential. The
+# slug is the one helsinki-endpoint-all.yaml declares and the Keycloak client names as audience.
+env:
+  JC_ORG_DOMAIN: {{ $global.orgDomain | quote }}
+  JC_GATEWAY_URL: "http://context-gateway.{{ index .Values "context-gateway" "gateway" "namespace" }}.svc.cluster.local:8080"
+  # The same host without the scheme, for a seeded DataSource that reads the space back
+  # (helsinki-datasource-vehicles-live.yaml): a manifest URL must start with http://.
+  JC_GATEWAY_HOST: "context-gateway.{{ index .Values "context-gateway" "gateway" "namespace" }}.svc.cluster.local:8080"
+  # The public issuer, so the token's `iss` is the one the gateway verifies (KC_HOSTNAME).
+  JC_TOKEN_URL: "https://idm.{{ $global.domain }}/realms/{{ $global.instanceSlug }}/protocol/openid-connect/token"
+  JC_CLIENT_ID: helsinki-pipelines
+envSecret:
+  JC_CLIENT_SECRET: { secret: keycloak-client-helsinki-pipelines, key: client-secret }
+
+# The runner starts with the shared resources alone (the caches and the rate limit the
+# rendered streams name, ../../streams/resources.yaml); the streams arrive over its API.
+args:
+  - -w
+  - -r
+  - /streams/resources.yaml
+  - streams
+
+configMap:
+  data:
+    resources.yaml: |
+{{ readFile "../../streams/resources.yaml" | indent 6 }}

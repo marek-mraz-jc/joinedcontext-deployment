@@ -1,0 +1,16 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: vehicles-reaper
+  namespace: helsinki
+  title: { en: "A bus that stopped reporting is gone in ten minutes" }
+spec:
+  class: auto
+  period: 60s
+  source:
+    dataSourceRef: { kind: DataSource, name: helsinki-vehicles-live }
+  # The deletes go through the same endpoint and the same Policy as every write (deleteBatch).
+  targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all
+  quotas:
+    maxMemoryMb: 64
+    cpuMillicores: 50

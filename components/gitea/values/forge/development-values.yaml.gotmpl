@@ -1,0 +1,20 @@
+---
+# Checklist:
+# - [x] Minimal Resources
+# - [x] Minimal storage -> 20Gi, the sizing table's floor for the repositories
+# - [x] 1 Replica
+# - [x] Recreate, as in production: a rolling update starts the new pod while the old one
+#       still holds the RWO volume, and the new Gitea dies on the level-db lock under /data/queues
+
+replicaCount: 1
+
+strategy:
+  type: Recreate
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 512Mi
+  limits:
+    cpu: '1'
+    memory: 1Gi

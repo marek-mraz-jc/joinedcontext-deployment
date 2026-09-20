@@ -1,0 +1,131 @@
+---
+# The proxy's identity on the endpoint surface (AG-49, PF-45, PF-46): a confidential client
+# with a service account, client_credentials only. The gateway maps the token's `azp` to the
+# ServiceAccount manifest `agent-proxy` of project `helsinki`
+# (components/context-gateway/seed/helsinki/helsinki-serviceaccount-agent-proxy.yaml), whose
+# role is `public` in the space, so the proxy reads exactly what an anonymous caller reads
+# and nothing more. One audience mapper per endpoint of the seed, and the gateway's own name
+# `context-gateway` beside them (Architecture/12 §5, ADR-N-019): a builder run reads through
+# whichever endpoint the person picked, one approved through the Portal after this realm was
+# written as well as one of the seed, and a token that named only the seeded slugs answered
+# 401 on the rest (T-0666). The Policy decision stays per endpoint.
+helsinki-agent-proxy:
+  name: Helsinki agent proxy
+  description: Service account of jc-agent-proxy for the builder runs of the Helsinki demo; client_credentials only, no browser flow
+  subdomain: ''
+  redirectPath: /
+  componentNamespaces:
+    - agent-runner
+  rawValues:
+    publicClient: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: true
+    protocolMappers:
+      - name: context-gateway-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: context-gateway
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: portal-internal-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        # The Portal's internal listener: the run callbacks answer this client's token and no other
+        # (T-2271, AG-52, PF-46). It replaced `JC_AGENT_PROXY_TOKEN`, one string the Portal and this
+        # proxy both held.
+        config:
+          included.custom.audience: portal-internal
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-bikes-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: scsd2eehkx42n53z2zyd6vshfh7s7irf
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      # The indicator space's endpoint (seed/helsinki/helsinki-endpoint-kpi.yaml): a KPI a pipeline
+      # or the assistant computed is read here (PF-54, PL-45).
+      - name: helsinki-kpi-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: kpi4h6q2wz7xr3nv5tj6pb3mydk2s4fa
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      # The stations' operations endpoint (seed/helsinki/helsinki-endpoint-bikes-ops.yaml): the
+      # proxy still reads it as the public role, so a build against it sees the same rows.
+      - name: helsinki-bikes-ops-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: ydp6nddchg4sewmylsiclg4377mlldrj
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-events-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: gx2knuus75alkjgc24kjz7llte6q5jkk
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-transport-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: ajaezssvx3bwqgejgepmq4ig3frgan4e
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-all-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: si6epqkx364lprho5uaigutk274r5grb
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-news-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: t2vph7knk35vyjoxzqwhjldnls6nhcmj
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-weather-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: 6wrymzu5x2uwjo2xqei66ppw53mafvbu
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-alerts-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: dhiw4735mzyvwkrmszljpxcvvgv32q33
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      # The hub (seed/helsinki/helsinki-endpoint-hub.yaml, T-1209): one door over the live
+      # context and the indicators beside it, which is the endpoint a run picks when the
+      # question spans both (EP-70).
+      - name: helsinki-hub-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: hub7kq3zr5mx2vwt6nbc4pjd7fgs3a2y
+          access.token.claim: 'true'
+          id.token.claim: 'false'

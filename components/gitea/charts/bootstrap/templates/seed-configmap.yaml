@@ -1,0 +1,11 @@
+{{- if .Values.seed }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "bootstrap.fullname" . }}-seed
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bootstrap.labels" . | nindent 4 }}
+data:
+  {{- toYaml .Values.seed | nindent 2 }}
+{{- end }}

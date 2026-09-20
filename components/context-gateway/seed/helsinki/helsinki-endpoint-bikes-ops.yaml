@@ -1,0 +1,18 @@
+# The stations' operations endpoint (AP-61, AP-62): the same slice the public endpoint reads,
+# for the city's own people, and the one place a generated application may write a station's
+# status back. No policyRef: every Policy of the space applies, so the public read grant and
+# the steward's write grant (bikes-ops-steward) meet here and the gateway evaluates the write
+# in full (GW16). Organization audience: the person signs in; nothing here is public.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: helsinki-bikes-ops
+  namespace: helsinki
+  title: { en: "Helsinki city bike stations, operations" }
+spec:
+  contextSpaceRef: helsinki
+  slug: ydp6nddchg4sewmylsiclg4377mlldrj
+  audience: organization
+  enabledRepresentations: [ngsi-ld, geojson, csv]
+  projection: { hiddenAttributes: [contactPoint] }
+  rateLimits: { requestsPerMinute: 300, burst: 50 }

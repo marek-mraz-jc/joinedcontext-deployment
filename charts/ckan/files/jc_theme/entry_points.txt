@@ -1,0 +1,2 @@
+[ckan.plugins]
+jc_theme = ckanext_jc_theme.plugin:JcThemePlugin

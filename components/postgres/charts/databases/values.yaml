@@ -1,0 +1,25 @@
+---
+cluster:
+  name: postgres-cluster
+roleJob:
+  # The client the role-setup Job runs. The deployment overrides it with the digest pinned in
+  # components/postgres/images.yaml; this default only keeps `helm template` of the bare chart
+  # from failing, and is not what a cluster runs.
+  image: docker.io/library/postgres@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
+databases:
+  []
+  # Example database configuration:
+  # apicurio:
+  #   name: 'apicurio'
+  #   user: 'apicurio'
+  #   additionalRoles:
+  #     - name: 'apicurio-readonly'
+  #       type: 'readonly'  # Can be 'readonly' or 'readwrite'
+  #       credentialsSecret:
+  #         name: 'apicurio-readonly-credentials'
+  #         passwordKey: 'password'  # Optional, defaults to 'password'
+  #     - name: 'apicurio-analytics'
+  #       type: 'readwrite'
+  #       credentialsSecret:
+  #         name: 'apicurio-analytics-credentials'
+  #         passwordKey: 'db-password'

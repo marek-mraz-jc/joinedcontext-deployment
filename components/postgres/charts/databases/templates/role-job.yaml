@@ -1,0 +1,180 @@
+{{ $root := . }}
+{{ range $component, $config := .Values.databases }}
+{{- if $config.additionalRoles }}
+{{- range $role := $config.additionalRoles }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  # Object names are RFC 1123 DNS labels and database and role names are snake_case,
+  # so the underscores come out here — a Job named `x_y-db-create-role-...` is rejected
+  # by the API server and the role is never created.
+  name: {{ printf "%s-db-create-role-%s-%s" $config.name $role.name ($role.type | default "readonly") | replace "_" "-" | trunc 63 | trimSuffix "-" }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "database.labels" $root | nindent 4 }}
+    app.kubernetes.io/component: database-role-setup
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "5"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 5
+  template:
+    metadata:
+      labels:
+        {{- include "database.selectorLabels" $root | nindent 8 }}
+        app.kubernetes.io/component: database-role-setup
+    spec:
+      restartPolicy: OnFailure
+      # The Job runs `psql` against a cluster that is already up and never calls the API
+      # server, so it has no use for a token -- and the one it would be handed belongs to the
+      # namespace's `default` account, shared with every other workload there (TS-19, CC-12).
+      automountServiceAccountToken: false
+      securityContext:
+        {{- toYaml $root.Values.securityDefaults.podSecurityContext | nindent 8 }}
+      # `readOnlyRootFilesystem` leaves psql nowhere to write, so it gets a writable HOME that
+      # is not the image's filesystem. Non-interactive psql does not keep a history file, but a
+      # Job that discovers otherwise only fails during an apply, which is an expensive place.
+      volumes:
+      - name: home
+        emptyDir: {}
+      containers:
+      - name: create-role
+        securityContext:
+          {{- toYaml $root.Values.securityDefaults.securityContext | nindent 10 }}
+        volumeMounts:
+        - name: home
+          mountPath: /tmp
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        image: {{ $root.Values.roleJob.image }}
+        env:
+        - name: HOME
+          value: /tmp
+        - name: PGHOST
+          value: {{ $root.Values.cluster.name }}-rw.{{ $.Release.Namespace }}.svc.cluster.local
+        - name: PGPORT
+          value: "5432"
+        - name: PGDATABASE
+          value: {{ $config.name }}
+        - name: PGUSER
+          valueFrom:
+            secretKeyRef:
+              name: {{ $root.Values.cluster.name }}-superuser
+              key: username
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ $root.Values.cluster.name }}-superuser
+              key: password
+        - name: ROLE_NAME
+          value: {{ $role.name | quote }}
+        - name: ROLE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ $role.credentialsSecret.name }}
+              key: {{ $role.credentialsSecret.passwordKey | default "password" }}
+        - name: ROLE_TYPE
+          value: {{ $role.type | default "readonly" | quote }}
+        - name: DB_OWNER
+          value: {{ $config.user | quote }}
+        command:
+        - /bin/sh
+        - -c
+        - |
+          set -e
+
+          # Wait for the database to become available (CNPG operator may still be creating it)
+          echo "Waiting for database ${PGDATABASE} to become available..."
+          MAX_RETRIES=60
+          RETRY_INTERVAL=5
+          RETRY_COUNT=0
+
+          until psql -c "SELECT 1" >/dev/null 2>&1; do
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+              echo "ERROR: Database ${PGDATABASE} not available after $((MAX_RETRIES * RETRY_INTERVAL)) seconds"
+              exit 1
+            fi
+            echo "Database ${PGDATABASE} not yet available. Retry ${RETRY_COUNT}/${MAX_RETRIES} in ${RETRY_INTERVAL}s..."
+            sleep $RETRY_INTERVAL
+          done
+          echo "Database ${PGDATABASE} is available!"
+
+          echo "Creating role ${ROLE_NAME} for database ${PGDATABASE}..."
+
+          # Create the role if it doesn't exist
+          psql -v ON_ERROR_STOP=1 <<-EOSQL
+            DO \$\$
+            BEGIN
+              IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '${ROLE_NAME}') THEN
+                CREATE ROLE "${ROLE_NAME}" WITH LOGIN PASSWORD '${ROLE_PASSWORD}';
+              ELSE
+                ALTER ROLE "${ROLE_NAME}" WITH LOGIN PASSWORD '${ROLE_PASSWORD}';
+              END IF;
+            END
+            \$\$;
+          EOSQL
+
+          echo "Configuring permissions for ${ROLE_NAME}..."
+
+          # Revoke all privileges first to ensure clean state
+          psql -v ON_ERROR_STOP=1 <<-EOSQL
+            REVOKE ALL PRIVILEGES ON DATABASE "${PGDATABASE}" FROM "${ROLE_NAME}";
+            REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM "${ROLE_NAME}";
+            REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM "${ROLE_NAME}";
+            REVOKE ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public FROM "${ROLE_NAME}";
+          EOSQL
+
+          # Grant database connection privilege
+          psql -v ON_ERROR_STOP=1 <<-EOSQL
+            GRANT CONNECT ON DATABASE "${PGDATABASE}" TO "${ROLE_NAME}";
+            GRANT USAGE ON SCHEMA public TO "${ROLE_NAME}";
+          EOSQL
+
+          if [ "${ROLE_TYPE}" = "readwrite" ]; then
+            echo "Granting read/write permissions..."
+            psql -v ON_ERROR_STOP=1 <<-EOSQL
+              GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO "${ROLE_NAME}";
+              GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO "${ROLE_NAME}";
+              GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO "${ROLE_NAME}";
+
+              -- Set default privileges for future objects created by the database owner
+              ALTER DEFAULT PRIVILEGES FOR ROLE "${DB_OWNER}" IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO "${ROLE_NAME}";
+              ALTER DEFAULT PRIVILEGES FOR ROLE "${DB_OWNER}" IN SCHEMA public GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO "${ROLE_NAME}";
+              ALTER DEFAULT PRIVILEGES FOR ROLE "${DB_OWNER}" IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO "${ROLE_NAME}";
+          EOSQL
+          else
+            echo "Granting read-only permissions..."
+            psql -v ON_ERROR_STOP=1 <<-EOSQL
+              GRANT SELECT ON ALL TABLES IN SCHEMA public TO "${ROLE_NAME}";
+              GRANT SELECT ON ALL SEQUENCES IN SCHEMA public TO "${ROLE_NAME}";
+
+              -- Set default privileges for future objects created by the database owner
+              ALTER DEFAULT PRIVILEGES FOR ROLE "${DB_OWNER}" IN SCHEMA public GRANT SELECT ON TABLES TO "${ROLE_NAME}";
+              ALTER DEFAULT PRIVILEGES FOR ROLE "${DB_OWNER}" IN SCHEMA public GRANT SELECT ON SEQUENCES TO "${ROLE_NAME}";
+          EOSQL
+          fi
+
+          echo "Role ${ROLE_NAME} configured successfully with ${ROLE_TYPE} permissions on database ${PGDATABASE}"
+
+          # Verify the role has no access to other databases by ensuring no extra privileges
+          echo "Verifying role is limited to database ${PGDATABASE}..."
+          psql -v ON_ERROR_STOP=1 -t <<-EOSQL | grep -q "^0$" && echo "✓ Role has no system-level privileges" || echo "⚠ Warning: Role may have additional privileges"
+            SELECT count(*)
+            FROM pg_roles
+            WHERE rolname = '${ROLE_NAME}'
+              AND (rolsuper = true OR rolcreaterole = true OR rolcreatedb = true);
+          EOSQL
+
+          echo "Database role setup completed successfully!"
+{{- end }}
+{{- end }}
+{{- end }}

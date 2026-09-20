@@ -1,0 +1,373 @@
+---
+# The Portal behind the edge login (ADR-N-019, AP-26…AP-29). The `openid-connect` plugin runs
+# in session mode on `portal-ui`, `portal-api` and `apps-surface` with the one confidential
+# client `edge`; the person logs in once and the upstream receives `X-Userinfo` and
+# `X-Access-Token`, set by the plugin after the serverless-pre-function has cleared both from
+# the client request (the plugin clears them again itself), so only the edge can set them.
+#
+# Three plugin options carry the ES256 constraint of T-0252 and are deliberate:
+# - `use_jwks: false` and no `introspection_endpoint`: the plugin then never verifies a
+#   presented bearer token. lua-resty-openidc verifies RS/HS signatures only, the realm signs
+#   ES256, and with `use_jwks: true` every CLI call carrying a bearer would be refused 401 before
+#   `unauth_action` is consulted. A bearer therefore passes untouched and the Portal verifies it
+#   (docs Deployment/10 §4, OPS-33). The ID token of the code flow is verified by the plugin
+#   against the realm JWKS, which is why the `edge` client signs RS256 by per-client override.
+# - `use_pkce: true`: the realm template sets `pkce.code.challenge.method: S256` on every
+#   browser client, and Keycloak then refuses an authorization request without a challenge.
+# - `session.*` are the flat lua-resty-session 4 keys APISIX 3.17 validates; a nested
+#   `session.cookie.path` is accepted and ignored, and the cookie would land on `/`.
+#
+# The session cookie is host-only (no `cookie_domain`), `Secure`, `HttpOnly`, `SameSite=Lax`;
+# its lifetime is bound to the realm's SSO idle time (3600 s) and max lifespan (36000 s), never
+# beyond them (AP-29). The Portal host and the apps surface use different cookie names so a
+# browser never presents the wrong session to a route.
+portal-ui:
+  name: portal-ui
+  description: Portal user interface behind the edge login
+  plugins:
+    request-id:
+      include_in_response: true
+    serverless-pre-function:
+      phase: rewrite
+      functions:
+        - >-
+          return function()
+            local forged = {
+              "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
+              "X-Endpoint-Slug", "X-Consumer-Identity",
+              "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
+              "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
+            }
+            for _, header in ipairs(forged) do
+              ngx.req.clear_header(header)
+            end
+          end
+    # Class 1 (standard web): 300 requests per minute per IP.
+    limit-count:
+      count: 300
+      time_window: 60
+      key_type: var
+      key: remote_addr
+      rejected_code: 429
+      policy: local
+      show_limit_quota_header: true
+    # A person without a session is sent to Keycloak (`unauth_action: auth`); the callback
+    # comes back to /callback on this host, which this route owns. /logout ends the edge
+    # session and the Keycloak session (front-channel) and lands on the Portal, which asks
+    # for a login again.
+    openid-connect:
+      client_id: edge
+      client_secret: ${EDGE_CLIENT_SECRET}
+      discovery: https://idm.${DOMAIN}/realms/${REALM}/.well-known/openid-configuration
+      bearer_only: false
+      use_jwks: false
+      use_pkce: true
+      ssl_verify: true
+      unauth_action: auth
+      redirect_uri: https://portal.${DOMAIN}/callback
+      logout_path: /logout
+      post_logout_redirect_uri: https://portal.${DOMAIN}/
+      set_userinfo_header: true
+      set_access_token_header: true
+      set_id_token_header: false
+      set_refresh_token_header: false
+      session:
+        secret: ${OIDC_SESSION_SECRET}
+        cookie_name: jc_edge
+        cookie_path: /
+        cookie_secure: true
+        cookie_http_only: true
+        cookie_same_site: Lax
+        idling_timeout: 3600
+        rolling_timeout: 3600
+        absolute_timeout: 36000
+    proxy-rewrite:
+      headers:
+        set:
+          X-Forwarded-Proto: https
+          X-Forwarded-Port: '443'
+    response-rewrite:
+      headers:
+        set:
+          Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+          X-Content-Type-Options: "nosniff"
+          X-Frame-Options: "SAMEORIGIN"
+          Referrer-Policy: "strict-origin-when-cross-origin"
+
+portal-api:
+  name: portal-api
+  description: Portal REST API (edge session becomes X-Access-Token, a bearer passes through)
+  plugins:
+    request-id:
+      include_in_response: true
+    serverless-pre-function:
+      phase: rewrite
+      functions:
+        - >-
+          return function()
+            local forged = {
+              "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
+              "X-Endpoint-Slug", "X-Consumer-Identity",
+              "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
+              "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
+            }
+            for _, header in ipairs(forged) do
+              ngx.req.clear_header(header)
+            end
+          end
+    # Class 2 (authenticated API): 1,200 requests per minute per client identity. The bearer
+    # token is the only identity APISIX has here and it is not verified at the edge, so the
+    # bucket is per token string rather than per subject and resets when a client renews.
+    # Splitting it by `sub` needs an APISIX consumer or a claim-extracting pre-function.
+    limit-count:
+      count: 1200
+      time_window: 60
+      key_type: var
+      key: http_authorization
+      rejected_code: 429
+      policy: local
+      show_limit_quota_header: true
+    # Same client, same secret and same cookie name as portal-ui, so the session the UI route
+    # created is read here and becomes X-Access-Token. `unauth_action: pass`: a call without a
+    # session reaches the Portal untouched, bearer callers (CLIs, service accounts) included,
+    # and the Portal decides what an anonymous caller may see. The callback path is the UI
+    # route's; this route never redirects anyone.
+    openid-connect:
+      client_id: edge
+      client_secret: ${EDGE_CLIENT_SECRET}
+      discovery: https://idm.${DOMAIN}/realms/${REALM}/.well-known/openid-configuration
+      bearer_only: false
+      use_jwks: false
+      use_pkce: true
+      ssl_verify: true
+      unauth_action: pass
+      redirect_uri: https://portal.${DOMAIN}/callback
+      logout_path: /logout
+      post_logout_redirect_uri: https://portal.${DOMAIN}/
+      set_userinfo_header: true
+      set_access_token_header: true
+      set_id_token_header: false
+      set_refresh_token_header: false
+      session:
+        secret: ${OIDC_SESSION_SECRET}
+        cookie_name: jc_edge
+        cookie_path: /
+        cookie_secure: true
+        cookie_http_only: true
+        cookie_same_site: Lax
+        idling_timeout: 3600
+        rolling_timeout: 3600
+        absolute_timeout: 36000
+    proxy-rewrite:
+      headers:
+        set:
+          X-Forwarded-Proto: https
+          X-Forwarded-Port: '443'
+    response-rewrite:
+      headers:
+        set:
+          Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+          X-Content-Type-Options: "nosniff"
+          X-Frame-Options: "DENY"
+          Referrer-Policy: "strict-origin-when-cross-origin"
+          Cache-Control: "no-store, no-cache, must-revalidate"
+
+portal-well-known:
+  name: portal-well-known
+  description: Public RFC 9728 metadata of the Portal MCP server
+  plugins:
+    request-id:
+      include_in_response: true
+    serverless-pre-function:
+      phase: rewrite
+      functions:
+        - >-
+          return function()
+            local forged = {
+              "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
+              "X-Endpoint-Slug", "X-Consumer-Identity",
+              "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
+              "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
+            }
+            for _, header in ipairs(forged) do
+              ngx.req.clear_header(header)
+            end
+          end
+    # Class 1 (public discovery): per source address, there is no token yet.
+    limit-count:
+      count: 600
+      time_window: 60
+      key_type: var
+      key: remote_addr
+      rejected_code: 429
+      policy: local
+      show_limit_quota_header: true
+    response-rewrite:
+      headers:
+        set:
+          Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+          X-Content-Type-Options: "nosniff"
+          X-Frame-Options: "DENY"
+          Referrer-Policy: "strict-origin-when-cross-origin"
+          Cache-Control: "no-store, no-cache, must-revalidate"
+
+portal-metrics:
+  name: portal-metrics
+  description: Refuse the scrape path at the edge
+  plugins:
+    request-id:
+      include_in_response: true
+    # A refusing route is still a route: the platform's header sanitisation and response
+    # headers apply to it like any other (T-0026, T-0028).
+    serverless-pre-function:
+      phase: rewrite
+      functions:
+        - >-
+          return function()
+            local forged = {
+              "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
+              "X-Endpoint-Slug", "X-Consumer-Identity",
+              "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
+              "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
+            }
+            for _, header in ipairs(forged) do
+              ngx.req.clear_header(header)
+            end
+          end
+    # The route terminates here: APISIX answers in the rewrite phase and never dials the
+    # upstream the route declares. 404 rather than 403, because from outside the cluster
+    # there is nothing at this path and saying "forbidden" would say there is.
+    fault-injection:
+      abort:
+        http_status: 404
+        body: "404 Not Found\n"
+    response-rewrite:
+      headers:
+        set:
+          Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+          X-Content-Type-Options: "nosniff"
+          X-Frame-Options: "DENY"
+          Referrer-Policy: "strict-origin-when-cross-origin"
+          Cache-Control: "no-store, no-cache, must-revalidate"
+
+# The shared `/apps/*` surface on the apex: compiled bundles of `static` apps, served by the
+# Portal behind the same login (AP-26). jcctl renders one `app-{name}` route per App above this
+# one, with its cookie scoped to `/apps/{name}/` and `unauth_action: pass` for a public app;
+# this route is what a path under /apps/ that belongs to no App falls back to, and it asks for
+# a login before it shows anything.
+apps-surface:
+  name: apps-surface
+  description: Static apps on demand behind the edge login
+  plugins:
+    request-id:
+      include_in_response: true
+    serverless-pre-function:
+      phase: rewrite
+      functions:
+        - >-
+          return function()
+            local forged = {
+              "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
+              "X-Endpoint-Slug", "X-Consumer-Identity",
+              "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
+              "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
+            }
+            for _, header in ipairs(forged) do
+              ngx.req.clear_header(header)
+            end
+          end
+    # Class 1 (standard web): 300 requests per minute per IP.
+    limit-count:
+      count: 300
+      time_window: 60
+      key_type: var
+      key: remote_addr
+      rejected_code: 429
+      policy: local
+      show_limit_quota_header: true
+    # Cookie path /apps/ and its own cookie name (AP-29); the callback and the logout path are
+    # under /apps/ so this route owns them. After a logout the person lands on the Portal, a
+    # URI the client lists, where Keycloak's post-logout check accepts it.
+    openid-connect:
+      client_id: edge
+      client_secret: ${EDGE_CLIENT_SECRET}
+      discovery: https://idm.${DOMAIN}/realms/${REALM}/.well-known/openid-configuration
+      bearer_only: false
+      use_jwks: false
+      use_pkce: true
+      ssl_verify: true
+      unauth_action: auth
+      redirect_uri: https://${DOMAIN}/apps/callback
+      logout_path: /apps/logout
+      post_logout_redirect_uri: https://portal.${DOMAIN}/
+      set_userinfo_header: true
+      set_access_token_header: true
+      set_id_token_header: false
+      set_refresh_token_header: false
+      session:
+        secret: ${OIDC_SESSION_SECRET}
+        cookie_name: jc_edge_apps
+        cookie_path: /apps/
+        cookie_secure: true
+        cookie_http_only: true
+        cookie_same_site: Lax
+        idling_timeout: 3600
+        rolling_timeout: 3600
+        absolute_timeout: 36000
+    proxy-rewrite:
+      headers:
+        set:
+          X-Forwarded-Proto: https
+          X-Forwarded-Port: '443'
+    response-rewrite:
+      headers:
+        set:
+          Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+          X-Content-Type-Options: "nosniff"
+          X-Frame-Options: "SAMEORIGIN"
+          Referrer-Policy: "strict-origin-when-cross-origin"
+
+# The apex answers `/` with a redirect to the Portal (ADR-N-019 §3.1). The route terminates
+# here, the way ckan-redirect does, and never dials the upstream it declares. The path and the
+# query travel along, so a link to the Portal that predates the move still opens the same page.
+portal-redirect:
+  name: portal-redirect
+  description: The apex sends what no other apex route serves to the Portal host
+  plugins:
+    request-id:
+      include_in_response: true
+    serverless-pre-function:
+      phase: rewrite
+      functions:
+        - >-
+          return function()
+            local forged = {
+              "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
+              "X-Endpoint-Slug", "X-Consumer-Identity",
+              "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
+              "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
+            }
+            for _, header in ipairs(forged) do
+              ngx.req.clear_header(header)
+            end
+          end
+    limit-count:
+      count: 300
+      time_window: 60
+      key_type: var
+      key: remote_addr
+      rejected_code: 429
+      policy: local
+      show_limit_quota_header: true
+    redirect:
+      uri: "https://portal.${DOMAIN}$uri"
+      append_query_string: true
+      ret_code: 302
+    response-rewrite:
+      headers:
+        set:
+          Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+          X-Content-Type-Options: "nosniff"
+          X-Frame-Options: "DENY"
+          Referrer-Policy: "strict-origin-when-cross-origin"
+          Cache-Control: "no-store, no-cache, must-revalidate"

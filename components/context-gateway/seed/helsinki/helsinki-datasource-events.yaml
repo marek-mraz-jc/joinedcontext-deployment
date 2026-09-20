@@ -1,0 +1,16 @@
+# The City of Helsinki's event register. No credential for reading; HTTPS all the same.
+# `include=location` expands the venue into the record, which is what gives an event coordinates.
+# One page holds today's events; a mirror of the whole register would follow `meta.next`.
+apiVersion: joinedcontext.com/v1alpha1
+kind: DataSource
+metadata:
+  name: hel-linked-events
+  namespace: helsinki
+  title: { en: "Helsinki events (Linked Events)", fi: "Helsingin tapahtumat (Linked Events)" }
+spec:
+  type: http
+  http:
+    url: https://api.hel.fi/linkedevents/v1/event/?include=location&start=today&end=today&page_size=100&sort=start_time
+    verb: GET
+    headers: { Accept: application/json }
+    timeout: 30s

@@ -1,0 +1,87 @@
+---
+# Both clients live on the Portal host (https://portal.{host}, ADR-N-019): the realm template
+# builds rootUrl, redirectUris and webOrigins from `subdomain`. The browser login itself is
+# the edge's (`edge` client, components/apisix/keycloak-clients.yaml); these two remain for
+# the Portal's own code flow, the fallback of an installation without the edge in front, and
+# for the service account of the backend.
+portal-ui:
+  name: Portal UI
+  description: Browser client of the portal single-page UI; public, PKCE only, no secret
+  subdomain: portal
+  redirectPath: /*
+  rawValues:
+    publicClient: true
+    standardFlowEnabled: true
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: false
+
+portal-api:
+  name: Portal API
+  description: Confidential client of the portal backend for the OIDC code flow and its service account
+  subdomain: portal
+  redirectPath: /api/v1/auth/callback
+  componentNamespaces:
+    - portal
+  # The reconciler creates, updates and deletes the confidential client `app-{name}` of every
+  # app on demand, as this client's own service account (AP-27). Keycloak scopes client
+  # management per realm and not per name prefix, so the grant is realm-wide; the reconciler
+  # only ever addresses `app-{name}` built from an App manifest's name, and narrowing the grant
+  # itself needs Keycloak's fine-grained admin permissions.
+  serviceAccountClientRoles:
+    realm-management:
+      - manage-clients
+  rawValues:
+    publicClient: false
+    standardFlowEnabled: true
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: true
+    # The Portal reads the caller's realm roles from the ID token (src/auth/oidc.rs
+    # realm_roles) and gates the Flows gallery by Blueprint.spec.allowedRoles on them
+    # (CC-59). Keycloak's default realm-roles mapper writes realm_access into the access
+    # token only, so a browser session had no role and saw no blueprint (T-0491).
+    protocolMappers:
+      - name: realm-roles-in-id-token
+        protocol: openid-connect
+        protocolMapper: oidc-usermodel-realm-role-mapper
+        consentRequired: false
+        config:
+          claim.name: realm_access.roles
+          jsonType.label: String
+          multivalued: 'true'
+          access.token.claim: 'true'
+          id.token.claim: 'true'
+          userinfo.token.claim: 'true'
+      # The Portal calls jc-functions with this client's client-credentials token (SDK-23); the
+      # runtime accepts audience jc-functions with azp portal-api and nothing else.
+      - name: jc-functions-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: jc-functions
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+
+# The reconciler's own credential (PF-63, T-0866): the Portal brings the realm's groups to what
+# `users/groups/` says, and that is the only thing this client may do. It is a separate client
+# from `portal-api` on purpose — the login client must not gain the right to write people into
+# groups — and it has no login flow of its own: a service account and nothing else.
+portal-reconciler:
+  name: Portal reconciler
+  description: Service account the Portal's reconciler manages the realm's platform-owned groups with
+  subdomain: portal
+  componentNamespaces:
+    - portal
+  # `manage-users` adds and removes a group membership; `query-groups` lists the groups to
+  # compare them against the manifests. No client, realm or role management.
+  serviceAccountClientRoles:
+    realm-management:
+      - manage-users
+      - query-groups
+  rawValues:
+    publicClient: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: true

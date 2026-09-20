@@ -1,0 +1,11 @@
+{% ckan_extends %}
+
+{% block footer_attribution %}
+  <p>
+    {{ h.jc_branding().instanceName }}
+    {% if h.jc_branding().organisation %} · {{ h.jc_branding().organisation }}{% endif %}
+    {% if h.jc_branding().contactEmail %}
+      · <a href="mailto:{{ h.jc_branding().contactEmail }}">{{ h.jc_branding().contactEmail }}</a>
+    {% endif %}
+  </p>
+{% endblock %}

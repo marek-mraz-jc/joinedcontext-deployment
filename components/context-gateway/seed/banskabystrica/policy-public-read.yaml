@@ -1,0 +1,19 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Policy
+metadata:
+  name: public-read
+  namespace: banskabystrica
+  title: { sk: "Verejné čítanie", en: "Public read" }
+spec:
+  contextSpaceRef: { kind: ContextSpace, name: ovzdusie }
+  assigner: did:web:banskabystrica.sk
+  assignee: { kind: role, id: public }
+  operations: [retrieveOps]
+  # What the anonymous caller may read, attribute by attribute (R6, EP-47). The two the
+  # list leaves out are the demo's least-privilege moment: `reliability` and `refDevice`
+  # are absent from the entity, from the JSON Schema and from the `@context`, and named
+  # in `redactedSlots` so the absence is visible rather than mysterious.
+  information:
+    - entities:
+        - type: AirQualityObserved
+      propertyNames: [dateObserved, location, observedAt, pm10, pm25]

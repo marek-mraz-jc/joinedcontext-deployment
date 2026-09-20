@@ -1,0 +1,11 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: public-air
+  namespace: banskabystrica
+spec:
+  contextSpaceRef: ovzdusie
+  slug: mluyob4nz52lok3ssk7pgn5vwt
+  audience: public
+  enabledRepresentations: [ngsi-ld, geojson, mcp]
+  rateLimits: { requestsPerMinute: 600, burst: 50 }
