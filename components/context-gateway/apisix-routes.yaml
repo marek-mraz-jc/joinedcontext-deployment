@@ -19,6 +19,32 @@ context-space:
     idleTimeout: 60
     requests: 1000
 
+# The same surface on the Portal host. The Portal UI reads a space from its own origin —
+# `sdk/src/grid/source.ts` builds `/cs/{space}/ngsi-ld/v1` as a relative URL — and with the route
+# bound to the apex alone that fetch fell through to portal-ui, which answers the SPA shell with
+# a 200. Every space page's "Data" section therefore read as "no grant on this space" over a full
+# space, and the live journey that walks the demonstration parsed `<!doctype html>` as NGSI-LD
+# (T-2454). The edge session becomes `Authorization: Bearer` here exactly as it does for
+# context-endpoint-portal; an anonymous visitor stays anonymous and a presented bearer is left
+# alone, and the gateway's PEP decides either way.
+context-space-portal:
+  name: context-space-portal
+  description: Context space NGSI-LD surface on the Portal host, edge session as bearer
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/cs/*'
+  subDomain: portal
+  priority: 15
+  timeout:
+    connect: 6
+    send: 60
+    read: 300
+  # APISIX defaults to the same 320, but a long-lived streaming upstream is the one place
+  # where the pool size is a deliberate capacity decision rather than a default.
+  keepalivePool:
+    size: 320
+    idleTimeout: 60
+    requests: 1000
+
 context-endpoint:
   name: context-endpoint
   description: Shared context endpoint representation surface

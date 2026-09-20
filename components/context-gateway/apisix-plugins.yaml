@@ -52,6 +52,97 @@ context-space:
           Referrer-Policy: "strict-origin-when-cross-origin"
           Cache-Control: "no-store, no-cache, must-revalidate"
 
+context-space-portal:
+  name: context-space-portal
+  description: Context space NGSI-LD surface on the Portal host, the edge session as the bearer
+  plugins:
+    request-id:
+      include_in_response: true
+    # SSE and large GeoJSON/CSV exports must reach the client as they are produced; with
+    # nginx buffering on, a 300 s read timeout only means the client waits 300 s for the
+    # first byte.
+    proxy-buffering:
+      disable_proxy_buffering: true
+    serverless-pre-function:
+      phase: rewrite
+      functions:
+        - >-
+          return function()
+            local forged = {
+              "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
+              "X-Endpoint-Slug", "X-Consumer-Identity", "X-Forwarded-User",
+              "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
+              "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
+            }
+            for _, header in ipairs(forged) do
+              ngx.req.clear_header(header)
+              ngx.req.clear_header((header:gsub("%-", "_")))
+            end
+          end
+    # Class 2 (authenticated API): 1,200 requests per minute per client identity.
+    limit-count:
+      count: 1200
+      time_window: 60
+      key_type: var
+      key: http_authorization
+      rejected_code: 429
+      policy: local
+      show_limit_quota_header: true
+    cors:
+      # A browser may call the endpoint surface from any app served under this platform's
+      # domain, and from nowhere else. `allow_origins: '*'` would also hand the response to
+      # a page on an attacker's host.
+      allow_origins_by_regex:
+        # `${DOMAIN_RE}` and not `${DOMAIN}`: the dots of the domain are escaped by the
+        # ConfigMap template, because an unescaped one matches any character and would admit
+        # `https://evil.platform-example.org` as if it were ours (T-1679).
+        - '^https://[^@/]+\.${DOMAIN_RE}$'
+      allow_methods: 'GET,HEAD,OPTIONS'
+      allow_headers: 'Authorization,Content-Type'
+      allow_credential: false
+    # The edge session as the bearer the gateway verifies (ADR-N-019, AP-62): `pass` leaves an
+    # anonymous visitor anonymous and a presented bearer untouched, like portal-api.
+    openid-connect:
+      client_id: edge
+      client_secret: ${EDGE_CLIENT_SECRET}
+      discovery: https://idm.${DOMAIN}/realms/${REALM}/.well-known/openid-configuration
+      bearer_only: false
+      use_jwks: false
+      use_pkce: true
+      ssl_verify: true
+      unauth_action: pass
+      redirect_uri: https://portal.${DOMAIN}/callback
+      logout_path: /logout
+      post_logout_redirect_uri: https://portal.${DOMAIN}/
+      set_userinfo_header: false
+      set_access_token_header: true
+      access_token_in_authorization_header: true
+      set_id_token_header: false
+      set_refresh_token_header: false
+      session:
+        secret: ${OIDC_SESSION_SECRET}
+        cookie_name: jc_edge
+        cookie_path: /
+        cookie_secure: true
+        cookie_http_only: true
+        cookie_same_site: Lax
+        idling_timeout: 3600
+        rolling_timeout: 3600
+        absolute_timeout: 36000
+    proxy-rewrite:
+      headers:
+        set:
+          X-Forwarded-Proto: https
+          X-Forwarded-Port: '443'
+    response-rewrite:
+      headers:
+        set:
+          Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+          X-Content-Type-Options: "nosniff"
+          X-Frame-Options: "DENY"
+          Referrer-Policy: "strict-origin-when-cross-origin"
+          Cache-Control: "no-store, no-cache, must-revalidate"
+
 context-endpoint:
   name: context-endpoint
   description: Context endpoint representation surface filtering

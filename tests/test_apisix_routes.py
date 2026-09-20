@@ -48,6 +48,12 @@ EDGE_LOGIN_ROUTES = {
     "context-endpoint-portal": {
         "unauth_action": "pass", "cookie_path": "/", "callback": f"https://{PORTAL_HOST}/callback", "userinfo": False,
     },
+    # And the space surface on the same host, for the same reason: the Portal UI reads a space
+    # from its own origin (`sdk/src/grid/source.ts`), so the session has to become the bearer
+    # there too. Anonymous is passed through, never redirected (T-2454).
+    "context-space-portal": {
+        "unauth_action": "pass", "cookie_path": "/", "callback": f"https://{PORTAL_HOST}/callback", "userinfo": False,
+    },
 }
 
 

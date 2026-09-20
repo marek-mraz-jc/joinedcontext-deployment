@@ -96,6 +96,10 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": False, "framing": "DENY",
         "why": "an Endpoint publishes what its Policy grants, to anonymous callers by design (EP-01)",
     },
+    "context-space-portal": {
+        "reach": EDGE_SESSION, "cacheable": False, "framing": "DENY",
+        "why": "the space surface on the Portal's origin, where the UI reads it from; the edge session becomes the bearer and the gateway's PEP still decides",
+    },
     "context-endpoint-portal": {
         "reach": EDGE_SESSION, "cacheable": False, "framing": "DENY",
         "why": "the same surface on the Portal's origin, with the edge session turned into a bearer",
