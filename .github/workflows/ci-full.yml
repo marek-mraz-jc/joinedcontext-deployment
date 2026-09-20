@@ -36,6 +36,21 @@ jobs:
         run: .ci/policies/verify-kyverno-policies.sh
       - name: kyverno policy unit tests
         run: kyverno test .ci/policies
+  readme:
+    # Every command the README tells a newcomer to type is run here (T-2144, TS-19). A
+    # renamed recipe, a moved script or a flag that no longer exists then fails a lane rather
+    # than somebody's first hour. Only the Build and Test sections run; "Run locally" brings
+    # up a cluster and is read by eye.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: helmfile/helmfile-action@1f44bcb43e5fb17ecb2685d8b6081ec5f6aa5fcf # v2.4.7
+        with: { helmfile-args: version }
+      - uses: extractions/setup-just@f8a3cce218d9f83db3a2ecd90e41ac3de6cdfd9b # v3.1.0
+      - name: the extractor reads what it is meant to read
+        run: python3 scripts/ci/check-readme-commands.py --selftest
+      - run: python3 scripts/ci/check-readme-commands.py
   deployment-variants:
     # scripts/test-deployment-variants.sh brings up k3d clusters, far too slow for the PR gate.
     runs-on: ubuntu-latest
