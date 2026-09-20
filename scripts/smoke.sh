@@ -15,6 +15,27 @@ slug="${JC_INSTANCE:-$realm}"
 # The Portal has a host of its own behind the edge login (ADR-N-019), derived the way the
 # route derives it; the apex keeps the shared surfaces and redirects the rest there.
 portal="${JC_PORTAL_URL:-https://portal.${base#https://}}"
+# The ceiling on the egress settle window (OPS-27, SEC-GAP-05). The network plugin programs a
+# new pod's egress chains after that pod is already on the network, and the egress probe below
+# measures how long that takes. Over this many seconds the run fails instead of printing a
+# larger number nobody reads: the gap is only an accepted one while it is bounded. Raising it on
+# a cluster is a decision with a line in AI_shared_folder.md, never a quiet default change.
+#
+# The probe keeps its own upper bound (18 rounds of 4 seconds), so a ceiling at or above that
+# could never be exceeded and would silently switch the check off; such a value is refused.
+settle_probe_seconds=72
+settle_ceiling="${JC_NETPOL_SETTLE:-30}"
+case "$settle_ceiling" in
+'' | *[!0-9]*)
+	printf 'smoke: JC_NETPOL_SETTLE must be a whole number of seconds, not "%s"\n' "$settle_ceiling" >&2
+	exit 2
+	;;
+esac
+if [ "$settle_ceiling" -ge "$settle_probe_seconds" ]; then
+	printf 'smoke: JC_NETPOL_SETTLE=%ss is not below the probe own bound of %ss, so nothing would fail on it\n' \
+		"$settle_ceiling" "$settle_probe_seconds" >&2
+	exit 2
+fi
 
 pass=0
 fail=0
@@ -617,12 +638,19 @@ egress_out=$(kubectl run "$egress" -n "$slug" --rm --attach --restart=Never --qu
 	--overrides="$(probe_overrides "$egress" '["sh", "-c", "i=0; while [ $i -lt 18 ]; do nc -w 3 -z 1.1.1.1 443 >/dev/null 2>&1 || break; i=$((i+1)); sleep 4; done; echo SETTLED-AFTER=$((i*4))s; timeout 8 nslookup kubernetes.default >/dev/null 2>&1 && echo REACHED-DNS; nc -w 5 -z 1.1.1.1 443 >/dev/null 2>&1 && echo REACHED-NET; echo PROBE-RAN"]')" \
 	2>/dev/null)
 reached=$(printf '%s' "$egress_out" | sed -n 's/^REACHED-DNS\r*$/CoreDNS/p; s/^REACHED-NET\r*$/1.1.1.1:443/p' | tr '\n' ' ')
+settled=$(printf '%s' "$egress_out" | sed -n 's/^SETTLED-AFTER=\([0-9]*\)s\r*$/\1/p' | head -1)
 if ! printf '%s' "$egress_out" | grep -q PROBE-RAN; then
 	ko "the egress probe never ran, so the egress half of the default-deny was not measured"
 elif [ -n "$reached" ]; then
 	ko "an unlabelled pod reached ${reached}— the egress half of the default-deny is not holding"
+elif [ -z "$settled" ]; then
+	# The probe ran and reached nothing, but printed no window. Nothing was measured, so the
+	# ceiling below would be compared against an empty string and pass by accident.
+	ko "the egress probe printed no settle window, so the length of the gap was not measured"
+elif [ "$settled" -gt "$settle_ceiling" ]; then
+	ko "the egress settle window was ${settled}s, over the ${settle_ceiling}s ceiling (JC_NETPOL_SETTLE): the gap the hardening page accepts is no longer bounded"
 else
-	ok "an unlabelled pod reaches neither CoreDNS nor the internet ($(printf '%s' "$egress_out" | sed -n 's/^SETTLED-AFTER=\([0-9a-z]*\)\r*$/settled after \1/p'))"
+	ok "an unlabelled pod reaches neither CoreDNS nor the internet (settled after ${settled}s, ceiling ${settle_ceiling}s)"
 fi
 
 echo "functions"
