@@ -1,11 +1,25 @@
+# The one public door of the air-quality space (EP-16, GW22): anonymous reads of what the
+# `public-read` Policy allows, and the dataset the open-data catalogue carries (EP-62).
 apiVersion: joinedcontext.com/v1alpha1
 kind: Endpoint
 metadata:
   name: public-air
   namespace: banskabystrica
+  # What the dataset page and the endpoint's own DCAT-AP record show: `dct:title` and
+  # `dct:description` are read from here (EP-27), and the catalogue maps them to the dataset's
+  # title and notes. Slovak first: the space's own locale is `sk`.
+  title: { sk: "Kvalita ovzdušia v Banskej Bystrici", en: "Air quality in Banská Bystrica" }
+  description:
+    sk: "Merania kvality ovzdušia z monitorovacích staníc mesta Banská Bystrica: PM10, PM2.5, čas merania a spoľahlivosť záznamu, jedna položka na stanicu a meranie."
+    en: "Air-quality readings from the monitoring stations of the city of Banská Bystrica: PM10, PM2.5, the time of the reading and how reliable it is, one record per station and reading."
 spec:
   contextSpaceRef: ovzdusie
   slug: mluyob4nz52lok3ssk7pgn5vwt
   audience: public
-  enabledRepresentations: [ngsi-ld, geojson, mcp]
+  # `csv` is what a tabular consumer reads, and what the catalogue's DataStore sheet is filled
+  # from: the sheet is read through this representation as an ordinary consumer, so an endpoint
+  # that serves none can carry no preview, no filtered API and no SQL over its rows (EP-64,
+  # Architecture/21 §3, T-2432). `xlsx` is the same rows for a person who opens them in a
+  # spreadsheet; `zip` is left out, a third copy of the same readings nobody rebuilds.
+  enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, mcp]
   rateLimits: { requestsPerMinute: 600, burst: 50 }

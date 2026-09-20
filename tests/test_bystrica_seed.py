@@ -218,3 +218,29 @@ def test_the_seed_index_lists_every_file_beside_it():
         }
         assert listed == on_disk, f"{folder.name}: {listed ^ on_disk}"
         assert len(set(index.values())) == len(index), f"{folder.name}: two files share a path"
+
+
+def test_a_public_endpoint_serves_a_tabular_representation_and_says_what_it_is():
+    """T-2432, EP-62..EP-64: what the open-data catalogue needs from a public endpoint.
+
+    A dataset's preview, its filtered API and SQL over its rows are the CKAN DataStore sheet, and
+    the sheet is filled by reading the endpoint's own tabular representation as an ordinary
+    consumer. An endpoint that serves none can carry links and nothing else. The dataset's title
+    and notes are the endpoint's `metadata.title` and `metadata.description`, mapped through its
+    DCAT-AP record, so an endpoint without them lands in the catalogue named after its manifest.
+    """
+    public = [
+        (folder.name, path, doc)
+        for folder in (REGION, CITY)
+        for path, doc in manifests(folder, "Endpoint")
+        if doc["spec"].get("audience") == "public"
+    ]
+    assert public, "neither project has a public endpoint to publish"
+    for project, path, doc in public:
+        where = f"{project}/{path.name}"
+        representations = doc["spec"].get("enabledRepresentations", [])
+        assert "csv" in representations, f"{where}: no tabular representation, so no sheet is possible"
+        for field in ("title", "description"):
+            text = doc["metadata"].get(field)
+            assert isinstance(text, dict) and text.get("sk"), f"{where}: no Slovak {field} for the dataset page"
+            assert text.get("en"), f"{where}: no English {field} beside the Slovak one"
