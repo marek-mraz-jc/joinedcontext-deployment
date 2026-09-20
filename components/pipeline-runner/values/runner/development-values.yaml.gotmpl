@@ -30,9 +30,20 @@ env:
   JC_GATEWAY_HOST: "context-gateway.{{ index .Values "context-gateway" "gateway" "namespace" }}.svc.cluster.local:8080"
   # The public issuer, so the token's `iss` is the one the gateway verifies (KC_HOSTNAME).
   JC_TOKEN_URL: "https://idm.{{ $global.domain }}/realms/{{ $global.instanceSlug }}/protocol/openid-connect/token"
+  # The pipeline-test harness the Portal sends still runs as this one client, because the
+  # `portal-internal` audience is only on it (T-2271); a rendered stream does not use it.
   JC_CLIENT_ID: helsinki-pipelines
 envSecret:
   JC_CLIENT_SECRET: { secret: keycloak-client-helsinki-pipelines, key: client-secret }
+  # One secret per project that has pipelines (T-2384, PF-46). A rendered stream writes its own
+  # project's client id — `{project}-pipelines`, what the gateway resolves the token's `azp` to —
+  # and names the variable below for the secret, so no credential is written into a stream the
+  # runner's own API serves back. The name is the project uppercased with `-` as `_`; the
+  # reconciler mints it the same way (joinedcontext-portal src/reconciler/streams.rs,
+  # `client_secret_var`), and the client entries are in ../../keycloak-clients.yaml.
+  JC_CLIENT_SECRET_HELSINKI: { secret: keycloak-client-helsinki-pipelines, key: client-secret }
+  JC_CLIENT_SECRET_BANSKABYSTRICA: { secret: keycloak-client-banskabystrica-pipelines, key: client-secret }
+  JC_CLIENT_SECRET_BBSK: { secret: keycloak-client-bbsk-pipelines, key: client-secret }
 
 # The runner starts with the shared resources alone (the caches and the rate limit the
 # rendered streams name, ../../streams/resources.yaml); the streams arrive over its API.
