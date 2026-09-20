@@ -173,6 +173,8 @@ v1/Secret local/keycloak-admin-user
 v1/Secret local/keycloak-client-activity-ingest
 v1/Secret local/keycloak-client-apisix-gateway
 v1/Secret local/keycloak-client-banskabystrica-conformance
+v1/Secret local/keycloak-client-banskabystrica-pipelines
+v1/Secret local/keycloak-client-bbsk-pipelines
 v1/Secret local/keycloak-client-context-gateway
 v1/Secret local/keycloak-client-edge
 v1/Secret local/keycloak-client-gitea
@@ -181,6 +183,7 @@ v1/Secret local/keycloak-client-portal-api
 v1/Secret local/keycloak-client-portal-reconciler
 v1/Secret local/keycloak-config-keycloak-config-cli-config-realms
 v1/Secret local/keycloak-user-demo-approver
+v1/Secret local/keycloak-user-demo-editor
 v1/Secret local/keycloak-user-demo-steward
 v1/Secret local/keycloak-user-demo-viewer
 v1/Secret local/portal-cookie-key
