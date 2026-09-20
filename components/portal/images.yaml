@@ -175,4 +175,10 @@ portal:
     # The pipeline canvas is a group rather than an image, so a screen reader announces the nodes
     # in it. Two test cases corrected to the aria-disabled contract they were asserting against
     # (T-2317, T-2320). On top of b9bb5d1.
-    digest: 'sha256:5530567ca24884187a5a73551ded54511fbc1df7a6912fcb3d0741af35f8c8c5'
+    # portal d04988a: the dashboard header, the sync card, the app cards and the SDK map panel
+    # keep one control in the open and put the rest, with their refusals, in the menu (T-2288);
+    # the bbsk-ukazovatele application and its live journey (T-2308, T-2309); five serious axe
+    # findings answered, including the info and primary-soft tones now being the brand pulled
+    # halfway to the ink — a pale brand measured 1.6:1 on its own soft background (T-1493).
+    # On top of f3342c2.
+    digest: 'sha256:f99a647bb8aa6ddea0b450b0f4a78b1696cbc0e6e3c2ce205070e7996e3a8887'

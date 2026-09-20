@@ -53,4 +53,7 @@ functions:
     # each step's index into the message metadata before the step runs and keeps it at the first
     # failure, so a trace says which processor threw rather than which ran last (T-1130, PL-43,
     # PL-52, PL-56). jc-core v0.7.47. On top of 387cbc0.
-    digest: 'sha256:7d07ce6dbc531890bd11586b2a99e8cff317ae31340fb61275abb893501095fb'
+    # platform 0b6bd13: 1682 lines of edge-case suites over the ten deciding functions of the
+    # edge and the PDP (T-1905..T-1914) — tests only, no behaviour change — on top of the image
+    # lane that now queues instead of cancelling itself (T-2318). On top of b2aab3f.
+    digest: 'sha256:e9c8828f713d30321598b960e801ec4a8840b805bc109c36af99105defdfb202'
