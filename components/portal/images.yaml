@@ -181,4 +181,20 @@ portal:
     # findings answered, including the info and primary-soft tones now being the brand pulled
     # halfway to the ink — a pale brand measured 1.6:1 on its own soft background (T-1493).
     # On top of f3342c2.
-    digest: 'sha256:f99a647bb8aa6ddea0b450b0f4a78b1696cbc0e6e3c2ce205070e7996e3a8887'
+    # portal a12297a: the streams reconciler tells a dead stream from a live one. It kept only the
+    # names from the runner's `GET /streams` and dropped each stream's `active` flag, so a stream
+    # whose writes were all refused stayed `Live` for ever and was never sent again — which is why
+    # the city's `voda` pipeline survived three applies dead while its siblings were re-created
+    # (T-2336, PL-18, OPS-27). An inactive stream is now re-sent, which restarts it and mints a
+    # fresh output token, bounded by whether its input is one that ends by itself so a file or
+    # `select` pipeline that legitimately finished is not re-ingested every pass. With it: an
+    # endpoint names the policies the gateway will evaluate for it and expands each CIM 009 group
+    # into the operations it covers (T-2282, GW34), the ui-parts sweep (T-1837..T-1846), and the
+    # spaces golden at 1920x1080 zoom 1.5 carrying the one-control row (T-2348). On top of d04988a.
+    # portal b6da73c: a Policy is authored through a form like every other kind — the five CIM 009
+    # groups first, their members read from the shared vocabulary rather than retyped, a
+    # prohibition that reads louder than a permission, four locales, axe and the keyboard
+    # (T-2326, R8, GW34, UI-44). With it: the ops routes and the agent access rules keep their
+    # refusals under attack (T-1689, T-1690, T-2081..T-2090), and the bento processor catalogue
+    # loses `file` in step with the platform (T-1701). On top of a12297a.
+    digest: 'sha256:51b4870230f795ed8ef99d4ebd6fd19d0b6c6479666a620d65bae0a355ddf661'

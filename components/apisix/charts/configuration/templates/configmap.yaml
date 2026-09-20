@@ -18,7 +18,10 @@ data:
       - id: {{ $id }}
         desc: {{ $config.description | default $config.name | quote }}
         plugins:
-{{ ($config.plugins | default dict) | toYaml | replace "${REALM}" $.Values.realm | replace "${DOMAIN}" $.Values.domain | replace "${APISIX_GATEWAY_CLIENT_SECRET}" "${{APISIX_GATEWAY_CLIENT_SECRET}}" | replace "${OIDC_SESSION_SECRET}" "${{OIDC_SESSION_SECRET}}" | replace "${EDGE_CLIENT_SECRET}" "${{EDGE_CLIENT_SECRET}}" | indent 10 }}
+{{/* ${DOMAIN_RE} is the domain with its dots escaped, for a plugin that matches an Origin
+     with a regular expression: an unescaped dot matches any character, so `.+\.${DOMAIN}`
+     also admits a look-alike host somebody else can register (T-1679). */}}
+{{ ($config.plugins | default dict) | toYaml | replace "${REALM}" $.Values.realm | replace "${DOMAIN_RE}" ($.Values.domain | replace "." "[.]") | replace "${DOMAIN}" $.Values.domain | replace "${APISIX_GATEWAY_CLIENT_SECRET}" "${{APISIX_GATEWAY_CLIENT_SECRET}}" | replace "${OIDC_SESSION_SECRET}" "${{OIDC_SESSION_SECRET}}" | replace "${EDGE_CLIENT_SECRET}" "${{EDGE_CLIENT_SECRET}}" | indent 10 }}
 {{- end }}
     upstreams:
 {{- range $id, $config := .Values.routes }}

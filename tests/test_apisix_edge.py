@@ -10,21 +10,10 @@ import pytest
 import yaml
 
 # Headers a client must never be able to set: each one is either a tenancy or authorization
-# claim the platform trusts internally, or a proxy hint APISIX sets itself.
-FORGED_HEADERS = (
-    "NGSILD-Tenant",
-    "X-Userinfo",
-    "X-Access-Token",
-    "X-Allowed-Scope-Ids",
-    "X-Endpoint-Slug",
-    "X-Consumer-Identity",
-    "X-Forwarded-Host",
-    "X-Forwarded-Proto",
-    "X-Forwarded-Port",
-    "X-Forwarded-Prefix",
-    "X-Forwarded-Server",
-    "X-Real-IP",
-)
+# claim the platform trusts internally, or a proxy hint APISIX sets itself. One list, shared
+# with the walk over the component sources: two copies of it drifted once already (T-1672).
+from test_edge_attack_surface import TRUSTED_HEADERS as FORGED_HEADERS
+
 UI_CONFIGS = ("portal-ui", "apps-surface", "keycloak", "gitea-forge")
 # The routes the Portal itself answers; their headers are the Portal's own (T-1732).
 PORTAL_CONFIGS = (
@@ -146,7 +135,9 @@ def test_gateway_routes_stream_unbuffered(plugin_configs):
 def test_endpoint_surface_restricts_cors_to_the_platform_domain(plugin_configs):
     cors = plugin_configs["context-endpoint"]["cors"]
     assert "allow_origins" not in cors, "a wildcard origin would hand responses to any page"
-    assert cors["allow_origins_by_regex"] == [r"^https://.+\.joinedcontext.test$"]
+    # The dots of the domain are a character class, not a bare `.`: see
+    # tests/test_foreign_origin.py for what an unescaped one lets through (T-1679).
+    assert cors["allow_origins_by_regex"] == [r"^https://[^@/]+\.joinedcontext[.]test$"]
     assert cors["allow_credential"] is False
 
 
