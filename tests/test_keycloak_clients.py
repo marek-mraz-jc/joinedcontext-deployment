@@ -308,3 +308,40 @@ def test_every_other_browser_client_still_requires_pkce(realm_clients):
         if client_id == "gitea" or not client.get("standardFlowEnabled"):
             continue
         assert client["attributes"]["pkce.code.challenge.method"] == "S256", client_id
+
+
+# --- T-2420, T-2271 (AG-52, PF-46): the agent proxy's two audiences ----------------------------
+
+
+@pytest.fixture(scope="module")
+def dev_realm_clients(rendered):
+    """The realm of an environment that runs the agent runner; `local` leaves that component out."""
+    for doc in rendered("dev"):
+        if doc.get("kind") == "Secret" and doc["metadata"]["name"].endswith("config-cli-config-realms"):
+            realm = json.loads(base64.b64decode(doc["data"]["dev.json"]))
+            return {c["clientId"]: c for c in realm["clients"]}
+    pytest.fail("no keycloak-config-cli realm Secret in the dev render")
+
+
+def test_the_agent_proxy_carries_both_audiences_it_is_refused_without(dev_realm_clients):
+    """One client, two doors, and a token is refused at either without its mapper.
+
+    `context-gateway` is how a run reads samples through whichever endpoint it names (T-0666).
+    `portal-internal` is how the proxy asks the Portal's internal listener what a run is
+    (`authenticate_agent_proxy`, portal `src/auth/internal.rs`): without it the lookup fails,
+    `RunResolver::fetch` reports no active run, and the proxy answers every model call of every
+    conversation `401 invalid run credentials` — the wording is deliberately the same for four
+    different failures (T-2285), so a dropped mapper looks exactly like a forged ticket. The
+    live realm is checked by `scripts/smoke.sh`; this is the manifest it is written from.
+    """
+    proxy = dev_realm_clients["helsinki-agent-proxy"]
+    audiences = {
+        mapper["config"].get("included.custom.audience")
+        for mapper in proxy["protocolMappers"]
+        if mapper["protocolMapper"] == "oidc-audience-mapper"
+    }
+    assert {"context-gateway", "portal-internal"} <= audiences, sorted(a for a in audiences if a)
+    # And it stays a workload: client credentials only, no browser flow to phish a token out of.
+    assert proxy["serviceAccountsEnabled"] is True
+    assert proxy["standardFlowEnabled"] is False and proxy["implicitFlowEnabled"] is False
+    assert proxy["directAccessGrantsEnabled"] is False and proxy["publicClient"] is False

@@ -259,6 +259,20 @@ else
 		else
 			ko "agent proxy client has no context-gateway audience: a run reads a 401 through an endpoint approved after the realm (T-0666)"
 		fi
+		# The proxy's second door: it asks the Portal's internal listener what a run is, and that
+		# listener answers this client's token and no other (T-2271, AG-52). Without the mapper the
+		# lookup fails, and the proxy answers every model call of every conversation
+		# `401 invalid run credentials` — the same sentence four different failures produce
+		# (T-2285), so a realm written before the mapper looks exactly like a forged ticket. This
+		# is the assistant's first-impression flow, so it is checked here and not only in the
+		# render (T-2420; `tests/test_keycloak_clients.py` holds the manifest side).
+		if [ "$proxy_client" != "[]" ] && [ -n "$proxy_client" ]; then
+			if printf '%s' "$proxy_client" | grep -q '"included.custom.audience" *: *"portal-internal"'; then
+				ok "agent proxy client mints tokens with audience portal-internal (the Portal answers its run lookups)"
+			else
+				ko "agent proxy client has no portal-internal audience: every assistant answer fails with 401 invalid run credentials (T-2420, T-2271)"
+			fi
+		fi
 	fi
 fi
 
