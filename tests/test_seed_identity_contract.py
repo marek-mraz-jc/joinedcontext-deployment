@@ -42,11 +42,20 @@ def test_no_mapping_types_its_space_or_project_in():
     minted = 0
     for path in bentos:
         for number, line in enumerate(path.read_text().splitlines(), 1):
-            if line.lstrip().startswith("#"):
+            stripped = line.lstrip()
+            # `let source_url` is the publisher's own address, and one of them lives under
+            # `egov.banskabystrica.sk`: a host that happens to contain a project's org domain
+            # is not this mapping typing its project in (T-2305).
+            if stripped.startswith("#") or stripped.startswith("let source_url ="):
                 continue
-            assert not literal.search(line), f"{path.name}:{number}: {line.strip()}"
+            assert not literal.search(line), f"{path.name}:{number}: {stripped}"
         minted += 'env("JC_SPACE")' in path.read_text()
-    assert minted == 7, "the seven mappings that mint ids read their space from JC_SPACE"
+    # Every mapping that mints an id reads its space from the environment. The one exception is
+    # named rather than counted around: the vehicles reaper writes nothing, it deletes buses
+    # whose position went stale, so it has no id to mint.
+    silent = {p.name for p in bentos if 'env("JC_SPACE")' not in p.read_text()}
+    assert silent == {"helsinki-pipeline-vehicles-reaper-bento.yaml"}, silent
+    assert minted == len(bentos) - 1
 
 
 def test_helsinki_policies_name_the_organization_by_placeholder():
