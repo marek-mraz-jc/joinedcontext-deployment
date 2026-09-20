@@ -162,4 +162,11 @@ portal:
     # gate that keeps them (T-1726..T-1728, T-1736..T-1748); a list that failed is no longer drawn
     # as "you have nothing" (T-1763, T-1764); the e2e lane keeps its evidence when it fails
     # (T-2311). On top of 4a27397.
-    digest: 'sha256:8d373c84e916a63dd2e8bf8be0ccc740ba32bcba76a0aabf8197a1967cd60349'
+    # portal b9bb5d1: the ui-forms and ui-pages checklists land — LinkML source/structure/mappings,
+    # the pipeline dialog and studio, complete-a-space, Access, Activity, AgentRun, App, the
+    # approvals queue and the change under review, dashboards, workspaces and the resource list,
+    # each against the UI contract with its test (T-1769..T-1796). The pipeline canvas stands
+    # between its two palettes again and the four 400px/zoom goldens carry the shared-control
+    # layout (T-2311). The Vite 8 `server.fs.allow` fix, without which 86 of 142 UI test files
+    # did not collect (T-1777). On top of 3da8cc4.
+    digest: 'sha256:101f3d1fa362b524f68214392bc38705547642ae2fecd45f5e53bc248313fa49'
