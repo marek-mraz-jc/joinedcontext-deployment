@@ -26,6 +26,8 @@ statistical-observation.v1.example.jsonld: projects/banskabystrica/spaces/banska
 statistical-observation.v1.md: projects/banskabystrica/spaces/banskabystrica-mesto/datamodels/statistical-observation.v1.md
 endpoint-mesto.yaml: projects/banskabystrica/spaces/banskabystrica-mesto/endpoints/banskabystrica-mesto.yaml
 policy-mesto-pipelines-write.yaml: projects/banskabystrica/spaces/banskabystrica-mesto/policies/mesto-pipelines-write.yaml
+policy-mesto-steward-read.yaml: projects/banskabystrica/spaces/banskabystrica-mesto/policies/mesto-steward-read.yaml
+policy-mesto-steward-note.yaml: projects/banskabystrica/spaces/banskabystrica-mesto/policies/mesto-steward-note.yaml
 space-kpi.yaml: projects/banskabystrica/spaces/banskabystrica-kpi/space.yaml
 endpoint-kpi.yaml: projects/banskabystrica/spaces/banskabystrica-kpi/endpoints/banskabystrica-kpi.yaml
 policy-kpi-pipelines-write.yaml: projects/banskabystrica/spaces/banskabystrica-kpi/policies/kpi-pipelines-write.yaml

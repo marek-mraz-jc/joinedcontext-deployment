@@ -1,4 +1,4 @@
-# One published statistical cell (`statistical-observation` 1.0.0)
+# One published statistical cell (`statistical-observation` 1.1.0)
 
 The model the raw spaces of `bbsk` and `banskabystrica` publish, generated from
 `statistical-observation.linkml.yaml`. One class, `StatisticalObservation`, specialising the
@@ -19,9 +19,17 @@ shared `Entity` of `ngsi-ld-core`.
 | `unitText` | Property | string | | `jc:unitText` |
 | `source` | Property | string | | `jc:source` |
 | `dateObserved` | Property | datetime | | `jc:dateObserved` |
+| `stewardNote` | Property | string | | `jc:stewardNote` |
 
 `dataSet`, `indicator`, `refArea`, `refPeriod`, `value`, `source`, `dateObserved`, `id` and
 `type` are required.
+
+`stewardNote` is the one attribute no pipeline writes (1.1.0). Every other attribute of a row
+belongs to the publisher and is replaced on the next run, so an application that offered one of
+them for editing would lose what a person typed without telling them. The note is where the
+person who keeps the data writes what they checked and what looks wrong; a Policy grants
+`updateAttrs` on this name alone, and a write to any other attribute from the same person is the
+gateway's own `403` (EP-14, AP-62). It holds at most 500 characters and no angle brackets.
 
 The `{localId}` of an entity is the publisher's own key, in the publisher's own spelling:
 `{dataSet}-{refArea}-{refPeriod}-{indicator}` and then one segment per remaining dimension, so

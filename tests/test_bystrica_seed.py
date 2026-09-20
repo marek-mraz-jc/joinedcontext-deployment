@@ -220,6 +220,129 @@ def test_the_seed_index_lists_every_file_beside_it():
         assert len(set(index.values())) == len(index), f"{folder.name}: two files share a path"
 
 
+# The steward's note (T-2434): the one attribute of a published row a person may write, and the
+# grants around it. Every figure in these spaces belongs to a publisher and is rewritten by the
+# next pipeline run, so an application that offered one for editing would lose what a person
+# typed without telling them. The note is what makes the two records applications possible.
+NOTE = "stewardNote"
+
+# What the models' own artifacts are, per folder: the LinkML source and the three generated or
+# hand-written files that a published DataModel commits beside it (DM-02).
+MODEL = "statistical-observation"
+
+
+def model_slots(folder: Path) -> list[str]:
+    """The slots the class declares, in the order the LinkML source lists them."""
+    source = yaml.safe_load((folder / f"{MODEL}.linkml.yaml").read_text())
+    return list(source["classes"]["StatisticalObservation"]["slots"])
+
+
+def policies_of(folder: Path, space: str) -> dict[str, dict]:
+    return {
+        doc["metadata"]["name"]: doc["spec"]
+        for _, doc in manifests(folder, "Policy")
+        if doc["spec"]["contextSpaceRef"]["name"] == space
+    }
+
+
+RAW = ((REGION, "bbsk-kraj", "kraj"), (CITY, "banskabystrica-mesto", "mesto"))
+
+
+def test_both_models_declare_the_one_attribute_no_pipeline_writes():
+    for folder, _, _ in RAW:
+        assert NOTE in model_slots(folder), folder.name
+    # A pipeline that wrote it would take the words back on its next run without a word. None
+    # does: the mappings produce the publisher's own columns and stop there. The upsert itself
+    # is `?options=update` (joinedcontext-portal src/reconciler/streams.rs), so a run that does
+    # not mention the note leaves the note where it is.
+    for folder in (REGION, CITY):
+        for path in sorted(folder.glob("*-bento.yaml")):
+            assert NOTE not in path.read_text(), path.name
+
+
+def test_every_slot_the_model_declares_reaches_the_artifacts_beside_it():
+    # The generator's files are committed, not rendered at read time (seed README), so this is
+    # what catches a source edited without `gen_json_schema.py` and `gen_context.py` being run.
+    for folder, _, _ in RAW:
+        schema = json.loads((folder / f"{MODEL}.v1.schema.json").read_text())
+        context = json.loads((folder / f"{MODEL}.v1.context.jsonld").read_text())["@context"]
+        docs = (folder / f"{MODEL}.v1.md").read_text()
+        declared = schema["definitions"]["StatisticalObservation"]["properties"]
+        for slot in model_slots(folder):
+            assert slot in declared, f"{folder.name}: {slot} is not in the JSON Schema"
+            assert slot in context, f"{folder.name}: {slot} is not in the @context"
+            assert f"| `{slot}` |" in docs, f"{folder.name}: {slot} is not in the docs page"
+
+
+def test_the_note_is_optional_and_bounded_and_the_figures_stay_required():
+    for folder, _, _ in RAW:
+        entity = json.loads((folder / f"{MODEL}.v1.schema.json").read_text())["definitions"][
+            "StatisticalObservation"
+        ]
+        assert NOTE not in entity["required"], "a row exists before anybody annotates it"
+        assert "value" in entity["required"], folder.name
+        note = entity["properties"][NOTE]
+        # The gateway validates every write against this schema (CC-12), so the bound on a
+        # free-text attribute is here and not only in the application that offers the field.
+        assert note["pattern"] == "^[^<>]{0,500}$", folder.name
+        assert note["type"] == ["string", "null"], folder.name
+
+
+def test_serving_the_note_is_a_minor_version_of_a_published_model():
+    for folder, _, _ in RAW:
+        model = one(folder, "DataModel", MODEL)
+        assert model["spec"]["version"] == "1.1.0", folder.name
+        assert model["spec"]["lifecycle"] == "published", folder.name
+        # An added optional attribute is backwards compatible, so the major version and the
+        # artifact filenames it names do not move.
+        assert model["spec"]["artifacts"]["jsonSchema"] == f"./{MODEL}.v1.schema.json", folder.name
+        assert f"`{MODEL}` 1.1.0" in (folder / f"{MODEL}.v1.md").read_text(), folder.name
+
+
+def test_a_person_may_write_the_note_and_may_not_write_a_figure():
+    for folder, space, name in RAW:
+        grant = policies_of(folder, space)[f"{name}-steward-note"]
+        assert grant["operations"] == ["updateAttrs"], f"{folder.name}: one write and no other"
+        assert grant["assignee"]["kind"] == "user", folder.name
+        assert grant["information"] == [
+            {"entities": [{"type": "StatisticalObservation"}], "propertyNames": [NOTE]}
+        ], f"{folder.name}: the grant names the attribute, not the type (EP-14, GW16)"
+
+
+def test_no_grant_in_these_projects_lets_a_person_write_a_published_figure():
+    # The property that has to hold however many policies are added later: a human write grant
+    # over a raw space reaches the note and nothing else, so `value` cannot be edited by anyone
+    # whose typing the next pipeline run would overwrite (AP-62, GW17).
+    writes = {"createEntity", "updateEntity", "appendAttrs", "updateAttrs", "deleteAttrs",
+              "deleteEntity", "mergeEntity", "replaceEntity", "replaceAttrs", "updateOps",
+              "redirectionOps", "createBatch", "upsertBatch", "updateBatch", "deleteBatch"}
+    for folder, space, _ in RAW:
+        for name, spec in policies_of(folder, space).items():
+            if spec["assignee"]["kind"] not in {"user", "group", "role"}:
+                continue
+            if not writes.intersection(spec["operations"]):
+                continue
+            granted = [info.get("propertyNames") for info in spec.get("information", [])]
+            assert granted == [[NOTE]], f"{folder.name}/{name} grants a person more than the note"
+
+
+def test_the_steward_reads_the_columns_the_records_application_shows():
+    for folder, space, name in RAW:
+        grant = policies_of(folder, space)[f"{name}-steward-read"]
+        assert grant["operations"] == ["retrieveOps"], f"{folder.name}: reading and nothing else"
+        served = grant["information"][0]["propertyNames"]
+        # Every column the model declares, because a filter names an attribute and an attribute
+        # the grant withholds is a filter the endpoint refuses rather than answers (T-1862).
+        assert sorted(served) == sorted(model_slots(folder)), folder.name
+        assert grant["information"][0]["entities"] == [{"type": "StatisticalObservation"}]
+
+
+def test_the_raw_endpoints_stay_closed_to_the_public_while_the_note_opens():
+    # The note is a grant on a space, not a wider door: both raw endpoints keep the audience
+    # they had, and the city's public air endpoint is still the only public one it has.
+    assert one(REGION, "Endpoint", "bbsk-kraj")["spec"]["audience"] == "organization"
+    assert one(CITY, "Endpoint", "banskabystrica-mesto")["spec"]["audience"] == "organization"
+    assert one(CITY, "Endpoint", "public-air")["spec"]["audience"] == "public"
 def test_a_public_endpoint_serves_a_tabular_representation_and_says_what_it_is():
     """T-2432, EP-62..EP-64: what the open-data catalogue needs from a public endpoint.
 
