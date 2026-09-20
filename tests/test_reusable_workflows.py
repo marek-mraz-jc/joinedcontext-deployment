@@ -279,6 +279,18 @@ def test_a_workload_that_declares_none_of_them_is_refused(conftest_binary):
         assert expected in result.stdout, result.stdout
 
 
+def test_an_edge_whose_429_is_an_html_page_is_refused(conftest_binary):
+    """T-2237: the one status the edge alone produces has to be Problem Details (API-08, GW26)."""
+    result = policy_check(conftest_binary, FIXTURES / "edge-429-html.yaml")
+    assert result.returncode == 1
+    assert "error_page 429" in result.stdout, result.stdout
+    assert "application/problem+json" in result.stdout, result.stdout
+
+
+def test_an_edge_that_shapes_its_429_passes(conftest_binary):
+    assert policy_check(conftest_binary, FIXTURES / "edge-429-problem-details.yaml").returncode == 0
+
+
 def test_a_workload_fetching_chosen_addresses_is_refused_a_private_range(conftest_binary):
     """The runner probes URLs people type (MF-39, T-0752): a range that leaves one private
     network reachable is named, and one that excepts them all passes."""

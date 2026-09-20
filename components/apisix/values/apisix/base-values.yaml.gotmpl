@@ -193,6 +193,48 @@ apisix:
       # own bodies and the edge only stops the absurd ones.
       httpSrv: |
         client_max_body_size 16m;
+        # The shape of a refusal the edge writes itself (T-2237, API-08, GW26, R20). Every
+        # `limit-count` answers `rejected_code: 429` and APISIX then serves its own
+        # `<h1>429 Too Many Requests</h1><hr>openresty` page, while the platform's error
+        # contract is RFC 9457 `application/problem+json` — a client that parses the contract
+        # fails on the parse instead of reading `Retry-After` and slowing down.
+        #
+        # Here, and not in each route's `response-rewrite`, for two reasons measured on
+        # `apache/apisix:3.17.0-ubuntu` (the pinned image) on 2026-09-20: a
+        # `response-rewrite` gated on `status == 429` would have to carry the body, and every
+        # route's `response-rewrite` already carries the unconditional security headers, which
+        # the same gate would then drop from every ordinary answer; and the same plugin in a
+        # `global_rule` beside a route's own is merged into one configuration, which applied
+        # this body to a `502` as well. One `error_page` in the server block is read by every
+        # route, the quota headers `limit-count` set still come out, an answer the upstream
+        # wrote is untouched (`proxy_intercept_errors` is off, so an upstream `429` — the
+        # gateway's own, which is already Problem Details — passes through), and there is one
+        # place to change.
+        #
+        # `Retry-After` is the seconds `limit-count` itself published in `X-RateLimit-Reset`,
+        # so it counts down with the window instead of naming a constant that would lie the
+        # day a route's `time_window` changes; `add_header` with an empty value adds nothing,
+        # which is the right answer for a `429` that did not come from a rate limit. The
+        # detail names no route, no quota and no upstream (R20).
+        # nginx builds this answer in the named location, after the plugin chain's
+        # `header_filter` has run, so each route's `response-rewrite` headers do not reach it:
+        # the ones a refusal needs are repeated here. HSTS and `nosniff` are the two every
+        # route sets identically; `no-store` keeps a refusal out of a cache; the frame and
+        # referrer values are the strictest of the ones the routes use (`DENY` beside
+        # `SAMEORIGIN`, `no-referrer` beside `strict-origin-when-cross-origin`), which a body
+        # of JSON with nothing to frame and nothing to link can always afford.
+        error_page 429 = @too_many_requests;
+        location @too_many_requests {
+          internal;
+          default_type application/problem+json;
+          add_header Retry-After $sent_http_x_ratelimit_reset always;
+          add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+          add_header X-Content-Type-Options "nosniff" always;
+          add_header X-Frame-Options "DENY" always;
+          add_header Referrer-Policy "no-referrer" always;
+          add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+          return 429 '{"type":"https://joinedcontext.com/errors/too-many-requests","title":"Too Many Requests","status":429,"detail":"the rate limit of this route was reached; retry after the window in the Retry-After header"}';
+        }
 ingress:
   enabled: true
   className: {{ $global.ingress.ingressClass }}
