@@ -548,6 +548,22 @@ config:
       groups:
         - name: platform-readers
           path: /platform-readers
+        {{- /* Every group a demo user is put in, so the realm holds the one the user names:
+               keycloak-config-cli fails the whole import on a membership of a group that does
+               not exist, and the demo would come up with no realm at all. A project's group is
+               what makes a person one of that project's own to the gateway, which resolves a
+               human's project out of this claim before it reads a Policy
+               (context-gateway app.rs, EP-14/EP-15, T-2456). */}}
+        {{- $declared := dict }}
+        {{- range $name, $user := $this.demoUsers | default dict }}
+        {{- range (index $user "groups" | default list) }}
+        {{- $_ := set $declared . true }}
+        {{- end }}
+        {{- end }}
+        {{- range $group, $_ := $declared }}
+        - name: {{ $group }}
+          path: /{{ $group }}
+        {{- end }}
       defaultGroups:
         - /platform-readers
       roles:

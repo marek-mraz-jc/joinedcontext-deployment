@@ -13,6 +13,9 @@ import pytest
 import yaml
 
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
+DEMO_USERS = yaml.safe_load(
+    (Path(__file__).resolve().parent.parent / "components/keycloak/demo-users.yaml").read_text()
+)
 REGION = SEED / "bbsk"
 CITY = SEED / "banskabystrica"
 DOCS = "joinedcontext-docs/Development/10-banska-bystrica-contract.md"
@@ -425,3 +428,28 @@ def test_every_space_the_portal_shows_is_one_its_own_steward_may_read():
                 or (assignee["kind"] == "role" and assignee["id"] == "public")
             ]
             assert human, f"{name} is readable by no signed-in person: {readers}"
+
+            # And the person the grant names gets past the door in front of it. The gateway
+            # resolves a human's project out of the `groups` claim and refuses an endpoint whose
+            # audience is a list of projects before it reads any Policy at all
+            # (context-gateway app.rs, EP-14, EP-15), so a read granted to somebody in no group
+            # of the project is a `403` that looks exactly like a missing grant.
+            endpoints = [
+                spec
+                for _, doc in manifests(folder, "Endpoint")
+                for spec in [doc["spec"]]
+                if spec["contextSpaceRef"] == name
+            ]
+            for endpoint in endpoints:
+                if endpoint["audience"] != "project-list":
+                    continue
+                admitted = {folder.name, *endpoint.get("allowedProjects", [])}
+                for policy_name, assignee in readers:
+                    if assignee["kind"] != "user":
+                        continue
+                    user = assignee["id"].split("@")[0]
+                    groups = set(DEMO_USERS.get(user, {}).get("groups", []))
+                    assert groups & admitted, (
+                        f"{policy_name} grants {user} a read on {name}, whose endpoint admits"
+                        f" {sorted(admitted)} and whose groups are {sorted(groups)}"
+                    )

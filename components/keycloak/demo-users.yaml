@@ -9,6 +9,14 @@ demo.steward:
   # A realm role names the person only; what they may do is the RoleBinding under users/
   # in the configuration repository (seed/helsinki/helsinki-rolebinding-*.yaml, PF-50).
   realmRoles: [portal-approver]
+  # The person who keeps the city's data is one of the city's own, which is a group and not a
+  # role: the gateway resolves a human's project out of the `groups` claim and refuses an
+  # endpoint whose audience is a list of projects before it reads any Policy at all
+  # (context-gateway app.rs, EP-14, EP-15). Without this the steward opened the city's own
+  # indicator space in the Portal and got `403` for every row of the numbers the city itself
+  # publishes (T-2456). It admits them to `banskabystrica` and to nothing else: the region's
+  # `bbsk` group, which the share grants, is not theirs to hold.
+  groups: [banskabystrica]
 demo.viewer:
   firstName: Demo
   lastName: Viewer
