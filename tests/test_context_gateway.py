@@ -43,16 +43,18 @@ def forge_seed(dev):
 def seed(forge_seed):
     """The manifests of the conformance project, parsed.
 
-    The seed also carries the data model's LinkML source and its generated artifacts. The
-    repository loader reads a file as a manifest only when it ends `.yaml` and not
-    `.linkml.yaml` (jcctl loader.rs), and so does this fixture: parsing the Markdown reference
-    as YAML is how the seed's own artifacts would break the whole module."""
-    manifests = [
+    The seed also carries the data model's LinkML source and its generated artifacts, and the
+    Bento configuration beside each Pipeline. The repository loader reads a file as a manifest
+    only when it ends `.yaml` and not `.linkml.yaml` (jcctl loader.rs), and so does this
+    fixture: parsing the Markdown reference as YAML is how the seed's own artifacts would break
+    the whole module. A `pipelines/*/bento.yaml` is valid YAML with no `kind` at all, which is
+    the other way in, so what parses without one is left out here too."""
+    parsed = [
         yaml.safe_load(text)
         for path, text in forge_seed.items()
         if path.startswith("projects/banskabystrica/") and path.endswith(".yaml") and not path.endswith(".linkml.yaml")
     ]
-    return {(m["kind"], m["metadata"]["name"]): m for m in manifests}
+    return {(m["kind"], m["metadata"]["name"]): m for m in parsed if isinstance(m, dict) and "kind" in m}
 
 
 @pytest.fixture(scope="module")
@@ -111,10 +113,23 @@ def test_every_seeded_manifest_of_the_city_belongs_to_one_of_its_three_spaces(se
     project does not seed (T-2305)."""
     spaces = {name for (kind, name) in seed if kind == "ContextSpace"}
     assert spaces == {"ovzdusie", "banskabystrica-mesto", "banskabystrica-kpi"}
+    # A DataSource is a fetch and a Project is the project: neither belongs to a space. A
+    # Pipeline names its space through the Endpoint it writes through, which is the point.
+    project_scoped = {"Project", "ServiceAccount", "DataSource", "Pipeline"}
     for (kind, name), manifest in seed.items():
-        if kind in ("Project", "ServiceAccount"):
+        if kind in project_scoped:
             continue
         assert space_of(manifest) in spaces, f"{kind}/{name} names {space_of(manifest)}"
+
+    endpoints = {
+        f'urn:ngsi-ld:Endpoint:banskabystrica.sk:{m["spec"]["contextSpaceRef"]}:{name}'
+        for (kind, name), m in seed.items()
+        if kind == "Endpoint"
+    }
+    for (kind, name), manifest in seed.items():
+        if kind == "Pipeline":
+            assert manifest["spec"]["targetEndpoint"] in endpoints, f"{name} writes nowhere the project serves"
+
     account = seed[("ServiceAccount", "pipelines")]
     scoped = {role["scope"]["contextSpace"] for role in account["spec"]["roles"]}
     assert scoped == {"banskabystrica-mesto", "banskabystrica-kpi"}, scoped
