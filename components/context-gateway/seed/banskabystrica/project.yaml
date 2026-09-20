@@ -3,15 +3,22 @@ kind: Project
 metadata:
   name: banskabystrica
   namespace: org
-  title: { sk: "Banská Bystrica", en: "Banská Bystrica" }
+  title: { sk: "Mesto Banská Bystrica", en: "City of Banská Bystrica" }
+  description:
+    sk: "Mesto so 72 123 obyvateľmi; publikuje to, čo patrí mestu. Kraj je samostatný projekt `bbsk`."
+    en: "The city: 72 123 people, publishing what a city owns. The region is its own project, `bbsk`."
 spec:
   organizationRef: hel
   # The smaller tenant of the same node, tighter still (PF-73), and `publicEndpoints` is exactly
   # what it publishes today (`public-air`): the endpoints page of this project is where the
   # pre-emptive quota warning of T-1594 is true and can be read, on dev and in the demo.
   quotas:
-    contextSpaces: 2
-    residentPipelines: 2
+    # Three spaces now: the seeded `ovzdusie`, the raw cube rows in `banskabystrica-mesto` and
+    # the indicators in `banskabystrica-kpi`. Two ingestion pipelines and the one that computes
+    # the indicators. `publicEndpoints` stays at one, `public-air`: the city's indicators reach
+    # the region's application by a named share and not by being public (EP-15).
+    contextSpaces: 3
+    residentPipelines: 3
     publicEndpoints: 1
     apps: 1
     ingestEventsPerSecond: 50

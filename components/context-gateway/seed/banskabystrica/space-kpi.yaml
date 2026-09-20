@@ -1,0 +1,15 @@
+# The city's indicator space (PF-54): every KPI a pipeline computes for `banskabystrica` is one
+# KeyPerformanceIndicator entity here, never in the space it reads.
+apiVersion: joinedcontext.com/v1alpha1
+kind: ContextSpace
+metadata:
+  name: banskabystrica-kpi
+  namespace: banskabystrica
+  title: { sk: "Ukazovatele mesta", en: "City indicators" }
+  description:
+    sk: "Jeden záznam na ukazovateľ, s jeho vzorcom, oknom a zdrojmi."
+    en: "One entity per indicator, with its formula, its window and its sources."
+spec:
+  urnSegment: banskabystrica-kpi
+  isSandbox: false
+  defaultLocale: sk

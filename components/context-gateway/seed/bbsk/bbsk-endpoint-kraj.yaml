@@ -1,0 +1,16 @@
+# The one door of the raw space. Not public: these rows are somebody else's published data,
+# mirrored here for the pipelines that read them, and republishing them under our own name at
+# our own URL is not ours to do. The region's open numbers are the indicators, and those have
+# their own public endpoint.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: bbsk-kraj
+  namespace: bbsk
+  title: { sk: "Kraj — zdrojové údaje", en: "Region, raw data" }
+spec:
+  contextSpaceRef: bbsk-kraj
+  slug: 7u4ns3cdg2mqlx5gmxhk7rqai6pmokdj
+  audience: organization
+  enabledRepresentations: [ngsi-ld, csv, json]
+  rateLimits: { requestsPerMinute: 300, burst: 50 }

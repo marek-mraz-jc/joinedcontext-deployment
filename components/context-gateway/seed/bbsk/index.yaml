@@ -1,0 +1,23 @@
+# file in this folder -> its path in the configuration repository (jc-core PATH_TEMPLATEs), read
+# by the gateway's development values (flat /repo, every file under its own name) and by the
+# forge bootstrap's seed (this layout). One list, two consumers.
+#
+# The region: one raw space holding the published cube rows as published, one indicator space
+# holding what was decided to be measured, and the reference that lets the region's application
+# read the city's indicators without being able to write them (T-2305, T-2310).
+bbsk-project.yaml: projects/bbsk/project.yaml
+bbsk-space-kraj.yaml: projects/bbsk/spaces/bbsk-kraj/space.yaml
+bbsk-datamodel.yaml: projects/bbsk/spaces/bbsk-kraj/datamodels/statistical-observation.yaml
+statistical-observation.linkml.yaml: projects/bbsk/spaces/bbsk-kraj/datamodels/statistical-observation.linkml.yaml
+statistical-observation.v1.schema.json: projects/bbsk/spaces/bbsk-kraj/datamodels/statistical-observation.v1.schema.json
+statistical-observation.v1.context.jsonld: projects/bbsk/spaces/bbsk-kraj/datamodels/statistical-observation.v1.context.jsonld
+statistical-observation.v1.example.jsonld: projects/bbsk/spaces/bbsk-kraj/datamodels/statistical-observation.v1.example.jsonld
+statistical-observation.v1.md: projects/bbsk/spaces/bbsk-kraj/datamodels/statistical-observation.v1.md
+bbsk-endpoint-kraj.yaml: projects/bbsk/spaces/bbsk-kraj/endpoints/bbsk-kraj.yaml
+bbsk-policy-pipelines-write.yaml: projects/bbsk/spaces/bbsk-kraj/policies/pipelines-write.yaml
+bbsk-space-kpi.yaml: projects/bbsk/spaces/bbsk-kpi/space.yaml
+bbsk-endpoint-kpi.yaml: projects/bbsk/spaces/bbsk-kpi/endpoints/bbsk-kpi.yaml
+bbsk-policy-kpi-pipelines-write.yaml: projects/bbsk/spaces/bbsk-kpi/policies/kpi-pipelines-write.yaml
+bbsk-policy-kpi-read.yaml: projects/bbsk/spaces/bbsk-kpi/policies/kpi-read.yaml
+bbsk-serviceaccount-pipelines.yaml: projects/bbsk/access/serviceaccounts/pipelines.yaml
+bbsk-share-mesto-kpi.yaml: projects/bbsk/shares/mesto-kpi.yaml

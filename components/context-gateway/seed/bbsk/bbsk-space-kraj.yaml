@@ -1,0 +1,17 @@
+# What the region's publishers published, as they published it: one entity per cube cell, the
+# publisher's own codes kept verbatim, nothing renamed on the way in. The indicators computed
+# from it live next door in `bbsk-kpi` and never here (PF-54).
+apiVersion: joinedcontext.com/v1alpha1
+kind: ContextSpace
+metadata:
+  name: bbsk-kraj
+  namespace: bbsk
+  title: { sk: "Kraj — zdrojové údaje", en: "Region, raw data" }
+  description:
+    sk: "Riadky otvorených dát pre kraj SK032 a jeho 13 okresov, tak ako ich publikoval ŠÚ SR."
+    en: "Open data rows for the kraj SK032 and its 13 districts, as ŠÚ SR published them."
+spec:
+  # The space name is the segment its ids carry, pinned so it cannot drift (PF-84).
+  urnSegment: bbsk-kraj
+  isSandbox: false
+  defaultLocale: sk

@@ -1,0 +1,14 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Policy
+metadata:
+  name: kpi-read
+  namespace: bbsk
+  title: { sk: "Verejné čítanie ukazovateľov", en: "Public read: indicators" }
+spec:
+  contextSpaceRef: { kind: ContextSpace, name: bbsk-kpi }
+  assigner: did:web:{orgDomain}
+  assignee: { kind: role, id: public }
+  operations: [retrieveOps]
+  information:
+    - entities:
+        - type: KeyPerformanceIndicator

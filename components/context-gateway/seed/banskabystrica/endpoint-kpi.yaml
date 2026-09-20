@@ -1,0 +1,16 @@
+# The city's indicators, shared with the region and with nobody else. `project-list` rather than
+# `public`: the region's application reads them through the SharedSpaceReference the region
+# declares (EP-15, EP-77), and the city revokes by changing this one line.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: banskabystrica-kpi
+  namespace: banskabystrica
+  title: { sk: "Ukazovatele mesta", en: "City indicators" }
+spec:
+  contextSpaceRef: banskabystrica-kpi
+  slug: y4royli3pip6yrhv3olxxf2522b3dovt
+  audience: project-list
+  allowedProjects: [bbsk]
+  enabledRepresentations: [ngsi-ld, csv, json]
+  rateLimits: { requestsPerMinute: 300, burst: 50 }

@@ -1,0 +1,14 @@
+# The one door of the city's raw space. Not public, for the same reason the region's is not:
+# these rows are somebody else's published data, mirrored here for the pipelines that read them.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: banskabystrica-mesto
+  namespace: banskabystrica
+  title: { sk: "Mesto — zdrojové údaje", en: "City, raw data" }
+spec:
+  contextSpaceRef: banskabystrica-mesto
+  slug: ovr4ttzywhad2oiogf67n7zyn2g2elfc
+  audience: organization
+  enabledRepresentations: [ngsi-ld, csv, json]
+  rateLimits: { requestsPerMinute: 300, burst: 50 }

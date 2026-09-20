@@ -81,19 +81,43 @@ def grants(policy):
     return set(policy["spec"]["operations"])
 
 
+def space_of(manifest):
+    """The one space a seeded manifest belongs to, or None when it belongs to no single space."""
+    if manifest["kind"] == "ContextSpace":
+        return manifest["metadata"]["name"]
+    if manifest["kind"] == "ServiceAccount":
+        scopes = {role["scope"]["contextSpace"] for role in manifest["spec"]["roles"]}
+        return scopes.pop() if len(scopes) == 1 else None
+    ref = manifest["spec"].get("contextSpaceRef")
+    if ref is None:
+        return None
+    return ref["name"] if isinstance(ref, dict) else ref
+
+
 @requires_helmfile
-def test_the_seed_is_one_space_one_endpoint_and_the_policies_of_two_callers(seed):
-    """The conformance project of the seed: one space, its model, one endpoint, a public
-    reader and one writing account. The Helsinki demo (T-0478) lives beside it in its own
-    project and is judged by its own tests."""
-    ovzdusie = {key: m for key, m in seed.items() if m["kind"] != "Project"}
+def test_the_conformance_space_is_one_space_one_endpoint_and_the_policies_of_two_callers(seed):
+    """The conformance space of the seed: one space, its model, one endpoint, a public reader
+    and one writing account. The Helsinki demo (T-0478) and the city's own two spaces (T-2305)
+    live beside it in the same project and are judged by their own tests, so this census is of
+    `ovzdusie` and not of everything the project holds."""
+    ovzdusie = {key: m for key, m in seed.items() if space_of(m) == "ovzdusie"}
     kinds = sorted(kind for kind, _ in ovzdusie)
     assert kinds == ["ContextSpace", "DataModel", "Endpoint", "Policy", "Policy", "ServiceAccount"], kinds
-    for m in ovzdusie.values():
-        if m["kind"] != "ContextSpace":
-            ref = m["spec"]["contextSpaceRef"] if m["kind"] != "ServiceAccount" else m["spec"]["roles"][0]["scope"]["contextSpace"]
-            name = ref["name"] if isinstance(ref, dict) else ref
-            assert name == "ovzdusie", m["metadata"]["name"]
+
+
+@requires_helmfile
+def test_every_seeded_manifest_of_the_city_belongs_to_one_of_its_three_spaces(seed):
+    """Nothing in the project floats free of a space, and no manifest of it names a space the
+    project does not seed (T-2305)."""
+    spaces = {name for (kind, name) in seed if kind == "ContextSpace"}
+    assert spaces == {"ovzdusie", "banskabystrica-mesto", "banskabystrica-kpi"}
+    for (kind, name), manifest in seed.items():
+        if kind in ("Project", "ServiceAccount"):
+            continue
+        assert space_of(manifest) in spaces, f"{kind}/{name} names {space_of(manifest)}"
+    account = seed[("ServiceAccount", "pipelines")]
+    scoped = {role["scope"]["contextSpace"] for role in account["spec"]["roles"]}
+    assert scoped == {"banskabystrica-mesto", "banskabystrica-kpi"}, scoped
 
 
 @requires_helmfile
