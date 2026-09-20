@@ -14,11 +14,12 @@ spec:
   # pre-emptive quota warning of T-1594 is true and can be read, on dev and in the demo.
   quotas:
     # Three spaces now: the seeded `ovzdusie`, the raw cube rows in `banskabystrica-mesto` and
-    # the indicators in `banskabystrica-kpi`. Two ingestion pipelines and the one that computes
-    # the indicators. `publicEndpoints` stays at one, `public-air`: the city's indicators reach
-    # the region's application by a named share and not by being public (EP-15).
+    # the indicators in `banskabystrica-kpi`. Four pipelines: two that ingest and two that
+    # compute, one per space the indicators are computed from. `publicEndpoints` stays at one,
+    # `public-air`: the city's indicators reach the region's application by a named share and
+    # not by being public (EP-15).
     contextSpaces: 3
-    residentPipelines: 3
+    residentPipelines: 4
     publicEndpoints: 1
     apps: 1
     ingestEventsPerSecond: 50
