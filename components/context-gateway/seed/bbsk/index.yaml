@@ -29,3 +29,6 @@ bbsk-pipeline-obyvatelstvo.yaml: projects/bbsk/pipelines/obyvatelstvo/pipeline.y
 bbsk-pipeline-obyvatelstvo-bento.yaml: projects/bbsk/pipelines/obyvatelstvo/bento.yaml
 bbsk-pipeline-emisie.yaml: projects/bbsk/pipelines/emisie/pipeline.yaml
 bbsk-pipeline-emisie-bento.yaml: projects/bbsk/pipelines/emisie/bento.yaml
+# The indicator pipeline (T-2307): its Bloblang is inline, because its input is a query through
+# the raw space's Endpoint and not a DataSource fetch, so there is no bento.yaml beside it.
+bbsk-pipeline-ukazovatele.yaml: projects/bbsk/pipelines/ukazovatele/pipeline.yaml

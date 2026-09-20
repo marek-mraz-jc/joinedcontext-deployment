@@ -38,3 +38,7 @@ pipeline-voda.yaml: projects/banskabystrica/pipelines/voda/pipeline.yaml
 pipeline-voda-bento.yaml: projects/banskabystrica/pipelines/voda/bento.yaml
 pipeline-obyvatelia.yaml: projects/banskabystrica/pipelines/obyvatelia/pipeline.yaml
 pipeline-obyvatelia-bento.yaml: projects/banskabystrica/pipelines/obyvatelia/bento.yaml
+# The two indicator pipelines (T-2307), one per space the city computes from. Their Bloblang is
+# inline: the input is a query through an Endpoint, not a DataSource fetch.
+pipeline-ukazovatele-ovzdusie.yaml: projects/banskabystrica/pipelines/ukazovatele-ovzdusie/pipeline.yaml
+pipeline-ukazovatele-mesto.yaml: projects/banskabystrica/pipelines/ukazovatele-mesto/pipeline.yaml

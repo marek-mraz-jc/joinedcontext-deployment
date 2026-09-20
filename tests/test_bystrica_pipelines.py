@@ -241,6 +241,7 @@ def test_every_pipeline_names_a_data_source_and_an_endpoint_the_seed_holds():
             if isinstance(doc, dict) and "kind" in doc
         ]
         sources = {d["metadata"]["name"] for d in docs if d["kind"] == "DataSource"}
+        endpoint_names = {d["metadata"]["name"] for d in docs if d["kind"] == "Endpoint"}
         endpoints = {
             f'urn:ngsi-ld:Endpoint:{ {"bbsk": "bbsk.sk", "banskabystrica": "banskabystrica.sk"}[d["metadata"]["namespace"]] }'
             f':{d["spec"]["contextSpaceRef"]}:{d["metadata"]["name"]}'
@@ -249,21 +250,39 @@ def test_every_pipeline_names_a_data_source_and_an_endpoint_the_seed_holds():
         }
         for pipeline in (d for d in docs if d["kind"] == "Pipeline"):
             spec = pipeline["spec"]
-            assert spec["source"]["dataSourceRef"]["name"] in sources, pipeline["metadata"]["name"]
+            name = pipeline["metadata"]["name"]
+            # A fetch names a DataSource of this project; a computation names the Endpoint it
+            # reads through. Either way the thing it names is in the seed beside it, so a
+            # renamed source breaks here and not in the cluster.
+            if "dataSourceRef" in spec["source"]:
+                assert spec["source"]["dataSourceRef"]["name"] in sources, name
+                assert spec["output"]["type"] == "StatisticalObservation", name
+            else:
+                assert spec["source"]["endpointRef"]["name"] in endpoint_names, name
+                assert spec["output"]["type"] == "KeyPerformanceIndicator", name
             assert spec["targetEndpoint"] in endpoints, spec["targetEndpoint"]
-            assert spec["output"]["type"] == "StatisticalObservation"
-            # An upsert is what a re-poll of a published table is: the same cell, published again.
+            # An upsert is what a re-poll of a published table is: the same cell, published
+            # again; and an indicator recomputed on a schedule is the same indicator.
             assert spec["output"]["mode"] == "upsert"
 
 
-def test_every_mapping_has_its_pipeline_and_every_pipeline_its_mapping():
+def test_a_pipeline_is_fed_by_a_data_source_or_by_a_query_and_the_files_beside_it_say_which():
+    """A DataSource fetch carries its mapping in the `-bento.yaml` beside it; a query through an
+    Endpoint carries it inline, because the reconciler renders the input from the query itself."""
     for folder in (SEED / "bbsk", SEED / "banskabystrica"):
         mappings = {p.name.replace("-bento.yaml", ".yaml") for p in folder.glob("*-bento.yaml")}
-        pipelines = {
-            path.name
-            for path in folder.glob("*.yaml")
-            if not path.name.endswith((".linkml.yaml", "-bento.yaml"))
-            for doc in yaml.safe_load_all(path.read_text())
-            if isinstance(doc, dict) and doc.get("kind") == "Pipeline"
-        }
-        assert mappings == pipelines, f"{folder.name}: {mappings ^ pipelines}"
+        fetched, queried = set(), set()
+        for path in sorted(folder.glob("*.yaml")):
+            if path.name == "index.yaml" or path.name.endswith(("-bento.yaml", ".linkml.yaml")):
+                continue
+            for doc in yaml.safe_load_all(path.read_text()):
+                if not isinstance(doc, dict) or doc.get("kind") != "Pipeline":
+                    continue
+                if "dataSourceRef" in doc["spec"]["source"]:
+                    fetched.add(path.name)
+                    assert "compute" not in doc["spec"], doc["metadata"]["name"]
+                else:
+                    queried.add(path.name)
+                    assert "bloblang" in doc["spec"]["compute"], doc["metadata"]["name"]
+        assert mappings == fetched, f"{folder.name}: {mappings ^ fetched}"
+        assert queried, f"{folder.name} computes no indicator"

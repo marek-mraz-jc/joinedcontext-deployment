@@ -1,0 +1,65 @@
+# The region's indicators (PL-45, PF-54, PF-55): one KeyPerformanceIndicator per
+# indicator and territory, 28 of them, from the raw cube rows of `bbsk-kraj`. The
+# indicators and their formulas are `joinedcontext-docs/Development/11-banska-bystrica-kpis.md`;
+# neither of them is judged against a threshold, because neither has a published one, and
+# the application shows them as a value and a direction and never as a colour.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: ukazovatele
+  namespace: bbsk
+  title: { sk: "Ukazovatele kraja", en: "Region indicators" }
+spec:
+  class: scheduled
+  schedule: "11 4 * * 1"
+  # Read through the space's own Endpoint and not the store, so the Policy applies to this
+  # pipeline exactly as it applies to anybody else (PL-18, PF-39, PL-45).
+  source:
+    endpointRef: { kind: Endpoint, name: bbsk-kraj }
+    query: { type: StatisticalObservation }
+  targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-kpi:bbsk-kpi
+  output:
+    type: KeyPerformanceIndicator
+    mode: upsert
+  compute:
+    kind: bloblang
+    bloblang: |
+      # The contract's territory tokens (Development/10 §6), keyed by the code the publishers use.
+      let territory = {
+        "SK032": "kraj", "SK0321": "okres-banska-bystrica", "SK0322": "okres-banska-stiavnica",
+        "SK0323": "okres-brezno", "SK0324": "okres-detva", "SK0325": "okres-krupina",
+        "SK0326": "okres-lucenec", "SK0327": "okres-poltar", "SK0328": "okres-revuca",
+        "SK0329": "okres-rimavska-sobota", "SK032A": "okres-velky-krtis", "SK032B": "okres-zvolen",
+        "SK032C": "okres-zarnovica", "SK032D": "okres-ziar-nad-hronom"
+      }
+      # The indicators of Development/11 §3, keyed by the cube each one reads.
+      let indicator = {
+        "om7102rr": { "name": "obyvatelstvo-stav", "unit": "C62", "formula": "the published value of om7102rr/IN010115/SPOLU for the territory and the latest year the cube carries" },
+        "zp3803rs": { "name": "emisie-tuhe-km2", "unit": "TNE", "formula": "the published value of zp3803rs/ODPAD_TONY_KM2, pollutant 1, in tonnes per km2, for the territory and the latest year the cube carries" }
+      }
+      let domain = env("JC_ORG_DOMAIN")
+      let space = env("JC_SPACE")
+      let ran = now().ts_format("2006-01-02T15:04:05Z07:00", "UTC")
+      let source_endpoint = "urn:ngsi-ld:Endpoint:%v:%v:%v".format($domain, env("JC_SOURCE_SPACE"), env("JC_SOURCE_SPACE"))
+
+      let rows = this.filter(r -> $indicator.keys().contains(r.dataSet.value) && $territory.keys().contains(r.refArea.value) && r.value.value.type() == "number")
+      let wanted = $indicator.keys().map_each(c -> $territory.keys().map_each(a -> { "cube": c, "area": a })).flatten()
+
+      root = $wanted.map_each(w -> {
+        "spec": $indicator.get(w.cube),
+        "token": $territory.get(w.area),
+        "pick": $rows.filter(r -> r.dataSet.value == w.cube && r.refArea.value == w.area).sort_by(r -> r.refPeriod.value).index(-1).catch(null)
+      }).map_each(c -> {
+        "id": "urn:ngsi-ld:KeyPerformanceIndicator:%v:%v:%v-%v".format($domain, $space, c.spec.name, c.token),
+        "type": "KeyPerformanceIndicator",
+        "name": { "type": "Property", "value": "%v-%v".format(c.spec.name, c.token) },
+        "currentValue": if c.pick == null { { "type": "Property", "value": "not measured" } } else {
+          { "type": "Property", "value": c.pick.value.value, "unitCode": c.spec.unit, "observedAt": c.pick.dateObserved.value }
+        },
+        "calculationPeriod": { "type": "Property", "value": if c.pick == null { { "start": "0001-01-01T00:00:00Z", "end": $ran } } else {
+          { "start": "%v-01-01T00:00:00Z".format(c.pick.refPeriod.value), "end": "%v-12-31T23:59:59Z".format(c.pick.refPeriod.value) } } },
+        "calculationFormula": { "type": "Property", "value": c.spec.formula },
+        "derivedFrom": { "type": "Relationship", "object": $source_endpoint },
+        "computedBy": { "type": "Relationship", "object": "urn:ngsi-ld:Pipeline:%v:%v:ukazovatele".format($domain, $space) },
+        "updatedAt": { "type": "Property", "value": { "@type": "DateTime", "@value": $ran } }
+      })
