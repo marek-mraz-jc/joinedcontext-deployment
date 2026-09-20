@@ -112,7 +112,13 @@ context-gateway:
     # could answer on a tenant `main` already serves through an endpoint no space manifest names
     # (T-1709, PF-83). With them: the MCP schema surface answers what REST answers (T-1858,
     # T-2299), and the edge-case suites T-1863..T-1871, T-1948, T-2139..T-2228. On top of 6028a06.
-    digest: 'sha256:f6f3f3c2c7d062bc3282f3de1b49851b8cf272a3e8dfaaa7f339ea602a4d8228'
+    # platform 462a1ba: the space record's children are all served (T-2373, T-2382), a polygon
+    # accounts for the other's holes and a contested agreement id serves nobody (T-2327, T-2355),
+    # idle rate-limit buckets are evicted (T-2356), every image attests a CycloneDX bill of
+    # materials (T-2412), a SyncSource carries its own inbound webhook secret (T-2297), and the
+    # proxy answers 503 for a failure of the platform's own instead of blaming the caller
+    # (T-2418). 61 commits on top of 0b6bd13.
+    digest: 'sha256:00ddcf219013267ffbfa30af2a912320458a68a88b6b5ec92bbfec740d2eafe2'
   # git-sync keeps the gateway's checkout of the configuration repository current (T-0278).
   git-sync:
     repository: 'registry.k8s.io/git-sync/git-sync'

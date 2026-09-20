@@ -6,6 +6,10 @@ metadata:
   name: bbsk-kpi
   namespace: bbsk
   title: { sk: "Ukazovatele kraja", en: "Region indicators" }
+  # The dataset's notes in the catalogue, through this endpoint's DCAT-AP record (EP-27, T-2432).
+  description:
+    sk: "Ukazovatele Banskobystrického samosprávneho kraja vypočítané z otvorených údajov ŠÚ SR: hodnota, jednotka, územie, obdobie a čas výpočtu, jeden záznam na ukazovateľ a obdobie."
+    en: "The indicators of the Banská Bystrica self-governing region, computed from the open data of the Slovak Statistical Office: value, unit, territory, period and when it was computed, one record per indicator and period."
 spec:
   contextSpaceRef: bbsk-kpi
   slug: qfhhh5no5wz4lk3rfjisdtx3chiyfig3
