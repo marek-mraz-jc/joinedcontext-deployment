@@ -16,3 +16,7 @@ dev-deployment/.ssl/crlnumber*
 
 # pytest leaves this behind when the suite runs in the checkout
 .pytest_cache/
+
+# The render the golden check compares against; CI writes it into the checkout and so does
+# anyone reproducing a golden failure by hand (ci.yml, `just golden-update`).
+/golden-check.yaml
