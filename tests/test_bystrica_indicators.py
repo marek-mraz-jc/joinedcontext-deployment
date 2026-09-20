@@ -355,3 +355,57 @@ def test_no_indicator_of_one_body_can_be_computed_from_the_others_space():
                 for literal in (other, other.removesuffix(".sk"), domains[project]):
                     assert literal not in mapping, f"{doc['metadata']['name']}: {literal} is hard coded"
     assert seen == 3, "the region's pipeline and the city's two"
+
+
+def test_the_read_every_indicator_pipeline_declares_is_one_a_policy_permits():
+    """A pipeline that may write its answer but not read its question computes nothing (T-2445).
+
+    The three indicator pipelines read `GET /entities` through an Endpoint of their own project.
+    That operation is `queryEntity`; `queryBatch` is only the `POST /entityOperations/query`
+    form, and granting one is not granting the other. Both raw-space policies named `queryBatch`
+    alone, so every read came back `403 Access Denied by Policy`, the stream's `errored()` guard
+    dropped the tick whole, and `banskabystrica-kpi` and `bbsk-kpi` stayed empty with no failure
+    anywhere to read. This asserts the grant that makes the declared read possible, per pipeline.
+    """
+    covers = {"queryEntity", "retrieveOps", "redirectionOps", "federationOps"}
+    seen = 0
+    for folder in (SEED / "bbsk", SEED / "banskabystrica"):
+        documents = [
+            doc
+            for path in sorted(folder.glob("*.yaml"))
+            for doc in yaml.safe_load_all(path.read_text())
+            if isinstance(doc, dict)
+        ]
+        spaces = {
+            doc["metadata"]["name"]: doc["spec"]["contextSpaceRef"]
+            for doc in documents
+            if doc.get("kind") == "Endpoint"
+        }
+        for doc in documents:
+            if doc.get("kind") != "Pipeline" or doc["spec"]["output"]["type"] != "KeyPerformanceIndicator":
+                continue
+            source = spaces[doc["spec"]["source"]["endpointRef"]["name"]]
+            account = doc["spec"].get("serviceAccountRef", {}).get("name", "pipelines")
+            granted = {
+                operation
+                for policy in documents
+                if policy.get("kind") == "Policy"
+                and policy["spec"]["contextSpaceRef"]["name"] == source
+                and policy["spec"]["assignee"] == {"kind": "serviceAccount", "id": account}
+                for operation in policy["spec"]["operations"]
+            } | {
+                # A space anyone may read is readable by this account too: the air pipeline's
+                # source is the city's public endpoint.
+                operation
+                for policy in documents
+                if policy.get("kind") == "Policy"
+                and policy["spec"]["contextSpaceRef"]["name"] == source
+                and policy["spec"]["assignee"] == {"kind": "role", "id": "public"}
+                for operation in policy["spec"]["operations"]
+            }
+            seen += 1
+            assert granted & covers, (
+                f"{doc['metadata']['name']} reads {source} with GET /entities and no policy "
+                f"grants it queryEntity; it has {sorted(granted)}"
+            )
+    assert seen == 3, "the region's pipeline and the city's two"
