@@ -6,6 +6,7 @@ stub `curl`/`kubectl`/`wait-rollouts.sh` on PATH inside a throwaway copy of `scr
 
 import json
 import os
+import re
 import subprocess
 from pathlib import Path
 
@@ -192,8 +193,9 @@ def sandbox(tmp_path: Path, spec: dict) -> dict:
     return env
 
 
-def run(tmp_path: Path, spec: dict, *args: str) -> subprocess.CompletedProcess:
+def run(tmp_path: Path, spec: dict, *args: str, extra_env: dict | None = None) -> subprocess.CompletedProcess:
     env = sandbox(tmp_path, spec)
+    env.update(extra_env or {})
     return subprocess.run(
         ["scripts/smoke.sh", *args],
         cwd=tmp_path,
@@ -647,7 +649,7 @@ def test_the_pass_line_reports_how_long_the_controller_took(tmp_path):
     spec = dict(HEALTHY, egressSettled=8)
     result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
     assert result.returncode == 0
-    assert "(settled after 8s)" in result.stdout
+    assert "(settled after 8s, ceiling 30s)" in result.stdout
 
 
 def test_a_pod_filtered_from_its_first_packet_settles_at_zero(tmp_path):
@@ -656,7 +658,7 @@ def test_a_pod_filtered_from_its_first_packet_settles_at_zero(tmp_path):
     spec = dict(HEALTHY, egressSettled=0)
     result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
     assert result.returncode == 0
-    assert "(settled after 0s)" in result.stdout
+    assert "(settled after 0s, ceiling 30s)" in result.stdout
 
 
 def test_a_window_that_never_closes_still_fails_the_run(tmp_path):
@@ -667,6 +669,90 @@ def test_a_window_that_never_closes_still_fails_the_run(tmp_path):
     result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
     assert result.returncode == 1
     assert "FAIL  an unlabelled pod reached 1.1.1.1:443" in result.stdout
+
+
+def test_a_settle_window_inside_the_ceiling_passes_and_prints_both_numbers(tmp_path):
+    """SEC-GAP-05 (docs/Deployment/08, "The startup window"): the ceiling is what makes the gap an
+    accepted one rather than an open one, so
+    the pass line carries the measured window and the ceiling it was held to. A reader of the
+    smoke output can tell a window that is closing from one that is creeping towards the bound."""
+    spec = dict(HEALTHY, egressSettled=24)
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 0
+    assert "ok    an unlabelled pod reaches neither CoreDNS nor the internet (settled after 24s, ceiling 30s)" in result.stdout
+
+
+def test_a_settle_window_over_the_ceiling_fails_the_run(tmp_path):
+    """SEC-GAP-05: the gap is bounded by this check and by nothing else. A controller that has got
+    slower must fail the run, naming the measured seconds and the allowed seconds, instead of
+    printing a larger number on a green line."""
+    spec = dict(HEALTHY, egressSettled=44)
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  the egress settle window was 44s, over the 30s ceiling (JC_NETPOL_SETTLE)" in result.stdout
+
+
+def test_the_ceiling_defaults_to_thirty_seconds_and_the_variable_moves_it(tmp_path):
+    """The default is the documented one (docs/Deployment/08) and it is read from the
+    environment, so a cluster with a slower controller is a deliberate decision with a value
+    beside it rather than an edit to the script."""
+    spec = dict(HEALTHY, egressSettled=44)
+    default = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert default.returncode == 1
+    assert "over the 30s ceiling" in default.stdout
+    raised = run(tmp_path, spec, "https://example.test", "https://idm.example.test",
+                 extra_env={"JC_NETPOL_SETTLE": "60"})
+    assert raised.returncode == 0
+    assert "(settled after 44s, ceiling 60s)" in raised.stdout
+    # An empty value is an unset one, the way every other knob of this script reads its
+    # environment: a pipeline that passes JC_NETPOL_SETTLE="$SOMETHING" with nothing behind it
+    # gets the default and not a refusal.
+    empty = run(tmp_path, spec, "https://example.test", "https://idm.example.test",
+                extra_env={"JC_NETPOL_SETTLE": ""})
+    assert empty.returncode == 1
+    assert "over the 30s ceiling" in empty.stdout
+
+
+@pytest.mark.parametrize("value", ["thirty", "30s", "-5", "2.5", " 30"])
+def test_a_ceiling_that_is_not_a_whole_number_of_seconds_is_refused(tmp_path, value):
+    """An unparsable value must not read as zero, as infinity, or as the default: either of the
+    first two silently inverts the check, and the third hides a typo in a deployment pipeline."""
+    result = run(tmp_path, dict(HEALTHY), "https://example.test", "https://idm.example.test",
+                 extra_env={"JC_NETPOL_SETTLE": value})
+    assert result.returncode == 2
+    assert "JC_NETPOL_SETTLE must be a whole number of seconds" in result.stderr
+    assert "settled after" not in result.stdout
+
+
+def test_a_ceiling_the_probe_could_never_exceed_is_refused(tmp_path):
+    """The probe waits at most 18 rounds of 4 seconds, so a ceiling at or above 72 seconds can
+    never be exceeded: the check would report a pass for every window there is. Refusing the
+    value keeps "raise the number until it is green" from being a way to switch the bound off."""
+    result = run(tmp_path, dict(HEALTHY), "https://example.test", "https://idm.example.test",
+                 extra_env={"JC_NETPOL_SETTLE": "72"})
+    assert result.returncode == 2
+    assert "is not below the probe own bound of 72s" in result.stderr
+
+
+def test_the_probe_bound_in_the_script_matches_the_one_the_ceiling_is_checked_against(tmp_path):
+    """The probe's bound lives in the pod's own shell command and the ceiling check compares
+    against a constant, so the two can drift apart. Then a ceiling between the real bound and
+    the constant would pass validation and never bite."""
+    script = SMOKE.read_text()
+    rounds = int(re.search(r"i=0; while \[ \$i -lt (\d+) \]", script).group(1))
+    sleep = int(re.search(r"i=\$\(\(i\+1\)\); sleep (\d+);", script).group(1))
+    constant = int(re.search(r"^settle_probe_seconds=(\d+)$", script, re.M).group(1))
+    assert rounds * sleep == constant
+
+
+def test_a_probe_that_reports_no_window_fails_the_run(tmp_path):
+    """The window is the measurement this check exists for. A probe that reached nothing and
+    printed no number proved the policy and not the bound, and an empty measurement compared
+    with the ceiling would pass by accident."""
+    spec = dict(HEALTHY, egressSettled=None)
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  the egress probe printed no settle window" in result.stdout
 
 
 def test_missing_client_secret_fails_the_run(tmp_path):
