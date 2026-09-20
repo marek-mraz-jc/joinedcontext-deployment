@@ -24,6 +24,12 @@ statistical-observation.v1.schema.json: projects/banskabystrica/spaces/banskabys
 statistical-observation.v1.context.jsonld: projects/banskabystrica/spaces/banskabystrica-mesto/datamodels/statistical-observation.v1.context.jsonld
 statistical-observation.v1.example.jsonld: projects/banskabystrica/spaces/banskabystrica-mesto/datamodels/statistical-observation.v1.example.jsonld
 statistical-observation.v1.md: projects/banskabystrica/spaces/banskabystrica-mesto/datamodels/statistical-observation.v1.md
+datamodel-kpi.yaml: projects/banskabystrica/spaces/banskabystrica-kpi/datamodels/key-performance-indicator.yaml
+key-performance-indicator.linkml.yaml: projects/banskabystrica/spaces/banskabystrica-kpi/datamodels/key-performance-indicator.linkml.yaml
+key-performance-indicator.v1.schema.json: projects/banskabystrica/spaces/banskabystrica-kpi/datamodels/key-performance-indicator.v1.schema.json
+key-performance-indicator.v1.context.jsonld: projects/banskabystrica/spaces/banskabystrica-kpi/datamodels/key-performance-indicator.v1.context.jsonld
+key-performance-indicator.v1.example.jsonld: projects/banskabystrica/spaces/banskabystrica-kpi/datamodels/key-performance-indicator.v1.example.jsonld
+key-performance-indicator.v1.md: projects/banskabystrica/spaces/banskabystrica-kpi/datamodels/key-performance-indicator.v1.md
 endpoint-mesto.yaml: projects/banskabystrica/spaces/banskabystrica-mesto/endpoints/banskabystrica-mesto.yaml
 policy-mesto-pipelines-write.yaml: projects/banskabystrica/spaces/banskabystrica-mesto/policies/mesto-pipelines-write.yaml
 policy-mesto-steward-read.yaml: projects/banskabystrica/spaces/banskabystrica-mesto/policies/mesto-steward-read.yaml

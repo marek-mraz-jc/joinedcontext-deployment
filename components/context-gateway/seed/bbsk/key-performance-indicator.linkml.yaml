@@ -1,0 +1,104 @@
+id: https://bbsk.sk/models/kpi/key-performance-indicator
+name: key-performance-indicator
+title: One computed indicator
+description: >-
+  One number for one window, with the provenance that makes it auditable (PF-54, PF-55). An
+  indicator is computed by a pipeline from the rows of a raw space and lives in the project's
+  indicator space, never beside the rows it was computed from.
+
+  The attribute set is fixed and the published schema closes the object, so `state` and
+  `threshold` are absent by decision and not by omission: a threshold is the judgement of
+  whoever reads the number, it changes without the number changing, and two departments may
+  hold different ones. The state a view paints is what that view computes from the value and
+  its own threshold (Development/10 §4).
+
+  The territory an indicator describes is the last segment of its `{localId}`, and therefore of
+  its `name`: the entity carries no attribute for it, because a number labelled with a body and
+  no territory is a number a viewer has to guess about (Development/11 §1).
+license: https://joinedcontext.com/licenses/cc-by-4.0
+prefixes:
+  linkml: https://w3id.org/linkml/
+  jc: https://joinedcontext.com/models/
+  ngsi-ld: https://uri.etsi.org/ngsi-ld/
+  ucefact: https://vocabulary.uncefact.org/UnitMeasureCode#
+default_prefix: jc
+default_range: string
+imports:
+  - linkml:types
+  - ngsi-ld-core
+
+slots:
+  name:
+    slot_uri: jc:name
+    description: >-
+      The indicator's own name, equal to the `{localId}` of its id, so the territory is legible
+      without parsing the URN.
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+  currentValue:
+    slot_uri: jc:currentValue
+    description: >-
+      The number, with its unit on the Property as `unitCode`, a UN/CEFACT common code, and the
+      instant it describes as `observedAt`. A window with no reading in it carries the string
+      `not measured` instead of a number, and never a zero: a zero reads as a measurement
+      (Development/10 §5).
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://vocabulary.uncefact.org/UnitMeasureCode#
+  calculationPeriod:
+    slot_uri: jc:calculationPeriod
+    description: >-
+      The window the value actually covers, as `{ start, end }` RFC 3339 instants. It is the
+      window the pipeline used and not the one it was asked for, so the distance between
+      `calculationPeriod.end` and `updatedAt` is how stale the source is.
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+  calculationFormula:
+    slot_uri: jc:calculationFormula
+    description: >-
+      How the value was computed, in words a reader can check the number against: the measure,
+      the aggregation, the window and any divisor, such as `per km² of the district's own area`.
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+  derivedFrom:
+    slot_uri: jc:derivedFrom
+    description: >-
+      The Endpoint the sources were read through, as its URN. The endpoint and not the space:
+      what an indicator could see is what that endpoint's policy let it see.
+    required: true
+    annotations:
+      ngsi_ld_kind: Relationship
+  computedBy:
+    slot_uri: jc:computedBy
+    description: The Pipeline that computed it, as its URN.
+    required: true
+    annotations:
+      ngsi_ld_kind: Relationship
+  updatedAt:
+    slot_uri: jc:updatedAt
+    description: >-
+      When the pipeline last ran, as an NGSI-LD DateTime. It is the run and not the window:
+      an indicator whose source stopped moving keeps its window and gains a newer `updatedAt`,
+      which is the visible fact that the source is static.
+    range: datetime
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+
+classes:
+  KeyPerformanceIndicator:
+    class_uri: jc:KeyPerformanceIndicator
+    description: One number for one window, with the provenance that makes it auditable.
+    is_a: Entity
+    slots:
+      - name
+      - currentValue
+      - calculationPeriod
+      - calculationFormula
+      - derivedFrom
+      - computedBy
+      - updatedAt

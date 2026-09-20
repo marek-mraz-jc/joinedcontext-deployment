@@ -367,3 +367,36 @@ def test_a_public_endpoint_serves_a_tabular_representation_and_says_what_it_is()
             text = doc["metadata"].get(field)
             assert isinstance(text, dict) and text.get("sk"), f"{where}: no Slovak {field} for the dataset page"
             assert text.get("en"), f"{where}: no English {field} beside the Slovak one"
+
+
+def test_every_space_is_named_by_a_model_so_the_portal_can_say_what_is_in_it():
+    """A space no model names shows a viewer nothing, however full it is (T-2450).
+
+    The Portal's look-inside view lists a space's entity types from the DataModels that name it:
+    `DataModel.spec.contextSpaceRef` is the required half of the link, and a space's own
+    `dataModelRef` is an optional pointer at the primary one. Both indicator spaces held their
+    indicators for a day with no model naming them, so the view said "nothing here" over a full
+    space and the demonstration's third step had nothing to show.
+    """
+    for folder in (REGION, CITY):
+        spaces = {doc["metadata"]["name"] for _, doc in manifests(folder, "ContextSpace")}
+        named = {doc["spec"]["contextSpaceRef"] for _, doc in manifests(folder, "DataModel")}
+        assert spaces, f"{folder.name} declares no ContextSpace"
+        assert spaces <= named, f"{folder.name}: no DataModel names {sorted(spaces - named)}"
+
+
+def test_the_indicator_model_states_the_contract_the_platform_enforces():
+    """The published schema closes the object and requires all seven; the model says the same.
+
+    A model that let an indicator carry `state` or `threshold` would describe a document the
+    gateway refuses before it is stored, which is worse than no model at all (Development/10 §4).
+    """
+    required = {"name", "currentValue", "calculationPeriod", "calculationFormula",
+                "derivedFrom", "computedBy", "updatedAt"}
+    for folder in (REGION, CITY):
+        schema = json.loads((folder / "key-performance-indicator.v1.schema.json").read_text())
+        entity = (schema.get("$defs") or schema["definitions"])["KeyPerformanceIndicator"]
+        assert entity["additionalProperties"] is False, f"{folder.name}: the object is left open"
+        assert required <= set(entity["required"]), f"{folder.name}: {sorted(required - set(entity['required']))} not required"
+        assert not ({"state", "threshold"} & set(entity["properties"])), \
+            f"{folder.name}: the model declares an attribute the gateway refuses"

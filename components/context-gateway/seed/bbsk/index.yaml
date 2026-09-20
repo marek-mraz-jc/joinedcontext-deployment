@@ -13,6 +13,12 @@ statistical-observation.v1.schema.json: projects/bbsk/spaces/bbsk-kraj/datamodel
 statistical-observation.v1.context.jsonld: projects/bbsk/spaces/bbsk-kraj/datamodels/statistical-observation.v1.context.jsonld
 statistical-observation.v1.example.jsonld: projects/bbsk/spaces/bbsk-kraj/datamodels/statistical-observation.v1.example.jsonld
 statistical-observation.v1.md: projects/bbsk/spaces/bbsk-kraj/datamodels/statistical-observation.v1.md
+bbsk-datamodel-kpi.yaml: projects/bbsk/spaces/bbsk-kpi/datamodels/key-performance-indicator.yaml
+key-performance-indicator.linkml.yaml: projects/bbsk/spaces/bbsk-kpi/datamodels/key-performance-indicator.linkml.yaml
+key-performance-indicator.v1.schema.json: projects/bbsk/spaces/bbsk-kpi/datamodels/key-performance-indicator.v1.schema.json
+key-performance-indicator.v1.context.jsonld: projects/bbsk/spaces/bbsk-kpi/datamodels/key-performance-indicator.v1.context.jsonld
+key-performance-indicator.v1.example.jsonld: projects/bbsk/spaces/bbsk-kpi/datamodels/key-performance-indicator.v1.example.jsonld
+key-performance-indicator.v1.md: projects/bbsk/spaces/bbsk-kpi/datamodels/key-performance-indicator.v1.md
 bbsk-endpoint-kraj.yaml: projects/bbsk/spaces/bbsk-kraj/endpoints/bbsk-kraj.yaml
 bbsk-policy-pipelines-write.yaml: projects/bbsk/spaces/bbsk-kraj/policies/pipelines-write.yaml
 bbsk-policy-kraj-steward-read.yaml: projects/bbsk/spaces/bbsk-kraj/policies/kraj-steward-read.yaml
