@@ -38,11 +38,14 @@ pipeline:
           "refArea": { "type": "Property", "value": c.at.get($area_dim) },
           "refPeriod": { "type": "Property", "value": c.at.get($period_dim) },
           "dimensionKey": if $key_dims.length() == 0 { null } else { { "type": "Property", "value": $key_dims.map_each(d -> c.at.get(d)).join("-") } },
-          "value": { "type": "Property", "value": c.cell, "unitCode": $unit_code },
+          # `observedAt` belongs to the attribute, never to the entity: CIM 009 4.5.1 makes it a
+          # core non-reified term, and the broker refuses a whole entity that carries one as an
+          # attribute of its own — 400 per entity, dropped by `drop_on`, so the space stayed empty
+          # in silence (T-2445). A cube that states no update time gets no `observedAt` at all.
+          "value": if $updated == null { { "type": "Property", "value": c.cell, "unitCode": $unit_code } } else { { "type": "Property", "value": c.cell, "unitCode": $unit_code, "observedAt": $updated } },
           "unitText": { "type": "Property", "value": $unit_text },
           "source": { "type": "Property", "value": $source_url },
-          "dateObserved": if $updated == null { null } else { { "type": "Property", "value": $updated } },
-          "observedAt": if $updated == null { null } else { { "type": "Property", "value": $updated } }
+          "dateObserved": if $updated == null { null } else { { "type": "Property", "value": $updated } }
         }.filter(entry -> entry.value != null))
 
     - archive:

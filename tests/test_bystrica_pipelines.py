@@ -286,3 +286,49 @@ def test_a_pipeline_is_fed_by_a_data_source_or_by_a_query_and_the_files_beside_i
                     assert "bloblang" in doc["spec"]["compute"], doc["metadata"]["name"]
         assert mappings == fetched, f"{folder.name}: {mappings ^ fetched}"
         assert queried, f"{folder.name} computes no indicator"
+
+
+# Core terms CIM 009 defines for an attribute, never for an entity: a mapping that writes one as
+# a top-level key writes an entity the broker refuses whole, with `400 … is a core non-reified
+# term and cannot be used as an Attribute name (4.5.1)`.
+NON_REIFIED = ("observedAt", "createdAt", "modifiedAt", "deletedAt", "unitCode", "datasetId")
+
+
+@requires_docker
+def test_no_entity_carries_a_core_term_as_an_attribute_of_its_own(entities):
+    """The defect that kept both Slovak raw spaces empty for a day (T-2445).
+
+    All four mappings wrote `observedAt` beside `value` as an attribute of the entity. Every
+    entity was refused with 400, the stream's `drop_on: [400, 413, 422]` dropped it without a
+    line in the log, and the spaces the second demo story reads stayed empty while the runner
+    reported the streams live: 3285 refusals for `obyvatelia`, 3275 for `voda`. The timestamp
+    belongs inside the attribute it dates.
+    """
+    for path, produced in entities.items():
+        for entity in produced:
+            named = [term for term in NON_REIFIED if term in entity]
+            assert not named, f"{path.name}: {entity['id']} carries {named} as its own attribute"
+
+
+def test_no_mapping_assigns_a_core_term_at_the_entity_level():
+    """The same rule read off the committed Bloblang, so it holds without a container runtime."""
+    for path in MAPPINGS:
+        for step in processors(path):
+            mapping = step.get("mapping")
+            if not mapping:
+                continue
+            depth = 0
+            for line in mapping.splitlines():
+                stripped = line.strip()
+                if stripped.startswith("#"):
+                    continue
+                # The entity object is the one nested a single level inside `root = … {`; a key
+                # written there is an attribute of the entity, and one written deeper belongs to
+                # an attribute, which is where these terms are allowed.
+                if depth == 2:
+                    for term in NON_REIFIED:
+                        assert not stripped.startswith(f'"{term}"'), (
+                            f"{path.name}: `{term}` is written as an attribute of the entity; "
+                            "CIM 009 4.5.1 allows it only inside one (T-2445)"
+                        )
+                depth += stripped.count("{") - stripped.count("}")

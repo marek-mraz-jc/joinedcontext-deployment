@@ -30,11 +30,14 @@ pipeline:
             "refArea": { "type": "Property", "value": "SK0321508438" },
             "refPeriod": { "type": "Property", "value": $today },
             "dimensionKey": { "type": "Property", "value": $age },
-            "value": { "type": "Property", "value": $count.number(), "unitCode": "C62" },
+            # `observedAt` belongs to the attribute, never to the entity: CIM 009 4.5.1 makes it a
+            # core non-reified term, and the broker refuses a whole entity that carries one as an
+            # attribute of its own — 400 per entity, dropped by `drop_on`, so the space stayed
+            # empty in silence (T-2445).
+            "value": { "type": "Property", "value": $count.number(), "unitCode": "C62", "observedAt": $fetched },
             "unitText": { "type": "Property", "value": "osoby v danom veku" },
             "source": { "type": "Property", "value": $source_url },
-            "dateObserved": { "type": "Property", "value": $fetched },
-            "observedAt": { "type": "Property", "value": $fetched }
+            "dateObserved": { "type": "Property", "value": $fetched }
           }
         }
 
