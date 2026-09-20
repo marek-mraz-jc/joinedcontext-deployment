@@ -76,3 +76,101 @@ def test_a_reference_inside_the_organization_names_its_endpoint():
         assert "endpointSlug" not in spec, path.name
         target = (spec["endpointRef"]["project"], spec["endpointRef"]["name"])
         assert target in endpoints, f"{path.name} names {target}, which the seed does not hold"
+
+
+def _index_destinations():
+    """Every seeded manifest with the repository path its `index.yaml` writes it to."""
+    for index in sorted(SEED.glob("*/index.yaml")):
+        for source, destination in (yaml.safe_load(index.read_text()) or {}).items():
+            path = index.parent / source
+            if not path.exists() or not source.endswith((".yaml", ".yml")):
+                continue
+            docs = documents(path)
+            # A multi-document file has no single kind to place; none exists in the seed today.
+            if len(docs) != 1 or "kind" not in docs[0]:
+                continue
+            yield path, docs[0], destination
+
+
+def _shape(destination: str, name: str) -> str:
+    """The destination with its variable segments named, so two manifests of one kind compare."""
+    segments = destination.split("/")
+    shaped = []
+    for position, segment in enumerate(segments):
+        previous = segments[position - 1] if position else None
+        if previous in {"projects"}:
+            shaped.append("{namespace}")
+        elif previous in {"spaces"}:
+            shaped.append("{space}")
+        elif previous in {"pipelines", "blueprints"}:
+            shaped.append("{name}")
+        elif position == len(segments) - 1 and segment == f"{name}.yaml":
+            shaped.append("{name}.yaml")
+        else:
+            shaped.append(segment)
+    return "/".join(shaped)
+
+
+def test_every_kind_is_seeded_to_one_repository_path():
+    """MF-06: a manifest lives at the path its kind declares, or the loader refuses it.
+
+    `jcctl validate --repo-dir` over the rendered seed reported
+    `SharedSpaceReference/bbsk/mesto-kpi belongs at projects/bbsk/shared/mesto-kpi.yaml`
+    because one `index.yaml` wrote `shares/` where the kind's template says `shared/` (T-1471).
+    Comparing the seeded manifests of one kind against each other needs no jcctl in the lane.
+    Its ceiling: a kind seeded exactly once has nothing to disagree with.
+    """
+    shapes: dict[str, dict[str, list[str]]] = {}
+    for _path, doc, destination in _index_destinations():
+        shape = _shape(destination, doc.get("metadata", {}).get("name"))
+        shapes.setdefault(doc["kind"], {}).setdefault(shape, []).append(destination)
+    assert shapes, "the seed holds manifests"
+    disagreeing = {kind: paths for kind, paths in shapes.items() if len(paths) > 1}
+    assert not disagreeing, f"one kind, two repository paths: {disagreeing}"
+
+
+def test_the_demo_editor_proposes_and_deletes_nothing():
+    """CC-34, PF-50, PF-58: dev holds a person whose own change waits for somebody else (T-2231).
+
+    The steward is bound to `steward` and to `org-admin`, so `delete` makes their own change the
+    PF-58 administrator exception; the approver holds `approve` and cannot propose; the viewer
+    holds `read` and gets the missing-role refusal instead. Without a fourth person the plain
+    self-approval refusal cannot be played on dev at all, which is what
+    `joinedcontext-portal/ui/e2e/live/roles-refusals.spec.ts` needed.
+
+    The property that journey stands on, read off `ui/src/api/approval.ts:88,100-106`: the editor
+    may approve the kind they propose — otherwise the page answers `needsRole` and never reaches
+    the self-approval rule — and may delete nothing, which is what `administers` asks for. They
+    may also propose a `RoleBinding`, so the grant refusal is about the width of the grant and
+    not about their being unable to grant at all (PF-50).
+    """
+    editor = "demo.editor@hel.fi"
+    roles = {doc["metadata"]["name"]: doc for _path, doc in manifests("Role")}
+    held = [
+        doc["spec"]["role"]
+        for _path, doc in manifests("RoleBinding")
+        if any(subject.get("user") == editor for subject in doc["spec"]["subjects"])
+    ]
+    assert held, f"{editor} is bound to no role"
+    rules = []
+    for name in held:
+        assert name in roles, f"{editor} is bound to `{name}`, which the seed does not declare"
+        rules.extend(roles[name]["spec"]["rules"])
+
+    def verbs_of(kind: str) -> set[str]:
+        return {verb for rule in rules if kind in rule["kinds"] for verb in rule["verbs"]}
+
+    assert "delete" not in {verb for rule in rules for verb in rule["verbs"]}, (
+        f"{editor} administers a kind, so their own change would be the PF-58 exception"
+    )
+    assert {"propose", "approve"} <= verbs_of("ContextSpace"), sorted(verbs_of("ContextSpace"))
+    assert verbs_of("RoleBinding") == {"propose"}, sorted(verbs_of("RoleBinding"))
+
+    # And strictly below the steward, who holds `org-admin` beside `steward`.
+    steward_kinds = {
+        kind
+        for name in ("steward", "org-admin")
+        for rule in roles[name]["spec"]["rules"]
+        for kind in rule["kinds"]
+    }
+    assert {kind for rule in rules for kind in rule["kinds"]} <= steward_kinds

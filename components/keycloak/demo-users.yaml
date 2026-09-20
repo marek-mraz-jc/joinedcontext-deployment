@@ -19,3 +19,11 @@ demo.approver:
   firstName: Demo
   lastName: Approver
   realmRoles: [portal-approver]
+# The person who proposes and administers nothing (T-2231): bound to `editor` alone
+# (seed/helsinki/helsinki-rolebinding-editors.yaml), so their own change is the plain CC-34
+# refusal and not the PF-58 administrator exception the steward gets. No `portal-approver`
+# realm role, because the refusal is the point.
+demo.editor:
+  firstName: Demo
+  lastName: Editor
+  realmRoles: []

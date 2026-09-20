@@ -76,11 +76,13 @@ helsinki-role-model-editor.yaml: users/roles/model-editor.yaml
 helsinki-role-pipeline-editor.yaml: users/roles/pipeline-editor.yaml
 helsinki-role-endpoint-editor.yaml: users/roles/endpoint-editor.yaml
 helsinki-role-app-editor.yaml: users/roles/app-editor.yaml
+helsinki-role-editor.yaml: users/roles/editor.yaml
 helsinki-role-approver.yaml: users/roles/approver.yaml
 helsinki-role-viewer.yaml: users/roles/viewer.yaml
 helsinki-rolebinding-stewards.yaml: users/assignments/stewards.yaml
 helsinki-rolebinding-admins.yaml: users/assignments/admins.yaml
 helsinki-rolebinding-approvers.yaml: users/assignments/approvers.yaml
+helsinki-rolebinding-editors.yaml: users/assignments/editors.yaml
 helsinki-rolebinding-viewers.yaml: users/assignments/viewers.yaml
 # The hub (T-1209, Architecture/04 §5a): a space of registrations, one Endpoint over it, and
 # the identity a forward carries.

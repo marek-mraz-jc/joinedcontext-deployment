@@ -117,11 +117,19 @@ def human_users(realm):
 def test_development_profile_seeds_the_demo_users(rendered):
     realm = realm_of(rendered, "dev")
     users = human_users(realm)
-    # A Yellow change needs an approver who is not its author (CC-34), so the demo has two.
-    assert set(users) == {"demo.steward@hel.fi", "demo.viewer@hel.fi", "demo.approver@hel.fi"}
+    # A Yellow change needs an approver who is not its author (CC-34), so the demo has two —
+    # and a fourth person who proposes and decides nothing, so the plain self-approval refusal
+    # can be played by somebody it applies to (T-2231).
+    assert set(users) == {
+        "demo.steward@hel.fi",
+        "demo.viewer@hel.fi",
+        "demo.approver@hel.fi",
+        "demo.editor@hel.fi",
+    }
     assert users["demo.steward@hel.fi"]["realmRoles"] == ["portal-approver"]
     assert users["demo.approver@hel.fi"]["realmRoles"] == ["portal-approver"]
     assert users["demo.viewer@hel.fi"]["realmRoles"] == [], "demo.viewer is read only"
+    assert users["demo.editor@hel.fi"]["realmRoles"] == [], "demo.editor approves nothing"
     assert "portal-approver" in {r["name"] for r in realm["roles"]["realm"]}
     assert realm["registrationEmailAsUsername"] is True
     for user in users.values():
@@ -139,7 +147,12 @@ def test_development_profile_seeds_the_demo_users(rendered):
 def test_demo_passwords_are_generated_per_cluster(rendered):
     secrets = {d["metadata"]["name"]: d for d in rendered("dev")
                if d.get("kind") == "Secret" and d["metadata"]["name"].startswith("keycloak-user-")}
-    assert set(secrets) == {"keycloak-user-demo-steward", "keycloak-user-demo-viewer", "keycloak-user-demo-approver"}
+    assert set(secrets) == {
+        "keycloak-user-demo-steward",
+        "keycloak-user-demo-viewer",
+        "keycloak-user-demo-approver",
+        "keycloak-user-demo-editor",
+    }
     for secret in secrets.values():
         assert secret["metadata"]["annotations"]["helm.sh/resource-policy"] == "keep"
         assert list(secret["data"]) == ["password"]

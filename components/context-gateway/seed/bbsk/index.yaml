@@ -20,7 +20,7 @@ bbsk-endpoint-kpi.yaml: projects/bbsk/spaces/bbsk-kpi/endpoints/bbsk-kpi.yaml
 bbsk-policy-kpi-pipelines-write.yaml: projects/bbsk/spaces/bbsk-kpi/policies/kpi-pipelines-write.yaml
 bbsk-policy-kpi-read.yaml: projects/bbsk/spaces/bbsk-kpi/policies/kpi-read.yaml
 bbsk-serviceaccount-pipelines.yaml: projects/bbsk/access/serviceaccounts/pipelines.yaml
-bbsk-share-mesto-kpi.yaml: projects/bbsk/shares/mesto-kpi.yaml
+bbsk-share-mesto-kpi.yaml: projects/bbsk/shared/mesto-kpi.yaml
 # The two ingestion pipelines and their mappings (T-2305). The reconciler renders each Pipeline
 # and the `-bento.yaml` beside it into a resident stream on the runner (PL-47).
 bbsk-datasource-obyvatelstvo.yaml: projects/bbsk/datasources/susr-om7102rr.yaml
