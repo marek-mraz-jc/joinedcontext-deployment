@@ -400,3 +400,28 @@ def test_the_indicator_model_states_the_contract_the_platform_enforces():
         assert required <= set(entity["required"]), f"{folder.name}: {sorted(required - set(entity['required']))} not required"
         assert not ({"state", "threshold"} & set(entity["properties"])), \
             f"{folder.name}: the model declares an attribute the gateway refuses"
+
+
+def test_every_space_the_portal_shows_is_one_its_own_steward_may_read():
+    """T-2456: a body's own person reads the body's own space, indicators included.
+
+    `banskabystrica-kpi` had two grants and neither was a human's — the pipelines write and the
+    region reads through the share — so the city's steward opened the space in the Portal and got
+    `403` for every row of the numbers the city itself publishes. The demonstration walks into
+    each of these four spaces, so each one needs a read a signed-in person actually holds.
+    """
+    for folder in (REGION, CITY):
+        for _, space in manifests(folder, "ContextSpace"):
+            name = space["metadata"]["name"]
+            readers = [
+                (policy_name, spec["assignee"])
+                for policy_name, spec in policies_of(folder, name).items()
+                if "retrieveOps" in spec["operations"]
+            ]
+            human = [
+                policy_name
+                for policy_name, assignee in readers
+                if assignee["kind"] == "user"
+                or (assignee["kind"] == "role" and assignee["id"] == "public")
+            ]
+            assert human, f"{name} is readable by no signed-in person: {readers}"
