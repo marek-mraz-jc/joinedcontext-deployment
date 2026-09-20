@@ -7,3 +7,7 @@
 # tests/test_ckan_api_token.py held a JWT-shaped fixture of a fake CKAN token (T-0493); built from
 # parts now.
 cb239c90751c0c49bb3dbbc93388afb9649a769d:tests/test_ckan_api_token.py:jc-jwt-bearer-token:17
+# The first public commit holds the whole tree in one patch, so `EDGE_CLIENT_SECRET` (an env
+# name) and the YAML key on the next line read as "client secret" plus twenty characters. In the
+# old history the two lines arrived in different commits and never met in one patch (T-2300).
+5f621603a2a3d4c73bfb6511dd00e3e316b50469:components/apisix/values/apisix/base-values.yaml.gotmpl:jc-keycloak-client-secret:160
