@@ -115,7 +115,10 @@ context-endpoint:
       # domain, and from nowhere else. `allow_origins: '*'` would also hand the response to
       # a page on an attacker's host.
       allow_origins_by_regex:
-        - '^https://.+\.${DOMAIN}$'
+        # `${DOMAIN_RE}` and not `${DOMAIN}`: the dots of the domain are escaped by the
+        # ConfigMap template, because an unescaped one matches any character and would admit
+        # `https://evil.platform-example.org` as if it were ours (T-1679).
+        - '^https://[^@/]+\.${DOMAIN_RE}$'
       allow_methods: 'GET,HEAD,OPTIONS'
       allow_headers: 'Authorization,Content-Type'
       allow_credential: false
@@ -197,7 +200,10 @@ context-endpoint-portal:
       # domain, and from nowhere else. `allow_origins: '*'` would also hand the response to
       # a page on an attacker's host.
       allow_origins_by_regex:
-        - '^https://.+\.${DOMAIN}$'
+        # `${DOMAIN_RE}` and not `${DOMAIN}`: the dots of the domain are escaped by the
+        # ConfigMap template, because an unescaped one matches any character and would admit
+        # `https://evil.platform-example.org` as if it were ours (T-1679).
+        - '^https://[^@/]+\.${DOMAIN_RE}$'
       allow_methods: 'GET,HEAD,OPTIONS'
       allow_headers: 'Authorization,Content-Type'
       allow_credential: false

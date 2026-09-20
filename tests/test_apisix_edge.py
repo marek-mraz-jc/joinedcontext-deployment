@@ -146,7 +146,9 @@ def test_gateway_routes_stream_unbuffered(plugin_configs):
 def test_endpoint_surface_restricts_cors_to_the_platform_domain(plugin_configs):
     cors = plugin_configs["context-endpoint"]["cors"]
     assert "allow_origins" not in cors, "a wildcard origin would hand responses to any page"
-    assert cors["allow_origins_by_regex"] == [r"^https://.+\.joinedcontext.test$"]
+    # The dots of the domain are a character class, not a bare `.`: see
+    # tests/test_foreign_origin.py for what an unescaped one lets through (T-1679).
+    assert cors["allow_origins_by_regex"] == [r"^https://[^@/]+\.joinedcontext[.]test$"]
     assert cors["allow_credential"] is False
 
 
