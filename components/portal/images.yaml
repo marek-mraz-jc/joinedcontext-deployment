@@ -197,4 +197,12 @@ portal:
     # (T-2326, R8, GW34, UI-44). With it: the ops routes and the agent access rules keep their
     # refusals under attack (T-1689, T-1690, T-2081..T-2090), and the bento processor catalogue
     # loses `file` in step with the platform (T-1701). On top of a12297a.
-    digest: 'sha256:51b4870230f795ed8ef99d4ebd6fd19d0b6c6479666a620d65bae0a355ddf661'
+    # portal b284f73: the assistant panel rebuilt — the composer is last and stays there, the
+    # example prompts and the app builder are reachable inside a conversation, a refused model
+    # call says what to do instead of printing a problem document (T-2419, T-2421, T-2423,
+    # T-2424); the workspace bar and the conflict chooser are a real radio group with a notice
+    # that is announced (T-1254, T-1255, T-2409); the focus ring and every link carry a readable
+    # contrast in both themes (T-2323, T-2324); a Role and a Group are authored through their
+    # fields (T-2400); and the T-2136 gates hold every module, control and route. On top of
+    # b6da73c.
+    digest: 'sha256:1f1261cbf75c8ba9f2238093f184167318a0b4ce501d3ea6c75ba2cd76434f3b'
