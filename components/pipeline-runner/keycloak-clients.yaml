@@ -48,3 +48,79 @@ helsinki-pipelines:
           included.custom.audience: kpi4h6q2wz7xr3nv5tj6pb3mydk2s4fa
           access.token.claim: 'true'
           id.token.claim: 'false'
+
+# The city's ingestion pipelines (T-2384). Until now every stream of every project presented
+# `helsinki-pipelines`, so the gateway refused each write to a Banská Bystrica endpoint with
+# `token is not bound to this resource` — about 1900 refusals in 45 minutes on dev. The client id
+# is what `jc_core::kinds::service_account::keycloak_client_id` yields for the `pipelines`
+# ServiceAccount of this project (components/context-gateway/seed/banskabystrica/
+# serviceaccount-pipelines.yaml), which is what the Portal's reconciler renders into each stream
+# and what the gateway resolves the token's `azp` to.
+#
+# The audiences are the two endpoints its streams write through and read back, and no others:
+# `banskabystrica-mesto` (the published rows, written by `obyvatelia` and `voda` and read by
+# `ukazovatele-mesto`) and `banskabystrica-kpi` (the indicators). `public-air` is public, so a
+# stream reading it sends no token at all.
+banskabystrica-pipelines:
+  name: Banská Bystrica ingestion pipelines
+  description: Service account of the Bento streams of the city demo; client_credentials only, no browser flow
+  subdomain: ''
+  redirectPath: /
+  componentNamespaces:
+    - pipeline-runner
+  rawValues:
+    publicClient: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: true
+    protocolMappers:
+      - name: banskabystrica-mesto-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: ovr4ttzywhad2oiogf67n7zyn2g2elfc
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: banskabystrica-kpi-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: y4royli3pip6yrhv3olxxf2522b3dovt
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+
+# The region's ingestion pipelines (T-2384), the same rule for project `bbsk`: `bbsk-kraj` is
+# written by `emisie` and `obyvatelstvo` and read back by `ukazovatele`, which writes `bbsk-kpi`.
+bbsk-pipelines:
+  name: Banskobystrický kraj ingestion pipelines
+  description: Service account of the Bento streams of the regional demo; client_credentials only, no browser flow
+  subdomain: ''
+  redirectPath: /
+  componentNamespaces:
+    - pipeline-runner
+  rawValues:
+    publicClient: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: true
+    protocolMappers:
+      - name: bbsk-kraj-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: 7u4ns3cdg2mqlx5gmxhk7rqai6pmokdj
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: bbsk-kpi-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: qfhhh5no5wz4lk3rfjisdtx3chiyfig3
+          access.token.claim: 'true'
+          id.token.claim: 'false'

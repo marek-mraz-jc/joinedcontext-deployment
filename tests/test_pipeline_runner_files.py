@@ -32,3 +32,117 @@ def test_the_runner_mounts_its_files_claim_at_data(dev):
     mount = next(m for m in pod["containers"][0]["volumeMounts"] if m["name"] == "files")
     assert mount["mountPath"] == "/data"
     assert claim["metadata"]["namespace"] == by_name(dev, "Deployment", "pipeline-runner")["metadata"]["namespace"]
+
+
+def _projects_with_pipelines():
+    """Every seeded project that has at least one `Pipeline` manifest."""
+    import pathlib
+
+    import yaml
+
+    seed = pathlib.Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
+    projects = set()
+    for path in sorted(seed.glob("*/*.yaml")):
+        if path.name == "index.yaml":
+            continue
+        try:
+            docs = list(yaml.safe_load_all(path.read_text()))
+        except yaml.YAMLError:
+            continue
+        for doc in docs:
+            if isinstance(doc, dict) and doc.get("kind") == "Pipeline":
+                projects.add(doc["metadata"]["namespace"])
+    return projects
+
+
+def _secret_variable(project: str) -> str:
+    """The runner variable one project's streams name, as the reconciler mints it (T-2384)."""
+    return "JC_CLIENT_SECRET_" + "".join(
+        c.upper() if c.isalnum() else "_" for c in project
+    )
+
+
+@requires_helmfile
+def test_every_project_with_pipelines_has_its_own_client_and_secret(dev):
+    """PF-46, AG-52, T-2384: a stream presents its own project's ServiceAccount, not Helsinki's.
+
+    The Portal's reconciler renders `{project}-pipelines` as the stream's `client_key` and names
+    `JC_CLIENT_SECRET_<PROJECT>` for its secret. Until this landed the runner had one client for
+    every stream, so every write to a Banská Bystrica endpoint was refused with `token is not
+    bound to this resource`. This is the deployment's half: the client exists, its secret is
+    generated per cluster, and the runner carries it under the name the reconciler mints.
+    """
+    import pathlib
+
+    import yaml
+
+    clients_file = (
+        pathlib.Path(__file__).resolve().parent.parent
+        / "components/pipeline-runner/keycloak-clients.yaml"
+    )
+    clients = yaml.safe_load(clients_file.read_text())
+
+    pod = by_name(dev, "Deployment", "pipeline-runner")["spec"]["template"]["spec"]
+    env = {e["name"]: e for e in pod["containers"][0]["env"]}
+    secrets = {
+        d["metadata"]["name"]
+        for d in dev
+        if d.get("kind") == "Secret" and d["metadata"]["name"].startswith("keycloak-client-")
+    }
+
+    projects = _projects_with_pipelines()
+    assert projects, "the seed holds pipelines"
+    for project in sorted(projects):
+        client = f"{project}-pipelines"
+        assert client in clients, f"{project} has pipelines and no Keycloak client"
+        variable = _secret_variable(project)
+        assert variable in env, f"the runner carries no {variable}"
+        assert env[variable]["valueFrom"]["secretKeyRef"] == {
+            "name": f"keycloak-client-{client}",
+            "key": "client-secret",
+        }, env[variable]
+        assert f"keycloak-client-{client}" in secrets, f"{client}'s secret is not generated"
+        # The secret is never a literal in the rendered manifest: it is a reference (PF-46).
+        assert "value" not in env[variable], env[variable]
+
+
+@requires_helmfile
+def test_a_pipeline_client_is_bound_to_its_own_projects_endpoints_only(dev):
+    """PF-46: an audience mapper names a slug of the client's own project, and of no other.
+
+    A token bound to one project must never be accepted for another, so widening an audience is
+    exactly the fix this task may not make (T-2384).
+    """
+    import pathlib
+
+    import yaml
+
+    root = pathlib.Path(__file__).resolve().parent.parent
+    clients = yaml.safe_load(
+        (root / "components/pipeline-runner/keycloak-clients.yaml").read_text()
+    )
+    slugs = {}
+    for path in sorted((root / "components/context-gateway/seed").glob("*/*.yaml")):
+        if path.name == "index.yaml":
+            continue
+        try:
+            docs = list(yaml.safe_load_all(path.read_text()))
+        except yaml.YAMLError:
+            continue
+        for doc in docs:
+            if isinstance(doc, dict) and doc.get("kind") == "Endpoint":
+                slug = (doc.get("spec") or {}).get("slug")
+                if slug:
+                    slugs[slug] = doc["metadata"]["namespace"]
+
+    for client, spec in clients.items():
+        project = client.removesuffix("-pipelines")
+        for mapper in spec["rawValues"]["protocolMappers"]:
+            audience = mapper["config"]["included.custom.audience"]
+            # `portal-internal` is the Portal's own listener, not an endpoint slug (T-2271).
+            if audience == "portal-internal":
+                continue
+            assert audience in slugs, f"{client} names {audience}, which no Endpoint declares"
+            assert slugs[audience] == project, (
+                f"{client} is bound to {audience}, an endpoint of project {slugs[audience]}"
+            )
