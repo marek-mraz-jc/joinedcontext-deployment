@@ -34,12 +34,13 @@ portal-ui:
           return function()
             local forged = {
               "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
-              "X-Endpoint-Slug", "X-Consumer-Identity",
+              "X-Endpoint-Slug", "X-Consumer-Identity", "X-Forwarded-User",
               "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
               "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
             }
             for _, header in ipairs(forged) do
               ngx.req.clear_header(header)
+              ngx.req.clear_header((header:gsub("%-", "_")))
             end
           end
     # Class 1 (standard web): 300 requests per minute per IP.
@@ -107,12 +108,13 @@ portal-api:
           return function()
             local forged = {
               "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
-              "X-Endpoint-Slug", "X-Consumer-Identity",
+              "X-Endpoint-Slug", "X-Consumer-Identity", "X-Forwarded-User",
               "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
               "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
             }
             for _, header in ipairs(forged) do
               ngx.req.clear_header(header)
+              ngx.req.clear_header((header:gsub("%-", "_")))
             end
           end
     # Class 2 (authenticated API): 1,200 requests per minute per client identity. The bearer
@@ -185,12 +187,13 @@ portal-well-known:
           return function()
             local forged = {
               "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
-              "X-Endpoint-Slug", "X-Consumer-Identity",
+              "X-Endpoint-Slug", "X-Consumer-Identity", "X-Forwarded-User",
               "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
               "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
             }
             for _, header in ipairs(forged) do
               ngx.req.clear_header(header)
+              ngx.req.clear_header((header:gsub("%-", "_")))
             end
           end
     # Class 1 (public discovery): per source address, there is no token yet.
@@ -226,14 +229,27 @@ portal-metrics:
           return function()
             local forged = {
               "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
-              "X-Endpoint-Slug", "X-Consumer-Identity",
+              "X-Endpoint-Slug", "X-Consumer-Identity", "X-Forwarded-User",
               "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
               "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
             }
             for _, header in ipairs(forged) do
               ngx.req.clear_header(header)
+              ngx.req.clear_header((header:gsub("%-", "_")))
             end
           end
+    # Class 1 (standard web): a refusal is cheap but not free, and a path that answers
+    # without a token is a request sink for whoever finds it (T-1673). The ServiceMonitor
+    # scrapes the pod directly and never passes through this route, so no scrape is bounded
+    # by this bucket.
+    limit-count:
+      count: 300
+      time_window: 60
+      key_type: var
+      key: remote_addr
+      rejected_code: 429
+      policy: local
+      show_limit_quota_header: true
     # The route terminates here: APISIX answers in the rewrite phase and never dials the
     # upstream the route declares. 404 rather than 403, because from outside the cluster
     # there is nothing at this path and saying "forbidden" would say there is.
@@ -268,12 +284,13 @@ apps-surface:
           return function()
             local forged = {
               "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
-              "X-Endpoint-Slug", "X-Consumer-Identity",
+              "X-Endpoint-Slug", "X-Consumer-Identity", "X-Forwarded-User",
               "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
               "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
             }
             for _, header in ipairs(forged) do
               ngx.req.clear_header(header)
+              ngx.req.clear_header((header:gsub("%-", "_")))
             end
           end
     # Class 1 (standard web): 300 requests per minute per IP.
@@ -343,12 +360,13 @@ portal-redirect:
           return function()
             local forged = {
               "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
-              "X-Endpoint-Slug", "X-Consumer-Identity",
+              "X-Endpoint-Slug", "X-Consumer-Identity", "X-Forwarded-User",
               "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
               "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
             }
             for _, header in ipairs(forged) do
               ngx.req.clear_header(header)
+              ngx.req.clear_header((header:gsub("%-", "_")))
             end
           end
     limit-count:
