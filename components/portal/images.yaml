@@ -156,4 +156,10 @@ portal:
     # the left that the runner merges, and the test trace painted on the step that failed
     # (T-1126..T-1128, T-1130, PL-52, PL-53, PL-56). jc-core at 0.7.47, whose pipeline test names
     # that step. On top of e0a7e38.
-    digest: 'sha256:b94480d2fadbeecbfe09155baf75ffd35b1e1b2d0ac00e382ed8c12073452bf7'
+    # portal 3da8cc4: the SDK is a real package with its own library build (T-0682); a preview
+    # address the workspace wrote is checked before it becomes a link (T-2312); the six layout
+    # components and the shared ExternalLink/ConfirmDialog/RadioGroup land, ui_rules.test.ts is the
+    # gate that keeps them (T-1726..T-1728, T-1736..T-1748); a list that failed is no longer drawn
+    # as "you have nothing" (T-1763, T-1764); the e2e lane keeps its evidence when it fails
+    # (T-2311). On top of 4a27397.
+    digest: 'sha256:8d373c84e916a63dd2e8bf8be0ccc740ba32bcba76a0aabf8197a1967cd60349'

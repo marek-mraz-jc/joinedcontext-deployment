@@ -49,4 +49,8 @@ agent-runner:
     # surface share one read parameter table, get_entity and batch_query take its selectors, the
     # registry reads and the two POST query forms have tools, total and nextCursor (T-1857, AG-84,
     # AG-85).
-    digest: 'sha256:487ec55e250c3c1749cff099c3094a5316f04cdb1ed7d5316cf10d98a4e4d5fd'
+    # platform b2aab3f: the pipeline test names the step a message failed at — the harness stamps
+    # each step's index into the message metadata before the step runs and keeps it at the first
+    # failure, so a trace says which processor threw rather than which ran last (T-1130, PL-43,
+    # PL-52, PL-56). jc-core v0.7.47. On top of 387cbc0.
+    digest: 'sha256:7d07ce6dbc531890bd11586b2a99e8cff317ae31340fb61275abb893501095fb'
