@@ -17,12 +17,13 @@ context-space:
           return function()
             local forged = {
               "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
-              "X-Endpoint-Slug", "X-Consumer-Identity",
+              "X-Endpoint-Slug", "X-Consumer-Identity", "X-Forwarded-User",
               "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
               "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
             }
             for _, header in ipairs(forged) do
               ngx.req.clear_header(header)
+              ngx.req.clear_header((header:gsub("%-", "_")))
             end
           end
     # Class 2 (authenticated API): 1,200 requests per minute per client identity.
@@ -78,12 +79,13 @@ context-endpoint:
             end
             local forged = {
               "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
-              "X-Endpoint-Slug", "X-Consumer-Identity",
+              "X-Endpoint-Slug", "X-Consumer-Identity", "X-Forwarded-User",
               "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
               "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
             }
             for _, header in ipairs(forged) do
               ngx.req.clear_header(header)
+              ngx.req.clear_header((header:gsub("%-", "_")))
             end
           end
     # Class 3 (high-throughput streams): 5,000 requests per minute. The endpoint surface is
@@ -163,12 +165,13 @@ context-endpoint-portal:
             end
             local forged = {
               "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
-              "X-Endpoint-Slug", "X-Consumer-Identity",
+              "X-Endpoint-Slug", "X-Consumer-Identity", "X-Forwarded-User",
               "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
               "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
             }
             for _, header in ipairs(forged) do
               ngx.req.clear_header(header)
+              ngx.req.clear_header((header:gsub("%-", "_")))
             end
           end
     # Class 3 (high-throughput streams): 5,000 requests per minute. The endpoint surface is
