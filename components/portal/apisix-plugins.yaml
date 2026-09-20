@@ -92,7 +92,7 @@ portal-ui:
           Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
           X-Content-Type-Options: "nosniff"
           X-Frame-Options: "SAMEORIGIN"
-          Referrer-Policy: "strict-origin-when-cross-origin"
+          Referrer-Policy: "no-referrer"
 
 portal-api:
   name: portal-api
@@ -169,7 +169,7 @@ portal-api:
           Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
           X-Content-Type-Options: "nosniff"
           X-Frame-Options: "DENY"
-          Referrer-Policy: "strict-origin-when-cross-origin"
+          Referrer-Policy: "no-referrer"
           Cache-Control: "no-store, no-cache, must-revalidate"
 
 portal-well-known:
@@ -208,7 +208,7 @@ portal-well-known:
           Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
           X-Content-Type-Options: "nosniff"
           X-Frame-Options: "DENY"
-          Referrer-Policy: "strict-origin-when-cross-origin"
+          Referrer-Policy: "no-referrer"
           Cache-Control: "no-store, no-cache, must-revalidate"
 
 portal-metrics:
@@ -247,7 +247,7 @@ portal-metrics:
           Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
           X-Content-Type-Options: "nosniff"
           X-Frame-Options: "DENY"
-          Referrer-Policy: "strict-origin-when-cross-origin"
+          Referrer-Policy: "no-referrer"
           Cache-Control: "no-store, no-cache, must-revalidate"
 
 # The shared `/apps/*` surface on the apex: compiled bundles of `static` apps, served by the
@@ -325,7 +325,7 @@ apps-surface:
           Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
           X-Content-Type-Options: "nosniff"
           X-Frame-Options: "SAMEORIGIN"
-          Referrer-Policy: "strict-origin-when-cross-origin"
+          Referrer-Policy: "no-referrer"
 
 # The apex answers `/` with a redirect to the Portal (ADR-N-019 §3.1). The route terminates
 # here, the way ckan-redirect does, and never dials the upstream it declares. The path and the
@@ -369,5 +369,5 @@ portal-redirect:
           Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
           X-Content-Type-Options: "nosniff"
           X-Frame-Options: "DENY"
-          Referrer-Policy: "strict-origin-when-cross-origin"
+          Referrer-Policy: "no-referrer"
           Cache-Control: "no-store, no-cache, must-revalidate"

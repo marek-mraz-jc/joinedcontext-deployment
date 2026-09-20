@@ -26,6 +26,15 @@ FORGED_HEADERS = (
     "X-Real-IP",
 )
 UI_CONFIGS = ("portal-ui", "apps-surface", "keycloak", "gitea-forge")
+# The routes the Portal itself answers; their headers are the Portal's own (T-1732).
+PORTAL_CONFIGS = (
+    "portal-ui",
+    "portal-api",
+    "portal-well-known",
+    "portal-metrics",
+    "apps-surface",
+    "portal-redirect",
+)
 # Pages and app bundles a browser may cache; every other route is `no-store`.
 CACHEABLE_CONFIGS = ("portal-ui", "apps-surface")
 API_CONFIGS = ("portal-api", "context-space", "context-endpoint")
@@ -79,7 +88,13 @@ def test_security_response_headers_on_every_route(plugin_configs):
         headers = plugins["response-rewrite"]["headers"]["set"]
         assert headers["Strict-Transport-Security"] == "max-age=31536000; includeSubDomains; preload"
         assert headers["X-Content-Type-Options"] == "nosniff"
-        assert headers["Referrer-Policy"] == "strict-origin-when-cross-origin"
+        # The Portal answers `no-referrer` itself, and the edge sets the header on every
+        # response including the ones it writes (the login redirect), so the Portal's own routes
+        # say the same thing on both sides and no request carries a Portal path to another
+        # origin. The upstreams that are somebody else's application keep the wider value: Gitea
+        # and Keycloak check the `Referer` on some form posts, and taking it away breaks a login.
+        expected_referrer = "no-referrer" if config_id in PORTAL_CONFIGS else "strict-origin-when-cross-origin"
+        assert headers["Referrer-Policy"] == expected_referrer, config_id
         expected_frame = "SAMEORIGIN" if config_id in UI_CONFIGS else "DENY"
         assert headers["X-Frame-Options"] == expected_frame, config_id
         if config_id not in CACHEABLE_CONFIGS:

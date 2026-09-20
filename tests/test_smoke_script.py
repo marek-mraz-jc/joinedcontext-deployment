@@ -26,7 +26,7 @@ DEFAULT_HEADERS = (
     "HTTP/2 200\\r\\nserver: APISIX\\r\\n"
     "strict-transport-security: max-age=31536000; includeSubDomains; preload\\r\\n"
     "x-content-type-options: nosniff\\r\\nx-frame-options: SAMEORIGIN\\r\\n"
-    "referrer-policy: strict-origin-when-cross-origin\\r\\n"
+    "referrer-policy: no-referrer\\r\\n"
 )
 
 
