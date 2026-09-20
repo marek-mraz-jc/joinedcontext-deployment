@@ -36,6 +36,21 @@ agent-proxy:
       ports:
         - protocol: TCP
           port: 8080
+    # The realm's token endpoint, in-cluster. The proxy mints its own audience-bound token for
+    # every call it makes — the Portal's internal listener, the gateway, the model — from
+    # `JC_OIDC_TOKEN_URL`, which is the ClusterIP service and not the public host, because a pod
+    # cannot dial this node's own public address (images.yaml says the same for the gateway).
+    # Without this rule that grant never leaves the pod: the lookup of a run then fails as a
+    # transport error, the proxy answers `401 invalid run credentials`, and the assistant's first
+    # question of the demo dies on it (T-2420).
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: keycloak-app
+          componentNamespace: keycloak
+      ports:
+        - protocol: TCP
+          port: 8080
     - to:
         - podSelector:
             matchLabels:
@@ -130,3 +145,20 @@ gitea-from-agent-proxy:
       ports:
         - protocol: TCP
           port: 3000
+
+# Keycloak lists its callers by name, and the credential proxy is one (T-2420).
+keycloak-from-agent-proxy:
+  componentNamespace: keycloak
+  podSelector:
+    app.kubernetes.io/instance: keycloak-app
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: agent-runner-proxy
+          componentNamespace: agent-runner
+      ports:
+        - protocol: TCP
+          port: 8080

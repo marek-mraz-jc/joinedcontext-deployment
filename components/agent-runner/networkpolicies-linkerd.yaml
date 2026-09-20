@@ -62,6 +62,14 @@ agent-proxy-linkerd-control-plane:
       ports:
         - protocol: TCP
           port: 4143
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: keycloak-app
+          componentNamespace: keycloak
+      ports:
+        - protocol: TCP
+          port: 4143
 
 portal-linkerd-from-agent-proxy:
   componentNamespace: portal
@@ -125,4 +133,24 @@ gitea-linkerd-from-agent-proxy:
           componentNamespace: agent-runner
       ports:
         - port: 4143
+          protocol: TCP
+
+keycloak-linkerd-from-agent-proxy:
+  componentNamespace: keycloak
+  podSelector:
+    app.kubernetes.io/instance: keycloak-app
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: agent-runner-proxy
+          componentNamespace: agent-runner
+      ports:
+        - port: 4143
+          protocol: TCP
+        - port: 4190
+          protocol: TCP
+        - port: 4191
           protocol: TCP

@@ -408,3 +408,47 @@ def test_the_portal_s_internal_listener_answers_the_runners_and_the_gateway_only
     names = {d["metadata"]["name"] for d in rendered(env) if d.get("kind") == "NetworkPolicy"}
     if "context-gateway" in names:
         assert "context-gateway-gateway" in reaching
+
+
+@pytest.mark.parametrize("env", ENVIRONMENTS)
+def test_a_workload_that_mints_its_own_token_may_reach_the_realm(rendered, env):
+    """A pod told to mint tokens at the in-cluster realm must have the egress rule to reach it.
+
+    `JC_OIDC_TOKEN_URL` is the ClusterIP Service and not the public host, because a pod cannot
+    dial this node's own public address. The credential proxy was configured that way and its
+    policy allowed 443 to the world and nothing to Keycloak, so every grant it asked for was
+    dropped on the way out. The proxy reports that as a transport failure, answers the run
+    `401 invalid run credentials`, and the assistant's first question dies with it — a whole
+    feature dark, from a rule nobody wrote (T-2420).
+    """
+    docs = rendered(env)
+    keycloak = {"app.kubernetes.io/instance": "keycloak-app"}
+
+    def reaches_keycloak(labels):
+        for doc in docs:
+            if doc.get("kind") != "NetworkPolicy":
+                continue
+            if doc["spec"].get("podSelector", {}).get("matchLabels") != labels:
+                continue
+            for rule in doc["spec"].get("egress") or []:
+                for peer in rule.get("to") or []:
+                    if (peer.get("podSelector", {}).get("matchLabels") or {}) == keycloak:
+                        return True
+        return False
+
+    missing = []
+    for doc in docs:
+        if doc.get("kind") not in ("Deployment", "StatefulSet", "DaemonSet"):
+            continue
+        spec = doc["spec"]["template"]["spec"]
+        for container in spec.get("containers") or []:
+            for var in container.get("env") or []:
+                if var.get("name") != "JC_OIDC_TOKEN_URL":
+                    continue
+                if "svc.cluster.local" not in (var.get("value") or ""):
+                    continue
+                labels = doc["spec"]["template"]["metadata"].get("labels") or {}
+                selector = {k: labels[k] for k in ("app.kubernetes.io/name",) if k in labels}
+                if selector and not reaches_keycloak(selector):
+                    missing.append(doc["metadata"]["name"])
+    assert not missing, f"told to mint in-cluster, no egress to the realm: {sorted(set(missing))}"
