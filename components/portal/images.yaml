@@ -151,4 +151,9 @@ portal:
     # Models catalogue is a bounded list with the wait announced (T-1851); the models page, the
     # LinkML editor and the SDM import share one Tabs and one Checkbox with the keyboard wired
     # (T-1781). The rest since 7859014 is edge-case suites (T-1963..T-2080). On top of 7859014.
-    digest: 'sha256:708b699299fcd9534a42dc27d386d44e586c5974d10f2a267705f36e6368ef24'
+    # portal 4a27397: the pipeline studio draws one lane — the runner's processors as steps with a
+    # palette grouped by category, each step's own Bento block as editable YAML, several sources on
+    # the left that the runner merges, and the test trace painted on the step that failed
+    # (T-1126..T-1128, T-1130, PL-52, PL-53, PL-56). jc-core at 0.7.47, whose pipeline test names
+    # that step. On top of e0a7e38.
+    digest: 'sha256:b94480d2fadbeecbfe09155baf75ffd35b1e1b2d0ac00e382ed8c12073452bf7'
