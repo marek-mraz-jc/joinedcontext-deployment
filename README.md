@@ -1,7 +1,7 @@
 # joinedcontext-deployment
 
-[![ci](https://github.com/marek-mraz/joinedcontext-deployment/actions/workflows/ci.yml/badge.svg)](https://github.com/marek-mraz/joinedcontext-deployment/actions/workflows/ci.yml)
-[![ci-full](https://github.com/marek-mraz/joinedcontext-deployment/actions/workflows/ci-full.yml/badge.svg)](https://github.com/marek-mraz/joinedcontext-deployment/actions/workflows/ci-full.yml)
+[![ci](https://github.com/marek-mraz-jc/joinedcontext-deployment/actions/workflows/ci.yml/badge.svg)](https://github.com/marek-mraz-jc/joinedcontext-deployment/actions/workflows/ci.yml)
+[![ci-full](https://github.com/marek-mraz-jc/joinedcontext-deployment/actions/workflows/ci-full.yml/badge.svg)](https://github.com/marek-mraz-jc/joinedcontext-deployment/actions/workflows/ci-full.yml)
 
 Helmfile deployment of the **joinedcontext platform**. Forked from the CIVITAS/CORE v2 deployment
 repository (EUPL 1.2, see `LICENSE` and `CONTRIBUTORS.md`) and stripped to the components the

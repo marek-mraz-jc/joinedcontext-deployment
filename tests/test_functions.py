@@ -30,7 +30,7 @@ def env_of(container):
 def test_the_runtime_is_the_functions_binary_with_no_credential(dev):
     (container,) = one(dev, "Deployment", "jc-functions")["spec"]["template"]["spec"]["containers"]
     assert container["command"] == ["/usr/local/bin/jc-functions"]
-    assert container["image"].startswith("ghcr.io/marek-mraz/joinedcontext-platform:main@sha256:")
+    assert container["image"].startswith("ghcr.io/marek-mraz-jc/joinedcontext-platform:main@sha256:")
     env = env_of(container)
     assert env["JC_FUNCTIONS_CALLER"] == "portal-api"
     assert env["JC_FUNCTIONS_AUDIENCE"] == "jc-functions"

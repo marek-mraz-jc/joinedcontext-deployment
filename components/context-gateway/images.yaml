@@ -4,7 +4,7 @@ context-gateway:
     # One image per repository: the platform image carries both context-gateway and jcctl.
     # Its entrypoint is /usr/local/bin/context-gateway, so `command` only makes the choice
     # explicit.
-    repository: 'ghcr.io/marek-mraz/joinedcontext-platform'
+    repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
     tag: 'main'
     # platform 2276b1f: `jcctl drift` no longer reports every declared resource as missing
     # against a platform that is not a store (T-1216), a unit carries its QUDT anchor and a
@@ -77,7 +77,12 @@ context-gateway:
     # 401s no longer tells a caller which run ids are live (T-2285); and the edge cases of the
     # identity table, the API keys, run authentication and the proxy's router came with them
     # (T-1890 to T-1894, T-1872, T-1873).
-    digest: 'sha256:0d2b810106dbd1c98adb4d92904a8ae1b40ed679d8a32df8fd4fce337118a5b4'
+    # platform 387cbc0: the first image from marek-mraz-jc/joinedcontext-platform, where the
+    # repository moved (T-2301), jc-core v0.7.46. Since 18585b0: the Data MCP tools and the REST
+    # surface share one read parameter table, get_entity and batch_query take its selectors, the
+    # registry reads and the two POST query forms have tools, total and nextCursor (T-1857, AG-84,
+    # AG-85).
+    digest: 'sha256:487ec55e250c3c1749cff099c3094a5316f04cdb1ed7d5316cf10d98a4e4d5fd'
   # git-sync keeps the gateway's checkout of the configuration repository current (T-0278).
   git-sync:
     repository: 'registry.k8s.io/git-sync/git-sync'

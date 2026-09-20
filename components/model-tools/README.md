@@ -13,6 +13,6 @@ helmfile apply -i --selector component=model-tools
 
 ## Image
 
-`ghcr.io/marek-mraz/joinedcontext-platform/model-tools`, pinned by digest, built from
+`ghcr.io/marek-mraz-jc/joinedcontext-platform/model-tools`, pinned by digest, built from
 `tools/model-tools` of the platform repository; entrypoint `python -m service`, port 8080,
 health at `/healthz`.

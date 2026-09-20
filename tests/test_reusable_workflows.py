@@ -191,7 +191,7 @@ def test_a_helm_test_hook_is_not_a_deployed_workload():
 
 # --- one repository, one digest (T-2270; OPS-13, AG-52) -------------------------------------
 
-PLATFORM = "ghcr.io/marek-mraz/joinedcontext-platform"
+PLATFORM = "ghcr.io/marek-mraz-jc/joinedcontext-platform"
 
 ONE_BUILD = """
 apiVersion: apps/v1

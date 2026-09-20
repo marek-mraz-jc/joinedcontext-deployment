@@ -23,7 +23,7 @@ helmfile apply -i --selector component=portal
 
 ## Image
 
-`ghcr.io/marek-mraz/joinedcontext-portal`, pinned by digest. Distroless, entrypoint
+`ghcr.io/marek-mraz-jc/joinedcontext-portal`, pinned by digest. Distroless, entrypoint
 `/usr/local/bin/joinedcontext-portal`, listening on 8080 — the component sets no `command`
 and lets the entrypoint run.
 

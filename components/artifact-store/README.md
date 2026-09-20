@@ -79,4 +79,4 @@ Git, and `jcctl artifacts rebuild --org <o>` is meant to re-render them (Archite
 not implemented yet, so a lost store is rebuilt by re-running the reconciler today). Dumps are
 the exception and are mirrored to the database backup bucket when their retention matters.
 
-[Architecture/17]: https://github.com/marek-mraz/joinedcontext-docs/blob/main/Architecture/17-artifact-store.md
+[Architecture/17]: https://github.com/marek-mraz-jc/joinedcontext-docs/blob/main/Architecture/17-artifact-store.md

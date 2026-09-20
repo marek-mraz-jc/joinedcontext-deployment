@@ -16,7 +16,7 @@ The gates every repository of the platform runs, written once here and called fr
 ```yaml
 jobs:
   rust:
-    uses: marek-mraz/joinedcontext-deployment/.github/workflows/reusable-rust-ci.yml@main
+    uses: marek-mraz-jc/joinedcontext-deployment/.github/workflows/reusable-rust-ci.yml@main
     with: { test-args: "--workspace --lib --bins" }
 ```
 

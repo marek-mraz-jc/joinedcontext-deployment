@@ -7,7 +7,7 @@ spec:
       serviceAccountName: context-gateway
       containers:
         - name: gateway
-          image: ghcr.io/marek-mraz/joinedcontext-platform@sha256:0000000000000000000000000000000000000000000000000000000000000000
+          image: ghcr.io/marek-mraz-jc/joinedcontext-platform@sha256:0000000000000000000000000000000000000000000000000000000000000000
           securityContext:
             runAsNonRoot: true
             capabilities: { drop: ["ALL"] }

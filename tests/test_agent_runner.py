@@ -45,7 +45,7 @@ def secret_env_of(c):
 def test_the_proxy_runs_the_proxy_binary_of_the_platform_image_with_its_credentials_mounted(dev):
     proxy = container(dev, "agent-proxy")
     assert proxy["command"] == ["/usr/local/bin/jc-agent-proxy"]
-    assert proxy["image"].startswith("ghcr.io/marek-mraz/joinedcontext-platform:main@sha256:")
+    assert proxy["image"].startswith("ghcr.io/marek-mraz-jc/joinedcontext-platform:main@sha256:")
     env = env_of(proxy)
     assert env["JC_PORTAL_BASE"].endswith(":9090")
     assert env["JC_MODEL_PROVIDER"] == "openai-compatible"

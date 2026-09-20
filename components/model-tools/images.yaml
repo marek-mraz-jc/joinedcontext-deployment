@@ -3,9 +3,9 @@ model-tools:
   tools:
     # Built from tools/model-tools of the platform repository by its `image` workflow, a
     # sub-path of the platform's registry name; entrypoint `python -m service`, port 8080.
-    repository: 'ghcr.io/marek-mraz/joinedcontext-platform/model-tools'
+    repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform/model-tools'
     tag: 'main'
     # platform b73d19a: the model-tools image built with the gateway of that commit (nothing
     # under tools/model-tools changed since d7b6a5a: `/generate` answers `typescript`).
     # Digest read from the registry for the tag named after the commit; the `main` tag moves.
-    digest: 'sha256:9c417ef61e650739e352d2a8155d83c70554f8ff3ddc71d128716f45988b92f3'
+    digest: 'sha256:51c6129072227b9e0aeddceaac40830794e8db87a6b870af180f32f92f728132'

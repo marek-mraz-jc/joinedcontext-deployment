@@ -2,7 +2,7 @@
 portal:
   portal:
     # Distroless, entrypoint /usr/local/bin/joinedcontext-portal, listens on 8080.
-    repository: 'ghcr.io/marek-mraz/joinedcontext-portal'
+    repository: 'ghcr.io/marek-mraz-jc/joinedcontext-portal'
     tag: 'main'
     # portal 946b8c9: the drift surface — the reconciler scans a space's seed entities on its
     # tick and the API serves what it found with the two resolutions UI-26 names (T-0453), with
@@ -145,4 +145,10 @@ portal:
     # (T-2281, T-2283), every kind's row carries one menu (T-2287), and the edge cases of the
     # session, the CSRF lock, the realm client, the operation gate, the verdict gate, the change
     # lane and the MCP task handles (T-2091..T-2128). On top of 09fffa5.
-    digest: 'sha256:74bc2daaa1adf1061a1e0c48aa7b313661ef2ff097d2b98ad2c90c55c9f491c3'
+    # portal e0a7e38: the first image from marek-mraz-jc/joinedcontext-portal, where the repository
+    # moved (T-2301); jc-core and jcctl come from the moved platform at jc-core-v0.7.46. A full
+    # preview node no longer names other projects' workspaces (T-2129, T-2294); the Smart Data
+    # Models catalogue is a bounded list with the wait announced (T-1851); the models page, the
+    # LinkML editor and the SDM import share one Tabs and one Checkbox with the keyboard wired
+    # (T-1781). The rest since 7859014 is edge-case suites (T-1963..T-2080). On top of 7859014.
+    digest: 'sha256:708b699299fcd9534a42dc27d386d44e586c5974d10f2a267705f36e6368ef24'
