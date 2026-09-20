@@ -212,4 +212,9 @@ portal:
     # spaces stayed empty with no failure to read anywhere. With it: the whole worker sweep of
     # 2026-09-20 (T-1254, T-1759..T-1766, T-2422) and the fast lane's `ui` budget (T-2447). On
     # top of b284f73.
-    digest: 'sha256:1569e0b79056ed7debe79389b63a94259f620b9415f2958f8d19e5037d7bed21'
+    # portal 3d0e085: a space's types are read from the DataModels that name it, not from the
+    # optional `dataModelRef` no seeded space sets, so the look-inside view lists what a space
+    # holds instead of reading as empty over hundreds of entities (T-2450); a page with no model
+    # says `untyped` rather than claiming `text`, so a numeric endpoint condition is not quoted
+    # into matching nothing (T-2448). On top of 4cafa0b.
+    digest: 'sha256:b89d4e811a7dd21710e2ea2ef023030457340fbe67509308f298e01c9dceb2b9'
