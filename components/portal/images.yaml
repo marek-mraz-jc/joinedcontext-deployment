@@ -169,4 +169,10 @@ portal:
     # between its two palettes again and the four 400px/zoom goldens carry the shared-control
     # layout (T-2311). The Vite 8 `server.fs.allow` fix, without which 86 of 142 UI test files
     # did not collect (T-1777). On top of 3da8cc4.
-    digest: 'sha256:101f3d1fa362b524f68214392bc38705547642ae2fecd45f5e53bc248313fa49'
+    # portal f3342c2: the rest of the ui-parts and ui-pages sweep — the rjsf theme and its three
+    # widgets, the Shell and the workspace bar, the dashboards and export parts, the access lists,
+    # the map's palette read from the theme's own tokens instead of eight literals (T-1797..T-1836).
+    # The pipeline canvas is a group rather than an image, so a screen reader announces the nodes
+    # in it. Two test cases corrected to the aria-disabled contract they were asserting against
+    # (T-2317, T-2320). On top of b9bb5d1.
+    digest: 'sha256:5530567ca24884187a5a73551ded54511fbc1df7a6912fcb3d0741af35f8c8c5'
