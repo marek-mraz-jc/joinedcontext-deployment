@@ -254,8 +254,12 @@ HEALTHY = {
     "helsinkiSeed": HELSINKI_SEED,
     "bodies": [[["Bearer", "/invoke"], FUNCTION_ANSWER],
                ["clients?clientId=edge", '[{"protocolMappers":[{"config":{"included.client.audience": "portal-api"}}]}]'],
+               # Both of the proxy's audiences: the gateway, which it reads endpoints through, and
+               # the Portal's internal listener, which answers its run lookups. A healthy instance
+               # has both mappers, and smoke.sh checks each on its own (T-0666, T-2420).
                ["clients?clientId=helsinki-agent-proxy",
-                '[{"protocolMappers":[{"config":{"included.custom.audience": "context-gateway"}}]}]'],
+                '[{"protocolMappers":[{"config":{"included.custom.audience": "context-gateway"}},'
+                '{"config":{"included.custom.audience": "portal-internal"}}]}]'],
                # The access document each endpoint answers, which is where the probe reads the
                # type it may ask for (T-1211, EP-55): `retrieveOps` grants entity reads and not
                # the type list, so a probe that asked for the type list would be a 403.
