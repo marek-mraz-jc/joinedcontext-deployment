@@ -15,6 +15,8 @@ statistical-observation.v1.example.jsonld: projects/bbsk/spaces/bbsk-kraj/datamo
 statistical-observation.v1.md: projects/bbsk/spaces/bbsk-kraj/datamodels/statistical-observation.v1.md
 bbsk-endpoint-kraj.yaml: projects/bbsk/spaces/bbsk-kraj/endpoints/bbsk-kraj.yaml
 bbsk-policy-pipelines-write.yaml: projects/bbsk/spaces/bbsk-kraj/policies/pipelines-write.yaml
+bbsk-policy-kraj-steward-read.yaml: projects/bbsk/spaces/bbsk-kraj/policies/kraj-steward-read.yaml
+bbsk-policy-kraj-steward-note.yaml: projects/bbsk/spaces/bbsk-kraj/policies/kraj-steward-note.yaml
 bbsk-space-kpi.yaml: projects/bbsk/spaces/bbsk-kpi/space.yaml
 bbsk-endpoint-kpi.yaml: projects/bbsk/spaces/bbsk-kpi/endpoints/bbsk-kpi.yaml
 bbsk-policy-kpi-pipelines-write.yaml: projects/bbsk/spaces/bbsk-kpi/policies/kpi-pipelines-write.yaml

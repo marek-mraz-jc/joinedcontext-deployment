@@ -94,6 +94,18 @@ slots:
     annotations:
       ngsi_ld_kind: Property
 
+  stewardNote:
+    slot_uri: jc:stewardNote
+    description: >-
+      A note by the person who keeps this data: what was checked, what looks wrong, whom to
+      ask. The one attribute of this model no pipeline writes and no pipeline overwrites, so
+      an application may offer it for editing without the next run silently taking the words
+      back (AP-62, EP-14). Every figure beside it belongs to the publisher and is read-only.
+      At most 500 characters and no angle brackets, because it is a note and not a document.
+    pattern: "^[^<>]{0,500}$"
+    annotations:
+      ngsi_ld_kind: Property
+
 classes:
   StatisticalObservation:
     class_uri: qb:Observation
@@ -109,3 +121,4 @@ classes:
       - unitText
       - source
       - dateObserved
+      - stewardNote

@@ -1,0 +1,19 @@
+# The one attribute of a city row a person may write (AP-62, EP-14, GW16): the steward's note.
+# Every figure beside it is the publisher's and is replaced by the next pipeline run, so the
+# grant names `stewardNote` and nothing else — a PATCH of `value` from the same person is the
+# gateway's own 403 (GW17), not a silent loss on the next run.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Policy
+metadata:
+  name: mesto-steward-note
+  namespace: banskabystrica
+  title: { sk: "Správca údajov píše poznámku k riadku mesta", en: "The data steward writes a note on a city row" }
+spec:
+  contextSpaceRef: { kind: ContextSpace, name: banskabystrica-mesto }
+  assigner: did:web:{orgDomain}
+  assignee: { kind: user, id: "demo.steward@{orgDomain}" }
+  operations: [updateAttrs]
+  information:
+    - entities:
+        - type: StatisticalObservation
+      propertyNames: [stewardNote]

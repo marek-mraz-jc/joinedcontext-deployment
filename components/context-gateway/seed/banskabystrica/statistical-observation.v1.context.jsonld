@@ -45,6 +45,9 @@
     "source": {
       "@id": "jc:source"
     },
+    "stewardNote": {
+      "@id": "jc:stewardNote"
+    },
     "type": "@type",
     "ucefact": "https://vocabulary.uncefact.org/UnitMeasureCode#",
     "unitText": {
