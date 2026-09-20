@@ -1,0 +1,16 @@
+# What the city's publishers published, as they published it. The city's own registers and the
+# national cubes sliced to the city's LAU code SK0321508438; the indicators computed from them
+# live next door in `banskabystrica-kpi` and never here (PF-54).
+apiVersion: joinedcontext.com/v1alpha1
+kind: ContextSpace
+metadata:
+  name: banskabystrica-mesto
+  namespace: banskabystrica
+  title: { sk: "Mesto — zdrojové údaje", en: "City, raw data" }
+  description:
+    sk: "Riadky otvorených dát pre mesto Banská Bystrica, tak ako ich publikovalo mesto a ŠÚ SR."
+    en: "Open data rows for the city of Banská Bystrica, as the city and ŠÚ SR published them."
+spec:
+  urnSegment: banskabystrica-mesto
+  isSandbox: false
+  defaultLocale: sk

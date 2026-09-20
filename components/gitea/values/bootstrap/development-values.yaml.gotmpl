@@ -25,6 +25,13 @@ seed:
   {{ $path | replace "/" "__" }}: |
 {{ readFile (printf "../../../context-gateway/seed/banskabystrica/%s" $file) | indent 4 }}
 {{- end }}
+  # The region (T-2305): its own project, its raw space of published cube rows, its indicator
+  # space, and the reference that lets its application read the city's indicators without
+  # being able to write them. Two publishers, two projects, one organization.
+{{- range $file, $path := readFile "../../../context-gateway/seed/bbsk/index.yaml" | fromYaml }}
+  {{ $path | replace "/" "__" }}: |
+{{ readFile (printf "../../../context-gateway/seed/bbsk/%s" $file) | indent 4 }}
+{{- end }}
 {{- if has "agent-runner" .Values.components }}
   # The builder profile the Portal loads for every agent run (AG-26): organization scope,
   # so it is committed by the forge seed and not by the gateway's own table.

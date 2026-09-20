@@ -1,0 +1,23 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Project
+metadata:
+  name: bbsk
+  namespace: org
+  title: { sk: "Banskobystrický samosprávny kraj", en: "Banská Bystrica Self-Governing Region" }
+  description:
+    sk: "Kraj s 13 okresmi a 614 356 obyvateľmi; publikuje to, čo patrí kraju."
+    en: "The region: 13 districts, 614 356 people, publishing what a region owns."
+spec:
+  organizationRef: hel
+  # Two spaces (the raw cube rows and the indicators), one pipeline per raw feed plus the one
+  # that computes the indicators, and one public endpoint: the indicator endpoint the
+  # application reads. Sized to what this project declares and no more (PF-73).
+  quotas:
+    contextSpaces: 2
+    residentPipelines: 3
+    publicEndpoints: 1
+    apps: 1
+    ingestEventsPerSecond: 20
+    agentRunsPerDay: 20
+    entitiesPerSpace: 10000
+    requestsPerMinute: 600

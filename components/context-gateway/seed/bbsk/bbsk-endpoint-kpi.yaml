@@ -1,0 +1,17 @@
+# The one door of the indicator space: the computing pipeline writes through it with the
+# runner's service account, and the application, a dashboard and the open web read it (PL-45).
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: bbsk-kpi
+  namespace: bbsk
+  title: { sk: "Ukazovatele kraja", en: "Region indicators" }
+spec:
+  contextSpaceRef: bbsk-kpi
+  slug: qfhhh5no5wz4lk3rfjisdtx3chiyfig3
+  # Public: the indicators are what the region publishes, and the gateway synthesises the
+  # `public` role only on a public endpoint, so the read grant below applies to a signed-in
+  # steward and to the application alike (EP-16, GW22).
+  audience: public
+  enabledRepresentations: [ngsi-ld, csv, json]
+  rateLimits: { requestsPerMinute: 300, burst: 50 }

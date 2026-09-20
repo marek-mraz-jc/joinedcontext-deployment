@@ -15,3 +15,19 @@ endpoint.yaml: projects/banskabystrica/spaces/ovzdusie/endpoints/public-air.yaml
 policy-public-read.yaml: projects/banskabystrica/spaces/ovzdusie/policies/public-read.yaml
 policy-conformance-write.yaml: projects/banskabystrica/spaces/ovzdusie/policies/conformance-write.yaml
 serviceaccount.yaml: projects/banskabystrica/access/serviceaccounts/conformance.yaml
+# The city's own two spaces (T-2305): the published rows as published, and the indicators
+# computed from them. The indicator endpoint is shared with `bbsk` and is not public.
+space-mesto.yaml: projects/banskabystrica/spaces/banskabystrica-mesto/space.yaml
+datamodel-mesto.yaml: projects/banskabystrica/spaces/banskabystrica-mesto/datamodels/statistical-observation.yaml
+statistical-observation.linkml.yaml: projects/banskabystrica/spaces/banskabystrica-mesto/datamodels/statistical-observation.linkml.yaml
+statistical-observation.v1.schema.json: projects/banskabystrica/spaces/banskabystrica-mesto/datamodels/statistical-observation.v1.schema.json
+statistical-observation.v1.context.jsonld: projects/banskabystrica/spaces/banskabystrica-mesto/datamodels/statistical-observation.v1.context.jsonld
+statistical-observation.v1.example.jsonld: projects/banskabystrica/spaces/banskabystrica-mesto/datamodels/statistical-observation.v1.example.jsonld
+statistical-observation.v1.md: projects/banskabystrica/spaces/banskabystrica-mesto/datamodels/statistical-observation.v1.md
+endpoint-mesto.yaml: projects/banskabystrica/spaces/banskabystrica-mesto/endpoints/banskabystrica-mesto.yaml
+policy-mesto-pipelines-write.yaml: projects/banskabystrica/spaces/banskabystrica-mesto/policies/mesto-pipelines-write.yaml
+space-kpi.yaml: projects/banskabystrica/spaces/banskabystrica-kpi/space.yaml
+endpoint-kpi.yaml: projects/banskabystrica/spaces/banskabystrica-kpi/endpoints/banskabystrica-kpi.yaml
+policy-kpi-pipelines-write.yaml: projects/banskabystrica/spaces/banskabystrica-kpi/policies/kpi-pipelines-write.yaml
+policy-kpi-shared-read.yaml: projects/banskabystrica/spaces/banskabystrica-kpi/policies/kpi-shared-read.yaml
+serviceaccount-pipelines.yaml: projects/banskabystrica/access/serviceaccounts/pipelines.yaml

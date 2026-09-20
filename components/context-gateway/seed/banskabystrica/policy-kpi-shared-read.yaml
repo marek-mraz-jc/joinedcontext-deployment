@@ -1,0 +1,16 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Policy
+metadata:
+  name: kpi-shared-read
+  namespace: banskabystrica
+  title: { sk: "Kraj číta ukazovatele mesta", en: "The region reads the city's indicators" }
+spec:
+  contextSpaceRef: { kind: ContextSpace, name: banskabystrica-kpi }
+  assigner: did:web:{orgDomain}
+  assignee: { kind: group, id: bbsk }
+  # Read only, and only the indicator type. The region cannot write a city number, which is the
+  # separation this demonstration exists to show (EP-15).
+  operations: [retrieveOps]
+  information:
+    - entities:
+        - type: KeyPerformanceIndicator

@@ -1,0 +1,14 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Policy
+metadata:
+  name: pipelines-write
+  namespace: bbsk
+  title: { sk: "Kanály zapisujú zdrojový priestor", en: "The ingestion pipelines write the raw space" }
+spec:
+  contextSpaceRef: { kind: ContextSpace, name: bbsk-kraj }
+  assigner: did:web:{orgDomain}
+  assignee: { kind: serviceAccount, id: pipelines }
+  # Upsert is what an annual re-poll does: the same cell, published again. Create and query are
+  # what a stream needs to start from nothing and to check itself. No delete: a published cube
+  # row is never withdrawn, it is superseded by the next year's.
+  operations: [upsertBatch, createBatch, queryBatch]
