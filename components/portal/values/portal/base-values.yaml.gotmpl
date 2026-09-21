@@ -104,6 +104,14 @@ envSecret:
 {{- end }}
 {{- if has "agent-runner" .Values.components }}
 {{- end }}
+{{- if has "ckan" .Values.components }}
+  # The reconciler publishes every Endpoint's `publish.ckan` block with it (EP-62, EP-67): the
+  # variable a CkanInstance's `apiTokenRef.envVar` names. Minted by the catalogue's own Job, which
+  # is why the catalogue is deployed before the Portal (T-2469).
+  CKAN_API_TOKEN:
+    secret: ckan-api-token
+    key: token
+{{- end }}
 {{- if has "artifact-store" .Values.components }}
   # The store's root credential (T-0422, PF-32). The reconciler is the only holder: it derives
   # a scoped writer and reader per organization from it and hands those out, so no other
