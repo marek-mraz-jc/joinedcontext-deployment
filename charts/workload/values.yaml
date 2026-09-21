@@ -113,3 +113,9 @@ extraVolumeMounts: []
 tmpDir: true          # emptyDir mounted at /tmp, required by readOnlyRootFilesystem
 serviceMesh:
   enabled: false      # true -> pod annotation linkerd.io/inject: enabled
+# The mesh identities allowed to call `port` (Architecture/13 §6): a Linkerd Server, a
+# MeshTLSAuthentication and an AuthorizationPolicy, rendered only when the workload is meshed and
+# names clients. Every other meshed pod is refused by the proxy; the kubelet's probes are not.
+meshAuthorization:
+  port: 0
+  clients: []         # [{serviceAccount: <name>, namespace: <namespace>}]
