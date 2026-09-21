@@ -229,4 +229,7 @@ portal:
     # portal e50de9b: an app edit is patched by the editing agent in small steps with a ceiling of
     # 12 calls / 500k input tokens a message (T-2466, T-2467); ServiceAccount and Subscription forms
     # (T-2342, T-2344); jc-core v0.7.49, the CKAN licence field (T-2465). On top of 48718f8.
-    digest: 'sha256:b29f35e23b38fdfe1538aa340a0ca07b07439493203a8a0f7492091e5f11dd9d'
+    # portal 8209b8c: every static application is its own private forge repository and publish
+    # merges it at the approved commit (T-2468); edit forms keep the stored title, description and
+    # labels (T-2470); the ContextSourceRegistration form (T-2345). On top of e50de9b.
+    digest: 'sha256:ead97da782a52fbc08941fd7748f2b53e3b572d3d896e199a773fbde7d6a2425'
