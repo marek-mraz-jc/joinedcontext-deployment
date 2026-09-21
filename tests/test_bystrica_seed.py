@@ -453,3 +453,18 @@ def test_every_space_the_portal_shows_is_one_its_own_steward_may_read():
                         f"{policy_name} grants {user} a read on {name}, whose endpoint admits"
                         f" {sorted(admitted)} and whose groups are {sorted(groups)}"
                     )
+
+
+def test_the_application_reading_both_bodies_is_a_published_static_app_on_the_regions_space():
+    """T-2457: the Portal serves only an App the configuration repository holds, and it configures
+    it with the Endpoints on the spaces its dataNeeds name plus those its project's shares name."""
+    app = one(REGION, "App", "bbsk-ukazovatele")
+    assert app["metadata"]["namespace"] == "bbsk"
+    assert app["spec"]["kind"] == "static"
+    assert app["spec"]["lifecycle"] == "published"
+    spaces = {need["contextSpaceRef"]["name"] for need in app["spec"]["dataNeeds"]}
+    assert spaces == {"bbsk-kpi"}
+    assert one(REGION, "Endpoint", "bbsk-kpi")["spec"]["contextSpaceRef"] == "bbsk-kpi"
+    # It reads and never writes (AP-07).
+    operations = {op for need in app["spec"]["dataNeeds"] for op in need["operations"]}
+    assert operations <= {"queryEntity", "retrieveEntity"}, operations

@@ -40,3 +40,6 @@ bbsk-pipeline-emisie-bento.yaml: projects/bbsk/pipelines/emisie/bento.yaml
 # The indicator pipeline (T-2307): its Bloblang is inline, because its input is a query through
 # the raw space's Endpoint and not a DataSource fetch, so there is no bento.yaml beside it.
 bbsk-pipeline-ukazovatele.yaml: projects/bbsk/pipelines/ukazovatele/pipeline.yaml
+# The one application reading both bodies (T-2308, T-2457): a static bundle the Portal serves at
+# /apps/bbsk-ukazovatele/, configured with the region's endpoint and the city's through mesto-kpi.
+bbsk-app-ukazovatele.yaml: projects/bbsk/apps/bbsk-ukazovatele/app.yaml
