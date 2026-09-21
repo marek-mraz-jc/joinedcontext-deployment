@@ -471,8 +471,10 @@ def test_the_application_reading_both_bodies_is_a_published_static_app_on_the_re
 
 
 # What the city and the region cleared for the open-data catalogue (T-2407, user 2026-09-21):
-# these two and nothing else, until the other endpoints are reviewed.
+# these two and nothing else, until the other endpoints are reviewed. `public-air` is held back
+# while its space holds Helsinki test stations rather than the city's readings (T-2407 body).
 CLEARED = {("banskabystrica", "public-air"), ("bbsk", "bbsk-kpi")}
+HELD = {("banskabystrica", "public-air")}
 
 
 def test_only_the_cleared_endpoints_publish_each_to_its_own_bodys_catalogue():
@@ -496,4 +498,4 @@ def test_only_the_cleared_endpoints_publish_each_to_its_own_bodys_catalogue():
                 assert ckan["datastore"]["representation"] in endpoint["spec"]["enabledRepresentations"]
             # The token is a reference, never a value.
             assert set(instance["spec"]["apiTokenRef"]) <= {"name", "key", "envVar"}
-    assert published == CLEARED
+    assert published == CLEARED - HELD
