@@ -471,6 +471,23 @@ if has_route context-endpoint; then
 			status 200 "helsinki-$name answers an MCP tools/list" -X POST -H 'Content-Type: application/json' \
 				-H 'Accept: application/json, text/event-stream' -d "$mcp" "$base/api/endpoint/$hs/mcp"
 		done
+		# EP-51, T-2262: a schema artifact is revalidated, not downloaded again. The gateway sends
+		# `private, no-cache` and a strong ETag, and the edge no longer replaces that with
+		# `no-store`; the second read with the ETag it answered is a 304 with no body.
+		artifact="$base/api/endpoint/$all/schema/v1/linkml"
+		first=$(curl -sS -D - -o /dev/null --max-time 20 "$artifact" 2>/dev/null | tr -d '\r' || true)
+		etag=$(printf '%s\n' "$first" | sed -n 's/^[Ee][Tt][Aa][Gg]: *//p' | head -1)
+		cache=$(printf '%s\n' "$first" | sed -n 's/^[Cc]ache-[Cc]ontrol: *//p' | head -1)
+		if [ "$cache" = "private, no-cache" ]; then
+			ok "a schema artifact may be kept and revalidated by its reader ($cache)"
+		else
+			ko "a schema artifact says Cache-Control '${cache:-none}', expected 'private, no-cache'"
+		fi
+		if [ -n "$etag" ]; then
+			status 304 "a second read of a schema artifact with its ETag is a 304" -H "If-None-Match: $etag" "$artifact"
+		else
+			ko "a schema artifact carries no ETag to revalidate with"
+		fi
 		# The slice is real: a type the endpoint's Policy does not grant is an empty answer, not
 		# the neighbour's data (EP-14, 404-vs-403 narrowing keeps it a 200).
 		body=$(curl -sS --max-time 20 "$base/api/endpoint/$(slug_of bikes)/ngsi-ld/v1/entities?type=Event&limit=1" 2>/dev/null || true)

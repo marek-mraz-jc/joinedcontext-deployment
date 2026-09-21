@@ -44,7 +44,12 @@ if "--tls-max" in line:
 elif "-sSI" in args:
     sys.stdout.write(lookup("headers", spec.get("defaultHeaders", DEFAULT_HEADERS)))
 elif "%{http_code}" in args:
-    sys.stdout.write(str(lookup("statuses", 200)))
+    # A conditional read of a schema artifact is a 304, as the gateway answers it (EP-51).
+    sys.stdout.write(str(lookup("statuses", 304 if "If-None-Match" in line else 200)))
+elif "-D" in args:
+    # The response headers of one read (T-2262): the gateway's own caching and its ETag.
+    sys.stdout.write(lookup("dumpedHeaders", spec.get("schemaHeaders",
+        'HTTP/2 200\\r\\ncache-control: private, no-cache\\r\\netag: "e3b0c442"\\r\\n')))
 else:
     sys.stdout.write(lookup("bodies", ""))
 '''
@@ -361,6 +366,23 @@ def test_an_instance_without_the_helsinki_seed_skips_its_checks(tmp_path):
     """No seed, no 210 s wait for data that will never come: the section is a skip."""
     result = run(tmp_path, dict(HEALTHY, helsinkiSeed={}), "https://example.test", "https://idm.example.test")
     assert "skip  helsinki endpoints (no Helsinki seed on the gateway in this instance)" in result.stdout
+
+
+def test_a_schema_artifact_is_revalidated_and_answers_304(tmp_path):
+    """EP-51, T-2262: the gateway's `private, no-cache` and ETag reach the reader, and a second
+    read with the ETag is a 304 — the edge no longer replaces them with `no-store`."""
+    result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
+    assert "ok    a schema artifact may be kept and revalidated by its reader (private, no-cache)" in result.stdout
+    assert "ok    a second read of a schema artifact with its ETag is a 304 (304)" in result.stdout
+
+
+def test_an_edge_that_forbids_keeping_a_schema_artifact_fails_the_run(tmp_path):
+    """The regression T-2262 fixed: the edge's `no-store` over the gateway's header, and no 304."""
+    spec = dict(HEALTHY, schemaHeaders="HTTP/2 200\r\ncache-control: no-store, no-cache, must-revalidate\r\n")
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode != 0
+    assert "FAIL  a schema artifact says Cache-Control 'no-store, no-cache, must-revalidate', expected 'private, no-cache'" in result.stdout
+    assert "FAIL  a schema artifact carries no ETag to revalidate with" in result.stdout
 
 
 def test_pipeline_residue_beyond_one_take_fails_the_run(tmp_path):

@@ -71,6 +71,23 @@ def test_x_forwarded_for_survives_sanitization(plugin_configs):
         assert '"X-Forwarded-For"' not in lua, f"{config_id} clears X-Forwarded-For"
 
 
+def test_the_trace_context_crosses_the_edge(plugin_configs):
+    """OPS-17: APISIX neither clears nor rewrites `traceparent`/`tracestate`, so a trace a client
+    starts reaches the gateway, which relays it to the broker (platform
+    `space_surface_tests::the_trace_context_reaches_the_broker_unchanged`)."""
+    for config_id, plugins in plugin_configs.items():
+        lua = "\n".join(plugins["serverless-pre-function"]["functions"]).lower()
+        rewrite = plugins.get("proxy-rewrite", {}).get("headers", {})
+        touched = [
+            name.lower()
+            for section in ("set", "add", "remove")
+            for name in (rewrite.get(section) or [])
+        ]
+        for header in ("traceparent", "tracestate"):
+            assert f'"{header}"' not in lua, f"{config_id} clears {header}"
+            assert header not in touched, f"{config_id} rewrites {header}"
+
+
 def test_security_response_headers_on_every_route(plugin_configs):
     """T-0028, OPS-34: HSTS, nosniff, referrer policy everywhere; framing and caching by route class."""
     for config_id, plugins in plugin_configs.items():
@@ -86,7 +103,11 @@ def test_security_response_headers_on_every_route(plugin_configs):
         assert headers["Referrer-Policy"] == expected_referrer, config_id
         expected_frame = "SAMEORIGIN" if config_id in UI_CONFIGS else "DENY"
         assert headers["X-Frame-Options"] == expected_frame, config_id
-        if config_id not in CACHEABLE_CONFIGS:
+        if config_id.removesuffix("-portal") in GATEWAY_UPSTREAMS:
+            # T-2262, EP-51: the gateway sets Cache-Control on every answer itself (`private`,
+            # `no-store`, or `no-cache` with an ETag on a schema artifact); the edge leaves it be.
+            assert "Cache-Control" not in headers, config_id
+        elif config_id not in CACHEABLE_CONFIGS:
             assert headers["Cache-Control"] == "no-store, no-cache, must-revalidate", config_id
 
 

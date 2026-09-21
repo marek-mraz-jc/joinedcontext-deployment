@@ -55,13 +55,16 @@ EDGE_LOGIN = "edge-login"  # openid-connect, unauth_action: auth — nothing ano
 EDGE_SESSION = "edge-session"  # openid-connect, unauth_action: pass — the session becomes a bearer
 UPSTREAM = "upstream"  # anonymous is proxied; the upstream is the one that authenticates
 TERMINATES = "terminates"  # the edge answers by itself and never dials the upstream
+UPSTREAM_DECIDES = "upstream"  # the edge leaves Cache-Control to the upstream, which always sets it
 
 # The reviewed allow-list of T-1673: every route of every component, what authenticates a
 # caller on it, and why that is allowed to be what it is. A route added to any component is
 # red here until somebody writes its line, which is the point of the list.
 #
 # `cacheable` is the surface that serves its own static assets and may be cached by the
-# browser; every other route answers `no-store`. `framing` is the X-Frame-Options a browser
+# browser; every other route answers `no-store` — except the gateway's, where the upstream
+# decides (`UPSTREAM_DECIDES`): it says `private` on every answer itself, `no-store` or, on the
+# schema artifacts, `no-cache` with an ETag so a client revalidates (T-2261, T-2262, EP-51). `framing` is the X-Frame-Options a browser
 # gets: SAMEORIGIN for a surface that frames its own pages, DENY everywhere else.
 ROUTE_CLASSES = {
     "portal-ui": {
@@ -89,19 +92,19 @@ ROUTE_CLASSES = {
         "why": "the apex answers 302 to the Portal host and never dials an upstream",
     },
     "context-space": {
-        "reach": UPSTREAM, "cacheable": False, "framing": "DENY",
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "the gateway is the enforcement point: anonymous sees what the space's Policy grants",
     },
     "context-endpoint": {
-        "reach": UPSTREAM, "cacheable": False, "framing": "DENY",
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "an Endpoint publishes what its Policy grants, to anonymous callers by design (EP-01)",
     },
     "context-space-portal": {
-        "reach": EDGE_SESSION, "cacheable": False, "framing": "DENY",
+        "reach": EDGE_SESSION, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "the space surface on the Portal's origin, where the UI reads it from; the edge session becomes the bearer and the gateway's PEP still decides",
     },
     "context-endpoint-portal": {
-        "reach": EDGE_SESSION, "cacheable": False, "framing": "DENY",
+        "reach": EDGE_SESSION, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "the same surface on the Portal's origin, with the edge session turned into a bearer",
     },
     "gitea-forge": {
@@ -328,7 +331,11 @@ def test_framing_and_caching_follow_the_class_the_allow_list_gives_the_route(com
         expected = ROUTE_CLASSES[route_id]
         headers = response_headers(config)
         assert headers["X-Frame-Options"] == expected["framing"], f"{route_id} ({source})"
-        if expected["cacheable"]:
+        if expected["cacheable"] == UPSTREAM_DECIDES:
+            assert "Cache-Control" not in headers, (
+                f"{route_id} ({source}) overrides the Cache-Control its upstream sets for itself"
+            )
+        elif expected["cacheable"]:
             assert "Cache-Control" not in headers, (
                 f"{route_id} ({source}) is classified cacheable and sets Cache-Control anyway"
             )

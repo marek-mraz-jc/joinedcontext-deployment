@@ -43,6 +43,10 @@ context-space:
         set:
           X-Forwarded-Proto: https
           X-Forwarded-Port: '443'
+    # No Cache-Control here: the gateway says `private, no-store` on every answer itself and
+    # `private, no-cache` with a strong ETag on the schema artifacts it wants revalidated (T-2261,
+    # EP-51). `set` replaced that with `no-store`, so no client could keep an artifact and every
+    # page load downloaded all of them again instead of a 304 (T-2262).
     response-rewrite:
       headers:
         set:
@@ -50,7 +54,6 @@ context-space:
           X-Content-Type-Options: "nosniff"
           X-Frame-Options: "DENY"
           Referrer-Policy: "strict-origin-when-cross-origin"
-          Cache-Control: "no-store, no-cache, must-revalidate"
 
 context-space-portal:
   name: context-space-portal
@@ -141,7 +144,6 @@ context-space-portal:
           X-Content-Type-Options: "nosniff"
           X-Frame-Options: "DENY"
           Referrer-Policy: "strict-origin-when-cross-origin"
-          Cache-Control: "no-store, no-cache, must-revalidate"
 
 context-endpoint:
   name: context-endpoint
@@ -227,7 +229,6 @@ context-endpoint:
           X-Content-Type-Options: "nosniff"
           X-Frame-Options: "DENY"
           Referrer-Policy: "strict-origin-when-cross-origin"
-          Cache-Control: "no-store, no-cache, must-revalidate"
 
 context-endpoint-portal:
   name: context-endpoint-portal
@@ -342,4 +343,3 @@ context-endpoint-portal:
           X-Content-Type-Options: "nosniff"
           X-Frame-Options: "DENY"
           Referrer-Policy: "strict-origin-when-cross-origin"
-          Cache-Control: "no-store, no-cache, must-revalidate"
