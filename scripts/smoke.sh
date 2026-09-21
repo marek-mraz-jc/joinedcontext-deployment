@@ -684,6 +684,26 @@ else
 	ok "an unlabelled pod reaches neither CoreDNS nor the internet (settled after ${settled}s, ceiling ${settle_ceiling}s)"
 fi
 
+# The edge's data plane admits the ingress controller alone (T-0939, EP-20). APISIX trusts
+# X-Real-IP from the whole pod network, so any other pod reaching 9080 — or 4143, where meshed
+# traffic lands — could name itself any caller and spend that caller's rate limit. The probe
+# runs in `default`, a namespace no policy of ours governs, so its own egress lets it try: what
+# refuses it can only be APISIX's ingress. Resolving the gateway first is the proof it ran.
+edge_peer="smoke-edgepeer-$$"
+edge_host="apisix-gateway.$slug.svc.cluster.local"
+edge_out=$(kubectl run "$edge_peer" -n default --rm --attach --restart=Never --quiet --timeout=90s \
+	--image="$image" \
+	--overrides="$(probe_overrides "$edge_peer" "[\"sh\", \"-c\", \"timeout 8 nslookup $edge_host >/dev/null 2>&1 || exit 0; echo PROBE-RAN; nc -w 5 -z $edge_host 9080 >/dev/null 2>&1 && echo REACHED-9080; nc -w 5 -z $edge_host 4143 >/dev/null 2>&1 && echo REACHED-4143; true\"]")" \
+	2>/dev/null)
+edge_reached=$(printf '%s' "$edge_out" | sed -n 's/^REACHED-\([0-9]*\)\r*$/\1/p' | tr '\n' ' ')
+if ! printf '%s' "$edge_out" | grep -q PROBE-RAN; then
+	ko "the edge-peer probe never resolved $edge_host, so who may reach APISIX was not measured"
+elif [ -n "$edge_reached" ]; then
+	ko "a pod outside the ingress controller reached APISIX on port ${edge_reached} — it could set X-Real-IP and spend another caller's rate limit (T-0939)"
+else
+	ok "APISIX refuses a pod that is not the ingress controller on 9080 and 4143"
+fi
+
 echo "functions"
 # jc-functions (SDK-22, SDK-23) takes the Portal alone, so the smoke reaches its Service over a
 # port-forward and presents what the Portal presents: portal-api's client_credentials token,

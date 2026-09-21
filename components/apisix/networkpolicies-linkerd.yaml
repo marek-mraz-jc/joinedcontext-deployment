@@ -5,9 +5,26 @@ apisix-allow-linkerd:
   policyTypes:
     - Ingress
   ingress:
-    - ports:
+    # 4143 is where meshed traffic lands, so it is the data plane of a meshed ingress
+    # controller (`allowUnauthenticatedIngress: false`) and admits that controller alone,
+    # for the reason the 9080 rule gives (T-0939). No workload of ours calls APISIX.
+    - from:
+        - namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values: [traefik, kube-system, ingress-nginx]
+          podSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values: [traefik, ingress-nginx]
+      ports:
         - port: 4143
           protocol: TCP
+    # The proxy's own control and admin ports (tap, readiness, metrics): no request reaches
+    # APISIX through them.
+    - ports:
         - port: 4190
           protocol: TCP
         - port: 4191

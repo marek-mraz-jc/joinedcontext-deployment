@@ -496,3 +496,102 @@ def test_the_dashboards_admit_nobody_anonymously():
     assert re.search(r"^admin:\n\s+existingSecret:\s+\S+", values, re.MULTILINE), (
         "the local administrator's password is not taken from a Secret"
     )
+
+
+# --- T-0939 (EP-20, SP-22): who may open a connection to the edge's data plane --------------
+
+APISIX_POD = {"app.kubernetes.io/name": "apisix", "app.kubernetes.io/instance": "apisix-apisix"}
+# 9080 is the plaintext entry point, 4143 is where meshed traffic lands on the same pod.
+DATA_PLANE_PORTS = (9080, 4143)
+INGRESS_CONTROLLERS = (
+    ("traefik", {"app.kubernetes.io/name": "traefik"}),
+    ("kube-system", {"app.kubernetes.io/name": "traefik"}),
+    ("ingress-nginx", {"app.kubernetes.io/name": "ingress-nginx"}),
+)
+
+
+def selects(selector: dict | None, labels: dict) -> bool:
+    """A Kubernetes label selector; an empty one selects everything."""
+    selector = selector or {}
+    if any(labels.get(k) != v for k, v in (selector.get("matchLabels") or {}).items()):
+        return False
+    for e in selector.get("matchExpressions") or []:
+        value, present = labels.get(e["key"]), e["key"] in labels
+        held = {
+            "In": present and value in e.get("values", []),
+            "NotIn": not present or value not in e.get("values", []),
+            "Exists": present,
+            "DoesNotExist": not present,
+        }[e["operator"]]
+        if not held:
+            return False
+    return True
+
+
+def admitted(policy: dict, port: int, namespace: str, labels: dict) -> bool:
+    """Whether one ingress rule of `policy` lets a pod (`namespace`, `labels`) open `port`.
+    An ipBlock counts as admitting anyone: every pod address is inside some CIDR."""
+    own = policy["metadata"].get("namespace")
+    for rule in policy["spec"].get("ingress") or []:
+        ports = rule.get("ports")
+        if ports and all(p.get("port") != port for p in ports):
+            continue
+        peers = rule.get("from")
+        if not peers:
+            return True
+        for peer in peers:
+            if "ipBlock" in peer:
+                return True
+            if "namespaceSelector" in peer:
+                in_namespace = selects(peer["namespaceSelector"], {"kubernetes.io/metadata.name": namespace})
+            else:
+                in_namespace = namespace == own
+            if in_namespace and selects(peer.get("podSelector"), labels):
+                return True
+    return False
+
+
+def edge_ingress(docs: list[dict]) -> list[dict]:
+    """Every ingress policy in APISIX's namespace that selects the APISIX pod."""
+    policies = [d for d in docs if d.get("kind") == "NetworkPolicy"]
+    (namespace,) = {p["metadata"].get("namespace") for p in policies if p["metadata"]["name"] == "apisix"}
+    return [
+        p for p in policies
+        if p["metadata"].get("namespace") == namespace
+        and "Ingress" in p["spec"].get("policyTypes", [])
+        and selects(p["spec"].get("podSelector"), APISIX_POD)
+    ]
+
+
+@pytest.mark.parametrize("environment", ["local", "dev", "production"])
+def test_only_the_ingress_controller_may_open_the_edge_data_plane(rendered, environment):
+    """EP-20, SP-22 (T-0939): APISIX takes X-Real-IP from the whole pod network, so a pod that
+    reaches 9080 or 4143 can name itself any caller and spend that caller's rate limit. Our own
+    workloads, an unlabelled pod, and a pod merely labelled like Traefik elsewhere are refused."""
+    policies = edge_ingress(rendered(environment))
+    assert policies, "no ingress policy selects the APISIX pod"
+    namespace = policies[0]["metadata"]["namespace"]
+    strangers = [
+        (namespace, {}),
+        (namespace, {"app.kubernetes.io/name": "portal-portal"}),
+        (namespace, {"app.kubernetes.io/name": "context-gateway-gateway"}),
+        ("default", {}),
+        ("default", {"app.kubernetes.io/name": "traefik"}),
+        (namespace, {"app.kubernetes.io/name": "traefik"}),
+    ]
+    for port in DATA_PLANE_PORTS:
+        for peer_namespace, labels in strangers:
+            let_in = [p["metadata"]["name"] for p in policies if admitted(p, port, peer_namespace, labels)]
+            assert not let_in, f"{environment}: {let_in} admit {peer_namespace}/{labels} on {port}"
+
+
+@pytest.mark.parametrize("environment", ["local", "dev", "production"])
+def test_every_supported_ingress_controller_still_reaches_the_edge(rendered, environment):
+    """EP-20: the narrowing keeps the front door open for the controller the environment runs,
+    unmeshed on 9080 and meshed on 4143, whether Traefik or ingress-nginx."""
+    policies = edge_ingress(rendered(environment))
+    for port in DATA_PLANE_PORTS:
+        for controller_namespace, labels in INGRESS_CONTROLLERS:
+            assert any(admitted(p, port, controller_namespace, labels) for p in policies), (
+                f"{environment}: {controller_namespace}/{labels} cannot reach APISIX on {port}"
+            )

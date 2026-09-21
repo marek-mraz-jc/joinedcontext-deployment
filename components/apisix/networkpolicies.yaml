@@ -7,11 +7,24 @@ apisix:
     - Ingress
     - Egress
   ingress:
-    # Data plane (9080): the public HTTP entry point behind the cluster ingress controller.
+    # Data plane (9080): the public HTTP entry point, reached through the cluster ingress
+    # controller and nothing else. APISIX trusts X-Real-IP from the whole pod network
+    # (`trustedProxyCidr`, T-0929), so any other pod that reached 9080 could name itself any
+    # caller and spend that caller's rate limit (T-0939, EP-20). The controller is Traefik in
+    # `traefik` (kube-hetzner) or `kube-system` (plain k3s), or ingress-nginx; the same peer
+    # the pipeline runner's policy names. The node's own probes are always admitted.
     # The Admin API does not exist in standalone mode (ADR-N-007), so no 9180 rule.
     - from:
-        - ipBlock:
-            cidr: 0.0.0.0/0
+        - namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values: [traefik, kube-system, ingress-nginx]
+          podSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values: [traefik, ingress-nginx]
       ports:
         - protocol: TCP
           port: 9080

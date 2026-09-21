@@ -158,6 +158,13 @@ elif args[0] == "run" and args[1].startswith("smoke-egress"):
         sys.stdout.write("REACHED-%s\\n" % destination)
     if spec.get("egressProbeRan", True):
         sys.stdout.write("PROBE-RAN\\n")
+elif args[0] == "run" and args[1].startswith("smoke-edgepeer"):
+    # T-0939: like the egress probe, it reports by what it prints. `edgePeerRan: False` is a
+    # probe that never resolved the gateway, which must not read as "the policy refused it".
+    if spec.get("edgePeerRan", True):
+        sys.stdout.write("PROBE-RAN\\n")
+    for port in spec.get("edgePeerReached", []):
+        sys.stdout.write("REACHED-%s\\n" % port)
 elif args[0] == "run":
     sys.exit(0 if spec.get("netpolReachable") else 1)
 else:
@@ -658,6 +665,38 @@ def test_an_egress_probe_that_never_ran_fails_the_run(tmp_path):
     result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
     assert result.returncode == 1
     assert "FAIL  the egress probe never ran" in result.stdout
+
+
+def test_a_pod_that_reaches_the_edge_data_plane_fails_the_run(tmp_path):
+    """EP-20, T-0939: APISIX trusts X-Real-IP from the pod network, so a pod other than the
+    ingress controller that reaches 9080 can name itself any caller and spend their quota."""
+    spec = dict(HEALTHY, edgePeerReached=["9080"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  a pod outside the ingress controller reached APISIX on port 9080 —" in result.stdout
+
+
+def test_a_pod_that_reaches_the_mesh_port_of_the_edge_fails_the_run(tmp_path):
+    """EP-20, T-0939: 4143 is where meshed traffic lands; narrowing 9080 alone leaves it open."""
+    spec = dict(HEALTHY, edgePeerReached=["9080", "4143"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "reached APISIX on port 9080 4143 —" in result.stdout
+
+
+def test_an_edge_peer_probe_that_never_ran_fails_the_run(tmp_path):
+    """EP-20: a probe that never resolved the gateway is silent exactly like a refused one."""
+    spec = dict(HEALTHY, edgePeerRan=False)
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  the edge-peer probe never resolved apisix-gateway." in result.stdout
+
+
+def test_an_edge_that_admits_only_the_ingress_controller_passes(tmp_path):
+    """EP-20: the green line names both ports it measured."""
+    result = run(tmp_path, dict(HEALTHY), "https://example.test", "https://idm.example.test")
+    assert result.returncode == 0
+    assert "ok    APISIX refuses a pod that is not the ingress controller on 9080 and 4143" in result.stdout
 
 
 def test_an_enforced_egress_policy_passes(tmp_path):
