@@ -693,10 +693,12 @@ edge_peer="smoke-edgepeer-$$"
 # The pod's own address: the Service publishes only 80, and an unlabelled pod in `default` is
 # refused CoreDNS on purpose (above), so a name would never resolve and the policy on the pod's
 # ports 9080 and 4143 is what this measures.
+# The sleep keeps the pod alive until kubectl run has attached; a probe that prints and exits
+# at once leaves --attach nothing to read.
 edge_host=$(kubectl get pods -n "$slug" -l app.kubernetes.io/name=apisix -o jsonpath='{.items[0].status.podIP}' 2>/dev/null)
 edge_out=$(kubectl run "$edge_peer" -n default --rm --attach --restart=Never --quiet --timeout=90s \
 	--image="$image" \
-	--overrides="$(probe_overrides "$edge_peer" "[\"sh\", \"-c\", \"echo PROBE-RAN; nc -w 5 -z $edge_host 9080 >/dev/null 2>&1 && echo REACHED-9080; nc -w 5 -z $edge_host 4143 >/dev/null 2>&1 && echo REACHED-4143; true\"]")" \
+	--overrides="$(probe_overrides "$edge_peer" "[\"sh\", \"-c\", \"sleep 3; echo PROBE-RAN; nc -w 5 -z $edge_host 9080 >/dev/null 2>&1 && echo REACHED-9080; nc -w 5 -z $edge_host 4143 >/dev/null 2>&1 && echo REACHED-4143; true\"]")" \
 	2>/dev/null)
 edge_reached=$(printf '%s' "$edge_out" | sed -n 's/^REACHED-\([0-9]*\)\r*$/\1/p' | tr '\n' ' ')
 if [ -z "$edge_host" ]; then
