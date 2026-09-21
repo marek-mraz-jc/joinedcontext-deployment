@@ -72,7 +72,7 @@ def test_x_forwarded_for_survives_sanitization(plugin_configs):
 
 
 def test_security_response_headers_on_every_route(plugin_configs):
-    """T-0028: HSTS, nosniff, referrer policy everywhere; framing and caching by route class."""
+    """T-0028, OPS-34: HSTS, nosniff, referrer policy everywhere; framing and caching by route class."""
     for config_id, plugins in plugin_configs.items():
         headers = plugins["response-rewrite"]["headers"]["set"]
         assert headers["Strict-Transport-Security"] == "max-age=31536000; includeSubDomains; preload"
@@ -216,7 +216,7 @@ def test_certificate_covers_the_apex_and_every_routed_subdomain(rendered):
 
 
 def test_traefik_listener_enforces_tr_02102(rendered):
-    """T-0044: TLS 1.2 floor, AEAD suites only."""
+    """T-0044, OPS-36: TLS 1.2 floor, AEAD suites only (BSI TR-02102)."""
     objects = edge_objects(rendered("dev"))
     options = objects["TLSOption"]["spec"]
     assert options["minVersion"] == "VersionTLS12"
@@ -230,7 +230,7 @@ def test_traefik_listener_enforces_tr_02102(rendered):
 
 
 def test_nginx_listener_carries_the_same_cipher_policy(rendered):
-    """The nginx branch of the same requirement; no TLSOption CRD exists there."""
+    """OPS-36: the nginx branch of the same requirement; no TLSOption CRD exists there."""
     objects = edge_objects(rendered("production"))
     assert "TLSOption" not in objects
     annotations = objects["Ingress"]["metadata"]["annotations"]

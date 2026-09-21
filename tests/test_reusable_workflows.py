@@ -298,3 +298,23 @@ def test_a_workload_fetching_chosen_addresses_is_refused_a_private_range(conftes
     assert result.returncode == 1
     assert "leaves" in result.stdout and "172.16.0.0/12" in result.stdout, result.stdout
     assert policy_check(conftest_binary, FIXTURES / "egress-closed.yaml").returncode == 0
+
+
+def test_every_pull_request_runs_kyverno_apply_on_the_rendered_manifests():
+    """OPS-40: `kyverno apply` against rendered Helmfile manifests runs before a pull request is
+    admitted, in the lane that runs on every pull request, not in a dispatch-only one."""
+    ci = yaml.safe_load((WORKFLOWS / "ci.yml").read_text())
+    triggers = ci.get("on", ci.get(True))
+    assert "pull_request" in triggers, "ci.yml is the pull-request lane"
+    runs = [
+        step.get("run", "")
+        for job in ci["jobs"].values()
+        for step in job.get("steps", [])
+    ]
+    assert any(".ci/policies/verify-kyverno-policies.sh" in run for run in runs), (
+        "no pull-request step applies the Kyverno policies to the rendered manifests"
+    )
+    script = (ROOT / ".ci/policies/verify-kyverno-policies.sh").read_text()
+    for env in ("local", "production"):
+        assert f"scripts/render.sh {env}" in script, env
+    assert script.count("kyverno apply") >= 2
