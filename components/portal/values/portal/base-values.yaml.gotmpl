@@ -38,6 +38,10 @@ nameOverride: portal-portal
 {{- /* Empty unless the installation supplied an age identity: an environment file older than
        the setting renders without a secret backend instead of failing to render. */}}
 {{- $ageSecret := dig "sopsAgeSecret" "" $thisPortal }}
+{{- /* The GitHub copy of application repositories (AP-79); off without an owner, and off
+       without a forge, which is what it copies. */}}
+{{- $appMirror := dig "appMirror" dict $thisPortal }}
+{{- $mirrorOwner := and (has "gitea" .Values.components) (dig "githubOwner" "" $appMirror) }}
 {{- $images := index .Values.images "portal" "portal" }}
 image:
   repository: {{ $images.repository }}
@@ -102,6 +106,13 @@ envSecret:
     secret: gitea-token-portal
     key: token
 {{- end }}
+{{- if $mirrorOwner }}
+  # Operator-supplied (AP-79): it creates the GitHub repositories and is the forge's push
+  # credential for them, handed over once when a mirror is set up.
+  JC_APP_MIRROR_GITHUB_TOKEN:
+    secret: {{ dig "secret" "github-app-mirror" $appMirror | quote }}
+    key: token
+{{- end }}
 {{- if has "agent-runner" .Values.components }}
 {{- end }}
 {{- if has "ckan" .Values.components }}
@@ -150,6 +161,10 @@ env:
   # Where a browser reaches the forge: the "Source" link of a manifest opens here, and a
   # browser resolves no .svc.cluster.local name. Same prefix as the forge's ROOT_URL.
   JC_GITEA_PUBLIC_URL: "https://{{ $global.domain }}{{ .Values.gitea.forge.pathPrefix | trimSuffix "/" }}"
+{{- end }}
+{{- if $mirrorOwner }}
+  # The GitHub organization or user every application repository is copied to (AP-79).
+  JC_APP_MIRROR_GITHUB_OWNER: {{ $mirrorOwner | quote }}
 {{- end }}
   # What this installation is called and what it looks like (UI-30, OPS-46). The file below
   # comes from the ConfigMap; a missing or unreadable one is neutral defaults, never a crash,

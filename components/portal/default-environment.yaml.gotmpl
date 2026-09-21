@@ -15,6 +15,14 @@ portal:
     # is what encrypts the `*.enc.yaml` files of the configuration repository. See the
     # component README.
     sopsAgeSecret: ''
+    # A GitHub copy of every generated application's repository (AP-79, T-2475): the forge keeps
+    # it current with a push mirror. An empty owner means no copy. The token is operator-supplied,
+    # never generated: a Secret of this name with key `token` in the Portal's namespace, declared in
+    # the environment's managedSecrets as a ref+sops value (components/secrets/README.md section 2).
+    # It needs to create repositories under the owner and push to them, and nothing else.
+    appMirror:
+      githubOwner: ''
+      secret: github-app-mirror
     # The sidecar that performs every app's Keycloak login (AP-26, AP-13). Pinned by digest:
     # this one is the app's front door, so a mutable tag here would be a mutable front door.
     oauth2ProxyImage: "quay.io/oauth2-proxy/oauth2-proxy:v7.7.1@sha256:a30ae0a6cbe7a6b5d0ad0f0b60e3e0f14dcbcd4a1e17b76c4b2ba3c0b1b09a1e"
