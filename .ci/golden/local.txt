@@ -127,8 +127,11 @@ networking.k8s.io/v1/NetworkPolicy local/postgres-operator-webhook
 networking.k8s.io/v1/NetworkPolicy local/role-setup-linkerd
 networking.k8s.io/v1/NetworkPolicy local/sandbox-reaper
 networking.k8s.io/v1/NetworkPolicy local/sandbox-reaper-linkerd-control-plane
+policy.linkerd.io/v1alpha1/AuthorizationPolicy local/pipeline-runner-api
+policy.linkerd.io/v1alpha1/MeshTLSAuthentication local/pipeline-runner-api-clients
 policy.linkerd.io/v1beta3/Server -/apisix-configuration-acme-http01-solver
 policy.linkerd.io/v1beta3/Server -/apisix-configuration-apisix-gateway
+policy.linkerd.io/v1beta3/Server local/pipeline-runner-api
 postgresql.cnpg.io/v1/Cluster local/postgres-cluster
 postgresql.cnpg.io/v1/Database local/antares
 postgresql.cnpg.io/v1/Database local/gitea
