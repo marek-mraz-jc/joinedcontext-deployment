@@ -10,7 +10,7 @@
     },
     "parts": {
       "type": "array",
-      "minItems": 1,
+      "description": "The releases built from this component's charts.yaml and values; empty for a component whose helmfile writes its releases itself (prepare, runtime-policies)",
       "items": {
         "type": "object",
         "required": ["name"],

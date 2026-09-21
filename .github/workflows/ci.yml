@@ -113,7 +113,7 @@ jobs:
         # job fewer on a metered private repository (T-0521). The reusable workflow stays for
         # the other repositories.
         run: gitleaks detect --source . --config .ci/shared/gitleaks.toml --redact --exit-code 1
-      - run: pip install --quiet pytest pyyaml
+      - run: pip install --quiet pytest pyyaml jsonschema
       - name: the two collector images the tests run
         # tests/test_observability_collector.py runs `otelcol validate` on the rendered
         # config and one record through the allow-list (T-0349); tests/test_audit_logging.py
