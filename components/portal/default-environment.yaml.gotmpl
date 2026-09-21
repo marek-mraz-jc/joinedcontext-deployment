@@ -23,6 +23,3 @@ portal:
     appMirror:
       githubOwner: ''
       secret: github-app-mirror
-    # The sidecar that performs every app's Keycloak login (AP-26, AP-13). Pinned by digest:
-    # this one is the app's front door, so a mutable tag here would be a mutable front door.
-    oauth2ProxyImage: "quay.io/oauth2-proxy/oauth2-proxy:v7.7.1@sha256:a30ae0a6cbe7a6b5d0ad0f0b60e3e0f14dcbcd4a1e17b76c4b2ba3c0b1b09a1e"

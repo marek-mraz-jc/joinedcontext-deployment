@@ -174,12 +174,11 @@ env:
   # comes from the ConfigMap; a missing or unreadable one is neutral defaults, never a crash,
   # so the Portal starts on an environment that configured no branding at all.
   JC_BRANDING_FILE: /etc/jc/branding/branding.yaml
-  # What an App compiles into and where it is applied (AP-13, AP-15, AP-18, T-0411). All three
-  # go together: without them the reconciler reads apps and deploys nothing, which is what a
+  # What an App compiles into and where it is applied (AP-13, AP-15, AP-18, T-0411). Both go
+  # together: without them the reconciler reads apps and deploys nothing, which is what a
   # Portal outside a cluster does. The host and the realm are not variables of their own; the
   # Portal reads them off its public URL and its OIDC issuer.
   JC_PORTAL_APPS_NAMESPACE: {{ $thisPortal.appsNamespace | quote }}
-  JC_PORTAL_APPS_OAUTH2_PROXY_IMAGE: {{ $thisPortal.oauth2ProxyImage | quote }}
   JC_PORTAL_ORG_DOMAIN: {{ $global.orgDomain | quote }}
 {{- if has "model-tools" .Values.components }}
   # The generator behind the LinkML editor (DM-18, DM-19): the live preview, the Smart Data
