@@ -62,4 +62,7 @@ agent-runner:
     # materials (T-2412), a SyncSource carries its own inbound webhook secret (T-2297), and the
     # proxy answers 503 for a failure of the platform's own instead of blaming the caller
     # (T-2418). 61 commits on top of 0b6bd13.
-    digest: 'sha256:00ddcf219013267ffbfa30af2a912320458a68a88b6b5ec92bbfec740d2eafe2'
+    # platform 12b32e8: the agent proxy pins every forge write to the run's branch or refuses it,
+    # refuses its own `usage` kind from a workspace, and never hands a run an internal address
+    # (T-2362, T-2363, T-2364). On top of 462a1ba.
+    digest: 'sha256:5eb1f09990b9e6b1be8b537b129bd551b678e1b88cdd439f71cd73bb898e8ddf'

@@ -217,4 +217,8 @@ portal:
     # holds instead of reading as empty over hundreds of entities (T-2450); a page with no model
     # says `untyped` rather than claiming `text`, so a numeric endpoint condition is not quoted
     # into matching nothing (T-2448). On top of 4cafa0b.
-    digest: 'sha256:b89d4e811a7dd21710e2ea2ef023030457340fbe67509308f298e01c9dceb2b9'
+    # portal 15dabf1: an answered conversation takes the next question, the stall notice waits
+    # only while the agent owes the answer and offers 'Ask again' beside Stop, and an ended or hung
+    # run never holds the dock: 'New conversation' under it and in the header (T-2461, T-2463).
+    # On top of 3d0e085.
+    digest: 'sha256:0d0d099af70dc70f07246cf41989003b840a24405111f6945de07465fee6ad3e'
