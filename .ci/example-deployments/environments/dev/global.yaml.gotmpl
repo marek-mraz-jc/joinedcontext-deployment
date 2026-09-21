@@ -34,10 +34,11 @@ components:
   - model-tools
   # The runtime of generated applications' functions; before the portal, which takes its address.
   - functions
-  - portal
   # The open-data catalogue (EP-62..67). It is the demo instance's public face, so dev
-  # carries it; other environments opt in the same way.
+  # carries it; other environments opt in the same way. Before the portal: its Job mints
+  # `ckan-api-token`, which the portal's reconciler publishes with (T-2469).
   - ckan
+  - portal
 
 global:
   domain: {{ env "JC_DEV_DOMAIN" | default "2.28.67.127.sslip.io" }}
