@@ -239,4 +239,5 @@ portal:
     # of 7107fe9.
     # portal cd2c1cf: an app is never served on the Portal's own origin (308 to the apps origin) and
     # a run's preview carries a CSP sandbox without allow-same-origin (T-2476). On top of 090772b.
-    digest: 'sha256:64719b45199611c8189f120f6eb3200046300a6ff85aa8addc6c86d1ab095215'
+    # portal 656219a: main since cd2c1cf, carrying T-1523 T-1706 T-1713 T-1714 T-1715 T-1716 T-2474.
+    digest: '656219a'
