@@ -234,4 +234,7 @@ portal:
     # labels (T-2470); the ContextSourceRegistration form (T-2345). On top of e50de9b.
     # portal 7107fe9: Mapping and DataModel edit forms (T-2354, T-2357), the CSR form keeps stored
     # metadata (T-2472), the kit-pass tests follow the edit loop (T-2471). On top of 8209b8c.
-    digest: 'sha256:1e9bba3471707cc04af55fbadc572be4212a56ed170597c3ed7383765e5adc5c'
+    # portal 090772b: an application repository can be copied to GitHub when the environment names
+    # an owner, off on dev until one is given (T-2475); a webhook SyncSource fixture (T-2473). On top
+    # of 7107fe9.
+    digest: 'sha256:54d8bf2f6bc169229132722b265a83cbcdb99f15e6f9996ff1aaf51fa615288b'
