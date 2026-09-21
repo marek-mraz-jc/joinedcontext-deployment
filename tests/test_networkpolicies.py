@@ -7,6 +7,7 @@ the rule to something narrower than what was written, and only a broken connecti
 two namespaces, months later, says so.
 """
 
+import ipaddress
 import shutil
 import subprocess
 from pathlib import Path
@@ -452,3 +453,39 @@ def test_a_workload_that_mints_its_own_token_may_reach_the_realm(rendered, env):
                 if selector and not reaches_keycloak(selector):
                     missing.append(doc["metadata"]["name"])
     assert not missing, f"told to mint in-cluster, no egress to the realm: {sorted(set(missing))}"
+
+
+METADATA = ipaddress.ip_address("169.254.169.254")
+# The port cloud metadata services answer on (Hetzner, AWS, GCP and Azure alike).
+METADATA_PORTS = {80}
+
+
+def _reaches_metadata(peer):
+    block = peer.get("ipBlock")
+    if not block:
+        return False
+    if METADATA not in ipaddress.ip_network(block["cidr"]):
+        return False
+    return not any(METADATA in ipaddress.ip_network(cidr) for cidr in block.get("except") or [])
+
+
+@pytest.mark.parametrize("env", ENVIRONMENTS)
+def test_no_workload_reaches_the_metadata_service(rendered, env):
+    """T-1710 (a compromised pod moves sideways): the metadata address hands out the node's
+    identity and the cloud's user data. An egress rule to 0.0.0.0/0 reaches it unless it
+    excludes the address or leaves out the metadata port. A rule without `ports` opens every
+    port, 80 included."""
+    offenders = []
+    for doc in rendered(env):
+        if doc.get("kind") != "NetworkPolicy":
+            continue
+        for rule in doc["spec"].get("egress") or []:
+            if not any(_reaches_metadata(peer) for peer in rule.get("to") or []):
+                continue
+            ports = rule.get("ports")
+            opened = {p.get("port") for p in ports} if ports else None
+            if opened is None or METADATA_PORTS & opened or any(
+                p.get("endPort") and p["port"] <= 80 <= p["endPort"] for p in ports or []
+            ):
+                offenders.append(f"{doc['metadata'].get('namespace')}/{doc['metadata']['name']}: {opened}")
+    assert not offenders, "egress that reaches 169.254.169.254:80:\n" + "\n".join(offenders)

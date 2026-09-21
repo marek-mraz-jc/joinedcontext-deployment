@@ -81,7 +81,7 @@ alertGroups:
         annotations:
           summary: 'APISIX standalone failed to reload apisix.yaml (check the #END marker)'
       - alert: APISIXHigh5xxRate
-        expr: sum(rate(apisix_http_status{status=~"5.."}[5m])) / sum(rate(apisix_http_status[5m])) > 0.01
+        expr: sum(rate(apisix_http_status{code=~"5.."}[5m])) / sum(rate(apisix_http_status[5m])) > 0.01
         for: 2m
         labels:
           severity: warning

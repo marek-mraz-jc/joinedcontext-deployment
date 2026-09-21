@@ -7,6 +7,7 @@ deliberate exception with a reason in its own production values file, and naming
 FOURTH one cannot appear without someone editing this list and saying why.
 """
 
+import re
 import pytest
 import yaml
 
@@ -292,3 +293,23 @@ def _pod_spec(document: dict) -> dict:
     if document.get("kind") == "CronJob":
         spec = (spec.get("jobTemplate") or {}).get("spec") or {}
     return (spec.get("template") or {}).get("spec") or {}
+
+
+# The labels APISIX's prometheus plugin puts on `apisix_http_status`. A selector on any other
+# label matches no series, so the alert built on it can never fire; the dashboards already read
+# `code` (components/grafana/charts/dashboards/files/edge-apisix.json).
+APISIX_HTTP_STATUS_LABELS = {"code", "route", "matched_uri", "matched_host", "service", "consumer", "node"}
+
+
+def test_an_edge_alert_selects_only_labels_apisix_emits(production):
+    """T-1715: `APISIXHigh5xxRate` once selected `status=~"5.."`, a label APISIX never emits, so
+    a node taken down by one caller raised no alert at all."""
+    offenders = []
+    for prometheus_rule in of_kind(production, "PrometheusRule"):
+        for group in prometheus_rule["spec"]["groups"]:
+            for rule in group["rules"]:
+                for selector in re.findall(r"apisix_http_status\{([^}]*)\}", rule.get("expr", "")):
+                    for label in re.findall(r"(\w+)\s*(?:=~|!~|!=|=)", selector):
+                        if label not in APISIX_HTTP_STATUS_LABELS:
+                            offenders.append(f"{rule.get('alert')}: {label}")
+    assert not offenders, "alerts that can never fire:\n" + "\n".join(offenders)

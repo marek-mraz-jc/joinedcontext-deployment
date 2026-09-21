@@ -237,4 +237,6 @@ portal:
     # portal 090772b: an application repository can be copied to GitHub when the environment names
     # an owner, off on dev until one is given (T-2475); a webhook SyncSource fixture (T-2473). On top
     # of 7107fe9.
-    digest: 'sha256:54d8bf2f6bc169229132722b265a83cbcdb99f15e6f9996ff1aaf51fa615288b'
+    # portal cd2c1cf: an app is never served on the Portal's own origin (308 to the apps origin) and
+    # a run's preview carries a CSP sandbox without allow-same-origin (T-2476). On top of 090772b.
+    digest: 'sha256:64719b45199611c8189f120f6eb3200046300a6ff85aa8addc6c86d1ab095215'

@@ -134,9 +134,11 @@ jobs:
         run: |
           just _dev-assemble
           helmfile -f deployment/helmfile.yaml -e local repos
+          helmfile -f deployment/helmfile.yaml -e production repos
           helmfile -f deployment/helmfile.yaml -e addons repos
       - name: kyverno policy unit tests
-        # Was the slow lane's `policies` job; the unit tests take seconds, the rest of that job
-        # (Kyverno on the rendered output) runs from a clone, see .github/workflows/README.md.
         run: kyverno test .ci/policies
+      - name: kyverno apply on the rendered local, production and add-on manifests (OPS-40)
+        # Shift-left: what admission would refuse is refused here first, on every pull request.
+        run: .ci/policies/verify-kyverno-policies.sh
       - run: pytest tests -q
