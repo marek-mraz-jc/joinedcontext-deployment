@@ -688,16 +688,21 @@ fi
 # X-Real-IP from the whole pod network, so any other pod reaching 9080 — or 4143, where meshed
 # traffic lands — could name itself any caller and spend that caller's rate limit. The probe
 # runs in `default`, a namespace no policy of ours governs, so its own egress lets it try: what
-# refuses it can only be APISIX's ingress. Resolving the gateway first is the proof it ran.
+# refuses it can only be APISIX's ingress.
 edge_peer="smoke-edgepeer-$$"
-edge_host="apisix-gateway.$slug.svc.cluster.local"
+# The pod's own address: the Service publishes only 80, and an unlabelled pod in `default` is
+# refused CoreDNS on purpose (above), so a name would never resolve and the policy on the pod's
+# ports 9080 and 4143 is what this measures.
+edge_host=$(kubectl get pods -n "$slug" -l app.kubernetes.io/name=apisix -o jsonpath='{.items[0].status.podIP}' 2>/dev/null)
 edge_out=$(kubectl run "$edge_peer" -n default --rm --attach --restart=Never --quiet --timeout=90s \
 	--image="$image" \
-	--overrides="$(probe_overrides "$edge_peer" "[\"sh\", \"-c\", \"timeout 8 nslookup $edge_host >/dev/null 2>&1 || exit 0; echo PROBE-RAN; nc -w 5 -z $edge_host 9080 >/dev/null 2>&1 && echo REACHED-9080; nc -w 5 -z $edge_host 4143 >/dev/null 2>&1 && echo REACHED-4143; true\"]")" \
+	--overrides="$(probe_overrides "$edge_peer" "[\"sh\", \"-c\", \"echo PROBE-RAN; nc -w 5 -z $edge_host 9080 >/dev/null 2>&1 && echo REACHED-9080; nc -w 5 -z $edge_host 4143 >/dev/null 2>&1 && echo REACHED-4143; true\"]")" \
 	2>/dev/null)
 edge_reached=$(printf '%s' "$edge_out" | sed -n 's/^REACHED-\([0-9]*\)\r*$/\1/p' | tr '\n' ' ')
-if ! printf '%s' "$edge_out" | grep -q PROBE-RAN; then
-	ko "the edge-peer probe never resolved $edge_host, so who may reach APISIX was not measured"
+if [ -z "$edge_host" ]; then
+	ko "no APISIX pod in $slug, so who may reach APISIX was not measured"
+elif ! printf '%s' "$edge_out" | grep -q PROBE-RAN; then
+	ko "the edge-peer probe never ran, so who may reach APISIX was not measured"
 elif [ -n "$edge_reached" ]; then
 	ko "a pod outside the ingress controller reached APISIX on port ${edge_reached} — it could set X-Real-IP and spend another caller's rate limit (T-0939)"
 else

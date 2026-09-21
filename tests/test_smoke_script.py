@@ -158,9 +158,12 @@ elif args[0] == "run" and args[1].startswith("smoke-egress"):
         sys.stdout.write("REACHED-%s\\n" % destination)
     if spec.get("egressProbeRan", True):
         sys.stdout.write("PROBE-RAN\\n")
+elif args[0] == "get" and args[1] == "pods" and "app.kubernetes.io/name=apisix" in line:
+    # T-0939: the probe aims at the APISIX pod's own address; `apisixPodIp: ""` is no pod.
+    sys.stdout.write(spec.get("apisixPodIp", "10.42.0.9"))
 elif args[0] == "run" and args[1].startswith("smoke-edgepeer"):
     # T-0939: like the egress probe, it reports by what it prints. `edgePeerRan: False` is a
-    # probe that never resolved the gateway, which must not read as "the policy refused it".
+    # probe that never ran, which must not read as "the policy refused it".
     if spec.get("edgePeerRan", True):
         sys.stdout.write("PROBE-RAN\\n")
     for port in spec.get("edgePeerReached", []):
@@ -685,11 +688,19 @@ def test_a_pod_that_reaches_the_mesh_port_of_the_edge_fails_the_run(tmp_path):
 
 
 def test_an_edge_peer_probe_that_never_ran_fails_the_run(tmp_path):
-    """EP-20: a probe that never resolved the gateway is silent exactly like a refused one."""
+    """EP-20: a probe that never ran is silent exactly like a refused one."""
     spec = dict(HEALTHY, edgePeerRan=False)
     result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
     assert result.returncode == 1
-    assert "FAIL  the edge-peer probe never resolved apisix-gateway." in result.stdout
+    assert "FAIL  the edge-peer probe never ran" in result.stdout
+
+
+def test_no_apisix_pod_to_probe_fails_the_run(tmp_path):
+    """EP-20: with no APISIX pod address the probe has nothing to aim at, which is no verdict."""
+    spec = dict(HEALTHY, apisixPodIp="")
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  no APISIX pod in" in result.stdout
 
 
 def test_an_edge_that_admits_only_the_ingress_controller_passes(tmp_path):
