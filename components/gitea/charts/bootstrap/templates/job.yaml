@@ -207,10 +207,13 @@ spec:
                 sed -n 's/.*"token": *"\([A-Za-z0-9+/=]*\)".*/\1/p' $WORK/secret | base64 -d 2>/dev/null || return 1
               }
 
-              # write_secret <namespace> <name> <token>
+              # write_secret <namespace> <name> <token> <scopes json>
+              # `scopes` is the record of what the token was minted with: a token that still
+              # authenticates but was minted with other scopes is minted again (T-2468).
               write_secret() {
                 encoded=$(printf '%s' "$3" | base64 | tr -d '\n')
-                body="{\"apiVersion\":\"v1\",\"kind\":\"Secret\",\"metadata\":{\"name\":\"$2\"},\"type\":\"Opaque\",\"data\":{\"token\":\"$encoded\"}}"
+                granted=$(printf '%s' "$4" | base64 | tr -d '\n')
+                body="{\"apiVersion\":\"v1\",\"kind\":\"Secret\",\"metadata\":{\"name\":\"$2\"},\"type\":\"Opaque\",\"data\":{\"token\":\"$encoded\",\"scopes\":\"$granted\"}}"
                 code=$(kube -o $WORK/body -w '%{http_code}' -X PUT -d "$body" \
                   "$KAPI/api/v1/namespaces/$1/secrets/$2")
                 if [ "$code" = 404 ]; then
@@ -227,12 +230,17 @@ spec:
               ensure_token() {
                 secret=$1; name=$2; scopes=$3; shift 3
                 first=$1
+                # The previous token's Secret must not answer for this one's.
+                rm -f $WORK/secret
                 existing=$(read_secret "$first" "$secret" || true)
+                held=$(sed -n 's/.*"scopes": *"\([A-Za-z0-9+/=]*\)".*/\1/p' $WORK/secret 2>/dev/null \
+                  | base64 -d 2>/dev/null || true)
                 # Checked against the repository, not against /api/v1/user: the gateway's token
                 # carries `read:repository` and nothing else, so /user answers 403 for a token
                 # that is perfectly good and the step would re-mint on every apply, churning a
-                # credential a running pod is already holding.
-                if [ -n "$existing" ] && [ "$(curl -sS -o /dev/null -w '%{http_code}' \
+                # credential a running pod is already holding. A token minted with other scopes
+                # than these (a scope added to the values, T-2468) is minted again.
+                if [ -n "$existing" ] && [ "$held" = "$scopes" ] && [ "$(curl -sS -o /dev/null -w '%{http_code}' \
                     -H "Authorization: token $existing" "$GITEA_URL/api/v1/repos/$ORG/$REPO")" = 200 ]; then
                   echo "the token in $secret still authenticates"
                   token=$existing
@@ -252,7 +260,7 @@ spec:
                 # record the check above trusts, and a second namespace whose copy went missing
                 # is repaired without touching the token itself.
                 for ns in "$@"; do
-                  write_secret "$ns" "$secret" "$token"
+                  write_secret "$ns" "$secret" "$token" "$scopes"
                 done
               }
 

@@ -24,8 +24,10 @@ adminSecret:
 tokens:
   portal:
     secret: gitea-token-portal
-    # Read and write one repository: the Portal opens branches, writes files and merges.
-    scopes: ['write:repository', 'read:user']
+    # Read and write the organization's repositories: the Portal opens branches, writes files
+    # and merges. `write:organization` is what creates a generated application's own repository
+    # in the organization (AP-75); the forge files that route under the organization scope.
+    scopes: ['write:repository', 'read:user', 'write:organization']
     # Where the Secret is written. One entry under `singleNamespace: true`, one per consumer
     # otherwise.
     namespaces: []

@@ -92,7 +92,7 @@ class Forge:
         """One seed file, under the repository path it is committed to."""
         (self.seed / path.replace("/", "__")).write_text(text)
 
-    def run(self, script: str) -> subprocess.CompletedProcess:
+    def run(self, script: str, **overrides: str) -> subprocess.CompletedProcess:
         environment = {
             **os.environ,
             "PATH": f"{self.bin}:{os.environ['PATH']}",
@@ -116,6 +116,7 @@ class Forge:
             "GATEWAY_NAMESPACES": "dev",
             "JC_FAKE_FORGE_STATE": str(self.state),
             "JC_FAKE_FORGE_CALLS": str(self.calls),
+            **overrides,
         }
         return subprocess.run(
             ["sh", "-c", script], env=environment, capture_output=True, text=True
@@ -124,6 +125,10 @@ class Forge:
     @property
     def contents(self) -> dict[str, str]:
         return json.loads(self.state.read_text())["contents"]
+
+    @property
+    def secrets(self) -> dict[str, dict]:
+        return json.loads(self.state.read_text())["secrets"]
 
     @property
     def log(self) -> list[str]:
@@ -264,3 +269,35 @@ def test_the_record_is_written_after_the_removals_and_names_no_secret(script, tm
     assert "not-a-real-password" not in record
     assert "a" * 40 not in record
     assert record == "projects/bbsk/project.yaml\n"
+
+
+@requires_helmfile
+def test_a_token_is_minted_again_when_its_scopes_change_and_only_then(script, tmp_path):
+    """AP-75 (T-2468): the Portal's token gains `write:organization` to create an application's
+    repository. A token that still authenticates used to be kept whatever it was minted with, so
+    a scope added to the values never reached a running forge. The Secret now records the scopes;
+    a different record mints again, the same record keeps the token a pod already holds."""
+    import base64
+
+    forge = Forge(tmp_path, {})
+    minted = lambda: [call for call in forge.log if call.endswith("/tokens")]  # noqa: E731
+
+    first = forge.run(script)
+    assert first.returncode == 0, first.stderr
+    assert len(minted()) == 2, forge.log
+    recorded = base64.b64decode(forge.secrets["gitea-token-portal"]["data"]["scopes"]).decode()
+    assert recorded == '["write:repository"]'
+
+    second = forge.run(script)
+    assert second.returncode == 0, second.stderr
+    assert len(minted()) == 2, "a token minted with the same scopes was minted again"
+    assert second.stdout.count("still authenticates") == 2
+
+    wider = '["write:repository","read:user","write:organization"]'
+    third = forge.run(script, PORTAL_SCOPES=wider)
+    assert third.returncode == 0, third.stderr
+    assert len(minted()) == 3, "the Portal's token was not minted with its new scope"
+    assert "DELETE http://forge.test/api/v1/users/forge-admin/tokens/jc-portal" in forge.log
+    assert "the token in gitea-token-gateway still authenticates" in third.stdout
+    recorded = base64.b64decode(forge.secrets["gitea-token-portal"]["data"]["scopes"]).decode()
+    assert recorded == wider
