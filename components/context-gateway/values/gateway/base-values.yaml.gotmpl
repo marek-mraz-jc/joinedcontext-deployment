@@ -95,7 +95,14 @@ env:
   # Architecture/06 §7.2). The Portal opens its internal listener only beside an agent runner.
   JC_GATEWAY_PREVIEWS_URL: "http://portal.{{ .Values.portal.portal.namespace }}.svc.cluster.local:9090/internal/previews"
   JC_GATEWAY_PREVIEWS_DIR: /previews
+  # The Organization's domain state, read from the same listener with the same token (PF-41,
+  # Architecture/03 §3). Only `enforce` reads it.
+  JC_GATEWAY_DOMAIN_VERIFICATIONS_URL: "http://portal.{{ .Values.portal.portal.namespace }}.svc.cluster.local:9090/internal/domain-verifications"
 {{- end }}
+  # `report` records and shows the domain state and refuses nothing; `enforce` refuses a write
+  # to a space until the Organization's domain is verified, and needs the URL above. The
+  # owner's switch once the seeds verify (T-2572).
+  JC_GATEWAY_DOMAIN_VERIFICATION: report
 {{- end }}
 
 {{- if has "gitea" .Values.components }}
