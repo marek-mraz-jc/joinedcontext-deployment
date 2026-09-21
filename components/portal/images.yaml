@@ -221,4 +221,9 @@ portal:
     # only while the agent owes the answer and offers 'Ask again' beside Stop, and an ended or hung
     # run never holds the dock: 'New conversation' under it and in the header (T-2461, T-2463).
     # On top of 3d0e085.
-    digest: 'sha256:0d0d099af70dc70f07246cf41989003b840a24405111f6945de07465fee6ad3e'
+    # portal 48718f8: a static app is served with its bundle, its integrity map and a #jc-config
+    # naming its endpoints (T-2457); the assistant says only what it read, reads the whole set and
+    # fails a silent turn at 90 s (T-2459, T-2460, T-2462); the share refuses a malformed endpoint
+    # and dedups (T-2349, T-2350); the manifest dialog and the dock on the UI contract (T-1749,
+    # T-1753); jc-core v0.7.48 with the SyncSource webhook block (T-2399). On top of 15dabf1.
+    digest: 'sha256:66fbfff69f0b62e65ddc7db4865cfa5dd485f82928ce636b0f7c712f77ca2a14'
