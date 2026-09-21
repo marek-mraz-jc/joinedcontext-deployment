@@ -226,4 +226,7 @@ portal:
     # fails a silent turn at 90 s (T-2459, T-2460, T-2462); the share refuses a malformed endpoint
     # and dedups (T-2349, T-2350); the manifest dialog and the dock on the UI contract (T-1749,
     # T-1753); jc-core v0.7.48 with the SyncSource webhook block (T-2399). On top of 15dabf1.
-    digest: 'sha256:66fbfff69f0b62e65ddc7db4865cfa5dd485f82928ce636b0f7c712f77ca2a14'
+    # portal e50de9b: an app edit is patched by the editing agent in small steps with a ceiling of
+    # 12 calls / 500k input tokens a message (T-2466, T-2467); ServiceAccount and Subscription forms
+    # (T-2342, T-2344); jc-core v0.7.49, the CKAN licence field (T-2465). On top of 48718f8.
+    digest: 'sha256:b29f35e23b38fdfe1538aa340a0ca07b07439493203a8a0f7492091e5f11dd9d'

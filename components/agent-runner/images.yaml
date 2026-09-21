@@ -65,4 +65,6 @@ agent-runner:
     # platform 12b32e8: the agent proxy pins every forge write to the run's branch or refuses it,
     # refuses its own `usage` kind from a workspace, and never hands a run an internal address
     # (T-2362, T-2363, T-2364). On top of 462a1ba.
-    digest: 'sha256:5eb1f09990b9e6b1be8b537b129bd551b678e1b88cdd439f71cd73bb898e8ddf'
+    # platform 6c2e439: an Endpoint's publish.ckan carries the licence the organization chose, and
+    # jcctl publishes in the space's language under the instance's title (T-2465). On top of 12b32e8.
+    digest: 'sha256:72d8ff6143332e5b44b87e8e6293932b5a2387416e604c5acbfe7fcdf53ad4a6'

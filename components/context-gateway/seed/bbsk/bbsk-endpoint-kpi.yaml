@@ -24,4 +24,6 @@ spec:
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: bbsk }
+      # CC-BY 4.0, chosen by the owner on 2026-09-21 (T-2407, T-2465).
+      license: cc-by
       datastore: { representation: csv, refresh: onReconcile }
