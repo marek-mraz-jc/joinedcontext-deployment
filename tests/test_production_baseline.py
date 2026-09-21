@@ -304,8 +304,6 @@ APISIX_HTTP_STATUS_LABELS = {"code", "route", "matched_uri", "matched_host", "se
 def test_an_edge_alert_selects_only_labels_apisix_emits(production):
     """T-1715: `APISIXHigh5xxRate` once selected `status=~"5.."`, a label APISIX never emits, so
     a node taken down by one caller raised no alert at all."""
-    import re
-
     offenders = []
     for prometheus_rule in of_kind(production, "PrometheusRule"):
         for group in prometheus_rule["spec"]["groups"]:
