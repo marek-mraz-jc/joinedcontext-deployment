@@ -224,7 +224,7 @@ env:
   # not a 404 that only says "no such test".
   # The runner's own client, which `components/pipeline-runner/keycloak-clients.yaml` names
   # `{project}-pipelines` from that component's own `project`.
-  JC_PORTAL_PIPELINE_RUNNER_CLIENT_ID: "{{ (index .Values "pipeline-runner" "runner").project }}-pipelines"
+  JC_PORTAL_PIPELINE_RUNNER_CLIENT_ID: "{{ required "pipeline-runner.runner.project names the project whose streams this runner carries; only the development profile falls back to the demo city (T-1720, CC-73)" (index .Values "pipeline-runner" "runner").project }}-pipelines"
 {{- end }}
   # The basemap under generated maps (AP-67): the Portal fetches, caches and serves the tiles,
   # so a sandboxed preview never talks to the tile host. OpenStreetMap's tile policy asks for a

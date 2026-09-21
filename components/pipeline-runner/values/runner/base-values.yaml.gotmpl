@@ -41,7 +41,7 @@ args:
 
 configMap:
   enabled: true
-  name: pipeline-runner-{{ $thisRunner.project }}-streams
+  name: pipeline-runner-{{ required "pipeline-runner.runner.project names the project whose streams this runner carries; only the development profile falls back to the demo city (T-1720, CC-73)" $thisRunner.project }}-streams
   mountPath: /streams
   data:
     {{- $thisRunner.streams | default dict | toYaml | nindent 4 }}

@@ -1,0 +1,15 @@
+{{- /*
+  CC-73, T-1720: a production instance is named by its own domain. The defaults carry the
+  development placeholder `joinedcontext.test` (RFC 2606), and dev runs on the node's sslip.io
+  host; a production render that inherits either is dev under another name, so it stops here
+  and says which value to set.
+*/}}
+{{- if eq .Values.global.profile "production" }}
+{{- range $key := list "domain" "orgDomain" }}
+{{- $value := index $.Values.global $key | default "" | toString }}
+{{- if or (eq $value "") (hasSuffix ".test" $value) (hasSuffix ".localhost" $value) (eq $value "localhost") (contains "sslip.io" $value) }}
+{{- fail (printf "global.%s is %q: a production instance names its own domain, not the development placeholder or the node's sslip.io host (CC-73, T-1720)" $key $value) }}
+{{- end }}
+{{- end }}
+{{- end }}
+{}

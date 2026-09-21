@@ -3,7 +3,9 @@ pipeline-runner:
   runner:
     enabled: true
     namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "pipeline-runner") }}
-    project: helsinki
+    # The demo city on the workbench; a production instance names its own project, and the
+    # render stops until it does (T-1720, CC-73).
+    project: {{ if eq .Values.global.profile "development" }}helsinki{{ end }}
     # The development profile's streams are values/runner/development-values.yaml.gotmpl.
     streams: {}
   # Scheduled pipelines (PL-04, PL-26, PL-27): one CronJob per pipeline, each pod alive only
@@ -12,6 +14,8 @@ pipeline-runner:
   scheduled:
     enabled: false
     namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "pipeline-runner") }}
-    project: helsinki
+    # The demo city on the workbench; a production instance names its own project, and the
+    # render stops until it does (T-1720, CC-73).
+    project: {{ if eq .Values.global.profile "development" }}helsinki{{ end }}
     # name: { periodSeconds | schedule, config } — see components/pipeline-runner/README.md
     pipelines: {}

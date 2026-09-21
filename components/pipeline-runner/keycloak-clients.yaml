@@ -8,6 +8,8 @@
 # indicator space the KPI pipelines write, PL-45): the gateway accepts it there and on no other
 # slug. The slugs are the endpoint manifests'; the runner's values name the first once more.
 helsinki-pipelines:
+  # An account of the demo seed: rendered by the development profile only (T-1720, CC-73).
+  profiles: [development]
   name: Helsinki ingestion pipelines
   description: Service account of the Bento streams of the Helsinki demo; client_credentials only, no browser flow
   subdomain: ''
@@ -62,6 +64,8 @@ helsinki-pipelines:
 # `ukazovatele-mesto`) and `banskabystrica-kpi` (the indicators). `public-air` is public, so a
 # stream reading it sends no token at all.
 banskabystrica-pipelines:
+  # An account of the demo seed: rendered by the development profile only (T-1720, CC-73).
+  profiles: [development]
   name: Banská Bystrica ingestion pipelines
   description: Service account of the Bento streams of the city demo; client_credentials only, no browser flow
   subdomain: ''
@@ -95,6 +99,8 @@ banskabystrica-pipelines:
 # The region's ingestion pipelines (T-2384), the same rule for project `bbsk`: `bbsk-kraj` is
 # written by `emisie` and `obyvatelstvo` and read back by `ukazovatele`, which writes `bbsk-kpi`.
 bbsk-pipelines:
+  # An account of the demo seed: rendered by the development profile only (T-1720, CC-73).
+  profiles: [development]
   name: Banskobystrický kraj ingestion pipelines
   description: Service account of the Bento streams of the regional demo; client_credentials only, no browser flow
   subdomain: ''

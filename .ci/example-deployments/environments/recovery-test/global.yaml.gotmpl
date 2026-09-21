@@ -6,6 +6,8 @@
 # incident. Runbook 6 in the operations guide is the procedure this environment is the shape of.
 global:
   domain: platform.example.org
+  # The organisation's own domain in every entity id; production has no placeholder (CC-73).
+  orgDomain: example.org
   profile: production
   instanceSlug: jc
   ingress:
@@ -34,3 +36,8 @@ postgres:
       # incident this environment stands in for.
       targetTime: '2026-08-15T14:30:00Z'
       destinationPath: 's3://jc-backups/postgres'
+
+# The project whose streams the pipeline runner carries: named here, never the demo city (CC-73).
+pipeline-runner:
+  runner:
+    project: city
