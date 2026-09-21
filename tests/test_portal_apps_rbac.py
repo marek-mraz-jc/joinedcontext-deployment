@@ -110,10 +110,8 @@ def test_the_portal_carries_the_identity_and_the_settings_together(rendered, env
     env = portal_env(docs)
     for name in [
         "JC_PORTAL_APPS_NAMESPACE",
-        "JC_PORTAL_APPS_OAUTH2_PROXY_IMAGE",
         "JC_PORTAL_ORG_DOMAIN",
     ]:
         assert env.get(name), f"{environment}: {name} is not set"
-
-    # AP-13: the sidecar is the app's front door, so a mutable tag here is a mutable front door.
-    assert "@sha256:" in env["JC_PORTAL_APPS_OAUTH2_PROXY_IMAGE"]
+    # AP-26: an app's login is the APISIX edge's openid-connect, so the Portal takes no sidecar image.
+    assert "JC_PORTAL_APPS_OAUTH2_PROXY_IMAGE" not in env
