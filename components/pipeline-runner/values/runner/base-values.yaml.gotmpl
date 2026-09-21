@@ -121,3 +121,12 @@ securityContext:
 
 serviceMesh:
   enabled: {{ and ($global.serviceMesh.enable | default false) (eq ($global.serviceMesh.type | default "") "linkerd") }}
+
+# The streams API holds the pipeline secrets in its environment (PL-07): only the Portal, which
+# puts, deletes and scrapes the streams, may call 4195 through the mesh (T-2568). The port the
+# NetworkPolicy opens for the proxy (4143) admits any meshed pod; this is what narrows it.
+meshAuthorization:
+  port: 4195
+  clients:
+    - serviceAccount: portal
+      namespace: {{ .Values.portal.portal.namespace }}

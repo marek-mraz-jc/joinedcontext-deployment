@@ -1,0 +1,59 @@
+{{- /*
+Who may call the workload's port inside the mesh (Architecture/13 §6, PF-46). A meshed call
+arrives on the proxy's inbound port, so a NetworkPolicy on the app's port never sees it; this
+Server makes the proxy itself refuse every identity the AuthorizationPolicy does not name.
+Rendered only for a meshed workload that names its clients. With no HTTPRoute on the Server,
+Linkerd keeps authorizing the kubelet's probes.
+*/ -}}
+{{- $auth := .Values.meshAuthorization | default dict }}
+{{- if and .Values.serviceMesh.enabled $auth.clients }}
+{{- $name := include "workload.fullname" . }}
+{{- $port := required "meshAuthorization.port names the port the clients call" $auth.port }}
+apiVersion: policy.linkerd.io/v1beta3
+kind: Server
+metadata:
+  name: {{ $name }}-api
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "workload.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "workload.selectorLabels" . | nindent 6 }}
+  port: {{ $port }}
+  proxyProtocol: HTTP/1
+  # What the AuthorizationPolicy below does not name is refused.
+  accessPolicy: deny
+---
+apiVersion: policy.linkerd.io/v1alpha1
+kind: MeshTLSAuthentication
+metadata:
+  name: {{ $name }}-api-clients
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "workload.labels" . | nindent 4 }}
+spec:
+  identityRefs:
+    {{- range $auth.clients }}
+    - kind: ServiceAccount
+      name: {{ required "meshAuthorization.clients[].serviceAccount" .serviceAccount }}
+      namespace: {{ required "meshAuthorization.clients[].namespace" .namespace }}
+    {{- end }}
+---
+apiVersion: policy.linkerd.io/v1alpha1
+kind: AuthorizationPolicy
+metadata:
+  name: {{ $name }}-api
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "workload.labels" . | nindent 4 }}
+spec:
+  targetRef:
+    group: policy.linkerd.io
+    kind: Server
+    name: {{ $name }}-api
+  requiredAuthenticationRefs:
+    - group: policy.linkerd.io
+      kind: MeshTLSAuthentication
+      name: {{ $name }}-api-clients
+{{- end }}
