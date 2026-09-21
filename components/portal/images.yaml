@@ -241,4 +241,4 @@ portal:
     # a run's preview carries a CSP sandbox without allow-same-origin (T-2476). On top of 090772b.
     # portal 9990ac9: main since cd2c1cf, carrying T-1523 T-1526 T-1527 T-1528 T-1529 T-1535 T-1645
     # T-1656 T-1658 T-1706 T-1713 T-1714 T-1715 T-1716 T-2309 T-2343 T-2474 T-2482.
-    digest: 'sha256:991ca0e2a4f1337c701e3744a73a610cd031bcb487b8c263360b157b0bcfbf1b'
+    digest: 'sha256:ccadffeedd3c29120e495307219b25a4b1a5fbf00e2cf56d9a16124bc86809b1'
