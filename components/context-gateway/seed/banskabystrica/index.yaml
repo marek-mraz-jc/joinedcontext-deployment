@@ -51,3 +51,5 @@ pipeline-obyvatelia-bento.yaml: projects/banskabystrica/pipelines/obyvatelia/ben
 # inline: the input is a query through an Endpoint, not a DataSource fetch.
 pipeline-ukazovatele-ovzdusie.yaml: projects/banskabystrica/pipelines/ukazovatele-ovzdusie/pipeline.yaml
 pipeline-ukazovatele-mesto.yaml: projects/banskabystrica/pipelines/ukazovatele-mesto/pipeline.yaml
+# The open-data catalogue of the city (T-2407): the one cleared endpoint, public-air, publishes here.
+ckan-banskabystrica.yaml: projects/banskabystrica/ckan/banskabystrica.yaml

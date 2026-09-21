@@ -23,3 +23,9 @@ spec:
   # spreadsheet; `zip` is left out, a third copy of the same readings nobody rebuilds.
   enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, mcp]
   rateLimits: { requestsPerMinute: 600, burst: 50 }
+  # The catalogue entry the city cleared (EP-62..EP-65, T-2407): one dataset in the city's own
+  # organization, one resource per representation, and a DataStore sheet of the CSV rows.
+  publish:
+    ckan:
+      instanceRef: { kind: CkanInstance, name: banskabystrica }
+      datastore: { representation: csv, refresh: onReconcile }

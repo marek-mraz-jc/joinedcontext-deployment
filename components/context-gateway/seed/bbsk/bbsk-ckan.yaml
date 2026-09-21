@@ -1,0 +1,16 @@
+# The open-data catalogue the region's cleared endpoints publish to (EP-62, EP-67, T-2407). The
+# region cleared one dataset, its indicators on `bbsk-kpi`; `bbsk-kraj` stays out of the catalogue
+# until it is reviewed. The API token is a reference, as for hel-fi.
+apiVersion: joinedcontext.com/v1alpha1
+kind: CkanInstance
+metadata:
+  name: bbsk
+  namespace: bbsk
+  title: { sk: "Banskobystrický samosprávny kraj", en: "Banská Bystrica Self-Governing Region" }
+spec:
+  url: https://data.2.28.67.127.sslip.io
+  organizationDefault: bbsk
+  apiTokenRef:
+    name: ckan-api-token
+    key: token
+    envVar: CKAN_API_TOKEN

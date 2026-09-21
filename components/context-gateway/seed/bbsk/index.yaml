@@ -43,3 +43,5 @@ bbsk-pipeline-ukazovatele.yaml: projects/bbsk/pipelines/ukazovatele/pipeline.yam
 # The one application reading both bodies (T-2308, T-2457): a static bundle the Portal serves at
 # /apps/bbsk-ukazovatele/, configured with the region's endpoint and the city's through mesto-kpi.
 bbsk-app-ukazovatele.yaml: projects/bbsk/apps/bbsk-ukazovatele/app.yaml
+# The open-data catalogue of the region (T-2407): the one cleared endpoint, bbsk-kpi, publishes here.
+bbsk-ckan.yaml: projects/bbsk/ckan/bbsk.yaml

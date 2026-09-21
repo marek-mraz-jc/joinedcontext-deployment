@@ -114,8 +114,9 @@ def test_every_seeded_manifest_of_the_city_belongs_to_one_of_its_three_spaces(se
     spaces = {name for (kind, name) in seed if kind == "ContextSpace"}
     assert spaces == {"ovzdusie", "banskabystrica-mesto", "banskabystrica-kpi"}
     # A DataSource is a fetch and a Project is the project: neither belongs to a space. A
-    # Pipeline names its space through the Endpoint it writes through, which is the point.
-    project_scoped = {"Project", "ServiceAccount", "DataSource", "Pipeline"}
+    # Pipeline names its space through the Endpoint it writes through, which is the point. A
+    # CkanInstance is the project's catalogue, which each space's Endpoint may publish to (T-2407).
+    project_scoped = {"Project", "ServiceAccount", "DataSource", "Pipeline", "CkanInstance"}
     for (kind, name), manifest in seed.items():
         if kind in project_scoped:
             continue

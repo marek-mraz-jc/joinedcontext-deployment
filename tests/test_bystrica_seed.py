@@ -468,3 +468,32 @@ def test_the_application_reading_both_bodies_is_a_published_static_app_on_the_re
     # It reads and never writes (AP-07).
     operations = {op for need in app["spec"]["dataNeeds"] for op in need["operations"]}
     assert operations <= {"queryEntity", "retrieveEntity"}, operations
+
+
+# What the city and the region cleared for the open-data catalogue (T-2407, user 2026-09-21):
+# these two and nothing else, until the other endpoints are reviewed.
+CLEARED = {("banskabystrica", "public-air"), ("bbsk", "bbsk-kpi")}
+
+
+def test_only_the_cleared_endpoints_publish_each_to_its_own_bodys_catalogue():
+    """T-2407: a publication is a step past "reachable at a URL", so it is the city's call."""
+    published = set()
+    for folder in (CITY, REGION):
+        instances = {doc["metadata"]["name"]: doc for _, doc in manifests(folder, "CkanInstance")}
+        for _, endpoint in manifests(folder, "Endpoint"):
+            ckan = endpoint["spec"].get("publish", {}).get("ckan")
+            if ckan is None:
+                continue
+            project = endpoint["metadata"]["namespace"]
+            published.add((project, endpoint["metadata"]["name"]))
+            assert endpoint["spec"]["audience"] == "public", endpoint["metadata"]["name"]
+            instance = instances[ckan["instanceRef"]["name"]]
+            # Each body lands in its own organization, never in hel-fi's.
+            assert instance["metadata"]["namespace"] == project
+            assert ckan.get("organization", instance["spec"]["organizationDefault"]) == project
+            # A DataStore sheet is read through a representation the endpoint serves.
+            if "datastore" in ckan:
+                assert ckan["datastore"]["representation"] in endpoint["spec"]["enabledRepresentations"]
+            # The token is a reference, never a value.
+            assert set(instance["spec"]["apiTokenRef"]) <= {"name", "key", "envVar"}
+    assert published == CLEARED
