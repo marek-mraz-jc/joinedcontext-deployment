@@ -40,6 +40,8 @@ context-gateway:
 # development seed). The audience mapper is what binds the token to the seeded endpoint:
 # the gateway accepts a token only when `aud` names the slug it is called on.
 banskabystrica-conformance:
+  # An account of the demo seed: rendered by the development profile only (T-1720, CC-73).
+  profiles: [development]
   name: Conformance suite
   description: Service account of the ETSI conformance suite; client_credentials only, no browser flow
   subdomain: ''

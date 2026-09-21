@@ -1,6 +1,8 @@
 ---
 global:
   domain: platform.example.org
+  # The organisation's own domain in every entity id; production has no placeholder (CC-73).
+  orgDomain: example.org
   profile: production
   instanceSlug: jc
   initialUserEmail: {{ env "GITLAB_USER_EMAIL" | default "admin@example.com" }}
@@ -34,3 +36,8 @@ audit-logging:
     bucket: 'jc-audit'
     region: 'eu-central-1'
     endpointURL: 'https://s3.example.org'
+
+# The project whose streams the pipeline runner carries: named here, never the demo city (CC-73).
+pipeline-runner:
+  runner:
+    project: city

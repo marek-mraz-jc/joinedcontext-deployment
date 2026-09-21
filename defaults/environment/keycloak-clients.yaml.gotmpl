@@ -1,3 +1,21 @@
 ---
+# A client with `profiles` is rendered under those profiles only: the demo seed's accounts
+# exist on the workbench and never in a production realm (T-1720, CC-73).
 keycloakClients:
-  {{ include "jc.configFiles" (dict "components" .Values.components "file" "keycloak-clients.yaml") }}
+  {{- $profile := .Values.global.profile }}
+  {{- range $component := .Values.components }}
+    {{- $filePath := printf "../../components/%s/keycloak-clients.yaml" $component }}
+    {{- $addonPath := printf "../../deployment/addons/%s" $component }}
+    {{- if isDir $addonPath }}
+      {{- $filePath = printf "%s/keycloak-clients.yaml" $addonPath }}
+    {{- end }}
+    {{- if isFile $filePath }}
+      {{- range $clientId, $client := readFile $filePath | fromYaml | default dict }}
+        {{- $profiles := index $client "profiles" | default list }}
+        {{- if or (not $profiles) (has $profile $profiles) }}
+  {{ $clientId }}:
+    {{- toYaml $client | nindent 4 }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
