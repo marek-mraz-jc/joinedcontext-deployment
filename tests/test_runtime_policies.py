@@ -314,3 +314,39 @@ def test_every_placeholder_is_substituted(policies):
     the rule names is never enforced (T-0815, OPS-30, CC-12)."""
     left = sorted(set(re.findall(r"[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+", policies.read_text())))
     assert left == [], f"the rendered policies still carry placeholders: {left}"
+
+
+def test_production_renders_every_runtime_policy_in_enforce(rendered):
+    """OPS-29: in the production profile every validating rule refuses at admission. The action
+    is read from the render itself, with no `--set`, so a default that slides back to Audit
+    turns this red. Workload exemptions go through the opt-out annotation that
+    `justify-linkerd-inject-opt-out` reads, so that policy has to be there too."""
+    policies = [d for d in rendered("production") if d.get("kind") in ("ClusterPolicy", "Policy")]
+    names = {p["metadata"]["name"] for p in policies}
+    assert "justify-linkerd-inject-opt-out" in names, sorted(names)
+    audit = [
+        f"{p['metadata']['name']}/{rule['name']}: {rule['validate'].get('failureAction')}"
+        for p in policies
+        for rule in p["spec"].get("rules", [])
+        if "validate" in rule
+        and (rule["validate"].get("failureAction") or p["spec"].get("validationFailureAction")) != "Enforce"
+    ]
+    assert not audit, "rules that only report in production:\n" + "\n".join(audit)
+
+
+def test_production_admits_no_unmeshed_pod_and_its_edge_takes_only_mesh_traffic(rendered):
+    """OPS-39: plaintext between components stays inside the Linkerd trust boundary. A pod in a
+    meshed namespace without the proxy, or a meshed namespace without a default inbound policy,
+    is refused at admission; the edge data plane accepts only mTLS-authenticated clients. The
+    ACME HTTP-01 solver is the one unauthenticated server, because Let's Encrypt reaches it in
+    plaintext from outside the cluster by design."""
+    docs = rendered("production")
+    policies = {d["metadata"]["name"]: d for d in docs if d.get("kind") == "ClusterPolicy"}
+    for name in ("require-linkerd-sidecar", "require-meshed-namespace-inbound-policy"):
+        assert name in policies, f"{name} is not rendered in production"
+        actions = {r["validate"].get("failureAction") for r in policies[name]["spec"]["rules"]}
+        assert actions == {"Enforce"}, f"{name}: {actions}"
+    servers = {d["metadata"]["name"]: d["spec"] for d in docs if d.get("kind") == "Server"}
+    open_servers = sorted(n for n, s in servers.items() if s.get("accessPolicy") == "all-unauthenticated")
+    assert open_servers == ["apisix-configuration-acme-http01-solver"], open_servers
+    assert servers["apisix-configuration-apisix-gateway"]["accessPolicy"] == "all-authenticated"

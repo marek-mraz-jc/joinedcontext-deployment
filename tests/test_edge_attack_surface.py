@@ -187,7 +187,7 @@ def apisix_config(rendered):
 
 
 def test_every_route_of_every_component_clears_every_header_the_platform_trusts(component_plugins):
-    """GW12, AG-38 — a client that can set one of these chooses its own tenant or identity.
+    """GW12, AG-38, OPS-32 — a client that can set one of these chooses its own tenant or identity.
 
     Walks the component sources, so a route in an addon nobody renders is checked too.
     """
@@ -307,7 +307,7 @@ def response_headers(config: dict) -> dict:
 
 
 def test_every_route_of_every_component_answers_with_the_transport_headers(component_plugins):
-    """OPS-27 — HSTS, no content sniffing and a referrer policy on every answer of every host,
+    """OPS-27, OPS-34, OPS-36 — HSTS, no content sniffing and a referrer policy on every answer of every host,
     the two addons and the routes the edge answers by itself included."""
     for route_id, (source, config) in component_plugins.items():
         headers = response_headers(config)
