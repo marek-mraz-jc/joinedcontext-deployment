@@ -22,6 +22,8 @@ components:
   # and a fresh cluster has neither yet (T-0653). Still before the two components that read a
   # token it mints (gitea-token-portal, gitea-token-gateway).
   - gitea
+  # After the forge: its bootstrap writes the registration token the runner reads (T-2608).
+  - gitea-runner
   - context-broker
   - context-gateway
   - pipeline-runner

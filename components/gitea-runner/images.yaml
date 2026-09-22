@@ -4,8 +4,7 @@ gitea-runner:
     # The Portal release's builder image (AP-82), which also carries the forge's runner binary
     # and its loop (builder/Dockerfile of the portal repository). Published by the portal's
     # image.yml as joinedcontext-app-builder; digest read from the registry for the `main` tag.
-    # Re-pin to the first build that contains /usr/local/bin/runner (T-2608) before the
-    # component is listed in an environment that applies it.
+    # Pinned to portal 080be67, the first build with /usr/local/bin/runner (T-2608).
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-app-builder'
     tag: 'main'
-    digest: 'sha256:f1e6381b7fe54858b801feae6fb831e42bdf8fb0c942b7c8ae20212c60806f3a'
+    digest: 'sha256:3b34c7c2059bae512da4913dd88f62d63793714f6d4106e39bae528df664cd09'
