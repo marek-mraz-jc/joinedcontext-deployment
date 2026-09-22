@@ -15,6 +15,7 @@ apps/v1/Deployment local/apisix
 apps/v1/Deployment local/context-broker
 apps/v1/Deployment local/context-gateway
 apps/v1/Deployment local/gitea
+apps/v1/Deployment local/gitea-runner
 apps/v1/Deployment local/model-tools
 apps/v1/Deployment local/observability-collector
 apps/v1/Deployment local/pipeline-runner
@@ -37,15 +38,12 @@ kyverno.io/v1/ClusterPolicy -/require-meshed-namespace-inbound-policy
 kyverno.io/v1/ClusterPolicy -/require-ro-rootfs
 kyverno.io/v1/ClusterPolicy -/require-run-as-non-root-user
 kyverno.io/v1/ClusterPolicy -/require-run-as-nonroot
-kyverno.io/v1/ClusterPolicy -/restrict-app-build-jobs
 kyverno.io/v1/ClusterPolicy -/restrict-cnpg-operator-pod-labels
 networking.k8s.io/v1/Ingress -/apisix
 networking.k8s.io/v1/NetworkPolicy local/acme-http01-solver
 networking.k8s.io/v1/NetworkPolicy local/apisix
 networking.k8s.io/v1/NetworkPolicy local/apisix-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy local/apisix-linkerd-control-plane
-networking.k8s.io/v1/NetworkPolicy local/app-builder
-networking.k8s.io/v1/NetworkPolicy local/app-builder-linkerd
 networking.k8s.io/v1/NetworkPolicy local/artifact-store
 networking.k8s.io/v1/NetworkPolicy local/artifact-store-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy local/artifact-store-bucket
@@ -67,6 +65,7 @@ networking.k8s.io/v1/NetworkPolicy local/default-deny-audit-logging
 networking.k8s.io/v1/NetworkPolicy local/default-deny-context-broker
 networking.k8s.io/v1/NetworkPolicy local/default-deny-context-gateway
 networking.k8s.io/v1/NetworkPolicy local/default-deny-gitea
+networking.k8s.io/v1/NetworkPolicy local/default-deny-gitea-runner
 networking.k8s.io/v1/NetworkPolicy local/default-deny-keycloak
 networking.k8s.io/v1/NetworkPolicy local/default-deny-model-tools
 networking.k8s.io/v1/NetworkPolicy local/default-deny-monitoring
@@ -83,6 +82,8 @@ networking.k8s.io/v1/NetworkPolicy local/gitea-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy local/gitea-bootstrap
 networking.k8s.io/v1/NetworkPolicy local/gitea-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy local/gitea-linkerd-from-jc
+networking.k8s.io/v1/NetworkPolicy local/gitea-runner
+networking.k8s.io/v1/NetworkPolicy local/gitea-runner-linkerd
 networking.k8s.io/v1/NetworkPolicy local/keycloak
 networking.k8s.io/v1/NetworkPolicy local/keycloak-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy local/keycloak-config-cli
@@ -107,12 +108,14 @@ networking.k8s.io/v1/NetworkPolicy local/portal-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy local/portal-egress-to-gitea
 networking.k8s.io/v1/NetworkPolicy local/portal-from-gitea
 networking.k8s.io/v1/NetworkPolicy local/portal-from-observability
+networking.k8s.io/v1/NetworkPolicy local/portal-ingress-from-gitea-runner
 networking.k8s.io/v1/NetworkPolicy local/portal-internal-from-context-gateway
 networking.k8s.io/v1/NetworkPolicy local/portal-internal-from-pipeline-runner
 networking.k8s.io/v1/NetworkPolicy local/portal-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy local/portal-linkerd-egress-to-gitea
 networking.k8s.io/v1/NetworkPolicy local/portal-linkerd-from-context-gateway
 networking.k8s.io/v1/NetworkPolicy local/portal-linkerd-from-gitea
+networking.k8s.io/v1/NetworkPolicy local/portal-linkerd-from-gitea-runner
 networking.k8s.io/v1/NetworkPolicy local/portal-linkerd-from-observability
 networking.k8s.io/v1/NetworkPolicy local/portal-linkerd-from-pipeline-runner
 networking.k8s.io/v1/NetworkPolicy local/postgres
@@ -157,6 +160,7 @@ v1/ConfigMap local/apisix-standalone-config
 v1/ConfigMap local/cnpg-controller-manager-config
 v1/ConfigMap local/cnpg-default-monitoring
 v1/ConfigMap local/gitea-bootstrap-seed
+v1/ConfigMap local/gitea-runner
 v1/ConfigMap local/observability-collector-config
 v1/ConfigMap local/pipeline-runner-helsinki-streams
 v1/ConfigMap local/portal-branding
@@ -207,12 +211,12 @@ v1/Service local/observability-collector
 v1/Service local/pipeline-runner
 v1/Service local/portal
 v1/ServiceAccount local/apisix
-v1/ServiceAccount local/app-builder
 v1/ServiceAccount local/artifact-store
 v1/ServiceAccount local/context-broker
 v1/ServiceAccount local/context-gateway
 v1/ServiceAccount local/gitea
 v1/ServiceAccount local/gitea-bootstrap
+v1/ServiceAccount local/gitea-runner
 v1/ServiceAccount local/keycloak-app-keycloakx
 v1/ServiceAccount local/observability-collector
 v1/ServiceAccount local/pipeline-runner

@@ -34,6 +34,13 @@ service:
 
 probes:
   enabled: false
+  # Ready while it holds a registration: runner.sh writes /tmp/runner/.runner when it registers
+  # and wipes it after each job, so a runner the forge keeps refusing reads not ready. No
+  # liveness: a restart would find the registration token already deleted (runner.sh).
+  readinessExec: ["test", "-s", "/tmp/runner/.runner"]
+  readiness:
+    periodSeconds: 10
+    failureThreshold: 6
 
 serviceAccount:
   create: true

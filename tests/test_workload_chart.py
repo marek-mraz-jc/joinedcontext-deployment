@@ -106,3 +106,24 @@ def test_configmap_empty_data_renders_and_annotations(tmp_path):
     dep = find_resource(docs, "Deployment")
     annotations = dep["spec"]["template"]["metadata"]["annotations"]
     assert "checksum/config" in annotations
+
+
+@requires_helm
+def test_a_workload_with_nothing_to_serve_is_ready_by_command_and_never_restarted_by_a_probe(tmp_path):
+    """The forge's runner (components/gitea-runner) serves no HTTP. Kyverno's validate-probes
+    wants a probe on every container; a liveness restart would lose the registration token the
+    runner read once and deleted, so readiness comes from a command and liveness stays off."""
+    docs = render_workload(tmp_path, {
+        "image": {"repository": "busybox", "tag": "1"},
+        "service": {"enabled": False},
+        "probes": {"enabled": False, "readinessExec": ["test", "-s", "/tmp/runner/.runner"]},
+    })
+    container = find_resource(docs, "Deployment")["spec"]["template"]["spec"]["containers"][0]
+    assert container["readinessProbe"]["exec"]["command"] == ["test", "-s", "/tmp/runner/.runner"]
+    assert "livenessProbe" not in container
+    assert "httpGet" not in container["readinessProbe"]
+
+    bare = render_workload(tmp_path, {"image": {"repository": "busybox", "tag": "1"},
+                                      "service": {"enabled": False}, "probes": {"enabled": False}})
+    plain = find_resource(bare, "Deployment")["spec"]["template"]["spec"]["containers"][0]
+    assert "readinessProbe" not in plain and "livenessProbe" not in plain, "no command, no probe"

@@ -72,6 +72,8 @@ metrics:
 probes:
   # false for a workload that serves nothing to probe, whose health is read elsewhere.
   enabled: true
+  # With enabled false: a readiness command instead, e.g. ["test", "-s", "/tmp/state"].
+  readinessExec: []
   readiness:
     path: /
     periodSeconds: 5
