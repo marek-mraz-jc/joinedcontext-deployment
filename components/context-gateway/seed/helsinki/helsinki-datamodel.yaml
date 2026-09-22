@@ -7,9 +7,9 @@ metadata:
 spec:
   contextSpaceRef: helsinki
   linkml: ./helsinki.linkml.yaml
-  version: 1.1.0
+  version: 1.2.0
   lifecycle: published
-  classes: [Event, BikeHireDockingStation, Vehicle, NewsArticle, WeatherObserved, Alert]
+  classes: [Event, BikeHireDockingStation, Vehicle, NewsArticle, WeatherObserved, Alert, AirQualityObserved]
   artifacts:
     jsonSchema: ./helsinki.v1.schema.json
     context: ./helsinki.v1.context.jsonld

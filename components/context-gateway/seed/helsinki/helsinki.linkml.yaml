@@ -4,12 +4,13 @@ title: Helsinki city context
 description: >-
   What the Helsinki demonstration space carries side by side (DM-01, DM-09): the events of the
   city's Linked Events register, the HSL city bike docking stations, the HSL buses of four
-  trunk lines, the city's news, Fintraffic's road weather stations and its traffic alerts. One model, one space, four endpoints that each publish a slice of it. The IRIs
+  trunk lines, the city's news, Fintraffic's road weather stations and its traffic alerts, and FMI's air quality stations. One model, one space, four endpoints that each publish a slice of it. The IRIs
   are Smart Data Models' and ETSI's, cited rather than minted, so a reader who knows those
   vocabularies reads the same terms here (DM-04, DM-16).
 license: https://joinedcontext.com/licenses/cc-by-4.0
 prefixes:
   linkml: https://w3id.org/linkml/
+  jc: https://joinedcontext.com/models/
   sdm: https://smartdatamodels.org/
   ngsi-ld: https://uri.etsi.org/ngsi-ld/
 default_prefix: sdm
@@ -268,6 +269,45 @@ slots:
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Alert
+  pm10:
+    slot_uri: sdm:pm10
+    description: Particulate matter up to 10 µm, the hour's mean at the station.
+    range: float
+    minimum_value: 0
+    unit:
+      ucum_code: ug/m3
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  pm25:
+    slot_uri: sdm:pm25
+    description: Particulate matter up to 2.5 µm, the hour's mean at the station.
+    range: float
+    minimum_value: 0
+    unit:
+      ucum_code: ug/m3
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  airQualityIndex:
+    slot_uri: sdm:airQualityIndex
+    description: FMI's hourly air quality index, 1 (good) to 5 (very poor).
+    range: float
+    minimum_value: 1
+    maximum_value: 5
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  stewardNote:
+    slot_uri: jc:stewardNote
+    description: >-
+      A note by the person who keeps this data: what was checked, what looks wrong, whom to
+      ask. No pipeline writes it and no pipeline overwrites it, so an application may offer it
+      for editing without the next run taking the words back (AP-62). At most 500 characters
+      and no angle brackets, because it is a note and not a document.
+    pattern: "^[^<>]{0,500}$"
+    annotations:
+      ngsi_ld_kind: Property
 
 classes:
   Event:
@@ -355,4 +395,20 @@ classes:
       - dateIssued
       - validFrom
       - validTo
+      - source
+  AirQualityObserved:
+    class_uri: sdm:AirQualityObserved
+    description: >-
+      One air quality station around Helsinki and its newest hourly readings: FMI's stations,
+      and the stations a steward adds by hand, which carry no source.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+    slots:
+      - name
+      - dateObserved
+      - pm10
+      - pm25
+      - airQualityIndex
+      - stewardNote
       - source

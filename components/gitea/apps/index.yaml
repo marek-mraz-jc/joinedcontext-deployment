@@ -1,6 +1,6 @@
 # Written by scripts/vendor-sample-apps.py; do not edit. The files of each sample application,
 # relative to its folder, as the forge bootstrap pushes them to its repository (T-2599).
-source: d111e1b20caacded6d39a7aa604104c0e9584b73
+source: d2988d60fab054c3a82a4c24d82da20a49c5f02b
 apps:
   helsinki-bikes:
     - .gitea/workflows/build.yml
@@ -93,3 +93,50 @@ apps:
     - test-setup.ts
     - tsconfig.json
     - vite.config.ts
+  air-quality:
+    - .gitea/workflows/build.yml
+    - Cargo.lock
+    - Cargo.toml
+    - README.md
+    - app.yaml
+    - build.rs
+    - src/assets.rs
+    - src/lib.rs
+    - src/main.rs
+    - tests/e2e/auth_flow.spec.ts
+    - tests/e2e/stub-endpoint.mjs
+    - tests/stations_api_tests.rs
+    - ui/index.html
+    - ui/package.json
+    - ui/playwright.config.ts
+    - ui/pnpm-lock.yaml
+    - ui/src/App.tsx
+    - ui/src/api.ts
+    - ui/src/index.css
+    - ui/src/main.tsx
+    - ui/tests/app.test.tsx
+    - ui/tests/setup.ts
+    - ui/tsconfig.json
+    - ui/vite.config.ts
+  hsl-transport:
+    - .gitea/workflows/build.yml
+    - Cargo.lock
+    - Cargo.toml
+    - README.md
+    - app.yaml
+    - build.rs
+    - src/assets.rs
+    - src/lib.rs
+    - src/main.rs
+    - tests/server_tests.rs
+    - ui/index.html
+    - ui/package.json
+    - ui/pnpm-lock.yaml
+    - ui/src/App.tsx
+    - ui/src/api.ts
+    - ui/src/index.css
+    - ui/src/main.tsx
+    - ui/tests/map.test.tsx
+    - ui/tests/setup.ts
+    - ui/tsconfig.json
+    - ui/vite.config.ts

@@ -1,6 +1,9 @@
 {
   "@context": {
     "@vocab": "https://smartdatamodels.org/",
+    "AirQualityObserved": {
+      "@id": "sdm:AirQualityObserved"
+    },
     "Alert": {
       "@id": "sdm:Alert"
     },
@@ -24,6 +27,10 @@
     },
     "address": {
       "@id": "schema:address"
+    },
+    "airQualityIndex": {
+      "@id": "sdm:airQualityIndex",
+      "@type": "xsd:float"
     },
     "availableBikeNumber": {
       "@id": "sdm:availableBikeNumber",
@@ -79,6 +86,7 @@
       "@id": "schema:image",
       "@type": "xsd:anyURI"
     },
+    "jc": "https://joinedcontext.com/models/",
     "linkml": "https://w3id.org/linkml/",
     "location": {
       "@id": "geojson:geometry"
@@ -91,6 +99,14 @@
     "observedAt": {
       "@id": "ngsi-ld:observedAt",
       "@type": "xsd:dateTime"
+    },
+    "pm10": {
+      "@id": "sdm:pm10",
+      "@type": "xsd:float"
+    },
+    "pm25": {
+      "@id": "sdm:pm25",
+      "@type": "xsd:float"
     },
     "precipitation": {
       "@id": "sdm:precipitation",
@@ -124,6 +140,9 @@
     },
     "status": {
       "@id": "sdm:status"
+    },
+    "stewardNote": {
+      "@id": "jc:stewardNote"
     },
     "subCategory": {
       "@id": "sdm:subCategory"
