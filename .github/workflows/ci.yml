@@ -9,7 +9,10 @@ on:
     branches: [main]
     paths-ignore: ["**.md"]
 permissions: { contents: read }
-concurrency: { group: "ci-${{ github.ref }}", cancel-in-progress: true }
+# On main a run is never cancelled: the watcher pins an image every few minutes, and each pin
+# used to cancel the run before it, so main went an hour without a finished run. One run
+# finishes, the newest push waits behind it (GitHub keeps one pending run per group).
+concurrency: { group: "ci-${{ github.ref }}", cancel-in-progress: "${{ github.ref != 'refs/heads/main' }}" }
 env:
   CONFTEST_VERSION: "0.69.0"
   CONFTEST_CHECKSUM: "96fc2fbf11f0afde51256647127e6f00a64ce839a4d9a0a1aef2426c0e6f4b3f"
