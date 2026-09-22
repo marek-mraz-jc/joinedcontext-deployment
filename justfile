@@ -464,6 +464,12 @@ dev-smoke:
 	./scripts/smoke-forge-login.sh "https://{{ dev_domain }}" || rc=1
 	exit "$rc"
 
+# Pin the portal and both app-builder images to one portal commit, checked against the seeded
+# workflows (T-2633); run it the moment the portal's image.yml publishes, then dev-apply
+[group('dev cluster')]
+pin-portal commit:
+	./scripts/pin-portal.sh {{ commit }}
+
 # Wipe the platform off the dev cluster (announce it in AI_shared_folder.md first!)
 [group('dev cluster')]
 dev-destroy:
