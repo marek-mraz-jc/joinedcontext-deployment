@@ -113,7 +113,7 @@ jobs:
         # job fewer on a metered private repository (T-0521). The reusable workflow stays for
         # the other repositories.
         run: gitleaks detect --source . --config .ci/shared/gitleaks.toml --redact --exit-code 1
-      - run: pip install --quiet pytest pyyaml jsonschema
+      - run: pip install --quiet pytest pytest-xdist pyyaml jsonschema
       - name: the two collector images the tests run
         # tests/test_observability_collector.py runs `otelcol validate` on the rendered
         # config and one record through the allow-list (T-0349); tests/test_audit_logging.py
@@ -141,4 +141,8 @@ jobs:
       - name: kyverno apply on the rendered local, production and add-on manifests (OPS-40)
         # Shift-left: what admission would refuse is refused here first, on every pull request.
         run: .ci/policies/verify-kyverno-policies.sh
-      - run: pytest tests -q
+      # One worker per core: each smoke-script case runs the whole script against stubs, and in
+      # series the suite passed the job's 10 minutes once T-2592 and T-2601 added cases, which
+      # GitHub reports as "cancelled" and which hid a red test behind it (8m24s -> 2m45s on 4).
+      # The modules that rewrite deployment/environments/testing share one worker (xdist_group).
+      - run: pytest tests -q -n auto --dist loadgroup

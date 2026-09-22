@@ -15,6 +15,10 @@ from pathlib import Path
 import pytest
 import yaml
 
+# Renders from the one shared `deployment/environments/testing` folder, which it rewrites, so
+# every module that does runs on one xdist worker (ci.yml runs `-n auto --dist loadgroup`).
+pytestmark = pytest.mark.xdist_group("deployment-environments-testing")
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SOURCE_ARCHIVE = "s3://jc-backups/postgres"
 TARGET_TIME = datetime.datetime(2026, 8, 15, 14, 30, tzinfo=datetime.timezone.utc)

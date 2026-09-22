@@ -6,6 +6,10 @@ from typing import Any, Dict, Optional
 import pytest
 import yaml
 
+# Renders from the one shared `deployment/environments/testing` folder, which it rewrites, so
+# every module that does runs on one xdist worker (ci.yml runs `-n auto --dist loadgroup`).
+pytestmark = pytest.mark.xdist_group("deployment-environments-testing")
+
 @pytest.fixture
 def project_root():
     return Path(__file__).resolve().parent.parent
