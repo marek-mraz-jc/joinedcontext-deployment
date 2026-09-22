@@ -38,6 +38,10 @@ spec:
         - UiSchema
         - Role
         - RoleBinding
+        # Who is in a group is who a binding names, so the administrator who writes bindings
+        # writes groups too; without it Organization → Groups refused its own administrator
+        # (PF-62, T-2625).
+        - Group
         - Subscription
         - Entity
         - Dashboard
