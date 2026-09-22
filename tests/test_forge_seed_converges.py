@@ -104,6 +104,7 @@ class Forge:
             "ORG": ORG,
             "REPO": REPO,
             "BRANCH": "main",
+            "LAYOUT": "1",
             "TEAMS": "viewers",
             "NAMESPACE": "dev",
             "ADMIN_USER": "forge-admin",
@@ -301,3 +302,99 @@ def test_a_token_is_minted_again_when_its_scopes_change_and_only_then(script, tm
     assert "the token in gitea-token-gateway still authenticates" in third.stdout
     recorded = base64.b64decode(forge.secrets["gitea-token-portal"]["data"]["scopes"]).decode()
     assert recorded == wider
+
+
+HELSINKI = """apiVersion: joinedcontext.com/v1alpha1
+kind: Project
+metadata:
+  name: helsinki
+  namespace: org
+spec:
+  organizationRef: hel
+"""
+
+ORG_MANIFEST = """apiVersion: joinedcontext.com/v1alpha1
+kind: Organization
+metadata:
+  name: hel
+spec:
+  domain: hel.fi
+"""
+
+
+def layout2(forge: Forge) -> None:
+    forge.put("org.yaml", ORG_MANIFEST)
+    forge.put("projects/helsinki/project.yaml", HELSINKI)
+    forge.put("projects/helsinki/shared/mesto-kpi.yaml", SHARE)
+    forge.put("projects/bbsk/project.yaml", PROJECT.replace("spec:\n", "spec:\n  organizationRef: hel\n"))
+
+
+@requires_helmfile
+def test_layout_2_seeds_the_organization_and_one_repository_per_project(script, tmp_path):
+    """A fresh installation in layout 2 (CC-85): the same cut `jcctl migrate` makes of a
+    layout 1 repository, and a second run writes nothing. The fake forge always has the
+    organization repository, so it starts as one this Job made: `.jc/layout` already 2."""
+    forge = Forge(tmp_path, {".jc/layout": "2\n"})
+    layout2(forge)
+    first = forge.run(script, LAYOUT="2")
+    assert first.returncode == 0, first.stderr
+
+    org = forge.contents
+    assert org[".jc/layout"] == "2\n"
+    assert org["org.yaml"] == ORG_MANIFEST
+    assert not [path for path in org if path.startswith("projects/helsinki/")], org.keys()
+    assert org["projects/helsinki.yaml"] == (
+        "apiVersion: joinedcontext.com/v1alpha1\nkind: Project\nmetadata:\n  name: helsinki\n"
+        "  namespace: org\nspec:\n  organizationRef: hel\n  repository:\n    name: helsinki\n"
+        "  ref: main\n"
+    )
+    assert "projects/bbsk.yaml" in org
+
+    repos = json.loads(forge.state.read_text())["repos"]
+    helsinki = repos["helsinki"]["files"]
+    assert helsinki["project.yaml"] == HELSINKI
+    assert helsinki["shared/mesto-kpi.yaml"] == SHARE
+    assert helsinki[".jc/layout"] == "2\n"
+    assert helsinki[MANIFEST].splitlines() == [".jc/layout", "project.yaml", "shared/mesto-kpi.yaml"]
+    assert repos["helsinki"]["private"] is True
+    assert set(repos) == {"helsinki", "bbsk"}
+
+    second = forge.run(script, LAYOUT="2")
+    assert second.returncode == 0, second.stderr
+    assert "created" not in second.stdout, second.stdout
+    assert second.stdout.count("seed: 0 file(s) written") == 3, second.stdout
+
+
+@requires_helmfile
+def test_layout_2_refuses_a_layout_1_repository_instead_of_splitting_it(script, tmp_path):
+    """Switching the value on an installation that was never migrated would move every project
+    file out of the organization repository without its history; the Job stops instead."""
+    forge = Forge(tmp_path, {"projects/helsinki/project.yaml": HELSINKI})
+    layout2(forge)
+    run = forge.run(script, LAYOUT="2")
+    assert run.returncode != 0
+    assert "not a layout 2 repository; migrate it first" in run.stderr
+    assert forge.contents == {"projects/helsinki/project.yaml": HELSINKI}
+    assert not json.loads(forge.state.read_text()).get("repos")
+
+
+@requires_helmfile
+def test_layout_2_does_not_adopt_a_project_repository_it_did_not_make(script, tmp_path):
+    forge = Forge(tmp_path, {".jc/layout": "2\n"})
+    state = json.loads(forge.state.read_text())
+    state["repos"] = {"helsinki": {"files": {"README.md": "somebody else's\n"}, "private": True, "head": "0" * 40}}
+    forge.state.write_text(json.dumps(state))
+    layout2(forge)
+    run = forge.run(script, LAYOUT="2")
+    assert run.returncode != 0
+    assert "joinedcontext/helsinki is not a layout 2 repository" in run.stderr
+    assert json.loads(forge.state.read_text())["repos"]["helsinki"]["files"] == {"README.md": "somebody else's\n"}
+
+
+@requires_helmfile
+def test_layout_2_refuses_a_project_without_its_organization(script, tmp_path):
+    forge = Forge(tmp_path, {".jc/layout": "2\n"})
+    forge.put("projects/bbsk/project.yaml", PROJECT)
+    run = forge.run(script, LAYOUT="2")
+    assert run.returncode != 0
+    assert "projects/bbsk/project.yaml names no apiVersion or spec.organizationRef" in run.stderr
