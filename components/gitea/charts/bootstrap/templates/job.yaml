@@ -644,6 +644,11 @@ spec:
                     held=$(sed -n 's/.*"content": *"\([^"]*\)".*/\1/p' $WORK/body | sed 's/\\n//g' | base64 -d)
                     if [ "$held" = "$(cat $WORK/app-manifest)" ]; then
                       echo "app $app: $path already names $head"
+                    elif printf '%s\n' "$held" | grep -qx "      ref: $head" && printf '%s\n' "$held" | grep -q '^status:'; then
+                      # The build lane's status.build for this very head (AP-13a): rewriting the
+                      # file would erase it, and the same head never builds again (T-2633).
+                      # ponytail: a seed edit at an unchanged head waits for the next app commit.
+                      echo "app $app: $path already names $head and its build"
                     else
                       sha=$(sed -n 's/.*"sha": *"\([0-9a-f]\{40\}\)".*/\1/p' $WORK/body | head -1)
                       status=$(forge_code PUT "/api/v1/repos/$ORG/$app_home/contents/$path" \

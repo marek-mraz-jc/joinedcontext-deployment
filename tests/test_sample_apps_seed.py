@@ -6,6 +6,7 @@ into the project pinned to that commit. These run the Job's real script against 
 and read the dev render for what the Job is handed.
 """
 
+import json
 import shutil
 import subprocess
 from pathlib import Path
@@ -122,6 +123,32 @@ def test_a_second_run_changes_nothing_and_says_so(script, tmp_path):
     written = forge.calls.read_text()[len(calls):]
     assert "POST http://forge.test/api/v1/orgs/joinedcontext/repos" not in written, "never recreated"
     assert "PUT http://forge.test/api/v1/repos/joinedcontext/configuration/contents/projects/helsinki/apps" not in written
+
+
+@requires_helmfile
+def test_a_rerun_keeps_the_build_the_lane_wrote_for_the_same_head(script, tmp_path):
+    """T-2633, AP-13a: the Portal rewrote the manifest with status.build; a rerun at the same head
+    leaves it, and a new head still moves the manifest."""
+    forge, app = seeded(tmp_path)
+    assert run(forge, script).returncode == 0
+    path = "projects/helsinki/apps/helsinki-bikes/app.yaml"
+    head = repos(forge)["helsinki_helsinki-bikes"]["head"]
+    built = yaml.safe_load(forge.contents[path])
+    built["status"] = {"build": {"commit": head, "digest": "sha256:" + "a" * 64}}
+    state = json.loads(forge.state.read_text())
+    state["contents"][path] = yaml.safe_dump(built, sort_keys=False)
+    forge.state.write_text(json.dumps(state))
+
+    second = run(forge, script)
+    assert second.returncode == 0, second.stderr
+    assert f"{path} already names {head} and its build" in second.stdout
+    assert yaml.safe_load(forge.contents[path])["status"]["build"]["commit"] == head
+
+    (app / "README.md").write_text("# changed\n")
+    third = run(forge, script)
+    assert third.returncode == 0, third.stderr
+    moved = yaml.safe_load(forge.contents[path])
+    assert moved["spec"]["source"]["git"]["ref"] != head and "status" not in moved
 
 
 @requires_helmfile
