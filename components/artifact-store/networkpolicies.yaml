@@ -19,11 +19,6 @@ artifact-store:
             matchLabels:
               app.kubernetes.io/name: portal-portal
           componentNamespace: portal
-        # The build Jobs of the Portal's build lane (AP-80, AP-81).
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/name: app-builder
-          componentNamespace: portal
         # The bucket bootstrap, which creates the bucket and its object-lock configuration
         # from inside this namespace after every apply.
         - podSelector:

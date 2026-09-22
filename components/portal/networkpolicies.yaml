@@ -136,8 +136,9 @@ postgres-from-portal:
           port: 5432
 
 # A build Job runs an application's own code (T-1707), so it reaches exactly what a build needs
-# and nothing else (AP-81): the forge to clone one repository, the artifact store to upload one
-# bundle, and DNS. No ingress at all: nothing calls a build.
+# and nothing else (AP-81): the forge to clone one repository, and DNS. Never the artifact store:
+# application builds live in the forge's package registry (ADR-N-028, AP-74). No ingress at all:
+# nothing calls a build.
 app-builder:
   podSelector:
     app.kubernetes.io/name: app-builder
@@ -154,14 +155,6 @@ app-builder:
       ports:
         - protocol: TCP
           port: 3000
-    - to:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/component: store
-          componentNamespace: artifact-store
-      ports:
-        - protocol: TCP
-          port: 9000
     - to:
         - namespaceSelector:
             matchLabels:
