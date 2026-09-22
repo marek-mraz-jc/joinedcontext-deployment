@@ -90,6 +90,12 @@ env:
   # steward merges in the Portal serves within one sync period and a revoked Policy stops
   # within the next (T-0278, EP-19, OPS-45).
   JC_GATEWAY_REPO_DIR: /repo/current
+{{- if eq (toString ($global.configRepo.layout | default 1)) "2" }}
+  # Layout 2 (CC-86): each registered project's checkout, kept by the checkouts sidecar, and
+  # the directory the gateway assembles the organization into.
+  JC_GATEWAY_PROJECTS_DIR: /projects
+  JC_GATEWAY_ASSEMBLY_DIR: /assembly
+{{- end }}
 {{- if has "agent-runner" .Values.components }}
   # The running workspace previews, served beside main on slugs of their own (CC-78,
   # Architecture/06 §7.2). The Portal opens its internal listener only beside an agent runner.
@@ -120,6 +126,12 @@ env:
 {{- $gitSyncSecurity := dict "runAsNonRoot" true "runAsUser" 65533 "runAsGroup" 65533 "allowPrivilegeEscalation" false "readOnlyRootFilesystem" true "capabilities" (dict "drop" (list "ALL")) "seccompProfile" (dict "type" "RuntimeDefault") }}
 {{- $gitSyncMounts := list (dict "name" "repo" "mountPath" "/repo") (dict "name" "tmp" "mountPath" "/tmp") }}
 {{- $gitSyncResources := dict "requests" (dict "cpu" "10m" "memory" "32Mi") "limits" (dict "cpu" "200m" "memory" "128Mi") }}
+{{- $layout2 := eq (toString ($global.configRepo.layout | default 1)) "2" }}
+{{- $checkouts := index .Values.images "context-gateway" "checkouts" }}
+{{- $checkoutsArgs := list "--org-dir" "/repo/current" "--projects-dir" "/projects" "--forge" (printf "http://gitea-http.%s.svc.cluster.local:3000/%s" .Values.gitea.forge.namespace $global.configRepo.owner) "--token-file" "/var/run/forge/token" }}
+{{- $checkoutsSecurity := dict "runAsNonRoot" true "runAsUser" 65532 "runAsGroup" 65532 "allowPrivilegeEscalation" false "readOnlyRootFilesystem" true "capabilities" (dict "drop" (list "ALL")) "seccompProfile" (dict "type" "RuntimeDefault") }}
+{{- $checkoutsMounts := list (dict "name" "repo" "mountPath" "/repo" "readOnly" true) (dict "name" "projects" "mountPath" "/projects") (dict "name" "forge-token" "mountPath" "/var/run/forge" "readOnly" true) (dict "name" "tmp" "mountPath" "/tmp") }}
+{{- $checkoutsEnv := list (dict "name" "HOME" "value" "/tmp") }}
 
 # The checkout the gateway reads. git-sync (image pinned by digest, images.yaml) clones the
 # forge's repository with the read-only token the forge bootstrap minted (gitea-token-gateway,
@@ -136,10 +148,31 @@ extraVolumes:
   - name: previews
     emptyDir:
       sizeLimit: 64Mi
+{{- if $layout2 }}
+  # Layout 2 (CC-86, T-2646): the checkouts sidecar writes every registered project here and
+  # the gateway only reads it; the gateway assembles the organization into /assembly. The
+  # forge token is the read-only one git-sync already uses (T-0399), mounted as a file
+  # because `jcctl checkouts` reads it from one and never from its environment.
+  - name: projects
+    emptyDir:
+      sizeLimit: 256Mi
+  - name: assembly
+    emptyDir:
+      sizeLimit: 256Mi
+  - name: forge-token
+    secret:
+      secretName: gitea-token-gateway
+      items:
+        - { key: token, path: token }
+{{- end }}
 
 extraVolumeMounts:
   - { name: repo, mountPath: /repo, readOnly: true }
   - { name: previews, mountPath: /previews }
+{{- if $layout2 }}
+  - { name: projects, mountPath: /projects, readOnly: true }
+  - { name: assembly, mountPath: /assembly }
+{{- end }}
 
 extraInitContainers:
   - name: git-sync-init
@@ -153,6 +186,23 @@ extraInitContainers:
 {{ $gitSyncMounts | toYaml | indent 6 }}
     resources:
 {{ $gitSyncResources | toYaml | indent 6 }}
+{{- if $layout2 }}
+  # One pass after the organization's first clone, so the gateway starts with every project
+  # it can reach; a project whose fetch fails is reported and the others start (CC-86).
+  - name: checkouts-init
+    image: "{{ $checkouts.repository }}:{{ $checkouts.tag }}@{{ $checkouts.digest }}"
+    imagePullPolicy: IfNotPresent
+    args:
+{{ append $checkoutsArgs "--once" | toYaml | indent 6 }}
+    env:
+{{ $checkoutsEnv | toYaml | indent 6 }}
+    securityContext:
+{{ $checkoutsSecurity | toYaml | indent 6 }}
+    volumeMounts:
+{{ $checkoutsMounts | toYaml | indent 6 }}
+    resources:
+{{ $gitSyncResources | toYaml | indent 6 }}
+{{- end }}
 
 extraContainers:
   - name: git-sync
@@ -175,6 +225,29 @@ extraContainers:
 {{ $gitSyncMounts | toYaml | indent 6 }}
     resources:
 {{ $gitSyncResources | toYaml | indent 6 }}
+{{- if $layout2 }}
+  # Every registered project at its ref, relinked one atomic rename at a time (CC-86); the
+  # gateway's reaper sees the new commit and reloads.
+  - name: checkouts
+    image: "{{ $checkouts.repository }}:{{ $checkouts.tag }}@{{ $checkouts.digest }}"
+    imagePullPolicy: IfNotPresent
+    args:
+{{ concat $checkoutsArgs (list "--interval" "10") | toYaml | indent 6 }}
+    env:
+{{ $checkoutsEnv | toYaml | indent 6 }}
+    # No port of its own: ready once the first pass left the projects directory behind.
+    readinessProbe:
+      exec:
+        command: ["test", "-d", "/projects"]
+      periodSeconds: 30
+      timeoutSeconds: 3
+    securityContext:
+{{ $checkoutsSecurity | toYaml | indent 6 }}
+    volumeMounts:
+{{ $checkoutsMounts | toYaml | indent 6 }}
+    resources:
+{{ $gitSyncResources | toYaml | indent 6 }}
+{{- end }}
 {{- end }}
 
 podSecurityContext:
