@@ -145,6 +145,10 @@ env:
   # `connect-src 'self'` would be the Portal API and the session cookie would ride along. With
   # this set the Portal answers /apps/* on its own host with a 308 to the apex (T-2476).
   JC_PORTAL_APPS_URL: "https://{{ $global.domain }}"
+  # The builds `status.build` names, fetched from the forge's package registry and unpacked
+  # under their digest (AP-102). The image's own /srv/apps is read-only and keeps the bundles it
+  # ships; this is the pod's one writable app directory, and a restart fetches again.
+  JC_PORTAL_APPS_CACHE_DIR: /var/cache/jc/apps
   # APISIX logs the person in and hands the Portal the user's access token as X-Access-Token,
   # after clearing the header from every client request; with this set the Portal accepts it
   # as it accepts `Authorization: Bearer`. Only a deployment with the edge in front sets it
@@ -271,8 +275,13 @@ env:
 {{- end }}
 
 {{- $clusterCa := eq ($global.ingress.clusterIssuer | default "") "selfsigned-ca" }}
-{{- if or $clusterCa $ageSecret }}
 extraVolumes:
+  # One build per application: the Portal removes an app's older build once the new one is in
+  # place. Past the limit the kubelet evicts the pod, so it is sized for the whole catalog
+  # (a bundle unpacks to 256 MiB at most, most to a few MiB).
+  - name: apps-cache
+    emptyDir:
+      sizeLimit: 2Gi
 {{- if $clusterCa }}
   - name: cluster-ca
     secret:
@@ -291,6 +300,8 @@ extraVolumes:
       optional: true
 {{- end }}
 extraVolumeMounts:
+  - name: apps-cache
+    mountPath: /var/cache/jc/apps
 {{- if $clusterCa }}
   - name: cluster-ca
     mountPath: /etc/jc/ca
@@ -300,7 +311,6 @@ extraVolumeMounts:
   - name: age-identity
     mountPath: /etc/jc/age
     readOnly: true
-{{- end }}
 {{- end }}
 
 # One image serves every installation: the identity is mounted, not built in. The chart's
