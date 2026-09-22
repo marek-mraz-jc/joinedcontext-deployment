@@ -53,12 +53,25 @@ tokens:
       - {{ .Values.portal.portal.appsNamespace }}
       {{- else }} []
       {{- end }}
+  lane:
+    namespaces:
+      {{- if has "gitea-runner" .Values.components }}
+      - {{ .Values.gitea.bootstrap.namespace }}
+      {{- else }} []
+      {{- end }}
   runner:
     namespaces:
       {{- if has "gitea-runner" .Values.components }}
       - {{ index .Values "gitea-runner" "runner" "namespace" }}
       {{- else }} []
       {{- end }}
+
+# The lane token's refresher, where the runner runs (ADR-N-028 §5, T-2636). The token endpoint
+# is Keycloak's in-cluster Service, the way Grafana exchanges its code: KC_HOSTNAME pins the
+# public issuer into every token, whichever host it was asked on.
+laneToken:
+  enabled: {{ has "gitea-runner" .Values.components }}
+  tokenUrl: "http://keycloak-app-keycloakx-http.{{ .Values.keycloak.app.namespace }}.svc.cluster.local:80{{ .Values.keycloak.app.pathPrefix | trimSuffix "/" }}/realms/{{ $global.instanceSlug }}/protocol/openid-connect/token"
 
 # The same image the forge runs, so the Job pulls nothing the node does not already have and
 # there is one digest to re-pin instead of two. It carries curl, sed and base64 and runs as

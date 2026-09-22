@@ -88,6 +88,12 @@ spec:
               value: {{ .Values.tokens.registry.host | quote }}
             - name: REGISTRY_NAMESPACES
               value: {{ .Values.tokens.registry.namespaces | uniq | sortAlpha | join " " | quote }}
+            - name: LANE_SECRET
+              value: {{ .Values.tokens.lane.secret | quote }}
+            - name: LANE_SCOPES
+              value: {{ .Values.tokens.lane.scopes | toJson | quote }}
+            - name: LANE_NAMESPACES
+              value: {{ .Values.tokens.lane.namespaces | uniq | sortAlpha | join " " | quote }}
             - name: RUNNER_SECRET
               value: {{ .Values.tokens.runner.secret | quote }}
             - name: RUNNER_NAMESPACES
@@ -306,6 +312,14 @@ spec:
                 CHECK_PATH="/api/v1/packages/$ORG" PULL_HOST=$REGISTRY_HOST
                 ensure_token "$REGISTRY_SECRET" "jc-registry-pull" "$REGISTRY_SCOPES" $REGISTRY_NAMESPACES
                 CHECK_PATH= PULL_HOST=
+              fi
+
+              # 4a'. What the lane's refresher writes JC_LANE_TOKEN with (ADR-N-028 §5, T-2636):
+              #      write:organization alone, checked against the organization it may write.
+              if [ -n "${LANE_NAMESPACES:-}" ]; then
+                CHECK_PATH="/api/v1/orgs/$ORG"
+                ensure_token "$LANE_SECRET" "jc-lane-secret" "$LANE_SCOPES" $LANE_NAMESPACES
+                CHECK_PATH=
               fi
 
               # 4b. The Actions runner's registration token (ADR-N-028 §3.3, AP-81), written

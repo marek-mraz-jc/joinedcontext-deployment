@@ -46,6 +46,14 @@ tokens:
     scopes: ['read:package']
     host: ''
     namespaces: []
+  # What the `gitea-lane-token` CronJob writes the Actions organization secret `JC_LANE_TOKEN`
+  # with (ADR-N-028 §5, T-2636): `write:organization` alone, the scope the forge files the
+  # organization's Actions secrets under. It reads no repository and writes no package. Empty
+  # namespaces: no runner, no lane, no token.
+  lane:
+    secret: gitea-token-lane-secret
+    scopes: ['write:organization']
+    namespaces: []
   # Not a token of the admin user: the organization's Actions runner registration token
   # (ADR-N-028), which only the runner's init container mounts. Empty namespaces: no runner.
   runner:
@@ -57,6 +65,20 @@ tokens:
 # paths the Portal reads (T-0478). Idempotent: a file whose committed content matches is left
 # alone, one that differs is updated, one that is missing is created; nothing is ever deleted.
 seed: {}
+
+# The refresher of the lane's token (AP-73, ADR-N-028 §5, T-2636): every `schedule` it asks
+# Keycloak for a `client_credentials` token of `clientId` and writes it as the organization's
+# Actions secret `JC_LANE_TOKEN`, with the `lane` forge token above and nothing else. Off unless
+# the environment runs the runner.
+laneToken:
+  enabled: false
+  schedule: '*/5 * * * *'
+  # The realm's token endpoint in-cluster: Keycloak pins its public hostname, so the token's
+  # `iss` is the one the Portal checks, and no TLS to the public host is needed from this image.
+  tokenUrl: ''
+  clientId: jc-build-lane
+  clientSecret: keycloak-client-jc-build-lane
+  secretName: JC_LANE_TOKEN
 
 image:
   repository: ''

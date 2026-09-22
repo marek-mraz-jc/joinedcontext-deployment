@@ -24,7 +24,14 @@ requires_helmfile = pytest.mark.skipif(shutil.which("helmfile") is None, reason=
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 FORGE_VARIABLES = {"JC_GITEA_URL", "JC_GITEA_OWNER", "JC_GITEA_REPO", "JC_GITEA_TOKEN"}
-TOKEN_SECRETS = {"gitea-token-portal", "gitea-token-gateway", "gitea-runner-registration", "app-registry"}
+TOKEN_SECRETS = {
+    "gitea-token-portal",
+    "gitea-token-gateway",
+    "gitea-runner-registration",
+    "app-registry",
+    # What the lane refresher writes JC_LANE_TOKEN with (T-2636).
+    "gitea-token-lane-secret",
+}
 
 
 @pytest.fixture(scope="module")
