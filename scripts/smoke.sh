@@ -69,7 +69,7 @@ for permission in document.get("permissions", []):
 # The gateway routes are only configured for the components this instance deploys, so the
 # suite asks APISIX itself what exists instead of assuming a fixed platform.
 routes=$(kubectl get configmap apisix-standalone-config -n "$slug" -o jsonpath='{.data.apisix\.yaml}' 2>/dev/null || true)
-has_route() { printf '%s' "$routes" | grep -q "^  - id: $1\$"; }
+has_route() { grep -q "^  - id: $1\$" <<<"$routes"; }
 
 # status <expected> <description> <curl args...>
 status() {
@@ -97,7 +97,7 @@ status 200 "keycloak JWKS over valid TLS" "$idm/realms/$realm/protocol/openid-co
 echo "gateway"
 # Everything reaches the platform through APISIX; the identity host is the route that
 # exists in every instance, even before the portal and the gateway are deployed.
-if curl -sSI --max-time 20 "$idm/realms/$realm/" 2>/dev/null | grep -qi '^server: *APISIX'; then
+if grep -qi '^server: *APISIX' < <(curl -sSI --max-time 20 "$idm/realms/$realm/" 2>/dev/null); then
 	ok "traffic is served by APISIX, not by the ingress controller"
 else
 	ko "no APISIX Server header on $idm — the route is not going through the gateway"
@@ -117,7 +117,7 @@ if has_route portal-ui; then
 		"$idm/realms/$realm/protocol/openid-connect/auth?"*) ;;
 		*) location="" ;;
 	esac
-	if [ -n "$location" ] && printf '%s' "$location" | grep -q "client_id=edge" && printf '%s' "$location" | grep -q "redirect_uri=$edge_callback"; then
+	if [ -n "$location" ] && grep -q "client_id=edge" <<<"$location" && grep -q "redirect_uri=$edge_callback" <<<"$location"; then
 		ok "portal host sends an anonymous visitor to the edge login"
 	else
 		ko "portal host does not redirect to the edge login with client_id=edge and redirect_uri=$edge_callback (got: ${location:-none})"
@@ -151,7 +151,7 @@ fi
 headers=$(curl -sSI --max-time 20 "$idm/realms/$realm/" 2>/dev/null)
 missing=""
 for header in strict-transport-security x-content-type-options x-frame-options referrer-policy; do
-	printf '%s' "$headers" | grep -qi "^$header:" || missing="$missing $header"
+	grep -qi "^$header:" <<<"$headers" || missing="$missing $header"
 done
 if [ -z "$missing" ]; then ok "security response headers present"; else ko "response headers missing:$missing"; fi
 # BSI TR-02102: TLS 1.2 is the floor and the CBC suites are out. Both are asserted against
@@ -169,7 +169,7 @@ if command -v openssl >/dev/null 2>&1; then
 	# found exactly what this check wants to see.
 	handshake=$(echo | openssl s_client -connect "$host:443" -servername "$host" -tls1_2 \
 		-cipher 'ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:DES-CBC3-SHA' 2>&1 || true)
-	if printf '%s' "$handshake" | grep -qF 'Cipher is (NONE)'; then
+	if grep -qF 'Cipher is (NONE)' <<<"$handshake"; then
 		ok "the edge refuses CBC and 3DES suites"
 	else
 		ko "the edge negotiated a CBC or 3DES suite"
@@ -241,7 +241,7 @@ else
 	edge_client=$(curl -sS --max-time 20 -H "Authorization: Bearer $admin_token" "$idm/admin/realms/$realm/clients?clientId=edge" 2>/dev/null || true)
 	if [ -z "$admin_token" ]; then
 		ko "no admin token for $admin_user in realm master"
-	elif printf '%s' "$edge_client" | grep -q '"included.client.audience" *: *"portal-api"'; then
+	elif grep -q '"included.client.audience" *: *"portal-api"' <<<"$edge_client"; then
 		ok "edge client mints tokens with audience portal-api (the Portal verifies aud)"
 	else
 		ko "edge client has no portal-api audience mapper: every edge login is a 401 (T-0619)"
@@ -254,7 +254,7 @@ else
 		proxy_client=$(curl -sS --max-time 20 -H "Authorization: Bearer $admin_token" "$idm/admin/realms/$realm/clients?clientId=helsinki-agent-proxy" 2>/dev/null || true)
 		if [ "$proxy_client" = "[]" ]; then
 			skip "agent proxy audience (no helsinki-agent-proxy client in realm $realm)"
-		elif printf '%s' "$proxy_client" | grep -q '"included.custom.audience" *: *"context-gateway"'; then
+		elif grep -q '"included.custom.audience" *: *"context-gateway"' <<<"$proxy_client"; then
 			ok "agent proxy client mints tokens with audience context-gateway (reads through any endpoint its Policy grants)"
 		else
 			ko "agent proxy client has no context-gateway audience: a run reads a 401 through an endpoint approved after the realm (T-0666)"
@@ -267,7 +267,7 @@ else
 		# is the assistant's first-impression flow, so it is checked here and not only in the
 		# render (T-2420; `tests/test_keycloak_clients.py` holds the manifest side).
 		if [ "$proxy_client" != "[]" ] && [ -n "$proxy_client" ]; then
-			if printf '%s' "$proxy_client" | grep -q '"included.custom.audience" *: *"portal-internal"'; then
+			if grep -q '"included.custom.audience" *: *"portal-internal"' <<<"$proxy_client"; then
 				ok "agent proxy client mints tokens with audience portal-internal (the Portal answers its run lookups)"
 			else
 				ko "agent proxy client has no portal-internal audience: every assistant answer fails with 401 invalid run credentials (T-2420, T-2271)"
@@ -296,7 +296,7 @@ if has_route portal-api; then
 	esac
 	if [ -n "$demo_token" ]; then
 		spaces=$(curl -sS --max-time 20 -H "Authorization: Bearer $demo_token" "$portal/api/v1/projects/helsinki/spaces" 2>/dev/null || true)
-		if printf '%s' "$spaces" | grep -q '"name": *"helsinki"'; then
+		if grep -q '"name": *"helsinki"' <<<"$spaces"; then
 			ok "portal lists the seeded helsinki space (the configuration repository is seeded)"
 		else
 			ko "portal does not list the helsinki space: ${spaces:0:160}"
@@ -527,7 +527,7 @@ if has_route gitea-forge; then
 	if [ -n "$forge_admin_pw" ]; then
 		teams=$(curl -sS --max-time 20 -u "$forge_admin_user:$forge_admin_pw" \
 			"$base/git/api/v1/orgs/$forge_org/teams" 2>/dev/null || true)
-		if printf '%s' "$teams" | grep -q '"name": *"readers"'; then
+		if grep -q '"name": *"readers"' <<<"$teams"; then
 			ok "the forge has the readers team a signed-in person lands in"
 		else
 			ko "the forge has no readers team: every Keycloak login meets a 404 on the private repository"
@@ -537,12 +537,12 @@ if has_route gitea-forge; then
 		# the code unit looks unprivileged there (it read "none" on dev while the readers
 		# team was reading perfectly well).
 		units=$(printf '%s' "$teams" | tr ',' '\n')
-		if printf '%s' "$units" | grep -q '"repo.code": *"read"'; then
+		if grep -q '"repo.code": *"read"' <<<"$units"; then
 			ok "a forge team reads the configuration repository (PF-79)"
 		else
 			ko "no forge team carries read permission"
 		fi
-		if printf '%s' "$units" | grep -Eq '"repo.code": *"(write|admin)"'; then
+		if grep -Eq '"repo.code": *"(write|admin)"' <<<"$units"; then
 			ko "a forge team writes the configuration repository: merging is the Portal's (PF-80)"
 		else
 			ok "no forge team writes it, so merging stays the Portal's approval (PF-80)"
@@ -550,17 +550,17 @@ if has_route gitea-forge; then
 		# The Actions runner (ADR-N-028): registered in the organization and online. It
 		# registers again before every job, so an empty list is waited for, and the wait is
 		# printed (T-0459's pattern), not hidden.
-		if kubectl get deployments -A --field-selector metadata.name=gitea-runner -o name 2>/dev/null | grep -q .; then
+		if grep -q . < <(kubectl get deployments -A --field-selector metadata.name=gitea-runner -o name 2>/dev/null); then
 			waited=0
 			while :; do
 				runners=$(curl -sS --max-time 20 -u "$forge_admin_user:$forge_admin_pw" \
 					"$base/git/api/v1/orgs/$forge_org/actions/runners" 2>/dev/null || true)
-				printf '%s' "$runners" | grep -q '"status": *"online"' && break
+				grep -q '"status": *"online"' <<<"$runners" && break
 				[ "$waited" -ge "${JC_SMOKE_RUNNER_WAIT:-60}" ] && break
 				sleep 5
 				waited=$((waited + 5))
 			done
-			if printf '%s' "$runners" | grep -q '"status": *"online"'; then
+			if grep -q '"status": *"online"' <<<"$runners"; then
 				ok "an Actions runner is registered in $forge_org and online (waited ${waited}s)"
 			else
 				ko "no Actions runner of $forge_org is online after ${waited}s: no application builds"
@@ -591,12 +591,12 @@ if has_route ckan; then
 	primary=$(kubectl get configmap portal-branding -n "$slug" \
 		-o jsonpath='{.data.branding\.yaml}' 2>/dev/null | sed -n 's/^  primary: *//p' | tr -d "'\"")
 	page=$(curl -sS --max-time 20 "$catalogue/" 2>/dev/null || true)
-	if [ -n "$name" ] && printf '%s' "$page" | grep -qF "$name"; then
+	if [ -n "$name" ] && grep -qF "$name" <<<"$page"; then
 		ok "catalogue front page carries the instance name"
 	else
 		ko "catalogue front page does not carry the instance name (${name:-<no branding configured>})"
 	fi
-	if [ -n "$primary" ] && printf '%s' "$page" | grep -qF -- "--jc-primary: $primary"; then
+	if [ -n "$primary" ] && grep -qF -- "--jc-primary: $primary" <<<"$page"; then
 		ok "catalogue front page carries the branded primary colour"
 	else
 		ko "catalogue front page does not carry the branded primary colour (${primary:-<none>})"
@@ -692,7 +692,7 @@ egress_out=$(kubectl run "$egress" -n "$slug" --rm --attach --restart=Never --qu
 	2>/dev/null)
 reached=$(printf '%s' "$egress_out" | sed -n 's/^REACHED-DNS\r*$/CoreDNS/p; s/^REACHED-NET\r*$/1.1.1.1:443/p' | tr '\n' ' ')
 settled=$(printf '%s' "$egress_out" | sed -n 's/^SETTLED-AFTER=\([0-9]*\)s\r*$/\1/p' | head -1)
-if ! printf '%s' "$egress_out" | grep -q PROBE-RAN; then
+if ! grep -q PROBE-RAN <<<"$egress_out"; then
 	ko "the egress probe never ran, so the egress half of the default-deny was not measured"
 elif [ -n "$reached" ]; then
 	ko "an unlabelled pod reached ${reached}— the egress half of the default-deny is not holding"
@@ -722,11 +722,11 @@ else
 			sed 's/"metadata": {/"metadata": {\n    "labels": {"app.kubernetes.io\/name": "gitea-runner"},/')" \
 		2>/dev/null)
 	build_settled=$(printf '%s' "$build_out" | sed -n 's/^SETTLED-AFTER=\([0-9]*\)s\r*$/\1/p' | head -1)
-	if ! printf '%s' "$build_out" | grep -q PROBE-RAN; then
+	if ! grep -q PROBE-RAN <<<"$build_out"; then
 		ko "the runner probe never ran, so the runner's egress was not measured"
-	elif printf '%s' "$build_out" | grep -q '^REACHED-NET'; then
+	elif grep -q '^REACHED-NET' <<<"$build_out"; then
 		ko "a pod with the runner's label reached 1.1.1.1:443: an application's build can reach the internet"
-	elif ! printf '%s' "$build_out" | grep -q '^REACHED-DNS'; then
+	elif ! grep -q '^REACHED-DNS' <<<"$build_out"; then
 		ko "a pod with the runner's label cannot resolve names, so the refusal of the internet proves nothing"
 	else
 		ok "a runner pod resolves names and reaches no internet address (settled after ${build_settled:-?}s)"
@@ -752,7 +752,7 @@ edge_out=$(kubectl run "$edge_peer" -n default --rm --attach --restart=Never --q
 edge_reached=$(printf '%s' "$edge_out" | sed -n 's/^REACHED-\([0-9]*\)\r*$/\1/p' | tr '\n' ' ')
 if [ -z "$edge_host" ]; then
 	ko "no APISIX pod in $slug, so who may reach APISIX was not measured"
-elif ! printf '%s' "$edge_out" | grep -q PROBE-RAN; then
+elif ! grep -q PROBE-RAN <<<"$edge_out"; then
 	ko "the edge-peer probe never ran, so who may reach APISIX was not measured"
 elif [ -n "$edge_reached" ]; then
 	ko "a pod outside the ingress controller reached APISIX on port ${edge_reached} — it could set X-Real-IP and spend another caller's rate limit (T-0939)"
@@ -788,7 +788,7 @@ else
 		--overrides="$(probe_overrides "$app_probe" "[\"sh\", \"-c\", \"sleep 3; echo PROBE-RAN; nc -w 5 -z $app_ip 8080 >/dev/null 2>&1 && echo REACHED-8080; nc -w 5 -z $app_ip 4143 >/dev/null 2>&1 && echo REACHED-4143; true\"]")" \
 		2>/dev/null)
 	app_reached=$(printf '%s' "$app_out" | sed -n 's/^REACHED-\([0-9]*\)\r*$/\1/p' | tr '\n' ' ')
-	if ! printf '%s' "$app_out" | grep -q PROBE-RAN; then
+	if ! grep -q PROBE-RAN <<<"$app_out"; then
 		ko "the App-peer probe never ran, so who may reach an App pod was not measured"
 	elif [ -n "$app_reached" ]; then
 		ko "a pod outside APISIX reached the App pod at $app_ip on port ${app_reached} — the App's NetworkPolicy is not holding and its login front can be skipped (AP-26)"
@@ -999,7 +999,7 @@ else
 		for variable in $variables; do
 			value=$(kubectl get secret pipeline-secrets -n "$slug" -o "jsonpath={.data.$variable}" 2>/dev/null | base64 -d 2>/dev/null || true)
 			[ -n "$value" ] || continue
-			if kubectl get configmap -n "$slug" -o yaml 2>/dev/null | grep -qF -- "$value"; then
+			if grep -qF -- "$value" < <(kubectl get configmap -n "$slug" -o yaml 2>/dev/null); then
 				leaked="$leaked $variable"
 			fi
 		done

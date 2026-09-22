@@ -76,7 +76,7 @@ step "revoking on instance $instance (namespace $namespace), bound ${bound}s"
 
 # 1. The Policy leaves the repository the gateway reads.
 if [ -n "$policy" ]; then
-	if kubectl -n "$namespace" get configmap "$configmap" -o "jsonpath={.data.$policy_key}" 2>/dev/null | grep -q "name: $policy"; then
+	if grep -q "name: $policy" < <(kubectl -n "$namespace" get configmap "$configmap" -o "jsonpath={.data.$policy_key}" 2>/dev/null); then
 		# A JSON Patch `remove` on a key that is gone fails loudly, which is what an
 		# emergency wants: no silent "revoked" on a repository that still grants.
 		if kubectl -n "$namespace" patch configmap "$configmap" \
