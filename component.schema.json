@@ -24,6 +24,11 @@
             "minimum": 1,
             "description": "Per-release helm wait timeout in seconds; overrides helmDefaults.timeout"
           },
+          "valuesFrom": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Another part of the same component whose values/<part>/ directory this release renders with; the release keeps its own name"
+          },
           "extraLabels": {
             "type": "object",
             "patternProperties": {
