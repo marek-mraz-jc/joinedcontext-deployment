@@ -24,7 +24,7 @@ requires_helmfile = pytest.mark.skipif(shutil.which("helmfile") is None, reason=
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 FORGE_VARIABLES = {"JC_GITEA_URL", "JC_GITEA_OWNER", "JC_GITEA_REPO", "JC_GITEA_TOKEN"}
-TOKEN_SECRETS = {"gitea-token-portal", "gitea-token-gateway", "gitea-runner-registration"}
+TOKEN_SECRETS = {"gitea-token-portal", "gitea-token-gateway", "gitea-runner-registration", "app-registry"}
 
 
 @pytest.fixture(scope="module")
@@ -159,7 +159,8 @@ def test_every_step_is_idempotent(script):
     assert 'status=$(forge_code GET "/api/v1/repos/$ORG/$REPO")' in script
     # The token check has to use an endpoint the read-only token may reach, or the gateway's
     # token is re-minted on every apply and the pod holding it is left with a dead credential.
-    assert '"$GITEA_URL/api/v1/repos/$ORG/$REPO")" = 200 ]; then' in script
+    # The pull token (AP-108) may read packages only and names its own check in CHECK_PATH.
+    assert '"$GITEA_URL${CHECK_PATH:-/api/v1/repos/$ORG/$REPO}")" = 200 ]; then' in script
     code = "\n".join(line for line in script.splitlines() if not line.lstrip().startswith("#"))
     assert '"$GITEA_URL/api/v1/user"' not in code, (
         "checking /user re-mints the read-only token on every apply: it has no read:user scope"

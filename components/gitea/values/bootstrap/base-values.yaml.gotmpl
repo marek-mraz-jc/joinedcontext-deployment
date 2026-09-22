@@ -45,6 +45,14 @@ tokens:
       {{- if has "context-gateway" .Values.components }}
       - {{ index .Values "context-gateway" "gateway" "namespace" }}
       {{- end }}
+  registry:
+    # The host a node pulls from: the primary one, whose /v2/ the edge routes to the forge.
+    host: {{ .Values.global.domain | quote }}
+    namespaces:
+      {{- if has "portal" .Values.components }}
+      - {{ .Values.portal.portal.appsNamespace }}
+      {{- else }} []
+      {{- end }}
   runner:
     namespaces:
       {{- if has "gitea-runner" .Values.components }}

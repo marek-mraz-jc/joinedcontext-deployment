@@ -1,5 +1,10 @@
 {{- $global := .Values.global }}
-{{- $images := index .Values.images "gitea-runner" "runner" }}
+{{- /* One file for both parts: `runner` (node-22) and `rust` (rust-1.90), told apart by the
+       release, gitea-runner-runner or gitea-runner-rust. */}}
+{{- $part := .Release.Name | trimPrefix "gitea-runner-" }}
+{{- $this := index .Values "gitea-runner" $part }}
+{{- $images := index .Values.images "gitea-runner" $part }}
+{{- $digest := required (printf "gitea-runner.%s needs its image digest in components/gitea-runner/images.yaml" $part) $images.digest }}
 {{- $forge := printf "http://gitea-http.%s.svc.cluster.local:3000" .Values.gitea.forge.namespace }}
 # Checklist:
 # - [x] Containers run as non-root with `readOnlyRootFilesystem` -> /tmp is the one writable path
@@ -17,13 +22,15 @@
 # repository): one ephemeral registration per job, the registration token read once and
 # deleted, every process a job leaves behind killed before the next job.
 
-fullnameOverride: gitea-runner
+# Both parts carry app.kubernetes.io/name gitea-runner, so the walls of networkpolicies.yaml hold
+# for each; the Deployment of the second is gitea-runner-rust.
+fullnameOverride: {{ if eq $part "runner" }}gitea-runner{{ else }}gitea-runner-{{ $part }}{{ end }}
 nameOverride: gitea-runner
 
 image:
   repository: {{ $images.repository }}
   tag: {{ $images.tag | quote }}
-  digest: {{ $images.digest }}
+  digest: {{ $digest }}
   pullPolicy: IfNotPresent
 
 command:
@@ -62,8 +69,8 @@ configMap:
         file: /tmp/runner/.runner
         capacity: 1
         # A build past this is a build that hangs; the forge's own job limit is longer.
-        timeout: 20m
-        labels: ["node-22:host"]
+        timeout: {{ $this.timeout }}
+        labels: ["{{ $this.label }}:host"]
         envs:
           JC_FORGE_URL: {{ $forge | quote }}
           {{- if has "portal" .Values.components }}
@@ -78,7 +85,7 @@ configMap:
 # and deletes it before the first job, so no job finds it on disk.
 extraInitContainers:
   - name: registration-token
-    image: "{{ $images.repository }}:{{ $images.tag }}@{{ $images.digest }}"
+    image: "{{ $images.repository }}:{{ $images.tag }}@{{ $digest }}"
     command: [/bin/sh, -c, "cp /secret/token /tmp/runner-secret/token"]
     securityContext:
       {{- .Values.securityDefaults.securityContext | toYaml | nindent 6 }}

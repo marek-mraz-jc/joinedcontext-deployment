@@ -80,6 +80,14 @@ spec:
               value: {{ .Values.tokens.gateway.scopes | toJson | quote }}
             - name: GATEWAY_NAMESPACES
               value: {{ .Values.tokens.gateway.namespaces | uniq | sortAlpha | join " " | quote }}
+            - name: REGISTRY_SECRET
+              value: {{ .Values.tokens.registry.secret | quote }}
+            - name: REGISTRY_SCOPES
+              value: {{ .Values.tokens.registry.scopes | toJson | quote }}
+            - name: REGISTRY_HOST
+              value: {{ .Values.tokens.registry.host | quote }}
+            - name: REGISTRY_NAMESPACES
+              value: {{ .Values.tokens.registry.namespaces | uniq | sortAlpha | join " " | quote }}
             - name: RUNNER_SECRET
               value: {{ .Values.tokens.runner.secret | quote }}
             - name: RUNNER_NAMESPACES
@@ -214,10 +222,18 @@ spec:
               # write_secret <namespace> <name> <token> <scopes json>
               # `scopes` is the record of what the token was minted with: a token that still
               # authenticates but was minted with other scopes is minted again (T-2468).
+              # With PULL_HOST set it is a `dockerconfigjson` Secret for that registry, the
+              # token and its scopes kept beside it as the record (AP-108).
               write_secret() {
                 encoded=$(printf '%s' "$3" | base64 | tr -d '\n')
                 granted=$(printf '%s' "$4" | base64 | tr -d '\n')
-                body="{\"apiVersion\":\"v1\",\"kind\":\"Secret\",\"metadata\":{\"name\":\"$2\"},\"type\":\"Opaque\",\"data\":{\"token\":\"$encoded\",\"scopes\":\"$granted\"}}"
+                type=Opaque extra=
+                if [ -n "${PULL_HOST:-}" ]; then
+                  auth=$(printf '%s:%s' "$ADMIN_USER" "$3" | base64 | tr -d '\n')
+                  config=$(printf '{"auths":{"%s":{"auth":"%s"}}}' "$PULL_HOST" "$auth" | base64 | tr -d '\n')
+                  type=kubernetes.io/dockerconfigjson extra=",\".dockerconfigjson\":\"$config\""
+                fi
+                body="{\"apiVersion\":\"v1\",\"kind\":\"Secret\",\"metadata\":{\"name\":\"$2\"},\"type\":\"$type\",\"data\":{\"token\":\"$encoded\",\"scopes\":\"$granted\"$extra}}"
                 code=$(kube -o $WORK/body -w '%{http_code}' -X PUT -d "$body" \
                   "$KAPI/api/v1/namespaces/$1/secrets/$2")
                 if [ "$code" = 404 ]; then
@@ -244,8 +260,9 @@ spec:
                 # that is perfectly good and the step would re-mint on every apply, churning a
                 # credential a running pod is already holding. A token minted with other scopes
                 # than these (a scope added to the values, T-2468) is minted again.
+                # CHECK_PATH names another read for a token that may not read the repository.
                 if [ -n "$existing" ] && [ "$held" = "$scopes" ] && [ "$(curl -sS -o /dev/null -w '%{http_code}' \
-                    -H "Authorization: token $existing" "$GITEA_URL/api/v1/repos/$ORG/$REPO")" = 200 ]; then
+                    -H "Authorization: token $existing" "$GITEA_URL${CHECK_PATH:-/api/v1/repos/$ORG/$REPO}")" = 200 ]; then
                   echo "the token in $secret still authenticates"
                   token=$existing
                 else
@@ -270,6 +287,15 @@ spec:
 
               ensure_token "$PORTAL_SECRET" "jc-portal" "$PORTAL_SCOPES" $PORTAL_NAMESPACES
               ensure_token "$GATEWAY_SECRET" "jc-gateway" "$GATEWAY_SCOPES" $GATEWAY_NAMESPACES
+
+              # 4a. What a node pulls App images with (AP-108): read:package alone, which may
+              #     not read the repository, so it is checked against the organization's
+              #     packages. Only when the environment runs App pods.
+              if [ -n "${REGISTRY_NAMESPACES:-}" ]; then
+                CHECK_PATH="/api/v1/packages/$ORG" PULL_HOST=$REGISTRY_HOST
+                ensure_token "$REGISTRY_SECRET" "jc-registry-pull" "$REGISTRY_SCOPES" $REGISTRY_NAMESPACES
+                CHECK_PATH= PULL_HOST=
+              fi
 
               # 4b. The Actions runner's registration token (ADR-N-028 §3.3, AP-81), written
               #     where the runner reads it. The forge keeps one per organization and answers

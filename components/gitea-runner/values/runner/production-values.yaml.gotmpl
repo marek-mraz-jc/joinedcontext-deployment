@@ -7,6 +7,11 @@
 
 replicaCount: 2
 
+{{- $this := index .Values "gitea-runner" (.Release.Name | trimPrefix "gitea-runner-") }}
+{{- if hasKey $this "resources" }}
+resources:
+  {{- $this.resources | toYaml | nindent 2 }}
+{{- else }}
 resources:
   requests:
     cpu: 250m
@@ -14,3 +19,4 @@ resources:
   limits:
     cpu: '2'
     memory: 3Gi
+{{- end }}

@@ -2,3 +2,5 @@
 gitea-runner:
   runner:
     chart: ../../charts/workload
+  rust:
+    chart: ../../charts/workload

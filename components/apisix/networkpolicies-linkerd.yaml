@@ -77,6 +77,12 @@ apisix-linkerd-control-plane:
               app.kubernetes.io/name: gitea
               app.kubernetes.io/instance: gitea-forge
           componentNamespace: gitea
+        # A pod-backed App is meshed too (AP-108): the Portal's reconciler labels it in the
+        # apps namespace, which is the Portal's.
+        - podSelector:
+            matchLabels:
+              joinedcontext.com/app: "true"
+          componentNamespace: portal
       ports:
         - protocol: TCP
           port: 4143
