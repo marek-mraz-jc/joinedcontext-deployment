@@ -7,6 +7,7 @@ leaves behind is `builder/runner.sh` in the portal repository.
 """
 
 import base64
+import re
 import shutil
 
 import pytest
@@ -160,7 +161,9 @@ def with_rust_runner(digest):
         head, rust = text.split("  rust:\n", 1)
         environment.write_text(head + "  rust:\n" + rust.replace("enabled: false", "enabled: true", 1))
         images = tree / "components/gitea-runner/images.yaml"
-        images.write_text(images.read_text().replace("digest: ''", f"digest: '{digest}'"))
+        head, rust = images.read_text().split("  rust:\n", 1)
+        rust = re.sub(r"digest: '[^']*'", f"digest: '{digest}'", rust, count=1)
+        images.write_text(head + "  rust:\n" + rust)
 
     return edit
 

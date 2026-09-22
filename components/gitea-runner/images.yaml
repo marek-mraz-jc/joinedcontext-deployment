@@ -9,9 +9,9 @@ gitea-runner:
     tag: 'main'
     digest: 'sha256:3b34c7c2059bae512da4913dd88f62d63793714f6d4106e39bae528df664cd09'
   # The rust-1.90 runner (AP-106): the same Dockerfile's `rust` stage, published by the portal's
-  # image.yml as joinedcontext-app-builder-rust. Empty until that first build is pinned here;
-  # gitea-runner.rust stays off without it.
+  # image.yml as joinedcontext-app-builder-rust. Pinned to portal 4c384fb, the first build that
+  # passed trivy (T-2622). gitea-runner.rust stays off until the node has room (T-2616).
   rust:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-app-builder-rust'
     tag: 'main'
-    digest: ''
+    digest: 'sha256:42464115f908df01792c8348659a2d0863de82f059d6af3461dca3f138035653'

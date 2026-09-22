@@ -111,6 +111,10 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": False, "framing": "SAMEORIGIN",
         "why": "the forge authenticates with its own session and Git credentials",
     },
+    "gitea-registry": {
+        "reach": UPSTREAM, "cacheable": False, "framing": "DENY",
+        "why": "a node pulls a fullstack App's image with the read:package token the registry checks itself (AP-108); no page is served",
+    },
     "keycloak": {
         "reach": UPSTREAM, "cacheable": False, "framing": "SAMEORIGIN",
         "why": "the realm is the identity provider; its login pages must be reachable unauthenticated",
