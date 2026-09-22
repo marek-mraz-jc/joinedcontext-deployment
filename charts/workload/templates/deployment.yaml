@@ -79,6 +79,7 @@ spec:
               containerPort: {{ .Values.metrics.port | default 4195 }}
               protocol: TCP
             {{- end }}
+          {{- if .Values.probes.enabled }}
           readinessProbe:
             httpGet:
               path: {{ .Values.probes.readiness.path | default "/" }}
@@ -99,6 +100,7 @@ spec:
             {{- if .Values.probes.liveness.initialDelaySeconds }}
             initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
             {{- end }}
+          {{- end }}
           {{- if or .Values.envSecret .Values.env }}
           env:
             {{- range $key, $sec := .Values.envSecret }}

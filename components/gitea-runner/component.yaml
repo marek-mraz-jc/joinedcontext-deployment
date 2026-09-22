@@ -1,0 +1,6 @@
+---
+component: gitea-runner
+parts:
+  # The forge's Actions runner (ADR-N-028, AP-80, AP-81): builds the application repositories
+  # from the workflow the Portal commits into each of them.
+  - name: runner

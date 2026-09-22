@@ -24,7 +24,7 @@ requires_helmfile = pytest.mark.skipif(shutil.which("helmfile") is None, reason=
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 FORGE_VARIABLES = {"JC_GITEA_URL", "JC_GITEA_OWNER", "JC_GITEA_REPO", "JC_GITEA_TOKEN"}
-TOKEN_SECRETS = {"gitea-token-portal", "gitea-token-gateway"}
+TOKEN_SECRETS = {"gitea-token-portal", "gitea-token-gateway", "gitea-runner-registration"}
 
 
 @pytest.fixture(scope="module")
@@ -59,8 +59,10 @@ def test_the_job_runs_the_image_the_forge_already_runs(local, job):
 
 
 @requires_helmfile
-def test_the_job_may_touch_only_the_two_secrets_it_writes(local):
+def test_the_job_may_touch_only_the_secrets_it_writes(local):
     """The forge namespace also holds the database credential and the administrator password.
+    The Job writes the two forge tokens and the runner's registration token (ADR-N-028), and
+    may name nothing else.
 
     A Role with `get` on secrets and no `resourceNames` would let this Job read both, and it
     authenticates with one of them."""

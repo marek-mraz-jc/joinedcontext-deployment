@@ -1,0 +1,4 @@
+---
+gitea-runner:
+  runner:
+    chart: ../../charts/workload

@@ -36,6 +36,11 @@ tokens:
     # The gateway only ever clones.
     scopes: ['read:repository']
     namespaces: []
+  # Not a token of the admin user: the organization's Actions runner registration token
+  # (ADR-N-028), which only the runner's init container mounts. Empty namespaces: no runner.
+  runner:
+    secret: gitea-runner-registration
+    namespaces: []
 
 # Files committed into the repository after it exists, keyed by their path with `/` written as
 # `__` (a ConfigMap key cannot hold a slash): the manifests the gateway already serves, under the

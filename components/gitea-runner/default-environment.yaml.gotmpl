@@ -1,0 +1,5 @@
+---
+gitea-runner:
+  runner:
+    enabled: true
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "gitea-runner") }}

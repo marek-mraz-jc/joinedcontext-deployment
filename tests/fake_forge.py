@@ -110,6 +110,8 @@ def answer(call: dict, state: dict) -> tuple[int, str]:
     if "/teams/search" in path:
         team = path.split("q=", 1)[-1]
         return 200, json.dumps({"data": [{"name": team}]})
+    if path.endswith("/actions/runners/registration-token") and method == "POST":
+        return 200, '{"token":"%s"}' % ("R" * 40)
     if path.endswith("/tokens") and method == "POST":
         return 201, '{"sha1":"%s"}' % ("a" * 40)
 

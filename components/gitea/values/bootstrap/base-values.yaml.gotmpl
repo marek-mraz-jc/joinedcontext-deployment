@@ -45,6 +45,12 @@ tokens:
       {{- if has "context-gateway" .Values.components }}
       - {{ index .Values "context-gateway" "gateway" "namespace" }}
       {{- end }}
+  runner:
+    namespaces:
+      {{- if has "gitea-runner" .Values.components }}
+      - {{ index .Values "gitea-runner" "runner" "namespace" }}
+      {{- else }} []
+      {{- end }}
 
 # The same image the forge runs, so the Job pulls nothing the node does not already have and
 # there is one digest to re-pin instead of two. It carries curl, sed and base64 and runs as
