@@ -45,6 +45,7 @@ helsinki-datasource-vehicles-live.yaml: projects/helsinki/datasources/helsinki-v
 helsinki-datasource-news-rss.yaml: projects/helsinki/datasources/hel-news-rss.yaml
 helsinki-datasource-road-weather.yaml: projects/helsinki/datasources/digitraffic-road-weather.yaml
 helsinki-datasource-traffic-messages.yaml: projects/helsinki/datasources/digitraffic-traffic-messages.yaml
+helsinki-datasource-air-quality.yaml: projects/helsinki/datasources/fmi-air-quality.yaml
 helsinki-pipeline-events.yaml: projects/helsinki/pipelines/linked-events/pipeline.yaml
 helsinki-pipeline-bikes.yaml: projects/helsinki/pipelines/citybikes-gbfs/pipeline.yaml
 helsinki-pipeline-bikes-info.yaml: projects/helsinki/pipelines/citybikes-gbfs-info/pipeline.yaml
@@ -53,6 +54,7 @@ helsinki-pipeline-vehicles-reaper.yaml: projects/helsinki/pipelines/vehicles-rea
 helsinki-pipeline-news.yaml: projects/helsinki/pipelines/hel-news/pipeline.yaml
 helsinki-pipeline-road-weather.yaml: projects/helsinki/pipelines/road-weather/pipeline.yaml
 helsinki-pipeline-traffic-messages.yaml: projects/helsinki/pipelines/traffic-messages/pipeline.yaml
+helsinki-pipeline-air-quality.yaml: projects/helsinki/pipelines/air-quality/pipeline.yaml
 # The mapping of each pipeline, native Bento beside its manifest (PL-03): the reconciler renders
 # it into the resident stream (T-0647), so no stream is written twice.
 helsinki-pipeline-events-bento.yaml: projects/helsinki/pipelines/linked-events/bento.yaml
@@ -63,6 +65,7 @@ helsinki-pipeline-vehicles-reaper-bento.yaml: projects/helsinki/pipelines/vehicl
 helsinki-pipeline-news-bento.yaml: projects/helsinki/pipelines/hel-news/bento.yaml
 helsinki-pipeline-road-weather-bento.yaml: projects/helsinki/pipelines/road-weather/bento.yaml
 helsinki-pipeline-traffic-messages-bento.yaml: projects/helsinki/pipelines/traffic-messages/bento.yaml
+helsinki-pipeline-air-quality-bento.yaml: projects/helsinki/pipelines/air-quality/bento.yaml
 helsinki-ckan-hel-fi.yaml: projects/helsinki/ckan/hel-fi.yaml
 helsinki-blueprint-http-json-feed.yaml: blueprints/http-json-feed/blueprint.yaml
 helsinki-blueprint-gbfs-stations.yaml: blueprints/gbfs-stations/blueprint.yaml
