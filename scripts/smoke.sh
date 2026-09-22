@@ -662,11 +662,12 @@ fi
 # and is T-0459 — it is not what this check is about.
 egress="smoke-egress-$$"
 # nslookup is the discriminating leg: CoreDNS is up, in this cluster, and reachable the moment
-# egress stops being enforced. The 1.1.1.1 leg adds the internet, which a firewall outside
+# egress stops being enforced. The name is fully qualified: busybox's nslookup does not walk the
+# search list, so `kubernetes.default` is NXDOMAIN from any pod and the leg proved nothing. The 1.1.1.1 leg adds the internet, which a firewall outside
 # Kubernetes may also be blocking, so it is a second opinion rather than the evidence.
 egress_out=$(kubectl run "$egress" -n "$slug" --rm --attach --restart=Never --quiet --timeout=180s \
 	--image="$image" \
-	--overrides="$(probe_overrides "$egress" '["sh", "-c", "i=0; while [ $i -lt 18 ]; do nc -w 3 -z 1.1.1.1 443 >/dev/null 2>&1 || break; i=$((i+1)); sleep 4; done; echo SETTLED-AFTER=$((i*4))s; timeout 8 nslookup kubernetes.default >/dev/null 2>&1 && echo REACHED-DNS; nc -w 5 -z 1.1.1.1 443 >/dev/null 2>&1 && echo REACHED-NET; echo PROBE-RAN"]')" \
+	--overrides="$(probe_overrides "$egress" '["sh", "-c", "i=0; while [ $i -lt 18 ]; do nc -w 3 -z 1.1.1.1 443 >/dev/null 2>&1 || break; i=$((i+1)); sleep 4; done; echo SETTLED-AFTER=$((i*4))s; timeout 8 nslookup kubernetes.default.svc.cluster.local >/dev/null 2>&1 && echo REACHED-DNS; nc -w 5 -z 1.1.1.1 443 >/dev/null 2>&1 && echo REACHED-NET; echo PROBE-RAN"]')" \
 	2>/dev/null)
 reached=$(printf '%s' "$egress_out" | sed -n 's/^REACHED-DNS\r*$/CoreDNS/p; s/^REACHED-NET\r*$/1.1.1.1:443/p' | tr '\n' ' ')
 settled=$(printf '%s' "$egress_out" | sed -n 's/^SETTLED-AFTER=\([0-9]*\)s\r*$/\1/p' | head -1)
@@ -696,7 +697,7 @@ else
 	build_probe="smoke-appbuild-$$"
 	build_out=$(kubectl run "$build_probe" -n "$build_ns" --rm --attach --restart=Never --quiet --timeout=180s \
 		--image="$image" \
-		--overrides="$(probe_overrides "$build_probe" '["sh", "-c", "i=0; while [ $i -lt 18 ]; do nc -w 3 -z 1.1.1.1 443 >/dev/null 2>&1 || break; i=$((i+1)); sleep 4; done; echo SETTLED-AFTER=$((i*4))s; timeout 8 nslookup kubernetes.default >/dev/null 2>&1 && echo REACHED-DNS; nc -w 5 -z 1.1.1.1 443 >/dev/null 2>&1 && echo REACHED-NET; echo PROBE-RAN"]' |
+		--overrides="$(probe_overrides "$build_probe" '["sh", "-c", "i=0; while [ $i -lt 18 ]; do nc -w 3 -z 1.1.1.1 443 >/dev/null 2>&1 || break; i=$((i+1)); sleep 4; done; echo SETTLED-AFTER=$((i*4))s; timeout 8 nslookup kubernetes.default.svc.cluster.local >/dev/null 2>&1 && echo REACHED-DNS; nc -w 5 -z 1.1.1.1 443 >/dev/null 2>&1 && echo REACHED-NET; echo PROBE-RAN"]' |
 			sed 's/"metadata": {/"metadata": {\n    "labels": {"app.kubernetes.io\/name": "app-builder"},/')" \
 		2>/dev/null)
 	build_settled=$(printf '%s' "$build_out" | sed -n 's/^SETTLED-AFTER=\([0-9]*\)s\r*$/\1/p' | head -1)
