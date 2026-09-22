@@ -3,3 +3,16 @@ gitea-runner:
   runner:
     enabled: true
     namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "gitea-runner") }}
+    label: node-22
+    timeout: 20m
+  # Off until its image digest is pinned in images.yaml (the portal's image.yml publishes it as
+  # joinedcontext-app-builder-rust) and the node has room for a 4 GiB job: a release build of
+  # air-quality peaked at about 1.3 GiB resident (-j4, T-2616), the link included.
+  rust:
+    enabled: false
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "gitea-runner") }}
+    label: rust-1.90
+    timeout: 30m
+    resources:
+      requests: { cpu: 250m, memory: 1536Mi }
+      limits: { cpu: '2', memory: 4Gi }

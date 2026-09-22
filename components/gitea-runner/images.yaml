@@ -8,3 +8,10 @@ gitea-runner:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-app-builder'
     tag: 'main'
     digest: 'sha256:3b34c7c2059bae512da4913dd88f62d63793714f6d4106e39bae528df664cd09'
+  # The rust-1.90 runner (AP-106): the same Dockerfile's `rust` stage, published by the portal's
+  # image.yml as joinedcontext-app-builder-rust. Empty until that first build is pinned here;
+  # gitea-runner.rust stays off without it.
+  rust:
+    repository: 'ghcr.io/marek-mraz-jc/joinedcontext-app-builder-rust'
+    tag: 'main'
+    digest: ''

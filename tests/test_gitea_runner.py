@@ -149,3 +149,54 @@ def test_without_a_runner_the_bootstrap_asks_for_no_registration_token(bootstrap
     assert result.returncode == 0, result.stderr
     assert not any("registration-token" in line for line in forge.log)
     assert "gitea-runner-registration" not in forge.secrets
+
+
+def with_rust_runner(digest):
+    """The copied tree with the rust-1.90 runner switched on and its image pinned to `digest`."""
+
+    def edit(tree):
+        environment = tree / "components/gitea-runner/default-environment.yaml.gotmpl"
+        text = environment.read_text()
+        head, rust = text.split("  rust:\n", 1)
+        environment.write_text(head + "  rust:\n" + rust.replace("enabled: false", "enabled: true", 1))
+        images = tree / "components/gitea-runner/images.yaml"
+        images.write_text(images.read_text().replace("digest: ''", f"digest: '{digest}'"))
+
+    return edit
+
+
+@requires_helmfile
+def test_the_rust_runner_is_the_same_walls_under_its_own_label_and_memory(rendered_variant):
+    """AP-105, AP-106: the second runner runs the rust-1.90 image under the label the fullstack
+    workflow asks for, with the job memory a release link needs, and carries every wall of the
+    first: no Kubernetes token, no privilege, the registration token copied into memory, and the
+    pod label the runner NetworkPolicy selects."""
+    digest = "sha256:" + "ab" * 32
+    docs = rendered_variant("dev", with_rust_runner(digest))
+    node = one(docs, "Deployment", "gitea-runner")["spec"]["template"]
+    rust = one(docs, "Deployment", "gitea-runner-rust")["spec"]["template"]
+
+    container = rust["spec"]["containers"][0]
+    assert container["image"].endswith(f"joinedcontext-app-builder-rust:main@{digest}")
+    assert container["resources"]["limits"]["memory"] == "4Gi"
+    assert container["resources"]["requests"]["memory"] == "1536Mi"
+    assert rust["spec"]["automountServiceAccountToken"] is False
+    assert container["securityContext"] == node["spec"]["containers"][0]["securityContext"]
+    assert rust["metadata"]["labels"]["app.kubernetes.io/name"] == "gitea-runner"
+    assert [c["image"] for c in rust["spec"]["initContainers"]] == [container["image"]]
+
+    config = yaml.safe_load(one(docs, "ConfigMap", "gitea-runner-rust")["data"]["runner.yaml"])
+    assert config["runner"]["labels"] == ["rust-1.90:host"]
+    assert config["runner"]["timeout"] == "30m"
+    assert config["runner"]["envs"]["JC_FORGE_URL"].endswith(":3000")
+    node_config = yaml.safe_load(one(docs, "ConfigMap", "gitea-runner")["data"]["runner.yaml"])
+    assert node_config["runner"]["labels"] == ["node-22:host"]
+    assert node_config["runner"]["timeout"] == "20m"
+
+
+@requires_helmfile
+def test_the_rust_runner_does_not_render_without_its_digest(rendered_variant):
+    """AP-13, AP-106: switched on with no pinned digest, the render stops and names the file to
+    pin, rather than deploying a tag."""
+    with pytest.raises(AssertionError, match="needs its image digest"):
+        rendered_variant("dev", with_rust_runner(""))
