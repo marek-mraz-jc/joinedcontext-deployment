@@ -54,6 +54,65 @@ def blob(path: str, text: str) -> dict:
     }
 
 
+def git_blob(text: str) -> str:
+    """The id `git hash-object` gives the file: sha1 over `blob <size>\\0` and the bytes."""
+    import hashlib
+
+    data = text.encode("utf-8")
+    return hashlib.sha1(b"blob %d\0" % len(data) + data).hexdigest()
+
+
+def head_of(files: dict[str, str]) -> str:
+    import hashlib
+
+    return hashlib.sha1(json.dumps(files, sort_keys=True).encode("utf-8")).hexdigest()
+
+
+def app_repository(path: str, method: str, call: dict, state: dict) -> tuple[int, str] | None:
+    """An application's own repository (T-2599): created in the organization, read as a tree,
+    written as one commit of file operations, and its main branch's head."""
+    repos = state.setdefault("repos", {})
+    if re.fullmatch(rf"/api/v1/orgs/{re.escape(ORG)}/repos", path) and method == "POST":
+        body = json.loads(call["data"])
+        if body["name"] in repos:
+            return 409, '{"message":"the repository already exists"}'
+        files = {"README.md": f"# {body['name']}\n"} if body.get("auto_init") else {}
+        repos[body["name"]] = {"files": files, "private": body.get("private"), "head": head_of(files)}
+        return 201, json.dumps({"name": body["name"]})
+    match = re.fullmatch(rf"/api/v1/repos/{re.escape(ORG)}/([^/?]+)/(git/trees/main|contents|branches/main)(\?.*)?", path)
+    if not match or match.group(1) == REPO or match.group(1) not in repos:
+        return None
+    repo = repos[match.group(1)]
+    what = match.group(2)
+    if what == "git/trees/main" and method == "GET":
+        tree = [
+            {"path": p, "mode": "100644", "type": "blob", "size": len(t.encode("utf-8")), "sha": git_blob(t), "url": f"http://forge.test/{p}"}
+            for p, t in sorted(repo["files"].items())
+        ]
+        return 200, json.dumps({"sha": "c" * 40, "url": "http://forge.test/tree", "tree": tree, "truncated": False, "page": 1, "total_count": len(tree)}, separators=(",", ":"))
+    if what == "branches/main" and method == "GET":
+        return 200, json.dumps({"name": "main", "commit": {"id": repo["head"], "message": "seed"}}, separators=(",", ":"))
+    if what == "contents" and method == "POST":
+        body = json.loads(call["data"])
+        files = dict(repo["files"])
+        for change in body["files"]:
+            held = files.get(change["path"])
+            if change["operation"] == "create":
+                if held is not None:
+                    return 422, '{"message":"the file already exists"}'
+            elif held is None or change.get("sha") != git_blob(held):
+                return 409, '{"message":"sha does not match"}'
+            if change["operation"] == "delete":
+                del files[change["path"]]
+            else:
+                files[change["path"]] = base64.b64decode(change["content"]).decode("utf-8")
+        repo["files"] = files
+        repo["head"] = head_of(files)
+        repo.setdefault("commits", []).append(body["message"])
+        return 201, json.dumps({"commit": {"sha": repo["head"]}})
+    return None
+
+
 def parse(argv: list[str]) -> dict:
     out = {"method": None, "out": None, "code": False, "data": None, "fail": False, "url": None}
     index = 0
@@ -74,7 +133,12 @@ def parse(argv: list[str]) -> dict:
             out["method"] = argv[index + 1]
             index += 1
         elif arg == "-d":
-            out["data"] = argv[index + 1]
+            data = argv[index + 1]
+            # `-d @file` sends the file, which is how the Job posts a tree too big for argv.
+            if data.startswith("@"):
+                with open(data[1:], encoding="utf-8") as handle:
+                    data = handle.read()
+            out["data"] = data
             index += 1
         elif arg.startswith("-"):
             pass
@@ -109,7 +173,12 @@ def answer(call: dict, state: dict) -> tuple[int, str]:
     if re.fullmatch(r"/api/v1/packages/[^/?]+", path):
         return 200, "[]"
     if re.fullmatch(r"/api/v1/repos/[^/]+/[^/]+", path):
-        return 200, '{"default_branch":"main"}'
+        name = path.rsplit("/", 1)[-1]
+        known = name == REPO or name in state.setdefault("repos", {})
+        return (200, '{"default_branch":"main"}') if known else (404, "{}")
+    app = app_repository(path, method, call, state)
+    if app is not None:
+        return app
     if "/teams/search" in path:
         team = path.split("q=", 1)[-1]
         return 200, json.dumps({"data": [{"name": team}]})

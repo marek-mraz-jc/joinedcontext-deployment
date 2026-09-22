@@ -40,3 +40,21 @@ seed:
 {{ readFile (printf "../../../agent-runner/seed/%s" $file) | indent 4 }}
 {{- end }}
 {{- end }}
+
+# The sample applications (T-2599, AP-75): each one its own private repository on the forge,
+# pushed from components/gitea/apps/<name>/ (vendored from a portal commit by
+# scripts/vendor-sample-apps.py), and its App manifest committed into the project with
+# `source.git` pinned to that repository's commit. JSON strings, not block scalars: a block
+# scalar rewrites trailing newlines, and a file the seed changed on the way would never match the
+# blob already on the forge, so every run would commit again.
+sampleApps:
+  project: helsinki
+  publicBase: "https://{{ .Values.global.domain }}/git"
+  apps:
+{{- $apps := readFile "../../apps/index.yaml" | fromYaml }}
+{{- range $app, $files := $apps.apps }}
+    {{ $app }}:
+{{- range $files }}
+      {{ . | replace "/" "__" | quote }}: {{ readFile (printf "../../apps/%s/%s" $app .) | toJson }}
+{{- end }}
+{{- end }}

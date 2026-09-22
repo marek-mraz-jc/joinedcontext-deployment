@@ -92,12 +92,20 @@ spec:
               value: {{ .Values.tokens.runner.secret | quote }}
             - name: RUNNER_NAMESPACES
               value: {{ .Values.tokens.runner.namespaces | uniq | sortAlpha | join " " | quote }}
+            - name: APPS_PROJECT
+              value: {{ .Values.sampleApps.project | quote }}
+            - name: APPS_PUBLIC_BASE
+              value: {{ .Values.sampleApps.publicBase | quote }}
           volumeMounts:
             - name: tmp
               mountPath: /tmp
             {{- if .Values.seed }}
             - name: seed
               mountPath: /seed
+            {{- end }}
+            {{- if .Values.sampleApps.apps }}
+            - name: apps
+              mountPath: /apps
               readOnly: true
             {{- end }}
           command: [/bin/sh, -c]
@@ -286,6 +294,9 @@ spec:
               }
 
               ensure_token "$PORTAL_SECRET" "jc-portal" "$PORTAL_SCOPES" $PORTAL_NAMESPACES
+              # The sample applications below are the Portal's to own (AP-75), so they are
+              # written with its token and not the administrator's.
+              PORTAL_TOKEN=$token
               ensure_token "$GATEWAY_SECRET" "jc-gateway" "$GATEWAY_SCOPES" $GATEWAY_NAMESPACES
 
               # 4a. What a node pulls App images with (AP-108): read:package alone, which may
@@ -441,6 +452,125 @@ spec:
                 [ "$status" = 201 ] || { echo "writing $SEED_MANIFEST failed: $status" >&2; cat $WORK/body >&2; exit 1; }
               fi
 
+              # 6. The sample applications (T-2599, AP-75, AP-77): each one its own private
+              #    repository `{project}_{name}` (the Portal's naming, T-2468), created once and
+              #    never recreated. The tree goes in as one commit, and only when a file differs
+              #    from the blob already there: a file's git blob id is computed here and
+              #    compared with the forge's tree, so a second run sends nothing. Then the App
+              #    manifest is committed into the project with `source.git` pinned to the
+              #    repository's head, which is the commit the build lane builds (AP-80).
+              APPS_DIR=${APPS_DIR:-/apps}
+              app_code() {
+                method=$1; path=$2; shift 2
+                curl -sS -o $WORK/body -w '%{http_code}' -X "$method" \
+                  -H "Authorization: token $PORTAL_TOKEN" -H 'content-type: application/json' \
+                  "$@" "$GITEA_URL$path"
+              }
+              # blob_id <file>: what `git hash-object` answers for it.
+              blob_id() {
+                { printf 'blob %s\000' "$(wc -c < "$1" | tr -d ' ')"; cat "$1"; } | sha1sum | cut -c1-40
+              }
+              for dir in "$APPS_DIR"/*/; do
+                [ -d "$dir" ] || continue
+                app=$(basename "$dir")
+                repo="${APPS_PROJECT}_$app"
+                status=$(app_code GET "/api/v1/repos/$ORG/$repo")
+                case "$status" in
+                  200) echo "app $app: repository $ORG/$repo is there" ;;
+                  404)
+                    status=$(app_code POST "/api/v1/orgs/$ORG/repos" \
+                      -d "{\"name\":\"$repo\",\"description\":\"The $app application of $APPS_PROJECT\",\"private\":true,\"auto_init\":true,\"default_branch\":\"main\"}")
+                    case "$status" in
+                      201|409) echo "app $app: created $ORG/$repo" ;;
+                      *) echo "creating $ORG/$repo failed: $status" >&2; cat $WORK/body >&2; exit 1 ;;
+                    esac ;;
+                  *) echo "the forge answered $status for $ORG/$repo" >&2; cat $WORK/body >&2; exit 1 ;;
+                esac
+
+                # What the forge holds: one `path sha` line per blob of main.
+                status=$(app_code GET "/api/v1/repos/$ORG/$repo/git/trees/main?recursive=true&per_page=10000")
+                [ "$status" = 200 ] || { echo "reading the tree of $ORG/$repo failed: $status" >&2; exit 1; }
+                grep -q '"truncated": *false' $WORK/body || { echo "the tree of $ORG/$repo came back truncated" >&2; exit 1; }
+                sed 's/},{/}\n{/g' $WORK/body | grep '"type": *"blob"' \
+                  | sed -n 's/.*"path": *"\([^"]*\)".*"sha": *"\([0-9a-f]\{40\}\)".*/\1 \2/p' \
+                  | sort > $WORK/app-remote
+
+                # What the seed holds, app.yaml aside: it is the manifest, not the source.
+                : > $WORK/app-local
+                # `.[!.]*` too: `*` skips dotfiles, and `.gitea/workflows/build.yml` is the file
+                # the build lane runs.
+                for f in "$dir"* "$dir".[!.]*; do
+                  [ -f "$f" ] || continue
+                  key=$(basename "$f")
+                  [ "$key" = app.yaml ] && continue
+                  echo "$(printf '%s' "$key" | sed 's/__/\//g') $(blob_id "$f") $key" >> $WORK/app-local
+                done
+                sort -o $WORK/app-local $WORK/app-local
+
+                # One commit: create, update or delete, each with the blob it replaces.
+                printf '{"branch":"main","message":"seed: the %s application from the platform (T-2599)","files":[' "$app" > $WORK/app-change
+                changes=0
+                while read -r path sha key; do
+                  held=$(grep -F "$path " $WORK/app-remote | awk -v p="$path" '$1 == p {print $2}')
+                  [ "$held" = "$sha" ] && continue
+                  [ "$changes" -eq 0 ] || printf ',' >> $WORK/app-change
+                  if [ -n "$held" ]; then
+                    printf '{"operation":"update","path":"%s","sha":"%s","content":"' "$path" "$held" >> $WORK/app-change
+                  else
+                    printf '{"operation":"create","path":"%s","content":"' "$path" >> $WORK/app-change
+                  fi
+                  base64 < "$dir$key" | tr -d '\n' >> $WORK/app-change
+                  printf '"}' >> $WORK/app-change
+                  changes=$((changes + 1))
+                done < $WORK/app-local
+                cut -d' ' -f1 $WORK/app-local > $WORK/app-paths
+                while read -r path held; do
+                  grep -qxF "$path" $WORK/app-paths && continue
+                  [ "$changes" -eq 0 ] || printf ',' >> $WORK/app-change
+                  printf '{"operation":"delete","path":"%s","sha":"%s"}' "$path" "$held" >> $WORK/app-change
+                  changes=$((changes + 1))
+                done < $WORK/app-remote
+                printf ']}' >> $WORK/app-change
+                if [ "$changes" -eq 0 ]; then
+                  echo "app $app: $ORG/$repo already holds this tree"
+                else
+                  status=$(app_code POST "/api/v1/repos/$ORG/$repo/contents" -d @$WORK/app-change)
+                  [ "$status" = 201 ] || { echo "pushing $app to $ORG/$repo failed: $status" >&2; cat $WORK/body >&2; exit 1; }
+                  echo "app $app: committed $changes file(s) to $ORG/$repo"
+                fi
+
+                status=$(app_code GET "/api/v1/repos/$ORG/$repo/branches/main")
+                [ "$status" = 200 ] || { echo "reading main of $ORG/$repo failed: $status" >&2; exit 1; }
+                head=$(sed -n 's/.*"commit": *{ *"id": *"\([0-9a-f]\{40\}\)".*/\1/p' $WORK/body)
+                [ "${#head}" -eq 40 ] || { echo "the forge named no commit for main of $ORG/$repo" >&2; exit 1; }
+
+                # The manifest, pinned to that commit at the address a person clones from.
+                sed -e "s|^\(      url: \).*|\1$APPS_PUBLIC_BASE/$ORG/$repo.git|" \
+                    -e "s|^\(      ref: \).*|\1$head|" "${dir}app.yaml" > $WORK/app-manifest
+                path="projects/$APPS_PROJECT/apps/$app/app.yaml"
+                encoded=$(base64 < $WORK/app-manifest | tr -d '\n')
+                status=$(forge_code GET "/api/v1/repos/$ORG/$REPO/contents/$path?ref=$BRANCH")
+                case "$status" in
+                  200)
+                    held=$(sed -n 's/.*"content": *"\([^"]*\)".*/\1/p' $WORK/body | sed 's/\\n//g' | base64 -d)
+                    if [ "$held" = "$(cat $WORK/app-manifest)" ]; then
+                      echo "app $app: $path already names $head"
+                    else
+                      sha=$(sed -n 's/.*"sha": *"\([0-9a-f]\{40\}\)".*/\1/p' $WORK/body | head -1)
+                      status=$(forge_code PUT "/api/v1/repos/$ORG/$REPO/contents/$path" \
+                        -d "{\"branch\":\"$BRANCH\",\"sha\":\"$sha\",\"content\":\"$encoded\",\"message\":\"seed: the $app application at $head\"}")
+                      [ "$status" = 200 ] || { echo "updating $path failed: $status" >&2; cat $WORK/body >&2; exit 1; }
+                      echo "app $app: $path now names $head"
+                    fi ;;
+                  404)
+                    status=$(forge_code POST "/api/v1/repos/$ORG/$REPO/contents/$path" \
+                      -d "{\"branch\":\"$BRANCH\",\"content\":\"$encoded\",\"message\":\"seed: the $app application at $head\"}")
+                    [ "$status" = 201 ] || { echo "writing $path failed: $status" >&2; cat $WORK/body >&2; exit 1; }
+                    echo "app $app: $path created at $head" ;;
+                  *) echo "the forge answered $status for $path" >&2; exit 1 ;;
+                esac
+              done
+
               # The body file has held a token; the volume is an emptyDir that dies with the
               # pod, but leaving it readable for the seconds a mesh proxy takes to shut down
               # is free to avoid.
@@ -453,4 +583,19 @@ spec:
         - name: seed
           configMap:
             name: {{ include "bootstrap.fullname" . }}-seed
+        {{- end }}
+        {{- if .Values.sampleApps.apps }}
+        # One folder per application, its files under their `__` names (T-2599).
+        - name: apps
+          projected:
+            sources:
+              {{- range $app, $files := .Values.sampleApps.apps }}
+              - configMap:
+                  name: {{ include "bootstrap.fullname" $ }}-app-{{ $app }}
+                  items:
+                    {{- range $key, $_ := $files }}
+                    - key: {{ $key | quote }}
+                      path: {{ printf "%s/%s" $app $key | quote }}
+                    {{- end }}
+              {{- end }}
         {{- end }}

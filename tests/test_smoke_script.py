@@ -81,6 +81,10 @@ elif args[0] == "get" and args[1] == "configmap" and args[2] == "gitea-bootstrap
 elif args[0] == "get" and args[1] == "configmap" and args[2] == "portal-branding":
     # The block both the Portal and the catalogue theme are served (OPS-46).
     sys.stdout.write(spec.get("branding", "instanceName: Example Context\\ncolours:\\n  primary: '#0000bf'\\n"))
+elif args[0] == "get" and args[1] == "configmaps" and "-o name" in line:
+    # The sample applications the forge bootstrap seeded (T-2599); `sampleApps: []` is none.
+    for app in spec.get("sampleApps", ["helsinki-bikes", "helsinki-events", "helsinki-alerts"]):
+        sys.stdout.write("configmap/gitea-bootstrap-app-%s\\n" % app)
 elif args[0] == "get" and args[1] == "configmap":
     routes = "".join("  - id: %s\\n" % r for r in spec.get("routes", []))
     sys.stdout.write("routes:\\n" + routes)
@@ -288,10 +292,13 @@ HELSINKI_SEED = {"events": "hsevents", "bikes": "hsbikes", "transport": "hstrans
 # What jc-functions answers the smoke's function when the gateway answered it (T-0686).
 FUNCTION_ANSWER = '{"status":200,"body":{"gateway":200},"logs":["smoke"]}'
 
+# What the Portal answers for a sample application the lane has built (T-2599).
+BUILT_APP = '{"kind":"App","status":{"build":{"commit":"%s","digest":"sha256:%s"}}}' % ("a" * 40, "b" * 64)
+
 HEALTHY = {
     "routes": ["portal-ui", "portal-api", "context-space", "context-endpoint", "gitea-forge", "ckan"],
     "helsinkiSeed": HELSINKI_SEED,
-    "bodies": [[["Bearer", "/invoke"], FUNCTION_ANSWER],
+    "bodies": [["/api/v1/projects/helsinki/apps/helsinki-", BUILT_APP],[["Bearer", "/invoke"], FUNCTION_ANSWER],
                # The organization's Actions runner, online (T-2608, ADR-N-028).
                ["actions/runners", '{"runners":[{"name":"gitea-runner-1","status":"online"}]}'],
                ["clients?clientId=edge", '[{"protocolMappers":[{"config":{"included.client.audience": "portal-api"}}]}]'],
@@ -624,7 +631,8 @@ def test_instance_without_demo_users_skips_the_login(tmp_path):
     assert result.returncode == 0
     assert "skip  demo user login (no demo users seeded" in result.stdout
     assert "skip  portal space list (no demo user token)" in result.stdout
-    assert "0 failed, 2 skipped" in result.stdout
+    assert "skip  sample apps (no demo user token to read them with)" in result.stdout
+    assert "0 failed, 3 skipped" in result.stdout
 
 
 def test_absent_routes_skip_instead_of_passing(tmp_path):
@@ -1039,3 +1047,24 @@ def test_an_instance_without_app_pods_skips_with_the_count(tmp_path):
     result = run(tmp_path, dict(HEALTHY, appPods=[]), "https://example.test", "https://idm.example.test")
     assert "skip  App pods (0 pod-backed Apps run in this instance)" in result.stdout
     assert "reaches an App pod" not in result.stdout
+
+
+def test_every_seeded_sample_app_is_built_and_the_wait_is_said(tmp_path):
+    """AP-75, AP-80 (T-2599): each seeded app reads as built at its commit, with the seconds waited."""
+    result = run(tmp_path, dict(HEALTHY), "https://example.test", "https://idm.example.test")
+    assert result.returncode == 0, result.stdout
+    for app in ("helsinki-bikes", "helsinki-events", "helsinki-alerts"):
+        assert re.search(rf"ok    sample app {app} is built at aaaaaaaaaaaa after [0-9]+ s", result.stdout)
+
+
+def test_a_sample_app_the_lane_never_built_fails_the_run(tmp_path):
+    """AP-80: no status.build within the wait is a failure naming the app, not a skip."""
+    spec = dict(HEALTHY, bodies=[b for b in HEALTHY["bodies"] if b[1] != BUILT_APP])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test", extra_env={"JC_SMOKE_APP_WAIT": "0"})
+    assert result.returncode == 1
+    assert "FAIL  sample app helsinki-alerts has no status.build after 0 s" in result.stdout
+
+
+def test_an_instance_without_sample_apps_skips_them(tmp_path):
+    result = run(tmp_path, dict(HEALTHY, sampleApps=[]), "https://example.test", "https://idm.example.test")
+    assert "skip  sample apps (none is seeded in this instance)" in result.stdout

@@ -1,0 +1,12 @@
+{{- range $app, $files := .Values.sampleApps.apps }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "bootstrap.fullname" $ }}-app-{{ $app }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "bootstrap.labels" $ | nindent 4 }}
+data:
+  {{- toYaml $files | nindent 2 }}
+{{- end }}
