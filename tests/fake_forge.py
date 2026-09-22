@@ -105,6 +105,9 @@ def answer(call: dict, state: dict) -> tuple[int, str]:
         return 200, call["data"]
     if re.fullmatch(r"/api/v1/orgs/[^/]+", path):
         return 200, "{}"
+    # The organization's packages: what a read:package token may read (AP-108).
+    if re.fullmatch(r"/api/v1/packages/[^/?]+", path):
+        return 200, "[]"
     if re.fullmatch(r"/api/v1/repos/[^/]+/[^/]+", path):
         return 200, '{"default_branch":"main"}'
     if "/teams/search" in path:

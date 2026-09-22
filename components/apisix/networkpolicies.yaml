@@ -74,6 +74,17 @@ apisix:
       ports:
         - protocol: TCP
           port: 3000
+    # A pod-backed App (AP-26, AP-108): the Portal's reconciler labels every App pod
+    # `joinedcontext.com/app` in the apps namespace, which is the Portal's, and the App's own
+    # policy admits APISIX on its one port.
+    - to:
+        - podSelector:
+            matchLabels:
+              joinedcontext.com/app: "true"
+          componentNamespace: portal
+      ports:
+        - protocol: TCP
+          port: 8080
     # The openid-connect plugin of the edge login (ADR-N-019) calls the PUBLIC issuer host:
     # discovery, the token endpoint, the JWKS and userinfo. The `iss` claim carries that host,
     # so the in-cluster Keycloak Service above is no substitute. The same two facts the

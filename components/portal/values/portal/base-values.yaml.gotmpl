@@ -184,6 +184,17 @@ env:
   # Portal reads them off its public URL and its OIDC issuer.
   JC_PORTAL_APPS_NAMESPACE: {{ $thisPortal.appsNamespace | quote }}
   JC_PORTAL_ORG_DOMAIN: {{ $global.orgDomain | quote }}
+{{- if has "apisix" .Values.components }}
+  # The only namespace whose APISIX pods an App pod admits (AP-108).
+  JC_PORTAL_APISIX_NAMESPACE: {{ .Values.apisix.apisix.namespace | quote }}
+{{- end }}
+{{- if has "gitea" .Values.components }}
+  # A fullstack App's image is {registry}/{JC_GITEA_OWNER}/app-{name}@{digest} (AP-108): the
+  # node pulls it from https://{domain}/v2/, which the edge routes to the forge, with the
+  # read:package Secret the gitea bootstrap Job writes into the apps namespace.
+  JC_PORTAL_APPS_REGISTRY: {{ $global.domain | quote }}
+  JC_PORTAL_APPS_PULL_SECRET_NAME: "app-registry"
+{{- end }}
 {{- if has "model-tools" .Values.components }}
   # The generator behind the LinkML editor (DM-18, DM-19): the live preview, the Smart Data
   # Models import and the draft from a sample file all go here; without it those three

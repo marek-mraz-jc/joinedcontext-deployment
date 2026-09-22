@@ -38,6 +38,14 @@ tokens:
     # The gateway only ever clones.
     scopes: ['read:repository']
     namespaces: []
+  # What a node pulls a fullstack App's image with (AP-108): a token that reads packages and
+  # nothing else, written as the `dockerconfigjson` Secret every App pod names in
+  # `imagePullSecrets`, for the registry at `host`. Empty namespaces: no App pod runs here.
+  registry:
+    secret: app-registry
+    scopes: ['read:package']
+    host: ''
+    namespaces: []
   # Not a token of the admin user: the organization's Actions runner registration token
   # (ADR-N-028), which only the runner's init container mounts. Empty namespaces: no runner.
   runner:
