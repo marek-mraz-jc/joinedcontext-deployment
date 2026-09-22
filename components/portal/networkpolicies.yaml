@@ -134,3 +134,43 @@ postgres-from-portal:
       ports:
         - protocol: TCP
           port: 5432
+
+# A build Job runs an application's own code (T-1707), so it reaches exactly what a build needs
+# and nothing else (AP-81): the forge to clone one repository, the artifact store to upload one
+# bundle, and DNS. No ingress at all: nothing calls a build.
+app-builder:
+  podSelector:
+    app.kubernetes.io/name: app-builder
+  policyTypes:
+    - Ingress
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: gitea
+              app.kubernetes.io/instance: gitea-forge
+          componentNamespace: gitea
+      ports:
+        - protocol: TCP
+          port: 3000
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: store
+          componentNamespace: artifact-store
+      ports:
+        - protocol: TCP
+          port: 9000
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53

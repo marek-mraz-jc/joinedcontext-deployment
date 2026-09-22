@@ -684,6 +684,33 @@ else
 	ok "an unlabelled pod reaches neither CoreDNS nor the internet (settled after ${settled}s, ceiling ${settle_ceiling}s)"
 fi
 
+# An application's build runs its untrusted code (T-1707, AP-81, ADR-N-026): a pod with the
+# build lane's label reaches the forge, the store and DNS, and never the internet. DNS is the
+# positive control, so a probe that could not dial at all never reads as "refused"; the settle
+# loop is the egress probe's above, for the same controller window (T-0459).
+echo "app build egress"
+build_ns=$(kubectl get serviceaccounts -A --field-selector metadata.name=app-builder -o jsonpath='{.items[0].metadata.namespace}' 2>/dev/null || true)
+if [ -z "$build_ns" ]; then
+	skip "app build egress (no app-builder ServiceAccount in this instance)"
+else
+	build_probe="smoke-appbuild-$$"
+	build_out=$(kubectl run "$build_probe" -n "$build_ns" --rm --attach --restart=Never --quiet --timeout=180s \
+		--image="$image" \
+		--overrides="$(probe_overrides "$build_probe" '["sh", "-c", "i=0; while [ $i -lt 18 ]; do nc -w 3 -z 1.1.1.1 443 >/dev/null 2>&1 || break; i=$((i+1)); sleep 4; done; echo SETTLED-AFTER=$((i*4))s; timeout 8 nslookup kubernetes.default >/dev/null 2>&1 && echo REACHED-DNS; nc -w 5 -z 1.1.1.1 443 >/dev/null 2>&1 && echo REACHED-NET; echo PROBE-RAN"]' |
+			sed 's/"metadata": {/"metadata": {\n    "labels": {"app.kubernetes.io\/name": "app-builder"},/')" \
+		2>/dev/null)
+	build_settled=$(printf '%s' "$build_out" | sed -n 's/^SETTLED-AFTER=\([0-9]*\)s\r*$/\1/p' | head -1)
+	if ! printf '%s' "$build_out" | grep -q PROBE-RAN; then
+		ko "the app build probe never ran, so the build lane's egress was not measured"
+	elif printf '%s' "$build_out" | grep -q '^REACHED-NET'; then
+		ko "a pod with the app build label reached 1.1.1.1:443: an application's build can reach the internet"
+	elif ! printf '%s' "$build_out" | grep -q '^REACHED-DNS'; then
+		ko "a pod with the app build label cannot resolve names, so the refusal of the internet proves nothing"
+	else
+		ok "an app build resolves names and reaches no internet address (settled after ${build_settled:-?}s)"
+	fi
+fi
+
 # The edge's data plane admits the ingress controller alone (T-0939, EP-20). APISIX trusts
 # X-Real-IP from the whole pod network, so any other pod reaching 9080 — or 4143, where meshed
 # traffic lands — could name itself any caller and spend that caller's rate limit. The probe

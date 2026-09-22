@@ -489,3 +489,26 @@ def test_no_workload_reaches_the_metadata_service(rendered, env):
             ):
                 offenders.append(f"{doc['metadata'].get('namespace')}/{doc['metadata']['name']}: {opened}")
     assert not offenders, "egress that reaches 169.254.169.254:80:\n" + "\n".join(offenders)
+
+
+@pytest.mark.parametrize("env", ENVIRONMENTS)
+def test_an_app_build_reaches_the_forge_the_store_and_dns_only(rendered, env):
+    """A build runs an application's untrusted code (T-1707, ADR-N-026 section 2.4): the clone
+    comes from the forge, the bundle goes to the store, and nothing else is reachable: no
+    address range, no Kubernetes API, no Keycloak."""
+    groups = egress_rules_by_selector(rendered(env))
+    builder = [rules for selector, rules in groups.items()
+               if dict(selector).get("app.kubernetes.io/name") == "app-builder"]
+    if not builder:
+        pytest.skip("portal not deployed in this environment")
+    reached = set()
+    for rules in builder:
+        for rule in rules:
+            for peer in rule.get("to") or []:
+                assert "ipBlock" not in peer, f"an app build reaches {peer['ipBlock']}"
+                labels = peer.get("podSelector", {}).get("matchLabels", {})
+                reached |= set(labels.values())
+                for expression in peer.get("podSelector", {}).get("matchExpressions", []):
+                    reached |= set(expression["values"])
+    assert reached - {"gitea", "gitea-forge", "store", "kube-dns", "linkerd-destination", "linkerd-identity",
+                      "linkerd-proxy-injector"} == set(), f"an app build reaches {reached}"

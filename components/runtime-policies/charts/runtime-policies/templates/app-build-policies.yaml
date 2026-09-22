@@ -1,0 +1,7 @@
+{{- /*
+Scoped to the namespaces this deployment owns, like the Pod Security policies: the Portal's
+Jobs are created in its apps namespace, which is one of them (AP-81, ADR-N-026).
+*/ -}}
+{{- if .Values.podSecurity.namespaces }}
+{{ .Files.Get "files/restrict-app-build-jobs.yaml" | replace "KYVERNO_FAILURE_ACTION" .Values.failureAction | replace "KYVERNO_NAMESPACES" (.Values.podSecurity.namespaces | toJson) }}
+{{- end }}
