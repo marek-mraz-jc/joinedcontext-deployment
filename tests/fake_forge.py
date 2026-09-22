@@ -188,28 +188,33 @@ def answer(call: dict, state: dict) -> tuple[int, str]:
         return 201, '{"sha1":"%s"}' % ("a" * 40)
 
     contents = re.fullmatch(
-        rf"/api/v1/repos/{re.escape(ORG)}/{re.escape(REPO)}/contents/(.+?)(\?ref=.*)?", path
+        rf"/api/v1/repos/{re.escape(ORG)}/([^/?]+)/contents/(.+?)(\?ref=.*)?", path
     )
+    # The configuration repository keeps its files in `contents`, any other one (a project
+    # repository of layout 2) in `repos[name].files`.
+    if contents and contents.group(1) != REPO and contents.group(1) not in state.setdefault("repos", {}):
+        return 404, "{}"
     if contents:
-        file_path = unquote(contents.group(1))
-        held = state["contents"].get(file_path)
+        files = state["contents"] if contents.group(1) == REPO else state["repos"][contents.group(1)]["files"]
+        file_path = unquote(contents.group(2))
+        held = files.get(file_path)
         if method == "GET":
             return (200, json.dumps(blob(file_path, held))) if held is not None else (404, "{}")
         body = json.loads(call["data"])
         if method == "POST":
             if held is not None:
                 return 422, '{"message":"the file already exists"}'
-            state["contents"][file_path] = base64.b64decode(body["content"]).decode("utf-8")
-            return 201, json.dumps(blob(file_path, state["contents"][file_path]))
+            files[file_path] = base64.b64decode(body["content"]).decode("utf-8")
+            return 201, json.dumps(blob(file_path, files[file_path]))
         if method == "PUT":
             if held is None or body.get("sha") != blob(file_path, held)["sha"]:
                 return 409, '{"message":"sha does not match"}'
-            state["contents"][file_path] = base64.b64decode(body["content"]).decode("utf-8")
-            return 200, json.dumps(blob(file_path, state["contents"][file_path]))
+            files[file_path] = base64.b64decode(body["content"]).decode("utf-8")
+            return 200, json.dumps(blob(file_path, files[file_path]))
         if method == "DELETE":
             if held is None or body.get("sha") != blob(file_path, held)["sha"]:
                 return 409, '{"message":"sha does not match"}'
-            del state["contents"][file_path]
+            del files[file_path]
             return 200, '{"commit":{"sha":"%s"}}' % ("b" * 40)
     return 404, "{}"
 

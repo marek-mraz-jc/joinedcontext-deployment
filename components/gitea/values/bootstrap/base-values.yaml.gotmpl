@@ -28,6 +28,8 @@ repo:
   owner: {{ $repo.owner | quote }}
   name: {{ $repo.name | quote }}
   branch: {{ $repo.branch | quote }}
+# 2: the seed goes into the organization repository and one repository per project (CC-85).
+layout: {{ $repo.layout | default 1 }}
 
 # A token minted at run time cannot be copied by the secrets component, so the Job writes each
 # one where it is read. Under `singleNamespace: true` these are all the same string and the

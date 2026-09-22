@@ -14,6 +14,10 @@ repo:
   name: ''
   branch: main
 
+# 1: one repository holds every project. 2: the organization repository holds the registry and each
+# project of the seed gets a repository of its own (ADR-N-029, CC-85).
+layout: 1
+
 # The forge administrator, the only credential that can mint a token.
 adminSecret:
   name: gitea-admin-credentials
