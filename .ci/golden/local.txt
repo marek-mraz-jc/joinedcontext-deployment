@@ -37,12 +37,15 @@ kyverno.io/v1/ClusterPolicy -/require-meshed-namespace-inbound-policy
 kyverno.io/v1/ClusterPolicy -/require-ro-rootfs
 kyverno.io/v1/ClusterPolicy -/require-run-as-non-root-user
 kyverno.io/v1/ClusterPolicy -/require-run-as-nonroot
+kyverno.io/v1/ClusterPolicy -/restrict-app-build-jobs
 kyverno.io/v1/ClusterPolicy -/restrict-cnpg-operator-pod-labels
 networking.k8s.io/v1/Ingress -/apisix
 networking.k8s.io/v1/NetworkPolicy local/acme-http01-solver
 networking.k8s.io/v1/NetworkPolicy local/apisix
 networking.k8s.io/v1/NetworkPolicy local/apisix-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy local/apisix-linkerd-control-plane
+networking.k8s.io/v1/NetworkPolicy local/app-builder
+networking.k8s.io/v1/NetworkPolicy local/app-builder-linkerd
 networking.k8s.io/v1/NetworkPolicy local/artifact-store
 networking.k8s.io/v1/NetworkPolicy local/artifact-store-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy local/artifact-store-bucket
@@ -204,6 +207,7 @@ v1/Service local/observability-collector
 v1/Service local/pipeline-runner
 v1/Service local/portal
 v1/ServiceAccount local/apisix
+v1/ServiceAccount local/app-builder
 v1/ServiceAccount local/artifact-store
 v1/ServiceAccount local/context-broker
 v1/ServiceAccount local/context-gateway
