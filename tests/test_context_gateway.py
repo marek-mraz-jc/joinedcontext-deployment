@@ -242,6 +242,51 @@ def test_the_gateway_reads_the_forge_checkout_git_sync_keeps(dev, gateway_pod, g
     repo = next(m for m in gateway["volumeMounts"] if m["mountPath"] == "/repo")
     assert repo["readOnly"] is True and repo["name"] == "repo"
     assert any(v["name"] == "repo" and "emptyDir" in v for v in gateway_pod["volumes"])
+    # Layout 1: no checkouts, nothing of layout 2 (CC-85).
+    names = {c["name"] for c in gateway_pod["containers"] + gateway_pod.get("initContainers", [])}
+    assert not names & {"checkouts", "checkouts-init"}
+    assert "JC_GATEWAY_PROJECTS_DIR" not in gateway_env
+
+
+@requires_helmfile
+def test_layout_two_checks_out_every_project_beside_the_organization(rendered_variant):
+    """CC-86, T-2646: in layout 2 `jcctl checkouts` runs once after git-sync's first clone and
+    beside the gateway after, writing the projects the gateway only reads; its image is pinned by
+    digest, it reads the forge's read-only token from a mounted file, and nothing of it runs as
+    root or writes its root filesystem."""
+    from conftest import set_global
+
+    docs = rendered_variant("dev", lambda tree: set_global(tree, "configRepo.layout", 2))
+    pod = next(
+        d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"] == "context-gateway"
+    )["spec"]["template"]["spec"]
+    gateway = pod["containers"][0]
+    env = {e["name"]: e.get("value") for e in gateway["env"]}
+    assert (env["JC_GATEWAY_PROJECTS_DIR"], env["JC_GATEWAY_ASSEMBLY_DIR"]) == ("/projects", "/assembly")
+    mounts = {m["mountPath"]: m for m in gateway["volumeMounts"]}
+    assert mounts["/projects"]["readOnly"] is True
+    assert not mounts["/assembly"].get("readOnly")
+
+    inits = [c["name"] for c in pod["initContainers"]]
+    assert inits.index("git-sync-init") < inits.index("checkouts-init"), "the organization first"
+    init = next(c for c in pod["initContainers"] if c["name"] == "checkouts-init")
+    sidecar = next(c for c in pod["containers"] if c["name"] == "checkouts")
+    for container in (init, sidecar):
+        assert "/checkouts:" in container["image"] and "@sha256:" in container["image"], container["image"]
+        args = container["args"]
+        assert args[:4] == ["--org-dir", "/repo/current", "--projects-dir", "/projects"]
+        assert args[args.index("--forge") + 1].startswith("http://gitea-http.")
+        assert args[args.index("--token-file") + 1] == "/var/run/forge/token"
+        assert container["securityContext"]["readOnlyRootFilesystem"] is True
+        assert container["securityContext"]["runAsNonRoot"] is True
+        own = {m["mountPath"]: m for m in container["volumeMounts"]}
+        assert own["/repo"]["readOnly"] is True and own["/var/run/forge"]["readOnly"] is True
+        assert not own["/projects"].get("readOnly")
+    assert "--once" in init["args"] and "--once" not in sidecar["args"]
+    assert "readinessProbe" in sidecar
+
+    token = next(v for v in pod["volumes"] if v["name"] == "forge-token")
+    assert token["secret"]["secretName"] == "gitea-token-gateway"
 
 
 @requires_helmfile

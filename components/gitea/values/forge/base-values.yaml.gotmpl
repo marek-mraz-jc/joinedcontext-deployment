@@ -184,6 +184,15 @@ gitea:
       # the limit); the second line stops a fork from ignoring it too.
       MAX_CREATION_LIMIT: 0
       ALLOW_FORK_WITHOUT_MAXIMUM_LIMIT: false
+    migrations:
+      # Duplicating a project copies its repository with its history (PF-89). Gitea refuses a
+      # fork into the owner that holds the origin, so the Portal migrates it from the forge's
+      # own Service instead; a private address is refused unless allowed, and the allow-list
+      # holds that Service alone, so no migration dials anything else in the cluster. Only the
+      # administrator creates repositories (MAX_CREATION_LIMIT above), so only the Portal
+      # migrates. The matching self rule is in components/gitea/networkpolicies.yaml.
+      ALLOW_LOCALNETWORKS: true
+      ALLOWED_DOMAINS: 'gitea-http.{{ $this.namespace }}.svc.cluster.local'
     oauth2_client:
       # First login through Keycloak creates the Gitea account and links it to the existing
       # one with that e-mail, instead of asking the person to invent a second password.

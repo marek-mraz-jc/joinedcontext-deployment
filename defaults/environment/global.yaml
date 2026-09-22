@@ -30,6 +30,11 @@ global:
     owner: joinedcontext
     name: configuration
     branch: main
+    # 1: every project lives under projects/{slug}/ of this repository. 2: this repository holds
+    # the organization and the registry projects/{slug}.yaml, and each project a repository of
+    # its own (ADR-N-029, CC-85); the Context Gateway then runs `jcctl checkouts` beside
+    # git-sync to keep every registered project checked out at its ref (CC-86, T-2646).
+    layout: 1
 
   # Deployment profile: "development" or "production"
   # Controls resource limits, replica counts, scaling
