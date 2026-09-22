@@ -132,3 +132,19 @@ def test_apisix_reaches_app_pods_on_their_one_port_and_nothing_else_there(local)
     (peer,) = rules[0]["to"]
     assert peer["namespaceSelector"]["matchLabels"]["kubernetes.io/metadata.name"] == portal_ns
     assert rules[0]["ports"] == [{"protocol": "TCP", "port": 8080}]
+
+
+@requires_helmfile
+def test_apisix_reaches_meshed_app_pods_on_the_inbound_proxy(local):
+    """AP-108: an App pod is meshed, so the edge's traffic lands on its Linkerd inbound port;
+    the 8080 rule alone would allow a connection the proxy never makes."""
+    policy = one(local, "NetworkPolicy", "apisix-linkerd-control-plane")
+    portal_ns = one(local, "Deployment", "portal")["metadata"]["namespace"]
+    rules = [
+        rule for rule in policy["spec"]["egress"]
+        if any(peer.get("podSelector", {}).get("matchLabels", {}).get("joinedcontext.com/app") == "true"
+               and peer["namespaceSelector"]["matchLabels"]["kubernetes.io/metadata.name"] == portal_ns
+               for peer in rule.get("to", []))
+    ]
+    assert len(rules) == 1, rules
+    assert rules[0]["ports"] == [{"protocol": "TCP", "port": 4143}]

@@ -170,6 +170,18 @@ elif args[0] == "run" and args[1].startswith("smoke-runner"):
         for destination in spec.get("runnerReached", ["DNS"]):
             sys.stdout.write("REACHED-%s\\n" % destination)
         sys.stdout.write("PROBE-RAN\\n")
+elif args[0] == "get" and args[1] == "pods" and "joinedcontext.com/app=true" in line:
+    # AP-108: the running pod-backed Apps' addresses; `appPods: []` is an instance without one.
+    sys.stdout.write("".join("%s " % ip for ip in spec.get("appPods", ["10.42.0.20"])))
+elif args[0] == "run" and args[1].startswith("smoke-app") and args[1].endswith("-edge"):
+    # The probe carrying APISIX's label: the App policy's own positive control.
+    sys.exit(0 if spec.get("appEdgeReaches", True) else 1)
+elif args[0] == "run" and args[1].startswith("smoke-app"):
+    # Reports by what it prints, like the edge-peer probe.
+    if spec.get("appPeerRan", True):
+        sys.stdout.write("PROBE-RAN\\n")
+    for port in spec.get("appPeerReached", []):
+        sys.stdout.write("REACHED-%s\\n" % port)
 elif args[0] == "get" and args[1] == "pods" and "app.kubernetes.io/name=apisix" in line:
     # T-0939: the probe aims at the APISIX pod's own address; `apisixPodIp: ""` is no pod.
     sys.stdout.write(spec.get("apisixPodIp", "10.42.0.9"))
@@ -993,3 +1005,37 @@ def test_a_runner_the_forge_does_not_show_online_fails_the_run(tmp_path):
                  extra_env={"JC_SMOKE_RUNNER_WAIT": "0"})
     assert result.returncode != 0
     assert "FAIL  no Actions runner of joinedcontext is online after 0s" in result.stdout
+
+
+def test_an_app_pod_reached_only_from_apisix_passes(tmp_path):
+    """AP-26, AP-108: the positive control and the refusal, with how many App pods ran."""
+    result = run(tmp_path, dict(HEALTHY, appPods=["10.42.0.20", "10.42.0.21"]), "https://example.test", "https://idm.example.test")
+    assert result.returncode == 0, result.stdout
+    assert "ok    a pod with APISIX's label reaches an App pod on 8080 (first of 2)" in result.stdout
+    assert "ok    an App pod refuses a pod that is not APISIX on 8080 and 4143" in result.stdout
+
+
+def test_an_app_pod_open_to_any_pod_fails_the_run(tmp_path):
+    """AP-26: a pod that reaches the App past the edge skips its login front."""
+    result = run(tmp_path, dict(HEALTHY, appPeerReached=["8080", "4143"]), "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  a pod outside APISIX reached the App pod at 10.42.0.20 on port 8080 4143 —" in result.stdout
+
+
+def test_an_app_pod_apisix_cannot_reach_fails_the_run(tmp_path):
+    """AP-108: an App the edge cannot reach serves nobody, and makes the refusal meaningless."""
+    result = run(tmp_path, dict(HEALTHY, appEdgeReaches=False), "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  a pod with APISIX's label cannot reach the App pod at 10.42.0.20:8080" in result.stdout
+
+
+def test_an_app_peer_probe_that_never_ran_fails_the_run(tmp_path):
+    result = run(tmp_path, dict(HEALTHY, appPeerRan=False), "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  the App-peer probe never ran" in result.stdout
+
+
+def test_an_instance_without_app_pods_skips_with_the_count(tmp_path):
+    result = run(tmp_path, dict(HEALTHY, appPods=[]), "https://example.test", "https://idm.example.test")
+    assert "skip  App pods (0 pod-backed Apps run in this instance)" in result.stdout
+    assert "reaches an App pod" not in result.stdout

@@ -760,6 +760,43 @@ else
 	ok "APISIX refuses a pod that is not the ingress controller on 9080 and 4143"
 fi
 
+# A pod-backed App (AP-26, AP-108): the Portal's reconciler writes one NetworkPolicy per App
+# that admits APISIX on the app port and the mesh's inbound port, and nothing else. The first
+# running App pod stands for all of them (every App gets the same policy); its own address,
+# so neither probe needs DNS. The APISIX-labelled probe is the positive control, retried for
+# the half minute the controller takes to admit a new pod (T-0459); the one in `default` is
+# the refusal, on both ports, as for the edge above.
+echo "apps"
+app_ips=$(kubectl get pods -A -l joinedcontext.com/app=true --field-selector=status.phase=Running \
+	-o jsonpath='{range .items[*]}{.status.podIP}{" "}{end}' 2>/dev/null)
+app_count=$(printf '%s' "$app_ips" | wc -w)
+if [ "$app_count" -eq 0 ]; then
+	skip "App pods (0 pod-backed Apps run in this instance)"
+else
+	app_ip=${app_ips%% *}
+	app_probe="smoke-app-$$"
+	app_edge=$(probe_overrides "$app_probe-edge" "[\"sh\", \"-c\", \"i=0; while [ \$i -lt 10 ]; do nc -w 3 -z $app_ip 8080 && exit 0; i=\$((i+1)); sleep 3; done; exit 1\"]" |
+		sed 's/"metadata": {/"metadata": {\n    "labels": {"app.kubernetes.io\/name": "apisix"},/')
+	if kubectl run "$app_probe-edge" -n "$slug" --rm --attach --restart=Never --quiet --timeout=90s \
+		--image="$image" --overrides="$app_edge" >/dev/null 2>&1; then
+		ok "a pod with APISIX's label reaches an App pod on 8080 (first of $app_count)"
+	else
+		ko "a pod with APISIX's label cannot reach the App pod at $app_ip:8080, so no App is served and the refusal below proves nothing"
+	fi
+	app_out=$(kubectl run "$app_probe" -n default --rm --attach --restart=Never --quiet --timeout=90s \
+		--image="$image" \
+		--overrides="$(probe_overrides "$app_probe" "[\"sh\", \"-c\", \"sleep 3; echo PROBE-RAN; nc -w 5 -z $app_ip 8080 >/dev/null 2>&1 && echo REACHED-8080; nc -w 5 -z $app_ip 4143 >/dev/null 2>&1 && echo REACHED-4143; true\"]")" \
+		2>/dev/null)
+	app_reached=$(printf '%s' "$app_out" | sed -n 's/^REACHED-\([0-9]*\)\r*$/\1/p' | tr '\n' ' ')
+	if ! printf '%s' "$app_out" | grep -q PROBE-RAN; then
+		ko "the App-peer probe never ran, so who may reach an App pod was not measured"
+	elif [ -n "$app_reached" ]; then
+		ko "a pod outside APISIX reached the App pod at $app_ip on port ${app_reached} — the App's NetworkPolicy is not holding and its login front can be skipped (AP-26)"
+	else
+		ok "an App pod refuses a pod that is not APISIX on 8080 and 4143"
+	fi
+fi
+
 echo "functions"
 # jc-functions (SDK-22, SDK-23) takes the Portal alone, so the smoke reaches its Service over a
 # port-forward and presents what the Portal presents: portal-api's client_credentials token,
