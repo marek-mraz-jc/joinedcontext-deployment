@@ -101,6 +101,16 @@ gitea-linkerd-control-plane:
       ports:
         - protocol: TCP
           port: 4143
+    # Itself, meshed: the migration that duplicates a project's repository (PF-89).
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: gitea
+              app.kubernetes.io/instance: gitea-forge
+          componentNamespace: gitea
+      ports:
+        - protocol: TCP
+          port: 4143
 
 gitea-linkerd-from-jc:
   podSelector:
@@ -117,6 +127,11 @@ gitea-linkerd-from-jc:
         - podSelector:
             matchLabels:
               app.kubernetes.io/name: bootstrap
+          componentNamespace: gitea
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: gitea
+              app.kubernetes.io/instance: gitea-forge
           componentNamespace: gitea
         # The Actions runner (ADR-N-028, AP-81): it takes jobs from the forge, and the jobs
         # clone, publish packages and call the forge API through it.

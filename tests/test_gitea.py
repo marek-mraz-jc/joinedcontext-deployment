@@ -186,6 +186,8 @@ def test_the_forge_may_reach_the_database_the_reconciler_and_the_issuer_and_noth
         ("kube-dns", 53),
         ("postgres-cluster", 5432),
         ("portal-portal", 8080),
+        # Itself, for the migration that duplicates a project's repository (PF-89).
+        ("gitea", 3000),
         # The issuer is reached on its public URL, and the port the rule sees after DNAT is
         # the ingress controller's container port, not 443.
         ("internet", 443),
@@ -213,3 +215,20 @@ def test_nobody_but_the_administrator_creates_or_forks_a_repository(rendered):
     )["stringData"]["repository"]
     assert "MAX_CREATION_LIMIT=0" in inline.splitlines()
     assert "ALLOW_FORK_WITHOUT_MAXIMUM_LIMIT=false" in inline.splitlines()
+
+
+def test_a_migration_reaches_the_forge_itself_and_nothing_else(rendered):
+    """PF-89: a duplicate is migrated from the forge's own Service; the private-address
+    exemption names that Service alone, so a migration cannot be pointed into the cluster."""
+    docs = rendered("local")
+    inline = next(
+        d for d in docs
+        if d.get("kind") == "Secret" and d["metadata"]["name"] == "gitea-inline-config"
+    )["stringData"]["migrations"].splitlines()
+    service = next(d for d in docs if d.get("kind") == "Service" and d["metadata"]["name"] == "gitea-http")
+    assert "ALLOW_LOCALNETWORKS=true" in inline
+    allowed = [line for line in inline if line.startswith("ALLOWED_DOMAINS=")]
+    assert len(allowed) == 1, inline
+    assert allowed[0].split("=", 1)[1].split(",") == [
+        f"gitea-http.{service['metadata']['namespace']}.svc.cluster.local"
+    ]

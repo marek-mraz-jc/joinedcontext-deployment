@@ -34,6 +34,13 @@ gitea:
             matchLabels:
               app.kubernetes.io/name: context-gateway-gateway
           componentNamespace: context-gateway
+        # The forge itself, cloning a repository it holds into a new one (PF-89, the
+        # migrations section of values/forge/base-values.yaml.gotmpl).
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: gitea
+              app.kubernetes.io/instance: gitea-forge
+          componentNamespace: gitea
       ports:
         - protocol: TCP
           port: 3000
@@ -71,6 +78,16 @@ gitea:
       ports:
         - protocol: TCP
           port: 8080
+    # Its own Service, for the migration that duplicates a project's repository (PF-89).
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: gitea
+              app.kubernetes.io/instance: gitea-forge
+          componentNamespace: gitea
+      ports:
+        - protocol: TCP
+          port: 3000
     # OIDC against the public issuer URL: the `iss` claim carries the public host, so the
     # in-cluster Keycloak Service is not a substitute. Egress is 443 and nothing else — plus
     # 8443, because kube-proxy DNATs before this rule is evaluated and the port it then sees
