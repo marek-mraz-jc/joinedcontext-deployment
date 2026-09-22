@@ -20,6 +20,11 @@ NO_BUDGET = {
         "serving while it is down, so a drain that takes both replicas delays reconciliation "
         "rather than causing an outage. The upstream chart templates no PDB for itself"
     ),
+    "gitea-runner": (
+        "no traffic reaches it and nothing waits on it: a runner between jobs is safe to evict, "
+        "a build it was running fails and is re-run from the forge, and queued builds wait in "
+        "the forge while no runner is up (components/gitea-runner production values, T-2608)"
+    ),
 }
 
 # Workloads that mount a path from the node, and why each one has to. A hostPath is host
