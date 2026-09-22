@@ -22,8 +22,11 @@ spec:
       contextSpaces: 6
       residentPipelines: 12
       publicEndpoints: 12
-      # One application preview is a pod with a build behind it; two is what is left.
-      apps: 2
+      # Every App counts, static and retired ones too (PF-73), and the reconciler serves only
+      # the first `apps` by name (PF-74). helsinki holds seven (five samples, two retired), of
+      # which air-quality and hsl-transport run a pod; at two, five samples were never served
+      # and their build was refused (T-2633). Counting pods alone is T-2654.
+      apps: 8
       # The busiest feed is the HFP MQTT stream of four trunk lines.
       ingestEventsPerSecond: 200
       # A recording session is a handful of runs; a day of demos is well under this.
