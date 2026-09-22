@@ -118,6 +118,11 @@ gitea-linkerd-from-jc:
             matchLabels:
               app.kubernetes.io/name: bootstrap
           componentNamespace: gitea
+        # The build Jobs of the Portal's build lane (AP-80, AP-81).
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: app-builder
+          componentNamespace: portal
         # The gateway's git-sync checkout of the configuration repository (T-0278).
         - podSelector:
             matchLabels:

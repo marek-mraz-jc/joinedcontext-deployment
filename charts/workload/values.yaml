@@ -106,6 +106,7 @@ persistence:
   mountPath: /data
   storageClass: ''    # '' -> the cluster default
   accessMode: ReadWriteOnce
+extraServiceAccounts: []  # names of token-less ServiceAccounts for pods this workload starts (AP-81)
 extraVolumes: []
 extraInitContainers: []   # raw container specs, run before the workload (a one-time git-sync checkout)
 extraContainers: []       # raw container specs beside the workload (a git-sync sidecar)

@@ -32,6 +32,22 @@ rbac:
     - apiGroups: ["networking.k8s.io"]
       resources: ["networkpolicies"]
       verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+    # The build lane (AP-80, ADR-N-026): the reconciler starts one Job per App build, watches
+    # it, reads its result from the pod's termination message and the log tail a failed build
+    # leaves on the App, and deletes it. Never `update`: a started build is not edited.
+    - apiGroups: ["batch"]
+      resources: ["jobs"]
+      verbs: ["get", "list", "watch", "create", "delete"]
+    - apiGroups: [""]
+      resources: ["pods"]
+      verbs: ["get", "list", "watch"]
+    - apiGroups: [""]
+      resources: ["pods/log"]
+      verbs: ["get"]
+# The build Job's identity: no token, no Role (AP-81). The runtime policy
+# `restrict-app-build-jobs` refuses a Job the Portal starts under any other.
+extraServiceAccounts:
+  - app-builder
 nameOverride: portal-portal
 
 {{- $branding := $global.branding | default dict }}
@@ -236,6 +252,14 @@ env:
   # Organization on every sync; without either half it issues nothing and touches no store.
   JC_PORTAL_ARTIFACT_STORE_ENDPOINT: "http://artifact-store.{{ index .Values "artifact-store" "store" "namespace" }}.svc.cluster.local:9000"
   JC_PORTAL_ARTIFACT_STORE_BUCKET: {{ index .Values "artifact-store" "store" "bucket" | default "jc-artifacts" | quote }}
+{{- end }}
+{{- $builder := dig "app-builder" dict (index .Values.images "portal") }}
+{{- if and (dig "digest" "" $builder) (has "artifact-store" .Values.components) (has "gitea" .Values.components) }}
+  # The build lane (AP-80, AP-82): the builder image of this Portal release, pinned by digest,
+  # and the identity its Jobs run as. Without the image the reconciler starts no build and says
+  # so on the App; a static App then serves only a bundle baked into the Portal image.
+  JC_APP_BUILDER_IMAGE: "{{ dig "repository" "" $builder }}@{{ dig "digest" "" $builder }}"
+  JC_APP_BUILDER_SERVICE_ACCOUNT: "app-builder"
 {{- end }}
 {{- if has "agent-runner" .Values.components }}
   # The agent runner (AG-33, AG-40): the two go together or the Portal refuses to start.

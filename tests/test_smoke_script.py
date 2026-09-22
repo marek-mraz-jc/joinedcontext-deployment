@@ -158,6 +158,16 @@ elif args[0] == "run" and args[1].startswith("smoke-egress"):
         sys.stdout.write("REACHED-%s\\n" % destination)
     if spec.get("egressProbeRan", True):
         sys.stdout.write("PROBE-RAN\\n")
+elif args[0] == "get" and args[1] == "serviceaccounts" and "metadata.name=app-builder" in line:
+    # The build lane's account (T-2592); an instance without it skips the build egress probe.
+    sys.stdout.write(spec.get("appBuilderNamespace", "apps"))
+elif args[0] == "run" and args[1].startswith("smoke-appbuild"):
+    # Like the egress probe, it reports by what it prints (T-2592).
+    if spec.get("appBuildProbeRan", True):
+        sys.stdout.write("SETTLED-AFTER=4s\\n")
+        for destination in spec.get("appBuildReached", ["DNS"]):
+            sys.stdout.write("REACHED-%s\\n" % destination)
+        sys.stdout.write("PROBE-RAN\\n")
 elif args[0] == "get" and args[1] == "pods" and "app.kubernetes.io/name=apisix" in line:
     # T-0939: the probe aims at the APISIX pod's own address; `apisixPodIp: ""` is no pod.
     sys.stdout.write(spec.get("apisixPodIp", "10.42.0.9"))
@@ -940,3 +950,28 @@ def test_a_resolver_that_refused_everything_fails_the_run(tmp_path):
     result = run(tmp_path, {**HEALTHY, "pipelineSecrets": {}}, "https://example.test", "https://idm.example.test")
     assert result.returncode == 1, result.stdout
     assert "FAIL  pipeline-secrets is empty" in result.stdout
+
+
+def test_an_app_build_that_reaches_the_internet_fails_the_run(tmp_path):
+    """AP-81: the build lane runs untrusted code with egress to the forge and the store only."""
+    result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
+    assert "ok    an app build resolves names and reaches no internet address" in result.stdout
+    result = run(tmp_path, dict(HEALTHY, appBuildReached=["DNS", "NET"]), "https://example.test", "https://idm.example.test")
+    assert result.returncode != 0
+    assert "FAIL  a pod with the app build label reached 1.1.1.1:443" in result.stdout
+
+
+def test_an_app_build_probe_that_measured_nothing_fails_the_run(tmp_path):
+    """AP-81: a probe that never ran, or could not even resolve a name, proves no refusal."""
+    for spec, line in [
+        (dict(HEALTHY, appBuildProbeRan=False), "FAIL  the app build probe never ran"),
+        (dict(HEALTHY, appBuildReached=[]), "FAIL  a pod with the app build label cannot resolve names"),
+    ]:
+        result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+        assert result.returncode != 0
+        assert line in result.stdout
+
+
+def test_an_instance_without_the_build_lane_skips_its_egress_probe(tmp_path):
+    result = run(tmp_path, dict(HEALTHY, appBuilderNamespace=""), "https://example.test", "https://idm.example.test")
+    assert "skip  app build egress (no app-builder ServiceAccount in this instance)" in result.stdout
