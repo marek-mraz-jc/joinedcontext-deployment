@@ -77,7 +77,7 @@ laneToken:
   # `iss` is the one the Portal checks, and no TLS to the public host is needed from this image.
   tokenUrl: ''
   clientId: jc-build-lane
-  clientSecret: keycloak-client-jc-build-lane
+  clientSecretName: keycloak-client-jc-build-lane
   secretName: JC_LANE_TOKEN
 
 image:

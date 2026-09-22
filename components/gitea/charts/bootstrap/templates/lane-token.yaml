@@ -123,7 +123,7 @@ spec:
                 sizeLimit: 1Mi
             - name: client
               secret:
-                secretName: {{ .Values.laneToken.clientSecret | quote }}
+                secretName: {{ .Values.laneToken.clientSecretName | quote }}
                 items:
                   - { key: client-secret, path: client-secret }
             - name: forge

@@ -23,6 +23,7 @@ apps/v1/Deployment local/portal
 apps/v1/Deployment local/postgres-operator-cloudnative-pg
 apps/v1/StatefulSet local/artifact-store
 apps/v1/StatefulSet local/keycloak-app-keycloakx
+batch/v1/CronJob local/gitea-lane-token
 batch/v1/CronJob local/sandbox-reaper-reaper
 batch/v1/Job local/artifact-store-bucket
 batch/v1/Job local/gitea-bootstrap
@@ -80,17 +81,23 @@ networking.k8s.io/v1/NetworkPolicy local/default-deny-secrets
 networking.k8s.io/v1/NetworkPolicy local/gitea
 networking.k8s.io/v1/NetworkPolicy local/gitea-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy local/gitea-bootstrap
+networking.k8s.io/v1/NetworkPolicy local/gitea-from-lane-token
+networking.k8s.io/v1/NetworkPolicy local/gitea-lane-token
 networking.k8s.io/v1/NetworkPolicy local/gitea-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy local/gitea-linkerd-from-jc
+networking.k8s.io/v1/NetworkPolicy local/gitea-linkerd-from-lane-token
 networking.k8s.io/v1/NetworkPolicy local/gitea-runner
 networking.k8s.io/v1/NetworkPolicy local/gitea-runner-linkerd
 networking.k8s.io/v1/NetworkPolicy local/keycloak
 networking.k8s.io/v1/NetworkPolicy local/keycloak-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy local/keycloak-config-cli
 networking.k8s.io/v1/NetworkPolicy local/keycloak-config-cli-linkerd
+networking.k8s.io/v1/NetworkPolicy local/keycloak-from-lane-token
 networking.k8s.io/v1/NetworkPolicy local/keycloak-from-observability
 networking.k8s.io/v1/NetworkPolicy local/keycloak-linkerd-control-plane
+networking.k8s.io/v1/NetworkPolicy local/keycloak-linkerd-from-lane-token
 networking.k8s.io/v1/NetworkPolicy local/keycloak-linkerd-from-observability
+networking.k8s.io/v1/NetworkPolicy local/lane-token-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy local/model-tools
 networking.k8s.io/v1/NetworkPolicy local/model-tools-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy local/model-tools-linkerd-control-plane
@@ -194,6 +201,7 @@ v1/Secret local/keycloak-client-context-gateway
 v1/Secret local/keycloak-client-edge
 v1/Secret local/keycloak-client-gitea
 v1/Secret local/keycloak-client-helsinki-pipelines
+v1/Secret local/keycloak-client-jc-build-lane
 v1/Secret local/keycloak-client-portal-api
 v1/Secret local/keycloak-client-portal-reconciler
 v1/Secret local/keycloak-config-keycloak-config-cli-config-realms
@@ -221,6 +229,7 @@ v1/ServiceAccount local/context-broker
 v1/ServiceAccount local/context-gateway
 v1/ServiceAccount local/gitea
 v1/ServiceAccount local/gitea-bootstrap
+v1/ServiceAccount local/gitea-bootstrap-lane-token
 v1/ServiceAccount local/gitea-runner
 v1/ServiceAccount local/keycloak-app-keycloakx
 v1/ServiceAccount local/observability-collector

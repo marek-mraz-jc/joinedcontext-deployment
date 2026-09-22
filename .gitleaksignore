@@ -11,3 +11,10 @@ cb239c90751c0c49bb3dbbc93388afb9649a769d:tests/test_ckan_api_token.py:jc-jwt-bea
 # name) and the YAML key on the next line read as "client secret" plus twenty characters. In the
 # old history the two lines arrived in different commits and never met in one patch (T-2300).
 5f621603a2a3d4c73bfb6511dd00e3e316b50469:components/apisix/values/apisix/base-values.yaml.gotmpl:jc-keycloak-client-secret:160
+# T-2636 (bba6644): tests/test_lane_token.py held a JWT-shaped fixture of the lane's token
+# ({"alg":"ES256"}.{"azp":"jc-build-lane"}.signature), built from parts now; the bootstrap values
+# named the lane client's Secret as `clientSecret`, which holds a Secret's name, renamed
+# `clientSecretName` now.
+bba6644bfb9f4e69a2bc7011da52c8beb28fa1cf:tests/test_lane_token.py:jwt:23
+bba6644bfb9f4e69a2bc7011da52c8beb28fa1cf:tests/test_lane_token.py:jc-jwt-bearer-token:23
+bba6644bfb9f4e69a2bc7011da52c8beb28fa1cf:components/gitea/charts/bootstrap/values.yaml:jc-keycloak-client-secret:80
