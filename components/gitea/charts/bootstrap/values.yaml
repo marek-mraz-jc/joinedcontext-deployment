@@ -72,3 +72,12 @@ podSecurityContext: {}
 securityContext: {}
 serviceMesh:
   enabled: false
+
+# The sample applications the Job pushes each into its own repository and commits into
+# `projects/<project>/apps/<name>/app.yaml` (T-2599, AP-75): `apps.<name>` maps a file's path,
+# `/` written as `__`, to its text. `app.yaml` is the manifest and is not pushed with the tree.
+# `publicBase` is where a person clones from, the address the manifest's `source.git.url` names.
+sampleApps:
+  project: ''
+  publicBase: ''
+  apps: {}

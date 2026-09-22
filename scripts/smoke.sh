@@ -797,6 +797,41 @@ else
 	fi
 fi
 
+# The sample applications (T-2599, AP-75, AP-80): the forge bootstrap pushed each into its own
+# repository and committed its manifest, and the build lane builds it on that push. Built means
+# the Portal accepted `status.build` for the repository's head. A fresh seed takes minutes, so
+# this waits up to JC_SMOKE_APP_WAIT seconds (default 600) and says how long it took (T-0459).
+echo "sample apps"
+sample_apps=$(kubectl get configmaps -n "$slug" -o name 2>/dev/null | sed -n 's,^configmap/gitea-bootstrap-app-,,p' | tr '\n' ' ')
+app_wait=${JC_SMOKE_APP_WAIT:-600}
+if [ -z "${sample_apps% }" ]; then
+	skip "sample apps (none is seeded in this instance)"
+elif [ -z "$demo_token" ]; then
+	skip "sample apps (no demo user token to read them with)"
+else
+	app_started=$(date +%s)
+	pending=${sample_apps% }
+	while :; do
+		still=""
+		for app in $pending; do
+			answer=$(curl -sS --max-time 20 -H "Authorization: Bearer $demo_token" \
+				"$portal/api/v1/projects/helsinki/apps/$app" 2>/dev/null | tr -d '\n ' || true)
+			commit=$(printf '%s' "$answer" | sed -n 's/.*"build":{[^}]*"commit":"\([0-9a-f]\{40\}\)".*/\1/p')
+			if [ -n "$commit" ]; then
+				ok "sample app $app is built at $(printf '%.12s' "$commit") after $(($(date +%s) - app_started)) s"
+			else
+				still="$still $app"
+			fi
+		done
+		pending=${still# }
+		[ -n "$pending" ] && [ $(($(date +%s) - app_started)) -lt "$app_wait" ] || break
+		sleep 10
+	done
+	for app in $pending; do
+		ko "sample app $app has no status.build after $app_wait s: the lane did not build its repository's head"
+	done
+fi
+
 echo "functions"
 # jc-functions (SDK-22, SDK-23) takes the Portal alone, so the smoke reaches its Service over a
 # port-forward and presents what the Portal presents: portal-api's client_credentials token,
