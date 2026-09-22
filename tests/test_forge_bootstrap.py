@@ -163,7 +163,9 @@ def test_every_step_is_idempotent(script):
     Read as text rather than executed, because executing it needs a forge. The three markers are
     the three branches that make a second run a no-op."""
     assert 'status=$(forge_code GET "/api/v1/orgs/$ORG")' in script
-    assert 'status=$(forge_code GET "/api/v1/repos/$ORG/$REPO")' in script
+    # Every repository, the organization's and (layout 2) each project's, through one function.
+    assert 'status=$(forge_code GET "/api/v1/repos/$ORG/$1")' in script
+    assert 'ensure_repo "$REPO"' in script
     # The token check has to use an endpoint the read-only token may reach, or the gateway's
     # token is re-minted on every apply and the pod holding it is left with a dead credential.
     # The pull token (AP-108) may read packages only and names its own check in CHECK_PATH.

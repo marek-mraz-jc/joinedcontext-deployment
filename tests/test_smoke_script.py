@@ -8,6 +8,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -239,13 +240,19 @@ def sandbox(tmp_path: Path, spec: dict) -> dict:
 def run(tmp_path: Path, spec: dict, *args: str, extra_env: dict | None = None) -> subprocess.CompletedProcess:
     env = sandbox(tmp_path, spec)
     env.update(extra_env or {})
-    return subprocess.run(
+    result = subprocess.run(
         ["scripts/smoke.sh", *args],
         cwd=tmp_path,
         env=env,
         capture_output=True,
         text=True,
     )
+    # pytest cuts the repr of a CompletedProcess where the reason stands (T-2660), but shows a
+    # failing case's captured stderr whole: every FAIL line, the summary and the script's own
+    # stderr go there, so the next red case names its line.
+    named = [line for line in result.stdout.splitlines() if "FAIL" in line or " passed, " in line]
+    print("smoke.sh", *args, "->", result.returncode, *named, result.stderr, sep="\n", file=sys.stderr)
+    return result
 
 
 # What the Portal's /api/v1/auth/login answers: the Keycloak authorization URL carrying the

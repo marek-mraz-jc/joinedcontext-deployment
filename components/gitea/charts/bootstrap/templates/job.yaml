@@ -53,6 +53,8 @@ spec:
               value: {{ .Values.repo.name | quote }}
             - name: BRANCH
               value: {{ .Values.repo.branch | quote }}
+            - name: LAYOUT
+              value: {{ .Values.layout | quote }}
             - name: TEAMS
               value: {{ .Values.teams | keys | sortAlpha | join " " | quote }}
             - name: NAMESPACE
@@ -175,18 +177,37 @@ spec:
 
               # 3. The repository. `auto_init` is what makes the default branch exist: an empty
               #    repository has no ref, and a clone of one is not a checkout the gateway can
-              #    read or the Portal can branch from.
-              status=$(forge_code GET "/api/v1/repos/$ORG/$REPO")
-              if [ "$status" = 404 ]; then
-                status=$(forge_code POST "/api/v1/orgs/$ORG/repos" \
-                  -d "{\"name\":\"$REPO\",\"private\":true,\"auto_init\":true,\"default_branch\":\"$BRANCH\"}")
-                [ "$status" = 201 ] || { echo "creating the repository failed: $status" >&2; cat $WORK/body >&2; exit 1; }
-                echo "repository $ORG/$REPO created"
-              elif [ "$status" = 200 ]; then
-                echo "repository $ORG/$REPO is already there"
-              else
-                echo "the forge answered $status for the repository" >&2; cat $WORK/body >&2; exit 1
-              fi
+              #    read or the Portal can branch from. In layout 2 a repository this Job did not
+              #    create has to say `.jc/layout` 2 already: a layout 1 organization repository
+              #    is migrated by `jcctl migrate` with its history (the Operations runbook), never
+              #    split here, and a project repository of somebody else's is not adopted (CC-85).
+              #    One this Job creates gets its `.jc/layout` in the same run, so a run that dies
+              #    after it is still a repository the next run accepts.
+              ensure_repo() {
+                status=$(forge_code GET "/api/v1/repos/$ORG/$1")
+                if [ "$status" = 404 ]; then
+                  status=$(forge_code POST "/api/v1/orgs/$ORG/repos" \
+                    -d "{\"name\":\"$1\",\"private\":true,\"auto_init\":true,\"default_branch\":\"$BRANCH\"}")
+                  [ "$status" = 201 ] || { echo "creating the repository $1 failed: $status" >&2; cat $WORK/body >&2; exit 1; }
+                  echo "repository $ORG/$1 created"
+                  if [ "$LAYOUT" = 2 ]; then
+                    status=$(forge_code POST "/api/v1/repos/$ORG/$1/contents/.jc/layout" \
+                      -d "{\"branch\":\"$BRANCH\",\"content\":\"Mgo=\",\"message\":\"seed: layout 2 (CC-85)\"}")
+                    [ "$status" = 201 ] || { echo "writing .jc/layout into $1 failed: $status" >&2; cat $WORK/body >&2; exit 1; }
+                  fi
+                elif [ "$status" = 200 ]; then
+                  echo "repository $ORG/$1 is already there"
+                  if [ "$LAYOUT" = 2 ]; then
+                    status=$(forge_code GET "/api/v1/repos/$ORG/$1/contents/.jc/layout?ref=$BRANCH")
+                    held=
+                    [ "$status" = 200 ] && held=$(grep -o '"content": *"[^"]*"' $WORK/body | head -1 | sed 's/^"content": *"//; s/"$//; s/\\n//g')
+                    [ "$held" = "Mgo=" ] || { echo "$ORG/$1 is not a layout 2 repository; migrate it first (jcctl migrate, CC-85)" >&2; exit 1; }
+                  fi
+                else
+                  echo "the forge answered $status for the repository $1" >&2; cat $WORK/body >&2; exit 1
+                fi
+              }
+              ensure_repo "$REPO"
 
               # 3b. The teams a signed-in person lands in (PF-79). The forge's OpenID Connect
               #     source maps the `groups` claim onto these names; a group whose team does
@@ -360,10 +381,13 @@ spec:
               #        paths, before anything is written. The gateway would refuse them at
               #        start-up; refusing here says which two files, while there is still a
               #        person reading the output.
+              # seed_repo <repository> <folder>: steps 5 to 5c for one repository and its seed.
+              seed_repo() {
+              SEED_REPO=$1; SEED_FROM=$2
               SEED_MANIFEST=.jc/seed-manifest.txt
               : > $WORK/seed-paths
               : > $WORK/seed-ids
-              for f in "$SEED_DIR"/*; do
+              for f in "$SEED_FROM"/* "$SEED_FROM"/.[!.]*; do
                 [ -f "$f" ] || continue
                 path=$(basename "$f" | sed 's|__|/|g')
                 echo "$path" >> $WORK/seed-paths
@@ -390,22 +414,22 @@ spec:
               fi
 
               seeded=0
-              for f in "$SEED_DIR"/*; do
+              for f in "$SEED_FROM"/* "$SEED_FROM"/.[!.]*; do
                 [ -f "$f" ] || continue
                 path=$(basename "$f" | sed 's|__|/|g')
                 encoded=$(base64 < "$f" | tr -d '\n')
-                status=$(forge_code GET "/api/v1/repos/$ORG/$REPO/contents/$path?ref=$BRANCH")
+                status=$(forge_code GET "/api/v1/repos/$ORG/$SEED_REPO/contents/$path?ref=$BRANCH")
                 case "$status" in
                   200)
                     current=$(grep -o '"content": *"[^"]*"' $WORK/body | head -1 | sed 's/^"content": *"//; s/"$//; s/\\n//g')
                     [ "$current" = "$encoded" ] && continue
                     sha=$(grep -o '"sha": *"[0-9a-f]\{40\}"' $WORK/body | head -1 | grep -o '[0-9a-f]\{40\}')
-                    status=$(forge_code PUT "/api/v1/repos/$ORG/$REPO/contents/$path" \
+                    status=$(forge_code PUT "/api/v1/repos/$ORG/$SEED_REPO/contents/$path" \
                       -d "{\"branch\":\"$BRANCH\",\"sha\":\"$sha\",\"content\":\"$encoded\",\"message\":\"seed: update $path\"}")
                     [ "$status" = 200 ] || { echo "updating $path failed: $status" >&2; cat $WORK/body >&2; exit 1; }
                     echo "seed: updated $path" ;;
                   404)
-                    status=$(forge_code POST "/api/v1/repos/$ORG/$REPO/contents/$path" \
+                    status=$(forge_code POST "/api/v1/repos/$ORG/$SEED_REPO/contents/$path" \
                       -d "{\"branch\":\"$BRANCH\",\"content\":\"$encoded\",\"message\":\"seed: add $path\"}")
                     [ "$status" = 201 ] || { echo "creating $path failed: $status" >&2; cat $WORK/body >&2; exit 1; }
                     echo "seed: created $path" ;;
@@ -421,7 +445,7 @@ spec:
               #     already gone is not an error, because this step is repeated on every apply.
               manifest_sha=
               : > $WORK/seed-previous
-              status=$(forge_code GET "/api/v1/repos/$ORG/$REPO/contents/$SEED_MANIFEST?ref=$BRANCH")
+              status=$(forge_code GET "/api/v1/repos/$ORG/$SEED_REPO/contents/$SEED_MANIFEST?ref=$BRANCH")
               case "$status" in
                 200)
                   manifest_sha=$(grep -o '"sha": *"[0-9a-f]\{40\}"' $WORK/body | head -1 | grep -o '[0-9a-f]\{40\}')
@@ -438,14 +462,14 @@ spec:
               comm -23 $WORK/seed-previous $WORK/seed-paths > $WORK/seed-gone
               while IFS= read -r gone; do
                 [ -n "$gone" ] || continue
-                status=$(forge_code GET "/api/v1/repos/$ORG/$REPO/contents/$gone?ref=$BRANCH")
+                status=$(forge_code GET "/api/v1/repos/$ORG/$SEED_REPO/contents/$gone?ref=$BRANCH")
                 if [ "$status" = 404 ]; then
                   echo "seed: $gone is already gone"
                   continue
                 fi
                 [ "$status" = 200 ] || { echo "the forge answered $status for $gone" >&2; cat $WORK/body >&2; exit 1; }
                 sha=$(grep -o '"sha": *"[0-9a-f]\{40\}"' $WORK/body | head -1 | grep -o '[0-9a-f]\{40\}')
-                status=$(forge_code DELETE "/api/v1/repos/$ORG/$REPO/contents/$gone" \
+                status=$(forge_code DELETE "/api/v1/repos/$ORG/$SEED_REPO/contents/$gone" \
                   -d "{\"branch\":\"$BRANCH\",\"sha\":\"$sha\",\"message\":\"seed: remove $gone, which the seed no longer owns\"}")
                 [ "$status" = 200 ] || { echo "removing $gone failed: $status" >&2; cat $WORK/body >&2; exit 1; }
                 echo "seed: removed $gone"
@@ -457,13 +481,62 @@ spec:
               #     leaves the older record, and the next one does the same work again.
               encoded=$(base64 < $WORK/seed-paths | tr -d '\n')
               if [ -n "$manifest_sha" ]; then
-                status=$(forge_code PUT "/api/v1/repos/$ORG/$REPO/contents/$SEED_MANIFEST" \
+                status=$(forge_code PUT "/api/v1/repos/$ORG/$SEED_REPO/contents/$SEED_MANIFEST" \
                   -d "{\"branch\":\"$BRANCH\",\"sha\":\"$manifest_sha\",\"content\":\"$encoded\",\"message\":\"seed: update the record of what the seed owns\"}")
                 [ "$status" = 200 ] || { echo "updating $SEED_MANIFEST failed: $status" >&2; cat $WORK/body >&2; exit 1; }
               else
-                status=$(forge_code POST "/api/v1/repos/$ORG/$REPO/contents/$SEED_MANIFEST" \
+                status=$(forge_code POST "/api/v1/repos/$ORG/$SEED_REPO/contents/$SEED_MANIFEST" \
                   -d "{\"branch\":\"$BRANCH\",\"content\":\"$encoded\",\"message\":\"seed: record what the seed owns\"}")
                 [ "$status" = 201 ] || { echo "writing $SEED_MANIFEST failed: $status" >&2; cat $WORK/body >&2; exit 1; }
+              fi
+              }
+
+              # 5d. Which repository each seed file goes to. Layout 1: all of it to $REPO. Layout
+              #     2 (CC-85, the same cut `jcctl migrate` makes): `projects/{slug}/...` goes to
+              #     the repository `{slug}` without that prefix, its `project.yaml` at the root;
+              #     everything else stays in $REPO, with the registry entry `projects/{slug}.yaml`
+              #     (the repository, tracking `main`, the organization the project names) in the
+              #     project's place. `.jc/layout` says 2 in every one of them.
+              if [ "$LAYOUT" = 2 ]; then
+                rm -rf $WORK/seed-org $WORK/seed-projects
+                mkdir -p $WORK/seed-org $WORK/seed-projects
+                for f in "$SEED_DIR"/*; do
+                  [ -f "$f" ] || continue
+                  key=$(basename "$f")
+                  case "$key" in
+                    projects__*__*)
+                      rest=${key#projects__}
+                      slug=${rest%%__*}
+                      case "$slug" in
+                        ''|-*|*-|*[!a-z0-9-]*) echo "the seed file $key names no project slug" >&2; exit 1 ;;
+                      esac
+                      mkdir -p "$WORK/seed-projects/$slug"
+                      cp "$f" "$WORK/seed-projects/$slug/${rest#*__}" ;;
+                    *) cp "$f" "$WORK/seed-org/$key" ;;
+                  esac
+                done
+                for dir in $WORK/seed-projects/*/; do
+                  [ -d "$dir" ] || continue
+                  slug=$(basename "$dir")
+                  own="${dir}project.yaml"
+                  [ -f "$own" ] || { echo "the seed of project $slug has no project.yaml" >&2; exit 1; }
+                  api=$(sed -n 's/^apiVersion:[[:space:]]*\([^[:space:]#]*\).*$/\1/p' "$own" | head -1)
+                  org_ref=$(sed -n 's/^  organizationRef:[[:space:]]*\([A-Za-z0-9.-]*\).*$/\1/p' "$own" | head -1)
+                  [ -n "$api" ] && [ -n "$org_ref" ] || { echo "projects/$slug/project.yaml names no apiVersion or spec.organizationRef" >&2; exit 1; }
+                  printf 'apiVersion: %s\nkind: Project\nmetadata:\n  name: %s\n  namespace: org\nspec:\n  organizationRef: %s\n  repository:\n    name: %s\n  ref: main\n' \
+                    "$api" "$slug" "$org_ref" "$slug" > "$WORK/seed-org/projects__$slug.yaml"
+                  printf '2\n' > "${dir}.jc__layout"
+                done
+                printf '2\n' > $WORK/seed-org/.jc__layout
+                seed_repo "$REPO" $WORK/seed-org
+                for dir in $WORK/seed-projects/*/; do
+                  [ -d "$dir" ] || continue
+                  slug=$(basename "$dir")
+                  ensure_repo "$slug"
+                  seed_repo "$slug" "${dir%/}"
+                done
+              else
+                seed_repo "$REPO" "$SEED_DIR"
               fi
 
               # 6. The sample applications (T-2599, AP-75, AP-77): each one its own private
@@ -561,9 +634,11 @@ spec:
                 # The manifest, pinned to that commit at the address a person clones from.
                 sed -e "s|^\(      url: \).*|\1$APPS_PUBLIC_BASE/$ORG/$repo.git|" \
                     -e "s|^\(      ref: \).*|\1$head|" "${dir}app.yaml" > $WORK/app-manifest
-                path="projects/$APPS_PROJECT/apps/$app/app.yaml"
+                # Layout 2: into the project's own repository, where its apps live (CC-85).
+                if [ "$LAYOUT" = 2 ]; then app_home=$APPS_PROJECT; path="apps/$app/app.yaml"
+                else app_home=$REPO; path="projects/$APPS_PROJECT/apps/$app/app.yaml"; fi
                 encoded=$(base64 < $WORK/app-manifest | tr -d '\n')
-                status=$(forge_code GET "/api/v1/repos/$ORG/$REPO/contents/$path?ref=$BRANCH")
+                status=$(forge_code GET "/api/v1/repos/$ORG/$app_home/contents/$path?ref=$BRANCH")
                 case "$status" in
                   200)
                     held=$(sed -n 's/.*"content": *"\([^"]*\)".*/\1/p' $WORK/body | sed 's/\\n//g' | base64 -d)
@@ -571,13 +646,13 @@ spec:
                       echo "app $app: $path already names $head"
                     else
                       sha=$(sed -n 's/.*"sha": *"\([0-9a-f]\{40\}\)".*/\1/p' $WORK/body | head -1)
-                      status=$(forge_code PUT "/api/v1/repos/$ORG/$REPO/contents/$path" \
+                      status=$(forge_code PUT "/api/v1/repos/$ORG/$app_home/contents/$path" \
                         -d "{\"branch\":\"$BRANCH\",\"sha\":\"$sha\",\"content\":\"$encoded\",\"message\":\"seed: the $app application at $head\"}")
                       [ "$status" = 200 ] || { echo "updating $path failed: $status" >&2; cat $WORK/body >&2; exit 1; }
                       echo "app $app: $path now names $head"
                     fi ;;
                   404)
-                    status=$(forge_code POST "/api/v1/repos/$ORG/$REPO/contents/$path" \
+                    status=$(forge_code POST "/api/v1/repos/$ORG/$app_home/contents/$path" \
                       -d "{\"branch\":\"$BRANCH\",\"content\":\"$encoded\",\"message\":\"seed: the $app application at $head\"}")
                     [ "$status" = 201 ] || { echo "writing $path failed: $status" >&2; cat $WORK/body >&2; exit 1; }
                     echo "app $app: $path created at $head" ;;

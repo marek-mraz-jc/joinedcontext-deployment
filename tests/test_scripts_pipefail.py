@@ -4,8 +4,8 @@
 `pipefail` reports the pipeline as failed although grep found the line. On a loaded runner a
 200-byte `printf` loses that race about once in 600: smoke.sh reported present headers as
 missing, skipped its whole Helsinki section (T-2653), and could have passed a ConfigMap that
-does hold a resolved credential. A script under `pipefail` matches a here-string or a captured
-value instead of a pipe.
+does hold a resolved credential (T-2660 fixed smoke.sh). A script under `pipefail` matches a
+here-string or `< <(command)`, or pipes into a grep that reads all of its input (`>/dev/null`).
 """
 
 import re

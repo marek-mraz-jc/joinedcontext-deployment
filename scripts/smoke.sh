@@ -97,7 +97,7 @@ status 200 "keycloak JWKS over valid TLS" "$idm/realms/$realm/protocol/openid-co
 echo "gateway"
 # Everything reaches the platform through APISIX; the identity host is the route that
 # exists in every instance, even before the portal and the gateway are deployed.
-if grep -qi '^server: *APISIX' < <(curl -sSI --max-time 20 "$idm/realms/$realm/" 2>/dev/null); then
+if curl -sSI --max-time 20 "$idm/realms/$realm/" 2>/dev/null | grep -i '^server: *APISIX' >/dev/null; then
 	ok "traffic is served by APISIX, not by the ingress controller"
 else
 	ko "no APISIX Server header on $idm — the route is not going through the gateway"
@@ -542,7 +542,7 @@ if has_route gitea-forge; then
 		else
 			ko "no forge team carries read permission"
 		fi
-		if grep -Eq '"repo.code": *"(write|admin)"' <<<"$units"; then
+		if grep -qE '"repo.code": *"(write|admin)"' <<<"$units"; then
 			ko "a forge team writes the configuration repository: merging is the Portal's (PF-80)"
 		else
 			ok "no forge team writes it, so merging stays the Portal's approval (PF-80)"
@@ -550,7 +550,7 @@ if has_route gitea-forge; then
 		# The Actions runner (ADR-N-028): registered in the organization and online. It
 		# registers again before every job, so an empty list is waited for, and the wait is
 		# printed (T-0459's pattern), not hidden.
-		if grep -q . < <(kubectl get deployments -A --field-selector metadata.name=gitea-runner -o name 2>/dev/null); then
+		if kubectl get deployments -A --field-selector metadata.name=gitea-runner -o name 2>/dev/null | grep . >/dev/null; then
 			waited=0
 			while :; do
 				runners=$(curl -sS --max-time 20 -u "$forge_admin_user:$forge_admin_pw" \
@@ -999,7 +999,7 @@ else
 		for variable in $variables; do
 			value=$(kubectl get secret pipeline-secrets -n "$slug" -o "jsonpath={.data.$variable}" 2>/dev/null | base64 -d 2>/dev/null || true)
 			[ -n "$value" ] || continue
-			if grep -qF -- "$value" < <(kubectl get configmap -n "$slug" -o yaml 2>/dev/null); then
+			if kubectl get configmap -n "$slug" -o yaml 2>/dev/null | grep -F -- "$value" >/dev/null; then
 				leaked="$leaked $variable"
 			fi
 		done
