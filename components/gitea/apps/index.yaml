@@ -1,17 +1,15 @@
 # Written by scripts/vendor-sample-apps.py; do not edit. The files of each sample application,
 # relative to its folder, as the forge bootstrap pushes them to its repository (T-2599).
-source: d111e1b20caacded6d39a7aa604104c0e9584b73
+source: 7145f884564861de1dbe33613836567fcada1d6b
 apps:
   helsinki-bikes:
     - .gitea/workflows/build.yml
     - .gitignore
     - README.md
     - app.yaml
-    - e2e/stations.spec.ts
     - index.html
     - map-worker.ts
     - package.json
-    - playwright.config.ts
     - src/App.test.tsx
     - src/App.tsx
     - src/app.css
@@ -51,7 +49,6 @@ apps:
     - .gitignore
     - README.md
     - app.yaml
-    - e2e/alerts.spec.ts
     - functions/expiring.test.ts
     - functions/expiring.ts
     - functions/summary.test.ts
@@ -59,7 +56,6 @@ apps:
     - index.html
     - map-worker.ts
     - package.json
-    - playwright.config.ts
     - src/App.test.tsx
     - src/App.tsx
     - src/alerts.ts
