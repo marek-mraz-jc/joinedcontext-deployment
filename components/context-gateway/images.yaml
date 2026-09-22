@@ -123,7 +123,7 @@ context-gateway:
     # (T-2362, T-2363, T-2364). On top of 462a1ba.
     # platform 6c2e439: an Endpoint's publish.ckan carries the licence the organization chose, and
     # jcctl publishes in the space's language under the instance's title (T-2465). On top of 12b32e8.
-    digest: 'sha256:9e8391a65034b8bbc7ef4bdf5244cf403bd7ec1c94a4be46a0edef9b0823ca36'
+    digest: 'sha256:52a4e1830a45195b9f6c6ae3dc8e1998e8ff612b1c5bc5ff186c8d7dd9afd45e'
   # git-sync keeps the gateway's checkout of the configuration repository current (T-0278).
   git-sync:
     repository: 'registry.k8s.io/git-sync/git-sync'
