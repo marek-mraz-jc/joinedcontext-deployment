@@ -187,3 +187,25 @@ def test_dev_hands_the_job_every_vendored_file_byte_for_byte(dev):
     env = {e["name"]: e.get("value") for e in job["spec"]["template"]["spec"]["containers"][0]["env"]}
     assert env["APPS_PROJECT"] == "helsinki"
     assert env["APPS_PUBLIC_BASE"].endswith("/git") and env["APPS_PUBLIC_BASE"].startswith("https://")
+
+
+@requires_helmfile
+def test_layout_2_commits_the_manifest_into_the_project_repository(script, tmp_path):
+    """CC-85: in layout 2 the project's apps live in its own repository, so the manifest goes
+    there at `apps/{name}/app.yaml` and the organization repository gets none."""
+    from test_forge_seed_converges import HELSINKI
+
+    forge, _ = seeded(tmp_path)
+    forge.state.write_text(forge.state.read_text().replace('"contents": {}', '"contents": {".jc/layout": "2\\n"}'))
+    forge.put("projects/helsinki/project.yaml", HELSINKI)
+    result = forge.run(
+        script,
+        LAYOUT="2",
+        APPS_DIR=str(forge.root / "apps"),
+        APPS_PROJECT="helsinki",
+        APPS_PUBLIC_BASE="https://joinedcontext.test/git",
+    )
+    assert result.returncode == 0, result.stderr
+    manifest = yaml.safe_load(repos(forge)["helsinki"]["files"]["apps/helsinki-bikes/app.yaml"])
+    assert manifest["spec"]["source"]["git"]["ref"] == repos(forge)["helsinki_helsinki-bikes"]["head"]
+    assert not [path for path in forge.contents if "/apps/" in path], forge.contents.keys()
