@@ -174,3 +174,20 @@ def test_the_demo_editor_proposes_and_deletes_nothing():
         for kind in rule["kinds"]
     }
     assert {kind for rule in rules for kind in rule["kinds"]} <= steward_kinds
+
+
+def test_the_organization_administrator_writes_groups():
+    """PF-56, PF-62: the organization administrator acts on every kind, groups included (T-2625).
+
+    A binding may name a group, so whoever writes bindings writes the groups they name. Without
+    `Group` in `org-admin`, Organization → Groups and the Project settings journey refused the
+    administrator with "no role grants propose on Group in project org (PF-50)".
+    """
+    roles = {doc["metadata"]["name"]: doc for _path, doc in manifests("Role")}
+    granted = {
+        verb
+        for rule in roles["org-admin"]["spec"]["rules"]
+        if "Group" in rule["kinds"]
+        for verb in rule["verbs"]
+    }
+    assert {"propose", "approve", "delete"} <= granted, sorted(granted)
