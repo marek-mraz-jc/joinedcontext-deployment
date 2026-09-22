@@ -415,8 +415,11 @@ def test_a_schema_artifact_is_revalidated_and_answers_304(tmp_path):
     """EP-51, T-2262: the gateway's `private, no-cache` and ETag reach the reader, and a second
     read with the ETag is a 304 — the edge no longer replaces them with `no-store`."""
     result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
-    assert "ok    a schema artifact may be kept and revalidated by its reader (private, no-cache)" in result.stdout
-    assert "ok    a second read of a schema artifact with its ETag is a 304 (304)" in result.stdout
+    # Once on main (run 35738512945, T-2653) the whole Helsinki section was skipped and pytest
+    # cut the output where the reason stood: every skip line and the section are named here.
+    helsinki = [line for line in result.stdout.splitlines() if "skip" in line or "helsinki" in line]
+    assert "ok    a schema artifact may be kept and revalidated by its reader (private, no-cache)" in result.stdout, helsinki
+    assert "ok    a second read of a schema artifact with its ETag is a 304 (304)" in result.stdout, helsinki
 
 
 def test_an_edge_that_forbids_keeping_a_schema_artifact_fails_the_run(tmp_path):
