@@ -111,6 +111,9 @@ def test_the_edge_routes_v2_to_the_forge_without_the_git_prefix_strip(local):
     upstream = next(u for u in parsed["upstreams"] if u["id"] == "gitea-registry")
     plugins = next(p for p in parsed["plugin_configs"] if p["id"] == "gitea-registry")["plugins"]
     assert route["uri"] == "/v2/*"
+    # Pull only at the edge: the Portal pushes in-cluster (AP-107), so PUT/POST/PATCH/DELETE on
+    # the public /v2/ would only ever be a push nobody meant.
+    assert route["methods"] == ["GET", "HEAD"]
     assert list(upstream["nodes"])[0].startswith("gitea-http.") and list(upstream["nodes"])[0].endswith(":3000")
     assert "regex_uri" not in plugins.get("proxy-rewrite", {})
     assert "X-Access-Token" in plugins["serverless-pre-function"]["functions"][0]

@@ -24,6 +24,9 @@ gitea-registry:
   upstream: gitea-http.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "gitea") }}.svc.cluster.local:3000 # yamllint disable-line rule:line-length
   uri: '/v2/*'
   host: '{{ .Values.global.domain }}'
+  # Pull only: a node reads manifests, blobs and its token here. The Portal pushes in-cluster,
+  # so a push through the public edge is never a push anybody meant.
+  methods: [GET, HEAD]
   priority: 10
   # A layer is megabytes; the defaults would cut a pull off on a slow node.
   timeout:
