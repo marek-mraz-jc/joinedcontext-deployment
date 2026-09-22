@@ -3,7 +3,9 @@ does. The suite runs the real script and the real curl against a local stub of t
 Keycloak, with a stub `kubectl` that hands out the password."""
 
 import base64
+import io
 import os
+import tarfile
 import subprocess
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -15,14 +17,27 @@ import pytest
 SCRIPT = Path(__file__).resolve().parent.parent / "scripts" / "smoke-forge-login.sh"
 PASSWORD = "s3cret-Pa55&word"
 FOLDER = "/git/joinedcontext/configuration/src/branch/main/projects/helsinki"
+APP = "/git/joinedcontext/helsinki_map-alerts"
 FORM = ('<html><form id="kc-form-login" onsubmit="return true;" '
         'action="{base}/kc/authenticate?session_code=a&amp;tab_id=b" method="post"></form>'
         '{error}</html>')
 
 
+def archive():
+    """What the forge's download link answers: the repository as a tar.gz with its files."""
+    data = b"<html>map</html>"
+    buffer = io.BytesIO()
+    with tarfile.open(fileobj=buffer, mode="w:gz") as tar:
+        entry = tarfile.TarInfo("helsinki_map-alerts/index.html")
+        entry.size = len(data)
+        tar.addfile(entry, io.BytesIO(data))
+    return buffer.getvalue()
+
+
 def serve(mode):
     """mode: ok | pkce (the forge's button fails) | no-team (404 after login) | writable |
-    forkable (the forge lets a reader fork)."""
+    forkable (the forge lets a reader fork) | app-hidden (the application repository is a 404
+    to a reader) | app-public (anyone reads it) | app-empty (it holds no commit) | no-apps."""
     forks = []
 
     class Handler(BaseHTTPRequestHandler):
@@ -33,7 +48,7 @@ def serve(mode):
             self.send_response(code)
             for k, v in headers:
                 self.send_header(k, v)
-            data = body.encode()
+            data = body if isinstance(body, bytes) else body.encode()
             self.send_header("Content-Length", str(len(data)))
             self.end_headers()
             self.wfile.write(data)
@@ -66,6 +81,20 @@ def serve(mode):
                 return self.send(200, "<p>You cannot edit this repository directly. Instead you can create a fork</p>")
             if self.path == FOLDER.split("/src/branch/")[0] + "/fork":
                 return self.send(200, '<input type="hidden" name="_csrf" value="tok"><input name="uid" type="hidden" value="4">')
+            if self.path == "/git/org/joinedcontext/teams/readers":
+                return self.send(200 if signed_in else 404, "<html>readers</html>")
+            if self.path == "/git/joinedcontext":
+                if not signed_in:
+                    return self.send(404)
+                listed = "" if mode == "no-apps" else f'<a href="{APP}">helsinki_map-alerts</a>'
+                return self.send(200, f'<a href="/git/joinedcontext/configuration">configuration</a>{listed}')
+            if self.path == APP:
+                if mode == "app-public" or (signed_in and mode != "app-hidden"):
+                    tree = "" if mode == "app-empty" else f'<a href="{APP}/src/branch/main/index.html">index.html</a>'
+                    return self.send(200, f"<html>{tree}</html>")
+                return self.send(404)
+            if self.path == APP + "/archive/main.tar.gz" and signed_in and mode not in ("app-hidden", "app-empty"):
+                return self.send(200, archive())
             if self.path in ("/git/demo.steward/configuration", "/git/demo.viewer/configuration"):
                 return self.send(200 if forks else 404, "<html>fork</html>")
             self.send(404)
@@ -159,3 +188,47 @@ def test_a_reader_who_can_fork_the_repository_fails(tmp_path):
 def test_a_refused_fork_passes(tmp_path):
     r = run(tmp_path, "ok")
     assert "ok    demo.viewer cannot fork the configuration repository (404)" in r.stdout
+
+
+def test_every_application_repository_is_read_and_downloaded_by_a_reader_and_hidden_from_anyone(tmp_path):
+    """T-2601, PF-79, AP-78: the owner met a 404 on an App's repository; the readers team holds
+    every repository of the organization, so the source opens and downloads for both people."""
+    r = run(tmp_path, "ok")
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "ok    an anonymous visitor does not read helsinki_map-alerts (404)" in r.stdout
+    for user in ("demo.steward", "demo.viewer"):
+        assert f"ok    {user} is in the forge team readers" in r.stdout
+        assert f"ok    {user} reads and downloads application repository helsinki_map-alerts (1 files)" in r.stdout
+    assert "not read configuration" not in r.stdout, "the configuration repository is no App"
+
+
+def test_an_application_repository_a_reader_cannot_open_fails(tmp_path):
+    r = run(tmp_path, "app-hidden")
+    assert r.returncode == 1
+    assert "FAIL  demo.viewer: application repository helsinki_map-alerts answers 404" in r.stdout
+
+
+def test_an_application_repository_anyone_reads_fails(tmp_path):
+    r = run(tmp_path, "app-public")
+    assert r.returncode == 1
+    assert "FAIL  an anonymous visitor reads helsinki_map-alerts (200)" in r.stdout
+
+
+def test_an_application_repository_with_no_files_fails(tmp_path):
+    r = run(tmp_path, "app-empty")
+    assert r.returncode == 1
+    assert "FAIL  demo.steward: application repository helsinki_map-alerts lists no files" in r.stdout
+
+
+def test_a_forge_with_no_application_repository_says_so_and_passes(tmp_path):
+    r = run(tmp_path, "no-apps")
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "ok    the forge holds no application repository yet" in r.stdout
+
+
+def test_a_person_the_group_map_lands_nowhere_fails_on_the_team(tmp_path):
+    r = run(tmp_path, "no-team")
+    assert r.returncode == 1
+    assert "the forge holds no application repository yet" not in r.stdout, (
+        "with nobody signed in, no list of applications is claimed"
+    )
