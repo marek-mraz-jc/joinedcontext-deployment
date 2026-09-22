@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sign in to the forge through Keycloak the way a browser does, then read the configuration
-# repository (T-1422, PF-51, PF-79). A login only a person could see broken is the defect
+# repository and download every application repository (T-1422, T-2601, PF-51, PF-79, AP-78). A login only a person could see broken is the defect
 # this catches: the forge's Keycloak button failed on every login for weeks behind a green smoke.
 #   scripts/smoke-forge-login.sh <base-url>
 # Passwords come from the Secrets keycloak-user-<name>, are sent on stdin and never printed.
@@ -11,7 +11,9 @@ slug="${JC_INSTANCE:-${JC_REALM:-dev}}"
 org="${JC_SMOKE_ORG:-$(kubectl get deploy context-gateway -n "$slug" \
 	-o jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="JC_GATEWAY_ORG_DOMAIN")].value}' 2>/dev/null || true)}"
 org="${org:-hel.fi}"
-folder="$base/git/${JC_FORGE_ORG:-joinedcontext}/configuration/src/branch/main/projects/${JC_SMOKE_PROJECT:-helsinki}"
+forge_org="${JC_FORGE_ORG:-joinedcontext}"
+folder="$base/git/$forge_org/configuration/src/branch/main/projects/${JC_SMOKE_PROJECT:-helsinki}"
+signed=""
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
@@ -73,6 +75,15 @@ login() {
 		ko "$user: signed in, but the configuration repository answers $code"
 		return
 	fi
+	# The team the `groups` claim maps onto (PF-79): the forge shows an organization's team only
+	# to its members, so a 404 here is a person the map landed nowhere.
+	code=$(curl -sS -b "$jar" -o /dev/null -w '%{http_code}' --max-time 20 "$base/git/org/$forge_org/teams/readers" 2>/dev/null)
+	if [ "$code" = 200 ]; then
+		ok "$user is in the forge team readers"
+	else
+		ko "$user is not in the forge team readers ($code)"
+	fi
+	signed="$signed $user"
 	# Every write goes through a Change (CC-41). Gitea links "Add file" for everyone; to a
 	# person without write it is the "fork to propose changes" notice, to a writer the commit
 	# form, so the form is what gives write access away.
@@ -101,5 +112,44 @@ login() {
 
 for user in ${JC_SMOKE_FORGE_USERS:-demo.steward demo.viewer}; do
 	login "$user"
+done
+
+# The application repositories (T-2601, PF-79, AP-78): `readers` holds every repository of the
+# organization, so each one the organization page lists opens and downloads with its source for a
+# person who only reads, and for nobody signed out. The list is every person's together: a
+# repository one of them misses is the defect, not a reason to skip it.
+apps=$(for user in $signed; do
+	curl -sS -b "$work/$user.jar" --max-time 20 "$base/git/$forge_org" 2>/dev/null \
+		| grep -o "href=\"/git/$forge_org/[A-Za-z0-9._-]*\"" | sed -e 's/.*\///' -e 's/"$//'
+done | grep -vx configuration | sort -u)
+if [ -n "$signed" ] && [ -z "$apps" ]; then
+	ok "the forge holds no application repository yet"
+fi
+for app in $apps; do
+	repo="$base/git/$forge_org/$app"
+	code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$repo" 2>/dev/null)
+	if [ "$code" = 404 ]; then
+		ok "an anonymous visitor does not read $app (404)"
+	else
+		ko "an anonymous visitor reads $app ($code)"
+	fi
+	for user in $signed; do
+		code=$(curl -sS -b "$work/$user.jar" -o "$work/$user.app" -w '%{http_code}' --max-time 20 "$repo" 2>/dev/null)
+		if [ "$code" != 200 ]; then
+			ko "$user: application repository $app answers $code"
+			continue
+		fi
+		if ! grep -q "/git/$forge_org/$app/src/branch/" "$work/$user.app"; then
+			ko "$user: application repository $app lists no files (empty repository?)"
+			continue
+		fi
+		code=$(curl -sS -b "$work/$user.jar" -o "$work/$user.tgz" -w '%{http_code}' --max-time 60 "$repo/archive/main.tar.gz" 2>/dev/null)
+		files=$( { tar tzf "$work/$user.tgz" 2>/dev/null || true; } | grep -vc '/$' || true)
+		if [ "$code" = 200 ] && [ "${files:-0}" -gt 0 ]; then
+			ok "$user reads and downloads application repository $app ($files files)"
+		else
+			ko "$user: downloading $app answers $code with ${files:-0} files"
+		fi
+	done
 done
 exit "$fail"
