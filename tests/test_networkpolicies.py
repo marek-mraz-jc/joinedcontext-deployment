@@ -492,23 +492,22 @@ def test_no_workload_reaches_the_metadata_service(rendered, env):
 
 
 @pytest.mark.parametrize("env", ENVIRONMENTS)
-def test_an_app_build_reaches_the_forge_and_dns_only(rendered, env):
-    """A build runs an application's untrusted code (T-1707, AP-81): the clone comes from the
-    forge, and nothing else is reachable: no address range, no Kubernetes API, no Keycloak, and
-    not the artifact store, which holds no application builds (ADR-N-028, AP-74)."""
+def test_the_actions_runner_reaches_the_forge_the_portal_and_dns_only(rendered, env):
+    """The runner runs an application's untrusted build code (T-1707, ADR-N-028 §5, AP-81): it
+    takes jobs from the forge, proposes `status.build` to the Portal, and resolves names.
+    Nothing else is reachable: no address range, no Kubernetes API, no Keycloak, no store."""
     groups = egress_rules_by_selector(rendered(env))
-    builder = [rules for selector, rules in groups.items()
-               if dict(selector).get("app.kubernetes.io/name") == "app-builder"]
-    if not builder:
-        pytest.skip("portal not deployed in this environment")
+    runner = [rules for selector, rules in groups.items()
+              if dict(selector).get("app.kubernetes.io/name") == "gitea-runner"]
+    if not runner:
+        pytest.skip("gitea-runner not deployed in this environment")
     reached = set()
-    for rules in builder:
+    for rules in runner:
         for rule in rules:
             for peer in rule.get("to") or []:
-                assert "ipBlock" not in peer, f"an app build reaches {peer['ipBlock']}"
+                assert "ipBlock" not in peer, f"the runner reaches {peer['ipBlock']}"
                 labels = peer.get("podSelector", {}).get("matchLabels", {})
                 reached |= set(labels.values())
                 for expression in peer.get("podSelector", {}).get("matchExpressions", []):
                     reached |= set(expression["values"])
-    assert reached - {"gitea", "gitea-forge", "kube-dns", "linkerd-destination", "linkerd-identity",
-                      "linkerd-proxy-injector"} == set(), f"an app build reaches {reached}"
+    assert reached - {"gitea", "gitea-forge", "portal-portal", "kube-dns"} == set(), f"the runner reaches {reached}"

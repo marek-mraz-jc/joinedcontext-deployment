@@ -80,6 +80,10 @@ spec:
               value: {{ .Values.tokens.gateway.scopes | toJson | quote }}
             - name: GATEWAY_NAMESPACES
               value: {{ .Values.tokens.gateway.namespaces | uniq | sortAlpha | join " " | quote }}
+            - name: RUNNER_SECRET
+              value: {{ .Values.tokens.runner.secret | quote }}
+            - name: RUNNER_NAMESPACES
+              value: {{ .Values.tokens.runner.namespaces | uniq | sortAlpha | join " " | quote }}
           volumeMounts:
             - name: tmp
               mountPath: /tmp
@@ -266,6 +270,21 @@ spec:
 
               ensure_token "$PORTAL_SECRET" "jc-portal" "$PORTAL_SCOPES" $PORTAL_NAMESPACES
               ensure_token "$GATEWAY_SECRET" "jc-gateway" "$GATEWAY_SCOPES" $GATEWAY_NAMESPACES
+
+              # 4b. The Actions runner's registration token (ADR-N-028 §3.3, AP-81), written
+              #     where the runner reads it. The forge keeps one per organization and answers
+              #     the same one until it is reset, so this is a no-op on every later run. Only
+              #     when the environment deploys a runner: no runner, no token lying around.
+              if [ -n "${RUNNER_NAMESPACES:-}" ]; then
+                status=$(forge_code POST "/api/v1/orgs/$ORG/actions/runners/registration-token")
+                [ "$status" = 200 ] || { echo "the runner registration token: $status" >&2; exit 1; }
+                token=$(sed -n 's/.*"token": *"\([A-Za-z0-9]\{20,64\}\)".*/\1/p' $WORK/body)
+                [ -n "$token" ] || { echo "the forge returned no runner registration token" >&2; exit 1; }
+                for ns in $RUNNER_NAMESPACES; do
+                  write_secret "$ns" "$RUNNER_SECRET" "$token" '["runner"]'
+                done
+                echo "the runner registration token is in $RUNNER_SECRET"
+              fi
 
               # 5. The seed: the manifests the gateway serves from its own ConfigMap, committed
               #    under the paths the Portal reads, so the two halves of the platform agree on

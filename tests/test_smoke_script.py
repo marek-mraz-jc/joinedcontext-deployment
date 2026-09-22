@@ -158,14 +158,16 @@ elif args[0] == "run" and args[1].startswith("smoke-egress"):
         sys.stdout.write("REACHED-%s\\n" % destination)
     if spec.get("egressProbeRan", True):
         sys.stdout.write("PROBE-RAN\\n")
-elif args[0] == "get" and args[1] == "serviceaccounts" and "metadata.name=app-builder" in line:
-    # The build lane's account (T-2592); an instance without it skips the build egress probe.
-    sys.stdout.write(spec.get("appBuilderNamespace", "apps"))
-elif args[0] == "run" and args[1].startswith("smoke-appbuild"):
-    # Like the egress probe, it reports by what it prints (T-2592).
-    if spec.get("appBuildProbeRan", True):
+elif args[0] == "get" and args[1] == "deployments" and "metadata.name=gitea-runner" in line:
+    # The Actions runner (T-2608); `runnerNamespace: ""` is an instance without one.
+    namespace = spec.get("runnerNamespace", "runners")
+    if namespace:
+        sys.stdout.write("deployment.apps/gitea-runner\\n" if "name" in args[-1:] else namespace)
+elif args[0] == "run" and args[1].startswith("smoke-runner"):
+    # Like the egress probe, it reports by what it prints (T-2608).
+    if spec.get("runnerProbeRan", True):
         sys.stdout.write("SETTLED-AFTER=4s\\n")
-        for destination in spec.get("appBuildReached", ["DNS"]):
+        for destination in spec.get("runnerReached", ["DNS"]):
             sys.stdout.write("REACHED-%s\\n" % destination)
         sys.stdout.write("PROBE-RAN\\n")
 elif args[0] == "get" and args[1] == "pods" and "app.kubernetes.io/name=apisix" in line:
@@ -278,6 +280,8 @@ HEALTHY = {
     "routes": ["portal-ui", "portal-api", "context-space", "context-endpoint", "gitea-forge", "ckan"],
     "helsinkiSeed": HELSINKI_SEED,
     "bodies": [[["Bearer", "/invoke"], FUNCTION_ANSWER],
+               # The organization's Actions runner, online (T-2608, ADR-N-028).
+               ["actions/runners", '{"runners":[{"name":"gitea-runner-1","status":"online"}]}'],
                ["clients?clientId=edge", '[{"protocolMappers":[{"config":{"included.client.audience": "portal-api"}}]}]'],
                # Both of the proxy's audiences: the gateway, which it reads endpoints through, and
                # the Portal's internal listener, which answers its run lookups. A healthy instance
@@ -952,26 +956,40 @@ def test_a_resolver_that_refused_everything_fails_the_run(tmp_path):
     assert "FAIL  pipeline-secrets is empty" in result.stdout
 
 
-def test_an_app_build_that_reaches_the_internet_fails_the_run(tmp_path):
-    """AP-81: the build lane runs untrusted code with egress to the forge and the store only."""
+def test_a_runner_that_reaches_the_internet_fails_the_run(tmp_path):
+    """AP-81: the Actions runner runs untrusted build code with egress to the forge, the Portal
+    API and DNS only (ADR-N-028)."""
     result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
-    assert "ok    an app build resolves names and reaches no internet address" in result.stdout
-    result = run(tmp_path, dict(HEALTHY, appBuildReached=["DNS", "NET"]), "https://example.test", "https://idm.example.test")
+    assert "ok    a runner pod resolves names and reaches no internet address" in result.stdout
+    result = run(tmp_path, dict(HEALTHY, runnerReached=["DNS", "NET"]), "https://example.test", "https://idm.example.test")
     assert result.returncode != 0
-    assert "FAIL  a pod with the app build label reached 1.1.1.1:443" in result.stdout
+    assert "FAIL  a pod with the runner's label reached 1.1.1.1:443" in result.stdout
 
 
-def test_an_app_build_probe_that_measured_nothing_fails_the_run(tmp_path):
+def test_a_runner_probe_that_measured_nothing_fails_the_run(tmp_path):
     """AP-81: a probe that never ran, or could not even resolve a name, proves no refusal."""
     for spec, line in [
-        (dict(HEALTHY, appBuildProbeRan=False), "FAIL  the app build probe never ran"),
-        (dict(HEALTHY, appBuildReached=[]), "FAIL  a pod with the app build label cannot resolve names"),
+        (dict(HEALTHY, runnerProbeRan=False), "FAIL  the runner probe never ran"),
+        (dict(HEALTHY, runnerReached=[]), "FAIL  a pod with the runner's label cannot resolve names"),
     ]:
         result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
         assert result.returncode != 0
         assert line in result.stdout
 
 
-def test_an_instance_without_the_build_lane_skips_its_egress_probe(tmp_path):
-    result = run(tmp_path, dict(HEALTHY, appBuilderNamespace=""), "https://example.test", "https://idm.example.test")
-    assert "skip  app build egress (no app-builder ServiceAccount in this instance)" in result.stdout
+def test_an_instance_without_the_runner_skips_its_checks(tmp_path):
+    result = run(tmp_path, dict(HEALTHY, runnerNamespace=""), "https://example.test", "https://idm.example.test")
+    assert "skip  actions runner egress (no gitea-runner in this instance)" in result.stdout
+    assert "skip  actions runner (no gitea-runner in this instance)" in result.stdout
+
+
+def test_a_runner_the_forge_does_not_show_online_fails_the_run(tmp_path):
+    """ADR-N-028 §3.3: a runner Deployment whose runner never came online builds nothing."""
+    result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
+    assert "ok    an Actions runner is registered in joinedcontext and online (waited 0s)" in result.stdout
+    offline = dict(HEALTHY, bodies=[["actions/runners", '{"runners":[{"name":"r-1","status":"offline"}]}']]
+                   + HEALTHY["bodies"])
+    result = run(tmp_path, offline, "https://example.test", "https://idm.example.test",
+                 extra_env={"JC_SMOKE_RUNNER_WAIT": "0"})
+    assert result.returncode != 0
+    assert "FAIL  no Actions runner of joinedcontext is online after 0s" in result.stdout

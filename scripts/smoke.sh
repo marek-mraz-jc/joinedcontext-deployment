@@ -547,6 +547,27 @@ if has_route gitea-forge; then
 		else
 			ok "no forge team writes it, so merging stays the Portal's approval (PF-80)"
 		fi
+		# The Actions runner (ADR-N-028): registered in the organization and online. It
+		# registers again before every job, so an empty list is waited for, and the wait is
+		# printed (T-0459's pattern), not hidden.
+		if kubectl get deployments -A --field-selector metadata.name=gitea-runner -o name 2>/dev/null | grep -q .; then
+			waited=0
+			while :; do
+				runners=$(curl -sS --max-time 20 -u "$forge_admin_user:$forge_admin_pw" \
+					"$base/git/api/v1/orgs/$forge_org/actions/runners" 2>/dev/null || true)
+				printf '%s' "$runners" | grep -q '"status": *"online"' && break
+				[ "$waited" -ge "${JC_SMOKE_RUNNER_WAIT:-60}" ] && break
+				sleep 5
+				waited=$((waited + 5))
+			done
+			if printf '%s' "$runners" | grep -q '"status": *"online"'; then
+				ok "an Actions runner is registered in $forge_org and online (waited ${waited}s)"
+			else
+				ko "no Actions runner of $forge_org is online after ${waited}s: no application builds"
+			fi
+		else
+			skip "actions runner (no gitea-runner in this instance)"
+		fi
 	else
 		skip "forge teams (no gitea-admin-credentials in $slug)"
 	fi
@@ -685,30 +706,30 @@ else
 	ok "an unlabelled pod reaches neither CoreDNS nor the internet (settled after ${settled}s, ceiling ${settle_ceiling}s)"
 fi
 
-# An application's build runs its untrusted code (T-1707, AP-81, ADR-N-026): a pod with the
-# build lane's label reaches the forge, the store and DNS, and never the internet. DNS is the
-# positive control, so a probe that could not dial at all never reads as "refused"; the settle
-# loop is the egress probe's above, for the same controller window (T-0459).
-echo "app build egress"
-build_ns=$(kubectl get serviceaccounts -A --field-selector metadata.name=app-builder -o jsonpath='{.items[0].metadata.namespace}' 2>/dev/null || true)
-if [ -z "$build_ns" ]; then
-	skip "app build egress (no app-builder ServiceAccount in this instance)"
+# The Actions runner runs an application's untrusted build code (T-1707, AP-81, ADR-N-028): a
+# pod with the runner's label reaches the forge, the Portal API and DNS, and never the
+# internet. DNS is the positive control, so a probe that could not dial at all never reads as
+# "refused"; the settle loop is the egress probe's above, for the same controller window (T-0459).
+echo "actions runner egress"
+runner_ns=$(kubectl get deployments -A --field-selector metadata.name=gitea-runner -o jsonpath='{.items[0].metadata.namespace}' 2>/dev/null || true)
+if [ -z "$runner_ns" ]; then
+	skip "actions runner egress (no gitea-runner in this instance)"
 else
-	build_probe="smoke-appbuild-$$"
-	build_out=$(kubectl run "$build_probe" -n "$build_ns" --rm --attach --restart=Never --quiet --timeout=180s \
+	build_probe="smoke-runner-$$"
+	build_out=$(kubectl run "$build_probe" -n "$runner_ns" --rm --attach --restart=Never --quiet --timeout=180s \
 		--image="$image" \
 		--overrides="$(probe_overrides "$build_probe" '["sh", "-c", "i=0; while [ $i -lt 18 ]; do nc -w 3 -z 1.1.1.1 443 >/dev/null 2>&1 || break; i=$((i+1)); sleep 4; done; echo SETTLED-AFTER=$((i*4))s; timeout 8 nslookup kubernetes.default.svc.cluster.local >/dev/null 2>&1 && echo REACHED-DNS; nc -w 5 -z 1.1.1.1 443 >/dev/null 2>&1 && echo REACHED-NET; echo PROBE-RAN"]' |
-			sed 's/"metadata": {/"metadata": {\n    "labels": {"app.kubernetes.io\/name": "app-builder"},/')" \
+			sed 's/"metadata": {/"metadata": {\n    "labels": {"app.kubernetes.io\/name": "gitea-runner"},/')" \
 		2>/dev/null)
 	build_settled=$(printf '%s' "$build_out" | sed -n 's/^SETTLED-AFTER=\([0-9]*\)s\r*$/\1/p' | head -1)
 	if ! printf '%s' "$build_out" | grep -q PROBE-RAN; then
-		ko "the app build probe never ran, so the build lane's egress was not measured"
+		ko "the runner probe never ran, so the runner's egress was not measured"
 	elif printf '%s' "$build_out" | grep -q '^REACHED-NET'; then
-		ko "a pod with the app build label reached 1.1.1.1:443: an application's build can reach the internet"
+		ko "a pod with the runner's label reached 1.1.1.1:443: an application's build can reach the internet"
 	elif ! printf '%s' "$build_out" | grep -q '^REACHED-DNS'; then
-		ko "a pod with the app build label cannot resolve names, so the refusal of the internet proves nothing"
+		ko "a pod with the runner's label cannot resolve names, so the refusal of the internet proves nothing"
 	else
-		ok "an app build resolves names and reaches no internet address (settled after ${build_settled:-?}s)"
+		ok "a runner pod resolves names and reaches no internet address (settled after ${build_settled:-?}s)"
 	fi
 fi
 

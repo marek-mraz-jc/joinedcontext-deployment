@@ -195,6 +195,9 @@ components:
   # recovers on its own, but a first apply that looks broken for a minute is a first apply
   # people debug.
   - gitea
+  # The forge's Actions runner (ADR-N-028): after the forge, whose bootstrap Job writes the
+  # registration token it starts with.
+  - gitea-runner
   - context-broker
   - pipeline-runner
   - context-gateway

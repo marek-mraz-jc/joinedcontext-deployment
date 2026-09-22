@@ -19,11 +19,12 @@ gitea:
             matchLabels:
               app.kubernetes.io/name: portal-portal
           componentNamespace: portal
-        # The build Jobs of the Portal's build lane (AP-80, AP-81).
+        # The Actions runner (ADR-N-028, AP-81): it takes jobs from the forge, and the jobs
+        # clone, publish packages and call the forge API through it.
         - podSelector:
             matchLabels:
-              app.kubernetes.io/name: app-builder
-          componentNamespace: portal
+              app.kubernetes.io/name: gitea-runner
+          componentNamespace: gitea-runner
         # The bootstrap Job, which creates the repository and mints the two tokens (T-0399).
         - podSelector:
             matchLabels:

@@ -70,6 +70,8 @@ metrics:
   name: metrics
 
 probes:
+  # false for a workload that serves nothing to probe, whose health is read elsewhere.
+  enabled: true
   readiness:
     path: /
     periodSeconds: 5
@@ -106,7 +108,6 @@ persistence:
   mountPath: /data
   storageClass: ''    # '' -> the cluster default
   accessMode: ReadWriteOnce
-extraServiceAccounts: []  # names of token-less ServiceAccounts for pods this workload starts (AP-81)
 extraVolumes: []
 extraInitContainers: []   # raw container specs, run before the workload (a one-time git-sync checkout)
 extraContainers: []       # raw container specs beside the workload (a git-sync sidecar)
