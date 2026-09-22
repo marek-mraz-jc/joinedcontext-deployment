@@ -162,7 +162,7 @@ need=(helmfile kubectl helm yq just)
 # curl only needed for the managed-cluster HTTP ingress smoke (known 80/443 mapping).
 $MANAGE_CLUSTER && need+=(k3d curl)
 # linkerd CLI only required if any selected variant enables the mesh
-if printf '%s\n' "${COMBOS[@]}" | grep -q ',1$'; then need+=(linkerd); fi
+if grep -q ',1$' < <(printf '%s\n' "${COMBOS[@]}"); then need+=(linkerd); fi
 missing=()
 for t in "${need[@]}"; do command -v "$t" >/dev/null 2>&1 || missing+=("$t"); done
 if [[ ${#missing[@]} -gt 0 ]]; then err "missing required tools: ${missing[*]}"; exit 1; fi
@@ -282,7 +282,7 @@ mesh_ingress_controller() {
     -l app.kubernetes.io/component=controller \
     --field-selector=status.phase=Running \
     -o jsonpath='{range .items[*]}{.spec.initContainers[*].name} {.spec.containers[*].name}{"\n"}{end}' 2>/dev/null)"
-  if echo "$containers" | grep -q linkerd-proxy; then
+  if grep -q linkerd-proxy <<<"$containers"; then
     ok "ingress controller is meshed (containers: $(echo "$containers" | tr '\n' '|'))"
   else
     err "ingress controller is NOT meshed (containers: $(echo "$containers" | tr '\n' '|'))"
