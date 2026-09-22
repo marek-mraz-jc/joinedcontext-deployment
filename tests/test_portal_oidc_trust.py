@@ -14,6 +14,10 @@ from pathlib import Path
 import pytest
 import yaml
 
+# Renders from the one shared `deployment/environments/testing` folder, which it rewrites, so
+# every module that does runs on one xdist worker (ci.yml runs `-n auto --dist loadgroup`).
+pytestmark = pytest.mark.xdist_group("deployment-environments-testing")
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 requires_helmfile = pytest.mark.skipif(shutil.which("helmfile") is None, reason="helmfile not installed")

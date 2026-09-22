@@ -107,3 +107,8 @@ def set_global(tree, dotted: str, value):
         target = target[key]
     target[leaf] = value
     path.write_text(yaml.safe_dump(values, sort_keys=False))
+
+
+def pytest_configure(config):
+    # Known without pytest-xdist installed too, so a serial run does not warn about the marker.
+    config.addinivalue_line("markers", "xdist_group(name): run on the same xdist worker as the rest of the group")
