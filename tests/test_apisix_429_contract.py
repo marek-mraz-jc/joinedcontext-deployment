@@ -23,6 +23,10 @@ from pathlib import Path
 import pytest
 import yaml
 
+# Starts its own containers from module-scoped fixtures; split over xdist workers, each worker
+# would start a second set beside the first. One worker runs the whole module (ci.yml loadgroup).
+pytestmark = pytest.mark.xdist_group("docker-apisix-429")
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 VALUES = PROJECT_ROOT / "components/apisix/values/apisix/base-values.yaml.gotmpl"
 IMAGES = PROJECT_ROOT / "components/apisix/images.yaml"

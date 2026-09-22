@@ -22,6 +22,10 @@ from pathlib import Path
 import pytest
 import yaml
 
+# Starts its own containers from module-scoped fixtures; split over xdist workers, each worker
+# would start a second set beside the first. One worker runs the whole module (ci.yml loadgroup).
+pytestmark = pytest.mark.xdist_group("docker-observability-collector")
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 IMAGES = yaml.safe_load((PROJECT_ROOT / "components/observability/images.yaml").read_text())
 IMAGE_SPEC = IMAGES["observability"]["collector"]

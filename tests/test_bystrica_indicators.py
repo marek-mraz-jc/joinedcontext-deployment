@@ -19,6 +19,10 @@ from pathlib import Path
 import pytest
 import yaml
 
+# Starts its own containers from module-scoped fixtures; split over xdist workers, each worker
+# would start a second set beside the first. One worker runs the whole module (ci.yml loadgroup).
+pytestmark = pytest.mark.xdist_group("docker-bystrica-indicators")
+
 ROOT = Path(__file__).resolve().parent.parent
 SEED = ROOT / "components/context-gateway/seed"
 FIXTURES = Path(__file__).resolve().parent / "fixtures/bystrica"
