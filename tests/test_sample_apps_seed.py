@@ -290,3 +290,34 @@ def test_layout_2_commits_the_grants_into_the_project_repository(script, tmp_pat
     files = repos(forge)["helsinki"]["files"]
     assert "spaces/helsinki/endpoints/app-helsinki-bikes.yaml" in files
     assert "policies/app-helsinki-bikes-1.yaml" in files
+
+
+def test_every_person_a_sample_app_admits_is_admitted_by_its_endpoint():
+    """T-2672, EP-14: the gateway admits a person to a `project-list` Endpoint only when a group
+    in their token names one of its projects, before it reads any Policy. An App whose `access`
+    names a demo person, or whose visibility is `project`, is read through such an Endpoint; a
+    demo person in no group of the project gets `403 Access Denied by Policy` on every row, as
+    helsinki-alerts did on dev for its own viewer and steward."""
+    demo = yaml.safe_load((ROOT / "components/keycloak/demo-users.yaml").read_text())
+    checked = 0
+    for endpoint_file in sorted(VENDORED.glob("*/grants/projects/*/spaces/*/endpoints/*.yaml")):
+        endpoint = yaml.safe_load(endpoint_file.read_text())
+        if endpoint["spec"]["audience"] != "project-list":
+            continue
+        admitted = {endpoint["metadata"]["namespace"], *endpoint["spec"].get("allowedProjects", [])}
+        app = yaml.safe_load((endpoint_file.parents[6] / "app.yaml").read_text())
+        people = {
+            subject["user"].split("@")[0]
+            for entry in app["spec"].get("access", [])
+            for subject in entry["subjects"]
+            if "user" in subject
+        }
+        # The live journeys open every sample as these people (ui/e2e/live/apps-*.spec.ts).
+        people |= {"demo.viewer", "demo.steward"}
+        for person in sorted(people):
+            groups = set(demo[person].get("groups", []))
+            assert groups & admitted, (
+                f"{endpoint_file.relative_to(VENDORED)} admits {sorted(admitted)}; {person} is in {sorted(groups)}"
+            )
+            checked += 1
+    assert checked, "no sample app reads through a project-list endpoint any more: drop this test"
