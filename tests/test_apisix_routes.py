@@ -35,7 +35,7 @@ EXPECTED_ROUTES = {
     },
     # T-2670: a static app's data calls, under its own path where the apps session cookie reaches.
     "context-endpoint-apps": {
-        "uri": "/apps/:name/api/endpoint/*", "priority": 35, "upstream_id": "context-endpoint-apps", "host": LOCAL_DOMAIN,
+        "uri": "/apps/*", "priority": 35, "upstream_id": "context-endpoint-apps", "host": LOCAL_DOMAIN,
     },
 }
 
@@ -245,6 +245,13 @@ def test_a_static_apps_data_calls_carry_the_apps_session_to_the_gateway(apisix_c
     routes = {r["id"]: r for r in parsed["routes"]}
     apps = routes["context-endpoint-apps"]
     assert apps["priority"] > routes["apps-surface"]["priority"]
+    # radixtree_host_uri reads `:name` literally (it matched nothing on dev), so the route is
+    # /apps/* narrowed by a regex on the normalised path.
+    [(var, op, regex)] = apps["vars"]
+    assert (var, op) == ("uri", "~~")
+    assert re.match(regex, "/apps/bikes/api/endpoint/abc/ngsi-ld/v1/entities")
+    for other in ("/apps/bikes/", "/apps/bikes/assets/api/endpoint.js", "/apps/bikes/api/functions/sum"):
+        assert not re.match(regex, other), other
     upstream = next(u for u in parsed["upstreams"] if u["id"] == apps["upstream_id"])
     assert all(node.startswith("context-gateway.") for node in upstream["nodes"])
     plugins = {pc["id"]: pc.get("plugins", {}) for pc in parsed["plugin_configs"]}

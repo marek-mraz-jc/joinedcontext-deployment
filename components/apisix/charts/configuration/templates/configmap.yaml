@@ -56,6 +56,9 @@ data:
         {{- if hasKey $config "methods" }}
         methods: {{ $config.methods | toJson }}
         {{- end }}
+        {{- if hasKey $config "vars" }}
+        vars: {{ $config.vars | toJson }}
+        {{- end }}
         {{- if hasKey $config "subDomain" }}
         host: {{ printf "%s.%s" $config.subDomain $.Values.domain | quote }}
         {{- else if hasKey $config "hosts" }}
