@@ -88,6 +88,11 @@ elif args[0] == "get" and args[1] == "configmaps" and "-o name" in line:
     # The sample applications the forge bootstrap seeded (T-2599); `sampleApps: []` is none.
     for app in spec.get("sampleApps", ["helsinki-bikes", "helsinki-events", "helsinki-alerts"]):
         sys.stdout.write("configmap/gitea-bootstrap-app-%s\\n" % app)
+elif args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-bootstrap-app-") and "go-template" in line:
+    # A sample app's file names: its grants (T-2667) when the spec gives it any.
+    app = args[2][len("gitea-bootstrap-app-"):]
+    grants = ["grants__projects__helsinki__spaces__helsinki__endpoints__app-%s.yaml" % app] if app in spec.get("appGrants", []) else []
+    sys.stdout.write("".join("%s\\n" % k for k in ["app.yaml", "index.html"] + grants))
 elif args[0] == "get" and args[1] == "configmap":
     routes = "".join("  - id: %s\\n" % r for r in spec.get("routes", []))
     sys.stdout.write("routes:\\n" + routes)
@@ -469,6 +474,16 @@ def test_endpoint_residue_beyond_one_take_fails_the_run(tmp_path):
     result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
     assert result.returncode != 0
     assert "FAIL  helsinki lists 6 endpoints for 4 seeded: residue of takes or e2e (T-0667)" in result.stdout
+
+
+def test_a_sample_apps_granted_endpoint_is_seeded_not_residue(tmp_path):
+    """T-2667: the bootstrap commits each sample app's Endpoint beside the seed; two apps with
+    grants are two endpoints more that the residue count (T-0667) expects."""
+    listed = json.dumps({"items": [{"kind": "Endpoint"} for _ in range(len(HELSINKI_SEED) + 2)]})
+    spec = dict(HEALTHY, appGrants=["helsinki-bikes", "helsinki-events"],
+                bodies=[["/api/v1/projects/helsinki/endpoints", listed]] + HEALTHY["bodies"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert "ok    helsinki lists 6 endpoints for 6 seeded (no residue)" in result.stdout
 
 
 def test_an_endpoint_list_that_does_not_answer_is_not_called_clean(tmp_path):

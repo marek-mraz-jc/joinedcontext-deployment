@@ -339,6 +339,12 @@ if has_route portal-api; then
 		# spaces its seed commits and at most one more of each (a take in flight); residue of
 		# recordings and e2e turns the run red.
 		seed=$(kubectl get configmap gitea-bootstrap-seed -n "$slug" -o 'jsonpath={.data}' 2>/dev/null)
+		# A sample app's Endpoint and Policies are committed by the bootstrap too, from its
+		# `grants__…` files (T-2667): they are seeded, not residue.
+		for app_cm in $(kubectl get configmaps -n "$slug" -o name 2>/dev/null | grep '^configmap/gitea-bootstrap-app-'); do
+			seed="$seed $(kubectl get configmap "${app_cm#configmap/}" -n "$slug" \
+				-o go-template='{{range $name, $_ := .data}}{{$name}}{{"\n"}}{{end}}' 2>/dev/null | grep '^grants__')"
+		done
 		for kind in "endpoints Endpoint projects__helsinki__spaces__[a-z0-9-]*__endpoints__[a-z0-9-]*\.yaml" \
 			"pipelines Pipeline projects__helsinki__pipelines__[a-z0-9-]*__pipeline\.yaml" \
 			"spaces ContextSpace projects__helsinki__spaces__[a-z0-9-]*__space\.yaml"; do
