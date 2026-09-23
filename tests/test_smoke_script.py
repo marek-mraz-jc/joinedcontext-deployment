@@ -126,6 +126,13 @@ elif args[0] == "get" and args[1] == "secret" and args[2] == "pipeline-secrets":
     elif ".data." in line:
         value = resolved.get(line.rsplit(".data.", 1)[1].rstrip("}"), "")
         sys.stdout.write(base64.b64encode(value.encode()).decode() if value else "")
+elif args[0] == "exec" and "deploy/gitea-runner" in line:
+    # T-1707: the runner's uid and whether it holds a ServiceAccount token.
+    if spec.get("runnerWallsRead", True):
+        sys.stdout.write("UID=%s\\n" % spec.get("runnerUid", 1000))
+        if spec.get("runnerSaToken", False):
+            sys.stdout.write("SA-TOKEN\\n")
+        sys.stdout.write("WALLS-READ\\n")
 elif args[0] == "exec":
     # `sh -c [ -n "$NAME" ]`: the runner has the variable, or it does not. The value is never
     # printed, here or in the script.
@@ -1115,3 +1122,24 @@ def test_the_stub_admits_the_edge_probe_by_the_selector_the_edge_policy_really_h
     policies = yaml.safe_load((PROJECT_ROOT / "components/apisix/networkpolicies.yaml").read_text())
     for name, value in policies["apisix"]["podSelector"].items():
         assert f'("{name}", "{value}")' in KUBECTL_STUB, name
+
+
+def test_the_runners_walls_are_read_from_the_running_pod(tmp_path):
+    result = run(tmp_path, dict(HEALTHY), "https://example.test", "https://idm.example.test")
+    assert "ok    the runner runs as uid 1000 and holds no Kubernetes token" in result.stdout
+
+
+@pytest.mark.parametrize(
+    ("walls", "said"),
+    [
+        ({"runnerUid": 0}, "FAIL  the runner runs as uid 0: an application's build runs as root"),
+        ({"runnerSaToken": True}, "FAIL  the runner holds a Kubernetes ServiceAccount token"),
+        ({"runnerWallsRead": False}, "FAIL  the runner could not be asked for its uid and token"),
+    ],
+)
+def test_a_runner_as_root_or_with_a_token_fails_the_run(tmp_path, walls, said):
+    """T-1707 steps 2 and 4 (AP-81): the untrusted build runs as the runner's uid and next to its
+    filesystem; root, a mounted token, or a runner nobody could ask is a failure, never a skip."""
+    result = run(tmp_path, dict(HEALTHY, **walls), "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert said in result.stdout

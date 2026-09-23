@@ -731,6 +731,20 @@ else
 	else
 		ok "a runner pod resolves names and reaches no internet address (settled after ${build_settled:-?}s)"
 	fi
+	# The walls of the runner itself, read from the running pod rather than the render (T-1707
+	# steps 2 and 4): an application's build runs as this uid, with this filesystem.
+	runner_walls=$(kubectl exec -n "$runner_ns" deploy/gitea-runner -c gitea-runner -- \
+		sh -c 'echo UID=$(id -u); [ -e /var/run/secrets/kubernetes.io/serviceaccount/token ] && echo SA-TOKEN; echo WALLS-READ' 2>/dev/null || true)
+	runner_uid=$(printf '%s' "$runner_walls" | sed -n 's/^UID=\([0-9]*\)\r*$/\1/p')
+	if ! grep -q WALLS-READ <<<"$runner_walls"; then
+		ko "the runner could not be asked for its uid and token, so its walls were not measured"
+	elif [ -z "$runner_uid" ] || [ "$runner_uid" = 0 ]; then
+		ko "the runner runs as uid ${runner_uid:-?}: an application's build runs as root"
+	elif grep -q '^SA-TOKEN' <<<"$runner_walls"; then
+		ko "the runner holds a Kubernetes ServiceAccount token an application's build can read"
+	else
+		ok "the runner runs as uid $runner_uid and holds no Kubernetes token"
+	fi
 fi
 
 # The edge's data plane admits the ingress controller alone (T-0939, EP-20). APISIX trusts

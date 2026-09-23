@@ -203,3 +203,43 @@ def test_the_rust_runner_does_not_render_without_its_digest(rendered_variant):
     pin, rather than deploying a tag."""
     with pytest.raises(AssertionError, match="needs its image digest"):
         rendered_variant("dev", with_rust_runner(""))
+
+
+def peers(policy):
+    """Each egress peer of a policy as (namespace, pod labels, ports)."""
+    found = set()
+    for rule in policy["spec"].get("egress", []):
+        ports = tuple(sorted(port["port"] for port in rule.get("ports", [])))
+        for peer in rule["to"]:
+            assert "ipBlock" not in peer, f"{policy['metadata']['name']}: an address range is a way out"
+            namespace = peer.get("namespaceSelector", {}).get("matchLabels", {}).get("kubernetes.io/metadata.name")
+            labels = tuple(sorted(peer.get("podSelector", {}).get("matchLabels", {}).items()))
+            found.add((namespace, labels, ports))
+    return found
+
+
+@requires_helmfile
+@pytest.mark.parametrize("environment", ["local", "dev", "production"])
+def test_a_build_reaches_the_forge_the_portal_and_dns_and_nothing_else(rendered, environment):
+    """T-1707 step 3, AP-81: an application's own install, test and build code runs in the runner,
+    so its egress is the lane's and no more: the forge, the Portal's API, DNS, and, where the mesh
+    runs, the same two peers on the proxy's port and the mesh's control plane. No address range, no
+    ingress, nothing on the internet. A rule added for convenience fails here, not in a breach."""
+    docs = rendered(environment)
+    policies = [
+        d for d in docs
+        if d.get("kind") == "NetworkPolicy"
+        and d["spec"].get("podSelector", {}).get("matchLabels", {}).get("app.kubernetes.io/name") == "gitea-runner"
+    ]
+    assert policies, "the runner has a policy of its own"
+    forge = (("app.kubernetes.io/instance", "gitea-forge"), ("app.kubernetes.io/name", "gitea"))
+    portal = (("app.kubernetes.io/name", "portal-portal"),)
+    dns = (("k8s-app", "kube-dns"),)
+    allowed = {(forge, (3000,)), (portal, (8080,)), (dns, (53, 53)), (forge, (4143,)), (portal, (4143,)), ((), (8080, 8086, 8090))}
+    for policy in policies:
+        for rule in policy["spec"].get("ingress", []):
+            assert "from" not in rule, f"{policy['metadata']['name']}: nothing calls a runner"
+        for namespace, labels, ports in peers(policy):
+            assert (labels, ports) in allowed, f"{policy['metadata']['name']}: {namespace} {labels} {ports}"
+            if labels == ():
+                assert namespace == "linkerd", "a selector-less peer is the mesh's control plane alone"
