@@ -236,3 +236,57 @@ def test_layout_2_commits_the_manifest_into_the_project_repository(script, tmp_p
     manifest = yaml.safe_load(repos(forge)["helsinki"]["files"]["apps/helsinki-bikes/app.yaml"])
     assert manifest["spec"]["source"]["git"]["ref"] == repos(forge)["helsinki_helsinki-bikes"]["head"]
     assert not [path for path in forge.contents if "/apps/" in path], forge.contents.keys()
+
+
+GRANT_ENDPOINT = "projects__helsinki__spaces__helsinki__endpoints__app-helsinki-bikes.yaml"
+GRANT_POLICY = "projects__helsinki__policies__app-helsinki-bikes-1.yaml"
+GRANTS = {
+    f"grants__{GRANT_ENDPOINT}": "kind: Endpoint\nmetadata:\n  name: app-helsinki-bikes\n",
+    f"grants__{GRANT_POLICY}": "kind: Policy\nmetadata:\n  name: app-helsinki-bikes-1\n",
+}
+
+
+def with_grants(app):
+    for key, text in GRANTS.items():
+        (app / key).write_text(text)
+
+
+@requires_helmfile
+def test_the_grants_the_portal_compiled_go_beside_the_manifest_and_never_into_the_app(script, tmp_path):
+    """T-2667, CC-61, AP-96: the gateway reads an App's Endpoint and Policies from the
+    configuration repository alone, so the seed commits them there, at the paths the Portal's door
+    uses, and the application's own repository never sees them."""
+    forge, app = seeded(tmp_path)
+    with_grants(app)
+    result = run(forge, script)
+    assert result.returncode == 0, result.stderr
+    assert repos(forge)["helsinki_helsinki-bikes"]["files"] == TREE
+    for key, text in GRANTS.items():
+        path = key.removeprefix("grants__").replace("__", "/")
+        assert forge.contents[path] == text, path
+
+    second = run(forge, script)
+    assert second.returncode == 0, second.stderr
+    assert "projects/helsinki/policies/app-helsinki-bikes-1.yaml is current" in second.stdout
+
+
+@requires_helmfile
+def test_layout_2_commits_the_grants_into_the_project_repository(script, tmp_path):
+    """CC-85: in layout 2 a grant's path loses the `projects/{project}/` prefix."""
+    from test_forge_seed_converges import HELSINKI
+
+    forge, app = seeded(tmp_path)
+    with_grants(app)
+    forge.state.write_text(forge.state.read_text().replace('"contents": {}', '"contents": {".jc/layout": "2\\n"}'))
+    forge.put("projects/helsinki/project.yaml", HELSINKI)
+    result = forge.run(
+        script,
+        LAYOUT="2",
+        APPS_DIR=str(forge.root / "apps"),
+        APPS_PROJECT="helsinki",
+        APPS_PUBLIC_BASE="https://joinedcontext.test/git",
+    )
+    assert result.returncode == 0, result.stderr
+    files = repos(forge)["helsinki"]["files"]
+    assert "spaces/helsinki/endpoints/app-helsinki-bikes.yaml" in files
+    assert "policies/app-helsinki-bikes-1.yaml" in files

@@ -60,6 +60,8 @@ import base64, itertools, json, os, sys
 spec = json.load(open(os.environ["STUB_SPEC"]))
 args = sys.argv[1:]
 line = " ".join(args)
+# The pod selector of APISIX's egress policy (components/apisix/networkpolicies.yaml).
+EDGE_SELECTOR = [("app.kubernetes.io/name", "apisix"), ("app.kubernetes.io/instance", "apisix-apisix")]
 if args[0] == "get" and args[1] == "configmap" and args[2] == "gitea-bootstrap-seed" and "endpoints__helsinki-" in line:
     # The Helsinki seed's slugs, one per endpoint name (T-0478); nothing seeded by default,
     # because the checks behind them wait up to 210 s for data to flow.
@@ -183,8 +185,10 @@ elif args[0] == "get" and args[1] == "pods" and "joinedcontext.com/app=true" in 
     # AP-108: the running pod-backed Apps' addresses; `appPods: []` is an instance without one.
     sys.stdout.write("".join("%s " % ip for ip in spec.get("appPods", ["10.42.0.20"])))
 elif args[0] == "run" and args[1].startswith("smoke-app") and args[1].endswith("-edge"):
-    # The probe carrying APISIX's label: the App policy's own positive control.
-    sys.exit(0 if spec.get("appEdgeReaches", True) else 1)
+    # The probe carrying APISIX's labels: the App policy's own positive control. Like the
+    # cluster, it passes only with every label the edge's egress policy selects (T-2667).
+    edge = all('"%s": "%s"' % pair in line for pair in EDGE_SELECTOR)
+    sys.exit(0 if spec.get("appEdgeReaches", True) and edge else 1)
 elif args[0] == "run" and args[1].startswith("smoke-app"):
     # Reports by what it prints, like the edge-peer probe.
     if spec.get("appPeerRan", True):
@@ -1100,3 +1104,14 @@ def test_a_published_app_with_no_ready_pod_fails_the_run(tmp_path):
 def test_an_instance_without_pod_backed_apps_skips_the_readiness(tmp_path):
     result = run(tmp_path, dict(HEALTHY, appDeployments=[]), "https://example.test", "https://idm.example.test")
     assert "skip  App deployments (no pod-backed App is published in this instance)" in result.stdout
+
+
+def test_the_stub_admits_the_edge_probe_by_the_selector_the_edge_policy_really_has():
+    """T-2667: the smoke's APISIX-labelled probe was refused on dev because it carried the name
+    label alone while the edge's egress policy selects name and instance; the stub holds the same
+    selector as the chart, so the probe's labels are checked against what the cluster applies."""
+    import yaml
+
+    policies = yaml.safe_load((PROJECT_ROOT / "components/apisix/networkpolicies.yaml").read_text())
+    for name, value in policies["apisix"]["podSelector"].items():
+        assert f'("{name}", "{value}")' in KUBECTL_STUB, name

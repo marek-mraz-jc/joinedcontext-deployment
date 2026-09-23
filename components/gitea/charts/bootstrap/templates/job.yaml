@@ -590,6 +590,8 @@ spec:
                   [ -f "$f" ] || continue
                   key=$(basename "$f")
                   [ "$key" = app.yaml ] && continue
+                  # Its grants belong to the configuration repository, beside the manifest.
+                  case "$key" in grants__*) continue ;; esac
                   echo "$(printf '%s' "$key" | sed 's/__/\//g') $(blob_id "$f") $key" >> $WORK/app-local
                 done
                 sort -o $WORK/app-local $WORK/app-local
@@ -663,6 +665,38 @@ spec:
                     echo "app $app: $path created at $head" ;;
                   *) echo "the forge answered $status for $path" >&2; exit 1 ;;
                 esac
+
+                # The Endpoint and Policies the Portal's door would commit with this App (T-2667,
+                # CC-61, AP-96): the gateway reads grants from the repository alone, so an App
+                # seeded without them reads nothing. Compiled by the Portal (apps/<name>/grants,
+                # reference_apps_tests), one file each, named by its layout-1 path.
+                # ponytail: a grant the app stops compiling to is left behind; the Portal's
+                # door removes it on the app's next proposal.
+                for f in "$dir"grants__*; do
+                  [ -f "$f" ] || continue
+                  gpath=$(basename "$f" | sed -e 's/^grants__//' -e 's/__/\//g')
+                  [ "$LAYOUT" = 2 ] && gpath=${gpath#projects/$APPS_PROJECT/}
+                  gencoded=$(base64 < "$f" | tr -d '\n')
+                  status=$(forge_code GET "/api/v1/repos/$ORG/$app_home/contents/$gpath?ref=$BRANCH")
+                  case "$status" in
+                    200)
+                      held=$(sed -n 's/.*"content": *"\([^"]*\)".*/\1/p' $WORK/body | sed 's/\\n//g' | base64 -d)
+                      if [ "$held" = "$(cat "$f")" ]; then
+                        echo "app $app: $gpath is current"
+                        continue
+                      fi
+                      sha=$(sed -n 's/.*"sha": *"\([0-9a-f]\{40\}\)".*/\1/p' $WORK/body | head -1)
+                      status=$(forge_code PUT "/api/v1/repos/$ORG/$app_home/contents/$gpath" \
+                        -d "{\"branch\":\"$BRANCH\",\"sha\":\"$sha\",\"content\":\"$gencoded\",\"message\":\"seed: the grants of the $app application\"}")
+                      [ "$status" = 200 ] || { echo "updating $gpath failed: $status" >&2; cat $WORK/body >&2; exit 1; } ;;
+                    404)
+                      status=$(forge_code POST "/api/v1/repos/$ORG/$app_home/contents/$gpath" \
+                        -d "{\"branch\":\"$BRANCH\",\"content\":\"$gencoded\",\"message\":\"seed: the grants of the $app application\"}")
+                      [ "$status" = 201 ] || { echo "writing $gpath failed: $status" >&2; cat $WORK/body >&2; exit 1; } ;;
+                    *) echo "the forge answered $status for $gpath" >&2; exit 1 ;;
+                  esac
+                  echo "app $app: $gpath committed"
+                done
               done
 
               # The body file has held a token; the volume is an emptyDir that dies with the

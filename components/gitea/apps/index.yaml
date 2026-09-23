@@ -1,51 +1,36 @@
 # Written by scripts/vendor-sample-apps.py; do not edit. The files of each sample application,
 # relative to its folder, as the forge bootstrap pushes them to its repository (T-2599).
-source: d2988d60fab054c3a82a4c24d82da20a49c5f02b
+source: 05325bf1edbc82bc87c9103a5fde1bd082c58422
 apps:
-  helsinki-bikes:
+  air-quality:
     - .gitea/workflows/build.yml
-    - .gitignore
+    - Cargo.lock
+    - Cargo.toml
     - README.md
     - app.yaml
-    - e2e/stations.spec.ts
-    - index.html
-    - map-worker.ts
-    - package.json
-    - playwright.config.ts
-    - src/App.test.tsx
-    - src/App.tsx
-    - src/app.css
-    - src/components/AppShell.test.tsx
-    - src/components/AppShell.tsx
-    - src/components/EntityDetail.tsx
-    - src/components/EntityMap.test.tsx
-    - src/components/EntityMap.tsx
-    - src/components/EntityTable.test.tsx
-    - src/components/EntityTable.tsx
-    - src/components/StatTiles.tsx
-    - src/components/components.css
-    - src/components/filters.test.tsx
-    - src/components/filters.tsx
-    - src/components/states.tsx
-    - src/design-tokens.json
-    - src/fixtures/stations.ts
-    - src/main.tsx
-    - src/pages/Overview.tsx
-    - src/pages/Stations.tsx
-    - src/stations.test.ts
-    - src/stations.ts
-    - test-setup.ts
-    - tsconfig.json
-    - vite.config.ts
-  helsinki-events:
-    - .gitea/workflows/build.yml
-    - README.md
-    - app.js
-    - app.yaml
-    - index.html
-    - style.css
-    - test/app.test.mjs
-    - test/events.json
+    - build.rs
+    - grants/projects/helsinki/spaces/helsinki/endpoints/app-air-quality.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-air-quality-1.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-air-quality-2-steward.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-air-quality-3-steward.yaml
+    - src/assets.rs
+    - src/lib.rs
+    - src/main.rs
+    - tests/e2e/auth_flow.spec.ts
+    - tests/e2e/stub-endpoint.mjs
+    - tests/stations_api_tests.rs
+    - ui/index.html
+    - ui/package.json
+    - ui/playwright.config.ts
+    - ui/pnpm-lock.yaml
+    - ui/src/App.tsx
+    - ui/src/api.ts
+    - ui/src/index.css
+    - ui/src/main.tsx
+    - ui/tests/app.test.tsx
+    - ui/tests/setup.ts
+    - ui/tsconfig.json
+    - ui/vite.config.ts
   helsinki-alerts:
     - .gitea/workflows/build.yml
     - .gitignore
@@ -56,6 +41,10 @@ apps:
     - functions/expiring.ts
     - functions/summary.test.ts
     - functions/summary.ts
+    - grants/projects/helsinki/spaces/helsinki/endpoints/app-helsinki-alerts.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-helsinki-alerts-1.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-helsinki-alerts-2-steward.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-helsinki-alerts-3-steward.yaml
     - index.html
     - map-worker.ts
     - package.json
@@ -93,31 +82,54 @@ apps:
     - test-setup.ts
     - tsconfig.json
     - vite.config.ts
-  air-quality:
+  helsinki-bikes:
     - .gitea/workflows/build.yml
-    - Cargo.lock
-    - Cargo.toml
+    - .gitignore
     - README.md
     - app.yaml
-    - build.rs
-    - src/assets.rs
-    - src/lib.rs
-    - src/main.rs
-    - tests/e2e/auth_flow.spec.ts
-    - tests/e2e/stub-endpoint.mjs
-    - tests/stations_api_tests.rs
-    - ui/index.html
-    - ui/package.json
-    - ui/playwright.config.ts
-    - ui/pnpm-lock.yaml
-    - ui/src/App.tsx
-    - ui/src/api.ts
-    - ui/src/index.css
-    - ui/src/main.tsx
-    - ui/tests/app.test.tsx
-    - ui/tests/setup.ts
-    - ui/tsconfig.json
-    - ui/vite.config.ts
+    - e2e/stations.spec.ts
+    - grants/projects/helsinki/spaces/helsinki/endpoints/app-helsinki-bikes.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-helsinki-bikes-1.yaml
+    - index.html
+    - map-worker.ts
+    - package.json
+    - playwright.config.ts
+    - src/App.test.tsx
+    - src/App.tsx
+    - src/app.css
+    - src/components/AppShell.test.tsx
+    - src/components/AppShell.tsx
+    - src/components/EntityDetail.tsx
+    - src/components/EntityMap.test.tsx
+    - src/components/EntityMap.tsx
+    - src/components/EntityTable.test.tsx
+    - src/components/EntityTable.tsx
+    - src/components/StatTiles.tsx
+    - src/components/components.css
+    - src/components/filters.test.tsx
+    - src/components/filters.tsx
+    - src/components/states.tsx
+    - src/design-tokens.json
+    - src/fixtures/stations.ts
+    - src/main.tsx
+    - src/pages/Overview.tsx
+    - src/pages/Stations.tsx
+    - src/stations.test.ts
+    - src/stations.ts
+    - test-setup.ts
+    - tsconfig.json
+    - vite.config.ts
+  helsinki-events:
+    - .gitea/workflows/build.yml
+    - README.md
+    - app.js
+    - app.yaml
+    - grants/projects/helsinki/spaces/helsinki/endpoints/app-helsinki-events.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-helsinki-events-1.yaml
+    - index.html
+    - style.css
+    - test/app.test.mjs
+    - test/events.json
   hsl-transport:
     - .gitea/workflows/build.yml
     - Cargo.lock
@@ -125,6 +137,8 @@ apps:
     - README.md
     - app.yaml
     - build.rs
+    - grants/projects/helsinki/spaces/helsinki/endpoints/app-hsl-transport.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-hsl-transport-1.yaml
     - src/assets.rs
     - src/lib.rs
     - src/main.rs

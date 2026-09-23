@@ -764,7 +764,9 @@ fi
 # that admits APISIX on the app port and the mesh's inbound port, and nothing else. The first
 # running App pod stands for all of them (every App gets the same policy); its own address,
 # so neither probe needs DNS. The APISIX-labelled probe is the positive control, retried for
-# the half minute the controller takes to admit a new pod (T-0459); the one in `default` is
+# the half minute the controller takes to admit a new pod (T-0459); it carries both labels the
+# edge's egress policy selects (components/apisix/networkpolicies.yaml), since with the name alone
+# the namespace's default-deny drops it before it leaves (T-2667); the one in `default` is
 # the refusal, on both ports, as for the edge above.
 echo "apps"
 app_ips=$(kubectl get pods -A -l joinedcontext.com/app=true --field-selector=status.phase=Running \
@@ -776,7 +778,7 @@ else
 	app_ip=${app_ips%% *}
 	app_probe="smoke-app-$$"
 	app_edge=$(probe_overrides "$app_probe-edge" "[\"sh\", \"-c\", \"i=0; while [ \$i -lt 10 ]; do nc -w 3 -z $app_ip 8080 && exit 0; i=\$((i+1)); sleep 3; done; exit 1\"]" |
-		sed 's/"metadata": {/"metadata": {\n    "labels": {"app.kubernetes.io\/name": "apisix"},/')
+		sed 's/"metadata": {/"metadata": {\n    "labels": {"app.kubernetes.io\/name": "apisix", "app.kubernetes.io\/instance": "apisix-apisix"},/')
 	if kubectl run "$app_probe-edge" -n "$slug" --rm --attach --restart=Never --quiet --timeout=90s \
 		--image="$image" --overrides="$app_edge" >/dev/null 2>&1; then
 		ok "a pod with APISIX's label reaches an App pod on 8080 (first of $app_count)"
