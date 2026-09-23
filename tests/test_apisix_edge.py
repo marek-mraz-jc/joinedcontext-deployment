@@ -121,6 +121,12 @@ def test_rate_limit_classes(plugin_configs):
         api = plugin_configs[config_id]["limit-count"]
         assert (api["count"], api["time_window"]) == (1200, 60), config_id
         assert "authorization" in api["key"], config_id
+    # T-2669: a browser carries the edge session, which openid-connect turns into X-Access-Token;
+    # keyed on the bearer alone, every session behind one address shared one bucket.
+    portal = plugin_configs["portal-api"]["limit-count"]
+    assert portal["key_type"] == "var_combination"
+    assert portal["key"].split() == ["$http_authorization", "$http_x_access_token", "$remote_addr"]
+    assert "X-Access-Token" in plugin_configs["portal-api"]["serverless-pre-function"]["functions"][0]
 
     stream = plugin_configs["context-endpoint"]["limit-count"]
     assert (stream["count"], stream["time_window"]) == (5000, 60)

@@ -117,15 +117,18 @@ portal-api:
               ngx.req.clear_header((header:gsub("%-", "_")))
             end
           end
-    # Class 2 (authenticated API): 1,200 requests per minute per client identity. The bearer
-    # token is the only identity APISIX has here and it is not verified at the edge, so the
-    # bucket is per token string rather than per subject and resets when a client renews.
-    # Splitting it by `sub` needs an APISIX consumer or a claim-extracting pre-function.
+    # Class 2 (authenticated API): 1,200 requests per minute per client identity. A CLI or a
+    # service account sends a bearer; a browser sends the edge session cookie, which
+    # openid-connect (it runs before limit-count) turns into X-Access-Token after the
+    # pre-function cleared any client copy. Keyed on both and the address, so each person
+    # behind one office NAT has a bucket and an anonymous caller is limited per address
+    # (T-2669). The bucket is per token string, not per subject, and starts again when a
+    # token is renewed; splitting it by `sub` needs a claim-extracting pre-function.
     limit-count:
       count: 1200
       time_window: 60
-      key_type: var
-      key: http_authorization
+      key_type: var_combination
+      key: '$http_authorization $http_x_access_token $remote_addr'
       rejected_code: 429
       policy: local
       show_limit_quota_header: true
