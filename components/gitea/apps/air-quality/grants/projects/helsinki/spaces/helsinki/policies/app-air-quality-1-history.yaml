@@ -1,7 +1,7 @@
 apiVersion: joinedcontext.com/v1alpha1
 kind: Policy
 metadata:
-  name: app-air-quality-1
+  name: app-air-quality-1-history
   namespace: helsinki
   annotations:
     joinedcontext.com/generated-by: portal/app-reconciler
@@ -35,5 +35,5 @@ spec:
     - stewardNote
     - source
   operations:
-  - queryEntity
-  - retrieveEntity
+  - queryTemporal
+  temporalQ: timerel=after;timeAt=P-1D

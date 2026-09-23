@@ -1,6 +1,6 @@
 # Written by scripts/vendor-sample-apps.py; do not edit. The files of each sample application,
 # relative to its folder, as the forge bootstrap pushes them to its repository (T-2599).
-source: bcfdc667903a492b76f3131e8f3baa63ddecb9f4
+source: 7d69646384b11bce711b0871f8e894110c76a4e4
 apps:
   air-quality:
     - .gitea/workflows/build.yml
@@ -10,6 +10,7 @@ apps:
     - app.yaml
     - build.rs
     - grants/projects/helsinki/spaces/helsinki/endpoints/app-air-quality.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-air-quality-1-history.yaml
     - grants/projects/helsinki/spaces/helsinki/policies/app-air-quality-1.yaml
     - grants/projects/helsinki/spaces/helsinki/policies/app-air-quality-2-steward.yaml
     - grants/projects/helsinki/spaces/helsinki/policies/app-air-quality-3-steward.yaml
