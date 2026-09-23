@@ -107,6 +107,10 @@ ROUTE_CLASSES = {
         "reach": EDGE_SESSION, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "the same surface on the Portal's origin, with the edge session turned into a bearer",
     },
+    "context-endpoint-apps": {
+        "reach": EDGE_SESSION, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "a static app's data calls under its own path, where the apps session becomes the bearer and the gateway's PEP still decides (T-2670)",
+    },
     "gitea-forge": {
         "reach": UPSTREAM, "cacheable": False, "framing": "SAMEORIGIN",
         "why": "the forge authenticates with its own session and Git credentials",

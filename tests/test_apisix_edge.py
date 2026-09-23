@@ -103,7 +103,7 @@ def test_security_response_headers_on_every_route(plugin_configs):
         assert headers["Referrer-Policy"] == expected_referrer, config_id
         expected_frame = "SAMEORIGIN" if config_id in UI_CONFIGS else "DENY"
         assert headers["X-Frame-Options"] == expected_frame, config_id
-        if config_id.removesuffix("-portal") in GATEWAY_UPSTREAMS:
+        if config_id.removesuffix("-portal").removesuffix("-apps") in GATEWAY_UPSTREAMS:
             # T-2262, EP-51: the gateway sets Cache-Control on every answer itself (`private`,
             # `no-store`, or `no-cache` with an ETag on a schema artifact); the edge leaves it be.
             assert "Cache-Control" not in headers, config_id
