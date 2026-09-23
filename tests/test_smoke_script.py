@@ -175,6 +175,10 @@ elif args[0] == "run" and args[1].startswith("smoke-runner"):
         for destination in spec.get("runnerReached", ["DNS"]):
             sys.stdout.write("REACHED-%s\\n" % destination)
         sys.stdout.write("PROBE-RAN\\n")
+elif args[0] == "get" and args[1] == "deployments" and "joinedcontext.com/app=true" in line:
+    # T-2665: the published pod-backed Apps as `ns/name|ready|wanted`; ready None = no pod ready.
+    for name, ready, wanted in spec.get("appDeployments", [["dev/app-air-quality", 1, 1]]):
+        sys.stdout.write("%s|%s|%s\\n" % (name, "" if ready is None else ready, wanted))
 elif args[0] == "get" and args[1] == "pods" and "joinedcontext.com/app=true" in line:
     # AP-108: the running pod-backed Apps' addresses; `appPods: []` is an instance without one.
     sys.stdout.write("".join("%s " % ip for ip in spec.get("appPods", ["10.42.0.20"])))
@@ -1078,3 +1082,21 @@ def test_a_sample_app_the_lane_never_built_fails_the_run(tmp_path):
 def test_an_instance_without_sample_apps_skips_them(tmp_path):
     result = run(tmp_path, dict(HEALTHY, sampleApps=[]), "https://example.test", "https://idm.example.test")
     assert "skip  sample apps (none is seeded in this instance)" in result.stdout
+
+
+def test_a_published_app_whose_pod_is_ready_passes(tmp_path):
+    result = run(tmp_path, dict(HEALTHY), "https://example.test", "https://idm.example.test")
+    assert "ok    App deployment dev/app-air-quality has 1 of 1 pods ready" in result.stdout
+
+
+def test_a_published_app_with_no_ready_pod_fails_the_run(tmp_path):
+    """T-2665: an image the node cannot pull left two Apps in ImagePullBackOff while smoke was green."""
+    spec = dict(HEALTHY, appDeployments=[["dev/app-air-quality", 1, 1], ["dev/app-hsl-transport", None, 1]])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  App deployment dev/app-hsl-transport has 0 of 1 pods ready" in result.stdout
+
+
+def test_an_instance_without_pod_backed_apps_skips_the_readiness(tmp_path):
+    result = run(tmp_path, dict(HEALTHY, appDeployments=[]), "https://example.test", "https://idm.example.test")
+    assert "skip  App deployments (no pod-backed App is published in this instance)" in result.stdout

@@ -832,6 +832,28 @@ else
 	done
 fi
 
+# A pod-backed App the Portal published but whose pod never became ready (T-2665: every
+# fullstack pull failed at the registry's token realm, and dev looked green for eleven hours).
+echo "App deployments"
+app_deployments=$(kubectl get deployments -A -l joinedcontext.com/app=true \
+	-o jsonpath='{range .items[*]}{.metadata.namespace}/{.metadata.name}|{.status.readyReplicas}|{.spec.replicas}{"\n"}{end}' 2>/dev/null || true)
+if [ -z "$app_deployments" ]; then
+	skip "App deployments (no pod-backed App is published in this instance)"
+else
+	# '|', not a space: read would fold an absent readyReplicas into the next field.
+	while IFS='|' read -r name ready wanted; do
+		[ -n "$name" ] || continue
+		# readyReplicas is absent, not 0, while no pod is ready; a scaled-down App wants 0.
+		case "$wanted" in '' | *[!0-9]*) ready_want=1 ;; *) ready_want=$wanted ;; esac
+		case "$ready" in '' | *[!0-9]*) ready=0 ;; esac
+		if [ "$ready" -ge "$ready_want" ]; then
+			ok "App deployment $name has $ready of $ready_want pods ready"
+		else
+			ko "App deployment $name has $ready of $ready_want pods ready (kubectl describe pod -l app.kubernetes.io/name=${name#*/} -n ${name%%/*})"
+		fi
+	done <<<"$app_deployments"
+fi
+
 echo "functions"
 # jc-functions (SDK-22, SDK-23) takes the Portal alone, so the smoke reaches its Service over a
 # port-forward and presents what the Portal presents: portal-api's client_credentials token,
