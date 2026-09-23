@@ -26,6 +26,10 @@ EXPECTED_ROUTES = {
     "context-endpoint": {"uri": "/api/endpoint/*", "priority": 20, "upstream_id": "context-endpoint", "host": LOCAL_DOMAIN},
     # AP-108: the forge's container registry at the apex's root, where a node pulls App images.
     "gitea-registry": {"uri": "/v2/*", "priority": 10, "upstream_id": "gitea-registry", "host": LOCAL_DOMAIN},
+    # containerd's OAuth POST to the token realm, which Gitea answers 404 so it falls back to GET.
+    "gitea-registry-token": {
+        "uri": "/v2/token", "priority": 11, "upstream_id": "gitea-registry-token", "host": LOCAL_DOMAIN,
+    },
     "context-endpoint-portal": {
         "uri": "/api/endpoint/*", "priority": 20, "upstream_id": "context-endpoint-portal", "host": PORTAL_HOST,
     },

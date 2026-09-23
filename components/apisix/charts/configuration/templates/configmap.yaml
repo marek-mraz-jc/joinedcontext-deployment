@@ -64,8 +64,9 @@ data:
         host: {{ $config.host | quote }}
         {{- end }}
         upstream_id: {{ $id }}
-        {{- if hasKey $.Values.plugins $id }}
-        plugin_config_id: {{ $id }}
+        {{- $pluginConfig := $config.pluginConfig | default $id }}
+        {{- if hasKey $.Values.plugins $pluginConfig }}
+        plugin_config_id: {{ $pluginConfig }}
         {{- end }}
 {{- end }}
     #END

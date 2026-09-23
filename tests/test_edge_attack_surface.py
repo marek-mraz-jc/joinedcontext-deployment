@@ -115,6 +115,10 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": False, "framing": "DENY",
         "why": "a node pulls a fullstack App's image with the read:package token the registry checks itself (AP-108); no page is served",
     },
+    "gitea-registry-token": {
+        "reach": UPSTREAM, "cacheable": False, "framing": "DENY",
+        "why": "containerd's OAuth POST to the token realm, which the forge answers 404 so the node falls back to GET (T-2665)",
+    },
     "keycloak": {
         "reach": UPSTREAM, "cacheable": False, "framing": "SAMEORIGIN",
         "why": "the realm is the identity provider; its login pages must be reachable unauthenticated",
@@ -271,7 +275,8 @@ def test_every_component_route_is_named_in_the_reviewed_allow_list(component_rou
 def test_every_route_carries_the_authentication_its_class_names(component_routes, component_plugins):
     """The allow-list is a claim about the route table; this is the claim checked against it."""
     for route_id, expected in ROUTE_CLASSES.items():
-        source, config = component_plugins[route_id]
+        # A route shares another's plugin config when it names one (`pluginConfig`, T-2665).
+        source, config = component_plugins[component_routes[route_id][1].get("pluginConfig", route_id)]
         plugins = config["plugins"]
         oidc = plugins.get("openid-connect")
         reach = expected["reach"]

@@ -151,3 +151,22 @@ def test_apisix_reaches_meshed_app_pods_on_the_inbound_proxy(local):
     ]
     assert len(rules) == 1, rules
     assert rules[0]["ports"] == [{"protocol": "TCP", "port": 4143}]
+
+
+@requires_helmfile
+def test_containerd_oauth_post_to_the_token_realm_reaches_the_forge_and_nothing_else_does(local):
+    """T-2665, AP-108: containerd with a pull Secret POSTs to /v2/token first and falls back to
+    GET only on a 404, which the forge answers. Anywhere else the POST met the portal's catch-all
+    and its HTML redirect, and every fullstack pull failed. POST is admitted on that one path only."""
+    import yaml
+
+    raw = one(local, "ConfigMap", "apisix-standalone-config")["data"]["apisix.yaml"]
+    parsed = yaml.safe_load(raw)
+    token = next(r for r in parsed["routes"] if r["id"] == "gitea-registry-token")
+    registry = next(r for r in parsed["routes"] if r["id"] == "gitea-registry")
+    upstream = next(u for u in parsed["upstreams"] if u["id"] == "gitea-registry-token")
+    assert token["uri"] == "/v2/token" and token["methods"] == ["POST"]
+    assert token["host"] == registry["host"] and token["priority"] > registry["priority"]
+    assert list(upstream["nodes"])[0].startswith("gitea-http.")
+    # The same header clearing and rate limit as every pull.
+    assert token["plugin_config_id"] == "gitea-registry"

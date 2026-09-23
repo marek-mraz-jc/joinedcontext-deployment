@@ -33,3 +33,17 @@ gitea-registry:
     connect: 6
     send: 300
     read: 300
+
+# containerd, holding the pull Secret, first asks the token realm with an OAuth POST and falls
+# back to GET only on a 404. Gitea answers that POST 404 on purpose; without this route the POST
+# reaches the portal's catch-all, whose 302 to an HTML page failed every fullstack pull (T-2665).
+# Exactly /v2/token and POST only, so a push through the edge stays impossible.
+gitea-registry-token:
+  name: gitea-registry-token
+  description: The registry's token realm, POST, for containerd's OAuth attempt
+  upstream: gitea-http.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "gitea") }}.svc.cluster.local:3000 # yamllint disable-line rule:line-length
+  uri: '/v2/token'
+  host: '{{ .Values.global.domain }}'
+  methods: [POST]
+  priority: 11
+  pluginConfig: gitea-registry
