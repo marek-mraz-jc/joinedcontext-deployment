@@ -42,3 +42,29 @@ def test_every_choice_of_a_seeded_blueprint_is_titled():
     for path, doc in blueprints():
         choices(doc["spec"].get("parameterSchema", {}), f"{path.relative_to(ROOT)}", found)
     assert found == []
+
+
+# The widgets the Portal draws (ui/src/components/forms/widgets/index.ts, plus rjsf's own
+# `textarea`); an unknown name silently falls back to a text box (Development/05 §2.1, T-2757).
+WIDGETS = {"entityPicker", "operations", "resourcePicker", "secretRef", "textarea"}
+
+
+def test_every_widget_a_seeded_blueprint_names_is_drawn():
+    named = []
+    for path, doc in blueprints():
+        for name, prop in doc["spec"].get("parameterSchema", {}).get("properties", {}).items():
+            widget = prop.get("x-jc-widget")
+            if widget is not None and widget not in WIDGETS:
+                named.append(f"{path.name}: {name} names {widget!r}")
+    assert named == []
+
+
+def test_the_app_builder_picks_its_endpoint_and_space_and_takes_prose():
+    # T-2757: the endpoint was a text box to type a name into from memory, the prompt one line.
+    (doc,) = [doc for _, doc in blueprints() if doc["metadata"]["name"] == "app-from-prompt"]
+    props = doc["spec"]["parameterSchema"]["properties"]
+    assert props["prompt"]["x-jc-widget"] == "textarea"
+    assert props["endpoint"]["x-jc-widget"] == "resourcePicker"
+    assert props["endpoint"]["x-jc-options"] == {"plural": "endpoints"}
+    assert props["contextSpace"]["x-jc-widget"] == "resourcePicker"
+    assert props["contextSpace"]["x-jc-options"] == {"plural": "spaces"}
