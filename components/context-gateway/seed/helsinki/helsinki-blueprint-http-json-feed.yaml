@@ -20,7 +20,17 @@ spec:
       name: { type: string, title: "Flow name", pattern: "^[a-z][a-z0-9-]{1,40}$", description: "Names the DataSource and the Pipeline, one word with hyphens." }
       url: { type: string, title: "URL of the JSON resource", format: uri }
       entityType: { type: string, title: "Entity type written", pattern: "^[A-Z][A-Za-z0-9]+$", default: Event }
-      period: { type: string, title: "Poll every", enum: [1m, 5m, 15m, 30m, 1h, 1d], default: 30m }
+      period:
+        type: string
+        title: "Poll every"
+        default: 30m
+        oneOf:
+          - { const: 1m, title: "Minute" }
+          - { const: 5m, title: "5 minutes" }
+          - { const: 15m, title: "15 minutes" }
+          - { const: 30m, title: "30 minutes" }
+          - { const: 1h, title: "Hour" }
+          - { const: 1d, title: "Day" }
       schedule: { type: string, title: "Cron schedule", default: "*/30 * * * *", description: "The cron line of the period above." }
       targetEndpoint: { type: string, title: "Endpoint the flow writes through", default: "urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all" }
   templates:

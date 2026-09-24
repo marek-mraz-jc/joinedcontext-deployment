@@ -19,7 +19,14 @@ spec:
     properties:
       name: { type: string, title: "Flow name", pattern: "^[a-z][a-z0-9-]{1,40}$", default: citybikes }
       stationStatusUrl: { type: string, title: "station_status.json URL", format: uri, default: "https://gbfs.theta.fifteen.eu/gbfs/2.2/helsinki/en/station_status.json" }
-      period: { type: string, title: "Poll every", enum: [1m, 5m, 15m], default: 1m }
+      period:
+        type: string
+        title: "Poll every"
+        default: 1m
+        oneOf:
+          - { const: 1m, title: "Minute" }
+          - { const: 5m, title: "5 minutes" }
+          - { const: 15m, title: "15 minutes" }
       targetEndpoint: { type: string, title: "Endpoint the flow writes through", default: "urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all" }
   templates:
     - name: datasource

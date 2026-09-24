@@ -30,7 +30,14 @@ spec:
     additionalProperties: false
     properties:
       name: { type: string, title: "App name", pattern: "^[a-z][a-z0-9-]{1,40}$", description: "The path the app is served at: /apps/{name}/." }
-      kind: { type: string, title: "How it is built and served", enum: [static, service, fullstack], default: static }
+      kind:
+        type: string
+        title: "How it is built and served"
+        default: static
+        oneOf:
+          - { const: static, title: "Static (screens only)" }
+          - { const: service, title: "Service (backend only, no screens)" }
+          - { const: fullstack, title: "Full stack (Rust backend and React screens)" }
       prompt: { type: string, title: "What should the app do", minLength: 10, maxLength: 2000 }
       endpoint: { type: string, title: "Endpoint it reads", pattern: "^[a-z][a-z0-9-]{1,60}$", description: "An Endpoint of this project; the app reads only what it publishes (AP-44)." }
       contextSpace: { type: string, title: "Context Space behind the endpoint", pattern: "^[a-z][a-z0-9-]{1,60}$", default: helsinki }
