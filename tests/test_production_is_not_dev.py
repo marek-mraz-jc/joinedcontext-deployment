@@ -2,7 +2,7 @@
 
 The attack diffs a production render against dev and looks for what only a workbench should
 carry: the demo people and the demo cities' accounts and feeds, debug switches, CORS open to
-any origin, verbose errors, the node's sslip.io host, a placeholder domain, the `dev`
+any origin, verbose errors, the dev cluster's hosts, a placeholder domain, the `dev`
 namespace and realm, and a model key written into the render. Each detector below is proved
 twice: on a hand-made document that carries the defect, so it cannot pass by matching nothing,
 and on the dev render, which carries most of them on purpose. The production render must carry
@@ -76,8 +76,14 @@ def embedded(doc):
             continue
 
 
-def sslip_hosts(docs):
-    return sorted({name_of(d) for d in docs for _, s in strings(d) if "sslip.io" in s})
+DEV_DOMAIN = "dev.joinedcontext.com"
+
+
+def dev_hosts(docs):
+    """The dev cluster's hosts: the node's sslip.io name it had, and dev.joinedcontext.com (T-2806)."""
+    return sorted(
+        {name_of(d) for d in docs for _, s in strings(d) if "sslip.io" in s or DEV_DOMAIN in s}
+    )
 
 
 def placeholder_domains(docs):
@@ -204,7 +210,7 @@ def written_model_keys(docs):
 
 
 DETECTORS = {
-    "sslip_hosts": sslip_hosts,
+    "dev_hosts": dev_hosts,
     "placeholder_domains": placeholder_domains,
     "demo_people": demo_people,
     "demo_accounts_and_feeds": demo_accounts_and_feeds,
@@ -233,7 +239,10 @@ def config_map(content: dict) -> dict:
 
 # One document per detector that carries its defect, the way a careless overlay would write it.
 DEFECTS = {
-    "sslip_hosts": [workload({"JC_PUBLIC_URL": "https://portal.2.28.67.127.sslip.io"})],
+    "dev_hosts": [
+        workload({"JC_PUBLIC_URL": "https://portal.2.28.67.127.sslip.io"}),
+        workload({"JC_PUBLIC_URL": f"https://portal.{DEV_DOMAIN}"}, name="other"),
+    ],
     "placeholder_domains": [workload({"JC_PORTAL_ORG_DOMAIN": "joinedcontext.test"})],
     "demo_people": [workload({"JC_OWNER": f"{DEMO_PEOPLE[0]}@hel.fi"})],
     "demo_accounts_and_feeds": [workload({"JC_CLIENT_ID": f"{DEMO_PROJECTS[0]}-pipelines"})],
@@ -245,13 +254,15 @@ DEFECTS = {
 }
 
 # What the dev render carries on purpose, which is the second proof each of these detectors works.
-ON_DEV = ["sslip_hosts", "demo_people", "demo_accounts_and_feeds", "dev_namespaces_and_realm"]
+ON_DEV = ["dev_hosts", "demo_people", "demo_accounts_and_feeds", "dev_namespaces_and_realm"]
 
 
 @pytest.mark.parametrize("detector", sorted(DETECTORS))
 def test_the_detector_finds_the_defect_it_is_named_for(detector):
     # CC-73: a detector that matches nothing proves nothing about a clean render.
     assert DETECTORS[detector](DEFECTS[detector]), f"{detector} missed its own defect"
+    for defect in DEFECTS[detector]:
+        assert DETECTORS[detector]([defect]), f"{detector} missed {defect}"
     assert DETECTORS[detector]([workload({"JC_LOG": "info"})]) == []
 
 

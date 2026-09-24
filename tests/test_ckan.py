@@ -23,7 +23,7 @@ CHART = PROJECT_ROOT / "charts/ckan"
 requires_helmfile = pytest.mark.skipif(shutil.which("helmfile") is None, reason="helmfile not installed")
 requires_helm = pytest.mark.skipif(shutil.which("helm") is None, reason="helm not installed")
 
-DEV_DOMAIN = "2.28.67.127.sslip.io"
+DEV_DOMAIN = "dev.joinedcontext.com"
 CATALOGUE_HOST = f"data.{DEV_DOMAIN}"
 
 

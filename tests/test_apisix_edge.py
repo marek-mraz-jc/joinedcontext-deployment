@@ -12,6 +12,7 @@ import yaml
 # Headers a client must never be able to set: each one is either a tenancy or authorization
 # claim the platform trusts internally, or a proxy hint APISIX sets itself. One list, shared
 # with the walk over the component sources: two copies of it drifted once already (T-1672).
+from conftest import set_global
 from test_edge_attack_surface import TRUSTED_HEADERS as FORGED_HEADERS
 
 UI_CONFIGS = ("portal-ui", "apps-surface", "keycloak", "gitea-forge")
@@ -231,13 +232,16 @@ def staging_objects(docs: list[dict]) -> dict[str, dict]:
     }
 
 
-def test_new_hostnames_are_proven_on_the_staging_issuer_first(rendered):
+def test_new_hostnames_are_proven_on_the_staging_issuer_first(rendered, rendered_variant):
     """T-2806, OPS-35: a new domain meets Let's Encrypt STAGING before production carries it.
 
     HTTP-01 per hostname (no DNS API exists for the zone, so no DNS-01 and no wildcard), a
     namespaced Issuer so nothing cluster-wide changes, and a Secret nothing serves.
     """
-    objects = staging_objects(rendered("dev"))
+    # dev proved dev.joinedcontext.com this way on 2026-09-24 before `domain` moved to it; a
+    # next move sets stagingDomain the same way.
+    docs = rendered_variant("dev", lambda tree: set_global(tree, "ingress.stagingDomain", "next.example.org"))
+    objects = staging_objects(docs)
     assert "ClusterIssuer" not in objects
     issuer = objects["Issuer"]["spec"]["acme"]
     assert issuer["server"] == "https://acme-staging-v02.api.letsencrypt.org/directory"
@@ -248,20 +252,21 @@ def test_new_hostnames_are_proven_on_the_staging_issuer_first(rendered):
     assert certificate["issuerRef"] == {"name": "letsencrypt-staging", "kind": "Issuer"}
     assert certificate["secretName"] == "apisix-edge-staging-tls"
     assert certificate["dnsNames"] == [
-        "dev.joinedcontext.com",
-        "data.dev.joinedcontext.com",
-        "idm.dev.joinedcontext.com",
-        "portal.dev.joinedcontext.com",
+        "next.example.org",
+        "data.next.example.org",
+        "idm.next.example.org",
+        "portal.next.example.org",
     ]
     assert not any("*" in name for name in certificate["dnsNames"]), "no wildcard over HTTP-01"
 
-    served = edge_objects(rendered("dev"))["Ingress"]["spec"]["tls"][0]["secretName"]
+    served = edge_objects(docs)["Ingress"]["spec"]["tls"][0]["secretName"]
     assert served != certificate["secretName"], "a staging certificate is never served"
 
 
 def test_no_staging_objects_without_a_staging_domain(rendered):
-    """Production and every other environment render no staging Issuer or Certificate."""
+    """Production, and dev once its domain moved, render no staging Issuer or Certificate."""
     assert staging_objects(rendered("production")) == {}
+    assert staging_objects(rendered("dev")) == {}
 
 
 def test_certificate_covers_the_apex_and_every_routed_subdomain(rendered):
@@ -273,10 +278,10 @@ def test_certificate_covers_the_apex_and_every_routed_subdomain(rendered):
     # One entry per hostname: the Portal's three routes share `portal` and must not put it
     # on the certificate three times (ADR-N-019).
     assert certificate["spec"]["dnsNames"] == [
-        "2.28.67.127.sslip.io",
-        "data.2.28.67.127.sslip.io",
-        "idm.2.28.67.127.sslip.io",
-        "portal.2.28.67.127.sslip.io",
+        "dev.joinedcontext.com",
+        "data.dev.joinedcontext.com",
+        "idm.dev.joinedcontext.com",
+        "portal.dev.joinedcontext.com",
     ]
 
     ingress = objects["Ingress"]

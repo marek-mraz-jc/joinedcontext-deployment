@@ -43,7 +43,7 @@ components:
   - portal
 
 global:
-  domain: {{ env "JC_DEV_DOMAIN" | default "2.28.67.127.sslip.io" }}
+  domain: {{ env "JC_DEV_DOMAIN" | default "dev.joinedcontext.com" }}
 
   instanceSlug: dev
 
@@ -67,7 +67,7 @@ global:
     # The publisher's own domain, which is what a DCAT-AP record and a did:web name. The
     # URN segment above is separate and stays until the demo data moves with it (T-0343).
     orgDomain: hel.fi
-    domain: {{ env "JC_DEV_DOMAIN" | default "2.28.67.127.sslip.io" }}
+    domain: {{ env "JC_DEV_DOMAIN" | default "dev.joinedcontext.com" }}
     contactEmail: {{ env "JC_DEV_CONTACT_EMAIL" | default "hello@joinedcontext.com" }}
     licenseDefault: CC-BY-4.0
     logo: logo.svg
@@ -103,9 +103,6 @@ global:
     enabled: true
     clusterIssuer: 'letsencrypt-prod'
     ingressClass: 'traefik'
-    # dev.joinedcontext.com (A and *.dev A at Websupport -> the node) is proven on the
-    # Let's Encrypt staging issuer before `domain` moves to it (T-2806).
-    stagingDomain: 'dev.joinedcontext.com'
 
   storage:
     storageClass:

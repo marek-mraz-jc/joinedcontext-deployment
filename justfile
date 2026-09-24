@@ -417,14 +417,16 @@ install-dependencies:
 # defaults + .ci/example-deployments/environments/dev, so the cluster equals main.
 # ---------------------------------------------------------------------------
 
-dev_domain := env('JC_DEV_DOMAIN', '2.28.67.127.sslip.io')
+dev_domain := env('JC_DEV_DOMAIN', 'dev.joinedcontext.com')
+# The node the dev domain points at; the guard compares it with the kube context's server.
+dev_node_ip := env('JC_DEV_NODE_IP', '2.28.67.127')
 
 # Refuse to touch anything but the dev cluster
 [group('dev cluster')]
 _dev-guard:
 	#!/usr/bin/env bash
 	set -euo pipefail
-	ip="${JC_DEV_DOMAIN:-{{ dev_domain }}}"; ip="${ip%.sslip.io}"
+	ip="{{ dev_node_ip }}"
 	server=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}' 2>/dev/null || true)
 	case "$server" in
 		*"$ip"*) ;;

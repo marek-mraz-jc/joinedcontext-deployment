@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Smoke-test a deployed instance from outside the cluster.
 #   scripts/smoke.sh <base-url> <idm-url>
-# e.g. scripts/smoke.sh https://2.28.67.127.sslip.io https://idm.2.28.67.127.sslip.io
+# e.g. scripts/smoke.sh https://dev.joinedcontext.com https://idm.dev.joinedcontext.com
 #
 # Every check asserts an exact HTTP status over a *valid* TLS chain (no -k), so an
 # expired or missing certificate fails the run. Cluster-side checks (workload
