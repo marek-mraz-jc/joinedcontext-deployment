@@ -45,6 +45,16 @@ edge:
     {{- range $subDomains }}
     - {{ printf "%s.%s" . $global.domain | quote }}
     {{- end }}
+  # A domain the edge is moving to is proven on the staging issuer first (T-2806).
+  {{- $stagingDomain := $global.ingress.stagingDomain | default "" }}
+  stagingHosts:
+    {{- if $stagingDomain }}
+    - {{ $stagingDomain | quote }}
+    {{- range $subDomains }}
+    - {{ printf "%s.%s" . $stagingDomain | quote }}
+    {{- end }}
+    {{- else }} []
+    {{- end }}
 
 # Authorize the ingress edge to reach the APISIX data plane when the
 # namespace enforces mandatory mTLS via the Linkerd default-inbound-policy.

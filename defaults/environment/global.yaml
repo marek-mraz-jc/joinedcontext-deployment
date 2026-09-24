@@ -121,6 +121,9 @@ global:
     # Use your available cluster issuer for production, e.g. 'letsencrypt-prod'
     clusterIssuer: 'selfsigned-ca'
     ingressClass: 'nginx'
+    # A domain the edge is moving to: its hostnames are ordered from Let's Encrypt STAGING
+    # (HTTP-01, namespaced Issuer) before `domain` moves and production carries them.
+    stagingDomain: ''
 
   # Storage class mappings (leave empty to use cluster defaults)
   storage:

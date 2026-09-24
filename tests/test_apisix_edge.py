@@ -215,7 +215,53 @@ def test_the_edge_client_secret_reaches_apisix_from_a_secret_only(rendered):
 
 def edge_objects(docs: list[dict]) -> dict[str, dict]:
     kinds = ("Certificate", "TLSOption", "Ingress")
-    return {d["kind"]: d for d in docs if d.get("kind") in kinds}
+    return {
+        d["kind"]: d
+        for d in docs
+        if d.get("kind") in kinds and d["metadata"]["name"] != "apisix-edge-staging"
+    }
+
+
+def staging_objects(docs: list[dict]) -> dict[str, dict]:
+    return {
+        d["kind"]: d
+        for d in docs
+        if d.get("kind") in ("Issuer", "Certificate", "ClusterIssuer")
+        and d["metadata"]["name"] in ("letsencrypt-staging", "apisix-edge-staging")
+    }
+
+
+def test_new_hostnames_are_proven_on_the_staging_issuer_first(rendered):
+    """T-2806, OPS-35: a new domain meets Let's Encrypt STAGING before production carries it.
+
+    HTTP-01 per hostname (no DNS API exists for the zone, so no DNS-01 and no wildcard), a
+    namespaced Issuer so nothing cluster-wide changes, and a Secret nothing serves.
+    """
+    objects = staging_objects(rendered("dev"))
+    assert "ClusterIssuer" not in objects
+    issuer = objects["Issuer"]["spec"]["acme"]
+    assert issuer["server"] == "https://acme-staging-v02.api.letsencrypt.org/directory"
+    assert issuer["solvers"] == [{"http01": {"ingress": {"ingressClassName": "traefik"}}}]
+    assert "email" not in issuer, "no personal address in Git; the ACME account needs none"
+
+    certificate = objects["Certificate"]["spec"]
+    assert certificate["issuerRef"] == {"name": "letsencrypt-staging", "kind": "Issuer"}
+    assert certificate["secretName"] == "apisix-edge-staging-tls"
+    assert certificate["dnsNames"] == [
+        "dev.joinedcontext.com",
+        "data.dev.joinedcontext.com",
+        "idm.dev.joinedcontext.com",
+        "portal.dev.joinedcontext.com",
+    ]
+    assert not any("*" in name for name in certificate["dnsNames"]), "no wildcard over HTTP-01"
+
+    served = edge_objects(rendered("dev"))["Ingress"]["spec"]["tls"][0]["secretName"]
+    assert served != certificate["secretName"], "a staging certificate is never served"
+
+
+def test_no_staging_objects_without_a_staging_domain(rendered):
+    """Production and every other environment render no staging Issuer or Certificate."""
+    assert staging_objects(rendered("production")) == {}
 
 
 def test_certificate_covers_the_apex_and_every_routed_subdomain(rendered):

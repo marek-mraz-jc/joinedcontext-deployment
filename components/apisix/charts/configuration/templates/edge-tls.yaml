@@ -23,6 +23,48 @@ spec:
     {{- range $edge.hosts }}
     - {{ . | quote }}
     {{- end }}
+{{- if $edge.stagingHosts }}
+---
+# Staging first (T-2806, OPS-35): a failed or looping order here costs nothing, while five
+# failed validations an hour lock a hostname out of production for a week. Namespaced, so
+# the cluster's own issuers stay as the kit made them; no e-mail, the account needs none.
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt-staging
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "configuration.labels" . | nindent 4 }}
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-staging-account-key
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: {{ $edge.ingressClass | quote }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: apisix-edge-staging
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "configuration.labels" . | nindent 4 }}
+spec:
+  secretName: apisix-edge-staging-tls
+  issuerRef:
+    name: letsencrypt-staging
+    kind: Issuer
+  dnsNames:
+    {{- range $edge.stagingHosts }}
+    {{- if contains "*" . }}
+    {{- fail (printf "edge.stagingHosts: %q is a wildcard, which HTTP-01 cannot prove" .) }}
+    {{- end }}
+    - {{ . | quote }}
+    {{- end }}
+{{- end }}
 {{- if eq $edge.ingressClass "traefik" }}
 ---
 apiVersion: traefik.io/v1alpha1

@@ -31,6 +31,10 @@ edge:
   clusterIssuer: ''
   ingressClass: ''
   hosts: []
+  # Hostnames to prove against Let's Encrypt STAGING before the production certificate
+  # carries them (T-2806): a namespaced Issuer, HTTP-01 per hostname, and a Secret no
+  # listener serves. Empty renders nothing.
+  stagingHosts: []
 
 # Service mesh integration: a Linkerd `Server` marks the APISIX data plane as the
 # public edge reachable by the ingress controller.

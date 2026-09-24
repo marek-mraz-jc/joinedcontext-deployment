@@ -103,6 +103,9 @@ global:
     enabled: true
     clusterIssuer: 'letsencrypt-prod'
     ingressClass: 'traefik'
+    # dev.joinedcontext.com (A and *.dev A at Websupport -> the node) is proven on the
+    # Let's Encrypt staging issuer before `domain` moves to it (T-2806).
+    stagingDomain: 'dev.joinedcontext.com'
 
   storage:
     storageClass:
