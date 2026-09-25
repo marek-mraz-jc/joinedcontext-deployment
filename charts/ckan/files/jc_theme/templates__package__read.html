@@ -1,0 +1,59 @@
+{% ckan_extends %}
+{#
+  The dataset page for people (T-2744, DS-01): the description as CKAN's sanitised Markdown,
+  then what a reader asks first (who publishes it, under which licence, how fresh it is), the
+  live API with an example, the downloads by format, and the rest of the metadata as labels.
+#}
+
+{% block package_notes %}
+  {{ super() }}
+  {% set about = h.jc_about(pkg) %}
+  {% if about %}
+    <section class="jc-about" aria-labelledby="jc-about-title">
+      <h2 id="jc-about-title">{{ h.jc_t('about') }}</h2>
+      <dl class="jc-about-list">
+        {% for label, text, link in about %}
+          <dt>{{ label }}</dt>
+          <dd>{% if link %}<a href="{{ link }}" rel="noopener">{{ text }}</a>{% else %}{{ text }}{% endif %}</dd>
+        {% endfor %}
+      </dl>
+    </section>
+  {% endif %}
+  {% set live = h.jc_live(pkg) %}
+  {% if live %}
+    <section class="jc-live" aria-labelledby="jc-live-title">
+      <h2 id="jc-live-title">{{ h.jc_t('live') }}</h2>
+      <p>{{ h.jc_t('live_lead') }}</p>
+      <div class="jc-copy">
+        <label for="jc-live-url" class="visually-hidden">{{ h.jc_t('live') }}</label>
+        <input id="jc-live-url" class="form-control" type="text" readonly value="{{ live.url }}">
+        <button type="button" class="btn btn-default" data-jc-copy="jc-live-url" data-jc-copied="{{ h.jc_t('copied') }}">{{ h.jc_t('copy') }}</button>
+      </div>
+      <p class="jc-example-label" id="jc-example-label">{{ h.jc_t('example') }}</p>
+      <pre aria-labelledby="jc-example-label"><code>{{ live.example }}</code></pre>
+      <p class="visually-hidden" role="status" aria-live="polite" id="jc-copy-status"></p>
+    </section>
+  {% endif %}
+{% endblock %}
+
+{% block package_tags %}{% endblock %}
+
+{% block package_additional_info %}
+  {% set more = h.jc_more(pkg) %}
+  {% if more %}
+    <section class="additional-info" aria-labelledby="jc-more-title">
+      <h2 id="jc-more-title">{{ h.jc_t('more') }}</h2>
+      <dl class="jc-about-list">
+        {% for key, value in more %}
+          <dt>{{ _(key|replace('_', ' ')|capitalize) }}</dt>
+          <dd>{{ value }}</dd>
+        {% endfor %}
+      </dl>
+    </section>
+  {% endif %}
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script src="{{ h.url_for_static('/jc-copy.js') }}" defer></script>
+{% endblock %}

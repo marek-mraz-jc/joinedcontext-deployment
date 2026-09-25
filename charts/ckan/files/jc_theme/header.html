@@ -20,12 +20,32 @@
   .masthead a, .navbar a, .navbar-brand { color: var(--jc-primary-fg); }
   .btn-primary { background: var(--jc-primary); border-color: var(--jc-primary); color: var(--jc-primary-fg); }
   .homepage .module-content h1 { color: var(--jc-primary); }
-  .site-footer { background: var(--jc-secondary); color: #ffffff; }
+  {# The footer reads text on background, the one pair the branding block chooses to be legible. #}
+  .site-footer { background: var(--jc-background); color: var(--jc-text); border-top: 4px solid var(--jc-secondary); }
+  .site-footer p, .site-footer a, .site-footer label, .site-footer .attribution p { color: var(--jc-text); }
   .badge, .label-default { background: var(--jc-accent); color: var(--jc-text); }
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--jc-primary); outline-offset: 2px; }
+  .jc-about, .jc-live { margin-block: 1.5rem; }
+  .jc-about-list { display: grid; grid-template-columns: minmax(8rem, max-content) 1fr; gap: .25rem 1rem; }
+  .jc-about-list dt { font-weight: 600; }
+  .jc-about-list dd { margin: 0; overflow-wrap: anywhere; }
+  .jc-copy { display: flex; gap: .5rem; }
+  .jc-live pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .jc-format { font-size: 1.15rem; margin-block: 1rem .25rem; }
+  .jc-format-what { font-weight: normal; }
+  @media (max-width: 480px) { .jc-about-list { grid-template-columns: 1fr; } .jc-about-list dd { margin-bottom: .5rem; } }
 </style>
 {{ super() }}
 {% endblock %}
 
 {% block header_site_navigation_tabs %}
   {{ super() }}
+{% endblock %}
+
+{# Staff who signed in get the way back to the Portal beside CKAN's own dashboard (T-2744). #}
+{% block header_dashboard %}
+  {{ super() }}
+  {% if h.jc_portal_url() %}
+    <li><a href="{{ h.jc_portal_url() }}"><span class="text">{{ h.jc_t('portal') }}</span></a></li>
+  {% endif %}
 {% endblock %}
