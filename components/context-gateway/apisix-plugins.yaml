@@ -2,6 +2,9 @@
 context-space:
   name: context-space
   description: Context space direct NGSI-LD security and filtering
+  # Every method but GET and HEAD, which the -read route counts apart: the Organization's
+  # spec.limits.edge.requestsPerMinute.dataWrite replaces the count below (ADR-N-035).
+  rateClass: dataWrite
   plugins:
     request-id:
       include_in_response: true
@@ -135,6 +138,9 @@ catalog-feed:
 context-space-portal:
   name: context-space-portal
   description: Context space NGSI-LD surface on the Portal host, the edge session as the bearer
+  # Every method but GET and HEAD, which the -read route counts apart: the Organization's
+  # spec.limits.edge.requestsPerMinute.dataWrite replaces the count below (ADR-N-035).
+  rateClass: dataWrite
   plugins:
     request-id:
       include_in_response: true

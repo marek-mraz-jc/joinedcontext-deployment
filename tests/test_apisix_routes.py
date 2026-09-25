@@ -22,6 +22,13 @@ EXPECTED_ROUTES = {
     "portal-metrics": {"uri": "/metrics", "priority": 5, "upstream_id": "portal-metrics", "host": PORTAL_HOST},
     "portal-redirect": {"uri": "/*", "priority": 1, "upstream_id": "portal-redirect", "host": LOCAL_DOMAIN},
     "context-space": {"uri": "/cs/*", "priority": 15, "upstream_id": "context-space", "host": LOCAL_DOMAIN},
+    # T-2892: the reads of the space surface, with its chain and a bucket of their own.
+    "context-space-read": {
+        "uri": "/cs/*", "priority": 16, "upstream_id": "context-space-read", "host": LOCAL_DOMAIN,
+    },
+    "context-space-portal-read": {
+        "uri": "/cs/*", "priority": 16, "upstream_id": "context-space-portal-read", "host": PORTAL_HOST,
+    },
     "context-endpoint": {"uri": "/api/endpoint/*", "priority": 20, "upstream_id": "context-endpoint", "host": LOCAL_DOMAIN},
     # AP-108: the forge's container registry at the apex's root, where a node pulls App images.
     "gitea-registry": {"uri": "/v2/*", "priority": 10, "upstream_id": "gitea-registry", "host": LOCAL_DOMAIN},
