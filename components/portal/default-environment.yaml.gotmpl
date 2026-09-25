@@ -23,3 +23,10 @@ portal:
     appMirror:
       githubOwner: ''
       secret: github-app-mirror
+  # Each project's own namespace for its pod-backed Apps, `{instanceSlug}-{project}-apps`
+  # (AP-116): the cluster-wide rights the Portal creates them with and the admission policy that
+  # keeps those rights to such namespaces (AP-117). Off means no pod-backed App runs: the Portal
+  # gets no release name and says so on every App that needs a pod.
+  namespaces:
+    enabled: true
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "portal") }}

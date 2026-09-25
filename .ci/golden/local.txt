@@ -1,4 +1,6 @@
 admissionregistration.k8s.io/v1/MutatingWebhookConfiguration -/cnpg-mutating-webhook-configuration
+admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/local-portal-apps-namespaces
+admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/local-portal-apps-namespaces
 admissionregistration.k8s.io/v1/ValidatingWebhookConfiguration -/cnpg-validating-webhook-configuration
 apiextensions.k8s.io/v1/CustomResourceDefinition -/backups.postgresql.cnpg.io
 apiextensions.k8s.io/v1/CustomResourceDefinition -/clusterimagecatalogs.postgresql.cnpg.io
@@ -45,6 +47,7 @@ networking.k8s.io/v1/NetworkPolicy local/acme-http01-solver
 networking.k8s.io/v1/NetworkPolicy local/apisix
 networking.k8s.io/v1/NetworkPolicy local/apisix-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy local/apisix-linkerd-control-plane
+networking.k8s.io/v1/NetworkPolicy local/apisix-project-apps
 networking.k8s.io/v1/NetworkPolicy local/artifact-store
 networking.k8s.io/v1/NetworkPolicy local/artifact-store-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy local/artifact-store-bucket
@@ -150,10 +153,13 @@ postgresql.cnpg.io/v1/Database local/antares
 postgresql.cnpg.io/v1/Database local/gitea
 postgresql.cnpg.io/v1/Database local/keycloak
 postgresql.cnpg.io/v1/Database local/portal
+rbac.authorization.k8s.io/v1/ClusterRole -/local-portal-apps
+rbac.authorization.k8s.io/v1/ClusterRole -/local-portal-namespaces
 rbac.authorization.k8s.io/v1/ClusterRole -/postgres-operator-cloudnative-pg
 rbac.authorization.k8s.io/v1/ClusterRole -/postgres-operator-cloudnative-pg-edit
 rbac.authorization.k8s.io/v1/ClusterRole -/postgres-operator-cloudnative-pg-view
 rbac.authorization.k8s.io/v1/ClusterRole -/sandbox-reaper-reaper
+rbac.authorization.k8s.io/v1/ClusterRoleBinding -/local-portal-namespaces
 rbac.authorization.k8s.io/v1/ClusterRoleBinding -/postgres-operator-cloudnative-pg
 rbac.authorization.k8s.io/v1/ClusterRoleBinding -/sandbox-reaper-reaper
 rbac.authorization.k8s.io/v1/Role local/gitea-bootstrap

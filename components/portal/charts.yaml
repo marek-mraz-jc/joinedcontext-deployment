@@ -2,3 +2,5 @@
 portal:
   portal:
     chart: ../../charts/workload
+  namespaces:
+    chart: charts/namespaces

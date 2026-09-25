@@ -1,0 +1,6 @@
+---
+release: {{ .Values.global.instanceSlug | quote }}
+serviceAccount:
+  # fullnameOverride of the portal part names its ServiceAccount.
+  name: portal
+  namespace: {{ .Values.portal.portal.namespace | quote }}
