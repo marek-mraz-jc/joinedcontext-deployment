@@ -350,3 +350,22 @@ def test_production_admits_no_unmeshed_pod_and_its_edge_takes_only_mesh_traffic(
     open_servers = sorted(n for n, s in servers.items() if s.get("accessPolicy") == "all-unauthenticated")
     assert open_servers == ["apisix-configuration-acme-http01-solver"], open_servers
     assert servers["apisix-configuration-apisix-gateway"]["accessPolicy"] == "all-authenticated"
+
+
+def test_the_linkerd_cni_plugin_is_given_its_opt_out_reason_and_nothing_else_is(rendered):
+    """T-2832: the linkerd2-cni chart opts its DaemonSet out of injection with no way to add an
+    annotation, and justify-linkerd-inject-opt-out refused it at admission on dev. The reason is
+    written for the plugin's own namespace only: every other opt-out still has to state its own."""
+    docs = rendered("production")
+    policy = next(d for d in docs if d.get("kind") == "ClusterPolicy"
+                  and d["metadata"]["name"] == "explain-linkerd-cni-opt-out")
+    rules = policy["spec"]["rules"]
+    assert {r["name"] for r in rules} == {"linkerd-cni-daemonset-reason", "linkerd-cni-pod-reason"}
+    for rule in rules:
+        for match in rule["match"]["any"]:
+            assert match["resources"]["namespaces"] == ["linkerd-cni"], rule["name"]
+        assert "validate" not in rule, "it states a reason; it refuses nothing and exempts nothing else"
+    daemonset, pod = (next(r for r in rules if r["name"] == name)["mutate"]["patchStrategicMerge"]
+                      for name in ("linkerd-cni-daemonset-reason", "linkerd-cni-pod-reason"))
+    reason = daemonset["spec"]["template"]["metadata"]["annotations"]["mesh.joinedcontext.com/opt-out-reason"]
+    assert reason.strip() and pod["metadata"]["annotations"]["mesh.joinedcontext.com/opt-out-reason"] == reason
