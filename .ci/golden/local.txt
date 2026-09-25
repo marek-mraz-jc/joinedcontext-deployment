@@ -33,6 +33,7 @@ batch/v1/Job local/keycloak-config-keycloak-config-cli
 cert-manager.io/v1/Certificate local/apisix-edge
 kyverno.io/v1/ClusterPolicy -/drop-all-capabilities
 kyverno.io/v1/ClusterPolicy -/exclude-acme-solver-from-mesh
+kyverno.io/v1/ClusterPolicy -/explain-linkerd-cni-opt-out
 kyverno.io/v1/ClusterPolicy -/justify-api-token-access
 kyverno.io/v1/ClusterPolicy -/justify-linkerd-inject-opt-out
 kyverno.io/v1/ClusterPolicy -/protect-operator-owned-labels
