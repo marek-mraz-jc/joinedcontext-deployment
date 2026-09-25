@@ -19,12 +19,11 @@ from pathlib import Path
 import pytest
 import yaml
 
-# Renders from the one shared `deployment/environments/testing` folder, which it rewrites, so
-# every module that does runs on one xdist worker (ci.yml runs `-n auto --dist loadgroup`).
-pytestmark = pytest.mark.xdist_group("deployment-environments-testing")
+# Writes `deployment/environments/testing` in its own copy of the tree (`own_tree`), so it
+# shares nothing with another module. Its own xdist group keeps the module on one worker, so its
+# module-scoped renders happen once rather than once per worker (T-2895).
+pytestmark = pytest.mark.xdist_group("namespace-modes")
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEPLOYMENT = PROJECT_ROOT / "deployment"
 SLUG = "dev"
 
 #: A fully qualified in-cluster host, `<service>.<namespace>.svc.cluster.local`: the form that
@@ -38,8 +37,8 @@ BARE_HOST_PORT = re.compile(
 )
 
 
-def _render(mode: bool) -> list[dict]:
-    env_dir = DEPLOYMENT / "environments" / "testing"
+def _render(deployment: Path, mode: bool) -> list[dict]:
+    env_dir = deployment / "environments" / "testing"
     if env_dir.exists():
         shutil.rmtree(env_dir)
     env_dir.mkdir(parents=True)
@@ -49,7 +48,7 @@ def _render(mode: bool) -> list[dict]:
     try:
         result = subprocess.run(
             ["helmfile", "template", "-f", "helmfile.yaml", "--skip-deps", "-e", "testing"],
-            cwd=DEPLOYMENT,
+            cwd=deployment,
             capture_output=True,
             text=True,
             check=False,
@@ -61,17 +60,13 @@ def _render(mode: bool) -> list[dict]:
 
 
 @pytest.fixture(scope="module")
-def single() -> list[dict]:
-    if not (DEPLOYMENT / "environments").is_dir():
-        pytest.skip("run `just _dev-assemble` first")
-    return _render(True)
+def single(own_tree) -> list[dict]:
+    return _render(own_tree / "deployment", True)
 
 
 @pytest.fixture(scope="module")
-def multi() -> list[dict]:
-    if not (DEPLOYMENT / "environments").is_dir():
-        pytest.skip("run `just _dev-assemble` first")
-    return _render(False)
+def multi(own_tree) -> list[dict]:
+    return _render(own_tree / "deployment", False)
 
 
 def _namespaces(docs: list[dict]) -> set[str]:

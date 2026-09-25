@@ -13,11 +13,11 @@ from pathlib import Path
 import pytest
 import yaml
 
-# Renders from the one shared `deployment/environments/testing` folder, which it rewrites, so
-# every module that does runs on one xdist worker (ci.yml runs `-n auto --dist loadgroup`).
-pytestmark = pytest.mark.xdist_group("deployment-environments-testing")
+# Writes `deployment/environments/testing` in its own copy of the tree (`own_tree`), so it
+# shares nothing with another module. Its own xdist group keeps the module on one worker, so its
+# module-scoped renders happen once rather than once per worker (T-2895).
+pytestmark = pytest.mark.xdist_group("audit-logging")
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
 IMAGE = "docker.io/timberio/vector:0.58.0-distroless-libc"
 requires_docker = pytest.mark.skipif(shutil.which("docker") is None, reason="docker not installed")
 
@@ -193,13 +193,11 @@ def test_the_component_is_off_until_a_bucket_is_named(local):
     ],
     ids=["retention-below-the-requirement", "lock-mode-an-admin-can-shorten", "no-bucket"],
 )
-def test_a_configuration_that_would_not_meet_the_requirement_stops_the_render(overrides, message):
+def test_a_configuration_that_would_not_meet_the_requirement_stops_the_render(own_tree, overrides, message):
     """All three are silent at apply time: the collector starts, reports healthy, and the
     trail it writes is one nobody can rely on. They are refused while they are still text."""
     if shutil.which("helmfile") is None:
         pytest.skip("helmfile not installed")
-    if not (PROJECT_ROOT / "deployment/environments").is_dir():
-        pytest.skip("run `just _dev-assemble` first")
     collector = {
         "enabled": True,
         "bucket": overrides.get("bucket", "jc-audit"),
@@ -208,7 +206,7 @@ def test_a_configuration_that_would_not_meet_the_requirement_stops_the_render(ov
         "retentionDays": overrides.get("retentionDays", 90),
         "objectLockMode": overrides.get("objectLockMode", "COMPLIANCE"),
     }
-    env_dir = PROJECT_ROOT / "deployment/environments/testing"
+    env_dir = own_tree / "deployment/environments/testing"
     shutil.rmtree(env_dir, ignore_errors=True)
     env_dir.mkdir(parents=True)
     (env_dir / "global.yaml.gotmpl").write_text(
@@ -218,7 +216,7 @@ def test_a_configuration_that_would_not_meet_the_requirement_stops_the_render(ov
         result = subprocess.run(
             ["helmfile", "-f", "deployment/helmfile.yaml", "-e", "testing", "template",
              "--skip-deps", "-q", "--selector", "component=audit-logging"],
-            cwd=str(PROJECT_ROOT), capture_output=True, text=True,
+            cwd=str(own_tree), capture_output=True, text=True,
         )
     finally:
         shutil.rmtree(env_dir, ignore_errors=True)

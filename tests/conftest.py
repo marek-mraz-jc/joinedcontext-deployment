@@ -1,10 +1,11 @@
 """Shared, cached environment renders.
 
 Rendering one environment takes about half a minute, and several modules want the same
-one, so the render happens once per session per environment and every test reads the same
+one, so the render happens once per run per environment and every test reads the same
 list of documents.
 """
 
+import fcntl
 import shutil
 import subprocess
 from pathlib import Path
@@ -14,12 +15,18 @@ import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 RENDER_SH = PROJECT_ROOT / "scripts/render.sh"
+TREE_IGNORE = shutil.ignore_patterns(".git", "__pycache__", ".pytest_cache", "node_modules")
 
 
 @pytest.fixture(scope="session")
-def rendered(tmp_path_factory):
+def rendered(tmp_path_factory, worker_id):
     cache: dict[str, list[dict]] = {}
-    out_dir = tmp_path_factory.mktemp("rendered")
+    # Under xdist every worker is its own session, and each rendered the same environments
+    # again (T-2895). The workers share the parent of their base temp directories, so the
+    # first one to ask renders under a lock and the others read its file.
+    base = tmp_path_factory.getbasetemp()
+    out_dir = base.parent / "rendered" if worker_id != "master" else base / "rendered"
+    out_dir.mkdir(exist_ok=True)
 
     def _rendered(env: str) -> list[dict]:
         if env not in cache:
@@ -30,15 +37,36 @@ def rendered(tmp_path_factory):
             if not (PROJECT_ROOT / f"deployment/environments/{env}").is_dir():
                 pytest.skip("run `just _dev-assemble` first")
             out = out_dir / f"{env}.yaml"
-            result = subprocess.run(
-                [str(RENDER_SH), env, str(out)],
-                cwd=str(PROJECT_ROOT), capture_output=True, text=True,
-            )
-            assert result.returncode == 0, result.stderr
+            with open(out_dir / f"{env}.lock", "w") as lock:
+                fcntl.flock(lock, fcntl.LOCK_EX)
+                # A finished render is renamed into place, so a file that exists is whole.
+                if not out.exists():
+                    partial = out_dir / f"{env}.partial.yaml"
+                    result = subprocess.run(
+                        [str(RENDER_SH), env, str(partial)],
+                        cwd=str(PROJECT_ROOT), capture_output=True, text=True,
+                    )
+                    assert result.returncode == 0, result.stderr
+                    partial.rename(out)
             cache[env] = [d for d in yaml.safe_load_all(out.read_text()) if isinstance(d, dict)]
         return cache[env]
 
     return _rendered
+
+
+@pytest.fixture(scope="module")
+def own_tree(tmp_path_factory):
+    """A copy of the repository for a module that writes `deployment/environments/testing`.
+
+    Modules writing that one shared folder had to run on one xdist worker, where their renders
+    queued for four and a half minutes of the fast lane (T-2895). The copy is 13 MB and takes a
+    fifth of a second, so each module (on each worker) writes its own and they run side by side.
+    """
+    if not (PROJECT_ROOT / "deployment/environments").is_dir():
+        pytest.skip("run `just _dev-assemble` first")
+    tree = tmp_path_factory.mktemp("tree") / "repo"
+    shutil.copytree(PROJECT_ROOT, tree, ignore=TREE_IGNORE)
+    return tree
 
 
 @pytest.fixture
@@ -61,10 +89,7 @@ def rendered_variant(tmp_path_factory):
             pytest.skip("run `just _dev-assemble` first")
         count += 1
         tree = made / f"tree-{count}"
-        shutil.copytree(
-            PROJECT_ROOT, tree,
-            ignore=shutil.ignore_patterns(".git", "__pycache__", ".pytest_cache", "node_modules"),
-        )
+        shutil.copytree(PROJECT_ROOT, tree, ignore=TREE_IGNORE)
         edit(tree)
         out = made / f"{env}-{count}.yaml"
         result = subprocess.run(
@@ -107,6 +132,13 @@ def set_global(tree, dotted: str, value):
         target = target[key]
     target[leaf] = value
     path.write_text(yaml.safe_dump(values, sort_keys=False))
+
+
+@pytest.fixture(scope="session")
+def worker_id(request):
+    """The xdist worker's name, or "master" in a run without xdist (its own fixture when
+    pytest-xdist is installed; this one stands in when it is not)."""
+    return getattr(request.config, "workerinput", {}).get("workerid", "master")
 
 
 def pytest_configure(config):
