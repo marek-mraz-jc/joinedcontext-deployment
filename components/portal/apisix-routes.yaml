@@ -42,17 +42,6 @@ portal-api:
   subDomain: portal
   priority: 10
 
-# The shared apps surface on the apex (AP-26): static bundles served by the Portal behind the
-# edge login. jcctl renders the `app-{name}` routes (`/apps/{name}/*`) at priority 30, above
-# this one; every other apex surface sits below it on a path it never matches.
-apps-surface:
-  name: apps-surface
-  description: Static apps on demand
-  upstream: portal.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "portal") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
-  uri: '/apps/*'
-  host: '{{ .Values.global.domain }}'
-  priority: 25
-
 # The lowest-priority apex route: whatever no other apex route serves is sent to the Portal
 # host (see apisix-plugins.yaml). Bound to the apex, or it would also match idm.<domain> and
 # swallow the login pages.

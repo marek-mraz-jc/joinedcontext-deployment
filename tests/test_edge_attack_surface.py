@@ -83,10 +83,6 @@ ROUTE_CLASSES = {
         "reach": TERMINATES, "cacheable": False, "framing": "DENY",
         "why": "the scrape path answers 404 at the edge; the ServiceMonitor reaches the pod (OPS-16)",
     },
-    "apps-surface": {
-        "reach": EDGE_LOGIN, "cacheable": True, "framing": "SAMEORIGIN",
-        "why": "a path under /apps/ that belongs to no App asks for a login before it shows anything",
-    },
     "portal-redirect": {
         "reach": TERMINATES, "cacheable": False, "framing": "DENY",
         "why": "the apex answers 302 to the Portal host and never dials an upstream",
@@ -106,10 +102,6 @@ ROUTE_CLASSES = {
     "context-endpoint-portal": {
         "reach": EDGE_SESSION, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "the same surface on the Portal's origin, with the edge session turned into a bearer",
-    },
-    "context-endpoint-apps": {
-        "reach": EDGE_SESSION, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
-        "why": "a static app's data calls under its own path, where the apps session becomes the bearer and the gateway's PEP still decides (T-2670)",
     },
     "gitea-forge": {
         "reach": UPSTREAM, "cacheable": False, "framing": "SAMEORIGIN",
@@ -142,6 +134,15 @@ ROUTE_CLASSES = {
     "ckan-redirect": {
         "reach": TERMINATES, "cacheable": False, "framing": "DENY",
         "why": "/ckan on the apex answers 302 to the catalogue host and never dials an upstream",
+    },
+}
+
+# Plugin configs no route of the base names: the Portal copies each onto the routes it composes
+# (ADR-N-037), so they carry the headers and the limit of the class those routes get.
+TEMPLATE_CLASSES = {
+    "apps-surface": {
+        "reach": EDGE_LOGIN, "cacheable": True, "framing": "SAMEORIGIN",
+        "why": "every App's own host, whose pages ask for a login before they show anything (AP-133)",
     },
 }
 
@@ -309,7 +310,7 @@ def test_a_route_that_reaches_its_upstream_anonymously_is_rate_limited(component
     """An unauthenticated route with no bucket is a free amplifier for whoever finds it. The
     routes that terminate at the edge are bounded too — answering 302 still costs a worker."""
     for route_id, (source, config) in component_plugins.items():
-        if ROUTE_CLASSES[route_id]["reach"] == EDGE_LOGIN:
+        if {**ROUTE_CLASSES, **TEMPLATE_CLASSES}[route_id]["reach"] == EDGE_LOGIN:
             continue  # the login front answers a redirect to the realm before anything else
         limit = config["plugins"].get("limit-count")
         assert limit, f"{route_id} ({source}) passes anonymous traffic with no limit-count"
@@ -345,7 +346,7 @@ def test_framing_and_caching_follow_the_class_the_allow_list_gives_the_route(com
     surface that serves its own static assets may be cached; everything else is `no-store`,
     so an answer that depended on a token never sits in a shared cache."""
     for route_id, (source, config) in component_plugins.items():
-        expected = ROUTE_CLASSES[route_id]
+        expected = {**ROUTE_CLASSES, **TEMPLATE_CLASSES}[route_id]
         headers = response_headers(config)
         assert headers["X-Frame-Options"] == expected["framing"], f"{route_id} ({source})"
         if expected["cacheable"] == UPSTREAM_DECIDES:

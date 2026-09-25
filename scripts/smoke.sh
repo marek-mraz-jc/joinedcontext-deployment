@@ -886,13 +886,13 @@ else
 	done <<<"$app_deployments"
 fi
 
-# The routes the Portal adds to the edge file per published App (T-2668, ADR-N-030, AP-28,
-# AP-29). A public App serves an anonymous visitor; any other sends the visitor to the realm's
-# login with the App's own client `app-{name}`. The shared `edge` client there means the request
-# fell through to the fallback surface: the Portal wrote no route for that App.
+# The routes the Portal adds to the edge file per published App (T-2668, ADR-N-030, ADR-N-037,
+# AP-28, AP-29, AP-133). Each App is served on its own host: a public App serves an anonymous
+# visitor there; any other sends the visitor to the realm's login with the App's own client
+# `app-{name}`. The old path on the apex answers a 308 to the host and sets no cookie.
 echo "App routes"
-if ! has_route apps-surface; then
-	skip "App routes (route apps-surface not configured in this instance)"
+if ! has_route portal-ui; then
+	skip "App routes (route portal-ui not configured in this instance)"
 elif [ -z "$demo_token" ]; then
 	skip "App routes (no demo user token to list the published Apps with)"
 else
@@ -912,11 +912,19 @@ for app in items:
 	fi
 	while read -r app visibility; do
 		[ -n "$app" ] || continue
+		host="https://$app.apps.${base#https://}"
+		moved=$(curl -sS -o /dev/null -D - --max-time 20 "$base/apps/$app/" 2>/dev/null | tr -d '\r' || true)
+		if grep -qE '^HTTP/[0-9.]+ 308' <<<"$moved" && grep -qix "location: $host/" <<<"$moved" &&
+			! grep -qi '^set-cookie:' <<<"$moved"; then
+			ok "App $app's old path answers 308 to $host/ with no cookie"
+		else
+			ko "App $app's old path does not move to its host without a cookie (got: $(head -1 <<<"$moved"))"
+		fi
 		if [ "$visibility" = public ]; then
-			status 200 "public App $app answers an anonymous visitor at the edge" "$base/apps/$app/"
+			status 200 "public App $app answers an anonymous visitor on its own host" "$host/"
 			continue
 		fi
-		location=$(curl -sS -o /dev/null -w '%{redirect_url}' --max-time 20 "$base/apps/$app/" 2>/dev/null || true)
+		location=$(curl -sS -o /dev/null -w '%{redirect_url}' --max-time 20 "$host/" 2>/dev/null || true)
 		case "$location" in
 			"$idm/realms/$realm/protocol/openid-connect/auth?"*) ;;
 			*) location="" ;;
