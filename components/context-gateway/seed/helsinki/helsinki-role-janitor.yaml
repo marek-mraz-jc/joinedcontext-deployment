@@ -16,6 +16,7 @@ spec:
         - ContextSpace
         - DataModel
         - Endpoint
+        - ModelProjection
         - Policy
         - Pipeline
         - DataSource

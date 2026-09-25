@@ -348,7 +348,7 @@ if has_route portal-api; then
 			"spaces ContextSpace projects__helsinki__spaces__[a-z0-9-]*__space\.yaml"; do
 			set -- $kind
 			plural=$1 manifest_kind=$2 seed_pattern=$3
-			if ! printf '%s' "$seed" | grep -q "$seed_pattern"; then
+			if ! grep -q "$seed_pattern" <<<"$seed"; then
 				skip "helsinki $plural residue (no Helsinki seed in this instance)"
 				continue
 			fi
