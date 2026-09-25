@@ -16,7 +16,7 @@ what an honest stub does with a request it does not understand.
 The state file (`JC_FAKE_FORGE_STATE`) holds `{"contents": {path: text}, "calls": [...]}`, and
 `writes`: every call that is not a read, with who made it (`basic:<user>` or `token:<token>`);
 the log is `JC_FAKE_FORGE_CALLS`, one `METHOD URL` per line. The forge's users, collaborators,
-teams, tokens and branch rules are kept in the state too (PF-104, PF-105).
+teams, tokens and branch rules are kept in the state too (PF-105, PF-106).
 """
 
 from __future__ import annotations
@@ -117,7 +117,7 @@ def app_repository(path: str, method: str, call: dict, state: dict) -> tuple[int
 
 def identities(path: str, method: str, call: dict, state: dict) -> tuple[int, str] | None:
     """Users, collaborators, the Portal's team, the organization's repositories and the branch
-    rule: what the Job converges before the seed (PF-104, PF-105)."""
+    rule: what the Job converges before the seed (PF-105, PF-106)."""
     users = state.setdefault("users", {})
     user = re.fullmatch(r"/api/v1/users/([^/?]+)", path)
     if user and method == "GET":
