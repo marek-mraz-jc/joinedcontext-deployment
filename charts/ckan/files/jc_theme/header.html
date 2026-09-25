@@ -13,6 +13,17 @@
     --jc-text: {{ h.jc_branding().colours.text }};
     --jc-font-heading: {{ h.jc_branding().fonts.heading }};
     --jc-font-body: {{ h.jc_branding().fonts.body }};
+    --jc-primary-dark: color-mix(in srgb, var(--jc-primary) 80%, #000000);
+    --jc-primary-ring: color-mix(in srgb, var(--jc-primary) 30%, transparent);
+    {# CKAN's Bootstrap reads its own colour from these, and the rules below that it compiled
+       with its teal written out, four shades of it (T-2888), are restated on ours. #}
+    --bs-primary: var(--jc-primary);
+    --bs-blue: var(--jc-primary);
+    --bs-primary-rgb: {{ h.jc_branding().primaryRgb }};
+    --bs-link-color: var(--jc-primary);
+    --bs-link-color-rgb: {{ h.jc_branding().primaryRgb }};
+    --bs-link-hover-color: var(--jc-primary-dark);
+    --bs-focus-ring-color: var(--jc-primary-ring);
   }
   body { background: var(--jc-background); color: var(--jc-text); font-family: var(--jc-font-body); }
   h1, h2, h3, .navbar-brand { font-family: var(--jc-font-heading); }
@@ -20,6 +31,29 @@
   .masthead a, .navbar a, .navbar-brand { color: var(--jc-primary-fg); }
   .btn-primary { background: var(--jc-primary); border-color: var(--jc-primary); color: var(--jc-primary-fg); }
   .homepage .module-content h1 { color: var(--jc-primary); }
+  a, .btn-link, .nav-link, .page-header .nav-tabs li a, .page-link, .link-primary, .btn-outline-primary { color: var(--jc-primary); }
+  a:hover, a:focus, .btn-link:hover, .nav-link:hover, .nav-link:focus, .page-header .nav-tabs li a:hover,
+  .page-header .nav-tabs li a:focus, .page-link:hover, .page-link:focus, .link-primary:hover, .link-primary:focus { color: var(--jc-primary-dark); }
+  .masthead a:hover, .masthead a:focus, .navbar a:hover, .navbar a:focus { color: var(--jc-primary-fg); }
+  .btn-primary:disabled, .btn-primary.disabled, .form-check-input:checked, .form-check-input[type=checkbox]:indeterminate,
+  .btn-outline-primary:hover, .btn-check:checked + .btn-outline-primary, .btn-outline-primary:active, .btn-outline-primary.active,
+  .followee-container li:hover, .followee-container li.active, .page-item.active .page-link, .nav-pills .nav-link.active {
+    background-color: var(--jc-primary); border-color: var(--jc-primary); color: var(--jc-primary-fg);
+  }
+  .btn-primary:hover, .btn-primary:focus, .btn-primary:active, .btn-primary.active, .btn-check:checked + .btn-primary {
+    background-color: var(--jc-primary-dark); border-color: var(--jc-primary-dark); color: var(--jc-primary-fg);
+  }
+  .btn-outline-primary, .border-primary, .media-view:hover, .media-view.hovered, .view-list li a.active, .view-list li a:hover, .view-list li.active a { border-color: var(--jc-primary); }
+  .view-list li a.active .icon, .view-list li a:hover .icon, .view-list li.active a .icon, .followee-container li:hover i, .followee-container li.active i { background-color: var(--jc-primary); }
+  .form-control:focus, .form-select:focus, .form-check-input:focus, .btn:focus, .page-link:focus, .accordion-button:focus {
+    border-color: var(--jc-primary); box-shadow: 0 0 0 .25rem var(--jc-primary-ring);
+  }
+  .homepage .module-search .search-form { background: var(--jc-primary); color: var(--jc-primary-fg); }
+  .homepage .module-search .search-form h3, .homepage .module-search .search-form label { color: var(--jc-primary-fg); }
+  .jc-brand { display: inline-flex; align-items: center; gap: .6rem; text-decoration: none; }
+  .jc-brand img { height: 2.5rem; width: 2.5rem; }
+  .jc-brand span { font-family: var(--jc-font-heading); font-size: 1.5rem; font-weight: 600; color: var(--jc-primary-fg); }
+  .jc-sso-error { margin-bottom: 1rem; }
   {# The footer reads text on background, the one pair the branding block chooses to be legible. #}
   .site-footer { background: var(--jc-background); color: var(--jc-text); border-top: 4px solid var(--jc-secondary); }
   .site-footer p, .site-footer a, .site-footer label, .site-footer .attribution p { color: var(--jc-text); }
@@ -36,6 +70,15 @@
   @media (max-width: 480px) { .jc-about-list { grid-template-columns: 1fr; } .jc-about-list dd { margin-bottom: .5rem; } }
 </style>
 {{ super() }}
+{% endblock %}
+
+{# The mark and the installation's name beside it, so the header says whose catalogue this is
+   at every width; the mark alone was a square nobody could name (T-2888). #}
+{% block header_logo %}
+  <a class="logo jc-brand" href="{{ h.url_for('home.index') }}">
+    {% if g.site_logo %}<img src="{{ h.url_for_static_or_external(g.site_logo) }}" alt="" />{% endif %}
+    <span>{{ g.site_title }}</span>
+  </a>
 {% endblock %}
 
 {% block header_site_navigation_tabs %}

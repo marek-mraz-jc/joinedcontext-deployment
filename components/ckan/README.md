@@ -33,12 +33,29 @@ generated password, and the chart builds `CKAN_DATASTORE_READ_URL` from it. Poin
 URLs at the owner turns a public catalogue into an arbitrary-SQL surface; CKAN checks this
 at startup and refuses to start.
 
+## What fills and refreshes the DataStore
+
+The Portal's reconciler, on every sync pass of the replica that holds the reconciler lock
+(`JC_PORTAL_SYNC_INTERVAL`, 60 s by default), publishes every Endpoint whose manifest declares
+`publish.ckan` and, when it declares `publish.ckan.datastore`, re-reads the Endpoint's tabular
+answer as an ordinary consumer and writes it into the dataset's sheet (portal
+`src/reconciler/ckan.rs`, through `jcctl::publish::ckan_datastore`, EP-62, EP-65). There is no
+separate job and no second schedule: the `jcctl publish ckan` run from a shell that EP-65 once
+described is the same code, now driven by the reconciler.
+
+So a sheet holds what the Endpoint answers at the last pass, and nothing more. A dataset whose
+pipelines have not run, or were refused by a quota, publishes a near-empty sheet until they do;
+the fix is upstream of the catalogue, never a fill by hand.
+
 ## Branding
 
 Nothing here carries a city name. `global.branding` is written into the theme ConfigMap as
 `branding.json` and read by `ckanext_jc_theme`, which renders the header, the footer and one
 stylesheet of `--jc-*` custom properties from it (OPS-46, OPS-47). The Portal is handed the
-same block as YAML, so the two surfaces cannot drift. A rebrand is a values edit and an
+same block as YAML, so the two surfaces cannot drift. CKAN's own teal, which its Bootstrap build
+writes into dozens of rules, is restated on `--jc-primary` in `header.html`; the footer carries the
+installation's links and none of CKAN's; and the header shows the mark with the installation's
+name beside it (T-2888). A rebrand is a values edit and an
 apply; the checksum annotation on the Deployment restarts the pod so the change is seen.
 
 The theme is mounted, not baked: a ConfigMap has no directories, so each file is mounted by

@@ -62,7 +62,20 @@ def _load():
         if _is_colour(value):
             colours[name] = value
     branding["colours"] = colours
+    red, green, blue = _rgb(colours["primary"])
+    branding["primaryRgb"] = "%d, %d, %d" % (red, green, blue)
+    # The text on the primary colour, by the YIQ rule the login theme uses too
+    # (components/keycloak/charts/theme), so a light brand colour gets dark text.
+    branding["primaryForeground"] = "#000000" if (red * 299 + green * 587 + blue * 114) // 1000 >= 128 else "#ffffff"
     return branding
+
+
+def _rgb(colour):
+    """`#rgb` or `#rrggbb` as three integers, for Bootstrap's `--bs-primary-rgb`."""
+    digits = colour[1:]
+    if len(digits) == 3:
+        digits = "".join(character * 2 for character in digits)
+    return tuple(int(digits[index:index + 2], 16) for index in (0, 2, 4))
 
 
 def _available(codes):
@@ -127,6 +140,40 @@ STRINGS = {
         "de": "Nichts gefunden. Versuchen Sie weniger oder andere Wörter, oder entfernen Sie links einen Filter.",
     },
     "portal": {"en": "Portal", "sk": "Portál", "cs": "Portál", "de": "Portal"},
+    "about_site": {"en": "About this catalogue", "sk": "O tomto katalógu", "cs": "O tomto katalogu", "de": "Über diesen Katalog"},
+    "catalogue_api": {"en": "Catalogue API", "sk": "API katalógu", "cs": "API katalogu", "de": "Katalog-API"},
+    # What a failed single sign-on says (T-2888). The extension keeps its reason in the session
+    # and shows it nowhere, so the person was sent back to the login page without a word.
+    "sso_cookie": {
+        "en": "The sign-in could not finish: this browser did not keep the catalogue's cookie from the start of the sign-in. Allow cookies for this site and sign in again.",
+        "sk": "Prihlásenie sa nedokončilo: prehliadač si neponechal súbor cookie katalógu zo začiatku prihlásenia. Povoľte súbory cookie pre túto stránku a prihláste sa znova.",
+        "cs": "Přihlášení se nedokončilo: prohlížeč si neponechal soubor cookie katalogu ze začátku přihlášení. Povolte soubory cookie pro tento web a přihlaste se znovu.",
+        "de": "Die Anmeldung wurde nicht abgeschlossen: Der Browser hat das Cookie des Katalogs vom Beginn der Anmeldung nicht behalten. Erlauben Sie Cookies für diese Seite und melden Sie sich erneut an.",
+    },
+    "sso_state": {
+        "en": "The sign-in expired or was started in another tab. Sign in again.",
+        "sk": "Prihlásenie vypršalo alebo sa začalo na inej karte. Prihláste sa znova.",
+        "cs": "Přihlášení vypršelo nebo bylo zahájeno na jiné kartě. Přihlaste se znovu.",
+        "de": "Die Anmeldung ist abgelaufen oder wurde in einem anderen Tab begonnen. Melden Sie sich erneut an.",
+    },
+    "sso_refused": {
+        "en": "The identity service refused the catalogue's sign-in request. Tell the administrator: the catalogue's log names the reason.",
+        "sk": "Služba identity odmietla žiadosť katalógu o prihlásenie. Povedzte to správcovi: dôvod je v logu katalógu.",
+        "cs": "Služba identity odmítla žádost katalogu o přihlášení. Řekněte to správci: důvod je v logu katalogu.",
+        "de": "Der Identitätsdienst hat die Anmeldeanfrage des Katalogs abgelehnt. Melden Sie es der Administration: Das Protokoll des Katalogs nennt den Grund.",
+    },
+    "sso_account": {
+        "en": "More than one catalogue account uses your e-mail address, so the catalogue cannot tell which one is yours. Ask the administrator to merge them.",
+        "sk": "Vašu e-mailovú adresu používa viac účtov katalógu, takže katalóg nevie, ktorý je váš. Požiadajte správcu, aby ich zlúčil.",
+        "cs": "Vaši e-mailovou adresu používá více účtů katalogu, takže katalog neví, který je váš. Požádejte správce, aby je sloučil.",
+        "de": "Mehrere Katalogkonten verwenden Ihre E-Mail-Adresse, daher weiß der Katalog nicht, welches Ihres ist. Bitten Sie die Administration, sie zusammenzuführen.",
+    },
+    "sso_other": {
+        "en": "The sign-in did not finish. Sign in again; if it fails again, tell the administrator when it happened.",
+        "sk": "Prihlásenie sa nedokončilo. Prihláste sa znova; ak zlyhá opäť, povedzte správcovi, kedy sa to stalo.",
+        "cs": "Přihlášení se nedokončilo. Přihlaste se znovu; pokud selže znovu, řekněte správci, kdy se to stalo.",
+        "de": "Die Anmeldung wurde nicht abgeschlossen. Melden Sie sich erneut an; schlägt es wieder fehl, nennen Sie der Administration den Zeitpunkt.",
+    },
     "more": {"en": "More details", "sk": "Ďalšie údaje", "cs": "Další údaje", "de": "Weitere Angaben"},
 }
 
@@ -314,6 +361,32 @@ def jc_branding():
     return BRANDING
 
 
+# The session key `ckanext-oidc-pkce` writes its reason under, and each reason it writes
+# (views.py of 0.4.1, pinned in images/ckan/Dockerfile) mapped to words a person can act on.
+SSO_ERROR = "ckanext:oidc-pkce:error"
+SSO_REASONS = {
+    "Login process was not started properly": "sso_cookie",
+    "The app state does not match": "sso_state",
+    "Unsupported token type. Should be 'Bearer'.": "sso_refused",
+    "No access token returned from the token endpoint.": "sso_refused",
+    "Unique user not found": "sso_account",
+}
+
+
+def jc_sso_error(session=None):
+    """Why the last single sign-on failed, once, in the page's language; None when it did not.
+
+    The raw reason stays in the extension's log line: it can name the identity service's own
+    error, which is for the administrator and not for the page.
+    """
+    if session is None:
+        from ckan.common import session
+    reason = session.pop(SSO_ERROR, None)
+    if not reason:
+        return None
+    return jc_t(SSO_REASONS.get(reason, "sso_other"))
+
+
 class JcThemePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.ITemplateHelpers)
@@ -348,6 +421,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_live": jc_live,
             "jc_resource_groups": jc_resource_groups,
             "jc_portal_url": jc_portal_url,
+            "jc_sso_error": jc_sso_error,
         }
 
     def dataset_facets(self, facets_dict, package_type):
