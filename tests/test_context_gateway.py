@@ -90,6 +90,10 @@ def space_of(manifest):
     if manifest["kind"] == "ServiceAccount":
         scopes = {role["scope"]["contextSpace"] for role in manifest["spec"]["roles"]}
         return scopes.pop() if len(scopes) == 1 else None
+    if manifest["kind"] == "App":
+        # An App names its space in what it reads (AP-08), not in a contextSpaceRef of its own.
+        needs = {need["contextSpaceRef"]["name"] for need in manifest["spec"].get("dataNeeds") or []}
+        return needs.pop() if len(needs) == 1 else None
     ref = manifest["spec"].get("contextSpaceRef")
     if ref is None:
         return None
