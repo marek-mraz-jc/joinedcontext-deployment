@@ -476,6 +476,16 @@ dev-validate out='deployment/validate-dev.json':
 	just _dev-assemble
 	./scripts/validate-dev.py --out "{{ out }}"
 
+# The monthly restore drill (T-2802): dev's databases copied into a throwaway namespace, counted,
+# timed and deleted; with a pinned portal image, its migrations run against the copy
+[group('dev cluster')]
+dev-restore-drill portal_image='' out='deployment/restore-drill.json':
+	#!/usr/bin/env bash
+	set -euo pipefail
+	just _dev-guard
+	mkdir -p "$(dirname "{{ out }}")"
+	./scripts/restore-drill.py --out "{{ out }}" {{ if portal_image != '' { '--portal-image ' + portal_image } else { '' } }}
+
 # Pin the portal and both app-builder images to one portal commit, checked against the seeded
 # workflows (T-2633); run it the moment the portal's image.yml publishes, then dev-apply
 [group('dev cluster')]
