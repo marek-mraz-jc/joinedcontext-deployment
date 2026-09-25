@@ -55,7 +55,9 @@ def test_the_portal_calls_the_service_with_a_token_the_runtime_accepts(dev):
         for m in client["protocolMappers"]
         if m["protocolMapper"] == "oidc-audience-mapper"
     }
-    assert audiences == {"jc-functions"}
+    # jc-functions for the Portal's own calls; helsinki-agent-proxy so a person's token is the
+    # subject token the agent proxy exchanges for a run of theirs (T-2866, ADR-N-038). No other.
+    assert audiences == {"jc-functions", "helsinki-agent-proxy"}
 
 
 @requires_helmfile
