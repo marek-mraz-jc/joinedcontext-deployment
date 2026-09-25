@@ -63,10 +63,11 @@ def test_guard_accepts_the_dev_cluster(tmp_path):
 
 
 @requires_just
-@pytest.mark.parametrize("recipe", ["dev-apply", "dev-smoke", "dev-validate", "dev-restore-drill", "dev-destroy"])
+@pytest.mark.parametrize("recipe", ["dev-apply", "dev-smoke", "dev-validate", "dev-restore-drill", "dev-destroy",
+                                    "dev-publish-health s.json 1"])
 def test_recipe_is_parseable(recipe):
     result = subprocess.run(
-        ["just", "--dry-run", recipe], cwd=PROJECT_ROOT, capture_output=True, text=True, check=False
+        ["just", "--dry-run", *recipe.split()], cwd=PROJECT_ROOT, capture_output=True, text=True, check=False
     )
     assert result.returncode == 0, result.stderr
 

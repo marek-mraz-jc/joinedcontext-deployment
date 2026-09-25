@@ -486,6 +486,15 @@ dev-restore-drill portal_image='' out='deployment/restore-drill.json':
 	mkdir -p "$(dirname "{{ out }}")"
 	./scripts/restore-drill.py --out "{{ out }}" {{ if portal_image != '' { '--portal-image ' + portal_image } else { '' } }}
 
+# Publish one check's summary to the Portal's Organization > Health tab (T-2803, OPS-53); run it
+# after tasks/file-failures, so the tasks it links exist
+[group('dev cluster')]
+dev-publish-health summary every_hours:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	just _dev-guard
+	./scripts/publish-health.py "{{ summary }}" --every-hours "{{ every_hours }}"
+
 # Pin the portal and both app-builder images to one portal commit, checked against the seeded
 # workflows (T-2633); run it the moment the portal's image.yml publishes, then dev-apply
 [group('dev cluster')]
