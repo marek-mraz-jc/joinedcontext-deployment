@@ -72,6 +72,7 @@ helsinki-ckan-hel-fi.yaml: projects/helsinki/ckan/hel-fi.yaml
 helsinki-blueprint-http-json-feed.yaml: blueprints/http-json-feed/blueprint.yaml
 helsinki-blueprint-gbfs-stations.yaml: blueprints/gbfs-stations/blueprint.yaml
 helsinki-blueprint-mqtt-feed.yaml: blueprints/mqtt-feed/blueprint.yaml
+helsinki-syncsource-blueprint-library.yaml: projects/helsinki/sync/blueprint-library.yaml
 helsinki-uischema-endpoint.yaml: portal/forms/endpoint.uischema.yaml
 helsinki-mobility-space.yaml: projects/helsinki-mobility/spaces/mobility/space.yaml
 helsinki-mobility-datamodel.yaml: projects/helsinki-mobility/spaces/mobility/datamodels/mobility.yaml
