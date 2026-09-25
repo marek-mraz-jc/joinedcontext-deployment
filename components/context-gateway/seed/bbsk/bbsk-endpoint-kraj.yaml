@@ -13,7 +13,6 @@ spec:
   slug: 7u4ns3cdg2mqlx5gmxhk7rqai6pmokdj
   audience: organization
   enabledRepresentations: [ngsi-ld, csv, json]
-  rateLimits: { requestsPerMinute: 300, burst: 50 }
   # CC BY-SA 4.0: both cubes are read from data.statistics.sk, whose distributions the national
   # catalogue licenses CC BY-SA 4.0 (om7102rr; zp3803rs is catalogued only as its statdata copy, CC BY
   # 4.0, and the stricter licence of the distribution actually read is kept). Population from 1993.

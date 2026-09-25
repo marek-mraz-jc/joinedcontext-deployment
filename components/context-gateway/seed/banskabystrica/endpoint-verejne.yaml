@@ -15,7 +15,6 @@ spec:
   slug: rpfqszwlbp5bonvg7kckhdsne5qedjor
   audience: public
   enabledRepresentations: [ngsi-ld, geojson, csv, json]
-  rateLimits: { requestsPerMinute: 300, burst: 50 }
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: banskabystrica }

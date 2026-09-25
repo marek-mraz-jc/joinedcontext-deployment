@@ -14,7 +14,6 @@ spec:
   audience: public
   policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki-hub:public-hub
   enabledRepresentations: [ngsi-ld, geojson, csv, mcp]
-  rateLimits: { requestsPerMinute: 300, burst: 50 }
   # No licence: the hub also serves the indicators of `helsinki-kpi`, which have no source a licence
   # can be read from yet (T-2793).
   catalog:

@@ -22,7 +22,6 @@ spec:
   # Architecture/21 §3, T-2432). `xlsx` is the same rows for a person who opens them in a
   # spreadsheet; `zip` is left out, a third copy of the same readings nobody rebuilds.
   enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, mcp]
-  rateLimits: { requestsPerMinute: 600, burst: 50 }
   # Cleared for the catalogue by the owner (T-2407) and held back by the integrator: the space
   # holds 13 test stations at Helsinki's coordinates with no pm10/pm25 (seeded 2026-09-17), not
   # the city's readings. Put back once the space holds Banská Bystrica's own data:
