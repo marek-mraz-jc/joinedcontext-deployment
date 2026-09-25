@@ -1,0 +1,376 @@
+id: https://joinedcontext.com/models/bbsk/bbsk-registre
+name: bbsk-registre
+title: Registers of the Banská Bystrica region
+description: >-
+  What the region's register space carries side by side (DM-01, DM-61): the outlines of its 13
+  districts and 516 municipalities, the organisations the region founded, the hospitals, the
+  social services run by public bodies, and the bridges of the road network, each read from the
+  region's own open-data portal (opendata.bbsk.sk). One model, one space, one public endpoint.
+  Where Smart Data Models has the class, its IRI is cited rather than minted (DM-04, DM-16).
+license: https://joinedcontext.com/licenses/cc-by-4.0
+prefixes:
+  linkml: https://w3id.org/linkml/
+  jc: https://joinedcontext.com/models/
+  sdm: https://smartdatamodels.org/
+  ngsi-ld: https://uri.etsi.org/ngsi-ld/
+default_prefix: sdm
+default_range: string
+imports:
+  - linkml:types
+  - ngsi-ld-core
+
+slots:
+  name:
+    slot_uri: schema:name
+    description: The name, per language, as the publisher writes it.
+    annotations:
+      ngsi_ld_kind: LanguageProperty
+      upstream_source: https://schema.org/name
+  alternateName:
+    slot_uri: schema:alternateName
+    description: The shorter name the organisation goes by, when it differs from the official one.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/alternateName
+  address:
+    slot_uri: schema:address
+    description: The street address, one line, as the publisher writes it.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/address
+  url:
+    slot_uri: schema:url
+    description: The web page the publisher gives for it.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/url
+  dataProvider:
+    slot_uri: sdm:dataProvider
+    description: >-
+      Who publishes the data the entity was read from, with the credit its licence asks for, as
+      an application shows it beside the data.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
+  source:
+    slot_uri: sdm:source
+    description: The open-data service the entity was read from.
+    range: uri
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
+  areaCode:
+    slot_uri: jc:areaCode
+    description: >-
+      The area's statistical code: LAU 1 (`SK0321`) for a district, LAU 2 (`SK0321508438`) for a
+      municipality, the same codes the Statistical Office's cubes carry in `refArea`.
+    required: true
+    pattern: "^SK032[0-9A-D]([0-9]{6})?$"
+    examples:
+      - value: SK0321508438
+    annotations:
+      ngsi_ld_kind: Property
+  divisionLevel:
+    slot_uri: jc:divisionLevel
+    description: Which tier of the territorial division the area is.
+    range: DivisionLevel
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+  refParentArea:
+    slot_uri: jc:refParentArea
+    description: The district a municipality lies in; absent on a district.
+    range: AdministrativeArea
+    annotations:
+      ngsi_ld_kind: Relationship
+  surfaceArea:
+    slot_uri: jc:surfaceArea
+    description: The area's surface as the cadastre states it.
+    range: float
+    minimum_value: 0
+    unit:
+      ucum_code: m2
+    annotations:
+      ngsi_ld_kind: Property
+  legalId:
+    slot_uri: jc:legalId
+    description: The body's identification number (IČO) in the Slovak register of legal persons.
+    pattern: "^[0-9]{8}$"
+    annotations:
+      ngsi_ld_kind: Property
+  organizationCategory:
+    slot_uri: jc:organizationCategory
+    description: The field the region founded the organisation for.
+    range: OrganizationCategory
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+  refMunicipality:
+    slot_uri: jc:refMunicipality
+    description: The municipality the record lies in.
+    range: AdministrativeArea
+    annotations:
+      ngsi_ld_kind: Relationship
+  hospitalKind:
+    slot_uri: jc:hospitalKind
+    description: Whether the hospital is a general one or specialises in some fields.
+    range: HospitalKind
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+  operatorName:
+    slot_uri: jc:operatorName
+    description: The legal person that runs it, as the register names it.
+    annotations:
+      ngsi_ld_kind: Property
+  medicalSpecialties:
+    slot_uri: jc:medicalSpecialties
+    description: The fields of medicine the hospital is licensed for, with their codes, as the register lists them.
+    annotations:
+      ngsi_ld_kind: Property
+  serviceKind:
+    slot_uri: jc:serviceKind
+    description: >-
+      The kind of social service in the words of Act 448/2008 Z. z., such as `zariadenie pre
+      seniorov` or `opatrovateľská služba`.
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+  serviceForm:
+    slot_uri: jc:serviceForm
+    description: How the service reaches the person it serves.
+    range: ServiceForm
+    annotations:
+      ngsi_ld_kind: Property
+  targetGroup:
+    slot_uri: jc:targetGroup
+    description: Whom the service is for, as the provisions of the Act the register cites.
+    annotations:
+      ngsi_ld_kind: Property
+  capacity:
+    slot_uri: jc:capacity
+    description: How many people the service may take at once, as registered; absent for a service registered without one.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+  providerKind:
+    slot_uri: jc:providerKind
+    description: Which public body provides the service.
+    range: ProviderKind
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+  bridgeCode:
+    slot_uri: jc:bridgeCode
+    description: The bridge's number in the national road databank (Cestná databanka), such as `M9673`.
+    required: true
+    pattern: "^M[0-9]+$"
+    annotations:
+      ngsi_ld_kind: Property
+  roadClass:
+    slot_uri: jc:roadClass
+    description: The class of the road the bridge carries.
+    range: RoadClass
+    annotations:
+      ngsi_ld_kind: Property
+  roadNumber:
+    slot_uri: jc:roadNumber
+    description: The number of the road the bridge carries, such as `66b`.
+    annotations:
+      ngsi_ld_kind: Property
+  yearBuilt:
+    slot_uri: jc:yearBuilt
+    description: The year the bridge was built.
+    range: integer
+    minimum_value: 1000
+    annotations:
+      ngsi_ld_kind: Property
+  spanCount:
+    slot_uri: jc:spanCount
+    description: How many openings the bridge has.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+  bridgedLength:
+    slot_uri: jc:bridgedLength
+    description: The length of the bridged gap.
+    range: float
+    minimum_value: 0
+    unit:
+      ucum_code: m
+    annotations:
+      ngsi_ld_kind: Property
+  structureMaterial:
+    slot_uri: jc:structureMaterial
+    description: The material of the load-bearing structure, in the databank's words.
+    annotations:
+      ngsi_ld_kind: Property
+  structureKind:
+    slot_uri: jc:structureKind
+    description: The kind of load-bearing structure, in the databank's words, such as `dosková`.
+    annotations:
+      ngsi_ld_kind: Property
+  heritageStatus:
+    slot_uri: jc:heritageStatus
+    description: Whether the bridge is a listed monument; absent where the databank does not say.
+    range: HeritageStatus
+    annotations:
+      ngsi_ld_kind: Property
+  managerName:
+    slot_uri: jc:managerName
+    description: The road administration that manages the bridge.
+    annotations:
+      ngsi_ld_kind: Property
+  districtName:
+    slot_uri: jc:districtName
+    description: The district the record lies in, by name, as the publisher writes it.
+    annotations:
+      ngsi_ld_kind: Property
+
+classes:
+  AdministrativeArea:
+    class_uri: jc:AdministrativeArea
+    description: One district (okres) or municipality (obec) of the region, its outline and its code.
+    is_a: Entity
+    slots:
+      - name
+      - areaCode
+      - divisionLevel
+      - refParentArea
+      - surfaceArea
+      - dataProvider
+      - source
+  PublicOrganization:
+    class_uri: jc:PublicOrganization
+    description: >-
+      One organisation the region founded: a secondary school, a social-care home, a theatre, a
+      museum or an office.
+    is_a: Entity
+    slots:
+      - name
+      - alternateName
+      - legalId
+      - organizationCategory
+      - address
+      - refMunicipality
+      - dataProvider
+      - source
+  Hospital:
+    class_uri: jc:Hospital
+    description: One general or specialised hospital in the region, by its facility number in the health-care register.
+    is_a: Entity
+    slots:
+      - name
+      - hospitalKind
+      - operatorName
+      - legalId
+      - medicalSpecialties
+      - address
+      - dataProvider
+      - source
+  SocialService:
+    class_uri: jc:SocialService
+    description: >-
+      One registered social service a municipality, a town or the region provides, where it is
+      provided and for whom. Private providers are not in the space.
+    is_a: Entity
+    slots:
+      - name
+      - serviceKind
+      - serviceForm
+      - targetGroup
+      - capacity
+      - providerKind
+      - legalId
+      - address
+      - districtName
+      - url
+      - dataProvider
+      - source
+  Bridge:
+    class_uri: jc:Bridge
+    description: One bridge of the road network in the region, its road, its age, its size and who manages it.
+    is_a: Entity
+    slots:
+      - name
+      - bridgeCode
+      - roadClass
+      - roadNumber
+      - yearBuilt
+      - spanCount
+      - bridgedLength
+      - structureMaterial
+      - structureKind
+      - heritageStatus
+      - managerName
+      - districtName
+      - dataProvider
+      - source
+
+enums:
+  DivisionLevel:
+    permissible_values:
+      district:
+        description: A district (okres), LAU 1.
+      municipality:
+        description: A municipality or town (obec, mesto), LAU 2.
+  OrganizationCategory:
+    permissible_values:
+      school:
+        description: A secondary school or a school facility (školy).
+      socialCare:
+        description: A social-care facility (sociálne).
+      culture:
+        description: A theatre, a museum, a gallery, a library or an education centre (kultúra).
+      office:
+        description: An office or an agency of the region (úrad).
+  HospitalKind:
+    permissible_values:
+      general:
+        description: A general hospital (všeobecná nemocnica).
+      specialised:
+        description: A specialised hospital (špecializovaná nemocnica).
+  ServiceForm:
+    permissible_values:
+      field:
+        description: Provided where the person lives (terénna).
+      outpatient:
+        description: The person comes to it (ambulantná).
+      residentialYearRound:
+        description: The person lives there all year (pobytová - ročná).
+      residentialWeekly:
+        description: The person lives there during the week (pobytová - týždenná).
+      remote:
+        description: By telephone or another telecommunication means (iná forma).
+  ProviderKind:
+    permissible_values:
+      municipality:
+        description: A municipality or a town itself (obec/mesto).
+      municipalityFounded:
+        description: A legal person a municipality or a town founded.
+      regionFounded:
+        description: A legal person the self-governing region founded.
+  RoadClass:
+    permissible_values:
+      motorway:
+        description: A motorway or an expressway (diaľnica).
+      firstClass:
+        description: A first-class road (cesta I. triedy).
+      secondClass:
+        description: A second-class road (cesta II. triedy).
+      thirdClass:
+        description: A third-class road (cesta III. triedy).
+      local:
+        description: A local road of no stated class (miestna neurčená).
+      service:
+        description: A service road (účelová cesta).
+  HeritageStatus:
+    permissible_values:
+      notListed:
+        description: The bridge is not a listed monument.
+      cultural:
+        description: The bridge is a listed cultural monument.
+      culturalAndTechnical:
+        description: The bridge is listed as a cultural and a technical monument.

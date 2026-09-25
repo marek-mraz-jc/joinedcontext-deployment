@@ -9,15 +9,16 @@ metadata:
     en: "The region: 13 districts, 614 356 people, publishing what a region owns."
 spec:
   organizationRef: hel
-  # Two spaces (the raw cube rows and the indicators), one pipeline per raw feed plus the one
-  # that computes the indicators, and one public endpoint: the indicator endpoint the
-  # application reads. Sized to what this project declares and no more (PF-73).
+  # Three spaces (the raw cube rows, the indicators and the region's registers), one pipeline
+  # per feed plus the one that computes the indicators, and two public endpoints: the indicators
+  # the application reads and the registers (T-2783). Sized to what this project declares and no
+  # more (PF-73).
   quotas:
-    contextSpaces: 2
-    residentPipelines: 3
-    publicEndpoints: 1
+    contextSpaces: 3
+    residentPipelines: 14
+    publicEndpoints: 2
     apps: 1
     ingestEventsPerSecond: 20
     agentRunsPerDay: 2000
-    entitiesPerSpace: 10000
+    entitiesPerSpace: 15000
     requestsPerMinute: 600

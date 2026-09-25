@@ -1,20 +1,22 @@
-# The mapping of the voda pipeline (PL-03): one StatisticalObservation per year from the
-# drinking-water cube of ŠÚ SR, for the city LAU code SK0321508438. The cube is in thousands of
-# cubic metres of INVOICED water, which is what `unitText` keeps: a UN/CEFACT code loses both the
-# scale factor and the fact that it is water billed rather than water used.
+# The mapping of the navstevnost pipeline (PL-03): one StatisticalObservation per territory per month per
+# indicator from the monthly tourism cube of ŠÚ SR, all categories of accommodation: `U_CR_0005`
+# visitors and `U_CR_0008` overnight stays. `dimensionKey` carries the month (`7.`); the
+# year-to-date code `1. - 12.` is not asked for, because it is a sum of the months and a code
+# with spaces is no id segment.
+# Decoded by the same JSON-stat decoder as every cube stream; nothing is renamed or recomputed.
 
 pipeline:
   processors:
     - mapping: |
         # --- the cube this stream reads ---------------------------------------
-        let cube = "vh5003rr"
-        let area_dim = "nuts15"
-        let period_dim = "vh5003rr_rok"
-        let indicator_dim = "vh5003rr_ukaz"
-        let key_dims = []
-        let unit_code = "MTQ"
-        let unit_text = "v tis. m3 fakturovanej vody"
-        let source_url = "https://data.statistics.sk/api/v2/dataset/vh5003rr/SK0321508438/*/U03084?lang=sk&type=json"
+        let cube = "cr3802mr"
+        let area_dim = "nuts14"
+        let period_dim = "cr3802mr_rok"
+        let indicator_dim = "cr3802mr_ukaz"
+        let key_dims = ["cr3802mr_mes"]
+        let unit_code = "C62"
+        let unit_text = "počet"
+        let source_url = "https://data.statistics.sk/api/v2/dataset/cr3802mr/SK032,SK0321,SK0322,SK0323,SK0324,SK0325,SK0326,SK0327,SK0328,SK0329,SK032A,SK032B,SK032C,SK032D/*/1.,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12./U_CR_0005,U_CR_0008/ACCSK_TOTAL?lang=sk&type=json"
         # JSON-stat 2.0, decoded by the index and never by the order. `value` is flat and
         # row-major over `size`; the position of a code inside a dimension is
         # `dimension.{name}.category.index`, which is NOT sorted: the period dimension comes back
