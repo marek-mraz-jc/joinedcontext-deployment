@@ -90,6 +90,10 @@ def space_of(manifest):
     if manifest["kind"] == "ServiceAccount":
         scopes = {role["scope"]["contextSpace"] for role in manifest["spec"]["roles"]}
         return scopes.pop() if len(scopes) == 1 else None
+    if manifest["kind"] == "App":
+        # An App reads the spaces its data needs name; one space is the space it belongs to.
+        needs = {need["contextSpaceRef"]["name"] for need in manifest["spec"].get("dataNeeds") or []}
+        return needs.pop() if len(needs) == 1 else None
     ref = manifest["spec"].get("contextSpaceRef")
     if ref is None:
         return None
@@ -104,7 +108,8 @@ def test_the_conformance_space_is_one_space_one_endpoint_and_the_policies_of_two
     `ovzdusie` and not of everything the project holds."""
     ovzdusie = {key: m for key, m in seed.items() if space_of(m) == "ovzdusie"}
     kinds = sorted(kind for kind, _ in ovzdusie)
-    assert kinds == ["ContextSpace", "DataModel", "Endpoint", "Policy", "Policy", "ServiceAccount"], kinds
+    # The city's public air-quality screen reads this space's public endpoint (T-2916).
+    assert kinds == ["App", "ContextSpace", "DataModel", "Endpoint", "Policy", "Policy", "ServiceAccount"], kinds
 
 
 @requires_helmfile
