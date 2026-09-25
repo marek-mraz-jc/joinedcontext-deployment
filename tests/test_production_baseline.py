@@ -217,6 +217,25 @@ def test_the_edge_alerts_are_the_two_the_runbook_names(production):
     )
 
 
+def test_the_assistant_alerts_read_the_portals_own_series(production):
+    """T-2771, AG-72: a slow assistant and a run of failures page somebody, and each rule reads a
+    series the Portal exports, so neither can fire never the way a misspelt name would."""
+    rules = {
+        rule["alert"]: rule
+        for prometheus_rule in of_kind(production, "PrometheusRule")
+        for group in prometheus_rule["spec"]["groups"]
+        for rule in group["rules"]
+        if "alert" in rule
+    }
+    slow = rules["AssistantSlowAnswers"]
+    assert "histogram_quantile(0.95" in slow["expr"]
+    assert "jc_agent_answer_duration_seconds_bucket" in slow["expr"] and slow["expr"].endswith("> 10")
+    assert slow["for"] == "15m"
+    failing = rules["AssistantRunsFailing"]
+    assert 'jc_agent_runs_finished_total{status=~"failed|expired"}' in failing["expr"]
+    assert failing["expr"].endswith("> 0.2")
+
+
 def test_metrics_stay_inside_the_cluster(production):
     # The scrape ports are never published: an Ingress or an APISIX route to a metrics path
     # would put the platform's internals on the public host.
