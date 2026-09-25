@@ -96,9 +96,18 @@ spec:
                   FORGE_DIR=${FORGE_DIR:-/forge}
                   trap 'rm -f "$WORK/token" "$WORK/auth" "$WORK/body"' EXIT
 
+                  # Every run on k3d failed its first call in 6 ms with "connection refused" while
+                  # Keycloak was ready (ci-full 36096443083, T-2826): k3s's NetworkPolicy
+                  # controller answers REJECT, and a pod this short-lived calls before the
+                  # controller has admitted its new address. curl retries, for at most a minute,
+                  # a refused connection, a timeout and a transient answer (408, 429, 5xx); a
+                  # refusal such as 401 or 403 still fails the run at once.
+                  RETRY="--retry 6 --retry-delay 2 --retry-connrefused --retry-max-time 60"
+
                   # 1. A client_credentials token of the lane. The secret goes in from its file,
                   #    so it is on no command line; the answer is read for its one field.
-                  code=$(curl -sS -o "$WORK/token" -w '%{http_code}' -X POST "$TOKEN_URL" \
+                  # shellcheck disable=SC2086
+                  code=$(curl -sS $RETRY -o "$WORK/token" -w '%{http_code}' -X POST "$TOKEN_URL" \
                     --data-urlencode grant_type=client_credentials \
                     --data-urlencode "client_id=$CLIENT_ID" \
                     --data-urlencode "client_secret@$LANE_DIR/client-secret")
@@ -109,7 +118,8 @@ spec:
                   # 2. The organization's Actions secret, replaced whole: 201 created, 204 updated.
                   printf 'Authorization: token %s\n' "$(cat "$FORGE_DIR/token")" > "$WORK/auth"
                   printf '{"data":"%s"}' "$token" > "$WORK/body"
-                  code=$(curl -sS -o /dev/null -w '%{http_code}' -X PUT \
+                  # shellcheck disable=SC2086
+                  code=$(curl -sS $RETRY -o /dev/null -w '%{http_code}' -X PUT \
                     -H @"$WORK/auth" -H 'content-type: application/json' --data @"$WORK/body" \
                     "$GITEA_URL/api/v1/orgs/$ORG/actions/secrets/$SECRET_NAME")
                   case "$code" in
