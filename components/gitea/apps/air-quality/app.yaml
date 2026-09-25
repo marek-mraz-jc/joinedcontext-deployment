@@ -73,4 +73,5 @@ spec:
       q: "!source"
       roles: [steward]
   limits:
+    requestsPerMinute: 300
     maxFileRows: 5000
