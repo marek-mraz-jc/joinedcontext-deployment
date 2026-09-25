@@ -327,6 +327,10 @@ if has_route portal-api; then
 		ptest='{"pipeline":{"apiVersion":"joinedcontext.com/v1alpha1","kind":"Pipeline","metadata":{"name":"smoke-test","namespace":"helsinki"},"spec":{"class":"auto","period":"60s","source":{"dataSourceRef":{"kind":"DataSource","name":"hsl-citybikes-gbfs"}},"compute":{"kind":"bloblang","bloblang":"root.id = \"urn:ngsi-ld:SmokeProbe:hel.fi:helsinki:1\"\nroot.type = \"SmokeProbe\""},"output":{"type":"SmokeProbe","mode":"upsert"},"targetEndpoint":"urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all"}},"sample":{"text":"{\"a\":1}","format":"json"}}'
 		status 200 "pipeline test runs a candidate on the runner and captures the output" -X POST -H "Authorization: Bearer $steward_token" \
 			-H 'Content-Type: application/json' -d "$ptest" "$portal/api/v1/projects/helsinki/pipelines/test"
+		# A space's counts are the broker's own (T-2889): the Portal reads them from the broker's
+		# admin surface, and a broker that serves no GET there left every space blank (T-2996).
+		status 200 "a space's usage reads its counts from the broker" -H "Authorization: Bearer $steward_token" \
+			"$portal/api/v1/projects/helsinki/spaces/helsinki/usage"
 		# A Check fetches the URL a person typed on the project's runner (MF-39, T-0752), so an
 		# address inside the cluster or the node's metadata service must answer as unreachable:
 		# records, a status or a body mean the runner's egress lets a typed URL in. The metadata

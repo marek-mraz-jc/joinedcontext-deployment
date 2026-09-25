@@ -2,5 +2,10 @@
 context-broker:
   broker:
     repository: 'ghcr.io/marek-mraz/antares-broker'
-    tag: 'dev-173'
-    digest: 'sha256:a3a3431976b1bb6fd26f43630a120d19a3961d6c5445d81e04bce404eed712d4'
+    # dev-293 is revision 31dd116 (2026-09-05). dev-173 (47f02f0) routed only DELETE on
+    # /q/tenants/{tenant}, so the Portal's count read (T-2889) answered 405 and every space
+    # showed no entities (T-2996); 27b2537 added the GET. Forward-only: migrations 0004-0007 run
+    # on first start, and dev-173 does not become ready on the migrated database, so going back
+    # means restoring the database, not re-pinning.
+    tag: 'dev-293'
+    digest: 'sha256:c049084076e389d2cb85be2b22235a9f64b810cd4a71b63bddf9a460b7f762b9'
