@@ -53,8 +53,14 @@ jobs:
       - run: python3 scripts/ci/check-readme-commands.py
   deployment-variants:
     # scripts/test-deployment-variants.sh brings up k3d clusters, far too slow for the PR gate.
+    # One job per variant: a variant takes 10 to 12 minutes, so the eight in one job (about 90)
+    # never finished inside a 45-minute cap and the sweep was cancelled at the fourth (T-2826).
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ["0,0,0", "0,0,1", "0,1,0", "0,1,1", "1,0,0", "1,0,1", "1,1,0", "1,1,1"]
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       # The three-node k3d cluster keeps one containerd image store per node on the runner's
@@ -80,7 +86,7 @@ jobs:
         run: |
           curl --proto '=https' --tlsv1.2 -sSfL https://run.linkerd.io/install-edge | sh
           echo "$HOME/.linkerd2/bin" >> "$GITHUB_PATH"
-      - run: ./scripts/test-deployment-variants.sh
+      - run: ./scripts/test-deployment-variants.sh ${{ matrix.variant }}
   k3d-deploy:
     # One real deployment into a throwaway k3d cluster on the runner: single namespace,
     # all-in-one, no mesh, development profile. That is the variant that fits a 7 GB runner,
