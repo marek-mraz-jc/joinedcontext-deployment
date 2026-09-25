@@ -11,14 +11,16 @@ cluster:
   # One instance carries the Portal, the broker, Keycloak, Gitea and CKAN. At 512Mi the
   # kernel killed it seven times in a week, every time under a recording (a checkpoint or a
   # broker statement on top of ~460Mi resident), and each kill took Gitea's git-sync and the
-  # Portal's reconciler lock with it. 1Gi leaves headroom on the 16 GB node.
+  # Portal's reconciler lock with it. At 1Gi it was killed four times on 2026-09-25 under the
+  # seeded pipelines (~530Mi anon, 20 broker connections, the rest page cache); 2Gi still
+  # leaves the 16 GB node ~2 GB of headroom.
   resources:
     requests:
       cpu: 100m
       memory: 512Mi
     limits:
       cpu: 500m
-      memory: 1Gi
+      memory: 2Gi
 
   storage:
     size: 1Gi

@@ -14,11 +14,18 @@ bb-air-quality.v1.md: projects/banskabystrica/spaces/ovzdusie/datamodels/bb-air-
 endpoint.yaml: projects/banskabystrica/spaces/ovzdusie/endpoints/public-air.yaml
 policy-public-read.yaml: projects/banskabystrica/spaces/ovzdusie/policies/public-read.yaml
 policy-conformance-write.yaml: projects/banskabystrica/spaces/ovzdusie/policies/conformance-write.yaml
+# The city's air quality (T-2916): a public static bundle the Portal image ships, reading the
+# public endpoint of this space (the EEA stations' PM10 and PM2.5) and nothing else.
+app-ovzdusie.yaml: projects/banskabystrica/apps/banskabystrica-ovzdusie/app.yaml
 serviceaccount.yaml: projects/banskabystrica/access/serviceaccounts/conformance.yaml
 # The city's own two spaces (T-2305): the published rows as published, and the indicators
 # computed from them. The indicator endpoint is shared with `bbsk` and is not public.
 space-mesto.yaml: projects/banskabystrica/spaces/banskabystrica-mesto/space.yaml
 datamodel-mesto.yaml: projects/banskabystrica/spaces/banskabystrica-mesto/datamodels/statistical-observation.yaml
+# The city's records (T-2916): a static bundle the Portal image ships and serves at
+# /apps/banskabystrica-zaznamy/, reading the rows of banskabystrica-mesto; the one write is the
+# steward's note, which policy mesto-steward-note grants.
+app-zaznamy.yaml: projects/banskabystrica/apps/banskabystrica-zaznamy/app.yaml
 statistical-observation.linkml.yaml: projects/banskabystrica/spaces/banskabystrica-mesto/datamodels/statistical-observation.linkml.yaml
 statistical-observation.v1.schema.json: projects/banskabystrica/spaces/banskabystrica-mesto/datamodels/statistical-observation.v1.schema.json
 statistical-observation.v1.context.jsonld: projects/banskabystrica/spaces/banskabystrica-mesto/datamodels/statistical-observation.v1.context.jsonld
