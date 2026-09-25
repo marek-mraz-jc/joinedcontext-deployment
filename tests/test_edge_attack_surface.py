@@ -135,6 +135,10 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "an open-data catalogue is public reading; writing is CKAN's own session",
     },
+    "security-txt": {
+        "reach": TERMINATES, "cacheable": False, "framing": "DENY",
+        "why": "RFC 9116 security.txt is public by the RFC; the edge answers it and names only the reporting contact (T-1721)",
+    },
     "ckan-redirect": {
         "reach": TERMINATES, "cacheable": False, "framing": "DENY",
         "why": "/ckan on the apex answers 302 to the catalogue host and never dials an upstream",

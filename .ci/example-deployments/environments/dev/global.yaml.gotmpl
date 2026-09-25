@@ -93,6 +93,11 @@ global:
         - en
 
   profile: development
+  # security.txt (T-1721): the owner's decision of 2026-09-24, the owner's own address and a
+  # year of validity; the render test fails a month before it expires.
+  securityTxt:
+    contact: mailto:contact@marek-mraz.com
+    expires: "2027-09-24T00:00:00Z"
 
   serviceMesh:
     # Traefik is installed by the kit outside the mesh and has no Linkerd identity,
