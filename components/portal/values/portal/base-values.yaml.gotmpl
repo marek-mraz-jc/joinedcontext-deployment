@@ -27,8 +27,14 @@ rbac:
       resources: ["deployments"]
       verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
     - apiGroups: [""]
-      resources: ["services", "secrets"]
+      resources: ["services"]
       verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+    # Secrets by name only (T-2479): the reconciler reads back the ones it wrote, applies (patch,
+    # create for a new one) and deletes them, and never lists or watches. Without `list` a
+    # compromised Portal cannot enumerate the namespace's Secrets; it must already know a name.
+    - apiGroups: [""]
+      resources: ["secrets"]
+      verbs: ["get", "create", "patch", "delete"]
     - apiGroups: ["networking.k8s.io"]
       resources: ["networkpolicies"]
       verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]

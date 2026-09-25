@@ -194,3 +194,47 @@ def test_the_portal_carries_the_identity_and_the_settings_together(rendered, env
         assert env.get(name), f"{environment}: {name} is not set"
     # AP-26: an app's login is the APISIX edge's openid-connect, so the Portal takes no sidecar image.
     assert "JC_PORTAL_APPS_OAUTH2_PROXY_IMAGE" not in env
+
+
+# What the Portal's client does to a Secret: read one back by name, apply it (PATCH, and create
+# for a new one), delete it. It never lists or watches one (portal src/apps/kube.rs).
+SECRET_VERBS = {"get", "create", "patch", "delete"}
+
+
+@requires_helmfile
+@pytest.mark.parametrize("environment", ["local", "dev", "production"])
+def test_no_role_of_the_portal_lists_or_watches_secrets(rendered, environment):
+    """T-2479, SEC: every Role and ClusterRole the Portal's ServiceAccount holds, or binds in a
+    project's apps namespace, names Secrets only by name: no `list`, `watch` or `*`, so a
+    compromised Portal cannot enumerate the instance's credentials."""
+    docs = rendered(environment)
+    slug = portal_env(docs)["JC_PORTAL_RELEASE"]
+    roles = {
+        (d["kind"], d["metadata"].get("namespace"), d["metadata"]["name"]): d
+        for d in docs
+        if d.get("kind") in {"Role", "ClusterRole"}
+    }
+    held = [roles[("ClusterRole", None, f"{slug}-portal-apps")]]
+    for binding in docs:
+        if binding.get("kind") not in {"RoleBinding", "ClusterRoleBinding"}:
+            continue
+        if not any(
+            s.get("kind") == "ServiceAccount" and s.get("name") == "portal"
+            for s in binding.get("subjects") or []
+        ):
+            continue
+        ref = binding["roleRef"]
+        namespace = binding["metadata"].get("namespace") if ref["kind"] == "Role" else None
+        held.append(roles[(ref["kind"], namespace, ref["name"])])
+
+    checked = 0
+    for role in held:
+        for rule in role.get("rules", []):
+            if not {"secrets", "*"} & set(rule.get("resources", [])):
+                continue
+            checked += 1
+            verbs = set(rule["verbs"])
+            where = f"{environment}: {role['kind']} {role['metadata']['name']}"
+            assert "*" not in verbs and not verbs & {"list", "watch"}, f"{where} lists Secrets: {sorted(verbs)}"
+            assert verbs <= SECRET_VERBS | {"update"}, f"{where}: {sorted(verbs)}"
+    assert checked >= 2, "the Portal's own Role and the apps role both name Secrets"

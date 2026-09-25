@@ -15,8 +15,12 @@ rules:
     resources: ["deployments"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
   - apiGroups: [""]
-    resources: ["services", "secrets"]
+    resources: ["services"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # By name only, as in the Portal's own namespace (T-2479): nothing lists or watches Secrets.
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "create", "patch", "delete"]
   - apiGroups: ["networking.k8s.io"]
     resources: ["networkpolicies"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
