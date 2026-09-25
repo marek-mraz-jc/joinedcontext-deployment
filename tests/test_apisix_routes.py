@@ -39,6 +39,8 @@ EXPECTED_ROUTES = {
     },
     # T-2726: the organization's DCAT-AP feed for harvesters, anonymous (EP-84).
     "catalog-feed": {"uri": "/catalog.*", "priority": 20, "upstream_id": "catalog-feed", "host": LOCAL_DOMAIN},
+    # T-2490: the MCP hub over several Endpoints, bearer only (EP-87).
+    "context-mcp-hub": {"uri": "/api/mcp*", "priority": 20, "upstream_id": "context-mcp-hub", "host": LOCAL_DOMAIN},
 }
 
 

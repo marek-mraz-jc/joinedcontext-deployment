@@ -107,6 +107,10 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "an Endpoint publishes what its Policy grants, to anonymous callers by design (EP-01)",
     },
+    "context-mcp-hub": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "the MCP hub (EP-87): the gateway verifies the bearer and decides each call as the named Endpoint's own",
+    },
     "context-space-portal": {
         "reach": EDGE_SESSION, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "the space surface on the Portal's origin, where the UI reads it from; the edge session becomes the bearer and the gateway's PEP still decides",

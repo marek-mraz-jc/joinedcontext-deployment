@@ -135,3 +135,44 @@ mcp-mobile:
       - https://claude.com/api/mcp/auth_callback
       - https://chatgpt.com/connector_platform_oauth_redirect
       - https://platform.openai.com/chatkit-oauth-callback
+
+# The identity a connector uses for the MCP hub at /api/mcp: one connector over several
+# Endpoints (T-2490, ADR-N-025 section 4, EP-87, EP-88).
+#
+# Its tokens name the hub (`aud: mcp-hub`, from the mapper below) and reach only the Endpoints
+# their `endpoint:{slug}` scopes pick. The Portal's reconciler renders one optional client scope
+# `endpoint:{slug}` on this client per MCP-enabled Endpoint; consent is on, so the person sees
+# which Endpoints the connector asks for before any token exists. The gateway accepts a hub token
+# at /api/mcp only, never at an Endpoint's own URL, and each call is still the Endpoint's own
+# Policy decision. Public and PKCE S256 like mcp-mobile, with the same known callbacks and no
+# dynamic registration.
+mcp-hub:
+  name: MCP hub connector
+  description: Public PKCE client for one MCP connector over the Endpoints a person picks
+  subdomain: ''
+  redirectPath: /
+  rawValues:
+    publicClient: true
+    consentRequired: true
+    standardFlowEnabled: true
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: false
+    attributes:
+      pkce.code.challenge.method: S256
+    optionalClientScopes:
+      - offline_access
+    redirectUris:
+      - https://claude.ai/api/mcp/auth_callback
+      - https://claude.com/api/mcp/auth_callback
+      - https://chatgpt.com/connector_platform_oauth_redirect
+      - https://platform.openai.com/chatkit-oauth-callback
+    protocolMappers:
+      - name: mcp-hub-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.client.audience: mcp-hub
+          access.token.claim: 'true'
+          id.token.claim: 'false'
