@@ -101,3 +101,35 @@ helsinki-csr-indicators.yaml: projects/helsinki/spaces/helsinki-hub/registration
 helsinki-serviceaccount-hub-reader.yaml: projects/helsinki/access/serviceaccounts/hub-reader.yaml
 helsinki-layer-bikes.yaml: projects/helsinki/dashboards/bike-stations.yaml
 helsinki-dashboard-bikes.yaml: projects/helsinki/dashboards/city-bikes.yaml
+# The city's open registers (T-2787): one DataSource, one pipeline and its mapping per feed, all
+# written into the city space through helsinki-all.
+helsinki-datasource-services.yaml: projects/helsinki/datasources/hel-servicemap-units.yaml
+helsinki-datasource-beach-water.yaml: projects/helsinki/datasources/fvh-uiras-beaches.yaml
+helsinki-datasource-parking-areas.yaml: projects/helsinki/datasources/parkkiopas-parking-areas.yaml
+helsinki-datasource-excavation.yaml: projects/helsinki/datasources/hel-allu-excavation.yaml
+helsinki-datasource-traffic-arrangements.yaml: projects/helsinki/datasources/hel-allu-traffic-arrangements.yaml
+helsinki-datasource-area-events.yaml: projects/helsinki/datasources/hel-allu-area-events.yaml
+helsinki-datasource-districts.yaml: projects/helsinki/datasources/hel-districts.yaml
+helsinki-datasource-subdistricts.yaml: projects/helsinki/datasources/hel-subdistricts.yaml
+helsinki-datasource-fee-parking-zones.yaml: projects/helsinki/datasources/hel-parking-fee-zones.yaml
+helsinki-datasource-resident-parking-zones.yaml: projects/helsinki/datasources/hel-resident-parking-zones.yaml
+helsinki-pipeline-services.yaml: projects/helsinki/pipelines/services/pipeline.yaml
+helsinki-pipeline-beach-water.yaml: projects/helsinki/pipelines/beach-water/pipeline.yaml
+helsinki-pipeline-parking-areas.yaml: projects/helsinki/pipelines/parking-areas/pipeline.yaml
+helsinki-pipeline-excavation.yaml: projects/helsinki/pipelines/excavation/pipeline.yaml
+helsinki-pipeline-traffic-arrangements.yaml: projects/helsinki/pipelines/traffic-arrangements/pipeline.yaml
+helsinki-pipeline-area-events.yaml: projects/helsinki/pipelines/area-events/pipeline.yaml
+helsinki-pipeline-districts.yaml: projects/helsinki/pipelines/districts/pipeline.yaml
+helsinki-pipeline-subdistricts.yaml: projects/helsinki/pipelines/subdistricts/pipeline.yaml
+helsinki-pipeline-fee-parking-zones.yaml: projects/helsinki/pipelines/fee-parking-zones/pipeline.yaml
+helsinki-pipeline-resident-parking-zones.yaml: projects/helsinki/pipelines/resident-parking-zones/pipeline.yaml
+helsinki-pipeline-services-bento.yaml: projects/helsinki/pipelines/services/bento.yaml
+helsinki-pipeline-beach-water-bento.yaml: projects/helsinki/pipelines/beach-water/bento.yaml
+helsinki-pipeline-parking-areas-bento.yaml: projects/helsinki/pipelines/parking-areas/bento.yaml
+helsinki-pipeline-excavation-bento.yaml: projects/helsinki/pipelines/excavation/bento.yaml
+helsinki-pipeline-traffic-arrangements-bento.yaml: projects/helsinki/pipelines/traffic-arrangements/bento.yaml
+helsinki-pipeline-area-events-bento.yaml: projects/helsinki/pipelines/area-events/bento.yaml
+helsinki-pipeline-districts-bento.yaml: projects/helsinki/pipelines/districts/bento.yaml
+helsinki-pipeline-subdistricts-bento.yaml: projects/helsinki/pipelines/subdistricts/bento.yaml
+helsinki-pipeline-fee-parking-zones-bento.yaml: projects/helsinki/pipelines/fee-parking-zones/bento.yaml
+helsinki-pipeline-resident-parking-zones-bento.yaml: projects/helsinki/pipelines/resident-parking-zones/bento.yaml

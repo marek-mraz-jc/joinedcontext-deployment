@@ -1,0 +1,21 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Policy
+metadata:
+  name: public-read
+  namespace: praha
+  title: { cs: "Veřejné čtení", en: "Public read" }
+spec:
+  contextSpaceRef: { kind: ContextSpace, name: praha-mesto }
+  assigner: did:web:{orgDomain}
+  assignee: { kind: role, id: public }
+  operations: [retrieveOps]
+  # Every type of the space: each is open data, and no mapping writes a person's name or contact.
+  information:
+    - entities:
+        - type: BikeHireDockingStation
+        - type: AirQualityObserved
+        - type: PointOfInterest
+        - type: WasteContainerIsle
+        - type: OffStreetParking
+        - type: CityDistrict
+        - type: BudgetLine

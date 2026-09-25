@@ -1,0 +1,23 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Project
+metadata:
+  name: praha
+  namespace: org
+  title: { cs: "Hlavní město Praha", en: "City of Prague" }
+  description:
+    cs: "Otevřená data Prahy: kola, ovzduší, městské části, školy, kultura, odpad, P+R, prodej jízdenek a rozpočet."
+    en: "Prague's open data: bikes, air, districts, schools, culture, waste, park and ride, ticket points and the budget."
+spec:
+  organizationRef: hel
+  # One space, eleven scheduled pipelines (every period is 5 minutes or longer, so none is
+  # resident, PL-26; a quota cannot be zero, so it holds one), one public endpoint. About 12 000
+  # entities on 2026-09-25. The four applications of T-2786 are counted ahead (PF-73).
+  quotas:
+    contextSpaces: 1
+    residentPipelines: 1
+    publicEndpoints: 1
+    apps: 4
+    ingestEventsPerSecond: 50
+    agentRunsPerDay: 20
+    entitiesPerSpace: 20000
+    requestsPerMinute: 600
