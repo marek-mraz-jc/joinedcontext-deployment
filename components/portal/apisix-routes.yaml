@@ -34,6 +34,30 @@ portal-well-known:
   subDomain: portal
   priority: 5
 
+# The public open-data catalogue (EP-81): the one Portal page a visitor reads without an account,
+# and the static bundle every Portal page loads. The edge session is read when there is one and
+# a visitor without one passes as anonymous; every read the page makes goes through portal-api,
+# where the Portal decides what an anonymous caller sees. `/catalogue*` also takes
+# `/catalogue/{dataset}`; anything else under the prefix is the Portal's own 404.
+portal-public:
+  name: portal-public
+  description: The public catalogue page, edge session optional
+  upstream: portal.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "portal") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/catalogue*'
+  subDomain: portal
+  priority: 5
+
+# The bundle the catalogue page (and every Portal page) runs on: the same files for everyone,
+# holding no data. The plugin config is portal-public's.
+portal-public-assets:
+  name: portal-public-assets
+  description: The Portal's static bundle, edge session optional
+  upstream: portal.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "portal") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/assets/*'
+  subDomain: portal
+  priority: 5
+  pluginConfig: portal-public
+
 portal-api:
   name: portal-api
   description: Portal REST API

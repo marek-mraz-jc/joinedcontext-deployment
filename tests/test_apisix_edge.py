@@ -15,10 +15,11 @@ import yaml
 from conftest import set_global
 from test_edge_attack_surface import TRUSTED_HEADERS as FORGED_HEADERS
 
-UI_CONFIGS = ("portal-ui", "apps-surface", "keycloak", "gitea-forge")
+UI_CONFIGS = ("portal-ui", "portal-public", "apps-surface", "keycloak", "gitea-forge")
 # The routes the Portal itself answers; their headers are the Portal's own (T-1732).
 PORTAL_CONFIGS = (
     "portal-ui",
+    "portal-public",
     "portal-api",
     "portal-well-known",
     "portal-metrics",
@@ -26,9 +27,11 @@ PORTAL_CONFIGS = (
     "portal-redirect",
 )
 # Pages and app bundles a browser may cache; every other route is `no-store`.
-CACHEABLE_CONFIGS = ("portal-ui", "apps-surface")
+CACHEABLE_CONFIGS = ("portal-ui", "portal-public", "apps-surface")
 API_CONFIGS = ("portal-api", "context-space", "context-endpoint")
 GATEWAY_UPSTREAMS = ("context-space", "context-endpoint")
+# The gateway answers these too, and sets their Cache-Control itself (EP-84: the DCAT-AP feed).
+GATEWAY_ANSWERED = (*GATEWAY_UPSTREAMS, "catalog-feed")
 # BSI TR-02102-2: no CBC, no 3DES, no static RSA key exchange, no anonymous suites.
 FORBIDDEN_CIPHER_MARKERS = ("_CBC_", "3DES", "TLS_RSA_", "_anon_", "RC4")
 
@@ -106,7 +109,7 @@ def test_security_response_headers_on_every_route(plugin_configs):
         assert headers["Referrer-Policy"] == expected_referrer, config_id
         expected_frame = "SAMEORIGIN" if config_id in UI_CONFIGS else "DENY"
         assert headers["X-Frame-Options"] == expected_frame, config_id
-        if config_id.removesuffix("-portal").removesuffix("-apps") in GATEWAY_UPSTREAMS:
+        if config_id.removesuffix("-portal").removesuffix("-apps") in GATEWAY_ANSWERED:
             # T-2262, EP-51: the gateway sets Cache-Control on every answer itself (`private`,
             # `no-store`, or `no-cache` with an ETag on a schema artifact); the edge leaves it be.
             assert "Cache-Control" not in headers, config_id
