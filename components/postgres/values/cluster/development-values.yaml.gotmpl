@@ -19,7 +19,10 @@ cluster:
       cpu: 100m
       memory: 512Mi
     limits:
-      cpu: 500m
+      # 2 cores: at 500m the kernel throttled it in 31% of its periods (4365 s in all by
+      # 2026-09-25 18:30Z), the broker's 1000-entity upserts outran their time and every praha
+      # waste-stations batch came back "database error" (T-2971). The node has 8 vCPUs, ~28% used.
+      cpu: '2'
       memory: 2Gi
 
   storage:
