@@ -65,7 +65,8 @@ def test_each_projects_quotas_hold_what_it_declares_with_room_for_the_demo():
     """T-2873: the quota leaves room for the demo's work, never exactly what the seed holds."""
     for folder, project, spaces, public in (
         (REGION, "bbsk", ["bbsk-kraj", "bbsk-kpi", "bbsk-registre"], 2),
-        (CITY, "banskabystrica", ["ovzdusie", "banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne"], 2),
+        # The third public endpoint of the city is the air-quality App's own (T-2972).
+        (CITY, "banskabystrica", ["ovzdusie", "banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne"], 3),
     ):
         quotas = one(folder, "Project", project)["spec"]["quotas"]
         declared = {doc["metadata"]["name"] for _, doc in manifests(folder, "ContextSpace")}
@@ -361,6 +362,9 @@ def test_a_public_endpoint_serves_a_tabular_representation_and_says_what_it_is()
         for folder in (REGION, CITY)
         for path, doc in manifests(folder, "Endpoint")
         if doc["spec"].get("audience") == "public"
+        # An App's own endpoint is its door, not a dataset: it publishes nothing to a catalogue
+        # and serves the representations the App reads (T-2972).
+        and doc["metadata"].get("annotations", {}).get("joinedcontext.com/generated-by") != "portal/app-reconciler"
     ]
     assert public, "neither project has a public endpoint to publish"
     for project, path, doc in public:
@@ -496,34 +500,52 @@ def test_the_citys_records_are_a_published_static_app_the_portal_image_ships():
     assert note["information"][0]["propertyNames"] == ["stewardNote"]
 
 
-def test_the_citys_air_quality_is_a_public_static_app_on_the_public_endpoint_alone():
-    """T-2916, T-2949: the public screen reads the city's public space, where the EEA pipelines
-    write station SK0263A, read only, and only the attributes that space's public grant serves,
-    so no answer carries a refusal."""
+def test_the_citys_air_quality_is_a_public_static_app_on_its_own_endpoint():
+    """T-2916, T-2949, T-2972: the public screen reads the city's public space, where the EEA
+    pipelines write station SK0263A, read only, through its own Endpoint and the Policies the
+    Portal compiles for it, seeded beside it because the seed commits the App past the Portal's
+    door. Without them the static host hands the App the space's public endpoint, whose grant
+    has no temporal read, and the day of history answers 404."""
     app = one(CITY, "App", "banskabystrica-ovzdusie")
     assert app["metadata"]["annotations"]["joinedcontext.com/shipped-with"] == "portal"
     assert app["spec"]["visibility"] == "public"
     assert app["spec"]["lifecycle"] == "published"
     (need,) = app["spec"]["dataNeeds"]
     space = need["contextSpaceRef"]["name"]
-    endpoints = [doc for _, doc in manifests(CITY, "Endpoint") if doc["spec"]["contextSpaceRef"] == space]
-    assert endpoints and all(e["spec"]["audience"] == "public" for e in endpoints), space
-    assert set(need["operations"]) <= {"queryEntity", "retrieveEntity", "queryTemporal"}
     # The space the live readings go to, never the conformance suite's seeded stations.
     assert space == "banskabystrica-verejne", space
     # `urn:ngsi-ld:Endpoint:{org}:{space}:{name}`: both streams land in this space.
     writes = {doc["spec"]["targetEndpoint"].split(":")[4] for _, doc in manifests(CITY, "Pipeline")
               if doc["metadata"]["name"] in {"ovzdusie-pm10", "ovzdusie-pm25"}}
     assert writes == {space}, writes
-    # The public grant of that space: a rule without propertyNames serves every attribute.
-    grants = [doc["spec"] for _, doc in manifests(CITY, "Policy")
-              if doc["spec"]["contextSpaceRef"]["name"] == space and doc["spec"]["assignee"] == {"kind": "role", "id": "public"}]
-    rules = [rule for grant in grants for rule in grant["information"]
-             if any(entity["type"] in need["types"] for entity in rule["entities"])]
-    assert rules, "no public grant of the space serves the type"
-    if all(rule.get("propertyNames") for rule in rules):
-        served = {name for rule in rules for name in rule["propertyNames"]}
-        assert set(need["attrs"]) <= served, sorted(set(need["attrs"]) - served)
+    # Read only: the entities and one station's history, the panel's `GET /temporal/entities/{id}`.
+    assert set(need["operations"]) == {"queryEntity", "retrieveEntity", "retrieveTemporal"}
+
+    generated = {"joinedcontext.com/generated-by": "portal/app-reconciler"}
+    endpoint = one(CITY, "Endpoint", "app-banskabystrica-ovzdusie")
+    assert endpoint["metadata"]["annotations"] == generated
+    assert endpoint["spec"]["contextSpaceRef"] == {"kind": "ContextSpace", "name": space}
+    assert endpoint["spec"]["audience"] == "public" and endpoint["spec"]["callerRole"] is True
+
+    role = {"kind": "role", "id": "endpoint:banskabystrica/app-banskabystrica-ovzdusie"}
+    grants = [doc for _, doc in manifests(CITY, "Policy") if doc["spec"]["assignee"] == role]
+    assert {doc["metadata"]["name"] for doc in grants} == {
+        "app-banskabystrica-ovzdusie-1", "app-banskabystrica-ovzdusie-1-history"}
+    granted = set()
+    for grant in grants:
+        spec = grant["spec"]
+        assert grant["metadata"]["annotations"] == generated
+        assert spec["contextSpaceRef"]["name"] == space
+        # No grant wider than the type and the attributes the screen shows.
+        (rule,) = spec["information"]
+        assert [entity["type"] for entity in rule["entities"]] == need["types"]
+        assert rule["propertyNames"] == need["attrs"]
+        # The history is the App's window and nothing older.
+        temporal = set(spec["operations"]) & {"queryTemporal", "retrieveTemporal"}
+        if temporal:
+            assert spec["temporalQ"] == "timerel=after;timeAt=P-1D", spec
+        granted |= set(spec["operations"])
+    assert granted == set(need["operations"]), granted
 
 
 # What the city and the region cleared for the open-data catalogue (T-2407, user 2026-09-21):

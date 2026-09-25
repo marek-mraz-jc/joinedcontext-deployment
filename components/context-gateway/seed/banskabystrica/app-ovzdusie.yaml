@@ -6,8 +6,9 @@
 # T-2435). Hand written, so no generated-by annotation.
 #
 # It reads and never writes, so it is `static`: a bundle the Portal static host serves under
-# /apps/banskabystrica-ovzdusie/. The endpoint behind it, `public-air`, is public, so the app
-# never asks anybody to sign in and never holds a token (AP-28).
+# /apps/banskabystrica-ovzdusie/. The endpoint behind it, its own `app-banskabystrica-ovzdusie`
+# (app-ovzdusie-endpoint.yaml), is public, so the app never asks anybody to sign in and never
+# holds a token (AP-28).
 apiVersion: joinedcontext.com/v1alpha1
 kind: App
 metadata:
@@ -46,7 +47,9 @@ spec:
         name: banskabystrica-verejne
       types: [AirQualityObserved]
       attrs: [name, dateObserved, location, pm10, pm25, dataProvider]
-      operations: [queryEntity, retrieveEntity, queryTemporal]
+      # The day of history is one station's, `GET /temporal/entities/{id}`: retrieveTemporal,
+      # never the type-wide queryTemporal the screen does not ask (T-2972).
+      operations: [queryEntity, retrieveEntity, retrieveTemporal]
       temporalQ:
         window: P1D
       representations: [ngsi-ld, geojson]
