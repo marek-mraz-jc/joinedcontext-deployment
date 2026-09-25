@@ -17,7 +17,8 @@ releases:
     version: 3.8.1
     # helm 4's watcher treats a CustomResourceDefinition as "InProgress" until it is
     # Established and fails --wait on the race (k3d-deploy, ci-full 34786322385); the
-    # hook below waits for the same convergence with kubectl instead.
+    # hook below waits for the same convergence with kubectl instead. It waits on every CRD, not
+    # a label: the chart labels its CRDs part-of=<release>-crds or not at all (ci-full 36096043398).
     wait: false
     waitForJobs: false
     hooks:
@@ -27,7 +28,7 @@ releases:
         args:
           - -ec
           - |
-            kubectl wait --for=condition=Established crd -l app.kubernetes.io/part-of=kyverno --timeout=180s
+            kubectl wait --for=condition=Established crd --all --timeout=180s
             kubectl -n kyverno rollout status deployment --timeout=300s
     values:
       - admissionController:
