@@ -181,6 +181,7 @@ v1/ConfigMap local/gitea-bootstrap-app-helsinki-events
 v1/ConfigMap local/gitea-bootstrap-app-hsl-transport
 v1/ConfigMap local/gitea-bootstrap-seed
 v1/ConfigMap local/gitea-runner
+v1/ConfigMap local/keycloak-theme
 v1/ConfigMap local/observability-collector-config
 v1/ConfigMap local/pipeline-runner-helsinki-streams
 v1/ConfigMap local/portal-branding

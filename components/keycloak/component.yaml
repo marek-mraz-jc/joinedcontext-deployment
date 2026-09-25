@@ -1,7 +1,12 @@
 ---
 component: keycloak
 parts:
+  # The login theme first: the Keycloak pod mounts its ConfigMap by name, and a pod whose
+  # ConfigMap does not exist yet stays in Init until it does.
+  - name: theme
   - name: app
+    needs:
+      - keycloak.theme
   - name: config
     needs:
       - keycloak.app

@@ -47,7 +47,9 @@ apisix-gateway:
 # The realm template merges `attributes` over its defaults, so the two the defaults carry
 # (post-logout URIs, PKCE method) are repeated here rather than relied on.
 edge:
-  name: Edge login
+  # What the login page names ("Sign in to {name} · {organization}"): a key the login theme
+  # translates (components/keycloak/charts/theme).
+  name: ${jcClientPortal}
   description: Confidential client of the APISIX openid-connect plugin, the login front of the Portal and every app
   subdomain: portal
   redirectPath: /*

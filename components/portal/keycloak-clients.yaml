@@ -5,7 +5,9 @@
 # the Portal's own code flow, the fallback of an installation without the edge in front, and
 # for the service account of the backend.
 portal-ui:
-  name: Portal UI
+  # What the login page names ("Sign in to {name} · {organization}"): a key the login theme
+  # translates (components/keycloak/charts/theme).
+  name: ${jcClientPortal}
   description: Browser client of the portal single-page UI; public, PKCE only, no secret
   subdomain: portal
   redirectPath: /*
@@ -16,7 +18,9 @@ portal-ui:
     serviceAccountsEnabled: false
 
 portal-api:
-  name: Portal API
+  # What the login page names ("Sign in to {name} · {organization}"): a key the login theme
+  # translates (components/keycloak/charts/theme).
+  name: ${jcClientPortal}
   description: Confidential client of the portal backend for the OIDC code flow and its service account
   subdomain: portal
   redirectPath: /api/v1/auth/callback

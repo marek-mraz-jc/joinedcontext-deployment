@@ -19,6 +19,14 @@ podSecurityContext:
 podAnnotations:
   config.linkerd.io/skip-outbound-ports: "25,465,587,7800,57800"
   config.linkerd.io/skip-inbound-ports: "7800,57800"
+  {{- /* The theme is copied in at start-up and Keycloak caches it, so a changed theme or
+         branding block has to roll the pod: the checksum covers both. */}}
+  {{- $theme := list (toJson (.Values.global.branding | default dict)) }}
+  {{- range readDir "../../charts/theme/files" }}
+  {{- $theme = append $theme (readFile .) }}
+  {{- end }}
+  {{- $theme = append $theme (readFile "../../charts/theme/templates/configmap.yaml") }}
+  checksum/theme: {{ join "\n" $theme | sha256sum }}
 
 
 image:
@@ -146,11 +154,20 @@ extraInitContainers: |
     securityContext:
       {{ .Values.securityDefaults.securityContext | toYaml | nindent 6 }}
     command:
-      - sh
+      - bash
       - -c
     args:
       - |
+        set -eu
         cp -R /opt/keycloak/* /app/
+        # The login theme (UI-82): a ConfigMap key is the file's path with `__` for `/`
+        # (components/keycloak/charts/theme).
+        for file in /theme/*; do
+          path="/app/themes/joinedcontext/$(basename "$file")"
+          path="${path//__//}"
+          mkdir -p "${path%/*}"
+          cp "$file" "$path"
+        done
         /app/bin/kc.sh build --db=postgres --health-enabled=true --metrics-enabled=true --http-relative-path={{ $this.pathPrefix }}
     resources:
       requests:
@@ -164,6 +181,9 @@ extraInitContainers: |
         mountPath: /app
       - name: tmp
         mountPath: /tmp
+      - name: theme
+        mountPath: /theme
+        readOnly: true
 
 extraVolumeMounts: |
   - name: workspace
@@ -176,3 +196,6 @@ extraVolumes: |
     emptyDir: {}
   - name: tmp
     emptyDir: {}
+  - name: theme
+    configMap:
+      name: {{ .Values.keycloak.theme.configMapName }}
