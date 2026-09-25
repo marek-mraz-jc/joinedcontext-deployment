@@ -111,6 +111,10 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "the MCP hub (EP-87): the gateway verifies the bearer and decides each call as the named Endpoint's own",
     },
+    "context-mcp-hub-portal": {
+        "reach": EDGE_SESSION, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "the MCP hub on the Portal's origin, where the Endpoints view shows it; the edge session becomes the bearer and the gateway still decides",
+    },
     "context-space-portal": {
         "reach": EDGE_SESSION, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "the space surface on the Portal's origin, where the UI reads it from; the edge session becomes the bearer and the gateway's PEP still decides",

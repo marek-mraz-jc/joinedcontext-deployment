@@ -94,6 +94,21 @@ context-mcp-hub:
     connect: 6
     send: 60
     read: 300
+# The hub on the Portal host, where the Endpoints view shows its URL beside the per-Endpoint
+# ones: the edge session becomes the bearer and a presented bearer passes as it is, exactly as on
+# context-endpoint-portal, whose plugin chain it shares.
+context-mcp-hub-portal:
+  name: context-mcp-hub-portal
+  description: The MCP hub on the Portal host, edge session as bearer
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/api/mcp*'
+  subDomain: portal
+  priority: 20
+  pluginConfig: context-endpoint-portal
+  timeout:
+    connect: 6
+    send: 60
+    read: 300
 # The same surface on the Portal host: the Portal UI fetches an endpoint's access and samples
 # from its own origin, and a preview's form writes through the page that framed it (AP-63).
 # Without this route those paths fall through to portal-ui, a login redirect and the Portal's
