@@ -1,0 +1,6 @@
+# The installation's release name: projects' apps namespaces are `{release}-{project}-apps`.
+release: ''
+# The Portal's ServiceAccount and its namespace.
+serviceAccount:
+  name: portal
+  namespace: ''

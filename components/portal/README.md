@@ -27,6 +27,26 @@ helmfile apply -i --selector component=portal
 `/usr/local/bin/joinedcontext-portal`, listening on 8080 — the component sets no `command`
 and lets the entrypoint run.
 
+## Each project's apps namespace
+
+A pod-backed App runs in its project's own namespace, `{instanceSlug}-{project}-apps` (AP-116).
+The Portal creates it on the project's first pod-backed App, with Pod Security `restricted`, a
+default-deny NetworkPolicy that admits APISIX only, the registry pull Secret and a RoleBinding
+of `{instanceSlug}-portal-apps` to itself, and deletes it when the last one is retired.
+
+The `namespaces` part (`charts/namespaces`) grants that. The ClusterRole
+`{instanceSlug}-portal-namespaces` lets the Portal create, patch and delete namespaces and
+RoleBindings and bind that one role. RBAC cannot name a prefix, so a ValidatingAdmissionPolicy
+bounds those rights (AP-117). The API server evaluates it for every request, and it always
+denies. The Portal may write a namespace only if the namespace is named
+`{instanceSlug}-{project}-apps` and carries `joinedcontext.com/managed-by=joinedcontext-portal`
+and `joinedcontext.com/project={project}`. It may write a RoleBinding only in such a namespace,
+binding `{instanceSlug}-portal-apps` to itself alone. `tests/test_portal_namespaces_policy.py`
+runs both rules through the kyverno CLI.
+
+`portal.namespaces.enabled: false` removes the grant and the Portal's `JC_PORTAL_RELEASE`, and
+the Portal then refuses every pod-backed App and says why.
+
 ## The secret backend a pipeline's `secretRef` resolves through
 
 A `Pipeline` names its credentials, it never carries them (CC-06, PL-15). The reconciler
