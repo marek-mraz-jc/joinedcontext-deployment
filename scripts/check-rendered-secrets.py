@@ -26,6 +26,10 @@ STRINGDATA_ALLOWED = {
     ("gitea-", "gitea"),
     ("gitea-", "gitea-init"),
     ("gitea-", "gitea-inline-config"),
+    # The APISIX rule file helm seeds until the Portal composes it (ADR-N-030, AP-112): the
+    # shared routes, whose secrets are `${{ENV}}` references; the per-App client secrets are
+    # only ever written into it at runtime by the Portal.
+    ("configuration-", "apisix-standalone-config"),
 }
 
 

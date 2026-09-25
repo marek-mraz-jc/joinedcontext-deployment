@@ -59,10 +59,10 @@ helsinki-pipelines:
 # serviceaccount-pipelines.yaml), which is what the Portal's reconciler renders into each stream
 # and what the gateway resolves the token's `azp` to.
 #
-# The audiences are the two endpoints its streams write through and read back, and no others:
+# The audiences are the three endpoints its streams write through and read back, and no others:
 # `banskabystrica-mesto` (the published rows, written by `obyvatelia` and `voda` and read by
-# `ukazovatele-mesto`) and `banskabystrica-kpi` (the indicators). `public-air` is public, so a
-# stream reading it sends no token at all.
+# `ukazovatele-mesto`), `banskabystrica-kpi` (the indicators) and `banskabystrica-verejne` (the
+# city's open data, T-2781). `public-air` is public, so a stream reading it sends no token at all.
 banskabystrica-pipelines:
   # An account of the demo seed: rendered by the development profile only (T-1720, CC-73).
   profiles: [development]
@@ -93,6 +93,14 @@ banskabystrica-pipelines:
         consentRequired: false
         config:
           included.custom.audience: y4royli3pip6yrhv3olxxf2522b3dovt
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: banskabystrica-verejne-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: rpfqszwlbp5bonvg7kckhdsne5qedjor
           access.token.claim: 'true'
           id.token.claim: 'false'
 

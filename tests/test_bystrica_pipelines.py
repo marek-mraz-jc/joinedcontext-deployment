@@ -44,6 +44,16 @@ MAPPINGS = {
     SEED / "banskabystrica/pipeline-obyvatelia-bento.yaml": (
         "mesto-obyvatelia-vek.json", "banskabystrica.sk", "banskabystrica-mesto",
     ),
+    # T-2781: the city's further ŠÚ SR cubes, each a complete recorded answer of 2026-09-25.
+    SEED / "banskabystrica/pipeline-pohyb-bento.yaml": ("mesto-om7103rr.json", "banskabystrica.sk", "banskabystrica-mesto"),
+    SEED / "banskabystrica/pipeline-obyvatelstvo-bento.yaml": ("mesto-om7101qr.json", "banskabystrica.sk", "banskabystrica-mesto"),
+    SEED / "banskabystrica/pipeline-ubytovanie-bento.yaml": ("mesto-cr3809qr.json", "banskabystrica.sk", "banskabystrica-mesto"),
+    SEED / "banskabystrica/pipeline-navstevnost-bento.yaml": ("mesto-cr3803mr.json", "banskabystrica.sk", "banskabystrica-mesto"),
+    SEED / "banskabystrica/pipeline-pozemky-bento.yaml": ("mesto-pl5001rr.json", "banskabystrica.sk", "banskabystrica-mesto"),
+    SEED / "banskabystrica/pipeline-uchadzaci-bento.yaml": ("mesto-pr5001rr.json", "banskabystrica.sk", "banskabystrica-mesto"),
+    SEED / "banskabystrica/pipeline-materske-skoly-bento.yaml": ("mesto-sv5001rr.json", "banskabystrica.sk", "banskabystrica-mesto"),
+    SEED / "banskabystrica/pipeline-zakladne-skoly-bento.yaml": ("mesto-sv5002rr.json", "banskabystrica.sk", "banskabystrica-mesto"),
+    SEED / "banskabystrica/pipeline-kniznice-bento.yaml": ("mesto-ku5008rr.json", "banskabystrica.sk", "banskabystrica-mesto"),
 }
 
 CUBE_MAPPINGS = [p for p in MAPPINGS if p.name != "pipeline-obyvatelia-bento.yaml"]
@@ -179,6 +189,52 @@ def test_the_region_cubes_carry_the_figures_the_publisher_states(entities):
 
 
 @requires_docker
+def test_the_city_cubes_carry_the_figures_the_publisher_states(entities):
+    """T-2781: read from the publisher on 2026-09-25 by decoding the index, and cross-checked:
+    the city's area is the one the BBSK municipality register states, and a quarter's end is the
+    next quarter's start."""
+    known = {
+        ("pl5001rr", "2025", "U14010", None): 103376157,
+        ("om7103rr", "2025", "IN010114", None): 73312,
+        ("om7101qr", "2026Q2", "IN010113", "SPOLU"): 72912,
+        ("om7101qr", "2026Q1", "IN010115", "SPOLU"): 72912,
+        ("pr5001rr", "2025", "U15061", None): 1631,
+    }
+    found = {
+        (e["dataSet"]["value"], e["refPeriod"]["value"], e["indicator"]["value"],
+         e.get("dimensionKey", {}).get("value")): e["value"]["value"]
+        for path, produced in entities.items()
+        if MAPPINGS[path][2] == "banskabystrica-mesto"
+        for e in produced
+    }
+    for key, expected in known.items():
+        assert found.get(key) == expected, key
+
+
+@requires_docker
+def test_the_citys_men_and_women_sum_to_its_population_in_every_quarter(entities):
+    produced = entities[SEED / "banskabystrica/pipeline-obyvatelstvo-bento.yaml"]
+    by_quarter: dict[tuple[str, str], dict[str, int]] = {}
+    for e in produced:
+        by_quarter.setdefault((e["refPeriod"]["value"], e["indicator"]["value"]), {})[e["dimensionKey"]["value"]] = e["value"]["value"]
+    assert len({period for period, _ in by_quarter}) == 134, "1993Q1 to 2026Q2"
+    for key, sexes in by_quarter.items():
+        assert set(sexes) == {"SPOLU", "1", "2"}, key
+        assert sexes["1"] + sexes["2"] == sexes["SPOLU"], key
+
+
+@requires_docker
+def test_the_city_tourism_cubes_key_by_their_period_and_never_by_a_sum(entities):
+    visits = entities[SEED / "banskabystrica/pipeline-navstevnost-bento.yaml"]
+    months = {e["dimensionKey"]["value"].split("-")[0] for e in visits}
+    assert months == {f"{m}." for m in range(1, 13)}
+    assert {e["dimensionKey"]["value"].split("-", 1)[1] for e in visits} == {"VISIT_TOTAL", "VISIT_DOM", "VISIT_FOR"}
+    rooms = entities[SEED / "banskabystrica/pipeline-ubytovanie-bento.yaml"]
+    assert {e["dimensionKey"]["value"] for e in rooms} == {f"{q}.Q." for q in range(1, 5)}
+    assert all(" " not in e["id"] for e in visits + rooms)
+
+
+@requires_docker
 def test_a_month_or_a_quarter_is_the_key_and_never_the_year_to_date_sum(entities):
     """The tourism cubes also publish `1. - 12.` and `1. - 4.Q.`, the sums of the periods; a
     code with spaces is no id segment, and a sum stored beside its parts is counted twice."""
@@ -212,6 +268,17 @@ def test_the_raw_space_holds_every_cube_within_the_projects_entity_quota():
     assert cells <= quota * 0.8, f"{cells} cells against a quota of {quota}"
 
 
+def test_the_citys_raw_space_holds_every_cube_within_its_entity_quota():
+    """The same rule for `banskabystrica-mesto` (T-2781), whose nine new cubes join `voda`."""
+    quota = yaml.safe_load((SEED / "banskabystrica/project.yaml").read_text())["spec"]["quotas"]["entitiesPerSpace"]
+    cells = sum(
+        sum(cell is not None for cell in json.loads((FIXTURES / fixture).read_text())["value"])
+        for path, (fixture, _, space) in MAPPINGS.items()
+        if space == "banskabystrica-mesto" and path in CUBE_MAPPINGS
+    )
+    assert cells <= quota * 0.8, f"{cells} cells against a quota of {quota}"
+
+
 @requires_docker
 def test_the_emissions_mapping_keeps_the_pollutant_it_sliced(entities):
     produced = entities[SEED / "bbsk/bbsk-pipeline-emisie-bento.yaml"]
@@ -238,8 +305,10 @@ def test_the_city_register_is_dated_by_the_day_it_was_read_because_it_declares_n
 def test_every_entity_carries_the_request_that_produced_it(entities):
     """A row that cannot be fetched again is not a row, so `source` is the DataSource's own URL
     and not a shortened one that would need a human to reconstruct the query."""
+    # Keyed by project: a DataSource name is unique in its project only, and the city and the
+    # region both read `susr-pr5001rr`, each for its own territory.
     declared = {
-        doc["metadata"]["name"]: doc["spec"]["http"]["url"]
+        (doc["metadata"]["namespace"], doc["metadata"]["name"]): doc["spec"]["http"]["url"]
         for folder in (SEED / "bbsk", SEED / "banskabystrica")
         for path in sorted(folder.glob("*.yaml"))
         if path.name != "index.yaml" and not path.name.endswith((".linkml.yaml", "-bento.yaml"))
@@ -248,7 +317,7 @@ def test_every_entity_carries_the_request_that_produced_it(entities):
     }
     for path, produced in entities.items():
         pipeline = yaml.safe_load(Path(str(path).replace("-bento.yaml", ".yaml")).read_text())
-        wanted = declared[pipeline["spec"]["source"]["dataSourceRef"]["name"]]
+        wanted = declared[(pipeline["metadata"]["namespace"], pipeline["spec"]["source"]["dataSourceRef"]["name"])]
         for entity in produced:
             assert entity["source"]["value"] == wanted, path.name
 

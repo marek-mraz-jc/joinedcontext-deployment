@@ -64,7 +64,7 @@ def test_the_region_is_its_own_project_and_the_city_says_it_is_the_city():
 def test_each_projects_quotas_hold_exactly_what_it_declares():
     for folder, project, spaces, public in (
         (REGION, "bbsk", ["bbsk-kraj", "bbsk-kpi", "bbsk-registre"], 2),
-        (CITY, "banskabystrica", ["ovzdusie", "banskabystrica-mesto", "banskabystrica-kpi"], 1),
+        (CITY, "banskabystrica", ["ovzdusie", "banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne"], 2),
     ):
         quotas = one(folder, "Project", project)["spec"]["quotas"]
         declared = {doc["metadata"]["name"] for _, doc in manifests(folder, "ContextSpace")}
@@ -108,7 +108,7 @@ def test_the_citys_indicators_reach_the_region_by_a_named_share_and_nothing_wide
 def test_no_service_account_can_write_into_the_other_bodys_space():
     for folder, project, own in (
         (REGION, "bbsk", {"bbsk-kraj", "bbsk-kpi", "bbsk-registre"}),
-        (CITY, "banskabystrica", {"banskabystrica-mesto", "banskabystrica-kpi"}),
+        (CITY, "banskabystrica", {"banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne"}),
     ):
         account = one(folder, "ServiceAccount", "pipelines")
         scopes = {role["scope"]["contextSpace"] for role in account["spec"]["roles"]}
@@ -475,7 +475,12 @@ def test_the_application_reading_both_bodies_is_a_published_static_app_on_the_re
 # while its space holds Helsinki test stations rather than the city's readings (T-2407 body).
 # T-2783 (owner, 2026-09-24: BBSK's open data "republished to CKAN") adds the region's registers,
 # which are the region's own CC BY-SA publication and hold no person.
-CLEARED = {("banskabystrica", "public-air"), ("bbsk", "bbsk-kpi"), ("bbsk", "bbsk-registre")}
+# T-2781 ("republished to CKAN", by the rule of T-2780) adds the city's public space: events, the
+# school map and the EEA's station readings, all CC BY 4.0, none of them about a person.
+CLEARED = {
+    ("banskabystrica", "public-air"), ("banskabystrica", "banskabystrica-verejne"),
+    ("bbsk", "bbsk-kpi"), ("bbsk", "bbsk-registre"),
+}
 HELD = {("banskabystrica", "public-air")}
 
 

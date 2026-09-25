@@ -13,14 +13,15 @@ spec:
   # what it publishes today (`public-air`): the endpoints page of this project is where the
   # pre-emptive quota warning of T-1594 is true and can be read, on dev and in the demo.
   quotas:
-    # Three spaces now: the seeded `ovzdusie`, the raw cube rows in `banskabystrica-mesto` and
-    # the indicators in `banskabystrica-kpi`. Four pipelines: two that ingest and two that
-    # compute, one per space the indicators are computed from. `publicEndpoints` stays at one,
-    # `public-air`: the city's indicators reach the region's application by a named share and
-    # not by being public (EP-15).
-    contextSpaces: 3
-    residentPipelines: 4
-    publicEndpoints: 1
+    # Four spaces: the seeded `ovzdusie`, the raw cube rows in `banskabystrica-mesto`, the
+    # indicators in `banskabystrica-kpi` and the city's open data in `banskabystrica-verejne`
+    # (T-2781). Seventeen pipelines: eleven streams into `banskabystrica-mesto`, four open-data
+    # feeds and the two that compute the indicators. Two public endpoints: `public-air` and
+    # `banskabystrica-verejne`; the city's indicators reach the region's application by a named
+    # share and not by being public (EP-15).
+    contextSpaces: 4
+    residentPipelines: 17
+    publicEndpoints: 2
     apps: 1
     ingestEventsPerSecond: 50
     agentRunsPerDay: 2000

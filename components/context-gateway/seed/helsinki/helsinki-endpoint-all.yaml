@@ -19,3 +19,42 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: hel-fi }
       datastore: { representation: csv, refresh: onReconcile }
+  # ODbL 1.0: the space holds the city bikes feed, and its share-alike duty governs the whole; every
+  # other source is CC BY 4.0 and keeps its attribution.
+  catalog:
+    publisher: { name: { fi: "Helsingin kaupunki", sv: "Helsingfors stad", en: "City of Helsinki" }, uri: "https://www.hel.fi/" }
+    license: ODC_ODBL
+    attribution: { fi: "Lähteet: HSL, Fintraffic / digitraffic.fi, Ilmatieteen laitos, Helsingin kaupunki (CC BY 4.0); Kaupunkipyörät-syöte (Inurba), ODbL 1.0", sv: "Källor: HRT, Fintraffic / digitraffic.fi, Meteorologiska institutet, Helsingfors stad (CC BY 4.0); stadscykelflödet (Inurba), ODbL 1.0", en: "Sources: HSL, Fintraffic / digitraffic.fi, Finnish Meteorological Institute, City of Helsinki (CC BY 4.0); City Bikes feed (Inurba), ODbL 1.0" }
+    themes: [TRAN, ENVI, EDUC, GOVE]
+    keywords:
+      fi: ["kaupunki", "liikenne", "sää", "tapahtumat", "kaupunkipyörät"]
+      sv: ["staden", "trafik", "väder", "evenemang", "stadscyklar"]
+      en: ["city", "traffic", "weather", "events", "city bikes"]
+    spatial:
+      - FI1B1
+      - "http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/091"
+      - "http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/049"
+      - "http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/092"
+    frequency: CONT
+    source:
+      - url: "https://hri.fi/data/en_GB/dataset/hsl-reittiopas-api"
+        title: { fi: "HSL:n Reittiopas-rajapinnat", en: "HSL Journey Planner APIs" }
+        description: { fi: "HSL:n avoimet rajapinnat, mukaan lukien reaaliaikaiset ajoneuvojen sijainnit (HFP, MQTT), CC BY 4.0.", en: "HSL's open APIs, including the real-time vehicle positions (HFP over MQTT), CC BY 4.0." }
+      - url: "https://gbfs.theta.fifteen.eu/gbfs/2.2/helsinki/gbfs.json"
+        title: { fi: "Kaupunkipyörät, GBFS-syöte", en: "City Bikes (Helsinki), GBFS feed" }
+        description: { fi: "Operaattorin avoin GBFS 2.2 -syöte asemista ja niiden tilasta, ODbL 1.0.", en: "The operator's open GBFS 2.2 feed of stations and their status, ODbL 1.0." }
+      - url: "https://hri.fi/data/en_GB/dataset/linked-events-tapahtumarajapinta"
+        title: { fi: "Linked Events -tapahtumarajapinta", en: "Linked Events API" }
+        description: { fi: "Helsingin kaupungin tapahtumarekisteri, CC BY 4.0.", en: "The City of Helsinki's event register, CC BY 4.0." }
+      - url: "https://hri.fi/data/en_GB/dataset/helsingin-hel-fi-sivuston-avoin-rajapinta-uutisille"
+        title: { fi: "Hel.fi-sivuston avoin rajapinta uutisille", en: "Open API for the news of hel.fi" }
+        description: { fi: "Helsingin kaupungin uutiset RSS-syötteenä, CC BY 4.0.", en: "The City of Helsinki's news as an RSS feed, CC BY 4.0." }
+      - url: "https://www.digitraffic.fi/en/road-traffic/"
+        title: { fi: "Digitraffic tiesääasemat", en: "Digitraffic road weather stations" }
+        description: { fi: "Fintrafficin tiesääasemien havainnot, CC BY 4.0.", en: "Fintraffic's road weather station observations, CC BY 4.0." }
+      - url: "https://www.digitraffic.fi/en/road-traffic/"
+        title: { fi: "Digitraffic liikennetiedotteet", en: "Digitraffic traffic messages" }
+        description: { fi: "Fintrafficin tietyöt ja liikennetiedotteet, CC BY 4.0.", en: "Fintraffic's road works and traffic announcements, CC BY 4.0." }
+      - url: "https://en.ilmatieteenlaitos.fi/open-data"
+        title: { fi: "Ilmatieteen laitoksen avoin data: ilmanlaatu", en: "Finnish Meteorological Institute open data: air quality" }
+        description: { fi: "Pääkaupunkiseudun asemien tunneittaiset ilmanlaatuhavainnot, CC BY 4.0.", en: "Hourly air quality observations of the capital region's stations, CC BY 4.0." }

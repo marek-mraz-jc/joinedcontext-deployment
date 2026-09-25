@@ -323,10 +323,23 @@ FUNCTION_ANSWER = '{"status":200,"body":{"gateway":200},"logs":["smoke"]}'
 # What the Portal answers for a sample application the lane has built (T-2599).
 BUILT_APP = '{"kind":"App","status":{"build":{"commit":"%s","digest":"sha256:%s"}}}' % ("a" * 40, "b" * 64)
 
+# The published Apps of Helsinki (T-2668): one public, one behind its own login, and a draft that
+# has no route yet and is not probed.
+PUBLISHED_APPS = json.dumps({"items": [
+    {"kind": "App", "metadata": {"name": "hsl-transport"}, "spec": {"lifecycle": "published", "visibility": "public"}},
+    {"kind": "App", "metadata": {"name": "air-quality"}, "spec": {"lifecycle": "published", "visibility": "internal"}},
+    {"kind": "App", "metadata": {"name": "sketch"}, "spec": {"lifecycle": "draft", "visibility": "public"}},
+]})
+# Where the edge sends an anonymous visitor of a non-public App: its own client's login.
+APP_LOGIN = ("https://idm.example.test/realms/dev/protocol/openid-connect/auth?response_type=code"
+             "&client_id=app-air-quality&redirect_uri=https%3A%2F%2Fexample.test%2Fapps%2Fair-quality%2Fcallback")
+
 HEALTHY = {
-    "routes": ["portal-ui", "portal-api", "context-space", "context-endpoint", "gitea-forge", "ckan"],
+    "routes": ["portal-ui", "portal-api", "context-space", "context-endpoint", "gitea-forge", "ckan", "apps-surface"],
     "helsinkiSeed": HELSINKI_SEED,
-    "bodies": [["/api/v1/projects/helsinki/apps/helsinki-", BUILT_APP],[["Bearer", "/invoke"], FUNCTION_ANSWER],
+    "bodies": [["/api/v1/projects/helsinki/apps/helsinki-", BUILT_APP],
+               ["/api/v1/projects/helsinki/apps", PUBLISHED_APPS],
+               [["%{redirect_url}", "https://example.test/apps/air-quality/"], APP_LOGIN],[["Bearer", "/invoke"], FUNCTION_ANSWER],
                # The organization's Actions runner, online (T-2608, ADR-N-028).
                ["actions/runners", '{"runners":[{"name":"gitea-runner-1","status":"online"}]}'],
                ["clients?clientId=edge", '[{"protocolMappers":[{"config":{"included.client.audience": "portal-api"}}]}]'],
@@ -693,7 +706,8 @@ def test_instance_without_demo_users_skips_the_login(tmp_path):
     assert "skip  demo user login (no demo users seeded" in result.stdout
     assert "skip  portal space list (no demo user token)" in result.stdout
     assert "skip  sample apps (no demo user token to read them with)" in result.stdout
-    assert "0 failed, 3 skipped" in result.stdout
+    assert "skip  App routes (no demo user token to list the published Apps with)" in result.stdout
+    assert "0 failed, 4 skipped" in result.stdout
 
 
 def test_absent_routes_skip_instead_of_passing(tmp_path):
@@ -708,7 +722,8 @@ def test_absent_routes_skip_instead_of_passing(tmp_path):
     assert "skip  git forge (route gitea-forge not configured" in result.stdout
     assert "skip  catalogue (route ckan not configured" in result.stdout
     assert "skip  chunked body (route portal-api not configured" in result.stdout
-    assert "7 skipped" in result.stdout
+    assert "skip  App routes (route apps-surface not configured" in result.stdout
+    assert "8 skipped" in result.stdout
 
 
 def test_an_unbranded_catalogue_fails_the_run(tmp_path):
@@ -1179,3 +1194,45 @@ def test_a_runner_as_root_or_with_a_token_fails_the_run(tmp_path, walls, said):
     result = run(tmp_path, dict(HEALTHY, **walls), "https://example.test", "https://idm.example.test")
     assert result.returncode == 1
     assert said in result.stdout
+
+
+def test_every_published_app_answers_on_its_own_route_at_the_edge(tmp_path):
+    """T-2668, AP-28, AP-29: a public App serves an anonymous visitor, any other sends the
+    visitor to the login of its own client; a draft App is not probed."""
+    result = run(tmp_path, dict(HEALTHY), "https://example.test", "https://idm.example.test")
+    assert result.returncode == 0, result.stdout
+    assert "ok    public App hsl-transport answers an anonymous visitor at the edge (200)" in result.stdout
+    assert "ok    internal App air-quality sends an anonymous visitor to its own login (app-air-quality)" in result.stdout
+    assert "sketch" not in result.stdout
+
+
+def test_an_app_that_falls_through_to_the_shared_surface_fails_the_run(tmp_path):
+    """The shared `edge` client's login means the Portal wrote no route for the App (T-2668)."""
+    fallback = APP_LOGIN.replace("client_id=app-air-quality", "client_id=edge")
+    spec = dict(HEALTHY, bodies=[[["%{redirect_url}", "https://example.test/apps/air-quality/"], fallback], *HEALTHY["bodies"]])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  internal App air-quality has no route of its own at the edge" in result.stdout
+
+
+def test_a_client_id_that_only_starts_with_the_app_name_fails_the_run(tmp_path):
+    """`app-air-quality-2` is another App's client, not this one's."""
+    other = APP_LOGIN.replace("client_id=app-air-quality&", "client_id=app-air-quality-2&")
+    spec = dict(HEALTHY, bodies=[[["%{redirect_url}", "https://example.test/apps/air-quality/"], other], *HEALTHY["bodies"]])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  internal App air-quality has no route of its own at the edge" in result.stdout
+
+
+def test_a_public_app_that_asks_for_a_login_fails_the_run(tmp_path):
+    """AP-28: the measured defect of T-2668, a public App answering 302 to Keycloak."""
+    spec = dict(HEALTHY, statuses=[["https://example.test/apps/hsl-transport/", 302], *HEALTHY["statuses"]])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  public App hsl-transport answers an anonymous visitor at the edge (expected 200, got 302)" in result.stdout
+
+
+def test_no_published_app_skips_the_app_routes(tmp_path):
+    spec = dict(HEALTHY, bodies=[["/api/v1/projects/helsinki/apps", '{"items": []}'] if b[0] == "/api/v1/projects/helsinki/apps" else b for b in HEALTHY["bodies"]])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert "skip  App routes (no App is published in helsinki)" in result.stdout

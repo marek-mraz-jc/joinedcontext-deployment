@@ -154,7 +154,7 @@ def test_the_catalogue_host_is_served_and_covered_by_the_certificate(rendered):
     )
     assert CATALOGUE_HOST in certificate["spec"]["dnsNames"]
 
-    config = by_name(docs, "ConfigMap", "apisix-standalone-config")["data"]["apisix.yaml"]
+    config = by_name(docs, "ConfigMap", "apisix-standalone-base")["data"]["apisix.yaml"]
     routes = {r["id"]: r for r in yaml.safe_load(config)["routes"]}
     assert routes["ckan"]["host"] == CATALOGUE_HOST
     # The one path on the primary host answers a redirect rather than proxying: CKAN builds
@@ -422,6 +422,11 @@ def test_the_login_names_the_plugin_and_the_realm_when_sso_is_on(tmp_path):
     # every endpoint with, so the realm path must not be part of it.
     assert env["CKANEXT_OIDC_PKCE_BASE_URL"] == "https://idm.example.test"
     assert env["CKANEXT_OIDC_PKCE_CLIENT_ID"] == "ckan"
+    # Declared required by the extension, so CKAN 2.11 exits without them as config options,
+    # which ckanext-envvars builds from the double-underscore names (dev, 2026-09-25).
+    assert env["CKANEXT__OIDC_PKCE__BASE_URL"] == env["CKANEXT_OIDC_PKCE_BASE_URL"]
+    assert env["CKANEXT__OIDC_PKCE__CLIENT_ID"] == "ckan"
+    assert "CKANEXT__OIDC_PKCE__CLIENT_SECRET" not in env
     assert env["JC_OIDC_REALM_PATH"] == "/realms/helsinki"
 
 

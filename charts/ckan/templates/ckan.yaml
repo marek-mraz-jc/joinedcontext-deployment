@@ -145,6 +145,15 @@ spec:
               value: {{ printf "%s://%s" $issuer.scheme $issuer.host | quote }}
             - name: CKANEXT_OIDC_PKCE_CLIENT_ID
               value: {{ .Values.ckan.sso.clientId | quote }}
+            # The same two as options: the extension declares them `required`, and CKAN 2.11
+            # validates its config before the extension ever reads the environment, so without
+            # them CKAN exits "ckanext.oidc_pkce.base_url: Missing value". `ckanext-envvars`
+            # maps `CKANEXT__A__B` to `ckanext.a.b`. The secret is optional there and stays
+            # env-only.
+            - name: CKANEXT__OIDC_PKCE__BASE_URL
+              value: {{ printf "%s://%s" $issuer.scheme $issuer.host | quote }}
+            - name: CKANEXT__OIDC_PKCE__CLIENT_ID
+              value: {{ .Values.ckan.sso.clientId | quote }}
             # The client stays confidential: its secret is only ever this reference, never a
             # value in the ini, an image layer or a log line.
             - name: CKANEXT_OIDC_PKCE_CLIENT_SECRET

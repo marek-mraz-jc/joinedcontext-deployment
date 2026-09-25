@@ -77,10 +77,10 @@ EDGE_LOGIN_ROUTES = {
 def apisix_config(rendered):
     docs = rendered("local")
     cm = next(
-        (d for d in docs if d.get("kind") == "ConfigMap" and d.get("metadata", {}).get("name") == "apisix-standalone-config"),
+        (d for d in docs if d.get("kind") == "ConfigMap" and d.get("metadata", {}).get("name") == "apisix-standalone-base"),
         None,
     )
-    assert cm is not None, "apisix-standalone-config ConfigMap not found in rendered output"
+    assert cm is not None, "apisix-standalone-base ConfigMap not found in rendered output"
     raw = cm["data"]["apisix.yaml"]
     return raw, yaml.safe_load(raw)
 
@@ -331,7 +331,7 @@ def test_every_route_upstream_is_a_pod_apisix_is_allowed_to_reach(rendered):
     docs = rendered("dev")
     config = yaml.safe_load(next(
         d for d in docs
-        if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "apisix-standalone-config"
+        if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "apisix-standalone-base"
     )["data"]["apisix.yaml"])
 
     apisix_labels = {

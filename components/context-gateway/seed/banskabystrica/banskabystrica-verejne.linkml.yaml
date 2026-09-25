@@ -1,0 +1,252 @@
+id: https://joinedcontext.com/models/banskabystrica/banskabystrica-verejne
+name: banskabystrica-verejne
+title: Open data of Banská Bystrica
+description: >-
+  What the city's public space carries side by side (DM-01, DM-61): the events the city
+  announces, every school and school facility of the national school map in the city, and the
+  hourly particulate readings of the city's urban-background station as the European
+  Environment Agency republishes them. One model, one space, one public endpoint. Where Smart
+  Data Models has the class, its IRI is cited rather than minted (DM-04, DM-16).
+license: https://joinedcontext.com/licenses/cc-by-4.0
+prefixes:
+  linkml: https://w3id.org/linkml/
+  jc: https://joinedcontext.com/models/
+  sdm: https://smartdatamodels.org/
+  ngsi-ld: https://uri.etsi.org/ngsi-ld/
+default_prefix: sdm
+default_range: string
+imports:
+  - linkml:types
+  - ngsi-ld-core
+
+slots:
+  name:
+    slot_uri: schema:name
+    description: The name, per language, as the publisher writes it.
+    annotations:
+      ngsi_ld_kind: LanguageProperty
+      upstream_source: https://schema.org/name
+  address:
+    slot_uri: schema:address
+    description: The street address or the venue, one line, as the publisher writes it.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/address
+  url:
+    slot_uri: schema:url
+    description: The web page the publisher gives for it.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/url
+  dataProvider:
+    slot_uri: sdm:dataProvider
+    description: >-
+      Who publishes the data the entity was read from, with the credit its licence asks for, as
+      an application shows it beside the data.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
+  source:
+    slot_uri: sdm:source
+    description: The open-data service the entity was read from.
+    range: uri
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
+  dateModified:
+    slot_uri: sdm:dateModified
+    description: When the publisher last changed the record.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
+  startDate:
+    slot_uri: schema:startDate
+    description: The day the event starts, in the city's local calendar.
+    range: date
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/startDate
+  endDate:
+    slot_uri: schema:endDate
+    description: The day the event ends, in the city's local calendar.
+    range: date
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/endDate
+  startTime:
+    slot_uri: jc:startTime
+    description: The time the event starts, local time in Banská Bystrica (Europe/Bratislava), `HH:MM`.
+    pattern: "^[0-2][0-9]:[0-5][0-9]$"
+    examples:
+      - value: "16:00"
+    annotations:
+      ngsi_ld_kind: Property
+  endTime:
+    slot_uri: jc:endTime
+    description: The time the event ends, local time in Banská Bystrica (Europe/Bratislava), `HH:MM`.
+    pattern: "^[0-2][0-9]:[0-5][0-9]$"
+    examples:
+      - value: "19:00"
+    annotations:
+      ngsi_ld_kind: Property
+  eventCategory:
+    slot_uri: jc:eventCategory
+    description: The kind of event, from the city's own categories.
+    range: EventCategory
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+  schoolCode:
+    slot_uri: jc:schoolCode
+    description: The school's EDUID in the national register of schools and school facilities.
+    required: true
+    pattern: "^[0-9]{9}$"
+    examples:
+      - value: "100009329"
+    annotations:
+      ngsi_ld_kind: Property
+  teachingLanguage:
+    slot_uri: jc:teachingLanguage
+    description: The language of instruction, in the register's words.
+    annotations:
+      ngsi_ld_kind: Property
+  pupilCount:
+    slot_uri: jc:pupilCount
+    description: How many pupils or children the school or facility has, a count and never a name.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+  teachingStaff:
+    slot_uri: jc:teachingStaff
+    description: Teaching staff, in full-time equivalents.
+    range: float
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+  nonTeachingStaff:
+    slot_uri: jc:nonTeachingStaff
+    description: Non-teaching staff, in full-time equivalents.
+    range: float
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+  annualBudget:
+    slot_uri: jc:annualBudget
+    description: The school's budget for `budgetYear`, in euro.
+    range: float
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+  budgetYear:
+    slot_uri: jc:budgetYear
+    description: The year `annualBudget` is for, as the school map's column names it.
+    range: integer
+    minimum_value: 2000
+    annotations:
+      ngsi_ld_kind: Property
+  stationCode:
+    slot_uri: jc:stationCode
+    description: The station's EoI code in the European air-quality network, such as `SK0263A`.
+    required: true
+    pattern: "^SK[0-9]{4}A$"
+    examples:
+      - value: SK0263A
+    annotations:
+      ngsi_ld_kind: Property
+  dateObserved:
+    slot_uri: sdm:dateObserved
+    description: The end of the latest hour a reading of the entity covers.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  pm10:
+    slot_uri: sdm:pm10
+    description: Particulate matter up to 10 µm, the hour's mean at the station.
+    range: float
+    minimum_value: 0
+    unit:
+      ucum_code: ug/m3
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  pm25:
+    slot_uri: sdm:pm25
+    description: Particulate matter up to 2.5 µm, the hour's mean at the station.
+    range: float
+    minimum_value: 0
+    unit:
+      ucum_code: ug/m3
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+
+classes:
+  Event:
+    class_uri: schema:Event
+    description: One event the city announces on its web site, where and when it takes place.
+    is_a: Entity
+    annotations:
+      upstream_source: https://schema.org/Event
+    slots:
+      - name
+      - startDate
+      - startTime
+      - endDate
+      - endTime
+      - eventCategory
+      - address
+      - url
+      - dateModified
+      - dataProvider
+      - source
+  School:
+    class_uri: jc:School
+    description: >-
+      One school or school facility in the city, from the national school map: its pupils, its
+      staff and its budget, counts only.
+    is_a: Entity
+    slots:
+      - name
+      - schoolCode
+      - address
+      - url
+      - teachingLanguage
+      - pupilCount
+      - teachingStaff
+      - nonTeachingStaff
+      - annualBudget
+      - budgetYear
+      - dataProvider
+      - source
+  AirQualityObserved:
+    class_uri: sdm:AirQualityObserved
+    description: One air-quality station in the city and the latest hourly means it reported.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+    slots:
+      - name
+      - stationCode
+      - dateObserved
+      - pm10
+      - pm25
+      - dataProvider
+      - source
+
+enums:
+  EventCategory:
+    permissible_values:
+      musicDanceTheatre:
+        description: Music, dance and theatre (Hudba, tanec, divadlo).
+      museumsGalleriesLibraries:
+        description: Museums, galleries and libraries (Múzeá, galérie, knižnice).
+      sport:
+        description: Sport (Športové).
+      exhibition:
+        description: Exhibitions (Výstavy).
+      other:
+        description: Any other event (Iné podujatia).

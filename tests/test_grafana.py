@@ -54,7 +54,7 @@ def test_the_workload_the_route_names_is_the_workload_that_renders(addons):
     assert named[target] == 3000, named
 
     config = yaml.safe_load(
-        by_name(addons, "ConfigMap", "apisix-standalone-config")["data"]["apisix.yaml"]
+        by_name(addons, "ConfigMap", "apisix-standalone-base")["data"]["apisix.yaml"]
     )
     route = next(r for r in config["routes"] if r["id"] == "grafana")
     assert route["uri"] == "/grafana*"
