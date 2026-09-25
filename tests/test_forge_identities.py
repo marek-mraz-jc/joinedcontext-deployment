@@ -49,6 +49,9 @@ def test_each_token_is_minted_on_a_machine_user_that_administers_nothing(script,
         assert patched["admin"] is False and patched["allow_create_organization"] is False, patched
     assert held["collaborators"]["configuration/jc-portal"] == "write"
     assert held["collaborators"]["configuration/jc-gateway"] == "read"
+    # The Portal publishes a checked App build as a package of the organization; the forge
+    # refuses that write (401 reqPackageAccess) unless its team holds the package unit.
+    assert held["team_units"]["jc-portal"] == {"repo.code": "read", "repo.packages": "write"}
     for secret, user in (("gitea-token-portal", "jc-portal"), ("gitea-token-gateway", "jc-gateway")):
         owner = base64.b64decode(forge.secrets[secret]["data"]["owner"]).decode()
         assert owner == user, secret

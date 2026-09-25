@@ -344,6 +344,17 @@ spec:
                   team_id=$(sed -n 's/^{"id": *\([0-9]*\).*/\1/p' $WORK/body)
                   [ -n "$team_id" ] || { echo "the forge named no id for team $2 of $1" >&2; exit 1; }
                 fi
+                # The user publishes the checked build of an App as a package of the
+                # organization (AP-101, AP-107), and the forge decides package writes by the
+                # team's `repo.packages` unit: without it every publish is a 401 reqPackageAccess.
+                # Set every run, so a team created before this line gets it too.
+                status=$(forge_code PATCH "/api/v1/teams/$team_id" -d "{
+                  \"name\":\"$2\",
+                  \"can_create_org_repo\":true,
+                  \"includes_all_repositories\":false,
+                  \"units_map\":{\"repo.code\":\"read\",\"repo.packages\":\"write\"}
+                }")
+                [ "$status" = 200 ] || { echo "giving team $2 of $1 its package unit failed: $status" >&2; cat $WORK/body >&2; exit 1; }
                 status=$(forge_code PUT "/api/v1/teams/$team_id/members/$2")
                 [ "$status" = 204 ] || { echo "adding $2 to its team of $1 failed: $status" >&2; exit 1; }
               }
