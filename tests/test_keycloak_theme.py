@@ -144,3 +144,23 @@ def test_a_light_primary_colour_gets_dark_button_text():
     result = helm_template({"colours": {"primary": "#ffe977"}})
     assert result.returncode == 0, result.stderr
     assert "--jc-primary-fg: #000000;" in result.stdout
+
+
+def test_keycloak_is_built_with_script_mappers_off_and_nothing_turns_them_on(rendered):
+    """T-2857: a script mapper runs code in every token its client mints, so managing an App's
+    client would be minting any claim. The build disables the feature by name, and no
+    environment variable of the pod enables it again."""
+    docs = rendered("local")
+    (keycloak,) = [
+        d for d in docs if d.get("kind") == "StatefulSet" and "keycloak" in d["metadata"]["name"]
+    ]
+    pod = keycloak["spec"]["template"]["spec"]
+    (build,) = [c for c in pod["initContainers"] if c["name"] == "build-keycloak"]
+    (line,) = [line for line in build["args"][0].splitlines() if "kc.sh build" in line]
+    assert "--features-disabled=scripts" in line.split()
+    assert not re.search(r"--features(=|\s)\S*scripts", line)
+    for container in pod["initContainers"] + pod["containers"]:
+        for env in container.get("env", []):
+            if env["name"] in ("KC_FEATURES", "KC_FEATURES_DISABLED"):
+                assert "scripts" not in env.get("value", "").split(",") or env["name"] == "KC_FEATURES_DISABLED", env
+

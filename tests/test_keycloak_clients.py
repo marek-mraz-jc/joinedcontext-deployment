@@ -126,6 +126,7 @@ def test_development_profile_seeds_the_demo_users(rendered):
         "demo.approver@hel.fi",
         "demo.editor@hel.fi",
         "demo.janitor@hel.fi",
+        "demo.probe@hel.fi",
     }
     assert users["demo.steward@hel.fi"]["realmRoles"] == ["portal-approver"]
     assert users["demo.approver@hel.fi"]["realmRoles"] == ["portal-approver"]
@@ -137,6 +138,8 @@ def test_development_profile_seeds_the_demo_users(rendered):
     assert not {"/helsinki", "/banskabystrica", "helsinki", "banskabystrica"} & set(
         users["demo.janitor@hel.fi"].get("groups", [])
     )
+    # The App probe (T-2795, AP-136) decides nothing; its groups are the ones Apps admit by.
+    assert users["demo.probe@hel.fi"]["realmRoles"] == []
     assert "portal-approver" in {r["name"] for r in realm["roles"]["realm"]}
     assert realm["registrationEmailAsUsername"] is True
     for user in users.values():
@@ -160,6 +163,7 @@ def test_demo_passwords_are_generated_per_cluster(rendered):
         "keycloak-user-demo-approver",
         "keycloak-user-demo-editor",
         "keycloak-user-demo-janitor",
+        "keycloak-user-demo-probe",
     }
     for secret in secrets.values():
         assert secret["metadata"]["annotations"]["helm.sh/resource-policy"] == "keep"
