@@ -471,8 +471,8 @@ def test_the_application_reading_both_bodies_is_a_published_static_app_on_the_re
 
 
 # What the city and the region cleared for the open-data catalogue (T-2407, user 2026-09-21):
-# these two and nothing else, until the other endpoints are reviewed. `public-air` is held back
-# while its space holds Helsinki test stations rather than the city's readings (T-2407 body).
+# these two and nothing else, until the other endpoints are reviewed. `public-air` publishes by the
+# owner's decision of 2026-09-25 although its space still holds seeded test stations (T-2407).
 # T-2783 (owner, 2026-09-24: BBSK's open data "republished to CKAN") adds the region's registers,
 # which are the region's own CC BY-SA publication and hold no person.
 # T-2781 ("republished to CKAN", by the rule of T-2780) adds the city's public space: events, the
@@ -481,7 +481,6 @@ CLEARED = {
     ("banskabystrica", "public-air"), ("banskabystrica", "banskabystrica-verejne"),
     ("bbsk", "bbsk-kpi"), ("bbsk", "bbsk-registre"),
 }
-HELD = {("banskabystrica", "public-air")}
 
 
 def test_only_the_cleared_endpoints_publish_each_to_its_own_bodys_catalogue():
@@ -505,4 +504,4 @@ def test_only_the_cleared_endpoints_publish_each_to_its_own_bodys_catalogue():
                 assert ckan["datastore"]["representation"] in endpoint["spec"]["enabledRepresentations"]
             # The token is a reference, never a value.
             assert set(instance["spec"]["apiTokenRef"]) <= {"name", "key", "envVar"}
-    assert published == CLEARED - HELD
+    assert published == CLEARED
