@@ -276,6 +276,23 @@ def test_mcp_mobile_lists_only_the_known_mobile_callbacks(realm_clients):
     }
 
 
+def test_mcp_hub_is_a_public_pkce_client_with_consent(realm_clients):
+    """T-2490 / EP-88: the hub connector lives on a device too, so no secret and PKCE S256; its
+    tokens name the hub, which the gateway accepts at /api/mcp only, and consent shows the
+    person which `endpoint:{slug}` scopes a connector asks for (ADR-N-025 section 4)."""
+    client = realm_clients["mcp-hub"]
+    assert client["publicClient"] is True
+    assert "secret" not in client
+    assert client["consentRequired"] is True
+    assert client["attributes"]["pkce.code.challenge.method"] == "S256"
+    assert client["directAccessGrantsEnabled"] is False
+    assert client["serviceAccountsEnabled"] is False
+    audiences = [m["config"]["included.client.audience"] for m in client["protocolMappers"]
+                 if m["protocolMapper"] == "oidc-audience-mapper"]
+    assert audiences == ["mcp-hub"], "a hub token names the hub and nothing else"
+    assert set(client["redirectUris"]) == set(realm_clients["mcp-mobile"]["redirectUris"])
+
+
 # --- PF-61, PF-79: who the caller is, on every client ----------------------------------------
 
 
