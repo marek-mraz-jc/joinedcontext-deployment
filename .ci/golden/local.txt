@@ -43,6 +43,7 @@ kyverno.io/v1/ClusterPolicy -/require-run-as-non-root-user
 kyverno.io/v1/ClusterPolicy -/require-run-as-nonroot
 kyverno.io/v1/ClusterPolicy -/restrict-cnpg-operator-pod-labels
 networking.k8s.io/v1/Ingress -/apisix
+networking.k8s.io/v1/NetworkPolicy local-app-tests/default-deny
 networking.k8s.io/v1/NetworkPolicy local/acme-http01-solver
 networking.k8s.io/v1/NetworkPolicy local/apisix
 networking.k8s.io/v1/NetworkPolicy local/apisix-allow-linkerd
@@ -162,10 +163,12 @@ rbac.authorization.k8s.io/v1/ClusterRole -/sandbox-reaper-reaper
 rbac.authorization.k8s.io/v1/ClusterRoleBinding -/local-portal-namespaces
 rbac.authorization.k8s.io/v1/ClusterRoleBinding -/postgres-operator-cloudnative-pg
 rbac.authorization.k8s.io/v1/ClusterRoleBinding -/sandbox-reaper-reaper
+rbac.authorization.k8s.io/v1/Role local-app-tests/app-test-runner
 rbac.authorization.k8s.io/v1/Role local/edge-file-composer
 rbac.authorization.k8s.io/v1/Role local/gitea-bootstrap
 rbac.authorization.k8s.io/v1/Role local/portal
 rbac.authorization.k8s.io/v1/Role local/postgres-operator-cloudnative-pg
+rbac.authorization.k8s.io/v1/RoleBinding local-app-tests/app-test-runner
 rbac.authorization.k8s.io/v1/RoleBinding local/edge-file-composer
 rbac.authorization.k8s.io/v1/RoleBinding local/gitea-bootstrap
 rbac.authorization.k8s.io/v1/RoleBinding local/portal
@@ -186,8 +189,11 @@ v1/ConfigMap local/pipeline-runner-helsinki-streams
 v1/ConfigMap local/portal-branding
 v1/ConfigMap local/postgres-cluster-monitoring-logical-replication
 v1/ConfigMap local/sandbox-reaper-reaper
+v1/LimitRange local-app-tests/app-tests
+v1/Namespace -/local-app-tests
 v1/PersistentVolumeClaim local/gitea-shared-storage
 v1/PersistentVolumeClaim local/pipeline-runner-files
+v1/ResourceQuota local-app-tests/app-tests
 v1/Secret local/apisix-oidc-session
 v1/Secret local/apisix-standalone-config
 v1/Secret local/artifact-store-root
