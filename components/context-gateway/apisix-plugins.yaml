@@ -239,6 +239,8 @@ context-space-portal:
 context-endpoint:
   name: context-endpoint
   description: Context endpoint representation surface filtering
+  # The Organization's spec.limits.edge.requestsPerMinute.publicEndpoint replaces the count below (ADR-N-035).
+  rateClass: publicEndpoint
   plugins:
     request-id:
       include_in_response: true
@@ -338,6 +340,8 @@ context-endpoint:
 context-endpoint-portal:
   name: context-endpoint-portal
   description: Context endpoint surface on the Portal host, the edge session as the bearer
+  # The Organization's spec.limits.edge.requestsPerMinute.publicEndpoint replaces the count below (ADR-N-035).
+  rateClass: publicEndpoint
   plugins:
     request-id:
       include_in_response: true
