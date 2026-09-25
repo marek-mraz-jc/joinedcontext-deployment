@@ -233,6 +233,14 @@ spec:
               mountPath: /srv/theme/ckanext_jc_theme-0.1.0.dist-info/entry_points.txt
               subPath: entry_points.txt
               readOnly: true
+            # The page templates and static files beyond the header and footer (T-2744): a key
+            # with `__` is the file's path under the package, `__` for `/`.
+            {{- range $path, $_ := .Files.Glob "files/jc_theme/{templates,public}__*" }}
+            - name: theme
+              mountPath: /srv/theme/ckanext_jc_theme/{{ base $path | replace "__" "/" }}
+              subPath: {{ base $path }}
+              readOnly: true
+            {{- end }}
             {{- if and (.Values.branding.logoSvg | default "") (.Values.branding.logo | default "") }}
             # CKAN serves the logo from the theme's public directory, so `ckan.site_logo`
             # is a path on this origin and no page fetches an asset from anywhere else.

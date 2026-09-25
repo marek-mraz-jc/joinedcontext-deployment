@@ -5,6 +5,7 @@ file is not an error: CKAN then looks like a plain CKAN, which is what an instal
 without branding should look like.
 """
 
+import datetime
 import json
 import os
 
@@ -88,6 +89,225 @@ def _available(codes):
 
 BRANDING = _load()
 
+# The words the theme adds to CKAN's own, in the four languages of the Portal (UI-82). CKAN's
+# catalogues translate everything else; a language CKAN names `cs_CZ` reads the `cs` column.
+STRINGS = {
+    "about": {"en": "About this dataset", "sk": "O tomto datasete", "cs": "O této datové sadě", "de": "Über diesen Datensatz"},
+    "publisher": {"en": "Publisher", "sk": "Vydavateľ", "cs": "Vydavatel", "de": "Herausgeber"},
+    "licence": {"en": "Licence", "sk": "Licencia", "cs": "Licence", "de": "Lizenz"},
+    "topic": {"en": "Topic", "sk": "Téma", "cs": "Téma", "de": "Thema"},
+    "keywords": {"en": "Keywords", "sk": "Kľúčové slová", "cs": "Klíčová slova", "de": "Schlagwörter"},
+    "format": {"en": "Format", "sk": "Formát", "cs": "Formát", "de": "Format"},
+    "frequency": {"en": "Updated", "sk": "Aktualizácia", "cs": "Aktualizace", "de": "Aktualisierung"},
+    "last_update": {"en": "Last update", "sk": "Posledná aktualizácia", "cs": "Poslední aktualizace", "de": "Letzte Aktualisierung"},
+    "next_update": {"en": "Next update expected", "sk": "Ďalšia aktualizácia", "cs": "Další aktualizace", "de": "Nächste Aktualisierung"},
+    "coverage": {"en": "Area covered", "sk": "Pokryté územie", "cs": "Pokryté území", "de": "Abgedecktes Gebiet"},
+    "period": {"en": "Time covered", "sk": "Obdobie", "cs": "Období", "de": "Zeitraum"},
+    "contact": {"en": "Contact", "sk": "Kontakt", "cs": "Kontakt", "de": "Kontakt"},
+    "identifier": {"en": "Identifier", "sk": "Identifikátor", "cs": "Identifikátor", "de": "Kennung"},
+    "language": {"en": "Language", "sk": "Jazyk", "cs": "Jazyk", "de": "Sprache"},
+    "conforms_to": {"en": "Follows the standard", "sk": "Zodpovedá štandardu", "cs": "Odpovídá standardu", "de": "Folgt dem Standard"},
+    "status": {"en": "Status", "sk": "Stav", "cs": "Stav", "de": "Status"},
+    "live": {"en": "Live data (API)", "sk": "Živé dáta (API)", "cs": "Živá data (API)", "de": "Live-Daten (API)"},
+    "live_lead": {
+        "en": "The current state of this data, answered by the platform on every request (NGSI-LD).",
+        "sk": "Aktuálny stav týchto dát, ktorý platforma vracia pri každej požiadavke (NGSI-LD).",
+        "cs": "Aktuální stav těchto dat, který platforma vrací při každém požadavku (NGSI-LD).",
+        "de": "Der aktuelle Stand dieser Daten, von der Plattform bei jeder Anfrage beantwortet (NGSI-LD).",
+    },
+    "example": {"en": "Start here: the kinds of entities it holds", "sk": "Začnite tu: aké druhy entít obsahuje", "cs": "Začněte zde: jaké druhy entit obsahuje", "de": "Hier beginnen: welche Arten von Entitäten es enthält"},
+    "copy": {"en": "Copy", "sk": "Kopírovať", "cs": "Kopírovat", "de": "Kopieren"},
+    "copied": {"en": "Copied", "sk": "Skopírované", "cs": "Zkopírováno", "de": "Kopiert"},
+    "resources": {"en": "Data and downloads", "sk": "Dáta na stiahnutie", "cs": "Data ke stažení", "de": "Daten und Downloads"},
+    "no_resources": {"en": "This dataset has no downloads yet.", "sk": "Tento dataset zatiaľ nemá nič na stiahnutie.", "cs": "Tato datová sada zatím nemá nic ke stažení.", "de": "Dieser Datensatz hat noch keine Downloads."},
+    "empty": {
+        "en": "Nothing matches. Try fewer or other words, or remove a filter on the left.",
+        "sk": "Nič nezodpovedá. Skúste menej alebo iné slová, alebo zrušte filter vľavo.",
+        "cs": "Nic neodpovídá. Zkuste méně nebo jiná slova, nebo zrušte filtr vlevo.",
+        "de": "Nichts gefunden. Versuchen Sie weniger oder andere Wörter, oder entfernen Sie links einen Filter.",
+    },
+    "portal": {"en": "Portal", "sk": "Portál", "cs": "Portál", "de": "Portal"},
+    "more": {"en": "More details", "sk": "Ďalšie údaje", "cs": "Další údaje", "de": "Weitere Angaben"},
+}
+
+# What a reader gets from each format, in one line (T-2744). A format not listed gets none.
+FORMATS = {
+    "NGSI-LD": {"en": "Live entities through the API", "sk": "Živé entity cez API", "cs": "Živé entity přes API", "de": "Live-Entitäten über die API"},
+    "JSON-LD": {"en": "Linked data with its context", "sk": "Prepojené dáta s kontextom", "cs": "Propojená data s kontextem", "de": "Verknüpfte Daten mit Kontext"},
+    "GEOJSON": {"en": "Points and shapes for a map", "sk": "Body a tvary pre mapu", "cs": "Body a tvary pro mapu", "de": "Punkte und Formen für eine Karte"},
+    "CSV": {"en": "A table for a spreadsheet", "sk": "Tabuľka pre tabuľkový procesor", "cs": "Tabulka pro tabulkový procesor", "de": "Eine Tabelle für die Tabellenkalkulation"},
+    "JSON": {"en": "Machine-readable JSON", "sk": "Strojovo čitateľný JSON", "cs": "Strojově čitelný JSON", "de": "Maschinenlesbares JSON"},
+    "XLSX": {"en": "A spreadsheet", "sk": "Tabuľkový súbor", "cs": "Tabulkový soubor", "de": "Eine Tabellendatei"},
+    "ZIP": {"en": "Everything in one download", "sk": "Všetko v jednom súbore", "cs": "Vše v jednom souboru", "de": "Alles in einem Download"},
+    "MCP": {"en": "For AI assistants (Model Context Protocol)", "sk": "Pre AI asistentov (Model Context Protocol)", "cs": "Pro AI asistenty (Model Context Protocol)", "de": "Für KI-Assistenten (Model Context Protocol)"},
+    "LINKML": {"en": "The data model", "sk": "Dátový model", "cs": "Datový model", "de": "Das Datenmodell"},
+    "SHACL": {"en": "Validation rules of the data model", "sk": "Pravidlá kontroly dátového modelu", "cs": "Pravidla kontroly datového modelu", "de": "Prüfregeln des Datenmodells"},
+}
+
+# The EU frequency vocabulary, publications.europa.eu/resource/authority/frequency, as a label
+# and the days to the next update. Irregular and unknown frequencies promise no date.
+FREQUENCIES = {
+    "CONT": ({"en": "Continuously", "sk": "Priebežne", "cs": "Průběžně", "de": "Laufend"}, None),
+    "UPDATE_CONT": ({"en": "Continuously", "sk": "Priebežne", "cs": "Průběžně", "de": "Laufend"}, None),
+    "HOURLY": ({"en": "Every hour", "sk": "Každú hodinu", "cs": "Každou hodinu", "de": "Stündlich"}, 1 / 24),
+    "DAILY": ({"en": "Every day", "sk": "Denne", "cs": "Denně", "de": "Täglich"}, 1),
+    "WEEKLY": ({"en": "Every week", "sk": "Týždenne", "cs": "Týdně", "de": "Wöchentlich"}, 7),
+    "MONTHLY": ({"en": "Every month", "sk": "Mesačne", "cs": "Měsíčně", "de": "Monatlich"}, 30),
+    "QUARTERLY": ({"en": "Every quarter", "sk": "Štvrťročne", "cs": "Čtvrtletně", "de": "Vierteljährlich"}, 91),
+    "ANNUAL": ({"en": "Every year", "sk": "Ročne", "cs": "Ročně", "de": "Jährlich"}, 365),
+    "IRREG": ({"en": "Irregularly", "sk": "Nepravidelne", "cs": "Nepravidelně", "de": "Unregelmäßig"}, None),
+}
+
+# The extras the About list reads by name, in the order a reader sees them. Everything else
+# the publisher wrote stays under "More details"; the internal ones are never shown.
+ABOUT_EXTRAS = ("identifier", "language", "contact", "conforms_to", "status")
+INTERNAL_EXTRAS = {"generated_by", "endpoint", "publisher_name", "publisher_uri", "contact_name",
+                   "contact_email", "frequency", "spatial", "spatial_uri", "temporal_start",
+                   "temporal_end", "theme"}
+
+
+def _language():
+    try:
+        code = toolkit.h.lang() or "en"
+    except (AttributeError, RuntimeError):
+        code = "en"
+    return code.split("_")[0].split("-")[0]
+
+
+def jc_t(key):
+    """One of the theme's words in the page's language, English when there is none."""
+    words = STRINGS.get(key) or {}
+    return words.get(_language()) or words.get("en") or key
+
+
+def _extras(pkg):
+    return {e.get("key"): e.get("value") for e in (pkg or {}).get("extras") or [] if e.get("key")}
+
+
+def _is_url(value):
+    return isinstance(value, str) and value.startswith(("https://", "http://"))
+
+
+_DAY = datetime.timedelta(days=1)
+
+
+def _parse(stamp):
+    """CKAN's `metadata_modified`, naive UTC without a zone, as an aware datetime."""
+    parsed = datetime.datetime.fromisoformat(str(stamp).replace("Z", "+00:00"))
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=datetime.timezone.utc)
+
+
+def jc_frequency(pkg):
+    """(label, next update as a datetime or None) of the dataset's frequency; None when unset."""
+    value = _extras(pkg).get("frequency")
+    if not value:
+        return None
+    code = str(value).rstrip("/").rsplit("/", 1)[-1].upper()
+    known = FREQUENCIES.get(code)
+    if not known:
+        return (str(value), None)
+    words, days = known
+    label = words.get(_language()) or words["en"]
+    modified = (pkg or {}).get("metadata_modified")
+    if days is None or not modified:
+        return (label, None)
+    try:
+        last = _parse(modified)
+    except ValueError:
+        return (label, None)
+    return (label, last + datetime.timedelta(days=days))
+
+
+def jc_about(pkg):
+    """The rows of "About this dataset" as (label, text, link or None), empty ones left out."""
+    pkg = pkg or {}
+    extras = _extras(pkg)
+    rows = []
+    organization = pkg.get("organization") or {}
+    publisher = extras.get("publisher_name") or organization.get("title") or organization.get("name")
+    if publisher:
+        link = extras.get("publisher_uri")
+        rows.append((jc_t("publisher"), publisher, link if _is_url(link) else None))
+    if pkg.get("license_title") or pkg.get("license_id"):
+        link = pkg.get("license_url")
+        rows.append((jc_t("licence"), pkg.get("license_title") or pkg.get("license_id"),
+                     link if _is_url(link) else None))
+    groups = [g.get("display_name") or g.get("title") or g.get("name") for g in pkg.get("groups") or []]
+    if groups:
+        rows.append((jc_t("topic"), ", ".join(g for g in groups if g), None))
+    tags = [t.get("display_name") or t.get("name") for t in pkg.get("tags") or []]
+    if tags:
+        rows.append((jc_t("keywords"), ", ".join(t for t in tags if t), None))
+    frequency = jc_frequency(pkg)
+    if frequency:
+        rows.append((jc_t("frequency"), frequency[0], None))
+    if pkg.get("metadata_modified"):
+        rows.append((jc_t("last_update"), str(pkg["metadata_modified"])[:10], None))
+    if frequency and frequency[1]:
+        # A dataset updated more than once a day promises an hour, not only a date.
+        pattern = "%Y-%m-%d %H:%M UTC" if frequency[1] - _parse(pkg["metadata_modified"]) < _DAY else "%Y-%m-%d"
+        rows.append((jc_t("next_update"), frequency[1].strftime(pattern), None))
+    coverage = extras.get("spatial_uri")
+    if coverage:
+        rows.append((jc_t("coverage"), coverage, coverage if _is_url(coverage) else None))
+    start, end = extras.get("temporal_start"), extras.get("temporal_end")
+    if start or end:
+        rows.append((jc_t("period"), " – ".join(v for v in (start, end) if v), None))
+    contact = extras.get("contact_name") or extras.get("contact_email")
+    if contact:
+        email = extras.get("contact_email")
+        rows.append((jc_t("contact"), contact, "mailto:" + email if email and "@" in email else None))
+    for key in ("identifier", "language", "conforms_to", "status"):
+        value = extras.get(key)
+        if value:
+            rows.append((jc_t(key), value, value if _is_url(value) else None))
+    return rows
+
+
+def jc_more(pkg):
+    """The extras the About list does not show, as (key, value), for "More details"."""
+    shown = set(ABOUT_EXTRAS) | INTERNAL_EXTRAS | {"identifier", "language", "conforms_to", "status"}
+    return sorted((k, v) for k, v in _extras(pkg).items() if k not in shown and v)
+
+
+def jc_live(pkg):
+    """The dataset's live NGSI-LD address and an example query, or None.
+
+    Only an https address under the platform's own domain is shown: the extra is written by
+    the publisher, and a page must never point a reader at an internal service address.
+    """
+    endpoint = _extras(pkg).get("endpoint")
+    domain = BRANDING.get("domain") or ""
+    if not (isinstance(endpoint, str) and endpoint.startswith("https://") and domain):
+        return None
+    host = endpoint[len("https://"):].split("/", 1)[0]
+    if host != domain and not host.endswith("." + domain):
+        return None
+    base = endpoint if endpoint.endswith("/") else endpoint + "/"
+    # `types` answers without a filter; a query for entities needs a type the reader learns here.
+    example = "curl -H 'Accept: application/ld+json' '%sngsi-ld/v1/types'" % base
+    return {"url": base, "example": example}
+
+
+def jc_resource_groups(pkg):
+    """The resources grouped by format, each group with its one-line "what is this"."""
+    groups = {}
+    for resource in (pkg or {}).get("resources") or []:
+        name = (resource.get("format") or "").strip() or "—"
+        groups.setdefault(name, []).append(resource)
+    out = []
+    for name in sorted(groups, key=lambda n: (n == "—", n.upper())):
+        words = FORMATS.get(name.upper()) or {}
+        out.append({"format": name, "what": words.get(_language()) or words.get("en") or "",
+                    "resources": groups[name]})
+    return out
+
+
+def jc_portal_url():
+    """The Portal of this installation, for staff who signed in; None without a domain."""
+    domain = BRANDING.get("domain")
+    return "https://portal.%s/" % domain if domain else None
+
 
 def jc_branding():
     """The block, for the templates."""
@@ -97,6 +317,7 @@ def jc_branding():
 class JcThemePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.ITemplateHelpers)
+    plugins.implements(plugins.IFacets, inherit=True)
 
     def update_config(self, config):
         toolkit.add_template_directory(config, "templates")
@@ -119,4 +340,21 @@ class JcThemePlugin(plugins.SingletonPlugin):
             config["ckan.locales_offered"] = " ".join(offered)
 
     def get_helpers(self):
-        return {"jc_branding": jc_branding}
+        return {
+            "jc_branding": jc_branding,
+            "jc_t": jc_t,
+            "jc_about": jc_about,
+            "jc_more": jc_more,
+            "jc_live": jc_live,
+            "jc_resource_groups": jc_resource_groups,
+            "jc_portal_url": jc_portal_url,
+        }
+
+    def dataset_facets(self, facets_dict, package_type):
+        """The search filters in plain words: Publisher, Topic, Keywords, Format, Licence."""
+        names = {"organization": "publisher", "groups": "topic", "tags": "keywords",
+                 "res_format": "format", "license_id": "licence"}
+        for field, key in names.items():
+            if field in facets_dict:
+                facets_dict[field] = jc_t(key)
+        return facets_dict
