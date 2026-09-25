@@ -1,0 +1,14 @@
+# The demo janitor (components/keycloak/demo-users.yaml) sweeps what journeys and takes left in
+# helsinki (T-0667, T-2627): the steward proposes each removal and the janitor approves it, under a
+# role that reaches journey-named resources alone. Nobody else holds it.
+apiVersion: joinedcontext.com/v1alpha1
+kind: RoleBinding
+metadata:
+  name: janitors
+  namespace: org
+spec:
+  subjects:
+    - user: demo.janitor@hel.fi
+  role: janitor
+  scope:
+    project: helsinki

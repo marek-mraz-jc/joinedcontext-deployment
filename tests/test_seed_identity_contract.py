@@ -191,3 +191,51 @@ def test_the_organization_administrator_writes_groups():
         for verb in rule["verbs"]
     }
     assert {"propose", "approve", "delete"} <= granted, sorted(granted)
+
+
+def test_the_janitor_reaches_journey_residue_and_nothing_seeded():
+    """T-2627, PF-49: the residue sweep's approver deletes what a journey or a take named, alone.
+
+    The owner's decision of 2026-09-24: a fifth demo person used only by the sweep, confined to
+    journey-named resources, so the demo roles stay as they are and the Portal's rule (approve and
+    delete for a removal) stays too. The pattern is read as the Portal and roles.rego read it, the
+    whole name, and no name the seed or a sample app commits may fall inside it: a janitor that
+    could approve the removal of `helsinki` would be an administrator by another name.
+    """
+    janitor = "demo.janitor@hel.fi"
+    roles = {doc["metadata"]["name"]: doc for _path, doc in manifests("Role")}
+    held = [
+        doc
+        for _path, doc in manifests("RoleBinding")
+        if any(subject.get("user") == janitor for subject in doc["spec"]["subjects"])
+    ]
+    assert [doc["spec"]["role"] for doc in held] == ["janitor"], "the janitor holds its own role alone"
+    assert held[0]["spec"]["scope"] == {"project": "helsinki"}
+    patterns = []
+    for rule in roles["janitor"]["spec"]["rules"]:
+        assert set(rule["verbs"]) == {"approve", "delete"}, "the janitor proposes and reads nothing"
+        (constraint,) = rule["constraints"]
+        assert constraint["field"] == "metadata.name" and set(constraint) == {"field", "pattern"}
+        patterns.append(re.compile(constraint["pattern"]))
+
+    def reached(name: str) -> bool:
+        return any(pattern.fullmatch(name) for pattern in patterns)
+
+    # What the sweep found on dev on 2026-09-25 (ui/e2e/live/residue.spec.ts names the same).
+    for name in ["t1588-mucg4n37", "t1589r-bikes", "t1550-1452", "bike-network-db-1101",
+                 "hsl-citybikes-draft-0837", "citybikes-0915", "bikes-regional-ab12", "large-map-city"]:
+        assert reached(name), f"{name} is residue the janitor cannot approve away"
+    # `city-bikes` a take once created is the seeded dashboard now.
+    for name in ["helsinki", "city-bikes", "helsinki-t1588-x", "citybikes-09150", "t1588", "", "t1588-X"]:
+        assert not reached(name), f"{name} is not a journey's"
+
+    apps = SEED.parent.parent / "gitea/apps"
+    seeded = {
+        doc["metadata"]["name"]
+        for path in [*SEED.glob("*/*.yaml"), *apps.glob("*/app.yaml"), *apps.glob("*/grants/**/*.yaml")]
+        if path.name != "index.yaml" and not path.name.endswith("-bento.yaml")
+        for doc in documents(path)
+        if isinstance(doc.get("metadata"), dict) and "name" in doc["metadata"]
+    }
+    assert len(seeded) > 50, "the seed and the sample apps were read"
+    assert not sorted(name for name in seeded if reached(name)), "the janitor reaches a seeded resource"

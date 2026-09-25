@@ -43,3 +43,11 @@ demo.editor:
   lastName: Editor
   realmRoles: []
   groups: [banskabystrica, helsinki]
+# The residue sweep's approver (T-2627): bound to `janitor` alone, which approves and deletes only
+# journey- and take-named resources of helsinki. No realm role and no project group, so the
+# gateway admits it to no context data.
+demo.janitor:
+  firstName: Demo
+  lastName: Janitor
+  realmRoles: []
+  groups: []

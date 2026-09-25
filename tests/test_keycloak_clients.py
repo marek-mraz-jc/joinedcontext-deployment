@@ -125,11 +125,18 @@ def test_development_profile_seeds_the_demo_users(rendered):
         "demo.viewer@hel.fi",
         "demo.approver@hel.fi",
         "demo.editor@hel.fi",
+        "demo.janitor@hel.fi",
     }
     assert users["demo.steward@hel.fi"]["realmRoles"] == ["portal-approver"]
     assert users["demo.approver@hel.fi"]["realmRoles"] == ["portal-approver"]
     assert users["demo.viewer@hel.fi"]["realmRoles"] == [], "demo.viewer is read only"
     assert users["demo.editor@hel.fi"]["realmRoles"] == [], "demo.editor approves nothing"
+    # The residue sweep's approver (T-2627): its RoleBinding is what it may do, and no project
+    # group admits it to the gateway, so it reads no context data.
+    assert users["demo.janitor@hel.fi"]["realmRoles"] == []
+    assert not {"/helsinki", "/banskabystrica", "helsinki", "banskabystrica"} & set(
+        users["demo.janitor@hel.fi"].get("groups", [])
+    )
     assert "portal-approver" in {r["name"] for r in realm["roles"]["realm"]}
     assert realm["registrationEmailAsUsername"] is True
     for user in users.values():
@@ -152,6 +159,7 @@ def test_demo_passwords_are_generated_per_cluster(rendered):
         "keycloak-user-demo-viewer",
         "keycloak-user-demo-approver",
         "keycloak-user-demo-editor",
+        "keycloak-user-demo-janitor",
     }
     for secret in secrets.values():
         assert secret["metadata"]["annotations"]["helm.sh/resource-policy"] == "keep"
