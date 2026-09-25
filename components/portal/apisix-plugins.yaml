@@ -24,6 +24,8 @@
 portal-ui:
   name: portal-ui
   description: Portal user interface behind the edge login
+  # The Organization's spec.limits.edge.requestsPerMinute.web replaces the count below (ADR-N-035).
+  rateClass: web
   plugins:
     request-id:
       include_in_response: true
@@ -112,6 +114,8 @@ portal-ui:
 portal-public:
   name: portal-public
   description: The public catalogue page and the bundle, edge session optional (EP-81)
+  # The Organization's spec.limits.edge.requestsPerMinute.web replaces the count below (ADR-N-035).
+  rateClass: web
   plugins:
     request-id:
       include_in_response: true
@@ -199,6 +203,8 @@ portal-public:
 portal-api:
   name: portal-api
   description: Portal REST API (edge session becomes X-Access-Token, a bearer passes through)
+  # The Organization's spec.limits.edge.requestsPerMinute.api replaces the count below (ADR-N-035).
+  rateClass: api
   plugins:
     request-id:
       include_in_response: true
@@ -420,6 +426,8 @@ portal-metrics:
 apps-surface:
   name: apps-surface
   description: Static apps on demand behind the edge login
+  # The Organization's spec.limits.edge.requestsPerMinute.web replaces the count below (ADR-N-035).
+  rateClass: web
   plugins:
     request-id:
       include_in_response: true
@@ -510,6 +518,8 @@ apps-surface:
 portal-redirect:
   name: portal-redirect
   description: The apex sends what no other apex route serves to the Portal host
+  # The Organization's spec.limits.edge.requestsPerMinute.web replaces the count below (ADR-N-035).
+  rateClass: web
   plugins:
     request-id:
       include_in_response: true

@@ -144,6 +144,36 @@ def test_rate_limit_classes(plugin_configs):
     assert "remote_addr" in bulk["key"]
 
 
+# ADR-N-035: each chain the Organization tunes, its class, and the catalog default helm renders.
+RATE_CLASSES = {
+    "portal-ui": ("web", 300),
+    "portal-public": ("web", 300),
+    "apps-surface": ("web", 300),
+    "portal-redirect": ("web", 300),
+    "portal-api": ("api", 1200),
+    "context-endpoint": ("publicEndpoint", 5000),
+    "context-endpoint-portal": ("publicEndpoint", 5000),
+}
+
+
+def test_the_organization_tunes_each_class_by_its_label(rendered):
+    """T-2892: the Portal replaces the count of a chain labelled `jc-rate-class` with the
+    Organization's rate; helm renders the default, and every other chain keeps its own."""
+    cm = next(
+        d for d in rendered("local")
+        if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "apisix-standalone-base"
+    )
+    configs = yaml.safe_load(cm["data"]["apisix.yaml"])["plugin_configs"]
+    labelled = {
+        pc["id"]: (pc["labels"]["jc-rate-class"], pc["plugins"]["limit-count"]["count"])
+        for pc in configs
+        if "jc-rate-class" in (pc.get("labels") or {})
+    }
+    assert labelled == RATE_CLASSES
+    for pc in configs:
+        assert "labels" not in pc or pc["id"] in RATE_CLASSES, pc["id"]
+
+
 def test_every_rate_limit_rejects_with_429(plugin_configs):
     for config_id, plugins in plugin_configs.items():
         for plugin in ("limit-count", "limit-conn"):

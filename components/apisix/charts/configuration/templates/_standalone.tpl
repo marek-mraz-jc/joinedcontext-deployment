@@ -8,6 +8,12 @@
 {{- range $id, $config := .Values.plugins }}
       - id: {{ $id }}
         desc: {{ $config.description | default $config.name | quote }}
+        {{- /* The Portal sets this chain's limit-count to the Organization's rate for the class
+               when it composes the served file (ADR-N-035, T-2892). */}}
+        {{- with $config.rateClass }}
+        labels:
+          jc-rate-class: {{ . | quote }}
+        {{- end }}
         plugins:
 {{/* ${DOMAIN_RE} is the domain with its dots escaped, for a plugin that matches an Origin
      with a regular expression: an unescaped dot matches any character, so `.+\.${DOMAIN}`
