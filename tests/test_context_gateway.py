@@ -108,7 +108,8 @@ def test_the_conformance_space_is_one_space_one_endpoint_and_the_policies_of_two
     `ovzdusie` and not of everything the project holds."""
     ovzdusie = {key: m for key, m in seed.items() if space_of(m) == "ovzdusie"}
     kinds = sorted(kind for kind, _ in ovzdusie)
-    assert kinds == ["ContextSpace", "DataModel", "Endpoint", "Policy", "Policy", "ServiceAccount"], kinds
+    # The App is the space's public reader on its own host (T-2916), a consumer of the space.
+    assert kinds == ["App", "ContextSpace", "DataModel", "Endpoint", "Policy", "Policy", "ServiceAccount"], kinds
 
 
 @requires_helmfile
