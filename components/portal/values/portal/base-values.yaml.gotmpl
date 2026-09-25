@@ -178,6 +178,8 @@ env:
   # comes from the ConfigMap; a missing or unreadable one is neutral defaults, never a crash,
   # so the Portal starts on an environment that configured no branding at all.
   JC_BRANDING_FILE: /etc/jc/branding/branding.yaml
+  # The operator's bounds on an Organization's limits (PF-97), from the same ConfigMap.
+  JC_PORTAL_ORGANIZATION_BOUNDS_FILE: /etc/jc/branding/organization-bounds.yaml
   # The validation checks' last results, one digest per check, which
   # scripts/publish-health.py writes into the ConfigMap jc-validation-results (OPS-53).
   JC_HEALTH_DIR: /etc/jc/health
@@ -379,6 +381,10 @@ configMap:
   data:
     branding.yaml: |
 {{ omit $branding "logoSvg" | toYaml | indent 6 }}
+    # The operator's bounds (PF-97): the Portal's own configuration beside its branding, so a
+    # bound changed in the values restarts the Portal through the same checksum.
+    organization-bounds.yaml: |
+{{ dig "organizationBounds" dict $thisPortal | toYaml | indent 6 }}
 {{- if and ($branding.logoSvg | default "") ($branding.logo | default "") }}
     {{ $branding.logo }}: |
 {{ $branding.logoSvg | indent 6 }}
