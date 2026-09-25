@@ -5,3 +5,22 @@ parts:
   - name: apisix
     needs:
       - apisix.configuration
+    # The chart mounts its standalone rule file from a ConfigMap and nothing else, but the file
+    # the gateway serves carries every App's client secret, so it is the Secret
+    # `apisix-standalone-config` (ADR-N-030, AP-112). The `test` makes a chart upgrade that moves
+    # the volume fail the render instead of mounting the wrong thing.
+    jsonPatches:
+      - target:
+          version: v1
+          kind: Deployment
+          name: apisix
+        patch:
+          - op: test
+            path: /spec/template/spec/volumes/0/name
+            value: apisix-admin
+          - op: replace
+            path: /spec/template/spec/volumes/0
+            value:
+              name: apisix-admin
+              secret:
+                secretName: apisix-standalone-config

@@ -1,0 +1,37 @@
+{{- if .Values.composer.enabled }}
+# The Portal's reconciler composes the edge file (ADR-N-030, AP-112): it reads the base and
+# writes the one Secret APISIX mounts, in this namespace and nothing else here. It never creates
+# the Secret (a `create` cannot be narrowed to a name); this chart seeds it.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: edge-file-composer
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "configuration.labels" . | nindent 4 }}
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["apisix-standalone-base"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["apisix-standalone-config"]
+    verbs: ["get", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: edge-file-composer
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "configuration.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: edge-file-composer
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Values.composer.serviceAccount }}
+    namespace: {{ .Values.composer.namespace }}
+{{- end }}

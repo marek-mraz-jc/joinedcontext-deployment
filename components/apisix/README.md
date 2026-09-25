@@ -2,15 +2,18 @@
 
 Edge API gateway in **standalone file mode** (docs ADR-N-007, Deployment/10): no etcd,
 no Admin API. Routes, upstreams and plugin configs are rendered by the `configuration`
-chart into the ConfigMap `apisix-standalone-config` (`apisix.yaml`, ending with `#END`),
-which APISIX reloads on change. Secrets are injected as environment variables and referenced
-as `${{VAR}}` inside the rule file.
+chart into the ConfigMap `apisix-standalone-base` (`apisix.yaml`, ending with `#END`). The
+Portal's reconciler adds every published App's routes and client secret to that base and writes
+the Secret `apisix-standalone-config`, which APISIX mounts and reloads on change (ADR-N-030,
+AP-112). The chart seeds that Secret with the base until the Portal first writes it and marks it
+`joinedcontext.com/composed-by: portal`. The shared secrets are injected as environment
+variables and referenced as `${{VAR}}` inside the rule file.
 
-Parts: `configuration` (ConfigMap + Linkerd `Server`), then `apisix` (upstream Helm chart,
-`deployment.mode: standalone`).
+Parts: `configuration` (base ConfigMap, the seeded Secret, the Portal's `edge-file-composer`
+Role, Linkerd `Server`), then `apisix` (upstream Helm chart, `deployment.mode: standalone`,
+its rule-file volume patched from a ConfigMap to the Secret in `component.yaml`).
 
-Contributing routes: add `apisix-routes.yaml` and `apisix-plugins.yaml` to a component;
-`jcctl` renders Endpoint and App routes into the same file at runtime.
+Contributing routes: add `apisix-routes.yaml` and `apisix-plugins.yaml` to a component.
 
 ```bash
 helmfile apply -i --selector component=apisix

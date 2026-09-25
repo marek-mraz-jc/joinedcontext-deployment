@@ -154,7 +154,7 @@ def test_the_catalogue_host_is_served_and_covered_by_the_certificate(rendered):
     )
     assert CATALOGUE_HOST in certificate["spec"]["dnsNames"]
 
-    config = by_name(docs, "ConfigMap", "apisix-standalone-config")["data"]["apisix.yaml"]
+    config = by_name(docs, "ConfigMap", "apisix-standalone-base")["data"]["apisix.yaml"]
     routes = {r["id"]: r for r in yaml.safe_load(config)["routes"]}
     assert routes["ckan"]["host"] == CATALOGUE_HOST
     # The one path on the primary host answers a redirect rather than proxying: CKAN builds

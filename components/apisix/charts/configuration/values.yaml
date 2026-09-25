@@ -1,7 +1,8 @@
 ---
 # Standalone APISIX configuration (ADR-N-007): rendered into the ConfigMap
-# `apisix-standalone-config` as apisix.yaml, consumed by APISIX in
-# deployment.mode=standalone. Secrets are referenced as ${{ENV_VAR}} and injected
+# `apisix-standalone-base` as apisix.yaml, which the Portal composes with the Apps' routes into
+# the Secret `apisix-standalone-config` that APISIX serves in deployment.mode=standalone.
+# Secrets are referenced as ${{ENV_VAR}} and injected
 # into the APISIX pod as environment variables (components/apisix/values/apisix).
 plugins: {}
   # keycloak:
@@ -44,3 +45,10 @@ serviceMesh:
     app.kubernetes.io/name: apisix
   dataPlanePort: 9080
   allowUnauthenticatedIngress: false
+
+# Who composes the served file from the base (ADR-N-030, AP-112): the Portal's ServiceAccount,
+# granted read on the base and update on the served Secret in this namespace only.
+composer:
+  enabled: false
+  serviceAccount: portal
+  namespace: ''

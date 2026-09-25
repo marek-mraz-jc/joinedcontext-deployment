@@ -37,7 +37,7 @@ FORBIDDEN_CIPHER_MARKERS = ("_CBC_", "3DES", "TLS_RSA_", "_anon_", "RC4")
 def plugin_configs(rendered):
     cm = next(
         d for d in rendered("local")
-        if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "apisix-standalone-config"
+        if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "apisix-standalone-base"
     )
     parsed = yaml.safe_load(cm["data"]["apisix.yaml"])
     return {pc["id"]: pc.get("plugins", {}) for pc in parsed["plugin_configs"]}
@@ -47,7 +47,7 @@ def plugin_configs(rendered):
 def upstreams(rendered):
     cm = next(
         d for d in rendered("local")
-        if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "apisix-standalone-config"
+        if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "apisix-standalone-base"
     )
     parsed = yaml.safe_load(cm["data"]["apisix.yaml"])
     return {u["id"]: u for u in parsed["upstreams"]}
@@ -179,7 +179,7 @@ def test_every_config_variable_is_declared_for_the_nginx_workers(rendered):
     """
     docs = rendered("local")
     configmaps = {d["metadata"]["name"]: d["data"] for d in docs if d.get("kind") == "ConfigMap"}
-    referenced = set(re.findall(r"\$\{\{(\w+)\}\}", configmaps["apisix-standalone-config"]["apisix.yaml"]))
+    referenced = set(re.findall(r"\$\{\{(\w+)\}\}", configmaps["apisix-standalone-base"]["apisix.yaml"]))
     declared = set(yaml.safe_load(configmaps["apisix"]["config.yaml"])["nginx_config"]["envs"])
     assert referenced <= declared, f"not declared in apisix.nginx.envs: {sorted(referenced - declared)}"
     # The edge login needs both (ADR-N-019): the client secret and the session key.
@@ -212,6 +212,54 @@ def test_the_edge_client_secret_reaches_apisix_from_a_secret_only(rendered):
         if any("ipBlock" in to for to in rule.get("to", []))
     ]
     assert internet and {443, 8443} <= internet[0], internet
+
+
+
+def test_apisix_serves_the_composed_secret_and_helm_seeds_it_with_the_base(rendered):
+    """ADR-N-030, AP-112: the rule file APISIX mounts is the Secret the Portal composes, never a
+    ConfigMap, since it carries every App's client secret. Helm renders the base as a ConfigMap
+    and seeds the Secret with the same file, kept across syncs once the Portal owns it."""
+    docs = rendered("local")
+    deployment = next(d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"] == "apisix")
+    volumes = {v["name"]: v for v in deployment["spec"]["template"]["spec"]["volumes"]}
+    assert volumes["apisix-admin"] == {
+        "name": "apisix-admin",
+        "secret": {"secretName": "apisix-standalone-config"},
+    }
+    mounts = {m["name"]: m for m in deployment["spec"]["template"]["spec"]["containers"][0]["volumeMounts"]}
+    assert mounts["apisix-admin"]["mountPath"] == "/apisix-config"
+    assert "subPath" not in mounts["apisix-admin"], "a subPath mount never sees the reconciler's writes"
+
+    namespace = deployment["metadata"]["namespace"]
+    by_kind = {(d["kind"], d["metadata"]["name"]): d for d in docs if d["metadata"].get("namespace") == namespace}
+    assert ("ConfigMap", "apisix-standalone-config") not in by_kind
+    base = by_kind[("ConfigMap", "apisix-standalone-base")]["data"]["apisix.yaml"]
+    seed = by_kind[("Secret", "apisix-standalone-config")]
+    assert seed["stringData"]["apisix.yaml"] == base
+    assert base.rstrip().endswith("#END")
+    assert seed["metadata"]["annotations"]["helm.sh/resource-policy"] == "keep"
+
+
+def test_the_portal_may_read_the_base_and_update_the_served_file_and_nothing_else(rendered):
+    """ADR-N-030: the Portal's ServiceAccount gets read on the base ConfigMap and read/update on
+    the one Secret in the APISIX namespace, each by name; no list, no create, no other object."""
+    docs = rendered("local")
+    role = next(d for d in docs if d.get("kind") == "Role" and d["metadata"]["name"] == "edge-file-composer")
+    assert role["rules"] == [
+        {"apiGroups": [""], "resources": ["configmaps"], "resourceNames": ["apisix-standalone-base"], "verbs": ["get"]},
+        {"apiGroups": [""], "resources": ["secrets"], "resourceNames": ["apisix-standalone-config"], "verbs": ["get", "update"]},
+    ]
+    binding = next(d for d in docs if d.get("kind") == "RoleBinding" and d["metadata"]["name"] == "edge-file-composer")
+    portal = next(
+        d for d in docs
+        if d.get("kind") == "Deployment" and d["metadata"]["name"] == "portal"
+    )
+    assert binding["metadata"]["namespace"] == role["metadata"]["namespace"]
+    assert binding["subjects"] == [{
+        "kind": "ServiceAccount",
+        "name": portal["spec"]["template"]["spec"]["serviceAccountName"],
+        "namespace": portal["metadata"]["namespace"],
+    }]
 
 
 def edge_objects(docs: list[dict]) -> dict[str, dict]:

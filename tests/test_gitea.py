@@ -70,7 +70,7 @@ def test_the_route_matches_the_edge_table_and_strips_the_prefix_root_url_keeps(r
     """docs Deployment/10 section 2. Gitea listens at the root and renders links from
     ROOT_URL, so the prefix has to come off at the gateway and stay in the config."""
     docs = rendered("local")
-    cm = next(d for d in docs if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "apisix-standalone-config")
+    cm = next(d for d in docs if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "apisix-standalone-base")
     apisix = yaml.safe_load(cm["data"]["apisix.yaml"])
 
     route = next(r for r in apisix["routes"] if r["id"] == "gitea-forge")

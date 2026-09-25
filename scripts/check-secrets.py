@@ -26,6 +26,11 @@ DERIVED_KEYS = {"client-secret": 32}
 # component `secrets.yaml`. The names are read, not matched by prefix: a generated
 # `keycloak-user-*` Secret for a user that file does not name still fails.
 DEMO_USER_KEYS = {"password": 32}
+# Kept Secrets that hold no generated value: the APISIX rule file, which helm seeds with the base
+# and the Portal's reconciler then owns (ADR-N-030, AP-112). `keep` stops a sync deleting it once
+# helm no longer renders it, not a credential rotation; check-rendered-secrets.py and gitleaks
+# still read its content.
+COMPOSED = {"apisix-standalone-config"}
 
 
 def declarations(components_dir: Path) -> dict[str, dict[str, int]]:
@@ -63,6 +68,7 @@ def main() -> int:
         d for d in docs
         if d.get("kind") == "Secret"
         and (d.get("metadata", {}).get("annotations") or {}).get("helm.sh/resource-policy") == "keep"
+        and d["metadata"]["name"] not in COMPOSED
     ]
 
     problems: list[str] = []
