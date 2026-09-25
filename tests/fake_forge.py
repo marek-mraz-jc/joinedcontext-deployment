@@ -136,6 +136,11 @@ def identities(path: str, method: str, call: dict, state: dict) -> tuple[int, st
     if collaborator and method == "PUT":
         state.setdefault("collaborators", {})[f"{collaborator.group(1)}/{collaborator.group(2)}"] = json.loads(call["data"])["permission"]
         return 204, ""
+    team = re.fullmatch(r"/api/v1/teams/(\d+)", path)
+    if team and method == "PATCH":
+        body = json.loads(call["data"])
+        state.setdefault("team_units", {})[body["name"]] = body["units_map"]
+        return 200, "{}"
     member = re.fullmatch(r"/api/v1/teams/(\d+)/members/([^/]+)", path)
     if member and method == "PUT":
         state.setdefault("members", []).append(member.group(2))
