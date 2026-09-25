@@ -69,22 +69,27 @@ def processors(path: Path) -> list[dict]:
     return yaml.safe_load(path.read_text())["pipeline"]["processors"]
 
 
-def run(path: Path, fixture: str, domain: str, space: str) -> list[dict]:
-    """Execute the mapping's processors over the recorded document, as the runner would."""
+#: What the Portal appends to every stream it renders (portal `src/reconciler/streams.rs`
+#: `batching()`): an array message is taken as it is and anything else becomes a one-element
+#: array, then one message per element, which is where the validation stage asks each entity for
+#: its class and its id (PL-60, DM-61, PF-42), and batches of 1000 for the Endpoint. A seed that
+#: archives its own output nests the batch one level deeper, and the validation stage then reads
+#: an array where an entity belongs: 18 pipelines ran Live and wrote nothing (T-2914).
+PORTAL_BATCHING = [
+    {"mapping": 'root = if this.type() == "array" { this } else { [this] }'},
+    {"unarchive": {"format": "json_array"}},
+    {"split": {"size": 1000}},
+    {"archive": {"format": "json_array"}},
+]
+
+
+def run(path: Path, fixture: str, domain: str, space: str) -> list:
+    """Execute the mapping's processors over the recorded document and then the Portal's
+    batching, in one Bento stream, as the runner does; answer every element the Endpoint
+    receives."""
     document = json.dumps(json.loads((FIXTURES / fixture).read_text()), separators=(",", ":"))
-    steps = processors(path)
-    payload = document
-    for step in steps:
-        if "unarchive" in step:
-            # `unarchive: json_array` turns one message into one per element and the steps after
-            # it run per element until `archive` joins them again: the pipeline's own steps, run
-            # by Bento in one stream. One container per element cost a minute and a half (T-2895).
-            return json.loads(run_stream(steps[steps.index(step):], payload, domain, space))
-        if "mapping" in step:
-            payload = run_mapping(step, payload, domain, space)
-        if "archive" in step:
-            break
-    return json.loads(payload)
+    written = run_stream(processors(path) + PORTAL_BATCHING, document, domain, space)
+    return [element for batch in written.splitlines() if batch.strip() for element in json.loads(batch)]
 
 
 def run_mapping(step: dict, payload: str, domain: str, space: str) -> str:
@@ -98,7 +103,8 @@ def run_mapping(step: dict, payload: str, domain: str, space: str) -> str:
 
 
 def run_stream(steps: list[dict], payload: str, domain: str, space: str) -> str:
-    """Run pipeline steps over one message through a Bento stream, and answer what it wrote."""
+    """Run pipeline steps over one message through a Bento stream, and answer what it wrote:
+    one line per message out of it."""
     assert "archive" in steps[-1], "a stream that unarchives must archive again to answer one document"
     with tempfile.TemporaryDirectory(dir="/tmp") as directory:
         work = Path(directory)
@@ -107,7 +113,7 @@ def run_stream(steps: list[dict], payload: str, domain: str, space: str) -> str:
         (work / "cfg.yaml").write_text(yaml.safe_dump({
             "input": {"file": {"paths": ["/w/in.json"], "scanner": {"to_the_end": {}}}},
             "pipeline": {"processors": steps},
-            "output": {"file": {"path": "/w/out.json", "codec": "all-bytes"}},
+            "output": {"file": {"path": "/w/out.json", "codec": "lines"}},
         }))
         for item in work.iterdir():
             item.chmod(0o666)
@@ -126,6 +132,28 @@ def entities():
     if shutil.which("docker") is None:
         pytest.skip("no container runtime")
     return {path: run(path, *config) for path, config in MAPPINGS.items()}
+
+
+@requires_docker
+def test_the_validation_stage_reads_one_entity_per_message(entities):
+    """T-2914: after the Portal's batching each message is one entity, never the seed's array."""
+    for path, produced in entities.items():
+        nested = [type(e).__name__ for e in produced if not isinstance(e, dict)]
+        assert not nested, f"{path.name}: the validation stage reads {nested[:3]}, not entities"
+
+
+def test_a_seed_ends_in_archive_only_after_unarchiving():
+    """The Portal's batching archives every stream; a seed whose mapping already answers the
+    array and then archives it hands the batching one array holding the batch, and not one
+    entity passes validation (T-2914). An `archive` that joins rows before the mapping (the
+    EEA parquet seeds) is the mapping's input, not its output. A shape check, so it holds
+    without a container runtime."""
+    nesting = []
+    for path in sorted(SEED.glob("*/*-bento.yaml")):
+        steps = [next(iter(step)) for step in (yaml.safe_load(path.read_text()) or {}).get("pipeline", {}).get("processors") or []]
+        if steps and steps[-1] == "archive" and "unarchive" not in steps:
+            nesting.append(path.relative_to(SEED).as_posix())
+    assert nesting == []
 
 
 @requires_docker
