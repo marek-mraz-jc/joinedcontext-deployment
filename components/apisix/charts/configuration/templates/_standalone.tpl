@@ -20,6 +20,13 @@
      also admits a look-alike host somebody else can register (T-1679). */}}
 {{ ($config.plugins | default dict) | toYaml | replace "${REALM}" $.Values.realm | replace "${DOMAIN_RE}" ($.Values.domain | replace "." "[.]") | replace "${DOMAIN}" $.Values.domain | replace "${APISIX_GATEWAY_CLIENT_SECRET}" "${{APISIX_GATEWAY_CLIENT_SECRET}}" | replace "${OIDC_SESSION_SECRET}" "${{OIDC_SESSION_SECRET}}" | replace "${EDGE_CLIENT_SECRET}" "${{EDGE_CLIENT_SECRET}}" | indent 10 }}
 {{- end }}
+    {{- /* Per request, `client-control` replaces the server block's ceiling in either direction
+           (measured on the pinned image, tests/test_apisix_429_contract.py). */}}
+    global_rules:
+      - id: edge-body
+        plugins:
+          client-control:
+            max_body_size: {{ mul (int .Values.maxRequestBodyMegabytes) 1048576 }}
     upstreams:
 {{- range $id, $config := .Values.routes }}
       - id: {{ $id }}

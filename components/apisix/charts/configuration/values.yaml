@@ -20,6 +20,12 @@ routes: {}
   #   priority: 10
   #   scheme: http
 
+# The body a request may carry at the edge, in MiB: the `client-control` global rule `edge-body`,
+# which the Portal rewrites to the Organization's spec.limits.edge.maxRequestBodyMegabytes
+# (ADR-N-035, T-2892). The catalog default, and the server block's own `client_max_body_size`,
+# which holds whenever no rule is served.
+maxRequestBodyMegabytes: 16
+
 domain: 'example.com'
 # Always overridden per instance (global.instanceSlug).
 realm: ''
