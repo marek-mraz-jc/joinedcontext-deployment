@@ -1,0 +1,28 @@
+# The city's public space (T-2781): what anybody may read and the catalogue republishes. The
+# events the city announces (banskabystrica.sk, CC BY 4.0), the national school map's schools in
+# the city (MŠVVaM SR, CC BY 4.0) and the hourly particulate readings of the city's station as
+# the EEA republishes them (CC BY 4.0). The statistics stay in `banskabystrica-mesto`, and
+# `ovzdusie` keeps its seeded stations.
+apiVersion: joinedcontext.com/v1alpha1
+kind: ContextSpace
+metadata:
+  name: banskabystrica-verejne
+  namespace: banskabystrica
+  title: { sk: "Mesto — verejné údaje", en: "City, open data" }
+  description:
+    sk: >-
+      Podujatia mesta, školy a školské zariadenia v meste a hodinové merania prachových častíc na
+      mestskej stanici. Zdroje: Mesto Banská Bystrica (banskabystrica.sk), Ministerstvo školstva
+      SR (Digitálna mapa škôl) a Európska environmentálna agentúra (údaje SHMÚ), všetky pod CC BY 4.0.
+    en: >-
+      The city's events, the schools and school facilities in the city and the hourly particulate
+      readings of the city's station. Sources: the City of Banská Bystrica (banskabystrica.sk),
+      the Slovak Ministry of Education (Digitálna mapa škôl) and the European Environment Agency
+      (SHMÚ's data), all under CC BY 4.0.
+spec:
+  # The space name is the segment its ids carry, pinned so it cannot drift (PF-84).
+  urnSegment: banskabystrica-verejne
+  isSandbox: false
+  # The one model of this space: a write of a type it does not declare is refused (DM-61).
+  dataModelRef: { kind: DataModel, name: banskabystrica-verejne }
+  defaultLocale: sk

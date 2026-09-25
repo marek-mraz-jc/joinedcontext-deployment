@@ -1,0 +1,17 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Policy
+metadata:
+  name: verejne-read
+  namespace: banskabystrica
+  title: { sk: "Verejné čítanie verejných údajov mesta", en: "Public read: the city's open data" }
+spec:
+  contextSpaceRef: { kind: ContextSpace, name: banskabystrica-verejne }
+  assigner: did:web:{orgDomain}
+  assignee: { kind: role, id: public }
+  operations: [retrieveOps]
+  # Every type of the space: each is open data, and no mapping writes a person's name or contact.
+  information:
+    - entities:
+        - type: Event
+        - type: School
+        - type: AirQualityObserved

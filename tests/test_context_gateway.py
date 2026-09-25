@@ -108,11 +108,11 @@ def test_the_conformance_space_is_one_space_one_endpoint_and_the_policies_of_two
 
 
 @requires_helmfile
-def test_every_seeded_manifest_of_the_city_belongs_to_one_of_its_three_spaces(seed):
+def test_every_seeded_manifest_of_the_city_belongs_to_one_of_its_four_spaces(seed):
     """Nothing in the project floats free of a space, and no manifest of it names a space the
-    project does not seed (T-2305)."""
+    project does not seed (T-2305, T-2781)."""
     spaces = {name for (kind, name) in seed if kind == "ContextSpace"}
-    assert spaces == {"ovzdusie", "banskabystrica-mesto", "banskabystrica-kpi"}
+    assert spaces == {"ovzdusie", "banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne"}
     # A DataSource is a fetch and a Project is the project: neither belongs to a space. A
     # Pipeline names its space through the Endpoint it writes through, which is the point. A
     # CkanInstance is the project's catalogue, which each space's Endpoint may publish to (T-2407).
@@ -133,7 +133,7 @@ def test_every_seeded_manifest_of_the_city_belongs_to_one_of_its_three_spaces(se
 
     account = seed[("ServiceAccount", "pipelines")]
     scoped = {role["scope"]["contextSpace"] for role in account["spec"]["roles"]}
-    assert scoped == {"banskabystrica-mesto", "banskabystrica-kpi"}, scoped
+    assert scoped == {"banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne"}, scoped
 
 
 @requires_helmfile

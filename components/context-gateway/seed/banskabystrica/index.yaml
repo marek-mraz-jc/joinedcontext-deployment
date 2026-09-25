@@ -51,5 +51,59 @@ pipeline-obyvatelia-bento.yaml: projects/banskabystrica/pipelines/obyvatelia/ben
 # inline: the input is a query through an Endpoint, not a DataSource fetch.
 pipeline-ukazovatele-ovzdusie.yaml: projects/banskabystrica/pipelines/ukazovatele-ovzdusie/pipeline.yaml
 pipeline-ukazovatele-mesto.yaml: projects/banskabystrica/pipelines/ukazovatele-mesto/pipeline.yaml
+# Nine more ŠÚ SR municipal cubes of the city (T-2781), into banskabystrica-mesto through the
+# shared JSON-stat decoder.
+datasource-pohyb.yaml: projects/banskabystrica/datasources/susr-om7103rr.yaml
+pipeline-pohyb.yaml: projects/banskabystrica/pipelines/pohyb/pipeline.yaml
+pipeline-pohyb-bento.yaml: projects/banskabystrica/pipelines/pohyb/bento.yaml
+datasource-obyvatelstvo.yaml: projects/banskabystrica/datasources/susr-om7101qr.yaml
+pipeline-obyvatelstvo.yaml: projects/banskabystrica/pipelines/obyvatelstvo/pipeline.yaml
+pipeline-obyvatelstvo-bento.yaml: projects/banskabystrica/pipelines/obyvatelstvo/bento.yaml
+datasource-ubytovanie.yaml: projects/banskabystrica/datasources/susr-cr3809qr.yaml
+pipeline-ubytovanie.yaml: projects/banskabystrica/pipelines/ubytovanie/pipeline.yaml
+pipeline-ubytovanie-bento.yaml: projects/banskabystrica/pipelines/ubytovanie/bento.yaml
+datasource-navstevnost.yaml: projects/banskabystrica/datasources/susr-cr3803mr.yaml
+pipeline-navstevnost.yaml: projects/banskabystrica/pipelines/navstevnost/pipeline.yaml
+pipeline-navstevnost-bento.yaml: projects/banskabystrica/pipelines/navstevnost/bento.yaml
+datasource-pozemky.yaml: projects/banskabystrica/datasources/susr-pl5001rr.yaml
+pipeline-pozemky.yaml: projects/banskabystrica/pipelines/pozemky/pipeline.yaml
+pipeline-pozemky-bento.yaml: projects/banskabystrica/pipelines/pozemky/bento.yaml
+datasource-uchadzaci.yaml: projects/banskabystrica/datasources/susr-pr5001rr.yaml
+pipeline-uchadzaci.yaml: projects/banskabystrica/pipelines/uchadzaci/pipeline.yaml
+pipeline-uchadzaci-bento.yaml: projects/banskabystrica/pipelines/uchadzaci/bento.yaml
+datasource-materske-skoly.yaml: projects/banskabystrica/datasources/susr-sv5001rr.yaml
+pipeline-materske-skoly.yaml: projects/banskabystrica/pipelines/materske-skoly/pipeline.yaml
+pipeline-materske-skoly-bento.yaml: projects/banskabystrica/pipelines/materske-skoly/bento.yaml
+datasource-zakladne-skoly.yaml: projects/banskabystrica/datasources/susr-sv5002rr.yaml
+pipeline-zakladne-skoly.yaml: projects/banskabystrica/pipelines/zakladne-skoly/pipeline.yaml
+pipeline-zakladne-skoly-bento.yaml: projects/banskabystrica/pipelines/zakladne-skoly/bento.yaml
+datasource-kniznice.yaml: projects/banskabystrica/datasources/susr-ku5008rr.yaml
+pipeline-kniznice.yaml: projects/banskabystrica/pipelines/kniznice/pipeline.yaml
+pipeline-kniznice-bento.yaml: projects/banskabystrica/pipelines/kniznice/bento.yaml
+# The city's public space (T-2781): its model with the artifacts beside it, the public endpoint
+# the catalogue republishes, the anonymous reader's policy and the pipelines' write policy.
+space-verejne.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/space.yaml
+datamodel-verejne.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/datamodels/banskabystrica-verejne.yaml
+banskabystrica-verejne.linkml.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/datamodels/banskabystrica-verejne.linkml.yaml
+banskabystrica-verejne.v1.schema.json: projects/banskabystrica/spaces/banskabystrica-verejne/datamodels/banskabystrica-verejne.v1.schema.json
+banskabystrica-verejne.v1.context.jsonld: projects/banskabystrica/spaces/banskabystrica-verejne/datamodels/banskabystrica-verejne.v1.context.jsonld
+banskabystrica-verejne.v1.example.jsonld: projects/banskabystrica/spaces/banskabystrica-verejne/datamodels/banskabystrica-verejne.v1.example.jsonld
+banskabystrica-verejne.v1.md: projects/banskabystrica/spaces/banskabystrica-verejne/datamodels/banskabystrica-verejne.v1.md
+endpoint-verejne.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/endpoints/banskabystrica-verejne.yaml
+policy-verejne-read.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/verejne-read.yaml
+policy-verejne-pipelines-write.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/verejne-pipelines-write.yaml
+# Its four feeds: the city's events, the school map and the EEA's hourly PM10 and PM2.5.
+datasource-podujatia.yaml: projects/banskabystrica/datasources/mesto-podujatia.yaml
+pipeline-podujatia.yaml: projects/banskabystrica/pipelines/podujatia/pipeline.yaml
+pipeline-podujatia-bento.yaml: projects/banskabystrica/pipelines/podujatia/bento.yaml
+datasource-skoly.yaml: projects/banskabystrica/datasources/minedu-mapa-skol.yaml
+pipeline-skoly.yaml: projects/banskabystrica/pipelines/skoly/pipeline.yaml
+pipeline-skoly-bento.yaml: projects/banskabystrica/pipelines/skoly/bento.yaml
+datasource-ovzdusie-pm10.yaml: projects/banskabystrica/datasources/eea-sk0263a-pm10.yaml
+pipeline-ovzdusie-pm10.yaml: projects/banskabystrica/pipelines/ovzdusie-pm10/pipeline.yaml
+pipeline-ovzdusie-pm10-bento.yaml: projects/banskabystrica/pipelines/ovzdusie-pm10/bento.yaml
+datasource-ovzdusie-pm25.yaml: projects/banskabystrica/datasources/eea-sk0263a-pm25.yaml
+pipeline-ovzdusie-pm25.yaml: projects/banskabystrica/pipelines/ovzdusie-pm25/pipeline.yaml
+pipeline-ovzdusie-pm25-bento.yaml: projects/banskabystrica/pipelines/ovzdusie-pm25/bento.yaml
 # The open-data catalogue of the city (T-2407): the one cleared endpoint, public-air, publishes here.
 ckan-banskabystrica.yaml: projects/banskabystrica/ckan/banskabystrica.yaml
