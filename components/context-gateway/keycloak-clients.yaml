@@ -64,6 +64,34 @@ banskabystrica-conformance:
           access.token.claim: 'true'
           id.token.claim: 'false'
 
+# A workload on the Portal's side (T-2245, PF-45, PF-49): the account `pipeline-proposer` of
+# project `helsinki` in the development seed. Its token's audience is the Portal's API client and
+# nothing else, so the Portal accepts it (the MCP door and the REST API) and every endpoint of the
+# gateway refuses it; the Portal maps `azp` to the manifest and grants its roles without approve.
+helsinki-pipeline-proposer:
+  profiles: [development]
+  name: Helsinki pipeline proposer
+  description: Service account that proposes Pipeline manifests over the Portal API and MCP; client_credentials only, no browser flow
+  subdomain: ''
+  redirectPath: /
+  componentNamespaces:
+    - context-gateway
+  rawValues:
+    publicClient: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: true
+    protocolMappers:
+      - name: portal-api-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.client.audience: portal-api
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+
 # The identity a phone uses to reach an endpoint's MCP route (T-0336, AG-32, PF-45, PF-46).
 #
 # One client for the mobile apps, not one per endpoint: in OAuth 2.1 the client is the app
