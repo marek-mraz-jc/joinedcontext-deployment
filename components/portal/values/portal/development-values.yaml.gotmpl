@@ -14,3 +14,11 @@ resources:
   limits:
     cpu: '1'
     memory: 512Mi
+
+{{- if has "keycloak" .Values.components }}
+env:
+  # The live journeys sign in as the demo people and mark the assistant runs they start as
+  # test runs (AG-93, T-2816). The Portal accepts the mark only from the users named here and
+  # refuses it with 403 for anyone else; production names nobody.
+  JC_PORTAL_JOURNEY_USERS: {{ readFile "../../../keycloak/demo-users.yaml" | fromYaml | keys | sortAlpha | join "," | quote }}
+{{- end }}
