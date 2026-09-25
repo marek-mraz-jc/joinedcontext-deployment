@@ -536,3 +536,36 @@ def test_the_actions_runner_reaches_the_forge_the_portal_and_dns_only(rendered, 
                 for expression in peer.get("podSelector", {}).get("matchExpressions", []):
                     reached |= set(expression["values"])
     assert reached - {"gitea", "gitea-forge", "portal-portal", "kube-dns"} == set(), f"the runner reaches {reached}"
+
+
+
+def _gateway_admits(policies, source: dict, port: int) -> bool:
+    """Whether one of the gateway's ingress policies names `source` on `port`."""
+    for policy in policies:
+        spec = policy["spec"]
+        selected = (spec.get("podSelector") or {}).get("matchLabels") or {}
+        if selected.get("app.kubernetes.io/name") != "context-gateway-gateway":
+            continue
+        for rule in spec.get("ingress") or []:
+            if port not in {p.get("port") for p in rule.get("ports") or []}:
+                continue
+            for peer in rule.get("from") or []:
+                labels = (peer.get("podSelector") or {}).get("matchLabels") or {}
+                if labels and set(labels.items()) <= set(source.items()):
+                    return True
+    return False
+
+
+@pytest.mark.parametrize("env", ENVIRONMENTS)
+def test_the_gateway_admits_the_portal_s_calls(rendered, env):
+    """The Portal calls the gateway in the cluster (`JC_PORTAL_GATEWAY_URL`): the AP-132 access
+    check before every App build, Subscriptions (T-0931), the assistant's reads. Its egress
+    named the gateway on 8080 and, meshed, on 4143, and the gateway's ingress named the Portal
+    on neither, so every build was refused with the Portal proxy's 504 (T-2944). Both halves."""
+    policies = [d for d in rendered(env) if d.get("kind") == "NetworkPolicy"]
+    portal = {"app.kubernetes.io/name": "portal-portal"}
+    assert _gateway_admits(policies, portal, 8080), "the gateway's ingress refuses the Portal on 8080"
+    if env == "dev":
+        assert _gateway_admits(policies, portal, 4143), (
+            "the gateway's inbound proxy (4143) refuses the Portal's meshed calls"
+        )
