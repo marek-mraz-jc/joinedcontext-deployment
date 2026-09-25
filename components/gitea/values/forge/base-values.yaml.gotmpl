@@ -10,6 +10,16 @@
 {{- range $group, $teams := $this.groupTeams | default dict }}
 {{- $_ := set $groupTeamMap $group (dict $global.configRepo.owner $teams) }}
 {{- end }}
+{{- /* PF-87: each project repository is read through its own two teams. The Portal's
+       reconciler creates the teams `{slug}-readers` and `{slug}-writers` and fills the Keycloak
+       groups of the same names from the project's bindings; this map joins each group to its
+       team, for the projects the environment lists. */}}
+{{- range $slug := $this.projectTeams | default list }}
+{{- range $role := list "readers" "writers" }}
+{{- $name := printf "%s-%s" $slug $role }}
+{{- $_ := set $groupTeamMap $name (dict $global.configRepo.owner (list $name)) }}
+{{- end }}
+{{- end }}
 {{- /* Where merge hooks are delivered. The reconciler runs in the portal process
        (docs Architecture/14), so its Service is the only target that exists today; an
        environment without the portal gets no webhook allow-list and Gitea keeps its
@@ -134,6 +144,11 @@ gitea:
       # Job; a group with no team here changes nothing.
       groupClaimName: groups
       groupTeamMap: '{{ $groupTeamMap | toJson }}'
+      # A person the realm no longer holds in a mapped group leaves its team at their next
+      # sign-in, so a removed binding closes the project repository to them (PF-87). The flag
+      # takes no value: the chart writes `--group-team-map-removal "true"`, and the forge sets
+      # the flag and ignores the word after it.
+      groupTeamMapRemoval: true
       {{- with $this.adminGroup }}
       adminGroup: {{ . | quote }}
       {{- end }}

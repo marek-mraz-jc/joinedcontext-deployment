@@ -11,6 +11,10 @@ gitea:
     groupTeams:
       platform-readers:
         - readers
+    # Projects of layout 2 whose repository members reach through `{slug}-readers` and
+    # `{slug}-writers` (PF-87): the Portal keeps those groups and teams, and this list maps
+    # each group onto its team at the forge's next apply. A project opened later is added here.
+    projectTeams: []
     # The Keycloak group whose members administer the forge (`--admin-group`, T-1421), so an
     # operator no longer needs the local `gitea_admin` password. Nobody is in it by default:
     # add a person in Keycloak. Empty or absent renders no admin group.
