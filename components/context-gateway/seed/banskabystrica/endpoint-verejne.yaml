@@ -1,0 +1,23 @@
+# The one door of the city's public space: every source is open data under CC BY 4.0, and
+# republishing it with each publisher's credit is what that licence allows (T-2781).
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: banskabystrica-verejne
+  namespace: banskabystrica
+  title: { sk: "Mesto — verejné údaje", en: "City, open data" }
+  # The dataset's notes in the catalogue, through this endpoint's DCAT-AP record (EP-27).
+  description:
+    sk: "Podujatia mesta, školy v meste a hodinové merania PM10 a PM2.5 na stanici SK0263A. Zdroje: Mesto Banská Bystrica, Ministerstvo školstva SR (Digitálna mapa škôl), Európska environmentálna agentúra (údaje SHMÚ); CC BY 4.0."
+    en: "The city's events, the schools in the city and hourly PM10 and PM2.5 at station SK0263A. Sources: the City of Banská Bystrica, the Slovak Ministry of Education (Digitálna mapa škôl), the European Environment Agency (SHMÚ's data); CC BY 4.0."
+spec:
+  contextSpaceRef: banskabystrica-verejne
+  slug: rpfqszwlbp5bonvg7kckhdsne5qedjor
+  audience: public
+  enabledRepresentations: [ngsi-ld, geojson, csv, json]
+  rateLimits: { requestsPerMinute: 300, burst: 50 }
+  publish:
+    ckan:
+      instanceRef: { kind: CkanInstance, name: banskabystrica }
+      license: cc-by
+      datastore: { representation: csv, refresh: onReconcile }
