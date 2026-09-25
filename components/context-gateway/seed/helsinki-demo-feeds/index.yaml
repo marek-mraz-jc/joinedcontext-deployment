@@ -1,0 +1,6 @@
+# The Helsinki pipeline that reads the demo NATS feed (T-2960), committed only where the
+# `demo-feeds` component runs: a pipeline whose broker is not there would stay in error.
+# Each file maps to its repository path, as in ../helsinki/index.yaml.
+datasource-demo-counters.yaml: projects/helsinki/datasources/demo-feed-counters.yaml
+pipeline-demo-counters.yaml: projects/helsinki/pipelines/demo-counters/pipeline.yaml
+pipeline-demo-counters-bento.yaml: projects/helsinki/pipelines/demo-counters/bento.yaml
