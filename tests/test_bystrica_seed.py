@@ -583,3 +583,68 @@ def test_only_the_cleared_endpoints_publish_each_to_its_own_bodys_catalogue():
             # The token is a reference, never a value.
             assert set(instance["spec"]["apiTokenRef"]) <= {"name", "key", "envVar"}
     assert published == CLEARED
+
+
+def test_only_the_sole_writer_of_a_space_expires_and_its_policy_grants_the_sweep():
+    """Stale-entity expiry deletes by space and type, never by writer (PL-64, T-2887).
+
+    Nothing on an entity says which pipeline wrote it, so the Portal refuses an expiry while
+    another Pipeline of the project writes the same space, a type outside the space's model, or a
+    sweep no Policy of the pipelines account grants (queryBatch to read the timestamps, deleteBatch
+    to remove). The seed is applied past that door, so the same rules are asserted here: a seed
+    the Portal would refuse never reaches dev. The region's indicators are the one demonstration.
+    """
+    expiring = []
+    for folder in sorted(p for p in SEED.iterdir() if p.is_dir()):
+        endpoints = {
+            doc["metadata"]["name"]: doc["spec"]["contextSpaceRef"]
+            for _, doc in manifests(folder, "Endpoint")
+        }
+
+        def space_of(pipeline):
+            outputs = pipeline["spec"].get("outputs") or [pipeline["spec"]]
+            names = [o["targetEndpoint"].rsplit(":", 1)[-1] for o in outputs if "targetEndpoint" in o]
+            spaces = [endpoints.get(name) for name in names]
+            return [s["name"] if isinstance(s, dict) else s for s in spaces if s]
+
+        pipelines = [doc for _, doc in manifests(folder, "Pipeline")]
+        for pipeline in pipelines:
+            expiry = pipeline["spec"].get("expiry")
+            if expiry is None:
+                continue
+            name = pipeline["metadata"]["name"]
+            expiring.append(f"{folder.name}/{name}")
+            (space,) = space_of(pipeline)
+            others = [p["metadata"]["name"] for p in pipelines if p is not pipeline and space in space_of(p)]
+            assert not others, f"{name} expires {space}, which {others} also write"
+            classes = {
+                c
+                for _, model in manifests(folder, "DataModel")
+                if model["spec"]["contextSpaceRef"] == space
+                for c in model["spec"]["classes"]
+            }
+            assert set(expiry["types"]) <= classes, f"{name}: {expiry['types']} not in {classes}"
+            for operation in ("queryBatch", "deleteBatch"):
+                for entity_type in expiry["types"]:
+                    assert any(
+                        policy["spec"]["contextSpaceRef"] in (space, {"kind": "ContextSpace", "name": space})
+                        and policy["spec"]["assignee"] == {"kind": "serviceAccount", "id": "pipelines"}
+                        and policy["spec"].get("effect", "permission") == "permission"
+                        and operation in policy["spec"]["operations"]
+                        and not any(k in policy["spec"] for k in ("q", "scopeQ", "geoQ", "temporalQ"))
+                        and (
+                            not policy["spec"].get("information")
+                            or any(
+                                selector == {"type": entity_type}
+                                for info in policy["spec"]["information"]
+                                for selector in info["entities"]
+                            )
+                        )
+                        for _, policy in manifests(folder, "Policy")
+                    ), f"{name}: no pipelines Policy grants {operation} on {entity_type} in {space}"
+    # Off by default: exactly the one demonstration carries it, every other pipeline deletes nothing.
+    assert expiring == ["bbsk/ukazovatele"]
+    assert one(REGION, "Pipeline", "ukazovatele")["spec"]["expiry"] == {
+        "after": "21d",
+        "types": ["KeyPerformanceIndicator"],
+    }
