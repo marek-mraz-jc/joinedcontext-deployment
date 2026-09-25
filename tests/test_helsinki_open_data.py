@@ -13,19 +13,19 @@ import copy
 import json
 import re
 import shutil
-import subprocess
 from pathlib import Path
 
 import pytest
 import yaml
+
+import open_data
+from open_data import requires_docker
 
 pytestmark = pytest.mark.xdist_group("docker-helsinki-open-data")
 
 ROOT = Path(__file__).resolve().parent.parent
 HELSINKI = ROOT / "components/context-gateway/seed/helsinki"
 FIXTURES = Path(__file__).resolve().parent / "fixtures/helsinki/open-data"
-# The digest the pipeline runner pins (test_bystrica_pipelines.py, test_demo_feeds.py).
-BENTO = "ghcr.io/warpstreamlabs/bento:1.21.1@sha256:656c55de3f8deddd4ee743f3c76f3b497e67324e940f2bc1769693cd8b906364"
 
 # pipeline -> (fixture, the type it writes, how many entities the recording holds)
 FEEDS = {
@@ -43,57 +43,17 @@ FEEDS = {
     "resident-parking-zones": ("resident-zones.json", "ParkingZone", 2),
 }
 
-requires_docker = pytest.mark.skipif(
-    shutil.which("docker") is None, reason="no container runtime, so Bento cannot run the mapping"
-)
-
 
 def fixture(name: str) -> dict:
     return json.loads((FIXTURES / name).read_text())
 
 
 def run(pipeline: str, document: dict) -> list[dict]:
-    """The mapping's processors over one fetched document, as the runner feeds it."""
-    config = {
-        "input": {"stdin": {"scanner": {"to_the_end": {}}}},
-        "pipeline": yaml.safe_load((HELSINKI / f"helsinki-pipeline-{pipeline}-bento.yaml").read_text())["pipeline"],
-        "output": {"stdout": {"codec": "all-bytes"}},
-        "logger": {"level": "error"},
-    }
-    result = subprocess.run(
-        ["docker", "run", "--rm", "-i", "-e", "JC_ORG_DOMAIN=hel.fi", "-e", "JC_SPACE=helsinki",
-         "-e", f"CONFIG={json.dumps(config)}", "--entrypoint", "sh", BENTO, "-c",
-         'printf "%s" "$CONFIG" > /tmp/c.json && exec /bento -c /tmp/c.json'],
-        input=json.dumps(document), capture_output=True, text=True, timeout=120,
-    )
-    assert result.returncode == 0, result.stderr or result.stdout
-    return json.loads(result.stdout)
-
-
-def key_values(entity: dict) -> dict:
-    """The entity as `keyValues`, the shape the generated JSON Schema describes."""
-    out = {}
-    for name, attribute in entity.items():
-        if not isinstance(attribute, dict) or "type" not in attribute:
-            out[name] = attribute
-        elif attribute["type"] == "Relationship":
-            out[name] = attribute["object"]
-        elif attribute["type"] == "LanguageProperty":
-            out[name] = attribute["languageMap"]
-        else:
-            out[name] = attribute["value"]
-    return out
+    return open_data.run(HELSINKI / f"helsinki-pipeline-{pipeline}-bento.yaml", json.dumps(document).encode(), "helsinki")
 
 
 def schema_errors(entity: dict) -> list[str]:
-    jsonschema = pytest.importorskip("jsonschema")
-    schema = json.loads((HELSINKI / "helsinki.v1.schema.json").read_text())
-    # The class definition refers to the enums beside it, so it is checked inside the document.
-    validator = jsonschema.Draft7Validator(
-        {**schema["definitions"][entity["type"]], "definitions": schema["definitions"]},
-        format_checker=jsonschema.Draft7Validator.FORMAT_CHECKER,
-    )
-    return [e.message for e in validator.iter_errors(key_values(entity))]
+    return open_data.schema_errors(HELSINKI / "helsinki.v1.schema.json", entity)
 
 
 @pytest.fixture(scope="module")
