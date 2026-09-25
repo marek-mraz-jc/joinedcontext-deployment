@@ -213,6 +213,8 @@ def test_one_value_moves_the_applications_and_the_portal_follows(rendered, rende
     env = {e["name"]: e.get("value") for e in job["spec"]["template"]["spec"]["containers"][0]["env"]}
     assert env["APPS_ORG"] == ""
     assert "JC_GITEA_APPS_OWNER" not in _portal_env(rendered("local"))
+    reader = _portal_env(rendered("local"))["JC_GITEA_READER"]["value"]
+    assert reader == env["GATEWAY_USER"], "the Portal names another reader than the gateway's user"
 
     def apart(tree):
         path = tree / "components/gitea/default-environment.yaml.gotmpl"
