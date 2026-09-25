@@ -23,7 +23,8 @@ spec:
         security.joinedcontext.com/api-access-reason: >-
           Forge bootstrap: writes the two access tokens it mints in the forge into the
           Secrets named in its Role, which is the only way a token minted at run time
-          reaches the Portal and the gateway.
+          reaches the Portal and the gateway, and restarts the Deployments its Role names
+          when a token was minted again.
         {{- if .Values.serviceMesh.enabled }}
         # The proxy has to be told to exit, or the pod stays Running after the script ends
         # and the Job never completes.
@@ -76,12 +77,32 @@ spec:
               value: {{ .Values.tokens.portal.scopes | toJson | quote }}
             - name: PORTAL_NAMESPACES
               value: {{ .Values.tokens.portal.namespaces | uniq | sortAlpha | join " " | quote }}
+            - name: PORTAL_USER
+              value: {{ .Values.tokens.portal.user | quote }}
+            - name: PORTAL_RESTART
+              value: {{ .Values.tokens.portal.restart | uniq | sortAlpha | join " " | quote }}
             - name: GATEWAY_SECRET
               value: {{ .Values.tokens.gateway.secret | quote }}
             - name: GATEWAY_SCOPES
               value: {{ .Values.tokens.gateway.scopes | toJson | quote }}
             - name: GATEWAY_NAMESPACES
               value: {{ .Values.tokens.gateway.namespaces | uniq | sortAlpha | join " " | quote }}
+            - name: GATEWAY_USER
+              value: {{ .Values.tokens.gateway.user | quote }}
+            - name: GATEWAY_RESTART
+              value: {{ .Values.tokens.gateway.restart | uniq | sortAlpha | join " " | quote }}
+            - name: APPS_ORG
+              value: {{ .Values.apps.owner | quote }}
+            - name: APPS_USER
+              value: {{ .Values.tokens.apps.user | quote }}
+            - name: APPS_SECRET
+              value: {{ .Values.tokens.apps.secret | quote }}
+            - name: APPS_SCOPES
+              value: {{ .Values.tokens.apps.scopes | toJson | quote }}
+            - name: APPS_NAMESPACES
+              value: {{ .Values.tokens.apps.namespaces | uniq | sortAlpha | join " " | quote }}
+            - name: APPS_RESTART
+              value: {{ .Values.tokens.apps.restart | uniq | sortAlpha | join " " | quote }}
             - name: REGISTRY_SECRET
               value: {{ .Values.tokens.registry.secret | quote }}
             - name: REGISTRY_SCOPES
@@ -142,6 +163,25 @@ spec:
                   "$@" "$GITEA_URL$path"
               }
 
+              # The same call as the Portal's machine user (PF-106): whatever lands on a branch of a
+              # configuration repository, and the applications' repositories. Defined here, used
+              # once PORTAL_TOKEN is minted.
+              portal_code() {
+                method=$1; path=$2; shift 2
+                curl -sS -o $WORK/body -w '%{http_code}' -X "$method" \
+                  -H "Authorization: token $PORTAL_TOKEN" -H 'content-type: application/json' \
+                  "$@" "$GITEA_URL$path"
+              }
+
+              # The same as the applications' machine user, in their organization (PF-106), or as
+              # the Portal's when they have none. Used once APPS_TOKEN is minted.
+              apps_code() {
+                method=$1; path=$2; shift 2
+                curl -sS -o $WORK/body -w '%{http_code}' -X "$method" \
+                  -H "Authorization: token $APPS_TOKEN" -H 'content-type: application/json' \
+                  "$@" "$GITEA_URL$path"
+              }
+
               kube() {
                 curl -sS --cacert "$SA/ca.crt" -H "Authorization: Bearer $(cat "$SA/token")" \
                   -H 'content-type: application/json' "$@"
@@ -163,17 +203,20 @@ spec:
 
               # 2. The organization. 404 means absent; anything else means it is there or the
               #    credential is wrong, and creating over it would be the wrong repair.
-              status=$(forge_code GET "/api/v1/orgs/$ORG")
-              if [ "$status" = 404 ]; then
-                status=$(forge_code POST /api/v1/orgs \
-                  -d "{\"username\":\"$ORG\",\"visibility\":\"private\"}")
-                [ "$status" = 201 ] || { echo "creating the organization failed: $status" >&2; cat $WORK/body >&2; exit 1; }
-                echo "organization $ORG created"
-              elif [ "$status" = 200 ]; then
-                echo "organization $ORG is already there"
-              else
-                echo "the forge answered $status for the organization" >&2; cat $WORK/body >&2; exit 1
-              fi
+              ensure_org() {
+                status=$(forge_code GET "/api/v1/orgs/$1")
+                if [ "$status" = 404 ]; then
+                  status=$(forge_code POST /api/v1/orgs \
+                    -d "{\"username\":\"$1\",\"visibility\":\"private\"}")
+                  [ "$status" = 201 ] || { echo "creating the organization $1 failed: $status" >&2; cat $WORK/body >&2; exit 1; }
+                  echo "organization $1 created"
+                elif [ "$status" = 200 ]; then
+                  echo "organization $1 is already there"
+                else
+                  echo "the forge answered $status for the organization $1" >&2; cat $WORK/body >&2; exit 1
+                fi
+              }
+              ensure_org "$ORG"
 
               # 3. The repository. `auto_init` is what makes the default branch exist: an empty
               #    repository has no ref, and a clone of one is not a checkout the gateway can
@@ -240,6 +283,137 @@ spec:
                 echo "team $team created"
               done
 
+              # 3c. The platform's own forge identities (PF-106): a machine user per consumer,
+              #     never an administrator. The password is random, never stored and never
+              #     printed, so nobody signs in as one; a token is its only credential. The
+              #     forge's `prohibit_login` would be the obvious switch, and it refuses the
+              #     user's tokens too.
+              ensure_user() {
+                status=$(forge_code GET "/api/v1/users/$1")
+                case "$status" in
+                  200) echo "user $1 is already there" ;;
+                  404)
+                    password=$(head -c 32 /dev/urandom | base64 | tr -d '\n/+=')
+                    status=$(forge_code POST /api/v1/admin/users \
+                      -d "{\"username\":\"$1\",\"email\":\"$1@noreply.invalid\",\"password\":\"$password\",\"must_change_password\":false,\"visibility\":\"private\"}")
+                    password=
+                    [ "$status" = 201 ] || { echo "creating user $1 failed: $status" >&2; exit 1; }
+                    echo "user $1 created" ;;
+                  *) echo "the forge answered $status for user $1" >&2; exit 1 ;;
+                esac
+                # Every run, so a role raised by hand comes back down: no administrator, and no
+                # organization of its own, which the forge lets any user create by default.
+                status=$(forge_code PATCH "/api/v1/admin/users/$1" \
+                  -d "{\"login_name\":\"$1\",\"source_id\":0,\"admin\":false,\"allow_create_organization\":false}")
+                [ "$status" = 200 ] || { echo "narrowing user $1 failed: $status" >&2; exit 1; }
+              }
+              ensure_user "$PORTAL_USER"
+              ensure_user "$GATEWAY_USER"
+
+              # grant <user> <permission> <repository> [organization]: set every run, so a
+              # permission raised by hand comes back down.
+              grant() {
+                status=$(forge_code PUT "/api/v1/repos/${4:-$ORG}/$3/collaborators/$1" -d "{\"permission\":\"$2\"}")
+                [ "$status" = 204 ] || { echo "making $1 a $2 collaborator on ${4:-$ORG}/$3 failed: $status" >&2; cat $WORK/body >&2; exit 1; }
+              }
+              grant "$PORTAL_USER" write "$REPO"
+              grant "$GATEWAY_USER" read "$REPO"
+
+              # creator <organization> <user>: the user may create a repository in the
+              # organization, and becomes the administrator of what it creates. The forge lets a
+              # member of a team that may create one do so when the organization's own limit
+              # allows it; the global one is 0 so that no person creates one (T-1461). The team
+              # reads nothing by itself. Answers the team's id in `team_id`.
+              creator() {
+                status=$(forge_code PATCH "/api/v1/admin/users/$1" \
+                  -d "{\"login_name\":\"$1\",\"source_id\":0,\"max_repo_creation\":1000}")
+                [ "$status" = 200 ] || { echo "setting the repository limit of $1 failed: $status" >&2; cat $WORK/body >&2; exit 1; }
+                status=$(forge_code GET "/api/v1/orgs/$1/teams/search?q=$2")
+                [ "$status" = 200 ] || { echo "the forge answered $status searching for team $2 of $1" >&2; exit 1; }
+                team_id=$(tr '{' '\n' < $WORK/body | grep "\"name\": *\"$2\"" | sed -n 's/.*"id": *\([0-9]*\).*/\1/p' | head -1)
+                if [ -z "$team_id" ]; then
+                  status=$(forge_code POST "/api/v1/orgs/$1/teams" -d "{
+                    \"name\":\"$2\",
+                    \"description\":\"Creates the repositories $2 owns (PF-106)\",
+                    \"permission\":\"read\",
+                    \"includes_all_repositories\":false,
+                    \"can_create_org_repo\":true,
+                    \"units\":[\"repo.code\"]
+                  }")
+                  [ "$status" = 201 ] || { echo "creating team $2 of $1 failed: $status" >&2; cat $WORK/body >&2; exit 1; }
+                  team_id=$(sed -n 's/^{"id": *\([0-9]*\).*/\1/p' $WORK/body)
+                  [ -n "$team_id" ] || { echo "the forge named no id for team $2 of $1" >&2; exit 1; }
+                fi
+                status=$(forge_code PUT "/api/v1/teams/$team_id/members/$2")
+                [ "$status" = 204 ] || { echo "adding $2 to its team of $1 failed: $status" >&2; exit 1; }
+              }
+
+              # repositories <organization>: every repository's name, one per line, all pages.
+              repositories() {
+                page=1
+                while :; do
+                  status=$(forge_code GET "/api/v1/orgs/$1/repos?limit=50&page=$page")
+                  [ "$status" = 200 ] || { echo "listing the repositories of $1 failed: $status" >&2; exit 1; }
+                  names=$(tr ',' '\n' < $WORK/body | sed -n 's/^"name": *"\([A-Za-z0-9._-]*\)".*/\1/p')
+                  [ -n "$names" ] || break
+                  printf '%s\n' $names
+                  page=$((page + 1))
+                done
+              }
+
+              # 3d. Where the generated applications live (PF-106). With APPS_ORG, in an
+              #     organization of their own that `jc-apps` creates and administers them in; an
+              #     application's repository still in $ORG, `{project}_{name}` (a name no project
+              #     repository has, a slug holds no `_`), is transferred there with its history,
+              #     and the forge redirects its old address. jc-portal then creates nothing in
+              #     $ORG unless layout 2 has it create project repositories (CC-85, PF-89, MF-45).
+              #     Without APPS_ORG they stay beside the configuration, created by jc-portal,
+              #     which administers the ones created before it lost the administrator's rights.
+              if [ -n "$APPS_ORG" ]; then
+                ensure_org "$APPS_ORG"
+                ensure_user "$APPS_USER"
+                creator "$APPS_ORG" "$APPS_USER"
+                # Into a file, not a `$(...)`: a failed listing has to stop the Job, not end the
+                # loop early.
+                repositories "$ORG" > $WORK/repos
+                for name in $(cat $WORK/repos); do
+                  case "$name" in
+                    *_*)
+                      status=$(forge_code POST "/api/v1/repos/$ORG/$name/transfer" -d "{\"new_owner\":\"$APPS_ORG\"}")
+                      case "$status" in
+                        201|202) echo "moved $ORG/$name to $APPS_ORG" ;;
+                        *) echo "moving $ORG/$name to $APPS_ORG failed: $status" >&2; cat $WORK/body >&2; exit 1 ;;
+                      esac ;;
+                  esac
+                done
+                repositories "$APPS_ORG" > $WORK/repos
+                for name in $(cat $WORK/repos); do
+                  grant "$APPS_USER" admin "$name" "$APPS_ORG"
+                done
+                if [ "$LAYOUT" = 2 ]; then
+                  creator "$ORG" "$PORTAL_USER"
+                else
+                  status=$(forge_code GET "/api/v1/orgs/$ORG/teams/search?q=$PORTAL_USER")
+                  [ "$status" = 200 ] || { echo "the forge answered $status searching for team $PORTAL_USER" >&2; exit 1; }
+                  team_id=$(tr '{' '\n' < $WORK/body | grep "\"name\": *\"$PORTAL_USER\"" | sed -n 's/.*"id": *\([0-9]*\).*/\1/p' | head -1)
+                  if [ -n "$team_id" ]; then
+                    status=$(forge_code DELETE "/api/v1/teams/$team_id/members/$PORTAL_USER")
+                    case "$status" in
+                      204|404) echo "$PORTAL_USER creates no repository in $ORG" ;;
+                      *) echo "taking $PORTAL_USER out of its team failed: $status" >&2; exit 1 ;;
+                    esac
+                  fi
+                fi
+              else
+                creator "$ORG" "$PORTAL_USER"
+                repositories "$ORG" > $WORK/repos
+                for name in $(cat $WORK/repos); do
+                  case "$name" in *_*) grant "$PORTAL_USER" admin "$name" ;; esac
+                done
+              fi
+              # Who creates, writes and publishes the applications, and where.
+              APPS_OWNER=${APPS_ORG:-$ORG}
+
               # 4. The tokens. A forge token is minted by the forge and shown once, so it can
               #    neither be generated by the secrets component nor read back later. The Job
               #    therefore keeps the Secret as the record: if what is in it still
@@ -254,21 +428,23 @@ spec:
                 sed -n 's/.*"token": *"\([A-Za-z0-9+/=]*\)".*/\1/p' $WORK/secret | base64 -d 2>/dev/null || return 1
               }
 
-              # write_secret <namespace> <name> <token> <scopes json>
-              # `scopes` is the record of what the token was minted with: a token that still
-              # authenticates but was minted with other scopes is minted again (T-2468).
+              # write_secret <namespace> <name> <token> <scopes json> <owner>
+              # `scopes` and `owner` are the record of what the token was minted with and on
+              # whom: a token that still authenticates but was minted with other scopes (T-2468)
+              # or on another user (PF-106) is minted again.
               # With PULL_HOST set it is a `dockerconfigjson` Secret for that registry, the
               # token and its scopes kept beside it as the record (AP-108).
               write_secret() {
                 encoded=$(printf '%s' "$3" | base64 | tr -d '\n')
                 granted=$(printf '%s' "$4" | base64 | tr -d '\n')
+                owner=$(printf '%s' "$5" | base64 | tr -d '\n')
                 type=Opaque extra=
                 if [ -n "${PULL_HOST:-}" ]; then
-                  auth=$(printf '%s:%s' "$ADMIN_USER" "$3" | base64 | tr -d '\n')
+                  auth=$(printf '%s:%s' "$5" "$3" | base64 | tr -d '\n')
                   config=$(printf '{"auths":{"%s":{"auth":"%s"}}}' "$PULL_HOST" "$auth" | base64 | tr -d '\n')
                   type=kubernetes.io/dockerconfigjson extra=",\".dockerconfigjson\":\"$config\""
                 fi
-                body="{\"apiVersion\":\"v1\",\"kind\":\"Secret\",\"metadata\":{\"name\":\"$2\"},\"type\":\"$type\",\"data\":{\"token\":\"$encoded\",\"scopes\":\"$granted\"$extra}}"
+                body="{\"apiVersion\":\"v1\",\"kind\":\"Secret\",\"metadata\":{\"name\":\"$2\"},\"type\":\"$type\",\"data\":{\"token\":\"$encoded\",\"scopes\":\"$granted\",\"owner\":\"$owner\"$extra}}"
                 code=$(kube -o $WORK/body -w '%{http_code}' -X PUT -d "$body" \
                   "$KAPI/api/v1/namespaces/$1/secrets/$2")
                 if [ "$code" = 404 ]; then
@@ -281,14 +457,18 @@ spec:
                 esac
               }
 
-              # ensure_token <secret name> <token name> <scopes json> <namespaces...>
+              # ensure_token <secret name> <token name> <scopes json> <user> <namespaces...>
+              # Sets `minted` to 1 when the token is new, so its readers can be restarted.
               ensure_token() {
-                secret=$1; name=$2; scopes=$3; shift 3
+                secret=$1; name=$2; scopes=$3; user=$4; shift 4
                 first=$1
+                minted=0
                 # The previous token's Secret must not answer for this one's.
                 rm -f $WORK/secret
                 existing=$(read_secret "$first" "$secret" || true)
                 held=$(sed -n 's/.*"scopes": *"\([A-Za-z0-9+/=]*\)".*/\1/p' $WORK/secret 2>/dev/null \
+                  | base64 -d 2>/dev/null || true)
+                held_by=$(sed -n 's/.*"owner": *"\([A-Za-z0-9+/=]*\)".*/\1/p' $WORK/secret 2>/dev/null \
                   | base64 -d 2>/dev/null || true)
                 # Checked against the repository, not against /api/v1/user: the gateway's token
                 # carries `read:repository` and nothing else, so /user answers 403 for a token
@@ -296,13 +476,13 @@ spec:
                 # credential a running pod is already holding. A token minted with other scopes
                 # than these (a scope added to the values, T-2468) is minted again.
                 # CHECK_PATH names another read for a token that may not read the repository.
-                if [ -n "$existing" ] && [ "$held" = "$scopes" ] && [ "$(curl -sS -o /dev/null -w '%{http_code}' \
+                if [ -n "$existing" ] && [ "$held" = "$scopes" ] && [ "$held_by" = "$user" ] && [ "$(curl -sS -o /dev/null -w '%{http_code}' \
                     -H "Authorization: token $existing" "$GITEA_URL${CHECK_PATH:-/api/v1/repos/$ORG/$REPO}")" = 200 ]; then
                   echo "the token in $secret still authenticates"
                   token=$existing
                 else
-                  forge_code DELETE "/api/v1/users/$ADMIN_USER/tokens/$name" >/dev/null || true
-                  status=$(forge_code POST "/api/v1/users/$ADMIN_USER/tokens" \
+                  forge_code DELETE "/api/v1/users/$user/tokens/$name" >/dev/null || true
+                  status=$(forge_code POST "/api/v1/users/$user/tokens" \
                     -d "{\"name\":\"$name\",\"scopes\":$scopes}")
                   [ "$status" = 201 ] || { echo "minting $name failed: $status" >&2; exit 1; }
                   token=$(sed -n 's/.*"sha1": *"\([0-9a-f]\{40\}\)".*/\1/p' $WORK/body)
@@ -310,36 +490,86 @@ spec:
                     echo "the forge did not return a token for $name" >&2
                     exit 1
                   fi
-                  echo "minted $name"
+                  echo "minted $name on $user"
+                  minted=1
                 fi
                 # Written to every namespace that reads it, every run: the first one is the
                 # record the check above trusts, and a second namespace whose copy went missing
                 # is repaired without touching the token itself.
                 for ns in "$@"; do
-                  write_secret "$ns" "$secret" "$token" "$scopes"
+                  write_secret "$ns" "$secret" "$token" "$scopes" "$user"
                 done
               }
 
-              ensure_token "$PORTAL_SECRET" "jc-portal" "$PORTAL_SCOPES" $PORTAL_NAMESPACES
-              # The sample applications below are the Portal's to own (AP-75), so they are
-              # written with its token and not the administrator's.
+              # restart <namespace/name...>: what `kubectl rollout restart` does, for the
+              # Deployments that read a token at start and so still hold the one just replaced.
+              # One that is not there yet (the first install) starts with the new one.
+              restart() {
+                for target in "$@"; do
+                  code=$(curl -sS --cacert "$SA/ca.crt" -H "Authorization: Bearer $(cat "$SA/token")" \
+                    -H 'content-type: application/strategic-merge-patch+json' -o $WORK/body -w '%{http_code}' -X PATCH \
+                    -d "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"kubectl.kubernetes.io/restartedAt\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}}}}}" \
+                    "$KAPI/apis/apps/v1/namespaces/${target%%/*}/deployments/${target#*/}")
+                  case "$code" in
+                    200) echo "restarted $target, which read the token at start" ;;
+                    404) echo "$target is not there yet" ;;
+                    *) echo "restarting $target failed: $code" >&2; cat $WORK/body >&2; exit 1 ;;
+                  esac
+                done
+              }
+
+              # retire <token name>: the same name minted on the administrator, before PF-106.
+              # Its readers were restarted with the new one, so nothing holds it any more.
+              retire() {
+                status=$(forge_code DELETE "/api/v1/users/$ADMIN_USER/tokens/$1")
+                case "$status" in
+                  204) echo "deleted $1 of the administrator" ;;
+                  404) : ;;
+                  *) echo "deleting $1 of the administrator failed: $status" >&2; exit 1 ;;
+                esac
+              }
+
+              ensure_token "$PORTAL_SECRET" "jc-portal" "$PORTAL_SCOPES" "$PORTAL_USER" $PORTAL_NAMESPACES
+              [ "$minted" = 1 ] && restart $PORTAL_RESTART
+              retire jc-portal
+              # The seed and the sample applications below are written with this token and not
+              # the administrator's: the branch rule lets nobody else move `main` (PF-105), and
+              # the applications are the Portal's to own (AP-75).
               PORTAL_TOKEN=$token
-              ensure_token "$GATEWAY_SECRET" "jc-gateway" "$GATEWAY_SCOPES" $GATEWAY_NAMESPACES
+              ensure_token "$GATEWAY_SECRET" "jc-gateway" "$GATEWAY_SCOPES" "$GATEWAY_USER" $GATEWAY_NAMESPACES
+              [ "$minted" = 1 ] && restart $GATEWAY_RESTART
+              retire jc-gateway
+
+              # The applications' machine user's token (PF-106), checked against their
+              # organization; without one the Portal's writes them, beside the configuration.
+              # The registry's and the lane's tokens are minted on the same user, so nothing the
+              # applications need is minted on the administrator any more.
+              if [ -n "$APPS_ORG" ]; then
+                CHECK_PATH="/api/v1/orgs/$APPS_ORG"
+                ensure_token "$APPS_SECRET" "jc-apps" "$APPS_SCOPES" "$APPS_USER" $APPS_NAMESPACES
+                CHECK_PATH=
+                [ "$minted" = 1 ] && restart $APPS_RESTART
+                APPS_TOKEN=$token APPS_MINTER=$APPS_USER
+              else
+                APPS_TOKEN=$PORTAL_TOKEN APPS_MINTER=$ADMIN_USER
+              fi
 
               # 4a. What a node pulls App images with (AP-108): read:package alone, which may
               #     not read the repository, so it is checked against the organization's
               #     packages. Only when the environment runs App pods.
               if [ -n "${REGISTRY_NAMESPACES:-}" ]; then
-                CHECK_PATH="/api/v1/packages/$ORG" PULL_HOST=$REGISTRY_HOST
-                ensure_token "$REGISTRY_SECRET" "jc-registry-pull" "$REGISTRY_SCOPES" $REGISTRY_NAMESPACES
+                CHECK_PATH="/api/v1/packages/$APPS_OWNER" PULL_HOST=$REGISTRY_HOST
+                # ponytail: on the administrator while the applications have no organization of
+                # their own (APPS_ORG empty), since jc-portal reads no package.
+                ensure_token "$REGISTRY_SECRET" "jc-registry-pull" "$REGISTRY_SCOPES" "$APPS_MINTER" $REGISTRY_NAMESPACES
                 CHECK_PATH= PULL_HOST=
               fi
 
               # 4a'. What the lane's refresher writes JC_LANE_TOKEN with (ADR-N-028 §5, T-2636):
               #      write:organization alone, checked against the organization it may write.
               if [ -n "${LANE_NAMESPACES:-}" ]; then
-                CHECK_PATH="/api/v1/orgs/$ORG"
-                ensure_token "$LANE_SECRET" "jc-lane-secret" "$LANE_SCOPES" $LANE_NAMESPACES
+                CHECK_PATH="/api/v1/orgs/$APPS_OWNER"
+                ensure_token "$LANE_SECRET" "jc-lane-secret" "$LANE_SCOPES" "$APPS_MINTER" $LANE_NAMESPACES
                 CHECK_PATH=
               fi
 
@@ -348,15 +578,37 @@ spec:
               #     the same one until it is reset, so this is a no-op on every later run. Only
               #     when the environment deploys a runner: no runner, no token lying around.
               if [ -n "${RUNNER_NAMESPACES:-}" ]; then
-                status=$(forge_code POST "/api/v1/orgs/$ORG/actions/runners/registration-token")
+                status=$(forge_code POST "/api/v1/orgs/$APPS_OWNER/actions/runners/registration-token")
                 [ "$status" = 200 ] || { echo "the runner registration token: $status" >&2; exit 1; }
                 token=$(sed -n 's/.*"token": *"\([A-Za-z0-9]\{20,64\}\)".*/\1/p' $WORK/body)
                 [ -n "$token" ] || { echo "the forge returned no runner registration token" >&2; exit 1; }
                 for ns in $RUNNER_NAMESPACES; do
-                  write_secret "$ns" "$RUNNER_SECRET" "$token" '["runner"]'
+                  write_secret "$ns" "$RUNNER_SECRET" "$token" '["runner"]' "$APPS_OWNER"
                 done
                 echo "the runner registration token is in $RUNNER_SECRET"
               fi
+
+              # 4c. The branch rule of the organization repository (PF-105, CC-41): only the
+              #     Portal's identity pushes to `main` or merges into it, an approval a later
+              #     commit invalidates is dropped, and nothing merges over an outdated base. No
+              #     forge approval is asked for: the Verdict is the Portal's, and a forge approval
+              #     would be the Portal approving itself. Nobody overrides the rule, the
+              #     administrator included. Created on 404, patched on 200, every run, so the
+              #     whitelist follows the user it names.
+              rule="{\"enable_push\":true,\"enable_push_whitelist\":true,\"push_whitelist_usernames\":[\"$PORTAL_USER\"],\"push_whitelist_deploy_keys\":false,\"enable_force_push\":false,\"enable_merge_whitelist\":true,\"merge_whitelist_usernames\":[\"$PORTAL_USER\"],\"enable_bypass_allowlist\":false,\"required_approvals\":0,\"dismiss_stale_approvals\":true,\"block_on_outdated_branch\":true,\"block_on_rejected_reviews\":true,\"block_admin_merge_override\":true}"
+              status=$(forge_code GET "/api/v1/repos/$ORG/$REPO/branch_protections/$BRANCH")
+              case "$status" in
+                404)
+                  status=$(forge_code POST "/api/v1/repos/$ORG/$REPO/branch_protections" \
+                    -d "{\"rule_name\":\"$BRANCH\",${rule#\{}")
+                  [ "$status" = 201 ] || { echo "protecting $BRANCH of $ORG/$REPO failed: $status" >&2; cat $WORK/body >&2; exit 1; }
+                  echo "$BRANCH of $ORG/$REPO is protected" ;;
+                200)
+                  status=$(forge_code PATCH "/api/v1/repos/$ORG/$REPO/branch_protections/$BRANCH" -d "$rule")
+                  [ "$status" = 200 ] || { echo "updating the rule of $BRANCH failed: $status" >&2; cat $WORK/body >&2; exit 1; }
+                  echo "the rule of $BRANCH is current" ;;
+                *) echo "the forge answered $status for the rule of $BRANCH" >&2; cat $WORK/body >&2; exit 1 ;;
+              esac
 
               # 5. The seed: the manifests the gateway serves from its own ConfigMap, committed
               #    under the paths the Portal reads, so the two halves of the platform agree on
@@ -418,18 +670,18 @@ spec:
                 [ -f "$f" ] || continue
                 path=$(basename "$f" | sed 's|__|/|g')
                 encoded=$(base64 < "$f" | tr -d '\n')
-                status=$(forge_code GET "/api/v1/repos/$ORG/$SEED_REPO/contents/$path?ref=$BRANCH")
+                status=$(portal_code GET "/api/v1/repos/$ORG/$SEED_REPO/contents/$path?ref=$BRANCH")
                 case "$status" in
                   200)
                     current=$(grep -o '"content": *"[^"]*"' $WORK/body | head -1 | sed 's/^"content": *"//; s/"$//; s/\\n//g')
                     [ "$current" = "$encoded" ] && continue
                     sha=$(grep -o '"sha": *"[0-9a-f]\{40\}"' $WORK/body | head -1 | grep -o '[0-9a-f]\{40\}')
-                    status=$(forge_code PUT "/api/v1/repos/$ORG/$SEED_REPO/contents/$path" \
+                    status=$(portal_code PUT "/api/v1/repos/$ORG/$SEED_REPO/contents/$path" \
                       -d "{\"branch\":\"$BRANCH\",\"sha\":\"$sha\",\"content\":\"$encoded\",\"message\":\"seed: update $path\"}")
                     [ "$status" = 200 ] || { echo "updating $path failed: $status" >&2; cat $WORK/body >&2; exit 1; }
                     echo "seed: updated $path" ;;
                   404)
-                    status=$(forge_code POST "/api/v1/repos/$ORG/$SEED_REPO/contents/$path" \
+                    status=$(portal_code POST "/api/v1/repos/$ORG/$SEED_REPO/contents/$path" \
                       -d "{\"branch\":\"$BRANCH\",\"content\":\"$encoded\",\"message\":\"seed: add $path\"}")
                     [ "$status" = 201 ] || { echo "creating $path failed: $status" >&2; cat $WORK/body >&2; exit 1; }
                     echo "seed: created $path" ;;
@@ -445,7 +697,7 @@ spec:
               #     already gone is not an error, because this step is repeated on every apply.
               manifest_sha=
               : > $WORK/seed-previous
-              status=$(forge_code GET "/api/v1/repos/$ORG/$SEED_REPO/contents/$SEED_MANIFEST?ref=$BRANCH")
+              status=$(portal_code GET "/api/v1/repos/$ORG/$SEED_REPO/contents/$SEED_MANIFEST?ref=$BRANCH")
               case "$status" in
                 200)
                   manifest_sha=$(grep -o '"sha": *"[0-9a-f]\{40\}"' $WORK/body | head -1 | grep -o '[0-9a-f]\{40\}')
@@ -462,14 +714,14 @@ spec:
               comm -23 $WORK/seed-previous $WORK/seed-paths > $WORK/seed-gone
               while IFS= read -r gone; do
                 [ -n "$gone" ] || continue
-                status=$(forge_code GET "/api/v1/repos/$ORG/$SEED_REPO/contents/$gone?ref=$BRANCH")
+                status=$(portal_code GET "/api/v1/repos/$ORG/$SEED_REPO/contents/$gone?ref=$BRANCH")
                 if [ "$status" = 404 ]; then
                   echo "seed: $gone is already gone"
                   continue
                 fi
                 [ "$status" = 200 ] || { echo "the forge answered $status for $gone" >&2; cat $WORK/body >&2; exit 1; }
                 sha=$(grep -o '"sha": *"[0-9a-f]\{40\}"' $WORK/body | head -1 | grep -o '[0-9a-f]\{40\}')
-                status=$(forge_code DELETE "/api/v1/repos/$ORG/$SEED_REPO/contents/$gone" \
+                status=$(portal_code DELETE "/api/v1/repos/$ORG/$SEED_REPO/contents/$gone" \
                   -d "{\"branch\":\"$BRANCH\",\"sha\":\"$sha\",\"message\":\"seed: remove $gone, which the seed no longer owns\"}")
                 [ "$status" = 200 ] || { echo "removing $gone failed: $status" >&2; cat $WORK/body >&2; exit 1; }
                 echo "seed: removed $gone"
@@ -481,11 +733,11 @@ spec:
               #     leaves the older record, and the next one does the same work again.
               encoded=$(base64 < $WORK/seed-paths | tr -d '\n')
               if [ -n "$manifest_sha" ]; then
-                status=$(forge_code PUT "/api/v1/repos/$ORG/$SEED_REPO/contents/$SEED_MANIFEST" \
+                status=$(portal_code PUT "/api/v1/repos/$ORG/$SEED_REPO/contents/$SEED_MANIFEST" \
                   -d "{\"branch\":\"$BRANCH\",\"sha\":\"$manifest_sha\",\"content\":\"$encoded\",\"message\":\"seed: update the record of what the seed owns\"}")
                 [ "$status" = 200 ] || { echo "updating $SEED_MANIFEST failed: $status" >&2; cat $WORK/body >&2; exit 1; }
               else
-                status=$(forge_code POST "/api/v1/repos/$ORG/$SEED_REPO/contents/$SEED_MANIFEST" \
+                status=$(portal_code POST "/api/v1/repos/$ORG/$SEED_REPO/contents/$SEED_MANIFEST" \
                   -d "{\"branch\":\"$BRANCH\",\"content\":\"$encoded\",\"message\":\"seed: record what the seed owns\"}")
                 [ "$status" = 201 ] || { echo "writing $SEED_MANIFEST failed: $status" >&2; cat $WORK/body >&2; exit 1; }
               fi
@@ -533,6 +785,8 @@ spec:
                   [ -d "$dir" ] || continue
                   slug=$(basename "$dir")
                   ensure_repo "$slug"
+                  grant "$PORTAL_USER" write "$slug"
+                  grant "$GATEWAY_USER" read "$slug"
                   seed_repo "$slug" "${dir%/}"
                 done
               else
@@ -547,12 +801,6 @@ spec:
               #    manifest is committed into the project with `source.git` pinned to the
               #    repository's head, which is the commit the build lane builds (AP-80).
               APPS_DIR=${APPS_DIR:-/apps}
-              app_code() {
-                method=$1; path=$2; shift 2
-                curl -sS -o $WORK/body -w '%{http_code}' -X "$method" \
-                  -H "Authorization: token $PORTAL_TOKEN" -H 'content-type: application/json' \
-                  "$@" "$GITEA_URL$path"
-              }
               # blob_id <file>: what `git hash-object` answers for it.
               blob_id() {
                 { printf 'blob %s\000' "$(wc -c < "$1" | tr -d ' ')"; cat "$1"; } | sha1sum | cut -c1-40
@@ -561,23 +809,23 @@ spec:
                 [ -d "$dir" ] || continue
                 app=$(basename "$dir")
                 repo="${APPS_PROJECT}_$app"
-                status=$(app_code GET "/api/v1/repos/$ORG/$repo")
+                status=$(apps_code GET "/api/v1/repos/$APPS_OWNER/$repo")
                 case "$status" in
-                  200) echo "app $app: repository $ORG/$repo is there" ;;
+                  200) echo "app $app: repository $APPS_OWNER/$repo is there" ;;
                   404)
-                    status=$(app_code POST "/api/v1/orgs/$ORG/repos" \
+                    status=$(apps_code POST "/api/v1/orgs/$APPS_OWNER/repos" \
                       -d "{\"name\":\"$repo\",\"description\":\"The $app application of $APPS_PROJECT\",\"private\":true,\"auto_init\":true,\"default_branch\":\"main\"}")
                     case "$status" in
-                      201|409) echo "app $app: created $ORG/$repo" ;;
-                      *) echo "creating $ORG/$repo failed: $status" >&2; cat $WORK/body >&2; exit 1 ;;
+                      201|409) echo "app $app: created $APPS_OWNER/$repo" ;;
+                      *) echo "creating $APPS_OWNER/$repo failed: $status" >&2; cat $WORK/body >&2; exit 1 ;;
                     esac ;;
-                  *) echo "the forge answered $status for $ORG/$repo" >&2; cat $WORK/body >&2; exit 1 ;;
+                  *) echo "the forge answered $status for $APPS_OWNER/$repo" >&2; cat $WORK/body >&2; exit 1 ;;
                 esac
 
                 # What the forge holds: one `path sha` line per blob of main.
-                status=$(app_code GET "/api/v1/repos/$ORG/$repo/git/trees/main?recursive=true&per_page=10000")
-                [ "$status" = 200 ] || { echo "reading the tree of $ORG/$repo failed: $status" >&2; exit 1; }
-                grep -q '"truncated": *false' $WORK/body || { echo "the tree of $ORG/$repo came back truncated" >&2; exit 1; }
+                status=$(apps_code GET "/api/v1/repos/$APPS_OWNER/$repo/git/trees/main?recursive=true&per_page=10000")
+                [ "$status" = 200 ] || { echo "reading the tree of $APPS_OWNER/$repo failed: $status" >&2; exit 1; }
+                grep -q '"truncated": *false' $WORK/body || { echo "the tree of $APPS_OWNER/$repo came back truncated" >&2; exit 1; }
                 sed 's/},{/}\n{/g' $WORK/body | grep '"type": *"blob"' \
                   | sed -n 's/.*"path": *"\([^"]*\)".*"sha": *"\([0-9a-f]\{40\}\)".*/\1 \2/p' \
                   | sort > $WORK/app-remote
@@ -621,26 +869,26 @@ spec:
                 done < $WORK/app-remote
                 printf ']}' >> $WORK/app-change
                 if [ "$changes" -eq 0 ]; then
-                  echo "app $app: $ORG/$repo already holds this tree"
+                  echo "app $app: $APPS_OWNER/$repo already holds this tree"
                 else
-                  status=$(app_code POST "/api/v1/repos/$ORG/$repo/contents" -d @$WORK/app-change)
-                  [ "$status" = 201 ] || { echo "pushing $app to $ORG/$repo failed: $status" >&2; cat $WORK/body >&2; exit 1; }
-                  echo "app $app: committed $changes file(s) to $ORG/$repo"
+                  status=$(apps_code POST "/api/v1/repos/$APPS_OWNER/$repo/contents" -d @$WORK/app-change)
+                  [ "$status" = 201 ] || { echo "pushing $app to $APPS_OWNER/$repo failed: $status" >&2; cat $WORK/body >&2; exit 1; }
+                  echo "app $app: committed $changes file(s) to $APPS_OWNER/$repo"
                 fi
 
-                status=$(app_code GET "/api/v1/repos/$ORG/$repo/branches/main")
-                [ "$status" = 200 ] || { echo "reading main of $ORG/$repo failed: $status" >&2; exit 1; }
+                status=$(apps_code GET "/api/v1/repos/$APPS_OWNER/$repo/branches/main")
+                [ "$status" = 200 ] || { echo "reading main of $APPS_OWNER/$repo failed: $status" >&2; exit 1; }
                 head=$(sed -n 's/.*"commit": *{ *"id": *"\([0-9a-f]\{40\}\)".*/\1/p' $WORK/body)
-                [ "${#head}" -eq 40 ] || { echo "the forge named no commit for main of $ORG/$repo" >&2; exit 1; }
+                [ "${#head}" -eq 40 ] || { echo "the forge named no commit for main of $APPS_OWNER/$repo" >&2; exit 1; }
 
                 # The manifest, pinned to that commit at the address a person clones from.
-                sed -e "s|^\(      url: \).*|\1$APPS_PUBLIC_BASE/$ORG/$repo.git|" \
+                sed -e "s|^\(      url: \).*|\1$APPS_PUBLIC_BASE/$APPS_OWNER/$repo.git|" \
                     -e "s|^\(      ref: \).*|\1$head|" "${dir}app.yaml" > $WORK/app-manifest
                 # Layout 2: into the project's own repository, where its apps live (CC-85).
                 if [ "$LAYOUT" = 2 ]; then app_home=$APPS_PROJECT; path="apps/$app/app.yaml"
                 else app_home=$REPO; path="projects/$APPS_PROJECT/apps/$app/app.yaml"; fi
                 encoded=$(base64 < $WORK/app-manifest | tr -d '\n')
-                status=$(forge_code GET "/api/v1/repos/$ORG/$app_home/contents/$path?ref=$BRANCH")
+                status=$(portal_code GET "/api/v1/repos/$ORG/$app_home/contents/$path?ref=$BRANCH")
                 case "$status" in
                   200)
                     held=$(sed -n 's/.*"content": *"\([^"]*\)".*/\1/p' $WORK/body | sed 's/\\n//g' | base64 -d)
@@ -653,13 +901,13 @@ spec:
                       echo "app $app: $path already names $head and its build"
                     else
                       sha=$(sed -n 's/.*"sha": *"\([0-9a-f]\{40\}\)".*/\1/p' $WORK/body | head -1)
-                      status=$(forge_code PUT "/api/v1/repos/$ORG/$app_home/contents/$path" \
+                      status=$(portal_code PUT "/api/v1/repos/$ORG/$app_home/contents/$path" \
                         -d "{\"branch\":\"$BRANCH\",\"sha\":\"$sha\",\"content\":\"$encoded\",\"message\":\"seed: the $app application at $head\"}")
                       [ "$status" = 200 ] || { echo "updating $path failed: $status" >&2; cat $WORK/body >&2; exit 1; }
                       echo "app $app: $path now names $head"
                     fi ;;
                   404)
-                    status=$(forge_code POST "/api/v1/repos/$ORG/$app_home/contents/$path" \
+                    status=$(portal_code POST "/api/v1/repos/$ORG/$app_home/contents/$path" \
                       -d "{\"branch\":\"$BRANCH\",\"content\":\"$encoded\",\"message\":\"seed: the $app application at $head\"}")
                     [ "$status" = 201 ] || { echo "writing $path failed: $status" >&2; cat $WORK/body >&2; exit 1; }
                     echo "app $app: $path created at $head" ;;
@@ -681,7 +929,7 @@ spec:
                   case "$gpath" in users/*) ghome=$REPO ;; esac
                   [ "$LAYOUT" = 2 ] && gpath=${gpath#projects/$APPS_PROJECT/}
                   gencoded=$(base64 < "$f" | tr -d '\n')
-                  status=$(forge_code GET "/api/v1/repos/$ORG/$ghome/contents/$gpath?ref=$BRANCH")
+                  status=$(portal_code GET "/api/v1/repos/$ORG/$ghome/contents/$gpath?ref=$BRANCH")
                   case "$status" in
                     200)
                       held=$(sed -n 's/.*"content": *"\([^"]*\)".*/\1/p' $WORK/body | sed 's/\\n//g' | base64 -d)
@@ -690,11 +938,11 @@ spec:
                         continue
                       fi
                       sha=$(sed -n 's/.*"sha": *"\([0-9a-f]\{40\}\)".*/\1/p' $WORK/body | head -1)
-                      status=$(forge_code PUT "/api/v1/repos/$ORG/$ghome/contents/$gpath" \
+                      status=$(portal_code PUT "/api/v1/repos/$ORG/$ghome/contents/$gpath" \
                         -d "{\"branch\":\"$BRANCH\",\"sha\":\"$sha\",\"content\":\"$gencoded\",\"message\":\"seed: the grants of the $app application\"}")
                       [ "$status" = 200 ] || { echo "updating $gpath failed: $status" >&2; cat $WORK/body >&2; exit 1; } ;;
                     404)
-                      status=$(forge_code POST "/api/v1/repos/$ORG/$ghome/contents/$gpath" \
+                      status=$(portal_code POST "/api/v1/repos/$ORG/$ghome/contents/$gpath" \
                         -d "{\"branch\":\"$BRANCH\",\"content\":\"$gencoded\",\"message\":\"seed: the grants of the $app application\"}")
                       [ "$status" = 201 ] || { echo "writing $gpath failed: $status" >&2; cat $WORK/body >&2; exit 1; } ;;
                     *) echo "the forge answered $status for $gpath" >&2; exit 1 ;;

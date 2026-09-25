@@ -73,7 +73,7 @@ def test_the_nightly_deployment_job_runs_the_one_variant_that_fits_a_runner():
     job = k3d_deploy_job()
     runs = [step["run"] for step in job["steps"] if "run" in step]
     variants = [line for line in "\n".join(runs).splitlines() if "test-deployment-variants.sh" in line]
-    assert variants == ["./scripts/test-deployment-variants.sh 0,0,0"], variants
+    assert variants == ["./scripts/test-deployment-variants.sh --after ./scripts/k3d-rotate-each-class.sh 0,0,0"], variants
     assert job["if"] == "github.event_name != 'push'", "nightly and on dispatch, never a push gate"
     # The Done-when asks for a median under 25 minutes; the ceiling has to be near it, or a
     # job that doubled in length is only discovered by a human noticing.
@@ -116,3 +116,44 @@ def test_the_nightly_deployment_job_installs_every_tool_the_harness_demands():
     job = yaml.safe_dump(k3d_deploy_job())
     for tool in sorted(needed):
         assert tool in job, f"the harness needs {tool} and the job never installs it"
+
+
+ROTATE_EACH = PROJECT_ROOT / "scripts/k3d-rotate-each-class.sh"
+
+
+def test_the_nightly_deployment_job_rotates_one_credential_of_each_class_and_smokes_again():
+    """T-2843 (OPS-45): the import cache, CloudNativePG, helm re-making a deleted Secret and the
+    readers coming back are only proven on a running cluster. The harness runs the rotations
+    after its smoke and smoke-tests again; a rotation that exits non-zero fails the variant."""
+    body = ROTATE_EACH.read_text()
+    code = "\n".join(line for line in body.splitlines() if not line.lstrip().startswith("#"))
+    assert "set -euo pipefail" in code, "a failed rotation must stop the script and fail the job"
+    rotated = re.findall(r"^rotate --secret (\S+)", code, re.M)
+    assert rotated == ["keycloak-client-portal-api", "db-portal", "gitea-token-gateway", "portal-cookie-key"], rotated
+    assert "./scripts/rotate-secret.sh" in code
+    # Never with verification off: curl trusts the harness's CA for these measurements.
+    assert "CURL_CA_BUNDLE" in code and " -k" not in code and "--insecure" not in code
+
+    harness = VARIANTS.read_text()
+    run_variant = harness[harness.index("run_variant() {"):].split("\n}\n")[0]
+    after = run_variant[run_variant.index('if [[ -n "$AFTER" ]]'):]
+    # The step, then the same smoke again, inside the variant, so its failure fails the job.
+    assert after.index('bash -c "$AFTER"') < after.index("smoke_platform || return 1"), after
+    assert "return 1" in after.split("smoke_platform")[0], "a failed step after the smoke has to fail the variant"
+
+    steps = k3d_deploy_job()["steps"]
+    hosts = next(step for step in steps if "/etc/hosts" in step.get("run", ""))
+    for host in ("joinedcontext.test", "idm.joinedcontext.test"):
+        assert host in hosts["run"], host
+    runs = [step.get("run", "") for step in steps]
+    assert runs.index(hosts["run"]) < next(i for i, run in enumerate(runs) if "--after" in run)
+
+
+def test_the_step_after_the_smoke_refuses_to_run_without_the_scratch_environment(tmp_path):
+    """Run outside the harness it would apply to an environment nobody named; it stops first."""
+    result = subprocess.run(
+        ["bash", str(ROTATE_EACH)], cwd=str(PROJECT_ROOT), capture_output=True, text=True,
+        env={"PATH": "/usr/bin:/bin", "HOME": str(tmp_path)},
+    )
+    assert result.returncode != 0
+    assert "JC_ENV" in result.stderr

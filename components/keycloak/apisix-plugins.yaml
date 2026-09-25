@@ -47,3 +47,17 @@ keycloak:
           X-Frame-Options: "SAMEORIGIN"
           Referrer-Policy: "strict-origin-when-cross-origin"
           Cache-Control: "no-store, no-cache, must-revalidate"
+    # OPS-34: the upstream owns the Content Security Policy (the Portal's, each App's, AP-12,
+    # AP-122), so the edge sets none over it and adds this baseline only to an answer that
+    # carries none, its own refusals included. `frame-ancestors` says what X-Frame-Options
+    # says. It runs after `response-rewrite`, whose `add` of an App's frame-ancestors counts.
+    serverless-post-function:
+      phase: header_filter
+      functions:
+        - >-
+          return function()
+            if ngx.header["Content-Security-Policy"] == nil then
+              ngx.header["Content-Security-Policy"] =
+                "frame-ancestors 'self'; object-src 'none'; base-uri 'self'"
+            end
+          end

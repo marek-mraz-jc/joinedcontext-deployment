@@ -13,8 +13,10 @@ what an honest stub does with a request it does not understand.
     curl [-sS] [-f] [-o FILE] [-w '%{http_code}'] [-X METHOD] [-u U:P] [-H H] [-d BODY]
          [--cacert FILE] URL
 
-The state file (`JC_FAKE_FORGE_STATE`) holds `{"contents": {path: text}, "calls": [...]}`; the
-log is `JC_FAKE_FORGE_CALLS`, one `METHOD URL` per line.
+The state file (`JC_FAKE_FORGE_STATE`) holds `{"contents": {path: text}, "calls": [...]}`, and
+`writes`: every call that is not a read, with who made it (`basic:<user>` or `token:<token>`);
+the log is `JC_FAKE_FORGE_CALLS`, one `METHOD URL` per line. The forge's users, collaborators,
+teams, tokens and branch rules are kept in the state too (PF-105, PF-106).
 """
 
 from __future__ import annotations
@@ -113,8 +115,73 @@ def app_repository(path: str, method: str, call: dict, state: dict) -> tuple[int
     return None
 
 
+def identities(path: str, method: str, call: dict, state: dict) -> tuple[int, str] | None:
+    """Users, collaborators, the Portal's team, the organization's repositories and the branch
+    rule: what the Job converges before the seed (PF-105, PF-106)."""
+    users = state.setdefault("users", {})
+    user = re.fullmatch(r"/api/v1/users/([^/?]+)", path)
+    if user and method == "GET":
+        held = users.get(user.group(1))
+        return (200, json.dumps({"login": user.group(1), **held})) if held else (404, "{}")
+    if path == "/api/v1/admin/users" and method == "POST":
+        body = json.loads(call["data"])
+        users[body["username"]] = {"is_admin": False, "email": body["email"], "password_set": bool(body["password"])}
+        return 201, json.dumps({"login": body["username"]})
+    edit = re.fullmatch(r"/api/v1/admin/users/([^/?]+)", path)
+    if edit and method == "PATCH":
+        body = json.loads(call["data"])
+        users.setdefault(edit.group(1), {}).update({"patched": body})
+        return 200, "{}"
+    collaborator = re.fullmatch(r"/api/v1/repos/[^/]+/([^/]+)/collaborators/([^/]+)", path)
+    if collaborator and method == "PUT":
+        state.setdefault("collaborators", {})[f"{collaborator.group(1)}/{collaborator.group(2)}"] = json.loads(call["data"])["permission"]
+        return 204, ""
+    member = re.fullmatch(r"/api/v1/teams/(\d+)/members/([^/]+)", path)
+    if member and method == "PUT":
+        state.setdefault("members", []).append(member.group(2))
+        return 204, ""
+    if member and method == "DELETE":
+        state.setdefault("left", []).append(member.group(2))
+        return 204, ""
+    moved = state.setdefault("moved", {})
+    transfer = re.fullmatch(rf"/api/v1/repos/{re.escape(ORG)}/([^/]+)/transfer", path)
+    if transfer and method == "POST":
+        name = transfer.group(1)
+        if name not in state.setdefault("repos", {}):
+            return 404, "{}"
+        moved[name] = json.loads(call["data"])["new_owner"]
+        del state["repos"][name]
+        return 202, "{}"
+    listing = re.fullmatch(r"/api/v1/orgs/([^/]+)/repos\?limit=50&page=(\d+)", path)
+    if listing and method == "GET":
+        owner = listing.group(1)
+        if owner == ORG:
+            names = [REPO, *sorted(state.setdefault("repos", {}))]
+        else:
+            names = sorted(name for name, to in moved.items() if to == owner)
+        page = int(listing.group(2))
+        return 200, json.dumps([{"id": i, "name": n} for i, n in enumerate(names)] if page == 1 else [], separators=(",", ":"))
+    rules = state.setdefault("rules", {})
+    rule = re.fullmatch(r"/api/v1/repos/[^/]+/([^/]+)/branch_protections(?:/([^/]+))?", path)
+    if rule:
+        key = f"{rule.group(1)}/{rule.group(2)}"
+        if method == "GET":
+            return (200, json.dumps(rules[key])) if key in rules else (404, "{}")
+        body = json.loads(call["data"])
+        if method == "POST":
+            rules[f"{rule.group(1)}/{body['rule_name']}"] = body
+            return 201, json.dumps(body)
+        if method == "PATCH" and key in rules:
+            rules[key].update(body)
+            return 200, json.dumps(rules[key])
+    if path.startswith("/apis/apps/v1/namespaces/") and method == "PATCH":
+        state.setdefault("restarted", []).append(path.split("/namespaces/", 1)[1])
+        return (200, "{}") if state.get("deployments_exist") else (404, "{}")
+    return None
+
+
 def parse(argv: list[str]) -> dict:
-    out = {"method": None, "out": None, "code": False, "data": None, "fail": False, "url": None}
+    out = {"method": None, "out": None, "code": False, "data": None, "fail": False, "url": None, "who": None}
     index = 0
     while index < len(argv):
         arg = argv[index]
@@ -123,8 +190,13 @@ def parse(argv: list[str]) -> dict:
         elif arg == "-f":
             out["fail"] = True
         elif arg in ("-o", "-u", "-H", "--cacert"):
+            value = argv[index + 1]
             if arg == "-o":
-                out["out"] = argv[index + 1]
+                out["out"] = value
+            elif arg == "-u":
+                out["who"] = "basic:" + value.split(":", 1)[0]
+            elif arg == "-H" and value.lower().startswith("authorization: token "):
+                out["who"] = "token:" + value.split(" ", 2)[2]
             index += 1
         elif arg == "-w":
             out["code"] = "%{http_code}" in argv[index + 1]
@@ -167,6 +239,9 @@ def answer(call: dict, state: dict) -> tuple[int, str]:
             return (200, json.dumps(held)) if held else (404, "{}")
         state["secrets"][name] = json.loads(call["data"])
         return 200, call["data"]
+    forge = identities(path, method, call, state)
+    if forge is not None:
+        return forge
     if re.fullmatch(r"/api/v1/orgs/[^/]+", path):
         return 200, "{}"
     # The organization's packages: what a read:package token may read (AP-108).
@@ -181,11 +256,21 @@ def answer(call: dict, state: dict) -> tuple[int, str]:
         return app
     if "/teams/search" in path:
         team = path.split("q=", 1)[-1]
-        return 200, json.dumps({"data": [{"name": team}]})
+        return 200, json.dumps({"data": [{"id": 7, "name": team}]})
     if path.endswith("/actions/runners/registration-token") and method == "POST":
         return 200, '{"token":"%s"}' % ("R" * 40)
-    if path.endswith("/tokens") and method == "POST":
-        return 201, '{"sha1":"%s"}' % ("a" * 40)
+    tokens = re.fullmatch(r"/api/v1/users/([^/]+)/tokens(?:/([^/]+))?", path)
+    if tokens:
+        held = state.setdefault("tokens", {})
+        owner, name = tokens.group(1), tokens.group(2)
+        if method == "POST":
+            name = json.loads(call["data"])["name"]
+            held[f"{owner}/{name}"] = True
+            count = len(state.setdefault("minted", [])) + 1
+            state["minted"].append(f"{owner}/{name}")
+            return 201, '{"sha1":"%040x"}' % count
+        if method == "DELETE":
+            return (204, "") if held.pop(f"{owner}/{name}", None) else (404, "{}")
 
     contents = re.fullmatch(
         rf"/api/v1/repos/{re.escape(ORG)}/([^/?]+)/contents/(.+?)(\?ref=.*)?", path
@@ -224,6 +309,8 @@ def main() -> int:
     state = load()
     code, body = answer(call, state)
     state.setdefault("calls", []).append(f"{call['method']} {call['url']}")
+    if call["method"] != "GET":
+        state.setdefault("writes", []).append({"method": call["method"], "url": call["url"], "who": call["who"]})
     save(state)
     with open(CALLS, "a", encoding="utf-8") as handle:
         handle.write(f"{call['method']} {call['url']}\n")

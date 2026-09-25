@@ -222,7 +222,8 @@ apisix:
         # route sets identically; `no-store` keeps a refusal out of a cache; the frame and
         # referrer values are the strictest of the ones the routes use (`DENY` beside
         # `SAMEORIGIN`, `no-referrer` beside `strict-origin-when-cross-origin`), which a body
-        # of JSON with nothing to frame and nothing to link can always afford.
+        # of JSON with nothing to frame and nothing to link can always afford. The
+        # CSP is the `DENY` routes' OPS-34 baseline: no upstream wrote this answer, so it has none.
         error_page 429 = @too_many_requests;
         location @too_many_requests {
           internal;
@@ -233,6 +234,7 @@ apisix:
           add_header X-Frame-Options "DENY" always;
           add_header Referrer-Policy "no-referrer" always;
           add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+          add_header Content-Security-Policy "frame-ancestors 'none'; object-src 'none'; base-uri 'self'" always;
           return 429 '{"type":"https://joinedcontext.com/errors/too-many-requests","title":"Too Many Requests","status":429,"detail":"the rate limit of this route was reached; retry after the window in the Retry-After header"}';
         }
 ingress:

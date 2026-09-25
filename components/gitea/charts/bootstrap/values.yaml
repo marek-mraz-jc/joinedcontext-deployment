@@ -18,16 +18,31 @@ repo:
 # project of the seed gets a repository of its own (ADR-N-029, CC-85).
 layout: 1
 
+# The generated applications' own organization (PF-106). Empty: their repositories stay in
+# `repo.owner` beside the configuration, created by the Portal's user. Set: the Job creates it,
+# moves the applications' repositories already in `repo.owner` into it with their history, and
+# mints the `apps` token on its own machine user; the registry's and the lane's tokens and the
+# runner follow it.
+apps:
+  owner: ''
+
 # The forge administrator, the only credential that can mint a token.
 adminSecret:
   name: gitea-admin-credentials
   usernameKey: username
   passwordKey: password
 
-# Where the two minted tokens are written. Each holds one key, `token`.
+# Where the two minted tokens are written. Each holds `token`, and `scopes` and `owner`, the
+# record of what it was minted with and on whom.
 tokens:
   portal:
     secret: gitea-token-portal
+    # The machine user the token is minted on (PF-106): never the administrator. It writes the
+    # configuration repository and is the only identity its branch rule lets move `main` (PF-105).
+    user: jc-portal
+    # `namespace/name` of every Deployment that reads the token at start: restarted when the
+    # token is minted again, or it would hold a credential the forge no longer accepts.
+    restart: []
     # Read and write the organization's repositories: the Portal opens branches, writes files
     # and merges. `write:organization` is what creates a generated application's own repository
     # in the organization (AP-75); the forge files that route under the organization scope.
@@ -37,11 +52,22 @@ tokens:
     # Where the Secret is written. One entry under `singleNamespace: true`, one per consumer
     # otherwise.
     namespaces: []
+  # The applications' machine user (PF-106): creates, writes and publishes the generated
+  # applications in `apps.owner` and holds nothing of the configuration's. Only with
+  # `apps.owner`.
+  apps:
+    secret: gitea-token-apps
+    user: jc-apps
+    scopes: ['write:repository', 'read:user', 'write:organization', 'write:package']
+    namespaces: []
+    restart: []
   gateway:
     secret: gitea-token-gateway
+    user: jc-gateway
     # The gateway only ever clones.
     scopes: ['read:repository']
     namespaces: []
+    restart: []
   # What a node pulls a fullstack App's image with (AP-108): a token that reads packages and
   # nothing else, written as the `dockerconfigjson` Secret every App pod names in
   # `imagePullSecrets`, for the registry at `host`. Empty namespaces: no App pod runs here.

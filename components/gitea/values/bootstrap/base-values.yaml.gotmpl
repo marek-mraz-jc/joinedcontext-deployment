@@ -31,6 +31,9 @@ repo:
 # 2: the seed goes into the organization repository and one repository per project (CC-85).
 layout: {{ $repo.layout | default 1 }}
 
+apps:
+  owner: {{ .Values.gitea.forge.appsOrganization | default "" | quote }}
+
 # A token minted at run time cannot be copied by the secrets component, so the Job writes each
 # one where it is read. Under `singleNamespace: true` these are all the same string and the
 # chart renders one Role; under `false` each consumer has its own.
@@ -41,11 +44,36 @@ tokens:
       {{- if has "portal" .Values.components }}
       - {{ .Values.portal.portal.namespace }}
       {{- end }}
+    restart:
+      {{- if has "portal" .Values.components }}
+      - {{ printf "%s/portal" .Values.portal.portal.namespace }}
+      {{- end }}
+      {{- if has "agent-runner" .Values.components }}
+      - {{ printf "%s/agent-proxy" (index .Values "agent-runner" "proxy" "namespace") }}
+      {{- end }}
+      {{- if not (or (has "portal" .Values.components) (has "agent-runner" .Values.components)) }} []
+      {{- end }}
+  apps:
+    {{- if and .Values.gitea.forge.appsOrganization (has "portal" .Values.components) }}
+    namespaces:
+      - {{ .Values.gitea.bootstrap.namespace }}
+      - {{ .Values.portal.portal.namespace }}
+    restart:
+      - {{ printf "%s/portal" .Values.portal.portal.namespace }}
+    {{- else }}
+    namespaces: []
+    restart: []
+    {{- end }}
   gateway:
     namespaces:
       - {{ .Values.gitea.bootstrap.namespace }}
       {{- if has "context-gateway" .Values.components }}
       - {{ index .Values "context-gateway" "gateway" "namespace" }}
+      {{- end }}
+    restart:
+      {{- if has "context-gateway" .Values.components }}
+      - {{ printf "%s/context-gateway" (index .Values "context-gateway" "gateway" "namespace") }}
+      {{- else }} []
       {{- end }}
   registry:
     # The host a node pulls from: the primary one, whose /v2/ the edge routes to the forge.
