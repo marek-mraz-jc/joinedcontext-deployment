@@ -100,7 +100,9 @@ def test_security_response_headers_on_every_route(plugin_configs):
         # say the same thing on both sides and no request carries a Portal path to another
         # origin. The upstreams that are somebody else's application keep the wider value: Gitea
         # and Keycloak check the `Referer` on some form posts, and taking it away breaks a login.
-        expected_referrer = "no-referrer" if config_id in PORTAL_CONFIGS else "strict-origin-when-cross-origin"
+        # security.txt is answered by the edge itself (T-1721): no upstream reads a `Referer`.
+        narrow = PORTAL_CONFIGS + ("security-txt",)
+        expected_referrer = "no-referrer" if config_id in narrow else "strict-origin-when-cross-origin"
         assert headers["Referrer-Policy"] == expected_referrer, config_id
         expected_frame = "SAMEORIGIN" if config_id in UI_CONFIGS else "DENY"
         assert headers["X-Frame-Options"] == expected_frame, config_id
