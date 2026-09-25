@@ -208,6 +208,9 @@ org="${JC_SMOKE_ORG:-$(kubectl get deploy context-gateway -n "$slug" \
 	-o jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="JC_GATEWAY_ORG_DOMAIN")].value}' 2>/dev/null || true)}"
 org="${org:-hel.fi}"
 demo_login="${demo_user}@${org}"
+# What a live journey or a recorded take names as its own: the janitor role's pattern, which
+# tests/test_smoke_script.py holds equal to seed/helsinki/helsinki-role-janitor.yaml (T-2817).
+RESIDUE_NAMES='t1[0-9]{3}[a-z]?-[a-z0-9-]+|[a-z0-9-]+-[0-9]{4}|bikes-regional-[a-z0-9]+|large-map-city'
 demo_token=""
 if [ -z "$demo_password" ]; then
 	skip "demo user login (no demo users seeded in this instance)"
@@ -335,34 +338,40 @@ if has_route portal-api; then
 				ko "a probe of $inside reached it: $said" ;;
 			esac
 		done
-		# A take cleans up after itself (T-0667, T-0750): helsinki lists the endpoints, pipelines and
-		# spaces its seed commits and at most one more of each (a take in flight); residue of
-		# recordings and e2e turns the run red.
+		# A take cleans up after itself (T-0667, T-0750): residue is what a journey or a take names as
+		# its own, the janitor's pattern (seed/helsinki/helsinki-role-janitor.yaml, T-2627, T-2817),
+		# and one of it per kind is a take in flight. What a person made on dev is not residue,
+		# whatever its name, so a generated app's endpoint or an upload leaves the check green.
 		seed=$(kubectl get configmap gitea-bootstrap-seed -n "$slug" -o 'jsonpath={.data}' 2>/dev/null)
-		# A sample app's Endpoint and Policies are committed by the bootstrap too, from its
-		# `grants__…` files (T-2667): they are seeded, not residue.
-		for app_cm in $(kubectl get configmaps -n "$slug" -o name 2>/dev/null | grep '^configmap/gitea-bootstrap-app-'); do
-			seed="$seed $(kubectl get configmap "${app_cm#configmap/}" -n "$slug" \
-				-o go-template='{{range $name, $_ := .data}}{{$name}}{{"\n"}}{{end}}' 2>/dev/null | grep '^grants__')"
-		done
 		for kind in "endpoints Endpoint projects__helsinki__spaces__[a-z0-9-]*__endpoints__[a-z0-9-]*\.yaml" \
 			"pipelines Pipeline projects__helsinki__pipelines__[a-z0-9-]*__pipeline\.yaml" \
 			"spaces ContextSpace projects__helsinki__spaces__[a-z0-9-]*__space\.yaml"; do
 			set -- $kind
 			plural=$1 manifest_kind=$2 seed_pattern=$3
-			seeded=$(printf '%s' "$seed" | grep -o "$seed_pattern" | sort -u | wc -l)
-			if [ "$seeded" -eq 0 ]; then
+			if ! printf '%s' "$seed" | grep -q "$seed_pattern"; then
 				skip "helsinki $plural residue (no Helsinki seed in this instance)"
 				continue
 			fi
-			listed=$(curl -sS --max-time 20 -H "Authorization: Bearer $demo_token" "$portal/api/v1/projects/helsinki/$plural" 2>/dev/null |
-				grep -o "\"kind\": *\"$manifest_kind\"" | wc -l)
+			names=$(curl -sS --max-time 20 -H "Authorization: Bearer $demo_token" "$portal/api/v1/projects/helsinki/$plural" 2>/dev/null |
+				python3 -c 'import json, sys
+try:
+    items = json.load(sys.stdin).get("items") or []
+except ValueError:
+    items = []
+for item in items:
+    if item.get("kind") == sys.argv[1]:
+        print((item.get("metadata") or {}).get("name", ""))' "$manifest_kind")
+			listed=$(printf '%s\n' "$names" | grep -c .)
+			residue=$(printf '%s\n' "$names" | grep -Ex "($RESIDUE_NAMES)" | tr '\n' ' ')
+			found=$(printf '%s' "$residue" | wc -w)
 			if [ "$listed" -eq 0 ]; then
-				ko "helsinki lists no $plural for $seeded seeded: the list did not answer"
-			elif [ "$listed" -le $((seeded + 1)) ]; then
-				ok "helsinki lists $listed $plural for $seeded seeded (no residue)"
+				ko "helsinki lists no $plural: the list did not answer"
+			elif [ "$found" -eq 0 ]; then
+				ok "helsinki lists $listed $plural, none of them residue of takes or e2e"
+			elif [ "$found" -eq 1 ]; then
+				ok "helsinki lists $listed $plural, one a take in flight: ${residue% }"
 			else
-				ko "helsinki lists $listed $plural for $seeded seeded: residue of takes or e2e (T-0667)"
+				ko "helsinki lists residue of takes or e2e among its $plural: ${residue% } (T-0667)"
 			fi
 		done
 	else

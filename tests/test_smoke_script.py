@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SMOKE = PROJECT_ROOT / "scripts" / "smoke.sh"
@@ -353,8 +354,8 @@ HEALTHY = {
                ["/token", '{"access_token":"a.b.c"}'],
                ["/api/v1/auth/login", LOGIN_REDIRECT],
                ["/api/v1/projects/helsinki/spaces", json.dumps({"items": [{"kind": "ContextSpace", "metadata": {"name": n}} for n in ("helsinki", "helsinki-kpi")]})],
-               ["/api/v1/projects/helsinki/pipelines", json.dumps({"items": [{"kind": "Pipeline"} for _ in range(2)]})],
-               ["/api/v1/projects/helsinki/endpoints", json.dumps({"items": [{"kind": "Endpoint"} for _ in HELSINKI_SEED]})],
+               ["/api/v1/projects/helsinki/pipelines", json.dumps({"items": [{"kind": "Pipeline", "metadata": {"name": n}} for n in ("hel-news", "citybikes-gbfs")]})],
+               ["/api/v1/projects/helsinki/endpoints", json.dumps({"items": [{"kind": "Endpoint", "metadata": {"name": "helsinki-%s" % n}} for n in HELSINKI_SEED]})],
                [["%{redirect_url}", "https://portal.example.test/"], EDGE_REDIRECT],
                [["%{redirect_url}", "https://example.test/"], "https://portal.example.test/"],
                ["datasources?dryRun=All", '{"valid": true, "probe": {"skipped": "the feed could not be reached: connection refused"}}'],
@@ -413,9 +414,9 @@ def test_full_platform_passes(tmp_path):
     assert "git forge answers under the /git prefix (200)" in result.stdout
     assert "catalogue front page carries the instance name" in result.stdout
     assert "ok    pipeline test runs a candidate on the runner and captures the output (200)" in result.stdout
-    assert "ok    helsinki lists 4 endpoints for 4 seeded (no residue)" in result.stdout
-    assert "ok    helsinki lists 2 pipelines for 2 seeded (no residue)" in result.stdout
-    assert "ok    helsinki lists 2 spaces for 2 seeded (no residue)" in result.stdout
+    assert "ok    helsinki lists 4 endpoints, none of them residue of takes or e2e" in result.stdout
+    assert "ok    helsinki lists 2 pipelines, none of them residue of takes or e2e" in result.stdout
+    assert "ok    helsinki lists 2 spaces, none of them residue of takes or e2e" in result.stdout
     assert "ok    agent proxy client mints tokens with audience context-gateway" in result.stdout
     assert "ok    helsinki-bikes does not serve events" in result.stdout
     assert "ok    city bike stations are flowing into the space" in result.stdout
@@ -458,32 +459,52 @@ def test_an_edge_that_forbids_keeping_a_schema_artifact_fails_the_run(tmp_path):
     assert "FAIL  a schema artifact carries no ETag to revalidate with" in result.stdout
 
 
+def listing(kind: str, names) -> str:
+    return json.dumps({"items": [{"kind": kind, "metadata": {"name": n}} for n in names]})
+
+
 def test_pipeline_residue_beyond_one_take_fails_the_run(tmp_path):
-    """Pipelines and spaces are counted the way endpoints are (T-0750)."""
-    listed = json.dumps({"items": [{"kind": "Pipeline"} for _ in range(4)]})
+    """Pipelines and spaces are judged the way endpoints are (T-0750, T-2817)."""
+    listed = listing("Pipeline", ["hel-news", "citybikes-gbfs", "t1597-feed", "citybikes-0915"])
     spec = dict(HEALTHY, bodies=[["/api/v1/projects/helsinki/pipelines", listed]] + HEALTHY["bodies"])
     result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
     assert result.returncode != 0
-    assert "FAIL  helsinki lists 4 pipelines for 2 seeded: residue of takes or e2e (T-0667)" in result.stdout
+    assert "FAIL  helsinki lists residue of takes or e2e among its pipelines: t1597-feed citybikes-0915 (T-0667)" in result.stdout
 
 
 def test_endpoint_residue_beyond_one_take_fails_the_run(tmp_path):
-    """Two endpoints more than the seed commits is residue of takes or e2e (T-0667)."""
-    listed = json.dumps({"items": [{"kind": "Endpoint"} for _ in range(len(HELSINKI_SEED) + 2)]})
-    spec = dict(HEALTHY, bodies=[["/api/v1/projects/helsinki/endpoints", listed]] + HEALTHY["bodies"])
+    """Two journey-named endpoints are residue of takes or e2e (T-0667, T-2817)."""
+    names = ["helsinki-%s" % n for n in HELSINKI_SEED] + ["t1588-a", "t1589r-b"]
+    spec = dict(HEALTHY, bodies=[["/api/v1/projects/helsinki/endpoints", listing("Endpoint", names)]] + HEALTHY["bodies"])
     result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
     assert result.returncode != 0
-    assert "FAIL  helsinki lists 6 endpoints for 4 seeded: residue of takes or e2e (T-0667)" in result.stdout
+    assert "FAIL  helsinki lists residue of takes or e2e among its endpoints: t1588-a t1589r-b (T-0667)" in result.stdout
 
 
-def test_a_sample_apps_granted_endpoint_is_seeded_not_residue(tmp_path):
-    """T-2667: the bootstrap commits each sample app's Endpoint beside the seed; two apps with
-    grants are two endpoints more that the residue count (T-0667) expects."""
-    listed = json.dumps({"items": [{"kind": "Endpoint"} for _ in range(len(HELSINKI_SEED) + 2)]})
-    spec = dict(HEALTHY, appGrants=["helsinki-bikes", "helsinki-events"],
-                bodies=[["/api/v1/projects/helsinki/endpoints", listed]] + HEALTHY["bodies"])
+def test_one_take_in_flight_is_named_and_not_residue(tmp_path):
+    """A take that is running holds one resource of a kind until it cleans up (T-0750)."""
+    names = ["helsinki-%s" % n for n in HELSINKI_SEED] + ["bikes-1942"]
+    spec = dict(HEALTHY, bodies=[["/api/v1/projects/helsinki/endpoints", listing("Endpoint", names)]] + HEALTHY["bodies"])
     result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
-    assert "ok    helsinki lists 6 endpoints for 6 seeded (no residue)" in result.stdout
+    assert "ok    helsinki lists 5 endpoints, one a take in flight: bikes-1942" in result.stdout
+
+
+def test_what_a_person_made_on_dev_is_not_residue(tmp_path):
+    """T-2817: a generated app's endpoint and an upload are people's work, whatever their count."""
+    names = ["helsinki-%s" % n for n in HELSINKI_SEED] + ["app-alerts-desk", "helsinki-bikes-mobility", "app-air-quality"]
+    spec = dict(HEALTHY, bodies=[["/api/v1/projects/helsinki/endpoints", listing("Endpoint", names)]] + HEALTHY["bodies"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert "ok    helsinki lists 7 endpoints, none of them residue of takes or e2e" in result.stdout
+
+
+def test_the_smoke_names_residue_the_way_the_janitor_does():
+    """The smoke's pattern is the janitor role's (T-2627, T-2817): what the sweep may remove is
+    exactly what the smoke calls residue, so neither drifts from the other."""
+    root = Path(__file__).resolve().parent.parent
+    role = yaml.safe_load((root / "components/context-gateway/seed/helsinki/helsinki-role-janitor.yaml").read_text())
+    (constraint,) = role["spec"]["rules"][0]["constraints"]
+    smoke = (root / "scripts/smoke.sh").read_text()
+    assert f"RESIDUE_NAMES='{constraint['pattern']}'" in smoke
 
 
 def test_an_endpoint_list_that_does_not_answer_is_not_called_clean(tmp_path):
@@ -491,7 +512,7 @@ def test_an_endpoint_list_that_does_not_answer_is_not_called_clean(tmp_path):
     spec = dict(HEALTHY, bodies=[["/api/v1/projects/helsinki/endpoints", "{}"]] + HEALTHY["bodies"])
     result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
     assert result.returncode != 0
-    assert "FAIL  helsinki lists no endpoints for 4 seeded: the list did not answer" in result.stdout
+    assert "FAIL  helsinki lists no endpoints: the list did not answer" in result.stdout
 
 
 def test_an_agent_proxy_without_the_gateway_audience_fails_the_run(tmp_path):
