@@ -153,6 +153,13 @@ RATE_CLASSES = {
     "portal-api": ("api", 1200),
     "context-endpoint": ("publicEndpoint", 5000),
     "context-endpoint-portal": ("publicEndpoint", 5000),
+    "context-space": ("dataWrite", 1200),
+    "context-space-portal": ("dataWrite", 1200),
+}
+# The routes that count a class apart from their shared chain, with the route-level limit.
+ROUTE_RATE_CLASSES = {
+    "context-space-read": ("dataRead", 1200, "context-space"),
+    "context-space-portal-read": ("dataRead", 1200, "context-space-portal"),
 }
 
 
@@ -172,6 +179,29 @@ def test_the_organization_tunes_each_class_by_its_label(rendered):
     assert labelled == RATE_CLASSES
     for pc in configs:
         assert "labels" not in pc or pc["id"] in RATE_CLASSES, pc["id"]
+
+
+def test_space_reads_and_writes_count_apart(rendered):
+    """T-2892, ADR-N-035: GET and HEAD on /cs/* win over the write route by priority and method,
+    share its chain, and replace only its limit-count, so dataRead and dataWrite are two buckets."""
+    cm = next(
+        d for d in rendered("local")
+        if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "apisix-standalone-base"
+    )
+    routes = {r["id"]: r for r in yaml.safe_load(cm["data"]["apisix.yaml"])["routes"]}
+    for route_id, (rate_class, count, chain) in ROUTE_RATE_CLASSES.items():
+        read, write = routes[route_id], routes[chain]
+        assert read["labels"] == {"jc-rate-class": rate_class}, route_id
+        assert read["plugin_config_id"] == write["plugin_config_id"] == chain, route_id
+        assert read["methods"] == ["GET", "HEAD"] and "methods" not in write, route_id
+        assert (read["uri"], read.get("host")) == (write["uri"], write.get("host")), route_id
+        assert read["priority"] > write["priority"], route_id
+        assert set(read["plugins"]) == {"limit-count"}, route_id
+        limit = read["plugins"]["limit-count"]
+        assert (limit["count"], limit["key"], limit["rejected_code"]) == (count, "http_authorization", 429)
+    for route in routes.values():
+        if route["id"] not in ROUTE_RATE_CLASSES:
+            assert "labels" not in route and "plugins" not in route, route["id"]
 
 
 def test_every_rate_limit_rejects_with_429(plugin_configs):

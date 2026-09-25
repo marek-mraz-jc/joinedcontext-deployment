@@ -19,6 +19,37 @@ context-space:
     idleTimeout: 60
     requests: 1000
 
+# The context space surface for GET and HEAD, above context-space in priority so the reads count a bucket of their own:
+# the Organization sets reads (dataRead) and writes (dataWrite) apart (ADR-N-035, T-2892). The
+# chain is context-space's; only its limit-count is replaced, and the Portal writes the count.
+context-space-read:
+  name: context-space-read
+  description: The context space surface, reads
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/cs/*'
+  host: '{{ .Values.global.domain }}'
+  priority: 16
+  methods: [GET, HEAD]
+  pluginConfig: context-space
+  rateClass: dataRead
+  plugins:
+    limit-count:
+      count: 1200
+      time_window: 60
+      key_type: var
+      key: http_authorization
+      rejected_code: 429
+      policy: local
+      show_limit_quota_header: true
+  timeout:
+    connect: 6
+    send: 60
+    read: 300
+  keepalivePool:
+    size: 320
+    idleTimeout: 60
+    requests: 1000
+
 # The same surface on the Portal host. The Portal UI reads a space from its own origin —
 # `sdk/src/grid/source.ts` builds `/cs/{space}/ngsi-ld/v1` as a relative URL — and with the route
 # bound to the apex alone that fetch fell through to portal-ui, which answers the SPA shell with
@@ -40,6 +71,37 @@ context-space-portal:
     read: 300
   # APISIX defaults to the same 320, but a long-lived streaming upstream is the one place
   # where the pool size is a deliberate capacity decision rather than a default.
+  keepalivePool:
+    size: 320
+    idleTimeout: 60
+    requests: 1000
+
+# The context space surface on the Portal host for GET and HEAD, above context-space-portal in priority so the reads count a bucket of their own:
+# the Organization sets reads (dataRead) and writes (dataWrite) apart (ADR-N-035, T-2892). The
+# chain is context-space-portal's; only its limit-count is replaced, and the Portal writes the count.
+context-space-portal-read:
+  name: context-space-portal-read
+  description: The context space surface on the Portal host, reads
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/cs/*'
+  subDomain: portal
+  priority: 16
+  methods: [GET, HEAD]
+  pluginConfig: context-space-portal
+  rateClass: dataRead
+  plugins:
+    limit-count:
+      count: 1200
+      time_window: 60
+      key_type: var
+      key: http_authorization
+      rejected_code: 429
+      policy: local
+      show_limit_quota_header: true
+  timeout:
+    connect: 6
+    send: 60
+    read: 300
   keepalivePool:
     size: 320
     idleTimeout: 60

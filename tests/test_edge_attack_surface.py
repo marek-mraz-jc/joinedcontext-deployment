@@ -99,6 +99,14 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "the gateway is the enforcement point: anonymous sees what the space's Policy grants",
     },
+    "context-space-read": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "context-space's reads with its chain, counted apart so the Organization sets reads and writes apart (ADR-N-035)",
+    },
+    "context-space-portal-read": {
+        "reach": EDGE_SESSION, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "context-space-portal's reads with its chain, counted apart so the Organization sets reads and writes apart (ADR-N-035)",
+    },
     "catalog-feed": {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "the DCAT-AP feed a national portal harvests (EP-84): the gateway reads no token on it and lists public Endpoints only",

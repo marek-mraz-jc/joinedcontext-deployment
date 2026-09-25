@@ -11,8 +11,10 @@ with that same snippet and one route whose limit is 1, because a header contract
 by an answer: it is skipped where there is no docker, and it needs no cluster.
 """
 
+import contextlib
 import json
 import re
+import shutil
 import socket
 import subprocess
 import time
@@ -30,7 +32,10 @@ pytestmark = pytest.mark.xdist_group("docker-apisix-429")
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 VALUES = PROJECT_ROOT / "components/apisix/values/apisix/base-values.yaml.gotmpl"
 IMAGES = PROJECT_ROOT / "components/apisix/images.yaml"
-PLUGIN_FILES = sorted(PROJECT_ROOT.glob("components/*/apisix-plugins.yaml"))
+# A route may carry a plugin of its own beside its plugin config (T-2892), so both files count.
+PLUGIN_FILES = sorted(PROJECT_ROOT.glob("components/*/apisix-plugins.yaml")) + sorted(
+    PROJECT_ROOT.glob("components/*/apisix-routes.yaml")
+)
 PROBLEM_TYPE = "https://joinedcontext.com/errors/too-many-requests"
 
 
@@ -47,7 +52,7 @@ def server_snippet() -> str:
 
 
 def limit_count_blocks() -> list[tuple[str, str, dict]]:
-    """Every `limit-count` configuration of the edge, with the file and route it belongs to."""
+    """Every `limit-count` configuration of the edge, with the file and entry it belongs to."""
     found = []
     for path in PLUGIN_FILES:
         document = yaml.safe_load(path.read_text()) or {}
@@ -129,8 +134,12 @@ def answer(url: str) -> tuple[int, dict[str, str], str]:
         return refused.code, dict(refused.headers), refused.read().decode()
 
 
-@pytest.mark.skipif(not __import__("shutil").which("docker"), reason="docker not installed")
-def test_the_pinned_image_answers_problem_details_for_a_real_refusal(tmp_path):
+@contextlib.contextmanager
+def pinned_apisix(tmp_path: Path, rules: str):
+    """The pinned image serving these standalone rules behind the edge's server block; yields
+    the base URL once it answers, and removes the container afterwards."""
+    if not shutil.which("docker"):
+        pytest.skip("docker not installed")
     port = free_port()
     (tmp_path / "config.yaml").write_text(
         "deployment:\n"
@@ -142,11 +151,41 @@ def test_the_pinned_image_answers_problem_details_for_a_real_refusal(tmp_path):
         "  http_server_configuration_snippet: |\n"
         + "".join(f"    {line}\n" for line in server_snippet().splitlines())
     )
+    (tmp_path / "apisix.yaml").write_text(rules)
+    name = f"apisix-429-contract-{port}"
+    subprocess.run(["docker", "rm", "-f", name], capture_output=True, check=False)
+    started = subprocess.run(
+        ["docker", "run", "-d", "--name", name, "-p", f"127.0.0.1:{port}:9080",
+         "-v", f"{tmp_path / 'config.yaml'}:/usr/local/apisix/conf/config.yaml:ro",
+         "-v", f"{tmp_path / 'apisix.yaml'}:/usr/local/apisix/conf/apisix.yaml:ro",
+         pinned_image()],
+        capture_output=True, text=True, check=False,
+    )
+    if started.returncode != 0:
+        pytest.skip(f"the pinned image does not run here: {started.stderr.strip()}")
+    try:
+        base = f"http://127.0.0.1:{port}"
+        deadline = time.time() + 60
+        while time.time() < deadline:
+            try:
+                urllib.request.urlopen(base + "/", timeout=5)
+                break
+            except urllib.error.HTTPError:
+                break
+            except OSError:
+                time.sleep(1)
+        else:
+            pytest.fail("APISIX did not start")
+        yield base
+    finally:
+        subprocess.run(["docker", "rm", "-f", name], capture_output=True, check=False)
+
+
+def test_the_pinned_image_answers_problem_details_for_a_real_refusal(tmp_path):
     # One route with a limit of 1 and the security headers every real route carries, so the
     # answer is the whole chain and not the handler alone. The upstream is a closed port: the
     # first request is a 502 the handler must leave alone, the second is the refusal.
-    (tmp_path / "apisix.yaml").write_text(
-        """
+    rules = """
 routes:
   - uri: /probe
     plugins:
@@ -168,31 +207,9 @@ routes:
       type: roundrobin
 #END
 """
-    )
-    name = f"apisix-429-contract-{port}"
-    subprocess.run(["docker", "rm", "-f", name], capture_output=True, check=False)
-    started = subprocess.run(
-        ["docker", "run", "-d", "--name", name, "-p", f"127.0.0.1:{port}:9080",
-         "-v", f"{tmp_path / 'config.yaml'}:/usr/local/apisix/conf/config.yaml:ro",
-         "-v", f"{tmp_path / 'apisix.yaml'}:/usr/local/apisix/conf/apisix.yaml:ro",
-         pinned_image()],
-        capture_output=True, text=True, check=False,
-    )
-    if started.returncode != 0:
-        pytest.skip(f"the pinned image does not run here: {started.stderr.strip()}")
-    try:
-        url = f"http://127.0.0.1:{port}/probe"
-        deadline = time.time() + 60
-        while time.time() < deadline:
-            try:
-                first = answer(url)
-                break
-            except OSError:
-                time.sleep(1)
-        else:
-            pytest.fail("APISIX did not start")
-
-        status, headers, body = first
+    with pinned_apisix(tmp_path, rules) as base:
+        url = base + "/probe"
+        status, headers, body = answer(url)
         assert status == 502, f"the first request is inside the limit: {status} {body}"
         assert "problem+json" not in headers.get("Content-Type", ""), headers
         assert PROBLEM_TYPE not in body, "an answer that is not a refusal is left alone"
@@ -213,5 +230,59 @@ routes:
         assert headers["X-Frame-Options"] == "DENY", headers
         assert headers["Referrer-Policy"] == "no-referrer", headers
         assert "no-store" in headers["Cache-Control"], headers
-    finally:
-        subprocess.run(["docker", "rm", "-f", name], capture_output=True, check=False)
+
+
+def test_the_pinned_image_counts_space_reads_and_writes_apart(tmp_path):
+    """T-2892, ADR-N-035: the -read route shares the write route's chain, both labelled, and its
+    own limit-count replaces the chain's, so reads and writes fill two buckets. The same shape
+    as context-space and context-space-read, with limits of 1 read and 2 writes."""
+    limit = "count: {count}\n        time_window: 60\n        key_type: var\n        key: remote_addr\n        rejected_code: 429\n        policy: local\n        show_limit_quota_header: true"
+    rules = f"""
+plugin_configs:
+  - id: chain
+    labels:
+      jc-rate-class: dataWrite
+    plugins:
+      limit-count:
+        {limit.format(count=2)}
+upstreams:
+  - id: closed
+    type: roundrobin
+    nodes:
+      "127.0.0.1:9": 1
+routes:
+  - id: write
+    uri: /cs/*
+    priority: 15
+    upstream_id: closed
+    plugin_config_id: chain
+  - id: read
+    uri: /cs/*
+    priority: 16
+    methods: ["GET", "HEAD"]
+    upstream_id: closed
+    plugin_config_id: chain
+    labels:
+      jc-rate-class: dataRead
+    plugins:
+      limit-count:
+        {limit.format(count=1)}
+#END
+"""
+
+    def call(base: str, method: str) -> tuple[int, str]:
+        body = b"{}" if method == "POST" else None
+        request = urllib.request.Request(base + "/cs/space/ngsi-ld/v1/entities", method=method, data=body)
+        try:
+            with urllib.request.urlopen(request, timeout=5) as response:
+                return response.status, response.headers.get("X-RateLimit-Limit", "")
+        except urllib.error.HTTPError as refused:
+            return refused.code, refused.headers.get("X-RateLimit-Limit", "")
+
+    with pinned_apisix(tmp_path, rules) as base:
+        assert call(base, "GET") == (502, "1"), "the read counts the route's own limit"
+        assert call(base, "GET")[0] == 429
+        # The spent read bucket leaves the writes alone, and they count the chain's limit.
+        assert call(base, "POST") == (502, "2")
+        assert call(base, "POST") == (502, "2")
+        assert call(base, "POST")[0] == 429

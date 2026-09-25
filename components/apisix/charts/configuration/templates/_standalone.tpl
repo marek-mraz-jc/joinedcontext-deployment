@@ -68,6 +68,16 @@
         {{- if hasKey $.Values.plugins $pluginConfig }}
         plugin_config_id: {{ $pluginConfig }}
         {{- end }}
+        {{- with $config.rateClass }}
+        labels:
+          jc-rate-class: {{ . | quote }}
+        {{- end }}
+        {{- /* A route-level plugin replaces the same plugin of its plugin config: the one way a
+               route shares a chain and counts a bucket of its own (T-2892). */}}
+        {{- with $config.plugins }}
+        plugins:
+{{ toYaml . | indent 10 }}
+        {{- end }}
 {{- end }}
     #END
 {{- end }}
