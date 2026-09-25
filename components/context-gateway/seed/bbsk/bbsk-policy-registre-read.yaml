@@ -1,0 +1,20 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Policy
+metadata:
+  name: registre-read
+  namespace: bbsk
+  title: { sk: "Verejné čítanie registrov", en: "Public read: registers" }
+spec:
+  contextSpaceRef: { kind: ContextSpace, name: bbsk-registre }
+  assigner: did:web:{orgDomain}
+  assignee: { kind: role, id: public }
+  operations: [retrieveOps]
+  # Every type of the space: each is the region's open data, and no mapping writes a person's
+  # name, telephone or e-mail.
+  information:
+    - entities:
+        - type: AdministrativeArea
+        - type: PublicOrganization
+        - type: Hospital
+        - type: SocialService
+        - type: Bridge

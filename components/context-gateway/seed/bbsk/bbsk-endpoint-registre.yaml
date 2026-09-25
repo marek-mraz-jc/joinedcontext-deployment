@@ -1,0 +1,25 @@
+# The one door of the register space, public: every register is the region's own open data under
+# CC BY-SA 4.0, and republishing it with the region's credit and under the same licence is what
+# that licence allows. The catalogue entry carries the licence; the pipelines write through here.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: bbsk-registre
+  namespace: bbsk
+  title: { sk: "Registre kraja", en: "Registers of the region" }
+  # The dataset's notes in the catalogue, through this endpoint's DCAT-AP record (EP-27).
+  description:
+    sk: "Hranice okresov a obcí, organizácie kraja, nemocnice, sociálne služby verejných poskytovateľov a mosty. Zdroj: Banskobystrický samosprávny kraj, https://opendata.bbsk.sk/, CC BY-SA 4.0."
+    en: "District and municipality outlines, the region's organisations, hospitals, the social services of public providers and bridges. Source: Banská Bystrica Self-Governing Region, https://opendata.bbsk.sk/, CC BY-SA 4.0."
+spec:
+  contextSpaceRef: bbsk-registre
+  slug: lws6dd7o56veegwxsjtvak3goeta4mfn
+  audience: public
+  enabledRepresentations: [ngsi-ld, geojson, csv, json]
+  rateLimits: { requestsPerMinute: 300, burst: 50 }
+  publish:
+    ckan:
+      instanceRef: { kind: CkanInstance, name: bbsk }
+      # ShareAlike: the region's licence binds the republication too (T-2783).
+      license: cc-by-sa
+      datastore: { representation: csv, refresh: onReconcile }
