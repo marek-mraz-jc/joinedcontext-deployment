@@ -1,6 +1,6 @@
 ---
 # What every workload this platform deploys already looks like: non-root, no capabilities,
-# nothing writable outside its volumes.
+# nothing writable outside its volumes, pinned by digest, with requests and limits (T-2480).
 apiVersion: v1
 kind: Pod
 metadata:
@@ -14,7 +14,10 @@ spec:
       type: RuntimeDefault
   containers:
     - name: app
-      image: nginx:1.27
+      image: nginx:1.27@sha256:0000000000000000000000000000000000000000000000000000000000000000
+      resources:
+        requests: { cpu: 10m, memory: 16Mi }
+        limits: { memory: 64Mi }
       securityContext:
         allowPrivilegeEscalation: false
         readOnlyRootFilesystem: true

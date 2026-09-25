@@ -316,6 +316,27 @@ def test_every_placeholder_is_substituted(policies):
     assert left == [], f"the rendered policies still carry placeholders: {left}"
 
 
+#: The rules T-2480 installs in Audit first, by the file name the chart's values use.
+STAGED_BY_T2480 = {
+    "disallow-privileged-containers",
+    "disallow-host-path",
+    "disallow-host-namespaces",
+    "require-image-checksum",
+    "require-pod-requests-limits",
+}
+
+
+def staged_policy_names(staged: set) -> set:
+    """The ClusterPolicy names of the staged files; a vendored file's policy may be named apart
+    from its file (require-pod-requests-limits is `require-requests-limits`)."""
+    return {
+        yaml.safe_load(
+            (CHART / "files/upstream" / f"{name}.yaml").read_text()
+        )["metadata"]["name"]
+        for name in staged
+    }
+
+
 def test_production_renders_every_runtime_policy_in_enforce(rendered):
     """OPS-29: in the production profile every validating rule refuses at admission. The action
     is read from the render itself, with no `--set`, so a default that slides back to Audit
@@ -324,11 +345,17 @@ def test_production_renders_every_runtime_policy_in_enforce(rendered):
     policies = [d for d in rendered("production") if d.get("kind") in ("ClusterPolicy", "Policy")]
     names = {p["metadata"]["name"] for p in policies}
     assert "justify-linkerd-inject-opt-out" in names, sorted(names)
+    staged = set(yaml.safe_load((CHART / "values.yaml").read_text())["podSecurity"]["staged"])
+    # T-2480: the owner's order is Audit, fix the offenders from dev's PolicyReports, then
+    # Enforce. Only these five may report in production, each until it is promoted.
+    assert staged <= STAGED_BY_T2480, f"a rule staged outside T-2480: {sorted(staged - STAGED_BY_T2480)}"
+    staged_names = staged_policy_names(staged)
     audit = [
         f"{p['metadata']['name']}/{rule['name']}: {rule['validate'].get('failureAction')}"
         for p in policies
         for rule in p["spec"].get("rules", [])
         if "validate" in rule
+        and p["metadata"]["name"] not in staged_names
         and (rule["validate"].get("failureAction") or p["spec"].get("validationFailureAction")) != "Enforce"
     ]
     assert not audit, "rules that only report in production:\n" + "\n".join(audit)
@@ -350,3 +377,113 @@ def test_production_admits_no_unmeshed_pod_and_its_edge_takes_only_mesh_traffic(
     open_servers = sorted(n for n, s in servers.items() if s.get("accessPolicy") == "all-unauthenticated")
     assert open_servers == ["apisix-configuration-acme-http01-solver"], open_servers
     assert servers["apisix-configuration-apisix-gateway"]["accessPolicy"] == "all-authenticated"
+
+
+@requires_helm
+def test_a_staged_rule_reports_in_audit_whatever_the_environment_enforces(pod_security):
+    """T-2480, OPS-29: the chart renders enforcing here (`failureAction=Enforce`); the five new
+    rules still only report, and the four promoted ones refuse. Both stop at the deployment's
+    namespaces."""
+    docs = {d["metadata"]["name"]: d for d in yaml.safe_load_all(pod_security.read_text()) if d}
+    staged = staged_policy_names(STAGED_BY_T2480)
+    assert staged <= set(docs), sorted(staged - set(docs))
+    for name, policy in docs.items():
+        for rule in policy["spec"].get("rules", []):
+            if "validate" not in rule or name not in staged | {
+                "drop-all-capabilities", "require-ro-rootfs",
+                "require-run-as-non-root-user", "require-run-as-nonroot",
+            }:
+                continue
+            want = "Audit" if name in staged else "Enforce"
+            assert rule["validate"]["failureAction"] == want, f"{name}/{rule['name']}"
+            for matcher in rule["match"]["any"]:
+                assert matcher["resources"]["namespaces"] == ["dev"], f"{name}/{rule['name']}"
+
+
+@requires_helm
+def test_a_rule_both_staged_and_promoted_fails_the_render():
+    """A name in both lists would render twice with two actions; the render refuses it."""
+    result = subprocess.run(
+        ["helm", "template", "runtime-policies", str(CHART),
+         "--set", "linkerd.enabled=false", "--set", "operators.enabled=false",
+         "--set", "podSecurity.namespaces={dev}",
+         "--set", "podSecurity.policies={disallow-host-path}", "--namespace", "dev"],
+        capture_output=True, text=True, check=False,
+    )
+    assert result.returncode != 0
+    assert "both staged and promoted" in result.stderr
+
+
+@requires_helm
+def test_the_platform_images_are_verified_against_their_workflow_identity(pod_security):
+    """T-2480: our own images carry the keyless signature reusable-container-sign.yml makes;
+    admission checks it for our registry path only, in Audit while staged, and never holds a
+    pod when Rekor is out of reach."""
+    docs = {d["metadata"]["name"]: d for d in yaml.safe_load_all(pod_security.read_text()) if d}
+    policy = docs["verify-platform-images"]["spec"]
+    assert policy["failurePolicy"] == "Ignore"
+    [rule] = policy["rules"]
+    assert rule["match"]["any"][0]["resources"]["namespaces"] == ["dev"]
+    [verify] = rule["verifyImages"]
+    assert verify["imageReferences"] == ["ghcr.io/marek-mraz-jc/*"]
+    assert verify["failureAction"] == "Audit"
+    keyless = verify["attestors"][0]["entries"][0]["keyless"]
+    assert keyless["issuer"] == "https://token.actions.githubusercontent.com"
+    assert keyless["subjectRegExp"] == "^https://github.com/marek-mraz-jc/"
+
+
+BAD_PODS = {
+    # T-2480: one pod per step of the attack, each refused by its own rule.
+    "privileged": ({"securityContext": {"privileged": True}}, {}, "privileged-containers"),
+    "host-path": ({}, {"volumes": [{"name": "h", "hostPath": {"path": "/"}}]}, "host-path"),
+    "host-network": ({}, {"hostNetwork": True}, "host-namespaces"),
+    "tag-only": ({"image": "nginx:1.27"}, {}, "require-image-checksum"),
+    "no-limits": ({"resources": None}, {}, "validate-resources"),
+}
+
+
+@requires_kyverno
+@requires_helm
+@pytest.mark.parametrize("step", sorted(BAD_PODS))
+def test_each_step_of_the_admission_attack_is_reported_by_its_rule(pod_security, tmp_path, step):
+    """T-2480, T-1711, OPS-29: the hardened pod with one thing wrong fails exactly the rule for
+    that thing (reported in Audit while staged, refused once promoted)."""
+    container_change, spec_change, rule = BAD_PODS[step]
+    pod = yaml.safe_load((FIXTURES / "hardened-pod.yaml").read_text())
+    container = pod["spec"]["containers"][0]
+    for key, value in container_change.items():
+        if key == "securityContext":
+            container[key].update(value)
+        elif value is None:
+            container.pop(key, None)
+        else:
+            container[key] = value
+    pod["spec"].update(spec_change)
+    resource = tmp_path / f"{step}.yaml"
+    resource.write_text(yaml.safe_dump(pod))
+    failed = failed_rules(pod_security, resource, CNPG_SA, tmp_path)
+    assert rule in failed, f"{step}: {sorted(failed)}"
+
+
+@pytest.mark.xdist_group("deployment-environments-testing")
+@pytest.mark.skipif(shutil.which("helmfile") is None, reason="helmfile not installed")
+@pytest.mark.parametrize("action", ["", "Warn"])
+def test_an_environment_without_an_action_fails_the_render_instead_of_auditing(action):
+    """T-2480: the helmfile used to fall back to Audit when `global.runtimePolicies.failureAction`
+    was missing, so a typo turned enforcement off without a word. Now the render stops."""
+    env_dir = PROJECT_ROOT / "deployment/environments/testing"
+    shutil.rmtree(env_dir, ignore_errors=True)
+    env_dir.mkdir(parents=True)
+    (env_dir / "global.yaml.gotmpl").write_text(
+        "global:\n  instanceSlug: dev\n  runtimePolicies:\n"
+        f"    enabled: true\n    failureAction: {action!r}\n"
+    )
+    try:
+        result = subprocess.run(
+            ["helmfile", "template", "-f", "helmfile.yaml", "--skip-deps", "-e", "testing"],
+            cwd=PROJECT_ROOT / "deployment", capture_output=True, text=True, check=False,
+        )
+    finally:
+        shutil.rmtree(env_dir, ignore_errors=True)
+    assert result.returncode != 0
+    assert "failureAction must be Audit or Enforce" in result.stderr + result.stdout

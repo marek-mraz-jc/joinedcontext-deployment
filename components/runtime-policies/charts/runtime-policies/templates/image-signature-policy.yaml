@@ -1,0 +1,45 @@
+{{- /*
+The platform's own images carry a keyless cosign signature from the workflow that built them
+(.github/workflows/reusable-container-sign.yml); this is the admission side of that (T-2480).
+Scoped like the Pod Security policies to the namespaces this deployment owns, and to our own
+registry path, since an upstream image carries no signature of ours. `failurePolicy: Ignore` and
+a short timeout: while the rule is staged in Audit, Rekor being out of reach must not hold a pod.
+*/ -}}
+{{- $sig := .Values.imageSignatures }}
+{{- if and $sig.enabled .Values.podSecurity.namespaces }}
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: verify-platform-images
+  annotations:
+    policies.kyverno.io/title: Verify the platform's image signatures
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/subject: Pod
+spec:
+  background: false
+  failurePolicy: Ignore
+  webhookTimeoutSeconds: 10
+  rules:
+    - name: signed-by-the-platform-workflows
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                {{- toYaml .Values.podSecurity.namespaces | nindent 16 }}
+      verifyImages:
+        - imageReferences:
+            {{- toYaml $sig.references | nindent 12 }}
+          failureAction: {{ $sig.failureAction }}
+          mutateDigest: false
+          verifyDigest: true
+          required: true
+          attestors:
+            - entries:
+                - keyless:
+                    issuer: {{ $sig.issuer | quote }}
+                    subjectRegExp: {{ $sig.subjectRegExp | quote }}
+                    rekor:
+                      url: https://rekor.sigstore.dev
+{{- end }}

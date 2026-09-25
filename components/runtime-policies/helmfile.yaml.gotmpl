@@ -4,7 +4,11 @@ bases:
 ---
 {{- $root := .Values }}
 {{- $linkerdEnabled := and ($root.global.serviceMesh.enable | default false) (eq ($root.global.serviceMesh.type | default "") "linkerd") }}
-{{- $failureAction := index ($root.global.runtimePolicies | default dict) "failureAction" | default "Audit" }}
+{{- /* No default (T-2480): a missing key used to turn enforcement off without a word. */}}
+{{- $failureAction := index ($root.global.runtimePolicies | default dict) "failureAction" | default "" }}
+{{- if not (has $failureAction (list "Audit" "Enforce")) }}
+{{- fail (printf "global.runtimePolicies.failureAction must be Audit or Enforce, not %q" $failureAction) }}
+{{- end }}
 {{- $enabled := index ($root.global.runtimePolicies | default dict) "enabled" | default false }}
 {{- $namespace := index $root "runtime-policies" "runtime-policies" "namespace" }}
 {{- /* Operator namespaces, used to pin the reverse label-protection rules to the

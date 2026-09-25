@@ -42,6 +42,13 @@ RUNTIME_POLICIES=(
   best-practices/require-ro-rootfs/require-ro-rootfs.yaml
   pod-security/restricted/require-run-as-non-root-user/require-run-as-non-root-user.yaml
   pod-security/restricted/require-run-as-nonroot/require-run-as-nonroot.yaml
+  # Staged at admission in Audit until dev's PolicyReports are clean (T-2480): the chart's
+  # podSecurity.staged list, promoted to podSecurity.policies one by one.
+  pod-security/baseline/disallow-privileged-containers/disallow-privileged-containers.yaml
+  pod-security/baseline/disallow-host-path/disallow-host-path.yaml
+  pod-security/baseline/disallow-host-namespaces/disallow-host-namespaces.yaml
+  other/require-image-checksum/require-image-checksum.yaml
+  best-practices/require-pod-requests-limits/require-pod-requests-limits.yaml
 )
 RUNTIME_DEST=../../components/runtime-policies/charts/runtime-policies/files/upstream
 
