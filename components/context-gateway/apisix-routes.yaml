@@ -45,6 +45,18 @@ context-space-portal:
     idleTimeout: 60
     requests: 1000
 
+# The organization's DCAT-AP catalogue for harvesters (EP-84): `/catalog.jsonld` and
+# `/catalog.ttl` on the apex, anonymous. The gateway reads no token on it and lists public
+# Endpoints only; any other name under the prefix is the gateway's 404.
+catalog-feed:
+  name: catalog-feed
+  description: The DCAT-AP catalogue feed, anonymous
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/catalog.*'
+  host: '{{ .Values.global.domain }}'
+  priority: 20
+  methods: [GET, HEAD]
+
 context-endpoint:
   name: context-endpoint
   description: Shared context endpoint representation surface

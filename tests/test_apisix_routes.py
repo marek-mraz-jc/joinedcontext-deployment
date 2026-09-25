@@ -32,6 +32,13 @@ EXPECTED_ROUTES = {
     "context-endpoint-portal": {
         "uri": "/api/endpoint/*", "priority": 20, "upstream_id": "context-endpoint-portal", "host": PORTAL_HOST,
     },
+    # T-2726: the public catalogue page and the bundle it runs on, edge session optional (EP-81).
+    "portal-public": {"uri": "/catalogue*", "priority": 5, "upstream_id": "portal-public", "host": PORTAL_HOST},
+    "portal-public-assets": {
+        "uri": "/assets/*", "priority": 5, "upstream_id": "portal-public-assets", "host": PORTAL_HOST,
+    },
+    # T-2726: the organization's DCAT-AP feed for harvesters, anonymous (EP-84).
+    "catalog-feed": {"uri": "/catalog.*", "priority": 20, "upstream_id": "catalog-feed", "host": LOCAL_DOMAIN},
 }
 
 
@@ -44,6 +51,9 @@ AUTHENTICATED_ROUTES = ("portal-api", "context-space", "context-endpoint")
 EDGE_LOGIN_ROUTES = {
     "portal-ui": {"unauth_action": "auth", "cookie_path": "/", "callback": f"https://{PORTAL_HOST}/callback"},
     "portal-api": {"unauth_action": "pass", "cookie_path": "/", "callback": f"https://{PORTAL_HOST}/callback"},
+    # The public catalogue reads portal-ui's session when there is one and never redirects a
+    # visitor (EP-81); `/assets/*` shares this config.
+    "portal-public": {"unauth_action": "pass", "cookie_path": "/", "callback": f"https://{PORTAL_HOST}/callback"},
     # No route: the chain the Portal copies onto every published App's own host, with the App's
     # own client, callback and host-only cookie in place of these (ADR-N-037, AP-112).
     "apps-surface": {

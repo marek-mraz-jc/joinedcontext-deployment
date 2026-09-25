@@ -71,6 +71,14 @@ ROUTE_CLASSES = {
         "reach": EDGE_LOGIN, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "the Portal is the management application; a visitor logs in at the edge first",
     },
+    "portal-public": {
+        "reach": EDGE_SESSION, "cacheable": True, "framing": "SAMEORIGIN",
+        "why": "the public open-data catalogue page (EP-81): a visitor reads it without an account, a signed-in person with the session; every read it makes is portal-api's",
+    },
+    "portal-public-assets": {
+        "reach": EDGE_SESSION, "cacheable": True, "framing": "SAMEORIGIN",
+        "why": "the Portal's static bundle, the same files for everyone and no data, which the public catalogue page loads before anyone signs in (EP-81)",
+    },
     "portal-api": {
         "reach": EDGE_SESSION, "cacheable": False, "framing": "DENY",
         "why": "CLIs and service accounts present a bearer the Portal verifies (OPS-33)",
@@ -90,6 +98,10 @@ ROUTE_CLASSES = {
     "context-space": {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "the gateway is the enforcement point: anonymous sees what the space's Policy grants",
+    },
+    "catalog-feed": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "the DCAT-AP feed a national portal harvests (EP-84): the gateway reads no token on it and lists public Endpoints only",
     },
     "context-endpoint": {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",

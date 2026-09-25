@@ -191,6 +191,28 @@ def test_the_token_names_the_seeded_endpoint_as_its_audience(seed, realm_clients
 
 
 @requires_helmfile
+def test_the_proposer_account_holds_a_portal_token_and_no_endpoint_token(forge_seed, realm_clients):
+    """T-2245 (PF-45, PF-49, PF-58): the seeded workload on the Portal's side derives its client
+    `{project}-{name}`, whose token names the Portal's API and nothing the gateway serves, and the
+    account's role proposes one kind and never approves."""
+    account = yaml.safe_load(forge_seed["projects/helsinki/access/serviceaccounts/pipeline-proposer.yaml"])
+    client = realm_clients[f"{account['metadata']['namespace']}-{account['metadata']['name']}"]
+    assert client["serviceAccountsEnabled"] is True and client["publicClient"] is False
+    assert client["standardFlowEnabled"] is False and client["directAccessGrantsEnabled"] is False
+    audiences = [
+        m["config"].get("included.client.audience") or m["config"].get("included.custom.audience")
+        for m in client.get("protocolMappers", [])
+        if m["protocolMapper"] == "oidc-audience-mapper"
+    ]
+    assert audiences == ["portal-api"], audiences
+    roles = {binding["role"] for binding in account["spec"]["roles"]}
+    for role in roles:
+        rules = yaml.safe_load(forge_seed[f"users/roles/{role}.yaml"])["spec"]["rules"]
+        assert all("approve" not in rule["verbs"] for rule in rules), (role, rules)
+        assert {verb for rule in rules for verb in rule["verbs"]} == {"propose"}, (role, rules)
+
+
+@requires_helmfile
 def test_the_gateway_verifies_against_the_realm_it_is_told_about(gateway_env):
     """Both OIDC variables or neither; the JWKS in-cluster over plain http, which the binary insists on."""
     assert gateway_env["JC_OIDC_ISSUER"].startswith("https://idm.")

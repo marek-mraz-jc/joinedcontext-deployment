@@ -221,6 +221,7 @@ v1/Secret local/keycloak-client-bbsk-pipelines
 v1/Secret local/keycloak-client-context-gateway
 v1/Secret local/keycloak-client-edge
 v1/Secret local/keycloak-client-gitea
+v1/Secret local/keycloak-client-helsinki-pipeline-proposer
 v1/Secret local/keycloak-client-helsinki-pipelines
 v1/Secret local/keycloak-client-jc-build-lane
 v1/Secret local/keycloak-client-portal-api
@@ -230,6 +231,7 @@ v1/Secret local/keycloak-config-keycloak-config-cli-config-realms
 v1/Secret local/keycloak-user-demo-approver
 v1/Secret local/keycloak-user-demo-editor
 v1/Secret local/keycloak-user-demo-janitor
+v1/Secret local/keycloak-user-demo-probe
 v1/Secret local/keycloak-user-demo-steward
 v1/Secret local/keycloak-user-demo-viewer
 v1/Secret local/portal-cookie-key
