@@ -75,11 +75,10 @@ global:
   # `ckanext-oidc-pkce` and needs the image that carries it, and the NetworkPolicy that lets the
   # catalogue reach the realm on 443. One is useless without the other.
   ckan:
-    # Off until the image the login needs can be pulled: `ghcr.io/marek-mraz/joinedcontext-ckan`
-    # is published by this repository, which is private, so the package is private too and the
-    # node's anonymous pull is a 401 (T-0403). Turning this on without a pullable image is a
-    # CKAN that never starts; the pair is checked by `test_the_plugin_list_and_the_image_cannot_disagree`.
-    sso: false
+    # On against `ghcr.io/marek-mraz-jc/joinedcontext-ckan` (components/ckan/images.yaml), which
+    # is public and pulls anonymously (T-0403). Turning this on against the stock image is a CKAN
+    # that never starts; the pair is checked by `test_the_plugin_list_and_the_image_cannot_disagree`.
+    sso: true
 
   # Service mesh configuration
   serviceMesh:

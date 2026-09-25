@@ -7,16 +7,15 @@
 #     https://registry-1.docker.io/v2/<repo>/manifests/<tag> | grep -i docker-content-digest
 ckan:
   catalogue:
-    # The stock image, because the patched one this repository builds cannot be pulled by the
-    # node: `images/ckan/Dockerfile` is CKAN plus the OIDC authenticator a Keycloak login needs
-    # and `.github/workflows/image-ckan.yml` publishes it as
-    # ghcr.io/marek-mraz/joinedcontext-ckan:2.11.6@sha256:96433e6763d32bae146e630ed63d8ff34567efee1605638dda5bca0c70a3d7b5,
-    # signed, but a package of a private repository is private and an anonymous pull answers 401
-    # (T-0403). This pin and `global.ckan.sso` travel together: the plugin list names `oidc_pkce`
-    # only when the flag is on, and CKAN exits on a plugin it cannot import.
-    repository: 'docker.io/ckan/ckan-base'
+    # CKAN plus the OIDC authenticator the Keycloak login needs (`images/ckan/Dockerfile`),
+    # published, signed and scanned by `.github/workflows/image-ckan.yml` (run 36104151075) from
+    # the public repository, so the package is public and the node pulls it anonymously (T-0403).
+    # This pin and `global.ckan.sso` travel together: the plugin list names `oidc_pkce` only when
+    # the flag is on, and CKAN exits on a plugin it cannot import. Stock base, for a rollback:
+    # docker.io/ckan/ckan-base:2.11.6@sha256:fc040c5b1e6e04de76187b478b3037c8c6c4e97ef4b7f1c03cbc6b0008e04ce7
+    repository: 'ghcr.io/marek-mraz-jc/joinedcontext-ckan'
     tag: '2.11.6'
-    digest: 'sha256:fc040c5b1e6e04de76187b478b3037c8c6c4e97ef4b7f1c03cbc6b0008e04ce7'
+    digest: 'sha256:5647ad44bd485260d41bf5c3680b572f904769889f0f6ed67cc0fcaed1269638'
   solr:
     # A plain Solr cannot index CKAN: the collection needs CKAN's schema, and this image is
     # the one that carries it. Its minor version tracks the CKAN one above.
