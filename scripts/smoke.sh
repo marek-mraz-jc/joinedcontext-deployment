@@ -315,6 +315,15 @@ if has_route portal-api; then
 			-d "username=demo.steward@${org}" --data-urlencode "password=$steward_password" \
 			"$idm/realms/$realm/protocol/openid-connect/token" 2>/dev/null |
 			sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
+		# Organization → People lists the demo people (T-2688, DEMO.md): read on Person is the
+		# steward's, not the viewer's. A missing one is a seed or a Keycloak search that lost them.
+		people=$(curl -sS --max-time 20 -H "Authorization: Bearer $steward_token" \
+			"$portal/api/v1/organization/people?search=demo.&max=100" 2>/dev/null || true)
+		missing=""
+		for who in demo.steward demo.viewer demo.approver; do
+			case "$people" in *"\"$who@$org\""*) ;; *) missing="$missing $who@$org" ;; esac
+		done
+		if [ -z "$missing" ]; then ok "People lists the demo people"; else ko "People does not list:$missing"; fi
 		ptest='{"pipeline":{"apiVersion":"joinedcontext.com/v1alpha1","kind":"Pipeline","metadata":{"name":"smoke-test","namespace":"helsinki"},"spec":{"class":"auto","period":"60s","source":{"dataSourceRef":{"kind":"DataSource","name":"hsl-citybikes-gbfs"}},"compute":{"kind":"bloblang","bloblang":"root.id = \"urn:ngsi-ld:SmokeProbe:hel.fi:helsinki:1\"\nroot.type = \"SmokeProbe\""},"output":{"type":"SmokeProbe","mode":"upsert"},"targetEndpoint":"urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all"}},"sample":{"text":"{\"a\":1}","format":"json"}}'
 		status 200 "pipeline test runs a candidate on the runner and captures the output" -X POST -H "Authorization: Bearer $steward_token" \
 			-H 'Content-Type: application/json' -d "$ptest" "$portal/api/v1/projects/helsinki/pipelines/test"
