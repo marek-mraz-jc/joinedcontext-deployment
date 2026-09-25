@@ -82,12 +82,15 @@ hooks:
         {{- end }}
         {{- if $patchNamespaces }}
         {{- if $linkerdEnabled }}
+        {{- if $defaultInboundPolicy }}
+        # Injection and the inbound policy in one write: Kyverno's
+        # require-meshed-namespace-inbound-policy refuses a namespace marked for injection without
+        # the policy, so injection alone first was refused on a new namespace (ci-full 36096443083).
+        kubectl annotate namespace {{ $ns | quote }} linkerd.io/inject=enabled config.linkerd.io/default-inbound-policy={{ $defaultInboundPolicy | quote }} --overwrite
+        echo "Patched namespace {{ $ns | quote }} for Linkerd injection with default-inbound-policy={{ $defaultInboundPolicy }}."
+        {{- else }}
         kubectl annotate namespace {{ $ns | quote }} linkerd.io/inject=enabled --overwrite
         echo "Patched namespace {{ $ns | quote }} for Linkerd injection."
-        {{- if $defaultInboundPolicy }}
-        kubectl annotate namespace {{ $ns | quote }} config.linkerd.io/default-inbound-policy={{ $defaultInboundPolicy | quote }} --overwrite
-        echo "Set Linkerd default-inbound-policy={{ $defaultInboundPolicy }} on namespace {{ $ns | quote }}."
-        {{- else }}
         kubectl annotate namespace {{ $ns | quote }} config.linkerd.io/default-inbound-policy-
         echo "Cleared Linkerd default-inbound-policy on namespace {{ $ns | quote }}."
         {{- end }}
