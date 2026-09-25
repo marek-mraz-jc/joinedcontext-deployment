@@ -42,7 +42,15 @@ FEEDS = {
     "ticket-points": ("ticket-points.json", "PointOfInterest", 3),
     # Three lines, one of them a correction the city files under no area.
     "budget": ("budget.json", "BudgetLine", 3),
+    # Golemio (T-2907). Three car parks, one of them (TSK's b567b2eb) paired with no IPR record.
+    "park-and-ride-occupancy": ("golemio-park-and-ride.json", "OffStreetParking", 2),
+    # Two collection points, twelve containers, four of them monitored.
+    "waste-fill": ("golemio-waste-containers.json", "WasteContainer", 4),
 }
+
+# Feeds that only add live attributes to an entity another feed writes: its credit is that feed's,
+# and the gateway's upsert merges, so writing a second credit would overwrite the first.
+MERGED = {"park-and-ride-occupancy"}
 
 
 def recorded(name: str) -> bytes:
@@ -97,7 +105,10 @@ def test_every_id_is_the_four_segment_urn_of_the_space_and_unique_per_type(writt
 
 @requires_docker
 def test_every_entity_credits_its_publisher_and_its_source(written):
-    for entities in written.values():
+    for name, entities in written.items():
+        if name in MERGED:
+            assert not any("dataProvider" in e or "source" in e for e in entities), name
+            continue
         for entity in entities:
             assert entity["dataProvider"]["value"], entity["id"]
             assert entity["source"]["value"].startswith("https://"), entity["id"]
@@ -198,8 +209,9 @@ def test_an_empty_answer_writes_nothing():
     assert run("budget", b'{"data": {"row": []}}') == []
     for name in ("bike-stations", "bike-availability"):
         assert run(name, b'{"data": {"stations": []}}') == []
-    for name in ("districts", "schools", "culture", "toilets", "waste-stations", "park-and-ride"):
+    for name in ("districts", "schools", "culture", "toilets", "waste-stations", "park-and-ride", "waste-fill"):
         assert run(name, b'{"type": "FeatureCollection", "features": []}') == [], name
+    assert run("park-and-ride-occupancy", b"[]") == []
 
 
 def test_a_value_outside_the_model_is_refused_by_the_schema():
@@ -213,6 +225,79 @@ def test_a_value_outside_the_model_is_refused_by_the_schema():
     assert not schema_errors(station)
     station["availableBikeNumber"] = {"type": "Property", "value": -1}
     assert schema_errors(station)
+
+
+@requires_docker
+def test_occupancy_lands_on_the_ids_ipr_writes_and_an_unpaired_car_park_is_left_out(written):
+    ids = {e["id"].rsplit(":", 1)[1] for e in written["park-and-ride-occupancy"]}
+    # Skalka II and Kotlářka, by the globalid the park-and-ride pipeline keys them on.
+    assert ids == {"ipr-a7c9a9af-a0fb-4005-8baf-c9a202b763ad", "ipr-8e869f78-c4e5-41fc-a316-ccff35083fdc"}
+    skalka = next(e for e in written["park-and-ride-occupancy"] if e["id"].endswith("a7c9a9af-a0fb-4005-8baf-c9a202b763ad"))
+    assert skalka["availableSpotNumber"]["value"] == 23 and skalka["occupiedSpotNumber"]["value"] == 55
+    assert skalka["dateModified"]["value"] == "2026-09-25T13:34:01Z"
+    # The capacity, the name and the outline are IPR's; the live feed never writes them.
+    assert not any(k in e for e in written["park-and-ride-occupancy"] for k in ("totalSpotNumber", "name", "location"))
+
+
+@requires_docker
+def test_a_count_that_is_not_a_whole_number_is_left_out_and_a_car_park_without_one_is_not_written():
+    def edit(d):
+        d[0]["free_spot_number"] = -3
+        d[0]["occupied_spot_number"] = 12.5
+        d[1]["free_spot_number"] = None
+        d[1]["occupied_spot_number"] = "n/a"
+        d[1]["last_updated"] = None
+    answer = run("park-and-ride-occupancy", edited("golemio-park-and-ride.json", edit))
+    assert [set(e) - {"id", "type"} for e in answer] == [{"dateModified"}]
+    assert not schema_errors(answer[0])
+
+
+@requires_docker
+def test_a_monitored_container_points_at_the_collection_point_the_ipr_feed_writes(written):
+    isles = {e["stationCode"]["value"]: e["id"] for e in written["waste-stations"]}
+    containers = written["waste-fill"]
+    assert {c["refWasteContainerIsle"]["object"] for c in containers if "0022-001" in c["refWasteContainerIsle"]["object"]} == {isles["0022/ 001"]}
+    metal = next(c for c in containers if c["id"].endswith(":ksnko-2"))
+    assert metal["wasteKind"]["value"] == "metal" and metal["fillingLevel"]["value"] == 0.48
+    assert metal["containerCode"]["value"] == "2" and metal["dateModified"]["value"] == "2026-09-25T10:35:39Z"
+
+
+@requires_docker
+def test_an_unmonitored_or_unknown_container_is_not_written_and_a_missing_reading_writes_no_level():
+    def edit(d):
+        monitored = [c for c in d["features"][0]["properties"]["containers"] if c["is_monitored"]]
+        monitored[0]["trash_type"] = {"id": 0, "description": "neznámý"}
+        monitored[1]["last_measurement"]["percent_calculated"] = None
+        monitored[2]["last_measurement"]["percent_calculated"] = 140
+    answer = run("waste-fill", edited("golemio-waste-containers.json", edit))
+    assert len(answer) == 3
+    assert sum("fillingLevel" in c for c in answer) == 1
+    assert all(not schema_errors(c) for c in answer)
+
+
+@requires_docker
+def test_the_two_spellings_of_a_register_number_are_two_collection_points():
+    def edit(d):
+        d["features"][1]["properties"]["stationnumber"] = d["features"][0]["properties"]["stationnumber"].replace("/ ", "/-")
+    ids = [e["id"].rsplit(":", 1)[1] for e in run("waste-stations", edited("waste-stations.json", edit))]
+    # `0022/ 001` and `0022/-001` are two points of the register (791 such pairs on 2026-09-25).
+    assert ids == ["station-0022-001", "station-0022--001"]
+
+
+def test_the_golemio_key_is_named_by_reference_and_committed_only_encrypted():
+    index = yaml.safe_load((PRAHA / "index.yaml").read_text())
+    for name in ("park-and-ride-occupancy", "waste-fill"):
+        http = yaml.safe_load((PRAHA / f"praha-datasource-{name}.yaml").read_text())["spec"]["http"]
+        assert http["authorization"] == {"header": "X-Access-Token", "headerRef": {"name": "golemio", "key": "token"}}
+        assert not any(h.lower() in ("x-access-token", "authorization") for h in http["headers"])
+        assert http["url"].startswith("https://api.golemio.cz/") and "token" not in http["url"].lower()
+    secret = yaml.safe_load((PRAHA / "praha-secrets-golemio.enc.yaml").read_text())
+    assert index["praha-secrets-golemio.enc.yaml"] == "projects/praha/secrets/golemio.enc.yaml"
+    # Every value encrypted, the file sealed by its MAC, to an age recipient (CC-06, Architecture/06 §1.4).
+    assert set(secret) == {"golemio", "sops"} and set(secret["golemio"]) == {"token"}
+    assert re.fullmatch(r"ENC\[AES256_GCM,data:[^,]+,iv:[^,]+,tag:[^,]+,type:str\]", secret["golemio"]["token"])
+    assert secret["sops"]["mac"].startswith("ENC[AES256_GCM,")
+    assert [a["recipient"] for a in secret["sops"]["age"]] and all(a["recipient"].startswith("age1") for a in secret["sops"]["age"])
 
 
 def test_every_feed_is_seeded_as_a_datasource_a_pipeline_and_a_mapping():

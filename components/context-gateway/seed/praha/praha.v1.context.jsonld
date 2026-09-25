@@ -22,6 +22,9 @@
     "PointOfInterest": {
       "@id": "sdm:PointOfInterest"
     },
+    "WasteContainer": {
+      "@id": "sdm:WasteContainer"
+    },
     "WasteContainerIsle": {
       "@id": "sdm:WasteContainerIsle"
     },
@@ -48,6 +51,10 @@
       "@id": "sdm:availableBikeNumber",
       "@type": "xsd:integer"
     },
+    "availableSpotNumber": {
+      "@id": "sdm:availableSpotNumber",
+      "@type": "xsd:integer"
+    },
     "budgetArea": {
       "@id": "jc:budgetArea"
     },
@@ -68,6 +75,9 @@
       "@id": "sdm:co",
       "@type": "xsd:float"
     },
+    "containerCode": {
+      "@id": "jc:containerCode"
+    },
     "dataProvider": {
       "@id": "sdm:dataProvider"
     },
@@ -84,6 +94,10 @@
     },
     "facilityType": {
       "@id": "jc:facilityType"
+    },
+    "fillingLevel": {
+      "@id": "sdm:fillingLevel",
+      "@type": "xsd:float"
     },
     "fiscalYear": {
       "@id": "jc:fiscalYear",
@@ -117,6 +131,10 @@
       "@id": "ngsi-ld:observedAt",
       "@type": "xsd:dateTime"
     },
+    "occupiedSpotNumber": {
+      "@id": "sdm:occupiedSpotNumber",
+      "@type": "xsd:integer"
+    },
     "openingHours": {
       "@container": "@language",
       "@id": "schema:openingHours"
@@ -135,6 +153,10 @@
     },
     "refDistrict": {
       "@id": "jc:refDistrict",
+      "@type": "@id"
+    },
+    "refWasteContainerIsle": {
+      "@id": "sdm:refWasteContainerIsle",
       "@type": "@id"
     },
     "schema": "http://schema.org/",
@@ -180,6 +202,22 @@
     "url": {
       "@id": "schema:url",
       "@type": "xsd:anyURI"
+    },
+    "wasteContainerIsles": {
+      "@id": "jc:wasteContainerIsles",
+      "@type": "@id"
+    },
+    "wasteContainers": {
+      "@id": "jc:wasteContainers",
+      "@type": "@id"
+    },
+    "wasteKind": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:wasteKind"
     },
     "wheelchairAccessible": {
       "@id": "jc:wheelchairAccessible",

@@ -10,13 +10,16 @@ metadata:
   description:
     cs: >-
       Sdílená kola, kvalita ovzduší, městské části, školy, kultura, veřejné toalety, tříděný
-      odpad, P+R, prodejní místa PID a rozpočet města. Zdroje: nextbike (CC0), ČHMÚ, IPR Praha
-      (datový podklad © IPR Praha) a ROPID pod CC BY 4.0, Magistrát hl. m. Prahy bez výhrad.
+      odpad a zaplněnost kontejnerů, P+R a jejich obsazenost, prodejní místa PID a rozpočet města.
+      Zdroje: nextbike (CC0), ČHMÚ, IPR Praha (datový podklad © IPR Praha) a ROPID pod CC BY 4.0,
+      Magistrát hl. m. Prahy bez výhrad, Golemio (Operátor ICT, s daty TSK hl. m. Prahy) jako
+      otevřená data.
     en: >-
-      Shared bikes, air quality, city districts, schools, culture, public toilets, sorted waste,
-      park and ride, PID ticket points and the city budget. Sources: nextbike (CC0), ČHMÚ, IPR
-      Praha (datový podklad © IPR Praha) and ROPID under CC BY 4.0, the City of Prague with no
-      rights reserved.
+      Shared bikes, air quality, city districts, schools, culture, public toilets, sorted waste
+      and how full its containers are, park and ride and how full it is, PID ticket points and the
+      city budget. Sources: nextbike (CC0), ČHMÚ, IPR Praha (datový podklad © IPR Praha) and ROPID
+      under CC BY 4.0, the City of Prague with no rights reserved, Golemio (Operátor ICT, with TSK
+      hl. m. Prahy's counters) as open data.
 spec:
   # The rendered segment, pinned so it cannot drift (PF-84).
   urnSegment: praha-mesto

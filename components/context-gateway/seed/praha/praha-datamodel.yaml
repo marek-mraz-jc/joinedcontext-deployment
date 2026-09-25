@@ -7,10 +7,10 @@ metadata:
 spec:
   contextSpaceRef: praha-mesto
   linkml: ./praha.linkml.yaml
-  version: 1.0.0
+  version: 1.1.0
   lifecycle: published
-  classes: [BikeHireDockingStation, AirQualityObserved, PointOfInterest, WasteContainerIsle, OffStreetParking,
-    CityDistrict, BudgetLine]
+  classes: [BikeHireDockingStation, AirQualityObserved, PointOfInterest, WasteContainerIsle, WasteContainer,
+    OffStreetParking, CityDistrict, BudgetLine]
   artifacts:
     jsonSchema: ./praha.v1.schema.json
     context: ./praha.v1.context.jsonld

@@ -5,7 +5,8 @@ description: >-
   What the Prague city space carries side by side (DM-01, DM-61): the nextbike docking stations
   and what they hold now, ČHMÚ's hourly air quality at the city's stations, the city districts,
   the schools, cultural venues, public toilets and sorted-waste points of the city's geoportal
-  (IPR Praha), the park-and-ride car parks, the PID ticket points, and the city budget line by
+  (IPR Praha), the park-and-ride car parks and how full they are now, the monitored sorted-waste
+  containers and their fill level (Golemio), the PID ticket points, and the city budget line by
   line. One model, one space, one public endpoint. Where Smart Data Models has the class, its
   IRI is cited rather than minted (DM-04, DM-16).
 license: https://joinedcontext.com/licenses/cc-by-4.0
@@ -57,7 +58,7 @@ slots:
       upstream_source: https://github.com/smart-data-models/data-models
   dateModified:
     slot_uri: sdm:dateModified
-    description: When the station last reported.
+    description: When the publisher's station, counter or sensor last reported the values beside it.
     range: datetime
     annotations:
       ngsi_ld_kind: Property
@@ -227,6 +228,64 @@ slots:
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Parking
+  availableSpotNumber:
+    slot_uri: sdm:availableSpotNumber
+    description: The free spaces of the car park right now, as its entry counters report them.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Parking
+  occupiedSpotNumber:
+    slot_uri: sdm:occupiedSpotNumber
+    description: The cars parked in the car park right now, as its entry counters report them.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Parking
+  fillingLevel:
+    slot_uri: sdm:fillingLevel
+    description: How full the container was at its sensor's last reading, 0 empty to 1 full.
+    range: float
+    minimum_value: 0
+    maximum_value: 1
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.WasteManagement
+  wasteKind:
+    slot_uri: jc:wasteKind
+    description: What the container takes, as the city's waste register sorts it.
+    range: WasteKind
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+  containerCode:
+    slot_uri: jc:containerCode
+    description: The container's number in the city's waste register (KSNKO).
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+  refWasteContainerIsle:
+    slot_uri: sdm:refWasteContainerIsle
+    description: The collection point the container stands at.
+    range: WasteContainerIsle
+    required: true
+    inverse: wasteContainers
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
+      on_delete: restrict
+      upstream_source: https://github.com/smart-data-models/dataModel.WasteManagement
+  wasteContainers:
+    slot_uri: jc:wasteContainers
+    description: The monitored containers at this collection point, computed from their refWasteContainerIsle and never stored.
+    range: WasteContainer
+    multivalued: true
+    inverse: refWasteContainerIsle
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
   districtCode:
     slot_uri: jc:districtCode
     description: The district's RÚIAN code, the key the national registers and the waste register use.
@@ -356,6 +415,21 @@ classes:
       - stationCode
       - accessRestriction
       - refDistrict
+      - wasteContainers
+      - dataProvider
+      - source
+  WasteContainer:
+    class_uri: sdm:WasteContainer
+    description: One sensor-monitored sorted-waste container of the city and how full it is.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.WasteManagement
+    slots:
+      - containerCode
+      - wasteKind
+      - fillingLevel
+      - dateModified
+      - refWasteContainerIsle
       - dataProvider
       - source
   OffStreetParking:
@@ -367,6 +441,9 @@ classes:
     slots:
       - name
       - totalSpotNumber
+      - availableSpotNumber
+      - occupiedSpotNumber
+      - dateModified
       - dataProvider
       - source
   CityDistrict:
@@ -419,3 +496,23 @@ enums:
         description: Anyone may use it (volně).
       residents:
         description: Only the residents of the house may use it (obyvatelům domu).
+  WasteKind:
+    permissible_values:
+      colouredGlass:
+        description: Coloured glass (barevné sklo).
+      clearGlass:
+        description: Clear glass (čiré sklo).
+      paper:
+        description: Paper (papír).
+      plastic:
+        description: Plastic (plast).
+      metal:
+        description: Metal (kovy).
+      beverageCartons:
+        description: Beverage cartons (nápojové kartony).
+      electronics:
+        description: Small electrical appliances (elektrozařízení).
+      edibleOil:
+        description: Edible fats and oils (jedlé tuky a oleje).
+      mixedRecyclables:
+        description: Paper, plastic and cartons in one container (multikomoditní sběr).
