@@ -144,13 +144,13 @@ def publish(namespace: str, check: str, body: dict) -> None:
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("summary", type=Path, help="the summary JSON the check wrote")
-    parser.add_argument("--every-hours", type=int, required=True, help="how often the check runs, 1 to 168")
+    parser.add_argument("--every-hours", type=int, required=True, help="how often the check runs, 1 to 744 (a month)")
     parser.add_argument("--tasks-dir", type=Path, default=Path("/workspace/tasks"), help="the board, for the task ids")
     parser.add_argument("--namespace", help="the Portal's namespace; found by its pod label when left out")
     parser.add_argument("--dry-run", action="store_true", help="print the digest, publish nothing")
     args = parser.parse_args(argv)
-    if not 1 <= args.every_hours <= 168:
-        raise SystemExit("publish-health: --every-hours is 1 to 168")
+    if not 1 <= args.every_hours <= 744:
+        raise SystemExit("publish-health: --every-hours is 1 to 744")
     summary = json.loads(args.summary.read_text())
     check = summary.get("check", "")
     now = datetime.now(timezone.utc).replace(microsecond=0)
