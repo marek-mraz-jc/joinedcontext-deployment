@@ -134,3 +134,103 @@ def test_an_application_repository_already_in_the_organization_stays_the_portals
     collaborators = state(forge)["collaborators"]
     assert collaborators["helsinki_bikes/jc-portal"] == "admin"
     assert collaborators["configuration/jc-portal"] == "write"
+
+
+@requires_helmfile
+def test_the_applications_move_to_their_own_organization_and_machine_user(script, tmp_path):
+    """PF-105, T-2856: with an organization for the applications, the Job moves every
+    `{project}_{name}` repository there with its history, makes jc-apps their administrator,
+    mints the applications', the registry's and the lane's tokens on jc-apps against that
+    organization, and takes jc-portal out of the team that may create repositories beside the
+    configuration. A second run moves and mints nothing."""
+    forge = Forge(tmp_path, {})
+    held = state(forge)
+    held["repos"] = {"helsinki_bikes": {"files": {}, "head": "c" * 40}, "helsinki": {"files": {}, "head": "d" * 40}}
+    forge.state.write_text(json.dumps(held))
+    apart = {
+        "APPS_ORG": "joinedcontext-apps",
+        "APPS_USER": "jc-apps",
+        "APPS_SECRET": "gitea-token-apps",
+        "APPS_SCOPES": '["write:repository","write:package"]',
+        "APPS_NAMESPACES": "dev",
+        "APPS_RESTART": "dev/portal",
+        "REGISTRY_SECRET": "app-registry",
+        "REGISTRY_SCOPES": '["read:package"]',
+        "REGISTRY_HOST": "forge.test",
+        "REGISTRY_NAMESPACES": "dev-apps",
+        "LANE_SECRET": "gitea-token-lane-secret",
+        "LANE_SCOPES": '["write:organization"]',
+        "LANE_NAMESPACES": "dev",
+        "RUNNER_SECRET": "gitea-runner-registration",
+        "RUNNER_NAMESPACES": "dev",
+    }
+    first = forge.run(script, **apart)
+    assert first.returncode == 0, first.stderr
+    held = state(forge)
+    assert held["moved"] == {"helsinki_bikes": "joinedcontext-apps"}, "a project repository moved too"
+    assert held["collaborators"]["helsinki_bikes/jc-apps"] == "admin"
+    assert "jc-portal" in held["left"], "jc-portal still creates repositories beside the configuration"
+    assert held["users"]["jc-apps"]["patched"]["admin"] is False
+    minted = [m for m in held["minted"] if not m.startswith(("jc-portal/", "jc-gateway/"))]
+    assert minted == ["jc-apps/jc-apps", "jc-apps/jc-registry-pull", "jc-apps/jc-lane-secret"], minted
+    pull = json.loads(base64.b64decode(forge.secrets["app-registry"]["data"][".dockerconfigjson"]))
+    user = base64.b64decode(pull["auths"]["forge.test"]["auth"]).decode().split(":", 1)[0]
+    assert user == "jc-apps", "a node pulls as the applications' user, not the administrator"
+    assert "PATCH http://kube.test/apis/apps/v1/namespaces/dev/deployments/portal" in forge.log
+    assert any("/orgs/joinedcontext-apps/actions/runners/registration-token" in line for line in forge.log)
+
+    second = forge.run(script, **apart)
+    assert second.returncode == 0, second.stderr
+    again = state(forge)
+    assert again["minted"] == held["minted"] and again["moved"] == held["moved"]
+
+
+@requires_helmfile
+def test_without_an_applications_organization_nothing_moves(script, tmp_path):
+    """T-2856: the default keeps the applications beside the configuration, jc-portal creating
+    and administering them, and no apps token is minted."""
+    forge = Forge(tmp_path, {})
+    held = state(forge)
+    held["repos"] = {"helsinki_bikes": {"files": {}, "head": "c" * 40}}
+    forge.state.write_text(json.dumps(held))
+    assert forge.run(script, APPS_ORG="").returncode == 0
+    held = state(forge)
+    assert not held.get("moved") and not held.get("left")
+    assert not any(m.startswith("jc-apps/") for m in held["minted"])
+
+
+def _portal_env(docs):
+    portal = next(d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"] == "portal")
+    return {e["name"]: e for e in portal["spec"]["template"]["spec"]["containers"][0]["env"]}
+
+
+@requires_helmfile
+def test_one_value_moves_the_applications_and_the_portal_follows(rendered, rendered_variant):
+    """PF-105, T-2856: `gitea.forge.appsOrganization` is the switch. Off by default, so no
+    environment moves a repository by surprise; on, the Job gets the organization and the
+    Portal the owner and the apps token, by secretRef only."""
+    job = next(d for d in rendered("local") if d.get("kind") == "Job" and d["metadata"]["name"] == "gitea-bootstrap")
+    env = {e["name"]: e.get("value") for e in job["spec"]["template"]["spec"]["containers"][0]["env"]}
+    assert env["APPS_ORG"] == ""
+    assert "JC_GITEA_APPS_OWNER" not in _portal_env(rendered("local"))
+
+    def apart(tree):
+        path = tree / "components/gitea/default-environment.yaml.gotmpl"
+        text = path.read_text()
+        assert '    appsOrganization: ""\n' in text
+        path.write_text(text.replace('    appsOrganization: ""\n', "    appsOrganization: joinedcontext-apps\n"))
+
+    docs = rendered_variant("local", apart)
+    portal = _portal_env(docs)
+    assert portal["JC_GITEA_APPS_OWNER"]["value"] == "joinedcontext-apps"
+    token = portal["JC_GITEA_APPS_TOKEN"]
+    assert "value" not in token and token["valueFrom"]["secretKeyRef"]["name"] == "gitea-token-apps"
+    job = next(d for d in docs if d.get("kind") == "Job" and d["metadata"]["name"] == "gitea-bootstrap")
+    env = {e["name"]: e.get("value") for e in job["spec"]["template"]["spec"]["containers"][0]["env"]}
+    assert env["APPS_ORG"] == "joinedcontext-apps"
+    assert env["APPS_RESTART"] == "local/portal"
+    lane = [d for d in docs if d.get("kind") == "CronJob" and "lane" in d["metadata"]["name"]]
+    for cronjob in lane:
+        containers = cronjob["spec"]["jobTemplate"]["spec"]["template"]["spec"]["containers"]
+        org = next(e["value"] for e in containers[0]["env"] if e["name"] == "ORG")
+        assert org == "joinedcontext-apps", "the lane's secret belongs to the organization its builds run in"

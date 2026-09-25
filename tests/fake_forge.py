@@ -140,10 +140,26 @@ def identities(path: str, method: str, call: dict, state: dict) -> tuple[int, st
     if member and method == "PUT":
         state.setdefault("members", []).append(member.group(2))
         return 204, ""
-    listing = re.fullmatch(rf"/api/v1/orgs/{re.escape(ORG)}/repos\?limit=50&page=(\d+)", path)
+    if member and method == "DELETE":
+        state.setdefault("left", []).append(member.group(2))
+        return 204, ""
+    moved = state.setdefault("moved", {})
+    transfer = re.fullmatch(rf"/api/v1/repos/{re.escape(ORG)}/([^/]+)/transfer", path)
+    if transfer and method == "POST":
+        name = transfer.group(1)
+        if name not in state.setdefault("repos", {}):
+            return 404, "{}"
+        moved[name] = json.loads(call["data"])["new_owner"]
+        del state["repos"][name]
+        return 202, "{}"
+    listing = re.fullmatch(r"/api/v1/orgs/([^/]+)/repos\?limit=50&page=(\d+)", path)
     if listing and method == "GET":
-        names = [REPO, *sorted(state.setdefault("repos", {}))]
-        page = int(listing.group(1))
+        owner = listing.group(1)
+        if owner == ORG:
+            names = [REPO, *sorted(state.setdefault("repos", {}))]
+        else:
+            names = sorted(name for name, to in moved.items() if to == owner)
+        page = int(listing.group(2))
         return 200, json.dumps([{"id": i, "name": n} for i, n in enumerate(names)] if page == 1 else [], separators=(",", ":"))
     rules = state.setdefault("rules", {})
     rule = re.fullmatch(r"/api/v1/repos/[^/]+/([^/]+)/branch_protections(?:/([^/]+))?", path)
