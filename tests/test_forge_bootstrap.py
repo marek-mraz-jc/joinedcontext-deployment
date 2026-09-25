@@ -526,3 +526,45 @@ def test_one_named_keycloak_group_administers_the_forge_and_no_team_writes(local
     # Once on `add-oauth`, once on `update-oauth`: both name the same one group.
     assert init.count("--admin-group") == init.count('--admin-group "forge-admins"') == 2
     assert '\\"permission\\":\\"write\\"' not in script and '\\"permission\\":\\"admin\\"' not in script
+
+
+def _forge_init(docs):
+    return next(
+        d for d in docs
+        if d.get("kind") == "Secret" and d["metadata"]["name"] == "gitea-init"
+    )["stringData"]["configure_gitea.sh"]
+
+
+@requires_helmfile
+def test_a_listed_projects_groups_land_in_its_own_teams_and_leaving_one_leaves_the_team(
+    local, job, rendered_variant
+):
+    """PF-87, T-2655: each project the environment lists maps `{slug}-readers` and
+    `{slug}-writers` onto the teams of the same names, and nothing else changes; the bootstrap
+    does not create those teams, the Portal's reconciler does, with its own description. The
+    removal flag rides on both the add and the update, so a person whose binding went leaves the
+    team at their next sign-in."""
+    init = _forge_init(local)
+    assert init.count('--group-team-map-removal "true"') == 2, init
+
+    def listed(tree):
+        path = tree / "components/gitea/default-environment.yaml.gotmpl"
+        text = path.read_text()
+        assert "    projectTeams: []\n" in text
+        path.write_text(text.replace("    projectTeams: []\n", "    projectTeams: [doprava]\n"))
+
+    docs = rendered_variant("local", listed)
+    init = _forge_init(docs)
+    owner = "joinedcontext"
+    expected = (
+        '{\\"doprava-readers\\":{\\"%s\\":[\\"doprava-readers\\"]},'
+        '\\"doprava-writers\\":{\\"%s\\":[\\"doprava-writers\\"]},'
+        '\\"platform-readers\\":{\\"%s\\":[\\"readers\\"]}}' % (owner, owner, owner)
+    )
+    assert f'--group-team-map "{expected}"' in init, init
+    variant_job = next(
+        d for d in docs if d.get("kind") == "Job" and d["metadata"]["name"] == "gitea-bootstrap"
+    )
+    teams = next(e for e in variant_job["spec"]["template"]["spec"]["containers"][0]["env"]
+                 if e["name"] == "TEAMS")
+    assert teams["value"].split() == ["readers"], "the project teams are the Portal's to create"
