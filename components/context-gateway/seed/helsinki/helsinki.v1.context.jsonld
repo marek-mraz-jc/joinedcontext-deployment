@@ -10,6 +10,9 @@
     "BikeHireDockingStation": {
       "@id": "sdm:BikeHireDockingStation"
     },
+    "CityDistrict": {
+      "@id": "jc:CityDistrict"
+    },
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
@@ -19,8 +22,23 @@
     "NewsArticle": {
       "@id": "schema:NewsArticle"
     },
+    "ParkingArea": {
+      "@id": "jc:ParkingArea"
+    },
+    "ParkingZone": {
+      "@id": "jc:ParkingZone"
+    },
+    "PointOfInterest": {
+      "@id": "sdm:PointOfInterest"
+    },
+    "PublicAreaPermit": {
+      "@id": "jc:PublicAreaPermit"
+    },
     "Vehicle": {
       "@id": "sdm:Vehicle"
+    },
+    "WaterQualityObserved": {
+      "@id": "sdm:WaterQualityObserved"
     },
     "WeatherObserved": {
       "@id": "sdm:WeatherObserved"
@@ -42,6 +60,9 @@
     "contactPoint": {
       "@id": "schema:contactPoint"
     },
+    "dataProvider": {
+      "@id": "sdm:dataProvider"
+    },
     "dateIssued": {
       "@id": "sdm:dateIssued",
       "@type": "xsd:dateTime"
@@ -61,6 +82,17 @@
     "description": {
       "@container": "@language",
       "@id": "schema:description"
+    },
+    "districtCode": {
+      "@id": "jc:districtCode"
+    },
+    "divisionLevel": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:divisionLevel"
     },
     "endDate": {
       "@id": "schema:endDate",
@@ -100,6 +132,37 @@
       "@id": "ngsi-ld:observedAt",
       "@type": "xsd:dateTime"
     },
+    "openingHours": {
+      "@container": "@language",
+      "@id": "schema:openingHours"
+    },
+    "permitEnd": {
+      "@id": "jc:permitEnd",
+      "@type": "xsd:date"
+    },
+    "permitKind": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:permitKind"
+    },
+    "permitNumber": {
+      "@id": "jc:permitNumber"
+    },
+    "permitStart": {
+      "@id": "jc:permitStart",
+      "@type": "xsd:date"
+    },
+    "permitStatus": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:permitStatus"
+    },
     "pm10": {
       "@id": "sdm:pm10",
       "@type": "xsd:float"
@@ -111,6 +174,14 @@
     "precipitation": {
       "@id": "sdm:precipitation",
       "@type": "xsd:float"
+    },
+    "refDistrict": {
+      "@id": "jc:refDistrict",
+      "@type": "@id"
+    },
+    "refPointOfInterest": {
+      "@id": "sdm:refPointOfInterest",
+      "@type": "@id"
     },
     "relativeHumidity": {
       "@id": "sdm:relativeHumidity",
@@ -125,7 +196,16 @@
     },
     "schema": "http://schema.org/",
     "sdm": "https://smartdatamodels.org/",
+    "serviceCategory": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:serviceCategory"
+    },
     "shex": "http://www.w3.org/ns/shex#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
     "source": {
       "@id": "sdm:source",
       "@type": "xsd:anyURI"
@@ -155,6 +235,10 @@
       "@id": "sdm:totalSlotNumber",
       "@type": "xsd:integer"
     },
+    "totalSpotNumber": {
+      "@id": "sdm:totalSpotNumber",
+      "@type": "xsd:integer"
+    },
     "type": "@type",
     "url": {
       "@id": "schema:url",
@@ -179,7 +263,18 @@
       "@id": "sdm:windSpeed",
       "@type": "xsd:float"
     },
-    "xsd": "http://www.w3.org/2001/XMLSchema#"
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "zoneCode": {
+      "@id": "jc:zoneCode"
+    },
+    "zoneKind": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:zoneKind"
+    }
   },
   "x-generator-version": "linkml-1.11.1"
 }

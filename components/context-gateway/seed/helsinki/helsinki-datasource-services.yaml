@@ -1,0 +1,17 @@
+# The city's service register (Service Map), the units of ten services in one page: public libraries (813), health stations
+# (703), swimming halls (729), beaches (731) and comprehensive schools (661, 662, 601, 602, 149, 150), 219 units on
+# 2026-09-25. `only=` keeps the page to the fields the mapping reads. No key. CC-BY-4.0, read from the HRI catalogue
+# (package paakaupunkiseudun-palvelukartan-rest-rajapinta).
+apiVersion: joinedcontext.com/v1alpha1
+kind: DataSource
+metadata:
+  name: hel-servicemap-units
+  namespace: helsinki
+  title: { en: "City services: libraries, health stations, swimming halls, beaches, schools (Service Map)", fi: "Kaupungin palvelut (Palvelukartta)" }
+spec:
+  type: http
+  http:
+    url: https://api.hel.fi/servicemap/v2/unit/?service=813,703,729,731,661,662,601,602,149,150&municipality=helsinki&page_size=1000&only=id,name,location,street_address,address_zip,services,www,last_modified_time,connections&format=json
+    verb: GET
+    headers: { Accept: application/json }
+    timeout: 30s
