@@ -154,7 +154,9 @@ def test_a_feed_message_becomes_one_indicator_of_the_kpi_space():
         "count": 42,
         "observedAt": "2026-09-25T16:00:00.123456789Z",
     }
-    (entity,) = open_data.run(DEMO_SEED / "pipeline-demo-counters-bento.yaml", json.dumps(message).encode(), "helsinki-kpi")
+    entity = open_data.run(DEMO_SEED / "pipeline-demo-counters-bento.yaml", json.dumps(message).encode(), "helsinki-kpi")
+    # One message, one entity and no array of it: the Portal's batching archives (T-2914).
+    assert isinstance(entity, dict), entity
     assert entity["id"] == "urn:ngsi-ld:KeyPerformanceIndicator:hel.fi:helsinki-kpi:demo-counter-3"
     assert entity["type"] == "KeyPerformanceIndicator"
     assert entity["currentValue"] == {"type": "Property", "value": 42, "observedAt": "2026-09-25T16:00:00Z"}

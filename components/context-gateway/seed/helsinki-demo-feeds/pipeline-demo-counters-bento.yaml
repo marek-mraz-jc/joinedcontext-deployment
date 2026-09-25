@@ -1,7 +1,8 @@
 # One demo message is one indicator (T-2960). The feed sends a full URN in its own space and
 # type (`urn:ngsi-ld:DemoCounter:{org}:helsinki:demo-counter-3`), so the local id is its last
 # segment and the entity is minted in this pipeline's space. The feed labels every reading as
-# synthetic, and the indicator says so in its formula.
+# synthetic, and the indicator says so in its formula. No closing `archive`: the Portal's batching
+# wraps the messages itself, and a second archive nests the batch (T-2914).
 pipeline:
   processors:
     - mapping: |
@@ -15,5 +16,3 @@ pipeline:
           "currentValue": { "type": "Property", "value": this.count.number(), "observedAt": $at },
           "updatedAt": { "type": "Property", "value": $at }
         }
-    - archive:
-        format: json_array
