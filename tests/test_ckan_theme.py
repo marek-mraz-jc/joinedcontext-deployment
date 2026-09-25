@@ -183,3 +183,70 @@ def test_the_theme_loads_nothing_from_another_origin():
             continue
         text = path.read_text()
         assert not re.search(r"<script>|(src|href)=\"(https?:)?//|(?<!\w)url\(|@import", text), path.name
+
+
+# --- T-2888: the catalogue wears the installation's look, and a failed sign-in says why ---------
+
+
+def test_the_brand_colour_reaches_bootstrap_and_its_text_stays_legible(theme, tmp_path):
+    assert theme.BRANDING["primaryRgb"] == "29, 78, 216"
+    assert theme.BRANDING["primaryForeground"] == "#ffffff"
+    light = tmp_path / "light.json"
+    light.write_text(json.dumps({"colours": {"primary": "#ffe977"}}))
+    theme.BRANDING_FILE = str(light)
+    block = theme._load()
+    assert block["primaryRgb"] == "255, 233, 119"
+    # White on a pale yellow is unreadable; the login theme's YIQ rule gives black.
+    assert block["primaryForeground"] == "#000000"
+    short = tmp_path / "short.json"
+    short.write_text(json.dumps({"colours": {"primary": "#00f"}}))
+    theme.BRANDING_FILE = str(short)
+    assert theme._load()["primaryRgb"] == "0, 0, 255"
+
+
+def test_no_stock_ckan_colour_survives_the_theme():
+    """CKAN compiles #206b82 into its own rules; each group of them is restated on the brand."""
+    header = (THEME / "header.html").read_text()
+    for variable in ("--bs-primary: var(--jc-primary)", "--bs-primary-rgb:", "--bs-link-color: var(--jc-primary)"):
+        assert variable in header, variable
+    for rule in ("a, .btn-link, .nav-link", ".btn-primary:hover", ".form-check-input:checked",
+                 ".form-control:focus", ".homepage .module-search .search-form", ".view-list li a.active .icon"):
+        assert rule in header, rule
+    assert not re.search(r"#206b82|#187794|#1a5668|#005d7a", header, re.I)
+
+
+def test_the_footer_carries_the_installations_links_and_none_of_ckans():
+    footer = (THEME / "footer.html").read_text()
+    assert "{% block footer_links_ckan %}{% endblock %}" in footer
+    for stock in ("docs.ckan.org", "ckan.org", "opendefinition", "od_80x15"):
+        assert stock not in footer, stock
+    assert "h.jc_t('about_site')" in footer and "h.jc_portal_url()" in footer
+    # The demo disclaimer stays: the organisation line of the branding block.
+    assert "h.jc_branding().organisation" in footer
+
+
+@pytest.mark.parametrize("reason, key", [
+    ("Login process was not started properly", "sso_cookie"),
+    ("The app state does not match", "sso_state"),
+    ("Unsupported token type. Should be 'Bearer'.", "sso_refused"),
+    ("No access token returned from the token endpoint.", "sso_refused"),
+    ("Unique user not found", "sso_account"),
+    ("access_denied", "sso_other"),
+])
+def test_a_failed_sign_in_says_why_once_in_words_a_person_acts_on(theme, reason, key):
+    session = {theme.SSO_ERROR: reason}
+    assert theme.jc_sso_error(session) == theme.STRINGS[key]["en"]
+    # Said once: a reload of the login page does not repeat an old failure.
+    assert theme.jc_sso_error(session) is None
+    theme.page.lang = "sk"
+    session[theme.SSO_ERROR] = reason
+    assert theme.jc_sso_error(session) == theme.STRINGS[key]["sk"]
+
+
+def test_a_sign_in_that_did_not_fail_says_nothing(theme):
+    assert theme.jc_sso_error({}) is None
+
+
+def test_the_login_page_shows_the_reason_as_an_alert():
+    login = (THEME / "templates__user__login.html").read_text()
+    assert "h.jc_sso_error()" in login and 'role="alert"' in login
