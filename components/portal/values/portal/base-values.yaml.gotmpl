@@ -190,6 +190,13 @@ env:
   # it (AP-117). Without the release name no pod-backed App runs.
   JC_PORTAL_RELEASE: {{ $global.instanceSlug | quote }}
   JC_PORTAL_SERVICE_ACCOUNT: "portal"
+{{- if has "gitea-runner" .Values.components }}
+  # A run tests each version in {release}-app-tests on the lane's own builder image before it
+  # offers publication (SDK-38); the namespaces part creates that namespace and the Portal's Role.
+{{- $builder := index .Values.images "gitea-runner" "runner" }}
+  JC_PORTAL_APP_TESTS_NAMESPACE: {{ printf "%s-app-tests" $global.instanceSlug | quote }}
+  JC_PORTAL_APP_TESTS_IMAGE: {{ printf "%s:%s@%s" $builder.repository $builder.tag $builder.digest | quote }}
+{{- end }}
 {{- end }}
 {{- if and (has "gitea-runner" .Values.components) (index .Values "gitea-runner" "build-pods" "enabled") }}
   # An App's `build` job runs in a pod of that App alone, which this Portal starts in the

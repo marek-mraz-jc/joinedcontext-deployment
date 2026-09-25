@@ -127,7 +127,11 @@ def test_every_object_has_one_identity(mode, request):
 
 
 def test_single_namespace_puts_everything_in_the_instance_namespace(single):
-    assert _namespaces(single) == {SLUG}
+    # The one exception is not a component's home but a fence: a run's tests execute the
+    # model's code in `{slug}-app-tests`, never beside the Portal (SDK-38), the way a project's
+    # Apps run in the `{slug}-{project}-apps` namespaces the Portal creates. What may live there
+    # is pinned by test_portal_app_tests.py.
+    assert _namespaces(single) - {f"{SLUG}-app-tests"} == {SLUG}
 
 
 def test_multi_namespace_gives_every_component_its_own(multi):
@@ -345,3 +349,4 @@ def test_each_component_keeps_its_own_service_account(mode, request):
         "two components share a ServiceAccount name; in single-namespace mode that is one "
         f"identity for both: {sorted(accounts)}"
     )
+
