@@ -75,7 +75,7 @@ jobs:
           retention-days: 3
   tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15  # ran 9m40 a run on 2026-09-25 and timed out at 10; back under budget is T-2895
     env: { KYVERNO_VERSION: v1.19.0, SOPS_VERSION: v3.13.3, AGE_VERSION: v1.2.1 }
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
