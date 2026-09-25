@@ -14,6 +14,9 @@ bb-air-quality.v1.md: projects/banskabystrica/spaces/ovzdusie/datamodels/bb-air-
 endpoint.yaml: projects/banskabystrica/spaces/ovzdusie/endpoints/public-air.yaml
 policy-public-read.yaml: projects/banskabystrica/spaces/ovzdusie/policies/public-read.yaml
 policy-conformance-write.yaml: projects/banskabystrica/spaces/ovzdusie/policies/conformance-write.yaml
+# The city's air quality (T-2916): a public static bundle the Portal image ships, reading the
+# public endpoint of this space (the EEA stations' PM10 and PM2.5) and nothing else.
+app-ovzdusie.yaml: projects/banskabystrica/apps/banskabystrica-ovzdusie/app.yaml
 serviceaccount.yaml: projects/banskabystrica/access/serviceaccounts/conformance.yaml
 # The city's own two spaces (T-2305): the published rows as published, and the indicators
 # computed from them. The indicator endpoint is shared with `bbsk` and is not public.
