@@ -672,12 +672,16 @@ spec:
                 # reference_apps_tests), one file each, named by its layout-1 path.
                 # ponytail: a grant the app stops compiling to is left behind; the Portal's
                 # door removes it on the app's next proposal.
+                # The App's default groups (users/groups/, AP-118) are organization files and
+                # stay in the organization repository whatever the layout.
                 for f in "$dir"grants__*; do
                   [ -f "$f" ] || continue
                   gpath=$(basename "$f" | sed -e 's/^grants__//' -e 's/__/\//g')
+                  ghome=$app_home
+                  case "$gpath" in users/*) ghome=$REPO ;; esac
                   [ "$LAYOUT" = 2 ] && gpath=${gpath#projects/$APPS_PROJECT/}
                   gencoded=$(base64 < "$f" | tr -d '\n')
-                  status=$(forge_code GET "/api/v1/repos/$ORG/$app_home/contents/$gpath?ref=$BRANCH")
+                  status=$(forge_code GET "/api/v1/repos/$ORG/$ghome/contents/$gpath?ref=$BRANCH")
                   case "$status" in
                     200)
                       held=$(sed -n 's/.*"content": *"\([^"]*\)".*/\1/p' $WORK/body | sed 's/\\n//g' | base64 -d)
@@ -686,11 +690,11 @@ spec:
                         continue
                       fi
                       sha=$(sed -n 's/.*"sha": *"\([0-9a-f]\{40\}\)".*/\1/p' $WORK/body | head -1)
-                      status=$(forge_code PUT "/api/v1/repos/$ORG/$app_home/contents/$gpath" \
+                      status=$(forge_code PUT "/api/v1/repos/$ORG/$ghome/contents/$gpath" \
                         -d "{\"branch\":\"$BRANCH\",\"sha\":\"$sha\",\"content\":\"$gencoded\",\"message\":\"seed: the grants of the $app application\"}")
                       [ "$status" = 200 ] || { echo "updating $gpath failed: $status" >&2; cat $WORK/body >&2; exit 1; } ;;
                     404)
-                      status=$(forge_code POST "/api/v1/repos/$ORG/$app_home/contents/$gpath" \
+                      status=$(forge_code POST "/api/v1/repos/$ORG/$ghome/contents/$gpath" \
                         -d "{\"branch\":\"$BRANCH\",\"content\":\"$gencoded\",\"message\":\"seed: the grants of the $app application\"}")
                       [ "$status" = 201 ] || { echo "writing $gpath failed: $status" >&2; cat $WORK/body >&2; exit 1; } ;;
                     *) echo "the forge answered $status for $gpath" >&2; exit 1 ;;
