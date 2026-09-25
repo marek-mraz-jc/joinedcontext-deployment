@@ -15,9 +15,16 @@ automountServiceAccountToken: false
 */}}
 {{- $secretNames := list }}
 {{- $namespaces := list }}
+{{- $restarts := dict }}
 {{- range $key, $token := .Values.tokens }}
 {{- $secretNames = append $secretNames $token.secret }}
 {{- $namespaces = concat $namespaces $token.namespaces }}
+{{- range $target := $token.restart | default list }}
+{{- $parts := splitList "/" $target }}
+{{- $ns := index $parts 0 }}
+{{- $_ := set $restarts $ns (append (get $restarts $ns | default list) (index $parts 1)) }}
+{{- $namespaces = append $namespaces $ns }}
+{{- end }}
 {{- end }}
 {{- range $namespace := $namespaces | uniq | sortAlpha }}
 ---
@@ -44,6 +51,17 @@ rules:
   - apiGroups: ['']
     resources: [secrets]
     verbs: [create]
+  {{- with get $restarts $namespace }}
+  # The Deployments that read a token at start, restarted when it is minted again (PF-105):
+  # `patch` on these names alone, which is all `kubectl rollout restart` is.
+  - apiGroups: [apps]
+    resources: [deployments]
+    resourceNames:
+      {{- range . | uniq | sortAlpha }}
+      - {{ . | quote }}
+      {{- end }}
+    verbs: [patch]
+  {{- end }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
