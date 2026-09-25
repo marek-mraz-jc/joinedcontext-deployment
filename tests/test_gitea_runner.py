@@ -243,3 +243,60 @@ def test_a_build_reaches_the_forge_the_portal_and_dns_and_nothing_else(rendered,
             assert (labels, ports) in allowed, f"{policy['metadata']['name']}: {namespace} {labels} {ports}"
             if labels == ():
                 assert namespace == "linkerd", "a selector-less peer is the mesh's control plane alone"
+
+
+@requires_helmfile
+@pytest.mark.parametrize("environment", ["dev", "production"])
+def test_a_build_pod_runs_under_its_class_label_with_the_shared_runners_walls(rendered, environment):
+    """AP-130: an App's `build` job asks for `app-build-node` or `app-build-rust`, which only the
+    pod the Portal starts for it carries. Its configuration is the shared runner's in every other
+    respect: one job at a time, the forge's shared cache off (the App's own cache is its claim,
+    AP-131), and the forge and the Portal at their in-cluster addresses."""
+    docs = rendered(environment)
+    shared = yaml.safe_load(one(docs, "ConfigMap", "gitea-runner")["data"]["runner.yaml"])
+    for build_class, timeout in (("node", "20m"), ("rust", "30m")):
+        config_map = one(docs, "ConfigMap", f"gitea-runner-build-{build_class}")
+        assert config_map["metadata"]["namespace"] == one(docs, "ConfigMap", "gitea-runner")["metadata"]["namespace"]
+        config = yaml.safe_load(config_map["data"]["runner.yaml"])
+        assert config["runner"]["labels"] == [f"app-build-{build_class}:host"]
+        assert config["runner"]["timeout"] == timeout
+        assert config["runner"]["capacity"] == 1
+        assert config["runner"]["file"] == shared["runner"]["file"]
+        assert config["cache"]["enabled"] is False
+        assert config["runner"]["envs"] == shared["runner"]["envs"]
+    assert shared["runner"]["labels"] == ["node-22:host"], "the shared runner never takes an App's build"
+
+
+@requires_helmfile
+@pytest.mark.parametrize("environment", ["dev", "production"])
+def test_the_portal_may_start_build_jobs_in_the_runner_namespace_and_nothing_else(rendered, environment):
+    """AP-130: the Portal's rights in the runner's namespace are a Job, its token Secret and the
+    App's cache claim, by server-side apply, bound to the Portal's ServiceAccount alone. No pods,
+    no exec, no logs, and no list of Secrets. The Portal is told that namespace and the two runner
+    images, each pinned by digest."""
+    docs = rendered(environment)
+    namespace = one(docs, "ConfigMap", "gitea-runner")["metadata"]["namespace"]
+    role = one(docs, "Role", "portal-build-pods")
+    assert role["metadata"]["namespace"] == namespace
+    rules = {(tuple(r["apiGroups"]), tuple(r["resources"])): set(r["verbs"]) for r in role["rules"]}
+    assert rules == {
+        (("batch",), ("jobs",)): {"get", "create", "patch", "delete"},
+        (("",), ("secrets",)): {"get", "create", "patch"},
+        (("",), ("persistentvolumeclaims",)): {"get", "list", "create", "patch", "delete"},
+    }
+    assert not any("resourceNames" in r or "*" in r["verbs"] for r in role["rules"])
+
+    binding = one(docs, "RoleBinding", "portal-build-pods")
+    portal = one(docs, "Deployment", "portal")
+    assert binding["metadata"]["namespace"] == namespace
+    assert binding["roleRef"] == {"apiGroup": "rbac.authorization.k8s.io", "kind": "Role", "name": "portal-build-pods"}
+    assert binding["subjects"] == [
+        {"kind": "ServiceAccount", "name": portal["spec"]["template"]["spec"]["serviceAccountName"], "namespace": portal["metadata"]["namespace"]}
+    ]
+
+    env = {e["name"]: e.get("value") for e in portal["spec"]["template"]["spec"]["containers"][0]["env"]}
+    assert env["JC_PORTAL_BUILD_NAMESPACE"] == namespace
+    runner = one(docs, "Deployment", "gitea-runner")["spec"]["template"]["spec"]["containers"][0]["image"]
+    assert env["JC_PORTAL_BUILD_IMAGE_NODE"] == runner.replace(":main@", "@")
+    assert re.fullmatch(r"ghcr\.io/[\w./-]+/joinedcontext-app-builder-rust@sha256:[0-9a-f]{64}", env["JC_PORTAL_BUILD_IMAGE_RUST"])
+    assert "JC_PORTAL_BUILD_CACHE_SIZE" not in env, "1Gi, the Portal's default"
