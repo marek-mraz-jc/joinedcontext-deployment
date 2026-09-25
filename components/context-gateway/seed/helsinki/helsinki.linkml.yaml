@@ -330,8 +330,11 @@ slots:
     slot_uri: sdm:refPointOfInterest
     description: The place in the city's service register the sensor stands at.
     range: PointOfInterest
+    inverse: waterQualityObservations
+    inlined: false
     annotations:
       ngsi_ld_kind: Relationship
+      on_delete: restrict
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
   totalSpotNumber:
     slot_uri: sdm:totalSpotNumber
@@ -393,8 +396,11 @@ slots:
     slot_uri: jc:refDistrict
     description: The district the record lies in.
     range: CityDistrict
+    inverse: publicAreaPermits
+    inlined: false
     annotations:
       ngsi_ld_kind: Relationship
+      on_delete: restrict
   districtCode:
     slot_uri: jc:districtCode
     description: >-
@@ -421,6 +427,24 @@ slots:
     pattern: "^[^<>]{0,500}$"
     annotations:
       ngsi_ld_kind: Property
+  waterQualityObservations:
+    slot_uri: jc:waterQualityObservations
+    description: The water-quality readings taken at this place, computed from their refPointOfInterest and never stored.
+    range: WaterQualityObserved
+    multivalued: true
+    inverse: refPointOfInterest
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
+  publicAreaPermits:
+    slot_uri: jc:publicAreaPermits
+    description: The public-area permits that lie in this district, computed from their refDistrict and never stored.
+    range: PublicAreaPermit
+    multivalued: true
+    inverse: refDistrict
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
 
 classes:
   Event:
@@ -543,6 +567,7 @@ classes:
       - dateModified
       - dataProvider
       - source
+      - waterQualityObservations
   WaterQualityObserved:
     class_uri: sdm:WaterQualityObserved
     description: >-
@@ -609,6 +634,7 @@ classes:
       - divisionLevel
       - dataProvider
       - source
+      - publicAreaPermits
 
 enums:
   ServiceCategory:

@@ -214,8 +214,11 @@ slots:
     slot_uri: jc:refDistrict
     description: The city district the record lies in.
     range: CityDistrict
+    inverse: wasteContainerIsles
+    inlined: false
     annotations:
       ngsi_ld_kind: Relationship
+      on_delete: restrict
   totalSpotNumber:
     slot_uri: sdm:totalSpotNumber
     description: The number of cars the car park holds.
@@ -279,6 +282,15 @@ slots:
     required: true
     annotations:
       ngsi_ld_kind: Property
+  wasteContainerIsles:
+    slot_uri: jc:wasteContainerIsles
+    description: The waste-container isles in this city district, computed from their refDistrict and never stored.
+    range: WasteContainerIsle
+    multivalued: true
+    inverse: refDistrict
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
 
 classes:
   BikeHireDockingStation:
@@ -366,6 +378,7 @@ classes:
       - districtCode
       - dataProvider
       - source
+      - wasteContainerIsles
   BudgetLine:
     class_uri: jc:BudgetLine
     description: >-
