@@ -19,6 +19,12 @@ resources:
 env:
   # The live journeys sign in as the demo people and mark the assistant runs they start as
   # test runs (AG-93, T-2816). The Portal accepts the mark only from the users named here and
-  # refuses it with 403 for anyone else; production names nobody.
-  JC_PORTAL_JOURNEY_USERS: {{ readFile "../../../keycloak/demo-users.yaml" | fromYaml | keys | sortAlpha | join "," | quote }}
+  # refuses it with 403 for anyone else; production names nobody. The realm stores each demo
+  # person as `{name}@{orgDomain}` (registrationEmailAsUsername), and that is the username the
+  # Portal compares; the bare key refused every journey's header.
+  {{- $journeyUsers := list }}
+  {{- range $name, $_ := readFile "../../../keycloak/demo-users.yaml" | fromYaml }}
+  {{- $journeyUsers = append $journeyUsers (printf "%s@%s" $name $global.orgDomain) }}
+  {{- end }}
+  JC_PORTAL_JOURNEY_USERS: {{ $journeyUsers | sortAlpha | join "," | quote }}
 {{- end }}
