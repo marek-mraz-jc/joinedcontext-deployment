@@ -8,4 +8,4 @@ model-tools:
     # platform b73d19a: the model-tools image built with the gateway of that commit (nothing
     # under tools/model-tools changed since d7b6a5a: `/generate` answers `typescript`).
     # Digest read from the registry for the tag named after the commit; the `main` tag moves.
-    digest: 'sha256:666c075d78a608b4a6ebfddfc6566132bc76190269f9e99d46d7e000f0b1d81c'
+    digest: 'sha256:24fedd43c36d22ee13061d9622a12fc314720392729d41e242b66e00f341abd5'
