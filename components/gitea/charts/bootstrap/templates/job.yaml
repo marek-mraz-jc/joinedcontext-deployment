@@ -163,7 +163,7 @@ spec:
                   "$@" "$GITEA_URL$path"
               }
 
-              # The same call as the Portal's machine user (PF-105): whatever lands on a branch of a
+              # The same call as the Portal's machine user (PF-106): whatever lands on a branch of a
               # configuration repository, and the applications' repositories. Defined here, used
               # once PORTAL_TOKEN is minted.
               portal_code() {
@@ -173,7 +173,7 @@ spec:
                   "$@" "$GITEA_URL$path"
               }
 
-              # The same as the applications' machine user, in their organization (PF-105), or as
+              # The same as the applications' machine user, in their organization (PF-106), or as
               # the Portal's when they have none. Used once APPS_TOKEN is minted.
               apps_code() {
                 method=$1; path=$2; shift 2
@@ -283,7 +283,7 @@ spec:
                 echo "team $team created"
               done
 
-              # 3c. The platform's own forge identities (PF-105): a machine user per consumer,
+              # 3c. The platform's own forge identities (PF-106): a machine user per consumer,
               #     never an administrator. The password is random, never stored and never
               #     printed, so nobody signs in as one; a token is its only credential. The
               #     forge's `prohibit_login` would be the obvious switch, and it refuses the
@@ -334,7 +334,7 @@ spec:
                 if [ -z "$team_id" ]; then
                   status=$(forge_code POST "/api/v1/orgs/$1/teams" -d "{
                     \"name\":\"$2\",
-                    \"description\":\"Creates the repositories $2 owns (PF-105)\",
+                    \"description\":\"Creates the repositories $2 owns (PF-106)\",
                     \"permission\":\"read\",
                     \"includes_all_repositories\":false,
                     \"can_create_org_repo\":true,
@@ -344,6 +344,17 @@ spec:
                   team_id=$(sed -n 's/^{"id": *\([0-9]*\).*/\1/p' $WORK/body)
                   [ -n "$team_id" ] || { echo "the forge named no id for team $2 of $1" >&2; exit 1; }
                 fi
+                # The user publishes the checked build of an App as a package of the
+                # organization (AP-101, AP-107), and the forge decides package writes by the
+                # team's `repo.packages` unit: without it every publish is a 401 reqPackageAccess.
+                # Set every run, so a team created before this line gets it too.
+                status=$(forge_code PATCH "/api/v1/teams/$team_id" -d "{
+                  \"name\":\"$2\",
+                  \"can_create_org_repo\":true,
+                  \"includes_all_repositories\":false,
+                  \"units_map\":{\"repo.code\":\"read\",\"repo.packages\":\"write\"}
+                }")
+                [ "$status" = 200 ] || { echo "giving team $2 of $1 its package unit failed: $status" >&2; cat $WORK/body >&2; exit 1; }
                 status=$(forge_code PUT "/api/v1/teams/$team_id/members/$2")
                 [ "$status" = 204 ] || { echo "adding $2 to its team of $1 failed: $status" >&2; exit 1; }
               }
@@ -361,7 +372,7 @@ spec:
                 done
               }
 
-              # 3d. Where the generated applications live (PF-105). With APPS_ORG, in an
+              # 3d. Where the generated applications live (PF-106). With APPS_ORG, in an
               #     organization of their own that `jc-apps` creates and administers them in; an
               #     application's repository still in $ORG, `{project}_{name}` (a name no project
               #     repository has, a slug holds no `_`), is transferred there with its history,
@@ -431,7 +442,7 @@ spec:
               # write_secret <namespace> <name> <token> <scopes json> <owner>
               # `scopes` and `owner` are the record of what the token was minted with and on
               # whom: a token that still authenticates but was minted with other scopes (T-2468)
-              # or on another user (PF-105) is minted again.
+              # or on another user (PF-106) is minted again.
               # With PULL_HOST set it is a `dockerconfigjson` Secret for that registry, the
               # token and its scopes kept beside it as the record (AP-108).
               write_secret() {
@@ -518,7 +529,7 @@ spec:
                 done
               }
 
-              # retire <token name>: the same name minted on the administrator, before PF-105.
+              # retire <token name>: the same name minted on the administrator, before PF-106.
               # Its readers were restarted with the new one, so nothing holds it any more.
               retire() {
                 status=$(forge_code DELETE "/api/v1/users/$ADMIN_USER/tokens/$1")
@@ -533,14 +544,14 @@ spec:
               [ "$minted" = 1 ] && restart $PORTAL_RESTART
               retire jc-portal
               # The seed and the sample applications below are written with this token and not
-              # the administrator's: the branch rule lets nobody else move `main` (PF-104), and
+              # the administrator's: the branch rule lets nobody else move `main` (PF-105), and
               # the applications are the Portal's to own (AP-75).
               PORTAL_TOKEN=$token
               ensure_token "$GATEWAY_SECRET" "jc-gateway" "$GATEWAY_SCOPES" "$GATEWAY_USER" $GATEWAY_NAMESPACES
               [ "$minted" = 1 ] && restart $GATEWAY_RESTART
               retire jc-gateway
 
-              # The applications' machine user's token (PF-105), checked against their
+              # The applications' machine user's token (PF-106), checked against their
               # organization; without one the Portal's writes them, beside the configuration.
               # The registry's and the lane's tokens are minted on the same user, so nothing the
               # applications need is minted on the administrator any more.
@@ -588,7 +599,7 @@ spec:
                 echo "the runner registration token is in $RUNNER_SECRET"
               fi
 
-              # 4c. The branch rule of the organization repository (PF-104, CC-41): only the
+              # 4c. The branch rule of the organization repository (PF-105, CC-41): only the
               #     Portal's identity pushes to `main` or merges into it, an approval a later
               #     commit invalidates is dropped, and nothing merges over an outdated base. No
               #     forge approval is asked for: the Verdict is the Portal's, and a forge approval

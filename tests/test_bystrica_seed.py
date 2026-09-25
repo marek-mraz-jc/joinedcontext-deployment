@@ -61,7 +61,8 @@ def test_the_region_is_its_own_project_and_the_city_says_it_is_the_city():
     assert region["spec"]["organizationRef"] == city["spec"]["organizationRef"] == "hel"
 
 
-def test_each_projects_quotas_hold_exactly_what_it_declares():
+def test_each_projects_quotas_hold_what_it_declares_with_room_for_the_demo():
+    """T-2873: the quota leaves room for the demo's work, never exactly what the seed holds."""
     for folder, project, spaces, public in (
         (REGION, "bbsk", ["bbsk-kraj", "bbsk-kpi", "bbsk-registre"], 2),
         (CITY, "banskabystrica", ["ovzdusie", "banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne"], 2),
@@ -69,10 +70,10 @@ def test_each_projects_quotas_hold_exactly_what_it_declares():
         quotas = one(folder, "Project", project)["spec"]["quotas"]
         declared = {doc["metadata"]["name"] for _, doc in manifests(folder, "ContextSpace")}
         assert declared == set(spaces), folder.name
-        assert quotas["contextSpaces"] == len(spaces), folder.name
+        assert quotas["contextSpaces"] >= len(spaces) + 90, folder.name
         endpoints = [doc for _, doc in manifests(folder, "Endpoint")]
         assert sum(e["spec"]["audience"] == "public" for e in endpoints) == public, folder.name
-        assert quotas["publicEndpoints"] == public, folder.name
+        assert quotas["publicEndpoints"] >= public + 90, folder.name
 
 
 def test_every_new_space_pins_the_segment_its_ids_carry():
@@ -470,9 +471,45 @@ def test_the_application_reading_both_bodies_is_a_published_static_app_on_the_re
     assert operations <= {"queryEntity", "retrieveEntity"}, operations
 
 
+def test_the_citys_records_are_a_published_static_app_the_portal_image_ships():
+    """T-2916: the city's one application on dev is the records grid over banskabystrica-mesto.
+    The Portal image carries the bundle, so the App names no repository; its one write is the
+    steward's note, which a seeded Policy grants and nothing else does."""
+    app = one(CITY, "App", "banskabystrica-zaznamy")
+    assert app["metadata"]["namespace"] == "banskabystrica"
+    assert app["metadata"]["annotations"]["joinedcontext.com/shipped-with"] == "portal"
+    assert app["spec"]["kind"] == "static"
+    assert app["spec"]["lifecycle"] == "published"
+    assert app["spec"]["source"] == {"path": "./apps/banskabystrica-zaznamy"}
+    (need,) = app["spec"]["dataNeeds"]
+    assert need["contextSpaceRef"]["name"] == "banskabystrica-mesto"
+    assert one(CITY, "ContextSpace", "banskabystrica-mesto")
+    assert set(need["operations"]) == {"queryEntity", "retrieveEntity", "updateAttrs"}
+    note = one(CITY, "Policy", "mesto-steward-note")["spec"]
+    assert note["operations"] == ["updateAttrs"]
+    assert note["information"][0]["propertyNames"] == ["stewardNote"]
+
+
+def test_the_citys_air_quality_is_a_public_static_app_on_the_public_endpoint_alone():
+    """T-2916: the public screen reads the one space whose endpoint is public, read only, and
+    only the attributes the public grant serves, so no answer carries a refusal."""
+    app = one(CITY, "App", "banskabystrica-ovzdusie")
+    assert app["metadata"]["annotations"]["joinedcontext.com/shipped-with"] == "portal"
+    assert app["spec"]["visibility"] == "public"
+    assert app["spec"]["lifecycle"] == "published"
+    (need,) = app["spec"]["dataNeeds"]
+    space = need["contextSpaceRef"]["name"]
+    endpoints = [doc for _, doc in manifests(CITY, "Endpoint") if doc["spec"]["contextSpaceRef"] == space]
+    assert endpoints and all(e["spec"]["audience"] == "public" for e in endpoints), space
+    assert set(need["operations"]) <= {"queryEntity", "retrieveEntity", "queryTemporal"}
+    public = one(CITY, "Policy", "public-read")["spec"]
+    served = {name for rule in public["information"] for name in rule.get("propertyNames", [])}
+    assert set(need["attrs"]) <= served, sorted(set(need["attrs"]) - served)
+
+
 # What the city and the region cleared for the open-data catalogue (T-2407, user 2026-09-21):
-# these two and nothing else, until the other endpoints are reviewed. `public-air` is held back
-# while its space holds Helsinki test stations rather than the city's readings (T-2407 body).
+# these two and nothing else, until the other endpoints are reviewed. `public-air` publishes by the
+# owner's decision of 2026-09-25 although its space still holds seeded test stations (T-2407).
 # T-2783 (owner, 2026-09-24: BBSK's open data "republished to CKAN") adds the region's registers,
 # which are the region's own CC BY-SA publication and hold no person.
 # T-2781 ("republished to CKAN", by the rule of T-2780) adds the city's public space: events, the
@@ -481,7 +518,6 @@ CLEARED = {
     ("banskabystrica", "public-air"), ("banskabystrica", "banskabystrica-verejne"),
     ("bbsk", "bbsk-kpi"), ("bbsk", "bbsk-registre"),
 }
-HELD = {("banskabystrica", "public-air")}
 
 
 def test_only_the_cleared_endpoints_publish_each_to_its_own_bodys_catalogue():
@@ -505,4 +541,4 @@ def test_only_the_cleared_endpoints_publish_each_to_its_own_bodys_catalogue():
                 assert ckan["datastore"]["representation"] in endpoint["spec"]["enabledRepresentations"]
             # The token is a reference, never a value.
             assert set(instance["spec"]["apiTokenRef"]) <= {"name", "key", "envVar"}
-    assert published == CLEARED - HELD
+    assert published == CLEARED

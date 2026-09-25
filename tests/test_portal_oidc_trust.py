@@ -14,9 +14,6 @@ from pathlib import Path
 import pytest
 import yaml
 
-# Renders from the one shared `deployment/environments/testing` folder, which it rewrites, so
-# every module that does runs on one xdist worker (ci.yml runs `-n auto --dist loadgroup`).
-pytestmark = pytest.mark.xdist_group("deployment-environments-testing")
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
@@ -236,3 +233,13 @@ def test_every_meshed_pod_that_dials_the_public_host_skips_443_outbound(rendered
         annotations = templates[name]["metadata"].get("annotations") or {}
         ports = [port.strip() for port in annotations.get(SKIP_OUTBOUND, "").split(",")]
         assert "443" in ports, f"{name} dials the public host on 443 through the outbound proxy"
+
+
+@requires_helmfile
+def test_the_journey_users_are_the_usernames_the_realm_stores(rendered):
+    """The realm keeps a demo person as `{name}@{orgDomain}` (registrationEmailAsUsername), and
+    the Portal compares `JC_PORTAL_JOURNEY_USERS` with that username: the bare `demo.steward`
+    made every live journey's `X-JC-Run-Origin` a 403 (AG-93, T-2816)."""
+    users = portal_env(portal_pod_spec(rendered("dev")))["JC_PORTAL_JOURNEY_USERS"].split(",")
+    assert "demo.steward@hel.fi" in users
+    assert all(user.endswith("@hel.fi") for user in users), users

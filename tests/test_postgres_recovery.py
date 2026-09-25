@@ -10,16 +10,15 @@ first time during an incident.
 import datetime
 import shutil
 import subprocess
-from pathlib import Path
 
 import pytest
 import yaml
 
-# Renders from the one shared `deployment/environments/testing` folder, which it rewrites, so
-# every module that does runs on one xdist worker (ci.yml runs `-n auto --dist loadgroup`).
-pytestmark = pytest.mark.xdist_group("deployment-environments-testing")
+# Writes `deployment/environments/testing` in its own copy of the tree (`own_tree`), so it
+# shares nothing with another module. Its own xdist group keeps the module on one worker, so its
+# module-scoped renders happen once rather than once per worker (T-2895).
+pytestmark = pytest.mark.xdist_group("postgres-recovery")
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SOURCE_ARCHIVE = "s3://jc-backups/postgres"
 TARGET_TIME = datetime.datetime(2026, 8, 15, 14, 30, tzinfo=datetime.timezone.utc)
 
@@ -102,13 +101,11 @@ def test_a_normal_environment_still_bootstraps_with_initdb(production):
     ],
     ids=["archives-over-its-source", "target-time-is-not-a-timestamp"],
 )
-def test_a_restore_that_would_lose_data_or_miss_its_target_stops_the_render(overrides, message):
+def test_a_restore_that_would_lose_data_or_miss_its_target_stops_the_render(own_tree, overrides, message):
     """Both mistakes are silent at apply time — the first overwrites the history, the second
     recovers to a point nobody chose — so they are refused while they are still text."""
     if shutil.which("helmfile") is None:
         pytest.skip("helmfile not installed")
-    if not (PROJECT_ROOT / "deployment/environments").is_dir():
-        pytest.skip("run `just _dev-assemble` first")
     backups = {
         "enabled": True,
         "endpointURL": "https://s3.example.org",
@@ -118,7 +115,7 @@ def test_a_restore_that_would_lose_data_or_miss_its_target_stops_the_render(over
     }
     recovery = {"enabled": True, "targetTime": overrides.get("targetTime", "2026-08-15T14:30:00Z"),
                 "destinationPath": SOURCE_ARCHIVE}
-    env_dir = PROJECT_ROOT / "deployment/environments/testing"
+    env_dir = own_tree / "deployment/environments/testing"
     shutil.rmtree(env_dir, ignore_errors=True)
     env_dir.mkdir(parents=True)
     (env_dir / "global.yaml.gotmpl").write_text(
@@ -128,7 +125,7 @@ def test_a_restore_that_would_lose_data_or_miss_its_target_stops_the_render(over
         result = subprocess.run(
             ["helmfile", "-f", "deployment/helmfile.yaml", "-e", "testing", "template",
              "--skip-deps", "-q", "--selector", "component=postgres"],
-            cwd=str(PROJECT_ROOT), capture_output=True, text=True,
+            cwd=str(own_tree), capture_output=True, text=True,
         )
     finally:
         shutil.rmtree(env_dir, ignore_errors=True)

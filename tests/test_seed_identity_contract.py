@@ -102,7 +102,7 @@ def _shape(destination: str, name: str) -> str:
             shaped.append("{namespace}")
         elif previous in {"spaces"}:
             shaped.append("{space}")
-        elif previous in {"pipelines", "blueprints"}:
+        elif previous in {"pipelines", "blueprints", "apps"}:
             shaped.append("{name}")
         elif position == len(segments) - 1 and segment == f"{name}.yaml":
             shaped.append("{name}.yaml")

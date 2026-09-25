@@ -9,15 +9,15 @@ metadata:
     en: "Prague's open data: bikes, air, districts, schools, culture, waste, park and ride, ticket points and the budget."
 spec:
   organizationRef: hel
-  # One space, eleven scheduled pipelines (every period is 5 minutes or longer, so none is
-  # resident, PL-26; a quota cannot be zero, so it holds one), one public endpoint. About 12 000
-  # entities on 2026-09-25. The four applications of T-2786 are counted ahead (PF-73).
+  # Owner, 2026-09-25 (T-2873): no demo work and no city dataset is refused by a quota, so every
+  # project allows 100 of each countable kind and runtime ceilings nobody reaches (PF-73). The
+  # quota stays as the mechanism; what the node holds is the operator's bounds file (PF-97).
   quotas:
-    contextSpaces: 1
-    residentPipelines: 1
-    publicEndpoints: 1
-    apps: 4
-    ingestEventsPerSecond: 50
+    contextSpaces: 100
+    residentPipelines: 100
+    publicEndpoints: 100
+    apps: 100
+    ingestEventsPerSecond: 500
     agentRunsPerDay: 2000
-    entitiesPerSpace: 20000
-    requestsPerMinute: 600
+    entitiesPerSpace: 1000000
+    requestsPerMinute: 6000

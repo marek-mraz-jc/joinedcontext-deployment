@@ -1,7 +1,7 @@
 # The mapping of the park-and-ride pipeline (PL-03): one OffStreetParking per P+R car park of the
 # city geoportal (IPR Praha), 28 on 2026-09-25, with the number of cars it holds today. The live
-# occupancy is Golemio's and needs a key; `kapacita_vyhled` is a planned capacity and is not a
-# fact about today, so it is not read.
+# occupancy is the `park-and-ride-occupancy` pipeline's, from Golemio, onto these ids;
+# `kapacita_vyhled` is a planned capacity and is not a fact about today, so it is not read.
 
 pipeline:
   processors:

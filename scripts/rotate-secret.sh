@@ -7,6 +7,7 @@
 #   scripts/rotate-secret.sh --instance dev --secret db-portal
 #   scripts/rotate-secret.sh --instance dev --secret gitea-token-portal --forge https://<domain>/git
 #   scripts/rotate-secret.sh --instance dev --secret portal-cookie-key
+#   scripts/rotate-secret.sh --instance dev --secret portal-cookie-key --drop-previous
 #
 # The generator writes a Secret only where no copy exists and copies the first one it finds to
 # every namespace, so deleting one copy changes nothing. The script therefore:
@@ -20,6 +21,13 @@
 #   5. restarts every workload in those namespaces whose pods read the Secret, and waits,
 #   6. measures: the old value is refused and the new one accepted, within --bound seconds.
 #
+# The Portal's session key is read on one side only, so there is nothing to measure, but every
+# signed-in person's cookie is sealed with it. Its rotation keeps the old value under the
+# Secret's `previous` key, which the Portal reads as JC_PORTAL_COOKIE_KEY_PREVIOUS and still
+# opens cookies with; nobody is signed out. Once a session has outlived the window,
+# `--drop-previous` removes it and restarts the readers (T-2842, Deployment/08). The next
+# rotation replaces it, so at most one retired key is ever held.
+#
 # Credentials the platform does not generate are refused and named with who rotates them:
 # the Gitea and Keycloak administrators are written once at install (initialOnlyNoReset), and
 # operator-supplied Secrets (the model key, SMTP, backup S3) belong to Runbook 5's table.
@@ -31,6 +39,7 @@ idm=""
 realm=""
 forge=""
 bound=60
+drop_previous=0
 helmfile_file="deployment/helmfile.yaml"
 
 die() { printf 'rotate-secret: %s\n' "$1" >&2; exit 2; }
@@ -44,7 +53,8 @@ while [ $# -gt 0 ]; do
 	--realm) realm="${2:?}"; shift 2 ;;
 	--forge) forge="${2:?}"; shift 2 ;;
 	--bound) bound="${2:?}"; shift 2 ;;
-	-h | --help) sed -n '2,27p' "$0"; exit 0 ;;
+	--drop-previous) drop_previous=1; shift ;;
+	-h | --help) sed -n '2,33p' "$0"; exit 0 ;;
 	*) die "unknown argument: $1" ;;
 	esac
 done
@@ -67,9 +77,11 @@ keycloak-user-*) class=generic key="" push_config=1 ;;
 gitea-token-portal | gitea-token-gateway | gitea-token-lane-secret)
 	class=forge key=token
 	[ -n "$forge" ] || die "a forge token is measured against the forge: pass --forge" ;;
+portal-cookie-key) class=generic key=key keeps_previous=1 ;;
 *) class=generic key="" ;;
 esac
 [ "$class" = client ] && push_config=1
+[ "$drop_previous" = 0 ] || [ "${keeps_previous:-0}" = 1 ] || die "$secret keeps no previous value; --drop-previous is for portal-cookie-key"
 
 namespaces=$(kubectl get secret -A --field-selector "metadata.name=$secret" \
 	-o 'jsonpath={range .items[*]}{.metadata.namespace}{"\n"}{end}' 2>/dev/null) || die "cannot list Secrets named $secret"
@@ -84,6 +96,33 @@ elif [ -z "$release" ]; then
 	die "$secret in $first carries no Helm release, so no apply would make it again; it is not the platform's to rotate"
 fi
 
+# Every workload whose pod template names the Secret: env, envFrom, a volume or a pull secret.
+restart_readers() {
+	restarted=0
+	for ns in $namespaces; do
+		workloads=$(kubectl -n "$ns" get deployment,statefulset,daemonset -o json 2>/dev/null | SECRET="$secret" python3 -c '
+import json, os, sys
+name = os.environ["SECRET"]
+for item in json.load(sys.stdin).get("items", []):
+    spec = item["spec"]["template"]["spec"]
+    refs = [p.get("name") for p in spec.get("imagePullSecrets", [])]
+    refs += [v.get("secret", {}).get("secretName") for v in spec.get("volumes", [])]
+    for c in spec.get("containers", []) + spec.get("initContainers", []):
+        refs += [e.get("valueFrom", {}).get("secretKeyRef", {}).get("name") for e in c.get("env", [])]
+        refs += [e.get("secretRef", {}).get("name") for e in c.get("envFrom", [])]
+    if name in refs:
+        print(item["kind"].lower() + "/" + item["metadata"]["name"])
+') || die "cannot list the workloads of $ns"
+		for workload in $workloads; do
+			kubectl -n "$ns" rollout restart "$workload" >/dev/null || die "restarting $workload in $ns failed"
+			kubectl -n "$ns" rollout status "$workload" --timeout=300s >/dev/null || die "$workload in $ns did not come back"
+			say "restarted $ns/$workload"
+			restarted=$((restarted + 1))
+		done
+	done
+	say "$restarted workload(s) restarted"
+}
+
 value_of() { # <namespace> -> the decoded value of $key (the whole encoded data without one), on stdout only
 	if [ -z "$key" ]; then
 		kubectl -n "$1" get secret "$secret" -o 'jsonpath={.data}' 2>/dev/null
@@ -91,6 +130,20 @@ value_of() { # <namespace> -> the decoded value of $key (the whole encoded data 
 	fi
 	kubectl -n "$1" get secret "$secret" -o "jsonpath={.data.${key//./\\.}}" 2>/dev/null | base64 -d 2>/dev/null
 }
+
+if [ "$drop_previous" = 1 ]; then
+	dropped=0
+	for ns in $namespaces; do
+		[ -n "$(kubectl -n "$ns" get secret "$secret" -o 'jsonpath={.data.previous}' 2>/dev/null)" ] || continue
+		kubectl -n "$ns" patch secret "$secret" --type json -p '[{"op":"remove","path":"/data/previous"}]' >/dev/null ||
+			die "removing the previous value of $secret in $ns failed"
+		dropped=$((dropped + 1))
+	done
+	[ "$dropped" -gt 0 ] || die "$secret holds no previous value in any copy: no rotation is open"
+	restart_readers
+	say "done: the previous value of $secret is dropped and every reader restarted; a cookie only it opened now asks for a login"
+	exit 0
+fi
 
 old=$(value_of "$first")
 [ -n "$old" ] || die "$secret in $first holds no ${key:-data}"
@@ -117,30 +170,19 @@ for ns in $namespaces; do
 done
 say "new value written in every copy"
 
-# Every workload whose pod template names the Secret: env, envFrom, a volume or a pull secret.
-restarted=0
-for ns in $namespaces; do
-	workloads=$(kubectl -n "$ns" get deployment,statefulset,daemonset -o json 2>/dev/null | SECRET="$secret" python3 -c '
-import json, os, sys
-name = os.environ["SECRET"]
-for item in json.load(sys.stdin).get("items", []):
-    spec = item["spec"]["template"]["spec"]
-    refs = [p.get("name") for p in spec.get("imagePullSecrets", [])]
-    refs += [v.get("secret", {}).get("secretName") for v in spec.get("volumes", [])]
-    for c in spec.get("containers", []) + spec.get("initContainers", []):
-        refs += [e.get("valueFrom", {}).get("secretKeyRef", {}).get("name") for e in c.get("env", [])]
-        refs += [e.get("secretRef", {}).get("name") for e in c.get("envFrom", [])]
-    if name in refs:
-        print(item["kind"].lower() + "/" + item["metadata"]["name"])
-') || die "cannot list the workloads of $ns"
-	for workload in $workloads; do
-		kubectl -n "$ns" rollout restart "$workload" >/dev/null || die "restarting $workload in $ns failed"
-		kubectl -n "$ns" rollout status "$workload" --timeout=300s >/dev/null || die "$workload in $ns did not come back"
-		say "restarted $ns/$workload"
-		restarted=$((restarted + 1))
+# Kept before any reader restarts, so no pod ever starts with the new key alone. Sent on stdin:
+# printf is a builtin, so the value is on no process's command line.
+if [ "${keeps_previous:-0}" = 1 ]; then
+	encoded=$(printf '%s' "$old" | base64 | tr -d '\n')
+	for ns in $namespaces; do
+		printf '{"data":{"previous":"%s"}}' "$encoded" |
+			kubectl -n "$ns" patch secret "$secret" --type merge --patch-file /dev/stdin >/dev/null ||
+			die "keeping the old value of $secret as previous in $ns failed; its readers were not restarted"
 	done
-done
-say "$restarted workload(s) restarted"
+	say "the old value stays readable as previous; run again with --drop-previous once every session has outlived it"
+fi
+
+restart_readers
 
 # The measurement: the old value refused, the new one accepted. Values go to curl and psql on
 # stdin, never on a command line another process could read.

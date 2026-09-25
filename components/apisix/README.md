@@ -39,6 +39,11 @@ their own priority, not by the order they appear in `apisix-plugins.yaml`:
 8. `response-rewrite` — HSTS, `nosniff`, `Referrer-Policy`, `X-Frame-Options`
    (`SAMEORIGIN` for the UIs, `DENY` for the APIs) and `no-store` on everything
    authenticated.
+9. `serverless-post-function` — a baseline `Content-Security-Policy` (`frame-ancestors` as
+   `X-Frame-Options` says, `object-src 'none'`, `base-uri 'self'`) on an answer that carries
+   none (OPS-34). The Portal and each App send their own policy, which the edge never
+   replaces; it runs in `header_filter` after `response-rewrite`, so APISIX's own refusals
+   get it too.
 
 ## Edge login
 

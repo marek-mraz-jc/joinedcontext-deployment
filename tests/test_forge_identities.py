@@ -1,4 +1,4 @@
-"""The platform's own forge identities and the rule on `main` (T-2352, T-2353, PF-104, PF-105).
+"""The platform's own forge identities and the rule on `main` (T-2352, T-2353, PF-105, PF-106).
 
 The Portal's and the gateway's tokens used to be minted on the site administrator, so a leaked
 `gitea-token-portal` administered the whole forge, and nothing protected the branch the platform
@@ -34,7 +34,7 @@ def token_of(forge: Forge, secret: str) -> str:
 
 @requires_helmfile
 def test_each_token_is_minted_on_a_machine_user_that_administers_nothing(script, tmp_path):
-    """PF-105: two users, neither an administrator nor able to open an organization, each a
+    """PF-106: two users, neither an administrator nor able to open an organization, each a
     collaborator on the configuration repository with the one verb it needs, and each token
     minted on its own user. The Secret records on whom, so a token of another user is replaced."""
     forge = Forge(tmp_path, {})
@@ -49,6 +49,9 @@ def test_each_token_is_minted_on_a_machine_user_that_administers_nothing(script,
         assert patched["admin"] is False and patched["allow_create_organization"] is False, patched
     assert held["collaborators"]["configuration/jc-portal"] == "write"
     assert held["collaborators"]["configuration/jc-gateway"] == "read"
+    # The Portal publishes a checked App build as a package of the organization; the forge
+    # refuses that write (401 reqPackageAccess) unless its team holds the package unit.
+    assert held["team_units"]["jc-portal"] == {"repo.code": "read", "repo.packages": "write"}
     for secret, user in (("gitea-token-portal", "jc-portal"), ("gitea-token-gateway", "jc-gateway")):
         owner = base64.b64decode(forge.secrets[secret]["data"]["owner"]).decode()
         assert owner == user, secret
@@ -58,7 +61,7 @@ def test_each_token_is_minted_on_a_machine_user_that_administers_nothing(script,
 
 @requires_helmfile
 def test_the_administrators_tokens_are_retired_after_their_readers_restart(script, tmp_path):
-    """PF-105, T-2353: the forge as it was, both tokens on the administrator and the Secrets
+    """PF-106, T-2353: the forge as it was, both tokens on the administrator and the Secrets
     without an owner. One run mints on the machine users, restarts what read the old tokens at
     start, then deletes the old tokens; the next run changes none of it."""
     forge = Forge(tmp_path, {})
@@ -86,7 +89,7 @@ def test_the_administrators_tokens_are_retired_after_their_readers_restart(scrip
 
 @requires_helmfile
 def test_main_takes_only_the_portals_push_and_merge_never_over_an_outdated_base(script, tmp_path):
-    """PF-104, CC-41: one rule on `main`, converged every run. The whitelist names the Portal's
+    """PF-105, CC-41: one rule on `main`, converged every run. The whitelist names the Portal's
     user alone, stale approvals drop, an outdated branch does not merge, nobody overrides it,
     and no forge approval is asked for because the Verdict is the Portal's."""
     forge = Forge(tmp_path, {})
@@ -112,7 +115,7 @@ def test_main_takes_only_the_portals_push_and_merge_never_over_an_outdated_base(
 
 @requires_helmfile
 def test_the_seed_commits_as_the_portal_and_never_as_the_administrator(script, tmp_path):
-    """PF-104: the rule refuses the administrator's push, so the seed is the Portal's commit."""
+    """PF-105: the rule refuses the administrator's push, so the seed is the Portal's commit."""
     forge = Forge(tmp_path, {})
     forge.put("projects/bbsk/project.yaml", "apiVersion: v1\nkind: Project\nmetadata:\n  name: bbsk\n")
     assert forge.run(script).returncode == 0
@@ -138,7 +141,7 @@ def test_an_application_repository_already_in_the_organization_stays_the_portals
 
 @requires_helmfile
 def test_the_applications_move_to_their_own_organization_and_machine_user(script, tmp_path):
-    """PF-105, T-2856: with an organization for the applications, the Job moves every
+    """PF-106, T-2856: with an organization for the applications, the Job moves every
     `{project}_{name}` repository there with its history, makes jc-apps their administrator,
     mints the applications', the registry's and the lane's tokens on jc-apps against that
     organization, and takes jc-portal out of the team that may create repositories beside the
@@ -206,7 +209,7 @@ def _portal_env(docs):
 
 @requires_helmfile
 def test_one_value_moves_the_applications_and_the_portal_follows(rendered, rendered_variant):
-    """PF-105, T-2856: `gitea.forge.appsOrganization` is the switch. Off by default, so no
+    """PF-106, T-2856: `gitea.forge.appsOrganization` is the switch. Off by default, so no
     environment moves a repository by surprise; on, the Job gets the organization and the
     Portal the owner and the apps token, by secretRef only."""
     job = next(d for d in rendered("local") if d.get("kind") == "Job" and d["metadata"]["name"] == "gitea-bootstrap")

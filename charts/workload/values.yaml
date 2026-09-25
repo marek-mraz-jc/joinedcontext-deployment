@@ -22,7 +22,7 @@ command: []
 args: []
 
 env: {}               # name -> value, always rendered as a quoted string
-envSecret: {}         # name -> {secret: <secret name>, key: <key>}  -> secretKeyRef
+envSecret: {}         # name -> {secret: <secret name>, key: <key>, optional: <bool>}  -> secretKeyRef
 envFrom: []           # raw list, passed through
 
 enableServiceLinks: false

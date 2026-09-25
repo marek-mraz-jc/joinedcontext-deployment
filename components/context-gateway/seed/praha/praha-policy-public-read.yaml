@@ -16,6 +16,7 @@ spec:
         - type: AirQualityObserved
         - type: PointOfInterest
         - type: WasteContainerIsle
+        - type: WasteContainer
         - type: OffStreetParking
         - type: CityDistrict
         - type: BudgetLine

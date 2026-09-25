@@ -455,6 +455,10 @@ def test_the_realm_endpoints_are_written_into_the_ini_and_not_left_at_okta_defau
     for option in ("auth_path", "token_path", "userinfo_path", "logout_path"):
         assert f"ckanext.oidc_pkce.{option}=" in script
     assert "protocol/openid-connect/auth" in script
+    # T-2888: the callback redirects to `ckan.route_after_login` (the extension's name, not
+    # 2.11's `ckan.auth.…`); left unset it lands on `activity.dashboard`, a 500 without the
+    # activity plugin, so a sign-in that worked ended on an error page.
+    assert "ckan.route_after_login=dashboard.datasets" in script
     # Sourced, not executed: an `exit` on the nothing-to-do path would stop the entrypoint
     # before uWSGI and the pod would come up "Completed" with no CKAN in it.
     assert "exit 0" not in script

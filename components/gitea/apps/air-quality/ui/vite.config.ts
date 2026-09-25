@@ -4,7 +4,7 @@ import react from "@vitejs/plugin-react";
 // `base` is a build-time constant here and JC_BASE_PATH is the run-time one; they are the
 // same value because the reconciler serves the app under exactly one path (AP-14).
 export default defineConfig({
-  base: process.env.JC_BASE_PATH ?? "/apps/air-quality/",
+  base: process.env.JC_BASE_PATH ?? "/",
   plugins: [react()],
   test: {
     globals: true,

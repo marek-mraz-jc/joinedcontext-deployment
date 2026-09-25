@@ -19,12 +19,11 @@ from pathlib import Path
 import pytest
 import yaml
 
-# Renders from the one shared `deployment/environments/testing` folder, which it rewrites, so
-# every module that does runs on one xdist worker (ci.yml runs `-n auto --dist loadgroup`).
-pytestmark = pytest.mark.xdist_group("deployment-environments-testing")
+# Writes `deployment/environments/testing` in its own copy of the tree (`own_tree`), so it
+# shares nothing with another module. Its own xdist group keeps the module on one worker, so its
+# module-scoped renders happen once rather than once per worker (T-2895).
+pytestmark = pytest.mark.xdist_group("namespace-modes")
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEPLOYMENT = PROJECT_ROOT / "deployment"
 SLUG = "dev"
 
 #: A fully qualified in-cluster host, `<service>.<namespace>.svc.cluster.local`: the form that
@@ -38,8 +37,8 @@ BARE_HOST_PORT = re.compile(
 )
 
 
-def _render(mode: bool) -> list[dict]:
-    env_dir = DEPLOYMENT / "environments" / "testing"
+def _render(deployment: Path, mode: bool) -> list[dict]:
+    env_dir = deployment / "environments" / "testing"
     if env_dir.exists():
         shutil.rmtree(env_dir)
     env_dir.mkdir(parents=True)
@@ -49,7 +48,7 @@ def _render(mode: bool) -> list[dict]:
     try:
         result = subprocess.run(
             ["helmfile", "template", "-f", "helmfile.yaml", "--skip-deps", "-e", "testing"],
-            cwd=DEPLOYMENT,
+            cwd=deployment,
             capture_output=True,
             text=True,
             check=False,
@@ -61,17 +60,13 @@ def _render(mode: bool) -> list[dict]:
 
 
 @pytest.fixture(scope="module")
-def single() -> list[dict]:
-    if not (DEPLOYMENT / "environments").is_dir():
-        pytest.skip("run `just _dev-assemble` first")
-    return _render(True)
+def single(own_tree) -> list[dict]:
+    return _render(own_tree / "deployment", True)
 
 
 @pytest.fixture(scope="module")
-def multi() -> list[dict]:
-    if not (DEPLOYMENT / "environments").is_dir():
-        pytest.skip("run `just _dev-assemble` first")
-    return _render(False)
+def multi(own_tree) -> list[dict]:
+    return _render(own_tree / "deployment", False)
 
 
 def _namespaces(docs: list[dict]) -> set[str]:
@@ -319,6 +314,34 @@ def _pod_policy_scopes(docs: list[dict]) -> list[tuple[str, set[str]]]:
     return scopes
 
 
+#: Pod rules that are no gate of the instance and name one namespace outside it on purpose,
+#: with exactly that namespace. The Linkerd CNI plugin's opt-out reason (T-2909) holds for the
+#: plugin alone; stating it in an instance namespace would let any pod there skip the mesh.
+OUTSIDE_THE_INSTANCE = {
+    "explain-linkerd-cni-opt-out/linkerd-cni-pod-reason": {"linkerd-cni"},
+}
+
+
+def _gates(scopes: list[tuple[str, set[str]]]) -> list[tuple[str, set[str]]]:
+    """The scopes that are gates of the instance. An exception keeps its one namespace:
+    widened into the instance, it is a gate again and fails here."""
+    for name, covered in scopes:
+        if name in OUTSIDE_THE_INSTANCE:
+            assert covered == OUTSIDE_THE_INSTANCE[name], (name, sorted(covered))
+    return [(name, covered) for name, covered in scopes if name not in OUTSIDE_THE_INSTANCE]
+
+
+def test_an_exception_widened_into_the_instance_is_refused():
+    """T-2913: the linkerd-cni exception drops out of the gates only while it names linkerd-cni
+    alone; the same rule reaching dev-portal is checked, and refused, like any gate."""
+    rule = "explain-linkerd-cni-opt-out/linkerd-cni-pod-reason"
+    assert _gates([(rule, {"linkerd-cni"}), ("drop-all-capabilities/x", {"dev"})]) == [
+        ("drop-all-capabilities/x", {"dev"})
+    ]
+    with pytest.raises(AssertionError):
+        _gates([(rule, {"linkerd-cni", "dev-portal"})])
+
+
 @pytest.mark.parametrize("mode", ["single", "multi"])
 def test_every_namespace_that_runs_a_pod_is_inside_every_pod_policy(mode, request):
     """The Kyverno gates (no capabilities, read-only root, non-root user, no automounted
@@ -329,6 +352,8 @@ def test_every_namespace_that_runs_a_pod_is_inside_every_pod_policy(mode, reques
     running = _pod_namespaces(docs)
     scopes = _pod_policy_scopes(docs)
     assert running and scopes, "nothing to check means the render changed shape"
+
+    scopes = _gates(scopes)
 
     unguarded = {name: sorted(running - covered) for name, covered in scopes if running - covered}
     assert unguarded == {}, unguarded

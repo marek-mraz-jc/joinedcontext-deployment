@@ -1,5 +1,15 @@
 {% ckan_extends %}
 
+{# The installation's own links, and none of the stock ones: no CKAN documentation, no CKAN
+   Association, no Open Definition badge (T-2888). The API is the catalogue's own. #}
+{% block footer_links %}
+  <li><a href="{{ h.url_for('home.about') }}">{{ h.jc_t('about_site') }}</a></li>
+  {% if h.jc_portal_url() %}<li><a href="{{ h.jc_portal_url() }}">{{ h.jc_t('portal') }}</a></li>{% endif %}
+  <li><a href="{{ h.url_for('api.action', logic_function='package_list', ver=3) }}">{{ h.jc_t('catalogue_api') }}</a></li>
+{% endblock %}
+
+{% block footer_links_ckan %}{% endblock %}
+
 {% block footer_attribution %}
   <p>
     {{ h.jc_branding().instanceName }}

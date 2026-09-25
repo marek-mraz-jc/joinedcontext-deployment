@@ -26,6 +26,8 @@ praha-datasource-waste-stations.yaml: projects/praha/datasources/ipr-waste-stati
 praha-datasource-park-and-ride.yaml: projects/praha/datasources/ipr-park-and-ride.yaml
 praha-datasource-ticket-points.yaml: projects/praha/datasources/pid-ticket-points.yaml
 praha-datasource-budget.yaml: projects/praha/datasources/mhmp-budget.yaml
+praha-datasource-park-and-ride-occupancy.yaml: projects/praha/datasources/golemio-park-and-ride.yaml
+praha-datasource-waste-fill.yaml: projects/praha/datasources/golemio-waste-containers.yaml
 praha-pipeline-bike-stations.yaml: projects/praha/pipelines/bike-stations/pipeline.yaml
 praha-pipeline-bike-availability.yaml: projects/praha/pipelines/bike-availability/pipeline.yaml
 praha-pipeline-air-quality.yaml: projects/praha/pipelines/air-quality/pipeline.yaml
@@ -37,6 +39,8 @@ praha-pipeline-waste-stations.yaml: projects/praha/pipelines/waste-stations/pipe
 praha-pipeline-park-and-ride.yaml: projects/praha/pipelines/park-and-ride/pipeline.yaml
 praha-pipeline-ticket-points.yaml: projects/praha/pipelines/ticket-points/pipeline.yaml
 praha-pipeline-budget.yaml: projects/praha/pipelines/budget/pipeline.yaml
+praha-pipeline-park-and-ride-occupancy.yaml: projects/praha/pipelines/park-and-ride-occupancy/pipeline.yaml
+praha-pipeline-waste-fill.yaml: projects/praha/pipelines/waste-fill/pipeline.yaml
 praha-pipeline-bike-stations-bento.yaml: projects/praha/pipelines/bike-stations/bento.yaml
 praha-pipeline-bike-availability-bento.yaml: projects/praha/pipelines/bike-availability/bento.yaml
 praha-pipeline-air-quality-bento.yaml: projects/praha/pipelines/air-quality/bento.yaml
@@ -48,3 +52,11 @@ praha-pipeline-waste-stations-bento.yaml: projects/praha/pipelines/waste-station
 praha-pipeline-park-and-ride-bento.yaml: projects/praha/pipelines/park-and-ride/bento.yaml
 praha-pipeline-ticket-points-bento.yaml: projects/praha/pipelines/ticket-points/bento.yaml
 praha-pipeline-budget-bento.yaml: projects/praha/pipelines/budget/bento.yaml
+praha-pipeline-park-and-ride-occupancy-bento.yaml: projects/praha/pipelines/park-and-ride-occupancy/bento.yaml
+praha-pipeline-waste-fill-bento.yaml: projects/praha/pipelines/waste-fill/bento.yaml
+# The Golemio key of the two datasources above, SOPS-encrypted to the dev age recipient
+# (age1dwqmmfzz…3mwj55, the public half of portal-age-identity); the reconciler decrypts it at
+# apply time (CC-06, Architecture/06 §1.4). Never a plaintext value here.
+praha-secrets-golemio.enc.yaml: projects/praha/secrets/golemio.enc.yaml
+# The one application of the space (T-2917): a static bundle the Portal serves at /apps/praha-mesto/.
+praha-app-mesto.yaml: projects/praha/apps/praha-mesto/app.yaml

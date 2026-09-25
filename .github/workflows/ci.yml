@@ -75,7 +75,7 @@ jobs:
           retention-days: 3
   tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15  # ran 9m40 a run on 2026-09-25 and timed out at 10; back under budget is T-2895
     env: { KYVERNO_VERSION: v1.19.0, SOPS_VERSION: v3.13.3, AGE_VERSION: v1.2.1 }
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -147,5 +147,6 @@ jobs:
       # One worker per core: each smoke-script case runs the whole script against stubs, and in
       # series the suite passed the job's 10 minutes once T-2592 and T-2601 added cases, which
       # GitHub reports as "cancelled" and which hid a red test behind it (8m24s -> 2m45s on 4).
-      # The modules that rewrite deployment/environments/testing share one worker (xdist_group).
+      # A module that rewrites deployment/environments/testing does it in its own copy of the tree
+      # (own_tree), and each environment is rendered once for all workers (T-2895).
       - run: pytest tests -q -n auto --dist loadgroup

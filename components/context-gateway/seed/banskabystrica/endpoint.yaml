@@ -22,15 +22,17 @@ spec:
   # Architecture/21 §3, T-2432). `xlsx` is the same rows for a person who opens them in a
   # spreadsheet; `zip` is left out, a third copy of the same readings nobody rebuilds.
   enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, mcp]
-  # Cleared for the catalogue by the owner (T-2407) and held back by the integrator: the space
-  # holds 13 test stations at Helsinki's coordinates with no pm10/pm25 (seeded 2026-09-17), not
-  # the city's readings. Put back once the space holds Banská Bystrica's own data:
-  #   publish: { ckan: { instanceRef: { kind: CkanInstance, name: banskabystrica },
-  #                      datastore: { representation: csv, refresh: onReconcile } } }
-  # No licence, frequency or source yet: the space holds seeded test stations, not the city's readings
-  # (see `publish` above). They follow the air-quality source of T-2781; a licence is read from
-  # that source, never assumed (T-2790).
+  # Published under CC BY 4.0 by the owner's decision (T-2407, 2026-09-25), knowing the space still
+  # holds 13 seeded test stations rather than the city's readings; the real Banská Bystrica readings
+  # replace them in the same dataset when they exist (T-2781). No frequency or source yet: those
+  # follow that air-quality source.
+  publish:
+    ckan:
+      instanceRef: { kind: CkanInstance, name: banskabystrica }
+      license: cc-by
+      datastore: { representation: csv, refresh: onReconcile }
   catalog:
+    license: CC_BY_4_0
     publisher: { name: { sk: "Mesto Banská Bystrica", en: "City of Banská Bystrica" }, uri: "https://www.banskabystrica.sk/" }
     themes: [ENVI, HEAL]
     keywords:

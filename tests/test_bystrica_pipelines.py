@@ -12,8 +12,10 @@ are what stops the four mappings drifting apart.
 """
 
 import json
+import os
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -67,27 +69,27 @@ def processors(path: Path) -> list[dict]:
     return yaml.safe_load(path.read_text())["pipeline"]["processors"]
 
 
-def run(path: Path, fixture: str, domain: str, space: str) -> list[dict]:
-    """Execute the mapping's processors over the recorded document, as the runner would."""
+#: What the Portal appends to every stream it renders (portal `src/reconciler/streams.rs`
+#: `batching()`): an array message is taken as it is and anything else becomes a one-element
+#: array, then one message per element, which is where the validation stage asks each entity for
+#: its class and its id (PL-60, DM-61, PF-42), and batches of 1000 for the Endpoint. A seed that
+#: archives its own output nests the batch one level deeper, and the validation stage then reads
+#: an array where an entity belongs: 18 pipelines ran Live and wrote nothing (T-2914).
+PORTAL_BATCHING = [
+    {"mapping": 'root = if this.type() == "array" { this } else { [this] }'},
+    {"unarchive": {"format": "json_array"}},
+    {"split": {"size": 1000}},
+    {"archive": {"format": "json_array"}},
+]
+
+
+def run(path: Path, fixture: str, domain: str, space: str) -> list:
+    """Execute the mapping's processors over the recorded document and then the Portal's
+    batching, in one Bento stream, as the runner does; answer every element the Endpoint
+    receives."""
     document = json.dumps(json.loads((FIXTURES / fixture).read_text()), separators=(",", ":"))
-    steps = processors(path)
-    payload = document
-    for step in steps:
-        if "unarchive" in step:
-            # `unarchive: json_array` turns one message into one per element; the mapping after
-            # it sees one element, so the remaining steps run per element and are re-archived.
-            elements = json.loads(payload)
-            mapped = [
-                run_mapping(step_after, json.dumps(element, separators=(",", ":")), domain, space)
-                for step_after in [s for s in steps[steps.index(step) + 1:] if "mapping" in s]
-                for element in elements
-            ]
-            return [json.loads(line) for line in mapped if line.strip() not in ("", "null")]
-        if "mapping" in step:
-            payload = run_mapping(step, payload, domain, space)
-        if "archive" in step:
-            break
-    return json.loads(payload)
+    written = run_stream(processors(path) + PORTAL_BATCHING, document, domain, space)
+    return [element for batch in written.splitlines() if batch.strip() for element in json.loads(batch)]
 
 
 def run_mapping(step: dict, payload: str, domain: str, space: str) -> str:
@@ -100,11 +102,58 @@ def run_mapping(step: dict, payload: str, domain: str, space: str) -> str:
     return result.stdout
 
 
+def run_stream(steps: list[dict], payload: str, domain: str, space: str) -> str:
+    """Run pipeline steps over one message through a Bento stream, and answer what it wrote:
+    one line per message out of it."""
+    assert "archive" in steps[-1], "a stream that unarchives must archive again to answer one document"
+    with tempfile.TemporaryDirectory(dir="/tmp") as directory:
+        work = Path(directory)
+        work.chmod(0o777)
+        (work / "in.json").write_text(payload)
+        (work / "cfg.yaml").write_text(yaml.safe_dump({
+            "input": {"file": {"paths": ["/w/in.json"], "scanner": {"to_the_end": {}}}},
+            "pipeline": {"processors": steps},
+            "output": {"file": {"path": "/w/out.json", "codec": "lines"}},
+        }))
+        for item in work.iterdir():
+            item.chmod(0o666)
+        result = subprocess.run(
+            ["docker", "run", "--rm", "--user", f"{os.getuid()}:{os.getgid()}", "-v", f"{work}:/w", "-w", "/w",
+             "-e", f"JC_ORG_DOMAIN={domain}", "-e", f"JC_SPACE={space}", BENTO, "-c", "/w/cfg.yaml"],
+            capture_output=True, text=True, timeout=240,
+        )
+        produced = work / "out.json"
+        assert produced.is_file(), (result.stderr or result.stdout)[-2000:]
+        return produced.read_text()
+
+
 @pytest.fixture(scope="module")
 def entities():
     if shutil.which("docker") is None:
         pytest.skip("no container runtime")
     return {path: run(path, *config) for path, config in MAPPINGS.items()}
+
+
+@requires_docker
+def test_the_validation_stage_reads_one_entity_per_message(entities):
+    """T-2914: after the Portal's batching each message is one entity, never the seed's array."""
+    for path, produced in entities.items():
+        nested = [type(e).__name__ for e in produced if not isinstance(e, dict)]
+        assert not nested, f"{path.name}: the validation stage reads {nested[:3]}, not entities"
+
+
+def test_a_seed_ends_in_archive_only_after_unarchiving():
+    """The Portal's batching archives every stream; a seed whose mapping already answers the
+    array and then archives it hands the batching one array holding the batch, and not one
+    entity passes validation (T-2914). An `archive` that joins rows before the mapping (the
+    EEA parquet seeds) is the mapping's input, not its output. A shape check, so it holds
+    without a container runtime."""
+    nesting = []
+    for path in sorted(SEED.glob("*/*-bento.yaml")):
+        steps = [next(iter(step)) for step in (yaml.safe_load(path.read_text()) or {}).get("pipeline", {}).get("processors") or []]
+        if steps and steps[-1] == "archive" and "unarchive" not in steps:
+            nesting.append(path.relative_to(SEED).as_posix())
+    assert nesting == []
 
 
 @requires_docker

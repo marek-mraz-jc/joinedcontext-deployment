@@ -31,7 +31,7 @@ TOKEN_SECRETS = {
     "app-registry",
     # What the lane refresher writes JC_LANE_TOKEN with (T-2636).
     "gitea-token-lane-secret",
-    # The applications' machine user's (PF-105, T-2856).
+    # The applications' machine user's (PF-106, T-2856).
     "gitea-token-apps",
 }
 
@@ -81,7 +81,7 @@ def test_the_job_may_touch_only_the_secrets_it_writes(local):
     )
     for rule in role["rules"]:
         if rule["resources"] == ["deployments"]:
-            # PF-105: what read a token at start is restarted when it is minted again; `patch`
+            # PF-106: what read a token at start is restarted when it is minted again; `patch`
             # on those names, nothing that reads or lists.
             assert rule["apiGroups"] == ["apps"] and rule["verbs"] == ["patch"], rule
             assert set(rule["resourceNames"]) <= {"portal", "context-gateway", "agent-proxy"}, rule
@@ -170,7 +170,7 @@ def test_every_step_is_idempotent(script):
 
     Read as text rather than executed, because executing it needs a forge. The three markers are
     the three branches that make a second run a no-op."""
-    # Every organization, the configuration's and (PF-105) the applications', through one function.
+    # Every organization, the configuration's and (PF-106) the applications', through one function.
     assert 'status=$(forge_code GET "/api/v1/orgs/$1")' in script
     assert 'ensure_org "$ORG"' in script
     # Every repository, the organization's and (layout 2) each project's, through one function.

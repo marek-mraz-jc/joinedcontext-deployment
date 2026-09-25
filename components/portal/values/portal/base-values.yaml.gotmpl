@@ -91,6 +91,12 @@ envSecret:
   JC_PORTAL_COOKIE_KEY:
     secret: portal-cookie-key
     key: key
+  # The key a rotation retired, still opening the cookies it sealed until
+  # `rotate-secret.sh --drop-previous` removes it (OPS-45, T-2842). Absent outside a rotation.
+  JC_PORTAL_COOKIE_KEY_PREVIOUS:
+    secret: portal-cookie-key
+    key: previous
+    optional: true
   JC_OIDC_CLIENT_SECRET:
     secret: keycloak-client-portal-api
     key: client-secret
@@ -106,7 +112,7 @@ envSecret:
     secret: gitea-token-portal
     key: token
 {{- if .Values.gitea.forge.appsOrganization }}
-  # The applications' own machine user (PF-105): their repositories, packages and builds.
+  # The applications' own machine user (PF-106): their repositories, packages and builds.
   JC_GITEA_APPS_TOKEN:
     secret: gitea-token-apps
     key: token
@@ -172,11 +178,11 @@ env:
   JC_GITEA_URL: "http://gitea-http.{{ .Values.gitea.forge.namespace }}.svc.cluster.local:3000"
   JC_GITEA_OWNER: {{ $global.configRepo.owner | quote }}
   JC_GITEA_REPO: {{ $global.configRepo.name | quote }}
-  # The gateway's forge user (PF-105), made a reader of every project repository the Portal
+  # The gateway's forge user (PF-106), made a reader of every project repository the Portal
   # opens in layout 2; the bootstrap Job mints the gateway's token on it.
   JC_GITEA_READER: "jc-gateway"
 {{- if .Values.gitea.forge.appsOrganization }}
-  # The generated applications' own organization (PF-105), with JC_GITEA_APPS_TOKEN above.
+  # The generated applications' own organization (PF-106), with JC_GITEA_APPS_TOKEN above.
   JC_GITEA_APPS_OWNER: {{ .Values.gitea.forge.appsOrganization | quote }}
 {{- end }}
   # Where a browser reaches the forge: the "Source" link of a manifest opens here, and a
@@ -191,6 +197,8 @@ env:
   # comes from the ConfigMap; a missing or unreadable one is neutral defaults, never a crash,
   # so the Portal starts on an environment that configured no branding at all.
   JC_BRANDING_FILE: /etc/jc/branding/branding.yaml
+  # The operator's bounds on an Organization's limits (PF-97), from the same ConfigMap.
+  JC_PORTAL_ORGANIZATION_BOUNDS_FILE: /etc/jc/branding/organization-bounds.yaml
   # The validation checks' last results, one digest per check, which
   # scripts/publish-health.py writes into the ConfigMap jc-validation-results (OPS-53).
   JC_HEALTH_DIR: /etc/jc/health
@@ -392,6 +400,10 @@ configMap:
   data:
     branding.yaml: |
 {{ omit $branding "logoSvg" | toYaml | indent 6 }}
+    # The operator's bounds (PF-97): the Portal's own configuration beside its branding, so a
+    # bound changed in the values restarts the Portal through the same checksum.
+    organization-bounds.yaml: |
+{{ dig "organizationBounds" dict $thisPortal | toYaml | indent 6 }}
 {{- if and ($branding.logoSvg | default "") ($branding.logo | default "") }}
     {{ $branding.logo }}: |
 {{ $branding.logoSvg | indent 6 }}

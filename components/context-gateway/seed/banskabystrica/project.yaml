@@ -9,21 +9,15 @@ metadata:
     en: "The city: 72 123 people, publishing what a city owns. The region is its own project, `bbsk`."
 spec:
   organizationRef: hel
-  # The smaller tenant of the same node, tighter still (PF-73), and `publicEndpoints` is exactly
-  # what it publishes today (`public-air`): the endpoints page of this project is where the
-  # pre-emptive quota warning of T-1594 is true and can be read, on dev and in the demo.
+  # Owner, 2026-09-25 (T-2873): no demo work and no city dataset is refused by a quota, so every
+  # project allows 100 of each countable kind and runtime ceilings nobody reaches (PF-73). The
+  # quota stays as the mechanism; what the node holds is the operator's bounds file (PF-97).
   quotas:
-    # Four spaces: the seeded `ovzdusie`, the raw cube rows in `banskabystrica-mesto`, the
-    # indicators in `banskabystrica-kpi` and the city's open data in `banskabystrica-verejne`
-    # (T-2781). Seventeen pipelines: eleven streams into `banskabystrica-mesto`, four open-data
-    # feeds and the two that compute the indicators. Two public endpoints: `public-air` and
-    # `banskabystrica-verejne`; the city's indicators reach the region's application by a named
-    # share and not by being public (EP-15).
-    contextSpaces: 4
-    residentPipelines: 17
-    publicEndpoints: 2
-    apps: 1
-    ingestEventsPerSecond: 50
+    contextSpaces: 100
+    residentPipelines: 100
+    publicEndpoints: 100
+    apps: 100
+    ingestEventsPerSecond: 500
     agentRunsPerDay: 2000
-    entitiesPerSpace: 10000
-    requestsPerMinute: 600
+    entitiesPerSpace: 1000000
+    requestsPerMinute: 6000

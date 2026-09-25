@@ -118,6 +118,9 @@ spec:
                 secretKeyRef:
                   name: {{ $sec.secret | quote }}
                   key: {{ $sec.key | quote }}
+                  {{- if $sec.optional }}
+                  optional: true
+                  {{- end }}
             {{- end }}
             {{- range $key, $val := .Values.env }}
             - name: {{ $key }}

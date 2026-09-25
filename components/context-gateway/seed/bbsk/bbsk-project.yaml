@@ -9,16 +9,15 @@ metadata:
     en: "The region: 13 districts, 614 356 people, publishing what a region owns."
 spec:
   organizationRef: hel
-  # Three spaces (the raw cube rows, the indicators and the region's registers), one pipeline
-  # per feed plus the one that computes the indicators, and two public endpoints: the indicators
-  # the application reads and the registers (T-2783). Sized to what this project declares and no
-  # more (PF-73).
+  # Owner, 2026-09-25 (T-2873): no demo work and no city dataset is refused by a quota, so every
+  # project allows 100 of each countable kind and runtime ceilings nobody reaches (PF-73). The
+  # quota stays as the mechanism; what the node holds is the operator's bounds file (PF-97).
   quotas:
-    contextSpaces: 3
-    residentPipelines: 14
-    publicEndpoints: 2
-    apps: 1
-    ingestEventsPerSecond: 20
+    contextSpaces: 100
+    residentPipelines: 100
+    publicEndpoints: 100
+    apps: 100
+    ingestEventsPerSecond: 500
     agentRunsPerDay: 2000
-    entitiesPerSpace: 15000
-    requestsPerMinute: 600
+    entitiesPerSpace: 1000000
+    requestsPerMinute: 6000

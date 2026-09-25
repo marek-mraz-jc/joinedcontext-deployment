@@ -94,6 +94,20 @@ portal-ui:
           X-Content-Type-Options: "nosniff"
           X-Frame-Options: "SAMEORIGIN"
           Referrer-Policy: "no-referrer"
+    # OPS-34: the upstream owns the Content Security Policy (the Portal's, each App's, AP-12,
+    # AP-122), so the edge sets none over it and adds this baseline only to an answer that
+    # carries none, its own refusals included. `frame-ancestors` says what X-Frame-Options
+    # says. It runs after `response-rewrite`, whose `add` of an App's frame-ancestors counts.
+    serverless-post-function:
+      phase: header_filter
+      functions:
+        - >-
+          return function()
+            if ngx.header["Content-Security-Policy"] == nil then
+              ngx.header["Content-Security-Policy"] =
+                "frame-ancestors 'self'; object-src 'none'; base-uri 'self'"
+            end
+          end
 
 portal-public:
   name: portal-public
@@ -167,6 +181,20 @@ portal-public:
           X-Content-Type-Options: "nosniff"
           X-Frame-Options: "SAMEORIGIN"
           Referrer-Policy: "no-referrer"
+    # OPS-34: the upstream owns the Content Security Policy (the Portal's, each App's, AP-12,
+    # AP-122), so the edge sets none over it and adds this baseline only to an answer that
+    # carries none, its own refusals included. `frame-ancestors` says what X-Frame-Options
+    # says. It runs after `response-rewrite`, whose `add` of an App's frame-ancestors counts.
+    serverless-post-function:
+      phase: header_filter
+      functions:
+        - >-
+          return function()
+            if ngx.header["Content-Security-Policy"] == nil then
+              ngx.header["Content-Security-Policy"] =
+                "frame-ancestors 'self'; object-src 'none'; base-uri 'self'"
+            end
+          end
 
 portal-api:
   name: portal-api
@@ -249,6 +277,20 @@ portal-api:
           X-Frame-Options: "DENY"
           Referrer-Policy: "no-referrer"
           Cache-Control: "no-store, no-cache, must-revalidate"
+    # OPS-34: the upstream owns the Content Security Policy (the Portal's, each App's, AP-12,
+    # AP-122), so the edge sets none over it and adds this baseline only to an answer that
+    # carries none, its own refusals included. `frame-ancestors` says what X-Frame-Options
+    # says. It runs after `response-rewrite`, whose `add` of an App's frame-ancestors counts.
+    serverless-post-function:
+      phase: header_filter
+      functions:
+        - >-
+          return function()
+            if ngx.header["Content-Security-Policy"] == nil then
+              ngx.header["Content-Security-Policy"] =
+                "frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
+            end
+          end
 
 portal-well-known:
   name: portal-well-known
@@ -289,6 +331,20 @@ portal-well-known:
           X-Frame-Options: "DENY"
           Referrer-Policy: "no-referrer"
           Cache-Control: "no-store, no-cache, must-revalidate"
+    # OPS-34: the upstream owns the Content Security Policy (the Portal's, each App's, AP-12,
+    # AP-122), so the edge sets none over it and adds this baseline only to an answer that
+    # carries none, its own refusals included. `frame-ancestors` says what X-Frame-Options
+    # says. It runs after `response-rewrite`, whose `add` of an App's frame-ancestors counts.
+    serverless-post-function:
+      phase: header_filter
+      functions:
+        - >-
+          return function()
+            if ngx.header["Content-Security-Policy"] == nil then
+              ngx.header["Content-Security-Policy"] =
+                "frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
+            end
+          end
 
 portal-metrics:
   name: portal-metrics
@@ -341,12 +397,26 @@ portal-metrics:
           X-Frame-Options: "DENY"
           Referrer-Policy: "no-referrer"
           Cache-Control: "no-store, no-cache, must-revalidate"
+    # OPS-34: the upstream owns the Content Security Policy (the Portal's, each App's, AP-12,
+    # AP-122), so the edge sets none over it and adds this baseline only to an answer that
+    # carries none, its own refusals included. `frame-ancestors` says what X-Frame-Options
+    # says. It runs after `response-rewrite`, whose `add` of an App's frame-ancestors counts.
+    serverless-post-function:
+      phase: header_filter
+      functions:
+        - >-
+          return function()
+            if ngx.header["Content-Security-Policy"] == nil then
+              ngx.header["Content-Security-Policy"] =
+                "frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
+            end
+          end
 
-# The shared `/apps/*` surface on the apex: compiled bundles of `static` apps, served by the
-# Portal behind the same login (AP-26). jcctl renders one `app-{name}` route per App above this
-# one, with its cookie scoped to `/apps/{name}/` and `unauth_action: pass` for a public app;
-# this route is what a path under /apps/ that belongs to no App falls back to, and it asks for
-# a login before it shows anything.
+# No route uses this config: it is the plugin chain the Portal copies onto every published
+# App's own route on `{name}.apps.{domain}` (ADR-N-037, AP-112, AP-133), changing only the login
+# (the App's client, its secret, its host-only cookie). Header stripping, the rate limit and
+# the security headers of an App's page are therefore decided here. No apex route serves an
+# App any more; its old `/apps/{name}/` path is the Portal's 308 to the App's host.
 apps-surface:
   name: apps-surface
   description: Static apps on demand behind the edge login
@@ -419,6 +489,20 @@ apps-surface:
           X-Content-Type-Options: "nosniff"
           X-Frame-Options: "SAMEORIGIN"
           Referrer-Policy: "no-referrer"
+    # OPS-34: the upstream owns the Content Security Policy (the Portal's, each App's, AP-12,
+    # AP-122), so the edge sets none over it and adds this baseline only to an answer that
+    # carries none, its own refusals included. `frame-ancestors` says what X-Frame-Options
+    # says. It runs after `response-rewrite`, whose `add` of an App's frame-ancestors counts.
+    serverless-post-function:
+      phase: header_filter
+      functions:
+        - >-
+          return function()
+            if ngx.header["Content-Security-Policy"] == nil then
+              ngx.header["Content-Security-Policy"] =
+                "frame-ancestors 'self'; object-src 'none'; base-uri 'self'"
+            end
+          end
 
 # The apex answers `/` with a redirect to the Portal (ADR-N-019 §3.1). The route terminates
 # here, the way ckan-redirect does, and never dials the upstream it declares. The path and the
@@ -465,3 +549,17 @@ portal-redirect:
           X-Frame-Options: "DENY"
           Referrer-Policy: "no-referrer"
           Cache-Control: "no-store, no-cache, must-revalidate"
+    # OPS-34: the upstream owns the Content Security Policy (the Portal's, each App's, AP-12,
+    # AP-122), so the edge sets none over it and adds this baseline only to an answer that
+    # carries none, its own refusals included. `frame-ancestors` says what X-Frame-Options
+    # says. It runs after `response-rewrite`, whose `add` of an App's frame-ancestors counts.
+    serverless-post-function:
+      phase: header_filter
+      functions:
+        - >-
+          return function()
+            if ngx.header["Content-Security-Policy"] == nil then
+              ngx.header["Content-Security-Policy"] =
+                "frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
+            end
+          end

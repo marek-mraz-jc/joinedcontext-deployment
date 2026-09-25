@@ -23,6 +23,12 @@ portal:
     appMirror:
       githubOwner: ''
       secret: github-app-mirror
+    # The operator's bounds on what an Organization may set, keyed by catalog path (PF-97,
+    # ADR-N-035 §3.7), e.g. `spec.projects.quota.contextSpaces: { max: 20 }`. An entry left out
+    # keeps the catalog's built-in bound; a security setting's bound may only tighten it. The
+    # Portal refuses to start on a path the catalog lacks or a loosened security bound, so a
+    # typo shows at the apply rather than as a limit nobody set.
+    organizationBounds: {}
   # Each project's own namespace for its pod-backed Apps, `{instanceSlug}-{project}-apps`
   # (AP-116): the cluster-wide rights the Portal creates them with and the admission policy that
   # keeps those rights to such namespaces (AP-117). Off means no pod-backed App runs: the Portal

@@ -77,6 +77,38 @@ context-endpoint:
     size: 320
     idleTimeout: 60
     requests: 1000
+# The MCP hub (EP-87, ADR-N-025): one connector over every Endpoint a token reaches, the
+# Endpoint named on each call. `/api/mcp` and its protected-resource metadata; the gateway
+# answers 404 to anything else under the prefix. Apex only, like the Endpoint URLs a connector
+# is given, and the Endpoint surface's plugin chain: forged headers stripped, the same limits.
+# The gateway verifies the bearer and decides each call as the named Endpoint's own.
+context-mcp-hub:
+  name: context-mcp-hub
+  description: The MCP hub over the Endpoints a token reaches
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/api/mcp*'
+  host: '{{ .Values.global.domain }}'
+  priority: 20
+  pluginConfig: context-endpoint
+  timeout:
+    connect: 6
+    send: 60
+    read: 300
+# The hub on the Portal host, where the Endpoints view shows its URL beside the per-Endpoint
+# ones: the edge session becomes the bearer and a presented bearer passes as it is, exactly as on
+# context-endpoint-portal, whose plugin chain it shares.
+context-mcp-hub-portal:
+  name: context-mcp-hub-portal
+  description: The MCP hub on the Portal host, edge session as bearer
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/api/mcp*'
+  subDomain: portal
+  priority: 20
+  pluginConfig: context-endpoint-portal
+  timeout:
+    connect: 6
+    send: 60
+    read: 300
 # The same surface on the Portal host: the Portal UI fetches an endpoint's access and samples
 # from its own origin, and a preview's form writes through the page that framed it (AP-63).
 # Without this route those paths fall through to portal-ui, a login redirect and the Portal's
@@ -96,28 +128,6 @@ context-endpoint-portal:
     read: 300
   # APISIX defaults to the same 320, but a long-lived streaming upstream is the one place
   # where the pool size is a deliberate capacity decision rather than a default.
-  keepalivePool:
-    size: 320
-    idleTimeout: 60
-    requests: 1000
-# A published static app's data calls (T-2670): the apps session cookie lives on /apps/ (AP-29)
-# and never reaches /api/endpoint/* at the root, so the SDK sends them under the app's own path
-# and this route sets the session as the bearer and strips the /apps/{name} prefix. Above
-# apps-surface (25) and a future app-{name} route (30), so neither swallows them.
-context-endpoint-apps:
-  name: context-endpoint-apps
-  description: Context endpoint surface under a static app's path, the apps session as bearer
-  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
-  # APISIX routes with radixtree_host_uri, which reads `:name` literally, so the route takes
-  # /apps/* and narrows it with a regex on the normalised path.
-  uri: '/apps/*'
-  vars: [['uri', '~~', '^/apps/[^/]+/api/endpoint/']]
-  host: '{{ .Values.global.domain }}'
-  priority: 35
-  timeout:
-    connect: 6
-    send: 60
-    read: 300
   keepalivePool:
     size: 320
     idleTimeout: 60

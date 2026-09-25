@@ -42,19 +42,24 @@ requires_docker = pytest.mark.skipif(
 )
 
 
-def bento(mapping: str, document, env: dict):
+def bento(mapping: str, document, env: dict, per_element: bool = False):
     """Run one Bloblang mapping over one document, through a Bento stream.
 
     A stream rather than `bento blobl`, because a page of five hundred entities is one line and
-    `blobl` reads stdin with a scanner that refuses it.
+    `blobl` reads stdin with a scanner that refuses it. `per_element` splits a JSON array the way
+    the pipeline's own `unarchive: json_array` does and joins the results back into one array,
+    in the same container: one container per element cost a minute and a half (T-2895).
     """
+    processors = [{"mapping": mapping}]
+    if per_element:
+        processors = [{"unarchive": {"format": "json_array"}}, *processors, {"archive": {"format": "json_array"}}]
     with tempfile.TemporaryDirectory(dir="/tmp") as directory:
         work = Path(directory)
         work.chmod(0o777)
         (work / "in.json").write_text(json.dumps(document, separators=(",", ":")))
         (work / "cfg.yaml").write_text(yaml.safe_dump({
             "input": {"file": {"paths": ["/w/in.json"], "scanner": {"to_the_end": {}}}},
-            "pipeline": {"processors": [{"mapping": mapping}]},
+            "pipeline": {"processors": processors},
             "output": {"file": {"path": "/w/out.json", "codec": "all-bytes"}},
         }))
         for item in work.iterdir():
@@ -86,7 +91,7 @@ def ingested(*fixtures) -> list[dict]:
         steps = yaml.safe_load(path.read_text())["pipeline"]["processors"]
         mapping = mapping_of(path)
         if any("unarchive" in step for step in steps):
-            rows += [bento(mapping, element, env) for element in document]
+            rows += bento(mapping, document, env, per_element=True)
         else:
             rows += bento(mapping, document, env)
     return rows

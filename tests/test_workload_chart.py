@@ -98,6 +98,14 @@ def test_env_raw_value_and_env_secret(tmp_path):
 
 
 @requires_helm
+def test_an_optional_env_secret_key_may_be_absent(tmp_path):
+    """T-2842: a key only a rotation writes must not hold the pod in CreateContainerConfigError."""
+    values = {"envSecret": {"PREV": {"secret": "s", "key": "previous", "optional": True}}}
+    env_vars = find_resource(render_workload(tmp_path, values), "Deployment")["spec"]["template"]["spec"]["containers"][0]["env"]
+    assert env_vars[0]["valueFrom"]["secretKeyRef"] == {"name": "s", "key": "previous", "optional": True}
+
+
+@requires_helm
 def test_configmap_empty_data_renders_and_annotations(tmp_path):
     docs = render_workload(tmp_path, {"configMap": {"enabled": True, "mountPath": "/streams", "data": {}}})
     cm = find_resource(docs, "ConfigMap")

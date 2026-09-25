@@ -69,7 +69,7 @@ spec:
               env:
                 - name: GITEA_URL
                   value: {{ .Values.giteaUrl | quote }}
-                # The organization the applications' builds run in (PF-105).
+                # The organization the applications' builds run in (PF-106).
                 - name: ORG
                   value: {{ .Values.apps.owner | default .Values.repo.owner | quote }}
                 - name: TOKEN_URL
