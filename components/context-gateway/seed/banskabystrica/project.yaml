@@ -23,6 +23,6 @@ spec:
     publicEndpoints: 1
     apps: 1
     ingestEventsPerSecond: 50
-    agentRunsPerDay: 20
+    agentRunsPerDay: 2000
     entitiesPerSpace: 10000
     requestsPerMinute: 600
