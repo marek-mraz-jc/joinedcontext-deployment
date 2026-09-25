@@ -1,0 +1,26 @@
+# The region's own registers as it publishes them on its open-data portal (T-2783): the outlines
+# of its districts and municipalities, the organisations it founded, the hospitals, the social
+# services public bodies run and the bridges of the road network. Every source is BBSK's, under
+# CC BY-SA 4.0, read from opendata.bbsk.sk; the statistics stay in `bbsk-kraj`.
+apiVersion: joinedcontext.com/v1alpha1
+kind: ContextSpace
+metadata:
+  name: bbsk-registre
+  namespace: bbsk
+  title: { sk: "Kraj — registre", en: "Region, registers" }
+  description:
+    sk: >-
+      Hranice okresov a obcí, organizácie v zriaďovateľskej pôsobnosti kraja, nemocnice, sociálne
+      služby verejných poskytovateľov a mosty cestnej siete. Zdroj: Banskobystrický samosprávny
+      kraj, opendata.bbsk.sk, licencia CC BY-SA 4.0.
+    en: >-
+      District and municipality outlines, the organisations the region founded, hospitals, the
+      social services of public providers and the bridges of the road network. Source: Banská
+      Bystrica Self-Governing Region, opendata.bbsk.sk, licensed CC BY-SA 4.0.
+spec:
+  # The space name is the segment its ids carry, pinned so it cannot drift (PF-84).
+  urnSegment: bbsk-registre
+  isSandbox: false
+  # The one model of this space: a write of a type it does not declare is refused (DM-61).
+  dataModelRef: { kind: DataModel, name: bbsk-registre }
+  defaultLocale: sk

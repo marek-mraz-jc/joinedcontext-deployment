@@ -37,6 +37,23 @@ bbsk-pipeline-obyvatelstvo.yaml: projects/bbsk/pipelines/obyvatelstvo/pipeline.y
 bbsk-pipeline-obyvatelstvo-bento.yaml: projects/bbsk/pipelines/obyvatelstvo/bento.yaml
 bbsk-pipeline-emisie.yaml: projects/bbsk/pipelines/emisie/pipeline.yaml
 bbsk-pipeline-emisie-bento.yaml: projects/bbsk/pipelines/emisie/bento.yaml
+# The further ŠÚ SR cubes of the region (T-2783): jobseekers, housing, wages and tourism, into
+# bbsk-kraj through the same JSON-stat decoder.
+bbsk-datasource-uchadzaci.yaml: projects/bbsk/datasources/susr-pr5001rr.yaml
+bbsk-pipeline-uchadzaci.yaml: projects/bbsk/pipelines/uchadzaci/pipeline.yaml
+bbsk-pipeline-uchadzaci-bento.yaml: projects/bbsk/pipelines/uchadzaci/bento.yaml
+bbsk-datasource-byty.yaml: projects/bbsk/datasources/susr-st3004rr.yaml
+bbsk-pipeline-byty.yaml: projects/bbsk/pipelines/byty/pipeline.yaml
+bbsk-pipeline-byty-bento.yaml: projects/bbsk/pipelines/byty/bento.yaml
+bbsk-datasource-mzdy.yaml: projects/bbsk/datasources/susr-np3110rr.yaml
+bbsk-pipeline-mzdy.yaml: projects/bbsk/pipelines/mzdy/pipeline.yaml
+bbsk-pipeline-mzdy-bento.yaml: projects/bbsk/pipelines/mzdy/bento.yaml
+bbsk-datasource-navstevnost.yaml: projects/bbsk/datasources/susr-cr3802mr.yaml
+bbsk-pipeline-navstevnost.yaml: projects/bbsk/pipelines/navstevnost/pipeline.yaml
+bbsk-pipeline-navstevnost-bento.yaml: projects/bbsk/pipelines/navstevnost/bento.yaml
+bbsk-datasource-kapacity.yaml: projects/bbsk/datasources/susr-cr3807qr.yaml
+bbsk-pipeline-kapacity.yaml: projects/bbsk/pipelines/kapacity/pipeline.yaml
+bbsk-pipeline-kapacity-bento.yaml: projects/bbsk/pipelines/kapacity/bento.yaml
 # The indicator pipeline (T-2307): its Bloblang is inline, because its input is a query through
 # the raw space's Endpoint and not a DataSource fetch, so there is no bento.yaml beside it.
 bbsk-pipeline-ukazovatele.yaml: projects/bbsk/pipelines/ukazovatele/pipeline.yaml
@@ -45,3 +62,33 @@ bbsk-pipeline-ukazovatele.yaml: projects/bbsk/pipelines/ukazovatele/pipeline.yam
 bbsk-app-ukazovatele.yaml: projects/bbsk/apps/bbsk-ukazovatele/app.yaml
 # The open-data catalogue of the region (T-2407): the one cleared endpoint, bbsk-kpi, publishes here.
 bbsk-ckan.yaml: projects/bbsk/ckan/bbsk.yaml
+# The region's own registers (T-2783): one public space with its one model, republished to the
+# region's catalogue under CC BY-SA 4.0, and one DataSource, pipeline and mapping per register.
+bbsk-space-registre.yaml: projects/bbsk/spaces/bbsk-registre/space.yaml
+bbsk-datamodel-registre.yaml: projects/bbsk/spaces/bbsk-registre/datamodels/bbsk-registre.yaml
+bbsk-registre.linkml.yaml: projects/bbsk/spaces/bbsk-registre/datamodels/bbsk-registre.linkml.yaml
+bbsk-registre.v1.schema.json: projects/bbsk/spaces/bbsk-registre/datamodels/bbsk-registre.v1.schema.json
+bbsk-registre.v1.context.jsonld: projects/bbsk/spaces/bbsk-registre/datamodels/bbsk-registre.v1.context.jsonld
+bbsk-registre.v1.example.jsonld: projects/bbsk/spaces/bbsk-registre/datamodels/bbsk-registre.v1.example.jsonld
+bbsk-registre.v1.md: projects/bbsk/spaces/bbsk-registre/datamodels/bbsk-registre.v1.md
+bbsk-endpoint-registre.yaml: projects/bbsk/spaces/bbsk-registre/endpoints/bbsk-registre.yaml
+bbsk-policy-registre-pipelines-write.yaml: projects/bbsk/spaces/bbsk-registre/policies/registre-pipelines-write.yaml
+bbsk-policy-registre-read.yaml: projects/bbsk/spaces/bbsk-registre/policies/registre-read.yaml
+bbsk-datasource-okresy.yaml: projects/bbsk/datasources/bbsk-okresy.yaml
+bbsk-pipeline-okresy.yaml: projects/bbsk/pipelines/okresy/pipeline.yaml
+bbsk-pipeline-okresy-bento.yaml: projects/bbsk/pipelines/okresy/bento.yaml
+bbsk-datasource-obce.yaml: projects/bbsk/datasources/bbsk-obce.yaml
+bbsk-pipeline-obce.yaml: projects/bbsk/pipelines/obce/pipeline.yaml
+bbsk-pipeline-obce-bento.yaml: projects/bbsk/pipelines/obce/bento.yaml
+bbsk-datasource-organizacie.yaml: projects/bbsk/datasources/bbsk-organizacie.yaml
+bbsk-pipeline-organizacie.yaml: projects/bbsk/pipelines/organizacie/pipeline.yaml
+bbsk-pipeline-organizacie-bento.yaml: projects/bbsk/pipelines/organizacie/bento.yaml
+bbsk-datasource-nemocnice.yaml: projects/bbsk/datasources/bbsk-nemocnice.yaml
+bbsk-pipeline-nemocnice.yaml: projects/bbsk/pipelines/nemocnice/pipeline.yaml
+bbsk-pipeline-nemocnice-bento.yaml: projects/bbsk/pipelines/nemocnice/bento.yaml
+bbsk-datasource-socialne-sluzby.yaml: projects/bbsk/datasources/bbsk-socialne-sluzby.yaml
+bbsk-pipeline-socialne-sluzby.yaml: projects/bbsk/pipelines/socialne-sluzby/pipeline.yaml
+bbsk-pipeline-socialne-sluzby-bento.yaml: projects/bbsk/pipelines/socialne-sluzby/bento.yaml
+bbsk-datasource-mosty.yaml: projects/bbsk/datasources/bbsk-mosty.yaml
+bbsk-pipeline-mosty.yaml: projects/bbsk/pipelines/mosty/pipeline.yaml
+bbsk-pipeline-mosty-bento.yaml: projects/bbsk/pipelines/mosty/bento.yaml

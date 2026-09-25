@@ -97,7 +97,8 @@ banskabystrica-pipelines:
           id.token.claim: 'false'
 
 # The region's ingestion pipelines (T-2384), the same rule for project `bbsk`: `bbsk-kraj` is
-# written by `emisie` and `obyvatelstvo` and read back by `ukazovatele`, which writes `bbsk-kpi`.
+# written by the ŠÚ SR cube streams and read back by `ukazovatele`, which writes `bbsk-kpi`; the
+# register streams write `bbsk-registre` (T-2783).
 bbsk-pipelines:
   # An account of the demo seed: rendered by the development profile only (T-1720, CC-73).
   profiles: [development]
@@ -128,6 +129,14 @@ bbsk-pipelines:
         consentRequired: false
         config:
           included.custom.audience: qfhhh5no5wz4lk3rfjisdtx3chiyfig3
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: bbsk-registre-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: lws6dd7o56veegwxsjtvak3goeta4mfn
           access.token.claim: 'true'
           id.token.claim: 'false'
 

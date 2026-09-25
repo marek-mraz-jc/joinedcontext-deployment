@@ -472,17 +472,19 @@ def test_the_realm_egress_is_the_login_s_and_closes_with_it(rendered, rendered_v
     """The catalogue dials nothing else on the internet. The login needs the realm's public host
     — the `iss` claim carries it, so the in-cluster Service is no substitute — and that is the
     entire hole: 443, 8443 for the DNAT a request to the cluster's own public address takes, and
-    no third port. The flag opens the hole and closes it, and it is off here (T-0403)."""
-    assert [d for d in rendered("dev")
-            if d.get("kind") == "NetworkPolicy" and d["metadata"]["name"] == "ckan-sso"] == []
-    # With the login off, nothing of it is rendered either: no plugin, no endpoints.
-    assert "oidc_pkce" not in env_of(ckan_container(rendered("dev")))["CKAN__PLUGINS"]
-
-    with_login = rendered_variant("dev", lambda tree: set_global(tree, "ckan.sso", True))
-    policy = by_name(with_login, "NetworkPolicy", "ckan-sso")
+    no third port. The flag opens the hole and closes it; dev runs with it on (T-0403)."""
+    on = rendered("dev")
+    policy = by_name(on, "NetworkPolicy", "ckan-sso")
     assert policy["spec"]["policyTypes"] == ["Egress"]
     assert policy["spec"]["podSelector"]["matchLabels"]["app.kubernetes.io/component"] == "ckan"
     assert [(p["protocol"], p["port"]) for rule in policy["spec"]["egress"] for p in rule["ports"]] == [
         ("TCP", 443), ("TCP", 8443),
     ]
-    assert "oidc_pkce" in env_of(ckan_container(with_login))["CKAN__PLUGINS"]
+    container = ckan_container(on)
+    assert "oidc_pkce" in env_of(container)["CKAN__PLUGINS"]
+    assert container["image"].startswith("ghcr.io/marek-mraz-jc/joinedcontext-ckan:2.11.6@sha256:")
+
+    # With the login off, nothing of it is rendered either: no policy, no plugin.
+    off = rendered_variant("dev", lambda tree: set_global(tree, "ckan.sso", False))
+    assert [d for d in off if d.get("kind") == "NetworkPolicy" and d["metadata"]["name"] == "ckan-sso"] == []
+    assert "oidc_pkce" not in env_of(ckan_container(off))["CKAN__PLUGINS"]

@@ -80,6 +80,18 @@ def test_the_nightly_deployment_job_runs_the_one_variant_that_fits_a_runner():
     assert job["timeout-minutes"] <= 30, job["timeout-minutes"]
 
 
+def test_the_variant_sweep_runs_every_variant_in_a_job_of_its_own():
+    """A variant takes 10 to 12 minutes; eight in one job never finished inside its cap and the
+    sweep was cancelled at the fourth (T-2826). One job per triplet, all eight, each capped."""
+    job = yaml.safe_load(CI_FULL.read_text())["jobs"]["deployment-variants"]
+    variants = job["strategy"]["matrix"]["variant"]
+    assert sorted(variants) == [f"{a},{b},{c}" for a in "01" for b in "01" for c in "01"]
+    assert job["strategy"]["fail-fast"] is False, "one red variant must not cancel the others"
+    runs = [step["run"] for step in job["steps"] if "run" in step]
+    assert "./scripts/test-deployment-variants.sh ${{ matrix.variant }}" in runs
+    assert job["timeout-minutes"] <= 30, job["timeout-minutes"]
+
+
 def test_the_nightly_deployment_job_keeps_what_it_needs_to_explain_a_failure():
     """A red 25-minute job whose logs are gone by the time anyone looks is a red job nobody
     fixes. Both steps are `if: failure()`, so a green run uploads nothing."""

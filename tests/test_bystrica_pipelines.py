@@ -34,6 +34,12 @@ BENTO = "ghcr.io/warpstreamlabs/bento:1.21.1@sha256:656c55de3f8deddd4ee743f3c76f
 MAPPINGS = {
     SEED / "bbsk/bbsk-pipeline-obyvatelstvo-bento.yaml": ("om7102rr.json", "bbsk.sk", "bbsk-kraj"),
     SEED / "bbsk/bbsk-pipeline-emisie-bento.yaml": ("zp3803rs.json", "bbsk.sk", "bbsk-kraj"),
+    # T-2783: the region's further ŠÚ SR cubes, each a complete recorded answer of 2026-09-25.
+    SEED / "bbsk/bbsk-pipeline-uchadzaci-bento.yaml": ("pr5001rr.json", "bbsk.sk", "bbsk-kraj"),
+    SEED / "bbsk/bbsk-pipeline-byty-bento.yaml": ("st3004rr.json", "bbsk.sk", "bbsk-kraj"),
+    SEED / "bbsk/bbsk-pipeline-mzdy-bento.yaml": ("np3110rr.json", "bbsk.sk", "bbsk-kraj"),
+    SEED / "bbsk/bbsk-pipeline-navstevnost-bento.yaml": ("cr3802mr.json", "bbsk.sk", "bbsk-kraj"),
+    SEED / "bbsk/bbsk-pipeline-kapacity-bento.yaml": ("cr3807qr.json", "bbsk.sk", "bbsk-kraj"),
     SEED / "banskabystrica/pipeline-voda-bento.yaml": ("vh5003rr.json", "banskabystrica.sk", "banskabystrica-mesto"),
     SEED / "banskabystrica/pipeline-obyvatelia-bento.yaml": (
         "mesto-obyvatelia-vek.json", "banskabystrica.sk", "banskabystrica-mesto",
@@ -144,6 +150,69 @@ def test_the_year_of_a_figure_is_the_publishers_year_and_not_its_position(entiti
 
 
 @requires_docker
+def test_the_region_cubes_carry_the_figures_the_publisher_states(entities):
+    """T-2783: read from the publisher on 2026-09-25 by decoding the index, and cross-checked
+    there: the 13 okresy sum to the kraj, and the kraj's figures are those its tables print."""
+    known = {
+        ("pr5001rr", "SK032", "2025", "U15061", None): 28022,
+        ("pr5001rr", "SK032", "2025", "U15062", None): 14940,
+        ("st3004rr", "SK032", "2024", "DOKONC_BYT", None): 1051,
+        ("st3004rr", "SK032", "2025", "DOKONC_BYT", None): 991,
+        ("np3110rr", "SK032", "2025", "E_PRIEM_MZDA", None): 1645,
+        ("cr3802mr", "SK0321", "2025", "U_CR_0005", "7."): 12027,
+        ("cr3807qr", "SK032", "2025", "U_CR_0002", "1.Q."): 773,
+        ("cr3807qr", "SK032", "2025", "U_CR_0004", "1.Q."): 24580,
+    }
+    found = {
+        (e["dataSet"]["value"], e["refArea"]["value"], e["refPeriod"]["value"], e["indicator"]["value"],
+         e.get("dimensionKey", {}).get("value")): e["value"]["value"]
+        for produced in entities.values()
+        for e in produced
+    }
+    for key, expected in known.items():
+        assert found.get(key) == expected, key
+    completed = [
+        value for (cube, area, year, indicator, _), value in found.items()
+        if cube == "st3004rr" and year == "2025" and indicator == "DOKONC_BYT" and area != "SK032"
+    ]
+    assert len(completed) == 13 and sum(completed) == 991, "the okresy do not sum to the kraj"
+
+
+@requires_docker
+def test_a_month_or_a_quarter_is_the_key_and_never_the_year_to_date_sum(entities):
+    """The tourism cubes also publish `1. - 12.` and `1. - 4.Q.`, the sums of the periods; a
+    code with spaces is no id segment, and a sum stored beside its parts is counted twice."""
+    for name, periods in (("navstevnost", {f"{m}." for m in range(1, 13)}),
+                          ("kapacity", {f"{q}.Q." for q in range(1, 5)})):
+        produced = entities[SEED / f"bbsk/bbsk-pipeline-{name}-bento.yaml"]
+        assert {e["dimensionKey"]["value"] for e in produced} == periods, name
+        assert all(" " not in e["id"] for e in produced), name
+
+
+@requires_docker
+def test_a_wage_in_euro_carries_its_unit_in_words_and_no_invented_code(entities):
+    """UN/CEFACT Recommendation 20 has no currency, so a wage keeps `unitText` and leaves
+    `unitCode` out rather than carry a code that means something else."""
+    produced = entities[SEED / "bbsk/bbsk-pipeline-mzdy-bento.yaml"]
+    assert produced and all("unitCode" not in e["value"] for e in produced)
+    assert {e["unitText"]["value"] for e in produced} == {"EUR"}
+    counted = entities[SEED / "bbsk/bbsk-pipeline-uchadzaci-bento.yaml"]
+    assert {e["value"]["unitCode"] for e in counted} == {"C62"}
+
+
+def test_the_raw_space_holds_every_cube_within_the_projects_entity_quota():
+    """PF-73: the quota is sized to what the project declares, so the cells of every cube the
+    raw space reads, as recorded, have to fit under it with room for the years to come."""
+    quota = yaml.safe_load((SEED / "bbsk/bbsk-project.yaml").read_text())["spec"]["quotas"]["entitiesPerSpace"]
+    cells = sum(
+        sum(cell is not None for cell in json.loads((FIXTURES / fixture).read_text())["value"])
+        for path, (fixture, _, space) in MAPPINGS.items()
+        if space == "bbsk-kraj"
+    )
+    assert cells <= quota * 0.8, f"{cells} cells against a quota of {quota}"
+
+
+@requires_docker
 def test_the_emissions_mapping_keeps_the_pollutant_it_sliced(entities):
     produced = entities[SEED / "bbsk/bbsk-pipeline-emisie-bento.yaml"]
     assert {e["dimensionKey"]["value"] for e in produced} == {"1"}, "one pollutant, the solid one"
@@ -207,9 +276,9 @@ def test_a_cell_the_publisher_left_empty_writes_nothing_rather_than_a_zero():
     assert not any(e["id"].endswith(":zp3803rs-SK032-2023-ODPAD_TONY_KM2-1") for e in produced)
 
 
-def test_the_three_cube_mappings_share_one_decoder_character_for_character():
-    """Three copies because a mapping file belongs to one pipeline; one decoder because three
-    decoders would be three chances to read a cube by position again."""
+def test_every_cube_mapping_shares_one_decoder_character_for_character():
+    """One copy per pipeline because a mapping file belongs to one pipeline; one decoder because
+    several decoders would be several chances to read a cube by position again."""
     bodies = []
     for path in CUBE_MAPPINGS:
         mapping = next(s["mapping"] for s in processors(path) if "mapping" in s)
@@ -245,6 +314,7 @@ def test_every_pipeline_names_a_data_source_and_an_endpoint_the_seed_holds():
             if isinstance(doc, dict) and "kind" in doc
         ]
         sources = {d["metadata"]["name"] for d in docs if d["kind"] == "DataSource"}
+        classes = {d["spec"]["contextSpaceRef"]: set(d["spec"]["classes"]) for d in docs if d["kind"] == "DataModel"}
         endpoint_names = {d["metadata"]["name"] for d in docs if d["kind"] == "Endpoint"}
         endpoints = {
             f'urn:ngsi-ld:Endpoint:{ {"bbsk": "bbsk.sk", "banskabystrica": "banskabystrica.sk"}[d["metadata"]["namespace"]] }'
@@ -260,11 +330,14 @@ def test_every_pipeline_names_a_data_source_and_an_endpoint_the_seed_holds():
             # renamed source breaks here and not in the cluster.
             if "dataSourceRef" in spec["source"]:
                 assert spec["source"]["dataSourceRef"]["name"] in sources, name
-                assert spec["output"]["type"] == "StatisticalObservation", name
             else:
                 assert spec["source"]["endpointRef"]["name"] in endpoint_names, name
                 assert spec["output"]["type"] == "KeyPerformanceIndicator", name
             assert spec["targetEndpoint"] in endpoints, spec["targetEndpoint"]
+            # And it writes a type the target space's one model declares, which is all the
+            # gateway lets into that space (DM-61).
+            space = spec["targetEndpoint"].split(":")[-2]
+            assert spec["output"]["type"] in classes[space], name
             # An upsert is what a re-poll of a published table is: the same cell, published
             # again; and an indicator recomputed on a schedule is the same indicator.
             assert spec["output"]["mode"] == "upsert"

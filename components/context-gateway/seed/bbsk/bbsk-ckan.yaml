@@ -1,6 +1,6 @@
-# The open-data catalogue the region's cleared endpoints publish to (EP-62, EP-67, T-2407). The
-# region cleared one dataset, its indicators on `bbsk-kpi`; `bbsk-kraj` stays out of the catalogue
-# until it is reviewed. The API token is a reference, as for hel-fi.
+# The open-data catalogue the region's cleared endpoints publish to (EP-62, EP-67, T-2407): its
+# indicators on `bbsk-kpi` and its own registers on `bbsk-registre` (T-2783); `bbsk-kraj` stays out
+# of the catalogue until it is reviewed. The API token is a reference, as for hel-fi.
 apiVersion: joinedcontext.com/v1alpha1
 kind: CkanInstance
 metadata:
