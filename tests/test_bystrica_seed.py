@@ -61,7 +61,8 @@ def test_the_region_is_its_own_project_and_the_city_says_it_is_the_city():
     assert region["spec"]["organizationRef"] == city["spec"]["organizationRef"] == "hel"
 
 
-def test_each_projects_quotas_hold_exactly_what_it_declares():
+def test_each_projects_quotas_hold_what_it_declares_with_room_for_the_demo():
+    """T-2873: the quota leaves room for the demo's work, never exactly what the seed holds."""
     for folder, project, spaces, public in (
         (REGION, "bbsk", ["bbsk-kraj", "bbsk-kpi", "bbsk-registre"], 2),
         (CITY, "banskabystrica", ["ovzdusie", "banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne"], 2),
@@ -69,10 +70,10 @@ def test_each_projects_quotas_hold_exactly_what_it_declares():
         quotas = one(folder, "Project", project)["spec"]["quotas"]
         declared = {doc["metadata"]["name"] for _, doc in manifests(folder, "ContextSpace")}
         assert declared == set(spaces), folder.name
-        assert quotas["contextSpaces"] == len(spaces), folder.name
+        assert quotas["contextSpaces"] >= len(spaces) + 90, folder.name
         endpoints = [doc for _, doc in manifests(folder, "Endpoint")]
         assert sum(e["spec"]["audience"] == "public" for e in endpoints) == public, folder.name
-        assert quotas["publicEndpoints"] == public, folder.name
+        assert quotas["publicEndpoints"] >= public + 90, folder.name
 
 
 def test_every_new_space_pins_the_segment_its_ids_carry():
