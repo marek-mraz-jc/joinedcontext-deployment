@@ -96,6 +96,28 @@ def space_of(manifest):
     return ref["name"] if isinstance(ref, dict) else ref
 
 
+def read_spaces(app):
+    """The spaces an App's `dataNeeds` read, by name; an item without a space names None."""
+    spaces = set()
+    for need in app["spec"].get("dataNeeds", []):
+        ref = need.get("contextSpaceRef")
+        spaces.add(ref.get("name") if isinstance(ref, dict) else ref)
+    return spaces
+
+
+def test_an_app_reads_the_spaces_its_data_needs_name():
+    """T-2947: an App names no space of its own; the census reads its `dataNeeds`, so an App
+    that reads a space the project does not seed is caught, and one with no space in an item too."""
+    app = {"kind": "App", "spec": {"dataNeeds": [
+        {"contextSpaceRef": {"kind": "ContextSpace", "name": "ovzdusie"}},
+        {"contextSpaceRef": "banskabystrica-kpi"},
+        {"types": ["Alert"]},
+    ]}}
+    assert space_of(app) is None
+    assert read_spaces(app) == {"ovzdusie", "banskabystrica-kpi", None}
+    assert read_spaces({"kind": "App", "spec": {}}) == set()
+
+
 @requires_helmfile
 def test_the_conformance_space_is_one_space_one_endpoint_and_the_policies_of_two_callers(seed):
     """The conformance space of the seed: one space, its model, one endpoint, a public reader
@@ -116,11 +138,15 @@ def test_every_seeded_manifest_of_the_city_belongs_to_one_of_its_four_spaces(see
     # A DataSource is a fetch and a Project is the project: neither belongs to a space. A
     # Pipeline names its space through the Endpoint it writes through, which is the point. A
     # CkanInstance is the project's catalogue, which each space's Endpoint may publish to (T-2407).
-    project_scoped = {"Project", "ServiceAccount", "DataSource", "Pipeline", "CkanInstance"}
+    # An App is the project's too, and reads its spaces through `dataNeeds` (AP-04, T-2916).
+    project_scoped = {"Project", "ServiceAccount", "DataSource", "Pipeline", "CkanInstance", "App"}
     for (kind, name), manifest in seed.items():
         if kind in project_scoped:
             continue
         assert space_of(manifest) in spaces, f"{kind}/{name} names {space_of(manifest)}"
+    for (kind, name), manifest in seed.items():
+        if kind == "App":
+            assert read_spaces(manifest) <= spaces, f"App/{name} reads {read_spaces(manifest) - spaces}"
 
     endpoints = {
         f'urn:ngsi-ld:Endpoint:banskabystrica.sk:{m["spec"]["contextSpaceRef"]}:{name}'
