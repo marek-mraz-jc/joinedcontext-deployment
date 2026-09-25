@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Card, displayName, Page, Split, useAccess, useEntities, useFilters, useSave } from "@joinedcontext/sdk";
+import { displayName, useAccess, useEntities, useFilters, useSave } from "@joinedcontext/sdk";
 import type { FilterDef } from "@joinedcontext/sdk";
 import { EntityDetail } from "../components/EntityDetail";
 import { EntityForm } from "../components/EntityForm";
@@ -31,7 +31,7 @@ function ReadOnlyNote() {
 }
 
 /**
- * Every alert: filters, the map with the chosen alert beside it, and the table. A steward also gets the record form
+ * Every alert: filters, the map, the table and the detail. A steward also gets the record form
  * (create and correct) and, on an alert a steward added, Delete. The controls follow the
  * endpoint's answer (`can`), and the gateway refuses the same write for anyone else (AP-09, AP-96).
  */
@@ -57,7 +57,7 @@ export function Alerts() {
   const mayDelete = can("deleteEntity", ALERT).ok;
 
   return (
-    <Page label="Alerts">
+    <section className="app-page" aria-label="Alerts">
       <FilterBar shown={shown.length} total={rows.length} onReset={reset}>
         <SearchBox binding={bind(0)} />
         <SelectFilter binding={bind(1)} />
@@ -68,41 +68,7 @@ export function Alerts() {
           New alert
         </button>
       )}
-      <Split ratio="2:1">
-        <EntityMap rows={shown} location="location" label="name" selected={selectedId} onSelect={(row) => select(row.id)} />
-        {selected && mode === "view" ? (
-          <div className="app-detail">
-            <EntityDetail row={selected} attrs={[...COLUMNS, "source"]} title={displayName(selected)} onClose={() => select(null)} />
-            {mayEdit && (
-              <button type="button" onClick={() => setMode("edit")}>
-                Edit
-              </button>
-            )}
-            {mayDelete && isOwn(selected) && (
-              <button
-                type="button"
-                disabled={save.saving}
-                onClick={() => {
-                  if (!window.confirm(`Delete ${displayName(selected)}? This cannot be undone.`)) return;
-                  void save.remove(selected.id).then((ok) => {
-                    if (ok) {
-                      select(null);
-                      reload();
-                    }
-                  });
-                }}
-              >
-                Delete
-              </button>
-            )}
-            <Problem error={save.problem} />
-          </div>
-        ) : (
-          <Card label="Alert">
-            <p>Choose an alert on the map or in the table to read it.</p>
-          </Card>
-        )}
-      </Split>
+      <EntityMap rows={shown} location="location" label="name" selected={selectedId} onSelect={(row) => select(row.id)} />
       <EntityTable
         rows={shown}
         columns={COLUMNS}
@@ -115,17 +81,45 @@ export function Alerts() {
         empty="No alert matches."
       />
       {mode === "new" && (
-        <Split ratio="2:1">
+        <>
           <EntityForm type={ALERT} fields={WRITABLE} rows={rows} title="New alert" onSaved={done} onCancel={() => setMode("view")} />
           <ReadOnlyNote />
-        </Split>
+        </>
+      )}
+      {selected && mode === "view" && (
+        <div className="app-detail">
+          <EntityDetail row={selected} attrs={[...COLUMNS, "source"]} title={displayName(selected)} onClose={() => select(null)} />
+          {mayEdit && (
+            <button type="button" onClick={() => setMode("edit")}>
+              Edit
+            </button>
+          )}
+          {mayDelete && isOwn(selected) && (
+            <button
+              type="button"
+              disabled={save.saving}
+              onClick={() => {
+                if (!window.confirm(`Delete ${displayName(selected)}? This cannot be undone.`)) return;
+                void save.remove(selected.id).then((ok) => {
+                  if (ok) {
+                    select(null);
+                    reload();
+                  }
+                });
+              }}
+            >
+              Delete
+            </button>
+          )}
+          <Problem error={save.problem} />
+        </div>
       )}
       {selected && mode === "edit" && (
-        <Split ratio="2:1">
+        <>
           <EntityForm type={ALERT} row={selected} fields={WRITABLE} rows={rows} onSaved={done} onCancel={() => setMode("view")} />
           <ReadOnlyNote />
-        </Split>
+        </>
       )}
-    </Page>
+    </section>
   );
 }

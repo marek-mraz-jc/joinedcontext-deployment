@@ -1,11 +1,6 @@
 import { useCallback, useEffect, useId, useState } from "react";
 import type { JSX } from "react";
-import { Card, Grid, Header, Page, Split } from "@joinedcontext/sdk";
-import { ApiError, createStation, deleteStation, getHistory, getIdentity, getStations, updateStation } from "./api";
-import { Chart } from "./Chart";
-import { historyOf } from "./quality";
-import type { History } from "./quality";
-import { StationMap } from "./StationMap";
+import { ApiError, createStation, deleteStation, getIdentity, getStations, updateStation } from "./api";
 import type { Identity, Station, StationFields } from "./api";
 
 /** Why a signed-in person without the role sees the controls disabled (UI-44). */
@@ -38,77 +33,36 @@ export function App(): JSX.Element {
     void load();
   }, [load]);
 
-  // The station the map and the chart are about: the one a person picked, else the first.
-  const [picked, setPicked] = useState<string | null>(null);
-  const selected = stations?.find((station) => station.id === picked) ?? stations?.[0] ?? null;
-
   const steward = identity?.roles.includes("steward") ?? false;
   const readOnly = (identity?.signedIn ?? false) && !steward;
 
-  const list = (
-    <>
+  return (
+    <main>
+      <h1>Air quality</h1>
+      <p className="identity">{who(identity)}</p>
+      {readOnly && <p id="read-only-reason">{READ_ONLY}</p>}
+
+      {error && <p role="alert">{error}</p>}
+      {!stations && !error && <p role="status">Loading stations…</p>}
+
+      {steward && (
+        <section aria-labelledby="add-station">
+          <h2 id="add-station">Add a station</h2>
+          <StationForm onSaved={load} />
+        </section>
+      )}
+
       {stations && stations.length === 0 && <p>No stations here yet.</p>}
+
       {stations && stations.length > 0 && (
-        <Grid columns={steward ? 2 : 4}>
+        <ul className="stations">
           {stations.map((station) => (
             <StationCard key={station.id} station={station} steward={steward} readOnly={readOnly} onSaved={load} />
           ))}
-        </Grid>
+        </ul>
       )}
-    </>
-  );
-
-  return (
-    <main>
-      <Page>
-        <Header level={1} title="Air quality" subtitle={who(identity)} />
-        {readOnly && <p id="read-only-reason">{READ_ONLY}</p>}
-
-        {error && <p role="alert">{error}</p>}
-        {!stations && !error && <p role="status">Loading stations…</p>}
-
-        {stations && stations.length > 0 && (
-          <Split ratio="1:1">
-            <Card title="Stations by air quality index">
-              <StationMap stations={stations} selected={selected?.id ?? null} onSelect={setPicked} />
-            </Card>
-            <Card title={`Last 24 hours at ${selected?.name ?? selected?.id ?? ""}`}>
-              {selected && <StationHistory id={selected.id} name={selected.name ?? selected.id} />}
-            </Card>
-          </Split>
-        )}
-
-        {steward ? (
-          <Split ratio="1:2">
-            <Card title="Add a station">
-              <StationForm onSaved={load} />
-            </Card>
-            {list}
-          </Split>
-        ) : (
-          list
-        )}
-      </Page>
     </main>
   );
-}
-
-/** One day of the picked station, read again when another station is picked. */
-function StationHistory({ id, name }: { id: string; name: string }): JSX.Element {
-  const [history, setHistory] = useState<{ id: string; data: History } | null>(null);
-  const [error, setError] = useState<{ id: string; text: string } | null>(null);
-  useEffect(() => {
-    let current = true;
-    getHistory(id)
-      .then((entity) => current && setHistory({ id, data: historyOf(entity) }))
-      .catch((cause: unknown) => current && setError({ id, text: problem(cause) }));
-    return () => {
-      current = false;
-    };
-  }, [id]);
-  if (error?.id === id) return <p role="alert">{error.text}</p>;
-  if (history?.id !== id) return <p role="status">Loading the last 24 hours…</p>;
-  return <Chart history={history.data} station={name} />;
 }
 
 function problem(cause: unknown): string {
@@ -138,7 +92,8 @@ function StationCard({
   const [editing, setEditing] = useState(false);
   const title = station.name ?? station.id;
   return (
-    <Card title={title}>
+    <li className="station">
+      <h2>{title}</h2>
       <dl>
         <Metric label="PM10" value={station.pm10} unit="µg/m³" />
         <Metric label="PM2.5" value={station.pm25} unit="µg/m³" />
@@ -169,7 +124,7 @@ function StationCard({
           onCancel={() => setEditing(false)}
         />
       )}
-    </Card>
+    </li>
   );
 }
 
@@ -345,16 +300,14 @@ function StationForm({
       />
       <label htmlFor={field("note")}>Steward note</label>
       <textarea id={field("note")} rows={2} maxLength={500} value={note} onChange={(event) => setNote(event.target.value)} />
-      <div className="note-actions">
-        <button type="submit" disabled={saving || !complete}>
-          {station ? "Save changes" : "Add station"}
+      <button type="submit" disabled={saving || !complete}>
+        {station ? "Save changes" : "Add station"}
+      </button>
+      {onCancel && (
+        <button type="button" onClick={onCancel}>
+          Cancel
         </button>
-        {onCancel && (
-          <button type="button" onClick={onCancel}>
-            Cancel
-          </button>
-        )}
-      </div>
+      )}
       {error && <p role="alert">{error}</p>}
     </form>
   );
