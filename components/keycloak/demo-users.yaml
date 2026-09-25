@@ -51,3 +51,12 @@ demo.janitor:
   lastName: Janitor
   realmRoles: []
   groups: []
+# The App probe (T-2795, AP-136): opens every published App as that App's own people do. The
+# project groups admit it to the gateway's project-list Endpoints, each App's default group
+# (components/gitea/apps/*/grants/users/groups/*-viewer.yaml) to a `roles` App, and the realm's
+# default `platform-readers` makes it a viewer like everyone; it proposes and approves nothing.
+demo.probe:
+  firstName: Demo
+  lastName: Probe
+  realmRoles: []
+  groups: [banskabystrica, helsinki]

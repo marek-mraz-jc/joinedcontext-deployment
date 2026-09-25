@@ -9,7 +9,9 @@ Portal mounts at `JC_HEALTH_DIR` (API/01 §25):
   each with the open task whose `check: {check}/{key}` line names it (or the check's overflow
   task);
 - the history of the last seven days, at most 200 points, carried over from the digest already
-  published.
+  published;
+- with `--passed`, the passing keys too (at most 500), which the App probe's chips need
+  (AP-136).
 
 A result's `detail` and `evidence` never leave the summary, and every text is redacted the way
 `tasks/file-failures` redacts, so the page holds no secret. Run it after `tasks/file-failures`,
@@ -28,7 +30,7 @@ CONFIGMAP = "jc-validation-results"
 PORTAL_LABEL = "app.kubernetes.io/name=portal-portal"
 NAME = re.compile(r"^[a-z0-9][a-z0-9-]{0,39}$")
 TASK_ID = re.compile(r"^id:\s*(T-\d{4,6})\s*$", re.M)
-MAX_FAILURES, MAX_HISTORY, MAX_TEXT, KEEP = 50, 200, 300, timedelta(days=7)
+MAX_FAILURES, MAX_HISTORY, MAX_TEXT, MAX_PASSED, KEEP = 50, 200, 300, 500, timedelta(days=7)
 # The patterns of tasks/file-failures: a token after its scheme, a JWT, a secret-named value,
 # credentials in a URL, and any long base64-like run.
 SECRETS = [
@@ -72,7 +74,8 @@ def recent(point: object, now: datetime) -> bool:
     return now - at <= KEEP and all(isinstance(point.get(v), int) for v in ("pass", "fail", "error", "skip"))
 
 
-def digest(summary: dict, every_hours: int, now: datetime, previous: dict | None, tasks: dict[str, str]) -> dict:
+def digest(summary: dict, every_hours: int, now: datetime, previous: dict | None, tasks: dict[str, str],
+           passed: bool = False) -> dict:
     check = summary.get("check", "")
     if not NAME.match(check):
         raise SystemExit(f"publish-health: the summary names no check, or '{check}' is not a check name")
@@ -80,12 +83,14 @@ def digest(summary: dict, every_hours: int, now: datetime, previous: dict | None
     if not isinstance(results, list):
         raise SystemExit("publish-health: the summary has no results list")
     counts = {verdict: 0 for verdict in ("pass", "fail", "error", "skip")}
-    failures = []
+    failures, passes = [], []
     for item in results:
         verdict = item.get("verdict")
         if verdict not in counts:
             raise SystemExit(f"publish-health: result {item.get('key')!r} has verdict {verdict!r}")
         counts[verdict] += 1
+        if verdict == "pass" and passed:
+            passes.append(text(item.get("key", "")))
         if verdict in ("fail", "error") and len(failures) < MAX_FAILURES:
             key = str(item.get("key", ""))
             failure = {"key": text(key), "verdict": verdict, "title": text(item.get("title"))}
@@ -100,6 +105,12 @@ def digest(summary: dict, every_hours: int, now: datetime, previous: dict | None
            "failures": failures, "history": history}
     if summary.get("run"):
         out["run"] = text(summary["run"])
+    if passed:
+        # The Portal shows a chip per passing key (the App probe, AP-136) and refuses a digest
+        # with more than it can show rather than a partial list.
+        if len(passes) > MAX_PASSED:
+            raise SystemExit(f"publish-health: {len(passes)} passing keys, the Portal shows at most {MAX_PASSED}")
+        out["passed"] = passes
     return out
 
 
@@ -147,6 +158,8 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--every-hours", type=int, required=True, help="how often the check runs, 1 to 744 (a month)")
     parser.add_argument("--tasks-dir", type=Path, default=Path("/workspace/tasks"), help="the board, for the task ids")
     parser.add_argument("--namespace", help="the Portal's namespace; found by its pod label when left out")
+    parser.add_argument("--passed", action="store_true",
+                        help="also list the passing keys, for a check whose passes a page shows (apps)")
     parser.add_argument("--dry-run", action="store_true", help="print the digest, publish nothing")
     args = parser.parse_args(argv)
     if not 1 <= args.every_hours <= 744:
@@ -156,7 +169,7 @@ def main(argv: list[str]) -> int:
     now = datetime.now(timezone.utc).replace(microsecond=0)
     namespace = None if args.dry_run else (args.namespace or portal_namespace())
     previous = published(namespace, check) if namespace else None
-    body = digest(summary, args.every_hours, now, previous, open_tasks(args.tasks_dir, check))
+    body = digest(summary, args.every_hours, now, previous, open_tasks(args.tasks_dir, check), args.passed)
     if args.dry_run:
         print(json.dumps(body, indent=2, ensure_ascii=False))
         return 0

@@ -9,3 +9,4 @@ spec:
   description: The viewers of air-quality, its default group (AP-118).
   members:
   - user: demo.viewer@hel.fi
+  - user: demo.probe@hel.fi

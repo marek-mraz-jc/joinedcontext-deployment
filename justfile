@@ -487,13 +487,13 @@ dev-restore-drill portal_image='' out='deployment/restore-drill.json':
 	./scripts/restore-drill.py --out "{{ out }}" {{ if portal_image != '' { '--portal-image ' + portal_image } else { '' } }}
 
 # Publish one check's summary to the Portal's Organization > Health tab (T-2803, OPS-53); run it
-# after tasks/file-failures, so the tasks it links exist
+# after tasks/file-failures, so the tasks it links exist; passed=true for the App probe's chips
 [group('dev cluster')]
-dev-publish-health summary every_hours:
+dev-publish-health summary every_hours passed='false':
 	#!/usr/bin/env bash
 	set -euo pipefail
 	just _dev-guard
-	./scripts/publish-health.py "{{ summary }}" --every-hours "{{ every_hours }}"
+	./scripts/publish-health.py "{{ summary }}" --every-hours "{{ every_hours }}" {{ if passed == 'true' { '--passed' } else { '' } }}
 
 # Pin the portal and both app-builder images to one portal commit, checked against the seeded
 # workflows (T-2633); run it the moment the portal's image.yml publishes, then dev-apply

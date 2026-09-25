@@ -114,3 +114,15 @@ def test_a_dry_run_touches_no_cluster(monkeypatch, tmp_path, capsys):
 def test_every_hours_is_bounded(tmp_path):
     with pytest.raises(SystemExit):
         ph.main([str(tmp_path / "s.json"), "--every-hours", "0", "--dry-run"])
+
+
+def test_the_app_probe_lists_its_passing_keys_and_other_checks_do_not():
+    s = summary(("helsinki/bikes", "pass", "ok"), ("helsinki/alerts", "fail", "no row"), check="apps")
+    assert ph.digest(s, 1, NOW, None, {}, passed=True)["passed"] == ["helsinki/bikes"]
+    assert "passed" not in ph.digest(s, 1, NOW, None, {})
+
+
+def test_more_passing_keys_than_the_portal_shows_is_refused():
+    s = summary(*[(f"p/a{i}", "pass", "ok") for i in range(ph.MAX_PASSED + 1)], check="apps")
+    with pytest.raises(SystemExit):
+        ph.digest(s, 1, NOW, None, {}, passed=True)
