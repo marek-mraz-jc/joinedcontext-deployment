@@ -6,6 +6,7 @@ test_smoke_script.py does. Every stub call is recorded, so a test can assert bot
 the script did and what it never did (OPS-45, R48, PF-38).
 """
 
+import base64
 import json
 import os
 import subprocess
@@ -30,7 +31,19 @@ args = sys.argv[1:]
 with open(os.environ["STUB_CALLS"], "a") as log:
     log.write("kubectl " + " ".join(args) + "\\n")
 
-if "get" in args and "configmap" in args:
+if "get" in args and "secret" in args and "-A" in args:
+    if not spec.get("listOk", True):
+        sys.exit(1)
+    sys.stdout.write("".join(ns + "\\n" for ns in spec.get("secretCopies", [])))
+elif "patch" in args and "secret" in args:
+    ns = args[args.index("-n") + 1]
+    with open(os.environ["STUB_PATCHES"], "a") as patches:
+        patches.write(ns + " " + sys.stdin.read().strip() + "\\n")
+    sys.exit(1 if ns in spec.get("patchFails", []) else 0)
+elif "get" in args and "deployments,statefulsets" in args:
+    ns = args[args.index("-n") + 1]
+    sys.stdout.write("".join(w + "\\n" for w in spec.get("workloads", {}).get(ns, [])))
+elif "get" in args and "configmap" in args:
     sys.stdout.write(spec.get("seededPolicy", ""))
 elif "patch" in args:
     sys.exit(0 if spec.get("patchOk", True) else 1)
@@ -57,7 +70,10 @@ elif "/admin/realms/" in line and "/users?" in line:
     sys.stdout.write(spec.get("userLookup", '[{"id":"user-uuid","username":"jana.kovacova"}]'))
 elif "/admin/realms/" in line and "/clients?" in line:
     sys.stdout.write(spec.get("clientLookup", '[{"id":"client-uuid","clientId":"conformance"}]'))
-elif "/logout" in line or "/client-secret" in line:
+elif "/client-secret" in line:
+    sys.stdout.write(spec.get("rotatedAnswer", '{"type":"secret","value":"rotated.client.secret"}'))
+    sys.stdout.write("\\n" + str(spec.get("adminWriteStatus", 200)))
+elif "/logout" in line:
     sys.stdout.write(str(spec.get("adminWriteStatus", 204)))
 else:
     calls = sum(1 for l in open(os.environ["STUB_CALLS"]) if "Authorization: Bearer" in l and "/api/endpoint/" in l)
@@ -87,6 +103,7 @@ def run(tmp_path: Path, spec: dict, *args: str) -> tuple[subprocess.CompletedPro
     env["PATH"] = f"{stub_bin}:{env['PATH']}"
     env["STUB_SPEC"] = str(spec_file)
     env["STUB_CALLS"] = str(calls_file)
+    env["STUB_PATCHES"] = str(tmp_path / "patches.log")
     env.setdefault("KEYCLOAK_ADMIN_TOKEN", "admin.token.value")
 
     result = subprocess.run(
@@ -192,3 +209,74 @@ def test_no_token_or_password_is_ever_printed(tmp_path):
     printed = result.stdout + result.stderr
     for secret in (env_secret, "admin.token.value", "compromised.jwt.value"):
         assert secret not in printed, f"{secret} reached the console"
+
+
+# T-2841: a platform client's secret lives in the generated Secret `keycloak-client-<client>`,
+# which keycloak-config-cli imports on every apply. Rotated in Keycloak alone, the next apply
+# wrote the compromised secret back.
+EDGE_READER = 'Deployment/apisix {"containers":[{"env":[{"name":"OIDC_SECRET","valueFrom":{"secretKeyRef":{"key":"client-secret","name":"keycloak-client-edge"}}}]}]}'
+PROXY_READER = 'Deployment/bikes-agent-proxy {"volumes":[{"name":"s","secret":{"secretName":"keycloak-client-edge-agent-proxy"}}]}'
+
+
+def revoke_client(tmp_path: Path, spec: dict, client: str = "edge"):
+    return run(
+        tmp_path, {"seededPolicy": SEEDED_POLICY, **spec},
+        "--instance", "dev", "--policy", "public-read",
+        "--service-account", client, "--idm", "https://idm.example.test",
+    )
+
+
+def patches(tmp_path: Path) -> list[str]:
+    path = tmp_path / "patches.log"
+    return path.read_text().splitlines() if path.exists() else []
+
+
+def test_a_platform_clients_new_secret_reaches_every_copy_and_its_readers_restart(tmp_path):
+    result, calls = revoke_client(tmp_path, {
+        "secretCopies": ["keycloak", "apisix"],
+        "workloads": {"apisix": [EDGE_READER, PROXY_READER]},
+    })
+    assert result.returncode == 0, result.stdout + result.stderr
+    written = base64.b64encode(b"rotated.client.secret").decode()
+    assert patches(tmp_path) == [
+        f'keycloak {{"data":{{"client-secret":"{written}"}}}}',
+        f'apisix {{"data":{{"client-secret":"{written}"}}}}',
+    ], "Keycloak and every copy of the Secret must hold the same new secret"
+    rotated = next(i for i, c in enumerate(calls) if "/client-secret" in c)
+    first_patch = next(i for i, c in enumerate(calls) if "patch secret keycloak-client-edge" in c)
+    assert rotated < first_patch
+    assert any("-n apisix rollout restart deployment/apisix" in c for c in calls)
+    assert not any("bikes-agent-proxy" in c and "restart" in c for c in calls), "only the readers of this Secret restart"
+    printed = result.stdout + result.stderr
+    assert "rotated.client.secret" not in printed and written not in printed
+    assert not any("rotated.client.secret" in c or written in c for c in calls), "the secret never rides on a command line"
+
+
+def test_a_client_the_portal_created_is_rotated_in_keycloak_only(tmp_path):
+    result, calls = revoke_client(tmp_path, {"secretCopies": []}, client="bikes-sensors")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "rotated in Keycloak only" in result.stdout
+    assert patches(tmp_path) == []
+    assert any("/client-secret" in c for c in calls)
+
+
+def test_a_copy_left_with_the_revoked_secret_fails_the_run(tmp_path):
+    result, _ = revoke_client(tmp_path, {
+        "secretCopies": ["keycloak", "apisix"],
+        "patchFails": ["apisix"],
+    })
+    assert result.returncode == 1
+    assert "Secret keycloak-client-edge in apisix still holds the revoked secret" in result.stderr
+
+
+def test_no_new_secret_in_keycloaks_answer_leaves_the_secret_alone_and_fails(tmp_path):
+    result, _ = revoke_client(tmp_path, {"secretCopies": ["keycloak"], "rotatedAnswer": "{}"})
+    assert result.returncode == 1
+    assert "did not answer the new secret" in result.stderr
+    assert patches(tmp_path) == []
+
+
+def test_copies_that_cannot_be_listed_fail_the_run(tmp_path):
+    result, _ = revoke_client(tmp_path, {"listOk": False})
+    assert result.returncode == 1
+    assert "cannot list the copies of Secret keycloak-client-edge" in result.stderr
