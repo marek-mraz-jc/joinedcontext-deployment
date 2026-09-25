@@ -8,7 +8,9 @@ nothing while its status said Live.
 """
 
 import json
+import queue
 import subprocess
+import threading
 import time
 from pathlib import Path
 
@@ -58,26 +60,51 @@ def test_a_slot_is_freed_by_silence_and_kept_by_reporting():
         runner.stdin.write("".join(line + "\n" for line in lines))
         runner.stdin.flush()
 
+    # The phases wait on what Bento wrote, never on a clock alone (T-2992): on a loaded runner
+    # the container started late, the frames queued up and ran in one burst, and the gaps the
+    # sleeps were meant to keep were gone.
+    out: list[str] = []
+    arrived: queue.Queue[str] = queue.Queue()
+    reader = threading.Thread(target=lambda: [arrived.put(line) for line in runner.stdout], daemon=True)
+    reader.start()
+
+    def take(count: int, within: float) -> None:
+        deadline = time.monotonic() + within
+        for _ in range(count):
+            try:
+                out.append(arrived.get(timeout=max(0.0, deadline - time.monotonic())))
+            except queue.Empty:
+                raise AssertionError(f"Bento wrote {len(out)} line(s), waiting for {count}: {out}") from None
+
     try:
-        time.sleep(3)  # Bento up before the first frame, so the phases keep their gaps
-        # Bus 1 alone first, so it holds a slot; then 39 more race for the other 29.
+        # Bus 1 alone first, so it holds a slot; its line also says Bento is up.
         send(frame(1, "01"))
-        time.sleep(0.5)
+        take(1, within=120)
+        # Then 39 more race for the other 29 slots.
         send(*(frame(v, "01") for v in range(2, 41)))
-        # Bus 1 keeps reporting past the ttl; buses 2..40 fall silent.
-        for _ in range(3 * TTL_S * 2):
+        take(29, within=30)
+        # Bus 1 keeps reporting past the ttl, each frame out before the next; buses 2..40 fall
+        # silent. The window counts from the last slot Bento handed out, not from a send.
+        silent_since = time.monotonic()
+        while time.monotonic() - silent_since < 3 * TTL_S:
             time.sleep(0.5)
             send(frame(1, "02"))
+            take(1, within=30)
         send(*(frame(v, "03") for v in range(41, 81)))
-        time.sleep(1)
-        out, err = runner.communicate(timeout=60)
+        take(29, within=30)
+        runner.stdin.close()
+        runner.wait(timeout=60)
+        reader.join(timeout=10)
+        err = runner.stderr.read()
     finally:
         if runner.poll() is None:
             runner.kill()
+    while not arrived.empty():
+        out.append(arrived.get())
     assert runner.returncode == 0, err
 
     written: dict[str, list[int]] = {}
-    for line in out.splitlines():
+    for line in out:
         entity = json.loads(line)
         phase = entity["location"]["observedAt"][14:16]
         written.setdefault(phase, []).append(int(entity["fleetVehicleId"]["value"].split("-")[1]))
