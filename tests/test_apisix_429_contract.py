@@ -286,3 +286,42 @@ routes:
         assert call(base, "POST") == (502, "2")
         assert call(base, "POST") == (502, "2")
         assert call(base, "POST")[0] == 429
+
+
+def test_the_pinned_image_holds_bodies_to_the_organizations_edge_limit(tmp_path):
+    """T-2892, ADR-N-035: the server block's ceiling is the catalog's largest value and the
+    `client-control` global rule the Portal writes holds each body to the Organization's
+    `spec.limits.edge.maxRequestBodyMegabytes`, above the old fixed 16 MiB and below the ceiling
+    alike, with a Content-Length and streamed in chunks (T-2263)."""
+    mib = 1024 * 1024
+    rules = f"""
+global_rules:
+  - id: edge-body
+    plugins:
+      client-control:
+        max_body_size: {20 * mib}
+routes:
+  - uri: /probe
+    upstream:
+      nodes:
+        "127.0.0.1:9": 1
+      type: roundrobin
+#END
+"""
+
+    def post(base: str, size: int, chunked: bool) -> int:
+        payload = b"x" * size
+        data = iter([payload[i : i + mib] for i in range(0, size, mib)]) if chunked else payload
+        headers = {"Content-Type": "application/octet-stream"}
+        request = urllib.request.Request(base + "/probe", method="POST", data=data, headers=headers)
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                return response.status
+        except urllib.error.HTTPError as refused:
+            return refused.code
+
+    with pinned_apisix(tmp_path, rules) as base:
+        for chunked in (False, True):
+            # Past the edge to the (closed) upstream: over the old 16 MiB, under the rule's 20.
+            assert post(base, 18 * mib, chunked) == 502, f"chunked={chunked}"
+            assert post(base, 21 * mib, chunked) == 413, f"chunked={chunked}"

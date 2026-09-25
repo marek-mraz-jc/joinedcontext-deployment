@@ -444,17 +444,38 @@ def test_the_edge_bounds_how_slowly_a_request_may_arrive(apisix_config):
         assert 0 < seconds <= 300, f"{directive} is {value}"
 
 
-def test_the_body_ceiling_is_a_number_in_the_server_block(apisix_config):
-    """GW26 — the 1 GB body. `client_max_body_size 0` in the http block is APISIX's own and
-    reads as "no limit" for a body with a Content-Length, while nginx's chunked filter
-    compares against the same zero without a guard and refuses every streamed body (T-2263).
-    The edge's own number therefore lives in the server block, and it is a number."""
+def server_block_ceiling(apisix_config) -> int:
+    """The server block's `client_max_body_size`, in bytes."""
     server = apisix_config["nginx_config"].get("http_server_configuration_snippet", "")
     found = re.search(r"^\s*client_max_body_size\s+(\d+)([kKmM]);", server, re.MULTILINE)
     assert found, f"the proxy server block sets no client_max_body_size:\n{server!r}"
     unit = found.group(2).lower()
     ceiling = int(found.group(1)) * (1024 if unit == "k" else 1024 * 1024)
+    return ceiling
+
+
+def test_the_body_ceiling_is_a_number_in_the_server_block(apisix_config):
+    """GW26 — the 1 GB body. `client_max_body_size 0` in the http block is APISIX's own and
+    reads as "no limit" for a body with a Content-Length, while nginx's chunked filter
+    compares against the same zero without a guard and refuses every streamed body (T-2263).
+    The edge's own number therefore lives in the server block, and it is a number."""
+    ceiling = server_block_ceiling(apisix_config)
     assert 0 < ceiling <= 64 * 1024 * 1024, f"a {ceiling} byte body ceiling is not a ceiling"
+
+
+def test_the_served_body_limit_starts_at_the_server_blocks_ceiling(apisix_config, rendered):
+    """T-2892, ADR-N-035: the `edge-body` rule the Portal rewrites to the Organization's value
+    renders the catalog default, which is the server block's own number, so a base served before
+    the Portal composes anything admits exactly what the server block does."""
+    ceiling = server_block_ceiling(apisix_config)
+    cm = next(
+        d for d in rendered("local")
+        if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "apisix-standalone-base"
+    )
+    rules = {r["id"]: r for r in yaml.safe_load(cm["data"]["apisix.yaml"]).get("global_rules", [])}
+    assert set(rules) == {"edge-body"}, rules
+    assert rules["edge-body"]["plugins"] == {"client-control": {"max_body_size": ceiling}}
+    assert ceiling == 16 * 1024 * 1024, "the catalog default of spec.limits.edge.maxRequestBodyMegabytes"
 
 
 # --- T-1676: the admin surfaces are reachable from the internet (OPS-31) -------------------
