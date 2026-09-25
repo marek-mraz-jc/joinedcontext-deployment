@@ -292,6 +292,35 @@ def test_layout_2_commits_the_grants_into_the_project_repository(script, tmp_pat
     assert "policies/app-helsinki-bikes-1.yaml" in files
 
 
+DEFAULT_GROUP = "users__groups__helsinki-bikes-viewer.yaml"
+
+
+@requires_helmfile
+def test_layout_2_keeps_the_default_groups_in_the_organization_repository(script, tmp_path):
+    """AP-118, CC-85: an App's default groups are organization files, so the seed commits them
+    to the organization repository in layout 2 too, never into the project's."""
+    from test_forge_seed_converges import HELSINKI
+
+    forge, app = seeded(tmp_path)
+    with_grants(app)
+    group = "kind: Group\nmetadata:\n  name: helsinki-bikes-viewer\n"
+    (app / f"grants__{DEFAULT_GROUP}").write_text(group)
+    forge.state.write_text(forge.state.read_text().replace('"contents": {}', '"contents": {".jc/layout": "2\\n"}'))
+    forge.put("projects/helsinki/project.yaml", HELSINKI)
+    result = forge.run(
+        script,
+        LAYOUT="2",
+        APPS_DIR=str(forge.root / "apps"),
+        APPS_PROJECT="helsinki",
+        APPS_PUBLIC_BASE="https://joinedcontext.test/git",
+    )
+    assert result.returncode == 0, result.stderr
+    assert forge.contents["users/groups/helsinki-bikes-viewer.yaml"] == group
+    files = repos(forge)["helsinki"]["files"]
+    assert not [path for path in files if path.startswith("users/")], sorted(files)
+    assert "policies/app-helsinki-bikes-1.yaml" in files
+
+
 def test_every_person_a_sample_app_admits_is_admitted_by_its_endpoint():
     """T-2672, EP-14: the gateway admits a person to a `project-list` Endpoint only when a group
     in their token names one of its projects, before it reads any Policy. An App whose `access`
@@ -312,6 +341,10 @@ def test_every_person_a_sample_app_admits_is_admitted_by_its_endpoint():
             for subject in entry["subjects"]
             if "user" in subject
         }
+        # A role given to a default group reaches its members (AP-118).
+        for group_file in (endpoint_file.parents[6] / "grants/users/groups").glob("*.yaml"):
+            group = yaml.safe_load(group_file.read_text())
+            people |= {member["user"].split("@")[0] for member in group["spec"].get("members", [])}
         # The live journeys open every sample as these people (ui/e2e/live/apps-*.spec.ts).
         people |= {"demo.viewer", "demo.steward"}
         for person in sorted(people):

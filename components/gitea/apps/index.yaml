@@ -1,6 +1,6 @@
 # Written by scripts/vendor-sample-apps.py; do not edit. The files of each sample application,
 # relative to its folder, as the forge bootstrap pushes them to its repository (T-2599).
-source: 02a0a6d296a259eaaa8cbf8670efcd75504d19d1
+source: 84f38d9a3b7b26fd0797cdc0752c6bdfd7192e8a
 apps:
   air-quality:
     - .gitea/workflows/build.yml
@@ -14,6 +14,8 @@ apps:
     - grants/projects/helsinki/spaces/helsinki/policies/app-air-quality-1.yaml
     - grants/projects/helsinki/spaces/helsinki/policies/app-air-quality-2-steward.yaml
     - grants/projects/helsinki/spaces/helsinki/policies/app-air-quality-3-steward.yaml
+    - grants/users/groups/air-quality-steward.yaml
+    - grants/users/groups/air-quality-viewer.yaml
     - src/assets.rs
     - src/lib.rs
     - src/main.rs
@@ -46,6 +48,8 @@ apps:
     - grants/projects/helsinki/spaces/helsinki/policies/app-helsinki-alerts-1.yaml
     - grants/projects/helsinki/spaces/helsinki/policies/app-helsinki-alerts-2-steward.yaml
     - grants/projects/helsinki/spaces/helsinki/policies/app-helsinki-alerts-3-steward.yaml
+    - grants/users/groups/helsinki-alerts-steward.yaml
+    - grants/users/groups/helsinki-alerts-viewer.yaml
     - index.html
     - map-worker.ts
     - package.json
