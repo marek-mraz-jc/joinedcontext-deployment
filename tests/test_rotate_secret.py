@@ -37,8 +37,11 @@ elif "get" in args and "secret" in args and ns is not None:
     value = state["copies"].get(ns)
     if value is None:
         sys.exit(1)
+    previous = state.get("previous", {}).get(ns)
     if out == "jsonpath={.data}":
         sys.stdout.write(json.dumps({"key": base64.b64encode(value.encode()).decode()}))
+    elif out == "jsonpath={.data.previous}":
+        sys.stdout.write(base64.b64encode(previous.encode()).decode() if previous else "")
     elif "release-name" in out:
         sys.stdout.write(state.get("release", ""))
     elif "username" in out:
@@ -47,6 +50,17 @@ elif "get" in args and "secret" in args and ns is not None:
         sys.stdout.write(base64.b64encode(value.encode()).decode())
 elif "delete" in args and "secret" in args:
     state["copies"][ns] = None
+    state.get("previous", {}).pop(ns, None)
+    save()
+elif "patch" in args and "secret" in args:
+    # A value may only arrive on stdin; the json removal carries no value at all.
+    if "--patch-file" in args and args[args.index("--patch-file") + 1] == "/dev/stdin":
+        data = json.loads(sys.stdin.read())["data"]
+        state.setdefault("previous", {})[ns] = base64.b64decode(data["previous"]).decode()
+    elif args[args.index("-p") + 1] == '[{"op":"remove","path":"/data/previous"}]':
+        del state["previous"][ns]
+    else:
+        sys.exit(1)
     save()
 elif "get" in args and "deployment,statefulset,daemonset" in args:
     print(json.dumps({"items": state.get("workloads", {}).get(ns, [])}))
@@ -231,3 +245,68 @@ def test_a_demo_persons_password_is_pushed_to_the_realm(tmp_path):
     generator = next(i for i, c in enumerate(calls) if "secret-name=keycloak-user-jana sync" in c)
     config = next(i for i, c in enumerate(calls) if "release=keycloak-config sync" in c)
     assert generator < config
+
+
+SESSION_KEY = ("--instance", "dev", "--secret", "portal-cookie-key")
+THIRD = "third-Value-5d1e.z"
+
+
+def test_a_session_key_rotation_keeps_the_old_key_as_previous_before_any_reader_restarts(tmp_path):
+    """T-2842 (OPS-45): the Portal opens cookies sealed with the previous key, so nobody is signed out."""
+    workloads = {"portal": [deployment("portal", "portal-cookie-key")]}
+    result, calls, state = run(tmp_path, {"workloads": workloads}, *SESSION_KEY)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert state["copies"] == {"keycloak": NEW, "portal": NEW}
+    assert state["previous"] == {"keycloak": OLD, "portal": OLD}, "every copy keeps the retired key"
+    patches = [i for i, c in enumerate(calls) if "patch secret portal-cookie-key --type merge --patch-file /dev/stdin" in c]
+    restart = next(i for i, c in enumerate(calls) if "rollout restart" in c)
+    assert len(patches) == 2 and max(patches) < restart, "a pod started before the patch would hold the new key alone"
+    assert "--drop-previous" in result.stdout
+
+
+def test_the_next_session_key_rotation_drops_the_key_the_last_one_kept(tmp_path):
+    """At most one retired key is ever held: the second run keeps the first run's new key only."""
+    state = {"copies": {"portal": NEW}, "previous": {"portal": OLD}, "regenerate": THIRD}
+    result, _, state = run(tmp_path, state, *SESSION_KEY)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert state["copies"] == {"portal": THIRD}
+    assert state["previous"] == {"portal": NEW}
+
+
+def test_drop_previous_removes_the_retired_key_everywhere_and_restarts_its_readers(tmp_path):
+    workloads = {"portal": [deployment("portal", "portal-cookie-key")]}
+    state = {"copies": {"portal": NEW, "other": NEW}, "previous": {"portal": OLD, "other": OLD}, "workloads": workloads}
+    result, calls, state = run(tmp_path, state, *SESSION_KEY, "--drop-previous")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert state["previous"] == {}
+    assert state["copies"] == {"portal": NEW, "other": NEW}, "dropping is not a rotation"
+    assert not any("delete secret" in c or c.startswith("helmfile") for c in calls)
+    assert any("rollout restart deployment/portal" in c for c in calls)
+
+
+def test_drop_previous_with_no_rotation_open_changes_nothing(tmp_path):
+    workloads = {"portal": [deployment("portal", "portal-cookie-key")]}
+    result, calls, _ = run(tmp_path, {"copies": {"portal": NEW}, "workloads": workloads}, *SESSION_KEY, "--drop-previous")
+    assert result.returncode == 2
+    assert "no rotation is open" in result.stderr
+    assert not any("patch" in c or "rollout" in c for c in calls)
+
+
+def test_drop_previous_is_refused_for_a_secret_no_reader_keeps_a_previous_of(tmp_path):
+    result, calls, _ = run(tmp_path, {}, *CLIENT, "--drop-previous")
+    assert result.returncode == 2
+    assert "portal-cookie-key" in result.stderr
+    assert calls == []
+
+
+def test_the_portal_reads_the_retired_session_key_and_starts_without_one(rendered):
+    """The render names JC_PORTAL_COOKIE_KEY_PREVIOUS; optional, so a Secret without `previous` starts the pod."""
+    portal = next(
+        d for d in rendered("local")
+        if d.get("kind") == "Deployment" and d["metadata"]["name"] == "portal"
+    )
+    env = {e["name"]: e for e in portal["spec"]["template"]["spec"]["containers"][0]["env"]}
+    assert env["JC_PORTAL_COOKIE_KEY_PREVIOUS"]["valueFrom"]["secretKeyRef"] == {
+        "name": "portal-cookie-key", "key": "previous", "optional": True,
+    }
+    assert "optional" not in env["JC_PORTAL_COOKIE_KEY"]["valueFrom"]["secretKeyRef"], "the active key stays required"

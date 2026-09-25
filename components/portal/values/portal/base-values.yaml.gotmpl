@@ -91,6 +91,12 @@ envSecret:
   JC_PORTAL_COOKIE_KEY:
     secret: portal-cookie-key
     key: key
+  # The key a rotation retired, still opening the cookies it sealed until
+  # `rotate-secret.sh --drop-previous` removes it (OPS-45, T-2842). Absent outside a rotation.
+  JC_PORTAL_COOKIE_KEY_PREVIOUS:
+    secret: portal-cookie-key
+    key: previous
+    optional: true
   JC_OIDC_CLIENT_SECRET:
     secret: keycloak-client-portal-api
     key: client-secret
