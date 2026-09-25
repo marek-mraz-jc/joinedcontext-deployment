@@ -48,6 +48,3 @@ pipeline:
           "source": { "type": "Property", "value": $source_url },
           "dateObserved": if $updated == null { null } else { { "type": "Property", "value": $updated } }
         }.filter(entry -> entry.value != null))
-
-    - archive:
-        format: json_array
