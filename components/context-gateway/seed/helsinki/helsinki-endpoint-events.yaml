@@ -21,3 +21,21 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: hel-fi }
       datastore: { representation: csv, refresh: onReconcile }
+  catalog:
+    publisher: { name: { fi: "Helsingin kaupunki", sv: "Helsingfors stad", en: "City of Helsinki" }, uri: "https://www.hel.fi/" }
+    license: CC_BY_4_0
+    attribution: { fi: "Lähde: Helsingin kaupunki, Linked Events, CC BY 4.0", sv: "Källa: Helsingfors stad, Linked Events, CC BY 4.0", en: "Source: City of Helsinki, Linked Events, CC BY 4.0" }
+    themes: [EDUC]
+    keywords:
+      fi: ["tapahtumat", "kulttuuri", "vapaa-aika"]
+      sv: ["evenemang", "kultur", "fritid"]
+      en: ["events", "culture", "leisure"]
+    spatial:
+      - FI1B1
+      - "http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/091"
+    frequency: HOURLY
+    source:
+      - url: "https://hri.fi/data/en_GB/dataset/linked-events-tapahtumarajapinta"
+        title: { fi: "Linked Events -tapahtumarajapinta", en: "Linked Events API" }
+        description: { fi: "Helsingin kaupungin tapahtumarekisteri, CC BY 4.0.", en: "The City of Helsinki's event register, CC BY 4.0." }
+    pipelineRef: { kind: Pipeline, name: linked-events }

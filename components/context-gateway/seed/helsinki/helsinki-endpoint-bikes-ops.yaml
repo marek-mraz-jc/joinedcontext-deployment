@@ -16,3 +16,21 @@ spec:
   enabledRepresentations: [ngsi-ld, geojson, csv]
   projection: { hiddenAttributes: [contactPoint] }
   rateLimits: { requestsPerMinute: 300, burst: 50 }
+  catalog:
+    publisher: { name: { fi: "Helsingin kaupunki", sv: "Helsingfors stad", en: "City of Helsinki" }, uri: "https://www.hel.fi/" }
+    license: ODC_ODBL
+    attribution: { fi: "Sisältää Kaupunkipyörät-syötteen dataa (Inurba), ODbL 1.0", sv: "Innehåller data från stadscykelflödet (Inurba), ODbL 1.0", en: "Contains data from the City Bikes feed (Inurba), ODbL 1.0" }
+    themes: [TRAN]
+    keywords:
+      fi: ["kaupunkipyörät", "pyöräasemat", "ylläpito"]
+      sv: ["stadscyklar", "cykelstationer", "drift"]
+      en: ["city bikes", "bike stations", "operations"]
+    spatial:
+      - FI1B1
+      - "http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/091"
+    frequency: CONT
+    source:
+      - url: "https://gbfs.theta.fifteen.eu/gbfs/2.2/helsinki/gbfs.json"
+        title: { fi: "Kaupunkipyörät, GBFS-syöte", en: "City Bikes (Helsinki), GBFS feed" }
+        description: { fi: "Operaattorin avoin GBFS 2.2 -syöte asemista ja niiden tilasta, ODbL 1.0.", en: "The operator's open GBFS 2.2 feed of stations and their status, ODbL 1.0." }
+    pipelineRef: { kind: Pipeline, name: citybikes-gbfs }

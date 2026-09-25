@@ -27,3 +27,36 @@ spec:
       # CC-BY 4.0, chosen by the owner on 2026-09-21 (T-2407, T-2465).
       license: cc-by
       datastore: { representation: csv, refresh: onReconcile }
+  # Computed from `bbsk-kraj`, whose CC BY-SA 4.0 inputs pass the share-alike duty on.
+  catalog:
+    publisher: { name: { sk: "Banskobystrický samosprávny kraj", en: "Banská Bystrica Self-Governing Region" }, uri: "https://www.bbsk.sk/" }
+    license: CC_BYSA_4_0
+    attribution: { sk: "Zdroj: Štatistický úrad SR (DATAcube om7102rr, zp3803rs), CC BY-SA 4.0", en: "Source: Statistical Office of the SR (DATAcube om7102rr, zp3803rs), CC BY-SA 4.0" }
+    themes: [REGI, SOCI, ENVI]
+    keywords:
+      sk: ["ukazovatele", "kraj", "obyvateľstvo", "emisie"]
+      en: ["indicators", "region", "population", "emissions"]
+    spatial:
+      - SK032
+      - "https://data.gov.sk/id/lau1/SK0321"
+      - "https://data.gov.sk/id/lau1/SK0322"
+      - "https://data.gov.sk/id/lau1/SK0323"
+      - "https://data.gov.sk/id/lau1/SK0324"
+      - "https://data.gov.sk/id/lau1/SK0325"
+      - "https://data.gov.sk/id/lau1/SK0326"
+      - "https://data.gov.sk/id/lau1/SK0327"
+      - "https://data.gov.sk/id/lau1/SK0328"
+      - "https://data.gov.sk/id/lau1/SK0329"
+      - "https://data.gov.sk/id/lau1/SK032A"
+      - "https://data.gov.sk/id/lau1/SK032B"
+      - "https://data.gov.sk/id/lau1/SK032C"
+      - "https://data.gov.sk/id/lau1/SK032D"
+    frequency: WEEKLY
+    source:
+      - url: "https://data.slovensko.sk/datasety/5be7a861-025b-4189-b01f-bd64546304ad"
+        title: { sk: "Stav obyvateľstva (ŠÚ SR, om7102rr)", en: "Resident population (Statistical Office of the SR, om7102rr)" }
+        description: { sk: "Počet obyvateľov podľa pohlavia za kraj a okresy, ročne; distribúcia data.statistics.sk pod CC BY-SA 4.0.", en: "Residents by sex for the region and its districts, yearly; the data.statistics.sk distribution under CC BY-SA 4.0." }
+      - url: "https://data.slovensko.sk/datasety/52995c9e8fc3d0bd50b072323d406fde"
+        title: { sk: "Emisie základných znečisťujúcich látok (ŠÚ SR, zp3803rs)", en: "Emissions of basic pollutants (Statistical Office of the SR, zp3803rs)" }
+        description: { sk: "Emisie tuhých látok z veľkých a stredných zdrojov na km², kraj a okresy, 2019 až 2023.", en: "Solid particulate emissions from large and medium sources per km², the region and its districts, 2019 to 2023." }
+    pipelineRef: { kind: Pipeline, name: ukazovatele }

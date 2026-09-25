@@ -15,3 +15,17 @@ spec:
   policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki-hub:public-hub
   enabledRepresentations: [ngsi-ld, geojson, csv, mcp]
   rateLimits: { requestsPerMinute: 300, burst: 50 }
+  # No licence: the hub also serves the indicators of `helsinki-kpi`, which have no source a licence
+  # can be read from yet (T-2793).
+  catalog:
+    publisher: { name: { fi: "Helsingin kaupunki", sv: "Helsingfors stad", en: "City of Helsinki" }, uri: "https://www.hel.fi/" }
+    themes: [TRAN, REGI]
+    keywords:
+      fi: ["joukkoliikenne", "tunnusluvut"]
+      sv: ["kollektivtrafik", "nyckeltal"]
+      en: ["public transport", "indicators"]
+    spatial:
+      - FI1B1
+      - "http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/091"
+      - "http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/049"
+      - "http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/092"
