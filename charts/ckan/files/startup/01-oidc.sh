@@ -5,6 +5,11 @@
 # userinfo, logout — it reads through `tk.config`, and its defaults are Okta's paths. Against
 # Keycloak a login would ask for `/oauth2/default/v1/authorize` and get a 404.
 #
+# Its callback also sends the person on to `ckan.route_after_login`, the pre-2.10 name, whose
+# fallback `dashboard.index` resolves to `activity.dashboard`: without the activity plugin that
+# is a 500 on /user/login/oidc-pkce/callback after a sign-in that worked (T-2888). The ini's
+# `ckan.auth.route_after_login` is the 2.11 name, which the extension never reads.
+#
 # So they are written into $CKAN_INI here, under the names the extension looks up, rather than
 # left to the `envvars` plugin's `CKAN___` spelling: one option, one name, in the file the rest
 # of this chart's configuration already lives in.
@@ -18,7 +23,8 @@ if [ -n "${JC_OIDC_REALM_PATH:-}" ]; then
       "ckanext.oidc_pkce.userinfo_path=${JC_OIDC_REALM_PATH}/protocol/openid-connect/userinfo" \
       "ckanext.oidc_pkce.logout_path=${JC_OIDC_REALM_PATH}/protocol/openid-connect/logout" \
       "ckanext.oidc_pkce.scope=${JC_OIDC_SCOPE:-openid email profile}" \
-      "ckanext.oidc_pkce.munge_password=false"; then
+      "ckanext.oidc_pkce.munge_password=false" \
+      "ckan.route_after_login=dashboard.datasets"; then
     echo "[jc] Keycloak login configured against ${JC_OIDC_REALM_PATH}"
   else
     echo "[jc] could not write the OIDC endpoints into $CKAN_INI" >&2
