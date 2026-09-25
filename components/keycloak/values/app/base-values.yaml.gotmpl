@@ -60,7 +60,9 @@ extraEnv: |
 serviceAccount:
   # Peers are discovered over the database (KC_CACHE_STACK=jdbc-ping, set by the chart),
   # never through the Kubernetes API, and the chart grants no pod-read RBAC
-  # (allowReadPods stays false). Nothing here needs a token (BSI TR-03187 AUT-3).
+  # (allowReadPods stays false). The default token stays unmounted (BSI TR-03187 AUT-3); the
+  # one token Keycloak holds is the short-lived projected one below, which the realm's
+  # `kubernetes` identity provider reads the cluster's service-account JWKS with (PF-47).
   automountServiceAccountToken: false
 
 ingress:
@@ -190,6 +192,12 @@ extraVolumeMounts: |
     mountPath: /opt/keycloak
   - name: tmp
     mountPath: /tmp
+  # Where Keycloak looks for its own token and the cluster CA: the `kubernetes` identity
+  # provider authenticates to `{issuer}/.well-known/openid-configuration` with it, and the CA
+  # joins Keycloak's truststore by that path (PF-47).
+  - name: kube-api-token
+    mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+    readOnly: true
 
 extraVolumes: |
   - name: workspace
@@ -199,3 +207,17 @@ extraVolumes: |
   - name: theme
     configMap:
       name: {{ .Values.keycloak.theme.configMapName }}
+  # The API server's default audience and an hour's life: good for the issuer discovery the
+  # cluster grants every ServiceAccount (system:service-account-issuer-discovery) and for no
+  # RBAC, because Keycloak's ServiceAccount is bound to none.
+  - name: kube-api-token
+    projected:
+      sources:
+        - serviceAccountToken:
+            path: token
+            expirationSeconds: 3600
+        - configMap:
+            name: kube-root-ca.crt
+            items:
+              - key: ca.crt
+                path: ca.crt

@@ -41,6 +41,16 @@ keycloak:
           port: 7800
         - protocol: TCP
           port: 57800
+    # The Kubernetes API, for the issuer's keys the `kubernetes` identity provider verifies
+    # workload tokens against (PF-47). The API server is not a pod, so it is named by address;
+    # k3s serves it on 6443 and the policy sees that port after the Service's DNAT, so 443 to
+    # the world stays closed.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 6443
   ingress:
     - from:
         - podSelector:
