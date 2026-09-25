@@ -1,7 +1,8 @@
 # PF-61: `Organization.spec.projects.visibility` is `organization` here, so every signed-in
 # person reads. `platform-readers` is the Keycloak group everyone lands in by default
 # (components/keycloak) and the same group the forge maps onto its readers team (PF-79); the
-# claim carries it, the binding says what it means (PF-50).
+# claim carries it, the binding says what it means (PF-50). `source: provider` marks it as the
+# realm's own: no Group manifest declares it and the reconciler never manages it (PF-63, PF-64).
 apiVersion: joinedcontext.com/v1alpha1
 kind: RoleBinding
 metadata:
@@ -10,6 +11,7 @@ metadata:
 spec:
   subjects:
     - group: platform-readers
+      source: provider
   role: viewer
   scope:
     organization: hel

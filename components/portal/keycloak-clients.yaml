@@ -89,3 +89,32 @@ portal-reconciler:
     implicitFlowEnabled: false
     directAccessGrantsEnabled: false
     serviceAccountsEnabled: true
+
+# `jcctl login` (T-2846, PF-45, MF-14): a person's token for the kubectl-shaped verbs, which call
+# the Portal resource API. RFC 8628's device flow, because a terminal has no browser to come back
+# to: no code flow and so no redirect URI anywhere, and a public client because it lives on a
+# laptop somebody can lose. Its tokens carry the one audience the Portal accepts.
+jcctl:
+  name: jcctl
+  description: Public client of the jcctl command line; device authorization grant only, tokens for the Portal API
+  subdomain: portal
+  redirectPath: /
+  rawValues:
+    publicClient: true
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: false
+    redirectUris: []
+    webOrigins: []
+    attributes:
+      oauth2.device.authorization.grant.enabled: 'true'
+    protocolMappers:
+      - name: portal-api-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.client.audience: portal-api
+          access.token.claim: 'true'
+          id.token.claim: 'false'

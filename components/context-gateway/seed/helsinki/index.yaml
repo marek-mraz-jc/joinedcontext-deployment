@@ -106,6 +106,7 @@ helsinki-policy-public-hub.yaml: projects/helsinki/spaces/helsinki-hub/policies/
 helsinki-csr-transport.yaml: projects/helsinki/spaces/helsinki-hub/registrations/transport.yaml
 helsinki-csr-indicators.yaml: projects/helsinki/spaces/helsinki-hub/registrations/indicators.yaml
 helsinki-serviceaccount-hub-reader.yaml: projects/helsinki/access/serviceaccounts/hub-reader.yaml
+helsinki-serviceaccount-pipeline-proposer.yaml: projects/helsinki/access/serviceaccounts/pipeline-proposer.yaml
 helsinki-layer-bikes.yaml: projects/helsinki/dashboards/bike-stations.yaml
 helsinki-dashboard-bikes.yaml: projects/helsinki/dashboards/city-bikes.yaml
 # The city's open registers (T-2787): one DataSource, one pipeline and its mapping per feed, all

@@ -181,6 +181,15 @@ env:
   # The validation checks' last results, one digest per check, which
   # scripts/publish-health.py writes into the ConfigMap jc-validation-results (OPS-53).
   JC_HEALTH_DIR: /etc/jc/health
+  # What this deployment provides, for Organization → Setup (T-2748, API/01 §25): the Portal
+  # cannot see Keycloak's theme or SMTP server or the database's backups, so the deployment
+  # says it here from the same values that configure them. Absent reads as not done.
+{{- if has "keycloak" .Values.components }}
+  JC_SETUP_LOGIN_THEME: "joinedcontext"
+{{- $smtp := dig "keycloak" "config" "smtp" dict .Values }}
+  JC_SETUP_SMTP: {{ dig "enabled" false $smtp | toString | quote }}
+{{- end }}
+  JC_SETUP_BACKUPS: {{ dig "postgres" "cluster" "backups" "enabled" false .Values | toString | quote }}
   # What an App compiles into and where it is applied (AP-13, AP-15, AP-18, T-0411). Both go
   # together: without them the reconciler reads apps and deploys nothing, which is what a
   # Portal outside a cluster does. The host and the realm are not variables of their own; the

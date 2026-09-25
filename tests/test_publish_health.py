@@ -1,7 +1,7 @@
 """T-2803: scripts/publish-health.py turns a check's summary into the digest the Portal shows.
 
 No cluster here: kubectl is replaced, and the digest is checked against the limits the Portal
-enforces (API/01 §25), so a digest this script writes is never shown as unreadable.
+enforces (API/01 §26), so a digest this script writes is never shown as unreadable.
 """
 
 import importlib.util

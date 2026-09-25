@@ -3,7 +3,7 @@
 
 Reads the summary a check wrote for `tasks/file-failures` and writes its digest, the key
 `{check}.json` of the ConfigMap `jc-validation-results` in the Portal's namespace, which the
-Portal mounts at `JC_HEALTH_DIR` (API/01 §25):
+Portal mounts at `JC_HEALTH_DIR` (API/01 §26):
 
 - the verdict counts, and at most 50 failing or erroring results with key, verdict and title,
   each with the open task whose `check: {check}/{key}` line names it (or the check's overflow

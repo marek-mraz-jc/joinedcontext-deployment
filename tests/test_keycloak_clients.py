@@ -357,3 +357,36 @@ def test_the_agent_proxy_carries_both_audiences_it_is_refused_without(dev_realm_
     assert proxy["serviceAccountsEnabled"] is True
     assert proxy["standardFlowEnabled"] is False and proxy["implicitFlowEnabled"] is False
     assert proxy["directAccessGrantsEnabled"] is False and proxy["publicClient"] is False
+
+
+# --- T-2846 (PF-45, MF-14): a person's token for jcctl, by the device flow ---------------------
+
+
+def test_jcctl_is_a_public_device_flow_client_for_the_portal(realm_clients):
+    """`jcctl login` runs RFC 8628 on this client: it lives on a laptop, so no secret; no browser
+    redirect lands anywhere, so no code flow and no redirect URI; and the token it hands out is
+    for the Portal resource API, which accepts `aud: portal-api` and nothing else."""
+    client = realm_clients["jcctl"]
+    assert client["publicClient"] is True
+    assert "secret" not in client, "a public client must not carry a secret"
+    assert client["attributes"]["oauth2.device.authorization.grant.enabled"] == "true"
+    assert client["standardFlowEnabled"] is False and client["implicitFlowEnabled"] is False
+    assert client["directAccessGrantsEnabled"] is False and client["serviceAccountsEnabled"] is False
+    assert client["redirectUris"] == [] and client["webOrigins"] == []
+    audiences = {
+        m["config"].get("included.client.audience")
+        for m in client["protocolMappers"]
+        if m["protocolMapper"] == "oidc-audience-mapper"
+    }
+    assert audiences == {"portal-api"}, audiences
+
+
+def test_only_jcctl_offers_the_device_flow(realm_clients):
+    """A device code is a login a stranger can start and a person can be tricked into finishing
+    (RFC 8628 §5.4), so the grant is on the one client that needs it."""
+    offering = {
+        client_id
+        for client_id, client in realm_clients.items()
+        if client.get("attributes", {}).get("oauth2.device.authorization.grant.enabled") == "true"
+    }
+    assert offering == {"jcctl"}
