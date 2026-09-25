@@ -11,5 +11,10 @@
 {{- fail (printf "global.%s is %q: a production instance names its own domain, not the development placeholder or a dev cluster host (CC-73, T-1720)" $key $value) }}
 {{- end }}
 {{- end }}
+{{- range $key := list "contact" "expires" }}
+{{- if eq (index $.Values.global.securityTxt $key | default "" | toString) "" }}
+{{- fail (printf "global.securityTxt.%s is empty: a production instance serves security.txt with its own contact and expiry (RFC 9116, OPS-52, T-1721)" $key) }}
+{{- end }}
+{{- end }}
 {{- end }}
 {}

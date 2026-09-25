@@ -21,6 +21,13 @@ global:
   # Email of the initial user with admin rights
   initialUserEmail: admin@joinedcontext.test
 
+  # RFC 9116 security.txt, served by the edge at /.well-known/security.txt on every host
+  # (T-1721, OPS-52): where a vulnerability is reported (`mailto:` or `https:`) and when the
+  # file stops being valid (RFC 3339, at most a year ahead). A production instance must set both.
+  securityTxt:
+    contact: ""
+    expires: ""
+
   # The one repository that holds this installation's configuration (CC-02, CC-08). The Portal
   # proposes and merges into it and the Context Gateway projects its endpoint table from a
   # checkout of it, so both of them read the name from here rather than carrying one of their

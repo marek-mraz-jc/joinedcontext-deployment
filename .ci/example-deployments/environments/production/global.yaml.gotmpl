@@ -4,6 +4,10 @@ global:
   # The organisation's own domain in every entity id; production has no placeholder (CC-73).
   orgDomain: example.org
   profile: production
+  # security.txt (RFC 9116, T-1721): an example contact of the example domain.
+  securityTxt:
+    contact: mailto:security@platform.example.org
+    expires: "2027-09-24T00:00:00Z"
   instanceSlug: jc
   initialUserEmail: {{ env "GITLAB_USER_EMAIL" | default "admin@example.com" }}
   ingress:
