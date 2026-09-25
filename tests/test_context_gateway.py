@@ -277,6 +277,18 @@ def test_the_gateway_reads_the_forge_checkout_git_sync_keeps(dev, gateway_pod, g
 
 
 @requires_helmfile
+def test_a_forge_outage_after_the_first_clone_keeps_the_gateway_in_service(gateway_pod):
+    """T-2978: git-sync exits on its first failed fetch by default, and a crash-looping sidecar
+    makes the only gateway pod NotReady: a Postgres restart took Gitea and with it every endpoint
+    for about 30 s. The sidecar keeps its last checkout and retries forever instead; the one-time
+    init still fails, since a gateway with no checkout has nothing to serve."""
+    init = next(c for c in gateway_pod.get("initContainers", []) if c["name"] == "git-sync-init")
+    sidecar = next(c for c in gateway_pod["containers"] if c["name"] == "git-sync")
+    assert {e["name"]: e.get("value") for e in sidecar["env"]}.get("GITSYNC_MAX_FAILURES") == "-1"
+    assert "GITSYNC_MAX_FAILURES" not in {e["name"] for e in init["env"]}
+
+
+@requires_helmfile
 def test_layout_two_checks_out_every_project_beside_the_organization(rendered_variant):
     """CC-86, T-2646: in layout 2 `jcctl checkouts` runs once after git-sync's first clone and
     beside the gateway after, writing the projects the gateway only reads; its image is pinned by

@@ -214,7 +214,10 @@ extraContainers:
     image: "{{ $gitSync.repository }}:{{ $gitSync.tag }}@{{ $gitSync.digest }}"
     imagePullPolicy: IfNotPresent
     env:
-{{ append (append $gitSyncEnv (dict "name" "GITSYNC_PERIOD" "value" "10s")) (dict "name" "GITSYNC_HTTP_BIND" "value" ":9092") | toYaml | indent 6 }}
+    # GITSYNC_MAX_FAILURES -1 (T-2978): after the first clone a failed fetch keeps the last
+    # checkout and retries each period. The default exits on the first one, and a crash-looping
+    # sidecar made the only gateway pod NotReady whenever the forge or its Postgres restarted.
+{{ concat $gitSyncEnv (list (dict "name" "GITSYNC_PERIOD" "value" "10s") (dict "name" "GITSYNC_HTTP_BIND" "value" ":9092") (dict "name" "GITSYNC_MAX_FAILURES" "value" "-1")) | toYaml | indent 6 }}
     # git-sync's own endpoint: 5xx until the first clone landed, 200 after (the readiness
     # every container must declare, .ci/policies/base/probes.yaml).
     readinessProbe:
