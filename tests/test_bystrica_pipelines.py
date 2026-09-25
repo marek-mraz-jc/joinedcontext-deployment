@@ -12,8 +12,10 @@ are what stops the four mappings drifting apart.
 """
 
 import json
+import os
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -74,15 +76,10 @@ def run(path: Path, fixture: str, domain: str, space: str) -> list[dict]:
     payload = document
     for step in steps:
         if "unarchive" in step:
-            # `unarchive: json_array` turns one message into one per element; the mapping after
-            # it sees one element, so the remaining steps run per element and are re-archived.
-            elements = json.loads(payload)
-            mapped = [
-                run_mapping(step_after, json.dumps(element, separators=(",", ":")), domain, space)
-                for step_after in [s for s in steps[steps.index(step) + 1:] if "mapping" in s]
-                for element in elements
-            ]
-            return [json.loads(line) for line in mapped if line.strip() not in ("", "null")]
+            # `unarchive: json_array` turns one message into one per element and the steps after
+            # it run per element until `archive` joins them again: the pipeline's own steps, run
+            # by Bento in one stream. One container per element cost a minute and a half (T-2895).
+            return json.loads(run_stream(steps[steps.index(step):], payload, domain, space))
         if "mapping" in step:
             payload = run_mapping(step, payload, domain, space)
         if "archive" in step:
@@ -98,6 +95,30 @@ def run_mapping(step: dict, payload: str, domain: str, space: str) -> str:
     )
     assert result.returncode == 0, result.stderr or result.stdout
     return result.stdout
+
+
+def run_stream(steps: list[dict], payload: str, domain: str, space: str) -> str:
+    """Run pipeline steps over one message through a Bento stream, and answer what it wrote."""
+    assert "archive" in steps[-1], "a stream that unarchives must archive again to answer one document"
+    with tempfile.TemporaryDirectory(dir="/tmp") as directory:
+        work = Path(directory)
+        work.chmod(0o777)
+        (work / "in.json").write_text(payload)
+        (work / "cfg.yaml").write_text(yaml.safe_dump({
+            "input": {"file": {"paths": ["/w/in.json"], "scanner": {"to_the_end": {}}}},
+            "pipeline": {"processors": steps},
+            "output": {"file": {"path": "/w/out.json", "codec": "all-bytes"}},
+        }))
+        for item in work.iterdir():
+            item.chmod(0o666)
+        result = subprocess.run(
+            ["docker", "run", "--rm", "--user", f"{os.getuid()}:{os.getgid()}", "-v", f"{work}:/w", "-w", "/w",
+             "-e", f"JC_ORG_DOMAIN={domain}", "-e", f"JC_SPACE={space}", BENTO, "-c", "/w/cfg.yaml"],
+            capture_output=True, text=True, timeout=240,
+        )
+        produced = work / "out.json"
+        assert produced.is_file(), (result.stderr or result.stdout)[-2000:]
+        return produced.read_text()
 
 
 @pytest.fixture(scope="module")

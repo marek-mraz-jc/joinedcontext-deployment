@@ -147,5 +147,6 @@ jobs:
       # One worker per core: each smoke-script case runs the whole script against stubs, and in
       # series the suite passed the job's 10 minutes once T-2592 and T-2601 added cases, which
       # GitHub reports as "cancelled" and which hid a red test behind it (8m24s -> 2m45s on 4).
-      # The modules that rewrite deployment/environments/testing share one worker (xdist_group).
+      # A module that rewrites deployment/environments/testing does it in its own copy of the tree
+      # (own_tree), and each environment is rendered once for all workers (T-2895).
       - run: pytest tests -q -n auto --dist loadgroup

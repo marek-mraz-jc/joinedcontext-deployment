@@ -1,22 +1,18 @@
 import subprocess
 import shutil
-from pathlib import Path
 from typing import Any, Dict, Optional
 
 import pytest
 import yaml
 
-# Renders from the one shared `deployment/environments/testing` folder, which it rewrites, so
-# every module that does runs on one xdist worker (ci.yml runs `-n auto --dist loadgroup`).
-pytestmark = pytest.mark.xdist_group("deployment-environments-testing")
+# Writes `deployment/environments/testing` in its own copy of the tree (`own_tree`), so it
+# shares nothing with another module. Its own xdist group keeps the module on one worker, so its
+# module-scoped renders happen once rather than once per worker (T-2895).
+pytestmark = pytest.mark.xdist_group("environments-config")
 
 @pytest.fixture
-def project_root():
-    return Path(__file__).resolve().parent.parent
-
-@pytest.fixture
-def deployment_dir(project_root):
-    return project_root / "deployment"
+def deployment_dir(own_tree):
+    return own_tree / "deployment"
 
 @pytest.fixture
 def render_helmfile(deployment_dir):
