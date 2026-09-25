@@ -1,0 +1,15 @@
+# The one model of the indicator space (DM-61): the indicator contract the regions' KPI spaces
+# publish, so a write of any other type into this space is refused. A draft until Model Tools
+# renders its artifacts (DM-02).
+apiVersion: joinedcontext.com/v1alpha1
+kind: DataModel
+metadata:
+  name: helsinki-kpi
+  namespace: helsinki
+  title: { en: "Indicator" }
+spec:
+  contextSpaceRef: helsinki-kpi
+  linkml: ./helsinki-kpi.linkml.yaml
+  version: 0.1.0
+  lifecycle: draft
+  classes: [KeyPerformanceIndicator]

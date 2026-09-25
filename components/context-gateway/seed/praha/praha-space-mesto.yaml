@@ -21,4 +21,6 @@ spec:
   # The rendered segment, pinned so it cannot drift (PF-84).
   urnSegment: praha-mesto
   isSandbox: false
+  # Its one model (DM-61, ADR-N-033).
+  dataModelRef: { kind: DataModel, name: praha-mesto }
   defaultLocale: cs

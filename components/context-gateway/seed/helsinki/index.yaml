@@ -32,6 +32,8 @@ helsinki-policy-public-weather.yaml: projects/helsinki/spaces/helsinki/policies/
 helsinki-policy-public-alerts.yaml: projects/helsinki/spaces/helsinki/policies/public-alerts.yaml
 helsinki-policy-pipelines-write.yaml: projects/helsinki/spaces/helsinki/policies/pipelines-write.yaml
 helsinki-kpi-space.yaml: projects/helsinki/spaces/helsinki-kpi/space.yaml
+helsinki-kpi-datamodel.yaml: projects/helsinki/spaces/helsinki-kpi/datamodels/helsinki-kpi.yaml
+helsinki-kpi.linkml.yaml: projects/helsinki/spaces/helsinki-kpi/datamodels/helsinki-kpi.linkml.yaml
 helsinki-endpoint-kpi.yaml: projects/helsinki/spaces/helsinki-kpi/endpoints/helsinki-kpi.yaml
 helsinki-policy-kpi-pipelines-write.yaml: projects/helsinki/spaces/helsinki-kpi/policies/kpi-pipelines-write.yaml
 helsinki-policy-kpi-read.yaml: projects/helsinki/spaces/helsinki-kpi/policies/kpi-read.yaml
@@ -72,6 +74,8 @@ helsinki-blueprint-gbfs-stations.yaml: blueprints/gbfs-stations/blueprint.yaml
 helsinki-blueprint-mqtt-feed.yaml: blueprints/mqtt-feed/blueprint.yaml
 helsinki-uischema-endpoint.yaml: portal/forms/endpoint.uischema.yaml
 helsinki-mobility-space.yaml: projects/helsinki-mobility/spaces/mobility/space.yaml
+helsinki-mobility-datamodel.yaml: projects/helsinki-mobility/spaces/mobility/datamodels/mobility.yaml
+mobility.linkml.yaml: projects/helsinki-mobility/spaces/mobility/datamodels/mobility.linkml.yaml
 helsinki-mobility-shared-bikes.yaml: projects/helsinki-mobility/shared/city-bikes.yaml
 helsinki-role-steward.yaml: users/roles/steward.yaml
 helsinki-role-org-admin.yaml: users/roles/org-admin.yaml
@@ -95,6 +99,8 @@ helsinki-rolebinding-janitors.yaml: users/assignments/janitors.yaml
 # The hub (T-1209, Architecture/04 §5a): a space of registrations, one Endpoint over it, and
 # the identity a forward carries.
 helsinki-hub-space.yaml: projects/helsinki/spaces/helsinki-hub/space.yaml
+helsinki-hub-datamodel.yaml: projects/helsinki/spaces/helsinki-hub/datamodels/helsinki-hub.yaml
+helsinki-hub.linkml.yaml: projects/helsinki/spaces/helsinki-hub/datamodels/helsinki-hub.linkml.yaml
 helsinki-endpoint-hub.yaml: projects/helsinki/spaces/helsinki-hub/endpoints/helsinki-hub.yaml
 helsinki-policy-public-hub.yaml: projects/helsinki/spaces/helsinki-hub/policies/public-hub.yaml
 helsinki-csr-transport.yaml: projects/helsinki/spaces/helsinki-hub/registrations/transport.yaml

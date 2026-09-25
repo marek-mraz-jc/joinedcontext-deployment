@@ -1,0 +1,27 @@
+id: https://hel.fi/models/helsinki/helsinki-hub
+name: helsinki-hub
+title: Helsinki hub
+description: >-
+  The types the hub answers for, each registered from the space that holds it: Vehicle from the
+  city context, KeyPerformanceIndicator from the indicator space. The IRIs are those spaces'
+  models' own, so a reader of the hub reads the same terms (DM-61).
+license: https://joinedcontext.com/licenses/cc-by-4.0
+prefixes:
+  linkml: https://w3id.org/linkml/
+  jc: https://joinedcontext.com/models/
+  sdm: https://smartdatamodels.org/
+  ngsi-ld: https://uri.etsi.org/ngsi-ld/
+default_prefix: jc
+default_range: string
+imports:
+  - linkml:types
+  - ngsi-ld-core
+classes:
+  Vehicle:
+    class_uri: sdm:Vehicle
+    description: One HSL bus on a trunk line, registered from the helsinki space.
+    is_a: Entity
+  KeyPerformanceIndicator:
+    class_uri: jc:KeyPerformanceIndicator
+    description: One computed indicator, registered from the helsinki-kpi space.
+    is_a: Entity

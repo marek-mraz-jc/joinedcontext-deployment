@@ -14,4 +14,6 @@ spec:
   # The space name is the segment its ids carry, pinned so it cannot drift (PF-84).
   urnSegment: bbsk-kraj
   isSandbox: false
+  # The one model of this space: a write of a type it does not declare is refused (DM-61).
+  dataModelRef: { kind: DataModel, name: statistical-observation }
   defaultLocale: sk
