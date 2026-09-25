@@ -34,6 +34,7 @@ DOMAIN = "joinedcontext.test"
 #: API to a page on another origin.
 PORTAL_CONFIGS = (
     "portal-ui",
+    "portal-public",
     "portal-api",
     "portal-well-known",
     "portal-metrics",

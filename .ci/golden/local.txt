@@ -221,6 +221,7 @@ v1/Secret local/keycloak-client-bbsk-pipelines
 v1/Secret local/keycloak-client-context-gateway
 v1/Secret local/keycloak-client-edge
 v1/Secret local/keycloak-client-gitea
+v1/Secret local/keycloak-client-helsinki-pipeline-proposer
 v1/Secret local/keycloak-client-helsinki-pipelines
 v1/Secret local/keycloak-client-jc-build-lane
 v1/Secret local/keycloak-client-portal-api

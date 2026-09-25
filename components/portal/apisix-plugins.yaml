@@ -95,6 +95,79 @@ portal-ui:
           X-Frame-Options: "SAMEORIGIN"
           Referrer-Policy: "no-referrer"
 
+portal-public:
+  name: portal-public
+  description: The public catalogue page and the bundle, edge session optional (EP-81)
+  plugins:
+    request-id:
+      include_in_response: true
+    serverless-pre-function:
+      phase: rewrite
+      functions:
+        - >-
+          return function()
+            local forged = {
+              "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
+              "X-Endpoint-Slug", "X-Consumer-Identity", "X-Forwarded-User",
+              "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
+              "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
+            }
+            for _, header in ipairs(forged) do
+              ngx.req.clear_header(header)
+              ngx.req.clear_header((header:gsub("%-", "_")))
+            end
+          end
+    # Class 1 (standard web): 300 requests per minute per IP.
+    limit-count:
+      count: 300
+      time_window: 60
+      key_type: var
+      key: remote_addr
+      rejected_code: 429
+      policy: local
+      show_limit_quota_header: true
+    # portal-ui's session, read when the browser has one, so a signed-in person sees the page in
+    # the Portal's shell; a visitor without one passes as anonymous (`unauth_action: pass`) and
+    # is never redirected. The callback and logout paths are portal-ui's.
+    openid-connect:
+      client_id: edge
+      client_secret: ${EDGE_CLIENT_SECRET}
+      discovery: https://idm.${DOMAIN}/realms/${REALM}/.well-known/openid-configuration
+      bearer_only: false
+      use_jwks: false
+      use_pkce: true
+      ssl_verify: true
+      unauth_action: pass
+      redirect_uri: https://portal.${DOMAIN}/callback
+      logout_path: /logout
+      post_logout_redirect_uri: https://portal.${DOMAIN}/
+      set_userinfo_header: true
+      set_access_token_header: true
+      set_id_token_header: false
+      set_refresh_token_header: false
+      session:
+        secret: ${OIDC_SESSION_SECRET}
+        cookie_name: jc_edge
+        cookie_path: /
+        cookie_secure: true
+        cookie_http_only: true
+        cookie_same_site: Lax
+        idling_timeout: 3600
+        rolling_timeout: 3600
+        absolute_timeout: 36000
+    proxy-rewrite:
+      headers:
+        set:
+          X-Forwarded-Proto: https
+          X-Forwarded-Port: '443'
+    response-rewrite:
+      headers:
+        set:
+          Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+          X-Content-Type-Options: "nosniff"
+          X-Frame-Options: "SAMEORIGIN"
+          Referrer-Policy: "no-referrer"
+
 portal-api:
   name: portal-api
   description: Portal REST API (edge session becomes X-Access-Token, a bearer passes through)
