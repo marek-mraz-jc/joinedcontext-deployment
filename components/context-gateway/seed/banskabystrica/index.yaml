@@ -19,6 +19,10 @@ serviceaccount.yaml: projects/banskabystrica/access/serviceaccounts/conformance.
 # computed from them. The indicator endpoint is shared with `bbsk` and is not public.
 space-mesto.yaml: projects/banskabystrica/spaces/banskabystrica-mesto/space.yaml
 datamodel-mesto.yaml: projects/banskabystrica/spaces/banskabystrica-mesto/datamodels/statistical-observation.yaml
+# The city's records (T-2916): a static bundle the Portal image ships and serves at
+# /apps/banskabystrica-zaznamy/, reading the rows of banskabystrica-mesto; the one write is the
+# steward's note, which policy mesto-steward-note grants.
+app-zaznamy.yaml: projects/banskabystrica/apps/banskabystrica-zaznamy/app.yaml
 statistical-observation.linkml.yaml: projects/banskabystrica/spaces/banskabystrica-mesto/datamodels/statistical-observation.linkml.yaml
 statistical-observation.v1.schema.json: projects/banskabystrica/spaces/banskabystrica-mesto/datamodels/statistical-observation.v1.schema.json
 statistical-observation.v1.context.jsonld: projects/banskabystrica/spaces/banskabystrica-mesto/datamodels/statistical-observation.v1.context.jsonld
