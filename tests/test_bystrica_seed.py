@@ -497,8 +497,9 @@ def test_the_citys_records_are_a_published_static_app_the_portal_image_ships():
 
 
 def test_the_citys_air_quality_is_a_public_static_app_on_the_public_endpoint_alone():
-    """T-2916: the public screen reads the one space whose endpoint is public, read only, and
-    only the attributes the public grant serves, so no answer carries a refusal."""
+    """T-2916, T-2949: the public screen reads the city's public space, where the EEA pipelines
+    write station SK0263A, read only, and only the attributes that space's public grant serves,
+    so no answer carries a refusal."""
     app = one(CITY, "App", "banskabystrica-ovzdusie")
     assert app["metadata"]["annotations"]["joinedcontext.com/shipped-with"] == "portal"
     assert app["spec"]["visibility"] == "public"
@@ -508,9 +509,21 @@ def test_the_citys_air_quality_is_a_public_static_app_on_the_public_endpoint_alo
     endpoints = [doc for _, doc in manifests(CITY, "Endpoint") if doc["spec"]["contextSpaceRef"] == space]
     assert endpoints and all(e["spec"]["audience"] == "public" for e in endpoints), space
     assert set(need["operations"]) <= {"queryEntity", "retrieveEntity", "queryTemporal"}
-    public = one(CITY, "Policy", "public-read")["spec"]
-    served = {name for rule in public["information"] for name in rule.get("propertyNames", [])}
-    assert set(need["attrs"]) <= served, sorted(set(need["attrs"]) - served)
+    # The space the live readings go to, never the conformance suite's seeded stations.
+    assert space == "banskabystrica-verejne", space
+    # `urn:ngsi-ld:Endpoint:{org}:{space}:{name}`: both streams land in this space.
+    writes = {doc["spec"]["targetEndpoint"].split(":")[4] for _, doc in manifests(CITY, "Pipeline")
+              if doc["metadata"]["name"] in {"ovzdusie-pm10", "ovzdusie-pm25"}}
+    assert writes == {space}, writes
+    # The public grant of that space: a rule without propertyNames serves every attribute.
+    grants = [doc["spec"] for _, doc in manifests(CITY, "Policy")
+              if doc["spec"]["contextSpaceRef"]["name"] == space and doc["spec"]["assignee"] == {"kind": "role", "id": "public"}]
+    rules = [rule for grant in grants for rule in grant["information"]
+             if any(entity["type"] in need["types"] for entity in rule["entities"])]
+    assert rules, "no public grant of the space serves the type"
+    if all(rule.get("propertyNames") for rule in rules):
+        served = {name for rule in rules for name in rule["propertyNames"]}
+        assert set(need["attrs"]) <= served, sorted(set(need["attrs"]) - served)
 
 
 # What the city and the region cleared for the open-data catalogue (T-2407, user 2026-09-21):
