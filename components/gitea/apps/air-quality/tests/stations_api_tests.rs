@@ -30,6 +30,7 @@ fn app_at(endpoint: &MockServer) -> axum::Router {
         endpoint_url: format!("{}/", endpoint.uri()),
         anonymous: false,
         me_url: Some(format!("{}/me", endpoint.uri())),
+        page_config: None,
     })))
 }
 
@@ -474,6 +475,50 @@ async fn the_readiness_probe_answers_at_the_root() {
     assert!(untouched(&endpoint).await);
 }
 
+/// AP-67, AP-126: the front page carries the reconciler's `JC_APP_CONFIG` as `#jc-config`, so
+/// the map finds the project's basemap; a value that spells `</script>` cannot end the element.
+#[tokio::test]
+async fn the_front_page_carries_the_reconcilers_configuration_with_its_basemap() {
+    let endpoint = MockServer::start().await;
+    let basemap = "https://portal.hel.fi/api/v1/projects/hel/basemap/default/style.json";
+    let raw =
+        json!({ "slug": "s", "appName": "</script><script>alert(1)</script>", "basemap": basemap });
+    let app = router(Arc::new(App::new(Config {
+        base_path: BASE.to_owned(),
+        endpoint_url: format!("{}/", endpoint.uri()),
+        anonymous: true,
+        me_url: None,
+        page_config: Some(air_quality::page_config(&raw.to_string()).expect("an object")),
+    })));
+
+    let (status, page) = call(app, anonymous("GET", BASE, None)).await;
+    assert_eq!(status, StatusCode::OK);
+    let open = r#"<script id="jc-config" type="application/json">"#;
+    let start = page.find(open).expect("the page carries #jc-config") + open.len();
+    let end = start
+        + page[start..]
+            .find("</script>")
+            .expect("the element is closed");
+    let config: Value = serde_json::from_str(&page[start..end]).expect("the element holds JSON");
+    assert_eq!(config["basemap"], basemap);
+    assert_eq!(
+        config["appName"], raw["appName"],
+        "read back as it was handed over"
+    );
+    assert!(untouched(&endpoint).await);
+
+    // Without one the page is served as built.
+    let (_, plain) = call(app_at(&endpoint), anonymous("GET", BASE, None)).await;
+    assert!(!plain.contains("jc-config"), "{plain}");
+}
+
+#[test]
+fn a_configuration_that_is_not_one_json_object_is_refused() {
+    for raw in ["not json", "[1]", "\"basemap\""] {
+        assert!(air_quality::page_config(raw).is_err(), "{raw} was accepted");
+    }
+}
+
 /// A userinfo header that is not base64 JSON is nobody, not an error: the token still decides.
 #[tokio::test]
 async fn an_unreadable_userinfo_is_no_identity() {
@@ -599,4 +644,34 @@ async fn nothing_is_served_above_the_apps_own_base_path() {
         assert_eq!(status, StatusCode::OK, "{front}");
         assert!(body.contains("<!doctype html>"), "{body}");
     }
+}
+
+/// T-2909: on its own host the base path is `/`; the router must build there (it panicked at
+/// start on dev with an empty route) and serve the station list under it.
+#[tokio::test]
+async fn the_app_starts_on_its_own_host_at_the_root() {
+    let endpoint = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/ngsi-ld/v1/entities"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!([entity()])))
+        .mount(&endpoint)
+        .await;
+    let app = router(Arc::new(App::new(Config {
+        base_path: "/".to_owned(),
+        endpoint_url: format!("{}/", endpoint.uri()),
+        anonymous: false,
+        me_url: Some(format!("{}/me", endpoint.uri())),
+        page_config: None,
+    })));
+    let (status, _) = call(
+        app.clone(),
+        Request::builder()
+            .uri("/healthz")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let (status, body) = call(app, signed_in("GET", "/api/stations", None)).await;
+    assert_eq!(status, StatusCode::OK, "{body}");
 }

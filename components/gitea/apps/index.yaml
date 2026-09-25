@@ -1,6 +1,6 @@
 # Written by scripts/vendor-sample-apps.py; do not edit. The files of each sample application,
 # relative to its folder, as the forge bootstrap pushes them to its repository (T-2599).
-source: 84f38d9a3b7b26fd0797cdc0752c6bdfd7192e8a
+source: 17b93888897a672a9651c49709176c6d99c0d9bf
 apps:
   air-quality:
     - .gitea/workflows/build.yml
@@ -22,15 +22,48 @@ apps:
     - tests/e2e/auth_flow.spec.ts
     - tests/e2e/stub-endpoint.mjs
     - tests/stations_api_tests.rs
+    - ui/e2e/responsive.spec.ts
     - ui/index.html
+    - ui/map-worker.ts
     - ui/package.json
     - ui/playwright.config.ts
-    - ui/pnpm-lock.yaml
+    - ui/src/App.tsx
+    - ui/src/Chart.tsx
+    - ui/src/StationMap.tsx
+    - ui/src/api.ts
+    - ui/src/index.css
+    - ui/src/main.tsx
+    - ui/src/quality.ts
+    - ui/tests/app.test.tsx
+    - ui/tests/charts.test.tsx
+    - ui/tests/maplibre.ts
+    - ui/tests/setup.ts
+    - ui/tsconfig.json
+    - ui/vite.config.ts
+  hsl-transport:
+    - .gitea/workflows/build.yml
+    - Cargo.lock
+    - Cargo.toml
+    - README.md
+    - app.yaml
+    - build.rs
+    - grants/projects/helsinki/spaces/helsinki/endpoints/app-hsl-transport.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-hsl-transport-1.yaml
+    - src/assets.rs
+    - src/lib.rs
+    - src/main.rs
+    - tests/server_tests.rs
+    - ui/e2e/responsive.spec.ts
+    - ui/e2e/serve.ts
+    - ui/index.html
+    - ui/map-worker.ts
+    - ui/package.json
+    - ui/playwright.config.ts
     - ui/src/App.tsx
     - ui/src/api.ts
     - ui/src/index.css
     - ui/src/main.tsx
-    - ui/tests/app.test.tsx
+    - ui/tests/map.test.tsx
     - ui/tests/setup.ts
     - ui/tsconfig.json
     - ui/vite.config.ts
@@ -40,6 +73,8 @@ apps:
     - README.md
     - app.yaml
     - e2e/alerts.spec.ts
+    - e2e/responsive.spec.ts
+    - e2e/serve.ts
     - functions/expiring.test.ts
     - functions/expiring.ts
     - functions/summary.test.ts
@@ -92,6 +127,8 @@ apps:
     - .gitignore
     - README.md
     - app.yaml
+    - e2e/responsive.spec.ts
+    - e2e/serve.ts
     - e2e/stations.spec.ts
     - grants/projects/helsinki/spaces/helsinki/endpoints/app-helsinki-bikes.yaml
     - grants/projects/helsinki/spaces/helsinki/policies/app-helsinki-bikes-1.yaml
@@ -102,8 +139,10 @@ apps:
     - src/App.test.tsx
     - src/App.tsx
     - src/app.css
+    - src/charts.ts
     - src/components/AppShell.test.tsx
     - src/components/AppShell.tsx
+    - src/components/ChartCard.tsx
     - src/components/EntityDetail.tsx
     - src/components/EntityMap.test.tsx
     - src/components/EntityMap.tsx
@@ -117,6 +156,7 @@ apps:
     - src/design-tokens.json
     - src/fixtures/stations.ts
     - src/main.tsx
+    - src/pages/Overview.test.tsx
     - src/pages/Overview.tsx
     - src/pages/Stations.tsx
     - src/stations.test.ts
@@ -135,27 +175,3 @@ apps:
     - style.css
     - test/app.test.mjs
     - test/events.json
-  hsl-transport:
-    - .gitea/workflows/build.yml
-    - Cargo.lock
-    - Cargo.toml
-    - README.md
-    - app.yaml
-    - build.rs
-    - grants/projects/helsinki/spaces/helsinki/endpoints/app-hsl-transport.yaml
-    - grants/projects/helsinki/spaces/helsinki/policies/app-hsl-transport-1.yaml
-    - src/assets.rs
-    - src/lib.rs
-    - src/main.rs
-    - tests/server_tests.rs
-    - ui/index.html
-    - ui/package.json
-    - ui/pnpm-lock.yaml
-    - ui/src/App.tsx
-    - ui/src/api.ts
-    - ui/src/index.css
-    - ui/src/main.tsx
-    - ui/tests/map.test.tsx
-    - ui/tests/setup.ts
-    - ui/tsconfig.json
-    - ui/vite.config.ts

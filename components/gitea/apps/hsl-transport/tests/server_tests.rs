@@ -24,6 +24,7 @@ fn app_at(endpoint: &MockServer) -> Arc<App> {
         base_path: BASE.to_owned(),
         endpoint_url: format!("{}/", endpoint.uri()),
         poll_seconds: 1,
+        page_config: None,
     }))
 }
 
@@ -378,4 +379,91 @@ async fn the_readiness_probe_answers_at_the_root_without_a_query() {
         .received_requests()
         .await
         .is_some_and(|r| r.is_empty()));
+}
+
+/// T-2909: on its own host the base path is `/`; the router must build there (it panicked at
+/// start on dev with an empty route) and serve the fleet under it.
+#[tokio::test]
+async fn the_app_starts_on_its_own_host_at_the_root() {
+    let endpoint = MockServer::start().await;
+    let app = Arc::new(App::new(Config {
+        base_path: "/".to_owned(),
+        endpoint_url: format!("{}/", endpoint.uri()),
+        poll_seconds: 1,
+        page_config: None,
+    }));
+    for uri in ["/healthz", "/api/vehicles"] {
+        let response = router(app.clone())
+            .oneshot(Request::builder().uri(uri).body(Body::empty()).unwrap())
+            .await
+            .expect("the app answers");
+        // The fleet answers 503 until its first poll: routed, not missing.
+        assert!(
+            [StatusCode::OK, StatusCode::SERVICE_UNAVAILABLE].contains(&response.status()),
+            "{uri}: {}",
+            response.status()
+        );
+    }
+}
+
+/// AP-67, AP-126: the front page carries the reconciler's `JC_APP_CONFIG` as `#jc-config`, so
+/// the map finds the project's basemap; a value that spells `</script>` cannot end the element.
+#[tokio::test]
+async fn the_front_page_carries_the_reconcilers_configuration_with_its_basemap() {
+    let endpoint = MockServer::start().await;
+    let basemap = "https://portal.hel.fi/api/v1/projects/hel/basemap/default/style.json";
+    let raw = json!({ "appName": "</script><script>alert(1)</script>", "basemap": basemap });
+    let page = |page_config: Option<String>| {
+        let app = Arc::new(App::new(Config {
+            base_path: "/".to_owned(),
+            endpoint_url: format!("{}/", endpoint.uri()),
+            poll_seconds: 1,
+            page_config,
+        }));
+        async move {
+            let response = router(app)
+                .oneshot(
+                    Request::builder()
+                        .uri("/")
+                        .body(Body::empty())
+                        .expect("a request"),
+                )
+                .await
+                .expect("the app answers");
+            assert_eq!(response.status(), StatusCode::OK);
+            let body = response
+                .into_body()
+                .collect()
+                .await
+                .expect("a body")
+                .to_bytes();
+            String::from_utf8_lossy(&body).into_owned()
+        }
+    };
+
+    let served = page(Some(
+        hsl_transport::page_config(&raw.to_string()).expect("an object"),
+    ))
+    .await;
+    let open = r#"<script id="jc-config" type="application/json">"#;
+    let start = served.find(open).expect("the page carries #jc-config") + open.len();
+    let end = start
+        + served[start..]
+            .find("</script>")
+            .expect("the element is closed");
+    let config: Value = serde_json::from_str(&served[start..end]).expect("the element holds JSON");
+    assert_eq!(config["basemap"], basemap);
+    assert_eq!(
+        config["appName"], raw["appName"],
+        "read back as it was handed over"
+    );
+
+    // Without one the page is served as built, and anything but one JSON object is refused.
+    assert!(!page(None).await.contains("jc-config"));
+    for raw in ["not json", "[1]", "\"basemap\""] {
+        assert!(
+            hsl_transport::page_config(raw).is_err(),
+            "{raw} was accepted"
+        );
+    }
 }
