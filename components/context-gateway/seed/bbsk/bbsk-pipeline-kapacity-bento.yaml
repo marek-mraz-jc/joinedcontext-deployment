@@ -1,20 +1,21 @@
-# The mapping of the voda pipeline (PL-03): one StatisticalObservation per year from the
-# drinking-water cube of ŠÚ SR, for the city LAU code SK0321508438. The cube is in thousands of
-# cubic metres of INVOICED water, which is what `unitText` keeps: a UN/CEFACT code loses both the
-# scale factor and the fact that it is water billed rather than water used.
+# The mapping of the kapacity pipeline (PL-03): one StatisticalObservation per territory per quarter per
+# indicator from the quarterly tourism cube of ŠÚ SR: establishments, rooms and beds available.
+# `dimensionKey` carries the quarter (`1.Q.`). Revenue, prices and occupancy are left out,
+# because one stream writes one unit and those are euro and per cent.
+# Decoded by the same JSON-stat decoder as every cube stream; nothing is renamed or recomputed.
 
 pipeline:
   processors:
     - mapping: |
         # --- the cube this stream reads ---------------------------------------
-        let cube = "vh5003rr"
-        let area_dim = "nuts15"
-        let period_dim = "vh5003rr_rok"
-        let indicator_dim = "vh5003rr_ukaz"
-        let key_dims = []
-        let unit_code = "MTQ"
-        let unit_text = "v tis. m3 fakturovanej vody"
-        let source_url = "https://data.statistics.sk/api/v2/dataset/vh5003rr/SK0321508438/*/U03084?lang=sk&type=json"
+        let cube = "cr3807qr"
+        let area_dim = "nuts14"
+        let period_dim = "cr3807qr_rok"
+        let indicator_dim = "cr3807qr_ukaz"
+        let key_dims = ["cr3807qr_stv"]
+        let unit_code = "C62"
+        let unit_text = "počet"
+        let source_url = "https://data.statistics.sk/api/v2/dataset/cr3807qr/SK032,SK0321,SK0322,SK0323,SK0324,SK0325,SK0326,SK0327,SK0328,SK0329,SK032A,SK032B,SK032C,SK032D/*/1.Q.,2.Q.,3.Q.,4.Q./U_CR_0002,U_CR_0003,U_CR_0004?lang=sk&type=json"
         # JSON-stat 2.0, decoded by the index and never by the order. `value` is flat and
         # row-major over `size`; the position of a code inside a dimension is
         # `dimension.{name}.category.index`, which is NOT sorted: the period dimension comes back

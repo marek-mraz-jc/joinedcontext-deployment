@@ -1,20 +1,20 @@
-# The mapping of the voda pipeline (PL-03): one StatisticalObservation per year from the
-# drinking-water cube of ŠÚ SR, for the city LAU code SK0321508438. The cube is in thousands of
-# cubic metres of INVOICED water, which is what `unitText` keeps: a UN/CEFACT code loses both the
-# scale factor and the fact that it is water billed rather than water used.
+# The mapping of the uchadzaci pipeline (PL-03): one StatisticalObservation per territory per year per
+# indicator from the registered-jobseekers cube of ŠÚ SR (from ÚPSVaR): `U15061` all jobseekers,
+# `U15062` the women among them.
+# Decoded by the same JSON-stat decoder as every cube stream; nothing is renamed or recomputed.
 
 pipeline:
   processors:
     - mapping: |
         # --- the cube this stream reads ---------------------------------------
-        let cube = "vh5003rr"
+        let cube = "pr5001rr"
         let area_dim = "nuts15"
-        let period_dim = "vh5003rr_rok"
-        let indicator_dim = "vh5003rr_ukaz"
+        let period_dim = "pr5001rr_rok"
+        let indicator_dim = "pr5001rr_ukaz"
         let key_dims = []
-        let unit_code = "MTQ"
-        let unit_text = "v tis. m3 fakturovanej vody"
-        let source_url = "https://data.statistics.sk/api/v2/dataset/vh5003rr/SK0321508438/*/U03084?lang=sk&type=json"
+        let unit_code = "C62"
+        let unit_text = "osoby"
+        let source_url = "https://data.statistics.sk/api/v2/dataset/pr5001rr/SK032,SK0321,SK0322,SK0323,SK0324,SK0325,SK0326,SK0327,SK0328,SK0329,SK032A,SK032B,SK032C,SK032D/*/*?lang=sk&type=json"
         # JSON-stat 2.0, decoded by the index and never by the order. `value` is flat and
         # row-major over `size`; the position of a code inside a dimension is
         # `dimension.{name}.category.index`, which is NOT sorted: the period dimension comes back

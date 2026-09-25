@@ -21,4 +21,6 @@ spec:
   # The rendered segment, pinned so it cannot drift (PF-84).
   urnSegment: praha-mesto
   isSandbox: false
+  # The one model of this space: a write of a type it does not declare is refused (DM-61).
+  dataModelRef: { kind: DataModel, name: praha-mesto }
   defaultLocale: cs
