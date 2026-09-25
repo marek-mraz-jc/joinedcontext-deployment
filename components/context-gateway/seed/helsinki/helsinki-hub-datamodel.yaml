@@ -1,0 +1,15 @@
+# The one model of the hub (DM-61): the types it registers from the city context and the
+# indicator space, with the IRIs those spaces' models give them. The hub holds registrations,
+# never entities of its own; its endpoint only reads.
+apiVersion: joinedcontext.com/v1alpha1
+kind: DataModel
+metadata:
+  name: helsinki-hub
+  namespace: helsinki
+  title: { en: "Helsinki hub" }
+spec:
+  contextSpaceRef: helsinki-hub
+  linkml: ./helsinki-hub.linkml.yaml
+  version: 0.1.0
+  lifecycle: draft
+  classes: [Vehicle, KeyPerformanceIndicator]

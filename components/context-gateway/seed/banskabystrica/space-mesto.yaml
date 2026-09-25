@@ -13,4 +13,6 @@ metadata:
 spec:
   urnSegment: banskabystrica-mesto
   isSandbox: false
+  # The one model of this space: a write of a type it does not declare is refused (DM-61).
+  dataModelRef: { kind: DataModel, name: statistical-observation }
   defaultLocale: sk

@@ -12,4 +12,6 @@ spec:
   # Pinned so no entity id changes: the space predates rendered segments (PF-84).
   urnSegment: helsinki-kpi
   isSandbox: false
+  # The one model of this space: a write of a type it does not declare is refused (DM-61).
+  dataModelRef: { kind: DataModel, name: helsinki-kpi }
   defaultLocale: en
