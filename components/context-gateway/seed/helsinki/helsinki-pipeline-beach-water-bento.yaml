@@ -1,0 +1,35 @@
+# The mapping of the beach-water pipeline (PL-03): one WaterQualityObserved per beach sensor of
+# Forum Virium Helsinki's Uiras network, with the water temperature it last read. The file's
+# top-level `meta` names a contact person and is never read; only `features` is.
+#
+# A sensor that has not reported this season has no `measurement`: it is written with its
+# position and name and no temperature, rather than with a zero nobody measured. A sensor's
+# `servicemap_url` names the beach in the city's service register, and that unit is the
+# PointOfInterest the services pipeline writes, so the reading points at it.
+
+pipeline:
+  processors:
+    - mapping: |
+        root = this.features.or([]).filter(f -> f.id.or("").string().re_match("^[0-9A-Fa-f]{16}$") && f.geometry.or(null) != null).map_each(f -> {
+          "sensor": f,
+          "reading": f.properties.measurement.or(null),
+          "unit": f.properties.servicemap_url.or("").re_find_all("/unit/[0-9]+").index(0).or("").re_replace_all("[^0-9]", "")
+        }).map_each(s -> {
+          "id": "urn:ngsi-ld:%v:%v:%v:uiras-%v".format("WaterQualityObserved", env("JC_ORG_DOMAIN"), env("JC_SPACE"), s.sensor.id.string().lowercase()),
+          "type": "WaterQualityObserved",
+          "name": if s.sensor.properties.name.or("").trim() == "" { null } else {
+            { "type": "LanguageProperty", "languageMap": { "fi": s.sensor.properties.name.trim() } }
+          },
+          "location": { "type": "GeoProperty", "value": s.sensor.geometry },
+          "temperature": if s.reading == null || s.reading.temp_water.or(null) == null { null } else {
+            { "type": "Property", "value": s.reading.temp_water, "unitCode": "CEL", "observedAt": s.reading.time.ts_parse("2006-01-02T15:04:05.999999Z07:00").ts_format("2006-01-02T15:04:05Z07:00", "UTC") }
+          },
+          "dateObserved": if s.reading == null || s.reading.time.or(null) == null { null } else {
+            { "type": "Property", "value": s.reading.time.ts_parse("2006-01-02T15:04:05.999999Z07:00").ts_format("2006-01-02T15:04:05Z07:00", "UTC") }
+          },
+          "refPointOfInterest": if s.unit == "" { null } else {
+            { "type": "Relationship", "object": "urn:ngsi-ld:%v:%v:%v:servicemap-%v".format("PointOfInterest", env("JC_ORG_DOMAIN"), env("JC_SPACE"), s.unit) }
+          },
+          "dataProvider": { "type": "Property", "value": "Forum Virium Helsinki, Uiras beach sensors" },
+          "source": { "type": "Property", "value": "https://iot.fvh.fi/opendata/uiras/uiras_latest.geojson" }
+        }.filter(entry -> entry.value != null))

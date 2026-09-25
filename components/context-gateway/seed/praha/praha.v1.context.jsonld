@@ -1,0 +1,191 @@
+{
+  "@context": {
+    "@vocab": "https://smartdatamodels.org/",
+    "AirQualityObserved": {
+      "@id": "sdm:AirQualityObserved"
+    },
+    "BikeHireDockingStation": {
+      "@id": "sdm:BikeHireDockingStation"
+    },
+    "BudgetLine": {
+      "@id": "jc:BudgetLine"
+    },
+    "CityDistrict": {
+      "@id": "jc:CityDistrict"
+    },
+    "Entity": {
+      "@id": "ngsi-ld:Entity"
+    },
+    "OffStreetParking": {
+      "@id": "sdm:OffStreetParking"
+    },
+    "PointOfInterest": {
+      "@id": "sdm:PointOfInterest"
+    },
+    "WasteContainerIsle": {
+      "@id": "sdm:WasteContainerIsle"
+    },
+    "accessRestriction": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:accessRestriction"
+    },
+    "address": {
+      "@id": "schema:address"
+    },
+    "adjustedAmount": {
+      "@id": "jc:adjustedAmount",
+      "@type": "xsd:float"
+    },
+    "approvedAmount": {
+      "@id": "jc:approvedAmount",
+      "@type": "xsd:float"
+    },
+    "availableBikeNumber": {
+      "@id": "sdm:availableBikeNumber",
+      "@type": "xsd:integer"
+    },
+    "budgetArea": {
+      "@id": "jc:budgetArea"
+    },
+    "budgetFunction": {
+      "@id": "jc:budgetFunction"
+    },
+    "budgetItem": {
+      "@id": "jc:budgetItem"
+    },
+    "budgetPurpose": {
+      "@id": "jc:budgetPurpose"
+    },
+    "capacity": {
+      "@id": "jc:capacity",
+      "@type": "xsd:integer"
+    },
+    "co": {
+      "@id": "sdm:co",
+      "@type": "xsd:float"
+    },
+    "dataProvider": {
+      "@id": "sdm:dataProvider"
+    },
+    "dateModified": {
+      "@id": "sdm:dateModified",
+      "@type": "xsd:dateTime"
+    },
+    "dateObserved": {
+      "@id": "sdm:dateObserved",
+      "@type": "xsd:dateTime"
+    },
+    "districtCode": {
+      "@id": "jc:districtCode"
+    },
+    "facilityType": {
+      "@id": "jc:facilityType"
+    },
+    "fiscalYear": {
+      "@id": "jc:fiscalYear",
+      "@type": "xsd:integer"
+    },
+    "freeSlotNumber": {
+      "@id": "sdm:freeSlotNumber",
+      "@type": "xsd:integer"
+    },
+    "geojson": "https://purl.org/geojson/vocab#",
+    "id": "@id",
+    "jc": "https://joinedcontext.com/models/",
+    "linkml": "https://w3id.org/linkml/",
+    "location": {
+      "@id": "geojson:geometry"
+    },
+    "name": {
+      "@container": "@language",
+      "@id": "schema:name"
+    },
+    "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
+    "no2": {
+      "@id": "sdm:no2",
+      "@type": "xsd:float"
+    },
+    "o3": {
+      "@id": "sdm:o3",
+      "@type": "xsd:float"
+    },
+    "observedAt": {
+      "@id": "ngsi-ld:observedAt",
+      "@type": "xsd:dateTime"
+    },
+    "openingHours": {
+      "@container": "@language",
+      "@id": "schema:openingHours"
+    },
+    "pm10": {
+      "@id": "sdm:pm10",
+      "@type": "xsd:float"
+    },
+    "pm25": {
+      "@id": "sdm:pm25",
+      "@type": "xsd:float"
+    },
+    "pupilCount": {
+      "@id": "jc:pupilCount",
+      "@type": "xsd:integer"
+    },
+    "refDistrict": {
+      "@id": "jc:refDistrict",
+      "@type": "@id"
+    },
+    "schema": "http://schema.org/",
+    "sdm": "https://smartdatamodels.org/",
+    "serviceCategory": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:serviceCategory"
+    },
+    "shex": "http://www.w3.org/ns/shex#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "so2": {
+      "@id": "sdm:so2",
+      "@type": "xsd:float"
+    },
+    "source": {
+      "@id": "sdm:source",
+      "@type": "xsd:anyURI"
+    },
+    "stationCode": {
+      "@id": "jc:stationCode"
+    },
+    "status": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "sdm:status"
+    },
+    "totalSlotNumber": {
+      "@id": "sdm:totalSlotNumber",
+      "@type": "xsd:integer"
+    },
+    "totalSpotNumber": {
+      "@id": "sdm:totalSpotNumber",
+      "@type": "xsd:integer"
+    },
+    "type": "@type",
+    "url": {
+      "@id": "schema:url",
+      "@type": "xsd:anyURI"
+    },
+    "wheelchairAccessible": {
+      "@id": "jc:wheelchairAccessible",
+      "@type": "xsd:boolean"
+    },
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "x-generator-version": "linkml-1.11.1"
+}

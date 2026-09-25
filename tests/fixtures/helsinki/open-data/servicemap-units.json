@@ -1,0 +1,216 @@
+{
+ "count": 5,
+ "next": null,
+ "previous": null,
+ "results": [
+  {
+   "id": 10037,
+   "connections": [
+    {
+     "section_type": "OPENING_HOURS",
+     "name": {
+      "fi": "Normaaliaukioloaika:\n– ma, ke-to, la-su suljettu\n– ti 12.00-18.00\n– pe 9.00-15.00",
+      "sv": "Normaaliaukioloaika:\n– mån, ons-tor, lör-sön stängt\n– tis 12.00-18.00\n– fre 9.00-15.00",
+      "en": "Normaaliaukioloaika:\n– Mon, Wed-Thu, Sat-Sun closed\n– Tue 12.00-18.00\n– Fri 9.00-15.00"
+     },
+     "www": null,
+     "email": null,
+     "phone": null,
+     "contact_person": null,
+     "tags": []
+    }
+   ],
+   "name": {
+    "fi": "Sakarinmäen lastenkirjasto",
+    "sv": "Östersundom barnbibliotek",
+    "en": "Sakarinmäki Children's Library"
+   },
+   "street_address": {
+    "fi": "Knutersintie 924",
+    "sv": "Knutersvägen 924",
+    "en": "Knutersintie 924"
+   },
+   "www": {
+    "fi": "http://www.helmet.fi/sakarinmaenlastenkirjasto",
+    "sv": "http://www.helmet.fi/ostersundombarnbibliotek",
+    "en": "http://www.helmet.fi/sakarinmakichildren"
+   },
+   "address_zip": "00890",
+   "last_modified_time": "2026-08-13T07:31:58.906471+03:00",
+   "services": [
+    813
+   ],
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     25.211632,
+     60.262024
+    ]
+   }
+  },
+  {
+   "id": 6247,
+   "connections": [
+    {
+     "section_type": "OPENING_HOURS",
+     "name": {
+      "fi": "Voimassa toistaiseksi:\n– ma-pe 8.00-16.00",
+      "sv": "Gäller tills vidare:\n– mån-fre 8.00-16.00",
+      "en": "Valid for the time being:\n– Mon-Fri 8.00-16.00"
+     },
+     "www": null,
+     "email": null,
+     "phone": null,
+     "contact_person": null,
+     "tags": []
+    }
+   ],
+   "name": {
+    "fi": "Keskisen terveysasema/Laajasalo",
+    "sv": "Degerö hälsostation",
+    "en": "Laajasalo Health Station"
+   },
+   "street_address": {
+    "fi": "Koulutanhua 2 A",
+    "sv": "Skoltået 2 A",
+    "en": "Koulutanhua 2 A"
+   },
+   "www": {
+    "fi": "https://www.hel.fi/fi/sosiaali-ja-terveyspalvelut/terveydenhoito/terveysasemat/laajasalon-terveysasema",
+    "sv": "https://www.hel.fi/sv/social-och-halsovardstjanster/halsovard/halsostationer/degero-halsostation",
+    "en": "https://www.hel.fi/en/health-and-social-services/health-care/health-stations/laajasalo-health-station"
+   },
+   "address_zip": "00840",
+   "last_modified_time": "2026-09-03T09:01:41.193694+03:00",
+   "services": [
+    703,
+    702,
+    417
+   ],
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     25.055822,
+     60.178677
+    ]
+   }
+  },
+  {
+   "id": 80486,
+   "connections": [],
+   "name": {
+    "fi": "Kellumo",
+    "en": "Kellumo - Floating and Relaxation Center"
+   },
+   "street_address": {
+    "fi": "Hietaniemenkatu 3",
+    "sv": "Sanduddsgatan 3",
+    "en": "Hietaniemenkatu 3"
+   },
+   "www": {
+    "fi": "https://kellumo.fi/",
+    "sv": "https://kellumo.fi/",
+    "en": "https://evaraus.fi/kellumo/kalenteri/en/"
+   },
+   "address_zip": "00100",
+   "last_modified_time": "2026-06-24T07:36:23.699117+03:00",
+   "services": [
+    864,
+    804,
+    729
+   ],
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     24.925314,
+     60.17006
+    ]
+   }
+  },
+  {
+   "id": 62953,
+   "connections": [
+    {
+     "section_type": "OPENING_HOURS",
+     "name": {
+      "fi": "Avoinna kesäkaudella",
+      "sv": "Öppet under sommarsäsongen",
+      "en": "Open in summer season"
+     },
+     "www": null,
+     "email": null,
+     "phone": null,
+     "contact_person": null,
+     "tags": []
+    }
+   ],
+   "name": {
+    "fi": "Cafe Kobben",
+    "sv": "Cafe Kobben",
+    "en": "Cafe Kobben"
+   },
+   "street_address": {
+    "fi": "Katajanokanluoto",
+    "sv": "Skatakobben",
+    "en": "Katajanokanluoto"
+   },
+   "www": {
+    "fi": "https://katajanokanluoto.fi/",
+    "sv": "https://katajanokanluoto.fi/",
+    "en": "https://katajanokanluoto.fi/"
+   },
+   "address_zip": "00140",
+   "last_modified_time": "2026-09-25T07:36:02.080427+03:00",
+   "services": [
+    881,
+    804,
+    731,
+    577,
+    239
+   ],
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     24.982311,
+     60.161896
+    ]
+   }
+  },
+  {
+   "id": 7010,
+   "connections": [],
+   "name": {
+    "fi": "Suomalais-venäläinen koulu",
+    "sv": "Suomalais-venäläinen koulu",
+    "en": "Finnish-Russian School"
+   },
+   "street_address": {
+    "fi": "Kaarelankuja 2b",
+    "sv": "Kårbölegränden 2b",
+    "en": "Kaarelankuja 2b"
+   },
+   "www": {
+    "fi": "https://www.svk-edu.fi/",
+    "sv": "https://www.svk-edu.fi/",
+    "en": "https://www.svk-edu.fi/"
+   },
+   "address_zip": "00430",
+   "last_modified_time": "2026-06-01T08:01:56.649400+03:00",
+   "services": [
+    772,
+    771,
+    770,
+    662,
+    661,
+    658
+   ],
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     24.900393,
+     60.23882
+    ]
+   }
+  }
+ ]
+}

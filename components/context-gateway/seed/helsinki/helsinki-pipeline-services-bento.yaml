@@ -1,0 +1,52 @@
+# The mapping of the services pipeline (PL-03): one PointOfInterest per unit of the city's
+# service register (Service Map) that is a library, a health station, a swimming hall, a beach
+# or a comprehensive school. The DataSource asks for those services only and for the fields
+# kept here, in one page.
+#
+# The register's contact sections (`PHONE_OR_EMAIL`) can name a member of staff, so only the
+# opening hours are read from `connections`, and nothing else from it reaches the space.
+
+pipeline:
+  processors:
+    - mapping: |
+        # One category per unit, the first that matches: a school that also runs a library is a
+        # school's building to a parent and a library's to a reader, and the register lists the
+        # library service first only where the unit is one.
+        map category {
+          root = match {
+            this.contains(813) => "library",
+            this.contains(703) => "healthStation",
+            this.contains(729) => "swimmingHall",
+            this.contains(731) => "beach",
+            [661, 662, 601, 602, 149, 150].any(code -> this.contains(code)) => "school",
+            _ => null,
+          }
+        }
+        # A language map without the languages the register left empty.
+        map texts {
+          root = this.or({}).filter(entry -> entry.value.type() == "string" && entry.value.trim() != "")
+        }
+        root = this.results.or([]).map_each(unit -> {
+          "unit": unit,
+          "category": unit.services.or([]).apply("category"),
+          "names": unit.name.apply("texts"),
+          "hours": unit.connections.or([]).filter(c -> c.section_type == "OPENING_HOURS").index(0).or({}).name.apply("texts"),
+          "street": unit.street_address.or({}).fi.or(null),
+          "www": [unit.www.or({}).fi.or(null), unit.www.or({}).en.or(null), unit.www.or({}).sv.or(null)].filter(u -> u != null && u.has_prefix("http")).index(0).or(null)
+        }).filter(u -> u.category != null && u.names.length() > 0).map_each(u -> {
+          "id": "urn:ngsi-ld:%v:%v:%v:servicemap-%v".format("PointOfInterest", env("JC_ORG_DOMAIN"), env("JC_SPACE"), u.unit.id),
+          "type": "PointOfInterest",
+          "name": { "type": "LanguageProperty", "languageMap": u.names },
+          "serviceCategory": { "type": "Property", "value": u.category },
+          "address": if u.street == null { null } else {
+            { "type": "Property", "value": "%v, %v Helsinki".format(u.street, u.unit.address_zip.or("")).replace_all(",  Helsinki", ", Helsinki") }
+          },
+          "url": if u.www == null { null } else { { "type": "Property", "value": u.www } },
+          "openingHours": if u.hours.length() == 0 { null } else { { "type": "LanguageProperty", "languageMap": u.hours } },
+          "location": if u.unit.location.or(null) == null { null } else { { "type": "GeoProperty", "value": u.unit.location } },
+          "dateModified": if u.unit.last_modified_time.or(null) == null { null } else {
+            { "type": "Property", "value": u.unit.last_modified_time }
+          },
+          "dataProvider": { "type": "Property", "value": "City of Helsinki, Service Map" },
+          "source": { "type": "Property", "value": "https://api.hel.fi/servicemap/v2/" }
+        }.filter(entry -> entry.value != null))

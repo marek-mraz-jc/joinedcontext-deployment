@@ -1,0 +1,50 @@
+# file in this folder -> its path in the configuration repository (jc-core PATH_TEMPLATEs), read
+# by the forge bootstrap's seed (components/gitea/values/bootstrap/development-values). Prague
+# (T-2785): one project of the one organization, one space with its one model, one public
+# endpoint republished to the catalogue, and one DataSource, pipeline and mapping per feed.
+praha-project.yaml: projects/praha/project.yaml
+praha-space-mesto.yaml: projects/praha/spaces/praha-mesto/space.yaml
+praha-datamodel.yaml: projects/praha/spaces/praha-mesto/datamodels/praha-mesto.yaml
+praha.linkml.yaml: projects/praha/spaces/praha-mesto/datamodels/praha.linkml.yaml
+praha.v1.schema.json: projects/praha/spaces/praha-mesto/datamodels/praha.v1.schema.json
+praha.v1.context.jsonld: projects/praha/spaces/praha-mesto/datamodels/praha.v1.context.jsonld
+praha.v1.example.jsonld: projects/praha/spaces/praha-mesto/datamodels/praha.v1.example.jsonld
+praha.v1.md: projects/praha/spaces/praha-mesto/datamodels/praha.v1.md
+praha-endpoint-mesto.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-mesto.yaml
+praha-policy-pipelines-write.yaml: projects/praha/spaces/praha-mesto/policies/pipelines-write.yaml
+praha-policy-public-read.yaml: projects/praha/spaces/praha-mesto/policies/public-read.yaml
+praha-serviceaccount-pipelines.yaml: projects/praha/access/serviceaccounts/pipelines.yaml
+praha-ckan.yaml: projects/praha/ckan/praha.yaml
+praha-datasource-bike-stations.yaml: projects/praha/datasources/nextbike-stations.yaml
+praha-datasource-bike-availability.yaml: projects/praha/datasources/nextbike-station-status.yaml
+praha-datasource-air-quality.yaml: projects/praha/datasources/chmi-air-quality.yaml
+praha-datasource-districts.yaml: projects/praha/datasources/ipr-districts.yaml
+praha-datasource-schools.yaml: projects/praha/datasources/ipr-schools.yaml
+praha-datasource-culture.yaml: projects/praha/datasources/ipr-culture.yaml
+praha-datasource-toilets.yaml: projects/praha/datasources/ipr-toilets.yaml
+praha-datasource-waste-stations.yaml: projects/praha/datasources/ipr-waste-stations.yaml
+praha-datasource-park-and-ride.yaml: projects/praha/datasources/ipr-park-and-ride.yaml
+praha-datasource-ticket-points.yaml: projects/praha/datasources/pid-ticket-points.yaml
+praha-datasource-budget.yaml: projects/praha/datasources/mhmp-budget.yaml
+praha-pipeline-bike-stations.yaml: projects/praha/pipelines/bike-stations/pipeline.yaml
+praha-pipeline-bike-availability.yaml: projects/praha/pipelines/bike-availability/pipeline.yaml
+praha-pipeline-air-quality.yaml: projects/praha/pipelines/air-quality/pipeline.yaml
+praha-pipeline-districts.yaml: projects/praha/pipelines/districts/pipeline.yaml
+praha-pipeline-schools.yaml: projects/praha/pipelines/schools/pipeline.yaml
+praha-pipeline-culture.yaml: projects/praha/pipelines/culture/pipeline.yaml
+praha-pipeline-toilets.yaml: projects/praha/pipelines/toilets/pipeline.yaml
+praha-pipeline-waste-stations.yaml: projects/praha/pipelines/waste-stations/pipeline.yaml
+praha-pipeline-park-and-ride.yaml: projects/praha/pipelines/park-and-ride/pipeline.yaml
+praha-pipeline-ticket-points.yaml: projects/praha/pipelines/ticket-points/pipeline.yaml
+praha-pipeline-budget.yaml: projects/praha/pipelines/budget/pipeline.yaml
+praha-pipeline-bike-stations-bento.yaml: projects/praha/pipelines/bike-stations/bento.yaml
+praha-pipeline-bike-availability-bento.yaml: projects/praha/pipelines/bike-availability/bento.yaml
+praha-pipeline-air-quality-bento.yaml: projects/praha/pipelines/air-quality/bento.yaml
+praha-pipeline-districts-bento.yaml: projects/praha/pipelines/districts/bento.yaml
+praha-pipeline-schools-bento.yaml: projects/praha/pipelines/schools/bento.yaml
+praha-pipeline-culture-bento.yaml: projects/praha/pipelines/culture/bento.yaml
+praha-pipeline-toilets-bento.yaml: projects/praha/pipelines/toilets/bento.yaml
+praha-pipeline-waste-stations-bento.yaml: projects/praha/pipelines/waste-stations/bento.yaml
+praha-pipeline-park-and-ride-bento.yaml: projects/praha/pipelines/park-and-ride/bento.yaml
+praha-pipeline-ticket-points-bento.yaml: projects/praha/pipelines/ticket-points/bento.yaml
+praha-pipeline-budget-bento.yaml: projects/praha/pipelines/budget/bento.yaml

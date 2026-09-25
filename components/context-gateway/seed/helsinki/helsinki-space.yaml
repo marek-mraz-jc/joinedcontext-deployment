@@ -5,7 +5,10 @@ metadata:
   namespace: helsinki
   title: { en: "Helsinki city context", fi: "Helsingin kaupunkikonteksti" }
   description:
-    en: "Today's events, the city bike stations and the buses of four trunk lines, in one space"
+    en: >-
+      Today's events, the city bike stations, the buses of four trunk lines, and the city's open
+      registers: services, beach water, parking, public-area permits and districts. Sources:
+      City of Helsinki, HSL, FMI, Fintraffic and Forum Virium Helsinki, each under CC BY 4.0.
 spec:
   # Pinned so no entity id changes: the space predates rendered segments (PF-84).
   urnSegment: helsinki

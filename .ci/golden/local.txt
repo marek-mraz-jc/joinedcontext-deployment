@@ -204,6 +204,7 @@ v1/Secret local/keycloak-client-helsinki-pipelines
 v1/Secret local/keycloak-client-jc-build-lane
 v1/Secret local/keycloak-client-portal-api
 v1/Secret local/keycloak-client-portal-reconciler
+v1/Secret local/keycloak-client-praha-pipelines
 v1/Secret local/keycloak-config-keycloak-config-cli-config-realms
 v1/Secret local/keycloak-user-demo-approver
 v1/Secret local/keycloak-user-demo-editor
