@@ -20,7 +20,6 @@ EXPECTED_ROUTES = {
     "portal-ui": {"uri": "/*", "priority": 1, "upstream_id": "portal-ui", "host": PORTAL_HOST},
     "portal-api": {"uri": "/api/v1/*", "priority": 10, "upstream_id": "portal-api", "host": PORTAL_HOST},
     "portal-metrics": {"uri": "/metrics", "priority": 5, "upstream_id": "portal-metrics", "host": PORTAL_HOST},
-    "apps-surface": {"uri": "/apps/*", "priority": 25, "upstream_id": "apps-surface", "host": LOCAL_DOMAIN},
     "portal-redirect": {"uri": "/*", "priority": 1, "upstream_id": "portal-redirect", "host": LOCAL_DOMAIN},
     "context-space": {"uri": "/cs/*", "priority": 15, "upstream_id": "context-space", "host": LOCAL_DOMAIN},
     "context-endpoint": {"uri": "/api/endpoint/*", "priority": 20, "upstream_id": "context-endpoint", "host": LOCAL_DOMAIN},
@@ -40,10 +39,6 @@ EXPECTED_ROUTES = {
     },
     # T-2726: the organization's DCAT-AP feed for harvesters, anonymous (EP-84).
     "catalog-feed": {"uri": "/catalog.*", "priority": 20, "upstream_id": "catalog-feed", "host": LOCAL_DOMAIN},
-    # T-2670: a static app's data calls, under its own path where the apps session cookie reaches.
-    "context-endpoint-apps": {
-        "uri": "/apps/*", "priority": 35, "upstream_id": "context-endpoint-apps", "host": LOCAL_DOMAIN,
-    },
 }
 
 
@@ -59,6 +54,8 @@ EDGE_LOGIN_ROUTES = {
     # The public catalogue reads portal-ui's session when there is one and never redirects a
     # visitor (EP-81); `/assets/*` shares this config.
     "portal-public": {"unauth_action": "pass", "cookie_path": "/", "callback": f"https://{PORTAL_HOST}/callback"},
+    # No route: the chain the Portal copies onto every published App's own host, with the App's
+    # own client, callback and host-only cookie in place of these (ADR-N-037, AP-112).
     "apps-surface": {
         "unauth_action": "auth", "cookie_path": "/apps/", "callback": f"https://{LOCAL_DOMAIN}/apps/callback",
     },
@@ -73,12 +70,6 @@ EDGE_LOGIN_ROUTES = {
     # there too. Anonymous is passed through, never redirected (T-2454).
     "context-space-portal": {
         "unauth_action": "pass", "cookie_path": "/", "callback": f"https://{PORTAL_HOST}/callback", "userinfo": False,
-    },
-    # A static app's data calls read the session apps-surface made, on its cookie path, and
-    # pass an anonymous visitor of a public app through (T-2670).
-    "context-endpoint-apps": {
-        "unauth_action": "pass", "cookie_path": "/apps/", "callback": f"https://{LOCAL_DOMAIN}/apps/callback",
-        "userinfo": False,
     },
 }
 
@@ -216,12 +207,11 @@ def test_the_apex_redirects_to_the_portal_below_every_other_apex_route(apisix_co
     for r_id, route in apex.items():
         if r_id != "portal-redirect":
             assert route["priority"] > routes["portal-redirect"]["priority"], r_id
-    # Nothing on the apex proxies the Portal UI any more; the apps surface is the one apex
-    # route with the Portal as upstream, and it is behind the login.
+    # Nothing on the apex proxies the Portal any more: no App is served there (ADR-N-037).
     portal_upstreams = {
         u["id"] for u in parsed["upstreams"] if any(n.startswith("portal.") for n in u["nodes"])
     }
-    assert {r_id for r_id in apex if r_id in portal_upstreams} == {"apps-surface", "portal-redirect"}
+    assert {r_id for r_id in apex if r_id in portal_upstreams} == {"portal-redirect"}
 
 
 @requires_helmfile
@@ -246,36 +236,20 @@ def test_the_endpoint_surface_answers_on_the_portal_host_too(apisix_config):
 
 
 @requires_helmfile
-def test_a_static_apps_data_calls_carry_the_apps_session_to_the_gateway(apisix_config):
-    """T-2670, AP-29, GW10: the apps session cookie lives on /apps/, so a static app calls its
-    endpoint under /apps/{name}/api/endpoint/…; this route reads that same session as the bearer,
-    strips the prefix to the gateway's own path, outranks apps-surface, and refuses the egress
-    path as the other endpoint routes do."""
+def test_no_route_of_the_base_serves_an_app(apisix_config):
+    """ADR-N-037, AP-133, T-2839: every App is served on its own host `{name}.apps.{domain}`,
+    whose routes the Portal composes, so no route helm renders matches `/apps/`, on the apex or
+    anywhere else; the old path's 308 to the App's host is the Portal's too. The `apps-surface`
+    plugin config stays, with no route: it is the chain the Portal copies onto each App's."""
     _, parsed = apisix_config
-    routes = {r["id"]: r for r in parsed["routes"]}
-    apps = routes["context-endpoint-apps"]
-    assert apps["priority"] > routes["apps-surface"]["priority"]
-    # radixtree_host_uri reads `:name` literally (it matched nothing on dev), so the route is
-    # /apps/* narrowed by a regex on the normalised path.
-    [(var, op, regex)] = apps["vars"]
-    assert (var, op) == ("uri", "~~")
-    assert re.match(regex, "/apps/bikes/api/endpoint/abc/ngsi-ld/v1/entities")
-    for other in ("/apps/bikes/", "/apps/bikes/assets/api/endpoint.js", "/apps/bikes/api/functions/sum"):
-        assert not re.match(regex, other), other
-    upstream = next(u for u in parsed["upstreams"] if u["id"] == apps["upstream_id"])
-    assert all(node.startswith("context-gateway.") for node in upstream["nodes"])
-    plugins = {pc["id"]: pc.get("plugins", {}) for pc in parsed["plugin_configs"]}
-    mine, surface = plugins[apps["plugin_config_id"]], plugins[routes["apps-surface"]["plugin_config_id"]]
-    oidc = mine["openid-connect"]
-    assert oidc["access_token_in_authorization_header"] is True
-    for key in ("cookie_name", "cookie_path", "secret"):
-        assert oidc["session"][key] == surface["openid-connect"]["session"][key], key
-    pattern, target = mine["proxy-rewrite"]["regex_uri"]
-    assert re.sub(pattern, target.replace("$1", r"\1"), "/apps/bikes/api/endpoint/abc/ngsi-ld/v1/entities") == (
-        "/api/endpoint/abc/ngsi-ld/v1/entities"
-    )
-    guard = mine["serverless-pre-function"]["functions"][0]
-    assert "^/apps/[^/]+/api/endpoint/[^/]+/egress/" in guard and "X-Access-Token" in guard
+    for route in parsed["routes"]:
+        text = json.dumps(route)
+        assert "/apps" not in text, route["id"]
+        assert ".apps." not in text, route["id"]
+    assert all(route.get("plugin_config_id") != "apps-surface" for route in parsed["routes"])
+    template = next(pc for pc in parsed["plugin_configs"] if pc["id"] == "apps-surface")["plugins"]
+    for plugin in ("openid-connect", "serverless-pre-function", "limit-count", "response-rewrite"):
+        assert plugin in template, plugin
 
 
 @requires_helmfile

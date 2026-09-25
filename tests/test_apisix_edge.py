@@ -247,12 +247,15 @@ def test_apisix_serves_the_composed_secret_and_helm_seeds_it_with_the_base(rende
 
 def test_the_portal_may_read_the_base_and_update_the_served_file_and_nothing_else(rendered):
     """ADR-N-030: the Portal's ServiceAccount gets read on the base ConfigMap and read/update on
-    the one Secret in the APISIX namespace, each by name; no list, no create, no other object."""
+    the one Secret in the APISIX namespace, each by name. ADR-N-037: it also makes and retires
+    each App's Ingress and Certificate there; no update or patch on either, no other object."""
     docs = rendered("local")
     role = next(d for d in docs if d.get("kind") == "Role" and d["metadata"]["name"] == "edge-file-composer")
     assert role["rules"] == [
         {"apiGroups": [""], "resources": ["configmaps"], "resourceNames": ["apisix-standalone-base"], "verbs": ["get"]},
         {"apiGroups": [""], "resources": ["secrets"], "resourceNames": ["apisix-standalone-config"], "verbs": ["get", "update"]},
+        {"apiGroups": ["networking.k8s.io"], "resources": ["ingresses"], "verbs": ["get", "list", "create", "delete"]},
+        {"apiGroups": ["cert-manager.io"], "resources": ["certificates"], "verbs": ["get", "list", "create", "delete"]},
     ]
     binding = next(d for d in docs if d.get("kind") == "RoleBinding" and d["metadata"]["name"] == "edge-file-composer")
     portal = next(
