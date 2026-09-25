@@ -11,7 +11,7 @@
 # 401 on the rest (T-0666). The Policy decision stays per endpoint.
 helsinki-agent-proxy:
   name: Helsinki agent proxy
-  description: Service account of jc-agent-proxy for the builder runs of the Helsinki demo; client_credentials only, no browser flow
+  description: Service account of jc-agent-proxy for the builder runs of the Helsinki demo; client_credentials for itself and token exchange for a run's person, no browser flow
   subdomain: ''
   redirectPath: /
   componentNamespaces:
@@ -22,6 +22,13 @@ helsinki-agent-proxy:
     implicitFlowEnabled: false
     directAccessGrantsEnabled: false
     serviceAccountsEnabled: true
+    # A run reads as the person who started it (ADR-N-038, AG-94): the proxy exchanges the
+    # person's token for one of this client whose subject is the person, with a refresh token
+    # tied to their session, so the grant ends when they sign out. Only this client exchanges
+    # (tests/test_keycloak_clients.py).
+    attributes:
+      standard.token.exchange.enabled: 'true'
+      standard.token.exchange.enableRefreshRequestedTokenType: SAME_SESSION
     protocolMappers:
       - name: context-gateway-audience
         protocol: openid-connect
