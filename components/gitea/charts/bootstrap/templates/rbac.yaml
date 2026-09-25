@@ -52,7 +52,7 @@ rules:
     resources: [secrets]
     verbs: [create]
   {{- with get $restarts $namespace }}
-  # The Deployments that read a token at start, restarted when it is minted again (PF-105):
+  # The Deployments that read a token at start, restarted when it is minted again (PF-106):
   # `patch` on these names alone, which is all `kubectl rollout restart` is.
   - apiGroups: [apps]
     resources: [deployments]

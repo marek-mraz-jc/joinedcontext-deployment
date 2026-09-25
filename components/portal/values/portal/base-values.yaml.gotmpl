@@ -106,7 +106,7 @@ envSecret:
     secret: gitea-token-portal
     key: token
 {{- if .Values.gitea.forge.appsOrganization }}
-  # The applications' own machine user (PF-105): their repositories, packages and builds.
+  # The applications' own machine user (PF-106): their repositories, packages and builds.
   JC_GITEA_APPS_TOKEN:
     secret: gitea-token-apps
     key: token
@@ -172,11 +172,11 @@ env:
   JC_GITEA_URL: "http://gitea-http.{{ .Values.gitea.forge.namespace }}.svc.cluster.local:3000"
   JC_GITEA_OWNER: {{ $global.configRepo.owner | quote }}
   JC_GITEA_REPO: {{ $global.configRepo.name | quote }}
-  # The gateway's forge user (PF-105), made a reader of every project repository the Portal
+  # The gateway's forge user (PF-106), made a reader of every project repository the Portal
   # opens in layout 2; the bootstrap Job mints the gateway's token on it.
   JC_GITEA_READER: "jc-gateway"
 {{- if .Values.gitea.forge.appsOrganization }}
-  # The generated applications' own organization (PF-105), with JC_GITEA_APPS_TOKEN above.
+  # The generated applications' own organization (PF-106), with JC_GITEA_APPS_TOKEN above.
   JC_GITEA_APPS_OWNER: {{ .Values.gitea.forge.appsOrganization | quote }}
 {{- end }}
   # Where a browser reaches the forge: the "Source" link of a manifest opens here, and a
