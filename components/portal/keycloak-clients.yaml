@@ -66,6 +66,18 @@ portal-api:
           included.custom.audience: jc-functions
           access.token.claim: 'true'
           id.token.claim: 'false'
+      # A person's token is the subject token jc-agent-proxy exchanges for a run of theirs
+      # (ADR-N-038, AG-94): standard token exchange V2 takes it only when its audience names the
+      # requesting client. A custom audience, so the realm of an environment without the agent
+      # runner still imports.
+      - name: agent-proxy-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: helsinki-agent-proxy
+          access.token.claim: 'true'
+          id.token.claim: 'false'
 
 # The reconciler's own credential (PF-63, T-0866): the Portal brings the realm's groups to what
 # `users/groups/` says, and that is the only thing this client may do. It is a separate client

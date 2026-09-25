@@ -390,3 +390,52 @@ def test_only_jcctl_offers_the_device_flow(realm_clients):
         if client.get("attributes", {}).get("oauth2.device.authorization.grant.enabled") == "true"
     }
     assert offering == {"jcctl"}
+
+
+# --- T-2866, ADR-N-038 (AG-01, AG-94, AG-95): a run reads as its person, by token exchange -----
+
+
+PROXY = "helsinki-agent-proxy"
+
+
+def test_only_the_agent_proxy_may_exchange_a_persons_token(dev_realm_clients):
+    """Standard token exchange V2 on one client: any other client that could turn a person's
+    token into one of its own could read as that person (ADR-N-038 §3.2)."""
+    exchanging = {
+        client_id
+        for client_id, client in dev_realm_clients.items()
+        if client.get("attributes", {}).get("standard.token.exchange.enabled") == "true"
+    }
+    assert exchanging == {PROXY}
+    attributes = dev_realm_clients[PROXY]["attributes"]
+    # A refresh token for the run, tied to the person's own session: it ends when they sign out
+    # (ADR-N-038 §3.5), which an offline token would not.
+    assert attributes["standard.token.exchange.enableRefreshRequestedTokenType"] == "SAME_SESSION"
+
+
+def test_a_persons_token_names_the_proxy_so_it_may_be_exchanged(dev_realm_clients):
+    """V2 exchanges only a subject token whose audience names the requesting client: the edge's
+    session token and the Portal's own login carry the proxy's client id."""
+    for client_id in ("edge", "portal-api"):
+        audiences = {
+            m["config"].get("included.custom.audience") or m["config"].get("included.client.audience")
+            for m in dev_realm_clients[client_id]["protocolMappers"]
+            if m["protocolMapper"] == "oidc-audience-mapper"
+        }
+        assert PROXY in audiences, (client_id, audiences)
+
+
+def test_the_proxys_account_declares_delegation_and_no_other_seed_account_does():
+    """AG-95: the gateway decides an exchanged token as the person only for an account that says
+    so; every other seeded workload keeps refusing a person's token."""
+    import yaml
+    from pathlib import Path
+
+    declared = {}
+    for path in Path(__file__).resolve().parent.parent.glob("components/*/seed/**/*.yaml"):
+        for doc in yaml.safe_load_all(path.read_text()):
+            if isinstance(doc, dict) and doc.get("kind") == "ServiceAccount":
+                name = f'{doc["metadata"].get("namespace")}/{doc["metadata"]["name"]}'
+                declared[name] = (doc.get("spec") or {}).get("delegation")
+    assert declared.get("helsinki/agent-proxy") == "token-exchange", declared
+    assert {name for name, value in declared.items() if value} == {"helsinki/agent-proxy"}
