@@ -116,7 +116,13 @@ jobs:
       - run: curl -sSL https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
       # No linkerd CLI: the mesh axis is 0 here, and the harness only demands the binary for
       # a variant that enables it. The pull-through image caches are the script's default.
-      - run: ./scripts/test-deployment-variants.sh 0,0,0
+      # rotate-secret.sh measures each rotation from the runner, at the edge k3d maps to the
+      # runner's 443: the test domain's hosts resolve there (T-2843).
+      - name: resolve the test domain to the k3d edge
+        run: echo "127.0.0.1 joinedcontext.test idm.joinedcontext.test portal.joinedcontext.test" | sudo tee -a /etc/hosts
+      # After the smoke, one rotation of each credential class and the smoke again (T-2843,
+      # OPS-45): the old value refused, the new one accepted, every reader green again.
+      - run: ./scripts/test-deployment-variants.sh --after ./scripts/k3d-rotate-each-class.sh 0,0,0
       # The harness keeps the cluster up when a variant fails, which is what makes this
       # possible: what did not become Ready, why, and what it said before it gave up.
       - name: collect what the cluster looked like when it failed
