@@ -15,7 +15,6 @@ spec:
   audience: organization
   enabledRepresentations: [ngsi-ld, geojson, csv]
   projection: { hiddenAttributes: [contactPoint] }
-  rateLimits: { requestsPerMinute: 300, burst: 50 }
   catalog:
     publisher: { name: { fi: "Helsingin kaupunki", sv: "Helsingfors stad", en: "City of Helsinki" }, uri: "https://www.hel.fi/" }
     license: ODC_ODBL

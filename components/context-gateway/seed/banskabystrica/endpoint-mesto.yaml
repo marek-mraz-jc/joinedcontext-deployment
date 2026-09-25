@@ -11,7 +11,6 @@ spec:
   slug: ovr4ttzywhad2oiogf67n7zyn2g2elfc
   audience: organization
   enabledRepresentations: [ngsi-ld, csv, json]
-  rateLimits: { requestsPerMinute: 300, burst: 50 }
   # CC BY-SA 4.0: the water cube is read from data.statistics.sk, whose distribution the national
   # catalogue licenses CC BY-SA 4.0 (legislation:termsOfUse); the inhabitants register is CC BY 4.0.
   # Held together, the share-alike licence governs. Water from 1996, the register is today's.
