@@ -487,7 +487,6 @@ apps-surface:
         set:
           Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
           X-Content-Type-Options: "nosniff"
-          X-Frame-Options: "SAMEORIGIN"
           Referrer-Policy: "no-referrer"
     # OPS-34: the upstream owns the Content Security Policy (the Portal's, each App's, AP-12,
     # AP-122), so the edge sets none over it and adds this baseline only to an answer that
