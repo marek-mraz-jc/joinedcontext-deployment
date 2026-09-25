@@ -334,6 +334,9 @@ PUBLISHED_APPS = json.dumps({"items": [
 APP_LOGIN = ("https://idm.example.test/realms/dev/protocol/openid-connect/auth?response_type=code"
              "&client_id=app-air-quality&redirect_uri=https%3A%2F%2Fexample.test%2Fapps%2Fair-quality%2Fcallback")
 
+# The demo people the seed creates (components/keycloak/demo-users.yaml), as People lists them.
+DEMO_PEOPLE = json.dumps({"items": [{"email": "demo.%s@hel.fi" % who} for who in ("steward", "viewer", "approver", "editor")]})
+
 HEALTHY = {
     "routes": ["portal-ui", "portal-api", "context-space", "context-endpoint", "gitea-forge", "ckan", "apps-surface"],
     "helsinkiSeed": HELSINKI_SEED,
@@ -365,6 +368,8 @@ HEALTHY = {
                 '{"id":"urn:ngsi-ld:AirQualityObserved:example.test:ovzdusie:2"}]'],
                ["openid-configuration", '{"jwks_uri":"https://idm/certs"}'],
                ["/token", '{"access_token":"a.b.c"}'],
+               # Organization → People, as the steward reads it (T-2688).
+               ["/api/v1/organization/people", DEMO_PEOPLE],
                ["/api/v1/auth/login", LOGIN_REDIRECT],
                ["/api/v1/projects/helsinki/spaces", json.dumps({"items": [{"kind": "ContextSpace", "metadata": {"name": n}} for n in ("helsinki", "helsinki-kpi")]})],
                ["/api/v1/projects/helsinki/pipelines", json.dumps({"items": [{"kind": "Pipeline", "metadata": {"name": n}} for n in ("hel-news", "citybikes-gbfs")]})],
@@ -442,6 +447,7 @@ def test_full_platform_passes(tmp_path):
     assert "ok    a pod with the Portal's label reaches jc-functions:8080" in result.stdout
     assert "ok    jc-functions refuses a pod that is not the Portal" in result.stdout
     assert "security response headers present" in result.stdout
+    assert "ok    People lists the demo people" in result.stdout
     assert "the edge refuses TLS 1.1" in result.stdout
     assert "the edge refuses CBC and 3DES suites" in result.stdout
 
@@ -1236,3 +1242,12 @@ def test_no_published_app_skips_the_app_routes(tmp_path):
     spec = dict(HEALTHY, bodies=[["/api/v1/projects/helsinki/apps", '{"items": []}'] if b[0] == "/api/v1/projects/helsinki/apps" else b for b in HEALTHY["bodies"]])
     result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
     assert "skip  App routes (no App is published in helsinki)" in result.stdout
+
+
+def test_a_demo_person_missing_from_people_fails_the_run(tmp_path):
+    """T-2688: DEMO.md walks Organization → People; a demo person it does not list is red."""
+    listed = json.dumps({"items": [{"email": "demo.steward@hel.fi"}, {"email": "demo.viewer@hel.fi"}]})
+    spec = dict(HEALTHY, bodies=[["/api/v1/organization/people", listed]] + HEALTHY["bodies"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  People does not list: demo.approver@hel.fi" in result.stdout
