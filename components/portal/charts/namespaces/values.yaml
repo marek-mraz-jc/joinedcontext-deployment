@@ -4,3 +4,7 @@ release: ''
 serviceAccount:
   name: portal
   namespace: ''
+# The namespace `{release}-app-tests`, where a run tests the model's code before it offers
+# publication (SDK-38). Needs the builder image, so it is on where the forge's runner is.
+appTests:
+  enabled: false

@@ -9,3 +9,7 @@ parts:
   # values as `runner`, read per part.
   - name: rust
     valuesFrom: runner
+  # What an App's build pod needs here (AP-130, AP-131): the runner configuration per build
+  # class and the Portal's Role, which lets it start one Job per queued App build with that
+  # App's own cache claim. The pods themselves are the Portal's (src/apps/build_pods.rs).
+  - name: build-pods

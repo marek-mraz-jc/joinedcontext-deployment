@@ -26,6 +26,15 @@ helmfile apply -i --selector component=gitea-runner
   `build-lane` Role. Check it: `kubectl -n <ns> get pods -l app.kubernetes.io/name=lane-token`
   prints the last runs, and a run's log says which secret it wrote or which call was refused.
 
+- **Build pods** (AP-130, AP-131, T-2794): an App's `build` job asks for `app-build-node` or
+  `app-build-rust`, which the shared runner never carries. The Portal reads the forge's queue and
+  starts one `Job` per queued App build here, registered with that repository's token alone, on
+  the configuration `gitea-runner-build-{class}` and with the App's own cache claim
+  `build-cache-{app}` at `/cache`. The part `build-pods` holds those two ConfigMaps and the Role
+  `portal-build-pods` (Jobs, their token Secrets and the cache claims; no pods, no logs). The
+  shared runner keeps `propose` and any job still asking for `node-22` or `rust-1.90`. Check it:
+  `kubectl -n <ns> get jobs,pvc -l app.kubernetes.io/component=build-pod`.
+
 ## Pinning
 
 `images.yaml` pins `joinedcontext-app-builder`. Only a build that contains

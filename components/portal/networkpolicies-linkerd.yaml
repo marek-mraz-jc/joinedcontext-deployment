@@ -21,6 +21,7 @@ portal-allow-linkerd:
 # Meshed traffic reaches a pod through its Linkerd inbound proxy on 4143, not on the
 # service port, so the 5432 rule alone would leave the connection blocked.
 postgres-linkerd-from-portal:
+  componentNamespace: postgres
   podSelector:
     cnpg.io/cluster: postgres-cluster
   policyTypes:
