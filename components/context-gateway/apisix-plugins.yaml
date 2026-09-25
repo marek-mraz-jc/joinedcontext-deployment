@@ -55,6 +55,55 @@ context-space:
           X-Frame-Options: "DENY"
           Referrer-Policy: "strict-origin-when-cross-origin"
 
+catalog-feed:
+  name: catalog-feed
+  description: The DCAT-AP catalogue feed, anonymous (EP-84)
+  plugins:
+    request-id:
+      include_in_response: true
+    serverless-pre-function:
+      phase: rewrite
+      functions:
+        - >-
+          return function()
+            local forged = {
+              "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
+              "X-Endpoint-Slug", "X-Consumer-Identity", "X-Forwarded-User",
+              "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
+              "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
+            }
+            for _, header in ipairs(forged) do
+              ngx.req.clear_header(header)
+              ngx.req.clear_header((header:gsub("%-", "_")))
+            end
+          end
+    # Class 1 (standard web): 300 requests per minute per IP; a harvester reads the feed a few
+    # times a day. No openid-connect: the feed reads no token.
+    limit-count:
+      count: 300
+      time_window: 60
+      key_type: var
+      key: remote_addr
+      rejected_code: 429
+      policy: local
+      show_limit_quota_header: true
+    proxy-rewrite:
+      headers:
+        set:
+          X-Forwarded-Proto: https
+          X-Forwarded-Port: '443'
+    # No Cache-Control here: the gateway says `private, no-store` on every answer itself and
+    # `private, no-cache` with a strong ETag on the schema artifacts it wants revalidated (T-2261,
+    # EP-51). `set` replaced that with `no-store`, so no client could keep an artifact and every
+    # page load downloaded all of them again instead of a 304 (T-2262).
+    response-rewrite:
+      headers:
+        set:
+          Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+          X-Content-Type-Options: "nosniff"
+          X-Frame-Options: "DENY"
+          Referrer-Policy: "strict-origin-when-cross-origin"
+
 context-space-portal:
   name: context-space-portal
   description: Context space NGSI-LD surface on the Portal host, the edge session as the bearer
