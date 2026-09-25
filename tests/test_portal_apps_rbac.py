@@ -2,8 +2,9 @@
 
 The Portal's app reconciler applies a Deployment, a Service, a Secret and a NetworkPolicy per
 app. That is the largest privilege the platform hands any of its own workloads, so the grant is
-decided in the render and asserted here: one namespace, four resources, no ClusterRole, and a
-token mount without which the reconciler deploys nothing at all.
+decided in the render and asserted here: one namespace, four resources, and a
+token mount without which the reconciler deploys nothing at all. Cluster-wide it may create a
+project's apps namespace and bind that role in it, fenced by an admission policy (AP-116, AP-117).
 """
 
 import shutil
@@ -62,14 +63,90 @@ def test_the_portal_may_write_four_kinds_in_one_namespace_and_nothing_else(
     }
     assert granted == GRANTED, f"{environment}: the Portal's Role is not the app's four kinds"
 
-    # Never cluster-wide: a ClusterRole cannot be reasoned about from the chart that renders it.
-    cluster_wide = [
+    # Cluster-wide only what creates a project's apps namespace (AP-116, AP-117), asserted below.
+    cluster_wide = {
         d["metadata"]["name"]
         for d in docs
         if d.get("kind") in {"ClusterRole", "ClusterRoleBinding"}
         and "portal" in d["metadata"]["name"]
+    }
+    slug = portal_env(docs)["JC_PORTAL_RELEASE"]
+    assert cluster_wide == {f"{slug}-portal-apps", f"{slug}-portal-namespaces"}, (
+        f"{environment}: the Portal was granted {cluster_wide}"
+    )
+
+
+# What the Portal may do cluster-wide: create and delete a project's apps namespace and bind the
+# apps role in it (AP-116). RBAC cannot name a prefix, so the admission policy is the bound.
+NAMESPACE_GRANT = {
+    ("", "namespaces", ("create", "delete", "get", "patch"), ()),
+    ("rbac.authorization.k8s.io", "rolebindings", ("create", "get", "patch"), ()),
+    ("rbac.authorization.k8s.io", "clusterroles", ("bind",), ("{slug}-portal-apps",)),
+}
+
+
+@requires_helmfile
+@pytest.mark.parametrize("environment", ["local", "dev", "production"])
+def test_the_portals_cluster_wide_grant_is_the_namespace_one_and_a_policy_fences_it(
+    rendered, environment
+):
+    docs = rendered(environment)
+    env = portal_env(docs)
+    slug = env["JC_PORTAL_RELEASE"]
+    by_name = {(d.get("kind"), d["metadata"]["name"]): d for d in docs}
+    pod = portal_deployment(docs)["spec"]["template"]["spec"]
+    assert env["JC_PORTAL_SERVICE_ACCOUNT"] == pod["serviceAccountName"]
+
+    role = by_name[("ClusterRole", f"{slug}-portal-namespaces")]
+    granted = {
+        (
+            group,
+            resource,
+            tuple(sorted(rule["verbs"])),
+            tuple(rule.get("resourceNames", ())),
+        )
+        for rule in role["rules"]
+        for group in rule["apiGroups"]
+        for resource in rule["resources"]
+    }
+    expected = {
+        (g, r, v, tuple(n.format(slug=slug) for n in names))
+        for g, r, v, names in NAMESPACE_GRANT
+    }
+    assert granted == expected
+
+    # The apps role is granted to nobody here; the Portal binds it inside each apps namespace.
+    apps = by_name[("ClusterRole", f"{slug}-portal-apps")]
+    assert {r for rule in apps["rules"] for r in rule["resources"]} == {
+        "deployments",
+        "services",
+        "secrets",
+        "networkpolicies",
+    }
+    bound = [
+        d["roleRef"]["name"]
+        for d in docs
+        if d.get("kind") in {"ClusterRoleBinding", "RoleBinding"}
     ]
-    assert not cluster_wide, f"{environment}: the Portal was granted {cluster_wide}"
+    assert f"{slug}-portal-apps" not in bound
+
+    binding = by_name[("ClusterRoleBinding", f"{slug}-portal-namespaces")]
+    namespace = portal_deployment(docs)["metadata"]["namespace"]
+    assert binding["subjects"] == [
+        {"kind": "ServiceAccount", "name": pod["serviceAccountName"], "namespace": namespace}
+    ]
+
+    policy = by_name[("ValidatingAdmissionPolicy", f"{slug}-portal-apps-namespaces")]
+    assert policy["spec"]["failurePolicy"] == "Fail"
+    assert (
+        f'"system:serviceaccount:{namespace}:{pod["serviceAccountName"]}"'
+        in policy["spec"]["matchConditions"][0]["expression"]
+    )
+    fence = by_name[("ValidatingAdmissionPolicyBinding", f"{slug}-portal-apps-namespaces")]
+    assert fence["spec"] == {
+        "policyName": f"{slug}-portal-apps-namespaces",
+        "validationActions": ["Deny"],
+    }
 
 
 @requires_helmfile
@@ -111,6 +188,8 @@ def test_the_portal_carries_the_identity_and_the_settings_together(rendered, env
     for name in [
         "JC_PORTAL_APPS_NAMESPACE",
         "JC_PORTAL_ORG_DOMAIN",
+        "JC_PORTAL_RELEASE",
+        "JC_PORTAL_SERVICE_ACCOUNT",
     ]:
         assert env.get(name), f"{environment}: {name} is not set"
     # AP-26: an app's login is the APISIX edge's openid-connect, so the Portal takes no sidecar image.

@@ -12,4 +12,6 @@ metadata:
 spec:
   urnSegment: banskabystrica-kpi
   isSandbox: false
+  # The one model of this space: a write of a type it does not declare is refused (DM-61).
+  dataModelRef: { kind: DataModel, name: key-performance-indicator }
   defaultLocale: sk

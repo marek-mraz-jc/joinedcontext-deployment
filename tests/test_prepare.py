@@ -76,18 +76,18 @@ def test_each_namespace_is_ensured_once_and_quoted(hook):
 
 
 @requires_helmfile
-def test_every_ensured_namespace_gets_linkerd_injection(hook):
-    for name in ensured(hook):
-        assert f'kubectl annotate namespace "{name}" linkerd.io/inject=enabled --overwrite' in hook, name
-
-
-@requires_helmfile
-def test_every_ensured_namespace_admits_only_authenticated_mesh_traffic(hook):
+def test_every_ensured_namespace_is_meshed_and_admits_only_authenticated_traffic_in_one_write(hook):
     # Linkerd's default inbound policy decides what a pod without its own Server admits; on dev
     # that is traffic from a meshed, authenticated workload of this cluster and nothing else.
+    # Both annotations go in one command: Kyverno's require-meshed-namespace-inbound-policy
+    # refuses a namespace marked for injection without the policy, so marking it first failed on
+    # every namespace created after the policy was installed (ci-full 36096443083, T-2826).
     for name in ensured(hook):
         assert (
-            f'kubectl annotate namespace "{name}" config.linkerd.io/default-inbound-policy="cluster-authenticated" --overwrite'
-            in hook
-        ), name
+            f'kubectl annotate namespace "{name}" linkerd.io/inject=enabled '
+            f'config.linkerd.io/default-inbound-policy="cluster-authenticated" --overwrite'
+        ) in hook, name
+    assert not re.search(r"kubectl annotate namespace \"[^\"]+\" linkerd.io/inject=enabled --overwrite", hook), (
+        "injection written on its own, without the inbound policy"
+    )
     assert "default-inbound-policy-" not in hook, "dev must not clear the policy"

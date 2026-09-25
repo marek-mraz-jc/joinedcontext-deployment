@@ -29,8 +29,9 @@ spec:
       apps: 8
       # The busiest feed is the HFP MQTT stream of four trunk lines.
       ingestEventsPerSecond: 200
-      # A recording session is a handful of runs; a day of demos is well under this.
-      agentRunsPerDay: 50
+      # Owner, 2026-09-25: the model keys have no spending limit, so the cap must never stop a
+      # live check or a demo; it stays as the mechanism (AG-41) at a ceiling nobody reaches.
+      agentRunsPerDay: 2000
       # The bike space holds about 460 stations and the vehicle space a few thousand.
       entitiesPerSpace: 50000
       # Every seeded endpoint asks for 600 or 300 a minute, and the form's "open" class

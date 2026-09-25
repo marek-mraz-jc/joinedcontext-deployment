@@ -118,13 +118,14 @@ CURL = r'''#!/usr/bin/env python3
 """A curl for the refresher's script: records each call, answers from the environment."""
 import json, os, sys
 args = sys.argv[1:]
-out, method, url, headers, data = None, "GET", None, [], []
+out, method, url, headers, data, retry = None, "GET", None, [], [], {}
 i = 0
 while i < len(args):
     a = args[i]
-    if a in ("-o", "-w", "-X", "-H", "--data", "--data-urlencode"):
+    if a in ("-o", "-w", "-X", "-H", "--data", "--data-urlencode", "--retry", "--retry-delay", "--retry-max-time"):
         value = args[i + 1]
-        if a == "-o": out = value
+        if a.startswith("--retry"): retry[a] = value
+        elif a == "-o": out = value
         elif a == "-X": method = value
         elif a == "-H":
             headers.append(open(value[1:]).read().strip() if value.startswith("@") else value)
@@ -134,10 +135,11 @@ while i < len(args):
             data.append(f"{name}=<{rest}>" if rest else value)
         i += 2
         continue
-    if not a.startswith("-"): url = a
+    if a == "--retry-connrefused": retry[a] = True
+    elif not a.startswith("-"): url = a
     i += 1
 with open(os.environ["FAKE_CALLS"], "a") as log:
-    log.write(json.dumps({"method": method, "url": url, "headers": headers, "data": data}) + "\n")
+    log.write(json.dumps({"method": method, "url": url, "headers": headers, "data": data, "retry": retry}) + "\n")
 token = url == os.environ["TOKEN_URL"]
 code = os.environ["FAKE_TOKEN_CODE" if token else "FAKE_FORGE_CODE"]
 if out and out != "/dev/null":
@@ -210,3 +212,16 @@ def test_a_refusal_fails_the_run_and_writes_nothing_it_did_not_mint(cronjob, tmp
     if token_code != "200" or "no access token" in says:
         assert [c["method"] for c in calls] == ["POST"], "no secret is written without a token"
     assert JWT not in result.stdout + result.stderr
+
+
+def test_a_refused_first_connection_is_retried_for_a_bounded_time(cronjob, tmp_path):
+    # k3d refused every run's first call while Keycloak was ready (ci-full 36096443083, T-2826):
+    # a new pod calls before the node's NetworkPolicy controller admits it. Both calls retry a
+    # refused connection, and give up within the Job's deadline.
+    result, calls, _ = run_refresher(cronjob, tmp_path)
+    assert result.returncode == 0, result.stderr
+    deadline = cronjob["spec"]["jobTemplate"]["spec"]["activeDeadlineSeconds"]
+    for call in calls:
+        assert call["retry"].get("--retry-connrefused") is True, call["method"]
+        assert int(call["retry"]["--retry"]) > 0
+        assert 0 < int(call["retry"]["--retry-max-time"]) < deadline

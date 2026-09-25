@@ -47,3 +47,8 @@ spec:
         - Dashboard
         - Layer
       verbs: [propose, approve, delete]
+    # The people of the realm (PF-91): a person is a Keycloak user and never a manifest, so the
+    # Portal's people routes check these verbs, which no other kind takes.
+    - kinds:
+        - Person
+      verbs: [read, create, update, disable, delete]
