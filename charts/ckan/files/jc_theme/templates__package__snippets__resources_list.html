@@ -1,0 +1,21 @@
+{#
+  The downloads of a dataset grouped by format, each format with one line saying what it is
+  for (T-2744). The items are CKAN's own, so the preview and download links stay CKAN's.
+#}
+<section id="dataset-resources" class="resources" aria-labelledby="jc-resources-title">
+  <h2 id="jc-resources-title">{{ h.jc_t('resources') }}</h2>
+  {% set groups = h.jc_resource_groups(pkg) %}
+  {% if groups %}
+    {% set can_edit = can_edit or h.check_access('package_update', {'id': pkg.id}) %}
+    {% for group in groups %}
+      <h3 class="jc-format">{{ group.format }}{% if group.what %} <span class="jc-format-what">· {{ group.what }}</span>{% endif %}</h3>
+      <ul class="resource-list">
+        {% for resource in group.resources %}
+          {% snippet 'package/snippets/resource_item.html', pkg=pkg, res=resource, can_edit=can_edit %}
+        {% endfor %}
+      </ul>
+    {% endfor %}
+  {% else %}
+    <p class="empty">{{ h.jc_t('no_resources') }}</p>
+  {% endif %}
+</section>

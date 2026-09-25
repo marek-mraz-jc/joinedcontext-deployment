@@ -65,7 +65,13 @@ def test_a_refusal_is_logged_with_its_words(hook):
 def test_every_namespace_a_component_deploys_into_is_ensured(hook, dev):
     wanted = {d["metadata"]["namespace"] for d in dev if d.get("metadata", {}).get("namespace")}
     assert wanted, "the dev render names no namespace"
-    assert wanted <= set(ensured(hook)), f"not ensured: {sorted(wanted - set(ensured(hook)))}"
+    # A namespace its own release renders as a Namespace object exists before anything in it
+    # (helm installs Namespaces first), and it carries its own labels: the app-tests sandbox of
+    # T-2675 is restricted and unmeshed, which the hook's Linkerd annotation would undo.
+    owned = {d["metadata"]["name"] for d in dev if d.get("kind") == "Namespace"}
+    assert not owned & set(ensured(hook)), f"ensured and meshed by the hook too: {sorted(owned & set(ensured(hook)))}"
+    missing = wanted - owned - set(ensured(hook))
+    assert not missing, f"not ensured: {sorted(missing)}"
 
 
 @requires_helmfile
