@@ -233,9 +233,10 @@ def test_every_feed_is_seeded_as_a_datasource_a_pipeline_and_a_mapping():
             assert seeded in index, seeded
 
 
-def test_no_pipeline_is_resident_so_the_project_asks_for_the_smallest_resident_quota():
+def test_every_pipeline_is_scheduled_and_the_project_has_room_for_a_hundred_more():
+    """T-2873: the praha pipelines were refused on dev by a resident quota of one."""
     project = yaml.safe_load((PRAHA / "praha-project.yaml").read_text())
-    assert project["spec"]["quotas"]["residentPipelines"] == 1
+    assert project["spec"]["quotas"]["residentPipelines"] >= 100
     for name in FEEDS:
         period = yaml.safe_load((PRAHA / f"praha-pipeline-{name}.yaml").read_text())["spec"]["period"]
         seconds = int(period[:-1]) * {"s": 1, "m": 60, "h": 3600}[period[-1]]
