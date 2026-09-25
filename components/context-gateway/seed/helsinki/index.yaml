@@ -75,6 +75,7 @@ helsinki-mobility-space.yaml: projects/helsinki-mobility/spaces/mobility/space.y
 helsinki-mobility-shared-bikes.yaml: projects/helsinki-mobility/shared/city-bikes.yaml
 helsinki-role-steward.yaml: users/roles/steward.yaml
 helsinki-role-org-admin.yaml: users/roles/org-admin.yaml
+helsinki-role-people-admin.yaml: users/roles/people-admin.yaml
 helsinki-role-model-editor.yaml: users/roles/model-editor.yaml
 helsinki-role-pipeline-editor.yaml: users/roles/pipeline-editor.yaml
 helsinki-role-endpoint-editor.yaml: users/roles/endpoint-editor.yaml
