@@ -325,3 +325,23 @@ def test_the_public_grant_hides_exactly_the_two_attributes_the_demo_shows_hidden
 
     entities = seed[("Policy", "public-read")]["spec"]["information"][0]["entities"]
     assert [e["type"] for e in entities] == ["AirQualityObserved"]
+
+
+@requires_helmfile
+def test_the_gateway_seals_subscribers_with_a_generated_key_it_reads_from_a_secret(dev, gateway_pod):
+    """GW27, T-2383: each delivery is decided again for the subscriber sealed into the
+    subscription. The key reaches the gateway only as a secretKeyRef to a Secret the secrets
+    component generates, long enough for HMAC-SHA256, and is never a literal in the values."""
+    env = {e["name"]: e for e in gateway_pod["containers"][0]["env"]}
+    key = env["JC_GATEWAY_DELIVERY_KEY"]
+    assert "value" not in key, "the delivery key is a literal in the manifest"
+    assert key["valueFrom"]["secretKeyRef"] == {"name": "context-gateway-delivery-key", "key": "secret"}
+    generated = [
+        d for d in dev
+        if d.get("kind") == "Secret" and d["metadata"]["name"] == "context-gateway-delivery-key"
+    ]
+    assert generated, "nothing generates the Secret the gateway reads its delivery key from"
+    namespace = gateway_pod.get("namespace") or next(
+        d for d in dev if d.get("kind") == "Deployment" and d["metadata"]["name"] == "context-gateway"
+    )["metadata"]["namespace"]
+    assert namespace in {d["metadata"].get("namespace") for d in generated}
