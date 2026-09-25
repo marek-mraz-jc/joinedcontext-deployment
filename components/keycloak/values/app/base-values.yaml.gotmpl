@@ -168,7 +168,10 @@ extraInitContainers: |
           mkdir -p "${path%/*}"
           cp "$file" "$path"
         done
-        /app/bin/kc.sh build --db=postgres --health-enabled=true --metrics-enabled=true --http-relative-path={{ $this.pathPrefix }}
+        # Script mappers stay off: with them, whoever may manage a client runs code in every
+        # token it mints (T-2857). Keycloak 26 ships them off; the build says so, so no image or
+        # default change turns them on.
+        /app/bin/kc.sh build --db=postgres --health-enabled=true --metrics-enabled=true --features-disabled=scripts --http-relative-path={{ $this.pathPrefix }}
     resources:
       requests:
         cpu: "100m"
