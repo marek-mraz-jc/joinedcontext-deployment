@@ -1,6 +1,6 @@
 # Written by scripts/vendor-sample-apps.py; do not edit. The files of each sample application,
 # relative to its folder, as the forge bootstrap pushes them to its repository (T-2599).
-source: 6ccc490663eee9c1d3f08d14c49be64bef16ec63
+source: bf6de22fa1d3b165e9c16633d0d7295b57cef08c
 apps:
   air-quality:
     - .gitea/workflows/build.yml
@@ -24,13 +24,19 @@ apps:
     - tests/stations_api_tests.rs
     - ui/e2e/responsive.spec.ts
     - ui/index.html
+    - ui/map-worker.ts
     - ui/package.json
     - ui/playwright.config.ts
     - ui/src/App.tsx
+    - ui/src/Chart.tsx
+    - ui/src/StationMap.tsx
     - ui/src/api.ts
     - ui/src/index.css
     - ui/src/main.tsx
+    - ui/src/quality.ts
     - ui/tests/app.test.tsx
+    - ui/tests/charts.test.tsx
+    - ui/tests/maplibre.ts
     - ui/tests/setup.ts
     - ui/tsconfig.json
     - ui/vite.config.ts
@@ -133,8 +139,10 @@ apps:
     - src/App.test.tsx
     - src/App.tsx
     - src/app.css
+    - src/charts.ts
     - src/components/AppShell.test.tsx
     - src/components/AppShell.tsx
+    - src/components/ChartCard.tsx
     - src/components/EntityDetail.tsx
     - src/components/EntityMap.test.tsx
     - src/components/EntityMap.tsx
@@ -148,6 +156,7 @@ apps:
     - src/design-tokens.json
     - src/fixtures/stations.ts
     - src/main.tsx
+    - src/pages/Overview.test.tsx
     - src/pages/Overview.tsx
     - src/pages/Stations.tsx
     - src/stations.test.ts
