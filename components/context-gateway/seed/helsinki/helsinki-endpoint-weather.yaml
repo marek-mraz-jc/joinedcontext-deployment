@@ -12,3 +12,23 @@ spec:
   policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki:public-weather
   enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, zip, mcp]
   rateLimits: { requestsPerMinute: 600, burst: 50 }
+  catalog:
+    publisher: { name: { fi: "Helsingin kaupunki", sv: "Helsingfors stad", en: "City of Helsinki" }, uri: "https://www.hel.fi/" }
+    license: CC_BY_4_0
+    attribution: { fi: "Lähde: Fintraffic / digitraffic.fi, CC BY 4.0", sv: "Källa: Fintraffic / digitraffic.fi, CC BY 4.0", en: "Source: Fintraffic / digitraffic.fi, CC BY 4.0" }
+    themes: [TRAN, ENVI]
+    keywords:
+      fi: ["tiesää", "sää", "tieolosuhteet"]
+      sv: ["väglag", "väder", "vägförhållanden"]
+      en: ["road weather", "weather", "road conditions"]
+    spatial:
+      - FI1B1
+      - "http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/091"
+      - "http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/049"
+      - "http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/092"
+    frequency: CONT
+    source:
+      - url: "https://www.digitraffic.fi/en/road-traffic/"
+        title: { fi: "Digitraffic tiesääasemat", en: "Digitraffic road weather stations" }
+        description: { fi: "Fintrafficin tiesääasemien havainnot, CC BY 4.0.", en: "Fintraffic's road weather station observations, CC BY 4.0." }
+    pipelineRef: { kind: Pipeline, name: road-weather }

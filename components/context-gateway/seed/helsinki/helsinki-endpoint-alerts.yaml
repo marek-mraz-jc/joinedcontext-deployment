@@ -12,3 +12,23 @@ spec:
   policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki:public-alerts
   enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, zip, mcp]
   rateLimits: { requestsPerMinute: 600, burst: 50 }
+  catalog:
+    publisher: { name: { fi: "Helsingin kaupunki", sv: "Helsingfors stad", en: "City of Helsinki" }, uri: "https://www.hel.fi/" }
+    license: CC_BY_4_0
+    attribution: { fi: "Lähde: Fintraffic / digitraffic.fi, CC BY 4.0", sv: "Källa: Fintraffic / digitraffic.fi, CC BY 4.0", en: "Source: Fintraffic / digitraffic.fi, CC BY 4.0" }
+    themes: [TRAN]
+    keywords:
+      fi: ["liikennetiedotteet", "tietyöt", "liikenne"]
+      sv: ["trafikmeddelanden", "vägarbeten", "trafik"]
+      en: ["traffic announcements", "road works", "traffic"]
+    spatial:
+      - FI1B1
+      - "http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/091"
+      - "http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/049"
+      - "http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/092"
+    frequency: CONT
+    source:
+      - url: "https://www.digitraffic.fi/en/road-traffic/"
+        title: { fi: "Digitraffic liikennetiedotteet", en: "Digitraffic traffic messages" }
+        description: { fi: "Fintrafficin tietyöt ja liikennetiedotteet, CC BY 4.0.", en: "Fintraffic's road works and traffic announcements, CC BY 4.0." }
+    pipelineRef: { kind: Pipeline, name: traffic-messages }

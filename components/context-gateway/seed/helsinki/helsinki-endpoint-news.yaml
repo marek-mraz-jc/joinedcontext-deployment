@@ -12,3 +12,21 @@ spec:
   policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki:public-news
   enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, zip, mcp]
   rateLimits: { requestsPerMinute: 600, burst: 50 }
+  catalog:
+    publisher: { name: { fi: "Helsingin kaupunki", sv: "Helsingfors stad", en: "City of Helsinki" }, uri: "https://www.hel.fi/" }
+    license: CC_BY_4_0
+    attribution: { fi: "Lähde: Helsingin kaupunki, hel.fi, CC BY 4.0", sv: "Källa: Helsingfors stad, hel.fi, CC BY 4.0", en: "Source: City of Helsinki, hel.fi, CC BY 4.0" }
+    themes: [GOVE]
+    keywords:
+      fi: ["uutiset", "kaupunki", "tiedotteet"]
+      sv: ["nyheter", "staden", "meddelanden"]
+      en: ["news", "city", "announcements"]
+    spatial:
+      - FI1B1
+      - "http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/091"
+    frequency: HOURLY
+    source:
+      - url: "https://hri.fi/data/en_GB/dataset/helsingin-hel-fi-sivuston-avoin-rajapinta-uutisille"
+        title: { fi: "Hel.fi-sivuston avoin rajapinta uutisille", en: "Open API for the news of hel.fi" }
+        description: { fi: "Helsingin kaupungin uutiset RSS-syötteenä, CC BY 4.0.", en: "The City of Helsinki's news as an RSS feed, CC BY 4.0." }
+    pipelineRef: { kind: Pipeline, name: hel-news }

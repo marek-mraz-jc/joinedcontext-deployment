@@ -15,3 +15,15 @@ spec:
   audience: public
   enabledRepresentations: [ngsi-ld, csv, json]
   rateLimits: { requestsPerMinute: 300, burst: 50 }
+  # No licence: an indicator is computed by a pipeline or the assistant from whatever the city space
+  # holds, and no seeded source names its inputs; the licence waits for that (T-2793).
+  catalog:
+    publisher: { name: { fi: "Helsingin kaupunki", sv: "Helsingfors stad", en: "City of Helsinki" }, uri: "https://www.hel.fi/" }
+    themes: [REGI]
+    keywords:
+      fi: ["tunnusluvut", "kaupunki"]
+      sv: ["nyckeltal", "staden"]
+      en: ["indicators", "city"]
+    spatial:
+      - FI1B1
+      - "http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/091"
