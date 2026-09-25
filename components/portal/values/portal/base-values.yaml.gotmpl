@@ -198,6 +198,15 @@ env:
   JC_PORTAL_APP_TESTS_IMAGE: {{ printf "%s:%s@%s" $builder.repository $builder.tag $builder.digest | quote }}
 {{- end }}
 {{- end }}
+{{- if and (has "gitea-runner" .Values.components) (index .Values "gitea-runner" "build-pods" "enabled") }}
+  # An App's `build` job runs in a pod of that App alone, which this Portal starts in the
+  # runner's namespace on the runner images, each with the App's own cache claim (AP-130,
+  # AP-131); the Role there is components/gitea-runner's build-pods part.
+  {{- $runners := index .Values.images "gitea-runner" }}
+  JC_PORTAL_BUILD_NAMESPACE: {{ index .Values "gitea-runner" "build-pods" "namespace" | quote }}
+  JC_PORTAL_BUILD_IMAGE_NODE: "{{ $runners.runner.repository }}@{{ required "gitea-runner.runner needs its image digest" $runners.runner.digest }}"
+  JC_PORTAL_BUILD_IMAGE_RUST: "{{ $runners.rust.repository }}@{{ required "gitea-runner.rust needs its image digest" $runners.rust.digest }}"
+{{- end }}
 {{- if has "apisix" .Values.components }}
   # The only namespace whose APISIX pods an App pod admits (AP-108).
   JC_PORTAL_APISIX_NAMESPACE: {{ .Values.apisix.apisix.namespace | quote }}
@@ -386,7 +395,9 @@ podAnnotations:
   security.joinedcontext.com/api-access-reason: >-
     App reconciler: applies the four objects an App is made of — Deployment, Service, Secret and
     NetworkPolicy — in the apps namespace only, under the Role in `rbac.rules` below (AP-13,
-    AP-15, AP-18, T-0411). It reads and writes nothing else at the API server.
+    AP-15, AP-18, T-0411); and an App's build Job, its token Secret and its cache claim in the
+    runner's namespace, under the Role `portal-build-pods` there (AP-130, AP-131, T-2794). It
+    reads and writes nothing else at the API server.
 
 serviceMesh:
   enabled: {{ and ($global.serviceMesh.enable | default false) (eq ($global.serviceMesh.type | default "") "linkerd") }}

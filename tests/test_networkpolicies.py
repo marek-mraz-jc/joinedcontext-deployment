@@ -77,6 +77,31 @@ def test_every_component_namespace_reference_names_a_component_that_exists():
     assert not unknown, "componentNamespace naming no component:\n" + "\n".join(unknown)
 
 
+def test_a_policy_for_another_components_pods_is_pinned_to_their_namespace():
+    """A policy lands in its own component's namespace unless it names another with a
+    top-level `componentNamespace`, and its `podSelector` only ever selects pods there. So
+    when two components each declare an unpinned policy for the same pods, one of them
+    selects nothing in the multi-namespace variants, which is how the database refused the
+    broker's and the Portal's meshed connections on 4143 (ci-full 36104814442, variant 1,1,1)
+    while every single-namespace variant stayed green."""
+    declared = {}
+    for path in policy_files():
+        component = path.parent.name
+        for name, policy in (yaml.safe_load(path.read_text()) or {}).items():
+            selector = policy.get("podSelector") or {}
+            if not selector or policy.get("componentNamespace") or policy.get("namespace"):
+                continue
+            key = tuple(sorted(selector.items()))
+            declared.setdefault(key, {}).setdefault(component, []).append(name)
+    shared = {
+        str(dict(key)): owners for key, owners in declared.items() if len(owners) > 1
+    }
+    assert not shared, (
+        "pods selected by unpinned policies of more than one component; pin the foreign ones "
+        f"with componentNamespace: {shared}"
+    )
+
+
 def test_the_broker_rule_names_the_gateway_peer_the_moment_the_component_is_deployed(rendered):
     """dev deploys the context-gateway since T-0263, so the broker's rule for it is rendered
     with both peers. While dev left the component out, this test was the proof that a peer

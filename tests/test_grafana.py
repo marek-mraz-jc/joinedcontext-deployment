@@ -107,10 +107,11 @@ def test_it_talks_to_prometheus_and_the_realm_and_to_nothing_else(addons):
 
 
 def test_the_dashboards_are_committed_json_and_reach_the_pod(addons):
-    """Four dashboards, provisioned from files rather than fetched at start-up: the egress
+    """Five dashboards, provisioned from files rather than fetched at start-up: the egress
     policy above allows no outbound call that could fetch one, which is the point."""
     dashboards = by_name(addons, "ConfigMap", "grafana-dashboards")["data"]
     assert sorted(dashboards) == [
+        "assistant.json",
         "context-broker.json",
         "context-gateway.json",
         "edge-apisix.json",
@@ -135,8 +136,8 @@ def test_the_dashboards_are_committed_json_and_reach_the_pod(addons):
 def test_no_dashboard_queries_a_metric_no_component_exports():
     """A panel is a claim that somebody exports that series. These four prefixes are the ones
     this platform actually has: APISIX's own, Antares's own, and — since T-0463 — the Context
-    Gateway's and the Portal's."""
-    allowed = ("apisix_", "antares_", "jc_gateway_", "jc_portal_")
+    Gateway's and the Portal's, the Portal's assistant series (`jc_agent_`) since T-2771."""
+    allowed = ("apisix_", "antares_", "jc_gateway_", "jc_portal_", "jc_agent_")
     for path in sorted((COMPONENT / "charts/dashboards/files").glob("*.json")):
         for panel in json.loads(path.read_text())["panels"]:
             for target in panel["targets"]:
@@ -188,6 +189,26 @@ def test_the_portal_dashboard_draws_proposals_by_lane():
         "jc_portal_changes_total" in expression and "by (lane)" in expression
         for expression in drawn
     ), drawn
+
+
+# The assistant's series, from the Portal's `telemetry.rs` (T-2771).
+ASSISTANT_SERIES = (
+    "jc_agent_answer_duration_seconds_bucket",
+    "jc_agent_model_call_duration_seconds_bucket",
+    "jc_agent_runs_finished_total",
+    "jc_agent_tool_steps_total",
+    "jc_agent_model_tokens_total",
+)
+
+
+def test_the_assistant_dashboard_draws_latency_endings_failures_and_tokens():
+    """Where an answer's seconds went, how runs end and expire, which tools fail and what the
+    model costs per day: a slow assistant is traced from here to its run (T-2771, AG-72)."""
+    drawn = expressions("assistant.json")
+    for series in ASSISTANT_SERIES:
+        assert any(series in expression for expression in drawn), f"{series} is not drawn"
+    assert any("histogram_quantile(0.95" in e and "jc_agent_answer_duration_seconds_bucket" in e for e in drawn)
+    assert any('status="expired"' in e for e in drawn)
 
 
 def test_no_duration_is_read_as_a_summary_quantile():
