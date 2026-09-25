@@ -239,3 +239,27 @@ def test_the_janitor_reaches_journey_residue_and_nothing_seeded():
     }
     assert len(seeded) > 50, "the seed and the sample apps were read"
     assert not sorted(name for name in seeded if reached(name)), "the janitor reaches a seeded resource"
+
+
+def test_every_bound_group_is_seeded_or_the_identity_providers():
+    """PF-63, PF-64: a binding's group is a seeded `Group` or marked `source: provider` (T-2844).
+
+    `platform-readers` is the realm's default group: Keycloak owns its members and no `Group`
+    manifest declares it, so without the mark `jcctl validate` on dev's repository reports the
+    binding as naming a group that does not exist. A marked group seeded as a `Group` as well
+    would give the reconciler a group the provider owns.
+    """
+    seeded = {doc["metadata"]["name"] for _path, doc in manifests("Group")}
+    bound = [
+        (path.name, subject)
+        for path, doc in manifests("RoleBinding")
+        for subject in doc["spec"]["subjects"]
+        if "group" in subject
+    ]
+    assert bound, "the seed binds groups"
+    for name, subject in bound:
+        if subject.get("source") == "provider":
+            assert subject["group"] not in seeded, f"{name}: {subject['group']} is the provider's and seeded"
+        else:
+            assert "source" not in subject, f"{name}: unknown source {subject['source']}"
+            assert subject["group"] in seeded, f"{name}: {subject['group']} is no seeded Group and not marked provider"
