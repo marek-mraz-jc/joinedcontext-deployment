@@ -71,7 +71,7 @@ banskabystrica-conformance:
 helsinki-pipeline-proposer:
   profiles: [development]
   name: Helsinki pipeline proposer
-  description: Service account that proposes Pipeline manifests over the Portal API and MCP; client_credentials only, no browser flow
+  description: Service account that proposes DataSource and Pipeline manifests over the Portal API and MCP; client_credentials only, no browser flow
   subdomain: ''
   redirectPath: /
   componentNamespaces:

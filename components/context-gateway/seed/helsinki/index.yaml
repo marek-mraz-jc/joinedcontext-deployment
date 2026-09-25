@@ -82,7 +82,6 @@ helsinki-role-org-admin.yaml: users/roles/org-admin.yaml
 helsinki-role-people-admin.yaml: users/roles/people-admin.yaml
 helsinki-role-model-editor.yaml: users/roles/model-editor.yaml
 helsinki-role-pipeline-editor.yaml: users/roles/pipeline-editor.yaml
-helsinki-role-pipeline-proposer.yaml: users/roles/pipeline-proposer.yaml
 helsinki-role-endpoint-editor.yaml: users/roles/endpoint-editor.yaml
 helsinki-role-app-editor.yaml: users/roles/app-editor.yaml
 helsinki-role-editor.yaml: users/roles/editor.yaml

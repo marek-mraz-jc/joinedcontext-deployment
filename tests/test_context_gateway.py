@@ -209,7 +209,7 @@ def test_the_proposer_account_holds_a_portal_token_and_no_endpoint_token(forge_s
     for role in roles:
         rules = yaml.safe_load(forge_seed[f"users/roles/{role}.yaml"])["spec"]["rules"]
         assert all("approve" not in rule["verbs"] for rule in rules), (role, rules)
-        assert [kind for rule in rules for kind in rule["kinds"]] == ["Pipeline"], (role, rules)
+        assert {verb for rule in rules for verb in rule["verbs"]} == {"propose"}, (role, rules)
 
 
 @requires_helmfile
