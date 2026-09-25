@@ -21,6 +21,12 @@ spec:
   output:
     type: KeyPerformanceIndicator
     mode: upsert
+  # Every run rewrites all 28 indicators, so one missing for three weekly runs is an indicator
+  # the region stopped publishing: it is removed rather than shown with a stale value (PL-64).
+  # Safe here and only here: this pipeline is the one writer of bbsk-kpi.
+  expiry:
+    after: 21d
+    types: [KeyPerformanceIndicator]
   compute:
     kind: bloblang
     bloblang: |
