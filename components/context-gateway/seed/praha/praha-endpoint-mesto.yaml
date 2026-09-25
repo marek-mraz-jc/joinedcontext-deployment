@@ -17,3 +17,63 @@ spec:
       instanceRef: { kind: CkanInstance, name: praha }
       license: cc-by
       datastore: { representation: csv, refresh: onReconcile }
+  # The DCAT-AP description (T-2792, EP-78, EP-79), each licence read from its source on 2026-09-25:
+  # ČHMÚ CC BY 4.0 (NKOD 00020699/2d09f059…, author ČHMÚ); IPR Praha CC BY 4.0 with the credit
+  # "datový podklad © IPR Praha"; ROPID's ticket points CC BY (NKOD 60437359/12cceb7b…); nextbike
+  # CC0 1.0 (its GBFS system_information); Golemio's park-and-ride API free of rights (NKOD
+  # 02795281/b1c05f31…, matched to CC0); the city budget free of rights (Prague catalogue); Golemio's
+  # waste sensors marked "Open Data" with no licence named, credited to Golemio. CC BY 4.0 is the
+  # most demanding, so it is the space's; no source asks for share-alike. No contactPoint: the
+  # organization has no open-data role address yet (owner's decision, as T-2790). No temporal:
+  # the space holds each feed's current state, not a history.
+  catalog:
+    publisher: { name: { cs: "Hlavní město Praha", en: "City of Prague" }, uri: "https://www.praha.eu/" }
+    license: CC_BY_4_0
+    attribution:
+      cs: "Zdroje: Český hydrometeorologický ústav (CC BY 4.0); datový podklad © IPR Praha (CC BY 4.0); ROPID (CC BY 4.0); nextbike (CC0 1.0); Golemio, Operátor ICT, s daty TSK hl. m. Prahy; rozpočet hl. m. Prahy"
+      en: "Sources: Czech Hydrometeorological Institute (CC BY 4.0); data © IPR Praha (CC BY 4.0); ROPID (CC BY 4.0); nextbike (CC0 1.0); Golemio, Operátor ICT, with data of TSK hl. m. Prahy; City of Prague budget"
+    themes: [TRAN, ENVI, EDUC, ECON, GOVE, REGI]
+    keywords:
+      cs: ["Praha", "doprava", "sdílená kola", "P+R", "kvalita ovzduší", "odpad", "školy", "kultura", "rozpočet", "městské části"]
+      en: ["Prague", "transport", "bike sharing", "park and ride", "air quality", "waste", "schools", "culture", "budget", "city districts"]
+    spatial:
+      - CZ010
+      - "https://linked.cuzk.cz/resource/ruian/obec/554782"
+    frequency: CONT
+    source:
+      - url: "https://opendata.chmi.cz/air_quality/now/data/airquality_1h_avg_CZ.csv"
+        title: { cs: "Kvalita ovzduší – aktuální hodinové údaje (ČHMÚ)", en: "Air quality, current hourly data (ČHMÚ)" }
+        description: { cs: "Hodinové průměry všech stanic ČHMÚ, z nichž prostor drží 14 pražských, CC BY 4.0.", en: "Hourly means of every ČHMÚ station, of which the space keeps Prague's 14, CC BY 4.0." }
+      - url: "https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_tg/gbfs.json"
+        title: { cs: "Sdílená kola nextbike v Praze, GBFS", en: "nextbike Prague bike sharing, GBFS" }
+        description: { cs: "Stanice a jejich obsazenost podle GBFS 2.3, obnovované každou minutu, CC0 1.0.", en: "Stations and what they hold, as GBFS 2.3, refreshed every minute, CC0 1.0." }
+      - url: "https://api.golemio.cz/v3/parking-measurements?primarySource=tsk-offstreet"
+        title: { cs: "Parkování P+R – API (Golemio)", en: "Park and ride parking API (Golemio)" }
+        description: { cs: "Obsazenost parkovišť P+R z počítadel TSK hl. m. Prahy, Operátor ICT, bez omezení práv.", en: "Occupancy of the park-and-ride car parks from the counters of TSK hl. m. Prahy, Operátor ICT, free of rights." }
+      - url: "https://api.golemio.cz/v2/sortedwastestations?onlyMonitored=true"
+        title: { cs: "Zaplněnost kontejnerů na tříděný odpad (Golemio)", en: "Sorted-waste container fill levels (Golemio)" }
+        description: { cs: "Stanoviště tříděného odpadu s poslední hodnotou zaplnění ze senzorů, Operátor ICT, otevřená data.", en: "Sorted-waste collection points with the last fill level their sensors read, Operátor ICT, open data." }
+      - url: "https://data.pid.cz/pointsOfSale/json/pointsOfSale.json"
+        title: { cs: "Prodejní místa dokladů PID (ROPID)", en: "PID ticket points of sale (ROPID)" }
+        description: { cs: "Místa, kde se prodávají jízdenky PID, CC BY 4.0.", en: "The places that sell PID tickets, CC BY 4.0." }
+      - url: "https://opendata-storage.praha.eu/ROZ_rozpocet_finance/rozpocet/Zdroje/2026/Rozpocet_MHMP_2026.json"
+        title: { cs: "Rozpočet hl. m. Prahy 2026", en: "City of Prague budget 2026" }
+        description: { cs: "Schválený a upravený rozpočet hlavního města Prahy na rok 2026, bez omezení práv.", en: "The approved and adjusted budget of the City of Prague for 2026, free of rights." }
+      - url: "https://hub.arcgis.com/api/v3/datasets/17f4294bf3f041db9a0ec0d6ac0741a6_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1"
+        title: { cs: "Kulturní zařízení (IPR Praha)", en: "Cultural venues (IPR Praha)" }
+        description: { cs: "Kulturní zařízení z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.", en: "Cultural venues from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha." }
+      - url: "https://hub.arcgis.com/api/v3/datasets/35ede955057f4815b522ea91b488792a_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1"
+        title: { cs: "Městské části (IPR Praha)", en: "City districts (IPR Praha)" }
+        description: { cs: "Hranice 57 městských částí z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.", en: "The boundaries of the 57 city districts from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha." }
+      - url: "https://hub.arcgis.com/api/v3/datasets/7dce241cdbb141fa8104e3a65ca67ad6_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1"
+        title: { cs: "Parkoviště P+R (IPR Praha)", en: "Park and ride car parks (IPR Praha)" }
+        description: { cs: "Parkoviště P+R z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.", en: "Park-and-ride car parks from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha." }
+      - url: "https://hub.arcgis.com/api/v3/datasets/5d32db18a5d545a79ad3029917984a89_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1"
+        title: { cs: "Školská zařízení (IPR Praha)", en: "School facilities (IPR Praha)" }
+        description: { cs: "Školská zařízení z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.", en: "School facilities from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha." }
+      - url: "https://hub.arcgis.com/api/v3/datasets/62e3cf1020434b07832ca9ae19bce348_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1"
+        title: { cs: "Veřejné toalety (IPR Praha)", en: "Public toilets (IPR Praha)" }
+        description: { cs: "Veřejné toalety z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.", en: "Public toilets from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha." }
+      - url: "https://hub.arcgis.com/api/v3/datasets/9938b4b73b4d49a7aef5a605f4d39acf_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1"
+        title: { cs: "Stanoviště tříděného odpadu (IPR Praha)", en: "Sorted-waste collection points (IPR Praha)" }
+        description: { cs: "Stanoviště tříděného odpadu z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.", en: "Sorted-waste collection points from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha." }
