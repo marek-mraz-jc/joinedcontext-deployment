@@ -193,7 +193,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "dateModified": {
-          "description": "When the station last reported.",
+          "description": "When the publisher's station, counter or sensor last reported the values beside it.",
           "format": "date-time",
           "type": [
             "string",
@@ -578,8 +578,26 @@
       "additionalProperties": false,
       "description": "One park-and-ride car park at the edge of the city.",
       "properties": {
+        "availableSpotNumber": {
+          "description": "The free spaces of the car park right now, as its entry counters report them.",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "dataProvider": {
           "description": "Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dateModified": {
+          "description": "When the publisher's station, counter or sensor last reported the values beside it.",
+          "format": "date-time",
           "type": [
             "string",
             "null"
@@ -635,6 +653,15 @@
           "format": "date-time",
           "type": [
             "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "occupiedSpotNumber": {
+          "description": "The cars parked in the car park right now, as its entry counters report them.",
+          "minimum": 0,
+          "type": [
+            "integer",
             "null"
           ],
           "x-ngsi-ld-kind": "Property"
@@ -834,7 +861,13 @@
         "ticketSale"
       ],
       "title": "ServiceCategory",
-      "type": "string"
+      "type": "string",
+      "x-enum-descriptions": {
+        "culture": "A theatre, a museum, a gallery or another cultural venue.",
+        "publicToilet": "A public toilet.",
+        "school": "A school or a school facility of the city's school register.",
+        "ticketSale": "A place that sells public transport tickets."
+      }
     },
     "StationStatus": {
       "description": "",
@@ -843,7 +876,11 @@
         "outOfService"
       ],
       "title": "StationStatus",
-      "type": "string"
+      "type": "string",
+      "x-enum-descriptions": {
+        "outOfService": "The station neither rents nor takes back bikes right now.",
+        "working": "The station rents bikes and takes them back."
+      }
     },
     "WasteAccess": {
       "description": "",
@@ -852,7 +889,132 @@
         "residents"
       ],
       "title": "WasteAccess",
-      "type": "string"
+      "type": "string",
+      "x-enum-descriptions": {
+        "public": "Anyone may use it (volně).",
+        "residents": "Only the residents of the house may use it (obyvatelům domu)."
+      }
+    },
+    "WasteContainer": {
+      "additionalProperties": false,
+      "description": "One sensor-monitored sorted-waste container of the city and how full it is.",
+      "properties": {
+        "containerCode": {
+          "description": "The container's number in the city's waste register (KSNKO).",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dateModified": {
+          "description": "When the publisher's station, counter or sensor last reported the values beside it.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "fillingLevel": {
+          "description": "How full the container was at its sensor's last reading, 0 empty to 1 full.",
+          "maximum": 1,
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "refWasteContainerIsle": {
+          "description": "The collection point the container stands at.",
+          "pattern": "^urn:ngsi-ld:WasteContainerIsle:",
+          "type": "string",
+          "x-ngsi-ld-kind": "Relationship",
+          "x-ngsi-ld-relationship": {
+            "cardinality": "many-to-one",
+            "inverse": "wasteContainers",
+            "onDelete": "restrict",
+            "target": "WasteContainerIsle",
+            "unique": false
+          }
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "wasteKind": {
+          "$ref": "#/definitions/WasteKind",
+          "description": "What the container takes, as the city's waste register sorts it.",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "containerCode",
+        "wasteKind",
+        "refWasteContainerIsle",
+        "id",
+        "type"
+      ],
+      "title": "WasteContainer",
+      "type": "object"
     },
     "WasteContainerIsle": {
       "additionalProperties": false,
@@ -926,11 +1088,16 @@
         },
         "refDistrict": {
           "description": "The city district the record lies in.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Relationship"
+          "pattern": "^urn:ngsi-ld:CityDistrict:",
+          "type": "string",
+          "x-ngsi-ld-kind": "Relationship",
+          "x-ngsi-ld-relationship": {
+            "cardinality": "many-to-one",
+            "inverse": "wasteContainerIsles",
+            "onDelete": "restrict",
+            "target": "CityDistrict",
+            "unique": false
+          }
         },
         "source": {
           "description": "The open-data service the entity was read from.",
@@ -959,6 +1126,33 @@
       ],
       "title": "WasteContainerIsle",
       "type": "object"
+    },
+    "WasteKind": {
+      "description": "",
+      "enum": [
+        "colouredGlass",
+        "clearGlass",
+        "paper",
+        "plastic",
+        "metal",
+        "beverageCartons",
+        "electronics",
+        "edibleOil",
+        "mixedRecyclables"
+      ],
+      "title": "WasteKind",
+      "type": "string",
+      "x-enum-descriptions": {
+        "beverageCartons": "Beverage cartons (nápojové kartony).",
+        "clearGlass": "Clear glass (čiré sklo).",
+        "colouredGlass": "Coloured glass (barevné sklo).",
+        "edibleOil": "Edible fats and oils (jedlé tuky a oleje).",
+        "electronics": "Small electrical appliances (elektrozařízení).",
+        "metal": "Metal (kovy).",
+        "mixedRecyclables": "Paper, plastic and cartons in one container (multikomoditní sběr).",
+        "paper": "Paper (papír).",
+        "plastic": "Plastic (plast)."
+      }
     }
   },
   "metamodel_version": "1.11.0",
