@@ -81,8 +81,11 @@ slots:
     slot_uri: jc:refParentArea
     description: The district a municipality lies in; absent on a district.
     range: AdministrativeArea
+    inverse: childAreas
+    inlined: false
     annotations:
       ngsi_ld_kind: Relationship
+      on_delete: restrict
   surfaceArea:
     slot_uri: jc:surfaceArea
     description: The area's surface as the cadastre states it.
@@ -109,8 +112,11 @@ slots:
     slot_uri: jc:refMunicipality
     description: The municipality the record lies in.
     range: AdministrativeArea
+    inverse: publicOrganizations
+    inlined: false
     annotations:
       ngsi_ld_kind: Relationship
+      on_delete: restrict
   hospitalKind:
     slot_uri: jc:hospitalKind
     description: Whether the hospital is a general one or specialises in some fields.
@@ -228,6 +234,24 @@ slots:
     description: The district the record lies in, by name, as the publisher writes it.
     annotations:
       ngsi_ld_kind: Property
+  childAreas:
+    slot_uri: jc:childAreas
+    description: The municipalities of a district, computed from their refParentArea and never stored.
+    range: AdministrativeArea
+    multivalued: true
+    inverse: refParentArea
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
+  publicOrganizations:
+    slot_uri: jc:publicOrganizations
+    description: The organisations the region founded in this municipality, computed from their refMunicipality and never stored.
+    range: PublicOrganization
+    multivalued: true
+    inverse: refMunicipality
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
 
 classes:
   AdministrativeArea:
@@ -242,6 +266,8 @@ classes:
       - surfaceArea
       - dataProvider
       - source
+      - childAreas
+      - publicOrganizations
   PublicOrganization:
     class_uri: jc:PublicOrganization
     description: >-
