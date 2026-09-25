@@ -10,5 +10,5 @@ spec:
   http:
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Obec3_WebMercator/FeatureServer/0/query?where=1%3D1&outFields=NM4,VYMERA,LAU1_CODE,LAU2_CODE&returnGeometry=true&f=geojson&outSR=4326&geometryPrecision=6
     verb: GET
-    headers: { Accept: application/geo+json, application/json }
+    headers: { Accept: "application/geo+json, application/json" }
     timeout: 60s
