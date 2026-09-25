@@ -88,3 +88,22 @@ alertGroups:
         annotations:
           summary: 'APISIX edge 5xx error rate exceeded 1%'
   {{- end }}
+  {{- if has "portal" $components }}
+  # docs Deployment/05 section 4 (T-2771): the assistant's answer budget and its failures.
+  - name: assistant
+    rules:
+      - alert: AssistantSlowAnswers
+        expr: histogram_quantile(0.95, sum(rate(jc_agent_answer_duration_seconds_bucket[15m])) by (le)) > 10
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Assistant answers p95 above 10 s for 15 minutes'
+      - alert: AssistantRunsFailing
+        expr: sum(increase(jc_agent_runs_finished_total{status=~"failed|expired"}[1h])) / sum(increase(jc_agent_runs_finished_total[1h])) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'More than 20% of assistant runs failed or expired in the last hour'
+  {{- end }}
