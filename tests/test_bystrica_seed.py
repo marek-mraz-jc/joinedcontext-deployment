@@ -471,6 +471,42 @@ def test_the_application_reading_both_bodies_is_a_published_static_app_on_the_re
     assert operations <= {"queryEntity", "retrieveEntity"}, operations
 
 
+def test_the_citys_records_are_a_published_static_app_the_portal_image_ships():
+    """T-2916: the city's one application on dev is the records grid over banskabystrica-mesto.
+    The Portal image carries the bundle, so the App names no repository; its one write is the
+    steward's note, which a seeded Policy grants and nothing else does."""
+    app = one(CITY, "App", "banskabystrica-zaznamy")
+    assert app["metadata"]["namespace"] == "banskabystrica"
+    assert app["metadata"]["annotations"]["joinedcontext.com/shipped-with"] == "portal"
+    assert app["spec"]["kind"] == "static"
+    assert app["spec"]["lifecycle"] == "published"
+    assert app["spec"]["source"] == {"path": "./apps/banskabystrica-zaznamy"}
+    (need,) = app["spec"]["dataNeeds"]
+    assert need["contextSpaceRef"]["name"] == "banskabystrica-mesto"
+    assert one(CITY, "ContextSpace", "banskabystrica-mesto")
+    assert set(need["operations"]) == {"queryEntity", "retrieveEntity", "updateAttrs"}
+    note = one(CITY, "Policy", "mesto-steward-note")["spec"]
+    assert note["operations"] == ["updateAttrs"]
+    assert note["information"][0]["propertyNames"] == ["stewardNote"]
+
+
+def test_the_citys_air_quality_is_a_public_static_app_on_the_public_endpoint_alone():
+    """T-2916: the public screen reads the one space whose endpoint is public, read only, and
+    only the attributes the public grant serves, so no answer carries a refusal."""
+    app = one(CITY, "App", "banskabystrica-ovzdusie")
+    assert app["metadata"]["annotations"]["joinedcontext.com/shipped-with"] == "portal"
+    assert app["spec"]["visibility"] == "public"
+    assert app["spec"]["lifecycle"] == "published"
+    (need,) = app["spec"]["dataNeeds"]
+    space = need["contextSpaceRef"]["name"]
+    endpoints = [doc for _, doc in manifests(CITY, "Endpoint") if doc["spec"]["contextSpaceRef"] == space]
+    assert endpoints and all(e["spec"]["audience"] == "public" for e in endpoints), space
+    assert set(need["operations"]) <= {"queryEntity", "retrieveEntity", "queryTemporal"}
+    public = one(CITY, "Policy", "public-read")["spec"]
+    served = {name for rule in public["information"] for name in rule.get("propertyNames", [])}
+    assert set(need["attrs"]) <= served, sorted(set(need["attrs"]) - served)
+
+
 # What the city and the region cleared for the open-data catalogue (T-2407, user 2026-09-21):
 # these two and nothing else, until the other endpoints are reviewed. `public-air` publishes by the
 # owner's decision of 2026-09-25 although its space still holds seeded test stations (T-2407).
