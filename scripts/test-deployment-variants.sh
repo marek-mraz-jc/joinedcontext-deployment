@@ -45,6 +45,7 @@ KEEP_CLUSTER=false     # keep the last cluster around after the run
 CONTINUE_ON_FAILURE=false  # on failure, tear down and proceed to the next variant
 USE_REGISTRY_CACHE=true    # start the local pull-through image caches first
 LIST_ONLY=false
+AFTER=""               # a command run on each variant after its smoke, then the smoke again
 SELECTED=()
 
 # --- colors -----------------------------------------------------------------
@@ -91,6 +92,9 @@ Options:
                       (dev-deployment/registry-cache.sh). On by default.
       --no-cluster    Do not create/delete clusters; deploy into the current
                       kubectl context and clean platform namespaces between runs
+      --after <cmd>   After a variant's smoke passes, run <cmd> on it (JC_ENV names the
+                      scratch environment, still in place) and then the smoke again: an
+                      operation the deployment must survive, such as a rotation (T-2843)
       --list          Print the selected variant matrix and exit
   -h, --help          Show this help
 EOF
@@ -106,6 +110,7 @@ while [[ $# -gt 0 ]]; do
     --continue-on-failure) CONTINUE_ON_FAILURE=true; shift ;;
     --no-registry-cache) USE_REGISTRY_CACHE=false; shift ;;
     --no-cluster) MANAGE_CLUSTER=false; shift ;;
+    --after)      AFTER="${2:?--after needs a command}"; shift 2 ;;
     --list)       LIST_ONLY=true; shift ;;
     -h|--help)    usage; exit 0 ;;
     all)          SELECTED=(); shift ;;
@@ -571,7 +576,30 @@ run_variant() { # MNS MI LNK
     err "no new namespaces detected after deploy — nothing to smoke test"; return 1
   fi
   log "Smoke-testing namespaces: ${PLATFORM_NS[*]}"
+  smoke_platform || return 1
 
+  # An operation the deployment must survive, then the same smoke: it is only survived when
+  # every pod is green again and the edge still answers.
+  if [[ -n "$AFTER" ]]; then
+    log "After the smoke: ${AFTER}"
+    if ! JC_ENV="$ENV" bash -c "$AFTER"; then
+      err "the step after the smoke failed: ${AFTER}"; dump_diagnostics; return 1
+    fi
+    log "Smoke-testing again after: ${AFTER}"
+    smoke_platform || return 1
+  fi
+
+  # In no-cluster mode clean up the platform namespaces for the next run.
+  if ! $MANAGE_CLUSTER; then
+    warn "cleaning platform namespaces (no-cluster mode)"
+    kubectl delete ns "${PLATFORM_NS[@]}" --ignore-not-found --wait=true >/dev/null 2>&1 || true
+  fi
+  return 0
+}
+
+# Pods green, rollouts complete and, on our own cluster, the edge answering, in the namespaces
+# run_variant found (PLATFORM_NS, its local, which bash hands to the functions it calls).
+smoke_platform() {
   local deadline=$((SECONDS + TIMEOUT))
   if ! wait_pods_green "$deadline" "${PLATFORM_NS[@]}"; then
     dump_diagnostics; return 1
@@ -590,13 +618,6 @@ run_variant() { # MNS MI LNK
   else
     warn "--no-cluster: skipping ingress HTTP smoke (ingress endpoint unknown)"
   fi
-
-  # In no-cluster mode clean up the platform namespaces for the next run.
-  if ! $MANAGE_CLUSTER; then
-    warn "cleaning platform namespaces (no-cluster mode)"
-    kubectl delete ns "${PLATFORM_NS[@]}" --ignore-not-found --wait=true >/dev/null 2>&1 || true
-  fi
-  return 0
 }
 
 # --- main loop --------------------------------------------------------------

@@ -105,6 +105,12 @@ envSecret:
   JC_GITEA_TOKEN:
     secret: gitea-token-portal
     key: token
+{{- if .Values.gitea.forge.appsOrganization }}
+  # The applications' own machine user (PF-105): their repositories, packages and builds.
+  JC_GITEA_APPS_TOKEN:
+    secret: gitea-token-apps
+    key: token
+{{- end }}
 {{- end }}
 {{- if $mirrorOwner }}
   # Operator-supplied (AP-79): it creates the GitHub repositories and is the forge's push
@@ -166,6 +172,13 @@ env:
   JC_GITEA_URL: "http://gitea-http.{{ .Values.gitea.forge.namespace }}.svc.cluster.local:3000"
   JC_GITEA_OWNER: {{ $global.configRepo.owner | quote }}
   JC_GITEA_REPO: {{ $global.configRepo.name | quote }}
+  # The gateway's forge user (PF-105), made a reader of every project repository the Portal
+  # opens in layout 2; the bootstrap Job mints the gateway's token on it.
+  JC_GITEA_READER: "jc-gateway"
+{{- if .Values.gitea.forge.appsOrganization }}
+  # The generated applications' own organization (PF-105), with JC_GITEA_APPS_TOKEN above.
+  JC_GITEA_APPS_OWNER: {{ .Values.gitea.forge.appsOrganization | quote }}
+{{- end }}
   # Where a browser reaches the forge: the "Source" link of a manifest opens here, and a
   # browser resolves no .svc.cluster.local name. Same prefix as the forge's ROOT_URL.
   JC_GITEA_PUBLIC_URL: "https://{{ $global.domain }}{{ .Values.gitea.forge.pathPrefix | trimSuffix "/" }}"
@@ -226,7 +239,7 @@ env:
   JC_PORTAL_APISIX_NAMESPACE: {{ .Values.apisix.apisix.namespace | quote }}
 {{- end }}
 {{- if has "gitea" .Values.components }}
-  # A fullstack App's image is {registry}/{JC_GITEA_OWNER}/app-{name}@{digest} (AP-108): the
+  # A fullstack App's image is {registry}/{JC_GITEA_APPS_OWNER or JC_GITEA_OWNER}/app-{name}@{digest} (AP-108): the
   # node pulls it from https://{domain}/v2/, which the edge routes to the forge, with the
   # read:package Secret the gitea bootstrap Job writes into the apps namespace.
   JC_PORTAL_APPS_REGISTRY: {{ $global.domain | quote }}
