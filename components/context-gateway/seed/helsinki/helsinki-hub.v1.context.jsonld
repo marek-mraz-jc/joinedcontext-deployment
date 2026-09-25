@@ -1,0 +1,73 @@
+{
+  "@context": {
+    "@vocab": "https://joinedcontext.com/models/",
+    "Entity": {
+      "@id": "ngsi-ld:Entity"
+    },
+    "KeyPerformanceIndicator": {
+      "@id": "jc:KeyPerformanceIndicator"
+    },
+    "Vehicle": {
+      "@id": "sdm:Vehicle"
+    },
+    "calculationFormula": {
+      "@id": "jc:calculationFormula"
+    },
+    "calculationPeriod": {
+      "@id": "jc:calculationPeriod"
+    },
+    "computedBy": {
+      "@id": "jc:computedBy",
+      "@type": "@id"
+    },
+    "currentValue": {
+      "@id": "jc:currentValue"
+    },
+    "derivedFrom": {
+      "@id": "jc:derivedFrom",
+      "@type": "@id"
+    },
+    "fleetVehicleId": {
+      "@id": "sdm:fleetVehicleId"
+    },
+    "geojson": "https://purl.org/geojson/vocab#",
+    "heading": {
+      "@id": "sdm:heading",
+      "@type": "xsd:float"
+    },
+    "id": "@id",
+    "jc": "https://joinedcontext.com/models/",
+    "linkml": "https://w3id.org/linkml/",
+    "location": {
+      "@id": "geojson:geometry"
+    },
+    "name": {
+      "@id": "jc:name"
+    },
+    "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
+    "observedAt": {
+      "@id": "ngsi-ld:observedAt",
+      "@type": "xsd:dateTime"
+    },
+    "route": {
+      "@id": "sdm:route"
+    },
+    "schema": "http://schema.org/",
+    "sdm": "https://smartdatamodels.org/",
+    "shex": "http://www.w3.org/ns/shex#",
+    "speed": {
+      "@id": "sdm:speed",
+      "@type": "xsd:float"
+    },
+    "type": "@type",
+    "updatedAt": {
+      "@id": "jc:updatedAt",
+      "@type": "xsd:dateTime"
+    },
+    "vehicleType": {
+      "@id": "sdm:vehicleType"
+    },
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "x-generator-version": "linkml-1.11.1"
+}
