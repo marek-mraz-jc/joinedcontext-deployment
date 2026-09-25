@@ -1,0 +1,408 @@
+id: https://joinedcontext.com/models/praha/praha-mesto
+name: praha-mesto
+title: Prague city data
+description: >-
+  What the Prague city space carries side by side (DM-01, DM-61): the nextbike docking stations
+  and what they hold now, ČHMÚ's hourly air quality at the city's stations, the city districts,
+  the schools, cultural venues, public toilets and sorted-waste points of the city's geoportal
+  (IPR Praha), the park-and-ride car parks, the PID ticket points, and the city budget line by
+  line. One model, one space, one public endpoint. Where Smart Data Models has the class, its
+  IRI is cited rather than minted (DM-04, DM-16).
+license: https://joinedcontext.com/licenses/cc-by-4.0
+prefixes:
+  linkml: https://w3id.org/linkml/
+  jc: https://joinedcontext.com/models/
+  sdm: https://smartdatamodels.org/
+  ngsi-ld: https://uri.etsi.org/ngsi-ld/
+default_prefix: sdm
+default_range: string
+imports:
+  - linkml:types
+  - ngsi-ld-core
+
+slots:
+  name:
+    slot_uri: schema:name
+    description: The name, per language, as the publisher writes it.
+    annotations:
+      ngsi_ld_kind: LanguageProperty
+      upstream_source: https://schema.org/name
+  address:
+    slot_uri: schema:address
+    description: The street address, one line, as the publisher writes it.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/address
+  url:
+    slot_uri: schema:url
+    description: The place's own web page.
+    range: uri
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/url
+  dataProvider:
+    slot_uri: sdm:dataProvider
+    description: >-
+      Who publishes the data the entity was read from, with the credit its licence asks for, as
+      an application shows it beside the data.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
+  source:
+    slot_uri: sdm:source
+    description: The open-data service the entity was read from.
+    range: uri
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
+  dateModified:
+    slot_uri: sdm:dateModified
+    description: When the station last reported.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
+  dateObserved:
+    slot_uri: sdm:dateObserved
+    description: The start of the hour the readings average.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  availableBikeNumber:
+    slot_uri: sdm:availableBikeNumber
+    description: Bikes ready to rent at the station right now.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  freeSlotNumber:
+    slot_uri: sdm:freeSlotNumber
+    description: Empty docks a bike can be returned to right now.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  totalSlotNumber:
+    slot_uri: sdm:totalSlotNumber
+    description: The number of docks the station has.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  status:
+    slot_uri: sdm:status
+    description: Whether the station rents bikes right now.
+    range: StationStatus
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  pm10:
+    slot_uri: sdm:pm10
+    description: Particulate matter up to 10 µm, the hour's mean at the station.
+    range: float
+    minimum_value: 0
+    unit:
+      ucum_code: ug/m3
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  pm25:
+    slot_uri: sdm:pm25
+    description: Particulate matter up to 2.5 µm, the hour's mean at the station.
+    range: float
+    minimum_value: 0
+    unit:
+      ucum_code: ug/m3
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  no2:
+    slot_uri: sdm:no2
+    description: Nitrogen dioxide, the hour's mean at the station.
+    range: float
+    minimum_value: 0
+    unit:
+      ucum_code: ug/m3
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  o3:
+    slot_uri: sdm:o3
+    description: Ozone, the hour's mean at the station.
+    range: float
+    minimum_value: 0
+    unit:
+      ucum_code: ug/m3
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  so2:
+    slot_uri: sdm:so2
+    description: Sulphur dioxide, the hour's mean at the station.
+    range: float
+    minimum_value: 0
+    unit:
+      ucum_code: ug/m3
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  co:
+    slot_uri: sdm:co
+    description: Carbon monoxide, the hour's mean at the station.
+    range: float
+    minimum_value: 0
+    unit:
+      ucum_code: ug/m3
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  serviceCategory:
+    slot_uri: jc:serviceCategory
+    description: Which kind of place it is.
+    range: ServiceCategory
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+  facilityType:
+    slot_uri: jc:facilityType
+    description: The publisher's own word for the kind of place, such as Mateřská škola or ticketMachine.
+    annotations:
+      ngsi_ld_kind: Property
+  capacity:
+    slot_uri: jc:capacity
+    description: How many pupils the school may take, as the school register states it.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+  pupilCount:
+    slot_uri: jc:pupilCount
+    description: How many pupils the school has, a count the register publishes and never a name.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+  openingHours:
+    slot_uri: schema:openingHours
+    description: The opening hours, per language, one line per group of days.
+    annotations:
+      ngsi_ld_kind: LanguageProperty
+      upstream_source: https://schema.org/openingHours
+  wheelchairAccessible:
+    slot_uri: jc:wheelchairAccessible
+    description: Whether the publisher states the place is reachable in a wheelchair; absent when it does not say.
+    range: boolean
+    annotations:
+      ngsi_ld_kind: Property
+  stationCode:
+    slot_uri: jc:stationCode
+    description: The collection point's number in the city's waste register, such as 0022/ 001.
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+  accessRestriction:
+    slot_uri: jc:accessRestriction
+    description: Who may use the collection point.
+    range: WasteAccess
+    annotations:
+      ngsi_ld_kind: Property
+  refDistrict:
+    slot_uri: jc:refDistrict
+    description: The city district the record lies in.
+    range: CityDistrict
+    annotations:
+      ngsi_ld_kind: Relationship
+  totalSpotNumber:
+    slot_uri: sdm:totalSpotNumber
+    description: The number of cars the car park holds.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Parking
+  districtCode:
+    slot_uri: jc:districtCode
+    description: The district's RÚIAN code, the key the national registers and the waste register use.
+    required: true
+    pattern: "^[0-9]{6}$"
+    annotations:
+      ngsi_ld_kind: Property
+  fiscalYear:
+    slot_uri: jc:fiscalYear
+    description: The budget year.
+    range: integer
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+  budgetArea:
+    slot_uri: jc:budgetArea
+    description: The city's own area of the line (oblast), its code and name joined, such as 09 Školství; absent on a correction line the city files under none.
+    annotations:
+      ngsi_ld_kind: Property
+  budgetFunction:
+    slot_uri: jc:budgetFunction
+    description: The section of the national budget classification (paragraf, ODPA), code and name.
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+  budgetItem:
+    slot_uri: jc:budgetItem
+    description: >-
+      The item of the national budget classification (položka), code and name. Items 1xxx to
+      4xxx are revenue, 5xxx and 6xxx expenditure, 8xxx financing.
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+  budgetPurpose:
+    slot_uri: jc:budgetPurpose
+    description: The earmark of the line (účelový znak), code and name.
+    annotations:
+      ngsi_ld_kind: Property
+  approvedAmount:
+    slot_uri: jc:approvedAmount
+    description: >-
+      The amount the council approved, as the city publishes it. The city's documentation names
+      no unit; the 2026 expenditure lines add up to 119 054 085, which is the size of Prague's
+      budget in thousands of CZK.
+    range: float
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+  adjustedAmount:
+    slot_uri: jc:adjustedAmount
+    description: The amount after the year's budget changes so far, in the same unit as the approved one.
+    range: float
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+
+classes:
+  BikeHireDockingStation:
+    class_uri: sdm:BikeHireDockingStation
+    description: One nextbike station in and around Prague, its docks and what it holds right now.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+    slots:
+      - name
+      - totalSlotNumber
+      - availableBikeNumber
+      - freeSlotNumber
+      - status
+      - dateModified
+      - dataProvider
+      - source
+  AirQualityObserved:
+    class_uri: sdm:AirQualityObserved
+    description: One of ČHMÚ's air quality stations in Prague and the hour's means it last published.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+    slots:
+      - name
+      - dateObserved
+      - pm10
+      - pm25
+      - no2
+      - o3
+      - so2
+      - co
+      - dataProvider
+      - source
+  PointOfInterest:
+    class_uri: sdm:PointOfInterest
+    description: >-
+      One place a resident goes to: a school, a cultural venue, a public toilet or a public
+      transport ticket point.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.PointOfInterest
+    slots:
+      - name
+      - serviceCategory
+      - facilityType
+      - address
+      - url
+      - capacity
+      - pupilCount
+      - openingHours
+      - wheelchairAccessible
+      - dataProvider
+      - source
+  WasteContainerIsle:
+    class_uri: sdm:WasteContainerIsle
+    description: One sorted-waste collection point of the city, where its containers stand.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.WasteManagement
+    slots:
+      - name
+      - stationCode
+      - accessRestriction
+      - refDistrict
+      - dataProvider
+      - source
+  OffStreetParking:
+    class_uri: sdm:OffStreetParking
+    description: One park-and-ride car park at the edge of the city.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Parking
+    slots:
+      - name
+      - totalSpotNumber
+      - dataProvider
+      - source
+  CityDistrict:
+    class_uri: jc:CityDistrict
+    description: One of the 57 city districts (městské části) of Prague, its outline and its code.
+    is_a: Entity
+    slots:
+      - name
+      - districtCode
+      - dataProvider
+      - source
+  BudgetLine:
+    class_uri: jc:BudgetLine
+    description: >-
+      One line of the city budget of the City of Prague (Magistrát hl. m. Prahy), in the national
+      budget classification, with the approved and the adjusted amount.
+    is_a: Entity
+    slots:
+      - fiscalYear
+      - budgetArea
+      - budgetFunction
+      - budgetItem
+      - budgetPurpose
+      - approvedAmount
+      - adjustedAmount
+      - dataProvider
+      - source
+
+enums:
+  StationStatus:
+    permissible_values:
+      working:
+        description: The station rents bikes and takes them back.
+      outOfService:
+        description: The station neither rents nor takes back bikes right now.
+  ServiceCategory:
+    permissible_values:
+      school:
+        description: A school or a school facility of the city's school register.
+      culture:
+        description: A theatre, a museum, a gallery or another cultural venue.
+      publicToilet:
+        description: A public toilet.
+      ticketSale:
+        description: A place that sells public transport tickets.
+  WasteAccess:
+    permissible_values:
+      public:
+        description: Anyone may use it (volně).
+      residents:
+        description: Only the residents of the house may use it (obyvatelům domu).

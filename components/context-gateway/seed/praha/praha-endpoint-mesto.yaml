@@ -1,0 +1,20 @@
+# The one door of the space, public: every source is open data, and republishing it with the
+# publisher's credit is what its licence allows. The catalogue entry names the licence the most
+# demanding source asks for, CC BY 4.0, and the space's description names each publisher.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: praha-mesto
+  namespace: praha
+  title: { cs: "Praha — městská data", en: "Prague city data" }
+spec:
+  contextSpaceRef: praha-mesto
+  slug: jw7tffshzip7igmzcszgffkkkuetnc6v
+  audience: public
+  enabledRepresentations: [ngsi-ld, geojson, csv, json]
+  rateLimits: { requestsPerMinute: 600, burst: 50 }
+  publish:
+    ckan:
+      instanceRef: { kind: CkanInstance, name: praha }
+      license: cc-by
+      datastore: { representation: csv, refresh: onReconcile }

@@ -32,6 +32,12 @@ seed:
   {{ $path | replace "/" "__" }}: |
 {{ readFile (printf "../../../context-gateway/seed/bbsk/%s" $file) | indent 4 }}
 {{- end }}
+  # Prague (T-2785): its own project of the same organization, one space of the city's open
+  # data and its one public endpoint.
+{{- range $file, $path := readFile "../../../context-gateway/seed/praha/index.yaml" | fromYaml }}
+  {{ $path | replace "/" "__" }}: |
+{{ readFile (printf "../../../context-gateway/seed/praha/%s" $file) | indent 4 }}
+{{- end }}
 {{- if has "agent-runner" .Values.components }}
   # The builder profile the Portal loads for every agent run (AG-26): organization scope,
   # so it is committed by the forge seed and not by the gateway's own table.

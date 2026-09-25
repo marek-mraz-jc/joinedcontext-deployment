@@ -130,3 +130,30 @@ bbsk-pipelines:
           included.custom.audience: qfhhh5no5wz4lk3rfjisdtx3chiyfig3
           access.token.claim: 'true'
           id.token.claim: 'false'
+
+# Prague's ingestion pipelines (T-2785), the same rule for project `praha`: its eleven streams
+# write the one space `praha-mesto` through its endpoint of the same name, and read nothing back.
+praha-pipelines:
+  # An account of the demo seed: rendered by the development profile only (T-1720, CC-73).
+  profiles: [development]
+  name: Prague ingestion pipelines
+  description: Service account of the Bento streams of the Prague project; client_credentials only, no browser flow
+  subdomain: ''
+  redirectPath: /
+  componentNamespaces:
+    - pipeline-runner
+  rawValues:
+    publicClient: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: true
+    protocolMappers:
+      - name: praha-mesto-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: jw7tffshzip7igmzcszgffkkkuetnc6v
+          access.token.claim: 'true'
+          id.token.claim: 'false'

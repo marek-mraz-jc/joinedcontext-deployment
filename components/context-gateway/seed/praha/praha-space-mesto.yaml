@@ -1,0 +1,24 @@
+# Prague's open data as its publishers published it, every source in one space (T-2785). Its
+# publishers: nextbike (CC0), ČHMÚ (CC BY 4.0), IPR Praha (CC BY 4.0, "datový podklad © IPR
+# Praha"), ROPID (CC BY 4.0) and the City of Prague (no rights reserved).
+apiVersion: joinedcontext.com/v1alpha1
+kind: ContextSpace
+metadata:
+  name: praha-mesto
+  namespace: praha
+  title: { cs: "Praha — městská data", en: "Prague city data" }
+  description:
+    cs: >-
+      Sdílená kola, kvalita ovzduší, městské části, školy, kultura, veřejné toalety, tříděný
+      odpad, P+R, prodejní místa PID a rozpočet města. Zdroje: nextbike (CC0), ČHMÚ, IPR Praha
+      (datový podklad © IPR Praha) a ROPID pod CC BY 4.0, Magistrát hl. m. Prahy bez výhrad.
+    en: >-
+      Shared bikes, air quality, city districts, schools, culture, public toilets, sorted waste,
+      park and ride, PID ticket points and the city budget. Sources: nextbike (CC0), ČHMÚ, IPR
+      Praha (datový podklad © IPR Praha) and ROPID under CC BY 4.0, the City of Prague with no
+      rights reserved.
+spec:
+  # The rendered segment, pinned so it cannot drift (PF-84).
+  urnSegment: praha-mesto
+  isSandbox: false
+  defaultLocale: cs
