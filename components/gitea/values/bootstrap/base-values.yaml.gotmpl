@@ -41,11 +41,25 @@ tokens:
       {{- if has "portal" .Values.components }}
       - {{ .Values.portal.portal.namespace }}
       {{- end }}
+    restart:
+      {{- if has "portal" .Values.components }}
+      - {{ printf "%s/portal" .Values.portal.portal.namespace }}
+      {{- end }}
+      {{- if has "agent-runner" .Values.components }}
+      - {{ printf "%s/agent-proxy" (index .Values "agent-runner" "proxy" "namespace") }}
+      {{- end }}
+      {{- if not (or (has "portal" .Values.components) (has "agent-runner" .Values.components)) }} []
+      {{- end }}
   gateway:
     namespaces:
       - {{ .Values.gitea.bootstrap.namespace }}
       {{- if has "context-gateway" .Values.components }}
       - {{ index .Values "context-gateway" "gateway" "namespace" }}
+      {{- end }}
+    restart:
+      {{- if has "context-gateway" .Values.components }}
+      - {{ printf "%s/context-gateway" (index .Values "context-gateway" "gateway" "namespace") }}
+      {{- else }} []
       {{- end }}
   registry:
     # The host a node pulls from: the primary one, whose /v2/ the edge routes to the forge.

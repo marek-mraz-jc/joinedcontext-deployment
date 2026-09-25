@@ -11,6 +11,7 @@ These tests run the Job's own script — the rendered one, not a copy — agains
 on PATH as `curl`, so the order of its steps and the shape of its requests are what is exercised.
 """
 
+import base64
 import json
 import os
 import shutil
@@ -115,6 +116,10 @@ class Forge:
             "GATEWAY_SECRET": "gitea-token-gateway",
             "GATEWAY_SCOPES": '["read:repository"]',
             "GATEWAY_NAMESPACES": "dev",
+            "PORTAL_USER": "jc-portal",
+            "PORTAL_RESTART": "dev/portal",
+            "GATEWAY_USER": "jc-gateway",
+            "GATEWAY_RESTART": "dev/context-gateway",
             "JC_FAKE_FORGE_STATE": str(self.state),
             "JC_FAKE_FORGE_CALLS": str(self.calls),
             **overrides,
@@ -268,7 +273,9 @@ def test_the_record_is_written_after_the_removals_and_names_no_secret(script, tm
     )
     record = forge.contents[MANIFEST]
     assert "not-a-real-password" not in record
-    assert "a" * 40 not in record
+    for secret in forge.secrets.values():
+        token = base64.b64decode(secret["data"]["token"]).decode()
+        assert token not in record
     assert record == "projects/bbsk/project.yaml\n"
 
 
@@ -278,7 +285,6 @@ def test_a_token_is_minted_again_when_its_scopes_change_and_only_then(script, tm
     repository. A token that still authenticates used to be kept whatever it was minted with, so
     a scope added to the values never reached a running forge. The Secret now records the scopes;
     a different record mints again, the same record keeps the token a pod already holds."""
-    import base64
 
     forge = Forge(tmp_path, {})
     minted = lambda: [call for call in forge.log if call.endswith("/tokens")]  # noqa: E731

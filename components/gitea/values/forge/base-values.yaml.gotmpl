@@ -184,6 +184,10 @@ gitea:
     service:
       DISABLE_REGISTRATION: true
       SHOW_REGISTRATION_BUTTON: false
+      # A person signed in through Keycloak is an account of the forge, and the forge lets every
+      # account create an organization of its own by default (T-1703): a place outside the
+      # team map to hold repositories in. Only the administrator creates one.
+      DEFAULT_ALLOW_CREATE_ORGANIZATION: false
     session:
       # Sessions in the database rather than in memory: one replica means one restart
       # signs everybody out, and the database is already there.
