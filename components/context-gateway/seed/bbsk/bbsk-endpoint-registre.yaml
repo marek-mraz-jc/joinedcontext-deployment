@@ -16,7 +16,6 @@ spec:
   slug: lws6dd7o56veegwxsjtvak3goeta4mfn
   audience: public
   enabledRepresentations: [ngsi-ld, geojson, csv, json]
-  rateLimits: { requestsPerMinute: 300, burst: 50 }
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: bbsk }

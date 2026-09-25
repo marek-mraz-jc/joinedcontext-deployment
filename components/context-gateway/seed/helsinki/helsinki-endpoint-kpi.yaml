@@ -14,7 +14,6 @@ spec:
   # steward and a dashboard alike (EP-16, GW22). On an organization endpoint nobody held it.
   audience: public
   enabledRepresentations: [ngsi-ld, csv, json]
-  rateLimits: { requestsPerMinute: 300, burst: 50 }
   # No licence: an indicator is computed by a pipeline or the assistant from whatever the city space
   # holds, and no seeded source names its inputs; the licence waits for that (T-2793).
   catalog:

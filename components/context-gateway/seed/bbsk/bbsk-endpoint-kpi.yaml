@@ -18,7 +18,6 @@ spec:
   # steward and to the application alike (EP-16, GW22).
   audience: public
   enabledRepresentations: [ngsi-ld, csv, json]
-  rateLimits: { requestsPerMinute: 300, burst: 50 }
   # The catalogue entry the region cleared (EP-62..EP-65, T-2407): region-level aggregates only,
   # no person and no address, in the region's own organization with a DataStore sheet.
   publish:

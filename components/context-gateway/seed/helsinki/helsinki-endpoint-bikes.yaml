@@ -14,7 +14,6 @@ spec:
   # The organizer's contact line stays in the space for the city's own coordination and is
   # served by no public endpoint (EP-61). A projection only narrows.
   projection: { hiddenAttributes: [contactPoint] }
-  rateLimits: { requestsPerMinute: 600, burst: 50 }
   # The catalogue entry (EP-62..EP-65): one dataset in the hel-fi catalogue, one resource per
   # representation, and a DataStore mirror of the CSV rows reloaded on every publish run.
   publish:

@@ -13,7 +13,6 @@ spec:
   audience: project-list
   allowedProjects: [bbsk]
   enabledRepresentations: [ngsi-ld, csv, json]
-  rateLimits: { requestsPerMinute: 300, burst: 50 }
   # Computed from `banskabystrica-mesto`, whose CC BY-SA 4.0 inputs pass the share-alike duty on.
   catalog:
     publisher: { name: { sk: "Mesto Banská Bystrica", en: "City of Banská Bystrica" }, uri: "https://www.banskabystrica.sk/" }

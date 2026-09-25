@@ -12,7 +12,6 @@ spec:
   slug: jw7tffshzip7igmzcszgffkkkuetnc6v
   audience: public
   enabledRepresentations: [ngsi-ld, geojson, csv, json]
-  rateLimits: { requestsPerMinute: 600, burst: 50 }
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: praha }
