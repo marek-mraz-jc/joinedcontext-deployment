@@ -463,9 +463,15 @@ def test_the_application_reading_both_bodies_is_a_published_static_app_on_the_re
     assert app["metadata"]["namespace"] == "bbsk"
     assert app["spec"]["kind"] == "static"
     assert app["spec"]["lifecycle"] == "published"
-    spaces = {need["contextSpaceRef"]["name"] for need in app["spec"]["dataNeeds"]}
-    assert spaces == {"bbsk-kpi"}
+    spaces = [need["contextSpaceRef"]["name"] for need in app["spec"]["dataNeeds"]]
+    # Its own space first; the one further space is read through that space's public Endpoint of
+    # the same project and compiles into no grant (AP-04, T-2933).
+    assert spaces == ["bbsk-kpi", "bbsk-registre"]
     assert one(REGION, "Endpoint", "bbsk-kpi")["spec"]["contextSpaceRef"] == "bbsk-kpi"
+    register = one(REGION, "Endpoint", "bbsk-registre")["spec"]
+    assert register["contextSpaceRef"] == "bbsk-registre" and register["audience"] == "public"
+    (further,) = [need for need in app["spec"]["dataNeeds"] if need["contextSpaceRef"]["name"] != "bbsk-kpi"]
+    assert further["types"] == ["AdministrativeArea"] and "roles" not in further
     # It reads and never writes (AP-07).
     operations = {op for need in app["spec"]["dataNeeds"] for op in need["operations"]}
     assert operations <= {"queryEntity", "retrieveEntity"}, operations
