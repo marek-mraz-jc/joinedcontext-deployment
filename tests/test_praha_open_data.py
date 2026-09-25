@@ -352,3 +352,32 @@ def test_the_model_classes_and_the_manifest_agree():
     linkml = yaml.safe_load((PRAHA / "praha.linkml.yaml").read_text())
     manifest = yaml.safe_load((PRAHA / "praha-datamodel.yaml").read_text())
     assert set(manifest["spec"]["classes"]) == set(linkml["classes"])
+
+
+def _dataset_of(url):
+    """The original dataset a DataSource reads: a GBFS feed belongs to its system's `gbfs.json`."""
+    gbfs = re.match(r"^(.*)/[a-z]{2}/station_(?:status|information)\.json$", url)
+    return f"{gbfs.group(1)}/gbfs.json" if gbfs else url
+
+
+def test_the_catalogue_names_every_source_the_space_reads_under_the_licence_it_publishes():
+    """T-2792, EP-78, EP-79: the DCAT-AP block names each original dataset the pipelines read,
+    so a feed added to the space without its source in the record is red; the licence is the one
+    the CKAN publication carries, the words in Czech and English, the place Prague."""
+    endpoint = yaml.safe_load((PRAHA / "praha-endpoint-mesto.yaml").read_text())
+    catalog = endpoint["spec"]["catalog"]
+    assert endpoint["spec"]["publish"]["ckan"]["license"] == "cc-by" and catalog["license"] == "CC_BY_4_0"
+    named = {source["url"] for source in catalog["source"]}
+    for name in FEEDS:
+        datasource = yaml.safe_load((PRAHA / f"praha-datasource-{name}.yaml").read_text())
+        assert _dataset_of(datasource["spec"]["http"]["url"]) in named, name
+    assert named == {
+        _dataset_of(yaml.safe_load(p.read_text())["spec"]["http"]["url"]) for p in PRAHA.glob("praha-datasource-*.yaml")
+    }, "a source the space does not read"
+    for source in catalog["source"]:
+        assert set(source["title"]) == set(source["description"]) == {"cs", "en"}, source["url"]
+    assert set(catalog["keywords"]) == set(catalog["attribution"]) == set(catalog["publisher"]["name"]) == {"cs", "en"}
+    assert len(catalog["keywords"]["cs"]) == len(catalog["keywords"]["en"])
+    assert "CZ010" in catalog["spatial"]
+    # A contact is a role address the owner chooses, never a person guessed here (EP-80).
+    assert "contactPoint" not in catalog
