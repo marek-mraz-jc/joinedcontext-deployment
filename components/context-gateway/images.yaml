@@ -123,7 +123,7 @@ context-gateway:
     # (T-2362, T-2363, T-2364). On top of 462a1ba.
     # platform 6c2e439: an Endpoint's publish.ckan carries the licence the organization chose, and
     # jcctl publishes in the space's language under the instance's title (T-2465). On top of 12b32e8.
-    digest: 'sha256:c6bf66a2efc220f92f773d25fcc800d60891bb2c8f3bbe72b014bf9523b2a1b2'
+    digest: 'sha256:fdbab375124f70f6763e14890b16e62e09fd0423db6312ab215b6eb81a0b275f'
   # `jcctl checkouts` keeps every registered project checked out for the gateway in layout 2
   # (CC-86, T-2646): the platform image's `checkouts` target, debian-slim with git.
   # platform cbe3697 (T-2640, T-2641, T-2646's command and image).
