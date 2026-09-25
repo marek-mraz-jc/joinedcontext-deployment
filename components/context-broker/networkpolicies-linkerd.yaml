@@ -26,6 +26,7 @@ context-broker-allow-linkerd:
 # service port, so allowing 5432 alone is not enough: the database pods need their own
 # rule for this client. Every meshed database client has to add one.
 postgres-linkerd-from-context-broker:
+  componentNamespace: postgres
   podSelector:
     cnpg.io/cluster: postgres-cluster
   policyTypes:
