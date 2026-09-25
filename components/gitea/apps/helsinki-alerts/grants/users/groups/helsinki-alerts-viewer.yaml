@@ -9,3 +9,4 @@ spec:
   description: The viewers of helsinki-alerts, its default group (AP-118).
   members:
   - user: demo.viewer@hel.fi
+  - user: demo.probe@hel.fi

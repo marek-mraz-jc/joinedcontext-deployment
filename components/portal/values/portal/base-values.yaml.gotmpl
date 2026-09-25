@@ -188,6 +188,9 @@ env:
   # comes from the ConfigMap; a missing or unreadable one is neutral defaults, never a crash,
   # so the Portal starts on an environment that configured no branding at all.
   JC_BRANDING_FILE: /etc/jc/branding/branding.yaml
+  # The validation checks' last results, one digest per check, which
+  # scripts/publish-health.py writes into the ConfigMap jc-validation-results (OPS-53).
+  JC_HEALTH_DIR: /etc/jc/health
   # What this deployment provides, for Organization → Setup (T-2748, API/01 §25): the Portal
   # cannot see Keycloak's theme or SMTP server or the database's backups, so the deployment
   # says it here from the same values that configure them. Absent reads as not done.
@@ -335,6 +338,12 @@ extraVolumes:
   - name: apps-cache
     emptyDir:
       sizeLimit: 2Gi
+  # Written by scripts/publish-health.py after each check, never by this release: optional, so a
+  # Portal starts before anything is published, and the kubelet fills it in when it is (OPS-53).
+  - name: validation-results
+    configMap:
+      name: jc-validation-results
+      optional: true
 {{- if $clusterCa }}
   - name: cluster-ca
     secret:
@@ -355,6 +364,9 @@ extraVolumes:
 extraVolumeMounts:
   - name: apps-cache
     mountPath: /var/cache/jc/apps
+  - name: validation-results
+    mountPath: /etc/jc/health
+    readOnly: true
 {{- if $clusterCa }}
   - name: cluster-ca
     mountPath: /etc/jc/ca
