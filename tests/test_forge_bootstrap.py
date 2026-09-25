@@ -78,6 +78,12 @@ def test_the_job_may_touch_only_the_secrets_it_writes(local):
         if d.get("kind") == "Role" and d["metadata"]["name"] == "gitea-bootstrap"
     )
     for rule in role["rules"]:
+        if rule["resources"] == ["deployments"]:
+            # PF-105: what read a token at start is restarted when it is minted again; `patch`
+            # on those names, nothing that reads or lists.
+            assert rule["apiGroups"] == ["apps"] and rule["verbs"] == ["patch"], rule
+            assert set(rule["resourceNames"]) <= {"portal", "context-gateway", "agent-proxy"}, rule
+            continue
         assert rule["resources"] == ["secrets"]
         if "create" in rule["verbs"]:
             # `create` cannot be limited by name; it must therefore be the only verb in its rule.
