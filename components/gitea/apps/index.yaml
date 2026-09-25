@@ -1,6 +1,6 @@
 # Written by scripts/vendor-sample-apps.py; do not edit. The files of each sample application,
 # relative to its folder, as the forge bootstrap pushes them to its repository (T-2599).
-source: 17b93888897a672a9651c49709176c6d99c0d9bf
+source: 62cc1967dbb4c083437d495769cbfd92f479ab72
 apps:
   air-quality:
     - .gitea/workflows/build.yml
@@ -166,12 +166,35 @@ apps:
     - vite.config.ts
   helsinki-events:
     - .gitea/workflows/build.yml
+    - .gitignore
     - README.md
-    - app.js
     - app.yaml
+    - e2e/responsive.spec.ts
+    - e2e/serve.ts
     - grants/projects/helsinki/spaces/helsinki/endpoints/app-helsinki-events.yaml
     - grants/projects/helsinki/spaces/helsinki/policies/app-helsinki-events-1.yaml
     - index.html
-    - style.css
-    - test/app.test.mjs
-    - test/events.json
+    - map-worker.ts
+    - package.json
+    - playwright.config.ts
+    - src/App.test.tsx
+    - src/App.tsx
+    - src/app.css
+    - src/charts.ts
+    - src/components/AppShell.test.tsx
+    - src/components/AppShell.tsx
+    - src/components/ChartCard.tsx
+    - src/components/EntityMap.tsx
+    - src/components/components.css
+    - src/components/filters.tsx
+    - src/components/states.tsx
+    - src/design-tokens.json
+    - src/events.test.ts
+    - src/events.ts
+    - src/fixtures/events.ts
+    - src/main.tsx
+    - src/pages/Events.test.tsx
+    - src/pages/Events.tsx
+    - test-setup.ts
+    - tsconfig.json
+    - vite.config.ts
