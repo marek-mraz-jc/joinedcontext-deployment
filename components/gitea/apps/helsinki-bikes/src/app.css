@@ -1,39 +1,38 @@
-/* The application's own layout, over the token variables the SDK sets from design-tokens.json. */
+/* The application's own layout, over the token variables the SDK sets from design-tokens.json. The
+   screens are laid out by the SDK's primitives (Page, Grid, Card, Split); what is here is only what
+   they do not cover. */
 
-.app-page {
-  display: grid;
-  gap: var(--jc-space-4, 1rem);
+/* T-2924: each overview number carries its colour from the design tokens. */
+.app-tile {
+  border-left: 4px solid var(--app-tone, var(--jc-color-accent, #0000bf));
 }
+.app-tile[data-tone="success"] { --app-tone: var(--jc-color-success, #059669); }
+.app-tile[data-tone="danger"] { --app-tone: var(--jc-color-danger, #dc2626); }
+.app-tile .jc-tile-value { color: var(--app-tone, var(--jc-color-accent, #0000bf)); }
 
-.app-grid {
-  display: grid;
-  gap: var(--jc-space-4, 1rem);
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
-}
-
-.app-card {
-  display: grid;
-  gap: var(--jc-space-3, 0.75rem);
-  padding: var(--jc-space-4, 1rem);
-  background: var(--jc-color-card, #f8fafc);
-  border: 1px solid var(--jc-color-line, #e2e8f0);
-  border-radius: var(--jc-radius-lg, 10px);
-}
-
-.app-card > header {
+.app-legend {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: var(--jc-space-2, 0.5rem);
+  margin-top: var(--jc-space-2, 0.5rem);
+  font-size: var(--jc-font-size-sm, 0.75rem);
+  color: var(--jc-color-muted, #64748b);
+}
+.app-legend-ramp {
+  flex: 0 1 10rem;
+  height: 0.6rem;
+  border-radius: var(--jc-radius-sm, 4px);
 }
 
-.app-card h2 {
-  margin: 0;
-  font-size: var(--jc-font-size-lg, 1rem);
+/* A station's status as a coloured chip. */
+.app-chip {
+  display: inline-block;
+  padding: 0 var(--jc-space-2, 0.5rem);
+  border-radius: 999px;
+  font-size: var(--jc-font-size-sm, 0.75rem);
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--jc-color-muted, #64748b);
 }
-
-.app-detail {
-  display: grid;
-  gap: var(--jc-space-2, 0.5rem);
-  justify-items: start;
-}
+.app-chip[data-status="working"] { background: var(--jc-color-success, #059669); }
