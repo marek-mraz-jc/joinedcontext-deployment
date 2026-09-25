@@ -1,5 +1,5 @@
 # The mapping of the hsl-hfp-vehicles pipeline (PL-03): HSL buses of four trunk lines from the
-# high-frequency positioning broker, capped at thirty buses and one position per bus every
+# high-frequency positioning broker, capped at thirty buses at a time and one position per bus every
 # fifteen seconds (PL-22). The reconciler renders the MQTT input of the hsl-hfp DataSource in
 # front and the endpoint upsert after (PL-39, PL-16); the `fleet` and `throttle` caches are the
 # runner's resources.
@@ -14,24 +14,67 @@ pipeline:
     - mapping: |
         meta vehicle = "%v-%v".format(this.oper, this.veh)
 
-    # The cap. The cache is the state; counter() hands out the slots in arrival order.
+    # The cap: thirty slots, `slot-1` … `slot-30` in the `fleet` cache, each held by the bus that
+    # took it for as long as that bus keeps reporting. Every frame of a holder refreshes its two
+    # keys, a bus silent for the cache's ttl frees its slot, and a new bus takes the first free
+    # one or none while thirty are held. A slot is taken with `add`, which fails on a held key,
+    # so two buses never share one. (`counter()` handed the slots out once: half an hour after a
+    # start every bus drew a number above thirty and the feed went silent, T-2961.)
     - branch:
         request_map: 'root = ""'
         processors:
-          - cache:
-              resource: fleet
-              operator: get
-              key: '${! meta("vehicle") }'
-          - catch:
-              - mapping: 'root = counter()'
+          # Slot "0" is none; Bento reads an empty metadata value as absent.
+          - mapping: |
+              meta slot = "0"
+              meta probe = "1"
+          # The slot this bus holds, if the slot still names it.
+          - try:
               - cache:
                   resource: fleet
-                  operator: set
-                  key: '${! meta("vehicle") }'
-                  value: '${! content() }'
+                  operator: get
+                  key: 'bus-${! meta("vehicle") }'
+              - mapping: 'meta held = content().string()'
+              - cache:
+                  resource: fleet
+                  operator: get
+                  key: 'slot-${! meta("held") }'
+              - mapping: |
+                  meta slot = if content().string() == meta("vehicle") { meta("held") } else { "0" }
+          - catch:
+              - mapping: 'root = ""'
+          # Otherwise the first free one.
+          - while:
+              max_loops: 30
+              check: 'meta("slot") == "0" && meta("probe").number() <= 30'
+              processors:
+                - try:
+                    - cache:
+                        resource: fleet
+                        operator: add
+                        key: 'slot-${! meta("probe") }'
+                        value: '${! meta("vehicle") }'
+                    - mapping: 'meta slot = meta("probe")'
+                - catch:
+                    - mapping: 'root = ""'
+                - mapping: 'meta probe = (meta("probe").number() + 1).string()'
+          # A holder's keys live as long as it reports.
+          - switch:
+              - check: 'meta("slot") != "0"'
+                processors:
+                  - cache:
+                      resource: fleet
+                      operator: set
+                      key: 'bus-${! meta("vehicle") }'
+                      value: '${! meta("slot") }'
+                  - cache:
+                      resource: fleet
+                      operator: set
+                      key: 'slot-${! meta("slot") }'
+                      value: '${! meta("vehicle") }'
+          - mapping: 'root = meta("slot")'
         result_map: 'meta slot = content().string()'
     - mapping: |
-        root = if meta("slot").number() > 30 { deleted() } else { this }
+        root = if meta("slot").or("0").re_match("^[1-9][0-9]*$") { this } else { deleted() }
 
     # The throttle: a bus seen in the last fifteen seconds writes nothing this time.
     - branch:

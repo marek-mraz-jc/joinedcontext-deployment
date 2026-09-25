@@ -105,6 +105,18 @@ edge:
           included.custom.audience: context-gateway
           access.token.claim: 'true'
           id.token.claim: 'false'
+      # A person's token is the subject token jc-agent-proxy exchanges for a run of theirs
+      # (ADR-N-038, AG-94): standard token exchange V2 takes it only when its audience names the
+      # requesting client. A custom audience, so the realm of an environment without the agent
+      # runner still imports.
+      - name: agent-proxy-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: helsinki-agent-proxy
+          access.token.claim: 'true'
+          id.token.claim: 'false'
       # The indicator space's endpoint (seed/helsinki/helsinki-endpoint-kpi.yaml): a KPI a pipeline
       # or the assistant computed is read here (PF-54, PL-45).
       - name: helsinki-kpi-audience

@@ -20,6 +20,13 @@ context-gateway-allow-linkerd:
             matchLabels:
               app.kubernetes.io/name: context-broker-broker
           componentNamespace: context-broker
+        # The Portal on JC_PORTAL_GATEWAY_URL: the access check before every App build (AP-132),
+        # Subscriptions (T-0931) and the assistant's reads, each with the person's own token;
+        # the Portal's egress already names this pod (T-2944).
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: portal-portal
+          componentNamespace: portal
         # A published App's pod calls its endpoint on this Service in the cluster, never through
         # the public host (AP-134). Every project's apps namespace is the Portal's, created with
         # this label (AP-116, AP-117), and only an App pod carries the other one.

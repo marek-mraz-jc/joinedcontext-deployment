@@ -911,11 +911,26 @@ spec:
                       # ponytail: a seed edit at an unchanged head waits for the next app commit.
                       echo "app $app: $path already names $head and its build"
                     else
+                      # A new head keeps the build that serves now (AP-80, AP-72): the lane's
+                      # status of the previous head goes on under the new spec until the lane
+                      # proposes this head's, so a failed build leaves the App on the air
+                      # (T-2948). Only a status the file already holds is carried.
+                      printf '%s\n' "$held" | awk '/^status:/ { keep = 1; print; next } keep && /^[^ ]/ { keep = 0 } keep' > $WORK/app-status
+                      carried=$(sed -n 's/^    commit: *"\{0,1\}\([0-9a-f]\{40\}\)"\{0,1\} *$/\1/p' $WORK/app-status | head -1)
+                      if [ -s $WORK/app-status ]; then
+                        [ -z "$(tail -c1 $WORK/app-manifest)" ] || echo >> $WORK/app-manifest
+                        cat $WORK/app-status >> $WORK/app-manifest
+                        encoded=$(base64 < $WORK/app-manifest | tr -d '\n')
+                      fi
                       sha=$(sed -n 's/.*"sha": *"\([0-9a-f]\{40\}\)".*/\1/p' $WORK/body | head -1)
                       status=$(portal_code PUT "/api/v1/repos/$ORG/$app_home/contents/$path" \
                         -d "{\"branch\":\"$BRANCH\",\"sha\":\"$sha\",\"content\":\"$encoded\",\"message\":\"seed: the $app application at $head\"}")
                       [ "$status" = 200 ] || { echo "updating $path failed: $status" >&2; cat $WORK/body >&2; exit 1; }
-                      echo "app $app: $path now names $head"
+                      if [ -n "$carried" ]; then
+                        echo "app $app: $path now names $head, the build of $carried serving until its own"
+                      else
+                        echo "app $app: $path now names $head"
+                      fi
                     fi ;;
                   404)
                     status=$(portal_code POST "/api/v1/repos/$ORG/$app_home/contents/$path" \

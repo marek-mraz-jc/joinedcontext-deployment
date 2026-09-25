@@ -5,10 +5,11 @@
 
 cache_resources:
   # hsl-hfp-vehicles: the 30-bus cap. A bus keeps the slot it was given for as long as it
-  # keeps reporting.
+  # keeps reporting (every frame refreshes it, about one a second); five minutes of silence, a
+  # layover longer than most, frees it for another bus (T-2961).
   - label: fleet
     memory:
-      default_ttl: 30m
+      default_ttl: 5m
       compaction_interval: 60s
   # ponytail: one position per bus per 15 s keeps the broker's temporal table at a few
   # entries a second; drop the ttl when the demo wants smoother movement and the disk allows.

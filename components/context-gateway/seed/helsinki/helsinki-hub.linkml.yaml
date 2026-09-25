@@ -21,7 +21,118 @@ classes:
     class_uri: sdm:Vehicle
     description: One HSL bus on a trunk line, registered from the helsinki space.
     is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+    slots:
+      - speed
+      - heading
+      - route
+      - vehicleType
+      - fleetVehicleId
   KeyPerformanceIndicator:
     class_uri: jc:KeyPerformanceIndicator
     description: One computed indicator, registered from the helsinki-kpi space.
     is_a: Entity
+    slots:
+      - name
+      - currentValue
+      - calculationPeriod
+      - calculationFormula
+      - derivedFrom
+      - computedBy
+      - updatedAt
+# The slots of the two classes, copied from the members' own models so the hub reads the same
+# terms; tests/test_helsinki_seed_models.py holds each equal to its source.
+slots:
+  speed:
+    slot_uri: sdm:speed
+    description: Ground speed of the bus.
+    range: float
+    minimum_value: 0
+    unit:
+      ucum_code: m/s
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  heading:
+    slot_uri: sdm:heading
+    description: Compass heading of the bus, degrees clockwise from north.
+    range: float
+    minimum_value: 0
+    maximum_value: 360
+    unit:
+      ucum_code: deg
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  route:
+    slot_uri: sdm:route
+    description: The HSL route id the bus is serving, four digits with the municipality prefix.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  vehicleType:
+    slot_uri: sdm:vehicleType
+    description: The kind of vehicle; bus on every entity of this space.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  fleetVehicleId:
+    slot_uri: sdm:fleetVehicleId
+    description: The operator and vehicle number HSL publishes, operator-vehicle.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  name:
+    slot_uri: jc:name
+    description: The indicator's own name, equal to the `{localId}` of its id, so the territory is legible
+      without parsing the URN.
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+  currentValue:
+    slot_uri: jc:currentValue
+    description: 'The number, with its unit on the Property as `unitCode`, a UN/CEFACT common code, and
+      the instant it describes as `observedAt`. A window with no reading in it carries the string `not
+      measured` instead of a number, and never a zero: a zero reads as a measurement (Development/10 §5).'
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://vocabulary.uncefact.org/UnitMeasureCode#
+  calculationPeriod:
+    slot_uri: jc:calculationPeriod
+    description: The window the value actually covers, as `{ start, end }` RFC 3339 instants. It is the
+      window the pipeline used and not the one it was asked for, so the distance between `calculationPeriod.end`
+      and `updatedAt` is how stale the source is.
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+  calculationFormula:
+    slot_uri: jc:calculationFormula
+    description: 'How the value was computed, in words a reader can check the number against: the measure,
+      the aggregation, the window and any divisor, such as `per km² of the district''s own area`.'
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+  derivedFrom:
+    slot_uri: jc:derivedFrom
+    description: 'The Endpoint the sources were read through, as its URN. The endpoint and not the space:
+      what an indicator could see is what that endpoint''s policy let it see.'
+    required: true
+    annotations:
+      ngsi_ld_kind: Relationship
+  computedBy:
+    slot_uri: jc:computedBy
+    description: The Pipeline that computed it, as its URN.
+    required: true
+    annotations:
+      ngsi_ld_kind: Relationship
+  updatedAt:
+    slot_uri: jc:updatedAt
+    description: 'When the pipeline last ran, as an NGSI-LD DateTime. It is the run and not the window:
+      an indicator whose source stopped moving keeps its window and gains a newer `updatedAt`, which is
+      the visible fact that the source is static.'
+    range: datetime
+    required: true
+    annotations:
+      ngsi_ld_kind: Property

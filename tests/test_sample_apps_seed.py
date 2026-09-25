@@ -128,7 +128,9 @@ def test_a_second_run_changes_nothing_and_says_so(script, tmp_path):
 @requires_helmfile
 def test_a_rerun_keeps_the_build_the_lane_wrote_for_the_same_head(script, tmp_path):
     """T-2633, AP-13a: the Portal rewrote the manifest with status.build; a rerun at the same head
-    leaves it, and a new head still moves the manifest."""
+    leaves it, and a new head still moves the manifest. T-2948, AP-80: the new head keeps the
+    previous head's build, which serves until the lane proposes the new one; a failed build of
+    the new head must not take the App off the air."""
     forge, app = seeded(tmp_path)
     assert run(forge, script).returncode == 0
     path = "projects/helsinki/apps/helsinki-bikes/app.yaml"
@@ -148,7 +150,29 @@ def test_a_rerun_keeps_the_build_the_lane_wrote_for_the_same_head(script, tmp_pa
     third = run(forge, script)
     assert third.returncode == 0, third.stderr
     moved = yaml.safe_load(forge.contents[path])
-    assert moved["spec"]["source"]["git"]["ref"] != head and "status" not in moved
+    new_head = repos(forge)["helsinki_helsinki-bikes"]["head"]
+    assert moved["spec"]["source"]["git"]["ref"] == new_head != head
+    assert moved["status"] == {"build": {"commit": head, "digest": "sha256:" + "a" * 64}}
+    assert f"{path} now names {new_head}, the build of {head} serving until its own" in third.stdout
+
+    # The next run at that head finds the carried build and leaves the file as it is.
+    fourth = run(forge, script)
+    assert fourth.returncode == 0, fourth.stderr
+    assert f"{path} already names {new_head} and its build" in fourth.stdout
+
+
+@requires_helmfile
+def test_a_new_head_of_an_app_that_never_built_carries_no_status(script, tmp_path):
+    """T-2948, AP-13a: only a build the lane wrote is carried; the seed never invents one."""
+    forge, app = seeded(tmp_path)
+    assert run(forge, script).returncode == 0
+    path = "projects/helsinki/apps/helsinki-bikes/app.yaml"
+    (app / "README.md").write_text("# changed\n")
+    second = run(forge, script)
+    assert second.returncode == 0, second.stderr
+    moved = yaml.safe_load(forge.contents[path])
+    assert moved["spec"]["source"]["git"]["ref"] == repos(forge)["helsinki_helsinki-bikes"]["head"]
+    assert "status" not in moved
 
 
 @requires_helmfile

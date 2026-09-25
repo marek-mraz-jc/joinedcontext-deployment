@@ -17,6 +17,16 @@ seed:
   {{ $path | replace "/" "__" }}: |
 {{ readFile (printf "../../../context-gateway/seed/helsinki/%s" $file) | indent 4 }}
 {{- end }}
+  # The pipeline that reads the demo NATS feed (T-2960), only where that feed runs: a broker
+  # that is not there would keep the pipeline in error. The DataSource's address names the
+  # component's namespace, which this installation decides.
+{{- if has "demo-feeds" .Values.components }}
+{{- $demoNs := index .Values "demo-feeds" "nats" "namespace" }}
+{{- range $file, $path := readFile "../../../context-gateway/seed/helsinki-demo-feeds/index.yaml" | fromYaml }}
+  {{ $path | replace "/" "__" }}: |
+{{ readFile (printf "../../../context-gateway/seed/helsinki-demo-feeds/%s" $file) | replace "DEMO_FEEDS_NAMESPACE" $demoNs | indent 4 }}
+{{- end }}
+{{- end }}
   # The conformance project (`ovzdusie`, its public endpoint, the two policies, the writing
   # account and the published model with its artifacts): what the gateway's own ConfigMap
   # carried until the checkout replaced it (T-0278). The smoke run and the ETSI suite write

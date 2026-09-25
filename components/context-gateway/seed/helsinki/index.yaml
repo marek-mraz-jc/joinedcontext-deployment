@@ -34,6 +34,10 @@ helsinki-policy-pipelines-write.yaml: projects/helsinki/spaces/helsinki/policies
 helsinki-kpi-space.yaml: projects/helsinki/spaces/helsinki-kpi/space.yaml
 helsinki-kpi-datamodel.yaml: projects/helsinki/spaces/helsinki-kpi/datamodels/helsinki-kpi.yaml
 helsinki-kpi.linkml.yaml: projects/helsinki/spaces/helsinki-kpi/datamodels/helsinki-kpi.linkml.yaml
+helsinki-kpi.v1.schema.json: projects/helsinki/spaces/helsinki-kpi/datamodels/helsinki-kpi.v1.schema.json
+helsinki-kpi.v1.context.jsonld: projects/helsinki/spaces/helsinki-kpi/datamodels/helsinki-kpi.v1.context.jsonld
+helsinki-kpi.v1.example.jsonld: projects/helsinki/spaces/helsinki-kpi/datamodels/helsinki-kpi.v1.example.jsonld
+helsinki-kpi.v1.md: projects/helsinki/spaces/helsinki-kpi/datamodels/helsinki-kpi.v1.md
 helsinki-endpoint-kpi.yaml: projects/helsinki/spaces/helsinki-kpi/endpoints/helsinki-kpi.yaml
 helsinki-policy-kpi-pipelines-write.yaml: projects/helsinki/spaces/helsinki-kpi/policies/kpi-pipelines-write.yaml
 helsinki-policy-kpi-read.yaml: projects/helsinki/spaces/helsinki-kpi/policies/kpi-read.yaml
@@ -102,6 +106,10 @@ helsinki-rolebinding-janitors.yaml: users/assignments/janitors.yaml
 helsinki-hub-space.yaml: projects/helsinki/spaces/helsinki-hub/space.yaml
 helsinki-hub-datamodel.yaml: projects/helsinki/spaces/helsinki-hub/datamodels/helsinki-hub.yaml
 helsinki-hub.linkml.yaml: projects/helsinki/spaces/helsinki-hub/datamodels/helsinki-hub.linkml.yaml
+helsinki-hub.v1.schema.json: projects/helsinki/spaces/helsinki-hub/datamodels/helsinki-hub.v1.schema.json
+helsinki-hub.v1.context.jsonld: projects/helsinki/spaces/helsinki-hub/datamodels/helsinki-hub.v1.context.jsonld
+helsinki-hub.v1.example.jsonld: projects/helsinki/spaces/helsinki-hub/datamodels/helsinki-hub.v1.example.jsonld
+helsinki-hub.v1.md: projects/helsinki/spaces/helsinki-hub/datamodels/helsinki-hub.v1.md
 helsinki-endpoint-hub.yaml: projects/helsinki/spaces/helsinki-hub/endpoints/helsinki-hub.yaml
 helsinki-policy-public-hub.yaml: projects/helsinki/spaces/helsinki-hub/policies/public-hub.yaml
 helsinki-csr-transport.yaml: projects/helsinki/spaces/helsinki-hub/registrations/transport.yaml
