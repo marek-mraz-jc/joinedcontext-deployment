@@ -14,5 +14,6 @@ resources:
   limits:
     cpu: '1'
     # 1Gi: a Load take's pipeline upserts 4 000 vehicles per poll, and at 512Mi the broker was
-    # OOM-killed six seconds after each restart while the runner replayed its batches.
-    memory: 1Gi
+    # OOM-killed six seconds after each restart while the runner replayed its batches. At 1Gi
+    # it was killed again on 2026-09-25 at 14:20Z with every seeded pipeline running.
+    memory: 1536Mi

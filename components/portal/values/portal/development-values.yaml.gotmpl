@@ -13,7 +13,10 @@ resources:
     memory: 128Mi
   limits:
     cpu: '1'
-    memory: 512Mi
+    # 1Gi: at 512Mi the kernel killed the Portal five times on 2026-09-25 (14:09 to 15:20Z)
+    # under the seeded pipelines and the App lanes, and each kill was a 504 for a signed-in
+    # person until the replica was ready again (T-2927). Resident is 250 to 350Mi between peaks.
+    memory: 1Gi
 
 {{- if has "keycloak" .Values.components }}
 env:
