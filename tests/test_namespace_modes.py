@@ -314,6 +314,34 @@ def _pod_policy_scopes(docs: list[dict]) -> list[tuple[str, set[str]]]:
     return scopes
 
 
+#: Pod rules that are no gate of the instance and name one namespace outside it on purpose,
+#: with exactly that namespace. The Linkerd CNI plugin's opt-out reason (T-2909) holds for the
+#: plugin alone; stating it in an instance namespace would let any pod there skip the mesh.
+OUTSIDE_THE_INSTANCE = {
+    "explain-linkerd-cni-opt-out/linkerd-cni-pod-reason": {"linkerd-cni"},
+}
+
+
+def _gates(scopes: list[tuple[str, set[str]]]) -> list[tuple[str, set[str]]]:
+    """The scopes that are gates of the instance. An exception keeps its one namespace:
+    widened into the instance, it is a gate again and fails here."""
+    for name, covered in scopes:
+        if name in OUTSIDE_THE_INSTANCE:
+            assert covered == OUTSIDE_THE_INSTANCE[name], (name, sorted(covered))
+    return [(name, covered) for name, covered in scopes if name not in OUTSIDE_THE_INSTANCE]
+
+
+def test_an_exception_widened_into_the_instance_is_refused():
+    """T-2913: the linkerd-cni exception drops out of the gates only while it names linkerd-cni
+    alone; the same rule reaching dev-portal is checked, and refused, like any gate."""
+    rule = "explain-linkerd-cni-opt-out/linkerd-cni-pod-reason"
+    assert _gates([(rule, {"linkerd-cni"}), ("drop-all-capabilities/x", {"dev"})]) == [
+        ("drop-all-capabilities/x", {"dev"})
+    ]
+    with pytest.raises(AssertionError):
+        _gates([(rule, {"linkerd-cni", "dev-portal"})])
+
+
 @pytest.mark.parametrize("mode", ["single", "multi"])
 def test_every_namespace_that_runs_a_pod_is_inside_every_pod_policy(mode, request):
     """The Kyverno gates (no capabilities, read-only root, non-root user, no automounted
@@ -324,6 +352,8 @@ def test_every_namespace_that_runs_a_pod_is_inside_every_pod_policy(mode, reques
     running = _pod_namespaces(docs)
     scopes = _pod_policy_scopes(docs)
     assert running and scopes, "nothing to check means the render changed shape"
+
+    scopes = _gates(scopes)
 
     unguarded = {name: sorted(running - covered) for name, covered in scopes if running - covered}
     assert unguarded == {}, unguarded
