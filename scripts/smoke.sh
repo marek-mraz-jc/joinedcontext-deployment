@@ -67,8 +67,9 @@ for permission in document.get("permissions", []):
 }
 
 # The gateway routes are only configured for the components this instance deploys, so the
-# suite asks APISIX itself what exists instead of assuming a fixed platform.
-routes=$(kubectl get configmap apisix-standalone-config -n "$slug" -o jsonpath='{.data.apisix\.yaml}' 2>/dev/null || true)
+# suite asks the edge's base file what exists instead of assuming a fixed platform. The served
+# file is a Secret with every App's client secret in it (AP-112), which the smoke never reads.
+routes=$(kubectl get configmap apisix-standalone-base -n "$slug" -o jsonpath='{.data.apisix\.yaml}' 2>/dev/null || true)
 has_route() { grep -q "^  - id: $1\$" <<<"$routes"; }
 
 # status <expected> <description> <curl args...>
@@ -883,6 +884,49 @@ else
 			ko "App deployment $name has $ready of $ready_want pods ready (kubectl describe pod -l app.kubernetes.io/name=${name#*/} -n ${name%%/*})"
 		fi
 	done <<<"$app_deployments"
+fi
+
+# The routes the Portal adds to the edge file per published App (T-2668, ADR-N-030, AP-28,
+# AP-29). A public App serves an anonymous visitor; any other sends the visitor to the realm's
+# login with the App's own client `app-{name}`. The shared `edge` client there means the request
+# fell through to the fallback surface: the Portal wrote no route for that App.
+echo "App routes"
+if ! has_route apps-surface; then
+	skip "App routes (route apps-surface not configured in this instance)"
+elif [ -z "$demo_token" ]; then
+	skip "App routes (no demo user token to list the published Apps with)"
+else
+	published=$(curl -sS --max-time 20 -H "Authorization: Bearer $demo_token" \
+		"$portal/api/v1/projects/helsinki/apps" 2>/dev/null | python3 -c '
+import json, sys
+try:
+    items = json.load(sys.stdin).get("items") or []
+except Exception:
+    sys.exit(0)
+for app in items:
+    spec = app.get("spec") or {}
+    if spec.get("lifecycle") == "published":
+        print(app["metadata"]["name"], spec.get("visibility") or "internal")' || true)
+	if [ -z "$published" ]; then
+		skip "App routes (no App is published in helsinki)"
+	fi
+	while read -r app visibility; do
+		[ -n "$app" ] || continue
+		if [ "$visibility" = public ]; then
+			status 200 "public App $app answers an anonymous visitor at the edge" "$base/apps/$app/"
+			continue
+		fi
+		location=$(curl -sS -o /dev/null -w '%{redirect_url}' --max-time 20 "$base/apps/$app/" 2>/dev/null || true)
+		case "$location" in
+			"$idm/realms/$realm/protocol/openid-connect/auth?"*) ;;
+			*) location="" ;;
+		esac
+		if [ -n "$location" ] && grep -E "[?&]client_id=app-$app(&|\$)" >/dev/null <<<"$location"; then
+			ok "$visibility App $app sends an anonymous visitor to its own login (app-$app)"
+		else
+			ko "$visibility App $app has no route of its own at the edge: an anonymous visit is not sent to the login of client app-$app (got: ${location:-none})"
+		fi
+	done <<<"$published"
 fi
 
 echo "functions"

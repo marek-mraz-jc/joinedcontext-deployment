@@ -46,7 +46,7 @@ PORTAL_CONFIGS = (
 def plugin_configs(rendered):
     cm = next(
         d for d in rendered("local")
-        if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "apisix-standalone-config"
+        if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "apisix-standalone-base"
     )
     parsed = yaml.safe_load(cm["data"]["apisix.yaml"])
     return {pc["id"]: pc.get("plugins", {}) for pc in parsed["plugin_configs"]}

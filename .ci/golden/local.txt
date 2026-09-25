@@ -162,14 +162,16 @@ rbac.authorization.k8s.io/v1/ClusterRole -/sandbox-reaper-reaper
 rbac.authorization.k8s.io/v1/ClusterRoleBinding -/local-portal-namespaces
 rbac.authorization.k8s.io/v1/ClusterRoleBinding -/postgres-operator-cloudnative-pg
 rbac.authorization.k8s.io/v1/ClusterRoleBinding -/sandbox-reaper-reaper
+rbac.authorization.k8s.io/v1/Role local/edge-file-composer
 rbac.authorization.k8s.io/v1/Role local/gitea-bootstrap
 rbac.authorization.k8s.io/v1/Role local/portal
 rbac.authorization.k8s.io/v1/Role local/postgres-operator-cloudnative-pg
+rbac.authorization.k8s.io/v1/RoleBinding local/edge-file-composer
 rbac.authorization.k8s.io/v1/RoleBinding local/gitea-bootstrap
 rbac.authorization.k8s.io/v1/RoleBinding local/portal
 rbac.authorization.k8s.io/v1/RoleBinding local/postgres-operator-cloudnative-pg
 v1/ConfigMap local/apisix
-v1/ConfigMap local/apisix-standalone-config
+v1/ConfigMap local/apisix-standalone-base
 v1/ConfigMap local/cnpg-controller-manager-config
 v1/ConfigMap local/cnpg-default-monitoring
 v1/ConfigMap local/gitea-bootstrap-app-air-quality
@@ -187,6 +189,7 @@ v1/ConfigMap local/sandbox-reaper-reaper
 v1/PersistentVolumeClaim local/gitea-shared-storage
 v1/PersistentVolumeClaim local/pipeline-runner-files
 v1/Secret local/apisix-oidc-session
+v1/Secret local/apisix-standalone-config
 v1/Secret local/artifact-store-root
 v1/Secret local/db-antares
 v1/Secret local/db-gitea

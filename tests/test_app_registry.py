@@ -105,7 +105,7 @@ def test_the_edge_routes_v2_to_the_forge_without_the_git_prefix_strip(local):
     stripping /git/ there, as the forge route does, would send every pull to a 404."""
     import yaml
 
-    raw = one(local, "ConfigMap", "apisix-standalone-config")["data"]["apisix.yaml"]
+    raw = one(local, "ConfigMap", "apisix-standalone-base")["data"]["apisix.yaml"]
     parsed = yaml.safe_load(raw)
     route = next(r for r in parsed["routes"] if r["id"] == "gitea-registry")
     upstream = next(u for u in parsed["upstreams"] if u["id"] == "gitea-registry")
@@ -160,7 +160,7 @@ def test_containerd_oauth_post_to_the_token_realm_reaches_the_forge_and_nothing_
     and its HTML redirect, and every fullstack pull failed. POST is admitted on that one path only."""
     import yaml
 
-    raw = one(local, "ConfigMap", "apisix-standalone-config")["data"]["apisix.yaml"]
+    raw = one(local, "ConfigMap", "apisix-standalone-base")["data"]["apisix.yaml"]
     parsed = yaml.safe_load(raw)
     token = next(r for r in parsed["routes"] if r["id"] == "gitea-registry-token")
     registry = next(r for r in parsed["routes"] if r["id"] == "gitea-registry")
