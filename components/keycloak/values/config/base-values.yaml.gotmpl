@@ -576,6 +576,16 @@ config:
         {{- end }}
       defaultGroups:
         - /platform-readers
+      # The trust a workload's federated client rests on (PF-47): Keycloak verifies a pod's
+      # projected ServiceAccount token against this issuer's keys. The Portal's reconciler names
+      # the alias in every such client and never writes it here.
+      identityProviders:
+        - alias: kubernetes
+          providerId: kubernetes
+          enabled: true
+          config:
+            # k3s's own service-account issuer (`--service-account-issuer` left at its default).
+            issuer: "https://kubernetes.default.svc.cluster.local"
       roles:
         realm:
           # Checked by the Portal (src/api/changes.rs) before a user may approve a change
