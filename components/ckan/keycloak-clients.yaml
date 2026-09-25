@@ -3,7 +3,9 @@
 # `ckanext-oidc-pkce` registers on its blueprint; nothing uses this client while
 # `global.ckan.sso` is false (see README).
 ckan:
-  name: CKAN Catalogue
+  # What the login page names ("Sign in to {name} · {organization}"): a key the login theme
+  # translates (components/keycloak/charts/theme).
+  name: ${jcClientCatalogue}
   description: Confidential client of the open-data catalogue for human login
   subdomain: data
   redirectPath: /user/login/oidc-pkce/callback

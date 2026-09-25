@@ -3,7 +3,9 @@
 # where the forge is served under /git/ (docs Deployment/10 section 2); the callback path
 # is Gitea's own, with the name of the authentication source in it.
 gitea:
-  name: Gitea Forge
+  # What the login page names ("Sign in to {name} · {organization}"): a key the login theme
+  # translates (components/keycloak/charts/theme).
+  name: ${jcClientForge}
   description: Confidential client of the in-cluster Git forge for human login
   subdomain: ''
   redirectPath: /git/user/oauth2/keycloak/callback

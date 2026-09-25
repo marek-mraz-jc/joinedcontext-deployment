@@ -2,7 +2,9 @@
 # Browser login for the dashboards. Confidential, authorization-code with PKCE, and no
 # service account: Grafana acts for the person who logged in and never on its own.
 grafana:
-  name: Grafana
+  # What the login page names ("Sign in to {name} · {organization}"): a key the login theme
+  # translates (components/keycloak/charts/theme).
+  name: ${jcClientMonitoring}
   description: Confidential client of the Grafana addon for operator login
   subdomain: ''
   redirectPath: /grafana/login/generic_oauth

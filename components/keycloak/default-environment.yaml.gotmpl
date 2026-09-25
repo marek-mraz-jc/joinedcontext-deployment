@@ -1,5 +1,11 @@
 ---
 keycloak:
+  # The `joinedcontext` login theme (UI-82): one ConfigMap the app part copies into its
+  # themes directory. The name is the contract between the two parts.
+  theme:
+    enabled: true
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "keycloak") }}
+    configMapName: keycloak-theme
   app:
     enabled: true
     namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "keycloak") }}

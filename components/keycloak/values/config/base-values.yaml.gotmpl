@@ -90,6 +90,10 @@ config:
     inline:
       id: {{ $global.instanceSlug }}
       realm: "{{ $global.instanceSlug }}"
+      # What the login pages call the organization (PF-90): its name from the branding
+      # block, never the realm id.
+      {{- $branding := $global.branding | default dict }}
+      displayName: {{ $branding.organisation | default $branding.instanceName | default "joinedcontext" | quote }}
       notBefore: 0
       # TR-03187 AR-11: Use ES256 for token signatures
       defaultSignatureAlgorithm: ES256
@@ -195,7 +199,9 @@ config:
         auth: "true"
         ssl: "false"
 {{- end }}
-      loginTheme: keycloak
+      # The joinedcontext theme (UI-82, components/keycloak/charts/theme); the account,
+      # admin and e-mail pages stay Keycloak's own.
+      loginTheme: joinedcontext
       accountTheme: keycloak
       adminTheme: keycloak
       emailTheme: keycloak
@@ -286,9 +292,13 @@ config:
       adminEventsEnabled: true
       adminEventsDetailsEnabled: true
       internationalizationEnabled: true
+      # The four languages of the Portal and of the login theme (UI-82); the Portal passes
+      # its own as ui_locales.
       supportedLocales:
-        - de
         - en
+        - sk
+        - cs
+        - de
       defaultLocale: en
       # TR-03187 AUT-2: Custom browser flow with conditional 2FA
       browserFlow: custom browser
