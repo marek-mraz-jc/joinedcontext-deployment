@@ -153,3 +153,27 @@ def test_the_forge_seed_commits_the_builder_profile(dev):
     assert not any("_key_" in name for name in named)
     assert all(set(grant["verbs"]) <= {"read", "propose"} for grant in access["kinds"])
     assert {"Pipeline", "DataSource", "ContextSpace", "RoleBinding"} <= {grant["kind"] for grant in access["kinds"]}
+
+
+@requires_helmfile
+def test_the_forge_seed_commits_the_chat_profile_no_wider_than_the_builder(dev):
+    seed = next(
+        d for d in dev
+        if d.get("kind") == "ConfigMap" and d["metadata"]["name"].endswith("bootstrap-seed")
+    )
+    chat = yaml.safe_load(seed["data"]["agentprofiles__chat.yaml"])
+    builder = yaml.safe_load(seed["data"]["agentprofiles__app-builder.yaml"])
+    assert chat["kind"] == "AgentProfile" and chat["metadata"]["name"] == "chat"
+    # T-2770, AG-72: conversations on a pool of their own, a steward with no tools and no
+    # internet, and the reasoning that measured no thinking tokens ("none" is refused upstream).
+    assert chat["spec"]["role"] == "steward"
+    assert chat["spec"]["tools"] == []
+    assert not chat["spec"].get("egress", {}).get("allowedHosts")
+    assert chat["spec"]["model"]["reasoningEffort"] == "low"
+    assert chat["spec"]["model"]["provider"] == "openai-compatible"
+    assert chat["spec"]["limits"]["concurrentRunsPerOrganization"] >= builder["spec"]["limits"]["concurrentRunsPerOrganization"]
+    # Security of T-2770: the chat's access is the builder's or narrower, never wider.
+    assert set(chat["spec"]["access"]["operations"]) <= set(builder["spec"]["access"]["operations"])
+    widest = {grant["kind"]: set(grant["verbs"]) for grant in builder["spec"]["access"]["kinds"]}
+    for grant in chat["spec"]["access"]["kinds"]:
+        assert set(grant["verbs"]) <= widest.get(grant["kind"], set()), grant
