@@ -5,6 +5,7 @@ the chart writes into the Service and into the container, which it derives from 
 another template sets as a side effect; and the `/git` prefix, which lives in Gitea's
 ROOT_URL and in the APISIX rewrite that takes it off again."""
 
+import re
 import shutil
 
 import pytest
@@ -232,3 +233,35 @@ def test_a_migration_reaches_the_forge_itself_and_nothing_else(rendered):
     assert allowed[0].split("=", 1)[1].split(",") == [
         f"gitea-http.{service['metadata']['namespace']}.svc.cluster.local"
     ]
+
+
+def test_no_push_repacks_a_repository_and_the_forge_compacts_them_nightly(rendered):
+    """T-3027: git's `gc --auto` after a push (receive.autogc) repacked the configuration
+    repository while the Portal's merge wrote its commit, and main pointed at a missing object.
+    The forge's git runs no automatic gc at all; Gitea's own cron compacts every repository once
+    a day, at midnight."""
+    inline = next(
+        d for d in rendered("local")
+        if d.get("kind") == "Secret" and d["metadata"]["name"] == "gitea-inline-config"
+    )["stringData"]
+    git = inline["git.config"].splitlines()
+    # `_0X2E_` is the chart's escape for a dot; Gitea decodes it into `receive.autogc`.
+    assert "receive_0X2E_autogc=false" in git, git
+    assert "gc_0X2E_auto=0" in git, git
+    cron = inline["cron.git_gc_repos"].splitlines()
+    assert "ENABLED=true" in cron, cron
+    assert "SCHEDULE=@midnight" in cron, cron
+
+
+def test_every_inline_setting_is_a_name_the_init_script_can_export(rendered):
+    """T-3027: the chart's init script (`set -euo pipefail`) exports each inline setting as
+    `GITEA__{SECTION}__{KEY}` and escapes the dots of the section only. A key with a dot or a
+    dash is "not a valid identifier", the init container exits 1 and the forge never starts."""
+    inline = next(
+        d for d in rendered("local")
+        if d.get("kind") == "Secret" and d["metadata"]["name"] == "gitea-inline-config"
+    )["stringData"]
+    for section, body in inline.items():
+        for line in body.splitlines():
+            key = line.split("=", 1)[0].strip()
+            assert re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", key), f"[{section}] {key}"
