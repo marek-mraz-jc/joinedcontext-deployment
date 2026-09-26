@@ -193,6 +193,7 @@ STRINGS = {
     },
     "rows": {"en": "rows", "sk": "riadkov", "cs": "řádků", "de": "Zeilen"},
     "table_title": {"en": "Table of the data", "sk": "Tabuľka dát", "cs": "Tabulka dat", "de": "Tabelle der Daten"},
+    "tables": {"en": "tables", "sk": "tabuľky", "cs": "tabulky", "de": "Tabellen"},
     "table_what": {"en": "The table above, as one file", "sk": "Tabuľka vyššie ako jeden súbor", "cs": "Tabulka výše jako jeden soubor", "de": "Die Tabelle oben als eine Datei"},
     "open_table": {"en": "Open the table on its own page", "sk": "Otvoriť tabuľku na samostatnej stránke", "cs": "Otevřít tabulku na samostatné stránce", "de": "Tabelle auf eigener Seite öffnen"},
     "no_view": {
@@ -422,6 +423,9 @@ def jc_resource_sections(pkg):
         name = (resource.get("format") or "").strip()
         words = FORMATS.get(name.upper()) or {}
         if resource.get("datastore_active"):
+            # A DataStore table downloads as CSV, whatever format its resource names (T-3012
+            # writes its tables with none).
+            name = name or "CSV"
             words = STRINGS["table_what"]
         sections[_section(resource)].append({
             "resource": resource,
@@ -432,10 +436,12 @@ def jc_resource_sections(pkg):
              "items": items} for key, items in sections.items() if items]
 
 
-def jc_preview(pkg):
-    """The dataset's DataStore table for the page itself: the resource, its table view (or
-    None when nobody created one) and the number of rows, or None without a DataStore."""
-    for resource in (pkg or {}).get("resources") or []:
+def jc_previews(pkg):
+    """The dataset's DataStore tables for the page itself, one per entity type since T-3012, in
+    the order `_order` gives them: each resource with its table view (None when nobody created
+    one) and its number of rows (None when the DataStore does not say)."""
+    out = []
+    for resource in sorted((pkg or {}).get("resources") or [], key=_order):
         if not resource.get("datastore_active"):
             continue
         try:
@@ -447,8 +453,14 @@ def jc_preview(pkg):
             total = toolkit.get_action("datastore_search")({}, {"resource_id": resource["id"], "limit": 0}).get("total")
         except (toolkit.ObjectNotFound, toolkit.NotAuthorized, toolkit.ValidationError):
             total = None
-        return {"resource": resource, "view": view, "total": total}
-    return None
+        out.append({"resource": resource, "view": view, "total": total})
+    return out
+
+
+def jc_total(previews):
+    """All rows of the tables, or None when any table's count is unknown."""
+    totals = [p["total"] for p in previews or []]
+    return sum(totals) if totals and all(isinstance(t, int) for t in totals) else None
 
 
 def jc_formats(pkg):
@@ -559,7 +571,8 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_more": jc_more,
             "jc_live": jc_live,
             "jc_resource_sections": jc_resource_sections,
-            "jc_preview": jc_preview,
+            "jc_previews": jc_previews,
+            "jc_total": jc_total,
             "jc_number": jc_number,
             "jc_formats": jc_formats,
             "jc_recent": jc_recent,

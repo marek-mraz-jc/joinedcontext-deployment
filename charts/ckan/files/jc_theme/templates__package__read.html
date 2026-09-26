@@ -8,28 +8,43 @@
 
 {% block package_notes %}
   {{ super() }}
-  {% set preview = h.jc_preview(pkg) %}
-  {% if preview %}
-    {% set res = preview.resource %}
+  {% set previews = h.jc_previews(pkg) %}
+  {% if previews %}
+    {% set total = h.jc_total(previews) %}
     <section class="jc-preview" aria-labelledby="jc-preview-title">
       <div class="jc-preview-head">
         <h2 id="jc-preview-title">{{ h.jc_t('preview') }}</h2>
-        {% if preview.total is not none %}<span class="jc-chip jc-chip-primary">{{ h.jc_number(preview.total) }} {{ h.jc_t('rows') }}</span>{% endif %}
+        {% if total is not none %}<span class="jc-chip jc-chip-primary">{{ h.jc_number(total) }} {{ h.jc_t('rows') }}</span>{% endif %}
+        {% if previews|length > 1 %}<span class="jc-chip">{{ previews|length }} {{ h.jc_t('tables') }}</span>{% endif %}
       </div>
-      <p class="jc-lead">{{ h.jc_t('preview_lead') if preview.view else h.jc_t('no_view') }}</p>
-      {% if preview.view %}
-        <iframe class="jc-grid" loading="lazy"
-                title="{{ h.jc_t('table_title') }}: {{ h.dataset_display_name(pkg) }}"
-                src="{{ h.url_for(pkg.type ~ '_resource.view', id=pkg.name, resource_id=res.id, view_id=preview.view.id) }}"></iframe>
-      {% endif %}
-      <div class="jc-preview-actions">
-        {% if preview.view %}
-          <a class="btn btn-default" href="{{ h.url_for(pkg.type ~ '_resource.read', id=pkg.name, resource_id=res.id) }}">{{ h.jc_t('open_table') }}</a>
-        {% endif %}
-        {% if res.url and h.is_url(res.url) %}
-          <a class="btn btn-primary" href="{{ res.url }}">{{ h.jc_t('download') }} {{ res.format or 'CSV' }}</a>
-        {% endif %}
-      </div>
+      <p class="jc-lead">{{ h.jc_t('preview_lead') }}</p>
+      {# One table per entity type (T-3012). The first is open; a closed one loads nothing until
+         a reader opens it, because a lazy frame inside a closed <details> is never rendered. #}
+      {% for preview in previews %}
+        {% set res = preview.resource %}
+        {% set name = h.resource_display_name(res) %}
+        <details class="jc-table"{% if loop.first %} open{% endif %}>
+          <summary>
+            <span class="jc-table-name">{{ name }}</span>
+            {% if preview.total is not none %}<span class="jc-table-rows">{{ h.jc_number(preview.total) }} {{ h.jc_t('rows') }}</span>{% endif %}
+          </summary>
+          {% if preview.view %}
+            <iframe class="jc-grid" loading="lazy"
+                    title="{{ h.jc_t('table_title') }}: {{ name }}"
+                    src="{{ h.url_for(pkg.type ~ '_resource.view', id=pkg.name, resource_id=res.id, view_id=preview.view.id) }}"></iframe>
+          {% else %}
+            <p class="jc-lead">{{ h.jc_t('no_view') }}</p>
+          {% endif %}
+          <div class="jc-preview-actions">
+            {% if preview.view %}
+              <a class="btn btn-default" href="{{ h.url_for(pkg.type ~ '_resource.read', id=pkg.name, resource_id=res.id) }}">{{ h.jc_t('open_table') }}<span class="visually-hidden"> {{ name }}</span></a>
+            {% endif %}
+            {% if res.url and h.is_url(res.url) %}
+              <a class="btn btn-primary" href="{{ res.url }}">{{ h.jc_t('download') }} CSV<span class="visually-hidden"> {{ name }}</span></a>
+            {% endif %}
+          </div>
+        </details>
+      {% endfor %}
     </section>
   {% endif %}
   {% set about = h.jc_about(pkg) %}
