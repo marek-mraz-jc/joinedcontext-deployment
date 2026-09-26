@@ -24,6 +24,17 @@ parts:
               name: apisix-admin
               secret:
                 secretName: apisix-standalone-config
+          # The chart pauses the gateway 30 s before it stops (a fixed preStop) and leaves the
+          # grace period at the kubelet's 30 s, so the kill lands at the end of the pause and the
+          # meshed proxy's wait (35 s, base-values) is cut short (T-3024). The grace period
+          # outlives the pause, the proxy's wait and nginx's own stop; the `test` makes a chart
+          # that changes its pause fail the render instead of silently undercutting this.
+          - op: test
+            path: /spec/template/spec/containers/0/lifecycle/preStop/exec/command/2
+            value: sleep 30
+          - op: add
+            path: /spec/template/spec/terminationGracePeriodSeconds
+            value: 45
   # Only with global.ingress.appsWildcard (ADR-N-037 §6, T-3013). The chart grants the webhook
   # get/list/watch on every Secret of the cluster so an Issuer may name its token by reference.
   # Ours reads the token from a mounted file instead, so the grant is emptied: a solver pod
