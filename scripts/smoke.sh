@@ -929,7 +929,7 @@ for app in items:
 	basemap="$portal/api/v1/projects/helsinki/basemap/"
 	basemap_code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "${basemap}default/style.json" 2>/dev/null || true)
 	# csp_allows <policy> <directive> <source>: the directive lists the source as one of its own.
-	csp_allows() { tr ';' '\n' <<<"$1" | sed 's/^ *//' | grep -E "^$2( |\$)" | tr ' ' '\n' | grep -qxF "$3"; }
+	csp_allows() { tr ';' '\n' <<<"$1" | sed 's/^ *//' | grep -E "^$2( |\$)" | tr ' ' '\n' | grep -xF "$3" >/dev/null; }
 	while read -r app visibility; do
 		[ -n "$app" ] || continue
 		host="https://$app.apps.${base#https://}"
