@@ -31,9 +31,13 @@ portal-api:
   # management per realm and not per name prefix, so the grant is realm-wide; the reconciler
   # only ever addresses `app-{name}` built from an App manifest's name, and narrowing the grant
   # itself needs Keycloak's fine-grained admin permissions.
+  # `query-users` (read-only) lets it list who holds an App client role: Keycloak answers
+  # GET /clients/{id}/roles/{role}/users only to a caller that may view the client and query
+  # users. Every lookup and every mapping write stays with `portal-reconciler` (T-3022).
   serviceAccountClientRoles:
     realm-management:
       - manage-clients
+      - query-users
   rawValues:
     publicClient: false
     standardFlowEnabled: true

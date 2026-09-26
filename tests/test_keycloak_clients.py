@@ -186,7 +186,9 @@ def test_the_portal_service_account_may_manage_clients(rendered, env):
     accounts = {u["serviceAccountClientId"]: u
                 for u in realm["users"] if "serviceAccountClientId" in u}
     assert "portal-api" in accounts, "the reconciler could not create an app's client"
-    assert accounts["portal-api"]["clientRoles"] == {"realm-management": ["manage-clients"]}
+    assert accounts["portal-api"]["clientRoles"] == {
+        "realm-management": ["manage-clients", "query-users"]
+    }
     assert accounts["portal-api"]["username"] == "service-account-portal-api", (
         "keycloak names a service account after its client; another name creates a second user"
     )
@@ -205,7 +207,12 @@ def test_no_other_client_holds_an_admin_api_role(rendered, env):
     groups the repository declares (PF-63) and nothing else — the login client must not gain
     that right. Every other workload is a service account with its own audience-bound token and
     no reason to reach the Admin API; another holder would make the blast radius of any one
-    leaked client secret the whole realm."""
+    leaked client secret the whole realm.
+
+    T-3022 (AP-113): `portal-api` also holds `query-users`, read-only, because Keycloak lists a
+    client role's holders only to a caller that may view the client. It never gains
+    `view-clients` (that reads every confidential client's secret) nor `manage-users` (the
+    mapping writes stay on `portal-reconciler`)."""
     realm = realm_of(rendered, env)
     holders = {
         u["serviceAccountClientId"]: u["clientRoles"]["realm-management"]
@@ -213,7 +220,7 @@ def test_no_other_client_holds_an_admin_api_role(rendered, env):
         if u.get("clientRoles", {}).get("realm-management")
     }
     assert set(holders) == {"portal-api", "portal-reconciler"}, holders
-    assert sorted(holders["portal-api"]) == ["manage-clients"], holders
+    assert sorted(holders["portal-api"]) == ["manage-clients", "query-users"], holders
     assert sorted(holders["portal-reconciler"]) == ["manage-users", "query-groups"], holders
 
 
