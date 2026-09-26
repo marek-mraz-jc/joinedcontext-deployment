@@ -90,7 +90,7 @@ global:
     # `sso`: `ckanext-dcat` is in images/ckan/Dockerfile, so this goes on together with the pin
     # of an image built from it; `test_the_pinned_image_carries_every_listed_plugin` refuses
     # the pair when they disagree.
-    dcat: false
+    dcat: true
 
   # Service mesh configuration
   serviceMesh:
