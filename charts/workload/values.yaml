@@ -27,6 +27,14 @@ envFrom: []           # raw list, passed through
 
 enableServiceLinks: false
 terminationGracePeriodSeconds: 30
+# How long a terminating pod keeps serving before its process is told to stop (OPS-27, T-3008).
+# The kubelet stops a pod at once, while APISIX and the mesh still send to it until they see its
+# endpoint go; without the pause every roll answered about 2 s of 502s in 0.1 s (connection
+# refused). The kubelet's own sleep, because the images are distroless and have no `sleep`. A
+# meshed pod's proxy waits this long plus `meshDrainSeconds`, so it outlives the drain of what
+# the pause let in. 0 turns both off. The grace period must be longer than the proxy's wait.
+preStopSleepSeconds: 5
+meshDrainSeconds: 5
 
 serviceAccount:
   create: true

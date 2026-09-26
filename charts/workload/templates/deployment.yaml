@@ -23,11 +23,21 @@ spec:
       {{- include "workload.selectorLabels" . | nindent 6 }}
   template:
     metadata:
+      {{- $pause := int (.Values.preStopSleepSeconds | default 0) }}
+      {{- $proxyWait := add $pause (int (.Values.meshDrainSeconds | default 0)) }}
+      {{- if and $pause (le (int .Values.terminationGracePeriodSeconds) (int $proxyWait)) }}
+      {{- fail (printf "terminationGracePeriodSeconds (%v) must be longer than preStopSleepSeconds + meshDrainSeconds (%v), or the kubelet kills the pod before it drains" .Values.terminationGracePeriodSeconds $proxyWait) }}
+      {{- end }}
       {{- $hasAnnotations := or .Values.serviceMesh.enabled .Values.configMap.enabled .Values.podAnnotations }}
       {{- if $hasAnnotations }}
       annotations:
         {{- if .Values.serviceMesh.enabled }}
         linkerd.io/inject: enabled
+        {{- if $pause }}
+        # The proxy is told to stop at the same instant as the app and refuses new connections
+        # from then on; it waits out the app's pause and its drain first (T-3008).
+        config.alpha.linkerd.io/proxy-wait-before-exit-seconds: {{ $proxyWait | quote }}
+        {{- end }}
         {{- end }}
         {{- if .Values.configMap.enabled }}
         checksum/config: {{ .Values.configMap.data | toYaml | sha256sum }}
@@ -70,6 +80,12 @@ spec:
           {{- end }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
+          {{- if $pause }}
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: {{ $pause }}
+          {{- end }}
           ports:
             - name: {{ .Values.service.name | default "http" }}
               containerPort: {{ .Values.containerPort }}
