@@ -260,8 +260,10 @@ spec:
               #     only, on the units a review needs, and `includes_all_repositories` so a
               #     repository added later is readable without a second step (PF-80). Owners
               #     stays the administrator alone.
+              # reading_teams <organization> <description>
+              reading_teams() {
               for team in $TEAMS; do
-                status=$(forge_code GET "/api/v1/orgs/$ORG/teams/search?q=$team")
+                status=$(forge_code GET "/api/v1/orgs/$1/teams/search?q=$team")
                 case "$status" in
                   200)
                     # `search` answers 200 with an empty list when nothing matches, so the
@@ -273,17 +275,19 @@ spec:
                   *)
                     echo "the forge answered $status searching for team $team" >&2; cat $WORK/body >&2; exit 1 ;;
                 esac
-                status=$(forge_code POST "/api/v1/orgs/$ORG/teams" -d "{
+                status=$(forge_code POST "/api/v1/orgs/$1/teams" -d "{
                   \"name\":\"$team\",
-                  \"description\":\"Reads the configuration repository (PF-79)\",
+                  \"description\":\"$2\",
                   \"permission\":\"read\",
                   \"includes_all_repositories\":true,
                   \"can_create_org_repo\":false,
                   \"units\":[\"repo.code\",\"repo.issues\",\"repo.pulls\"]
                 }")
-                [ "$status" = 201 ] || { echo "creating team $team failed: $status" >&2; cat $WORK/body >&2; exit 1; }
-                echo "team $team created"
+                [ "$status" = 201 ] || { echo "creating team $team of $1 failed: $status" >&2; cat $WORK/body >&2; exit 1; }
+                echo "team $team of $1 created"
               done
+              }
+              reading_teams "$ORG" "Reads the configuration repository (PF-79)"
 
               # 3c. The platform's own forge identities (PF-106): a machine user per consumer,
               #     never an administrator. The password is random, never stored and never
@@ -394,6 +398,28 @@ spec:
                 done
               }
 
+              # team_id <organization> <team>: the team's id, or a failure naming what is missing.
+              team_id() {
+                status=$(forge_code GET "/api/v1/orgs/$1/teams/search?q=$2")
+                [ "$status" = 200 ] || { echo "the forge answered $status searching for team $2 of $1" >&2; return 1; }
+                id=$(tr '{' '\n' < $WORK/body | grep "\"name\": *\"$2\"" | sed -n 's/.*"id": *\([0-9]*\).*/\1/p' | head -1)
+                [ -n "$id" ] || { echo "$1 has no team $2" >&2; return 1; }
+                echo "$id"
+              }
+
+              # members <team id>: every member's login, one per line, all pages.
+              members() {
+                page=1
+                while :; do
+                  status=$(forge_code GET "/api/v1/teams/$1/members?limit=50&page=$page")
+                  [ "$status" = 200 ] || { echo "listing the members of team $1 failed: $status" >&2; return 1; }
+                  logins=$(tr ',' '\n' < $WORK/body | sed -n 's/^.*"login": *"\([A-Za-z0-9._@-]*\)".*/\1/p')
+                  [ -n "$logins" ] || break
+                  printf '%s\n' $logins
+                  page=$((page + 1))
+                done
+              }
+
               # 3d. Where the generated applications live (PF-106). With APPS_ORG, in an
               #     organization of their own that `jc-apps` creates and administers them in; an
               #     application's repository still in $ORG, `{project}_{name}` (a name no project
@@ -417,6 +443,30 @@ spec:
                 [ -n "$team_id" ] || { echo "$APPS_ORG has no Owners team" >&2; exit 1; }
                 status=$(forge_code PUT "/api/v1/teams/$team_id/members/$APPS_USER")
                 [ "$status" = 204 ] || { echo "making $APPS_USER an owner of $APPS_ORG failed: $status" >&2; exit 1; }
+                # The same reading teams (PF-79, AP-78, T-3030): a person who reads the
+                # configuration reads every App's source too. The login keeps both teams from the
+                # Keycloak group (the forge's group-team map names both organizations); the Job
+                # copies the configuration team's members over every run, so nobody has to sign
+                # in again after the move, and takes out whoever that team no longer holds.
+                reading_teams "$APPS_ORG" "Reads the applications' repositories (PF-79, AP-78)"
+                for team in $TEAMS; do
+                  from=$(team_id "$ORG" "$team") && to=$(team_id "$APPS_ORG" "$team") || exit 1
+                  members "$from" > $WORK/from && members "$to" > $WORK/to || exit 1
+                  for user in $(cat $WORK/from); do
+                    grep -qx "$user" $WORK/to && continue
+                    status=$(forge_code PUT "/api/v1/teams/$to/members/$user")
+                    [ "$status" = 204 ] || { echo "adding $user to $team of $APPS_ORG failed: $status" >&2; exit 1; }
+                    echo "$user reads the applications ($team of $APPS_ORG)"
+                  done
+                  for user in $(cat $WORK/to); do
+                    grep -qx "$user" $WORK/from && continue
+                    status=$(forge_code DELETE "/api/v1/teams/$to/members/$user")
+                    case "$status" in
+                      204|404) echo "$user left $team of $APPS_ORG, as it left $team of $ORG" ;;
+                      *) echo "taking $user out of $team of $APPS_ORG failed: $status" >&2; exit 1 ;;
+                    esac
+                  done
+                done
                 # Into a file, not a `$(...)`: a failed listing has to stop the Job, not end the
                 # loop early.
                 repositories "$ORG" > $WORK/repos

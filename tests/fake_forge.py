@@ -115,6 +115,52 @@ def app_repository(path: str, method: str, call: dict, state: dict) -> tuple[int
     return None
 
 
+def team_by_id(state: dict, team_id: str) -> dict | None:
+    return next((t for t in state.setdefault("teams", {}).values() if str(t["id"]) == team_id), None)
+
+
+def teams(path: str, method: str, call: dict, state: dict) -> tuple[int, str] | None:
+    """An organization's teams, keyed `org/name` in `state["teams"]`, each with its id, what it
+    was created with and its members. Every organization has its Owners team (T-3030)."""
+    held = state.setdefault("teams", {})
+
+    def make(org: str, name: str, spec: dict) -> dict:
+        team = {"id": 10 + len(held), "spec": spec, "members": []}
+        held[f"{org}/{name}"] = team
+        return team
+
+    search = re.fullmatch(r"/api/v1/orgs/([^/]+)/teams/search\?q=(.+)", path)
+    if search and method == "GET":
+        org, name = search.group(1), unquote(search.group(2))
+        if name == "Owners" and f"{org}/Owners" not in held:
+            make(org, "Owners", {"permission": "owner"})
+        team = held.get(f"{org}/{name}")
+        return 200, json.dumps({"data": [{"id": team["id"], "name": name}] if team else [], "ok": True})
+    create = re.fullmatch(r"/api/v1/orgs/([^/]+)/teams", path)
+    if create and method == "POST":
+        body = json.loads(call["data"])
+        if f"{create.group(1)}/{body['name']}" in held:
+            return 422, '{"message":"team already exists"}'
+        team = make(create.group(1), body["name"], body)
+        return 201, json.dumps({"id": team["id"], "name": body["name"]})
+    listing = re.fullmatch(r"/api/v1/teams/(\d+)/members\?limit=50&page=(\d+)", path)
+    if listing and method == "GET":
+        team = team_by_id(state, listing.group(1))
+        if team is None:
+            return 404, "{}"
+        page = team["members"] if listing.group(2) == "1" else []
+        return 200, json.dumps([{"id": i, "login": login, "login_name": ""} for i, login in enumerate(page)])
+    member = re.fullmatch(r"/api/v1/teams/(\d+)/members/([^/]+)", path)
+    if member and method in ("PUT", "DELETE"):
+        team = team_by_id(state, member.group(1))
+        login = member.group(2)
+        if team is not None and method == "PUT" and login not in team["members"]:
+            team["members"].append(login)
+        if team is not None and method == "DELETE" and login in team["members"]:
+            team["members"].remove(login)
+    return None
+
+
 def identities(path: str, method: str, call: dict, state: dict) -> tuple[int, str] | None:
     """Users, collaborators, the Portal's team, the organization's repositories and the branch
     rule: what the Job converges before the seed (PF-105, PF-106)."""
@@ -257,6 +303,9 @@ def answer(call: dict, state: dict) -> tuple[int, str]:
             return (200, json.dumps(held)) if held else (404, "{}")
         state["secrets"][name] = json.loads(call["data"])
         return 200, call["data"]
+    team = teams(path, method, call, state)
+    if team is not None:
+        return team
     forge = identities(path, method, call, state)
     if forge is not None:
         return forge
@@ -272,10 +321,6 @@ def answer(call: dict, state: dict) -> tuple[int, str]:
     app = app_repository(path, method, call, state)
     if app is not None:
         return app
-    if "/teams/search" in path:
-        team = path.split("q=", 1)[-1]
-        # Every organization's Owners team is its own; the others share one id.
-        return 200, json.dumps({"data": [{"id": 1 if team == "Owners" else 7, "name": team}]})
     if path.endswith("/actions/runners/registration-token") and method == "POST":
         return 200, '{"token":"%s"}' % ("R" * 40)
     tokens = re.fullmatch(r"/api/v1/users/([^/]+)/tokens(?:/([^/]+))?", path)
