@@ -65,6 +65,55 @@ spec:
     - {{ . | quote }}
     {{- end }}
 {{- end }}
+{{- with $edge.appsWildcard }}
+{{- if not (hasPrefix "*.apps." .) }}
+{{- fail (printf "edge.appsWildcard: %q is not *.apps.<domain>" .) }}
+{{- end }}
+---
+# The App wildcard (ADR-N-037 §6, T-3013): DNS-01 in the delegated App zone through Hetzner's
+# webhook, which reads its token from a mounted file and holds no right to read Secrets.
+# Namespaced like the staging Issuer, so nothing cluster-wide changes; no e-mail, the account
+# needs none.
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt-dns01
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "configuration.labels" $ | nindent 4 }}
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-dns01-account-key
+    solvers:
+      - selector:
+          dnsZones:
+            - {{ trimPrefix "*." . | quote }}
+        dns01:
+          webhook:
+            groupName: acme.hetzner.com
+            solverName: hetzner
+            config:
+              tokenFilePath: /var/run/secrets/hetzner/token
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: apisix-apps-wildcard
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "configuration.labels" $ | nindent 4 }}
+spec:
+  # The Portal reads this Certificate: Ready and on the edge Ingress, it stops making a
+  # certificate per App (AP-133).
+  secretName: apisix-apps-wildcard-tls
+  issuerRef:
+    name: letsencrypt-dns01
+    kind: Issuer
+  dnsNames:
+    - {{ . | quote }}
+{{- end }}
 {{- if eq $edge.ingressClass "traefik" }}
 ---
 apiVersion: traefik.io/v1alpha1

@@ -42,6 +42,10 @@ edge:
   # carries them (T-2806): a namespaced Issuer, HTTP-01 per hostname, and a Secret no
   # listener serves. Empty renders nothing.
   stagingHosts: []
+  # One certificate `*.apps.<domain>` by DNS-01 for every App host (ADR-N-037 §6, T-3013):
+  # the namespaced Issuer `letsencrypt-dns01` and the Certificate `apisix-apps-wildcard`.
+  # Empty renders nothing, and every App host keeps a certificate of its own.
+  appsWildcard: ''
 
 # Service mesh integration: a Linkerd `Server` marks the APISIX data plane as the
 # public edge reachable by the ingress controller.

@@ -130,6 +130,15 @@ global:
     # A domain the edge is moving to: its hostnames are ordered from Let's Encrypt STAGING
     # (HTTP-01, namespaced Issuer) before `domain` moves and production carries them.
     stagingDomain: ''
+    # One certificate `*.apps.<domain>` by DNS-01 for every App host, so a published App answers
+    # at once (ADR-N-037 §6, T-3013). It needs the zone `apps.<domain>` delegated to Hetzner DNS
+    # and the operator-supplied Secret `tokenSecret` (key `token`, a Hetzner Cloud token of the
+    # project that holds that zone alone) in `certManagerNamespace`. Off: every App host gets a
+    # certificate of its own by HTTP-01.
+    appsWildcard:
+      enabled: false
+      certManagerNamespace: 'cert-manager'
+      tokenSecret: 'hetzner-dns'
 
   # Storage class mappings (leave empty to use cluster defaults)
   storage:

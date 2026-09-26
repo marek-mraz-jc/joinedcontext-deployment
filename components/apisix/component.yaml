@@ -24,3 +24,22 @@ parts:
               name: apisix-admin
               secret:
                 secretName: apisix-standalone-config
+  # Only with global.ingress.appsWildcard (ADR-N-037 §6, T-3013). The chart grants the webhook
+  # get/list/watch on every Secret of the cluster so an Issuer may name its token by reference.
+  # Ours reads the token from a mounted file instead, so the grant is emptied: a solver pod
+  # that talks to the internet never reads the platform's Secrets. The `test` makes a chart
+  # upgrade that renames or reshapes the grant fail the render instead of keeping it.
+  - name: dns01
+    jsonPatches:
+      - target:
+          group: rbac.authorization.k8s.io
+          version: v1
+          kind: ClusterRole
+          name: cert-manager-webhook-hetzner:read-secrets
+        patch:
+          - op: test
+            path: /rules/0/resources
+            value: [secrets]
+          - op: replace
+            path: /rules
+            value: []
