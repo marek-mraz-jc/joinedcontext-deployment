@@ -89,6 +89,9 @@ tokens:
   runner:
     secret: gitea-runner-registration
     namespaces: []
+    # `namespace/name` of every runner Deployment: restarted when the token they registered
+    # with belongs to another organization than the one written now (T-2969).
+    restart: []
 
 # Files committed into the repository after it exists, keyed by their path with `/` written as
 # `__` (a ConfigMap key cannot hold a slash): the manifests the gateway already serves, under the

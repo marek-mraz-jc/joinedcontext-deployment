@@ -121,6 +121,8 @@ spec:
               value: {{ .Values.tokens.runner.secret | quote }}
             - name: RUNNER_NAMESPACES
               value: {{ .Values.tokens.runner.namespaces | uniq | sortAlpha | join " " | quote }}
+            - name: RUNNER_RESTART
+              value: {{ .Values.tokens.runner.restart | default list | uniq | sortAlpha | join " " | quote }}
             - name: APPS_PROJECT
               value: {{ .Values.sampleApps.project | quote }}
             - name: APPS_PUBLIC_BASE
@@ -384,6 +386,17 @@ spec:
                 ensure_org "$APPS_ORG"
                 ensure_user "$APPS_USER"
                 creator "$APPS_ORG" "$APPS_USER"
+                # jc-apps owns this organization and no other (T-2969): the forge mints a
+                # repository's runner registration token, which the Portal's build-pods pass
+                # asks for with jc-apps' token, only for an owner of the organization
+                # (`reqOwner`); an `admin` collaborator gets 403. The configuration's
+                # organization never gets it.
+                status=$(forge_code GET "/api/v1/orgs/$APPS_ORG/teams/search?q=Owners")
+                [ "$status" = 200 ] || { echo "the forge answered $status searching for the Owners of $APPS_ORG" >&2; exit 1; }
+                team_id=$(tr '{' '\n' < $WORK/body | grep '"name": *"Owners"' | sed -n 's/.*"id": *\([0-9]*\).*/\1/p' | head -1)
+                [ -n "$team_id" ] || { echo "$APPS_ORG has no Owners team" >&2; exit 1; }
+                status=$(forge_code PUT "/api/v1/teams/$team_id/members/$APPS_USER")
+                [ "$status" = 204 ] || { echo "making $APPS_USER an owner of $APPS_ORG failed: $status" >&2; exit 1; }
                 # Into a file, not a `$(...)`: a failed listing has to stop the Job, not end the
                 # loop early.
                 repositories "$ORG" > $WORK/repos
@@ -593,10 +606,19 @@ spec:
                 [ "$status" = 200 ] || { echo "the runner registration token: $status" >&2; exit 1; }
                 token=$(sed -n 's/.*"token": *"\([A-Za-z0-9]\{20,64\}\)".*/\1/p' $WORK/body)
                 [ -n "$token" ] || { echo "the forge returned no runner registration token" >&2; exit 1; }
+                # A runner reads the token once, at start, and registers with it again after
+                # every job, so a token of another organization (APPS_ORG set or changed on a
+                # running forge, T-2969) reaches it only by a restart. The Secret records which.
+                moved=0
                 for ns in $RUNNER_NAMESPACES; do
+                  if kube -f -o $WORK/secret "$KAPI/api/v1/namespaces/$ns/secrets/$RUNNER_SECRET" >/dev/null 2>&1; then
+                    held=$(sed -n 's/.*"owner": *"\([A-Za-z0-9+/=]*\)".*/\1/p' $WORK/secret | base64 -d 2>/dev/null || true)
+                    [ "$held" = "$APPS_OWNER" ] || moved=1
+                  fi
                   write_secret "$ns" "$RUNNER_SECRET" "$token" '["runner"]' "$APPS_OWNER"
                 done
                 echo "the runner registration token is in $RUNNER_SECRET"
+                if [ "$moved" = 1 ]; then restart $RUNNER_RESTART; fi
               fi
 
               # 4c. The branch rule of the organization repository (PF-105, CC-41): only the

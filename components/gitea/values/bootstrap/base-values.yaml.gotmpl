@@ -95,6 +95,14 @@ tokens:
       - {{ index .Values "gitea-runner" "runner" "namespace" }}
       {{- else }} []
       {{- end }}
+    restart:
+      {{- if has "gitea-runner" .Values.components }}
+      - {{ printf "%s/gitea-runner" (index .Values "gitea-runner" "runner" "namespace") }}
+      {{- if index .Values "gitea-runner" "rust" "enabled" }}
+      - {{ printf "%s/gitea-runner-rust" (index .Values "gitea-runner" "rust" "namespace") }}
+      {{- end }}
+      {{- else }} []
+      {{- end }}
 
 # The lane token's refresher, where the runner runs (ADR-N-028 §5, T-2636). The token endpoint
 # is Keycloak's in-cluster Service, the way Grafana exchanges its code: KC_HOSTNAME pins the
