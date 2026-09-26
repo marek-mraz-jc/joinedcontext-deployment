@@ -30,6 +30,10 @@ ckan:
     enabled: {{ $global.ckan.sso | default false }}
     clientId: ckan
     issuer: "https://idm.{{ $global.domain }}/realms/{{ $global.instanceSlug }}"
+  # DCAT-AP for harvesters: `global.ckan.dcat`, against an image that carries ckanext-dcat
+  # (images/ckan/Dockerfile), the same pairing as the login above (T-3010).
+  dcat:
+    enabled: {{ $global.ckan.dcat | default false }}
 
 solr:
   image:

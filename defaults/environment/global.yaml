@@ -86,6 +86,11 @@ global:
     # is public and pulls anonymously (T-0403). Turning this on against the stock image is a CKAN
     # that never starts; the pair is checked by `test_the_plugin_list_and_the_image_cannot_disagree`.
     sso: true
+    # DCAT-AP 3 on /catalog.ttl and /dataset/{id}.ttl for harvesters (T-3010). Same pairing as
+    # `sso`: `ckanext-dcat` is in images/ckan/Dockerfile, so this goes on together with the pin
+    # of an image built from it; `test_the_pinned_image_carries_every_listed_plugin` refuses
+    # the pair when they disagree.
+    dcat: false
 
   # Service mesh configuration
   serviceMesh:
