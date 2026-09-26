@@ -67,4 +67,4 @@ functions:
     # (T-2362, T-2363, T-2364). On top of 462a1ba.
     # platform 6c2e439: an Endpoint's publish.ckan carries the licence the organization chose, and
     # jcctl publishes in the space's language under the instance's title (T-2465). On top of 12b32e8.
-    digest: 'sha256:27be922afd8909eaad4400cb1951a83f474e0575e36f2daede68bec1723ae7ee'
+    digest: 'sha256:bd6c6cc023b82d392f80de01afe6b3a029817e93884e0633a284f1a0854b0deb'
