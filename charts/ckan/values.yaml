@@ -40,6 +40,12 @@ ckan:
     # The realm's public issuer; the `iss` of every token carries it.
     issuer: ''
     scope: 'openid email profile'
+  # DCAT-AP 3 for harvesters (data.europa.eu, a national portal, another CKAN): the catalogue
+  # at /catalog.{rdf,ttl,jsonld} and each dataset at /dataset/{id}.{rdf,ttl,jsonld}, through
+  # `ckanext-dcat` (T-3010). Like `sso`, the plugin lives in the image this repository builds,
+  # so `dcat` joins the plugin list only when this is on and the pinned image carries it.
+  dcat:
+    enabled: false
   env: {}
   envSecret: {}
   resources: {}
