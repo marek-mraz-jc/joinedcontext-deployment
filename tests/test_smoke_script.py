@@ -330,6 +330,11 @@ PUBLISHED_APPS = json.dumps({"items": [
     {"kind": "App", "metadata": {"name": "air-quality"}, "spec": {"lifecycle": "published", "visibility": "internal"}},
     {"kind": "App", "metadata": {"name": "sketch"}, "spec": {"lifecycle": "draft", "visibility": "public"}},
 ]})
+# What the edge sends with a public App's page when the Portal serves a basemap (AP-12, AP-67).
+BASEMAP = "https://portal.example.test/api/v1/projects/helsinki/basemap/"
+APP_POLICY = ("content-security-policy: default-src 'self'; script-src 'self'; "
+              f"img-src 'self' data: blob: {BASEMAP}; connect-src 'self' {BASEMAP}; "
+              "frame-ancestors https://portal.example.test\r\n")
 # Where the edge sends an anonymous visitor of a non-public App: its own client's login.
 APP_LOGIN = ("https://idm.example.test/realms/dev/protocol/openid-connect/auth?response_type=code"
              "&client_id=app-air-quality&redirect_uri=https%3A%2F%2Fair-quality.apps.example.test%2Fcallback")
@@ -343,6 +348,8 @@ HEALTHY = {
     "dumpedHeaders": [
         ["/apps/hsl-transport/", "HTTP/2 308\r\nlocation: https://hsl-transport.apps.example.test/\r\n"],
         ["/apps/air-quality/", "HTTP/2 308\r\nlocation: https://air-quality.apps.example.test/\r\n"],
+        # A public App's own page, with the AP-12 policy that lets the basemap tiles in (T-3014).
+        ["hsl-transport.apps.example.test/", "HTTP/2 200\r\n" + APP_POLICY],
     ],
     "helsinkiSeed": HELSINKI_SEED,
     "bodies": [["/api/v1/projects/helsinki/apps/helsinki-", BUILT_APP],
@@ -751,6 +758,35 @@ def test_an_app_old_path_that_serves_or_sets_a_cookie_fails_the_run(tmp_path):
         assert f"FAIL  App air-quality's old path does not move to its host without a cookie (got: {said})" in result.stdout
     result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
     assert "ok    App hsl-transport's old path answers 308 to https://hsl-transport.apps.example.test/ with no cookie" in result.stdout
+
+
+def test_a_public_app_whose_policy_shuts_out_the_basemap_fails_the_run(tmp_path):
+    """AP-12, AP-67 (T-3014): a public App's map draws on the Portal's basemap route, so its page
+    policy lists that route in img-src and connect-src; a page with no policy, or one that lists
+    the route in one directive only, is a blank map and red."""
+    only_img = APP_POLICY.replace(f"connect-src 'self' {BASEMAP}", "connect-src 'self'")
+    for headers, said in [
+        ("HTTP/2 200\r\ncontent-security-policy: frame-ancestors 'self' portal.example.test\r\n",
+         "frame-ancestors 'self' portal.example.test"),
+        ("HTTP/2 200\r\n" + only_img, only_img.split(": ", 1)[1].strip()),
+        ("HTTP/2 200\r\n", "none"),
+    ]:
+        spec = dict(HEALTHY, dumpedHeaders=[["hsl-transport.apps.example.test/", headers]] + HEALTHY["dumpedHeaders"])
+        result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+        assert result.returncode == 1, headers
+        assert ("FAIL  public App hsl-transport's Content-Security-Policy does not list "
+                f"{BASEMAP} in img-src and connect-src, so its map draws no tiles (got: {said})") in result.stdout
+    result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
+    assert f"ok    public App hsl-transport's policy lets the basemap tiles in ({BASEMAP})" in result.stdout
+
+
+def test_an_instance_without_a_basemap_does_not_ask_for_it_in_a_policy(tmp_path):
+    """AP-67: the basemap is optional; where the Portal proxies none, no App policy names it."""
+    spec = dict(HEALTHY, statuses=[["basemap/default/style.json", 404]] + HEALTHY["statuses"],
+                dumpedHeaders=[["hsl-transport.apps.example.test/", "HTTP/2 200\r\n"]] + HEALTHY["dumpedHeaders"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert "basemap" not in "\n".join(line for line in result.stdout.splitlines() if "hsl-transport" in line)
+    assert "FAIL  public App hsl-transport" not in result.stdout
 
 
 def test_an_unbranded_catalogue_fails_the_run(tmp_path):
