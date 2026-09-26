@@ -15,6 +15,7 @@ import types
 from pathlib import Path
 
 import pytest
+import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 THEME = PROJECT_ROOT / "charts/ckan/files/jc_theme"
@@ -30,6 +31,20 @@ def theme(tmp_path, monkeypatch):
     page = types.SimpleNamespace(lang="en")
     toolkit = types.ModuleType("ckan.plugins.toolkit")
     toolkit.h = types.SimpleNamespace(lang=lambda: page.lang)
+    # CKAN's actions, answered from `page.actions` by name: a callable or an exception to raise.
+    page.actions = {}
+
+    def get_action(name):
+        def action(context, data_dict):
+            answer = page.actions[name]
+            if isinstance(answer, Exception):
+                raise answer
+            return answer(data_dict)
+        return action
+
+    for error in ("ObjectNotFound", "NotAuthorized", "ValidationError"):
+        setattr(toolkit, error, type(error, (Exception,), {}))
+    toolkit.get_action = get_action
     plugins = types.ModuleType("ckan.plugins")
     plugins.toolkit = toolkit
     plugins.SingletonPlugin = object
@@ -104,7 +119,8 @@ def test_a_bare_dataset_shows_only_what_it_has_and_the_publisher_falls_back_to_t
     assert theme.jc_about({}) == []
     bare = {"organization": {"name": "helsinki", "title": "City of Helsinki"}}
     assert theme.jc_about(bare) == [("Publisher", "City of Helsinki", None)]
-    assert theme.jc_live({}) is None and theme.jc_resource_groups({}) == [] and theme.jc_more({}) == []
+    assert theme.jc_live({}) is None and theme.jc_resource_sections({}) == [] and theme.jc_more({}) == []
+    assert theme.jc_preview({}) is None and theme.jc_formats({}) == []
 
 
 def test_a_link_that_is_not_http_is_shown_as_text(theme):
@@ -130,11 +146,82 @@ def test_internal_extras_never_reach_more_details(theme):
     assert theme.jc_more(PUBLISHED) == [("source_note", "Measured by HSY")]
 
 
-def test_resources_are_grouped_by_format_with_what_each_is_for(theme):
-    groups = theme.jc_resource_groups(PUBLISHED)
-    assert [(g["format"], len(g["resources"])) for g in groups] == [("CSV", 1), ("csv", 1), ("NGSI-LD", 1), ("—", 1)]
-    assert groups[0]["what"] == "A table for a spreadsheet"
-    assert groups[-1]["what"] == ""
+SCHEMA = "https://dev.example/api/endpoint/praha/schema/v1/"
+
+# The resources `jcctl` publishes for an Endpoint, in its order: the DataStore table last.
+PUBLISHED_RESOURCES = [
+    {"id": "r-ngsi", "name": "NGSI-LD API", "format": "NGSI-LD", "url": ENDPOINT + "ngsi-ld/v1/"},
+    {"id": "r-geo", "name": "GeoJSON", "format": "GeoJSON", "url": ENDPOINT + "file.geojson"},
+    {"id": "r-csv", "name": "CSV", "format": "CSV", "url": ENDPOINT + "file.csv"},
+    {"id": "r-mcp", "name": "Model Context Protocol", "format": "MCP", "url": ENDPOINT + "mcp"},
+    {"id": "r-index", "name": "Schema artifacts", "format": "JSON", "url": ENDPOINT + "schema/index.json"},
+    {"id": "r-shacl", "name": "model.shacl.ttl", "format": "SHACL", "url": SCHEMA + "model.shacl.ttl"},
+    {"id": "r-ctx", "name": "context.jsonld", "format": "JSON-LD", "url": SCHEMA + "context.jsonld?v=1"},
+    {"id": "r-odd", "name": "Unlabelled", "format": "", "url": ENDPOINT + "other"},
+    {"id": "r-table", "name": "DataStore", "format": "CSV", "url": "https://data.dev.example/datastore/dump/r-table",
+     "datastore_active": True},
+]
+
+
+def test_the_datastore_table_leads_the_files_and_the_model_is_a_section_of_its_own(theme):
+    """T-3009: the DataStore resource was the last of fourteen links; it leads the data now."""
+    sections = theme.jc_resource_sections({"resources": PUBLISHED_RESOURCES})
+    ids = {s["key"]: [i["resource"]["id"] for i in s["items"]] for s in sections}
+    assert [s["key"] for s in sections] == ["data", "api", "schema"]
+    assert ids["data"] == ["r-table", "r-csv", "r-geo", "r-odd"]
+    assert ids["api"] == ["r-ngsi", "r-mcp"]
+    # Everything under the Endpoint's /schema/ path is the model, whatever format it names.
+    assert sorted(ids["schema"]) == ["r-ctx", "r-index", "r-shacl"]
+    data = sections[0]["items"]
+    assert data[0]["what"] == "The table above, as one file"
+    assert data[1]["what"] == "A table for a spreadsheet"
+    assert data[-1]["format"] == "—" and data[-1]["what"] == ""
+    assert sections[2]["title"] == "Data model" and sections[1]["lead"]
+
+
+def test_a_dataset_with_only_files_has_one_section_and_a_search_result_names_no_model_format(theme):
+    files = [r for r in PUBLISHED_RESOURCES if r["id"] in ("r-csv", "r-geo")]
+    assert [s["key"] for s in theme.jc_resource_sections({"resources": files})] == ["data"]
+    assert theme.jc_formats({"resources": PUBLISHED_RESOURCES}) == ["CSV", "GeoJSON", "NGSI-LD", "MCP"]
+
+
+def test_the_page_frames_the_datastore_table_with_its_row_count(theme):
+    theme.page.actions = {
+        "resource_view_list": lambda d: [{"id": "v-image", "view_type": "image_view"},
+                                         {"id": "v-table", "view_type": "datatables_view"}],
+        "datastore_search": lambda d: {"total": 25108} if d == {"resource_id": "r-table", "limit": 0} else {},
+    }
+    preview = theme.jc_preview({"resources": PUBLISHED_RESOURCES})
+    assert preview["resource"]["id"] == "r-table"
+    assert preview["view"]["id"] == "v-table" and preview["total"] == 25108
+    assert theme.jc_number(preview["total"]) == "25\u202f108"
+
+
+def test_a_table_without_a_view_or_a_count_still_shows_and_says_so(theme, tmp_path):
+    theme.page.actions = {
+        "resource_view_list": theme.toolkit.NotAuthorized(),
+        "datastore_search": theme.toolkit.ObjectNotFound(),
+    }
+    preview = theme.jc_preview({"resources": PUBLISHED_RESOURCES})
+    assert preview == {"resource": PUBLISHED_RESOURCES[-1], "view": None, "total": None}
+    assert theme.jc_number(None) == "" and theme.jc_number("x") == ""
+    read = (THEME / "templates__package__read.html").read_text()
+    assert "h.jc_t('no_view')" in read and "preview.total is not none" in read
+
+
+def test_the_table_comes_before_the_about_list_on_the_dataset_page():
+    read = (THEME / "templates__package__read.html").read_text()
+    assert read.index("h.jc_preview(pkg)") < read.index("h.jc_about(pkg)") < read.index("h.jc_live(pkg)")
+    # The framed table carries a title a screen reader announces.
+    assert re.search(r"<iframe[^>]*title=\"\{\{ h.jc_t\('table_title'\) \}\}", read)
+
+
+def test_each_resource_has_its_one_action_named_for_a_screen_reader():
+    item = (THEME / "templates__package__snippets__resource_item.html").read_text()
+    assert "dropdown" not in item and "{{ _('Explore') }}" not in item
+    assert "h.jc_t('open') if jc_section == 'api' else h.jc_t('download')" in item
+    assert item.count('<span class="visually-hidden"> {{ name }}</span>') == 2
+    assert "{% if not url_is_edit %}" in item
 
 
 @pytest.mark.parametrize("lang, words", [
@@ -204,15 +291,69 @@ def test_the_brand_colour_reaches_bootstrap_and_its_text_stays_legible(theme, tm
     assert theme._load()["primaryRgb"] == "0, 0, 255"
 
 
+STOCK_TEALS = r"#206b82|#187794|#1a5668|#005d7a|#003647|#00232e|#bfd7de|#d9e7eb|#000f14"
+
+
 def test_no_stock_ckan_colour_survives_the_theme():
-    """CKAN compiles #206b82 into its own rules; each group of them is restated on the brand."""
-    header = (THEME / "header.html").read_text()
-    for variable in ("--bs-primary: var(--jc-primary)", "--bs-primary-rgb:", "--bs-link-color: var(--jc-primary)"):
-        assert variable in header, variable
-    for rule in ("a, .btn-link, .nav-link", ".btn-primary:hover", ".form-check-input:checked",
-                 ".form-control:focus", ".homepage .module-search .search-form", ".view-list li a.active .icon"):
-        assert rule in header, rule
-    assert not re.search(r"#206b82|#187794|#1a5668|#005d7a", header, re.I)
+    """CKAN compiles its teal into its own rules; each group of them is restated on the brand."""
+    css = (THEME / "public__jc-theme.css").read_text()
+    for variable in ("--bs-primary: var(--jc-primary)", "--bs-primary-rgb: var(--jc-primary-rgb)",
+                     "--bs-link-color: var(--jc-primary)"):
+        assert variable in css, variable
+    for rule in (".btn-link, .link-primary", ".btn-primary:hover", ".form-check-input:checked",
+                 ".form-control:focus", ".masthead .main-navbar ul li:hover a", ".view-list li a.active .icon",
+                 ".account-masthead {", ".dropdown-item.active", ".page-item.active .page-link",
+                 "body.dt-view .page-item.active .page-link"):
+        assert rule in css, rule
+    for path in THEME.iterdir():
+        if path.suffix in (".html", ".css"):
+            assert not re.search(STOCK_TEALS, path.read_text(), re.I), path.name
+
+
+def test_the_stylesheet_carries_no_colour_of_its_own():
+    """T-3009: every colour is the branding block's or mixed from it, so values restyle it all."""
+    css = (THEME / "public__jc-theme.css").read_text()
+    assert not re.search(r"#[0-9a-f]{3,8}\b|\brgba?\(|\bhsla?\(", css, re.I)
+    named = re.findall(r":\s*(white|black|red|blue|green|gray|grey|navy|teal)\b", css, re.I)
+    assert not named, named
+    styles = (THEME / "templates__snippets__jc_styles.html").read_text()
+    for token in ("--jc-primary:", "--jc-primary-fg:", "--jc-primary-rgb:", "--jc-secondary:", "--jc-accent:",
+                  "--jc-background:", "--jc-text:", "--jc-font-heading:", "--jc-font-body:"):
+        assert token in styles, token
+    assert "h.url_for_static('/jc-theme.css')" in styles
+
+
+def test_the_table_view_wears_the_theme_and_the_theme_s_templates_win():
+    """The table view's own template empties the styles block; the theme restores it there, and
+    only the first plugin's templates outrank the table view's."""
+    view = (THEME / "templates__datatables__datatables_view.html").read_text()
+    assert "{% ckan_extends %}" in view and "snippets/jc_styles.html" in view
+    assert "snippets/jc_styles.html" in (THEME / "templates__base.html").read_text()
+    values = yaml.safe_load((PROJECT_ROOT / "charts/ckan/values.yaml").read_text())
+    assert values["ckan"]["plugins"].split()[0] == "jc_theme"
+
+
+def test_the_home_page_replaces_ckan_s_sample_page():
+    home = (THEME / "templates__home__index.html").read_text()
+    assert "{% block primary_content %}" in home
+    for part in ("brand.tagline or h.jc_t('tagline')", "h.get_site_statistics()", "h.jc_recent(6)",
+                 "get_facet_items_dict('organization'", 'role="search"', '<label for="jc-hero-q">'):
+        assert part in home, part
+    assert "home/snippets/" not in home
+
+
+def test_tagline_and_footer_lines_are_read_as_words_and_nothing_else(theme, tmp_path):
+    assert theme.BRANDING["tagline"] == "" and theme.BRANDING["footerLines"] == []
+    block = tmp_path / "words.json"
+    block.write_text(json.dumps({"tagline": "Open data of the city",
+                                 "footerLines": ["Demo instance, not affiliated.", "", "  ", 7, None]}))
+    theme.BRANDING_FILE = str(block)
+    loaded = theme._load()
+    assert loaded["tagline"] == "Open data of the city"
+    assert loaded["footerLines"] == ["Demo instance, not affiliated."]
+    block.write_text(json.dumps({"tagline": {"x": 1}, "footerLines": "not a list"}))
+    loaded = theme._load()
+    assert loaded["tagline"] == "" and loaded["footerLines"] == []
 
 
 def test_the_footer_carries_the_installations_links_and_none_of_ckans():
@@ -221,8 +362,40 @@ def test_the_footer_carries_the_installations_links_and_none_of_ckans():
     for stock in ("docs.ckan.org", "ckan.org", "opendefinition", "od_80x15"):
         assert stock not in footer, stock
     assert "h.jc_t('about_site')" in footer and "h.jc_portal_url()" in footer
-    # The demo disclaimer stays: the organisation line of the branding block.
-    assert "h.jc_branding().organisation" in footer
+    # The demo disclaimer stays: the organisation line, and the footer lines of the block.
+    assert "brand.organisation" in footer and "brand.footerLines" in footer
+
+
+def test_a_second_deployment_restyles_the_catalogue_from_values_alone(rendered, rendered_variant):
+    """T-3009: a new palette, logo, tagline and footer reach the theme with no file of it edited."""
+    logo = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><rect width="1" height="1" fill="#8a1538"/></svg>'
+
+    def rebrand(tree):
+        env = tree / "deployment/environments/dev/global.yaml.gotmpl"
+        text = env.read_text()
+        assert "primary: '#0000bf'" in text
+        text = text.replace("primary: '#0000bf'", "primary: '#8a1538'")
+        text = text.replace("    logo: logo.svg\n", "    logo: logo.svg\n    tagline: Otvorené dáta mesta\n"
+                            "    footerLines:\n      - Demo, not affiliated.\n", 1)
+        env.write_text(text)
+        (tree / "deployment/environments/dev/branding/logo.svg").write_text(logo + "\n")
+
+    def theme_of(docs):
+        (cm,) = [d for d in docs if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "ckan-theme"]
+        (ckan,) = [d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"] == "ckan"]
+        return cm["data"], ckan["spec"]["template"]["metadata"]["annotations"]["checksum/theme"]
+
+    before, before_sum = theme_of(rendered("dev"))
+    after, after_sum = theme_of(rendered_variant("dev", rebrand))
+    branding = json.loads(after["branding.json"])
+    assert branding["colours"]["primary"] == "#8a1538"
+    assert branding["tagline"] == "Otvorené dáta mesta" and branding["footerLines"] == ["Demo, not affiliated."]
+    assert after["logo.svg"].strip() == logo
+    # The theme's own files are byte for byte the same: only the values changed.
+    assert {k: v for k, v in after.items() if k not in ("branding.json", "logo.svg")} == \
+        {k: v for k, v in before.items() if k not in ("branding.json", "logo.svg")}
+    # And the pod restarts to show it.
+    assert after_sum != before_sum
 
 
 @pytest.mark.parametrize("reason, key", [

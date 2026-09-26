@@ -1,0 +1,8 @@
+{% ckan_extends %}
+
+{# The installation's look on every page (T-3009): the stylesheet holds no colour of its own,
+   so a second installation restyles the catalogue by its branding block alone (OPS-47). #}
+{% block custom_styles %}
+  {{ super() }}
+  {% snippet 'snippets/jc_styles.html' %}
+{% endblock %}
