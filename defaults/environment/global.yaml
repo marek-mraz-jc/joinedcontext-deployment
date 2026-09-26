@@ -86,6 +86,11 @@ global:
     # is public and pulls anonymously (T-0403). Turning this on against the stock image is a CKAN
     # that never starts; the pair is checked by `test_the_plugin_list_and_the_image_cannot_disagree`.
     sso: true
+    # DCAT-AP 3 on /catalog.ttl and /dataset/{id}.ttl for harvesters (T-3010). Same pairing as
+    # `sso`: `ckanext-dcat` is in images/ckan/Dockerfile, so this goes on together with the pin
+    # of an image built from it; `test_the_pinned_image_carries_every_listed_plugin` refuses
+    # the pair when they disagree.
+    dcat: true
 
   # Service mesh configuration
   serviceMesh:
@@ -183,6 +188,11 @@ global:
       default: en
       offered:
         - en
+    # The catalogue's own words (T-3009): the line under the name on its home page (empty is
+    # the theme's default, in the page's language) and its footer lines, one paragraph each,
+    # e.g. a demo disclaimer or an imprint.
+    tagline: ''
+    footerLines: []
 
   # Prometheus metrics scraping
   metrics:

@@ -1,21 +1,33 @@
 {% ckan_extends %}
 
-{# The installation's own links, and none of the stock ones: no CKAN documentation, no CKAN
-   Association, no Open Definition badge (T-2888). The API is the catalogue's own. #}
-{% block footer_links %}
-  <li><a href="{{ h.url_for('home.about') }}">{{ h.jc_t('about_site') }}</a></li>
-  {% if h.jc_portal_url() %}<li><a href="{{ h.jc_portal_url() }}">{{ h.jc_t('portal') }}</a></li>{% endif %}
-  <li><a href="{{ h.url_for('api.action', logic_function='package_list', ver=3) }}">{{ h.jc_t('catalogue_api') }}</a></li>
+{# The installation's own footer (T-2888, T-3009): its mark and name, the lines its branding
+   block writes (a demo disclaimer, an imprint), its links and none of CKAN's: no CKAN
+   documentation, no CKAN Association, no Open Definition badge. The API is the catalogue's own. #}
+{% block footer_content %}
+  {% set brand = h.jc_branding() %}
+  <div class="row gy-4">
+    <div class="col-md-6 jc-footer-lines">
+      <div class="jc-footer-brand">
+        {% if g.site_logo %}<img src="{{ h.url_for_static_or_external(g.site_logo) }}" alt="" />{% endif %}
+        <span>{{ brand.instanceName }}</span>
+      </div>
+      {% if brand.organisation %}<p>{{ brand.organisation }}</p>{% endif %}
+      {% for line in brand.footerLines %}<p>{{ line }}</p>{% endfor %}
+      {% if brand.contactEmail %}<p><a href="mailto:{{ brand.contactEmail }}">{{ brand.contactEmail }}</a></p>{% endif %}
+    </div>
+    <nav class="col-md-3 footer-links" aria-label="{{ h.jc_t('about_site') }}">
+      <ul class="list-unstyled">
+        {% block footer_links %}
+          <li><a href="{{ h.url_for('home.about') }}">{{ h.jc_t('about_site') }}</a></li>
+          {% if h.jc_portal_url() %}<li><a href="{{ h.jc_portal_url() }}">{{ h.jc_t('portal') }}</a></li>{% endif %}
+          <li><a href="{{ h.url_for('api.action', logic_function='package_list', ver=3) }}">{{ h.jc_t('catalogue_api') }}</a></li>
+        {% endblock %}
+      </ul>
+    </nav>
+    <div class="col-md-3 attribution">
+      {% snippet "snippets/language_selector.html" %}
+    </div>
+  </div>
 {% endblock %}
 
 {% block footer_links_ckan %}{% endblock %}
-
-{% block footer_attribution %}
-  <p>
-    {{ h.jc_branding().instanceName }}
-    {% if h.jc_branding().organisation %} · {{ h.jc_branding().organisation }}{% endif %}
-    {% if h.jc_branding().contactEmail %}
-      · <a href="mailto:{{ h.jc_branding().contactEmail }}">{{ h.jc_branding().contactEmail }}</a>
-    {% endif %}
-  </p>
-{% endblock %}

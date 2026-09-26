@@ -8,14 +8,14 @@
 ckan:
   catalogue:
     # CKAN plus the OIDC authenticator the Keycloak login needs (`images/ckan/Dockerfile`),
-    # published, signed and scanned by `.github/workflows/image-ckan.yml` (run 36104151075) from
+    # published, signed and scanned by `.github/workflows/image-ckan.yml` (run 36236182519, with ckanext-dcat for T-3010) from
     # the public repository, so the package is public and the node pulls it anonymously (T-0403).
     # This pin and `global.ckan.sso` travel together: the plugin list names `oidc_pkce` only when
     # the flag is on, and CKAN exits on a plugin it cannot import. Stock base, for a rollback:
     # docker.io/ckan/ckan-base:2.11.6@sha256:fc040c5b1e6e04de76187b478b3037c8c6c4e97ef4b7f1c03cbc6b0008e04ce7
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-ckan'
     tag: '2.11.6'
-    digest: 'sha256:5647ad44bd485260d41bf5c3680b572f904769889f0f6ed67cc0fcaed1269638'
+    digest: 'sha256:e02211e11d99c35fb104645ad8d6d1f1494f92f72f3fbef2f004e587b4bd1021'
   solr:
     # A plain Solr cannot index CKAN: the collection needs CKAN's schema, and this image is
     # the one that carries it. Its minor version tracks the CKAN one above.

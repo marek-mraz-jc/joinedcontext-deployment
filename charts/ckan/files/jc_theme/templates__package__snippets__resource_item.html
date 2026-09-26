@@ -1,0 +1,29 @@
+{#
+  One resource as a row (T-3009): its format, its name and what it is for, and the one action
+  it has, in place of CKAN's "Explore" menu that hid "Download" one click deep on every row.
+  The edit pages list resources through this snippet too (`url_is_edit`); they get the name only.
+#}
+{% set url_action = pkg.type ~ ('_resource.edit' if url_is_edit and can_edit else '_resource.read') %}
+{% set url = url or h.url_for(url_action, id=pkg.name, resource_id=res.id) %}
+{% set name = h.resource_display_name(res) %}
+<li class="resource-item jc-resource" data-id="{{ res.id }}">
+  <span class="jc-chip{% if res.datastore_active %} jc-chip-primary{% endif %}" data-format="{{ (res.format or 'data').lower() }}">{{ jc_format or h.get_translated(res, 'format') or '—' }}</span>
+  <div>
+    <a class="heading" href="{{ url }}">{{ name }}</a>
+    {% if jc_what %}<p>{{ jc_what }}</p>{% endif %}
+    {% if res.description %}<p class="description">{{ h.markdown_extract(h.get_translated(res, 'description'), extract_length=120) }}</p>{% endif %}
+  </div>
+  {% if not url_is_edit %}
+    <div class="jc-resource-actions">
+      {% if res.url and h.is_url(res.url) %}
+        <a class="btn btn-sm btn-outline-primary resource-url-analytics" href="{{ res.url }}" rel="noreferrer">
+          {{- h.jc_t('open') if jc_section == 'api' else h.jc_t('download') -}}
+          <span class="visually-hidden"> {{ name }}</span>
+        </a>
+      {% endif %}
+      {% if can_edit %}
+        <a class="btn btn-sm btn-default" href="{{ h.url_for(pkg.type ~ '_resource.edit', id=pkg.name, resource_id=res.id) }}">{{ _('Edit') }}<span class="visually-hidden"> {{ name }}</span></a>
+      {% endif %}
+    </div>
+  {% endif %}
+</li>

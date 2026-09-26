@@ -1,0 +1,7 @@
+{% ckan_extends %}
+
+{# The table view is framed on the dataset page; it wears the installation's look too (T-3009).
+   Its own template empties this block, which is why base.html's styles never reached it. #}
+{% block custom_styles %}
+  {% snippet 'snippets/jc_styles.html' %}
+{% endblock %}

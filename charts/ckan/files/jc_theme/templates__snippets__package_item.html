@@ -1,0 +1,17 @@
+{% ckan_extends %}
+
+{# A search result names what a reader gets and who publishes it (T-3009): the data and API
+   formats as plain chips, without the data model's seven artifacts and without CKAN's
+   colour per format, then the publisher and the last update. #}
+{% block resources %}
+  <div class="jc-item-meta">
+    {% if not hide_resources %}
+      {% for format in h.jc_formats(package)[:6] %}<span class="jc-chip">{{ format }}</span>{% endfor %}
+    {% endif %}
+    <span class="jc-item-facts">
+      {%- if package.organization %}{{ package.organization.title or package.organization.name }}{% endif -%}
+      {%- if package.organization and package.metadata_modified %} · {% endif -%}
+      {%- if package.metadata_modified %}{{ h.jc_t('updated') }} {{ h.render_datetime(package.metadata_modified) }}{% endif -%}
+    </span>
+  </div>
+{% endblock %}
