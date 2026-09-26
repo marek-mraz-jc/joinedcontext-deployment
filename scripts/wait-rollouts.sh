@@ -29,8 +29,12 @@ done
 
 failed=0
 for ns in $namespaces; do
+	# A pod already being deleted belongs to a rollout that finished; once its containers exit it
+	# shows Error or Completed rather than Terminating, so skip it by its deletionTimestamp.
+	deleting=$(kubectl get pods -n "$ns" -o jsonpath='{range .items[?(@.metadata.deletionTimestamp)]}{.metadata.name}{"\n"}{end}' 2>/dev/null || true)
 	while read -r pod; do
 		[ -n "$pod" ] || continue
+		grep -qxF "$pod" <<<"$deleting" && continue
 		failed=1
 		echo "--- not ready: ${ns}/${pod}"
 		kubectl get pod "$pod" -n "$ns" -o wide
