@@ -32,9 +32,15 @@ for ns in $namespaces; do
 	# A pod already being deleted belongs to a rollout that finished; once its containers exit it
 	# shows Error or Completed rather than Terminating, so skip it by its deletionTimestamp.
 	deleting=$(kubectl get pods -n "$ns" -o jsonpath='{range .items[?(@.metadata.deletionTimestamp)]}{.metadata.name}{"\n"}{end}' 2>/dev/null || true)
+	# A Job's pod in Error is one attempt; the Job retries it and removes it (a CronJob's pod
+	# did, mid-apply). Only a Job whose `Failed` condition is True is a failure of the apply.
+	owners=$(kubectl get pods -n "$ns" -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.metadata.ownerReferences[?(@.kind=="Job")].name}{"\n"}{end}' 2>/dev/null || true)
+	failed_jobs=$(kubectl get jobs -n "$ns" -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.status.conditions[?(@.type=="Failed")].status}{"\n"}{end}' 2>/dev/null | awk '$2 == "True" {print $1}' || true)
 	while read -r pod; do
 		[ -n "$pod" ] || continue
 		grep -qxF "$pod" <<<"$deleting" && continue
+		job=$(awk -v pod="$pod" '$1 == pod {print $2}' <<<"$owners")
+		if [ -n "$job" ] && ! grep -qxF "$job" <<<"$failed_jobs"; then continue; fi
 		failed=1
 		echo "--- not ready: ${ns}/${pod}"
 		kubectl get pod "$pod" -n "$ns" -o wide
