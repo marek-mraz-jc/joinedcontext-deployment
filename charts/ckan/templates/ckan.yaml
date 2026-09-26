@@ -179,6 +179,12 @@ spec:
             # `ckanext-envvars` maps the name to `ckanext.dcat.rdf.profiles`.
             - name: CKANEXT__DCAT__RDF__PROFILES
               value: euro_dcat_ap_3 jc_dcat_ap
+            # ckanext-dcat renames every extra of a page's dataset to an English label
+            # (`conforms_to` -> `Conforms to`) by default; the theme labels those keys itself, in
+            # the page's language, and found none of them once they were renamed (T-3025). The
+            # RDF endpoints never read this.
+            - name: CKANEXT__DCAT__TRANSLATE_KEYS
+              value: "false"
             {{- end }}
             {{- range $name, $value := .Values.ckan.env }}
             - name: {{ $name }}
