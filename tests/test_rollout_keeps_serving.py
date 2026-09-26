@@ -47,3 +47,26 @@ def test_a_rollout_starts_the_new_pod_before_the_old_one_stops(rendered, env, na
     if (template["metadata"].get("annotations") or {}).get("linkerd.io/inject") == "enabled":
         assert wait and int(wait) > main["lifecycle"]["preStop"]["sleep"]["seconds"], f"{env}/{name}: the proxy stops first"
     assert template["spec"].get("terminationGracePeriodSeconds", 30) > int(wait or 0)
+
+
+@pytest.mark.parametrize("env", ["dev", "production"])
+def test_the_edge_keeps_serving_while_it_rolls(rendered, env):
+    """T-3024, OPS-27: every request of every host passes APISIX, one pod on dev. Its chart pauses
+    30 s before the stop, but the meshed proxy stopped at once and the kubelet killed at 30 s:
+    a roll answered ~3 s of alternating 502s on both hosts. The proxy outlives the pause and the
+    grace period outlives the proxy."""
+    found = [
+        d for d in rendered(env)
+        if d.get("kind") == "Deployment" and d["metadata"]["name"] == "apisix"
+    ]
+    assert len(found) == 1, f"{env} renders {len(found)} APISIX Deployments"
+    template = found[0]["spec"]["template"]
+    gateway = next(c for c in template["spec"]["containers"] if c["name"] == "apisix")
+    command = gateway["lifecycle"]["preStop"]["exec"]["command"]
+    pause = int(command[-1].removeprefix("sleep "))
+    assert pause >= 5, f"{env}: the gateway stops listening while the ingress still routes to it"
+    wait = int(template["metadata"]["annotations"]["config.alpha.linkerd.io/proxy-wait-before-exit-seconds"])
+    assert wait > pause, f"{env}: the mesh proxy stops before the gateway's pause ends"
+    assert template["spec"]["terminationGracePeriodSeconds"] > wait, (
+        f"{env}: the kubelet kills the pod before the proxy's wait ends"
+    )
