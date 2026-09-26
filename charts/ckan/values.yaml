@@ -19,8 +19,11 @@ ckan:
     tag: ''
     digest: ''
     pullPolicy: IfNotPresent
-  # CKAN's own plugin list. `jc_theme` is the theme this chart mounts; the rest are CKAN's.
-  plugins: 'envvars image_view text_view datatables_view datastore jc_theme'
+  # CKAN's own plugin list. `jc_theme` is the theme this chart mounts; the rest are CKAN's. It
+  # comes first because the first plugin's templates win (IConfigurer runs in reverse), and the
+  # theme overrides the table view's own page so the grid framed on a dataset page wears the
+  # installation's look (T-3009).
+  plugins: 'jc_theme envvars image_view text_view datatables_view datastore'
   # `oidc_pkce` is appended to this list by the template when `sso.enabled` is on, and only
   # then: CKAN exits on a plugin it cannot import, and the extension lives in the image this
   # repository builds, not in the stock one.

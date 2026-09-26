@@ -50,13 +50,43 @@ the fix is upstream of the catalogue, never a fill by hand.
 ## Branding
 
 Nothing here carries a city name. `global.branding` is written into the theme ConfigMap as
-`branding.json` and read by `ckanext_jc_theme`, which renders the header, the footer and one
-stylesheet of `--jc-*` custom properties from it (OPS-46, OPS-47). The Portal is handed the
-same block as YAML, so the two surfaces cannot drift. CKAN's own teal, which its Bootstrap build
-writes into dozens of rules, is restated on `--jc-primary` in `header.html`; the footer carries the
-installation's links and none of CKAN's; and the header shows the mark with the installation's
-name beside it (T-2888). A rebrand is a values edit and an
-apply; the checksum annotation on the Deployment restarts the pod so the change is seen.
+`branding.json` and read by `ckanext_jc_theme` (OPS-46, OPS-47); the Portal is handed the same
+block as YAML, so the two surfaces cannot drift. What a deployment sets, and where it shows:
+
+```yaml
+global:
+  branding:
+    instanceName: joinedcontext       # header, hero, footer, page titles
+    organisation: City of ...         # footer, publisher fallback
+    contactEmail: opendata@example.org
+    logo: logo.svg                    # header and footer mark; logoSvg carries the bytes
+    favicon: logo.svg                 # a file the ConfigMap carries (today: the logo)
+    logoSvg: |
+      <svg ...>
+    colours: {primary: '#0000bf', secondary: '#0072c6', accent: '#ffe977', background: '#ffffff', text: '#1a1a1a'}
+    fonts: {heading: 'system-ui, sans-serif', body: 'system-ui, sans-serif'}
+    languages: {default: en, offered: [en]}
+    tagline: ''                       # under the name on the home page; empty = the theme's line
+    footerLines: []                   # footer paragraphs: a demo disclaimer, an imprint
+```
+
+The look is `files/jc_theme/public__jc-theme.css`, in the Portal's family (T-3009): a light header,
+cards on a tinted page, the brand colour for actions and the current place, a dark footer.
+`templates__base.html` writes the five colours and two font stacks as `--jc-*` custom properties
+and the stylesheet mixes every other shade from them with `color-mix()`, the way the Portal's
+`tokens.css` does, so it holds no colour of its own and a second city restyles the catalogue from
+this block alone. CKAN's own teal, which its Bootstrap build writes into dozens of rules, is
+restated on the brand there too. Pages the theme lays out itself: the home page (hero, search,
+recently updated datasets, publishers and keywords), the dataset page (the DataStore table framed
+first with its row count, then About, the live API, and the resources in three sections: files,
+APIs, and the folded data model), the resource rows, the search results and the footer.
+
+`jc_theme` is the first plugin in `ckan.plugins`: the first plugin's templates win, and the theme
+overrides the table view's own page (`datatables/datatables_view.html`), which empties the styles
+block every other page inherits, so the grid framed on a dataset page wears the same look.
+
+A rebrand is a values edit and an apply; the checksum annotation on the Deployment restarts the
+pod so the change is seen.
 
 The theme is mounted, not baked: a ConfigMap has no directories, so each file is mounted by
 its own `subPath` into one directory on `PYTHONPATH`, together with a `dist-info` carrying
