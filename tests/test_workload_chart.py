@@ -135,3 +135,39 @@ def test_a_workload_with_nothing_to_serve_is_ready_by_command_and_never_restarte
                                       "service": {"enabled": False}, "probes": {"enabled": False}})
     plain = find_resource(bare, "Deployment")["spec"]["template"]["spec"]["containers"][0]
     assert "readinessProbe" not in plain and "livenessProbe" not in plain, "no command, no probe"
+
+
+@requires_helm
+def test_a_stopping_pod_keeps_serving_until_the_edge_and_the_mesh_let_it_go(tmp_path):
+    """T-3008, OPS-27: every roll answered ~2 s of 502s in 0.1 s. The kubelet stops the old pod at
+    once while APISIX and Linkerd still send to it, and the meshed proxy refuses new connections
+    from the same instant. The app pauses first (the kubelet's own sleep: the images are
+    distroless), the proxy outlives the pause and the drain, and the grace period outlives both."""
+    dep = find_resource(render_workload(tmp_path / "meshed", {"serviceMesh": {"enabled": True}}), "Deployment")
+    pod = dep["spec"]["template"]
+    pause = pod["spec"]["containers"][0]["lifecycle"]["preStop"]["sleep"]["seconds"]
+    assert pause >= 5
+    wait = int(pod["metadata"]["annotations"]["config.alpha.linkerd.io/proxy-wait-before-exit-seconds"])
+    assert wait > pause
+    assert pod["spec"]["terminationGracePeriodSeconds"] > wait
+
+    # Without the mesh there is no proxy to hold; the app still pauses.
+    plain = find_resource(render_workload(tmp_path / "plain", {"serviceMesh": {"enabled": False}}), "Deployment")
+    template = plain["spec"]["template"]
+    assert "config.alpha.linkerd.io/proxy-wait-before-exit-seconds" not in (template["metadata"].get("annotations") or {})
+    assert template["spec"]["containers"][0]["lifecycle"]["preStop"]["sleep"]["seconds"] == pause
+
+    # A workload that opts out renders neither.
+    off = find_resource(
+        render_workload(tmp_path / "off", {"preStopSleepSeconds": 0, "serviceMesh": {"enabled": True}}), "Deployment"
+    )
+    assert "lifecycle" not in off["spec"]["template"]["spec"]["containers"][0]
+    assert "config.alpha.linkerd.io/proxy-wait-before-exit-seconds" not in off["spec"]["template"]["metadata"]["annotations"]
+
+
+@requires_helm
+def test_a_grace_period_shorter_than_the_pause_and_drain_is_refused(tmp_path):
+    """A kubelet that kills the pod before its proxy's wait ends cuts the drain it was for."""
+    with pytest.raises(subprocess.CalledProcessError) as refused:
+        render_workload(tmp_path, {"terminationGracePeriodSeconds": 10, "serviceMesh": {"enabled": True}})
+    assert "terminationGracePeriodSeconds (10) must be longer" in refused.value.stderr
