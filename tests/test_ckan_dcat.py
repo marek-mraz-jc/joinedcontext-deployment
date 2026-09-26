@@ -66,6 +66,17 @@ def test_the_flag_lists_the_plugin_and_both_profiles_and_nothing_while_off(tmp_p
 
 
 @requires_helm
+def test_the_dataset_page_keeps_the_keys_the_theme_reads(tmp_path):
+    """T-3025: ckanext-dcat renames every extra of a page's dataset to an English label
+    (`conforms_to` -> `Conforms to`) unless told not to, and the theme's About list, which labels
+    those keys itself in four languages, then found none of them."""
+    on = env_of(ckan_container(render_chart(tmp_path / "on", with_dcat(True))))
+    assert on["CKANEXT__DCAT__TRANSLATE_KEYS"] == "false"
+    off = env_of(ckan_container(render_chart(tmp_path / "off", with_dcat(False))))
+    assert "CKANEXT__DCAT__TRANSLATE_KEYS" not in off
+
+
+@requires_helm
 def test_the_profile_is_mounted_where_its_entry_point_imports_it(tmp_path):
     """An entry point naming a module that is not mounted is a /catalog.ttl that answers 500."""
     docs = render_chart(tmp_path / "on", with_dcat(True))

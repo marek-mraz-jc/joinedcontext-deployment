@@ -144,6 +144,16 @@ def test_the_live_box_shows_only_an_https_address_of_the_platform_and_a_query_th
 
 def test_internal_extras_never_reach_more_details(theme):
     assert theme.jc_more(PUBLISHED) == [("source_note", "Measured by HSY")]
+    # T-3025: the DCAT metadata jcctl writes for harvesters is not words for a reader: the EU
+    # licence URI beside the licence the About list already links, and the themes as a JSON list.
+    dcat = dict(PUBLISHED, extras=PUBLISHED["extras"] + [
+        {"key": "license_url", "value": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"},
+        {"key": "theme", "value": '["http://publications.europa.eu/resource/authority/data-theme/TRAN"]'},
+        {"key": "spatial_uri", "value": "http://data.europa.eu/nuts/code/CZ010"},
+    ])
+    assert theme.jc_more(dcat) == [("source_note", "Measured by HSY")]
+    rows = {label: text for label, text, _ in theme.jc_about(dcat)}
+    assert rows["Area covered"] == "http://data.europa.eu/nuts/code/CZ010"
 
 
 SCHEMA = "https://dev.example/api/endpoint/praha/schema/v1/"

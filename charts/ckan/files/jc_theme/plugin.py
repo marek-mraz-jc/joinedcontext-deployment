@@ -263,9 +263,11 @@ FREQUENCIES = {
 # The extras the About list reads by name, in the order a reader sees them. Everything else
 # the publisher wrote stays under "More details"; the internal ones are never shown.
 ABOUT_EXTRAS = ("identifier", "language", "contact", "conforms_to", "status")
+# `license_url` and `theme` are DCAT metadata for harvesters (T-3025): the EU licence URI beside
+# the licence the About list already links, and the themes as a JSON list of vocabulary URIs.
 INTERNAL_EXTRAS = {"generated_by", "endpoint", "publisher_name", "publisher_uri", "contact_name",
                    "contact_email", "frequency", "spatial", "spatial_uri", "temporal_start",
-                   "temporal_end", "theme"}
+                   "temporal_end", "theme", "license_url"}
 
 
 def _language():
