@@ -8,7 +8,13 @@
        and the organization is the one the configuration repository lives in. */}}
 {{- $groupTeamMap := dict }}
 {{- range $group, $teams := $this.groupTeams | default dict }}
-{{- $_ := set $groupTeamMap $group (dict $global.configRepo.owner $teams) }}
+{{- $orgs := dict $global.configRepo.owner $teams }}
+{{- /* The same teams in the applications' own organization (T-3030), which the bootstrap Job
+       creates beside the configuration's: a reader reads every App's source too. */}}
+{{- with $this.appsOrganization }}
+{{- $_ := set $orgs . $teams }}
+{{- end }}
+{{- $_ := set $groupTeamMap $group $orgs }}
 {{- end }}
 {{- /* PF-87: each project repository is read through its own two teams. The Portal's
        reconciler creates the teams `{slug}-readers` and `{slug}-writers` and fills the Keycloak

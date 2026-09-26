@@ -8,6 +8,7 @@ reads its configuration from. These tests run the bootstrap Job's own rendered s
 
 import base64
 import json
+import re
 
 import pytest
 
@@ -169,6 +170,8 @@ def test_the_applications_move_to_their_own_organization_and_machine_user(script
     forge = Forge(tmp_path, {})
     held = state(forge)
     held["repos"] = {"helsinki_bikes": {"files": {}, "head": "c" * 40}, "helsinki": {"files": {}, "head": "d" * 40}}
+    # The team jc-portal created repositories through, before the applications moved.
+    held["teams"] = {"joinedcontext/jc-portal": {"id": 3, "spec": {}, "members": ["jc-portal"]}}
     forge.state.write_text(json.dumps(held))
     apart = APART
     first = forge.run(script, **apart)
@@ -178,7 +181,7 @@ def test_the_applications_move_to_their_own_organization_and_machine_user(script
     assert held["collaborators"]["helsinki_bikes/jc-apps"] == "admin"
     # T-2969: the forge mints a repository's runner registration token for an owner of the
     # organization only, and the Portal's build-pods pass asks for it with jc-apps' token.
-    assert held["team_members"]["1"] == ["jc-apps"], "jc-apps is not the only new owner of the apps organization"
+    assert held["teams"]["joinedcontext-apps/Owners"]["members"] == ["jc-apps"], "jc-apps is not the only new owner"
     assert "jc-portal" in held["left"], "jc-portal still creates repositories beside the configuration"
     assert held["users"]["jc-apps"]["patched"]["admin"] is False
     minted = [m for m in held["minted"] if not m.startswith(("jc-portal/", "jc-gateway/"))]
@@ -193,6 +196,30 @@ def test_the_applications_move_to_their_own_organization_and_machine_user(script
     assert second.returncode == 0, second.stderr
     again = state(forge)
     assert again["minted"] == held["minted"] and again["moved"] == held["moved"]
+
+
+@requires_helmfile
+def test_a_reader_of_the_configuration_reads_every_application_in_their_own_organization(script, tmp_path):
+    """T-3030, PF-79, AP-78: after the move the apps organization had no readers team, so no
+    reader opened an App's repository. The Job gives it the same read-only teams, including every
+    repository, with the configuration team's members; one who leaves that team leaves this one."""
+    forge = Forge(tmp_path, {})
+    held = state(forge)
+    held["teams"] = {"joinedcontext/viewers": {"id": 3, "spec": {}, "members": ["demo.steward", "demo.viewer"]}}
+    forge.state.write_text(json.dumps(held))
+    first = forge.run(script, **APART)
+    assert first.returncode == 0, first.stderr
+    team = state(forge)["teams"]["joinedcontext-apps/viewers"]
+    assert team["spec"]["permission"] == "read" and team["spec"]["includes_all_repositories"] is True, team
+    assert team["spec"]["units"] == ["repo.code", "repo.issues", "repo.pulls"], team
+    assert sorted(team["members"]) == ["demo.steward", "demo.viewer"], team
+
+    held = state(forge)
+    held["teams"]["joinedcontext/viewers"]["members"] = ["demo.steward"]
+    forge.state.write_text(json.dumps(held))
+    second = forge.run(script, **APART)
+    assert second.returncode == 0, second.stderr
+    assert state(forge)["teams"]["joinedcontext-apps/viewers"]["members"] == ["demo.steward"]
 
 
 @requires_helmfile
@@ -265,7 +292,8 @@ def test_without_an_applications_organization_nothing_moves(script, tmp_path):
     assert forge.run(script, APPS_ORG="").returncode == 0
     held = state(forge)
     assert not held.get("moved") and not held.get("left")
-    assert "1" not in held.get("team_members", {}), "somebody became an owner of the configuration's organization"
+    owners = {k: t["members"] for k, t in held.get("teams", {}).items() if k.endswith("/Owners")}
+    assert not any(owners.values()), f"somebody became an owner: {owners}"
     assert not any(m.startswith("jc-apps/") for m in held["minted"])
 
 
@@ -318,6 +346,16 @@ def test_dev_keeps_its_applications_apart_and_restarts_only_its_runners(rendered
     env = {e["name"]: e.get("value") for e in job["spec"]["template"]["spec"]["containers"][0]["env"]}
     assert env["APPS_ORG"] == "joinedcontext-apps"
     assert _portal_env(docs)["JC_GITEA_APPS_OWNER"]["value"] == "joinedcontext-apps"
+    # T-3030: a sign-in keeps the reading teams of both organizations in step with the group.
+    configure = next(
+        d["stringData"]["configure_gitea.sh"] for d in docs
+        if d.get("kind") == "Secret" and "configure_gitea.sh" in d.get("stringData", {})
+    )
+    maps = re.findall(r'--group-team-map "(.*?)" --group-team-map-removal', configure)
+    assert maps, "no group-team map on the forge's login"
+    for raw in maps:
+        for group, orgs in json.loads(raw.replace('\\"', '"')).items():
+            assert orgs["joinedcontext"] and orgs.get("joinedcontext-apps") == orgs["joinedcontext"], (group, orgs)
     targets = env["RUNNER_RESTART"].split()
     assert [t.split("/")[1] for t in targets] == ["gitea-runner", "gitea-runner-rust"], targets
     namespace = targets[0].split("/")[0]

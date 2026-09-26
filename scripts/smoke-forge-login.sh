@@ -12,7 +12,12 @@ org="${JC_SMOKE_ORG:-$(kubectl get deploy context-gateway -n "$slug" \
 	-o jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="JC_GATEWAY_ORG_DOMAIN")].value}' 2>/dev/null || true)}"
 org="${org:-hel.fi}"
 forge_org="${JC_FORGE_ORG:-joinedcontext}"
-folder="$base/git/$forge_org/configuration/src/branch/main/projects/${JC_SMOKE_PROJECT:-helsinki}"
+# The App repositories live in an organization of their own when `appsOrganization` is set
+# (T-2969); the bootstrap records it as the runner Secret's `owner`, as scripts/smoke.sh reads it.
+apps_org="${JC_FORGE_APPS_ORG:-$(kubectl get secret gitea-runner-registration -n "$slug" -o jsonpath='{.data.owner}' 2>/dev/null | base64 -d 2>/dev/null || true)}"
+apps_org="${apps_org:-$forge_org}"
+project="${JC_SMOKE_PROJECT:-helsinki}"
+folder="$base/git/$forge_org/configuration/src/branch/main/projects/$project"
 signed=""
 
 work=$(mktemp -d)
@@ -83,6 +88,15 @@ login() {
 	else
 		ko "$user is not in the forge team readers ($code)"
 	fi
+	# The same team in the Apps' own organization (T-3030): without it, a reader opens none of them.
+	if [ "$apps_org" != "$forge_org" ]; then
+		code=$(curl -sS -b "$jar" -o /dev/null -w '%{http_code}' --max-time 20 "$base/git/org/$apps_org/teams/readers" 2>/dev/null)
+		if [ "$code" = 200 ]; then
+			ok "$user is in the forge team readers of $apps_org"
+		else
+			ko "$user is not in the forge team readers of $apps_org ($code)"
+		fi
+	fi
 	signed="$signed $user"
 	# Every write goes through a Change (CC-41). Gitea links "Add file" for everyone; to a
 	# person without write it is the "fork to propose changes" notice, to a writer the commit
@@ -119,14 +133,24 @@ done
 # person who only reads, and for nobody signed out. The list is every person's together: a
 # repository one of them misses is the defect, not a reason to skip it.
 apps=$(for user in $signed; do
-	curl -sS -b "$work/$user.jar" --max-time 20 "$base/git/$forge_org" 2>/dev/null \
-		| grep -o "href=\"/git/$forge_org/[A-Za-z0-9._-]*\"" | sed -e 's/.*\///' -e 's/"$//'
+	curl -sS -b "$work/$user.jar" --max-time 20 "$base/git/$apps_org" 2>/dev/null \
+		| grep -o "href=\"/git/$apps_org/[A-Za-z0-9._-]*\"" | sed -e 's/.*\///' -e 's/"$//'
 done | grep -vx configuration | sort -u)
+# What the project declares (projects/{project}/apps/{app}/app.yaml), read as the same people: an
+# empty list beside a declared App is a reader who cannot see the repositories, not an empty forge.
+declared=$(for user in $signed; do
+	curl -sS -b "$work/$user.jar" --max-time 20 "$folder/apps" 2>/dev/null \
+		| grep -o "href=\"${folder#"$base"}/apps/[A-Za-z0-9._-]*\"" | sed -e 's/.*\///' -e 's/"$//'
+done | sort -u)
 if [ -n "$signed" ] && [ -z "$apps" ]; then
-	ok "the forge holds no application repository yet"
+	if [ -n "$declared" ]; then
+		ko "$project declares Apps ($(echo $declared | tr ' ' ',')) and no reader lists a repository of $apps_org"
+	else
+		ok "the forge holds no application repository yet"
+	fi
 fi
 for app in $apps; do
-	repo="$base/git/$forge_org/$app"
+	repo="$base/git/$apps_org/$app"
 	code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$repo" 2>/dev/null)
 	if [ "$code" = 404 ]; then
 		ok "an anonymous visitor does not read $app (404)"
@@ -139,7 +163,7 @@ for app in $apps; do
 			ko "$user: application repository $app answers $code"
 			continue
 		fi
-		if ! grep -q "/git/$forge_org/$app/src/branch/" "$work/$user.app"; then
+		if ! grep -q "/git/$apps_org/$app/src/branch/" "$work/$user.app"; then
 			ko "$user: application repository $app lists no files (empty repository?)"
 			continue
 		fi

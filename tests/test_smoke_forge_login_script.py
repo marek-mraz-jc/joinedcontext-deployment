@@ -17,7 +17,8 @@ import pytest
 SCRIPT = Path(__file__).resolve().parent.parent / "scripts" / "smoke-forge-login.sh"
 PASSWORD = "s3cret-Pa55&word"
 FOLDER = "/git/joinedcontext/configuration/src/branch/main/projects/helsinki"
-APP = "/git/joinedcontext/helsinki_map-alerts"
+APP_NAME = "helsinki_map-alerts"
+APPS_ORG = "joinedcontext-apps"
 FORM = ('<html><form id="kc-form-login" onsubmit="return true;" '
         'action="{base}/kc/authenticate?session_code=a&amp;tab_id=b" method="post"></form>'
         '{error}</html>')
@@ -37,8 +38,14 @@ def archive():
 def serve(mode):
     """mode: ok | pkce (the forge's button fails) | no-team (404 after login) | writable |
     forkable (the forge lets a reader fork) | app-hidden (the application repository is a 404
-    to a reader) | app-public (anyone reads it) | app-empty (it holds no commit) | no-apps."""
+    to a reader) | app-public (anyone reads it) | app-empty (it holds no commit) | no-apps |
+    apart (the Apps live in an organization of their own, T-2969) | apart-no-team (that
+    organization has no readers team, T-3030) | apart-no-repos (it holds no repository while
+    the project declares an App)."""
     forks = []
+    org = APPS_ORG if mode.startswith("apart") else "joinedcontext"
+    APP = f"/git/{org}/{APP_NAME}"
+    reader = mode != "apart-no-team"
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *_):
@@ -83,17 +90,30 @@ def serve(mode):
                 return self.send(200, '<input type="hidden" name="_csrf" value="tok"><input name="uid" type="hidden" value="4">')
             if self.path == "/git/org/joinedcontext/teams/readers":
                 return self.send(200 if signed_in else 404, "<html>readers</html>")
+            if self.path == f"/git/org/{APPS_ORG}/teams/readers" and org == APPS_ORG:
+                return self.send(200 if signed_in and reader else 404, "<html>readers</html>")
+            if self.path == FOLDER + "/apps":
+                if not signed_in:
+                    return self.send(404)
+                declared = "" if mode == "no-apps" else f'<a href="{FOLDER}/apps/map-alerts">map-alerts</a>'
+                return self.send(200, f"<html>{declared}</html>")
             if self.path == "/git/joinedcontext":
                 if not signed_in:
                     return self.send(404)
-                listed = "" if mode == "no-apps" else f'<a href="{APP}">helsinki_map-alerts</a>'
+                listed = "" if mode == "no-apps" or org != "joinedcontext" else f'<a href="{APP}">{APP_NAME}</a>'
                 return self.send(200, f'<a href="/git/joinedcontext/configuration">configuration</a>{listed}')
+            if self.path == f"/git/{APPS_ORG}" and org == APPS_ORG:
+                # A private organization is a 404 to anybody outside its teams.
+                if not signed_in or not reader:
+                    return self.send(404)
+                listed = "" if mode == "apart-no-repos" else f'<a href="{APP}">{APP_NAME}</a>'
+                return self.send(200, f"<html>{listed}</html>")
             if self.path == APP:
-                if mode == "app-public" or (signed_in and mode != "app-hidden"):
+                if mode == "app-public" or (signed_in and reader and mode != "app-hidden"):
                     tree = "" if mode == "app-empty" else f'<a href="{APP}/src/branch/main/index.html">index.html</a>'
                     return self.send(200, f"<html>{tree}</html>")
                 return self.send(404)
-            if self.path == APP + "/archive/main.tar.gz" and signed_in and mode not in ("app-hidden", "app-empty"):
+            if self.path == APP + "/archive/main.tar.gz" and signed_in and reader and mode not in ("app-hidden", "app-empty"):
                 return self.send(200, archive())
             if self.path in ("/git/demo.steward/configuration", "/git/demo.viewer/configuration"):
                 return self.send(200 if forks else 404, "<html>fork</html>")
@@ -120,7 +140,13 @@ def run(tmp_path, mode, password=PASSWORD):
     server = serve(mode)
     kubectl = tmp_path / "kubectl"
     encoded = base64.b64encode(password.encode()).decode() if password else ""
-    kubectl.write_text(f'#!/bin/sh\ncase "$*" in *secret*) printf %s "{encoded}";; esac\n')
+    # The runner's Secret records the organization the App repositories live in (T-2969).
+    owner = base64.b64encode((APPS_ORG if mode.startswith("apart") else "joinedcontext").encode()).decode()
+    kubectl.write_text(
+        '#!/bin/sh\ncase "$*" in\n'
+        f'  *gitea-runner-registration*) printf %s "{owner}";;\n'
+        f'  *secret*) printf %s "{encoded}";;\nesac\n'
+    )
     kubectl.chmod(0o755)
     env = {**os.environ, "PATH": f"{tmp_path}:{os.environ['PATH']}", "JC_SMOKE_ORG": "hel.fi"}
     try:
@@ -232,3 +258,30 @@ def test_a_person_the_group_map_lands_nowhere_fails_on_the_team(tmp_path):
     assert "the forge holds no application repository yet" not in r.stdout, (
         "with nobody signed in, no list of applications is claimed"
     )
+
+
+def test_application_repositories_in_their_own_organization_are_read_by_a_reader(tmp_path):
+    """T-2969, T-3030: the Apps moved to `joinedcontext-apps`; the smoke reads that organization,
+    named by the runner Secret's `owner`, and a reader there reads and downloads every App."""
+    r = run(tmp_path, "apart")
+    assert r.returncode == 0, r.stdout + r.stderr
+    for user in ("demo.steward", "demo.viewer"):
+        assert f"ok    {user} is in the forge team readers of {APPS_ORG}" in r.stdout
+        assert f"ok    {user} reads and downloads application repository {APP_NAME} (1 files)" in r.stdout
+    assert f"ok    an anonymous visitor does not read {APP_NAME} (404)" in r.stdout
+
+
+def test_an_applications_organization_without_readers_fails_and_claims_no_empty_forge(tmp_path):
+    """T-3030: after the move no reader could open an App, and the smoke printed 'ok, the forge
+    holds no application repository yet'."""
+    r = run(tmp_path, "apart-no-team")
+    assert r.returncode == 1, r.stdout + r.stderr
+    assert f"FAIL  demo.viewer is not in the forge team readers of {APPS_ORG} (404)" in r.stdout
+    assert "the forge holds no application repository yet" not in r.stdout
+    assert f"FAIL  helsinki declares Apps (map-alerts) and no reader lists a repository of {APPS_ORG}" in r.stdout
+
+
+def test_declared_apps_with_no_repository_fail(tmp_path):
+    r = run(tmp_path, "apart-no-repos")
+    assert r.returncode == 1, r.stdout + r.stderr
+    assert f"FAIL  helsinki declares Apps (map-alerts) and no reader lists a repository of {APPS_ORG}" in r.stdout
