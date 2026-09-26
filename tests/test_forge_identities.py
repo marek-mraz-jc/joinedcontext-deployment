@@ -11,7 +11,7 @@ import json
 
 import pytest
 
-from test_forge_seed_converges import Forge, requires_helmfile
+from test_forge_seed_converges import ORG, Forge, requires_helmfile
 
 
 @pytest.fixture(scope="module")
@@ -30,6 +30,26 @@ def state(forge: Forge) -> dict:
 
 def token_of(forge: Forge, secret: str) -> str:
     return base64.b64decode(forge.secrets[secret]["data"]["token"]).decode()
+
+
+# An environment with an organization of its own for the applications (PF-106, T-2856).
+APART = {
+    "APPS_ORG": "joinedcontext-apps",
+    "APPS_USER": "jc-apps",
+    "APPS_SECRET": "gitea-token-apps",
+    "APPS_SCOPES": '["write:repository","write:package"]',
+    "APPS_NAMESPACES": "dev",
+    "APPS_RESTART": "dev/portal",
+    "REGISTRY_SECRET": "app-registry",
+    "REGISTRY_SCOPES": '["read:package"]',
+    "REGISTRY_HOST": "forge.test",
+    "REGISTRY_NAMESPACES": "dev-apps",
+    "LANE_SECRET": "gitea-token-lane-secret",
+    "LANE_SCOPES": '["write:organization"]',
+    "LANE_NAMESPACES": "dev",
+    "RUNNER_SECRET": "gitea-runner-registration",
+    "RUNNER_NAMESPACES": "dev",
+}
 
 
 @requires_helmfile
@@ -150,28 +170,15 @@ def test_the_applications_move_to_their_own_organization_and_machine_user(script
     held = state(forge)
     held["repos"] = {"helsinki_bikes": {"files": {}, "head": "c" * 40}, "helsinki": {"files": {}, "head": "d" * 40}}
     forge.state.write_text(json.dumps(held))
-    apart = {
-        "APPS_ORG": "joinedcontext-apps",
-        "APPS_USER": "jc-apps",
-        "APPS_SECRET": "gitea-token-apps",
-        "APPS_SCOPES": '["write:repository","write:package"]',
-        "APPS_NAMESPACES": "dev",
-        "APPS_RESTART": "dev/portal",
-        "REGISTRY_SECRET": "app-registry",
-        "REGISTRY_SCOPES": '["read:package"]',
-        "REGISTRY_HOST": "forge.test",
-        "REGISTRY_NAMESPACES": "dev-apps",
-        "LANE_SECRET": "gitea-token-lane-secret",
-        "LANE_SCOPES": '["write:organization"]',
-        "LANE_NAMESPACES": "dev",
-        "RUNNER_SECRET": "gitea-runner-registration",
-        "RUNNER_NAMESPACES": "dev",
-    }
+    apart = APART
     first = forge.run(script, **apart)
     assert first.returncode == 0, first.stderr
     held = state(forge)
     assert held["moved"] == {"helsinki_bikes": "joinedcontext-apps"}, "a project repository moved too"
     assert held["collaborators"]["helsinki_bikes/jc-apps"] == "admin"
+    # T-2969: the forge mints a repository's runner registration token for an owner of the
+    # organization only, and the Portal's build-pods pass asks for it with jc-apps' token.
+    assert held["team_members"]["1"] == ["jc-apps"], "jc-apps is not the only new owner of the apps organization"
     assert "jc-portal" in held["left"], "jc-portal still creates repositories beside the configuration"
     assert held["users"]["jc-apps"]["patched"]["admin"] is False
     minted = [m for m in held["minted"] if not m.startswith(("jc-portal/", "jc-gateway/"))]
@@ -189,6 +196,34 @@ def test_the_applications_move_to_their_own_organization_and_machine_user(script
 
 
 @requires_helmfile
+def test_the_runners_restart_once_when_their_token_moves_to_the_applications_organization(script, tmp_path):
+    """T-2969: a runner reads its registration token once, at start, and registers with it after
+    every job. When the token it holds is the configuration organization's and the Job now writes
+    the applications organization's, the runners restart once; a second run restarts nothing."""
+    forge = Forge(tmp_path, {})
+    held = state(forge)
+    old = {"token": base64.b64encode(b"R" * 40).decode(), "owner": base64.b64encode(ORG.encode()).decode()}
+    held["secrets"]["gitea-runner-registration"] = {"data": old}
+    held["deployments_exist"] = True
+    forge.state.write_text(json.dumps(held))
+    apart = {
+        **APART,
+        "RUNNER_NAMESPACES": "dev-runner",
+        "RUNNER_RESTART": "dev-runner/gitea-runner dev-runner/gitea-runner-rust",
+    }
+    first = forge.run(script, **apart)
+    assert first.returncode == 0, first.stderr
+    runners = [r for r in state(forge)["restarted"] if "gitea-runner" in r]
+    assert runners == ["dev-runner/deployments/gitea-runner", "dev-runner/deployments/gitea-runner-rust"], runners
+    owner = base64.b64decode(forge.secrets["gitea-runner-registration"]["data"]["owner"]).decode()
+    assert owner == "joinedcontext-apps"
+
+    second = forge.run(script, **apart)
+    assert second.returncode == 0, second.stderr
+    assert [r for r in state(forge)["restarted"] if "gitea-runner" in r] == runners, "a runner restarted again"
+
+
+@requires_helmfile
 def test_without_an_applications_organization_nothing_moves(script, tmp_path):
     """T-2856: the default keeps the applications beside the configuration, jc-portal creating
     and administering them, and no apps token is minted."""
@@ -199,6 +234,7 @@ def test_without_an_applications_organization_nothing_moves(script, tmp_path):
     assert forge.run(script, APPS_ORG="").returncode == 0
     held = state(forge)
     assert not held.get("moved") and not held.get("left")
+    assert "1" not in held.get("team_members", {}), "somebody became an owner of the configuration's organization"
     assert not any(m.startswith("jc-apps/") for m in held["minted"])
 
 
@@ -239,3 +275,27 @@ def test_one_value_moves_the_applications_and_the_portal_follows(rendered, rende
         containers = cronjob["spec"]["jobTemplate"]["spec"]["template"]["spec"]["containers"]
         org = next(e["value"] for e in containers[0]["env"] if e["name"] == "ORG")
         assert org == "joinedcontext-apps", "the lane's secret belongs to the organization its builds run in"
+
+
+@requires_helmfile
+def test_dev_keeps_its_applications_apart_and_restarts_only_its_runners(rendered):
+    """T-2969 (owner decision 2026-09-26): dev keeps the applications in `joinedcontext-apps`,
+    so the build-pods pass mints runner tokens as jc-apps, an owner of that organization only.
+    The Job may restart the runner Deployments, by name only."""
+    docs = rendered("dev")
+    job = next(d for d in docs if d.get("kind") == "Job" and d["metadata"]["name"] == "gitea-bootstrap")
+    env = {e["name"]: e.get("value") for e in job["spec"]["template"]["spec"]["containers"][0]["env"]}
+    assert env["APPS_ORG"] == "joinedcontext-apps"
+    assert _portal_env(docs)["JC_GITEA_APPS_OWNER"]["value"] == "joinedcontext-apps"
+    targets = env["RUNNER_RESTART"].split()
+    assert [t.split("/")[1] for t in targets] == ["gitea-runner", "gitea-runner-rust"], targets
+    namespace = targets[0].split("/")[0]
+    deployments = {d["metadata"]["name"] for d in docs if d.get("kind") == "Deployment" and d["metadata"].get("namespace") == namespace}
+    assert {"gitea-runner", "gitea-runner-rust"} <= deployments, deployments
+    role = next(
+        d for d in docs
+        if d.get("kind") == "Role" and d["metadata"]["name"] == "gitea-bootstrap" and d["metadata"]["namespace"] == namespace
+    )
+    patch = [r for r in role["rules"] if "deployments" in r.get("resources", [])]
+    assert len(patch) == 1 and patch[0]["verbs"] == ["patch"], patch
+    assert {"gitea-runner", "gitea-runner-rust"} <= set(patch[0].get("resourceNames", [])), patch
