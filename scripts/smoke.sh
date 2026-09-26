@@ -575,20 +575,25 @@ if has_route gitea-forge; then
 		# The Actions runner (ADR-N-028): registered in the organization and online. It
 		# registers again before every job, so an empty list is waited for, and the wait is
 		# printed (T-0459's pattern), not hidden.
+		# The runners register in the organization that holds the App repositories, its own one
+		# when `appsOrganization` is set (T-2969); the bootstrap records it beside the token as
+		# `owner` (a name, never the token), and the configuration's organization otherwise.
+		runner_org=$(kubectl get secret gitea-runner-registration -n "$slug" -o jsonpath='{.data.owner}' 2>/dev/null | base64 -d 2>/dev/null || true)
+		runner_org="${runner_org:-$forge_org}"
 		if kubectl get deployments -A --field-selector metadata.name=gitea-runner -o name 2>/dev/null | grep . >/dev/null; then
 			waited=0
 			while :; do
 				runners=$(curl -sS --max-time 20 -u "$forge_admin_user:$forge_admin_pw" \
-					"$base/git/api/v1/orgs/$forge_org/actions/runners" 2>/dev/null || true)
+					"$base/git/api/v1/orgs/$runner_org/actions/runners" 2>/dev/null || true)
 				grep -q '"status": *"online"' <<<"$runners" && break
 				[ "$waited" -ge "${JC_SMOKE_RUNNER_WAIT:-60}" ] && break
 				sleep 5
 				waited=$((waited + 5))
 			done
 			if grep -q '"status": *"online"' <<<"$runners"; then
-				ok "an Actions runner is registered in $forge_org and online (waited ${waited}s)"
+				ok "an Actions runner is registered in $runner_org and online (waited ${waited}s)"
 			else
-				ko "no Actions runner of $forge_org is online after ${waited}s: no application builds"
+				ko "no Actions runner of $runner_org is online after ${waited}s: no application builds"
 			fi
 		else
 			skip "actions runner (no gitea-runner in this instance)"

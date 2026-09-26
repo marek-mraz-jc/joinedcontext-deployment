@@ -150,6 +150,10 @@ elif args[0] == "get" and args[1] == "secret" and args[2].startswith("keycloak-u
     if not secret:
         sys.exit(1)
     sys.stdout.write(base64.b64encode(secret.encode()).decode())
+elif args[0] == "get" and args[1] == "secret" and args[2] == "gitea-runner-registration":
+    # The organization the runners' token belongs to, recorded by the bootstrap (T-2969).
+    owner = spec.get("runnerOwner", "")
+    sys.stdout.write(base64.b64encode(owner.encode()).decode() if owner else "")
 elif args[0] == "get" and args[1] == "secret":
     secret = spec.get("clientSecret", "s3cr3t")
     if not secret:
@@ -1152,6 +1156,13 @@ def test_a_runner_the_forge_does_not_show_online_fails_the_run(tmp_path):
                  extra_env={"JC_SMOKE_RUNNER_WAIT": "0"})
     assert result.returncode != 0
     assert "FAIL  no Actions runner of joinedcontext is online after 0s" in result.stdout
+
+
+def test_the_runner_is_looked_for_in_the_organization_that_holds_the_apps(tmp_path):
+    """T-2969: with `appsOrganization` the runners register in that organization, which the
+    bootstrap records beside their token; the configuration's organization is the fallback."""
+    result = run(tmp_path, dict(HEALTHY, runnerOwner="joinedcontext-apps"), "https://example.test", "https://idm.example.test")
+    assert "ok    an Actions runner is registered in joinedcontext-apps and online (waited 0s)" in result.stdout
 
 
 def test_an_app_pod_reached_only_from_apisix_passes(tmp_path):
