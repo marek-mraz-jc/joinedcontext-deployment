@@ -374,6 +374,26 @@ spec:
                 done
               }
 
+              # requeue <owner> <repository>: a run queued before its repository moved keeps the
+              # old organization as its owner, so the new organization's runners never take it,
+              # and the forge refuses to cancel, rerun or delete a run that is not done (T-3026,
+              # Gitea 1.27). Every branch that had a run waiting gets build.yml dispatched again,
+              # now owned by the new organization; the stranded run is abandoned by the forge
+              # after its ABANDONED_JOB_TIMEOUT. Only right after a move, so no other run repeats.
+              requeue() {
+                status=$(forge_code GET "/api/v1/repos/$1/$2/actions/runs?status=queued&limit=50")
+                [ "$status" = 200 ] || { echo "listing the waiting runs of $1/$2 failed: $status" >&2; exit 1; }
+                refs=$(tr ',{' '\n\n' < $WORK/body | sed -n 's/^"head_branch": *"\([A-Za-z0-9._/-]*\)".*/\1/p' | sort -u)
+                for ref in $refs; do
+                  status=$(forge_code POST "/api/v1/repos/$1/$2/actions/workflows/build.yml/dispatches" -d "{\"ref\":\"$ref\"}")
+                  case "$status" in
+                    204) echo "build.yml of $1/$2 dispatched again on $ref, owned by $1" ;;
+                    404|422) echo "$1/$2 has no build.yml to dispatch on $ref" ;;
+                    *) echo "dispatching build.yml of $1/$2 on $ref failed: $status" >&2; cat $WORK/body >&2; exit 1 ;;
+                  esac
+                done
+              }
+
               # 3d. Where the generated applications live (PF-106). With APPS_ORG, in an
               #     organization of their own that `jc-apps` creates and administers them in; an
               #     application's repository still in $ORG, `{project}_{name}` (a name no project
@@ -405,7 +425,7 @@ spec:
                     *_*)
                       status=$(forge_code POST "/api/v1/repos/$ORG/$name/transfer" -d "{\"new_owner\":\"$APPS_ORG\"}")
                       case "$status" in
-                        201|202) echo "moved $ORG/$name to $APPS_ORG" ;;
+                        201|202) echo "moved $ORG/$name to $APPS_ORG"; requeue "$APPS_ORG" "$name" ;;
                         *) echo "moving $ORG/$name to $APPS_ORG failed: $status" >&2; cat $WORK/body >&2; exit 1 ;;
                       esac ;;
                   esac

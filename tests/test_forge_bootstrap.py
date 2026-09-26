@@ -82,9 +82,11 @@ def test_the_job_may_touch_only_the_secrets_it_writes(local):
     for rule in role["rules"]:
         if rule["resources"] == ["deployments"]:
             # PF-106: what read a token at start is restarted when it is minted again; `patch`
-            # on those names, nothing that reads or lists.
+            # on those names, nothing that reads or lists. The runners read their registration
+            # token at start too and restart when it moves organization (T-2969).
             assert rule["apiGroups"] == ["apps"] and rule["verbs"] == ["patch"], rule
-            assert set(rule["resourceNames"]) <= {"portal", "context-gateway", "agent-proxy"}, rule
+            allowed = {"portal", "context-gateway", "agent-proxy", "gitea-runner", "gitea-runner-rust"}
+            assert set(rule["resourceNames"]) <= allowed, rule
             continue
         assert rule["resources"] == ["secrets"]
         if "create" in rule["verbs"]:
