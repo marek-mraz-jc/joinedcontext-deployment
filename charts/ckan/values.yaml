@@ -52,6 +52,12 @@ ckan:
   env: {}
   envSecret: {}
   resources: {}
+  # How long a stopping CKAN keeps serving before uWSGI is told to stop, and how long its mesh
+  # proxy waits beyond that for the requests the pause let in (T-3008, T-3032). The grace
+  # period must be longer than both together.
+  preStopSleepSeconds: 5
+  meshDrainSeconds: 5
+  terminationGracePeriodSeconds: 30
 
 solr:
   # The CKAN project publishes a Solr image with CKAN's own schema already in it; a plain

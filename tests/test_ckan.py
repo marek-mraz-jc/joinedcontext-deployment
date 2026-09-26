@@ -567,3 +567,44 @@ def test_the_realm_egress_is_the_login_s_and_closes_with_it(rendered, rendered_v
     off = rendered_variant("dev", lambda tree: set_global(tree, "ckan.sso", False))
     assert [d for d in off if d.get("kind") == "NetworkPolicy" and d["metadata"]["name"] == "ckan-sso"] == []
     assert "oidc_pkce" not in env_of(ckan_container(off))["CKAN__PLUGINS"]
+
+
+@requires_helmfile
+def test_a_catalogue_roll_starts_the_new_pod_before_the_old_one_stops(rendered):
+    """T-3032 (OPS-07): a CKAN deploy once took data.dev's action API down for ~40 s (503/504),
+    because the Deployment was `Recreate`: the old pod stopped before the new one had even
+    started. The uploads claim is ReadWriteOnce, which binds a volume to one node and not to one
+    pod, so the new pod may mount it beside the old one as long as it runs on that node: the
+    catalogue surges onto the node its running pod is on, takes traffic once ready, and the old
+    pod pauses before it stops while APISIX and the mesh still route to it."""
+    docs = rendered("dev")
+    spec = by_name(docs, "Deployment", "ckan")["spec"]
+    strategy = spec.get("strategy", {})
+    assert strategy.get("type") == "RollingUpdate", strategy
+    assert strategy["rollingUpdate"]["maxUnavailable"] == 0, "a pod stops before its successor is ready"
+    assert strategy["rollingUpdate"]["maxSurge"] == 1, "no room to start the successor"
+
+    pod = spec["template"]["spec"]
+    claims = [v["persistentVolumeClaim"]["claimName"] for v in pod["volumes"] if "persistentVolumeClaim" in v]
+    assert claims == ["ckan-storage"]
+    assert by_name(docs, "PersistentVolumeClaim", "ckan-storage")["spec"]["accessModes"] == ["ReadWriteOnce"]
+    # The successor lands on the node that holds the volume, or a network volume would refuse
+    # the second attach and the roll would hang.
+    terms = pod["affinity"]["podAffinity"]["requiredDuringSchedulingIgnoredDuringExecution"]
+    assert len(terms) == 1, terms
+    assert terms[0]["topologyKey"] == "kubernetes.io/hostname"
+    selector = terms[0]["labelSelector"]["matchLabels"]
+    labels = spec["template"]["metadata"]["labels"]
+    assert selector == spec["selector"]["matchLabels"], "the affinity names the catalogue's own pods"
+    assert all(labels.get(k) == v for k, v in selector.items()), "the first pod matches itself and schedules"
+
+    main = pod["containers"][0]
+    assert main["name"] == "ckan"
+    assert main["readinessProbe"]["httpGet"]["path"] == "/api/3/action/status_show"
+    pause = main["lifecycle"]["preStop"]["sleep"]["seconds"]
+    assert pause >= 5, "the pod stops listening while the edge still routes to it"
+    annotations = spec["template"]["metadata"].get("annotations") or {}
+    wait = int(annotations.get("config.alpha.linkerd.io/proxy-wait-before-exit-seconds", 0))
+    if annotations.get("linkerd.io/inject") == "enabled":
+        assert wait > pause, "the mesh proxy stops before the app has drained"
+    assert pod["terminationGracePeriodSeconds"] > max(wait, pause), "the kubelet kills the pod mid-drain"
