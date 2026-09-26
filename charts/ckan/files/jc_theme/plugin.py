@@ -31,6 +31,10 @@ NEUTRAL = {
     "fonts": {"heading": "system-ui, sans-serif", "body": "system-ui, sans-serif"},
     "languages": {"default": "en", "offered": ["en"]},
     "primaryForeground": "#ffffff",
+    # The line under the name on the home page and the lines at the foot of every page (a
+    # demo disclaimer, an imprint): words only a deployment knows, so they are values too.
+    "tagline": "",
+    "footerLines": [],
 }
 
 HEX = set("0123456789abcdefABCDEF")
@@ -62,6 +66,11 @@ def _load():
         if _is_colour(value):
             colours[name] = value
     branding["colours"] = colours
+    if not isinstance(branding.get("tagline"), str):
+        branding["tagline"] = ""
+    lines = branding.get("footerLines")
+    branding["footerLines"] = [line for line in lines if isinstance(line, str) and line.strip()] \
+        if isinstance(lines, list) else []
     red, green, blue = _rgb(colours["primary"])
     branding["primaryRgb"] = "%d, %d, %d" % (red, green, blue)
     # The text on the primary colour, by the YIQ rule the login theme uses too
@@ -174,6 +183,52 @@ STRINGS = {
         "cs": "Přihlášení se nedokončilo. Přihlaste se znovu; pokud selže znovu, řekněte správci, kdy se to stalo.",
         "de": "Die Anmeldung wurde nicht abgeschlossen. Melden Sie sich erneut an; schlägt es wieder fehl, nennen Sie der Administration den Zeitpunkt.",
     },
+    # The dataset page leads with its rows, then the downloads in three sections (T-3009).
+    "preview": {"en": "The data", "sk": "Dáta", "cs": "Data", "de": "Die Daten"},
+    "preview_lead": {
+        "en": "Browse, search and sort the rows here, or download the whole table.",
+        "sk": "Prezerajte, vyhľadávajte a triedte riadky priamo tu, alebo si stiahnite celú tabuľku.",
+        "cs": "Procházejte, vyhledávejte a řaďte řádky přímo zde, nebo si stáhněte celou tabulku.",
+        "de": "Zeilen hier durchsuchen, filtern und sortieren oder die ganze Tabelle herunterladen.",
+    },
+    "rows": {"en": "rows", "sk": "riadkov", "cs": "řádků", "de": "Zeilen"},
+    "table_title": {"en": "Table of the data", "sk": "Tabuľka dát", "cs": "Tabulka dat", "de": "Tabelle der Daten"},
+    "tables": {"en": "tables", "sk": "tabuľky", "cs": "tabulky", "de": "Tabellen"},
+    "table_what": {"en": "The table above, as one file", "sk": "Tabuľka vyššie ako jeden súbor", "cs": "Tabulka výše jako jeden soubor", "de": "Die Tabelle oben als eine Datei"},
+    "open_table": {"en": "Open the table on its own page", "sk": "Otvoriť tabuľku na samostatnej stránke", "cs": "Otevřít tabulku na samostatné stránce", "de": "Tabelle auf eigener Seite öffnen"},
+    "no_view": {
+        "en": "The table has no view yet; download it below.",
+        "sk": "Tabuľka zatiaľ nemá zobrazenie; stiahnite si ju nižšie.",
+        "cs": "Tabulka zatím nemá zobrazení; stáhněte si ji níže.",
+        "de": "Die Tabelle hat noch keine Ansicht; laden Sie sie unten herunter.",
+    },
+    "download": {"en": "Download", "sk": "Stiahnuť", "cs": "Stáhnout", "de": "Herunterladen"},
+    "open": {"en": "Open", "sk": "Otvoriť", "cs": "Otevřít", "de": "Öffnen"},
+    "details": {"en": "Details", "sk": "Podrobnosti", "cs": "Podrobnosti", "de": "Details"},
+    "section_data": {"en": "Downloads", "sk": "Na stiahnutie", "cs": "Ke stažení", "de": "Downloads"},
+    "section_data_lead": {"en": "The data as files, updated with the dataset.", "sk": "Dáta ako súbory, aktualizované spolu s datasetom.", "cs": "Data jako soubory, aktualizovaná spolu s datovou sadou.", "de": "Die Daten als Dateien, mit dem Datensatz aktualisiert."},
+    "section_api": {"en": "APIs", "sk": "API", "cs": "API", "de": "Schnittstellen"},
+    "section_api_lead": {"en": "For applications and AI assistants that query the data live.", "sk": "Pre aplikácie a AI asistentov, ktorí sa na dáta pýtajú naživo.", "cs": "Pro aplikace a AI asistenty, kteří se na data ptají živě.", "de": "Für Anwendungen und KI-Assistenten, die die Daten live abfragen."},
+    "section_schema": {"en": "Data model", "sk": "Dátový model", "cs": "Datový model", "de": "Datenmodell"},
+    "section_schema_lead": {"en": "What each field means, in the formats validators and developers read.", "sk": "Čo znamená každé pole, vo formátoch pre validátory a vývojárov.", "cs": "Co znamená každé pole, ve formátech pro validátory a vývojáře.", "de": "Was jedes Feld bedeutet, in den Formaten für Validatoren und Entwickler."},
+    # The home page (T-3009).
+    "tagline": {
+        "en": "Open data you can browse, download and query live.",
+        "sk": "Otvorené dáta, ktoré si prezriete, stiahnete a dopytujete naživo.",
+        "cs": "Otevřená data, která si prohlédnete, stáhnete a dotazujete živě.",
+        "de": "Offene Daten zum Durchsuchen, Herunterladen und Live-Abfragen.",
+    },
+    "no_datasets": {"en": "No dataset is published yet.", "sk": "Zatiaľ nie je zverejnený žiadny dataset.", "cs": "Zatím není zveřejněna žádná datová sada.", "de": "Noch ist kein Datensatz veröffentlicht."},
+    "hero_search": {"en": "Search the open data", "sk": "Hľadať v otvorených dátach", "cs": "Hledat v otevřených datech", "de": "Offene Daten durchsuchen"},
+    "hero_placeholder": {"en": "e.g. air quality, bikes, budget", "sk": "napr. kvalita ovzdušia, bicykle, rozpočet", "cs": "např. kvalita ovzduší, kola, rozpočet", "de": "z. B. Luftqualität, Fahrräder, Haushalt"},
+    "search": {"en": "Search", "sk": "Hľadať", "cs": "Hledat", "de": "Suchen"},
+    "datasets": {"en": "datasets", "sk": "datasetov", "cs": "datových sad", "de": "Datensätze"},
+    "publishers": {"en": "publishers", "sk": "vydavateľov", "cs": "vydavatelů", "de": "Herausgeber"},
+    "recent": {"en": "Recently updated", "sk": "Nedávno aktualizované", "cs": "Nedávno aktualizované", "de": "Kürzlich aktualisiert"},
+    "all_datasets": {"en": "All datasets", "sk": "Všetky datasety", "cs": "Všechny datové sady", "de": "Alle Datensätze"},
+    "by_publisher": {"en": "By publisher", "sk": "Podľa vydavateľa", "cs": "Podle vydavatele", "de": "Nach Herausgeber"},
+    "by_keyword": {"en": "Popular keywords", "sk": "Časté kľúčové slová", "cs": "Častá klíčová slova", "de": "Häufige Schlagwörter"},
+    "updated": {"en": "Updated", "sk": "Aktualizované", "cs": "Aktualizováno", "de": "Aktualisiert"},
     "more": {"en": "More details", "sk": "Ďalšie údaje", "cs": "Další údaje", "de": "Weitere Angaben"},
 }
 
@@ -336,18 +391,110 @@ def jc_live(pkg):
     return {"url": base, "example": example}
 
 
-def jc_resource_groups(pkg):
-    """The resources grouped by format, each group with its one-line "what is this"."""
-    groups = {}
-    for resource in (pkg or {}).get("resources") or []:
-        name = (resource.get("format") or "").strip() or "—"
-        groups.setdefault(name, []).append(resource)
-    out = []
-    for name in sorted(groups, key=lambda n: (n == "—", n.upper())):
+# Where a resource belongs on the dataset page (T-3009). The model artifacts are published under
+# the endpoint's `/schema/` path; the API formats answer queries rather than being files.
+API_FORMATS = ("NGSI-LD", "MCP")
+DATA_ORDER = ("CSV", "GEOJSON", "JSON", "XLSX", "ZIP")
+
+
+def _section(resource):
+    url = resource.get("url") or ""
+    path = url.split("?", 1)[0]
+    if "/schema/" in path:
+        return "schema"
+    if (resource.get("format") or "").strip().upper() in API_FORMATS:
+        return "api"
+    return "data"
+
+
+def _order(resource):
+    """The DataStore table first (it is the data a reader came for), then files by format."""
+    name = (resource.get("format") or "").strip().upper()
+    known = DATA_ORDER.index(name) if name in DATA_ORDER else len(DATA_ORDER)
+    api = API_FORMATS.index(name) if name in API_FORMATS else len(API_FORMATS)
+    return (not resource.get("datastore_active"), known, api, name, resource.get("name") or "")
+
+
+def jc_resource_sections(pkg):
+    """The resources in three sections, data, APIs and the data model, each in reading order
+    and each resource with its one-line "what is this". Empty sections are left out."""
+    sections = {"data": [], "api": [], "schema": []}
+    for resource in sorted((pkg or {}).get("resources") or [], key=_order):
+        name = (resource.get("format") or "").strip()
         words = FORMATS.get(name.upper()) or {}
-        out.append({"format": name, "what": words.get(_language()) or words.get("en") or "",
-                    "resources": groups[name]})
+        if resource.get("datastore_active"):
+            # A DataStore table downloads as CSV, whatever format its resource names (T-3012
+            # writes its tables with none).
+            name = name or "CSV"
+            words = STRINGS["table_what"]
+        sections[_section(resource)].append({
+            "resource": resource,
+            "format": name or "—",
+            "what": words.get(_language()) or words.get("en") or "",
+        })
+    return [{"key": key, "title": jc_t("section_" + key), "lead": jc_t("section_" + key + "_lead"),
+             "items": items} for key, items in sections.items() if items]
+
+
+def jc_previews(pkg):
+    """The dataset's DataStore tables for the page itself, one per entity type since T-3012, in
+    the order `_order` gives them: each resource with its table view (None when nobody created
+    one) and its number of rows (None when the DataStore does not say)."""
+    out = []
+    for resource in sorted((pkg or {}).get("resources") or [], key=_order):
+        if not resource.get("datastore_active"):
+            continue
+        try:
+            views = toolkit.get_action("resource_view_list")({}, {"id": resource["id"]})
+        except (toolkit.ObjectNotFound, toolkit.NotAuthorized):
+            views = []
+        view = next((v for v in views or [] if v.get("view_type") == "datatables_view"), None)
+        try:
+            total = toolkit.get_action("datastore_search")({}, {"resource_id": resource["id"], "limit": 0}).get("total")
+        except (toolkit.ObjectNotFound, toolkit.NotAuthorized, toolkit.ValidationError):
+            total = None
+        out.append({"resource": resource, "view": view, "total": total})
     return out
+
+
+def jc_total(previews):
+    """All rows of the tables, or None when any table's count is unknown."""
+    totals = [p["total"] for p in previews or []]
+    return sum(totals) if totals and all(isinstance(t, int) for t in totals) else None
+
+
+def jc_formats(pkg):
+    """The formats a reader gets, data before APIs, without the data model's artifacts."""
+    seen, out = set(), []
+    for section in jc_resource_sections(pkg):
+        if section["key"] == "schema":
+            continue
+        for item in section["items"]:
+            name = item["format"]
+            if name != "—" and name.upper() not in seen:
+                seen.add(name.upper())
+                out.append(name)
+    return out
+
+
+def jc_number(value):
+    """A count with thin-space thousands, the way every language of the Portal reads it."""
+    try:
+        return "{:,}".format(int(value)).replace(",", "\u202f")
+    except (TypeError, ValueError):
+        return ""
+
+
+def jc_recent(limit=6):
+    """The public datasets changed last, for the home page."""
+    from ckan.lib.search import SearchError
+
+    try:
+        found = toolkit.get_action("package_search")(
+            {}, {"rows": limit, "sort": "metadata_modified desc", "fq": 'capacity:"public"'})
+    except SearchError:
+        return []
+    return found.get("results") or []
 
 
 def jc_portal_url():
@@ -401,9 +548,13 @@ class JcThemePlugin(plugins.SingletonPlugin):
         if title:
             config["ckan.site_title"] = title
             config["ckan.site_description"] = BRANDING.get("organisation", "")
+        public = os.path.join(os.path.dirname(__file__), "public")
         logo = BRANDING.get("logo")
-        if logo and os.path.exists(os.path.join(os.path.dirname(__file__), "public", logo)):
+        if logo and os.path.exists(os.path.join(public, logo)):
             config["ckan.site_logo"] = "/" + logo
+        favicon = BRANDING.get("favicon")
+        if favicon and os.path.exists(os.path.join(public, favicon)):
+            config["ckan.favicon"] = "/" + favicon
         languages = BRANDING.get("languages") or {}
         offered = _available(languages.get("offered") or [])
         default = languages.get("default")
@@ -419,7 +570,12 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_about": jc_about,
             "jc_more": jc_more,
             "jc_live": jc_live,
-            "jc_resource_groups": jc_resource_groups,
+            "jc_resource_sections": jc_resource_sections,
+            "jc_previews": jc_previews,
+            "jc_total": jc_total,
+            "jc_number": jc_number,
+            "jc_formats": jc_formats,
+            "jc_recent": jc_recent,
             "jc_portal_url": jc_portal_url,
             "jc_sso_error": jc_sso_error,
         }

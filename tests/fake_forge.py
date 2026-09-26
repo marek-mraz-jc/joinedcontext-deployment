@@ -144,6 +144,7 @@ def identities(path: str, method: str, call: dict, state: dict) -> tuple[int, st
     member = re.fullmatch(r"/api/v1/teams/(\d+)/members/([^/]+)", path)
     if member and method == "PUT":
         state.setdefault("members", []).append(member.group(2))
+        state.setdefault("team_members", {}).setdefault(member.group(1), []).append(member.group(2))
         return 204, ""
     if member and method == "DELETE":
         state.setdefault("left", []).append(member.group(2))
@@ -261,7 +262,8 @@ def answer(call: dict, state: dict) -> tuple[int, str]:
         return app
     if "/teams/search" in path:
         team = path.split("q=", 1)[-1]
-        return 200, json.dumps({"data": [{"id": 7, "name": team}]})
+        # Every organization's Owners team is its own; the others share one id.
+        return 200, json.dumps({"data": [{"id": 1 if team == "Owners" else 7, "name": team}]})
     if path.endswith("/actions/runners/registration-token") and method == "POST":
         return 200, '{"token":"%s"}' % ("R" * 40)
     tokens = re.fullmatch(r"/api/v1/users/([^/]+)/tokens(?:/([^/]+))?", path)

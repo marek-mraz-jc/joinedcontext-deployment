@@ -80,9 +80,13 @@ spec:
             - name: CKAN_SITE_URL
               value: {{ .Values.siteUrl | quote }}
             - name: CKAN__PLUGINS
-              # `oidc_pkce` is listed only when the login is on: CKAN exits on a plugin it
-              # cannot import, so the list and the image have to agree (T-0403).
-              value: {{ if .Values.ckan.sso.enabled }}{{ printf "%s oidc_pkce" .Values.ckan.plugins | quote }}{{ else }}{{ .Values.ckan.plugins | quote }}{{ end }}
+              # `oidc_pkce` and `dcat` are listed only when their flag is on: CKAN exits on a
+              # plugin it cannot import, so the list and the image have to agree (T-0403,
+              # T-3010).
+              {{- $plugins := .Values.ckan.plugins }}
+              {{- if .Values.ckan.sso.enabled }}{{ $plugins = printf "%s oidc_pkce" $plugins }}{{ end }}
+              {{- if .Values.ckan.dcat.enabled }}{{ $plugins = printf "%s dcat" $plugins }}{{ end }}
+              value: {{ $plugins | quote }}
             - name: CKAN_STORAGE_PATH
               value: /var/lib/ckan
             - name: PYTHONPATH
@@ -168,6 +172,14 @@ spec:
             - name: JC_OIDC_SCOPE
               value: {{ .Values.ckan.sso.scope | quote }}
             {{- end }}
+            {{- if .Values.ckan.dcat.enabled }}
+            # DCAT-AP 3 on /catalog.{rdf,ttl,jsonld} and /dataset/{id}.{rdf,ttl,jsonld}:
+            # ckanext-dcat's profile, then the theme's, which puts the controlled vocabularies
+            # and the catalogue's publisher on top (files/jc_theme/dcat_profile.py).
+            # `ckanext-envvars` maps the name to `ckanext.dcat.rdf.profiles`.
+            - name: CKANEXT__DCAT__RDF__PROFILES
+              value: euro_dcat_ap_3 jc_dcat_ap
+            {{- end }}
             {{- range $name, $value := .Values.ckan.env }}
             - name: {{ $name }}
               value: {{ $value | quote }}
@@ -216,6 +228,10 @@ spec:
             - name: theme
               mountPath: /srv/theme/ckanext_jc_theme/plugin.py
               subPath: plugin.py
+              readOnly: true
+            - name: theme
+              mountPath: /srv/theme/ckanext_jc_theme/dcat_profile.py
+              subPath: dcat_profile.py
               readOnly: true
             - name: theme
               mountPath: /srv/theme/ckanext_jc_theme/templates/header.html

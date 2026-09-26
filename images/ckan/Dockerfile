@@ -26,6 +26,11 @@ RUN apt-get update \
 # flow on the next build. `--no-cache-dir` keeps the layer to what is installed.
 RUN pip install --no-cache-dir 'ckanext-oidc-pkce==0.4.1'
 
+# DCAT-AP for harvesters (T-3010): /catalog.{rdf,ttl,jsonld} and /dataset/{id}.{rdf,ttl,jsonld}
+# with the `euro_dcat_ap_3` profile. 2.4 is the line that supports CKAN 2.11 and DCAT-AP 3; the
+# theme's `jc_dcat_ap` profile (charts/ckan/files/jc_theme/dcat_profile.py) runs on top of it.
+RUN pip install --no-cache-dir 'ckanext-dcat==2.4.4'
+
 # The Python packages CKAN pins that have a fix published. CKAN's own pins are floors, not
 # ceilings, and each of these is a patch release of a library CKAN uses through a stable API.
 RUN pip install --no-cache-dir --upgrade \

@@ -6,3 +6,8 @@ apisix:
     version: '2.15.0'
   configuration:
     chart: charts/configuration
+  # Hetzner's DNS-01 solver for the App wildcard certificate (ADR-N-037 §6, T-3013).
+  dns01:
+    repository: https://charts.hetzner.cloud
+    chart: hcloud/cert-manager-webhook-hetzner
+    version: '0.9.0'

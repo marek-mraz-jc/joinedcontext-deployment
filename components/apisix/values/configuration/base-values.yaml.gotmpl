@@ -63,6 +63,8 @@ edge:
     {{- end }}
     {{- else }} []
     {{- end }}
+  # The zone every App host sits in, when its wildcard certificate is on (ADR-N-037 §6).
+  appsWildcard: {{ if dig "ingress" "appsWildcard" "enabled" false $global }}{{ printf "*.apps.%s" $global.domain | quote }}{{ else }}''{{ end }}
 
 # Authorize the ingress edge to reach the APISIX data plane when the
 # namespace enforces mandatory mTLS via the Linkerd default-inbound-policy.

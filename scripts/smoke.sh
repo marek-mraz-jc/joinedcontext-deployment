@@ -919,6 +919,12 @@ for app in items:
 	if [ -z "$published" ]; then
 		skip "App routes (no App is published in helsinki)"
 	fi
+	# A public App's map draws on the Portal's basemap route and nothing else (AP-67, AP-12):
+	# its page policy has to let the tiles in, or the map is blank without a word (T-3014).
+	basemap="$portal/api/v1/projects/helsinki/basemap/"
+	basemap_code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "${basemap}default/style.json" 2>/dev/null || true)
+	# csp_allows <policy> <directive> <source>: the directive lists the source as one of its own.
+	csp_allows() { tr ';' '\n' <<<"$1" | sed 's/^ *//' | grep -E "^$2( |\$)" | tr ' ' '\n' | grep -qxF "$3"; }
 	while read -r app visibility; do
 		[ -n "$app" ] || continue
 		host="https://$app.apps.${base#https://}"
@@ -931,6 +937,15 @@ for app in items:
 		fi
 		if [ "$visibility" = public ]; then
 			status 200 "public App $app answers an anonymous visitor on its own host" "$host/"
+			if [ "$basemap_code" = 200 ]; then
+				csp=$(curl -sS -o /dev/null -D - --max-time 20 "$host/" 2>/dev/null | tr -d '\r' |
+					sed -n 's/^[Cc]ontent-[Ss]ecurity-[Pp]olicy: *//p' | head -1)
+				if csp_allows "$csp" img-src "$basemap" && csp_allows "$csp" connect-src "$basemap"; then
+					ok "public App $app's policy lets the basemap tiles in ($basemap)"
+				else
+					ko "public App $app's Content-Security-Policy does not list $basemap in img-src and connect-src, so its map draws no tiles (got: ${csp:-none})"
+				fi
+			fi
 			continue
 		fi
 		location=$(curl -sS -o /dev/null -w '%{redirect_url}' --max-time 20 "$host/" 2>/dev/null || true)
