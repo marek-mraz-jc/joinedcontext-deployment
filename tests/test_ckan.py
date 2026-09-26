@@ -353,6 +353,76 @@ def test_the_secret_key_is_never_a_literal_and_never_read_as_a_ckan_env_var(rend
 
 
 @requires_helmfile
+def test_the_session_cookies_are_secure_on_an_https_catalogue(rendered):
+    """The image's ini ships `SESSION_COOKIE_SECURE = false` and `REMEMBER_COOKIE_SECURE =
+    false`, so dev's `ckan` cookie went out without `Secure` (T-3017). The startup ConfigMap
+    carries the script that marks both, and dev's site URL is the https one it acts on."""
+    docs = rendered("dev")
+    assert env_of(ckan_container(docs))["CKAN_SITE_URL"].startswith("https://")
+    scripts = by_name(docs, "ConfigMap", "ckan-startup")["data"]
+    assert "02-secure-cookies.sh" in scripts, sorted(scripts)
+    script = scripts["02-secure-cookies.sh"]
+    for option in ("SESSION_COOKIE_SECURE=true", "REMEMBER_COOKIE_SECURE=true"):
+        assert option in script
+    # Sourced, not executed: an `exit 0` would stop the entrypoint before uWSGI.
+    assert "exit 0" not in script
+
+
+@pytest.mark.parametrize(
+    ("site_url", "written"),
+    [
+        ("https://data.dev.joinedcontext.com", ["SESSION_COOKIE_SECURE=true", "REMEMBER_COOKIE_SECURE=true"]),
+        ("http://data.localhost", None),
+        ("", None),
+    ],
+)
+def test_the_cookie_script_marks_secure_only_behind_https(tmp_path, site_url, written):
+    """Sourced the way `start_ckan.sh` sources it, against a `ckan` that records its arguments:
+    an https catalogue writes both options into $CKAN_INI; a plain-http one keeps the image's
+    default, where a `Secure` cookie would never come back and nobody could sign in."""
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    calls = tmp_path / "calls"
+    fake = bin_dir / "ckan"
+    fake.write_text(f'#!/bin/sh\nprintf "%s\\n" "$@" >> {calls}\n')
+    fake.chmod(0o755)
+    script = CHART / "files/startup/02-secure-cookies.sh"
+    result = subprocess.run(
+        ["sh", "-c", f'. "{script}"; echo sourced-to-the-end'],
+        env={"PATH": f"{bin_dir}:/usr/bin:/bin", "CKAN_INI": "/tmp/ckan.ini", "CKAN_SITE_URL": site_url},
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "sourced-to-the-end" in result.stdout, "the script ended the entrypoint"
+    if written is None:
+        assert not calls.exists(), calls.read_text()
+    else:
+        assert calls.read_text().split() == ["config-tool", "/tmp/ckan.ini", *written]
+
+
+def test_the_cookie_script_stops_the_pod_when_the_ini_cannot_be_written(tmp_path):
+    """A catalogue that could not mark its cookies must not serve with the insecure ones."""
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    fake = bin_dir / "ckan"
+    fake.write_text("#!/bin/sh\nexit 3\n")
+    fake.chmod(0o755)
+    script = CHART / "files/startup/02-secure-cookies.sh"
+    result = subprocess.run(
+        ["sh", "-c", f'. "{script}"; echo served'],
+        env={"PATH": f"{bin_dir}:/usr/bin:/bin", "CKAN_INI": "/tmp/ckan.ini", "CKAN_SITE_URL": "https://data.example"},
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 1
+    assert "served" not in result.stdout
+    assert "could not mark the session cookies Secure" in result.stderr
+
+
+@requires_helmfile
 def test_the_api_token_job_writes_one_secret_and_reaches_two_things(rendered):
     """T-0493: the token is minted at run time, so a Job writes it; its Role names the one Secret
     it may read and replace, its image is the catalogue's pinned one, and its egress is the

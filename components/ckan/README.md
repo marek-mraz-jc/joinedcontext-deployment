@@ -126,6 +126,11 @@ serving with a key that dies with it.
 The Secret is still named `ckan-session` because renaming it would generate a new one, and a
 new key logs everyone out and invalidates every token they hold.
 
+The image's ini also ships `SESSION_COOKIE_SECURE = false` and `REMEMBER_COOKIE_SECURE = false`.
+`files/startup/02-secure-cookies.sh` writes both `true` whenever `CKAN_SITE_URL` is https, so the
+`ckan` and `remember_token` cookies carry `Secure` (T-3017); a plain-http site URL keeps the
+default, which a browser needs to send the cookie back at all.
+
 ## DCAT-AP for harvesters
 
 With `global.ckan.dcat` on, the catalogue serves DCAT-AP 3 through `ckanext-dcat` (the image
