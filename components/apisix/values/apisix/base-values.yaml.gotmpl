@@ -68,6 +68,15 @@ extraEnvVars:
 # another port and stays meshed.
 podAnnotations:
   config.linkerd.io/skip-outbound-ports: "443"
+  {{- if and ($global.serviceMesh.enable | default false) (eq ($global.serviceMesh.type | default "") "linkerd") }}
+  # Every request of every host passes this pod, and dev runs one (T-3024, OPS-27). The chart's
+  # preStop keeps nginx serving for 30 s while the ingress controller stops sending to the old
+  # pod, but the kubelet stops the meshed proxy at the same instant, and it refuses new
+  # connections from then on: a roll answered ~3 s of 502s in 0.1 s on both hosts. The proxy now
+  # outlives the pause and a drain; the grace period that outlives both is set in component.yaml
+  # (the chart has no value for it).
+  config.alpha.linkerd.io/proxy-wait-before-exit-seconds: "35"
+  {{- end }}
 
 # Config to ensure functionality with read-only filesystem
 # Ensures that /usr/local/apisix/conf and /tmp are writable, while also preserving
