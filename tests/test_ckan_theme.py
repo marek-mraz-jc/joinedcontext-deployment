@@ -49,6 +49,8 @@ def theme(tmp_path, monkeypatch):
     plugins.toolkit = toolkit
     plugins.SingletonPlugin = object
     plugins.implements = lambda *args, **kwargs: None
+    page.loaded = set()
+    plugins.plugin_loaded = lambda name: name in page.loaded
     plugins.IConfigurer = plugins.ITemplateHelpers = plugins.IFacets = object
     ckan = types.ModuleType("ckan")
     ckan.__file__ = str(tmp_path / "ckan/__init__.py")
@@ -454,3 +456,63 @@ def test_a_sign_in_that_did_not_fail_says_nothing(theme):
 def test_the_login_page_shows_the_reason_as_an_alert():
     login = (THEME / "templates__user__login.html").read_text()
     assert "h.jc_sso_error()" in login and 'role="alert"' in login
+
+
+# --- T-3028: the About page, the publisher and topic pages speak for this catalogue ------------
+
+
+def test_the_about_page_says_whose_catalogue_this_is_and_how_to_reach_the_data(theme, tmp_path):
+    block = tmp_path / "about.json"
+    block.write_text(json.dumps({"instanceName": "Praha Context", "organisation": "Hlavní město Praha",
+                                 "contactEmail": "opendata@praha.eu"}))
+    theme.BRANDING_FILE = str(block)
+    theme.BRANDING = theme._load()
+    theme.page.loaded = {"dcat"}
+    about = theme.jc_about_site()
+    assert about == {"intro": "Praha Context is the open data catalogue of Hlavní město Praha.",
+                     "dcat": True, "email": "opendata@praha.eu"}
+    theme.page.lang = "de"
+    assert theme.jc_about_site()["intro"] == "Praha Context ist der Katalog offener Daten von Hlavní město Praha."
+
+
+def test_an_about_page_without_organisation_contact_or_dcat_leaves_those_out(theme, tmp_path):
+    block = tmp_path / "bare.json"
+    block.write_text(json.dumps({"instanceName": "City Context", "contactEmail": "not an address"}))
+    theme.BRANDING_FILE = str(block)
+    theme.BRANDING = theme._load()
+    assert theme.jc_about_site() == {"intro": "City Context is an open data catalogue.", "dcat": False, "email": ""}
+    about = (THEME / "templates__home__about.html").read_text()
+    assert "{% if about.dcat %}" in about and "{% if about.email %}" in about
+
+
+def test_a_sysadmin_s_own_about_text_still_wins_and_no_ckan_advert_is_left():
+    about = (THEME / "templates__home__about.html").read_text()
+    assert "{% if g.site_about %}\n    {{ super() }}" in about
+    assert "about_text.html" not in about and "ckan.org" not in about
+    for name in ("templates__organization__snippets__helper.html", "templates__group__snippets__helper.html"):
+        helper = (THEME / name).read_text()
+        assert "CKAN" not in helper.split("#}", 1)[1] and "h.jc_t(" in helper, name
+
+
+def test_the_header_names_the_sections_as_the_search_filters_do():
+    header = (THEME / "header.html").read_text()
+    for key in ("nav_datasets", "nav_publishers", "nav_topics", "nav_about"):
+        assert f"h.jc_t('{key}')" in header, key
+    assert "_('Organizations')" not in header and "_('Groups')" not in header
+
+
+def test_publisher_and_topic_cards_are_a_grid_that_wraps_at_words():
+    css = (THEME / "public__jc-theme.css").read_text()
+    assert re.search(r"\.media-grid \{ clear: both; display: grid;", css)
+    assert ".media-grid > .clearfix { display: none; }" in css
+    assert "word-break: normal" in css and "float: none; width: auto" in css
+    for name in ("templates__organization__snippets__organization_list.html", "templates__group__snippets__group_list.html"):
+        listing = (THEME / name).read_text()
+        # CKAN's media-grid module places each card absolutely (masonry) over the grid.
+        assert 'data-module="media-grid"' not in listing and '<ul class="media-grid">' in listing, name
+
+
+def test_a_short_page_keeps_its_footer_at_the_bottom():
+    css = (THEME / "public__jc-theme.css").read_text()
+    assert "body:not(.dt-view) { min-height: 100vh; display: flex; flex-direction: column; }" in css
+    assert "body:not(.dt-view) > .site-footer { margin-top: auto; }" in css
