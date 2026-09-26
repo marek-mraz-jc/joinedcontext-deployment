@@ -116,17 +116,18 @@ jobs:
         # job fewer on a metered private repository (T-0521). The reusable workflow stays for
         # the other repositories.
         run: gitleaks detect --source . --config .ci/shared/gitleaks.toml --redact --exit-code 1
-      - run: pip install --quiet pytest pytest-xdist pyyaml jsonschema
-      - name: the two collector images the tests run
+      - run: pip install --quiet pytest pytest-xdist pyyaml jsonschema pyshacl
+      - name: the images the tests run
         # tests/test_observability_collector.py runs `otelcol validate` on the rendered
         # config and one record through the allow-list (T-0349); tests/test_audit_logging.py
-        # runs `vector validate` and `vector test` on the rendered audit transform (T-0052).
+        # runs `vector validate` and `vector test` on the rendered audit transform (T-0052);
+        # tests/test_ckan_dcat.py serializes DCAT-AP in the catalogue image (T-3010).
         # Pulled here so a registry failure reads as a registry failure rather than as a red
         # test.
         run: |
           python3 - <<'EOF' > /tmp/test-images
           import yaml
-          for component, part in (("observability", "collector"), ("audit-logging", "collector")):
+          for component, part in (("observability", "collector"), ("audit-logging", "collector"), ("ckan", "catalogue")):
               i = yaml.safe_load(open(f"components/{component}/images.yaml"))[component][part]
               print(f"{i['repository']}:{i['tag']}@{i['digest']}")
           EOF
