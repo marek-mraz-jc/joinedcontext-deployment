@@ -123,14 +123,14 @@ context-gateway:
     # (T-2362, T-2363, T-2364). On top of 462a1ba.
     # platform 6c2e439: an Endpoint's publish.ckan carries the licence the organization chose, and
     # jcctl publishes in the space's language under the instance's title (T-2465). On top of 12b32e8.
-    digest: 'sha256:7676f0f551590e6fc6040fddac9b91cd6807294354ce4b0c17f0c21cb3f12683'
+    digest: 'sha256:27be922afd8909eaad4400cb1951a83f474e0575e36f2daede68bec1723ae7ee'
   # `jcctl checkouts` keeps every registered project checked out for the gateway in layout 2
   # (CC-86, T-2646): the platform image's `checkouts` target, debian-slim with git.
   # platform cbe3697 (T-2640, T-2641, T-2646's command and image).
   checkouts:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform/checkouts'
     tag: 'main'
-    digest: 'sha256:76ea859ea07ea61f6a24298ce9f83ec4382df3c457911d90650bc2fb0ca096c3'
+    digest: 'sha256:0ea70ce72e93fed235446cbbeee1cf402c5ada9918b14500412d85a699ec1f1c'
   # git-sync keeps the gateway's checkout of the configuration repository current (T-0278).
   git-sync:
     repository: 'registry.k8s.io/git-sync/git-sync'
