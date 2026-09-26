@@ -196,6 +196,37 @@ def test_the_applications_move_to_their_own_organization_and_machine_user(script
 
 
 @requires_helmfile
+def test_a_moved_repositorys_waiting_builds_are_dispatched_again_under_its_new_owner(script, tmp_path):
+    """T-3026: a run queued before its repository moved keeps the old organization as owner, the
+    new organization's runners never take it, and the forge will not cancel or rerun it. The Job
+    dispatches build.yml once per branch that had a run waiting, under the new owner, right after
+    the move; a repository that stays, and a second run of the Job, dispatch nothing."""
+    forge = Forge(tmp_path, {})
+    held = state(forge)
+    held["repos"] = {
+        "helsinki_bikes": {"files": {}, "head": "c" * 40},
+        "praha_desk": {"files": {}, "head": "e" * 40},
+        "helsinki": {"files": {}, "head": "d" * 40},
+    }
+    held["queued"] = {
+        "helsinki_bikes": ["main", "agent/app-bikes/run-1", "main"],
+        "helsinki": ["main"],
+    }
+    forge.state.write_text(json.dumps(held))
+
+    first = forge.run(script, **APART)
+    assert first.returncode == 0, first.stderr
+    assert sorted(state(forge)["dispatched"]) == [
+        "joinedcontext-apps/helsinki_bikes@agent/app-bikes/run-1",
+        "joinedcontext-apps/helsinki_bikes@main",
+    ]
+
+    second = forge.run(script, **APART)
+    assert second.returncode == 0, second.stderr
+    assert len(state(forge)["dispatched"]) == 2, "a run of the Job without a move dispatched a build"
+
+
+@requires_helmfile
 def test_the_runners_restart_once_when_their_token_moves_to_the_applications_organization(script, tmp_path):
     """T-2969: a runner reads its registration token once, at start, and registers with it after
     every job. When the token it holds is the configuration organization's and the Job now writes

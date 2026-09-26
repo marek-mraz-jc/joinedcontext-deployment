@@ -158,6 +158,18 @@ def identities(path: str, method: str, call: dict, state: dict) -> tuple[int, st
         moved[name] = json.loads(call["data"])["new_owner"]
         del state["repos"][name]
         return 202, "{}"
+    # The runs a repository had waiting when it moved (T-3026): `queued` is {name: [branch, ...]},
+    # one entry per run, and every dispatch is recorded as `owner/name@ref`.
+    runs = re.fullmatch(r"/api/v1/repos/([^/]+)/([^/]+)/actions/runs\?status=queued&limit=50", path)
+    if runs and method == "GET":
+        branches = state.setdefault("queued", {}).get(runs.group(2), [])
+        listed = [{"id": i + 1, "head_branch": b, "status": "queued"} for i, b in enumerate(branches)]
+        return 200, json.dumps({"total_count": len(listed), "workflow_runs": listed}, separators=(",", ":"))
+    dispatch = re.fullmatch(r"/api/v1/repos/([^/]+)/([^/]+)/actions/workflows/build\.yml/dispatches", path)
+    if dispatch and method == "POST":
+        ref = json.loads(call["data"])["ref"]
+        state.setdefault("dispatched", []).append(f"{dispatch.group(1)}/{dispatch.group(2)}@{ref}")
+        return 204, ""
     listing = re.fullmatch(r"/api/v1/orgs/([^/]+)/repos\?limit=50&page=(\d+)", path)
     if listing and method == "GET":
         owner = listing.group(1)
