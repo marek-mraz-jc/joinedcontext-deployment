@@ -47,6 +47,9 @@
 
 /* ---- Page ------------------------------------------------------------------------------ */
 
+/* The footer sits at the bottom of a short page instead of above a band of page colour. */
+body:not(.dt-view) { min-height: 100vh; display: flex; flex-direction: column; }
+body:not(.dt-view) > .site-footer { margin-top: auto; }
 body {
   background: var(--jc-bg);
   color: var(--jc-ink);
@@ -206,8 +209,15 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .secondary .module-narrow .module-heading, .secondary .module-footer { background: var(--jc-surface); }
 .secondary .module-footer { border-top: 1px solid var(--jc-border); }
 .jc-empty { color: var(--jc-muted); padding: 2rem 0; }
-.media-grid { border: 0; background: transparent; }
-.media-item { background: var(--jc-surface); border: 1px solid var(--jc-border); border-radius: var(--jc-radius-lg); box-shadow: var(--jc-shadow-1); }
+/* Publisher and topic cards: a grid that wraps names at word boundaries (T-3028), in place of
+   CKAN's fixed 178 px floats with `word-break: break-all`. */
+.media-grid { clear: both; display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: 1rem; border: 0; background: transparent; min-height: 0; padding: 0; }
+.media-grid::before, .media-grid::after { content: none; }
+/* CKAN's item snippet adds a float clearer after every third card; in a grid it takes a cell. */
+.media-grid > .clearfix { display: none; }
+.media-item { float: none; width: auto; margin: 0; background: var(--jc-surface); border: 1px solid var(--jc-border); border-radius: var(--jc-radius-lg); box-shadow: var(--jc-shadow-1); }
+.media-heading, .media-description { word-break: normal; overflow-wrap: break-word; hyphens: auto; }
+.media-heading { font-size: 1.0625rem; }
 
 /* ---- Home ------------------------------------------------------------------------------ */
 
@@ -281,6 +291,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .jc-about-list dt:first-of-type, .jc-about-list dd:first-of-type { border-top: 0; }
 .jc-about-list dt { font-weight: 600; background: var(--jc-n50); color: var(--jc-ink); font-size: .9375rem; }
 .jc-about-list dd { overflow-wrap: anywhere; }
+.jc-about-lead { font-size: 1.1875rem; }
 .jc-live { background: var(--jc-primary-soft); border: 1px solid color-mix(in oklab, var(--jc-primary) 22%, var(--jc-paper)); border-radius: var(--jc-radius-lg); padding: 1.25rem 1.5rem; }
 .jc-live h2 { margin-top: 0; }
 .jc-copy { display: flex; gap: .5rem; }
