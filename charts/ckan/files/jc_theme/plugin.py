@@ -229,6 +229,56 @@ STRINGS = {
     "by_publisher": {"en": "By publisher", "sk": "Podľa vydavateľa", "cs": "Podle vydavatele", "de": "Nach Herausgeber"},
     "by_keyword": {"en": "Popular keywords", "sk": "Časté kľúčové slová", "cs": "Častá klíčová slova", "de": "Häufige Schlagwörter"},
     "updated": {"en": "Updated", "sk": "Aktualizované", "cs": "Aktualizováno", "de": "Aktualisiert"},
+    # The About page, the publisher and topic helpers and the header's words (T-3028).
+    "nav_datasets": {"en": "Datasets", "sk": "Datasety", "cs": "Datové sady", "de": "Datensätze"},
+    "nav_publishers": {"en": "Publishers", "sk": "Vydavatelia", "cs": "Vydavatelé", "de": "Herausgeber"},
+    "nav_topics": {"en": "Topics", "sk": "Témy", "cs": "Témata", "de": "Themen"},
+    "nav_about": {"en": "About", "sk": "O katalógu", "cs": "O katalogu", "de": "Über den Katalog"},
+    "publishers_help": {
+        "en": "The cities, regions and offices whose data this catalogue carries. Open one to see all of its datasets.",
+        "sk": "Mestá, kraje a úrady, ktorých dáta tento katalóg obsahuje. Otvorte jedného a uvidíte všetky jeho datasety.",
+        "cs": "Města, kraje a úřady, jejichž data tento katalog obsahuje. Otevřete jednoho a uvidíte všechny jeho datové sady.",
+        "de": "Die Städte, Regionen und Ämter, deren Daten dieser Katalog enthält. Öffnen Sie einen, um alle seine Datensätze zu sehen.",
+    },
+    "topics_help": {
+        "en": "A topic gathers the datasets on one subject from every publisher.",
+        "sk": "Téma spája datasety o jednej veci od všetkých vydavateľov.",
+        "cs": "Téma spojuje datové sady o jedné věci od všech vydavatelů.",
+        "de": "Ein Thema bündelt die Datensätze zu einem Gegenstand von allen Herausgebern.",
+    },
+    "about_intro_org": {
+        "en": "{name} is the open data catalogue of {org}.",
+        "sk": "{name} je katalóg otvorených dát: {org}.",
+        "cs": "{name} je katalog otevřených dat: {org}.",
+        "de": "{name} ist der Katalog offener Daten von {org}.",
+    },
+    "about_intro": {
+        "en": "{name} is an open data catalogue.",
+        "sk": "{name} je katalóg otvorených dát.",
+        "cs": "{name} je katalog otevřených dat.",
+        "de": "{name} ist ein Katalog offener Daten.",
+    },
+    "about_data": {
+        "en": "Every dataset comes straight from the platform's live data. Open one to browse and search its rows, download it as files, or query it live through its API.",
+        "sk": "Každý dataset pochádza priamo zo živých dát platformy. Otvorte ho a prezerajte či vyhľadávajte v jeho riadkoch, stiahnite si ho ako súbory alebo sa naň pýtajte naživo cez jeho API.",
+        "cs": "Každá datová sada pochází přímo z živých dat platformy. Otevřete ji a procházejte či vyhledávejte v jejích řádcích, stáhněte si ji jako soubory nebo se na ni ptejte živě přes její API.",
+        "de": "Jeder Datensatz stammt direkt aus den Live-Daten der Plattform. Öffnen Sie ihn, um seine Zeilen zu durchsuchen, ihn als Dateien herunterzuladen oder ihn live über seine API abzufragen.",
+    },
+    "about_machines": {"en": "For developers and other catalogues", "sk": "Pre vývojárov a iné katalógy", "cs": "Pro vývojáře a jiné katalogy", "de": "Für Entwickler und andere Kataloge"},
+    "about_api": {
+        "en": "Every dataset and its description as JSON, through CKAN's Action API.",
+        "sk": "Všetky datasety a ich opis ako JSON, cez Action API CKAN.",
+        "cs": "Všechny datové sady a jejich popis jako JSON, přes Action API CKAN.",
+        "de": "Alle Datensätze und ihre Beschreibung als JSON, über die Action-API von CKAN.",
+    },
+    "about_dcat": {"en": "DCAT-AP catalogue", "sk": "Katalóg DCAT-AP", "cs": "Katalog DCAT-AP", "de": "DCAT-AP-Katalog"},
+    "about_dcat_what": {
+        "en": "The whole catalogue as DCAT-AP, for harvesting by national and European data portals.",
+        "sk": "Celý katalóg vo formáte DCAT-AP, na zber národnými a európskymi dátovými portálmi.",
+        "cs": "Celý katalog ve formátu DCAT-AP, pro sklízení národními a evropskými datovými portály.",
+        "de": "Der ganze Katalog als DCAT-AP, zum Einsammeln durch nationale und europäische Datenportale.",
+    },
+    "about_contact": {"en": "Questions about the data", "sk": "Otázky k dátam", "cs": "Dotazy k datům", "de": "Fragen zu den Daten"},
     "more": {"en": "More details", "sk": "Ďalšie údaje", "cs": "Další údaje", "de": "Weitere Angaben"},
 }
 
@@ -499,6 +549,24 @@ def jc_recent(limit=6):
     return found.get("results") or []
 
 
+def jc_about_site():
+    """What the About page says when no sysadmin wrote `ckan.site_about` (T-3028): whose
+    catalogue this is, how to get at the data, and the machine entrances, all from the branding
+    block and the plugins that are loaded. The words are escaped by the template like any text."""
+    name = BRANDING.get("instanceName") or "joinedcontext"
+    organisation = BRANDING.get("organisation") or ""
+    if organisation:
+        intro = jc_t("about_intro_org").format(name=name, org=organisation)
+    else:
+        intro = jc_t("about_intro").format(name=name)
+    email = BRANDING.get("contactEmail") or ""
+    return {
+        "intro": intro,
+        "dcat": plugins.plugin_loaded("dcat"),
+        "email": email if "@" in email else "",
+    }
+
+
 def jc_portal_url():
     """The Portal of this installation, for staff who signed in; None without a domain."""
     domain = BRANDING.get("domain")
@@ -579,6 +647,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_formats": jc_formats,
             "jc_recent": jc_recent,
             "jc_portal_url": jc_portal_url,
+            "jc_about_site": jc_about_site,
             "jc_sso_error": jc_sso_error,
         }
 
