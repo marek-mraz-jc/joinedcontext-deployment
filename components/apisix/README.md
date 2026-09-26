@@ -104,3 +104,29 @@ ingress class. Traefik gets a `TLSOption` referenced as
 `<namespace>-bsi-tr-02102@kubernetescrd`; ingress-nginx gets the `ssl-ciphers` and
 `ssl-prefer-server-ciphers` annotations — its protocol floor is a controller-wide setting
 (`ssl-protocols`, TLS 1.2+1.3 by default), not something one Ingress can pin.
+
+### The App wildcard (ADR-N-037 §6)
+
+`global.ingress.appsWildcard.enabled` puts every App host on one certificate
+`*.apps.<domain>` (`apisix-apps-wildcard` → Secret `apisix-apps-wildcard-tls`), issued by DNS-01
+through the namespaced Issuer `letsencrypt-dns01` and Hetzner's webhook (the `dns01` part, in
+cert-manager's namespace). The edge Ingress gets a `*.apps.<domain>` rule and TLS entry, and the
+Portal stops making a certificate and Ingress per App once the wildcard is `Ready`. Per-App
+certificates made before stay until the wildcard is proven, then one change removes them.
+
+The chart grants the webhook get/list/watch on every Secret of the cluster; `component.yaml`
+empties that grant, and the Issuer reads the token from a mounted file (`tokenFilePath`).
+
+Before turning it on, once per installation (Deployment/01 §2 has the full recipe):
+
+1. A Hetzner project that holds the zone `apps.<domain>` and nothing else, since a Hetzner
+   token is scoped to a project, not to a zone. In it, the zone with `*` `A` to the ingress
+   address.
+2. A Read & Write token of that project, as the Secret `hetzner-dns` (key `token`) in
+   cert-manager's namespace. Supply it the way `components/secrets/README.md` §2 supplies any
+   operator secret, never in values or Git.
+3. `NS` records for `apps.<domain>` at the parent zone's registrar, naming the zone's Hetzner
+   name servers. Step 1's `*` record has to exist first, or App hosts stop resolving.
+
+Check it with `openssl s_client -connect <ingress>:443 -servername anything.apps.<domain>`: the
+subject is `CN = *.apps.<domain>`, for a host no App was ever published on too.

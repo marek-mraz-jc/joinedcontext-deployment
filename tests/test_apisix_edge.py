@@ -468,3 +468,67 @@ def test_the_proxy_server_names_its_own_body_ceiling(rendered):
     assert "client_max_body_size" not in nginx.get("http_configuration_snippet", ""), (
         "a second client_max_body_size in the http block makes nginx refuse to start"
     )
+
+
+def wildcard_objects(docs: list[dict]) -> dict[tuple[str, str], dict]:
+    names = {"letsencrypt-dns01", "apisix-apps-wildcard", "cert-manager-webhook-hetzner",
+             "cert-manager-webhook-hetzner:read-secrets"}
+    return {(d["kind"], d["metadata"]["name"]): d for d in docs
+            if d.get("kind") and d.get("metadata", {}).get("name") in names}
+
+
+def test_the_app_wildcard_is_one_dns01_certificate_on_the_edge(rendered_variant):
+    """ADR-N-037 §6, AP-133 (T-3013): with appsWildcard on, one certificate `*.apps.<domain>` by
+    DNS-01 in the delegated App zone serves every App host from the edge Ingress, and the solver
+    reads its token from a mounted file with no right to read any Secret."""
+    docs = rendered_variant("dev", lambda tree: set_global(
+        tree, "ingress.appsWildcard", {"enabled": True, "certManagerNamespace": "cert-manager", "tokenSecret": "hetzner-dns"}))
+    objects = wildcard_objects(docs)
+
+    issuer = objects[("Issuer", "letsencrypt-dns01")]["spec"]["acme"]
+    assert issuer["server"] == "https://acme-v02.api.letsencrypt.org/directory"
+    assert "email" not in issuer
+    [solver] = issuer["solvers"]
+    assert solver["selector"] == {"dnsZones": ["apps.dev.joinedcontext.com"]}
+    assert solver["dns01"]["webhook"] == {
+        "groupName": "acme.hetzner.com", "solverName": "hetzner",
+        "config": {"tokenFilePath": "/var/run/secrets/hetzner/token"},
+    }, "the token is a file, never tokenSecretKeyRef (which needs the read-every-Secret grant)"
+
+    certificate = objects[("Certificate", "apisix-apps-wildcard")]
+    assert certificate["metadata"]["namespace"] == objects[("Issuer", "letsencrypt-dns01")]["metadata"]["namespace"]
+    assert certificate["spec"] == {
+        "secretName": "apisix-apps-wildcard-tls",
+        "issuerRef": {"name": "letsencrypt-dns01", "kind": "Issuer"},
+        "dnsNames": ["*.apps.dev.joinedcontext.com"],
+    }
+
+    ingress = edge_objects(docs)["Ingress"]["spec"]
+    assert {"hosts": ["*.apps.dev.joinedcontext.com"], "secretName": "apisix-apps-wildcard-tls"} in ingress["tls"]
+    assert "*.apps.dev.joinedcontext.com" in [rule["host"] for rule in ingress["rules"]]
+    # The Portal copies the first rule as every App Ingress's template (AP-133): still the apex.
+    assert ingress["rules"][0]["host"] == "dev.joinedcontext.com"
+    # The edge certificate itself never carries the wildcard: HTTP-01 cannot prove one.
+    assert not any("*" in name for name in edge_objects(docs)["Certificate"]["spec"]["dnsNames"])
+
+    assert objects[("ClusterRole", "cert-manager-webhook-hetzner:read-secrets")]["rules"] == []
+    webhook = objects[("Deployment", "cert-manager-webhook-hetzner")]
+    assert webhook["metadata"]["namespace"] == "cert-manager"
+    pod = webhook["spec"]["template"]["spec"]
+    [container] = pod["containers"]
+    assert container["image"] == (
+        "docker.io/hetzner/cert-manager-webhook-hetzner:v0.9.0"
+        "@sha256:b64db89ba4c1f008aeaf3d834681d4227316c78e0c3ab6c21939457e90d42586")
+    assert {"name": "hetzner-token", "mountPath": "/var/run/secrets/hetzner", "readOnly": True} in container["volumeMounts"]
+    assert {"name": "hetzner-token", "secret": {"secretName": "hetzner-dns", "items": [{"key": "token", "path": "token"}]}} in pod["volumes"]
+    assert container["securityContext"]["readOnlyRootFilesystem"] is True
+    assert container["resources"]["limits"]["memory"]
+
+
+def test_without_the_app_wildcard_nothing_of_it_renders(rendered):
+    """Off by default: every App host keeps its own HTTP-01 certificate (ADR-N-037 §3.2)."""
+    for env in ("dev", "production"):
+        docs = rendered(env)
+        assert wildcard_objects(docs) == {}, env
+        ingress = edge_objects(docs)["Ingress"]["spec"]
+        assert not any("*" in rule["host"] for rule in ingress["rules"]), env

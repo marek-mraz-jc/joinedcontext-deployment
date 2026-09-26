@@ -286,6 +286,14 @@ ingress:
       paths:
         - '/'
   {{- end }}
+  {{- $appsWildcard := dig "ingress" "appsWildcard" "enabled" false $global }}
+  {{- if $appsWildcard }}
+    # Every App host on one rule and one certificate (ADR-N-037 §6, T-3013). APISIX answers
+    # a host that no published App owns with a 404.
+    - host: '*.apps.{{ $global.domain }}'
+      paths:
+        - '/'
+  {{- end }}
   tls:
     # Its own Secret, not the `apisix-tls` cert-manager's ingress-shim used to fill: two
     # Certificates cannot share one Secret, and an upgrade that renamed the owner instead of
@@ -296,6 +304,11 @@ ingress:
       {{- range $subDomains }}
         - {{ . }}.{{ $global.domain }}
       {{- end }}
+    {{- if $appsWildcard }}
+    - secretName: apisix-apps-wildcard-tls
+      hosts:
+        - '*.apps.{{ $global.domain }}'
+    {{- end }}
 
 # Ingress Controller
 ingress-controller:
