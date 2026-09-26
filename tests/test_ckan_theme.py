@@ -120,7 +120,7 @@ def test_a_bare_dataset_shows_only_what_it_has_and_the_publisher_falls_back_to_t
     bare = {"organization": {"name": "helsinki", "title": "City of Helsinki"}}
     assert theme.jc_about(bare) == [("Publisher", "City of Helsinki", None)]
     assert theme.jc_live({}) is None and theme.jc_resource_sections({}) == [] and theme.jc_more({}) == []
-    assert theme.jc_preview({}) is None and theme.jc_formats({}) == []
+    assert theme.jc_previews({}) == [] and theme.jc_formats({}) == []
 
 
 def test_a_link_that_is_not_http_is_shown_as_text(theme):
@@ -185,35 +185,56 @@ def test_a_dataset_with_only_files_has_one_section_and_a_search_result_names_no_
     assert theme.jc_formats({"resources": PUBLISHED_RESOURCES}) == ["CSV", "GeoJSON", "NGSI-LD", "MCP"]
 
 
-def test_the_page_frames_the_datastore_table_with_its_row_count(theme):
+# Since T-3012 the mirror writes one DataStore table per entity type, named by the type and
+# with no format of its own.
+TYPE_TABLES = [
+    {"id": "t-bikes", "name": "BikeHireDockingStation", "format": "", "url": "https://data.dev.example/datastore/dump/t-bikes",
+     "datastore_active": True},
+    {"id": "t-air", "name": "AirQualityObserved", "format": "", "url": "https://data.dev.example/datastore/dump/t-air",
+     "datastore_active": True},
+]
+
+
+def test_the_page_frames_every_type_table_with_its_row_count(theme):
+    rows = {"t-air": 300, "t-bikes": 24808, "r-table": 5}
     theme.page.actions = {
         "resource_view_list": lambda d: [{"id": "v-image", "view_type": "image_view"},
-                                         {"id": "v-table", "view_type": "datatables_view"}],
-        "datastore_search": lambda d: {"total": 25108} if d == {"resource_id": "r-table", "limit": 0} else {},
+                                         {"id": "v-" + d["id"], "view_type": "datatables_view"}],
+        "datastore_search": lambda d: {"total": rows[d["resource_id"]]} if d["limit"] == 0 else {},
     }
-    preview = theme.jc_preview({"resources": PUBLISHED_RESOURCES})
-    assert preview["resource"]["id"] == "r-table"
-    assert preview["view"]["id"] == "v-table" and preview["total"] == 25108
-    assert theme.jc_number(preview["total"]) == "25\u202f108"
+    previews = theme.jc_previews({"resources": PUBLISHED_RESOURCES[:3] + TYPE_TABLES})
+    assert [p["resource"]["id"] for p in previews] == ["t-air", "t-bikes"]
+    assert [p["view"]["id"] for p in previews] == ["v-t-air", "v-t-bikes"]
+    assert theme.jc_total(previews) == 25108 and theme.jc_number(25108) == "25\u202f108"
+    # A table the mirror wrote without a format downloads as CSV and says what it is.
+    data = theme.jc_resource_sections({"resources": TYPE_TABLES})[0]["items"]
+    assert [(i["format"], i["what"]) for i in data] == [("CSV", "The table above, as one file")] * 2
 
 
-def test_a_table_without_a_view_or_a_count_still_shows_and_says_so(theme, tmp_path):
+def test_a_table_without_a_view_or_a_count_still_shows_and_says_so(theme):
     theme.page.actions = {
         "resource_view_list": theme.toolkit.NotAuthorized(),
         "datastore_search": theme.toolkit.ObjectNotFound(),
     }
-    preview = theme.jc_preview({"resources": PUBLISHED_RESOURCES})
-    assert preview == {"resource": PUBLISHED_RESOURCES[-1], "view": None, "total": None}
+    previews = theme.jc_previews({"resources": PUBLISHED_RESOURCES})
+    assert previews == [{"resource": PUBLISHED_RESOURCES[-1], "view": None, "total": None}]
+    assert theme.jc_total(previews) is None and theme.jc_total([]) is None
     assert theme.jc_number(None) == "" and theme.jc_number("x") == ""
     read = (THEME / "templates__package__read.html").read_text()
-    assert "h.jc_t('no_view')" in read and "preview.total is not none" in read
+    assert "h.jc_t('no_view')" in read and "total is not none" in read and "preview.total is not none" in read
+
+
+def test_only_the_first_table_is_open_so_the_others_load_nothing_until_asked():
+    read = (THEME / "templates__package__read.html").read_text()
+    assert '<details class="jc-table"{% if loop.first %} open{% endif %}>' in read
+    assert 'loading="lazy"' in read
 
 
 def test_the_table_comes_before_the_about_list_on_the_dataset_page():
     read = (THEME / "templates__package__read.html").read_text()
-    assert read.index("h.jc_preview(pkg)") < read.index("h.jc_about(pkg)") < read.index("h.jc_live(pkg)")
+    assert read.index("h.jc_previews(pkg)") < read.index("h.jc_about(pkg)") < read.index("h.jc_live(pkg)")
     # The framed table carries a title a screen reader announces.
-    assert re.search(r"<iframe[^>]*title=\"\{\{ h.jc_t\('table_title'\) \}\}", read)
+    assert re.search(r"<iframe[^>]*title=\"\{\{ h.jc_t\('table_title'\) \}\}: \{\{ name \}\}", read)
 
 
 def test_each_resource_has_its_one_action_named_for_a_screen_reader():
@@ -221,7 +242,7 @@ def test_each_resource_has_its_one_action_named_for_a_screen_reader():
     assert "dropdown" not in item and "{{ _('Explore') }}" not in item
     assert "h.jc_t('open') if jc_section == 'api' else h.jc_t('download')" in item
     assert item.count('<span class="visually-hidden"> {{ name }}</span>') == 2
-    assert "{% if not url_is_edit %}" in item
+    assert "{% if not url_is_edit %}" in item and "jc_format or h.get_translated(res, 'format')" in item
 
 
 @pytest.mark.parametrize("lang, words", [

@@ -23,7 +23,7 @@
         {% endif %}
         <ul class="resource-list jc-resource-list" aria-labelledby="jc-section-{{ section.key }}">
           {% for item in section['items'] %}
-            {% snippet 'package/snippets/resource_item.html', pkg=pkg, res=item.resource, can_edit=can_edit, jc_what=item.what, jc_section=section.key %}
+            {% snippet 'package/snippets/resource_item.html', pkg=pkg, res=item.resource, can_edit=can_edit, jc_what=item.what, jc_format=item.format, jc_section=section.key %}
           {% endfor %}
         </ul>
         {% if section.key == 'schema' %}</details>{% endif %}

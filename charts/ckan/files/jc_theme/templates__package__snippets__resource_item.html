@@ -7,7 +7,7 @@
 {% set url = url or h.url_for(url_action, id=pkg.name, resource_id=res.id) %}
 {% set name = h.resource_display_name(res) %}
 <li class="resource-item jc-resource" data-id="{{ res.id }}">
-  <span class="jc-chip{% if res.datastore_active %} jc-chip-primary{% endif %}" data-format="{{ (res.format or 'data').lower() }}">{{ h.get_translated(res, 'format') or '—' }}</span>
+  <span class="jc-chip{% if res.datastore_active %} jc-chip-primary{% endif %}" data-format="{{ (res.format or 'data').lower() }}">{{ jc_format or h.get_translated(res, 'format') or '—' }}</span>
   <div>
     <a class="heading" href="{{ url }}">{{ name }}</a>
     {% if jc_what %}<p>{{ jc_what }}</p>{% endif %}

@@ -77,8 +77,8 @@ and the stylesheet mixes every other shade from them with `color-mix()`, the way
 `tokens.css` does, so it holds no colour of its own and a second city restyles the catalogue from
 this block alone. CKAN's own teal, which its Bootstrap build writes into dozens of rules, is
 restated on the brand there too. Pages the theme lays out itself: the home page (hero, search,
-recently updated datasets, publishers and keywords), the dataset page (the DataStore table framed
-first with its row count, then About, the live API, and the resources in three sections: files,
+recently updated datasets, publishers and keywords), the dataset page (every DataStore table, one per
+entity type, framed first with its row count, the first open, then About, the live API, and the resources in three sections: files,
 APIs, and the folded data model), the resource rows, the search results and the footer.
 
 `jc_theme` is the first plugin in `ckan.plugins`: the first plugin's templates win, and the theme
