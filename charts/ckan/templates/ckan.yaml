@@ -25,11 +25,18 @@ metadata:
   labels:
     {{- include "ckan.labels" (dict "root" . "part" $part) | nindent 4 }}
 spec:
-  # The uploads claim is ReadWriteOnce, so a second replica would not schedule beside the
-  # first on a single-node cluster. Scaling CKAN needs an RWX volume or object storage.
+  # The uploads claim is ReadWriteOnce: it binds to one node, so every CKAN pod runs on the
+  # node that holds it (the affinity below). Scaling CKAN across nodes needs an RWX volume or
+  # object storage.
   replicas: {{ .Values.ckan.replicaCount }}
+  # The successor starts beside the running pod and takes traffic once its readiness probe
+  # answers; `Recreate` stopped the old pod first and left the catalogue down ~40 s per deploy
+  # (T-3032).
   strategy:
-    type: Recreate
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       {{- include "ckan.selectorLabels" (dict "root" . "part" $part) | nindent 6 }}
@@ -44,8 +51,26 @@ spec:
         {{- with (include "ckan.podAnnotations" .) }}
         {{- . | nindent 8 }}
         {{- end }}
+        {{- if .Values.serviceMesh.enabled }}
+        # The proxy outlives the app's pause and the drain of what it let in (T-3008).
+        config.alpha.linkerd.io/proxy-wait-before-exit-seconds: {{ add .Values.ckan.preStopSleepSeconds .Values.ckan.meshDrainSeconds | quote }}
+        {{- end }}
     spec:
       automountServiceAccountToken: false
+      {{- if le (int .Values.ckan.terminationGracePeriodSeconds) (add .Values.ckan.preStopSleepSeconds .Values.ckan.meshDrainSeconds | int) }}
+      {{- fail "ckan.terminationGracePeriodSeconds must be longer than preStopSleepSeconds + meshDrainSeconds, or the kubelet kills the pod mid-drain" }}
+      {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.ckan.terminationGracePeriodSeconds }}
+      # A roll's successor mounts the ReadWriteOnce uploads claim, which only the node that
+      # holds it can: so it is placed beside the catalogue's running pod. The first pod matches
+      # its own selector, which the scheduler lets through when no such pod runs yet.
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  {{- include "ckan.selectorLabels" (dict "root" . "part" $part) | nindent 18 }}
       enableServiceLinks: false
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
@@ -193,6 +218,12 @@ spec:
           ports:
             - name: http
               containerPort: 5000
+          # APISIX and the mesh still send to a stopping pod until they see its endpoint go, so
+          # it keeps serving that long before uWSGI is told to stop (OPS-27, T-3008).
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: {{ .Values.ckan.preStopSleepSeconds }}
           readinessProbe:
             httpGet:
               path: /api/3/action/status_show
