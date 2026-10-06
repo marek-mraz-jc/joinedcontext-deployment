@@ -42,13 +42,14 @@ requires_docker = pytest.mark.skipif(
 )
 
 
-def bento(mapping: str, document, env: dict, per_element: bool = False):
+def bento(mapping: str, document, env: dict, per_element: bool = False, may_drop: bool = False):
     """Run one Bloblang mapping over one document, through a Bento stream.
 
     A stream rather than `bento blobl`, because a page of five hundred entities is one line and
     `blobl` reads stdin with a scanner that refuses it. `per_element` splits a JSON array the way
     the pipeline's own `unarchive: json_array` does and joins the results back into one array,
     in the same container: one container per element cost a minute and a half (T-2895).
+    `may_drop`: a mapping that deletes the message writes nothing, which is the empty list here.
     """
     processors = [{"mapping": mapping}]
     if per_element:
@@ -70,6 +71,8 @@ def bento(mapping: str, document, env: dict, per_element: bool = False):
             args += ["-e", f"{key}={value}"]
         result = subprocess.run(args + [BENTO, "-c", "/w/cfg.yaml"], capture_output=True, text=True, timeout=240)
         produced = work / "out.json"
+        if may_drop and result.returncode == 0 and (not produced.is_file() or not produced.read_text().strip()):
+            return []
         assert produced.is_file(), (result.stderr or result.stdout)[-2000:]
         return json.loads(produced.read_text())
 
@@ -254,6 +257,22 @@ def test_a_region_with_no_row_for_a_territory_says_not_measured_too():
     assert all(e["currentValue"]["value"] == "not measured" for e in population)
     emissions = [e for e in produced if e["name"]["value"].startswith("emisie-")]
     assert all(isinstance(e["currentValue"]["value"], (int, float)) for e in emissions)
+
+
+@requires_docker
+def test_a_region_read_that_brought_no_row_writes_nothing_rather_than_wiping_every_indicator():
+    """T-3113: on 2026-10-05 the weekly run wrote "not measured" over all 28 indicators of the
+    region while `bbsk-kraj` held the rows; an answer with no row of either cube is a failed read,
+    and the indicators keep their values until the expiry removes one that really stopped."""
+    env = {"JC_ORG_DOMAIN": "bbsk.sk", "JC_SPACE": "bbsk-kpi", "JC_SOURCE_SPACE": "bbsk-kraj"}
+    mapping = mapping_of(SEED / "bbsk/bbsk-pipeline-ukazovatele.yaml")
+    assert bento(mapping, [], env, may_drop=True) == []
+    # Rows of no cube the indicators read are no answer either.
+    stranger = [{"id": "urn:ngsi-ld:StatisticalObservation:bbsk.sk:bbsk-kraj:x", "type": "StatisticalObservation",
+                 "dataSet": {"type": "Property", "value": "xx0000rr"}, "refArea": {"type": "Property", "value": "SK032"},
+                 "refPeriod": {"type": "Property", "value": "2024"}, "value": {"type": "Property", "value": 1},
+                 "dateObserved": {"type": "Property", "value": "2025-10-31T00:00:00Z"}}]
+    assert bento(mapping, stranger, env, may_drop=True) == []
 
 
 @requires_docker

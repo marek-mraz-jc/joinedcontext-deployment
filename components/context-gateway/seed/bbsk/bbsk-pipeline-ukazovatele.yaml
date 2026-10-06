@@ -54,7 +54,12 @@ spec:
       let rows = this.filter(r -> $indicator.keys().contains(r.dataSet.value) && $territory.keys().contains(r.refArea.value) && r.value.value.type() == "number")
       let wanted = $indicator.keys().map_each(c -> $territory.keys().map_each(a -> { "cube": c, "area": a })).flatten()
 
-      root = $wanted.map_each(w -> {
+      # An answer with no row of either cube is a read that brought nothing (the endpoint
+      # refused the pipeline, or answered a page of something else), never 28 territories that
+      # stopped publishing: writing "not measured" over all of them wiped every indicator on dev
+      # (T-3113, 2026-10-05). Nothing is written then; an indicator that really stops is removed
+      # by the expiry above.
+      root = if $rows.length() == 0 { deleted() } else { $wanted.map_each(w -> {
         "spec": $indicator.get(w.cube),
         "token": $territory.get(w.area),
         "pick": $rows.filter(r -> r.dataSet.value == w.cube && r.refArea.value == w.area).sort_by(r -> r.refPeriod.value).index(-1).catch(null)
@@ -71,4 +76,4 @@ spec:
         "derivedFrom": { "type": "Relationship", "object": $source_endpoint },
         "computedBy": { "type": "Relationship", "object": "urn:ngsi-ld:Pipeline:%v:%v:ukazovatele".format($domain, $space) },
         "updatedAt": { "type": "Property", "value": { "@type": "DateTime", "@value": $ran } }
-      })
+      }) }

@@ -20,3 +20,20 @@ spec:
       instanceRef: { kind: CkanInstance, name: banskabystrica }
       license: cc-by
       datastore: { representation: csv, refresh: onReconcile }
+  # What the dataset page and the DCAT-AP record carry beside the title (EP-27, T-3112): the
+  # publisher, the licence and each source's credit, the themes and keywords a reader searches
+  # by, the city, and how often it changes (hourly: the PM10 and PM2.5 readings).
+  catalog:
+    publisher: { name: { sk: "Mesto Banská Bystrica", en: "City of Banská Bystrica" }, uri: "https://www.banskabystrica.sk/" }
+    license: CC_BY_4_0
+    attribution:
+      sk: "Zdroje: Mesto Banská Bystrica (podujatia), Ministerstvo školstva SR, Digitálna mapa škôl (školy), Európska environmentálna agentúra, údaje SHMÚ (ovzdušie); CC BY 4.0"
+      en: "Sources: City of Banská Bystrica (events), Slovak Ministry of Education, Digitálna mapa škôl (schools), European Environment Agency, SHMÚ's data (air); CC BY 4.0"
+    themes: [EDUC, ENVI, SOCI]
+    keywords:
+      sk: ["podujatia", "školy", "kvalita ovzdušia", "PM10", "PM2.5", "Banská Bystrica"]
+      en: ["events", "schools", "air quality", "PM10", "PM2.5", "Banská Bystrica"]
+    spatial:
+      - SK032
+      - "https://data.gov.sk/id/lau2/SK0321508438"
+    frequency: HOURLY
