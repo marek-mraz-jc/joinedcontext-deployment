@@ -161,3 +161,19 @@ def test_the_chat_is_published_on_its_own_host_and_its_client_names_the_proxy(do
     config = next(d for d in docs if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "apisix-standalone-base")
     assert "assistant.dev.joinedcontext.com" in str(config["data"])
     assert "jc-assistant.dev.svc.cluster.local:8080" in str(config["data"])
+
+
+def test_the_widget_is_served_from_the_assistants_host_which_the_chat_admits(docs):
+    """AG-114: /d/* on assistant.{domain} reaches jc-assistant with no X-Frame-Options from the
+    edge, and the service knows that host as its own origin, so its page may ask the chat."""
+    import yaml
+
+    worker = one(docs, "Deployment", "jc-assistant")["spec"]["template"]["spec"]["containers"]
+    worker_env = {e["name"]: e.get("value") for c in worker for e in c.get("env", [])}
+    assert worker_env["JC_ASSISTANT_PUBLIC_ORIGIN"] == "https://assistant.dev.joinedcontext.com"
+    config = next(d for d in docs if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "apisix-standalone-base")
+    edge = yaml.safe_load(next(v for v in config["data"].values() if "routes" in v and "#END" in v).replace("#END", ""))
+    route = next(r for r in edge["routes"] if r.get("plugin_config_id") == "assistant-widget")
+    assert route["uri"] == "/d/*" and route["host"] == "assistant.dev.joinedcontext.com"
+    plugins = next(pc for pc in edge["plugin_configs"] if pc["id"] == "assistant-widget")["plugins"]
+    assert "X-Frame-Options" not in plugins["response-rewrite"]["headers"]["set"]

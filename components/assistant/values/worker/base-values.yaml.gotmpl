@@ -71,6 +71,9 @@ env:
   JC_ASSISTANT_CLIENT_ID: jc-assistant
   JC_ASSISTANT_CLIENT_SECRET_FILE: /var/run/keycloak/client-secret
   JC_ASSISTANT_LLM: {{ .Values.assistant.worker.llm | quote }}
+  # The widget's own host (AG-114): its page asks the chat from there, so the chat admits it
+  # beside each deployment's allowedOrigins.
+  JC_ASSISTANT_PUBLIC_ORIGIN: "https://assistant.{{ $global.domain }}"
 {{- if has "functions" .Values.components }}
   # A deployment with `sandbox: true` filters a long tool result with a script there (AG-112).
   JC_ASSISTANT_FUNCTIONS_URL: "http://jc-functions.{{ .Values.functions.runtime.namespace }}.svc.cluster.local:8080"
