@@ -59,6 +59,18 @@ portal-public:
   subDomain: portal
   priority: 5
 
+# A data view published as a public link (API/01 §33, T-3108): a read-only page with no login in
+# front, whose every read goes to the public Endpoint the view was published as, where the
+# gateway enforces what the link shows. The plugin config is portal-public's.
+portal-public-view:
+  name: portal-public-view
+  description: A published data view, edge session optional
+  upstream: portal.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "portal") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/v/*'
+  subDomain: portal
+  priority: 5
+  pluginConfig: portal-public
+
 # The bundle the catalogue page (and every Portal page) runs on: the same files for everyone,
 # holding no data. The plugin config is portal-public's.
 portal-public-assets:
