@@ -22,6 +22,7 @@ PORTAL_CONFIGS = (
     "portal-public",
     "portal-api",
     "portal-well-known",
+    "portal-live-notify",
     "portal-metrics",
     "apps-surface",
     "portal-redirect",
