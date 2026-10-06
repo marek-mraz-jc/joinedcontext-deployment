@@ -13,10 +13,13 @@ spec:
   class: scheduled
   schedule: "11 4 * * 1"
   # Read through the space's own Endpoint and not the store, so the Policy applies to this
-  # pipeline exactly as it applies to anybody else (PL-18, PF-39, PL-45).
+  # pipeline exactly as it applies to anybody else (PL-18, PF-39, PL-45). Only the two cubes
+  # the compute reads: bbsk-kraj holds ~7,700 rows of seven cubes, and an endpoint source is
+  # read as one page of 1000 (T-3132), which left zp3803rs out and every emissions indicator
+  # "not measured" (T-3125).
   source:
     endpointRef: { kind: Endpoint, name: bbsk-kraj }
-    query: { type: StatisticalObservation }
+    query: { type: StatisticalObservation, q: 'dataSet=="om7102rr","zp3803rs"' }
   targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-kpi:bbsk-kpi
   output:
     type: KeyPerformanceIndicator

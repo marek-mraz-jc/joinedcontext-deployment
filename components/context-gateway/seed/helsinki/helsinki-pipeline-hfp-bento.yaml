@@ -10,6 +10,12 @@ pipeline:
     - mapping: |
         root = if this.exists("VP") { this.VP } else { deleted() }
 
+    # A report without a GPS fix (`loc: "ODO"`, lat and long null) says nothing about where the
+    # bus is: it is dropped here, before it takes a fleet slot, instead of failing the build
+    # below and piling up as a rejected record (T-3129).
+    - mapping: |
+        root = if this.lat.type() == "number" && this.long.type() == "number" { this } else { deleted() }
+
     # The bus this frame belongs to: operator and vehicle number, the local part of its URN.
     - mapping: |
         meta vehicle = "%v-%v".format(this.oper, this.veh)
@@ -109,18 +115,18 @@ pipeline:
             "value": { "type": "Point", "coordinates": [ this.long.number(), this.lat.number() ] },
             "observedAt": this.tst
           },
-          "speed": {
+          "speed": if this.spd.type() != "number" { deleted() } else { {
             "type": "Property",
-            "value": this.spd.number(),
+            "value": this.spd,
             "unitCode": "MTS",
             "observedAt": this.tst
-          },
-          "heading": {
+          } },
+          "heading": if this.hdg.type() != "number" { deleted() } else { {
             "type": "Property",
-            "value": this.hdg.number(),
+            "value": this.hdg,
             "unitCode": "DD",
             "observedAt": this.tst
-          },
+          } },
           "route": { "type": "Property", "value": this.route.string(), "observedAt": this.tst },
           "vehicleType": { "type": "Property", "value": "bus" },
           "fleetVehicleId": { "type": "Property", "value": meta("vehicle") }

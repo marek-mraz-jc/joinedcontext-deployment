@@ -319,3 +319,19 @@ def test_the_model_classes_and_the_manifest_agree():
     model = manifest("bbsk-datamodel-registre.yaml")
     assert linkml["name"] == model["metadata"]["name"]
     assert set(model["spec"]["classes"]) == set(linkml["classes"])
+
+
+def test_the_indicator_pipeline_reads_exactly_the_cubes_its_compute_uses():
+    """T-3125, T-3132: an endpoint source is one page of 1000; bbsk-kraj holds ~7,700 rows of
+    seven cubes, so the indicators read only their own two, and a cube added to the compute
+    must be added to the query too."""
+    import re
+
+    pipeline = yaml.safe_load((BBSK / "bbsk-pipeline-ukazovatele.yaml").read_text())
+    compute = pipeline["spec"]["compute"]["bloblang"]
+    used = set(re.findall(r'"([a-z]{2}\d{4}r[rs])": \{ "name"', compute))
+    assert used == {"om7102rr", "zp3803rs"}
+    query = pipeline["spec"]["source"]["query"]
+    assert query["type"] == "StatisticalObservation"
+    assert set(re.findall(r'"([^"]+)"', query["q"])) == used
+    assert query["q"].startswith('dataSet==')

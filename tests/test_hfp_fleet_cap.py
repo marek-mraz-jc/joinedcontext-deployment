@@ -118,3 +118,49 @@ def test_a_slot_is_freed_by_silence_and_kept_by_reporting():
     # The silent buses' slots are free again: 29 new buses take them, beside bus 1's.
     later = written.get("03", [])
     assert len(later) == len(set(later)) == 29 and set(later) <= set(range(41, 81)), later
+
+
+@requires_docker
+def test_a_report_without_a_gps_fix_is_dropped_and_a_missing_speed_is_left_out():
+    """T-3129: HFP sends position reports with no fix (`loc: "ODO"`, lat/long/spd/hdg null).
+
+    Built into a Vehicle they failed on `long.number()` and every one was kept as a rejected
+    record: 1,000 piled up on dev and buried the real ones. A report without coordinates says
+    nothing about where the bus is and is dropped before it takes a fleet slot; a report with
+    coordinates and no speed or heading is written without them.
+    """
+    def report(vehicle: int, **fields) -> str:
+        vp = {"oper": 22, "veh": vehicle, "long": 24.94, "lat": 60.17, "spd": 8.5, "hdg": 90,
+              "route": "2510", "tst": "2026-10-06T17:26:13.575Z", "loc": "GPS"}
+        vp.update(fields)
+        return json.dumps({"VP": vp})
+
+    config = {
+        "input": {"stdin": {"scanner": {"lines": {}}}},
+        "pipeline": yaml.safe_load(MAPPING.read_text())["pipeline"],
+        "cache_resources": caches(),
+        "output": {"stdout": {"codec": "lines"}},
+        "logger": {"level": "error"},
+    }
+    frames = [
+        report(1, lat=None, long=None, spd=None, hdg=None, loc="ODO"),
+        report(2, spd=None, hdg=None),
+        report(3),
+    ]
+    result = subprocess.run(
+        ["docker", "run", "--rm", "-i", "-e", "JC_ORG_DOMAIN=hel.fi", "-e", "JC_SPACE=helsinki",
+         "-e", f"CONFIG={json.dumps(config)}", "--entrypoint", "sh", BENTO, "-c",
+         'printf "%s" "$CONFIG" > /tmp/c.json && exec /bento -c /tmp/c.json'],
+        input="".join(line + "\n" for line in frames), capture_output=True, text=True, timeout=120,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "error" not in result.stderr.lower(), result.stderr
+    written = {
+        entity["fleetVehicleId"]["value"]: entity
+        for entity in (json.loads(line) for line in result.stdout.splitlines() if line.strip())
+    }
+    assert sorted(written) == ["22-2", "22-3"]
+    without_speed, whole = written["22-2"], written["22-3"]
+    assert without_speed["location"]["value"]["coordinates"] == [24.94, 60.17]
+    assert "speed" not in without_speed and "heading" not in without_speed
+    assert whole["speed"]["value"] == 8.5 and whole["heading"]["value"] == 90
