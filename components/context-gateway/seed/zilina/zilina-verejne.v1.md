@@ -3,7 +3,7 @@
 <!-- Generated from the LinkML source by Model Tools. Do not edit: `jcctl model
      generate` overwrites this file and CI fails on any difference (DM-01, DM-02). -->
 
-What the city's public space carries side by side (DM-01, DM-61): the hourly readings of the city's one air-quality station as the European Environment Agency republishes them, the city's immovable national cultural monuments from the Monuments Board's register placed through the national register of addresses, and the railway stations of the city from the ŽSR timetable. One model, one space, one public endpoint. Where Smart Data Models has the class, its IRI is cited rather than minted (DM-04, DM-16). Sources: Research/zilina-open-data-sources.md.
+What the city's public space carries side by side (DM-01, DM-61): the hourly readings of the city's one air-quality station as the European Environment Agency republishes them, the city's immovable national cultural monuments from the Monuments Board's register placed through the national register of addresses, and the railway stations of the city from the national train timetable. One model, one space, one public endpoint. Where Smart Data Models has the class, its IRI is cited rather than minted (DM-04, DM-16). Sources: Research/zilina-open-data-sources.md.
 
 - Namespace: `https://joinedcontext.com/models/zilina/zilina-verejne`
 - Rendered by: `linkml-1.11.1`
@@ -63,7 +63,7 @@ Specialises `Entity`.
 
 ### GtfsStop
 
-One railway station in the city and how much of the timetable calls at it.
+One railway station in the city and how many trains leave it today.
 
 IRI: `sdm:GtfsStop`
 
@@ -73,8 +73,7 @@ Specialises `Entity`.
 |---|---|---|---|---|---|---|
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
 | `stopCode` | Property | `string` | yes |  | `jc:stopCode` | The station's `stop_id` in the ŽSR timetable. |
-| `routeCount` | Property | `integer` |  |  | `jc:routeCount` | How many routes of the timetable call at the station. |
-| `dailyDepartures` | Property | `integer` |  |  | `jc:dailyDepartures` | How many trains leave the station on a weekday of the timetable. |
+| `dailyDepartures` | Property | `integer` |  |  | `jc:dailyDepartures` | How many trains leave the station on the day the pipeline ran, by the timetable's calendar and its exceptions; a train that ends its run at the station does not count. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |

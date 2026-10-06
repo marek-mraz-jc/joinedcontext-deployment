@@ -5,7 +5,8 @@ description: >-
   What the city's public space carries side by side (DM-01, DM-61): the hourly readings of the
   city's one air-quality station as the European Environment Agency republishes them, the city's
   immovable national cultural monuments from the Monuments Board's register placed through the
-  national register of addresses, and the railway stations of the city from the ŽSR timetable.
+  national register of addresses, and the railway stations of the city from the national train
+  timetable.
   One model, one space, one public endpoint. Where Smart Data Models has the class, its IRI is
   cited rather than minted (DM-04, DM-16). Sources: Research/zilina-open-data-sources.md.
 license: https://joinedcontext.com/licenses/cc-by-4.0
@@ -159,16 +160,11 @@ slots:
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://gtfs.org/schedule/reference/#stopstxt
-  routeCount:
-    slot_uri: jc:routeCount
-    description: How many routes of the timetable call at the station.
-    range: integer
-    minimum_value: 0
-    annotations:
-      ngsi_ld_kind: Property
   dailyDepartures:
     slot_uri: jc:dailyDepartures
-    description: How many trains leave the station on a weekday of the timetable.
+    description: >-
+      How many trains leave the station on the day the pipeline ran, by the timetable's calendar
+      and its exceptions; a train that ends its run at the station does not count.
     range: integer
     minimum_value: 0
     annotations:
@@ -213,14 +209,13 @@ classes:
       - source
   GtfsStop:
     class_uri: sdm:GtfsStop
-    description: One railway station in the city and how much of the timetable calls at it.
+    description: One railway station in the city and how many trains leave it today.
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
     slots:
       - name
       - stopCode
-      - routeCount
       - dailyDepartures
       - dataProvider
       - source

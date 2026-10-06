@@ -227,10 +227,10 @@
     },
     "GtfsStop": {
       "additionalProperties": false,
-      "description": "One railway station in the city and how much of the timetable calls at it.",
+      "description": "One railway station in the city and how many trains leave it today.",
       "properties": {
         "dailyDepartures": {
-          "description": "How many trains leave the station on a weekday of the timetable.",
+          "description": "How many trains leave the station on the day the pipeline ran, by the timetable's calendar and its exceptions; a train that ends its run at the station does not count.",
           "minimum": 0,
           "type": [
             "integer",
@@ -295,15 +295,6 @@
           "format": "date-time",
           "type": [
             "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "routeCount": {
-          "description": "How many routes of the timetable call at the station.",
-          "minimum": 0,
-          "type": [
-            "integer",
             "null"
           ],
           "x-ngsi-ld-kind": "Property"

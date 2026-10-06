@@ -6,12 +6,16 @@ The empty-read guard every stream starts with is checked the same way: an answer
 it fails the run instead of writing nothing as if the city had emptied.
 """
 
+import csv
+import datetime
 import http.server
+import io
 import json
 import shutil
 import subprocess
 import threading
 import urllib.parse
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -265,3 +269,79 @@ def test_an_empty_library_and_a_missing_page_fail_the_run():
     page["_embedded"]["searchResult"]["page"]["totalPages"] = 4  # page 3 answers 404
     missing = drepo(json.dumps(page).encode())
     assert b"page 3 did not come" in missing.stdout + missing.stderr
+
+
+VLAKY = SEED / "zilina-pipeline-vlaky-bento.yaml"
+GTFS = FIXTURES / "zsr-gtfs.zip"
+CITY_STATIONS = {"Žilina", "Žilina-zariečie", "Žilina-Solinky", "Bytčica", "Brodno"}
+
+
+def vlaky(document: bytes, day: str) -> subprocess.CompletedProcess:
+    """The vlaky mapping over `document` as if it ran at noon of `day` in Žilina."""
+    text = VLAKY.read_text()
+    assert text.count("now()") == 1, "the mapping reads the clock once, which the test sets"
+    text = text.replace("now()", f'"{day}T10:00:00Z".ts_parse("2006-01-02T15:04:05Z07:00")')
+    return subprocess.run(
+        ["docker", "run", "--rm", "-i", "-e", f"JC_ORG_DOMAIN={DOMAIN}", "-e", "JC_SPACE=zilina-verejne",
+         "-e", "CONFIG=" + json.dumps({"input": {"stdin": {"scanner": {"to_the_end": {}}}},
+                                      "pipeline": yaml.safe_load(text)["pipeline"],
+                                      "output": {"stdout": {"codec": "all-bytes"}}, "logger": {"level": "error"}}),
+         "--entrypoint", "sh", BENTO, "-c", 'printf "%s" "$CONFIG" > /tmp/c.json && exec /bento -c /tmp/c.json'],
+        input=document, capture_output=True, timeout=180,
+    )
+
+
+def departures(day: str) -> dict[str, int]:
+    """The same count, written plainly over the recorded timetable: the oracle the mapping meets."""
+    archive = zipfile.ZipFile(GTFS)
+    table = lambda name: list(csv.DictReader(io.TextIOWrapper(archive.open(name), "utf-8-sig")))
+    weekday = datetime.date(int(day[:4]), int(day[5:7]), int(day[8:])).strftime("%A").lower()
+    date = day.replace("-", "")
+    exceptions = [e for e in table("calendar_dates.txt") if e["date"] == date]
+    services = {c["service_id"] for c in table("calendar.txt")
+                if c[weekday] == "1" and c["start_date"] <= date <= c["end_date"]}
+    services -= {e["service_id"] for e in exceptions if e["exception_type"] == "2"}
+    services |= {e["service_id"] for e in exceptions if e["exception_type"] == "1"}
+    running = {t["trip_id"] for t in table("trips.txt") if t["service_id"] in services}
+    calls = [s for s in table("stop_times.txt") if s["trip_id"] in running]
+    last = {}
+    for s in calls:
+        last[s["trip_id"]] = max(last.get(s["trip_id"], -1), int(s["stop_sequence"]))
+    names = {s["stop_id"]: s["stop_name"] for s in table("stops.txt") if s["stop_name"] in CITY_STATIONS}
+    out = dict.fromkeys(names.values(), 0)
+    for s in calls:
+        if s["stop_id"] in names and int(s["stop_sequence"]) < last[s["trip_id"]]:
+            out[names[s["stop_id"]]] += 1
+    return out
+
+
+@requires_docker
+@pytest.mark.parametrize("day", ["2026-10-07", "2026-10-11"])  # a Wednesday, a Sunday
+def test_each_station_of_the_city_counts_the_trains_leaving_it_that_day(day):
+    result = vlaky(GTFS.read_bytes(), day)
+    assert result.returncode == 0, result.stderr.decode()
+    stations = json.loads(result.stdout)
+    assert {s["name"]["languageMap"]["sk"] for s in stations} == CITY_STATIONS
+    counted = {s["name"]["languageMap"]["sk"]: s["dailyDepartures"]["value"] for s in stations}
+    assert counted == departures(day)
+    assert counted["Žilina"] > 100, "the main station of a four-line node"
+    schema = SEED / "zilina-verejne.v1.schema.json"
+    for station in stations:
+        assert station["id"] == f"urn:ngsi-ld:GtfsStop:{DOMAIN}:zilina-verejne:zsr-{station['stopCode']['value']}"
+        assert not open_data.schema_errors(schema, station), open_data.schema_errors(schema, station)
+
+
+@requires_docker
+def test_a_weekday_runs_more_trains_than_a_sunday():
+    assert departures("2026-10-07")["Žilina"] > departures("2026-10-11")["Žilina"]
+
+
+@requires_docker
+def test_an_expired_timetable_and_a_zip_without_the_city_fail_the_run():
+    expired = vlaky(GTFS.read_bytes(), "2027-01-15")
+    assert b"the timetable runs no train from the city on 20270115" in expired.stdout + expired.stderr
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        archive.writestr("stops.txt", "stop_id,stop_name,stop_lat,stop_lon\n1,Košice,48.7,21.2\n")
+    elsewhere = vlaky(buffer.getvalue(), "2026-10-07")
+    assert b"the timetable names none of the city's stations" in elsewhere.stdout + elsewhere.stderr

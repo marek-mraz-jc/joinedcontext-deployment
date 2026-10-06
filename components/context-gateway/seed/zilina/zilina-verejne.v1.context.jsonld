@@ -81,10 +81,6 @@
       "@id": "sdm:pm25",
       "@type": "xsd:float"
     },
-    "routeCount": {
-      "@id": "jc:routeCount",
-      "@type": "xsd:integer"
-    },
     "schema": "http://schema.org/",
     "sdm": "https://smartdatamodels.org/",
     "shex": "http://www.w3.org/ns/shex#",
