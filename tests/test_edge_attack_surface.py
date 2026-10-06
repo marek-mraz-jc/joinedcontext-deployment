@@ -79,6 +79,10 @@ ROUTE_CLASSES = {
         "reach": EDGE_SESSION, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "the Portal's static bundle, the same files for everyone and no data, which the public catalogue page loads before anyone signs in (EP-81)",
     },
+    "portal-public-view": {
+        "reach": EDGE_SESSION, "cacheable": True, "framing": "SAMEORIGIN",
+        "why": "a data view published as a public link (T-3108): the page holds no data, every read it makes goes to the public Endpoint, where the gateway enforces what it shows",
+    },
     "portal-api": {
         "reach": EDGE_SESSION, "cacheable": False, "framing": "DENY",
         "why": "CLIs and service accounts present a bearer the Portal verifies (OPS-33)",

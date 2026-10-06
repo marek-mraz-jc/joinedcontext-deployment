@@ -44,6 +44,8 @@ EXPECTED_ROUTES = {
     "portal-public-assets": {
         "uri": "/assets/*", "priority": 5, "upstream_id": "portal-public-assets", "host": PORTAL_HOST,
     },
+    # T-3108: a data view published as a public link, edge session optional.
+    "portal-public-view": {"uri": "/v/*", "priority": 5, "upstream_id": "portal-public-view", "host": PORTAL_HOST},
     # T-3105: the gateway delivers the Portal's live-update notifications here, no login (API/01 §32).
     "portal-live-notify": {
         "uri": "/live-notify/*", "priority": 5, "upstream_id": "portal-live-notify", "host": PORTAL_HOST,
