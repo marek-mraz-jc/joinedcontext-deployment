@@ -9,7 +9,8 @@ from pathlib import Path
 import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEV_SERVER = "https://2.28.67.127:6443"
+# The node the justfile's dev_node_ip names: primaleto since the 2026-09-26 migration (T-3042).
+DEV_SERVER = "https://116.203.134.249:6443"
 FOREIGN_SERVER = "https://10.11.12.13:6443"
 
 requires_just = pytest.mark.skipif(shutil.which("just") is None, reason="just not installed")
