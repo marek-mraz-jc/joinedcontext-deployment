@@ -15,7 +15,7 @@ ckan:
     # docker.io/ckan/ckan-base:2.11.6@sha256:fc040c5b1e6e04de76187b478b3037c8c6c4e97ef4b7f1c03cbc6b0008e04ce7
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-ckan'
     tag: '2.11.6'
-    digest: 'sha256:e02211e11d99c35fb104645ad8d6d1f1494f92f72f3fbef2f004e587b4bd1021'
+    digest: 'sha256:89744e44aa1785e76eea0b4f6aca100f4d4612c666682a22085c6f831688d325'
   solr:
     # A plain Solr cannot index CKAN: the collection needs CKAN's schema, and this image is
     # the one that carries it. Its minor version tracks the CKAN one above.
