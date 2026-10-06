@@ -64,8 +64,8 @@ def test_the_region_is_its_own_project_and_the_city_says_it_is_the_city():
 def test_each_projects_quotas_hold_what_it_declares_with_room_for_the_demo():
     """T-2873: the quota leaves room for the demo's work, never exactly what the seed holds."""
     for folder, project, spaces, public in (
-        # The region's two public endpoints, and the third the region map's (T-2784).
-        (REGION, "bbsk", ["bbsk-kraj", "bbsk-kpi", "bbsk-registre"], 3),
+        # The region's two public endpoints, and the region map's and its grids' (T-2784).
+        (REGION, "bbsk", ["bbsk-kraj", "bbsk-kpi", "bbsk-registre"], 4),
         # The third public endpoint of the city is the air-quality App's own (T-2972), the fourth
         # and fifth the city map's and the data grids' (T-2782).
         (CITY, "banskabystrica", ["ovzdusie", "banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne"], 5),

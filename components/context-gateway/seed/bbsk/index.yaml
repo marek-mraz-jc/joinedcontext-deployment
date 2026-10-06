@@ -98,3 +98,7 @@ bbsk-pipeline-mosty-bento.yaml: projects/bbsk/pipelines/mosty/bento.yaml
 bbsk-app-mapa.yaml: projects/bbsk/apps/bbsk-mapa/app.yaml
 bbsk-app-mapa-endpoint.yaml: projects/bbsk/spaces/bbsk-registre/endpoints/app-bbsk-mapa.yaml
 bbsk-app-mapa-policy.yaml: projects/bbsk/spaces/bbsk-registre/policies/app-bbsk-mapa-1.yaml
+# The region's public registers as grids (T-2784), with the endpoint's own downloads.
+bbsk-app-data.yaml: projects/bbsk/apps/bbsk-data/app.yaml
+bbsk-app-data-endpoint.yaml: projects/bbsk/spaces/bbsk-registre/endpoints/app-bbsk-data.yaml
+bbsk-app-data-policy.yaml: projects/bbsk/spaces/bbsk-registre/policies/app-bbsk-data-1.yaml
