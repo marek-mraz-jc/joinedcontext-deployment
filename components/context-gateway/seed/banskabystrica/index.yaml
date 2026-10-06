@@ -27,6 +27,10 @@ app-ovzdusie-policy-history.yaml: projects/banskabystrica/spaces/banskabystrica-
 app-mapa.yaml: projects/banskabystrica/apps/banskabystrica-mapa/app.yaml
 app-mapa-endpoint.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/endpoints/app-banskabystrica-mapa.yaml
 app-mapa-policy.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/app-banskabystrica-mapa-1.yaml
+# The city's public datasets as grids (T-2782), with the endpoint's own downloads.
+app-data.yaml: projects/banskabystrica/apps/banskabystrica-data/app.yaml
+app-data-endpoint.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/endpoints/app-banskabystrica-data.yaml
+app-data-policy.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/app-banskabystrica-data-1.yaml
 serviceaccount.yaml: projects/banskabystrica/access/serviceaccounts/conformance.yaml
 # The city's own two spaces (T-2305): the published rows as published, and the indicators
 # computed from them. The indicator endpoint is shared with `bbsk` and is not public.

@@ -66,8 +66,8 @@ def test_each_projects_quotas_hold_what_it_declares_with_room_for_the_demo():
     for folder, project, spaces, public in (
         (REGION, "bbsk", ["bbsk-kraj", "bbsk-kpi", "bbsk-registre"], 2),
         # The third public endpoint of the city is the air-quality App's own (T-2972), the fourth
-        # the city map's (T-2782).
-        (CITY, "banskabystrica", ["ovzdusie", "banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne"], 4),
+        # and fifth the city map's and the data grids' (T-2782).
+        (CITY, "banskabystrica", ["ovzdusie", "banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne"], 5),
     ):
         quotas = one(folder, "Project", project)["spec"]["quotas"]
         declared = {doc["metadata"]["name"] for _, doc in manifests(folder, "ContextSpace")}
