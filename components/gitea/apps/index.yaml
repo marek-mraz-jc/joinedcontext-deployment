@@ -1,6 +1,6 @@
 # Written by scripts/vendor-sample-apps.py; do not edit. The files of each sample application,
 # relative to its folder, as the forge bootstrap pushes them to its repository (T-2599).
-source: ab38f1f090d6daffb9e3d43eaf3fa7414356086e
+source: c9a29aaf83c31175ac273c019ae2b7f5bc07ed07
 apps:
   air-quality:
     - .gitea/workflows/build.yml
@@ -35,6 +35,7 @@ apps:
     - ui/src/main.tsx
     - ui/src/quality.ts
     - ui/tests/app.test.tsx
+    - ui/tests/attribution.test.tsx
     - ui/tests/charts.test.tsx
     - ui/tests/maplibre.ts
     - ui/tests/setup.ts
@@ -63,6 +64,7 @@ apps:
     - ui/src/api.ts
     - ui/src/index.css
     - ui/src/main.tsx
+    - ui/tests/attribution.test.tsx
     - ui/tests/map.test.tsx
     - ui/tests/setup.ts
     - ui/tsconfig.json
