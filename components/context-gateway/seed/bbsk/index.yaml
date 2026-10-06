@@ -92,3 +92,9 @@ bbsk-pipeline-socialne-sluzby-bento.yaml: projects/bbsk/pipelines/socialne-sluzb
 bbsk-datasource-mosty.yaml: projects/bbsk/datasources/bbsk-mosty.yaml
 bbsk-pipeline-mosty.yaml: projects/bbsk/pipelines/mosty/pipeline.yaml
 bbsk-pipeline-mosty-bento.yaml: projects/bbsk/pipelines/mosty/bento.yaml
+# The region's map for its residents (T-2784): a public static bundle the Portal image ships,
+# reading the hospitals, social services and organizations of bbsk-registre through its own
+# endpoint; the Endpoint under the space it serves, its Policy beside it.
+bbsk-app-mapa.yaml: projects/bbsk/apps/bbsk-mapa/app.yaml
+bbsk-app-mapa-endpoint.yaml: projects/bbsk/spaces/bbsk-registre/endpoints/app-bbsk-mapa.yaml
+bbsk-app-mapa-policy.yaml: projects/bbsk/spaces/bbsk-registre/policies/app-bbsk-mapa-1.yaml
