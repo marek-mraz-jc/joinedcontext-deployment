@@ -131,6 +131,9 @@ apiToken:
 # makes the theme reusable by a second installation without a file change (OPS-47).
 branding: {}
 
+# The knowledge assistant's widget page every catalogue page offers (AG-114); empty for none.
+assistantWidget: ''
+
 podSecurityContext: {}
 securityContext: {}
 serviceMesh:

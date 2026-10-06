@@ -157,3 +157,5 @@ helsinki-pipeline-fee-parking-zones-bento.yaml: projects/helsinki/pipelines/fee-
 helsinki-pipeline-resident-parking-zones-bento.yaml: projects/helsinki/pipelines/resident-parking-zones/bento.yaml
 # The public knowledge assistant over the weather and events Endpoints (T-3055, MF-52).
 helsinki-assistant-public.yaml: projects/helsinki/assistant/deployments/helsinki-public.yaml
+# The catalogue's assistant, framed by every page of the catalogue (T-3058, AG-114).
+helsinki-assistant-catalogue.yaml: projects/helsinki/assistant/deployments/helsinki-catalogue.yaml
