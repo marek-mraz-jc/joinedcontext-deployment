@@ -34,6 +34,18 @@ portal-well-known:
   subDomain: portal
   priority: 5
 
+# Where the gateway delivers the notifications of the Portal's own live-update subscriptions
+# (API/01 §32, T-3105). The broker behind the gateway holds no token, so there is no login in
+# front; the path's key is an HMAC only this Portal can make, and a notification only makes an
+# open view read again with the person's own session.
+portal-live-notify:
+  name: portal-live-notify
+  description: Notifications of the Portal's live-update subscriptions, delivered by the gateway
+  upstream: portal.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "portal") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/live-notify/*'
+  subDomain: portal
+  priority: 5
+
 # The public open-data catalogue (EP-81): the one Portal page a visitor reads without an account,
 # and the static bundle every Portal page loads. The edge session is read when there is one and
 # a visitor without one passes as anonymous; every read the page makes goes through portal-api,

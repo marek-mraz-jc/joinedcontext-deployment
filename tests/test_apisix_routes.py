@@ -44,6 +44,10 @@ EXPECTED_ROUTES = {
     "portal-public-assets": {
         "uri": "/assets/*", "priority": 5, "upstream_id": "portal-public-assets", "host": PORTAL_HOST,
     },
+    # T-3105: the gateway delivers the Portal's live-update notifications here, no login (API/01 §32).
+    "portal-live-notify": {
+        "uri": "/live-notify/*", "priority": 5, "upstream_id": "portal-live-notify", "host": PORTAL_HOST,
+    },
     # T-2726: the organization's DCAT-AP feed for harvesters, anonymous (EP-84).
     "catalog-feed": {"uri": "/catalog.*", "priority": 20, "upstream_id": "catalog-feed", "host": LOCAL_DOMAIN},
     # T-2490: the MCP hub over several Endpoints, bearer only (EP-87).
