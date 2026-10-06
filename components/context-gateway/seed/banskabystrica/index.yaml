@@ -22,6 +22,11 @@ app-ovzdusie.yaml: projects/banskabystrica/apps/banskabystrica-ovzdusie/app.yaml
 app-ovzdusie-endpoint.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/endpoints/app-banskabystrica-ovzdusie.yaml
 app-ovzdusie-policy.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/app-banskabystrica-ovzdusie-1.yaml
 app-ovzdusie-policy-history.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/app-banskabystrica-ovzdusie-1-history.yaml
+# The city's map for its residents (T-2782): a public static bundle the Portal image ships, reading
+# the events, schools and the air station of banskabystrica-verejne through its own endpoint.
+app-mapa.yaml: projects/banskabystrica/apps/banskabystrica-mapa/app.yaml
+app-mapa-endpoint.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/endpoints/app-banskabystrica-mapa.yaml
+app-mapa-policy.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/app-banskabystrica-mapa-1.yaml
 serviceaccount.yaml: projects/banskabystrica/access/serviceaccounts/conformance.yaml
 # The city's own two spaces (T-2305): the published rows as published, and the indicators
 # computed from them. The indicator endpoint is shared with `bbsk` and is not public.
