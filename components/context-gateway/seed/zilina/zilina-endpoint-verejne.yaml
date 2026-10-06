@@ -1,0 +1,13 @@
+# The city's public map data: the air-quality station, the monuments and the railway stations,
+# open to anyone as their publishers' licences allow (CC BY 4.0, CC0).
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: zilina-verejne
+  namespace: zilina
+  title: { sk: "Mesto — verejné dáta", en: "City, public data" }
+spec:
+  contextSpaceRef: zilina-verejne
+  slug: zhu42lbyivllciy7pluenlhxmqn5hi7c
+  audience: public
+  enabledRepresentations: [ngsi-ld, geojson, csv, json]

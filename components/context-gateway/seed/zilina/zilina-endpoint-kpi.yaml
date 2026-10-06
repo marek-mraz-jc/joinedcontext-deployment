@@ -1,0 +1,12 @@
+# The city's indicators, what the project publishes as its own numbers (PF-54, PF-55).
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: zilina-kpi
+  namespace: zilina
+  title: { sk: "Mesto — ukazovatele", en: "City, indicators" }
+spec:
+  contextSpaceRef: zilina-kpi
+  slug: ricvfpfxtaxeyzf5c3b3es7ymc6unh3o
+  audience: public
+  enabledRepresentations: [ngsi-ld, csv, json]

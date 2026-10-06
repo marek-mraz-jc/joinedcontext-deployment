@@ -1,0 +1,14 @@
+# The one door of the city's raw space. Not public: these rows are ŠÚ SR's published data, mirrored
+# here for the pipelines that read them, and republishing them under our own name at our own URL
+# is not ours to do. The city's open numbers are its indicators (zilina-kpi).
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: zilina-mesto
+  namespace: zilina
+  title: { sk: "Mesto — zdrojové údaje", en: "City, raw data" }
+spec:
+  contextSpaceRef: zilina-mesto
+  slug: 6cm7hh73b7igmmekf3a5ucwmjyqspf62
+  audience: organization
+  enabledRepresentations: [ngsi-ld, csv, json]

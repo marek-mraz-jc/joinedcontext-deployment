@@ -174,3 +174,55 @@ praha-pipelines:
           included.custom.audience: jw7tffshzip7igmzcszgffkkkuetnc6v
           access.token.claim: 'true'
           id.token.claim: 'false'
+
+# The Žilina project's ingestion pipelines (T-3138), the same rule for project `zilina`: the ŠÚ SR
+# cube streams write `zilina-mesto`, the air-quality, monument and station streams `zilina-verejne`,
+# the repository stream `zilina-uniza`, and `ukazovatele` reads `zilina-mesto` and writes `zilina-kpi`.
+zilina-pipelines:
+  # An account of the demo seed: rendered by the development profile only (T-1720, CC-73).
+  profiles: [development]
+  name: Žilina ingestion pipelines
+  description: Service account of the Bento streams of the Žilina project; client_credentials only, no browser flow
+  subdomain: ''
+  redirectPath: /
+  componentNamespaces:
+    - pipeline-runner
+  rawValues:
+    publicClient: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: true
+    protocolMappers:
+      - name: zilina-mesto-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: 6cm7hh73b7igmmekf3a5ucwmjyqspf62
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: zilina-verejne-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: zhu42lbyivllciy7pluenlhxmqn5hi7c
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: zilina-uniza-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: os4quyrmvhijr3x7x4fno2jicej4ifv5
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: zilina-kpi-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: ricvfpfxtaxeyzf5c3b3es7ymc6unh3o
+          access.token.claim: 'true'
+          id.token.claim: 'false'

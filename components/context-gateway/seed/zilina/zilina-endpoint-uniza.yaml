@@ -1,0 +1,12 @@
+# The university's openly licensed works, open to anyone, each carrying its own licence.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: zilina-uniza
+  namespace: zilina
+  title: { sk: "Žilinská univerzita — výskum", en: "University of Žilina, research" }
+spec:
+  contextSpaceRef: zilina-uniza
+  slug: os4quyrmvhijr3x7x4fno2jicej4ifv5
+  audience: public
+  enabledRepresentations: [ngsi-ld, csv, json]
