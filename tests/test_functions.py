@@ -61,7 +61,7 @@ def test_the_portal_calls_the_service_with_a_token_the_runtime_accepts(dev):
 
 
 @requires_helmfile
-def test_only_the_portal_gets_in_and_the_runtime_reaches_the_gateway_keycloak_and_dns_only(dev):
+def test_only_the_portal_gets_in_and_the_runtime_reaches_the_gateway_proxy_keycloak_and_dns_only(dev):
     policy = one(dev, "NetworkPolicy", "functions-runtime")
     assert policy["spec"]["podSelector"]["matchLabels"] == {"app.kubernetes.io/name": "functions-runtime"}
     (inbound,) = policy["spec"]["ingress"]
@@ -73,6 +73,7 @@ def test_only_the_portal_gets_in_and_the_runtime_reaches_the_gateway_keycloak_an
     ]
     assert targets == [
         ({"app.kubernetes.io/name": "context-gateway-gateway"}, [8080]),
+        ({"app.kubernetes.io/name": "agent-runner-proxy"}, [8080]),
         ({"app.kubernetes.io/instance": "keycloak-app"}, [8080]),
         ({"k8s-app": "kube-dns"}, [53, 53]),
     ]
@@ -80,3 +81,18 @@ def test_only_the_portal_gets_in_and_the_runtime_reaches_the_gateway_keycloak_an
     assert workload["app.kubernetes.io/name"] == "functions-runtime"
     for name in ("portal-egress-to-functions", "gateway-from-functions", "keycloak-from-functions"):
         one(dev, "NetworkPolicy", name)
+
+
+@requires_helmfile
+def test_a_runs_own_function_call_reaches_the_proxy_and_nothing_else_new(dev):
+    """ADR-N-038 decision 6: jc-functions knows the proxy's address itself and the proxy lets it in
+    on its API port and the mesh port, from the functions workload alone."""
+    env = env_of(one(dev, "Deployment", "jc-functions")["spec"]["template"]["spec"]["containers"][0])
+    assert env["JC_AGENT_PROXY_URL"].startswith("http://agent-proxy.")
+    assert env["JC_AGENT_PROXY_URL"].endswith(".svc.cluster.local:8080")
+    for name, port in (("agent-proxy-from-functions", 8080), ("agent-proxy-linkerd-from-functions", 4143)):
+        policy = one(dev, "NetworkPolicy", name)
+        assert policy["spec"]["podSelector"]["matchLabels"] == {"app.kubernetes.io/name": "agent-runner-proxy"}
+        (inbound,) = policy["spec"]["ingress"]
+        assert [f["podSelector"]["matchLabels"] for f in inbound["from"]] == [{"app.kubernetes.io/name": "functions-runtime"}]
+        assert [p["port"] for p in inbound["ports"]] == [port]

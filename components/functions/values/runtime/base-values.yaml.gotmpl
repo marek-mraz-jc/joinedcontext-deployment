@@ -54,6 +54,9 @@ env:
   JC_FUNCTIONS_CALLER: portal-api
   JC_FUNCTIONS_AUDIENCE: jc-functions
   JC_GATEWAY_URL: "http://context-gateway.{{ index .Values "context-gateway" "gateway" "namespace" }}.svc.cluster.local:8080"
+  # An editing agent's own call of a function reads through the proxy with the run's data
+  # credential (ADR-N-038 decision 6); the address is the runtime's, never the call's.
+  JC_AGENT_PROXY_URL: "http://agent-proxy.{{ index .Values "agent-runner" "proxy" "namespace" }}.svc.cluster.local:8080"
 
 podSecurityContext:
   {{ .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}

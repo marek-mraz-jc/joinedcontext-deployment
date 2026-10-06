@@ -45,6 +45,10 @@ functions-linkerd-control-plane:
           componentNamespace: context-gateway
         - podSelector:
             matchLabels:
+              app.kubernetes.io/name: agent-runner-proxy
+          componentNamespace: agent-runner
+        - podSelector:
+            matchLabels:
               app.kubernetes.io/instance: keycloak-app
           componentNamespace: keycloak
       ports:
@@ -71,6 +75,22 @@ gateway-linkerd-from-functions:
   componentNamespace: context-gateway
   podSelector:
     app.kubernetes.io/name: context-gateway-gateway
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: functions-runtime
+          componentNamespace: functions
+      ports:
+        - port: 4143
+          protocol: TCP
+
+agent-proxy-linkerd-from-functions:
+  componentNamespace: agent-runner
+  podSelector:
+    app.kubernetes.io/name: agent-runner-proxy
   policyTypes:
     - Ingress
   ingress:
