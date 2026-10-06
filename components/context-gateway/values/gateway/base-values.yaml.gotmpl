@@ -99,7 +99,9 @@ env:
   # Layout 2 (CC-86): each registered project's checkout, kept by the checkouts sidecar, and
   # the directory the gateway assembles the organization into.
   JC_GATEWAY_PROJECTS_DIR: /projects
-  JC_GATEWAY_ASSEMBLY_DIR: /assembly
+  # One level inside the volume: the gateway renders into a sibling `.current.next` and swaps it
+  # in, and a sibling of the mount itself would sit on the read-only root (T-2647).
+  JC_GATEWAY_ASSEMBLY_DIR: /assembly/current
 {{- end }}
 {{- if has "agent-runner" .Values.components }}
   # The running workspace previews, served beside main on slugs of their own (CC-78,
