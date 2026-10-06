@@ -270,10 +270,11 @@ def test_the_gateway_reads_the_forge_checkout_git_sync_keeps(dev, gateway_pod, g
     repo = next(m for m in gateway["volumeMounts"] if m["mountPath"] == "/repo")
     assert repo["readOnly"] is True and repo["name"] == "repo"
     assert any(v["name"] == "repo" and "emptyDir" in v for v in gateway_pod["volumes"])
-    # Layout 1: no checkouts, nothing of layout 2 (CC-85).
+    # dev runs layout 2 since 2026-10-06 (T-2647): the checkouts keep every registered project
+    # beside the organization's own checkout (CC-85, CC-86).
     names = {c["name"] for c in gateway_pod["containers"] + gateway_pod.get("initContainers", [])}
-    assert not names & {"checkouts", "checkouts-init"}
-    assert "JC_GATEWAY_PROJECTS_DIR" not in gateway_env
+    assert {"checkouts", "checkouts-init"} <= names
+    assert gateway_env["JC_GATEWAY_PROJECTS_DIR"] == "/projects"
 
 
 @requires_helmfile
@@ -302,7 +303,7 @@ def test_layout_two_checks_out_every_project_beside_the_organization(rendered_va
     )["spec"]["template"]["spec"]
     gateway = pod["containers"][0]
     env = {e["name"]: e.get("value") for e in gateway["env"]}
-    assert (env["JC_GATEWAY_PROJECTS_DIR"], env["JC_GATEWAY_ASSEMBLY_DIR"]) == ("/projects", "/assembly")
+    assert (env["JC_GATEWAY_PROJECTS_DIR"], env["JC_GATEWAY_ASSEMBLY_DIR"]) == ("/projects", "/assembly/current")
     mounts = {m["mountPath"]: m for m in gateway["volumeMounts"]}
     assert mounts["/projects"]["readOnly"] is True
     assert not mounts["/assembly"].get("readOnly")
