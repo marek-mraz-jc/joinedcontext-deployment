@@ -1,0 +1,98 @@
+id: https://joinedcontext.com/models/zilina/zilina-uniza
+name: zilina-uniza
+title: Open research of the University of Žilina
+description: >-
+  What the university's space carries (DM-01, DM-61): one entity per item of DREPO, the
+  university's digital library, that carries an open licence of its own, described by its title,
+  kind, year, faculty and licence. Authors are people, so the model has no slot for them: an
+  application counts and lists works, it does not list who wrote them. Sources:
+  Research/zilina-open-data-sources.md.
+license: https://joinedcontext.com/licenses/cc-by-4.0
+prefixes:
+  linkml: https://w3id.org/linkml/
+  jc: https://joinedcontext.com/models/
+  sdm: https://smartdatamodels.org/
+  ngsi-ld: https://uri.etsi.org/ngsi-ld/
+default_prefix: sdm
+default_range: string
+imports:
+  - linkml:types
+  - ngsi-ld-core
+
+slots:
+  name:
+    slot_uri: schema:name
+    description: The work's title, per language, as the repository records it.
+    annotations:
+      ngsi_ld_kind: LanguageProperty
+      upstream_source: https://schema.org/name
+  workType:
+    slot_uri: jc:workType
+    description: What the work is, in the repository's words (Article, Conference paper, Thesis, …).
+    annotations:
+      ngsi_ld_kind: Property
+  yearPublished:
+    slot_uri: jc:yearPublished
+    description: The year the work was issued.
+    range: integer
+    minimum_value: 1900
+    annotations:
+      ngsi_ld_kind: Property
+  faculty:
+    slot_uri: jc:faculty
+    description: The faculty or collection of the university the work belongs to.
+    annotations:
+      ngsi_ld_kind: Property
+  publisher:
+    slot_uri: schema:publisher
+    description: Who issued the work, as the repository records it.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/publisher
+  license:
+    slot_uri: schema:license
+    description: >-
+      The licence the work itself carries (`dc.rights.uri`); only open licences reach the space.
+    range: uri
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/license
+  url:
+    slot_uri: schema:url
+    description: The work's persistent handle in the repository.
+    range: uri
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/url
+  dataProvider:
+    slot_uri: sdm:dataProvider
+    description: Who publishes the record, with the credit its licence asks for.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
+  source:
+    slot_uri: sdm:source
+    description: The repository service the entity was read from.
+    range: uri
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
+
+classes:
+  CreativeWork:
+    class_uri: schema:CreativeWork
+    description: One openly licensed work of the University of Žilina's digital library.
+    is_a: Entity
+    annotations:
+      upstream_source: https://schema.org/CreativeWork
+    slots:
+      - name
+      - workType
+      - yearPublished
+      - faculty
+      - publisher
+      - license
+      - url
+      - dataProvider
+      - source

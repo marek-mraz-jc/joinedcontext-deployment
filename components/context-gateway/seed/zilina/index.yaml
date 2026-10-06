@@ -1,0 +1,36 @@
+# file in this folder -> its path in the configuration repository (jc-core PATH_TEMPLATEs), read
+# by the forge bootstrap's seed (components/gitea/values/bootstrap/development-values). The
+# Žilina project (T-3137): the city's ŠÚ SR rows, its public map data, the university's works and
+# the indicators, one model per space; the sources are joinedcontext-docs
+# Research/zilina-open-data-sources.md.
+zilina-project.yaml: projects/zilina/project.yaml
+zilina-serviceaccount-pipelines.yaml: projects/zilina/access/serviceaccounts/pipelines.yaml
+zilina-ckan.yaml: projects/zilina/ckan/zilina.yaml
+zilina-space-mesto.yaml: projects/zilina/spaces/zilina-mesto/space.yaml
+zilina-datamodel-mesto.yaml: projects/zilina/spaces/zilina-mesto/datamodels/statistical-observation.yaml
+statistical-observation.linkml.yaml: projects/zilina/spaces/zilina-mesto/datamodels/statistical-observation.linkml.yaml
+statistical-observation.v1.schema.json: projects/zilina/spaces/zilina-mesto/datamodels/statistical-observation.v1.schema.json
+statistical-observation.v1.context.jsonld: projects/zilina/spaces/zilina-mesto/datamodels/statistical-observation.v1.context.jsonld
+statistical-observation.v1.example.jsonld: projects/zilina/spaces/zilina-mesto/datamodels/statistical-observation.v1.example.jsonld
+statistical-observation.v1.md: projects/zilina/spaces/zilina-mesto/datamodels/statistical-observation.v1.md
+zilina-space-verejne.yaml: projects/zilina/spaces/zilina-verejne/space.yaml
+zilina-datamodel-verejne.yaml: projects/zilina/spaces/zilina-verejne/datamodels/zilina-verejne.yaml
+zilina-verejne.linkml.yaml: projects/zilina/spaces/zilina-verejne/datamodels/zilina-verejne.linkml.yaml
+zilina-verejne.v1.schema.json: projects/zilina/spaces/zilina-verejne/datamodels/zilina-verejne.v1.schema.json
+zilina-verejne.v1.context.jsonld: projects/zilina/spaces/zilina-verejne/datamodels/zilina-verejne.v1.context.jsonld
+zilina-verejne.v1.example.jsonld: projects/zilina/spaces/zilina-verejne/datamodels/zilina-verejne.v1.example.jsonld
+zilina-verejne.v1.md: projects/zilina/spaces/zilina-verejne/datamodels/zilina-verejne.v1.md
+zilina-space-uniza.yaml: projects/zilina/spaces/zilina-uniza/space.yaml
+zilina-datamodel-uniza.yaml: projects/zilina/spaces/zilina-uniza/datamodels/zilina-uniza.yaml
+zilina-uniza.linkml.yaml: projects/zilina/spaces/zilina-uniza/datamodels/zilina-uniza.linkml.yaml
+zilina-uniza.v1.schema.json: projects/zilina/spaces/zilina-uniza/datamodels/zilina-uniza.v1.schema.json
+zilina-uniza.v1.context.jsonld: projects/zilina/spaces/zilina-uniza/datamodels/zilina-uniza.v1.context.jsonld
+zilina-uniza.v1.example.jsonld: projects/zilina/spaces/zilina-uniza/datamodels/zilina-uniza.v1.example.jsonld
+zilina-uniza.v1.md: projects/zilina/spaces/zilina-uniza/datamodels/zilina-uniza.v1.md
+zilina-space-kpi.yaml: projects/zilina/spaces/zilina-kpi/space.yaml
+zilina-datamodel-kpi.yaml: projects/zilina/spaces/zilina-kpi/datamodels/key-performance-indicator.yaml
+key-performance-indicator.linkml.yaml: projects/zilina/spaces/zilina-kpi/datamodels/key-performance-indicator.linkml.yaml
+key-performance-indicator.v1.schema.json: projects/zilina/spaces/zilina-kpi/datamodels/key-performance-indicator.v1.schema.json
+key-performance-indicator.v1.context.jsonld: projects/zilina/spaces/zilina-kpi/datamodels/key-performance-indicator.v1.context.jsonld
+key-performance-indicator.v1.example.jsonld: projects/zilina/spaces/zilina-kpi/datamodels/key-performance-indicator.v1.example.jsonld
+key-performance-indicator.v1.md: projects/zilina/spaces/zilina-kpi/datamodels/key-performance-indicator.v1.md
