@@ -39,3 +39,16 @@ kubectl -n <namespace> create secret generic agent-runner-model-key --from-file=
 
 Without it the proxy pod waits in `CreateContainerConfigError` and every run fails at its
 first model call.
+
+## Key health and the daily budget
+
+The proxy asks OpenRouter's `GET /key` every `modelProbeSecs` (900; `0` turns it off), which costs
+no completion, and reports the key's state to the Portal: the `jc_model_key_*` gauges, the alerts
+`ModelKeyInvalid` and `ModelKeyCreditLow` of the monitoring component, and a `model.key` event on
+the activity feed of the project `org` (AG-96). A model call the provider refuses with 401 or 402
+reports the same at once.
+
+`dailyTokens` caps the tokens one UTC day may spend, per consumer (`assistant`, `appBuilder`,
+`other`) and per person (`perPerson`); `0` is no cap (AG-97). A capped call is refused before it
+reaches the provider with a sentence the person reads in the conversation. The counts live in the
+proxy's memory, so a restart starts the day again.

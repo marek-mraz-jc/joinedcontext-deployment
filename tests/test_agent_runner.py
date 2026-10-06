@@ -67,6 +67,16 @@ def test_the_proxy_runs_the_proxy_binary_of_the_platform_image_with_its_credenti
 
 
 @requires_helmfile
+def test_the_proxy_probes_the_key_and_caps_the_days_tokens(dev):
+    """T-3065, AG-96, AG-97: the key is probed every 15 minutes and every consumer and person has
+    a daily token cap, as numbers the proxy parses."""
+    env = env_of(container(dev, "agent-proxy"))
+    assert env["JC_MODEL_PROBE_SECS"] == "900"
+    caps = {name: env[f"JC_DAILY_TOKENS_{name}"] for name in ("ASSISTANT", "APP_BUILDER", "OTHER", "PER_PERSON")}
+    assert caps == {"ASSISTANT": "2000000", "APP_BUILDER": "4000000", "OTHER": "1000000", "PER_PERSON": "3000000"}
+
+
+@requires_helmfile
 def test_the_portal_is_told_where_the_proxy_is_and_opens_its_internal_listener_to_it_alone(dev):
     portal = container(dev, "portal")
     env = env_of(portal)
