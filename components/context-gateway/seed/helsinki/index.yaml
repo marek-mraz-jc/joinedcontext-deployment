@@ -85,6 +85,11 @@ helsinki-mobility-shared-bikes.yaml: projects/helsinki-mobility/shared/city-bike
 helsinki-role-steward.yaml: users/roles/steward.yaml
 helsinki-role-org-admin.yaml: users/roles/org-admin.yaml
 helsinki-role-people-admin.yaml: users/roles/people-admin.yaml
+# One right per CKAN instance of the seed, bound to nobody (PF-107).
+helsinki-role-ckan-admin-helsinki-hel-fi.yaml: users/roles/ckan-admin-helsinki-hel-fi.yaml
+helsinki-role-ckan-admin-banskabystrica-banskabystrica.yaml: users/roles/ckan-admin-banskabystrica-banskabystrica.yaml
+helsinki-role-ckan-admin-bbsk-bbsk.yaml: users/roles/ckan-admin-bbsk-bbsk.yaml
+helsinki-role-ckan-admin-praha-praha.yaml: users/roles/ckan-admin-praha-praha.yaml
 helsinki-role-model-editor.yaml: users/roles/model-editor.yaml
 helsinki-role-pipeline-editor.yaml: users/roles/pipeline-editor.yaml
 helsinki-role-endpoint-editor.yaml: users/roles/endpoint-editor.yaml

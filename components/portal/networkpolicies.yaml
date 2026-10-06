@@ -11,6 +11,16 @@ portal:
             matchLabels:
               app.kubernetes.io/name: apisix
           componentNamespace: apisix
+        # An App pod asks JC_ME_URL for its caller's roles on this Service in the cluster, never
+        # through the public host its own policy does not admit (AP-109, AP-134, T-3037). Every
+        # project's apps namespace is the Portal's, created with this label (AP-116, AP-117), and
+        # only an App pod carries the other one; the Portal checks the bearer token itself.
+        - namespaceSelector:
+            matchLabels:
+              joinedcontext.com/managed-by: joinedcontext-portal
+          podSelector:
+            matchLabels:
+              joinedcontext.com/app: "true"
       ports:
         - protocol: TCP
           port: 8080

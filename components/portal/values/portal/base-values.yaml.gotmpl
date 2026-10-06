@@ -223,6 +223,10 @@ env:
   # it (AP-117). Without the release name no pod-backed App runs.
   JC_PORTAL_RELEASE: {{ $global.instanceSlug | quote }}
   JC_PORTAL_SERVICE_ACCOUNT: "portal"
+  # Where an App pod asks JC_ME_URL for its caller's roles: this Portal's public listener on
+  # its Service in the cluster, which the App's NetworkPolicy admits and the public host is
+  # not (AP-109, AP-134, T-3037). Without it the Portal renders no pod-backed App.
+  JC_PORTAL_SERVICE_URL: "http://portal.{{ $thisPortal.namespace }}.svc.cluster.local:8080"
 {{- if has "gitea-runner" .Values.components }}
   # A run tests each version in {release}-app-tests on the lane's own builder image before it
   # offers publication (SDK-38); the namespaces part creates that namespace and the Portal's Role.
