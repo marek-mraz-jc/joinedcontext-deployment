@@ -117,5 +117,15 @@ pipeline-ovzdusie-pm10-bento.yaml: projects/banskabystrica/pipelines/ovzdusie-pm
 datasource-ovzdusie-pm25.yaml: projects/banskabystrica/datasources/eea-sk0263a-pm25.yaml
 pipeline-ovzdusie-pm25.yaml: projects/banskabystrica/pipelines/ovzdusie-pm25/pipeline.yaml
 pipeline-ovzdusie-pm25-bento.yaml: projects/banskabystrica/pipelines/ovzdusie-pm25/bento.yaml
+# The same two EEA streams into `ovzdusie`, so the public-air dataset carries the real reading,
+# and the reaper that ages the stale readings out of it (T-3120).
+policy-ovzdusie-pipelines-write.yaml: projects/banskabystrica/spaces/ovzdusie/policies/ovzdusie-pipelines-write.yaml
+pipeline-public-air-pm10.yaml: projects/banskabystrica/pipelines/public-air-pm10/pipeline.yaml
+pipeline-public-air-pm10-bento.yaml: projects/banskabystrica/pipelines/public-air-pm10/bento.yaml
+pipeline-public-air-pm25.yaml: projects/banskabystrica/pipelines/public-air-pm25/pipeline.yaml
+pipeline-public-air-pm25-bento.yaml: projects/banskabystrica/pipelines/public-air-pm25/bento.yaml
+datasource-public-air-live.yaml: projects/banskabystrica/datasources/public-air-live.yaml
+pipeline-public-air-reaper.yaml: projects/banskabystrica/pipelines/public-air-reaper/pipeline.yaml
+pipeline-public-air-reaper-bento.yaml: projects/banskabystrica/pipelines/public-air-reaper/bento.yaml
 # The open-data catalogue of the city (T-2407): the one cleared endpoint, public-air, publishes here.
 ckan-banskabystrica.yaml: projects/banskabystrica/ckan/banskabystrica.yaml

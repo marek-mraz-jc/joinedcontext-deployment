@@ -33,7 +33,8 @@ def run(mapping: Path, document: bytes, space: str, domain: str = "hel.fi") -> l
         input=document, capture_output=True, timeout=120,
     )
     assert result.returncode == 0, result.stderr.decode() or result.stdout.decode()
-    return json.loads(result.stdout)
+    # A mapping that drops the message (`deleted()`) prints nothing: it wrote no entity.
+    return json.loads(result.stdout) if result.stdout.strip() else []
 
 
 def key_values(entity: dict) -> dict:

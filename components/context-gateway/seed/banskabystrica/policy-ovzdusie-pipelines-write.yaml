@@ -1,0 +1,18 @@
+# The city's pipelines write the air-quality space behind `public-air` (T-3120): the two EEA
+# streams upsert the station's hourly reading, and the reaper deletes a reading no source has
+# renewed for seven days, which is how the 13 seeded test stations leave the dataset. No person
+# holds a delete grant here; the deletes are the pipeline's, through the endpoint, in the log.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Policy
+metadata:
+  name: ovzdusie-pipelines-write
+  namespace: banskabystrica
+  title: { sk: "Kanály zapisujú ovzdušie", en: "The ingestion pipelines write the air-quality space" }
+spec:
+  contextSpaceRef: { kind: ContextSpace, name: ovzdusie }
+  assigner: did:web:{orgDomain}
+  assignee: { kind: serviceAccount, id: pipelines }
+  operations: [upsertBatch, createBatch, queryBatch, deleteBatch]
+  information:
+    - entities:
+        - type: AirQualityObserved

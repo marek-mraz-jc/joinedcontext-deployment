@@ -110,7 +110,7 @@ def test_the_citys_indicators_reach_the_region_by_a_named_share_and_nothing_wide
 def test_no_service_account_can_write_into_the_other_bodys_space():
     for folder, project, own in (
         (REGION, "bbsk", {"bbsk-kraj", "bbsk-kpi", "bbsk-registre"}),
-        (CITY, "banskabystrica", {"banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne"}),
+        (CITY, "banskabystrica", {"banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne", "ovzdusie"}),
     ):
         account = one(folder, "ServiceAccount", "pipelines")
         scopes = {role["scope"]["contextSpace"] for role in account["spec"]["roles"]}

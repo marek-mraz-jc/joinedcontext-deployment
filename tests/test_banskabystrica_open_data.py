@@ -270,3 +270,113 @@ def test_the_model_classes_and_the_manifest_agree():
     model = manifest("datamodel-verejne.yaml")
     assert linkml["name"] == model["metadata"]["name"]
     assert set(model["spec"]["classes"]) == set(linkml["classes"])
+
+
+# T-3120: the same EEA streams into `ovzdusie`, the space `public-air` publishes, and the reaper
+# that ages the readings no source renews out of it.
+AIR_SPACE = "ovzdusie"
+AIR_SLUG = "mluyob4nz52lok3ssk7pgn5vwt"
+AIR_STREAMS = ("public-air-pm10", "public-air-pm25")
+
+
+def air_schema_errors(entity: dict) -> list[str]:
+    return open_data.schema_errors(CITY / "bb-air-quality.v1.schema.json", entity)
+
+
+def decoding(name: str) -> str:
+    """A mapping's processors up to the entity it writes: the part both copies of a stream share."""
+    text = (CITY / name).read_text()
+    return text[text.index("pipeline:") : text.index("root = if")]
+
+
+@requires_docker
+def test_public_air_gets_the_real_reading_with_only_its_models_attributes():
+    model = set(yaml.safe_load((CITY / "bb-air-quality.linkml.yaml").read_text())["classes"]["AirQualityObserved"]["slots"])
+    for stream, attribute in zip(AIR_STREAMS, ("pm10", "pm25")):
+        fixture = f"eea-sk0263a-{attribute}.parquet"
+        [station] = open_data.run(CITY / f"pipeline-{stream}-bento.yaml", recorded(fixture), AIR_SPACE, DOMAIN)
+        assert station["id"] == f"urn:ngsi-ld:AirQualityObserved:{DOMAIN}:{AIR_SPACE}:eea-SK0263A"
+        assert station[attribute]["observedAt"] == "2026-09-25T05:00:00Z"
+        assert set(station) - {"id", "type", "location"} <= model, set(station) - model
+        assert not air_schema_errors(station), air_schema_errors(station)
+
+
+def test_the_public_air_streams_decode_exactly_as_the_verejne_ones():
+    for stream, attribute in zip(AIR_STREAMS, ("pm10", "pm25")):
+        assert decoding(f"pipeline-{stream}-bento.yaml") == decoding(f"pipeline-ovzdusie-{attribute}-bento.yaml")
+
+
+def test_the_public_air_streams_are_seeded_wired_and_granted():
+    index = yaml.safe_load((CITY / "index.yaml").read_text())
+    target = f"urn:ngsi-ld:Endpoint:{DOMAIN}:{AIR_SPACE}:public-air"
+    schedules = {manifest(f"pipeline-{name}.yaml")["spec"]["schedule"] for name in (*FEEDS, *AIR_STREAMS, "public-air-reaper")}
+    assert len(schedules) == len(FEEDS) + len(AIR_STREAMS) + 1, "two streams start in the same minute"
+    for stream, attribute in zip(AIR_STREAMS, ("pm10", "pm25")):
+        spec = manifest(f"pipeline-{stream}.yaml")["spec"]
+        assert spec["source"]["dataSourceRef"]["name"] == f"eea-sk0263a-{attribute}"
+        assert spec["targetEndpoint"] == target and spec["period"] == "1h"
+        assert spec["output"] == {"type": "AirQualityObserved", "mode": "upsert"}
+    reaper = manifest("pipeline-public-air-reaper.yaml")["spec"]
+    assert reaper["targetEndpoint"] == target and "output" not in reaper
+    assert AIR_SLUG in manifest("datasource-public-air-live.yaml")["spec"]["http"]["url"]
+    for seeded in (
+        "policy-ovzdusie-pipelines-write.yaml", "datasource-public-air-live.yaml",
+        *(f"pipeline-{name}{part}.yaml" for name in (*AIR_STREAMS, "public-air-reaper") for part in ("", "-bento")),
+    ):
+        assert seeded in index, seeded
+
+    grant = manifest("policy-ovzdusie-pipelines-write.yaml")["spec"]
+    assert grant["assignee"] == {"kind": "serviceAccount", "id": "pipelines"}
+    assert grant["contextSpaceRef"]["name"] == AIR_SPACE
+    assert set(grant["operations"]) == {"upsertBatch", "createBatch", "queryBatch", "deleteBatch"}
+    roles = manifest("serviceaccount-pipelines.yaml")["spec"]["roles"]
+    assert {"role": "space-writer", "scope": {"contextSpace": AIR_SPACE}} in roles
+    clients = yaml.safe_load((ROOT / "components/pipeline-runner/keycloak-clients.yaml").read_text())
+    audiences = {m["config"]["included.custom.audience"] for m in clients["banskabystrica-pipelines"]["rawValues"]["protocolMappers"]}
+    assert AIR_SLUG in audiences
+    # No person may delete there: only the pipelines' account holds deleteBatch on the space.
+    for name in ("policy-public-read.yaml", "policy-conformance-write.yaml"):
+        assert manifest(name)["spec"]["assignee"]["kind"] != "user", name
+
+
+def test_the_dataset_says_how_often_it_changes_and_where_it_comes_from():
+    endpoint = manifest("endpoint.yaml")
+    assert endpoint["spec"]["slug"] == AIR_SLUG
+    assert endpoint["spec"]["catalog"]["frequency"] == "HOURLY"
+    for text in ("SK0263A", "European Environment Agency", "CC BY 4.0"):
+        assert text in endpoint["metadata"]["description"]["en"], text
+
+
+def reaped(entities: list[dict]) -> list[str]:
+    """The ids the reaper would delete: its processors up to the delete call, over `entities`."""
+    bento = yaml.safe_load((CITY / "pipeline-public-air-reaper-bento.yaml").read_text())
+    processors = bento["pipeline"]["processors"]
+    cut = next(i for i, p in enumerate(processors) if "http" in p)
+    trimmed = Path(FIXTURES.parent / f".reaper-{id(entities)}.yaml")
+    trimmed.write_text(yaml.safe_dump({"pipeline": {"processors": processors[:cut]}}))
+    try:
+        return open_data.run(trimmed, json.dumps(entities).encode(), AIR_SPACE, DOMAIN)
+    finally:
+        trimmed.unlink()
+
+
+@requires_docker
+def test_the_reaper_deletes_what_no_source_renewed_for_seven_days_and_nothing_else():
+    from datetime import datetime, timedelta, timezone
+
+    def reading(local: str, observed: datetime | None) -> dict:
+        entity = {"id": f"urn:ngsi-ld:AirQualityObserved:hel.fi:{AIR_SPACE}:{local}", "type": "AirQualityObserved"}
+        if observed is not None:
+            entity["dateObserved"] = {"type": "Property", "value": observed.strftime("%Y-%m-%dT%H:%M:%SZ")}
+        return entity
+
+    now = datetime.now(timezone.utc)
+    entities = [
+        reading("station-1", datetime(2026, 9, 7, 5, tzinfo=timezone.utc)),
+        reading("eea-SK0263A", now - timedelta(hours=2)),
+        reading("six-days", now - timedelta(days=6)),
+        reading("no-date", None),
+    ]
+    assert sorted(reaped(entities)) == sorted([entities[0]["id"], entities[3]["id"]])
+    assert reaped([entities[1], entities[2]]) == []
+    assert reaped([]) == []
