@@ -26,7 +26,8 @@ spec:
         - Pipeline
         - DataSource
         - App
-        - CkanInstance
+        # No CkanInstance: an instance is the administrator's, handed out per instance by its
+        # ckan-admin-{project}-{name} role (PF-107).
         - Blueprint
         - DataSpaceParticipant
         - DataOffer
