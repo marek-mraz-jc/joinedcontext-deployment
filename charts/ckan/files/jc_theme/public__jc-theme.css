@@ -196,7 +196,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .jc-item-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .375rem .375rem; margin-top: .625rem; }
 .jc-item-facts { color: var(--jc-muted); font-size: .8125rem; margin-left: .25rem; }
 .nav-facet .nav-item > a { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .5rem 1rem; text-decoration: none; }
-.nav-facet .nav-item > a .item-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav-facet .nav-item > a .item-label { overflow-wrap: anywhere; }
 .nav-facet .separator { display: none; }
 .module-narrow .nav-item > a .badge, .nav-facet .nav-item > a .item-count { background: var(--jc-n100); color: var(--jc-muted); border: 0; font-variant-numeric: tabular-nums; }
 .module-narrow .nav-item.active > a .badge { background: var(--jc-primary); color: var(--jc-primary-fg); }
@@ -351,3 +351,31 @@ body.dt-view { background: var(--jc-surface); }
 body.dt-view .page-item.active .page-link { background-color: var(--jc-primary); border-color: var(--jc-primary); color: var(--jc-primary-fg); }
 body.dt-view .page-link { color: var(--jc-primary); }
 body.dt-view .dt-button, body.dt-view .btn-secondary { background: var(--jc-surface); color: var(--jc-ink); border-color: var(--jc-border); }
+
+/* The resource page's list of resources: whole names that wrap, and an editor's Edit beside each (T-3048). */
+.jc-resource-nav .nav-item { display: flex; align-items: center; gap: .5rem; }
+.jc-resource-nav .nav-item > a:first-child { flex: 1; overflow-wrap: anywhere; }
+.jc-resource-nav .jc-resource-edit { font-size: .875rem; white-space: nowrap; padding-inline-end: 1rem; }
+.jc-resource-address { overflow-wrap: anywhere; }
+.jc-no-view { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; padding: 1rem 0; }
+.jc-no-view p { margin: 0; flex: 1 1 20rem; }
+
+/* The table view in a narrow frame (T-3048): its controls float side by side for a desktop and
+   overlapped below desktop width ("Search:" over "Showing 1 to 20 of 529 entries"). Below 992 px they
+   stack, each the frame's width, the search field taking what its label leaves. The view's own
+   rules name the table's id, so these do too. */
+@media (max-width: 991.98px) {
+  body.dt-view #dtprv_wrapper { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+  body.dt-view #dtprv_wrapper > div:not(.dataTables_processing) { float: none; width: 100%; margin: 0; text-align: start; }
+  body.dt-view #dtprv_wrapper > .dataTables_length { width: auto; }
+  body.dt-view #dtprv_wrapper > .dataTables_filter { order: 1; display: flex; align-items: center; gap: .25rem; }
+  body.dt-view #dtprv_wrapper .dataTables_filter label { display: flex; flex: 1; align-items: center; gap: .5rem; margin: 0; }
+  body.dt-view #dtprv_wrapper .dataTables_filter input { flex: 1; min-width: 0; margin-left: 0; }
+  body.dt-view #dtprv_wrapper > .dataTables_info { order: 2; padding-top: 0; white-space: normal; }
+  body.dt-view #dtprv_wrapper > .dataTables_scroll { order: 3; }
+  body.dt-view #dtprv_wrapper > .resourceinfo,
+  body.dt-view #dtprv_wrapper > .sortinfo,
+  body.dt-view #dtprv_wrapper > .dataTables_paginate { order: 4; }
+  body.dt-view #dtprv_wrapper .dataTables_paginate .pagination { flex-wrap: wrap; justify-content: flex-start; }
+}
+
