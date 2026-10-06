@@ -19,6 +19,11 @@ assistant-worker:
             matchLabels:
               app.kubernetes.io/name: apisix
           componentNamespace: apisix
+        # The Portal's knowledge administration (API/01 §34), on the paths the edge never routes.
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: portal-portal
+          componentNamespace: portal
       ports:
         - protocol: TCP
           port: 8080
@@ -214,6 +219,22 @@ functions-from-assistant:
     - Ingress
   ingress:
     - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: assistant-worker
+          componentNamespace: assistant
+      ports:
+        - protocol: TCP
+          port: 8080
+
+portal-egress-to-assistant:
+  componentNamespace: portal
+  podSelector:
+    app.kubernetes.io/name: portal-portal
+  policyTypes:
+    - Egress
+  egress:
+    - to:
         - podSelector:
             matchLabels:
               app.kubernetes.io/name: assistant-worker

@@ -115,7 +115,10 @@ def test_the_worker_reaches_its_database_the_forge_dns_and_public_addresses_only
         ((("k8s-app", "kube-dns"),), (53, 53)),
     ])
     (inbound,) = policy["spec"]["ingress"]
-    assert [f["podSelector"]["matchLabels"] for f in inbound["from"]] == [{"app.kubernetes.io/name": "apisix"}]
+    assert [f["podSelector"]["matchLabels"] for f in inbound["from"]] == [
+        {"app.kubernetes.io/name": "apisix"},
+        {"app.kubernetes.io/name": "portal-portal"},
+    ]
     assert [p["port"] for p in inbound["ports"]] == [8080]
     for name, port in (
         ("postgres-from-assistant", 5432),
@@ -148,6 +151,10 @@ def test_the_chat_is_published_on_its_own_host_and_its_client_names_the_proxy(do
     worker = one(docs, "Deployment", "jc-assistant")["spec"]["template"]["spec"]["containers"]
     worker_env = {e["name"]: e.get("value") for c in worker for e in c.get("env", [])}
     assert worker_env["JC_ASSISTANT_FUNCTIONS_URL"] == "http://jc-functions.dev.svc.cluster.local:8080"
+    # T-3057: the Portal asks the assistant's administration paths.
+    portal = one(docs, "Deployment", "portal")["spec"]["template"]["spec"]["containers"][0]
+    portal_env = {e["name"]: e.get("value") for e in portal.get("env", [])}
+    assert portal_env["JC_PORTAL_KNOWLEDGE_URL"] == "http://jc-assistant.dev.svc.cluster.local:8080"
     proxy = one(docs, "Deployment", "agent-proxy")["spec"]["template"]["spec"]["containers"][0]
     proxy_env = {e["name"]: e.get("value") for e in proxy.get("env", [])}
     assert proxy_env["JC_OIDC_CLIENT_ID"] == "helsinki-agent-proxy"

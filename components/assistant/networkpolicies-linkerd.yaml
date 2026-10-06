@@ -12,6 +12,10 @@ assistant-allow-linkerd:
             matchLabels:
               app.kubernetes.io/name: apisix
           componentNamespace: apisix
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: portal-portal
+          componentNamespace: portal
       ports:
         - port: 4143
           protocol: TCP
@@ -180,3 +184,19 @@ functions-linkerd-from-assistant:
       ports:
         - port: 4143
           protocol: TCP
+
+portal-linkerd-to-assistant:
+  componentNamespace: portal
+  podSelector:
+    app.kubernetes.io/name: portal-portal
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: assistant-worker
+          componentNamespace: assistant
+      ports:
+        - protocol: TCP
+          port: 4143
