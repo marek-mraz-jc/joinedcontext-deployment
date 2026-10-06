@@ -15,17 +15,17 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
-        "faculty": {
-          "description": "The faculty or collection of the university the work belongs to.",
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "isPartOf": {
+          "description": "The repository collection the work was deposited in, as DREPO names it: a journal issue, a proceedings volume or a series (`Kr\u00edzov\u00fd mana\u017ement - Ro\u010dn\u00edk 24.; \u010c\u00edslo 2/2025`).",
           "type": [
             "string",
             "null"
           ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "id": {
-          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
-          "type": "string",
           "x-ngsi-ld-kind": "Property"
         },
         "license": {

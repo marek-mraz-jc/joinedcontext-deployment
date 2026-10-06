@@ -6,9 +6,12 @@ The empty-read guard every stream starts with is checked the same way: an answer
 it fails the run instead of writing nothing as if the city had emptied.
 """
 
+import http.server
 import json
 import shutil
 import subprocess
+import threading
+import urllib.parse
 from pathlib import Path
 
 import pytest
@@ -150,3 +153,115 @@ def test_an_empty_station_file_fails_the_run():
     mapping = guard(STATIONS["ovzdusie-pm10"]["bento"])
     empty = blobl(mapping, "[]\n")
     assert "the station file holds no record" in empty.stdout + empty.stderr
+
+
+DREPO = SEED / "zilina-pipeline-drepo-bento.yaml"
+DREPO_HOST = "https://dspace.uniza.sk"
+
+
+class Library(http.server.BaseHTTPRequestHandler):
+    """DREPO's search API over the recorded pages: the first three, cut to the fields the mapping
+    reads and with the page count set to three (the real library has fourteen)."""
+
+    def do_GET(self):
+        query = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+        page = FIXTURES / f"drepo-page{query.get('page', ['0'])[0]}.json"
+        if not page.is_file() or query.get("size") != ["100"]:
+            self.send_error(404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(page.read_bytes())
+
+    def log_message(self, *_):
+        pass
+
+
+def drepo(document: bytes) -> subprocess.CompletedProcess:
+    """The drepo mapping over `document`, its page requests answered by `Library` on the host."""
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Library)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        text = DREPO.read_text().replace(DREPO_HOST, f"http://127.0.0.1:{server.server_port}")
+        config = {
+            "input": {"stdin": {"scanner": {"to_the_end": {}}}},
+            "pipeline": yaml.safe_load(text)["pipeline"],
+            # The runner's shared egress limit (pipeline-runner/streams/resources.yaml).
+            "rate_limit_resources": [{"label": "pipeline_egress", "local": {"count": 100, "interval": "1s"}}],
+            "output": {"stdout": {"codec": "all-bytes"}},
+            "logger": {"level": "error"},
+        }
+        return subprocess.run(
+            ["docker", "run", "--rm", "-i", "--network", "host", "-e", f"JC_ORG_DOMAIN={DOMAIN}",
+             "-e", "JC_SPACE=zilina-uniza", "-e", f"CONFIG={json.dumps(config)}", "--entrypoint", "sh",
+             BENTO, "-c", 'printf "%s" "$CONFIG" > /tmp/c.json && exec /bento -c /tmp/c.json'],
+            input=document, capture_output=True, timeout=120,
+        )
+    finally:
+        server.shutdown()
+
+
+def recorded_items() -> list[dict]:
+    return [o["_embedded"]["indexableObject"] for p in range(3)
+            for o in json.loads((FIXTURES / f"drepo-page{p}.json").read_text())["_embedded"]["searchResult"]["_embedded"]["objects"]]
+
+
+@requires_docker
+def test_every_page_is_read_and_only_the_openly_licensed_works_enter():
+    result = drepo((FIXTURES / "drepo-page0.json").read_bytes())
+    assert result.returncode == 0, result.stderr.decode()
+    works = json.loads(result.stdout)
+    items = recorded_items()
+    open_ = [i for i in items if i["metadata"].get("dc.rights.uri")]
+    assert len(works) == len(open_) == 251, "every open item of all three pages, and nothing else"
+    by_id = {w["id"]: w for w in works}
+    assert len(by_id) == len(works)
+    schema = SEED / "zilina-uniza.v1.schema.json"
+    for work in works:
+        assert work["id"].split(":")[3:5] == [DOMAIN, "zilina-uniza"]
+        assert work["license"]["value"] == "http://creativecommons.org/licenses/by/4.0/"
+        assert not open_data.schema_errors(schema, work), (work["id"], open_data.schema_errors(schema, work))
+        assert not {"author", "creator", "contributor"} & set(work)
+    first = by_id[f"urn:ngsi-ld:CreativeWork:{DOMAIN}:zilina-uniza:hdluniza-936"]
+    assert first["name"]["languageMap"] == {"sk": "Accuracy of digital terrain model on forest roads using airborne LIDAR and UAV point clouds"}
+    assert (first["workType"]["value"], first["yearPublished"]["value"]) == ("Conference paper", 2023)
+    assert first["url"]["value"] == "http://drepo.uniza.sk/handle/hdluniza/936"
+    # No author name of any recorded item reaches the output, in any attribute.
+    assert "Kardoš" not in result.stdout.decode()
+
+
+@requires_docker
+def test_a_title_of_no_stated_language_is_written_as_none():
+    item = next(i for i in recorded_items() if i["metadata"].get("dc.rights.uri")
+                and i["metadata"].get("dc.language.iso", [{}])[0].get("value") in (None, "other"))
+    page = {"_embedded": {"searchResult": {"page": {"totalPages": 1, "totalElements": 1},
+                                           "_embedded": {"objects": [{"_embedded": {"indexableObject": item}}]}}}}
+    result = drepo(json.dumps(page).encode())
+    [work] = json.loads(result.stdout)
+    assert list(work["name"]["languageMap"]) == ["@none"]
+
+
+@requires_docker
+def test_a_closed_licence_and_a_withdrawn_item_stay_out():
+    item = next(i for i in recorded_items() if i["metadata"].get("dc.rights.uri"))
+    nc = json.loads(json.dumps(item))
+    nc["metadata"]["dc.rights.uri"] = [{"value": "http://creativecommons.org/licenses/by-nc/4.0/"}]
+    withdrawn = {**item, "withdrawn": True}
+    sa = json.loads(json.dumps(item))
+    sa["handle"] = "hdluniza/sa"
+    sa["metadata"]["dc.rights.uri"] = [{"value": "https://creativecommons.org/licenses/by-sa/4.0/"}]
+    objects = [{"_embedded": {"indexableObject": i}} for i in (nc, withdrawn, sa)]
+    page = {"_embedded": {"searchResult": {"page": {"totalPages": 1, "totalElements": 3}, "_embedded": {"objects": objects}}}}
+    result = drepo(json.dumps(page).encode())
+    assert [w["id"].rsplit(":", 1)[1] for w in json.loads(result.stdout)] == ["hdluniza-sa"]
+
+
+@requires_docker
+def test_an_empty_library_and_a_missing_page_fail_the_run():
+    empty = drepo(json.dumps({"_embedded": {"searchResult": {"page": {"totalPages": 0, "totalElements": 0}}}}).encode())
+    assert b"the library answered no item" in empty.stdout + empty.stderr
+    page = json.loads((FIXTURES / "drepo-page0.json").read_text())
+    page["_embedded"]["searchResult"]["page"]["totalPages"] = 4  # page 3 answers 404
+    missing = drepo(json.dumps(page).encode())
+    assert b"page 3 did not come" in missing.stdout + missing.stderr

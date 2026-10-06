@@ -4,7 +4,7 @@ title: Open research of the University of Žilina
 description: >-
   What the university's space carries (DM-01, DM-61): one entity per item of DREPO, the
   university's digital library, that carries an open licence of its own, described by its title,
-  kind, year, faculty and licence. Authors are people, so the model has no slot for them: an
+  kind, year, collection and licence. Authors are people, so the model has no slot for them: an
   application counts and lists works, it does not list who wrote them. Sources:
   Research/zilina-open-data-sources.md.
 license: https://joinedcontext.com/licenses/cc-by-4.0
@@ -38,9 +38,11 @@ slots:
     minimum_value: 1900
     annotations:
       ngsi_ld_kind: Property
-  faculty:
-    slot_uri: jc:faculty
-    description: The faculty or collection of the university the work belongs to.
+  isPartOf:
+    slot_uri: schema:isPartOf
+    description: >-
+      The repository collection the work was deposited in, as DREPO names it: a journal issue,
+      a proceedings volume or a series (`Krízový manažment - Ročník 24.; Číslo 2/2025`).
     annotations:
       ngsi_ld_kind: Property
   publisher:
@@ -90,7 +92,7 @@ classes:
       - name
       - workType
       - yearPublished
-      - faculty
+      - isPartOf
       - publisher
       - license
       - url

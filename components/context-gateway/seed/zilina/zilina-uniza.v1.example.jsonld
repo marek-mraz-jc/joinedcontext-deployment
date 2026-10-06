@@ -1,7 +1,7 @@
 {
   "dataProvider": "dataProvider",
-  "faculty": "faculty",
   "id": "urn:ngsi-ld:CreativeWork:joinedcontext.com:example:1",
+  "isPartOf": "isPartOf",
   "license": "license",
   "location": {
     "coordinates": [

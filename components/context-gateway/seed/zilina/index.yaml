@@ -105,3 +105,6 @@ zilina-pipeline-voda.yaml: projects/zilina/pipelines/voda/pipeline.yaml
 zilina-pipeline-voda-bento.yaml: projects/zilina/pipelines/voda/bento.yaml
 zilina-pipeline-zakladne-skoly.yaml: projects/zilina/pipelines/zakladne-skoly/pipeline.yaml
 zilina-pipeline-zakladne-skoly-bento.yaml: projects/zilina/pipelines/zakladne-skoly/bento.yaml
+zilina-datasource-drepo.yaml: projects/zilina/datasources/uniza-drepo.yaml
+zilina-pipeline-drepo.yaml: projects/zilina/pipelines/drepo/pipeline.yaml
+zilina-pipeline-drepo-bento.yaml: projects/zilina/pipelines/drepo/bento.yaml

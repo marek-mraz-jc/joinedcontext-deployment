@@ -3,7 +3,7 @@
 <!-- Generated from the LinkML source by Model Tools. Do not edit: `jcctl model
      generate` overwrites this file and CI fails on any difference (DM-01, DM-02). -->
 
-What the university's space carries (DM-01, DM-61): one entity per item of DREPO, the university's digital library, that carries an open licence of its own, described by its title, kind, year, faculty and licence. Authors are people, so the model has no slot for them: an application counts and lists works, it does not list who wrote them. Sources: Research/zilina-open-data-sources.md.
+What the university's space carries (DM-01, DM-61): one entity per item of DREPO, the university's digital library, that carries an open licence of its own, described by its title, kind, year, collection and licence. Authors are people, so the model has no slot for them: an application counts and lists works, it does not list who wrote them. Sources: Research/zilina-open-data-sources.md.
 
 - Namespace: `https://joinedcontext.com/models/zilina/zilina-uniza`
 - Rendered by: `linkml-1.11.1`
@@ -24,7 +24,7 @@ Specialises `Entity`.
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The work's title, per language, as the repository records it. |
 | `workType` | Property | `string` |  |  | `jc:workType` | What the work is, in the repository's words (Article, Conference paper, Thesis, …). |
 | `yearPublished` | Property | `integer` |  |  | `jc:yearPublished` | The year the work was issued. |
-| `faculty` | Property | `string` |  |  | `jc:faculty` | The faculty or collection of the university the work belongs to. |
+| `isPartOf` | Property | `string` |  |  | `schema:isPartOf` | The repository collection the work was deposited in, as DREPO names it: a journal issue, a proceedings volume or a series (`Krízový manažment - Ročník 24.; Číslo 2/2025`). |
 | `publisher` | Property | `string` |  |  | `schema:publisher` | Who issued the work, as the repository records it. |
 | `license` | Property | `uri` | yes |  | `schema:license` | The licence the work itself carries (`dc.rights.uri`); only open licences reach the space. |
 | `url` | Property | `uri` |  |  | `schema:url` | The work's persistent handle in the repository. |

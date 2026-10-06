@@ -10,11 +10,11 @@
     "dataProvider": {
       "@id": "sdm:dataProvider"
     },
-    "faculty": {
-      "@id": "jc:faculty"
-    },
     "geojson": "https://purl.org/geojson/vocab#",
     "id": "@id",
+    "isPartOf": {
+      "@id": "schema:isPartOf"
+    },
     "jc": "https://joinedcontext.com/models/",
     "license": {
       "@id": "schema:license",

@@ -6,7 +6,7 @@
 #
 # The station's own host (SHMÚ) does not answer, and the file carries neither the station's
 # name nor its place, so both come from the EEA station metadata (PanEuropean_metadata.csv,
-# read 2026-09-25): station SK0020A, urban background, 19.115268 E, 48.733256 N, 425 m.
+# read 2026-10-06): station SK0020A, urban background, 18.771215 E, 49.211447 N.
 
 pipeline:
   processors:
