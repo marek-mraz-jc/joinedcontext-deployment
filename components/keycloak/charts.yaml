@@ -11,6 +11,8 @@ keycloak:
     repository: https://jkroepke.github.io/helm-charts/
     chart: keycloak-config-cli/keycloak-config-cli
     version: '1.3.7'
+  adminPermissions:
+    chart: charts/admin-permissions
   configUserCreation:
     repository: https://jkroepke.github.io/helm-charts/
     chart: keycloak-config-cli/keycloak-config-cli

@@ -178,8 +178,9 @@ def test_production_seeds_no_human_users(rendered):
 
 # T-0411, AP-27: the reconciler creates the confidential client `app-{name}` of every app on
 # demand. It authenticates as the service account of the Portal's own client, so that account
-# is the one identity in the realm with an Admin API role, and the role is the narrowest one
-# Keycloak has for the job.
+# is the one identity in the realm with an Admin API role. T-2725: the role is the read-only
+# `view-clients`; the writes come from the realm's fine-grained admin permissions, granted on
+# the clients it manages and denied on every other one.
 @pytest.mark.parametrize("env", ["local", "production", "dev"])
 def test_the_portal_service_account_may_manage_clients(rendered, env):
     realm = realm_of(rendered, env)
@@ -187,7 +188,7 @@ def test_the_portal_service_account_may_manage_clients(rendered, env):
                 for u in realm["users"] if "serviceAccountClientId" in u}
     assert "portal-api" in accounts, "the reconciler could not create an app's client"
     assert accounts["portal-api"]["clientRoles"] == {
-        "realm-management": ["manage-clients", "query-users"]
+        "realm-management": ["view-clients", "query-users"]
     }
     assert accounts["portal-api"]["username"] == "service-account-portal-api", (
         "keycloak names a service account after its client; another name creates a second user"
@@ -211,8 +212,13 @@ def test_no_other_client_holds_an_admin_api_role(rendered, env):
 
     T-3022 (AP-113): `portal-api` also holds `query-users`, read-only, because Keycloak lists a
     client role's holders only to a caller that may view the client. It never gains
-    `view-clients` (that reads every confidential client's secret) nor `manage-users` (the
-    mapping writes stay on `portal-reconciler`)."""
+    `manage-users` (the mapping writes stay on `portal-reconciler`).
+
+    T-2725: `portal-api` no longer holds `manage-clients`, which let it rewrite or delete any
+    client of the realm, the edge's included. It holds `view-clients`, which reads what
+    `manage-clients` already read (every client, its secret too; that read goes when the
+    confidential platform clients move off shared secrets, T-2868), and its writes come from
+    the realm's fine-grained admin permissions on the clients it manages alone."""
     realm = realm_of(rendered, env)
     holders = {
         u["serviceAccountClientId"]: u["clientRoles"]["realm-management"]
@@ -220,7 +226,7 @@ def test_no_other_client_holds_an_admin_api_role(rendered, env):
         if u.get("clientRoles", {}).get("realm-management")
     }
     assert set(holders) == {"portal-api", "portal-reconciler"}, holders
-    assert sorted(holders["portal-api"]) == ["manage-clients", "query-users"], holders
+    assert sorted(holders["portal-api"]) == ["query-users", "view-clients"], holders
     assert sorted(holders["portal-reconciler"]) == ["manage-users", "query-groups"], holders
 
 
@@ -463,3 +469,26 @@ def test_the_proxys_account_declares_delegation_and_no_other_seed_account_does()
                 declared[name] = (doc.get("spec") or {}).get("delegation")
     assert declared.get("helsinki/agent-proxy") == "token-exchange", declared
     assert {name for name, value in declared.items() if value} == {"helsinki/agent-proxy"}
+
+
+@pytest.mark.parametrize("env", ["local", "production", "dev"])
+def test_the_portal_writes_only_the_clients_it_manages(rendered, env):
+    """T-2725, AP-27: the realm runs fine-grained admin permissions and, after every import, the
+    admin-permissions Job grants `portal-api` the client writes and denies them on each client
+    without `managed-by: joinedcontext`. The Job runs the Keycloak image's own kcadm.sh, holds no
+    API token and reaches Keycloak through its own NetworkPolicy."""
+    realm = realm_of(rendered, env)
+    assert realm["adminPermissionsEnabled"] is True
+    docs = rendered(env)
+    job = next(d for d in docs if d.get("kind") == "Job" and d["metadata"]["name"] == "keycloak-admin-permissions")
+    assert job["metadata"]["annotations"]["helm.sh/hook"] == "post-install,post-upgrade"
+    pod = job["spec"]["template"]["spec"]
+    assert pod["automountServiceAccountToken"] is False
+    container = pod["containers"][0]
+    assert container["image"].startswith("quay.io/keycloak/keycloak:") and "@sha256:" in container["image"]
+    env_of = {e["name"]: e for e in container["env"]}
+    assert env_of["PRINCIPAL"]["value"] == "portal-api"
+    assert "secretKeyRef" in env_of["KEYCLOAK_PASSWORD"]["valueFrom"], "the password comes from the Secret, never a value"
+    script = next(d for d in docs if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "keycloak-admin-permissions")
+    assert "managed-by" in script["data"]["sync-admin-permissions.sh"]
+    assert any(d.get("kind") == "NetworkPolicy" and "keycloak-admin-permissions" in d["metadata"]["name"] for d in docs)

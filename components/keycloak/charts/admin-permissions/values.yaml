@@ -1,0 +1,13 @@
+# Set by components/keycloak/values/admin-permissions; the defaults name what each one is.
+image: ""
+keycloakUrl: ""
+realm: ""
+principal: portal-api
+serviceAccount: keycloak-app-keycloakx
+admin:
+  username: ""
+  existingSecret: keycloak-admin-user
+  existingSecretKey: password
+securityDefaults:
+  podSecurityContext: {}
+  securityContext: {}

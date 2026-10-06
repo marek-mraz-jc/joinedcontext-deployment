@@ -122,6 +122,10 @@ config:
       # TR-03187 AUT-9: Keycloak 26 account console requires password re-entry for sensitive profile changes (incl. email) by default
       # TR-03187 AR-13: Certificate chain validation handled by Linkerd mTLS at infrastructure level — no realm config needed
       enabled: true
+      # Fine-grained admin permissions (v2): what narrows the Portal's client administration to
+      # the clients it manages; the keycloak adminPermissions part writes the permissions after
+      # this import (T-2725).
+      adminPermissionsEnabled: true
       sslRequired: external
       registrationAllowed: false
       registrationEmailAsUsername: true
