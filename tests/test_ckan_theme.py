@@ -268,7 +268,7 @@ def test_the_page_language_picks_the_words_and_an_unknown_one_reads_english(them
 
 
 def test_every_word_of_the_theme_is_in_all_four_languages(theme):
-    for table in (theme.STRINGS, theme.FORMATS):
+    for table in (theme.STRINGS, theme.FORMATS, theme.MODEL_FILES):
         for key, words in table.items():
             assert set(words) == {"en", "sk", "cs", "de"}, key
     for key, (words, _) in theme.FREQUENCIES.items():
@@ -516,3 +516,78 @@ def test_a_short_page_keeps_its_footer_at_the_bottom():
     css = (THEME / "public__jc-theme.css").read_text()
     assert "body:not(.dt-view) { min-height: 100vh; display: flex; flex-direction: column; }" in css
     assert "body:not(.dt-view) > .site-footer { margin-top: auto; }" in css
+
+
+# T-3048: what a reader meets on the resource page, the search filters and a narrow table.
+
+REGISTRE = {"name": "bbsk-registre", "title": "Registre kraja"}
+
+
+@pytest.mark.parametrize("lang, shacl, owl", [
+    ("en", "Validation rules (SHACL)", "Data model (OWL)"),
+    ("sk", "Pravidlá kontroly (SHACL)", "Dátový model (OWL)"),
+    ("fi", "Validation rules (SHACL)", "Data model (OWL)"),
+])
+def test_a_data_model_file_is_named_in_words_without_the_dataset_s_name(theme, lang, shacl, owl):
+    theme.page.lang = lang
+    label = theme.jc_resource_label
+    assert label({"name": "bbsk-registre model.shacl.ttl"}, REGISTRE) == shacl
+    assert label({"name": "bbsk-registre model.owl.ttl"}, REGISTRE) == owl
+    # Every file jcctl publishes for a model reads as words, none as a file name.
+    names = {label({"name": f"bbsk-registre {file}"}, REGISTRE) for file in theme.MODEL_FILES}
+    assert len(names) == len(theme.MODEL_FILES) and not any("bbsk-registre" in n for n in names)
+
+
+def test_another_resource_keeps_its_name_and_an_empty_one_falls_back(theme):
+    label = theme.jc_resource_label
+    assert label({"name": "Bridge"}, REGISTRE) == "Bridge"
+    assert label({"name": "bbsk-registre context.jsonld"}, None) == "bbsk-registre context.jsonld"
+    assert label({"name": "bbsk-registre"}, REGISTRE) == "bbsk-registre"  # nothing after the prefix
+    assert label({"name": "", "format": "CSV"}, REGISTRE) == "CSV"
+    assert label({"id": "r1"}, REGISTRE) == "r1"
+    assert label(None, None) == ""
+
+
+def test_the_resource_list_and_page_name_resources_in_words_and_never_cut_them():
+    sidebar = (THEME / "templates__package__snippets__resources.html").read_text()
+    page = (THEME / "templates__package__resource_read.html").read_text()
+    row = (THEME / "templates__package__snippets__resource_item.html").read_text()
+    for template in (sidebar, page, row):
+        assert "h.jc_resource_label(" in template
+        assert "|truncate" not in template and "| truncate" not in template
+    assert 'aria-current="page"' in sidebar
+    crumb = page[page.index("{% block breadcrumb_content %}"):page.index("{% endblock %}", page.index("{% block breadcrumb_content %}"))]
+    assert "h.jc_resource_label(res, pkg)" in crumb and "super()" not in crumb
+    # One line back to the dataset, never its whole description again.
+    assert "Dataset description" not in page and "h.jc_t('part_of')" in page
+
+
+def test_a_file_without_a_view_says_what_it_is_and_offers_its_one_action():
+    page = (THEME / "templates__package__resource_read.html").read_text()
+    block = page[page.index("{% block resource_view_content %}"):]
+    assert "_(\"There are no views" not in block
+    assert "h.jc_t('api_lead') if api else h.jc_t('file_lead')" in block
+    # Whoever may create views still gets CKAN's own page.
+    assert "{{ super() }}" in block and "resource_view_create" in block
+
+
+def test_a_search_filter_with_nothing_to_choose_is_left_out_and_labels_are_whole():
+    facets = (THEME / "templates__snippets__facet_list.html").read_text()
+    assert "_('There are no" not in facets
+    assert "{% if items %}" in facets and "|truncate" not in facets
+    css = (THEME / "public__jc-theme.css").read_text()
+    assert ".nav-facet .nav-item > a .item-label { overflow-wrap: anywhere; }" in css
+    assert "text-overflow: ellipsis; white-space: nowrap; }\n" not in css.split(".nav-facet .nav-item > a .item-label", 1)[1][:80]
+
+
+def test_the_table_view_stacks_its_controls_below_desktop_width():
+    """The view's own rules name `#dtprv_wrapper`; a rule on the class alone loses to them, which is
+    how the first try left "Search:" under the toolbar."""
+    css = (THEME / "public__jc-theme.css").read_text()
+    block = css[css.index("@media (max-width: 991.98px) {\n  body.dt-view"):]
+    block = block[:block.index("\n}\n") + 3]
+    assert "body.dt-view #dtprv_wrapper { display: flex; flex-wrap: wrap;" in block
+    assert "float: none; width: 100%; margin: 0;" in block
+    for selector in (".dataTables_filter", ".dataTables_info", ".dataTables_paginate"):
+        assert all("#dtprv_wrapper" in line for line in block.splitlines() if selector in line), selector
+

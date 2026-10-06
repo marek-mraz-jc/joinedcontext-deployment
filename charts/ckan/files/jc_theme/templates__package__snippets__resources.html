@@ -1,0 +1,21 @@
+{% ckan_extends %}
+
+{#
+  The resource page's list of the dataset's resources (T-3048): each named as a reader reads it
+  (a data model file in words, the dataset's own name not repeated) and never cut off mid-name,
+  where CKAN truncated at 25 characters and two model files both read "bbsk-registre...".
+#}
+{% block resources_list %}
+  <ul class="list-unstyled nav nav-simple jc-resource-nav">
+    {% for resource in resources %}
+      {% set label = h.jc_resource_label(resource, pkg) %}
+      {% set url = h.url_for('%s_resource.read' % pkg.type, id=pkg.name, resource_id=resource.id) %}
+      <li class="nav-item{% if active == resource.id %} active{% endif %}">
+        <a href="{{ url }}"{% if active == resource.id %} aria-current="page"{% endif %}>{{ label }}</a>
+        {% if can_edit %}
+          <a class="jc-resource-edit" href="{{ h.url_for(pkg.type ~ '_resource.edit', id=pkg.name, resource_id=resource.id) }}">{{ _('Edit') }}<span class="visually-hidden"> {{ label }}</span></a>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}

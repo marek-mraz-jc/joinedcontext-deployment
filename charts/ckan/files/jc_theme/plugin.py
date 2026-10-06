@@ -203,6 +203,20 @@ STRINGS = {
         "de": "Die Tabelle hat noch keine Ansicht; laden Sie sie unten herunter.",
     },
     "download": {"en": "Download", "sk": "Stiahnuť", "cs": "Stáhnout", "de": "Herunterladen"},
+    "part_of": {"en": "Part of the dataset", "sk": "Súčasť datasetu", "cs": "Součást datové sady", "de": "Teil des Datensatzes"},
+    "address": {"en": "Address", "sk": "Adresa", "cs": "Adresa", "de": "Adresse"},
+    "file_lead": {
+        "en": "This is a file to download; it opens in the program that reads its format.",
+        "sk": "Toto je súbor na stiahnutie; otvorí sa v programe, ktorý číta jeho formát.",
+        "cs": "Toto je soubor ke stažení; otevře se v programu, který čte jeho formát.",
+        "de": "Dies ist eine Datei zum Herunterladen; sie öffnet sich im Programm, das ihr Format liest.",
+    },
+    "api_lead": {
+        "en": "This is an address a program calls; open it to see what it answers.",
+        "sk": "Toto je adresa, ktorú volá program; otvorte ju a uvidíte, čo odpovedá.",
+        "cs": "Toto je adresa, kterou volá program; otevřete ji a uvidíte, co odpovídá.",
+        "de": "Dies ist eine Adresse, die ein Programm aufruft; öffnen Sie sie, um die Antwort zu sehen.",
+    },
     "open": {"en": "Open", "sk": "Otvoriť", "cs": "Otevřít", "de": "Öffnen"},
     "details": {"en": "Details", "sk": "Podrobnosti", "cs": "Podrobnosti", "de": "Details"},
     "section_data": {"en": "Downloads", "sk": "Na stiahnutie", "cs": "Ke stažení", "de": "Downloads"},
@@ -488,6 +502,31 @@ def jc_resource_sections(pkg):
              "items": items} for key, items in sections.items() if items]
 
 
+# The data model's files as `jcctl` publishes them (crates/jcctl/src/publish/ckan.rs): the
+# dataset's name, a space and the file. A reader sees what each one is instead (T-3048).
+MODEL_FILES = {
+    "context.jsonld": {"en": "JSON-LD context", "sk": "Kontext JSON-LD", "cs": "Kontext JSON-LD", "de": "JSON-LD-Kontext"},
+    "model.linkml.yaml": {"en": "Data model (LinkML)", "sk": "Dátový model (LinkML)", "cs": "Datový model (LinkML)", "de": "Datenmodell (LinkML)"},
+    "model.md": {"en": "Data model, described in words", "sk": "Dátový model, opísaný slovami", "cs": "Datový model, popsaný slovy", "de": "Datenmodell, in Worten beschrieben"},
+    "model.owl.ttl": {"en": "Data model (OWL)", "sk": "Dátový model (OWL)", "cs": "Datový model (OWL)", "de": "Datenmodell (OWL)"},
+    "model.rdf.ttl": {"en": "Data model (RDF)", "sk": "Dátový model (RDF)", "cs": "Datový model (RDF)", "de": "Datenmodell (RDF)"},
+    "model.schema.json": {"en": "Data model (JSON Schema)", "sk": "Dátový model (JSON Schema)", "cs": "Datový model (JSON Schema)", "de": "Datenmodell (JSON Schema)"},
+    "model.shacl.ttl": {"en": "Validation rules (SHACL)", "sk": "Pravidlá kontroly (SHACL)", "cs": "Pravidla kontroly (SHACL)", "de": "Prüfregeln (SHACL)"},
+}
+
+
+def jc_resource_label(resource, pkg=None):
+    """A resource's name as a reader reads it: a data model file in words, any other name
+    without the dataset's own name in front of it, and the name as it is when that leaves nothing."""
+    name = ((resource or {}).get("name") or "").strip()
+    prefix = ((pkg or {}).get("name") or "").strip()
+    rest = name[len(prefix):].strip() if prefix and name.startswith(prefix + " ") else name
+    words = MODEL_FILES.get(rest)
+    if words:
+        return words.get(_language()) or words["en"]
+    return rest or name or (resource or {}).get("format") or (resource or {}).get("id") or ""
+
+
 def jc_previews(pkg):
     """The dataset's DataStore tables for the page itself, one per entity type since T-3012, in
     the order `_order` gives them: each resource with its table view (None when nobody created
@@ -641,6 +680,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_more": jc_more,
             "jc_live": jc_live,
             "jc_resource_sections": jc_resource_sections,
+            "jc_resource_label": jc_resource_label,
             "jc_previews": jc_previews,
             "jc_total": jc_total,
             "jc_number": jc_number,
