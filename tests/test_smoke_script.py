@@ -297,7 +297,7 @@ HEALTHY_STATUSES = [
     ["/entities?", 200],
     ["/ckan", 302],
     ["-X DELETE", 204],
-    ["someone-else.sk", 400],
+    ["smoke-not-a-urn", 400],
     ["entities/urn", 200],
     ["/entities", 201],
     [["Bearer", ".forged"], 401],
@@ -444,7 +444,9 @@ def test_full_platform_passes(tmp_path):
     assert "client_credentials token" in result.stdout
     assert "ok    demo user demo.viewer@hel.fi logs in with a password grant" in result.stdout
     assert "entity create through the endpoint (201)" in result.stdout
-    assert "write with a foreign URN prefix is refused (400)" in result.stdout
+    assert "write with an id that is no NGSI-LD URN is refused (400)" in result.stdout
+    assert "ok    an id naming another organization lands in this space (ADR-N-041) (201)" in result.stdout
+    assert "ok    and is deleted again (204)" in result.stdout
     assert "git forge answers under the /git prefix (200)" in result.stdout
     assert "catalogue front page carries the instance name" in result.stdout
     assert "ok    pipeline test runs a candidate on the runner and captures the output (200)" in result.stdout
