@@ -155,3 +155,6 @@ helsinki-pipeline-districts-bento.yaml: projects/helsinki/pipelines/districts/be
 helsinki-pipeline-subdistricts-bento.yaml: projects/helsinki/pipelines/subdistricts/bento.yaml
 helsinki-pipeline-fee-parking-zones-bento.yaml: projects/helsinki/pipelines/fee-parking-zones/bento.yaml
 helsinki-pipeline-resident-parking-zones-bento.yaml: projects/helsinki/pipelines/resident-parking-zones/bento.yaml
+# The default group of Prague's waste desk (T-2786, AP-118): an organization Group, so it is seeded
+# here beside the organization's roles rather than from the praha folder, which writes its project only.
+group-praha-odpad-viewer.yaml: users/groups/praha-odpad-viewer.yaml
