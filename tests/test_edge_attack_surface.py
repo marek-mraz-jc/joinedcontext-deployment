@@ -91,6 +91,10 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": False, "framing": "DENY",
         "why": "RFC 9728 protected-resource metadata is public by the RFC; it names no secret",
     },
+    "assistant-chat": {
+        "reach": UPSTREAM, "cacheable": False, "framing": "DENY",
+        "why": "the knowledge assistant's public deployments answer anyone on their allowed origins; jc-assistant checks the Origin, limits per deployment and client, and caps the budget (API/05, AG-100, AG-101)",
+    },
     "portal-live-notify": {
         "reach": UPSTREAM, "cacheable": False, "framing": "DENY",
         "why": "the gateway delivers the Portal's own live-update notifications; the broker holds no token, the path's key is an HMAC only the Portal makes, and a notification only makes a view read again (API/01 §32)",

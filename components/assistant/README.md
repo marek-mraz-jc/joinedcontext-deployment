@@ -1,10 +1,12 @@
 # Assistant
 
-`jc-assistant` from the platform image (docs Architecture/22 §1, ADR-N-040, T-3052): the
-knowledge assistant's crawl worker. Once a minute it reads the organization's `KnowledgeSource`
-manifests, queues every website source its schedule names, crawls the public site, extracts
-pages and PDFs and stores the passages in its own database. One Deployment, no Service:
-nothing calls it, the kubelet probes `/healthz` and `/readyz` on 8080.
+`jc-assistant` from the platform image (docs Architecture/22 §1, ADR-N-040, T-3052, T-3055): the
+knowledge assistant. Once a minute it reads the organization's `KnowledgeSource` and
+`AssistantDeployment` manifests, queues every source its schedule names, crawls the public site
+or the catalogue, and stores and embeds the passages in its own database. Its chat route,
+`https://assistant.{domain}/api/v1/d/{publicId}/chat` (docs API/05), answers the public
+deployments. One Deployment and a ClusterIP Service on 8080; the kubelet probes `/healthz` and
+`/readyz` on the same port.
 
 Deploy the component with:
 ```bash
@@ -15,10 +17,18 @@ helmfile apply -i --selector component=assistant
 
 No environment lists `assistant` yet. The platform image pinned in `images.yaml` is the
 gateway's, which predates the binary; pin a digest whose build contains
-`/usr/local/bin/jc-assistant` (platform T-3052 and later), then add `assistant` after
-`functions` in the environment's component list.
+`/usr/local/bin/jc-assistant` with the chat (platform T-3055 and later), and the agent proxy's
+digest with the assistant caller (same build), then add `assistant` after `functions` in the
+environment's component list. It needs `gitea`, `agent-runner`, `context-gateway` and
+`keycloak` listed, and says so if one is missing.
 
 ## What it wires
+
+- **Edge**: `assistant-chat` on `assistant.{domain}`, no login, 30 requests a minute per address
+  at the edge; the service limits each deployment and client again and checks the Origin.
+- **Keycloak**: the `jc-assistant` client, service account only, audience `helsinki-agent-proxy`;
+  its secret `keycloak-client-jc-assistant` is mounted as a file. The proxy serves its token for
+  model calls named for a deployment, counted against that deployment's day.
 
 - **PostgreSQL**: the `assistant` database and role (`databases.yaml`), the password in
   `db-assistant`, the `vector` extension created by the role job. The worker runs its own
@@ -26,9 +36,10 @@ gateway's, which predates the binary; pin a digest whose build contains
 - **Forge**: git-sync and, in layout 2, the checkouts sidecar, both with the read-only
   `gitea-token-gateway`; the forge bootstrap mints that token into this namespace and
   restarts `jc-assistant` when it mints it again.
-- **Network**: no ingress; egress to PostgreSQL, the forge, CoreDNS, TCP 80/443 on every
-  public address and the ingress controller (the platform's own CKAN is the cluster's public
-  host, T-3054). Every private range is excepted, so a source URL never reaches the cluster.
+- **Network**: ingress from APISIX on 8080; egress to PostgreSQL, the forge, the agent proxy,
+  the gateway (connectors' MCP surfaces), Keycloak, CoreDNS, TCP 80/443 on every public address
+  and the ingress controller (the platform's own CKAN is the cluster's public host, T-3054).
+  Every private range is excepted, so a source URL never reaches the cluster.
 - **Embeddings**: the model and ONNX Runtime are in the image; one ONNX thread, as many as the
   CPU limit (T-3053).
 

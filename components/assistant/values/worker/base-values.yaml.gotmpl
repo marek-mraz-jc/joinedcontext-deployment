@@ -1,6 +1,8 @@
 {{- $global := .Values.global }}
-{{- if not (has "gitea" .Values.components) }}
-{{- fail "assistant: the crawl worker reads its KnowledgeSource manifests from the forge; list gitea in the environment's components" }}
+{{- range $needed := list "gitea" "agent-runner" "context-gateway" "keycloak" }}
+{{- if not (has $needed $.Values.components) }}
+{{- fail (printf "assistant: needs %s in the environment's components (the forge holds its manifests, the agent proxy its model, the gateway its connectors, Keycloak its identity)" $needed) }}
+{{- end }}
 {{- end }}
 # Checklist:
 # - [x] Containers run as non-root with `readOnlyRootFilesystem`
@@ -8,8 +10,8 @@
 # - [x] Graceful shutdown -> SIGTERM finishes the loop between jobs
 # - [x] Standard labels
 # - [x] ServiceAccount with least privilege where required -> no API token
-# - [x] Named ports -> 8080, the probes only
-# - [ ] Ingress with TLS -> not applicable, nothing calls the worker
+# - [x] Named ports -> 8080, the chat route and the probes
+# - [x] Ingress with TLS -> the edge, assistant.{domain} (apisix-routes.yaml)
 
 fullnameOverride: jc-assistant
 nameOverride: assistant-worker
@@ -28,7 +30,11 @@ command:
 containerPort: 8080
 
 service:
-  enabled: false
+  enabled: true
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+  name: http
 
 probes:
   readiness:
@@ -48,12 +54,23 @@ envSecret:
     secret: db-assistant
     key: password
 
+# The chat (API/05, T-3055): the model only through jc-agent-proxy with the service's own
+# client-credentials token, the connectors on the gateway's Endpoint MCP surfaces, the token
+# from the realm's in-cluster Service (a pod cannot dial this node's own public host, T-1500).
+# The client secret is a file, so it is never in the process environment.
+
 env:
   # As the `assistant` role, which owns its database and runs its own migrations, so the
   # forced row-level security of every tenant table holds (T-3050).
   JC_ASSISTANT_DATABASE_URL: "postgresql://assistant:$(PGPASSWORD)@postgres-cluster-rw.{{ .Values.postgres.cluster.namespace }}.svc.cluster.local:5432/assistant"
   JC_ASSISTANT_ORG_DOMAIN: {{ $global.orgDomain | quote }}
   JC_ASSISTANT_BIND: "0.0.0.0:8080"
+  JC_ASSISTANT_PROXY_URL: "http://agent-proxy.{{ index .Values "agent-runner" "proxy" "namespace" }}.svc.cluster.local:8080"
+  JC_ASSISTANT_GATEWAY_URL: "http://context-gateway.{{ index .Values "context-gateway" "gateway" "namespace" }}.svc.cluster.local:8080"
+  JC_ASSISTANT_TOKEN_URL: "http://keycloak-app-keycloakx-http.{{ .Values.keycloak.app.namespace }}.svc.cluster.local:80{{ .Values.keycloak.app.pathPrefix | trimSuffix "/" }}/realms/{{ $global.instanceSlug }}/protocol/openid-connect/token"
+  JC_ASSISTANT_CLIENT_ID: jc-assistant
+  JC_ASSISTANT_CLIENT_SECRET_FILE: /var/run/keycloak/client-secret
+  JC_ASSISTANT_LLM: {{ .Values.assistant.worker.llm | quote }}
   # The embedder's ONNX Runtime threads, as many as the CPU limit (T-3053). The model and the
   # runtime are in the image (JC_ASSISTANT_MODEL_DIR, ORT_DYLIB_PATH).
   JC_ASSISTANT_EMBED_THREADS: "1"
@@ -92,6 +109,11 @@ env:
 extraVolumes:
   - name: repo
     emptyDir: {}
+  - name: keycloak-client
+    secret:
+      secretName: keycloak-client-jc-assistant
+      items:
+        - { key: client-secret, path: client-secret }
   - name: assembly
     emptyDir:
       sizeLimit: 256Mi
@@ -108,6 +130,7 @@ extraVolumes:
 
 extraVolumeMounts:
   - { name: repo, mountPath: /repo, readOnly: true }
+  - { name: keycloak-client, mountPath: /var/run/keycloak, readOnly: true }
   - { name: assembly, mountPath: /assembly }
 {{- if $layout2 }}
   - { name: projects, mountPath: /projects, readOnly: true }

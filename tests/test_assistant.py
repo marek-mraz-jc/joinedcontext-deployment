@@ -57,8 +57,17 @@ def test_the_worker_rendered_with_its_database_checkout_and_network(docs):
     assert worker["resources"]["limits"]["memory"] == "1Gi"
     sidecars = {c["name"] for c in pod["containers"]} - {worker["name"]}
     assert "git-sync" in sidecars
-    tokens = [v["secret"]["secretName"] for v in pod["volumes"] if "secret" in v]
-    assert set(tokens) <= {"gitea-token-gateway"}, "the read-only forge token, nothing else"
+    secrets = {v["secret"]["secretName"] for v in pod["volumes"] if "secret" in v}
+    assert secrets <= {"gitea-token-gateway", "keycloak-client-jc-assistant"}, "the read-only forge token and its own client secret"
+    assert "keycloak-client-jc-assistant" in secrets
+    assert "JC_ASSISTANT_CLIENT_SECRET" not in env, "the client secret is a file, never the environment"
+    assert env["JC_ASSISTANT_CLIENT_SECRET_FILE"] == "/var/run/keycloak/client-secret"
+    assert env["JC_ASSISTANT_PROXY_URL"] == "http://agent-proxy.dev.svc.cluster.local:8080"
+    assert env["JC_ASSISTANT_GATEWAY_URL"] == "http://context-gateway.dev.svc.cluster.local:8080"
+    assert env["JC_ASSISTANT_TOKEN_URL"].startswith("http://keycloak-app-keycloakx-http.")
+    assert env["JC_ASSISTANT_LLM"]
+    service = one(docs, "Service", "jc-assistant")
+    assert [p["port"] for p in service["spec"]["ports"]] == [8080]
 
     # Its own database, owned by its own role, with the vector extension the role job creates.
     database = one(docs, "Database", "assistant")["spec"]
@@ -76,9 +85,9 @@ def test_the_worker_rendered_with_its_database_checkout_and_network(docs):
 
 
 def test_the_worker_reaches_its_database_the_forge_dns_and_public_addresses_only(docs):
+    """And the chat's peers: the edge in; the agent proxy, the gateway and Keycloak out (T-3055)."""
     policy = one(docs, "NetworkPolicy", "assistant-worker")
     assert policy["spec"]["podSelector"]["matchLabels"] == {"app.kubernetes.io/name": "assistant-worker"}
-    assert "ingress" not in policy["spec"] or policy["spec"]["ingress"] in (None, [])
     assert set(policy["spec"]["policyTypes"]) == {"Ingress", "Egress"}
     web = [r for r in policy["spec"]["egress"] if "ipBlock" in r["to"][0]]
     (rule,) = web
@@ -91,15 +100,48 @@ def test_the_worker_reaches_its_database_the_forge_dns_and_public_addresses_only
     assert ingress["to"][0]["podSelector"]["matchExpressions"][0]["values"] == ["traefik", "ingress-nginx"]
     assert sorted(p["port"] for p in ingress["ports"]) == [443, 8443]
     peers = sorted(
-        (tuple(sorted(r["to"][0]["podSelector"]["matchLabels"].items())), tuple(p["port"] for p in r["ports"]))
-        for r in policy["spec"]["egress"] if "matchLabels" in r["to"][0].get("podSelector", {})
+        (tuple(sorted(peer["podSelector"]["matchLabels"].items())), tuple(p["port"] for p in r["ports"]))
+        for r in policy["spec"]["egress"]
+        for peer in r["to"]
+        if "matchLabels" in peer.get("podSelector", {})
     )
     assert peers == sorted([
         ((("cnpg.io/cluster", "postgres-cluster"),), (5432,)),
         ((("app.kubernetes.io/instance", "gitea-forge"), ("app.kubernetes.io/name", "gitea")), (3000,)),
+        ((("app.kubernetes.io/name", "agent-runner-proxy"),), (8080,)),
+        ((("app.kubernetes.io/name", "context-gateway-gateway"),), (8080,)),
+        ((("app.kubernetes.io/instance", "keycloak-app"),), (8080,)),
         ((("k8s-app", "kube-dns"),), (53, 53)),
     ])
-    for name, port in (("postgres-from-assistant", 5432), ("gitea-from-assistant", 3000)):
+    (inbound,) = policy["spec"]["ingress"]
+    assert [f["podSelector"]["matchLabels"] for f in inbound["from"]] == [{"app.kubernetes.io/name": "apisix"}]
+    assert [p["port"] for p in inbound["ports"]] == [8080]
+    for name, port in (
+        ("postgres-from-assistant", 5432),
+        ("gitea-from-assistant", 3000),
+        ("agent-proxy-from-assistant", 8080),
+        ("gateway-from-assistant", 8080),
+        ("keycloak-from-assistant", 8080),
+    ):
         (inbound,) = one(docs, "NetworkPolicy", name)["spec"]["ingress"]
         assert [f["podSelector"]["matchLabels"] for f in inbound["from"]] == [{"app.kubernetes.io/name": "assistant-worker"}]
         assert [p["port"] for p in inbound["ports"]] == [port]
+
+
+def test_the_chat_is_published_on_its_own_host_and_its_client_names_the_proxy(docs):
+    """T-3055, AG-109: the edge route, and the Keycloak client whose token the proxy accepts."""
+    import base64
+    import json
+
+    secret = one(docs, "Secret", "keycloak-config-keycloak-config-cli-config-realms")
+    realm = json.loads(base64.b64decode(secret["data"]["dev.json"]))
+    client = next(c for c in realm["clients"] if c["clientId"] == "jc-assistant")
+    assert client["serviceAccountsEnabled"] and not client["standardFlowEnabled"] and not client["publicClient"]
+    audiences = {m["config"]["included.custom.audience"] for m in client["protocolMappers"] if m["protocolMapper"] == "oidc-audience-mapper"}
+    assert audiences == {"helsinki-agent-proxy"}
+    proxy = one(docs, "Deployment", "agent-proxy")["spec"]["template"]["spec"]["containers"][0]
+    proxy_env = {e["name"]: e.get("value") for e in proxy.get("env", [])}
+    assert proxy_env["JC_OIDC_CLIENT_ID"] == "helsinki-agent-proxy"
+    config = next(d for d in docs if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "apisix-standalone-base")
+    assert "assistant.dev.joinedcontext.com" in str(config["data"])
+    assert "jc-assistant.dev.svc.cluster.local:8080" in str(config["data"])
