@@ -418,8 +418,9 @@ install-dependencies:
 # ---------------------------------------------------------------------------
 
 dev_domain := env('JC_DEV_DOMAIN', 'dev.joinedcontext.com')
-# The node the dev domain points at; the guard compares it with the kube context's server.
-dev_node_ip := env('JC_DEV_NODE_IP', '2.28.67.127')
+# The node the dev domain points at (primaleto since 2026-09-26, T-3042); the guard compares it
+# with the kube context's server.
+dev_node_ip := env('JC_DEV_NODE_IP', '116.203.134.249')
 
 # Refuse to touch anything but the dev cluster
 [group('dev cluster')]
