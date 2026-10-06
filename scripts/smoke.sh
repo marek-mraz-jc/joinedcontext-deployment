@@ -436,10 +436,19 @@ if has_route context-endpoint; then
 		status 201 "entity create through the endpoint" -X POST -H 'Content-Type: application/json' \
 			-H "Authorization: Bearer $ep_token" -d "$body" "$base/api/endpoint/$ep/ngsi-ld/v1/entities"
 		status 200 "entity read back" -H "Authorization: Bearer $ep_token" "$base/api/endpoint/$ep/ngsi-ld/v1/entities/$urn"
-		# A foreign organization prefix must be refused by the gateway, not stored.
-		foreign='{"id":"urn:ngsi-ld:AirQualityObserved:someone-else.sk:ovzdusie:smoke-2","type":"AirQualityObserved"}'
-		status 400 "write with a foreign URN prefix is refused" -X POST -H 'Content-Type: application/json' \
-			-H "Authorization: Bearer $ep_token" -d "$foreign" "$base/api/endpoint/$ep/ngsi-ld/v1/entities"
+		# An id that is no NGSI-LD URN is refused by the gateway, not stored (PF-43).
+		bad='{"id":"smoke-not-a-urn","type":"AirQualityObserved"}'
+		status 400 "write with an id that is no NGSI-LD URN is refused" -X POST -H 'Content-Type: application/json' \
+			-H "Authorization: Bearer $ep_token" -d "$bad" "$base/api/endpoint/$ep/ngsi-ld/v1/entities"
+		# A URN naming another organization is an id like any other since ADR-N-041: it lands in
+		# this endpoint's space and is removed again, so dev keeps nothing (a run before the rule
+		# changed may have left it: it is deleted first).
+		other="urn:ngsi-ld:AirQualityObserved:someone-else.sk:ovzdusie:smoke-2"
+		curl -sS -o /dev/null --max-time 20 -X DELETE -H "Authorization: Bearer $ep_token" \
+			"$base/api/endpoint/$ep/ngsi-ld/v1/entities/$other" 2>/dev/null || true
+		status 201 "an id naming another organization lands in this space (ADR-N-041)" -X POST -H 'Content-Type: application/json' \
+			-H "Authorization: Bearer $ep_token" -d '{"id":"'"$other"'","type":"AirQualityObserved"}' "$base/api/endpoint/$ep/ngsi-ld/v1/entities"
+		status 204 "and is deleted again" -X DELETE -H "Authorization: Bearer $ep_token" "$base/api/endpoint/$ep/ngsi-ld/v1/entities/$other"
 		status 204 "entity delete" -X DELETE -H "Authorization: Bearer $ep_token" "$base/api/endpoint/$ep/ngsi-ld/v1/entities/$urn"
 
 		# T-0945: what the space lists, the space serves. An entity whose URN carries another
