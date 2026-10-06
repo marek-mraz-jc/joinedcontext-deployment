@@ -60,3 +60,8 @@ praha-pipeline-waste-fill-bento.yaml: projects/praha/pipelines/waste-fill/bento.
 praha-secrets-golemio.enc.yaml: projects/praha/secrets/golemio.enc.yaml
 # The one application of the space (T-2917): a static bundle the Portal serves at /apps/praha-mesto/.
 praha-app-mesto.yaml: projects/praha/apps/praha-mesto/app.yaml
+# Prague's map for its residents (T-2786): a public static bundle the Portal image ships, reading
+# the points of interest and the sorting isles of praha-mesto through its own endpoint.
+praha-app-mapa.yaml: projects/praha/apps/praha-mapa/app.yaml
+praha-app-mapa-endpoint.yaml: projects/praha/spaces/praha-mesto/endpoints/app-praha-mapa.yaml
+praha-app-mapa-policy.yaml: projects/praha/spaces/praha-mesto/policies/app-praha-mapa-1.yaml
