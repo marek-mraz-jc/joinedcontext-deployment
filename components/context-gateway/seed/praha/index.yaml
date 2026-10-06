@@ -65,3 +65,7 @@ praha-app-mesto.yaml: projects/praha/apps/praha-mesto/app.yaml
 praha-app-mapa.yaml: projects/praha/apps/praha-mapa/app.yaml
 praha-app-mapa-endpoint.yaml: projects/praha/spaces/praha-mesto/endpoints/app-praha-mapa.yaml
 praha-app-mapa-policy.yaml: projects/praha/spaces/praha-mesto/policies/app-praha-mapa-1.yaml
+# Prague's open data as grids (T-2786), with the endpoint's own downloads.
+praha-app-data.yaml: projects/praha/apps/praha-data/app.yaml
+praha-app-data-endpoint.yaml: projects/praha/spaces/praha-mesto/endpoints/app-praha-data.yaml
+praha-app-data-policy.yaml: projects/praha/spaces/praha-mesto/policies/app-praha-data-1.yaml
