@@ -61,6 +61,10 @@ keycloak:
             matchLabels:
               app.kubernetes.io/name: keycloak-config-cli
           componentNamespace: keycloak
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: keycloak-admin-permissions
+          componentNamespace: keycloak
         # The Context Gateway loads the realm's signing keys over the in-cluster Service and
         # exits when it cannot (platform main.rs: no keys, no process). Without the mesh
         # that is a plain connection to 8080, and this list is what lets it through; the
@@ -92,6 +96,35 @@ keycloak-config-cli:
   egress:
     # CoreDNS. Every rule below names a Service, and a Service name is worth nothing
     # without this one.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: keycloak-app
+          componentNamespace: keycloak
+      ports:
+        - protocol: TCP
+          port: 8080
+
+# The admin permissions job (a post-install/post-upgrade hook after the realm import, T-2725):
+# kcadm.sh over the admin API, the only thing it ever dials is Keycloak.
+keycloak-admin-permissions:
+  podSelector:
+    app.kubernetes.io/name: keycloak-admin-permissions
+  policyTypes:
+    - Egress
+  egress:
     - to:
         - namespaceSelector:
             matchLabels:

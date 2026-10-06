@@ -10,3 +10,8 @@ parts:
   - name: config
     needs:
       - keycloak.app
+  # After the realm import: it narrows the Portal's client administration with the realm's
+  # fine-grained admin permissions, which the import switches on (T-2725).
+  - name: adminPermissions
+    needs:
+      - keycloak.config

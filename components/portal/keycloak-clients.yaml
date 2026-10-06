@@ -27,16 +27,18 @@ portal-api:
   componentNamespaces:
     - portal
   # The reconciler creates, updates and deletes the confidential client `app-{name}` of every
-  # app on demand, as this client's own service account (AP-27). Keycloak scopes client
-  # management per realm and not per name prefix, so the grant is realm-wide; the reconciler
-  # only ever addresses `app-{name}` built from an App manifest's name, and narrowing the grant
-  # itself needs Keycloak's fine-grained admin permissions.
+  # app on demand, as this client's own service account (AP-27). It holds the read-only
+  # `view-clients`, which lists and finds clients, and the write scopes come from the realm's
+  # fine-grained admin permissions, which the keycloak adminPermissions part grants on every
+  # client and denies on each one without `managed-by: joinedcontext`: the edge, the platform's
+  # own clients and Keycloak's (T-2725). Reading a client's secret stays with `view-clients`;
+  # the confidential platform clients move off shared secrets for that (T-2868).
   # `query-users` (read-only) lets it list who holds an App client role: Keycloak answers
   # GET /clients/{id}/roles/{role}/users only to a caller that may view the client and query
   # users. Every lookup and every mapping write stays with `portal-reconciler` (T-3022).
   serviceAccountClientRoles:
     realm-management:
-      - manage-clients
+      - view-clients
       - query-users
   rawValues:
     publicClient: false

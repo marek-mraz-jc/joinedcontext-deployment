@@ -29,6 +29,7 @@ batch/v1/CronJob local/gitea-lane-token
 batch/v1/CronJob local/sandbox-reaper-reaper
 batch/v1/Job local/artifact-store-bucket
 batch/v1/Job local/gitea-bootstrap
+batch/v1/Job local/keycloak-admin-permissions
 batch/v1/Job local/keycloak-config-keycloak-config-cli
 cert-manager.io/v1/Certificate local/apisix-edge
 kyverno.io/v1/ClusterPolicy -/drop-all-capabilities
@@ -94,6 +95,8 @@ networking.k8s.io/v1/NetworkPolicy local/gitea-linkerd-from-lane-token
 networking.k8s.io/v1/NetworkPolicy local/gitea-runner
 networking.k8s.io/v1/NetworkPolicy local/gitea-runner-linkerd
 networking.k8s.io/v1/NetworkPolicy local/keycloak
+networking.k8s.io/v1/NetworkPolicy local/keycloak-admin-permissions
+networking.k8s.io/v1/NetworkPolicy local/keycloak-admin-permissions-linkerd
 networking.k8s.io/v1/NetworkPolicy local/keycloak-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy local/keycloak-config-cli
 networking.k8s.io/v1/NetworkPolicy local/keycloak-config-cli-linkerd
@@ -189,6 +192,7 @@ v1/ConfigMap local/gitea-bootstrap-seed
 v1/ConfigMap local/gitea-runner
 v1/ConfigMap local/gitea-runner-build-node
 v1/ConfigMap local/gitea-runner-build-rust
+v1/ConfigMap local/keycloak-admin-permissions
 v1/ConfigMap local/keycloak-theme
 v1/ConfigMap local/observability-collector-config
 v1/ConfigMap local/pipeline-runner-helsinki-streams

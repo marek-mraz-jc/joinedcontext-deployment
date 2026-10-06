@@ -34,6 +34,10 @@ keycloak:
       {{- else }}
       {}
       {{- end }}
+  # The Portal administers the clients it manages and no other (T-2725, AP-27).
+  adminPermissions:
+    enabled: true
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "keycloak") }}
   configUserCreation:
     enabled: true
     namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "keycloak") }}

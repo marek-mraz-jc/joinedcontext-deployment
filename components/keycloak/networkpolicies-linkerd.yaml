@@ -16,6 +16,10 @@ keycloak-allow-linkerd:
           componentNamespace: keycloak
         - podSelector:
             matchLabels:
+              app.kubernetes.io/name: keycloak-admin-permissions
+          componentNamespace: keycloak
+        - podSelector:
+            matchLabels:
               app.kubernetes.io/name: portal-portal
           componentNamespace: portal
         - podSelector:
@@ -81,6 +85,32 @@ keycloak-linkerd-control-plane:
 keycloak-config-cli-linkerd:
   podSelector:
     app.kubernetes.io/name: keycloak-config-cli
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: linkerd
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 8086
+        - protocol: TCP
+          port: 8090
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: keycloak-app
+          componentNamespace: keycloak
+      ports:
+        - protocol: TCP
+          port: 4143
+
+keycloak-admin-permissions-linkerd:
+  podSelector:
+    app.kubernetes.io/name: keycloak-admin-permissions
   policyTypes:
     - Egress
   egress:
