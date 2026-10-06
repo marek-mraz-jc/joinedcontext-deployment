@@ -87,6 +87,10 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": False, "framing": "DENY",
         "why": "RFC 9728 protected-resource metadata is public by the RFC; it names no secret",
     },
+    "portal-live-notify": {
+        "reach": UPSTREAM, "cacheable": False, "framing": "DENY",
+        "why": "the gateway delivers the Portal's own live-update notifications; the broker holds no token, the path's key is an HMAC only the Portal makes, and a notification only makes a view read again (API/01 §32)",
+    },
     "portal-metrics": {
         "reach": TERMINATES, "cacheable": False, "framing": "DENY",
         "why": "the scrape path answers 404 at the edge; the ServiceMonitor reaches the pod (OPS-16)",
