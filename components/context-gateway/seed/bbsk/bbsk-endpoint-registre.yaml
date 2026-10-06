@@ -22,3 +22,19 @@ spec:
       # ShareAlike: the region's licence binds the republication too (T-2783).
       license: cc-by-sa
       datastore: { representation: csv, refresh: onReconcile }
+  # What the dataset page and the DCAT-AP record carry beside the title (EP-27, T-3114): the
+  # region as publisher, its ShareAlike licence and credit, the themes and keywords a reader
+  # searches by, the region, and the registers' weekly refresh.
+  catalog:
+    publisher: { name: { sk: "Banskobystrický samosprávny kraj", en: "Banská Bystrica Self-Governing Region" }, uri: "https://www.bbsk.sk/" }
+    license: CC_BYSA_4_0
+    attribution:
+      sk: "Zdroj: Banskobystrický samosprávny kraj, https://opendata.bbsk.sk/, CC BY-SA 4.0"
+      en: "Source: Banská Bystrica Self-Governing Region, https://opendata.bbsk.sk/, CC BY-SA 4.0"
+    themes: [REGI, GOVE, HEAL, SOCI, TRAN]
+    keywords:
+      sk: ["hranice okresov", "obce", "organizácie kraja", "nemocnice", "sociálne služby", "mosty"]
+      en: ["district boundaries", "municipalities", "regional organisations", "hospitals", "social services", "bridges"]
+    spatial:
+      - SK032
+    frequency: WEEKLY
