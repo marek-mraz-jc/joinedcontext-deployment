@@ -149,7 +149,7 @@ PUBLIC = {"zilina-verejne", "zilina-uniza", "zilina-kpi"}
 
 def test_every_public_space_is_published_to_the_projects_catalogue_with_its_record():
     """T-3139, EP-27, EP-76: the three public spaces reach CKAN with a complete DCAT-AP record."""
-    endpoints = by_name("Endpoint")
+    endpoints = {n: e for n, e in by_name("Endpoint").items() if not n.startswith("app-")}
     assert {n for n, e in endpoints.items() if e["spec"]["audience"] == "public"} == PUBLIC
     for name in PUBLIC:
         endpoint = endpoints[name]
@@ -182,3 +182,39 @@ def test_the_public_reads_only_and_only_the_types_of_its_space():
         linkml = yaml.safe_load((ZILINA / f"{SPACES[space]}.linkml.yaml").read_text())
         assert types == set(linkml["classes"]) - {"Entity"}, space
         assert models[SPACES[space]]["spec"]["contextSpaceRef"] == space
+
+
+APPS = {"zilina-mapa", "zilina-ukazovatele", "zilina-zaznamy", "zilina-vyskum"}
+
+
+def test_the_four_apps_are_public_read_only_and_granted_exactly_what_they_show():
+    """T-3140, AP-04, AP-28: the apps the Portal image ships, each reading public spaces only, its
+    own through the Endpoint and Policy the Portal compiles for it and no attribute more."""
+    apps = by_name("App")
+    assert set(apps) == APPS
+    generated = {"joinedcontext.com/generated-by": "portal/app-reconciler"}
+    endpoints, policies = by_name("Endpoint"), by_name("Policy")
+    for name, app in apps.items():
+        spec = app["spec"]
+        assert app["metadata"]["annotations"]["joinedcontext.com/shipped-with"] == "portal"
+        assert (spec["visibility"], spec["lifecycle"], spec["source"]) == ("public", "published", {"path": f"./apps/{name}"})
+        needs = spec["dataNeeds"]
+        assert all(set(need["operations"]) <= {"queryEntity", "retrieveEntity"} for need in needs), name
+        assert {need["contextSpaceRef"]["name"] for need in needs} <= PUBLIC, name
+        own, *further = needs
+        assert len(further) <= 1, f"{name}: its own space and one more at most (AP-04)"
+        endpoint = endpoints[f"app-{name}"]
+        assert endpoint["metadata"]["annotations"] == generated
+        assert endpoint["spec"]["contextSpaceRef"]["name"] == own["contextSpaceRef"]["name"]
+        assert endpoint["spec"]["audience"] == "public"
+        policy = policies[f"app-{name}-1"]["spec"]
+        assert policy["assignee"] == {"kind": "role", "id": f"endpoint:zilina/app-{name}"}
+        assert policy["contextSpaceRef"]["name"] == own["contextSpaceRef"]["name"]
+        (rule,) = policy["information"]
+        assert [entity["type"] for entity in rule["entities"]] == own["types"]
+        assert rule["propertyNames"] == own["attrs"]
+        assert set(policy["operations"]) == set(own["operations"])
+        # A further space is read through its public Endpoint, whose public Policy already grants it.
+        for need in further:
+            assert need["contextSpaceRef"]["name"] in {e["spec"]["contextSpaceRef"] for e in endpoints.values()
+                                                       if e["spec"]["audience"] == "public" and "publish" in e["spec"]}

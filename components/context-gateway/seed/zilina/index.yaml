@@ -118,3 +118,15 @@ zilina-pipeline-ukazovatele.yaml: projects/zilina/pipelines/ukazovatele/pipeline
 zilina-policy-verejne-read.yaml: projects/zilina/spaces/zilina-verejne/policies/verejne-read.yaml
 zilina-policy-uniza-read.yaml: projects/zilina/spaces/zilina-uniza/policies/uniza-read.yaml
 zilina-policy-kpi-read.yaml: projects/zilina/spaces/zilina-kpi/policies/kpi-read.yaml
+zilina-app-mapa.yaml: projects/zilina/apps/zilina-mapa/app.yaml
+zilina-app-mapa-endpoint.yaml: projects/zilina/spaces/zilina-verejne/endpoints/app-zilina-mapa.yaml
+zilina-app-mapa-policy.yaml: projects/zilina/spaces/zilina-verejne/policies/app-zilina-mapa-1.yaml
+zilina-app-ukazovatele.yaml: projects/zilina/apps/zilina-ukazovatele/app.yaml
+zilina-app-ukazovatele-endpoint.yaml: projects/zilina/spaces/zilina-kpi/endpoints/app-zilina-ukazovatele.yaml
+zilina-app-ukazovatele-policy.yaml: projects/zilina/spaces/zilina-kpi/policies/app-zilina-ukazovatele-1.yaml
+zilina-app-zaznamy.yaml: projects/zilina/apps/zilina-zaznamy/app.yaml
+zilina-app-zaznamy-endpoint.yaml: projects/zilina/spaces/zilina-verejne/endpoints/app-zilina-zaznamy.yaml
+zilina-app-zaznamy-policy.yaml: projects/zilina/spaces/zilina-verejne/policies/app-zilina-zaznamy-1.yaml
+zilina-app-vyskum.yaml: projects/zilina/apps/zilina-vyskum/app.yaml
+zilina-app-vyskum-endpoint.yaml: projects/zilina/spaces/zilina-uniza/endpoints/app-zilina-vyskum.yaml
+zilina-app-vyskum-policy.yaml: projects/zilina/spaces/zilina-uniza/policies/app-zilina-vyskum-1.yaml
