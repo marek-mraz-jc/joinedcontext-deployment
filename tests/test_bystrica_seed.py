@@ -642,8 +642,10 @@ def test_only_the_sole_writer_of_a_space_expires_and_its_policy_grants_the_sweep
                         )
                         for _, policy in manifests(folder, "Policy")
                     ), f"{name}: no pipelines Policy grants {operation} on {entity_type} in {space}"
-    # Off by default: exactly the one demonstration carries it, every other pipeline deletes nothing.
-    assert expiring == ["bbsk/ukazovatele"]
+    # Off by default: exactly these carry it, every other pipeline deletes nothing. The region's
+    # indicators, and the city's air readings, whose 13 seeded test stations leave public-air that
+    # way (T-3120).
+    assert expiring == ["banskabystrica/public-air", "bbsk/ukazovatele"]
     assert one(REGION, "Pipeline", "ukazovatele")["spec"]["expiry"] == {
         "after": "21d",
         "types": ["KeyPerformanceIndicator"],

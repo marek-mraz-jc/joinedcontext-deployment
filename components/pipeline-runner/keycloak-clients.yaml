@@ -62,7 +62,7 @@ helsinki-pipelines:
 # The audiences are the four endpoints its streams write through and read back, and no others:
 # `banskabystrica-mesto` (the published rows, written by `obyvatelia` and `voda` and read by
 # `ukazovatele-mesto`), `banskabystrica-kpi` (the indicators), `banskabystrica-verejne` (the
-# city's open data, T-2781) and `public-air` (the EEA readings and the reaper's deletes, T-3120).
+# city's open data, T-2781) and `public-air` (the EEA readings and their expiry sweep, T-3120).
 # `public-air` is public, so a stream that only reads it sends no token at all.
 banskabystrica-pipelines:
   # An account of the demo seed: rendered by the development profile only (T-1720, CC-73).

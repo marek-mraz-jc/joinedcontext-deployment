@@ -23,8 +23,8 @@ spec:
   # spreadsheet; `zip` is left out, a third copy of the same readings nobody rebuilds.
   enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, mcp]
   # Published under CC BY 4.0 by the owner's decision (T-2407, 2026-09-25). Since T-3120 the
-  # space holds the real hourly EEA reading of SK0263A (pipelines public-air-pm10/pm25), and the
-  # 13 seeded test stations age out through the public-air-reaper pipeline.
+  # space holds the real hourly EEA reading of SK0263A (pipeline public-air), and the 13 seeded
+  # test stations age out through that pipeline's expiry (PL-64).
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: banskabystrica }

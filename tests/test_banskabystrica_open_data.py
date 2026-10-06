@@ -272,57 +272,65 @@ def test_the_model_classes_and_the_manifest_agree():
     assert set(model["spec"]["classes"]) == set(linkml["classes"])
 
 
-# T-3120: the same EEA streams into `ovzdusie`, the space `public-air` publishes, and the reaper
-# that ages the readings no source renews out of it.
+# T-3120: both EEA files into `ovzdusie`, the space `public-air` publishes, by one pipeline that
+# expires what it stops renewing (PL-64).
 AIR_SPACE = "ovzdusie"
 AIR_SLUG = "mluyob4nz52lok3ssk7pgn5vwt"
-AIR_STREAMS = ("public-air-pm10", "public-air-pm25")
+
+
+def public_air(document: bytes) -> list[dict]:
+    """Pipeline public-air's own steps, as the merged stream runs them, over one fetched file."""
+    steps = manifest("pipeline-public-air.yaml")["spec"]["steps"]
+    processors = [step["processor"] if "processor" in step else {"mapping": step["bloblang"]} for step in steps]
+    rendered = FIXTURES.parent / ".public-air-steps.yaml"
+    rendered.write_text(yaml.safe_dump({"pipeline": {"processors": processors}}))
+    try:
+        return open_data.run(rendered, document, AIR_SPACE, DOMAIN)
+    finally:
+        rendered.unlink()
+
+
+@requires_docker
+def test_public_air_reads_each_file_into_the_one_station_as_verejne_decodes_it():
+    model = set(yaml.safe_load((CITY / "bb-air-quality.linkml.yaml").read_text())["classes"]["AirQualityObserved"]["slots"])
+    for attribute in ("pm10", "pm25"):
+        fixture = recorded(f"eea-sk0263a-{attribute}.parquet")
+        [station] = public_air(fixture)
+        [verejne] = run(f"ovzdusie-{attribute}", fixture)
+        assert station["id"] == f"urn:ngsi-ld:AirQualityObserved:{DOMAIN}:{AIR_SPACE}:eea-SK0263A"
+        # The file's Pollutant code picks the attribute; the other one is left to its own file.
+        assert ({"pm10", "pm25"} - {attribute}).isdisjoint(station)
+        assert station[attribute] == verejne[attribute]
+        assert station["dateObserved"] == verejne["dateObserved"]
+        assert set(station) - {"id", "type", "location"} <= model, set(station) - model
+        assert not air_schema_errors(station), air_schema_errors(station)
+
+
+@requires_docker
+def test_public_air_skips_a_withdrawn_hour_as_verejne_does():
+    [station] = public_air(recorded("eea-sk0263a-pm10-withdrawn.parquet"))
+    assert station["pm10"]["observedAt"] == "2026-09-25T04:00:00Z"
 
 
 def air_schema_errors(entity: dict) -> list[str]:
     return open_data.schema_errors(CITY / "bb-air-quality.v1.schema.json", entity)
 
 
-def decoding(name: str) -> str:
-    """A mapping's processors up to the entity it writes: the part both copies of a stream share."""
-    text = (CITY / name).read_text()
-    return text[text.index("pipeline:") : text.index("root = if")]
-
-
-@requires_docker
-def test_public_air_gets_the_real_reading_with_only_its_models_attributes():
-    model = set(yaml.safe_load((CITY / "bb-air-quality.linkml.yaml").read_text())["classes"]["AirQualityObserved"]["slots"])
-    for stream, attribute in zip(AIR_STREAMS, ("pm10", "pm25")):
-        fixture = f"eea-sk0263a-{attribute}.parquet"
-        [station] = open_data.run(CITY / f"pipeline-{stream}-bento.yaml", recorded(fixture), AIR_SPACE, DOMAIN)
-        assert station["id"] == f"urn:ngsi-ld:AirQualityObserved:{DOMAIN}:{AIR_SPACE}:eea-SK0263A"
-        assert station[attribute]["observedAt"] == "2026-09-25T05:00:00Z"
-        assert set(station) - {"id", "type", "location"} <= model, set(station) - model
-        assert not air_schema_errors(station), air_schema_errors(station)
-
-
-def test_the_public_air_streams_decode_exactly_as_the_verejne_ones():
-    for stream, attribute in zip(AIR_STREAMS, ("pm10", "pm25")):
-        assert decoding(f"pipeline-{stream}-bento.yaml") == decoding(f"pipeline-ovzdusie-{attribute}-bento.yaml")
-
-
-def test_the_public_air_streams_are_seeded_wired_and_granted():
+def test_public_air_is_the_spaces_one_writer_and_expires_what_it_stops_renewing():
     index = yaml.safe_load((CITY / "index.yaml").read_text())
-    target = f"urn:ngsi-ld:Endpoint:{DOMAIN}:{AIR_SPACE}:public-air"
-    schedules = {manifest(f"pipeline-{name}.yaml")["spec"]["schedule"] for name in (*FEEDS, *AIR_STREAMS, "public-air-reaper")}
-    assert len(schedules) == len(FEEDS) + len(AIR_STREAMS) + 1, "two streams start in the same minute"
-    for stream, attribute in zip(AIR_STREAMS, ("pm10", "pm25")):
-        spec = manifest(f"pipeline-{stream}.yaml")["spec"]
-        assert spec["source"]["dataSourceRef"]["name"] == f"eea-sk0263a-{attribute}"
-        assert spec["targetEndpoint"] == target and spec["period"] == "1h"
-        assert spec["output"] == {"type": "AirQualityObserved", "mode": "upsert"}
-    reaper = manifest("pipeline-public-air-reaper.yaml")["spec"]
-    assert reaper["targetEndpoint"] == target and "output" not in reaper
-    assert AIR_SLUG in manifest("datasource-public-air-live.yaml")["spec"]["http"]["url"]
-    for seeded in (
-        "policy-ovzdusie-pipelines-write.yaml", "datasource-public-air-live.yaml",
-        *(f"pipeline-{name}{part}.yaml" for name in (*AIR_STREAMS, "public-air-reaper") for part in ("", "-bento")),
-    ):
+    pipeline = manifest("pipeline-public-air.yaml")
+    spec = pipeline["spec"]
+    assert pipeline["apiVersion"] == "joinedcontext.com/v1alpha2"
+    assert [s["dataSourceRef"]["name"] for s in spec["sources"]] == ["eea-sk0263a-pm10", "eea-sk0263a-pm25"]
+    assert spec["outputs"] == [{
+        "targetEndpoint": f"urn:ngsi-ld:Endpoint:{DOMAIN}:{AIR_SPACE}:public-air",
+        "type": "AirQualityObserved", "mode": "upsert",
+    }]
+    assert spec["expiry"] == {"after": "7d", "types": ["AirQualityObserved"]}
+    assert spec["period"] == "1h"
+    schedules = [manifest(f"pipeline-{name}.yaml")["spec"]["schedule"] for name in (*FEEDS, "public-air")]
+    assert len(set(schedules)) == len(schedules), "two streams start in the same minute"
+    for seeded in ("policy-ovzdusie-pipelines-write.yaml", "pipeline-public-air.yaml"):
         assert seeded in index, seeded
 
     grant = manifest("policy-ovzdusie-pipelines-write.yaml")["spec"]
@@ -334,7 +342,7 @@ def test_the_public_air_streams_are_seeded_wired_and_granted():
     clients = yaml.safe_load((ROOT / "components/pipeline-runner/keycloak-clients.yaml").read_text())
     audiences = {m["config"]["included.custom.audience"] for m in clients["banskabystrica-pipelines"]["rawValues"]["protocolMappers"]}
     assert AIR_SLUG in audiences
-    # No person may delete there: only the pipelines' account holds deleteBatch on the space.
+    # No person may delete there: the space's other grants name a role and a workload, never a user.
     for name in ("policy-public-read.yaml", "policy-conformance-write.yaml"):
         assert manifest(name)["spec"]["assignee"]["kind"] != "user", name
 
@@ -345,38 +353,3 @@ def test_the_dataset_says_how_often_it_changes_and_where_it_comes_from():
     assert endpoint["spec"]["catalog"]["frequency"] == "HOURLY"
     for text in ("SK0263A", "European Environment Agency", "CC BY 4.0"):
         assert text in endpoint["metadata"]["description"]["en"], text
-
-
-def reaped(entities: list[dict]) -> list[str]:
-    """The ids the reaper would delete: its processors up to the delete call, over `entities`."""
-    bento = yaml.safe_load((CITY / "pipeline-public-air-reaper-bento.yaml").read_text())
-    processors = bento["pipeline"]["processors"]
-    cut = next(i for i, p in enumerate(processors) if "http" in p)
-    trimmed = Path(FIXTURES.parent / f".reaper-{id(entities)}.yaml")
-    trimmed.write_text(yaml.safe_dump({"pipeline": {"processors": processors[:cut]}}))
-    try:
-        return open_data.run(trimmed, json.dumps(entities).encode(), AIR_SPACE, DOMAIN)
-    finally:
-        trimmed.unlink()
-
-
-@requires_docker
-def test_the_reaper_deletes_what_no_source_renewed_for_seven_days_and_nothing_else():
-    from datetime import datetime, timedelta, timezone
-
-    def reading(local: str, observed: datetime | None) -> dict:
-        entity = {"id": f"urn:ngsi-ld:AirQualityObserved:hel.fi:{AIR_SPACE}:{local}", "type": "AirQualityObserved"}
-        if observed is not None:
-            entity["dateObserved"] = {"type": "Property", "value": observed.strftime("%Y-%m-%dT%H:%M:%SZ")}
-        return entity
-
-    now = datetime.now(timezone.utc)
-    entities = [
-        reading("station-1", datetime(2026, 9, 7, 5, tzinfo=timezone.utc)),
-        reading("eea-SK0263A", now - timedelta(hours=2)),
-        reading("six-days", now - timedelta(days=6)),
-        reading("no-date", None),
-    ]
-    assert sorted(reaped(entities)) == sorted([entities[0]["id"], entities[3]["id"]])
-    assert reaped([entities[1], entities[2]]) == []
-    assert reaped([]) == []
