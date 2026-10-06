@@ -48,6 +48,7 @@ def test_the_worker_rendered_with_its_database_checkout_and_network(docs):
     )
     assert env["JC_ASSISTANT_REPO_DIR"] == "/repo/current"
     assert env["JC_ASSISTANT_ORG_DOMAIN"]
+    assert env["JC_ASSISTANT_EMBED_THREADS"] == "1"
     password = next(e for e in worker["env"] if e["name"] == "PGPASSWORD")
     assert password["valueFrom"]["secretKeyRef"] == {"name": "db-assistant", "key": "password"}
     assert worker["securityContext"]["readOnlyRootFilesystem"] is True
@@ -85,9 +86,13 @@ def test_the_worker_reaches_its_database_the_forge_dns_and_public_addresses_only
     assert block["cidr"] == "0.0.0.0/0"
     assert set(block["except"]) == PRIVATE
     assert sorted(p["port"] for p in rule["ports"]) == [80, 443]
+    edge = [r for r in policy["spec"]["egress"] if "matchExpressions" in r["to"][0].get("podSelector", {})]
+    (ingress,) = edge
+    assert ingress["to"][0]["podSelector"]["matchExpressions"][0]["values"] == ["traefik", "ingress-nginx"]
+    assert sorted(p["port"] for p in ingress["ports"]) == [443, 8443]
     peers = sorted(
         (tuple(sorted(r["to"][0]["podSelector"]["matchLabels"].items())), tuple(p["port"] for p in r["ports"]))
-        for r in policy["spec"]["egress"] if "podSelector" in r["to"][0]
+        for r in policy["spec"]["egress"] if "matchLabels" in r["to"][0].get("podSelector", {})
     )
     assert peers == sorted([
         ((("cnpg.io/cluster", "postgres-cluster"),), (5432,)),

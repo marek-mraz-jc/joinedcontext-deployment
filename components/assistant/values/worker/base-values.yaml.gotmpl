@@ -54,6 +54,9 @@ env:
   JC_ASSISTANT_DATABASE_URL: "postgresql://assistant:$(PGPASSWORD)@postgres-cluster-rw.{{ .Values.postgres.cluster.namespace }}.svc.cluster.local:5432/assistant"
   JC_ASSISTANT_ORG_DOMAIN: {{ $global.orgDomain | quote }}
   JC_ASSISTANT_BIND: "0.0.0.0:8080"
+  # The embedder's ONNX Runtime threads, as many as the CPU limit (T-3053). The model and the
+  # runtime are in the image (JC_ASSISTANT_MODEL_DIR, ORT_DYLIB_PATH).
+  JC_ASSISTANT_EMBED_THREADS: "1"
   JC_ASSISTANT_REPO_DIR: /repo/current
   # One level inside the volume, as the gateway's: the assembly renders into a sibling and
   # swaps it in.

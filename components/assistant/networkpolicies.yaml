@@ -44,6 +44,26 @@ assistant-worker:
           port: 80
         - protocol: TCP
           port: 443
+    # The platform's own CKAN (a `ckan` source, T-3054) is the cluster's public host, which the
+    # node rewrites to the ingress controller's pod before this rule is evaluated, on the
+    # controller's container port: 8443 for Traefik, 443 for ingress-nginx (the Portal's rule
+    # explains the same thing). Through it the worker sees what the internet sees, no more.
+    - to:
+        - namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values: [traefik, kube-system, ingress-nginx]
+          podSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values: [traefik, ingress-nginx]
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 8443
     - to:
         - namespaceSelector:
             matchLabels:

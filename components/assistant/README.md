@@ -26,8 +26,11 @@ gateway's, which predates the binary; pin a digest whose build contains
 - **Forge**: git-sync and, in layout 2, the checkouts sidecar, both with the read-only
   `gitea-token-gateway`; the forge bootstrap mints that token into this namespace and
   restarts `jc-assistant` when it mints it again.
-- **Network**: no ingress; egress to PostgreSQL, the forge, CoreDNS, and TCP 80/443 on every
-  public address. Every private range is excepted, so a source URL never reaches the cluster.
+- **Network**: no ingress; egress to PostgreSQL, the forge, CoreDNS, TCP 80/443 on every
+  public address and the ingress controller (the platform's own CKAN is the cluster's public
+  host, T-3054). Every private range is excepted, so a source URL never reaches the cluster.
+- **Embeddings**: the model and ONNX Runtime are in the image; one ONNX thread, as many as the
+  CPU limit (T-3053).
 
 ## Sizing
 
