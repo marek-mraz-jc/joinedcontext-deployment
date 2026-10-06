@@ -71,6 +71,10 @@ env:
   JC_ASSISTANT_CLIENT_ID: jc-assistant
   JC_ASSISTANT_CLIENT_SECRET_FILE: /var/run/keycloak/client-secret
   JC_ASSISTANT_LLM: {{ .Values.assistant.worker.llm | quote }}
+{{- if has "functions" .Values.components }}
+  # A deployment with `sandbox: true` filters a long tool result with a script there (AG-112).
+  JC_ASSISTANT_FUNCTIONS_URL: "http://jc-functions.{{ .Values.functions.runtime.namespace }}.svc.cluster.local:8080"
+{{- end }}
   # The embedder's ONNX Runtime threads, as many as the CPU limit (T-3053). The model and the
   # runtime are in the image (JC_ASSISTANT_MODEL_DIR, ORT_DYLIB_PATH).
   JC_ASSISTANT_EMBED_THREADS: "1"

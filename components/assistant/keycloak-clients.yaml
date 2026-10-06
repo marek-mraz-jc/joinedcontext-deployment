@@ -2,7 +2,9 @@
 # jc-assistant's own identity (ADR-N-040 §3.4, AG-109): a confidential client with a service
 # account, client_credentials only. Its token buys model calls from jc-agent-proxy for an
 # AssistantDeployment, so it names the proxy's client in its audience; the proxy checks that it
-# is this client's service account and nothing else. The proxy's client is
+# is this client's service account and nothing else. `jc-functions` in the audience as well: a
+# deployment with `sandbox: true` runs the model's scripts there, with no network (AG-112). The
+# proxy's client is
 # `{agent-runner.proxy.project}-agent-proxy`, `helsinki` on every environment so far.
 jc-assistant:
   name: Knowledge assistant
@@ -24,5 +26,13 @@ jc-assistant:
         consentRequired: false
         config:
           included.custom.audience: helsinki-agent-proxy
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: functions-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: jc-functions
           access.token.claim: 'true'
           id.token.claim: 'false'

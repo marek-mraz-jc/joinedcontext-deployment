@@ -44,6 +44,10 @@ assistant-worker:
             matchLabels:
               app.kubernetes.io/instance: keycloak-app
           componentNamespace: keycloak
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: functions-runtime
+          componentNamespace: functions
       ports:
         - protocol: TCP
           port: 8080
@@ -190,6 +194,22 @@ keycloak-from-assistant:
   componentNamespace: keycloak
   podSelector:
     app.kubernetes.io/instance: keycloak-app
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: assistant-worker
+          componentNamespace: assistant
+      ports:
+        - protocol: TCP
+          port: 8080
+
+functions-from-assistant:
+  componentNamespace: functions
+  podSelector:
+    app.kubernetes.io/name: functions-runtime
   policyTypes:
     - Ingress
   ingress:

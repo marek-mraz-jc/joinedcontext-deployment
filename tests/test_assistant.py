@@ -111,6 +111,7 @@ def test_the_worker_reaches_its_database_the_forge_dns_and_public_addresses_only
         ((("app.kubernetes.io/name", "agent-runner-proxy"),), (8080,)),
         ((("app.kubernetes.io/name", "context-gateway-gateway"),), (8080,)),
         ((("app.kubernetes.io/instance", "keycloak-app"),), (8080,)),
+        ((("app.kubernetes.io/name", "functions-runtime"),), (8080,)),
         ((("k8s-app", "kube-dns"),), (53, 53)),
     ])
     (inbound,) = policy["spec"]["ingress"]
@@ -122,6 +123,7 @@ def test_the_worker_reaches_its_database_the_forge_dns_and_public_addresses_only
         ("agent-proxy-from-assistant", 8080),
         ("gateway-from-assistant", 8080),
         ("keycloak-from-assistant", 8080),
+        ("functions-from-assistant", 8080),
     ):
         (inbound,) = one(docs, "NetworkPolicy", name)["spec"]["ingress"]
         assert [f["podSelector"]["matchLabels"] for f in inbound["from"]] == [{"app.kubernetes.io/name": "assistant-worker"}]
@@ -138,7 +140,14 @@ def test_the_chat_is_published_on_its_own_host_and_its_client_names_the_proxy(do
     client = next(c for c in realm["clients"] if c["clientId"] == "jc-assistant")
     assert client["serviceAccountsEnabled"] and not client["standardFlowEnabled"] and not client["publicClient"]
     audiences = {m["config"]["included.custom.audience"] for m in client["protocolMappers"] if m["protocolMapper"] == "oidc-audience-mapper"}
-    assert audiences == {"helsinki-agent-proxy"}
+    assert audiences == {"helsinki-agent-proxy", "jc-functions"}
+    # AG-112: the functions runtime admits the assistant's client, and the assistant knows where it is.
+    runtime = one(docs, "Deployment", "jc-functions")["spec"]["template"]["spec"]["containers"][0]
+    runtime_env = {e["name"]: e.get("value") for e in runtime.get("env", [])}
+    assert runtime_env["JC_FUNCTIONS_ASSISTANT_CALLER"] == "jc-assistant"
+    worker = one(docs, "Deployment", "jc-assistant")["spec"]["template"]["spec"]["containers"]
+    worker_env = {e["name"]: e.get("value") for c in worker for e in c.get("env", [])}
+    assert worker_env["JC_ASSISTANT_FUNCTIONS_URL"] == "http://jc-functions.dev.svc.cluster.local:8080"
     proxy = one(docs, "Deployment", "agent-proxy")["spec"]["template"]["spec"]["containers"][0]
     proxy_env = {e["name"]: e.get("value") for e in proxy.get("env", [])}
     assert proxy_env["JC_OIDC_CLIENT_ID"] == "helsinki-agent-proxy"

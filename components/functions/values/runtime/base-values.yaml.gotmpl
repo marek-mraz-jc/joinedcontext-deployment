@@ -52,6 +52,10 @@ env:
   # The signing keys over the in-cluster Service, as the gateway reads them.
   JC_OIDC_JWKS_URL: "http://keycloak-app-keycloakx-http.{{ .Values.keycloak.app.namespace }}.svc.cluster.local:80{{ .Values.keycloak.app.pathPrefix | trimSuffix "/" }}/realms/{{ $global.instanceSlug }}/protocol/openid-connect/certs"
   JC_FUNCTIONS_CALLER: portal-api
+{{- if has "assistant" .Values.components }}
+  # The knowledge assistant's scripts, with no network and nothing else (AG-112, T-3056).
+  JC_FUNCTIONS_ASSISTANT_CALLER: jc-assistant
+{{- end }}
   JC_FUNCTIONS_AUDIENCE: jc-functions
   JC_GATEWAY_URL: "http://context-gateway.{{ index .Values "context-gateway" "gateway" "namespace" }}.svc.cluster.local:8080"
 
