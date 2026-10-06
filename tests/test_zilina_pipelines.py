@@ -160,34 +160,41 @@ def test_an_empty_station_file_fails_the_run():
 
 
 DREPO = SEED / "zilina-pipeline-drepo-bento.yaml"
-DREPO_HOST = "https://dspace.uniza.sk"
 
 
-class Library(http.server.BaseHTTPRequestHandler):
-    """DREPO's search API over the recorded pages: the first three, cut to the fields the mapping
-    reads and with the page count set to three (the real library has fourteen)."""
+class Recorded(http.server.BaseHTTPRequestHandler):
+    """A feed's host answering from the recordings: DREPO's search API with its first three pages,
+    cut to the fields the mapping reads and the page count set to three (the real library has
+    fourteen), and the address register's file for Žilina, cut to the buildings the monuments name
+    and forty others."""
 
     def do_GET(self):
-        query = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
-        page = FIXTURES / f"drepo-page{query.get('page', ['0'])[0]}.json"
-        if not page.is_file() or query.get("size") != ["100"]:
+        url = urllib.parse.urlsplit(self.path)
+        query = urllib.parse.parse_qs(url.query)
+        if url.path.endswith("/discover/search/objects") and query.get("size") == ["100"]:
+            body = FIXTURES / f"drepo-page{query.get('page', ['0'])[0]}.json"
+        elif url.path == "/opendata/dataset/address_by_lau2_SK031B517402.geojson":
+            body = FIXTURES / "mvsr-adresy-zilina.geojson"
+        else:
+            body = None
+        if body is None or not body.is_file():
             self.send_error(404)
             return
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.end_headers()
-        self.wfile.write(page.read_bytes())
+        self.wfile.write(body.read_bytes())
 
     def log_message(self, *_):
         pass
 
 
-def drepo(document: bytes) -> subprocess.CompletedProcess:
-    """The drepo mapping over `document`, its page requests answered by `Library` on the host."""
-    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Library)
+def offline(mapping: Path, host: str, space: str, document: bytes) -> subprocess.CompletedProcess:
+    """`mapping` over `document`, its requests to `host` answered by `Recorded` on this machine."""
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Recorded)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     try:
-        text = DREPO.read_text().replace(DREPO_HOST, f"http://127.0.0.1:{server.server_port}")
+        text = mapping.read_text().replace(host, f"http://127.0.0.1:{server.server_port}")
         config = {
             "input": {"stdin": {"scanner": {"to_the_end": {}}}},
             "pipeline": yaml.safe_load(text)["pipeline"],
@@ -198,12 +205,16 @@ def drepo(document: bytes) -> subprocess.CompletedProcess:
         }
         return subprocess.run(
             ["docker", "run", "--rm", "-i", "--network", "host", "-e", f"JC_ORG_DOMAIN={DOMAIN}",
-             "-e", "JC_SPACE=zilina-uniza", "-e", f"CONFIG={json.dumps(config)}", "--entrypoint", "sh",
+             "-e", f"JC_SPACE={space}", "-e", f"CONFIG={json.dumps(config)}", "--entrypoint", "sh",
              BENTO, "-c", 'printf "%s" "$CONFIG" > /tmp/c.json && exec /bento -c /tmp/c.json'],
-            input=document, capture_output=True, timeout=120,
+            input=document, capture_output=True, timeout=180,
         )
     finally:
         server.shutdown()
+
+
+def drepo(document: bytes) -> subprocess.CompletedProcess:
+    return offline(DREPO, "https://dspace.uniza.sk", "zilina-uniza", document)
 
 
 def recorded_items() -> list[dict]:
@@ -345,3 +356,61 @@ def test_an_expired_timetable_and_a_zip_without_the_city_fail_the_run():
         archive.writestr("stops.txt", "stop_id,stop_name,stop_lat,stop_lon\n1,Košice,48.7,21.2\n")
     elsewhere = vlaky(buffer.getvalue(), "2026-10-07")
     assert b"the timetable names none of the city's stations" in elsewhere.stdout + elsewhere.stderr
+
+
+PAMIATKY = SEED / "zilina-pipeline-pamiatky-bento.yaml"
+REGISTER = FIXTURES / "mksr-pamiatky-zsk.csv"
+
+
+def pamiatky(document: bytes) -> subprocess.CompletedProcess:
+    return offline(PAMIATKY, "https://rageo.minv.sk", "zilina-verejne", document)
+
+
+@requires_docker
+def test_every_object_of_a_city_monument_is_one_point_placed_at_its_building():
+    result = pamiatky(REGISTER.read_bytes())
+    assert result.returncode == 0, result.stderr.decode()
+    points = json.loads(result.stdout)
+    rows = [r for r in csv.DictReader(io.StringIO(REGISTER.read_text(encoding="utf-8"))) if r["Obec"] == "Žilina"]
+    assert len(points) == len(rows) == 104, "one entity per object of the city, none from elsewhere"
+    assert len({p["id"] for p in points}) == len(points)
+    by_number = {p["monumentNumber"]["value"]: p for p in points}
+    schema = SEED / "zilina-verejne.v1.schema.json"
+    for point in points:
+        assert not open_data.schema_errors(schema, point), (point["id"], open_data.schema_errors(schema, point))
+    # Of the 85 objects with a súpisné číslo, 83 have their building in the register of addresses;
+    # the other two name a number the register does not hold in that cadastral area.
+    placed = [p for p in points if "location" in p]
+    assert len(placed) == 83
+    # A corner house is placed at the entrance the register names (Mariánske nám. 23, not Jezuitská 4).
+    corner = next(p for p in placed if p["address"]["value"].startswith("Mariánske námestie 158/"))
+    assert corner["address"]["value"] == "Mariánske námestie 158/23, Žilina"
+    # A column in a square has no address and so no position; it is listed all the same.
+    column = by_number["1317/2"]
+    assert (column["monumentKind"]["value"], "location" in column) == ("SÚSOŠIE", False)
+    assert column["name"]["languageMap"] == {"sk": "Trojičný stĺp"}
+
+
+@requires_docker
+def test_no_parcel_author_or_owner_leaves_the_register():
+    result = pamiatky(REGISTER.read_bytes())
+    points = json.loads(result.stdout)
+    assert all(not {"author", "parcel", "parcelNumber", "owner"} & set(p) for p in points)
+    authors = {r["Autor"] for r in csv.DictReader(io.StringIO(REGISTER.read_text(encoding="utf-8")))
+               if r["Obec"] == "Žilina" and len(r["Autor"]) > 3}
+    assert authors, "the recording names authors, so this check checks something"
+    text = result.stdout.decode()
+    assert not [a for a in authors if a in text]
+    # Ownership is one of the register's categories ("Vlastníctvo cirkvi a cirk. organizácií"),
+    # a dozen across the city, never a name.
+    forms = {p["ownershipForm"]["value"] for p in points if "ownershipForm" in p}
+    assert 3 <= len(forms) <= 15, forms
+
+
+@requires_docker
+def test_a_register_without_the_city_and_missing_addresses_fail_the_run():
+    header = REGISTER.read_text(encoding="utf-8").splitlines()[0]
+    elsewhere = pamiatky((header + "\r\n" + ",".join(["1", "Martin", "Martin"] + [""] * 16) + "\r\n").encode())
+    assert b"the register holds no monument of the city" in elsewhere.stdout + elsewhere.stderr
+    broken = offline(PAMIATKY, "https://rageo.minv.sk/opendata/dataset/address_by_lau2_", "zilina-verejne", REGISTER.read_bytes())
+    assert b"the register of addresses did not come" in broken.stdout + broken.stderr

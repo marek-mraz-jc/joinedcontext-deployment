@@ -111,3 +111,6 @@ zilina-pipeline-drepo-bento.yaml: projects/zilina/pipelines/drepo/bento.yaml
 zilina-datasource-zsr-gtfs.yaml: projects/zilina/datasources/zsr-gtfs.yaml
 zilina-pipeline-vlaky.yaml: projects/zilina/pipelines/vlaky/pipeline.yaml
 zilina-pipeline-vlaky-bento.yaml: projects/zilina/pipelines/vlaky/bento.yaml
+zilina-datasource-pamiatky.yaml: projects/zilina/datasources/mksr-pamiatky-zsk.yaml
+zilina-pipeline-pamiatky.yaml: projects/zilina/pipelines/pamiatky/pipeline.yaml
+zilina-pipeline-pamiatky-bento.yaml: projects/zilina/pipelines/pamiatky/bento.yaml
