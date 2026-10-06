@@ -5,6 +5,9 @@ set dotenv-load
 # MINIKUBE_IP := $(shell minikube ip)
 marker := 'LOCAL_JOINEDCONTEXT_HOSTS'
 hosts := 'idm.joinedcontext.test joinedcontext.test'
+# How many helm processes one helmfile run starts at once (T-3095). Unbounded (helmfile's 0) the
+# hourly dev-apply ran dozens beside the agents' builds and put the server at load 335 on 8 CPUs.
+helmfile_concurrency := env('JC_HELMFILE_CONCURRENCY', '4')
 
 default:
 	@just --list
@@ -16,13 +19,13 @@ validate:
 
 sync-component environment='local' component='':
 	echo "Syncing component: {{component}} in environment: {{environment}}"
-	helmfile -f ./deployment/helmfile.yaml sync -e {{environment}} --selector component={{component}}
+	helmfile -f ./deployment/helmfile.yaml sync --concurrency {{helmfile_concurrency}} -e {{environment}} --selector component={{component}}
 
 # Destroy a specific component in an environment
 [group('deployment')]
 destroy-component environment='local' component='':
 	echo "Destroying component: {{component}} in environment: {{environment}}"
-	helmfile -f ./deployment/helmfile.yaml destroy -e {{environment}} --selector component={{component}}
+	helmfile -f ./deployment/helmfile.yaml destroy --concurrency {{helmfile_concurrency}} -e {{environment}} --selector component={{component}}
 
 # Get Keycloak Realm
 [group('helpers')]
@@ -37,24 +40,24 @@ _get-domain profile='local':
 # Get Keycloak namespace
 [group('helpers')]
 _get-keycloak-namespace:
-	@helmfile template -f deployment/helmfile.yaml -e local --selector component=keycloak --skip-deps -q | yq 'select(.kind == "StatefulSet") | .metadata.namespace'
+	@helmfile template --concurrency {{helmfile_concurrency}} -f deployment/helmfile.yaml -e local --selector component=keycloak --skip-deps -q | yq 'select(.kind == "StatefulSet") | .metadata.namespace'
 
 # Get APISix namespace
 [group('helpers')]
 _get-apisix-namespace:
-	@helmfile template -f deployment/helmfile.yaml -e local --selector component=apisix --skip-deps -q | yq 'select(.kind == "Deployment" ) | .metadata.namespace'
+	@helmfile template --concurrency {{helmfile_concurrency}} -f deployment/helmfile.yaml -e local --selector component=apisix --skip-deps -q | yq 'select(.kind == "Deployment" ) | .metadata.namespace'
 
 # Get Postgres namespace
 [group('helpers')]
 _get-postgres-namespace:
-	@helmfile template -f deployment/helmfile.yaml -e local --selector component=postgres --skip-deps -q | yq 'select(.kind == "Deployment") | .metadata.namespace'
+	@helmfile template --concurrency {{helmfile_concurrency}} -f deployment/helmfile.yaml -e local --selector component=postgres --skip-deps -q | yq 'select(.kind == "Deployment") | .metadata.namespace'
 
 # Deploy the shared cluster operators (CloudNativePG, Strimzi) ONCE per cluster.
 # Run this before deploying any instances; re-running is idempotent.
 [group('deployment')]
 deploy-operators environment='local':
 	echo "Deploying shared cluster operators in environment: {{environment}}"
-	helmfile -f ./deployment/helmfile-operators.yaml sync -e {{environment}}
+	helmfile -f ./deployment/helmfile-operators.yaml sync --concurrency {{helmfile_concurrency}} -e {{environment}}
 
 # Deploy a single instance (everything except the shared operators). The shared operators
 # must already be running (see deploy-operators). Optionally override the instance slug
@@ -63,19 +66,19 @@ deploy-operators environment='local':
 deploy-instance environment='local' slug='':
 	if [ -n "{{slug}}" ]; then \
 		echo "Deploying instance '{{slug}}' in environment: {{environment}}"; \
-		helmfile -f ./deployment/helmfile-instance.yaml.gotmpl sync -e {{environment}} --state-values-set-string instanceSlug={{slug}}; \
+		helmfile -f ./deployment/helmfile-instance.yaml.gotmpl sync --concurrency {{helmfile_concurrency}} -e {{environment}} --state-values-set-string instanceSlug={{slug}}; \
 	else \
 		echo "Deploying instance in environment: {{environment}}"; \
-		helmfile -f ./deployment/helmfile-instance.yaml.gotmpl sync -e {{environment}}; \
+		helmfile -f ./deployment/helmfile-instance.yaml.gotmpl sync --concurrency {{helmfile_concurrency}} -e {{environment}}; \
 	fi
 
 # Destroy a single instance (everything except the shared operators)
 [group('deployment')]
 destroy-instance environment='local' slug='':
 	if [ -n "{{slug}}" ]; then \
-		helmfile -f ./deployment/helmfile-instance.yaml.gotmpl destroy -e {{environment}} --state-values-set-string instanceSlug={{slug}}; \
+		helmfile -f ./deployment/helmfile-instance.yaml.gotmpl destroy --concurrency {{helmfile_concurrency}} -e {{environment}} --state-values-set-string instanceSlug={{slug}}; \
 	else \
-		helmfile -f ./deployment/helmfile-instance.yaml.gotmpl destroy -e {{environment}}; \
+		helmfile -f ./deployment/helmfile-instance.yaml.gotmpl destroy --concurrency {{helmfile_concurrency}} -e {{environment}}; \
 	fi
 
 # Deploy minikube
@@ -112,10 +115,10 @@ deploy-k3d:
 sync environment='local' component='all':
 	if [ "{{component}}" = "all" ]; then \
 		echo "Syncing environment: {{environment}}"; \
-		helmfile -f ./deployment/helmfile.yaml sync -e {{environment}}; \
+		helmfile -f ./deployment/helmfile.yaml sync --concurrency {{helmfile_concurrency}} -e {{environment}}; \
 	else \
 		echo "Syncing component: {{component}} in environment: {{environment}}"; \
-		helmfile -f ./deployment/helmfile.yaml sync -e {{environment}} --selector component={{component}}; \
+		helmfile -f ./deployment/helmfile.yaml sync --concurrency {{helmfile_concurrency}} -e {{environment}} --selector component={{component}}; \
 	fi
 
 # Deploy linkerd (idempotent — skips if the control plane is already installed)
@@ -257,29 +260,29 @@ vendor-policies:
 template environment='local' component='all':
 	if [ "{{component}}" = "all" ]; then \
 		echo "Rendering helmfile for environment: {{environment}}"; \
-		helmfile -f ./deployment/helmfile.yaml template -e {{environment}}; \
+		helmfile -f ./deployment/helmfile.yaml template --concurrency {{helmfile_concurrency}} -e {{environment}}; \
 	else \
 		echo "Rendering helmfile for component: {{component}} in environment: {{environment}}"; \
-		helmfile -f ./deployment/helmfile.yaml template -e {{environment}} --selector component={{component}}; \
+		helmfile -f ./deployment/helmfile.yaml template --concurrency {{helmfile_concurrency}} -e {{environment}} --selector component={{component}}; \
 	fi
 
 # Render helmfile for a specific component in an environment
 [group('helpers')]
 template-component environment='local' component='':
-	helmfile -f ./deployment/helmfile.yaml template -e {{environment}} --selector component={{component}}
+	helmfile -f ./deployment/helmfile.yaml template --concurrency {{helmfile_concurrency}} -e {{environment}} --selector component={{component}}
 
 # Render the shared operator layer (deploy-operators)
 [group('helpers')]
 template-operators environment='local':
-	helmfile -f ./deployment/helmfile-operators.yaml template -e {{environment}}
+	helmfile -f ./deployment/helmfile-operators.yaml template --concurrency {{helmfile_concurrency}} -e {{environment}}
 
 # Render a single instance layer (deploy-instance); optional ad-hoc slug override
 [group('helpers')]
 template-instance environment='local' slug='':
 	if [ -n "{{slug}}" ]; then \
-		helmfile -f ./deployment/helmfile-instance.yaml.gotmpl template -e {{environment}} --state-values-set-string instanceSlug={{slug}}; \
+		helmfile -f ./deployment/helmfile-instance.yaml.gotmpl template --concurrency {{helmfile_concurrency}} -e {{environment}} --state-values-set-string instanceSlug={{slug}}; \
 	else \
-		helmfile -f ./deployment/helmfile-instance.yaml.gotmpl template -e {{environment}}; \
+		helmfile -f ./deployment/helmfile-instance.yaml.gotmpl template --concurrency {{helmfile_concurrency}} -e {{environment}}; \
 	fi
 
 deploy cri='k3d' namespace='dev' profile='local':
@@ -301,7 +304,7 @@ deploy cri='k3d' namespace='dev' profile='local':
 	fi
 	@( timeout 30 bash -c 'until kubectl get ns {{namespace}} >/dev/null 2>&1; do sleep 1; done'; \
 	KEYCLOAK_NS=$( \
-		helmfile template \
+		helmfile template --concurrency {{helmfile_concurrency}} \
 		-f deployment/helmfile.yaml \
 		-e {{profile}} \
 		--selector component=keycloak -q | \
@@ -313,7 +316,7 @@ deploy cri='k3d' namespace='dev' profile='local':
 		--from-literal=user='noreply@example.com' \
 		--from-literal=password='YOUR_SMTP_PASSWORD' \
 		-n ${KEYCLOAK_NS} ) &
-	@helmfile -f deployment/helmfile.yaml sync -e {{profile}}
+	@helmfile -f deployment/helmfile.yaml sync --concurrency {{helmfile_concurrency}} -e {{profile}}
 
 # Remove local cluster
 [group('deployment')]
@@ -451,7 +454,7 @@ dev-apply:
 	set -euo pipefail
 	just _dev-guard
 	just _dev-assemble
-	helmfile -f deployment/helmfile.yaml -e dev sync
+	helmfile -f deployment/helmfile.yaml -e dev sync --concurrency {{helmfile_concurrency}}
 	./scripts/wait-rollouts.sh dev
 
 # Verify the dev cluster (see scripts/smoke.sh)
@@ -509,7 +512,7 @@ dev-destroy:
 	set -euo pipefail
 	just _dev-guard
 	just _dev-assemble
-	helmfile -f deployment/helmfile.yaml -e dev destroy --skip-deps || true
+	helmfile -f deployment/helmfile.yaml -e dev destroy --concurrency {{helmfile_concurrency}} --skip-deps || true
 	for ns in $(kubectl get ns -o name | sed 's|namespace/||' | grep -E '^(dev|dev-|jc-operators$)'); do
 		kubectl delete pvc --all -n "$ns" --ignore-not-found --timeout=120s || true
 		kubectl delete namespace "$ns" --ignore-not-found --timeout=300s || true
