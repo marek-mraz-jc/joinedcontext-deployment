@@ -43,6 +43,19 @@ RUN pip install --no-cache-dir --upgrade \
         'setuptools>=78.1.1' \
         'msgpack>=1.2.1'
 
+# The table view showed only `_id`, `entity_id` and `type` (T-3047): every other DataStore column
+# of a published endpoint is named after its NGSI-LD path (`dataProvider.value`), and CKAN 2.11's
+# datatables_view hands DataTables that name as the column's `data`, which DataTables reads as
+# nested-object notation (`row.dataProvider.value`) and finds empty. A function accessor reads the
+# key as it is. Search and sort are unaffected: the ajax view reads each column's `name`, never its
+# `data`. The grep before and after fails the build when an upgrade moves the line, so a new base
+# image never ships the empty columns silently.
+RUN f=/srv/app/src/ckan/ckanext/datatablesview/assets/datatablesview.js \
+    && grep -q "const colDict = { name: colDefn.id, data: colDefn.id, contentPadding: 'MM' }" "$f" \
+    && sed -i "s/const colDict = { name: colDefn.id, data: colDefn.id, contentPadding: 'MM' }/const colDict = { name: colDefn.id, data: (row) => row[colDefn.id], contentPadding: 'MM' }/" "$f" \
+    && grep -q "data: (row) => row\[colDefn.id\], contentPadding" "$f" \
+    && ! grep -q "data: colDefn.id" "$f"
+
 # The kernel headers the base image needs to build wheels, which a running CKAN does not: they
 # are 1306 of the 1321 findings a scan of the stock image reports, and they are reported because
 # the code is genuinely there. Removing it is the honest fix; `ignore-unfixed` would not have
