@@ -234,6 +234,12 @@ def test_the_assistant_alerts_read_the_portals_own_series(production):
     failing = rules["AssistantRunsFailing"]
     assert 'jc_agent_runs_finished_total{status=~"failed|expired"}' in failing["expr"]
     assert failing["expr"].endswith("> 0.2")
+    # T-3065, AG-96: a dead or empty model key pages somebody, from the gauges the Portal keeps.
+    dead = rules["ModelKeyInvalid"]
+    assert dead["expr"] == "max(jc_model_key_valid) == 0"
+    assert dead["labels"]["severity"] == "critical"
+    low = rules["ModelKeyCreditLow"]
+    assert "jc_model_key_remaining / jc_model_key_limit" in low["expr"] and low["expr"].endswith("< 0.2")
 
 
 def test_metrics_stay_inside_the_cluster(production):

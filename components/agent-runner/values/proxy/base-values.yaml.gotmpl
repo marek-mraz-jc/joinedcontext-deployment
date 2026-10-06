@@ -84,6 +84,11 @@ env:
   JC_OIDC_CLIENT_ID: "{{ $thisProxy.project }}-agent-proxy"
   JC_MODEL_BASE: {{ $thisProxy.modelBase | quote }}
   JC_MODEL_PROVIDER: {{ $thisProxy.modelProvider | quote }}
+  JC_MODEL_PROBE_SECS: {{ $thisProxy.modelProbeSecs | default 900 | quote }}
+  JC_DAILY_TOKENS_ASSISTANT: {{ $thisProxy.dailyTokens.assistant | default 0 | int64 | quote }}
+  JC_DAILY_TOKENS_APP_BUILDER: {{ $thisProxy.dailyTokens.appBuilder | default 0 | int64 | quote }}
+  JC_DAILY_TOKENS_OTHER: {{ $thisProxy.dailyTokens.other | default 0 | int64 | quote }}
+  JC_DAILY_TOKENS_PER_PERSON: {{ $thisProxy.dailyTokens.perPerson | default 0 | int64 | quote }}
 
 # The token endpoint on the cluster's public host and the model provider are both the
 # proxy's own TLS to hosts outside the mesh, the hop the Portal's values describe: 443 leaves

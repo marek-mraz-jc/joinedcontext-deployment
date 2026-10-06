@@ -106,4 +106,20 @@ alertGroups:
           severity: warning
         annotations:
           summary: 'More than 20% of assistant runs failed or expired in the last hour'
+      # AG-96 (T-3065): the model key, as the agent proxy reports it to the Portal. A dead key
+      # stopped the assistant and the app builder for ten days in September 2026 unnoticed.
+      - alert: ModelKeyInvalid
+        expr: max(jc_model_key_valid) == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'The model key is refused or out of credit: the assistant and the app builder cannot answer'
+      - alert: ModelKeyCreditLow
+        expr: max(jc_model_key_remaining / jc_model_key_limit) < 0.2
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Less than 20% of the model key credit is left'
   {{- end }}
