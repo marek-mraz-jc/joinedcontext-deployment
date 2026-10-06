@@ -292,6 +292,11 @@ env:
   # listener; without the pair the studio's "Test mapping" answers 503.
   JC_PORTAL_PIPELINE_RUNNER_URL: "http://pipeline-runner.{{ index .Values "pipeline-runner" "runner" "namespace" }}.svc.cluster.local:4195"
   JC_PORTAL_PIPELINE_TEST_CAPTURE_URL: "http://portal.{{ $thisPortal.namespace }}.svc.cluster.local:9090"
+  # Whose identity a stream presents (PL-19, T-1508): `project` keeps every stream on its
+  # project's `pipelines` client; `pipeline` sends each to the token service as its own
+  # pipeline. Switched once the token service runs (pipeline-runner.tokens.enabled) and the
+  # federated mechanism is seen working on dev (T-2868).
+  JC_PORTAL_PIPELINE_IDENTITY: "project"
   # And whose token that capture answers (T-2271, AG-52): the project's own runner client, whose
   # tokens an audience mapper binds to `portal-internal`. The test's id is 130 random bits and a
   # capability of its own; this names the caller as well, so a call with no identity is a 401 and

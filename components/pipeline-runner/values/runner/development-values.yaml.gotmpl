@@ -33,6 +33,10 @@ env:
   # The pipeline-test harness the Portal sends still runs as this one client, because the
   # `portal-internal` audience is only on it (T-2271); a rendered stream does not use it.
   JC_CLIENT_ID: helsinki-pipelines
+  # The pipelines' token service (PL-19, T-1508): where a stream asks for its own pipeline's
+  # token once the Portal renders streams with JC_PORTAL_PIPELINE_IDENTITY=pipeline. Unread
+  # until then.
+  JC_PIPELINE_TOKEN_URL: "http://pipeline-tokens.{{ index .Values "pipeline-runner" "tokens" "namespace" }}.svc.cluster.local:4180/token"
 envSecret:
   JC_CLIENT_SECRET: { secret: keycloak-client-helsinki-pipelines, key: client-secret }
   # One secret per project that has pipelines (T-2384, PF-46). A rendered stream writes its own

@@ -50,6 +50,14 @@ pipeline-runner-linkerd-control-plane:
       ports:
         - protocol: TCP
           port: 4143
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: pipeline-runner-tokens
+          componentNamespace: pipeline-runner.tokens
+      ports:
+        - protocol: TCP
+          port: 4143
 
 # The same two rules for the scheduled pods. A meshed CronJob pod that cannot reach the
 # control plane never becomes ready and the run is lost with it, once a minute.
@@ -108,3 +116,36 @@ portal-linkerd-from-pipeline-runner:
       ports:
         - port: 4143
           protocol: TCP
+
+# The token service's two mesh rules (T-1508): the proxy's inbound ports, and the control plane.
+pipeline-tokens-allow-linkerd:
+  podSelector:
+    app.kubernetes.io/name: pipeline-runner-tokens
+  policyTypes:
+    - Ingress
+  ingress:
+    - ports:
+        - port: 4143
+          protocol: TCP
+        - port: 4190
+          protocol: TCP
+        - port: 4191
+          protocol: TCP
+
+pipeline-tokens-linkerd-control-plane:
+  podSelector:
+    app.kubernetes.io/name: pipeline-runner-tokens
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: linkerd
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 8086
+        - protocol: TCP
+          port: 8090

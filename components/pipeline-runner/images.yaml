@@ -4,3 +4,10 @@ pipeline-runner:
     repository: 'ghcr.io/warpstreamlabs/bento'
     tag: '1.21.1'
     digest: 'sha256:656c55de3f8deddd4ee743f3c76f3b497e67324e940f2bc1769693cd8b906364'
+  # The platform image's `jc-token-sidecar` (T-1508). The digest is the platform's of the day the
+  # part was added, which predates the binary: pin one built from a commit that carries
+  # crates/token-sidecar before `tokens.enabled` is set.
+  tokens:
+    repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
+    tag: 'main'
+    digest: 'sha256:e327d75dde6e24ae7987aa8f745b30cc6b81ab33b96de87342e25782c4f62270'
