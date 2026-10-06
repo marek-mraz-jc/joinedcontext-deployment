@@ -69,3 +69,9 @@ praha-app-mapa-policy.yaml: projects/praha/spaces/praha-mesto/policies/app-praha
 praha-app-data.yaml: projects/praha/apps/praha-data/app.yaml
 praha-app-data-endpoint.yaml: projects/praha/spaces/praha-mesto/endpoints/app-praha-data.yaml
 praha-app-data-policy.yaml: projects/praha/spaces/praha-mesto/policies/app-praha-data-1.yaml
+# The waste-collection desk for Prague's staff (T-2786): opened by its viewer role, which its
+# default group holds (AP-118); the group is the organization's, so it lives under users/groups/.
+praha-app-odpad.yaml: projects/praha/apps/praha-odpad/app.yaml
+praha-app-odpad-endpoint.yaml: projects/praha/spaces/praha-mesto/endpoints/app-praha-odpad.yaml
+praha-app-odpad-policy-viewer.yaml: projects/praha/spaces/praha-mesto/policies/app-praha-odpad-1-viewer.yaml
+praha-app-odpad-group-viewer.yaml: users/groups/praha-odpad-viewer.yaml
