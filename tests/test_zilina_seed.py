@@ -141,3 +141,44 @@ def test_the_catalogue_is_the_projects_own_organisation():
     ckan = by_name("CkanInstance")["zilina"]["spec"]
     assert ckan["organizationDefault"] == "zilina"
     assert "apiTokenRef" in ckan and "token" not in ckan, "the token is a reference, never a value"
+
+
+CKAN_LICENCE = {"CC_BY_4_0": "cc-by", "CC_BYSA_4_0": "cc-by-sa"}
+PUBLIC = {"zilina-verejne", "zilina-uniza", "zilina-kpi"}
+
+
+def test_every_public_space_is_published_to_the_projects_catalogue_with_its_record():
+    """T-3139, EP-27, EP-76: the three public spaces reach CKAN with a complete DCAT-AP record."""
+    endpoints = by_name("Endpoint")
+    assert {n for n, e in endpoints.items() if e["spec"]["audience"] == "public"} == PUBLIC
+    for name in PUBLIC:
+        endpoint = endpoints[name]
+        spec = endpoint["spec"]
+        assert set(endpoint["metadata"]["description"]) == {"sk", "en"}, name
+        assert spec["publish"]["ckan"]["instanceRef"] == {"kind": "CkanInstance", "name": "zilina"}
+        assert spec["publish"]["ckan"]["datastore"] == {"representation": "csv", "refresh": "onReconcile"}
+        catalog = spec["catalog"]
+        # The CKAN licence is the record's licence: ShareAlike data is never offered as plain CC BY.
+        assert spec["publish"]["ckan"]["license"] == CKAN_LICENCE[catalog["license"]], name
+        for member in ("publisher", "attribution", "themes", "keywords", "spatial", "frequency", "pipelineRef"):
+            assert catalog.get(member), f"{name}: no {member}"
+        assert "https://data.gov.sk/id/lau2/SK031B517402" in catalog["spatial"]
+        assert catalog["pipelineRef"]["name"] in by_name("Pipeline"), name
+    # The raw ŠÚ SR mirror is described for the organization, never republished under our URL.
+    mesto = endpoints["zilina-mesto"]["spec"]
+    assert mesto["audience"] == "organization" and "publish" not in mesto
+    assert mesto["catalog"]["license"] == "CC_BYSA_4_0"
+
+
+def test_the_public_reads_only_and_only_the_types_of_its_space():
+    policies = [p for p in manifests("Policy") if p["spec"]["assignee"] == {"kind": "role", "id": "public"}]
+    assert {p["spec"]["contextSpaceRef"]["name"] for p in policies} == PUBLIC
+    models = by_name("DataModel")
+    for policy in policies:
+        spec = policy["spec"]
+        assert spec["operations"] == ["retrieveOps"], policy["metadata"]["name"]
+        space = spec["contextSpaceRef"]["name"]
+        types = {e["type"] for info in spec["information"] for e in info["entities"]}
+        linkml = yaml.safe_load((ZILINA / f"{SPACES[space]}.linkml.yaml").read_text())
+        assert types == set(linkml["classes"]) - {"Entity"}, space
+        assert models[SPACES[space]]["spec"]["contextSpaceRef"] == space

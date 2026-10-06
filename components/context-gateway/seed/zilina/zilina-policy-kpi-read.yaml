@@ -1,0 +1,15 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Policy
+metadata:
+  name: kpi-read
+  namespace: zilina
+  title: { sk: "Verejné čítanie ukazovateľov mesta", en: "Public read: the city's indicators" }
+spec:
+  contextSpaceRef: { kind: ContextSpace, name: zilina-kpi }
+  assigner: did:web:{orgDomain}
+  assignee: { kind: role, id: public }
+  # Read only. The indicators are what the project publishes as its own numbers.
+  operations: [retrieveOps]
+  information:
+    - entities:
+        - type: KeyPerformanceIndicator

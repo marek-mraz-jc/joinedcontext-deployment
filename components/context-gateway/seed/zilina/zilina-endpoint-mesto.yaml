@@ -12,3 +12,23 @@ spec:
   slug: 6cm7hh73b7igmmekf3a5ucwmjyqspf62
   audience: organization
   enabledRepresentations: [ngsi-ld, csv, json]
+  # Described, not published: the catalogue lists the space for the organization's own readers
+  # and names where every row came from (EP-27, T-3139).
+  catalog:
+    publisher: { name: { sk: "Štatistický úrad Slovenskej republiky", en: "Statistical Office of the Slovak Republic" }, uri: "https://slovak.statistics.sk/" }
+    license: CC_BYSA_4_0
+    attribution: { sk: "Zdroj: Štatistický úrad SR, DATAcube (16 kociek za obec Žilina), CC BY-SA 4.0", en: "Source: Statistical Office of the SR, DATAcube (16 cubes for the municipality of Žilina), CC BY-SA 4.0" }
+    themes: [SOCI, ECON, EDUC, REGI]
+    keywords:
+      sk: ["obyvateľstvo", "vekové zloženie", "nezamestnanosť", "cestovný ruch", "školy", "Žilina"]
+      en: ["population", "age structure", "jobseekers", "tourism", "schools", "Žilina"]
+    spatial:
+      - SK031
+      - "https://data.gov.sk/id/lau2/SK031B517402"
+    temporal: { start: "1993-01-01" }
+    frequency: WEEKLY
+    source:
+      - url: "https://data.statistics.sk/api/v2/collection?lang=sk"
+        title: { sk: "DATAcube, Štatistický úrad SR", en: "DATAcube, Statistical Office of the SR" }
+        description: { sk: "Kocky za obce (om7101qr, om7006rr, om7052rr, om7014rr, om7105rr, cr3803mr, pr5001rr a ďalšie), obec SK031B517402, JSON-stat 2.0 pod CC BY-SA 4.0.", en: "Municipal cubes (om7101qr, om7006rr, om7052rr, om7014rr, om7105rr, cr3803mr, pr5001rr and more), municipality SK031B517402, JSON-stat 2.0 under CC BY-SA 4.0." }
+    pipelineRef: { kind: Pipeline, name: obyvatelstvo }
