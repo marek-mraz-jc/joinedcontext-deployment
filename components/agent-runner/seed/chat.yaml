@@ -28,6 +28,8 @@ spec:
     concurrentRunsPerOrganization: 10
     requestsPerMinute: 60
     maxResponseBytes: 2097152
+  # No host at all: a conversation reads through the endpoints, never the internet (AG-50).
+  egress: {}
   tools: []
   # What an assistant run may call, intersected with the person who starts it (AG-70): the
   # catalog search, the share and KPI steps, space completion, opening a change or a removal of
