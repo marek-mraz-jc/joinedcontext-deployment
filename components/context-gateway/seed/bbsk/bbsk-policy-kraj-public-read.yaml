@@ -1,0 +1,19 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Policy
+metadata:
+  name: kraj-public-read
+  namespace: bbsk
+  title: { sk: "Verejné čítanie zdrojových riadkov kraja", en: "Public read: the region's raw rows" }
+spec:
+  contextSpaceRef: { kind: ContextSpace, name: bbsk-kraj }
+  assigner: did:web:{orgDomain}
+  assignee: { kind: role, id: public }
+  # Read only, and every published column of the statistics office's rows. stewardNote is the
+  # region's own annotation (statistical-observation 1.1.0), written by its steward and not open
+  # data, so it is left out (T-2934).
+  operations: [retrieveOps]
+  information:
+    - entities:
+        - type: StatisticalObservation
+      propertyNames:
+        [dataSet, indicator, refArea, refPeriod, dimensionKey, value, unitText, source, dateObserved]

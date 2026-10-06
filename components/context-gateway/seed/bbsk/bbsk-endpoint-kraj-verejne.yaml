@@ -1,0 +1,20 @@
+# The region's raw rows open to anyone (T-2934, owner decision 2026-10-06, option b1): the ŠÚ SR
+# cubes the pipelines mirror into bbsk-kraj are the statistics office's open data (CC BY-SA 4.0,
+# listed in bbsk-kraj's catalog block), and the indicators application draws its trend lines from
+# their yearly rows through this endpoint (AP-04, a further space read through its public
+# Endpoint). The steward's notes stay behind: kraj-public-read names every column but
+# stewardNote. Not published to CKAN; the region's catalogue entry is bbsk-kpi's.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: bbsk-kraj-verejne
+  namespace: bbsk
+  title: { sk: "Kraj — zdrojové údaje, verejne", en: "Region, raw data, public" }
+  description:
+    sk: "Ročné údaje Štatistického úradu SR za kraj a jeho okresy, ako ich kraj zrkadlí: počet obyvateľov (om7102rr) a emisie tuhých znečisťujúcich látok na km² (zp3803rs), CC BY-SA 4.0. Bez poznámok správcu údajov."
+    en: "The Statistical Office's yearly data for the region and its districts as the region mirrors them: residents (om7102rr) and solid particulate emissions per km² (zp3803rs), CC BY-SA 4.0. Without the data steward's notes."
+spec:
+  contextSpaceRef: bbsk-kraj
+  slug: 2lwz27hvqjvxaow2hr73lxmxx743irui
+  audience: public
+  enabledRepresentations: [ngsi-ld, csv, json]
