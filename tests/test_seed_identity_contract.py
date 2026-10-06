@@ -60,7 +60,8 @@ def test_no_mapping_types_its_space_or_project_in():
 
 def test_helsinki_policies_name_the_organization_by_placeholder():
     policies = [(p, d) for p, d in manifests("Policy") if p.parent.name == "helsinki"]
-    assert len(policies) == 12
+    # Twelve of the city's own and the service map App's (T-2788).
+    assert len(policies) == 13
     for path, policy in policies:
         assert policy["spec"]["assigner"] == "did:web:{orgDomain}", path.name
 
