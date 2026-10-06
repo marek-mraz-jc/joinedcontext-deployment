@@ -40,7 +40,7 @@ def pipelines(prefix: str) -> dict[str, dict]:
         if path.name.endswith("-bento.yaml"):
             continue
         manifest = yaml.safe_load(path.read_text())
-        source = manifest["spec"]["source"]["dataSourceRef"]["name"]
+        source = manifest["spec"]["source"].get("dataSourceRef", {}).get("name", "")
         if source.startswith(prefix):
             found[manifest["metadata"]["name"]] = {"source": source, "manifest": manifest,
                                                    "bento": path.with_name(path.stem + "-bento.yaml")}
@@ -414,3 +414,63 @@ def test_a_register_without_the_city_and_missing_addresses_fail_the_run():
     assert b"the register holds no monument of the city" in elsewhere.stdout + elsewhere.stderr
     broken = offline(PAMIATKY, "https://rageo.minv.sk/opendata/dataset/address_by_lau2_", "zilina-verejne", REGISTER.read_bytes())
     assert b"the register of addresses did not come" in broken.stdout + broken.stderr
+
+
+UKAZOVATELE = SEED / "zilina-pipeline-ukazovatele.yaml"
+KPI_ENV = {"JC_ORG_DOMAIN": DOMAIN, "JC_SPACE": "zilina-kpi", "JC_SOURCE_SPACE": "zilina-mesto"}
+
+
+def indicators(rows: list[dict]) -> list[dict]:
+    from test_bystrica_indicators import bento
+    mapping = yaml.safe_load(UKAZOVATELE.read_text())["spec"]["compute"]["bloblang"]
+    return bento(mapping, rows, KPI_ENV, may_drop=True)
+
+
+def queried(cubes: dict) -> list[dict]:
+    """The rows of zilina-mesto the pipeline's query asks the Endpoint for."""
+    q = yaml.safe_load(UKAZOVATELE.read_text())["spec"]["source"]["query"]["q"]
+    sets, wanted = (part.split("==")[1].replace('"', "").split(",") for part in q.split(";"))
+    return [e for rows in cubes.values() for e in rows if e["dataSet"]["value"] in sets and e["indicator"]["value"] in wanted]
+
+
+@requires_docker
+def test_the_six_indicators_are_the_cubes_newest_published_values(cubes):
+    rows = queried(cubes)
+    # About a thousand rows of the ~3 300 the five cubes hold; the endpoint read pages (T-3132).
+    assert 900 < len(rows) < 1500, len(rows)
+    by_name = {k["name"]["value"]: k for k in indicators(rows)}
+    assert set(by_name) == {f"{n}-mesto" for n in (
+        "obyvatelstvo-stav", "index-starnutia", "priemerny-vek", "celkovy-prirastok", "uchadzaci", "navstevnici-rok")}
+    value = lambda name: (by_name[name]["currentValue"]["value"], by_name[name]["currentValue"]["unitCode"],
+                          by_name[name]["calculationPeriod"]["value"])
+    assert value("obyvatelstvo-stav-mesto") == (79617, "C62", {"start": "2026-04-01T00:00:00Z", "end": "2026-06-30T23:59:59Z"})
+    year = lambda y: {"start": f"{y}-01-01T00:00:00Z", "end": f"{y}-12-31T23:59:59Z"}
+    newest = lambda cube, indicator, key: max(
+        (e for e in rows if (e["dataSet"]["value"], e["indicator"]["value"], e.get("dimensionKey", {}).get("value")) == (cube, indicator, key)),
+        key=lambda e: e["refPeriod"]["value"])
+    for name, cube, indicator, key, unit in (
+        ("index-starnutia-mesto", "om7052rr", "IN010087", "SPOLU", "P1"),
+        ("priemerny-vek-mesto", "om7052rr", "IN010089", "SPOLU", "ANN"),
+        ("celkovy-prirastok-mesto", "om7105rr", "IN010082", "SPOLU", "C62"),
+        ("uchadzaci-mesto", "pr5001rr", "U15061", None, "C62"),
+    ):
+        row = newest(cube, indicator, key)
+        assert value(name) == (row["value"]["value"], unit, year(row["refPeriod"]["value"])), name
+    # The visitors add up twelve months of the newest complete year, never 2026's first months.
+    months = [e for e in rows if e["dataSet"]["value"] == "cr3803mr" and e["refPeriod"]["value"] == "2025"
+              and e["dimensionKey"]["value"].endswith(".-VISIT_TOTAL")]
+    assert len(months) == 12
+    assert value("navstevnici-rok-mesto") == (sum(e["value"]["value"] for e in months), "C62", year("2025"))
+    for kpi in by_name.values():
+        assert kpi["id"] == f"urn:ngsi-ld:KeyPerformanceIndicator:{DOMAIN}:zilina-kpi:{kpi['name']['value']}"
+        assert kpi["derivedFrom"]["object"] == f"urn:ngsi-ld:Endpoint:{DOMAIN}:zilina-mesto:zilina-mesto"
+        assert kpi["currentValue"]["observedAt"].endswith("Z")
+
+
+@requires_docker
+def test_a_cube_that_drops_out_is_not_measured_and_an_empty_read_writes_nothing(cubes):
+    rows = [e for e in queried(cubes) if e["dataSet"]["value"] != "pr5001rr"]
+    by_name = {k["name"]["value"]: k for k in indicators(rows)}
+    assert by_name["uchadzaci-mesto"]["currentValue"]["value"] == "not measured"
+    assert by_name["obyvatelstvo-stav-mesto"]["currentValue"]["value"] == 79617
+    assert indicators([]) == []

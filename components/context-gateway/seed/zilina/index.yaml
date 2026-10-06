@@ -114,3 +114,4 @@ zilina-pipeline-vlaky-bento.yaml: projects/zilina/pipelines/vlaky/bento.yaml
 zilina-datasource-pamiatky.yaml: projects/zilina/datasources/mksr-pamiatky-zsk.yaml
 zilina-pipeline-pamiatky.yaml: projects/zilina/pipelines/pamiatky/pipeline.yaml
 zilina-pipeline-pamiatky-bento.yaml: projects/zilina/pipelines/pamiatky/bento.yaml
+zilina-pipeline-ukazovatele.yaml: projects/zilina/pipelines/ukazovatele/pipeline.yaml
