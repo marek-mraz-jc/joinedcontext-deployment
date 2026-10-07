@@ -1,0 +1,42 @@
+name: pinned-images
+# Every image components/*/images.yaml pins, scanned by its digest (T-3289): a CRITICAL with a
+# fixed version, or a fixed HIGH that CISA lists as exploited, fails the job, and tasks/ci files a
+# task for the red run. Excuses live in .ci/pinned-images-ignore.yaml, each with a reason, a task
+# and an expiry. On demand only for now: this repository is private and its Actions minutes are
+# metered (T-0402, T-0521). Put `schedule: [{ cron: "23 4 * * *" }]` and
+# `push: { branches: [main], paths: ["components/*/images.yaml", ".ci/pinned-images-ignore.yaml"] }`
+# back under `on:` when the minutes are back.
+on:
+  workflow_dispatch:
+permissions: { contents: read, packages: read }
+concurrency: { group: "pinned-images-${{ github.ref }}", cancel-in-progress: false }
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env: { TRIVY_VERSION: 0.69.1 }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: trivy
+        run: |
+          curl -sSL -o trivy.tgz "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          curl -sSL -o checksums.txt "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_checksums.txt"
+          grep " trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz$" checksums.txt | sed 's/ .*//' | sed "s/\$/  trivy.tgz/" | sha256sum -c -
+          tar xzf trivy.tgz trivy && sudo install -m 0755 trivy /usr/local/bin/trivy
+      - name: scan every pinned image
+        env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
+        run: |
+          set -eu
+          mkdir -p reports
+          echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin >/dev/null
+          python3 scripts/scan-pinned-images.py list > pinned.txt
+          n=0
+          while read -r image; do
+            n=$((n + 1))
+            trivy image --quiet --scanners vuln --severity CRITICAL,HIGH --format json \
+              --output "reports/${n}.json" "$image"
+          done < pinned.txt
+      - name: CISA known exploited vulnerabilities
+        run: curl -sSLf -o kev.json https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json
+      - name: judge
+        run: python3 scripts/scan-pinned-images.py judge reports/*.json --kev kev.json
