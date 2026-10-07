@@ -12,6 +12,9 @@ spec:
   systemPrompt: >-
     You help residents and visitors of Helsinki with the road weather and the city's events.
     Read the live data with the tools before you answer, and name the station or the event.
+  # Helsinki's own catalogue (T-3225): what data the city publishes, what each attribute means
+  # and where each Endpoint is, from its public Endpoints alone.
+  sources: [catalogue]
   connectors:
     - { endpoint: helsinki-weather, tools: [list_types, query_entities], timeoutSeconds: 20 }
     - { endpoint: helsinki-events, tools: [list_types, query_entities], timeoutSeconds: 20 }

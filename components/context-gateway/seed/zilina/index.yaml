@@ -130,3 +130,4 @@ zilina-app-zaznamy-policy.yaml: projects/zilina/spaces/zilina-verejne/policies/a
 zilina-app-vyskum.yaml: projects/zilina/apps/zilina-vyskum/app.yaml
 zilina-app-vyskum-endpoint.yaml: projects/zilina/spaces/zilina-uniza/endpoints/app-zilina-vyskum.yaml
 zilina-app-vyskum-policy.yaml: projects/zilina/spaces/zilina-uniza/policies/app-zilina-vyskum-1.yaml
+zilina-knowledge-catalogue-ngsi.yaml: projects/zilina/assistant/sources/catalogue.yaml
