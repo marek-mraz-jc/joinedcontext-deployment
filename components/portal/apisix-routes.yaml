@@ -83,6 +83,18 @@ portal-public-form:
   priority: 5
   pluginConfig: portal-public
 
+# A public Endpoint's API documentation (EP-99, T-3265): a page with no login in front that reads
+# the OpenAPI document the gateway generates, under the caller's rights, and holds no data. The
+# plugin config is portal-public's.
+portal-public-docs:
+  name: portal-public-docs
+  description: A public Endpoint's API documentation, edge session optional
+  upstream: portal.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "portal") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/d/*'
+  subDomain: portal
+  priority: 5
+  pluginConfig: portal-public
+
 # The bundle the catalogue page (and every Portal page) runs on: the same files for everyone,
 # holding no data. The plugin config is portal-public's.
 portal-public-assets:
