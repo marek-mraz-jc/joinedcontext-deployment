@@ -164,3 +164,40 @@ def test_a_report_without_a_gps_fix_is_dropped_and_a_missing_speed_is_left_out()
     assert without_speed["location"]["value"]["coordinates"] == [24.94, 60.17]
     assert "speed" not in without_speed and "heading" not in without_speed
     assert whole["speed"]["value"] == 8.5 and whole["heading"]["value"] == 90
+
+
+@requires_docker
+def test_a_full_fleet_and_a_repeat_count_no_processor_error():
+    """T-3186: dev counted 5.4 M errors of 792 k frames. The mapping probed the `fleet` and
+    `throttle` caches with `get` and `add` and caught the misses, and Bento counts every caught
+    miss in `processor_error`, which the Portal shows as the pipeline's errors: 40 buses for 30
+    slots made 805. Probing with `exists` first, a fleet that is full, a bus that repeats within
+    the throttle and a bus without a slot are no error at all."""
+    config = {
+        "input": {"stdin": {"scanner": {"lines": {}}}},
+        # One thread: what is measured is the probing. On several threads two new buses can
+        # still race for one free slot, and the loser's `add` is the one error left (the
+        # mapping's ponytail note).
+        "pipeline": {**yaml.safe_load(MAPPING.read_text())["pipeline"], "threads": 1},
+        # The runner's own ttls: a repeat within fifteen seconds is throttled, a slot is held.
+        "cache_resources": yaml.safe_load(RESOURCES.read_text())["cache_resources"],
+        "output": {"stdout": {"codec": "lines"}},
+        "metrics": {"logger": {"push_interval": "", "flush_metrics": True}},
+        "logger": {"level": "info", "format": "json"},
+    }
+    frames = [frame(v, "01") for v in range(1, 41)] + [frame(v, "02") for v in range(1, 41)]
+    result = subprocess.run(
+        ["docker", "run", "--rm", "-i", "-e", "JC_ORG_DOMAIN=hel.fi", "-e", "JC_SPACE=helsinki",
+         "-e", f"CONFIG={json.dumps(config)}", "--entrypoint", "sh", BENTO, "-c",
+         'printf "%s" "$CONFIG" > /tmp/c.json && exec /bento -c /tmp/c.json'],
+        input="".join(line + "\n" for line in frames), capture_output=True, text=True, timeout=120,
+    )
+    assert result.returncode == 0, result.stderr
+    counters = [json.loads(line) for line in result.stderr.splitlines() if '"Counter metric"' in line]
+    errors = sum(int(c["value"]) for c in counters if c["name"] == "processor_error")
+    received = sum(int(c["value"]) for c in counters if c["name"] == "input_received")
+    assert received == 80, counters
+    # The cap still holds: thirty buses written, once each, the repeats throttled.
+    written = [json.loads(line)["fleetVehicleId"]["value"] for line in result.stdout.splitlines() if line.strip()]
+    assert len(written) == len(set(written)) == 30, written
+    assert errors == 0, f"{errors} processor errors for {received} frames"
