@@ -29,6 +29,9 @@ pytestmark = pytest.mark.xdist_group("docker-apisix-csp")
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 PLUGIN_FILES = sorted(PROJECT_ROOT.glob("components/*/apisix-plugins.yaml"))
 ANCESTORS = {"DENY": "'none'", "SAMEORIGIN": "'self'"}
+# The routes whose upstream names in its own `frame-ancestors` the sites that may frame its page
+# (AG-114); the edge sets no X-Frame-Options there, and an answer without a policy gets DENY's.
+FRAMED_BY_UPSTREAM = {"assistant/assistant-widget"}
 
 
 def baseline(framing: str) -> str:
@@ -70,6 +73,11 @@ def csp_problems(route: str, plugins: dict) -> list[str]:
                 "and serverless-post-function adds the baseline where none came"
             )
     framing = (headers.get("set") or {}).get("X-Frame-Options")
+    if route in FRAMED_BY_UPSTREAM:
+        if framing is not None:
+            problems.append(f"{route}: X-Frame-Options {framing!r} overrides the frame-ancestors its upstream names")
+            return problems
+        framing = "DENY"
     if framing not in ANCESTORS:
         problems.append(f"{route}: X-Frame-Options is {framing!r}; the baseline follows DENY or SAMEORIGIN")
         return problems

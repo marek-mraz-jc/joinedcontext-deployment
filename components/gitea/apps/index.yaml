@@ -1,6 +1,6 @@
 # Written by scripts/vendor-sample-apps.py; do not edit. The files of each sample application,
 # relative to its folder, as the forge bootstrap pushes them to its repository (T-2599).
-source: c9a29aaf83c31175ac273c019ae2b7f5bc07ed07
+source: 92d9afb5938a02452561a115f3a1d38262294618
 apps:
   air-quality:
     - .gitea/workflows/build.yml
@@ -141,6 +141,7 @@ apps:
     - src/App.test.tsx
     - src/App.tsx
     - src/app.css
+    - src/charts.test.ts
     - src/charts.ts
     - src/components/AppShell.test.tsx
     - src/components/AppShell.tsx
@@ -197,6 +198,44 @@ apps:
     - src/main.tsx
     - src/pages/Events.test.tsx
     - src/pages/Events.tsx
+    - test-setup.ts
+    - tsconfig.json
+    - vite.config.ts
+  alerts-desk:
+    - .gitea/workflows/build.yml
+    - .gitignore
+    - README.md
+    - app.yaml
+    - e2e/app.spec.ts
+    - e2e/serve.ts
+    - grants/projects/helsinki/spaces/helsinki/endpoints/app-alerts-desk.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-alerts-desk-1.yaml
+    - index.html
+    - map-worker.ts
+    - package.json
+    - playwright.config.ts
+    - src/App.tsx
+    - src/app.css
+    - src/components/AppShell.test.tsx
+    - src/components/AppShell.tsx
+    - src/components/EntityDetail.tsx
+    - src/components/EntityTable.test.tsx
+    - src/components/EntityTable.tsx
+    - src/components/ExportButton.test.tsx
+    - src/components/ExportButton.tsx
+    - src/components/StatTiles.tsx
+    - src/components/components.css
+    - src/components/filters.test.tsx
+    - src/components/filters.tsx
+    - src/components/states.tsx
+    - src/design-tokens.json
+    - src/fixtures.ts
+    - src/i18n.test.ts
+    - src/i18n.ts
+    - src/jc-types.ts
+    - src/main.tsx
+    - src/pages/AlertDesk.test.tsx
+    - src/pages/AlertDesk.tsx
     - test-setup.ts
     - tsconfig.json
     - vite.config.ts

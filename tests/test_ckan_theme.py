@@ -591,3 +591,46 @@ def test_the_table_view_stacks_its_controls_below_desktop_width():
     for selector in (".dataTables_filter", ".dataTables_info", ".dataTables_paginate"):
         assert all("#dtprv_wrapper" in line for line in block.splitlines() if selector in line), selector
 
+
+
+# --- T-3058, AG-114: the catalogue offers its knowledge assistant ----------------------------
+
+
+@pytest.mark.parametrize("address, offered", [
+    ("https://assistant.dev.example/d/helsinki-catalogue/widget", True),
+    ("", False),
+    ("https://assistant.evil.example/d/helsinki-catalogue/widget", False),
+    ("https://assistant.dev.example.evil.example/d/helsinki-catalogue/widget", False),
+    ("http://assistant.dev.example/d/helsinki-catalogue/widget", False),
+    ("https://assistant.dev.example/d/Helsinki/widget", False),
+    ("https://assistant.dev.example/d/x/widget?next=//evil.example", False),
+    ('https://assistant.dev.example/d/x/widget"><script>', False),
+])
+def test_the_widget_is_offered_only_from_the_installation_s_assistant_host(theme, address, offered):
+    theme.ASSISTANT_WIDGET = address
+    assert theme.jc_assistant_widget() == (address if offered else None)
+
+
+def test_the_footer_offers_the_assistant_as_a_disclosure_a_keyboard_opens():
+    footer = (THEME / "footer.html").read_text()
+    assert "{% set widget = h.jc_assistant_widget() %}" in footer
+    assert '<details class="jc-assistant">' in footer and "<summary>{{ h.jc_t('assistant') }}</summary>" in footer
+    assert 'title="{{ h.jc_t(\'assistant\') }}"' in footer and 'loading="lazy"' in footer
+    assert 'referrerpolicy="no-referrer"' in footer
+
+
+def test_the_catalogue_pod_is_told_its_assistant_only_when_the_assistant_is_deployed(rendered, rendered_variant):
+    def widget(docs):
+        (ckan,) = [d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"].endswith("ckan")
+                   and any(c["name"] == "ckan" for c in d["spec"]["template"]["spec"]["containers"])]
+        (container,) = [c for c in ckan["spec"]["template"]["spec"]["containers"] if c["name"] == "ckan"]
+        return {e["name"]: e.get("value") for e in container["env"]}["JC_ASSISTANT_WIDGET_URL"]
+
+    assert widget(rendered("dev")) == ""
+
+    def with_assistant(tree):
+        path = tree / "deployment/environments/dev/global.yaml.gotmpl"
+        text = path.read_text()
+        path.write_text(text.replace("\n  - functions\n", "\n  - functions\n  - assistant\n", 1))
+
+    assert widget(rendered_variant("dev", with_assistant)) == "https://assistant.dev.joinedcontext.com/d/helsinki-catalogue/widget"
