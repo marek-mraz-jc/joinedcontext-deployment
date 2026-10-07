@@ -6,9 +6,11 @@
 replicaCount: 1
 
 resources:
+  # T-3053 measured 490 MB resident at rest and 679 MB at peak (the embedding model loaded):
+  # the request says so, so the scheduler does not overbook the node.
   requests:
     cpu: 50m
-    memory: 128Mi
+    memory: 640Mi
   limits:
     cpu: '1'
     memory: 1Gi
