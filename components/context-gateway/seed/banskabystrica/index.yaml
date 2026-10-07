@@ -141,3 +141,5 @@ ckan-banskabystrica.yaml: projects/banskabystrica/ckan/banskabystrica.yaml
 # The city's website as a knowledge source (T-3067, user decision 2026-10-07).
 banskabystrica-knowledge-web.yaml: projects/banskabystrica/assistant/sources/web.yaml
 banskabystrica-knowledge-catalogue-ngsi.yaml: projects/banskabystrica/assistant/sources/catalogue.yaml
+# The staff assistant over the website, for the answer-quality evals (T-3067).
+banskabystrica-assistant-knowledge.yaml: projects/banskabystrica/assistant/deployments/knowledge.yaml

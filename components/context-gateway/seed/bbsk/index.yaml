@@ -114,3 +114,5 @@ bbsk-app-mosty-group-viewer.yaml: users/groups/bbsk-mosty-viewer.yaml
 # The region's website as a knowledge source (T-3067, user decision 2026-10-07).
 bbsk-knowledge-web.yaml: projects/bbsk/assistant/sources/web.yaml
 bbsk-knowledge-catalogue-ngsi.yaml: projects/bbsk/assistant/sources/catalogue.yaml
+# The staff assistant over the website, for the answer-quality evals (T-3067).
+bbsk-assistant-knowledge.yaml: projects/bbsk/assistant/deployments/knowledge.yaml
