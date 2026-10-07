@@ -24,6 +24,8 @@ teams:
 {{- if not (.Values.gitea.forge.groupTeams | default dict) }} {}
 {{- end }}
 
+projectTeams: {{ .Values.gitea.forge.projectTeams | default list | toJson }}
+
 repo:
   owner: {{ $repo.owner | quote }}
   name: {{ $repo.name | quote }}
