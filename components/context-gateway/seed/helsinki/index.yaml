@@ -181,3 +181,4 @@ helsinki-assistant-catalogue.yaml: projects/helsinki/assistant/deployments/helsi
 helsinki-knowledge-catalogue.yaml: projects/helsinki/assistant/sources/data-portal.yaml
 # The city's website as a knowledge source (T-3067, user decision 2026-10-07).
 helsinki-knowledge-web.yaml: projects/helsinki/assistant/sources/web.yaml
+helsinki-knowledge-catalogue-ngsi.yaml: projects/helsinki/assistant/sources/catalogue.yaml

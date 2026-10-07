@@ -113,3 +113,4 @@ bbsk-app-mosty-policy-viewer.yaml: projects/bbsk/spaces/bbsk-registre/policies/a
 bbsk-app-mosty-group-viewer.yaml: users/groups/bbsk-mosty-viewer.yaml
 # The region's website as a knowledge source (T-3067, user decision 2026-10-07).
 bbsk-knowledge-web.yaml: projects/bbsk/assistant/sources/web.yaml
+bbsk-knowledge-catalogue-ngsi.yaml: projects/bbsk/assistant/sources/catalogue.yaml

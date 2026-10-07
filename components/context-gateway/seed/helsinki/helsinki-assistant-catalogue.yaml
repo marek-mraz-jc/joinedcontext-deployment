@@ -20,7 +20,7 @@ spec:
     may also read the live data with the tools. Never invent a dataset: when the catalogue has
     nothing on the question, say so and suggest the closest dataset it does have. Answer in the
     visitor's language.
-  sources: [data-portal]
+  sources: [data-portal, catalogue]
   connectors:
     - { endpoint: helsinki-weather, tools: [list_types, query_entities], timeoutSeconds: 20 }
     - { endpoint: helsinki-events, tools: [list_types, query_entities], timeoutSeconds: 20 }
