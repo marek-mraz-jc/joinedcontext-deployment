@@ -355,6 +355,11 @@ def test_dev_keeps_its_applications_apart_and_restarts_only_its_runners(rendered
     assert maps, "no group-team map on the forge's login"
     for raw in maps:
         for group, orgs in json.loads(raw.replace('\\"', '"')).items():
+            # A project's own two teams (PF-87, T-2647) reach that project's repository in the
+            # configuration's organization alone; every other group reads both organizations.
+            if group.endswith(("-readers", "-writers")) and group != "platform-readers":
+                assert orgs == {"joinedcontext": [group]}, (group, orgs)
+                continue
             assert orgs["joinedcontext"] and orgs.get("joinedcontext-apps") == orgs["joinedcontext"], (group, orgs)
     targets = env["RUNNER_RESTART"].split()
     assert [t.split("/")[1] for t in targets] == ["gitea-runner", "gitea-runner-rust"], targets
