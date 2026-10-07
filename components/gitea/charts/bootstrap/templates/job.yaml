@@ -354,7 +354,11 @@ spec:
                 status=$(forge_code PUT "/api/v1/teams/$team_id/repos/$ORG/$1")
                 [ "$status" = 204 ] || { echo "giving team $team the repository $ORG/$1 failed: $status" >&2; cat $WORK/body >&2; exit 1; }
               }
+              # A project listed here before its seed is first pushed (the Zilina case, T-3181)
+              # has no repository yet: it is created here, as step 5d would, so the teams have
+              # one to hold.
               for slug in ${PROJECT_TEAMS:-}; do
+                ensure_repo "$slug"
                 project_team "$slug" readers read
                 project_team "$slug" writers write
               done
