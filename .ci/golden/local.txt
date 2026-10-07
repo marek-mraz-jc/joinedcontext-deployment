@@ -184,6 +184,7 @@ v1/ConfigMap local/apisix-standalone-base
 v1/ConfigMap local/cnpg-controller-manager-config
 v1/ConfigMap local/cnpg-default-monitoring
 v1/ConfigMap local/gitea-bootstrap-app-air-quality
+v1/ConfigMap local/gitea-bootstrap-app-alerts-desk
 v1/ConfigMap local/gitea-bootstrap-app-helsinki-alerts
 v1/ConfigMap local/gitea-bootstrap-app-helsinki-bikes
 v1/ConfigMap local/gitea-bootstrap-app-helsinki-events
