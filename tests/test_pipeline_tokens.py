@@ -77,3 +77,28 @@ def test_switched_on_the_service_mints_only_in_the_pipelines_namespace_with_its_
     binding = one(docs, "RoleBinding", "pipeline-tokens")
     assert binding["metadata"]["namespace"] == identities
     assert binding["subjects"] == [{"kind": "ServiceAccount", "name": "pipeline-tokens", "namespace": tokens_namespace}]
+
+
+def test_switched_on_the_portal_keeps_the_pipelines_accounts_there_and_nothing_else(rendered_variant):
+    docs = rendered_variant("dev", enable_tokens)
+    identities = one(docs, "Role", "pipeline-tokens")["metadata"]["namespace"]
+    portal = one(docs, "Deployment", "portal")
+    env = {e["name"]: e.get("value") for c in portal["spec"]["template"]["spec"]["containers"] for e in c.get("env", [])}
+    assert env["JC_PORTAL_PIPELINE_NAMESPACE"] == identities
+    assert env["JC_PORTAL_PIPELINE_IDENTITY"] == "project", "making the accounts does not switch the streams"
+    role = one(docs, "Role", "portal-pipeline-accounts")
+    assert role["metadata"]["namespace"] == identities
+    assert role["rules"] == [{"apiGroups": [""], "resources": ["serviceaccounts"],
+                              "verbs": ["get", "list", "create", "patch", "delete"]}]
+    binding = one(docs, "RoleBinding", "portal-pipeline-accounts")
+    assert binding["metadata"]["namespace"] == identities
+    assert binding["subjects"] == [{"kind": "ServiceAccount", "name": "portal",
+                                    "namespace": portal["metadata"]["namespace"]}]
+
+
+def test_off_the_portal_has_no_pipeline_namespace_and_no_grant(rendered):
+    docs = rendered("local")
+    assert not [d for d in docs if d.get("kind") == "Role" and d["metadata"]["name"] == "portal-pipeline-accounts"]
+    portal = one(docs, "Deployment", "portal")
+    names = {e["name"] for c in portal["spec"]["template"]["spec"]["containers"] for e in c.get("env", [])}
+    assert "JC_PORTAL_PIPELINE_NAMESPACE" not in names

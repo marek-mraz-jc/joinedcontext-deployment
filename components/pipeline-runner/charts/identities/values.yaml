@@ -6,3 +6,8 @@ namespace: ''
 tokenService:
   serviceAccount: pipeline-tokens
   namespace: ''
+# The Portal, whose reconciler creates and deletes the pipelines' ServiceAccounts there. An
+# empty namespace grants it nothing (an environment without the Portal).
+portal:
+  serviceAccount: portal
+  namespace: ''
