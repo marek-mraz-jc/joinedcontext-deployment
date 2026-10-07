@@ -25,3 +25,12 @@ pipeline-runner:
   tokens:
     enabled: false
     namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "pipeline-runner") }}
+  # The pipelines' own Kubernetes ServiceAccounts, in a namespace of their own the chart creates
+  # (PL-19, T-1508): the token service may mint a token of any ServiceAccount there and of none
+  # elsewhere. The release itself lives with the runner. On with the token service.
+  identities:
+    enabled: false
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "pipeline-runner") }}
+    # The namespace the chart creates: never `jc.namespace`, which is the one namespace of a
+    # `singleNamespace` environment and holds every workload's ServiceAccount.
+    pipelineNamespace: {{ printf "%s-pipeline-identities" .Values.global.instanceSlug | trunc 63 | trimSuffix "-" }}
