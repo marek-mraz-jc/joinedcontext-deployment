@@ -124,8 +124,12 @@ def test_every_seeded_manifest_of_the_city_belongs_to_one_of_its_four_spaces(see
     # A DataSource is a fetch and a Project is the project: neither belongs to a space. A
     # Pipeline names its space through the Endpoint it writes through, which is the point. A
     # CkanInstance is the project's catalogue, which each space's Endpoint may publish to (T-2407).
-    # A KnowledgeSource is a website the project's assistant answers from, no space's (T-3067).
-    project_scoped = {"Project", "ServiceAccount", "DataSource", "Pipeline", "CkanInstance", "KnowledgeSource"}
+    # A KnowledgeSource is a website the project's assistant answers from, and an
+    # AssistantDeployment the assistant that answers from it: neither is a space's (T-3067).
+    project_scoped = {
+        "Project", "ServiceAccount", "DataSource", "Pipeline", "CkanInstance", "KnowledgeSource",
+        "AssistantDeployment",
+    }
     for (kind, name), manifest in seed.items():
         if kind in project_scoped:
             continue
