@@ -302,6 +302,11 @@ env:
   # pipeline. Switched once the token service runs (pipeline-runner.tokens.enabled) and the
   # federated mechanism is seen working on dev (T-2868).
   JC_PORTAL_PIPELINE_IDENTITY: "project"
+  {{- if (index .Values "pipeline-runner" "identities" "enabled") }}
+  # Where the reconciler keeps each Pipeline's own Kubernetes ServiceAccount and whose subjects
+  # their federated clients trust (PL-19, T-1508); the identities part grants it that namespace.
+  JC_PORTAL_PIPELINE_NAMESPACE: {{ index .Values "pipeline-runner" "identities" "pipelineNamespace" | quote }}
+  {{- end }}
   # And whose token that capture answers (T-2271, AG-52): the project's own runner client, whose
   # tokens an audience mapper binds to `portal-internal`. The test's id is 130 random bits and a
   # capability of its own; this names the caller as well, so a call with no identity is a 401 and
