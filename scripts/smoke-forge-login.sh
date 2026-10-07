@@ -17,7 +17,17 @@ forge_org="${JC_FORGE_ORG:-joinedcontext}"
 apps_org="${JC_FORGE_APPS_ORG:-$(kubectl get secret gitea-runner-registration -n "$slug" -o jsonpath='{.data.owner}' 2>/dev/null | base64 -d 2>/dev/null || true)}"
 apps_org="${apps_org:-$forge_org}"
 project="${JC_SMOKE_PROJECT:-helsinki}"
-folder="$base/git/$forge_org/configuration/src/branch/main/projects/$project"
+# Layout 2 (PF-87, T-2647): the project is a repository of its own, which its readers read; the
+# gateway carries JC_GATEWAY_PROJECTS_DIR exactly then. Layout 1: its folder in the configuration.
+layout2=$(kubectl get deploy context-gateway -n "$slug" \
+	-o jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="JC_GATEWAY_PROJECTS_DIR")].value}' 2>/dev/null || true)
+if [ -n "${JC_SMOKE_LAYOUT2:-$layout2}" ]; then
+	cfg_repo="$project"
+	folder="$base/git/$forge_org/$project/src/branch/main"
+else
+	cfg_repo=configuration
+	folder="$base/git/$forge_org/configuration/src/branch/main/projects/$project"
+fi
 signed=""
 
 work=$(mktemp -d)
@@ -38,9 +48,9 @@ lists_files() { grep -q 'project\.yaml' "$1"; }
 
 code=$(curl -sS -o "$work/anonymous" -w '%{http_code}' --max-time 20 "$folder" 2>/dev/null)
 if [ "$code" = 200 ] && lists_files "$work/anonymous"; then
-	ko "an anonymous visitor reads the configuration repository"
+	ko "an anonymous visitor reads the $cfg_repo repository"
 else
-	ok "an anonymous visitor does not read the configuration repository ($code)"
+	ok "an anonymous visitor does not read the $cfg_repo repository ($code)"
 fi
 
 login() {
@@ -72,12 +82,12 @@ login() {
 
 	code=$(curl -sS -b "$jar" -o "$work/$user.folder" -w '%{http_code}' --max-time 20 "$folder" 2>/dev/null)
 	if [ "$code" = 200 ] && lists_files "$work/$user.folder"; then
-		ok "$user signs in to the forge through Keycloak and reads the configuration repository"
+		ok "$user signs in to the forge through Keycloak and reads the $cfg_repo repository"
 	elif [ "$code" = 404 ]; then
-		ko "$user: signed in, but the configuration repository answers 404: the groups claim maps to no forge team (gitea.forge.groupTeams)"
+		ko "$user: signed in, but the $cfg_repo repository answers 404: the groups claim maps to no forge team (gitea.forge.groupTeams)"
 		return
 	else
-		ko "$user: signed in, but the configuration repository answers $code"
+		ko "$user: signed in, but the $cfg_repo repository answers $code"
 		return
 	fi
 	# The team the `groups` claim maps onto (PF-79): the forge shows an organization's team only
@@ -103,9 +113,9 @@ login() {
 	# form, so the form is what gives write access away.
 	curl -sS -b "$jar" -o "$work/$user.editor" --max-time 20 "${folder/\/src\/branch\//\/_new\/}" 2>/dev/null
 	if grep -q 'name="commit_choice"' "$work/$user.editor"; then
-		ko "$user may commit to the configuration repository in the forge"
+		ko "$user may commit to the $cfg_repo repository in the forge"
 	else
-		ok "$user reads the configuration repository without write access"
+		ok "$user reads the $cfg_repo repository without write access"
 	fi
 	# Nor a copy of it (T-1461): the forge refuses a reader's fork, which would outlive their
 	# group membership. The fork page carries the form's token and the person's own id.
@@ -115,12 +125,12 @@ login() {
 	uid=$(sed -n 's/.*name="uid"[^>]*value="\([0-9]*\)".*/\1/p' "$fork_page" | head -1)
 	curl -sS -b "$jar" -c "$jar" -o /dev/null --max-time 30 -X POST "$repo/fork" \
 		--data-urlencode "_csrf=$token" --data-urlencode "uid=$uid" \
-		--data-urlencode "repo_name=configuration" 2>/dev/null
-	code=$(curl -sS -b "$jar" -o /dev/null -w '%{http_code}' --max-time 20 "$base/git/$user/configuration" 2>/dev/null)
+		--data-urlencode "repo_name=$cfg_repo" 2>/dev/null
+	code=$(curl -sS -b "$jar" -o /dev/null -w '%{http_code}' --max-time 20 "$base/git/$user/$cfg_repo" 2>/dev/null)
 	if [ "$code" = 200 ]; then
-		ko "$user forked the configuration repository into $base/git/$user/configuration"
+		ko "$user forked the $cfg_repo repository into $base/git/$user/$cfg_repo"
 	else
-		ok "$user cannot fork the configuration repository ($code)"
+		ok "$user cannot fork the $cfg_repo repository ($code)"
 	fi
 }
 
@@ -135,7 +145,7 @@ done
 apps=$(for user in $signed; do
 	curl -sS -b "$work/$user.jar" --max-time 20 "$base/git/$apps_org" 2>/dev/null \
 		| grep -o "href=\"/git/$apps_org/[A-Za-z0-9._-]*\"" | sed -e 's/.*\///' -e 's/"$//'
-done | grep -vx configuration | sort -u)
+done | grep -vx "$cfg_repo" | grep -vx configuration | sort -u)
 # What the project declares (projects/{project}/apps/{app}/app.yaml), read as the same people: an
 # empty list beside a declared App is a reader who cannot see the repositories, not an empty forge.
 declared=$(for user in $signed; do
