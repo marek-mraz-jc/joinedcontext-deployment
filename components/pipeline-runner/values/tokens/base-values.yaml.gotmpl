@@ -4,7 +4,7 @@
 # - [x] Health probes -> /healthz
 # - [x] Graceful shutdown
 # - [x] Standard labels
-# - [x] ServiceAccount with least privilege -> `create` on serviceaccounts/token in its namespace
+# - [x] ServiceAccount with least privilege -> `create` on serviceaccounts/token in the pipelines' namespace alone
 # - [x] Named ports -> 4180
 # - [ ] Ingress with TLS -> not applicable, reached from the runner alone, through the mesh
 
@@ -53,6 +53,8 @@ env:
   # own `JC_TOKEN_URL`), so the token's `iss` is the one the gateway verifies.
   JC_TOKEN_URL: "https://idm.{{ $global.domain }}/realms/{{ $global.instanceSlug }}/protocol/openid-connect/token"
   JC_TOKEN_AUDIENCE: "https://idm.{{ $global.domain }}/realms/{{ $global.instanceSlug }}"
+  # Where the pipelines' ServiceAccounts are, the only namespace it may mint in.
+  JC_PIPELINE_NAMESPACE: {{ index .Values "pipeline-runner" "identities" "pipelineNamespace" | quote }}
 
 # Its own token, at the path the binary reads, from a projected volume rather than the
 # automount, so the API server audience and a short life are explicit.
@@ -72,23 +74,15 @@ extraVolumes:
             items:
               - key: ca.crt
                 path: ca.crt
-        - downwardAPI:
-            items:
-              - path: namespace
-                fieldRef:
-                  fieldPath: metadata.namespace
 extraVolumeMounts:
   - name: kube-api-token
     mountPath: /var/run/secrets/kubernetes.io/serviceaccount
     readOnly: true
 
-# One verb on one subresource, in its own namespace: a token of a ServiceAccount there. The
-# namespace holds no ServiceAccount but the runner's, this one's and the pipelines'.
+# No grant in its own namespace: its one grant, `create` on serviceaccounts/token, is in the
+# namespace of the pipelines' ServiceAccounts alone (charts/identities, part `identities`).
 rbac:
-  rules:
-    - apiGroups: [""]
-      resources: ["serviceaccounts/token"]
-      verbs: ["create"]
+  rules: []
 
 resources:
   requests:

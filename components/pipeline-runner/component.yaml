@@ -9,3 +9,5 @@ parts:
   # TokenRequest for that pipeline's own Kubernetes ServiceAccount. The one pod of the runner's
   # namespace that reaches the Kubernetes API; off until the platform image carries it.
   - name: tokens
+  # The namespace of the pipelines' own ServiceAccounts and the token service's one grant there.
+  - name: identities

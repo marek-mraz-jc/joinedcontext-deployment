@@ -1,0 +1,8 @@
+# The namespace of the pipelines' own ServiceAccounts, which this chart creates. Never an
+# environment's instance namespace: with `singleNamespace` that one holds every workload.
+namespace: ''
+# The token service's ServiceAccount, which may mint a token of any ServiceAccount there and of
+# none anywhere else.
+tokenService:
+  serviceAccount: pipeline-tokens
+  namespace: ''

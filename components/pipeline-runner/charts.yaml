@@ -6,3 +6,5 @@ pipeline-runner:
     chart: charts/cronjob
   tokens:
     chart: ../../charts/workload
+  identities:
+    chart: charts/identities
