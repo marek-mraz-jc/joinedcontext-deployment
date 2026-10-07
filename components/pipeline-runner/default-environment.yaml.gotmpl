@@ -19,3 +19,9 @@ pipeline-runner:
     project: {{ if eq .Values.global.profile "development" }}helsinki{{ end }}
     # name: { periodSeconds | schedule, config } — see components/pipeline-runner/README.md
     pipelines: {}
+  # The pipelines' token service (PL-19, T-1508). Off until the platform image carries
+  # `jc-token-sidecar` and the federated mechanism is seen working on dev (T-2868); the Portal's
+  # `JC_PORTAL_PIPELINE_IDENTITY` switches the streams onto it.
+  tokens:
+    enabled: false
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "pipeline-runner") }}

@@ -118,6 +118,9 @@ networking.k8s.io/v1/NetworkPolicy local/pipeline-runner-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy local/pipeline-scheduled
 networking.k8s.io/v1/NetworkPolicy local/pipeline-scheduled-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy local/pipeline-scheduled-linkerd-control
+networking.k8s.io/v1/NetworkPolicy local/pipeline-tokens
+networking.k8s.io/v1/NetworkPolicy local/pipeline-tokens-allow-linkerd
+networking.k8s.io/v1/NetworkPolicy local/pipeline-tokens-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy local/portal
 networking.k8s.io/v1/NetworkPolicy local/portal-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy local/portal-egress-to-gitea
