@@ -18,6 +18,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from conftest import seed_configmap
 
 requires_helmfile = pytest.mark.skipif(shutil.which("helmfile") is None, reason="helmfile not installed")
 
@@ -316,10 +317,7 @@ def test_the_seed_binds_every_signed_in_person_to_the_viewer_role(local):
     The binding's group and the Keycloak group everyone lands in are written in two
     components and are the same string; when they drifted, every list of the demo answered
     404 to the viewer and to the approver (dev-smoke, T-0906)."""
-    seed = next(
-        d for d in local
-        if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "gitea-bootstrap-seed"
-    )["data"]
+    seed = seed_configmap(local)["data"]
     role = yaml.safe_load(seed["users__roles__viewer.yaml"])
     assert role["kind"] == "Role" and role["metadata"]["name"] == "viewer"
     assert [rule["verbs"] for rule in role["spec"]["rules"]] == [["read"]], "the viewer changes nothing"
@@ -354,10 +352,7 @@ def test_the_seed_carries_the_organization_its_settings_and_a_project_manifest(l
     Nothing on dev held `org.yaml`, so the domain of every entity URN, the locales and the
     project rules had no home, and two of three project directories had no Project at all
     (T-0901, T-0902)."""
-    seed = next(
-        d for d in local
-        if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "gitea-bootstrap-seed"
-    )["data"]
+    seed = seed_configmap(local)["data"]
 
     org = yaml.safe_load(seed["org.yaml"])
     assert org["kind"] == "Organization" and org["metadata"]["name"] == "hel"
@@ -392,10 +387,7 @@ def test_every_project_of_the_seed_runs_under_a_quota_it_can_hold(local):
     eight times and the pre-emptive warnings of T-0526 and T-1594 could not appear at all.
     The organization now carries the default every project starts from, and the two smaller
     projects carry their own, tighter one."""
-    seed = next(
-        d for d in local
-        if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "gitea-bootstrap-seed"
-    )["data"]
+    seed = seed_configmap(local)["data"]
     dimensions = {
         "contextSpaces", "residentPipelines", "publicEndpoints", "apps",
         "ingestEventsPerSecond", "agentRunsPerDay", "entitiesPerSpace", "requestsPerMinute",
@@ -440,10 +432,7 @@ def test_the_seed_carries_a_hub_whose_two_members_are_inside_its_own_project(loc
     them at. What makes this one a federation rather than one tenant with two types in it is
     that its members are two different spaces: the live context and the indicator space beside
     it. PF-48 refuses a member outside the hub's project, so both are `helsinki`."""
-    seed = next(
-        d for d in local
-        if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "gitea-bootstrap-seed"
-    )["data"]
+    seed = seed_configmap(local)["data"]
     hub = "projects__helsinki__spaces__helsinki-hub"
 
     space = yaml.safe_load(seed[f"{hub}__space.yaml"])
@@ -504,10 +493,7 @@ def test_a_role_that_may_act_on_an_endpoint_may_act_on_its_projection(local):
     The Helsinki seed granted `Endpoint` and not `ModelProjection`, so the demo steward could
     not check their own endpoint proposal: `403 no role grants propose on ModelProjection in
     project helsinki (PF-50)`, found by the share recording take on dev (2026-09-18)."""
-    seed = next(
-        d for d in local
-        if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "gitea-bootstrap-seed"
-    )["data"]
+    seed = seed_configmap(local)["data"]
     roles = {
         key.rsplit("__", 1)[1].removesuffix(".yaml"): yaml.safe_load(value)
         for key, value in seed.items()

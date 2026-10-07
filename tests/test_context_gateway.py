@@ -12,6 +12,7 @@ import shutil
 
 import pytest
 import yaml
+from conftest import seed_configmap
 
 requires_helmfile = pytest.mark.skipif(shutil.which("helmfile") is None, reason="helmfile not installed")
 
@@ -33,9 +34,7 @@ def forge_seed(dev):
     """The files the forge bootstrap commits: the repository the gateway checks out (T-0278).
 
     A key's `__` is a `/` of the repository path."""
-    configmap = next(
-        d for d in dev if d.get("kind") == "ConfigMap" and d["metadata"]["name"].endswith("bootstrap-seed")
-    )
+    configmap = seed_configmap(dev)
     return {key.replace("__", "/"): text for key, text in configmap["data"].items()}
 
 

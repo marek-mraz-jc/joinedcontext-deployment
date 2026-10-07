@@ -63,13 +63,13 @@ args = sys.argv[1:]
 line = " ".join(args)
 # The pod selector of APISIX's egress policy (components/apisix/networkpolicies.yaml).
 EDGE_SELECTOR = [("app.kubernetes.io/name", "apisix"), ("app.kubernetes.io/instance", "apisix-apisix")]
-if args[0] == "get" and args[1] == "configmap" and args[2] == "gitea-bootstrap-seed" and "endpoints__helsinki-" in line:
+if args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-bootstrap-seed") and "endpoints__helsinki-" in line:
     # The Helsinki seed's slugs, one per endpoint name (T-0478); nothing seeded by default,
     # because the checks behind them wait up to 210 s for data to flow.
     name = "".join(itertools.takewhile(str.isalnum, line.split("endpoints__helsinki-", 1)[1]))
     seeded = spec.get("helsinkiSeed", {}).get(name)
     sys.stdout.write("spec:\\n  slug: %s\\n" % seeded if seeded else "")
-elif args[0] == "get" and args[1] == "configmap" and args[2] == "gitea-bootstrap-seed" and "jsonpath={.data}" in line:
+elif args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-bootstrap-seed") and "jsonpath={.data}" in line:
     # The seed's file names, for the residue count (T-0667): one Helsinki endpoint per seeded slug.
     keys = ["projects__helsinki__spaces__helsinki__endpoints__helsinki-%s.yaml" % n for n in spec.get("helsinkiSeed", {})]
     if spec.get("helsinkiSeed"):
@@ -79,7 +79,7 @@ elif args[0] == "get" and args[1] == "configmap" and args[2] == "gitea-bootstrap
                  "projects__helsinki__spaces__helsinki__space.yaml",
                  "projects__helsinki__spaces__helsinki-kpi__space.yaml"]
     sys.stdout.write(json.dumps({k: "" for k in keys}))
-elif args[0] == "get" and args[1] == "configmap" and args[2] == "gitea-bootstrap-seed":
+elif args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-bootstrap-seed"):
     # The seeded Endpoint manifest the smoke reads the slug from (T-0282, T-0278); "" = nothing seeded.
     sys.stdout.write(spec.get("seedEndpoint", "spec:\\n  slug: mluyob4nz52lok3ssk7pgn5vwt\\n"))
 elif args[0] == "get" and args[1] == "configmap" and args[2] == "portal-branding":
