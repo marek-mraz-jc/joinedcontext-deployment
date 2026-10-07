@@ -8,6 +8,10 @@ giteaUrl: ''
 # The forge teams a signed-in person lands in, keyed by name so the environment's
 # group -> teams map and this list cannot drift (PF-79). Every team reads, none writes.
 teams: {}
+# Layout 2 (PF-87, T-2647): the projects whose repository gets its two teams, `{slug}-readers`
+# (read) and `{slug}-writers` (write), on that repository alone. Created here, as the forge's
+# administrator, because creating a team needs an organization owner; the Portal keeps members.
+projectTeams: []
 
 repo:
   owner: ''

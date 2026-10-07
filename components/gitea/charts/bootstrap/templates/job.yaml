@@ -58,6 +58,8 @@ spec:
               value: {{ .Values.layout | quote }}
             - name: TEAMS
               value: {{ .Values.teams | keys | sortAlpha | join " " | quote }}
+            - name: PROJECT_TEAMS
+              value: {{ .Values.projectTeams | default list | join " " | quote }}
             - name: NAMESPACE
               valueFrom:
                 fieldRef: { fieldPath: metadata.namespace }
@@ -324,6 +326,38 @@ spec:
               }
               grant "$PORTAL_USER" write "$REPO"
               grant "$GATEWAY_USER" read "$REPO"
+
+              # 3d. Each project repository's two teams (PF-87, T-2647): `{slug}-readers` reads and
+              #     `{slug}-writers` writes that repository and no other. The Portal fills their
+              #     members from the project's bindings; the teams are made here because creating a
+              #     team needs an organization owner, which the Portal's user is not (PF-106).
+              # project_team <slug> <role> <permission>
+              project_team() {
+                team="$1-$2"
+                status=$(forge_code GET "/api/v1/orgs/$ORG/teams/search?q=$team")
+                [ "$status" = 200 ] || { echo "the forge answered $status searching for team $team" >&2; exit 1; }
+                team_id=$(tr '{' '\n' < $WORK/body | grep "\"name\": *\"$team\"" | sed -n 's/.*"id": *\([0-9]*\).*/\1/p' | head -1)
+                if [ -z "$team_id" ]; then
+                  status=$(forge_code POST "/api/v1/orgs/$ORG/teams" -d "{
+                    \"name\":\"$team\",
+                    \"description\":\"The $2 of project $1 (PF-87)\",
+                    \"permission\":\"$3\",
+                    \"includes_all_repositories\":false,
+                    \"can_create_org_repo\":false,
+                    \"units\":[\"repo.code\",\"repo.issues\",\"repo.pulls\"]
+                  }")
+                  [ "$status" = 201 ] || { echo "creating team $team failed: $status" >&2; cat $WORK/body >&2; exit 1; }
+                  team_id=$(sed -n 's/^{"id": *\([0-9]*\).*/\1/p' $WORK/body)
+                  [ -n "$team_id" ] || { echo "the forge named no id for team $team" >&2; exit 1; }
+                  echo "team $team created"
+                fi
+                status=$(forge_code PUT "/api/v1/teams/$team_id/repos/$ORG/$1")
+                [ "$status" = 204 ] || { echo "giving team $team the repository $ORG/$1 failed: $status" >&2; cat $WORK/body >&2; exit 1; }
+              }
+              for slug in ${PROJECT_TEAMS:-}; do
+                project_team "$slug" readers read
+                project_team "$slug" writers write
+              done
 
               # creator <organization> <user>: the user may create a repository in the
               # organization, and becomes the administrator of what it creates. The forge lets a
