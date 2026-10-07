@@ -468,7 +468,7 @@ def test_the_application_reading_both_bodies_is_a_published_static_app_on_the_re
     it with the Endpoints on the spaces its dataNeeds name plus those its project's shares name."""
     app = one(REGION, "App", "bbsk-ukazovatele")
     assert app["metadata"]["namespace"] == "bbsk"
-    assert app["spec"]["kind"] == "static"
+    assert app["spec"]["kind"] == "ui"
     assert app["spec"]["lifecycle"] == "published"
     spaces = [need["contextSpaceRef"]["name"] for need in app["spec"]["dataNeeds"]]
     # Its own space first; each further space is read through that space's public Endpoint of the
@@ -502,7 +502,7 @@ def test_the_citys_records_are_a_published_static_app_the_portal_image_ships():
     app = one(CITY, "App", "banskabystrica-zaznamy")
     assert app["metadata"]["namespace"] == "banskabystrica"
     assert app["metadata"]["annotations"]["joinedcontext.com/shipped-with"] == "portal"
-    assert app["spec"]["kind"] == "static"
+    assert app["spec"]["kind"] == "ui"
     assert app["spec"]["lifecycle"] == "published"
     assert app["spec"]["source"] == {"path": "./apps/banskabystrica-zaznamy"}
     (need,) = app["spec"]["dataNeeds"]

@@ -25,7 +25,7 @@ metadata:
   name: helsinki-bikes
   namespace: helsinki
 spec:
-  kind: static
+  kind: ui
   source:
     git:
       url: https://example.test/git/joinedcontext/helsinki_helsinki-bikes.git
