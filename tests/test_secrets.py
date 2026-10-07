@@ -160,7 +160,9 @@ def test_sops_encrypted_value_reaches_the_generated_secret(tmp_path):
     encrypted.write_text(
         subprocess.run(
             ["sops", "--encrypt", "--age", recipient, str(plain)],
-            check=True, capture_output=True, text=True,
+            # Outside the repository: its .sops.yaml (T-1712) names the recipients of the
+            # repository's own files, and this throwaway key is none of them.
+            check=True, capture_output=True, text=True, cwd=tmp_path,
         ).stdout
     )
     assert "sops-supplied-password" not in encrypted.read_text(), "sops left the value in plaintext"

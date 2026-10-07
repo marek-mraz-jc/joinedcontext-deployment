@@ -1,0 +1,17 @@
+# What was decided to be measured for Žilina: KeyPerformanceIndicator entities computed from zilina-mesto and zilina-verejne, with their formula and provenance (PF-54, PF-55).
+apiVersion: joinedcontext.com/v1alpha1
+kind: ContextSpace
+metadata:
+  name: zilina-kpi
+  namespace: zilina
+  title: { sk: "Mesto — ukazovatele", en: "City, indicators" }
+  description:
+    sk: "Ukazovatele mesta Žilina vypočítané z otvorených dát, s vzorcom a pôvodom."
+    en: "The indicators of the city of Žilina computed from open data, with their formula and provenance."
+spec:
+  # The space name is the segment its ids carry, pinned so it cannot drift (PF-84).
+  urnSegment: zilina-kpi
+  isSandbox: false
+  # The one model of this space: a write of a type it does not declare is refused (DM-61).
+  dataModelRef: { kind: DataModel, name: key-performance-indicator }
+  defaultLocale: sk

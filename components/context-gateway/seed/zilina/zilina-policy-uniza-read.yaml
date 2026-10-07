@@ -1,0 +1,15 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Policy
+metadata:
+  name: uniza-read
+  namespace: zilina
+  title: { sk: "Verejné čítanie prác univerzity", en: "Public read: the university's works" }
+spec:
+  contextSpaceRef: { kind: ContextSpace, name: zilina-uniza }
+  assigner: did:web:{orgDomain}
+  assignee: { kind: role, id: public }
+  # Read only. Only works that carry an open licence of their own enter the space, and none carries an author.
+  operations: [retrieveOps]
+  information:
+    - entities:
+        - type: CreativeWork

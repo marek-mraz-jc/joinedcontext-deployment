@@ -19,3 +19,18 @@ pipeline-runner:
     project: {{ if eq .Values.global.profile "development" }}helsinki{{ end }}
     # name: { periodSeconds | schedule, config } — see components/pipeline-runner/README.md
     pipelines: {}
+  # The pipelines' token service (PL-19, T-1508). Off until the platform image carries
+  # `jc-token-sidecar` and the federated mechanism is seen working on dev (T-2868); the Portal's
+  # `JC_PORTAL_PIPELINE_IDENTITY` switches the streams onto it.
+  tokens:
+    enabled: false
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "pipeline-runner") }}
+  # The pipelines' own Kubernetes ServiceAccounts, in a namespace of their own the chart creates
+  # (PL-19, T-1508): the token service may mint a token of any ServiceAccount there and of none
+  # elsewhere. The release itself lives with the runner. On with the token service.
+  identities:
+    enabled: false
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "pipeline-runner") }}
+    # The namespace the chart creates: never `jc.namespace`, which is the one namespace of a
+    # `singleNamespace` environment and holds every workload's ServiceAccount.
+    pipelineNamespace: {{ printf "%s-pipeline-identities" .Values.global.instanceSlug | trunc 63 | trimSuffix "-" }}

@@ -12,6 +12,8 @@ import shutil
 
 import pytest
 import yaml
+from conftest import seed_configmap
+from pipeline_spec import outputs
 
 requires_helmfile = pytest.mark.skipif(shutil.which("helmfile") is None, reason="helmfile not installed")
 
@@ -33,9 +35,7 @@ def forge_seed(dev):
     """The files the forge bootstrap commits: the repository the gateway checks out (T-0278).
 
     A key's `__` is a `/` of the repository path."""
-    configmap = next(
-        d for d in dev if d.get("kind") == "ConfigMap" and d["metadata"]["name"].endswith("bootstrap-seed")
-    )
+    configmap = seed_configmap(dev)
     return {key.replace("__", "/"): text for key, text in configmap["data"].items()}
 
 
@@ -109,8 +109,10 @@ def test_the_conformance_space_is_one_space_one_endpoint_and_the_policies_of_two
     ovzdusie = {key: m for key, m in seed.items() if space_of(m) == "ovzdusie"}
     kinds = sorted(kind for kind, _ in ovzdusie)
     # No App reads it: the city's air-quality screen reads the live EEA readings in
-    # banskabystrica-verejne, not the conformance suite's seeded stations (T-2916, T-2949).
-    assert kinds == ["ContextSpace", "DataModel", "Endpoint", "Policy", "Policy", "ServiceAccount"], kinds
+    # banskabystrica-verejne, not the conformance suite's seeded stations (T-2916, T-2949). The
+    # third Policy is the pipelines' write, which pipeline public-air and its expiry sweep need
+    # (T-3120, PL-64).
+    assert kinds == ["ContextSpace", "DataModel", "Endpoint", "Policy", "Policy", "Policy", "ServiceAccount"], kinds
 
 
 @requires_helmfile
@@ -135,11 +137,13 @@ def test_every_seeded_manifest_of_the_city_belongs_to_one_of_its_four_spaces(see
     }
     for (kind, name), manifest in seed.items():
         if kind == "Pipeline":
-            assert manifest["spec"]["targetEndpoint"] in endpoints, f"{name} writes nowhere the project serves"
+            for output in outputs(manifest["spec"]):
+                assert output["targetEndpoint"] in endpoints, f"{name} writes nowhere the project serves"
 
     account = seed[("ServiceAccount", "pipelines")]
     scoped = {role["scope"]["contextSpace"] for role in account["spec"]["roles"]}
-    assert scoped == {"banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne"}, scoped
+    # ovzdusie since T-3120: pipeline public-air writes the conformance space's open dataset.
+    assert scoped == {"ovzdusie", "banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne"}, scoped
 
 
 @requires_helmfile

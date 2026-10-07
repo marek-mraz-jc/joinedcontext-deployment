@@ -78,6 +78,18 @@ pipeline-runner:
         - protocol: TCP
           port: 53
 
+    # The pipelines' token service beside it (PL-19, T-1508): every stream's token, once the
+    # Portal renders streams with their own pipeline. The service, not the runner, reaches the
+    # Kubernetes API.
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: pipeline-runner-tokens
+          componentNamespace: pipeline-runner.tokens
+      ports:
+        - protocol: TCP
+          port: 4180
+
 # The scheduled half (PL-04, PL-10): the same client, in a pod that exists for one run. The
 # selector is the release rather than the workload name, because the pod's name label carries
 # the project and the project is a value.
@@ -126,3 +138,61 @@ portal-internal-from-pipeline-runner:
       ports:
         - protocol: TCP
           port: 9090
+
+# The pipelines' token service (PL-19, T-1508): the runner asks it for a pipeline's token on
+# 4180 and nothing else does; it asks the Kubernetes API for that pipeline's ServiceAccount
+# token and the realm's token endpoint for the access token.
+pipeline-tokens:
+  podSelector:
+    app.kubernetes.io/name: pipeline-runner-tokens
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: pipeline-runner-runner
+          componentNamespace: pipeline-runner.runner
+      ports:
+        - protocol: TCP
+          port: 4180
+  egress:
+    # The Kubernetes API, for TokenRequest (Keycloak's rule says the same): not a pod, so named
+    # by address; k3s serves it on 6443, the port the policy sees after the Service's DNAT.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 6443
+    # The realm's token endpoint on the cluster's public host, rewritten to the ingress
+    # controller's pod as for the runner.
+    - to:
+        - namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values: [traefik, kube-system, ingress-nginx]
+          podSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values: [traefik, ingress-nginx]
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 8443
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53

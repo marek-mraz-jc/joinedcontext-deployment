@@ -352,7 +352,7 @@ if has_route portal-api; then
 		# its own, the janitor's pattern (seed/helsinki/helsinki-role-janitor.yaml, T-2627, T-2817),
 		# and one of it per kind is a take in flight. What a person made on dev is not residue,
 		# whatever its name, so a generated app's endpoint or an upload leaves the check green.
-		seed=$(kubectl get configmap gitea-bootstrap-seed -n "$slug" -o 'jsonpath={.data}' 2>/dev/null)
+		seed=$(kubectl get configmap gitea-bootstrap-seed-helsinki -n "$slug" -o 'jsonpath={.data}' 2>/dev/null)
 		for kind in "endpoints Endpoint projects__helsinki__spaces__[a-z0-9-]*__endpoints__[a-z0-9-]*\.yaml" \
 			"pipelines Pipeline projects__helsinki__pipelines__[a-z0-9-]*__pipeline\.yaml" \
 			"spaces ContextSpace projects__helsinki__spaces__[a-z0-9-]*__space\.yaml"; do
@@ -409,7 +409,7 @@ if has_route context-endpoint; then
 	# gateway serves the forge's checkout), the same way the route table comes from APISIX: a
 	# slug written into this script would drift from the seed, and a made-up one cannot exist
 	# (slugs are 26+ base32 characters). A seed key is the repository path with `/` as `__`.
-	ep="${JC_SMOKE_ENDPOINT:-$(kubectl get configmap gitea-bootstrap-seed -n "$slug" -o jsonpath='{.data.projects__banskabystrica__spaces__ovzdusie__endpoints__public-air\.yaml}' 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1)}"
+	ep="${JC_SMOKE_ENDPOINT:-$(kubectl get configmap gitea-bootstrap-seed-banskabystrica -n "$slug" -o jsonpath='{.data.projects__banskabystrica__spaces__ovzdusie__endpoints__public-air\.yaml}' 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1)}"
 	# Writes are bound to the conformance ServiceAccount (GW22): its client_credentials token
 	# carries the slug as audience and an azp the gateway resolves to the manifest (PF-45, PF-46).
 	# The apisix-gateway token above is minted for the Portal and names no account here.
@@ -486,7 +486,7 @@ echo "helsinki space"
 # answers NGSI-LD, MCP and the model's LinkML; the streams of the resident runner fill it. The
 # slugs come from the forge's seed the way the ovzdusie one does above.
 if has_route context-endpoint; then
-	slug_of() { kubectl get configmap gitea-bootstrap-seed -n "$slug" -o jsonpath="{.data.projects__helsinki__spaces__helsinki__endpoints__helsinki-$1\.yaml}" 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1; }
+	slug_of() { kubectl get configmap gitea-bootstrap-seed-helsinki -n "$slug" -o jsonpath="{.data.projects__helsinki__spaces__helsinki__endpoints__helsinki-$1\.yaml}" 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1; }
 	all=$(slug_of all)
 	if [ -z "$all" ]; then
 		skip "helsinki endpoints (no Helsinki seed on the gateway in this instance)"
@@ -576,10 +576,30 @@ if has_route gitea-forge; then
 		else
 			ko "no forge team carries read permission"
 		fi
-		if grep -qE '"repo.code": *"(write|admin)"' <<<"$units"; then
-			ko "a forge team writes the configuration repository: merging is the Portal's (PF-80)"
+		# A team that writes is a project's `{slug}-writers` (PF-87): it holds its project's
+		# repository and nothing else. None may write the configuration repository, whose merges
+		# are the Portal's (PF-80), nor every repository at once.
+		writing=$(printf '%s' "$teams" | python3 -c 'import json, sys
+for t in json.load(sys.stdin):
+    if (t.get("units_map") or {}).get("repo.code") in ("write", "admin"):
+        print(t["id"], "all" if t.get("includes_all_repositories") else "listed", t["name"])' 2>/dev/null || true)
+		wrong=""
+		while read -r team_id scope team_name; do
+			[ -n "$team_id" ] || continue
+			if [ "$scope" = all ]; then
+				wrong="$wrong $team_name"
+				continue
+			fi
+			team_repos=$(curl -sS --max-time 20 -u "$forge_admin_user:$forge_admin_pw" \
+				"$base/git/api/v1/teams/$team_id/repos" 2>/dev/null || true)
+			if grep -qE '"name": *"configuration"' <<<"$team_repos"; then
+				wrong="$wrong $team_name"
+			fi
+		done <<<"$writing"
+		if [ -n "$wrong" ]; then
+			ko "forge team(s)$wrong write the configuration repository: merging is the Portal's (PF-80)"
 		else
-			ok "no forge team writes it, so merging stays the Portal's approval (PF-80)"
+			ok "no forge team writes the configuration repository, so merging stays the Portal's approval (PF-80)"
 		fi
 		# The Actions runner (ADR-N-028): registered in the organization and online. It
 		# registers again before every job, so an empty list is waited for, and the wait is
@@ -857,7 +877,7 @@ fi
 # the Portal accepted `status.build` for the repository's head. A fresh seed takes minutes, so
 # this waits up to JC_SMOKE_APP_WAIT seconds (default 600) and says how long it took (T-0459).
 echo "sample apps"
-sample_apps=$(kubectl get configmaps -n "$slug" -o name 2>/dev/null | sed -n 's,^configmap/gitea-bootstrap-app-,,p' | tr '\n' ' ')
+sample_apps=$(kubectl get configmaps -n "$slug" -o name 2>/dev/null | sed -n 's,^configmap/gitea-sample-apps-,,p' | tr '\n' ' ')
 app_wait=${JC_SMOKE_APP_WAIT:-600}
 if [ -z "${sample_apps% }" ]; then
 	skip "sample apps (none is seeded in this instance)"
@@ -1000,7 +1020,7 @@ else
 			"$idm/realms/$realm/protocol/openid-connect/token" 2>/dev/null |
 			sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
 	fi
-	fn_slug=$(kubectl get configmap gitea-bootstrap-seed -n "$slug" -o jsonpath='{.data.projects__helsinki__spaces__helsinki__endpoints__helsinki-all\.yaml}' 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1)
+	fn_slug=$(kubectl get configmap gitea-bootstrap-seed-helsinki -n "$slug" -o jsonpath='{.data.projects__helsinki__spaces__helsinki__endpoints__helsinki-all\.yaml}' 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1)
 	if [ -z "$fn_token" ]; then
 		ko "no client_credentials token for portal-api, so no function was invoked"
 	elif [ -z "$fn_slug" ]; then

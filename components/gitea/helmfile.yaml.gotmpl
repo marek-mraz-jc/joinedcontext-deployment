@@ -53,10 +53,10 @@ releases:
     condition: {{ $component }}.{{ $part.name }}.enabled
     {{- if index $part "needs" }}
     needs:
-      {{ range index $part "needs" }}
-        {{- $items := splitList "." . -}}
-        {{- $depComponent := index $items 0 -}}
-        {{- $depPart := index $items 1 -}}
+      {{- range index $part "needs" }}
+        {{- $items := splitList "." . }}
+        {{- $depComponent := index $items 0 }}
+        {{- $depPart := index $items 1 }}
       - {{ index $root $depComponent $depPart "namespace" }}/{{ printf "%s-%s" ($depComponent | kebabcase) $depPart }}
       {{- end }}
     {{- end }}

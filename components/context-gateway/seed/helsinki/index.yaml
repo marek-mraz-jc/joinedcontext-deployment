@@ -90,6 +90,7 @@ helsinki-role-ckan-admin-helsinki-hel-fi.yaml: users/roles/ckan-admin-helsinki-h
 helsinki-role-ckan-admin-banskabystrica-banskabystrica.yaml: users/roles/ckan-admin-banskabystrica-banskabystrica.yaml
 helsinki-role-ckan-admin-bbsk-bbsk.yaml: users/roles/ckan-admin-bbsk-bbsk.yaml
 helsinki-role-ckan-admin-praha-praha.yaml: users/roles/ckan-admin-praha-praha.yaml
+helsinki-role-ckan-admin-zilina-zilina.yaml: users/roles/ckan-admin-zilina-zilina.yaml
 helsinki-role-model-editor.yaml: users/roles/model-editor.yaml
 helsinki-role-pipeline-editor.yaml: users/roles/pipeline-editor.yaml
 helsinki-role-endpoint-editor.yaml: users/roles/endpoint-editor.yaml
@@ -155,6 +156,18 @@ helsinki-pipeline-districts-bento.yaml: projects/helsinki/pipelines/districts/be
 helsinki-pipeline-subdistricts-bento.yaml: projects/helsinki/pipelines/subdistricts/bento.yaml
 helsinki-pipeline-fee-parking-zones-bento.yaml: projects/helsinki/pipelines/fee-parking-zones/bento.yaml
 helsinki-pipeline-resident-parking-zones-bento.yaml: projects/helsinki/pipelines/resident-parking-zones/bento.yaml
+# The default group of Prague's waste desk (T-2786, AP-118): an organization Group, so it is seeded
+# here beside the organization's roles rather than from the praha folder, which writes its project only.
+group-praha-odpad-viewer.yaml: users/groups/praha-odpad-viewer.yaml
+# Helsinki's service map for its residents (T-2788): a public static bundle the Portal image ships,
+# reading the service register and the beach water sensors of the space helsinki through its own endpoint.
+helsinki-app-kartta.yaml: projects/helsinki/apps/helsinki-kartta/app.yaml
+helsinki-app-kartta-endpoint.yaml: projects/helsinki/spaces/helsinki/endpoints/app-helsinki-kartta.yaml
+helsinki-app-kartta-policy.yaml: projects/helsinki/spaces/helsinki/policies/app-helsinki-kartta-1.yaml
+# Helsinki's open data as grids (T-2788), with the endpoint's own downloads.
+helsinki-app-data.yaml: projects/helsinki/apps/helsinki-data/app.yaml
+helsinki-app-data-endpoint.yaml: projects/helsinki/spaces/helsinki/endpoints/app-helsinki-data.yaml
+helsinki-app-data-policy.yaml: projects/helsinki/spaces/helsinki/policies/app-helsinki-data-1.yaml
 # The public knowledge assistant over the weather and events Endpoints (T-3055, MF-52).
 helsinki-assistant-public.yaml: projects/helsinki/assistant/deployments/helsinki-public.yaml
 # The catalogue's assistant, framed by every page of the catalogue (T-3058, AG-114).

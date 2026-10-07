@@ -1,0 +1,17 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Policy
+metadata:
+  name: verejne-read
+  namespace: zilina
+  title: { sk: "Verejné čítanie verejných údajov mesta", en: "Public read: the city's open data" }
+spec:
+  contextSpaceRef: { kind: ContextSpace, name: zilina-verejne }
+  assigner: did:web:{orgDomain}
+  assignee: { kind: role, id: public }
+  # Read only. Every type of the space is open data, and no mapping writes a person's name, a parcel or an owner.
+  operations: [retrieveOps]
+  information:
+    - entities:
+        - type: AirQualityObserved
+        - type: PointOfInterest
+        - type: GtfsStop

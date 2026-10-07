@@ -95,3 +95,19 @@ bbsk-pipeline-socialne-sluzby-bento.yaml: projects/bbsk/pipelines/socialne-sluzb
 bbsk-datasource-mosty.yaml: projects/bbsk/datasources/bbsk-mosty.yaml
 bbsk-pipeline-mosty.yaml: projects/bbsk/pipelines/mosty/pipeline.yaml
 bbsk-pipeline-mosty-bento.yaml: projects/bbsk/pipelines/mosty/bento.yaml
+# The region's map for its residents (T-2784): a public static bundle the Portal image ships,
+# reading the hospitals, social services and organizations of bbsk-registre through its own
+# endpoint; the Endpoint under the space it serves, its Policy beside it.
+bbsk-app-mapa.yaml: projects/bbsk/apps/bbsk-mapa/app.yaml
+bbsk-app-mapa-endpoint.yaml: projects/bbsk/spaces/bbsk-registre/endpoints/app-bbsk-mapa.yaml
+bbsk-app-mapa-policy.yaml: projects/bbsk/spaces/bbsk-registre/policies/app-bbsk-mapa-1.yaml
+# The region's public registers as grids (T-2784), with the endpoint's own downloads.
+bbsk-app-data.yaml: projects/bbsk/apps/bbsk-data/app.yaml
+bbsk-app-data-endpoint.yaml: projects/bbsk/spaces/bbsk-registre/endpoints/app-bbsk-data.yaml
+bbsk-app-data-policy.yaml: projects/bbsk/spaces/bbsk-registre/policies/app-bbsk-data-1.yaml
+# The bridge desk for road management (T-2784): opened by its viewer role, which its default group
+# holds (AP-118); the group is the organization's, so it lives under users/groups/.
+bbsk-app-mosty.yaml: projects/bbsk/apps/bbsk-mosty/app.yaml
+bbsk-app-mosty-endpoint.yaml: projects/bbsk/spaces/bbsk-registre/endpoints/app-bbsk-mosty.yaml
+bbsk-app-mosty-policy-viewer.yaml: projects/bbsk/spaces/bbsk-registre/policies/app-bbsk-mosty-1-viewer.yaml
+bbsk-app-mosty-group-viewer.yaml: users/groups/bbsk-mosty-viewer.yaml

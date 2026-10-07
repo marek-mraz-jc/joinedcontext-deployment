@@ -4,3 +4,7 @@ pipeline-runner:
     chart: ../../charts/workload
   scheduled:
     chart: charts/cronjob
+  tokens:
+    chart: ../../charts/workload
+  identities:
+    chart: charts/identities

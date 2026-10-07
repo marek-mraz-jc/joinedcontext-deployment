@@ -29,3 +29,19 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- printf "%s:%s" .Values.image.repository .Values.image.tag }}
 {{- end }}
 {{- end }}
+
+{{/*
+The seed is one ConfigMap per project, `<fullname>-seed-<project>`, beside `<fullname>-seed` for
+the organization's own files: one ConfigMap holds at most 1 MiB, and the seed outgrew it when
+the fifth city joined (T-3177). `bootstrap.seedGroup` names the group of one `__` key.
+*/}}
+{{- define "bootstrap.seedGroup" -}}
+{{- $parts := splitList "__" . -}}
+{{- if and (eq (index $parts 0) "projects") (gt (len $parts) 2) }}{{ index $parts 1 }}{{ end -}}
+{{- end }}
+
+{{- define "bootstrap.seedGroups" -}}
+{{- $groups := dict -}}
+{{- range $key, $text := .Values.seed }}{{ $_ := set $groups (include "bootstrap.seedGroup" $key) true }}{{ end -}}
+{{- keys $groups | sortAlpha | toJson -}}
+{{- end }}

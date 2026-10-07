@@ -6,3 +6,5 @@ gitea:
     version: '12.7.0'
   bootstrap:
     chart: charts/bootstrap
+  sample-apps:
+    chart: charts/sample-apps

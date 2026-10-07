@@ -133,10 +133,12 @@ serviceMesh:
   enabled: false
 
 # The sample applications the Job pushes each into its own repository and commits into
-# `projects/<project>/apps/<name>/app.yaml` (T-2599, AP-75): `apps.<name>` maps a file's path,
-# `/` written as `__`, to its text. `app.yaml` is the manifest and is not pushed with the tree.
+# `projects/<project>/apps/<name>/app.yaml` (T-2599, AP-75): `apps.<name>` names each file's path,
+# `/` written as `__`; the text is in the ConfigMap `<configMaps>-<name>` of the release
+# gitea-sample-apps (T-3175). `app.yaml` is the manifest and is not pushed with the tree.
 # `publicBase` is where a person clones from, the address the manifest's `source.git.url` names.
 sampleApps:
+  configMaps: gitea-sample-apps
   project: ''
   publicBase: ''
   apps: {}

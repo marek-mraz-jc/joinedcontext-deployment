@@ -218,12 +218,13 @@ def test_dev_hands_the_job_every_vendored_file_byte_for_byte(dev):
         item["path"] for source in volume["projected"]["sources"] for item in source["configMap"]["items"]
     }
     assert sorted(index["apps"]) == [
-        "air-quality", "helsinki-alerts", "helsinki-bikes", "helsinki-events", "hsl-transport",
+        "air-quality", "alerts-desk", "helsinki-alerts", "helsinki-bikes", "helsinki-events", "hsl-transport",
     ]
     for app, files in index["apps"].items():
         on_disk = sorted(str(p.relative_to(VENDORED / app)) for p in (VENDORED / app).rglob("*") if p.is_file())
         assert sorted(files) == on_disk, f"{app}: index.yaml and the vendored tree disagree"
-        data = one(dev, "ConfigMap", f"gitea-bootstrap-app-{app}")["data"]
+        # A release of its own (T-3175): the bootstrap's would not fit Helm's Secret with them.
+        data = one(dev, "ConfigMap", f"gitea-sample-apps-{app}")["data"]
         for path in files:
             key = path.replace("/", "__")
             assert "__" not in path, f"{app}/{path} would not survive the key encoding"
@@ -378,3 +379,33 @@ def test_every_person_a_sample_app_admits_is_admitted_by_its_endpoint():
             )
             checked += 1
     assert checked, "no sample app reads through a project-list endpoint any more: drop this test"
+
+
+@requires_helmfile
+def test_no_gitea_release_outgrows_the_secret_helm_keeps_it_in(dev):
+    """Helm stores a release (its values and its manifest, gzipped and base64-encoded) in one
+    Secret of at most 1 MiB; gitea-bootstrap passed it when alerts-desk joined the seed and every
+    apply stopped there (T-3175). The values carry what the manifest renders, so twice the
+    manifest is the estimate, and a quarter of the Secret stays free for the next app."""
+    import base64
+    import gzip
+
+    for release in ("gitea-bootstrap", "gitea-sample-apps"):
+        docs = [
+            d for d in dev
+            if (d.get("metadata", {}).get("labels") or {}).get("app.kubernetes.io/instance") == release
+        ]
+        assert docs, f"{release} renders nothing labelled as its own"
+        manifest = yaml.safe_dump_all(docs).encode()
+        stored = len(base64.b64encode(gzip.compress(manifest * 2)))
+        assert stored < 0.75 * 1024 * 1024, f"{release} would be stored in {stored} bytes"
+
+
+@requires_helmfile
+def test_no_configmap_of_dev_nears_the_one_mib_an_object_may_hold(dev):
+    """The API server refuses an object over 1 MiB; the forge seed did when Zilina joined it and
+    every apply stopped at gitea-bootstrap (T-3177). A quarter stays free for the next project."""
+    for d in dev:
+        if d.get("kind") == "ConfigMap":
+            size = len(yaml.safe_dump(d).encode())
+            assert size < 0.75 * 1024 * 1024, f"ConfigMap {d['metadata']['name']} is {size} bytes"

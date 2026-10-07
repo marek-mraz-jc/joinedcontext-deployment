@@ -64,8 +64,9 @@ def test_the_region_is_its_own_project_and_the_city_says_it_is_the_city():
 def test_each_projects_quotas_hold_what_it_declares_with_room_for_the_demo():
     """T-2873: the quota leaves room for the demo's work, never exactly what the seed holds."""
     for folder, project, spaces, public in (
-        # The third public endpoint of the region is its raw rows' for the trend lines (T-2934).
-        (REGION, "bbsk", ["bbsk-kraj", "bbsk-kpi", "bbsk-registre"], 3),
+        # The region's public endpoints: its raw rows' for the trend lines (T-2934), and the region
+        # map's and its grids' (T-2784).
+        (REGION, "bbsk", ["bbsk-kraj", "bbsk-kpi", "bbsk-registre"], 5),
         # The third public endpoint of the city is the air-quality App's own (T-2972), the fourth
         # and fifth the city map's and the data grids' (T-2782).
         (CITY, "banskabystrica", ["ovzdusie", "banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne"], 5),
@@ -656,9 +657,10 @@ def test_only_the_sole_writer_of_a_space_expires_and_its_policy_grants_the_sweep
                         for _, policy in manifests(folder, "Policy")
                     ), f"{name}: no pipelines Policy grants {operation} on {entity_type} in {space}"
     # Off by default: exactly these carry it, every other pipeline deletes nothing. The region's
-    # indicators, and the city's air readings, whose 13 seeded test stations leave public-air that
-    # way (T-3120).
-    assert expiring == ["banskabystrica/public-air", "bbsk/ukazovatele"]
+    # indicators, the city's air readings, whose 13 seeded test stations leave public-air that
+    # way (T-3120), and Žilina's two sole writers, its indicators and the university's works
+    # (T-3138).
+    assert expiring == ["banskabystrica/public-air", "bbsk/ukazovatele", "zilina/drepo", "zilina/ukazovatele"]
     assert one(REGION, "Pipeline", "ukazovatele")["spec"]["expiry"] == {
         "after": "21d",
         "types": ["KeyPerformanceIndicator"],

@@ -23,12 +23,15 @@ layout2=$(kubectl get deploy context-gateway -n "$slug" \
 	-o jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="JC_GATEWAY_PROJECTS_DIR")].value}' 2>/dev/null || true)
 if [ -n "${JC_SMOKE_LAYOUT2:-$layout2}" ]; then
 	cfg_repo="$project"
+	# The people the dev bindings give `propose` on the project, so `{slug}-writers` (PF-87).
+	writers="${JC_SMOKE_FORGE_WRITERS:-demo.steward}"
 	folder="$base/git/$forge_org/$project/src/branch/main"
 else
 	cfg_repo=configuration
 	folder="$base/git/$forge_org/configuration/src/branch/main/projects/$project"
 fi
 signed=""
+: "${writers:=}"
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
@@ -111,11 +114,15 @@ login() {
 	# Every write goes through a Change (CC-41). Gitea links "Add file" for everyone; to a
 	# person without write it is the "fork to propose changes" notice, to a writer the commit
 	# form, so the form is what gives write access away.
+	# At layout 2 a person with `propose` is in `{slug}-writers` (PF-87) and gets the form, but main
+	# is protected for the Portal alone: the forge must offer them a new branch and refuse main.
 	curl -sS -b "$jar" -o "$work/$user.editor" --max-time 20 "${folder/\/src\/branch\//\/_new\/}" 2>/dev/null
-	if grep -q 'name="commit_choice"' "$work/$user.editor"; then
-		ko "$user may commit to the $cfg_repo repository in the forge"
-	else
+	if ! grep -q 'name="commit_choice"' "$work/$user.editor"; then
 		ok "$user reads the $cfg_repo repository without write access"
+	elif [[ " $writers " == *" $user "* ]] && grep -q 'Not allowed to commit directly to branch' "$work/$user.editor"; then
+		ok "$user may propose a branch in the $cfg_repo repository, main refuses their commit"
+	else
+		ko "$user may commit to the $cfg_repo repository in the forge"
 	fi
 	# Nor a copy of it (T-1461): the forge refuses a reader's fork, which would outlive their
 	# group membership. The fork page carries the form's token and the person's own id.

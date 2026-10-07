@@ -1112,9 +1112,14 @@ spec:
         - name: tmp
           emptyDir: {}
         {{- if .Values.seed }}
+        # One ConfigMap per project and one for the organization, one tree here (T-3177).
         - name: seed
-          configMap:
-            name: {{ include "bootstrap.fullname" . }}-seed
+          projected:
+            sources:
+              {{- range $group := include "bootstrap.seedGroups" . | fromJsonArray }}
+              - configMap:
+                  name: {{ include "bootstrap.fullname" $ }}-seed{{ if $group }}-{{ $group }}{{ end }}
+              {{- end }}
         {{- end }}
         {{- if .Values.sampleApps.apps }}
         # One folder per application, its files under their `__` names (T-2599).
@@ -1123,7 +1128,7 @@ spec:
             sources:
               {{- range $app, $files := .Values.sampleApps.apps }}
               - configMap:
-                  name: {{ include "bootstrap.fullname" $ }}-app-{{ $app }}
+                  name: {{ $.Values.sampleApps.configMaps }}-{{ $app }}
                   items:
                     {{- range $key, $_ := $files }}
                     - key: {{ $key | quote }}

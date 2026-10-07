@@ -63,13 +63,13 @@ args = sys.argv[1:]
 line = " ".join(args)
 # The pod selector of APISIX's egress policy (components/apisix/networkpolicies.yaml).
 EDGE_SELECTOR = [("app.kubernetes.io/name", "apisix"), ("app.kubernetes.io/instance", "apisix-apisix")]
-if args[0] == "get" and args[1] == "configmap" and args[2] == "gitea-bootstrap-seed" and "endpoints__helsinki-" in line:
+if args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-bootstrap-seed") and "endpoints__helsinki-" in line:
     # The Helsinki seed's slugs, one per endpoint name (T-0478); nothing seeded by default,
     # because the checks behind them wait up to 210 s for data to flow.
     name = "".join(itertools.takewhile(str.isalnum, line.split("endpoints__helsinki-", 1)[1]))
     seeded = spec.get("helsinkiSeed", {}).get(name)
     sys.stdout.write("spec:\\n  slug: %s\\n" % seeded if seeded else "")
-elif args[0] == "get" and args[1] == "configmap" and args[2] == "gitea-bootstrap-seed" and "jsonpath={.data}" in line:
+elif args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-bootstrap-seed") and "jsonpath={.data}" in line:
     # The seed's file names, for the residue count (T-0667): one Helsinki endpoint per seeded slug.
     keys = ["projects__helsinki__spaces__helsinki__endpoints__helsinki-%s.yaml" % n for n in spec.get("helsinkiSeed", {})]
     if spec.get("helsinkiSeed"):
@@ -79,7 +79,7 @@ elif args[0] == "get" and args[1] == "configmap" and args[2] == "gitea-bootstrap
                  "projects__helsinki__spaces__helsinki__space.yaml",
                  "projects__helsinki__spaces__helsinki-kpi__space.yaml"]
     sys.stdout.write(json.dumps({k: "" for k in keys}))
-elif args[0] == "get" and args[1] == "configmap" and args[2] == "gitea-bootstrap-seed":
+elif args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-bootstrap-seed"):
     # The seeded Endpoint manifest the smoke reads the slug from (T-0282, T-0278); "" = nothing seeded.
     sys.stdout.write(spec.get("seedEndpoint", "spec:\\n  slug: mluyob4nz52lok3ssk7pgn5vwt\\n"))
 elif args[0] == "get" and args[1] == "configmap" and args[2] == "portal-branding":
@@ -88,10 +88,10 @@ elif args[0] == "get" and args[1] == "configmap" and args[2] == "portal-branding
 elif args[0] == "get" and args[1] == "configmaps" and "-o name" in line:
     # The sample applications the forge bootstrap seeded (T-2599); `sampleApps: []` is none.
     for app in spec.get("sampleApps", ["helsinki-bikes", "helsinki-events", "helsinki-alerts"]):
-        sys.stdout.write("configmap/gitea-bootstrap-app-%s\\n" % app)
-elif args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-bootstrap-app-") and "go-template" in line:
+        sys.stdout.write("configmap/gitea-sample-apps-%s\\n" % app)
+elif args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-sample-apps-") and "go-template" in line:
     # A sample app's file names: its grants (T-2667) when the spec gives it any.
-    app = args[2][len("gitea-bootstrap-app-"):]
+    app = args[2][len("gitea-sample-apps-"):]
     grants = ["grants__projects__helsinki__spaces__helsinki__endpoints__app-%s.yaml" % app] if app in spec.get("appGrants", []) else []
     sys.stdout.write("".join("%s\\n" % k for k in ["app.yaml", "index.html"] + grants))
 elif args[0] == "get" and args[1] == "configmap":
@@ -1321,3 +1321,46 @@ def test_a_demo_person_missing_from_people_fails_the_run(tmp_path):
     result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
     assert result.returncode == 1
     assert "FAIL  People does not list: demo.approver@hel.fi" in result.stdout
+
+
+def _teams(*extra):
+    """The forge's teams as HEALTHY has them, plus `extra` (PF-80, PF-87)."""
+    return json.dumps([
+        {"id": 1, "name": "Owners", "permission": "owner", "includes_all_repositories": True,
+         "units_map": {"repo.code": "owner", "repo.issues": "owner"}},
+        {"id": 2, "name": "readers", "permission": "none", "includes_all_repositories": True,
+         "units_map": {"repo.code": "read", "repo.issues": "read", "repo.pulls": "read"}},
+        *extra,
+    ], separators=(",", ":"))
+
+
+WRITERS = {"id": 12, "name": "helsinki-writers", "permission": "none", "includes_all_repositories": False,
+           "units_map": {"repo.code": "write", "repo.pulls": "write"}}
+
+
+def _with_teams(teams, *bodies):
+    spec = dict(HEALTHY)
+    spec["bodies"] = [["/api/v1/orgs/joinedcontext/teams", teams], *bodies, *HEALTHY["bodies"]]
+    return spec
+
+
+def test_a_project_writers_team_on_its_own_repository_keeps_merging_the_portals(tmp_path):
+    """Layout 2 (PF-87): `{slug}-writers` writes its project repository; that is not PF-80's."""
+    spec = _with_teams(_teams(WRITERS), ["/api/v1/teams/12/repos", '[{"id":5,"name":"helsinki"}]'])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert "ok    no forge team writes the configuration repository" in result.stdout, result.stdout
+    assert "PF-80)" not in "".join(l for l in result.stdout.splitlines() if "FAIL" in l)
+
+
+def test_a_team_that_writes_the_configuration_repository_fails(tmp_path):
+    spec = _with_teams(_teams(WRITERS), ["/api/v1/teams/12/repos", '[{"id":5,"name":"helsinki"},{"id":1,"name":"configuration"}]'])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  forge team(s) helsinki-writers write the configuration repository" in result.stdout
+
+
+def test_a_team_that_writes_every_repository_fails(tmp_path):
+    spec = _with_teams(_teams(dict(WRITERS, name="everyone", includes_all_repositories=True)))
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  forge team(s) everyone write the configuration repository" in result.stdout

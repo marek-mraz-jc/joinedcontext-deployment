@@ -144,3 +144,15 @@ def worker_id(request):
 def pytest_configure(config):
     # Known without pytest-xdist installed too, so a serial run does not warn about the marker.
     config.addinivalue_line("markers", "xdist_group(name): run on the same xdist worker as the rest of the group")
+
+
+def seed_configmap(docs):
+    """The forge seed as one ConfigMap: the bootstrap renders it as `gitea-bootstrap-seed` (the
+    organization's files) and one `gitea-bootstrap-seed-<project>` per project, so that none
+    outgrows a ConfigMap's 1 MiB (T-3177); the Job mounts them all as one tree."""
+    data = {}
+    for d in docs:
+        if d.get("kind") == "ConfigMap" and d["metadata"]["name"].startswith("gitea-bootstrap-seed"):
+            data.update(d["data"])
+    assert data, "no forge seed rendered"
+    return {"data": data}

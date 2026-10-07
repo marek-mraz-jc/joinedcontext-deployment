@@ -48,6 +48,12 @@ seed:
   {{ $path | replace "/" "__" }}: |
 {{ readFile (printf "../../../context-gateway/seed/praha/%s" $file) | indent 4 }}
 {{- end }}
+  # Žilina (T-3137): the city and its university as one project of the same organization, four
+  # spaces of one model each, built on national open data and the university's own repository.
+{{- range $file, $path := readFile "../../../context-gateway/seed/zilina/index.yaml" | fromYaml }}
+  {{ $path | replace "/" "__" }}: |
+{{ readFile (printf "../../../context-gateway/seed/zilina/%s" $file) | indent 4 }}
+{{- end }}
 {{- if has "agent-runner" .Values.components }}
   # The builder profile the Portal loads for every agent run (AG-26): organization scope,
   # so it is committed by the forge seed and not by the gateway's own table.
@@ -63,7 +69,10 @@ seed:
 # `source.git` pinned to that repository's commit. JSON strings, not block scalars: a block
 # scalar rewrites trailing newlines, and a file the seed changed on the way would never match the
 # blob already on the forge, so every run would commit again.
+# The files themselves are the release gitea-sample-apps (values/sample-apps, T-3175); the Job
+# reads them from its ConfigMaps and needs only their names here.
 sampleApps:
+  configMaps: gitea-sample-apps
   project: helsinki
   publicBase: "https://{{ .Values.global.domain }}/git"
   apps:
@@ -71,6 +80,6 @@ sampleApps:
 {{- range $app, $files := $apps.apps }}
     {{ $app }}:
 {{- range $files }}
-      {{ . | replace "/" "__" | quote }}: {{ readFile (printf "../../apps/%s/%s" $app .) | toJson }}
+      {{ . | replace "/" "__" | quote }}: ""
 {{- end }}
 {{- end }}

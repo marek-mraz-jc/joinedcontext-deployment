@@ -1,0 +1,22 @@
+# Compiled by the Portal from zilina-app-mapa.yaml (joinedcontext-portal apps/zilina-mapa/grants,
+# `write_sample_app_grants`): the seed commits the App past the Portal's door, so the Endpoint and
+# Policy the door would commit beside it are seeded with it (T-2667, T-2972). Keep them equal.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: app-zilina-mapa
+  namespace: zilina
+  annotations:
+    joinedcontext.com/generated-by: portal/app-reconciler
+  title:
+    en: Map of Žilina
+    sk: Mapa mesta Žilina
+spec:
+  audience: public
+  callerRole: true
+  contextSpaceRef:
+    kind: ContextSpace
+    name: zilina-verejne
+  enabledRepresentations:
+  - ngsi-ld
+  slug: nepjcubhzaptj2qsytzkfk5htu

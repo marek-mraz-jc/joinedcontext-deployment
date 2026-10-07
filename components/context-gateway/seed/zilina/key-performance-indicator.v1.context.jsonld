@@ -1,0 +1,53 @@
+{
+  "@context": {
+    "@vocab": "https://joinedcontext.com/models/",
+    "Entity": {
+      "@id": "ngsi-ld:Entity"
+    },
+    "KeyPerformanceIndicator": {
+      "@id": "jc:KeyPerformanceIndicator"
+    },
+    "calculationFormula": {
+      "@id": "jc:calculationFormula"
+    },
+    "calculationPeriod": {
+      "@id": "jc:calculationPeriod"
+    },
+    "computedBy": {
+      "@id": "jc:computedBy",
+      "@type": "@id"
+    },
+    "currentValue": {
+      "@id": "jc:currentValue"
+    },
+    "derivedFrom": {
+      "@id": "jc:derivedFrom",
+      "@type": "@id"
+    },
+    "geojson": "https://purl.org/geojson/vocab#",
+    "id": "@id",
+    "jc": "https://joinedcontext.com/models/",
+    "linkml": "https://w3id.org/linkml/",
+    "location": {
+      "@id": "geojson:geometry"
+    },
+    "name": {
+      "@id": "jc:name"
+    },
+    "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
+    "observedAt": {
+      "@id": "ngsi-ld:observedAt",
+      "@type": "xsd:dateTime"
+    },
+    "schema": "http://schema.org/",
+    "shex": "http://www.w3.org/ns/shex#",
+    "type": "@type",
+    "ucefact": "https://vocabulary.uncefact.org/UnitMeasureCode#",
+    "updatedAt": {
+      "@id": "jc:updatedAt",
+      "@type": "xsd:dateTime"
+    },
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "x-generator-version": "linkml-1.11.1"
+}

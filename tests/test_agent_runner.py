@@ -12,6 +12,7 @@ import shutil
 
 import pytest
 import yaml
+from conftest import seed_configmap
 
 requires_helmfile = pytest.mark.skipif(shutil.which("helmfile") is None, reason="helmfile not installed")
 
@@ -114,7 +115,7 @@ def test_the_proxy_client_carries_every_endpoint_of_the_project_as_audience_and_
     }
     # The endpoint table the gateway serves is the forge's repository, seeded by the bootstrap
     # (T-0278); a key's `__` is a `/`.
-    forge = next(d for d in dev if d.get("kind") == "ConfigMap" and d["metadata"]["name"].endswith("bootstrap-seed"))
+    forge = seed_configmap(dev)
     documents = [
         yaml.safe_load(text)
         for key, text in forge["data"].items()
@@ -136,10 +137,7 @@ def test_the_proxy_client_carries_every_endpoint_of_the_project_as_audience_and_
 
 @requires_helmfile
 def test_the_forge_seed_commits_the_builder_profile(dev):
-    seed = next(
-        d for d in dev
-        if d.get("kind") == "ConfigMap" and d["metadata"]["name"].endswith("bootstrap-seed")
-    )
+    seed = seed_configmap(dev)
     profile = yaml.safe_load(seed["data"]["agentprofiles__app-builder.yaml"])
     assert profile["kind"] == "AgentProfile"
     assert profile["spec"]["role"] == "builder"
@@ -167,10 +165,7 @@ def test_the_forge_seed_commits_the_builder_profile(dev):
 
 @requires_helmfile
 def test_the_forge_seed_commits_the_chat_profile_no_wider_than_the_builder(dev):
-    seed = next(
-        d for d in dev
-        if d.get("kind") == "ConfigMap" and d["metadata"]["name"].endswith("bootstrap-seed")
-    )
+    seed = seed_configmap(dev)
     chat = yaml.safe_load(seed["data"]["agentprofiles__chat.yaml"])
     builder = yaml.safe_load(seed["data"]["agentprofiles__app-builder.yaml"])
     assert chat["kind"] == "AgentProfile" and chat["metadata"]["name"] == "chat"
