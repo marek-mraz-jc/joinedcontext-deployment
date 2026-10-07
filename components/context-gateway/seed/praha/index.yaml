@@ -75,3 +75,5 @@ praha-app-data-policy.yaml: projects/praha/spaces/praha-mesto/policies/app-praha
 praha-app-odpad.yaml: projects/praha/apps/praha-odpad/app.yaml
 praha-app-odpad-endpoint.yaml: projects/praha/spaces/praha-mesto/endpoints/app-praha-odpad.yaml
 praha-app-odpad-policy-viewer.yaml: projects/praha/spaces/praha-mesto/policies/app-praha-odpad-1-viewer.yaml
+# The city's website as a knowledge source (T-3067, user decision 2026-10-07).
+praha-knowledge-web.yaml: projects/praha/assistant/sources/web.yaml
