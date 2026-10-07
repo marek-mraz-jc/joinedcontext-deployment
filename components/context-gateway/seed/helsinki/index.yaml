@@ -82,6 +82,11 @@ helsinki-mobility-space.yaml: projects/helsinki-mobility/spaces/mobility/space.y
 helsinki-mobility-datamodel.yaml: projects/helsinki-mobility/spaces/mobility/datamodels/mobility.yaml
 mobility.linkml.yaml: projects/helsinki-mobility/spaces/mobility/datamodels/mobility.linkml.yaml
 helsinki-mobility-shared-bikes.yaml: projects/helsinki-mobility/shared/city-bikes.yaml
+# The mobility project's city bike stations (T-3185): a bundle the Portal image ships, reading the
+# helsinki project's stations through the shared space city-bikes.
+helsinki-mobility-app-bike-stations.yaml: projects/helsinki-mobility/apps/bike-stations/app.yaml
+helsinki-mobility-app-bike-stations-endpoint.yaml: projects/helsinki-mobility/spaces/mobility/endpoints/app-bike-stations.yaml
+helsinki-mobility-app-bike-stations-policy.yaml: projects/helsinki-mobility/spaces/mobility/policies/app-bike-stations-1.yaml
 helsinki-role-steward.yaml: users/roles/steward.yaml
 helsinki-role-org-admin.yaml: users/roles/org-admin.yaml
 helsinki-role-people-admin.yaml: users/roles/people-admin.yaml
