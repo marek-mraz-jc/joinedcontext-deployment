@@ -41,6 +41,9 @@ components:
   # `ckan-api-token`, which the portal's reconciler publishes with (T-2469).
   - ckan
   - portal
+  # The knowledge assistant (ADR-N-040, T-3052): its chat behind the data portal's widget and the
+  # public channel (T-3181). After the portal, whose internal routes it administers through.
+  - assistant
 
 global:
   domain: {{ env "JC_DEV_DOMAIN" | default "dev.joinedcontext.com" }}

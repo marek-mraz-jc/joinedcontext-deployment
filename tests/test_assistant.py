@@ -14,6 +14,8 @@ PRIVATE = {"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "169.254.0.0/16", "1
 def add_assistant(tree):
     path = tree / "deployment/environments/dev/global.yaml.gotmpl"
     text = path.read_text()
+    if "\n  - assistant\n" in text:
+        return  # dev lists the component itself since T-3181
     assert "\n  - functions\n" in text
     path.write_text(text.replace("\n  - functions\n", "\n  - functions\n  - assistant\n", 1))
 
