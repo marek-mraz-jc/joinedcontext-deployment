@@ -172,3 +172,5 @@ helsinki-app-data-policy.yaml: projects/helsinki/spaces/helsinki/policies/app-he
 helsinki-assistant-public.yaml: projects/helsinki/assistant/deployments/helsinki-public.yaml
 # The catalogue's assistant, framed by every page of the catalogue (T-3058, AG-114).
 helsinki-assistant-catalogue.yaml: projects/helsinki/assistant/deployments/helsinki-catalogue.yaml
+# The data portal's public datasets, the catalogue assistant's knowledge (T-3181, T-3054).
+helsinki-knowledge-catalogue.yaml: projects/helsinki/assistant/sources/data-portal.yaml
