@@ -17,6 +17,13 @@ import pytest
 SCRIPT = Path(__file__).resolve().parent.parent / "scripts" / "smoke-forge-login.sh"
 PASSWORD = "s3cret-Pa55&word"
 FOLDER = "/git/joinedcontext/configuration/src/branch/main/projects/helsinki"
+# Layout 2 (PF-87, T-2647): the project is a repository of its own; the fake serves it as FOLDER.
+PROJECT_REPO = "/git/joinedcontext/helsinki"
+# What Gitea shows a member of `{slug}-writers` on a protected main: a form whose direct commit
+# is disabled, so the only choice is a new branch.
+PROTECTED_FORM = ('<div class="ui radio checkbox disabled"><input name="commit_choice" value="direct">'
+                  "Not allowed to commit directly to branch because: User cannot push to branch</div>"
+                  '<input name="commit_choice" value="commit-to-new-branch" checked>')
 APP_NAME = "helsinki_map-alerts"
 APPS_ORG = "joinedcontext-apps"
 FORM = ('<html><form id="kc-form-login" onsubmit="return true;" '
@@ -41,7 +48,8 @@ def serve(mode):
     to a reader) | app-public (anyone reads it) | app-empty (it holds no commit) | no-apps |
     apart (the Apps live in an organization of their own, T-2969) | apart-no-team (that
     organization has no readers team, T-3030) | apart-no-repos (it holds no repository while
-    the project declares an App)."""
+    the project declares an App) | protected (layout 2: demo.steward gets the form of a protected
+    main) | protected-all (so does demo.viewer)."""
     forks = []
     org = APPS_ORG if mode.startswith("apart") else "joinedcontext"
     APP = f"/git/{org}/{APP_NAME}"
@@ -64,7 +72,12 @@ def serve(mode):
             return f"http://{self.headers['Host']}"
 
         def do_GET(self):
-            signed_in = "forge=session" in (self.headers.get("Cookie") or "")
+            cookie = self.headers.get("Cookie") or ""
+            signed_in = "forge=session" in cookie
+            if self.path.startswith(PROJECT_REPO + "/"):
+                self.path = self.path.replace(PROJECT_REPO + "/src/branch/main", FOLDER).replace(
+                    PROJECT_REPO + "/_new/main", FOLDER.replace("/src/branch/", "/_new/")).replace(
+                    PROJECT_REPO + "/fork", FOLDER.split("/src/branch/")[0] + "/fork")
             if self.path == "/git/user/oauth2/keycloak":
                 if mode == "pkce":
                     return self.send(302, headers=[("Location", "/git/user/login")])
@@ -75,7 +88,8 @@ def serve(mode):
             if self.path == "/kc/auth":
                 return self.send(200, FORM.format(base=self.base(), error=""))
             if self.path.startswith("/git/user/oauth2/keycloak/callback"):
-                return self.send(302, headers=[("Location", "/git/"), ("Set-Cookie", "forge=session; Path=/")])
+                who = parse_qs(self.path.split("?", 1)[-1]).get("code", ["x"])[0]
+                return self.send(302, headers=[("Location", "/git/"), ("Set-Cookie", f"forge=session-{who}; Path=/")])
             if self.path == "/git/":
                 return self.send(200, "<html>dashboard</html>")
             if self.path == FOLDER:
@@ -83,6 +97,8 @@ def serve(mode):
                     return self.send(404, "<html>Not found</html>")
                 return self.send(200, '<a href="/git/joinedcontext/configuration/_new/main/projects/helsinki">Add File</a><a>project.yaml</a>')
             if self.path == FOLDER.replace("/src/branch/", "/_new/"):
+                if mode == "protected-all" or (mode == "protected" and "steward" in cookie):
+                    return self.send(200, PROTECTED_FORM)
                 if mode == "writable":
                     return self.send(200, '<form><input name="commit_choice" value="direct"></form>')
                 return self.send(200, "<p>You cannot edit this repository directly. Instead you can create a fork</p>")
@@ -127,7 +143,8 @@ def serve(mode):
                     return self.send(303, headers=[("Location", "/git/")])
                 return self.send(400, '{"errorMessage":"The owner has already reached the limit of 0 repositories."}')
             if body.get("password") == [PASSWORD] and body["username"][0].endswith("@hel.fi"):
-                return self.send(302, headers=[("Location", "/git/user/oauth2/keycloak/callback?code=x")])
+                who = body["username"][0].split("@")[0]
+                return self.send(302, headers=[("Location", f"/git/user/oauth2/keycloak/callback?code={who}")])
             err = '<span id="input-error" class="kc-feedback">Invalid username or password.</span>'
             self.send(200, FORM.format(base=self.base(), error=err))
 
@@ -136,7 +153,7 @@ def serve(mode):
     return server
 
 
-def run(tmp_path, mode, password=PASSWORD):
+def run(tmp_path, mode, password=PASSWORD, **extra):
     server = serve(mode)
     kubectl = tmp_path / "kubectl"
     encoded = base64.b64encode(password.encode()).decode() if password else ""
@@ -148,7 +165,7 @@ def run(tmp_path, mode, password=PASSWORD):
         f'  *secret*) printf %s "{encoded}";;\nesac\n'
     )
     kubectl.chmod(0o755)
-    env = {**os.environ, "PATH": f"{tmp_path}:{os.environ['PATH']}", "JC_SMOKE_ORG": "hel.fi"}
+    env = {**os.environ, "PATH": f"{tmp_path}:{os.environ['PATH']}", "JC_SMOKE_ORG": "hel.fi", **extra}
     try:
         return subprocess.run([str(SCRIPT), f"http://127.0.0.1:{server.server_port}"],
                               env=env, capture_output=True, text=True, timeout=60)
@@ -189,6 +206,30 @@ def test_an_editor_in_the_forge_fails(tmp_path):
     r = run(tmp_path, "writable")
     assert r.returncode == 1
     assert "may commit to the configuration repository" in r.stdout
+
+
+def test_a_project_writer_on_a_protected_main_passes_and_the_reader_still_has_no_form(tmp_path):
+    r = run(tmp_path, "protected", JC_SMOKE_LAYOUT2="1")
+    assert "demo.steward may propose a branch in the helsinki repository, main refuses their commit" in r.stdout
+    assert "demo.viewer reads the helsinki repository without write access" in r.stdout
+
+
+def test_a_project_writer_who_may_commit_to_main_fails(tmp_path):
+    r = run(tmp_path, "writable", JC_SMOKE_LAYOUT2="1")
+    assert r.returncode == 1
+    assert "demo.steward may commit to the helsinki repository" in r.stdout
+
+
+def test_a_reader_with_the_branch_form_fails_even_when_main_refuses(tmp_path):
+    r = run(tmp_path, "protected-all", JC_SMOKE_LAYOUT2="1")
+    assert r.returncode == 1
+    assert "demo.viewer may commit to the helsinki repository" in r.stdout
+
+
+def test_at_layout_1_the_protected_form_is_still_a_failure(tmp_path):
+    r = run(tmp_path, "protected")
+    assert r.returncode == 1
+    assert "demo.steward may commit to the configuration repository" in r.stdout
 
 
 def test_a_missing_secret_fails_instead_of_skipping(tmp_path):
