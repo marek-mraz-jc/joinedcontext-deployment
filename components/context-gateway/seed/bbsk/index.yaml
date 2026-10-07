@@ -23,6 +23,9 @@ bbsk-endpoint-kraj.yaml: projects/bbsk/spaces/bbsk-kraj/endpoints/bbsk-kraj.yaml
 bbsk-policy-pipelines-write.yaml: projects/bbsk/spaces/bbsk-kraj/policies/pipelines-write.yaml
 bbsk-policy-kraj-steward-read.yaml: projects/bbsk/spaces/bbsk-kraj/policies/kraj-steward-read.yaml
 bbsk-policy-kraj-steward-note.yaml: projects/bbsk/spaces/bbsk-kraj/policies/kraj-steward-note.yaml
+# The rows open to anyone, for the indicators application's trend lines (T-2934).
+bbsk-endpoint-kraj-verejne.yaml: projects/bbsk/spaces/bbsk-kraj/endpoints/bbsk-kraj-verejne.yaml
+bbsk-policy-kraj-public-read.yaml: projects/bbsk/spaces/bbsk-kraj/policies/kraj-public-read.yaml
 bbsk-space-kpi.yaml: projects/bbsk/spaces/bbsk-kpi/space.yaml
 bbsk-endpoint-kpi.yaml: projects/bbsk/spaces/bbsk-kpi/endpoints/bbsk-kpi.yaml
 bbsk-policy-kpi-pipelines-write.yaml: projects/bbsk/spaces/bbsk-kpi/policies/kpi-pipelines-write.yaml
