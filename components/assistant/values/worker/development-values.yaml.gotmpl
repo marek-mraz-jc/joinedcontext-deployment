@@ -1,0 +1,16 @@
+# Checklist:
+# - [x] Minimal Resources -> one crawl at a time; kreuzberg holds a PDF and its text in memory
+# - [x] Minimal storage -> the index lives in PostgreSQL
+# - [x] 1 Replica -> the queue would let more claim jobs, one is what a city's sites need
+
+replicaCount: 1
+
+resources:
+  # T-3053 measured 490 MB resident at rest and 679 MB at peak (the embedding model loaded):
+  # the request says so, so the scheduler does not overbook the node.
+  requests:
+    cpu: 50m
+    memory: 640Mi
+  limits:
+    cpu: '1'
+    memory: 1Gi

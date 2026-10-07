@@ -1,0 +1,24 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: AssistantDeployment
+metadata:
+  name: helsinki-catalogue
+  namespace: helsinki
+spec:
+  # The catalogue's assistant (T-3058, AG-114): every page of data.dev.joinedcontext.com frames
+  # its widget (components/ckan, `ckan.catalogue.assistant`). The same live data as the public
+  # one; the catalogue is the only site that may frame it.
+  publicId: helsinki-catalogue
+  channel: ckan
+  systemPrompt: >-
+    You help visitors of the Helsinki open-data catalogue find and read its data: the live road
+    weather and the city's events. Read the live data with the tools before you answer, and
+    name the station or the event.
+  connectors:
+    - { endpoint: helsinki-weather, tools: [list_types, query_entities], timeoutSeconds: 20 }
+    - { endpoint: helsinki-events, tools: [list_types, query_entities], timeoutSeconds: 20 }
+  allowedOrigins: [https://data.dev.joinedcontext.com]
+  rateLimit: { requestsPerMinute: 30, perClientPerMinute: 6 }
+  # About 0.1 USD a day at most (google/gemini-3.8-flash, 2026-10-06).
+  budget: { tokensPerDay: 300000, tokensPerConversation: 40000 }
+  theme: { greeting: "Hello! Ask me about the catalogue's road weather or what is on in Helsinki." }
+  languages: [en, fi, sv]

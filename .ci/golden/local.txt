@@ -187,6 +187,7 @@ v1/ConfigMap local/apisix-standalone-base
 v1/ConfigMap local/cnpg-controller-manager-config
 v1/ConfigMap local/cnpg-default-monitoring
 v1/ConfigMap local/gitea-bootstrap-app-air-quality
+v1/ConfigMap local/gitea-bootstrap-app-alerts-desk
 v1/ConfigMap local/gitea-bootstrap-app-helsinki-alerts
 v1/ConfigMap local/gitea-bootstrap-app-helsinki-bikes
 v1/ConfigMap local/gitea-bootstrap-app-helsinki-events
@@ -235,6 +236,7 @@ v1/Secret local/keycloak-client-jc-build-lane
 v1/Secret local/keycloak-client-portal-api
 v1/Secret local/keycloak-client-portal-reconciler
 v1/Secret local/keycloak-client-praha-pipelines
+v1/Secret local/keycloak-client-zilina-pipelines
 v1/Secret local/keycloak-config-keycloak-config-cli-config-realms
 v1/Secret local/keycloak-user-demo-approver
 v1/Secret local/keycloak-user-demo-editor

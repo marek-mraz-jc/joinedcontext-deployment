@@ -1,0 +1,17 @@
+# The city's public map data: its air-quality station, its monuments and its railway stations, as national publishers publish them (Research/zilina-open-data-sources.md).
+apiVersion: joinedcontext.com/v1alpha1
+kind: ContextSpace
+metadata:
+  name: zilina-verejne
+  namespace: zilina
+  title: { sk: "Mesto — verejné dáta", en: "City, public data" }
+  description:
+    sk: "Kvalita ovzdušia, kultúrne pamiatky a železničné stanice mesta Žilina z otvorených dát EEA, Pamiatkového úradu a ŽSR."
+    en: "Air quality, cultural monuments and railway stations of Žilina from the open data of the EEA, the Monuments Board and ŽSR."
+spec:
+  # The space name is the segment its ids carry, pinned so it cannot drift (PF-84).
+  urnSegment: zilina-verejne
+  isSandbox: false
+  # The one model of this space: a write of a type it does not declare is refused (DM-61).
+  dataModelRef: { kind: DataModel, name: zilina-verejne }
+  defaultLocale: sk

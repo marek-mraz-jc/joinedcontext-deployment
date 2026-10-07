@@ -64,7 +64,9 @@ def test_the_region_is_its_own_project_and_the_city_says_it_is_the_city():
 def test_each_projects_quotas_hold_what_it_declares_with_room_for_the_demo():
     """T-2873: the quota leaves room for the demo's work, never exactly what the seed holds."""
     for folder, project, spaces, public in (
-        (REGION, "bbsk", ["bbsk-kraj", "bbsk-kpi", "bbsk-registre"], 2),
+        # The region's public endpoints: its raw rows' for the trend lines (T-2934), and the region
+        # map's and its grids' (T-2784).
+        (REGION, "bbsk", ["bbsk-kraj", "bbsk-kpi", "bbsk-registre"], 5),
         # The third public endpoint of the city is the air-quality App's own (T-2972), the fourth
         # and fifth the city map's and the data grids' (T-2782).
         (CITY, "banskabystrica", ["ovzdusie", "banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne"], 5),
@@ -111,7 +113,7 @@ def test_the_citys_indicators_reach_the_region_by_a_named_share_and_nothing_wide
 def test_no_service_account_can_write_into_the_other_bodys_space():
     for folder, project, own in (
         (REGION, "bbsk", {"bbsk-kraj", "bbsk-kpi", "bbsk-registre"}),
-        (CITY, "banskabystrica", {"banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne"}),
+        (CITY, "banskabystrica", {"banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne", "ovzdusie"}),
     ):
         account = one(folder, "ServiceAccount", "pipelines")
         scopes = {role["scope"]["contextSpace"] for role in account["spec"]["roles"]}
@@ -469,14 +471,25 @@ def test_the_application_reading_both_bodies_is_a_published_static_app_on_the_re
     assert app["spec"]["kind"] == "static"
     assert app["spec"]["lifecycle"] == "published"
     spaces = [need["contextSpaceRef"]["name"] for need in app["spec"]["dataNeeds"]]
-    # Its own space first; the one further space is read through that space's public Endpoint of
-    # the same project and compiles into no grant (AP-04, T-2933).
-    assert spaces == ["bbsk-kpi", "bbsk-registre"]
+    # Its own space first; each further space is read through that space's public Endpoint of the
+    # same project and compiles into no grant (AP-04, T-2933): the district outlines, and the
+    # yearly rows the trend lines are drawn from (T-2934).
+    assert spaces == ["bbsk-kpi", "bbsk-registre", "bbsk-kraj"]
     assert one(REGION, "Endpoint", "bbsk-kpi")["spec"]["contextSpaceRef"] == "bbsk-kpi"
     register = one(REGION, "Endpoint", "bbsk-registre")["spec"]
     assert register["contextSpaceRef"] == "bbsk-registre" and register["audience"] == "public"
-    (further,) = [need for need in app["spec"]["dataNeeds"] if need["contextSpaceRef"]["name"] != "bbsk-kpi"]
-    assert further["types"] == ["AdministrativeArea"] and "roles" not in further
+    raw = one(REGION, "Endpoint", "bbsk-kraj-verejne")["spec"]
+    assert raw["contextSpaceRef"] == "bbsk-kraj" and raw["audience"] == "public" and "publish" not in raw
+    further = [need for need in app["spec"]["dataNeeds"] if need["contextSpaceRef"]["name"] != "bbsk-kpi"]
+    assert [need["types"] for need in further] == [["AdministrativeArea"], ["StatisticalObservation"]]
+    assert all("roles" not in need for need in further)
+    # The public read of the raw rows names every published column of the statistics office and
+    # never the steward's own note, which is the region's annotation and not open data.
+    public = one(REGION, "Policy", "kraj-public-read")["spec"]
+    assert public["assignee"] == {"kind": "role", "id": "public"} and public["operations"] == ["retrieveOps"]
+    (rule,) = public["information"]
+    assert "stewardNote" not in rule["propertyNames"]
+    assert set(further[1]["attrs"]) <= set(rule["propertyNames"])
     # It reads and never writes (AP-07).
     operations = {op for need in app["spec"]["dataNeeds"] for op in need["operations"]}
     assert operations <= {"queryEntity", "retrieveEntity"}, operations
@@ -643,8 +656,11 @@ def test_only_the_sole_writer_of_a_space_expires_and_its_policy_grants_the_sweep
                         )
                         for _, policy in manifests(folder, "Policy")
                     ), f"{name}: no pipelines Policy grants {operation} on {entity_type} in {space}"
-    # Off by default: exactly the one demonstration carries it, every other pipeline deletes nothing.
-    assert expiring == ["bbsk/ukazovatele"]
+    # Off by default: exactly these carry it, every other pipeline deletes nothing. The region's
+    # indicators, the city's air readings, whose 13 seeded test stations leave public-air that
+    # way (T-3120), and Žilina's two sole writers, its indicators and the university's works
+    # (T-3138).
+    assert expiring == ["banskabystrica/public-air", "bbsk/ukazovatele", "zilina/drepo", "zilina/ukazovatele"]
     assert one(REGION, "Pipeline", "ukazovatele")["spec"]["expiry"] == {
         "after": "21d",
         "types": ["KeyPerformanceIndicator"],

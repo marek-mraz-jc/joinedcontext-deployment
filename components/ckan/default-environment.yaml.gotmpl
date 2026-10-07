@@ -6,3 +6,6 @@ ckan:
     # The catalogue is published on its own host, because CKAN builds every link it renders
     # from one site URL and a path prefix would need CKAN's own root_path as well.
     subDomain: data
+    # The publicId of a `ckan` AssistantDeployment whose widget every catalogue page offers
+    # (AG-114, T-3058); empty, or without the assistant component, the pages offer none.
+    assistant: ""

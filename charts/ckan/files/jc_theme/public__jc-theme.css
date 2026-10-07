@@ -379,3 +379,10 @@ body.dt-view .dt-button, body.dt-view .btn-secondary { background: var(--jc-surf
   body.dt-view #dtprv_wrapper .dataTables_paginate .pagination { flex-wrap: wrap; justify-content: flex-start; }
 }
 
+/* The assistant (AG-114): a button in the corner, its frame opening above it, never wider than
+   the phone it is on. */
+.jc-assistant { position: fixed; inset-inline-end: 1rem; inset-block-end: 1rem; z-index: 1040; }
+.jc-assistant > summary { list-style: none; cursor: pointer; background: var(--jc-primary); color: var(--jc-primary-fg); border-radius: 999px; padding: .75rem 1.25rem; font-weight: 600; box-shadow: 0 .25rem 1rem color-mix(in oklab, var(--jc-ink) 25%, transparent); }
+.jc-assistant > summary::-webkit-details-marker { display: none; }
+.jc-assistant > summary:focus-visible { outline: 3px solid var(--jc-accent); outline-offset: 2px; }
+.jc-assistant > iframe { position: absolute; inset-inline-end: 0; inset-block-end: calc(100% + .5rem); width: min(24rem, calc(100vw - 2rem)); height: min(36rem, calc(100vh - 6rem)); border: 1px solid var(--jc-border); border-radius: .75rem; background: var(--jc-surface); }
