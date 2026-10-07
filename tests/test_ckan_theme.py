@@ -626,11 +626,14 @@ def test_the_catalogue_pod_is_told_its_assistant_only_when_the_assistant_is_depl
         (container,) = [c for c in ckan["spec"]["template"]["spec"]["containers"] if c["name"] == "ckan"]
         return {e["name"]: e.get("value") for e in container["env"]}["JC_ASSISTANT_WIDGET_URL"]
 
-    assert widget(rendered("dev")) == ""
+    # dev lists the assistant since T-3181, so its catalogue carries the widget; without the
+    # component the catalogue is told nothing.
+    assert widget(rendered("dev")) == "https://assistant.dev.joinedcontext.com/d/helsinki-catalogue/widget"
 
-    def with_assistant(tree):
+    def without_assistant(tree):
         path = tree / "deployment/environments/dev/global.yaml.gotmpl"
         text = path.read_text()
-        path.write_text(text.replace("\n  - functions\n", "\n  - functions\n  - assistant\n", 1))
+        assert "\n  - assistant\n" in text
+        path.write_text(text.replace("\n  - assistant\n", "\n", 1))
 
-    assert widget(rendered_variant("dev", with_assistant)) == "https://assistant.dev.joinedcontext.com/d/helsinki-catalogue/widget"
+    assert widget(rendered_variant("dev", without_assistant)) == ""
