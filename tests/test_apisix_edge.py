@@ -370,6 +370,7 @@ def test_new_hostnames_are_proven_on_the_staging_issuer_first(rendered, rendered
     assert certificate["secretName"] == "apisix-edge-staging-tls"
     assert certificate["dnsNames"] == [
         "next.example.org",
+        "assistant.next.example.org",
         "data.next.example.org",
         "idm.next.example.org",
         "portal.next.example.org",
@@ -396,6 +397,7 @@ def test_certificate_covers_the_apex_and_every_routed_subdomain(rendered):
     # on the certificate three times (ADR-N-019).
     assert certificate["spec"]["dnsNames"] == [
         "dev.joinedcontext.com",
+        "assistant.dev.joinedcontext.com",
         "data.dev.joinedcontext.com",
         "idm.dev.joinedcontext.com",
         "portal.dev.joinedcontext.com",
