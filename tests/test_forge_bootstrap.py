@@ -566,3 +566,13 @@ def test_a_listed_projects_groups_land_in_its_own_teams_and_leaving_one_leaves_t
     teams = next(e for e in variant_job["spec"]["template"]["spec"]["containers"][0]["env"]
                  if e["name"] == "TEAMS")
     assert teams["value"].split() == ["readers"], "the project teams are the Portal's to create"
+
+
+def test_a_listed_project_has_its_repository_before_its_teams_are_given_it(script):
+    """T-3181: Zilina was listed in projectTeams before its seed had ever been pushed, so the
+    team grant met a 404 and every apply stopped at the bootstrap. The repository is ensured
+    (created at layout 2 with its `.jc/layout`) before the first grant to it."""
+    loop = script[script.index('for slug in ${PROJECT_TEAMS:-}; do'):]
+    loop = loop[: loop.index("done")]
+    assert loop.index('ensure_repo "$slug"') < loop.index('project_team "$slug" readers read'), loop
+    assert script.index("ensure_repo() {") < script.index('for slug in ${PROJECT_TEAMS:-}; do')
