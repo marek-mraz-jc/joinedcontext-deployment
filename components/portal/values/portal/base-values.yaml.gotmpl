@@ -255,6 +255,10 @@ env:
   JC_PORTAL_APPS_REGISTRY: {{ $global.domain | quote }}
   JC_PORTAL_APPS_PULL_SECRET_NAME: "app-registry"
 {{- end }}
+  # The client an invitation's link returns through (PF-108, T-3237): `portal-ui`'s redirect URIs
+  # already cover every Portal page (components/portal/keycloak-clients.yaml), so the invitee
+  # lands on the project's home page once their password is set and no redirect rule widens.
+  JC_PORTAL_INVITATION_CLIENT_ID: "portal-ui"
 {{- if has "model-tools" .Values.components }}
   # The generator behind the LinkML editor (DM-18, DM-19): the live preview, the Smart Data
   # Models import and the draft from a sample file all go here; without it those three
