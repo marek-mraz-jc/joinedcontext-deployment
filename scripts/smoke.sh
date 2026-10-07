@@ -339,8 +339,13 @@ if has_route portal-api; then
 				-d "{\"apiVersion\":\"joinedcontext.com/v1alpha1\",\"kind\":\"DataSource\",\"metadata\":{\"name\":\"smoke-probe\",\"namespace\":\"helsinki\"},\"spec\":{\"type\":\"http\",\"http\":{\"url\":\"$inside\"}}}" \
 				"$portal/api/v1/projects/helsinki/datasources?dryRun=All" 2>/dev/null || true)
 			said=$(printf '%s' "$probe" | sed -n 's/.*"skipped": *"\([^"]*\)".*/\1/p')
+			# A private or link-local host is refused before anything runs (jc-core, PL-07,
+			# T-3162): the dry run is red and names why, which is the strongest refusal there is.
+			if grep -q '"valid": *false' <<<"$probe" && grep -q "does not connect to the runner's own pod or a private address" <<<"$probe"; then
+				said="refused before it runs: a private address (PL-07)"
+			fi
 			case "$said" in
-			"the feed could not be reached"* | "the feed did not answer within"* | "the feed answered nothing"*)
+			"refused before it runs"* | "the feed could not be reached"* | "the feed did not answer within"* | "the feed answered nothing"*)
 				ok "a probe of $inside stays outside the cluster: $said" ;;
 			"")
 				ko "a probe of $inside answered no refusal: ${probe:0:160}" ;;

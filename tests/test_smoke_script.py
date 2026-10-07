@@ -1364,3 +1364,28 @@ def test_a_team_that_writes_every_repository_fails(tmp_path):
     result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
     assert result.returncode == 1
     assert "FAIL  forge team(s) everyone write the configuration repository" in result.stdout
+
+
+REFUSED_BEFORE_RUN = json.dumps({
+    "valid": False, "lane": "red", "plan": {"summary": {"create": 0, "update": 0, "delete": 0}, "fields": []},
+    "verdict": {"ok": False, "findings": [{"level": "error", "path": "spec.http.url", "message":
+        "a pipeline does not connect to the runner's own pod or a private address: the URL names one (PL-07)"}]},
+})
+
+
+def test_a_probe_refused_by_validation_before_it_runs_stays_outside(tmp_path):
+    """T-3162 refuses a private or link-local host in jc-core, so the dry run never reaches the
+    runner; that red answer is a refusal, not 'no refusal' (T-3197)."""
+    spec = dict(HEALTHY)
+    spec["bodies"] = [[["datasources?dryRun=All", "169.254.169.254"], REFUSED_BEFORE_RUN], *HEALTHY["bodies"]]
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert "ok    a probe of https://169.254.169.254/hetzner/v1/metadata stays outside the cluster: refused before it runs" in result.stdout, result.stdout
+
+
+def test_a_red_dry_run_for_another_reason_is_still_no_refusal(tmp_path):
+    spec = dict(HEALTHY)
+    other = REFUSED_BEFORE_RUN.replace("a pipeline does not connect to the runner's own pod or a private address", "spec.http.url is not a URL")
+    spec["bodies"] = [[["datasources?dryRun=All", "169.254.169.254"], other], *HEALTHY["bodies"]]
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  a probe of https://169.254.169.254/hetzner/v1/metadata answered no refusal" in result.stdout
