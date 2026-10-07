@@ -7,13 +7,15 @@
 
 replicaCount: 1
 
+# Six cities' resident streams in one process: 1 GiB was OOMKilled once Zilina's joined
+# (2026-10-07, T-3191); the request says what it holds, the limit leaves it room.
 resources:
   requests:
     cpu: 100m
-    memory: 256Mi
+    memory: 512Mi
   limits:
     cpu: 1000m
-    memory: 1024Mi
+    memory: 1536Mi
 
 # The Helsinki demo's feeds (DEMO.md step 3) are the seeded Pipeline manifests and the
 # bento.yaml beside each (../../context-gateway/seed/helsinki/): the Portal's reconciler renders
