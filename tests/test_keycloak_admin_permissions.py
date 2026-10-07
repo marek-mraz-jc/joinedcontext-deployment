@@ -171,7 +171,10 @@ def test_the_portal_writes_its_own_clients_and_no_other(keycloak):
     assert again.stdout.count("updated ") == 4, again.stdout
 
     # A client added by hand is the Portal's until the next run, and not after it.
-    status, _, headers = call(base, "POST", f"/admin/realms/{REALM}/clients", ids["admin"], {"clientId": "by-hand"})
+    # A fresh admin token: master's admin-cli tokens live 60 s, and two runs of the Job on a busy
+    # runner outlast the one `realm()` took, which answered 401 here (T-3179).
+    admin = token(base, "master", "admin-cli", user="admin")
+    status, _, headers = call(base, "POST", f"/admin/realms/{REALM}/clients", admin, {"clientId": "by-hand"})
     assert status == 201
     late = headers["Location"].rsplit("/", 1)[1]
     portal = token(base, REALM, "portal-api", "portal-api-secret")

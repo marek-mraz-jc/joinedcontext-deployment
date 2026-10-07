@@ -18,6 +18,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from pipeline_spec import outputs
 
 # Starts its own containers from module-scoped fixtures; split over xdist workers, each worker
 # would start a second set beside the first. One worker runs the whole module (ci.yml loadgroup).
@@ -333,7 +334,7 @@ def test_every_indicator_pipeline_reads_through_an_endpoint_and_writes_through_o
                 if not isinstance(doc, dict) or doc.get("kind") != "Pipeline":
                     continue
                 spec = doc["spec"]
-                if spec["output"]["type"] != "KeyPerformanceIndicator":
+                if all(o["type"] != "KeyPerformanceIndicator" for o in outputs(spec)):
                     continue
                 assert spec["class"] == "scheduled", doc["metadata"]["name"]
                 # PL-18, PF-39: never the store, always the space's own Endpoint.
@@ -362,7 +363,7 @@ def test_no_indicator_of_one_body_can_be_computed_from_the_others_space():
                 if not isinstance(doc, dict) or doc.get("kind") != "Pipeline":
                     continue
                 spec = doc["spec"]
-                if spec["output"]["type"] != "KeyPerformanceIndicator":
+                if all(o["type"] != "KeyPerformanceIndicator" for o in outputs(spec)):
                     continue
                 seen += 1
                 assert doc["metadata"]["namespace"] == project
@@ -410,7 +411,7 @@ def test_the_read_every_indicator_pipeline_declares_is_one_a_policy_permits():
             if doc.get("kind") == "Endpoint"
         }
         for doc in documents:
-            if doc.get("kind") != "Pipeline" or doc["spec"]["output"]["type"] != "KeyPerformanceIndicator":
+            if doc.get("kind") != "Pipeline" or all(o["type"] != "KeyPerformanceIndicator" for o in outputs(doc["spec"])):
                 continue
             source = spaces[doc["spec"]["source"]["endpointRef"]["name"]]
             account = doc["spec"].get("serviceAccountRef", {}).get("name", "pipelines")
