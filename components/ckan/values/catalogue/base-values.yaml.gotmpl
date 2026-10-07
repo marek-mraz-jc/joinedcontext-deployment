@@ -61,6 +61,15 @@ database:
 branding:
   {{- $branding | toYaml | nindent 2 }}
 
+# The assistant's widget on every page (AG-114): its own host frames nothing but the origins
+# its AssistantDeployment allows, so that deployment's allowedOrigins names this catalogue.
+{{- if and (has "assistant" .Values.components) ($this.assistant | default "") }}
+{{- if not (regexMatch "^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$" $this.assistant) }}
+{{- fail (printf "ckan.catalogue.assistant: %q is not a publicId (lowercase letters, digits and dashes)" $this.assistant) }}
+{{- end }}
+assistantWidget: "https://assistant.{{ $global.domain }}/d/{{ $this.assistant }}/widget"
+{{- end }}
+
 podSecurityContext:
   {{ .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}
 

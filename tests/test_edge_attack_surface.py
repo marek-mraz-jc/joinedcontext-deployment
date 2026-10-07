@@ -65,7 +65,10 @@ UPSTREAM_DECIDES = "upstream"  # the edge leaves Cache-Control to the upstream, 
 # browser; every other route answers `no-store` — except the gateway's, where the upstream
 # decides (`UPSTREAM_DECIDES`): it says `private` on every answer itself, `no-store` or, on the
 # schema artifacts, `no-cache` with an ETag so a client revalidates (T-2261, T-2262, EP-51). `framing` is the X-Frame-Options a browser
-# gets: SAMEORIGIN for a surface that frames its own pages, DENY everywhere else.
+# gets: SAMEORIGIN for a surface that frames its own pages, DENY everywhere else, and none
+# (`FRAMED_BY_UPSTREAM`) where the upstream names the sites that may frame it in its own
+# `frame-ancestors`, which X-Frame-Options cannot express.
+FRAMED_BY_UPSTREAM = None
 ROUTE_CLASSES = {
     "portal-ui": {
         "reach": EDGE_LOGIN, "cacheable": True, "framing": "SAMEORIGIN",
@@ -90,6 +93,14 @@ ROUTE_CLASSES = {
     "portal-well-known": {
         "reach": UPSTREAM, "cacheable": False, "framing": "DENY",
         "why": "RFC 9728 protected-resource metadata is public by the RFC; it names no secret",
+    },
+    "assistant-chat": {
+        "reach": UPSTREAM, "cacheable": False, "framing": "DENY",
+        "why": "the knowledge assistant's public deployments answer anyone on their allowed origins; jc-assistant checks the Origin, limits per deployment and client, and caps the budget (API/05, AG-100, AG-101)",
+    },
+    "assistant-widget": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": FRAMED_BY_UPSTREAM,
+        "why": "the widget page a public deployment's own sites frame (AG-114): no data and no token in it; jc-assistant sets frame-ancestors to the deployment's allowedOrigins, no-store on the page and a short max-age on its script and style",
     },
     "portal-live-notify": {
         "reach": UPSTREAM, "cacheable": False, "framing": "DENY",
@@ -384,7 +395,7 @@ def test_framing_and_caching_follow_the_class_the_allow_list_gives_the_route(com
     for route_id, (source, config) in component_plugins.items():
         expected = {**ROUTE_CLASSES, **TEMPLATE_CLASSES}[route_id]
         headers = response_headers(config)
-        assert headers["X-Frame-Options"] == expected["framing"], f"{route_id} ({source})"
+        assert headers.get("X-Frame-Options") == expected["framing"], f"{route_id} ({source})"
         if expected["cacheable"] == UPSTREAM_DECIDES:
             assert "Cache-Control" not in headers, (
                 f"{route_id} ({source}) overrides the Cache-Control its upstream sets for itself"

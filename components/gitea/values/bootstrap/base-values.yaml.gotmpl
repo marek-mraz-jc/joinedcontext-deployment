@@ -72,9 +72,19 @@ tokens:
       {{- if has "context-gateway" .Values.components }}
       - {{ index .Values "context-gateway" "gateway" "namespace" }}
       {{- end }}
+      {{- /* The assistant's crawl worker reads the same repositories with the same read-only
+             token (T-3052). */}}
+      {{- if has "assistant" .Values.components }}
+      - {{ .Values.assistant.worker.namespace }}
+      {{- end }}
     restart:
+      {{- if or (has "context-gateway" .Values.components) (has "assistant" .Values.components) }}
       {{- if has "context-gateway" .Values.components }}
       - {{ printf "%s/context-gateway" (index .Values "context-gateway" "gateway" "namespace") }}
+      {{- end }}
+      {{- if has "assistant" .Values.components }}
+      - {{ printf "%s/jc-assistant" .Values.assistant.worker.namespace }}
+      {{- end }}
       {{- else }} []
       {{- end }}
   registry:

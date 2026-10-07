@@ -1,0 +1,8 @@
+# Who can decrypt this repository's encrypted files (T-1712; CC-06, S6). Owner decision
+# 2026-10-06: the dev age key, whose private half lives only in the operator's secret store, and
+# the owner's offline age key, whose public key is still to come: add it to `age` below and run
+# `sops updatekeys` on every *.enc.yaml so each file names both. tests/test_sops_recipients.py
+# fails on a file that names anyone else, and on an encrypted file outside these rules.
+creation_rules:
+  - path_regex: \.enc\.ya?ml$
+    age: age1dwqmmfzz3d953uawww9nzp56vhl9j4ljg3l06mrzp8xuwu6l09cq3mwj55
