@@ -28,6 +28,15 @@
       {% snippet "snippets/language_selector.html" %}
     </div>
   </div>
+  {# The assistant (AG-114): a native disclosure, so a keyboard opens it and a closed one loads
+     nothing; the page it frames is the assistant host's, framed only by the origins it allows. #}
+  {% set widget = h.jc_assistant_widget() %}
+  {% if widget %}
+    <details class="jc-assistant">
+      <summary>{{ h.jc_t('assistant') }}</summary>
+      <iframe src="{{ widget }}" title="{{ h.jc_t('assistant') }}" loading="lazy" referrerpolicy="no-referrer"></iframe>
+    </details>
+  {% endif %}
 {% endblock %}
 
 {% block footer_links_ckan %}{% endblock %}

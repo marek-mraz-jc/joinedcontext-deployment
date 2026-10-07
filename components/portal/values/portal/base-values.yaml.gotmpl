@@ -266,6 +266,11 @@ env:
   # client-credentials token (audience jc-functions); without it the function route answers 503.
   JC_FUNCTIONS_URL: "http://jc-functions.{{ .Values.functions.runtime.namespace }}.svc.cluster.local:8080"
 {{- end }}
+{{- if has "assistant" .Values.components }}
+  # The knowledge assistant's administration paths (API/01 §34, T-3057), asked with the Portal's
+  # own token (audience jc-assistant); without it the knowledge routes answer 503.
+  JC_PORTAL_KNOWLEDGE_URL: "http://jc-assistant.{{ .Values.assistant.worker.namespace }}.svc.cluster.local:8080"
+{{- end }}
 {{- if has "context-gateway" .Values.components }}
   # The space surface a declared Subscription is written through (T-0931, CC-72): the reconciler
   # posts to `{this}/cs/{space}/ngsi-ld/v1/subscriptions` with its own client-credentials token,
