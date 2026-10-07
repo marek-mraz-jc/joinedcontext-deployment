@@ -71,6 +71,18 @@ portal-public-view:
   priority: 5
   pluginConfig: portal-public
 
+# A form view published as a public form (API/01 §33, T-3103): a page with no login in front,
+# whose one write is an anonymous create through the public Endpoint the form was published as,
+# where the gateway decides and rate-limits it. The plugin config is portal-public's.
+portal-public-form:
+  name: portal-public-form
+  description: A published form, edge session optional
+  upstream: portal.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "portal") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/f/*'
+  subDomain: portal
+  priority: 5
+  pluginConfig: portal-public
+
 # The bundle the catalogue page (and every Portal page) runs on: the same files for everyone,
 # holding no data. The plugin config is portal-public's.
 portal-public-assets:
