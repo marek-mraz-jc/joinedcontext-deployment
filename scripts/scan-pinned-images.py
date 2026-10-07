@@ -78,10 +78,13 @@ def blocking(report: dict, kev: set[str], excused: set[tuple[str, str]]) -> list
             if not fixed or (image, cve) in excused:
                 continue
             if severity == "CRITICAL" or (severity == "HIGH" and cve in kev):
-                found.append(
+                line = (
                     f"{image}: {cve} {severity} in {vulnerability.get('PkgName', '?')} "
                     f"{vulnerability.get('InstalledVersion', '?')}, fixed in {fixed}"
                 )
+                # One finding per package, however many targets of the image carry it.
+                if line not in found:
+                    found.append(line)
     return found
 
 
