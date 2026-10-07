@@ -7,4 +7,4 @@ assistant:
     # binary; until then no environment lists the component.
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
     tag: 'main'
-    digest: 'sha256:6979b4610604c7b0b86109f410cd25ca09dc11888012d05697ef7f20873a1567'
+    digest: 'sha256:d21630496b9ae75445ae515d100251eea2d4d4c587b44eb8e369aeb9dbd787f3'
