@@ -399,3 +399,13 @@ def test_no_gitea_release_outgrows_the_secret_helm_keeps_it_in(dev):
         manifest = yaml.safe_dump_all(docs).encode()
         stored = len(base64.b64encode(gzip.compress(manifest * 2)))
         assert stored < 0.75 * 1024 * 1024, f"{release} would be stored in {stored} bytes"
+
+
+@requires_helmfile
+def test_no_configmap_of_dev_nears_the_one_mib_an_object_may_hold(dev):
+    """The API server refuses an object over 1 MiB; the forge seed did when Zilina joined it and
+    every apply stopped at gitea-bootstrap (T-3177). A quarter stays free for the next project."""
+    for d in dev:
+        if d.get("kind") == "ConfigMap":
+            size = len(yaml.safe_dump(d).encode())
+            assert size < 0.75 * 1024 * 1024, f"ConfigMap {d['metadata']['name']} is {size} bytes"

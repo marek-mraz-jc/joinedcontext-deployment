@@ -187,6 +187,12 @@ v1/ConfigMap local/apisix-standalone-base
 v1/ConfigMap local/cnpg-controller-manager-config
 v1/ConfigMap local/cnpg-default-monitoring
 v1/ConfigMap local/gitea-bootstrap-seed
+v1/ConfigMap local/gitea-bootstrap-seed-banskabystrica
+v1/ConfigMap local/gitea-bootstrap-seed-bbsk
+v1/ConfigMap local/gitea-bootstrap-seed-helsinki
+v1/ConfigMap local/gitea-bootstrap-seed-helsinki-mobility
+v1/ConfigMap local/gitea-bootstrap-seed-praha
+v1/ConfigMap local/gitea-bootstrap-seed-zilina
 v1/ConfigMap local/gitea-runner
 v1/ConfigMap local/gitea-runner-build-node
 v1/ConfigMap local/gitea-runner-build-rust
