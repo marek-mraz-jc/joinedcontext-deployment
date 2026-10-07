@@ -1,0 +1,21 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Project
+metadata:
+  name: zilina
+  namespace: org
+  title: { sk: "Mesto Žilina a Žilinská univerzita", en: "City of Žilina and the University of Žilina" }
+  description:
+    sk: "Mesto s 79 617 obyvateľmi a jeho univerzita: otvorené dáta, ktoré o nich vychádzajú, a ukazovatele z nich."
+    en: "A city of 79 617 people and its university: the open data published about them, and the indicators computed from it."
+spec:
+  organizationRef: hel
+  # The same quotas as every demo project (T-2873, PF-73): the mechanism stays, nobody reaches it.
+  quotas:
+    contextSpaces: 100
+    residentPipelines: 100
+    publicEndpoints: 100
+    apps: 100
+    ingestEventsPerSecond: 500
+    agentRunsPerDay: 2000
+    entitiesPerSpace: 1000000
+    requestsPerMinute: 6000
