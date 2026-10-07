@@ -24,6 +24,9 @@ gitea:
     # on a running forge moves every `{project}_{name}` repository there at the next apply; each
     # App then needs one rebuild, since its packages stay under the old owner (T-2856).
     appsOrganization: ""
+  sample-apps:
+    enabled: true
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "gitea") }}
   bootstrap:
     enabled: true
     namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "gitea") }}

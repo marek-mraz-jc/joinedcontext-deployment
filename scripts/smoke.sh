@@ -576,10 +576,30 @@ if has_route gitea-forge; then
 		else
 			ko "no forge team carries read permission"
 		fi
-		if grep -qE '"repo.code": *"(write|admin)"' <<<"$units"; then
-			ko "a forge team writes the configuration repository: merging is the Portal's (PF-80)"
+		# A team that writes is a project's `{slug}-writers` (PF-87): it holds its project's
+		# repository and nothing else. None may write the configuration repository, whose merges
+		# are the Portal's (PF-80), nor every repository at once.
+		writing=$(printf '%s' "$teams" | python3 -c 'import json, sys
+for t in json.load(sys.stdin):
+    if (t.get("units_map") or {}).get("repo.code") in ("write", "admin"):
+        print(t["id"], "all" if t.get("includes_all_repositories") else "listed", t["name"])' 2>/dev/null || true)
+		wrong=""
+		while read -r team_id scope team_name; do
+			[ -n "$team_id" ] || continue
+			if [ "$scope" = all ]; then
+				wrong="$wrong $team_name"
+				continue
+			fi
+			team_repos=$(curl -sS --max-time 20 -u "$forge_admin_user:$forge_admin_pw" \
+				"$base/git/api/v1/teams/$team_id/repos" 2>/dev/null || true)
+			if grep -qE '"name": *"configuration"' <<<"$team_repos"; then
+				wrong="$wrong $team_name"
+			fi
+		done <<<"$writing"
+		if [ -n "$wrong" ]; then
+			ko "forge team(s)$wrong write the configuration repository: merging is the Portal's (PF-80)"
 		else
-			ok "no forge team writes it, so merging stays the Portal's approval (PF-80)"
+			ok "no forge team writes the configuration repository, so merging stays the Portal's approval (PF-80)"
 		fi
 		# The Actions runner (ADR-N-028): registered in the organization and online. It
 		# registers again before every job, so an empty list is waited for, and the wait is
@@ -857,7 +877,7 @@ fi
 # the Portal accepted `status.build` for the repository's head. A fresh seed takes minutes, so
 # this waits up to JC_SMOKE_APP_WAIT seconds (default 600) and says how long it took (T-0459).
 echo "sample apps"
-sample_apps=$(kubectl get configmaps -n "$slug" -o name 2>/dev/null | sed -n 's,^configmap/gitea-bootstrap-app-,,p' | tr '\n' ' ')
+sample_apps=$(kubectl get configmaps -n "$slug" -o name 2>/dev/null | sed -n 's,^configmap/gitea-sample-apps-,,p' | tr '\n' ' ')
 app_wait=${JC_SMOKE_APP_WAIT:-600}
 if [ -z "${sample_apps% }" ]; then
 	skip "sample apps (none is seeded in this instance)"

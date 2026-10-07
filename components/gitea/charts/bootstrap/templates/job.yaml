@@ -1123,7 +1123,7 @@ spec:
             sources:
               {{- range $app, $files := .Values.sampleApps.apps }}
               - configMap:
-                  name: {{ include "bootstrap.fullname" $ }}-app-{{ $app }}
+                  name: {{ $.Values.sampleApps.configMaps }}-{{ $app }}
                   items:
                     {{- range $key, $_ := $files }}
                     - key: {{ $key | quote }}

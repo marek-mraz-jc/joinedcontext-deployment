@@ -4,6 +4,10 @@ parts:
   - name: forge
   # After the forge, because it talks to it. `needs` is the ordering; the Job's own wait loop
   # only covers the gap between a ready Deployment and a Gitea that has finished migrating.
+  # The sample applications' files, a release of their own so the bootstrap's stays under Helm's
+  # 1 MiB (T-3175); before the bootstrap, whose Job mounts them.
+  - name: sample-apps
   - name: bootstrap
     needs:
       - gitea.forge
+      - gitea.sample-apps
