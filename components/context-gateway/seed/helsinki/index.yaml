@@ -179,3 +179,5 @@ helsinki-assistant-public.yaml: projects/helsinki/assistant/deployments/helsinki
 helsinki-assistant-catalogue.yaml: projects/helsinki/assistant/deployments/helsinki-catalogue.yaml
 # The data portal's public datasets, the catalogue assistant's knowledge (T-3181, T-3054).
 helsinki-knowledge-catalogue.yaml: projects/helsinki/assistant/sources/data-portal.yaml
+# The city's website as a knowledge source (T-3067, user decision 2026-10-07).
+helsinki-knowledge-web.yaml: projects/helsinki/assistant/sources/web.yaml

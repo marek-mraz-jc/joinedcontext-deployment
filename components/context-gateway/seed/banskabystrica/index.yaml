@@ -138,3 +138,5 @@ policy-ovzdusie-pipelines-write.yaml: projects/banskabystrica/spaces/ovzdusie/po
 pipeline-public-air.yaml: projects/banskabystrica/pipelines/public-air/pipeline.yaml
 # The open-data catalogue of the city (T-2407): the one cleared endpoint, public-air, publishes here.
 ckan-banskabystrica.yaml: projects/banskabystrica/ckan/banskabystrica.yaml
+# The city's website as a knowledge source (T-3067, user decision 2026-10-07).
+banskabystrica-knowledge-web.yaml: projects/banskabystrica/assistant/sources/web.yaml
