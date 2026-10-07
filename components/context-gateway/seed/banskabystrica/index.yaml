@@ -31,6 +31,12 @@ app-mapa-policy.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/poli
 app-data.yaml: projects/banskabystrica/apps/banskabystrica-data/app.yaml
 app-data-endpoint.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/endpoints/app-banskabystrica-data.yaml
 app-data-policy.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/app-banskabystrica-data-1.yaml
+# The school coverage desk for city staff (T-2782): opened by its viewer role, which its default
+# group holds (AP-118); the group is the organization's, so it lives under users/groups/.
+app-skoly.yaml: projects/banskabystrica/apps/banskabystrica-skoly/app.yaml
+app-skoly-endpoint.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/endpoints/app-banskabystrica-skoly.yaml
+app-skoly-policy-viewer.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/app-banskabystrica-skoly-1-viewer.yaml
+app-skoly-group-viewer.yaml: users/groups/banskabystrica-skoly-viewer.yaml
 serviceaccount.yaml: projects/banskabystrica/access/serviceaccounts/conformance.yaml
 # The city's own two spaces (T-2305): the published rows as published, and the indicators
 # computed from them. The indicator endpoint is shared with `bbsk` and is not public.
