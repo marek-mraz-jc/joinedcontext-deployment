@@ -112,7 +112,7 @@ def test_the_citys_indicators_reach_the_region_by_a_named_share_and_nothing_wide
 def test_no_service_account_can_write_into_the_other_bodys_space():
     for folder, project, own in (
         (REGION, "bbsk", {"bbsk-kraj", "bbsk-kpi", "bbsk-registre"}),
-        (CITY, "banskabystrica", {"banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne"}),
+        (CITY, "banskabystrica", {"banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne", "ovzdusie"}),
     ):
         account = one(folder, "ServiceAccount", "pipelines")
         scopes = {role["scope"]["contextSpace"] for role in account["spec"]["roles"]}
@@ -644,8 +644,10 @@ def test_only_the_sole_writer_of_a_space_expires_and_its_policy_grants_the_sweep
                         )
                         for _, policy in manifests(folder, "Policy")
                     ), f"{name}: no pipelines Policy grants {operation} on {entity_type} in {space}"
-    # Off by default: exactly the one demonstration carries it, every other pipeline deletes nothing.
-    assert expiring == ["bbsk/ukazovatele"]
+    # Off by default: exactly these carry it, every other pipeline deletes nothing. The region's
+    # indicators, and the city's air readings, whose 13 seeded test stations leave public-air that
+    # way (T-3120).
+    assert expiring == ["banskabystrica/public-air", "bbsk/ukazovatele"]
     assert one(REGION, "Pipeline", "ukazovatele")["spec"]["expiry"] == {
         "after": "21d",
         "types": ["KeyPerformanceIndicator"],

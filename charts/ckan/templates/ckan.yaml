@@ -118,6 +118,8 @@ spec:
               value: /srv/theme
             - name: JC_BRANDING_FILE
               value: /etc/jc/branding/branding.json
+            - name: JC_ASSISTANT_WIDGET_URL
+              value: {{ .Values.assistantWidget | quote }}
             - name: CKAN_SOLR_URL
               value: http://{{ $full }}-solr.{{ .Release.Namespace }}.svc.cluster.local:8983/solr/ckan
             - name: CKAN_REDIS_URL

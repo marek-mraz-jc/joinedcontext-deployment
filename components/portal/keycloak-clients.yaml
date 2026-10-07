@@ -72,6 +72,17 @@ portal-api:
           included.custom.audience: jc-functions
           access.token.claim: 'true'
           id.token.claim: 'false'
+      # The Portal reads and steers what the knowledge assistant holds of a project's sources
+      # with this client's client-credentials token (API/01 §34, T-3057); jc-assistant accepts
+      # the client's service account and nobody else, so a person's token of it is refused.
+      - name: jc-assistant-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: jc-assistant
+          access.token.claim: 'true'
+          id.token.claim: 'false'
       # A person's token is the subject token jc-agent-proxy exchanges for a run of theirs
       # (ADR-N-038, AG-94): standard token exchange V2 takes it only when its audience names the
       # requesting client. A custom audience, so the realm of an environment without the agent

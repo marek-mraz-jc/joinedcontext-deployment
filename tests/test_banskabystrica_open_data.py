@@ -270,3 +270,86 @@ def test_the_model_classes_and_the_manifest_agree():
     model = manifest("datamodel-verejne.yaml")
     assert linkml["name"] == model["metadata"]["name"]
     assert set(model["spec"]["classes"]) == set(linkml["classes"])
+
+
+# T-3120: both EEA files into `ovzdusie`, the space `public-air` publishes, by one pipeline that
+# expires what it stops renewing (PL-64).
+AIR_SPACE = "ovzdusie"
+AIR_SLUG = "mluyob4nz52lok3ssk7pgn5vwt"
+
+
+def public_air(document: bytes) -> list[dict]:
+    """Pipeline public-air's own steps, as the merged stream runs them, over one fetched file."""
+    steps = manifest("pipeline-public-air.yaml")["spec"]["steps"]
+    processors = [step["processor"] if "processor" in step else {"mapping": step["bloblang"]} for step in steps]
+    rendered = FIXTURES.parent / ".public-air-steps.yaml"
+    rendered.write_text(yaml.safe_dump({"pipeline": {"processors": processors}}))
+    try:
+        return open_data.run(rendered, document, AIR_SPACE, DOMAIN)
+    finally:
+        rendered.unlink()
+
+
+@requires_docker
+def test_public_air_reads_each_file_into_the_one_station_as_verejne_decodes_it():
+    model = set(yaml.safe_load((CITY / "bb-air-quality.linkml.yaml").read_text())["classes"]["AirQualityObserved"]["slots"])
+    for attribute in ("pm10", "pm25"):
+        fixture = recorded(f"eea-sk0263a-{attribute}.parquet")
+        [station] = public_air(fixture)
+        [verejne] = run(f"ovzdusie-{attribute}", fixture)
+        assert station["id"] == f"urn:ngsi-ld:AirQualityObserved:{DOMAIN}:{AIR_SPACE}:eea-SK0263A"
+        # The file's Pollutant code picks the attribute; the other one is left to its own file.
+        assert ({"pm10", "pm25"} - {attribute}).isdisjoint(station)
+        assert station[attribute] == verejne[attribute]
+        assert station["dateObserved"] == verejne["dateObserved"]
+        assert set(station) - {"id", "type", "location"} <= model, set(station) - model
+        assert not air_schema_errors(station), air_schema_errors(station)
+
+
+@requires_docker
+def test_public_air_skips_a_withdrawn_hour_as_verejne_does():
+    [station] = public_air(recorded("eea-sk0263a-pm10-withdrawn.parquet"))
+    assert station["pm10"]["observedAt"] == "2026-09-25T04:00:00Z"
+
+
+def air_schema_errors(entity: dict) -> list[str]:
+    return open_data.schema_errors(CITY / "bb-air-quality.v1.schema.json", entity)
+
+
+def test_public_air_is_the_spaces_one_writer_and_expires_what_it_stops_renewing():
+    index = yaml.safe_load((CITY / "index.yaml").read_text())
+    pipeline = manifest("pipeline-public-air.yaml")
+    spec = pipeline["spec"]
+    assert pipeline["apiVersion"] == "joinedcontext.com/v1alpha2"
+    assert [s["dataSourceRef"]["name"] for s in spec["sources"]] == ["eea-sk0263a-pm10", "eea-sk0263a-pm25"]
+    assert spec["outputs"] == [{
+        "targetEndpoint": f"urn:ngsi-ld:Endpoint:{DOMAIN}:{AIR_SPACE}:public-air",
+        "type": "AirQualityObserved", "mode": "upsert",
+    }]
+    assert spec["expiry"] == {"after": "7d", "types": ["AirQualityObserved"]}
+    assert spec["period"] == "1h"
+    schedules = [manifest(f"pipeline-{name}.yaml")["spec"]["schedule"] for name in (*FEEDS, "public-air")]
+    assert len(set(schedules)) == len(schedules), "two streams start in the same minute"
+    for seeded in ("policy-ovzdusie-pipelines-write.yaml", "pipeline-public-air.yaml"):
+        assert seeded in index, seeded
+
+    grant = manifest("policy-ovzdusie-pipelines-write.yaml")["spec"]
+    assert grant["assignee"] == {"kind": "serviceAccount", "id": "pipelines"}
+    assert grant["contextSpaceRef"]["name"] == AIR_SPACE
+    assert set(grant["operations"]) == {"upsertBatch", "createBatch", "queryBatch", "deleteBatch"}
+    roles = manifest("serviceaccount-pipelines.yaml")["spec"]["roles"]
+    assert {"role": "space-writer", "scope": {"contextSpace": AIR_SPACE}} in roles
+    clients = yaml.safe_load((ROOT / "components/pipeline-runner/keycloak-clients.yaml").read_text())
+    audiences = {m["config"]["included.custom.audience"] for m in clients["banskabystrica-pipelines"]["rawValues"]["protocolMappers"]}
+    assert AIR_SLUG in audiences
+    # No person may delete there: the space's other grants name a role and a workload, never a user.
+    for name in ("policy-public-read.yaml", "policy-conformance-write.yaml"):
+        assert manifest(name)["spec"]["assignee"]["kind"] != "user", name
+
+
+def test_the_dataset_says_how_often_it_changes_and_where_it_comes_from():
+    endpoint = manifest("endpoint.yaml")
+    assert endpoint["spec"]["slug"] == AIR_SLUG
+    assert endpoint["spec"]["catalog"]["frequency"] == "HOURLY"
+    for text in ("SK0263A", "European Environment Agency", "CC BY 4.0"):
+        assert text in endpoint["metadata"]["description"]["en"], text

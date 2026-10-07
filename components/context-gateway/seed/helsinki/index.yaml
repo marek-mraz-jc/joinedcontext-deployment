@@ -167,3 +167,7 @@ helsinki-app-kartta-policy.yaml: projects/helsinki/spaces/helsinki/policies/app-
 helsinki-app-data.yaml: projects/helsinki/apps/helsinki-data/app.yaml
 helsinki-app-data-endpoint.yaml: projects/helsinki/spaces/helsinki/endpoints/app-helsinki-data.yaml
 helsinki-app-data-policy.yaml: projects/helsinki/spaces/helsinki/policies/app-helsinki-data-1.yaml
+# The public knowledge assistant over the weather and events Endpoints (T-3055, MF-52).
+helsinki-assistant-public.yaml: projects/helsinki/assistant/deployments/helsinki-public.yaml
+# The catalogue's assistant, framed by every page of the catalogue (T-3058, AG-114).
+helsinki-assistant-catalogue.yaml: projects/helsinki/assistant/deployments/helsinki-catalogue.yaml

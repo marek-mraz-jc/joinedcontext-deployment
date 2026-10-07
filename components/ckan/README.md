@@ -88,6 +88,13 @@ block every other page inherits, so the grid framed on a dataset page wears the 
 A rebrand is a values edit and an apply; the checksum annotation on the Deployment restarts the
 pod so the change is seen.
 
+Every page offers the knowledge assistant when the environment lists the `assistant`
+component and sets `ckan.catalogue.assistant` to the publicId of a `ckan` AssistantDeployment
+(AG-114, T-3058): a button in the corner opens the widget page of
+`https://assistant.{domain}/d/{publicId}/widget` in a frame. That deployment's
+`allowedOrigins` has to name this catalogue's host, or the assistant's own `frame-ancestors`
+refuses the frame. The theme offers only an address on the installation's assistant host.
+
 The theme is mounted, not baked: a ConfigMap has no directories, so each file is mounted by
 its own `subPath` into one directory on `PYTHONPATH`, together with a `dist-info` carrying
 the `entry_points.txt` that makes the plugin discoverable. A plugin CKAN cannot find is a

@@ -8,6 +8,7 @@ without branding should look like.
 import datetime
 import json
 import os
+import re
 
 import ckan
 import ckan.plugins as plugins
@@ -183,6 +184,7 @@ STRINGS = {
         "cs": "Přihlášení se nedokončilo. Přihlaste se znovu; pokud selže znovu, řekněte správci, kdy se to stalo.",
         "de": "Die Anmeldung wurde nicht abgeschlossen. Melden Sie sich erneut an; schlägt es wieder fehl, nennen Sie der Administration den Zeitpunkt.",
     },
+    "assistant": {"en": "Ask the assistant", "sk": "Opýtajte sa asistenta", "cs": "Zeptejte se asistenta", "de": "Fragen Sie den Assistenten"},
     # The dataset page leads with its rows, then the downloads in three sections (T-3009).
     "preview": {"en": "The data", "sk": "Dáta", "cs": "Data", "de": "Die Daten"},
     "preview_lead": {
@@ -612,6 +614,20 @@ def jc_portal_url():
     return "https://portal.%s/" % domain if domain else None
 
 
+ASSISTANT_WIDGET = os.environ.get("JC_ASSISTANT_WIDGET_URL", "")
+PUBLIC_ID = r"[a-z0-9](?:[-a-z0-9]{0,61}[a-z0-9])?"
+
+
+def jc_assistant_widget():
+    """The knowledge assistant's widget page on this installation's assistant host (AG-114);
+    None when there is none, or when the address names any other host or path."""
+    domain = BRANDING.get("domain")
+    if not domain or not ASSISTANT_WIDGET:
+        return None
+    pattern = r"https://assistant\.%s/d/%s/widget" % (re.escape(domain), PUBLIC_ID)
+    return ASSISTANT_WIDGET if re.fullmatch(pattern, ASSISTANT_WIDGET) else None
+
+
 def jc_branding():
     """The block, for the templates."""
     return BRANDING
@@ -687,6 +703,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_formats": jc_formats,
             "jc_recent": jc_recent,
             "jc_portal_url": jc_portal_url,
+            "jc_assistant_widget": jc_assistant_widget,
             "jc_about_site": jc_about_site,
             "jc_sso_error": jc_sso_error,
         }
