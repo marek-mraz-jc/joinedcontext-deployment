@@ -126,5 +126,9 @@ pipeline-ovzdusie-pm10-bento.yaml: projects/banskabystrica/pipelines/ovzdusie-pm
 datasource-ovzdusie-pm25.yaml: projects/banskabystrica/datasources/eea-sk0263a-pm25.yaml
 pipeline-ovzdusie-pm25.yaml: projects/banskabystrica/pipelines/ovzdusie-pm25/pipeline.yaml
 pipeline-ovzdusie-pm25-bento.yaml: projects/banskabystrica/pipelines/ovzdusie-pm25/bento.yaml
+# Both EEA files into `ovzdusie` too, so the public-air dataset carries the real reading; the
+# pipeline expires what it stops renewing (T-3120, PL-64).
+policy-ovzdusie-pipelines-write.yaml: projects/banskabystrica/spaces/ovzdusie/policies/ovzdusie-pipelines-write.yaml
+pipeline-public-air.yaml: projects/banskabystrica/pipelines/public-air/pipeline.yaml
 # The open-data catalogue of the city (T-2407): the one cleared endpoint, public-air, publishes here.
 ckan-banskabystrica.yaml: projects/banskabystrica/ckan/banskabystrica.yaml
