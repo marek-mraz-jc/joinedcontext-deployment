@@ -86,6 +86,10 @@ ROUTE_CLASSES = {
         "reach": EDGE_SESSION, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "a data view published as a public link (T-3108): the page holds no data, every read it makes goes to the public Endpoint, where the gateway enforces what it shows",
     },
+    "portal-public-form": {
+        "reach": EDGE_SESSION, "cacheable": True, "framing": "SAMEORIGIN",
+        "why": "a form view published as a public form (T-3103): the page holds no data, its one write is an anonymous create through the public Endpoint, which the gateway decides and rate-limits",
+    },
     "portal-api": {
         "reach": EDGE_SESSION, "cacheable": False, "framing": "DENY",
         "why": "CLIs and service accounts present a bearer the Portal verifies (OPS-33)",
