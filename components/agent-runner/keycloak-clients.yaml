@@ -136,3 +136,22 @@ helsinki-agent-proxy:
           included.custom.audience: hub7kq3zr5mx2vwt6nbc4pjd7fgs3a2y
           access.token.claim: 'true'
           id.token.claim: 'false'
+      # The Helsinki Apps' public Endpoints (seed/helsinki/helsinki-app-kartta-endpoint.yaml,
+      # helsinki-app-data-endpoint.yaml, T-2788): a run that builds against one reads it as the
+      # public role, as every visitor of the App does.
+      - name: helsinki-app-kartta-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: hx5kv2nr7qcm3tbz6wjd4yae2p
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-app-data-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: mc4hz7tkq2vbr6xna3wjd5yep2
+          access.token.claim: 'true'
+          id.token.claim: 'false'

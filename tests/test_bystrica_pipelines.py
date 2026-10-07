@@ -20,6 +20,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from pipeline_spec import outputs, sources
 
 # Starts its own containers from module-scoped fixtures; split over xdist workers, each worker
 # would start a second set beside the first. One worker runs the whole module (ci.yml loadgroup).
@@ -431,7 +432,7 @@ def test_every_pipeline_names_a_data_source_and_an_endpoint_the_seed_holds():
             for doc in yaml.safe_load_all(path.read_text())
             if isinstance(doc, dict) and "kind" in doc
         ]
-        sources = {d["metadata"]["name"] for d in docs if d["kind"] == "DataSource"}
+        sources_held = {d["metadata"]["name"] for d in docs if d["kind"] == "DataSource"}
         classes = {d["spec"]["contextSpaceRef"]: set(d["spec"]["classes"]) for d in docs if d["kind"] == "DataModel"}
         endpoint_names = {d["metadata"]["name"] for d in docs if d["kind"] == "Endpoint"}
         endpoints = {
@@ -446,19 +447,21 @@ def test_every_pipeline_names_a_data_source_and_an_endpoint_the_seed_holds():
             # A fetch names a DataSource of this project; a computation names the Endpoint it
             # reads through. Either way the thing it names is in the seed beside it, so a
             # renamed source breaks here and not in the cluster.
-            if "dataSourceRef" in spec["source"]:
-                assert spec["source"]["dataSourceRef"]["name"] in sources, name
-            else:
-                assert spec["source"]["endpointRef"]["name"] in endpoint_names, name
-                assert spec["output"]["type"] == "KeyPerformanceIndicator", name
-            assert spec["targetEndpoint"] in endpoints, spec["targetEndpoint"]
-            # And it writes a type the target space's one model declares, which is all the
-            # gateway lets into that space (DM-61).
-            space = spec["targetEndpoint"].split(":")[-2]
-            assert spec["output"]["type"] in classes[space], name
-            # An upsert is what a re-poll of a published table is: the same cell, published
-            # again; and an indicator recomputed on a schedule is the same indicator.
-            assert spec["output"]["mode"] == "upsert"
+            for source in sources(spec):
+                if "dataSourceRef" in source:
+                    assert source["dataSourceRef"]["name"] in sources_held, name
+                else:
+                    assert source["endpointRef"]["name"] in endpoint_names, name
+                    assert all(o["type"] == "KeyPerformanceIndicator" for o in outputs(spec)), name
+            for output in outputs(spec):
+                assert output["targetEndpoint"] in endpoints, output["targetEndpoint"]
+                # And it writes a type the target space's one model declares, which is all the
+                # gateway lets into that space (DM-61).
+                space = output["targetEndpoint"].split(":")[-2]
+                assert output["type"] in classes[space], name
+                # An upsert is what a re-poll of a published table is: the same cell, published
+                # again; and an indicator recomputed on a schedule is the same indicator.
+                assert output["mode"] == "upsert"
 
 
 def test_a_pipeline_is_fed_by_a_data_source_or_by_a_query_and_the_files_beside_it_say_which():
@@ -473,7 +476,11 @@ def test_a_pipeline_is_fed_by_a_data_source_or_by_a_query_and_the_files_beside_i
             for doc in yaml.safe_load_all(path.read_text()):
                 if not isinstance(doc, dict) or doc.get("kind") != "Pipeline":
                     continue
-                if "dataSourceRef" in doc["spec"]["source"]:
+                # A v1alpha2 pipeline carries its mapping inline, as `steps` (PL-52): no file beside it.
+                if "steps" in doc["spec"]:
+                    assert path.name not in mappings, path.name
+                    continue
+                if all("dataSourceRef" in source for source in sources(doc["spec"])):
                     fetched.add(path.name)
                     assert "compute" not in doc["spec"], doc["metadata"]["name"]
                 else:
