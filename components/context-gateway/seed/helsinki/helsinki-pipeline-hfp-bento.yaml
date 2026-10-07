@@ -26,6 +26,14 @@ pipeline:
     # one or none while thirty are held. A slot is taken with `add`, which fails on a held key,
     # so two buses never share one. (`counter()` handed the slots out once: half an hour after a
     # start every bus drew a number above thirty and the feed went silent, T-2961.)
+    #
+    # Every lookup asks `exists` first: a `get` of a missing key and an `add` on a held one are
+    # errors to Bento, counted in `processor_error` even when caught, and probing that way made
+    # 5.4 million errors of 792 thousand frames on dev (T-3186). What is left inside `try` fails
+    # only when another frame wins the same key between the two calls.
+    # ponytail: two new buses racing for one free slot on two runner threads still count one
+    # error for the loser; a single-threaded slot stage (the runner's `pipeline.threads`, which
+    # the Portal does not pass through yet) removes it if a restart burst ever matters.
     - branch:
         request_map: 'root = ""'
         processors:
@@ -34,34 +42,48 @@ pipeline:
               meta slot = "0"
               meta probe = "1"
           # The slot this bus holds, if the slot still names it.
-          - try:
-              - cache:
-                  resource: fleet
-                  operator: get
-                  key: 'bus-${! meta("vehicle") }'
-              - mapping: 'meta held = content().string()'
-              - cache:
-                  resource: fleet
-                  operator: get
-                  key: 'slot-${! meta("held") }'
-              - mapping: |
-                  meta slot = if content().string() == meta("vehicle") { meta("held") } else { "0" }
-          - catch:
-              - mapping: 'root = ""'
+          - cache:
+              resource: fleet
+              operator: exists
+              key: 'bus-${! meta("vehicle") }'
+          - switch:
+              - check: 'content().string() == "true"'
+                processors:
+                  - try:
+                      - cache:
+                          resource: fleet
+                          operator: get
+                          key: 'bus-${! meta("vehicle") }'
+                      - mapping: 'meta held = content().string()'
+                      - cache:
+                          resource: fleet
+                          operator: get
+                          key: 'slot-${! meta("held") }'
+                      - mapping: |
+                          meta slot = if content().string() == meta("vehicle") { meta("held") } else { "0" }
+                  - catch:
+                      - mapping: 'root = ""'
           # Otherwise the first free one.
           - while:
               max_loops: 30
               check: 'meta("slot") == "0" && meta("probe").number() <= 30'
               processors:
-                - try:
-                    - cache:
-                        resource: fleet
-                        operator: add
-                        key: 'slot-${! meta("probe") }'
-                        value: '${! meta("vehicle") }'
-                    - mapping: 'meta slot = meta("probe")'
-                - catch:
-                    - mapping: 'root = ""'
+                - cache:
+                    resource: fleet
+                    operator: exists
+                    key: 'slot-${! meta("probe") }'
+                - switch:
+                    - check: 'content().string() == "false"'
+                      processors:
+                        - try:
+                            - cache:
+                                resource: fleet
+                                operator: add
+                                key: 'slot-${! meta("probe") }'
+                                value: '${! meta("vehicle") }'
+                            - mapping: 'meta slot = meta("probe")'
+                        - catch:
+                            - mapping: 'root = ""'
                 - mapping: 'meta probe = (meta("probe").number() + 1).string()'
           # A holder's keys live as long as it reports.
           - switch:
@@ -86,19 +108,21 @@ pipeline:
     - branch:
         request_map: 'root = ""'
         processors:
-          - try:
-              - cache:
-                  resource: throttle
-                  operator: get
-                  key: '${! meta("vehicle") }'
-              - mapping: 'root = "seen"'
-          - catch:
-              - cache:
-                  resource: throttle
-                  operator: set
-                  key: '${! meta("vehicle") }'
-                  value: "1"
-              - mapping: 'root = "fresh"'
+          - cache:
+              resource: throttle
+              operator: exists
+              key: '${! meta("vehicle") }'
+          - switch:
+              - check: 'content().string() == "true"'
+                processors:
+                  - mapping: 'root = "seen"'
+              - processors:
+                  - cache:
+                      resource: throttle
+                      operator: set
+                      key: '${! meta("vehicle") }'
+                      value: "1"
+                  - mapping: 'root = "fresh"'
         result_map: 'meta throttle = content().string()'
     - mapping: |
         root = if meta("throttle") == "seen" { deleted() } else { this }
