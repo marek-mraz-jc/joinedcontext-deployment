@@ -1,6 +1,12 @@
 ---
 context-broker:
   broker:
-    repository: 'ghcr.io/marek-mraz/antares-broker'
-    tag: 'dev-173'
-    digest: 'sha256:a3a3431976b1bb6fd26f43630a120d19a3961d6c5445d81e04bce404eed712d4'
+    # The public release (owner order 2026-10-06, T-3068): v0.1.2, cosign-verified keyless as
+    # joinedcontext/Antares-NGSI-LD-Context-Broker full.yml@refs/tags/v0.1.2. Its migrations
+    # run forward only; the database was dumped first (pg_dump -Fc, 3.5 GB, 2026-10-07, in
+    # postgres-cluster-1:/var/lib/postgresql/data/t3068/). Rollback: dev-173
+    # (ghcr.io/marek-mraz/antares-broker@sha256:a3a3431976b1bb6fd26f43630a120d19a3961d6c5445d81e04bce404eed712d4)
+    # and that dump restored.
+    repository: 'ghcr.io/joinedcontext/antares-broker'
+    tag: '0.1.2'
+    digest: 'sha256:44f78d69e73e1a6942c18f135b43edefffe28629ba9a3e09751872b0c9705ad2'
