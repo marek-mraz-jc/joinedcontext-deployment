@@ -126,11 +126,12 @@ context-gateway:
     digest: 'sha256:04274bc393457e0d59bcbd2eaae3f05d384d10cd9793ab6e2bab12aeb0a2b70b'
   # `jcctl checkouts` keeps every registered project checked out for the gateway in layout 2
   # (CC-86, T-2646): the platform image's `checkouts` target, debian-slim with git.
-  # platform cbe3697 (T-2640, T-2641, T-2646's command and image).
+  # platform 871624a: the same command, rebuilt on a Debian that clears the 12 fixable perl
+  # CRITICALs of the cbe3697 build (T-3297).
   checkouts:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform/checkouts'
     tag: 'main'
-    digest: 'sha256:b5c1935ee0babd819da0c69bde8c95d41da0aa782b091256cbbd740fb1fe461e'
+    digest: 'sha256:05092cadd552491f181b4dd42c3eb36e80d17b80b093e668904819254827a86f'
   # git-sync keeps the gateway's checkout of the configuration repository current (T-0278).
   git-sync:
     repository: 'registry.k8s.io/git-sync/git-sync'
