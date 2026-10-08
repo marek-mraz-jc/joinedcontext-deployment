@@ -1,0 +1,70 @@
+---
+# apps-db (ADR-N-044 §2.5): reached by the Portal, which provisions and migrates every App's
+# schema, and later by the shards of jc-wasm-host (their rule lands with their component,
+# T-3344); by nothing else. Its own instances, the operator and the API server as the
+# platform's cluster (components/postgres/networkpolicies.yaml).
+apps-db:
+  podSelector:
+    cnpg.io/cluster: apps-db
+  policyTypes:
+    - Ingress
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: apps-db
+          componentNamespace: apps-db
+      ports:
+        - protocol: TCP
+          port: 5432
+    # The kube-apiserver (6443 on k3s) and WAL archiving to the object store (443), as for the
+    # platform's cluster; neither is a pod a selector can name.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 6443
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: cloudnative-pg
+          componentNamespace: postgres.operator
+    - from:
+        - podSelector:
+            matchLabels:
+              cnpg.io/jobRole: join
+          componentNamespace: apps-db
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: apps-db
+          componentNamespace: apps-db
+      ports:
+        - protocol: TCP
+          port: 5432
+        - protocol: TCP
+          port: 8000
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: portal-portal
+          componentNamespace: portal
+      ports:
+        - protocol: TCP
+          port: 5432

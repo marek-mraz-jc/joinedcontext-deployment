@@ -1,0 +1,82 @@
+"""apps-db, the database of the server WASM Apps, as the deployment renders it (T-3344, ADR-N-044,
+AP-149).
+
+No environment lists the component until the Portal provisions Apps in it and jc-wasm-host has an
+image to pin, so the tests render dev with it added. What is coupled across files: the roles
+CloudNativePG manages and the Secrets that hold their passwords, the `pg_hba` that admits those
+logins alone over TLS, and the NetworkPolicy that lets only the Portal (and the operator and the
+cluster's own instances) reach it."""
+
+import pytest
+
+
+def add_apps_db(tree):
+    path = tree / "deployment/environments/dev/global.yaml.gotmpl"
+    text = path.read_text()
+    assert "\n  - postgres\n" in text
+    path.write_text(text.replace("\n  - postgres\n", "\n  - postgres\n  - apps-db\n", 1))
+
+
+RENDERED: list = []
+
+
+@pytest.fixture
+def docs(rendered_variant):
+    if not RENDERED:
+        RENDERED.append(rendered_variant("dev", add_apps_db))
+    return RENDERED[0]
+
+
+def one(docs, kind, name):
+    found = [d for d in docs if d.get("kind") == kind and d["metadata"]["name"] == name]
+    assert len(found) == 1, f"{kind} {name}: {len(found)}"
+    return found[0]
+
+
+def test_a_cluster_of_its_own_with_the_portals_login_and_one_per_shard(docs):
+    cluster = one(docs, "Cluster", "apps-db")
+    spec = cluster["spec"]
+    assert one(docs, "Cluster", "postgres-cluster"), "apart from the platform's own cluster"
+    assert "@sha256:" in spec["imageName"]
+    assert spec["instances"] == 1
+    initdb = spec["bootstrap"]["initdb"]
+    assert (initdb["database"], initdb["owner"], initdb["secret"]["name"]) == ("apps", "jc_apps_admin", "db-apps-admin")
+    roles = {r["name"]: r for r in spec["managed"]["roles"]}
+    assert set(roles) == {"jc_apps_admin", "wasm_host_0", "wasm_host_1"}
+    admin = roles["jc_apps_admin"]
+    assert admin["createrole"] is True and admin["superuser"] is False and admin.get("createdb") is False
+    for shard in (0, 1):
+        host = roles[f"wasm_host_{shard}"]
+        assert host["login"] is True and host["inherit"] is False and host["superuser"] is False
+        assert host.get("createrole") is False
+        assert host["passwordSecret"]["name"] == f"apps-host-{shard}-db"
+
+
+def test_only_its_three_kinds_of_login_over_tls_and_everyone_else_refused(docs):
+    hba = one(docs, "Cluster", "apps-db")["spec"]["postgresql"]["pg_hba"]
+    assert hba[0] == "hostnossl all all all reject"
+    assert hba[-1] == "host all all all reject", "nothing reaches CloudNativePG's appended catch-all"
+    admitted = [line for line in hba if line.startswith("hostssl")]
+    assert admitted == [
+        "hostssl apps jc_apps_admin all scram-sha-256",
+        "hostssl apps /^wasm_host_[0-9]+$ all scram-sha-256",
+        "hostssl apps /^app_[0-9a-f]{16}_owner$ all scram-sha-256",
+    ]
+    assert not any(" app_" in line and "_owner" not in line for line in hba), "an App's run-time role never logs in"
+
+
+def test_every_password_is_a_generated_secret_where_its_reader_runs(docs):
+    for name in ("db-apps-admin", "apps-host-0-db", "apps-host-1-db"):
+        found = [d for d in docs if d.get("kind") in ("Secret", "ExternalSecret", "SealedSecret") and d["metadata"]["name"] == name]
+        assert found, f"{name} is rendered"
+
+
+def test_only_the_portal_the_operator_and_its_own_instances_reach_it(docs):
+    policy = next(
+        d for d in docs
+        if d.get("kind") == "NetworkPolicy" and d["spec"].get("podSelector", {}).get("matchLabels") == {"cnpg.io/cluster": "apps-db"}
+        and "Egress" in d["spec"]["policyTypes"]
+    )
+    sources = [peer.get("podSelector", {}).get("matchLabels", {}) for rule in policy["spec"]["ingress"] for peer in rule["from"]]
+    names = {labels.get("app.kubernetes.io/name") or labels.get("cnpg.io/cluster") or labels.get("cnpg.io/jobRole") for labels in sources}
+    assert names == {"cloudnative-pg", "join", "apps-db", "portal-portal"}, names

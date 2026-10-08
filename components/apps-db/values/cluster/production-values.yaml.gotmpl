@@ -1,0 +1,18 @@
+---
+cluster:
+  instances: 3
+  resources:
+    requests:
+      cpu: "1"
+      memory: "4Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+  storage:
+    size: 50Gi
+  affinity:
+    enablePodAntiAffinity: true
+    podAntiAffinityType: required
+    topologyKey: kubernetes.io/hostname
+  monitoring:
+    enablePodMonitor: true
