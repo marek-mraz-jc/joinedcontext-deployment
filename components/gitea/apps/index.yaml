@@ -1,6 +1,6 @@
 # Written by scripts/vendor-sample-apps.py; do not edit. The files of each sample application,
 # relative to its folder, as the forge bootstrap pushes them to its repository (T-2599).
-source: db8840522b476d690dfabca82b069182896cd443
+source: e9bbeb92cb9ef58e5eaded0135bfb2b84249d352
 apps:
   air-quality:
     - .gitea/workflows/build.yml
@@ -459,3 +459,47 @@ apps:
     - wasm/src/forecast.rs
     - wasm/src/lib.rs
     - wasm/src/stats.rs
+  transit-reach:
+    - .gitea/workflows/build.yml
+    - .gitignore
+    - README.md
+    - app.yaml
+    - e2e/responsive.spec.ts
+    - e2e/serve.ts
+    - grants/projects/helsinki/spaces/helsinki/endpoints/app-transit-reach.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-transit-reach-1-history.yaml
+    - index.html
+    - map-worker.ts
+    - package.json
+    - playwright.config.ts
+    - src/App.test.tsx
+    - src/App.tsx
+    - src/analysis.ts
+    - src/analysis.worker.ts
+    - src/app.css
+    - src/components/AppShell.tsx
+    - src/components/ReachMap.tsx
+    - src/components/components.css
+    - src/components/states.tsx
+    - src/design-tokens.json
+    - src/fixtures/vehicles.ts
+    - src/history.ts
+    - src/i18n.test.ts
+    - src/i18n.ts
+    - src/main.tsx
+    - src/pages/Reach.tsx
+    - src/test-analyser.ts
+    - src/theme.ts
+    - src/vehicles.test.ts
+    - src/vehicles.ts
+    - src/wasm.test.ts
+    - test-setup.ts
+    - tsconfig.json
+    - vite.config.ts
+    - wasm/Cargo.lock
+    - wasm/Cargo.toml
+    - wasm/src/dbscan.rs
+    - wasm/src/geo.rs
+    - wasm/src/lib.rs
+    - wasm/src/reach.rs
+    - wasm/src/stops.rs
