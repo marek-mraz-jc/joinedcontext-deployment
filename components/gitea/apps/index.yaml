@@ -1,6 +1,6 @@
 # Written by scripts/vendor-sample-apps.py; do not edit. The files of each sample application,
 # relative to its folder, as the forge bootstrap pushes them to its repository (T-2599).
-source: 2d71d7b9c286f4c647c422ea0fc8bca547b2525c
+source: 231bb34e193edc4ae26272a25fcd5cbda23f5e13
 apps:
   air-quality:
     - .gitea/workflows/build.yml
