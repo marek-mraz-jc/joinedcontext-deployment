@@ -220,7 +220,7 @@ def test_dev_hands_the_job_every_vendored_file_byte_for_byte(dev):
     }
     assert sorted(index["apps"]) == [
         "air-quality", "air-weather-explorer", "alerts-desk", "alerts-heatmap", "bike-rebalancing",
-        "event-day-planner", "helsinki-alerts", "helsinki-bikes", "helsinki-events", "hsl-transport",
+        "event-day-planner", "helsinki-alerts", "helsinki-bikes", "helsinki-events", "hsl-transport", "kpi-forecast",
     ]
     for app, files in index["apps"].items():
         on_disk = sorted(str(p.relative_to(VENDORED / app)) for p in (VENDORED / app).rglob("*") if p.is_file())
