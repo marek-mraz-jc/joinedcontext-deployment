@@ -1,6 +1,6 @@
 # Written by scripts/vendor-sample-apps.py; do not edit. The files of each sample application,
 # relative to its folder, as the forge bootstrap pushes them to its repository (T-2599).
-source: d0efe390c4078887db7830ea00fcaa58e80d5f39
+source: 33a8991cc6e87e1285bf6a7e381eaf96a9898d0e
 apps:
   air-quality:
     - .gitea/workflows/build.yml
@@ -284,3 +284,47 @@ apps:
     - wasm/src/geo.rs
     - wasm/src/lib.rs
     - wasm/src/time.rs
+  kpi-forecast:
+    - .gitea/workflows/build.yml
+    - .gitignore
+    - README.md
+    - app.yaml
+    - e2e/responsive.spec.ts
+    - e2e/serve.ts
+    - grants/projects/helsinki/spaces/helsinki-kpi/endpoints/app-kpi-forecast.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-kpi-forecast-1-history.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-kpi-forecast-1.yaml
+    - index.html
+    - package.json
+    - playwright.config.ts
+    - src/App.test.tsx
+    - src/App.tsx
+    - src/analysis.ts
+    - src/analysis.worker.ts
+    - src/app.css
+    - src/charts.test.ts
+    - src/charts.ts
+    - src/components/AppShell.tsx
+    - src/components/ChartCard.tsx
+    - src/components/components.css
+    - src/components/states.tsx
+    - src/design-tokens.json
+    - src/fixtures/kpis.ts
+    - src/history.ts
+    - src/i18n.test.ts
+    - src/i18n.ts
+    - src/kpis.test.ts
+    - src/kpis.ts
+    - src/main.tsx
+    - src/pages/Forecast.tsx
+    - src/test-analyser.ts
+    - src/theme.ts
+    - src/wasm.test.ts
+    - test-setup.ts
+    - tsconfig.json
+    - vite.config.ts
+    - wasm/Cargo.lock
+    - wasm/Cargo.toml
+    - wasm/src/forecast.rs
+    - wasm/src/lib.rs
+    - wasm/src/stats.rs
