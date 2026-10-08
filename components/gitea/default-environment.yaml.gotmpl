@@ -33,6 +33,9 @@ gitea:
   sample-apps-3:
     enabled: true
     namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "gitea") }}
+  sample-apps-4:
+    enabled: true
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "gitea") }}
   bootstrap:
     enabled: true
     namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "gitea") }}

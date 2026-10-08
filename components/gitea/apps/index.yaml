@@ -1,6 +1,6 @@
 # Written by scripts/vendor-sample-apps.py; do not edit. The files of each sample application,
 # relative to its folder, as the forge bootstrap pushes them to its repository (T-2599).
-source: d9d954f17aa0278ff19fd876d58d90217d7dd415
+source: e19a5adb9b0156c896d621ef89641f7c02e008e7
 apps:
   air-quality:
     - .gitea/workflows/build.yml
@@ -68,6 +68,7 @@ apps:
     - ui/src/main.tsx
     - ui/tests/attribution.test.tsx
     - ui/tests/map.test.tsx
+    - ui/tests/panel.test.tsx
     - ui/tests/setup.ts
     - ui/tsconfig.json
     - ui/vite.config.ts
@@ -97,24 +98,17 @@ apps:
     - src/App.tsx
     - src/alerts.ts
     - src/app.css
-    - src/components/AppShell.test.tsx
-    - src/components/AppShell.tsx
-    - src/components/EntityDetail.tsx
     - src/components/EntityForm.test.tsx
     - src/components/EntityForm.tsx
     - src/components/EntityMap.test.tsx
     - src/components/EntityMap.tsx
     - src/components/EntityTable.test.tsx
     - src/components/EntityTable.tsx
-    - src/components/ExportButton.test.tsx
-    - src/components/ExportButton.tsx
+    - src/components/StatTiles.test.tsx
     - src/components/StatTiles.tsx
-    - src/components/charts.test.tsx
-    - src/components/charts.tsx
     - src/components/components.css
     - src/components/filters.test.tsx
     - src/components/filters.tsx
-    - src/components/states.tsx
     - src/design-tokens.json
     - src/fixtures/access.ts
     - src/fixtures/alerts.ts
@@ -145,19 +139,14 @@ apps:
     - src/app.css
     - src/charts.test.ts
     - src/charts.ts
-    - src/components/AppShell.test.tsx
-    - src/components/AppShell.tsx
     - src/components/ChartCard.tsx
-    - src/components/EntityDetail.tsx
     - src/components/EntityMap.test.tsx
     - src/components/EntityMap.tsx
     - src/components/EntityTable.test.tsx
     - src/components/EntityTable.tsx
-    - src/components/StatTiles.tsx
     - src/components/components.css
     - src/components/filters.test.tsx
     - src/components/filters.tsx
-    - src/components/states.tsx
     - src/design-tokens.json
     - src/fixtures/stations.ts
     - src/main.tsx
@@ -186,13 +175,10 @@ apps:
     - src/App.tsx
     - src/app.css
     - src/charts.ts
-    - src/components/AppShell.test.tsx
-    - src/components/AppShell.tsx
     - src/components/ChartCard.tsx
+    - src/components/EntityMap.test.tsx
     - src/components/EntityMap.tsx
     - src/components/components.css
-    - src/components/filters.tsx
-    - src/components/states.tsx
     - src/design-tokens.json
     - src/events.test.ts
     - src/events.ts
@@ -298,14 +284,12 @@ apps:
     - map-worker.ts
     - package.json
     - playwright.config.ts
+    - src/App.test.tsx
     - src/App.tsx
     - src/app.css
-    - src/components/AppShell.tsx
     - src/components/ChartCard.tsx
-    - src/components/LangSwitch.tsx
     - src/components/MapView.tsx
     - src/components/components.css
-    - src/components/states.tsx
     - src/design-tokens.json
     - src/fixtures/stations.ts
     - src/i18n.test.ts
@@ -315,6 +299,7 @@ apps:
     - src/pages/Rebalance.tsx
     - src/planner.test.ts
     - src/planner.ts
+    - src/planner.worker-path.test.ts
     - src/planner.worker.ts
     - src/stations.test.ts
     - src/stations.ts
@@ -340,14 +325,12 @@ apps:
     - map-worker.ts
     - package.json
     - playwright.config.ts
+    - src/App.test.tsx
     - src/App.tsx
     - src/app.css
-    - src/components/AppShell.tsx
     - src/components/ChartCard.tsx
-    - src/components/LangSwitch.tsx
     - src/components/MapView.tsx
     - src/components/components.css
-    - src/components/states.tsx
     - src/design-tokens.json
     - src/events.test.ts
     - src/events.ts
@@ -477,13 +460,13 @@ apps:
     - playwright.config.ts
     - src/App.test.tsx
     - src/App.tsx
+    - src/analysis.test.ts
     - src/analysis.ts
     - src/analysis.worker.ts
     - src/app.css
-    - src/components/AppShell.tsx
+    - src/components/ReachMap.test.tsx
     - src/components/ReachMap.tsx
     - src/components/components.css
-    - src/components/states.tsx
     - src/design-tokens.json
     - src/fixtures/network.ts
     - src/fixtures/vehicles.ts
@@ -496,6 +479,8 @@ apps:
     - src/network.ts
     - src/pages/Reach.tsx
     - src/test-analyser.ts
+    - src/testing/maplibre.ts
+    - src/theme.test.ts
     - src/theme.ts
     - src/vehicles.test.ts
     - src/vehicles.ts
@@ -525,14 +510,12 @@ apps:
     - playwright.config.ts
     - src/App.tsx
     - src/app.css
-    - src/components/AppShell.test.tsx
-    - src/components/AppShell.tsx
+    - src/components/ChartCard.test.tsx
     - src/components/ChartCard.tsx
     - src/components/components.css
-    - src/components/filters.tsx
-    - src/components/states.tsx
     - src/design-tokens.json
     - src/fixtures/news.ts
+    - src/i18n.test.ts
     - src/i18n.ts
     - src/main.tsx
     - src/pages/Topics.test.tsx
@@ -563,13 +546,13 @@ apps:
     - src/App.test.tsx
     - src/App.tsx
     - src/app.css
+    - src/compare.test.tsx
     - src/compare.ts
     - src/compare.worker.ts
-    - src/components/AppShell.tsx
     - src/components/ChartCard.tsx
+    - src/components/DistrictMap.test.tsx
     - src/components/DistrictMap.tsx
     - src/components/components.css
-    - src/components/states.tsx
     - src/design-tokens.json
     - src/districts.test.ts
     - src/districts.ts
@@ -578,6 +561,7 @@ apps:
     - src/i18n.ts
     - src/main.tsx
     - src/pages/Compare.tsx
+    - src/theme.test.ts
     - src/theme.ts
     - src/wasm.test.ts
     - test-setup.ts
@@ -602,20 +586,20 @@ apps:
     - src/App.test.tsx
     - src/App.tsx
     - src/app.css
-    - src/components/AppShell.tsx
     - src/components/ChartCard.tsx
     - src/components/components.css
-    - src/components/states.tsx
     - src/design-tokens.json
     - src/fixtures/quality.ts
     - src/i18n.test.ts
     - src/i18n.ts
+    - src/inspect.test.tsx
     - src/inspect.ts
     - src/inspect.worker.ts
     - src/main.tsx
     - src/pages/Quality.tsx
     - src/quality.test.ts
     - src/quality.ts
+    - src/theme.test.ts
     - src/theme.ts
     - src/wasm.test.ts
     - test-setup.ts
@@ -647,19 +631,21 @@ apps:
     - src/app.css
     - src/bikes.test.ts
     - src/bikes.ts
-    - src/components/AppShell.tsx
     - src/components/ChartCard.tsx
+    - src/components/StationMap.test.tsx
     - src/components/StationMap.tsx
     - src/components/components.css
-    - src/components/states.tsx
     - src/design-tokens.json
+    - src/estimate.test.tsx
     - src/estimate.ts
     - src/estimate.worker.ts
     - src/fixtures/bikes.ts
     - src/i18n.test.ts
     - src/i18n.ts
     - src/main.tsx
+    - src/pages/Station.test.tsx
     - src/pages/Station.tsx
+    - src/theme.test.ts
     - src/theme.ts
     - src/wasm.test.ts
     - test-setup.ts
