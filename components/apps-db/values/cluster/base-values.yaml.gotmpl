@@ -1,0 +1,106 @@
+---
+{{- $this := index .Values "apps-db" "cluster" -}}
+{{- $global := .Values.global }}
+{{- $images := index .Values.images "apps-db" "cluster" }}
+
+# values: https://github.com/cloudnative-pg/charts/blob/main/charts/cluster/values.yaml
+# The database of the server WASM Apps (ADR-N-044, AP-149). What isolates one App from another
+# is in Postgres itself: an App's run-time role has rights on its own schema alone, and a shard's
+# login is a member only of the run-time roles of its own shard's Apps (AP-144).
+
+# The Cluster, its Services (`apps-db-rw`) and its pods' `cnpg.io/cluster` label are named
+# `apps-db`, which the NetworkPolicies and the Portal's connection string name.
+fullnameOverride: {{ $this.name | quote }}
+
+type: postgresql
+
+version:
+  postgresql: "16"
+
+cluster:
+  imageName: "{{ $images.repository }}:{{ $images.tag }}@{{ $images.digest }}"
+  # As the platform's cluster (components/postgres): the probe port is unmeshed, and the instance
+  # manager watches its own Cluster resource.
+  annotations:
+    config.linkerd.io/skip-inbound-ports: "8000"
+    security.joinedcontext.com/api-access-reason: >-
+      CloudNativePG instance manager: watches its own Cluster resource and reports
+      instance status back to the operator.
+  storage:
+    size: "8Gi"
+    storageClass: "{{ $global.storage.storageClass.rwo | default "" }}"
+
+  # The database `apps`, owned by the Portal's login, which makes every App's schema and roles
+  # through jc_apps (portal apps_db/migrations): CREATEROLE and nothing more.
+  initdb:
+    database: apps
+    owner: jc_apps_admin
+    secret:
+      name: db-apps-admin
+
+  roles:
+    - name: jc_apps_admin
+      ensure: present
+      login: true
+      superuser: false
+      createrole: true
+      createdb: false
+      passwordSecret:
+        name: db-apps-admin
+    {{- range $shard := until (int $this.shards) }}
+    # Shard {{ $shard }} of jc-wasm-host: NOINHERIT, owns nothing, a member of its Apps' roles only.
+    - name: wasm_host_{{ $shard }}
+      ensure: present
+      login: true
+      superuser: false
+      inherit: false
+      createrole: false
+      createdb: false
+      passwordSecret:
+        name: apps-host-{{ $shard }}-db
+    {{- end }}
+
+  postgresql:
+    parameters:
+      # Two shards of twenty connections, the Portal, and an owner login per migration run.
+      max_connections: "100"
+      # The host sets 2 s per statement itself (AP-146); this bounds anything else.
+      statement_timeout: "30s"
+      idle_in_transaction_session_timeout: "60s"
+    pg_hba:
+      # TLS or nothing (as components/postgres), and only the three kinds of login this
+      # database has: the Portal, the shards and an App's owner while it migrates (AP-149).
+      # The last line refuses everyone else before CloudNativePG's own catch-all is reached.
+      - hostnossl all all all reject
+      - hostssl apps jc_apps_admin all scram-sha-256
+      - hostssl apps /^wasm_host_[0-9]+$ all scram-sha-256
+      - hostssl apps /^app_[0-9a-f]{16}_owner$ all scram-sha-256
+      - host all all all reject
+
+{{- $backups := $this.backups | default dict }}
+backups:
+  enabled: {{ $backups.enabled | default false }}
+{{- if $backups.enabled }}
+  provider: {{ $backups.provider | default "s3" | quote }}
+  endpointURL: {{ $backups.endpointURL | default "" | quote }}
+  destinationPath: {{ $backups.destinationPath | default "" | quote }}
+  retentionPolicy: {{ $backups.retentionPolicy | default "30d" | quote }}
+  s3:
+    region: {{ $backups.region | default "" | quote }}
+    bucket: {{ $backups.bucket | default "" | quote }}
+    path: {{ $backups.path | default "/" | quote }}
+  secret:
+    create: false
+    name: {{ $backups.existingSecret | default "apps-db-backup-s3" | quote }}
+  wal:
+    compression: gzip
+    encryption: AES256
+  data:
+    compression: gzip
+    encryption: AES256
+  scheduledBackups:
+    - name: daily-backup
+      schedule: {{ $backups.schedule | default "0 30 3 * * *" | quote }}
+      backupOwnerReference: self
+      method: barmanObjectStore
+{{- end }}
