@@ -9,5 +9,8 @@
 grafana:
   grafana:
     repository: 'docker.io/grafana/grafana'
-    tag: '12.3.1'
-    digest: 'sha256:2175aaa91c96733d86d31cf270d5310b278654b03f5718c59de12a865380a31f'
+    # 12.4.12 clears the 7 fixable CRITICALs of 12.3.1, which the 12.3 line still carries one of
+    # (T-3297). Checked against 12.3.1 read-only with this component's grafana.ini, datasource and
+    # dashboard provider: no error, the same five dashboards provisioned.
+    tag: '12.4.12'
+    digest: 'sha256:83be3e511ede559bee80e2215bb1987cb1246075461cb961beb515b0341e7aea'
