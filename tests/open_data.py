@@ -18,12 +18,11 @@ requires_docker = pytest.mark.skipif(
 )
 
 
-def run(mapping: Path, document: bytes, space: str, domain: str = "hel.fi") -> list[dict]:
-    """The mapping's processors over one fetched document, as the runner feeds it."""
+def _bento(mapping: Path, document: bytes, space: str, domain: str, codec: str) -> bytes:
     config = {
         "input": {"stdin": {"scanner": {"to_the_end": {}}}},
         "pipeline": yaml.safe_load(mapping.read_text())["pipeline"],
-        "output": {"stdout": {"codec": "all-bytes"}},
+        "output": {"stdout": {"codec": codec}},
         "logger": {"level": "error"},
     }
     result = subprocess.run(
@@ -33,7 +32,23 @@ def run(mapping: Path, document: bytes, space: str, domain: str = "hel.fi") -> l
         input=document, capture_output=True, timeout=120,
     )
     assert result.returncode == 0, result.stderr.decode() or result.stdout.decode()
-    return json.loads(result.stdout)
+    return result.stdout
+
+
+def run(mapping: Path, document: bytes, space: str, domain: str = "hel.fi") -> list[dict]:
+    """The mapping's processors over one fetched document, as the runner feeds it."""
+    return json.loads(_bento(mapping, document, space, domain, "all-bytes"))
+
+
+def run_all(mapping: Path, document: bytes, space: str, domain: str = "hel.fi") -> list[dict]:
+    """Like `run`, for a mapping that answers many messages (one entity each, or arrays), as one
+    that splits and regroups its rows does: the runner batches whichever it gets (T-3356)."""
+    entities: list[dict] = []
+    for line in _bento(mapping, document, space, domain, "lines").decode().splitlines():
+        if line.strip():
+            message = json.loads(line)
+            entities.extend(message if isinstance(message, list) else [message])
+    return entities
 
 
 def key_values(entity: dict) -> dict:

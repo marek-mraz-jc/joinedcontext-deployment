@@ -161,6 +161,13 @@ helsinki-pipeline-districts-bento.yaml: projects/helsinki/pipelines/districts/be
 helsinki-pipeline-subdistricts-bento.yaml: projects/helsinki/pipelines/subdistricts/bento.yaml
 helsinki-pipeline-fee-parking-zones-bento.yaml: projects/helsinki/pipelines/fee-parking-zones/bento.yaml
 helsinki-pipeline-resident-parking-zones-bento.yaml: projects/helsinki/pipelines/resident-parking-zones/bento.yaml
+# HSL's stops and lines (T-3356): the network transit-reach routes over, beside the live vehicles.
+helsinki-datasource-transit-stops.yaml: projects/helsinki/datasources/hsl-stops.yaml
+helsinki-datasource-transit-routes.yaml: projects/helsinki/datasources/hsl-routes.yaml
+helsinki-pipeline-transit-stops.yaml: projects/helsinki/pipelines/transit-stops/pipeline.yaml
+helsinki-pipeline-transit-routes.yaml: projects/helsinki/pipelines/transit-routes/pipeline.yaml
+helsinki-pipeline-transit-stops-bento.yaml: projects/helsinki/pipelines/transit-stops/bento.yaml
+helsinki-pipeline-transit-routes-bento.yaml: projects/helsinki/pipelines/transit-routes/bento.yaml
 # The default group of Prague's waste desk (T-2786, AP-118): an organization Group, so it is seeded
 # here beside the organization's roles rather than from the praha folder, which writes its project only.
 group-praha-odpad-viewer.yaml: users/groups/praha-odpad-viewer.yaml

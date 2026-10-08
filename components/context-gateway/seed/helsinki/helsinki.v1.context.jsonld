@@ -19,6 +19,9 @@
     "Event": {
       "@id": "sdm:Event"
     },
+    "GtfsStop": {
+      "@id": "sdm:GtfsStop"
+    },
     "NewsArticle": {
       "@id": "schema:NewsArticle"
     },
@@ -33,6 +36,9 @@
     },
     "PublicAreaPermit": {
       "@id": "jc:PublicAreaPermit"
+    },
+    "TransitRoute": {
+      "@id": "jc:TransitRoute"
     },
     "Vehicle": {
       "@id": "sdm:Vehicle"
@@ -83,6 +89,10 @@
       "@container": "@language",
       "@id": "schema:description"
     },
+    "directionId": {
+      "@id": "jc:directionId",
+      "@type": "xsd:integer"
+    },
     "districtCode": {
       "@id": "jc:districtCode"
     },
@@ -101,6 +111,9 @@
     "eventStatus": {
       "@id": "schema:eventStatus"
     },
+    "fareZone": {
+      "@id": "jc:fareZone"
+    },
     "fleetVehicleId": {
       "@id": "sdm:fleetVehicleId"
     },
@@ -112,6 +125,9 @@
     "heading": {
       "@id": "sdm:heading",
       "@type": "xsd:float"
+    },
+    "headsign": {
+      "@id": "jc:headsign"
     },
     "id": "@id",
     "image": {
@@ -175,6 +191,10 @@
       "@id": "sdm:precipitation",
       "@type": "xsd:float"
     },
+    "publicAreaPermits": {
+      "@id": "jc:publicAreaPermits",
+      "@type": "@id"
+    },
     "refDistrict": {
       "@id": "jc:refDistrict",
       "@type": "@id"
@@ -193,6 +213,9 @@
     },
     "route": {
       "@id": "sdm:route"
+    },
+    "routeShortName": {
+      "@id": "jc:routeShortName"
     },
     "schema": "http://schema.org/",
     "sdm": "https://smartdatamodels.org/",
@@ -224,6 +247,12 @@
     "stewardNote": {
       "@id": "jc:stewardNote"
     },
+    "stopCode": {
+      "@id": "jc:stopCode"
+    },
+    "stopSequence": {
+      "@id": "jc:stopSequence"
+    },
     "subCategory": {
       "@id": "sdm:subCategory"
     },
@@ -238,6 +267,14 @@
     "totalSpotNumber": {
       "@id": "sdm:totalSpotNumber",
       "@type": "xsd:integer"
+    },
+    "transportMode": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:transportMode"
     },
     "type": "@type",
     "url": {
@@ -254,6 +291,10 @@
     },
     "vehicleType": {
       "@id": "sdm:vehicleType"
+    },
+    "waterQualityObservations": {
+      "@id": "jc:waterQualityObservations",
+      "@type": "@id"
     },
     "windDirection": {
       "@id": "sdm:windDirection",

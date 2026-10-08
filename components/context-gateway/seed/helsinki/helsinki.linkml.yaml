@@ -4,7 +4,7 @@ title: Helsinki city context
 description: >-
   What the Helsinki demonstration space carries side by side (DM-01, DM-09): the events of the
   city's Linked Events register, the HSL city bike docking stations, the HSL buses of four
-  trunk lines, the city's news, Fintraffic's road weather stations and its traffic alerts, FMI's air quality stations, and the city's open registers: its services (libraries, health
+  trunk lines, HSL's stops and lines, the city's news, Fintraffic's road weather stations and its traffic alerts, FMI's air quality stations, and the city's open registers: its services (libraries, health
   stations, swimming halls, beaches, schools), the beach water sensors, parking areas and zones,
   the permits for digging, traffic arrangements and events on public areas, and its district
   division. One model, one space, four endpoints that each publish a slice of it. The IRIs
@@ -445,6 +445,49 @@ slots:
     inlined: false
     annotations:
       ngsi_ld_kind: Relationship
+  stopCode:
+    slot_uri: jc:stopCode
+    description: The code on the stop's sign, such as H2014; empty for a stop HSL gives none.
+    annotations:
+      ngsi_ld_kind: Property
+  fareZone:
+    slot_uri: jc:fareZone
+    description: The HSL fare zone the stop lies in, A to D; none for a stop beyond HSL's zones.
+    pattern: "^[A-Z]$"
+    annotations:
+      ngsi_ld_kind: Property
+  routeShortName:
+    slot_uri: jc:routeShortName
+    description: The line number riders see, such as 4 or 550.
+    annotations:
+      ngsi_ld_kind: Property
+  headsign:
+    slot_uri: jc:headsign
+    description: Where the line runs to in this direction, as its sign shows it.
+    annotations:
+      ngsi_ld_kind: Property
+  directionId:
+    slot_uri: jc:directionId
+    description: HSL's direction of the line, 1 or 2.
+    range: integer
+    minimum_value: 1
+    maximum_value: 2
+    annotations:
+      ngsi_ld_kind: Property
+  transportMode:
+    slot_uri: jc:transportMode
+    description: What serves the stop or runs the line.
+    range: TransportMode
+    annotations:
+      ngsi_ld_kind: Property
+  stopSequence:
+    slot_uri: jc:stopSequence
+    description: >-
+      The stops the line serves in this direction, in order, each the GTFS stop id that ends
+      the id of a GtfsStop of this space.
+    multivalued: true
+    annotations:
+      ngsi_ld_kind: Property
 
 classes:
   Event:
@@ -635,6 +678,36 @@ classes:
       - dataProvider
       - source
       - publicAreaPermits
+  GtfsStop:
+    class_uri: sdm:GtfsStop
+    description: One HSL stop or station platform, where it is, its sign's code and its fare zone.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+    slots:
+      - name
+      - stopCode
+      - description
+      - fareZone
+      - transportMode
+      - dataProvider
+      - source
+  TransitRoute:
+    class_uri: jc:TransitRoute
+    description: >-
+      One HSL line in one direction: its number, where it runs to, its stops in order and the
+      line through them. A line with several variants has one entity per variant.
+    is_a: Entity
+    slots:
+      - name
+      - route
+      - routeShortName
+      - headsign
+      - directionId
+      - transportMode
+      - stopSequence
+      - dataProvider
+      - source
 
 enums:
   ServiceCategory:
@@ -679,3 +752,15 @@ enums:
         description: A district (kaupunginosa), 60 of them.
       subDistrict:
         description: A sub-district (osa-alue), the unit the city's statistics use.
+  TransportMode:
+    permissible_values:
+      bus:
+        description: A bus.
+      tram:
+        description: A tram.
+      metro:
+        description: The metro.
+      train:
+        description: A commuter train.
+      ferry:
+        description: A ferry.

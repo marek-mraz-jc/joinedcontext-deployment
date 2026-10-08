@@ -14,6 +14,8 @@ spec:
         - type: Event
         - type: BikeHireDockingStation
         - type: Vehicle
+        - type: GtfsStop
+        - type: TransitRoute
         # The city's open registers (T-2787), each CC-BY-4.0 and free of personal data by their
         # mappings: the contact lines, applicants and contractors are never written.
         - type: PointOfInterest

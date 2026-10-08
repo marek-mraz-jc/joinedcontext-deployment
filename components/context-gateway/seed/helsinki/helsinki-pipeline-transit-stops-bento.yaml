@@ -1,0 +1,41 @@
+# The mapping of the transit-stops pipeline (PL-03, T-3356): one GtfsStop per stop or platform of
+# HSL's stop register, where it is, the code on its sign, its fare zone and what serves it. A
+# station (location type 1) only gathers its platforms, which the lines name, so it is left out.
+#
+# The register answers at most 16000 records a request; a page it cut short says so
+# (`exceededTransferLimit`), and the run fails rather than write a part of the stops as all.
+#
+# A stop beyond HSL's zones has the zone "Ei HSL" (not HSL) and no fare zone here.
+#
+# vehicle_ty is GTFS's route type: 3 a bus, 0 a tram, 1 the metro, 109 the commuter train, 4 a
+# ferry.
+
+pipeline:
+  processors:
+    - mapping: |
+        map mode {
+          root = match this.string() {
+            "0" => "tram",
+            "900" => "tram",
+            "1" => "metro",
+            "109" => "train",
+            "4" => "ferry",
+            _ => "bus",
+          }
+        }
+        map text {
+          root = this.or("").string().trim()
+        }
+        root = if this.properties.exceededTransferLimit.or(false) == true { throw("the stop register cut its answer short: raise resultRecordCount or page the DataSource") } else { this.features.or([]) }
+        root = root.filter(f -> f.properties.location_t.or(0) == 0 && f.properties.stop_id.apply("text") != "" && f.geometry.type.or("") == "Point").map_each(f -> {
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("GtfsStop", env("JC_ORG_DOMAIN"), env("JC_SPACE"), f.properties.stop_id.apply("text")),
+          "type": "GtfsStop",
+          "name": if f.properties.stop_name.apply("text") != "" { { "type": "LanguageProperty", "languageMap": { "fi": f.properties.stop_name.apply("text") } } },
+          "stopCode": if f.properties.stop_code.apply("text") != "" { { "type": "Property", "value": f.properties.stop_code.apply("text") } },
+          "description": if f.properties.stop_desc.apply("text") != "" { { "type": "LanguageProperty", "languageMap": { "fi": f.properties.stop_desc.apply("text") } } },
+          "fareZone": if f.properties.zone_id.apply("text").re_match("^[A-Z]$") { { "type": "Property", "value": f.properties.zone_id.apply("text") } },
+          "transportMode": { "type": "Property", "value": f.properties.vehicle_ty.or("3").apply("mode") },
+          "location": { "type": "GeoProperty", "value": f.geometry },
+          "dataProvider": { "type": "Property", "value": "Helsinki Region Transport (HSL), stops" },
+          "source": { "type": "Property", "value": "https://hri.fi/data/fi/dataset/hsl-n-joukkoliikenteen-pysakit" }
+        }.filter(entry -> entry.value != null))
