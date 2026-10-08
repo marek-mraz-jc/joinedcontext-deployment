@@ -1,0 +1,99 @@
+---
+# Fixable findings no release has a fix for yet, each with its reason, its task and an expiry of
+# at most 30 days (scripts/scan-pinned-images.py `judge`). An expired or incomplete entry
+# excuses nothing and turns the scan red. Re-scan and remove an entry once the image is rebuilt.
+# registry.k8s.io/git-sync/git-sync: v4.7.1 is the newest git-sync; its Debian base still ships the affected perl and socat. git-sync runs inside the cluster, reads the configuration repository and serves nothing.
+- cve: CVE-2026-13221
+  image: registry.k8s.io/git-sync/git-sync
+  reason: "v4.7.1 is the newest git-sync; its Debian base still ships the affected perl and socat. git-sync runs inside the cluster, reads the configuration repository and serves nothing."
+  task: T-3297
+  expires: 2026-11-07
+- cve: CVE-2026-42496
+  image: registry.k8s.io/git-sync/git-sync
+  reason: "v4.7.1 is the newest git-sync; its Debian base still ships the affected perl and socat. git-sync runs inside the cluster, reads the configuration repository and serves nothing."
+  task: T-3297
+  expires: 2026-11-07
+- cve: CVE-2026-56123
+  image: registry.k8s.io/git-sync/git-sync
+  reason: "v4.7.1 is the newest git-sync; its Debian base still ships the affected perl and socat. git-sync runs inside the cluster, reads the configuration repository and serves nothing."
+  task: T-3297
+  expires: 2026-11-07
+- cve: CVE-2026-8376
+  image: registry.k8s.io/git-sync/git-sync
+  reason: "v4.7.1 is the newest git-sync; its Debian base still ships the affected perl and socat. git-sync runs inside the cluster, reads the configuration repository and serves nothing."
+  task: T-3297
+  expires: 2026-11-07
+# docker.io/ckan/ckan-solr: 2.11-solr9, 2.11-solr9.9 and 2.12-solr9.9 all ship the same Solr libraries; no CKAN Solr image carries the fixed jars yet. Solr is reachable only from CKAN inside its namespace.
+- cve: CVE-2024-47561
+  image: docker.io/ckan/ckan-solr
+  reason: "2.11-solr9, 2.11-solr9.9 and 2.12-solr9.9 all ship the same Solr libraries; no CKAN Solr image carries the fixed jars yet. Solr is reachable only from CKAN inside its namespace."
+  task: T-3297
+  expires: 2026-11-07
+- cve: CVE-2025-12383
+  image: docker.io/ckan/ckan-solr
+  reason: "2.11-solr9, 2.11-solr9.9 and 2.12-solr9.9 all ship the same Solr libraries; no CKAN Solr image carries the fixed jars yet. Solr is reachable only from CKAN inside its namespace."
+  task: T-3297
+  expires: 2026-11-07
+- cve: CVE-2025-54988
+  image: docker.io/ckan/ckan-solr
+  reason: "2.11-solr9, 2.11-solr9.9 and 2.12-solr9.9 all ship the same Solr libraries; no CKAN Solr image carries the fixed jars yet. Solr is reachable only from CKAN inside its namespace."
+  task: T-3297
+  expires: 2026-11-07
+- cve: CVE-2025-66516
+  image: docker.io/ckan/ckan-solr
+  reason: "2.11-solr9, 2.11-solr9.9 and 2.12-solr9.9 all ship the same Solr libraries; no CKAN Solr image carries the fixed jars yet. Solr is reachable only from CKAN inside its namespace."
+  task: T-3297
+  expires: 2026-11-07
+- cve: CVE-2026-40682
+  image: docker.io/ckan/ckan-solr
+  reason: "2.11-solr9, 2.11-solr9.9 and 2.12-solr9.9 all ship the same Solr libraries; no CKAN Solr image carries the fixed jars yet. Solr is reachable only from CKAN inside its namespace."
+  task: T-3297
+  expires: 2026-11-07
+- cve: CVE-2026-42027
+  image: docker.io/ckan/ckan-solr
+  reason: "2.11-solr9, 2.11-solr9.9 and 2.12-solr9.9 all ship the same Solr libraries; no CKAN Solr image carries the fixed jars yet. Solr is reachable only from CKAN inside its namespace."
+  task: T-3297
+  expires: 2026-11-07
+- cve: CVE-2026-75595
+  image: docker.io/ckan/ckan-solr
+  reason: "2.11-solr9, 2.11-solr9.9 and 2.12-solr9.9 all ship the same Solr libraries; no CKAN Solr image carries the fixed jars yet. Solr is reachable only from CKAN inside its namespace."
+  task: T-3297
+  expires: 2026-11-07
+# ghcr.io/warpstreamlabs/bento: 1.21.2, the newest Bento, still bundles amqp091-go 1.9.0; no pipeline of this platform uses an AMQP input or output.
+- cve: CVE-2026-77405
+  image: ghcr.io/warpstreamlabs/bento
+  reason: "1.21.2, the newest Bento, still bundles amqp091-go 1.9.0; no pipeline of this platform uses an AMQP input or output."
+  task: T-3297
+  expires: 2026-11-07
+- cve: CVE-2026-77408
+  image: ghcr.io/warpstreamlabs/bento
+  reason: "1.21.2, the newest Bento, still bundles amqp091-go 1.9.0; no pipeline of this platform uses an AMQP input or output."
+  task: T-3297
+  expires: 2026-11-07
+- cve: CVE-2026-77411
+  image: ghcr.io/warpstreamlabs/bento
+  reason: "1.21.2, the newest Bento, still bundles amqp091-go 1.9.0; no pipeline of this platform uses an AMQP input or output."
+  task: T-3297
+  expires: 2026-11-07
+# docker.gitea.com/gitea: 1.27.3 is the newest Gitea patch and still ships openssh-keygen 10.3_p1-r0 and runner 1.0.8; the forge exposes no SSH and runs no bundled runner here.
+- cve: CVE-2026-60002
+  image: docker.gitea.com/gitea
+  reason: "1.27.3 is the newest Gitea patch and still ships openssh-keygen 10.3_p1-r0 and runner 1.0.8; the forge exposes no SSH and runs no bundled runner here."
+  task: T-3297
+  expires: 2026-11-07
+- cve: CVE-2026-73802
+  image: docker.gitea.com/gitea
+  reason: "1.27.3 is the newest Gitea patch and still ships openssh-keygen 10.3_p1-r0 and runner 1.0.8; the forge exposes no SSH and runs no bundled runner here."
+  task: T-3297
+  expires: 2026-11-07
+# alpine/kubectl: alpine/kubectl has no 1.33 or 1.34 build with the fixed OpenSSL and Go (1.35 has, outside the supported skew of the k3s v1.33 cluster); the reaper runs inside the cluster with no inbound traffic.
+- cve: CVE-2025-68121
+  image: alpine/kubectl
+  reason: "alpine/kubectl has no 1.33 or 1.34 build with the fixed OpenSSL and Go (1.35 has, outside the supported skew of the k3s v1.33 cluster); the reaper runs inside the cluster with no inbound traffic."
+  task: T-3297
+  expires: 2026-11-07
+- cve: CVE-2026-31789
+  image: alpine/kubectl
+  reason: "alpine/kubectl has no 1.33 or 1.34 build with the fixed OpenSSL and Go (1.35 has, outside the supported skew of the k3s v1.33 cluster); the reaper runs inside the cluster with no inbound traffic."
+  task: T-3297
+  expires: 2026-11-07
