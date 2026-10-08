@@ -33,13 +33,16 @@ portal-api:
   # client and denies on each one without `managed-by: joinedcontext`: the edge, the platform's
   # own clients and Keycloak's (T-2725). Reading a client's secret stays with `view-clients`;
   # the confidential platform clients move off shared secrets for that (T-2868).
-  # `query-users` (read-only) lets it list who holds an App client role: Keycloak answers
-  # GET /clients/{id}/roles/{role}/users only to a caller that may view the client and query
-  # users. Every lookup and every mapping write stays with `portal-reconciler` (T-3022).
+  # `query-users` and `query-groups` (read-only) let it list who holds an App client role:
+  # Keycloak answers GET /clients/{id}/roles/{role}/users and …/groups only to a caller that may
+  # view the client and query users or groups (T-3022, T-3322; without `query-groups` every
+  # reconcile cycle answered 403 on the role's groups). Neither reads a group's members or
+  # writes a mapping: every lookup and every mapping write stays with `portal-reconciler`.
   serviceAccountClientRoles:
     realm-management:
       - view-clients
       - query-users
+      - query-groups
   rawValues:
     publicClient: false
     standardFlowEnabled: true

@@ -23,9 +23,15 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / "components/keycloak/charts/admin-permissions/files/sync-admin-permissions.sh"
 IMAGES = ROOT / "components/keycloak/images.yaml"
+CLIENTS = ROOT / "components/portal/keycloak-clients.yaml"
 REALM = "t2725"
 
 pytestmark = pytest.mark.skipif(shutil.which("docker") is None, reason="no container runtime for Keycloak")
+
+
+def portal_roles() -> list[str]:
+    """The realm-management roles the deployment gives `portal-api`, as the realm import maps them."""
+    return yaml.safe_load(CLIENTS.read_text())["portal-api"]["serviceAccountClientRoles"]["realm-management"]
 
 
 def image() -> str:
@@ -114,7 +120,17 @@ def realm(base, permissions=True):
     roles = {r["name"]: r for r in call(base, "GET", f"/admin/realms/{REALM}/clients/{management}/roles", admin)[1]}
     account = call(base, "GET", f"/admin/realms/{REALM}/clients/{ids['portal']}/service-account-user", admin)[1]["id"]
     status, body, _ = call(base, "POST", f"/admin/realms/{REALM}/users/{account}/role-mappings/clients/{management}",
-                           admin, [roles["view-clients"], roles["query-users"]])
+                           admin, [roles[name] for name in portal_roles()])
+    assert status == 204, body
+    # An App role a group holds, as the reconciler finds it on every cycle (T-3322).
+    status, body, _ = call(base, "POST", f"/admin/realms/{REALM}/clients/{ids['app']}/roles", admin, {"name": "steward"})
+    assert status == 201, body
+    role = call(base, "GET", f"/admin/realms/{REALM}/clients/{ids['app']}/roles/steward", admin)[1]
+    status, body, headers = call(base, "POST", f"/admin/realms/{REALM}/groups", admin, {"name": "stewards"})
+    assert status == 201, body
+    ids["group"] = headers["Location"].rsplit("/", 1)[1]
+    status, body, _ = call(base, "POST", f"/admin/realms/{REALM}/groups/{ids['group']}/role-mappings/clients/{ids['app']}",
+                           admin, [role])
     assert status == 204, body
     ids["admin"] = admin
     return ids
@@ -142,6 +158,9 @@ def may(base, ids):
         "delete the edge": admin("DELETE", f"/clients/{ids['edge']}"),
         "change itself": admin("PUT", f"/clients/{ids['portal']}", {"clientId": "portal-api", "description": "x"}),
         "list clients": admin("GET", "/clients"),
+        "read the users of an app role": admin("GET", f"/clients/{ids['app']}/roles/steward/users?max=1000"),
+        "read the groups of an app role": admin("GET", f"/clients/{ids['app']}/roles/steward/groups?briefRepresentation=true&max=1000"),
+        "read a group's members": admin("GET", f"/groups/{ids['group']}/members"),
     }
 
 
@@ -163,6 +182,10 @@ def test_the_portal_writes_its_own_clients_and_no_other(keycloak):
         "delete the edge": 403,
         "change itself": 403,
         "list clients": 200,
+        "read the users of an app role": 200,
+        # Without `query-groups` this answered 403 on every reconcile cycle on dev (T-3322).
+        "read the groups of an app role": 200,
+        "read a group's members": 403,
     }, after
 
     # Idempotent: a second run rewrites the same four objects.

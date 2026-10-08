@@ -188,7 +188,7 @@ def test_the_portal_service_account_may_manage_clients(rendered, env):
                 for u in realm["users"] if "serviceAccountClientId" in u}
     assert "portal-api" in accounts, "the reconciler could not create an app's client"
     assert accounts["portal-api"]["clientRoles"] == {
-        "realm-management": ["view-clients", "query-users"]
+        "realm-management": ["view-clients", "query-users", "query-groups"]
     }
     assert accounts["portal-api"]["username"] == "service-account-portal-api", (
         "keycloak names a service account after its client; another name creates a second user"
@@ -218,7 +218,10 @@ def test_no_other_client_holds_an_admin_api_role(rendered, env):
     client of the realm, the edge's included. It holds `view-clients`, which reads what
     `manage-clients` already read (every client, its secret too; that read goes when the
     confidential platform clients move off shared secrets, T-2868), and its writes come from
-    the realm's fine-grained admin permissions on the clients it manages alone."""
+    the realm's fine-grained admin permissions on the clients it manages alone.
+
+    T-3322: `portal-api` also holds `query-groups`, read-only, for the groups that hold an App
+    client role; it reads no group's members and writes nothing."""
     realm = realm_of(rendered, env)
     holders = {
         u["serviceAccountClientId"]: u["clientRoles"]["realm-management"]
@@ -226,7 +229,7 @@ def test_no_other_client_holds_an_admin_api_role(rendered, env):
         if u.get("clientRoles", {}).get("realm-management")
     }
     assert set(holders) == {"portal-api", "portal-reconciler"}, holders
-    assert sorted(holders["portal-api"]) == ["query-users", "view-clients"], holders
+    assert sorted(holders["portal-api"]) == ["query-groups", "query-users", "view-clients"], holders
     assert sorted(holders["portal-reconciler"]) == ["manage-users", "query-groups"], holders
 
 
