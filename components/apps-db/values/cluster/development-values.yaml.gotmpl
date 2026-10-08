@@ -1,0 +1,14 @@
+---
+# One instance on the dev node, sized for its first hundred Apps; T-3345 measures what
+# ten thousand need before production is sized.
+cluster:
+  instances: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+    limits:
+      cpu: '1'
+      memory: 768Mi
+  storage:
+    size: 2Gi

@@ -1,0 +1,8 @@
+---
+component: apps-db
+parts:
+  # The database of the server WASM Apps (ADR-N-044, AP-149, T-3344): a CloudNativePG cluster of
+  # its own, apart from the platform's, run by the platform's operator. One schema and two roles
+  # per App, made by the Portal; the shards of jc-wasm-host log in as `wasm_host_<shard>`. The
+  # operator is the operators layer's, applied before this one, so no `needs` names it.
+  - name: cluster
