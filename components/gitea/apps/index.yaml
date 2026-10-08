@@ -1,6 +1,6 @@
 # Written by scripts/vendor-sample-apps.py; do not edit. The files of each sample application,
 # relative to its folder, as the forge bootstrap pushes them to its repository (T-2599).
-source: 5f31c665ffd633a614935596077922baa830705b
+source: d9d954f17aa0278ff19fd876d58d90217d7dd415
 apps:
   air-quality:
     - .gitea/workflows/build.yml
@@ -33,11 +33,13 @@ apps:
     - ui/src/api.ts
     - ui/src/index.css
     - ui/src/main.tsx
+    - ui/src/panel.ts
     - ui/src/quality.ts
     - ui/tests/app.test.tsx
     - ui/tests/attribution.test.tsx
     - ui/tests/charts.test.tsx
     - ui/tests/maplibre.ts
+    - ui/tests/panel.test.tsx
     - ui/tests/setup.ts
     - ui/tsconfig.json
     - ui/vite.config.ts
@@ -216,18 +218,13 @@ apps:
     - playwright.config.ts
     - src/App.tsx
     - src/app.css
-    - src/components/AppShell.test.tsx
-    - src/components/AppShell.tsx
-    - src/components/EntityDetail.tsx
     - src/components/EntityTable.test.tsx
     - src/components/EntityTable.tsx
     - src/components/ExportButton.test.tsx
     - src/components/ExportButton.tsx
-    - src/components/StatTiles.tsx
     - src/components/components.css
     - src/components/filters.test.tsx
     - src/components/filters.tsx
-    - src/components/states.tsx
     - src/design-tokens.json
     - src/fixtures.ts
     - src/i18n.test.ts
@@ -256,16 +253,16 @@ apps:
     - src/App.tsx
     - src/alerts.test.ts
     - src/alerts.ts
+    - src/analysis.test.tsx
     - src/analysis.ts
     - src/analysis.worker.ts
     - src/app.css
     - src/charts.test.ts
     - src/charts.ts
-    - src/components/AppShell.tsx
     - src/components/ChartCard.tsx
+    - src/components/HexMap.test.tsx
     - src/components/HexMap.tsx
     - src/components/components.css
-    - src/components/states.tsx
     - src/design-tokens.json
     - src/fixtures/alerts.ts
     - src/i18n.test.ts
@@ -273,6 +270,8 @@ apps:
     - src/main.tsx
     - src/pages/Heatmap.tsx
     - src/test-analyser.ts
+    - src/testing/maplibre.ts
+    - src/theme.test.tsx
     - src/theme.ts
     - src/wasm.test.ts
     - test-setup.ts
@@ -386,26 +385,27 @@ apps:
     - map-worker.ts
     - package.json
     - playwright.config.ts
+    - src/App.test.tsx
     - src/App.tsx
     - src/analysis.test.ts
     - src/analysis.ts
     - src/analysis.worker.ts
     - src/app.css
-    - src/components/AppShell.tsx
     - src/components/ChartCard.tsx
-    - src/components/LangSwitch.tsx
     - src/components/MapView.tsx
     - src/components/components.css
-    - src/components/states.tsx
+    - src/components/components.test.tsx
     - src/design-tokens.json
     - src/fixtures/stations.ts
     - src/i18n.test.ts
     - src/i18n.ts
     - src/main.tsx
+    - src/pages/Explore.failure.test.tsx
     - src/pages/Explore.test.tsx
     - src/pages/Explore.tsx
     - src/stations.test.ts
     - src/stations.ts
+    - src/testing/maplibre.ts
     - src/texts.ts
     - src/theme.ts
     - src/url.ts
@@ -430,15 +430,15 @@ apps:
     - playwright.config.ts
     - src/App.test.tsx
     - src/App.tsx
+    - src/analysis.test.tsx
     - src/analysis.ts
     - src/analysis.worker.ts
     - src/app.css
     - src/charts.test.ts
     - src/charts.ts
-    - src/components/AppShell.tsx
+    - src/components/ChartCard.test.tsx
     - src/components/ChartCard.tsx
     - src/components/components.css
-    - src/components/states.tsx
     - src/design-tokens.json
     - src/fixtures/kpis.ts
     - src/history.ts
@@ -449,6 +449,7 @@ apps:
     - src/main.tsx
     - src/pages/Forecast.tsx
     - src/test-analyser.ts
+    - src/theme.test.tsx
     - src/theme.ts
     - src/wasm.test.ts
     - test-setup.ts
