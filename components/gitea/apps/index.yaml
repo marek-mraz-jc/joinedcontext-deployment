@@ -1,6 +1,6 @@
 # Written by scripts/vendor-sample-apps.py; do not edit. The files of each sample application,
 # relative to its folder, as the forge bootstrap pushes them to its repository (T-2599).
-source: d0efe390c4078887db7830ea00fcaa58e80d5f39
+source: 8e618ccf71411c6b16e8198b9b864e898d39acb1
 apps:
   air-quality:
     - .gitea/workflows/build.yml
@@ -284,3 +284,134 @@ apps:
     - wasm/src/geo.rs
     - wasm/src/lib.rs
     - wasm/src/time.rs
+  bike-rebalancing:
+    - .gitea/workflows/build.yml
+    - .gitignore
+    - README.md
+    - app.yaml
+    - e2e/responsive.spec.ts
+    - e2e/serve.ts
+    - grants/projects/helsinki/spaces/helsinki/endpoints/app-bike-rebalancing.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-bike-rebalancing-1.yaml
+    - grants/users/groups/bike-rebalancing-steward.yaml
+    - grants/users/groups/bike-rebalancing-viewer.yaml
+    - index.html
+    - map-worker.ts
+    - package.json
+    - playwright.config.ts
+    - src/App.tsx
+    - src/app.css
+    - src/components/AppShell.tsx
+    - src/components/ChartCard.tsx
+    - src/components/LangSwitch.tsx
+    - src/components/MapView.tsx
+    - src/components/components.css
+    - src/components/states.tsx
+    - src/design-tokens.json
+    - src/fixtures/stations.ts
+    - src/i18n.test.ts
+    - src/i18n.ts
+    - src/main.tsx
+    - src/pages/Rebalance.test.tsx
+    - src/pages/Rebalance.tsx
+    - src/planner.test.ts
+    - src/planner.ts
+    - src/planner.worker.ts
+    - src/stations.test.ts
+    - src/stations.ts
+    - src/texts.ts
+    - src/theme.ts
+    - src/url.ts
+    - test-setup.ts
+    - tsconfig.json
+    - vite.config.ts
+    - wasm/Cargo.lock
+    - wasm/Cargo.toml
+    - wasm/src/lib.rs
+  event-day-planner:
+    - .gitea/workflows/build.yml
+    - .gitignore
+    - README.md
+    - app.yaml
+    - e2e/responsive.spec.ts
+    - e2e/serve.ts
+    - grants/projects/helsinki/spaces/helsinki/endpoints/app-event-day-planner.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-event-day-planner-1.yaml
+    - index.html
+    - map-worker.ts
+    - package.json
+    - playwright.config.ts
+    - src/App.tsx
+    - src/app.css
+    - src/components/AppShell.tsx
+    - src/components/ChartCard.tsx
+    - src/components/LangSwitch.tsx
+    - src/components/MapView.tsx
+    - src/components/components.css
+    - src/components/states.tsx
+    - src/design-tokens.json
+    - src/events.test.ts
+    - src/events.ts
+    - src/fixtures/events.ts
+    - src/i18n.test.ts
+    - src/i18n.ts
+    - src/main.tsx
+    - src/pages/MyDay.test.tsx
+    - src/pages/MyDay.tsx
+    - src/planner.test.ts
+    - src/planner.ts
+    - src/planner.worker.ts
+    - src/texts.ts
+    - src/theme.ts
+    - src/url.ts
+    - test-setup.ts
+    - tsconfig.json
+    - vite.config.ts
+    - wasm/Cargo.lock
+    - wasm/Cargo.toml
+    - wasm/src/lib.rs
+  air-weather-explorer:
+    - .gitea/workflows/build.yml
+    - .gitignore
+    - README.md
+    - app.yaml
+    - e2e/responsive.spec.ts
+    - e2e/serve.ts
+    - grants/projects/helsinki/spaces/helsinki/endpoints/app-air-weather-explorer.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-air-weather-explorer-1-history.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-air-weather-explorer-1.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-air-weather-explorer-2-history.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-air-weather-explorer-2.yaml
+    - index.html
+    - map-worker.ts
+    - package.json
+    - playwright.config.ts
+    - src/App.tsx
+    - src/analysis.test.ts
+    - src/analysis.ts
+    - src/analysis.worker.ts
+    - src/app.css
+    - src/components/AppShell.tsx
+    - src/components/ChartCard.tsx
+    - src/components/LangSwitch.tsx
+    - src/components/MapView.tsx
+    - src/components/components.css
+    - src/components/states.tsx
+    - src/design-tokens.json
+    - src/fixtures/stations.ts
+    - src/i18n.test.ts
+    - src/i18n.ts
+    - src/main.tsx
+    - src/pages/Explore.test.tsx
+    - src/pages/Explore.tsx
+    - src/stations.test.ts
+    - src/stations.ts
+    - src/texts.ts
+    - src/theme.ts
+    - src/url.ts
+    - test-setup.ts
+    - tsconfig.json
+    - vite.config.ts
+    - wasm/Cargo.lock
+    - wasm/Cargo.toml
+    - wasm/src/lib.rs
