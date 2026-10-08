@@ -45,6 +45,17 @@ if "--tls-max" in line:
     sys.exit(spec.get("tls11", 1))
 elif "-sSI" in args:
     sys.stdout.write(lookup("headers", spec.get("defaultHeaders", DEFAULT_HEADERS)))
+elif "%{http_code}" in args and any(all(n in line for n in (m if isinstance(m, list) else [m])) for m, _ in spec.get("statusSequences", [])):
+    # A status that changes while the script waits (T-3424): each call takes the next answer of
+    # the sequence, and the last one stands once it runs out.
+    for index, (match, answers) in enumerate(spec["statusSequences"]):
+        needles = match if isinstance(match, list) else [match]
+        if all(n in line for n in needles):
+            counter = os.environ["STUB_SPEC"] + ".seq%d" % index
+            taken = int(open(counter).read()) if os.path.exists(counter) else 0
+            open(counter, "w").write(str(taken + 1))
+            sys.stdout.write(str(answers[min(taken, len(answers) - 1)]))
+            break
 elif "%{http_code}" in args:
     # A conditional read of a schema artifact is a 304, as the gateway answers it (EP-51).
     sys.stdout.write(str(lookup("statuses", 304 if "If-None-Match" in line else 200)))
@@ -784,6 +795,24 @@ def test_a_public_app_whose_policy_shuts_out_the_basemap_fails_the_run(tmp_path)
                 f"{BASEMAP} in img-src and connect-src, so its map draws no tiles (got: {said})") in result.stdout
     result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
     assert f"ok    public App hsl-transport's policy lets the basemap tiles in ({BASEMAP})" in result.stdout
+
+
+def test_a_public_app_host_that_answers_once_the_lane_republished_is_green(tmp_path):
+    """T-3424: an apply that re-vendored an App leaves its host 404 until the lane republishes the
+    build; the host check waits for it within the sample apps' bound and then passes."""
+    spec = dict(HEALTHY, statusSequences=[["hsl-transport.apps.example.test/", [404, 404, 200]]])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test", extra_env={"JC_SMOKE_POLL": "0"})
+    assert "ok    public App hsl-transport answers an anonymous visitor on its own host (200)" in result.stdout
+    assert "FAIL  public App hsl-transport" not in result.stdout
+
+
+def test_a_public_app_host_still_missing_past_the_bound_fails_the_run(tmp_path):
+    """T-3424: the wait is bounded; a host still 404 past it is red, as before."""
+    spec = dict(HEALTHY, statusSequences=[["hsl-transport.apps.example.test/", [404]]])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test",
+                 extra_env={"JC_SMOKE_POLL": "0", "JC_SMOKE_APP_WAIT": "1"})
+    assert result.returncode == 1
+    assert "FAIL  public App hsl-transport answers an anonymous visitor on its own host (expected 200, got 404)" in result.stdout
 
 
 def test_an_instance_without_a_basemap_does_not_ask_for_it_in_a_policy(tmp_path):
