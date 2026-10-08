@@ -20,7 +20,7 @@ def test_every_pin_of_every_component_is_listed_by_digest():
     images = scan.pinned()
     assert len(images) >= 20
     assert all("@sha256:" in image for image in images), images
-    assert "docker.gitea.com/gitea@sha256:36cce26be71609091e1236d5b5de2c66a81fb8a7d45756a5fd3b7a28c11733b7" in images, "the chart's registry joins its repository"
+    assert "docker.gitea.com/gitea@sha256:1c17ecaead42eb3b5391553d8708103a4beb0e86edf5b9ebc1eb269c318845f2" in images, "the chart's registry joins its repository"
 
 
 def test_the_known_vulnerable_gitea_pin_fails_on_its_fixable_critical(tmp_path):
