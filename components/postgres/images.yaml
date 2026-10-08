@@ -18,5 +18,5 @@ postgres:
     digest: 'sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685'
   cluster:
     repository: ghcr.io/cloudnative-pg/postgis
-    tag: 16-3.6-system-trixie
-    digest: 'sha256:9d597fcf4350e4bae9ff40cbe0e4383746a9c7f9c60da72483b0e966e4c20765'
+    tag: '16-3.6-system-trixie'
+    digest: 'sha256:06e22a518417c6ecfec4c23f7c2f8a4608405e559b97143e98b54f363ac03507'
