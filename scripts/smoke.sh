@@ -962,6 +962,19 @@ for app in items:
 	# its page policy has to let the tiles in, or the map is blank without a word (T-3014).
 	basemap="$portal/api/v1/projects/helsinki/basemap/"
 	basemap_code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "${basemap}default/style.json" 2>/dev/null || true)
+	# An apply that re-vendored an App makes the lane build it again, and its host answers 404 until
+	# the Portal fetched that build (T-3424): the host checks wait out a 404, within the sample apps'
+	# bound (JC_SMOKE_APP_WAIT, shared by every App), then run as they always did. Any other answer
+	# (a login wall's 302, a 5xx) is no publish still to come, and is checked at once.
+	host_deadline=$(($(date +%s) + app_wait))
+	wait_host() {
+		local code
+		while :; do
+			code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$1" 2>/dev/null || true)
+			[ "$code" = 404 ] && [ "$(date +%s)" -lt "$host_deadline" ] || return 0
+			sleep "${JC_SMOKE_POLL:-10}"
+		done
+	}
 	# csp_allows <policy> <directive> <source>: the directive lists the source as one of its own.
 	csp_allows() { tr ';' '\n' <<<"$1" | sed 's/^ *//' | grep -E "^$2( |\$)" | tr ' ' '\n' | grep -xF "$3" >/dev/null; }
 	while read -r app visibility; do
@@ -975,6 +988,7 @@ for app in items:
 			ko "App $app's old path does not move to its host without a cookie (got: $(head -1 <<<"$moved"))"
 		fi
 		if [ "$visibility" = public ]; then
+			wait_host "$host/"
 			status 200 "public App $app answers an anonymous visitor on its own host" "$host/"
 			if [ "$basemap_code" = 200 ]; then
 				csp=$(curl -sS -o /dev/null -D - --max-time 20 "$host/" 2>/dev/null | tr -d '\r' |
