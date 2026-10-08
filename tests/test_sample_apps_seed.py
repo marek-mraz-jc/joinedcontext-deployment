@@ -9,6 +9,7 @@ and read the dev render for what the Job is handed.
 import json
 import shutil
 import subprocess
+import zlib
 from pathlib import Path
 
 import pytest
@@ -218,13 +219,19 @@ def test_dev_hands_the_job_every_vendored_file_byte_for_byte(dev):
         item["path"] for source in volume["projected"]["sources"] for item in source["configMap"]["items"]
     }
     assert sorted(index["apps"]) == [
-        "air-quality", "alerts-desk", "helsinki-alerts", "helsinki-bikes", "helsinki-events", "hsl-transport",
+        "air-quality", "alerts-desk", "alerts-heatmap", "helsinki-alerts", "helsinki-bikes", "helsinki-events",
+        "hsl-transport",
     ]
     for app, files in index["apps"].items():
         on_disk = sorted(str(p.relative_to(VENDORED / app)) for p in (VENDORED / app).rglob("*") if p.is_file())
         assert sorted(files) == on_disk, f"{app}: index.yaml and the vendored tree disagree"
-        # A release of its own (T-3175): the bootstrap's would not fit Helm's Secret with them.
-        data = one(dev, "ConfigMap", f"gitea-sample-apps-{app}")["data"]
+        # A release of its own (T-3175): the bootstrap's would not fit Helm's Secret with them; one
+        # of three, the one the app's name hashes to, since one no longer holds them all (T-3333).
+        config_map = one(dev, "ConfigMap", f"gitea-sample-apps-{app}")
+        shard = zlib.adler32(app.encode()) % 3 + 1
+        release = "gitea-sample-apps" if shard == 1 else f"gitea-sample-apps-{shard}"
+        assert config_map["metadata"]["labels"]["app.kubernetes.io/instance"] == release
+        data = config_map["data"]
         for path in files:
             key = path.replace("/", "__")
             assert "__" not in path, f"{app}/{path} would not survive the key encoding"
@@ -390,7 +397,7 @@ def test_no_gitea_release_outgrows_the_secret_helm_keeps_it_in(dev):
     import base64
     import gzip
 
-    for release in ("gitea-bootstrap", "gitea-sample-apps"):
+    for release in ("gitea-bootstrap", "gitea-sample-apps", "gitea-sample-apps-2", "gitea-sample-apps-3"):
         docs = [
             d for d in dev
             if (d.get("metadata", {}).get("labels") or {}).get("app.kubernetes.io/instance") == release

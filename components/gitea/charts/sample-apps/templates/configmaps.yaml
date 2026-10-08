@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ $.Release.Name }}-{{ $app }}
+  name: {{ $.Values.configMaps }}-{{ $app }}
   namespace: {{ $.Release.Namespace }}
   labels:
     app.kubernetes.io/name: sample-apps

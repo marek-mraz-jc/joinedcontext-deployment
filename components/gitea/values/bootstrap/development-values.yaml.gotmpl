@@ -69,8 +69,8 @@ seed:
 # `source.git` pinned to that repository's commit. JSON strings, not block scalars: a block
 # scalar rewrites trailing newlines, and a file the seed changed on the way would never match the
 # blob already on the forge, so every run would commit again.
-# The files themselves are the release gitea-sample-apps (values/sample-apps, T-3175); the Job
-# reads them from its ConfigMaps and needs only their names here.
+# The files themselves are the releases gitea-sample-apps, -2 and -3 (values/sample-apps, T-3175,
+# T-3333); the Job reads them from their ConfigMaps and needs only their names here.
 sampleApps:
   configMaps: gitea-sample-apps
   project: helsinki
