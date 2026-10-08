@@ -8,3 +8,7 @@ gitea:
     chart: charts/bootstrap
   sample-apps:
     chart: charts/sample-apps
+  sample-apps-2:
+    chart: charts/sample-apps
+  sample-apps-3:
+    chart: charts/sample-apps

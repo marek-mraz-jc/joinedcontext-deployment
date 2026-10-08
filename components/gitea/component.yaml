@@ -5,8 +5,18 @@ parts:
   # After the forge, because it talks to it. `needs` is the ordering; the Job's own wait loop
   # only covers the gap between a ready Deployment and a Gitea that has finished migrating.
   # The sample applications' files, a release of their own so the bootstrap's stays under Helm's
-  # 1 MiB (T-3175); before the bootstrap, whose Job mounts them.
+  # 1 MiB (T-3175); before the bootstrap, whose Job mounts them. Three releases, each app in the
+  # one its name hashes to (values/sample-apps), since seven apps already filled one (T-3333).
+  # In order, so an app that moves is deleted by the release it left before the next creates it.
   - name: sample-apps
+  - name: sample-apps-2
+    valuesFrom: sample-apps
+    needs:
+      - gitea.sample-apps
+  - name: sample-apps-3
+    valuesFrom: sample-apps
+    needs:
+      - gitea.sample-apps-2
   # Its post-upgrade Job pushes six projects' seeds and the sample apps: 6 min 45 s on
   # 2026-10-07, past Helm's 300 s default, which failed an apply whose Job then succeeded (T-3207).
   - name: bootstrap
@@ -14,3 +24,5 @@ parts:
     needs:
       - gitea.forge
       - gitea.sample-apps
+      - gitea.sample-apps-2
+      - gitea.sample-apps-3
