@@ -3,9 +3,10 @@
 # Checklist:
 # - [x] Minimal Resources -> a Rust proxy that streams; the model's answers pass through
 # - [x] Minimal storage -> stateless
-# - [x] 1 Replica
+# - [x] 1 Replica, held at 0 while the owner's spend guard is tripped (2026-10-08 17:50Z, OpenRouter
+#   usage $9.74 over the $6 limit): only the owner sets this back to 1, so no apply restarts it
 
-replicaCount: 1
+replicaCount: 0
 
 resources:
   requests:
