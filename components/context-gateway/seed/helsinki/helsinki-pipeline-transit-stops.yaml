@@ -1,0 +1,22 @@
+# One GtfsStop per stop or platform of `hsl-stops`, written into the city space (T-3356).
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: transit-stops
+  namespace: helsinki
+  title: { en: "HSL stops and platforms, weekly" }
+spec:
+  class: auto
+  # HSL changes stops with its timetable seasons; weekly keeps a new stop within a week.
+  period: 168h
+  schedule: "20 4 * * 2"
+  source:
+    dataSourceRef: { kind: DataSource, name: hsl-stops }
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
+  output:
+    type: GtfsStop
+    mode: upsert
+  quotas:
+    # 2 MB of GeoJSON; Bento held about 85 MB over its own baseline for it (2026-10-08).
+    maxMemoryMb: 128
+    cpuMillicores: 100

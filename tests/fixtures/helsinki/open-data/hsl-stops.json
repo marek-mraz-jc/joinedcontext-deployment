@@ -1,0 +1,125 @@
+{
+ "type": "FeatureCollection",
+ "crs": {
+  "type": "name",
+  "properties": {
+   "name": "EPSG:4326"
+  }
+ },
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     24.956946,
+     60.174167
+    ]
+   },
+   "properties": {
+    "stop_id": "1010107",
+    "stop_code": "H2014",
+    "stop_name": "Meritullinkatu",
+    "stop_desc": "Liisankatu",
+    "zone_id": "A",
+    "vehicle_ty": "3",
+    "location_t": 0
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     24.953501,
+     60.17014
+    ]
+   },
+   "properties": {
+    "stop_id": "1010419",
+    "stop_code": "H0450",
+    "stop_name": "Hallituskatu",
+    "stop_desc": "Snellmaninkatu",
+    "zone_id": "A",
+    "vehicle_ty": "0",
+    "location_t": 0
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     24.939846,
+     60.170379
+    ]
+   },
+   "properties": {
+    "stop_id": "1020601",
+    "stop_code": "H0019",
+    "stop_name": "Rautatientori",
+    "stop_desc": "Asema-aukio",
+    "zone_id": "A",
+    "vehicle_ty": "1",
+    "location_t": 0
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     25.267486,
+     60.375462
+    ]
+   },
+   "properties": {
+    "stop_id": "9200001",
+    "stop_code": " ",
+    "stop_name": "Nikkilä",
+    "stop_desc": " ",
+    "zone_id": "D",
+    "vehicle_ty": "3",
+    "location_t": 1
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     25.58958,
+     60.373136
+    ]
+   },
+   "properties": {
+    "stop_id": "9300292",
+    "stop_code": " ",
+    "stop_name": "Pienteollisuustie",
+    "stop_desc": "Helsingintie",
+    "zone_id": "Ei HSL",
+    "vehicle_ty": "3",
+    "location_t": 0
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     24.955786,
+     60.167248
+    ]
+   },
+   "properties": {
+    "stop_id": "1030701",
+    "stop_code": "H0099",
+    "stop_name": "Kauppatori",
+    "stop_desc": "Kauppatori",
+    "zone_id": "A",
+    "vehicle_ty": "4",
+    "location_t": 0
+   }
+  }
+ ]
+}

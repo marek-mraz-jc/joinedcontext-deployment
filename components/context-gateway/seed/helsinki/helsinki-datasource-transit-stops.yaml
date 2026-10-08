@@ -1,0 +1,17 @@
+# HSL's stop register (HSL:n pysäkit), every stop, platform and station of the region, from its
+# ArcGIS feature service in WGS84: 8509 records on 2026-10-08, one request (the service answers
+# up to 16000 with resultType=standard), only the fields the mapping reads. No key. CC-BY-4.0,
+# read from the HRI catalogue (package hsl-n-joukkoliikenteen-pysakit). T-3356.
+apiVersion: joinedcontext.com/v1alpha1
+kind: DataSource
+metadata:
+  name: hsl-stops
+  namespace: helsinki
+  title: { en: "HSL stops and platforms", fi: "HSL:n pysäkit" }
+spec:
+  type: http
+  http:
+    url: https://services1.arcgis.com/sswNXkUiRoWtrx0t/arcgis/rest/services/HSLn_pys%C3%A4kit/FeatureServer/0/query?where=1%3D1&outFields=stop_id,stop_code,stop_name,stop_desc,zone_id,vehicle_ty,location_t&outSR=4326&f=geojson&resultType=standard&resultRecordCount=16000
+    verb: GET
+    headers: { Accept: application/geo+json }
+    timeout: 60s

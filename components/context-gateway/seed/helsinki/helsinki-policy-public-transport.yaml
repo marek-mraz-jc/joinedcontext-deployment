@@ -3,7 +3,7 @@ kind: Policy
 metadata:
   name: public-transport
   namespace: helsinki
-  title: { en: "Public read: buses" }
+  title: { en: "Public read: buses, stops and lines" }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: helsinki }
   assigner: did:web:{orgDomain}
@@ -12,3 +12,5 @@ spec:
   information:
     - entities:
         - type: Vehicle
+        - type: GtfsStop
+        - type: TransitRoute

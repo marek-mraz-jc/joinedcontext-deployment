@@ -505,7 +505,11 @@
         "subDistrict"
       ],
       "title": "DivisionLevel",
-      "type": "string"
+      "type": "string",
+      "x-enum-descriptions": {
+        "district": "A district (kaupunginosa), 60 of them.",
+        "subDistrict": "A sub-district (osa-alue), the unit the city's statistics use."
+      }
     },
     "Entity": {
       "additionalProperties": false,
@@ -696,6 +700,126 @@
         "type"
       ],
       "title": "Event",
+      "type": "object"
+    },
+    "GtfsStop": {
+      "additionalProperties": false,
+      "description": "One HSL stop or station platform, where it is, its sign's code and its fare zone.",
+      "properties": {
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "description": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "A short description, per language.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "fareZone": {
+          "description": "The HSL fare zone the stop lies in, A to D; none for a stop beyond HSL's zones.",
+          "pattern": "^[A-Z]$",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "stopCode": {
+          "description": "The code on the stop's sign, such as H2014; empty for a stop HSL gives none.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "transportMode": {
+          "$ref": "#/definitions/TransportMode",
+          "description": "What serves the stop or runs the line.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "GtfsStop",
       "type": "object"
     },
     "NewsArticle": {
@@ -1026,7 +1150,11 @@
         "resident"
       ],
       "title": "ParkingZoneKind",
-      "type": "string"
+      "type": "string",
+      "x-enum-descriptions": {
+        "fee": "The zone sets what parking costs by the hour.",
+        "resident": "Residents and businesses of the zone park on its permit."
+      }
     },
     "PermitKind": {
       "description": "",
@@ -1036,7 +1164,12 @@
         "event"
       ],
       "title": "PermitKind",
-      "type": "string"
+      "type": "string",
+      "x-enum-descriptions": {
+        "event": "An event held on a public area.",
+        "excavation": "Digging on a street or a park.",
+        "trafficArrangement": "A temporary change to traffic, such as a closed lane."
+      }
     },
     "PermitStatus": {
       "description": "",
@@ -1047,7 +1180,13 @@
         "teardown"
       ],
       "title": "PermitStatus",
-      "type": "string"
+      "type": "string",
+      "x-enum-descriptions": {
+        "ongoing": "The work or the event is going on.",
+        "setup": "The event's structures are being built.",
+        "teardown": "The event's structures are being taken down.",
+        "upcoming": "Granted and not started."
+      }
     },
     "PointOfInterest": {
       "additionalProperties": false,
@@ -1293,11 +1432,16 @@
         },
         "refDistrict": {
           "description": "The district the record lies in.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Relationship"
+          "pattern": "^urn:ngsi-ld:CityDistrict:",
+          "type": "string",
+          "x-ngsi-ld-kind": "Relationship",
+          "x-ngsi-ld-relationship": {
+            "cardinality": "many-to-one",
+            "inverse": "publicAreaPermits",
+            "onDelete": "restrict",
+            "target": "CityDistrict",
+            "unique": false
+          }
         },
         "source": {
           "description": "The open-data service the entity was read from.",
@@ -1336,7 +1480,170 @@
         "school"
       ],
       "title": "ServiceCategory",
-      "type": "string"
+      "type": "string",
+      "x-enum-descriptions": {
+        "beach": "A public beach.",
+        "healthStation": "A health station.",
+        "library": "A public library.",
+        "school": "A comprehensive school.",
+        "swimmingHall": "An indoor swimming hall."
+      }
+    },
+    "TransitRoute": {
+      "additionalProperties": false,
+      "description": "One HSL line in one direction: its number, where it runs to, its stops in order and the line through them. A line with several variants has one entity per variant.",
+      "properties": {
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "directionId": {
+          "description": "HSL's direction of the line, 1 or 2.",
+          "maximum": 2,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "headsign": {
+          "description": "Where the line runs to in this direction, as its sign shows it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "route": {
+          "description": "The HSL route id the bus is serving, four digits with the municipality prefix.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "routeShortName": {
+          "description": "The line number riders see, such as 4 or 550.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "stopSequence": {
+          "description": "The stops the line serves in this direction, in order, each the GTFS stop id that ends the id of a GtfsStop of this space.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "transportMode": {
+          "$ref": "#/definitions/TransportMode",
+          "description": "What serves the stop or runs the line.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "TransitRoute",
+      "type": "object"
+    },
+    "TransportMode": {
+      "description": "",
+      "enum": [
+        "bus",
+        "tram",
+        "metro",
+        "train",
+        "ferry"
+      ],
+      "title": "TransportMode",
+      "type": "string",
+      "x-enum-descriptions": {
+        "bus": "A bus.",
+        "ferry": "A ferry.",
+        "metro": "The metro.",
+        "train": "A commuter train.",
+        "tram": "A tram."
+      }
     },
     "Vehicle": {
       "additionalProperties": false,
@@ -1522,11 +1829,16 @@
         },
         "refPointOfInterest": {
           "description": "The place in the city's service register the sensor stands at.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Relationship"
+          "pattern": "^urn:ngsi-ld:PointOfInterest:",
+          "type": "string",
+          "x-ngsi-ld-kind": "Relationship",
+          "x-ngsi-ld-relationship": {
+            "cardinality": "many-to-one",
+            "inverse": "waterQualityObservations",
+            "onDelete": "restrict",
+            "target": "PointOfInterest",
+            "unique": false
+          }
         },
         "source": {
           "description": "The open-data service the entity was read from.",
