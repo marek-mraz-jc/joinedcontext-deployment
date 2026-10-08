@@ -1,6 +1,6 @@
 # Written by scripts/vendor-sample-apps.py; do not edit. The files of each sample application,
 # relative to its folder, as the forge bootstrap pushes them to its repository (T-2599).
-source: e9bbeb92cb9ef58e5eaded0135bfb2b84249d352
+source: 1ccf07e18ea336518616678d5a45628f7b19522f
 apps:
   air-quality:
     - .gitea/workflows/build.yml
@@ -468,6 +468,8 @@ apps:
     - e2e/serve.ts
     - grants/projects/helsinki/spaces/helsinki/endpoints/app-transit-reach.yaml
     - grants/projects/helsinki/spaces/helsinki/policies/app-transit-reach-1-history.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-transit-reach-2.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-transit-reach-3.yaml
     - index.html
     - map-worker.ts
     - package.json
@@ -482,11 +484,15 @@ apps:
     - src/components/components.css
     - src/components/states.tsx
     - src/design-tokens.json
+    - src/fixtures/network.ts
     - src/fixtures/vehicles.ts
     - src/history.ts
     - src/i18n.test.ts
     - src/i18n.ts
     - src/main.tsx
+    - src/network-paging.test.tsx
+    - src/network.test.ts
+    - src/network.ts
     - src/pages/Reach.tsx
     - src/test-analyser.ts
     - src/theme.ts
@@ -501,5 +507,6 @@ apps:
     - wasm/src/dbscan.rs
     - wasm/src/geo.rs
     - wasm/src/lib.rs
+    - wasm/src/network.rs
     - wasm/src/reach.rs
     - wasm/src/stops.rs
