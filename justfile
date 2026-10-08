@@ -464,6 +464,16 @@ dev-smoke:
 	set -euo pipefail
 	just _dev-guard
 	rc=0
+	# One lookup, then every curl goes to that address (T-3420): the sandbox resolver stalls up
+	# to 15 s per lookup, which ate the 20 s request budget and failed checks the cluster passed.
+	# TLS is still verified per hostname; the wildcard record is checked here instead.
+	edge=$(getent ahostsv4 "{{ dev_domain }}" | awk 'NR==1{print $1}')
+	wild=$(getent ahostsv4 "smoke-$RANDOM.apps.{{ dev_domain }}" | awk 'NR==1{print $1}')
+	if [ -z "$edge" ] || [ "$wild" != "$edge" ]; then
+		echo "  FAIL  *.{{ dev_domain }} resolves to '${wild}', the apex to '${edge}'"; exit 1
+	fi
+	export CURL_HOME; CURL_HOME=$(mktemp -d); trap 'rm -rf "$CURL_HOME"' EXIT
+	printf 'resolve = *:443:%s\nresolve = *:80:%s\n' "$edge" "$edge" >"$CURL_HOME/.curlrc"
 	./scripts/smoke.sh "https://{{ dev_domain }}" "https://idm.{{ dev_domain }}" || rc=1
 	# A real forge login as the demo people (T-1422): the button can fail with the rest green.
 	echo "forge login"
