@@ -201,12 +201,16 @@ v1/ConfigMap local/gitea-sample-apps-air-weather-explorer
 v1/ConfigMap local/gitea-sample-apps-alerts-desk
 v1/ConfigMap local/gitea-sample-apps-alerts-heatmap
 v1/ConfigMap local/gitea-sample-apps-bike-rebalancing
+v1/ConfigMap local/gitea-sample-apps-bike-weather-demand
+v1/ConfigMap local/gitea-sample-apps-data-quality-inspector
+v1/ConfigMap local/gitea-sample-apps-district-compare
 v1/ConfigMap local/gitea-sample-apps-event-day-planner
 v1/ConfigMap local/gitea-sample-apps-helsinki-alerts
 v1/ConfigMap local/gitea-sample-apps-helsinki-bikes
 v1/ConfigMap local/gitea-sample-apps-helsinki-events
 v1/ConfigMap local/gitea-sample-apps-hsl-transport
 v1/ConfigMap local/gitea-sample-apps-kpi-forecast
+v1/ConfigMap local/gitea-sample-apps-news-topics
 v1/ConfigMap local/gitea-sample-apps-transit-reach
 v1/ConfigMap local/keycloak-admin-permissions
 v1/ConfigMap local/keycloak-theme
