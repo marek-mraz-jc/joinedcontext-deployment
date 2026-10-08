@@ -5,7 +5,7 @@ model-tools:
     # sub-path of the platform's registry name; entrypoint `python -m service`, port 8080.
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform/model-tools'
     tag: 'main'
-    # platform b73d19a: the model-tools image built with the gateway of that commit (nothing
-    # under tools/model-tools changed since d7b6a5a: `/generate` answers `typescript`).
+    # platform 871624a: model tools as main has them (T-3250's inferred required columns,
+    # T-3061's pypdf), on a Debian that clears the 3 fixable perl CRITICALs of b73d19a (T-3297).
     # Digest read from the registry for the tag named after the commit; the `main` tag moves.
-    digest: 'sha256:11b08c94d5a4174140ad4c09a42f6607a77ecdde1ccf968ebb87afc425255ed5'
+    digest: 'sha256:60c4f895e50ac05ebbbfc84916495548f7072762cba213eb3c7d07b675341395'
