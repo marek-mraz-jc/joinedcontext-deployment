@@ -37,6 +37,23 @@ cluster:
     owner: jc_apps_admin
     secret:
       name: db-apps-admin
+    # As the superuser, in `apps`, once (T-3362, AP-144): a shard's login may switch into every
+    # App role of its shard, so no App role may run a function that switches again or runs SQL
+    # text it is handed. `set_config` is executable by `jc_set_config` alone (the shards' and the
+    # Portal's logins), the query-running functions by nobody. The same statements are the
+    # Portal's apps_db/superuser.sql, which its tests run; keep the two equal.
+    postInitApplicationSQL:
+      - CREATE ROLE jc_set_config NOLOGIN
+      - REVOKE EXECUTE ON FUNCTION pg_catalog.set_config(text, text, boolean) FROM PUBLIC
+      - GRANT EXECUTE ON FUNCTION pg_catalog.set_config(text, text, boolean) TO jc_set_config
+      - REVOKE EXECUTE ON FUNCTION pg_catalog.query_to_xml(text, boolean, boolean, text) FROM PUBLIC
+      - REVOKE EXECUTE ON FUNCTION pg_catalog.query_to_xmlschema(text, boolean, boolean, text) FROM PUBLIC
+      - REVOKE EXECUTE ON FUNCTION pg_catalog.query_to_xml_and_xmlschema(text, boolean, boolean, text) FROM PUBLIC
+      - REVOKE EXECUTE ON FUNCTION pg_catalog.cursor_to_xml(refcursor, integer, boolean, boolean, text) FROM PUBLIC
+      - REVOKE EXECUTE ON FUNCTION pg_catalog.cursor_to_xmlschema(refcursor, boolean, boolean, text) FROM PUBLIC
+      - REVOKE EXECUTE ON FUNCTION pg_catalog.ts_stat(text) FROM PUBLIC
+      - REVOKE EXECUTE ON FUNCTION pg_catalog.ts_stat(text, text) FROM PUBLIC
+      - REVOKE EXECUTE ON FUNCTION pg_catalog.ts_rewrite(tsquery, text) FROM PUBLIC
 
   roles:
     - name: jc_apps_admin
@@ -45,15 +62,21 @@ cluster:
       superuser: false
       createrole: true
       createdb: false
+      inRoles:
+        - jc_set_config
       passwordSecret:
         name: db-apps-admin
     {{- range $shard := until (int $this.shards) }}
-    # Shard {{ $shard }} of jc-wasm-host: NOINHERIT, owns nothing, a member of its Apps' roles only.
+    # Shard {{ $shard }} of jc-wasm-host: owns nothing; the Portal grants it each App role of its
+    # shard WITH INHERIT FALSE (the switch, none of the App's privileges), and it inherits only
+    # `jc_set_config`, to make the switch (T-3362).
     - name: wasm_host_{{ $shard }}
       ensure: present
       login: true
       superuser: false
-      inherit: false
+      inherit: true
+      inRoles:
+        - jc_set_config
       createrole: false
       createdb: false
       passwordSecret:
