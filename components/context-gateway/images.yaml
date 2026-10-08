@@ -135,5 +135,5 @@ context-gateway:
   # git-sync keeps the gateway's checkout of the configuration repository current (T-0278).
   git-sync:
     repository: 'registry.k8s.io/git-sync/git-sync'
-    tag: 'v4.5.0'
-    digest: 'sha256:0e64aedb0d0ae0a3bab880349a5109b2a31891d646dd61e433ca36ed220dff1f'
+    tag: 'v4.7.1'
+    digest: 'sha256:c5e1976da735bf0b53979f079a07475d77174c51863cd084e928ff6074480717'
