@@ -47,7 +47,9 @@ def test_a_cluster_of_its_own_with_the_portals_login_and_one_per_shard(docs):
     assert admin["createrole"] is True and admin["superuser"] is False and admin.get("createdb") is False
     for shard in (0, 1):
         host = roles[f"wasm_host_{shard}"]
-        assert host["login"] is True and host["inherit"] is False and host["superuser"] is False
+        assert host["login"] is True and host["superuser"] is False
+        # It inherits jc_set_config alone; the Portal grants App roles WITH INHERIT FALSE (T-3362).
+        assert host["inRoles"] == ["jc_set_config"]
         assert host.get("createrole") is False
         assert host["passwordSecret"]["name"] == f"apps-host-{shard}-db"
 
@@ -80,3 +82,22 @@ def test_only_the_portal_the_operator_and_its_own_instances_reach_it(docs):
     sources = [peer.get("podSelector", {}).get("matchLabels", {}) for rule in policy["spec"]["ingress"] for peer in rule["from"]]
     names = {labels.get("app.kubernetes.io/name") or labels.get("cnpg.io/cluster") or labels.get("cnpg.io/jobRole") for labels in sources}
     assert names == {"cloudnative-pg", "join", "apps-db", "portal-portal"}, names
+
+
+PORTAL_SUPERUSER_SQL = (
+    "CREATE ROLE jc_set_config NOLOGIN",
+    "REVOKE EXECUTE ON FUNCTION pg_catalog.set_config(text, text, boolean) FROM PUBLIC",
+    "GRANT EXECUTE ON FUNCTION pg_catalog.set_config(text, text, boolean) TO jc_set_config",
+)
+
+
+def test_no_app_role_may_switch_again_or_run_handed_sql(docs):
+    """T-3362: set_config only for jc_set_config, the query-running functions for nobody; the
+    statements equal the Portal's apps_db/superuser.sql, which its same-shard test runs."""
+    spec = one(docs, "Cluster", "apps-db")["spec"]
+    post = spec["bootstrap"]["initdb"]["postInitApplicationSQL"]
+    assert post[:3] == list(PORTAL_SUPERUSER_SQL)
+    for function in ("query_to_xml(", "query_to_xmlschema(", "query_to_xml_and_xmlschema(", "cursor_to_xml(", "cursor_to_xmlschema(", "ts_stat(text)", "ts_stat(text, text)", "ts_rewrite("):
+        assert any(line.startswith("REVOKE EXECUTE ON FUNCTION pg_catalog." + function) and line.endswith("FROM PUBLIC") for line in post), function
+    roles = {r["name"]: r for r in spec["managed"]["roles"]}
+    assert roles["jc_apps_admin"]["inRoles"] == ["jc_set_config"]
