@@ -33,6 +33,15 @@ portal:
       ports:
         - protocol: TCP
           port: 5432
+    # The `wasm` Apps' database: placement, provisioning, migrations and export (AP-149, AP-150).
+    - to:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: apps-db
+          componentNamespace: apps-db
+      ports:
+        - protocol: TCP
+          port: 5432
     - to:
         - podSelector:
             matchLabels:

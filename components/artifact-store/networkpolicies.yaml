@@ -19,6 +19,11 @@ artifact-store:
             matchLabels:
               app.kubernetes.io/name: portal-portal
           componentNamespace: portal
+        # A shard of the WASM host (ADR-N-044 §2.7, T-3361).
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: wasm-host-shard
+          componentNamespace: wasm-host
         # The bucket bootstrap, which creates the bucket and its object-lock configuration
         # from inside this namespace after every apply.
         - podSelector:

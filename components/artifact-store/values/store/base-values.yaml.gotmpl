@@ -37,6 +37,13 @@ objectLock:
   enabled: {{ $objectLock.enabled | default false }}
   defaultRetentionDays: {{ $objectLock.defaultRetentionDays | default 0 }}
 
+{{- if has "wasm-host" .Values.components }}
+appsBucket:
+  enabled: true
+  name: {{ index .Values "wasm-host" "bucket" | default "apps" | quote }}
+  retiredPrefix: apps/retired/
+  retiredExpiryDays: 90
+{{- end }}
 {{- $fileCache := $this.fileCache | default dict }}
 fileCache:
   prefix: {{ $fileCache.prefix | default "filecache/" | quote }}

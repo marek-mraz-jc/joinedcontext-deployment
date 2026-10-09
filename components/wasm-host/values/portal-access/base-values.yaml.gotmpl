@@ -1,0 +1,7 @@
+shards: {{ index .Values "apps-db" "cluster" "shards" | default 2 }}
+{{- if has "portal" .Values.components }}
+portal:
+  # fullnameOverride of the portal part names its ServiceAccount.
+  serviceAccount: portal
+  namespace: {{ .Values.portal.portal.namespace | quote }}
+{{- end }}

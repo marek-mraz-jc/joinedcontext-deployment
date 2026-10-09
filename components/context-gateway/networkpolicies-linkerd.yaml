@@ -14,6 +14,11 @@ context-gateway-allow-linkerd:
             matchLabels:
               app.kubernetes.io/name: pipeline-runner-runner
           componentNamespace: pipeline-runner
+        # A shard of the WASM host (ADR-N-044 §2.7, T-3361).
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: wasm-host-shard
+          componentNamespace: wasm-host
         # The broker delivering a notification, meshed like every other client
         # (R46); the plain rule for it is context-gateway-notification-egress.
         - podSelector:

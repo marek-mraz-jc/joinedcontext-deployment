@@ -19,6 +19,39 @@ apps-db-allow-linkerd:
             matchLabels:
               app.kubernetes.io/name: portal-portal
           componentNamespace: portal
+        # A shard of the WASM host (ADR-N-044 §2.7, T-3361).
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: wasm-host-shard
+          componentNamespace: wasm-host
       ports:
         - port: 4143
           protocol: TCP
+
+# Its pods declare egress, so their proxies need the control plane, and an instance dials its
+# peers through their inbound proxy (4143) beside 5432, as components/postgres does.
+apps-db-linkerd-control-plane:
+  podSelector:
+    cnpg.io/cluster: apps-db
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: linkerd
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 8086
+        - protocol: TCP
+          port: 8090
+    - to:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: apps-db
+          componentNamespace: apps-db
+      ports:
+        - protocol: TCP
+          port: 4143

@@ -1,0 +1,12 @@
+---
+# The platform image carries jc-wasm-host beside the gateway (its Dockerfile); a shard runs it by
+# `command`. The same pin as components/context-gateway/images.yaml, re-pinned with it.
+wasm-host:
+  shard-0:
+    repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
+    tag: 'main'
+    digest: 'sha256:410bf0a696b98276af41e37b0d8469e0845387098a53d536970f0d187b987db4'
+  shard-1:
+    repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
+    tag: 'main'
+    digest: 'sha256:410bf0a696b98276af41e37b0d8469e0845387098a53d536970f0d187b987db4'

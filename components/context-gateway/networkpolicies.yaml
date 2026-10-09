@@ -22,6 +22,11 @@ context-gateway:
             matchLabels:
               app.kubernetes.io/name: portal-portal
           componentNamespace: portal
+        # A shard of the WASM host: an App's one outgoing origin, with the caller's token (AP-147, T-3361).
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: wasm-host-shard
+          componentNamespace: wasm-host
         # A published App's pod calls its endpoint on this Service in the cluster, never through
         # the public host (AP-134). Every project's apps namespace is the Portal's, created with
         # this label (AP-116, AP-117), and only an App pod carries the other one.

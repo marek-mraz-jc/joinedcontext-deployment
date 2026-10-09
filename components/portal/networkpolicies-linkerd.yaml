@@ -82,6 +82,14 @@ portal-linkerd-control-plane:
     - to:
         - podSelector:
             matchLabels:
+              cnpg.io/cluster: apps-db
+          componentNamespace: apps-db
+      ports:
+        - protocol: TCP
+          port: 4143
+    - to:
+        - podSelector:
+            matchLabels:
               app.kubernetes.io/instance: keycloak-app
           componentNamespace: keycloak
       ports:

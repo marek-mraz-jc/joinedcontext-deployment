@@ -69,6 +69,20 @@ spec:
               aws --endpoint-url "$endpoint" s3api put-bucket-lifecycle-configuration --bucket "$BUCKET" \
                 --lifecycle-configuration '{"Rules":[{"ID":"file-cache","Status":"Enabled","Filter":{"Prefix":"{{ .Values.fileCache.prefix }}"},"Expiration":{"Days":{{ int .Values.fileCache.expiryDays }}}}]}'
               echo "lifecycle: {{ .Values.fileCache.prefix }} expires after {{ int .Values.fileCache.expiryDays }} day(s)"
+              {{- if .Values.appsBucket.enabled }}
+              # The server WASM Apps' bucket: each shard's key is minted by the Portal (AP-158);
+              # a retired App's export is deleted after its days (AP-150).
+              apps={{ .Values.appsBucket.name | quote }}
+              if aws --endpoint-url "$endpoint" s3api head-bucket --bucket "$apps" 2>/dev/null; then
+                echo "bucket $apps is already there"
+              else
+                aws --endpoint-url "$endpoint" s3api create-bucket --bucket "$apps"
+                echo "created bucket $apps"
+              fi
+              aws --endpoint-url "$endpoint" s3api put-bucket-lifecycle-configuration --bucket "$apps" \
+                --lifecycle-configuration '{"Rules":[{"ID":"retired-apps","Status":"Enabled","Filter":{"Prefix":"{{ .Values.appsBucket.retiredPrefix }}"},"Expiration":{"Days":{{ int .Values.appsBucket.retiredExpiryDays }}}}]}'
+              echo "lifecycle: {{ .Values.appsBucket.retiredPrefix }} in $apps expires after {{ int .Values.appsBucket.retiredExpiryDays }} day(s)"
+              {{- end }}
           env:
             - name: ENDPOINT
               value: {{ include "rustfs.endpoint" . | quote }}

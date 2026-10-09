@@ -65,6 +65,11 @@ apps-db:
             matchLabels:
               app.kubernetes.io/name: portal-portal
           componentNamespace: portal
+        # Each shard of the WASM host as its own login role (ADR-N-044 §2.5, T-3361).
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: wasm-host-shard
+          componentNamespace: wasm-host
       ports:
         - protocol: TCP
           port: 5432

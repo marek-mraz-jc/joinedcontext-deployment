@@ -77,6 +77,10 @@ apisix-linkerd-control-plane:
               app.kubernetes.io/name: gitea
               app.kubernetes.io/instance: gitea-forge
           componentNamespace: gitea
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: wasm-host-shard
+          componentNamespace: wasm-host
         # A pod-backed App is meshed too (AP-108): the Portal's reconciler labels it in the
         # apps namespace, which is the Portal's.
         - podSelector:

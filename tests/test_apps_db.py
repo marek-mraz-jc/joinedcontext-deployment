@@ -1,30 +1,17 @@
 """apps-db, the database of the server WASM Apps, as the deployment renders it (T-3344, ADR-N-044,
 AP-149).
 
-No environment lists the component until the Portal provisions Apps in it and jc-wasm-host has an
-image to pin, so the tests render dev with it added. What is coupled across files: the roles
+Dev lists it beside jc-wasm-host since T-3361. What is coupled across files: the roles
 CloudNativePG manages and the Secrets that hold their passwords, the `pg_hba` that admits those
-logins alone over TLS, and the NetworkPolicy that lets only the Portal (and the operator and the
-cluster's own instances) reach it."""
+logins alone over TLS, and the NetworkPolicy that lets only the Portal and the WASM host's shards
+(and the operator and the cluster's own instances) reach it."""
 
 import pytest
 
 
-def add_apps_db(tree):
-    path = tree / "deployment/environments/dev/global.yaml.gotmpl"
-    text = path.read_text()
-    assert "\n  - postgres\n" in text
-    path.write_text(text.replace("\n  - postgres\n", "\n  - postgres\n  - apps-db\n", 1))
-
-
-RENDERED: list = []
-
-
 @pytest.fixture
-def docs(rendered_variant):
-    if not RENDERED:
-        RENDERED.append(rendered_variant("dev", add_apps_db))
-    return RENDERED[0]
+def docs(rendered):
+    return rendered("dev")
 
 
 def one(docs, kind, name):
@@ -73,7 +60,7 @@ def test_every_password_is_a_generated_secret_where_its_reader_runs(docs):
         assert found, f"{name} is rendered"
 
 
-def test_only_the_portal_the_operator_and_its_own_instances_reach_it(docs):
+def test_only_the_portal_the_shards_the_operator_and_its_own_instances_reach_it(docs):
     policy = next(
         d for d in docs
         if d.get("kind") == "NetworkPolicy" and d["spec"].get("podSelector", {}).get("matchLabels") == {"cnpg.io/cluster": "apps-db"}
@@ -81,7 +68,7 @@ def test_only_the_portal_the_operator_and_its_own_instances_reach_it(docs):
     )
     sources = [peer.get("podSelector", {}).get("matchLabels", {}) for rule in policy["spec"]["ingress"] for peer in rule["from"]]
     names = {labels.get("app.kubernetes.io/name") or labels.get("cnpg.io/cluster") or labels.get("cnpg.io/jobRole") for labels in sources}
-    assert names == {"cloudnative-pg", "join", "apps-db", "portal-portal"}, names
+    assert names == {"cloudnative-pg", "join", "apps-db", "portal-portal", "wasm-host-shard"}, names
 
 
 PORTAL_SUPERUSER_SQL = (
