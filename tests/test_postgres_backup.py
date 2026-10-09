@@ -90,13 +90,14 @@ def test_managed_role_names_are_unique(rendered, env):
     used to emit that user twice. Nothing caught it: the render is valid YAML and no Kyverno
     policy judges a Cluster, so the first thing to object was the live webhook, at `dev-apply`.
     """
-    cluster = only(rendered(env), "Cluster")
-    names = [role["name"] for role in cluster["spec"].get("managed", {}).get("roles", [])]
-    duplicates = sorted({name for name in names if names.count(name) > 1})
-    assert not duplicates, (
-        f"{env} renders {duplicates} more than once in spec.managed.roles; CNPG refuses the "
-        "Cluster. One role per user, not per database."
-    )
+    # Every Cluster: dev runs the Apps' own beside the platform's (apps-db, T-3361).
+    for cluster in [d for d in rendered(env) if d.get("kind") == "Cluster"]:
+        names = [role["name"] for role in cluster["spec"].get("managed", {}).get("roles", [])]
+        duplicates = sorted({name for name in names if names.count(name) > 1})
+        assert not duplicates, (
+            f"{env} renders {duplicates} more than once in {cluster['metadata']['name']}'s "
+            "spec.managed.roles; CNPG refuses the Cluster. One role per user, not per database."
+        )
 
 
 @pytest.mark.parametrize("env", ["local", "dev", "production"])
@@ -104,9 +105,17 @@ def test_every_embedded_database_has_a_role_to_own_it(rendered, env):
     """Deduplicating by user must not drop a user: every embedded database's owner still needs
     a role, or the database is created and nothing can log into it."""
     docs = rendered(env)
-    cluster = only(docs, "Cluster")
-    roles = {role["name"] for role in cluster["spec"].get("managed", {}).get("roles", [])}
-    databases = [d for d in docs if d.get("kind") == "Database"]
-    owners = {d["spec"]["owner"] for d in databases if d.get("spec", {}).get("owner")}
-    missing = sorted(owners - roles)
+    # A database's owner needs its role in the Cluster the database lives in.
+    roles = {
+        d["metadata"]["name"]: {role["name"] for role in d["spec"].get("managed", {}).get("roles", [])}
+        for d in docs
+        if d.get("kind") == "Cluster"
+    }
+    missing = sorted(
+        f"{d['spec']['cluster']['name']}/{d['spec']['owner']}"
+        for d in docs
+        if d.get("kind") == "Database"
+        and d.get("spec", {}).get("owner")
+        and d["spec"]["owner"] not in roles.get(d["spec"]["cluster"]["name"], set())
+    )
     assert not missing, f"{env} declares databases owned by {missing} with no managed role"

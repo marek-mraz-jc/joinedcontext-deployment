@@ -143,8 +143,13 @@ def test_an_environment_without_the_store_wires_none_of_it(rendered_variant):
     """A half configured store is a refusal on every sync rather than a feature, so an
     environment that drops the component must carry neither the endpoint nor the key. Rendered
     from a copy of `dev` with the component taken out, since every environment deploys it
-    (T-0926)."""
-    docs = rendered_variant("dev", lambda tree: drop_component(tree, "dev", "artifact-store"))
+    (T-0926). The WebAssembly host keeps the Apps' blobs in the store, so it goes with it."""
+
+    def without_store(tree):
+        drop_component(tree, "dev", "artifact-store")
+        drop_component(tree, "dev", "wasm-host")
+
+    docs = rendered_variant("dev", without_store)
     assert [e["name"] for e in portal_container(docs)["env"] if "ARTIFACT_STORE" in e["name"]] == []
     assert secret_readers(docs, ROOT_SECRET) == []
 
