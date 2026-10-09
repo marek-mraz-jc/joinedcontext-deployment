@@ -29,10 +29,6 @@ components:
   - gitea-runner
   - context-broker
   - context-gateway
-  # The shared host of server WASM Apps, one Deployment per shard (ADR-N-044, T-3361): after
-  # apps-db, the store and the gateway it reaches; before the Portal, which writes each shard's
-  # placement and store key into its namespace (AP-157, AP-158).
-  - wasm-host
   - pipeline-runner
   # The broker a `nats` DataSource reads on dev (PL-50, T-0477).
   - demo-feeds
@@ -48,6 +44,11 @@ components:
   # `ckan-api-token`, which the portal's reconciler publishes with (T-2469).
   - ckan
   - portal
+  # The shared host of server WASM Apps, one Deployment per shard (ADR-N-044, T-3361): AFTER the
+  # Portal, whose reconciler writes each shard's placement ConfigMap and store-key Secret, which a
+  # shard mounts and waits for (AP-157, AP-158); synced before it, a fresh cluster's shards waited
+  # out the apply (T-3429). Components sync in this order, and `needs` does not cross them.
+  - wasm-host
   # The knowledge assistant (ADR-N-040, T-3052): its chat behind the data portal's widget and the
   # public channel (T-3181). After the portal, whose internal routes it administers through.
   - assistant

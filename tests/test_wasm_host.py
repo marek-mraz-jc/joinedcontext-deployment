@@ -128,3 +128,22 @@ def test_the_store_keeps_an_apps_bucket_whose_retired_exports_expire_after_ninet
     script = job["spec"]["template"]["spec"]["containers"][0]["command"][-1]
     assert 'apps="apps"' in script
     assert '"Prefix":"apps/retired/"' in script and '"Days":90' in script
+
+
+def test_every_environment_syncs_the_shards_after_the_portal_that_writes_what_they_mount():
+    """T-3429: a shard mounts the placement ConfigMap and store-key Secret the Portal writes, and
+    helmfile waits for its Deployment; components sync in list order and `needs` does not cross
+    them, so a shard listed before the Portal waits out a fresh cluster's apply."""
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent / ".ci/example-deployments/environments"
+    checked = []
+    for file in sorted(root.glob("*/global.yaml.gotmpl")):
+        listed = [line.strip()[2:] for line in file.read_text().splitlines() if line.startswith("  - ")]
+        if "wasm-host" not in listed:
+            continue
+        assert "portal" in listed, f"{file.parent.name}: wasm-host without the Portal that feeds it"
+        assert listed.index("portal") < listed.index("wasm-host"), f"{file.parent.name}: wasm-host before the Portal"
+        assert listed.index("apps-db") < listed.index("portal"), f"{file.parent.name}: the Portal before its database"
+        checked.append(file.parent.name)
+    assert "dev" in checked
