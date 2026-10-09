@@ -88,3 +88,21 @@ def test_no_app_role_may_switch_again_or_run_handed_sql(docs):
         assert any(line.startswith("REVOKE EXECUTE ON FUNCTION pg_catalog." + function) and line.endswith("FROM PUBLIC") for line in post), function
     roles = {r["name"]: r for r in spec["managed"]["roles"]}
     assert roles["jc_apps_admin"]["inRoles"] == ["jc_set_config"]
+
+
+def test_the_operator_reaches_every_clusters_status_port(docs):
+    """CNPG polls each instance's manager on 8000; an operator whose egress names only the
+    platform's cluster left apps-db "not ready" on dev (HTTP communication issue, T-3361)."""
+    operator = {"app.kubernetes.io/name": "cloudnative-pg"}
+    reached = {
+        (peer["podSelector"]["matchLabels"].get("cnpg.io/cluster"), port["port"])
+        for d in docs
+        if d.get("kind") == "NetworkPolicy" and d["spec"]["podSelector"].get("matchLabels") == operator
+        for rule in d["spec"].get("egress", [])
+        for peer in rule.get("to", [])
+        if "podSelector" in peer
+        for port in rule.get("ports", [])
+    }
+    for cluster in [d["metadata"]["name"] for d in docs if d.get("kind") == "Cluster"]:
+        assert (cluster, 8000) in reached, f"no operator egress to {cluster}'s instance manager on 8000"
+        assert (cluster, 4143) in reached, f"no operator egress to {cluster}'s inbound proxy on 4143"

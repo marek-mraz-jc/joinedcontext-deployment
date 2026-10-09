@@ -73,3 +73,25 @@ apps-db:
       ports:
         - protocol: TCP
           port: 5432
+
+# The operator side: it polls every instance's manager for status, and the platform's
+# `postgres-operator-egress` names only postgres-cluster, so without this the operator reports
+# "Instance Status Extraction Error: HTTP communication issue" and the Cluster never turns ready.
+apps-db-operator-egress:
+  deployLayer: operators
+  componentNamespace: postgres.operator
+  podSelector:
+    app.kubernetes.io/name: cloudnative-pg
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: apps-db
+          componentNamespace: apps-db
+      ports:
+        - protocol: TCP
+          port: 8000
+        - protocol: TCP
+          port: 5432

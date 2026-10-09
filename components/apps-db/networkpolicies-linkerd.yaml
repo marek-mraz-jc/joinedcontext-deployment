@@ -55,3 +55,22 @@ apps-db-linkerd-control-plane:
       ports:
         - protocol: TCP
           port: 4143
+
+# The operator's meshed calls land on the instance's inbound proxy (components/postgres'
+# `postgres-operator-linkerd` names only the platform's cluster).
+apps-db-operator-linkerd:
+  deployLayer: operators
+  componentNamespace: postgres.operator
+  podSelector:
+    app.kubernetes.io/name: cloudnative-pg
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: apps-db
+          componentNamespace: apps-db
+      ports:
+        - protocol: TCP
+          port: 4143
