@@ -74,6 +74,15 @@ apisix:
       ports:
         - protocol: TCP
           port: 3000
+    # A server WASM App's API, /apps/{name}/api/* on its shard (AP-143, T-3361).
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: wasm-host-shard
+          componentNamespace: wasm-host
+      ports:
+        - protocol: TCP
+          port: 8080
     # A pod-backed App (AP-26, AP-108): the Portal's reconciler labels every App pod
     # `joinedcontext.com/app` in the apps namespace, which is the Portal's, and the App's own
     # policy admits APISIX on its one port.

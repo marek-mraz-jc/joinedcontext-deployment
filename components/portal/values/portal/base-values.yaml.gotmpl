@@ -146,6 +146,12 @@ envSecret:
     secret: artifact-store-root
     key: ACCESS_SECRET_KEY
 {{- end }}
+{{- if has "wasm-host" .Values.components }}
+  # The `wasm` Apps' database login (AP-149): the Portal makes every App's schema and roles.
+  APPS_DB_PASSWORD:
+    secret: db-apps-admin
+    key: password
+{{- end }}
 
 # Kubernetes expands $(VAR) references in container env definitions when the referenced variable appears earlier in the list.
 env:
@@ -330,6 +336,15 @@ env:
   # Organization on every sync; without either half it issues nothing and touches no store.
   JC_PORTAL_ARTIFACT_STORE_ENDPOINT: "http://artifact-store.{{ index .Values "artifact-store" "store" "namespace" }}.svc.cluster.local:9000"
   JC_PORTAL_ARTIFACT_STORE_BUCKET: {{ index .Values "artifact-store" "store" "bucket" | default "jc-artifacts" | quote }}
+{{- end }}
+{{- if has "wasm-host" .Values.components }}
+  # Server WASM Apps (ADR-N-044): their database, the shards the Portal places them on, the
+  # bucket of their components and files, and the namespace where it writes each shard's
+  # placement and store key (AP-149, AP-157, AP-158).
+  JC_PORTAL_APPS_DB_URL: "postgresql://jc_apps_admin:$(APPS_DB_PASSWORD)@apps-db-rw.{{ index .Values "apps-db" "cluster" "namespace" }}.svc.cluster.local:5432/apps?sslmode=require"
+  JC_PORTAL_WASM_SHARDS: {{ index .Values "apps-db" "cluster" "shards" | default 2 | quote }}
+  JC_PORTAL_APPS_BUCKET: {{ index .Values "wasm-host" "bucket" | default "apps" | quote }}
+  JC_PORTAL_WASM_HOST_NAMESPACE: {{ index .Values "wasm-host" "shard-0" "namespace" | quote }}
 {{- end }}
 {{- if has "agent-runner" .Values.components }}
   # The agent runner (AG-33, AG-40): the two go together or the Portal refuses to start.

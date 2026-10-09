@@ -30,6 +30,14 @@ objectLock:
   # per object; set this only for a store that holds published artifacts and nothing else.
   defaultRetentionDays: 0
 
+# The server WASM Apps' bucket (ADR-N-044, AP-145, AP-150): components/, apps/<shard>/<id>/ and
+# apps/retired/<id>/<time>/, which expires. No object lock: an App's own files change.
+appsBucket:
+  enabled: false
+  name: apps
+  retiredPrefix: apps/retired/
+  retiredExpiryDays: 90
+
 fileCache:
   # `filecache/` is the gateway's own cache of file downloads: 24 hours, then gone (PF-33).
   prefix: filecache/

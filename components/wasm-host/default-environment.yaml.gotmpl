@@ -1,0 +1,13 @@
+---
+wasm-host:
+  # The Apps' bucket in the artifact store (JC_PORTAL_APPS_BUCKET): components/ and apps/<shard>/.
+  bucket: apps
+  shard-0:
+    enabled: true
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "wasm-host") }}
+  shard-1:
+    enabled: true
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "wasm-host") }}
+  portal-access:
+    enabled: true
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "wasm-host") }}

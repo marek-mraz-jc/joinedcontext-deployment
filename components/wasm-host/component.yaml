@@ -1,0 +1,13 @@
+---
+component: wasm-host
+# The shared host of server WASM Apps (ADR-N-044, AP-143): one part per shard, named as the
+# Portal places Apps (`JC_PORTAL_WASM_SHARDS`) and as apps-db makes their logins
+# (`apps-db.cluster.shards`). A shard added there adds its part here, read from the same values.
+parts:
+  - name: shard-0
+    valuesFrom: shard
+  - name: shard-1
+    valuesFrom: shard
+  # The Portal's Role here: it writes each shard's placement ConfigMap and store-key Secret
+  # (AP-157, AP-158), and nothing else in this namespace.
+  - name: portal-access
