@@ -10,6 +10,9 @@ components:
   - networkpolicies
   - runtime-policies
   - postgres
+  # The server WASM Apps' database (ADR-N-044, AP-149): one schema and role per App, a login
+  # per shard, the Portal's login that makes them (T-3344).
+  - apps-db
   # The S3 API for everything the platform renders: schemas, compiled mappings, dumps,
   # export bundles, app builds and the gateway's file cache (PF-29, Architecture/17).
   # Before the Portal, whose reconciler mints a writer and a reader per Organization from
@@ -26,6 +29,10 @@ components:
   - gitea-runner
   - context-broker
   - context-gateway
+  # The shared host of server WASM Apps, one Deployment per shard (ADR-N-044, T-3361): after
+  # apps-db, the store and the gateway it reaches; before the Portal, which writes each shard's
+  # placement and store key into its namespace (AP-157, AP-158).
+  - wasm-host
   - pipeline-runner
   # The broker a `nats` DataSource reads on dev (PL-50, T-0477).
   - demo-feeds
