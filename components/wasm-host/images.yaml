@@ -5,8 +5,8 @@ wasm-host:
   shard-0:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
     tag: 'main'
-    digest: 'sha256:410bf0a696b98276af41e37b0d8469e0845387098a53d536970f0d187b987db4'
+    digest: 'sha256:bd84fed627b30ef26fadee1907e0e88f9e3f1902dcdf67167530eb3a71ac2075'
   shard-1:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
     tag: 'main'
-    digest: 'sha256:410bf0a696b98276af41e37b0d8469e0845387098a53d536970f0d187b987db4'
+    digest: 'sha256:bd84fed627b30ef26fadee1907e0e88f9e3f1902dcdf67167530eb3a71ac2075'
