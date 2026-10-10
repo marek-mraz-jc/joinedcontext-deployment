@@ -241,4 +241,6 @@ portal:
     # a run's preview carries a CSP sandbox without allow-same-origin (T-2476). On top of 090772b.
     # portal 9990ac9: main since cd2c1cf, carrying T-1523 T-1526 T-1527 T-1528 T-1529 T-1535 T-1645
     # T-1656 T-1658 T-1706 T-1713 T-1714 T-1715 T-1716 T-2309 T-2343 T-2474 T-2482.
-    digest: 'sha256:630a17ce3c7a52cb5d736fb15bb9d2ad5266b97647021785a56af9c3b7d53579'
+    # portal ce936a5: each wasm App with jobs gets its appjob ServiceAccount and federated client
+    # (T-3539). Builder images stay on c8db613 (builder/ unchanged; ce936a5 builder-rust failed trivy, T-3567).
+    digest: 'sha256:40c3158826cb2ee066c83c09de45530b4fc154d2b4bd154e59bd4ed05ede52fb'

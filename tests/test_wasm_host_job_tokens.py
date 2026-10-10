@@ -35,12 +35,25 @@ def enable(tree):
     path.write_text(text)
 
 
-def test_off_by_default_no_service_no_namespace_and_no_token_url(rendered):
-    docs = rendered("dev")
+def without_dev_switch(tree):
+    (tree / "deployment/environments/dev/wasm-host.yaml.gotmpl").unlink()
+
+
+def test_off_by_default_no_service_no_namespace_and_no_token_url(rendered_variant):
+    docs = rendered_variant("dev", without_dev_switch)
     assert not [d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"] == "wasm-host-tokens"]
     assert not [d for d in docs if d.get("kind") == "Role" and d["metadata"]["name"] == "wasm-host-tokens"]
     assert "JC_WASM_JOB_TOKEN_URL" not in env_of(one(docs, "Deployment", "jc-wasm-host-0"))
     assert "JC_PORTAL_APP_IDENTITY_NAMESPACE" not in env_of(one(docs, "Deployment", "portal"))
+
+
+def test_dev_switches_it_on_and_the_portal_learns_the_namespace(rendered):
+    # dev runs the federated mechanism (T-2868), so the jobs' principals are on there (T-3539).
+    docs = rendered("dev")
+    one(docs, "Deployment", "wasm-host-tokens")
+    namespace = env_of(one(docs, "Deployment", "portal"))["JC_PORTAL_APP_IDENTITY_NAMESPACE"]
+    assert namespace == "dev-app-identities"
+    assert env_of(one(docs, "Deployment", "jc-wasm-host-0"))["JC_WASM_JOB_TOKEN_URL"]
 
 
 def test_the_service_admits_the_shards_alone_and_the_shards_reach_it(rendered):
