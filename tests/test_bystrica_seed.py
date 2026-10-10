@@ -505,14 +505,63 @@ def test_the_citys_records_are_a_published_static_app_the_portal_image_ships():
     assert app["spec"]["kind"] == "ui"
     assert app["spec"]["lifecycle"] == "published"
     assert app["spec"]["source"] == {"path": "./apps/banskabystrica-zaznamy"}
-    (need,) = app["spec"]["dataNeeds"]
-    assert need["contextSpaceRef"]["name"] == "banskabystrica-mesto"
+    read, write = app["spec"]["dataNeeds"]
+    assert {need["contextSpaceRef"]["name"] for need in (read, write)} == {"banskabystrica-mesto"}
     assert one(CITY, "ContextSpace", "banskabystrica-mesto")
-    assert set(need["operations"]) == {"queryEntity", "retrieveEntity", "updateAttrs"}
+    assert read["operations"] == ["queryEntity", "retrieveEntity"]
+    # The write in a need of its own, on the note alone: the compiled grant names what the need
+    # names for every operation it holds (AP-62, T-3596).
+    assert (write["operations"], write["attrs"]) == (["updateAttrs"], ["stewardNote"])
     note = one(CITY, "Policy", "mesto-steward-note")["spec"]
     assert note["operations"] == ["updateAttrs"]
     assert note["information"][0]["propertyNames"] == ["stewardNote"]
 
+
+def test_the_regions_records_are_seeded_with_the_endpoint_and_policy_the_portal_compiles():
+    """T-3596: bbsk-zaznamy was published in the Portal repository and never seeded, so dev had no
+    App, no certificate and no endpoint for it. The seed carries the App, which the Portal image
+    ships, and the Endpoint and Policy the Portal compiles for it, on bbsk-kraj and nowhere else;
+    the one write is the steward's note."""
+    app = one(REGION, "App", "bbsk-zaznamy")
+    assert app["metadata"]["namespace"] == "bbsk"
+    assert app["metadata"]["annotations"]["joinedcontext.com/shipped-with"] == "portal"
+    assert app["spec"]["lifecycle"] == "published"
+    assert app["spec"]["source"] == {"path": "./apps/bbsk-zaznamy"}
+    space = app["spec"]["dataNeeds"][0]["contextSpaceRef"]["name"]
+    assert space == "bbsk-kraj" and one(REGION, "ContextSpace", space)
+
+    generated = {"joinedcontext.com/generated-by": "portal/app-reconciler"}
+    endpoint = one(REGION, "Endpoint", "app-bbsk-zaznamy")
+    assert endpoint["metadata"]["annotations"] == generated
+    assert endpoint["spec"]["contextSpaceRef"] == {"kind": "ContextSpace", "name": space}
+    # Not public: the App's visibility is the project, so is its endpoint's audience.
+    assert endpoint["spec"]["audience"] == "project-list"
+    assert endpoint["spec"]["allowedProjects"] == ["bbsk"]
+
+    # One Policy per need, each exactly its need: the columns to read, and the note alone to write.
+    role = {"kind": "role", "id": "endpoint:bbsk/app-bbsk-zaznamy"}
+    grants = {doc["metadata"]["name"]: doc for _, doc in manifests(REGION, "Policy")
+              if doc["spec"]["assignee"] == role}
+    needs = app["spec"]["dataNeeds"]
+    assert sorted(grants) == [f"app-bbsk-zaznamy-{n}" for n in range(1, len(needs) + 1)]
+    for n, need in enumerate(needs, 1):
+        grant = grants[f"app-bbsk-zaznamy-{n}"]
+        assert grant["metadata"]["annotations"] == generated
+        spec = grant["spec"]
+        assert spec["contextSpaceRef"]["name"] == need["contextSpaceRef"]["name"] == space
+        (rule,) = spec["information"]
+        assert [entity["type"] for entity in rule["entities"]] == need["types"]
+        assert rule["propertyNames"] == need["attrs"]
+        assert spec["operations"] == need["operations"]
+    writes = [grant["spec"] for grant in grants.values() if "updateAttrs" in grant["spec"]["operations"]]
+    assert [(spec["operations"], spec["information"][0]["propertyNames"]) for spec in writes] == [
+        (["updateAttrs"], [NOTE])]
+
+    index = yaml.safe_load((REGION / "index.yaml").read_text())
+    assert index["bbsk-app-zaznamy.yaml"] == "projects/bbsk/apps/bbsk-zaznamy/app.yaml"
+    assert index["bbsk-app-zaznamy-endpoint.yaml"].startswith(f"projects/bbsk/spaces/{space}/endpoints/")
+    for key in ("bbsk-app-zaznamy-policy.yaml", "bbsk-app-zaznamy-policy-note.yaml"):
+        assert index[key].startswith(f"projects/bbsk/spaces/{space}/policies/"), key
 
 def test_the_citys_air_quality_is_a_public_static_app_on_its_own_endpoint():
     """T-2916, T-2949, T-2972: the public screen reads the city's public space, where the EEA
