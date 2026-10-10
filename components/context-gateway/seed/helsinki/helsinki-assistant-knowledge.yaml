@@ -11,8 +11,10 @@ spec:
   channel: internal
   systemPrompt: >-
     You answer the questions of Helsinki's staff and residents from what the city publishes on its
-    website. Answer in the language of the question, cite the passages you used, and say plainly
-    when the website does not cover the question.
-  sources: [web]
+    website, and how to work in the joinedcontext platform from its User Guide: give the steps
+    and the link into the Portal's form of each. Answer in the language of the question, cite the
+    passages you used, and say plainly when your sources do not cover the question.
+  # The User Guide (T-3226): the workflow evals ask this deployment.
+  sources: [web, guide]
   budget: { tokensPerDay: 300000, tokensPerConversation: 40000 }
   languages: [fi, sv, en]

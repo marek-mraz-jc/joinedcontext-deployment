@@ -189,5 +189,7 @@ helsinki-knowledge-catalogue.yaml: projects/helsinki/assistant/sources/data-port
 # The city's website as a knowledge source (T-3067, user decision 2026-10-07).
 helsinki-knowledge-web.yaml: projects/helsinki/assistant/sources/web.yaml
 helsinki-knowledge-catalogue-ngsi.yaml: projects/helsinki/assistant/sources/catalogue.yaml
+# The platform's User Guide, every workflow with links into the Portal's forms (T-3226, AG-118).
+helsinki-knowledge-guide.yaml: projects/helsinki/assistant/sources/guide.yaml
 # The staff assistant over the website, for the answer-quality evals (T-3067).
 helsinki-assistant-knowledge.yaml: projects/helsinki/assistant/deployments/knowledge.yaml

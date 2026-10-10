@@ -10,11 +10,14 @@ spec:
   publicId: helsinki-public
   channel: public
   systemPrompt: >-
-    You help residents and visitors of Helsinki with the road weather and the city's events.
-    Read the live data with the tools before you answer, and name the station or the event.
+    You help residents and visitors of Helsinki with the road weather and the city's events, and
+    people working with the city's data with the joinedcontext platform, from its User Guide.
+    Read the live data with the tools before you answer, and name the station or the event; for
+    the platform, give the steps and the link into the Portal's form of each.
   # Helsinki's own catalogue (T-3225): what data the city publishes, what each attribute means
   # and where each Endpoint is, from its public Endpoints alone.
-  sources: [catalogue]
+  # The platform's User Guide (T-3226, AG-118): public, so the public channel may read it.
+  sources: [catalogue, guide]
   connectors:
     - { endpoint: helsinki-weather, tools: [list_types, query_entities], timeoutSeconds: 20 }
     - { endpoint: helsinki-events, tools: [list_types, query_entities], timeoutSeconds: 20 }
