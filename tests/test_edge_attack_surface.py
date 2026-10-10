@@ -87,8 +87,8 @@ ROUTE_CLASSES = {
         "why": "a data view published as a public link (T-3108): the page holds no data, every read it makes goes to the public Endpoint, where the gateway enforces what it shows",
     },
     "portal-public-form": {
-        "reach": EDGE_SESSION, "cacheable": True, "framing": "SAMEORIGIN",
-        "why": "a form view published as a public form (T-3103): the page holds no data, its one write is an anonymous create through the public Endpoint, which the gateway decides and rate-limits",
+        "reach": UPSTREAM, "cacheable": True, "framing": FRAMED_BY_UPSTREAM,
+        "why": "a form view published as a public form (T-3103): the page holds no data, its one write is an anonymous create through the public Endpoint, which the gateway decides and rate-limits; the Portal names the sites that may frame it in the page's own frame-ancestors, from the Endpoint's embedOrigins (EP-101), and the page is anonymous for everyone, so no edge session is read (EP-102, T-3266)",
     },
     "portal-public-docs": {
         "reach": EDGE_SESSION, "cacheable": True, "framing": "SAMEORIGIN",

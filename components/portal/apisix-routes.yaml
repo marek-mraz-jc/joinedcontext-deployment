@@ -73,15 +73,15 @@ portal-public-view:
 
 # A form view published as a public form (API/01 §33, T-3103): a page with no login in front,
 # whose one write is an anonymous create through the public Endpoint the form was published as,
-# where the gateway decides and rate-limits it. The plugin config is portal-public's.
+# where the gateway decides and rate-limits it. Its plugin config is its own: portal-public's
+# without X-Frame-Options, so the sites the form's Endpoint names may frame it (EP-101, T-3266).
 portal-public-form:
   name: portal-public-form
-  description: A published form, edge session optional
+  description: A published form, anonymous
   upstream: portal.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "portal") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
   uri: '/f/*'
   subDomain: portal
   priority: 5
-  pluginConfig: portal-public
 
 # A public Endpoint's API documentation (EP-99, T-3265): a page with no login in front that reads
 # the OpenAPI document the gateway generates, under the caller's rights, and holds no data. The
