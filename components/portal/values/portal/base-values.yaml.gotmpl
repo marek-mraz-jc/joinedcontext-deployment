@@ -345,6 +345,11 @@ env:
   JC_PORTAL_WASM_SHARDS: {{ index .Values "apps-db" "cluster" "shards" | default 2 | quote }}
   JC_PORTAL_APPS_BUCKET: {{ index .Values "wasm-host" "bucket" | default "apps" | quote }}
   JC_PORTAL_WASM_HOST_NAMESPACE: {{ index .Values "wasm-host" "shard-0" "namespace" | quote }}
+  {{- if (index .Values "wasm-host" "identities" "enabled") }}
+  # Where the reconciler keeps each wasm App's job ServiceAccount, whose subject the App's job
+  # client trusts (AP-159, T-3372); the identities part grants it that namespace.
+  JC_PORTAL_APP_IDENTITY_NAMESPACE: {{ index .Values "wasm-host" "identities" "appNamespace" | quote }}
+  {{- end }}
 {{- end }}
 {{- if has "agent-runner" .Values.components }}
   # The agent runner (AG-33, AG-40): the two go together or the Portal refuses to start.

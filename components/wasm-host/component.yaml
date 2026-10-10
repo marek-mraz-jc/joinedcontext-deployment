@@ -11,3 +11,9 @@ parts:
   # The Portal's Role here: it writes each shard's placement ConfigMap and store-key Secret
   # (AP-157, AP-158), and nothing else in this namespace.
   - name: portal-access
+  # The token service of the Apps' jobs (AP-159, T-3372): per run, a token of the App's job
+  # principal, minted by TokenRequest for its own Kubernetes ServiceAccount. Off until the
+  # federated mechanism is on (as pipeline-runner.tokens).
+  - name: tokens
+  # The namespace of the Apps' job ServiceAccounts and the token service's one grant there.
+  - name: identities

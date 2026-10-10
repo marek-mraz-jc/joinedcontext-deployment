@@ -1,6 +1,7 @@
 ---
-# A shard of the WASM host (ADR-N-044 §2.7): reached only from the edge, which routes an App's
-# /apps/{name}/api/* here; it reaches only the gateway (an App's one outgoing origin, AP-147),
+# A shard of the WASM host (ADR-N-044 §2.7): reached from the edge, which routes an App's
+# /apps/{name}/api/* here, and from the Portal for /jobs; it reaches only the gateway (an App's
+# one outgoing origin, AP-147),
 # apps-db (its login role) and the artifact store (its own prefix and the components), and DNS.
 wasm-host-shard:
   podSelector:
@@ -14,6 +15,15 @@ wasm-host-shard:
             matchLabels:
               app.kubernetes.io/name: apisix
           componentNamespace: apisix
+      ports:
+        - protocol: TCP
+          port: 8080
+    # The Portal's reconciler, for GET /jobs (AP-154, T-3372).
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: portal-portal
+          componentNamespace: portal
       ports:
         - protocol: TCP
           port: 8080
@@ -42,6 +52,74 @@ wasm-host-shard:
       ports:
         - protocol: TCP
           port: 9000
+    # The job token service (AP-159), the one way a job gets its App's token.
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: wasm-host-tokens
+          componentNamespace: wasm-host.tokens
+      ports:
+        - protocol: TCP
+          port: 4180
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+
+# The job token service (AP-159, T-3372): the shards ask it for a job's token on 4180 and nothing
+# else does; it asks the Kubernetes API for the App's job ServiceAccount's token and the realm's
+# token endpoint for the access token.
+wasm-host-tokens:
+  podSelector:
+    app.kubernetes.io/name: wasm-host-tokens
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: wasm-host-shard
+          # every shard's pods: the parts share one namespace (test_every_shard_may_ask_for_a_token)
+          componentNamespace: wasm-host
+      ports:
+        - protocol: TCP
+          port: 4180
+  egress:
+    # The Kubernetes API, for TokenRequest: not a pod, so named by address; k3s serves it on 6443,
+    # the port the policy sees after the Service's DNAT.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 6443
+    # The realm's token endpoint on the cluster's public host, rewritten to the ingress
+    # controller's pod as for the pipelines' token service.
+    - to:
+        - namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values: [traefik, kube-system, ingress-nginx]
+          podSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values: [traefik, ingress-nginx]
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 8443
     - to:
         - namespaceSelector:
             matchLabels:

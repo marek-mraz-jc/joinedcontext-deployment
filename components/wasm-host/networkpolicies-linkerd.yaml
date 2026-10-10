@@ -11,6 +11,10 @@ wasm-host-shard-allow-linkerd:
             matchLabels:
               app.kubernetes.io/name: apisix
           componentNamespace: apisix
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: portal-portal
+          componentNamespace: portal
       ports:
         - port: 4143
           protocol: TCP
@@ -62,3 +66,50 @@ wasm-host-shard-linkerd-control-plane:
       ports:
         - protocol: TCP
           port: 4143
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: wasm-host-tokens
+          componentNamespace: wasm-host.tokens
+      ports:
+        - protocol: TCP
+          port: 4143
+
+# The job token service's two mesh rules (T-3372): the proxy's inbound ports, and the control plane.
+wasm-host-tokens-linkerd-in:
+  podSelector:
+    app.kubernetes.io/name: wasm-host-tokens
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: wasm-host-shard
+          # every shard's pods: the parts share one namespace (test_every_shard_may_ask_for_a_token)
+          componentNamespace: wasm-host
+      ports:
+        - port: 4143
+          protocol: TCP
+        - port: 4190
+          protocol: TCP
+        - port: 4191
+          protocol: TCP
+
+wasm-host-tokens-linkerd-cp:
+  podSelector:
+    app.kubernetes.io/name: wasm-host-tokens
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: linkerd
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 8086
+        - protocol: TCP
+          port: 8090

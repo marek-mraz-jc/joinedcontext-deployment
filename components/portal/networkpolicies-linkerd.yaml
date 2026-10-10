@@ -90,6 +90,14 @@ portal-linkerd-control-plane:
     - to:
         - podSelector:
             matchLabels:
+              app.kubernetes.io/name: wasm-host-shard
+          componentNamespace: wasm-host
+      ports:
+        - protocol: TCP
+          port: 4143
+    - to:
+        - podSelector:
+            matchLabels:
               app.kubernetes.io/instance: keycloak-app
           componentNamespace: keycloak
       ports:

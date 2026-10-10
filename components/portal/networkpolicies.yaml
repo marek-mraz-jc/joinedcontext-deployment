@@ -98,6 +98,16 @@ portal:
       ports:
         - protocol: TCP
           port: 4195
+    # Each WASM shard's GET /jobs, the last run of every scheduled job, which the reconciler
+    # writes into the App's status.jobs[] (AP-154, T-3372).
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: wasm-host-shard
+          componentNamespace: wasm-host
+      ports:
+        - protocol: TCP
+          port: 8080
     - to:
         - namespaceSelector:
             matchLabels:
