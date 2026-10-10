@@ -46,6 +46,11 @@ env:
   # The address in the open, the login's generated password from its file (AP-144).
   JC_WASM_DB_URL: "postgresql://wasm_host_{{ $shard }}@apps-db-rw.{{ $appsDb }}.svc.cluster.local:5432/apps?sslmode=require"
   JC_WASM_DB_PASSWORD_FILE: /etc/jc-wasm/db/password
+  # Compiled components a shard keeps. Measured at about 1.25 MiB each in the 30-minute run on a
+  # GitHub runner (T-3345, ADR-N-044 §8: 892.6 MiB peak with 700 kept): the host's default of 2000
+  # would pass the 1 GiB limit near 800 and be OOM-killed; 600 keeps about 270 MiB for compiles in
+  # flight and running instances. Raise it with the memory limit.
+  JC_WASM_CACHED_COMPONENTS: "600"
   {{- if index .Values "wasm-host" "tokens" "enabled" }}
   # The job token service (AP-159): a job runs as the App's job principal. Unset, every run fails
   # saying so, and nothing else changes.
