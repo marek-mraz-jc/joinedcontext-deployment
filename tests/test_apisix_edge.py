@@ -20,6 +20,7 @@ UI_CONFIGS = ("portal-ui", "portal-public", "apps-surface", "keycloak", "gitea-f
 PORTAL_CONFIGS = (
     "portal-ui",
     "portal-public",
+    "portal-public-form",
     "portal-api",
     "portal-well-known",
     "portal-live-notify",
@@ -28,7 +29,11 @@ PORTAL_CONFIGS = (
     "portal-redirect",
 )
 # Pages and app bundles a browser may cache; every other route is `no-store`.
-CACHEABLE_CONFIGS = ("portal-ui", "portal-public", "apps-surface")
+CACHEABLE_CONFIGS = ("portal-ui", "portal-public", "portal-public-form", "apps-surface")
+# A published form's page, which the Portal lets the sites its Endpoint names frame through the
+# page's own `frame-ancestors`; X-Frame-Options cannot name a site, so the edge sends none there
+# (EP-101, T-3266). Every other route keeps SAMEORIGIN or DENY.
+FRAMED_BY_PAGE = ("portal-public-form",)
 API_CONFIGS = ("portal-api", "context-space", "context-endpoint")
 GATEWAY_UPSTREAMS = ("context-space", "context-endpoint")
 # The gateway answers these too, and sets their Cache-Control itself (EP-84: the DCAT-AP feed).
@@ -108,8 +113,8 @@ def test_security_response_headers_on_every_route(plugin_configs):
         narrow = PORTAL_CONFIGS + ("security-txt",)
         expected_referrer = "no-referrer" if config_id in narrow else "strict-origin-when-cross-origin"
         assert headers["Referrer-Policy"] == expected_referrer, config_id
-        expected_frame = "SAMEORIGIN" if config_id in UI_CONFIGS else "DENY"
-        assert headers["X-Frame-Options"] == expected_frame, config_id
+        expected_frame = None if config_id in FRAMED_BY_PAGE else "SAMEORIGIN" if config_id in UI_CONFIGS else "DENY"
+        assert headers.get("X-Frame-Options") == expected_frame, config_id
         if config_id.removesuffix("-portal").removesuffix("-apps") in GATEWAY_ANSWERED:
             # T-2262, EP-51: the gateway sets Cache-Control on every answer itself (`private`,
             # `no-store`, or `no-cache` with an ETag on a schema artifact); the edge leaves it be.
@@ -149,6 +154,7 @@ def test_rate_limit_classes(plugin_configs):
 RATE_CLASSES = {
     "portal-ui": ("web", 300),
     "portal-public": ("web", 300),
+    "portal-public-form": ("web", 300),
     "apps-surface": ("web", 300),
     "portal-redirect": ("web", 300),
     "portal-api": ("api", 1200),
