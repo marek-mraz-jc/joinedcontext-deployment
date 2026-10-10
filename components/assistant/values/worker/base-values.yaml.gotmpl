@@ -77,6 +77,9 @@ env:
   # Where a public Endpoint answers anyone (the gateway's JC_GATEWAY_PUBLIC_URL): a `catalogue`
   # source's page cites it when the Endpoint publishes no CKAN dataset (AG-116, T-3225).
   JC_ASSISTANT_ENDPOINT_URL: "https://{{ $global.domain }}"
+  # The Portal (the Portal's JC_PORTAL_PUBLIC_URL): a `guide` source's sections link into its
+  # forms in the source's own project (AG-118, T-3226).
+  JC_ASSISTANT_PORTAL_URL: "https://portal.{{ $global.domain }}"
 {{- if has "functions" .Values.components }}
   # A deployment with `sandbox: true` filters a long tool result with a script there (AG-112).
   JC_ASSISTANT_FUNCTIONS_URL: "http://jc-functions.{{ .Values.functions.runtime.namespace }}.svc.cluster.local:8080"

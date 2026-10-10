@@ -51,6 +51,8 @@ def test_the_worker_rendered_with_its_database_checkout_and_network(docs):
     assert env["JC_ASSISTANT_REPO_DIR"] == "/repo/current"
     assert env["JC_ASSISTANT_ORG_DOMAIN"]
     assert env["JC_ASSISTANT_EMBED_THREADS"] == "1"
+    # AG-118: a guide source's sections link into the Portal's forms.
+    assert env["JC_ASSISTANT_PORTAL_URL"] == "https://portal.dev.joinedcontext.com"
     password = next(e for e in worker["env"] if e["name"] == "PGPASSWORD")
     assert password["valueFrom"]["secretKeyRef"] == {"name": "db-assistant", "key": "password"}
     assert worker["securityContext"]["readOnlyRootFilesystem"] is True

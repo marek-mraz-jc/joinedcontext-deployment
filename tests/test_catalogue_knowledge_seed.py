@@ -44,3 +44,21 @@ def test_helsinkis_public_assistants_answer_from_its_catalogue():
     deployments = {d["metadata"]["name"]: d["spec"] for d in documents("helsinki") if d["kind"] == "AssistantDeployment"}
     for name in ("helsinki-public", "helsinki-catalogue"):
         assert "catalogue" in deployments[name]["sources"], name
+
+
+def test_helsinki_seeds_the_user_guide_for_its_internal_and_public_assistants():
+    """T-3226 (AG-118): one public `guide` source, read by the staff assistant the workflow evals
+    ask and by the public one; it names nothing to fetch."""
+    guides = [d for d in documents("helsinki") if d["kind"] == "KnowledgeSource" and d["spec"]["source"] == "guide"]
+    assert len(guides) == 1
+    guide = guides[0]
+    assert guide["metadata"]["name"] == "guide"
+    assert guide["spec"]["visibility"] == "public"
+    assert not {"startUrls", "ckanInstanceRef", "contextSpaces"} & set(guide["spec"])
+    index = yaml.safe_load((SEED / "helsinki" / "index.yaml").read_text())
+    assert index["helsinki-knowledge-guide.yaml"] == "projects/helsinki/assistant/sources/guide.yaml"
+    deployments = {d["metadata"]["name"]: d["spec"] for d in documents("helsinki") if d["kind"] == "AssistantDeployment"}
+    assert deployments["knowledge"]["channel"] == "internal"
+    assert deployments["helsinki-public"]["channel"] == "public"
+    for name in ("knowledge", "helsinki-public"):
+        assert "guide" in deployments[name]["sources"], name
