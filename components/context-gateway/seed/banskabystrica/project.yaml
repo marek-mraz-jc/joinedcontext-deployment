@@ -3,6 +3,9 @@ kind: Project
 metadata:
   name: banskabystrica
   namespace: org
+  # The sample of real open data the first-run checklist offers every newcomer (PF-109, T-3234):
+  # every signed-in person reads it through `viewers`; the label grants nothing more.
+  labels: { joinedcontext.com/sample: "true" }
   title: { sk: "Mesto Banská Bystrica", en: "City of Banská Bystrica" }
   description:
     sk: "Mesto so 72 123 obyvateľmi; publikuje to, čo patrí mestu. Kraj je samostatný projekt `bbsk`."
