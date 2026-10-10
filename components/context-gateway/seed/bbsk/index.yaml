@@ -111,6 +111,13 @@ bbsk-app-mosty.yaml: projects/bbsk/apps/bbsk-mosty/app.yaml
 bbsk-app-mosty-endpoint.yaml: projects/bbsk/spaces/bbsk-registre/endpoints/app-bbsk-mosty.yaml
 bbsk-app-mosty-policy-viewer.yaml: projects/bbsk/spaces/bbsk-registre/policies/app-bbsk-mosty-1-viewer.yaml
 bbsk-app-mosty-group-viewer.yaml: users/groups/bbsk-mosty-viewer.yaml
+# The region's records (T-2437, T-3596): the grid over bbsk-kraj, a static bundle the Portal image
+# ships at /apps/bbsk-zaznamy/; the one write is the steward's note. The Endpoint and Policies the
+# Portal compiles for it are seeded beside it, because the seed commits the App past the Portal's door.
+bbsk-app-zaznamy.yaml: projects/bbsk/apps/bbsk-zaznamy/app.yaml
+bbsk-app-zaznamy-endpoint.yaml: projects/bbsk/spaces/bbsk-kraj/endpoints/app-bbsk-zaznamy.yaml
+bbsk-app-zaznamy-policy.yaml: projects/bbsk/spaces/bbsk-kraj/policies/app-bbsk-zaznamy-1.yaml
+bbsk-app-zaznamy-policy-note.yaml: projects/bbsk/spaces/bbsk-kraj/policies/app-bbsk-zaznamy-2.yaml
 # The region's website as a knowledge source (T-3067, user decision 2026-10-07).
 bbsk-knowledge-web.yaml: projects/bbsk/assistant/sources/web.yaml
 bbsk-knowledge-catalogue-ngsi.yaml: projects/bbsk/assistant/sources/catalogue.yaml
