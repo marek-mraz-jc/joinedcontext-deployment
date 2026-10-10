@@ -165,6 +165,10 @@ elif args[0] == "get" and args[1] == "secret" and args[2] == "gitea-runner-regis
     # The organization the runners' token belongs to, recorded by the bootstrap (T-2969).
     owner = spec.get("runnerOwner", "")
     sys.stdout.write(base64.b64encode(owner.encode()).decode() if owner else "")
+elif args[0] == "create" and args[1] == "token":
+    # A ServiceAccount token, which the smoke presents as a federated client's assertion
+    # (PF-47, T-2868); empty when the account may not have one.
+    sys.stdout.write(spec.get("serviceAccountToken", "eyJ.serviceaccount.token"))
 elif args[0] == "get" and args[1] == "secret":
     secret = spec.get("clientSecret", "s3cr3t")
     if not secret:
@@ -586,6 +590,32 @@ def test_an_agent_proxy_without_the_gateway_audience_fails_the_run(tmp_path):
     spec = dict(HEALTHY, bodies=[["clients?clientId=helsinki-agent-proxy", "[]"]] + HEALTHY["bodies"])
     result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
     assert "skip  agent proxy audience (no helsinki-agent-proxy client in realm dev)" in result.stdout
+
+
+def test_the_functions_check_proves_portal_api_with_the_portal_pods_token_and_no_client_id(tmp_path):
+    """PF-47, T-2868: portal-api holds no secret. The smoke mints a token of the Portal pod's
+    ServiceAccount and presents it as the client assertion; a request naming the client id is
+    one Keycloak refuses beside an assertion, and without a token nothing is invoked."""
+    federated = [
+        ["client_id=portal-api", '{"error":"invalid_client"}'],
+        [["client_assertion=eyJ.serviceaccount.token", "jwt-bearer"], '{"access_token":"fn.token.sig"}'],
+    ]
+    first = tmp_path / "minted"
+    first.mkdir()
+    result = run(
+        first, dict(HEALTHY, bodies=federated + HEALTHY["bodies"]), "https://example.test", "https://idm.example.test"
+    )
+    assert "ok    jc-functions runs a function for the Portal's token and the function reads the gateway" in result.stdout
+
+    second = tmp_path / "no-token"
+    second.mkdir()
+    result = run(
+        second,
+        dict(HEALTHY, serviceAccountToken="", bodies=federated + HEALTHY["bodies"]),
+        "https://example.test",
+        "https://idm.example.test",
+    )
+    assert "FAIL  no client_credentials token for portal-api, so no function was invoked" in result.stdout
 
 
 def test_a_function_that_cannot_read_the_gateway_fails_the_run(tmp_path):

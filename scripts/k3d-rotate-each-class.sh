@@ -27,7 +27,9 @@ export CURL_CA_BUNDLE="$ca"
 
 rotate() { ./scripts/rotate-secret.sh --instance "$env" "$@"; }
 
-rotate --secret keycloak-client-portal-api --idm "https://idm.${domain}" --realm "$realm"
+# The Keycloak client class on a client that keeps a secret (the collector, a PF-47 exception):
+# the platform's own workload clients are federated and hold none (T-2868).
+rotate --secret keycloak-client-activity-ingest --idm "https://idm.${domain}" --realm "$realm"
 rotate --secret db-portal
 rotate --secret gitea-token-gateway --forge "https://${domain}/git"
 rotate --secret portal-cookie-key

@@ -24,8 +24,12 @@ portal-api:
   description: Confidential client of the portal backend for the OIDC code flow and its service account
   subdomain: portal
   redirectPath: /api/v1/auth/callback
-  componentNamespaces:
-    - portal
+  # No secret (PF-47, T-2868): Keycloak verifies the Portal pod's projected ServiceAccount
+  # token, audience the realm, against the cluster issuer of the realm's `kubernetes` provider.
+  # `release` names the values key of the namespace, `serviceAccount` the pod's account.
+  federated:
+    release: portal.portal
+    serviceAccount: portal
   # The reconciler creates, updates and deletes the confidential client `app-{name}` of every
   # app on demand, as this client's own service account (AP-27). It holds the read-only
   # `view-clients`, which lists and finds clients, and the write scopes come from the realm's
@@ -119,8 +123,12 @@ portal-reconciler:
   name: Portal reconciler
   description: Service account the Portal's reconciler manages the realm's platform-owned groups with
   subdomain: portal
-  componentNamespaces:
-    - portal
+  # No secret (PF-47, T-2868): the ServiceAccount `portal-reconciler`, whose token the Portal mints
+  # per request (charts/namespaces/templates/reconciler-identity.yaml). Not the pod's own account,
+  # which is `portal-api`'s subject.
+  federated:
+    release: portal.portal
+    serviceAccount: portal-reconciler
   # `manage-users` adds and removes a group membership; `query-groups` lists the groups to
   # compare them against the manifests. No client, realm or role management.
   serviceAccountClientRoles:

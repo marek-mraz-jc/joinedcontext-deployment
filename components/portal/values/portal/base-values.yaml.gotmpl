@@ -97,14 +97,6 @@ envSecret:
     secret: portal-cookie-key
     key: previous
     optional: true
-  JC_OIDC_CLIENT_SECRET:
-    secret: keycloak-client-portal-api
-    key: client-secret
-  # The reconciler's own client (PF-63): it writes the realm's platform-owned groups and
-  # nothing else. Without it the Group manifests are read and the realm is written by nobody.
-  JC_PORTAL_KEYCLOAK_ADMIN_CLIENT_SECRET:
-    secret: keycloak-client-portal-reconciler
-    key: client-secret
 {{- if has "gitea" .Values.components }}
   # Minted by the forge's bootstrap Job, not generated: a token the forge accepts is one the
   # forge issued (T-0399).
@@ -174,7 +166,14 @@ env:
   JC_TRUST_EDGE_TOKEN: "true"
   JC_OIDC_ISSUER: "https://idm.{{ $global.domain }}/realms/{{ $global.instanceSlug }}"
   JC_OIDC_CLIENT_ID: "portal-api"
+  # `portal-api` is federated (PF-47, T-2868): the Portal sends this pod's projected token,
+  # read on every token request, and holds no client secret.
+  JC_OIDC_CLIENT_ASSERTION_FILE: /var/run/secrets/jc/keycloak/token
   JC_PORTAL_KEYCLOAK_ADMIN_CLIENT_ID: "portal-reconciler"
+  # The reconciler's own client (PF-63): it writes the realm's platform-owned groups and nothing
+  # else. Federated (PF-47, T-2868): its proof is a token of this ServiceAccount, which the Portal
+  # mints per request; the namespaces part makes the account and lets this pod mint for it.
+  JC_PORTAL_KEYCLOAK_ADMIN_CLIENT_SERVICE_ACCOUNT: "portal-reconciler"
   JC_PORTAL_DATABASE_URL: "postgresql://portal:$(PGPASSWORD)@postgres-cluster-rw.{{ .Values.postgres.cluster.namespace }}.svc.cluster.local:5432/portal"
 {{- if has "gitea" .Values.components }}
   # The configuration repository (CC-02, CC-08). All four go together or none does: the client
@@ -398,6 +397,15 @@ extraVolumes:
     configMap:
       name: jc-validation-results
       optional: true
+  # The token `portal-api` proves itself with (PF-47, T-2868): bound to the realm as its
+  # audience, so it opens nothing else, and ten minutes long; the kubelet renews it in place.
+  - name: keycloak-token
+    projected:
+      sources:
+        - serviceAccountToken:
+            audience: "https://idm.{{ $global.domain }}/realms/{{ $global.instanceSlug }}"
+            expirationSeconds: 600
+            path: token
 {{- if $clusterCa }}
   - name: cluster-ca
     secret:
@@ -418,6 +426,9 @@ extraVolumes:
 extraVolumeMounts:
   - name: apps-cache
     mountPath: /var/cache/jc/apps
+  - name: keycloak-token
+    mountPath: /var/run/secrets/jc/keycloak
+    readOnly: true
   - name: validation-results
     mountPath: /etc/jc/health
     readOnly: true

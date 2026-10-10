@@ -175,12 +175,14 @@ rbac.authorization.k8s.io/v1/Role local/edge-file-composer
 rbac.authorization.k8s.io/v1/Role local/gitea-bootstrap
 rbac.authorization.k8s.io/v1/Role local/portal
 rbac.authorization.k8s.io/v1/Role local/portal-build-pods
+rbac.authorization.k8s.io/v1/Role local/portal-reconciler-token
 rbac.authorization.k8s.io/v1/Role local/postgres-operator-cloudnative-pg
 rbac.authorization.k8s.io/v1/RoleBinding local-app-tests/app-test-runner
 rbac.authorization.k8s.io/v1/RoleBinding local/edge-file-composer
 rbac.authorization.k8s.io/v1/RoleBinding local/gitea-bootstrap
 rbac.authorization.k8s.io/v1/RoleBinding local/portal
 rbac.authorization.k8s.io/v1/RoleBinding local/portal-build-pods
+rbac.authorization.k8s.io/v1/RoleBinding local/portal-reconciler-token
 rbac.authorization.k8s.io/v1/RoleBinding local/postgres-operator-cloudnative-pg
 v1/ConfigMap local/apisix
 v1/ConfigMap local/apisix-standalone-base
@@ -249,8 +251,6 @@ v1/Secret local/keycloak-client-gitea
 v1/Secret local/keycloak-client-helsinki-pipeline-proposer
 v1/Secret local/keycloak-client-helsinki-pipelines
 v1/Secret local/keycloak-client-jc-build-lane
-v1/Secret local/keycloak-client-portal-api
-v1/Secret local/keycloak-client-portal-reconciler
 v1/Secret local/keycloak-client-praha-pipelines
 v1/Secret local/keycloak-client-zilina-pipelines
 v1/Secret local/keycloak-config-keycloak-config-cli-config-realms
@@ -286,5 +286,6 @@ v1/ServiceAccount local/keycloak-app-keycloakx
 v1/ServiceAccount local/observability-collector
 v1/ServiceAccount local/pipeline-runner
 v1/ServiceAccount local/portal
+v1/ServiceAccount local/portal-reconciler
 v1/ServiceAccount local/postgres-operator-cloudnative-pg
 v1/ServiceAccount local/sandbox-reaper-reaper

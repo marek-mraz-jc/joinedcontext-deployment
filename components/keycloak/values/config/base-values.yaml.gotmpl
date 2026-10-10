@@ -76,7 +76,7 @@ extraEnv:
   {{- if hasKey $rawValues "publicClient" }}
   {{- $isPublicClient = index $rawValues "publicClient" }}
   {{- end }}
-  {{- if not $isPublicClient }}
+  {{- if and (not $isPublicClient) (not (index $client "federated")) }}
   - name: CLIENT_SECRET_{{ $clientId | upper | replace "-" "_" }}
     valueFrom:
       secretKeyRef:
@@ -528,10 +528,21 @@ config:
                unable to complete a login at all. Only the secret is confidential-only. */}}
         {{- $_ := set $clientDefaults "redirectUris" $redirectUris }}
         {{- $_ := set $clientDefaults "attributes" (dict "post.logout.redirect.uris" "+" "pkce.code.challenge.method" "S256") }}
-        {{- if not $isPublicClient }}
+        {{- $federated := index $client "federated" }}
+        {{- if and (not $isPublicClient) (not $federated) }}
         {{- $_ := set $clientDefaults "secret" (printf "$(CLIENT_SECRET_%s)" ($clientId | upper | replace "-" "_")) }}
         {{- end }}
         {{- $finalClient := mergeOverwrite $clientDefaults ($rawValues | default dict) }}
+        {{- /* PF-47, T-2868: a platform workload's client trusts its pod's projected
+               ServiceAccount token, verified against the `kubernetes` provider below, and holds
+               no secret. Set after the merge, so a client's own attributes cannot drop it. */}}
+        {{- if $federated }}
+        {{- $release := splitList "." (required (printf "%s: federated.release" $clientId) $federated.release) }}
+        {{- $namespace := required (printf "%s: no namespace for %s" $clientId $federated.release) (index $.Values (index $release 0) (index $release 1) "namespace") }}
+        {{- $_ := set $finalClient "clientAuthenticatorType" "federated-jwt" }}
+        {{- $_ := set $finalClient.attributes "jwt.credential.issuer" "kubernetes" }}
+        {{- $_ := set $finalClient.attributes "jwt.credential.sub" (printf "system:serviceaccount:%s:%s" $namespace (required (printf "%s: federated.serviceAccount" $clientId) $federated.serviceAccount)) }}
+        {{- end }}
         {{- /* Who the caller is, on every client the platform trusts: a `RoleBinding` names a
                group and the Portal checks the binding (PF-50, PF-61), and the forge maps the
                same claim onto its teams (PF-79). Identity, never permission. A client's own

@@ -2,7 +2,7 @@
 # Rotate one in-cluster credential without downtime, then MEASURE that the old one is refused
 # (OPS-45, T-1719; Operations/01 Runbook 5).
 #
-#   scripts/rotate-secret.sh --instance dev --secret keycloak-client-portal-api \
+#   scripts/rotate-secret.sh --instance dev --secret keycloak-client-activity-ingest \
 #       --idm https://idm.<domain> --realm <realm>
 #   scripts/rotate-secret.sh --instance dev --secret db-portal
 #   scripts/rotate-secret.sh --instance dev --secret gitea-token-portal --forge https://<domain>/git
