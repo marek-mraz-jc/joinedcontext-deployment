@@ -248,10 +248,10 @@ portal-public-form:
           Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
           X-Content-Type-Options: "nosniff"
           Referrer-Policy: "no-referrer"
-    # OPS-34: the upstream owns the Content Security Policy (the Portal's, each App's, AP-12,
-    # AP-122), so the edge sets none over it and adds this baseline only to an answer that
-    # carries none, its own refusals included. `frame-ancestors` says what X-Frame-Options
-    # says. It runs after `response-rewrite`, whose `add` of an App's frame-ancestors counts.
+    # OPS-34: the Portal owns the page's Content Security Policy and its `frame-ancestors`
+    # (EP-101), so the edge sets none over it and adds this baseline only to an answer that
+    # carries none, its own refusals included; with no X-Frame-Options here such an answer is
+    # framed by nobody, as on the assistant's widget (AG-114).
     serverless-post-function:
       phase: header_filter
       functions:
@@ -259,7 +259,7 @@ portal-public-form:
           return function()
             if ngx.header["Content-Security-Policy"] == nil then
               ngx.header["Content-Security-Policy"] =
-                "frame-ancestors 'self'; object-src 'none'; base-uri 'self'"
+                "frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
             end
           end
 
