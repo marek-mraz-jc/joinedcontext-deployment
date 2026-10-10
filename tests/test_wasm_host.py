@@ -42,6 +42,31 @@ def test_each_shard_runs_the_pinned_host_with_no_token_and_a_read_only_root(docs
     assert [p["port"] for p in service["spec"]["ports"]] == [8080]
 
 
+# What one compiled component costs a shard, measured by the 10 000-App load test (T-3345,
+# ADR-N-044 §8), and what the shard needs beside its cache: compiles in flight and instances.
+MIB_PER_COMPONENT = 1.04
+HEADROOM_MIB = 256
+
+
+def mib(quantity):
+    units = {"Ki": 1 / 1024, "Mi": 1, "Gi": 1024}
+    for unit, factor in units.items():
+        if quantity.endswith(unit):
+            return float(quantity[: -len(unit)]) * factor
+    raise AssertionError(f"a memory limit in Ki, Mi or Gi: {quantity}")
+
+
+@pytest.mark.parametrize("shard", SHARDS)
+def test_each_shard_keeps_no_more_compiled_components_than_its_memory_holds(docs, shard):
+    (container,) = one(docs, "Deployment", f"jc-wasm-host-{shard}")["spec"]["template"]["spec"]["containers"]
+    cached = int(env_of(container)["JC_WASM_CACHED_COMPONENTS"])
+    limit = mib(container["resources"]["limits"]["memory"])
+    assert cached * MIB_PER_COMPONENT + HEADROOM_MIB <= limit, (
+        f"{cached} compiled components need about {cached * MIB_PER_COMPONENT + HEADROOM_MIB:.0f} MiB; "
+        f"the shard may use {limit:.0f} MiB and would be OOM-killed (T-3345)"
+    )
+
+
 @pytest.mark.parametrize("shard", SHARDS)
 def test_each_shard_reads_its_own_placement_key_and_login_from_files_never_variables(docs, shard):
     pod = one(docs, "Deployment", f"jc-wasm-host-{shard}")["spec"]["template"]["spec"]
