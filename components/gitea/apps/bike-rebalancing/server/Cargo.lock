@@ -9,7 +9,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 
 [[package]]
-name = "bike-weather-demand"
+name = "bike-rebalancing"
 version = "0.1.0"
 dependencies = [
  "serde",
@@ -17,10 +17,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "bike-weather-demand-server"
+name = "bike-rebalancing-server"
 version = "0.1.0"
 dependencies = [
- "bike-weather-demand",
+ "bike-rebalancing",
  "jc-app-sdk",
  "serde",
  "serde_json",
@@ -86,7 +86,7 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 [[package]]
 name = "jc-app-sdk"
 version = "0.1.0"
-source = "git+https://github.com/marek-mraz-jc/joinedcontext-platform.git?rev=9d6378b2b21b45917b6fb1653ff6fbb8701d021f#9d6378b2b21b45917b6fb1653ff6fbb8701d021f"
+source = "git+https://github.com/marek-mraz-jc/joinedcontext-platform.git?rev=263c41169d7f02dcbfa86024234686b4bb534500#263c41169d7f02dcbfa86024234686b4bb534500"
 dependencies = [
  "serde",
  "serde_json",

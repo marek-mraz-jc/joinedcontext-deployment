@@ -1,6 +1,6 @@
 # Written by scripts/vendor-sample-apps.py; do not edit. The files of each sample application,
 # relative to its folder, as the forge bootstrap pushes them to its repository (T-2599).
-source: da2f5deb4de43dbeb5bfa32cd388a3b16fe6a1f1
+source: ed7f2af6981b81aa92ed4975beab85aa30e29a61
 apps:
   air-quality:
     - .gitea/workflows/build.yml
@@ -293,13 +293,19 @@ apps:
     - grants/users/groups/bike-rebalancing-viewer.yaml
     - index.html
     - map-worker.ts
+    - migrations/0001_plans.sql
     - package.json
     - playwright.config.ts
+    - server/Cargo.lock
+    - server/Cargo.toml
+    - server/src/lib.rs
     - src/App.test.tsx
     - src/App.tsx
     - src/app.css
     - src/components/ChartCard.tsx
     - src/components/MapView.tsx
+    - src/components/SavedPlans.test.tsx
+    - src/components/SavedPlans.tsx
     - src/components/components.css
     - src/design-tokens.json
     - src/fixtures/stations.ts
@@ -312,6 +318,8 @@ apps:
     - src/planner.ts
     - src/planner.worker-path.test.ts
     - src/planner.worker.ts
+    - src/plans.test.ts
+    - src/plans.ts
     - src/stations.test.ts
     - src/stations.ts
     - src/texts.ts
