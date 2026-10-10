@@ -57,6 +57,10 @@ envSecret:
 # rendered streams name, ../../streams/resources.yaml); the streams arrive over its API.
 args:
   - -w
+  # T-3537 profiling window (deployer, 2026-10-10): pprof on the API port, which only the Portal
+  # reaches; read from inside the pod, and removed again in the next apply after the profile.
+  - --set
+  - http.debug_endpoints=true
   - -r
   - /streams/resources.yaml
   - streams
