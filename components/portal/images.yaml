@@ -246,3 +246,9 @@ portal:
     # green again and the builders move with it (T-3567); auth_tests fixed (T-3568). portal ccc23a87:
     # the SDK's entity panel writes a number as the grid does (T-3600).
     digest: 'sha256:2495a9eee4c1505869ffe27c6bd58cbf87f74435a111a291a2528aba289bff69'
+  # Mailpit, the mail catcher of an installation without a relay (T-3583). Re-pin with the
+  # registry query in components/sandbox-reaper/images.yaml, repository axllent/mailpit.
+  mail-catcher:
+    repository: 'axllent/mailpit'
+    tag: 'v1.31.2'
+    digest: 'sha256:74d609a42ec279aa63c6b4622a6fa9b5408d1ad5b1d76a1c4be40a265ce0863d'

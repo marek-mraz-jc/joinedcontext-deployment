@@ -3,3 +3,6 @@ component: portal
 parts:
   - name: portal
   - name: namespaces
+  # Mailpit: keeps the mail the Portal sends where no relay is named, for a person or a test to
+  # read; off unless an environment turns it on (T-3583, AP-168).
+  - name: mail-catcher

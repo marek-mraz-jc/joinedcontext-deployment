@@ -15,3 +15,8 @@ portal:
     # repository the Portal stages. Without the Secret the mount is empty and every reference
     # is refused with "the age identity is unreadable", which is the same fail-closed answer.
     sopsAgeSecret: portal-age-identity
+  # No relay yet (T-3309): App mail lands in the in-cluster catcher, where a person reads it with
+  # `kubectl -n dev port-forward svc/mail-catcher 8025` and the e2e reads `/api/v1/messages`
+  # (T-3583). Naming the relay later is `portal-mail-relay` and this switched off.
+  mail-catcher:
+    enabled: true

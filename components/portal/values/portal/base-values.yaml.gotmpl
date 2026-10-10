@@ -88,6 +88,15 @@ envSecret:
   PGPASSWORD:
     secret: db-portal
     key: password
+  # The relay App mail goes out through (T-3583, AP-168): an operator-supplied SOPS reference in
+  # the environment's managedSecrets, the relay's smtps URL with its login. Absent, the Portal
+  # sends no mail and its email route answers 503. The in-cluster catcher takes its place below.
+{{- if not (index .Values.portal "mail-catcher" "enabled") }}
+  JC_PORTAL_SMTP_URL:
+    secret: portal-mail-relay
+    key: url
+    optional: true
+{{- end }}
   JC_PORTAL_COOKIE_KEY:
     secret: portal-cookie-key
     key: key
@@ -174,6 +183,12 @@ env:
   JC_TRUST_EDGE_TOKEN: "true"
   JC_OIDC_ISSUER: "https://idm.{{ $global.domain }}/realms/{{ $global.instanceSlug }}"
   JC_OIDC_CLIENT_ID: "portal-api"
+  # The sender of App mail; the App's title is the name beside it (T-3583, AP-168).
+  JC_PORTAL_MAIL_FROM: "noreply@{{ $global.domain }}"
+{{- if index .Values.portal "mail-catcher" "enabled" }}
+  # The in-cluster catcher, in the clear inside the namespace: no credential, so no Secret.
+  JC_PORTAL_SMTP_URL: "smtp://mail-catcher.{{ index .Values.portal "mail-catcher" "namespace" }}.svc.cluster.local:1025"
+{{- end }}
   JC_PORTAL_KEYCLOAK_ADMIN_CLIENT_ID: "portal-reconciler"
   JC_PORTAL_DATABASE_URL: "postgresql://portal:$(PGPASSWORD)@postgres-cluster-rw.{{ .Values.postgres.cluster.namespace }}.svc.cluster.local:5432/portal"
 {{- if has "gitea" .Values.components }}
