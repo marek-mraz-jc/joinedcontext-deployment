@@ -88,10 +88,11 @@ def test_each_shard_reads_its_own_placement_key_and_login_from_files_never_varia
     assert env["JC_WASM_DB_PASSWORD_FILE"] == mounts["db"] + "/password"
 
 
-def test_the_edge_alone_reaches_a_shard_and_a_shard_reaches_the_gateway_the_database_the_store_and_its_token_service(docs):
+def test_the_edge_and_the_portal_alone_reach_a_shard_and_a_shard_reaches_the_gateway_the_database_the_store_and_its_token_service(docs):
     policy = one(docs, "NetworkPolicy", "wasm-host-shard")
     sources = [peer["podSelector"]["matchLabels"] for rule in policy["spec"]["ingress"] for peer in rule["from"]]
-    assert sources == [{"app.kubernetes.io/name": "apisix"}]
+    assert sources == [{"app.kubernetes.io/name": "apisix"}, {"app.kubernetes.io/name": "portal-portal"}], (
+        "the edge for an App's API, the Portal for /jobs (T-3372), nobody else")
     reached = []
     for rule in policy["spec"]["egress"]:
         ports = sorted(p["port"] for p in rule["ports"])

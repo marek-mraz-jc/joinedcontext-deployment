@@ -11,6 +11,10 @@ wasm-host-shard-allow-linkerd:
             matchLabels:
               app.kubernetes.io/name: apisix
           componentNamespace: apisix
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: portal-portal
+          componentNamespace: portal
       ports:
         - port: 4143
           protocol: TCP
