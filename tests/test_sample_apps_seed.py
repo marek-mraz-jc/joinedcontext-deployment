@@ -230,14 +230,12 @@ def test_dev_hands_the_job_every_vendored_file_byte_for_byte(dev):
         # A release of its own (T-3175): the bootstrap's would not fit Helm's Secret with them; one
         # of three, the one the app's name hashes to, since one no longer holds them all (T-3333).
         config_map = one(dev, "ConfigMap", f"gitea-sample-apps-{app}")
-        # The first of three splits by the hash's next digit, the odd ones into -4 (T-3393), and
-        # the third the same way into -5 (T-3350).
+        # The first and third of three split by the hash's next digit, the odd ones into -4
+        # (T-3393) and -5 (T-3350).
         hashed = zlib.adler32(app.encode())
         shard = hashed % 3 + 1
-        if shard == 1 and hashed // 3 % 2 == 1:
-            shard = 4
-        if shard == 3 and hashed // 3 % 2 == 1:
-            shard = 5
+        if shard in (1, 3) and hashed // 3 % 2 == 1:
+            shard = {1: 4, 3: 5}[shard]
         release = "gitea-sample-apps" if shard == 1 else f"gitea-sample-apps-{shard}"
         assert config_map["metadata"]["labels"]["app.kubernetes.io/instance"] == release
         data = config_map["data"]

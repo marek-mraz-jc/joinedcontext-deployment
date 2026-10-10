@@ -4,9 +4,9 @@
 # already on the forge, so every run would commit again.
 # An app lives in the release its name hashes to (gitea-sample-apps, -2, -3; T-3333), its
 # ConfigMap named gitea-sample-apps-<app> whichever it is, so the Job and the smoke find it.
-# The first release's apps split again by the hash's next digit, the odd ones into -4 (T-3393),
-# and the third's the same way into -5 (T-3350): an app only ever moves to a release synced after
-# the one it left, never back.
+# The first release's apps split again by the hash's next digit, the odd ones into -4 (T-3393):
+# The third release's split the same way, the odd ones into -5 (T-3350). An app only ever moves
+# to a release synced after the one it left, never back.
 {{- $shard := .Release.Name | trimPrefix "gitea-sample-apps" | trimPrefix "-" | default "1" | atoi }}
 apps:
 {{- $apps := readFile "../../apps/index.yaml" | fromYaml }}
