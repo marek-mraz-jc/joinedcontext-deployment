@@ -68,6 +68,8 @@ def test_the_worker_rendered_with_its_database_checkout_and_network(docs):
     assert env["JC_ASSISTANT_GATEWAY_URL"] == "http://context-gateway.dev.svc.cluster.local:8080"
     assert env["JC_ASSISTANT_TOKEN_URL"].startswith("http://keycloak-app-keycloakx-http.")
     assert env["JC_ASSISTANT_LLM"]
+    # A guide source's sections link into the Portal the people open (AG-118, T-3226).
+    assert env["JC_ASSISTANT_PORTAL_URL"] == "https://portal.dev.joinedcontext.com"
     service = one(docs, "Service", "jc-assistant")
     assert [p["port"] for p in service["spec"]["ports"]] == [8080]
 
