@@ -171,3 +171,28 @@ def test_a_grace_period_shorter_than_the_pause_and_drain_is_refused(tmp_path):
     with pytest.raises(subprocess.CalledProcessError) as refused:
         render_workload(tmp_path, {"terminationGracePeriodSeconds": 10, "serviceMesh": {"enabled": True}})
     assert "terminationGracePeriodSeconds (10) must be longer" in refused.value.stderr
+
+
+@requires_helm
+@pytest.mark.parametrize(
+    "limit, expected",
+    [("1536Mi", 1536 * 2**20 * 85 // 100), ("2Gi", 2 * 2**30 * 85 // 100), ("1G", 10**9 * 85 // 100), ("1000000", 850000)],
+)
+def test_gomemlimit_follows_the_memory_limit(tmp_path, limit, expected):
+    """T-3537: a Go workload's soft limit is a share of whatever limit the environment sets."""
+    values = {"goMemLimitPercent": 85, "resources": {"limits": {"memory": limit}}}
+    env = find_resource(render_workload(tmp_path, values), "Deployment")["spec"]["template"]["spec"]["containers"][0]["env"]
+    assert {"name": "GOMEMLIMIT", "value": str(expected)} in env
+
+
+@requires_helm
+def test_gomemlimit_is_off_by_default_and_refuses_what_it_cannot_read(tmp_path):
+    container = find_resource(render_workload(tmp_path / "default"), "Deployment")["spec"]["template"]["spec"]["containers"][0]
+    assert all(e["name"] != "GOMEMLIMIT" for e in container.get("env", []))
+    for name, values, reason in [
+        ("fraction", {"goMemLimitPercent": 85, "resources": {"limits": {"memory": "1.5Gi"}}}, "not a whole number"),
+        ("percent", {"goMemLimitPercent": 120}, "not between 1 and 100"),
+    ]:
+        with pytest.raises(subprocess.CalledProcessError) as refused:
+            render_workload(tmp_path / name, values)
+        assert reason in refused.value.stderr, name

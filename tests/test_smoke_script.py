@@ -223,6 +223,19 @@ elif args[0] == "run" and args[1].startswith("smoke-app"):
         sys.stdout.write("PROBE-RAN\\n")
     for port in spec.get("appPeerReached", []):
         sys.stdout.write("REACHED-%s\\n" % port)
+elif args[0] == "get" and args[1] == "pods" and "app.kubernetes.io/name=pipeline-runner-runner" in line:
+    # T-3537: the runner's restart count, read at the start and the end of the run; each read
+    # takes the next value of `runnerRestarts`, and `[]` is an instance without the runner.
+    counts = spec.get("runnerRestarts", [0, 0])
+    marker = os.environ["STUB_SPEC"] + ".runner-reads"
+    reads = int(open(marker).read()) if os.path.exists(marker) else 0
+    open(marker, "w").write(str(reads + 1))
+    if counts:
+        sys.stdout.write(str(counts[min(reads, len(counts) - 1)]))
+elif args[0] == "top" and "pipeline-runner-runner" in line:
+    sys.stdout.write("pipeline-runner-6bf86c8c76-zmh95   pipeline-runner-runner   76m   %s\\n" % spec.get("runnerMemory", "700Mi"))
+elif args[0] == "get" and args[1] == "deployment" and args[2] == "pipeline-runner":
+    sys.stdout.write(spec.get("runnerLimit", "1536Mi"))
 elif args[0] == "get" and args[1] == "pods" and "app.kubernetes.io/name=apisix" in line:
     # T-0939: the probe aims at the APISIX pod's own address; `apisixPodIp: ""` is no pod.
     sys.stdout.write(spec.get("apisixPodIp", "10.42.0.9"))
@@ -1418,3 +1431,27 @@ def test_a_red_dry_run_for_another_reason_is_still_no_refusal(tmp_path):
     result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
     assert result.returncode == 1
     assert "FAIL  a probe of https://169.254.169.254/hetzner/v1/metadata answered no refusal" in result.stdout
+
+
+def test_a_runner_that_restarted_during_the_run_fails_it(tmp_path):
+    """T-3537: an OOMKill stops every project's streams; the run that saw one is not green."""
+    result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
+    assert "ok    the pipeline runner did not restart during the smoke run (0 restarts)" in result.stdout
+    result = run(tmp_path / "restarted", dict(HEALTHY, runnerRestarts=[3, 4]), "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  the pipeline runner restarted during the smoke run (3 -> 4)" in result.stdout
+
+
+def test_a_runner_at_80_percent_of_its_limit_fails_the_run(tmp_path):
+    """T-3537: under 80 % of the limit passes; at it, in GiB or MiB, fails; unreadable skips."""
+    result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
+    assert "ok    the pipeline runner uses 700Mi of its 1536Mi limit, under 80 %" in result.stdout
+    for name, spec, line in [
+        ("full", dict(HEALTHY, runnerMemory="1229Mi"), "FAIL  the pipeline runner uses 1229Mi of its 1536Mi limit, 80 % or more"),
+        ("gib", dict(HEALTHY, runnerMemory="1700Mi", runnerLimit="2Gi"), "FAIL  the pipeline runner uses 1700Mi of its 2048Mi limit, 80 % or more"),
+        ("odd", dict(HEALTHY, runnerLimit="1.5G"), 'skip  pipeline runner memory (working set "700" or limit "1.5G" not readable in MiB)'),
+        ("none", dict(HEALTHY, runnerRestarts=[]), "skip  pipeline runner memory (no pipeline-runner in this instance)"),
+    ]:
+        result = run(tmp_path / name, spec, "https://example.test", "https://idm.example.test")
+        assert line in result.stdout, name
+

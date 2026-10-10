@@ -105,6 +105,11 @@ probes:
     failureThreshold: 3
     initialDelaySeconds: 10
 
+# Bento is Go: without a soft limit its heap grows to the kernel's hard one, and one OOMKill
+# stops every project's streams at once (T-3537, 3 restarts at 1536Mi with 97 streams). The
+# GC works harder from 85 % of whatever limit the environment sets.
+goMemLimitPercent: 85
+
 resources:
   requests:
     cpu: 100m

@@ -71,3 +71,23 @@ Create the image reference: repo:tag@digest or repo:tag
 {{- printf "%s:%s" .Values.image.repository .Values.image.tag }}
 {{- end }}
 {{- end }}
+
+{{/*
+GOMEMLIMIT for a Go workload: `goMemLimitPercent` of the container's memory limit, in bytes,
+read from the merged `resources.limits.memory` so an environment that raises the limit raises
+this with it (T-3537). Kubernetes binary and decimal suffixes; anything else fails the render.
+*/}}
+{{- define "workload.goMemLimit" -}}
+{{- $limit := toString .Values.resources.limits.memory -}}
+{{- $number := regexFind "^[0-9]+" $limit -}}
+{{- $suffix := trimPrefix $number $limit -}}
+{{- $units := dict "" 1 "Ki" 1024 "Mi" 1048576 "Gi" 1073741824 "k" 1000 "M" 1000000 "G" 1000000000 -}}
+{{- if or (not $number) (not (hasKey $units $suffix)) -}}
+{{- fail (printf "goMemLimitPercent: resources.limits.memory %q is not a whole number with a Ki/Mi/Gi/k/M/G suffix" $limit) -}}
+{{- end -}}
+{{- $percent := int .Values.goMemLimitPercent -}}
+{{- if or (lt $percent 1) (gt $percent 100) -}}
+{{- fail (printf "goMemLimitPercent %d is not between 1 and 100" $percent) -}}
+{{- end -}}
+{{- div (mul (atoi $number) (get $units $suffix) $percent) 100 -}}
+{{- end }}
