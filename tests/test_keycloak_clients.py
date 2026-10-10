@@ -495,3 +495,26 @@ def test_the_portal_writes_only_the_clients_it_manages(rendered, env):
     script = next(d for d in docs if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "keycloak-admin-permissions")
     assert "managed-by" in script["data"]["sync-admin-permissions.sh"]
     assert any(d.get("kind") == "NetworkPolicy" and "keycloak-admin-permissions" in d["metadata"]["name"] for d in docs)
+
+
+# --- T-3311 (EP-103): the Portal asks the gateway's access/simulate with its own token ----------
+
+
+def test_the_portal_carries_the_simulate_audience_and_never_the_gateways(realm_clients):
+    """The gateway answers `access/simulate` for the audience `context-gateway-simulate` alone,
+    and only from the Portal's own service account. The mapper puts that audience on the
+    Portal's access tokens; `context-gateway` stays off them, or a person's Portal token would
+    reach every Endpoint's data paths."""
+    audiences = {
+        mapper["config"].get("included.custom.audience")
+        for mapper in realm_clients["portal-api"]["protocolMappers"]
+        if mapper["protocolMapper"] == "oidc-audience-mapper"
+    }
+    assert "context-gateway-simulate" in audiences, sorted(a for a in audiences if a)
+    assert "context-gateway" not in audiences
+    simulate = next(
+        m for m in realm_clients["portal-api"]["protocolMappers"]
+        if m["config"].get("included.custom.audience") == "context-gateway-simulate"
+    )
+    assert simulate["config"]["access.token.claim"] == "true"
+    assert simulate["config"]["id.token.claim"] == "false"
