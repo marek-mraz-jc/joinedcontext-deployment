@@ -1,0 +1,17 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: alerts-reaper
+  namespace: helsinki
+  title: { en: "A road work or traffic announcement leaves the space when its validTo has passed" }
+spec:
+  class: auto
+  period: 10m
+  schedule: "*/10 * * * *"
+  source:
+    dataSourceRef: { kind: DataSource, name: helsinki-alerts-live }
+  # The deletes go through the same endpoint and the same Policy as every write (deleteBatch).
+  targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all
+  quotas:
+    maxMemoryMb: 64
+    cpuMillicores: 50

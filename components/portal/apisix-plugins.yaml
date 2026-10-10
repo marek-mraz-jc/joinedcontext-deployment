@@ -200,6 +200,69 @@ portal-public:
             end
           end
 
+# A published form's page (API/01 §33, EP-101): portal-public's plugins with one difference, no
+# X-Frame-Options. That header cannot name a site, and the Portal answers `/f/{slug}` with the
+# `frame-ancestors` its Endpoint's embedOrigins name, `'self'` alone when it names none, with
+# SAMEORIGIN beside it; every other page keeps the edge's SAMEORIGIN (T-3266).
+portal-public-form:
+  name: portal-public-form
+  description: A published form, anonymous, framed by the sites its Endpoint names (EP-101)
+  # The Organization's spec.limits.edge.requestsPerMinute.web replaces the count below (ADR-N-035).
+  rateClass: web
+  plugins:
+    request-id:
+      include_in_response: true
+    serverless-pre-function:
+      phase: rewrite
+      functions:
+        - >-
+          return function()
+            local forged = {
+              "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
+              "X-Endpoint-Slug", "X-Consumer-Identity", "X-Forwarded-User",
+              "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
+              "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
+            }
+            for _, header in ipairs(forged) do
+              ngx.req.clear_header(header)
+              ngx.req.clear_header((header:gsub("%-", "_")))
+            end
+          end
+    # Class 1 (standard web): 300 requests per minute per IP.
+    limit-count:
+      count: 300
+      time_window: 60
+      key_type: var
+      key: remote_addr
+      rejected_code: 429
+      policy: local
+      show_limit_quota_header: true
+    proxy-rewrite:
+      headers:
+        set:
+          X-Forwarded-Proto: https
+          X-Forwarded-Port: '443'
+    response-rewrite:
+      headers:
+        set:
+          Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+          X-Content-Type-Options: "nosniff"
+          Referrer-Policy: "no-referrer"
+    # OPS-34: the Portal owns the page's Content Security Policy and its `frame-ancestors`
+    # (EP-101), so the edge sets none over it and adds this baseline only to an answer that
+    # carries none, its own refusals included; with no X-Frame-Options here such an answer is
+    # framed by nobody, as on the assistant's widget (AG-114).
+    serverless-post-function:
+      phase: header_filter
+      functions:
+        - >-
+          return function()
+            if ngx.header["Content-Security-Policy"] == nil then
+              ngx.header["Content-Security-Policy"] =
+                "frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
+            end
+          end
+
 portal-api:
   name: portal-api
   description: Portal REST API (edge session becomes X-Access-Token, a bearer passes through)
