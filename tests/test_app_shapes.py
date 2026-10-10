@@ -1,4 +1,4 @@
-"""Every App the seed and the forge seed carry names its shape by this release's names (AP-124).
+"""Every App the seed and the forge seed carry names its shape by this release's names (AP-124, AP-152).
 
 `static` and `fullstack` still read for one release, and the Portal's Applications page warns about
 every App that uses them ("1 app still uses a shape name the next release refuses", T-3183): a
@@ -10,7 +10,7 @@ from pathlib import Path
 import yaml
 
 COMPONENTS = Path(__file__).resolve().parent.parent / "components"
-SHAPES = {"ui", "ui-rust"}
+SHAPES = {"ui", "wasm", "ui-node", "ui-rust"}  # AP-152; never the retired `static`, `fullstack`
 
 
 def apps():
@@ -30,4 +30,4 @@ def test_the_seed_carries_apps():
 
 def test_every_app_names_its_shape_by_this_releases_name():
     wrong = [f"{path}: {app['metadata']['name']} is `{app['spec'].get('kind')}`" for path, app in apps() if app["spec"].get("kind") not in SHAPES]
-    assert wrong == [], "write `ui`, or `ui-rust` for a server of the App's own (AP-124)"
+    assert wrong == [], f"write `ui`, `wasm`, `ui-node` or `ui-rust` (AP-124, AP-152): {wrong}"
