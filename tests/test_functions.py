@@ -57,8 +57,9 @@ def test_the_portal_calls_the_service_with_a_token_the_runtime_accepts(dev):
     }
     # jc-functions for the Portal's own calls; helsinki-agent-proxy so a person's token is the
     # subject token the agent proxy exchanges for a run of theirs (T-2866, ADR-N-038). No other.
-    # and jc-assistant, whose administration paths the Portal asks with its own token (T-3057).
-    assert audiences == {"jc-functions", "helsinki-agent-proxy", "jc-assistant"}
+    # and jc-assistant, whose administration paths the Portal asks with its own token (T-3057),
+    # and context-gateway-simulate, the one audience the gateway's access/simulate takes (T-3311).
+    assert audiences == {"jc-functions", "helsinki-agent-proxy", "jc-assistant", "context-gateway-simulate"}
 
 
 @requires_helmfile

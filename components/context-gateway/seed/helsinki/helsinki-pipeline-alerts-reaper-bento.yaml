@@ -1,27 +1,49 @@
 # The mapping of the alerts-reaper pipeline (T-3122): the expiry Digitraffic's feed does not
 # carry. The traffic-messages pipeline asks for active messages only and upserts them, so a
 # message that ended simply stops arriving and its Alert stayed. Every ten minutes the reaper
-# reads the Alerts back, keeps the ids of the Digitraffic ones whose validTo has passed and
-# deletes them in one batch through the endpoint (deleteBatch of the pipelines-write Policy).
-# An Alert with no validTo, an unreadable one or one from another source is kept.
-# ponytail: an ended message without a validTo stays; diff against the feed if those pile up.
+# reads the Alerts back and the active feed beside them (the URL the ingest reads), keeps the
+# ids of the Digitraffic Alerts whose validTo has passed or whose situation the feed no longer
+# lists, and deletes them in one batch through the endpoint (deleteBatch of the pipelines-write
+# Policy). The feed decides only when it answered with at least one situation: a failed or
+# empty answer leaves validTo alone to decide, so an outage deletes nothing that still runs.
+# An Alert from another source is kept.
 
 pipeline:
   processors:
-    - unarchive:
-        format: json_array
-
     - mapping: |
-        let ends = this.validTo.or("").string().ts_unix().catch(null)
-        let ours = this.source.or("") == "https://tie.digitraffic.fi/api/traffic-message/v1/messages"
-        root = if $ours && $ends != null && $ends < now().ts_unix() { { "id": this.id } } else { deleted() }
+        root = { "alerts": this }
 
-    - archive:
-        format: json_array
+    # The situations running now. A failed call leaves `active` unset (the branch's error
+    # does not reach the message's own fields), which the next step reads as "no answer".
+    - branch:
+        request_map: root = ""
+        processors:
+          - http:
+              url: https://tie.digitraffic.fi/api/traffic-message/v1/messages?inactiveHours=0&includeAreaGeometry=false&situationType=TRAFFIC_ANNOUNCEMENT&situationType=ROAD_WORK
+              verb: GET
+              headers:
+                Accept: application/json
+                Digitraffic-User: joinedcontext-helsinki
+              timeout: 30s
+              rate_limit: pipeline_egress
+          - mapping: |
+              root = this.features.or([]).map_each(f -> f.properties.situationId.or("").string())
+        result_map: root.active = this
+
+    # The Alert id ends in the situation id the ingest minted it from.
+    - mapping: |
+        let source = "https://tie.digitraffic.fi/api/traffic-message/v1/messages"
+        let active = this.active.or([])
+        let answered = $active.length() > 0
+        let now = now().ts_unix()
+        root = this.alerts.or([]).filter(a -> a.source.or("") == $source && (
+          (a.validTo.or("").string().ts_unix().catch(0) > 0 && a.validTo.or("").string().ts_unix().catch(0) < $now) ||
+          ($answered && !$active.contains(a.id.or("").string().split(":").index(-1)))
+        )).map_each(a -> a.id)
 
     # The batch delete takes the bare ids; an empty batch is nothing to delete.
     - mapping: |
-        root = if this.length() == 0 { deleted() } else { this.map_each(entity -> entity.id) }
+        root = if this.length() == 0 { deleted() } else { this }
 
     - http:
         url: ${JC_GATEWAY_URL}/api/endpoint/si6epqkx364lprho5uaigutk274r5grb/ngsi-ld/v1/entityOperations/delete
