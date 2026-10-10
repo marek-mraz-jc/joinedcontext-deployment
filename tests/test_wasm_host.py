@@ -44,7 +44,7 @@ def test_each_shard_runs_the_pinned_host_with_no_token_and_a_read_only_root(docs
 
 # What one compiled component costs a shard, measured by the 10 000-App load test (T-3345,
 # ADR-N-044 §8), and what the shard needs beside its cache: compiles in flight and instances.
-MIB_PER_COMPONENT = 1.04
+MIB_PER_COMPONENT = 1.25
 HEADROOM_MIB = 256
 
 
