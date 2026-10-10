@@ -30,8 +30,9 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 PLUGIN_FILES = sorted(PROJECT_ROOT.glob("components/*/apisix-plugins.yaml"))
 ANCESTORS = {"DENY": "'none'", "SAMEORIGIN": "'self'"}
 # The routes whose upstream names in its own `frame-ancestors` the sites that may frame its page
-# (AG-114); the edge sets no X-Frame-Options there, and an answer without a policy gets DENY's.
-FRAMED_BY_UPSTREAM = {"assistant/assistant-widget"}
+# (AG-114, and a public form's page, EP-101); the edge sets no X-Frame-Options there, and an
+# answer without a policy gets DENY's.
+FRAMED_BY_UPSTREAM = {"assistant/assistant-widget", "portal/portal-public-form"}
 
 
 def baseline(framing: str) -> str:
