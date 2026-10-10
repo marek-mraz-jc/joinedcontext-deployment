@@ -28,23 +28,75 @@ def federated_clients() -> dict[str, dict]:
 
 @pytest.fixture(scope="module")
 def docs(rendered):
-    return rendered("local")
+    # `dev`: the agent runner and the assistant are rendered there and not in `local`.
+    return rendered("dev")
 
 
 @pytest.fixture(scope="module")
 def realm(docs):
     for doc in docs:
         if doc.get("kind") == "Secret" and doc["metadata"]["name"].endswith("config-cli-config-realms"):
-            data = json.loads(base64.b64decode(doc["data"]["local.json"]))
+            data = json.loads(base64.b64decode(doc["data"]["dev.json"]))
             return {client["clientId"]: client for client in data["clients"]}
-    pytest.fail("no keycloak-config-cli realm Secret in the local render")
+    pytest.fail("no keycloak-config-cli realm Secret in the dev render")
 
 
 def workload(docs, kind: str, name: str) -> dict:
     for doc in docs:
         if doc.get("kind") == kind and doc["metadata"]["name"] == name:
             return doc
-    pytest.fail(f"no {kind} {name} in the local render")
+    pytest.fail(f"no {kind} {name} in the dev render")
+
+
+def test_the_platforms_own_workloads_are_federated():
+    """T-2868: the gateway, the agent proxy and the assistant hold no client secret."""
+    clients = federated_clients()
+    assert clients.get("context-gateway") == {"release": "context-gateway.gateway", "serviceAccount": "context-gateway"}
+    assert clients.get("helsinki-agent-proxy") == {"release": "agent-runner.proxy", "serviceAccount": "agent-proxy"}
+    assert clients.get("jc-assistant") == {"release": "assistant.worker", "serviceAccount": "jc-assistant"}
+    assert clients.get("jc-build-lane") == {"release": "gitea.bootstrap", "serviceAccount": "gitea-bootstrap-lane-token"}
+
+
+@pytest.mark.parametrize("client_id", sorted(federated_clients()))
+def test_the_pod_of_a_federated_client_mounts_a_short_realm_bound_token_and_no_secret(client_id, docs):
+    """The pod running as the client's ServiceAccount presents its projected token: audience the
+    realm, at most an hour, read-only, and the `*_ASSERTION_FILE` it is told to read is that file.
+    `portal-reconciler` runs no pod; the Portal mints its token (test below)."""
+    federated = federated_clients()[client_id]
+    pods = [
+        d for d in docs
+        if d.get("kind") in ("Deployment", "StatefulSet")
+        and d["spec"]["template"]["spec"].get("serviceAccountName") == federated["serviceAccount"]
+    ]
+    if federated["serviceAccount"] == "gitea-bootstrap-lane-token":
+        return  # a CronJob with a script of its own: tests/test_lane_token.py
+    if federated["serviceAccount"] == "portal-reconciler":
+        assert pods == []
+        return
+    assert len(pods) == 1, f"one workload runs as {federated['serviceAccount']}, not {len(pods)}"
+    pod = pods[0]["spec"]["template"]["spec"]
+    issuers = {e["value"] for c in pod["containers"] for e in c.get("env", []) if e["name"] == "JC_OIDC_ISSUER"}
+    files = {
+        e["value"]: c for c in pod["containers"] for e in c.get("env", [])
+        if e["name"].endswith("CLIENT_ASSERTION_FILE")
+    }
+    assert len(files) == 1, files
+    ((path, container),) = files.items()
+    path = Path(path)
+    mount = next(m for m in container["volumeMounts"] if m["mountPath"] == str(path.parent))
+    assert mount.get("readOnly") is True
+    volume = next(v for v in pod["volumes"] if v["name"] == mount["name"])
+    token = next(s["serviceAccountToken"] for s in volume["projected"]["sources"] if "serviceAccountToken" in s)
+    assert token["path"] == path.name
+    assert token["audience"].startswith("https://idm.") and "/realms/" in token["audience"]
+    if issuers:
+        assert {token["audience"]} == issuers, "bound to the realm and nothing else"
+    assert 600 <= token["expirationSeconds"] <= 3600
+    named = {
+        e["valueFrom"]["secretKeyRef"]["name"]
+        for c in pod["containers"] for e in c.get("env", []) if "secretKeyRef" in e.get("valueFrom", {})
+    } | {v["secret"]["secretName"] for v in pod.get("volumes", []) if "secret" in v}
+    assert f"keycloak-client-{client_id}" not in named, named
 
 
 def test_the_portals_two_clients_are_federated_as_two_subjects():

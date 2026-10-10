@@ -52,17 +52,15 @@ def test_the_proxy_runs_the_proxy_binary_of_the_platform_image_with_its_credenti
     assert env["JC_MODEL_PROVIDER"] == "openai-compatible"
     assert env["JC_OIDC_CLIENT_ID"] == "helsinki-agent-proxy"
     secrets = secret_env_of(proxy)
-    # T-2271: no shared bearer any more. The proxy holds its own client's secret and mints a token
-    # per audience from the in-cluster token endpoint, which a pod can actually dial (T-2272).
+    # T-2271: no shared bearer any more. The proxy proves its own client with its pod's projected
+    # token (PF-47, T-2868) and mints a token per audience from the in-cluster token endpoint,
+    # which a pod can actually dial (T-2272).
     assert "JC_PROXY_TOKEN" not in secrets
-    assert secrets["JC_OIDC_CLIENT_SECRET"] == (
-        "keycloak-client-helsinki-agent-proxy",
-        "client-secret",
-    )
+    assert "JC_OIDC_CLIENT_SECRET" not in secrets
+    assert env["JC_OIDC_CLIENT_ASSERTION_FILE"] == "/var/run/secrets/jc/keycloak/token"
     assert env["JC_OIDC_TOKEN_URL"].startswith("http://keycloak-app-keycloakx-http.")
     assert env["JC_OIDC_TOKEN_URL"].endswith("/protocol/openid-connect/token")
     assert secrets["JC_MODEL_KEY"] == ("agent-runner-model-key", "key")
-    assert secrets["JC_OIDC_CLIENT_SECRET"] == ("keycloak-client-helsinki-agent-proxy", "client-secret")
     # No literal credential anywhere in the plain environment.
     assert not any(k.endswith(("KEY", "TOKEN", "SECRET")) for k in env)
 

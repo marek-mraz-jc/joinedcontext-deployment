@@ -114,7 +114,9 @@ laneToken:
   # `iss` is the one the Portal checks, and no TLS to the public host is needed from this image.
   tokenUrl: ''
   clientId: jc-build-lane
-  clientSecretName: keycloak-client-jc-build-lane
+  # The realm issuer the pod's projected token is bound to; `jc-build-lane` is federated and
+  # trusts this pod's ServiceAccount, `<fullname>-lane-token` (PF-47, T-2868).
+  audience: ''
   secretName: JC_LANE_TOKEN
 
 image:

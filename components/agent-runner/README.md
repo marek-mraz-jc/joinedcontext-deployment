@@ -23,8 +23,9 @@ helmfile apply -i --selector component=agent-runner
   listener); the gateway resolves its token to the
   ServiceAccount manifest `agent-proxy` of that project, whose role is `public`.
 - **Forge seed**: `agentprofiles/app-builder.yaml`, the builder profile every run names.
-- **Secrets**: `agent-proxy-token` (generated, both namespaces), the Keycloak client secret
-  (generated), the forge token (the Portal's, minted by the bootstrap Job).
+- **Secrets**: `agent-proxy-token` (generated, both namespaces) and the forge token (the
+  Portal's, minted by the bootstrap Job). The Keycloak client holds none: it is federated and the
+  proxy presents its pod's projected ServiceAccount token (PF-47, T-2868).
 
 ## The model key
 
