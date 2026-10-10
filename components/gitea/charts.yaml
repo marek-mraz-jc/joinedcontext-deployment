@@ -14,3 +14,5 @@ gitea:
     chart: charts/sample-apps
   sample-apps-4:
     chart: charts/sample-apps
+  sample-apps-5:
+    chart: charts/sample-apps
