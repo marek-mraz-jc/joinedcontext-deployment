@@ -1,0 +1,16 @@
+# The Alerts endpoint read back by the alerts reaper (T-3122): every Alert the space publishes,
+# read in-cluster through the gateway, where the public-alerts Policy answers an anonymous read.
+# The gateway host comes in as JC_GATEWAY_HOST from the runner's environment, as for the buses.
+apiVersion: joinedcontext.com/v1alpha1
+kind: DataSource
+metadata:
+  name: helsinki-alerts-live
+  namespace: helsinki
+  title: { en: "Alerts the space holds right now (read back for expiry)" }
+spec:
+  type: http
+  http:
+    url: http://${JC_GATEWAY_HOST}/api/endpoint/dhiw4735mzyvwkrmszljpxcvvgv32q33/ngsi-ld/v1/entities?type=Alert&limit=1000&options=keyValues
+    verb: GET
+    headers: { Accept: application/json }
+    timeout: 20s

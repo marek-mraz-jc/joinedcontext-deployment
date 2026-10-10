@@ -51,11 +51,12 @@ def test_no_mapping_types_its_space_or_project_in():
             assert not literal.search(line), f"{path.name}:{number}: {stripped}"
         minted += 'env("JC_SPACE")' in path.read_text()
     # Every mapping that mints an id reads its space from the environment. The one exception is
-    # named rather than counted around: the vehicles reaper writes nothing, it deletes buses
-    # whose position went stale, so it has no id to mint.
+    # named rather than counted around: the two reapers write nothing, they delete buses whose
+    # position went stale and Alerts whose validTo passed, so they have no id to mint.
     silent = {p.name for p in bentos if 'env("JC_SPACE")' not in p.read_text()}
-    assert silent == {"helsinki-pipeline-vehicles-reaper-bento.yaml"}, silent
-    assert minted == len(bentos) - 1
+    assert silent == {"helsinki-pipeline-vehicles-reaper-bento.yaml",
+                      "helsinki-pipeline-alerts-reaper-bento.yaml"}, silent
+    assert minted == len(bentos) - 2
 
 
 def test_helsinki_policies_name_the_organization_by_placeholder():
