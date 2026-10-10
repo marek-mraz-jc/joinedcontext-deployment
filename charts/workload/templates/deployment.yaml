@@ -126,8 +126,12 @@ spec:
             timeoutSeconds: {{ .Values.probes.readiness.timeoutSeconds | default 3 }}
             failureThreshold: {{ .Values.probes.readiness.failureThreshold | default 3 }}
           {{- end }}
-          {{- if or .Values.envSecret .Values.env }}
+          {{- if or .Values.envSecret .Values.env .Values.goMemLimitPercent }}
           env:
+            {{- if .Values.goMemLimitPercent }}
+            - name: GOMEMLIMIT
+              value: {{ include "workload.goMemLimit" . | quote }}
+            {{- end }}
             {{- range $key, $sec := .Values.envSecret }}
             - name: {{ $key }}
               valueFrom:

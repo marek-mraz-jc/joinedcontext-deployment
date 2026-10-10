@@ -24,6 +24,7 @@ args: []
 env: {}               # name -> value, always rendered as a quoted string
 envSecret: {}         # name -> {secret: <secret name>, key: <key>, optional: <bool>}  -> secretKeyRef
 envFrom: []           # raw list, passed through
+goMemLimitPercent: 0  # >0: GOMEMLIMIT = this % of resources.limits.memory (Go workloads)
 
 enableServiceLinks: false
 terminationGracePeriodSeconds: 30

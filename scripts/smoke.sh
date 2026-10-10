@@ -46,6 +46,16 @@ ko() { printf '  FAIL  %s\n' "$1"; fail=$((fail + 1)); }
 # A check whose subject is not deployed in this instance. Not a pass: it never ran.
 skip() { printf '  skip  %s\n' "$1"; skipped=$((skipped + 1)); }
 
+# The pipeline runner carries every project's streams in one process, so an OOMKill during the
+# run is every pipeline stopped at once (T-3537). Its restart count is read now and again at
+# the end, and it must not have moved.
+runner_restarts() {
+	kubectl get pods -n "$slug" -l app.kubernetes.io/name=pipeline-runner-runner \
+		-o 'jsonpath={.items[*].status.containerStatuses[?(@.name=="pipeline-runner-runner")].restartCount}' 2>/dev/null |
+		tr ' ' '\n' | awk '{ total += $1 } END { if (NR) print total }'
+}
+runner_restarts_before=$(runner_restarts)
+
 # The entity type an endpoint grants this caller, from its own access document (EP-55).
 #
 # A read names a type (GW33), and these grants are `retrieveOps`, which is `retrieveEntity` and
@@ -1191,6 +1201,41 @@ else
 			ok "no resolved credential appears in any ConfigMap of $slug"
 		fi
 	fi
+fi
+
+echo "pipeline runner memory (T-3537)"
+if [ -z "$runner_restarts_before" ]; then
+	skip "pipeline runner memory (no pipeline-runner in this instance)"
+else
+	runner_restarts_after=$(runner_restarts)
+	if [ "$runner_restarts_after" = "$runner_restarts_before" ]; then
+		ok "the pipeline runner did not restart during the smoke run ($runner_restarts_before restarts)"
+	else
+		ko "the pipeline runner restarted during the smoke run ($runner_restarts_before -> ${runner_restarts_after:-gone}); kubectl describe its pod for OOMKilled"
+	fi
+	# The working set (what the kernel's OOM killer counts) against the container's limit,
+	# both in MiB; Bento's GOMEMLIMIT sits at 85 %, so 80 % is the line before the GC fights.
+	used=$(kubectl top pod -n "$slug" -l app.kubernetes.io/name=pipeline-runner-runner --containers --no-headers 2>/dev/null |
+		awk '$2 == "pipeline-runner-runner" { sub(/Mi$/, "", $4); total += $4 } END { if (NR) print total }')
+	limit=$(kubectl get deployment pipeline-runner -n "$slug" \
+		-o 'jsonpath={.spec.template.spec.containers[?(@.name=="pipeline-runner-runner")].resources.limits.memory}' 2>/dev/null)
+	case "$limit" in
+	*Gi) limit_mib=$((${limit%Gi} * 1024)) ;;
+	*Mi) limit_mib=${limit%Mi} ;;
+	*) limit_mib="" ;;
+	esac
+	case "$used:$limit_mib" in
+	'':* | *: | *[!0-9:]*)
+		skip "pipeline runner memory (working set \"${used}\" or limit \"${limit}\" not readable in MiB)"
+		;;
+	*)
+		if [ $((used * 100)) -lt $((limit_mib * 80)) ]; then
+			ok "the pipeline runner uses ${used}Mi of its ${limit_mib}Mi limit, under 80 %"
+		else
+			ko "the pipeline runner uses ${used}Mi of its ${limit_mib}Mi limit, 80 % or more (T-3537)"
+		fi
+		;;
+	esac
 fi
 
 printf '\n%s passed, %s failed, %s skipped\n' "$pass" "$fail" "$skipped"
