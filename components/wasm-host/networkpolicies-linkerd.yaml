@@ -86,7 +86,8 @@ wasm-host-tokens-linkerd-in:
         - podSelector:
             matchLabels:
               app.kubernetes.io/name: wasm-host-shard
-          componentNamespace: wasm-host.shard-0
+          # every shard's pods: the parts share one namespace (test_every_shard_may_ask_for_a_token)
+          componentNamespace: wasm-host
       ports:
         - port: 4143
           protocol: TCP

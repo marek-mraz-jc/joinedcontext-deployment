@@ -90,3 +90,22 @@ def test_switched_on_the_service_mints_only_in_the_app_identities_namespace(rend
     assert accounts["metadata"]["namespace"] == identities
     assert accounts["rules"] == [{"apiGroups": [""], "resources": ["serviceaccounts"],
                                   "verbs": ["get", "list", "create", "patch", "delete"]}]
+
+
+def test_every_shard_may_ask_for_a_token(rendered_variant):
+    """Each shard runs its own Apps' jobs, so the service admits every shard's pods, in the plain
+    policy and in the mesh one; a rule naming shard-0 alone left shard-1's jobs without a token."""
+    docs = rendered_variant("dev", enable)
+    shards = [d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"].startswith("jc-wasm-host-")]
+    assert len(shards) == 2, [d["metadata"]["name"] for d in shards]
+    for name in ("wasm-host-tokens", "wasm-host-tokens-linkerd-in"):
+        policy = one(docs, "NetworkPolicy", name)
+        (ingress,) = policy["spec"]["ingress"]
+        for shard in shards:
+            labels = shard["spec"]["template"]["metadata"]["labels"]
+            namespace = shard["metadata"]["namespace"]
+            assert any(
+                all(labels.get(k) == v for k, v in peer["podSelector"]["matchLabels"].items())
+                and peer.get("namespaceSelector", {}).get("matchLabels", {}).get("kubernetes.io/metadata.name", policy["metadata"]["namespace"]) == namespace
+                for peer in ingress["from"]
+            ), f"{name} does not admit {shard['metadata']['name']}: {ingress['from']}"
