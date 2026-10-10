@@ -11,3 +11,8 @@ tokenService:
 portal:
   serviceAccount: portal
   namespace: ''
+# What the namespace holds and the names of the two Roles, so the same chart serves the wasm
+# Apps' job principals (AP-159, T-3372) with names of their own.
+holds: pipeline-serviceaccounts
+tokenRole: pipeline-tokens
+portalRole: portal-pipeline-accounts

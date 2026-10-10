@@ -6,3 +6,7 @@ wasm-host:
     chart: ../../charts/workload
   portal-access:
     chart: ./charts/portal-access
+  tokens:
+    chart: ../../charts/workload
+  identities:
+    chart: ../pipeline-runner/charts/identities
