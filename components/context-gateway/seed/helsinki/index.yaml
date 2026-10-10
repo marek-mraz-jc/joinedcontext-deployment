@@ -48,6 +48,7 @@ helsinki-datasource-bikes.yaml: projects/helsinki/datasources/hsl-citybikes-gbfs
 helsinki-datasource-bikes-info.yaml: projects/helsinki/datasources/hsl-citybikes-gbfs-info.yaml
 helsinki-datasource-hfp.yaml: projects/helsinki/datasources/hsl-hfp.yaml
 helsinki-datasource-vehicles-live.yaml: projects/helsinki/datasources/helsinki-vehicles-live.yaml
+helsinki-datasource-alerts-live.yaml: projects/helsinki/datasources/helsinki-alerts-live.yaml
 helsinki-datasource-news-rss.yaml: projects/helsinki/datasources/hel-news-rss.yaml
 helsinki-datasource-road-weather.yaml: projects/helsinki/datasources/digitraffic-road-weather.yaml
 helsinki-datasource-traffic-messages.yaml: projects/helsinki/datasources/digitraffic-traffic-messages.yaml
@@ -60,6 +61,7 @@ helsinki-pipeline-vehicles-reaper.yaml: projects/helsinki/pipelines/vehicles-rea
 helsinki-pipeline-news.yaml: projects/helsinki/pipelines/hel-news/pipeline.yaml
 helsinki-pipeline-road-weather.yaml: projects/helsinki/pipelines/road-weather/pipeline.yaml
 helsinki-pipeline-traffic-messages.yaml: projects/helsinki/pipelines/traffic-messages/pipeline.yaml
+helsinki-pipeline-alerts-reaper.yaml: projects/helsinki/pipelines/alerts-reaper/pipeline.yaml
 helsinki-pipeline-air-quality.yaml: projects/helsinki/pipelines/air-quality/pipeline.yaml
 # The mapping of each pipeline, native Bento beside its manifest (PL-03): the reconciler renders
 # it into the resident stream (T-0647), so no stream is written twice.
@@ -71,6 +73,7 @@ helsinki-pipeline-vehicles-reaper-bento.yaml: projects/helsinki/pipelines/vehicl
 helsinki-pipeline-news-bento.yaml: projects/helsinki/pipelines/hel-news/bento.yaml
 helsinki-pipeline-road-weather-bento.yaml: projects/helsinki/pipelines/road-weather/bento.yaml
 helsinki-pipeline-traffic-messages-bento.yaml: projects/helsinki/pipelines/traffic-messages/bento.yaml
+helsinki-pipeline-alerts-reaper-bento.yaml: projects/helsinki/pipelines/alerts-reaper/bento.yaml
 helsinki-pipeline-air-quality-bento.yaml: projects/helsinki/pipelines/air-quality/bento.yaml
 helsinki-ckan-hel-fi.yaml: projects/helsinki/ckan/hel-fi.yaml
 helsinki-blueprint-http-json-feed.yaml: blueprints/http-json-feed/blueprint.yaml

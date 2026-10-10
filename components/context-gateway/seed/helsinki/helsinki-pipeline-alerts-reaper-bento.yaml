@@ -1,0 +1,39 @@
+# The mapping of the alerts-reaper pipeline (T-3122): the expiry Digitraffic's feed does not
+# carry. The traffic-messages pipeline asks for active messages only and upserts them, so a
+# message that ended simply stops arriving and its Alert stayed. Every ten minutes the reaper
+# reads the Alerts back, keeps the ids of the Digitraffic ones whose validTo has passed and
+# deletes them in one batch through the endpoint (deleteBatch of the pipelines-write Policy).
+# An Alert with no validTo, an unreadable one or one from another source is kept.
+# ponytail: an ended message without a validTo stays; diff against the feed if those pile up.
+
+pipeline:
+  processors:
+    - unarchive:
+        format: json_array
+
+    - mapping: |
+        let ends = this.validTo.or("").string().ts_unix().catch(null)
+        let ours = this.source.or("") == "https://tie.digitraffic.fi/api/traffic-message/v1/messages"
+        root = if $ours && $ends != null && $ends < now().ts_unix() { { "id": this.id } } else { deleted() }
+
+    - archive:
+        format: json_array
+
+    # The batch delete takes the bare ids; an empty batch is nothing to delete.
+    - mapping: |
+        root = if this.length() == 0 { deleted() } else { this.map_each(entity -> entity.id) }
+
+    - http:
+        url: ${JC_GATEWAY_URL}/api/endpoint/si6epqkx364lprho5uaigutk274r5grb/ngsi-ld/v1/entityOperations/delete
+        verb: POST
+        headers:
+          Content-Type: application/json
+        oauth2:
+          enabled: true
+          client_key: ${JC_CLIENT_ID}
+          client_secret: ${JC_CLIENT_SECRET}
+          token_url: ${JC_TOKEN_URL}
+        timeout: 30s
+        rate_limit: pipeline_egress
+
+    - mapping: root = deleted()
