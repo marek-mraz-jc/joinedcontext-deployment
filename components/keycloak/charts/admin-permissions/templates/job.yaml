@@ -1,7 +1,8 @@
 {{/*
   The Portal's client administration, narrowed to its own clients (T-2725, AP-27, AP-111):
   after every realm import, `sync-admin-permissions.sh` grants `portal-api` the write scopes on
-  the realm's clients and denies them on every client without `managed-by: joinedcontext`.
+  the realm's clients and denies them on every client without `managed-by: joinedcontext`,
+  then links every marked `endpoint:` client scope to `mcp-hub` (T-3324).
   It runs `kcadm.sh` from the Keycloak image itself, so the Job adds no image to pin.
 */}}
 apiVersion: v1

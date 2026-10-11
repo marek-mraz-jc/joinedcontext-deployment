@@ -214,3 +214,60 @@ def test_a_realm_without_admin_permissions_fails_the_run(keycloak):
     run = sync(name)
     assert run.returncode != 0
     assert "adminPermissionsEnabled is off" in run.stderr, run.stderr
+
+
+def test_the_job_links_the_marked_endpoint_scopes_to_the_hub(keycloak):
+    """T-3324, EP-88: the Portal may not link a scope to `mcp-hub` (the deny covers it), so the
+    Job links every marked `endpoint:` scope there as an optional scope and unlinks an unmarked
+    one and any default `endpoint:` link; a scope outside the prefix is left as it is."""
+    name, base = keycloak
+    ids = realm(base)
+    admin = ids["admin"]
+    status, body, headers = call(base, "POST", f"/admin/realms/{REALM}/clients", admin, {"clientId": "mcp-hub"})
+    assert status == 201, body
+    hub = headers["Location"].rsplit("/", 1)[1]
+
+    def scope(scope_name, marked):
+        attributes = {"include.in.token.scope": "true"}
+        if marked:
+            attributes["managed-by"] = "joinedcontext"
+        status, body, headers = call(base, "POST", f"/admin/realms/{REALM}/client-scopes", admin,
+                                     {"name": scope_name, "protocol": "openid-connect", "attributes": attributes})
+        assert status == 201, body
+        return headers["Location"].rsplit("/", 1)[1]
+
+    scopes = {
+        "endpoint:ours": scope("endpoint:ours", True),
+        "endpoint:default": scope("endpoint:default", True),
+        "endpoint:stray": scope("endpoint:stray", False),
+        "endpoint:unlinked": scope("endpoint:unlinked", False),
+        "weather": scope("weather", False),
+    }
+    for kind, scope_name in [("default", "endpoint:default"), ("optional", "endpoint:stray"), ("optional", "weather")]:
+        status, body, _ = call(base, "PUT", f"/admin/realms/{REALM}/clients/{hub}/{kind}-client-scopes/{scopes[scope_name]}", admin)
+        assert status == 204, body
+
+    def links(kind):
+        token_ = token(base, "master", "admin-cli", user="admin")
+        status, body, _ = call(base, "GET", f"/admin/realms/{REALM}/clients/{hub}/{kind}-client-scopes", token_)
+        assert status == 200, body
+        return sorted(s["name"] for s in body if s["name"].startswith("endpoint:") or s["name"] == "weather")
+
+    run = sync(name)
+    assert run.returncode == 0, run.stderr
+    assert links("optional") == ["endpoint:default", "endpoint:ours", "weather"], run.stdout
+    assert links("default") == [], run.stdout
+    assert "linked 2 of 2 endpoint: scopes to mcp-hub" in run.stdout, run.stdout
+    assert "unlinked endpoint:stray from mcp-hub (optional)" in run.stdout, run.stdout
+    assert "unlinked endpoint:default from mcp-hub (default)" in run.stdout, run.stdout
+
+    # The Portal still may not link one itself: the deny stays on the hub.
+    portal = token(base, REALM, "portal-api", "portal-api-secret")
+    status, _, _ = call(base, "PUT", f"/admin/realms/{REALM}/clients/{hub}/optional-client-scopes/{scopes['endpoint:unlinked']}", portal)
+    assert status == 403
+
+    again = sync(name)
+    assert again.returncode == 0, again.stderr
+    assert "linked 0 of 2 endpoint: scopes to mcp-hub" in again.stdout, again.stdout
+    assert "unlinked" not in again.stdout, again.stdout
+    assert again.stdout.count("updated ") == 4, again.stdout
