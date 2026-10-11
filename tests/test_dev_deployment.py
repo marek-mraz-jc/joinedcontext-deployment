@@ -129,7 +129,7 @@ def test_the_nightly_deployment_job_rotates_one_credential_of_each_class_and_smo
     code = "\n".join(line for line in body.splitlines() if not line.lstrip().startswith("#"))
     assert "set -euo pipefail" in code, "a failed rotation must stop the script and fail the job"
     rotated = re.findall(r"^rotate --secret (\S+)", code, re.M)
-    assert rotated == ["keycloak-client-portal-api", "db-portal", "gitea-token-gateway", "portal-cookie-key"], rotated
+    assert rotated == ["keycloak-client-activity-ingest", "db-portal", "gitea-token-gateway", "portal-cookie-key"], rotated
     assert "./scripts/rotate-secret.sh" in code
     # Never with verification off: curl trusts the harness's CA for these measurements.
     assert "CURL_CA_BUNDLE" in code and " -k" not in code and "--insecure" not in code

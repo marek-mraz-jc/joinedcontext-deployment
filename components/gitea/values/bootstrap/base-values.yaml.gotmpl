@@ -121,6 +121,7 @@ tokens:
 # public issuer into every token, whichever host it was asked on.
 laneToken:
   enabled: {{ has "gitea-runner" .Values.components }}
+  audience: "https://idm.{{ $global.domain }}/realms/{{ $global.instanceSlug }}"
   tokenUrl: "http://keycloak-app-keycloakx-http.{{ .Values.keycloak.app.namespace }}.svc.cluster.local:80{{ .Values.keycloak.app.pathPrefix | trimSuffix "/" }}/realms/{{ $global.instanceSlug }}/protocol/openid-connect/token"
 
 # The same image the forge runs, so the Job pulls nothing the node does not already have and

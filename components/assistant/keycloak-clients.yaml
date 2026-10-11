@@ -11,8 +11,11 @@ jc-assistant:
   description: Service account of jc-assistant; client_credentials for its model calls through jc-agent-proxy, no browser flow
   subdomain: ''
   redirectPath: /
-  componentNamespaces:
-    - assistant
+  # Federated (PF-47, T-2868): the worker pod's own ServiceAccount, whose projected token it
+  # presents (JC_ASSISTANT_CLIENT_ASSERTION_FILE); no secret exists for it.
+  federated:
+    release: assistant.worker
+    serviceAccount: jc-assistant
   rawValues:
     publicClient: false
     standardFlowEnabled: false

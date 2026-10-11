@@ -1041,11 +1041,15 @@ else
 	done
 	status 401 "jc-functions refuses an invocation without the Portal's token" -X POST \
 		-H 'Content-Type: application/json' -d '{}' "http://127.0.0.1:$fn_port/invoke"
-	fn_secret=$(kubectl get secret keycloak-client-portal-api -n "$slug" -o jsonpath='{.data.client-secret}' 2>/dev/null | base64 -d 2>/dev/null || true)
+	# portal-api is federated (PF-47, T-2868): its proof is a token of the Portal pod's own
+	# ServiceAccount with the realm as audience, sent without client_id, exactly what the Portal
+	# sends. Ten minutes, never stored.
+	fn_assertion=$(kubectl create token portal -n "$slug" --audience "$idm/realms/$realm" --duration 10m 2>/dev/null || true)
 	fn_token=""
-	if [ -n "$fn_secret" ]; then
-		fn_token=$(curl -sS --max-time 20 -d grant_type=client_credentials -d client_id=portal-api \
-			--data-urlencode "client_secret=$fn_secret" \
+	if [ -n "$fn_assertion" ]; then
+		fn_token=$(curl -sS --max-time 20 -d grant_type=client_credentials \
+			-d client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer \
+			--data-urlencode "client_assertion=$fn_assertion" \
 			"$idm/realms/$realm/protocol/openid-connect/token" 2>/dev/null |
 			sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
 	fi

@@ -8,16 +8,18 @@
 # no token of this client and reads nothing. CLAUDE.md's rule is the shape: "every workload via a
 # ServiceAccount client with audience-bound tokens; no static keys between cluster services".
 #
-# `client_credentials` only: nobody logs in as the gateway, so every browser flow is off. The
-# secret is generated into `keycloak-client-context-gateway` and mounted as JC_OIDC_CLIENT_SECRET
+# `client_credentials` only: nobody logs in as the gateway, so every browser flow is off.
+# Federated (PF-47, T-2868): the client trusts the gateway pod's own ServiceAccount, whose
+# projected token the gateway presents as JC_OIDC_CLIENT_ASSERTION_FILE, and holds no secret
 # (components/context-gateway/values/gateway/base-values.yaml.gotmpl).
 context-gateway:
   name: Context Gateway
   description: Service account of the Context Gateway on the Portal's internal listener; client_credentials only, no browser flow
   subdomain: ''
   redirectPath: /
-  componentNamespaces:
-    - context-gateway
+  federated:
+    release: context-gateway.gateway
+    serviceAccount: context-gateway
   rawValues:
     publicClient: false
     standardFlowEnabled: false

@@ -65,14 +65,20 @@ def test_the_lane_client_mints_short_portal_api_tokens_and_nothing_else(lane_cli
     assert lane_client["attributes"]["access.token.lifespan"] == "900"
 
 
-def test_the_refresher_holds_the_two_secrets_as_files_and_no_kubernetes_token(dev, cronjob):
+def test_the_refresher_holds_the_forge_token_and_a_realm_bound_projected_token_as_files(dev, cronjob):
     job = cronjob["spec"]["jobTemplate"]["spec"]
     pod = job["template"]["spec"]
     assert cronjob["spec"]["schedule"] == "*/5 * * * *", "every 5 minutes, a token lives 15"
     assert cronjob["spec"]["concurrencyPolicy"] == "Forbid"
     assert pod["automountServiceAccountToken"] is False
     secrets = {v["secret"]["secretName"] for v in pod["volumes"] if "secret" in v}
-    assert secrets == {"keycloak-client-jc-build-lane", "gitea-token-lane-secret"}
+    assert secrets == {"gitea-token-lane-secret"}, "the lane's client is federated: no client secret (PF-47)"
+    # The lane proves its client with this pod's own token, bound to the realm and nothing else,
+    # ten minutes long: no Kubernetes API token, which would be audienced to the API server.
+    (projected,) = [v["projected"] for v in pod["volumes"] if "projected" in v]
+    (token,) = [s["serviceAccountToken"] for s in projected["sources"]]
+    assert token["audience"] == "https://idm.dev.joinedcontext.com/realms/dev"
+    assert token["expirationSeconds"] == 600 and token["path"] == "token"
     container = pod["containers"][0]
     assert not any("valueFrom" in e for e in container["env"]), "no secret in the environment"
     env = {e["name"]: e["value"] for e in container["env"]}
@@ -155,7 +161,7 @@ def run_refresher(cronjob, tmp_path, token_code="200", forge_code="201", body=No
     curl = bin_dir / "curl"
     curl.write_text(CURL)
     curl.chmod(curl.stat().st_mode | stat.S_IEXEC)
-    for folder, name, value in (("lane", "client-secret", "the-lane-client-secret"), ("forge", "token", "f" * 40)):
+    for folder, name, value in (("lane", "token", "the-lane-projected-token"), ("forge", "token", "f" * 40)):
         (tmp_path / folder).mkdir()
         (tmp_path / folder / name).write_text(value)
     (tmp_path / "work").mkdir()
@@ -185,13 +191,17 @@ def test_a_run_writes_the_fresh_token_as_the_one_org_secret_and_prints_no_secret
     result, calls, work = run_refresher(cronjob, tmp_path)
     assert result.returncode == 0, result.stderr
     assert [c["method"] for c in calls] == ["POST", "PUT"]
-    assert "client_secret=<" in " ".join(calls[0]["data"]), "the client secret goes in from its file"
-    assert "the-lane-client-secret" not in json.dumps(calls[0]), "never on a command line"
+    sent = calls[0]["data"]
+    assert f"client_assertion=<{tmp_path / 'lane'}/token>" in sent, "the projected token goes in from its file"
+    assert "client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer" in sent
+    # Keycloak finds a federated client by the token's subject and refuses a named client_id.
+    assert not any(d.startswith(("client_id=", "client_secret")) for d in sent), sent
+    assert "the-lane-projected-token" not in json.dumps(calls[0]), "never on a command line"
     assert calls[1]["url"] == "http://forge.test/api/v1/orgs/joinedcontext/actions/secrets/JC_LANE_TOKEN"
     assert json.loads(calls[1]["data"][0]) == {"data": JWT}
     assert calls[1]["headers"][0] == "Authorization: token " + "f" * 40
     output = result.stdout + result.stderr
-    for secret in (JWT, "the-lane-client-secret", "f" * 40):
+    for secret in (JWT, "the-lane-projected-token", "f" * 40):
         assert secret not in output
     assert list(work.iterdir()) == [], "nothing of the token stays behind"
 

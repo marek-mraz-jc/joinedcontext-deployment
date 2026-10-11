@@ -2,13 +2,18 @@
 {{- if not .Values.laneToken.tokenUrl }}
 {{- fail "gitea-bootstrap: laneToken.tokenUrl names the realm's token endpoint the lane's token is minted at" }}
 {{- end }}
+{{- if not .Values.laneToken.audience }}
+{{- fail "gitea-bootstrap: laneToken.audience names the realm issuer the pod's projected token is bound to" }}
+{{- end }}
 {{- /*
   The lane's token as the Actions organization secret JC_LANE_TOKEN (AP-73, AP-80, ADR-N-028 §5,
   T-2636). A Keycloak access token expires, so one write at bootstrap is not enough: every run
   mints a `client_credentials` token of the lane's client and replaces the secret. The token
   lives 15 minutes and a run comes every 5, so a `propose` job reads one that is good for 10.
-  The pod holds the lane's client secret and a forge token that writes organization settings,
-  both as files; it has no Kubernetes token and prints status codes, never a body.
+  The lane's client is federated (PF-47, T-2868): the pod proves it with its own projected
+  ServiceAccount token, bound to the realm and ten minutes long, and holds no client secret. The
+  forge token that writes organization settings is a file too; the pod has no Kubernetes API
+  token and prints status codes, never a body.
 */}}
 apiVersion: v1
 kind: ServiceAccount
@@ -105,13 +110,15 @@ spec:
                   # refusal such as 401 or 403 still fails the run at once.
                   RETRY="--retry 6 --retry-delay 2 --retry-connrefused --retry-max-time 60"
 
-                  # 1. A client_credentials token of the lane. The secret goes in from its file,
-                  #    so it is on no command line; the answer is read for its one field.
+                  # 1. A client_credentials token of the lane, proved by the pod's projected token
+                  #    from its file, so it is on no command line, and with no client_id: Keycloak
+                  #    finds a federated client by the token's subject. The answer is read for its
+                  #    one field.
                   # shellcheck disable=SC2086
                   code=$(curl -sS $RETRY -o "$WORK/token" -w '%{http_code}' -X POST "$TOKEN_URL" \
                     --data-urlencode grant_type=client_credentials \
-                    --data-urlencode "client_id=$CLIENT_ID" \
-                    --data-urlencode "client_secret@$LANE_DIR/client-secret")
+                    --data-urlencode client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer \
+                    --data-urlencode "client_assertion@$LANE_DIR/token")
                   [ "$code" = 200 ] || { echo "the realm answered $code for $CLIENT_ID" >&2; exit 1; }
                   token=$(sed -n 's/.*"access_token" *: *"\([A-Za-z0-9_-]*\.[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*\)".*/\1/p' "$WORK/token")
                   [ -n "$token" ] || { echo "the realm answered no access token for $CLIENT_ID" >&2; exit 1; }
@@ -133,10 +140,12 @@ spec:
                 medium: Memory
                 sizeLimit: 1Mi
             - name: client
-              secret:
-                secretName: {{ .Values.laneToken.clientSecretName | quote }}
-                items:
-                  - { key: client-secret, path: client-secret }
+              projected:
+                sources:
+                  - serviceAccountToken:
+                      audience: {{ .Values.laneToken.audience | quote }}
+                      expirationSeconds: 600
+                      path: token
             - name: forge
               secret:
                 secretName: {{ .Values.tokens.lane.secret | quote }}

@@ -14,8 +14,11 @@ helsinki-agent-proxy:
   description: Service account of jc-agent-proxy for the builder runs of the Helsinki demo; client_credentials for itself and token exchange for a run's person, no browser flow
   subdomain: ''
   redirectPath: /
-  componentNamespaces:
-    - agent-runner
+  # Federated (PF-47, T-2868): the proxy pod's own ServiceAccount, whose projected token it
+  # presents on every realm call (JC_OIDC_CLIENT_ASSERTION_FILE); no secret exists for it.
+  federated:
+    release: agent-runner.proxy
+    serviceAccount: agent-proxy
   rawValues:
     publicClient: false
     standardFlowEnabled: false

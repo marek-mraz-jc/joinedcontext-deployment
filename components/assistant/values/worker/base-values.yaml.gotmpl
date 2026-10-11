@@ -57,7 +57,6 @@ envSecret:
 # The chat (API/05, T-3055): the model only through jc-agent-proxy with the service's own
 # client-credentials token, the connectors on the gateway's Endpoint MCP surfaces, the token
 # from the realm's in-cluster Service (a pod cannot dial this node's own public host, T-1500).
-# The client secret is a file, so it is never in the process environment.
 
 env:
   # As the `assistant` role, which owns its database and runs its own migrations, so the
@@ -69,7 +68,7 @@ env:
   JC_ASSISTANT_GATEWAY_URL: "http://context-gateway.{{ index .Values "context-gateway" "gateway" "namespace" }}.svc.cluster.local:8080"
   JC_ASSISTANT_TOKEN_URL: "http://keycloak-app-keycloakx-http.{{ .Values.keycloak.app.namespace }}.svc.cluster.local:80{{ .Values.keycloak.app.pathPrefix | trimSuffix "/" }}/realms/{{ $global.instanceSlug }}/protocol/openid-connect/token"
   JC_ASSISTANT_CLIENT_ID: jc-assistant
-  JC_ASSISTANT_CLIENT_SECRET_FILE: /var/run/keycloak/client-secret
+  JC_ASSISTANT_CLIENT_ASSERTION_FILE: /var/run/secrets/jc/keycloak/token
   JC_ASSISTANT_LLM: {{ .Values.assistant.worker.llm | quote }}
   # The widget's own host (AG-114): its page asks the chat from there, so the chat admits it
   # beside each deployment's allowedOrigins.
@@ -122,11 +121,16 @@ env:
 extraVolumes:
   - name: repo
     emptyDir: {}
-  - name: keycloak-client
-    secret:
-      secretName: keycloak-client-jc-assistant
-      items:
-        - { key: client-secret, path: client-secret }
+  # The token the `jc-assistant` client proves itself with (PF-47, T-2868): this pod's ServiceAccount,
+  # bound to the realm as its audience so it opens nothing else, ten minutes long; the kubelet
+  # renews it in place and the worker reads it again at every grant.
+  - name: keycloak-token
+    projected:
+      sources:
+        - serviceAccountToken:
+            audience: "https://idm.{{ $global.domain }}/realms/{{ $global.instanceSlug }}"
+            expirationSeconds: 600
+            path: token
   - name: assembly
     emptyDir:
       sizeLimit: 256Mi
@@ -143,7 +147,7 @@ extraVolumes:
 
 extraVolumeMounts:
   - { name: repo, mountPath: /repo, readOnly: true }
-  - { name: keycloak-client, mountPath: /var/run/keycloak, readOnly: true }
+  - { name: keycloak-token, mountPath: /var/run/secrets/jc/keycloak, readOnly: true }
   - { name: assembly, mountPath: /assembly }
 {{- if $layout2 }}
   - { name: projects, mountPath: /projects, readOnly: true }

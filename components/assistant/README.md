@@ -27,8 +27,9 @@ environment's component list. It needs `gitea`, `agent-runner`, `context-gateway
 - **Edge**: `assistant-chat` on `assistant.{domain}`, no login, 30 requests a minute per address
   at the edge; the service limits each deployment and client again and checks the Origin.
 - **Keycloak**: the `jc-assistant` client, service account only, audience `helsinki-agent-proxy`;
-  its secret `keycloak-client-jc-assistant` is mounted as a file. The proxy serves its token for
-  model calls named for a deployment, counted against that deployment's day.
+  federated (PF-47): it proves itself with the worker pod's projected ServiceAccount token and
+  holds no secret. The proxy serves its token for model calls named for a deployment, counted
+  against that deployment's day.
 
 - **PostgreSQL**: the `assistant` database and role (`databases.yaml`), the password in
   `db-assistant`, the `vector` extension created by the role job. The worker runs its own

@@ -60,10 +60,10 @@ def test_the_worker_rendered_with_its_database_checkout_and_network(docs):
     sidecars = {c["name"] for c in pod["containers"]} - {worker["name"]}
     assert "git-sync" in sidecars
     secrets = {v["secret"]["secretName"] for v in pod["volumes"] if "secret" in v}
-    assert secrets <= {"gitea-token-gateway", "keycloak-client-jc-assistant"}, "the read-only forge token and its own client secret"
-    assert "keycloak-client-jc-assistant" in secrets
-    assert "JC_ASSISTANT_CLIENT_SECRET" not in env, "the client secret is a file, never the environment"
-    assert env["JC_ASSISTANT_CLIENT_SECRET_FILE"] == "/var/run/keycloak/client-secret"
+    assert secrets <= {"gitea-token-gateway"}, "the read-only forge token and no client secret"
+    # Its client is federated (PF-47, T-2868): the pod's projected token, never a secret.
+    assert "JC_ASSISTANT_CLIENT_SECRET_FILE" not in env
+    assert env["JC_ASSISTANT_CLIENT_ASSERTION_FILE"] == "/var/run/secrets/jc/keycloak/token"
     assert env["JC_ASSISTANT_PROXY_URL"] == "http://agent-proxy.dev.svc.cluster.local:8080"
     assert env["JC_ASSISTANT_GATEWAY_URL"] == "http://context-gateway.dev.svc.cluster.local:8080"
     assert env["JC_ASSISTANT_TOKEN_URL"].startswith("http://keycloak-app-keycloakx-http.")
