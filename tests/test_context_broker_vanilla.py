@@ -44,8 +44,9 @@ def test_the_broker_runs_the_surfaces_and_requires_its_admin_credential(broker_p
     assert env["ANTARES_ADMIN_TOKEN_FILE"] == "/var/run/secrets/antares/admin/token"
     assert env["ANTARES_ADMIN_METRICS"] == "open"
     assert int(env["ANTARES_SCHEMA_MAX_BYTES"]) > 0
-    # The engine is turned on by T-3768, after the gateway's own hops carry a subject (T-3767).
-    assert "ANTARES_POLICY" not in env
+    # T-3768: the joinedcontext engine decides every request, after the gateway's own hops carry
+    # a subject (T-3767) and a participant's DID is a header it reads (T-3810).
+    assert env["ANTARES_POLICY"] == "joinedcontext"
 
 
 def test_the_broker_is_told_only_its_own_settings(broker_pod):
