@@ -63,6 +63,11 @@
         {{- if hasKey $config "vars" }}
         vars: {{ $config.vars | toJson }}
         {{- end }}
+        {{- /* The upgrade is passed on only where the route says so (T-3905): the gateway
+               authenticates before it answers 101 (platform T-3885). */}}
+        {{- if $config.websocket }}
+        enable_websocket: true
+        {{- end }}
         {{- if hasKey $config "subDomain" }}
         host: {{ printf "%s.%s" $config.subDomain $.Values.domain | quote }}
         {{- else if hasKey $config "hosts" }}

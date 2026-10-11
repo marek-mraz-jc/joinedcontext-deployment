@@ -37,7 +37,12 @@ def test_the_broker_runs_the_surfaces_and_requires_its_admin_credential(broker_p
     """T-3642: the views, MCP and access surfaces beside `/q`, the subject headers the gateway sets
     (platform T-3641), and `/q` behind the mounted secret with only the metrics open."""
     env = {e["name"]: e.get("value") for e in broker_pod["containers"][0].get("env", [])}
-    assert env["ANTARES_API_SURFACES"].split(",") == ["admin", "views", "mcp", "access"]
+    assert env["ANTARES_API_SURFACES"].split(",") == ["admin", "views", "mcp", "access", "ws"]
+    # T-3905: the view WebSocket is bounded for the one node, under the broker's own defaults.
+    assert 0 < int(env["ANTARES_WS_MAX_CONNECTIONS_PER_TENANT"]) <= int(env["ANTARES_WS_MAX_CONNECTIONS"]) <= 1000
+    assert 0 < int(env["ANTARES_WS_MAX_SUBSCRIPTIONS"]) <= 64
+    assert 0 < int(env["ANTARES_WS_QUEUE"]) <= 256
+    assert "ANTARES_WS_ALLOWED_ORIGINS" not in env, "browsers reach the socket through the gateway alone"
     assert env["ANTARES_POLICY_SUBJECT_HEADERS"].split(",") == [
         "x-jc-subject", "x-jc-groups", "x-jc-roles", "x-jc-client", "x-jc-restricted", "x-jc-did"]
     assert not {"authorization", "cookie"} & set(env["ANTARES_POLICY_SUBJECT_HEADERS"].split(","))
