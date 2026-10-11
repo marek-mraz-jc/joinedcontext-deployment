@@ -11,7 +11,7 @@ import pytest
 import yaml
 
 # The digest the pipeline runner pins (test_bystrica_pipelines.py, test_demo_feeds.py).
-BENTO = "ghcr.io/warpstreamlabs/bento:1.21.1@sha256:656c55de3f8deddd4ee743f3c76f3b497e67324e940f2bc1769693cd8b906364"
+BENTO = "ghcr.io/warpstreamlabs/bento:1.22.0@sha256:ef674bebae45793c982c350d8f37c2c7661133c1dc65a5517fb977b36dc09841"
 
 requires_docker = pytest.mark.skipif(
     shutil.which("docker") is None, reason="no container runtime, so Bento cannot run the mapping"

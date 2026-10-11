@@ -6,8 +6,8 @@
 #     https://registry-1.docker.io/v2/alpine/kubectl/manifests/<tag> | grep -i docker-content-digest
 sandbox-reaper:
   reaper:
-    # kubectl on Alpine, one minor behind the newest Kubernetes release so it stays inside
-    # the supported client skew of any cluster this deploys to. The Kubernetes project's own
+    # kubectl on Alpine, the minor of the cluster's Kubernetes (k3s v1.33, hetzner-kit kube.tf),
+    # so it stays inside the supported client skew; re-pin it with the cluster's upgrade. The Kubernetes project's own
     # `registry.k8s.io/kubectl` is distroless and carries no shell, and the reaper is a shell
     # script around two kubectl calls, so it cannot run there.
     repository: 'alpine/kubectl'
