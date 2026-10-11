@@ -8,6 +8,9 @@
 # Keycloak's built-in ones. The App and workload clients the Portal creates carry the mark, so
 # it keeps creating, changing and deleting those.
 #
+# It then links the Portal's `endpoint:{slug}` scopes to the MCP hub, which the deny keeps the
+# Portal from doing itself (T-3324, below).
+#
 # Run after every realm import and idempotent: it finds its two policies and two permissions by
 # name and writes them as they should be, and the deny covers the clients the realm holds now.
 # A client somebody adds by hand between two runs is the Portal's to change until the next.
@@ -94,3 +97,45 @@ ensure permission/scope "$PRINCIPAL-manages-clients" -s resourceType=Clients \
 ensure permission/scope "$PRINCIPAL-not-on-unmanaged-clients" -s resourceType=Clients \
   -s "scopes=$WRITE_SCOPES" -s "resources=[$unmanaged]" -s "policies=[\"$denied\"]"
 echo "denied $PRINCIPAL the writes on $count clients without $MANAGED_KEY: $MANAGED_VALUE"
+
+# The MCP hub's links (T-3324, EP-88). The deny above covers `mcp-hub`, and Keycloak checks
+# `manage` on a client to link a scope to it, so the Portal cannot link its `endpoint:{slug}`
+# scopes there itself. The realm admin does it on each run: every `endpoint:` scope carrying the
+# mark is an optional scope of the hub, and an `endpoint:` scope without the mark, or linked as
+# a default scope, is unlinked, because it would widen what hub tokens reach. A new Endpoint
+# reaches the hub after the next run.
+HUB_CLIENT=${HUB_CLIENT:-mcp-hub}
+SCOPE_PREFIX=endpoint:
+hub_id=$(client_id "$HUB_CLIENT")
+if [ -z "$hub_id" ]; then
+  echo "no client $HUB_CLIENT: no endpoint scope to link"
+  exit 0
+fi
+hub="clients/$hub_id"
+declare -A ours=() linked=()
+while IFS=, read -r id name mark; do
+  if [ -n "$id" ] && [ "${name#"$SCOPE_PREFIX"}" != "$name" ] && [ "$mark" = "$MANAGED_VALUE" ]; then
+    ours[$id]=$name
+  fi
+done < <(kc get client-scopes -r "$REALM" --fields "id,name,attributes($MANAGED_KEY)" --format csv --noquotes)
+for kind in default optional; do
+  while IFS=, read -r id name; do
+    if [ -z "$id" ] || [ "${name#"$SCOPE_PREFIX"}" = "$name" ]; then
+      continue
+    fi
+    if [ "$kind" = optional ] && [ -n "${ours[$id]:-}" ]; then
+      linked[$id]=1
+    else
+      kc delete "$hub/$kind-client-scopes/$id" -r "$REALM"
+      echo "unlinked $name from $HUB_CLIENT ($kind)"
+    fi
+  done < <(kc get "$hub/$kind-client-scopes" -r "$REALM" --fields id,name --format csv --noquotes)
+done
+added=0
+for id in "${!ours[@]}"; do
+  if [ -z "${linked[$id]:-}" ]; then
+    kc update "$hub/optional-client-scopes/$id" -r "$REALM"
+    added=$((added + 1))
+  fi
+done
+echo "linked $added of ${#ours[@]} $SCOPE_PREFIX scopes to $HUB_CLIENT"
