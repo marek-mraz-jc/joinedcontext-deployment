@@ -74,6 +74,14 @@ wasm-host-shard-linkerd-control-plane:
       ports:
         - protocol: TCP
           port: 4143
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: portal-portal
+          componentNamespace: portal
+      ports:
+        - protocol: TCP
+          port: 4143
 
 # The job token service's two mesh rules (T-3372): the proxy's inbound ports, and the control plane.
 wasm-host-tokens-linkerd-in:

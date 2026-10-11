@@ -20,6 +20,12 @@ portal-allow-linkerd:
           podSelector:
             matchLabels:
               joinedcontext.com/app: "true"
+        # A WASM shard asks for a request's caller and an App's email and ai as that person
+        # (T-3622, API/06 §5); the Portal checks the bearer token itself.
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: wasm-host-shard
+          componentNamespace: wasm-host
       ports:
         - port: 4143
           protocol: TCP

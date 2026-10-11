@@ -36,6 +36,9 @@ def test_the_portal_tests_in_a_namespace_of_their_own_on_the_lanes_image(rendere
     lane_image = runner["spec"]["template"]["spec"]["containers"][0]["image"]
     assert env["JC_PORTAL_APP_TESTS_IMAGE"] == lane_image, "the sandbox runs the tests as the lane does"
     assert "@sha256:" in env["JC_PORTAL_APP_TESTS_IMAGE"]
+    # A wasm App's server tests run on the rust runner the build pods use (T-3618).
+    rust = env["JC_PORTAL_APP_TESTS_RUST_IMAGE"]
+    assert rust.startswith("ghcr.io/marek-mraz-jc/joinedcontext-app-builder-rust:") and "@sha256:" in rust, rust
 
     ns = next(d for d in docs if d.get("kind") == "Namespace" and d["metadata"]["name"] == namespace)
     labels = ns["metadata"]["labels"]
