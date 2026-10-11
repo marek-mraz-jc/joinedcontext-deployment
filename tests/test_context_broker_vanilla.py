@@ -39,7 +39,7 @@ def test_the_broker_runs_the_surfaces_and_requires_its_admin_credential(broker_p
     env = {e["name"]: e.get("value") for e in broker_pod["containers"][0].get("env", [])}
     assert env["ANTARES_API_SURFACES"].split(",") == ["admin", "views", "mcp", "access"]
     assert env["ANTARES_POLICY_SUBJECT_HEADERS"].split(",") == [
-        "x-jc-subject", "x-jc-groups", "x-jc-roles", "x-jc-client", "x-jc-restricted"]
+        "x-jc-subject", "x-jc-groups", "x-jc-roles", "x-jc-client", "x-jc-restricted", "x-jc-did"]
     assert not {"authorization", "cookie"} & set(env["ANTARES_POLICY_SUBJECT_HEADERS"].split(","))
     assert env["ANTARES_ADMIN_TOKEN_FILE"] == "/var/run/secrets/antares/admin/token"
     assert env["ANTARES_ADMIN_METRICS"] == "open"
