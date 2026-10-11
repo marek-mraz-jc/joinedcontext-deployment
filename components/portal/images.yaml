@@ -245,4 +245,4 @@ portal:
     # (T-3539). portal 85ff8a3: the builder image drops git checkouts' own Cargo.lock, so trivy is
     # green again and the builders move with it (T-3567); auth_tests fixed (T-3568). portal ccc23a87:
     # the SDK's entity panel writes a number as the grid does (T-3600).
-    digest: 'sha256:211f90c1e523cff305b9d502f3d63bf0bbc90866eb23ff169f4c3b90a502ec46'
+    digest: 'sha256:0f5b309b89c89e6b60ca7153be78a8aa0e81bac08e54f9b846d81563fb37abc7'
