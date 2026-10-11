@@ -25,4 +25,4 @@ ckan:
   redis:
     repository: 'docker.io/library/redis'
     tag: '7-alpine'
-    digest: 'sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf'
+    digest: 'sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499'

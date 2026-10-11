@@ -8,5 +8,5 @@ artifact-store:
   # hook of the store's release.
   bootstrap:
     repository: 'docker.io/amazon/aws-cli'
-    tag: '2.36.40'
-    digest: 'sha256:b6aeb95d19d7f5a8cae4eb814cb16739b6b2a4f2f46f427ada6a8c9a20d9881d'
+    tag: '2.37.12'
+    digest: 'sha256:ce44b800602264c12298bbf3399055a4cefdb9ed4a098abe564afe26e7071bce'
