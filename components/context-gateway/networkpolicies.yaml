@@ -39,6 +39,16 @@ context-gateway:
       ports:
         - protocol: TCP
           port: 8080
+    # The Prometheus that scrapes /metrics (components/monitoring), from its own namespace only
+    # (T-3771).
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+          namespaceFrom: monitoring.monitoring.prometheusNamespace
+      ports:
+        - protocol: TCP
+          port: 8080
   egress:
     - to:
         - podSelector:

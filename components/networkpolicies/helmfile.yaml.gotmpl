@@ -123,6 +123,7 @@ releases:
                 {{- range $peer := (index $rule $directionKey) }}
                   {{- $transformedPeer := dict }}
                   {{- $unresolved := "" }}
+                  {{- $omitted := false }}
                   {{- range $peerKey, $peerValue := $peer }}
                     {{- if eq $peerKey "componentNamespace" }}
                       {{- /* Resolve $partData: the map (a component part) expected to carry a
@@ -163,6 +164,32 @@ releases:
                       {{- else }}
                         {{- $unresolved = $peerValue }}
                       {{- end }}
+                    {{- else if eq $peerKey "namespaceFrom" }}
+                      {{- /* A peer outside this repository's components (the Prometheus an
+                             Operator runs) whose namespace is a value: "component.part.key".
+                             The component absent, or the value empty, is "not configured" and
+                             drops the peer; the component deployed and the key missing is a
+                             typo and stops the render, like componentNamespace above. Never a
+                             part with a `namespace` key: prepare would manage that namespace. */ -}}
+                      {{- $path := splitList "." $peerValue }}
+                      {{- $node := $root }}
+                      {{- $found := true }}
+                      {{- range $segment := $path }}
+                        {{- if and $found (kindIs "map" $node) (hasKey $node $segment) }}
+                          {{- $node = index $node $segment }}
+                        {{- else }}
+                          {{- $found = false }}
+                        {{- end }}
+                      {{- end }}
+                      {{- $deployed := has (index $path 0) ($root.components | default list) }}
+                      {{- if and $deployed (not $found) }}
+                        {{- fail (printf "networkpolicies: %s peer namespaceFrom %q names no value, but %q is deployed in this environment" $policyComponentName $peerValue (index $path 0)) }}
+                      {{- end }}
+                      {{- if and $deployed $found (kindIs "string" $node) (ne $node "") }}
+                        {{- $_ := set $transformedPeer "namespaceSelector" (dict "matchLabels" (dict "kubernetes.io/metadata.name" $node)) }}
+                      {{- else }}
+                        {{- $omitted = true }}
+                      {{- end }}
                     {{- else }}
                       {{- $_ := set $transformedPeer $peerKey $peerValue }}
                     {{- end }}
@@ -178,7 +205,8 @@ releases:
                          peer; or the component IS deployed here and still resolves to no
                          namespace, which is a typo or a values change — fail the render
                          rather than ship a rule that no longer means what it says. */ -}}
-                  {{- if $unresolved }}
+                  {{- if $omitted }}
+                  {{- else if $unresolved }}
                     {{- if has (index (splitList "." $unresolved) 0) ($root.components | default list) }}
                       {{- fail (printf "networkpolicies: %s peer componentNamespace %q resolves to no namespace, but %q is deployed in this environment — fix the reference or the component's namespace" $policyComponentName $unresolved (index (splitList "." $unresolved) 0)) }}
                     {{- end }}
