@@ -1,6 +1,6 @@
 ---
-# A shard of the WASM host (ADR-N-044 §2.7): reached from the edge, which routes an App's
-# /apps/{name}/api/* here, and from the Portal for /jobs; it reaches only the gateway (an App's
+# A shard of the WASM host (ADR-N-044 §2.7): reached from the edge on 8080, which routes an App's
+# /apps/{name}/api/* here, and from the Portal on 9090 for /jobs (T-3857); it reaches only the gateway (an App's
 # one outgoing origin, AP-147),
 # apps-db (its login role), the artifact store (its own prefix and the components), the Portal (a
 # request's caller, email and ai, T-3622), and DNS.
@@ -19,7 +19,7 @@ wasm-host-shard:
       ports:
         - protocol: TCP
           port: 8080
-    # The Portal's reconciler, for GET /jobs (AP-154, T-3372).
+    # The Portal's reconciler, for GET /jobs on the admin port alone (AP-154, T-3372, T-3857).
     - from:
         - podSelector:
             matchLabels:
@@ -27,7 +27,7 @@ wasm-host-shard:
           componentNamespace: portal
       ports:
         - protocol: TCP
-          port: 8080
+          port: 9090
   egress:
     - to:
         - podSelector:

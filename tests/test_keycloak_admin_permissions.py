@@ -15,6 +15,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import uuid
 from pathlib import Path
 
 import pytest
@@ -26,7 +27,12 @@ IMAGES = ROOT / "components/keycloak/images.yaml"
 CLIENTS = ROOT / "components/portal/keycloak-clients.yaml"
 REALM = "t2725"
 
-pytestmark = pytest.mark.skipif(shutil.which("docker") is None, reason="no container runtime for Keycloak")
+# One worker runs the module, so one Keycloak serves its tests; a second worker's container started
+# in the same second used to collide on the name (docker run exit 125, T-3897).
+pytestmark = [
+    pytest.mark.skipif(shutil.which("docker") is None, reason="no container runtime for Keycloak"),
+    pytest.mark.xdist_group("docker-keycloak-admin-permissions"),
+]
 
 
 def portal_roles() -> list[str]:
@@ -70,7 +76,7 @@ def token(base, realm, client, secret=None, user=None):
 
 @pytest.fixture(scope="module")
 def keycloak():
-    name = f"t2725-kc-{int(time.time())}"
+    name = f"t2725-kc-{uuid.uuid4().hex[:12]}"
     subprocess.run(
         ["docker", "run", "-d", "--name", name, "-P", "-e", "KC_BOOTSTRAP_ADMIN_USERNAME=admin",
          "-e", "KC_BOOTSTRAP_ADMIN_PASSWORD=admin", image(), "start-dev"],
