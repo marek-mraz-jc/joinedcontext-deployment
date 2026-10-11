@@ -39,7 +39,9 @@ def test_each_shard_runs_the_pinned_host_with_no_token_and_a_read_only_root(docs
     assert pod["securityContext"]["runAsNonRoot"] is True
     assert container["readinessProbe"]["httpGet"]["path"] == "/healthz"
     service = one(docs, "Service", f"jc-wasm-host-{shard}")
-    assert [p["port"] for p in service["spec"]["ports"]] == [8080]
+    # 8080 the edge's, 9090 /metrics and /jobs for the Portal alone (T-3857).
+    assert [(p["name"], p["port"]) for p in service["spec"]["ports"]] == [("http", 8080), ("admin", 9090)]
+    assert [p["containerPort"] for p in container["ports"]] == [8080, 9090]
 
 
 # What one compiled component costs a shard, measured by the 10 000-App load test (T-3345,
@@ -90,9 +92,13 @@ def test_each_shard_reads_its_own_placement_key_and_login_from_files_never_varia
 
 def test_the_edge_and_the_portal_alone_reach_a_shard_and_a_shard_reaches_the_gateway_the_database_the_store_its_token_service_and_the_portal(docs):
     policy = one(docs, "NetworkPolicy", "wasm-host-shard")
-    sources = [peer["podSelector"]["matchLabels"] for rule in policy["spec"]["ingress"] for peer in rule["from"]]
-    assert sources == [{"app.kubernetes.io/name": "apisix"}, {"app.kubernetes.io/name": "portal-portal"}], (
-        "the edge for an App's API, the Portal for /jobs (T-3372), nobody else")
+    sources = [
+        (peer["podSelector"]["matchLabels"]["app.kubernetes.io/name"], [p["port"] for p in rule["ports"]])
+        for rule in policy["spec"]["ingress"]
+        for peer in rule["from"]
+    ]
+    assert sources == [("apisix", [8080]), ("portal-portal", [9090])], (
+        "the edge for an App's API, the Portal for /jobs on the admin port (T-3372, T-3857), nobody else")
     reached = []
     for rule in policy["spec"]["egress"]:
         ports = sorted(p["port"] for p in rule["ports"])
@@ -183,3 +189,24 @@ def test_each_shard_asks_the_portal_in_the_cluster_for_a_caller_and_the_services
     container = one(docs, "Deployment", f"jc-wasm-host-{shard}")["spec"]["template"]["spec"]["containers"][0]
     portal = env_of(container)["JC_WASM_PORTAL_URL"]
     assert portal.startswith("http://portal.") and portal.endswith(".svc.cluster.local:8080"), portal
+
+
+def linkerd(docs, kind):
+    return [d for d in docs if d.get("kind") == kind and d.get("apiVersion", "").startswith("policy.linkerd.io/")]
+
+
+@pytest.mark.parametrize("shard", SHARDS)
+def test_only_the_portal_s_identity_reaches_a_shards_job_records_through_the_mesh(docs, shard):
+    """T-3857: the proxy's 4143 admits the edge too; the Server on 9090 refuses every identity
+    but the Portal's, so a meshed edge never reads /jobs or /metrics."""
+    deployment = one(docs, "Deployment", f"jc-wasm-host-{shard}")
+    assert deployment["spec"]["template"]["metadata"]["annotations"]["linkerd.io/inject"] == "enabled"
+    (server,) = [s for s in linkerd(docs, "Server") if s["metadata"]["name"] == f"jc-wasm-host-{shard}-api"]
+    assert (server["spec"]["port"], server["spec"]["accessPolicy"]) == (9090, "deny")
+    (policy,) = [p for p in linkerd(docs, "AuthorizationPolicy") if p["spec"]["targetRef"]["name"] == server["metadata"]["name"]]
+    (required,) = policy["spec"]["requiredAuthenticationRefs"]
+    (authentication,) = [m for m in linkerd(docs, "MeshTLSAuthentication") if m["metadata"]["name"] == required["name"]]
+    portal = one(docs, "Deployment", "portal")
+    assert authentication["spec"]["identityRefs"] == [
+        {"kind": "ServiceAccount", "name": "portal", "namespace": portal["metadata"]["namespace"]}
+    ]

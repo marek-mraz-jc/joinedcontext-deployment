@@ -14,7 +14,8 @@
 # - [x] Graceful shutdown
 # - [x] Standard labels
 # - [x] No ServiceAccount token: the host calls no API server
-# - [x] Named ports -> the Service the edge route names, jc-wasm-host-<shard>:8080
+# - [x] Named ports -> the Service the edge route names, jc-wasm-host-<shard>:8080 (`http`), and
+#       the admin port 9090 (`admin`: /metrics and /jobs, the Portal alone, T-3857)
 # - [ ] Ingress with TLS -> not applicable, reached through APISIX only
 
 # The Service the edge's route names (jcctl apisix.rs `wasm_host_service`).
@@ -96,6 +97,13 @@ service:
   enabled: true
   port: 8080
 
+# /metrics and /jobs (every App's job records, AP-154) answer on this port alone, never on 8080,
+# which the edge reaches (T-3857). JC_WASM_ADMIN_LISTEN defaults to it.
+metrics:
+  enabled: true
+  port: 9090
+  name: admin
+
 probes:
   readiness:
     path: /healthz
@@ -127,3 +135,13 @@ securityContext:
 
 serviceMesh:
   enabled: {{ and ($global.serviceMesh.enable | default false) (eq ($global.serviceMesh.type | default "") "linkerd") }}
+
+# The job records answer the Portal's reconciler alone (T-3857): the port the NetworkPolicy opens
+# for the proxy (4143) admits APISIX too; this is what keeps it off 9090.
+{{- if dig "enabled" false $portal }}
+meshAuthorization:
+  port: 9090
+  clients:
+    - serviceAccount: portal
+      namespace: {{ $portal.namespace }}
+{{- end }}

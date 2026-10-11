@@ -37,15 +37,21 @@ def test_the_broker_runs_the_surfaces_and_requires_its_admin_credential(broker_p
     """T-3642: the views, MCP and access surfaces beside `/q`, the subject headers the gateway sets
     (platform T-3641), and `/q` behind the mounted secret with only the metrics open."""
     env = {e["name"]: e.get("value") for e in broker_pod["containers"][0].get("env", [])}
-    assert env["ANTARES_API_SURFACES"].split(",") == ["admin", "views", "mcp", "access"]
+    assert env["ANTARES_API_SURFACES"].split(",") == ["admin", "views", "mcp", "access", "ws"]
+    # T-3905: the view WebSocket is bounded for the one node, under the broker's own defaults.
+    assert 0 < int(env["ANTARES_WS_MAX_CONNECTIONS_PER_TENANT"]) <= int(env["ANTARES_WS_MAX_CONNECTIONS"]) <= 1000
+    assert 0 < int(env["ANTARES_WS_MAX_SUBSCRIPTIONS"]) <= 64
+    assert 0 < int(env["ANTARES_WS_QUEUE"]) <= 256
+    assert "ANTARES_WS_ALLOWED_ORIGINS" not in env, "browsers reach the socket through the gateway alone"
     assert env["ANTARES_POLICY_SUBJECT_HEADERS"].split(",") == [
         "x-jc-subject", "x-jc-groups", "x-jc-roles", "x-jc-client", "x-jc-restricted", "x-jc-did"]
     assert not {"authorization", "cookie"} & set(env["ANTARES_POLICY_SUBJECT_HEADERS"].split(","))
     assert env["ANTARES_ADMIN_TOKEN_FILE"] == "/var/run/secrets/antares/admin/token"
     assert env["ANTARES_ADMIN_METRICS"] == "open"
     assert int(env["ANTARES_SCHEMA_MAX_BYTES"]) > 0
-    # The engine is turned on by T-3768, after the gateway's own hops carry a subject (T-3767).
-    assert "ANTARES_POLICY" not in env
+    # T-3768: the joinedcontext engine decides every request, after the gateway's own hops carry
+    # a subject (T-3767) and a participant's DID is a header it reads (T-3810).
+    assert env["ANTARES_POLICY"] == "joinedcontext"
 
 
 def test_the_broker_is_told_only_its_own_settings(broker_pod):

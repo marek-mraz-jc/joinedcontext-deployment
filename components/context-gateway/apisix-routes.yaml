@@ -129,6 +129,9 @@ context-endpoint:
   # context-endpoint-portal below, with the edge session turned into the bearer.
   host: '{{ .Values.global.domain }}'
   priority: 20
+  # `{endpoint}/ws`: the gateway forwards the upgrade to the broker view's WebSocket after it
+  # verified the bearer (platform T-3885); the read timeout outlives the broker's 30 s Ping.
+  websocket: true
   timeout:
     connect: 6
     send: 60
@@ -184,6 +187,9 @@ context-endpoint-portal:
   uri: '/api/endpoint/*'
   subDomain: portal
   priority: 20
+  # `{endpoint}/ws`: the gateway forwards the upgrade to the broker view's WebSocket after it
+  # verified the bearer (platform T-3885); the read timeout outlives the broker's 30 s Ping.
+  websocket: true
   timeout:
     connect: 6
     send: 60
