@@ -65,5 +65,10 @@ securityContext:
   {{ .Values.securityDefaults.securityContext | toYaml | nindent 2 }}
 
 # Outside the mesh: nothing it serves is a platform call, and its policy admits the Portal alone.
+# The namespace injects every pod (linkerd.io/inject: enabled), so leaving the annotation out is
+# not enough: a meshed catcher's proxy finds no egress to the control plane, its startup probe
+# gets a 403 and the rollout never finishes.
 serviceMesh:
   enabled: false
+podAnnotations:
+  linkerd.io/inject: disabled
