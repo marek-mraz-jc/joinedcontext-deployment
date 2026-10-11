@@ -66,6 +66,13 @@ env:
   # /q/schemas/{tenant} (T-3628), which takes nothing while ANTARES_SCHEMA_MAX_BYTES is unset.
   ANTARES_API_SURFACES: "admin,views,mcp,access"
   ANTARES_SCHEMA_MAX_BYTES: "1048576"
+  # MCP's Host and Origin checks (Antares MC8, T-3814). The gateway and the Portal reach the
+  # broker by its Service name, so the Host is one of these (a name without a port matches any
+  # port); an empty list would admit every Host. The Origin a browser sends through the gateway
+  # is the Portal's MCP page or an App on the apex, never anything else.
+  {{- $ns := index .Values "context-broker" "broker" "namespace" }}
+  ANTARES_MCP_ALLOWED_HOSTS: "context-broker,context-broker.{{ $ns }},context-broker.{{ $ns }}.svc,context-broker.{{ $ns }}.svc.cluster.local"
+  ANTARES_MCP_ALLOWED_ORIGINS: "https://portal.{{ required "global.domain" $global.domain }},https://{{ $global.domain }}"
   # The verified caller the gateway forwards (platform T-3641). The engine stays allow-all until
   # T-3768 sets ANTARES_POLICY=joinedcontext: it denies a request without these headers outside
   # the Context Source clauses, and the gateway's own hops send none yet (T-3767).

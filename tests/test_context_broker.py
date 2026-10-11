@@ -158,3 +158,22 @@ def test_the_broker_reaches_dns_its_database_and_the_gateway_only(dev):
     ]
     assert all("ipBlock" not in to for rule in policy["egress"] for to in rule["to"])
     assert one(dev, "NetworkPolicy", "default-deny-context-broker")["spec"]["podSelector"] == {}
+
+
+@requires_helmfile
+def test_the_mcp_surface_admits_the_gateways_hop_and_the_platforms_origins_alone(dev):
+    """Antares MC8 (T-3814): the Host the gateway and the Portal send is the broker Service's name,
+    and the only browser origins are the Portal's and the apex; an empty or `*` entry admits all."""
+    (container,) = pod_of(dev)["containers"]
+    env = env_of(container)
+    hosts = env["ANTARES_MCP_ALLOWED_HOSTS"]["value"].split(",")
+    origins = env["ANTARES_MCP_ALLOWED_ORIGINS"]["value"].split(",")
+    gateway = one(dev, "Deployment", "context-gateway")["spec"]["template"]["spec"]["containers"][0]
+    broker_url = env_of(gateway)["JC_GATEWAY_BROKER_URL"]["value"]
+    host = broker_url.split("://", 1)[1].split("/", 1)[0].rsplit(":", 1)[0]
+    assert host in hosts, (host, hosts)
+    assert all(h and "*" not in h for h in hosts + origins), (hosts, origins)
+    portal = one(dev, "Deployment", "portal")["spec"]["template"]["spec"]["containers"][0]
+    public = env_of(portal)["JC_PORTAL_PUBLIC_URL"]["value"]
+    assert sorted(origins) == sorted([public, env_of(portal)["JC_PORTAL_APPS_URL"]["value"]])
+    assert all(o.startswith("https://") for o in origins), origins
