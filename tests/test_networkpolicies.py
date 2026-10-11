@@ -369,6 +369,27 @@ def test_the_gateway_delivers_to_public_addresses_only(rendered, env):
 
 
 @pytest.mark.parametrize("env", ENVIRONMENTS)
+def test_the_broker_delivers_to_public_addresses_only(rendered, env):
+    """Once a subscription is stored through a broker view (T-3653), the broker delivers the
+    notification itself, to the address the subscription names. The allowance is a range with
+    every private range excepted, so a subscription cannot steer the broker at the cluster, the
+    node or a metadata service (T-3882, G11)."""
+    groups = egress_rules_by_selector(rendered(env))
+    broker = next((rules for selector, rules in groups.items()
+                   if dict(selector).get("app.kubernetes.io/name") == "context-broker-broker"),
+                  None)
+    if broker is None:
+        pytest.skip("context-broker not deployed in this environment")
+    delivery = [rule for rule in broker if any("ipBlock" in peer for peer in rule.get("to") or [])]
+    assert delivery, "the broker has no route to a subscriber at all"
+    for rule in delivery:
+        assert {p["port"] for p in rule.get("ports") or []} == {80, 443}, rule.get("ports")
+        for peer in rule["to"]:
+            reached = set(peer["ipBlock"].get("except") or [])
+            assert reached >= PRIVATE_RANGES, f"reaches {PRIVATE_RANGES - reached}"
+
+
+@pytest.mark.parametrize("env", ENVIRONMENTS)
 def test_the_pipeline_runner_reaches_public_addresses_and_the_ingress_controller_only(rendered, env):
     """A check probes the URL of a DataSource a person typed on the runner (MF-39), so what the
     runner may reach over HTTPS is what that URL may reach: every public address, and inside the
