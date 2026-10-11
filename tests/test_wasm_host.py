@@ -4,7 +4,7 @@ AP-143, AP-145, AP-147, AP-157, AP-158).
 What is coupled across files: one Deployment per shard behind the Service the edge route names,
 each reading its shard's placement and store key (the Portal's) and its database login (the
 secret generator's) from files; NetworkPolicies that let only the edge in and only the gateway,
-apps-db and the store out; the Portal's Role here, by name; the Portal's settings that point at
+apps-db, the store, the token service and the Portal (a request's caller, email and ai, T-3622) out; the Portal's Role here, by name; the Portal's settings that point at
 all of it; and the store's `apps` bucket with its 90-day rule for retired exports."""
 
 import pytest
@@ -88,7 +88,7 @@ def test_each_shard_reads_its_own_placement_key_and_login_from_files_never_varia
     assert env["JC_WASM_DB_PASSWORD_FILE"] == mounts["db"] + "/password"
 
 
-def test_the_edge_and_the_portal_alone_reach_a_shard_and_a_shard_reaches_the_gateway_the_database_the_store_and_its_token_service(docs):
+def test_the_edge_and_the_portal_alone_reach_a_shard_and_a_shard_reaches_the_gateway_the_database_the_store_its_token_service_and_the_portal(docs):
     policy = one(docs, "NetworkPolicy", "wasm-host-shard")
     sources = [peer["podSelector"]["matchLabels"] for rule in policy["spec"]["ingress"] for peer in rule["from"]]
     assert sources == [{"app.kubernetes.io/name": "apisix"}, {"app.kubernetes.io/name": "portal-portal"}], (
@@ -104,6 +104,7 @@ def test_the_edge_and_the_portal_alone_reach_a_shard_and_a_shard_reaches_the_gat
         ((("cnpg.io/cluster", "apps-db"),), (5432,)),
         ((("app.kubernetes.io/component", "store"),), (9000,)),
         ((("app.kubernetes.io/name", "wasm-host-tokens"),), (4180,)),
+        ((("app.kubernetes.io/name", "portal-portal"),), (8080,)),
         ((("k8s-app", "kube-dns"),), (53, 53)),
     ])
     for rule in policy["spec"]["egress"]:
@@ -116,7 +117,7 @@ def test_the_peers_admit_the_shards_and_apisix_may_call_them(docs):
     def admits(policy):
         return any(peer.get("podSelector", {}).get("matchLabels") == shard for rule in policy["spec"].get("ingress", []) for peer in rule["from"])
 
-    for name in ("artifact-store", "context-gateway"):
+    for name in ("artifact-store", "context-gateway", "portal"):
         assert admits(one(docs, "NetworkPolicy", name)), name
     apisix = one(docs, "NetworkPolicy", "apisix")
     assert any(
@@ -174,3 +175,11 @@ def test_every_environment_syncs_the_shards_after_the_portal_that_writes_what_th
         assert listed.index("apps-db") < listed.index("portal"), f"{file.parent.name}: the Portal before its database"
         checked.append(file.parent.name)
     assert "dev" in checked
+
+
+@pytest.mark.parametrize("shard", SHARDS)
+def test_each_shard_asks_the_portal_in_the_cluster_for_a_caller_and_the_services(docs, shard):
+    """T-3622, API/06 §5: the Portal's Service on its own port, never the public host."""
+    container = one(docs, "Deployment", f"jc-wasm-host-{shard}")["spec"]["template"]["spec"]["containers"][0]
+    portal = env_of(container)["JC_WASM_PORTAL_URL"]
+    assert portal.startswith("http://portal.") and portal.endswith(".svc.cluster.local:8080"), portal

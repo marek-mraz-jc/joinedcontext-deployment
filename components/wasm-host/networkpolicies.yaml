@@ -2,7 +2,8 @@
 # A shard of the WASM host (ADR-N-044 §2.7): reached from the edge, which routes an App's
 # /apps/{name}/api/* here, and from the Portal for /jobs; it reaches only the gateway (an App's
 # one outgoing origin, AP-147),
-# apps-db (its login role) and the artifact store (its own prefix and the components), and DNS.
+# apps-db (its login role), the artifact store (its own prefix and the components), the Portal (a
+# request's caller, email and ai, T-3622), and DNS.
 wasm-host-shard:
   podSelector:
     app.kubernetes.io/name: wasm-host-shard
@@ -61,6 +62,15 @@ wasm-host-shard:
       ports:
         - protocol: TCP
           port: 4180
+    # The Portal, for jc:app/identity, email and ai as the request's person (T-3622).
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: portal-portal
+          componentNamespace: portal
+      ports:
+        - protocol: TCP
+          port: 8080
     - to:
         - namespaceSelector:
             matchLabels:
