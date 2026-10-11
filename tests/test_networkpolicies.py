@@ -573,3 +573,85 @@ def test_the_gateway_admits_the_portal_s_calls(rendered, env):
         assert _gateway_admits(policies, portal, 4143), (
             "the gateway's inbound proxy (4143) refuses the Portal's meshed calls"
         )
+
+
+PROMETHEUS = {"app.kubernetes.io/name": "prometheus"}
+SCRAPED = ("context-broker-broker", "context-gateway-gateway", "portal-portal")
+
+
+def _prometheus_ingress(docs):
+    """(policy, selected pods, peer, ports) for every ingress peer naming Prometheus' pods."""
+    for doc in docs:
+        if doc.get("kind") != "NetworkPolicy":
+            continue
+        pods = doc["spec"].get("podSelector", {}).get("matchLabels", {}).get("app.kubernetes.io/name")
+        for rule in doc["spec"].get("ingress") or []:
+            for peer in rule.get("from") or []:
+                if peer.get("podSelector", {}).get("matchLabels") == PROMETHEUS:
+                    yield doc["metadata"]["name"], pods, peer, sorted(p["port"] for p in rule["ports"])
+
+
+def test_prometheus_is_admitted_to_the_scraped_workloads_from_its_own_namespace_alone(rendered):
+    """T-3771: production names the operator's namespace, so the broker, the gateway and the
+    Portal admit Prometheus' pods from there, and nowhere else: a label is anybody's to set."""
+    found = list(_prometheus_ingress(rendered("production")))
+    assert {pods for _, pods, _, _ in found} == set(SCRAPED), found
+    for name, _, peer, _ in found:
+        assert peer.get("namespaceSelector") == {
+            "matchLabels": {"kubernetes.io/metadata.name": "monitoring"}
+        }, (name, peer)
+    ports = {(name, tuple(p)) for name, _, _, p in found}
+    assert ("context-broker", (9090,)) in ports, ports
+    assert ("context-gateway", (8080,)) in ports, ports
+
+
+@pytest.mark.parametrize("env", ("local", "dev"))
+def test_without_a_prometheus_namespace_no_rule_admits_prometheus(rendered, env):
+    """An empty monitoring.prometheusNamespace renders no peer and no rule, never one that
+    falls back to the policy's own namespace or to every namespace."""
+    assert not list(_prometheus_ingress(rendered(env)))
+
+
+def test_every_namespace_from_reference_names_a_value_that_exists():
+    """namespaceFrom: component.part.key, the key declared in that component's defaults, so a
+    typo fails here and not only in the render of an environment that deploys the component."""
+    unknown = []
+    for path in policy_files():
+        for policy in (yaml.safe_load(path.read_text()) or {}).values():
+            for _, key, rule in peers({"spec": policy}):
+                for peer in rule.get(key) or []:
+                    ref = peer.get("namespaceFrom")
+                    if not ref:
+                        continue
+                    component, *_, leaf = ref.split(".")
+                    defaults = COMPONENTS / component / "default-environment.yaml.gotmpl"
+                    if not defaults.is_file() or f"\n    {leaf}:" not in defaults.read_text():
+                        unknown.append(f"{path.relative_to(PROJECT_ROOT)}: {ref}")
+    assert not unknown, "namespaceFrom naming no value:\n" + "\n".join(unknown)
+
+
+def test_a_namespace_from_typo_in_a_deployed_component_aborts_the_render(tmp_path):
+    """The same guard as componentNamespace: monitoring is deployed in local, so a key that is
+    not there is a typo and stops the render instead of reading as "not configured"."""
+    if shutil.which("helmfile") is None:
+        pytest.skip("helmfile not installed")
+    for entry in TREE:
+        source = PROJECT_ROOT / entry
+        (shutil.copytree if source.is_dir() else shutil.copy)(source, tmp_path / entry)
+    shutil.copytree(tmp_path / "defaults/deployment", tmp_path / "deployment")
+    shutil.copy(tmp_path / ".ci/example-deployments/helmfile.yaml", tmp_path / "deployment/helmfile.yaml")
+    shutil.copytree(tmp_path / ".ci/example-deployments/environments",
+                    tmp_path / "deployment/environments", dirs_exist_ok=True)
+    broken = tmp_path / "components/context-broker/networkpolicies.yaml"
+    text = broken.read_text()
+    ref = "namespaceFrom: monitoring.monitoring.prometheusNamespace\n"
+    assert text.count(ref) == 1, "fixture moved, pick another peer"
+    broken.write_text(text.replace(ref, "namespaceFrom: monitoring.monitoring.prometheusNamespce\n"))
+
+    result = subprocess.run(
+        ["helmfile", "-f", "deployment/helmfile.yaml", "-e", "local", "template",
+         "--skip-deps", "-q", "--selector", "component=networkpolicies"],
+        cwd=str(tmp_path), capture_output=True, text=True,
+    )
+    assert result.returncode != 0, "a namespaceFrom typo into a deployed component rendered fine"
+    assert "names no value" in result.stderr + result.stdout

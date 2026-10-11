@@ -33,6 +33,16 @@ portal-allow-linkerd:
           protocol: TCP
         - port: 4191
           protocol: TCP
+    # The Prometheus that scrapes /metrics (components/monitoring), from its own namespace only
+    # (T-3771); a meshed scrape lands on the inbound proxy.
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+          namespaceFrom: monitoring.monitoring.prometheusNamespace
+      ports:
+        - port: 4143
+          protocol: TCP
 
 # Meshed traffic reaches a pod through its Linkerd inbound proxy on 4143, not on the
 # service port, so the 5432 rule alone would leave the connection blocked.

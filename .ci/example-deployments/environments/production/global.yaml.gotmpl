@@ -19,6 +19,12 @@ global:
   metrics:
     enabled: true
 
+# The Prometheus the Operator runs, which the broker, the gateway and the Portal admit for
+# their scrapes from this namespace alone (T-3771).
+monitoring:
+  monitoring:
+    prometheusNamespace: 'monitoring'
+
 # An example object store, so the production render carries a real backup stanza. The
 # credentials are not here: `postgres-backup-s3` is a Secret the operator supplies.
 postgres:
