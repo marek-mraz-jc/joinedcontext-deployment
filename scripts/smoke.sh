@@ -1025,7 +1025,7 @@ for app in items:
 fi
 
 echo "broker surfaces"
-# The surfaces the broker mounts (T-3905): `/q/health` reports each one the deployment selected,
+# The surfaces the broker mounts (T-3905, T-3922): `/q/health` reports each one the deployment selected,
 # so a `ws` missing from ANTARES_API_SURFACES or an image built without it shows here. Health
 # needs no credential; the broker is reached over a port-forward like jc-functions below.
 if ! kubectl get deployment context-broker -n "$slug" >/dev/null 2>&1; then
@@ -1039,7 +1039,7 @@ else
 		cb_health=$(curl -s --max-time 2 "http://127.0.0.1:$cb_port/q/health" 2>/dev/null) && [ -n "$cb_health" ] && break
 		sleep 1
 	done
-	for surface in views mcp access ws; do
+	for surface in views mcp access ws ogc; do
 		if printf '%s' "$cb_health" | python3 -c 'import json,sys; sys.exit(0 if sys.argv[1] in (json.load(sys.stdin).get("surfaces") or {}) else 1)' "$surface" 2>/dev/null; then
 			ok "the broker mounts the $surface surface"
 		else
