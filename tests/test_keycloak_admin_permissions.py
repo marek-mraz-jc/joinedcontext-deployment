@@ -27,11 +27,11 @@ IMAGES = ROOT / "components/keycloak/images.yaml"
 CLIENTS = ROOT / "components/portal/keycloak-clients.yaml"
 REALM = "t2725"
 
-# One worker runs the module, so one Keycloak starts per run (T-3897: a fixture per xdist worker
-# started two at once and collided on the container name).
+# One worker runs the module, so one Keycloak serves its tests; a second worker's container started
+# in the same second used to collide on the name (docker run exit 125, T-3897).
 pytestmark = [
     pytest.mark.skipif(shutil.which("docker") is None, reason="no container runtime for Keycloak"),
-    pytest.mark.xdist_group("keycloak-admin-permissions"),
+    pytest.mark.xdist_group("docker-keycloak-admin-permissions"),
 ]
 
 
