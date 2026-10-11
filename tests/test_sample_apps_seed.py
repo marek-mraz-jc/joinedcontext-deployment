@@ -423,3 +423,35 @@ def test_no_configmap_of_dev_nears_the_one_mib_an_object_may_hold(dev):
         if d.get("kind") == "ConfigMap":
             size = len(yaml.safe_dump(d).encode())
             assert size < 0.75 * 1024 * 1024, f"ConfigMap {d['metadata']['name']} is {size} bytes"
+
+
+def test_every_demo_person_a_seeded_app_admits_is_admitted_by_its_endpoint():
+    """T-3598, T-3595, EP-14: the city Apps reach dev through the gateway seed, not the vendored
+    samples, so the check above never read them. praha-odpad and bbsk-mosty gave their default
+    group to demo.steward and demo.viewer, whose project groups named neither `praha` nor `bbsk`,
+    and both Apps answered `403 Access Denied by Policy` on dev."""
+    demo = yaml.safe_load((ROOT / "components/keycloak/demo-users.yaml").read_text())
+    docs = [
+        doc
+        for path in sorted((ROOT / "components/context-gateway/seed").glob("*/*.yaml"))
+        for doc in yaml.safe_load_all(path.read_text())
+        if isinstance(doc, dict) and "kind" in doc
+    ]
+    members = {}
+    for group in (doc for doc in docs if doc["kind"] == "Group"):
+        app = group["metadata"].get("annotations", {}).get("joinedcontext.com/app")
+        if app:
+            names = {m["user"].split("@")[0] for m in group["spec"].get("members", []) if "user" in m}
+            members.setdefault(app, set()).update(names)
+    checked = 0
+    for endpoint in (doc for doc in docs if doc["kind"] == "Endpoint"):
+        meta, spec = endpoint["metadata"], endpoint["spec"]
+        if not meta["name"].startswith("app-") or spec["audience"] != "project-list":
+            continue
+        admitted = {meta["namespace"], *spec.get("allowedProjects", [])}
+        people = {"demo.viewer", "demo.steward"} | members.get(f"{meta['namespace']}/{meta['name'][4:]}", set())
+        for person in sorted(people & demo.keys()):
+            groups = set(demo[person].get("groups", []))
+            assert groups & admitted, f"{meta['namespace']}/{meta['name']} admits {sorted(admitted)}; {person} is in {sorted(groups)}"
+            checked += 1
+    assert checked, "no seeded App endpoint was checked"
