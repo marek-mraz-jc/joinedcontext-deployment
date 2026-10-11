@@ -271,6 +271,9 @@ def test_an_unmeshed_peer_opts_out_of_the_namespace_s_injection(rendered, env):
             found.append(doc["metadata"]["name"])
             annotations = template["metadata"].get("annotations") or {}
             assert annotations.get("linkerd.io/inject") == "disabled", doc["metadata"]["name"]
+            # Admission refuses an opt-out without its reason (autogen-opt-out-needs-reason).
+            assert (annotations.get("mesh.joinedcontext.com/opt-out-reason") or "").strip(), \
+                doc["metadata"]["name"]
     assert found, "no unmeshed workload in the render: UNMESHED_PEERS names nothing deployed"
 
 

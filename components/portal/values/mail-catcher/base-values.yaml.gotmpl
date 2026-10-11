@@ -72,3 +72,5 @@ serviceMesh:
   enabled: false
 podAnnotations:
   linkerd.io/inject: disabled
+  # Kyverno's autogen-opt-out-needs-reason refuses an opt-out without one.
+  mesh.joinedcontext.com/opt-out-reason: "SMTP speaks first; the Portal reaches the catcher on 1025 unmeshed and nothing it serves is a platform call (T-3583, T-3930)"
