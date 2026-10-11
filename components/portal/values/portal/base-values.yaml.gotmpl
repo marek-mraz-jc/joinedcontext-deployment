@@ -88,6 +88,15 @@ envSecret:
   PGPASSWORD:
     secret: db-portal
     key: password
+  # The relay App mail goes out through (T-3583, AP-168): an operator-supplied SOPS reference in
+  # the environment's managedSecrets, the relay's smtps URL with its login. Absent, the Portal
+  # sends no mail and its email route answers 503. The in-cluster catcher takes its place below.
+{{- if not (index .Values.portal "mail-catcher" "enabled") }}
+  JC_PORTAL_SMTP_URL:
+    secret: portal-mail-relay
+    key: url
+    optional: true
+{{- end }}
   JC_PORTAL_COOKIE_KEY:
     secret: portal-cookie-key
     key: key
@@ -169,6 +178,12 @@ env:
   # `portal-api` is federated (PF-47, T-2868): the Portal sends this pod's projected token,
   # read on every token request, and holds no client secret.
   JC_OIDC_CLIENT_ASSERTION_FILE: /var/run/secrets/jc/keycloak/token
+  # The sender of App mail; the App's title is the name beside it (T-3583, AP-168).
+  JC_PORTAL_MAIL_FROM: "noreply@{{ $global.domain }}"
+{{- if index .Values.portal "mail-catcher" "enabled" }}
+  # The in-cluster catcher, in the clear inside the namespace: no credential, so no Secret.
+  JC_PORTAL_SMTP_URL: "smtp://mail-catcher.{{ index .Values.portal "mail-catcher" "namespace" }}.svc.cluster.local:1025"
+{{- end }}
   JC_PORTAL_KEYCLOAK_ADMIN_CLIENT_ID: "portal-reconciler"
   # The reconciler's own client (PF-63): it writes the realm's platform-owned groups and nothing
   # else. Federated (PF-47, T-2868): its proof is a token of this ServiceAccount, which the Portal
@@ -238,6 +253,9 @@ env:
 {{- $builder := index .Values.images "gitea-runner" "runner" }}
   JC_PORTAL_APP_TESTS_NAMESPACE: {{ printf "%s-app-tests" $global.instanceSlug | quote }}
   JC_PORTAL_APP_TESTS_IMAGE: {{ printf "%s:%s@%s" $builder.repository $builder.tag $builder.digest | quote }}
+  # A `wasm` App's version also runs its server's `cargo test`, on the rust runner (T-3618).
+{{- $rust := index .Values.images "gitea-runner" "rust" }}
+  JC_PORTAL_APP_TESTS_RUST_IMAGE: {{ printf "%s:%s@%s" $rust.repository $rust.tag $rust.digest | quote }}
 {{- end }}
 {{- end }}
 {{- if and (has "gitea-runner" .Values.components) (index .Values "gitea-runner" "build-pods" "enabled") }}

@@ -249,7 +249,11 @@ INFRA_PORTS = MESH_PORTS | CONTROL_PLANE_PORTS | {53}
 # Peers that answer on their service port without the mesh, so an egress rule to them needs no
 # companion 4143 rule. Each one is a workload the mesh does not inject, not a workload whose
 # companion rule was forgotten: the difference is the whole point of the test below.
-UNMESHED_PEERS: list[dict] = []
+UNMESHED_PEERS: list[dict] = [
+    # The mail catcher stays outside the mesh: SMTP speaks first, and it serves no platform call
+    # (T-3583); the Portal reaches it on 1025 itself.
+    {"app.kubernetes.io/name": "mail-catcher"},
+]
 
 
 @pytest.mark.parametrize("env", ["dev"])

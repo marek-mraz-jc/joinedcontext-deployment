@@ -21,6 +21,12 @@ portal:
           podSelector:
             matchLabels:
               joinedcontext.com/app: "true"
+        # A WASM shard asks for a request's caller and an App's email and ai as that person
+        # (T-3622, API/06 §5); the Portal checks the bearer token itself.
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: wasm-host-shard
+          componentNamespace: wasm-host
       ports:
         - protocol: TCP
           port: 8080
@@ -33,6 +39,16 @@ portal:
       ports:
         - protocol: TCP
           port: 5432
+    # The mail catcher of an installation without a relay (T-3583); a named relay outside the
+    # cluster takes an egress rule of the environment's own.
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: mail-catcher
+          componentNamespace: portal
+      ports:
+        - protocol: TCP
+          port: 1025
     # The `wasm` Apps' database: placement, provisioning, migrations and export (AP-149, AP-150).
     - to:
         - podSelector:
@@ -163,3 +179,21 @@ postgres-from-portal:
       ports:
         - protocol: TCP
           port: 5432
+
+# The mail catcher takes SMTP from the Portal alone (T-3583); its egress is the namespace's
+# default deny, so it reaches nothing but DNS. Its API on 8025 is read through a port-forward,
+# which no policy here admits from a pod.
+mail-catcher:
+  podSelector:
+    app.kubernetes.io/name: mail-catcher
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: portal-portal
+          componentNamespace: portal
+      ports:
+        - protocol: TCP
+          port: 1025

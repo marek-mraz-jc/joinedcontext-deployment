@@ -106,6 +106,7 @@ networking.k8s.io/v1/NetworkPolicy local/keycloak-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy local/keycloak-linkerd-from-lane-token
 networking.k8s.io/v1/NetworkPolicy local/keycloak-linkerd-from-observability
 networking.k8s.io/v1/NetworkPolicy local/lane-token-linkerd-control-plane
+networking.k8s.io/v1/NetworkPolicy local/mail-catcher
 networking.k8s.io/v1/NetworkPolicy local/model-tools
 networking.k8s.io/v1/NetworkPolicy local/model-tools-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy local/model-tools-linkerd-control-plane

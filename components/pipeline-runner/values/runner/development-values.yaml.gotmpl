@@ -57,6 +57,10 @@ envSecret:
 # rendered streams name, ../../streams/resources.yaml); the streams arrive over its API.
 args:
   - -w
+  # Timings as histogram buckets, not per-label summaries: the summaries' quantile streams held
+  # 45 % of the runner's heap on dev (T-3537); the Portal reads p99 from the buckets (T-3625).
+  - --set
+  - metrics.prometheus.use_histogram_timing=true
   - -r
   - /streams/resources.yaml
   - streams
