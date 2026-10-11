@@ -56,3 +56,52 @@ def test_an_excuse_needs_a_reason_a_task_and_an_expiry_and_lapses(tmp_path):
     found = scan.judge([FIXTURE], None, ignores, TODAY)
     assert any("an excuse names its reason, a task" in line for line in found)
     assert any("CVE-2026-60004 CRITICAL" in line for line in found), "an incomplete excuse excuses nothing"
+
+
+def _report(tmp_path, name, artifact_type, artifact, vulnerabilities):
+    path = tmp_path / name
+    path.write_text(json.dumps({"ArtifactName": artifact, "ArtifactType": artifact_type,
+                                "Results": [{"Vulnerabilities": vulnerabilities}]}))
+    return path
+
+
+def test_summary_turns_each_fixable_high_or_critical_into_one_board_key(tmp_path):
+    # T-3834 (d): the summary is what tasks/file-failures reads; one key per (image, CVE) of an
+    # image and per (crate, CVE) of a lockfile, so a CVE in two packages of one image is one task.
+    image = _report(tmp_path, "image.json", "container_image", "example.org/x@sha256:1", [
+        {"VulnerabilityID": "CVE-2026-1", "Severity": "HIGH", "FixedVersion": "2", "PkgName": "openssl", "InstalledVersion": "1"},
+        {"VulnerabilityID": "CVE-2026-1", "Severity": "HIGH", "FixedVersion": "2", "PkgName": "libssl", "InstalledVersion": "1"},
+        {"VulnerabilityID": "CVE-2026-2", "Severity": "CRITICAL", "FixedVersion": "", "PkgName": "q", "InstalledVersion": "1"},
+        {"VulnerabilityID": "CVE-2026-3", "Severity": "MEDIUM", "FixedVersion": "2", "PkgName": "r", "InstalledVersion": "1"},
+    ])
+    lock = _report(tmp_path, "fs.json", "filesystem", ".", [
+        {"VulnerabilityID": "RUSTSEC-2026-0001", "Severity": "CRITICAL", "FixedVersion": ">=0.5.1", "PkgName": "rustls", "InstalledVersion": "0.5.0"},
+    ])
+    summary = scan.summary([image, lock], "joinedcontext-platform", "run-1", tmp_path / "none.yaml", None, TODAY)
+    assert summary["check"] == "vuln" and summary["repo"] == "joinedcontext-platform" and summary["run"] == "run-1"
+    failing = {r["key"]: r for r in summary["results"] if r["verdict"] == "fail"}
+    assert set(failing) == {"example.org/x/CVE-2026-1", "rustls/RUSTSEC-2026-0001"}, failing
+    assert "openssl" in failing["example.org/x/CVE-2026-1"]["detail"] and "libssl" in failing["example.org/x/CVE-2026-1"]["detail"]
+    assert failing["rustls/RUSTSEC-2026-0001"]["title"] == "rustls: RUSTSEC-2026-0001 CRITICAL, fixed in >=0.5.1"
+
+
+def test_summary_skips_an_excused_finding_and_passes_a_fixed_one_of_a_scanned_target(tmp_path):
+    ignores = tmp_path / "ignore.yaml"
+    ignores.write_text("- {image: example.org/x, cve: CVE-2026-1, reason: upgrade scheduled, task: T-3286, expires: 2026-10-14}\n")
+    image = _report(tmp_path, "image.json", "container_image", "example.org/x@sha256:2", [
+        {"VulnerabilityID": "CVE-2026-1", "Severity": "HIGH", "FixedVersion": "2", "PkgName": "p", "InstalledVersion": "1"},
+    ])
+    board = tmp_path / "board"
+    board.mkdir()
+    (board / "T-9001-vuln-example-org-x-cve-2026-9.md").write_text("---\nid: T-9001\nstatus: todo\ncheck: vuln/example.org/x/CVE-2026-9\n---\n")
+    (board / "T-9002-vuln-other-cve-2026-8.md").write_text("---\nid: T-9002\nstatus: todo\ncheck: vuln/example.org/other/CVE-2026-8\n---\n")
+    summary = scan.summary([image], "joinedcontext-deployment", "run-2", ignores, board, TODAY)
+    verdicts = {r["key"]: r["verdict"] for r in summary["results"]}
+    assert verdicts == {"example.org/x/CVE-2026-9": "pass"}, "excused waits; a CVE gone from a scanned image closes; an unscanned image says nothing"
+
+
+def test_summary_command_prints_the_json_file_failures_reads(tmp_path, capsys):
+    image = _report(tmp_path, "image.json", "container_image", "example.org/x@sha256:1", [])
+    assert scan.main(["scan-pinned-images.py", "summary", str(image), "--repo", "joinedcontext-portal", "--run", "r"]) == 0
+    assert json.loads(capsys.readouterr().out) == {"check": "vuln", "repo": "joinedcontext-portal", "run": "r",
+                                                   "requirements": [], "results": []}
