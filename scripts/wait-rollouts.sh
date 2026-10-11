@@ -40,6 +40,11 @@ for ns in $namespaces; do
 		[ -n "$pod" ] || continue
 		grep -qxF "$pod" <<<"$deleting" && continue
 		job=$(awk -v pod="$pod" '$1 == pod {print $2}' <<<"$owners")
+		# A CronJob may start a pod after the snapshot above: read that pod's owner now, and a
+		# pod already gone was one of those.
+		if ! grep -q "^${pod} " <<<"$owners"; then
+			job=$(kubectl get pod "$pod" -n "$ns" -o jsonpath='{.metadata.ownerReferences[?(@.kind=="Job")].name}' 2>/dev/null) || continue
+		fi
 		if [ -n "$job" ] && ! grep -qxF "$job" <<<"$failed_jobs"; then continue; fi
 		failed=1
 		echo "--- not ready: ${ns}/${pod}"
