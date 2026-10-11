@@ -61,10 +61,12 @@ env:
   ANTARES_REQUIRE_RLS: "1"
   ANTARES_MAX_CONNECTIONS: "512"
   ANTARES_DATABASE_URL: "postgresql://antares:$(PGPASSWORD)@postgres-cluster-rw.{{ .Values.postgres.cluster.namespace }}.svc.cluster.local:5432/antares"
-  # The jc build's surfaces (T-3642): the endpoint views, MCP and the engine's access document,
-  # each under /x/views/{view}/. The LinkML schema is no surface: the Portal PUTs it to
+  # The jc build's surfaces (T-3642): the endpoint views, MCP, the engine's access document, the
+  # view WebSocket and OGC API Features (T-3922; the gateway forwards /api/endpoint/{slug}/ogc/
+  # features to it since platform T-3752), each under /x/views/{view}/ and reached through the
+  # gateway hop alone, never an edge route. The LinkML schema is no surface: the Portal PUTs it to
   # /q/schemas/{tenant} (T-3628), which takes nothing while ANTARES_SCHEMA_MAX_BYTES is unset.
-  ANTARES_API_SURFACES: "admin,views,mcp,access,ws"
+  ANTARES_API_SURFACES: "admin,views,mcp,access,ws,ogc"
   # The view WebSocket (T-3905, ADR-0026), bounded for the one 16 GB node: at most 200 sockets,
   # 50 per Tenant, 16 Subscriptions and 128 queued notifications each, so a full house holds
   # about 200 x 128 notifications (~100 MiB at 4 KiB each) where the defaults (10 000 sockets,
