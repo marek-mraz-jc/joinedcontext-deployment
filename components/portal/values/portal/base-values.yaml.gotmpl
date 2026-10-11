@@ -239,6 +239,9 @@ env:
 {{- $builder := index .Values.images "gitea-runner" "runner" }}
   JC_PORTAL_APP_TESTS_NAMESPACE: {{ printf "%s-app-tests" $global.instanceSlug | quote }}
   JC_PORTAL_APP_TESTS_IMAGE: {{ printf "%s:%s@%s" $builder.repository $builder.tag $builder.digest | quote }}
+  # A `wasm` App's version also runs its server's `cargo test`, on the rust runner (T-3618).
+{{- $rust := index .Values.images "gitea-runner" "rust" }}
+  JC_PORTAL_APP_TESTS_RUST_IMAGE: {{ printf "%s:%s@%s" $rust.repository $rust.tag $rust.digest | quote }}
 {{- end }}
 {{- end }}
 {{- if and (has "gitea-runner" .Values.components) (index .Values "gitea-runner" "build-pods" "enabled") }}
