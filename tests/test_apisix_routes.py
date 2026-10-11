@@ -392,67 +392,14 @@ def test_every_route_upstream_is_a_pod_apisix_is_allowed_to_reach(rendered):
                 )
 
 
-# The paths under the endpoint surface that must keep working, and the one that must not
-# reach the gateway from outside (T-0458, R46). The delivery path carries no token — the
-# broker calling it holds none — so it is reached in-cluster, where the NetworkPolicy of
-# T-0429 governs who may, and refused here, where a NetworkPolicy can say nothing.
-ENDPOINT_PATHS = {
-    "/api/endpoint/n4t8xq2vhm6zc9wrb5sdj3kfp7/ngsi-ld/v1/entities": True,
-    "/api/endpoint/n4t8xq2vhm6zc9wrb5sdj3kfp7/ngsi-ld/v1/subscriptions": True,
-    "/api/endpoint/n4t8xq2vhm6zc9wrb5sdj3kfp7/ogc/features/collections": True,
-    "/api/endpoint/n4t8xq2vhm6zc9wrb5sdj3kfp7/sta/v1.1/Things": True,
-    "/api/endpoint/n4t8xq2vhm6zc9wrb5sdj3kfp7/access": True,
-    "/api/endpoint/n4t8xq2vhm6zc9wrb5sdj3kfp7/egress/notifications": False,
-    "/api/endpoint/other-slug/egress/notifications?to=http%3A%2F%2Fx": False,
-}
-
-
-def endpoint_guard(parsed):
-    """The path guard of the endpoint route, as the regex it actually applies."""
-    config = next(p for p in parsed["plugin_configs"] if p["id"] == "context-endpoint")
-    lua = config["plugins"]["serverless-pre-function"]["functions"][0]
-    pattern = re.search(r"ngx\.re\.find\(ngx\.var\.uri, \[\[(?P<re>.+?)\]\]", lua)
-    assert pattern, f"the endpoint route applies no path guard:\n{lua}"
-    assert "ngx.exit(403)" in lua, "the guard matches a path and then lets it through"
-    return re.compile(pattern.group("re"))
-
-
 @requires_helmfile
-def test_the_unauthenticated_delivery_path_is_refused_at_the_edge(apisix_config):
-    """The route stays as it is — it is the whole public representation surface — and one
-    path under it is refused. Asserted by running the guard's own expression, so what is
-    tested is which paths it refuses rather than that a guard is present."""
+def test_no_route_carries_a_delivery_path_guard_any_more(apisix_config):
+    """T-3925: the gateway serves no token-less delivery path since the broker delivers itself
+    (plan 5.5), so no route keeps a guard for one."""
     _, parsed = apisix_config
-    guard = endpoint_guard(parsed)
-    refused = {path: bool(guard.search(path)) for path in ENDPOINT_PATHS}
-    assert refused == {path: not allowed for path, allowed in ENDPOINT_PATHS.items()}
-
-
-@requires_helmfile
-def test_the_space_surface_needs_no_such_guard(apisix_config):
-    """`/cs/*` is the tenant-member surface and carries no egress path at all; a guard there
-    would be a rule nobody can explain in a year."""
-    _, parsed = apisix_config
-    config = next(p for p in parsed["plugin_configs"] if p["id"] == "context-space")
-    assert "egress" not in config["plugins"]["serverless-pre-function"]["functions"][0]
-
-
-@requires_helmfile
-def test_the_broker_dials_the_service_and_not_the_edge(rendered):
-    """The other half, and the half that has to land first: with the egress base left at the
-    public URL the broker would dial the path the guard above refuses, and every notification
-    would stop (R46, T-0457)."""
-    deployment = next(
-        d for d in rendered("local")
-        if d.get("kind") == "Deployment" and d["metadata"]["name"] == "context-gateway"
-    )
-    env = {
-        e["name"]: e.get("value")
-        for e in deployment["spec"]["template"]["spec"]["containers"][0]["env"]
-    }
-    assert env["JC_GATEWAY_EGRESS_URL"].startswith("http://context-gateway.")
-    assert env["JC_GATEWAY_EGRESS_URL"].endswith(".svc.cluster.local:8080")
-    assert env["JC_GATEWAY_PUBLIC_URL"] == f"https://{LOCAL_DOMAIN}"
+    for config_id in ("context-endpoint", "context-space"):
+        config = next(p for p in parsed["plugin_configs"] if p["id"] == config_id)
+        assert "egress" not in config["plugins"]["serverless-pre-function"]["functions"][0]
 
 
 @requires_helmfile

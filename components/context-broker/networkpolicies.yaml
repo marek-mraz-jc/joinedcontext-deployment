@@ -28,17 +28,6 @@ context-broker:
       ports:
         - protocol: TCP
           port: 5432
-    # Delivering a notification stored before the switch (R46): the gateway rewrote its
-    # endpoint to point back at itself, and it delivers through the gateway until T-3883 has
-    # rewritten it and T-3654 removes this rule.
-    - to:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/name: context-gateway-gateway
-          componentNamespace: context-gateway
-      ports:
-        - protocol: TCP
-          port: 8080
     # Delivering a notification itself (plan 5.5, T-3653): a subscription stored through a view
     # names its subscriber, and the broker sends what `pre_notify` lets through straight to it.
     # The address arrives in a subscription, so the allowance is a range, and every private

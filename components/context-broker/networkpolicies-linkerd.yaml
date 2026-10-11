@@ -86,11 +86,3 @@ context-broker-linkerd-control-plane:
       ports:
         - protocol: TCP
           port: 4143
-    - to:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/name: context-gateway-gateway
-          componentNamespace: context-gateway
-      ports:
-        - protocol: TCP
-          port: 4143
