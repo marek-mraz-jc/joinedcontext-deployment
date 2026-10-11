@@ -57,10 +57,10 @@ envSecret:
 # rendered streams name, ../../streams/resources.yaml); the streams arrive over its API.
 args:
   - -w
-  # T-3537 profiling window (deployer, 2026-10-10): pprof on the API port, which only the Portal
-  # reaches; read from inside the pod, and removed again in the next apply after the profile.
+  # Timings as histogram buckets, not per-label summaries: the summaries' quantile streams held
+  # 45 % of the runner's heap on dev (T-3537); the Portal reads p99 from the buckets (T-3625).
   - --set
-  - http.debug_endpoints=true
+  - metrics.prometheus.use_histogram_timing=true
   - -r
   - /streams/resources.yaml
   - streams
