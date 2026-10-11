@@ -71,7 +71,9 @@ env:
   # the Context Source clauses, and the gateway's own hops send none yet (T-3767).
   ANTARES_POLICY_SUBJECT_HEADERS: "x-jc-subject,x-jc-groups,x-jc-roles,x-jc-client,x-jc-restricted"
   ANTARES_ADMIN_TOKEN_FILE: /var/run/secrets/antares/admin/token
-  # Prometheus cannot send the admin secret; the metrics carry no tenant data.
+  # A scraper cannot send the admin secret; the metrics carry no tenant data. Prometheus is not
+  # admitted to the broker yet: its namespace is the operator's, and a rule naming it by pod
+  # label alone would let any pod that labels itself reach the API (T-3771).
   ANTARES_ADMIN_METRICS: "open"
 
 extraVolumes:

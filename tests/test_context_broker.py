@@ -113,17 +113,32 @@ def test_the_gateway_and_the_portal_address_the_port_the_service_serves(dev):
 
 
 @requires_helmfile
-def test_only_the_gateway_the_portal_and_prometheus_reach_the_broker(dev):
-    """Prometheus scrapes `/q/metrics`, the one `/q` route open without the admin secret (T-3642)."""
+def test_only_the_gateway_and_the_portal_reach_the_broker(dev):
     policy = one(dev, "NetworkPolicy", "context-broker")["spec"]
     (container,) = pod_of(dev)["containers"]
-    port = [container["ports"][0]["containerPort"]]
-    rules = {
-        tuple(sorted(f["podSelector"]["matchLabels"]["app.kubernetes.io/name"] for f in rule["from"])):
-        [p["port"] for p in rule["ports"]]
-        for rule in policy["ingress"]
-    }
-    assert rules == {("context-gateway-gateway", "portal-portal"): port, ("prometheus",): port}
+    (inbound,) = policy["ingress"]
+    peers = sorted(f["podSelector"]["matchLabels"]["app.kubernetes.io/name"] for f in inbound["from"])
+    assert peers == ["context-gateway-gateway", "portal-portal"]
+    assert [p["port"] for p in inbound["ports"]] == [container["ports"][0]["containerPort"]]
+
+
+@requires_helmfile
+def test_no_broker_ingress_admits_a_peer_from_any_namespace(dev):
+    """The broker reads a request without x-jc-* as the cluster's own, and any pod can carry any
+    label: a peer must be named in its own namespace, never with `namespaceSelector: {}`. Every
+    policy selecting the broker counts, the Linkerd one (4143 reaches every port) included."""
+    broker = "context-broker-broker"
+    selecting = [
+        d for d in dev
+        if d.get("kind") == "NetworkPolicy"
+        and d["spec"].get("podSelector", {}).get("matchLabels", {}).get("app.kubernetes.io/name") == broker
+    ]
+    assert len(selecting) >= 1
+    for policy in selecting:
+        for rule in policy["spec"].get("ingress", []):
+            for peer in rule.get("from", []):
+                assert peer.get("namespaceSelector") != {}, (policy["metadata"]["name"], peer)
+                assert "namespaceSelector" in peer or "podSelector" in peer, (policy["metadata"]["name"], peer)
 
 
 @requires_helmfile

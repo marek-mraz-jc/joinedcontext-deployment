@@ -53,17 +53,6 @@ context-broker:
       ports:
         - protocol: TCP
           port: 9090
-    # The Prometheus that scrapes /q/metrics (components/monitoring). It is not one of this
-    # repository's components, so the peer is named by the label its Operator sets, as in
-    # components/grafana; only the metrics answer it without the admin secret.
-    - from:
-        - namespaceSelector: {}
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/name: prometheus
-      ports:
-        - protocol: TCP
-          port: 9090
 
 postgres-from-context-broker:
   componentNamespace: postgres
