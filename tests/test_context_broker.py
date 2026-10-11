@@ -57,7 +57,9 @@ def test_the_broker_runs_as_nobody_with_a_read_only_root_and_no_token(dev):
     assert context["readOnlyRootFilesystem"] is True
     assert context["allowPrivilegeEscalation"] is False
     assert context["capabilities"]["drop"] == ["ALL"]
-    assert [m["mountPath"] for m in container.get("volumeMounts", [])] == ["/tmp"]
+    # /tmp and its own admin credential, read only (T-3642).
+    mounts = {m["mountPath"]: m.get("readOnly", False) for m in container.get("volumeMounts", [])}
+    assert mounts == {"/tmp": False, "/var/run/secrets/antares/admin": True}
 
 
 @requires_helmfile
@@ -118,6 +120,25 @@ def test_only_the_gateway_and_the_portal_reach_the_broker(dev):
     peers = sorted(f["podSelector"]["matchLabels"]["app.kubernetes.io/name"] for f in inbound["from"])
     assert peers == ["context-gateway-gateway", "portal-portal"]
     assert [p["port"] for p in inbound["ports"]] == [container["ports"][0]["containerPort"]]
+
+
+@requires_helmfile
+def test_no_broker_ingress_admits_a_peer_from_any_namespace(dev):
+    """The broker reads a request without x-jc-* as the cluster's own, and any pod can carry any
+    label: a peer must be named in its own namespace, never with `namespaceSelector: {}`. Every
+    policy selecting the broker counts, the Linkerd one (4143 reaches every port) included."""
+    broker = "context-broker-broker"
+    selecting = [
+        d for d in dev
+        if d.get("kind") == "NetworkPolicy"
+        and d["spec"].get("podSelector", {}).get("matchLabels", {}).get("app.kubernetes.io/name") == broker
+    ]
+    assert len(selecting) >= 1
+    for policy in selecting:
+        for rule in policy["spec"].get("ingress", []):
+            for peer in rule.get("from", []):
+                assert peer.get("namespaceSelector") != {}, (policy["metadata"]["name"], peer)
+                assert "namespaceSelector" in peer or "podSelector" in peer, (policy["metadata"]["name"], peer)
 
 
 @requires_helmfile
