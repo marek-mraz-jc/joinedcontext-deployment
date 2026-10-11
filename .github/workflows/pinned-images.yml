@@ -39,5 +39,11 @@ jobs:
       - name: CISA known exploited vulnerabilities
         # CISA's own copy on GitHub: its web site answers 403 to a script.
         run: curl -sSLf -o kev.json https://raw.githubusercontent.com/cisagov/kev-data/main/known_exploited_vulnerabilities.json
+      # T-3834 (d): every fixable HIGH or CRITICAL as a tasks/file-failures summary, one board
+      # task per (image, CVE): `tasks/file-failures vuln-summary.json` files and closes them.
+      - name: board summary
+        run: python3 scripts/scan-pinned-images.py summary reports/*.json --repo joinedcontext-deployment --run "$GITHUB_RUN_ID" > vuln-summary.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with: { name: vuln-summary, path: vuln-summary.json, retention-days: 14 }
       - name: judge
         run: python3 scripts/scan-pinned-images.py judge reports/*.json --kev kev.json
