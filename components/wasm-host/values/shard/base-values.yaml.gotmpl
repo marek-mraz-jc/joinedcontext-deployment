@@ -7,6 +7,7 @@
 {{- $appsDb := index .Values "apps-db" "cluster" "namespace" }}
 {{- $store := index .Values "artifact-store" "store" "namespace" }}
 {{- $gateway := index .Values "context-gateway" "gateway" "namespace" }}
+{{- $portal := dig "portal" "portal" dict .Values }}
 # Checklist:
 # - [x] Containers run as non-root with `readOnlyRootFilesystem` -> /tmp is the one writable path
 # - [x] Health probes -> /healthz
@@ -51,6 +52,12 @@ env:
   # would pass the 1 GiB limit near 800 and be OOM-killed; 600 keeps about 270 MiB for compiles in
   # flight and running instances. Raise it with the memory limit.
   JC_WASM_CACHED_COMPONENTS: "600"
+  {{- if dig "enabled" false $portal }}
+  # The Portal the host asks for a request's caller and an App's email and ai, as that person and
+  # on the App's own host (T-3622, API/06 §5). Unset, identity answers nobody and both services
+  # say so.
+  JC_WASM_PORTAL_URL: "http://portal.{{ dig "namespace" "" $portal }}.svc.cluster.local:8080"
+  {{- end }}
   {{- if index .Values "wasm-host" "tokens" "enabled" }}
   # The job token service (AP-159): a job runs as the App's job principal. Unset, every run fails
   # saying so, and nothing else changes.
