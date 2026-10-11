@@ -14,5 +14,5 @@ context-broker:
     # one new migration over v0.1.2 is 0008_views.sql, a new table only, so the rollback to
     # 0.1.2 above needs no restore.
     repository: 'ghcr.io/marek-mraz-jc/antares-broker-jc'
-    tag: '8bd85c5'
-    digest: 'sha256:b83f08ce79bc62946d8d4609f9a5318fb3ca1a2fc41f6173956a400e519b66eb'
+    tag: '5ed3183'
+    digest: 'sha256:304ae4fc93a1a44251c70e456bc3fcfb30b3f405e16ea073b13a4885aa13ef3d'
