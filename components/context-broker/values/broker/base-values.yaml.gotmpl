@@ -64,12 +64,22 @@ env:
   # The jc build's surfaces (T-3642): the endpoint views, MCP and the engine's access document,
   # each under /x/views/{view}/. The LinkML schema is no surface: the Portal PUTs it to
   # /q/schemas/{tenant} (T-3628), which takes nothing while ANTARES_SCHEMA_MAX_BYTES is unset.
-  ANTARES_API_SURFACES: "admin,views,mcp,access"
+  ANTARES_API_SURFACES: "admin,views,mcp,access,ws"
+  # The view WebSocket (T-3905, ADR-0026), bounded for the one 16 GB node: at most 200 sockets,
+  # 50 per Tenant, 16 Subscriptions and 128 queued notifications each, so a full house holds
+  # about 200 x 128 notifications (~100 MiB at 4 KiB each) where the defaults (10 000 sockets,
+  # queue 256) would hold gigabytes. Browsers reach it through the gateway alone: no Origin.
+  ANTARES_WS_MAX_CONNECTIONS: "200"
+  ANTARES_WS_MAX_CONNECTIONS_PER_TENANT: "50"
+  ANTARES_WS_MAX_SUBSCRIPTIONS: "16"
+  ANTARES_WS_QUEUE: "128"
   ANTARES_SCHEMA_MAX_BYTES: "1048576"
   # The verified caller the gateway forwards (platform T-3641); `x-jc-did` a data-space
-  # participant, which the gateway strips from every client request (platform T-3800). The engine stays allow-all until
-  # T-3768 sets ANTARES_POLICY=joinedcontext: it denies a request without these headers outside
-  # the Context Source clauses, and the gateway's own hops send none yet (T-3767).
+  # participant, which the gateway strips from every client request (platform T-3800, T-3816).
+  # The joinedcontext engine decides every request by them and the Portal's rule documents
+  # (T-3768): a request naming nobody is the cluster's own and is refused outside the Context
+  # Source clauses; the gateway's own hops speak as its client (T-3767).
+  ANTARES_POLICY: "joinedcontext"
   ANTARES_POLICY_SUBJECT_HEADERS: "x-jc-subject,x-jc-groups,x-jc-roles,x-jc-client,x-jc-restricted,x-jc-did"
   ANTARES_ADMIN_TOKEN_FILE: /var/run/secrets/antares/admin/token
   # A scraper cannot send the admin secret; the metrics carry no tenant data. Prometheus is not

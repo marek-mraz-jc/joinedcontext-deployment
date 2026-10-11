@@ -122,6 +122,15 @@ def test_expected_routes_exist_with_properties(apisix_config):
 
 
 @requires_helmfile
+def test_only_the_endpoint_surface_passes_a_websocket_upgrade(apisix_config):
+    """T-3905: `{endpoint}/ws` reaches the gateway, which verifies the bearer before it answers 101
+    (platform T-3885); every other route keeps APISIX's default and drops the upgrade."""
+    _, parsed = apisix_config
+    upgraded = sorted(r["id"] for r in parsed.get("routes", []) if r.get("enable_websocket"))
+    assert upgraded == ["context-endpoint", "context-endpoint-portal"]
+
+
+@requires_helmfile
 def test_routes_have_plugin_config_with_request_id(apisix_config):
     _, parsed = apisix_config
     routes_by_id = {r["id"]: r for r in parsed.get("routes", [])}
