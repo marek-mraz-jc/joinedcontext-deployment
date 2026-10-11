@@ -57,7 +57,9 @@ def test_the_broker_runs_as_nobody_with_a_read_only_root_and_no_token(dev):
     assert context["readOnlyRootFilesystem"] is True
     assert context["allowPrivilegeEscalation"] is False
     assert context["capabilities"]["drop"] == ["ALL"]
-    assert [m["mountPath"] for m in container.get("volumeMounts", [])] == ["/tmp"]
+    # /tmp and its own admin credential, read only (T-3642).
+    mounts = {m["mountPath"]: m.get("readOnly", False) for m in container.get("volumeMounts", [])}
+    assert mounts == {"/tmp": False, "/var/run/secrets/antares/admin": True}
 
 
 @requires_helmfile
@@ -111,13 +113,17 @@ def test_the_gateway_and_the_portal_address_the_port_the_service_serves(dev):
 
 
 @requires_helmfile
-def test_only_the_gateway_and_the_portal_reach_the_broker(dev):
+def test_only_the_gateway_the_portal_and_prometheus_reach_the_broker(dev):
+    """Prometheus scrapes `/q/metrics`, the one `/q` route open without the admin secret (T-3642)."""
     policy = one(dev, "NetworkPolicy", "context-broker")["spec"]
     (container,) = pod_of(dev)["containers"]
-    (inbound,) = policy["ingress"]
-    peers = sorted(f["podSelector"]["matchLabels"]["app.kubernetes.io/name"] for f in inbound["from"])
-    assert peers == ["context-gateway-gateway", "portal-portal"]
-    assert [p["port"] for p in inbound["ports"]] == [container["ports"][0]["containerPort"]]
+    port = [container["ports"][0]["containerPort"]]
+    rules = {
+        tuple(sorted(f["podSelector"]["matchLabels"]["app.kubernetes.io/name"] for f in rule["from"])):
+        [p["port"] for p in rule["ports"]]
+        for rule in policy["ingress"]
+    }
+    assert rules == {("context-gateway-gateway", "portal-portal"): port, ("prometheus",): port}
 
 
 @requires_helmfile

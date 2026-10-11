@@ -7,6 +7,12 @@ context-broker:
     # postgres-cluster-1:/var/lib/postgresql/data/t3068/). Rollback: dev-173
     # (ghcr.io/marek-mraz/antares-broker@sha256:a3a3431976b1bb6fd26f43630a120d19a3961d6c5445d81e04bce404eed712d4)
     # and that dump restored.
-    repository: 'ghcr.io/joinedcontext/antares-broker'
-    tag: '0.1.2'
-    digest: 'sha256:44f78d69e73e1a6942c18f135b43edefffe28629ba9a3e09751872b0c9705ad2'
+    #
+    # The jc build (T-3642, Antares T-3636): the same broker with FEATURES=full,jc-policy (views,
+    # MCP, OData, WebSocket and the joinedcontext policy engine), from Antares dev 8bd85c5 by
+    # image-jc.yml run 38141581298, cosign-signed keyless by that workflow, SBOM attested. Its
+    # one new migration over v0.1.2 is 0008_views.sql, a new table only, so the rollback to
+    # 0.1.2 above needs no restore.
+    repository: 'ghcr.io/marek-mraz-jc/antares-broker-jc'
+    tag: '8bd85c5'
+    digest: 'sha256:b83f08ce79bc62946d8d4609f9a5318fb3ca1a2fc41f6173956a400e519b66eb'

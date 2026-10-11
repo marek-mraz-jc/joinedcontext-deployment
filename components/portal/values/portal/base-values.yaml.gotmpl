@@ -317,6 +317,9 @@ env:
   # to read a member at, because a hub reads a member's tenant on this same broker. Without it
   # a ContextSourceRegistration manifest is read, served and federated nowhere.
   JC_PORTAL_BROKER_URL: "http://context-broker.{{ (index .Values "context-broker" "broker" "namespace") }}.svc.cluster.local:8080"
+  # The broker's `/q` admin credential the view writer sends (T-3640, T-3642), from the Secret
+  # components/context-broker/secrets.yaml generates for both namespaces.
+  JC_PORTAL_BROKER_ADMIN_TOKEN_FILE: /var/run/secrets/jc/broker-admin/token
 {{- end }}
 {{- if has "pipeline-runner" .Values.components }}
   # The pipeline test (PL-43): a candidate pipeline runs once as an ephemeral stream on the
@@ -429,6 +432,15 @@ extraVolumes:
     secret:
       secretName: custom-ca-cert
 {{- end }}
+{{- if has "context-broker" .Values.components }}
+  - name: broker-admin-token
+    secret:
+      secretName: context-broker-admin-token
+      defaultMode: 0440
+      items:
+        - key: token
+          path: token
+{{- end }}
 {{- if $ageSecret }}
   # Operator-supplied: the identity is generated once, kept out of Git and handed to this
   # namespace alone. 0440 with the pod's fsGroup, so the Portal reads it and no other user in
@@ -453,6 +465,11 @@ extraVolumeMounts:
 {{- if $clusterCa }}
   - name: cluster-ca
     mountPath: /etc/jc/ca
+    readOnly: true
+{{- end }}
+{{- if has "context-broker" .Values.components }}
+  - name: broker-admin-token
+    mountPath: /var/run/secrets/jc/broker-admin
     readOnly: true
 {{- end }}
 {{- if $ageSecret }}

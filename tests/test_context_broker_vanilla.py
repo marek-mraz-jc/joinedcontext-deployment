@@ -1,6 +1,7 @@
-"""CC-01: the context broker stays a vanilla NGSI-LD broker. It reads no configuration of this
-plane: no repository, no manifest, no ConfigMap of ours; what it is told arrives as its own
-environment and its database, so any compliant broker can take its place (CC-52)."""
+"""CC-01: the context broker reads no configuration of this plane: no repository, no manifest, no
+ConfigMap of ours; what it is told arrives as its own environment, its own admin credential and its
+database. The image is the jc build (surfaces and the joinedcontext engine, T-3642); the views and
+rule documents it serves are written into its database by the Portal through `/q`, never mounted."""
 
 import pytest
 
@@ -14,15 +15,37 @@ def broker_pod(rendered):
     return deployment["spec"]["template"]["spec"]
 
 
+ADMIN_TOKEN = {"secretName": "context-broker-admin-token", "items": [{"key": "token", "path": "token"}]}
+
+
 def test_the_broker_mounts_no_configuration_of_the_plane(broker_pod):
-    """CC-01: one scratch directory and nothing else; no repository, ConfigMap or Secret volume."""
+    """CC-01: one scratch directory and its own admin credential, nothing else; no repository,
+    ConfigMap or other Secret volume."""
     volumes = broker_pod.get("volumes", [])
-    assert all(set(v) == {"name", "emptyDir"} for v in volumes), volumes
+    scratch = [v for v in volumes if set(v) == {"name", "emptyDir"}]
+    secrets = [v for v in volumes if "secret" in v]
+    assert len(scratch) + len(secrets) == len(volumes), volumes
+    assert [v["secret"] for v in secrets] == [ADMIN_TOKEN], secrets
     for container in broker_pod.get("initContainers", []) + broker_pod["containers"]:
         assert "git" not in container["name"], "no repository sidecar beside the broker"
-        mounts = [m["mountPath"] for m in container.get("volumeMounts", [])]
-        assert mounts in ([], ["/tmp"]), mounts
+        mounts = sorted(m["mountPath"] for m in container.get("volumeMounts", []))
+        assert mounts in ([], ["/tmp"], ["/tmp", "/var/run/secrets/antares/admin"]), mounts
         assert not container.get("envFrom"), "the broker takes no bulk configuration of ours"
+
+
+def test_the_broker_runs_the_surfaces_and_requires_its_admin_credential(broker_pod):
+    """T-3642: the views, MCP and access surfaces beside `/q`, the subject headers the gateway sets
+    (platform T-3641), and `/q` behind the mounted secret with only the metrics open."""
+    env = {e["name"]: e.get("value") for e in broker_pod["containers"][0].get("env", [])}
+    assert env["ANTARES_API_SURFACES"].split(",") == ["admin", "views", "mcp", "access"]
+    assert env["ANTARES_POLICY_SUBJECT_HEADERS"].split(",") == [
+        "x-jc-subject", "x-jc-groups", "x-jc-roles", "x-jc-client", "x-jc-restricted"]
+    assert not {"authorization", "cookie"} & set(env["ANTARES_POLICY_SUBJECT_HEADERS"].split(","))
+    assert env["ANTARES_ADMIN_TOKEN_FILE"] == "/var/run/secrets/antares/admin/token"
+    assert env["ANTARES_ADMIN_METRICS"] == "open"
+    assert int(env["ANTARES_SCHEMA_MAX_BYTES"]) > 0
+    # The engine is turned on by T-3768, after the gateway's own hops carry a subject (T-3767).
+    assert "ANTARES_POLICY" not in env
 
 
 def test_the_broker_is_told_only_its_own_settings(broker_pod):

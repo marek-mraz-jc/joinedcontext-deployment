@@ -21,6 +21,15 @@ context-broker-allow-linkerd:
           protocol: TCP
         - port: 4191
           protocol: TCP
+    # Prometheus (networkpolicies.yaml): its scrape lands on the inbound proxy as well.
+    - from:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - port: 4143
+          protocol: TCP
 
 # Meshed traffic reaches a pod through its Linkerd inbound proxy on 4143, not on the
 # service port, so allowing 5432 alone is not enough: the database pods need their own

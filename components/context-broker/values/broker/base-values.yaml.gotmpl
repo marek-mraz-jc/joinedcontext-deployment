@@ -61,6 +61,31 @@ env:
   ANTARES_REQUIRE_RLS: "1"
   ANTARES_MAX_CONNECTIONS: "512"
   ANTARES_DATABASE_URL: "postgresql://antares:$(PGPASSWORD)@postgres-cluster-rw.{{ .Values.postgres.cluster.namespace }}.svc.cluster.local:5432/antares"
+  # The jc build's surfaces (T-3642): the endpoint views, MCP and the engine's access document,
+  # each under /x/views/{view}/. The LinkML schema is no surface: the Portal PUTs it to
+  # /q/schemas/{tenant} (T-3628), which takes nothing while ANTARES_SCHEMA_MAX_BYTES is unset.
+  ANTARES_API_SURFACES: "admin,views,mcp,access"
+  ANTARES_SCHEMA_MAX_BYTES: "1048576"
+  # The verified caller the gateway forwards (platform T-3641). The engine stays allow-all until
+  # T-3768 sets ANTARES_POLICY=joinedcontext: it denies a request without these headers outside
+  # the Context Source clauses, and the gateway's own hops send none yet (T-3767).
+  ANTARES_POLICY_SUBJECT_HEADERS: "x-jc-subject,x-jc-groups,x-jc-roles,x-jc-client,x-jc-restricted"
+  ANTARES_ADMIN_TOKEN_FILE: /var/run/secrets/antares/admin/token
+  # Prometheus cannot send the admin secret; the metrics carry no tenant data.
+  ANTARES_ADMIN_METRICS: "open"
+
+extraVolumes:
+  - name: admin-token
+    secret:
+      secretName: context-broker-admin-token
+      items:
+        - key: token
+          path: token
+
+extraVolumeMounts:
+  - name: admin-token
+    mountPath: /var/run/secrets/antares/admin
+    readOnly: true
 
 podSecurityContext:
   {{ .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}
