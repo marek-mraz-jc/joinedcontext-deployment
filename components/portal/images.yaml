@@ -245,7 +245,7 @@ portal:
     # (T-3539). portal 85ff8a3: the builder image drops git checkouts' own Cargo.lock, so trivy is
     # green again and the builders move with it (T-3567); auth_tests fixed (T-3568). portal ccc23a87:
     # the SDK's entity panel writes a number as the grid does (T-3600).
-    digest: 'sha256:97c2850ac6c8ea91c0c52fa350d9c1870368141d20caec82b4713bfbd645e617'
+    digest: 'sha256:84bef11566f82d9fd07bcea2c7ae5a8692ad866872434e0e185f2bddcef7ca37'
   # Mailpit, the mail catcher of an installation without a relay (T-3583). Re-pin with the
   # registry query in components/sandbox-reaper/images.yaml, repository axllent/mailpit.
   mail-catcher:
