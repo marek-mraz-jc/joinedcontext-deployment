@@ -7,7 +7,7 @@ package main
 private_ranges := {"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "169.254.0.0/16", "127.0.0.0/8"}
 
 fetches_chosen_addresses(policy) if {
-	policy.spec.podSelector.matchLabels["app.kubernetes.io/name"] in {"pipeline-runner-runner", "context-gateway-gateway"}
+	policy.spec.podSelector.matchLabels["app.kubernetes.io/name"] in {"pipeline-runner-runner", "context-gateway-gateway", "context-broker-broker"}
 }
 
 deny contains msg if {
