@@ -66,10 +66,11 @@ env:
   # /q/schemas/{tenant} (T-3628), which takes nothing while ANTARES_SCHEMA_MAX_BYTES is unset.
   ANTARES_API_SURFACES: "admin,views,mcp,access"
   ANTARES_SCHEMA_MAX_BYTES: "1048576"
-  # The verified caller the gateway forwards (platform T-3641). The engine stays allow-all until
+  # The verified caller the gateway forwards (platform T-3641); `x-jc-did` a data-space
+  # participant, which the gateway strips from every client request (platform T-3800). The engine stays allow-all until
   # T-3768 sets ANTARES_POLICY=joinedcontext: it denies a request without these headers outside
   # the Context Source clauses, and the gateway's own hops send none yet (T-3767).
-  ANTARES_POLICY_SUBJECT_HEADERS: "x-jc-subject,x-jc-groups,x-jc-roles,x-jc-client,x-jc-restricted"
+  ANTARES_POLICY_SUBJECT_HEADERS: "x-jc-subject,x-jc-groups,x-jc-roles,x-jc-client,x-jc-restricted,x-jc-did"
   ANTARES_ADMIN_TOKEN_FILE: /var/run/secrets/antares/admin/token
   # A scraper cannot send the admin secret; the metrics carry no tenant data. Prometheus is not
   # admitted to the broker yet: its namespace is the operator's, and a rule naming it by pod
