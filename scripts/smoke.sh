@@ -1024,6 +1024,31 @@ for app in items:
 	done <<<"$published"
 fi
 
+echo "broker surfaces"
+# The surfaces the broker mounts (T-3905): `/q/health` reports each one the deployment selected,
+# so a `ws` missing from ANTARES_API_SURFACES or an image built without it shows here. Health
+# needs no credential; the broker is reached over a port-forward like jc-functions below.
+if ! kubectl get deployment context-broker -n "$slug" >/dev/null 2>&1; then
+	skip "broker surfaces (the context broker is not deployed in this instance)"
+else
+	cb_port=$((30000 + $$ % 10000))
+	kubectl port-forward -n "$slug" svc/context-broker "$cb_port:8080" >/dev/null 2>&1 &
+	cb_forward=$!
+	cb_health=""
+	for _ in 1 2 3 4 5 6 7 8 9 10; do
+		cb_health=$(curl -s --max-time 2 "http://127.0.0.1:$cb_port/q/health" 2>/dev/null) && [ -n "$cb_health" ] && break
+		sleep 1
+	done
+	for surface in views mcp access ws; do
+		if printf '%s' "$cb_health" | python3 -c 'import json,sys; sys.exit(0 if sys.argv[1] in (json.load(sys.stdin).get("surfaces") or {}) else 1)' "$surface" 2>/dev/null; then
+			ok "the broker mounts the $surface surface"
+		else
+			ko "the broker's /q/health lists no $surface surface: ${cb_health:0:160}"
+		fi
+	done
+	kill "$cb_forward" 2>/dev/null
+fi
+
 echo "functions"
 # jc-functions (SDK-22, SDK-23) takes the Portal alone, so the smoke reaches its Service over a
 # port-forward and presents what the Portal presents: portal-api's client_credentials token,
