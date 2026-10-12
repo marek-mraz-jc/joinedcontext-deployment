@@ -5,7 +5,9 @@ file is not an error: CKAN then looks like a plain CKAN, which is what an instal
 without branding should look like.
 """
 
+import base64
 import datetime
+import html
 import json
 import os
 import re
@@ -111,6 +113,57 @@ def _available(codes):
 
 
 BRANDING = _load()
+
+# A badge and a description per CKAN organization name, from the chart's `organizations` value,
+# for a publisher that set neither in CKAN. Same rule as the branding: a missing or broken file
+# leaves CKAN's own placeholder.
+ORGANIZATIONS_FILE = os.environ.get(
+    "JC_ORGANIZATIONS_FILE", os.path.join(os.path.dirname(BRANDING_FILE), "organizations.json"))
+
+
+def _organizations():
+    try:
+        with open(ORGANIZATIONS_FILE, encoding="utf-8") as handle:
+            block = json.load(handle)
+    except (OSError, ValueError):
+        return {}
+    return {name: entry for name, entry in block.items() if isinstance(entry, dict)} \
+        if isinstance(block, dict) else {}
+
+
+ORGANIZATIONS = _organizations()
+
+
+def _badge(entry):
+    """The publisher's initials on its colour, as an SVG data URI: on this origin, no file to mount."""
+    initials = entry.get("initials")
+    colour = entry.get("colour")
+    if not isinstance(initials, str) or not initials.strip() or not _is_colour(colour):
+        return None
+    red, green, blue = _rgb(colour)
+    ink = "#000000" if (red * 299 + green * 587 + blue * 114) // 1000 >= 128 else "#ffffff"
+    svg = (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200">'
+        '<rect width="400" height="200" fill="%s"/>'
+        '<text x="200" y="100" dy="0.35em" text-anchor="middle" fill="%s" '
+        'font-family="system-ui, sans-serif" font-size="72" font-weight="700">%s</text></svg>'
+    ) % (colour, ink, html.escape(initials.strip()[:4]))
+    return "data:image/svg+xml;base64," + base64.b64encode(svg.encode("utf-8")).decode("ascii")
+
+
+def jc_org(organization):
+    """The organization's image and description: CKAN's own first, then the chart's, in the page's
+    language when the chart gives several; None where neither has one."""
+    organization = organization or {}
+    entry = ORGANIZATIONS.get(organization.get("name") or "", {})
+    description = organization.get("description")
+    if not description:
+        words = entry.get("description")
+        if isinstance(words, dict):
+            lang = toolkit.h.lang() or "en"
+            words = words.get(lang) or words.get("en")
+        description = words if isinstance(words, str) and words.strip() else None
+    return {"image": organization.get("image_display_url") or _badge(entry), "description": description}
 
 # The words the theme adds to CKAN's own, in the four languages of the Portal (UI-82). CKAN's
 # catalogues translate everything else; a language CKAN names `cs_CZ` reads the `cs` column.
@@ -255,13 +308,6 @@ STRINGS = {
     "nav_publishers": {"en": "Publishers", "sk": "Vydavatelia", "cs": "Vydavatelé", "de": "Herausgeber"},
     "nav_topics": {"en": "Topics", "sk": "Témy", "cs": "Témata", "de": "Themen"},
     "nav_about": {"en": "About", "sk": "O katalógu", "cs": "O katalogu", "de": "Über den Katalog"},
-    # The sidebar card of a publisher CKAN holds no description for (T-4066).
-    "publisher_about": {
-        "en": "Publishes its open data in this catalogue, straight from the platform's live data. Open it to see every dataset.",
-        "sk": "Zverejňuje svoje otvorené dáta v tomto katalógu, priamo zo živých dát platformy. Otvorte ho a uvidíte všetky datasety.",
-        "cs": "Zveřejňuje svá otevřená data v tomto katalogu, přímo z živých dat platformy. Otevřete jej a uvidíte všechny datové sady.",
-        "de": "Veröffentlicht seine offenen Daten in diesem Katalog, direkt aus den Live-Daten der Plattform. Öffnen Sie ihn, um alle Datensätze zu sehen.",
-    },
     "publishers_help": {
         "en": "The cities, regions and offices whose data this catalogue carries. Open one to see all of its datasets.",
         "sk": "Mestá, kraje a úrady, ktorých dáta tento katalóg obsahuje. Otvorte jedného a uvidíte všetky jeho datasety.",
@@ -675,15 +721,6 @@ def jc_rows(value):
     return "%s %s" % (number, words[form])
 
 
-def jc_logo():
-    """The installation's logo as CKAN serves it, or None when the branding names none."""
-    logo = BRANDING.get("logo")
-    public = os.path.join(os.path.dirname(__file__), "public")
-    if logo and "/" not in logo and os.path.exists(os.path.join(public, logo)):
-        return "/" + logo
-    return None
-
-
 def jc_recent(limit=6):
     """The public datasets changed last, for the home page."""
     from ckan.lib.search import SearchError
@@ -780,9 +817,9 @@ class JcThemePlugin(plugins.SingletonPlugin):
             config["ckan.site_title"] = title
             config["ckan.site_description"] = BRANDING.get("organisation", "")
         public = os.path.join(os.path.dirname(__file__), "public")
-        logo = jc_logo()
-        if logo:
-            config["ckan.site_logo"] = logo
+        logo = BRANDING.get("logo")
+        if logo and os.path.exists(os.path.join(public, logo)):
+            config["ckan.site_logo"] = "/" + logo
         favicon = BRANDING.get("favicon")
         if favicon and os.path.exists(os.path.join(public, favicon)):
             config["ckan.favicon"] = "/" + favicon
@@ -797,6 +834,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
     def get_helpers(self):
         return {
             "jc_branding": jc_branding,
+            "jc_org": jc_org,
             "jc_t": jc_t,
             "jc_about": jc_about,
             "jc_more": jc_more,
@@ -810,7 +848,6 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_total": jc_total,
             "jc_number": jc_number,
             "jc_rows": jc_rows,
-            "jc_logo": jc_logo,
             "jc_formats": jc_formats,
             "jc_recent": jc_recent,
             "jc_portal_url": jc_portal_url,

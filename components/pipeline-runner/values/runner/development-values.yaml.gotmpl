@@ -11,13 +11,15 @@ replicaCount: 1
 # (2026-10-07, T-3191); the request says what it holds, the limit leaves it room. One core was
 # throttled in 38 % of its CFS periods with 102 streams, the passes bursting to 900m while the
 # HSL feed wants a steady share (T-4036); two cores cost the node nothing it reserves.
+# 2Gi since the gateway answers model refusals per entity (207, T-4011): 1536Mi was OOMKilled
+# twice in 20 min on 2026-10-12 (T-4069); T-4036 sizes it from measurements.
 resources:
   requests:
     cpu: 100m
     memory: 512Mi
   limits:
     cpu: 2000m
-    memory: 1536Mi
+    memory: 2Gi
 
 # The Helsinki demo's feeds (DEMO.md step 3) are the seeded Pipeline manifests and the
 # bento.yaml beside each (../../context-gateway/seed/helsinki/): the Portal's reconciler renders

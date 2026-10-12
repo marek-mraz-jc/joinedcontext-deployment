@@ -318,6 +318,8 @@ spec:
             items:
               - key: branding.json
                 path: branding.json
+              - key: organizations.json
+                path: organizations.json
         - name: theme
           configMap:
             name: {{ $full }}-theme

@@ -1,20 +1,20 @@
 {% ckan_extends %}
-
-{# A publisher CKAN holds no logo or description for shows the installation's logo and one line on
-   what a publisher is (T-4066), in place of a placeholder building and "There is no description". #}
+{# The publisher box beside a dataset and on the publisher's page: the chart's badge and words
+   where CKAN has none, so no page says "There is no description for this organization". #}
 {% block image %}
-  {% set logo = organization.image_display_url or h.jc_logo() %}
-  {% if logo %}
-    <div class="image">
-      <a href="{{ h.url_for(organization.type + '.read', id=organization.name) }}"><img src="{{ logo }}" width="200" alt="{{ organization.title or organization.name }}" /></a>
-    </div>
-  {% endif %}
+  {% set org = organization or group %}
+  {% set jc = h.jc_org(org) %}
+  <div class="image">
+    <a href="{{ h.url_for(org.type ~ '.read', id=org.name) }}">
+      <img src="{{ jc.image or h.url_for_static('/base/images/placeholder-organization.png') }}" width="200" alt="" />
+    </a>
+  </div>
 {% endblock %}
-
 {% block description %}
-  {% if organization.description %}
-    {{ super() }}
-  {% else %}
-    <p class="description">{{ h.jc_t('publisher_about') }}</p>
+  {% set org = organization or group %}
+  {% set jc = h.jc_org(org) %}
+  {% if jc.description %}
+    <p class="description">{{ h.markdown_extract(jc.description, 180) }}</p>
+    <p class="read-more">{% link_for _('read more'), named_route=org.type ~ '.about', id=org.name %}</p>
   {% endif %}
 {% endblock %}

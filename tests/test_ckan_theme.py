@@ -768,20 +768,54 @@ def test_the_format_badge_sits_beside_the_resource_name():
     assert "grid-template-columns: 6.5rem" not in css
 
 
-def test_a_publisher_without_a_description_or_logo_gets_the_installation_s(theme, tmp_path, monkeypatch):
-    """T-4066: the organization card said "There is no description for this organization" beside a
-    placeholder building."""
-    info = (THEME / "templates__organization__snippets__info.html").read_text()
-    assert info.startswith("{% ckan_extends %}")
-    assert "organization.image_display_url or h.jc_logo()" in info
-    assert "h.jc_t('publisher_about')" in info and "super()" in info
-    assert theme.jc_t("publisher_about").startswith("Publishes its open data")
-    assert theme.jc_logo() is None
-    monkeypatch.setitem(theme.BRANDING, "logo", "logo.svg")
-    assert theme.jc_logo() is None  # named but not shipped beside the theme
-    monkeypatch.setattr(theme, "__file__", str(tmp_path / "plugin.py"))
-    (tmp_path / "public").mkdir()
-    (tmp_path / "public" / "logo.svg").write_text("<svg/>")
-    assert theme.jc_logo() == "/logo.svg"
-    monkeypatch.setitem(theme.BRANDING, "logo", "../logo.svg")
-    assert theme.jc_logo() is None
+def test_a_publisher_without_a_picture_gets_its_badge_and_words_in_the_page_language(theme, tmp_path):
+    import base64
+    block = tmp_path / "organizations.json"
+    block.write_text(json.dumps({
+        "hel-fi": {"initials": "HEL", "colour": "#0000bf", "description": {"en": "Helsinki data", "sk": "Údaje Helsínk"}},
+        "bad": {"initials": "<b>", "colour": "red"},
+        "evil": {"initials": "<script>", "colour": "#ffffff"},
+    }))
+    theme.ORGANIZATIONS_FILE = str(block)
+    theme.ORGANIZATIONS = theme._organizations()
+    card = theme.jc_org({"name": "hel-fi", "description": "", "image_display_url": ""})
+    assert card["description"] == "Helsinki data"
+    svg = base64.b64decode(card["image"].removeprefix("data:image/svg+xml;base64,")).decode()
+    assert ">HEL</text>" in svg and 'fill="#0000bf"' in svg and 'fill="#ffffff"' in svg
+    theme.page.lang = "sk"
+    assert theme.jc_org({"name": "hel-fi"})["description"] == "Údaje Helsínk"
+    # CKAN's own picture and words win; an unknown publisher keeps CKAN's placeholder.
+    assert theme.jc_org({"name": "hel-fi", "description": "own", "image_display_url": "/x.png"}) == \
+        {"image": "/x.png", "description": "own"}
+    assert theme.jc_org({"name": "nobody"}) == {"image": None, "description": None}
+    assert theme.jc_org(None) == {"image": None, "description": None}
+    # A colour that is not #rgb/#rrggbb draws nothing; initials are text, never markup.
+    assert theme.jc_org({"name": "bad"})["image"] is None
+    evil = base64.b64decode(theme.jc_org({"name": "evil"})["image"].split(",", 1)[1]).decode()
+    assert "<script>" not in evil and "&lt;scr" in evil and 'fill="#000000"' in evil
+
+
+def test_a_missing_or_broken_organizations_file_leaves_ckan_s_placeholder(theme, tmp_path):
+    theme.ORGANIZATIONS_FILE = str(tmp_path / "absent.json")
+    assert theme._organizations() == {}
+    broken = tmp_path / "broken.json"
+    broken.write_text("[1, 2")
+    theme.ORGANIZATIONS_FILE = str(broken)
+    assert theme._organizations() == {}
+    broken.write_text("[1, 2]")
+    assert theme._organizations() == {}
+
+
+def test_every_demo_publisher_has_a_badge_and_the_file_reaches_the_pod(rendered):
+    docs = rendered("dev")
+    (config,) = [d for d in docs if d.get("kind") == "ConfigMap" and d["metadata"]["name"].endswith("ckan-theme")]
+    organizations = json.loads(config["data"]["organizations.json"])
+    assert {"hel-fi", "praha", "zilina", "banskabystrica", "bbsk"} <= set(organizations)
+    for name, entry in organizations.items():
+        assert re.fullmatch(r"#[0-9a-fA-F]{6}", entry["colour"]) and entry["initials"], name
+    for name in ("hel-fi", "praha", "zilina"):
+        assert organizations[name]["description"]["en"] and organizations[name]["description"]["sk"], name
+    (ckan,) = [d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"].endswith("ckan")
+               and any(c["name"] == "ckan" for c in d["spec"]["template"]["spec"]["containers"])]
+    (branding,) = [v for v in ckan["spec"]["template"]["spec"]["volumes"] if v["name"] == "branding"]
+    assert {"key": "organizations.json", "path": "organizations.json"} in branding["configMap"]["items"]
