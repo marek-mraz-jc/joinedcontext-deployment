@@ -34,8 +34,8 @@ def frame(vehicle: int, phase: str) -> str:
 def caches() -> list[dict]:
     resources = yaml.safe_load(RESOURCES.read_text())["cache_resources"]
     for cache in resources:
-        # The slot silence window, shortened; the throttle off, so every frame is a write.
-        cache["memory"]["default_ttl"] = f"{TTL_S}s" if cache["label"] == "fleet" else "1ms"
+        # The slot silence window, shortened.
+        cache["memory"]["default_ttl"] = f"{TTL_S}s"
         cache["memory"]["compaction_interval"] = "1s"
     return resources
 
@@ -168,18 +168,18 @@ def test_a_report_without_a_gps_fix_is_dropped_and_a_missing_speed_is_left_out()
 
 @requires_docker
 def test_a_full_fleet_and_a_repeat_count_no_processor_error():
-    """T-3186: dev counted 5.4 M errors of 792 k frames. The mapping probed the `fleet` and
-    `throttle` caches with `get` and `add` and caught the misses, and Bento counts every caught
-    miss in `processor_error`, which the Portal shows as the pipeline's errors: 40 buses for 30
-    slots made 805. Probing with `exists` first, a fleet that is full, a bus that repeats within
-    the throttle and a bus without a slot are no error at all."""
+    """T-3186: dev counted 5.4 M errors of 792 k frames. The mapping probed its caches with
+    `get` and `add` and caught the misses, and Bento counts every caught miss in
+    `processor_error`, which the Portal shows as the pipeline's errors: 40 buses for 30 slots
+    made 805. Probing with `exists` first, a fleet that is full, a bus that repeats and a bus
+    without a slot are no error at all."""
     config = {
         "input": {"stdin": {"scanner": {"lines": {}}}},
         # One thread: what is measured is the probing. On several threads two new buses can
         # still race for one free slot, and the loser's `add` is the one error left (the
         # mapping's ponytail note).
         "pipeline": {**yaml.safe_load(MAPPING.read_text())["pipeline"], "threads": 1},
-        # The runner's own ttls: a repeat within fifteen seconds is throttled, a slot is held.
+        # The runner's own ttl: a slot is held.
         "cache_resources": yaml.safe_load(RESOURCES.read_text())["cache_resources"],
         "output": {"stdout": {"codec": "lines"}},
         "metrics": {"logger": {"push_interval": "", "flush_metrics": True}},
@@ -197,7 +197,39 @@ def test_a_full_fleet_and_a_repeat_count_no_processor_error():
     errors = sum(int(c["value"]) for c in counters if c["name"] == "processor_error")
     received = sum(int(c["value"]) for c in counters if c["name"] == "input_received")
     assert received == 80, counters
-    # The cap still holds: thirty buses written, once each, the repeats throttled.
+    # The cap still holds: thirty buses written, each twice (T-3906), the other ten never.
     written = [json.loads(line)["fleetVehicleId"]["value"] for line in result.stdout.splitlines() if line.strip()]
-    assert len(written) == len(set(written)) == 30, written
+    assert len(written) == 60 and len(set(written)) == 30, written
+    assert all(written.count(bus) == 2 for bus in set(written)), written
     assert errors == 0, f"{errors} processor errors for {received} frames"
+
+
+@requires_docker
+def test_every_frame_of_an_admitted_bus_is_a_write():
+    """T-3906: an admitted bus writes every position report it sends, about one a second, so the
+    map follows the feed; the cap on how many buses are admitted is what bounds the load. A
+    15-second throttle once made the map move in jumps."""
+    config = {
+        "input": {"stdin": {"scanner": {"lines": {}}}},
+        "pipeline": yaml.safe_load(MAPPING.read_text())["pipeline"],
+        "cache_resources": yaml.safe_load(RESOURCES.read_text())["cache_resources"],
+        "output": {"stdout": {"codec": "lines"}},
+        "logger": {"level": "error"},
+    }
+    frames = [
+        json.dumps({"VP": {"oper": 22, "veh": 7, "long": 24.94 + i / 1000, "lat": 60.17, "spd": 8.5,
+                           "hdg": 90, "route": "2550", "tst": f"2026-10-12T08:00:0{i}.000Z"}})
+        for i in range(10)
+    ]
+    result = subprocess.run(
+        ["docker", "run", "--rm", "-i", "-e", "JC_ORG_DOMAIN=hel.fi", "-e", "JC_SPACE=helsinki",
+         "-e", f"CONFIG={json.dumps(config)}", "--entrypoint", "sh", BENTO, "-c",
+         'printf "%s" "$CONFIG" > /tmp/c.json && exec /bento -c /tmp/c.json'],
+        input="".join(line + "\n" for line in frames), capture_output=True, text=True, timeout=120,
+    )
+    assert result.returncode == 0, result.stderr
+    written = [json.loads(line) for line in result.stdout.splitlines() if line.strip()]
+    assert sorted(e["location"]["observedAt"] for e in written) == [
+        f"2026-10-12T08:00:0{i}.000Z" for i in range(10)
+    ], written
+    assert {e["fleetVehicleId"]["value"] for e in written} == {"22-7"}
