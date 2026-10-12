@@ -1,7 +1,7 @@
 """The next departures of a curated set of HSL stops from GTFS-RT trip updates (T-3891, PL-03).
 
 Bento runs the committed mapping with the runner's shared resources and the GTFS-RT schema it
-mounts at /streams, over a cut of HSL's feed recorded on 2026-10-12 (13 trips, re-encoded from the
+mounts at /proto, over a cut of HSL's feed recorded on 2026-10-12 (13 trips, re-encoded from the
 live document: `fixtures/helsinki/gtfs-rt/trip-updates.pb`) and over feeds the test encodes with
 the same schema, each edited in the one thing it names. Without a container runtime the Bento
 cases skip; the seed cases do not.
@@ -35,10 +35,14 @@ RAUTATIENTORI = "1020601"  # a metro platform of the list
 OUTSIDE = "1173434"  # a bus stop of stops.txt that is not
 
 
+# The runner's mounts: the shared resources at /streams, the GTFS-RT schema alone at /proto (T-4037).
+MOUNTS = ["-v", f"{STREAMS}:/streams:ro", "-v", f"{STREAMS / 'gtfs-realtime.proto'}:/proto/gtfs-realtime.proto:ro"]
+
+
 def docker(config: dict, document: bytes, codec: str = "lines") -> bytes:
     config = {**config, "output": {"stdout": {"codec": codec}}, "logger": {"level": "error"}}
     result = subprocess.run(
-        ["docker", "run", "--rm", "-i", "-v", f"{STREAMS}:/streams:ro", "-e", "JC_ORG_DOMAIN=hel.fi",
+        ["docker", "run", "--rm", "-i", *MOUNTS, "-e", "JC_ORG_DOMAIN=hel.fi",
          "-e", "JC_SPACE=helsinki", "-e", f"CONFIG={json.dumps(config)}", "--entrypoint", "sh", BENTO,
          "-c", 'printf "%s" "$CONFIG" > /tmp/c.json && exec /bento -c /tmp/c.json'],
         input=document, capture_output=True, timeout=120,
@@ -57,7 +61,7 @@ def caches(ttl: str = "5m") -> list[dict]:
 
 def encode(feed: dict) -> bytes:
     """The protobuf HSL would send for `feed`, written with the schema the runner decodes by."""
-    step = {"protobuf": {"operator": "from_json", "message": "transit_realtime.FeedMessage", "import_paths": ["/streams"]}}
+    step = {"protobuf": {"operator": "from_json", "message": "transit_realtime.FeedMessage", "import_paths": ["/proto"]}}
     return docker({"input": {"stdin": {"scanner": {"to_the_end": {}}}}, "pipeline": {"processors": [step]}},
                   json.dumps(feed).encode(), "all-bytes")
 
@@ -155,7 +159,7 @@ def test_an_empty_feed_keeps_the_departures_five_minutes_then_clears_them():
     full = base64.b64encode(encode(feed(trip("1003", (RAUTATIENTORI, 300))))).decode()
     empty = base64.b64encode(encode(feed())).decode()
     runner = subprocess.Popen(
-        ["docker", "run", "--rm", "-i", "-v", f"{STREAMS}:/streams:ro", "-e", "JC_ORG_DOMAIN=hel.fi",
+        ["docker", "run", "--rm", "-i", *MOUNTS, "-e", "JC_ORG_DOMAIN=hel.fi",
          "-e", "JC_SPACE=helsinki", "-e", f"CONFIG={json.dumps(config)}", "--entrypoint", "sh", BENTO,
          "-c", 'printf "%s" "$CONFIG" > /tmp/c.json && exec /bento -c /tmp/c.json'],
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
@@ -211,7 +215,7 @@ def test_the_seed_reads_the_feed_every_30_s_into_gtfsstop_through_the_city_endpo
     for processor in yaml.safe_load(MAPPING.read_text())["pipeline"]["processors"]:
         (name,) = processor
         assert name in {"mapping", "mutation", "protobuf", "branch", "unarchive"}, name
-    assert step["import_paths"] == ["/streams"] and (STREAMS / "gtfs-realtime.proto").is_file()
+    assert step["import_paths"] == ["/proto"] and (STREAMS / "gtfs-realtime.proto").is_file()
     values = (ROOT / "components/pipeline-runner/values/runner/development-values.yaml.gotmpl").read_text()
     assert 'readFile "../../streams/gtfs-realtime.proto"' in values
     assert "departures" in {c["label"] for c in caches()}

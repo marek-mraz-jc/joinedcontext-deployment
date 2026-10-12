@@ -1,5 +1,5 @@
 # The mapping of the hsl-service-alerts pipeline (PL-03, T-3892): HSL's GTFS-RT service alerts,
-# decoded in the runner with Bento's `protobuf` step and the GTFS-RT schema mounted at /streams
+# decoded in the runner with Bento's `protobuf` step and the GTFS-RT schema mounted at /proto
 # (as hsl-departures, T-3891), become one Alert each: its header and description in Finnish,
 # Swedish and English, GTFS-RT's cause and effect, its severity, the span of its active periods,
 # and the lines (refRoute) and stops (refStop) it affects.
@@ -30,7 +30,7 @@ pipeline:
     - protobuf:
         operator: to_json
         message: transit_realtime.FeedMessage
-        import_paths: [/streams]
+        import_paths: [/proto]
 
     # A body too large or not a feed is dropped, as the runner drops a failed fetch: it must never
     # read as an empty feed, which withdraws every HSL alert.

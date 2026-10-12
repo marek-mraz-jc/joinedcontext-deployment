@@ -6,7 +6,9 @@
 #
 # The feed is protobuf. The runner decodes it with Bento's `protobuf` processor and the GTFS-RT
 # schema it carries beside its shared resources (`components/pipeline-runner/streams/
-# gtfs-realtime.proto`, mounted at /streams with resources.yaml), so no WASM step is needed.
+# gtfs-realtime.proto`, mounted alone at /proto), so no WASM step is needed. Not /streams: Bento
+# reads every .proto under an import path, and a ConfigMap mount holds the file twice (its link
+# and the kubelet's dated copy), "symbol already defined" (T-4037).
 #
 # What HSL's feed holds (measured 2026-10-12): each stop time update carries an expected
 # `departure.time` or `arrival.time` and no `delay` (0 of 19 211), and a trip carries its route
@@ -29,7 +31,7 @@ pipeline:
     - protobuf:
         operator: to_json
         message: transit_realtime.FeedMessage
-        import_paths: [/streams]
+        import_paths: [/proto]
 
     # A body too large or not a feed is dropped here, as the runner drops a failed fetch (the error
     # stays counted in processor_error): nothing below may read it as an empty feed and clear the
