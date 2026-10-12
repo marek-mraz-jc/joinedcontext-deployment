@@ -62,8 +62,13 @@ def _secret_variable(project: str) -> str:
     )
 
 
+@pytest.fixture(scope="module")
+def local(rendered):
+    return rendered("local")
+
+
 @requires_helmfile
-def test_every_project_with_pipelines_has_its_own_client_and_secret(dev):
+def test_every_project_with_pipelines_has_its_own_client_and_secret(local):
     """PF-46, AG-52, T-2384: a stream presents its own project's ServiceAccount, not Helsinki's.
 
     The Portal's reconciler renders `{project}-pipelines` as the stream's `client_key` and names
@@ -71,6 +76,8 @@ def test_every_project_with_pipelines_has_its_own_client_and_secret(dev):
     every stream, so every write to a Banská Bystrica endpoint was refused with `token is not
     bound to this resource`. This is the deployment's half: the client exists, its secret is
     generated per cluster, and the runner carries it under the name the reconciler mints.
+    Where the streams run as their pipelines' own identities (dev, T-4044, T-4050) the runner
+    carries none: test_pipeline_tokens.py holds that side.
     """
     import pathlib
 
@@ -82,11 +89,11 @@ def test_every_project_with_pipelines_has_its_own_client_and_secret(dev):
     )
     clients = yaml.safe_load(clients_file.read_text())
 
-    pod = by_name(dev, "Deployment", "pipeline-runner")["spec"]["template"]["spec"]
+    pod = by_name(local, "Deployment", "pipeline-runner")["spec"]["template"]["spec"]
     env = {e["name"]: e for e in pod["containers"][0]["env"]}
     secrets = {
         d["metadata"]["name"]
-        for d in dev
+        for d in local
         if d.get("kind") == "Secret" and d["metadata"]["name"].startswith("keycloak-client-")
     }
 

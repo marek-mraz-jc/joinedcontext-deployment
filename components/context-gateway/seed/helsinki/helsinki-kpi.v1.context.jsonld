@@ -1,6 +1,12 @@
 {
   "@context": {
     "@vocab": "https://joinedcontext.com/models/",
+    "Any": {
+      "@id": "linkml:Any"
+    },
+    "CalculationPeriod": {
+      "@id": "jc:CalculationPeriod"
+    },
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
@@ -24,6 +30,10 @@
       "@id": "jc:derivedFrom",
       "@type": "@id"
     },
+    "end": {
+      "@id": "jc:end",
+      "@type": "xsd:dateTime"
+    },
     "geojson": "https://purl.org/geojson/vocab#",
     "id": "@id",
     "jc": "https://joinedcontext.com/models/",
@@ -41,6 +51,10 @@
     },
     "schema": "http://schema.org/",
     "shex": "http://www.w3.org/ns/shex#",
+    "start": {
+      "@id": "jc:start",
+      "@type": "xsd:dateTime"
+    },
     "type": "@type",
     "ucefact": "https://vocabulary.uncefact.org/UnitMeasureCode#",
     "updatedAt": {

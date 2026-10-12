@@ -9,7 +9,7 @@ spec:
   assigner: did:web:{orgDomain}
   assignee: { kind: role, id: public }
   # Read only. The indicators are what the project publishes as its own numbers.
-  operations: [retrieveOps]
+  operations: [retrieveOps, createSubscription, retrieveSubscription, updateSubscription, deleteSubscription]
   information:
     - entities:
         - type: KeyPerformanceIndicator

@@ -2,7 +2,7 @@
   One search filter (T-3048), CKAN 2.11.6's own snippet with two changes: a filter with nothing
   to choose is left out, where CKAN printed "There are no Topic that match this search"; and a
   label is shown whole and wraps, where CKAN cut every one at 22 characters and three licences
-  all read "Creative Commons...".
+  all read "Creative Commons..."; and the footer is printed only when it holds a link.
 #}
 {% block facet_list %}
   {% with items = items or h.get_facet_items_dict(name, search_facets) %}
@@ -25,15 +25,17 @@
             {% endfor %}
           </ul>
         </nav>
-        <p class="module-footer">
-          {% if h.get_param_int('_%s_limit' % name) %}
-            {% if h.has_more_facets(name, search_facets) %}
+        {# The footer only when it holds a link: an empty one drew a bordered strip under the list. #}
+        {% set limited = h.get_param_int('_%s_limit' % name) %}
+        {% if not limited or h.has_more_facets(name, search_facets) %}
+          <p class="module-footer">
+            {% if limited %}
               <a href="{{ h.remove_url_param('_%s_limit' % name, replace=0, extras=extras, alternative_url=alternative_url) }}" class="read-more">{{ _('Show More {facet_type}').format(facet_type=title) }}</a>
+            {% else %}
+              <a href="{{ h.remove_url_param('_%s_limit' % name, extras=extras, alternative_url=alternative_url) }}" class="read-more">{{ _('Show Only Popular {facet_type}').format(facet_type=title) }}</a>
             {% endif %}
-          {% else %}
-            <a href="{{ h.remove_url_param('_%s_limit' % name, extras=extras, alternative_url=alternative_url) }}" class="read-more">{{ _('Show Only Popular {facet_type}').format(facet_type=title) }}</a>
-          {% endif %}
-        </p>
+          </p>
+        {% endif %}
       </section>
     {% endif %}
   {% endwith %}

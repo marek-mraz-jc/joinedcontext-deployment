@@ -222,3 +222,16 @@ def test_the_seed_reads_the_feed_every_30_s_into_gtfsstop_through_the_city_endpo
     model = yaml.safe_load((HELSINKI / "helsinki.linkml.yaml").read_text())
     assert "departures" in model["classes"]["GtfsStop"]["slots"]
     assert model["slots"]["departures"]["annotations"]["ngsi_ld_kind"] == "JsonProperty"
+
+
+def test_a_pass_never_copies_the_whole_feed_or_regroups_every_row():
+    # T-4071: the runner was OOMKilled with this pass every 30 s beside 100 other streams. A
+    # `mapping` answering `this` deep-copies the decoded feed (a mutation edits it in place), and
+    # a `fold` that merges each row into the table so far copies the table on every row.
+    processors = yaml.safe_load(MAPPING.read_text())["pipeline"]["processors"]
+    for processor in processors:
+        mapping = processor.get("mapping", "")
+        assert not re.search(r"\{\s*this\s*\}", mapping), mapping
+    final = processors[-2]["mapping"]
+    assert ".fold(" not in final.split("let rows")[1], "rows are taken per stop, not folded"
+    assert ".filter(u -> $wanted.get(" in final, "only a kept stop's updates become rows"

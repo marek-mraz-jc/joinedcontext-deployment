@@ -55,6 +55,7 @@ runner_restarts() {
 		tr ' ' '\n' | awk '{ total += $1 } END { if (NR) print total }'
 }
 runner_restarts_before=$(runner_restarts)
+smoke_started=$(date +%s)
 
 # The entity type an endpoint grants this caller, from its own access document (EP-55).
 #
@@ -452,7 +453,7 @@ if has_route context-endpoint; then
 			-H "Authorization: Bearer $ep_token" -d "$body" "$base/api/endpoint/$ep/ngsi-ld/v1/entities"
 		status 200 "entity read back" -H "Authorization: Bearer $ep_token" "$base/api/endpoint/$ep/ngsi-ld/v1/entities/$urn"
 		# An id that is no NGSI-LD URN is refused by the gateway, not stored (PF-43).
-		bad='{"id":"smoke-not-a-urn","type":"AirQualityObserved"}'
+		bad='{"id":"smoke-not-a-urn","type":"AirQualityObserved","dateObserved":{"type":"Property","value":"2026-01-01T00:00:00Z"}}'
 		status 400 "write with an id that is no NGSI-LD URN is refused" -X POST -H 'Content-Type: application/json' \
 			-H "Authorization: Bearer $ep_token" -d "$bad" "$base/api/endpoint/$ep/ngsi-ld/v1/entities"
 		# A URN naming another organization is an id like any other since ADR-N-041: it lands in
@@ -462,7 +463,7 @@ if has_route context-endpoint; then
 		curl -sS -o /dev/null --max-time 20 -X DELETE -H "Authorization: Bearer $ep_token" \
 			"$base/api/endpoint/$ep/ngsi-ld/v1/entities/$other" 2>/dev/null || true
 		status 201 "an id naming another organization lands in this space (ADR-N-041)" -X POST -H 'Content-Type: application/json' \
-			-H "Authorization: Bearer $ep_token" -d '{"id":"'"$other"'","type":"AirQualityObserved"}' "$base/api/endpoint/$ep/ngsi-ld/v1/entities"
+			-H "Authorization: Bearer $ep_token" -d '{"id":"'"$other"'","type":"AirQualityObserved","dateObserved":{"type":"Property","value":"2026-01-01T00:00:00Z"}}' "$base/api/endpoint/$ep/ngsi-ld/v1/entities"
 		status 204 "and is deleted again" -X DELETE -H "Authorization: Bearer $ep_token" "$base/api/endpoint/$ep/ngsi-ld/v1/entities/$other"
 		status 204 "entity delete" -X DELETE -H "Authorization: Bearer $ep_token" "$base/api/endpoint/$ep/ngsi-ld/v1/entities/$urn"
 
@@ -710,6 +711,19 @@ for t in json.load(sys.stdin):
 		"$base/git/$forge_org/configuration/raw/branch/main/platform-settings.yaml"
 else
 	skip "git forge (route gitea-forge not configured in this instance)"
+fi
+
+echo "public documentation"
+if has_route portal-public-guide; then
+	# T-4063: a citizen reads how to use a public Endpoint with no account, from the apex address
+	# as the API pages print it; the apex redirects to the Portal host, which answers the page.
+	guide=$(curl -sSL --max-time 20 "$base/docs/API/07-websocket" 2>/dev/null || true)
+	if printf '%s' "$guide" | grep -q '<title>Live Updates over WebSocket</title>'; then
+		ok "the WebSocket guide reads without signing in"
+	else
+		ko "the WebSocket guide does not read without signing in"
+	fi
+	status 404 "no Operations page is public" "$portal/docs/Operations/00-intro"
 fi
 
 echo "catalogue"
@@ -1297,11 +1311,17 @@ if [ -z "$runner_restarts_before" ]; then
 	skip "pipeline runner streams (no pipeline-runner in this instance)"
 else
 	# A stream the runner refused at init (a step that does not build, the GTFS-RT schema read
-	# twice) never runs and says so only in this log; 15 min covers the apply before the smoke.
-	refused=$(kubectl logs -n "$slug" -l app.kubernetes.io/name=pipeline-runner-runner -c pipeline-runner-runner --since=15m --tail=-1 2>/dev/null |
+	# twice) never runs and says so only in this log, without its name. The Portal sends a
+	# refused render again on every 60 s sync tick, so a refusal that stands is in the last two
+	# minutes; one from the apply (the new pod given the old render before the seed converged,
+	# T-4055) is older once the smoke has run that long.
+	window=${JC_SMOKE_RUNNER_WINDOW:-120}
+	ran=$(($(date +%s) - smoke_started))
+	[ "$ran" -lt "$window" ] && sleep $((window - ran))
+	refused=$(kubectl logs -n "$slug" -l app.kubernetes.io/name=pipeline-runner-runner -c pipeline-runner-runner --since="${window}s" --tail=-1 2>/dev/null |
 		grep -oE 'Failed to create stream \([^)]*\)|Streams CRUD Error[^"]{0,80}' | sort -u | head -n 5 || true)
 	if [ -z "$refused" ]; then
-		ok "the pipeline runner built every stream it was given in the last 15 min"
+		ok "the pipeline runner refused no stream in the last ${window} s"
 	else
 		ko "the pipeline runner refused streams: $(echo $refused)"
 	fi

@@ -9,7 +9,7 @@ spec:
   assigner: did:web:{orgDomain}
   assignee: { kind: role, id: public }
   # Read only. Only works that carry an open licence of their own enter the space, and none carries an author.
-  operations: [retrieveOps]
+  operations: [retrieveOps, createSubscription, retrieveSubscription, updateSubscription, deleteSubscription]
   information:
     - entities:
         - type: CreativeWork

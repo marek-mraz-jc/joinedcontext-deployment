@@ -3,6 +3,9 @@ kind: Endpoint
 metadata:
   name: helsinki-bikes
   namespace: helsinki
+  description:
+    fi: "Helsingin kaupunkipyöräasemat: sijainti, kapasiteetti sekä juuri nyt vapaat pyörät ja telineet. Lähde: operaattorin GBFS-syöte, ODbL 1.0."
+    en: "Helsinki's city bike stations: location, capacity and the bikes and docks free right now. Source: the operator's GBFS feed, ODbL 1.0."
   title: { en: "Helsinki city bike stations" }
 spec:
   contextSpaceRef: helsinki
@@ -11,7 +14,7 @@ spec:
   # The one Policy this endpoint evaluates: the slice of the space it publishes (EP-14).
   policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki:public-bikes
   # `ogc-features` is the OGC API Features surface dev-smoke reads per Endpoint kind (T-3957).
-  enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, zip, mcp, ogc-features]
+  enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, zip, mcp, ogc-features, websocket]
   # The organizer's contact line stays in the space for the city's own coordination and is
   # served by no public endpoint (EP-61). A projection only narrows.
   projection: { hiddenAttributes: [contactPoint] }

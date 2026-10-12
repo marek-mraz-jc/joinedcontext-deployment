@@ -11,7 +11,7 @@ spec:
   contextSpaceRef: zilina-mesto
   slug: 6cm7hh73b7igmmekf3a5ucwmjyqspf62
   audience: organization
-  enabledRepresentations: [ngsi-ld, csv, json]
+  enabledRepresentations: [ngsi-ld, csv, json, websocket, ogc-features]
   # Described, not published: the catalogue lists the space for the organization's own readers
   # and names where every row came from (EP-27, T-3139).
   catalog:

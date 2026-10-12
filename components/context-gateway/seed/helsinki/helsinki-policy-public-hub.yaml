@@ -12,7 +12,7 @@ spec:
   contextSpaceRef: { kind: ContextSpace, name: helsinki-hub }
   assigner: did:web:{orgDomain}
   assignee: { kind: role, id: public }
-  operations: [retrieveOps]
+  operations: [retrieveOps, createSubscription, retrieveSubscription, updateSubscription, deleteSubscription]
   information:
     - entities:
         - type: Vehicle
