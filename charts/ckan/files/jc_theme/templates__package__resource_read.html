@@ -32,7 +32,8 @@
     <p class="text-muted jc-resource-address">{{ h.jc_t('address') }}: <a class="resource-url-analytics" href="{{ res.url }}">{{ res.url }}</a></p>
   {% endif %}
   <div class="prose notes">
-    {% if res.description %}{{ h.render_markdown(h.get_translated(res, 'description')) }}{% endif %}
+    {# An API resource's usage text is shown below with its copy buttons (T-3887). #}
+    {% if res.description and not h.jc_is_api(res) %}{{ h.render_markdown(h.get_translated(res, 'description')) }}{% endif %}
     <p>{{ h.jc_t('part_of') }}: <a href="{{ h.url_for(package.type ~ '.read', id=package.name) }}">{{ h.get_translated(package, 'title') or package.name }}</a></p>
   </div>
 {% endblock %}
@@ -40,15 +41,20 @@
 {#
   A file or an API address has no table view, and CKAN said so as if something were missing.
   A reader is told what the resource is and given its one action; an editor who may create
-  views still gets CKAN's own explanation.
+  views for a file still gets CKAN's own explanation. An API resource always shows how to use
+  it instead, with its commands to copy (T-3887).
 #}
 {% block resource_view_content %}
-  {% if resource_views or h.check_access('resource_view_create', {'resource_id': resource.id}) %}
+  {% set api = h.jc_is_api(res) %}
+  {% if resource_views or (not api and h.check_access('resource_view_create', {'resource_id': resource.id})) %}
     {{ super() }}
   {% else %}
-    {% set api = (res.format or '').upper() in ['NGSI-LD', 'MCP'] %}
     <div class="resource-view jc-no-view">
       <p>{{ h.jc_t('api_lead') if api else h.jc_t('file_lead') }}</p>
+      {% if api %}
+        <div class="jc-usage">{% snippet 'package/snippets/jc_usage.html', blocks=h.jc_usage(res), res=res %}</div>
+        <p class="visually-hidden" role="status" aria-live="polite" id="jc-copy-status"></p>
+      {% endif %}
       {% if res.url and h.is_url(res.url) %}
         <a class="btn btn-primary" href="{{ res.url }}" rel="noreferrer">
           {{- h.jc_t('open') if api else h.jc_t('download') -}}
@@ -57,4 +63,9 @@
       {% endif %}
     </div>
   {% endif %}
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script src="{{ h.url_for_static('/jc-copy.js') }}" defer></script>
 {% endblock %}
