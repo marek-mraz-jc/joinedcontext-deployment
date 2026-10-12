@@ -27,8 +27,9 @@ spec:
       history: PT8H
   # Plausibility beside the model's own constraints (DM-86, ADR-N-046 2.4). The area is what
   # HSL's feeds cover: its region and the commuter trains to Riihimäki (Hyvinkää is a stop of
-  # the recorded GTFS); 33.4 m/s is 120 km/h (HFP reports `spd` in m/s); a report more than
-  # 30 s ahead of the clock is refused.
+  # the recorded GTFS); 44.5 m/s is 160 km/h, the commuter trains' top speed (Sm5; HFP takes
+  # every rail vehicle and reports `spd` in m/s); a report more than 30 s ahead of the
+  # clock is refused.
   quality:
     - name: vehicle-in-hsl-area
       entityType: Vehicle
@@ -40,7 +41,7 @@ spec:
       kind: range
       attribute: speed
       min: 0
-      max: 33.4
+      max: 44.5
     - name: vehicle-report-not-ahead
       entityType: Vehicle
       kind: freshness

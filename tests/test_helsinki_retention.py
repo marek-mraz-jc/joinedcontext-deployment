@@ -2,7 +2,8 @@
 
 The values are the owner's (DM-81, DM-86, ADR-N-046): a vehicle is gone five minutes after its
 last report and its track is kept eight hours; positions lie in what HSL's feeds cover, speeds
-under 120 km/h, and no report is ahead of the clock. No other space of the seed loses data.
+up to 160 km/h (the Sm5 commuter trains), and no report is ahead of the clock. No other space
+of the seed loses data.
 """
 
 import csv
@@ -47,7 +48,7 @@ def test_each_rule_reads_a_slot_of_its_class_and_names_itself_once():
         assert rule["attribute"] in model["classes"][rule["entityType"]]["slots"] + ["location"], rule
     by_name = {rule["name"]: rule for rule in rules}
     assert by_name["vehicle-speed"] == {
-        "name": "vehicle-speed", "entityType": "Vehicle", "kind": "range", "attribute": "speed", "min": 0, "max": 33.4,
+        "name": "vehicle-speed", "entityType": "Vehicle", "kind": "range", "attribute": "speed", "min": 0, "max": 44.5,
     }
     assert by_name["vehicle-report-not-ahead"]["maxAhead"] == "PT30S"
 
