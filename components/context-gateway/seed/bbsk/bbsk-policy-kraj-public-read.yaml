@@ -11,7 +11,7 @@ spec:
   # Read only, and every published column of the statistics office's rows. stewardNote is the
   # region's own annotation (statistical-observation 1.1.0), written by its steward and not open
   # data, so it is left out (T-2934).
-  operations: [retrieveOps]
+  operations: [retrieveOps, createSubscription, retrieveSubscription, updateSubscription, deleteSubscription]
   information:
     - entities:
         - type: StatisticalObservation

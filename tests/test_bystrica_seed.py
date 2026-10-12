@@ -12,6 +12,9 @@ from pathlib import Path
 import pytest
 import yaml
 
+# Reading, plus the subscriptions a WebSocket needs (T-4073); no entity write.
+READ_AND_SUBSCRIBE = ["retrieveOps", "createSubscription", "retrieveSubscription", "updateSubscription", "deleteSubscription"]
+
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
 DEMO_USERS = yaml.safe_load(
     (Path(__file__).resolve().parent.parent / "components/keycloak/demo-users.yaml").read_text()
@@ -106,7 +109,7 @@ def test_the_citys_indicators_reach_the_region_by_a_named_share_and_nothing_wide
     # Read and nothing else: the region cannot write a city number.
     grant = one(CITY, "Policy", "kpi-shared-read")
     assert grant["spec"]["assignee"] == {"kind": "group", "id": "bbsk"}
-    assert grant["spec"]["operations"] == ["retrieveOps"]
+    assert grant["spec"]["operations"] == READ_AND_SUBSCRIBE
     assert grant["spec"]["information"][0]["entities"] == [{"type": "KeyPerformanceIndicator"}]
 
 
@@ -339,7 +342,7 @@ def test_no_grant_in_these_projects_lets_a_person_write_a_published_figure():
 def test_the_steward_reads_the_columns_the_records_application_shows():
     for folder, space, name in RAW:
         grant = policies_of(folder, space)[f"{name}-steward-read"]
-        assert grant["operations"] == ["retrieveOps"], f"{folder.name}: reading and nothing else"
+        assert grant["operations"] == READ_AND_SUBSCRIBE, f"{folder.name}: reading and nothing else"
         served = grant["information"][0]["propertyNames"]
         # Every column the model declares, because a filter names an attribute and an attribute
         # the grant withholds is a filter the endpoint refuses rather than answers (T-1862).
@@ -488,7 +491,7 @@ def test_the_application_reading_both_bodies_is_a_published_static_app_on_the_re
     # The public read of the raw rows names every published column of the statistics office and
     # never the steward's own note, which is the region's annotation and not open data.
     public = one(REGION, "Policy", "kraj-public-read")["spec"]
-    assert public["assignee"] == {"kind": "role", "id": "public"} and public["operations"] == ["retrieveOps"]
+    assert public["assignee"] == {"kind": "role", "id": "public"} and public["operations"] == READ_AND_SUBSCRIBE
     (rule,) = public["information"]
     assert "stewardNote" not in rule["propertyNames"]
     assert set(further[1]["attrs"]) <= set(rule["propertyNames"])
