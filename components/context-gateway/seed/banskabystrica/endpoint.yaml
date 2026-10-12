@@ -22,7 +22,7 @@ spec:
   # Architecture/21 §3, T-2432). `xlsx` is the same rows for a person who opens them in a
   # spreadsheet; `zip` is left out, a third copy of the same readings nobody rebuilds.
   # `ogc-features` is the OGC API Features surface dev-smoke reads per Endpoint kind (T-3957).
-  enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, mcp, ogc-features]
+  enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, mcp, ogc-features, websocket]
   # Published under CC BY 4.0 by the owner's decision (T-2407, 2026-09-25). Since T-3120 the
   # space holds the real hourly EEA reading of SK0263A (pipeline public-air), and the 13 seeded
   # test stations age out through that pipeline's expiry (PL-64).
