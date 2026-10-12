@@ -20,6 +20,9 @@ context-broker:
     # Antares dev eb30b4f (image-jc run 38201052761 green 2026-10-12): the broker refuses
     # private egress except the hosts ANTARES_EGRESS_PRIVATE_HOSTS names (T-3908, T-3909); no
     # new migration over 6770b73.
+    # Antares dev e6484ba (train 20261012-1042): per (tenant, type) retention of current state and
+    # history under /q/retention, deleted in bounded batches (T-3900), with T-4003 T-4019 T-3786
+    # T-3933/34 T-3936 T-3948 T-3980 T-4021 T-4034; no new migration over eb30b4f.
     repository: 'ghcr.io/marek-mraz-jc/antares-broker-jc'
-    tag: 'eb30b4f'
-    digest: 'sha256:cf6093adadb4110808fe4be95ee88034ccb0d30c8eeb2c71a244cdb5fefb96ed'
+    tag: 'e6484ba'
+    digest: 'sha256:5644d20004704e19954100219dad28c8381b17e50d33e4c2cf42f4543f55c35f'
