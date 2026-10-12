@@ -34,10 +34,11 @@ def test_the_broker_mounts_no_configuration_of_the_plane(broker_pod):
 
 
 def test_the_broker_runs_the_surfaces_and_requires_its_admin_credential(broker_pod):
-    """T-3642: the views, MCP and access surfaces beside `/q`, the subject headers the gateway sets
-    (platform T-3641), and `/q` behind the mounted secret with only the metrics open."""
+    """T-3642: the views, MCP, access and (T-3804) LinkML surfaces beside `/q`, the subject headers
+    the gateway sets (platform T-3641), and `/q` behind the mounted secret with only the metrics
+    open."""
     env = {e["name"]: e.get("value") for e in broker_pod["containers"][0].get("env", [])}
-    assert env["ANTARES_API_SURFACES"].split(",") == ["admin", "views", "mcp", "access"]
+    assert env["ANTARES_API_SURFACES"].split(",") == ["admin", "views", "mcp", "access", "linkml"]
     assert env["ANTARES_POLICY_SUBJECT_HEADERS"].split(",") == [
         "x-jc-subject", "x-jc-groups", "x-jc-roles", "x-jc-client", "x-jc-restricted", "x-jc-did"]
     assert not {"authorization", "cookie"} & set(env["ANTARES_POLICY_SUBJECT_HEADERS"].split(","))

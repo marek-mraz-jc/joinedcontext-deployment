@@ -61,10 +61,12 @@ env:
   ANTARES_REQUIRE_RLS: "1"
   ANTARES_MAX_CONNECTIONS: "512"
   ANTARES_DATABASE_URL: "postgresql://antares:$(PGPASSWORD)@postgres-cluster-rw.{{ .Values.postgres.cluster.namespace }}.svc.cluster.local:5432/antares"
-  # The jc build's surfaces (T-3642): the endpoint views, MCP and the engine's access document,
-  # each under /x/views/{view}/. The LinkML schema is no surface: the Portal PUTs it to
-  # /q/schemas/{tenant} (T-3628), which takes nothing while ANTARES_SCHEMA_MAX_BYTES is unset.
-  ANTARES_API_SURFACES: "admin,views,mcp,access"
+  # The jc build's surfaces (T-3642): the endpoint views, MCP, the engine's access document and
+  # the view's LinkML schema (T-3804, the image carries it since Antares T-3803), each under
+  # /x/views/{view}/ and reached through the gateway only (no edge route). The Portal PUTs the
+  # schema to /q/schemas/{tenant} (T-3628), which takes nothing while ANTARES_SCHEMA_MAX_BYTES is
+  # unset; the gateway serves /api/endpoint/{slug}/schema/... from /x/views/{slug}/linkml (T-3645).
+  ANTARES_API_SURFACES: "admin,views,mcp,access,linkml"
   ANTARES_SCHEMA_MAX_BYTES: "1048576"
   # The verified caller the gateway forwards (platform T-3641); `x-jc-did` a data-space
   # participant, which the gateway strips from every client request (platform T-3800, T-3816).
