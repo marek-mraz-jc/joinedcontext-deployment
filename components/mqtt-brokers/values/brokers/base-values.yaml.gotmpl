@@ -21,5 +21,12 @@ runner:
 brokers:
   {{- $this.brokers | default list | toYaml | nindent 2 }}
 
+{{- if has "portal" .Values.components }}
+portal:
+  # fullnameOverride of the portal part names its ServiceAccount.
+  namespace: {{ .Values.portal.portal.namespace | quote }}
+  serviceAccount: portal
+{{- end }}
+
 serviceMesh:
   enabled: {{ and ($global.serviceMesh.enable | default false) (eq ($global.serviceMesh.type | default "") "linkerd") }}

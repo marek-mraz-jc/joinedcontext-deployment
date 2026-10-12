@@ -1579,3 +1579,52 @@ def test_a_runner_at_80_percent_of_its_limit_fails_the_run(tmp_path):
         result = run(tmp_path / name, spec, "https://example.test", "https://idm.example.test")
         assert line in result.stdout, name
 
+
+
+def test_the_smoke_client_mints_the_internal_ogc_rows_audience_from_the_seed():
+    """T-3957: dev-smoke's "ogc internal" row reads helsinki-bikes-ops with the demo user's token
+    from the smoke client; the gateway admits it only when `aud` names that Endpoint's slug
+    (PF-45), so the client's mapper carries exactly the seeded slug."""
+    seed = yaml.safe_load(
+        (PROJECT_ROOT / "components/context-gateway/seed/helsinki/helsinki-endpoint-bikes-ops.yaml").read_text()
+    )
+    clients = yaml.safe_load((PROJECT_ROOT / "components/apisix/keycloak-clients.yaml").read_text())
+    audiences = {
+        mapper["config"].get("included.custom.audience")
+        for mapper in clients["apisix-gateway"]["rawValues"]["protocolMappers"]
+    }
+    assert seed["spec"]["slug"] in audiences
+    assert "ogc_row internal helsinki-bikes-ops" in SMOKE.read_text()
+
+
+def test_the_internal_ogc_rows_reader_is_granted_the_stations_on_helsinki_bikes_ops():
+    """T-3957: on an `organization` Endpoint the gateway gives a signed-in person no `public`
+    role (GW22), so the demo viewer the row reads as needs a grant of their own on the space.
+    The Endpoint names no policyRef, so every Policy of its space applies; one of them must
+    let a group of the viewer's token read the stations, or /collections lists none."""
+    seed_dir = PROJECT_ROOT / "components/context-gateway/seed/helsinki"
+    endpoint = yaml.safe_load((seed_dir / "helsinki-endpoint-bikes-ops.yaml").read_text())
+    assert endpoint["spec"]["audience"] == "organization"
+    assert "policyRef" not in endpoint["spec"]
+    space = endpoint["spec"]["contextSpaceRef"]
+    groups = set(yaml.safe_load((PROJECT_ROOT / "components/keycloak/demo-users.yaml").read_text())["demo.viewer"]["groups"])
+    assert 'demo_user="${JC_SMOKE_DEMO_USER:-demo.viewer}"' in SMOKE.read_text()
+
+    def grants(policy):
+        spec = policy["spec"]
+        ref = spec["contextSpaceRef"]
+        return (
+            (ref.get("name") if isinstance(ref, dict) else ref) == space
+            and spec["assignee"] == {"kind": "group", "id": spec["assignee"]["id"]}
+            and spec["assignee"]["id"] in groups
+            and "retrieveOps" in spec["operations"]
+            and any(e.get("type") == "BikeHireDockingStation" for i in spec["information"] for e in i["entities"])
+        )
+
+    policies = [
+        doc
+        for path in sorted(seed_dir.glob("helsinki-policy-*.yaml"))
+        for doc in yaml.safe_load_all(path.read_text())
+        if doc and doc.get("kind") == "Policy"
+    ]
+    assert any(grants(policy) for policy in policies), "no group of demo.viewer reads the stations"
