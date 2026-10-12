@@ -22,4 +22,4 @@ context-broker:
     # new migration over 6770b73.
     repository: 'ghcr.io/marek-mraz-jc/antares-broker-jc'
     tag: 'eb30b4f'
-    digest: 'sha256:bc80fd49aa610489a5c1e2202a1b85cacc3a04caaf08ef6a764d18cd98b96416'
+    digest: 'sha256:cf6093adadb4110808fe4be95ee88034ccb0d30c8eeb2c71a244cdb5fefb96ed'
