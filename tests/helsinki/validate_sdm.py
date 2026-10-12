@@ -43,6 +43,9 @@ MODELS = {
     "PointOfInterest": ("dataModel.PointOfInterest", "PointOfInterest"),
     "GtfsStop": ("dataModel.UrbanMobility", "GtfsStop"),
     "GtfsRoute": ("dataModel.UrbanMobility", "GtfsRoute"),
+    "GtfsStation": ("dataModel.UrbanMobility", "GtfsStation"),
+    "GtfsAgency": ("dataModel.UrbanMobility", "GtfsAgency"),
+    "GtfsShape": ("dataModel.UrbanMobility", "GtfsShape"),
     "Event": ("dataModel.TourismDestinations", "Event"),
 }
 
@@ -56,7 +59,8 @@ EXCEPTIONS = {
     "KeyPerformanceIndicator": "the platform's own KPI type, outside the Helsinki feeds",
     "TransitRoute": "one direction of one HSL line with its headsign and drawn shape; GtfsRoute is the "
                     "line without a direction or a shape (those are GtfsTrip and GtfsShape), so renaming "
-                    "would claim a model the entity is not; T-3890 brings GtfsRoute from GTFS static",
+                    "would claim a model the entity is not; GtfsRoute from GTFS static stands beside it (T-3890), and "
+                    "transit-reach reads this one's stop order, which GTFS gives only through stop_times",
 }
 
 #: Attributes of a validated type that knowingly differ from the SDM schema, and why. A failure on
@@ -69,6 +73,8 @@ ACCEPTED = {
     ("Alert", "subCategory"): "Digitraffic's situationType, which the alerts-heatmap app labels; SDM codes are T-3950",
     ("Event", "eventStatus"): "one schema.org status as the Helsinki class declares it and the event apps read it; "
                               "SDM's only Event (dataModel.TourismDestinations) makes it a list",
+    ("GtfsStation", "hasStop"): "the inverse of each platform's hasParentStation, which the Helsinki model "
+                                "computes and never stores (one stored end per relationship, DM-67)",
     ("WaterQualityObserved", "dateObserved"): "a beach sensor that has not reported this season is kept with its "
                                               "position and name and no observation, rather than a date nobody "
                                               "measured (test_a_beach_sensor_without_a_reading...)",

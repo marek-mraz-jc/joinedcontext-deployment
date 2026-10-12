@@ -19,6 +19,18 @@
     "Event": {
       "@id": "sdm:Event"
     },
+    "GtfsAgency": {
+      "@id": "sdm:GtfsAgency"
+    },
+    "GtfsRoute": {
+      "@id": "sdm:GtfsRoute"
+    },
+    "GtfsShape": {
+      "@id": "sdm:GtfsShape"
+    },
+    "GtfsStation": {
+      "@id": "sdm:GtfsStation"
+    },
     "GtfsStop": {
       "@id": "sdm:GtfsStop"
     },
@@ -51,6 +63,9 @@
     },
     "address": {
       "@id": "schema:address"
+    },
+    "agencyName": {
+      "@id": "sdm:agencyName"
     },
     "airQualityIndex": {
       "@id": "sdm:airQualityIndex",
@@ -93,6 +108,10 @@
       "@id": "jc:directionId",
       "@type": "xsd:integer"
     },
+    "distanceTravelled": {
+      "@id": "sdm:distanceTravelled",
+      "@type": "xsd:float"
+    },
     "districtCode": {
       "@id": "jc:districtCode"
     },
@@ -122,6 +141,14 @@
       "@type": "xsd:integer"
     },
     "geojson": "https://purl.org/geojson/vocab#",
+    "hasParentStation": {
+      "@id": "sdm:hasParentStation",
+      "@type": "@id"
+    },
+    "hasStop": {
+      "@id": "sdm:hasStop",
+      "@type": "@id"
+    },
     "heading": {
       "@id": "sdm:heading",
       "@type": "xsd:float"
@@ -135,6 +162,9 @@
       "@type": "xsd:anyURI"
     },
     "jc": "https://joinedcontext.com/models/",
+    "language": {
+      "@id": "sdm:language"
+    },
     "linkml": "https://w3id.org/linkml/",
     "location": {
       "@id": "geojson:geometry"
@@ -151,6 +181,14 @@
     "openingHours": {
       "@container": "@language",
       "@id": "schema:openingHours"
+    },
+    "operatedBy": {
+      "@id": "sdm:operatedBy",
+      "@type": "@id"
+    },
+    "page": {
+      "@id": "sdm:page",
+      "@type": "xsd:anyURI"
     },
     "permitEnd": {
       "@id": "jc:permitEnd",
@@ -178,6 +216,9 @@
         "text": "skos:notation"
       },
       "@id": "jc:permitStatus"
+    },
+    "phone": {
+      "@id": "sdm:phone"
     },
     "pm10": {
       "@id": "sdm:pm10",
@@ -217,6 +258,13 @@
     "routeShortName": {
       "@id": "jc:routeShortName"
     },
+    "routeType": {
+      "@id": "sdm:routeType"
+    },
+    "routes": {
+      "@id": "jc:routes",
+      "@type": "@id"
+    },
     "schema": "http://schema.org/",
     "sdm": "https://smartdatamodels.org/",
     "serviceCategory": {
@@ -228,6 +276,9 @@
       "@id": "jc:serviceCategory"
     },
     "shex": "http://www.w3.org/ns/shex#",
+    "shortName": {
+      "@id": "sdm:shortName"
+    },
     "skos": "http://www.w3.org/2004/02/skos/core#",
     "source": {
       "@id": "sdm:source",
@@ -259,6 +310,9 @@
     "temperature": {
       "@id": "sdm:temperature",
       "@type": "xsd:float"
+    },
+    "timezone": {
+      "@id": "sdm:timezone"
     },
     "totalSlotNumber": {
       "@id": "sdm:totalSlotNumber",
@@ -295,6 +349,9 @@
     "waterQualityObservations": {
       "@id": "jc:waterQualityObservations",
       "@type": "@id"
+    },
+    "wheelChairAccessible": {
+      "@id": "sdm:wheelChairAccessible"
     },
     "windDirection": {
       "@id": "sdm:windDirection",

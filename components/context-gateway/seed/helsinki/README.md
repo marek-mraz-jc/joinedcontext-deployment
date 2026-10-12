@@ -59,3 +59,28 @@ capped; departures only for a curated stop set; no `stop_times` or `trips` table
 whole; each task above measures pipeline-runner and broker memory (`kubectl top pod`, 10 min
 average) before and after and stays under +150 MiB. This task adds no ingest, so it changes
 neither.
+
+### GTFS static (T-3890)
+
+Three DataSources read `hsl.zip` by its members (PL-72): the runner fetches the zip's directory
+and then each named member by its byte range, so `stop_times.txt` (1.0 GB inflated), `trips.txt`
+and `translations.txt` are never fetched. Measured 2026-10-12 with Bento 1.22.0 locally over the
+member alone, peak resident memory over Bento's own baseline (about 140 MB), and entities written:
+
+| Pipeline | Source | Members | Entities | Peak over baseline | Time | Schedule |
+|---|---|---|---|---|---|---|
+| `transit-stops` | `hsl-gtfs-stops` | `stops.txt` (8 385 rows) | 8 263 GtfsStop, 122 GtfsStation | 120 to 135 MB | 2 s | daily 04:20 |
+| `gtfs-routes` | `hsl-gtfs-routes` | `agency.txt` (1), `routes.txt` (459) | 1 GtfsAgency, 459 GtfsRoute | under 5 MB | 1 s | daily 04:30 |
+| `gtfs-shapes` | `hsl-gtfs-shapes` | `shapes.txt` (456 964 points, 1 192 shapes) | 1 192 GtfsShape, about 200 points each | 180 to 225 MB | 4 s | paused |
+
+The row counts are `wc -l` minus the header of each member; the entity counts are the mappings'
+output over those members, every entity valid against `helsinki.v1.schema.json`. `gtfs-shapes`
+is paused because the runner reads a deflated member only when 1032 times its packed size fits
+the 256 MiB bound (T-3951), and `shapes.txt` is 4.2 MB packed; T-3953 bounds the inflate on its
+output instead. `stops.txt` (197 kB packed) fits that rule with 256 MiB, until it passes 260 kB
+packed. A line's stops in order and its direction stay with TransitRoute from the ArcGIS "stops by
+line" register (`transit-routes`), which transit-reach reads: GTFS gives them only through
+`trips.txt` and `stop_times.txt`. The ArcGIS stop register is gone; it named stops by the same
+GTFS stop ids, so the first run updates those entities in place, and a stop it held that the
+GTFS feed lacks stays on dev until someone deletes it. The 10-minute averages on dev (`kubectl top pod`) are the deployer's to
+record after the first runs.
