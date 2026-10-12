@@ -32,13 +32,21 @@ env:
   JC_GATEWAY_HOST: "context-gateway.{{ index .Values "context-gateway" "gateway" "namespace" }}.svc.cluster.local:8080"
   # The public issuer, so the token's `iss` is the one the gateway verifies (KC_HOSTNAME).
   JC_TOKEN_URL: "https://idm.{{ $global.domain }}/realms/{{ $global.instanceSlug }}/protocol/openid-connect/token"
-  # The pipeline-test harness the Portal sends still runs as this one client, because the
-  # `portal-internal` audience is only on it (T-2271); a rendered stream does not use it.
+  # The pipeline-test harness the Portal sends runs as this one client without the pipelines' own
+  # identities, because the `portal-internal` audience is only on it (T-2271); with them it runs
+  # as `{project}/pipeline-test` (T-4050), and no rendered stream uses this.
   JC_CLIENT_ID: helsinki-pipelines
   # The pipelines' token service (PL-19, T-1508): where a stream asks for its own pipeline's
   # token once the Portal renders streams with JC_PORTAL_PIPELINE_IDENTITY=pipeline. Unread
   # until then.
   JC_PIPELINE_TOKEN_URL: "http://pipeline-tokens.{{ index .Values "pipeline-runner" "tokens" "namespace" }}.svc.cluster.local:4180/token"
+{{- $runner := index .Values "pipeline-runner" }}
+{{- if and $runner.tokens.enabled $runner.identities.enabled $runner.identities.streams }}
+# Every stream, its reports and sweep (T-4044), and the pipeline-test harness and DataSource
+# probes (T-4050) take their token from the token service as their own principal: the runner
+# reads no client secret, so the `{project}-pipelines` secrets can be retired.
+envSecret: {}
+{{- else }}
 envSecret:
   JC_CLIENT_SECRET: { secret: keycloak-client-helsinki-pipelines, key: client-secret }
   # One secret per project that has pipelines (T-2384, PF-46). A rendered stream writes its own
@@ -52,6 +60,7 @@ envSecret:
   JC_CLIENT_SECRET_BBSK: { secret: keycloak-client-bbsk-pipelines, key: client-secret }
   JC_CLIENT_SECRET_ZILINA: { secret: keycloak-client-zilina-pipelines, key: client-secret }
   JC_CLIENT_SECRET_PRAHA: { secret: keycloak-client-praha-pipelines, key: client-secret }
+{{- end }}
 
 # The runner starts with the shared resources alone (the caches and the rate limit the
 # rendered streams name, ../../streams/resources.yaml); the streams arrive over its API.

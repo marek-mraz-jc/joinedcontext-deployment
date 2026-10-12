@@ -124,6 +124,23 @@ def test_dev_streams_present_their_own_pipeline_and_the_runner_resolves_no_secre
     assert env["JC_PORTAL_PIPELINE_NAMESPACE"] == identities
 
 
+def test_on_dev_the_runner_reads_no_client_secret(rendered):
+    """T-4050: with the streams and the pipeline-test harness on the token service, the runner
+    carries no `JC_CLIENT_SECRET*` at all, so no `{project}-pipelines` secret is read by a
+    workload and the owner can retire them. Without the switch it still carries them."""
+    def secret_env(docs):
+        runner = one(docs, "Deployment", "pipeline-runner")
+        return sorted(
+            e["name"]
+            for c in runner["spec"]["template"]["spec"]["containers"]
+            for e in c.get("env", [])
+            if e["name"].startswith("JC_CLIENT_SECRET") or "secretKeyRef" in e.get("valueFrom", {})
+        )
+
+    assert secret_env(rendered("dev")) == []
+    assert "JC_CLIENT_SECRET_HELSINKI" in secret_env(rendered("local"))
+
+
 @pytest.mark.parametrize("environment", ["local", "production"])
 def test_elsewhere_the_streams_stay_on_the_project_client_until_switched(rendered, environment):
     portal = one(rendered(environment), "Deployment", "portal")
