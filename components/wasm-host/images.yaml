@@ -5,15 +5,15 @@ wasm-host:
   shard-0:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
     tag: 'main'
-    digest: 'sha256:a7d1a992d9fb468a2bf6fad8af8b52b615c8887a35630cf21a6c12dc273c5c44'
+    digest: 'sha256:ea2cb705be34193eda0220e98abfccc31e6ea187acfd87934683b56f543a65d7'
   shard-1:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
     tag: 'main'
-    digest: 'sha256:a7d1a992d9fb468a2bf6fad8af8b52b615c8887a35630cf21a6c12dc273c5c44'
+    digest: 'sha256:ea2cb705be34193eda0220e98abfccc31e6ea187acfd87934683b56f543a65d7'
   # The platform image's `jc-token-sidecar` with `JC_SIDECAR_IDENTITY=appjob` (T-3372): pin one
   # built from a commit that carries it before `tokens.enabled` is set; an older binary refuses
   # to start without JC_PIPELINE_NAMESPACE.
   tokens:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
     tag: 'main'
-    digest: 'sha256:a7d1a992d9fb468a2bf6fad8af8b52b615c8887a35630cf21a6c12dc273c5c44'
+    digest: 'sha256:ea2cb705be34193eda0220e98abfccc31e6ea187acfd87934683b56f543a65d7'

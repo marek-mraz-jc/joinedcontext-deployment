@@ -8,6 +8,6 @@ model-tools:
     # platform 871624a: model tools as main has them (T-3250's inferred required columns,
     # T-3061's pypdf), on a Debian that clears the 3 fixable perl CRITICALs of b73d19a (T-3297).
     # platform 0fcaa59: the broker schema generator the Portal's view writer PUTs to /q/schemas
-    # (T-3703, 7f3a8c9). Digest from image run's model-tools job for that commit.
+    # (T-3703, 7f3a8c9); platform b94155b: JsonProperty in the generated schemas (T-3891). Digest from image run's model-tools job for that commit.
     # Digest read from the registry for the tag named after the commit; the `main` tag moves.
-    digest: 'sha256:43dd85fc8e672a89c6460d58db6f08446cecb875002e1f94ab594a00682a2e42'
+    digest: 'sha256:840a9e27f43e0e7ae80e916d5ea2c4a6f99376b9ff3ceb0d21e8b11758cd6df8'

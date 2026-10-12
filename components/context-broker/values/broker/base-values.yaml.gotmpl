@@ -93,6 +93,14 @@ env:
   # admitted to the broker yet: its namespace is the operator's, and a rule naming it by pod
   # label alone would let any pod that labels itself reach the API (T-3771).
   ANTARES_ADMIN_METRICS: "open"
+  # Broker-initiated HTTP and MQTT reach no private address but the peers named here (T-3909,
+  # Antares T-3908): the gateway's egress Service, where R12 deliveries of subscriptions stored
+  # before T-3653 go (until T-3654), and the broker's own Service, which every federation
+  # registration the reconciler writes names as its endpoint (portal
+  # src/reconciler/registrations.rs, `members_of`). Loopback and instance metadata stay refused
+  # whatever the list says; an unlisted private destination is refused at delivery.
+  ANTARES_EGRESS_ALLOW_PRIVATE: "false"
+  ANTARES_EGRESS_PRIVATE_HOSTS: "context-gateway.{{ (index .Values "context-gateway" "gateway" "namespace") }}.svc.cluster.local,context-broker.{{ (index .Values "context-broker" "broker" "namespace") }}.svc.cluster.local"
 
 extraVolumes:
   - name: admin-token

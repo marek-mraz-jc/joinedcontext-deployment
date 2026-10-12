@@ -50,7 +50,10 @@ def test_every_helsinki_class_is_validated_or_excepted_and_every_exception_names
     seed = ROOT / "components/context-gateway/seed/helsinki"
     classes = set()
     for name in ("helsinki.linkml.yaml", "helsinki-hub.linkml.yaml", "helsinki-kpi.linkml.yaml"):
-        classes |= set((yaml.safe_load((seed / name).read_text()).get("classes") or {})) - {"Entity"}
+        # An entity type is `is_a: Entity`; a value class such as PostalAddress (T-3949) is the
+        # shape of one attribute and is validated inside the type that holds it.
+        declared = yaml.safe_load((seed / name).read_text()).get("classes") or {}
+        classes |= {cls for cls, body in declared.items() if (body or {}).get("is_a") == "Entity"}
     assert not set(sdm.MODELS) & set(sdm.EXCEPTIONS)
     assert classes <= set(sdm.MODELS) | set(sdm.EXCEPTIONS), classes - set(sdm.MODELS) - set(sdm.EXCEPTIONS)
     for kind, attribute in sdm.ACCEPTED:
