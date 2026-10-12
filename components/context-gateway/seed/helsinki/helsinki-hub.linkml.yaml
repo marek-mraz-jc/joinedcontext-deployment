@@ -19,7 +19,7 @@ imports:
 classes:
   Vehicle:
     class_uri: sdm:Vehicle
-    description: One HSL bus on a trunk line, registered from the helsinki space.
+    description: One HSL vehicle in service, registered from the helsinki space.
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
@@ -28,7 +28,12 @@ classes:
       - heading
       - route
       - vehicleType
+      - transportMode
       - fleetVehicleId
+      - onRoute
+      - nextStop
+      - delay
+      - occupancy
   KeyPerformanceIndicator:
     class_uri: jc:KeyPerformanceIndicator
     description: One computed indicator, registered from the helsinki-kpi space.
@@ -44,9 +49,47 @@ classes:
 # The slots of the two classes, copied from the members' own models so the hub reads the same
 # terms; tests/test_helsinki_seed_models.py holds each equal to its source.
 slots:
+  transportMode:
+    slot_uri: jc:transportMode
+    description: What serves the stop or runs the line.
+    range: TransportMode
+    annotations:
+      ngsi_ld_kind: Property
+  onRoute:
+    slot_uri: jc:onRoute
+    description: The line the vehicle is running, the URN of a GtfsRoute of this space.
+    range: uriorcurie
+    annotations:
+      ngsi_ld_kind: Relationship
+  nextStop:
+    slot_uri: jc:nextStop
+    description: >-
+      The stop the vehicle stands at or comes to next, the URN of a GtfsStop of this space; HSL
+      moves it on at each departure from or passing of a stop.
+    range: uriorcurie
+    annotations:
+      ngsi_ld_kind: Relationship
+  delay:
+    slot_uri: jc:delay
+    description: Seconds behind the timetable, negative when ahead (HSL's dl with the sign turned).
+    range: integer
+    unit:
+      ucum_code: s
+    annotations:
+      ngsi_ld_kind: Property
+  occupancy:
+    slot_uri: jc:occupancy
+    description: How full the vehicle is, in percent; HSL sends 0 (room) or 100 (full).
+    range: integer
+    minimum_value: 0
+    maximum_value: 100
+    unit:
+      ucum_code: '%'
+    annotations:
+      ngsi_ld_kind: Property
   speed:
     slot_uri: sdm:speed
-    description: Ground speed of the bus.
+    description: Ground speed of the vehicle.
     range: float
     minimum_value: 0
     unit:
@@ -56,7 +99,7 @@ slots:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   heading:
     slot_uri: sdm:heading
-    description: Compass heading of the bus, degrees clockwise from north.
+    description: Compass heading of the vehicle, degrees clockwise from north.
     range: float
     minimum_value: 0
     maximum_value: 360
@@ -67,13 +110,13 @@ slots:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   route:
     slot_uri: sdm:route
-    description: The HSL route id the bus is serving, four digits with the municipality prefix.
+    description: The HSL route id the vehicle is serving, as GTFS names it (2550, 1009, 31M1, 3001K).
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   vehicleType:
     slot_uri: sdm:vehicleType
-    description: The kind of vehicle; bus on every entity of this space.
+    description: The Smart Data Models kind of vehicle - bus, tram, passengerVessel for a ferry, other for metro and train; transportMode names HSL's mode.
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
@@ -136,3 +179,16 @@ slots:
     required: true
     annotations:
       ngsi_ld_kind: Property
+enums:
+  TransportMode:
+    permissible_values:
+      bus:
+        description: A bus.
+      tram:
+        description: A tram.
+      metro:
+        description: The metro.
+      train:
+        description: A commuter train.
+      ferry:
+        description: A ferry.

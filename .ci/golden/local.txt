@@ -76,6 +76,7 @@ networking.k8s.io/v1/NetworkPolicy local/default-deny-gitea-runner
 networking.k8s.io/v1/NetworkPolicy local/default-deny-keycloak
 networking.k8s.io/v1/NetworkPolicy local/default-deny-model-tools
 networking.k8s.io/v1/NetworkPolicy local/default-deny-monitoring
+networking.k8s.io/v1/NetworkPolicy local/default-deny-mqtt-brokers
 networking.k8s.io/v1/NetworkPolicy local/default-deny-networkpolicies
 networking.k8s.io/v1/NetworkPolicy local/default-deny-observability
 networking.k8s.io/v1/NetworkPolicy local/default-deny-pipeline-runner
@@ -84,6 +85,8 @@ networking.k8s.io/v1/NetworkPolicy local/default-deny-postgres
 networking.k8s.io/v1/NetworkPolicy local/default-deny-runtime-policies
 networking.k8s.io/v1/NetworkPolicy local/default-deny-sandbox-reaper
 networking.k8s.io/v1/NetworkPolicy local/default-deny-secrets
+networking.k8s.io/v1/NetworkPolicy local/gateway-from-mqtt-brokers
+networking.k8s.io/v1/NetworkPolicy local/gateway-from-mqtt-brokers-linkerd
 networking.k8s.io/v1/NetworkPolicy local/gitea
 networking.k8s.io/v1/NetworkPolicy local/gitea-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy local/gitea-bootstrap
@@ -110,6 +113,8 @@ networking.k8s.io/v1/NetworkPolicy local/mail-catcher
 networking.k8s.io/v1/NetworkPolicy local/model-tools
 networking.k8s.io/v1/NetworkPolicy local/model-tools-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy local/model-tools-linkerd-control-plane
+networking.k8s.io/v1/NetworkPolicy local/mqtt-brokers
+networking.k8s.io/v1/NetworkPolicy local/mqtt-brokers-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy local/observability
 networking.k8s.io/v1/NetworkPolicy local/observability-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy local/observability-linkerd-control-plane
@@ -150,6 +155,8 @@ networking.k8s.io/v1/NetworkPolicy local/postgres-operator-egress
 networking.k8s.io/v1/NetworkPolicy local/postgres-operator-linkerd
 networking.k8s.io/v1/NetworkPolicy local/postgres-operator-webhook
 networking.k8s.io/v1/NetworkPolicy local/role-setup-linkerd
+networking.k8s.io/v1/NetworkPolicy local/runner-to-mqtt-brokers
+networking.k8s.io/v1/NetworkPolicy local/runner-to-mqtt-brokers-linkerd
 networking.k8s.io/v1/NetworkPolicy local/sandbox-reaper
 networking.k8s.io/v1/NetworkPolicy local/sandbox-reaper-linkerd-control-plane
 policy.linkerd.io/v1alpha1/AuthorizationPolicy local/pipeline-runner-api
@@ -190,12 +197,6 @@ v1/ConfigMap local/apisix-standalone-base
 v1/ConfigMap local/cnpg-controller-manager-config
 v1/ConfigMap local/cnpg-default-monitoring
 v1/ConfigMap local/gitea-bootstrap-seed
-v1/ConfigMap local/gitea-bootstrap-seed-banskabystrica
-v1/ConfigMap local/gitea-bootstrap-seed-bbsk
-v1/ConfigMap local/gitea-bootstrap-seed-helsinki
-v1/ConfigMap local/gitea-bootstrap-seed-helsinki-mobility
-v1/ConfigMap local/gitea-bootstrap-seed-praha
-v1/ConfigMap local/gitea-bootstrap-seed-zilina
 v1/ConfigMap local/gitea-runner
 v1/ConfigMap local/gitea-runner-build-node
 v1/ConfigMap local/gitea-runner-build-rust
@@ -215,6 +216,12 @@ v1/ConfigMap local/gitea-sample-apps-hsl-transport
 v1/ConfigMap local/gitea-sample-apps-kpi-forecast
 v1/ConfigMap local/gitea-sample-apps-news-topics
 v1/ConfigMap local/gitea-sample-apps-transit-reach
+v1/ConfigMap local/gitea-seed-banskabystrica
+v1/ConfigMap local/gitea-seed-bbsk
+v1/ConfigMap local/gitea-seed-helsinki
+v1/ConfigMap local/gitea-seed-helsinki-mobility
+v1/ConfigMap local/gitea-seed-praha
+v1/ConfigMap local/gitea-seed-zilina
 v1/ConfigMap local/keycloak-admin-permissions
 v1/ConfigMap local/keycloak-theme
 v1/ConfigMap local/observability-collector-config
@@ -273,6 +280,7 @@ v1/Service local/keycloak-app-keycloakx-http
 v1/Service local/model-tools
 v1/Service local/observability-collector
 v1/Service local/pipeline-runner
+v1/Service local/pipeline-runner-pods
 v1/Service local/portal
 v1/ServiceAccount local/apisix
 v1/ServiceAccount local/artifact-store

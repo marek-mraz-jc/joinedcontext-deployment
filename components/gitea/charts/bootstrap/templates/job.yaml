@@ -1115,14 +1115,19 @@ spec:
       volumes:
         - name: tmp
           emptyDir: {}
-        {{- if .Values.seed }}
-        # One ConfigMap per project and one for the organization, one tree here (T-3177).
+        {{- if or .Values.seed .Values.seedProjects }}
+        # One ConfigMap per project and one for the organization, one tree here (T-3177); the
+        # projects' are the releases gitea-seed and gitea-seed-2 (T-3998).
         - name: seed
           projected:
             sources:
               {{- range $group := include "bootstrap.seedGroups" . | fromJsonArray }}
               - configMap:
                   name: {{ include "bootstrap.fullname" $ }}-seed{{ if $group }}-{{ $group }}{{ end }}
+              {{- end }}
+              {{- range $project := .Values.seedProjects }}
+              - configMap:
+                  name: {{ $.Values.seedConfigMaps }}-{{ $project }}
               {{- end }}
         {{- end }}
         {{- if .Values.sampleApps.apps }}

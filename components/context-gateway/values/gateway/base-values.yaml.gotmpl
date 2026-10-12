@@ -30,6 +30,13 @@ service:
   port: 8080
   targetPort: 8080
   name: http
+  # The internal listener (JC_GATEWAY_INTERNAL_BIND): the MQTT brokers' CONNECT check and
+  # nothing else (PL-75); only broker pods reach it (components/mqtt-brokers/networkpolicies).
+  extraPorts:
+    - name: internal
+      port: 8082
+      targetPort: 8082
+      protocol: TCP
 
 probes:
   readiness:
@@ -53,7 +60,14 @@ probes:
 # an accepted audience next to the bare slug (PF-45).
 env:
   JC_GATEWAY_BROKER_URL: "http://context-broker.{{ (index .Values "context-broker" "broker" "namespace") }}.svc.cluster.local:8080"
+  # Every ContextBroker beside `main`, `{broker}` its name (ADR-N-046 §2.3, T-3989): the release
+  # components/context-broker adds per entry of global.contextBrokers. The variable above stays
+  # the implicit `main`, whose Service keeps its old name.
+  JC_GATEWAY_BROKER_URL_TEMPLATE: "http://context-broker-{broker}.{{ (index .Values "context-broker" "broker" "namespace") }}.svc.cluster.local:8080"
   JC_GATEWAY_ORG_DOMAIN: {{ $global.orgDomain | quote }}
+  JC_GATEWAY_INTERNAL_BIND: "0.0.0.0:8082"
+  # The runner's headless Service: a broker admits a tokenless CONNECT only from its pods (T-4004).
+  JC_GATEWAY_MQTT_RUNNER_HOST: "pipeline-runner-pods.{{ index .Values "pipeline-runner" "runner" "namespace" }}.svc.cluster.local"
   JC_GATEWAY_PUBLIC_URL: "https://{{ $global.domain }}"
   JC_OIDC_ISSUER: "https://idm.{{ $global.domain }}/realms/{{ $global.instanceSlug }}"
   # The gateway's own client on the Portal's internal listener (T-1500, PF-46, AG-52), proved by

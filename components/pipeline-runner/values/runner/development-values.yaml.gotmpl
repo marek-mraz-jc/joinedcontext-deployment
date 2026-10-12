@@ -69,3 +69,7 @@ configMap:
   data:
     resources.yaml: |
 {{ readFile "../../streams/resources.yaml" | indent 6 }}
+    # The GTFS-RT schema the `protobuf` step of hsl-departures and hsl-service-alerts decodes HSL's
+    # feeds with (`import_paths: [/streams]`, T-3891, T-3892), Apache-2.0 from google/transit.
+    gtfs-realtime.proto: |
+{{ readFile "../../streams/gtfs-realtime.proto" | indent 6 }}

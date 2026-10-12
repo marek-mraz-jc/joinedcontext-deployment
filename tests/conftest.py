@@ -147,12 +147,13 @@ def pytest_configure(config):
 
 
 def seed_configmap(docs):
-    """The forge seed as one ConfigMap: the bootstrap renders it as `gitea-bootstrap-seed` (the
-    organization's files) and one `gitea-bootstrap-seed-<project>` per project, so that none
-    outgrows a ConfigMap's 1 MiB (T-3177); the Job mounts them all as one tree."""
+    """The forge seed as one ConfigMap: the bootstrap renders `gitea-bootstrap-seed` (the
+    organization's files) and the releases gitea-seed and gitea-seed-2 one `gitea-seed-<project>`
+    per project, so that none outgrows a ConfigMap's 1 MiB (T-3177, T-3998); the Job mounts them
+    all as one tree."""
     data = {}
     for d in docs:
-        if d.get("kind") == "ConfigMap" and d["metadata"]["name"].startswith("gitea-bootstrap-seed"):
+        if d.get("kind") == "ConfigMap" and d["metadata"]["name"].startswith(("gitea-bootstrap-seed", "gitea-seed-")):
             data.update(d["data"])
     assert data, "no forge seed rendered"
     return {"data": data}

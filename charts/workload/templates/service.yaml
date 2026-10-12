@@ -29,3 +29,25 @@ spec:
     {{- toYaml . | nindent 4 }}
     {{- end }}
 {{- end }}
+{{- with .Values.headlessService }}
+---
+# One DNS record per pod, ready or not, for a caller that has to know the pods by address: the
+# gateway admits the pipeline runner's tokenless MQTT CONNECT only from these (T-4004).
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "workload.labels" $ | nindent 4 }}
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+    {{- include "workload.selectorLabels" $ | nindent 4 }}
+  ports:
+    - name: {{ $.Values.service.name | default "http" }}
+      port: {{ $.Values.service.port }}
+      targetPort: {{ $.Values.service.targetPort | default $.Values.containerPort }}
+      protocol: TCP
+{{- end }}

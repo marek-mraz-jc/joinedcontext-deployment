@@ -257,6 +257,27 @@ UNMESHED_PEERS: list[dict] = [
 
 
 @pytest.mark.parametrize("env", ["dev"])
+def test_an_unmeshed_peer_opts_out_of_the_namespace_s_injection(rendered, env):
+    """The namespace injects every pod, so an unmeshed workload must say `disabled`: left
+    unannotated it is meshed anyway, its proxy has no egress to the control plane, the startup
+    probe gets a 403 and the rollout never finishes (mail-catcher on dev, 2026-10-11)."""
+    found = []
+    for doc in rendered(env):
+        if doc.get("kind") not in ("Deployment", "StatefulSet", "DaemonSet"):
+            continue
+        template = doc["spec"]["template"]
+        labels = template["metadata"].get("labels") or {}
+        if any(peer.items() <= labels.items() for peer in UNMESHED_PEERS):
+            found.append(doc["metadata"]["name"])
+            annotations = template["metadata"].get("annotations") or {}
+            assert annotations.get("linkerd.io/inject") == "disabled", doc["metadata"]["name"]
+            # Admission refuses an opt-out without its reason (autogen-opt-out-needs-reason).
+            assert (annotations.get("mesh.joinedcontext.com/opt-out-reason") or "").strip(), \
+                doc["metadata"]["name"]
+    assert found, "no unmeshed workload in the render: UNMESHED_PEERS names nothing deployed"
+
+
+@pytest.mark.parametrize("env", ["dev"])
 def test_a_meshed_egress_to_a_pod_peer_also_allows_that_peer_s_inbound_proxy(rendered, env):
     """Meshed traffic lands on the peer's Linkerd inbound proxy on 4143, not on the service
     port, so an egress rule naming only the service port allows a connection the proxy never

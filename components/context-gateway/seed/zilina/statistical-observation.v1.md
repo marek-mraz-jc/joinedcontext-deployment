@@ -15,13 +15,13 @@ shared `Entity` of `ngsi-ld-core`.
 | `refArea` | Property | string | | `sdmx-dim:refArea` |
 | `refPeriod` | Property | string | | `sdmx-dim:refPeriod` |
 | `dimensionKey` | Property | string | | `jc:dimensionKey` |
-| `value` | Property | float | varies, on the Property as `unitCode` | `jc:value` |
+| `observationValue` | Property | float | varies, on the Property as `unitCode` | `jc:observationValue` |
 | `unitText` | Property | string | | `jc:unitText` |
 | `source` | Property | string | | `jc:source` |
 | `dateObserved` | Property | datetime | | `jc:dateObserved` |
 | `stewardNote` | Property | string | | `jc:stewardNote` |
 
-`dataSet`, `indicator`, `refArea`, `refPeriod`, `value`, `source`, `dateObserved`, `id` and
+`dataSet`, `indicator`, `refArea`, `refPeriod`, `observationValue`, `source`, `dateObserved`, `id` and
 `type` are required.
 
 `stewardNote` is the one attribute no pipeline writes (1.1.0). Every other attribute of a row

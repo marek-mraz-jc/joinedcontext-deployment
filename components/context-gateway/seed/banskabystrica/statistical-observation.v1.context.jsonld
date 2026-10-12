@@ -28,6 +28,10 @@
       "@id": "geojson:geometry"
     },
     "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
+    "observationValue": {
+      "@id": "jc:observationValue",
+      "@type": "xsd:float"
+    },
     "observedAt": {
       "@id": "ngsi-ld:observedAt",
       "@type": "xsd:dateTime"
@@ -52,10 +56,6 @@
     "ucefact": "https://vocabulary.uncefact.org/UnitMeasureCode#",
     "unitText": {
       "@id": "jc:unitText"
-    },
-    "value": {
-      "@id": "jc:value",
-      "@type": "xsd:float"
     },
     "xsd": "http://www.w3.org/2001/XMLSchema#"
   },

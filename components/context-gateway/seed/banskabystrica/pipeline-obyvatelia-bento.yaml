@@ -34,7 +34,7 @@ pipeline:
             # core non-reified term, and the broker refuses a whole entity that carries one as an
             # attribute of its own — 400 per entity, dropped by `drop_on`, so the space stayed
             # empty in silence (T-2445).
-            "value": { "type": "Property", "value": $count.number(), "unitCode": "C62", "observedAt": $fetched },
+            "observationValue": { "type": "Property", "value": $count.number(), "unitCode": "C62", "observedAt": $fetched },
             "unitText": { "type": "Property", "value": "osoby v danom veku" },
             "source": { "type": "Property", "value": $source_url },
             "dateObserved": { "type": "Property", "value": $fetched }

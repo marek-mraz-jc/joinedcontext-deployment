@@ -18,10 +18,15 @@ requires_docker = pytest.mark.skipif(
 )
 
 
-def _bento(mapping: Path, document: bytes, space: str, domain: str, codec: str) -> bytes:
+def _bento(mapping: Path, document: bytes, space: str, domain: str, codec: str, metadata: dict | None = None) -> bytes:
+    pipeline = yaml.safe_load(mapping.read_text())["pipeline"]
+    if metadata:
+        # What a connection's own steps leave on the message, such as the member name an archive
+        # read sets (PL-72), set the way those steps set it.
+        pipeline["processors"].insert(0, {"mapping": "\n".join(f"meta {k} = {json.dumps(v)}" for k, v in metadata.items())})
     config = {
         "input": {"stdin": {"scanner": {"to_the_end": {}}}},
-        "pipeline": yaml.safe_load(mapping.read_text())["pipeline"],
+        "pipeline": pipeline,
         "output": {"stdout": {"codec": codec}},
         "logger": {"level": "error"},
     }
@@ -40,11 +45,11 @@ def run(mapping: Path, document: bytes, space: str, domain: str = "hel.fi") -> l
     return json.loads(_bento(mapping, document, space, domain, "all-bytes"))
 
 
-def run_all(mapping: Path, document: bytes, space: str, domain: str = "hel.fi") -> list[dict]:
+def run_all(mapping: Path, document: bytes, space: str, domain: str = "hel.fi", metadata: dict | None = None) -> list[dict]:
     """Like `run`, for a mapping that answers many messages (one entity each, or arrays), as one
     that splits and regroups its rows does: the runner batches whichever it gets (T-3356)."""
     entities: list[dict] = []
-    for line in _bento(mapping, document, space, domain, "lines").decode().splitlines():
+    for line in _bento(mapping, document, space, domain, "lines", metadata).decode().splitlines():
         if line.strip():
             message = json.loads(line)
             entities.extend(message if isinstance(message, list) else [message])
@@ -61,6 +66,8 @@ def key_values(entity: dict) -> dict:
             out[name] = attribute["object"]
         elif attribute["type"] == "LanguageProperty":
             out[name] = attribute["languageMap"]
+        elif attribute["type"] == "JsonProperty":
+            out[name] = attribute["json"]
         else:
             out[name] = attribute["value"]
     return out

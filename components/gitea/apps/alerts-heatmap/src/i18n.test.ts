@@ -21,7 +21,8 @@ describe("the App's language", () => {
   });
 
   it("names the known kinds and keeps an unknown code readable", () => {
-    expect(subCategory("fi", "ROAD_WORK")).toBe("Tietyö");
+    expect(subCategory("fi", "roadWorks")).toBe("Tietyö");
+    expect(subCategory("en", "carAccident")).toBe("Accident");
     expect(subCategory("en", "NEW_KIND")).toBe("NEW_KIND");
     expect(subCategory("en", "")).toBe("Other");
     expect(t("en", "unlocated", { n: 3 })).toBe("3 alerts have no location and are not on the map.");
