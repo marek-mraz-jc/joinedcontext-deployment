@@ -183,6 +183,7 @@ rbac.authorization.k8s.io/v1/Role local/edge-file-composer
 rbac.authorization.k8s.io/v1/Role local/gitea-bootstrap
 rbac.authorization.k8s.io/v1/Role local/portal
 rbac.authorization.k8s.io/v1/Role local/portal-build-pods
+rbac.authorization.k8s.io/v1/Role local/portal-mqtt-brokers
 rbac.authorization.k8s.io/v1/Role local/portal-reconciler-token
 rbac.authorization.k8s.io/v1/Role local/postgres-operator-cloudnative-pg
 rbac.authorization.k8s.io/v1/RoleBinding local-app-tests/app-test-runner
@@ -190,10 +191,12 @@ rbac.authorization.k8s.io/v1/RoleBinding local/edge-file-composer
 rbac.authorization.k8s.io/v1/RoleBinding local/gitea-bootstrap
 rbac.authorization.k8s.io/v1/RoleBinding local/portal
 rbac.authorization.k8s.io/v1/RoleBinding local/portal-build-pods
+rbac.authorization.k8s.io/v1/RoleBinding local/portal-mqtt-brokers
 rbac.authorization.k8s.io/v1/RoleBinding local/portal-reconciler-token
 rbac.authorization.k8s.io/v1/RoleBinding local/postgres-operator-cloudnative-pg
 v1/ConfigMap local/apisix
 v1/ConfigMap local/apisix-standalone-base
+v1/ConfigMap local/broker-template
 v1/ConfigMap local/cnpg-controller-manager-config
 v1/ConfigMap local/cnpg-default-monitoring
 v1/ConfigMap local/gitea-bootstrap-seed

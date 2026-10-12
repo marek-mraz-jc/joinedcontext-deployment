@@ -25,6 +25,11 @@ runner:
 serviceMesh:
   enabled: false
 
+# The Portal, which stamps one broker per MqttBroker from the template (T-3994); empty, no Role.
+portal:
+  namespace: ''
+  serviceAccount: portal
+
 # One entry per MqttBroker: {project, name, limits: {maxMessageBytes, messagesPerSecond,
 # maxConnections}}. The roles stay in the gateway, which answers each CONNECT with them.
 brokers: []

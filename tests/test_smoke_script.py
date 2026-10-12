@@ -1615,3 +1615,36 @@ def test_the_smoke_client_mints_the_internal_ogc_rows_audience_from_the_seed():
     }
     assert seed["spec"]["slug"] in audiences
     assert "ogc_row internal helsinki-bikes-ops" in SMOKE.read_text()
+
+
+def test_the_internal_ogc_rows_reader_is_granted_the_stations_on_helsinki_bikes_ops():
+    """T-3957: on an `organization` Endpoint the gateway gives a signed-in person no `public`
+    role (GW22), so the demo viewer the row reads as needs a grant of their own on the space.
+    The Endpoint names no policyRef, so every Policy of its space applies; one of them must
+    let a group of the viewer's token read the stations, or /collections lists none."""
+    seed_dir = PROJECT_ROOT / "components/context-gateway/seed/helsinki"
+    endpoint = yaml.safe_load((seed_dir / "helsinki-endpoint-bikes-ops.yaml").read_text())
+    assert endpoint["spec"]["audience"] == "organization"
+    assert "policyRef" not in endpoint["spec"]
+    space = endpoint["spec"]["contextSpaceRef"]
+    groups = set(yaml.safe_load((PROJECT_ROOT / "components/keycloak/demo-users.yaml").read_text())["demo.viewer"]["groups"])
+    assert 'demo_user="${JC_SMOKE_DEMO_USER:-demo.viewer}"' in SMOKE.read_text()
+
+    def grants(policy):
+        spec = policy["spec"]
+        ref = spec["contextSpaceRef"]
+        return (
+            (ref.get("name") if isinstance(ref, dict) else ref) == space
+            and spec["assignee"] == {"kind": "group", "id": spec["assignee"]["id"]}
+            and spec["assignee"]["id"] in groups
+            and "retrieveOps" in spec["operations"]
+            and any(e.get("type") == "BikeHireDockingStation" for i in spec["information"] for e in i["entities"])
+        )
+
+    policies = [
+        doc
+        for path in sorted(seed_dir.glob("helsinki-policy-*.yaml"))
+        for doc in yaml.safe_load_all(path.read_text())
+        if doc and doc.get("kind") == "Policy"
+    ]
+    assert any(grants(policy) for policy in policies), "no group of demo.viewer reads the stations"
