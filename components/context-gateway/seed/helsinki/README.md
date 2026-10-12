@@ -34,7 +34,7 @@ each attribute that knowingly differs, carries its written reason in the script 
 `ACCEPTED`), and `tests/test_helsinki_sdm.py` fails when a class of the model is neither validated
 nor excepted. Run on dev 2026-10-12 against the `all` endpoint: BikeHireDockingStation, GtfsStop
 and WeatherObserved pass; Alert, Event, PointOfInterest and WaterQualityObserved pass except for
-the written gaps (address as text, T-3949; Alert's alertSource and subCategory codes, T-3950;
+the written gaps (address as text, closed by T-3949 with a PostalAddress; Alert's alertSource and subCategory codes, T-3950;
 Event's single eventStatus; a beach sensor with no reading this season); AirQualityObserved,
 Vehicle and GtfsRoute had no entities to read.
 

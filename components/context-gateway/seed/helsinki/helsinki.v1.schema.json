@@ -139,11 +139,15 @@
       "description": "One road work or traffic announcement of Fintraffic in the capital region, or one service alert of HSL with the lines and stops it affects.",
       "properties": {
         "address": {
-          "description": "The street address, one line.",
-          "type": [
-            "string",
-            "null"
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PostalAddress"
+            },
+            {
+              "type": "null"
+            }
           ],
+          "description": "The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed from a line of text.",
           "x-ngsi-ld-kind": "Property"
         },
         "category": {
@@ -634,11 +638,15 @@
       "description": "One event of the City of Helsinki's Linked Events register.",
       "properties": {
         "address": {
-          "description": "The street address, one line.",
-          "type": [
-            "string",
-            "null"
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PostalAddress"
+            },
+            {
+              "type": "null"
+            }
           ],
+          "description": "The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed from a line of text.",
           "x-ngsi-ld-kind": "Property"
         },
         "contactPoint": {
@@ -1893,11 +1901,15 @@
       "description": "One place of the city's service register a resident goes to: a library, a health station, a swimming hall, a beach or a school. The register's contact lines are left out, because they can name a person.",
       "properties": {
         "address": {
-          "description": "The street address, one line.",
-          "type": [
-            "string",
-            "null"
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PostalAddress"
+            },
+            {
+              "type": "null"
+            }
           ],
+          "description": "The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed from a line of text.",
           "x-ngsi-ld-kind": "Property"
         },
         "dataProvider": {
@@ -2018,16 +2030,60 @@
       "title": "PointOfInterest",
       "type": "object"
     },
+    "PostalAddress": {
+      "additionalProperties": false,
+      "description": "The value of `address`: a postal address, never an entity of its own (Smart Data Models' common schema).",
+      "properties": {
+        "addressCountry": {
+          "description": "The country, as an ISO 3166-1 alpha-2 code.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "addressLocality": {
+          "description": "The town or the municipality.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "postalCode": {
+          "description": "The postal code.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "streetAddress": {
+          "description": "The street and the house number.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "title": "PostalAddress",
+      "type": "object"
+    },
     "PublicAreaPermit": {
       "additionalProperties": false,
       "description": "One permit of the city's public-area register: an excavation, a temporary traffic arrangement or an event, with every area it covers as one outline. The applicant and the contractor are left out, because they can name a person.",
       "properties": {
         "address": {
-          "description": "The street address, one line.",
-          "type": [
-            "string",
-            "null"
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PostalAddress"
+            },
+            {
+              "type": "null"
+            }
           ],
+          "description": "The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed from a line of text.",
           "x-ngsi-ld-kind": "Property"
         },
         "dataProvider": {

@@ -276,4 +276,6 @@ def test_every_wfs_feed_asks_for_wgs84():
 def test_the_model_classes_and_the_manifest_agree():
     linkml = yaml.safe_load((HELSINKI / "helsinki.linkml.yaml").read_text())
     manifest = yaml.safe_load((HELSINKI / "helsinki-datamodel.yaml").read_text())
-    assert set(manifest["spec"]["classes"]) == set(linkml["classes"])
+    # The entity types; a value class such as PostalAddress (T-3949) is no type of the space.
+    entities = {name for name, body in linkml["classes"].items() if (body or {}).get("is_a") == "Entity"}
+    assert set(manifest["spec"]["classes"]) == entities
