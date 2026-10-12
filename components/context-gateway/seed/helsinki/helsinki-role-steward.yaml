@@ -25,6 +25,7 @@ spec:
         - ServiceAccount
         - Pipeline
         - DataSource
+        - MqttBroker
         - App
         # No CkanInstance: an instance is the administrator's, handed out per instance by its
         # ckan-admin-{project}-{name} role (PF-107).
