@@ -58,8 +58,9 @@ pipeline:
                       key: trip-updates
                   - mapping: 'root = if content().string() == "true" { "keep" } else { "write" }'
         result_map: 'meta departures = content().string()'
-    - mapping: |
-        root = if meta("departures") == "keep" { deleted() } else { this }
+    # A mutation, not a mapping: `root = this` deep-copies the whole decoded feed (T-4071).
+    - mutation: |
+        root = if meta("departures") == "keep" { deleted() }
 
     - mapping: |
         # Every metro platform (stops.txt vehicle_type 1): 60.
@@ -99,21 +100,24 @@ pipeline:
         let now = this.header.timestamp.or("0").number()
         let at = $now.ts_format("2006-01-02T15:04:05Z", "UTC")
         let urn = "urn:ngsi-ld:%v:%v:%v:%v"
-        let rows = this.entity.or([]).filter(e -> e.tripUpdate != null).map_each(e -> e.tripUpdate.stopTimeUpdate.or([]).map_each(u -> {
+        # Only the updates of a kept stop become rows, and each stop takes its own five from the rows
+        # sorted once: grouping all rows with `fold` and `merge` copied the growing table on every
+        # row, and the runner, holding this pass every 30 s beside 100 other streams, was
+        # OOMKilled (T-4071).
+        let rows = this.entity.or([]).filter(e -> e.tripUpdate != null).map_each(e -> e.tripUpdate.stopTimeUpdate.or([]).filter(u -> $wanted.get(u.stopId.or("")) == true).map_each(u -> {
           "stop": u.stopId.or(""),
           "route": e.tripUpdate.trip.routeId.or(""),
           "direction": e.tripUpdate.trip.directionId.or(0),
           "time": u.departure.time.or(u.arrival.time).or("0").number(),
           "delay": u.departure.delay.or(u.arrival.delay),
           "status": if e.tripUpdate.trip.scheduleRelationship.or("") == "CANCELED" { "canceled" } else if u.scheduleRelationship.or("") == "SKIPPED" { "skipped" } else { "scheduled" }
-        })).flatten().filter(r -> $wanted.get(r.stop) == true && r.time >= $now && r.route.re_match("^[A-Za-z0-9._-]{1,64}$"))
-        let at_stop = $rows.sort_by(r -> r.time).fold({}, t -> t.tally.merge({ (t.value.stop): [t.value] }))
+        })).flatten().filter(r -> r.time >= $now && r.route.re_match("^[A-Za-z0-9._-]{1,64}$")).sort_by(r -> r.time)
         root = $metro.concat($train, $bus).map_each(stop -> {
           "id": $urn.format("GtfsStop", env("JC_ORG_DOMAIN"), env("JC_SPACE"), stop),
           "type": "GtfsStop",
           "departures": {
             "type": "JsonProperty",
-            "json": $at_stop.get(stop).or([]).slice(0, 5).map_each(r -> {
+            "json": $rows.filter(r -> r.stop == stop).slice(0, 5).map_each(r -> {
               "route": $urn.format("GtfsRoute", env("JC_ORG_DOMAIN"), env("JC_SPACE"), r.route),
               "routeId": r.route,
               "directionId": r.direction,
