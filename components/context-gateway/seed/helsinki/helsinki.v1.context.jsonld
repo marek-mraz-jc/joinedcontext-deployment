@@ -37,6 +37,9 @@
     "NewsArticle": {
       "@id": "schema:NewsArticle"
     },
+    "OffStreetParking": {
+      "@id": "sdm:OffStreetParking"
+    },
     "ParkingArea": {
       "@id": "jc:ParkingArea"
     },
@@ -71,9 +74,20 @@
       "@id": "sdm:airQualityIndex",
       "@type": "xsd:float"
     },
+    "allowedVehicleType": {
+      "@id": "sdm:allowedVehicleType"
+    },
     "availableBikeNumber": {
       "@id": "sdm:availableBikeNumber",
       "@type": "xsd:integer"
+    },
+    "availableSpotNumber": {
+      "@id": "sdm:availableSpotNumber",
+      "@type": "xsd:integer"
+    },
+    "capacityByType": {
+      "@id": "jc:capacityByType",
+      "@type": "@json"
     },
     "category": {
       "@id": "sdm:category"
@@ -184,6 +198,10 @@
       "@container": "@language",
       "@id": "schema:name"
     },
+    "nearbyParking": {
+      "@id": "jc:nearbyParking",
+      "@type": "@id"
+    },
     "nextStop": {
       "@id": "jc:nextStop",
       "@type": "@id"
@@ -261,6 +279,10 @@
     },
     "refDistrict": {
       "@id": "jc:refDistrict",
+      "@type": "@id"
+    },
+    "refNearestStation": {
+      "@id": "jc:refNearestStation",
       "@type": "@id"
     },
     "refPointOfInterest": {

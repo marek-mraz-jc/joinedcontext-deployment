@@ -48,7 +48,7 @@ Specialises `Entity`.
 | `availableBikeNumber` | Property | `integer` |  |  | `sdm:availableBikeNumber` | Bikes ready to rent at the station right now. |
 | `freeSlotNumber` | Property | `integer` |  |  | `sdm:freeSlotNumber` | Empty docks a bike can be returned to right now. |
 | `totalSlotNumber` | Property | `integer` |  |  | `sdm:totalSlotNumber` | Bikes plus free docks, the station's working size. |
-| `status` | Property | `string` |  |  | `sdm:status` | working while the station rents and takes returns, otherwise outOfService. |
+| `status` | Property | `string` |  |  | `sdm:status` | A bike station's working while it rents and takes returns, otherwise outOfService; a park and ride site's open, closed or closedAbnormal (Fintraffic LIIPI's IN_OPERATION, INACTIVE or TEMPORARILY_CLOSED, EXCEPTIONAL_SITUATION). |
 | `dateModified` | Property | `datetime` |  |  | `sdm:dateModified` | When the publisher last changed the record, or the station last reported. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
@@ -232,7 +232,31 @@ Specialises `Entity`.
 
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
-| `totalSpotNumber` | Property | `integer` |  |  | `sdm:totalSpotNumber` | The number of cars the area holds, as the publisher estimates it. |
+| `totalSpotNumber` | Property | `integer` |  |  | `sdm:totalSpotNumber` | The number of vehicles the site holds, as the publisher states or estimates it; for a park and ride site, of its own kind (car or bicycle). |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### OffStreetParking
+
+One park and ride site of the HSL area from Fintraffic's LIIPI register (T-3894), where it is, what it holds, whether it is open, the free spaces when it reports them, and its station.
+
+IRI: `sdm:OffStreetParking`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language. |
+| `status` | Property | `string` |  |  | `sdm:status` | A bike station's working while it rents and takes returns, otherwise outOfService; a park and ride site's open, closed or closedAbnormal (Fintraffic LIIPI's IN_OPERATION, INACTIVE or TEMPORARILY_CLOSED, EXCEPTIONAL_SITUATION). |
+| `allowedVehicleType` | Property | `string` (list) |  |  | `sdm:allowedVehicleType` | What may park, the site's own kind first (car or bicycle), then motorcycle where it has spaces for them. |
+| `totalSpotNumber` | Property | `integer` |  |  | `sdm:totalSpotNumber` | The number of vehicles the site holds, as the publisher states or estimates it; for a park and ride site, of its own kind (car or bicycle). |
+| `capacityByType` | JsonProperty | `string` |  |  | `jc:capacityByType` | The built capacity per kind of space, as LIIPI names them in lower case (car, disabled, bicycle, electricCar, motorcycle, bicycleSecureSpace), each a count. |
+| `availableSpotNumber` | Property | `integer` |  |  | `sdm:availableSpotNumber` | Free spaces at the park and ride site when it last reported, LIIPI's spacesAvailable. |
+| `refNearestStation` | Relationship | [`GtfsStation`](#gtfsstation) |  |  | `jc:refNearestStation` | The HSL station within 500 m of the park and ride site, the nearest one, a GtfsStation of this space. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
@@ -375,6 +399,7 @@ Specialises `Entity`.
 | `transportMode` | Property | [`TransportMode`](#transportmode) |  |  | `jc:transportMode` | What serves the stop or runs the line. |
 | `wheelChairAccessible` | Property | `string` |  |  | `sdm:wheelChairAccessible` | Whether a wheelchair can board here, GTFS's wheelchair_boarding; 0 unknown, 1 possible, 2 not possible. |
 | `hasStop` | Relationship | [`GtfsStop`](#gtfsstop) (list) |  |  | `sdm:hasStop` | The platforms of the station, computed from their hasParentStation and never stored. |
+| `nearbyParking` | Relationship | [`OffStreetParking`](#offstreetparking) (list) |  |  | `jc:nearbyParking` | The park and ride sites whose nearest station this is, computed from their refNearestStation and never stored. |
 | `page` | Property | `uri` |  |  | `sdm:page` | The publisher's web page about it. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |

@@ -428,7 +428,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "status": {
-          "description": "working while the station rents and takes returns, otherwise outOfService.",
+          "description": "A bike station's working while it rents and takes returns, otherwise outOfService; a park and ride site's open, closed or closedAbnormal (Fintraffic LIIPI's IN_OPERATION, INACTIVE or TEMPORARILY_CLOSED, EXCEPTIONAL_SITUATION).",
           "type": [
             "string",
             "null"
@@ -1498,6 +1498,147 @@
       "title": "NewsArticle",
       "type": "object"
     },
+    "OffStreetParking": {
+      "additionalProperties": false,
+      "description": "One park and ride site of the HSL area from Fintraffic's LIIPI register (T-3894), where it is, what it holds, whether it is open, the free spaces when it reports them, and its station.",
+      "properties": {
+        "allowedVehicleType": {
+          "description": "What may park, the site's own kind first (car or bicycle), then motorcycle where it has spaces for them.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "availableSpotNumber": {
+          "description": "Free spaces at the park and ride site when it last reported, LIIPI's spacesAvailable.",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "capacityByType": {
+          "description": "The built capacity per kind of space, as LIIPI names them in lower case (car, disabled, bicycle, electricCar, motorcycle, bicycleSecureSpace), each a count.",
+          "x-ngsi-ld-kind": "JsonProperty"
+        },
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "refNearestStation": {
+          "description": "The HSL station within 500 m of the park and ride site, the nearest one, a GtfsStation of this space.",
+          "pattern": "^urn:ngsi-ld:GtfsStation:",
+          "type": "string",
+          "x-ngsi-ld-kind": "Relationship",
+          "x-ngsi-ld-relationship": {
+            "cardinality": "many-to-one",
+            "inverse": "nearbyParking",
+            "onDelete": "set-null",
+            "target": "GtfsStation",
+            "unique": false
+          }
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "status": {
+          "description": "A bike station's working while it rents and takes returns, otherwise outOfService; a park and ride site's open, closed or closedAbnormal (Fintraffic LIIPI's IN_OPERATION, INACTIVE or TEMPORARILY_CLOSED, EXCEPTIONAL_SITUATION).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "totalSpotNumber": {
+          "description": "The number of vehicles the site holds, as the publisher states or estimates it; for a park and ride site, of its own kind (car or bicycle).",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "OffStreetParking",
+      "type": "object"
+    },
     "ParkingArea": {
       "additionalProperties": false,
       "description": "One parking area of the city's parking guide, its outline and the number of cars it holds when the city has estimated it.",
@@ -1562,7 +1703,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "totalSpotNumber": {
-          "description": "The number of cars the area holds, as the publisher estimates it.",
+          "description": "The number of vehicles the site holds, as the publisher states or estimates it; for a park and ride site, of its own kind (car or bicycle).",
           "minimum": 0,
           "type": [
             "integer",

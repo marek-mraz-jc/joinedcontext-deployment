@@ -186,6 +186,13 @@ helsinki-pipeline-departures-bento.yaml: projects/helsinki/pipelines/hsl-departu
 helsinki-datasource-service-alerts.yaml: projects/helsinki/datasources/hsl-service-alerts.yaml
 helsinki-pipeline-service-alerts.yaml: projects/helsinki/pipelines/hsl-service-alerts/pipeline.yaml
 helsinki-pipeline-service-alerts-bento.yaml: projects/helsinki/pipelines/hsl-service-alerts/bento.yaml
+# Fintraffic LIIPI park and ride (T-3894): the HSL area's sites daily, their free spaces every 5 min.
+helsinki-datasource-liipi-facilities.yaml: projects/helsinki/datasources/liipi-facilities.yaml
+helsinki-datasource-liipi-utilizations.yaml: projects/helsinki/datasources/liipi-utilizations.yaml
+helsinki-pipeline-liipi-facilities.yaml: projects/helsinki/pipelines/liipi-facilities/pipeline.yaml
+helsinki-pipeline-liipi-facilities-bento.yaml: projects/helsinki/pipelines/liipi-facilities/bento.yaml
+helsinki-pipeline-liipi-utilizations.yaml: projects/helsinki/pipelines/liipi-utilizations/pipeline.yaml
+helsinki-pipeline-liipi-utilizations-bento.yaml: projects/helsinki/pipelines/liipi-utilizations/bento.yaml
 # The default group of Prague's waste desk (T-2786, AP-118): an organization Group, so it is seeded
 # here beside the organization's roles rather than from the praha folder, which writes its project only.
 group-praha-odpad-viewer.yaml: users/groups/praha-odpad-viewer.yaml

@@ -50,7 +50,7 @@ one `GET` each from the sandbox; the sizes are bytes received, the times the who
 | GTFS-RT vehicle positions | `https://realtime.hsl.fi/realtime/vehicle-positions/v2/hsl` | CC BY 4.0 | 1 231 B (night) | 0.26 s | continuous | no | no: HFP below carries the same positions with less work; T-3893 widens HFP to every mode inside the vehicle cap |
 | GTFS-RT service alerts | `https://realtime.hsl.fi/realtime/service-alerts/v2/hsl` | CC BY 4.0 | 21 615 B | 0.32 s | on change | no | yes, T-3892: one Alert per HSL alert, beside the Digitraffic ones |
 | HFP (MQTT) | `mqtts://mqtt.hsl.fi:8883/hfp/v2/journey/ongoing/vp/#` | CC BY 4.0 | a stream, not a document: not measured by `GET` | — | one `vp` message a second per vehicle (HSL HFP documentation) | no | yes: 4 bus trunk lines and every tram, metro, train and ferry, capped per mode (T-3893, below); every position of an admitted vehicle written (T-3906) |
-| Park and ride (Liipi) | `https://p.hsl.fi/api/v1` (`/facilities`, `/utilizations`, `/hubs`) | CC BY 4.0 | the host did not resolve (`Could not resolve host: p.hsl.fi`) | — | — | no | not until the host answers; T-3894 re-checks the address first |
+| Park and ride (LIIPI) | `https://parking.fintraffic.fi/api/v1` (`/facilities`, `/utilizations`, `/hubs`); `p.hsl.fi` is gone, Fintraffic took the service over in May 2024 | CC BY 4.0 | facilities of the HSL area 1 007 120 B (545); utilisations 6 191 B (39 rows, the whole country) | — | utilisations live | no | yes, T-3894: one OffStreetParking per facility, daily; free spaces every 5 min |
 | City bikes (GBFS) | the `citybikes-gbfs` pipelines | CC BY 4.0 | in place | — | 1 min | no | in place |
 | Digitransit GraphQL | `https://api.digitransit.fi/routing/v2/hsl/gtfs/v1` | CC BY 4.0 | `401` without a key | 0.09 s | live | **yes** | Owner action: a Digitransit subscription key, never committed; nothing waits for it, because GTFS and GTFS-RT above carry the same data |
 
@@ -137,3 +137,22 @@ the last stop). Both point outside the model (`uriorcurie`), because the hub car
 for slot without the GTFS classes, and so the gateway writes a vehicle even before the day's GTFS
 read holds its line. The memory and write counts on dev (`kubectl top`, input and output counters)
 are the deployer's to record; a test cannot reach the MQTT feed.
+
+### Park and ride (T-3894)
+
+HSL's `p.hsl.fi` no longer resolves; Fintraffic runs the same API (HSL's parkandrideAPI) as LIIPI
+at `https://parking.fintraffic.fi/api/v1`, public, no key, since 20 May 2024. `liipi-facilities`
+reads the facilities inside the box 24.2..25.6 E, 60.05..60.55 N (the API's `geometry` filter: 545
+of the country's 784 on 2026-10-12, 1.0 MB) daily at 04:40, after the GTFS stations, and writes
+one OffStreetParking each, `urn:ngsi-ld:OffStreetParking:{orgDomain}:helsinki:liipi-{id}`:
+name in three languages, outline, status (IN_OPERATION open; INACTIVE and TEMPORARILY_CLOSED
+closed; EXCEPTIONAL_SITUATION closedAbnormal), `allowedVehicleType`, `totalSpotNumber` of the
+site's own kind, `capacityByType` per kind of space, and `refNearestStation` to the nearest
+GtfsStation within 500 m (423 of 545). `liipi-utilizations` reads the country's free spaces every
+five minutes (39 rows) and writes `availableSpotNumber`, observed at LIIPI's timestamp, only on
+the sites the space holds; a counter more than a day behind the newest row is left out (three on
+2026-10-12, the oldest from 2023). A site that never reports has capacity and no free count.
+
+Measured 2026-10-12 with Bento 1.22.0 over the recorded 1.0 MB answer, the station ask stubbed:
+peak resident memory 169 MB against Bento's baseline of 130 MB, about 39 MB once a day; the
+utilisations are 6 kB.

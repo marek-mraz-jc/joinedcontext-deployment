@@ -103,7 +103,10 @@ slots:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   status:
     slot_uri: sdm:status
-    description: working while the station rents and takes returns, otherwise outOfService.
+    description: >-
+      A bike station's working while it rents and takes returns, otherwise outOfService; a park and
+      ride site's open, closed or closedAbnormal (Fintraffic LIIPI's IN_OPERATION, INACTIVE or
+      TEMPORARILY_CLOSED, EXCEPTIONAL_SITUATION).
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
@@ -433,7 +436,7 @@ slots:
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
   totalSpotNumber:
     slot_uri: sdm:totalSpotNumber
-    description: The number of cars the area holds, as the publisher estimates it.
+    description: The number of vehicles the site holds, as the publisher states or estimates it; for a park and ride site, of its own kind (car or bicycle).
     range: integer
     minimum_value: 0
     annotations:
@@ -583,6 +586,46 @@ slots:
     multivalued: true
     annotations:
       ngsi_ld_kind: Property
+  availableSpotNumber:
+    slot_uri: sdm:availableSpotNumber
+    description: Free spaces at the park and ride site when it last reported, LIIPI's spacesAvailable.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Parking
+  allowedVehicleType:
+    slot_uri: sdm:allowedVehicleType
+    description: What may park, the site's own kind first (car or bicycle), then motorcycle where it has spaces for them.
+    multivalued: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Parking
+  capacityByType:
+    slot_uri: jc:capacityByType
+    description: >-
+      The built capacity per kind of space, as LIIPI names them in lower case (car, disabled,
+      bicycle, electricCar, motorcycle, bicycleSecureSpace), each a count.
+    annotations:
+      ngsi_ld_kind: JsonProperty
+  refNearestStation:
+    slot_uri: jc:refNearestStation
+    description: The HSL station within 500 m of the park and ride site, the nearest one, a GtfsStation of this space.
+    range: GtfsStation
+    inverse: nearbyParking
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
+      on_delete: set-null
+  nearbyParking:
+    slot_uri: jc:nearbyParking
+    description: The park and ride sites whose nearest station this is, computed from their refNearestStation and never stored.
+    range: OffStreetParking
+    multivalued: true
+    inverse: refNearestStation
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
   departures:
     slot_uri: jc:departures
     description: >-
@@ -851,6 +894,24 @@ classes:
       - totalSpotNumber
       - dataProvider
       - source
+  OffStreetParking:
+    class_uri: sdm:OffStreetParking
+    description: >-
+      One park and ride site of the HSL area from Fintraffic's LIIPI register (T-3894), where it is,
+      what it holds, whether it is open, the free spaces when it reports them, and its station.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Parking
+    slots:
+      - name
+      - status
+      - allowedVehicleType
+      - totalSpotNumber
+      - capacityByType
+      - availableSpotNumber
+      - refNearestStation
+      - dataProvider
+      - source
   ParkingZone:
     class_uri: jc:ParkingZone
     description: One parking fee zone or resident parking zone of the city, its outline and its rules.
@@ -940,6 +1001,7 @@ classes:
       - transportMode
       - wheelChairAccessible
       - hasStop
+      - nearbyParking
       - page
       - dataProvider
       - source
