@@ -1179,6 +1179,10 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "departures": {
+          "description": "The next departures from the stop, at most five, soonest first, each an object with the line (`route`, the GtfsRoute's id, and `routeId`), its `directionId`, the `expected` time and its `status` (scheduled, skipped or canceled), and `delay` in seconds with the `scheduled` time it implies when HSL sends one. Set every 30 s for a curated set of stops from HSL's GTFS-RT trip updates; empty after five minutes without a feed.",
+          "x-ngsi-ld-kind": "JsonProperty"
+        },
         "description": {
           "additionalProperties": {
             "type": "string"

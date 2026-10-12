@@ -100,6 +100,10 @@
       "@id": "schema:datePublished",
       "@type": "xsd:dateTime"
     },
+    "departures": {
+      "@id": "jc:departures",
+      "@type": "@json"
+    },
     "description": {
       "@container": "@language",
       "@id": "schema:description"

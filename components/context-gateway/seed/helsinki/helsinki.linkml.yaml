@@ -488,6 +488,16 @@ slots:
     multivalued: true
     annotations:
       ngsi_ld_kind: Property
+  departures:
+    slot_uri: jc:departures
+    description: >-
+      The next departures from the stop, at most five, soonest first, each an object with the
+      line (`route`, the GtfsRoute's id, and `routeId`), its `directionId`, the `expected` time
+      and its `status` (scheduled, skipped or canceled), and `delay` in seconds with the
+      `scheduled` time it implies when HSL sends one. Set every 30 s for a curated set of stops
+      from HSL's GTFS-RT trip updates; empty after five minutes without a feed.
+    annotations:
+      ngsi_ld_kind: JsonProperty
   wheelChairAccessible:
     slot_uri: sdm:wheelChairAccessible
     description: Whether a wheelchair can board here, GTFS's wheelchair_boarding; 0 unknown, 1 possible, 2 not possible.
@@ -790,6 +800,7 @@ classes:
       - transportMode
       - wheelChairAccessible
       - hasParentStation
+      - departures
       - page
       - dataProvider
       - source

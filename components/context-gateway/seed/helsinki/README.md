@@ -84,3 +84,20 @@ line" register (`transit-routes`), which transit-reach reads: GTFS gives them on
 GTFS stop ids, so the first run updates those entities in place, and a stop it held that the
 GTFS feed lacks stays on dev until someone deletes it. The 10-minute averages on dev (`kubectl top pod`) are the deployer's to
 record after the first runs.
+
+### GTFS-RT departures (T-3891)
+
+`hsl-departures` reads `https://realtime.hsl.fi/realtime/trip-updates/v2/hsl` every 30 s and writes
+the next five departures onto 231 stops as the JsonProperty `departures`: the 60 metro platforms
+and 131 commuter train platforms of `stops.txt` (`vehicle_type` 1 and 109), and the 40 bus stops
+with the most rows in `stop_times.txt` (counted once, 2026-10-12, over the whole feed). The runner
+decodes the protobuf with Bento's `protobuf` processor and the GTFS-RT schema mounted beside its
+resources (`components/pipeline-runner/streams/gtfs-realtime.proto`), so no WASM step is involved.
+
+Measured 2026-10-12 03:02Z over the live document (638 kB, 666 trips, 19 211 stop time updates;
+221 of the 231 stops appear in it): 204 stops got departures. Peak resident memory was 217 MB
+against Bento's baseline of 139 MB, about 76 MB for the 2 s each refresh holds it. HSL's v2 feed
+sends expected times and no `delay` (0 of 19 211 updates) and no headsign. So a departure names
+its line and direction, and the app takes the headsign from the TransitRoute of that line and
+direction. An empty feed keeps the departures five minutes (the runner's `departures` cache), then
+clears them.

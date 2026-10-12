@@ -178,6 +178,10 @@ helsinki-pipeline-gtfs-routes.yaml: projects/helsinki/pipelines/gtfs-routes/pipe
 helsinki-pipeline-gtfs-shapes.yaml: projects/helsinki/pipelines/gtfs-shapes/pipeline.yaml
 helsinki-pipeline-gtfs-routes-bento.yaml: projects/helsinki/pipelines/gtfs-routes/bento.yaml
 helsinki-pipeline-gtfs-shapes-bento.yaml: projects/helsinki/pipelines/gtfs-shapes/bento.yaml
+# HSL's GTFS-RT trip updates (T-3891): the next departures of a curated set of stops.
+helsinki-datasource-trip-updates.yaml: projects/helsinki/datasources/hsl-trip-updates.yaml
+helsinki-pipeline-departures.yaml: projects/helsinki/pipelines/hsl-departures/pipeline.yaml
+helsinki-pipeline-departures-bento.yaml: projects/helsinki/pipelines/hsl-departures/bento.yaml
 # The default group of Prague's waste desk (T-2786, AP-118): an organization Group, so it is seeded
 # here beside the organization's roles rather than from the praha folder, which writes its project only.
 group-praha-odpad-viewer.yaml: users/groups/praha-odpad-viewer.yaml
