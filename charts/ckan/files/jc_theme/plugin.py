@@ -246,7 +246,9 @@ STRINGS = {
         "cs": "Procházejte, vyhledávejte a řaďte řádky přímo zde, nebo si stáhněte celou tabulku.",
         "de": "Zeilen hier durchsuchen, filtern und sortieren oder die ganze Tabelle herunterladen.",
     },
-    "rows": {"en": "rows", "sk": "riadkov", "cs": "řádků", "de": "Zeilen"},
+    # A count's word in each language's plural forms, one, two to four, five and more (T-4066).
+    "rows": {"en": ("row", "rows", "rows"), "sk": ("riadok", "riadky", "riadkov"),
+             "cs": ("řádek", "řádky", "řádků"), "de": ("Zeile", "Zeilen", "Zeilen")},
     "table_title": {"en": "Table of the data", "sk": "Tabuľka dát", "cs": "Tabulka dat", "de": "Tabelle der Daten"},
     "tables": {"en": "tables", "sk": "tabuľky", "cs": "tabulky", "de": "Tabellen"},
     "table_what": {"en": "The table above, as one file", "sk": "Tabuľka vyššie ako jeden súbor", "cs": "Tabulka výše jako jeden soubor", "de": "Die Tabelle oben als eine Datei"},
@@ -579,6 +581,10 @@ def _shown(text):
     return True
 
 
+# The characters a code box holds per line at its narrowest common width.
+WRAP = 64
+
+
 def jc_usage(resource):
     """An API resource's usage description as blocks for the page (T-3887, EP-108): paragraphs,
     and the indented code `jcctl` writes as fields with a copy button. A block that names a
@@ -594,7 +600,9 @@ def jc_usage(resource):
         code = all(line.startswith("    ") for line in lines if line.strip())
         body = "\n".join(line[4:] for line in lines) if code else " ".join(line.strip() for line in lines)
         if body.strip() and _shown(body):
-            blocks.append({"code": code, "text": body, "rows": len(lines), "id": "jc-use-%s-%d" % (key, number)})
+            # A code box wraps its long lines (T-4066), so it is as tall as the wrapped text.
+            rows = sum(max(1, -(-len(line) // WRAP)) for line in body.split("\n")) if code else 1
+            blocks.append({"code": code, "text": body, "rows": rows, "id": "jc-use-%s-%d" % (key, number)})
     return blocks
 
 
@@ -700,6 +708,17 @@ def jc_number(value):
         return "{:,}".format(int(value)).replace(",", "\u202f")
     except (TypeError, ValueError):
         return ""
+
+
+def jc_rows(value):
+    """A row count with its word in the page's language: "1 row", "3 riadky", "5 řádků"."""
+    number = jc_number(value)
+    if not number:
+        return ""
+    count = abs(int(value))
+    words = STRINGS["rows"].get(_language()) or STRINGS["rows"]["en"]
+    form = 0 if count == 1 else 1 if 2 <= count <= 4 else 2
+    return "%s %s" % (number, words[form])
 
 
 def jc_recent(limit=6):
@@ -828,6 +847,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_previews": jc_previews,
             "jc_total": jc_total,
             "jc_number": jc_number,
+            "jc_rows": jc_rows,
             "jc_formats": jc_formats,
             "jc_recent": jc_recent,
             "jc_portal_url": jc_portal_url,

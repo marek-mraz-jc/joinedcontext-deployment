@@ -3,6 +3,9 @@ kind: Endpoint
 metadata:
   name: helsinki-transport
   namespace: helsinki
+  description:
+    fi: "HSL:n joukkoliikenne: bussien, raitiovaunujen, metrojen, junien ja lauttojen sijainnit reaaliajassa (WebSocket), pysäkit, linjat ja liikennöitsijät, häiriötiedotteet sekä liityntäpysäköinnin paikat. Lähteet: HSL ja Fintraffic, CC BY 4.0."
+    en: "HSL public transport: live positions of the buses, trams, metro, trains and ferries (WebSocket), the stops, lines and operators, the service alerts and the park and ride sites. Sources: HSL and Fintraffic, CC BY 4.0."
   title: { en: "HSL public transport: vehicles, stops, departures, alerts, park and ride" }
 spec:
   contextSpaceRef: helsinki
