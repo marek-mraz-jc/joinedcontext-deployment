@@ -23,6 +23,8 @@ context-broker:
     # Antares dev e6484ba (train 20261012-1042): per (tenant, type) retention of current state and
     # history under /q/retention, deleted in bounded batches (T-3900), with T-4003 T-4019 T-3786
     # T-3933/34 T-3936 T-3948 T-3980 T-4021 T-4034; no new migration over eb30b4f.
+    # Antares dev 058db12 (train 20261012-1301): T-3956 T-3880 T-4009 T-3805 T-4030 T-4031 T-4018;
+    # no new migration and no new ANTARES_* key over e6484ba.
     repository: 'ghcr.io/marek-mraz-jc/antares-broker-jc'
-    tag: 'e6484ba'
-    digest: 'sha256:5644d20004704e19954100219dad28c8381b17e50d33e4c2cf42f4543f55c35f'
+    tag: '058db12'
+    digest: 'sha256:f802b983d846e55414016d551ddc726bec3354614070cc98365b694dc7d7f1df'
