@@ -146,3 +146,23 @@ def test_a_pipeline_client_is_bound_to_its_own_projects_endpoints_only(dev):
             assert slugs[audience] == project, (
                 f"{client} is bound to {audience}, an endpoint of project {slugs[audience]}"
             )
+
+
+def test_every_projects_pipeline_client_reaches_the_portals_internal_listener():
+    """T-4038: a stream's outcome, rejected and samples sinks post with its project's own client,
+    and the Portal's internal listener takes only a token issued for `portal-internal`. A project
+    whose client lacked the audience had every report refused with 401 (zilina on dev)."""
+    import pathlib
+
+    import yaml
+
+    root = pathlib.Path(__file__).resolve().parent.parent
+    clients = yaml.safe_load(
+        (root / "components/pipeline-runner/keycloak-clients.yaml").read_text()
+    )
+    for client, spec in clients.items():
+        audiences = {
+            mapper["config"]["included.custom.audience"]
+            for mapper in spec["rawValues"]["protocolMappers"]
+        }
+        assert "portal-internal" in audiences, client
