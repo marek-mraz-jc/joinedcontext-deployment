@@ -431,15 +431,17 @@ def test_only_jcctl_offers_the_device_flow(realm_clients):
 PROXY = "helsinki-agent-proxy"
 
 
-def test_only_the_agent_proxy_may_exchange_a_persons_token(dev_realm_clients):
-    """Standard token exchange V2 on one client: any other client that could turn a person's
-    token into one of its own could read as that person (ADR-N-038 §3.2)."""
+def test_only_the_agent_proxy_and_the_gateway_may_exchange_a_persons_token(dev_realm_clients):
+    """Standard token exchange V2 on two clients: any other client that could turn a person's
+    token into one of its own could read as that person (ADR-N-038 §3.2). The gateway exchanges
+    only for a broker's audience on a read across brokers (T-3999,
+    tests/test_broker_token_exchange.py)."""
     exchanging = {
         client_id
         for client_id, client in dev_realm_clients.items()
         if client.get("attributes", {}).get("standard.token.exchange.enabled") == "true"
     }
-    assert exchanging == {PROXY}
+    assert exchanging == {PROXY, "context-gateway"}
     attributes = dev_realm_clients[PROXY]["attributes"]
     # A refresh token for the run, tied to the person's own session: it ends when they sign out
     # (ADR-N-038 §3.5), which an offline token would not.
