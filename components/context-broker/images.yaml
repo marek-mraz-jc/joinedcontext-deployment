@@ -28,6 +28,8 @@ context-broker:
     # Antares dev 2a48c7a (train 20261012-1619): the notifier's steps get 60 s deadlines, so one
     # stuck delivery no longer stops every notification (T-4102, T-4084), access/explain for the
     # gateway (T-3881), T-4079 T-4083; no new migration or ANTARES_* key over 058db12.
+    # Antares dev c9df233: tenant move (T-4001, T-4016), T-4057, T-4118; no new migration or
+    # runtime ANTARES_* key over 2a48c7a.
     repository: 'ghcr.io/marek-mraz-jc/antares-broker-jc'
-    tag: '2a48c7a'
-    digest: 'sha256:d546d8be907ea81fb2796c5bdafe1b1e4474cadbeec1a75358ad17dce00ec712'
+    tag: 'c9df233'
+    digest: 'sha256:e73bb843b19e62632afa7fd27ae4cae02ae5c986f3b2d12803b3c28b1bafd2bd'
