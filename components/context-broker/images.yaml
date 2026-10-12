@@ -30,6 +30,8 @@ context-broker:
     # gateway (T-3881), T-4079 T-4083; no new migration or ANTARES_* key over 058db12.
     # Antares dev c9df233: tenant move (T-4001, T-4016), T-4057, T-4118; no new migration or
     # runtime ANTARES_* key over 2a48c7a.
+    # Antares dev f248288: view all, Accept precedence and LdContext (T-3947); no new migration
+    # or ANTARES_* key over c9df233.
     repository: 'ghcr.io/marek-mraz-jc/antares-broker-jc'
-    tag: 'c9df233'
-    digest: 'sha256:e73bb843b19e62632afa7fd27ae4cae02ae5c986f3b2d12803b3c28b1bafd2bd'
+    tag: 'f248288'
+    digest: 'sha256:8c9efa5acb90321db43bb637ace2c2053b534defdc9887f288ce97647b9885ac'
