@@ -271,7 +271,7 @@ def test_a_region_read_that_brought_no_row_writes_nothing_rather_than_wiping_eve
     # Rows of no cube the indicators read are no answer either.
     stranger = [{"id": "urn:ngsi-ld:StatisticalObservation:bbsk.sk:bbsk-kraj:x", "type": "StatisticalObservation",
                  "dataSet": {"type": "Property", "value": "xx0000rr"}, "refArea": {"type": "Property", "value": "SK032"},
-                 "refPeriod": {"type": "Property", "value": "2024"}, "value": {"type": "Property", "value": 1},
+                 "refPeriod": {"type": "Property", "value": "2024"}, "observationValue": {"type": "Property", "value": 1},
                  "dateObserved": {"type": "Property", "value": "2025-10-31T00:00:00Z"}}]
     assert bento(mapping, stranger, env, may_drop=True) == []
 

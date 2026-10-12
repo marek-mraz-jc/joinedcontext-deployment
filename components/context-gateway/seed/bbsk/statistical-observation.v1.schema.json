@@ -123,6 +123,11 @@
           ],
           "x-ngsi-ld-kind": "GeoProperty"
         },
+        "observationValue": {
+          "description": "The number, exactly as published. Its unit varies with the indicator and travels on the Property as `unitCode`, a UN/CEFACT common code, beside `unitText`.",
+          "type": "number",
+          "x-ngsi-ld-kind": "Property"
+        },
         "observedAt": {
           "description": "When the observation the entity reports was made.",
           "format": "date-time",
@@ -168,11 +173,6 @@
             "null"
           ],
           "x-ngsi-ld-kind": "Property"
-        },
-        "value": {
-          "description": "The number, exactly as published. Its unit varies with the indicator and travels on the Property as `unitCode`, a UN/CEFACT common code, beside `unitText`.",
-          "type": "number",
-          "x-ngsi-ld-kind": "Property"
         }
       },
       "required": [
@@ -180,7 +180,7 @@
         "indicator",
         "refArea",
         "refPeriod",
-        "value",
+        "observationValue",
         "source",
         "dateObserved",
         "id",

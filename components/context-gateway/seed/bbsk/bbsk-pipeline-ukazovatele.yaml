@@ -51,7 +51,7 @@ spec:
       let ran = now().ts_format("2006-01-02T15:04:05Z07:00", "UTC")
       let source_endpoint = "urn:ngsi-ld:Endpoint:%v:%v:%v".format($domain, env("JC_SOURCE_SPACE"), env("JC_SOURCE_SPACE"))
 
-      let rows = this.filter(r -> $indicator.keys().contains(r.dataSet.value) && $territory.keys().contains(r.refArea.value) && r.value.value.type() == "number")
+      let rows = this.filter(r -> $indicator.keys().contains(r.dataSet.value) && $territory.keys().contains(r.refArea.value) && r.observationValue.value.type() == "number")
       let wanted = $indicator.keys().map_each(c -> $territory.keys().map_each(a -> { "cube": c, "area": a })).flatten()
 
       # An answer with no row of either cube is a read that brought nothing (the endpoint
@@ -68,7 +68,7 @@ spec:
         "type": "KeyPerformanceIndicator",
         "name": { "type": "Property", "value": "%v-%v".format(c.spec.name, c.token) },
         "currentValue": if c.pick == null { { "type": "Property", "value": "not measured" } } else {
-          { "type": "Property", "value": c.pick.value.value, "unitCode": c.spec.unit, "observedAt": c.pick.dateObserved.value }
+          { "type": "Property", "value": c.pick.observationValue.value, "unitCode": c.spec.unit, "observedAt": c.pick.dateObserved.value }
         },
         "calculationPeriod": { "type": "Property", "value": if c.pick == null { { "start": "0001-01-01T00:00:00Z", "end": $ran } } else {
           { "start": "%v-01-01T00:00:00Z".format(c.pick.refPeriod.value), "end": "%v-12-31T23:59:59Z".format(c.pick.refPeriod.value) } } },
