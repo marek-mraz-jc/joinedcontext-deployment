@@ -25,6 +25,7 @@ helsinki-endpoint-alerts.yaml: projects/helsinki/spaces/helsinki/endpoints/helsi
 helsinki-policy-public-events.yaml: projects/helsinki/spaces/helsinki/policies/public-events.yaml
 helsinki-policy-public-bikes.yaml: projects/helsinki/spaces/helsinki/policies/public-bikes.yaml
 helsinki-policy-bikes-ops-steward.yaml: projects/helsinki/spaces/helsinki/policies/bikes-ops-steward.yaml
+helsinki-policy-bikes-ops-read.yaml: projects/helsinki/spaces/helsinki/policies/bikes-ops-read.yaml
 helsinki-policy-public-transport.yaml: projects/helsinki/spaces/helsinki/policies/public-transport.yaml
 helsinki-policy-public-all.yaml: projects/helsinki/spaces/helsinki/policies/public-all.yaml
 helsinki-policy-public-news.yaml: projects/helsinki/spaces/helsinki/policies/public-news.yaml

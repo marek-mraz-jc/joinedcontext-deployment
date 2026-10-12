@@ -541,6 +541,14 @@ if has_route context-endpoint; then
 		# the neighbour's data (EP-14, 404-vs-403 narrowing keeps it a 200).
 		body=$(curl -sS --max-time 20 "$base/api/endpoint/$(slug_of bikes)/ngsi-ld/v1/entities?type=Event&limit=1" 2>/dev/null || true)
 		if [ "$body" = "[]" ]; then ok "helsinki-bikes does not serve events"; else ko "helsinki-bikes served events: ${body:0:120}"; fi
+		# T-4035, EP-106/107: the transport endpoint's WebSocket is public like its REST read. An
+		# anonymous client (no Origin, no token) gets its 101 and a subscribe for Vehicle its 201.
+		ws=$(python3 "$(dirname "$0")/smoke-ws.py" "$base/api/endpoint/$(slug_of transport)/ws" Vehicle 20 2>&1 || true)
+		if [ "$ws" = "101 201" ]; then
+			ok "helsinki-transport opens its WebSocket anonymously and subscribes to Vehicle (101 201)"
+		else
+			ko "helsinki-transport WebSocket answered '${ws:0:160}', expected '101 201'"
+		fi
 		# Data flows: the bike feed answers within a minute of the runner starting, the events
 		# register at once; the buses depend on HSL's timetable, so their absence is a note.
 		flowing() { # type seconds
@@ -1281,6 +1289,21 @@ else
 		else
 			ok "no resolved credential appears in any ConfigMap of $slug"
 		fi
+	fi
+fi
+
+echo "pipeline runner streams (T-4037)"
+if [ -z "$runner_restarts_before" ]; then
+	skip "pipeline runner streams (no pipeline-runner in this instance)"
+else
+	# A stream the runner refused at init (a step that does not build, the GTFS-RT schema read
+	# twice) never runs and says so only in this log; 15 min covers the apply before the smoke.
+	refused=$(kubectl logs -n "$slug" -l app.kubernetes.io/name=pipeline-runner-runner -c pipeline-runner-runner --since=15m --tail=-1 2>/dev/null |
+		grep -oE 'Failed to create stream \([^)]*\)|Streams CRUD Error[^"]{0,80}' | sort -u | head -n 5 || true)
+	if [ -z "$refused" ]; then
+		ok "the pipeline runner built every stream it was given in the last 15 min"
+	else
+		ko "the pipeline runner refused streams: $(echo $refused)"
 	fi
 fi
 

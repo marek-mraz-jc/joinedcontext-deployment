@@ -14,7 +14,7 @@ pod_spec := input.spec if input.kind == "Pod"
 # A Helm *test* hook is never applied by `helmfile sync`, so it is not a workload of the
 # deployment; `scripts/render.sh --deployed` and the Kyverno gate drop it for the same reason.
 # Every other hook (post-install and friends) is applied and is held to all of this.
-test_hook if "test" in split(object.get(input, ["metadata", "annotations", "helm.sh/hook"], ""), ",")
+helm_test_hook if "test" in split(object.get(input, ["metadata", "annotations", "helm.sh/hook"], ""), ",")
 
 containers contains container if some container in pod_spec.containers
 
@@ -29,14 +29,14 @@ non_root(container) if container.securityContext.runAsNonRoot == true
 non_root(_) if pod_spec.securityContext.runAsNonRoot == true
 
 deny contains msg if {
-	not test_hook
+	not helm_test_hook
 	some container in containers
 	not non_root(container)
 	msg := sprintf("%s: container %q does not set runAsNonRoot", [subject, container.name])
 }
 
 deny contains msg if {
-	not test_hook
+	not helm_test_hook
 	some container in containers
 	container.securityContext.runAsUser == 0
 	msg := sprintf("%s: container %q asks for uid 0", [subject, container.name])
@@ -45,7 +45,7 @@ deny contains msg if {
 # 2. Every capability dropped. `drop: [ALL]` is the whole of the PSS restricted requirement;
 #    an `add` beside it is a deliberate exception and belongs in a policy exception, not here.
 deny contains msg if {
-	not test_hook
+	not helm_test_hook
 	some container in containers
 	not "ALL" in object.get(container, ["securityContext", "capabilities", "drop"], [])
 	msg := sprintf("%s: container %q does not drop ALL capabilities", [subject, container.name])
@@ -53,7 +53,7 @@ deny contains msg if {
 
 # 3. A memory limit. Without one, a single leaking pod evicts its neighbours on the node.
 deny contains msg if {
-	not test_hook
+	not helm_test_hook
 	some container in containers
 	not object.get(container, ["resources", "limits", "memory"], false)
 	msg := sprintf("%s: container %q declares no memory limit", [subject, container.name])
@@ -62,7 +62,7 @@ deny contains msg if {
 # 4. Its own ServiceAccount. The `default` one is shared by everything in the namespace, so a
 #    RoleBinding meant for one workload reaches all of them.
 deny contains msg if {
-	not test_hook
+	not helm_test_hook
 	object.get(pod_spec, "serviceAccountName", "default") == "default"
 	# The default account is shared by everything in the namespace, so a RoleBinding meant for
 	# one workload reaches all of them. A pod that is handed no token cannot use the identity,

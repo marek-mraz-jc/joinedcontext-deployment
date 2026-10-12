@@ -30,6 +30,16 @@ mqtt-brokers:
       ports:
         - protocol: TCP
           port: 1884
+    # The Portal reads the HTTP API (ADR-N-048 §2.8, T-4043); the chart's Linkerd Server admits
+    # its identity on two GET routes only.
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: portal-portal
+          componentNamespace: portal
+      ports:
+        - protocol: TCP
+          port: 6060
   egress:
     - to:
         - podSelector:
@@ -87,3 +97,20 @@ runner-to-mqtt-brokers:
       ports:
         - protocol: TCP
           port: 1883
+
+# The Portal's side of 6060.
+portal-to-mqtt-brokers:
+  componentNamespace: portal
+  podSelector:
+    app.kubernetes.io/name: portal-portal
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: mqtt-broker
+          componentNamespace: mqtt-brokers
+      ports:
+        - protocol: TCP
+          port: 6060

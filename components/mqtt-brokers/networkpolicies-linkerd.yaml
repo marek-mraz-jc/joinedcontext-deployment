@@ -23,6 +23,10 @@ mqtt-brokers-allow-linkerd:
           podSelector:
             matchLabels:
               app.kubernetes.io/name: traefik
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: portal-portal
+          componentNamespace: portal
       ports:
         - port: 4143
           protocol: TCP
@@ -83,3 +87,20 @@ runner-to-mqtt-brokers-linkerd:
       ports:
         - port: 4143
           protocol: TCP
+
+# The Portal's meshed read of 6060 leaves through its proxy to the broker's inbound proxy.
+portal-to-mqtt-brokers-linkerd:
+  componentNamespace: portal
+  podSelector:
+    app.kubernetes.io/name: portal-portal
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: mqtt-broker
+          componentNamespace: mqtt-brokers
+      ports:
+        - protocol: TCP
+          port: 4143

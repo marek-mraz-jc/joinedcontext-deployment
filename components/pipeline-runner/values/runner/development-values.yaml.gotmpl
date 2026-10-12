@@ -70,6 +70,17 @@ configMap:
     resources.yaml: |
 {{ readFile "../../streams/resources.yaml" | indent 6 }}
     # The GTFS-RT schema the `protobuf` step of hsl-departures and hsl-service-alerts decodes HSL's
-    # feeds with (`import_paths: [/streams]`, T-3891, T-3892), Apache-2.0 from google/transit.
+    # feeds with (T-3891, T-3892), Apache-2.0 from google/transit, mounted alone at /proto below.
     gtfs-realtime.proto: |
 {{ readFile "../../streams/gtfs-realtime.proto" | indent 6 }}
+
+# The schema again, by subPath into a directory of its own: the steps' `import_paths: [/proto]`.
+# Bento parses every .proto under an import path, and /streams, a ConfigMap mount, holds the file
+# twice (the link and the kubelet's dated copy under ..<timestamp>/), so both streams failed with
+# "symbol transit_realtime.FeedMessage already defined" (T-4037). A subPath file is not updated
+# in place; the config checksum restarts the runner when the schema changes.
+extraVolumeMounts:
+  - name: config
+    mountPath: /proto/gtfs-realtime.proto
+    subPath: gtfs-realtime.proto
+    readOnly: true
