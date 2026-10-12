@@ -49,6 +49,10 @@ configMap:
   mountPath: /streams
   data:
     {{- $thisRunner.streams | default dict | toYaml | nindent 4 }}
+  # The bounded inflate of a zip member's read (PL-72, T-3953): the module the rendered
+  # `wasm` step loads as /streams/inflate.wasm. ../../streams/README.md says how it is built.
+  binaryData:
+    inflate.wasm: {{ readFile "../../streams/inflate.wasm" | b64enc }}
 
 # The files volume a `csv`, `file`, `file_tail` or `parquet` DataSource reads from (PL-50,
 # Architecture/08 §6): a manifest names paths under /data/, a file gets there with

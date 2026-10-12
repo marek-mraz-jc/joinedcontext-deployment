@@ -110,6 +110,7 @@ configMap:
   name: ''            # defaults to <fullname>
   mountPath: ''
   data: {}            # filename -> file content
+  binaryData: {}      # filename -> base64 of a binary file (a wasm module)
 
 # A files volume of the workload's own (PL-50): a PersistentVolumeClaim mounted at `mountPath`,
 # the place a runner reads a dropped CSV from. Off unless a component asks.
