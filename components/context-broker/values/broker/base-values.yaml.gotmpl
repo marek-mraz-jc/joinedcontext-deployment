@@ -82,6 +82,9 @@ env:
   ANTARES_WS_MAX_CONNECTIONS_PER_TENANT: "50"
   ANTARES_WS_MAX_SUBSCRIPTIONS: "16"
   ANTARES_WS_QUEUE: "128"
+  # A socket's lifetime here bounds only anonymous callers on public Endpoints (24 h, platform
+  # T-4132): the gateway ends a token caller's socket at the token's 300 s itself.
+  ANTARES_WS_MAX_LIFETIME_SECS: "86400"
   ANTARES_SCHEMA_MAX_BYTES: "1048576"
   # The verified caller the gateway forwards (platform T-3641); `x-jc-did` a data-space
   # participant, which the gateway strips from every client request (platform T-3800, T-3816).
