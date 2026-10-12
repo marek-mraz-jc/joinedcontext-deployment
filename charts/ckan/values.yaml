@@ -131,6 +131,10 @@ apiToken:
 # makes the theme reusable by a second installation without a file change (OPS-47).
 branding: {}
 
+# A badge and words per CKAN organization name, for a publisher that set no picture or
+# description in CKAN itself: `{<name>: {initials, colour: "#rrggbb", description: {en, sk}}}`.
+organizations: {}
+
 # The knowledge assistant's widget page every catalogue page offers (AG-114); empty for none.
 assistantWidget: ''
 
