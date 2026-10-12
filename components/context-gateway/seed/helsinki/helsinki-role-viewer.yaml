@@ -25,11 +25,13 @@ spec:
         - ServiceAccount
         - Pipeline
         - DataSource
+        - MqttBroker
         - App
         - CkanInstance
         # The knowledge assistant's sources and deployments (MF-51, MF-52, T-3057).
         - KnowledgeSource
         - AssistantDeployment
+        - McpServer
         - Blueprint
         - AgentProfile
         - DataSpaceParticipant
