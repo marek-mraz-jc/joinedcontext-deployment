@@ -467,10 +467,11 @@ if has_route context-endpoint; then
 		status 204 "and is deleted again" -X DELETE -H "Authorization: Bearer $ep_token" "$base/api/endpoint/$ep/ngsi-ld/v1/entities/$other"
 		status 204 "entity delete" -X DELETE -H "Authorization: Bearer $ep_token" "$base/api/endpoint/$ep/ngsi-ld/v1/entities/$urn"
 
-		# T-4109: hand probes an earlier debugging session left in this space; a visitor of the
-		# demo dataset sees them beside the real station. Removed when present, named when removed.
-		for stale in urn:ngsi-ld:AirQualityObserved:hel.fi:ovzdusie:deployer-probe \
-			urn:ngsi-ld:AirQualityObserved:hel.fi:ovzdusie:eea-SK0263A; do
+		# T-4109: a hand probe an earlier debugging session left in this space; a visitor of the
+		# demo dataset sees it beside the real station. Removed when present, named when removed.
+		# Never eea-SK0263A: that is the station itself, minted by pipeline-public-air with the
+		# instance's JC_ORG_DOMAIN (hel.fi on dev), and the ogc star row reads it (T-4116).
+		for stale in urn:ngsi-ld:AirQualityObserved:hel.fi:ovzdusie:deployer-probe; do
 			got=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 -X DELETE \
 				-H "Authorization: Bearer $ep_token" "$base/api/endpoint/$ep/ngsi-ld/v1/entities/$stale" 2>/dev/null) || got=""
 			[ "$got" = "204" ] && ok "removed the stale test entity $stale"
