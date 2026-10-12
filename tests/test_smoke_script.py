@@ -272,6 +272,15 @@ sys.stdout.write("New, (NONE), Cipher is (NONE)\\n" if spec.get("cbcRefused", Tr
 
 ROLLOUTS_STUB = "#!/bin/sh\nexit 0\n"
 
+# scripts/smoke-ws.py has its own tests (test_smoke_ws.py); here it answers what the spec says.
+WS_STUB = '''#!/usr/bin/env python3
+import json, os, sys
+spec = json.load(open(os.environ["STUB_SPEC"]))
+answer = spec.get("ws", "101 201")
+print(answer)
+sys.exit(0 if answer == "101 201" else 1)
+'''
+
 
 def sandbox(tmp_path: Path, spec: dict) -> dict:
     """A copy of the script with stubbed neighbours; returns the env to run it with."""
@@ -281,6 +290,8 @@ def sandbox(tmp_path: Path, spec: dict) -> dict:
     (scripts / "smoke.sh").chmod(0o755)
     (scripts / "wait-rollouts.sh").write_text(ROLLOUTS_STUB)
     (scripts / "wait-rollouts.sh").chmod(0o755)
+    (scripts / "smoke-ws.py").write_text(WS_STUB)
+    (scripts / "smoke-ws.py").chmod(0o755)
 
     stub_bin = tmp_path / "bin"
     stub_bin.mkdir(parents=True, exist_ok=True)
@@ -507,6 +518,7 @@ def test_full_platform_passes(tmp_path):
     assert "ok    helsinki lists 2 spaces, none of them residue of takes or e2e" in result.stdout
     assert "ok    agent proxy client mints tokens with audience context-gateway" in result.stdout
     assert "ok    helsinki-bikes does not serve events" in result.stdout
+    assert "ok    helsinki-transport opens its WebSocket anonymously and subscribes to Vehicle (101 201)" in result.stdout
     assert "ok    city bike stations are flowing into the space" in result.stdout
     assert "ok    buses are flowing into the space" in result.stdout
     assert "catalogue front page carries the branded primary colour" in result.stdout
@@ -526,6 +538,14 @@ def test_an_instance_without_the_helsinki_seed_skips_its_checks(tmp_path):
     """No seed, no 210 s wait for data that will never come: the section is a skip."""
     result = run(tmp_path, dict(HEALTHY, helsinkiSeed={}), "https://example.test", "https://idm.example.test")
     assert "skip  helsinki endpoints (no Helsinki seed on the gateway in this instance)" in result.stdout
+
+
+def test_a_transport_websocket_that_is_not_public_fails_with_its_answer(tmp_path):
+    """T-4035: the 404 the supervisor measured on dev (no `websocket` representation) is a FAIL
+    line that says what the gateway answered."""
+    result = run(tmp_path, dict(HEALTHY, ws="404 -"), "https://example.test", "https://idm.example.test")
+    assert result.returncode != 0
+    assert "FAIL  helsinki-transport WebSocket answered '404 -', expected '101 201'" in result.stdout
 
 
 def test_a_schema_artifact_is_revalidated_and_answers_304(tmp_path):
