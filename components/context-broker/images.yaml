@@ -13,6 +13,9 @@ context-broker:
     # image-jc.yml run 38141581298, cosign-signed keyless by that workflow, SBOM attested. Its
     # one new migration over v0.1.2 is 0008_views.sql, a new table only, so the rollback to
     # 0.1.2 above needs no restore.
+    # Antares dev 6770b73 (image-jc green 2026-10-12T00:35Z): x-jc-did names a data-space
+    # participant (T-3809), which the gateway's broker-view MCP needs (T-3647); no new migration
+    # over 5ed3183.
     repository: 'ghcr.io/marek-mraz-jc/antares-broker-jc'
-    tag: '5ed3183'
-    digest: 'sha256:304ae4fc93a1a44251c70e456bc3fcfb30b3f405e16ea073b13a4885aa13ef3d'
+    tag: '6770b73'
+    digest: 'sha256:78f04a57372b498d7c96cf74774adde71fcfd1421ff119b009a38ef83322ef93'
