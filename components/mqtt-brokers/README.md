@@ -15,9 +15,11 @@ did not allow. No retainer, no session or message storage, sessions end with the
 | 1883 | `internal`, plain MQTT | the pipeline runner only (NetworkPolicy and a Linkerd Server) |
 | 1884 | `external`, PROXY protocol v2 | the ingress controller only |
 | 8883 | Traefik entrypoint `mqtts`, TLS | devices, `HostSNI(<name>.<project>.mqtt.<domain>)`, one HTTP-01 certificate per host |
+| 6060 | RMQTT HTTP API, under the mesh only | the Portal's identity, `GET /api/v1/metrics/history/sum` and `GET /api/v1/clients` only (Linkerd `Server` + `HTTPRoute`, ADR-N-048 §2.8, T-4043) |
 
-RMQTT opens an HTTP API on 6060 and TLS, WebSocket and QUIC listeners on its own; the chart
-turns each of them off, and binds the cluster gRPC to loopback.
+RMQTT opens TLS, WebSocket and QUIC listeners on its own; the chart turns each of them off, and
+binds the cluster gRPC to loopback. Its HTTP API runs only where the instance runs the mesh and
+names the Portal; elsewhere the chart turns it off too and the Portal shows "not measured".
 
 `brokers` is empty in every environment: the Portal's reconciler stamps one broker per
 `MqttBroker` manifest (T-3994). The chart renders a broker's objects once more with sentinels

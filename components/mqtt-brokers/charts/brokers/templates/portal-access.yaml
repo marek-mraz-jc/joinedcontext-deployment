@@ -28,7 +28,7 @@ rules:
     resources: ["ingressroutetcps"]
     verbs: ["get", "list", "create", "patch", "delete"]
   - apiGroups: ["policy.linkerd.io"]
-    resources: ["servers", "meshtlsauthentications", "authorizationpolicies"]
+    resources: ["servers", "httproutes", "meshtlsauthentications", "authorizationpolicies"]
     verbs: ["get", "list", "create", "patch", "delete"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1

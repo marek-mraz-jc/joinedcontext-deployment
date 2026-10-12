@@ -231,11 +231,61 @@ def test_the_portal_gets_its_role_only_when_named(docs, tmp_path):
     assert granted == {
         ("", "serviceaccounts"), ("", "configmaps"), ("", "services"), ("apps", "deployments"),
         ("cert-manager.io", "certificates"), ("traefik.io", "ingressroutetcps"),
-        ("policy.linkerd.io", "servers"), ("policy.linkerd.io", "meshtlsauthentications"),
-        ("policy.linkerd.io", "authorizationpolicies"),
+        ("policy.linkerd.io", "servers"), ("policy.linkerd.io", "httproutes"),
+        ("policy.linkerd.io", "meshtlsauthentications"), ("policy.linkerd.io", "authorizationpolicies"),
     }
     for rule in role["rules"]:
         assert "*" not in rule["verbs"] and "escalate" not in rule["verbs"] and "bind" not in rule["verbs"]
+
+
+PORTAL = {"portal": {"namespace": "jc-portal", "serviceAccount": "portal"}}
+
+
+def test_the_portal_alone_reads_two_routes_of_the_http_api_under_the_mesh(tmp_path):
+    """ADR-N-048 §2.8, T-4043: 6060 admits the Portal's identity on two GET routes; the API's
+    publish, subscribe and kick routes match nothing, and the API holds no token."""
+    result = helm({**BASE, **PORTAL}, tmp_path)
+    assert result.returncode == 0, result.stderr
+    rendered = [d for d in yaml.safe_load_all(result.stdout) if d]
+    for release in RELEASES:
+        files = config(rendered, release)
+        assert files["rmqtt.toml"]["plugins"]["disabled_default_startups"] == []
+        api = files["rmqtt-http-api.toml"]
+        assert api["http_laddr"] == "0.0.0.0:6060" and "http_bearer_token" not in api
+        server = of(rendered, "Server")[f"{release}-api"]["spec"]
+        assert (server["port"], server["proxyProtocol"], server["accessPolicy"]) == (6060, "HTTP/1", "deny")
+        route = of(rendered, "HTTPRoute")[f"{release}-api"]["spec"]
+        assert route["parentRefs"] == [{"group": "policy.linkerd.io", "kind": "Server", "name": f"{release}-api"}]
+        matches = [m for rule in route["rules"] for m in rule["matches"]]
+        assert {(m["method"], m["path"]["type"], m["path"]["value"]) for m in matches} == {
+            ("GET", "Exact", "/api/v1/metrics/history/sum"), ("GET", "Exact", "/api/v1/clients")}
+        assert of(rendered, "MeshTLSAuthentication")[f"{release}-api"]["spec"]["identityRefs"] == [
+            {"kind": "ServiceAccount", "name": "portal", "namespace": "jc-portal"}]
+        policy = of(rendered, "AuthorizationPolicy")[f"{release}-api"]["spec"]
+        assert policy["targetRef"] == {"group": "policy.linkerd.io", "kind": "HTTPRoute", "name": f"{release}-api"}
+        ports = {p["port"] for p in of(rendered, "Service")[release]["spec"]["ports"]}
+        assert ports == {1883, 1884, 6060}
+    # The Portal stamps the same objects from the template.
+    template = next(d for d in rendered if d["kind"] == "ConfigMap" and d["metadata"]["name"] == TEMPLATE)
+    stamped = [d for d in yaml.safe_load_all(template["data"]["objects.yaml"]) if d]
+    assert {d["kind"] for d in stamped if d["metadata"]["name"] == "__RELEASE__-api"} == {
+        "Server", "HTTPRoute", "MeshTLSAuthentication", "AuthorizationPolicy"}
+
+
+@pytest.mark.parametrize("values", [
+    {**PORTAL, "serviceMesh": {"enabled": False}},
+    {},
+], ids=["no mesh", "no portal"])
+def test_without_the_mesh_or_the_portal_the_http_api_stays_off(tmp_path, values):
+    result = helm({**BASE, **values}, tmp_path)
+    assert result.returncode == 0, result.stderr
+    rendered = [d for d in yaml.safe_load_all(result.stdout) if d]
+    for release in RELEASES:
+        files = config(rendered, release)
+        assert files["rmqtt.toml"]["plugins"]["disabled_default_startups"] == ["rmqtt-http-api"]
+        assert "rmqtt-http-api.toml" not in files
+        assert {p["port"] for p in of(rendered, "Service")[release]["spec"]["ports"]} == {1883, 1884}
+    assert not [d for d in rendered if d["kind"] == "HTTPRoute"]
 
 
 # The environment around the brokers.
@@ -274,7 +324,10 @@ def test_the_runner_knows_the_brokers_namespace(local):
 def test_only_brokers_reach_8082_and_only_the_runner_and_traefik_reach_a_broker(local):
     brokers = one(local, "NetworkPolicy", "mqtt-brokers")["spec"]
     by_port = {rule["ports"][0]["port"]: rule["from"] for rule in brokers["ingress"]}
-    assert set(by_port) == {1883, 1884}
+    assert set(by_port) == {1883, 1884, 6060}
+    assert by_port[6060][0]["podSelector"]["matchLabels"] == {"app.kubernetes.io/name": "portal-portal"}
+    egress = one(local, "NetworkPolicy", "portal-to-mqtt-brokers")["spec"]
+    assert [p["port"] for rule in egress["egress"] for p in rule["ports"]] == [6060]
     assert by_port[1883][0]["podSelector"]["matchLabels"] == {"app.kubernetes.io/name": "pipeline-runner-runner"}
     assert by_port[1884][0]["podSelector"]["matchLabels"] == {"app.kubernetes.io/name": "traefik"}
     internal = one(local, "NetworkPolicy", "gateway-from-mqtt-brokers")["spec"]

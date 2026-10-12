@@ -142,6 +142,8 @@ networking.k8s.io/v1/NetworkPolicy local/portal-linkerd-from-gitea
 networking.k8s.io/v1/NetworkPolicy local/portal-linkerd-from-gitea-runner
 networking.k8s.io/v1/NetworkPolicy local/portal-linkerd-from-observability
 networking.k8s.io/v1/NetworkPolicy local/portal-linkerd-from-pipeline-runner
+networking.k8s.io/v1/NetworkPolicy local/portal-to-mqtt-brokers
+networking.k8s.io/v1/NetworkPolicy local/portal-to-mqtt-brokers-linkerd
 networking.k8s.io/v1/NetworkPolicy local/postgres
 networking.k8s.io/v1/NetworkPolicy local/postgres-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy local/postgres-from-context-broker
