@@ -1,6 +1,12 @@
 {
   "@context": {
     "@vocab": "https://joinedcontext.com/models/",
+    "Any": {
+      "@id": "linkml:Any"
+    },
+    "CalculationPeriod": {
+      "@id": "jc:CalculationPeriod"
+    },
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
@@ -30,6 +36,10 @@
     "derivedFrom": {
       "@id": "jc:derivedFrom",
       "@type": "@id"
+    },
+    "end": {
+      "@id": "jc:end",
+      "@type": "xsd:dateTime"
     },
     "fleetVehicleId": {
       "@id": "sdm:fleetVehicleId"
@@ -75,6 +85,10 @@
     "speed": {
       "@id": "sdm:speed",
       "@type": "xsd:float"
+    },
+    "start": {
+      "@id": "jc:start",
+      "@type": "xsd:dateTime"
     },
     "transportMode": {
       "@context": {

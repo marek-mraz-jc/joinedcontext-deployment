@@ -44,6 +44,11 @@ slots:
       `not measured` instead of a number, and never a zero: a zero reads as a measurement
       (Development/10 §5).
     required: true
+    range: Any
+    inlined: true
+    any_of:
+      - range: float
+      - range: string
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://vocabulary.uncefact.org/UnitMeasureCode#
@@ -54,6 +59,8 @@ slots:
       window the pipeline used and not the one it was asked for, so the distance between
       `calculationPeriod.end` and `updatedAt` is how stale the source is.
     required: true
+    range: CalculationPeriod
+    inlined: true
     annotations:
       ngsi_ld_kind: Property
   calculationFormula:
@@ -88,6 +95,16 @@ slots:
     required: true
     annotations:
       ngsi_ld_kind: Property
+  start:
+    slot_uri: jc:start
+    description: The first instant the window covers.
+    range: datetime
+    required: true
+  end:
+    slot_uri: jc:end
+    description: The last instant the window covers.
+    range: datetime
+    required: true
 
 classes:
   KeyPerformanceIndicator:
@@ -102,3 +119,20 @@ classes:
       - derivedFrom
       - computedBy
       - updatedAt
+
+  CalculationPeriod:
+    class_uri: jc:CalculationPeriod
+    description: >-
+      The value of `calculationPeriod`: the window an indicator covers, never an entity of
+      its own.
+    slots:
+      - start
+      - end
+
+  Any:
+    class_uri: linkml:Any
+    description: >-
+      Any value, which the slot's `any_of` narrows: `currentValue` is a number or the string
+      `not measured`.
+    annotations:
+      upstream_source: https://w3id.org/linkml/Any
