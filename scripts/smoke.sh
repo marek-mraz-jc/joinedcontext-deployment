@@ -55,6 +55,7 @@ runner_restarts() {
 		tr ' ' '\n' | awk '{ total += $1 } END { if (NR) print total }'
 }
 runner_restarts_before=$(runner_restarts)
+smoke_started=$(date +%s)
 
 # The entity type an endpoint grants this caller, from its own access document (EP-55).
 #
@@ -1297,11 +1298,17 @@ if [ -z "$runner_restarts_before" ]; then
 	skip "pipeline runner streams (no pipeline-runner in this instance)"
 else
 	# A stream the runner refused at init (a step that does not build, the GTFS-RT schema read
-	# twice) never runs and says so only in this log; 15 min covers the apply before the smoke.
-	refused=$(kubectl logs -n "$slug" -l app.kubernetes.io/name=pipeline-runner-runner -c pipeline-runner-runner --since=15m --tail=-1 2>/dev/null |
+	# twice) never runs and says so only in this log, without its name. The Portal sends a
+	# refused render again on every 60 s sync tick, so a refusal that stands is in the last two
+	# minutes; one from the apply (the new pod given the old render before the seed converged,
+	# T-4055) is older once the smoke has run that long.
+	window=${JC_SMOKE_RUNNER_WINDOW:-120}
+	ran=$(($(date +%s) - smoke_started))
+	[ "$ran" -lt "$window" ] && sleep $((window - ran))
+	refused=$(kubectl logs -n "$slug" -l app.kubernetes.io/name=pipeline-runner-runner -c pipeline-runner-runner --since="${window}s" --tail=-1 2>/dev/null |
 		grep -oE 'Failed to create stream \([^)]*\)|Streams CRUD Error[^"]{0,80}' | sort -u | head -n 5 || true)
 	if [ -z "$refused" ]; then
-		ok "the pipeline runner built every stream it was given in the last 15 min"
+		ok "the pipeline runner refused no stream in the last ${window} s"
 	else
 		ko "the pipeline runner refused streams: $(echo $refused)"
 	fi
