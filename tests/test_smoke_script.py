@@ -119,6 +119,13 @@ elif args[0] == "get" and args[1] == "configmap":
         sys.stdout.write("  password: %s\\n" % spec["leakedCredential"])
 elif args[0] == "get" and args[1] == "deployment" and args[2] == "apisix":
     sys.exit(0 if spec.get("edge", True) else 1)
+elif args[0] == "logs" and "pipeline-runner-runner" in line:
+    # T-4055: the runner's refusals, each `[age in seconds, line]`; `--since=Ns` shows those
+    # at most N seconds old.
+    since = int(next(a for a in args if a.startswith("--since=")).split("=")[1].rstrip("s"))
+    for age, said in spec.get("runnerRefused", []):
+        if age <= since:
+            sys.stdout.write('{"level":"error","msg":"%s"}\\n' % said)
 elif args[0] == "logs":
     # One access-log line for the beacon path, from whoever the edge thinks called (T-0929).
     caller = spec.get("edgeCaller", "203.0.113.7")
@@ -305,6 +312,7 @@ def sandbox(tmp_path: Path, spec: dict) -> dict:
     env = dict(os.environ)
     env["PATH"] = f"{stub_bin}:{env['PATH']}"
     env["STUB_SPEC"] = str(spec_file)
+    env.setdefault("JC_SMOKE_RUNNER_WINDOW", "1")
     return env
 
 
@@ -1648,3 +1656,14 @@ def test_the_internal_ogc_rows_reader_is_granted_the_stations_on_helsinki_bikes_
         if doc and doc.get("kind") == "Policy"
     ]
     assert any(grants(policy) for policy in policies), "no group of demo.viewer reads the stations"
+
+
+def test_only_a_runner_refusal_that_still_recurs_fails_the_run(tmp_path):
+    """T-4055: a refusal from the apply, older than the window, passes; one inside it fails."""
+    defined = "Streams CRUD Error: failed to init processor: symbol transit_realtime.FeedMessage already defined"
+    result = run(tmp_path, dict(HEALTHY, runnerRefused=[[600, defined]]), "https://example.test", "https://idm.example.test")
+    assert "ok    the pipeline runner refused no stream in the last 1 s" in result.stdout
+    result = run(tmp_path / "standing", dict(HEALTHY, runnerRefused=[[600, defined], [0, defined]]),
+                 "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  the pipeline runner refused streams: Streams CRUD Error: failed to init processor: symbol" in result.stdout

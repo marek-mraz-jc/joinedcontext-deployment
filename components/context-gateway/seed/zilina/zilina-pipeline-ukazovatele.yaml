@@ -10,8 +10,9 @@ metadata:
   title: { sk: "Ukazovatele mesta", en: "City indicators" }
 spec:
   class: scheduled
-  # After the cube pipelines' weekly reads (Monday 02:00 to 03:30 UTC).
-  schedule: "17 5 * * 1"
+  # After the cube pipelines' weekly reads (Monday 02:00 to 03:30 UTC), and daily, so a tick the
+  # runner misses (a restart, a stream replaced at that minute) costs a day, not a week (T-4081).
+  schedule: "17 5 * * *"
   # Read through the space's own Endpoint and not the store, so the Policy applies to this
   # pipeline exactly as it applies to anybody else (PL-18, PF-39, PL-45). Only the rows the six
   # indicators read: the five cubes hold ~3 300 rows, these indicators about 1 000.
@@ -24,8 +25,8 @@ spec:
   output:
     type: KeyPerformanceIndicator
     mode: upsert
-  # Every run rewrites all six, so one missing for three weekly runs is an indicator the city
-  # stopped publishing: it is removed rather than shown with a stale value (PL-64). Safe here and
+  # Every run rewrites each of the six its cube carries, so one missing for three weeks is an
+  # indicator the city stopped publishing: it is removed rather than shown with a stale value (PL-64). Safe here and
   # only here: this pipeline is the one writer of zilina-kpi.
   expiry:
     after: 21d
@@ -71,17 +72,16 @@ spec:
         "pick": $chosen.get(name),
         # "2026Q2" is a quarter, "2025" a year; the window is the period's first and last day.
         "period": $chosen.get(name).refPeriod.value.string().catch("")
-      }).map_each(c -> c.assign({
+      # An indicator whose cube carries no row is left out rather than written as "not measured"
+      # over a zero period (T-4081): the last value it had stays until the expiry removes it.
+      }).filter(c -> c.pick != null).map_each(c -> c.assign({
         "days": if c.period.length() > 4 { $quarters.get(c.period.slice(4)) } else { ["01-01", "12-31"] }
       })).map_each(c -> {
         "id": "urn:ngsi-ld:KeyPerformanceIndicator:%v:%v:%v-mesto".format($domain, $space, c.name),
         "type": "KeyPerformanceIndicator",
         "name": { "type": "Property", "value": "%v-mesto".format(c.name) },
-        "currentValue": if c.pick == null { { "type": "Property", "value": "not measured" } } else {
-          { "type": "Property", "value": c.pick.observationValue.value, "unitCode": c.spec.unit, "observedAt": c.pick.dateObserved.value.or(null) }.filter(e -> e.value != null)
-        },
-        "calculationPeriod": { "type": "Property", "value": if c.pick == null { { "start": "0001-01-01T00:00:00Z", "end": $ran } } else {
-          { "start": "%v-%vT00:00:00Z".format(c.period.slice(0, 4), c.days.index(0)), "end": "%v-%vT23:59:59Z".format(c.period.slice(0, 4), c.days.index(1)) } } },
+        "currentValue": { "type": "Property", "value": c.pick.observationValue.value, "unitCode": c.spec.unit, "observedAt": c.pick.dateObserved.value.or(null) }.filter(e -> e.value != null),
+        "calculationPeriod": { "type": "Property", "value": { "start": "%v-%vT00:00:00Z".format(c.period.slice(0, 4), c.days.index(0)), "end": "%v-%vT23:59:59Z".format(c.period.slice(0, 4), c.days.index(1)) } },
         "calculationFormula": { "type": "Property", "value": c.spec.formula },
         "derivedFrom": { "type": "Relationship", "object": $source_endpoint },
         "computedBy": { "type": "Relationship", "object": "urn:ngsi-ld:Pipeline:%v:%v:ukazovatele".format($domain, $space) },

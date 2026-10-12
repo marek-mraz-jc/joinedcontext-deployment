@@ -52,4 +52,4 @@ spec:
       operations: [queryEntity, retrieveEntity, retrieveTemporal]
       temporalQ:
         window: P1D
-      representations: [ngsi-ld, geojson]
+      representations: [ngsi-ld, geojson, ogc-features]

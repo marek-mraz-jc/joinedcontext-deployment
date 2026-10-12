@@ -22,6 +22,8 @@ metadata:
 data:
   branding.json: |
     {{ omit .Values.branding "logoSvg" | toJson }}
+  organizations.json: |
+    {{ .Values.organizations | default dict | toJson }}
   {{- if and (.Values.branding.logoSvg | default "") (.Values.branding.logo | default "") }}
   {{ .Values.branding.logo }}: |
 {{ .Values.branding.logoSvg | indent 4 }}

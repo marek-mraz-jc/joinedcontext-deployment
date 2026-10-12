@@ -5,7 +5,9 @@ file is not an error: CKAN then looks like a plain CKAN, which is what an instal
 without branding should look like.
 """
 
+import base64
 import datetime
+import html
 import json
 import os
 import re
@@ -112,6 +114,57 @@ def _available(codes):
 
 BRANDING = _load()
 
+# A badge and a description per CKAN organization name, from the chart's `organizations` value,
+# for a publisher that set neither in CKAN. Same rule as the branding: a missing or broken file
+# leaves CKAN's own placeholder.
+ORGANIZATIONS_FILE = os.environ.get(
+    "JC_ORGANIZATIONS_FILE", os.path.join(os.path.dirname(BRANDING_FILE), "organizations.json"))
+
+
+def _organizations():
+    try:
+        with open(ORGANIZATIONS_FILE, encoding="utf-8") as handle:
+            block = json.load(handle)
+    except (OSError, ValueError):
+        return {}
+    return {name: entry for name, entry in block.items() if isinstance(entry, dict)} \
+        if isinstance(block, dict) else {}
+
+
+ORGANIZATIONS = _organizations()
+
+
+def _badge(entry):
+    """The publisher's initials on its colour, as an SVG data URI: on this origin, no file to mount."""
+    initials = entry.get("initials")
+    colour = entry.get("colour")
+    if not isinstance(initials, str) or not initials.strip() or not _is_colour(colour):
+        return None
+    red, green, blue = _rgb(colour)
+    ink = "#000000" if (red * 299 + green * 587 + blue * 114) // 1000 >= 128 else "#ffffff"
+    svg = (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200">'
+        '<rect width="400" height="200" fill="%s"/>'
+        '<text x="200" y="100" dy="0.35em" text-anchor="middle" fill="%s" '
+        'font-family="system-ui, sans-serif" font-size="72" font-weight="700">%s</text></svg>'
+    ) % (colour, ink, html.escape(initials.strip()[:4]))
+    return "data:image/svg+xml;base64," + base64.b64encode(svg.encode("utf-8")).decode("ascii")
+
+
+def jc_org(organization):
+    """The organization's image and description: CKAN's own first, then the chart's, in the page's
+    language when the chart gives several; None where neither has one."""
+    organization = organization or {}
+    entry = ORGANIZATIONS.get(organization.get("name") or "", {})
+    description = organization.get("description")
+    if not description:
+        words = entry.get("description")
+        if isinstance(words, dict):
+            lang = toolkit.h.lang() or "en"
+            words = words.get(lang) or words.get("en")
+        description = words if isinstance(words, str) and words.strip() else None
+    return {"image": organization.get("image_display_url") or _badge(entry), "description": description}
+
 # The words the theme adds to CKAN's own, in the four languages of the Portal (UI-82). CKAN's
 # catalogues translate everything else; a language CKAN names `cs_CZ` reads the `cs` column.
 STRINGS = {
@@ -193,7 +246,9 @@ STRINGS = {
         "cs": "Procházejte, vyhledávejte a řaďte řádky přímo zde, nebo si stáhněte celou tabulku.",
         "de": "Zeilen hier durchsuchen, filtern und sortieren oder die ganze Tabelle herunterladen.",
     },
-    "rows": {"en": "rows", "sk": "riadkov", "cs": "řádků", "de": "Zeilen"},
+    # A count's word in each language's plural forms, one, two to four, five and more (T-4066).
+    "rows": {"en": ("row", "rows", "rows"), "sk": ("riadok", "riadky", "riadkov"),
+             "cs": ("řádek", "řádky", "řádků"), "de": ("Zeile", "Zeilen", "Zeilen")},
     "table_title": {"en": "Table of the data", "sk": "Tabuľka dát", "cs": "Tabulka dat", "de": "Tabelle der Daten"},
     "tables": {"en": "tables", "sk": "tabuľky", "cs": "tabulky", "de": "Tabellen"},
     "table_what": {"en": "The table above, as one file", "sk": "Tabuľka vyššie ako jeden súbor", "cs": "Tabulka výše jako jeden soubor", "de": "Die Tabelle oben als eine Datei"},
@@ -526,6 +581,10 @@ def _shown(text):
     return True
 
 
+# The characters a code box holds per line at its narrowest common width.
+WRAP = 64
+
+
 def jc_usage(resource):
     """An API resource's usage description as blocks for the page (T-3887, EP-108): paragraphs,
     and the indented code `jcctl` writes as fields with a copy button. A block that names a
@@ -541,7 +600,9 @@ def jc_usage(resource):
         code = all(line.startswith("    ") for line in lines if line.strip())
         body = "\n".join(line[4:] for line in lines) if code else " ".join(line.strip() for line in lines)
         if body.strip() and _shown(body):
-            blocks.append({"code": code, "text": body, "rows": len(lines), "id": "jc-use-%s-%d" % (key, number)})
+            # A code box wraps its long lines (T-4066), so it is as tall as the wrapped text.
+            rows = sum(max(1, -(-len(line) // WRAP)) for line in body.split("\n")) if code else 1
+            blocks.append({"code": code, "text": body, "rows": rows, "id": "jc-use-%s-%d" % (key, number)})
     return blocks
 
 
@@ -647,6 +708,17 @@ def jc_number(value):
         return "{:,}".format(int(value)).replace(",", "\u202f")
     except (TypeError, ValueError):
         return ""
+
+
+def jc_rows(value):
+    """A row count with its word in the page's language: "1 row", "3 riadky", "5 řádků"."""
+    number = jc_number(value)
+    if not number:
+        return ""
+    count = abs(int(value))
+    words = STRINGS["rows"].get(_language()) or STRINGS["rows"]["en"]
+    form = 0 if count == 1 else 1 if 2 <= count <= 4 else 2
+    return "%s %s" % (number, words[form])
 
 
 def jc_recent(limit=6):
@@ -762,6 +834,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
     def get_helpers(self):
         return {
             "jc_branding": jc_branding,
+            "jc_org": jc_org,
             "jc_t": jc_t,
             "jc_about": jc_about,
             "jc_more": jc_more,
@@ -774,6 +847,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_previews": jc_previews,
             "jc_total": jc_total,
             "jc_number": jc_number,
+            "jc_rows": jc_rows,
             "jc_formats": jc_formats,
             "jc_recent": jc_recent,
             "jc_portal_url": jc_portal_url,

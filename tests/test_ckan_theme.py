@@ -578,6 +578,10 @@ def test_a_search_filter_with_nothing_to_choose_is_left_out_and_labels_are_whole
     css = (THEME / "public__jc-theme.css").read_text()
     assert ".nav-facet .nav-item > a .item-label { overflow-wrap: anywhere; }" in css
     assert "text-overflow: ellipsis; white-space: nowrap; }\n" not in css.split(".nav-facet .nav-item > a .item-label", 1)[1][:80]
+    # Owner, 2026-10-12: an empty footer drew a bordered strip under a short list (Licence), so the
+    # footer is printed only inside the condition that gives it a link.
+    guard = facets.index("{% if not limited or h.has_more_facets(name, search_facets) %}")
+    assert guard < facets.index('<p class="module-footer">') < facets.index("{% endif %}\n      </section>")
 
 
 def test_the_table_view_stacks_its_controls_below_desktop_width():
@@ -679,7 +683,9 @@ def test_an_api_resource_shows_its_usage_with_its_commands_to_copy(theme):
     assert [b["code"] for b in blocks] == [False, True, False]
     command = blocks[1]
     assert command["text"].startswith("websocat -H \"Authorization: Bearer $TOKEN\" 'wss://dev.example/")
-    assert command["rows"] == 2 and command["id"] == "jc-use-r-ws-1"
+    # Two lines, each as many rows as it wraps to (T-4066).
+    assert command["rows"] == sum(-(-len(line) // theme.WRAP) for line in command["text"].split("\n")) >= 2
+    assert command["id"] == "jc-use-r-ws-1"
     # A file has no usage blocks; its description is CKAN's one-line extract.
     assert theme.jc_usage({"id": "r-csv", "format": "CSV", "url": ENDPOINT + "file.csv", "description": WS_USAGE}) == []
     assert theme.jc_usage({"format": "MCP"}) == []
@@ -720,3 +726,100 @@ def test_an_api_resource_page_shows_its_usage_where_ckan_said_no_view():
     snippet = (THEME / "templates__package__snippets__jc_usage.html").read_text()
     assert 'data-jc-copy="{{ block.id }}"' in snippet and "readonly" in snippet
     assert "|safe" not in snippet
+
+
+@pytest.mark.parametrize("lang, counts", [
+    ("en", {1: "1 row", 2: "2 rows", 5: "5 rows", 0: "0 rows", 1234: "1 234 rows"}),
+    ("sk", {1: "1 riadok", 3: "3 riadky", 5: "5 riadkov"}),
+    ("cs_CZ", {1: "1 řádek", 4: "4 řádky", 12: "12 řádků"}),
+    ("de", {1: "1 Zeile", 2: "2 Zeilen"}),
+    ("fi", {1: "1 row", 7: "7 rows"}),
+])
+def test_a_row_count_takes_its_language_s_plural(theme, lang, counts):
+    """T-4066: the owner's photo read "GtfsAgency 1 rows"."""
+    theme.page.lang = lang
+    for count, words in counts.items():
+        assert theme.jc_rows(count) == words
+    assert theme.jc_rows(None) == ""
+    read = (THEME / "templates__package__read.html").read_text()
+    assert "h.jc_t('rows')" not in read and read.count("h.jc_rows(") == 2
+
+
+def test_usage_reads_as_markdown_and_its_commands_wrap(theme):
+    """T-4066: `query_entities` showed its backticks, and a long command was a one-line box
+    clipped mid-word behind a horizontal scrollbar."""
+    snippet = (THEME / "templates__package__snippets__jc_usage.html").read_text()
+    # CKAN's render_markdown runs the sanitiser; the text never reaches the page as raw HTML.
+    assert "h.render_markdown(block.text)" in snippet and "<p>{{ block.text }}</p>" not in snippet
+    assert "|safe" not in snippet
+    css = (THEME / "public__jc-theme.css").read_text()
+    box = re.search(r"\.jc-copy-code textarea \{([^}]*)\}", css).group(1)
+    assert "white-space: pre-wrap" in box and "overflow-wrap: anywhere" in box and "white-space: pre;" not in box
+    config = '    {"mcpServers":{"helsinki-transport":{"type":"http","url":"https://dev.example/api/endpoint/ajaezssvx3bwqgejgepmq4ig3frgan4e/mcp"}}}'
+    resource = {"id": "r", "format": "MCP", "url": ENDPOINT + "mcp", "description": "Tools: `get_entity`.\n\n" + config}
+    text, code = theme.jc_usage(resource)
+    assert text["text"] == "Tools: `get_entity`." and not text["code"]
+    # The box is as tall as the wrapped command, so nothing hides below its edge either.
+    assert code["rows"] == -(-(len(config) - 4) // theme.WRAP) > 1
+
+
+def test_the_format_badge_sits_beside_the_resource_name():
+    """T-4066: the badge stood alone in a wide left column beside a long usage text."""
+    item = (THEME / "templates__package__snippets__resource_item.html").read_text()
+    head = item[item.index('<div class="jc-resource-head">'):item.index("</div>", item.index('<div class="jc-resource-head">'))]
+    assert "jc-chip" in head and 'class="heading"' in head
+    css = (THEME / "public__jc-theme.css").read_text()
+    assert "grid-template-columns: 6.5rem" not in css
+
+
+def test_a_publisher_without_a_picture_gets_its_badge_and_words_in_the_page_language(theme, tmp_path):
+    import base64
+    block = tmp_path / "organizations.json"
+    block.write_text(json.dumps({
+        "hel-fi": {"initials": "HEL", "colour": "#0000bf", "description": {"en": "Helsinki data", "sk": "Údaje Helsínk"}},
+        "bad": {"initials": "<b>", "colour": "red"},
+        "evil": {"initials": "<script>", "colour": "#ffffff"},
+    }))
+    theme.ORGANIZATIONS_FILE = str(block)
+    theme.ORGANIZATIONS = theme._organizations()
+    card = theme.jc_org({"name": "hel-fi", "description": "", "image_display_url": ""})
+    assert card["description"] == "Helsinki data"
+    svg = base64.b64decode(card["image"].removeprefix("data:image/svg+xml;base64,")).decode()
+    assert ">HEL</text>" in svg and 'fill="#0000bf"' in svg and 'fill="#ffffff"' in svg
+    theme.page.lang = "sk"
+    assert theme.jc_org({"name": "hel-fi"})["description"] == "Údaje Helsínk"
+    # CKAN's own picture and words win; an unknown publisher keeps CKAN's placeholder.
+    assert theme.jc_org({"name": "hel-fi", "description": "own", "image_display_url": "/x.png"}) == \
+        {"image": "/x.png", "description": "own"}
+    assert theme.jc_org({"name": "nobody"}) == {"image": None, "description": None}
+    assert theme.jc_org(None) == {"image": None, "description": None}
+    # A colour that is not #rgb/#rrggbb draws nothing; initials are text, never markup.
+    assert theme.jc_org({"name": "bad"})["image"] is None
+    evil = base64.b64decode(theme.jc_org({"name": "evil"})["image"].split(",", 1)[1]).decode()
+    assert "<script>" not in evil and "&lt;scr" in evil and 'fill="#000000"' in evil
+
+
+def test_a_missing_or_broken_organizations_file_leaves_ckan_s_placeholder(theme, tmp_path):
+    theme.ORGANIZATIONS_FILE = str(tmp_path / "absent.json")
+    assert theme._organizations() == {}
+    broken = tmp_path / "broken.json"
+    broken.write_text("[1, 2")
+    theme.ORGANIZATIONS_FILE = str(broken)
+    assert theme._organizations() == {}
+    broken.write_text("[1, 2]")
+    assert theme._organizations() == {}
+
+
+def test_every_demo_publisher_has_a_badge_and_the_file_reaches_the_pod(rendered):
+    docs = rendered("dev")
+    (config,) = [d for d in docs if d.get("kind") == "ConfigMap" and d["metadata"]["name"].endswith("ckan-theme")]
+    organizations = json.loads(config["data"]["organizations.json"])
+    assert {"hel-fi", "praha", "zilina", "banskabystrica", "bbsk"} <= set(organizations)
+    for name, entry in organizations.items():
+        assert re.fullmatch(r"#[0-9a-fA-F]{6}", entry["colour"]) and entry["initials"], name
+    for name in ("hel-fi", "praha", "zilina"):
+        assert organizations[name]["description"]["en"] and organizations[name]["description"]["sk"], name
+    (ckan,) = [d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"].endswith("ckan")
+               and any(c["name"] == "ckan" for c in d["spec"]["template"]["spec"]["containers"])]
+    (branding,) = [v for v in ckan["spec"]["template"]["spec"]["volumes"] if v["name"] == "branding"]
+    assert {"key": "organizations.json", "path": "organizations.json"} in branding["configMap"]["items"]

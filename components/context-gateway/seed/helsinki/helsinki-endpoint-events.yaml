@@ -3,6 +3,9 @@ kind: Endpoint
 metadata:
   name: helsinki-events
   namespace: helsinki
+  description:
+    fi: "Helsingin kaupungin tämän päivän tapahtumat: nimi, aika, paikka ja linkki. Lähde: Linked Events, CC BY 4.0."
+    en: "Today's events in Helsinki: name, time, venue and link. Source: the City of Helsinki's Linked Events, CC BY 4.0."
   title: { en: "Helsinki events" }
 spec:
   contextSpaceRef: helsinki
@@ -10,7 +13,7 @@ spec:
   audience: public
   # The one Policy this endpoint evaluates: the slice of the space it publishes (EP-14).
   policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki:public-events
-  enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, zip, mcp]
+  enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, zip, mcp, websocket, ogc-features]
   # The organizer's contact line stays in the space for the city's own coordination and is
   # served by no public endpoint (EP-61). A projection only narrows.
   projection: { hiddenAttributes: [contactPoint] }

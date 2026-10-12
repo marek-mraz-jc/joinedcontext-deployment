@@ -468,9 +468,14 @@ def test_the_six_indicators_are_the_cubes_newest_published_values(cubes):
 
 
 @requires_docker
-def test_a_cube_that_drops_out_is_not_measured_and_an_empty_read_writes_nothing(cubes):
+def test_a_cube_that_drops_out_is_left_out_and_an_empty_read_writes_nothing(cubes):
+    """T-4081: an indicator without a row is not written as "not measured" over a period that
+    starts 0001-01-01; the value it had stays until the expiry removes it."""
     rows = [e for e in queried(cubes) if e["dataSet"]["value"] != "pr5001rr"]
     by_name = {k["name"]["value"]: k for k in indicators(rows)}
-    assert by_name["uchadzaci-mesto"]["currentValue"]["value"] == "not measured"
+    assert "uchadzaci-mesto" not in by_name
+    assert len(by_name) == 5
     assert by_name["obyvatelstvo-stav-mesto"]["currentValue"]["value"] == 79617
+    for kpi in by_name.values():
+        assert not kpi["calculationPeriod"]["value"]["start"].startswith("0001"), kpi["id"]
     assert indicators([]) == []

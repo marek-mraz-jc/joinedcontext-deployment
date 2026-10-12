@@ -177,6 +177,19 @@ def test_a_row_without_a_name_or_a_key_is_dropped():
 
 
 @requires_docker
+def test_a_web_field_that_is_no_single_address_leaves_the_place_without_its_url():
+    """T-4011: the gateway holds `url` to an IRI, so `web` with two addresses or a space in one
+    writes the place without a url instead of a place the gateway refuses."""
+    def edit(d):
+        d["features"][0]["properties"]["web"] = "www.divadlodisk.cz, www.disk.cz"
+        d["features"][1]["properties"]["web"] = " www.divadlou22.cz "
+    places = run("culture", edited("culture.json", edit))
+    assert len(places) == 2
+    assert "url" not in places[0] and not schema_errors(places[0])
+    assert places[1]["url"]["value"] == "https://www.divadlou22.cz"
+
+
+@requires_docker
 def test_ticket_point_hours_read_as_day_ranges(written):
     hours = {e["id"].rsplit(":", 1)[1]: e["openingHours"]["languageMap"]["cs"] for e in written["ticket-points"]}
     assert hours["pid-dp2"] == "po–ne 5:00-24:00"

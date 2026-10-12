@@ -3,6 +3,9 @@ kind: Endpoint
 metadata:
   name: helsinki-transport
   namespace: helsinki
+  description:
+    fi: "HSL:n joukkoliikenne: bussien, raitiovaunujen, metrojen, junien ja lauttojen sijainnit reaaliajassa (WebSocket), pysäkit, linjat ja liikennöitsijät, häiriötiedotteet sekä liityntäpysäköinnin paikat. Lähteet: HSL ja Fintraffic, CC BY 4.0."
+    en: "HSL public transport: live positions of the buses, trams, metro, trains and ferries (WebSocket), the stops, lines and operators, the service alerts and the park and ride sites. Sources: HSL and Fintraffic, CC BY 4.0."
   title: { en: "HSL public transport: vehicles, stops, departures, alerts, park and ride" }
 spec:
   contextSpaceRef: helsinki
@@ -12,7 +15,9 @@ spec:
   policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki:public-transport
   # `websocket`: the live vehicle positions reach a map as notifications, anonymously like the
   # REST read, under the gateway's Origin check and per-caller cap (EP-106, EP-107, T-4035).
-  enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, zip, mcp, websocket]
+  # `ogc-features`: the vehicles, stops and park and ride sites open in QGIS and any OGC API
+  # Features client, anonymously like the REST read (owner order 2026-10-12, T-4067).
+  enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, zip, mcp, websocket, ogc-features]
   # The organizer's contact line stays in the space for the city's own coordination and is
   # served by no public endpoint (EP-61). A projection only narrows.
   projection: { hiddenAttributes: [contactPoint] }

@@ -12,6 +12,9 @@ from pathlib import Path
 import pytest
 import yaml
 
+# Reading, plus the subscriptions a WebSocket needs (T-4073); no entity write.
+READ_AND_SUBSCRIBE = ["retrieveOps", "createSubscription", "retrieveSubscription", "updateSubscription", "deleteSubscription"]
+
 ROOT = Path(__file__).resolve().parent.parent
 SEED = ROOT / "components/context-gateway/seed"
 ZILINA = SEED / "zilina"
@@ -176,11 +179,13 @@ def test_the_public_reads_only_and_only_the_types_of_its_space():
     models = by_name("DataModel")
     for policy in policies:
         spec = policy["spec"]
-        assert spec["operations"] == ["retrieveOps"], policy["metadata"]["name"]
+        assert spec["operations"] == READ_AND_SUBSCRIBE, policy["metadata"]["name"]
         space = spec["contextSpaceRef"]["name"]
         types = {e["type"] for info in spec["information"] for e in info["entities"]}
         linkml = yaml.safe_load((ZILINA / f"{SPACES[space]}.linkml.yaml").read_text())
-        assert types == set(linkml["classes"]) - {"Entity"}, space
+        # A value class (CalculationPeriod, Any: the shape of one slot's value) is no type.
+        entities = {name for name, body in linkml["classes"].items() if (body or {}).get("is_a") == "Entity"}
+        assert types == entities, space
         assert models[SPACES[space]]["spec"]["contextSpaceRef"] == space
 
 
