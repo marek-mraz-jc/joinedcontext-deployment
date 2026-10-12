@@ -11,12 +11,6 @@ cache_resources:
     memory:
       default_ttl: 5m
       compaction_interval: 60s
-  # ponytail: one position per bus per 15 s keeps the broker's temporal table at a few
-  # entries a second; drop the ttl when the demo wants smoother movement and the disk allows.
-  - label: throttle
-    memory:
-      default_ttl: 15s
-      compaction_interval: 5s
   # hsl-departures: an empty trip-updates feed keeps the departures already written for this
   # long, then writes every listed stop's list empty (T-3891). Every non-empty feed refreshes it.
   - label: departures

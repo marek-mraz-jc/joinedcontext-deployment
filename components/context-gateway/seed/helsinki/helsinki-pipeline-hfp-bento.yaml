@@ -1,8 +1,8 @@
 # The mapping of the hsl-hfp-vehicles pipeline (PL-03): HSL buses of four trunk lines from the
-# high-frequency positioning broker, capped at thirty buses at a time and one position per bus every
-# fifteen seconds (PL-22). The reconciler renders the MQTT input of the hsl-hfp DataSource in
-# front and the endpoint upsert after (PL-39, PL-16); the `fleet` and `throttle` caches are the
-# runner's resources.
+# high-frequency positioning broker, capped at thirty buses at a time (PL-22); every position
+# report of an admitted bus, about one a second, is one write and one notification (T-3906). The
+# reconciler renders the MQTT input of the hsl-hfp DataSource in front and the endpoint upsert
+# after (PL-39, PL-16); the `fleet` cache is the runner's resource.
 
 pipeline:
   processors:
@@ -103,29 +103,6 @@ pipeline:
         result_map: 'meta slot = content().string()'
     - mapping: |
         root = if meta("slot").or("0").re_match("^[1-9][0-9]*$") { this } else { deleted() }
-
-    # The throttle: a bus seen in the last fifteen seconds writes nothing this time.
-    - branch:
-        request_map: 'root = ""'
-        processors:
-          - cache:
-              resource: throttle
-              operator: exists
-              key: '${! meta("vehicle") }'
-          - switch:
-              - check: 'content().string() == "true"'
-                processors:
-                  - mapping: 'root = "seen"'
-              - processors:
-                  - cache:
-                      resource: throttle
-                      operator: set
-                      key: '${! meta("vehicle") }'
-                      value: "1"
-                  - mapping: 'root = "fresh"'
-        result_map: 'meta throttle = content().string()'
-    - mapping: |
-        root = if meta("throttle") == "seen" { deleted() } else { this }
 
     # The entity. The domain comes from the deployment, never from this file (PF-44, PF-42).
     - mapping: |
