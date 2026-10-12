@@ -21,6 +21,8 @@ spec:
         - type: GtfsAgency
         - type: GtfsRoute
         - type: GtfsShape
+        # Fintraffic LIIPI's park and ride sites of the HSL area (T-3894).
+        - type: OffStreetParking
         # The city's open registers (T-2787), each CC-BY-4.0 and free of personal data by their
         # mappings: the contact lines, applicants and contractors are never written.
         - type: PointOfInterest

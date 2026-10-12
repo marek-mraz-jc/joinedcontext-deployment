@@ -37,6 +37,9 @@
     "NewsArticle": {
       "@id": "schema:NewsArticle"
     },
+    "OffStreetParking": {
+      "@id": "sdm:OffStreetParking"
+    },
     "ParkingArea": {
       "@id": "jc:ParkingArea"
     },
@@ -71,12 +74,26 @@
       "@id": "sdm:airQualityIndex",
       "@type": "xsd:float"
     },
+    "allowedVehicleType": {
+      "@id": "sdm:allowedVehicleType"
+    },
     "availableBikeNumber": {
       "@id": "sdm:availableBikeNumber",
       "@type": "xsd:integer"
     },
+    "availableSpotNumber": {
+      "@id": "sdm:availableSpotNumber",
+      "@type": "xsd:integer"
+    },
+    "capacityByType": {
+      "@id": "jc:capacityByType",
+      "@type": "@json"
+    },
     "category": {
       "@id": "sdm:category"
+    },
+    "cause": {
+      "@id": "jc:cause"
     },
     "contactPoint": {
       "@id": "schema:contactPoint"
@@ -99,6 +116,14 @@
     "datePublished": {
       "@id": "schema:datePublished",
       "@type": "xsd:dateTime"
+    },
+    "delay": {
+      "@id": "jc:delay",
+      "@type": "xsd:integer"
+    },
+    "departures": {
+      "@id": "jc:departures",
+      "@type": "@json"
     },
     "description": {
       "@container": "@language",
@@ -173,10 +198,26 @@
       "@container": "@language",
       "@id": "schema:name"
     },
+    "nearbyParking": {
+      "@id": "jc:nearbyParking",
+      "@type": "@id"
+    },
+    "nextStop": {
+      "@id": "jc:nextStop",
+      "@type": "@id"
+    },
     "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
     "observedAt": {
       "@id": "ngsi-ld:observedAt",
       "@type": "xsd:dateTime"
+    },
+    "occupancy": {
+      "@id": "jc:occupancy",
+      "@type": "xsd:integer"
+    },
+    "onRoute": {
+      "@id": "jc:onRoute",
+      "@type": "@id"
     },
     "openingHours": {
       "@container": "@language",
@@ -240,8 +281,20 @@
       "@id": "jc:refDistrict",
       "@type": "@id"
     },
+    "refNearestStation": {
+      "@id": "jc:refNearestStation",
+      "@type": "@id"
+    },
     "refPointOfInterest": {
       "@id": "sdm:refPointOfInterest",
+      "@type": "@id"
+    },
+    "refRoute": {
+      "@id": "jc:refRoute",
+      "@type": "@id"
+    },
+    "refStop": {
+      "@id": "jc:refStop",
       "@type": "@id"
     },
     "relativeHumidity": {
@@ -254,6 +307,10 @@
     },
     "route": {
       "@id": "sdm:route"
+    },
+    "routeAlerts": {
+      "@id": "jc:routeAlerts",
+      "@type": "@id"
     },
     "routeShortName": {
       "@id": "jc:routeShortName"
@@ -274,6 +331,9 @@
         "text": "skos:notation"
       },
       "@id": "jc:serviceCategory"
+    },
+    "severity": {
+      "@id": "sdm:severity"
     },
     "shex": "http://www.w3.org/ns/shex#",
     "shortName": {
@@ -297,6 +357,10 @@
     },
     "stewardNote": {
       "@id": "jc:stewardNote"
+    },
+    "stopAlerts": {
+      "@id": "jc:stopAlerts",
+      "@type": "@id"
     },
     "stopCode": {
       "@id": "jc:stopCode"
@@ -331,6 +395,9 @@
       "@id": "jc:transportMode"
     },
     "type": "@type",
+    "unknownReference": {
+      "@id": "jc:unknownReference"
+    },
     "url": {
       "@id": "schema:url",
       "@type": "xsd:anyURI"

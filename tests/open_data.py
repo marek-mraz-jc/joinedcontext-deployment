@@ -66,6 +66,8 @@ def key_values(entity: dict) -> dict:
             out[name] = attribute["object"]
         elif attribute["type"] == "LanguageProperty":
             out[name] = attribute["languageMap"]
+        elif attribute["type"] == "JsonProperty":
+            out[name] = attribute["json"]
         else:
             out[name] = attribute["value"]
     return out

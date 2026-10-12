@@ -47,6 +47,7 @@ MODELS = {
     "GtfsAgency": ("dataModel.UrbanMobility", "GtfsAgency"),
     "GtfsShape": ("dataModel.UrbanMobility", "GtfsShape"),
     "Event": ("dataModel.TourismDestinations", "Event"),
+    "OffStreetParking": ("dataModel.Parking", "OffStreetParking"),
 }
 
 #: Types with no Smart Data Model, and why the Helsinki model keeps its own.
@@ -73,6 +74,8 @@ ACCEPTED = {
     ("Alert", "subCategory"): "Digitraffic's situationType, which the alerts-heatmap app labels; SDM codes are T-3950",
     ("Event", "eventStatus"): "one schema.org status as the Helsinki class declares it and the event apps read it; "
                               "SDM's only Event (dataModel.TourismDestinations) makes it a list",
+    ("OffStreetParking", "status"): "one value, as the space's one status slot holds it for bike stations too "
+                                    "(BikeHireDockingStation's SDM status is a single value); SDM makes it a list",
     ("GtfsStation", "hasStop"): "the inverse of each platform's hasParentStation, which the Helsinki model "
                                 "computes and never stores (one stored end per relationship, DM-67)",
     ("WaterQualityObserved", "dateObserved"): "a beach sensor that has not reported this season is kept with its "

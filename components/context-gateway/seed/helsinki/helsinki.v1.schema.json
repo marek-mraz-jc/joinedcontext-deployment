@@ -136,7 +136,7 @@
     },
     "Alert": {
       "additionalProperties": false,
-      "description": "One road work or traffic announcement of Fintraffic in the capital region.",
+      "description": "One road work or traffic announcement of Fintraffic in the capital region, or one service alert of HSL with the lines and stops it affects.",
       "properties": {
         "address": {
           "description": "The street address, one line.",
@@ -147,7 +147,15 @@
           "x-ngsi-ld-kind": "Property"
         },
         "category": {
-          "description": "The alert's domain; traffic for everything Fintraffic publishes.",
+          "description": "The alert's domain; traffic for everything Fintraffic and HSL publish.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "cause": {
+          "description": "Why an HSL service alert is in force, as GTFS-RT names it, such as CONSTRUCTION or MAINTENANCE.",
           "type": [
             "string",
             "null"
@@ -227,6 +235,46 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "refRoute": {
+          "description": "The lines an HSL service alert affects, each a GtfsRoute of this space.",
+          "items": {
+            "pattern": "^urn:ngsi-ld:GtfsRoute:",
+            "type": "string"
+          },
+          "type": "array",
+          "x-ngsi-ld-kind": "Relationship",
+          "x-ngsi-ld-relationship": {
+            "cardinality": "many-to-many",
+            "inverse": "routeAlerts",
+            "onDelete": "set-null",
+            "target": "GtfsRoute",
+            "unique": false
+          }
+        },
+        "refStop": {
+          "description": "The stops an HSL service alert affects, each a GtfsStop of this space.",
+          "items": {
+            "pattern": "^urn:ngsi-ld:GtfsStop:",
+            "type": "string"
+          },
+          "type": "array",
+          "x-ngsi-ld-kind": "Relationship",
+          "x-ngsi-ld-relationship": {
+            "cardinality": "many-to-many",
+            "inverse": "stopAlerts",
+            "onDelete": "set-null",
+            "target": "GtfsStop",
+            "unique": false
+          }
+        },
+        "severity": {
+          "description": "How much the alert matters, informational, medium or high (GTFS-RT INFO, WARNING, SEVERE).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "source": {
           "description": "The open-data service the entity was read from.",
           "format": "uri",
@@ -237,7 +285,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "subCategory": {
-          "description": "Fintraffic's situation type, ROAD_WORK or TRAFFIC_ANNOUNCEMENT.",
+          "description": "Fintraffic's situation type, ROAD_WORK or TRAFFIC_ANNOUNCEMENT, or the effect of an HSL service alert as GTFS-RT names it, such as DETOUR or REDUCED_SERVICE.",
           "type": [
             "string",
             "null"
@@ -247,6 +295,17 @@
         "type": {
           "description": "The entity type, one class of a published data model.",
           "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "unknownReference": {
+          "description": "What an HSL service alert names that this space holds no entity for, as `route:<id>` or `stop:<id>`, kept as text rather than as a relationship that would point at nothing.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
           "x-ngsi-ld-kind": "Property"
         },
         "validFrom": {
@@ -369,7 +428,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "status": {
-          "description": "working while the station rents and takes returns, otherwise outOfService.",
+          "description": "A bike station's working while it rents and takes returns, otherwise outOfService; a park and ride site's open, closed or closedAbnormal (Fintraffic LIIPI's IN_OPERATION, INACTIVE or TEMPORARILY_CLOSED, EXCEPTIONAL_SITUATION).",
           "type": [
             "string",
             "null"
@@ -1179,6 +1238,10 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "departures": {
+          "description": "The next departures from the stop, at most five, soonest first, each an object with the line (`route`, the GtfsRoute's id, and `routeId`), its `directionId`, the `expected` time and its `status` (scheduled, skipped or canceled), and `delay` in seconds with the `scheduled` time it implies when HSL sends one. Set every 30 s for a curated set of stops from HSL's GTFS-RT trip updates; empty after five minutes without a feed.",
+          "x-ngsi-ld-kind": "JsonProperty"
+        },
         "description": {
           "additionalProperties": {
             "type": "string"
@@ -1435,6 +1498,147 @@
       "title": "NewsArticle",
       "type": "object"
     },
+    "OffStreetParking": {
+      "additionalProperties": false,
+      "description": "One park and ride site of the HSL area from Fintraffic's LIIPI register (T-3894), where it is, what it holds, whether it is open, the free spaces when it reports them, and its station.",
+      "properties": {
+        "allowedVehicleType": {
+          "description": "What may park, the site's own kind first (car or bicycle), then motorcycle where it has spaces for them.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "availableSpotNumber": {
+          "description": "Free spaces at the park and ride site when it last reported, LIIPI's spacesAvailable.",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "capacityByType": {
+          "description": "The built capacity per kind of space, as LIIPI names them in lower case (car, disabled, bicycle, electricCar, motorcycle, bicycleSecureSpace), each a count.",
+          "x-ngsi-ld-kind": "JsonProperty"
+        },
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "refNearestStation": {
+          "description": "The HSL station within 500 m of the park and ride site, the nearest one, a GtfsStation of this space.",
+          "pattern": "^urn:ngsi-ld:GtfsStation:",
+          "type": "string",
+          "x-ngsi-ld-kind": "Relationship",
+          "x-ngsi-ld-relationship": {
+            "cardinality": "many-to-one",
+            "inverse": "nearbyParking",
+            "onDelete": "set-null",
+            "target": "GtfsStation",
+            "unique": false
+          }
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "status": {
+          "description": "A bike station's working while it rents and takes returns, otherwise outOfService; a park and ride site's open, closed or closedAbnormal (Fintraffic LIIPI's IN_OPERATION, INACTIVE or TEMPORARILY_CLOSED, EXCEPTIONAL_SITUATION).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "totalSpotNumber": {
+          "description": "The number of vehicles the site holds, as the publisher states or estimates it; for a park and ride site, of its own kind (car or bicycle).",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "OffStreetParking",
+      "type": "object"
+    },
     "ParkingArea": {
       "additionalProperties": false,
       "description": "One parking area of the city's parking guide, its outline and the number of cars it holds when the city has estimated it.",
@@ -1499,7 +1703,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "totalSpotNumber": {
-          "description": "The number of cars the area holds, as the publisher estimates it.",
+          "description": "The number of vehicles the site holds, as the publisher states or estimates it; for a park and ride site, of its own kind (car or bicycle).",
           "minimum": 0,
           "type": [
             "integer",
@@ -2069,7 +2273,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "route": {
-          "description": "The HSL route id the bus is serving, four digits with the municipality prefix.",
+          "description": "The HSL route id the vehicle is serving, as GTFS names it (2550, 1009, 31M1, 3001K).",
           "type": [
             "string",
             "null"
@@ -2143,8 +2347,19 @@
     },
     "Vehicle": {
       "additionalProperties": false,
-      "description": "One HSL bus on a trunk line, where it is and how fast it moves.",
+      "description": "One HSL bus, tram, metro, train or ferry in service, where it is, how fast it moves and how late it runs.",
       "properties": {
+        "delay": {
+          "description": "Seconds behind the timetable, negative when ahead (HSL's dl with the sign turned).",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "s"
+          }
+        },
         "fleetVehicleId": {
           "description": "The operator and vehicle number HSL publishes, operator-vehicle.",
           "type": [
@@ -2154,7 +2369,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "heading": {
-          "description": "Compass heading of the bus, degrees clockwise from north.",
+          "description": "Compass heading of the vehicle, degrees clockwise from north.",
           "maximum": 360,
           "minimum": 0,
           "type": [
@@ -2199,6 +2414,14 @@
           ],
           "x-ngsi-ld-kind": "GeoProperty"
         },
+        "nextStop": {
+          "description": "The stop the vehicle stands at or comes to next, the URN of a GtfsStop of this space; HSL moves it on at each departure from or passing of a stop.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Relationship"
+        },
         "observedAt": {
           "description": "When the observation the entity reports was made.",
           "format": "date-time",
@@ -2208,8 +2431,29 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "occupancy": {
+          "description": "How full the vehicle is, in percent; HSL sends 0 (room) or 100 (full).",
+          "maximum": 100,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "%"
+          }
+        },
+        "onRoute": {
+          "description": "The line the vehicle is running, the URN of a GtfsRoute of this space.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Relationship"
+        },
         "route": {
-          "description": "The HSL route id the bus is serving, four digits with the municipality prefix.",
+          "description": "The HSL route id the vehicle is serving, as GTFS names it (2550, 1009, 31M1, 3001K).",
           "type": [
             "string",
             "null"
@@ -2217,7 +2461,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "speed": {
-          "description": "Ground speed of the bus.",
+          "description": "Ground speed of the vehicle.",
           "minimum": 0,
           "type": [
             "number",
@@ -2228,13 +2472,18 @@
             "ucumCode": "m/s"
           }
         },
+        "transportMode": {
+          "$ref": "#/definitions/TransportMode",
+          "description": "What serves the stop or runs the line.",
+          "x-ngsi-ld-kind": "Property"
+        },
         "type": {
           "description": "The entity type, one class of a published data model.",
           "type": "string",
           "x-ngsi-ld-kind": "Property"
         },
         "vehicleType": {
-          "description": "The kind of vehicle; bus on every entity of this space.",
+          "description": "The Smart Data Models kind of vehicle - bus, tram, passengerVessel for a ferry, other for metro and train; transportMode names HSL's mode.",
           "type": [
             "string",
             "null"

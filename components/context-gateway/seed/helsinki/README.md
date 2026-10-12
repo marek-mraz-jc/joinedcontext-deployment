@@ -49,8 +49,8 @@ one `GET` each from the sandbox; the sizes are bytes received, the times the who
 | GTFS-RT trip updates | `https://realtime.hsl.fi/realtime/trip-updates/v2/hsl` | CC BY 4.0 | 7 630 B (night) | 0.26 s | continuous | no | yes, T-3891: departures for a curated stop set only, as a property of those stops; no entity per trip |
 | GTFS-RT vehicle positions | `https://realtime.hsl.fi/realtime/vehicle-positions/v2/hsl` | CC BY 4.0 | 1 231 B (night) | 0.26 s | continuous | no | no: HFP below carries the same positions with less work; T-3893 widens HFP to every mode inside the vehicle cap |
 | GTFS-RT service alerts | `https://realtime.hsl.fi/realtime/service-alerts/v2/hsl` | CC BY 4.0 | 21 615 B | 0.32 s | on change | no | yes, T-3892: one Alert per HSL alert, beside the Digitraffic ones |
-| HFP (MQTT) | `mqtts://mqtt.hsl.fi:8883/hfp/v2/journey/ongoing/vp/#` | CC BY 4.0 | a stream, not a document: not measured by `GET` | — | one `vp` message a second per vehicle (HSL HFP documentation) | no | yes, in place: 30 vehicle slots over 4 trunk lines, every position of an admitted vehicle written (`helsinki-pipeline-hfp-bento.yaml`, T-3906); T-3893 keeps the cap |
-| Park and ride (Liipi) | `https://p.hsl.fi/api/v1` (`/facilities`, `/utilizations`, `/hubs`) | CC BY 4.0 | the host did not resolve (`Could not resolve host: p.hsl.fi`) | — | — | no | not until the host answers; T-3894 re-checks the address first |
+| HFP (MQTT) | `mqtts://mqtt.hsl.fi:8883/hfp/v2/journey/ongoing/vp/#` | CC BY 4.0 | a stream, not a document: not measured by `GET` | — | one `vp` message a second per vehicle (HSL HFP documentation) | no | yes: 4 bus trunk lines and every tram, metro, train and ferry, capped per mode (T-3893, below); every position of an admitted vehicle written (T-3906) |
+| Park and ride (LIIPI) | `https://parking.fintraffic.fi/api/v1` (`/facilities`, `/utilizations`, `/hubs`); `p.hsl.fi` is gone, Fintraffic took the service over in May 2024 | CC BY 4.0 | facilities of the HSL area 1 007 120 B (545); utilisations 6 191 B (39 rows, the whole country) | — | utilisations live | no | yes, T-3894: one OffStreetParking per facility, daily; free spaces every 5 min |
 | City bikes (GBFS) | the `citybikes-gbfs` pipelines | CC BY 4.0 | in place | — | 1 min | no | in place |
 | Digitransit GraphQL | `https://api.digitransit.fi/routing/v2/hsl/gtfs/v1` | CC BY 4.0 | `401` without a key | 0.09 s | live | **yes** | Owner action: a Digitransit subscription key, never committed; nothing waits for it, because GTFS and GTFS-RT above carry the same data |
 
@@ -84,3 +84,75 @@ line" register (`transit-routes`), which transit-reach reads: GTFS gives them on
 GTFS stop ids, so the first run updates those entities in place, and a stop it held that the
 GTFS feed lacks stays on dev until someone deletes it. The 10-minute averages on dev (`kubectl top pod`) are the deployer's to
 record after the first runs.
+
+### GTFS-RT departures (T-3891)
+
+`hsl-departures` reads `https://realtime.hsl.fi/realtime/trip-updates/v2/hsl` every 30 s and writes
+the next five departures onto 231 stops as the JsonProperty `departures`: the 60 metro platforms
+and 131 commuter train platforms of `stops.txt` (`vehicle_type` 1 and 109), and the 40 bus stops
+with the most rows in `stop_times.txt` (counted once, 2026-10-12, over the whole feed). The runner
+decodes the protobuf with Bento's `protobuf` processor and the GTFS-RT schema mounted beside its
+resources (`components/pipeline-runner/streams/gtfs-realtime.proto`), so no WASM step is involved.
+
+Measured 2026-10-12 03:02Z over the live document (638 kB, 666 trips, 19 211 stop time updates;
+221 of the 231 stops appear in it): 204 stops got departures. Peak resident memory was 217 MB
+against Bento's baseline of 139 MB, about 76 MB for the 2 s each refresh holds it. HSL's v2 feed
+sends expected times and no `delay` (0 of 19 211 updates) and no headsign. So a departure names
+its line and direction, and the app takes the headsign from the TransitRoute of that line and
+direction. An empty feed keeps the departures five minutes (the runner's `departures` cache), then
+clears them.
+
+### GTFS-RT service alerts (T-3892)
+
+`hsl-service-alerts` reads `https://realtime.hsl.fi/realtime/service-alerts/v2/hsl` every minute
+and writes one `Alert` per HSL alert, `urn:ngsi-ld:Alert:{orgDomain}:helsinki:hsl-{id}`, beside the
+Digitraffic ones: header and description as LanguageProperty in Finnish, Swedish and English, the
+effect as `subCategory`, the cause, the severity (`INFO`, `WARNING`, `SEVERE` become
+`informational`, `medium`, `high`), and the first active period as `validFrom`/`validTo` (no end,
+no `validTo`). Each line or stop the alert names becomes `refRoute`/`refStop` when the space holds
+that GtfsRoute or GtfsStop (one `entityOperations/query` per round). A name the space lacks stays
+text in `unknownReference` (`route:…`, `stop:…`), because the gateway refuses a relationship to a
+missing target. A failed lookup skips the round. An alert HSL no longer lists is deleted; the
+pipeline deletes only Alerts whose `source` is this feed, so Digitraffic's and a steward's stay.
+
+Measured 2026-10-12 over the recorded feed (21 kB, 18 alerts, `tests/fixtures/helsinki/gtfs-rt/
+service-alerts.pb`), with the gateway calls cut: 18 Alerts, peak resident memory 140 MB against
+Bento's baseline of 96 MB, so about 44 MB for the moment each refresh holds it.
+
+### HFP vehicles of every mode (T-3893)
+
+`hsl-hfp` subscribes to a fixed list: the four bus trunk lines and `vp/tram/#`, `vp/metro/#`,
+`vp/train/#`, `vp/ferry/#`; never `vp/#` or `vp/bus/#`. `hsl-hfp-vehicles` admits 30 buses, 30
+trams, 10 metros, 15 trains and 5 ferries at a time (90 in all), each mode in its own slots of the
+`fleet` cache, so a full mode never takes another's; a vehicle silent for five minutes frees its
+slot. Every frame of an admitted vehicle is a write, about one a second (T-3906): at most 90
+writes a second against 30 before. When the load budget is exceeded, lower the caps in the
+mapping, not the rate.
+
+A Vehicle now says its `transportMode`, the Smart Data Models `vehicleType` (bus, tram,
+passengerVessel, other), `delay` in seconds behind the timetable (HSL's `dl` with the sign
+turned), `occupancy` (0 or 100), and two Relationships by URN: `onRoute` to the GtfsRoute of its
+line and `nextStop` to the GtfsStop it stands at or comes to next, read from the topic (none past
+the last stop). Both point outside the model (`uriorcurie`), because the hub carries Vehicle slot
+for slot without the GTFS classes, and so the gateway writes a vehicle even before the day's GTFS
+read holds its line. The memory and write counts on dev (`kubectl top`, input and output counters)
+are the deployer's to record; a test cannot reach the MQTT feed.
+
+### Park and ride (T-3894)
+
+HSL's `p.hsl.fi` no longer resolves; Fintraffic runs the same API (HSL's parkandrideAPI) as LIIPI
+at `https://parking.fintraffic.fi/api/v1`, public, no key, since 20 May 2024. `liipi-facilities`
+reads the facilities inside the box 24.2..25.6 E, 60.05..60.55 N (the API's `geometry` filter: 545
+of the country's 784 on 2026-10-12, 1.0 MB) daily at 04:40, after the GTFS stations, and writes
+one OffStreetParking each, `urn:ngsi-ld:OffStreetParking:{orgDomain}:helsinki:liipi-{id}`:
+name in three languages, outline, status (IN_OPERATION open; INACTIVE and TEMPORARILY_CLOSED
+closed; EXCEPTIONAL_SITUATION closedAbnormal), `allowedVehicleType`, `totalSpotNumber` of the
+site's own kind, `capacityByType` per kind of space, and `refNearestStation` to the nearest
+GtfsStation within 500 m (423 of 545). `liipi-utilizations` reads the country's free spaces every
+five minutes (39 rows) and writes `availableSpotNumber`, observed at LIIPI's timestamp, only on
+the sites the space holds; a counter more than a day behind the newest row is left out (three on
+2026-10-12, the oldest from 2023). A site that never reports has capacity and no free count.
+
+Measured 2026-10-12 with Bento 1.22.0 over the recorded 1.0 MB answer, the station ask stubbed:
+peak resident memory 169 MB against Bento's baseline of 130 MB, about 39 MB once a day; the
+utilisations are 6 kB.
