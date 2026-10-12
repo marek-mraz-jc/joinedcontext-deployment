@@ -1,0 +1,33 @@
+{#
+  "Connect an AI assistant" (T-4114, EP-113): the installation's MCP hub, the one address an
+  assistant needs for the whole catalogue, with a line per client. The copy buttons are
+  jc-copy.js's; without script each line is selected by hand. The status line is the live box's
+  when the dataset page shows one, so the page keeps one id.
+#}
+{% set mcp = h.jc_mcp_install() %}
+{% if mcp %}
+  <section class="jc-live jc-mcp" aria-labelledby="jc-mcp-title">
+    <h2 id="jc-mcp-title">{{ h.jc_t('mcp') }}</h2>
+    <p>{{ h.jc_t('mcp_lead') }}</p>
+    <div class="jc-copy">
+      <label for="jc-mcp-url" class="visually-hidden">{{ h.jc_t('mcp_url') }}</label>
+      <input id="jc-mcp-url" class="form-control" type="text" readonly value="{{ mcp.url }}">
+      <button type="button" class="btn btn-default" data-jc-copy="jc-mcp-url" data-jc-copied="{{ h.jc_t('copied') }}">{{ h.jc_t('copy') }}</button>
+    </div>
+    <p>
+      <a class="btn btn-default" href="{{ mcp.vscode }}">{{ h.jc_t('mcp_vscode') }}</a>
+      <a class="btn btn-default" href="{{ mcp.cursor }}">{{ h.jc_t('mcp_cursor') }}</a>
+    </p>
+    <p class="jc-example-label" id="jc-mcp-claude-label">{{ h.jc_t('mcp_claude') }}</p>
+    <div class="jc-copy jc-copy-code">
+      <pre id="jc-mcp-claude" aria-labelledby="jc-mcp-claude-label" tabindex="0"><code>{{ mcp.claude }}</code></pre>
+      <button type="button" class="btn btn-default" data-jc-copy="jc-mcp-claude" data-jc-copied="{{ h.jc_t('copied') }}">{{ h.jc_t('copy') }}</button>
+    </div>
+    <p class="jc-example-label" id="jc-mcp-json-label">{{ h.jc_t('mcp_json') }}</p>
+    <div class="jc-copy jc-copy-code">
+      <pre id="jc-mcp-json" aria-labelledby="jc-mcp-json-label" tabindex="0"><code>{{ mcp.json }}</code></pre>
+      <button type="button" class="btn btn-default" data-jc-copy="jc-mcp-json" data-jc-copied="{{ h.jc_t('copied') }}">{{ h.jc_t('copy') }}</button>
+    </div>
+    {% if not live %}<p class="visually-hidden" role="status" aria-live="polite" id="jc-copy-status"></p>{% endif %}
+  </section>
+{% endif %}
