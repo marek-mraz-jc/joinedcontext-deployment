@@ -30,6 +30,13 @@ service:
   port: 8080
   targetPort: 8080
   name: http
+  # The internal listener (JC_GATEWAY_INTERNAL_BIND): the MQTT brokers' CONNECT check and
+  # nothing else (PL-75); only broker pods reach it (components/mqtt-brokers/networkpolicies).
+  extraPorts:
+    - name: internal
+      port: 8082
+      targetPort: 8082
+      protocol: TCP
 
 probes:
   readiness:
@@ -69,6 +76,7 @@ envSecret:
 env:
   JC_GATEWAY_BROKER_URL: "http://context-broker.{{ (index .Values "context-broker" "broker" "namespace") }}.svc.cluster.local:8080"
   JC_GATEWAY_ORG_DOMAIN: {{ $global.orgDomain | quote }}
+  JC_GATEWAY_INTERNAL_BIND: "0.0.0.0:8082"
   JC_GATEWAY_PUBLIC_URL: "https://{{ $global.domain }}"
   JC_GATEWAY_EGRESS_URL: "http://context-gateway.{{ (index .Values "context-gateway" "gateway" "namespace") }}.svc.cluster.local:8080"
   JC_OIDC_ISSUER: "https://idm.{{ $global.domain }}/realms/{{ $global.instanceSlug }}"

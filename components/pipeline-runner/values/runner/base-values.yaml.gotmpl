@@ -68,6 +68,11 @@ podAnnotations:
 
 containerPort: 4195
 
+# A DataSource with `mqtt.brokerRef` reads tcp://mqtt-{project}-{name}.${JC_MQTT_NAMESPACE}...
+# (PL-76): the namespace of the brokers, which the configuration repository cannot know.
+env:
+  JC_MQTT_NAMESPACE: {{ dig "mqtt-brokers" "brokers" "namespace" "" .Values | quote }}
+
 # What a Pipeline's `secretRef`s resolve to (T-0927, PL-15). The Portal's reconciler writes
 # the Secret `pipeline-secrets` into this namespace on every sync and rolls this Deployment
 # by its `joinedcontext.com/pipeline-secrets` annotation when a value changes, so nothing

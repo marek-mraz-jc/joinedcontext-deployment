@@ -27,6 +27,7 @@ cluster. Forked from the CIVITAS/CORE v2 deployment repository (EUPL 1.2, see `L
 | `model-tools` | the stateless LinkML generator image behind the editor |
 | `monitoring` | Prometheus Operator scrape configuration and edge alerting (OPS-16, TS-22) |
 | `networkpolicies` | default-deny per component and the explicit allow rules |
+| `mqtt-brokers` | one RMQTT per `MqttBroker`, devices over TLS on 8883, the pipeline runner on 1883 (ADR-N-048) |
 | `observability` | the OpenTelemetry Collector that fills the Portal's activity stream |
 | `pipeline-runner` | Bento, in both execution modes of PL-04 |
 | `portal` | the management application: API, embedded UI and in-process reconciler |
