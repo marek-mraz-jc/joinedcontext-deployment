@@ -17,6 +17,9 @@ context-broker:
     # participant (T-3809), which the gateway's broker-view MCP needs (T-3647); no new migration
     # over 5ed3183.
     # Its FEATURES are full,jc-policy,linkml: the LinkML surface ANTARES_API_SURFACES mounts (T-3804).
+    # Antares dev eb30b4f (image-jc run 38201052761 green 2026-10-12): the broker refuses
+    # private egress except the hosts ANTARES_EGRESS_PRIVATE_HOSTS names (T-3908, T-3909); no
+    # new migration over 6770b73.
     repository: 'ghcr.io/marek-mraz-jc/antares-broker-jc'
-    tag: '6770b73'
-    digest: 'sha256:78f04a57372b498d7c96cf74774adde71fcfd1421ff119b009a38ef83322ef93'
+    tag: 'eb30b4f'
+    digest: 'sha256:bc80fd49aa610489a5c1e2202a1b85cacc3a04caaf08ef6a764d18cd98b96416'
