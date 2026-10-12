@@ -121,3 +121,35 @@ def test_a_traffic_alert_address_is_its_municipality():
     }
     (alert,) = accepted(run("traffic-messages", {"features": [situation]}))
     assert address(alert) == {"addressLocality": "Espoo", "addressCountry": "FI"}
+
+
+def situation(n: int, kind: str, *features: str) -> dict:
+    return {
+        "geometry": {"type": "Point", "coordinates": [24.95, 60.17]},
+        "properties": {
+            "situationId": f"GUID6000{n}",
+            "situationType": kind,
+            "releaseTime": "2026-10-12T08:00:00Z",
+            "announcements": [{
+                "title": "Tie 4, Helsinki",
+                "features": [{"name": name} for name in features],
+                "locationDetails": {"roadAddressLocation": {"primaryPoint": {"municipality": "Helsinki"}}},
+            }],
+        },
+    }
+
+
+@requires_docker
+def test_a_traffic_alert_carries_the_smart_data_models_code_or_none():
+    """T-3950: ROAD_WORK is roadWorks; an announcement is carAccident or roadClosed when its
+    features say so (an accident first), and has no subCategory otherwise."""
+    written = accepted(run("traffic-messages", {"features": [
+        situation(1, "ROAD_WORK", "Tie on suljettu liikenteeltä"),
+        situation(2, "TRAFFIC_ANNOUNCEMENT", "Tie on suljettu liikenteeltä", "Onnettomuus"),
+        situation(3, "TRAFFIC_ANNOUNCEMENT", "Liikenne ruuhkautuu", "Tie on suljettu liikenteeltä"),
+        situation(4, "TRAFFIC_ANNOUNCEMENT", "Ajokaista suljettu liikenteeltä"),
+        situation(5, "TRAFFIC_ANNOUNCEMENT"),
+    ]}))
+    codes = {e["id"][-1]: e.get("subCategory", {}).get("value") for e in written}
+    assert codes == {"1": "roadWorks", "2": "carAccident", "3": "roadClosed", "4": None, "5": None}
+    assert {e["alertSource"]["value"] for e in written} == {"Fintraffic"}
