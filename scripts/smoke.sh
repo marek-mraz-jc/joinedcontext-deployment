@@ -467,6 +467,15 @@ if has_route context-endpoint; then
 		status 204 "and is deleted again" -X DELETE -H "Authorization: Bearer $ep_token" "$base/api/endpoint/$ep/ngsi-ld/v1/entities/$other"
 		status 204 "entity delete" -X DELETE -H "Authorization: Bearer $ep_token" "$base/api/endpoint/$ep/ngsi-ld/v1/entities/$urn"
 
+		# T-4109: hand probes an earlier debugging session left in this space; a visitor of the
+		# demo dataset sees them beside the real station. Removed when present, named when removed.
+		for stale in urn:ngsi-ld:AirQualityObserved:hel.fi:ovzdusie:deployer-probe \
+			urn:ngsi-ld:AirQualityObserved:hel.fi:ovzdusie:eea-SK0263A; do
+			got=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 -X DELETE \
+				-H "Authorization: Bearer $ep_token" "$base/api/endpoint/$ep/ngsi-ld/v1/entities/$stale" 2>/dev/null) || got=""
+			[ "$got" = "204" ] && ok "removed the stale test entity $stale"
+		done
+
 		# T-0945: what the space lists, the space serves. An entity whose URN carries another
 		# organization's domain lists (the broker holds it) and answers 400 on retrieve (the
 		# gateway checks the prefix, GW20), so a steward can neither read nor correct it. A
@@ -718,11 +727,10 @@ if has_route portal-public-guide; then
 	# T-4063: a citizen reads how to use a public Endpoint with no account, from the apex address
 	# as the API pages print it; the apex redirects to the Portal host, which answers the page.
 	guide=$(curl -sSL --max-time 20 "$base/docs/API/07-websocket" 2>/dev/null || true)
-	if printf '%s' "$guide" | grep -q '<title>Live Updates over WebSocket</title>'; then
-		ok "the WebSocket guide reads without signing in"
-	else
-		ko "the WebSocket guide does not read without signing in"
-	fi
+	case $guide in
+	*'<title>Live Updates over WebSocket</title>'*) ok "the WebSocket guide reads without signing in" ;;
+	*) ko "the WebSocket guide does not read without signing in" ;;
+	esac
 	status 404 "no Operations page is public" "$portal/docs/Operations/00-intro"
 fi
 

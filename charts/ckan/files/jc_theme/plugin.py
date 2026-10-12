@@ -581,10 +581,6 @@ def _shown(text):
     return True
 
 
-# The characters a code box holds per line at its narrowest common width.
-WRAP = 64
-
-
 def jc_usage(resource):
     """An API resource's usage description as blocks for the page (T-3887, EP-108): paragraphs,
     and the indented code `jcctl` writes as fields with a copy button. A block that names a
@@ -600,9 +596,7 @@ def jc_usage(resource):
         code = all(line.startswith("    ") for line in lines if line.strip())
         body = "\n".join(line[4:] for line in lines) if code else " ".join(line.strip() for line in lines)
         if body.strip() and _shown(body):
-            # A code box wraps its long lines (T-4066), so it is as tall as the wrapped text.
-            rows = sum(max(1, -(-len(line) // WRAP)) for line in body.split("\n")) if code else 1
-            blocks.append({"code": code, "text": body, "rows": rows, "id": "jc-use-%s-%d" % (key, number)})
+            blocks.append({"code": code, "text": body, "id": "jc-use-%s-%d" % (key, number)})
     return blocks
 
 

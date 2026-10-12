@@ -247,11 +247,11 @@ portal:
     # the SDK's entity panel writes a number as the grid does (T-3600).
     # portal dfd0b23: jc-core of platform 2883bd0 reads a space's `quality` and `retention`
     # (T-3899), so the Helsinki seed that carries them comes back in the same apply (T-4054).
-    digest: 'sha256:e26065523a996225a9016a61881b17bb22658d4b83eae0a7d297685f332c4b0f'
+    digest: 'sha256:71d97ed1293c1927c62a815f9170a4caa9127d1951de4fadf59fbf3e78a821aa'
     # The platform commit the image's jc-core is built from (the portal's Cargo.toml `rev`): a
     # seed field this jc-core does not know makes the Portal drop the whole manifest, so
     # tests/test_portal_pin_reads_the_seed.py holds every seed to it (T-4054).
-    platform: '5352d69dc56d41ae52a7850282fce07d5d062179'
+    platform: '77d9a825a46beb3cbf45bf512d922b2a1c6e7b75'
   # Mailpit, the mail catcher of an installation without a relay (T-3583). Re-pin with the
   # registry query in components/sandbox-reaper/images.yaml, repository axllent/mailpit.
   mail-catcher:

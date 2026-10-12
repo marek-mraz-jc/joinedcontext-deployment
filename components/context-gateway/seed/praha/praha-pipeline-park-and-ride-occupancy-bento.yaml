@@ -39,6 +39,7 @@ pipeline:
           "id": "urn:ngsi-ld:%v:%v:%v:ipr-%v".format("OffStreetParking", env("JC_ORG_DOMAIN"), env("JC_SPACE"), $pairs.get(m.primary_source_id.string().lowercase())),
           "type": "OffStreetParking",
           "availableSpotNumber": if m.free_spot_number.type() == "number" && m.free_spot_number >= 0 && m.free_spot_number == m.free_spot_number.floor() { { "type": "Property", "value": m.free_spot_number } } else { null },
+          "totalSpotNumber": if m.total_spot_number.type() == "number" && m.total_spot_number >= 0 && m.total_spot_number == m.total_spot_number.floor() { { "type": "Property", "value": m.total_spot_number } } else { null },
           "occupiedSpotNumber": if m.occupied_spot_number.type() == "number" && m.occupied_spot_number >= 0 && m.occupied_spot_number == m.occupied_spot_number.floor() { { "type": "Property", "value": m.occupied_spot_number } } else { null },
           "dateModified": if m.last_updated.or("").string().re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}T") { { "type": "Property", "value": m.last_updated.ts_format("2006-01-02T15:04:05Z07:00", "UTC") } } else { null }
         }.filter(entry -> entry.value != null)).filter(e -> e.keys().length() > 2)

@@ -852,6 +852,17 @@ def test_every_listed_entity_is_retrieved_by_id(tmp_path):
     assert "ok    every listed entity retrieves by id (2 of them)" in result.stdout
 
 
+def test_a_stale_hand_probe_in_the_space_is_removed_and_named(tmp_path):
+    """T-4109: the probes a debugging session left in ovzdusie are deleted when present; an
+    absent one (404) says nothing and fails nothing."""
+    spec = dict(HEALTHY, statuses=[[["-X DELETE", "deployer-probe"], 204], [["-X DELETE", "eea-SK0263A"], 404]]
+                + HEALTHY_STATUSES)
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert "ok    removed the stale test entity urn:ngsi-ld:AirQualityObserved:hel.fi:ovzdusie:deployer-probe" in result.stdout
+    assert "eea-SK0263A" not in result.stdout
+    assert "0 failed" in result.stdout
+
+
 def test_an_entity_that_lists_but_never_retrieves_fails_the_run(tmp_path):
     """The drift T-0945 is about: the broker holds a row the gateway refuses on retrieve, so
     nobody can read or correct it. The smoke names the id, and fails."""

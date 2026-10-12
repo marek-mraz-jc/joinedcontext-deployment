@@ -223,6 +223,13 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 /* The publisher box: CKAN nests a `.module.context-info` inside a `.module`, so without this the
    card drew twice, the inner one adding its margin and padding below "read more" (owner,
    2026-10-12); and CKAN breaks its description at any letter. */
+/* The publisher bar above a dataset (owner, 2026-10-12). */
+.jc-publisher { display: flex; align-items: center; gap: 1rem; padding: .875rem 1.25rem; }
+.jc-publisher-image img { display: block; height: 3.5rem; width: auto; border-radius: var(--jc-radius); }
+.jc-publisher-name { font-weight: 650; font-size: 1.0625rem; color: var(--jc-ink); text-decoration: none; }
+.jc-publisher-name:hover { text-decoration: underline; }
+.jc-publisher-text p { margin: .125rem 0 0; color: var(--jc-muted); font-size: .9375rem; }
+@media (max-width: 575.98px) { .jc-publisher { align-items: flex-start; } .jc-publisher-image img { height: 2.5rem; } }
 .module .module.context-info { border: 0; border-radius: 0; box-shadow: none; margin: 0; }
 .context-info .description { word-break: normal; overflow-wrap: break-word; hyphens: auto; }
 .context-info .module-content > :last-child { margin-bottom: 0; }
@@ -303,14 +310,14 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .jc-live { background: var(--jc-primary-soft); border: 1px solid color-mix(in oklab, var(--jc-primary) 22%, var(--jc-paper)); border-radius: var(--jc-radius-lg); padding: 1.25rem 1.5rem; }
 .jc-live h2 { margin-top: 0; }
 .jc-copy { display: flex; gap: .5rem; }
-.jc-copy .form-control { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .875rem; }
+.jc-copy .form-control, .jc-copy-code pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .875rem; }
 /* An API resource's usage text and its commands to copy (T-3887). */
 .jc-usage { margin-top: .5rem; }
 .jc-usage summary { cursor: pointer; font-weight: 600; }
 .jc-usage p { margin: .5rem 0; overflow-wrap: anywhere; }
 .jc-copy-code { align-items: flex-start; margin: .5rem 0; }
 /* A command wraps instead of scrolling sideways (T-4066); the copy button copies it whole. */
-.jc-copy-code textarea { min-width: 0; flex: 1; white-space: pre-wrap; overflow-wrap: anywhere; overflow-x: hidden; resize: vertical; field-sizing: content; }
+.jc-copy-code pre { min-width: 0; flex: 1; margin: 0; padding: .75rem 1rem; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 24rem; overflow-y: auto; background: var(--jc-n50); border: 1px solid var(--jc-border); border-radius: var(--jc-radius); font-size: .8125rem; line-height: 1.5; }
 .jc-usage code { overflow-wrap: anywhere; }
 .jc-live pre { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--jc-ink); color: var(--jc-paper); border-radius: var(--jc-radius); padding: .875rem 1rem; font-size: .8125rem; margin: 0; }
 .jc-example-label { font-weight: 600; margin: 1rem 0 .375rem; }

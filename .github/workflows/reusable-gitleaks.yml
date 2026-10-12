@@ -32,7 +32,7 @@ jobs:
           CHECKSUM: "${{ inputs.checksum }}"
         run: |
           set -eu
-          curl -sSLo gitleaks.tar.gz \
+          curl --fail --retry 3 --retry-all-errors -sSLo gitleaks.tar.gz \
             "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz"
           echo "${CHECKSUM}  gitleaks.tar.gz" | sha256sum --check --status
           tar xzf gitleaks.tar.gz gitleaks

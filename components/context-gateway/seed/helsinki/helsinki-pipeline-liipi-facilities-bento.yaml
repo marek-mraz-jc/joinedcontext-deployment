@@ -18,11 +18,11 @@ pipeline:
     - mutation: 'root = if errored() { deleted() }'
 
     - branch:
-        request_map: 'root = { "type": "Query", "entities": [ { "type": "GtfsStation" } ] }'
+        request_map: 'root = { "type": "Query", "entities": [ { "type": "GtfsStation" } ], "attrs": [ "location" ] }'
         processors:
           - try:
               - http:
-                  url: ${JC_GATEWAY_URL}/api/endpoint/si6epqkx364lprho5uaigutk274r5grb/ngsi-ld/v1/entityOperations/query?limit=1000&options=keyValues&attrs=location
+                  url: ${JC_GATEWAY_URL}/api/endpoint/si6epqkx364lprho5uaigutk274r5grb/ngsi-ld/v1/entityOperations/query?limit=1000&options=keyValues
                   verb: POST
                   headers:
                     Content-Type: application/json

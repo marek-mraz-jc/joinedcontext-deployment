@@ -44,12 +44,12 @@ jobs:
           CONFTEST_CHECKSUM: "${{ inputs.conftest-checksum }}"
         run: |
           set -eu
-          curl -sSLo kubeconform.tar.gz \
+          curl --fail --retry 3 --retry-all-errors -sSLo kubeconform.tar.gz \
             "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz"
           echo "${KUBECONFORM_CHECKSUM}  kubeconform.tar.gz" | sha256sum --check --status
           tar xzf kubeconform.tar.gz kubeconform
           sudo install -m 0755 kubeconform /usr/local/bin/kubeconform
-          curl -sSLo conftest.tar.gz \
+          curl --fail --retry 3 --retry-all-errors -sSLo conftest.tar.gz \
             "https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz"
           echo "${CONFTEST_CHECKSUM}  conftest.tar.gz" | sha256sum --check --status
           tar xzf conftest.tar.gz conftest
