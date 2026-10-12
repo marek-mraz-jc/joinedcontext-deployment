@@ -333,9 +333,10 @@ env:
   JC_PORTAL_PIPELINE_TEST_CAPTURE_URL: "http://portal.{{ $thisPortal.namespace }}.svc.cluster.local:9090"
   # Whose identity a stream presents (PL-19, T-1508): `project` keeps every stream on its
   # project's `pipelines` client; `pipeline` sends each to the token service as its own
-  # pipeline. Switched once the token service runs (pipeline-runner.tokens.enabled) and the
-  # federated mechanism is seen working on dev (T-2868).
-  JC_PORTAL_PIPELINE_IDENTITY: "project"
+  # pipeline, so no stream names a secret the runner's API could serve back (T-4044). Switched by
+  # pipeline-runner.identities.streams, with the token service and the accounts on.
+  {{- $pipelineRunner := index .Values "pipeline-runner" }}
+  JC_PORTAL_PIPELINE_IDENTITY: {{ if and $pipelineRunner.tokens.enabled $pipelineRunner.identities.enabled $pipelineRunner.identities.streams }}"pipeline"{{ else }}"project"{{ end }}
   {{- if (index .Values "pipeline-runner" "identities" "enabled") }}
   # Where the reconciler keeps each Pipeline's own Kubernetes ServiceAccount and whose subjects
   # their federated clients trust (PL-19, T-1508); the identities part grants it that namespace.
