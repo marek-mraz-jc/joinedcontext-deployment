@@ -8,13 +8,15 @@
 replicaCount: 1
 
 # Six cities' resident streams in one process: 1 GiB was OOMKilled once Zilina's joined
-# (2026-10-07, T-3191); the request says what it holds, the limit leaves it room.
+# (2026-10-07, T-3191); the request says what it holds, the limit leaves it room. One core was
+# throttled in 38 % of its CFS periods with 102 streams, the passes bursting to 900m while the
+# HSL feed wants a steady share (T-4036); two cores cost the node nothing it reserves.
 resources:
   requests:
     cpu: 100m
     memory: 512Mi
   limits:
-    cpu: 1000m
+    cpu: 2000m
     memory: 1536Mi
 
 # The Helsinki demo's feeds (DEMO.md step 3) are the seeded Pipeline manifests and the
