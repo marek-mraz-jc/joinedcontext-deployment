@@ -39,7 +39,12 @@ pipeline:
           "name": { "type": "LanguageProperty", "languageMap": u.names },
           "serviceCategory": { "type": "Property", "value": u.category },
           "address": if u.street == null { null } else {
-            { "type": "Property", "value": "%v, %v Helsinki".format(u.street, u.unit.address_zip.or("")).replace_all(",  Helsinki", ", Helsinki") }
+            { "type": "Property", "value": {
+              "streetAddress": u.street,
+              "postalCode": u.unit.address_zip.or(null),
+              "addressLocality": u.unit.address_city.or({}).fi.or(null),
+              "addressCountry": "FI"
+            }.filter(entry -> entry.value != null && entry.value != "") }
           },
           "url": if u.www == null { null } else { { "type": "Property", "value": u.www } },
           "openingHours": if u.hours.length() == 0 { null } else { { "type": "LanguageProperty", "languageMap": u.hours } },

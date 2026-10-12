@@ -3,7 +3,7 @@ kind: Policy
 metadata:
   name: public-transport
   namespace: helsinki
-  title: { en: "Public read: buses, stops and lines" }
+  title: { en: "Public read: HSL vehicles, stops, lines, departures, service alerts and park and ride" }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: helsinki }
   assigner: did:web:{orgDomain}
@@ -19,3 +19,8 @@ spec:
         - type: GtfsAgency
         - type: GtfsRoute
         - type: GtfsShape
+        # HSL's service alerts (T-3892), beside Digitraffic's road alerts of the same type, and
+        # the park and ride sites of the HSL area (T-3894). A GtfsStop carries its departures
+        # (T-3891), a Vehicle its mode (T-3893): both types are above.
+        - type: Alert
+        - type: OffStreetParking

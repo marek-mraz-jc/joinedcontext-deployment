@@ -197,12 +197,6 @@ v1/ConfigMap local/apisix-standalone-base
 v1/ConfigMap local/cnpg-controller-manager-config
 v1/ConfigMap local/cnpg-default-monitoring
 v1/ConfigMap local/gitea-bootstrap-seed
-v1/ConfigMap local/gitea-bootstrap-seed-banskabystrica
-v1/ConfigMap local/gitea-bootstrap-seed-bbsk
-v1/ConfigMap local/gitea-bootstrap-seed-helsinki
-v1/ConfigMap local/gitea-bootstrap-seed-helsinki-mobility
-v1/ConfigMap local/gitea-bootstrap-seed-praha
-v1/ConfigMap local/gitea-bootstrap-seed-zilina
 v1/ConfigMap local/gitea-runner
 v1/ConfigMap local/gitea-runner-build-node
 v1/ConfigMap local/gitea-runner-build-rust
@@ -222,6 +216,12 @@ v1/ConfigMap local/gitea-sample-apps-hsl-transport
 v1/ConfigMap local/gitea-sample-apps-kpi-forecast
 v1/ConfigMap local/gitea-sample-apps-news-topics
 v1/ConfigMap local/gitea-sample-apps-transit-reach
+v1/ConfigMap local/gitea-seed-banskabystrica
+v1/ConfigMap local/gitea-seed-bbsk
+v1/ConfigMap local/gitea-seed-helsinki
+v1/ConfigMap local/gitea-seed-helsinki-mobility
+v1/ConfigMap local/gitea-seed-praha
+v1/ConfigMap local/gitea-seed-zilina
 v1/ConfigMap local/keycloak-admin-permissions
 v1/ConfigMap local/keycloak-theme
 v1/ConfigMap local/observability-collector-config

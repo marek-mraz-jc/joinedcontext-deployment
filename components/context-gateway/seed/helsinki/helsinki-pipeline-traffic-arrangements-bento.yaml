@@ -49,7 +49,10 @@ pipeline:
           "permitStart": { "type": "Property", "value": p.start },
           "permitEnd": { "type": "Property", "value": p.end },
           "description": if p.purpose == null { null } else { { "type": "LanguageProperty", "languageMap": { "fi": p.purpose } } },
-          "address": if p.address == null { null } else { { "type": "Property", "value": p.address } },
+          # The register's address line as it is, never split; the permit is the city's own.
+          "address": if p.address == null { null } else {
+            { "type": "Property", "value": { "streetAddress": p.address, "addressLocality": "Helsinki", "addressCountry": "FI" } }
+          },
           # The district as the register names it, "20 LÄNSISATAMA": its number is the district
           # code of the city's division, so the permit points at that CityDistrict.
           "refDistrict": if p.district == null { null } else {
