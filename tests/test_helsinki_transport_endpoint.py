@@ -22,7 +22,10 @@ def test_a_public_reader_of_the_endpoint_sees_the_transport_types_and_nothing_el
     assert endpoint["policyRef"] == f"urn:ngsi-ld:Policy:hel.fi:helsinki:{policy['metadata']['name']}"
     spec = policy["spec"]
     assert spec["assignee"] == {"kind": "role", "id": "public"}
-    assert spec["operations"] == ["retrieveOps"]
+    # T-4049: a citizen subscribes over the WebSocket; reading stays the only entity operation.
+    assert spec["operations"] == [
+        "retrieveOps", "createSubscription", "retrieveSubscription", "updateSubscription", "deleteSubscription",
+    ]
     granted = [entity["type"] for rule in spec["information"] for entity in rule["entities"]]
     assert sorted(granted) == sorted(TRANSPORT)
     # Every granted type is a class of the space's model, so none is a typo that grants nothing.
