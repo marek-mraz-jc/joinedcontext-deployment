@@ -317,10 +317,9 @@ def test_every_placeholder_is_substituted(policies):
 
 
 #: The rules T-2480 installs in Audit first, by the file name the chart's values use.
+# The privileged, hostPath and host-namespace rules were promoted after dev reported them clean
+# (T-2480, 2026-10-12); these two still have offenders on dev.
 STAGED_BY_T2480 = {
-    "disallow-privileged-containers",
-    "disallow-host-path",
-    "disallow-host-namespaces",
     "require-image-checksum",
     "require-pod-requests-limits",
 }
@@ -426,7 +425,7 @@ def test_a_rule_both_staged_and_promoted_fails_the_render():
         ["helm", "template", "runtime-policies", str(CHART),
          "--set", "linkerd.enabled=false", "--set", "operators.enabled=false",
          "--set", "podSecurity.namespaces={dev}",
-         "--set", "podSecurity.policies={disallow-host-path}", "--namespace", "dev"],
+         "--set", "podSecurity.policies={require-image-checksum}", "--namespace", "dev"],
         capture_output=True, text=True, check=False,
     )
     assert result.returncode != 0
