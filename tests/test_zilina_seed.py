@@ -180,7 +180,9 @@ def test_the_public_reads_only_and_only_the_types_of_its_space():
         space = spec["contextSpaceRef"]["name"]
         types = {e["type"] for info in spec["information"] for e in info["entities"]}
         linkml = yaml.safe_load((ZILINA / f"{SPACES[space]}.linkml.yaml").read_text())
-        assert types == set(linkml["classes"]) - {"Entity"}, space
+        # A value class (CalculationPeriod, Any: the shape of one slot's value) is no type.
+        entities = {name for name, body in linkml["classes"].items() if (body or {}).get("is_a") == "Entity"}
+        assert types == entities, space
         assert models[SPACES[space]]["spec"]["contextSpaceRef"] == space
 
 

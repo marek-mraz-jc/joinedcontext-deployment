@@ -68,10 +68,53 @@ def test_the_hubs_classes_carry_their_members_slots_unchanged():
         "Vehicle": load(HELSINKI / "helsinki.linkml.yaml"),
         "KeyPerformanceIndicator": load(HELSINKI / "helsinki-kpi.linkml.yaml"),
     }
-    assert set(hub["classes"]) == set(members)
+    entities = {name for name, body in hub["classes"].items() if body.get("is_a") == "Entity"}
+    assert entities == set(members)
+    # A value class (the shape of one slot's value, T-4011) is the indicator model's own.
+    for name in set(hub["classes"]) - entities:
+        assert hub["classes"][name] == members["KeyPerformanceIndicator"]["classes"][name], name
+        for slot in hub["classes"][name].get("slots", []):
+            assert hub["slots"][slot] == members["KeyPerformanceIndicator"]["slots"][slot], f"{name}.{slot}"
     for name, member in members.items():
         source = member["classes"][name]
         assert hub["classes"][name]["class_uri"] == source["class_uri"], name
         assert hub["classes"][name]["slots"] == source["slots"], name
         for slot in source["slots"]:
             assert hub["slots"][slot] == member["slots"][slot], f"{name}.{slot}"
+
+
+KPI_MODELS = ["helsinki/helsinki-kpi", "zilina/key-performance-indicator", "bbsk/key-performance-indicator",
+              "banskabystrica/key-performance-indicator"]
+
+
+def key_values(entity: dict) -> dict:
+    """An NGSI-LD normalized entity in keyValues form, as the model's schema describes it."""
+    member = {"Relationship": "object", "LanguageProperty": "languageMap"}
+    out = {}
+    for name, attribute in entity.items():
+        if isinstance(attribute, dict) and "type" in attribute and name != "@context":
+            value = attribute.get(member.get(attribute["type"], "value"))
+            out[name] = value.get("@value", value) if isinstance(value, dict) else value
+        elif name != "@context":
+            out[name] = attribute
+    return out
+
+
+@pytest.mark.parametrize("model", KPI_MODELS)
+def test_an_indicator_is_a_number_or_not_measured_over_a_start_end_window(model):
+    """T-4011: the gateway holds every write to the model's schema, so the schema says what the
+    pipelines write: `currentValue` a number or `not measured` (Development/10 §5), and
+    `calculationPeriod` an object of two instants. Both were `string` by default_range, and
+    the gateway refused 866 Helsinki indicator writes in 30 min on dev."""
+    jsonschema = pytest.importorskip("jsonschema")
+    schema = json.loads((SEED / f"{model}.v1.schema.json").read_text())
+    validator = jsonschema.Draft7Validator(
+        {**schema["definitions"]["KeyPerformanceIndicator"], "definitions": schema["definitions"]}
+    )
+    example = key_values(json.loads((SEED / f"{model}.v1.example.jsonld").read_text()))
+    assert isinstance(example["currentValue"], (int, float))
+    assert [error.message for error in validator.iter_errors(example)] == []
+    assert list(validator.iter_errors({**example, "currentValue": "not measured"})) == []
+    window = example["calculationPeriod"]
+    for wrong in ("2026-09-18T05:31:05Z/2026-09-18T05:46:05Z", {"start": window["start"]}):
+        assert list(validator.iter_errors({**example, "calculationPeriod": wrong})), wrong
