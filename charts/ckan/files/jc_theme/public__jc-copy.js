@@ -1,5 +1,5 @@
 // The copy button of the live API box (T-2744). Without script the address is a read-only
-// field a person selects and copies by hand, so nothing depends on this file.
+// field or block a person selects and copies by hand, so nothing depends on this file.
 document.addEventListener("click", function (event) {
   var button = event.target.closest("[data-jc-copy]");
   if (!button || !navigator.clipboard) {
@@ -7,7 +7,7 @@ document.addEventListener("click", function (event) {
   }
   var field = document.getElementById(button.getAttribute("data-jc-copy"));
   var status = document.getElementById("jc-copy-status");
-  navigator.clipboard.writeText(field.value).then(function () {
+  navigator.clipboard.writeText(field.value !== undefined ? field.value : field.textContent).then(function () {
     if (status) {
       status.textContent = button.getAttribute("data-jc-copied");
     }
