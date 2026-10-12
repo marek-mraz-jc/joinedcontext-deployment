@@ -68,7 +68,9 @@ env:
   # since Antares T-3803), which the gateway serves as /api/endpoint/{slug}/schema/... (T-3645).
   # The Portal PUTs the schema to /q/schemas/{tenant} (T-3628), which takes nothing while
   # ANTARES_SCHEMA_MAX_BYTES is unset.
-  ANTARES_API_SURFACES: "admin,views,mcp,access,ws,ogc,linkml"
+  # `ws-views` mounts /x/views/{view}/ws, the one the gateway relays an Endpoint's /ws to; `ws`
+  # alone serves only the broker-wide /x/ws, and every Endpoint WebSocket answered 404 (T-4048).
+  ANTARES_API_SURFACES: "admin,views,mcp,access,ws,ws-views,ogc,linkml"
   # The MCP surface answers the Host names listed here alone (rmcp's DNS-rebinding guard, MC8);
   # unset it answers loopback only, and the gateway's hop (JC_GATEWAY_BROKER_URL, T-3647) got 403.
   ANTARES_MCP_ALLOWED_HOSTS: "context-broker.{{ (index .Values "context-broker" "broker" "namespace") }}.svc.cluster.local:8080"
