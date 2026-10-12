@@ -9,13 +9,14 @@ skip; the seed cases do not.
 """
 
 import json
+from datetime import UTC, datetime
 
 import pytest
 import yaml
 
 import open_data
 from open_data import requires_docker
-from test_helsinki_departures import HELSINKI, URN, docker, encode, feed
+from test_helsinki_departures import HELSINKI, NOW, URN, docker, encode, feed
 
 pytestmark = pytest.mark.xdist_group("docker-helsinki-open-data")
 
@@ -69,9 +70,14 @@ def test_every_recorded_alert_is_written_in_three_languages():
     assert len(alerts) == 18
     tapanila = alerts["hsl-315885"]
     assert set(tapanila["name"]["languageMap"]) == {"fi", "sv", "en"}
-    assert tapanila["subCategory"]["value"] == "DETOUR" and tapanila["cause"]["value"] == "CONSTRUCTION"
+    assert tapanila["effect"]["value"] == "DETOUR" and tapanila["cause"]["value"] == "CONSTRUCTION"
+    # GTFS-RT's effect has no Smart Data Models code, so the Alert carries none (T-3950).
+    assert tapanila["alertSource"]["value"] == "HSL" and "subCategory" not in tapanila
     assert tapanila["severity"]["value"] == "informational"
     assert tapanila["validFrom"]["value"] == "2026-09-05T06:23:00Z"
+    # dataModel.Alert requires dateIssued (T-4002): the first active period's start.
+    assert tapanila["dateIssued"]["value"] == "2026-09-05T06:23:00Z"
+    assert all("dateIssued" in a for a in alerts.values())
     # The space held none of what the alerts name here, so every name stays text.
     assert tapanila["unknownReference"]["value"] == ["stop:1392501", "stop:1392551"]
     assert not any("refRoute" in a or "refStop" in a for a in alerts.values())
@@ -95,6 +101,20 @@ def test_a_route_and_a_stop_the_space_holds_are_linked_an_unknown_one_stays_text
     assert on_stop["severity"]["value"] == "high"
     assert not {"refRoute", "refStop", "unknownReference", "severity"} & set(on_agency)
     assert on_agency["name"]["languageMap"]["sv"] == "Header sv"
+
+
+@requires_docker
+def test_an_alert_without_a_dated_period_is_issued_when_the_feed_was_produced():
+    undated = alert(1, {"agencyId": "HSL"})
+    undated["alert"]["activePeriod"] = []
+    later = alert(2, {"agencyId": "HSL"})
+    later["alert"]["activePeriod"].append({"start": str(START - 3600)})
+    alerts = run(encode(feed(undated, later)), held())
+    produced = datetime.fromtimestamp(NOW, UTC)
+    assert alerts["hsl-1"]["dateIssued"]["value"] == produced.strftime("%Y-%m-%dT%H:%M:%SZ")
+    assert "validFrom" not in alerts["hsl-1"]
+    # Two periods: the earlier start is the issue time.
+    assert alerts["hsl-2"]["dateIssued"]["value"] == "2026-10-14T08:00:00Z"
 
 
 @requires_docker

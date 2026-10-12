@@ -135,11 +135,11 @@ PIPELINE_PATH = "projects/helsinki/pipelines/demo-counters/pipeline.yaml"
 
 
 def forge_seed(docs):
-    # One ConfigMap per project beside the organization's (T-3177); none rendered is an empty seed.
+    # One ConfigMap per project beside the organization's (T-3177, T-3998); none rendered is an empty seed.
     return {
         k.replace("__", "/"): v
         for d in docs
-        if d.get("kind") == "ConfigMap" and d["metadata"]["name"].startswith("gitea-bootstrap-seed")
+        if d.get("kind") == "ConfigMap" and d["metadata"]["name"].startswith(("gitea-bootstrap-seed", "gitea-seed-"))
         for k, v in d["data"].items()
     }
 

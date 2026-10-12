@@ -34,7 +34,7 @@ each attribute that knowingly differs, carries its written reason in the script 
 `ACCEPTED`), and `tests/test_helsinki_sdm.py` fails when a class of the model is neither validated
 nor excepted. Run on dev 2026-10-12 against the `all` endpoint: BikeHireDockingStation, GtfsStop
 and WeatherObserved pass; Alert, Event, PointOfInterest and WaterQualityObserved pass except for
-the written gaps (address as text, closed by T-3949 with a PostalAddress; Alert's alertSource and subCategory codes, T-3950;
+the written gaps (address as text, closed by T-3949 with a PostalAddress; Alert's alertSource and subCategory codes, closed by T-3950;
 Event's single eventStatus; a beach sensor with no reading this season); AirQualityObserved,
 Vehicle and GtfsRoute had no entities to read.
 
@@ -106,8 +106,8 @@ clears them.
 
 `hsl-service-alerts` reads `https://realtime.hsl.fi/realtime/service-alerts/v2/hsl` every minute
 and writes one `Alert` per HSL alert, `urn:ngsi-ld:Alert:{orgDomain}:helsinki:hsl-{id}`, beside the
-Digitraffic ones: header and description as LanguageProperty in Finnish, Swedish and English, the
-effect as `subCategory`, the cause, the severity (`INFO`, `WARNING`, `SEVERE` become
+Digitraffic ones: header and description as LanguageProperty in Finnish, Swedish and English,
+`alertSource` HSL, the effect as `effect` (no Smart Data Models `subCategory` code fits one), the cause, the severity (`INFO`, `WARNING`, `SEVERE` become
 `informational`, `medium`, `high`), and the first active period as `validFrom`/`validTo` (no end,
 no `validTo`). Each line or stop the alert names becomes `refRoute`/`refStop` when the space holds
 that GtfsRoute or GtfsStop (one `entityOperations/query` per round). A name the space lacks stays

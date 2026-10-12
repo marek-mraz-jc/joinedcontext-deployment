@@ -4,6 +4,7 @@ Its failures cost a 45-minute job to discover, so the cheap preconditions are as
 """
 
 import re
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -157,3 +158,42 @@ def test_the_step_after_the_smoke_refuses_to_run_without_the_scratch_environment
     )
     assert result.returncode != 0
     assert "JC_ENV" in result.stderr
+
+
+UPGRADE = PROJECT_ROOT / "scripts/ci-upgrade-e2e.sh"
+
+
+def test_the_upgrade_job_runs_the_end_to_end_script_with_the_tags_it_upgrades_between():
+    """T-3997: the previous tag must be in the checkout, so the clone is a full one."""
+    job = yaml.safe_load(CI_FULL.read_text())["jobs"]["upgrade"]
+    assert job["if"] == "github.event_name != 'push'"
+    checkout = next(s for s in job["steps"] if s.get("uses", "").startswith("actions/checkout@"))
+    assert checkout["with"]["fetch-depth"] == 0
+    assert any(s.get("run") == "./scripts/ci-upgrade-e2e.sh" for s in job["steps"])
+    assert any(s.get("if") == "failure()" and "upload-artifact" in s.get("uses", "") for s in job["steps"])
+
+
+def test_the_upgrade_script_runs_only_images_the_platform_pins():
+    """The S3 store and its client are the artifact store's pins, read from its images.yaml,
+    never a tag typed into the script."""
+    text = UPGRADE.read_text()
+    assert "components/artifact-store/images.yaml" in text
+    assert re.findall(r'"\$\(image (\w+)\)"', text) == ["store", "bootstrap"]
+    assert not re.search(r"\b[\w./-]+:[\w.-]+@sha256:", text)
+
+
+def test_the_upgrade_script_refuses_without_a_release_to_upgrade_from(tmp_path):
+    """No `v*` tag below HEAD: it says who cuts the first one and touches no cluster."""
+    repo = tmp_path / "repo"
+    (repo / "scripts").mkdir(parents=True)
+    shutil.copy(UPGRADE, repo / "scripts")
+    git = ["git", "-c", "user.name=t", "-c", "user.email=t@t.invalid", "-C", str(repo)]
+    subprocess.run(["git", "init", "-q", str(repo)], check=True)
+    subprocess.run([*git, "add", "-A"], check=True)
+    subprocess.run([*git, "commit", "-qm", "x"], check=True)
+    subprocess.run([*git, "tag", "v0.1.0-rc.1"], check=True)
+    result = subprocess.run([str(repo / "scripts/ci-upgrade-e2e.sh")], cwd=repo, capture_output=True, text=True,
+                            env={"PATH": "/usr/bin:/bin"})
+    assert result.returncode == 1
+    assert "no release tag" in result.stderr and "just release-notes v0.1.0" in result.stderr
+    assert "upgrade:" not in result.stdout

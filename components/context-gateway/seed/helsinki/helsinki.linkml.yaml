@@ -278,8 +278,8 @@ slots:
   subCategory:
     slot_uri: sdm:subCategory
     description: >-
-      Fintraffic's situation type, ROAD_WORK or TRAFFIC_ANNOUNCEMENT, or the effect of an HSL
-      service alert as GTFS-RT names it, such as DETOUR or REDUCED_SERVICE.
+      The Smart Data Models code of the alert, roadWorks for a Fintraffic road work. Left out
+      where no code fits: a Fintraffic traffic announcement and an HSL service alert.
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Alert
@@ -290,6 +290,17 @@ slots:
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Alert
+  alertSource:
+    slot_uri: sdm:alertSource
+    description: Who raised the alert, Fintraffic or HSL.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Alert
+  effect:
+    slot_uri: jc:effect
+    description: What an HSL service alert does to the service, as GTFS-RT names it, such as DETOUR or REDUCED_SERVICE.
+    annotations:
+      ngsi_ld_kind: Property
   cause:
     slot_uri: jc:cause
     description: Why an HSL service alert is in force, as GTFS-RT names it, such as CONSTRUCTION or MAINTENANCE.
@@ -849,6 +860,8 @@ classes:
       - description
       - category
       - subCategory
+      - alertSource
+      - effect
       - cause
       - severity
       - address
