@@ -49,6 +49,9 @@
     "PointOfInterest": {
       "@id": "sdm:PointOfInterest"
     },
+    "PostalAddress": {
+      "@id": "schema:PostalAddress"
+    },
     "PublicAreaPermit": {
       "@id": "jc:PublicAreaPermit"
     },
@@ -66,6 +69,12 @@
     },
     "address": {
       "@id": "schema:address"
+    },
+    "addressCountry": {
+      "@id": "schema:addressCountry"
+    },
+    "addressLocality": {
+      "@id": "schema:addressLocality"
     },
     "agencyName": {
       "@id": "sdm:agencyName"
@@ -269,6 +278,9 @@
       "@id": "sdm:pm25",
       "@type": "xsd:float"
     },
+    "postalCode": {
+      "@id": "schema:postalCode"
+    },
     "precipitation": {
       "@id": "sdm:precipitation",
       "@type": "xsd:float"
@@ -367,6 +379,9 @@
     },
     "stopSequence": {
       "@id": "jc:stopSequence"
+    },
+    "streetAddress": {
+      "@id": "schema:streetAddress"
     },
     "subCategory": {
       "@id": "sdm:subCategory"

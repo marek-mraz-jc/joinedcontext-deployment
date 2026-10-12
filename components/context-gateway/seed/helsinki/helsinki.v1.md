@@ -26,7 +26,7 @@ Specialises `Entity`.
 | `startDate` | Property | `datetime` |  |  | `schema:startDate` | When the event starts, ISO 8601 with a time zone. |
 | `endDate` | Property | `datetime` |  |  | `schema:endDate` | When the event ends; absent while the register does not say. |
 | `eventStatus` | Property | `string` |  |  | `schema:eventStatus` | The register's status of the event, EventScheduled, EventCancelled or EventPostponed. |
-| `address` | Property | `string` |  |  | `schema:address` | The street address, one line. |
+| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed from a line of text. |
 | `contactPoint` | Property | `string` |  |  | `schema:contactPoint` | The organizer's contact line as the register carries it, often a named person with a phone number. The space keeps it for the city's own coordination; no public endpoint serves it. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
@@ -142,7 +142,7 @@ Specialises `Entity`.
 | `subCategory` | Property | `string` |  |  | `sdm:subCategory` | Fintraffic's situation type, ROAD_WORK or TRAFFIC_ANNOUNCEMENT, or the effect of an HSL service alert as GTFS-RT names it, such as DETOUR or REDUCED_SERVICE. |
 | `cause` | Property | `string` |  |  | `jc:cause` | Why an HSL service alert is in force, as GTFS-RT names it, such as CONSTRUCTION or MAINTENANCE. |
 | `severity` | Property | `string` |  |  | `sdm:severity` | How much the alert matters, informational, medium or high (GTFS-RT INFO, WARNING, SEVERE). |
-| `address` | Property | `string` |  |  | `schema:address` | The street address, one line. |
+| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed from a line of text. |
 | `dateIssued` | Property | `datetime` |  |  | `sdm:dateIssued` | When the situation was published. |
 | `validFrom` | Property | `datetime` |  |  | `sdm:validFrom` | When the situation starts. |
 | `validTo` | Property | `datetime` |  |  | `sdm:validTo` | When the situation ends; absent while open-ended. |
@@ -189,7 +189,7 @@ Specialises `Entity`.
 |---|---|---|---|---|---|---|
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language. |
 | `serviceCategory` | Property | [`ServiceCategory`](#servicecategory) | yes |  | `jc:serviceCategory` | Which of the city's services the place is, from the service register's own codes. |
-| `address` | Property | `string` |  |  | `schema:address` | The street address, one line. |
+| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed from a line of text. |
 | `url` | Property | `uri` |  |  | `schema:url` | Where the item is published in full. |
 | `openingHours` | LanguageProperty | `string` |  |  | `schema:openingHours` | The opening hours as the city's service register words them, per language. Free text, because the register writes exceptions and self-service hours no fixed shape holds. |
 | `dateModified` | Property | `datetime` |  |  | `sdm:dateModified` | When the publisher last changed the record, or the station last reported. |
@@ -303,7 +303,7 @@ Specialises `Entity`.
 | `permitStart` | Property | `date` | yes |  | `jc:permitStart` | The first day the permit covers. |
 | `permitEnd` | Property | `date` | yes |  | `jc:permitEnd` | The last day the permit covers. |
 | `description` | LanguageProperty | `string` |  |  | `schema:description` | A short description, per language. |
-| `address` | Property | `string` |  |  | `schema:address` | The street address, one line. |
+| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed from a line of text. |
 | `refDistrict` | Relationship | [`CityDistrict`](#citydistrict) |  |  | `jc:refDistrict` | The district the record lies in. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
@@ -473,6 +473,19 @@ Specialises `Entity`.
 | `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### PostalAddress
+
+The value of `address`: a postal address, never an entity of its own (Smart Data Models' common schema).
+
+IRI: `schema:PostalAddress`
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `streetAddress` | Property | `string` |  |  | `schema:streetAddress` | The street and the house number. |
+| `postalCode` | Property | `string` |  |  | `schema:postalCode` | The postal code. |
+| `addressLocality` | Property | `string` |  |  | `schema:addressLocality` | The town or the municipality. |
+| `addressCountry` | Property | `string` |  |  | `schema:addressCountry` | The country, as an ISO 3166-1 alpha-2 code. |
 
 ### Entity
 

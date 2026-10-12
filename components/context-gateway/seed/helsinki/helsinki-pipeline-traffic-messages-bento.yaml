@@ -29,7 +29,7 @@ pipeline:
               { "type": "LanguageProperty", "languageMap": { "fi": $where } }
             },
             "location": { "type": "GeoProperty", "value": $geometry },
-            "address": { "type": "Property", "value": $municipality },
+            "address": { "type": "Property", "value": { "addressLocality": $municipality, "addressCountry": "FI" } },
             "dateIssued": { "type": "Property", "value": this.properties.releaseTime },
             "validFrom": if $starts == null { null } else { { "type": "Property", "value": $starts } },
             "validTo": if $ends == null { null } else { { "type": "Property", "value": $ends } },

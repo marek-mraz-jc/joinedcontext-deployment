@@ -44,7 +44,12 @@ pipeline:
           "eventStatus": { "type": "Property", "value": this.event_status },
           "location": { "type": "GeoProperty", "value": this.location.position },
           "address": if $street == null { null } else {
-            { "type": "Property", "value": $street + ", Helsinki" }
+            { "type": "Property", "value": {
+              "streetAddress": $street,
+              "postalCode": this.location.postal_code.or(null),
+              "addressLocality": this.location.address_locality.or({}).fi.or(null),
+              "addressCountry": "FI"
+            }.filter(entry -> entry.value != null && entry.value != "") }
           },
           "contactPoint": if $contact == null || $contact == "" { null } else {
             { "type": "Property", "value": $contact }

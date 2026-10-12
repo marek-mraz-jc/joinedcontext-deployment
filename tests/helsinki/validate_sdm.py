@@ -67,9 +67,6 @@ EXCEPTIONS = {
 #: Attributes of a validated type that knowingly differ from the SDM schema, and why. A failure on
 #: one is reported as excepted and does not fail the run.
 ACCEPTED = {
-    ("PointOfInterest", "address"): "one line of text (schema:address allows Text); PostalAddress is T-3949",
-    ("Event", "address"): "one line of text; PostalAddress is T-3949",
-    ("Alert", "address"): "the municipality as text; PostalAddress is T-3949",
     ("Alert", "alertSource"): "not written yet; T-3950",
     ("Alert", "subCategory"): "Digitraffic's situationType, which the alerts-heatmap app labels; SDM codes are T-3950",
     ("Event", "eventStatus"): "one schema.org status as the Helsinki class declares it and the event apps read it; "
