@@ -247,9 +247,12 @@ def test_occupancy_lands_on_the_ids_ipr_writes_and_an_unpaired_car_park_is_left_
     assert ids == {"ipr-a7c9a9af-a0fb-4005-8baf-c9a202b763ad", "ipr-8e869f78-c4e5-41fc-a316-ccff35083fdc"}
     skalka = next(e for e in written["park-and-ride-occupancy"] if e["id"].endswith("a7c9a9af-a0fb-4005-8baf-c9a202b763ad"))
     assert skalka["availableSpotNumber"]["value"] == 23 and skalka["occupiedSpotNumber"]["value"] == 55
+    # The capacity comes with the free and occupied counts from the same feed (T-4105): IPR's register
+    # gave P+R Nové Butovice 57 places while Golemio counted 112 free, a negative occupancy.
+    assert skalka["totalSpotNumber"]["value"] == 78
     assert skalka["dateModified"]["value"] == "2026-09-25T13:34:01Z"
-    # The capacity, the name and the outline are IPR's; the live feed never writes them.
-    assert not any(k in e for e in written["park-and-ride-occupancy"] for k in ("totalSpotNumber", "name", "location"))
+    # The name and the outline are IPR's; the live feed never writes them.
+    assert not any(k in e for e in written["park-and-ride-occupancy"] for k in ("name", "location"))
 
 
 @requires_docker
@@ -257,8 +260,10 @@ def test_a_count_that_is_not_a_whole_number_is_left_out_and_a_car_park_without_o
     def edit(d):
         d[0]["free_spot_number"] = -3
         d[0]["occupied_spot_number"] = 12.5
+        d[0]["total_spot_number"] = 78.5
         d[1]["free_spot_number"] = None
         d[1]["occupied_spot_number"] = "n/a"
+        d[1]["total_spot_number"] = None
         d[1]["last_updated"] = None
     answer = run("park-and-ride-occupancy", edited("golemio-park-and-ride.json", edit))
     assert [set(e) - {"id", "type"} for e in answer] == [{"dateModified"}]
