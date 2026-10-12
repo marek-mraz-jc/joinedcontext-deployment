@@ -33,6 +33,14 @@ serviceMonitors:
     # armed by ANTARES_TELEMETRY in components/context-broker; without it this path answers
     # 404 as well.
     path: /q/metrics
+  {{- range $b := $root.global.contextBrokers | default list }}
+  - name: context-broker-{{ $b.name }}
+    namespace: {{ index $root "context-broker" "broker" "namespace" }}
+    selector:
+      app.kubernetes.io/name: context-broker-{{ $b.name }}
+    port: http
+    path: /q/metrics
+  {{- end }}
   {{- end }}
   {{- if has "portal" $components }}
   - name: portal
