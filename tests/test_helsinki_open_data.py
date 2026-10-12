@@ -41,8 +41,6 @@ FEEDS = {
     "subdistricts": ("subdistricts.json", "CityDistrict", 2),
     "fee-parking-zones": ("payment-zones.json", "ParkingZone", 1),
     "resident-parking-zones": ("resident-zones.json", "ParkingZone", 2),
-    # Six records, one of them a station, which only gathers its platforms (T-3356).
-    "transit-stops": ("hsl-stops.json", "GtfsStop", 5),
     # Every row of three line variants: a ferry, a metro line and a one-stop variant.
     "transit-routes": ("hsl-routes.json", "TransitRoute", 3),
 }
@@ -203,20 +201,6 @@ def test_a_zone_link_without_a_scheme_is_written_as_https(written):
 
 
 @requires_docker
-def test_a_stop_says_what_serves_it_and_a_station_or_a_zone_beyond_hsl_is_not_made_up(written):
-    stops = {e["id"].rsplit(":", 1)[1]: e for e in written["transit-stops"]}
-    assert "9200001" not in stops, "a station gathers platforms; the lines name the platforms"
-    assert stops["1010107"]["stopCode"]["value"] == "H2014"
-    assert stops["1010107"]["fareZone"]["value"] == "A"
-    assert stops["1010107"]["name"]["languageMap"] == {"fi": "Meritullinkatu"}
-    assert {stops[i]["transportMode"]["value"] for i in ("1010107", "1010419", "1020601", "1030701")} == {"bus", "tram", "metro", "ferry"}
-    # A stop beyond HSL's zones ("Ei HSL") and with a blank sign code carries neither.
-    beyond = stops["9300292"]
-    assert "fareZone" not in beyond and "stopCode" not in beyond
-    assert beyond["location"]["value"]["type"] == "Point"
-
-
-@requires_docker
 def test_a_line_lists_its_stops_in_order_whatever_order_its_rows_come_in(written):
     recording = fixture("hsl-routes.json")
     rows = [f["properties"] for f in recording["features"] if f["properties"]["route_vari"] == "31M1_1"]
@@ -231,13 +215,6 @@ def test_a_line_lists_its_stops_in_order_whatever_order_its_rows_come_in(written
     alone = next(e for e in written["transit-routes"] if e["id"].endswith(":4625-10"))
     assert alone["location"]["value"]["type"] == "Point", "one stop is no line"
     assert len(alone["stopSequence"]["value"]) == 1
-
-
-@requires_docker
-def test_a_stop_page_the_register_cut_short_writes_no_stop():
-    recording = fixture("hsl-stops.json")
-    recording["properties"] = {"exceededTransferLimit": True}
-    assert not [e for e in run("transit-stops", recording) if e.get("type") == "GtfsStop"]
 
 
 @requires_docker

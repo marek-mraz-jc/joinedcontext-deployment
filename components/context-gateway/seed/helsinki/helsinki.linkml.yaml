@@ -4,7 +4,7 @@ title: Helsinki city context
 description: >-
   What the Helsinki demonstration space carries side by side (DM-01, DM-09): the events of the
   city's Linked Events register, the HSL city bike docking stations, the HSL buses of four
-  trunk lines, HSL's stops and lines, the city's news, Fintraffic's road weather stations and its traffic alerts, FMI's air quality stations, and the city's open registers: its services (libraries, health
+  trunk lines, HSL's stops, stations, lines and their shapes, the city's news, Fintraffic's road weather stations and its traffic alerts, FMI's air quality stations, and the city's open registers: its services (libraries, health
   stations, swimming halls, beaches, schools), the beach water sensors, parking areas and zones,
   the permits for digging, traffic arrangements and events on public areas, and its district
   division. One model, one space, four endpoints that each publish a slice of it. The IRIs
@@ -488,6 +488,104 @@ slots:
     multivalued: true
     annotations:
       ngsi_ld_kind: Property
+  wheelChairAccessible:
+    slot_uri: sdm:wheelChairAccessible
+    description: Whether a wheelchair can board here, GTFS's wheelchair_boarding; 0 unknown, 1 possible, 2 not possible.
+    pattern: "^[012]$"
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  hasParentStation:
+    slot_uri: sdm:hasParentStation
+    description: The station the stop or platform belongs to; absent for a stop on its own.
+    range: GtfsStation
+    inverse: hasStop
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  hasStop:
+    slot_uri: sdm:hasStop
+    description: The platforms of the station, computed from their hasParentStation and never stored.
+    range: GtfsStop
+    multivalued: true
+    inverse: hasParentStation
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  page:
+    slot_uri: sdm:page
+    description: The publisher's web page about it.
+    range: uri
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  agencyName:
+    slot_uri: sdm:agencyName
+    description: The transit agency's full name.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  timezone:
+    slot_uri: sdm:timezone
+    description: The agency's time zone, an IANA name such as Europe/Helsinki.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  language:
+    slot_uri: sdm:language
+    description: The agency's main language, a two-letter code.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  phone:
+    slot_uri: sdm:phone
+    description: The agency's public customer service number.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  shortName:
+    slot_uri: sdm:shortName
+    description: The line number riders see, such as 4 or 550.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  routeType:
+    slot_uri: sdm:routeType
+    description: >-
+      GTFS's basic route type: 0 a tram, 1 the metro, 2 a train, 3 a bus, 4 a ferry. HSL's
+      extended codes (109, 700s, 900) are written as the basic one they extend.
+    pattern: "^[0-7]$"
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  operatedBy:
+    slot_uri: sdm:operatedBy
+    description: The agency that runs the line.
+    range: GtfsAgency
+    inverse: routes
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  routes:
+    slot_uri: jc:routes
+    description: The lines the agency operates, computed from their operatedBy and never stored.
+    range: GtfsRoute
+    multivalued: true
+    inverse: operatedBy
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
+  distanceTravelled:
+    slot_uri: sdm:distanceTravelled
+    description: The distance along the shape at each point of its line, in kilometres.
+    range: float
+    multivalued: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
 
 classes:
   Event:
@@ -690,6 +788,9 @@ classes:
       - description
       - fareZone
       - transportMode
+      - wheelChairAccessible
+      - hasParentStation
+      - page
       - dataProvider
       - source
   TransitRoute:
@@ -706,6 +807,66 @@ classes:
       - directionId
       - transportMode
       - stopSequence
+      - dataProvider
+      - source
+  GtfsStation:
+    class_uri: sdm:GtfsStation
+    description: One HSL station (GTFS location type 1), where it is and the platforms it gathers.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+    slots:
+      - name
+      - fareZone
+      - transportMode
+      - wheelChairAccessible
+      - hasStop
+      - page
+      - dataProvider
+      - source
+  GtfsAgency:
+    class_uri: sdm:GtfsAgency
+    description: The transit agency HSL's GTFS feed names, HSL itself.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+    slots:
+      - agencyName
+      - page
+      - timezone
+      - language
+      - phone
+      - routes
+      - dataProvider
+      - source
+  GtfsRoute:
+    class_uri: sdm:GtfsRoute
+    description: >-
+      One HSL line as GTFS gives it, both directions and every variant: its number, its name,
+      what runs it and who operates it. Its stops in order are TransitRoute's.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+    slots:
+      - shortName
+      - name
+      - routeType
+      - transportMode
+      - operatedBy
+      - page
+      - dataProvider
+      - source
+  GtfsShape:
+    class_uri: sdm:GtfsShape
+    description: >-
+      The line one HSL route variant draws on the map, about 200 of its points, and the distance
+      travelled at each.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+    slots:
+      - name
+      - distanceTravelled
       - dataProvider
       - source
 

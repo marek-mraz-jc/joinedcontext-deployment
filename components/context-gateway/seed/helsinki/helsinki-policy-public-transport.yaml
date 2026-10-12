@@ -14,3 +14,8 @@ spec:
         - type: Vehicle
         - type: GtfsStop
         - type: TransitRoute
+        # HSL's GTFS static feed (T-3890).
+        - type: GtfsStation
+        - type: GtfsAgency
+        - type: GtfsRoute
+        - type: GtfsShape

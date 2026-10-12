@@ -3,7 +3,7 @@
 <!-- Generated from the LinkML source by Model Tools. Do not edit: `jcctl model
      generate` overwrites this file and CI fails on any difference (DM-01, DM-02). -->
 
-What the Helsinki demonstration space carries side by side (DM-01, DM-09): the events of the city's Linked Events register, the HSL city bike docking stations, the HSL buses of four trunk lines, HSL's stops and lines, the city's news, Fintraffic's road weather stations and its traffic alerts, FMI's air quality stations, and the city's open registers: its services (libraries, health stations, swimming halls, beaches, schools), the beach water sensors, parking areas and zones, the permits for digging, traffic arrangements and events on public areas, and its district division. One model, one space, four endpoints that each publish a slice of it. The IRIs are Smart Data Models' and ETSI's, cited rather than minted, so a reader who knows those vocabularies reads the same terms here (DM-04, DM-16).
+What the Helsinki demonstration space carries side by side (DM-01, DM-09): the events of the city's Linked Events register, the HSL city bike docking stations, the HSL buses of four trunk lines, HSL's stops, stations, lines and their shapes, the city's news, Fintraffic's road weather stations and its traffic alerts, FMI's air quality stations, and the city's open registers: its services (libraries, health stations, swimming halls, beaches, schools), the beach water sensors, parking areas and zones, the permits for digging, traffic arrangements and events on public areas, and its district division. One model, one space, four endpoints that each publish a slice of it. The IRIs are Smart Data Models' and ETSI's, cited rather than minted, so a reader who knows those vocabularies reads the same terms here (DM-04, DM-16).
 
 - Namespace: `https://hel.fi/models/helsinki/helsinki`
 - Rendered by: `linkml-1.11.1`
@@ -314,6 +314,9 @@ Specialises `Entity`.
 | `description` | LanguageProperty | `string` |  |  | `schema:description` | A short description, per language. |
 | `fareZone` | Property | `string` |  |  | `jc:fareZone` | The HSL fare zone the stop lies in, A to D; none for a stop beyond HSL's zones. |
 | `transportMode` | Property | [`TransportMode`](#transportmode) |  |  | `jc:transportMode` | What serves the stop or runs the line. |
+| `wheelChairAccessible` | Property | `string` |  |  | `sdm:wheelChairAccessible` | Whether a wheelchair can board here, GTFS's wheelchair_boarding; 0 unknown, 1 possible, 2 not possible. |
+| `hasParentStation` | Relationship | [`GtfsStation`](#gtfsstation) |  |  | `sdm:hasParentStation` | The station the stop or platform belongs to; absent for a stop on its own. |
+| `page` | Property | `uri` |  |  | `sdm:page` | The publisher's web page about it. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
@@ -338,6 +341,94 @@ Specialises `Entity`.
 | `directionId` | Property | `integer` |  |  | `jc:directionId` | HSL's direction of the line, 1 or 2. |
 | `transportMode` | Property | [`TransportMode`](#transportmode) |  |  | `jc:transportMode` | What serves the stop or runs the line. |
 | `stopSequence` | Property | `string` (list) |  |  | `jc:stopSequence` | The stops the line serves in this direction, in order, each the GTFS stop id that ends the id of a GtfsStop of this space. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### GtfsStation
+
+One HSL station (GTFS location type 1), where it is and the platforms it gathers.
+
+IRI: `sdm:GtfsStation`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language. |
+| `fareZone` | Property | `string` |  |  | `jc:fareZone` | The HSL fare zone the stop lies in, A to D; none for a stop beyond HSL's zones. |
+| `transportMode` | Property | [`TransportMode`](#transportmode) |  |  | `jc:transportMode` | What serves the stop or runs the line. |
+| `wheelChairAccessible` | Property | `string` |  |  | `sdm:wheelChairAccessible` | Whether a wheelchair can board here, GTFS's wheelchair_boarding; 0 unknown, 1 possible, 2 not possible. |
+| `hasStop` | Relationship | [`GtfsStop`](#gtfsstop) (list) |  |  | `sdm:hasStop` | The platforms of the station, computed from their hasParentStation and never stored. |
+| `page` | Property | `uri` |  |  | `sdm:page` | The publisher's web page about it. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### GtfsAgency
+
+The transit agency HSL's GTFS feed names, HSL itself.
+
+IRI: `sdm:GtfsAgency`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `agencyName` | Property | `string` |  |  | `sdm:agencyName` | The transit agency's full name. |
+| `page` | Property | `uri` |  |  | `sdm:page` | The publisher's web page about it. |
+| `timezone` | Property | `string` |  |  | `sdm:timezone` | The agency's time zone, an IANA name such as Europe/Helsinki. |
+| `language` | Property | `string` |  |  | `sdm:language` | The agency's main language, a two-letter code. |
+| `phone` | Property | `string` |  |  | `sdm:phone` | The agency's public customer service number. |
+| `routes` | Relationship | [`GtfsRoute`](#gtfsroute) (list) |  |  | `jc:routes` | The lines the agency operates, computed from their operatedBy and never stored. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### GtfsRoute
+
+One HSL line as GTFS gives it, both directions and every variant: its number, its name, what runs it and who operates it. Its stops in order are TransitRoute's.
+
+IRI: `sdm:GtfsRoute`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `shortName` | Property | `string` |  |  | `sdm:shortName` | The line number riders see, such as 4 or 550. |
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language. |
+| `routeType` | Property | `string` |  |  | `sdm:routeType` | GTFS's basic route type: 0 a tram, 1 the metro, 2 a train, 3 a bus, 4 a ferry. HSL's extended codes (109, 700s, 900) are written as the basic one they extend. |
+| `transportMode` | Property | [`TransportMode`](#transportmode) |  |  | `jc:transportMode` | What serves the stop or runs the line. |
+| `operatedBy` | Relationship | [`GtfsAgency`](#gtfsagency) |  |  | `sdm:operatedBy` | The agency that runs the line. |
+| `page` | Property | `uri` |  |  | `sdm:page` | The publisher's web page about it. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### GtfsShape
+
+The line one HSL route variant draws on the map, about 200 of its points, and the distance travelled at each.
+
+IRI: `sdm:GtfsShape`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language. |
+| `distanceTravelled` | Property | `float` (list) |  |  | `sdm:distanceTravelled` | The distance along the shape at each point of its line, in kilometres. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
