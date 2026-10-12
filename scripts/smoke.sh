@@ -713,6 +713,19 @@ else
 	skip "git forge (route gitea-forge not configured in this instance)"
 fi
 
+echo "public documentation"
+if has_route portal-public-guide; then
+	# T-4063: a citizen reads how to use a public Endpoint with no account, from the apex address
+	# as the API pages print it; the apex redirects to the Portal host, which answers the page.
+	guide=$(curl -sSL --max-time 20 "$base/docs/API/07-websocket" 2>/dev/null || true)
+	if printf '%s' "$guide" | grep -q '<title>Live Updates over WebSocket</title>'; then
+		ok "the WebSocket guide reads without signing in"
+	else
+		ko "the WebSocket guide does not read without signing in"
+	fi
+	status 404 "no Operations page is public" "$portal/docs/Operations/00-intro"
+fi
+
 echo "catalogue"
 if has_route ckan; then
 	# The catalogue has a host of its own, derived the way the route derives it.
