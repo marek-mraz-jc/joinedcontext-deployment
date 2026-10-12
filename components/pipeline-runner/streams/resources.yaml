@@ -17,6 +17,15 @@ cache_resources:
     memory:
       default_ttl: 5m
       compaction_interval: 60s
+  # transit-stops and gtfs-routes write the URN of every GtfsStop, GtfsStation, GtfsRoute and
+  # GtfsAgency they upsert here, at runner start and daily after; hsl-hfp-vehicles links a
+  # vehicle to its line and next stop only when the URN is here, since the space's view refuses
+  # a whole Vehicle whose relationship names an entity it does not hold (T-4052, threat model D7).
+  # Three days: the space never deletes them, so two missed reads still keep every link.
+  - label: gtfs
+    memory:
+      default_ttl: 72h
+      compaction_interval: 1h
 
 rate_limit_resources:
   # Every stream's writes to the gateway share this budget.

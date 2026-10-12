@@ -80,3 +80,14 @@ pipeline:
           "routes.txt" => content().string().parse_csv().map_each(r -> r.apply("route")),
           _ => [],
         }
+
+    # One entity per message, and its URN into the runner's `gtfs` cache: hsl-hfp-vehicles links a
+    # vehicle only to a line or stop this read wrote (T-4052). The runner batches the messages
+    # back for the gateway as it does any array.
+    - unarchive:
+        format: json_array
+    - cache:
+        resource: gtfs
+        operator: set
+        key: '${! json("id") }'
+        value: "1"

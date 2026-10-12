@@ -248,11 +248,17 @@ def test_every_frame_of_an_admitted_bus_is_a_write():
     assert {e["fleetVehicleId"]["value"] for e in written} == {"22-7"}
 
 
-def bento(frames: list[str], **extra) -> list[dict]:
+def bento(frames: list[str], known: tuple[str, ...] = (), **extra) -> list[dict]:
+    """The mapping over `frames`, the `gtfs` cache holding the URNs `known` as the daily GTFS read
+    leaves them."""
+    resources = yaml.safe_load(RESOURCES.read_text())["cache_resources"]
+    for cache in resources:
+        if cache["label"] == "gtfs":
+            cache["memory"]["init_values"] = {urn: "1" for urn in known}
     config = {
         "input": {"stdin": {"scanner": {"lines": {}}}},
         "pipeline": pipeline(**extra),
-        "cache_resources": yaml.safe_load(RESOURCES.read_text())["cache_resources"],
+        "cache_resources": resources,
         "output": {"stdout": {"codec": "lines"}},
         "logger": {"level": "error"},
     }
@@ -290,6 +296,8 @@ def test_each_mode_has_its_own_cap_and_a_full_one_never_takes_another_modes_slot
 
 @requires_docker
 def test_a_vehicle_links_its_line_and_next_stop_and_says_how_late_and_full_it_runs():
+    urn = "urn:ngsi-ld:{}:hel.fi:helsinki:{}"
+    known = (urn.format("GtfsRoute", "1009"), urn.format("GtfsRoute", "3001K"), urn.format("GtfsStop", "1040601"))
     tram, at_end, quiet = bento([
         frame(3, "01", "tram", 40, "1009", dl=-95, occu=100),
         json.dumps({"topic": topic("train", 90, 7, "3001K", "EOL"), "VP": {
@@ -297,8 +305,7 @@ def test_a_vehicle_links_its_line_and_next_stop_and_says_how_late_and_full_it_ru
             "tst": "2026-09-25T16:01:00.000Z", "dl": 30, "occu": 0}}),
         json.dumps({"topic": topic("ferry", 60, 4, "1019"), "VP": {
             "oper": 60, "veh": 4, "long": 24.98, "lat": 60.15, "route": None, "tst": "2026-09-25T16:01:00.000Z"}}),
-    ], threads=1)
-    urn = "urn:ngsi-ld:{}:hel.fi:helsinki:{}"
+    ], known, threads=1)
     assert tram["onRoute"]["object"] == urn.format("GtfsRoute", "1009")
     assert tram["nextStop"]["object"] == urn.format("GtfsStop", "1040601")
     # HSL's dl counts ahead of the timetable (-95: 95 s late); delay counts behind it.
@@ -311,6 +318,34 @@ def test_a_vehicle_links_its_line_and_next_stop_and_says_how_late_and_full_it_ru
     assert not {"route", "onRoute"} & set(quiet) and quiet["vehicleType"]["value"] == "passengerVessel"
     for entity in (tram, at_end, quiet):
         assert not open_data.schema_errors(ROOT / "components/context-gateway/seed/helsinki/helsinki.v1.schema.json", entity), entity
+
+
+@requires_docker
+def test_a_line_or_stop_the_space_does_not_hold_is_left_out_and_the_position_still_lands():
+    """T-4052: HFP runs lines GTFS does not list (train 3002X3 on 2026-10-12), and the space's view
+    refuses a whole Vehicle whose relationship names an entity it does not hold (threat model
+    D7). Only a URN the daily GTFS read left in the `gtfs` cache is linked."""
+    urn = "urn:ngsi-ld:{}:hel.fi:helsinki:{}"
+    known = (urn.format("GtfsRoute", "3001K"), urn.format("GtfsStop", "1040601"))
+    frames = [
+        json.dumps({"topic": topic("train", 90, v, route, stop), "VP": {
+            "oper": 90, "veh": v, "long": 24.94, "lat": 60.17, "route": route, "tst": "2026-10-12T09:30:00.000Z"}})
+        for v, route, stop in [(1, "3001K", "1040601"), (2, "3002X3", "1040601"), (3, "3001K", "9999999"), (4, "3002X3", "9999999")]
+    ]
+    written = {e["fleetVehicleId"]["value"]: e for e in bento(frames, known, threads=1)}
+    assert sorted(written) == ["90-1", "90-2", "90-3", "90-4"]
+    links = {vehicle: (e.get("onRoute", {}).get("object"), e.get("nextStop", {}).get("object")) for vehicle, e in written.items()}
+    assert links == {
+        "90-1": (urn.format("GtfsRoute", "3001K"), urn.format("GtfsStop", "1040601")),
+        "90-2": (None, urn.format("GtfsStop", "1040601")),
+        "90-3": (urn.format("GtfsRoute", "3001K"), None),
+        "90-4": (None, None),
+    }
+    # The line's number and the position land either way.
+    assert all(e["route"]["value"] in ("3001K", "3002X3") and e["location"]["value"]["coordinates"] == [24.94, 60.17]
+               for e in written.values())
+    # Before the first GTFS read of a fresh runner the cache is empty: nothing is linked.
+    assert not any({"onRoute", "nextStop"} & set(e) for e in bento(frames, threads=1))
 
 
 def test_the_topics_are_a_fixed_list_without_the_whole_bus_fleet():
