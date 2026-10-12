@@ -22,7 +22,10 @@ cluster:
       # 2 cores: at 500m the kernel throttled it in 31% of its periods (4365 s in all by
       # 2026-09-25 18:30Z), the broker's 1000-entity upserts outran their time and every praha
       # waste-stations batch came back "database error" (T-2971). The node has 8 vCPUs, ~28% used.
-      cpu: '2'
+      # 3 cores: at 2 it was throttled in 22% of its periods (22 499 s in 14 h, 2026-10-12), each
+      # broker transaction waited a median 0.15 s to begin and a gateway upsert took 1 s, which
+      # capped the HSL vehicle stream at about 62 writes/s (T-4075).
+      cpu: '3'
       memory: 2Gi
 
   storage:
