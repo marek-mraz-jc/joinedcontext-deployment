@@ -64,9 +64,11 @@ env:
   # The jc build's surfaces (T-3642): the endpoint views, MCP, the engine's access document, the
   # view WebSocket and OGC API Features (T-3922; the gateway forwards /api/endpoint/{slug}/ogc/
   # features to it since platform T-3752), each under /x/views/{view}/ and reached through the
-  # gateway hop alone, never an edge route. The LinkML schema is no surface: the Portal PUTs it to
-  # /q/schemas/{tenant} (T-3628), which takes nothing while ANTARES_SCHEMA_MAX_BYTES is unset.
-  ANTARES_API_SURFACES: "admin,views,mcp,access,ws,ogc"
+  # gateway hop alone, never an edge route; and the view's LinkML schema (T-3804, in the image
+  # since Antares T-3803), which the gateway serves as /api/endpoint/{slug}/schema/... (T-3645).
+  # The Portal PUTs the schema to /q/schemas/{tenant} (T-3628), which takes nothing while
+  # ANTARES_SCHEMA_MAX_BYTES is unset.
+  ANTARES_API_SURFACES: "admin,views,mcp,access,ws,ogc,linkml"
   # The MCP surface answers the Host names listed here alone (rmcp's DNS-rebinding guard, MC8);
   # unset it answers loopback only, and the gateway's hop (JC_GATEWAY_BROKER_URL, T-3647) got 403.
   ANTARES_MCP_ALLOWED_HOSTS: "context-broker.{{ (index .Values "context-broker" "broker" "namespace") }}.svc.cluster.local:8080"

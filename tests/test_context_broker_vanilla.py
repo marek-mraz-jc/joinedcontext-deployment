@@ -34,10 +34,11 @@ def test_the_broker_mounts_no_configuration_of_the_plane(broker_pod):
 
 
 def test_the_broker_runs_the_surfaces_and_requires_its_admin_credential(broker_pod):
-    """T-3642: the views, MCP and access surfaces beside `/q`, the subject headers the gateway sets
-    (platform T-3641), and `/q` behind the mounted secret with only the metrics open."""
+    """T-3642: the views, MCP, access, WebSocket, OGC and (T-3804) LinkML surfaces beside `/q`, the
+    subject headers the gateway sets (platform T-3641), and `/q` behind the mounted secret with only
+    the metrics open."""
     env = {e["name"]: e.get("value") for e in broker_pod["containers"][0].get("env", [])}
-    assert env["ANTARES_API_SURFACES"].split(",") == ["admin", "views", "mcp", "access", "ws", "ogc"]
+    assert env["ANTARES_API_SURFACES"].split(",") == ["admin", "views", "mcp", "access", "ws", "ogc", "linkml"]
     # T-3905: the view WebSocket is bounded for the one node, under the broker's own defaults.
     assert 0 < int(env["ANTARES_WS_MAX_CONNECTIONS_PER_TENANT"]) <= int(env["ANTARES_WS_MAX_CONNECTIONS"]) <= 1000
     assert 0 < int(env["ANTARES_WS_MAX_SUBSCRIPTIONS"]) <= 64
