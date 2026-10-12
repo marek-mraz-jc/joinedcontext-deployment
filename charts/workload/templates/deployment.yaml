@@ -41,6 +41,9 @@ spec:
         {{- end }}
         {{- if .Values.configMap.enabled }}
         checksum/config: {{ .Values.configMap.data | toYaml | sha256sum }}
+        {{- with .Values.configMap.binaryData }}
+        checksum/binary: {{ . | toYaml | sha256sum }}
+        {{- end }}
         {{- end }}
         {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}

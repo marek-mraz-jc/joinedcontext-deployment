@@ -12,4 +12,8 @@ data:
 {{- else }}
 data: {}
 {{- end }}
+{{- with .Values.configMap.binaryData }}
+binaryData:
+  {{- toYaml . | nindent 2 }}
+{{- end }}
 {{- end }}
