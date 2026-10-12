@@ -14,7 +14,7 @@
     <section class="jc-preview" aria-labelledby="jc-preview-title">
       <div class="jc-preview-head">
         <h2 id="jc-preview-title">{{ h.jc_t('preview') }}</h2>
-        {% if total is not none %}<span class="jc-chip jc-chip-primary">{{ h.jc_number(total) }} {{ h.jc_t('rows') }}</span>{% endif %}
+        {% if total is not none %}<span class="jc-chip jc-chip-primary">{{ h.jc_rows(total) }}</span>{% endif %}
         {% if previews|length > 1 %}<span class="jc-chip">{{ previews|length }} {{ h.jc_t('tables') }}</span>{% endif %}
       </div>
       <p class="jc-lead">{{ h.jc_t('preview_lead') }}</p>
@@ -26,7 +26,7 @@
         <details class="jc-table"{% if loop.first %} open{% endif %}>
           <summary>
             <span class="jc-table-name">{{ name }}</span>
-            {% if preview.total is not none %}<span class="jc-table-rows">{{ h.jc_number(preview.total) }} {{ h.jc_t('rows') }}</span>{% endif %}
+            {% if preview.total is not none %}<span class="jc-table-rows">{{ h.jc_rows(preview.total) }}</span>{% endif %}
           </summary>
           {% if preview.view %}
             <iframe class="jc-grid" loading="lazy"

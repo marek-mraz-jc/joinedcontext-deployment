@@ -26,7 +26,7 @@ spec:
   # `{orgDomain}` is rendered out of every spec when the repository is loaded, by the
   # gateway as well as by jcctl (jcctl loader.rs `render_in_place`, CC-74).
   assignee: { kind: user, id: "demo.steward@{orgDomain}" }
-  operations: [retrieveOps]
+  operations: [retrieveOps, createSubscription, retrieveSubscription, updateSubscription, deleteSubscription]
   information:
     - entities:
         - type: StatisticalObservation

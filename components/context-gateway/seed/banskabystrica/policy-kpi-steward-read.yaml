@@ -18,7 +18,7 @@ spec:
   contextSpaceRef: { kind: ContextSpace, name: banskabystrica-kpi }
   assigner: did:web:{orgDomain}
   assignee: { kind: user, id: "demo.steward@{orgDomain}" }
-  operations: [retrieveOps]
+  operations: [retrieveOps, createSubscription, retrieveSubscription, updateSubscription, deleteSubscription]
   information:
     - entities:
         - type: KeyPerformanceIndicator

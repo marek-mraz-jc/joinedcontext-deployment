@@ -309,17 +309,20 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .jc-usage summary { cursor: pointer; font-weight: 600; }
 .jc-usage p { margin: .5rem 0; overflow-wrap: anywhere; }
 .jc-copy-code { align-items: flex-start; margin: .5rem 0; }
-.jc-copy-code textarea { min-width: 0; flex: 1; white-space: pre; overflow-x: auto; resize: vertical; }
+/* A command wraps instead of scrolling sideways (T-4066); the copy button copies it whole. */
+.jc-copy-code textarea { min-width: 0; flex: 1; white-space: pre-wrap; overflow-wrap: anywhere; overflow-x: hidden; resize: vertical; field-sizing: content; }
+.jc-usage code { overflow-wrap: anywhere; }
 .jc-live pre { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--jc-ink); color: var(--jc-paper); border-radius: var(--jc-radius); padding: .875rem 1rem; font-size: .8125rem; margin: 0; }
 .jc-example-label { font-weight: 600; margin: 1rem 0 .375rem; }
 .jc-section + .jc-section { margin-top: 1.5rem; }
 .jc-section h3 { margin: 0; font-size: 1.0625rem; }
 .jc-section-lead { color: var(--jc-muted); font-size: .9375rem; margin: .125rem 0 .75rem; }
 .jc-resource-list { list-style: none; padding: 0; margin: 0; border: 1px solid var(--jc-border); border-radius: var(--jc-radius-lg); overflow: hidden; background: var(--jc-surface); }
-.jc-resource { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr) auto; align-items: center; gap: .75rem 1rem; padding: .875rem 1rem; margin: 0; }
+.jc-resource { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: .75rem 1rem; padding: .875rem 1rem; margin: 0; }
 .jc-resource + .jc-resource { border-top: 1px solid var(--jc-border); }
 .jc-resource:hover { background: var(--jc-n50); }
-.jc-resource .jc-chip { justify-self: start; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.jc-resource-head { display: flex; align-items: baseline; gap: .5rem; flex-wrap: wrap; }
+.jc-resource .jc-chip { flex: none; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .jc-resource .heading { font-weight: 600; color: var(--jc-ink); text-decoration: none; overflow-wrap: anywhere; }
 .jc-resource .heading:hover { color: var(--jc-primary); text-decoration: underline; }
 .jc-resource p { margin: 0; color: var(--jc-muted); font-size: .875rem; }

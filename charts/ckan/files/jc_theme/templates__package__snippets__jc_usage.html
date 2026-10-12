@@ -1,6 +1,7 @@
 {#
-  An API resource's usage text (T-3887, EP-108): its paragraphs, each command as a read-only
-  field with a copy button (jc-copy.js; without script it is selected by hand), and the
+  An API resource's usage text (T-3887, EP-108): its paragraphs as Markdown through CKAN's
+  sanitiser (T-4066, so `query_entities` reads as code and no raw HTML passes), each command as a
+  read-only field that wraps, with a copy button (jc-copy.js; without script it is selected by hand), and the
   WebSocket guide when the installation names its documentation.
 #}
 {% for block in blocks %}
@@ -11,7 +12,7 @@
       <button type="button" class="btn btn-default" data-jc-copy="{{ block.id }}" data-jc-copied="{{ h.jc_t('copied') }}">{{ h.jc_t('copy') }}</button>
     </div>
   {% else %}
-    <p>{{ block.text }}</p>
+    {{ h.render_markdown(block.text) }}
   {% endif %}
 {% endfor %}
 {% set guide = h.jc_guide(res) %}
