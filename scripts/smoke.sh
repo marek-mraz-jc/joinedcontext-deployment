@@ -453,7 +453,7 @@ if has_route context-endpoint; then
 			-H "Authorization: Bearer $ep_token" -d "$body" "$base/api/endpoint/$ep/ngsi-ld/v1/entities"
 		status 200 "entity read back" -H "Authorization: Bearer $ep_token" "$base/api/endpoint/$ep/ngsi-ld/v1/entities/$urn"
 		# An id that is no NGSI-LD URN is refused by the gateway, not stored (PF-43).
-		bad='{"id":"smoke-not-a-urn","type":"AirQualityObserved"}'
+		bad='{"id":"smoke-not-a-urn","type":"AirQualityObserved","dateObserved":{"type":"Property","value":"2026-01-01T00:00:00Z"}}'
 		status 400 "write with an id that is no NGSI-LD URN is refused" -X POST -H 'Content-Type: application/json' \
 			-H "Authorization: Bearer $ep_token" -d "$bad" "$base/api/endpoint/$ep/ngsi-ld/v1/entities"
 		# A URN naming another organization is an id like any other since ADR-N-041: it lands in
@@ -463,7 +463,7 @@ if has_route context-endpoint; then
 		curl -sS -o /dev/null --max-time 20 -X DELETE -H "Authorization: Bearer $ep_token" \
 			"$base/api/endpoint/$ep/ngsi-ld/v1/entities/$other" 2>/dev/null || true
 		status 201 "an id naming another organization lands in this space (ADR-N-041)" -X POST -H 'Content-Type: application/json' \
-			-H "Authorization: Bearer $ep_token" -d '{"id":"'"$other"'","type":"AirQualityObserved"}' "$base/api/endpoint/$ep/ngsi-ld/v1/entities"
+			-H "Authorization: Bearer $ep_token" -d '{"id":"'"$other"'","type":"AirQualityObserved","dateObserved":{"type":"Property","value":"2026-01-01T00:00:00Z"}}' "$base/api/endpoint/$ep/ngsi-ld/v1/entities"
 		status 204 "and is deleted again" -X DELETE -H "Authorization: Bearer $ep_token" "$base/api/endpoint/$ep/ngsi-ld/v1/entities/$other"
 		status 204 "entity delete" -X DELETE -H "Authorization: Bearer $ep_token" "$base/api/endpoint/$ep/ngsi-ld/v1/entities/$urn"
 
