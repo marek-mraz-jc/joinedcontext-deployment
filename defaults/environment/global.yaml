@@ -234,6 +234,9 @@ components:
   - context-broker
   - pipeline-runner
   - context-gateway
+  # The MQTT edge brokers (ADR-N-048): after the gateway, whose CONNECT check they call, and
+  # the runner, the one client of their internal listener.
+  - mqtt-brokers
   # The generator behind the LinkML editor; before the portal, which takes its address.
   - model-tools
   - portal
