@@ -121,6 +121,18 @@ sync environment='local' component='all':
 		helmfile -f ./deployment/helmfile.yaml sync --concurrency {{helmfile_concurrency}} -e {{environment}} --selector component={{component}}; \
 	fi
 
+# Update an installation to a release: backup, diff, apply, steps, smoke, roll back on red
+# (T-3794, docs Deployment/06-updating); `--check` shows the plan and changes nothing
+[group('deployment')]
+upgrade environment version *flags:
+	./scripts/upgrade.py {{environment}} {{version}} --concurrency {{helmfile_concurrency}} {{flags}}
+
+# Write releases/<version>.md from the pinned images, the commits and releases/next.yaml; commit
+# it, then tag that commit <version>
+[group('deployment')]
+release-notes version:
+	./scripts/release-notes.py {{version}}
+
 # Deploy linkerd (idempotent — skips if the control plane is already installed)
 [group('deployment')]
 linkerd:
