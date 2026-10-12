@@ -404,7 +404,8 @@ def test_no_gitea_release_outgrows_the_secret_helm_keeps_it_in(dev):
     import base64
     import gzip
 
-    for release in ("gitea-bootstrap", "gitea-sample-apps", "gitea-sample-apps-2", "gitea-sample-apps-3", "gitea-sample-apps-4", "gitea-sample-apps-5"):
+    for release in ("gitea-bootstrap", "gitea-seed", "gitea-seed-2", "gitea-sample-apps", "gitea-sample-apps-2",
+                    "gitea-sample-apps-3", "gitea-sample-apps-4", "gitea-sample-apps-5"):
         docs = [
             d for d in dev
             if (d.get("metadata", {}).get("labels") or {}).get("app.kubernetes.io/instance") == release
@@ -413,6 +414,35 @@ def test_no_gitea_release_outgrows_the_secret_helm_keeps_it_in(dev):
         manifest = yaml.safe_dump_all(docs).encode()
         stored = len(base64.b64encode(gzip.compress(manifest * 2)))
         assert stored < 0.75 * 1024 * 1024, f"{release} would be stored in {stored} bytes"
+
+
+@requires_helmfile
+def test_the_job_mounts_every_project_s_seed_and_the_releases_split_it(dev):
+    """The projects' seed is gitea-seed and gitea-seed-2 (T-3998): the Job's tree is the
+    organization's ConfigMap and exactly the gitea-seed-<project> ConfigMaps rendered, every file
+    of every seed index in one of them, Helsinki's projects in the first release."""
+    rendered = {
+        d["metadata"]["name"]: d for d in dev
+        if d.get("kind") == "ConfigMap" and d["metadata"]["name"].startswith(("gitea-bootstrap-seed", "gitea-seed-"))
+    }
+    job = one(dev, "Job", "gitea-bootstrap")["spec"]["template"]["spec"]
+    seed = next(v for v in job["volumes"] if v["name"] == "seed")
+    assert {s["configMap"]["name"] for s in seed["projected"]["sources"]} == set(rendered)
+    assert [n for n in rendered if n.startswith("gitea-bootstrap-seed")] == ["gitea-bootstrap-seed"]
+    for name, cm in rendered.items():
+        release = cm["metadata"]["labels"]["app.kubernetes.io/instance"]
+        if name == "gitea-bootstrap-seed":
+            assert release == "gitea-bootstrap" and not any(k.startswith("projects__") for k in cm["data"])
+            continue
+        project = name.removeprefix("gitea-seed-")
+        assert release == ("gitea-seed" if project.startswith("helsinki") else "gitea-seed-2")
+        assert all(k.startswith(f"projects__{project}__") for k in cm["data"])
+    keys = [k for cm in rendered.values() for k in cm["data"]]
+    assert len(keys) == len(set(keys)), "a file in two ConfigMaps"
+    for seed_dir in ("helsinki", "banskabystrica", "bbsk", "praha", "zilina"):
+        index = yaml.safe_load((ROOT / f"components/context-gateway/seed/{seed_dir}/index.yaml").read_text())
+        missing = {p.replace("/", "__") for p in index.values()} - set(keys)
+        assert not missing, f"{seed_dir}: {sorted(missing)[:3]}"
 
 
 @requires_helmfile

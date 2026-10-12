@@ -4,7 +4,7 @@ title: Helsinki city context
 description: >-
   What the Helsinki demonstration space carries side by side (DM-01, DM-09): the events of the
   city's Linked Events register, the HSL city bike docking stations, the HSL buses of four
-  trunk lines, HSL's stops and lines, the city's news, Fintraffic's road weather stations and its traffic alerts, FMI's air quality stations, and the city's open registers: its services (libraries, health
+  trunk lines, HSL's stops, stations, lines and their shapes, the city's news, Fintraffic's road weather stations and its traffic alerts, FMI's air quality stations, and the city's open registers: its services (libraries, health
   stations, swimming halls, beaches, schools), the beach water sensors, parking areas and zones,
   the permits for digging, traffic arrangements and events on public areas, and its district
   division. One model, one space, four endpoints that each publish a slice of it. The IRIs
@@ -57,10 +57,35 @@ slots:
       upstream_source: https://schema.org/eventStatus
   address:
     slot_uri: schema:address
-    description: The street address, one line.
+    description: >-
+      The postal address as the source publishes it, field by field (Smart Data Models'
+      common PostalAddress); a field the source leaves out is absent, never guessed from a
+      line of text.
+    range: PostalAddress
+    inlined: true
     annotations:
       ngsi_ld_kind: Property
-      upstream_source: https://schema.org/address
+      upstream_source: https://github.com/smart-data-models/data-models/blob/master/common-schema.json
+  streetAddress:
+    slot_uri: schema:streetAddress
+    description: The street and the house number.
+    annotations:
+      upstream_source: https://schema.org/streetAddress
+  postalCode:
+    slot_uri: schema:postalCode
+    description: The postal code.
+    annotations:
+      upstream_source: https://schema.org/postalCode
+  addressLocality:
+    slot_uri: schema:addressLocality
+    description: The town or the municipality.
+    annotations:
+      upstream_source: https://schema.org/addressLocality
+  addressCountry:
+    slot_uri: schema:addressCountry
+    description: The country, as an ISO 3166-1 alpha-2 code.
+    annotations:
+      upstream_source: https://schema.org/addressCountry
   contactPoint:
     slot_uri: schema:contactPoint
     description: >-
@@ -103,7 +128,10 @@ slots:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   status:
     slot_uri: sdm:status
-    description: working while the station rents and takes returns, otherwise outOfService.
+    description: >-
+      A bike station's working while it rents and takes returns, otherwise outOfService; a park and
+      ride site's open, closed or closedAbnormal (Fintraffic LIIPI's IN_OPERATION, INACTIVE or
+      TEMPORARILY_CLOSED, EXCEPTIONAL_SITUATION).
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
@@ -116,7 +144,7 @@ slots:
       upstream_source: https://github.com/smart-data-models/data-models
   speed:
     slot_uri: sdm:speed
-    description: Ground speed of the bus.
+    description: Ground speed of the vehicle.
     range: float
     minimum_value: 0
     unit:
@@ -126,7 +154,7 @@ slots:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   heading:
     slot_uri: sdm:heading
-    description: Compass heading of the bus, degrees clockwise from north.
+    description: Compass heading of the vehicle, degrees clockwise from north.
     range: float
     minimum_value: 0
     maximum_value: 360
@@ -137,13 +165,13 @@ slots:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   route:
     slot_uri: sdm:route
-    description: The HSL route id the bus is serving, four digits with the municipality prefix.
+    description: The HSL route id the vehicle is serving, as GTFS names it (2550, 1009, 31M1, 3001K).
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   vehicleType:
     slot_uri: sdm:vehicleType
-    description: The kind of vehicle; bus on every entity of this space.
+    description: The Smart Data Models kind of vehicle - bus, tram, passengerVessel for a ferry, other for metro and train; transportMode names HSL's mode.
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
@@ -243,13 +271,15 @@ slots:
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
   category:
     slot_uri: sdm:category
-    description: The alert's domain; traffic for everything Fintraffic publishes.
+    description: The alert's domain; traffic for everything Fintraffic and HSL publish.
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Alert
   subCategory:
     slot_uri: sdm:subCategory
-    description: Fintraffic's situation type, ROAD_WORK or TRAFFIC_ANNOUNCEMENT.
+    description: >-
+      The Smart Data Models code of the alert, roadWorks for a Fintraffic road work. Left out
+      where no code fits: a Fintraffic traffic announcement and an HSL service alert.
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Alert
@@ -260,6 +290,110 @@ slots:
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Alert
+  alertSource:
+    slot_uri: sdm:alertSource
+    description: Who raised the alert, Fintraffic or HSL.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Alert
+  effect:
+    slot_uri: jc:effect
+    description: What an HSL service alert does to the service, as GTFS-RT names it, such as DETOUR or REDUCED_SERVICE.
+    annotations:
+      ngsi_ld_kind: Property
+  cause:
+    slot_uri: jc:cause
+    description: Why an HSL service alert is in force, as GTFS-RT names it, such as CONSTRUCTION or MAINTENANCE.
+    annotations:
+      ngsi_ld_kind: Property
+  severity:
+    slot_uri: sdm:severity
+    description: How much the alert matters, informational, medium or high (GTFS-RT INFO, WARNING, SEVERE).
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Alert
+  refRoute:
+    slot_uri: jc:refRoute
+    description: The lines an HSL service alert affects, each a GtfsRoute of this space.
+    range: GtfsRoute
+    multivalued: true
+    inverse: routeAlerts
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
+      on_delete: set-null
+  refStop:
+    slot_uri: jc:refStop
+    description: The stops an HSL service alert affects, each a GtfsStop of this space.
+    range: GtfsStop
+    multivalued: true
+    inverse: stopAlerts
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
+      on_delete: set-null
+    # T-3893: a vehicle's links to the line it runs and the stop it is at or heading to. They name
+    # entities by URN and point outside the model (uriorcurie): the hub carries Vehicle slot for
+    # slot without the GTFS classes (DM-61), and a vehicle is written even before the day's GTFS
+    # read holds its line or stop.
+  onRoute:
+    slot_uri: jc:onRoute
+    description: The line the vehicle is running, the URN of a GtfsRoute of this space.
+    range: uriorcurie
+    annotations:
+      ngsi_ld_kind: Relationship
+  nextStop:
+    slot_uri: jc:nextStop
+    description: >-
+      The stop the vehicle stands at or comes to next, the URN of a GtfsStop of this space; HSL
+      moves it on at each departure from or passing of a stop.
+    range: uriorcurie
+    annotations:
+      ngsi_ld_kind: Relationship
+  delay:
+    slot_uri: jc:delay
+    description: Seconds behind the timetable, negative when ahead (HSL's dl with the sign turned).
+    range: integer
+    unit:
+      ucum_code: s
+    annotations:
+      ngsi_ld_kind: Property
+  occupancy:
+    slot_uri: jc:occupancy
+    description: How full the vehicle is, in percent; HSL sends 0 (room) or 100 (full).
+    range: integer
+    minimum_value: 0
+    maximum_value: 100
+    unit:
+      ucum_code: '%'
+    annotations:
+      ngsi_ld_kind: Property
+  routeAlerts:
+    slot_uri: jc:routeAlerts
+    description: The HSL service alerts on the line, computed from their refRoute and never stored.
+    range: Alert
+    multivalued: true
+    inverse: refRoute
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
+  stopAlerts:
+    slot_uri: jc:stopAlerts
+    description: The HSL service alerts on the stop, computed from their refStop and never stored.
+    range: Alert
+    multivalued: true
+    inverse: refStop
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
+  unknownReference:
+    slot_uri: jc:unknownReference
+    description: >-
+      What an HSL service alert names that this space holds no entity for, as `route:<id>` or
+      `stop:<id>`, kept as text rather than as a relationship that would point at nothing.
+    multivalued: true
+    annotations:
+      ngsi_ld_kind: Property
   validFrom:
     slot_uri: sdm:validFrom
     description: When the situation starts.
@@ -338,7 +472,7 @@ slots:
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
   totalSpotNumber:
     slot_uri: sdm:totalSpotNumber
-    description: The number of cars the area holds, as the publisher estimates it.
+    description: The number of vehicles the site holds, as the publisher states or estimates it; for a park and ride site, of its own kind (car or bicycle).
     range: integer
     minimum_value: 0
     annotations:
@@ -488,6 +622,154 @@ slots:
     multivalued: true
     annotations:
       ngsi_ld_kind: Property
+  availableSpotNumber:
+    slot_uri: sdm:availableSpotNumber
+    description: Free spaces at the park and ride site when it last reported, LIIPI's spacesAvailable.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Parking
+  allowedVehicleType:
+    slot_uri: sdm:allowedVehicleType
+    description: What may park, the site's own kind first (car or bicycle), then motorcycle where it has spaces for them.
+    multivalued: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Parking
+  capacityByType:
+    slot_uri: jc:capacityByType
+    description: >-
+      The built capacity per kind of space, as LIIPI names them in lower case (car, disabled,
+      bicycle, electricCar, motorcycle, bicycleSecureSpace), each a count.
+    annotations:
+      ngsi_ld_kind: JsonProperty
+  refNearestStation:
+    slot_uri: jc:refNearestStation
+    description: The HSL station within 500 m of the park and ride site, the nearest one, a GtfsStation of this space.
+    range: GtfsStation
+    inverse: nearbyParking
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
+      on_delete: set-null
+  nearbyParking:
+    slot_uri: jc:nearbyParking
+    description: The park and ride sites whose nearest station this is, computed from their refNearestStation and never stored.
+    range: OffStreetParking
+    multivalued: true
+    inverse: refNearestStation
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
+  departures:
+    slot_uri: jc:departures
+    description: >-
+      The next departures from the stop, at most five, soonest first, each an object with the
+      line (`route`, the GtfsRoute's id, and `routeId`), its `directionId`, the `expected` time
+      and its `status` (scheduled, skipped or canceled), and `delay` in seconds with the
+      `scheduled` time it implies when HSL sends one. Set every 30 s for a curated set of stops
+      from HSL's GTFS-RT trip updates; empty after five minutes without a feed.
+    annotations:
+      ngsi_ld_kind: JsonProperty
+  wheelChairAccessible:
+    slot_uri: sdm:wheelChairAccessible
+    description: Whether a wheelchair can board here, GTFS's wheelchair_boarding; 0 unknown, 1 possible, 2 not possible.
+    pattern: "^[012]$"
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  hasParentStation:
+    slot_uri: sdm:hasParentStation
+    description: The station the stop or platform belongs to; absent for a stop on its own.
+    range: GtfsStation
+    inverse: hasStop
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  hasStop:
+    slot_uri: sdm:hasStop
+    description: The platforms of the station, computed from their hasParentStation and never stored.
+    range: GtfsStop
+    multivalued: true
+    inverse: hasParentStation
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  page:
+    slot_uri: sdm:page
+    description: The publisher's web page about it.
+    range: uri
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  agencyName:
+    slot_uri: sdm:agencyName
+    description: The transit agency's full name.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  timezone:
+    slot_uri: sdm:timezone
+    description: The agency's time zone, an IANA name such as Europe/Helsinki.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  language:
+    slot_uri: sdm:language
+    description: The agency's main language, a two-letter code.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  phone:
+    slot_uri: sdm:phone
+    description: The agency's public customer service number.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  shortName:
+    slot_uri: sdm:shortName
+    description: The line number riders see, such as 4 or 550.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  routeType:
+    slot_uri: sdm:routeType
+    description: >-
+      GTFS's basic route type: 0 a tram, 1 the metro, 2 a train, 3 a bus, 4 a ferry. HSL's
+      extended codes (109, 700s, 900) are written as the basic one they extend.
+    pattern: "^[0-7]$"
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  operatedBy:
+    slot_uri: sdm:operatedBy
+    description: The agency that runs the line.
+    range: GtfsAgency
+    inverse: routes
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  routes:
+    slot_uri: jc:routes
+    description: The lines the agency operates, computed from their operatedBy and never stored.
+    range: GtfsRoute
+    multivalued: true
+    inverse: operatedBy
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
+  distanceTravelled:
+    slot_uri: sdm:distanceTravelled
+    description: The distance along the shape at each point of its line, in kilometres.
+    range: float
+    multivalued: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
 
 classes:
   Event:
@@ -521,7 +803,7 @@ classes:
       - source
   Vehicle:
     class_uri: sdm:Vehicle
-    description: One HSL bus on a trunk line, where it is and how fast it moves.
+    description: One HSL bus, tram, metro, train or ferry in service, where it is, how fast it moves and how late it runs.
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
@@ -530,7 +812,12 @@ classes:
       - heading
       - route
       - vehicleType
+      - transportMode
       - fleetVehicleId
+      - onRoute
+      - nextStop
+      - delay
+      - occupancy
   NewsArticle:
     class_uri: schema:NewsArticle
     description: One item of the City of Helsinki's news feed.
@@ -562,7 +849,9 @@ classes:
       - source
   Alert:
     class_uri: sdm:Alert
-    description: One road work or traffic announcement of Fintraffic in the capital region.
+    description: >-
+      One road work or traffic announcement of Fintraffic in the capital region, or one service
+      alert of HSL with the lines and stops it affects.
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Alert
@@ -571,10 +860,17 @@ classes:
       - description
       - category
       - subCategory
+      - alertSource
+      - effect
+      - cause
+      - severity
       - address
       - dateIssued
       - validFrom
       - validTo
+      - refRoute
+      - refStop
+      - unknownReference
       - source
   AirQualityObserved:
     class_uri: sdm:AirQualityObserved
@@ -636,6 +932,24 @@ classes:
       - totalSpotNumber
       - dataProvider
       - source
+  OffStreetParking:
+    class_uri: sdm:OffStreetParking
+    description: >-
+      One park and ride site of the HSL area from Fintraffic's LIIPI register (T-3894), where it is,
+      what it holds, whether it is open, the free spaces when it reports them, and its station.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Parking
+    slots:
+      - name
+      - status
+      - allowedVehicleType
+      - totalSpotNumber
+      - capacityByType
+      - availableSpotNumber
+      - refNearestStation
+      - dataProvider
+      - source
   ParkingZone:
     class_uri: jc:ParkingZone
     description: One parking fee zone or resident parking zone of the city, its outline and its rules.
@@ -690,6 +1004,11 @@ classes:
       - description
       - fareZone
       - transportMode
+      - wheelChairAccessible
+      - hasParentStation
+      - departures
+      - stopAlerts
+      - page
       - dataProvider
       - source
   TransitRoute:
@@ -708,6 +1027,81 @@ classes:
       - stopSequence
       - dataProvider
       - source
+  GtfsStation:
+    class_uri: sdm:GtfsStation
+    description: One HSL station (GTFS location type 1), where it is and the platforms it gathers.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+    slots:
+      - name
+      - fareZone
+      - transportMode
+      - wheelChairAccessible
+      - hasStop
+      - nearbyParking
+      - page
+      - dataProvider
+      - source
+  GtfsAgency:
+    class_uri: sdm:GtfsAgency
+    description: The transit agency HSL's GTFS feed names, HSL itself.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+    slots:
+      - agencyName
+      - page
+      - timezone
+      - language
+      - phone
+      - routes
+      - dataProvider
+      - source
+  GtfsRoute:
+    class_uri: sdm:GtfsRoute
+    description: >-
+      One HSL line as GTFS gives it, both directions and every variant: its number, its name,
+      what runs it and who operates it. Its stops in order are TransitRoute's.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+    slots:
+      - shortName
+      - name
+      - routeType
+      - transportMode
+      - operatedBy
+      - routeAlerts
+      - page
+      - dataProvider
+      - source
+  GtfsShape:
+    class_uri: sdm:GtfsShape
+    description: >-
+      The line one HSL route variant draws on the map, about 200 of its points, and the distance
+      travelled at each.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+    slots:
+      - name
+      - distanceTravelled
+      - dataProvider
+      - source
+
+  PostalAddress:
+    class_uri: schema:PostalAddress
+    description: >-
+      The value of `address`: a postal address, never an entity of its own (Smart Data Models'
+      common schema).
+    annotations:
+      upstream_source: https://schema.org/PostalAddress
+    slots:
+      - streetAddress
+      - postalCode
+      - addressLocality
+      - addressCountry
 
 enums:
   ServiceCategory:

@@ -11,7 +11,13 @@
   <div>
     <a class="heading" href="{{ url }}">{{ name }}</a>
     {% if jc_what %}<p>{{ jc_what }}</p>{% endif %}
-    {% if res.description %}<p class="description">{{ h.markdown_extract(h.get_translated(res, 'description'), extract_length=120) }}</p>{% endif %}
+    {% set usage = h.jc_usage(res) if jc_section == 'api' and not url_is_edit else [] %}
+    {% if usage %}
+      <details class="jc-usage">
+        <summary>{{ h.jc_t('usage') }}</summary>
+        {% snippet 'package/snippets/jc_usage.html', blocks=usage, res=res %}
+      </details>
+    {% elif res.description %}<p class="description">{{ h.markdown_extract(h.get_translated(res, 'description'), extract_length=120) }}</p>{% endif %}
   </div>
   {% if not url_is_edit %}
     <div class="jc-resource-actions">

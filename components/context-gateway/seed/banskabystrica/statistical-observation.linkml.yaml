@@ -66,8 +66,8 @@ slots:
       without matching on an id pattern. Absent when the table has no further dimension.
     annotations:
       ngsi_ld_kind: Property
-  value:
-    slot_uri: jc:value
+  observationValue:
+    slot_uri: jc:observationValue
     description: >-
       The number, exactly as published. Its unit varies with the indicator and travels on the
       Property as `unitCode`, a UN/CEFACT common code, beside `unitText`.
@@ -117,7 +117,7 @@ classes:
       - refArea
       - refPeriod
       - dimensionKey
-      - value
+      - observationValue
       - unitText
       - source
       - dateObserved

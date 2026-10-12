@@ -637,3 +637,86 @@ def test_the_catalogue_pod_is_told_its_assistant_only_when_the_assistant_is_depl
         path.write_text(text.replace("\n  - assistant\n", "\n", 1))
 
     assert widget(rendered_variant("dev", without_assistant)) == ""
+
+
+# The usage texts `jcctl publish ckan` writes on the API resources (T-3886), for a restricted
+# Endpoint on dev.example: a paragraph, an indented command, a paragraph.
+WS_USAGE = (
+    "Live updates: open one WebSocket, subscribe to the entities you want.\n\n"
+    "    websocat -H \"Authorization: Bearer $TOKEN\" 'wss://dev.example/api/endpoint/hkiair/ws'\n"
+    "    {\"metadata\":{\"x-op\":\"x-subscribe\",\"x-id\":\"s1\"},\"body\":{\"type\":\"Subscription\"}}\n\n"
+    "Always live: the catalogue holds this link, never a copy. Answers what the endpoint's policy lets "
+    "the caller read: send a bearer token for the endpoint; without one it answers 401."
+)
+
+EVERY_SURFACE = PUBLISHED_RESOURCES + [
+    {"id": "r-ws", "name": "Live updates over WebSocket", "format": "WebSocket", "url": ENDPOINT + "ws",
+     "description": WS_USAGE},
+    {"id": "r-ogc", "name": "OGC API - Features", "format": "OGCFEAT", "url": ENDPOINT + "ogc/features/"},
+    {"id": "r-odata", "name": "OData v4", "format": "OData", "url": ENDPOINT + "odata/v4/"},
+    {"id": "r-xlsx", "name": "Excel spreadsheet", "format": "XLSX", "url": ENDPOINT + "file.xlsx"},
+]
+
+
+def test_every_live_surface_is_in_the_api_and_live_access_section(theme):
+    """T-3887, EP-108: WebSocket, OGC API - Features and OData are APIs a program calls, beside
+    NGSI-LD and MCP; the spreadsheet is a download."""
+    sections = {s["key"]: s for s in theme.jc_resource_sections({"resources": EVERY_SURFACE})}
+    assert [i["resource"]["id"] for i in sections["api"]["items"]] == ["r-ngsi", "r-ws", "r-mcp", "r-ogc", "r-odata"]
+    assert sections["api"]["title"] == "API and live access"
+    assert "r-xlsx" in [i["resource"]["id"] for i in sections["data"]["items"]]
+    words = {i["resource"]["id"]: i["what"] for i in sections["api"]["items"]}
+    assert "WebSocket" in words["r-ws"] and "Power BI" in words["r-odata"]
+    # A dataset without the WebSocket surface shows no WebSocket row.
+    without = [r for r in EVERY_SURFACE if r["format"] != "WebSocket"]
+    api = [s for s in theme.jc_resource_sections({"resources": without}) if s["key"] == "api"][0]
+    assert all(i["format"] != "WebSocket" for i in api["items"])
+
+
+def test_an_api_resource_shows_its_usage_with_its_commands_to_copy(theme):
+    (ws,) = [r for r in EVERY_SURFACE if r["id"] == "r-ws"]
+    blocks = theme.jc_usage(ws)
+    assert [b["code"] for b in blocks] == [False, True, False]
+    command = blocks[1]
+    assert command["text"].startswith("websocat -H \"Authorization: Bearer $TOKEN\" 'wss://dev.example/")
+    assert command["rows"] == 2 and command["id"] == "jc-use-r-ws-1"
+    # A file has no usage blocks; its description is CKAN's one-line extract.
+    assert theme.jc_usage({"id": "r-csv", "format": "CSV", "url": ENDPOINT + "file.csv", "description": WS_USAGE}) == []
+    assert theme.jc_usage({"format": "MCP"}) == []
+
+
+@pytest.mark.parametrize("leak", [
+    "    curl -H \"Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ4In0.c2ln\" 'https://dev.example/x'",
+    "    curl -H \"Authorization: Bearer 0123456789abcdef0123\" 'https://dev.example/x'",
+    "    websocat 'wss://context-gateway.jc.svc.cluster.local:8080/api/endpoint/hkiair/ws'",
+    "Open https://dev.example.evil/x to start.",
+])
+def test_a_usage_block_with_a_token_or_an_internal_address_never_reaches_the_page(theme, leak):
+    """EP-110: the page shows `$TOKEN` and the platform's own addresses, nothing else."""
+    resource = {"id": "r", "format": "NGSI-LD", "url": ENDPOINT, "description": "Query it.\n\n" + leak}
+    assert [b["text"] for b in theme.jc_usage(resource)] == ["Query it."]
+
+
+def test_the_websocket_guide_is_linked_only_from_the_installation_s_documentation(theme, monkeypatch):
+    ws = {"format": "WebSocket"}
+    assert theme.jc_guide(ws) is None
+    monkeypatch.setitem(theme.BRANDING, "documentationBaseUrl", "https://docs.dev.example/")
+    assert theme.jc_guide(ws) == "https://docs.dev.example/API/07-websocket"
+    assert theme.jc_guide({"format": "NGSI-LD"}) is None
+    # A usage text may link the guide's host.
+    linked = {"id": "r", "format": "WebSocket", "description": "Guide: https://docs.dev.example/API/07-websocket"}
+    assert len(theme.jc_usage(linked)) == 1
+    for unsafe in ("javascript:alert(1)", "http://docs.dev.example", "https://docs.dev.example/\"onload=x"):
+        monkeypatch.setitem(theme.BRANDING, "documentationBaseUrl", unsafe)
+        assert theme.jc_guide(ws) is None, unsafe
+
+
+def test_an_api_resource_page_shows_its_usage_where_ckan_said_no_view():
+    page = (THEME / "templates__package__resource_read.html").read_text()
+    assert "(not api and h.check_access('resource_view_create'" in page
+    assert "package/snippets/jc_usage.html" in page and "/jc-copy.js" in page
+    item = (THEME / "templates__package__snippets__resource_item.html").read_text()
+    assert "h.jc_usage(res) if jc_section == 'api' and not url_is_edit" in item
+    snippet = (THEME / "templates__package__snippets__jc_usage.html").read_text()
+    assert 'data-jc-copy="{{ block.id }}"' in snippet and "readonly" in snippet
+    assert "|safe" not in snippet

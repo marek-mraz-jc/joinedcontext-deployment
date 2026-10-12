@@ -10,7 +10,7 @@
   "refArea": { "type": "Property", "value": "SK031B517402" },
   "refPeriod": { "type": "Property", "value": "2026Q2" },
   "dimensionKey": { "type": "Property", "value": "SPOLU" },
-  "value": { "type": "Property", "value": 79617, "unitCode": "C62" },
+  "observationValue": { "type": "Property", "value": 79617, "unitCode": "C62" },
   "unitText": { "type": "Property", "value": "osoba" },
   "source": {
     "type": "Property",

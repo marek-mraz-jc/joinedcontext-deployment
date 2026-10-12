@@ -288,7 +288,9 @@ def test_the_note_is_optional_and_bounded_and_the_figures_stay_required():
             "StatisticalObservation"
         ]
         assert NOTE not in entity["required"], "a row exists before anybody annotates it"
-        assert "value" in entity["required"], folder.name
+        assert "observationValue" in entity["required"], folder.name
+        # `value` is an NGSI-LD core term; a slot of that name would collide with it (T-3964).
+        assert "value" not in entity["properties"], folder.name
         note = entity["properties"][NOTE]
         # The gateway validates every write against this schema (CC-12), so the bound on a
         # free-text attribute is here and not only in the application that offers the field.
@@ -319,7 +321,7 @@ def test_a_person_may_write_the_note_and_may_not_write_a_figure():
 
 def test_no_grant_in_these_projects_lets_a_person_write_a_published_figure():
     # The property that has to hold however many policies are added later: a human write grant
-    # over a raw space reaches the note and nothing else, so `value` cannot be edited by anyone
+    # over a raw space reaches the note and nothing else, so `observationValue` cannot be edited by anyone
     # whose typing the next pipeline run would overwrite (AP-62, GW17).
     writes = {"createEntity", "updateEntity", "appendAttrs", "updateAttrs", "deleteAttrs",
               "deleteEntity", "mergeEntity", "replaceEntity", "replaceAttrs", "updateOps",

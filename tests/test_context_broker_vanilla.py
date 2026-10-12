@@ -34,10 +34,11 @@ def test_the_broker_mounts_no_configuration_of_the_plane(broker_pod):
 
 
 def test_the_broker_runs_the_surfaces_and_requires_its_admin_credential(broker_pod):
-    """T-3642: the views, MCP and access surfaces beside `/q`, the subject headers the gateway sets
-    (platform T-3641), and `/q` behind the mounted secret with only the metrics open."""
+    """T-3642: the views, MCP, access, WebSocket, OGC and (T-3804) LinkML surfaces beside `/q`, the
+    subject headers the gateway sets (platform T-3641), and `/q` behind the mounted secret with only
+    the metrics open."""
     env = {e["name"]: e.get("value") for e in broker_pod["containers"][0].get("env", [])}
-    assert env["ANTARES_API_SURFACES"].split(",") == ["admin", "views", "mcp", "access", "ws"]
+    assert env["ANTARES_API_SURFACES"].split(",") == ["admin", "views", "mcp", "access", "ws", "ogc", "linkml"]
     # T-3905: the view WebSocket is bounded for the one node, under the broker's own defaults.
     assert 0 < int(env["ANTARES_WS_MAX_CONNECTIONS_PER_TENANT"]) <= int(env["ANTARES_WS_MAX_CONNECTIONS"]) <= 1000
     assert 0 < int(env["ANTARES_WS_MAX_SUBSCRIPTIONS"]) <= 64
@@ -62,3 +63,35 @@ def test_the_broker_is_told_only_its_own_settings(broker_pod):
     foreign = {n for n in names if not (n.startswith("ANTARES_") or n == "PGPASSWORD")}
     assert foreign == set()
     assert not any("REPO" in n or n.startswith("JC_") or n.startswith("GITSYNC") for n in names)
+
+
+def test_the_broker_s_mcp_answers_the_host_the_gateway_calls(rendered, broker_pod):
+    """T-3647: the gateway reaches an Endpoint's MCP on the broker by its Service name; the MCP
+    surface refuses any Host it does not list (DNS rebinding), so the two must name the same."""
+    env = {e["name"]: e.get("value") for e in broker_pod["containers"][0].get("env", [])}
+    gateway = next(d for d in rendered("dev") if d.get("kind") == "Deployment"
+                   and d["metadata"]["name"] == "context-gateway")
+    gateway_env = {e["name"]: e.get("value") for c in gateway["spec"]["template"]["spec"]["containers"]
+                   for e in c.get("env", [])}
+    authority = gateway_env["JC_GATEWAY_BROKER_URL"].split("://", 1)[1].split("/", 1)[0]
+    assert authority in env["ANTARES_MCP_ALLOWED_HOSTS"].split(","), (authority, env["ANTARES_MCP_ALLOWED_HOSTS"])
+
+
+def test_the_broker_reaches_only_the_private_peers_it_names(rendered, broker_pod):
+    """T-3909, Antares T-3908: private egress is off, and the list names exactly the gateway's
+    egress Service and the broker's own Service (the endpoint of every federation registration),
+    each a Service host of this cluster: no wildcard, no address, no loopback."""
+    env = {e["name"]: e.get("value") for e in broker_pod["containers"][0].get("env", [])}
+    assert env["ANTARES_EGRESS_ALLOW_PRIVATE"] == "false"
+    hosts = env["ANTARES_EGRESS_PRIVATE_HOSTS"].split(",")
+    workloads = rendered("dev")
+    env_of = lambda name: {e["name"]: e.get("value") for d in workloads
+                           if d.get("kind") == "Deployment" and d["metadata"]["name"] == name
+                           for c in d["spec"]["template"]["spec"]["containers"] for e in c.get("env", [])}
+    host = lambda url: url.split("://", 1)[1].split("/", 1)[0].split(":", 1)[0]
+    expected = {host(env_of("context-gateway")["JC_GATEWAY_EGRESS_URL"]),
+                host(env_of("context-gateway")["JC_GATEWAY_BROKER_URL"])}
+    assert sorted(hosts) == sorted(expected), (hosts, expected)
+    for name in hosts:
+        assert name.endswith(".svc.cluster.local") and "*" not in name, name
+        assert not name.replace(".", "").isdigit() and "localhost" not in name, name

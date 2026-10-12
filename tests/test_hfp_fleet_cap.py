@@ -16,6 +16,7 @@ from pathlib import Path
 
 import yaml
 
+import open_data
 from open_data import BENTO, requires_docker
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -24,18 +25,29 @@ RESOURCES = ROOT / "components/pipeline-runner/streams/resources.yaml"
 TTL_S = 2
 
 
-def frame(vehicle: int, phase: str) -> str:
-    return json.dumps({"VP": {
-        "oper": 22, "veh": vehicle, "long": 24.94, "lat": 60.17, "spd": 8.5, "hdg": 90,
-        "route": "2550", "tst": f"2026-09-25T16:{phase}:00.000Z",
-    }})
+def topic(mode: str, oper: int, vehicle: int, route: str, next_stop: str = "1040601") -> str:
+    """The HFP topic a frame arrives on; the mapping reads the mode and the next stop from it."""
+    return f"/hfp/v2/journey/ongoing/vp/{mode}/{oper:04d}/{vehicle:05d}/{route}/1/Kamppi/16:00/{next_stop}/5/60;24/19/75/45"
+
+
+def frame(vehicle: int, phase: str, mode: str = "bus", oper: int = 22, route: str = "2550", **fields) -> str:
+    vp = {"oper": oper, "veh": vehicle, "long": 24.94, "lat": 60.17, "spd": 8.5, "hdg": 90,
+          "route": route, "tst": f"2026-09-25T16:{phase}:00.000Z"} | fields
+    return json.dumps({"topic": topic(mode, oper, vehicle, route), "VP": vp})
+
+
+def pipeline(**extra) -> dict:
+    """The committed mapping behind a step that sets the topic as the runner's MQTT input does."""
+    committed = yaml.safe_load(MAPPING.read_text())["pipeline"]
+    as_mqtt = {"mapping": 'meta mqtt_topic = this.topic\nroot = this.without("topic")'}
+    return {**committed, "processors": [as_mqtt, *committed["processors"]], **extra}
 
 
 def caches() -> list[dict]:
     resources = yaml.safe_load(RESOURCES.read_text())["cache_resources"]
     for cache in resources:
-        # The slot silence window, shortened; the throttle off, so every frame is a write.
-        cache["memory"]["default_ttl"] = f"{TTL_S}s" if cache["label"] == "fleet" else "1ms"
+        # The slot silence window, shortened.
+        cache["memory"]["default_ttl"] = f"{TTL_S}s"
         cache["memory"]["compaction_interval"] = "1s"
     return resources
 
@@ -44,7 +56,7 @@ def caches() -> list[dict]:
 def test_a_slot_is_freed_by_silence_and_kept_by_reporting():
     config = {
         "input": {"stdin": {"scanner": {"lines": {}}}},
-        "pipeline": yaml.safe_load(MAPPING.read_text())["pipeline"],
+        "pipeline": pipeline(),
         "cache_resources": caches(),
         "output": {"stdout": {"codec": "lines"}},
         "logger": {"level": "error"},
@@ -133,11 +145,11 @@ def test_a_report_without_a_gps_fix_is_dropped_and_a_missing_speed_is_left_out()
         vp = {"oper": 22, "veh": vehicle, "long": 24.94, "lat": 60.17, "spd": 8.5, "hdg": 90,
               "route": "2510", "tst": "2026-10-06T17:26:13.575Z", "loc": "GPS"}
         vp.update(fields)
-        return json.dumps({"VP": vp})
+        return json.dumps({"topic": topic("bus", 22, vehicle, "2510"), "VP": vp})
 
     config = {
         "input": {"stdin": {"scanner": {"lines": {}}}},
-        "pipeline": yaml.safe_load(MAPPING.read_text())["pipeline"],
+        "pipeline": pipeline(),
         "cache_resources": caches(),
         "output": {"stdout": {"codec": "lines"}},
         "logger": {"level": "error"},
@@ -168,18 +180,18 @@ def test_a_report_without_a_gps_fix_is_dropped_and_a_missing_speed_is_left_out()
 
 @requires_docker
 def test_a_full_fleet_and_a_repeat_count_no_processor_error():
-    """T-3186: dev counted 5.4 M errors of 792 k frames. The mapping probed the `fleet` and
-    `throttle` caches with `get` and `add` and caught the misses, and Bento counts every caught
-    miss in `processor_error`, which the Portal shows as the pipeline's errors: 40 buses for 30
-    slots made 805. Probing with `exists` first, a fleet that is full, a bus that repeats within
-    the throttle and a bus without a slot are no error at all."""
+    """T-3186: dev counted 5.4 M errors of 792 k frames. The mapping probed its caches with
+    `get` and `add` and caught the misses, and Bento counts every caught miss in
+    `processor_error`, which the Portal shows as the pipeline's errors: 40 buses for 30 slots
+    made 805. Probing with `exists` first, a fleet that is full, a bus that repeats and a bus
+    without a slot are no error at all."""
     config = {
         "input": {"stdin": {"scanner": {"lines": {}}}},
         # One thread: what is measured is the probing. On several threads two new buses can
         # still race for one free slot, and the loser's `add` is the one error left (the
         # mapping's ponytail note).
-        "pipeline": {**yaml.safe_load(MAPPING.read_text())["pipeline"], "threads": 1},
-        # The runner's own ttls: a repeat within fifteen seconds is throttled, a slot is held.
+        "pipeline": pipeline(threads=1),
+        # The runner's own ttl: a slot is held.
         "cache_resources": yaml.safe_load(RESOURCES.read_text())["cache_resources"],
         "output": {"stdout": {"codec": "lines"}},
         "metrics": {"logger": {"push_interval": "", "flush_metrics": True}},
@@ -197,7 +209,116 @@ def test_a_full_fleet_and_a_repeat_count_no_processor_error():
     errors = sum(int(c["value"]) for c in counters if c["name"] == "processor_error")
     received = sum(int(c["value"]) for c in counters if c["name"] == "input_received")
     assert received == 80, counters
-    # The cap still holds: thirty buses written, once each, the repeats throttled.
+    # The cap still holds: thirty buses written, each twice (T-3906), the other ten never.
     written = [json.loads(line)["fleetVehicleId"]["value"] for line in result.stdout.splitlines() if line.strip()]
-    assert len(written) == len(set(written)) == 30, written
+    assert len(written) == 60 and len(set(written)) == 30, written
+    assert all(written.count(bus) == 2 for bus in set(written)), written
     assert errors == 0, f"{errors} processor errors for {received} frames"
+
+
+@requires_docker
+def test_every_frame_of_an_admitted_bus_is_a_write():
+    """T-3906: an admitted bus writes every position report it sends, about one a second, so the
+    map follows the feed; the cap on how many buses are admitted is what bounds the load. A
+    15-second throttle once made the map move in jumps."""
+    config = {
+        "input": {"stdin": {"scanner": {"lines": {}}}},
+        "pipeline": pipeline(),
+        "cache_resources": yaml.safe_load(RESOURCES.read_text())["cache_resources"],
+        "output": {"stdout": {"codec": "lines"}},
+        "logger": {"level": "error"},
+    }
+    frames = [
+        json.dumps({"topic": topic("bus", 22, 7, "2550"), "VP": {
+            "oper": 22, "veh": 7, "long": 24.94 + i / 1000, "lat": 60.17, "spd": 8.5, "hdg": 90,
+            "route": "2550", "tst": f"2026-10-12T08:00:0{i}.000Z"}})
+        for i in range(10)
+    ]
+    result = subprocess.run(
+        ["docker", "run", "--rm", "-i", "-e", "JC_ORG_DOMAIN=hel.fi", "-e", "JC_SPACE=helsinki",
+         "-e", f"CONFIG={json.dumps(config)}", "--entrypoint", "sh", BENTO, "-c",
+         'printf "%s" "$CONFIG" > /tmp/c.json && exec /bento -c /tmp/c.json'],
+        input="".join(line + "\n" for line in frames), capture_output=True, text=True, timeout=120,
+    )
+    assert result.returncode == 0, result.stderr
+    written = [json.loads(line) for line in result.stdout.splitlines() if line.strip()]
+    assert sorted(e["location"]["observedAt"] for e in written) == [
+        f"2026-10-12T08:00:0{i}.000Z" for i in range(10)
+    ], written
+    assert {e["fleetVehicleId"]["value"] for e in written} == {"22-7"}
+
+
+def bento(frames: list[str], **extra) -> list[dict]:
+    config = {
+        "input": {"stdin": {"scanner": {"lines": {}}}},
+        "pipeline": pipeline(**extra),
+        "cache_resources": yaml.safe_load(RESOURCES.read_text())["cache_resources"],
+        "output": {"stdout": {"codec": "lines"}},
+        "logger": {"level": "error"},
+    }
+    result = subprocess.run(
+        ["docker", "run", "--rm", "-i", "-e", "JC_ORG_DOMAIN=hel.fi", "-e", "JC_SPACE=helsinki",
+         "-e", f"CONFIG={json.dumps(config)}", "--entrypoint", "sh", BENTO, "-c",
+         'printf "%s" "$CONFIG" > /tmp/c.json && exec /bento -c /tmp/c.json'],
+        input="".join(line + "\n" for line in frames), capture_output=True, text=True, timeout=120,
+    )
+    assert result.returncode == 0, result.stderr
+    return [json.loads(line) for line in result.stdout.splitlines() if line.strip()]
+
+
+@requires_docker
+def test_each_mode_has_its_own_cap_and_a_full_one_never_takes_another_modes_slot():
+    """T-3893: 30 buses, 30 trams, 10 metros, 15 trains, 5 ferries. Twelve metros and seven
+    ferries arrive first and fill their modes; the trams and buses after them are all admitted,
+    and a mode outside the list is never written."""
+    frames = (
+        [frame(v, "01", "metro", 50, "31M1") for v in range(1, 13)]
+        + [frame(v, "01", "ferry", 60, "1019") for v in range(1, 8)]
+        + [frame(v, "01", "tram", 40, "1009") for v in range(1, 21)]
+        + [frame(v, "01", "train", 90, "3001K") for v in range(1, 4)]
+        + [frame(v, "01") for v in range(1, 6)]
+        + [frame(v, "01", "ubus", 12, "1500") for v in range(1, 3)]
+    )
+    written: dict[str, set[str]] = {}
+    for entity in bento(frames, threads=1):
+        written.setdefault(entity["transportMode"]["value"], set()).add(entity["fleetVehicleId"]["value"])
+    assert {mode: len(vehicles) for mode, vehicles in written.items()} == {
+        "metro": 10, "ferry": 5, "tram": 20, "train": 3, "bus": 5}
+    # The first ten metros hold the slots, so the last two are the ones left out.
+    assert written["metro"] == {f"50-{v}" for v in range(1, 11)}
+
+
+@requires_docker
+def test_a_vehicle_links_its_line_and_next_stop_and_says_how_late_and_full_it_runs():
+    tram, at_end, quiet = bento([
+        frame(3, "01", "tram", 40, "1009", dl=-95, occu=100),
+        json.dumps({"topic": topic("train", 90, 7, "3001K", "EOL"), "VP": {
+            "oper": 90, "veh": 7, "long": 24.94, "lat": 60.17, "route": "3001K",
+            "tst": "2026-09-25T16:01:00.000Z", "dl": 30, "occu": 0}}),
+        json.dumps({"topic": topic("ferry", 60, 4, "1019"), "VP": {
+            "oper": 60, "veh": 4, "long": 24.98, "lat": 60.15, "route": None, "tst": "2026-09-25T16:01:00.000Z"}}),
+    ], threads=1)
+    urn = "urn:ngsi-ld:{}:hel.fi:helsinki:{}"
+    assert tram["onRoute"]["object"] == urn.format("GtfsRoute", "1009")
+    assert tram["nextStop"]["object"] == urn.format("GtfsStop", "1040601")
+    # HSL's dl counts ahead of the timetable (-95: 95 s late); delay counts behind it.
+    assert tram["delay"]["value"] == 95 and tram["occupancy"]["value"] == 100
+    assert tram["transportMode"]["value"] == "tram" and tram["vehicleType"]["value"] == "tram"
+    # Past its last stop a train has no next stop.
+    assert "nextStop" not in at_end and at_end["delay"]["value"] == -30 and at_end["occupancy"]["value"] == 0
+    assert at_end["vehicleType"]["value"] == "other" and at_end["onRoute"]["object"] == urn.format("GtfsRoute", "3001K")
+    # A ferry frame without a route names no line.
+    assert not {"route", "onRoute"} & set(quiet) and quiet["vehicleType"]["value"] == "passengerVessel"
+    for entity in (tram, at_end, quiet):
+        assert not open_data.schema_errors(ROOT / "components/context-gateway/seed/helsinki/helsinki.v1.schema.json", entity), entity
+
+
+def test_the_topics_are_a_fixed_list_without_the_whole_bus_fleet():
+    topics = yaml.safe_load(
+        (ROOT / "components/context-gateway/seed/helsinki/helsinki-datasource-hfp.yaml").read_text()
+    )["spec"]["mqtt"]["topics"]
+    vp = "/hfp/v2/journey/ongoing/vp/"
+    assert [t for t in topics if not t.startswith(vp + "bus/")] == [
+        vp + f"{mode}/#" for mode in ("tram", "metro", "train", "ferry")]
+    assert all(t.startswith(vp + "bus/+/+/") and not t.startswith(vp + "bus/+/+/+") for t in topics if "/bus/" in t)
+    assert len(topics) == 8

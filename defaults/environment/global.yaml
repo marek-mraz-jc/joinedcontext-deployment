@@ -92,6 +92,21 @@ global:
     # the pair when they disagree.
     dcat: true
 
+  # The Context Brokers beside `main` (ADR-N-046 §2.5, PF-110, T-3989). `main` is always there:
+  # today's release `context-broker-broker`, Service `context-broker`, database on the platform's
+  # postgres-cluster, sized by the profile. Each entry here adds a release `context-broker-{name}`
+  # with its own CloudNativePG cluster `context-broker-{name}-db`, generated credentials, Keycloak
+  # client and audience `context-broker-{name}`, NetworkPolicies and ServiceMonitor; the gateway
+  # and the Portal reach it at `http://context-broker-{name}.{namespace}.svc.cluster.local:8080`.
+  # `size` is a preset of components/context-broker/sizes.yaml (small, medium, large);
+  # `storageClass` empty takes storage.storageClass.rwo. A name is a DNS label of at most 16
+  # characters, neither `main` nor `broker`.
+  #   contextBrokers:
+  #     - name: archive
+  #       size: small
+  #       storageClass: ''
+  contextBrokers: []
+
   # Service mesh configuration
   serviceMesh:
     enable: true
@@ -234,6 +249,9 @@ components:
   - context-broker
   - pipeline-runner
   - context-gateway
+  # The MQTT edge brokers (ADR-N-048): after the gateway, whose CONNECT check they call, and
+  # the runner, the one client of their internal listener.
+  - mqtt-brokers
   # The generator behind the LinkML editor; before the portal, which takes its address.
   - model-tools
   - portal

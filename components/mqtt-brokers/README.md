@@ -1,0 +1,39 @@
+# mqtt-brokers
+
+The MQTT edge brokers of the projects (`docs/Decisions/adr-n-048-mqtt-edge-brokers.md`,
+MF-54, PL-74, PL-76, PL-77): RMQTT 0.24.0 as published, one Deployment per `MqttBroker`,
+named `mqtt-{project}-{name}`. That name is also the broker's ServiceAccount, so its mesh
+identity, and its Keycloak audience.
+
+A broker keeps nothing. Each CONNECT goes to the gateway's `POST /internal/mqtt/auth` on
+port 8082 (rmqtt-auth-http, `deny_if_error`); the answer carries the client's ACL and the
+token's expiry, and the broker's own last rule, `["deny", "all"]`, refuses whatever the answer
+did not allow. No retainer, no session or message storage, sessions end with the connection.
+
+| Port | Listener | Who reaches it |
+|---|---|---|
+| 1883 | `internal`, plain MQTT | the pipeline runner only (NetworkPolicy and a Linkerd Server) |
+| 1884 | `external`, PROXY protocol v2 | the ingress controller only |
+| 8883 | Traefik entrypoint `mqtts`, TLS | devices, `HostSNI(<name>.<project>.mqtt.<domain>)`, one HTTP-01 certificate per host |
+
+RMQTT opens an HTTP API on 6060 and TLS, WebSocket and QUIC listeners on its own; the chart
+turns each of them off, and binds the cluster gRPC to loopback.
+
+`brokers` is empty in every environment: the Portal's reconciler stamps one release per
+manifest from this chart (T-3994). Until it does, an entry under
+`mqtt-brokers.brokers.brokers` runs one by hand.
+
+## Preconditions on the cluster
+
+The `mqtts` entrypoint is part of the cluster's Traefik, not of this repository: an entrypoint
+on 8883, published on the node with `externalTrafficPolicy: Local`, and its container port in
+Traefik's `config.linkerd.io/skip-inbound-ports`. Without the last one, Traefik sees every
+client as 127.0.0.1, writes that into the PROXY header, and the gateway reads a device as a
+client inside the cluster.
+
+## Not here yet
+
+- A dedicated `port` (18830-18849) per broker: on the node behind klipper and the Linkerd
+  inbound proxy, the broker would see every such client as a loopback address.
+- A per-publisher rate: RMQTT 0.24 has none. `messagesPerSecond` caps delivery to each
+  subscriber (`mqueue_rate_limit`).

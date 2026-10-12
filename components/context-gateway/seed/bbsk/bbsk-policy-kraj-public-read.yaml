@@ -16,4 +16,4 @@ spec:
     - entities:
         - type: StatisticalObservation
       propertyNames:
-        [dataSet, indicator, refArea, refPeriod, dimensionKey, value, unitText, source, dateObserved]
+        [dataSet, indicator, refArea, refPeriod, dimensionKey, observationValue, unitText, source, dateObserved]

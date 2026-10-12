@@ -1,0 +1,18 @@
+{#
+  An API resource's usage text (T-3887, EP-108): its paragraphs, each command as a read-only
+  field with a copy button (jc-copy.js; without script it is selected by hand), and the
+  WebSocket guide when the installation names its documentation.
+#}
+{% for block in blocks %}
+  {% if block.code %}
+    <div class="jc-copy jc-copy-code">
+      <label for="{{ block.id }}" class="visually-hidden">{{ h.jc_t('snippet') }}</label>
+      <textarea id="{{ block.id }}" class="form-control" readonly rows="{{ block.rows }}" spellcheck="false">{{ block.text }}</textarea>
+      <button type="button" class="btn btn-default" data-jc-copy="{{ block.id }}" data-jc-copied="{{ h.jc_t('copied') }}">{{ h.jc_t('copy') }}</button>
+    </div>
+  {% else %}
+    <p>{{ block.text }}</p>
+  {% endif %}
+{% endfor %}
+{% set guide = h.jc_guide(res) %}
+{% if guide %}<p><a href="{{ guide }}" rel="noreferrer">{{ h.jc_t('guide') }}</a></p>{% endif %}

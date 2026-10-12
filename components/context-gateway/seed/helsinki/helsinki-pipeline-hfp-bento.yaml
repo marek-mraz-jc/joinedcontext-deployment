@@ -1,8 +1,10 @@
-# The mapping of the hsl-hfp-vehicles pipeline (PL-03): HSL buses of four trunk lines from the
-# high-frequency positioning broker, capped at thirty buses at a time and one position per bus every
-# fifteen seconds (PL-22). The reconciler renders the MQTT input of the hsl-hfp DataSource in
-# front and the endpoint upsert after (PL-39, PL-16); the `fleet` and `throttle` caches are the
-# runner's resources.
+# The mapping of the hsl-hfp-vehicles pipeline (PL-03): HSL vehicles from the high-frequency
+# positioning broker, buses of four trunk lines and every tram, metro, train and ferry, capped per
+# mode (PL-22, T-3893): 30 buses, 30 trams, 10 metros, 15 trains, 5 ferries at a time. Every
+# position report of an admitted vehicle, about one a second, is one write and one notification
+# (T-3906); when the load budget is exceeded, the caps go down, never the rate. The
+# reconciler renders the MQTT input of the hsl-hfp DataSource in front and the endpoint upsert
+# after (PL-39, PL-16); the `fleet` cache is the runner's resource.
 
 pipeline:
   processors:
@@ -16,14 +18,23 @@ pipeline:
     - mapping: |
         root = if this.lat.type() == "number" && this.long.type() == "number" { this } else { deleted() }
 
-    # The bus this frame belongs to: operator and vehicle number, the local part of its URN.
+    # The vehicle this frame belongs to: operator and vehicle number, the local part of its URN.
+    # Its mode, and the stop it is at or comes to next, are only in the topic:
+    # /hfp/v2/journey/ongoing/vp/<mode>/<oper>/<veh>/<route>/<dir>/<headsign>/<start>/<next stop>/…
+    # A mode without a cap (a topic outside the DataSource's list) gets none and is dropped below.
     - mapping: |
+        let topic = meta("mqtt_topic").or("").split("/")
         meta vehicle = "%v-%v".format(this.oper, this.veh)
+        let mode = $topic.index(6).catch("")
+        meta mode = $mode
+        meta cap = {"bus": "30", "tram": "30", "metro": "10", "train": "15", "ferry": "5"}.get($mode).or("0")
+        meta next_stop = $topic.index(13).catch("")
 
-    # The cap: thirty slots, `slot-1` … `slot-30` in the `fleet` cache, each held by the bus that
-    # took it for as long as that bus keeps reporting. Every frame of a holder refreshes its two
-    # keys, a bus silent for the cache's ttl frees its slot, and a new bus takes the first free
-    # one or none while thirty are held. A slot is taken with `add`, which fails on a held key,
+    # The cap: per mode, `slot-<mode>-1` … `slot-<mode>-<cap>` in the `fleet` cache, each held by
+    # the vehicle that took it for as long as that vehicle keeps reporting. Every frame of a holder
+    # refreshes its two keys, a vehicle silent for the cache's ttl frees its slot, and a new one
+    # takes the first free slot of its mode or none while its mode's are all held; a full mode
+    # never takes another mode's slot. A slot is taken with `add`, which fails on a held key,
     # so two buses never share one. (`counter()` handed the slots out once: half an hour after a
     # start every bus drew a number above thirty and the feed went silent, T-2961.)
     #
@@ -41,11 +52,12 @@ pipeline:
           - mapping: |
               meta slot = "0"
               meta probe = "1"
+              meta key = "%v-%v".format(meta("mode"), meta("vehicle"))
           # The slot this bus holds, if the slot still names it.
           - cache:
               resource: fleet
               operator: exists
-              key: 'bus-${! meta("vehicle") }'
+              key: 'veh-${! meta("key") }'
           - switch:
               - check: 'content().string() == "true"'
                 processors:
@@ -53,25 +65,26 @@ pipeline:
                       - cache:
                           resource: fleet
                           operator: get
-                          key: 'bus-${! meta("vehicle") }'
+                          key: 'veh-${! meta("key") }'
                       - mapping: 'meta held = content().string()'
                       - cache:
                           resource: fleet
                           operator: get
-                          key: 'slot-${! meta("held") }'
+                          key: 'slot-${! meta("mode") }-${! meta("held") }'
                       - mapping: |
                           meta slot = if content().string() == meta("vehicle") { meta("held") } else { "0" }
                   - catch:
                       - mapping: 'root = ""'
           # Otherwise the first free one.
           - while:
+              # The largest cap.
               max_loops: 30
-              check: 'meta("slot") == "0" && meta("probe").number() <= 30'
+              check: 'meta("slot") == "0" && meta("probe").number() <= meta("cap").number()'
               processors:
                 - cache:
                     resource: fleet
                     operator: exists
-                    key: 'slot-${! meta("probe") }'
+                    key: 'slot-${! meta("mode") }-${! meta("probe") }'
                 - switch:
                     - check: 'content().string() == "false"'
                       processors:
@@ -79,7 +92,7 @@ pipeline:
                             - cache:
                                 resource: fleet
                                 operator: add
-                                key: 'slot-${! meta("probe") }'
+                                key: 'slot-${! meta("mode") }-${! meta("probe") }'
                                 value: '${! meta("vehicle") }'
                             - mapping: 'meta slot = meta("probe")'
                         - catch:
@@ -92,45 +105,27 @@ pipeline:
                   - cache:
                       resource: fleet
                       operator: set
-                      key: 'bus-${! meta("vehicle") }'
+                      key: 'veh-${! meta("key") }'
                       value: '${! meta("slot") }'
                   - cache:
                       resource: fleet
                       operator: set
-                      key: 'slot-${! meta("slot") }'
+                      key: 'slot-${! meta("mode") }-${! meta("slot") }'
                       value: '${! meta("vehicle") }'
           - mapping: 'root = meta("slot")'
         result_map: 'meta slot = content().string()'
     - mapping: |
         root = if meta("slot").or("0").re_match("^[1-9][0-9]*$") { this } else { deleted() }
 
-    # The throttle: a bus seen in the last fifteen seconds writes nothing this time.
-    - branch:
-        request_map: 'root = ""'
-        processors:
-          - cache:
-              resource: throttle
-              operator: exists
-              key: '${! meta("vehicle") }'
-          - switch:
-              - check: 'content().string() == "true"'
-                processors:
-                  - mapping: 'root = "seen"'
-              - processors:
-                  - cache:
-                      resource: throttle
-                      operator: set
-                      key: '${! meta("vehicle") }'
-                      value: "1"
-                  - mapping: 'root = "fresh"'
-        result_map: 'meta throttle = content().string()'
-    - mapping: |
-        root = if meta("throttle") == "seen" { deleted() } else { this }
-
     # The entity. The domain comes from the deployment, never from this file (PF-44, PF-42).
+    # onRoute and nextStop name the GTFS line and stop by HSL's ids, which the daily GTFS read
+    # holds (T-3890); a stop past the last one (`EOL`) is no stop.
     - mapping: |
         let domain = env("JC_ORG_DOMAIN")
         let id = "urn:ngsi-ld:%v:%v:%v:%v".format("Vehicle", $domain, env("JC_SPACE"), meta("vehicle"))
+        let urn = "urn:ngsi-ld:%v:" + $domain + ":" + env("JC_SPACE") + ":%v"
+        let route = this.route.or("").string()
+        let next_stop = meta("next_stop").or("")
         root = {
           "id": $id,
           "type": "Vehicle",
@@ -151,7 +146,20 @@ pipeline:
             "unitCode": "DD",
             "observedAt": this.tst
           } },
-          "route": { "type": "Property", "value": this.route.string(), "observedAt": this.tst },
-          "vehicleType": { "type": "Property", "value": "bus" },
+          "route": if $route == "" { deleted() } else { { "type": "Property", "value": $route, "observedAt": this.tst } },
+          "onRoute": if $route == "" { deleted() } else { {
+            "type": "Relationship", "object": $urn.format("GtfsRoute", $route), "observedAt": this.tst
+          } },
+          "nextStop": if !$next_stop.re_match("^[0-9]+$") { deleted() } else { {
+            "type": "Relationship", "object": $urn.format("GtfsStop", $next_stop), "observedAt": this.tst
+          } },
+          "delay": if this.dl.type() != "number" { deleted() } else { {
+            "type": "Property", "value": 0 - this.dl.number().round(), "unitCode": "SEC", "observedAt": this.tst
+          } },
+          "occupancy": if this.occu.type() != "number" { deleted() } else { {
+            "type": "Property", "value": this.occu.number().round(), "unitCode": "P1", "observedAt": this.tst
+          } },
+          "transportMode": { "type": "Property", "value": meta("mode") },
+          "vehicleType": { "type": "Property", "value": {"bus": "bus", "tram": "tram", "ferry": "passengerVessel"}.get(meta("mode")).or("other") },
           "fleetVehicleId": { "type": "Property", "value": meta("vehicle") }
         }

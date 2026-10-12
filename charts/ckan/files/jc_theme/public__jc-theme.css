@@ -296,6 +296,12 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .jc-live h2 { margin-top: 0; }
 .jc-copy { display: flex; gap: .5rem; }
 .jc-copy .form-control { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .875rem; }
+/* An API resource's usage text and its commands to copy (T-3887). */
+.jc-usage { margin-top: .5rem; }
+.jc-usage summary { cursor: pointer; font-weight: 600; }
+.jc-usage p { margin: .5rem 0; overflow-wrap: anywhere; }
+.jc-copy-code { align-items: flex-start; margin: .5rem 0; }
+.jc-copy-code textarea { min-width: 0; flex: 1; white-space: pre; overflow-x: auto; resize: vertical; }
 .jc-live pre { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--jc-ink); color: var(--jc-paper); border-radius: var(--jc-radius); padding: .875rem 1rem; font-size: .8125rem; margin: 0; }
 .jc-example-label { font-weight: 600; margin: 1rem 0 .375rem; }
 .jc-section + .jc-section { margin-top: 1.5rem; }

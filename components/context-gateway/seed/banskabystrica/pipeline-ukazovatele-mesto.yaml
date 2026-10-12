@@ -31,9 +31,9 @@ spec:
       let pipeline = "urn:ngsi-ld:Pipeline:%v:%v:ukazovatele-mesto".format($domain, $space)
 
       # The newest year the water cube carries, and the register as it stood the last time it was read.
-      let water = this.filter(r -> r.dataSet.value == "vh5003rr" && r.indicator.value == "U03084" && r.value.value.type() == "number").sort_by(r -> r.refPeriod.value).index(-1).catch(null)
+      let water = this.filter(r -> r.dataSet.value == "vh5003rr" && r.indicator.value == "U03084" && r.observationValue.value.type() == "number").sort_by(r -> r.refPeriod.value).index(-1).catch(null)
       let register_day = this.filter(r -> r.dataSet.value == "mesto-obyvatelia-vek").map_each(r -> r.refPeriod.value).sort().index(-1).catch(null)
-      let people = if $register_day == null { 0 } else { this.filter(r -> r.dataSet.value == "mesto-obyvatelia-vek" && r.refPeriod.value == $register_day && r.value.value.type() == "number").map_each(r -> r.value.value).sum() }
+      let people = if $register_day == null { 0 } else { this.filter(r -> r.dataSet.value == "mesto-obyvatelia-vek" && r.refPeriod.value == $register_day && r.observationValue.value.type() == "number").map_each(r -> r.observationValue.value).sum() }
 
       # 366 days in a leap year, because dividing a year's water by 365 in a leap year is wrong in the
       # third digit and the indicator is read to the first.
@@ -41,7 +41,7 @@ spec:
       let days = if ($year % 4 == 0 && $year % 100 != 0) || $year % 400 == 0 { 366 } else { 365 }
 
       # Thousands of cubic metres to litres: x1000 for the thousands, x1000 for m3 to litres.
-      let litres_per_person_day = if $water == null || $people == 0 { null } else { ($water.value.value * 1000000) / $people / $days }
+      let litres_per_person_day = if $water == null || $people == 0 { null } else { ($water.observationValue.value * 1000000) / $people / $days }
 
       root = [{
         "id": "urn:ngsi-ld:KeyPerformanceIndicator:%v:%v:spotreba-vody-obyvatel-mesto".format($domain, $space),
@@ -53,7 +53,7 @@ spec:
         "calculationPeriod": { "type": "Property", "value": if $water == null { { "start": $ran, "end": $ran } } else {
           { "start": "%v-01-01T00:00:00Z".format($water.refPeriod.value), "end": "%v-12-31T23:59:59Z".format($water.refPeriod.value) } } },
         "calculationFormula": { "type": "Property", "value": if $water == null { "vh5003rr/U03084 x 1000000 / the city register's total / the days of the year; no published value for any year" } else {
-          "vh5003rr/U03084 for %v (%v thousand m3 of invoiced water) x 1000000 / %v inhabitants in the city register of %v / %v days".format($water.refPeriod.value, $water.value.value, $people, $register_day, $days) } },
+          "vh5003rr/U03084 for %v (%v thousand m3 of invoiced water) x 1000000 / %v inhabitants in the city register of %v / %v days".format($water.refPeriod.value, $water.observationValue.value, $people, $register_day, $days) } },
         "derivedFrom": { "type": "Relationship", "object": $source_endpoint },
         "computedBy": { "type": "Relationship", "object": $pipeline },
         "updatedAt": { "type": "Property", "value": { "@type": "DateTime", "@value": $ran } }

@@ -7,10 +7,11 @@ metadata:
 spec:
   contextSpaceRef: helsinki
   linkml: ./helsinki.linkml.yaml
-  version: 1.4.0
+  version: 1.8.0
   lifecycle: published
   classes: [Event, BikeHireDockingStation, Vehicle, NewsArticle, WeatherObserved, Alert, AirQualityObserved,
-    PointOfInterest, WaterQualityObserved, ParkingArea, ParkingZone, PublicAreaPermit, CityDistrict, GtfsStop, TransitRoute]
+    PointOfInterest, WaterQualityObserved, ParkingArea, ParkingZone, PublicAreaPermit, CityDistrict, GtfsStop, TransitRoute,
+    GtfsStation, GtfsAgency, GtfsRoute, GtfsShape, OffStreetParking]
   artifacts:
     jsonSchema: ./helsinki.v1.schema.json
     context: ./helsinki.v1.context.jsonld

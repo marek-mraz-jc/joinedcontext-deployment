@@ -367,7 +367,7 @@ if has_route portal-api; then
 		# its own, the janitor's pattern (seed/helsinki/helsinki-role-janitor.yaml, T-2627, T-2817),
 		# and one of it per kind is a take in flight. What a person made on dev is not residue,
 		# whatever its name, so a generated app's endpoint or an upload leaves the check green.
-		seed=$(kubectl get configmap gitea-bootstrap-seed-helsinki -n "$slug" -o 'jsonpath={.data}' 2>/dev/null)
+		seed=$(kubectl get configmap gitea-seed-helsinki -n "$slug" -o 'jsonpath={.data}' 2>/dev/null)
 		for kind in "endpoints Endpoint projects__helsinki__spaces__[a-z0-9-]*__endpoints__[a-z0-9-]*\.yaml" \
 			"pipelines Pipeline projects__helsinki__pipelines__[a-z0-9-]*__pipeline\.yaml" \
 			"spaces ContextSpace projects__helsinki__spaces__[a-z0-9-]*__space\.yaml"; do
@@ -424,7 +424,7 @@ if has_route context-endpoint; then
 	# gateway serves the forge's checkout), the same way the route table comes from APISIX: a
 	# slug written into this script would drift from the seed, and a made-up one cannot exist
 	# (slugs are 26+ base32 characters). A seed key is the repository path with `/` as `__`.
-	ep="${JC_SMOKE_ENDPOINT:-$(kubectl get configmap gitea-bootstrap-seed-banskabystrica -n "$slug" -o jsonpath='{.data.projects__banskabystrica__spaces__ovzdusie__endpoints__public-air\.yaml}' 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1)}"
+	ep="${JC_SMOKE_ENDPOINT:-$(kubectl get configmap gitea-seed-banskabystrica -n "$slug" -o jsonpath='{.data.projects__banskabystrica__spaces__ovzdusie__endpoints__public-air\.yaml}' 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1)}"
 	# Writes are bound to the conformance ServiceAccount (GW22): its client_credentials token
 	# carries the slug as audience and an azp the gateway resolves to the manifest (PF-45, PF-46).
 	# The apisix-gateway token above is minted for the Portal and names no account here.
@@ -501,7 +501,7 @@ echo "helsinki space"
 # answers NGSI-LD, MCP and the model's LinkML; the streams of the resident runner fill it. The
 # slugs come from the forge's seed the way the ovzdusie one does above.
 if has_route context-endpoint; then
-	slug_of() { kubectl get configmap gitea-bootstrap-seed-helsinki -n "$slug" -o jsonpath="{.data.projects__helsinki__spaces__helsinki__endpoints__helsinki-$1\.yaml}" 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1; }
+	slug_of() { kubectl get configmap gitea-seed-helsinki -n "$slug" -o jsonpath="{.data.projects__helsinki__spaces__helsinki__endpoints__helsinki-$1\.yaml}" 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1; }
 	all=$(slug_of all)
 	if [ -z "$all" ]; then
 		skip "helsinki endpoints (no Helsinki seed on the gateway in this instance)"
@@ -558,6 +558,58 @@ if has_route context-endpoint; then
 	fi
 else
 	skip "helsinki endpoints (route context-endpoint not configured in this instance)"
+fi
+
+echo "ogc api features"
+# T-3957 (T-3831's dev row): one row per Endpoint kind of Antares' OGC matrix, through the
+# gateway, whose OGC surface is the broker's view since platform T-3752. Each row reads
+# /conformance and one page of the first collection, and names the seeded Endpoint it read.
+# A kind no seeded Endpoint has is a skip naming it.
+if has_route context-endpoint; then
+	seed_slug() { # project space endpoint
+		kubectl get configmap "gitea-seed-$1" -n "$slug" -o jsonpath="{.data.projects__$1__spaces__$2__endpoints__$3\.yaml}" 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1
+	}
+	ogc_row() { # kind endpoint-name slug hidden-attribute|"" bearer|""
+		local kind="$1" name="$2" ep="$3" hidden="$4" auth=() root conf coll head type body verdict
+		if [ -z "$ep" ]; then skip "ogc $kind ($name is not seeded in this instance)"; return; fi
+		[ -n "$5" ] && auth=(-H "Authorization: Bearer $5")
+		root="$base/api/endpoint/$ep/ogc/features"
+		conf=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "${auth[@]}" "$root/conformance" 2>/dev/null) || conf="curl-error"
+		if [ "$conf" != "200" ]; then ko "ogc $kind ($name $ep): /conformance answered $conf"; return; fi
+		coll=$(curl -sS --max-time 20 "${auth[@]}" "$root/collections" 2>/dev/null |
+			python3 -c 'import json,sys; print(next((c["id"] for c in json.load(sys.stdin).get("collections", [])), ""))' 2>/dev/null)
+		if [ -z "$coll" ]; then ko "ogc $kind ($name $ep): /collections lists none"; return; fi
+		head=$(curl -sS -D - -o /dev/null --max-time 20 "${auth[@]}" "$root/collections/$coll/items?limit=1" 2>/dev/null | tr -d '\r')
+		type=$(printf '%s\n' "$head" | sed -n 's/^[Cc]ontent-[Tt]ype: *//p' | head -1)
+		case "$head" in "HTTP/"*" 200"*) ;; *) ko "ogc $kind ($name $ep): items of $coll answered ${head%%$'\n'*}"; return ;; esac
+		case "$type" in application/geo+json*) ;; *) ko "ogc $kind ($name $ep): items of $coll are '${type:-no type}', not application/geo+json"; return ;; esac
+		body=$(curl -sS --max-time 20 "${auth[@]}" "$root/collections/$coll/items?limit=1" 2>/dev/null)
+		verdict=$(printf '%s' "$body" | python3 -c '
+import json, sys
+hidden = sys.argv[1]
+try:
+    features = json.load(sys.stdin).get("features") or []
+except (ValueError, AttributeError):
+    sys.exit("no FeatureCollection")
+if not features:
+    sys.exit("no feature")
+if hidden and any(hidden in (f.get("properties") or {}) for f in features):
+    sys.exit("the hidden " + hidden + " is served")
+print(len(features))' "$hidden" 2>&1) || { ko "ogc $kind ($name $ep): items of $coll: $verdict"; return; }
+		ok "ogc $kind ($name $ep): conformance, $verdict feature of $coll as geo+json${hidden:+, no $hidden}"
+	}
+	ogc_row public helsinki-bikes "$(seed_slug helsinki helsinki helsinki-bikes)" "" ""
+	if [ -n "$demo_token" ]; then
+		ogc_row internal helsinki-bikes-ops "$(seed_slug helsinki helsinki helsinki-bikes-ops)" "" "$demo_token"
+	else
+		skip "ogc internal (no demo user token to read helsinki-bikes-ops with)"
+	fi
+	skip "ogc filtered view (no seeded Endpoint narrows its view by a q)"
+	ogc_row star public-air "$(seed_slug banskabystrica ovzdusie public-air)" "" ""
+	ogc_row projection helsinki-all "$(seed_slug helsinki helsinki helsinki-all)" contactPoint ""
+	skip "ogc cube (no seeded Endpoint serves a LinkML cube, T-3805)"
+else
+	skip "ogc api features (route context-endpoint not configured in this instance)"
 fi
 
 echo "forge"
@@ -1025,7 +1077,7 @@ for app in items:
 fi
 
 echo "broker surfaces"
-# The surfaces the broker mounts (T-3905): `/q/health` reports each one the deployment selected,
+# The surfaces the broker mounts (T-3905, T-3922): `/q/health` reports each one the deployment selected,
 # so a `ws` missing from ANTARES_API_SURFACES or an image built without it shows here. Health
 # needs no credential; the broker is reached over a port-forward like jc-functions below.
 if ! kubectl get deployment context-broker -n "$slug" >/dev/null 2>&1; then
@@ -1039,7 +1091,7 @@ else
 		cb_health=$(curl -s --max-time 2 "http://127.0.0.1:$cb_port/q/health" 2>/dev/null) && [ -n "$cb_health" ] && break
 		sleep 1
 	done
-	for surface in views mcp access ws; do
+	for surface in views mcp access ws ogc; do
 		if printf '%s' "$cb_health" | python3 -c 'import json,sys; sys.exit(0 if sys.argv[1] in (json.load(sys.stdin).get("surfaces") or {}) else 1)' "$surface" 2>/dev/null; then
 			ok "the broker mounts the $surface surface"
 		else
@@ -1078,7 +1130,7 @@ else
 			"$idm/realms/$realm/protocol/openid-connect/token" 2>/dev/null |
 			sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
 	fi
-	fn_slug=$(kubectl get configmap gitea-bootstrap-seed-helsinki -n "$slug" -o jsonpath='{.data.projects__helsinki__spaces__helsinki__endpoints__helsinki-all\.yaml}' 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1)
+	fn_slug=$(kubectl get configmap gitea-seed-helsinki -n "$slug" -o jsonpath='{.data.projects__helsinki__spaces__helsinki__endpoints__helsinki-all\.yaml}' 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1)
 	if [ -z "$fn_token" ]; then
 		ko "no client_credentials token for portal-api, so no function was invoked"
 	elif [ -z "$fn_slug" ]; then
