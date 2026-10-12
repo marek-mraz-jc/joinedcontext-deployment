@@ -25,3 +25,23 @@ podSecurity:
     - require-ro-rootfs
     - require-run-as-non-root-user
     - require-run-as-nonroot
+  # Admitted in Audit whatever `failureAction` says (T-2480): a rule new to the cluster first
+  # reports what it would refuse, the offenders are fixed from dev's PolicyReports, and only then
+  # does it move up to `policies` and the environment's action. A name in both fails the render.
+  staged:
+    - disallow-privileged-containers
+    - disallow-host-path
+    - disallow-host-namespaces
+    - require-image-checksum
+    - require-pod-requests-limits
+
+# The platform's own images, signed keylessly by their repositories' workflows
+# (.github/workflows/reusable-container-sign.yml), verified at admission (T-2480). Staged like
+# the rules above: Audit, and `failurePolicy: Ignore` so an unreachable Rekor never holds a pod.
+imageSignatures:
+  enabled: true
+  failureAction: Audit
+  references:
+    - "ghcr.io/marek-mraz-jc/*"
+  issuer: https://token.actions.githubusercontent.com
+  subjectRegExp: "^https://github.com/marek-mraz-jc/"
