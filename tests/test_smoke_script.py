@@ -81,8 +81,9 @@ EDGE_SELECTOR = [("app.kubernetes.io/name", "apisix"), ("app.kubernetes.io/insta
 if args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-bootstrap-seed") and "endpoints__helsinki-" in line:
     # The Helsinki seed's slugs, one per endpoint name (T-0478); nothing seeded by default,
     # because the checks behind them wait up to 210 s for data to flow.
-    name = "".join(itertools.takewhile(str.isalnum, line.split("endpoints__helsinki-", 1)[1]))
-    seeded = spec.get("helsinkiSeed", {}).get(name)
+    name = "".join(itertools.takewhile(lambda c: c.isalnum() or c == "-", line.split("endpoints__helsinki-", 1)[1]))
+    # The OGC rows' Endpoints (T-3957) are seeded beside the ones the residue count lists.
+    seeded = spec.get("helsinkiSeed", {}).get(name) or spec.get("ogcSeed", {}).get(name)
     sys.stdout.write("spec:\\n  slug: %s\\n" % seeded if seeded else "")
 elif args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-bootstrap-seed") and "jsonpath={.data}" in line:
     # The seed's file names, for the residue count (T-0667): one Helsinki endpoint per seeded slug.
@@ -380,17 +381,30 @@ APP_LOGIN = ("https://idm.example.test/realms/dev/protocol/openid-connect/auth?r
 # The demo people the seed creates (components/keycloak/demo-users.yaml), as People lists them.
 DEMO_PEOPLE = json.dumps({"items": [{"email": "demo.%s@hel.fi" % who} for who in ("steward", "viewer", "approver", "editor")]})
 
+# T-3957: the OGC API Features answers of a healthy dev, one Endpoint per kind. The internal
+# one is seeded beside the Helsinki endpoints the residue count lists; the star one is the
+# ovzdusie seed (`seedEndpoint`).
+OGC_SEED = {"bikes-ops": "hsbikesops"}
+OGC_COLLECTIONS = '{"collections":[{"id":"BikeHireDockingStation"},{"id":"Event"}]}'
+OGC_ITEMS = ('{"type":"FeatureCollection","features":[{"type":"Feature","id":"urn:ngsi-ld:x",'
+             '"geometry":null,"properties":{"name":"Kamppi"}}]}')
+OGC_HEADERS = "HTTP/2 200\r\ncontent-type: application/geo+json\r\n"
+
 HEALTHY = {
+    "ogcSeed": OGC_SEED,
     "routes": ["portal-ui", "portal-api", "context-space", "context-endpoint", "gitea-forge", "ckan"],
     # The old path of each published App moves to its own host with no cookie (AP-133).
     "dumpedHeaders": [
+        ["/ogc/features/collections/", OGC_HEADERS],
         ["/apps/hsl-transport/", "HTTP/2 308\r\nlocation: https://hsl-transport.apps.example.test/\r\n"],
         ["/apps/air-quality/", "HTTP/2 308\r\nlocation: https://air-quality.apps.example.test/\r\n"],
         # A public App's own page, with the AP-12 policy that lets the basemap tiles in (T-3014).
         ["hsl-transport.apps.example.test/", "HTTP/2 200\r\n" + APP_POLICY],
     ],
     "helsinkiSeed": HELSINKI_SEED,
-    "bodies": [["/api/v1/projects/helsinki/apps/helsinki-", BUILT_APP],
+    "bodies": [["/ogc/features/collections/", OGC_ITEMS],
+               ["/ogc/features/collections", OGC_COLLECTIONS],
+               ["/api/v1/projects/helsinki/apps/helsinki-", BUILT_APP],
                ["/api/v1/projects/helsinki/apps", PUBLISHED_APPS],
                [["%{redirect_url}", "https://air-quality.apps.example.test/"], APP_LOGIN],[["Bearer", "/invoke"], FUNCTION_ANSWER],
                # The organization's Actions runner, online (T-2608, ADR-N-028).
@@ -458,7 +472,7 @@ def test_a_datasource_check_that_reaches_inside_the_cluster_fails(tmp_path):
     assert "FAIL  a probe of https://kubernetes.default.svc/version reached it: the feed answered 200 OK" in result.stdout
     assert "FAIL  a probe of https://169.254.169.254/hetzner/v1/metadata answered no refusal" in result.stdout
     assert "ok    a probe of http://context-broker.dev.svc:8080/ngsi-ld/v1/types stays outside the cluster" in result.stdout
-    assert "2 failed, 0 skipped" in result.stdout
+    assert "2 failed, 2 skipped" in result.stdout
 
 
 def test_missing_arguments_are_refused(tmp_path):
@@ -471,7 +485,11 @@ def test_missing_arguments_are_refused(tmp_path):
 def test_full_platform_passes(tmp_path):
     result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
     assert result.returncode == 0, result.stdout
-    assert "0 failed, 0 skipped" in result.stdout
+    # The only skips are the OGC kinds no seeded Endpoint has (T-3957): filtered view and cube.
+    assert "0 failed, 2 skipped" in result.stdout
+    assert [line for line in result.stdout.splitlines() if line.startswith("  skip")] == [
+        "  skip  ogc filtered view (no seeded Endpoint narrows its view by a q)",
+        "  skip  ogc cube (no seeded Endpoint serves a LinkML cube, T-3805)"]
     assert "ok    portal host sends an anonymous visitor to the edge login" in result.stdout
     assert "ok    apex redirects to the portal host" in result.stdout
     assert "ok    portal API answers a bearer call through the edge (200)" in result.stdout
@@ -656,6 +674,55 @@ def test_a_surface_the_broker_does_not_mount_fails_the_run(tmp_path):
     assert "FAIL  the broker's /q/health lists no ogc surface" in result.stdout
 
 
+def test_one_ogc_row_per_endpoint_kind_names_its_endpoint(tmp_path):
+    """T-3957: each kind of T-3831's OGC matrix is a row naming the seeded Endpoint it read, or a
+    skip naming the kind dev has none of; the internal row reads with the demo user's token."""
+    result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 0, result.stdout
+    for kind, name, ep in (("public", "helsinki-bikes", "hsbikes"),
+                           ("internal", "helsinki-bikes-ops", "hsbikesops"),
+                           ("star", "public-air", "mluyob4nz52lok3ssk7pgn5vwt")):
+        assert (f"ok    ogc {kind} ({name} {ep}): conformance, 1 feature of BikeHireDockingStation "
+                "as geo+json\n") in result.stdout
+    assert ("ok    ogc projection (helsinki-all hsall): conformance, 1 feature of "
+            "BikeHireDockingStation as geo+json, no contactPoint") in result.stdout
+    assert "skip  ogc filtered view (no seeded Endpoint narrows its view by a q)" in result.stdout
+    assert "skip  ogc cube (no seeded Endpoint serves a LinkML cube, T-3805)" in result.stdout
+    assert "a.b.c" not in result.stdout, "a token reached the output"
+
+
+@pytest.mark.parametrize("change, reason", [
+    ({"statuses": [["hsbikes/ogc/features/conformance", 404]] + HEALTHY_STATUSES},
+     "ogc public (helsinki-bikes hsbikes): /conformance answered 404"),
+    ({"bodies": [["hsbikes/ogc/features/collections", '{"collections":[]}']] + HEALTHY["bodies"]},
+     "ogc public (helsinki-bikes hsbikes): /collections lists none"),
+    ({"dumpedHeaders": [["hsbikes/ogc/features/collections/", "HTTP/2 502\r\n"]] + HEALTHY["dumpedHeaders"]},
+     "ogc public (helsinki-bikes hsbikes): items of BikeHireDockingStation answered HTTP/2 502"),
+    ({"dumpedHeaders": [["hsbikes/ogc/features/collections/", "HTTP/2 200\r\ncontent-type: application/json\r\n"]]
+      + HEALTHY["dumpedHeaders"]},
+     "ogc public (helsinki-bikes hsbikes): items of BikeHireDockingStation are 'application/json', not application/geo+json"),
+    ({"bodies": [["hsbikes/ogc/features/collections/", '{"type":"FeatureCollection","features":[]}']] + HEALTHY["bodies"]},
+     "ogc public (helsinki-bikes hsbikes): items of BikeHireDockingStation: no feature"),
+    ({"bodies": [["hsbikes/ogc/features/collections/", "<html>502</html>"]] + HEALTHY["bodies"]},
+     "ogc public (helsinki-bikes hsbikes): items of BikeHireDockingStation: no FeatureCollection"),
+    ({"bodies": [["hsall/ogc/features/collections/", OGC_ITEMS.replace('"name"', '"contactPoint"')]] + HEALTHY["bodies"]},
+     "ogc projection (helsinki-all hsall): items of BikeHireDockingStation: the hidden contactPoint is served"),
+])
+def test_an_ogc_row_that_is_not_a_feature_page_of_the_view_fails_the_run(tmp_path, change, reason):
+    result = run(tmp_path, dict(HEALTHY, **change), "https://example.test", "https://idm.example.test")
+    assert result.returncode != 0
+    assert f"FAIL  {reason}" in result.stdout
+
+
+def test_an_ogc_kind_dev_has_not_seeded_is_a_skip_naming_it(tmp_path):
+    result = run(tmp_path, dict(HEALTHY, ogcSeed={}, demoPassword=""),
+                 "https://example.test", "https://idm.example.test")
+    assert "skip  ogc internal (no demo user token to read helsinki-bikes-ops with)" in result.stdout
+    result = run(tmp_path, dict(HEALTHY, ogcSeed={}), "https://example.test", "https://idm.example.test")
+    assert "skip  ogc internal (helsinki-bikes-ops is not seeded in this instance)" in result.stdout
+    assert "ok    ogc internal" not in result.stdout
+
+
 def test_an_instance_without_the_broker_skips_the_surface_checks(tmp_path):
     result = run(tmp_path, dict(HEALTHY, broker=False), "https://example.test", "https://idm.example.test")
     assert "skip  broker surfaces (the context broker is not deployed in this instance)" in result.stdout
@@ -748,7 +815,7 @@ def test_endpoint_round_trip_uses_the_seeded_slug_and_the_conformance_token(tmp_
     result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
     assert "ok    client_credentials token for banskabystrica-conformance" in result.stdout
     assert "ok    entity create through the endpoint (201)" in result.stdout
-    assert "0 failed, 0 skipped" in result.stdout
+    assert "0 failed, 2 skipped" in result.stdout
 
 
 def test_every_listed_entity_is_retrieved_by_id(tmp_path):
@@ -779,7 +846,8 @@ def test_unseeded_gateway_skips_the_round_trip(tmp_path):
     spec = dict(HEALTHY, seedEndpoint="")
     result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
     assert "skip  endpoint round trip (no Endpoint seeded" in result.stdout
-    assert "0 failed, 1 skipped" in result.stdout
+    assert "skip  ogc star (public-air is not seeded in this instance)" in result.stdout
+    assert "0 failed, 4 skipped" in result.stdout
 
 
 def test_endpoint_not_found_fails_the_run(tmp_path):
@@ -809,7 +877,8 @@ def test_instance_without_demo_users_skips_the_login(tmp_path):
     assert "skip  portal space list (no demo user token)" in result.stdout
     assert "skip  sample apps (no demo user token to read them with)" in result.stdout
     assert "skip  App routes (no demo user token to list the published Apps with)" in result.stdout
-    assert "0 failed, 4 skipped" in result.stdout
+    assert "skip  ogc internal (no demo user token to read helsinki-bikes-ops with)" in result.stdout
+    assert "0 failed, 7 skipped" in result.stdout
 
 
 def test_absent_routes_skip_instead_of_passing(tmp_path):
@@ -825,7 +894,8 @@ def test_absent_routes_skip_instead_of_passing(tmp_path):
     assert "skip  catalogue (route ckan not configured" in result.stdout
     assert "skip  chunked body (route portal-api not configured" in result.stdout
     assert "skip  App routes (route portal-ui not configured" in result.stdout
-    assert "8 skipped" in result.stdout
+    assert "skip  ogc api features (route context-endpoint not configured" in result.stdout
+    assert "9 skipped" in result.stdout
 
 
 def test_an_app_old_path_that_serves_or_sets_a_cookie_fails_the_run(tmp_path):

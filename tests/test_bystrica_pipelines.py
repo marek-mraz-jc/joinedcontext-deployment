@@ -200,7 +200,7 @@ def test_the_year_of_a_figure_is_the_publishers_year_and_not_its_position(entiti
         ("vh5003rr", "SK0321508438", "2022"): 3991,
     }
     found = {
-        (e["dataSet"]["value"], e["refArea"]["value"], e["refPeriod"]["value"]): e["value"]["value"]
+        (e["dataSet"]["value"], e["refArea"]["value"], e["refPeriod"]["value"]): e["observationValue"]["value"]
         for produced in entities.values()
         for e in produced
     }
@@ -225,7 +225,7 @@ def test_the_region_cubes_carry_the_figures_the_publisher_states(entities):
     }
     found = {
         (e["dataSet"]["value"], e["refArea"]["value"], e["refPeriod"]["value"], e["indicator"]["value"],
-         e.get("dimensionKey", {}).get("value")): e["value"]["value"]
+         e.get("dimensionKey", {}).get("value")): e["observationValue"]["value"]
         for produced in entities.values()
         for e in produced
     }
@@ -252,7 +252,7 @@ def test_the_city_cubes_carry_the_figures_the_publisher_states(entities):
     }
     found = {
         (e["dataSet"]["value"], e["refPeriod"]["value"], e["indicator"]["value"],
-         e.get("dimensionKey", {}).get("value")): e["value"]["value"]
+         e.get("dimensionKey", {}).get("value")): e["observationValue"]["value"]
         for path, produced in entities.items()
         if MAPPINGS[path][2] == "banskabystrica-mesto"
         for e in produced
@@ -266,7 +266,7 @@ def test_the_citys_men_and_women_sum_to_its_population_in_every_quarter(entities
     produced = entities[SEED / "banskabystrica/pipeline-obyvatelstvo-bento.yaml"]
     by_quarter: dict[tuple[str, str], dict[str, int]] = {}
     for e in produced:
-        by_quarter.setdefault((e["refPeriod"]["value"], e["indicator"]["value"]), {})[e["dimensionKey"]["value"]] = e["value"]["value"]
+        by_quarter.setdefault((e["refPeriod"]["value"], e["indicator"]["value"]), {})[e["dimensionKey"]["value"]] = e["observationValue"]["value"]
     assert len({period for period, _ in by_quarter}) == 134, "1993Q1 to 2026Q2"
     for key, sexes in by_quarter.items():
         assert set(sexes) == {"SPOLU", "1", "2"}, key
@@ -300,10 +300,10 @@ def test_a_wage_in_euro_carries_its_unit_in_words_and_no_invented_code(entities)
     """UN/CEFACT Recommendation 20 has no currency, so a wage keeps `unitText` and leaves
     `unitCode` out rather than carry a code that means something else."""
     produced = entities[SEED / "bbsk/bbsk-pipeline-mzdy-bento.yaml"]
-    assert produced and all("unitCode" not in e["value"] for e in produced)
+    assert produced and all("unitCode" not in e["observationValue"] for e in produced)
     assert {e["unitText"]["value"] for e in produced} == {"EUR"}
     counted = entities[SEED / "bbsk/bbsk-pipeline-uchadzaci-bento.yaml"]
-    assert {e["value"]["unitCode"] for e in counted} == {"C62"}
+    assert {e["observationValue"]["unitCode"] for e in counted} == {"C62"}
 
 
 def test_the_raw_space_holds_every_cube_within_the_projects_entity_quota():
@@ -336,7 +336,7 @@ def test_the_emissions_mapping_keeps_the_pollutant_it_sliced(entities):
     # 14 territories over the five years the cube carries, minus the cells it leaves empty.
     assert {e["refArea"]["value"] for e in produced} >= {"SK032", "SK0323", "SK032D"}
     for entity in produced:
-        assert entity["value"]["unitCode"] == "TNE"
+        assert entity["observationValue"]["unitCode"] == "TNE"
         assert entity["id"].endswith("-ODPAD_TONY_KM2-1")
 
 
@@ -347,7 +347,7 @@ def test_the_city_register_is_dated_by_the_day_it_was_read_because_it_declares_n
     periods = {e["refPeriod"]["value"] for e in produced}
     assert len(periods) == 1 and len(periods.pop()) == len("2026-09-20")
     # "   1 071" with a non-breaking space is 1071, and the counts sum to the register's total.
-    assert sum(e["value"]["value"] for e in produced) == 72123
+    assert sum(e["observationValue"]["value"] for e in produced) == 72123
     assert {e["refArea"]["value"] for e in produced} == {"SK0321508438"}
 
 
@@ -390,7 +390,7 @@ def test_a_cell_the_publisher_left_empty_writes_nothing_rather_than_a_zero():
         run_mapping(step, json.dumps(gapped, separators=(",", ":")), "bbsk.sk", "bbsk-kraj")
     )
     assert len(produced) == len(document["value"]) - 1
-    assert all(e["value"]["value"] is not None for e in produced)
+    assert all(e["observationValue"]["value"] is not None for e in produced)
     # The row that was dropped is the one that had no number, not the one after it.
     assert not any(e["id"].endswith(":zp3803rs-SK032-2023-ODPAD_TONY_KM2-1") for e in produced)
 

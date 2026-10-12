@@ -69,6 +69,9 @@ env:
   # The Portal PUTs the schema to /q/schemas/{tenant} (T-3628), which takes nothing while
   # ANTARES_SCHEMA_MAX_BYTES is unset.
   ANTARES_API_SURFACES: "admin,views,mcp,access,ws,ogc,linkml"
+  # The MCP surface answers the Host names listed here alone (rmcp's DNS-rebinding guard, MC8);
+  # unset it answers loopback only, and the gateway's hop (JC_GATEWAY_BROKER_URL, T-3647) got 403.
+  ANTARES_MCP_ALLOWED_HOSTS: "context-broker.{{ (index .Values "context-broker" "broker" "namespace") }}.svc.cluster.local:8080"
   # The view WebSocket (T-3905, ADR-0026), bounded for the one 16 GB node: at most 200 sockets,
   # 50 per Tenant, 16 Subscriptions and 128 queued notifications each, so a full house holds
   # about 200 x 128 notifications (~100 MiB at 4 KiB each) where the defaults (10 000 sockets,

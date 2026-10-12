@@ -560,6 +560,58 @@ else
 	skip "helsinki endpoints (route context-endpoint not configured in this instance)"
 fi
 
+echo "ogc api features"
+# T-3957 (T-3831's dev row): one row per Endpoint kind of Antares' OGC matrix, through the
+# gateway, whose OGC surface is the broker's view since platform T-3752. Each row reads
+# /conformance and one page of the first collection, and names the seeded Endpoint it read.
+# A kind no seeded Endpoint has is a skip naming it.
+if has_route context-endpoint; then
+	seed_slug() { # project space endpoint
+		kubectl get configmap "gitea-bootstrap-seed-$1" -n "$slug" -o jsonpath="{.data.projects__$1__spaces__$2__endpoints__$3\.yaml}" 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1
+	}
+	ogc_row() { # kind endpoint-name slug hidden-attribute|"" bearer|""
+		local kind="$1" name="$2" ep="$3" hidden="$4" auth=() root conf coll head type body verdict
+		if [ -z "$ep" ]; then skip "ogc $kind ($name is not seeded in this instance)"; return; fi
+		[ -n "$5" ] && auth=(-H "Authorization: Bearer $5")
+		root="$base/api/endpoint/$ep/ogc/features"
+		conf=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "${auth[@]}" "$root/conformance" 2>/dev/null) || conf="curl-error"
+		if [ "$conf" != "200" ]; then ko "ogc $kind ($name $ep): /conformance answered $conf"; return; fi
+		coll=$(curl -sS --max-time 20 "${auth[@]}" "$root/collections" 2>/dev/null |
+			python3 -c 'import json,sys; print(next((c["id"] for c in json.load(sys.stdin).get("collections", [])), ""))' 2>/dev/null)
+		if [ -z "$coll" ]; then ko "ogc $kind ($name $ep): /collections lists none"; return; fi
+		head=$(curl -sS -D - -o /dev/null --max-time 20 "${auth[@]}" "$root/collections/$coll/items?limit=1" 2>/dev/null | tr -d '\r')
+		type=$(printf '%s\n' "$head" | sed -n 's/^[Cc]ontent-[Tt]ype: *//p' | head -1)
+		case "$head" in "HTTP/"*" 200"*) ;; *) ko "ogc $kind ($name $ep): items of $coll answered ${head%%$'\n'*}"; return ;; esac
+		case "$type" in application/geo+json*) ;; *) ko "ogc $kind ($name $ep): items of $coll are '${type:-no type}', not application/geo+json"; return ;; esac
+		body=$(curl -sS --max-time 20 "${auth[@]}" "$root/collections/$coll/items?limit=1" 2>/dev/null)
+		verdict=$(printf '%s' "$body" | python3 -c '
+import json, sys
+hidden = sys.argv[1]
+try:
+    features = json.load(sys.stdin).get("features") or []
+except (ValueError, AttributeError):
+    sys.exit("no FeatureCollection")
+if not features:
+    sys.exit("no feature")
+if hidden and any(hidden in (f.get("properties") or {}) for f in features):
+    sys.exit("the hidden " + hidden + " is served")
+print(len(features))' "$hidden" 2>&1) || { ko "ogc $kind ($name $ep): items of $coll: $verdict"; return; }
+		ok "ogc $kind ($name $ep): conformance, $verdict feature of $coll as geo+json${hidden:+, no $hidden}"
+	}
+	ogc_row public helsinki-bikes "$(seed_slug helsinki helsinki helsinki-bikes)" "" ""
+	if [ -n "$demo_token" ]; then
+		ogc_row internal helsinki-bikes-ops "$(seed_slug helsinki helsinki helsinki-bikes-ops)" "" "$demo_token"
+	else
+		skip "ogc internal (no demo user token to read helsinki-bikes-ops with)"
+	fi
+	skip "ogc filtered view (no seeded Endpoint narrows its view by a q)"
+	ogc_row star public-air "$(seed_slug banskabystrica ovzdusie public-air)" "" ""
+	ogc_row projection helsinki-all "$(seed_slug helsinki helsinki helsinki-all)" contactPoint ""
+	skip "ogc cube (no seeded Endpoint serves a LinkML cube, T-3805)"
+else
+	skip "ogc api features (route context-endpoint not configured in this instance)"
+fi
+
 echo "forge"
 if has_route gitea-forge; then
 	# Gitea listens at the root; a 200 here proves both halves of the prefix — the gateway

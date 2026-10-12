@@ -63,3 +63,15 @@ def test_the_broker_is_told_only_its_own_settings(broker_pod):
     foreign = {n for n in names if not (n.startswith("ANTARES_") or n == "PGPASSWORD")}
     assert foreign == set()
     assert not any("REPO" in n or n.startswith("JC_") or n.startswith("GITSYNC") for n in names)
+
+
+def test_the_broker_s_mcp_answers_the_host_the_gateway_calls(rendered, broker_pod):
+    """T-3647: the gateway reaches an Endpoint's MCP on the broker by its Service name; the MCP
+    surface refuses any Host it does not list (DNS rebinding), so the two must name the same."""
+    env = {e["name"]: e.get("value") for e in broker_pod["containers"][0].get("env", [])}
+    gateway = next(d for d in rendered("dev") if d.get("kind") == "Deployment"
+                   and d["metadata"]["name"] == "context-gateway")
+    gateway_env = {e["name"]: e.get("value") for c in gateway["spec"]["template"]["spec"]["containers"]
+                   for e in c.get("env", [])}
+    authority = gateway_env["JC_GATEWAY_BROKER_URL"].split("://", 1)[1].split("/", 1)[0]
+    assert authority in env["ANTARES_MCP_ALLOWED_HOSTS"].split(","), (authority, env["ANTARES_MCP_ALLOWED_HOSTS"])
