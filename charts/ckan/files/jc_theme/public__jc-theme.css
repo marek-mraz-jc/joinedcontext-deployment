@@ -195,7 +195,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .module .dataset-list .dataset-item:hover { box-shadow: none; }
 .jc-item-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .375rem .375rem; margin-top: .625rem; }
 .jc-item-facts { color: var(--jc-muted); font-size: .8125rem; margin-left: .25rem; }
-.nav-facet .nav-item > a { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .5rem 1rem; text-decoration: none; }
+.nav-facet .nav-item > a { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .5rem 1.25rem; text-decoration: none; }
 .nav-facet .nav-item > a .item-label { overflow-wrap: anywhere; }
 .nav-facet .separator { display: none; }
 .module-narrow .nav-item > a .badge, .nav-facet .nav-item > a .item-count { background: var(--jc-n100); color: var(--jc-muted); border: 0; font-variant-numeric: tabular-nums; }
@@ -207,7 +207,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .search-form { border-bottom: 1px solid var(--jc-border); padding-bottom: 1rem; margin-bottom: 1.25rem; }
 .search-form h1, .search-form h2 { font-size: 1.125rem; margin: 1rem 0 0; }
 .secondary .module-narrow .module-heading, .secondary .module-footer { background: var(--jc-surface); }
-.secondary .module-footer { border-top: 1px solid var(--jc-border); }
+.secondary .module-footer { border-top: 1px solid var(--jc-border); margin: 0; padding: .75rem 1.25rem; }
+/* The list ends the card: no list margin under its last row (owner, 2026-10-12). */
+.nav-facet { margin-bottom: 0; }
 .jc-empty { color: var(--jc-muted); padding: 2rem 0; }
 /* Publisher and topic cards: a grid that wraps names at word boundaries (T-3028), in place of
    CKAN's fixed 178 px floats with `word-break: break-all`. */
