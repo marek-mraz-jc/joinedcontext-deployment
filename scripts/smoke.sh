@@ -541,6 +541,14 @@ if has_route context-endpoint; then
 		# the neighbour's data (EP-14, 404-vs-403 narrowing keeps it a 200).
 		body=$(curl -sS --max-time 20 "$base/api/endpoint/$(slug_of bikes)/ngsi-ld/v1/entities?type=Event&limit=1" 2>/dev/null || true)
 		if [ "$body" = "[]" ]; then ok "helsinki-bikes does not serve events"; else ko "helsinki-bikes served events: ${body:0:120}"; fi
+		# T-4035, EP-106/107: the transport endpoint's WebSocket is public like its REST read. An
+		# anonymous client (no Origin, no token) gets its 101 and a subscribe for Vehicle its 201.
+		ws=$(python3 "$(dirname "$0")/smoke-ws.py" "$base/api/endpoint/$(slug_of transport)/ws" Vehicle 20 2>&1 || true)
+		if [ "$ws" = "101 201" ]; then
+			ok "helsinki-transport opens its WebSocket anonymously and subscribes to Vehicle (101 201)"
+		else
+			ko "helsinki-transport WebSocket answered '${ws:0:160}', expected '101 201'"
+		fi
 		# Data flows: the bike feed answers within a minute of the runner starting, the events
 		# register at once; the buses depend on HSL's timetable, so their absence is a note.
 		flowing() { # type seconds

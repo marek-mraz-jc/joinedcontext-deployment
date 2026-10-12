@@ -40,3 +40,15 @@ def test_the_endpoint_projects_no_internal_attribute_and_credits_its_sources():
     assert "Fintraffic" in catalog["attribution"]["en"] and "HSL" in catalog["attribution"]["en"]
     sources = {source["url"] for source in catalog["source"]}
     assert {"https://hsl.fi/en/hsl/open-data", "https://parking.fintraffic.fi/api/v1"} <= sources
+
+
+def test_the_live_vehicles_reach_a_map_over_the_endpoints_public_websocket():
+    """T-4035: the owner's order, the WebSocket is public. Only the transport endpoint carries the
+    live positions a map follows; the other Helsinki endpoints keep their REST surfaces."""
+    endpoint = load("helsinki-endpoint-transport.yaml")["spec"]
+    assert "websocket" in endpoint["enabledRepresentations"]
+    assert endpoint["audience"] == "public"
+    others = [p.name for p in HELSINKI.glob("helsinki-endpoint-*.yaml") if p.name != "helsinki-endpoint-transport.yaml"]
+    assert others
+    for name in others:
+        assert "websocket" not in load(name)["spec"].get("enabledRepresentations", []), name
