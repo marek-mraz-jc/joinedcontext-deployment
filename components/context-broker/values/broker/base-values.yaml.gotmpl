@@ -61,12 +61,22 @@ env:
   ANTARES_REQUIRE_RLS: "1"
   ANTARES_MAX_CONNECTIONS: "512"
   ANTARES_DATABASE_URL: "postgresql://antares:$(PGPASSWORD)@postgres-cluster-rw.{{ .Values.postgres.cluster.namespace }}.svc.cluster.local:5432/antares"
-  # The jc build's surfaces (T-3642): the endpoint views, MCP, the engine's access document and
-  # the view's LinkML schema (T-3804, the image carries it since Antares T-3803), each under
-  # /x/views/{view}/ and reached through the gateway only (no edge route). The Portal PUTs the
-  # schema to /q/schemas/{tenant} (T-3628), which takes nothing while ANTARES_SCHEMA_MAX_BYTES is
-  # unset; the gateway serves /api/endpoint/{slug}/schema/... from /x/views/{slug}/linkml (T-3645).
-  ANTARES_API_SURFACES: "admin,views,mcp,access,linkml"
+  # The jc build's surfaces (T-3642): the endpoint views, MCP, the engine's access document, the
+  # view WebSocket and OGC API Features (T-3922; the gateway forwards /api/endpoint/{slug}/ogc/
+  # features to it since platform T-3752), each under /x/views/{view}/ and reached through the
+  # gateway hop alone, never an edge route; and the view's LinkML schema (T-3804, in the image
+  # since Antares T-3803), which the gateway serves as /api/endpoint/{slug}/schema/... (T-3645).
+  # The Portal PUTs the schema to /q/schemas/{tenant} (T-3628), which takes nothing while
+  # ANTARES_SCHEMA_MAX_BYTES is unset.
+  ANTARES_API_SURFACES: "admin,views,mcp,access,ws,ogc,linkml"
+  # The view WebSocket (T-3905, ADR-0026), bounded for the one 16 GB node: at most 200 sockets,
+  # 50 per Tenant, 16 Subscriptions and 128 queued notifications each, so a full house holds
+  # about 200 x 128 notifications (~100 MiB at 4 KiB each) where the defaults (10 000 sockets,
+  # queue 256) would hold gigabytes. Browsers reach it through the gateway alone: no Origin.
+  ANTARES_WS_MAX_CONNECTIONS: "200"
+  ANTARES_WS_MAX_CONNECTIONS_PER_TENANT: "50"
+  ANTARES_WS_MAX_SUBSCRIPTIONS: "16"
+  ANTARES_WS_QUEUE: "128"
   ANTARES_SCHEMA_MAX_BYTES: "1048576"
   # The verified caller the gateway forwards (platform T-3641); `x-jc-did` a data-space
   # participant, which the gateway strips from every client request (platform T-3800, T-3816).

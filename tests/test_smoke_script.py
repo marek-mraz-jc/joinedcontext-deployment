@@ -63,6 +63,10 @@ elif "-D" in args:
     # The response headers of one read (T-2262): the gateway's own caching and its ETag.
     sys.stdout.write(lookup("dumpedHeaders", spec.get("schemaHeaders",
         'HTTP/2 200\\r\\ncache-control: private, no-cache\\r\\netag: "e3b0c442"\\r\\n')))
+elif "/q/health" in line:
+    # The broker's own health over the port-forward (T-3905): the surfaces the deployment mounts.
+    surfaces = spec.get("brokerSurfaces", ["views", "mcp", "access", "ws", "ogc"])
+    sys.stdout.write(lookup("bodies", json.dumps({"status": "UP", "surfaces": {s: "UP" for s in surfaces}})))
 else:
     sys.stdout.write(lookup("bodies", ""))
 '''
@@ -174,6 +178,8 @@ elif args[0] == "get" and args[1] == "secret":
     if not secret:
         sys.exit(1)
     sys.stdout.write(base64.b64encode(secret.encode()).decode())
+elif args[0] == "get" and args[1] == "deployment" and args[2] == "context-broker":
+    sys.exit(0 if spec.get("broker", True) else 1)
 elif args[0] == "get" and args[1] == "deployment" and args[2] == "jc-functions":
     sys.exit(0 if spec.get("functions", True) else 1)
 elif args[0] == "get" and args[1] == "service" and args[2] == "jc-functions":
@@ -636,6 +642,24 @@ def test_jc_functions_open_to_any_pod_or_closed_to_the_portal_fails_the_run(tmp_
     result = run(tmp_path, dict(HEALTHY, functionsPortalReaches=False), "https://example.test", "https://idm.example.test")
     assert result.returncode != 0
     assert "FAIL  a pod with the Portal's label cannot reach jc-functions:8080" in result.stdout
+
+
+def test_a_surface_the_broker_does_not_mount_fails_the_run(tmp_path):
+    """T-3905, T-3922: `/q/health` lists each surface the deployment selected; one missing from
+    it is a broker built without it or a list that lost it."""
+    result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
+    for surface in ("views", "mcp", "access", "ws", "ogc"):
+        assert f"ok    the broker mounts the {surface} surface" in result.stdout
+    result = run(tmp_path, dict(HEALTHY, brokerSurfaces=["views", "mcp", "access", "ws"]),
+                 "https://example.test", "https://idm.example.test")
+    assert result.returncode != 0
+    assert "FAIL  the broker's /q/health lists no ogc surface" in result.stdout
+
+
+def test_an_instance_without_the_broker_skips_the_surface_checks(tmp_path):
+    result = run(tmp_path, dict(HEALTHY, broker=False), "https://example.test", "https://idm.example.test")
+    assert "skip  broker surfaces (the context broker is not deployed in this instance)" in result.stdout
+    assert "mounts the" not in result.stdout
 
 
 def test_an_instance_without_jc_functions_skips_the_functions_checks(tmp_path):
