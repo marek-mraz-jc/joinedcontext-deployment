@@ -467,6 +467,15 @@ if has_route context-endpoint; then
 		status 204 "and is deleted again" -X DELETE -H "Authorization: Bearer $ep_token" "$base/api/endpoint/$ep/ngsi-ld/v1/entities/$other"
 		status 204 "entity delete" -X DELETE -H "Authorization: Bearer $ep_token" "$base/api/endpoint/$ep/ngsi-ld/v1/entities/$urn"
 
+		# T-4109: hand probes an earlier debugging session left in this space; a visitor of the
+		# demo dataset sees them beside the real station. Removed when present, named when removed.
+		for stale in urn:ngsi-ld:AirQualityObserved:hel.fi:ovzdusie:deployer-probe \
+			urn:ngsi-ld:AirQualityObserved:hel.fi:ovzdusie:eea-SK0263A; do
+			got=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 -X DELETE \
+				-H "Authorization: Bearer $ep_token" "$base/api/endpoint/$ep/ngsi-ld/v1/entities/$stale" 2>/dev/null) || got=""
+			[ "$got" = "204" ] && ok "removed the stale test entity $stale"
+		done
+
 		# T-0945: what the space lists, the space serves. An entity whose URN carries another
 		# organization's domain lists (the broker holds it) and answers 400 on retrieve (the
 		# gateway checks the prefix, GW20), so a steward can neither read nor correct it. A
