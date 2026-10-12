@@ -94,6 +94,10 @@ ROUTE_CLASSES = {
         "reach": EDGE_SESSION, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "a public Endpoint's API documentation (T-3265): the page holds no data, it reads the OpenAPI document the gateway generates under the caller's rights",
     },
+    "portal-public-guide": {
+        "reach": EDGE_SESSION, "cacheable": True, "framing": "SAMEORIGIN",
+        "why": "the API chapter and the User Guide (T-4063): pages the Portal was built with, the same for everyone and holding no data; no other chapter is served on the path",
+    },
     "portal-api": {
         "reach": EDGE_SESSION, "cacheable": False, "framing": "DENY",
         "why": "CLIs and service accounts present a bearer the Portal verifies (OPS-33)",
