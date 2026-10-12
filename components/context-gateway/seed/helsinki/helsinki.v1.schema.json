@@ -246,7 +246,7 @@
           "x-ngsi-ld-relationship": {
             "cardinality": "many-to-many",
             "inverse": "routeAlerts",
-            "onDelete": "restrict",
+            "onDelete": "set-null",
             "target": "GtfsRoute",
             "unique": false
           }
@@ -262,7 +262,7 @@
           "x-ngsi-ld-relationship": {
             "cardinality": "many-to-many",
             "inverse": "stopAlerts",
-            "onDelete": "restrict",
+            "onDelete": "set-null",
             "target": "GtfsStop",
             "unique": false
           }
@@ -2132,7 +2132,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "route": {
-          "description": "The HSL route id the bus is serving, four digits with the municipality prefix.",
+          "description": "The HSL route id the vehicle is serving, as GTFS names it (2550, 1009, 31M1, 3001K).",
           "type": [
             "string",
             "null"
@@ -2206,8 +2206,19 @@
     },
     "Vehicle": {
       "additionalProperties": false,
-      "description": "One HSL bus on a trunk line, where it is and how fast it moves.",
+      "description": "One HSL bus, tram, metro, train or ferry in service, where it is, how fast it moves and how late it runs.",
       "properties": {
+        "delay": {
+          "description": "Seconds behind the timetable, negative when ahead (HSL's dl with the sign turned).",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "s"
+          }
+        },
         "fleetVehicleId": {
           "description": "The operator and vehicle number HSL publishes, operator-vehicle.",
           "type": [
@@ -2217,7 +2228,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "heading": {
-          "description": "Compass heading of the bus, degrees clockwise from north.",
+          "description": "Compass heading of the vehicle, degrees clockwise from north.",
           "maximum": 360,
           "minimum": 0,
           "type": [
@@ -2262,6 +2273,14 @@
           ],
           "x-ngsi-ld-kind": "GeoProperty"
         },
+        "nextStop": {
+          "description": "The stop the vehicle stands at or comes to next, the URN of a GtfsStop of this space; HSL moves it on at each departure from or passing of a stop.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Relationship"
+        },
         "observedAt": {
           "description": "When the observation the entity reports was made.",
           "format": "date-time",
@@ -2271,8 +2290,29 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "occupancy": {
+          "description": "How full the vehicle is, in percent; HSL sends 0 (room) or 100 (full).",
+          "maximum": 100,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "%"
+          }
+        },
+        "onRoute": {
+          "description": "The line the vehicle is running, the URN of a GtfsRoute of this space.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Relationship"
+        },
         "route": {
-          "description": "The HSL route id the bus is serving, four digits with the municipality prefix.",
+          "description": "The HSL route id the vehicle is serving, as GTFS names it (2550, 1009, 31M1, 3001K).",
           "type": [
             "string",
             "null"
@@ -2280,7 +2320,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "speed": {
-          "description": "Ground speed of the bus.",
+          "description": "Ground speed of the vehicle.",
           "minimum": 0,
           "type": [
             "number",
@@ -2291,13 +2331,18 @@
             "ucumCode": "m/s"
           }
         },
+        "transportMode": {
+          "$ref": "#/definitions/TransportMode",
+          "description": "What serves the stop or runs the line.",
+          "x-ngsi-ld-kind": "Property"
+        },
         "type": {
           "description": "The entity type, one class of a published data model.",
           "type": "string",
           "x-ngsi-ld-kind": "Property"
         },
         "vehicleType": {
-          "description": "The kind of vehicle; bus on every entity of this space.",
+          "description": "The Smart Data Models kind of vehicle - bus, tram, passengerVessel for a ferry, other for metro and train; transportMode names HSL's mode.",
           "type": [
             "string",
             "null"

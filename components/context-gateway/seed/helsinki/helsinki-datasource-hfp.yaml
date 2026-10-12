@@ -1,5 +1,6 @@
-# HSL's high-frequency positioning broker, public. Four trunk lines rather than the whole fleet:
-# the topic is the filter, so the runner never sees the six hundred buses it would drop anyway.
+# HSL's high-frequency positioning broker, public. Four bus trunk lines rather than the whole bus
+# fleet, and every rail and ferry vehicle: the topic is the filter, so the runner never sees the
+# six hundred buses it would drop anyway.
 # Route ids carry the municipality prefix (2 = Espoo, 4 = Vantaa): 2510, 2550, 4560 and 4570 are
 # lines 510, 550, 560 and 570.
 apiVersion: joinedcontext.com/v1alpha1
@@ -7,7 +8,7 @@ kind: DataSource
 metadata:
   name: hsl-hfp
   namespace: helsinki
-  title: { en: "HSL high-frequency positioning, trunk lines", fi: "HSL:n suurtaajuinen paikannus, runkolinjat" }
+  title: { en: "HSL high-frequency positioning, trunk lines, rail and ferries", fi: "HSL:n suurtaajuinen paikannus, runkolinjat, raideliikenne ja lautat" }
 spec:
   type: mqtt
   mqtt:
@@ -16,10 +17,17 @@ spec:
     # same broker on both. `wss://` renders the stream's TLS block.
     urls:
       - wss://mqtt.hsl.fi:443/
+    # A fixed list (T-3893): the four bus trunk lines, and every tram, metro, train and ferry,
+    # which together are a few hundred vehicles; never the whole bus fleet, never `vp/#`. The
+    # mapping caps how many of each mode are written.
     topics:
       - /hfp/v2/journey/ongoing/vp/bus/+/+/2510/#
       - /hfp/v2/journey/ongoing/vp/bus/+/+/2550/#
       - /hfp/v2/journey/ongoing/vp/bus/+/+/4560/#
       - /hfp/v2/journey/ongoing/vp/bus/+/+/4570/#
+      - /hfp/v2/journey/ongoing/vp/tram/#
+      - /hfp/v2/journey/ongoing/vp/metro/#
+      - /hfp/v2/journey/ongoing/vp/train/#
+      - /hfp/v2/journey/ongoing/vp/ferry/#
     qos: 0
     cleanSession: true

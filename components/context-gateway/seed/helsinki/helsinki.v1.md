@@ -58,7 +58,7 @@ Specialises `Entity`.
 
 ### Vehicle
 
-One HSL bus on a trunk line, where it is and how fast it moves.
+One HSL bus, tram, metro, train or ferry in service, where it is, how fast it moves and how late it runs.
 
 IRI: `sdm:Vehicle`
 
@@ -66,11 +66,16 @@ Specialises `Entity`.
 
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
-| `speed` | Property | `float` |  | m/s | `sdm:speed` | Ground speed of the bus. |
-| `heading` | Property | `float` |  | deg | `sdm:heading` | Compass heading of the bus, degrees clockwise from north. |
-| `route` | Property | `string` |  |  | `sdm:route` | The HSL route id the bus is serving, four digits with the municipality prefix. |
-| `vehicleType` | Property | `string` |  |  | `sdm:vehicleType` | The kind of vehicle; bus on every entity of this space. |
+| `speed` | Property | `float` |  | m/s | `sdm:speed` | Ground speed of the vehicle. |
+| `heading` | Property | `float` |  | deg | `sdm:heading` | Compass heading of the vehicle, degrees clockwise from north. |
+| `route` | Property | `string` |  |  | `sdm:route` | The HSL route id the vehicle is serving, as GTFS names it (2550, 1009, 31M1, 3001K). |
+| `vehicleType` | Property | `string` |  |  | `sdm:vehicleType` | The Smart Data Models kind of vehicle - bus, tram, passengerVessel for a ferry, other for metro and train; transportMode names HSL's mode. |
+| `transportMode` | Property | [`TransportMode`](#transportmode) |  |  | `jc:transportMode` | What serves the stop or runs the line. |
 | `fleetVehicleId` | Property | `string` |  |  | `sdm:fleetVehicleId` | The operator and vehicle number HSL publishes, operator-vehicle. |
+| `onRoute` | Relationship | `uriorcurie` |  |  | `jc:onRoute` | The line the vehicle is running, the URN of a GtfsRoute of this space. |
+| `nextStop` | Relationship | `uriorcurie` |  |  | `jc:nextStop` | The stop the vehicle stands at or comes to next, the URN of a GtfsStop of this space; HSL moves it on at each departure from or passing of a stop. |
+| `delay` | Property | `integer` |  | s | `jc:delay` | Seconds behind the timetable, negative when ahead (HSL's dl with the sign turned). |
+| `occupancy` | Property | `integer` |  | % | `jc:occupancy` | How full the vehicle is, in percent; HSL sends 0 (room) or 100 (full). |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
 | `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
@@ -342,7 +347,7 @@ Specialises `Entity`.
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language. |
-| `route` | Property | `string` |  |  | `sdm:route` | The HSL route id the bus is serving, four digits with the municipality prefix. |
+| `route` | Property | `string` |  |  | `sdm:route` | The HSL route id the vehicle is serving, as GTFS names it (2550, 1009, 31M1, 3001K). |
 | `routeShortName` | Property | `string` |  |  | `jc:routeShortName` | The line number riders see, such as 4 or 550. |
 | `headsign` | Property | `string` |  |  | `jc:headsign` | Where the line runs to in this direction, as its sign shows it. |
 | `directionId` | Property | `integer` |  |  | `jc:directionId` | HSL's direction of the line, 1 or 2. |

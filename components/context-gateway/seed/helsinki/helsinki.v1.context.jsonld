@@ -103,6 +103,10 @@
       "@id": "schema:datePublished",
       "@type": "xsd:dateTime"
     },
+    "delay": {
+      "@id": "jc:delay",
+      "@type": "xsd:integer"
+    },
     "departures": {
       "@id": "jc:departures",
       "@type": "@json"
@@ -180,10 +184,22 @@
       "@container": "@language",
       "@id": "schema:name"
     },
+    "nextStop": {
+      "@id": "jc:nextStop",
+      "@type": "@id"
+    },
     "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
     "observedAt": {
       "@id": "ngsi-ld:observedAt",
       "@type": "xsd:dateTime"
+    },
+    "occupancy": {
+      "@id": "jc:occupancy",
+      "@type": "xsd:integer"
+    },
+    "onRoute": {
+      "@id": "jc:onRoute",
+      "@type": "@id"
     },
     "openingHours": {
       "@container": "@language",
