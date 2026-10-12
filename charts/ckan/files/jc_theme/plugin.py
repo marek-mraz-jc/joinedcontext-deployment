@@ -5,7 +5,9 @@ file is not an error: CKAN then looks like a plain CKAN, which is what an instal
 without branding should look like.
 """
 
+import base64
 import datetime
+import html
 import json
 import os
 import re
@@ -111,6 +113,57 @@ def _available(codes):
 
 
 BRANDING = _load()
+
+# A badge and a description per CKAN organization name, from the chart's `organizations` value,
+# for a publisher that set neither in CKAN. Same rule as the branding: a missing or broken file
+# leaves CKAN's own placeholder.
+ORGANIZATIONS_FILE = os.environ.get(
+    "JC_ORGANIZATIONS_FILE", os.path.join(os.path.dirname(BRANDING_FILE), "organizations.json"))
+
+
+def _organizations():
+    try:
+        with open(ORGANIZATIONS_FILE, encoding="utf-8") as handle:
+            block = json.load(handle)
+    except (OSError, ValueError):
+        return {}
+    return {name: entry for name, entry in block.items() if isinstance(entry, dict)} \
+        if isinstance(block, dict) else {}
+
+
+ORGANIZATIONS = _organizations()
+
+
+def _badge(entry):
+    """The publisher's initials on its colour, as an SVG data URI: on this origin, no file to mount."""
+    initials = entry.get("initials")
+    colour = entry.get("colour")
+    if not isinstance(initials, str) or not initials.strip() or not _is_colour(colour):
+        return None
+    red, green, blue = _rgb(colour)
+    ink = "#000000" if (red * 299 + green * 587 + blue * 114) // 1000 >= 128 else "#ffffff"
+    svg = (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200">'
+        '<rect width="400" height="200" fill="%s"/>'
+        '<text x="200" y="100" dy="0.35em" text-anchor="middle" fill="%s" '
+        'font-family="system-ui, sans-serif" font-size="72" font-weight="700">%s</text></svg>'
+    ) % (colour, ink, html.escape(initials.strip()[:4]))
+    return "data:image/svg+xml;base64," + base64.b64encode(svg.encode("utf-8")).decode("ascii")
+
+
+def jc_org(organization):
+    """The organization's image and description: CKAN's own first, then the chart's, in the page's
+    language when the chart gives several; None where neither has one."""
+    organization = organization or {}
+    entry = ORGANIZATIONS.get(organization.get("name") or "", {})
+    description = organization.get("description")
+    if not description:
+        words = entry.get("description")
+        if isinstance(words, dict):
+            lang = toolkit.h.lang() or "en"
+            words = words.get(lang) or words.get("en")
+        description = words if isinstance(words, str) and words.strip() else None
+    return {"image": organization.get("image_display_url") or _badge(entry), "description": description}
 
 # The words the theme adds to CKAN's own, in the four languages of the Portal (UI-82). CKAN's
 # catalogues translate everything else; a language CKAN names `cs_CZ` reads the `cs` column.
@@ -762,6 +815,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
     def get_helpers(self):
         return {
             "jc_branding": jc_branding,
+            "jc_org": jc_org,
             "jc_t": jc_t,
             "jc_about": jc_about,
             "jc_more": jc_more,
