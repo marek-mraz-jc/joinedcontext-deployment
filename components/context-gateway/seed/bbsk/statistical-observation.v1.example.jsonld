@@ -10,7 +10,7 @@
   "refArea": { "type": "Property", "value": "SK032" },
   "refPeriod": { "type": "Property", "value": "2023" },
   "dimensionKey": { "type": "Property", "value": "1" },
-  "value": { "type": "Property", "value": 5354.3, "unitCode": "TNE" },
+  "observationValue": { "type": "Property", "value": 5354.3, "unitCode": "TNE" },
   "unitText": { "type": "Property", "value": "v tonách" },
   "source": {
     "type": "Property",
