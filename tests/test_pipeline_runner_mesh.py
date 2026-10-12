@@ -98,3 +98,18 @@ def test_an_unmeshed_runner_gets_no_mesh_policy(rendered_variant):
         s["spec"]["podSelector"].get("matchLabels", {}).get("app.kubernetes.io/name") == RUNNER
         for s in of_kind(docs, "Server")
     )
+
+
+@pytest.mark.parametrize("environment", ENVIRONMENTS)
+def test_no_networkpolicy_admits_a_peer_to_the_streams_api(rendered, environment):
+    """T-4044: off the mesh, 4195 is reached by no pod at all (PL-07): every runner ingress rule
+    either opens the Linkerd proxy port, which the Server above narrows to the Portal, or none."""
+    docs = rendered(environment)
+    for policy in docs:
+        if policy.get("kind") != "NetworkPolicy":
+            continue
+        if policy["spec"]["podSelector"].get("matchLabels", {}).get("app.kubernetes.io/name") != RUNNER:
+            continue
+        for rule in policy["spec"].get("ingress", []):
+            opened = {port.get("port") for port in rule.get("ports", [])}
+            assert opened and 4195 not in opened, (policy["metadata"]["name"], rule)
