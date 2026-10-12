@@ -17,6 +17,9 @@ requires_docker = pytest.mark.skipif(
     shutil.which("docker") is None, reason="no container runtime, so Bento cannot run the mapping"
 )
 
+# The runner's shared caches, which a mapping may name (T-4052).
+RESOURCES = Path(__file__).resolve().parent.parent / "components/pipeline-runner/streams/resources.yaml"
+
 
 def _bento(mapping: Path, document: bytes, space: str, domain: str, codec: str, metadata: dict | None = None) -> bytes:
     pipeline = yaml.safe_load(mapping.read_text())["pipeline"]
@@ -27,6 +30,7 @@ def _bento(mapping: Path, document: bytes, space: str, domain: str, codec: str, 
     config = {
         "input": {"stdin": {"scanner": {"to_the_end": {}}}},
         "pipeline": pipeline,
+        "cache_resources": yaml.safe_load(RESOURCES.read_text())["cache_resources"],
         "output": {"stdout": {"codec": codec}},
         "logger": {"level": "error"},
     }

@@ -206,3 +206,27 @@ def test_each_source_reads_only_its_named_members_of_the_zip_within_a_bound():
     assert yaml.safe_load((HELSINKI / "helsinki-pipeline-gtfs-shapes.yaml").read_text())["spec"]["enabled"] is False
     # The ArcGIS stop register this feed replaces is gone; its lines stay for TransitRoute.
     assert "hsl-stops.yaml" not in " ".join(str(v) for v in index.values())
+
+
+@requires_docker
+@pytest.mark.parametrize("pipeline, name", [("transit-stops", "stops.txt"), ("gtfs-routes", "routes.txt"), ("gtfs-routes", "agency.txt")])
+def test_every_entity_written_leaves_its_urn_in_the_runners_gtfs_cache(pipeline, name, tmp_path):
+    """T-4052: hsl-hfp-vehicles links a vehicle only to a line or stop whose URN the read left in
+    the `gtfs` cache. Each entity goes out once, as its own message, and its URN is cached; a URN
+    the read did not write is not."""
+    mapping = yaml.safe_load((HELSINKI / f"helsinki-pipeline-{pipeline}-bento.yaml").read_text())
+    probe = lambda key, field: {"branch": {  # noqa: E731
+        "request_map": 'root = ""',
+        "processors": [{"cache": {"resource": "gtfs", "operator": "exists", "key": key}}],
+        "result_map": f"root.{field} = content().string()",
+    }}
+    mapping["pipeline"]["processors"] += [
+        {"mapping": "meta urn = this.id\nroot = {\"id\": this.id}"},
+        probe('${! meta("urn") }', "cached"),
+        probe(URN.format("GtfsStop", "nope"), "stranger"),
+    ]
+    probed = tmp_path / "probed.yaml"
+    probed.write_text(yaml.safe_dump(mapping))
+    seen = open_data.run_all(probed, member(name), "helsinki", metadata={"archive_filename": name})
+    assert len(seen) == len(run(pipeline, name)) > 0
+    assert all(s == {"id": s["id"], "cached": "true", "stranger": "false"} for s in seen), seen

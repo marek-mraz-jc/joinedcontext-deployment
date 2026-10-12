@@ -245,7 +245,13 @@ portal:
     # (T-3539). portal 85ff8a3: the builder image drops git checkouts' own Cargo.lock, so trivy is
     # green again and the builders move with it (T-3567); auth_tests fixed (T-3568). portal ccc23a87:
     # the SDK's entity panel writes a number as the grid does (T-3600).
-    digest: 'sha256:d898acd85ebc9d15b31fce200bc6d46cdb2e21526fc7f2625378fd092dd63804'
+    # portal dfd0b23: jc-core of platform 2883bd0 reads a space's `quality` and `retention`
+    # (T-3899), so the Helsinki seed that carries them comes back in the same apply (T-4054).
+    digest: 'sha256:54ada9a9871ce593ceb201e06c52904b8e0fc0ce3177f28d007aaeff8bdc81c0'
+    # The platform commit the image's jc-core is built from (the portal's Cargo.toml `rev`): a
+    # seed field this jc-core does not know makes the Portal drop the whole manifest, so
+    # tests/test_portal_pin_reads_the_seed.py holds every seed to it (T-4054).
+    platform: '2883bd06a17ebe8568f37579d0578025fc9eb963'
   # Mailpit, the mail catcher of an installation without a relay (T-3583). Re-pin with the
   # registry query in components/sandbox-reaper/images.yaml, repository axllent/mailpit.
   mail-catcher:
