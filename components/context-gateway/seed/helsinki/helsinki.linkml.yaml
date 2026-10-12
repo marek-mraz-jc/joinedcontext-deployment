@@ -243,13 +243,15 @@ slots:
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
   category:
     slot_uri: sdm:category
-    description: The alert's domain; traffic for everything Fintraffic publishes.
+    description: The alert's domain; traffic for everything Fintraffic and HSL publish.
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Alert
   subCategory:
     slot_uri: sdm:subCategory
-    description: Fintraffic's situation type, ROAD_WORK or TRAFFIC_ANNOUNCEMENT.
+    description: >-
+      Fintraffic's situation type, ROAD_WORK or TRAFFIC_ANNOUNCEMENT, or the effect of an HSL
+      service alert as GTFS-RT names it, such as DETOUR or REDUCED_SERVICE.
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Alert
@@ -260,6 +262,61 @@ slots:
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Alert
+  cause:
+    slot_uri: jc:cause
+    description: Why an HSL service alert is in force, as GTFS-RT names it, such as CONSTRUCTION or MAINTENANCE.
+    annotations:
+      ngsi_ld_kind: Property
+  severity:
+    slot_uri: sdm:severity
+    description: How much the alert matters, informational, medium or high (GTFS-RT INFO, WARNING, SEVERE).
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Alert
+  refRoute:
+    slot_uri: jc:refRoute
+    description: The lines an HSL service alert affects, each a GtfsRoute of this space.
+    range: GtfsRoute
+    multivalued: true
+    inverse: routeAlerts
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
+  refStop:
+    slot_uri: jc:refStop
+    description: The stops an HSL service alert affects, each a GtfsStop of this space.
+    range: GtfsStop
+    multivalued: true
+    inverse: stopAlerts
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
+  routeAlerts:
+    slot_uri: jc:routeAlerts
+    description: The HSL service alerts on the line, computed from their refRoute and never stored.
+    range: Alert
+    multivalued: true
+    inverse: refRoute
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
+  stopAlerts:
+    slot_uri: jc:stopAlerts
+    description: The HSL service alerts on the stop, computed from their refStop and never stored.
+    range: Alert
+    multivalued: true
+    inverse: refStop
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
+  unknownReference:
+    slot_uri: jc:unknownReference
+    description: >-
+      What an HSL service alert names that this space holds no entity for, as `route:<id>` or
+      `stop:<id>`, kept as text rather than as a relationship that would point at nothing.
+    multivalued: true
+    annotations:
+      ngsi_ld_kind: Property
   validFrom:
     slot_uri: sdm:validFrom
     description: When the situation starts.
@@ -670,7 +727,9 @@ classes:
       - source
   Alert:
     class_uri: sdm:Alert
-    description: One road work or traffic announcement of Fintraffic in the capital region.
+    description: >-
+      One road work or traffic announcement of Fintraffic in the capital region, or one service
+      alert of HSL with the lines and stops it affects.
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Alert
@@ -679,10 +738,15 @@ classes:
       - description
       - category
       - subCategory
+      - cause
+      - severity
       - address
       - dateIssued
       - validFrom
       - validTo
+      - refRoute
+      - refStop
+      - unknownReference
       - source
   AirQualityObserved:
     class_uri: sdm:AirQualityObserved
@@ -801,6 +865,7 @@ classes:
       - wheelChairAccessible
       - hasParentStation
       - departures
+      - stopAlerts
       - page
       - dataProvider
       - source
@@ -864,6 +929,7 @@ classes:
       - routeType
       - transportMode
       - operatedBy
+      - routeAlerts
       - page
       - dataProvider
       - source

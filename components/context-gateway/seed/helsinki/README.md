@@ -101,3 +101,20 @@ sends expected times and no `delay` (0 of 19 211 updates) and no headsign. So a 
 its line and direction, and the app takes the headsign from the TransitRoute of that line and
 direction. An empty feed keeps the departures five minutes (the runner's `departures` cache), then
 clears them.
+
+### GTFS-RT service alerts (T-3892)
+
+`hsl-service-alerts` reads `https://realtime.hsl.fi/realtime/service-alerts/v2/hsl` every minute
+and writes one `Alert` per HSL alert, `urn:ngsi-ld:Alert:{orgDomain}:helsinki:hsl-{id}`, beside the
+Digitraffic ones: header and description as LanguageProperty in Finnish, Swedish and English, the
+effect as `subCategory`, the cause, the severity (`INFO`, `WARNING`, `SEVERE` become
+`informational`, `medium`, `high`), and the first active period as `validFrom`/`validTo` (no end,
+no `validTo`). Each line or stop the alert names becomes `refRoute`/`refStop` when the space holds
+that GtfsRoute or GtfsStop (one `entityOperations/query` per round). A name the space lacks stays
+text in `unknownReference` (`route:…`, `stop:…`), because the gateway refuses a relationship to a
+missing target. A failed lookup skips the round. An alert HSL no longer lists is deleted; the
+pipeline deletes only Alerts whose `source` is this feed, so Digitraffic's and a steward's stay.
+
+Measured 2026-10-12 over the recorded feed (21 kB, 18 alerts, `tests/fixtures/helsinki/gtfs-rt/
+service-alerts.pb`), with the gateway calls cut: 18 Alerts, peak resident memory 140 MB against
+Bento's baseline of 96 MB, so about 44 MB for the moment each refresh holds it.

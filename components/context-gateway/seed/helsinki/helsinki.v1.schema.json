@@ -136,7 +136,7 @@
     },
     "Alert": {
       "additionalProperties": false,
-      "description": "One road work or traffic announcement of Fintraffic in the capital region.",
+      "description": "One road work or traffic announcement of Fintraffic in the capital region, or one service alert of HSL with the lines and stops it affects.",
       "properties": {
         "address": {
           "description": "The street address, one line.",
@@ -147,7 +147,15 @@
           "x-ngsi-ld-kind": "Property"
         },
         "category": {
-          "description": "The alert's domain; traffic for everything Fintraffic publishes.",
+          "description": "The alert's domain; traffic for everything Fintraffic and HSL publish.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "cause": {
+          "description": "Why an HSL service alert is in force, as GTFS-RT names it, such as CONSTRUCTION or MAINTENANCE.",
           "type": [
             "string",
             "null"
@@ -227,6 +235,46 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "refRoute": {
+          "description": "The lines an HSL service alert affects, each a GtfsRoute of this space.",
+          "items": {
+            "pattern": "^urn:ngsi-ld:GtfsRoute:",
+            "type": "string"
+          },
+          "type": "array",
+          "x-ngsi-ld-kind": "Relationship",
+          "x-ngsi-ld-relationship": {
+            "cardinality": "many-to-many",
+            "inverse": "routeAlerts",
+            "onDelete": "restrict",
+            "target": "GtfsRoute",
+            "unique": false
+          }
+        },
+        "refStop": {
+          "description": "The stops an HSL service alert affects, each a GtfsStop of this space.",
+          "items": {
+            "pattern": "^urn:ngsi-ld:GtfsStop:",
+            "type": "string"
+          },
+          "type": "array",
+          "x-ngsi-ld-kind": "Relationship",
+          "x-ngsi-ld-relationship": {
+            "cardinality": "many-to-many",
+            "inverse": "stopAlerts",
+            "onDelete": "restrict",
+            "target": "GtfsStop",
+            "unique": false
+          }
+        },
+        "severity": {
+          "description": "How much the alert matters, informational, medium or high (GTFS-RT INFO, WARNING, SEVERE).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "source": {
           "description": "The open-data service the entity was read from.",
           "format": "uri",
@@ -237,7 +285,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "subCategory": {
-          "description": "Fintraffic's situation type, ROAD_WORK or TRAFFIC_ANNOUNCEMENT.",
+          "description": "Fintraffic's situation type, ROAD_WORK or TRAFFIC_ANNOUNCEMENT, or the effect of an HSL service alert as GTFS-RT names it, such as DETOUR or REDUCED_SERVICE.",
           "type": [
             "string",
             "null"
@@ -247,6 +295,17 @@
         "type": {
           "description": "The entity type, one class of a published data model.",
           "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "unknownReference": {
+          "description": "What an HSL service alert names that this space holds no entity for, as `route:<id>` or `stop:<id>`, kept as text rather than as a relationship that would point at nothing.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
           "x-ngsi-ld-kind": "Property"
         },
         "validFrom": {

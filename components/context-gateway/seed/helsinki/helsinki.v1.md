@@ -123,7 +123,7 @@ Specialises `Entity`.
 
 ### Alert
 
-One road work or traffic announcement of Fintraffic in the capital region.
+One road work or traffic announcement of Fintraffic in the capital region, or one service alert of HSL with the lines and stops it affects.
 
 IRI: `sdm:Alert`
 
@@ -133,12 +133,17 @@ Specialises `Entity`.
 |---|---|---|---|---|---|---|
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language. |
 | `description` | LanguageProperty | `string` |  |  | `schema:description` | A short description, per language. |
-| `category` | Property | `string` |  |  | `sdm:category` | The alert's domain; traffic for everything Fintraffic publishes. |
-| `subCategory` | Property | `string` |  |  | `sdm:subCategory` | Fintraffic's situation type, ROAD_WORK or TRAFFIC_ANNOUNCEMENT. |
+| `category` | Property | `string` |  |  | `sdm:category` | The alert's domain; traffic for everything Fintraffic and HSL publish. |
+| `subCategory` | Property | `string` |  |  | `sdm:subCategory` | Fintraffic's situation type, ROAD_WORK or TRAFFIC_ANNOUNCEMENT, or the effect of an HSL service alert as GTFS-RT names it, such as DETOUR or REDUCED_SERVICE. |
+| `cause` | Property | `string` |  |  | `jc:cause` | Why an HSL service alert is in force, as GTFS-RT names it, such as CONSTRUCTION or MAINTENANCE. |
+| `severity` | Property | `string` |  |  | `sdm:severity` | How much the alert matters, informational, medium or high (GTFS-RT INFO, WARNING, SEVERE). |
 | `address` | Property | `string` |  |  | `schema:address` | The street address, one line. |
 | `dateIssued` | Property | `datetime` |  |  | `sdm:dateIssued` | When the situation was published. |
 | `validFrom` | Property | `datetime` |  |  | `sdm:validFrom` | When the situation starts. |
 | `validTo` | Property | `datetime` |  |  | `sdm:validTo` | When the situation ends; absent while open-ended. |
+| `refRoute` | Relationship | [`GtfsRoute`](#gtfsroute) (list) |  |  | `jc:refRoute` | The lines an HSL service alert affects, each a GtfsRoute of this space. |
+| `refStop` | Relationship | [`GtfsStop`](#gtfsstop) (list) |  |  | `jc:refStop` | The stops an HSL service alert affects, each a GtfsStop of this space. |
+| `unknownReference` | Property | `string` (list) |  |  | `jc:unknownReference` | What an HSL service alert names that this space holds no entity for, as `route:<id>` or `stop:<id>`, kept as text rather than as a relationship that would point at nothing. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
 | `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
@@ -317,6 +322,7 @@ Specialises `Entity`.
 | `wheelChairAccessible` | Property | `string` |  |  | `sdm:wheelChairAccessible` | Whether a wheelchair can board here, GTFS's wheelchair_boarding; 0 unknown, 1 possible, 2 not possible. |
 | `hasParentStation` | Relationship | [`GtfsStation`](#gtfsstation) |  |  | `sdm:hasParentStation` | The station the stop or platform belongs to; absent for a stop on its own. |
 | `departures` | JsonProperty | `string` |  |  | `jc:departures` | The next departures from the stop, at most five, soonest first, each an object with the line (`route`, the GtfsRoute's id, and `routeId`), its `directionId`, the `expected` time and its `status` (scheduled, skipped or canceled), and `delay` in seconds with the `scheduled` time it implies when HSL sends one. Set every 30 s for a curated set of stops from HSL's GTFS-RT trip updates; empty after five minutes without a feed. |
+| `stopAlerts` | Relationship | [`Alert`](#alert) (list) |  |  | `jc:stopAlerts` | The HSL service alerts on the stop, computed from their refStop and never stored. |
 | `page` | Property | `uri` |  |  | `sdm:page` | The publisher's web page about it. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
@@ -410,6 +416,7 @@ Specialises `Entity`.
 | `routeType` | Property | `string` |  |  | `sdm:routeType` | GTFS's basic route type: 0 a tram, 1 the metro, 2 a train, 3 a bus, 4 a ferry. HSL's extended codes (109, 700s, 900) are written as the basic one they extend. |
 | `transportMode` | Property | [`TransportMode`](#transportmode) |  |  | `jc:transportMode` | What serves the stop or runs the line. |
 | `operatedBy` | Relationship | [`GtfsAgency`](#gtfsagency) |  |  | `sdm:operatedBy` | The agency that runs the line. |
+| `routeAlerts` | Relationship | [`Alert`](#alert) (list) |  |  | `jc:routeAlerts` | The HSL service alerts on the line, computed from their refRoute and never stored. |
 | `page` | Property | `uri` |  |  | `sdm:page` | The publisher's web page about it. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |

@@ -78,6 +78,9 @@
     "category": {
       "@id": "sdm:category"
     },
+    "cause": {
+      "@id": "jc:cause"
+    },
     "contactPoint": {
       "@id": "schema:contactPoint"
     },
@@ -248,6 +251,14 @@
       "@id": "sdm:refPointOfInterest",
       "@type": "@id"
     },
+    "refRoute": {
+      "@id": "jc:refRoute",
+      "@type": "@id"
+    },
+    "refStop": {
+      "@id": "jc:refStop",
+      "@type": "@id"
+    },
     "relativeHumidity": {
       "@id": "sdm:relativeHumidity",
       "@type": "xsd:float"
@@ -258,6 +269,10 @@
     },
     "route": {
       "@id": "sdm:route"
+    },
+    "routeAlerts": {
+      "@id": "jc:routeAlerts",
+      "@type": "@id"
     },
     "routeShortName": {
       "@id": "jc:routeShortName"
@@ -278,6 +293,9 @@
         "text": "skos:notation"
       },
       "@id": "jc:serviceCategory"
+    },
+    "severity": {
+      "@id": "sdm:severity"
     },
     "shex": "http://www.w3.org/ns/shex#",
     "shortName": {
@@ -301,6 +319,10 @@
     },
     "stewardNote": {
       "@id": "jc:stewardNote"
+    },
+    "stopAlerts": {
+      "@id": "jc:stopAlerts",
+      "@type": "@id"
     },
     "stopCode": {
       "@id": "jc:stopCode"
@@ -335,6 +357,9 @@
       "@id": "jc:transportMode"
     },
     "type": "@type",
+    "unknownReference": {
+      "@id": "jc:unknownReference"
+    },
     "url": {
       "@id": "schema:url",
       "@type": "xsd:anyURI"
