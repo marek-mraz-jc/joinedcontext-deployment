@@ -19,9 +19,14 @@ did not allow. No retainer, no session or message storage, sessions end with the
 RMQTT opens an HTTP API on 6060 and TLS, WebSocket and QUIC listeners on its own; the chart
 turns each of them off, and binds the cluster gRPC to loopback.
 
-`brokers` is empty in every environment: the Portal's reconciler stamps one release per
-manifest from this chart (T-3994). Until it does, an entry under
-`mqtt-brokers.brokers.brokers` runs one by hand.
+`brokers` is empty in every environment: the Portal's reconciler stamps one broker per
+`MqttBroker` manifest (T-3994). The chart renders a broker's objects once more with sentinels
+(`__RELEASE__`, `__PROJECT__`, `__NAME__`, `__MAX_BYTES__`, `__PER_SECOND__`, `__CONNECTIONS__`,
+`__CONFIG_HASH__`) into the ConfigMap `broker-template`; the Portal fills them from the manifest,
+applies the objects by server-side apply with `app.kubernetes.io/managed-by: joinedcontext-portal`,
+and deletes those of a broker whose manifest is gone. The Role `portal-mqtt-brokers` lets it do
+that here and nowhere else, and `JC_PORTAL_MQTT_NAMESPACE` tells it where. An entry under
+`mqtt-brokers.brokers.brokers` still runs one by hand, from the same template.
 
 ## Preconditions on the cluster
 

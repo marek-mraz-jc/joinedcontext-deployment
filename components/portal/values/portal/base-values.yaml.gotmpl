@@ -371,6 +371,11 @@ env:
   JC_PORTAL_APP_IDENTITY_NAMESPACE: {{ index .Values "wasm-host" "identities" "appNamespace" | quote }}
   {{- end }}
 {{- end }}
+{{- if has "mqtt-brokers" .Values.components }}
+  # Where the reconciler stamps one release per MqttBroker from the chart's template, with the
+  # Role mqtt-brokers grants it there (ADR-N-048, T-3994).
+  JC_PORTAL_MQTT_NAMESPACE: {{ index .Values "mqtt-brokers" "brokers" "namespace" | quote }}
+{{- end }}
 {{- if has "agent-runner" .Values.components }}
   # The agent runner (AG-33, AG-40): the two go together or the Portal refuses to start.
   # A `static` run is built by the Portal itself and schedules nothing in the namespace; the
