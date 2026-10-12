@@ -1284,6 +1284,21 @@ else
 	fi
 fi
 
+echo "pipeline runner streams (T-4037)"
+if [ -z "$runner_restarts_before" ]; then
+	skip "pipeline runner streams (no pipeline-runner in this instance)"
+else
+	# A stream the runner refused at init (a step that does not build, the GTFS-RT schema read
+	# twice) never runs and says so only in this log; 15 min covers the apply before the smoke.
+	refused=$(kubectl logs -n "$slug" -l app.kubernetes.io/name=pipeline-runner-runner -c pipeline-runner-runner --since=15m --tail=-1 2>/dev/null |
+		grep -oE 'Failed to create stream \([^)]*\)|Streams CRUD Error[^"]{0,80}' | sort -u | head -n 5 || true)
+	if [ -z "$refused" ]; then
+		ok "the pipeline runner built every stream it was given in the last 15 min"
+	else
+		ko "the pipeline runner refused streams: $(echo $refused)"
+	fi
+fi
+
 echo "pipeline runner memory (T-3537)"
 if [ -z "$runner_restarts_before" ]; then
 	skip "pipeline runner memory (no pipeline-runner in this instance)"
