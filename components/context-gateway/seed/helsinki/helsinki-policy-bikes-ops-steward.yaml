@@ -11,7 +11,7 @@ spec:
   contextSpaceRef: { kind: ContextSpace, name: helsinki }
   assigner: did:web:{orgDomain}
   assignee: { kind: user, id: demo.steward@hel.fi }
-  operations: [retrieveOps, updateAttrs]
+  operations: [retrieveOps, updateAttrs, createSubscription, retrieveSubscription, updateSubscription, deleteSubscription]
   information:
     - entities:
         - type: BikeHireDockingStation

@@ -46,14 +46,10 @@ def test_the_endpoint_projects_no_internal_attribute_and_credits_its_sources():
 
 
 def test_the_live_vehicles_reach_a_map_over_the_endpoints_public_websocket():
-    """T-4035: the owner's order, the WebSocket is public. Only the transport endpoint carries the
-    live positions a map follows; the other Helsinki endpoints keep their REST surfaces."""
+    """T-4035: the owner's order, the WebSocket is public. Since T-4073 every hand-written seeded
+    Endpoint serves it too (test_seeded_endpoint_surfaces.py)."""
     endpoint = load("helsinki-endpoint-transport.yaml")["spec"]
     assert "websocket" in endpoint["enabledRepresentations"]
     # T-4067: the same vehicles as OGC API Features, for QGIS and the open data portal.
     assert "ogc-features" in endpoint["enabledRepresentations"]
     assert endpoint["audience"] == "public"
-    others = [p.name for p in HELSINKI.glob("helsinki-endpoint-*.yaml") if p.name != "helsinki-endpoint-transport.yaml"]
-    assert others
-    for name in others:
-        assert "websocket" not in load(name)["spec"].get("enabledRepresentations", []), name
