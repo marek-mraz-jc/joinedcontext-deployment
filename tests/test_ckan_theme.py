@@ -578,6 +578,10 @@ def test_a_search_filter_with_nothing_to_choose_is_left_out_and_labels_are_whole
     css = (THEME / "public__jc-theme.css").read_text()
     assert ".nav-facet .nav-item > a .item-label { overflow-wrap: anywhere; }" in css
     assert "text-overflow: ellipsis; white-space: nowrap; }\n" not in css.split(".nav-facet .nav-item > a .item-label", 1)[1][:80]
+    # Owner, 2026-10-12: an empty footer drew a bordered strip under a short list (Licence), so the
+    # footer is printed only inside the condition that gives it a link.
+    guard = facets.index("{% if not limited or h.has_more_facets(name, search_facets) %}")
+    assert guard < facets.index('<p class="module-footer">') < facets.index("{% endif %}\n      </section>")
 
 
 def test_the_table_view_stacks_its_controls_below_desktop_width():
