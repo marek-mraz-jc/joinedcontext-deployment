@@ -679,7 +679,9 @@ def test_an_api_resource_shows_its_usage_with_its_commands_to_copy(theme):
     assert [b["code"] for b in blocks] == [False, True, False]
     command = blocks[1]
     assert command["text"].startswith("websocat -H \"Authorization: Bearer $TOKEN\" 'wss://dev.example/")
-    assert command["rows"] == 2 and command["id"] == "jc-use-r-ws-1"
+    # Two lines, each as many rows as it wraps to (T-4066).
+    assert command["rows"] == sum(-(-len(line) // theme.WRAP) for line in command["text"].split("\n")) >= 2
+    assert command["id"] == "jc-use-r-ws-1"
     # A file has no usage blocks; its description is CKAN's one-line extract.
     assert theme.jc_usage({"id": "r-csv", "format": "CSV", "url": ENDPOINT + "file.csv", "description": WS_USAGE}) == []
     assert theme.jc_usage({"format": "MCP"}) == []
@@ -720,3 +722,66 @@ def test_an_api_resource_page_shows_its_usage_where_ckan_said_no_view():
     snippet = (THEME / "templates__package__snippets__jc_usage.html").read_text()
     assert 'data-jc-copy="{{ block.id }}"' in snippet and "readonly" in snippet
     assert "|safe" not in snippet
+
+
+@pytest.mark.parametrize("lang, counts", [
+    ("en", {1: "1 row", 2: "2 rows", 5: "5 rows", 0: "0 rows", 1234: "1 234 rows"}),
+    ("sk", {1: "1 riadok", 3: "3 riadky", 5: "5 riadkov"}),
+    ("cs_CZ", {1: "1 řádek", 4: "4 řádky", 12: "12 řádků"}),
+    ("de", {1: "1 Zeile", 2: "2 Zeilen"}),
+    ("fi", {1: "1 row", 7: "7 rows"}),
+])
+def test_a_row_count_takes_its_language_s_plural(theme, lang, counts):
+    """T-4066: the owner's photo read "GtfsAgency 1 rows"."""
+    theme.page.lang = lang
+    for count, words in counts.items():
+        assert theme.jc_rows(count) == words
+    assert theme.jc_rows(None) == ""
+    read = (THEME / "templates__package__read.html").read_text()
+    assert "h.jc_t('rows')" not in read and read.count("h.jc_rows(") == 2
+
+
+def test_usage_reads_as_markdown_and_its_commands_wrap(theme):
+    """T-4066: `query_entities` showed its backticks, and a long command was a one-line box
+    clipped mid-word behind a horizontal scrollbar."""
+    snippet = (THEME / "templates__package__snippets__jc_usage.html").read_text()
+    # CKAN's render_markdown runs the sanitiser; the text never reaches the page as raw HTML.
+    assert "h.render_markdown(block.text)" in snippet and "<p>{{ block.text }}</p>" not in snippet
+    assert "|safe" not in snippet
+    css = (THEME / "public__jc-theme.css").read_text()
+    box = re.search(r"\.jc-copy-code textarea \{([^}]*)\}", css).group(1)
+    assert "white-space: pre-wrap" in box and "overflow-wrap: anywhere" in box and "white-space: pre;" not in box
+    config = '    {"mcpServers":{"helsinki-transport":{"type":"http","url":"https://dev.example/api/endpoint/ajaezssvx3bwqgejgepmq4ig3frgan4e/mcp"}}}'
+    resource = {"id": "r", "format": "MCP", "url": ENDPOINT + "mcp", "description": "Tools: `get_entity`.\n\n" + config}
+    text, code = theme.jc_usage(resource)
+    assert text["text"] == "Tools: `get_entity`." and not text["code"]
+    # The box is as tall as the wrapped command, so nothing hides below its edge either.
+    assert code["rows"] == -(-(len(config) - 4) // theme.WRAP) > 1
+
+
+def test_the_format_badge_sits_beside_the_resource_name():
+    """T-4066: the badge stood alone in a wide left column beside a long usage text."""
+    item = (THEME / "templates__package__snippets__resource_item.html").read_text()
+    head = item[item.index('<div class="jc-resource-head">'):item.index("</div>", item.index('<div class="jc-resource-head">'))]
+    assert "jc-chip" in head and 'class="heading"' in head
+    css = (THEME / "public__jc-theme.css").read_text()
+    assert "grid-template-columns: 6.5rem" not in css
+
+
+def test_a_publisher_without_a_description_or_logo_gets_the_installation_s(theme, tmp_path, monkeypatch):
+    """T-4066: the organization card said "There is no description for this organization" beside a
+    placeholder building."""
+    info = (THEME / "templates__organization__snippets__info.html").read_text()
+    assert info.startswith("{% ckan_extends %}")
+    assert "organization.image_display_url or h.jc_logo()" in info
+    assert "h.jc_t('publisher_about')" in info and "super()" in info
+    assert theme.jc_t("publisher_about").startswith("Publishes its open data")
+    assert theme.jc_logo() is None
+    monkeypatch.setitem(theme.BRANDING, "logo", "logo.svg")
+    assert theme.jc_logo() is None  # named but not shipped beside the theme
+    monkeypatch.setattr(theme, "__file__", str(tmp_path / "plugin.py"))
+    (tmp_path / "public").mkdir()
+    (tmp_path / "public" / "logo.svg").write_text("<svg/>")
+    assert theme.jc_logo() == "/logo.svg"
+    monkeypatch.setitem(theme.BRANDING, "logo", "../logo.svg")
+    assert theme.jc_logo() is None

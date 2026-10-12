@@ -3,6 +3,9 @@ kind: Endpoint
 metadata:
   name: helsinki-events
   namespace: helsinki
+  description:
+    fi: "Helsingin kaupungin tämän päivän tapahtumat: nimi, aika, paikka ja linkki. Lähde: Linked Events, CC BY 4.0."
+    en: "Today's events in Helsinki: name, time, venue and link. Source: the City of Helsinki's Linked Events, CC BY 4.0."
   title: { en: "Helsinki events" }
 spec:
   contextSpaceRef: helsinki

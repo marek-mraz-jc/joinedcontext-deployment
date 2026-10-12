@@ -3,6 +3,9 @@ kind: Endpoint
 metadata:
   name: helsinki-bikes
   namespace: helsinki
+  description:
+    fi: "Helsingin kaupunkipyöräasemat: sijainti, kapasiteetti sekä juuri nyt vapaat pyörät ja telineet. Lähde: operaattorin GBFS-syöte, ODbL 1.0."
+    en: "Helsinki's city bike stations: location, capacity and the bikes and docks free right now. Source: the operator's GBFS feed, ODbL 1.0."
   title: { en: "Helsinki city bike stations" }
 spec:
   contextSpaceRef: helsinki

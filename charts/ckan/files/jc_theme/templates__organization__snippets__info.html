@@ -1,0 +1,20 @@
+{% ckan_extends %}
+
+{# A publisher CKAN holds no logo or description for shows the installation's logo and one line on
+   what a publisher is (T-4066), in place of a placeholder building and "There is no description". #}
+{% block image %}
+  {% set logo = organization.image_display_url or h.jc_logo() %}
+  {% if logo %}
+    <div class="image">
+      <a href="{{ h.url_for(organization.type + '.read', id=organization.name) }}"><img src="{{ logo }}" width="200" alt="{{ organization.title or organization.name }}" /></a>
+    </div>
+  {% endif %}
+{% endblock %}
+
+{% block description %}
+  {% if organization.description %}
+    {{ super() }}
+  {% else %}
+    <p class="description">{{ h.jc_t('publisher_about') }}</p>
+  {% endif %}
+{% endblock %}
