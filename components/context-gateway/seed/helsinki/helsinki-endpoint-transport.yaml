@@ -10,7 +10,9 @@ spec:
   audience: public
   # The one Policy this endpoint evaluates: the slice of the space it publishes (EP-14).
   policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki:public-transport
-  enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, zip, mcp]
+  # `websocket`: the live vehicle positions reach a map as notifications, anonymously like the
+  # REST read, under the gateway's Origin check and per-caller cap (EP-106, EP-107, T-4035).
+  enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, zip, mcp, websocket]
   # The organizer's contact line stays in the space for the city's own coordination and is
   # served by no public endpoint (EP-61). A projection only narrows.
   projection: { hiddenAttributes: [contactPoint] }

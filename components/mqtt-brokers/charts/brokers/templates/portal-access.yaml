@@ -1,0 +1,50 @@
+{{- if .Values.portal.namespace }}
+{{- /*
+  What the Portal does in the brokers' namespace (ADR-N-048 §2.6, T-3994): read the template
+  above, and apply, list and delete the objects of each broker it stamps from it. RBAC cannot
+  bind `create` or `list` to a name, so the Portal's own client refuses every object not named
+  `mqtt-…` and every kind not in the template (src/apps/kube.rs, MQTT_KINDS); the template is
+  `broker-template` and stays out of its reach.
+*/}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: portal-mqtt-brokers
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "brokers.labels" (dict "root" . "managedBy" .Release.Service) | nindent 4 }}
+    app.kubernetes.io/component: portal-access
+rules:
+  - apiGroups: [""]
+    resources: ["serviceaccounts", "configmaps", "services"]
+    verbs: ["get", "list", "create", "patch", "delete"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "create", "patch", "delete"]
+  - apiGroups: ["cert-manager.io"]
+    resources: ["certificates"]
+    verbs: ["get", "list", "create", "patch", "delete"]
+  - apiGroups: ["traefik.io"]
+    resources: ["ingressroutetcps"]
+    verbs: ["get", "list", "create", "patch", "delete"]
+  - apiGroups: ["policy.linkerd.io"]
+    resources: ["servers", "httproutes", "meshtlsauthentications", "authorizationpolicies"]
+    verbs: ["get", "list", "create", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: portal-mqtt-brokers
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "brokers.labels" (dict "root" . "managedBy" .Release.Service) | nindent 4 }}
+    app.kubernetes.io/component: portal-access
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: portal-mqtt-brokers
+subjects:
+  - kind: ServiceAccount
+    name: {{ required "portal.serviceAccount" .Values.portal.serviceAccount }}
+    namespace: {{ .Values.portal.namespace }}
+{{- end }}

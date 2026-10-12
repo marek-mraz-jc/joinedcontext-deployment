@@ -407,6 +407,31 @@ config:
                 included.client.audience: portal-api
                 access.token.claim: 'true'
                 id.token.claim: 'false'
+        {{- /* A read across brokers (ADR-N-047 §2.4, PF-113, PF-114, T-3999): the gateway
+               exchanges the caller's token for one naming only the brokers the space's
+               `identity: caller` members live on. One optional scope per broker, `main`
+               included, holds that broker's audience; only the context-gateway client may
+               request them (below), so no default token of any client carries a broker
+               audience. */}}
+        {{- if has "context-broker" $.Values.components }}
+        {{- range $b := concat (list (dict "name" "main")) ($global.contextBrokers | default list) }}
+        - name: context-broker-{{ $b.name }}
+          description: Audience of the Context Broker {{ $b.name }}, requested only in the gateway's token exchange
+          protocol: openid-connect
+          attributes:
+            include.in.token.scope: 'false'
+            display.on.consent.screen: 'false'
+          protocolMappers:
+            - name: context-broker-{{ $b.name }}-audience
+              protocol: openid-connect
+              protocolMapper: oidc-audience-mapper
+              consentRequired: false
+              config:
+                included.custom.audience: context-broker-{{ $b.name }}
+                access.token.claim: 'true'
+                id.token.claim: 'false'
+        {{- end }}
+        {{- end }}
       # Machine identities (jcctl, pipelines, connector) are Keycloak service accounts
       # created from ServiceAccount manifests. The only realm users are the demo logins of
       # the development profile (keycloak.config.demoUsers); their passwords are the
@@ -562,6 +587,19 @@ config:
             "userinfo.token.claim" "true")
         }}
         {{- $_ := set $finalClient "protocolMappers" (concat (list $groupsMapper) (index $rawValues "protocolMappers" | default list)) }}
+        {{- /* The gateway alone exchanges a caller's token for the brokers' audiences
+               (ADR-N-047 §2.4, T-3999): standard token exchange V2 on its client, and the
+               broker scopes above optional on it, so its own client_credentials token names no
+               broker. A person's token is a subject token here because the edge adds the
+               `context-gateway` audience (components/apisix/keycloak-clients.yaml). */}}
+        {{- if and (eq $clientId "context-gateway") (has "context-broker" $.Values.components) }}
+        {{- $_ := set $finalClient.attributes "standard.token.exchange.enabled" "true" }}
+        {{- $brokerScopes := list "context-broker-main" }}
+        {{- range $b := $global.contextBrokers | default list }}
+        {{- $brokerScopes = append $brokerScopes (printf "context-broker-%s" $b.name) }}
+        {{- end }}
+        {{- $_ := set $finalClient "optionalClientScopes" (concat $finalClient.optionalClientScopes $brokerScopes) }}
+        {{- end }}
         - {{ $finalClient | toYaml | nindent 10 }}
         {{- end }}
       # The forge reads group membership from the `groups` claim and maps it onto its teams

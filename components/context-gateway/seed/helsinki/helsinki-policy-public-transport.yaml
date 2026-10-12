@@ -8,7 +8,10 @@ spec:
   contextSpaceRef: { kind: ContextSpace, name: helsinki }
   assigner: did:web:{orgDomain}
   assignee: { kind: role, id: public }
-  operations: [retrieveOps]
+  # The subscription operations are what a citizen's x-subscribe over the Endpoint's WebSocket
+  # runs (owner order 2026-10-12, T-4049): anyone may follow the buses live. A REST subscription
+  # they open is held to the same notification-address checks as every other (T-1302, GW27).
+  operations: [retrieveOps, createSubscription, retrieveSubscription, updateSubscription, deleteSubscription]
   information:
     - entities:
         - type: Vehicle

@@ -1,8 +1,9 @@
 # The stations' operations endpoint (AP-61, AP-62): the same slice the public endpoint reads,
 # for the city's own people, and the one place a generated application may write a station's
-# status back. No policyRef: every Policy of the space applies, so the public read grant and
-# the steward's write grant (bikes-ops-steward) meet here and the gateway evaluates the write
-# in full (GW16). Organization audience: the person signs in; nothing here is public.
+# status back. No policyRef: every Policy of the space applies, so the members' read grant
+# (bikes-ops-read) and the steward's write grant (bikes-ops-steward) meet here and the gateway
+# evaluates the write in full (GW16). Organization audience: the person signs in; nothing here
+# is public, and public-bikes does not reach a signed-in person here (GW22).
 apiVersion: joinedcontext.com/v1alpha1
 kind: Endpoint
 metadata:

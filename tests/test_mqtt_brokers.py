@@ -16,6 +16,7 @@ import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 CHART = PROJECT_ROOT / "components/mqtt-brokers/charts/brokers"
+TEMPLATE = "broker-template"
 STORAGE_PLUGINS = {"rmqtt-retainer", "rmqtt-session-storage", "rmqtt-message-storage"}
 
 BASE = {
@@ -51,7 +52,8 @@ def docs(tmp_path_factory) -> list[dict]:
 
 
 def of(docs, kind):
-    return {d["metadata"]["name"]: d for d in docs if d["kind"] == kind}
+    """The objects of one kind by name, the template the Portal stamps from left out."""
+    return {d["metadata"]["name"]: d for d in docs if d["kind"] == kind and d["metadata"]["name"] != TEMPLATE}
 
 
 def config(docs, release):
@@ -167,10 +169,123 @@ def test_a_collision_or_an_unbounded_name_refuses_to_render(tmp_path, brokers, m
     assert message in result.stderr
 
 
-def test_no_broker_renders_nothing(tmp_path):
+def test_no_broker_renders_only_the_template(tmp_path):
     result = helm({**BASE, "brokers": []}, tmp_path)
     assert result.returncode == 0, result.stderr
-    assert [d for d in yaml.safe_load_all(result.stdout) if d] == []
+    docs = [d for d in yaml.safe_load_all(result.stdout) if d]
+    assert [(d["kind"], d["metadata"]["name"]) for d in docs] == [("ConfigMap", TEMPLATE)]
+
+
+def fill(template: str, release: str, project: str, name: str, limits: dict) -> list[dict]:
+    """The template filled as the Portal fills it (src/reconciler/mqtt_brokers.rs), hash aside."""
+    for sentinel, value in (
+        ("__RELEASE__", release), ("__PROJECT__", project), ("__NAME__", name),
+        ("__MAX_BYTES__", limits["maxMessageBytes"]), ("__PER_SECOND__", limits["messagesPerSecond"]),
+        ("__CONNECTIONS__", limits["maxConnections"]), ("__CONFIG_HASH__", "h"),
+    ):
+        template = template.replace(sentinel, str(value))
+    return [d for d in yaml.safe_load_all(template) if d]
+
+
+def comparable(docs: list[dict]) -> list[dict]:
+    for d in docs:
+        d["metadata"]["labels"]["app.kubernetes.io/managed-by"] = "-"
+        if d["kind"] == "Deployment":
+            d["spec"]["template"]["metadata"]["labels"]["app.kubernetes.io/managed-by"] = "-"
+            d["spec"]["template"]["metadata"]["annotations"]["checksum/config"] = "-"
+    return sorted(docs, key=lambda d: (d["kind"], d["metadata"]["name"]))
+
+
+def test_the_template_filled_is_the_broker_the_chart_renders(docs):
+    """T-3994: one description of a broker; what the Portal stamps is what an entry here runs."""
+    (template,) = [d for d in docs if d["kind"] == "ConfigMap" and d["metadata"]["name"] == TEMPLATE]
+    assert template["metadata"]["labels"]["app.kubernetes.io/managed-by"] == "Helm"
+    stamped = fill(template["data"]["objects.yaml"], "mqtt-helsinki-buses", "helsinki", "buses", BASE["brokers"][1]["limits"])
+    for d in stamped:
+        assert d["metadata"]["labels"]["app.kubernetes.io/managed-by"] == "joinedcontext-portal"
+        assert d["metadata"]["labels"]["app.kubernetes.io/part-of"] == "mqtt-brokers"
+        assert d["metadata"]["labels"]["app.kubernetes.io/instance"] == "mqtt-helsinki-buses"
+        assert d["metadata"]["name"].startswith("mqtt-")
+    rendered = [d for d in docs if d["metadata"].get("labels", {}).get("app.kubernetes.io/instance") == "mqtt-helsinki-buses"]
+    assert comparable(stamped) == comparable(rendered)
+    kinds = {(d["apiVersion"], d["kind"]) for d in stamped}
+    # The kinds the Portal's client allows a broker (src/apps/kube.rs MQTT_KINDS), and no other.
+    assert kinds == {
+        ("v1", "ServiceAccount"), ("v1", "ConfigMap"), ("v1", "Service"), ("apps/v1", "Deployment"),
+        ("cert-manager.io/v1", "Certificate"), ("traefik.io/v1alpha1", "IngressRouteTCP"),
+        ("policy.linkerd.io/v1beta3", "Server"), ("policy.linkerd.io/v1alpha1", "MeshTLSAuthentication"),
+        ("policy.linkerd.io/v1alpha1", "AuthorizationPolicy"),
+    }
+
+
+def test_the_portal_gets_its_role_only_when_named(docs, tmp_path):
+    assert not [d for d in docs if d["kind"] in ("Role", "RoleBinding")]
+    result = helm({**BASE, "portal": {"namespace": "jc-portal", "serviceAccount": "portal"}}, tmp_path)
+    assert result.returncode == 0, result.stderr
+    rendered = [d for d in yaml.safe_load_all(result.stdout) if d]
+    (role,) = [d for d in rendered if d["kind"] == "Role"]
+    (binding,) = [d for d in rendered if d["kind"] == "RoleBinding"]
+    assert binding["subjects"] == [{"kind": "ServiceAccount", "name": "portal", "namespace": "jc-portal"}]
+    assert binding["roleRef"]["name"] == role["metadata"]["name"]
+    granted = {(group, resource) for rule in role["rules"] for group in rule["apiGroups"] for resource in rule["resources"]}
+    assert granted == {
+        ("", "serviceaccounts"), ("", "configmaps"), ("", "services"), ("apps", "deployments"),
+        ("cert-manager.io", "certificates"), ("traefik.io", "ingressroutetcps"),
+        ("policy.linkerd.io", "servers"), ("policy.linkerd.io", "httproutes"),
+        ("policy.linkerd.io", "meshtlsauthentications"), ("policy.linkerd.io", "authorizationpolicies"),
+    }
+    for rule in role["rules"]:
+        assert "*" not in rule["verbs"] and "escalate" not in rule["verbs"] and "bind" not in rule["verbs"]
+
+
+PORTAL = {"portal": {"namespace": "jc-portal", "serviceAccount": "portal"}}
+
+
+def test_the_portal_alone_reads_two_routes_of_the_http_api_under_the_mesh(tmp_path):
+    """ADR-N-048 §2.8, T-4043: 6060 admits the Portal's identity on two GET routes; the API's
+    publish, subscribe and kick routes match nothing, and the API holds no token."""
+    result = helm({**BASE, **PORTAL}, tmp_path)
+    assert result.returncode == 0, result.stderr
+    rendered = [d for d in yaml.safe_load_all(result.stdout) if d]
+    for release in RELEASES:
+        files = config(rendered, release)
+        assert files["rmqtt.toml"]["plugins"]["disabled_default_startups"] == []
+        api = files["rmqtt-http-api.toml"]
+        assert api["http_laddr"] == "0.0.0.0:6060" and "http_bearer_token" not in api
+        server = of(rendered, "Server")[f"{release}-api"]["spec"]
+        assert (server["port"], server["proxyProtocol"], server["accessPolicy"]) == (6060, "HTTP/1", "deny")
+        route = of(rendered, "HTTPRoute")[f"{release}-api"]["spec"]
+        assert route["parentRefs"] == [{"group": "policy.linkerd.io", "kind": "Server", "name": f"{release}-api"}]
+        matches = [m for rule in route["rules"] for m in rule["matches"]]
+        assert {(m["method"], m["path"]["type"], m["path"]["value"]) for m in matches} == {
+            ("GET", "Exact", "/api/v1/metrics/history/sum"), ("GET", "Exact", "/api/v1/clients")}
+        assert of(rendered, "MeshTLSAuthentication")[f"{release}-api"]["spec"]["identityRefs"] == [
+            {"kind": "ServiceAccount", "name": "portal", "namespace": "jc-portal"}]
+        policy = of(rendered, "AuthorizationPolicy")[f"{release}-api"]["spec"]
+        assert policy["targetRef"] == {"group": "policy.linkerd.io", "kind": "HTTPRoute", "name": f"{release}-api"}
+        ports = {p["port"] for p in of(rendered, "Service")[release]["spec"]["ports"]}
+        assert ports == {1883, 1884, 6060}
+    # The Portal stamps the same objects from the template.
+    template = next(d for d in rendered if d["kind"] == "ConfigMap" and d["metadata"]["name"] == TEMPLATE)
+    stamped = [d for d in yaml.safe_load_all(template["data"]["objects.yaml"]) if d]
+    assert {d["kind"] for d in stamped if d["metadata"]["name"] == "__RELEASE__-api"} == {
+        "Server", "HTTPRoute", "MeshTLSAuthentication", "AuthorizationPolicy"}
+
+
+@pytest.mark.parametrize("values", [
+    {**PORTAL, "serviceMesh": {"enabled": False}},
+    {},
+], ids=["no mesh", "no portal"])
+def test_without_the_mesh_or_the_portal_the_http_api_stays_off(tmp_path, values):
+    result = helm({**BASE, **values}, tmp_path)
+    assert result.returncode == 0, result.stderr
+    rendered = [d for d in yaml.safe_load_all(result.stdout) if d]
+    for release in RELEASES:
+        files = config(rendered, release)
+        assert files["rmqtt.toml"]["plugins"]["disabled_default_startups"] == ["rmqtt-http-api"]
+        assert "rmqtt-http-api.toml" not in files
+        assert {p["port"] for p in of(rendered, "Service")[release]["spec"]["ports"]} == {1883, 1884}
+    assert not [d for d in rendered if d["kind"] == "HTTPRoute"]
 
 
 # The environment around the brokers.
@@ -209,7 +324,10 @@ def test_the_runner_knows_the_brokers_namespace(local):
 def test_only_brokers_reach_8082_and_only_the_runner_and_traefik_reach_a_broker(local):
     brokers = one(local, "NetworkPolicy", "mqtt-brokers")["spec"]
     by_port = {rule["ports"][0]["port"]: rule["from"] for rule in brokers["ingress"]}
-    assert set(by_port) == {1883, 1884}
+    assert set(by_port) == {1883, 1884, 6060}
+    assert by_port[6060][0]["podSelector"]["matchLabels"] == {"app.kubernetes.io/name": "portal-portal"}
+    egress = one(local, "NetworkPolicy", "portal-to-mqtt-brokers")["spec"]
+    assert [p["port"] for rule in egress["egress"] for p in rule["ports"]] == [6060]
     assert by_port[1883][0]["podSelector"]["matchLabels"] == {"app.kubernetes.io/name": "pipeline-runner-runner"}
     assert by_port[1884][0]["podSelector"]["matchLabels"] == {"app.kubernetes.io/name": "traefik"}
     internal = one(local, "NetworkPolicy", "gateway-from-mqtt-brokers")["spec"]
@@ -222,6 +340,17 @@ def test_only_brokers_reach_8082_and_only_the_runner_and_traefik_reach_a_broker(
             continue
         for rule in doc["spec"].get("ingress") or []:
             assert 8082 not in [p.get("port") for p in rule.get("ports") or []], doc["metadata"]["name"]
+
+
+def test_the_portal_knows_the_brokers_namespace_and_holds_its_role_there(local):
+    portal = one(local, "Deployment", "portal")
+    namespace = env_of(portal)["JC_PORTAL_MQTT_NAMESPACE"]
+    assert namespace == one(local, "NetworkPolicy", "mqtt-brokers")["metadata"]["namespace"]
+    binding = one(local, "RoleBinding", "portal-mqtt-brokers")
+    assert binding["metadata"]["namespace"] == namespace
+    (subject,) = binding["subjects"]
+    assert subject["namespace"] == portal["metadata"]["namespace"]
+    assert subject["name"] == portal["spec"]["template"]["spec"]["serviceAccountName"]
 
 
 def test_the_gateway_admits_the_tokenless_runner_from_its_pods_only(local):

@@ -272,6 +272,15 @@ sys.stdout.write("New, (NONE), Cipher is (NONE)\\n" if spec.get("cbcRefused", Tr
 
 ROLLOUTS_STUB = "#!/bin/sh\nexit 0\n"
 
+# scripts/smoke-ws.py has its own tests (test_smoke_ws.py); here it answers what the spec says.
+WS_STUB = '''#!/usr/bin/env python3
+import json, os, sys
+spec = json.load(open(os.environ["STUB_SPEC"]))
+answer = spec.get("ws", "101 201")
+print(answer)
+sys.exit(0 if answer == "101 201" else 1)
+'''
+
 
 def sandbox(tmp_path: Path, spec: dict) -> dict:
     """A copy of the script with stubbed neighbours; returns the env to run it with."""
@@ -281,6 +290,8 @@ def sandbox(tmp_path: Path, spec: dict) -> dict:
     (scripts / "smoke.sh").chmod(0o755)
     (scripts / "wait-rollouts.sh").write_text(ROLLOUTS_STUB)
     (scripts / "wait-rollouts.sh").chmod(0o755)
+    (scripts / "smoke-ws.py").write_text(WS_STUB)
+    (scripts / "smoke-ws.py").chmod(0o755)
 
     stub_bin = tmp_path / "bin"
     stub_bin.mkdir(parents=True, exist_ok=True)
@@ -507,6 +518,7 @@ def test_full_platform_passes(tmp_path):
     assert "ok    helsinki lists 2 spaces, none of them residue of takes or e2e" in result.stdout
     assert "ok    agent proxy client mints tokens with audience context-gateway" in result.stdout
     assert "ok    helsinki-bikes does not serve events" in result.stdout
+    assert "ok    helsinki-transport opens its WebSocket anonymously and subscribes to Vehicle (101 201)" in result.stdout
     assert "ok    city bike stations are flowing into the space" in result.stdout
     assert "ok    buses are flowing into the space" in result.stdout
     assert "catalogue front page carries the branded primary colour" in result.stdout
@@ -526,6 +538,14 @@ def test_an_instance_without_the_helsinki_seed_skips_its_checks(tmp_path):
     """No seed, no 210 s wait for data that will never come: the section is a skip."""
     result = run(tmp_path, dict(HEALTHY, helsinkiSeed={}), "https://example.test", "https://idm.example.test")
     assert "skip  helsinki endpoints (no Helsinki seed on the gateway in this instance)" in result.stdout
+
+
+def test_a_transport_websocket_that_is_not_public_fails_with_its_answer(tmp_path):
+    """T-4035: the 404 the supervisor measured on dev (no `websocket` representation) is a FAIL
+    line that says what the gateway answered."""
+    result = run(tmp_path, dict(HEALTHY, ws="404 -"), "https://example.test", "https://idm.example.test")
+    assert result.returncode != 0
+    assert "FAIL  helsinki-transport WebSocket answered '404 -', expected '101 201'" in result.stdout
 
 
 def test_a_schema_artifact_is_revalidated_and_answers_304(tmp_path):
@@ -1595,3 +1615,36 @@ def test_the_smoke_client_mints_the_internal_ogc_rows_audience_from_the_seed():
     }
     assert seed["spec"]["slug"] in audiences
     assert "ogc_row internal helsinki-bikes-ops" in SMOKE.read_text()
+
+
+def test_the_internal_ogc_rows_reader_is_granted_the_stations_on_helsinki_bikes_ops():
+    """T-3957: on an `organization` Endpoint the gateway gives a signed-in person no `public`
+    role (GW22), so the demo viewer the row reads as needs a grant of their own on the space.
+    The Endpoint names no policyRef, so every Policy of its space applies; one of them must
+    let a group of the viewer's token read the stations, or /collections lists none."""
+    seed_dir = PROJECT_ROOT / "components/context-gateway/seed/helsinki"
+    endpoint = yaml.safe_load((seed_dir / "helsinki-endpoint-bikes-ops.yaml").read_text())
+    assert endpoint["spec"]["audience"] == "organization"
+    assert "policyRef" not in endpoint["spec"]
+    space = endpoint["spec"]["contextSpaceRef"]
+    groups = set(yaml.safe_load((PROJECT_ROOT / "components/keycloak/demo-users.yaml").read_text())["demo.viewer"]["groups"])
+    assert 'demo_user="${JC_SMOKE_DEMO_USER:-demo.viewer}"' in SMOKE.read_text()
+
+    def grants(policy):
+        spec = policy["spec"]
+        ref = spec["contextSpaceRef"]
+        return (
+            (ref.get("name") if isinstance(ref, dict) else ref) == space
+            and spec["assignee"] == {"kind": "group", "id": spec["assignee"]["id"]}
+            and spec["assignee"]["id"] in groups
+            and "retrieveOps" in spec["operations"]
+            and any(e.get("type") == "BikeHireDockingStation" for i in spec["information"] for e in i["entities"])
+        )
+
+    policies = [
+        doc
+        for path in sorted(seed_dir.glob("helsinki-policy-*.yaml"))
+        for doc in yaml.safe_load_all(path.read_text())
+        if doc and doc.get("kind") == "Policy"
+    ]
+    assert any(grants(policy) for policy in policies), "no group of demo.viewer reads the stations"
