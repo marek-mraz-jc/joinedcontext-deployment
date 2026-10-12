@@ -75,6 +75,10 @@ envSecret:
 
 env:
   JC_GATEWAY_BROKER_URL: "http://context-broker.{{ (index .Values "context-broker" "broker" "namespace") }}.svc.cluster.local:8080"
+  # Every ContextBroker beside `main`, `{broker}` its name (ADR-N-046 §2.3, T-3989): the release
+  # components/context-broker adds per entry of global.contextBrokers. The variable above stays
+  # the implicit `main`, whose Service keeps its old name.
+  JC_GATEWAY_BROKER_URL_TEMPLATE: "http://context-broker-{broker}.{{ (index .Values "context-broker" "broker" "namespace") }}.svc.cluster.local:8080"
   JC_GATEWAY_ORG_DOMAIN: {{ $global.orgDomain | quote }}
   JC_GATEWAY_INTERNAL_BIND: "0.0.0.0:8082"
   # The runner's headless Service: a broker admits a tokenless CONNECT only from its pods (T-4004).
