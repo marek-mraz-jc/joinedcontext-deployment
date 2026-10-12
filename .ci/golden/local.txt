@@ -283,6 +283,7 @@ v1/Service local/keycloak-app-keycloakx-http
 v1/Service local/model-tools
 v1/Service local/observability-collector
 v1/Service local/pipeline-runner
+v1/Service local/pipeline-runner-pods
 v1/Service local/portal
 v1/ServiceAccount local/apisix
 v1/ServiceAccount local/artifact-store
