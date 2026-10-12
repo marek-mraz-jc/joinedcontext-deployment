@@ -12,10 +12,16 @@
 # the Portal image of portal 47a97de carries jc-core 0.7.1 and knows every kind. (The image
 # before it refused the whole repository over one manifest of a kind it did not know, which
 # is why T-0479 held those eight files back for a day.)
+# Only the organization's files are here; each project's are the ConfigMap gitea-seed-<project>
+# of the releases gitea-seed and gitea-seed-2 (values/seed, T-3998), which read the same indexes.
+# The bootstrap outgrew Helm's 1 MiB Secret with every project in it (T-3175, T-3998).
+{{- $projects := dict }}
 seed:
 {{- range $file, $path := readFile "../../../context-gateway/seed/helsinki/index.yaml" | fromYaml }}
+{{- if regexMatch "^projects/[^/]+/." $path }}{{ $_ := set $projects (index (splitList "/" $path) 1) true }}{{ else }}
   {{ $path | replace "/" "__" }}: |
 {{ readFile (printf "../../../context-gateway/seed/helsinki/%s" $file) | indent 4 }}
+{{- end }}
 {{- end }}
   # The pipeline that reads the demo NATS feed (T-2960), only where that feed runs: a broker
   # that is not there would keep the pipeline in error. The DataSource's address names the
@@ -23,8 +29,10 @@ seed:
 {{- if has "demo-feeds" .Values.components }}
 {{- $demoNs := index .Values "demo-feeds" "nats" "namespace" }}
 {{- range $file, $path := readFile "../../../context-gateway/seed/helsinki-demo-feeds/index.yaml" | fromYaml }}
+{{- if regexMatch "^projects/[^/]+/." $path }}{{ $_ := set $projects (index (splitList "/" $path) 1) true }}{{ else }}
   {{ $path | replace "/" "__" }}: |
 {{ readFile (printf "../../../context-gateway/seed/helsinki-demo-feeds/%s" $file) | replace "DEMO_FEEDS_NAMESPACE" $demoNs | indent 4 }}
+{{- end }}
 {{- end }}
 {{- end }}
   # The conformance project (`ovzdusie`, its public endpoint, the two policies, the writing
@@ -32,36 +40,47 @@ seed:
   # carried until the checkout replaced it (T-0278). The smoke run and the ETSI suite write
   # through this endpoint.
 {{- range $file, $path := readFile "../../../context-gateway/seed/banskabystrica/index.yaml" | fromYaml }}
+{{- if regexMatch "^projects/[^/]+/." $path }}{{ $_ := set $projects (index (splitList "/" $path) 1) true }}{{ else }}
   {{ $path | replace "/" "__" }}: |
 {{ readFile (printf "../../../context-gateway/seed/banskabystrica/%s" $file) | indent 4 }}
+{{- end }}
 {{- end }}
   # The region (T-2305): its own project, its raw space of published cube rows, its indicator
   # space, and the reference that lets its application read the city's indicators without
   # being able to write them. Two publishers, two projects, one organization.
 {{- range $file, $path := readFile "../../../context-gateway/seed/bbsk/index.yaml" | fromYaml }}
+{{- if regexMatch "^projects/[^/]+/." $path }}{{ $_ := set $projects (index (splitList "/" $path) 1) true }}{{ else }}
   {{ $path | replace "/" "__" }}: |
 {{ readFile (printf "../../../context-gateway/seed/bbsk/%s" $file) | indent 4 }}
+{{- end }}
 {{- end }}
   # Prague (T-2785): its own project of the same organization, one space of the city's open
   # data and its one public endpoint.
 {{- range $file, $path := readFile "../../../context-gateway/seed/praha/index.yaml" | fromYaml }}
+{{- if regexMatch "^projects/[^/]+/." $path }}{{ $_ := set $projects (index (splitList "/" $path) 1) true }}{{ else }}
   {{ $path | replace "/" "__" }}: |
 {{ readFile (printf "../../../context-gateway/seed/praha/%s" $file) | indent 4 }}
+{{- end }}
 {{- end }}
   # Žilina (T-3137): the city and its university as one project of the same organization, four
   # spaces of one model each, built on national open data and the university's own repository.
 {{- range $file, $path := readFile "../../../context-gateway/seed/zilina/index.yaml" | fromYaml }}
+{{- if regexMatch "^projects/[^/]+/." $path }}{{ $_ := set $projects (index (splitList "/" $path) 1) true }}{{ else }}
   {{ $path | replace "/" "__" }}: |
 {{ readFile (printf "../../../context-gateway/seed/zilina/%s" $file) | indent 4 }}
+{{- end }}
 {{- end }}
 {{- if has "agent-runner" .Values.components }}
   # The builder profile the Portal loads for every agent run (AG-26): organization scope,
   # so it is committed by the forge seed and not by the gateway's own table.
 {{- range $file, $path := readFile "../../../agent-runner/seed/index.yaml" | fromYaml }}
+{{- if regexMatch "^projects/[^/]+/." $path }}{{ $_ := set $projects (index (splitList "/" $path) 1) true }}{{ else }}
   {{ $path | replace "/" "__" }}: |
 {{ readFile (printf "../../../agent-runner/seed/%s" $file) | indent 4 }}
 {{- end }}
 {{- end }}
+{{- end }}
+seedProjects: {{ keys $projects | sortAlpha | toJson }}
 
 # The sample applications (T-2599, AP-75): each one its own private repository on the forge,
 # pushed from components/gitea/apps/<name>/ (vendored from a portal commit by
