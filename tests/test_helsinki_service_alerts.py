@@ -69,7 +69,9 @@ def test_every_recorded_alert_is_written_in_three_languages():
     assert len(alerts) == 18
     tapanila = alerts["hsl-315885"]
     assert set(tapanila["name"]["languageMap"]) == {"fi", "sv", "en"}
-    assert tapanila["subCategory"]["value"] == "DETOUR" and tapanila["cause"]["value"] == "CONSTRUCTION"
+    assert tapanila["effect"]["value"] == "DETOUR" and tapanila["cause"]["value"] == "CONSTRUCTION"
+    # GTFS-RT's effect has no Smart Data Models code, so the Alert carries none (T-3950).
+    assert tapanila["alertSource"]["value"] == "HSL" and "subCategory" not in tapanila
     assert tapanila["severity"]["value"] == "informational"
     assert tapanila["validFrom"]["value"] == "2026-09-05T06:23:00Z"
     # The space held none of what the alerts name here, so every name stays text.

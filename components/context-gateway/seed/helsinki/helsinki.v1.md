@@ -139,7 +139,9 @@ Specialises `Entity`.
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language. |
 | `description` | LanguageProperty | `string` |  |  | `schema:description` | A short description, per language. |
 | `category` | Property | `string` |  |  | `sdm:category` | The alert's domain; traffic for everything Fintraffic and HSL publish. |
-| `subCategory` | Property | `string` |  |  | `sdm:subCategory` | Fintraffic's situation type, ROAD_WORK or TRAFFIC_ANNOUNCEMENT, or the effect of an HSL service alert as GTFS-RT names it, such as DETOUR or REDUCED_SERVICE. |
+| `subCategory` | Property | `string` |  |  | `sdm:subCategory` | The Smart Data Models code of the alert, roadWorks for a Fintraffic road work. Left out where no code fits: a Fintraffic traffic announcement and an HSL service alert. |
+| `alertSource` | Property | `string` |  |  | `sdm:alertSource` | Who raised the alert, Fintraffic or HSL. |
+| `effect` | Property | `string` |  |  | `jc:effect` | What an HSL service alert does to the service, as GTFS-RT names it, such as DETOUR or REDUCED_SERVICE. |
 | `cause` | Property | `string` |  |  | `jc:cause` | Why an HSL service alert is in force, as GTFS-RT names it, such as CONSTRUCTION or MAINTENANCE. |
 | `severity` | Property | `string` |  |  | `sdm:severity` | How much the alert matters, informational, medium or high (GTFS-RT INFO, WARNING, SEVERE). |
 | `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed from a line of text. |

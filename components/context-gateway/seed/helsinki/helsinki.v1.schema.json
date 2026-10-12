@@ -150,6 +150,14 @@
           "description": "The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed from a line of text.",
           "x-ngsi-ld-kind": "Property"
         },
+        "alertSource": {
+          "description": "Who raised the alert, Fintraffic or HSL.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "category": {
           "description": "The alert's domain; traffic for everything Fintraffic and HSL publish.",
           "type": [
@@ -185,6 +193,14 @@
             "null"
           ],
           "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "effect": {
+          "description": "What an HSL service alert does to the service, as GTFS-RT names it, such as DETOUR or REDUCED_SERVICE.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
         },
         "id": {
           "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
@@ -289,7 +305,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "subCategory": {
-          "description": "Fintraffic's situation type, ROAD_WORK or TRAFFIC_ANNOUNCEMENT, or the effect of an HSL service alert as GTFS-RT names it, such as DETOUR or REDUCED_SERVICE.",
+          "description": "The Smart Data Models code of the alert, roadWorks for a Fintraffic road work. Left out where no code fits: a Fintraffic traffic announcement and an HSL service alert.",
           "type": [
             "string",
             "null"

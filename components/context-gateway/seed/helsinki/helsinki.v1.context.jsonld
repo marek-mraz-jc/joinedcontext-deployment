@@ -83,6 +83,9 @@
       "@id": "sdm:airQualityIndex",
       "@type": "xsd:float"
     },
+    "alertSource": {
+      "@id": "sdm:alertSource"
+    },
     "allowedVehicleType": {
       "@id": "sdm:allowedVehicleType"
     },
@@ -156,6 +159,9 @@
         "text": "skos:notation"
       },
       "@id": "jc:divisionLevel"
+    },
+    "effect": {
+      "@id": "jc:effect"
     },
     "endDate": {
       "@id": "schema:endDate",
