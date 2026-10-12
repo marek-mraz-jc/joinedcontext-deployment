@@ -222,3 +222,20 @@ def test_only_brokers_reach_8082_and_only_the_runner_and_traefik_reach_a_broker(
             continue
         for rule in doc["spec"].get("ingress") or []:
             assert 8082 not in [p.get("port") for p in rule.get("ports") or []], doc["metadata"]["name"]
+
+
+def test_the_gateway_admits_the_tokenless_runner_from_its_pods_only(local):
+    """T-4004: the gateway resolves the runner's headless Service, which lists every runner pod
+    and nothing else; the public listener stays reachable from Traefik alone (the test above)."""
+    host = env_of(one(local, "Deployment", "context-gateway"))["JC_GATEWAY_MQTT_RUNNER_HOST"]
+    name, namespace = host.split(".")[:2]
+    pods = one(local, "Service", name)
+    assert pods["metadata"]["namespace"] == namespace
+    assert pods["spec"]["clusterIP"] == "None" and pods["spec"]["publishNotReadyAddresses"] is True
+    runner = one(local, "Deployment", "pipeline-runner")
+    assert pods["spec"]["selector"] == runner["spec"]["selector"]["matchLabels"]
+    assert runner["metadata"]["namespace"] == namespace
+    # Only the runner asks for one.
+    headless = [d["metadata"]["name"] for d in local if d.get("kind") == "Service" and d["spec"].get("clusterIP") == "None"
+                and d["metadata"]["name"].startswith("pipeline-runner")]
+    assert headless == [name]
