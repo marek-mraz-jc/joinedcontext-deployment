@@ -6,6 +6,9 @@ kind: Endpoint
 metadata:
   name: praha-mesto
   namespace: praha
+  description:
+    cs: "Městská data Prahy: kvalita ovzduší, sdílená kola, parkoviště P+R, kontejnery a stanoviště tříděného odpadu, rozpočet, kulturní a školská zařízení, veřejné toalety a městské části. Zdroje: ČHMÚ, Golemio, ROPID, IPR Praha a hl. m. Praha."
+    en: "Prague city data: air quality, shared bikes, park and ride car parks, sorted-waste containers and collection points, the budget, cultural and school facilities, public toilets and city districts. Sources: ČHMÚ, Golemio, ROPID, IPR Praha and the City of Prague."
   title: { cs: "Praha — městská data", en: "Prague city data" }
 spec:
   contextSpaceRef: praha-mesto

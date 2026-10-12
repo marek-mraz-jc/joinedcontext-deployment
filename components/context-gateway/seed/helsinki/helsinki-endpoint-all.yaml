@@ -3,6 +3,9 @@ kind: Endpoint
 metadata:
   name: helsinki-all
   namespace: helsinki
+  description:
+    fi: "Koko Helsingin tila yhdessä: tapahtumat, kaupunkipyöräasemat, joukkoliikenteen pysäkit ja linjat, uutiset, tiesää, liikennetiedotteet, uimavesi, pysäköinti, ulkoilmaluvat ja kaupunginosat. Kukin lähde lisenssinsä mukaisesti."
+    en: "The whole Helsinki space in one place: events, city bike stations, transit stops and lines, news, road weather, traffic messages, beach water, parking, public-area permits and districts. Each source under its own licence."
   title: { en: "Helsinki city context, everything" }
 spec:
   contextSpaceRef: helsinki
