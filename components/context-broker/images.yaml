@@ -32,6 +32,9 @@ context-broker:
     # runtime ANTARES_* key over 2a48c7a.
     # Antares dev f248288: view all, Accept precedence and LdContext (T-3947); no new migration
     # or ANTARES_* key over c9df233.
+    # Antares dev d335893: each subscription delivers on its own lane, so a hung endpoint no
+    # longer stalls matching (T-4086); rumqttc vendored, vendor/ copied before cargo chef (T-4129);
+    # no new migration or runtime ANTARES_* key over f248288.
     repository: 'ghcr.io/marek-mraz-jc/antares-broker-jc'
-    tag: 'f248288'
-    digest: 'sha256:8c9efa5acb90321db43bb637ace2c2053b534defdc9887f288ce97647b9885ac'
+    tag: 'd335893'
+    digest: 'sha256:582d98e4a49cc01b1843079846008b751ce650f47446c3b6a671ee56156bf8e7'
