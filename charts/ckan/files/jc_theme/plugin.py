@@ -11,6 +11,7 @@ import html
 import json
 import os
 import re
+from urllib.parse import quote
 
 import ckan
 import ckan.plugins as plugins
@@ -282,6 +283,18 @@ STRINGS = {
     "usage": {"en": "How to use it", "sk": "Ako to použiť", "cs": "Jak to použít", "de": "So verwenden Sie es"},
     "guide": {"en": "The WebSocket guide: messages, limits and examples", "sk": "Príručka k WebSocketu: správy, limity a príklady", "cs": "Průvodce WebSocketem: zprávy, limity a příklady", "de": "Die WebSocket-Anleitung: Nachrichten, Grenzen und Beispiele"},
     "snippet": {"en": "Command to copy", "sk": "Príkaz na skopírovanie", "cs": "Příkaz ke zkopírování", "de": "Befehl zum Kopieren"},
+    "mcp": {"en": "Connect an AI assistant", "sk": "Pripojte AI asistenta", "cs": "Připojte AI asistenta", "de": "KI-Assistenten verbinden"},
+    "mcp_lead": {
+        "en": "One address for the whole catalogue (MCP). Add it once and your assistant finds every dataset, its attributes, data model and access rules by itself. Open data needs no login; signing in adds the data you may read.",
+        "sk": "Jedna adresa pre celý katalóg (MCP). Pridajte ju raz a asistent sám nájde každý dataset, jeho atribúty, dátový model a pravidlá prístupu. Otvorené dáta nepotrebujú prihlásenie; po prihlásení pribudnú dáta, ktoré smiete čítať.",
+        "cs": "Jedna adresa pro celý katalog (MCP). Přidejte ji jednou a asistent sám najde každou datovou sadu, její atributy, datový model a pravidla přístupu. Otevřená data nepotřebují přihlášení; po přihlášení přibudou data, která smíte číst.",
+        "de": "Eine Adresse für den ganzen Katalog (MCP). Einmal hinzugefügt, findet Ihr Assistent jeden Datensatz, seine Attribute, sein Datenmodell und seine Zugriffsregeln selbst. Offene Daten brauchen keine Anmeldung; nach der Anmeldung kommen die Daten hinzu, die Sie lesen dürfen.",
+    },
+    "mcp_url": {"en": "MCP server address", "sk": "Adresa MCP servera", "cs": "Adresa MCP serveru", "de": "Adresse des MCP-Servers"},
+    "mcp_claude": {"en": "Claude Code", "sk": "Claude Code", "cs": "Claude Code", "de": "Claude Code"},
+    "mcp_json": {"en": "Any other MCP client (JSON)", "sk": "Iný MCP klient (JSON)", "cs": "Jiný MCP klient (JSON)", "de": "Jeder andere MCP-Client (JSON)"},
+    "mcp_vscode": {"en": "Add to VS Code", "sk": "Pridať do VS Code", "cs": "Přidat do VS Code", "de": "Zu VS Code hinzufügen"},
+    "mcp_cursor": {"en": "Add to Cursor", "sk": "Pridať do Cursor", "cs": "Přidat do Cursor", "de": "Zu Cursor hinzufügen"},
     "section_api_lead": {"en": "For applications and AI assistants that query the data live.", "sk": "Pre aplikácie a AI asistentov, ktorí sa na dáta pýtajú naživo.", "cs": "Pro aplikace a AI asistenty, kteří se na data ptají živě.", "de": "Für Anwendungen und KI-Assistenten, die die Daten live abfragen."},
     "section_schema": {"en": "Data model", "sk": "Dátový model", "cs": "Datový model", "de": "Datenmodell"},
     "section_schema_lead": {"en": "What each field means, in the formats validators and developers read.", "sk": "Čo znamená každé pole, vo formátoch pre validátory a vývojárov.", "cs": "Co znamená každé pole, ve formátech pro validátory a vývojáře.", "de": "Was jedes Feld bedeutet, in den Formaten für Validatoren und Entwickler."},
@@ -745,6 +758,30 @@ def jc_about_site():
     }
 
 
+_HOST = re.compile(r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$")
+MCP_NAME = "joinedcontext"
+
+
+def jc_mcp_install():
+    """The "Connect an AI assistant" panel (T-4114, EP-113): the installation's MCP hub and one
+    ready line per client, or None without a valid domain. Every line names the hub alone, never a
+    dataset, a token or a key, so one installation serves the whole catalogue (EP-110)."""
+    domain = BRANDING.get("domain")
+    if not (isinstance(domain, str) and _HOST.match(domain)):
+        return None
+    url = "https://%s/api/mcp" % domain
+    server = {"type": "http", "url": url}
+    vscode = json.dumps(dict(name=MCP_NAME, **server), separators=(",", ":"))
+    cursor = base64.b64encode(json.dumps({"url": url}, separators=(",", ":")).encode()).decode()
+    return {
+        "url": url,
+        "claude": "claude mcp add --transport http %s %s" % (MCP_NAME, url),
+        "json": json.dumps({"mcpServers": {MCP_NAME: server}}, indent=2),
+        "vscode": "vscode:mcp/install?" + quote(vscode, safe=""),
+        "cursor": "cursor://anysphere.cursor-deeplink/mcp/install?name=%s&config=%s" % (MCP_NAME, quote(cursor, safe="")),
+    }
+
+
 def jc_portal_url():
     """The Portal of this installation, for staff who signed in; None without a domain."""
     domain = BRANDING.get("domain")
@@ -845,6 +882,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_formats": jc_formats,
             "jc_recent": jc_recent,
             "jc_portal_url": jc_portal_url,
+            "jc_mcp_install": jc_mcp_install,
             "jc_assistant_widget": jc_assistant_widget,
             "jc_about_site": jc_about_site,
             "jc_sso_error": jc_sso_error,

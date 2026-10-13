@@ -249,6 +249,45 @@ def test_the_table_comes_before_the_about_list_on_the_dataset_page():
     assert re.search(r"<iframe[^>]*title=\"\{\{ h.jc_t\('table_title'\) \}\}: \{\{ name \}\}", read)
 
 
+def test_the_mcp_panel_names_the_installation_s_hub_and_nothing_else(theme):
+    """T-4114, EP-113: one address for the whole catalogue, a ready line per client."""
+    from base64 import b64decode
+    from urllib.parse import parse_qs, unquote, urlsplit
+
+    mcp = theme.jc_mcp_install()
+    hub = "https://dev.example/api/mcp"
+    assert mcp["url"] == hub
+    assert mcp["claude"] == f"claude mcp add --transport http joinedcontext {hub}"
+    assert json.loads(mcp["json"]) == {"mcpServers": {"joinedcontext": {"type": "http", "url": hub}}}
+    assert mcp["vscode"].startswith("vscode:mcp/install?")
+    assert json.loads(unquote(mcp["vscode"].split("?", 1)[1])) == {"name": "joinedcontext", "type": "http", "url": hub}
+    cursor = urlsplit(mcp["cursor"])
+    assert (cursor.scheme, cursor.netloc, cursor.path) == ("cursor", "anysphere.cursor-deeplink", "/mcp/install")
+    query = parse_qs(cursor.query)
+    assert query["name"] == ["joinedcontext"]
+    assert json.loads(b64decode(query["config"][0])) == {"url": hub}
+    # No dataset, no token: every line is the same for every page (EP-110).
+    for line in mcp.values():
+        assert "endpoint/" not in unquote(line) and "token" not in line.lower() and "bearer" not in line.lower()
+
+
+@pytest.mark.parametrize("domain", [None, "", "dev.example\" onmouseover=\"x", "dev.example/evil", "localhost", 7])
+def test_the_mcp_panel_is_left_out_without_a_plain_domain(theme, domain):
+    theme.BRANDING["domain"] = domain
+    assert theme.jc_mcp_install() is None
+
+
+def test_the_mcp_panel_is_on_the_home_page_and_every_dataset_page_with_its_copy_script():
+    panel = (THEME / "templates__snippets__jc_mcp_install.html").read_text()
+    for page in ("templates__home__index.html", "templates__package__read.html"):
+        text = (THEME / page).read_text()
+        assert "{% snippet 'snippets/jc_mcp_install.html'" in text, page
+        assert "url_for_static('/jc-copy.js')" in text, page
+    # One status line per page: the live box's when the dataset page has one.
+    assert '{% if not live %}<p class="visually-hidden" role="status"' in panel
+    assert panel.count("data-jc-copy=") == 3
+
+
 def test_each_resource_has_its_one_action_named_for_a_screen_reader():
     item = (THEME / "templates__package__snippets__resource_item.html").read_text()
     assert "dropdown" not in item and "{{ _('Explore') }}" not in item

@@ -220,7 +220,8 @@ mcp-mobile:
 # Endpoints (T-2490, ADR-N-025 section 4, EP-87, EP-88).
 #
 # Its tokens name the hub (`aud: mcp-hub`, from the mapper below) and reach only the Endpoints
-# their `endpoint:{slug}` scopes pick. The Portal's reconciler renders one optional client scope
+# their `endpoint:{slug}` scopes pick. The default scope `endpoint:*` (T-4114, ADR-N-025 4b) is the
+# one-login choice the consent screen names: every Endpoint the person may read. The Portal's reconciler renders one optional client scope
 # `endpoint:{slug}` on this client per MCP-enabled Endpoint; consent is on, so the person sees
 # which Endpoints the connector asks for before any token exists. The gateway accepts a hub token
 # at /api/mcp only, never at an Endpoint's own URL, and each call is still the Endpoint's own
@@ -240,6 +241,13 @@ mcp-hub:
     serviceAccountsEnabled: false
     attributes:
       pkce.code.challenge.method: S256
+    defaultClientScopes:
+      - acr
+      - basic
+      - email
+      - profile
+      - roles
+      - endpoint:*
     optionalClientScopes:
       - offline_access
     redirectUris:
