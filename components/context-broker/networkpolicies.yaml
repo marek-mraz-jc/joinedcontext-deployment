@@ -28,18 +28,25 @@ context-broker:
       ports:
         - protocol: TCP
           port: 5432
-    # Delivering a notification (R46). The gateway rewrites every subscription's endpoint
-    # to point back at itself, so this is the only address the broker ever dials for one,
-    # and the broker still holds no policy: it hands the notification to the gateway and
-    # the gateway decides what leaves and where it goes.
+    # Delivering a notification itself (plan 5.5, T-3653): a subscription stored through a view
+    # names its subscriber, and the broker sends what `pre_notify` lets through straight to it.
+    # The address arrives in a subscription, so the allowance is a range, and every private
+    # range is excepted: a subscription cannot steer the broker at the cluster, the node or a
+    # metadata service (G11, T-3882). A subscriber inside this cluster needs its own rule.
     - to:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/name: context-gateway-gateway
-          componentNamespace: context-gateway
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              - 169.254.0.0/16
+              - 127.0.0.0/8
       ports:
         - protocol: TCP
-          port: 8080
+          port: 80
+        - protocol: TCP
+          port: 443
   ingress:
     - from:
         - podSelector:

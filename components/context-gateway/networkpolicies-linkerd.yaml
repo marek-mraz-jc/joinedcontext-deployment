@@ -19,12 +19,6 @@ context-gateway-allow-linkerd:
             matchLabels:
               app.kubernetes.io/name: wasm-host-shard
           componentNamespace: wasm-host
-        # The broker delivering a notification, meshed like every other client
-        # (R46); the plain rule for it is context-gateway-notification-egress.
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/name: context-broker-broker
-          componentNamespace: context-broker
         # The Portal on JC_PORTAL_GATEWAY_URL: the access check before every App build (AP-132),
         # Subscriptions (T-0931) and the assistant's reads, each with the person's own token;
         # the Portal's egress already names this pod (T-2944).
