@@ -20,4 +20,5 @@ spec:
   enabledRepresentations:
   - ngsi-ld
   - ogc-features
+  - odata
   slug: ecifgir4dzgl7h45rwvty2ygyb

@@ -17,4 +17,4 @@ spec:
   contextSpaceRef: bbsk-kraj
   slug: 2lwz27hvqjvxaow2hr73lxmxx743irui
   audience: public
-  enabledRepresentations: [ngsi-ld, csv, json, websocket, ogc-features]
+  enabledRepresentations: [ngsi-ld, csv, json, websocket, ogc-features, odata]

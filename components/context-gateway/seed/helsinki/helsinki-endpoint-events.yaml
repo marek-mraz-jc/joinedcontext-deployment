@@ -13,7 +13,7 @@ spec:
   audience: public
   # The one Policy this endpoint evaluates: the slice of the space it publishes (EP-14).
   policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki:public-events
-  enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, zip, mcp, websocket, ogc-features]
+  enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, zip, mcp, websocket, ogc-features, odata]
   # The organizer's contact line stays in the space for the city's own coordination and is
   # served by no public endpoint (EP-61). A projection only narrows.
   projection: { hiddenAttributes: [contactPoint] }

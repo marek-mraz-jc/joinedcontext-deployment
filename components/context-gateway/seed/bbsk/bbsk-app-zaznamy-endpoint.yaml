@@ -19,4 +19,5 @@ spec:
   enabledRepresentations:
   - ngsi-ld
   - ogc-features
+  - odata
   slug: 66kkv3xr4lau6pjg2i5ef5lonc
