@@ -43,6 +43,8 @@ def test_the_broker_runs_the_surfaces_and_requires_its_admin_credential(broker_p
     assert 0 < int(env["ANTARES_WS_MAX_CONNECTIONS_PER_TENANT"]) <= int(env["ANTARES_WS_MAX_CONNECTIONS"]) <= 1000
     assert 0 < int(env["ANTARES_WS_MAX_SUBSCRIPTIONS"]) <= 64
     assert 0 < int(env["ANTARES_WS_QUEUE"]) <= 256
+    # T-4132: 24 h for an anonymous socket; the gateway cuts a token caller's at 300 s.
+    assert env["ANTARES_WS_MAX_LIFETIME_SECS"] == "86400"
     assert "ANTARES_WS_ALLOWED_ORIGINS" not in env, "browsers reach the socket through the gateway alone"
     assert env["ANTARES_POLICY_SUBJECT_HEADERS"].split(",") == [
         "x-jc-subject", "x-jc-groups", "x-jc-roles", "x-jc-client", "x-jc-restricted", "x-jc-did"]
