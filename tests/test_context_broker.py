@@ -142,9 +142,9 @@ def test_no_broker_ingress_admits_a_peer_from_any_namespace(dev):
 
 
 @requires_helmfile
-def test_the_broker_reaches_dns_its_database_the_gateway_and_public_subscribers_only(dev):
-    """The gateway on 8080 still delivers what was stored before the switch (until T-3654); the
-    broker delivers the rest itself, to public addresses only (plan 5.5, T-3882)."""
+def test_the_broker_reaches_dns_its_database_and_public_subscribers_only(dev):
+    """Since the switch the broker delivers itself (plan 5.5, T-3653), so it no longer dials the
+    gateway (T-3925); its one route out of the cluster is the public range of T-3882."""
     policy = one(dev, "NetworkPolicy", "context-broker")["spec"]
     targets = sorted(
         (
@@ -154,7 +154,6 @@ def test_the_broker_reaches_dns_its_database_the_gateway_and_public_subscribers_
         for rule in policy["egress"]
     )
     assert targets == [
-        ("context-gateway-gateway", (8080,)),
         ("ipBlock", (80, 443)),
         ("kube-dns", (53,)),
         ("postgres-cluster", (5432,)),

@@ -407,6 +407,17 @@ config:
                 included.client.audience: portal-api
                 access.token.claim: 'true'
                 id.token.claim: 'false'
+      # Every Endpoint the person may read, through the MCP hub (T-4114, ADR-N-025 4b, EP-88): a
+      # default scope of `mcp-hub` only, shown on its consent screen, so one login hands a
+      # connector what the person's own session reads and nothing more. The gateway still
+      # decides each call by the Endpoint's Policy; the `endpoint:{slug}` scopes stay narrower.
+        - name: endpoint:*
+          description: Every Endpoint you may read, through the MCP hub
+          protocol: openid-connect
+          attributes:
+            include.in.token.scope: 'true'
+            display.on.consent.screen: 'true'
+            consent.screen.text: Read every dataset and Endpoint you may read, through one AI connector
         {{- /* A read across brokers (ADR-N-047 §2.4, PF-113, PF-114, T-3999): the gateway
                exchanges the caller's token for one naming only the brokers the space's
                `identity: caller` members live on. One optional scope per broker, `main`

@@ -30,11 +30,11 @@ jobs:
       - name: kubeconform, conftest, gitleaks
         run: |
           set -eu
-          curl -sSL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | tar xz
-          curl -sSLo conftest.tar.gz "https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz"
+          curl --fail --retry 3 --retry-all-errors -sSL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | tar xz
+          curl --fail --retry 3 --retry-all-errors -sSLo conftest.tar.gz "https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz"
           echo "${CONFTEST_CHECKSUM}  conftest.tar.gz" | sha256sum --check --status
           tar xzf conftest.tar.gz conftest
-          curl -sSLo gitleaks.tar.gz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl --fail --retry 3 --retry-all-errors -sSLo gitleaks.tar.gz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
           echo "${GITLEAKS_CHECKSUM}  gitleaks.tar.gz" | sha256sum --check --status
           tar xzf gitleaks.tar.gz gitleaks
           rm -f conftest.tar.gz gitleaks.tar.gz
@@ -90,15 +90,15 @@ jobs:
       - uses: extractions/setup-just@f8a3cce218d9f83db3a2ecd90e41ac3de6cdfd9b # v3.1.0
       - name: kyverno cli
         run: |
-          curl -sSL "https://github.com/kyverno/kyverno/releases/download/${KYVERNO_VERSION}/kyverno-cli_${KYVERNO_VERSION}_linux_x86_64.tar.gz" | tar xz kyverno
+          curl --fail --retry 3 --retry-all-errors -sSL "https://github.com/kyverno/kyverno/releases/download/${KYVERNO_VERSION}/kyverno-cli_${KYVERNO_VERSION}_linux_x86_64.tar.gz" | tar xz kyverno
           sudo install -m 0755 kyverno /usr/local/bin/kyverno
       - name: sops + age
         # tests/test_secrets.py round-trips a SOPS-encrypted environment secret; without
         # these two binaries that test would skip and the integration would go unproven.
         run: |
-          curl -sSL -o sops "https://github.com/getsops/sops/releases/download/${SOPS_VERSION}/sops-${SOPS_VERSION}.linux.amd64"
+          curl --fail --retry 3 --retry-all-errors -sSL -o sops "https://github.com/getsops/sops/releases/download/${SOPS_VERSION}/sops-${SOPS_VERSION}.linux.amd64"
           sudo install -m 0755 sops /usr/local/bin/sops
-          curl -sSL "https://github.com/FiloSottile/age/releases/download/${AGE_VERSION}/age-${AGE_VERSION}-linux-amd64.tar.gz" | tar xz
+          curl --fail --retry 3 --retry-all-errors -sSL "https://github.com/FiloSottile/age/releases/download/${AGE_VERSION}/age-${AGE_VERSION}-linux-amd64.tar.gz" | tar xz
           sudo install -m 0755 age/age age/age-keygen /usr/local/bin/
       - name: gitleaks + conftest
         # tests/test_reusable_workflows.py runs the shared secret ruleset against the shapes it
@@ -106,11 +106,11 @@ jobs:
         # would skip, and a skipped gate reads exactly like a passing one.
         run: |
           set -eu
-          curl -sSLo gitleaks.tar.gz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl --fail --retry 3 --retry-all-errors -sSLo gitleaks.tar.gz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
           echo "${GITLEAKS_CHECKSUM}  gitleaks.tar.gz" | sha256sum --check --status
           tar xzf gitleaks.tar.gz gitleaks
           sudo install -m 0755 gitleaks /usr/local/bin/gitleaks
-          curl -sSLo conftest.tar.gz "https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz"
+          curl --fail --retry 3 --retry-all-errors -sSLo conftest.tar.gz "https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz"
           echo "${CONFTEST_CHECKSUM}  conftest.tar.gz" | sha256sum --check --status
           tar xzf conftest.tar.gz conftest
           sudo install -m 0755 conftest /usr/local/bin/conftest

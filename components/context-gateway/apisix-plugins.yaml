@@ -260,15 +260,6 @@ context-endpoint:
       functions:
         - >-
           return function()
-            -- The notification delivery path is the one gateway surface that carries no
-            -- token: the broker calling it holds none (R46). It is reached in-cluster, where
-            -- the NetworkPolicy of T-0429 says only the broker may, and JC_GATEWAY_EGRESS_URL
-            -- is what makes the broker dial the Service rather than this edge. Published here
-            -- it would be a delivery-forging surface open to the internet, and a policy that
-            -- governs pods can say nothing about a request that arrives through the ingress.
-            if ngx.re.find(ngx.var.uri, [[^/api/endpoint/[^/]+/egress/]], "jo") then
-              return ngx.exit(403)
-            end
             local forged = {
               "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
               "X-Endpoint-Slug", "X-Consumer-Identity", "X-Forwarded-User",
@@ -361,15 +352,6 @@ context-endpoint-portal:
       functions:
         - >-
           return function()
-            -- The notification delivery path is the one gateway surface that carries no
-            -- token: the broker calling it holds none (R46). It is reached in-cluster, where
-            -- the NetworkPolicy of T-0429 says only the broker may, and JC_GATEWAY_EGRESS_URL
-            -- is what makes the broker dial the Service rather than this edge. Published here
-            -- it would be a delivery-forging surface open to the internet, and a policy that
-            -- governs pods can say nothing about a request that arrives through the ingress.
-            if ngx.re.find(ngx.var.uri, [[^/api/endpoint/[^/]+/egress/]], "jo") then
-              return ngx.exit(403)
-            end
             local forged = {
               "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
               "X-Endpoint-Slug", "X-Consumer-Identity", "X-Forwarded-User",

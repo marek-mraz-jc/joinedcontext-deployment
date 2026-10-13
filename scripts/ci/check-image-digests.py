@@ -44,6 +44,9 @@ def deployed(path: Path):
         annotations = (document.get("metadata") or {}).get("annotations") or {}
         if "test" in str(annotations.get("helm.sh/hook", "")).split(","):
             continue
+        # A Kyverno policy's `containers:` is a pattern (`image: '*@*'`), not a workload.
+        if str(document.get("apiVersion", "")).startswith("kyverno.io/"):
+            continue
         where = f"{document.get('kind', '?')}/{(document.get('metadata') or {}).get('name', '?')}"
         for container in containers(document):
             yield where, container

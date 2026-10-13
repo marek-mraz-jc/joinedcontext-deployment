@@ -249,6 +249,45 @@ def test_the_table_comes_before_the_about_list_on_the_dataset_page():
     assert re.search(r"<iframe[^>]*title=\"\{\{ h.jc_t\('table_title'\) \}\}: \{\{ name \}\}", read)
 
 
+def test_the_mcp_panel_names_the_installation_s_hub_and_nothing_else(theme):
+    """T-4114, EP-113: one address for the whole catalogue, a ready line per client."""
+    from base64 import b64decode
+    from urllib.parse import parse_qs, unquote, urlsplit
+
+    mcp = theme.jc_mcp_install()
+    hub = "https://dev.example/api/mcp"
+    assert mcp["url"] == hub
+    assert mcp["claude"] == f"claude mcp add --transport http joinedcontext {hub}"
+    assert json.loads(mcp["json"]) == {"mcpServers": {"joinedcontext": {"type": "http", "url": hub}}}
+    assert mcp["vscode"].startswith("vscode:mcp/install?")
+    assert json.loads(unquote(mcp["vscode"].split("?", 1)[1])) == {"name": "joinedcontext", "type": "http", "url": hub}
+    cursor = urlsplit(mcp["cursor"])
+    assert (cursor.scheme, cursor.netloc, cursor.path) == ("cursor", "anysphere.cursor-deeplink", "/mcp/install")
+    query = parse_qs(cursor.query)
+    assert query["name"] == ["joinedcontext"]
+    assert json.loads(b64decode(query["config"][0])) == {"url": hub}
+    # No dataset, no token: every line is the same for every page (EP-110).
+    for line in mcp.values():
+        assert "endpoint/" not in unquote(line) and "token" not in line.lower() and "bearer" not in line.lower()
+
+
+@pytest.mark.parametrize("domain", [None, "", "dev.example\" onmouseover=\"x", "dev.example/evil", "localhost", 7])
+def test_the_mcp_panel_is_left_out_without_a_plain_domain(theme, domain):
+    theme.BRANDING["domain"] = domain
+    assert theme.jc_mcp_install() is None
+
+
+def test_the_mcp_panel_is_on_the_home_page_and_every_dataset_page_with_its_copy_script():
+    panel = (THEME / "templates__snippets__jc_mcp_install.html").read_text()
+    for page in ("templates__home__index.html", "templates__package__read.html"):
+        text = (THEME / page).read_text()
+        assert "{% snippet 'snippets/jc_mcp_install.html'" in text, page
+        assert "url_for_static('/jc-copy.js')" in text, page
+    # One status line per page: the live box's when the dataset page has one.
+    assert '{% if not live %}<p class="visually-hidden" role="status"' in panel
+    assert panel.count("data-jc-copy=") == 3
+
+
 def test_each_resource_has_its_one_action_named_for_a_screen_reader():
     item = (THEME / "templates__package__snippets__resource_item.html").read_text()
     assert "dropdown" not in item and "{{ _('Explore') }}" not in item
@@ -683,8 +722,6 @@ def test_an_api_resource_shows_its_usage_with_its_commands_to_copy(theme):
     assert [b["code"] for b in blocks] == [False, True, False]
     command = blocks[1]
     assert command["text"].startswith("websocat -H \"Authorization: Bearer $TOKEN\" 'wss://dev.example/")
-    # Two lines, each as many rows as it wraps to (T-4066).
-    assert command["rows"] == sum(-(-len(line) // theme.WRAP) for line in command["text"].split("\n")) >= 2
     assert command["id"] == "jc-use-r-ws-1"
     # A file has no usage blocks; its description is CKAN's one-line extract.
     assert theme.jc_usage({"id": "r-csv", "format": "CSV", "url": ENDPOINT + "file.csv", "description": WS_USAGE}) == []
@@ -724,8 +761,10 @@ def test_an_api_resource_page_shows_its_usage_where_ckan_said_no_view():
     item = (THEME / "templates__package__snippets__resource_item.html").read_text()
     assert "h.jc_usage(res) if jc_section == 'api' and not url_is_edit" in item
     snippet = (THEME / "templates__package__snippets__jc_usage.html").read_text()
-    assert 'data-jc-copy="{{ block.id }}"' in snippet and "readonly" in snippet
+    assert 'data-jc-copy="{{ block.id }}"' in snippet and '<pre id="{{ block.id }}"' in snippet
     assert "|safe" not in snippet
+    # The copy button reads a block's text as well as a field's value.
+    assert "field.value !== undefined ? field.value : field.textContent" in (THEME / "public__jc-copy.js").read_text()
 
 
 @pytest.mark.parametrize("lang, counts", [
@@ -753,14 +792,15 @@ def test_usage_reads_as_markdown_and_its_commands_wrap(theme):
     assert "h.render_markdown(block.text)" in snippet and "<p>{{ block.text }}</p>" not in snippet
     assert "|safe" not in snippet
     css = (THEME / "public__jc-theme.css").read_text()
-    box = re.search(r"\.jc-copy-code textarea \{([^}]*)\}", css).group(1)
+    # Owner, 2026-10-12: a textarea sized to its text only in Chromium; a block wraps everywhere.
+    box = re.search(r"^\.jc-copy-code pre \{([^}]*)\}", css, re.M).group(1)
     assert "white-space: pre-wrap" in box and "overflow-wrap: anywhere" in box and "white-space: pre;" not in box
+    assert "<textarea" not in snippet
     config = '    {"mcpServers":{"helsinki-transport":{"type":"http","url":"https://dev.example/api/endpoint/ajaezssvx3bwqgejgepmq4ig3frgan4e/mcp"}}}'
     resource = {"id": "r", "format": "MCP", "url": ENDPOINT + "mcp", "description": "Tools: `get_entity`.\n\n" + config}
     text, code = theme.jc_usage(resource)
     assert text["text"] == "Tools: `get_entity`." and not text["code"]
-    # The box is as tall as the wrapped command, so nothing hides below its edge either.
-    assert code["rows"] == -(-(len(config) - 4) // theme.WRAP) > 1
+    assert code["code"] and code["text"] == config[4:]
 
 
 def test_the_format_badge_sits_beside_the_resource_name():
@@ -823,3 +863,14 @@ def test_every_demo_publisher_has_a_badge_and_the_file_reaches_the_pod(rendered)
                and any(c["name"] == "ckan" for c in d["spec"]["template"]["spec"]["containers"])]
     (branding,) = [v for v in ckan["spec"]["template"]["spec"]["volumes"] if v["name"] == "branding"]
     assert {"key": "organizations.json", "path": "organizations.json"} in branding["configMap"]["items"]
+
+
+def test_a_dataset_page_puts_its_publisher_above_and_gives_the_data_the_whole_width():
+    """Owner, 2026-10-12: the publisher sidebar took a quarter of the page from the tables."""
+    base = (THEME / "templates__package__read_base.html").read_text()
+    assert "{% block secondary %}{% endblock %}" in base
+    assert '<div class="primary col-12" role="main">' in base and "self.primary_content()" in base
+    assert "package/snippets/jc_publisher.html" in base.split("{% block pre_primary %}", 1)[1]
+    bar = (THEME / "templates__package__snippets__jc_publisher.html").read_text()
+    assert "h.jc_org(organization)" in bar and "placeholder-organization.png" in bar
+    assert ".jc-publisher {" in (THEME / "public__jc-theme.css").read_text()

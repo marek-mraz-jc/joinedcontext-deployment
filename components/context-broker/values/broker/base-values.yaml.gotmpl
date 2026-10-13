@@ -82,6 +82,9 @@ env:
   ANTARES_WS_MAX_CONNECTIONS_PER_TENANT: "50"
   ANTARES_WS_MAX_SUBSCRIPTIONS: "16"
   ANTARES_WS_QUEUE: "128"
+  # A socket's lifetime here bounds only anonymous callers on public Endpoints (24 h, platform
+  # T-4132): the gateway ends a token caller's socket at the token's 300 s itself.
+  ANTARES_WS_MAX_LIFETIME_SECS: "86400"
   ANTARES_SCHEMA_MAX_BYTES: "1048576"
   # The verified caller the gateway forwards (platform T-3641); `x-jc-did` a data-space
   # participant, which the gateway strips from every client request (platform T-3800, T-3816).
@@ -96,13 +99,12 @@ env:
   # label alone would let any pod that labels itself reach the API (T-3771).
   ANTARES_ADMIN_METRICS: "open"
   # Broker-initiated HTTP and MQTT reach no private address but the peers named here (T-3909,
-  # Antares T-3908): the gateway's egress Service, where R12 deliveries of subscriptions stored
-  # before T-3653 go (until T-3654), and the broker's own Service, which every federation
-  # registration the reconciler writes names as its endpoint (portal
-  # src/reconciler/registrations.rs, `members_of`). Loopback and instance metadata stay refused
-  # whatever the list says; an unlisted private destination is refused at delivery.
+  # Antares T-3908): the broker's own Service, which every federation registration the
+  # reconciler writes names as its endpoint (portal src/reconciler/registrations.rs,
+  # `members_of`). Loopback and instance metadata stay refused whatever the list says; an
+  # unlisted private destination is refused at delivery.
   ANTARES_EGRESS_ALLOW_PRIVATE: "false"
-  ANTARES_EGRESS_PRIVATE_HOSTS: "context-gateway.{{ (index .Values "context-gateway" "gateway" "namespace") }}.svc.cluster.local,context-broker.{{ (index .Values "context-broker" "broker" "namespace") }}.svc.cluster.local"
+  ANTARES_EGRESS_PRIVATE_HOSTS: "context-broker.{{ (index .Values "context-broker" "broker" "namespace") }}.svc.cluster.local"
 
 extraVolumes:
   - name: admin-token

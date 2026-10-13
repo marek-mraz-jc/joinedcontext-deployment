@@ -23,6 +23,24 @@ context-broker:
     # Antares dev e6484ba (train 20261012-1042): per (tenant, type) retention of current state and
     # history under /q/retention, deleted in bounded batches (T-3900), with T-4003 T-4019 T-3786
     # T-3933/34 T-3936 T-3948 T-3980 T-4021 T-4034; no new migration over eb30b4f.
+    # Antares dev 058db12 (train 20261012-1301): T-3956 T-3880 T-4009 T-3805 T-4030 T-4031 T-4018;
+    # no new migration and no new ANTARES_* key over e6484ba.
+    # Antares dev 2a48c7a (train 20261012-1619): the notifier's steps get 60 s deadlines, so one
+    # stuck delivery no longer stops every notification (T-4102, T-4084), access/explain for the
+    # gateway (T-3881), T-4079 T-4083; no new migration or ANTARES_* key over 058db12.
+    # Antares dev c9df233: tenant move (T-4001, T-4016), T-4057, T-4118; no new migration or
+    # runtime ANTARES_* key over 2a48c7a.
+    # Antares dev f248288: view all, Accept precedence and LdContext (T-3947); no new migration
+    # or ANTARES_* key over c9df233.
+    # Antares dev d335893: each subscription delivers on its own lane, so a hung endpoint no
+    # longer stalls matching (T-4086); rumqttc vendored, vendor/ copied before cargo chef (T-4129);
+    # no new migration or runtime ANTARES_* key over f248288.
+    # Antares dev e25ec9c (train 20261013-0011): retention sets the rule's tenant, so the history
+    # sweep deletes under the broker's RLS-bound role (T-3900); upsert through a view in one read
+    # (T-4085); OGC Part 3 CQL2 and items through the view scan (T-3745, T-3759); no new
+    # migration or runtime ANTARES_* key over d335893.
+    # Antares dev d032654 (train 20261013-0226): OData dispatch and the LinkML slot map shared
+    # across surfaces (T-4020); no new migration or runtime ANTARES_* key over e25ec9c.
     repository: 'ghcr.io/marek-mraz-jc/antares-broker-jc'
-    tag: 'e6484ba'
-    digest: 'sha256:5644d20004704e19954100219dad28c8381b17e50d33e4c2cf42f4543f55c35f'
+    tag: 'd032654'
+    digest: 'sha256:0c8f73eb28438a3aa0994b01681cccb1e6057b3a01c1663fba873d3c4a4953da'

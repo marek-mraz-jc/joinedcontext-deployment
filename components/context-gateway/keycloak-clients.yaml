@@ -66,6 +66,84 @@ banskabystrica-conformance:
           access.token.claim: 'true'
           id.token.claim: 'false'
 
+# The request-trace suite's three callers on dev (T-3931): the accounts trace-a and
+# trace-deny of project banskabystrica and trace-b of project bbsk, made through the Portal.
+# The Portal's reconciler writes no Keycloak client for an account without a workload binding,
+# so they get theirs here, the way the conformance account does. Space A is banskabystrica-kpi,
+# space B the private bbsk-trace, and trace-deny reaches only the Endpoint over A. Removed with
+# the accounts after the run.
+banskabystrica-trace-a:
+  profiles: [development]
+  name: Request trace, space A
+  description: T-3931 request-trace caller of space A; client_credentials only
+  subdomain: ''
+  redirectPath: /
+  componentNamespaces:
+    - context-gateway
+  rawValues:
+    publicClient: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: true
+    protocolMappers:
+      - name: space-a-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: banskabystrica-kpi
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+
+banskabystrica-trace-deny:
+  profiles: [development]
+  name: Request trace, denied
+  description: T-3931 request-trace caller the Endpoint over space A refuses; client_credentials only
+  subdomain: ''
+  redirectPath: /
+  componentNamespaces:
+    - context-gateway
+  rawValues:
+    publicClient: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: true
+    protocolMappers:
+      - name: endpoint-a-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: y4royli3pip6yrhv3olxxf2522b3dovt
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+
+bbsk-trace-b:
+  profiles: [development]
+  name: Request trace, space B
+  description: T-3931 request-trace caller of space B; client_credentials only
+  subdomain: ''
+  redirectPath: /
+  componentNamespaces:
+    - context-gateway
+  rawValues:
+    publicClient: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: true
+    protocolMappers:
+      - name: space-b-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: bbsk-trace
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+
 # A workload on the Portal's side (T-2245, PF-45, PF-49): the account `pipeline-proposer` of
 # project `helsinki` in the development seed. Its token's audience is the Portal's API client and
 # nothing else, so the Portal accepts it (the MCP door and the REST API) and every endpoint of the
@@ -142,7 +220,8 @@ mcp-mobile:
 # Endpoints (T-2490, ADR-N-025 section 4, EP-87, EP-88).
 #
 # Its tokens name the hub (`aud: mcp-hub`, from the mapper below) and reach only the Endpoints
-# their `endpoint:{slug}` scopes pick. The Portal's reconciler renders one optional client scope
+# their `endpoint:{slug}` scopes pick. The default scope `endpoint:*` (T-4114, ADR-N-025 4b) is the
+# one-login choice the consent screen names: every Endpoint the person may read. The Portal's reconciler renders one optional client scope
 # `endpoint:{slug}` on this client per MCP-enabled Endpoint; consent is on, so the person sees
 # which Endpoints the connector asks for before any token exists. The gateway accepts a hub token
 # at /api/mcp only, never at an Endpoint's own URL, and each call is still the Endpoint's own
@@ -162,6 +241,13 @@ mcp-hub:
     serviceAccountsEnabled: false
     attributes:
       pkce.code.challenge.method: S256
+    defaultClientScopes:
+      - acr
+      - basic
+      - email
+      - profile
+      - roles
+      - endpoint:*
     optionalClientScopes:
       - offline_access
     redirectUris:

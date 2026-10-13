@@ -350,43 +350,29 @@ PRIVATE_RANGES = {"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "169.254.0.0/
 
 
 @pytest.mark.parametrize("env", ENVIRONMENTS)
-def test_only_the_broker_reaches_the_gateway_s_delivery_path(rendered, env):
-    """`POST /api/endpoint/{slug}/egress/notifications` carries no token, because the broker
-    delivering a notification holds none (R46). A NetworkPolicy cannot see a path, so what it
-    can say is which pods reach the port the path is served on, and the answer is one pod."""
-    names_in_render = {d["metadata"]["name"] for d in rendered(env) if d.get("kind") == "NetworkPolicy"}
-    if "context-gateway" not in names_in_render:
-        pytest.skip("context-gateway not deployed in this environment")
-    # Deployed and the policy gone is the case worth failing on: the delivery path would
-    # then be open to whatever else already reaches the gateway's port.
-    assert "context-gateway-notification-egress" in names_in_render
-    docs = [d for d in rendered(env) if d.get("kind") == "NetworkPolicy"
-            and d["metadata"]["name"] == "context-gateway-notification-egress"]
-    rules = docs[0]["spec"]["ingress"]
-    names = [peer.get("podSelector", {}).get("matchLabels", {}).get("app.kubernetes.io/name")
-             for rule in rules for peer in rule["from"]]
-    assert names == ["context-broker-broker"], names
-    assert [p["port"] for rule in rules for p in rule.get("ports") or []] == [8080]
-
-
-@pytest.mark.parametrize("env", ENVIRONMENTS)
-def test_the_gateway_delivers_to_public_addresses_only(rendered, env):
-    """A subscriber's address arrives in a subscription, so the delivery allowance is a range
-    rather than a peer. Excepting every private range is what stops a subscription from
-    steering the gateway back into the cluster, at the node, or at a metadata service."""
-    groups = egress_rules_by_selector(rendered(env))
+def test_the_gateway_dials_nothing_outside_the_cluster_and_takes_nothing_from_the_broker(rendered, env):
+    """T-3925: the broker delivers a notification itself (plan 5.5), so the gateway keeps no route
+    to a subscriber and no token-less delivery path: no ipBlock in its egress, and the broker is
+    no peer of its ingress, plain or meshed."""
+    docs = rendered(env)
+    groups = egress_rules_by_selector(docs)
     gateway = next((rules for selector, rules in groups.items()
                     if dict(selector).get("app.kubernetes.io/name") == "context-gateway-gateway"),
                    None)
     if gateway is None:
         pytest.skip("context-gateway not deployed in this environment")
-    delivery = [rule for rule in gateway if any("ipBlock" in peer for peer in rule.get("to") or [])]
-    assert delivery, "the gateway has no route to a subscriber at all"
-    for rule in delivery:
-        assert {p["port"] for p in rule.get("ports") or []} <= {80, 443}, rule.get("ports")
-        for peer in rule["to"]:
-            reached = set(peer["ipBlock"].get("except") or [])
-            assert reached >= PRIVATE_RANGES, f"reaches {PRIVATE_RANGES - reached}"
+    assert not [rule for rule in gateway if any("ipBlock" in peer for peer in rule.get("to") or [])]
+    names = {d["metadata"]["name"] for d in docs if d.get("kind") == "NetworkPolicy"}
+    assert "context-gateway-notification-egress" not in names
+    for doc in docs:
+        if doc.get("kind") != "NetworkPolicy":
+            continue
+        spec = doc["spec"]
+        if (spec.get("podSelector") or {}).get("matchLabels", {}).get("app.kubernetes.io/name") != "context-gateway-gateway":
+            continue
+        peers = [peer.get("podSelector", {}).get("matchLabels", {}).get("app.kubernetes.io/name")
+                 for rule in spec.get("ingress") or [] for peer in rule.get("from") or []]
+        assert "context-broker-broker" not in peers, doc["metadata"]["name"]
 
 
 @pytest.mark.parametrize("env", ENVIRONMENTS)

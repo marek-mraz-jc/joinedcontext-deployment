@@ -43,6 +43,8 @@ def test_the_broker_runs_the_surfaces_and_requires_its_admin_credential(broker_p
     assert 0 < int(env["ANTARES_WS_MAX_CONNECTIONS_PER_TENANT"]) <= int(env["ANTARES_WS_MAX_CONNECTIONS"]) <= 1000
     assert 0 < int(env["ANTARES_WS_MAX_SUBSCRIPTIONS"]) <= 64
     assert 0 < int(env["ANTARES_WS_QUEUE"]) <= 256
+    # T-4132: 24 h for an anonymous socket; the gateway cuts a token caller's at 300 s.
+    assert env["ANTARES_WS_MAX_LIFETIME_SECS"] == "86400"
     assert "ANTARES_WS_ALLOWED_ORIGINS" not in env, "browsers reach the socket through the gateway alone"
     assert env["ANTARES_POLICY_SUBJECT_HEADERS"].split(",") == [
         "x-jc-subject", "x-jc-groups", "x-jc-roles", "x-jc-client", "x-jc-restricted", "x-jc-did"]
@@ -78,9 +80,9 @@ def test_the_broker_s_mcp_answers_the_host_the_gateway_calls(rendered, broker_po
 
 
 def test_the_broker_reaches_only_the_private_peers_it_names(rendered, broker_pod):
-    """T-3909, Antares T-3908: private egress is off, and the list names exactly the gateway's
-    egress Service and the broker's own Service (the endpoint of every federation registration),
-    each a Service host of this cluster: no wildcard, no address, no loopback."""
+    """T-3909, Antares T-3908: private egress is off, and the list names exactly the broker's own
+    Service (the endpoint of every federation registration), a Service host of this cluster: no
+    wildcard, no address, no loopback. The gateway's R12 egress is gone (T-3925), so is its host."""
     env = {e["name"]: e.get("value") for e in broker_pod["containers"][0].get("env", [])}
     assert env["ANTARES_EGRESS_ALLOW_PRIVATE"] == "false"
     hosts = env["ANTARES_EGRESS_PRIVATE_HOSTS"].split(",")
@@ -89,8 +91,7 @@ def test_the_broker_reaches_only_the_private_peers_it_names(rendered, broker_pod
                            if d.get("kind") == "Deployment" and d["metadata"]["name"] == name
                            for c in d["spec"]["template"]["spec"]["containers"] for e in c.get("env", [])}
     host = lambda url: url.split("://", 1)[1].split("/", 1)[0].split(":", 1)[0]
-    expected = {host(env_of("context-gateway")["JC_GATEWAY_EGRESS_URL"]),
-                host(env_of("context-gateway")["JC_GATEWAY_BROKER_URL"])}
+    expected = {host(env_of("context-gateway")["JC_GATEWAY_BROKER_URL"])}
     assert sorted(hosts) == sorted(expected), (hosts, expected)
     for name in hosts:
         assert name.endswith(".svc.cluster.local") and "*" not in name, name
