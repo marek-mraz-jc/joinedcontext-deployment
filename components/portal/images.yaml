@@ -247,7 +247,7 @@ portal:
     # the SDK's entity panel writes a number as the grid does (T-3600).
     # portal dfd0b23: jc-core of platform 2883bd0 reads a space's `quality` and `retention`
     # (T-3899), so the Helsinki seed that carries them comes back in the same apply (T-4054).
-    digest: 'sha256:60ac064661859fc7ea964288971fae69ddab623c3ca551c617f48f0cbf2640a3'
+    digest: 'sha256:1372db82eb364b09a9de6b2ba6bed3dfaeadbb2abd5f94433584c7c3311bf500'
     # The platform commit the image's jc-core is built from (the portal's Cargo.toml `rev`): a
     # seed field this jc-core does not know makes the Portal drop the whole manifest, so
     # tests/test_portal_pin_reads_the_seed.py holds every seed to it (T-4054).
