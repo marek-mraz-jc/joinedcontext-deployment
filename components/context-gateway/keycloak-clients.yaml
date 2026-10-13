@@ -66,6 +66,84 @@ banskabystrica-conformance:
           access.token.claim: 'true'
           id.token.claim: 'false'
 
+# The request-trace suite's three callers on dev (T-3931): the accounts trace-a and
+# trace-deny of project banskabystrica and trace-b of project bbsk, made through the Portal.
+# The Portal's reconciler writes no Keycloak client for an account without a workload binding,
+# so they get theirs here, the way the conformance account does. Space A is banskabystrica-kpi,
+# space B the private bbsk-trace, and trace-deny reaches only the Endpoint over A. Removed with
+# the accounts after the run.
+banskabystrica-trace-a:
+  profiles: [development]
+  name: Request trace, space A
+  description: T-3931 request-trace caller of space A; client_credentials only
+  subdomain: ''
+  redirectPath: /
+  componentNamespaces:
+    - context-gateway
+  rawValues:
+    publicClient: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: true
+    protocolMappers:
+      - name: space-a-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: banskabystrica-kpi
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+
+banskabystrica-trace-deny:
+  profiles: [development]
+  name: Request trace, denied
+  description: T-3931 request-trace caller the Endpoint over space A refuses; client_credentials only
+  subdomain: ''
+  redirectPath: /
+  componentNamespaces:
+    - context-gateway
+  rawValues:
+    publicClient: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: true
+    protocolMappers:
+      - name: endpoint-a-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: y4royli3pip6yrhv3olxxf2522b3dovt
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+
+bbsk-trace-b:
+  profiles: [development]
+  name: Request trace, space B
+  description: T-3931 request-trace caller of space B; client_credentials only
+  subdomain: ''
+  redirectPath: /
+  componentNamespaces:
+    - context-gateway
+  rawValues:
+    publicClient: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: true
+    protocolMappers:
+      - name: space-b-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: bbsk-trace
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+
 # A workload on the Portal's side (T-2245, PF-45, PF-49): the account `pipeline-proposer` of
 # project `helsinki` in the development seed. Its token's audience is the Portal's API client and
 # nothing else, so the Portal accepts it (the MCP door and the REST API) and every endpoint of the

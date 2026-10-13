@@ -39,6 +39,8 @@ context-broker:
     # sweep deletes under the broker's RLS-bound role (T-3900); upsert through a view in one read
     # (T-4085); OGC Part 3 CQL2 and items through the view scan (T-3745, T-3759); no new
     # migration or runtime ANTARES_* key over d335893.
+    # Antares dev d032654 (train 20261013-0226): OData dispatch and the LinkML slot map shared
+    # across surfaces (T-4020); no new migration or runtime ANTARES_* key over e25ec9c.
     repository: 'ghcr.io/marek-mraz-jc/antares-broker-jc'
-    tag: 'e25ec9c'
-    digest: 'sha256:ac7c3a73b63b63a18280db9fbf6abdb828dd9580205c7c21ae586c00bf3d9429'
+    tag: 'd032654'
+    digest: 'sha256:0c8f73eb28438a3aa0994b01681cccb1e6057b3a01c1663fba873d3c4a4953da'
