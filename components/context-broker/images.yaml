@@ -35,6 +35,10 @@ context-broker:
     # Antares dev d335893: each subscription delivers on its own lane, so a hung endpoint no
     # longer stalls matching (T-4086); rumqttc vendored, vendor/ copied before cargo chef (T-4129);
     # no new migration or runtime ANTARES_* key over f248288.
+    # Antares dev e25ec9c (train 20261013-0011): retention sets the rule's tenant, so the history
+    # sweep deletes under the broker's RLS-bound role (T-3900); upsert through a view in one read
+    # (T-4085); OGC Part 3 CQL2 and items through the view scan (T-3745, T-3759); no new
+    # migration or runtime ANTARES_* key over d335893.
     repository: 'ghcr.io/marek-mraz-jc/antares-broker-jc'
-    tag: 'd335893'
-    digest: 'sha256:582d98e4a49cc01b1843079846008b751ce650f47446c3b6a671ee56156bf8e7'
+    tag: 'e25ec9c'
+    digest: 'sha256:ac7c3a73b63b63a18280db9fbf6abdb828dd9580205c7c21ae586c00bf3d9429'
