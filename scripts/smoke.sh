@@ -595,9 +595,20 @@ if has_route context-endpoint; then
 		root="$base/api/endpoint/$ep/ogc/features"
 		conf=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "${auth[@]}" "$root/conformance" 2>/dev/null) || conf="curl-error"
 		if [ "$conf" != "200" ]; then ko "ogc $kind ($name $ep): /conformance answered $conf"; return; fi
-		coll=$(curl -sS --max-time 20 "${auth[@]}" "$root/collections" 2>/dev/null |
-			python3 -c 'import json,sys; print(next((c["id"] for c in json.load(sys.stdin).get("collections", [])), ""))' 2>/dev/null)
+		# The collections are the view's LinkML classes (T-3752), and a class may hold no entity in
+		# this space: the row reads the first collection that has a feature, else the first one.
+		local ids c
+		ids=$(curl -sS --max-time 20 "${auth[@]}" "$root/collections" 2>/dev/null |
+			python3 -c 'import json,sys; print("\n".join(c["id"] for c in json.load(sys.stdin).get("collections", [])[:40]))' 2>/dev/null)
+		coll=$(printf '%s\n' "$ids" | head -1)
 		if [ -z "$coll" ]; then ko "ogc $kind ($name $ep): /collections lists none"; return; fi
+		for c in $ids; do
+			if curl -sS --max-time 20 "${auth[@]}" "$root/collections/$c/items?limit=1" 2>/dev/null |
+				python3 -c 'import json,sys; sys.exit(0 if json.load(sys.stdin).get("features") else 1)' 2>/dev/null; then
+				coll=$c
+				break
+			fi
+		done
 		head=$(curl -sS -D - -o /dev/null --max-time 20 "${auth[@]}" "$root/collections/$coll/items?limit=1" 2>/dev/null | tr -d '\r')
 		type=$(printf '%s\n' "$head" | sed -n 's/^[Cc]ontent-[Tt]ype: *//p' | head -1)
 		case "$head" in "HTTP/"*" 200"*) ;; *) ko "ogc $kind ($name $ep): items of $coll answered ${head%%$'\n'*}"; return ;; esac

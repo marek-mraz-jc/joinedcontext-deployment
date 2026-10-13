@@ -742,6 +742,20 @@ def test_an_ogc_row_that_is_not_a_feature_page_of_the_view_fails_the_run(tmp_pat
     assert f"FAIL  {reason}" in result.stdout
 
 
+def test_an_ogc_row_reads_the_first_collection_that_has_a_feature(tmp_path):
+    """The collections are the view's LinkML classes (T-3752): a class with no entity in the space
+    comes first on dev (AirQualityObserved on helsinki-all), and the row reads the next one."""
+    bodies = [["hsbikes/ogc/features/collections/AirQualityObserved/", '{"type":"FeatureCollection","features":[]}'],
+              ["hsbikes/ogc/features/collections/", OGC_ITEMS],
+              ["hsbikes/ogc/features/collections",
+               '{"collections":[{"id":"AirQualityObserved"},{"id":"BikeHireDockingStation"}]}']]
+    result = run(tmp_path, dict(HEALTHY, bodies=bodies + HEALTHY["bodies"]),
+                 "https://example.test", "https://idm.example.test")
+    assert result.returncode == 0, result.stdout
+    assert ("ok    ogc public (helsinki-bikes hsbikes): conformance, 1 feature of BikeHireDockingStation "
+            "as geo+json\n") in result.stdout
+
+
 def test_an_ogc_kind_dev_has_not_seeded_is_a_skip_naming_it(tmp_path):
     result = run(tmp_path, dict(HEALTHY, ogcSeed={}, demoPassword=""),
                  "https://example.test", "https://idm.example.test")
