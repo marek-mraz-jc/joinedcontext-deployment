@@ -262,10 +262,7 @@ v1/Secret local/keycloak-client-activity-ingest
 v1/Secret local/keycloak-client-apisix-gateway
 v1/Secret local/keycloak-client-banskabystrica-conformance
 v1/Secret local/keycloak-client-banskabystrica-pipelines
-v1/Secret local/keycloak-client-banskabystrica-trace-a
-v1/Secret local/keycloak-client-banskabystrica-trace-deny
 v1/Secret local/keycloak-client-bbsk-pipelines
-v1/Secret local/keycloak-client-bbsk-trace-b
 v1/Secret local/keycloak-client-edge
 v1/Secret local/keycloak-client-gitea
 v1/Secret local/keycloak-client-helsinki-pipeline-proposer
