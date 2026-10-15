@@ -4,8 +4,9 @@ title: Open data of Banská Bystrica
 description: >-
   What the city's public space carries side by side (DM-01, DM-61): the events the city
   announces, every school and school facility of the national school map in the city, and the
-  hourly particulate readings of the city's urban-background station as the European
-  Environment Agency republishes them. One model, one space, one public endpoint. Where Smart
+  hourly particulate, nitrogen dioxide and ozone readings of the city's urban-background station
+  as the European Environment Agency republishes them, and the latest minute of SHMÚ's automatic
+  weather stations in and near the city. One model, one space, one public endpoint. Where Smart
   Data Models has the class, its IRI is cited rather than minted (DM-04, DM-16).
 license: https://joinedcontext.com/licenses/cc-by-4.0
 prefixes:
@@ -158,7 +159,9 @@ slots:
       ngsi_ld_kind: Property
   dateObserved:
     slot_uri: sdm:dateObserved
-    description: The end of the latest hour a reading of the entity covers.
+    description: >-
+      When the latest reading of the entity was taken: the end of the hour for an air-quality
+      mean, the minute for a weather reading.
     range: datetime
     annotations:
       ngsi_ld_kind: Property
@@ -184,6 +187,85 @@ slots:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
 
+  no2:
+    slot_uri: sdm:no2
+    description: Nitrogen dioxide, the hour's mean at the station.
+    range: float
+    minimum_value: 0
+    unit:
+      ucum_code: ug/m3
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  o3:
+    slot_uri: sdm:o3
+    description: Ozone, the hour's mean at the station.
+    range: float
+    minimum_value: 0
+    unit:
+      ucum_code: ug/m3
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  temperature:
+    slot_uri: sdm:temperature
+    description: Air temperature 2 m above the ground, the minute's mean.
+    range: float
+    unit:
+      ucum_code: Cel
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  relativeHumidity:
+    slot_uri: sdm:relativeHumidity
+    description: Relative humidity of the air, 0 to 1, the minute's mean.
+    range: float
+    minimum_value: 0
+    maximum_value: 1
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  atmosphericPressure:
+    slot_uri: sdm:atmosphericPressure
+    description: Air pressure at the station, the minute's mean.
+    range: float
+    minimum_value: 0
+    unit:
+      ucum_code: hPa
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  windSpeed:
+    slot_uri: sdm:windSpeed
+    description: Wind speed, the minute's scalar mean.
+    range: float
+    minimum_value: 0
+    unit:
+      ucum_code: m/s
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  windDirection:
+    slot_uri: sdm:windDirection
+    description: Where the wind comes from, degrees clockwise from north, the minute's vector mean.
+    range: float
+    minimum_value: 0
+    maximum_value: 360
+    unit:
+      ucum_code: deg
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  precipitation:
+    slot_uri: sdm:precipitation
+    description: Rain and melted snow over the ten minutes up to `dateObserved`.
+    range: float
+    minimum_value: 0
+    unit:
+      ucum_code: mm
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
 classes:
   Event:
     class_uri: schema:Event
@@ -234,6 +316,27 @@ classes:
       - dateObserved
       - pm10
       - pm25
+      - no2
+      - o3
+      - dataProvider
+      - source
+  WeatherObserved:
+    class_uri: sdm:WeatherObserved
+    description: >-
+      One automatic weather station of SHMÚ in or near the city and the latest minute it
+      reported.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+    slots:
+      - name
+      - dateObserved
+      - temperature
+      - relativeHumidity
+      - atmosphericPressure
+      - windSpeed
+      - windDirection
+      - precipitation
       - dataProvider
       - source
 
