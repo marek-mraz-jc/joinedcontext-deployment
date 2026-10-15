@@ -47,6 +47,56 @@ So a sheet holds what the Endpoint answers at the last pass, and nothing more. A
 pipelines have not run, or were refused by a quota, publishes a near-empty sheet until they do;
 the fix is upstream of the catalogue, never a fill by hand.
 
+## Catalogue harvests
+
+Some datasets have no Endpoint behind them: a city publishes files in the national catalogue
+(NKOD) and the assistant has to answer from them (T-4151). `harvest.sources` lists one entry per
+publisher, and the chart renders one CronJob per entry (`ckan-harvest-<name>`, nightly). Each run
+of `files/harvest-nkod.py`:
+
+- reads the publisher's datasets from the NKOD SPARQL endpoint, with the licence from
+  `legislation:termsOfUse` (NKOD carries no `dct:license`), and leaves out a dataset with no open
+  licence;
+- fetches each distribution once over https, only from `allowedHosts`, redirects included, with
+  TLS verification on. An HTML or PDF answer where JSON is declared is not ingested, a non-ASCII
+  URL is percent-encoded, and string values are trimmed;
+- skips the titles under `skip` (a link to another dataset's file, personal data) and drops the
+  rows of a `requireColumn` table that have no value in that column. A filtered table is
+  published without the original file, which still holds those rows;
+- writes each dataset into the source's organization with its licence, publisher and `modified`,
+  each file as a link and each flat JSON table as a DataStore table (CKAN also serves it as CSV),
+  then withdraws what an earlier run harvested and the publisher no longer lists;
+- checks every ingested dataset (title, licence, a format on each resource, the row count of each
+  table), prints the count per state with each skipped title and its reason, and exits 1 when a
+  check fails. An empty catalogue answer deletes nothing.
+
+It writes with the publisher token above and mounts no Kubernetes token. Its egress is DNS, the
+catalogue and public addresses on 443 with the private ranges cut out (`ckan-harvest`), so CKAN
+itself still dials nothing. The first run after an apply does not wait for the schedule:
+
+```bash
+kubectl -n <ns> create job --from=cronjob/ckan-harvest-banskabystrica ckan-harvest-banskabystrica-now
+kubectl -n <ns> logs -f job/ckan-harvest-banskabystrica-now -c harvest
+```
+
+### `kind: hub`: an ArcGIS Hub (T-4152)
+
+An entry with `kind: hub` runs `files/harvest-hub.py` instead. On dev, BBSK's Hub
+(`https://opendata.bbsk.sk`) fills `bbsk` (`ckan-harvest-bbsk`). Its egress and token are the
+ones above.
+
+| Rule | What the job does |
+|---|---|
+| list | reads the Hub search API whole (`numberMatched` items); a short read is an error |
+| licence | keeps CC-BY-4.0, CC-BY-SA-4.0 and CC0-1.0; skips anything else, naming why |
+| corrections | `skip` (by item id, with the reason), `titles` (by item id), `spelling` from the values |
+| duplicates | one title, one dataset: the newest `modified` stays, the other is logged as its duplicate |
+| resources | per layer a CSV and, with a geometry, a GeoJSON from the Hub's download API, plus the ArcGIS REST service; a link off the source's `allowedHosts` is dropped |
+| identity | extras `harvest_source` and `source_id`; the CKAN id is a UUIDv5 of the item's Hub URL |
+| withdrawal | after a complete read, a dataset of this source that the read no longer lists is deleted (CKAN keeps it as `deleted`, and a returning item revives it); nothing else in the organization is touched |
+
+Its log names every skipped item and why.
+
 ## Branding
 
 Nothing here carries a city name. `global.branding` is written into the theme ConfigMap as
@@ -205,25 +255,6 @@ and every dataset and validates each against the DCAT-AP 3.0.1 shapes in
 `scripts/dcat-ap-3.0.1/` (from github.com/SEMICeu/DCAT-AP, `releases/3.0.1/shacl`); it
 exits 1 on any violation and on an empty catalogue. `tests/test_ckan_dcat.py` runs the same
 check in CI on a real record serialized inside the pinned image.
-
-## Harvesting outside catalogues
-
-The CronJob `ckan-harvest` (`charts/ckan/files/harvest.py`, T-4152) copies outside open-data
-catalogues into CKAN organizations once a day, through the action API with the `ckan-api-token`
-Secret. Each source sits in the chart's `harvest.sources`. On dev, BBSK's ArcGIS Hub
-(`https://opendata.bbsk.sk`) fills organization `bbsk`.
-
-| Rule | What the job does |
-|---|---|
-| list | reads the Hub search API whole (`numberMatched` items); a short read is an error |
-| licence | keeps CC-BY-4.0, CC-BY-SA-4.0 and CC0-1.0; skips anything else, naming why |
-| corrections | `skip` (by item id, with the reason), `titles` (by item id), `spelling` from the values |
-| duplicates | one title, one dataset: the newest `modified` stays, the other is logged as its duplicate |
-| resources | per layer a CSV and, with a geometry, a GeoJSON from the Hub's download API, plus the ArcGIS REST service; a link off the source's `hosts` is dropped |
-| identity | extras `harvest_source` and `source_id`; the CKAN id is a UUIDv5 of the item's Hub URL |
-| withdrawal | after a complete read, a dataset of this source that the read no longer lists is deleted (CKAN keeps it as `deleted`, and a returning item revives it); nothing else in the organization is touched |
-
-Its log names every skipped item and why. Its egress is DNS, the catalogue on 5000 and HTTPS.
 
 ## Routing
 

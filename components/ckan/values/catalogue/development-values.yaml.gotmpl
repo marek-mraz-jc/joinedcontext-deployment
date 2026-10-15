@@ -65,21 +65,43 @@ organizations:
     initials: BBSK
     colour: '#7a1f5c'
 
-# The region's open data from its ArcGIS Hub into organization `bbsk` (T-4152, docs
-# Research/banska-bystrica-open-data-sources.md sections 6 to 8). The Hub's search API is the
-# list (103 datasets); its DCAT feeds are per layer and name the publisher `{{"{{"}}source{{"}}"}}`.
+# The city's 43 datasets in the national catalogue, harvested nightly into `banskabystrica`
+# (T-4151). The corrections are docs Research/banska-bystrica-open-data-sources.md §7 and §8:
+# four titles link another dataset's file, which is ingested once under the title its columns
+# match; the dog registry locates people; contracts, orders and subsidies keep only the rows that
+# carry an IČO. HTML and PDF answers where JSON is declared are found by the fetch itself.
 harvest:
-  enabled: true
   sources:
-    - key: bbsk-hub
-      kind: arcgis-hub
+    - name: banskabystrica
+      sparql: https://data.slovensko.sk/api/sparql
+      publisher: https://data.gov.sk/id/legal-subject/00313271
+      publisherName: Mesto Banská Bystrica
+      organization: banskabystrica
+      namePrefix: bb-
+      allowedHosts: [egov.banskabystrica.sk, dtm-banskabystrica.tmapserver.sk, www.banskabystrica.sk]
+      # NKOD records the bare host, which 301s to www.
+      rewriteHosts: {banskabystrica.sk: www.banskabystrica.sk}
+      skip:
+        Ulice: {state: mislinked, reason: 'not ingested, link points to Počet občanov podľa dňa narodenia (732 rows of Deň, Pohlavie, Počet)'}
+        Počet občanov podľa mena: {state: mislinked, reason: 'not ingested, link points to Počet občanov podľa veku (105 rows of ages)'}
+        Členovia orgánov samosprávy: {state: mislinked, reason: 'not ingested, link points to Evidencia psov (3 299 dog records)'}
+        Počet občanov podľa ulíc BB: {state: mislinked, reason: 'not ingested, link points to Prírastky a úbytky občanov za jednotlivé roky (27 rows of years)'}
+        Evidencia psov: {state: personal, reason: 'not ingested, street, house, flat and floor of each dog owner (Open data integration rules §1)'}
+      requireColumn:
+        Zmluvy BB: Zmluvné_strany_s_údajom_IČO
+        Objednávky BB: IČO
+        Dotácie: IČO_žiadateľa
+    # The region's open data from its ArcGIS Hub into organization `bbsk` (T-4152, docs
+    # Research/banska-bystrica-open-data-sources.md sections 6 to 8). The Hub's search API is the
+    # list (103 datasets); its DCAT feeds are per layer and name the publisher `{{"{{"}}source{{"}}"}}`.
+    - name: bbsk
+      kind: hub
       hub: https://opendata.bbsk.sk
-      hosts: [opendata.bbsk.sk, services-eu1.arcgis.com, www.arcgis.com]
-      org: bbsk
-      publisher:
-        name: Banskobystrický samosprávny kraj
-        uri: https://data.gov.sk/id/legal-subject/37828100
-        description: Otvorené údaje Banskobystrického samosprávneho kraja (IČO 37828100) z opendata.bbsk.sk, prevzaté a opravené.
+      allowedHosts: [opendata.bbsk.sk, services-eu1.arcgis.com, www.arcgis.com]
+      organization: bbsk
+      publisherName: Banskobystrický samosprávny kraj
+      publisherUri: https://data.gov.sk/id/legal-subject/37828100
+      publisherDescription: Otvorené údaje Banskobystrického samosprávneho kraja (IČO 37828100) z opendata.bbsk.sk, prevzaté a opravené.
       skip:
         # Names, e-mails and phones of personal-assistance providers, 277 of them people (section 8).
         b5486911cb0342e48d475130d1d5e960: personal data (section 8), a count per okres at most

@@ -112,6 +112,11 @@ spec:
               {{- if .Values.ckan.sso.enabled }}{{ $plugins = printf "%s oidc_pkce" $plugins }}{{ end }}
               {{- if .Values.ckan.dcat.enabled }}{{ $plugins = printf "%s dcat" $plugins }}{{ end }}
               value: {{ $plugins | quote }}
+            # CKAN 2.11 defaults `ckan.auth.public_user_details` to true, which let an
+            # anonymous `user_list` name every account and which one is sysadmin (T-4172).
+            # `ckanext-envvars` maps this name to that option.
+            - name: CKAN__AUTH__PUBLIC_USER_DETAILS
+              value: "false"
             - name: CKAN_STORAGE_PATH
               value: /var/lib/ckan
             - name: PYTHONPATH

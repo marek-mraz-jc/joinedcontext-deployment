@@ -128,8 +128,8 @@ def test_the_catalogue_is_reached_through_the_edge_and_nothing_else(rendered):
     only door is APISIX, where the header sanitisation and the rate limit are."""
     policy = by_name(rendered("dev"), "NetworkPolicy", "ckan")["spec"]
     peers = [p for rule in policy["ingress"] for p in rule["from"]]
-    # The edge, the API token Job that signs in on the Service (T-0493) and the harvest that
-    # writes with that token (T-4152); nobody else.
+    # The edge, the API token Job that signs in on the Service (T-0493) and the catalogue
+    # harvest that writes with that token (T-4151); nobody else.
     assert [p["podSelector"]["matchLabels"].get("app.kubernetes.io/component",
                                                 p["podSelector"]["matchLabels"]["app.kubernetes.io/name"])
             for p in peers] == ["apisix", "api-token", "harvest"]
@@ -369,6 +369,17 @@ def test_the_session_cookies_are_secure_on_an_https_catalogue(rendered):
     assert "exit 0" not in script
 
 
+def test_the_catalogue_names_no_account_to_an_anonymous_visitor(rendered):
+    """CKAN 2.11 defaults `ckan.auth.public_user_details` to true, so dev's anonymous
+    `user_list` named every account, its last activity and which one is sysadmin (T-4172).
+    `ckanext-envvars` maps the variable to that option; false makes `user_list` and
+    `user_show` ask for a signed-in person."""
+    docs = rendered("dev")
+    plugins = env_of(ckan_container(docs))["CKAN__PLUGINS"].split()
+    assert "envvars" in plugins, plugins
+    assert env_of(ckan_container(docs)).get("CKAN__AUTH__PUBLIC_USER_DETAILS") == "false"
+
+
 @pytest.mark.parametrize(
     ("site_url", "written"),
     [
@@ -452,6 +463,34 @@ def test_the_api_token_job_writes_one_secret_and_reaches_two_things(rendered):
     assert "ingress" not in policy or policy["ingress"] == []
     ports = sorted(p["port"] for rule in policy["egress"] for p in rule["ports"])
     assert ports == [53, 53, 443, 5000, 6443]
+
+
+@requires_helmfile
+def test_the_harvest_writes_with_the_token_and_reaches_only_public_443(rendered):
+    """T-4151: the city's NKOD harvest is a CronJob on the catalogue's pinned image, with the
+    publisher token by reference and no Kubernetes API token; it reaches DNS, the catalogue and
+    public addresses on 443, never a private range a source URL could point it at."""
+    docs = rendered("dev")
+    cron = by_name(docs, "CronJob", "ckan-harvest-banskabystrica")
+    assert cron["spec"]["concurrencyPolicy"] == "Forbid"
+    pod = cron["spec"]["jobTemplate"]["spec"]["template"]["spec"]
+    assert pod["automountServiceAccountToken"] is False
+    container = pod["containers"][0]
+    assert container["image"] == ckan_container(docs)["image"]
+    env = {e["name"]: e for e in container["env"]}
+    assert env["CKAN_API_TOKEN"]["valueFrom"]["secretKeyRef"] == {"name": "ckan-api-token", "key": "token"}
+    config = json.loads(env["HARVEST_CONFIG"]["value"])
+    assert config["source"] == "nkod-banskabystrica" and config["organization"] == "banskabystrica"
+    assert config["requireColumn"]["Objednávky BB"] == "IČO"
+    assert "Evidencia psov" in config["skip"]
+    assert "def main():" in container["args"][0]
+
+    policy = by_name(docs, "NetworkPolicy", "ckan-harvest")["spec"]
+    assert "ingress" not in policy or policy["ingress"] == []
+    ports = sorted(p["port"] for rule in policy["egress"] for p in rule["ports"])
+    assert ports == [53, 53, 443, 5000]
+    blocks = [peer["ipBlock"] for rule in policy["egress"] for peer in rule["to"] if "ipBlock" in peer]
+    assert len(blocks) == 1 and {"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "169.254.0.0/16"} <= set(blocks[0]["except"])
 
 
 # --- Keycloak login (T-0403, OPS-26) -------------------------------------------------------

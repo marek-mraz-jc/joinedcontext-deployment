@@ -32,7 +32,7 @@ ckan:
       ports:
         - protocol: TCP
           port: 5000
-    # The harvest CronJob writes the datasets it reads from outside catalogues (T-4152).
+    # The catalogue harvest (T-4151) writes through the Action API with the publisher token.
     - from:
         - podSelector:
             matchLabels:
@@ -243,8 +243,10 @@ ckan-api-token:
         - protocol: TCP
           port: 6443
 
-# The harvest CronJob (T-4152) reads outside open-data catalogues over HTTPS and writes to the
-# catalogue's Service with its API token. No Kubernetes API: it mounts no ServiceAccount token.
+# The catalogue harvest (T-4151) reads the national catalogue and the publishers' files, and
+# writes into the catalogue. Public addresses are named by address, 443 only, and the private
+# ranges are cut out, so a source URL can never point the fetcher at a cluster Service; the
+# script's host allowlist is the second fence.
 ckan-harvest:
   podSelector:
     app.kubernetes.io/name: ckan
@@ -279,6 +281,7 @@ ckan-harvest:
     - to:
         - ipBlock:
             cidr: 0.0.0.0/0
+            except: [10.0.0.0/8, 100.64.0.0/10, 127.0.0.0/8, 169.254.0.0/16, 172.16.0.0/12, 192.168.0.0/16]
       ports:
         - protocol: TCP
           port: 443

@@ -37,6 +37,9 @@ FEEDS = {
     "skoly": ("skoly.csv", "School", 5),
     "ovzdusie-pm10": ("eea-sk0263a-pm10.parquet", "AirQualityObserved", 1),
     "ovzdusie-pm25": ("eea-sk0263a-pm25.parquet", "AirQualityObserved", 1),
+    # The station's last 24 hours of 2026-10-15 (T-4153); every O3 hour there is validity 4.
+    "ovzdusie-no2": ("eea-sk0263a-no2.parquet", "AirQualityObserved", 1),
+    "ovzdusie-o3": ("eea-sk0263a-o3.parquet", "AirQualityObserved", 1),
 }
 
 
@@ -178,6 +181,18 @@ def test_the_station_is_one_entity_and_each_stream_writes_its_own_reading(writte
 
 
 @requires_docker
+def test_nitrogen_dioxide_and_ozone_join_the_same_station(written):
+    """T-4153: each stream writes only its own pollutant into the one station entity, in µg/m³,
+    stamped with the end of its hour in UTC."""
+    no2, o3 = written["ovzdusie-no2"][0], written["ovzdusie-o3"][0]
+    assert no2["id"] == o3["id"] == written["ovzdusie-pm10"][0]["id"]
+    assert no2["no2"] == {"type": "Property", "value": 3.14639, "unitCode": "GQ", "observedAt": "2026-10-15T18:00:00Z"}
+    assert o3["o3"] == {"type": "Property", "value": 51.03, "unitCode": "GQ", "observedAt": "2026-10-15T19:00:00Z"}
+    for entity, own in ((no2, "no2"), (o3, "o3")):
+        assert not {"pm10", "pm25", "no2", "o3"} - {own} & set(entity), entity
+
+
+@requires_docker
 def test_a_withdrawn_hour_is_skipped_for_the_one_before_it():
     station = run("ovzdusie-pm10", recorded("eea-sk0263a-pm10-withdrawn.parquet"))[0]
     assert station["pm10"]["observedAt"] == "2026-09-25T04:00:00Z"
@@ -234,7 +249,8 @@ def test_the_events_query_never_asks_for_the_organisers_contact():
 
 def test_every_poll_matches_its_source():
     periods = {name: manifest(f"pipeline-{name}.yaml")["spec"]["period"] for name in FEEDS}
-    assert periods == {"podujatia": "24h", "skoly": "168h", "ovzdusie-pm10": "1h", "ovzdusie-pm25": "1h"}
+    assert periods == {"podujatia": "24h", "skoly": "168h", "ovzdusie-pm10": "1h", "ovzdusie-pm25": "1h",
+                       "ovzdusie-no2": "1h", "ovzdusie-o3": "1h"}
     # PL-26: 30 s or longer is scheduled; the two air streams do not start in the same minute.
     schedules = [manifest(f"pipeline-{name}.yaml")["spec"]["schedule"] for name in FEEDS]
     assert len(set(schedules)) == len(schedules)

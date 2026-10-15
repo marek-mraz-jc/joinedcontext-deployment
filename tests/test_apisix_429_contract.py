@@ -325,3 +325,56 @@ routes:
             # Past the edge to the (closed) upstream: over the old 16 MiB, under the rule's 20.
             assert post(base, 18 * mib, chunked) == 502, f"chunked={chunked}"
             assert post(base, 21 * mib, chunked) == 413, f"chunked={chunked}"
+
+
+def test_the_pinned_image_counts_anonymous_named_mcp_calls_per_client(tmp_path):
+    """T-4141: the public named MCP servers. The committed `context-mcp-named` route's `vars` and
+    limit, in front of a route that counts nothing, as the hub's 5,000 is nothing to this test:
+    a caller without a bearer is refused after the route's count, a client header does not
+    reset the bucket, and a bearer takes the other route and is never counted here."""
+    routes = yaml.safe_load((PROJECT_ROOT / "components/context-gateway/apisix-routes.yaml").read_text())
+    named = routes["context-mcp-named"]
+    limit = named["plugins"]["limit-count"]
+    assert named["uri"] == "/api/mcp/*" and named["priority"] > routes["context-mcp-hub"]["priority"]
+    rules = f"""
+upstreams:
+  - id: closed
+    type: roundrobin
+    nodes:
+      "127.0.0.1:9": 1
+routes:
+  - id: hub
+    uri: {routes["context-mcp-hub"]["uri"]}
+    priority: {routes["context-mcp-hub"]["priority"]}
+    upstream_id: closed
+  - id: named
+    uri: {named["uri"]}
+    priority: {named["priority"]}
+    vars: {json.dumps(named["vars"])}
+    upstream_id: closed
+    plugins:
+      limit-count: {json.dumps(limit)}
+#END
+"""
+
+    def call(base: str, headers: dict[str, str]) -> int:
+        request = urllib.request.Request(
+            base + "/api/mcp/bbsk/otvorene-data", method="POST", data=b"{}", headers=headers
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=5) as response:
+                return response.status
+        except urllib.error.HTTPError as refused:
+            return refused.code
+
+    with pinned_apisix(tmp_path, rules) as base:
+        for _ in range(limit["count"]):
+            assert call(base, {}) == 502, "inside the limit the call reaches the (closed) upstream"
+        assert call(base, {}) == 429
+        assert call(base, {"Authorization": ""}) == 429, "an empty Authorization is anonymous"
+        for spoof in ("X-Forwarded-For", "X-Real-IP"):
+            assert call(base, {spoof: "203.0.113.7"}) == 429, f"{spoof} chose a fresh bucket"
+        # A bearer is the gateway's to verify; it never spends or meets the anonymous bucket.
+        assert call(base, {"Authorization": "Bearer token"}) == 502
+        status, _, _ = answer(base + "/api/mcp")
+        assert status == 502, "the hub itself is not this route's"

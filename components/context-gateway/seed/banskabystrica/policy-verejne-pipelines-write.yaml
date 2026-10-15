@@ -16,3 +16,4 @@ spec:
         - type: Event
         - type: School
         - type: AirQualityObserved
+        - type: WeatherObserved

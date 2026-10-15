@@ -50,6 +50,10 @@ EXPECTED_ROUTES = {
     "portal-public-form": {"uri": "/f/*", "priority": 5, "upstream_id": "portal-public-form", "host": PORTAL_HOST},
     # T-3265: a public Endpoint's API documentation, edge session optional.
     "portal-public-docs": {"uri": "/d/*", "priority": 5, "upstream_id": "portal-public-docs", "host": PORTAL_HOST},
+    # T-4169: a public named MCP server's setup page, edge session optional.
+    "portal-public-connect": {
+        "uri": "/connect/*", "priority": 5, "upstream_id": "portal-public-connect", "host": PORTAL_HOST,
+    },
     # T-4063: the API and User Guide pages, edge session optional.
     "portal-public-guide": {"uri": "/docs/*", "priority": 5, "upstream_id": "portal-public-guide", "host": PORTAL_HOST},
     # T-3105: the gateway delivers the Portal's live-update notifications here, no login (API/01 §32).
@@ -62,6 +66,13 @@ EXPECTED_ROUTES = {
     "context-mcp-hub": {"uri": "/api/mcp*", "priority": 20, "upstream_id": "context-mcp-hub", "host": LOCAL_DOMAIN},
     "context-mcp-hub-portal": {
         "uri": "/api/mcp*", "priority": 20, "upstream_id": "context-mcp-hub-portal", "host": PORTAL_HOST,
+    },
+    # T-4141: the named MCP servers for a caller without a bearer, counted per client IP.
+    "context-mcp-named": {
+        "uri": "/api/mcp/*", "priority": 21, "upstream_id": "context-mcp-named", "host": LOCAL_DOMAIN,
+    },
+    "context-mcp-named-portal": {
+        "uri": "/api/mcp/*", "priority": 21, "upstream_id": "context-mcp-named-portal", "host": PORTAL_HOST,
     },
 }
 

@@ -1,271 +1,347 @@
-"""The harvest of outside catalogues into CKAN (T-4152): BBSK's ArcGIS Hub into `bbsk`.
-
-`charts/ckan/files/harvest-hub.py` runs over answers of the region's Hub recorded on 2026-10-15
-(`fixtures/bbsk-hub/`, eight of its 103 items, descriptions shortened) and writes into a CKAN
-that answers the action API in-process. The render cases check what the CronJob may reach.
+"""The catalogue harvest (T-4151): `charts/ckan/files/harvest-nkod.py` against a fake NKOD, fake
+publisher files and a fake CKAN that keep what the real ones decide: a DataStore table belongs to a
+resource, `package_update` replaces the resource list, `package_delete` only marks. The SPARQL rows
+and files are shaped like the city's own, fetched on 2026-10-15 (docs
+Research/banska-bystrica-open-data-sources.md §6 to §8), and cut to a few rows. Nothing here needs
+a cluster or the network.
 """
 
 import importlib.util
+import io
 import json
-import threading
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import urllib.error
 from pathlib import Path
 
 import pytest
-import yaml
 
-ROOT = Path(__file__).resolve().parent.parent
-FIXTURES = Path(__file__).resolve().parent / "fixtures/bbsk-hub"
+SCRIPT = Path(__file__).resolve().parent.parent / "charts/ckan/files/harvest-nkod.py"
+EU = "http://publications.europa.eu/resource/authority/"
+BY, BYSA = EU + "licence/CC_BY_4_0", EU + "licence/CC_BYSA_4_0"
+EGOV = "https://egov.banskabystrica.sk/Default.aspx?NavigationState="
+DTM = "https://dtm-banskabystrica.tmapserver.sk/opendata/"
+TOKEN = "harvest-test-token"
 
-spec = importlib.util.spec_from_file_location("harvest", ROOT / "charts/ckan/files/harvest-hub.py")
-harvest = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(harvest)
+CONFIG = {
+    "source": "nkod-banskabystrica",
+    "sparql": "https://data.slovensko.sk/api/sparql",
+    "publisher": "https://data.gov.sk/id/legal-subject/00313271",
+    "publisherName": "Mesto Banská Bystrica",
+    "organization": "banskabystrica",
+    "namePrefix": "bb-",
+    "allowedHosts": ["egov.banskabystrica.sk", "dtm-banskabystrica.tmapserver.sk", "www.banskabystrica.sk"],
+    "rewriteHosts": {"banskabystrica.sk": "www.banskabystrica.sk"},
+    "skip": {
+        "Ulice": {"state": "mislinked", "reason": "not ingested, link points to Počet občanov podľa dňa narodenia"},
+        "Evidencia psov": {"state": "personal", "reason": "not ingested, locates each dog owner"},
+    },
+    "requireColumn": {"Objednávky BB": "IČO"},
+}
 
-APS = "b5486911cb0342e48d475130d1d5e960"
-OBCE, OKRESY = "40138c783eaa46cd8cd3c8e09ab67127", "04e229d8b39b415497081c63a74c94f9"
-CULTURE = "2f936202febe4340a72c1b7224a664d9"
-SUPPLIERS = "825cd0cb3b0f46759d14f3bb0d328b59"
+AGES = [{"Vek": "0", "Počet_občanov_v_danom_veku": "612 ", "Počet_mužov": "301", "Počet_žien": "311"},
+        {"Vek": "1", "Počet_občanov_v_danom_veku": "640", "Počet_mužov": "330", "Počet_žien": "310"}]
+ORDERS = [{"Číslo_objednávky": "1/2025", "Dodávateľ": "Firma s.r.o.", "IČO": "00313271   "},
+          {"Číslo_objednávky": "2/2025", "Dodávateľ": "Ján Novák", "IČO": "   "},
+          {"Číslo_objednávky": "3/2025", "Dodávateľ": "Iná a.s.", "IČO": "35677708"}]
+
+# url -> (status, content type, body); a tuple of a redirect target instead redirects.
+WEB = {
+    EGOV + "920:0::plac1140:_144053_5_8": (200, "application/json", json.dumps(AGES).encode("utf-8-sig")),
+    EGOV + "1:orders": (200, "application/json", json.dumps(ORDERS).encode()),
+    EGOV + "1100:0:": (200, "text/html; charset=utf-8", b"<!DOCTYPE html><html></html>"),
+    "https://egov.banskabystrica.sk/XSD/07.pdf": (200, "application/pdf", b"%PDF-1.4"),
+    DTM + "OE_02_register_ulic.zip": (200, "application/zip", b""),
+    DTM + "OE_4_DTM_BB_3.0_polohopis_a_v%C3%BD%C5%A1kopis_bodov%C3%A9ho_po%C4%BEa.zip": (200, "application/zip", b""),
+    "https://www.banskabystrica.sk/wp-json/wp/v2/events": (200, "application/json", json.dumps([{"id": 1, "title": {"rendered": "Jarmok"}}]).encode()),
+    DTM + "gone.zip": (404, "", b""),
+}
 
 
-def dev_source():
-    values = (ROOT / "components/ckan/values/catalogue/development-values.yaml.gotmpl").read_text()
-    # The file is a template only for the `{{"{{"}}source{{"}}"}}` in one comment.
-    sources = yaml.safe_load(values.replace('{{"{{"}}', "{{").replace('{{"}}"}}', "}}"))["harvest"]["sources"]
-    entry = next(s for s in sources if s.get("kind") == "hub")
-    # What the chart puts into HARVEST_CONFIG: the entry, keyed `source` by kind and name.
-    return {"source": f"hub-{entry['name']}", **{k: v for k, v in entry.items() if k != "name"}}
+def dataset(uid, title, *dists, keyword="obcania", modified="2023-11-30T08:26:58Z"):
+    """The SPARQL rows NKOD answers for one dataset: one row per distribution, each with its terms."""
+    base = {"ds": f"https://data.gov.sk/set/{uid}", "title": title, "description": title,
+            "modified": modified, "landing": f"https://data.gov.sk/dataset/{uid}-slug", "keyword": keyword}
+    rows = []
+    for n, (url, fmt, licence) in enumerate(dists):
+        row = dict(base, dist=f"{base['ds']}/resource/{n}", distTitle=title, url=url, format=EU + "file-type/" + fmt)
+        if licence:
+            row |= {"work": licence, "database": licence, "special": licence}
+        rows.append(row)
+    return rows or [base]
 
 
-def items():
-    return [f["properties"] for f in json.loads((FIXTURES / "items.json").read_text())["features"]]
-
-
-def layers_of(item):
-    return json.loads((FIXTURES / "layers.json").read_text()).get(item["id"], [])
+CATALOGUE = (
+    dataset("veku", "Počet občanov podľa veku", (EGOV + "920:0::plac1140:_144053_5_8", "JSON", BY))
+    + dataset("ulice", "Ulice", (EGOV + "945:0::plac2174:_144154_5_8", "JSON", BY))
+    + dataset("psy", "Evidencia psov", (EGOV + "803:0::plac2114:_272000_5_8", "JSON", BY))
+    + dataset("faktury", "Faktúry BB", (EGOV + "1100:0:", "JSON", BY))
+    + dataset("pocty", "Počty občanov v jednotlivých rokoch", ("https://egov.banskabystrica.sk/XSD/07.pdf", "JSON", BY))
+    + dataset("objednavky", "Objednávky BB", (EGOV + "1:orders", "JSON", BY))
+    # The same file twice under one dataset, and a non-ASCII file name.
+    + dataset("ulic", "DTM_BB-register-ulic", (DTM + "OE_02_register_ulic.zip", "ZIP", BYSA),
+              (DTM + "OE_02_register_ulic.zip", "ZIP", BYSA))
+    + dataset("polohopis", "DTM_BB-Polohopis", (DTM + "OE_4_DTM_BB_3.0_polohopis_a_výškopis_bodového_poľa.zip", "ZIP", BYSA))
+    # The bare host NKOD records, which the configuration moves to www.
+    + dataset("podujatia", "Podujatia", ("https://banskabystrica.sk/wp-json/wp/v2/events", "JSON", BY))
+    + dataset("bezlicencie", "Bez licencie", (DTM + "OE_02_register_ulic.zip", "ZIP", None))
+    + dataset("mrtvy", "Mŕtvy odkaz", (DTM + "gone.zip", "ZIP", BY))
+)
 
 
 class FakeCkan:
-    """CKAN's action API, as much of it as the harvest calls: the organization, search, create,
-    update and delete. Every request must carry the token."""
-
     def __init__(self):
-        self.orgs, self.packages, self.calls = {}, {}, []
-        fake = self
+        self.packages, self.tables, self.organizations, self.calls = {}, {}, set(), []
+        self.next_id = 0
 
-        class Handler(BaseHTTPRequestHandler):
-            def do_POST(self):
-                action = self.path.rsplit("/", 1)[-1]
-                body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-                assert self.headers["Authorization"] == "token-1"
-                fake.calls.append(action)
-                status, answer = fake.answer(action, body)
-                data = json.dumps(answer).encode()
-                self.send_response(status)
-                self.send_header("Content-Length", str(len(data)))
-                self.end_headers()
-                self.wfile.write(data)
+    def new_id(self):
+        self.next_id += 1
+        return f"id-{self.next_id}"
 
-            def log_message(self, *args):
-                pass
+    def __call__(self, action, payload):
+        self.calls.append(action)
+        return getattr(self, action)(payload)
 
-        self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
-        threading.Thread(target=self.server.serve_forever, daemon=True).start()
-        self.host = f"127.0.0.1:{self.server.server_port}"
+    def organization_show(self, p):
+        return {"name": p["id"]} if p["id"] in self.organizations else None
 
-    def answer(self, action, body):
-        def ok(result):
-            return 200, {"success": True, "result": result}
+    def organization_create(self, p):
+        self.organizations.add(p["name"])
+        return {"name": p["name"]}
 
-        if action == "organization_show":
-            if body["id"] in self.orgs:
-                return ok(self.orgs[body["id"]])
-            return 404, {"success": False, "error": {"__type": "Not Found Error", "message": "Not found"}}
-        if action == "organization_create":
-            self.orgs[body["name"]] = body
-            return ok(body)
-        if action == "package_search":
-            org = body["fq"].split(":", 1)[1]
-            # CKAN's index drops a deleted dataset (`ckan.search.remove_deleted_packages`).
-            found = [p for p in self.packages.values() if p["owner_org"] == org and p["state"] == "active"]
-            return ok({"count": len(found), "results": found[body["start"]:body["start"] + body["rows"]]})
-        if action == "package_show":
-            if body["id"] in self.packages:
-                return ok(self.packages[body["id"]])
-            return 404, {"success": False, "error": {"__type": "Not Found Error", "message": "Not found"}}
-        if action == "package_create":
-            assert body["name"] not in {p["name"] for p in self.packages.values()}, "name already in use"
-            assert body["id"] not in self.packages
-            package = dict(body, state="active")
-            self.packages[package["id"]] = package
-            return ok(package)
-        if action == "package_update":
-            self.packages[body["id"]] = dict(body)
-            return ok(body)
-        if action == "package_delete":
-            self.packages[body["id"]]["state"] = "deleted"
-            return ok(None)
-        return 400, {"success": False, "error": {"__type": "Bad request", "message": f"Action name not known: {action}"}}
+    def package_show(self, p):
+        return next((v for v in self.packages.values() if p["id"] in (v["id"], v["name"])), None)
 
-    def active(self):
-        return {harvest.extra(p, "source_id"): p for p in self.packages.values() if p["state"] == "active"}
+    def _resources(self, package_id, resources):
+        return [dict(r, id=r.get("id") or self.new_id(), package_id=package_id) for r in resources]
 
+    def package_create(self, p):
+        assert p["name"] not in self.packages
+        package = dict(p, id=self.new_id(), state="active")
+        package["resources"] = self._resources(package["id"], p.get("resources", []))
+        self.packages[p["name"]] = package
+        return package
 
-@pytest.fixture
-def ckan():
-    fake = FakeCkan()
-    yield fake
-    fake.server.shutdown()
+    def package_update(self, p):
+        live = self.package_show({"id": p["id"]})
+        kept = {r["id"] for r in p["resources"] if r.get("id")}
+        for r in live["resources"]:
+            if r["id"] not in kept:
+                self.tables.pop(r["id"], None)  # CKAN drops a table with its resource
+        package = dict(p, resources=self._resources(p["id"], p["resources"]))
+        self.packages[p["name"]] = package
+        return package
 
+    def package_delete(self, p):
+        self.packages[p["id"]]["state"] = "deleted"
 
-def test_the_selection_keeps_open_licences_and_names_why_each_other_item_is_out():
-    kept, skipped = harvest.select(items(), dev_source())
-    assert sorted(item["id"] for item, _ in kept) == sorted([OBCE, OKRESY, CULTURE, SUPPLIERS])
-    reasons = {ident: reason for ident, _, reason in skipped}
-    assert reasons[APS].startswith("personal data")
-    assert sorted(r for r in reasons.values() if r.startswith("no open licence")) == [
-        "no open licence (CC-BY-NC-4.0)", "no open licence (none)", "no open licence (none)"]
-    # The okres and the obec census layer share a title at the source and are two datasets here.
-    titles = {item["id"]: title for item, title in kept}
-    assert titles[OBCE] == "Obyvateľstvo podľa rodinného stavu (2021), obce"
-    assert titles[OKRESY] == "Obyvateľstvo podľa rodinného stavu (2021), okresy"
-    assert titles[SUPPLIERS] == "Dodávatelia", "the source's trailing space survived"
-    assert all("Bystrinská" not in title for _, title, _ in skipped)
+    def package_search(self, p):
+        assert 'extras_harvest_source:"nkod-banskabystrica"' in p["fq"]
+        names = [v["name"] for v in self.packages.values() if v["state"] == "active" and any(
+            e == {"key": "harvest_source", "value": "nkod-banskabystrica"} for e in v.get("extras", []))]
+        return {"count": len(names), "results": [{"name": n} for n in names][p["start"]:p["start"] + p["rows"]]}
+
+    def datastore_create(self, p):
+        assert p["force"] is True
+        if "resource" in p:
+            package = self.package_show({"id": p["resource"]["package_id"]})
+            resource = dict(p["resource"], id=self.new_id(), url_type="datastore", url="https://x/dump")
+            package["resources"].append(resource)
+            rid = resource["id"]
+        else:
+            rid = p["resource_id"]
+            assert rid not in self.tables, "datastore_create on a live table"
+        self.tables[rid] = {"fields": p["fields"], "records": list(p["records"])}
+        return {"resource_id": rid}
+
+    def datastore_upsert(self, p):
+        self.tables[p["resource_id"]]["records"] += p["records"]
+
+    def datastore_delete(self, p):
+        self.tables.pop(p["resource_id"])
+
+    def datastore_search(self, p):
+        return {"total": len(self.tables[p["resource_id"]]["records"])}
 
 
-def test_a_repeated_title_keeps_the_newest_copy_and_names_the_other_as_its_duplicate():
-    source = dict(dev_source(), titles={})
-    kept, skipped = harvest.select(items(), source)
-    newer = max((i for i in items() if i["id"] in (OBCE, OKRESY)), key=lambda i: i["modified"])
-    older = OKRESY if newer["id"] == OBCE else OBCE
-    assert newer["id"] in [item["id"] for item, _ in kept]
-    assert (older, "Obyvateľstvo podľa rodinného stavu (2021)", f"duplicate of {newer['id']}") in skipped
+class Response(io.BytesIO):
+    def __init__(self, status, kind, body):
+        super().__init__(body)
+        self.status, self.headers = status, {"Content-Type": kind}
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        return False
 
 
-def test_a_dataset_carries_licence_publisher_and_one_csv_and_geojson_per_layer():
-    item = next(i for i in items() if i["id"] == CULTURE)
-    package = harvest.dataset(item, item["title"], layers_of(item), dev_source())
-    assert package["owner_org"] == "bbsk" and package["license_id"] == "cc-by"
-    extras = {e["key"]: e["value"] for e in package["extras"]}
-    assert extras["publisher_name"] == "Banskobystrický samosprávny kraj"
-    assert extras["publisher_uri"].endswith("/37828100")
-    assert extras["license_url"] == "https://creativecommons.org/licenses/by/4.0/"
-    assert extras["source_id"] == CULTURE and extras["modified"].endswith("Z")
-    assert [r["format"] for r in package["resources"]] == ["CSV", "GeoJSON"] * 3 + ["Esri REST"]
-    assert package["resources"][0]["url"] == (
-        f"https://opendata.bbsk.sk/api/download/v1/items/{CULTURE}/csv?layers=7")
-    assert package["resources"][0]["name"] == "Kultúrne inštitúcie CSV"
-    assert "<" not in package["notes"] and "style=" not in package["notes"]
-    assert len(package["name"]) <= 100 and package["name"].startswith("bbsk-kulturne-institucie")
+class FakeWeb:
+    def __init__(self, harvest):
+        self.harvest, self.requests = harvest, []
+
+    def open(self, request, timeout):
+        url = request.full_url
+        self.requests.append((request.get_method(), url))
+        target = WEB.get(url)
+        if target is None:
+            raise urllib.error.URLError("no route to host")
+        if isinstance(target[0], str):  # a redirect: what the handler checks before following
+            self.harvest.allowed(target[0])
+            return self.open(type(request)(target[0], method=request.get_method()), timeout)
+        status, kind, body = target
+        if status != 200:
+            raise urllib.error.HTTPError(url, status, "status", {}, io.BytesIO())
+        return Response(status, kind, body)
 
 
-def test_a_table_has_no_geojson_and_a_link_off_the_allowed_hosts_is_dropped():
-    item = next(i for i in items() if i["id"] == SUPPLIERS)
-    package = harvest.dataset(item, "Dodávatelia", layers_of(item), dev_source())
-    assert [r["format"] for r in package["resources"]] == ["CSV", "Esri REST"]
-    moved = dict(item, url="http://evil.example/arcgis/rest/services/x/FeatureServer")
-    package = harvest.dataset(moved, "Dodávatelia", layers_of(item), dev_source())
-    assert [r["format"] for r in package["resources"]] == ["CSV"]
+def load(monkeypatch, catalogue=CATALOGUE, config=CONFIG):
+    monkeypatch.setenv("CATALOGUE", "ckan.ckan.svc.cluster.local")
+    monkeypatch.setenv("CKAN_API_TOKEN", TOKEN)
+    monkeypatch.setenv("HARVEST_CONFIG", json.dumps(config))
+    spec = importlib.util.spec_from_file_location("harvest_nkod", SCRIPT)
+    harvest = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(harvest)
+    harvest.ckan = FakeCkan()
+    harvest.OPENER = FakeWeb(harvest)
+    harvest.sparql = lambda query: [{k: {"value": v} for k, v in row.items()} for row in catalogue]
+    return harvest
 
 
-def test_html_in_a_description_becomes_text_and_never_markup():
-    text = harvest.plain_text("<p style='x'>Prvý&nbsp;odsek</p><p>Druhý <a href='https://x'>odkaz</a>"
-                              "<script>alert(1)</script></p>")
-    assert text == "Prvý odsek\n\nDruhý odkazalert(1)"
-    assert harvest.plain_text(None) == ""
+def states(out):
+    return {line.split(":")[0]: int(line.split(": ")[1]) for line in out.splitlines()
+            if line and not line.startswith(" ") and line.split(":")[0].isalpha()}
 
 
-def test_the_harvest_creates_then_leaves_alone_then_withdraws_only_its_own(ckan):
-    client = harvest.Ckan(ckan.host, "token-1")
-    source = dev_source()
-    ckan.packages["hand"] = {"id": "hand", "name": "rucny", "owner_org": "bbsk", "state": "active",
-                             "extras": []}
+def test_a_run_ingests_what_the_files_hold_and_lists_every_skip_with_its_reason(monkeypatch, capsys):
+    harvest = load(monkeypatch)
+    assert harvest.main() == 0
+    out = capsys.readouterr().out
+    assert states(out) == {"ingested": 5, "mislinked": 1, "personal": 1, "html": 1, "pdf": 1,
+                           "licence": 1, "dead": 1}
+    assert "  - Ulice: not ingested, link points to Počet občanov podľa dňa narodenia" in out
+    assert "  - Faktúry BB: declared JSON, https://egov.banskabystrica.sk/Default.aspx?NavigationState=1100:0: serves an HTML page" in out
+    assert "  - Bez licencie: no open licence in legislation:termsOfUse" in out
+    assert "  - Mŕtvy odkaz: https://dtm-banskabystrica.tmapserver.sk/opendata/gone.zip answered 404" in out
 
-    warmed = []
-    counts, kept, _ = harvest.harvest(client, source, items(), layers_of, warmed.append)
-    assert counts == {"created": 4, "updated": 0, "unchanged": 0, "withdrawn": 0}
-    assert len(warmed) == 4
-    assert ckan.orgs["bbsk"]["title"] == "Banskobystrický samosprávny kraj"
-    assert set(ckan.active()) == {None, OBCE, OKRESY, CULTURE, SUPPLIERS}
+    fake = harvest.ckan
+    assert fake.organizations == {"banskabystrica"}
+    assert set(fake.packages) == {"bb-pocet-obcanov-podla-veku", "bb-objednavky-bb", "bb-dtm-bb-register-ulic", "bb-dtm-bb-polohopis",
+                                  "bb-podujatia"}
+    ages = fake.packages["bb-pocet-obcanov-podla-veku"]
+    assert ages["license_id"] == "cc-by" and ages["owner_org"] == "banskabystrica"
+    extras = {e["key"]: e["value"] for e in ages["extras"]}
+    assert extras["modified"] == "2023-11-30T08:26:58Z"
+    assert extras["publisher_name"] == "Mesto Banská Bystrica"
+    assert extras["source_uri"] == "https://data.gov.sk/set/veku"
+    assert [r["format"] for r in ages["resources"]] == ["JSON", "CSV"]
+    table = fake.tables[ages["resources"][1]["id"]]
+    # Trimmed and typed: the count is a number, and the stray space is gone.
+    assert table["records"][0]["Počet_občanov_v_danom_veku"] == 612
+    assert [f["type"] for f in table["fields"]] == ["int", "int", "int", "int"]
 
-    counts, _, _ = harvest.harvest(client, source, items(), layers_of, warmed.append)
-    assert counts == {"created": 0, "updated": 0, "unchanged": 4, "withdrawn": 0}
-    assert len(warmed) == 4, "an unchanged dataset's downloads were requested again"
-    assert "organization_create" not in ckan.calls[ckan.calls.index("package_create") + 1:]
-
-    renamed = [dict(i, title="Kultúrne inštitúcie") if i["id"] == CULTURE else i
-               for i in items() if i["id"] != SUPPLIERS]
-    name_before = ckan.active()[CULTURE]["name"]
-    counts, _, _ = harvest.harvest(client, source, renamed, layers_of)
-    assert counts == {"created": 0, "updated": 1, "unchanged": 2, "withdrawn": 1}
-    assert ckan.active()[CULTURE]["name"] == name_before, "a retitled dataset changed its URL"
-    assert SUPPLIERS not in ckan.active()
-    assert ckan.packages["hand"]["state"] == "active", "a dataset the harvest did not make was withdrawn"
-
-    counts, _, _ = harvest.harvest(client, source, items(), layers_of)
-    assert counts["updated"] == 2 and SUPPLIERS in ckan.active(), "a returning dataset stayed deleted"
-
-
-def test_a_source_that_fails_halfway_withdraws_nothing(ckan):
-    client = harvest.Ckan(ckan.host, "token-1")
-    harvest.harvest(client, dev_source(), items(), layers_of)
-
-    def broken(item):
-        if item["id"] == CULTURE:
-            raise harvest.SourceError("services-eu1.arcgis.com: timed out")
-        return layers_of(item)
-
-    with pytest.raises(harvest.SourceError):
-        harvest.harvest(client, dev_source(), [i for i in items() if i["id"] != SUPPLIERS], broken)
-    assert SUPPLIERS in ckan.active()
+    # The ZIP listed twice is one resource; the licence of the map data is the stricter one.
+    streets = fake.packages["bb-dtm-bb-register-ulic"]
+    assert len(streets["resources"]) == 1 and streets["license_id"] == "cc-by-sa"
+    # The non-ASCII file name is sent percent-encoded, and stored that way.
+    assert fake.packages["bb-dtm-bb-polohopis"]["resources"][0]["url"].endswith("v%C3%BD%C5%A1kopis_bodov%C3%A9ho_po%C4%BEa.zip")
+    # The bare host is moved to www., and a WordPress answer that is no flat table stays a link.
+    events = fake.packages["bb-podujatia"]
+    assert [r["url"] for r in events["resources"]] == ["https://www.banskabystrica.sk/wp-json/wp/v2/events"]
+    # A file is fetched at most once per run, and the ZIPs only by HEAD.
+    requests = harvest.OPENER.requests
+    assert len(requests) == len(set(requests))
+    assert all(method == "HEAD" for method, url in requests if url.endswith(".zip"))
 
 
-def test_a_short_read_of_the_hub_is_an_error_not_an_empty_catalogue(monkeypatch):
-    page = json.loads((FIXTURES / "items.json").read_text())
-    monkeypatch.setattr(harvest, "fetch_json", lambda url: dict(page, numberMatched=103))
-    with pytest.raises(harvest.SourceError, match="read 8 of 103"):
-        harvest.hub_items(dev_source())
+def test_rows_without_an_identifier_are_not_published_in_any_resource(monkeypatch, capsys):
+    """§8: an order without an IČO can name a natural person. The table drops it, the original
+    file is not linked (it still holds the row), and the description says how many were left out."""
+    harvest = load(monkeypatch)
+    assert harvest.main() == 0
+    orders = harvest.ckan.packages["bb-objednavky-bb"]
+    assert [r["url_type"] for r in orders["resources"]] == ["datastore"]
+    records = harvest.ckan.tables[orders["resources"][0]["id"]]["records"]
+    assert [r["Dodávateľ"] for r in records] == ["Firma s.r.o.", "Iná a.s."]
+    # An IČO keeps its leading zeros: it is an identifier, not a number.
+    assert records[0]["IČO"] == "00313271"
+    assert "Ján Novák" not in json.dumps(harvest.ckan.packages, ensure_ascii=False)
+    assert "vynechané riadky bez údaja IČO (1)" in orders["notes"]
 
 
-def test_a_next_page_off_the_hub_is_refused(monkeypatch):
-    page = json.loads((FIXTURES / "items.json").read_text())
-    page["links"] = [{"rel": "next", "href": "https://evil.example/items?startindex=9"}]
-    monkeypatch.setattr(harvest, "fetch_json", lambda url: page)
-    with pytest.raises(harvest.SourceError, match="outside the hub"):
-        harvest.hub_items(dev_source())
+def test_a_second_run_replaces_the_tables_instead_of_adding_new_ones(monkeypatch, capsys):
+    harvest = load(monkeypatch)
+    assert harvest.main() == 0
+    tables = set(harvest.ckan.tables)
+    first = len(harvest.ckan.calls)
+    grown = AGES + [{"Vek": "2", "Počet_občanov_v_danom_veku": "1", "Počet_mužov": "1", "Počet_žien": "0"}]
+    monkeypatch.setitem(WEB, EGOV + "920:0::plac1140:_144053_5_8", (200, "application/json", json.dumps(grown).encode()))
+    assert harvest.main() == 0
+    assert set(harvest.ckan.tables) == tables, "a rerun added or lost a table"
+    assert "package_create" not in harvest.ckan.calls[first:]
+    ages = harvest.ckan.packages["bb-pocet-obcanov-podla-veku"]["resources"]
+    assert [r.get("url_type") for r in ages] == [None, "datastore"]
+    assert len(harvest.ckan.tables[ages[1]["id"]]["records"]) == 3
 
 
-def test_a_ckan_refusal_is_raised_with_its_reason_and_never_the_token(ckan):
-    client = harvest.Ckan(ckan.host, "token-1")
-    with pytest.raises(RuntimeError) as error:
-        client.call("package_purge", {"id": "x"})
-    assert "token-1" not in str(error.value)
+def test_a_dataset_the_publisher_no_longer_lists_is_withdrawn(monkeypatch, capsys):
+    harvest = load(monkeypatch)
+    assert harvest.main() == 0
+    fake = harvest.ckan
+    harvest = load(monkeypatch, catalogue=[r for r in CATALOGUE if r["title"] != "DTM_BB-register-ulic"])
+    harvest.ckan = fake
+    assert harvest.main() == 0
+    assert fake.packages["bb-dtm-bb-register-ulic"]["state"] == "deleted"
+    assert fake.packages["bb-pocet-obcanov-podla-veku"]["state"] == "active"
+    assert "  - bb-dtm-bb-register-ulic: no longer ingested from the catalogue" in capsys.readouterr().out
 
 
-def by_name(docs, kind, name):
-    match = [d for d in docs if d.get("kind") == kind and d["metadata"]["name"] == name]
-    assert match, f"{kind}/{name} is not in the render"
-    return match[0]
+def test_an_empty_catalogue_answer_deletes_nothing(monkeypatch, capsys):
+    harvest = load(monkeypatch)
+    assert harvest.main() == 0
+    fake = harvest.ckan
+    harvest = load(monkeypatch, catalogue=[])
+    harvest.ckan = fake
+    assert harvest.main() == 1
+    assert "package_delete" not in fake.calls
+    assert "nothing is deleted on an empty answer" in capsys.readouterr().err
 
 
-def test_the_cronjob_runs_the_catalogue_image_with_the_token_by_reference(rendered):
-    docs = rendered("dev")
-    job = by_name(docs, "CronJob", "ckan-harvest-bbsk")
-    pod = job["spec"]["jobTemplate"]["spec"]["template"]["spec"]
-    assert job["spec"]["concurrencyPolicy"] == "Forbid"
-    assert pod["automountServiceAccountToken"] is False
-    container = pod["containers"][0]
-    catalogue = by_name(docs, "Deployment", "ckan")["spec"]["template"]["spec"]["containers"][0]
-    assert container["image"] == catalogue["image"] and "@sha256:" in container["image"]
-    env = {e["name"]: e for e in container["env"]}
-    assert env["CKAN_API_TOKEN"]["valueFrom"]["secretKeyRef"] == {"name": "ckan-api-token", "key": "token"}
-    config = json.loads(env["HARVEST_CONFIG"]["value"])
-    assert (config["source"], config["organization"], config["kind"]) == ("hub-bbsk", "bbsk", "hub")
-    assert "def warm_downloads(package):" in container["args"][0], "the hub source runs another script"
-    assert "def main():" in container["args"][0]
+def test_a_source_off_the_allowlist_or_on_plain_http_is_never_fetched(monkeypatch, capsys):
+    harvest = load(monkeypatch)
+    with pytest.raises(harvest.Refused):
+        harvest.allowed("http://egov.banskabystrica.sk/x")
+    with pytest.raises(harvest.Refused):
+        harvest.allowed("https://ckan.ckan.svc.cluster.local:5000/api/3/action/user_list")
+    # A redirect off the allowlist is refused before it is followed.
+    monkeypatch.setitem(WEB, EGOV + "1:orders", ("https://169.254.169.254/latest/meta-data/",))
+    catalogue = (dataset("objednavky", "Objednávky BB", (EGOV + "1:orders", "JSON", BY))
+                 + dataset("elsewhere", "Inde", ("https://example.org/data.json", "JSON", BY)))
+    harvest = load(monkeypatch, catalogue=catalogue)
+    assert harvest.main() == 0
+    out = capsys.readouterr().out
+    assert states(out) == {"refused": 2}
+    assert not any("169.254" in url or "example.org" in url for _, url in harvest.OPENER.requests)
+    assert harvest.ckan.packages == {}
 
 
-def test_the_harvest_reaches_dns_the_catalogue_and_https_only(rendered):
-    docs = rendered("dev")
-    policy = by_name(docs, "NetworkPolicy", "ckan-harvest")["spec"]
-    assert not policy.get("ingress")
-    assert sorted(p["port"] for rule in policy["egress"] for p in rule["ports"]) == [53, 53, 443, 5000]
+def test_a_table_that_lost_rows_fails_the_run(monkeypatch, capsys):
+    harvest = load(monkeypatch)
+    real = harvest.ckan.datastore_search
+    harvest.ckan.datastore_search = lambda p: {"total": real(p)["total"] - 1}
+    assert harvest.main() == 1
+    assert "check failed: Počet občanov podľa veku: table Počet občanov podľa veku (tabuľka) holds 1 rows, 2 expected" \
+        in capsys.readouterr().err
+
+
+def test_the_token_is_never_printed(monkeypatch, capsys):
+    harvest = load(monkeypatch)
+    harvest.main()
+    captured = capsys.readouterr()
+    assert TOKEN not in captured.out + captured.err
+
+
+def test_two_titles_that_fold_to_one_name_keep_apart(monkeypatch, capsys):
+    catalogue = (dataset("aaaaaaaa-1", "Školy", (DTM + "OE_02_register_ulic.zip", "ZIP", BY))
+                 + dataset("bbbbbbbb-2", "Skoly", (DTM + "OE_02_register_ulic.zip", "ZIP", BY)))
+    harvest = load(monkeypatch, catalogue=catalogue)
+    assert harvest.main() == 0
+    assert set(harvest.ckan.packages) == {"bb-skoly-aaaaaaaa", "bb-skoly-bbbbbbbb"}

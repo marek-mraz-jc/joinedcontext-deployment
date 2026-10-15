@@ -11,14 +11,17 @@ metadata:
   title: { sk: "Mesto — verejné údaje", en: "City, open data" }
   description:
     sk: >-
-      Podujatia mesta, školy a školské zariadenia v meste a hodinové merania prachových častíc na
-      mestskej stanici. Zdroje: Mesto Banská Bystrica (banskabystrica.sk), Ministerstvo školstva
-      SR (Digitálna mapa škôl) a Európska environmentálna agentúra (údaje SHMÚ), všetky pod CC BY 4.0.
+      Podujatia mesta, školy a školské zariadenia v meste, hodinové merania prachových častíc, NO2
+      a ozónu na mestskej stanici a počasie na automatických staniciach SHMÚ každých päť minút.
+      Zdroje: Mesto Banská Bystrica (banskabystrica.sk), Ministerstvo školstva SR (Digitálna mapa
+      škôl), Európska environmentálna agentúra (údaje SHMÚ) a Slovenský hydrometeorologický ústav,
+      všetky pod CC BY 4.0.
     en: >-
-      The city's events, the schools and school facilities in the city and the hourly particulate
-      readings of the city's station. Sources: the City of Banská Bystrica (banskabystrica.sk),
-      the Slovak Ministry of Education (Digitálna mapa škôl) and the European Environment Agency
-      (SHMÚ's data), all under CC BY 4.0.
+      The city's events, the schools and school facilities in the city, the hourly particulate,
+      NO2 and ozone readings of the city's station, and the weather at SHMÚ's automatic stations
+      every five minutes. Sources: the City of Banská Bystrica (banskabystrica.sk), the Slovak
+      Ministry of Education (Digitálna mapa škôl), the European Environment Agency (SHMÚ's data)
+      and the Slovak Hydrometeorological Institute, all under CC BY 4.0.
 spec:
   # The space name is the segment its ids carry, pinned so it cannot drift (PF-84).
   urnSegment: banskabystrica-verejne

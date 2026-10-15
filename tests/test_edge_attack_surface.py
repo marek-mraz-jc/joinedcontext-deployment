@@ -98,6 +98,10 @@ ROUTE_CLASSES = {
         "reach": EDGE_SESSION, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "the API chapter and the User Guide (T-4063): pages the Portal was built with, the same for everyone and holding no data; no other chapter is served on the path",
     },
+    "portal-public-connect": {
+        "reach": EDGE_SESSION, "cacheable": True, "framing": "SAMEORIGIN",
+        "why": "a public named MCP server's setup page (T-4169): the same bundle for everyone, holding no data; it asks the server's own address for its tools without credentials",
+    },
     "portal-api": {
         "reach": EDGE_SESSION, "cacheable": False, "framing": "DENY",
         "why": "CLIs and service accounts present a bearer the Portal verifies (OPS-33)",
@@ -153,6 +157,14 @@ ROUTE_CLASSES = {
     "context-mcp-hub-portal": {
         "reach": EDGE_SESSION, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "the MCP hub on the Portal's origin, where the Endpoints view shows it; the edge session becomes the bearer and the gateway still decides",
+    },
+    "context-mcp-named": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "the public named MCP servers for a caller without a bearer (T-4141): the hub's chain, 60 calls a minute per client IP; the gateway decides each call as the member Endpoint's own",
+    },
+    "context-mcp-named-portal": {
+        "reach": EDGE_SESSION, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "the same on the Portal's origin, so the anonymous limit is not one hostname away",
     },
     "context-space-portal": {
         "reach": EDGE_SESSION, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
