@@ -21,3 +21,15 @@ assistant-widget:
   uri: '/d/*'
   subDomain: assistant
   priority: 10
+
+# Any other path on the assistant host (T-4200): a page in words, in Slovak and English, instead
+# of APISIX's `{"error_msg":"404 Route Not Found"}`. The lowest priority, so the chat and the
+# widget keep their paths; the edge answers it (apisix-plugins.yaml) and never dials jc-assistant,
+# which is named only because every route has an upstream.
+assistant-unknown:
+  name: assistant-unknown
+  description: Any other path on the assistant host, a 404 page in words
+  upstream: jc-assistant.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "assistant") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/*'
+  subDomain: assistant
+  priority: 0

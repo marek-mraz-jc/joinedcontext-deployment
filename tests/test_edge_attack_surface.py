@@ -118,6 +118,10 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": FRAMED_BY_UPSTREAM,
         "why": "the widget page a public deployment's own sites frame (AG-114): no data and no token in it; jc-assistant sets frame-ancestors to the deployment's allowedOrigins, no-store on the page and a short max-age on its script and style",
     },
+    "assistant-unknown": {
+        "reach": TERMINATES, "cacheable": False, "framing": "DENY",
+        "why": "any other path on the assistant host (T-4200): the edge answers a 404 page in words that names no deployment, and never dials jc-assistant",
+    },
     "portal-live-notify": {
         "reach": UPSTREAM, "cacheable": False, "framing": "DENY",
         "why": "the gateway delivers the Portal's own live-update notifications; the broker holds no token, the path's key is an HMAC only the Portal makes, and a notification only makes a view read again (API/01 §32)",
