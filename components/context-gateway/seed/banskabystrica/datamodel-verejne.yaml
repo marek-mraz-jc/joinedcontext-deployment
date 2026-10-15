@@ -7,9 +7,9 @@ metadata:
 spec:
   contextSpaceRef: banskabystrica-verejne
   linkml: ./banskabystrica-verejne.linkml.yaml
-  version: 1.0.0
+  version: 1.1.0
   lifecycle: published
-  classes: [Event, School, AirQualityObserved]
+  classes: [Event, School, AirQualityObserved, WeatherObserved]
   artifacts:
     jsonSchema: ./banskabystrica-verejne.v1.schema.json
     context: ./banskabystrica-verejne.v1.context.jsonld
