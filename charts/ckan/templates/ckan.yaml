@@ -117,6 +117,14 @@ spec:
             # `ckanext-envvars` maps this name to that option.
             - name: CKAN__AUTH__PUBLIC_USER_DETAILS
               value: "false"
+            # The catalogue's publishers are Slovak, Czech and Finnish bodies: CKAN serves a
+            # language only under its offered prefix (/sk/…), and with English alone a Slovak
+            # visitor had no way to Slovak at all (T-4199). Slovak is the default, the others a
+            # click in the footer's menu away.
+            - name: CKAN__LOCALE_DEFAULT
+              value: {{ .Values.ckan.locales.default | quote }}
+            - name: CKAN__LOCALES_OFFERED
+              value: {{ .Values.ckan.locales.offered | join " " | quote }}
             - name: CKAN_STORAGE_PATH
               value: /var/lib/ckan
             - name: PYTHONPATH
