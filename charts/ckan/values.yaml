@@ -127,6 +127,15 @@ apiToken:
   # The token's name in CKAN, so the administrator's token list says who holds it.
   name: jcctl
 
+# Catalogue harvests (T-4151): a CronJob per source that copies one publisher's datasets from
+# the national catalogue (NKOD) into a CKAN organization, corrected, with the API token above.
+# Each source is the configuration `files/harvest-nkod.py` reads; a deployment that lists none
+# renders nothing. A source: `{name, sparql, publisher, publisherName, organization, namePrefix,
+# allowedHosts: [], rewriteHosts: {}, skip: {<title>: {state, reason}}, requireColumn: {<title>: <column>}}`.
+harvest:
+  schedule: '23 3 * * *'
+  sources: []
+
 # The block of Deployment/12. Every template below reads it and nothing else, which is what
 # makes the theme reusable by a second installation without a file change (OPS-47).
 branding: {}

@@ -21,6 +21,12 @@ ckan-allow-linkerd:
               app.kubernetes.io/instance: ckan-catalogue
               app.kubernetes.io/component: api-token
           componentNamespace: ckan
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: ckan
+              app.kubernetes.io/instance: ckan-catalogue
+              app.kubernetes.io/component: harvest
+          componentNamespace: ckan
       ports:
         - port: 4143
           protocol: TCP
@@ -195,6 +201,36 @@ ckan-api-token-linkerd-control-plane:
     app.kubernetes.io/name: ckan
     app.kubernetes.io/instance: ckan-catalogue
     app.kubernetes.io/component: api-token
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: linkerd
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 8086
+        - protocol: TCP
+          port: 8090
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: ckan
+              app.kubernetes.io/instance: ckan-catalogue
+              app.kubernetes.io/component: ckan
+          componentNamespace: ckan
+      ports:
+        - protocol: TCP
+          port: 4143
+
+ckan-harvest-linkerd-control-plane:
+  podSelector:
+    app.kubernetes.io/name: ckan
+    app.kubernetes.io/instance: ckan-catalogue
+    app.kubernetes.io/component: harvest
   policyTypes:
     - Egress
   egress:

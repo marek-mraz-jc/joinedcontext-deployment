@@ -10,6 +10,12 @@ fetches_chosen_addresses(policy) if {
 	policy.spec.podSelector.matchLabels["app.kubernetes.io/name"] in {"pipeline-runner-runner", "context-gateway-gateway", "context-broker-broker"}
 }
 
+# The catalogue harvest fetches the download URLs a national catalogue lists (T-4151).
+fetches_chosen_addresses(policy) if {
+	policy.spec.podSelector.matchLabels["app.kubernetes.io/name"] == "ckan"
+	policy.spec.podSelector.matchLabels["app.kubernetes.io/component"] == "harvest"
+}
+
 deny contains msg if {
 	input.kind == "NetworkPolicy"
 	fetches_chosen_addresses(input)

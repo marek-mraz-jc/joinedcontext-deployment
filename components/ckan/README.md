@@ -47,6 +47,38 @@ So a sheet holds what the Endpoint answers at the last pass, and nothing more. A
 pipelines have not run, or were refused by a quota, publishes a near-empty sheet until they do;
 the fix is upstream of the catalogue, never a fill by hand.
 
+## Catalogue harvests
+
+Some datasets have no Endpoint behind them: a city publishes files in the national catalogue
+(NKOD) and the assistant has to answer from them (T-4151). `harvest.sources` lists one entry per
+publisher, and the chart renders one CronJob per entry (`ckan-harvest-<name>`, nightly). Each run
+of `files/harvest-nkod.py`:
+
+- reads the publisher's datasets from the NKOD SPARQL endpoint, with the licence from
+  `legislation:termsOfUse` (NKOD carries no `dct:license`), and leaves out a dataset with no open
+  licence;
+- fetches each distribution once over https, only from `allowedHosts`, redirects included, with
+  TLS verification on. An HTML or PDF answer where JSON is declared is not ingested, a non-ASCII
+  URL is percent-encoded, and string values are trimmed;
+- skips the titles under `skip` (a link to another dataset's file, personal data) and drops the
+  rows of a `requireColumn` table that have no value in that column. A filtered table is
+  published without the original file, which still holds those rows;
+- writes each dataset into the source's organization with its licence, publisher and `modified`,
+  each file as a link and each flat JSON table as a DataStore table (CKAN also serves it as CSV),
+  then withdraws what an earlier run harvested and the publisher no longer lists;
+- checks every ingested dataset (title, licence, a format on each resource, the row count of each
+  table), prints the count per state with each skipped title and its reason, and exits 1 when a
+  check fails. An empty catalogue answer deletes nothing.
+
+It writes with the publisher token above and mounts no Kubernetes token. Its egress is DNS, the
+catalogue and public addresses on 443 with the private ranges cut out (`ckan-harvest`), so CKAN
+itself still dials nothing. The first run after an apply does not wait for the schedule:
+
+```bash
+kubectl -n <ns> create job --from=cronjob/ckan-harvest-banskabystrica ckan-harvest-banskabystrica-now
+kubectl -n <ns> logs -f job/ckan-harvest-banskabystrica-now -c harvest
+```
+
 ## Branding
 
 Nothing here carries a city name. `global.branding` is written into the theme ConfigMap as
