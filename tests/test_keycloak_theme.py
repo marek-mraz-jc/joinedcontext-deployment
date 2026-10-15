@@ -105,11 +105,12 @@ def test_the_keycloak_pod_copies_the_theme_in_and_rolls_when_it_changes(rendered
 
 def test_the_theme_loads_nothing_from_another_origin_and_adds_no_script():
     """CSP unchanged or stricter: no external asset anywhere, and the pages the theme writes
-    carry no script and no inline handler. template.ftl keeps keycloak.v2's own scripts."""
+    carry no script and no inline handler. login's template.ftl and login.ftl and the account
+    console's index.ftl are Keycloak's own pages with one change each, their scripts kept."""
     for path in (THEME / "files").iterdir():
         text = path.read_text()
         assert not re.search(r"(src|href)=[\"']?(https?:)?//|url\(|@import", text), path.name
-        if path.name != "login__template.ftl":
+        if path.name not in ("login__template.ftl", "login__login.ftl", "account__index.ftl"):
             assert not re.search(r"<script|\son[a-z]+=", text), path.name
     template = (THEME / "files/login__template.ftl").read_text()
     assert "prefers-color-scheme" not in template, "the dark-mode script is gone"
@@ -164,3 +165,39 @@ def test_keycloak_is_built_with_script_mappers_off_and_nothing_turns_them_on(ren
             if env["name"] in ("KC_FEATURES", "KC_FEATURES_DISABLED"):
                 assert "scripts" not in env.get("value", "").split(",") or env["name"] == "KC_FEATURES_DISABLED", env
 
+
+
+def test_the_account_console_wears_the_portal_and_leads_back_to_it(rendered):
+    """T-4203: the account console is keycloak.v3 with the branding logo and colours, no dark
+    mode, and its logo and "Back to …" line lead to the Portal of this domain."""
+    assert realm_of(rendered("dev"))["accountTheme"] == "joinedcontext"
+    data = theme_of(rendered("dev"))["data"]
+    properties = dict(line.split("=", 1) for line in data["account__theme.properties"].splitlines())
+    assert properties["parent"] == "keycloak.v3"
+    assert properties["darkMode"] == "false"
+    assert properties["logo"] == "img/logo.svg" and data["account__resources__img__logo.svg"].startswith("<svg")
+    assert properties["logoUrl"] == properties["jcPortalUrl"] == "https://portal.dev.joinedcontext.com"
+    assert "--pf-v5-global--primary-color--100: #0000bf;" in data["account__resources__css__branding.css"]
+    index = data["account__index.ftl"]
+    assert '"referrerUrl": "${jcReferrerUrl}"' in index and "properties.jcPortalUrl" in index
+
+
+def test_a_portal_url_that_is_not_an_https_origin_stops_the_render():
+    for url in ["http://portal.example", "https://portal.example/x\" onload=1", "javascript:alert(1)"]:
+        result = subprocess.run(
+            ["helm", "template", "t", str(THEME), "--set-string", f"portalUrl={url}"],
+            capture_output=True, text=True,
+        )
+        assert result.returncode != 0 and "portalUrl" in result.stderr, url
+
+
+def test_a_wrong_password_is_the_forms_alert_and_the_card_names_the_app_alone():
+    """T-4203: either value can be wrong, so no field is marked; the organization is in the
+    brand header already, so the card's heading does not repeat it (four lines on a phone)."""
+    login = (THEME / "files/login__login.ftl").read_text()
+    assert "displayMessage=true" in login and 'name="username" label=label error=""' in login
+    assert "getFirstError('username','password')" not in login
+    template = (THEME / "files/login__template.ftl").read_text()
+    assert '${msg("jcSignInToApp", app)}' in template
+    (heading,) = [line for line in template.splitlines() if 'id="kc-page-title"' in line]
+    assert "org" not in heading

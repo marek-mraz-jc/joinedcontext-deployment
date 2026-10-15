@@ -6,6 +6,9 @@
 
   Three entries are written here from the branding block: theme.properties (which names the
   logo), branding.css (the colours and fonts as custom properties) and the logo itself.
+
+  The account console (`account__…`, T-4203) is keycloak.v3's with the same logo, colours and
+  font, its logo and a "Back to the Portal" line leading to `portalUrl`, and no dark mode.
 */}}
 {{- $branding := .Values.branding | default dict }}
 {{- $colours := merge (dict) ($branding.colours | default dict) (dict "primary" "#1d4ed8" "secondary" "#0f766e" "accent" "#f59e0b" "background" "#ffffff" "text" "#0f172a") }}
@@ -44,6 +47,10 @@
 {{- fail "branding.logoSvg carries script; the logo is served from the login origin and must be a plain drawing" }}
 {{- end }}
 {{- $hasLogo := and $logo $logoSvg }}
+{{- $portalUrl := .Values.portalUrl | default "" }}
+{{- if and $portalUrl (not (regexMatch "^https://[A-Za-z0-9.-]+(:[0-9]+)?/?$" $portalUrl)) }}
+{{- fail (printf "portalUrl must be an https origin, not %q" $portalUrl) }}
+{{- end }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -79,7 +86,28 @@ data:
   {{- if $hasLogo }}
   login__resources__img__{{ $logo }}: |
 {{ $logoSvg | indent 4 }}
+  account__resources__img__{{ $logo }}: |
+{{ $logoSvg | indent 4 }}
   {{- end }}
+  account__theme.properties: |
+    parent=keycloak.v3
+    darkMode=false
+    styles=css/branding.css
+    {{- if $hasLogo }}
+    logo=img/{{ $logo }}
+    favIcon=/img/{{ $logo }}
+    {{- end }}
+    {{- if $portalUrl }}
+    logoUrl={{ $portalUrl }}
+    jcPortalUrl={{ $portalUrl }}
+    {{- end }}
+  account__resources__css__branding.css: |
+    :root {
+      --pf-v5-global--primary-color--100: {{ $colours.primary }};
+      --pf-v5-global--link--Color: {{ $colours.primary }};
+      --pf-v5-global--FontFamily--text: {{ $fonts.body }};
+      --pf-v5-global--FontFamily--heading: {{ $fonts.heading }};
+    }
 {{- range $path, $_ := .Files.Glob "files/*" }}
   {{ base $path }}: |
 {{ $.Files.Get $path | indent 4 }}
