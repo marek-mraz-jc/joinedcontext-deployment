@@ -27,7 +27,7 @@ pipeline:
           root = if this.or("").string().re_match("^[0-2][0-9]:[0-5][0-9]$") { this } else { null }
         }
         root = this.or([]).filter(e -> e.id.type() == "number" && e.title.rendered.or("").trim() != "" && e.meta.date_start.or("").string().re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") && e.event_categories.or([]).apply("category") != null).map_each(e -> {
-          "id": "urn:ngsi-ld:%v:%v:%v:event-%v".format("Event", env("JC_ORG_DOMAIN"), env("JC_SPACE"), e.id.int64()),
+          "id": "urn:ngsi-ld:%v:%v:%v:event-%v".format("Event", "banskabystrica.sk", env("JC_SPACE"), e.id.int64()),
           "type": "Event",
           "name": { "type": "LanguageProperty", "languageMap": { "sk": e.title.rendered.unescape_html().trim() } },
           "startDate": { "type": "Property", "value": e.meta.date_start },
