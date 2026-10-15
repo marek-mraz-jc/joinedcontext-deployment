@@ -4,9 +4,10 @@
 <#--
   keycloak.v2's template with three changes, and nothing else (UI-82, PF-90):
   - the brand header names the organization (the realm's display name) under its logo,
-    never the realm id;
-  - a sign-in page's title says what is being signed into, "Sign in to {app} · {org}",
-    and every other page names the app above its title;
+    never the realm id, and the card under it names the app alone: a long organization name
+    said twice wrapped the card's heading to four lines on a phone (T-4203);
+  - a sign-in page's heading says what is being signed into, "Sign in to {app}", its tab
+    title "Sign in to {app} · {org}", and every other page names the app above its title;
   - no dark-mode script: the branding colours are one light palette.
   The theme adds no script of its own; what is left is Keycloak's, unchanged.
 -->
@@ -36,7 +37,7 @@
 <#assign app = jc.app()>
 <#assign org = jc.org()>
 <#assign signIn = app?has_content && jc.signInPage(.main_template_name)>
-<#assign header><#if signIn>${msg("jcSignInTo", app, org)}<#else><#nested "header"></#if></#assign>
+<#assign header><#if signIn>${msg("jcSignInToApp", app)}<#else><#nested "header"></#if></#assign>
 <!DOCTYPE html>
 <html class="${properties.kcHtmlClass!}" lang="${lang}"<#if realm.internationalizationEnabled> dir="${(locale.rtl)?then('rtl','ltr')}"</#if>>
 
@@ -54,7 +55,7 @@
     <#-- keycloak.v2 opens every page with an HTML comment naming its template, and a comment
          inside the title element is shown as text: the title leaves it out. -->
     <#assign titleText = header?markup_string?replace("<!--.*?-->", "", "rs")?trim>
-    <title><#if signIn>${titleText?no_esc}<#else>${titleText?no_esc} · ${org}</#if></title>
+    <title><#if signIn>${msg("jcSignInTo", app, org)}<#else>${titleText?no_esc} · ${org}</#if></title>
     <link rel="icon" href="${url.resourcesPath}/img/${properties.jcFavicon!'favicon.ico'}" />
     <#if properties.stylesCommon?has_content>
         <#list properties.stylesCommon?split(' ') as style>
@@ -148,7 +149,7 @@
       <div class="${properties.kcLoginMainHeader!}">
         <div class="jc-heading">
           <#if app?has_content && !signIn>
-            <p class="jc-context" id="jc-context">${msg("jcContext", app?cap_first, org)}</p>
+            <p class="jc-context" id="jc-context">${app?cap_first}</p>
           </#if>
           <h1 class="${properties.kcLoginMainTitle!}" id="kc-page-title">${header}</h1>
         </div>
