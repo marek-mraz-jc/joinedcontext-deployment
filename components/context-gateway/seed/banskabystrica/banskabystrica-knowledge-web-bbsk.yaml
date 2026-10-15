@@ -1,0 +1,19 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: KnowledgeSource
+metadata:
+  name: web-bbsk
+  namespace: banskabystrica
+spec:
+  # The region's website for the city's public assistant (T-4167, Architecture/23 §6): a
+  # deployment answers from its own project's sources, so the public assistant crawls bbsk.sk
+  # here, bounded as `bbsk/web` (T-3067 approved the site; the crawler pins the GeoTrust
+  # intermediate bbsk.sk leaves out, T-3298).
+  source: website
+  startUrls: [https://www.bbsk.sk/]
+  sitemap: true
+  maxDepth: 3
+  maxPages: 500
+  pdf: { policy: include, maxBytes: 20971520, maxPages: 200 }
+  schedule: "30 3 * * 0"
+  languages: [sk]
+  visibility: public

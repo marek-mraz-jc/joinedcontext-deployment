@@ -1,0 +1,18 @@
+# The open datasets of the city and the region (T-4167, Architecture/23 §6): the CKAN at
+# data.dev.joinedcontext.com holds five bodies' catalogues; this source lists the two
+# organizations of the public assistant's scope anonymously, so Prague, Helsinki and Žilina never
+# reach its index and a private dataset never does either. Read once a night.
+apiVersion: joinedcontext.com/v1alpha1
+kind: KnowledgeSource
+metadata:
+  name: data-portal
+  namespace: banskabystrica
+  title: { sk: "Otvorené údaje mesta a kraja", en: "The city's and the region's open datasets" }
+spec:
+  source: ckan
+  ckanInstanceRef: banskabystrica
+  organizations: [banskabystrica, bbsk]
+  schedule: "40 3 * * *"
+  maxPages: 500
+  languages: [sk, en]
+  visibility: public

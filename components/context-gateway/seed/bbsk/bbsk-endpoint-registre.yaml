@@ -15,7 +15,9 @@ spec:
   contextSpaceRef: bbsk-registre
   slug: lws6dd7o56veegwxsjtvak3goeta4mfn
   audience: public
-  enabledRepresentations: [ngsi-ld, geojson, csv, json, websocket, ogc-features, odata]
+  # mcp: the members of the public `otvorene-data` MCP server (T-4141) and the public
+  # assistant's connectors (T-4167); the gateway lists a member only when it serves MCP.
+  enabledRepresentations: [ngsi-ld, geojson, csv, json, websocket, ogc-features, odata, mcp]
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: bbsk }
