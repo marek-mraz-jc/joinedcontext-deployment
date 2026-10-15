@@ -3,6 +3,42 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "definitions": {
+    "Any": {
+      "additionalProperties": true,
+      "description": "Any value, which the slot's `any_of` narrows: `currentValue` is a number or the string `not measured`.",
+      "title": "Any",
+      "type": [
+        "null",
+        "boolean",
+        "object",
+        "number",
+        "string"
+      ]
+    },
+    "CalculationPeriod": {
+      "additionalProperties": false,
+      "description": "The value of `calculationPeriod`: the window an indicator covers, never an entity of its own.",
+      "properties": {
+        "end": {
+          "description": "The last instant the window covers.",
+          "format": "date-time",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "start": {
+          "description": "The first instant the window covers.",
+          "format": "date-time",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "title": "CalculationPeriod",
+      "type": "object"
+    },
     "Entity": {
       "additionalProperties": false,
       "description": "The root every NGSI-LD entity class specialises.",
@@ -72,8 +108,8 @@
           "x-ngsi-ld-kind": "Property"
         },
         "calculationPeriod": {
+          "$ref": "#/definitions/CalculationPeriod",
           "description": "The window the value actually covers, as `{ start, end }` RFC 3339 instants. It is the window the pipeline used and not the one it was asked for, so the distance between `calculationPeriod.end` and `updatedAt` is how stale the source is.",
-          "type": "string",
           "x-ngsi-ld-kind": "Property"
         },
         "computedBy": {
@@ -82,8 +118,16 @@
           "x-ngsi-ld-kind": "Relationship"
         },
         "currentValue": {
+          "$ref": "#/definitions/Any",
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
           "description": "The number, with its unit on the Property as `unitCode`, a UN/CEFACT common code, and the instant it describes as `observedAt`. A window with no reading in it carries the string `not measured` instead of a number, and never a zero: a zero reads as a measurement (Development/10 \u00a75).",
-          "type": "string",
           "x-ngsi-ld-kind": "Property"
         },
         "derivedFrom": {

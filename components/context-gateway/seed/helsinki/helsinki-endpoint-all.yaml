@@ -3,12 +3,16 @@ kind: Endpoint
 metadata:
   name: helsinki-all
   namespace: helsinki
+  description:
+    fi: "Koko Helsingin tila yhdessä: tapahtumat, kaupunkipyöräasemat, joukkoliikenteen pysäkit ja linjat, uutiset, tiesää, liikennetiedotteet, uimavesi, pysäköinti, ulkoilmaluvat ja kaupunginosat. Kukin lähde lisenssinsä mukaisesti."
+    en: "The whole Helsinki space in one place: events, city bike stations, transit stops and lines, news, road weather, traffic messages, beach water, parking, public-area permits and districts. Each source under its own licence."
   title: { en: "Helsinki city context, everything" }
 spec:
   contextSpaceRef: helsinki
   slug: si6epqkx364lprho5uaigutk274r5grb
   audience: public
-  enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, zip, mcp]
+  # `ogc-features` is the OGC API Features surface dev-smoke reads per Endpoint kind (T-3957).
+  enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, zip, mcp, ogc-features, websocket, odata]
   # The organizer's contact line stays in the space for the city's own coordination and is
   # served by no public endpoint (EP-61). A projection only narrows.
   projection: { hiddenAttributes: [contactPoint] }

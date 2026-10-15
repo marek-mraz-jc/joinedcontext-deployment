@@ -12,7 +12,7 @@ spec:
   slug: y4royli3pip6yrhv3olxxf2522b3dovt
   audience: project-list
   allowedProjects: [bbsk]
-  enabledRepresentations: [ngsi-ld, csv, json]
+  enabledRepresentations: [ngsi-ld, csv, json, websocket, ogc-features, odata]
   # Computed from `banskabystrica-mesto`, whose CC BY-SA 4.0 inputs pass the share-alike duty on.
   catalog:
     publisher: { name: { sk: "Mesto Banská Bystrica", en: "City of Banská Bystrica" }, uri: "https://www.banskabystrica.sk/" }

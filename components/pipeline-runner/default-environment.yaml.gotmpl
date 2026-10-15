@@ -34,3 +34,8 @@ pipeline-runner:
     # The namespace the chart creates: never `jc.namespace`, which is the one namespace of a
     # `singleNamespace` environment and holds every workload's ServiceAccount.
     pipelineNamespace: {{ printf "%s-pipeline-identities" .Values.global.instanceSlug | trunc 63 | trimSuffix "-" }}
+    # Whether the Portal renders every stream with its own pipeline's identity, a token from the
+    # token service, instead of its project's `pipelines` client and that client's secret
+    # (JC_PORTAL_PIPELINE_IDENTITY=pipeline, T-4044). Needs `tokens` and `identities` on: the
+    # accounts come first, the streams follow.
+    streams: false

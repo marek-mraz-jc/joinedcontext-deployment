@@ -142,7 +142,9 @@ def test_no_broker_ingress_admits_a_peer_from_any_namespace(dev):
 
 
 @requires_helmfile
-def test_the_broker_reaches_dns_its_database_and_the_gateway_only(dev):
+def test_the_broker_reaches_dns_its_database_and_public_subscribers_only(dev):
+    """Since the switch the broker delivers itself (plan 5.5, T-3653), so it no longer dials the
+    gateway (T-3925); its one route out of the cluster is the public range of T-3882."""
     policy = one(dev, "NetworkPolicy", "context-broker")["spec"]
     targets = sorted(
         (
@@ -152,28 +154,21 @@ def test_the_broker_reaches_dns_its_database_and_the_gateway_only(dev):
         for rule in policy["egress"]
     )
     assert targets == [
-        ("context-gateway-gateway", (8080,)),
+        ("ipBlock", (80, 443)),
         ("kube-dns", (53,)),
         ("postgres-cluster", (5432,)),
     ]
-    assert all("ipBlock" not in to for rule in policy["egress"] for to in rule["to"])
     assert one(dev, "NetworkPolicy", "default-deny-context-broker")["spec"]["podSelector"] == {}
 
 
 @requires_helmfile
-def test_the_mcp_surface_admits_the_gateways_hop_and_the_platforms_origins_alone(dev):
-    """Antares MC8 (T-3814): the Host the gateway and the Portal send is the broker Service's name,
-    and the only browser origins are the Portal's and the apex; an empty or `*` entry admits all."""
+def test_the_mcp_surface_admits_the_portal_and_apex_origins_alone(dev):
+    """Antares MC8 (T-3814): rmcp refuses every request whose Origin is not listed, and the gateway
+    forwards the browser's Origin; the list names the Portal's and the Apps' public origins on 443
+    and nothing else (the gateway's Host is pinned by test_context_broker_vanilla)."""
     (container,) = pod_of(dev)["containers"]
-    env = env_of(container)
-    hosts = env["ANTARES_MCP_ALLOWED_HOSTS"]["value"].split(",")
-    origins = env["ANTARES_MCP_ALLOWED_ORIGINS"]["value"].split(",")
-    gateway = one(dev, "Deployment", "context-gateway")["spec"]["template"]["spec"]["containers"][0]
-    broker_url = env_of(gateway)["JC_GATEWAY_BROKER_URL"]["value"]
-    host = broker_url.split("://", 1)[1].split("/", 1)[0].rsplit(":", 1)[0]
-    assert host in hosts, (host, hosts)
-    assert all(h and "*" not in h for h in hosts + origins), (hosts, origins)
-    portal = one(dev, "Deployment", "portal")["spec"]["template"]["spec"]["containers"][0]
-    public = env_of(portal)["JC_PORTAL_PUBLIC_URL"]["value"]
-    assert sorted(origins) == sorted([public, env_of(portal)["JC_PORTAL_APPS_URL"]["value"]])
-    assert all(o.startswith("https://") for o in origins), origins
+    origins = env_of(container)["ANTARES_MCP_ALLOWED_ORIGINS"]["value"].split(",")
+    portal = env_of(one(dev, "Deployment", "portal")["spec"]["template"]["spec"]["containers"][0])
+    public = [portal[k]["value"] for k in ("JC_PORTAL_PUBLIC_URL", "JC_PORTAL_APPS_URL")]
+    assert sorted(origins) == sorted(f"{u}:443" for u in public), (origins, public)
+    assert all(o.startswith("https://") and "*" not in o for o in origins), origins

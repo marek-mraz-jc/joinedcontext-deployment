@@ -11,7 +11,9 @@ metadata:
   title: { sk: "Ukazovatele kraja", en: "Region indicators" }
 spec:
   class: scheduled
-  schedule: "11 4 * * 1"
+  # Daily, though the cubes change weekly: a tick the runner misses (a restart, a stream
+  # replaced at that minute) then costs a day of stale indicators, not a week (T-4081).
+  schedule: "11 4 * * *"
   # Read through the space's own Endpoint and not the store, so the Policy applies to this
   # pipeline exactly as it applies to anybody else (PL-18, PF-39, PL-45). Only the two cubes
   # the compute reads: bbsk-kraj holds ~7,700 rows of seven cubes, and an endpoint source is
@@ -24,8 +26,8 @@ spec:
   output:
     type: KeyPerformanceIndicator
     mode: upsert
-  # Every run rewrites all 28 indicators, so one missing for three weekly runs is an indicator
-  # the region stopped publishing: it is removed rather than shown with a stale value (PL-64).
+  # Every run rewrites every indicator its cubes carry, so one missing for three weeks is an
+  # indicator the region stopped publishing: it is removed rather than shown with a stale value (PL-64).
   # Safe here and only here: this pipeline is the one writer of bbsk-kpi.
   expiry:
     after: 21d
@@ -51,7 +53,7 @@ spec:
       let ran = now().ts_format("2006-01-02T15:04:05Z07:00", "UTC")
       let source_endpoint = "urn:ngsi-ld:Endpoint:%v:%v:%v".format($domain, env("JC_SOURCE_SPACE"), env("JC_SOURCE_SPACE"))
 
-      let rows = this.filter(r -> $indicator.keys().contains(r.dataSet.value) && $territory.keys().contains(r.refArea.value) && r.value.value.type() == "number")
+      let rows = this.filter(r -> $indicator.keys().contains(r.dataSet.value) && $territory.keys().contains(r.refArea.value) && r.observationValue.value.type() == "number")
       let wanted = $indicator.keys().map_each(c -> $territory.keys().map_each(a -> { "cube": c, "area": a })).flatten()
 
       # An answer with no row of either cube is a read that brought nothing (the endpoint
@@ -63,15 +65,14 @@ spec:
         "spec": $indicator.get(w.cube),
         "token": $territory.get(w.area),
         "pick": $rows.filter(r -> r.dataSet.value == w.cube && r.refArea.value == w.area).sort_by(r -> r.refPeriod.value).index(-1).catch(null)
-      }).map_each(c -> {
+      # A territory the cube carries no row for is left out rather than written as "not measured"
+      # over a zero period (T-4081): the last value it had stays until the expiry removes it.
+      }).filter(c -> c.pick != null).map_each(c -> {
         "id": "urn:ngsi-ld:KeyPerformanceIndicator:%v:%v:%v-%v".format($domain, $space, c.spec.name, c.token),
         "type": "KeyPerformanceIndicator",
         "name": { "type": "Property", "value": "%v-%v".format(c.spec.name, c.token) },
-        "currentValue": if c.pick == null { { "type": "Property", "value": "not measured" } } else {
-          { "type": "Property", "value": c.pick.value.value, "unitCode": c.spec.unit, "observedAt": c.pick.dateObserved.value }
-        },
-        "calculationPeriod": { "type": "Property", "value": if c.pick == null { { "start": "0001-01-01T00:00:00Z", "end": $ran } } else {
-          { "start": "%v-01-01T00:00:00Z".format(c.pick.refPeriod.value), "end": "%v-12-31T23:59:59Z".format(c.pick.refPeriod.value) } } },
+        "currentValue": { "type": "Property", "value": c.pick.observationValue.value, "unitCode": c.spec.unit, "observedAt": c.pick.dateObserved.value },
+        "calculationPeriod": { "type": "Property", "value": { "start": "%v-01-01T00:00:00Z".format(c.pick.refPeriod.value), "end": "%v-12-31T23:59:59Z".format(c.pick.refPeriod.value) } },
         "calculationFormula": { "type": "Property", "value": c.spec.formula },
         "derivedFrom": { "type": "Relationship", "object": $source_endpoint },
         "computedBy": { "type": "Relationship", "object": "urn:ngsi-ld:Pipeline:%v:%v:ukazovatele".format($domain, $space) },

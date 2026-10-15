@@ -105,7 +105,7 @@ def test_every_cube_cell_becomes_one_observation_of_the_city(cubes):
 def test_the_population_of_the_city_is_the_one_ŠÚ_SR_publishes(cubes):
     end_of_quarter = {e["id"]: e for e in cubes["obyvatelstvo"]}[
         f"urn:ngsi-ld:StatisticalObservation:{DOMAIN}:zilina-mesto:om7101qr-{CITY}-2026Q2-IN010115-SPOLU"]
-    assert end_of_quarter["value"]["value"] == 79617
+    assert end_of_quarter["observationValue"]["value"] == 79617
 
 
 @requires_docker
@@ -455,12 +455,12 @@ def test_the_six_indicators_are_the_cubes_newest_published_values(cubes):
         ("uchadzaci-mesto", "pr5001rr", "U15061", None, "C62"),
     ):
         row = newest(cube, indicator, key)
-        assert value(name) == (row["value"]["value"], unit, year(row["refPeriod"]["value"])), name
+        assert value(name) == (row["observationValue"]["value"], unit, year(row["refPeriod"]["value"])), name
     # The visitors add up twelve months of the newest complete year, never 2026's first months.
     months = [e for e in rows if e["dataSet"]["value"] == "cr3803mr" and e["refPeriod"]["value"] == "2025"
               and e["dimensionKey"]["value"].endswith(".-VISIT_TOTAL")]
     assert len(months) == 12
-    assert value("navstevnici-rok-mesto") == (sum(e["value"]["value"] for e in months), "C62", year("2025"))
+    assert value("navstevnici-rok-mesto") == (sum(e["observationValue"]["value"] for e in months), "C62", year("2025"))
     for kpi in by_name.values():
         assert kpi["id"] == f"urn:ngsi-ld:KeyPerformanceIndicator:{DOMAIN}:zilina-kpi:{kpi['name']['value']}"
         assert kpi["derivedFrom"]["object"] == f"urn:ngsi-ld:Endpoint:{DOMAIN}:zilina-mesto:zilina-mesto"
@@ -468,9 +468,14 @@ def test_the_six_indicators_are_the_cubes_newest_published_values(cubes):
 
 
 @requires_docker
-def test_a_cube_that_drops_out_is_not_measured_and_an_empty_read_writes_nothing(cubes):
+def test_a_cube_that_drops_out_is_left_out_and_an_empty_read_writes_nothing(cubes):
+    """T-4081: an indicator without a row is not written as "not measured" over a period that
+    starts 0001-01-01; the value it had stays until the expiry removes it."""
     rows = [e for e in queried(cubes) if e["dataSet"]["value"] != "pr5001rr"]
     by_name = {k["name"]["value"]: k for k in indicators(rows)}
-    assert by_name["uchadzaci-mesto"]["currentValue"]["value"] == "not measured"
+    assert "uchadzaci-mesto" not in by_name
+    assert len(by_name) == 5
     assert by_name["obyvatelstvo-stav-mesto"]["currentValue"]["value"] == 79617
+    for kpi in by_name.values():
+        assert not kpi["calculationPeriod"]["value"]["start"].startswith("0001"), kpi["id"]
     assert indicators([]) == []

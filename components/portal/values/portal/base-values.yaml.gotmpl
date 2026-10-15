@@ -317,6 +317,10 @@ env:
   # to read a member at, because a hub reads a member's tenant on this same broker. Without it
   # a ContextSourceRegistration manifest is read, served and federated nowhere.
   JC_PORTAL_BROKER_URL: "http://context-broker.{{ (index .Values "context-broker" "broker" "namespace") }}.svc.cluster.local:8080"
+  # Every ContextBroker beside `main`, `{broker}` its name (ADR-N-046 §2.3, T-3989): the release
+  # components/context-broker adds per entry of global.contextBrokers. The variable above stays
+  # the implicit `main`, whose Service keeps its old name.
+  JC_PORTAL_BROKER_URL_TEMPLATE: "http://context-broker-{broker}.{{ (index .Values "context-broker" "broker" "namespace") }}.svc.cluster.local:8080"
   # The broker's `/q` admin credential the view writer sends (T-3640, T-3642), from the Secret
   # components/context-broker/secrets.yaml generates for both namespaces.
   JC_PORTAL_BROKER_ADMIN_TOKEN_FILE: /var/run/secrets/jc/broker-admin/token
@@ -329,9 +333,10 @@ env:
   JC_PORTAL_PIPELINE_TEST_CAPTURE_URL: "http://portal.{{ $thisPortal.namespace }}.svc.cluster.local:9090"
   # Whose identity a stream presents (PL-19, T-1508): `project` keeps every stream on its
   # project's `pipelines` client; `pipeline` sends each to the token service as its own
-  # pipeline. Switched once the token service runs (pipeline-runner.tokens.enabled) and the
-  # federated mechanism is seen working on dev (T-2868).
-  JC_PORTAL_PIPELINE_IDENTITY: "project"
+  # pipeline, so no stream names a secret the runner's API could serve back (T-4044). Switched by
+  # pipeline-runner.identities.streams, with the token service and the accounts on.
+  {{- $pipelineRunner := index .Values "pipeline-runner" }}
+  JC_PORTAL_PIPELINE_IDENTITY: {{ if and $pipelineRunner.tokens.enabled $pipelineRunner.identities.enabled $pipelineRunner.identities.streams }}"pipeline"{{ else }}"project"{{ end }}
   {{- if (index .Values "pipeline-runner" "identities" "enabled") }}
   # Where the reconciler keeps each Pipeline's own Kubernetes ServiceAccount and whose subjects
   # their federated clients trust (PL-19, T-1508); the identities part grants it that namespace.
@@ -370,6 +375,11 @@ env:
   # client trusts (AP-159, T-3372); the identities part grants it that namespace.
   JC_PORTAL_APP_IDENTITY_NAMESPACE: {{ index .Values "wasm-host" "identities" "appNamespace" | quote }}
   {{- end }}
+{{- end }}
+{{- if has "mqtt-brokers" .Values.components }}
+  # Where the reconciler stamps one release per MqttBroker from the chart's template, with the
+  # Role mqtt-brokers grants it there (ADR-N-048, T-3994).
+  JC_PORTAL_MQTT_NAMESPACE: {{ index .Values "mqtt-brokers" "brokers" "namespace" | quote }}
 {{- end }}
 {{- if has "agent-runner" .Values.components }}
   # The agent runner (AG-33, AG-40): the two go together or the Portal refuses to start.

@@ -9,7 +9,7 @@
   "indicator": { "type": "Property", "value": "U03084" },
   "refArea": { "type": "Property", "value": "SK0321508438" },
   "refPeriod": { "type": "Property", "value": "2023" },
-  "value": { "type": "Property", "value": 3991, "unitCode": "MTQ" },
+  "observationValue": { "type": "Property", "value": 3991, "unitCode": "MTQ" },
   "unitText": { "type": "Property", "value": "v tis. m3" },
   "source": {
     "type": "Property",

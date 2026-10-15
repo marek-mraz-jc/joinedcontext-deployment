@@ -61,27 +61,56 @@ env:
   ANTARES_REQUIRE_RLS: "1"
   ANTARES_MAX_CONNECTIONS: "512"
   ANTARES_DATABASE_URL: "postgresql://antares:$(PGPASSWORD)@postgres-cluster-rw.{{ .Values.postgres.cluster.namespace }}.svc.cluster.local:5432/antares"
-  # The jc build's surfaces (T-3642): the endpoint views, MCP and the engine's access document,
-  # each under /x/views/{view}/. The LinkML schema is no surface: the Portal PUTs it to
-  # /q/schemas/{tenant} (T-3628), which takes nothing while ANTARES_SCHEMA_MAX_BYTES is unset.
-  ANTARES_API_SURFACES: "admin,views,mcp,access"
+  # The jc build's surfaces (T-3642): the endpoint views, MCP, the engine's access document, the
+  # view WebSocket and OGC API Features (T-3922; the gateway forwards /api/endpoint/{slug}/ogc/
+  # features to it since platform T-3752), each under /x/views/{view}/ and reached through the
+  # gateway hop alone, never an edge route; and the view's LinkML schema (T-3804, in the image
+  # since Antares T-3803), which the gateway serves as /api/endpoint/{slug}/schema/... (T-3645).
+  # The Portal PUTs the schema to /q/schemas/{tenant} (T-3628), which takes nothing while
+  # ANTARES_SCHEMA_MAX_BYTES is unset.
+  # `ws-views` mounts /x/views/{view}/ws, the one the gateway relays an Endpoint's /ws to; `ws`
+  # alone serves only the broker-wide /x/ws, and every Endpoint WebSocket answered 404 (T-4048).
+  # `odata` mounts /x/views/{view}/odata/v4, the OData service the gateway forwards an Endpoint's
+  # /odata/v4 to; without it Power BI and Excel got 404 on the service root and $metadata.
+  ANTARES_API_SURFACES: "admin,views,mcp,access,ws,ws-views,ogc,linkml,odata"
+  # The MCP surface answers the Host names listed here alone (rmcp's DNS-rebinding guard, MC8);
+  # unset it answers loopback only, and the gateway's hop (JC_GATEWAY_BROKER_URL, T-3647) got 403.
+  ANTARES_MCP_ALLOWED_HOSTS: "context-broker.{{ (index .Values "context-broker" "broker" "namespace") }}.svc.cluster.local:8080"
+  # The view WebSocket (T-3905, ADR-0026), bounded for the one 16 GB node: at most 200 sockets,
+  # 50 per Tenant, 16 Subscriptions and 128 queued notifications each, so a full house holds
+  # about 200 x 128 notifications (~100 MiB at 4 KiB each) where the defaults (10 000 sockets,
+  # queue 256) would hold gigabytes. Browsers reach it through the gateway alone: no Origin.
+  ANTARES_WS_MAX_CONNECTIONS: "200"
+  ANTARES_WS_MAX_CONNECTIONS_PER_TENANT: "50"
+  ANTARES_WS_MAX_SUBSCRIPTIONS: "16"
+  ANTARES_WS_QUEUE: "128"
+  # A socket's lifetime here bounds only anonymous callers on public Endpoints (24 h, platform
+  # T-4132): the gateway ends a token caller's socket at the token's 300 s itself.
+  ANTARES_WS_MAX_LIFETIME_SECS: "86400"
   ANTARES_SCHEMA_MAX_BYTES: "1048576"
-  # MCP's Host and Origin checks (Antares MC8, T-3814). The gateway and the Portal reach the
-  # broker by its Service name, so the Host is one of these (a name without a port matches any
-  # port); an empty list would admit every Host. The Origin a browser sends through the gateway
-  # is the Portal's MCP page or an App on the apex, never anything else.
-  {{- $ns := index .Values "context-broker" "broker" "namespace" }}
-  ANTARES_MCP_ALLOWED_HOSTS: "context-broker,context-broker.{{ $ns }},context-broker.{{ $ns }}.svc,context-broker.{{ $ns }}.svc.cluster.local"
-  ANTARES_MCP_ALLOWED_ORIGINS: "https://portal.{{ required "global.domain" $global.domain }},https://{{ $global.domain }}"
-  # The verified caller the gateway forwards (platform T-3641). The engine stays allow-all until
-  # T-3768 sets ANTARES_POLICY=joinedcontext: it denies a request without these headers outside
-  # the Context Source clauses, and the gateway's own hops send none yet (T-3767).
-  ANTARES_POLICY_SUBJECT_HEADERS: "x-jc-subject,x-jc-groups,x-jc-roles,x-jc-client,x-jc-restricted"
+  # The browser Origin the gateway forwards to the MCP surface (MC8, T-3814): rmcp refuses every
+  # request whose Origin is not listed, so unset the Portal's MCP page got 403. The Portal and
+  # the apex alone, each on 443 (an entry without a port matching any port is deprecated in rmcp).
+  ANTARES_MCP_ALLOWED_ORIGINS: "https://portal.{{ required "global.domain" $global.domain }}:443,https://{{ $global.domain }}:443"
+  # The verified caller the gateway forwards (platform T-3641); `x-jc-did` a data-space
+  # participant, which the gateway strips from every client request (platform T-3800, T-3816).
+  # The joinedcontext engine decides every request by them and the Portal's rule documents
+  # (T-3768): a request naming nobody is the cluster's own and is refused outside the Context
+  # Source clauses; the gateway's own hops speak as its client (T-3767).
+  ANTARES_POLICY: "joinedcontext"
+  ANTARES_POLICY_SUBJECT_HEADERS: "x-jc-subject,x-jc-groups,x-jc-roles,x-jc-client,x-jc-restricted,x-jc-did"
   ANTARES_ADMIN_TOKEN_FILE: /var/run/secrets/antares/admin/token
   # A scraper cannot send the admin secret; the metrics carry no tenant data. Prometheus is not
   # admitted to the broker yet: its namespace is the operator's, and a rule naming it by pod
   # label alone would let any pod that labels itself reach the API (T-3771).
   ANTARES_ADMIN_METRICS: "open"
+  # Broker-initiated HTTP and MQTT reach no private address but the peers named here (T-3909,
+  # Antares T-3908): the broker's own Service, which every federation registration the
+  # reconciler writes names as its endpoint (portal src/reconciler/registrations.rs,
+  # `members_of`). Loopback and instance metadata stay refused whatever the list says; an
+  # unlisted private destination is refused at delivery.
+  ANTARES_EGRESS_ALLOW_PRIVATE: "false"
+  ANTARES_EGRESS_PRIVATE_HOSTS: "context-broker.{{ (index .Values "context-broker" "broker" "namespace") }}.svc.cluster.local"
 
 extraVolumes:
   - name: admin-token

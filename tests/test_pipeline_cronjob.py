@@ -23,7 +23,7 @@ CONFIG = {"pipeline": {"processors": [{"mapping": "root = this"}]}, "output": {"
 def render(tmp_path: Path, pipelines: dict, **values) -> subprocess.CompletedProcess:
     payload = {
         "project": "ovzdusie",
-        "image": {"repository": "ghcr.io/warpstreamlabs/bento", "tag": "1.21.1"},
+        "image": {"repository": "ghcr.io/warpstreamlabs/bento", "tag": "1.22.0"},
         "pipelines": pipelines,
         **values,
     }
@@ -131,7 +131,7 @@ def test_the_security_context_and_the_image_digest_reach_the_container(tmp_path)
     docs = objects(render(
         tmp_path,
         {"batch": {"periodSeconds": 60, "config": CONFIG}},
-        image={"repository": "ghcr.io/warpstreamlabs/bento", "tag": "1.21.1", "digest": "sha256:abc"},
+        image={"repository": "ghcr.io/warpstreamlabs/bento", "tag": "1.22.0", "digest": "sha256:abc"},
         podSecurityContext={"runAsNonRoot": True, "runAsUser": 10001},
         securityContext={"readOnlyRootFilesystem": True, "allowPrivilegeEscalation": False},
     ))

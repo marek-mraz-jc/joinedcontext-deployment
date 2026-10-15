@@ -11,17 +11,26 @@ import pytest
 import yaml
 
 # The digest the pipeline runner pins (test_bystrica_pipelines.py, test_demo_feeds.py).
-BENTO = "ghcr.io/warpstreamlabs/bento:1.21.1@sha256:656c55de3f8deddd4ee743f3c76f3b497e67324e940f2bc1769693cd8b906364"
+BENTO = "ghcr.io/warpstreamlabs/bento:1.22.0@sha256:ef674bebae45793c982c350d8f37c2c7661133c1dc65a5517fb977b36dc09841"
 
 requires_docker = pytest.mark.skipif(
     shutil.which("docker") is None, reason="no container runtime, so Bento cannot run the mapping"
 )
 
+# The runner's shared caches, which a mapping may name (T-4052).
+RESOURCES = Path(__file__).resolve().parent.parent / "components/pipeline-runner/streams/resources.yaml"
 
-def _bento(mapping: Path, document: bytes, space: str, domain: str, codec: str) -> bytes:
+
+def _bento(mapping: Path, document: bytes, space: str, domain: str, codec: str, metadata: dict | None = None) -> bytes:
+    pipeline = yaml.safe_load(mapping.read_text())["pipeline"]
+    if metadata:
+        # What a connection's own steps leave on the message, such as the member name an archive
+        # read sets (PL-72), set the way those steps set it.
+        pipeline["processors"].insert(0, {"mapping": "\n".join(f"meta {k} = {json.dumps(v)}" for k, v in metadata.items())})
     config = {
         "input": {"stdin": {"scanner": {"to_the_end": {}}}},
-        "pipeline": yaml.safe_load(mapping.read_text())["pipeline"],
+        "pipeline": pipeline,
+        "cache_resources": yaml.safe_load(RESOURCES.read_text())["cache_resources"],
         "output": {"stdout": {"codec": codec}},
         "logger": {"level": "error"},
     }
@@ -40,11 +49,11 @@ def run(mapping: Path, document: bytes, space: str, domain: str = "hel.fi") -> l
     return json.loads(_bento(mapping, document, space, domain, "all-bytes"))
 
 
-def run_all(mapping: Path, document: bytes, space: str, domain: str = "hel.fi") -> list[dict]:
+def run_all(mapping: Path, document: bytes, space: str, domain: str = "hel.fi", metadata: dict | None = None) -> list[dict]:
     """Like `run`, for a mapping that answers many messages (one entity each, or arrays), as one
     that splits and regroups its rows does: the runner batches whichever it gets (T-3356)."""
     entities: list[dict] = []
-    for line in _bento(mapping, document, space, domain, "lines").decode().splitlines():
+    for line in _bento(mapping, document, space, domain, "lines", metadata).decode().splitlines():
         if line.strip():
             message = json.loads(line)
             entities.extend(message if isinstance(message, list) else [message])
@@ -61,6 +70,8 @@ def key_values(entity: dict) -> dict:
             out[name] = attribute["object"]
         elif attribute["type"] == "LanguageProperty":
             out[name] = attribute["languageMap"]
+        elif attribute["type"] == "JsonProperty":
+            out[name] = attribute["json"]
         else:
             out[name] = attribute["value"]
     return out

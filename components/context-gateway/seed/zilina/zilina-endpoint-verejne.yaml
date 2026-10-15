@@ -13,7 +13,7 @@ spec:
   contextSpaceRef: zilina-verejne
   slug: zhu42lbyivllciy7pluenlhxmqn5hi7c
   audience: public
-  enabledRepresentations: [ngsi-ld, geojson, csv, json]
+  enabledRepresentations: [ngsi-ld, geojson, csv, json, websocket, ogc-features, odata]
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: zilina }

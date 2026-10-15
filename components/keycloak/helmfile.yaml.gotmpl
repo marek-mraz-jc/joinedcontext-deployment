@@ -46,6 +46,9 @@ releases:
     version: {{ index $root.charts $component $part.name "version" }}
     {{- end }}
     createNamespace: {{ $root.global.createNamespaces }}
+    {{- if index $part "timeout" }}
+    timeout: {{ $part.timeout }}
+    {{- end }}
     installed: {{ index $root $component $part.name "enabled" }}
     condition: {{ $component }}.{{ $part.name }}.enabled
     {{- if index $part "needs" }}

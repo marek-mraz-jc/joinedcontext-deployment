@@ -177,6 +177,19 @@ def test_a_row_without_a_name_or_a_key_is_dropped():
 
 
 @requires_docker
+def test_a_web_field_that_is_no_single_address_leaves_the_place_without_its_url():
+    """T-4011: the gateway holds `url` to an IRI, so `web` with two addresses or a space in one
+    writes the place without a url instead of a place the gateway refuses."""
+    def edit(d):
+        d["features"][0]["properties"]["web"] = "www.divadlodisk.cz, www.disk.cz"
+        d["features"][1]["properties"]["web"] = " www.divadlou22.cz "
+    places = run("culture", edited("culture.json", edit))
+    assert len(places) == 2
+    assert "url" not in places[0] and not schema_errors(places[0])
+    assert places[1]["url"]["value"] == "https://www.divadlou22.cz"
+
+
+@requires_docker
 def test_ticket_point_hours_read_as_day_ranges(written):
     hours = {e["id"].rsplit(":", 1)[1]: e["openingHours"]["languageMap"]["cs"] for e in written["ticket-points"]}
     assert hours["pid-dp2"] == "po–ne 5:00-24:00"
@@ -234,9 +247,12 @@ def test_occupancy_lands_on_the_ids_ipr_writes_and_an_unpaired_car_park_is_left_
     assert ids == {"ipr-a7c9a9af-a0fb-4005-8baf-c9a202b763ad", "ipr-8e869f78-c4e5-41fc-a316-ccff35083fdc"}
     skalka = next(e for e in written["park-and-ride-occupancy"] if e["id"].endswith("a7c9a9af-a0fb-4005-8baf-c9a202b763ad"))
     assert skalka["availableSpotNumber"]["value"] == 23 and skalka["occupiedSpotNumber"]["value"] == 55
+    # The capacity comes with the free and occupied counts from the same feed (T-4105): IPR's register
+    # gave P+R Nové Butovice 57 places while Golemio counted 112 free, a negative occupancy.
+    assert skalka["totalSpotNumber"]["value"] == 78
     assert skalka["dateModified"]["value"] == "2026-09-25T13:34:01Z"
-    # The capacity, the name and the outline are IPR's; the live feed never writes them.
-    assert not any(k in e for e in written["park-and-ride-occupancy"] for k in ("totalSpotNumber", "name", "location"))
+    # The name and the outline are IPR's; the live feed never writes them.
+    assert not any(k in e for e in written["park-and-ride-occupancy"] for k in ("name", "location"))
 
 
 @requires_docker
@@ -244,8 +260,10 @@ def test_a_count_that_is_not_a_whole_number_is_left_out_and_a_car_park_without_o
     def edit(d):
         d[0]["free_spot_number"] = -3
         d[0]["occupied_spot_number"] = 12.5
+        d[0]["total_spot_number"] = 78.5
         d[1]["free_spot_number"] = None
         d[1]["occupied_spot_number"] = "n/a"
+        d[1]["total_spot_number"] = None
         d[1]["last_updated"] = None
     answer = run("park-and-ride-occupancy", edited("golemio-park-and-ride.json", edit))
     assert [set(e) - {"id", "type"} for e in answer] == [{"dateModified"}]

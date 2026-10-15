@@ -14,7 +14,7 @@ spec:
   contextSpaceRef: banskabystrica-verejne
   slug: rpfqszwlbp5bonvg7kckhdsne5qedjor
   audience: public
-  enabledRepresentations: [ngsi-ld, geojson, csv, json]
+  enabledRepresentations: [ngsi-ld, geojson, csv, json, websocket, ogc-features, odata]
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: banskabystrica }

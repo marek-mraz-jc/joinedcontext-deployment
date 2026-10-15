@@ -43,12 +43,21 @@ args:
   - /streams/{{ $name }}
 {{- end }}
 
+# The runner's pods by address: the gateway admits the runner's tokenless MQTT CONNECT only
+# from what this name resolves to (JC_GATEWAY_MQTT_RUNNER_HOST, PL-76, T-4004).
+headlessService:
+  name: pipeline-runner-pods
+
 configMap:
   enabled: true
   name: pipeline-runner-{{ required "pipeline-runner.runner.project names the project whose streams this runner carries; only the development profile falls back to the demo city (T-1720, CC-73)" $thisRunner.project }}-streams
   mountPath: /streams
   data:
     {{- $thisRunner.streams | default dict | toYaml | nindent 4 }}
+  # The bounded inflate of a zip member's read (PL-72, T-3953): the module the rendered
+  # `wasm` step loads as /streams/inflate.wasm. ../../streams/README.md says how it is built.
+  binaryData:
+    inflate.wasm: {{ readFile "../../streams/inflate.wasm" | b64enc }}
 
 # The files volume a `csv`, `file`, `file_tail` or `parquet` DataSource reads from (PL-50,
 # Architecture/08 §6): a manifest names paths under /data/, a file gets there with
@@ -67,6 +76,11 @@ podAnnotations:
   config.linkerd.io/skip-outbound-ports: "443"
 
 containerPort: 4195
+
+# A DataSource with `mqtt.brokerRef` reads tcp://mqtt-{project}-{name}.${JC_MQTT_NAMESPACE}...
+# (PL-76): the namespace of the brokers, which the configuration repository cannot know.
+env:
+  JC_MQTT_NAMESPACE: {{ dig "mqtt-brokers" "brokers" "namespace" "" .Values | quote }}
 
 # What a Pipeline's `secretRef`s resolve to (T-0927, PL-15). The Portal's reconciler writes
 # the Secret `pipeline-secrets` into this namespace on every sync and rolls this Deployment
@@ -111,8 +125,10 @@ probes:
 
 # Bento is Go: without a soft limit its heap grows to the kernel's hard one, and one OOMKill
 # stops every project's streams at once (T-3537, 3 restarts at 1536Mi with 97 streams). The
-# GC works harder from 85 % of whatever limit the environment sets.
-goMemLimitPercent: 85
+# GC works harder from 75 % of whatever limit the environment sets: under dev-smoke's 80 % line,
+# so the runtime defends the line instead of letting a normal heap cross it (T-4036; at 85 %
+# the runner sawed between 875 and 1342 Mi of 1536 Mi).
+goMemLimitPercent: 75
 
 resources:
   requests:

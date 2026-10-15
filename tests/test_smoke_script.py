@@ -63,6 +63,10 @@ elif "-D" in args:
     # The response headers of one read (T-2262): the gateway's own caching and its ETag.
     sys.stdout.write(lookup("dumpedHeaders", spec.get("schemaHeaders",
         'HTTP/2 200\\r\\ncache-control: private, no-cache\\r\\netag: "e3b0c442"\\r\\n')))
+elif "/q/health" in line:
+    # The broker's own health over the port-forward (T-3905): the surfaces the deployment mounts.
+    surfaces = spec.get("brokerSurfaces", ["views", "mcp", "access", "ws", "ogc"])
+    sys.stdout.write(lookup("bodies", json.dumps({"status": "UP", "surfaces": {s: "UP" for s in surfaces}})))
 else:
     sys.stdout.write(lookup("bodies", ""))
 '''
@@ -74,13 +78,14 @@ args = sys.argv[1:]
 line = " ".join(args)
 # The pod selector of APISIX's egress policy (components/apisix/networkpolicies.yaml).
 EDGE_SELECTOR = [("app.kubernetes.io/name", "apisix"), ("app.kubernetes.io/instance", "apisix-apisix")]
-if args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-bootstrap-seed") and "endpoints__helsinki-" in line:
+if args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-seed-") and "endpoints__helsinki-" in line:
     # The Helsinki seed's slugs, one per endpoint name (T-0478); nothing seeded by default,
     # because the checks behind them wait up to 210 s for data to flow.
-    name = "".join(itertools.takewhile(str.isalnum, line.split("endpoints__helsinki-", 1)[1]))
-    seeded = spec.get("helsinkiSeed", {}).get(name)
+    name = "".join(itertools.takewhile(lambda c: c.isalnum() or c == "-", line.split("endpoints__helsinki-", 1)[1]))
+    # The OGC rows' Endpoints (T-3957) are seeded beside the ones the residue count lists.
+    seeded = spec.get("helsinkiSeed", {}).get(name) or spec.get("ogcSeed", {}).get(name)
     sys.stdout.write("spec:\\n  slug: %s\\n" % seeded if seeded else "")
-elif args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-bootstrap-seed") and "jsonpath={.data}" in line:
+elif args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-seed-") and "jsonpath={.data}" in line:
     # The seed's file names, for the residue count (T-0667): one Helsinki endpoint per seeded slug.
     keys = ["projects__helsinki__spaces__helsinki__endpoints__helsinki-%s.yaml" % n for n in spec.get("helsinkiSeed", {})]
     if spec.get("helsinkiSeed"):
@@ -90,7 +95,7 @@ elif args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-b
                  "projects__helsinki__spaces__helsinki__space.yaml",
                  "projects__helsinki__spaces__helsinki-kpi__space.yaml"]
     sys.stdout.write(json.dumps({k: "" for k in keys}))
-elif args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-bootstrap-seed"):
+elif args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-seed-"):
     # The seeded Endpoint manifest the smoke reads the slug from (T-0282, T-0278); "" = nothing seeded.
     sys.stdout.write(spec.get("seedEndpoint", "spec:\\n  slug: mluyob4nz52lok3ssk7pgn5vwt\\n"))
 elif args[0] == "get" and args[1] == "configmap" and args[2] == "portal-branding":
@@ -114,6 +119,13 @@ elif args[0] == "get" and args[1] == "configmap":
         sys.stdout.write("  password: %s\\n" % spec["leakedCredential"])
 elif args[0] == "get" and args[1] == "deployment" and args[2] == "apisix":
     sys.exit(0 if spec.get("edge", True) else 1)
+elif args[0] == "logs" and "pipeline-runner-runner" in line:
+    # T-4055: the runner's refusals, each `[age in seconds, line]`; `--since=Ns` shows those
+    # at most N seconds old.
+    since = int(next(a for a in args if a.startswith("--since=")).split("=")[1].rstrip("s"))
+    for age, said in spec.get("runnerRefused", []):
+        if age <= since:
+            sys.stdout.write('{"level":"error","msg":"%s"}\\n' % said)
 elif args[0] == "logs":
     # One access-log line for the beacon path, from whoever the edge thinks called (T-0929).
     caller = spec.get("edgeCaller", "203.0.113.7")
@@ -174,6 +186,8 @@ elif args[0] == "get" and args[1] == "secret":
     if not secret:
         sys.exit(1)
     sys.stdout.write(base64.b64encode(secret.encode()).decode())
+elif args[0] == "get" and args[1] == "deployment" and args[2] == "context-broker":
+    sys.exit(0 if spec.get("broker", True) else 1)
 elif args[0] == "get" and args[1] == "deployment" and args[2] == "jc-functions":
     sys.exit(0 if spec.get("functions", True) else 1)
 elif args[0] == "get" and args[1] == "service" and args[2] == "jc-functions":
@@ -265,6 +279,15 @@ sys.stdout.write("New, (NONE), Cipher is (NONE)\\n" if spec.get("cbcRefused", Tr
 
 ROLLOUTS_STUB = "#!/bin/sh\nexit 0\n"
 
+# scripts/smoke-ws.py has its own tests (test_smoke_ws.py); here it answers what the spec says.
+WS_STUB = '''#!/usr/bin/env python3
+import json, os, sys
+spec = json.load(open(os.environ["STUB_SPEC"]))
+answer = spec.get("ws", "101 201")
+print(answer)
+sys.exit(0 if answer == "101 201" else 1)
+'''
+
 
 def sandbox(tmp_path: Path, spec: dict) -> dict:
     """A copy of the script with stubbed neighbours; returns the env to run it with."""
@@ -274,6 +297,8 @@ def sandbox(tmp_path: Path, spec: dict) -> dict:
     (scripts / "smoke.sh").chmod(0o755)
     (scripts / "wait-rollouts.sh").write_text(ROLLOUTS_STUB)
     (scripts / "wait-rollouts.sh").chmod(0o755)
+    (scripts / "smoke-ws.py").write_text(WS_STUB)
+    (scripts / "smoke-ws.py").chmod(0o755)
 
     stub_bin = tmp_path / "bin"
     stub_bin.mkdir(parents=True, exist_ok=True)
@@ -287,6 +312,7 @@ def sandbox(tmp_path: Path, spec: dict) -> dict:
     env = dict(os.environ)
     env["PATH"] = f"{stub_bin}:{env['PATH']}"
     env["STUB_SPEC"] = str(spec_file)
+    env.setdefault("JC_SMOKE_RUNNER_WINDOW", "1")
     return env
 
 
@@ -374,17 +400,30 @@ APP_LOGIN = ("https://idm.example.test/realms/dev/protocol/openid-connect/auth?r
 # The demo people the seed creates (components/keycloak/demo-users.yaml), as People lists them.
 DEMO_PEOPLE = json.dumps({"items": [{"email": "demo.%s@hel.fi" % who} for who in ("steward", "viewer", "approver", "editor")]})
 
+# T-3957: the OGC API Features answers of a healthy dev, one Endpoint per kind. The internal
+# one is seeded beside the Helsinki endpoints the residue count lists; the star one is the
+# ovzdusie seed (`seedEndpoint`).
+OGC_SEED = {"bikes-ops": "hsbikesops"}
+OGC_COLLECTIONS = '{"collections":[{"id":"BikeHireDockingStation"},{"id":"Event"}]}'
+OGC_ITEMS = ('{"type":"FeatureCollection","features":[{"type":"Feature","id":"urn:ngsi-ld:x",'
+             '"geometry":null,"properties":{"name":"Kamppi"}}]}')
+OGC_HEADERS = "HTTP/2 200\r\ncontent-type: application/geo+json\r\n"
+
 HEALTHY = {
+    "ogcSeed": OGC_SEED,
     "routes": ["portal-ui", "portal-api", "context-space", "context-endpoint", "gitea-forge", "ckan"],
     # The old path of each published App moves to its own host with no cookie (AP-133).
     "dumpedHeaders": [
+        ["/ogc/features/collections/", OGC_HEADERS],
         ["/apps/hsl-transport/", "HTTP/2 308\r\nlocation: https://hsl-transport.apps.example.test/\r\n"],
         ["/apps/air-quality/", "HTTP/2 308\r\nlocation: https://air-quality.apps.example.test/\r\n"],
         # A public App's own page, with the AP-12 policy that lets the basemap tiles in (T-3014).
         ["hsl-transport.apps.example.test/", "HTTP/2 200\r\n" + APP_POLICY],
     ],
     "helsinkiSeed": HELSINKI_SEED,
-    "bodies": [["/api/v1/projects/helsinki/apps/helsinki-", BUILT_APP],
+    "bodies": [["/ogc/features/collections/", OGC_ITEMS],
+               ["/ogc/features/collections", OGC_COLLECTIONS],
+               ["/api/v1/projects/helsinki/apps/helsinki-", BUILT_APP],
                ["/api/v1/projects/helsinki/apps", PUBLISHED_APPS],
                [["%{redirect_url}", "https://air-quality.apps.example.test/"], APP_LOGIN],[["Bearer", "/invoke"], FUNCTION_ANSWER],
                # The organization's Actions runner, online (T-2608, ADR-N-028).
@@ -452,7 +491,7 @@ def test_a_datasource_check_that_reaches_inside_the_cluster_fails(tmp_path):
     assert "FAIL  a probe of https://kubernetes.default.svc/version reached it: the feed answered 200 OK" in result.stdout
     assert "FAIL  a probe of https://169.254.169.254/hetzner/v1/metadata answered no refusal" in result.stdout
     assert "ok    a probe of http://context-broker.dev.svc:8080/ngsi-ld/v1/types stays outside the cluster" in result.stdout
-    assert "2 failed, 0 skipped" in result.stdout
+    assert "2 failed, 2 skipped" in result.stdout
 
 
 def test_missing_arguments_are_refused(tmp_path):
@@ -465,7 +504,11 @@ def test_missing_arguments_are_refused(tmp_path):
 def test_full_platform_passes(tmp_path):
     result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
     assert result.returncode == 0, result.stdout
-    assert "0 failed, 0 skipped" in result.stdout
+    # The only skips are the OGC kinds no seeded Endpoint has (T-3957): filtered view and cube.
+    assert "0 failed, 2 skipped" in result.stdout
+    assert [line for line in result.stdout.splitlines() if line.startswith("  skip")] == [
+        "  skip  ogc filtered view (no seeded Endpoint narrows its view by a q)",
+        "  skip  ogc cube (no seeded Endpoint serves a LinkML cube, T-3805)"]
     assert "ok    portal host sends an anonymous visitor to the edge login" in result.stdout
     assert "ok    apex redirects to the portal host" in result.stdout
     assert "ok    portal API answers a bearer call through the edge (200)" in result.stdout
@@ -483,6 +526,7 @@ def test_full_platform_passes(tmp_path):
     assert "ok    helsinki lists 2 spaces, none of them residue of takes or e2e" in result.stdout
     assert "ok    agent proxy client mints tokens with audience context-gateway" in result.stdout
     assert "ok    helsinki-bikes does not serve events" in result.stdout
+    assert "ok    helsinki-transport opens its WebSocket anonymously and subscribes to Vehicle (101 201)" in result.stdout
     assert "ok    city bike stations are flowing into the space" in result.stdout
     assert "ok    buses are flowing into the space" in result.stdout
     assert "catalogue front page carries the branded primary colour" in result.stdout
@@ -502,6 +546,14 @@ def test_an_instance_without_the_helsinki_seed_skips_its_checks(tmp_path):
     """No seed, no 210 s wait for data that will never come: the section is a skip."""
     result = run(tmp_path, dict(HEALTHY, helsinkiSeed={}), "https://example.test", "https://idm.example.test")
     assert "skip  helsinki endpoints (no Helsinki seed on the gateway in this instance)" in result.stdout
+
+
+def test_a_transport_websocket_that_is_not_public_fails_with_its_answer(tmp_path):
+    """T-4035: the 404 the supervisor measured on dev (no `websocket` representation) is a FAIL
+    line that says what the gateway answered."""
+    result = run(tmp_path, dict(HEALTHY, ws="404 -"), "https://example.test", "https://idm.example.test")
+    assert result.returncode != 0
+    assert "FAIL  helsinki-transport WebSocket answered '404 -', expected '101 201'" in result.stdout
 
 
 def test_a_schema_artifact_is_revalidated_and_answers_304(tmp_path):
@@ -638,6 +690,87 @@ def test_jc_functions_open_to_any_pod_or_closed_to_the_portal_fails_the_run(tmp_
     assert "FAIL  a pod with the Portal's label cannot reach jc-functions:8080" in result.stdout
 
 
+def test_a_surface_the_broker_does_not_mount_fails_the_run(tmp_path):
+    """T-3905, T-3922: `/q/health` lists each surface the deployment selected; one missing from
+    it is a broker built without it or a list that lost it."""
+    result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
+    for surface in ("views", "mcp", "access", "ws", "ogc"):
+        assert f"ok    the broker mounts the {surface} surface" in result.stdout
+    result = run(tmp_path, dict(HEALTHY, brokerSurfaces=["views", "mcp", "access", "ws"]),
+                 "https://example.test", "https://idm.example.test")
+    assert result.returncode != 0
+    assert "FAIL  the broker's /q/health lists no ogc surface" in result.stdout
+
+
+def test_one_ogc_row_per_endpoint_kind_names_its_endpoint(tmp_path):
+    """T-3957: each kind of T-3831's OGC matrix is a row naming the seeded Endpoint it read, or a
+    skip naming the kind dev has none of; the internal row reads with the demo user's token."""
+    result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 0, result.stdout
+    for kind, name, ep in (("public", "helsinki-bikes", "hsbikes"),
+                           ("internal", "helsinki-bikes-ops", "hsbikesops"),
+                           ("star", "public-air", "mluyob4nz52lok3ssk7pgn5vwt")):
+        assert (f"ok    ogc {kind} ({name} {ep}): conformance, 1 feature of BikeHireDockingStation "
+                "as geo+json\n") in result.stdout
+    assert ("ok    ogc projection (helsinki-all hsall): conformance, 1 feature of "
+            "BikeHireDockingStation as geo+json, no contactPoint") in result.stdout
+    assert "skip  ogc filtered view (no seeded Endpoint narrows its view by a q)" in result.stdout
+    assert "skip  ogc cube (no seeded Endpoint serves a LinkML cube, T-3805)" in result.stdout
+    assert "a.b.c" not in result.stdout, "a token reached the output"
+
+
+@pytest.mark.parametrize("change, reason", [
+    ({"statuses": [["hsbikes/ogc/features/conformance", 404]] + HEALTHY_STATUSES},
+     "ogc public (helsinki-bikes hsbikes): /conformance answered 404"),
+    ({"bodies": [["hsbikes/ogc/features/collections", '{"collections":[]}']] + HEALTHY["bodies"]},
+     "ogc public (helsinki-bikes hsbikes): /collections lists none"),
+    ({"dumpedHeaders": [["hsbikes/ogc/features/collections/", "HTTP/2 502\r\n"]] + HEALTHY["dumpedHeaders"]},
+     "ogc public (helsinki-bikes hsbikes): items of BikeHireDockingStation answered HTTP/2 502"),
+    ({"dumpedHeaders": [["hsbikes/ogc/features/collections/", "HTTP/2 200\r\ncontent-type: application/json\r\n"]]
+      + HEALTHY["dumpedHeaders"]},
+     "ogc public (helsinki-bikes hsbikes): items of BikeHireDockingStation are 'application/json', not application/geo+json"),
+    ({"bodies": [["hsbikes/ogc/features/collections/", '{"type":"FeatureCollection","features":[]}']] + HEALTHY["bodies"]},
+     "ogc public (helsinki-bikes hsbikes): items of BikeHireDockingStation: no feature"),
+    ({"bodies": [["hsbikes/ogc/features/collections/", "<html>502</html>"]] + HEALTHY["bodies"]},
+     "ogc public (helsinki-bikes hsbikes): items of BikeHireDockingStation: no FeatureCollection"),
+    ({"bodies": [["hsall/ogc/features/collections/", OGC_ITEMS.replace('"name"', '"contactPoint"')]] + HEALTHY["bodies"]},
+     "ogc projection (helsinki-all hsall): items of BikeHireDockingStation: the hidden contactPoint is served"),
+])
+def test_an_ogc_row_that_is_not_a_feature_page_of_the_view_fails_the_run(tmp_path, change, reason):
+    result = run(tmp_path, dict(HEALTHY, **change), "https://example.test", "https://idm.example.test")
+    assert result.returncode != 0
+    assert f"FAIL  {reason}" in result.stdout
+
+
+def test_an_ogc_row_reads_the_first_collection_that_has_a_feature(tmp_path):
+    """The collections are the view's LinkML classes (T-3752): a class with no entity in the space
+    comes first on dev (AirQualityObserved on helsinki-all), and the row reads the next one."""
+    bodies = [["hsbikes/ogc/features/collections/AirQualityObserved/", '{"type":"FeatureCollection","features":[]}'],
+              ["hsbikes/ogc/features/collections/", OGC_ITEMS],
+              ["hsbikes/ogc/features/collections",
+               '{"collections":[{"id":"AirQualityObserved"},{"id":"BikeHireDockingStation"}]}']]
+    result = run(tmp_path, dict(HEALTHY, bodies=bodies + HEALTHY["bodies"]),
+                 "https://example.test", "https://idm.example.test")
+    assert result.returncode == 0, result.stdout
+    assert ("ok    ogc public (helsinki-bikes hsbikes): conformance, 1 feature of BikeHireDockingStation "
+            "as geo+json\n") in result.stdout
+
+
+def test_an_ogc_kind_dev_has_not_seeded_is_a_skip_naming_it(tmp_path):
+    result = run(tmp_path, dict(HEALTHY, ogcSeed={}, demoPassword=""),
+                 "https://example.test", "https://idm.example.test")
+    assert "skip  ogc internal (no demo user token to read helsinki-bikes-ops with)" in result.stdout
+    result = run(tmp_path, dict(HEALTHY, ogcSeed={}), "https://example.test", "https://idm.example.test")
+    assert "skip  ogc internal (helsinki-bikes-ops is not seeded in this instance)" in result.stdout
+    assert "ok    ogc internal" not in result.stdout
+
+
+def test_an_instance_without_the_broker_skips_the_surface_checks(tmp_path):
+    result = run(tmp_path, dict(HEALTHY, broker=False), "https://example.test", "https://idm.example.test")
+    assert "skip  broker surfaces (the context broker is not deployed in this instance)" in result.stdout
+    assert "mounts the" not in result.stdout
+
+
 def test_an_instance_without_jc_functions_skips_the_functions_checks(tmp_path):
     result = run(tmp_path, dict(HEALTHY, functions=False), "https://example.test", "https://idm.example.test")
     assert "skip  functions (jc-functions is not deployed in this instance)" in result.stdout
@@ -724,13 +857,25 @@ def test_endpoint_round_trip_uses_the_seeded_slug_and_the_conformance_token(tmp_
     result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
     assert "ok    client_credentials token for banskabystrica-conformance" in result.stdout
     assert "ok    entity create through the endpoint (201)" in result.stdout
-    assert "0 failed, 0 skipped" in result.stdout
+    assert "0 failed, 2 skipped" in result.stdout
 
 
 def test_every_listed_entity_is_retrieved_by_id(tmp_path):
     """T-0945: a healthy space serves what it lists, and the smoke says how many it read."""
     result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
     assert "ok    every listed entity retrieves by id (2 of them)" in result.stdout
+
+
+def test_a_stale_hand_probe_in_the_space_is_removed_and_named(tmp_path):
+    """T-4109: the probe a debugging session left in ovzdusie is deleted when present and named.
+    T-4116: the station eea-SK0263A is never deleted, though a DELETE of it would succeed: the
+    public-air pipeline mints it with the instance's org domain, and the ogc star row reads it."""
+    spec = dict(HEALTHY, statuses=[[["-X DELETE", "deployer-probe"], 204], [["-X DELETE", "eea-SK0263A"], 204]]
+                + HEALTHY_STATUSES)
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert "ok    removed the stale test entity urn:ngsi-ld:AirQualityObserved:hel.fi:ovzdusie:deployer-probe" in result.stdout
+    assert "eea-SK0263A" not in result.stdout
+    assert "0 failed" in result.stdout
 
 
 def test_an_entity_that_lists_but_never_retrieves_fails_the_run(tmp_path):
@@ -755,7 +900,8 @@ def test_unseeded_gateway_skips_the_round_trip(tmp_path):
     spec = dict(HEALTHY, seedEndpoint="")
     result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
     assert "skip  endpoint round trip (no Endpoint seeded" in result.stdout
-    assert "0 failed, 1 skipped" in result.stdout
+    assert "skip  ogc star (public-air is not seeded in this instance)" in result.stdout
+    assert "0 failed, 4 skipped" in result.stdout
 
 
 def test_endpoint_not_found_fails_the_run(tmp_path):
@@ -785,7 +931,8 @@ def test_instance_without_demo_users_skips_the_login(tmp_path):
     assert "skip  portal space list (no demo user token)" in result.stdout
     assert "skip  sample apps (no demo user token to read them with)" in result.stdout
     assert "skip  App routes (no demo user token to list the published Apps with)" in result.stdout
-    assert "0 failed, 4 skipped" in result.stdout
+    assert "skip  ogc internal (no demo user token to read helsinki-bikes-ops with)" in result.stdout
+    assert "0 failed, 7 skipped" in result.stdout
 
 
 def test_absent_routes_skip_instead_of_passing(tmp_path):
@@ -801,7 +948,8 @@ def test_absent_routes_skip_instead_of_passing(tmp_path):
     assert "skip  catalogue (route ckan not configured" in result.stdout
     assert "skip  chunked body (route portal-api not configured" in result.stdout
     assert "skip  App routes (route portal-ui not configured" in result.stdout
-    assert "8 skipped" in result.stdout
+    assert "skip  ogc api features (route context-endpoint not configured" in result.stdout
+    assert "9 skipped" in result.stdout
 
 
 def test_an_app_old_path_that_serves_or_sets_a_cookie_fails_the_run(tmp_path):
@@ -1485,3 +1633,63 @@ def test_a_runner_at_80_percent_of_its_limit_fails_the_run(tmp_path):
         result = run(tmp_path / name, spec, "https://example.test", "https://idm.example.test")
         assert line in result.stdout, name
 
+
+
+def test_the_smoke_client_mints_the_internal_ogc_rows_audience_from_the_seed():
+    """T-3957: dev-smoke's "ogc internal" row reads helsinki-bikes-ops with the demo user's token
+    from the smoke client; the gateway admits it only when `aud` names that Endpoint's slug
+    (PF-45), so the client's mapper carries exactly the seeded slug."""
+    seed = yaml.safe_load(
+        (PROJECT_ROOT / "components/context-gateway/seed/helsinki/helsinki-endpoint-bikes-ops.yaml").read_text()
+    )
+    clients = yaml.safe_load((PROJECT_ROOT / "components/apisix/keycloak-clients.yaml").read_text())
+    audiences = {
+        mapper["config"].get("included.custom.audience")
+        for mapper in clients["apisix-gateway"]["rawValues"]["protocolMappers"]
+    }
+    assert seed["spec"]["slug"] in audiences
+    assert "ogc_row internal helsinki-bikes-ops" in SMOKE.read_text()
+
+
+def test_the_internal_ogc_rows_reader_is_granted_the_stations_on_helsinki_bikes_ops():
+    """T-3957: on an `organization` Endpoint the gateway gives a signed-in person no `public`
+    role (GW22), so the demo viewer the row reads as needs a grant of their own on the space.
+    The Endpoint names no policyRef, so every Policy of its space applies; one of them must
+    let a group of the viewer's token read the stations, or /collections lists none."""
+    seed_dir = PROJECT_ROOT / "components/context-gateway/seed/helsinki"
+    endpoint = yaml.safe_load((seed_dir / "helsinki-endpoint-bikes-ops.yaml").read_text())
+    assert endpoint["spec"]["audience"] == "organization"
+    assert "policyRef" not in endpoint["spec"]
+    space = endpoint["spec"]["contextSpaceRef"]
+    groups = set(yaml.safe_load((PROJECT_ROOT / "components/keycloak/demo-users.yaml").read_text())["demo.viewer"]["groups"])
+    assert 'demo_user="${JC_SMOKE_DEMO_USER:-demo.viewer}"' in SMOKE.read_text()
+
+    def grants(policy):
+        spec = policy["spec"]
+        ref = spec["contextSpaceRef"]
+        return (
+            (ref.get("name") if isinstance(ref, dict) else ref) == space
+            and spec["assignee"] == {"kind": "group", "id": spec["assignee"]["id"]}
+            and spec["assignee"]["id"] in groups
+            and "retrieveOps" in spec["operations"]
+            and any(e.get("type") == "BikeHireDockingStation" for i in spec["information"] for e in i["entities"])
+        )
+
+    policies = [
+        doc
+        for path in sorted(seed_dir.glob("helsinki-policy-*.yaml"))
+        for doc in yaml.safe_load_all(path.read_text())
+        if doc and doc.get("kind") == "Policy"
+    ]
+    assert any(grants(policy) for policy in policies), "no group of demo.viewer reads the stations"
+
+
+def test_only_a_runner_refusal_that_still_recurs_fails_the_run(tmp_path):
+    """T-4055: a refusal from the apply, older than the window, passes; one inside it fails."""
+    defined = "Streams CRUD Error: failed to init processor: symbol transit_realtime.FeedMessage already defined"
+    result = run(tmp_path, dict(HEALTHY, runnerRefused=[[600, defined]]), "https://example.test", "https://idm.example.test")
+    assert "ok    the pipeline runner refused no stream in the last 1 s" in result.stdout
+    result = run(tmp_path / "standing", dict(HEALTHY, runnerRefused=[[600, defined], [0, defined]]),
+                 "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  the pipeline runner refused streams: Streams CRUD Error: failed to init processor: symbol" in result.stdout

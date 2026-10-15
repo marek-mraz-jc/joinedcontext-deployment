@@ -8,7 +8,7 @@ spec:
   contextSpaceRef: { kind: ContextSpace, name: banskabystrica-verejne }
   assigner: did:web:{orgDomain}
   assignee: { kind: role, id: public }
-  operations: [retrieveOps]
+  operations: [retrieveOps, createSubscription, retrieveSubscription, updateSubscription, deleteSubscription]
   # Every type of the space: each is open data, and no mapping writes a person's name or contact.
   information:
     - entities:

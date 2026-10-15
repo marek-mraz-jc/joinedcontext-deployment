@@ -10,7 +10,7 @@ spec:
   audience: public
   # The one Policy this endpoint evaluates: the slice of the space it publishes (EP-14).
   policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki:public-alerts
-  enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, zip, mcp]
+  enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, zip, mcp, websocket, ogc-features, odata]
   catalog:
     publisher: { name: { fi: "Helsingin kaupunki", sv: "Helsingfors stad", en: "City of Helsinki" }, uri: "https://www.hel.fi/" }
     license: CC_BY_4_0

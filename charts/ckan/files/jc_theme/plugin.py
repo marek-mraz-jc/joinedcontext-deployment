@@ -5,10 +5,13 @@ file is not an error: CKAN then looks like a plain CKAN, which is what an instal
 without branding should look like.
 """
 
+import base64
 import datetime
+import html
 import json
 import os
 import re
+from urllib.parse import quote
 
 import ckan
 import ckan.plugins as plugins
@@ -112,6 +115,57 @@ def _available(codes):
 
 BRANDING = _load()
 
+# A badge and a description per CKAN organization name, from the chart's `organizations` value,
+# for a publisher that set neither in CKAN. Same rule as the branding: a missing or broken file
+# leaves CKAN's own placeholder.
+ORGANIZATIONS_FILE = os.environ.get(
+    "JC_ORGANIZATIONS_FILE", os.path.join(os.path.dirname(BRANDING_FILE), "organizations.json"))
+
+
+def _organizations():
+    try:
+        with open(ORGANIZATIONS_FILE, encoding="utf-8") as handle:
+            block = json.load(handle)
+    except (OSError, ValueError):
+        return {}
+    return {name: entry for name, entry in block.items() if isinstance(entry, dict)} \
+        if isinstance(block, dict) else {}
+
+
+ORGANIZATIONS = _organizations()
+
+
+def _badge(entry):
+    """The publisher's initials on its colour, as an SVG data URI: on this origin, no file to mount."""
+    initials = entry.get("initials")
+    colour = entry.get("colour")
+    if not isinstance(initials, str) or not initials.strip() or not _is_colour(colour):
+        return None
+    red, green, blue = _rgb(colour)
+    ink = "#000000" if (red * 299 + green * 587 + blue * 114) // 1000 >= 128 else "#ffffff"
+    svg = (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200">'
+        '<rect width="400" height="200" fill="%s"/>'
+        '<text x="200" y="100" dy="0.35em" text-anchor="middle" fill="%s" '
+        'font-family="system-ui, sans-serif" font-size="72" font-weight="700">%s</text></svg>'
+    ) % (colour, ink, html.escape(initials.strip()[:4]))
+    return "data:image/svg+xml;base64," + base64.b64encode(svg.encode("utf-8")).decode("ascii")
+
+
+def jc_org(organization):
+    """The organization's image and description: CKAN's own first, then the chart's, in the page's
+    language when the chart gives several; None where neither has one."""
+    organization = organization or {}
+    entry = ORGANIZATIONS.get(organization.get("name") or "", {})
+    description = organization.get("description")
+    if not description:
+        words = entry.get("description")
+        if isinstance(words, dict):
+            lang = toolkit.h.lang() or "en"
+            words = words.get(lang) or words.get("en")
+        description = words if isinstance(words, str) and words.strip() else None
+    return {"image": organization.get("image_display_url") or _badge(entry), "description": description}
+
 # The words the theme adds to CKAN's own, in the four languages of the Portal (UI-82). CKAN's
 # catalogues translate everything else; a language CKAN names `cs_CZ` reads the `cs` column.
 STRINGS = {
@@ -193,7 +247,9 @@ STRINGS = {
         "cs": "Procházejte, vyhledávejte a řaďte řádky přímo zde, nebo si stáhněte celou tabulku.",
         "de": "Zeilen hier durchsuchen, filtern und sortieren oder die ganze Tabelle herunterladen.",
     },
-    "rows": {"en": "rows", "sk": "riadkov", "cs": "řádků", "de": "Zeilen"},
+    # A count's word in each language's plural forms, one, two to four, five and more (T-4066).
+    "rows": {"en": ("row", "rows", "rows"), "sk": ("riadok", "riadky", "riadkov"),
+             "cs": ("řádek", "řádky", "řádků"), "de": ("Zeile", "Zeilen", "Zeilen")},
     "table_title": {"en": "Table of the data", "sk": "Tabuľka dát", "cs": "Tabulka dat", "de": "Tabelle der Daten"},
     "tables": {"en": "tables", "sk": "tabuľky", "cs": "tabulky", "de": "Tabellen"},
     "table_what": {"en": "The table above, as one file", "sk": "Tabuľka vyššie ako jeden súbor", "cs": "Tabulka výše jako jeden soubor", "de": "Die Tabelle oben als eine Datei"},
@@ -223,7 +279,22 @@ STRINGS = {
     "details": {"en": "Details", "sk": "Podrobnosti", "cs": "Podrobnosti", "de": "Details"},
     "section_data": {"en": "Downloads", "sk": "Na stiahnutie", "cs": "Ke stažení", "de": "Downloads"},
     "section_data_lead": {"en": "The data as files, updated with the dataset.", "sk": "Dáta ako súbory, aktualizované spolu s datasetom.", "cs": "Data jako soubory, aktualizovaná spolu s datovou sadou.", "de": "Die Daten als Dateien, mit dem Datensatz aktualisiert."},
-    "section_api": {"en": "APIs", "sk": "API", "cs": "API", "de": "Schnittstellen"},
+    "section_api": {"en": "API and live access", "sk": "API a živý prístup", "cs": "API a živý přístup", "de": "API und Live-Zugriff"},
+    "usage": {"en": "How to use it", "sk": "Ako to použiť", "cs": "Jak to použít", "de": "So verwenden Sie es"},
+    "guide": {"en": "The WebSocket guide: messages, limits and examples", "sk": "Príručka k WebSocketu: správy, limity a príklady", "cs": "Průvodce WebSocketem: zprávy, limity a příklady", "de": "Die WebSocket-Anleitung: Nachrichten, Grenzen und Beispiele"},
+    "snippet": {"en": "Command to copy", "sk": "Príkaz na skopírovanie", "cs": "Příkaz ke zkopírování", "de": "Befehl zum Kopieren"},
+    "mcp": {"en": "Connect an AI assistant", "sk": "Pripojte AI asistenta", "cs": "Připojte AI asistenta", "de": "KI-Assistenten verbinden"},
+    "mcp_lead": {
+        "en": "One address for the whole catalogue (MCP). Add it once and your assistant finds every dataset, its attributes, data model and access rules by itself. Open data needs no login; signing in adds the data you may read.",
+        "sk": "Jedna adresa pre celý katalóg (MCP). Pridajte ju raz a asistent sám nájde každý dataset, jeho atribúty, dátový model a pravidlá prístupu. Otvorené dáta nepotrebujú prihlásenie; po prihlásení pribudnú dáta, ktoré smiete čítať.",
+        "cs": "Jedna adresa pro celý katalog (MCP). Přidejte ji jednou a asistent sám najde každou datovou sadu, její atributy, datový model a pravidla přístupu. Otevřená data nepotřebují přihlášení; po přihlášení přibudou data, která smíte číst.",
+        "de": "Eine Adresse für den ganzen Katalog (MCP). Einmal hinzugefügt, findet Ihr Assistent jeden Datensatz, seine Attribute, sein Datenmodell und seine Zugriffsregeln selbst. Offene Daten brauchen keine Anmeldung; nach der Anmeldung kommen die Daten hinzu, die Sie lesen dürfen.",
+    },
+    "mcp_url": {"en": "MCP server address", "sk": "Adresa MCP servera", "cs": "Adresa MCP serveru", "de": "Adresse des MCP-Servers"},
+    "mcp_claude": {"en": "Claude Code", "sk": "Claude Code", "cs": "Claude Code", "de": "Claude Code"},
+    "mcp_json": {"en": "Any other MCP client (JSON)", "sk": "Iný MCP klient (JSON)", "cs": "Jiný MCP klient (JSON)", "de": "Jeder andere MCP-Client (JSON)"},
+    "mcp_vscode": {"en": "Add to VS Code", "sk": "Pridať do VS Code", "cs": "Přidat do VS Code", "de": "Zu VS Code hinzufügen"},
+    "mcp_cursor": {"en": "Add to Cursor", "sk": "Pridať do Cursor", "cs": "Přidat do Cursor", "de": "Zu Cursor hinzufügen"},
     "section_api_lead": {"en": "For applications and AI assistants that query the data live.", "sk": "Pre aplikácie a AI asistentov, ktorí sa na dáta pýtajú naživo.", "cs": "Pro aplikace a AI asistenty, kteří se na data ptají živě.", "de": "Für Anwendungen und KI-Assistenten, die die Daten live abfragen."},
     "section_schema": {"en": "Data model", "sk": "Dátový model", "cs": "Datový model", "de": "Datenmodell"},
     "section_schema_lead": {"en": "What each field means, in the formats validators and developers read.", "sk": "Čo znamená každé pole, vo formátoch pre validátory a vývojárov.", "cs": "Co znamená každé pole, ve formátech pro validátory a vývojáře.", "de": "Was jedes Feld bedeutet, in den Formaten für Validatoren und Entwickler."},
@@ -307,6 +378,10 @@ FORMATS = {
     "JSON": {"en": "Machine-readable JSON", "sk": "Strojovo čitateľný JSON", "cs": "Strojově čitelný JSON", "de": "Maschinenlesbares JSON"},
     "XLSX": {"en": "A spreadsheet", "sk": "Tabuľkový súbor", "cs": "Tabulkový soubor", "de": "Eine Tabellendatei"},
     "ZIP": {"en": "Everything in one download", "sk": "Všetko v jednom súbore", "cs": "Vše v jednom souboru", "de": "Alles in einem Download"},
+    "WEBSOCKET": {"en": "Live updates as they happen (WebSocket)", "sk": "Zmeny naživo, hneď ako nastanú (WebSocket)", "cs": "Změny živě, hned jak nastanou (WebSocket)", "de": "Änderungen live, sobald sie geschehen (WebSocket)"},
+    "OGCFEAT": {"en": "Map layers for GIS (OGC API - Features)", "sk": "Mapové vrstvy pre GIS (OGC API - Features)", "cs": "Mapové vrstvy pro GIS (OGC API - Features)", "de": "Kartenebenen für GIS (OGC API - Features)"},
+    "ODATA": {"en": "For Excel and Power BI (OData)", "sk": "Pre Excel a Power BI (OData)", "cs": "Pro Excel a Power BI (OData)", "de": "Für Excel und Power BI (OData)"},
+    "STA": {"en": "Sensors and observations (SensorThings API)", "sk": "Senzory a merania (SensorThings API)", "cs": "Senzory a měření (SensorThings API)", "de": "Sensoren und Messungen (SensorThings API)"},
     "MCP": {"en": "For AI assistants (Model Context Protocol)", "sk": "Pre AI asistentov (Model Context Protocol)", "cs": "Pro AI asistenty (Model Context Protocol)", "de": "Für KI-Assistenten (Model Context Protocol)"},
     "LINKML": {"en": "The data model", "sk": "Dátový model", "cs": "Datový model", "de": "Das Datenmodell"},
     "SHACL": {"en": "Validation rules of the data model", "sk": "Pravidlá kontroly dátového modelu", "cs": "Pravidla kontroly datového modelu", "de": "Prüfregeln des Datenmodells"},
@@ -461,7 +536,7 @@ def jc_live(pkg):
 
 # Where a resource belongs on the dataset page (T-3009). The model artifacts are published under
 # the endpoint's `/schema/` path; the API formats answer queries rather than being files.
-API_FORMATS = ("NGSI-LD", "MCP")
+API_FORMATS = ("NGSI-LD", "WEBSOCKET", "MCP", "OGCFEAT", "ODATA", "STA")
 DATA_ORDER = ("CSV", "GEOJSON", "JSON", "XLSX", "ZIP")
 
 
@@ -481,6 +556,70 @@ def _order(resource):
     known = DATA_ORDER.index(name) if name in DATA_ORDER else len(DATA_ORDER)
     api = API_FORMATS.index(name) if name in API_FORMATS else len(API_FORMATS)
     return (not resource.get("datastore_active"), known, api, name, resource.get("name") or "")
+
+
+def jc_is_api(resource):
+    """Whether a resource is an address a program calls rather than a file (T-3887)."""
+    return _section(resource or {}) == "api"
+
+
+# An address in a usage text, and a credential where `$TOKEN` belongs: a bearer value or a JWT.
+_ADDRESS = re.compile(r"\b(?:https?|wss?)://([^/\s'\"<>`]+)")
+_CREDENTIAL = re.compile(
+    r"(?i)(?:bearer[ .]+(?!\$TOKEN\b)[A-Za-z0-9._~+/=-]{16,}|\beyJ[A-Za-z0-9_-]{8,}\.)")
+
+
+def _docs_base():
+    """The installation's documentation, from branding `documentationBaseUrl`: https only."""
+    base = BRANDING.get("documentationBaseUrl")
+    if not (isinstance(base, str) and base.startswith("https://") and _is_url(base)) \
+            or re.search(r"[\s\"'<>]", base):
+        return None
+    return base.rstrip("/")
+
+
+def _shown(text):
+    """Whether a usage block may reach the page: every address it names is on the platform's
+    domain or the documentation's host, and it carries no credential (T-3887, EP-110). The text is
+    the publisher's, and a page must never show an internal service address or a token."""
+    if _CREDENTIAL.search(text):
+        return False
+    domain = BRANDING.get("domain") or ""
+    docs = _docs_base()
+    docs_host = docs[len("https://"):].split("/", 1)[0] if docs else None
+    for host in _ADDRESS.findall(text):
+        on_platform = domain and (host == domain or host.endswith("." + domain))
+        if not (on_platform or host == docs_host):
+            return False
+    return True
+
+
+def jc_usage(resource):
+    """An API resource's usage description as blocks for the page (T-3887, EP-108): paragraphs,
+    and the indented code `jcctl` writes as fields with a copy button. A block that names a
+    foreign address or holds a credential is left out; anything but an API resource has none."""
+    resource = resource or {}
+    text = resource.get("description")
+    if not jc_is_api(resource) or not isinstance(text, str):
+        return []
+    key = re.sub(r"[^A-Za-z0-9_-]", "", str(resource.get("id") or "")) or "resource"
+    blocks = []
+    for number, chunk in enumerate(re.split(r"\n[ \t]*\n", text.strip("\n"))):
+        lines = chunk.split("\n")
+        code = all(line.startswith("    ") for line in lines if line.strip())
+        body = "\n".join(line[4:] for line in lines) if code else " ".join(line.strip() for line in lines)
+        if body.strip() and _shown(body):
+            blocks.append({"code": code, "text": body, "id": "jc-use-%s-%d" % (key, number)})
+    return blocks
+
+
+def jc_guide(resource):
+    """The WebSocket guide (API/07) for a WebSocket resource, when the installation names its
+    documentation; None otherwise (T-3887)."""
+    base = _docs_base()
+    if base and ((resource or {}).get("format") or "").strip().upper() == "WEBSOCKET":
+        return base + "/API/07-websocket"
+    return None
 
 
 def jc_resource_sections(pkg):
@@ -578,6 +717,17 @@ def jc_number(value):
         return ""
 
 
+def jc_rows(value):
+    """A row count with its word in the page's language: "1 row", "3 riadky", "5 řádků"."""
+    number = jc_number(value)
+    if not number:
+        return ""
+    count = abs(int(value))
+    words = STRINGS["rows"].get(_language()) or STRINGS["rows"]["en"]
+    form = 0 if count == 1 else 1 if 2 <= count <= 4 else 2
+    return "%s %s" % (number, words[form])
+
+
 def jc_recent(limit=6):
     """The public datasets changed last, for the home page."""
     from ckan.lib.search import SearchError
@@ -605,6 +755,30 @@ def jc_about_site():
         "intro": intro,
         "dcat": plugins.plugin_loaded("dcat"),
         "email": email if "@" in email else "",
+    }
+
+
+_HOST = re.compile(r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$")
+MCP_NAME = "joinedcontext"
+
+
+def jc_mcp_install():
+    """The "Connect an AI assistant" panel (T-4114, EP-113): the installation's MCP hub and one
+    ready line per client, or None without a valid domain. Every line names the hub alone, never a
+    dataset, a token or a key, so one installation serves the whole catalogue (EP-110)."""
+    domain = BRANDING.get("domain")
+    if not (isinstance(domain, str) and _HOST.match(domain)):
+        return None
+    url = "https://%s/api/mcp" % domain
+    server = {"type": "http", "url": url}
+    vscode = json.dumps(dict(name=MCP_NAME, **server), separators=(",", ":"))
+    cursor = base64.b64encode(json.dumps({"url": url}, separators=(",", ":")).encode()).decode()
+    return {
+        "url": url,
+        "claude": "claude mcp add --transport http %s %s" % (MCP_NAME, url),
+        "json": json.dumps({"mcpServers": {MCP_NAME: server}}, indent=2),
+        "vscode": "vscode:mcp/install?" + quote(vscode, safe=""),
+        "cursor": "cursor://anysphere.cursor-deeplink/mcp/install?name=%s&config=%s" % (MCP_NAME, quote(cursor, safe="")),
     }
 
 
@@ -691,18 +865,24 @@ class JcThemePlugin(plugins.SingletonPlugin):
     def get_helpers(self):
         return {
             "jc_branding": jc_branding,
+            "jc_org": jc_org,
             "jc_t": jc_t,
             "jc_about": jc_about,
             "jc_more": jc_more,
             "jc_live": jc_live,
             "jc_resource_sections": jc_resource_sections,
             "jc_resource_label": jc_resource_label,
+            "jc_is_api": jc_is_api,
+            "jc_usage": jc_usage,
+            "jc_guide": jc_guide,
             "jc_previews": jc_previews,
             "jc_total": jc_total,
             "jc_number": jc_number,
+            "jc_rows": jc_rows,
             "jc_formats": jc_formats,
             "jc_recent": jc_recent,
             "jc_portal_url": jc_portal_url,
+            "jc_mcp_install": jc_mcp_install,
             "jc_assistant_widget": jc_assistant_widget,
             "jc_about_site": jc_about_site,
             "jc_sso_error": jc_sso_error,

@@ -249,6 +249,45 @@ def test_the_table_comes_before_the_about_list_on_the_dataset_page():
     assert re.search(r"<iframe[^>]*title=\"\{\{ h.jc_t\('table_title'\) \}\}: \{\{ name \}\}", read)
 
 
+def test_the_mcp_panel_names_the_installation_s_hub_and_nothing_else(theme):
+    """T-4114, EP-113: one address for the whole catalogue, a ready line per client."""
+    from base64 import b64decode
+    from urllib.parse import parse_qs, unquote, urlsplit
+
+    mcp = theme.jc_mcp_install()
+    hub = "https://dev.example/api/mcp"
+    assert mcp["url"] == hub
+    assert mcp["claude"] == f"claude mcp add --transport http joinedcontext {hub}"
+    assert json.loads(mcp["json"]) == {"mcpServers": {"joinedcontext": {"type": "http", "url": hub}}}
+    assert mcp["vscode"].startswith("vscode:mcp/install?")
+    assert json.loads(unquote(mcp["vscode"].split("?", 1)[1])) == {"name": "joinedcontext", "type": "http", "url": hub}
+    cursor = urlsplit(mcp["cursor"])
+    assert (cursor.scheme, cursor.netloc, cursor.path) == ("cursor", "anysphere.cursor-deeplink", "/mcp/install")
+    query = parse_qs(cursor.query)
+    assert query["name"] == ["joinedcontext"]
+    assert json.loads(b64decode(query["config"][0])) == {"url": hub}
+    # No dataset, no token: every line is the same for every page (EP-110).
+    for line in mcp.values():
+        assert "endpoint/" not in unquote(line) and "token" not in line.lower() and "bearer" not in line.lower()
+
+
+@pytest.mark.parametrize("domain", [None, "", "dev.example\" onmouseover=\"x", "dev.example/evil", "localhost", 7])
+def test_the_mcp_panel_is_left_out_without_a_plain_domain(theme, domain):
+    theme.BRANDING["domain"] = domain
+    assert theme.jc_mcp_install() is None
+
+
+def test_the_mcp_panel_is_on_the_home_page_and_every_dataset_page_with_its_copy_script():
+    panel = (THEME / "templates__snippets__jc_mcp_install.html").read_text()
+    for page in ("templates__home__index.html", "templates__package__read.html"):
+        text = (THEME / page).read_text()
+        assert "{% snippet 'snippets/jc_mcp_install.html'" in text, page
+        assert "url_for_static('/jc-copy.js')" in text, page
+    # One status line per page: the live box's when the dataset page has one.
+    assert '{% if not live %}<p class="visually-hidden" role="status"' in panel
+    assert panel.count("data-jc-copy=") == 3
+
+
 def test_each_resource_has_its_one_action_named_for_a_screen_reader():
     item = (THEME / "templates__package__snippets__resource_item.html").read_text()
     assert "dropdown" not in item and "{{ _('Explore') }}" not in item
@@ -578,6 +617,10 @@ def test_a_search_filter_with_nothing_to_choose_is_left_out_and_labels_are_whole
     css = (THEME / "public__jc-theme.css").read_text()
     assert ".nav-facet .nav-item > a .item-label { overflow-wrap: anywhere; }" in css
     assert "text-overflow: ellipsis; white-space: nowrap; }\n" not in css.split(".nav-facet .nav-item > a .item-label", 1)[1][:80]
+    # Owner, 2026-10-12: an empty footer drew a bordered strip under a short list (Licence), so the
+    # footer is printed only inside the condition that gives it a link.
+    guard = facets.index("{% if not limited or h.has_more_facets(name, search_facets) %}")
+    assert guard < facets.index('<p class="module-footer">') < facets.index("{% endif %}\n      </section>")
 
 
 def test_the_table_view_stacks_its_controls_below_desktop_width():
@@ -637,3 +680,197 @@ def test_the_catalogue_pod_is_told_its_assistant_only_when_the_assistant_is_depl
         path.write_text(text.replace("\n  - assistant\n", "\n", 1))
 
     assert widget(rendered_variant("dev", without_assistant)) == ""
+
+
+# The usage texts `jcctl publish ckan` writes on the API resources (T-3886), for a restricted
+# Endpoint on dev.example: a paragraph, an indented command, a paragraph.
+WS_USAGE = (
+    "Live updates: open one WebSocket, subscribe to the entities you want.\n\n"
+    "    websocat -H \"Authorization: Bearer $TOKEN\" 'wss://dev.example/api/endpoint/hkiair/ws'\n"
+    "    {\"metadata\":{\"x-op\":\"x-subscribe\",\"x-id\":\"s1\"},\"body\":{\"type\":\"Subscription\"}}\n\n"
+    "Always live: the catalogue holds this link, never a copy. Answers what the endpoint's policy lets "
+    "the caller read: send a bearer token for the endpoint; without one it answers 401."
+)
+
+EVERY_SURFACE = PUBLISHED_RESOURCES + [
+    {"id": "r-ws", "name": "Live updates over WebSocket", "format": "WebSocket", "url": ENDPOINT + "ws",
+     "description": WS_USAGE},
+    {"id": "r-ogc", "name": "OGC API - Features", "format": "OGCFEAT", "url": ENDPOINT + "ogc/features/"},
+    {"id": "r-odata", "name": "OData v4", "format": "OData", "url": ENDPOINT + "odata/v4/"},
+    {"id": "r-xlsx", "name": "Excel spreadsheet", "format": "XLSX", "url": ENDPOINT + "file.xlsx"},
+]
+
+
+def test_every_live_surface_is_in_the_api_and_live_access_section(theme):
+    """T-3887, EP-108: WebSocket, OGC API - Features and OData are APIs a program calls, beside
+    NGSI-LD and MCP; the spreadsheet is a download."""
+    sections = {s["key"]: s for s in theme.jc_resource_sections({"resources": EVERY_SURFACE})}
+    assert [i["resource"]["id"] for i in sections["api"]["items"]] == ["r-ngsi", "r-ws", "r-mcp", "r-ogc", "r-odata"]
+    assert sections["api"]["title"] == "API and live access"
+    assert "r-xlsx" in [i["resource"]["id"] for i in sections["data"]["items"]]
+    words = {i["resource"]["id"]: i["what"] for i in sections["api"]["items"]}
+    assert "WebSocket" in words["r-ws"] and "Power BI" in words["r-odata"]
+    # A dataset without the WebSocket surface shows no WebSocket row.
+    without = [r for r in EVERY_SURFACE if r["format"] != "WebSocket"]
+    api = [s for s in theme.jc_resource_sections({"resources": without}) if s["key"] == "api"][0]
+    assert all(i["format"] != "WebSocket" for i in api["items"])
+
+
+def test_an_api_resource_shows_its_usage_with_its_commands_to_copy(theme):
+    (ws,) = [r for r in EVERY_SURFACE if r["id"] == "r-ws"]
+    blocks = theme.jc_usage(ws)
+    assert [b["code"] for b in blocks] == [False, True, False]
+    command = blocks[1]
+    assert command["text"].startswith("websocat -H \"Authorization: Bearer $TOKEN\" 'wss://dev.example/")
+    assert command["id"] == "jc-use-r-ws-1"
+    # A file has no usage blocks; its description is CKAN's one-line extract.
+    assert theme.jc_usage({"id": "r-csv", "format": "CSV", "url": ENDPOINT + "file.csv", "description": WS_USAGE}) == []
+    assert theme.jc_usage({"format": "MCP"}) == []
+
+
+@pytest.mark.parametrize("leak", [
+    "    curl -H \"Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ4In0.c2ln\" 'https://dev.example/x'",
+    "    curl -H \"Authorization: Bearer 0123456789abcdef0123\" 'https://dev.example/x'",
+    "    websocat 'wss://context-gateway.jc.svc.cluster.local:8080/api/endpoint/hkiair/ws'",
+    "Open https://dev.example.evil/x to start.",
+])
+def test_a_usage_block_with_a_token_or_an_internal_address_never_reaches_the_page(theme, leak):
+    """EP-110: the page shows `$TOKEN` and the platform's own addresses, nothing else."""
+    resource = {"id": "r", "format": "NGSI-LD", "url": ENDPOINT, "description": "Query it.\n\n" + leak}
+    assert [b["text"] for b in theme.jc_usage(resource)] == ["Query it."]
+
+
+def test_the_websocket_guide_is_linked_only_from_the_installation_s_documentation(theme, monkeypatch):
+    ws = {"format": "WebSocket"}
+    assert theme.jc_guide(ws) is None
+    monkeypatch.setitem(theme.BRANDING, "documentationBaseUrl", "https://docs.dev.example/")
+    assert theme.jc_guide(ws) == "https://docs.dev.example/API/07-websocket"
+    assert theme.jc_guide({"format": "NGSI-LD"}) is None
+    # A usage text may link the guide's host.
+    linked = {"id": "r", "format": "WebSocket", "description": "Guide: https://docs.dev.example/API/07-websocket"}
+    assert len(theme.jc_usage(linked)) == 1
+    for unsafe in ("javascript:alert(1)", "http://docs.dev.example", "https://docs.dev.example/\"onload=x"):
+        monkeypatch.setitem(theme.BRANDING, "documentationBaseUrl", unsafe)
+        assert theme.jc_guide(ws) is None, unsafe
+
+
+def test_an_api_resource_page_shows_its_usage_where_ckan_said_no_view():
+    page = (THEME / "templates__package__resource_read.html").read_text()
+    assert "(not api and h.check_access('resource_view_create'" in page
+    assert "package/snippets/jc_usage.html" in page and "/jc-copy.js" in page
+    item = (THEME / "templates__package__snippets__resource_item.html").read_text()
+    assert "h.jc_usage(res) if jc_section == 'api' and not url_is_edit" in item
+    snippet = (THEME / "templates__package__snippets__jc_usage.html").read_text()
+    assert 'data-jc-copy="{{ block.id }}"' in snippet and '<pre id="{{ block.id }}"' in snippet
+    assert "|safe" not in snippet
+    # The copy button reads a block's text as well as a field's value.
+    assert "field.value !== undefined ? field.value : field.textContent" in (THEME / "public__jc-copy.js").read_text()
+
+
+@pytest.mark.parametrize("lang, counts", [
+    ("en", {1: "1 row", 2: "2 rows", 5: "5 rows", 0: "0 rows", 1234: "1 234 rows"}),
+    ("sk", {1: "1 riadok", 3: "3 riadky", 5: "5 riadkov"}),
+    ("cs_CZ", {1: "1 řádek", 4: "4 řádky", 12: "12 řádků"}),
+    ("de", {1: "1 Zeile", 2: "2 Zeilen"}),
+    ("fi", {1: "1 row", 7: "7 rows"}),
+])
+def test_a_row_count_takes_its_language_s_plural(theme, lang, counts):
+    """T-4066: the owner's photo read "GtfsAgency 1 rows"."""
+    theme.page.lang = lang
+    for count, words in counts.items():
+        assert theme.jc_rows(count) == words
+    assert theme.jc_rows(None) == ""
+    read = (THEME / "templates__package__read.html").read_text()
+    assert "h.jc_t('rows')" not in read and read.count("h.jc_rows(") == 2
+
+
+def test_usage_reads_as_markdown_and_its_commands_wrap(theme):
+    """T-4066: `query_entities` showed its backticks, and a long command was a one-line box
+    clipped mid-word behind a horizontal scrollbar."""
+    snippet = (THEME / "templates__package__snippets__jc_usage.html").read_text()
+    # CKAN's render_markdown runs the sanitiser; the text never reaches the page as raw HTML.
+    assert "h.render_markdown(block.text)" in snippet and "<p>{{ block.text }}</p>" not in snippet
+    assert "|safe" not in snippet
+    css = (THEME / "public__jc-theme.css").read_text()
+    # Owner, 2026-10-12: a textarea sized to its text only in Chromium; a block wraps everywhere.
+    box = re.search(r"^\.jc-copy-code pre \{([^}]*)\}", css, re.M).group(1)
+    assert "white-space: pre-wrap" in box and "overflow-wrap: anywhere" in box and "white-space: pre;" not in box
+    assert "<textarea" not in snippet
+    config = '    {"mcpServers":{"helsinki-transport":{"type":"http","url":"https://dev.example/api/endpoint/ajaezssvx3bwqgejgepmq4ig3frgan4e/mcp"}}}'
+    resource = {"id": "r", "format": "MCP", "url": ENDPOINT + "mcp", "description": "Tools: `get_entity`.\n\n" + config}
+    text, code = theme.jc_usage(resource)
+    assert text["text"] == "Tools: `get_entity`." and not text["code"]
+    assert code["code"] and code["text"] == config[4:]
+
+
+def test_the_format_badge_sits_beside_the_resource_name():
+    """T-4066: the badge stood alone in a wide left column beside a long usage text."""
+    item = (THEME / "templates__package__snippets__resource_item.html").read_text()
+    head = item[item.index('<div class="jc-resource-head">'):item.index("</div>", item.index('<div class="jc-resource-head">'))]
+    assert "jc-chip" in head and 'class="heading"' in head
+    css = (THEME / "public__jc-theme.css").read_text()
+    assert "grid-template-columns: 6.5rem" not in css
+
+
+def test_a_publisher_without_a_picture_gets_its_badge_and_words_in_the_page_language(theme, tmp_path):
+    import base64
+    block = tmp_path / "organizations.json"
+    block.write_text(json.dumps({
+        "hel-fi": {"initials": "HEL", "colour": "#0000bf", "description": {"en": "Helsinki data", "sk": "Údaje Helsínk"}},
+        "bad": {"initials": "<b>", "colour": "red"},
+        "evil": {"initials": "<script>", "colour": "#ffffff"},
+    }))
+    theme.ORGANIZATIONS_FILE = str(block)
+    theme.ORGANIZATIONS = theme._organizations()
+    card = theme.jc_org({"name": "hel-fi", "description": "", "image_display_url": ""})
+    assert card["description"] == "Helsinki data"
+    svg = base64.b64decode(card["image"].removeprefix("data:image/svg+xml;base64,")).decode()
+    assert ">HEL</text>" in svg and 'fill="#0000bf"' in svg and 'fill="#ffffff"' in svg
+    theme.page.lang = "sk"
+    assert theme.jc_org({"name": "hel-fi"})["description"] == "Údaje Helsínk"
+    # CKAN's own picture and words win; an unknown publisher keeps CKAN's placeholder.
+    assert theme.jc_org({"name": "hel-fi", "description": "own", "image_display_url": "/x.png"}) == \
+        {"image": "/x.png", "description": "own"}
+    assert theme.jc_org({"name": "nobody"}) == {"image": None, "description": None}
+    assert theme.jc_org(None) == {"image": None, "description": None}
+    # A colour that is not #rgb/#rrggbb draws nothing; initials are text, never markup.
+    assert theme.jc_org({"name": "bad"})["image"] is None
+    evil = base64.b64decode(theme.jc_org({"name": "evil"})["image"].split(",", 1)[1]).decode()
+    assert "<script>" not in evil and "&lt;scr" in evil and 'fill="#000000"' in evil
+
+
+def test_a_missing_or_broken_organizations_file_leaves_ckan_s_placeholder(theme, tmp_path):
+    theme.ORGANIZATIONS_FILE = str(tmp_path / "absent.json")
+    assert theme._organizations() == {}
+    broken = tmp_path / "broken.json"
+    broken.write_text("[1, 2")
+    theme.ORGANIZATIONS_FILE = str(broken)
+    assert theme._organizations() == {}
+    broken.write_text("[1, 2]")
+    assert theme._organizations() == {}
+
+
+def test_every_demo_publisher_has_a_badge_and_the_file_reaches_the_pod(rendered):
+    docs = rendered("dev")
+    (config,) = [d for d in docs if d.get("kind") == "ConfigMap" and d["metadata"]["name"].endswith("ckan-theme")]
+    organizations = json.loads(config["data"]["organizations.json"])
+    assert {"hel-fi", "praha", "zilina", "banskabystrica", "bbsk"} <= set(organizations)
+    for name, entry in organizations.items():
+        assert re.fullmatch(r"#[0-9a-fA-F]{6}", entry["colour"]) and entry["initials"], name
+    for name in ("hel-fi", "praha", "zilina"):
+        assert organizations[name]["description"]["en"] and organizations[name]["description"]["sk"], name
+    (ckan,) = [d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"].endswith("ckan")
+               and any(c["name"] == "ckan" for c in d["spec"]["template"]["spec"]["containers"])]
+    (branding,) = [v for v in ckan["spec"]["template"]["spec"]["volumes"] if v["name"] == "branding"]
+    assert {"key": "organizations.json", "path": "organizations.json"} in branding["configMap"]["items"]
+
+
+def test_a_dataset_page_puts_its_publisher_above_and_gives_the_data_the_whole_width():
+    """Owner, 2026-10-12: the publisher sidebar took a quarter of the page from the tables."""
+    base = (THEME / "templates__package__read_base.html").read_text()
+    assert "{% block secondary %}{% endblock %}" in base
+    assert '<div class="primary col-12" role="main">' in base and "self.primary_content()" in base
+    assert "package/snippets/jc_publisher.html" in base.split("{% block pre_primary %}", 1)[1]
+    bar = (THEME / "templates__package__snippets__jc_publisher.html").read_text()
+    assert "h.jc_org(organization)" in bar and "placeholder-organization.png" in bar
+    assert ".jc-publisher {" in (THEME / "public__jc-theme.css").read_text()

@@ -14,14 +14,22 @@ the vendored copy, because the copy must stay editable only by the vendor script
                    not a trade this chart gets to make on an operator's behalf.
 */ -}}
 {{- if and .Values.podSecurity.enabled .Values.podSecurity.namespaces }}
-{{- range $name := .Values.podSecurity.policies }}
+{{- range $name := .Values.podSecurity.staged }}
+{{- if has $name $.Values.podSecurity.policies }}
+{{- fail (printf "%s is both staged and promoted: remove it from podSecurity.staged" $name) }}
+{{- end }}
+{{- end }}
+{{- $actions := dict }}
+{{- range $name := .Values.podSecurity.policies }}{{ $_ := set $actions $name $.Values.failureAction }}{{ end }}
+{{- range $name := .Values.podSecurity.staged }}{{ $_ := set $actions $name "Audit" }}{{ end }}
+{{- range $name := concat .Values.podSecurity.policies .Values.podSecurity.staged }}
 {{- $policy := $.Files.Get (printf "files/upstream/%s.yaml" $name) | fromYaml }}
 {{- if not $policy.spec }}
 {{- fail (printf "files/upstream/%s.yaml did not parse as a ClusterPolicy — re-run .ci/policies/vendor-upstream-policies.sh" $name) }}
 {{- end }}
 {{- $_ := unset $policy.spec "validationFailureAction" }}
 {{- range $rule := $policy.spec.rules }}
-{{- $_ := set $rule.validate "failureAction" $.Values.failureAction }}
+{{- $_ := set $rule.validate "failureAction" (index $actions $name) }}
 {{- range $matcher := $rule.match.any }}
 {{- $_ := set $matcher.resources "namespaces" $.Values.podSecurity.namespaces }}
 {{- end }}

@@ -1,0 +1,7 @@
+---
+# The projects' seed (T-3998): one ConfigMap per project, gitea-seed-<project>, mounted by the
+# bootstrap Job beside the organization's files, which stay in gitea-bootstrap. A release of its
+# own for the reason the sample apps have theirs (T-3175): Helm keeps a release in one Secret of
+# at most 1 MiB, and the Helsinki transit seed took gitea-bootstrap past its budget.
+configMaps: gitea-seed
+apps: {}

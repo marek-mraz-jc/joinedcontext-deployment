@@ -13,7 +13,7 @@ spec:
   slug: hub7kq3zr5mx2vwt6nbc4pjd7fgs3a2y
   audience: public
   policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki-hub:public-hub
-  enabledRepresentations: [ngsi-ld, geojson, csv, mcp]
+  enabledRepresentations: [ngsi-ld, geojson, csv, mcp, websocket, ogc-features, odata]
   # No licence: the hub also serves the indicators of `helsinki-kpi`, which have no source a licence
   # can be read from yet (T-2793).
   catalog:

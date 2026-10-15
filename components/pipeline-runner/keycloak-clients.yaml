@@ -80,6 +80,16 @@ banskabystrica-pipelines:
     directAccessGrantsEnabled: false
     serviceAccountsEnabled: true
     protocolMappers:
+      - name: portal-internal-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        # The Portal's internal listener: the streams' outcome, rejected and samples sinks post
+        # with this client's own token, admitted for this project's pipelines only (T-3193, T-4038).
+        config:
+          included.custom.audience: portal-internal
+          access.token.claim: 'true'
+          id.token.claim: 'false'
       - name: banskabystrica-mesto-audience
         protocol: openid-connect
         protocolMapper: oidc-audience-mapper
@@ -132,6 +142,16 @@ bbsk-pipelines:
     directAccessGrantsEnabled: false
     serviceAccountsEnabled: true
     protocolMappers:
+      - name: portal-internal-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        # The Portal's internal listener: the streams' outcome, rejected and samples sinks post
+        # with this client's own token, admitted for this project's pipelines only (T-3193, T-4038).
+        config:
+          included.custom.audience: portal-internal
+          access.token.claim: 'true'
+          id.token.claim: 'false'
       - name: bbsk-kraj-audience
         protocol: openid-connect
         protocolMapper: oidc-audience-mapper
@@ -175,6 +195,16 @@ praha-pipelines:
     directAccessGrantsEnabled: false
     serviceAccountsEnabled: true
     protocolMappers:
+      - name: portal-internal-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        # The Portal's internal listener: the streams' outcome, rejected and samples sinks post
+        # with this client's own token, admitted for this project's pipelines only (T-3193, T-4038).
+        config:
+          included.custom.audience: portal-internal
+          access.token.claim: 'true'
+          id.token.claim: 'false'
       - name: praha-mesto-audience
         protocol: openid-connect
         protocolMapper: oidc-audience-mapper
@@ -203,6 +233,16 @@ zilina-pipelines:
     directAccessGrantsEnabled: false
     serviceAccountsEnabled: true
     protocolMappers:
+      - name: portal-internal-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        # The Portal's internal listener: the streams' outcome, rejected and samples sinks post
+        # with this client's own token, admitted for this project's pipelines only (T-3193, T-4038).
+        config:
+          included.custom.audience: portal-internal
+          access.token.claim: 'true'
+          id.token.claim: 'false'
       - name: zilina-mesto-audience
         protocol: openid-connect
         protocolMapper: oidc-audience-mapper

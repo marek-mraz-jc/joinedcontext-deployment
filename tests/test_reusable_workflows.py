@@ -189,6 +189,29 @@ def test_a_helm_test_hook_is_not_a_deployed_workload():
     assert digest_check(HOOK).returncode == 0
 
 
+POLICY_PATTERN = """
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata: { name: require-image-checksum }
+spec:
+  rules:
+    - name: require-image-checksum
+      validate:
+        pattern:
+          spec:
+            containers:
+              - image: '*@*'
+"""
+
+
+def test_a_kyverno_pattern_is_not_a_deployed_workload():
+    """T-1711: the vendored require-image-checksum policy names `image: '*@*'` as a pattern;
+    a workload with a mutable tag beside it is still refused."""
+    assert digest_check(POLICY_PATTERN).returncode == 0
+    result = digest_check(POLICY_PATTERN + "---" + MUTABLE)
+    assert result.returncode == 1 and "require-image-checksum" not in result.stderr
+
+
 # --- one repository, one digest (T-2270; OPS-13, AG-52) -------------------------------------
 
 PLATFORM = "ghcr.io/marek-mraz-jc/joinedcontext-platform"

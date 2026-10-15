@@ -13,5 +13,5 @@ demo-feeds:
   feed:
     # The runner's own Bento pin (components/pipeline-runner/images.yaml).
     repository: 'ghcr.io/warpstreamlabs/bento'
-    tag: '1.21.1'
-    digest: 'sha256:656c55de3f8deddd4ee743f3c76f3b497e67324e940f2bc1769693cd8b906364'
+    tag: '1.22.0'
+    digest: 'sha256:ef674bebae45793c982c350d8f37c2c7661133c1dc65a5517fb977b36dc09841'

@@ -79,8 +79,16 @@ def test_switched_on_the_service_mints_only_in_the_pipelines_namespace_with_its_
     assert binding["subjects"] == [{"kind": "ServiceAccount", "name": "pipeline-tokens", "namespace": tokens_namespace}]
 
 
+def without_dev_switch(tree):
+    (tree / "deployment/environments/dev/pipeline-runner.yaml.gotmpl").unlink()
+
+
 def test_switched_on_the_portal_keeps_the_pipelines_accounts_there_and_nothing_else(rendered_variant):
-    docs = rendered_variant("dev", enable_tokens)
+    def accounts_only(tree):
+        without_dev_switch(tree)
+        enable_tokens(tree)
+
+    docs = rendered_variant("dev", accounts_only)
     identities = one(docs, "Role", "pipeline-tokens")["metadata"]["namespace"]
     portal = one(docs, "Deployment", "portal")
     env = {e["name"]: e.get("value") for c in portal["spec"]["template"]["spec"]["containers"] for e in c.get("env", [])}
@@ -102,3 +110,51 @@ def test_off_the_portal_has_no_pipeline_namespace_and_no_grant(rendered):
     portal = one(docs, "Deployment", "portal")
     names = {e["name"] for c in portal["spec"]["template"]["spec"]["containers"] for e in c.get("env", [])}
     assert "JC_PORTAL_PIPELINE_NAMESPACE" not in names
+
+
+def test_dev_streams_present_their_own_pipeline_and_the_runner_resolves_no_secret_for_them(rendered):
+    """T-4044: on dev every stream takes its token from the token service, so the Portal renders
+    no client secret into one and the runner's streams API has none to hand out."""
+    docs = rendered("dev")
+    one(docs, "Deployment", "pipeline-tokens")
+    identities = one(docs, "Role", "pipeline-tokens")["metadata"]["namespace"]
+    portal = one(docs, "Deployment", "portal")
+    env = {e["name"]: e.get("value") for c in portal["spec"]["template"]["spec"]["containers"] for e in c.get("env", [])}
+    assert env["JC_PORTAL_PIPELINE_IDENTITY"] == "pipeline"
+    assert env["JC_PORTAL_PIPELINE_NAMESPACE"] == identities
+
+
+def test_on_dev_the_runner_reads_no_client_secret(rendered):
+    """T-4050: with the streams and the pipeline-test harness on the token service, the runner
+    carries no `JC_CLIENT_SECRET*` at all, so no `{project}-pipelines` secret is read by a
+    workload and the owner can retire them. Without the switch it still carries them."""
+    def secret_env(docs):
+        runner = one(docs, "Deployment", "pipeline-runner")
+        return sorted(
+            e["name"]
+            for c in runner["spec"]["template"]["spec"]["containers"]
+            for e in c.get("env", [])
+            if e["name"].startswith("JC_CLIENT_SECRET") or "secretKeyRef" in e.get("valueFrom", {})
+        )
+
+    assert secret_env(rendered("dev")) == []
+    assert "JC_CLIENT_SECRET_HELSINKI" in secret_env(rendered("local"))
+
+
+@pytest.mark.parametrize("environment", ["local", "production"])
+def test_elsewhere_the_streams_stay_on_the_project_client_until_switched(rendered, environment):
+    portal = one(rendered(environment), "Deployment", "portal")
+    env = {e["name"]: e.get("value") for c in portal["spec"]["template"]["spec"]["containers"] for e in c.get("env", [])}
+    assert env["JC_PORTAL_PIPELINE_IDENTITY"] == "project"
+
+
+def test_the_streams_switch_alone_switches_nothing(rendered_variant):
+    """`identities.streams` without the token service would send every stream to a service that
+    is not there: the Portal keeps the project client."""
+    def streams_only(tree):
+        path = tree / "deployment/environments/dev/pipeline-runner.yaml.gotmpl"
+        path.write_text("---\npipeline-runner:\n  identities:\n    streams: true\n")
+
+    portal = one(rendered_variant("dev", streams_only), "Deployment", "portal")
+    env = {e["name"]: e.get("value") for c in portal["spec"]["template"]["spec"]["containers"] for e in c.get("env", [])}
+    assert env["JC_PORTAL_PIPELINE_IDENTITY"] == "project"

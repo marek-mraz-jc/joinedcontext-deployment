@@ -8,14 +8,18 @@
 replicaCount: 1
 
 # Six cities' resident streams in one process: 1 GiB was OOMKilled once Zilina's joined
-# (2026-10-07, T-3191); the request says what it holds, the limit leaves it room.
+# (2026-10-07, T-3191); the request says what it holds, the limit leaves it room. One core was
+# throttled in 38 % of its CFS periods with 102 streams, the passes bursting to 900m while the
+# HSL feed wants a steady share (T-4036); two cores cost the node nothing it reserves.
+# 2Gi since the gateway answers model refusals per entity (207, T-4011): 1536Mi was OOMKilled
+# twice in 20 min on 2026-10-12 (T-4069); T-4036 sizes it from measurements.
 resources:
   requests:
     cpu: 100m
     memory: 512Mi
   limits:
-    cpu: 1000m
-    memory: 1536Mi
+    cpu: 2000m
+    memory: 2Gi
 
 # The Helsinki demo's feeds (DEMO.md step 3) are the seeded Pipeline manifests and the
 # bento.yaml beside each (../../context-gateway/seed/helsinki/): the Portal's reconciler renders
@@ -32,13 +36,21 @@ env:
   JC_GATEWAY_HOST: "context-gateway.{{ index .Values "context-gateway" "gateway" "namespace" }}.svc.cluster.local:8080"
   # The public issuer, so the token's `iss` is the one the gateway verifies (KC_HOSTNAME).
   JC_TOKEN_URL: "https://idm.{{ $global.domain }}/realms/{{ $global.instanceSlug }}/protocol/openid-connect/token"
-  # The pipeline-test harness the Portal sends still runs as this one client, because the
-  # `portal-internal` audience is only on it (T-2271); a rendered stream does not use it.
+  # The pipeline-test harness the Portal sends runs as this one client without the pipelines' own
+  # identities, because the `portal-internal` audience is only on it (T-2271); with them it runs
+  # as `{project}/pipeline-test` (T-4050), and no rendered stream uses this.
   JC_CLIENT_ID: helsinki-pipelines
   # The pipelines' token service (PL-19, T-1508): where a stream asks for its own pipeline's
   # token once the Portal renders streams with JC_PORTAL_PIPELINE_IDENTITY=pipeline. Unread
   # until then.
   JC_PIPELINE_TOKEN_URL: "http://pipeline-tokens.{{ index .Values "pipeline-runner" "tokens" "namespace" }}.svc.cluster.local:4180/token"
+{{- $runner := index .Values "pipeline-runner" }}
+{{- if and $runner.tokens.enabled $runner.identities.enabled $runner.identities.streams }}
+# Every stream, its reports and sweep (T-4044), and the pipeline-test harness and DataSource
+# probes (T-4050) take their token from the token service as their own principal: the runner
+# reads no client secret, so the `{project}-pipelines` secrets can be retired.
+envSecret: {}
+{{- else }}
 envSecret:
   JC_CLIENT_SECRET: { secret: keycloak-client-helsinki-pipelines, key: client-secret }
   # One secret per project that has pipelines (T-2384, PF-46). A rendered stream writes its own
@@ -52,6 +64,7 @@ envSecret:
   JC_CLIENT_SECRET_BBSK: { secret: keycloak-client-bbsk-pipelines, key: client-secret }
   JC_CLIENT_SECRET_ZILINA: { secret: keycloak-client-zilina-pipelines, key: client-secret }
   JC_CLIENT_SECRET_PRAHA: { secret: keycloak-client-praha-pipelines, key: client-secret }
+{{- end }}
 
 # The runner starts with the shared resources alone (the caches and the rate limit the
 # rendered streams name, ../../streams/resources.yaml); the streams arrive over its API.
@@ -69,3 +82,18 @@ configMap:
   data:
     resources.yaml: |
 {{ readFile "../../streams/resources.yaml" | indent 6 }}
+    # The GTFS-RT schema the `protobuf` step of hsl-departures and hsl-service-alerts decodes HSL's
+    # feeds with (T-3891, T-3892), Apache-2.0 from google/transit, mounted alone at /proto below.
+    gtfs-realtime.proto: |
+{{ readFile "../../streams/gtfs-realtime.proto" | indent 6 }}
+
+# The schema again, by subPath into a directory of its own: the steps' `import_paths: [/proto]`.
+# Bento parses every .proto under an import path, and /streams, a ConfigMap mount, holds the file
+# twice (the link and the kubelet's dated copy under ..<timestamp>/), so both streams failed with
+# "symbol transit_realtime.FeedMessage already defined" (T-4037). A subPath file is not updated
+# in place; the config checksum restarts the runner when the schema changes.
+extraVolumeMounts:
+  - name: config
+    mountPath: /proto/gtfs-realtime.proto
+    subPath: gtfs-realtime.proto
+    readOnly: true

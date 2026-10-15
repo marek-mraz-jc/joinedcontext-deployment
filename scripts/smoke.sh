@@ -55,6 +55,7 @@ runner_restarts() {
 		tr ' ' '\n' | awk '{ total += $1 } END { if (NR) print total }'
 }
 runner_restarts_before=$(runner_restarts)
+smoke_started=$(date +%s)
 
 # The entity type an endpoint grants this caller, from its own access document (EP-55).
 #
@@ -367,7 +368,7 @@ if has_route portal-api; then
 		# its own, the janitor's pattern (seed/helsinki/helsinki-role-janitor.yaml, T-2627, T-2817),
 		# and one of it per kind is a take in flight. What a person made on dev is not residue,
 		# whatever its name, so a generated app's endpoint or an upload leaves the check green.
-		seed=$(kubectl get configmap gitea-bootstrap-seed-helsinki -n "$slug" -o 'jsonpath={.data}' 2>/dev/null)
+		seed=$(kubectl get configmap gitea-seed-helsinki -n "$slug" -o 'jsonpath={.data}' 2>/dev/null)
 		for kind in "endpoints Endpoint projects__helsinki__spaces__[a-z0-9-]*__endpoints__[a-z0-9-]*\.yaml" \
 			"pipelines Pipeline projects__helsinki__pipelines__[a-z0-9-]*__pipeline\.yaml" \
 			"spaces ContextSpace projects__helsinki__spaces__[a-z0-9-]*__space\.yaml"; do
@@ -424,7 +425,7 @@ if has_route context-endpoint; then
 	# gateway serves the forge's checkout), the same way the route table comes from APISIX: a
 	# slug written into this script would drift from the seed, and a made-up one cannot exist
 	# (slugs are 26+ base32 characters). A seed key is the repository path with `/` as `__`.
-	ep="${JC_SMOKE_ENDPOINT:-$(kubectl get configmap gitea-bootstrap-seed-banskabystrica -n "$slug" -o jsonpath='{.data.projects__banskabystrica__spaces__ovzdusie__endpoints__public-air\.yaml}' 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1)}"
+	ep="${JC_SMOKE_ENDPOINT:-$(kubectl get configmap gitea-seed-banskabystrica -n "$slug" -o jsonpath='{.data.projects__banskabystrica__spaces__ovzdusie__endpoints__public-air\.yaml}' 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1)}"
 	# Writes are bound to the conformance ServiceAccount (GW22): its client_credentials token
 	# carries the slug as audience and an azp the gateway resolves to the manifest (PF-45, PF-46).
 	# The apisix-gateway token above is minted for the Portal and names no account here.
@@ -452,7 +453,7 @@ if has_route context-endpoint; then
 			-H "Authorization: Bearer $ep_token" -d "$body" "$base/api/endpoint/$ep/ngsi-ld/v1/entities"
 		status 200 "entity read back" -H "Authorization: Bearer $ep_token" "$base/api/endpoint/$ep/ngsi-ld/v1/entities/$urn"
 		# An id that is no NGSI-LD URN is refused by the gateway, not stored (PF-43).
-		bad='{"id":"smoke-not-a-urn","type":"AirQualityObserved"}'
+		bad='{"id":"smoke-not-a-urn","type":"AirQualityObserved","dateObserved":{"type":"Property","value":"2026-01-01T00:00:00Z"}}'
 		status 400 "write with an id that is no NGSI-LD URN is refused" -X POST -H 'Content-Type: application/json' \
 			-H "Authorization: Bearer $ep_token" -d "$bad" "$base/api/endpoint/$ep/ngsi-ld/v1/entities"
 		# A URN naming another organization is an id like any other since ADR-N-041: it lands in
@@ -462,9 +463,19 @@ if has_route context-endpoint; then
 		curl -sS -o /dev/null --max-time 20 -X DELETE -H "Authorization: Bearer $ep_token" \
 			"$base/api/endpoint/$ep/ngsi-ld/v1/entities/$other" 2>/dev/null || true
 		status 201 "an id naming another organization lands in this space (ADR-N-041)" -X POST -H 'Content-Type: application/json' \
-			-H "Authorization: Bearer $ep_token" -d '{"id":"'"$other"'","type":"AirQualityObserved"}' "$base/api/endpoint/$ep/ngsi-ld/v1/entities"
+			-H "Authorization: Bearer $ep_token" -d '{"id":"'"$other"'","type":"AirQualityObserved","dateObserved":{"type":"Property","value":"2026-01-01T00:00:00Z"}}' "$base/api/endpoint/$ep/ngsi-ld/v1/entities"
 		status 204 "and is deleted again" -X DELETE -H "Authorization: Bearer $ep_token" "$base/api/endpoint/$ep/ngsi-ld/v1/entities/$other"
 		status 204 "entity delete" -X DELETE -H "Authorization: Bearer $ep_token" "$base/api/endpoint/$ep/ngsi-ld/v1/entities/$urn"
+
+		# T-4109: a hand probe an earlier debugging session left in this space; a visitor of the
+		# demo dataset sees it beside the real station. Removed when present, named when removed.
+		# Never eea-SK0263A: that is the station itself, minted by pipeline-public-air with the
+		# instance's JC_ORG_DOMAIN (hel.fi on dev), and the ogc star row reads it (T-4116).
+		for stale in urn:ngsi-ld:AirQualityObserved:hel.fi:ovzdusie:deployer-probe; do
+			got=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 -X DELETE \
+				-H "Authorization: Bearer $ep_token" "$base/api/endpoint/$ep/ngsi-ld/v1/entities/$stale" 2>/dev/null) || got=""
+			[ "$got" = "204" ] && ok "removed the stale test entity $stale"
+		done
 
 		# T-0945: what the space lists, the space serves. An entity whose URN carries another
 		# organization's domain lists (the broker holds it) and answers 400 on retrieve (the
@@ -501,7 +512,7 @@ echo "helsinki space"
 # answers NGSI-LD, MCP and the model's LinkML; the streams of the resident runner fill it. The
 # slugs come from the forge's seed the way the ovzdusie one does above.
 if has_route context-endpoint; then
-	slug_of() { kubectl get configmap gitea-bootstrap-seed-helsinki -n "$slug" -o jsonpath="{.data.projects__helsinki__spaces__helsinki__endpoints__helsinki-$1\.yaml}" 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1; }
+	slug_of() { kubectl get configmap gitea-seed-helsinki -n "$slug" -o jsonpath="{.data.projects__helsinki__spaces__helsinki__endpoints__helsinki-$1\.yaml}" 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1; }
 	all=$(slug_of all)
 	if [ -z "$all" ]; then
 		skip "helsinki endpoints (no Helsinki seed on the gateway in this instance)"
@@ -541,6 +552,14 @@ if has_route context-endpoint; then
 		# the neighbour's data (EP-14, 404-vs-403 narrowing keeps it a 200).
 		body=$(curl -sS --max-time 20 "$base/api/endpoint/$(slug_of bikes)/ngsi-ld/v1/entities?type=Event&limit=1" 2>/dev/null || true)
 		if [ "$body" = "[]" ]; then ok "helsinki-bikes does not serve events"; else ko "helsinki-bikes served events: ${body:0:120}"; fi
+		# T-4035, EP-106/107: the transport endpoint's WebSocket is public like its REST read. An
+		# anonymous client (no Origin, no token) gets its 101 and a subscribe for Vehicle its 201.
+		ws=$(python3 "$(dirname "$0")/smoke-ws.py" "$base/api/endpoint/$(slug_of transport)/ws" Vehicle 20 2>&1 || true)
+		if [ "$ws" = "101 201" ]; then
+			ok "helsinki-transport opens its WebSocket anonymously and subscribes to Vehicle (101 201)"
+		else
+			ko "helsinki-transport WebSocket answered '${ws:0:160}', expected '101 201'"
+		fi
 		# Data flows: the bike feed answers within a minute of the runner starting, the events
 		# register at once; the buses depend on HSL's timetable, so their absence is a note.
 		flowing() { # type seconds
@@ -558,6 +577,69 @@ if has_route context-endpoint; then
 	fi
 else
 	skip "helsinki endpoints (route context-endpoint not configured in this instance)"
+fi
+
+echo "ogc api features"
+# T-3957 (T-3831's dev row): one row per Endpoint kind of Antares' OGC matrix, through the
+# gateway, whose OGC surface is the broker's view since platform T-3752. Each row reads
+# /conformance and one page of the first collection, and names the seeded Endpoint it read.
+# A kind no seeded Endpoint has is a skip naming it.
+if has_route context-endpoint; then
+	seed_slug() { # project space endpoint
+		kubectl get configmap "gitea-seed-$1" -n "$slug" -o jsonpath="{.data.projects__$1__spaces__$2__endpoints__$3\.yaml}" 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1
+	}
+	ogc_row() { # kind endpoint-name slug hidden-attribute|"" bearer|""
+		local kind="$1" name="$2" ep="$3" hidden="$4" auth=() root conf coll head type body verdict
+		if [ -z "$ep" ]; then skip "ogc $kind ($name is not seeded in this instance)"; return; fi
+		[ -n "$5" ] && auth=(-H "Authorization: Bearer $5")
+		root="$base/api/endpoint/$ep/ogc/features"
+		conf=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "${auth[@]}" "$root/conformance" 2>/dev/null) || conf="curl-error"
+		if [ "$conf" != "200" ]; then ko "ogc $kind ($name $ep): /conformance answered $conf"; return; fi
+		# The collections are the view's LinkML classes (T-3752), and a class may hold no entity in
+		# this space: the row reads the first collection that has a feature, else the first one.
+		local ids c
+		ids=$(curl -sS --max-time 20 "${auth[@]}" "$root/collections" 2>/dev/null |
+			python3 -c 'import json,sys; print("\n".join(c["id"] for c in json.load(sys.stdin).get("collections", [])[:40]))' 2>/dev/null)
+		coll=$(printf '%s\n' "$ids" | head -1)
+		if [ -z "$coll" ]; then ko "ogc $kind ($name $ep): /collections lists none"; return; fi
+		for c in $ids; do
+			if curl -sS --max-time 20 "${auth[@]}" "$root/collections/$c/items?limit=1" 2>/dev/null |
+				python3 -c 'import json,sys; sys.exit(0 if json.load(sys.stdin).get("features") else 1)' 2>/dev/null; then
+				coll=$c
+				break
+			fi
+		done
+		head=$(curl -sS -D - -o /dev/null --max-time 20 "${auth[@]}" "$root/collections/$coll/items?limit=1" 2>/dev/null | tr -d '\r')
+		type=$(printf '%s\n' "$head" | sed -n 's/^[Cc]ontent-[Tt]ype: *//p' | head -1)
+		case "$head" in "HTTP/"*" 200"*) ;; *) ko "ogc $kind ($name $ep): items of $coll answered ${head%%$'\n'*}"; return ;; esac
+		case "$type" in application/geo+json*) ;; *) ko "ogc $kind ($name $ep): items of $coll are '${type:-no type}', not application/geo+json"; return ;; esac
+		body=$(curl -sS --max-time 20 "${auth[@]}" "$root/collections/$coll/items?limit=1" 2>/dev/null)
+		verdict=$(printf '%s' "$body" | python3 -c '
+import json, sys
+hidden = sys.argv[1]
+try:
+    features = json.load(sys.stdin).get("features") or []
+except (ValueError, AttributeError):
+    sys.exit("no FeatureCollection")
+if not features:
+    sys.exit("no feature")
+if hidden and any(hidden in (f.get("properties") or {}) for f in features):
+    sys.exit("the hidden " + hidden + " is served")
+print(len(features))' "$hidden" 2>&1) || { ko "ogc $kind ($name $ep): items of $coll: $verdict"; return; }
+		ok "ogc $kind ($name $ep): conformance, $verdict feature of $coll as geo+json${hidden:+, no $hidden}"
+	}
+	ogc_row public helsinki-bikes "$(seed_slug helsinki helsinki helsinki-bikes)" "" ""
+	if [ -n "$demo_token" ]; then
+		ogc_row internal helsinki-bikes-ops "$(seed_slug helsinki helsinki helsinki-bikes-ops)" "" "$demo_token"
+	else
+		skip "ogc internal (no demo user token to read helsinki-bikes-ops with)"
+	fi
+	skip "ogc filtered view (no seeded Endpoint narrows its view by a q)"
+	ogc_row star public-air "$(seed_slug banskabystrica ovzdusie public-air)" "" ""
+	ogc_row projection helsinki-all "$(seed_slug helsinki helsinki helsinki-all)" contactPoint ""
+	skip "ogc cube (no seeded Endpoint serves a LinkML cube, T-3805)"
+else
+	skip "ogc api features (route context-endpoint not configured in this instance)"
 fi
 
 echo "forge"
@@ -650,6 +732,18 @@ for t in json.load(sys.stdin):
 		"$base/git/$forge_org/configuration/raw/branch/main/platform-settings.yaml"
 else
 	skip "git forge (route gitea-forge not configured in this instance)"
+fi
+
+echo "public documentation"
+if has_route portal-public-guide; then
+	# T-4063: a citizen reads how to use a public Endpoint with no account, from the apex address
+	# as the API pages print it; the apex redirects to the Portal host, which answers the page.
+	guide=$(curl -sSL --max-time 20 "$base/docs/API/07-websocket" 2>/dev/null || true)
+	case $guide in
+	*'<title>Live Updates over WebSocket</title>'*) ok "the WebSocket guide reads without signing in" ;;
+	*) ko "the WebSocket guide does not read without signing in" ;;
+	esac
+	status 404 "no Operations page is public" "$portal/docs/Operations/00-intro"
 fi
 
 echo "catalogue"
@@ -1024,6 +1118,31 @@ for app in items:
 	done <<<"$published"
 fi
 
+echo "broker surfaces"
+# The surfaces the broker mounts (T-3905, T-3922): `/q/health` reports each one the deployment selected,
+# so a `ws` missing from ANTARES_API_SURFACES or an image built without it shows here. Health
+# needs no credential; the broker is reached over a port-forward like jc-functions below.
+if ! kubectl get deployment context-broker -n "$slug" >/dev/null 2>&1; then
+	skip "broker surfaces (the context broker is not deployed in this instance)"
+else
+	cb_port=$((30000 + $$ % 10000))
+	kubectl port-forward -n "$slug" svc/context-broker "$cb_port:8080" >/dev/null 2>&1 &
+	cb_forward=$!
+	cb_health=""
+	for _ in 1 2 3 4 5 6 7 8 9 10; do
+		cb_health=$(curl -s --max-time 2 "http://127.0.0.1:$cb_port/q/health" 2>/dev/null) && [ -n "$cb_health" ] && break
+		sleep 1
+	done
+	for surface in views mcp access ws ogc; do
+		if printf '%s' "$cb_health" | python3 -c 'import json,sys; sys.exit(0 if sys.argv[1] in (json.load(sys.stdin).get("surfaces") or {}) else 1)' "$surface" 2>/dev/null; then
+			ok "the broker mounts the $surface surface"
+		else
+			ko "the broker's /q/health lists no $surface surface: ${cb_health:0:160}"
+		fi
+	done
+	kill "$cb_forward" 2>/dev/null
+fi
+
 echo "functions"
 # jc-functions (SDK-22, SDK-23) takes the Portal alone, so the smoke reaches its Service over a
 # port-forward and presents what the Portal presents: portal-api's client_credentials token,
@@ -1053,7 +1172,7 @@ else
 			"$idm/realms/$realm/protocol/openid-connect/token" 2>/dev/null |
 			sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
 	fi
-	fn_slug=$(kubectl get configmap gitea-bootstrap-seed-helsinki -n "$slug" -o jsonpath='{.data.projects__helsinki__spaces__helsinki__endpoints__helsinki-all\.yaml}' 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1)
+	fn_slug=$(kubectl get configmap gitea-seed-helsinki -n "$slug" -o jsonpath='{.data.projects__helsinki__spaces__helsinki__endpoints__helsinki-all\.yaml}' 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1)
 	if [ -z "$fn_token" ]; then
 		ko "no client_credentials token for portal-api, so no function was invoked"
 	elif [ -z "$fn_slug" ]; then
@@ -1204,6 +1323,27 @@ else
 		else
 			ok "no resolved credential appears in any ConfigMap of $slug"
 		fi
+	fi
+fi
+
+echo "pipeline runner streams (T-4037)"
+if [ -z "$runner_restarts_before" ]; then
+	skip "pipeline runner streams (no pipeline-runner in this instance)"
+else
+	# A stream the runner refused at init (a step that does not build, the GTFS-RT schema read
+	# twice) never runs and says so only in this log, without its name. The Portal sends a
+	# refused render again on every 60 s sync tick, so a refusal that stands is in the last two
+	# minutes; one from the apply (the new pod given the old render before the seed converged,
+	# T-4055) is older once the smoke has run that long.
+	window=${JC_SMOKE_RUNNER_WINDOW:-120}
+	ran=$(($(date +%s) - smoke_started))
+	[ "$ran" -lt "$window" ] && sleep $((window - ran))
+	refused=$(kubectl logs -n "$slug" -l app.kubernetes.io/name=pipeline-runner-runner -c pipeline-runner-runner --since="${window}s" --tail=-1 2>/dev/null |
+		grep -oE 'Failed to create stream \([^)]*\)|Streams CRUD Error[^"]{0,80}' | sort -u | head -n 5 || true)
+	if [ -z "$refused" ]; then
+		ok "the pipeline runner refused no stream in the last ${window} s"
+	else
+		ko "the pipeline runner refused streams: $(echo $refused)"
 	fi
 fi
 

@@ -30,6 +30,9 @@ components:
   - context-broker
   - context-gateway
   - pipeline-runner
+  # The MQTT edge brokers (ADR-N-048, T-3993): after the gateway, whose CONNECT check they
+  # call, and the runner, the one client of their internal listener.
+  - mqtt-brokers
   # The broker a `nats` DataSource reads on dev (PL-50, T-0477).
   - demo-feeds
   # The credential proxy of the builder runs (AG-49); before the portal, which reads the
@@ -84,6 +87,9 @@ global:
     orgDomain: hel.fi
     domain: {{ env "JC_DEV_DOMAIN" | default "dev.joinedcontext.com" }}
     contactEmail: {{ env "JC_DEV_CONTACT_EMAIL" | default "hello@joinedcontext.com" }}
+    # The public API and User Guide pages the Portal serves to anyone (T-4063): the catalogue's
+    # usage texts link their guides under it, the WebSocket's included (T-4064, EP-108).
+    documentationBaseUrl: https://{{ env "JC_DEV_DOMAIN" | default "dev.joinedcontext.com" }}/docs
     licenseDefault: CC-BY-4.0
     logo: logo.svg
     favicon: logo.svg

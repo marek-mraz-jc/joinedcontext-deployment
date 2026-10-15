@@ -33,6 +33,19 @@ apisix-gateway:
           included.client.audience: portal-api
           access.token.claim: 'true'
           id.token.claim: 'false'
+      # dev-smoke's "ogc internal" row reads the organization Endpoint helsinki-bikes-ops as the
+      # demo user (T-3957). The gateway admits a token only when `aud` names the slug (PF-45), as
+      # the edge's mapper of the same name does for a signed-in person; the person's own grants
+      # still decide what the read returns. The slug is the seed's
+      # (seed/helsinki/helsinki-endpoint-bikes-ops.yaml).
+      - name: helsinki-bikes-ops-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: ydp6nddchg4sewmylsiclg4377mlldrj
+          access.token.claim: 'true'
+          id.token.claim: 'false'
 
 # The one login front (ADR-N-019, AP-26, AP-27): the `openid-connect` plugin of APISIX logs
 # every person in through this client, on the Portal host and on every `/apps/*` route of the

@@ -41,7 +41,7 @@ jobs:
           KYVERNO_CHECKSUM: "${{ inputs.kyverno-checksum }}"
         run: |
           set -eu
-          curl -sSLo kyverno.tar.gz \
+          curl --fail --retry 3 --retry-all-errors -sSLo kyverno.tar.gz \
             "https://github.com/kyverno/kyverno/releases/download/${KYVERNO_VERSION}/kyverno-cli_${KYVERNO_VERSION}_linux_x86_64.tar.gz"
           echo "${KYVERNO_CHECKSUM}  kyverno.tar.gz" | sha256sum --check --status
           tar xzf kyverno.tar.gz kyverno

@@ -27,7 +27,7 @@ pytestmark = pytest.mark.xdist_group("docker-bystrica-indicators")
 ROOT = Path(__file__).resolve().parent.parent
 SEED = ROOT / "components/context-gateway/seed"
 FIXTURES = Path(__file__).resolve().parent / "fixtures/bystrica"
-BENTO = "ghcr.io/warpstreamlabs/bento:1.21.1@sha256:656c55de3f8deddd4ee743f3c76f3b497e67324e940f2bc1769693cd8b906364"
+BENTO = "ghcr.io/warpstreamlabs/bento:1.22.0@sha256:ef674bebae45793c982c350d8f37c2c7661133c1dc65a5517fb977b36dc09841"
 
 INGEST = {
     "om7102rr.json": (SEED / "bbsk/bbsk-pipeline-obyvatelstvo-bento.yaml", "bbsk.sk", "bbsk-kraj"),
@@ -246,18 +246,26 @@ def test_an_empty_window_says_not_measured_and_never_zero():
 
 
 @requires_docker
-def test_a_region_with_no_row_for_a_territory_says_not_measured_too():
+def test_a_region_with_no_row_for_a_territory_leaves_it_out():
+    """T-4081: dev's bbsk-kpi held 28 of 28 "not measured" with calculationPeriod.start
+    0001-01-01, a dataset of blanks in the catalogue. A territory without a row is not written;
+    the value it had stays until the expiry removes it."""
     rows = ingested("zp3803rs.json")
     produced = bento(
         mapping_of(SEED / "bbsk/bbsk-pipeline-ukazovatele.yaml"), rows,
         {"JC_ORG_DOMAIN": "bbsk.sk", "JC_SPACE": "bbsk-kpi", "JC_SOURCE_SPACE": "bbsk-kraj"},
     )
-    assert len(produced) == 28, "every territory is written, measured or not"
-    population = [e for e in produced if e["name"]["value"].startswith("obyvatelstvo-stav-")]
-    assert len(population) == 14
-    assert all(e["currentValue"]["value"] == "not measured" for e in population)
-    emissions = [e for e in produced if e["name"]["value"].startswith("emisie-")]
-    assert all(isinstance(e["currentValue"]["value"], (int, float)) for e in emissions)
+    assert len(produced) == 14
+    assert all(e["name"]["value"].startswith("emisie-tuhe-km2-") for e in produced)
+    assert all(isinstance(e["currentValue"]["value"], (int, float)) for e in produced)
+
+
+@requires_docker
+def test_no_indicator_has_a_zero_period(region):
+    """T-4081: every period an indicator states is the year of the row it came from."""
+    for entity in region:
+        assert not entity["calculationPeriod"]["value"]["start"].startswith("0001"), entity["id"]
+        assert isinstance(entity["currentValue"]["value"], (int, float)), entity["id"]
 
 
 @requires_docker
@@ -271,7 +279,7 @@ def test_a_region_read_that_brought_no_row_writes_nothing_rather_than_wiping_eve
     # Rows of no cube the indicators read are no answer either.
     stranger = [{"id": "urn:ngsi-ld:StatisticalObservation:bbsk.sk:bbsk-kraj:x", "type": "StatisticalObservation",
                  "dataSet": {"type": "Property", "value": "xx0000rr"}, "refArea": {"type": "Property", "value": "SK032"},
-                 "refPeriod": {"type": "Property", "value": "2024"}, "value": {"type": "Property", "value": 1},
+                 "refPeriod": {"type": "Property", "value": "2024"}, "observationValue": {"type": "Property", "value": 1},
                  "dateObserved": {"type": "Property", "value": "2025-10-31T00:00:00Z"}}]
     assert bento(mapping, stranger, env, may_drop=True) == []
 

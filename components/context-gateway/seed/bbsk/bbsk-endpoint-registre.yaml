@@ -15,7 +15,7 @@ spec:
   contextSpaceRef: bbsk-registre
   slug: lws6dd7o56veegwxsjtvak3goeta4mfn
   audience: public
-  enabledRepresentations: [ngsi-ld, geojson, csv, json]
+  enabledRepresentations: [ngsi-ld, geojson, csv, json, websocket, ogc-features, odata]
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: bbsk }

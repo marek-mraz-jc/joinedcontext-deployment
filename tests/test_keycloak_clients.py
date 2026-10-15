@@ -309,6 +309,26 @@ def test_mcp_hub_is_a_public_pkce_client_with_consent(realm_clients):
     assert set(client["redirectUris"]) == set(realm_clients["mcp-mobile"]["redirectUris"])
 
 
+def test_the_hub_s_one_login_scope_is_the_hub_s_alone_and_on_its_consent_screen(rendered, realm_clients):
+    """T-4114, ADR-N-025 4b: `endpoint:*` reaches every Endpoint the person may read, so the
+    person sees it before a token exists, and no other client's default token carries it."""
+    for doc in rendered("local"):
+        if doc.get("kind") == "Secret" and doc["metadata"]["name"].endswith("config-cli-config-realms"):
+            realm = json.loads(base64.b64decode(doc["data"]["local.json"]))
+    scope = {s["name"]: s for s in realm["clientScopes"]}["endpoint:*"]
+    assert scope["attributes"]["display.on.consent.screen"] == "true"
+    assert scope["attributes"]["include.in.token.scope"] == "true"
+    assert scope["attributes"]["consent.screen.text"]
+    assert not scope.get("protocolMappers"), "the scope adds no audience: the hub's own mapper names it"
+    assert "endpoint:*" in realm_clients["mcp-hub"]["defaultClientScopes"]
+    assert "roles" in realm_clients["mcp-hub"]["defaultClientScopes"], "the Endpoint Policies read the realm roles"
+    for client_id, client in realm_clients.items():
+        if client_id != "mcp-hub":
+            assert "endpoint:*" not in client.get("defaultClientScopes", []), client_id
+            assert "endpoint:*" not in client.get("optionalClientScopes", []), client_id
+    assert "endpoint:*" not in realm.get("defaultDefaultClientScopes", [])
+
+
 # --- PF-61, PF-79: who the caller is, on every client ----------------------------------------
 
 
@@ -431,15 +451,17 @@ def test_only_jcctl_offers_the_device_flow(realm_clients):
 PROXY = "helsinki-agent-proxy"
 
 
-def test_only_the_agent_proxy_may_exchange_a_persons_token(dev_realm_clients):
-    """Standard token exchange V2 on one client: any other client that could turn a person's
-    token into one of its own could read as that person (ADR-N-038 §3.2)."""
+def test_only_the_agent_proxy_and_the_gateway_may_exchange_a_persons_token(dev_realm_clients):
+    """Standard token exchange V2 on two clients: any other client that could turn a person's
+    token into one of its own could read as that person (ADR-N-038 §3.2). The gateway exchanges
+    only for a broker's audience on a read across brokers (T-3999,
+    tests/test_broker_token_exchange.py)."""
     exchanging = {
         client_id
         for client_id, client in dev_realm_clients.items()
         if client.get("attributes", {}).get("standard.token.exchange.enabled") == "true"
     }
-    assert exchanging == {PROXY}
+    assert exchanging == {PROXY, "context-gateway"}
     attributes = dev_realm_clients[PROXY]["attributes"]
     # A refresh token for the run, tied to the person's own session: it ends when they sign out
     # (ADR-N-038 §3.5), which an offline token would not.

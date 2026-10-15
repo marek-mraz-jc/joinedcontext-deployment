@@ -102,6 +102,10 @@ tokens:
 # paths the Portal reads (T-0478). Idempotent: a file whose committed content matches is left
 # alone, one that differs is updated, one that is missing is created; nothing is ever deleted.
 seed: {}
+# The projects whose files another release holds, one ConfigMap `<seedConfigMaps>-<project>`
+# each, mounted into the same tree as `seed` (T-3998).
+seedProjects: []
+seedConfigMaps: gitea-seed
 
 # The refresher of the lane's token (AP-73, ADR-N-028 §5, T-2636): every `schedule` it asks
 # Keycloak for a `client_credentials` token of `clientId` and writes it as the organization's

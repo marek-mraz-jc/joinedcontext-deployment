@@ -62,8 +62,13 @@ def _secret_variable(project: str) -> str:
     )
 
 
+@pytest.fixture(scope="module")
+def local(rendered):
+    return rendered("local")
+
+
 @requires_helmfile
-def test_every_project_with_pipelines_has_its_own_client_and_secret(dev):
+def test_every_project_with_pipelines_has_its_own_client_and_secret(local):
     """PF-46, AG-52, T-2384: a stream presents its own project's ServiceAccount, not Helsinki's.
 
     The Portal's reconciler renders `{project}-pipelines` as the stream's `client_key` and names
@@ -71,6 +76,8 @@ def test_every_project_with_pipelines_has_its_own_client_and_secret(dev):
     every stream, so every write to a Banská Bystrica endpoint was refused with `token is not
     bound to this resource`. This is the deployment's half: the client exists, its secret is
     generated per cluster, and the runner carries it under the name the reconciler mints.
+    Where the streams run as their pipelines' own identities (dev, T-4044, T-4050) the runner
+    carries none: test_pipeline_tokens.py holds that side.
     """
     import pathlib
 
@@ -82,11 +89,11 @@ def test_every_project_with_pipelines_has_its_own_client_and_secret(dev):
     )
     clients = yaml.safe_load(clients_file.read_text())
 
-    pod = by_name(dev, "Deployment", "pipeline-runner")["spec"]["template"]["spec"]
+    pod = by_name(local, "Deployment", "pipeline-runner")["spec"]["template"]["spec"]
     env = {e["name"]: e for e in pod["containers"][0]["env"]}
     secrets = {
         d["metadata"]["name"]
-        for d in dev
+        for d in local
         if d.get("kind") == "Secret" and d["metadata"]["name"].startswith("keycloak-client-")
     }
 
@@ -146,3 +153,23 @@ def test_a_pipeline_client_is_bound_to_its_own_projects_endpoints_only(dev):
             assert slugs[audience] == project, (
                 f"{client} is bound to {audience}, an endpoint of project {slugs[audience]}"
             )
+
+
+def test_every_projects_pipeline_client_reaches_the_portals_internal_listener():
+    """T-4038: a stream's outcome, rejected and samples sinks post with its project's own client,
+    and the Portal's internal listener takes only a token issued for `portal-internal`. A project
+    whose client lacked the audience had every report refused with 401 (zilina on dev)."""
+    import pathlib
+
+    import yaml
+
+    root = pathlib.Path(__file__).resolve().parent.parent
+    clients = yaml.safe_load(
+        (root / "components/pipeline-runner/keycloak-clients.yaml").read_text()
+    )
+    for client, spec in clients.items():
+        audiences = {
+            mapper["config"]["included.custom.audience"]
+            for mapper in spec["rawValues"]["protocolMappers"]
+        }
+        assert "portal-internal" in audiences, client

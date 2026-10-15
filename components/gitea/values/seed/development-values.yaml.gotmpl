@@ -1,0 +1,42 @@
+---
+# The files values/bootstrap/development-values.yaml.gotmpl names, read from the same indexes:
+# here the ones under projects/<project>/, there the organization's. Helsinki's projects are the
+# release gitea-seed, every other city's gitea-seed-2, so each stays well inside its Secret.
+# JSON strings ending in exactly one newline, which is what the bootstrap's block scalars made of
+# them, so no blob already on the forge changes.
+{{- $seed := dict }}
+{{- $sources := list "context-gateway/seed/helsinki" "context-gateway/seed/banskabystrica" "context-gateway/seed/bbsk" "context-gateway/seed/praha" "context-gateway/seed/zilina" }}
+{{- if has "agent-runner" .Values.components }}{{ $sources = append $sources "agent-runner/seed" }}{{ end }}
+{{- range $dir := $sources }}
+{{- range $file, $path := readFile (printf "../../../%s/index.yaml" $dir) | fromYaml }}
+{{- $_ := set $seed $path (readFile (printf "../../../%s/%s" $dir $file)) }}
+{{- end }}
+{{- end }}
+{{- if has "demo-feeds" .Values.components }}
+{{- $demoNs := index .Values "demo-feeds" "nats" "namespace" }}
+{{- range $file, $path := readFile "../../../context-gateway/seed/helsinki-demo-feeds/index.yaml" | fromYaml }}
+{{- $_ := set $seed $path (readFile (printf "../../../context-gateway/seed/helsinki-demo-feeds/%s" $file) | replace "DEMO_FEEDS_NAMESPACE" $demoNs) }}
+{{- end }}
+{{- end }}
+{{- $shard := .Release.Name | trimPrefix "gitea-seed" | trimPrefix "-" | default "1" | atoi }}
+{{- $projects := dict }}
+{{- range $path, $text := $seed }}
+{{- $parts := splitList "/" $path }}
+{{- if and (eq (index $parts 0) "projects") (gt (len $parts) 2) }}
+{{- $project := index $parts 1 }}
+{{- if eq $shard (ternary 1 2 (hasPrefix "helsinki" $project)) }}
+{{- $files := index $projects $project | default dict }}
+{{- $_ := set $files ($path | replace "/" "__") (regexReplaceAll "\n*\\z" $text "\n") }}
+{{- $_ := set $projects $project $files }}
+{{- end }}
+{{- end }}
+{{- end }}
+apps:
+{{- range $project, $files := $projects }}
+  {{ $project }}:
+{{- range $key, $text := $files }}
+    {{ $key | quote }}: {{ $text | toJson }}
+{{- end }}
+{{- end }}
+{{- if not $projects }} {}
+{{- end }}

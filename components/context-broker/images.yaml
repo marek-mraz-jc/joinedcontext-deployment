@@ -13,6 +13,35 @@ context-broker:
     # image-jc.yml run 38141581298, cosign-signed keyless by that workflow, SBOM attested. Its
     # one new migration over v0.1.2 is 0008_views.sql, a new table only, so the rollback to
     # 0.1.2 above needs no restore.
+    # Antares dev 6770b73 (image-jc green 2026-10-12T00:35Z): x-jc-did names a data-space
+    # participant (T-3809), which the gateway's broker-view MCP needs (T-3647); no new migration
+    # over 5ed3183.
+    # Its FEATURES are full,jc-policy,linkml: the LinkML surface ANTARES_API_SURFACES mounts (T-3804).
+    # Antares dev eb30b4f (image-jc run 38201052761 green 2026-10-12): the broker refuses
+    # private egress except the hosts ANTARES_EGRESS_PRIVATE_HOSTS names (T-3908, T-3909); no
+    # new migration over 6770b73.
+    # Antares dev e6484ba (train 20261012-1042): per (tenant, type) retention of current state and
+    # history under /q/retention, deleted in bounded batches (T-3900), with T-4003 T-4019 T-3786
+    # T-3933/34 T-3936 T-3948 T-3980 T-4021 T-4034; no new migration over eb30b4f.
+    # Antares dev 058db12 (train 20261012-1301): T-3956 T-3880 T-4009 T-3805 T-4030 T-4031 T-4018;
+    # no new migration and no new ANTARES_* key over e6484ba.
+    # Antares dev 2a48c7a (train 20261012-1619): the notifier's steps get 60 s deadlines, so one
+    # stuck delivery no longer stops every notification (T-4102, T-4084), access/explain for the
+    # gateway (T-3881), T-4079 T-4083; no new migration or ANTARES_* key over 058db12.
+    # Antares dev c9df233: tenant move (T-4001, T-4016), T-4057, T-4118; no new migration or
+    # runtime ANTARES_* key over 2a48c7a.
+    # Antares dev f248288: view all, Accept precedence and LdContext (T-3947); no new migration
+    # or ANTARES_* key over c9df233.
+    # Antares dev d335893: each subscription delivers on its own lane, so a hung endpoint no
+    # longer stalls matching (T-4086); rumqttc vendored, vendor/ copied before cargo chef (T-4129);
+    # no new migration or runtime ANTARES_* key over f248288.
+    # Antares dev e25ec9c (train 20261013-0011): retention sets the rule's tenant, so the history
+    # sweep deletes under the broker's RLS-bound role (T-3900); upsert through a view in one read
+    # (T-4085); OGC Part 3 CQL2 and items through the view scan (T-3745, T-3759); no new
+    # migration or runtime ANTARES_* key over d335893.
+    # Antares dev 79be5ab (train 20261013-0509): T-4020 T-3715 T-3946 T-3747 T-3822 T-4133 T-3752
+    # (OGC collections from the view's LinkML, fan-out 1011/503, view-all contexts); no new
+    # migration or runtime ANTARES_* key over d032654.
     repository: 'ghcr.io/marek-mraz-jc/antares-broker-jc'
-    tag: '5ed3183'
-    digest: 'sha256:304ae4fc93a1a44251c70e456bc3fcfb30b3f405e16ea073b13a4885aa13ef3d'
+    tag: '79be5ab'
+    digest: 'sha256:48ce9551e14eb6a140627889e32a31cb822b845bfd38a655b90e560fb70261a0'

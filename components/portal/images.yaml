@@ -245,10 +245,17 @@ portal:
     # (T-3539). portal 85ff8a3: the builder image drops git checkouts' own Cargo.lock, so trivy is
     # green again and the builders move with it (T-3567); auth_tests fixed (T-3568). portal ccc23a87:
     # the SDK's entity panel writes a number as the grid does (T-3600).
-    digest: 'sha256:3958e5a127eef1e7aef3b25f515e44971a8638f794cc8b369da4b9fa1a8466ac'
+    # portal dfd0b23: jc-core of platform 2883bd0 reads a space's `quality` and `retention`
+    # (T-3899), so the Helsinki seed that carries them comes back in the same apply (T-4054).
+    # portal f311196: a failed forge build no longer flags the App's catalog card (owner, 2026-10-13).
+    digest: 'sha256:c8048fc93e868f2206c5fb57ace3906e29630a00fa66646a0a736a11a71e5b49'
+    # The platform commit the image's jc-core is built from (the portal's Cargo.toml `rev`): a
+    # seed field this jc-core does not know makes the Portal drop the whole manifest, so
+    # tests/test_portal_pin_reads_the_seed.py holds every seed to it (T-4054).
+    platform: '77d9a825a46beb3cbf45bf512d922b2a1c6e7b75'
   # Mailpit, the mail catcher of an installation without a relay (T-3583). Re-pin with the
   # registry query in components/sandbox-reaper/images.yaml, repository axllent/mailpit.
   mail-catcher:
     repository: 'axllent/mailpit'
-    tag: 'v1.31.2'
-    digest: 'sha256:74d609a42ec279aa63c6b4622a6fa9b5408d1ad5b1d76a1c4be40a265ce0863d'
+    tag: 'v1.31.5'
+    digest: 'sha256:94f6b70c1436defae6799d9ac7ff0eeff9540465b842026d5cdb018f1c0234ea'

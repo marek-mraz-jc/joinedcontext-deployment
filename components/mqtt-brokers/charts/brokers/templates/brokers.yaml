@@ -1,0 +1,41 @@
+{{- /*
+  One RMQTT per MqttBroker (ADR-N-048, PL-74). Two listeners, both plain MQTT inside the pod:
+  `internal` on 1883 for the pipeline runner only, `external` on 1884 behind the ingress
+  controller, which terminates TLS on 8883 and passes the client's address in a PROXY header.
+  Every CONNECT goes to the gateway (rmqtt-auth-http); its answer carries the client's ACL and
+  the broker's own last rule denies everything else. No storage plugin: nothing on disk.
+*/}}
+{{- $root := . }}
+{{- $hosts := dict }}
+{{- range .Values.brokers }}
+{{- $release := .release | default (include "brokers.release" .) }}
+{{- if gt (len $release) 63 }}
+{{- fail (printf "broker %s/%s: release %q is longer than a DNS label; pass the bounded name as `release`" .project .name $release) }}
+{{- end }}
+{{- $host := printf "%s.%s.mqtt.%s" .name .project (required "domain names the brokers' hosts" $root.Values.domain) }}
+{{- if hasKey $hosts $host }}
+{{- fail (printf "two brokers answer on %s" $host) }}
+{{- end }}
+{{- $_ := set $hosts $host true }}
+{{- $limits := .limits | default dict }}
+{{- $maxBytes := $limits.maxMessageBytes | default 65536 | int }}
+{{- $perSecond := $limits.messagesPerSecond | default 10 | int }}
+{{- $connections := $limits.maxConnections | default 1000 | int }}
+{{ include "brokers.objects" (dict "root" $root "release" $release "project" .project "name" .name "host" $host "maxBytes" $maxBytes "perSecond" $perSecond "connections" $connections "managedBy" $root.Release.Service "checksum" (printf "%s%s%s%d%d%d" $root.Values.authUrl $release $host $maxBytes $perSecond $connections | sha256sum)) }}
+{{- end }}
+---
+# What the Portal stamps per MqttBroker (ADR-N-048 §2.6, T-3994): the objects above with
+# sentinels, which it fills from the manifest (release, project, name, limits) and the hash of the
+# rest, and applies by server-side apply in this namespace. Not named mqtt-…, so the Portal's own
+# client can never write or remove it.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: broker-template
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "brokers.labels" (dict "root" $root "managedBy" .Release.Service) | nindent 4 }}
+    app.kubernetes.io/component: template
+data:
+  objects.yaml: |
+    {{- include "brokers.objects" (dict "root" $root "release" "__RELEASE__" "project" "__PROJECT__" "name" "__NAME__" "host" (printf "__NAME__.__PROJECT__.mqtt.%s" (required "domain names the brokers' hosts" .Values.domain)) "maxBytes" "__MAX_BYTES__" "perSecond" "__PER_SECOND__" "connections" "__CONNECTIONS__" "managedBy" "joinedcontext-portal" "checksum" "__CONFIG_HASH__") | nindent 4 }}

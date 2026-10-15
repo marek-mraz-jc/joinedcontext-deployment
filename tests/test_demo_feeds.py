@@ -13,7 +13,7 @@ import yaml
 import open_data
 
 NATS_IMAGE_DIGEST = "sha256:54eac64d71b1b04360c2bba312a6b652ff7da0b7e7328865c977518aa5e29d11"
-FEED_IMAGE_DIGEST = "sha256:656c55de3f8deddd4ee743f3c76f3b497e67324e940f2bc1769693cd8b906364"
+FEED_IMAGE_DIGEST = "sha256:ef674bebae45793c982c350d8f37c2c7661133c1dc65a5517fb977b36dc09841"
 
 
 @pytest.fixture(scope="module")
@@ -38,7 +38,7 @@ def test_both_deployments_exist_with_pinned_images(dev):
     feed_container = feed["spec"]["template"]["spec"]["containers"][0]
 
     assert nats_container["image"] == f"docker.io/library/nats:2.14.6-scratch@{NATS_IMAGE_DIGEST}"
-    assert feed_container["image"] == f"ghcr.io/warpstreamlabs/bento:1.21.1@{FEED_IMAGE_DIGEST}"
+    assert feed_container["image"] == f"ghcr.io/warpstreamlabs/bento:1.22.0@{FEED_IMAGE_DIGEST}"
 
 
 def test_nats_pod_template_security_and_opaque_ports(dev):
@@ -135,11 +135,11 @@ PIPELINE_PATH = "projects/helsinki/pipelines/demo-counters/pipeline.yaml"
 
 
 def forge_seed(docs):
-    # One ConfigMap per project beside the organization's (T-3177); none rendered is an empty seed.
+    # One ConfigMap per project beside the organization's (T-3177, T-3998); none rendered is an empty seed.
     return {
         k.replace("__", "/"): v
         for d in docs
-        if d.get("kind") == "ConfigMap" and d["metadata"]["name"].startswith("gitea-bootstrap-seed")
+        if d.get("kind") == "ConfigMap" and d["metadata"]["name"].startswith(("gitea-bootstrap-seed", "gitea-seed-"))
         for k, v in d["data"].items()
     }
 

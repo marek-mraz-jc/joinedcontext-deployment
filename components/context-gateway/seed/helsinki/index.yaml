@@ -25,6 +25,7 @@ helsinki-endpoint-alerts.yaml: projects/helsinki/spaces/helsinki/endpoints/helsi
 helsinki-policy-public-events.yaml: projects/helsinki/spaces/helsinki/policies/public-events.yaml
 helsinki-policy-public-bikes.yaml: projects/helsinki/spaces/helsinki/policies/public-bikes.yaml
 helsinki-policy-bikes-ops-steward.yaml: projects/helsinki/spaces/helsinki/policies/bikes-ops-steward.yaml
+helsinki-policy-bikes-ops-read.yaml: projects/helsinki/spaces/helsinki/policies/bikes-ops-read.yaml
 helsinki-policy-public-transport.yaml: projects/helsinki/spaces/helsinki/policies/public-transport.yaml
 helsinki-policy-public-all.yaml: projects/helsinki/spaces/helsinki/policies/public-all.yaml
 helsinki-policy-public-news.yaml: projects/helsinki/spaces/helsinki/policies/public-news.yaml
@@ -165,12 +166,34 @@ helsinki-pipeline-subdistricts-bento.yaml: projects/helsinki/pipelines/subdistri
 helsinki-pipeline-fee-parking-zones-bento.yaml: projects/helsinki/pipelines/fee-parking-zones/bento.yaml
 helsinki-pipeline-resident-parking-zones-bento.yaml: projects/helsinki/pipelines/resident-parking-zones/bento.yaml
 # HSL's stops and lines (T-3356): the network transit-reach routes over, beside the live vehicles.
-helsinki-datasource-transit-stops.yaml: projects/helsinki/datasources/hsl-stops.yaml
+helsinki-datasource-transit-stops.yaml: projects/helsinki/datasources/hsl-gtfs-stops.yaml
 helsinki-datasource-transit-routes.yaml: projects/helsinki/datasources/hsl-routes.yaml
 helsinki-pipeline-transit-stops.yaml: projects/helsinki/pipelines/transit-stops/pipeline.yaml
 helsinki-pipeline-transit-routes.yaml: projects/helsinki/pipelines/transit-routes/pipeline.yaml
 helsinki-pipeline-transit-stops-bento.yaml: projects/helsinki/pipelines/transit-stops/bento.yaml
 helsinki-pipeline-transit-routes-bento.yaml: projects/helsinki/pipelines/transit-routes/bento.yaml
+# HSL's GTFS static feed (T-3890): agencies and lines, and the shapes they draw.
+helsinki-datasource-gtfs-routes.yaml: projects/helsinki/datasources/hsl-gtfs-routes.yaml
+helsinki-datasource-gtfs-shapes.yaml: projects/helsinki/datasources/hsl-gtfs-shapes.yaml
+helsinki-pipeline-gtfs-routes.yaml: projects/helsinki/pipelines/gtfs-routes/pipeline.yaml
+helsinki-pipeline-gtfs-shapes.yaml: projects/helsinki/pipelines/gtfs-shapes/pipeline.yaml
+helsinki-pipeline-gtfs-routes-bento.yaml: projects/helsinki/pipelines/gtfs-routes/bento.yaml
+helsinki-pipeline-gtfs-shapes-bento.yaml: projects/helsinki/pipelines/gtfs-shapes/bento.yaml
+# HSL's GTFS-RT trip updates (T-3891): the next departures of a curated set of stops.
+helsinki-datasource-trip-updates.yaml: projects/helsinki/datasources/hsl-trip-updates.yaml
+helsinki-pipeline-departures.yaml: projects/helsinki/pipelines/hsl-departures/pipeline.yaml
+helsinki-pipeline-departures-bento.yaml: projects/helsinki/pipelines/hsl-departures/bento.yaml
+# HSL's GTFS-RT service alerts (T-3892): one Alert each, linked to its lines and stops.
+helsinki-datasource-service-alerts.yaml: projects/helsinki/datasources/hsl-service-alerts.yaml
+helsinki-pipeline-service-alerts.yaml: projects/helsinki/pipelines/hsl-service-alerts/pipeline.yaml
+helsinki-pipeline-service-alerts-bento.yaml: projects/helsinki/pipelines/hsl-service-alerts/bento.yaml
+# Fintraffic LIIPI park and ride (T-3894): the HSL area's sites daily, their free spaces every 5 min.
+helsinki-datasource-liipi-facilities.yaml: projects/helsinki/datasources/liipi-facilities.yaml
+helsinki-datasource-liipi-utilizations.yaml: projects/helsinki/datasources/liipi-utilizations.yaml
+helsinki-pipeline-liipi-facilities.yaml: projects/helsinki/pipelines/liipi-facilities/pipeline.yaml
+helsinki-pipeline-liipi-facilities-bento.yaml: projects/helsinki/pipelines/liipi-facilities/bento.yaml
+helsinki-pipeline-liipi-utilizations.yaml: projects/helsinki/pipelines/liipi-utilizations/pipeline.yaml
+helsinki-pipeline-liipi-utilizations-bento.yaml: projects/helsinki/pipelines/liipi-utilizations/bento.yaml
 # The default group of Prague's waste desk (T-2786, AP-118): an organization Group, so it is seeded
 # here beside the organization's roles rather than from the praha folder, which writes its project only.
 group-praha-odpad-viewer.yaml: users/groups/praha-odpad-viewer.yaml
