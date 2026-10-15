@@ -42,6 +42,8 @@ context-broker:
     # Antares dev 79be5ab (train 20261013-0509): T-4020 T-3715 T-3946 T-3747 T-3822 T-4133 T-3752
     # (OGC collections from the view's LinkML, fan-out 1011/503, view-all contexts); no new
     # migration or runtime ANTARES_* key over d032654.
+    # Antares dev c0be313 (trains 20261013-0555, -0704, -1004): T-3645 T-3912 T-3959 T-3773 T-3945
+    # T-3817 T-3937 T-3831 T-3985 T-4017 T-3962; no new migration or runtime ANTARES_* key over 79be5ab.
     repository: 'ghcr.io/marek-mraz-jc/antares-broker-jc'
-    tag: '79be5ab'
-    digest: 'sha256:48ce9551e14eb6a140627889e32a31cb822b845bfd38a655b90e560fb70261a0'
+    tag: 'c0be313'
+    digest: 'sha256:19b617f81ca7cdb201589c2864eb0e9c1057bfcbdf569e681237ebc06ad706ab'
