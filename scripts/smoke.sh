@@ -84,10 +84,26 @@ routes=$(kubectl get configmap apisix-standalone-base -n "$slug" -o jsonpath='{.
 has_route() { grep -q "^  - id: $1\$" <<<"$routes"; }
 
 # status <expected> <description> <curl args...>
+# A 429 is the edge's per-IP budget, which every agent on this host's address spends as well
+# (apply 78, 2026-10-15: the UX photo audit walking the Portal). It is not the answer a check is
+# about: wait out the window the edge names, then ask again, up to three windows. Every check keeps its answer.
+wait_429() {
+	local reset="$1"
+	[[ $reset =~ ^[0-9]+$ ]] && [ "$reset" -le 60 ] || reset=30
+	sleep $((reset + 1))
+}
+
 status() {
 	local expected="$1" desc="$2"; shift 2
-	local got
-	got=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$@" 2>/dev/null) || got="curl-error"
+	local got reset
+	read -r got reset < <(curl -sS -o /dev/null -w '%{http_code} %header{x-ratelimit-reset}\n' \
+		--max-time 20 "$@" 2>/dev/null || echo curl-error)
+	local tries=0
+	while [ "$got" = 429 ] && [ "$expected" != 429 ] && [ $tries -lt 3 ]; do
+		wait_429 "$reset"; tries=$((tries + 1))
+		read -r got reset < <(curl -sS -o /dev/null -w '%{http_code} %header{x-ratelimit-reset}\n' \
+			--max-time 20 "$@" 2>/dev/null || echo curl-error)
+	done
 	if [ "$got" = "$expected" ]; then ok "$desc ($got)"; else ko "$desc (expected $expected, got $got)"; fi
 }
 
@@ -739,6 +755,11 @@ if has_route portal-public-guide; then
 	# T-4063: a citizen reads how to use a public Endpoint with no account, from the apex address
 	# as the API pages print it; the apex redirects to the Portal host, which answers the page.
 	guide=$(curl -sSL --max-time 20 "$base/docs/API/07-websocket" 2>/dev/null || true)
+	for _ in 1 2 3; do
+		case $guide in *'<title>Live Updates over WebSocket</title>'*) break ;; esac
+		wait_429 "$(curl -sS -o /dev/null -w '%header{x-ratelimit-reset}' --max-time 20 "$portal/docs/" 2>/dev/null)"
+		guide=$(curl -sSL --max-time 20 "$base/docs/API/07-websocket" 2>/dev/null || true)
+	done
 	case $guide in
 	*'<title>Live Updates over WebSocket</title>'*) ok "the WebSocket guide reads without signing in" ;;
 	*) ko "the WebSocket guide does not read without signing in" ;;
