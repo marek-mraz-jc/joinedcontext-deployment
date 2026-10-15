@@ -188,6 +188,10 @@ def test_the_organization_tunes_each_class_by_its_label(rendered):
         assert "labels" not in pc or pc["id"] in RATE_CLASSES, pc["id"]
 
 
+# The named MCP servers' anonymous callers, per client IP a minute (T-4141).
+ANONYMOUS_ROUTE_LIMITS = {"context-mcp-named": 60, "context-mcp-named-portal": 60}
+
+
 def test_space_reads_and_writes_count_apart(rendered):
     """T-2892, ADR-N-035: GET and HEAD on /cs/* win over the write route by priority and method,
     share its chain, and replace only its limit-count, so dataRead and dataWrite are two buckets."""
@@ -207,7 +211,14 @@ def test_space_reads_and_writes_count_apart(rendered):
         limit = read["plugins"]["limit-count"]
         assert (limit["count"], limit["key"], limit["rejected_code"]) == (count, "http_authorization", 429)
     for route in routes.values():
-        if route["id"] not in ROUTE_RATE_CLASSES:
+        if route["id"] in ANONYMOUS_ROUTE_LIMITS:
+            # A fixed per-IP count for callers without a bearer (T-4141): no rate class, so the
+            # Portal never rewrites it, and nothing beside the count.
+            assert "labels" not in route and set(route["plugins"]) == {"limit-count"}, route["id"]
+            limit = route["plugins"]["limit-count"]
+            assert (limit["count"], limit["key"]) == (ANONYMOUS_ROUTE_LIMITS[route["id"]], "remote_addr")
+            assert route["vars"] == [["http_authorization", "!", "~~", "."]], route["id"]
+        elif route["id"] not in ROUTE_RATE_CLASSES:
             assert "labels" not in route and "plugins" not in route, route["id"]
 
 

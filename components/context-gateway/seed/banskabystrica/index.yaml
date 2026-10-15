@@ -119,6 +119,8 @@ banskabystrica-verejne.v1.md: projects/banskabystrica/spaces/banskabystrica-vere
 endpoint-verejne.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/endpoints/banskabystrica-verejne.yaml
 policy-verejne-read.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/verejne-read.yaml
 policy-verejne-pipelines-write.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/verejne-pipelines-write.yaml
+# The same public Endpoint as a public, read-only MCP connector for any AI client (T-4141).
+banskabystrica-mcp-otvorene-data.yaml: projects/banskabystrica/mcp/otvorene-data.yaml
 # Its four feeds: the city's events, the school map and the EEA's hourly PM10 and PM2.5.
 datasource-podujatia.yaml: projects/banskabystrica/datasources/mesto-podujatia.yaml
 pipeline-podujatia.yaml: projects/banskabystrica/pipelines/podujatia/pipeline.yaml
