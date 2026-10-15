@@ -363,11 +363,15 @@ def test_every_entity_carries_the_request_that_produced_it(entities):
         for path in sorted(folder.glob("*.yaml"))
         if path.name != "index.yaml" and not path.name.endswith((".linkml.yaml", "-bento.yaml"))
         for doc in yaml.safe_load_all(path.read_text())
-        if isinstance(doc, dict) and doc.get("kind") == "DataSource"
+        if isinstance(doc, dict) and doc.get("kind") == "DataSource" and "http" in doc["spec"]
     }
     for path, produced in entities.items():
         pipeline = yaml.safe_load(Path(str(path).replace("-bento.yaml", ".yaml")).read_text())
-        wanted = declared[(pipeline["metadata"]["namespace"], pipeline["spec"]["source"]["dataSourceRef"]["name"])]
+        key = (pipeline["metadata"]["namespace"], pipeline["spec"]["source"]["dataSourceRef"]["name"])
+        # a `generate` source (SHMÚ, T-4153) has no URL: its requests live in the mapping
+        if key not in declared:
+            continue
+        wanted = declared[key]
         for entity in produced:
             assert entity["source"]["value"] == wanted, path.name
 
