@@ -14,6 +14,37 @@ ckan:
     send: 60
     read: 60
 
+# T-4201: CKAN's webassets carry a content hash in their names (`51d427fe_main.css`) yet CKAN
+# serves them `no-cache`, so every page revalidated each stylesheet and script against the
+# per-address limit. The browser keeps them a year, set only on a 200 or 304 so an error is
+# never cached. A route's `serverless-post-function` replaces its plugin config's, so the
+# config's CSP baseline comes first, word for word (tests/test_edge_asset_cache.py).
+ckan-webassets:
+  name: ckan-webassets
+  description: CKAN's fingerprinted stylesheets and scripts, cached for a year
+  upstream: ckan.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "ckan") }}.svc.cluster.local:5000 # yamllint disable-line rule:line-length
+  subDomain: data
+  uri: '/webassets/*'
+  priority: 5
+  pluginConfig: ckan
+  plugins:
+    serverless-post-function:
+      phase: header_filter
+      functions:
+        - >-
+          return function()
+            if ngx.header["Content-Security-Policy"] == nil then
+              ngx.header["Content-Security-Policy"] =
+                "frame-ancestors 'self'; object-src 'none'; base-uri 'self'"
+            end
+          end
+        - >-
+          return function()
+            if ngx.status == 200 or ngx.status == 304 then
+              ngx.header["Cache-Control"] = "public, max-age=31536000, immutable"
+            end
+          end
+
 # One stable path on the primary host that leads to the catalogue, for the people who only
 # ever learn one hostname. It answers a redirect and never proxies (see apisix-plugins.yaml),
 # because CKAN renders every link from its site URL and would emit data.{domain} links from

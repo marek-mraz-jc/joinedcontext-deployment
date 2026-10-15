@@ -65,7 +65,8 @@ def limit_count_blocks() -> list[tuple[str, str, dict]]:
 
 def test_the_server_block_answers_a_429_with_problem_details():
     snippet = server_snippet()
-    assert "error_page 429 = @too_many_requests;" in snippet, snippet
+    assert "error_page 429 = @too_many_requests_$jc_refusal;" in snippet, snippet
+    assert "set $jc_refusal json;" in snippet, "a client that does not ask for a page gets the contract"
     assert "default_type application/problem+json;" in snippet, snippet
     document = re.search(r"return 429 '(\{.*\})';", snippet)
     assert document, snippet
@@ -98,6 +99,34 @@ def test_the_refusal_carries_the_headers_a_refusal_needs():
         assert header in snippet, snippet
 
 
+def html_pages(snippet: str) -> dict[str, str]:
+    """T-4201: the refusal page per language, by the named location that answers it."""
+    return dict(re.findall(r"location @too_many_requests_html_(\w+) \{.*?return 429 '(<!doctype html>.*?)';", snippet, re.S))
+
+
+def test_a_browser_gets_a_page_in_its_language():
+    """T-4201: the bare JSON in a browser's pretty-print box was the page a visitor met."""
+    snippet = server_snippet()
+    pages = html_pages(snippet)
+    assert sorted(pages) == ["cs", "de", "en", "sk"], sorted(pages)
+    for lang, page in pages.items():
+        assert f'<html lang="{lang}">' in page, lang
+        assert '<meta http-equiv="refresh" content="$sent_http_x_ratelimit_reset">' in page, lang
+        assert "$sent_http_x_ratelimit_reset s" in page, f"{lang}: the page says when"
+        assert "<script" not in page and "src=" not in page and "href=" not in page, f"{lang}: it loads nothing"
+        for count in {str(block.get("count")) for _, _, block in limit_count_blocks()}:
+            assert f" {count} " not in page, f"{lang}: the quota {count} is in the page"
+    assert 'if ($http_accept ~* "text/html") {' in snippet
+    for lang in ("sk", "cs", "de"):
+        assert f'if ($jc_refusal_lang ~* "^\\s*{lang}") {{' in snippet, lang
+    # Each page's location sets the headers a refusal needs, and a CSP that allows nothing to load.
+    for block in re.findall(r"location @too_many_requests_\w+ \{(.*?)\n        \}", snippet, re.S):
+        assert "add_header Retry-After $sent_http_x_ratelimit_reset always;" in block
+        assert 'add_header X-Content-Type-Options "nosniff" always;' in block
+        assert 'add_header Cache-Control "no-store, no-cache, must-revalidate" always;' in block
+        assert "add_header Content-Security-Policy" in block
+
+
 def test_retry_after_is_the_window_the_limit_published():
     """A constant would lie the day a route's `time_window` changes."""
     assert "add_header Retry-After $sent_http_x_ratelimit_reset always;" in server_snippet()
@@ -126,9 +155,9 @@ def pinned_image() -> str:
     return f"{gateway['repository']}:{gateway['tag']}@{gateway['digest']}"
 
 
-def answer(url: str) -> tuple[int, dict[str, str], str]:
+def answer(url: str, headers: dict[str, str] | None = None) -> tuple[int, dict[str, str], str]:
     try:
-        with urllib.request.urlopen(url, timeout=5) as response:
+        with urllib.request.urlopen(urllib.request.Request(url, headers=headers or {}), timeout=5) as response:
             return response.status, dict(response.headers), response.read().decode()
     except urllib.error.HTTPError as refused:
         return refused.code, dict(refused.headers), refused.read().decode()
@@ -230,6 +259,23 @@ routes:
         assert headers["X-Frame-Options"] == "DENY", headers
         assert headers["Referrer-Policy"] == "no-referrer", headers
         assert "no-store" in headers["Cache-Control"], headers
+
+        # T-4201: the same refusal, asked for by a Slovak browser, is a Slovak page that
+        # reloads when the window ends; a German one gets German, anyone else English.
+        page = {"Accept": "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"}
+        status, headers, body = answer(url, {**page, "Accept-Language": "sk-SK,sk;q=0.9,en;q=0.8"})
+        assert status == 429, body
+        assert headers["Content-Type"] == "text/html; charset=utf-8", headers
+        assert '<html lang="sk">' in body and "Príliš veľa požiadaviek" in body, body
+        assert f'content="{headers["Retry-After"]}"' in body, "the page reloads when the window ends"
+        assert "default-src 'none'" in headers["Content-Security-Policy"], headers
+        assert headers["X-Content-Type-Options"] == "nosniff", headers
+        assert PROBLEM_TYPE not in body
+        assert '<html lang="de">' in answer(url, {**page, "Accept-Language": "de-AT"})[2]
+        assert '<html lang="en">' in answer(url, {**page, "Accept-Language": "fi"})[2]
+        assert '<html lang="en">' in answer(url, page)[2], "no Accept-Language is English"
+        status, headers, body = answer(url, {"Accept": "application/json", "Accept-Language": "sk"})
+        assert headers["Content-Type"] == "application/problem+json" and json.loads(body)["type"] == PROBLEM_TYPE
 
 
 def test_the_pinned_image_counts_space_reads_and_writes_apart(tmp_path):
