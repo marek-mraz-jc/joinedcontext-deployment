@@ -64,3 +64,30 @@ organizations:
   bbsk:
     initials: BBSK
     colour: '#7a1f5c'
+
+# The city's 43 datasets in the national catalogue, harvested nightly into `banskabystrica`
+# (T-4151). The corrections are docs Research/banska-bystrica-open-data-sources.md §7 and §8:
+# four titles link another dataset's file, which is ingested once under the title its columns
+# match; the dog registry locates people; contracts, orders and subsidies keep only the rows that
+# carry an IČO. HTML and PDF answers where JSON is declared are found by the fetch itself.
+harvest:
+  sources:
+    - name: banskabystrica
+      sparql: https://data.slovensko.sk/api/sparql
+      publisher: https://data.gov.sk/id/legal-subject/00313271
+      publisherName: Mesto Banská Bystrica
+      organization: banskabystrica
+      namePrefix: bb-
+      allowedHosts: [egov.banskabystrica.sk, dtm-banskabystrica.tmapserver.sk, www.banskabystrica.sk]
+      # NKOD records the bare host, which 301s to www.
+      rewriteHosts: {banskabystrica.sk: www.banskabystrica.sk}
+      skip:
+        Ulice: {state: mislinked, reason: 'not ingested, link points to Počet občanov podľa dňa narodenia (732 rows of Deň, Pohlavie, Počet)'}
+        Počet občanov podľa mena: {state: mislinked, reason: 'not ingested, link points to Počet občanov podľa veku (105 rows of ages)'}
+        Členovia orgánov samosprávy: {state: mislinked, reason: 'not ingested, link points to Evidencia psov (3 299 dog records)'}
+        Počet občanov podľa ulíc BB: {state: mislinked, reason: 'not ingested, link points to Prírastky a úbytky občanov za jednotlivé roky (27 rows of years)'}
+        Evidencia psov: {state: personal, reason: 'not ingested, street, house, flat and floor of each dog owner (Open data integration rules §1)'}
+      requireColumn:
+        Zmluvy BB: Zmluvné_strany_s_údajom_IČO
+        Objednávky BB: IČO
+        Dotácie: IČO_žiadateľa

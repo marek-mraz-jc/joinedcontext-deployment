@@ -1,0 +1,398 @@
+"""Harvests one publisher's datasets from the national catalogue (NKOD) into a CKAN organization (T-4151).
+
+Runs as `python3 -c` in the catalogue's image, from the `harvest` CronJob. One run:
+
+1. reads the publisher's datasets and distributions from the NKOD SPARQL endpoint (DCAT-AP), with
+   the licence from `legislation:termsOfUse`, where NKOD keeps it instead of `dct:license`;
+2. fetches every distribution once and corrects what the source gets wrong (docs
+   `Research/banska-bystrica-open-data-sources.md` sections 7 and 8): a title the configuration
+   names as mislinked or personal is not ingested, an HTML or PDF answer where JSON is declared is
+   not ingested, a non-ASCII URL is percent-encoded, string values are trimmed, and the rows the
+   configuration says must carry an identifier (an IČO) are dropped without one;
+3. writes each ingested dataset into CKAN with its licence, the original publisher and its
+   `modified`, the files as link resources and every JSON table as a DataStore table, which CKAN
+   also serves as CSV;
+4. deletes a dataset an earlier run harvested that the publisher no longer lists, checks every
+   ingested dataset (title, licence, a format on each resource, every link answered 200, every
+   table holds its rows) and prints the count per state with each skipped title and its reason.
+
+Fetched text is data: it is stored, never interpreted. TLS verification stays on, and a
+distribution is fetched only over https from a host the configuration allows, redirects
+included. The API token comes from the environment and is never printed.
+"""
+import json
+import os
+import re
+import sys
+import unicodedata
+import urllib.error
+import urllib.parse
+import urllib.request
+
+CATALOGUE = os.environ.get("CATALOGUE", "")
+TOKEN = os.environ.get("CKAN_API_TOKEN", "")
+CONFIG = json.loads(os.environ.get("HARVEST_CONFIG", "{}"))
+
+MAX_BYTES = 64 * 1024 * 1024
+CHUNK = 5000
+AGENT = "joinedcontext-harvest/1 (+https://www.joinedcontext.com)"
+EU_LICENCE = "http://publications.europa.eu/resource/authority/licence/"
+# The EU licence vocabulary to CKAN's own licence ids, in order of how much each one binds a
+# reuser: a dataset whose distributions differ takes the stricter one.
+LICENCES = {"CC0": "cc-zero", "CC_BY_4_0": "cc-by", "CC_BYSA_4_0": "cc-by-sa"}
+STRICTNESS = ["cc-zero", "cc-by", "cc-by-sa"]
+
+QUERY = """
+PREFIX dcat: <http://www.w3.org/ns/dcat#>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX l: <https://data.gov.sk/def/ontology/legislation/>
+SELECT ?ds ?title ?description ?modified ?issued ?landing ?keyword
+       ?dist ?distTitle ?url ?format ?work ?database ?special WHERE {
+  ?ds a dcat:Dataset ; dct:publisher <%s> ; dct:title ?title .
+  OPTIONAL { ?ds dct:description ?description }
+  OPTIONAL { ?ds dct:modified ?modified }
+  OPTIONAL { ?ds dct:issued ?issued }
+  OPTIONAL { ?ds dcat:landingPage ?landing }
+  OPTIONAL { ?ds dcat:keyword ?keyword }
+  OPTIONAL {
+    ?ds dcat:distribution ?dist .
+    OPTIONAL { ?dist dct:title ?distTitle }
+    OPTIONAL { ?dist dcat:downloadURL ?url }
+    OPTIONAL { ?dist dct:format ?format }
+    OPTIONAL { ?dist l:termsOfUse ?terms .
+               OPTIONAL { ?terms l:authorsWorkType ?work }
+               OPTIONAL { ?terms l:originalDatabaseType ?database }
+               OPTIONAL { ?terms l:databaseProtectedBySpecialRightsType ?special } }
+  }
+}
+"""
+
+
+class Refused(Exception):
+    """A fetch the rules do not allow: plain http, or a host outside the allowlist."""
+
+
+class Redirects(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        allowed(newurl)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+OPENER = urllib.request.build_opener(Redirects())
+
+
+def allowed(url):
+    parts = urllib.parse.urlsplit(url)
+    if parts.scheme != "https" or parts.hostname not in CONFIG.get("allowedHosts", []):
+        raise Refused(f"{parts.scheme}://{parts.hostname} is not an allowed source")
+
+
+def corrected_url(url):
+    """The publisher's URL as a client can send it: a host the configuration moves (the bare
+    host that 301s to `www.`) is moved, and a non-ASCII path or query is percent-encoded."""
+    parts = urllib.parse.urlsplit(url.strip())
+    host = CONFIG.get("rewriteHosts", {}).get(parts.netloc, parts.netloc)
+    path = urllib.parse.quote(parts.path, safe="/%:@!$&'()*+,;=-._~")
+    query = urllib.parse.quote(parts.query, safe="/%:@!$&'()*+,;=-._~?")
+    return urllib.parse.urlunsplit((parts.scheme, host, path, query, ""))
+
+
+def fetch(url, method="GET"):
+    """(status, content type, body) of an allowed https URL, the body capped at MAX_BYTES."""
+    allowed(url)
+    request = urllib.request.Request(url, method=method, headers={"User-Agent": AGENT})
+    try:
+        with OPENER.open(request, timeout=60) as response:
+            body = response.read(MAX_BYTES + 1) if method == "GET" else b""
+            if len(body) > MAX_BYTES:
+                raise Refused(f"answered more than {MAX_BYTES} bytes")
+            kind = (response.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+            return response.status, kind, body
+    except urllib.error.HTTPError as error:
+        return error.code, "", b""
+
+
+def sparql(query):
+    data = urllib.parse.urlencode({"query": query}).encode()
+    request = urllib.request.Request(CONFIG["sparql"], data=data, headers={
+        "Accept": "application/sparql-results+json", "User-Agent": AGENT})
+    with urllib.request.urlopen(request, timeout=120) as response:
+        return json.load(response)["results"]["bindings"]
+
+
+def ckan(action, payload):
+    """One Action API call on the catalogue's Service. Returns `result`, or None on a 404."""
+    host, _, port = CATALOGUE.partition(":")
+    request = urllib.request.Request(
+        f"http://{host}:{port or 5000}/api/3/action/{action}",
+        data=json.dumps(payload).encode(),
+        headers={"Content-Type": "application/json", "Authorization": TOKEN})
+    try:
+        with urllib.request.urlopen(request, timeout=300) as response:
+            return json.load(response)["result"]
+    except urllib.error.HTTPError as error:
+        if error.code == 404:
+            return None
+        detail = error.read(2000).decode("utf-8", "replace")
+        raise RuntimeError(f"{action} answered {error.code}: {detail}") from None
+
+
+# --- 1. what the catalogue lists ---------------------------------------------------------------
+
+def datasets(bindings):
+    """The SPARQL rows folded into one dict per dataset, keyed by its IRI."""
+    out = {}
+    for row in bindings:
+        value = {key: cell["value"] for key, cell in row.items()}
+        ds = out.setdefault(value["ds"], {
+            "iri": value["ds"], "title": value["title"].strip(),
+            "description": (value.get("description") or "").strip(),
+            "modified": value.get("modified", ""), "issued": value.get("issued", ""),
+            "landing": value.get("landing", ""), "keywords": set(), "distributions": {}})
+        if value.get("keyword"):
+            ds["keywords"].add(value["keyword"].strip())
+        if value.get("dist") and value.get("url"):
+            dist = ds["distributions"].setdefault(value["dist"], {
+                "title": (value.get("distTitle") or ds["title"]).strip(), "url": value["url"],
+                "format": value.get("format", "").rsplit("/", 1)[-1].upper(), "licences": set()})
+            for key in ("work", "database", "special"):
+                if value.get(key):
+                    dist["licences"].add(value[key])
+    return out
+
+
+def licence(distributions):
+    """The CKAN licence id of a dataset, or None when a distribution carries no open licence."""
+    ids = set()
+    for dist in distributions:
+        codes = {code[len(EU_LICENCE):] if code.startswith(EU_LICENCE) else code for code in dist["licences"]}
+        if not codes or not codes <= LICENCES.keys():
+            return None
+        ids |= {LICENCES[code] for code in codes}
+    return max(ids, key=STRICTNESS.index) if ids else None
+
+
+def slug(ds):
+    """A readable CKAN name from the title, `Počet občanov podľa veku` -> `bb-pocet-obcanov-podla-veku`.
+    NKOD's own landing-page names are often a mangled download URL, so they are not used."""
+    ascii_title = unicodedata.normalize("NFKD", ds["title"]).encode("ascii", "ignore").decode()
+    base = re.sub(r"[^a-z0-9]+", "-", ascii_title.lower()).strip("-") or ds["iri"].rsplit("/", 1)[-1]
+    return (CONFIG["namePrefix"] + base)[:100]
+
+
+def names(found):
+    """CKAN names per dataset IRI; two titles that fold to one name both get their NKOD id."""
+    counts = {}
+    for ds in found.values():
+        counts[slug(ds)] = counts.get(slug(ds), 0) + 1
+    return {iri: slug(ds) if counts[slug(ds)] == 1 else
+            (slug(ds)[:91] + "-" + iri.rsplit("/", 1)[-1][:8]) for iri, ds in found.items()}
+
+
+# --- 2. what the files hold, corrected -----------------------------------------------------------
+
+def table(body, title):
+    """The JSON array of flat records a city file holds, trimmed, with the rows the
+    configuration says must carry an identifier dropped when they do not. None if it is not one."""
+    try:
+        rows = json.loads(body.decode("utf-8-sig"))
+    except (UnicodeDecodeError, ValueError):
+        return None
+    if not isinstance(rows, list) or not rows or not all(isinstance(r, dict) for r in rows):
+        return None
+    if any(isinstance(v, (dict, list)) for r in rows for v in r.values()):
+        return None
+    rows = [{str(k).strip(): (v.strip() if isinstance(v, str) else v) for k, v in r.items()} for r in rows]
+    column = CONFIG.get("requireColumn", {}).get(title)
+    dropped = 0
+    if column:
+        kept = [r for r in rows if str(r.get(column) or "").strip()]
+        dropped, rows = len(rows) - len(kept), kept
+    return rows, dropped
+
+
+INTEGER = re.compile(r"-?(0|[1-9][0-9]*)")
+
+
+def fields(rows):
+    """DataStore fields in the file's column order; a column is int only when every value is a
+    plain integer without a leading zero, so an IČO or a postcode stays text."""
+    names = list(dict.fromkeys(k for r in rows for k in r))
+    out = []
+    for name in names:
+        values = [r.get(name) for r in rows if r.get(name) not in (None, "")]
+        whole = values and all(isinstance(v, int) or (isinstance(v, str) and INTEGER.fullmatch(v)) for v in values)
+        out.append({"id": name, "type": "int" if whole else "text"})
+    return out
+
+
+def records(rows, columns):
+    ints = {c["id"] for c in columns if c["type"] == "int"}
+    return [{k: (int(v) if k in ints and v not in (None, "") else (None if v == "" else v)) for k, v in r.items()}
+            for r in rows]
+
+
+def assess(ds):
+    """Decides one dataset: (state, reason, resources, tables). Only `ingested` is written."""
+    skip = CONFIG.get("skip", {}).get(ds["title"])
+    if skip:
+        return skip["state"], skip["reason"], [], []
+    dists = list(ds["distributions"].values())
+    if not dists:
+        return "empty", "no distribution with a download URL", [], []
+    licence_id = licence(dists)
+    if not licence_id:
+        return "licence", "no open licence in legislation:termsOfUse", [], []
+    resources, tables, refusals, seen = [], [], [], set()
+    filtered = ds["title"] in CONFIG.get("requireColumn", {})
+    for dist in dists:
+        url = corrected_url(dist["url"])
+        if url in seen:
+            continue
+        seen.add(url)
+        try:
+            status, kind, body = fetch(url, "GET" if dist["format"] == "JSON" else "HEAD")
+            if status in (405, 501):
+                status, kind, body = fetch(url)
+        except Refused as error:
+            refusals.append(("refused", str(error)))
+            continue
+        except (urllib.error.URLError, OSError) as error:
+            refusals.append(("dead", f"{url} did not answer: {error}"))
+            continue
+        if status != 200:
+            refusals.append(("dead", f"{url} answered {status}"))
+            continue
+        if kind == "text/html":
+            refusals.append(("html", f"declared {dist['format']}, {url} serves an HTML page"))
+            continue
+        if kind == "application/pdf":
+            refusals.append(("pdf", f"declared {dist['format']}, {url} serves a PDF"))
+            continue
+        if dist["format"] == "JSON":
+            parsed = table(body, ds["title"])
+            if parsed is not None:
+                rows, dropped = parsed
+                tables.append({"name": f"{dist['title']} (tabuľka)", "rows": rows, "dropped": dropped})
+        # A file whose rows were filtered is published only as the filtered table: linking the
+        # original would publish the rows that were dropped.
+        if not (filtered and dist["format"] == "JSON"):
+            resources.append({"name": dist["title"], "url": url, "format": dist["format"] or kind,
+                              "mimetype": kind or None})
+    if not resources and not tables:
+        state, reason = refusals[0] if refusals else ("empty", "nothing to publish")
+        return state, reason, [], []
+    return "ingested", licence_id, resources, tables
+
+
+# --- 3. what CKAN holds --------------------------------------------------------------------------
+
+def package(ds, name, licence_id, resources, tables):
+    dropped = sum(t["dropped"] for t in tables)
+    notes = [ds["description"] or ds["title"],
+             f"Zdroj: Národný katalóg otvorených dát, {ds['landing'] or ds['iri']}."]
+    if dropped:
+        notes.append(f"Z tabuľky sú vynechané riadky bez údaja {CONFIG['requireColumn'][ds['title']]} "
+                     f"({dropped}), ktoré môžu označovať fyzickú osobu.")
+    tags = [{"name": t[:100]} for t in sorted(ds["keywords"]) if re.fullmatch(r"[\w .-]{2,100}", t)]
+    extras = {"harvest_source": CONFIG["source"], "source_uri": ds["iri"],
+              "publisher_name": CONFIG["publisherName"], "publisher_uri": CONFIG["publisher"],
+              "issued": ds["issued"], "modified": ds["modified"]}
+    return {"name": name, "title": ds["title"], "notes": "\n\n".join(notes),
+            "owner_org": CONFIG["organization"], "license_id": licence_id, "tags": tags,
+            "url": ds["landing"] or ds["iri"],
+            "extras": [{"key": k, "value": v} for k, v in extras.items() if v],
+            "resources": resources}
+
+
+def upsert(desired, tables):
+    live = ckan("package_show", {"id": desired["name"]})
+    if live is None:
+        live = ckan("package_create", desired)
+    else:
+        payload = dict(desired, id=live["id"], state="active")
+        # package_update replaces the resource list: the DataStore tables are carried over by
+        # id, or CKAN drops them with their rows.
+        names = {t["name"] for t in tables}
+        payload["resources"] = desired["resources"] + [
+            r for r in live.get("resources", []) if r.get("url_type") == "datastore" and r["name"] in names]
+        live = ckan("package_update", payload)
+    existing = {r["name"]: r["id"] for r in live.get("resources", []) if r.get("url_type") == "datastore"}
+    for t in tables:
+        columns = fields(t["rows"]) if t["rows"] else [{"id": "empty", "type": "text"}]
+        rows = records(t["rows"], columns)
+        if t["name"] in existing:
+            target = {"resource_id": existing[t["name"]]}
+            ckan("datastore_delete", dict(target, force=True))
+        else:
+            target = {"resource": {"package_id": live["id"], "name": t["name"], "format": "CSV"}}
+        created = ckan("datastore_create", dict(target, force=True, fields=columns, records=rows[:CHUNK]))
+        for start in range(CHUNK, len(rows), CHUNK):
+            ckan("datastore_upsert", {"resource_id": created["resource_id"], "method": "insert",
+                                      "force": True, "records": rows[start:start + CHUNK]})
+        t["resource_id"] = created["resource_id"]
+
+
+def harvested_names():
+    names, start = set(), 0
+    while True:
+        page = ckan("package_search", {
+            "fq": f'organization:{CONFIG["organization"]} AND extras_harvest_source:"{CONFIG["source"]}"',
+            "rows": 1000, "start": start, "include_private": True, "fl": "name"})
+        names |= {p["name"] for p in page["results"]}
+        start += 1000
+        if start >= page["count"]:
+            return names
+
+
+def verify(desired, tables):
+    """The defects a reader would hit: missing title or licence, a resource without a format, a
+    table that lost rows. Every link resource was fetched with 200 in `assess` already."""
+    live = ckan("package_show", {"id": desired["name"]})
+    problems = []
+    if not live.get("title") or not live.get("license_id"):
+        problems.append("title or licence missing")
+    problems += [f"resource {r['name']} has no format" for r in live["resources"] if not r.get("format")]
+    for t in tables:
+        total = ckan("datastore_search", {"resource_id": t["resource_id"], "limit": 0})["total"]
+        if total != len(t["rows"]):
+            problems.append(f"table {t['name']} holds {total} rows, {len(t['rows'])} expected")
+    return problems
+
+
+def main():
+    if not CATALOGUE or not TOKEN or not CONFIG.get("organization"):
+        print("CATALOGUE, CKAN_API_TOKEN and HARVEST_CONFIG.organization are required", file=sys.stderr)
+        return 2
+    found = datasets(sparql(QUERY % CONFIG["publisher"]))
+    print(f"{CONFIG['source']}: {len(found)} datasets in the catalogue")
+    if not found:
+        print("the catalogue listed nothing; nothing is deleted on an empty answer", file=sys.stderr)
+        return 1
+    if ckan("organization_show", {"id": CONFIG["organization"]}) is None:
+        ckan("organization_create", {"name": CONFIG["organization"], "title": CONFIG["publisherName"]})
+    states, problems, kept, named = {}, [], set(), names(found)
+    for ds in sorted(found.values(), key=lambda d: d["title"]):
+        state, reason, resources, tables = assess(ds)
+        states.setdefault(state, []).append((ds["title"], reason))
+        if state != "ingested":
+            continue
+        desired = package(ds, named[ds["iri"]], reason, resources, tables)
+        upsert(desired, tables)
+        kept.add(desired["name"])
+        problems += [f"{ds['title']}: {p}" for p in verify(desired, tables)]
+    for name in sorted(harvested_names() - kept):
+        ckan("package_delete", {"id": name})
+        states.setdefault("withdrawn", []).append((name, "no longer ingested from the catalogue"))
+    for state in sorted(states):
+        print(f"{state}: {len(states[state])}")
+        if state != "ingested":
+            for title, reason in states[state]:
+                print(f"  - {title}: {reason}")
+    for problem in problems:
+        print(f"check failed: {problem}", file=sys.stderr)
+    return 1 if problems else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
