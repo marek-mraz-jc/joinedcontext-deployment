@@ -30,5 +30,7 @@ spec:
   rateLimit: { requestsPerMinute: 30, perClientPerMinute: 6 }
   # About 0.1 USD a day at most (google/gemini-3.8-flash, 2026-10-06); the owner keeps usage down.
   budget: { tokensPerDay: 300000, tokensPerConversation: 40000 }
-  theme: { greeting: "Hello! Ask me about the open data of Banská Bystrica, its region, Prague, Helsinki or Žilina." }
+  # In the first of `languages`: the widget shows it to a visitor in that language and its own
+  # greeting in theirs to anyone else (T-4199).
+  theme: { greeting: "Dobrý deň! Opýtajte sa ma na otvorené údaje Banskej Bystrice, jej kraja, Prahy, Helsínk alebo Žiliny." }
   languages: [sk, cs, en, fi]

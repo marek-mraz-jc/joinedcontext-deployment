@@ -233,8 +233,82 @@ apisix:
         # `SAMEORIGIN`, `no-referrer` beside `strict-origin-when-cross-origin`), which a body
         # of JSON with nothing to frame and nothing to link can always afford. The
         # CSP is the `DENY` routes' OPS-34 baseline: no upstream wrote this answer, so it has none.
-        error_page 429 = @too_many_requests;
-        location @too_many_requests {
+        # T-4201: a browser asking for a page gets a page, in its language, that reloads itself
+        # when the window ends; a client asking for anything else keeps the Problem Details
+        # above. The choice is made in the server's rewrite phase from `Accept` (text/html) and
+        # `Accept-Language` (sk, cs, de, else en), before any route runs. The page carries no
+        # script and loads nothing (`default-src 'none'`).
+        set $jc_refusal json;
+        set $jc_refusal_lang "";
+        if ($http_accept ~* "text/html") {
+          set $jc_refusal html_en;
+        }
+        if ($jc_refusal = html_en) {
+          set $jc_refusal_lang $http_accept_language;
+        }
+        if ($jc_refusal_lang ~* "^\s*sk") {
+          set $jc_refusal html_sk;
+        }
+        if ($jc_refusal_lang ~* "^\s*cs") {
+          set $jc_refusal html_cs;
+        }
+        if ($jc_refusal_lang ~* "^\s*de") {
+          set $jc_refusal html_de;
+        }
+        error_page 429 = @too_many_requests_$jc_refusal;
+        location @too_many_requests_html_sk {
+          internal;
+          default_type text/html;
+          charset utf-8;
+          add_header Retry-After $sent_http_x_ratelimit_reset always;
+          add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+          add_header X-Content-Type-Options "nosniff" always;
+          add_header X-Frame-Options "DENY" always;
+          add_header Referrer-Policy "no-referrer" always;
+          add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+          add_header Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'" always;
+          return 429 '<!doctype html><html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="$sent_http_x_ratelimit_reset"><title>Príliš veľa požiadaviek</title><style>body{font:16px/1.5 system-ui,sans-serif;margin:0;padding:24px;color:#1a1a1a;background:#f6f6f6}main{max-width:36rem;margin:10vh auto;background:#fff;border:1px solid #ddd;border-radius:8px;padding:24px}h1{font-size:1.4rem;margin:0 0 8px}</style></head><body><main><h1>Príliš veľa požiadaviek</h1><p>Z vašej siete prišlo za poslednú minútu viac požiadaviek, ako platforma prijme z jednej adresy. Stránka sa sama znova načíta o $sent_http_x_ratelimit_reset s.</p></main></body></html>';
+        }
+        location @too_many_requests_html_cs {
+          internal;
+          default_type text/html;
+          charset utf-8;
+          add_header Retry-After $sent_http_x_ratelimit_reset always;
+          add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+          add_header X-Content-Type-Options "nosniff" always;
+          add_header X-Frame-Options "DENY" always;
+          add_header Referrer-Policy "no-referrer" always;
+          add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+          add_header Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'" always;
+          return 429 '<!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="$sent_http_x_ratelimit_reset"><title>Příliš mnoho požadavků</title><style>body{font:16px/1.5 system-ui,sans-serif;margin:0;padding:24px;color:#1a1a1a;background:#f6f6f6}main{max-width:36rem;margin:10vh auto;background:#fff;border:1px solid #ddd;border-radius:8px;padding:24px}h1{font-size:1.4rem;margin:0 0 8px}</style></head><body><main><h1>Příliš mnoho požadavků</h1><p>Z vaší sítě přišlo za poslední minutu více požadavků, než platforma přijme z jedné adresy. Stránka se sama znovu načte za $sent_http_x_ratelimit_reset s.</p></main></body></html>';
+        }
+        location @too_many_requests_html_de {
+          internal;
+          default_type text/html;
+          charset utf-8;
+          add_header Retry-After $sent_http_x_ratelimit_reset always;
+          add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+          add_header X-Content-Type-Options "nosniff" always;
+          add_header X-Frame-Options "DENY" always;
+          add_header Referrer-Policy "no-referrer" always;
+          add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+          add_header Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'" always;
+          return 429 '<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="$sent_http_x_ratelimit_reset"><title>Zu viele Anfragen</title><style>body{font:16px/1.5 system-ui,sans-serif;margin:0;padding:24px;color:#1a1a1a;background:#f6f6f6}main{max-width:36rem;margin:10vh auto;background:#fff;border:1px solid #ddd;border-radius:8px;padding:24px}h1{font-size:1.4rem;margin:0 0 8px}</style></head><body><main><h1>Zu viele Anfragen</h1><p>Aus Ihrem Netz kamen in der letzten Minute mehr Anfragen, als die Plattform von einer Adresse annimmt. Die Seite lädt sich in $sent_http_x_ratelimit_reset s selbst neu.</p></main></body></html>';
+        }
+        location @too_many_requests_html_en {
+          internal;
+          default_type text/html;
+          charset utf-8;
+          add_header Retry-After $sent_http_x_ratelimit_reset always;
+          add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+          add_header X-Content-Type-Options "nosniff" always;
+          add_header X-Frame-Options "DENY" always;
+          add_header Referrer-Policy "no-referrer" always;
+          add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+          add_header Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'" always;
+          return 429 '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="$sent_http_x_ratelimit_reset"><title>Too many requests</title><style>body{font:16px/1.5 system-ui,sans-serif;margin:0;padding:24px;color:#1a1a1a;background:#f6f6f6}main{max-width:36rem;margin:10vh auto;background:#fff;border:1px solid #ddd;border-radius:8px;padding:24px}h1{font-size:1.4rem;margin:0 0 8px}</style></head><body><main><h1>Too many requests</h1><p>Your network sent more requests in the last minute than the platform accepts from one address. The page reloads itself in $sent_http_x_ratelimit_reset s.</p></main></body></html>';
+        }
+        location @too_many_requests_json {
           internal;
           default_type application/problem+json;
           add_header Retry-After $sent_http_x_ratelimit_reset always;

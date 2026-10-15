@@ -15,6 +15,7 @@ pipeline:
         let unit_code = "C62"
         let unit_text = "osoby"
         let source_url = "https://data.statistics.sk/api/v2/dataset/om7102rr/SK032,SK0321,SK0322,SK0323,SK0324,SK0325,SK0326,SK0327,SK0328,SK0329,SK032A,SK032B,SK032C,SK032D/*/IN010115/SPOLU?lang=sk&type=json"
+        let domain = "bbsk.sk"
         # JSON-stat 2.0, decoded by the index and never by the order. `value` is flat and
         # row-major over `size`; the position of a code inside a dimension is
         # `dimension.{name}.category.index`, which is NOT sorted: the period dimension comes back
@@ -31,7 +32,7 @@ pipeline:
         let updated = $ds.update.or("").ts_parse("2006-01-02").ts_format("2006-01-02T15:04:05Z07:00", "UTC").catch(null)
         # One entity per cell that carries a number. A cell the publisher left empty is not a zero.
         root = range(0, $ds.value.length(), 1).map_each(p -> { "at": range(0, $n, 1).map_each(k -> { $ids.index(k): $codes.index(k).index(((p / $strides.index(k)).floor().int64()) % $sizes.index(k)) }).squash(), "cell": $ds.value.index(p) }).filter(c -> c.cell != null).map_each(c -> {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("StatisticalObservation", env("JC_ORG_DOMAIN"), env("JC_SPACE"), [$cube, c.at.get($area_dim), c.at.get($period_dim), c.at.get($indicator_dim)].concat($key_dims.map_each(d -> c.at.get(d))).join("-")),
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("StatisticalObservation", $domain, env("JC_SPACE"), [$cube, c.at.get($area_dim), c.at.get($period_dim), c.at.get($indicator_dim)].concat($key_dims.map_each(d -> c.at.get(d))).join("-")),
           "type": "StatisticalObservation",
           "dataSet": { "type": "Property", "value": $cube },
           "indicator": { "type": "Property", "value": c.at.get($indicator_dim) },

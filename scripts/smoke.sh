@@ -107,6 +107,23 @@ status() {
 	if [ "$got" = "$expected" ]; then ok "$desc ($got)"; else ko "$desc (expected $expected, got $got)"; fi
 }
 
+# immutable <description> <url>: the asset answers 200 with the year-long cache of a
+# content-hashed file (T-4201). A 429 on the way is waited out as `status` does.
+immutable() {
+	local desc="$1" url="$2" head tries=0
+	case $url in */assets/?*|*/webassets/?*) ;; *) ko "$desc (no asset found on the page)"; return ;; esac
+	head=$(curl -sSI --max-time 20 "$url" 2>/dev/null || true)
+	while grep -q '^HTTP/[0-9.]* 429' <<<"$head" && [ $tries -lt 3 ]; do
+		wait_429 "$(sed -n 's/^x-ratelimit-reset: *\([0-9]*\).*/\1/Ip' <<<"$head")"; tries=$((tries + 1))
+		head=$(curl -sSI --max-time 20 "$url" 2>/dev/null || true)
+	done
+	if grep -q '^HTTP/[0-9.]* 200' <<<"$head" && grep -qi '^cache-control: public, max-age=31536000, immutable' <<<"$head"; then
+		ok "$desc"
+	else
+		ko "$desc ($(head -1 <<<"$head" | tr -d '\r'); $(grep -i '^cache-control' <<<"$head" | tr -d '\r'))"
+	fi
+}
+
 echo "smoke: $base (realm $realm)"
 
 echo "workloads"
@@ -750,6 +767,15 @@ else
 	skip "git forge (route gitea-forge not configured in this instance)"
 fi
 
+echo "portal bundle"
+if has_route portal-public-assets; then
+	# T-4201: the public catalogue page names its content-hashed chunks; one is kept a year.
+	catalogue_page=$(curl -sS --max-time 20 "$portal/catalogue" 2>/dev/null || true)
+	immutable "a Portal chunk is cached for a year" "$portal$(grep -o '/assets/[^"]*\.js' <<<"$catalogue_page" | head -1)"
+else
+	skip "portal bundle (route portal-public-assets not configured in this instance)"
+fi
+
 echo "public documentation"
 if has_route portal-public-guide; then
 	# T-4063: a citizen reads how to use a public Endpoint with no account, from the apex address
@@ -780,6 +806,8 @@ if has_route ckan; then
 	primary=$(kubectl get configmap portal-branding -n "$slug" \
 		-o jsonpath='{.data.branding\.yaml}' 2>/dev/null | sed -n 's/^  primary: *//p' | tr -d "'\"")
 	page=$(curl -sS --max-time 20 "$catalogue/" 2>/dev/null || true)
+	# T-4201: a fingerprinted stylesheet is kept a year, so a revisit costs no request.
+	immutable "a catalogue webasset is cached for a year" "$catalogue$(grep -o '/webassets/[^"]*\.css' <<<"$page" | head -1)"
 	if [ -n "$name" ] && grep -qF "$name" <<<"$page"; then
 		ok "catalogue front page carries the instance name"
 	else

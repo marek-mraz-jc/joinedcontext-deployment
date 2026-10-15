@@ -202,6 +202,10 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "an open-data catalogue is public reading; writing is CKAN's own session",
     },
+    "ckan-webassets": {
+        "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",
+        "why": "CKAN's fingerprinted stylesheets and scripts, the same files for everyone, kept a year by the browser (T-4201)",
+    },
     "security-txt": {
         "reach": TERMINATES, "cacheable": False, "framing": "DENY",
         "why": "RFC 9116 security.txt is public by the RFC; the edge answers it and names only the reporting contact (T-1721)",

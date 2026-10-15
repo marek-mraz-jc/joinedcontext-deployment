@@ -16,14 +16,14 @@ pipeline:
           }
         }
         root = this.features.or([]).map_each(f -> f.properties.assign({ "_geometry": f.geometry.or(null) })).filter(p -> p."IČO".or("").string().re_match("^[0-9]{8}$") && p."kategória".or("").apply("category") != null && p."Oficiálny_názov".or("").trim() != "").map_each(p -> {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("PublicOrganization", env("JC_ORG_DOMAIN"), env("JC_SPACE"), p."IČO"),
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("PublicOrganization", "bbsk.sk", env("JC_SPACE"), p."IČO"),
           "type": "PublicOrganization",
           "name": { "type": "LanguageProperty", "languageMap": { "sk": p."Oficiálny_názov".trim() } },
           "alternateName": if p."Zaužívaný_názov".or("").trim() == "" || p."Zaužívaný_názov".trim() == p."Oficiálny_názov".trim() { null } else { { "type": "Property", "value": p."Zaužívaný_názov".trim() } },
           "legalId": { "type": "Property", "value": p."IČO" },
           "organizationCategory": { "type": "Property", "value": p."kategória".apply("category") },
           "address": if p.adresa.or("").trim() == "" { null } else { { "type": "Property", "value": p.adresa.trim() } },
-          "refMunicipality": if p.obec_NUTS.or("").string().re_match("^SK032[1-9A-D][0-9]{6}$") { { "type": "Relationship", "object": "urn:ngsi-ld:%v:%v:%v:%v".format("AdministrativeArea", env("JC_ORG_DOMAIN"), env("JC_SPACE"), p.obec_NUTS) } } else { null },
+          "refMunicipality": if p.obec_NUTS.or("").string().re_match("^SK032[1-9A-D][0-9]{6}$") { { "type": "Relationship", "object": "urn:ngsi-ld:%v:%v:%v:%v".format("AdministrativeArea", "bbsk.sk", env("JC_SPACE"), p.obec_NUTS) } } else { null },
           "location": if p._geometry == null { null } else { { "type": "GeoProperty", "value": p._geometry } },
           "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj, opendata.bbsk.sk (CC BY-SA 4.0)" },
           "source": { "type": "Property", "value": "https://opendata.bbsk.sk/" }

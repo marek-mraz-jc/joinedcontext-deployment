@@ -20,7 +20,7 @@ pipeline:
           root = this.keys().filter(k -> k.re_match("^Rozpočet v [0-9]{4}$")).index(0).or(null)
         }
         root = content().string().trim_prefix("﻿").parse_csv(true, ";").filter(r -> r.Obec.or("").trim().re_match("^[0-9]{5} Banská Bystrica$") && r.EDUID.or("").trim().re_match("^[0-9]{9}$") && r."Názov".or("").trim() != "").map_each(r -> r.assign({ "_budget": r.apply("budget_column") })).map_each(r -> {
-          "id": "urn:ngsi-ld:%v:%v:%v:school-%v".format("School", env("JC_ORG_DOMAIN"), env("JC_SPACE"), r.EDUID.trim()),
+          "id": "urn:ngsi-ld:%v:%v:%v:school-%v".format("School", "banskabystrica.sk", env("JC_SPACE"), r.EDUID.trim()),
           "type": "School",
           "name": { "type": "LanguageProperty", "languageMap": { "sk": r."Názov".trim() } },
           "schoolCode": { "type": "Property", "value": r.EDUID.trim() },

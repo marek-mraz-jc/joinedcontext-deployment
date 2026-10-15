@@ -76,12 +76,14 @@ global:
   # languages are the only difference from any other installation, and nothing below is
   # baked into an image. The colours are Helsinki Design System values (brand blue, bus blue,
   # engel, black-90). The name and the mark are the platform's own, joinedcontext (owner's
-  # decision): the data is Helsinki's, the product on screen is joinedcontext.
+  # decision). The installation serves five publishers (Helsinki, Banská Bystrica, BBSK, Žilina,
+  # Praha), so the publisher it names is the demo itself, not one of them: each dataset and
+  # Endpoint carries its own publisher (T-4202).
   branding:
     instanceName: joinedcontext
     shortName: joinedcontext
     city: Helsinki
-    organisation: City of Helsinki (demo instance, not affiliated)
+    organisation: joinedcontext demo
     # The publisher's own domain, which is what a DCAT-AP record and a did:web name. The
     # URN segment above is separate and stays until the demo data moves with it (T-0343).
     orgDomain: hel.fi
@@ -103,7 +105,9 @@ global:
       text: '#1a1a1a'
     fonts:
       # Self-hosted or system only: nothing on a page fetches from a third-party origin.
-      heading: HelsinkiGrotesk, system-ui, sans-serif
+      # No HelsinkiGrotesk: it has no š, ž or ř, and Slovak and Czech headings fell back letter
+      # by letter to another face (T-4202).
+      heading: system-ui, sans-serif
       body: system-ui, sans-serif
     # English only, for now, by the owner's decision: the Portal ships no Finnish or Swedish
     # bundle, so offering them showed a switcher that fell back to another language. The

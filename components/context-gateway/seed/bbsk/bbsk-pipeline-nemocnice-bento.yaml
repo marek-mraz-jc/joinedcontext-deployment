@@ -14,7 +14,7 @@ pipeline:
           }
         }
         root = this.features.or([]).filter(f -> f.properties.IdZZ.or("").string().re_match("^[0-9A-Z-]+$") && f.properties.Druh_zariadenia.or("").apply("kind") != null).map_each(f -> f.properties.assign({ "_geometry": f.geometry.or(null) })).map_each(p -> {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Hospital", env("JC_ORG_DOMAIN"), env("JC_SPACE"), p.IdZZ),
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Hospital", "bbsk.sk", env("JC_SPACE"), p.IdZZ),
           "type": "Hospital",
           "name": { "type": "LanguageProperty", "languageMap": { "sk": p."Vlastný_názov_zariadenia".or(p."Názov_poskytovateľa").string().trim() } },
           "hospitalKind": { "type": "Property", "value": p.Druh_zariadenia.apply("kind") },

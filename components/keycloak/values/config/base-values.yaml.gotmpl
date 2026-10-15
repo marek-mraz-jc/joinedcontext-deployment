@@ -203,10 +203,11 @@ config:
         auth: "true"
         ssl: "false"
 {{- end }}
-      # The joinedcontext theme (UI-82, components/keycloak/charts/theme); the account,
+      # The joinedcontext theme (UI-82, components/keycloak/charts/theme) for the login pages
+      # and the account console (T-4203: the Portal's logo, colours and a way back to it); the
       # admin and e-mail pages stay Keycloak's own.
       loginTheme: joinedcontext
-      accountTheme: keycloak
+      accountTheme: joinedcontext
       adminTheme: keycloak
       emailTheme: keycloak
       eventsEnabled: true
