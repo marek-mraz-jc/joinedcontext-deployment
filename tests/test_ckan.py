@@ -128,11 +128,12 @@ def test_the_catalogue_is_reached_through_the_edge_and_nothing_else(rendered):
     only door is APISIX, where the header sanitisation and the rate limit are."""
     policy = by_name(rendered("dev"), "NetworkPolicy", "ckan")["spec"]
     peers = [p for rule in policy["ingress"] for p in rule["from"]]
-    # The edge, and the API token Job that signs in on the Service (T-0493); nobody else.
+    # The edge, the API token Job that signs in on the Service (T-0493) and the harvest that
+    # writes with that token (T-4152); nobody else.
     assert [p["podSelector"]["matchLabels"].get("app.kubernetes.io/component",
                                                 p["podSelector"]["matchLabels"]["app.kubernetes.io/name"])
-            for p in peers] == ["apisix", "api-token"]
-    assert [p["port"] for rule in policy["ingress"] for p in rule["ports"]] == [5000, 5000]
+            for p in peers] == ["apisix", "api-token", "harvest"]
+    assert [p["port"] for rule in policy["ingress"] for p in rule["ports"]] == [5000, 5000, 5000]
     # Egress is a closed list: DNS, the database, Solr, Redis. No 443, because nothing in
     # this configuration fetches a remote URL — turning SSO on adds it, and this test with it.
     assert "Egress" in policy["policyTypes"]

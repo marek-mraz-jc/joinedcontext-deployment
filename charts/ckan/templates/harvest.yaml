@@ -1,0 +1,64 @@
+{{- /*
+  The harvest of outside catalogues into CKAN organizations (T-4152): `files/harvest.py`, once
+  a day, with the API token the api-token Job keeps. It reads the internet (443) and writes to
+  the catalogue's own Service; it needs no Kubernetes API, so no ServiceAccount token.
+*/}}
+{{- if and .Values.harvest.enabled .Values.harvest.sources }}
+{{- $part := "harvest" }}
+{{- $full := include "ckan.fullname" . }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ $full }}-{{ $part }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "ckan.labels" (dict "root" . "part" $part) | nindent 4 }}
+spec:
+  schedule: {{ .Values.harvest.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 1800
+      ttlSecondsAfterFinished: 86400
+      template:
+        metadata:
+          labels:
+            {{- include "ckan.selectorLabels" (dict "root" . "part" $part) | nindent 12 }}
+          {{- if .Values.serviceMesh.enabled }}
+          annotations:
+            # Told to exit with the script, or the pod stays Running and the Job never completes.
+            linkerd.io/inject: enabled
+            config.alpha.linkerd.io/proxy-enable-native-sidecar: "true"
+          {{- end }}
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          enableServiceLinks: false
+          securityContext:
+            {{- toYaml .Values.podSecurityContext | nindent 12 }}
+          containers:
+            - name: harvest
+              image: {{ include "ckan.image" .Values.ckan.image }}
+              imagePullPolicy: {{ .Values.ckan.image.pullPolicy }}
+              securityContext:
+                {{- toYaml .Values.securityContext | nindent 16 }}
+              resources:
+                requests: { cpu: 10m, memory: 64Mi }
+                limits: { memory: 256Mi }
+              env:
+                - name: CATALOGUE
+                  value: {{ printf "%s.%s.svc.cluster.local" $full .Release.Namespace | quote }}
+                - name: CKAN_API_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.apiToken.secret }}
+                      key: token
+                - name: SOURCES
+                  value: {{ .Values.harvest.sources | toJson | quote }}
+              command: [python3, -c]
+              args:
+                - {{ .Files.Get "files/harvest.py" | toJson }}
+{{- end }}

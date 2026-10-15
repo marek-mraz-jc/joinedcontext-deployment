@@ -127,6 +127,14 @@ apiToken:
   # The token's name in CKAN, so the administrator's token list says who holds it.
   name: jcctl
 
+# Outside catalogues harvested into CKAN organizations once a day (T-4152, `files/harvest.py`).
+# Each source: {key, kind: arcgis-hub, hub, hosts, org, publisher: {name, uri, description},
+# skip: {item id: reason}, titles: {item id: title}, spelling: {wrong: right}}.
+harvest:
+  enabled: false
+  schedule: '23 3 * * *'
+  sources: []
+
 # The block of Deployment/12. Every template below reads it and nothing else, which is what
 # makes the theme reusable by a second installation without a file change (OPS-47).
 branding: {}

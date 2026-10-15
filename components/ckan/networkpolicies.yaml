@@ -32,6 +32,17 @@ ckan:
       ports:
         - protocol: TCP
           port: 5000
+    # The harvest CronJob writes the datasets it reads from outside catalogues (T-4152).
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: ckan
+              app.kubernetes.io/instance: ckan-catalogue
+              app.kubernetes.io/component: harvest
+          componentNamespace: ckan
+      ports:
+        - protocol: TCP
+          port: 5000
   egress:
     # CoreDNS. Every rule below names a Service, and a Service name is worth nothing
     # without this one.
@@ -231,3 +242,43 @@ ckan-api-token:
           port: 443
         - protocol: TCP
           port: 6443
+
+# The harvest CronJob (T-4152) reads outside open-data catalogues over HTTPS and writes to the
+# catalogue's Service with its API token. No Kubernetes API: it mounts no ServiceAccount token.
+ckan-harvest:
+  podSelector:
+    app.kubernetes.io/name: ckan
+    app.kubernetes.io/instance: ckan-catalogue
+    app.kubernetes.io/component: harvest
+  policyTypes:
+    - Ingress
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: ckan
+              app.kubernetes.io/instance: ckan-catalogue
+              app.kubernetes.io/component: ckan
+          componentNamespace: ckan
+      ports:
+        - protocol: TCP
+          port: 5000
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443
