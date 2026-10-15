@@ -11,8 +11,28 @@ spec:
   source: website
   startUrls: [https://www.banskabystrica.sk/]
   sitemap: true
+  # The site's own content list (T-4154): most of its types keep their text in custom fields,
+  # so the REST API gives the links and each page is crawled. Read before the sitemap (which
+  # lists only taxonomy pages), most useful types first; events last, so 6,000 pages keep every
+  # other type (5,155 items on 2026-10-15) and the newest events. Media files stay out.
+  wordpressTypes:
+    - life_situations
+    - office_sections
+    - pages
+    - regulations
+    - agendas
+    - city_documents
+    - emergency_contacts
+    - subsidies
+    - procurements
+    - projects
+    - urban_plans
+    - documents
+    - office_announcements
+    - newses
+    - events
   maxDepth: 3
-  maxPages: 500
+  maxPages: 6000
   pdf: { policy: include, maxBytes: 20971520, maxPages: 200 }
   schedule: "0 3 * * 0"
   languages: [sk]

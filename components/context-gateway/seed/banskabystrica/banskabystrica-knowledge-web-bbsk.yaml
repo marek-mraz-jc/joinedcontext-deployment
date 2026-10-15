@@ -12,7 +12,8 @@ spec:
   startUrls: [https://www.bbsk.sk/]
   sitemap: true
   maxDepth: 3
-  maxPages: 500
+  # The sitemap lists 766 URLs, 758 of them allowed by robots.txt (T-4154).
+  maxPages: 800
   pdf: { policy: include, maxBytes: 20971520, maxPages: 200 }
   schedule: "30 3 * * 0"
   languages: [sk]
