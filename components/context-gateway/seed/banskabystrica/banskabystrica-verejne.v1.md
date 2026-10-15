@@ -3,7 +3,7 @@
 <!-- Generated from the LinkML source by Model Tools. Do not edit: `jcctl model
      generate` overwrites this file and CI fails on any difference (DM-01, DM-02). -->
 
-What the city's public space carries side by side (DM-01, DM-61): the events the city announces, every school and school facility of the national school map in the city, and the hourly particulate readings of the city's urban-background station as the European Environment Agency republishes them. One model, one space, one public endpoint. Where Smart Data Models has the class, its IRI is cited rather than minted (DM-04, DM-16).
+What the city's public space carries side by side (DM-01, DM-61): the events the city announces, every school and school facility of the national school map in the city, and the hourly particulate, nitrogen dioxide and ozone readings of the city's urban-background station as the European Environment Agency republishes them, and the latest minute of SHMÚ's automatic weather stations in and near the city. One model, one space, one public endpoint. Where Smart Data Models has the class, its IRI is cited rather than minted (DM-04, DM-16).
 
 - Namespace: `https://joinedcontext.com/models/banskabystrica/banskabystrica-verejne`
 - Rendered by: `linkml-1.11.1`
@@ -76,9 +76,36 @@ Specialises `Entity`.
 |---|---|---|---|---|---|---|
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
 | `stationCode` | Property | `string` | yes |  | `jc:stationCode` | The station's EoI code in the European air-quality network, such as `SK0263A`. |
-| `dateObserved` | Property | `datetime` |  |  | `sdm:dateObserved` | The end of the latest hour a reading of the entity covers. |
+| `dateObserved` | Property | `datetime` |  |  | `sdm:dateObserved` | When the latest reading of the entity was taken: the end of the hour for an air-quality mean, the minute for a weather reading. |
 | `pm10` | Property | `float` |  | ug/m3 | `sdm:pm10` | Particulate matter up to 10 µm, the hour's mean at the station. |
 | `pm25` | Property | `float` |  | ug/m3 | `sdm:pm25` | Particulate matter up to 2.5 µm, the hour's mean at the station. |
+| `no2` | Property | `float` |  | ug/m3 | `sdm:no2` | Nitrogen dioxide, the hour's mean at the station. |
+| `o3` | Property | `float` |  | ug/m3 | `sdm:o3` | Ozone, the hour's mean at the station. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### WeatherObserved
+
+One automatic weather station of SHMÚ in or near the city and the latest minute it reported.
+
+IRI: `sdm:WeatherObserved`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
+| `dateObserved` | Property | `datetime` |  |  | `sdm:dateObserved` | When the latest reading of the entity was taken: the end of the hour for an air-quality mean, the minute for a weather reading. |
+| `temperature` | Property | `float` |  | Cel | `sdm:temperature` | Air temperature 2 m above the ground, the minute's mean. |
+| `relativeHumidity` | Property | `float` |  |  | `sdm:relativeHumidity` | Relative humidity of the air, 0 to 1, the minute's mean. |
+| `atmosphericPressure` | Property | `float` |  | hPa | `sdm:atmosphericPressure` | Air pressure at the station, the minute's mean. |
+| `windSpeed` | Property | `float` |  | m/s | `sdm:windSpeed` | Wind speed, the minute's scalar mean. |
+| `windDirection` | Property | `float` |  | deg | `sdm:windDirection` | Where the wind comes from, degrees clockwise from north, the minute's vector mean. |
+| `precipitation` | Property | `float` |  | mm | `sdm:precipitation` | Rain and melted snow over the ten minutes up to `dateObserved`. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |

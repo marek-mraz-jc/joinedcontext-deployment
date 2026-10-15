@@ -13,11 +13,18 @@
     "School": {
       "@id": "jc:School"
     },
+    "WeatherObserved": {
+      "@id": "sdm:WeatherObserved"
+    },
     "address": {
       "@id": "schema:address"
     },
     "annualBudget": {
       "@id": "jc:annualBudget",
+      "@type": "xsd:float"
+    },
+    "atmosphericPressure": {
+      "@id": "sdm:atmosphericPressure",
       "@type": "xsd:float"
     },
     "budgetYear": {
@@ -62,8 +69,16 @@
       "@id": "schema:name"
     },
     "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
+    "no2": {
+      "@id": "sdm:no2",
+      "@type": "xsd:float"
+    },
     "nonTeachingStaff": {
       "@id": "jc:nonTeachingStaff",
+      "@type": "xsd:float"
+    },
+    "o3": {
+      "@id": "sdm:o3",
       "@type": "xsd:float"
     },
     "observedAt": {
@@ -78,9 +93,17 @@
       "@id": "sdm:pm25",
       "@type": "xsd:float"
     },
+    "precipitation": {
+      "@id": "sdm:precipitation",
+      "@type": "xsd:float"
+    },
     "pupilCount": {
       "@id": "jc:pupilCount",
       "@type": "xsd:integer"
+    },
+    "relativeHumidity": {
+      "@id": "sdm:relativeHumidity",
+      "@type": "xsd:float"
     },
     "schema": "http://schema.org/",
     "schoolCode": {
@@ -110,9 +133,21 @@
       "@id": "jc:teachingStaff",
       "@type": "xsd:float"
     },
+    "temperature": {
+      "@id": "sdm:temperature",
+      "@type": "xsd:float"
+    },
     "type": "@type",
     "url": {
       "@id": "schema:url"
+    },
+    "windDirection": {
+      "@id": "sdm:windDirection",
+      "@type": "xsd:float"
+    },
+    "windSpeed": {
+      "@id": "sdm:windSpeed",
+      "@type": "xsd:float"
     },
     "xsd": "http://www.w3.org/2001/XMLSchema#"
   },
