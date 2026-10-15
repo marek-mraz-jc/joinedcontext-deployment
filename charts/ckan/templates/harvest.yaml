@@ -1,7 +1,8 @@
 {{- /*
   Catalogue harvests (T-4151): one CronJob per `harvest.sources` entry, each copying one
   publisher's datasets from the national catalogue into a CKAN organization with
-  `files/harvest-nkod.py`. It writes through the Action API on the catalogue's own Service with
+  `files/harvest-<kind>.py` (`nkod` unless the entry names `kind`; `hub` reads an ArcGIS Hub,
+  T-4152). It writes through the Action API on the catalogue's own Service with
   the publisher token the api-token Job keeps, so it needs no Kubernetes API access and mounts no
   ServiceAccount token. Its egress is the catalogue and public 443 (networkpolicies.yaml).
   A run takes minutes, so it is never a Helm hook: the first run after an install is
@@ -64,8 +65,8 @@ spec:
                       name: {{ $.Values.apiToken.secret }}
                       key: token
                 - name: HARVEST_CONFIG
-                  value: {{ merge (dict "source" (printf "nkod-%s" .name)) (omit . "name") | toJson | quote }}
+                  value: {{ merge (dict "source" (printf "%s-%s" (.kind | default "nkod") .name)) (omit . "name") | toJson | quote }}
               command: [python3, -c]
               args:
-                - {{ $.Files.Get "files/harvest-nkod.py" | toJson }}
+                - {{ $.Files.Get (printf "files/harvest-%s.py" (.kind | default "nkod")) | toJson }}
 {{- end }}

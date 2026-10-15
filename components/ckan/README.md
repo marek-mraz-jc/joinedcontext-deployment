@@ -79,6 +79,24 @@ kubectl -n <ns> create job --from=cronjob/ckan-harvest-banskabystrica ckan-harve
 kubectl -n <ns> logs -f job/ckan-harvest-banskabystrica-now -c harvest
 ```
 
+### `kind: hub`: an ArcGIS Hub (T-4152)
+
+An entry with `kind: hub` runs `files/harvest-hub.py` instead. On dev, BBSK's Hub
+(`https://opendata.bbsk.sk`) fills `bbsk` (`ckan-harvest-bbsk`). Its egress and token are the
+ones above.
+
+| Rule | What the job does |
+|---|---|
+| list | reads the Hub search API whole (`numberMatched` items); a short read is an error |
+| licence | keeps CC-BY-4.0, CC-BY-SA-4.0 and CC0-1.0; skips anything else, naming why |
+| corrections | `skip` (by item id, with the reason), `titles` (by item id), `spelling` from the values |
+| duplicates | one title, one dataset: the newest `modified` stays, the other is logged as its duplicate |
+| resources | per layer a CSV and, with a geometry, a GeoJSON from the Hub's download API, plus the ArcGIS REST service; a link off the source's `allowedHosts` is dropped |
+| identity | extras `harvest_source` and `source_id`; the CKAN id is a UUIDv5 of the item's Hub URL |
+| withdrawal | after a complete read, a dataset of this source that the read no longer lists is deleted (CKAN keeps it as `deleted`, and a returning item revives it); nothing else in the organization is touched |
+
+Its log names every skipped item and why.
+
 ## Branding
 
 Nothing here carries a city name. `global.branding` is written into the theme ConfigMap as

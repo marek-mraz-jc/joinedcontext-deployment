@@ -91,3 +91,40 @@ harvest:
         Zmluvy BB: Zmluvné_strany_s_údajom_IČO
         Objednávky BB: IČO
         Dotácie: IČO_žiadateľa
+    # The region's open data from its ArcGIS Hub into organization `bbsk` (T-4152, docs
+    # Research/banska-bystrica-open-data-sources.md sections 6 to 8). The Hub's search API is the
+    # list (103 datasets); its DCAT feeds are per layer and name the publisher `{{"{{"}}source{{"}}"}}`.
+    - name: bbsk
+      kind: hub
+      hub: https://opendata.bbsk.sk
+      allowedHosts: [opendata.bbsk.sk, services-eu1.arcgis.com, www.arcgis.com]
+      organization: bbsk
+      publisherName: Banskobystrický samosprávny kraj
+      publisherUri: https://data.gov.sk/id/legal-subject/37828100
+      publisherDescription: Otvorené údaje Banskobystrického samosprávneho kraja (IČO 37828100) z opendata.bbsk.sk, prevzaté a opravené.
+      skip:
+        # Names, e-mails and phones of personal-assistance providers, 277 of them people (section 8).
+        b5486911cb0342e48d475130d1d5e960: personal data (section 8), a count per okres at most
+      spelling:
+        Bystrinská: Bystrianska
+      # Each census title is published twice, once per okres (13 rows) and once per obec (516
+      # rows), read from each layer's fields on 2026-10-15: two datasets, not a duplicate.
+      titles:
+        c0f097d92ceb4a90b006fdee8af6da1d: Obyvateľstvo podľa materinského jazyka (2011), obce
+        59064392c3e248d39199c0376ba56d22: Obyvateľstvo podľa materinského jazyka (2011), okresy
+        fc02ff58590647ed98f1df29d18e617f: Obyvateľstvo podľa materinského jazyka (2021), obce
+        404a3d55408b439891269e5985056db9: Obyvateľstvo podľa materinského jazyka (2021), okresy
+        81576bdd05ea48a6b660a217a61097c8: Obyvateľstvo podľa náboženského vyznania (2011), obce
+        3844c8ed6ade4c2e96e547005c5f2178: Obyvateľstvo podľa náboženského vyznania (2011), okresy
+        4d7df96609bd49deabf028eca4fdf301: Obyvateľstvo podľa náboženského vyznania (2021), okresy
+        5fb2e96e5c57464183dab40a727a6db4: Obyvateľstvo podľa náboženského vyznania (2021), obce
+        a36024d023cf47e9bf5759bc43f8e585: Obyvateľstvo podľa národnosti (2011), obce
+        09f7d6aed66349f2b3a1bf53dc2eb771: Obyvateľstvo podľa národnosti (2011), okresy
+        d559c2bdffab4e4dae7b1383913e42e8: Obyvateľstvo podľa národnosti (2021), okresy
+        bf372d72bb444e40a8ecd7f15b8a9329: Obyvateľstvo podľa národnosti (2021), obce
+        04e229d8b39b415497081c63a74c94f9: Obyvateľstvo podľa rodinného stavu (2021), okresy
+        40138c783eaa46cd8cd3c8e09ab67127: Obyvateľstvo podľa rodinného stavu (2021), obce
+        2819023d949e4f14be1fe0b72de157aa: Obyvateľstvo podľa vekovej štruktúry (2011, 2021), obce
+        5e08d37332034f87be19ebc116ee9df5: Obyvateľstvo podľa vekovej štruktúry (2011, 2021), okresy
+        54bc2cca50824f64ba0343873257cbe6: Obyvateľstvo podľa ďalšej národnosti (2021), okresy
+        11667a5630ce459ca19479f5eb1413bd: Obyvateľstvo podľa ďalšej národnosti (2021), obce
