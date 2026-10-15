@@ -39,11 +39,33 @@ class SourceError(Exception):
     """The source could not be read whole; nothing of it is written or withdrawn."""
 
 
-def fetch_json(url, attempts=3):
+class _CheckedRedirects(urllib.request.HTTPRedirectHandler):
+    """Follows a redirect only to a host the source allows."""
+
+    def __init__(self, hosts):
+        super().__init__()
+        self.hosts = hosts
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if not allowed(newurl, self.hosts):
+            raise SourceError(f"redirect to {urllib.parse.urlsplit(newurl).hostname} is not an allowed host")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+class _NoRedirects(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def fetch_json(url, hosts, attempts=3):
+    """The JSON at `url`, fetched over https from `hosts` only, redirects included."""
+    if not allowed(url, hosts):
+        raise SourceError(f"{url}: not an allowed host")
+    opener = urllib.request.build_opener(_CheckedRedirects(hosts))
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/json"})
     for attempt in range(attempts):
         try:
-            with urllib.request.urlopen(request, timeout=60) as response:
+            with opener.open(request, timeout=60) as response:
                 body = response.read(MAX_BODY + 1)
             if len(body) > MAX_BODY:
                 raise SourceError(f"{url}: answer larger than {MAX_BODY} bytes")
@@ -112,6 +134,8 @@ def select(items, source):
             skipped.append((item["id"], title, f"type {item.get('type')} is not a dataset"))
         elif item.get("license") not in LICENCES:
             skipped.append((item["id"], title, f"no open licence ({item.get('license')})"))
+        elif item["type"] == "Feature Service" and not allowed(item.get("url"), set(source["allowedHosts"])):
+            skipped.append((item["id"], title, "its service is not on an allowed host"))
         else:
             kept.append((item, title))
     # One title, one dataset: the newest copy stays, an older one is named as its duplicate.
@@ -238,7 +262,7 @@ def hub_items(source):
     items, url = [], f"{source['hub']}/api/search/v1/collections/dataset/items?limit=100"
     matched = None
     while url:
-        page = fetch_json(url)
+        page = fetch_json(url, {urllib.parse.urlsplit(source["hub"]).hostname})
         matched = page.get("numberMatched", matched)
         items += [f["properties"] for f in page.get("features", [])]
         url = next((l["href"] for l in page.get("links", []) if l.get("rel") == "next"), None)
@@ -249,23 +273,28 @@ def hub_items(source):
     return items
 
 
-def item_layers(item):
+def item_layers(item, hosts):
     if item["type"] != "Feature Service":
         return []
-    service = fetch_json(f"{item['url']}?f=json")
+    service = fetch_json(f"{item['url']}?f=json", hosts)
     tables = [{**t, "geometryType": None} for t in service.get("tables", [])]
     return service.get("layers", []) + tables
 
 
 def warm_downloads(package):
     """The Hub builds an export on its first request and answers 202 until it is ready; one
-    request per new or changed download here means a visitor gets the file, not the wait."""
+    request per new or changed download here means a visitor gets the file, not the wait. A
+    redirect means the file is ready and is not followed."""
+    opener = urllib.request.build_opener(_NoRedirects())
     for resource in package["resources"]:
         if resource["format"] in ("CSV", "GeoJSON"):
             request = urllib.request.Request(resource["url"], headers={"User-Agent": USER_AGENT})
             try:
-                with urllib.request.urlopen(request, timeout=120) as response:
+                with opener.open(request, timeout=120) as response:
                     response.read(1)
+            except urllib.error.HTTPError as error:
+                if not 300 <= error.code < 400:
+                    print(f"  could not prepare {resource['url']}: HTTP {error.code}", file=sys.stderr)
             except (urllib.error.URLError, TimeoutError, ConnectionError) as error:
                 print(f"  could not prepare {resource['url']}: {error}", file=sys.stderr)
             time.sleep(0.5)
@@ -273,6 +302,9 @@ def warm_downloads(package):
 
 def harvest(ckan, source, items, layers_of, warm=lambda package: None):
     kept, skipped = select(items, source)
+    if not kept:
+        # A Hub that answers nothing (or nothing open) is an outage, not a catalogue to empty.
+        raise SourceError(f"the hub listed {len(items)} items and none to keep; nothing is withdrawn")
     counts = {"created": 0, "updated": 0, "unchanged": 0, "withdrawn": 0}
     if ckan.show("organization_show", source["organization"]) is None:
         ckan.call("organization_create", {"name": source["organization"], "title": source["publisherName"],
@@ -306,7 +338,9 @@ def main():
     source = json.loads(os.environ["HARVEST_CONFIG"])
     try:
         items = hub_items(source)
-        counts, kept, skipped = harvest(ckan, source, items, item_layers, warm_downloads)
+        hosts = set(source["allowedHosts"])
+        counts, kept, skipped = harvest(ckan, source, items, lambda item: item_layers(item, hosts),
+                                        warm_downloads)
     except (SourceError, RuntimeError, OSError) as error:
         print(f"{source['source']}: {error}", file=sys.stderr)
         sys.exit(1)

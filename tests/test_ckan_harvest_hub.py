@@ -221,7 +221,7 @@ def test_a_source_that_fails_halfway_withdraws_nothing(ckan):
 
 def test_a_short_read_of_the_hub_is_an_error_not_an_empty_catalogue(monkeypatch):
     page = json.loads((FIXTURES / "items.json").read_text())
-    monkeypatch.setattr(harvest, "fetch_json", lambda url: dict(page, numberMatched=103))
+    monkeypatch.setattr(harvest, "fetch_json", lambda url, hosts: dict(page, numberMatched=103))
     with pytest.raises(harvest.SourceError, match="read 8 of 103"):
         harvest.hub_items(dev_source())
 
@@ -229,7 +229,7 @@ def test_a_short_read_of_the_hub_is_an_error_not_an_empty_catalogue(monkeypatch)
 def test_a_next_page_off_the_hub_is_refused(monkeypatch):
     page = json.loads((FIXTURES / "items.json").read_text())
     page["links"] = [{"rel": "next", "href": "https://evil.example/items?startindex=9"}]
-    monkeypatch.setattr(harvest, "fetch_json", lambda url: page)
+    monkeypatch.setattr(harvest, "fetch_json", lambda url, hosts: page)
     with pytest.raises(harvest.SourceError, match="outside the hub"):
         harvest.hub_items(dev_source())
 
@@ -269,3 +269,38 @@ def test_the_harvest_reaches_dns_the_catalogue_and_https_only(rendered):
     policy = by_name(docs, "NetworkPolicy", "ckan-harvest")["spec"]
     assert not policy.get("ingress")
     assert sorted(p["port"] for rule in policy["egress"] for p in rule["ports"]) == [53, 53, 443, 5000]
+
+
+def test_an_empty_or_closed_hub_answer_withdraws_nothing(ckan):
+    """Integrator review 2026-10-15: an outage that lists nothing must not empty `bbsk`."""
+    client = harvest.Ckan(ckan.host, "token-1")
+    harvest.harvest(client, dev_source(), items(), layers_of)
+    before = set(ckan.active())
+    closed = [dict(i, license="none") for i in items()]
+    for answer in ([], closed):
+        with pytest.raises(harvest.SourceError, match="nothing is withdrawn"):
+            harvest.harvest(client, dev_source(), answer, layers_of)
+        assert set(ckan.active()) == before
+    assert "package_delete" not in ckan.calls
+
+
+def test_a_service_off_the_allowed_hosts_is_skipped_and_never_fetched():
+    moved = [dict(i, url="https://evil.example/arcgis/rest/services/x/FeatureServer")
+             if i["id"] == CULTURE else i for i in items()]
+    kept, skipped = harvest.select(moved, dev_source())
+    assert CULTURE not in [item["id"] for item, _ in kept]
+    assert (CULTURE, "its service is not on an allowed host") in [(i, r) for i, _, r in skipped]
+    with pytest.raises(harvest.SourceError, match="not an allowed host"):
+        harvest.item_layers(moved[[i["id"] for i in moved].index(CULTURE)], {"opendata.bbsk.sk"})
+
+
+def test_a_fetch_is_refused_off_the_allowed_hosts_and_so_is_a_redirect_there():
+    with pytest.raises(harvest.SourceError, match="not an allowed host"):
+        harvest.fetch_json("https://evil.example/x.json", {"opendata.bbsk.sk"})
+    with pytest.raises(harvest.SourceError, match="not an allowed host"):
+        harvest.fetch_json("http://opendata.bbsk.sk/x.json", {"opendata.bbsk.sk"})
+    handler = harvest._CheckedRedirects({"opendata.bbsk.sk"})
+    request = harvest.urllib.request.Request("https://opendata.bbsk.sk/a")
+    with pytest.raises(harvest.SourceError, match="redirect to 169.254.169.254"):
+        handler.redirect_request(request, None, 302, "Found", {}, "http://169.254.169.254/latest/")
+    assert handler.redirect_request(request, None, 302, "Found", {}, "https://opendata.bbsk.sk/b") is not None
