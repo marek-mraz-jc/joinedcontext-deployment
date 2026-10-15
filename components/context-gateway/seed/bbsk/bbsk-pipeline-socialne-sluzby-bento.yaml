@@ -27,7 +27,7 @@ pipeline:
           }
         }
         root = this.features.or([]).map_each(f -> f.properties).filter(p -> p."IČO".or("").string().re_match("^[0-9]{8}$") && p."Druh_poskytovanej_sociálnej_slu".or("").trim() != "" && p."Typ_poskytovateľa".or("").apply("provider") != null).map_each(p -> {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v-%v".format("SocialService", env("JC_ORG_DOMAIN"), env("JC_SPACE"), p."IČO", [p."Druh_poskytovanej_sociálnej_slu", p."Forma_poskytovanej_sociálnej_sl", p."Cieľova_skupina_fyzických_osôb_", p."Ulica_sociálnej_služby", p."Obec_sociálnej_služby"].map_each(v -> v.or("").string()).join("|").hash("xxhash64").string()),
+          "id": "urn:ngsi-ld:%v:%v:%v:%v-%v".format("SocialService", "bbsk.sk", env("JC_SPACE"), p."IČO", [p."Druh_poskytovanej_sociálnej_slu", p."Forma_poskytovanej_sociálnej_sl", p."Cieľova_skupina_fyzických_osôb_", p."Ulica_sociálnej_služby", p."Obec_sociálnej_služby"].map_each(v -> v.or("").string()).join("|").hash("xxhash64").string()),
           "type": "SocialService",
           "name": { "type": "LanguageProperty", "languageMap": { "sk": "%v, %v".format(p."Druh_poskytovanej_sociálnej_slu".trim(), p."Obchodné_meno".or("").trim()).trim_suffix(", ") } },
           "serviceKind": { "type": "Property", "value": p."Druh_poskytovanej_sociálnej_slu".trim() },

@@ -358,9 +358,11 @@ def test_no_indicator_of_one_body_can_be_computed_from_the_others_space():
     A KPI of the region computed from the city's rows would be a figure eight times too small
     under the region's name, and nothing in the entity would say so. Three things stop it and all
     three are here: the pipeline reads one Endpoint and that Endpoint is its own project's; it
-    writes its own project's KPI endpoint; and its mapping mints ids from `JC_ORG_DOMAIN` and
-    `JC_SPACE`, which the reconciler sets from the pipeline's own project, so a mapping copied
-    into the other project mints the other project's ids and cannot forge the first one's.
+    writes its own project's KPI endpoint; and its mapping mints ids from its own publisher's
+    domain and from `JC_SPACE`, which the reconciler sets from the pipeline's own project, and
+    names the other body nowhere. Since ADR-N-041 the id carries no authority (the space comes
+    from the address), and the runner's `JC_ORG_DOMAIN` is the installation's one organization,
+    hel.fi, which is why the domain is the project's own literal (T-4202).
     """
     domains = {"bbsk": "bbsk.sk", "banskabystrica": "banskabystrica.sk"}
     seen = 0
@@ -386,10 +388,12 @@ def test_no_indicator_of_one_body_can_be_computed_from_the_others_space():
                 }
                 assert spec["targetEndpoint"].split(":")[3] == domains[project]
                 mapping = spec["compute"]["bloblang"]
-                assert 'env("JC_ORG_DOMAIN")' in mapping and 'env("JC_SPACE")' in mapping
-                # The type prefix is rightly literal — a KPI is a KPI. The body and its spaces
-                # are not: they come from the environment the reconciler sets per project.
-                for literal in (other, other.removesuffix(".sk"), domains[project]):
+                assert f'let domain = "{domains[project]}"' in mapping and 'env("JC_SPACE")' in mapping
+                assert "JC_ORG_DOMAIN" not in mapping and "hel.fi" not in mapping
+                # The type prefix is rightly literal (a KPI is a KPI), and so is the body's own
+                # domain, once. The other body is named nowhere, and the spaces come from the
+                # environment the reconciler sets per project.
+                for literal in (other, other.removesuffix(".sk")):
                     assert literal not in mapping, f"{doc['metadata']['name']}: {literal} is hard coded"
     assert seen == 3, "the region's pipeline and the city's two"
 

@@ -26,7 +26,7 @@ spec:
   compute:
     kind: bloblang
     bloblang: |
-      let domain = env("JC_ORG_DOMAIN")
+      let domain = "banskabystrica.sk"
       let space = env("JC_SPACE")
       let source_space = env("JC_SOURCE_SPACE")
       let ran = now().ts_format("2006-01-02T15:04:05Z07:00", "UTC")

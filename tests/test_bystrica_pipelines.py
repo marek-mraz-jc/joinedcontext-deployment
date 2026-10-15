@@ -413,19 +413,25 @@ def test_every_cube_mapping_shares_one_decoder_character_for_character():
 
 
 def test_no_mapping_writes_its_own_space_or_domain_as_a_literal():
-    # CC-82, PL-57: a mapping reads both from the environment, so a space renamed in one place
-    # does not leave an id pointing at the old one.
+    # CC-82, PL-57: a mapping reads its space from the environment, so a space renamed in one
+    # place does not leave an id pointing at the old one. The domain is the exception (T-4202):
+    # the runner's JC_ORG_DOMAIN is the installation's one organization (hel.fi), which put
+    # Helsinki's domain into the Slovak publishers' ids, so each mapping names its own
+    # publisher's domain as a quoted literal and no other body's.
     for path in MAPPINGS:
         text = path.read_text()
+        own = "bbsk.sk" if path.parent.name == "bbsk" else "banskabystrica.sk"
         for number, line in enumerate(text.splitlines(), 1):
             stripped = line.lstrip()
             # A comment explains, and `source_url` is the publisher's address: one of them is
             # `egov.banskabystrica.sk`, which is a host and not this project's org domain.
             if stripped.startswith("#") or stripped.startswith("let source_url ="):
                 continue
+            line = line.replace(f'"{own}"', "")
             for literal in ("bbsk.sk", "banskabystrica.sk", "bbsk-kraj", "banskabystrica-mesto"):
                 assert literal not in line, f"{path.name}:{number}: {stripped}"
-        assert 'env("JC_ORG_DOMAIN")' in text and 'env("JC_SPACE")' in text, path.name
+        assert "JC_ORG_DOMAIN" not in text and "hel.fi" not in text, path.name
+        assert 'env("JC_SPACE")' in text, path.name
 
 
 def test_every_pipeline_names_a_data_source_and_an_endpoint_the_seed_holds():
@@ -539,3 +545,14 @@ def test_no_mapping_assigns_a_core_term_at_the_entity_level():
                             "CIM 009 4.5.1 allows it only inside one (T-2445)"
                         )
                 depth += stripped.count("{") - stripped.count("}")
+
+
+def test_no_pipeline_of_the_two_slovak_bodies_mints_helsinkis_domain():
+    # T-4202: the runner's JC_ORG_DOMAIN is the installation's organization, hel.fi, so a
+    # Slovak publisher's rows carried Helsinki's domain in their ids (photo audit, pattern
+    # helsinki). Every pipeline file of both projects, its mapping, compute and Python alike.
+    files = [p for folder in ("bbsk", "banskabystrica") for p in (SEED / folder).glob("*pipeline*")]
+    assert len(files) > 20
+    for path in files:
+        text = path.read_text()
+        assert "JC_ORG_DOMAIN" not in text and "hel.fi" not in text, path.name
