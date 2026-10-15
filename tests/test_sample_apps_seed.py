@@ -230,12 +230,14 @@ def test_dev_hands_the_job_every_vendored_file_byte_for_byte(dev):
         # A release of its own (T-3175): the bootstrap's would not fit Helm's Secret with them; one
         # of three, the one the app's name hashes to, since one no longer holds them all (T-3333).
         config_map = one(dev, "ConfigMap", f"gitea-sample-apps-{app}")
-        # The first and third of three split by the hash's next digit, the odd ones into -4
-        # (T-3393) and -5 (T-3350).
+        # Each of the three splits by the hash's next digit, the odd ones into -4 (T-3393), -5
+        # (T-3350) and -6 (T-4195); -4 again by the third digit into -7 (T-4195).
         hashed = zlib.adler32(app.encode())
         shard = hashed % 3 + 1
-        if shard in (1, 3) and hashed // 3 % 2 == 1:
-            shard = {1: 4, 3: 5}[shard]
+        if hashed // 3 % 2 == 1:
+            shard = {1: 4, 2: 6, 3: 5}[shard]
+        if shard == 4 and hashed // 6 % 2 == 1:
+            shard = 7
         release = "gitea-sample-apps" if shard == 1 else f"gitea-sample-apps-{shard}"
         assert config_map["metadata"]["labels"]["app.kubernetes.io/instance"] == release
         data = config_map["data"]
@@ -405,7 +407,8 @@ def test_no_gitea_release_outgrows_the_secret_helm_keeps_it_in(dev):
     import gzip
 
     for release in ("gitea-bootstrap", "gitea-seed", "gitea-seed-2", "gitea-sample-apps", "gitea-sample-apps-2",
-                    "gitea-sample-apps-3", "gitea-sample-apps-4", "gitea-sample-apps-5"):
+                    "gitea-sample-apps-3", "gitea-sample-apps-4", "gitea-sample-apps-5", "gitea-sample-apps-6",
+                    "gitea-sample-apps-7"):
         docs = [
             d for d in dev
             if (d.get("metadata", {}).get("labels") or {}).get("app.kubernetes.io/instance") == release

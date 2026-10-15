@@ -16,4 +16,12 @@ spec:
     name: helsinki
   enabledRepresentations:
   - ngsi-ld
+  - ogc-features
+  roles:
+  - name: viewer
+    subjects:
+    - group: alerts-heatmap-viewer
+  - name: steward
+    subjects:
+    - group: alerts-heatmap-steward
   slug: fx43ojotubeun2tyqxvhjdxwa7

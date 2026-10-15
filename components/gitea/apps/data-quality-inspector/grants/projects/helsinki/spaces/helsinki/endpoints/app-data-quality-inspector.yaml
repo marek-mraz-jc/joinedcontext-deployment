@@ -16,4 +16,12 @@ spec:
     name: helsinki
   enabledRepresentations:
   - ngsi-ld
+  - ogc-features
+  roles:
+  - name: viewer
+    subjects:
+    - group: data-quality-inspector-viewer
+  - name: steward
+    subjects:
+    - group: data-quality-inspector-steward
   slug: rywjgug3g32ayfjwkzr5j3tqom

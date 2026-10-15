@@ -16,4 +16,12 @@ spec:
     name: helsinki-kpi
   enabledRepresentations:
   - ngsi-ld
+  - ogc-features
+  roles:
+  - name: viewer
+    subjects:
+    - group: kpi-forecast-viewer
+  - name: steward
+    subjects:
+    - group: kpi-forecast-steward
   slug: dljgcex3vmybwkwrguionszkcv

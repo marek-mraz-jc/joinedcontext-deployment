@@ -9,6 +9,7 @@ use std::sync::Arc;
 
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
+use hsl_transport::board::HSL_ALERTS;
 use hsl_transport::{router, App, Config, PollError};
 use http_body_util::BodyExt;
 use serde_json::{json, Value};
@@ -23,7 +24,6 @@ fn app_at(endpoint: &MockServer) -> Arc<App> {
     Arc::new(App::new(Config {
         base_path: BASE.to_owned(),
         endpoint_url: format!("{}/", endpoint.uri()),
-        poll_seconds: 1,
         page_config: None,
     }))
 }
@@ -73,7 +73,7 @@ async fn the_fleet_is_read_from_the_endpoints_geojson_representation() {
     Mock::given(method("GET"))
         .and(path("/ngsi-ld/v1/entities"))
         .and(query_param("type", "Vehicle"))
-        .and(query_param("limit", "30"))
+        .and(query_param("limit", "90"))
         .and(header("accept", "application/geo+json"))
         .respond_with(
             ResponseTemplate::new(200).set_body_json(collection(vec![feature(BUS, 24.94, 60.17)])),
@@ -83,7 +83,7 @@ async fn the_fleet_is_read_from_the_endpoints_geojson_representation() {
         .await;
 
     let app = app_at(&endpoint);
-    let changed = app.poll_once().await.expect("a fleet");
+    let changed = app.reload().await.expect("a fleet");
 
     assert_eq!(changed.len(), 1);
     assert_eq!(changed[0].id, BUS);
@@ -98,7 +98,7 @@ async fn the_poll_carries_no_credential_at_all() {
     let endpoint = MockServer::start().await;
     serving(&endpoint, collection(vec![feature(BUS, 24.94, 60.17)])).await;
 
-    app_at(&endpoint).poll_once().await.expect("a fleet");
+    app_at(&endpoint).reload().await.expect("a fleet");
 
     let requests = endpoint.received_requests().await.expect("the requests");
     assert_eq!(requests.len(), 1);
@@ -117,7 +117,7 @@ async fn every_call_the_app_makes_goes_to_its_own_endpoint() {
     serving(&endpoint, collection(vec![feature(BUS, 24.94, 60.17)])).await;
     let app = app_at(&endpoint);
 
-    app.poll_once().await.expect("a fleet");
+    app.reload().await.expect("a fleet");
     // Serving a browser must not produce a call of its own; the fleet is already in memory.
     router(Arc::clone(&app))
         .oneshot(
@@ -141,9 +141,9 @@ async fn a_bus_that_has_not_moved_is_not_sent_again() {
     serving(&endpoint, collection(vec![feature(BUS, 24.94, 60.17)])).await;
     let app = app_at(&endpoint);
 
-    assert_eq!(app.poll_once().await.expect("a fleet").len(), 1);
+    assert_eq!(app.reload().await.expect("a fleet").len(), 1);
     assert!(
-        app.poll_once().await.expect("a fleet").is_empty(),
+        app.reload().await.expect("a fleet").is_empty(),
         "an unchanged fleet produced a change"
     );
     assert_eq!(app.snapshot().len(), 1, "the bus left the map");
@@ -172,19 +172,20 @@ async fn a_bus_that_moves_is_reported_once_and_the_others_stay_quiet() {
     .await;
     let app = app_at(&endpoint);
 
-    assert_eq!(app.poll_once().await.expect("a fleet").len(), 2);
-    let moved = app.poll_once().await.expect("a fleet");
+    assert_eq!(app.reload().await.expect("a fleet").len(), 2);
+    let moved = app.reload().await.expect("a fleet");
 
     assert_eq!(moved.len(), 1);
     assert_eq!(moved[0].id, BUS);
     assert_eq!(moved[0].coordinates, [24.95, 60.18]);
 }
 
-/// AP-38: the demo runs thirty buses and the map draws thirty, whatever the space holds.
+/// AP-38, T-3893: the map draws at most ninety vehicles, the pipeline's caps summed, whatever the
+/// space holds.
 #[tokio::test]
-async fn the_fleet_is_capped_at_thirty_buses() {
+async fn the_fleet_is_capped_at_ninety_vehicles() {
     let endpoint = MockServer::start().await;
-    let features = (0..40)
+    let features = (0..120)
         .map(|n| {
             feature(
                 &format!("urn:ngsi-ld:Vehicle:hsl.fi:transport:bus-{n:02}"),
@@ -196,8 +197,8 @@ async fn the_fleet_is_capped_at_thirty_buses() {
     serving(&endpoint, collection(features)).await;
 
     let app = app_at(&endpoint);
-    assert_eq!(app.poll_once().await.expect("a fleet").len(), 30);
-    assert_eq!(app.snapshot().len(), 30);
+    assert_eq!(app.reload().await.expect("a fleet").len(), 90);
+    assert_eq!(app.snapshot().len(), 90);
 }
 
 /// A bus the map cannot place is a bus the map must not draw somewhere wrong.
@@ -213,7 +214,7 @@ async fn a_feature_with_no_point_is_dropped_rather_than_placed_at_zero() {
     )
     .await;
 
-    let fleet = app_at(&endpoint).poll_once().await.expect("a fleet");
+    let fleet = app_at(&endpoint).reload().await.expect("a fleet");
     assert_eq!(fleet.len(), 1);
     assert_eq!(fleet[0].id, BUS);
 }
@@ -234,7 +235,7 @@ async fn an_attribute_the_grant_hides_is_absent_and_not_defaulted() {
     )
     .await;
     let app = app_at(&endpoint);
-    app.poll_once().await.expect("a fleet");
+    app.reload().await.expect("a fleet");
 
     let response = router(Arc::clone(&app))
         .oneshot(
@@ -284,7 +285,7 @@ async fn the_stream_opens_with_the_whole_fleet() {
     let endpoint = MockServer::start().await;
     serving(&endpoint, collection(vec![feature(BUS, 24.94, 60.17)])).await;
     let app = app_at(&endpoint);
-    app.poll_once().await.expect("a fleet");
+    app.reload().await.expect("a fleet");
 
     let response = router(app)
         .oneshot(
@@ -335,8 +336,8 @@ async fn an_endpoint_that_refuses_leaves_the_last_known_fleet_in_place() {
         .await;
     let app = app_at(&endpoint);
 
-    app.poll_once().await.expect("a fleet");
-    assert_eq!(app.poll_once().await, Err(PollError::Refused(403)));
+    app.reload().await.expect("a fleet");
+    assert_eq!(app.reload().await, Err(PollError::Refused(403)));
     assert_eq!(app.snapshot().len(), 1, "a refusal emptied the map");
 }
 
@@ -389,7 +390,6 @@ async fn the_app_starts_on_its_own_host_at_the_root() {
     let app = Arc::new(App::new(Config {
         base_path: "/".to_owned(),
         endpoint_url: format!("{}/", endpoint.uri()),
-        poll_seconds: 1,
         page_config: None,
     }));
     for uri in ["/healthz", "/api/vehicles"] {
@@ -417,7 +417,6 @@ async fn the_front_page_carries_the_reconcilers_configuration_with_its_basemap()
         let app = Arc::new(App::new(Config {
             base_path: "/".to_owned(),
             endpoint_url: format!("{}/", endpoint.uri()),
-            poll_seconds: 1,
             page_config,
         }));
         async move {
@@ -466,4 +465,151 @@ async fn the_front_page_carries_the_reconcilers_configuration_with_its_basemap()
             "{raw} was accepted"
         );
     }
+}
+
+/// Answers the board's reads of one type with these entities, simplified.
+async fn board_serving(endpoint: &MockServer, kind: &str, body: Value) {
+    Mock::given(method("GET"))
+        .and(path("/ngsi-ld/v1/entities"))
+        .and(query_param("type", kind))
+        .and(query_param("options", "keyValues"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(body))
+        .mount(endpoint)
+        .await;
+}
+
+const SPACE: &str = "hel.fi:helsinki";
+
+async fn board_endpoint() -> MockServer {
+    let endpoint = MockServer::start().await;
+    board_serving(&endpoint, "TransitRoute", json!([
+        { "id": "urn:ngsi-ld:TransitRoute:x:550-1", "route": "2550", "directionId": 1, "headsign": "Itäkeskus" },
+        { "id": "urn:ngsi-ld:TransitRoute:x:550-2", "route": "2550", "directionId": "2", "headsign": "Westendinasema" }
+    ])).await;
+    // Only stops that carry departures are asked for; the endpoint is told so.
+    Mock::given(method("GET"))
+        .and(path("/ngsi-ld/v1/entities"))
+        .and(query_param("type", "GtfsStop"))
+        .and(query_param("q", "departures"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!([
+            { "id": format!("urn:ngsi-ld:GtfsStop:{SPACE}:2222"), "name": { "fi": "Tapiola", "en": "Tapiola (M)" },
+              "location": { "type": "Point", "coordinates": [24.80, 60.17] },
+              "departures": [
+                { "route": "x", "routeId": "2550", "directionId": 1, "expected": "2026-10-12T08:01:00Z", "status": "scheduled", "delay": 60 },
+                { "routeId": "31M1", "directionId": 0, "expected": "2026-10-12T08:03:00Z", "status": "canceled" }
+              ] },
+            { "id": format!("urn:ngsi-ld:GtfsStop:{SPACE}:1111"), "name": "Aalto-yliopisto", "departures": [] }
+        ])))
+        .mount(&endpoint)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/ngsi-ld/v1/entities"))
+        .and(query_param("type", "GtfsStop"))
+        // Both stops the alerts name, in one ask; the space holds one of them.
+        .and(query_param(
+            "id",
+            format!("urn:ngsi-ld:GtfsStop:{SPACE}:1392501,urn:ngsi-ld:GtfsStop:{SPACE}:9999"),
+        ))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!([
+            { "id": format!("urn:ngsi-ld:GtfsStop:{SPACE}:1392501"), "location": { "type": "Point", "coordinates": [25.03, 60.27] } }
+        ])))
+        .mount(&endpoint)
+        .await;
+    board_serving(&endpoint, "Alert", json!([
+        { "id": format!("urn:ngsi-ld:Alert:{SPACE}:hsl-2"), "name": { "fi": "Poikkeus", "en": "<b>Detour</b>" },
+          "description": "Line 550 takes a detour.", "severity": "medium",
+          "refRoute": format!("urn:ngsi-ld:GtfsRoute:{SPACE}:2550"), "unknownReference": ["route:100HE", "stop:9999"],
+          "validFrom": "2026-10-12T05:00:00Z", "source": HSL_ALERTS },
+        { "id": format!("urn:ngsi-ld:Alert:{SPACE}:hsl-1"), "name": { "fi": "Pysäkki suljettu" }, "severity": "high",
+          "refStop": [format!("urn:ngsi-ld:GtfsStop:{SPACE}:1392501")], "source": HSL_ALERTS },
+        { "id": format!("urn:ngsi-ld:Alert:{SPACE}:digitraffic-7"), "name": "Road works",
+          "source": "https://tie.digitraffic.fi/api/traffic-message/v1/messages" }
+    ])).await;
+    endpoint
+}
+
+/// T-3895: a stop's departures carry the headsign of their line and direction, and a stop with
+/// none is not listed.
+#[tokio::test]
+async fn departures_name_their_headsign_and_only_stops_with_departures_are_listed() {
+    let endpoint = board_endpoint().await;
+    let app = app_at(&endpoint);
+    let response = router(app.clone())
+        .oneshot(
+            Request::get(format!("{BASE}api/departures"))
+                .body(Body::empty())
+                .expect("a request"),
+        )
+        .await
+        .expect("a response");
+    assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+    app.poll_board().await.expect("a board");
+    let response = router(app)
+        .oneshot(
+            Request::get(format!("{BASE}api/departures"))
+                .body(Body::empty())
+                .expect("a request"),
+        )
+        .await
+        .expect("a response");
+    assert_eq!(response.status(), StatusCode::OK);
+    let stops: Value = serde_json::from_str(&text_of(response).await).expect("JSON");
+    assert_eq!(
+        stops,
+        json!([{
+            "id": format!("urn:ngsi-ld:GtfsStop:{SPACE}:2222"), "name": "Tapiola (M)", "coordinates": [24.80, 60.17],
+            "departures": [
+                { "line": "2550", "headsign": "Westendinasema", "expected": "2026-10-12T08:01:00Z", "status": "scheduled", "delay": 60 },
+                { "line": "31M1", "expected": "2026-10-12T08:03:00Z", "status": "canceled" }
+            ]
+        }])
+    );
+}
+
+/// T-3892, T-3895: HSL's alerts only, the most severe first, each with its lines and stops,
+/// linked or kept as text, and where the stops are; the text goes out as HSL wrote it, for the
+/// browser to render as text.
+#[tokio::test]
+async fn alerts_are_hsls_most_severe_first_with_their_lines_stops_and_places() {
+    let endpoint = board_endpoint().await;
+    let app = app_at(&endpoint);
+    let board = app.poll_board().await.expect("a board");
+    let alerts = serde_json::to_value(&board.alerts).expect("JSON");
+    assert_eq!(
+        alerts,
+        json!([
+            { "id": format!("urn:ngsi-ld:Alert:{SPACE}:hsl-1"), "title": "Pysäkki suljettu", "severity": "high",
+              "lines": [], "stops": ["1392501"], "places": [{ "stop": "1392501", "coordinates": [25.03, 60.27] }] },
+            { "id": format!("urn:ngsi-ld:Alert:{SPACE}:hsl-2"), "title": "<b>Detour</b>", "body": "Line 550 takes a detour.",
+              "severity": "medium", "validFrom": "2026-10-12T05:00:00Z", "lines": ["100HE", "2550"], "stops": ["9999"], "places": [] }
+        ])
+    );
+}
+
+/// A board read that fails keeps the last board on every open page.
+#[tokio::test]
+async fn a_failed_board_read_keeps_the_last_board() {
+    let endpoint = board_endpoint().await;
+    let app = app_at(&endpoint);
+    let first = app.poll_board().await.expect("a board");
+    endpoint.reset().await;
+    Mock::given(method("GET"))
+        .respond_with(ResponseTemplate::new(502))
+        .mount(&endpoint)
+        .await;
+    assert_eq!(app.poll_board().await, Err(PollError::Refused(502)));
+    assert_eq!(app.board(), Some(first));
+}
+
+/// T-3893: a vehicle says its mode, as the pipeline writes it.
+#[tokio::test]
+async fn a_vehicle_carries_its_mode() {
+    let endpoint = MockServer::start().await;
+    let mut tram = feature("urn:ngsi-ld:Vehicle:hel.fi:helsinki:40-3", 24.94, 60.17);
+    tram["properties"]["transportMode"] = json!({ "type": "Property", "value": "tram" });
+    serving(&endpoint, collection(vec![tram])).await;
+    let app = app_at(&endpoint);
+    let fleet = app.reload().await.expect("a fleet");
+    assert_eq!(fleet[0].mode.as_deref(), Some("tram"));
 }

@@ -63,22 +63,29 @@ function bus(id: string, longitude: number, refLine = "550"): Vehicle {
 class StubEventSource {
   static last: StubEventSource | undefined;
   closed = false;
-  private listeners: Array<(event: MessageEvent<string>) => void> = [];
+  private listeners: Array<[string, (event: MessageEvent<string>) => void]> = [];
   constructor(readonly url: string) {
     StubEventSource.last = this;
   }
-  addEventListener(_type: string, handler: (event: MessageEvent<string>) => void) {
-    this.listeners.push(handler);
+  addEventListener(type: string, handler: (event: MessageEvent<string>) => void) {
+    this.listeners.push([type, handler]);
   }
   close() {
     this.closed = true;
   }
+  private emit(type: string, data: unknown) {
+    const event = new MessageEvent(type, { data: JSON.stringify(data) });
+    for (const [listening, handler] of this.listeners) {
+      if (listening === type) handler(event);
+    }
+  }
   /** What the server pushes when a bus moves. */
   push(vehicles: Vehicle[]) {
-    const event = new MessageEvent("vehicles", { data: JSON.stringify(vehicles) });
-    for (const handler of this.listeners) {
-      handler(event);
-    }
+    this.emit("vehicles", vehicles);
+  }
+  /** What the server pushes when its live feed is lost, or live again (T-3581). */
+  feed(lostSince: string | null) {
+    this.emit("feed", { lostSince });
   }
 }
 
@@ -110,13 +117,13 @@ describe("the map source", () => {
     render(<VehicleMap collection={featureCollection([bus(BUS, 24.94)])} />);
     load?.();
 
-    expect(addSource).toHaveBeenCalledTimes(1);
-    const [name, source] = addSource.mock.calls[0] as [string, { type: string; data: unknown }];
-    expect(name).toBe("vehicles");
+    // The alerts' stops first, under the vehicles (T-3895).
+    expect(addSource.mock.calls.map(([name]) => name)).toEqual(["alerts", "vehicles"]);
+    const [, source] = addSource.mock.calls[1] as [string, { type: string; data: unknown }];
     expect(source.type).toBe("geojson");
     // The line's colour, and the heading on top of it (T-2926).
-    expect(addLayer).toHaveBeenCalledTimes(2);
-    const [dots, heading] = addLayer.mock.calls.map(([layer]) => layer as { id: string; paint?: Record<string, unknown>; layout?: Record<string, unknown> });
+    expect(addLayer).toHaveBeenCalledTimes(3);
+    const [, dots, heading] = addLayer.mock.calls.map(([layer]) => layer as { id: string; paint?: Record<string, unknown>; layout?: Record<string, unknown> });
     expect(dots.paint?.["circle-color"]).toEqual(["get", "color"]);
     expect(heading.layout?.["icon-rotate"]).toEqual(["get", "bearing"]);
     expect(heading.layout?.["icon-rotation-alignment"]).toBe("map");
@@ -130,11 +137,15 @@ describe("the map source", () => {
 
     rerender(<VehicleMap collection={featureCollection([bus(BUS, 24.99)])} />);
 
-    expect(setData).toHaveBeenCalledTimes(1);
-    const collection = setData.mock.calls[0][0] as ReturnType<typeof featureCollection>;
+    // The fleet's source, once; the alert layer's (empty here) is written on its own.
+    const fleets = setData.mock.calls
+      .map(([data]) => data as ReturnType<typeof featureCollection>)
+      .filter((data) => data.features.length > 0);
+    expect(fleets).toHaveLength(1);
+    const collection = fleets[0];
     expect(collection.features[0].geometry.coordinates).toEqual([24.99, 60.17]);
-    expect(addSource).toHaveBeenCalledTimes(1);
-    expect(addLayer).toHaveBeenCalledTimes(2);
+    expect(addSource).toHaveBeenCalledTimes(2);
+    expect(addLayer).toHaveBeenCalledTimes(3);
   });
 
   it("is not written to before the map has loaded", () => {
@@ -167,7 +178,7 @@ describe("the app", () => {
     await waitFor(() => expect(StubEventSource.last).toBeDefined());
 
     StubEventSource.last?.push([bus(BUS, 24.94), bus(OTHER, 24.8, "551")]);
-    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("2 buses"));
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("2 vehicles"));
 
     StubEventSource.last?.push([bus(OTHER, 24.85, "551")]);
 
@@ -175,7 +186,19 @@ describe("the app", () => {
       const collection = setData.mock.lastCall?.[0] as ReturnType<typeof featureCollection>;
       expect(collection.features).toHaveLength(2);
     });
-    expect(screen.getByRole("status")).toHaveTextContent("2 buses, updating live");
+    expect(screen.getByRole("status")).toHaveTextContent("2 vehicles, updating live");
+  });
+
+  it("says since when the live feed is lost, and updating live once it is back (T-3581)", async () => {
+    render(<App />);
+    load?.();
+    await waitFor(() => expect(StubEventSource.last).toBeDefined());
+    StubEventSource.last?.push([bus(BUS, 24.94)]);
+    StubEventSource.last?.feed("2026-10-12T08:05:00Z");
+    // 08:05 UTC is 11:05 in Helsinki in October.
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("1 vehicles, live feed lost since 11:05"));
+    StubEventSource.last?.feed(null);
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("1 vehicles, updating live"));
   });
 
   it("subscribes to its own backend and never to the endpoint", async () => {
@@ -305,7 +328,7 @@ describe("the charts on the page", () => {
     render(<App />);
     load?.();
 
-    const perLineChart = await screen.findByRole("list", { name: "Buses per line" });
+    const perLineChart = await screen.findByRole("list", { name: "Vehicles per line" });
     await waitFor(() => expect(perLineChart.querySelectorAll("li")).toHaveLength(2));
     expect(perLineChart).toHaveTextContent("550");
     expect(perLineChart).toHaveTextContent("551");
@@ -319,18 +342,18 @@ describe("the charts on the page", () => {
     // Panned to the east of 24.9: the bus on the 551 leaves the charts and the legend.
     view = [[24.9, 60.1], [25.0, 60.3]];
     moveend?.();
-    await waitFor(() => expect(screen.getByRole("list", { name: "Buses per line" }).querySelectorAll("li")).toHaveLength(1));
+    await waitFor(() => expect(screen.getByRole("list", { name: "Vehicles per line" }).querySelectorAll("li")).toHaveLength(1));
     expect(screen.getByRole("list", { name: "Lines on the map" })).not.toHaveTextContent("551");
-    expect(screen.getByRole("status")).toHaveTextContent("3 buses, 2 in view");
+    expect(screen.getByRole("status")).toHaveTextContent("3 vehicles, 2 in view");
   });
 
   it("says so when no bus is in view instead of drawing empty bars", async () => {
     render(<App />);
     load?.();
-    await screen.findByRole("list", { name: "Buses per line" });
+    await screen.findByRole("list", { name: "Vehicles per line" });
     view = [[10, 50], [10.1, 50.1]];
     moveend?.();
-    await waitFor(() => expect(screen.getAllByText("No buses in view.")).toHaveLength(2));
+    await waitFor(() => expect(screen.getAllByText("No vehicles in view.")).toHaveLength(2));
   });
 });
 
