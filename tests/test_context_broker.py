@@ -159,3 +159,16 @@ def test_the_broker_reaches_dns_its_database_and_public_subscribers_only(dev):
         ("postgres-cluster", (5432,)),
     ]
     assert one(dev, "NetworkPolicy", "default-deny-context-broker")["spec"]["podSelector"] == {}
+
+
+@requires_helmfile
+def test_the_mcp_surface_admits_the_portal_and_apex_origins_alone(dev):
+    """Antares MC8 (T-3814): rmcp refuses every request whose Origin is not listed, and the gateway
+    forwards the browser's Origin; the list names the Portal's and the Apps' public origins on 443
+    and nothing else (the gateway's Host is pinned by test_context_broker_vanilla)."""
+    (container,) = pod_of(dev)["containers"]
+    origins = env_of(container)["ANTARES_MCP_ALLOWED_ORIGINS"]["value"].split(",")
+    portal = env_of(one(dev, "Deployment", "portal")["spec"]["template"]["spec"]["containers"][0])
+    public = [portal[k]["value"] for k in ("JC_PORTAL_PUBLIC_URL", "JC_PORTAL_APPS_URL")]
+    assert sorted(origins) == sorted(f"{u}:443" for u in public), (origins, public)
+    assert all(o.startswith("https://") and "*" not in o for o in origins), origins

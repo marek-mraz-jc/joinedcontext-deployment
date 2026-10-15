@@ -88,6 +88,10 @@ env:
   # T-4132): the gateway ends a token caller's socket at the token's 300 s itself.
   ANTARES_WS_MAX_LIFETIME_SECS: "86400"
   ANTARES_SCHEMA_MAX_BYTES: "1048576"
+  # The browser Origin the gateway forwards to the MCP surface (MC8, T-3814): rmcp refuses every
+  # request whose Origin is not listed, so unset the Portal's MCP page got 403. The Portal and
+  # the apex alone, each on 443 (an entry without a port matching any port is deprecated in rmcp).
+  ANTARES_MCP_ALLOWED_ORIGINS: "https://portal.{{ required "global.domain" $global.domain }}:443,https://{{ $global.domain }}:443"
   # The verified caller the gateway forwards (platform T-3641); `x-jc-did` a data-space
   # participant, which the gateway strips from every client request (platform T-3800, T-3816).
   # The joinedcontext engine decides every request by them and the Portal's rule documents
