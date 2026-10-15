@@ -128,10 +128,11 @@ context-gateway:
   # (CC-86, T-2646): the platform image's `checkouts` target, debian-slim with git.
   # platform 871624a: the same command, rebuilt on a Debian that clears the 12 fixable perl
   # CRITICALs of the cbe3697 build (T-3297). platform cbd6f94: on Debian 13 (trixie), T-4126.
+  # platform d1b8f7f: apt layer refreshed daily, curl 8.14.1-2+deb13u7 (CVE-2026-8286, T-3834).
   checkouts:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform/checkouts'
     tag: 'main'
-    digest: 'sha256:bb3fe8953f0c633b578dce4ecb3f13b7abbf4ae500d8fe805526c230c832398d'
+    digest: 'sha256:d52dfd1c792c173cc7f7f9fdd3f78611c0ad8945a28148b8460511f1f30e6297'
   # git-sync keeps the gateway's checkout of the configuration repository current (T-0278).
   git-sync:
     repository: 'registry.k8s.io/git-sync/git-sync'
