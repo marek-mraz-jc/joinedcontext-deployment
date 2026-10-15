@@ -648,3 +648,11 @@ def test_a_catalogue_roll_starts_the_new_pod_before_the_old_one_stops(rendered):
     if annotations.get("linkerd.io/inject") == "enabled":
         assert wait > pause, "the mesh proxy stops before the app has drained"
     assert pod["terminationGracePeriodSeconds"] > max(wait, pause), "the kubelet kills the pod mid-drain"
+
+
+def test_the_catalogue_speaks_slovak_and_offers_the_publishers_languages(rendered):
+    """With English alone offered, /sk/ answered 404 and every page was English to a Slovak
+    visitor (photo audit, T-4199). `ckanext-envvars` maps both variables to their options."""
+    env = env_of(ckan_container(rendered("dev")))
+    assert env.get("CKAN__LOCALE_DEFAULT") == "sk"
+    assert env.get("CKAN__LOCALES_OFFERED", "").split() == ["sk", "en", "cs", "fi"]
