@@ -218,6 +218,11 @@ def test_space_reads_and_writes_count_apart(rendered):
             limit = route["plugins"]["limit-count"]
             assert (limit["count"], limit["key"]) == (ANONYMOUS_ROUTE_LIMITS[route["id"]], "remote_addr")
             assert route["vars"] == [["http_authorization", "!", "~~", "."]], route["id"]
+        elif route["id"] == "ckan-webassets":
+            # T-4201: its one plugin of its own keeps the config's CSP baseline and adds the
+            # year-long cache of a content-hashed file (tests/test_edge_asset_cache.py); the
+            # limit is the config's, unchanged.
+            assert "labels" not in route and set(route["plugins"]) == {"serverless-post-function"}, route["id"]
         elif route["id"] not in ROUTE_RATE_CLASSES:
             assert "labels" not in route and "plugins" not in route, route["id"]
 
