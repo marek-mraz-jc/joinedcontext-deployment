@@ -108,6 +108,19 @@ portal-public-guide:
   priority: 5
   pluginConfig: portal-public
 
+# The public setup page of a named MCP server (T-4169): `/connect/{project}/{name}`, a page with no
+# login in front that asks the server's own address for its tools as an anonymous caller would, and
+# holds no data. The plugin config is portal-public's: a session is read when there is one and
+# nobody is redirected.
+portal-public-connect:
+  name: portal-public-connect
+  description: The public setup page of a named MCP server, edge session optional
+  upstream: portal.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "portal") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/connect/*'
+  subDomain: portal
+  priority: 5
+  pluginConfig: portal-public
+
 # The bundle the catalogue page (and every Portal page) runs on: the same files for everyone,
 # holding no data. The plugin config is portal-public's.
 portal-public-assets:

@@ -50,6 +50,10 @@ EXPECTED_ROUTES = {
     "portal-public-form": {"uri": "/f/*", "priority": 5, "upstream_id": "portal-public-form", "host": PORTAL_HOST},
     # T-3265: a public Endpoint's API documentation, edge session optional.
     "portal-public-docs": {"uri": "/d/*", "priority": 5, "upstream_id": "portal-public-docs", "host": PORTAL_HOST},
+    # T-4169: a public named MCP server's setup page, edge session optional.
+    "portal-public-connect": {
+        "uri": "/connect/*", "priority": 5, "upstream_id": "portal-public-connect", "host": PORTAL_HOST,
+    },
     # T-4063: the API and User Guide pages, edge session optional.
     "portal-public-guide": {"uri": "/docs/*", "priority": 5, "upstream_id": "portal-public-guide", "host": PORTAL_HOST},
     # T-3105: the gateway delivers the Portal's live-update notifications here, no login (API/01 §32).
