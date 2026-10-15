@@ -187,7 +187,7 @@ pipeline:
           # The ten minutes up to the latest one, as far as the file holds them.
           "_rain": rs.filter(r -> r.minuta.ts_parse("2006-01-02T15:04:05").ts_unix() > rs.slice(-1).index(0).minuta.ts_parse("2006-01-02T15:04:05").ts_unix() - 600 && r.zra_uhrn.type() == "number").map_each(r -> r.zra_uhrn).sum()
         })).map_each(r -> {
-          "id": "urn:ngsi-ld:%v:%v:%v:shmu-%v".format("WeatherObserved", env("JC_ORG_DOMAIN"), env("JC_SPACE"), r.ind_kli),
+          "id": "urn:ngsi-ld:%v:%v:%v:shmu-%v".format("WeatherObserved", "banskabystrica.sk", env("JC_SPACE"), r.ind_kli),
           "type": "WeatherObserved",
           "name": { "type": "LanguageProperty", "languageMap": { "sk": "Stanica SHMÚ " + $stations.get(r.ind_kli.string()).sk, "en": "SHMÚ station " + $stations.get(r.ind_kli.string()).en } },
           "dateObserved": { "type": "Property", "value": r._at },

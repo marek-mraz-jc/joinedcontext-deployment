@@ -51,7 +51,7 @@ def test_the_realm_signs_people_in_on_the_joinedcontext_theme(rendered, env):
 
 
 def test_the_dev_realm_is_named_after_the_organization_of_the_branding_block(rendered):
-    assert realm_of(rendered("dev"))["displayName"] == "City of Helsinki (demo instance, not affiliated)"
+    assert realm_of(rendered("dev"))["displayName"] == "joinedcontext demo"
 
 
 def test_the_theme_extends_keycloak_v2_with_the_branding_colours_and_logo(rendered):

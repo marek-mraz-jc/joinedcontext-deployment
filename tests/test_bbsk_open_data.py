@@ -96,7 +96,7 @@ def test_every_id_is_the_four_segment_urn_of_the_space_and_unique(written):
         ids = [e["id"] for e in entities]
         assert len(ids) == len(set(ids)), name
         for entity in entities:
-            assert re.fullmatch(rf"urn:ngsi-ld:{entity['type']}:hel\.fi:{SPACE}:[A-Za-z0-9-]+", entity["id"]), entity["id"]
+            assert re.fullmatch(rf"urn:ngsi-ld:{entity['type']}:bbsk\.sk:{SPACE}:[A-Za-z0-9-]+", entity["id"]), entity["id"]
 
 
 @requires_docker
@@ -114,7 +114,7 @@ def test_an_area_is_keyed_by_the_code_the_statistical_cubes_carry(written):
     localId is that code, so an application joins the two without a lookup table."""
     districts = {e["areaCode"]["value"]: e for e in written["okresy"]}
     assert set(districts) == {"SK0321", "SK0323"}
-    assert districts["SK0321"]["id"] == f"urn:ngsi-ld:AdministrativeArea:hel.fi:{SPACE}:SK0321"
+    assert districts["SK0321"]["id"] == f"urn:ngsi-ld:AdministrativeArea:bbsk.sk:{SPACE}:SK0321"
     assert districts["SK0321"]["name"]["languageMap"] == {"sk": "Okres Banská Bystrica"}
     assert districts["SK0321"]["surfaceArea"] == {"type": "Property", "value": 809438509, "unitCode": "MTK"}
     capital = next(e for e in written["obce"] if e["areaCode"]["value"] == "SK0321508438")
@@ -128,7 +128,7 @@ def test_an_organisation_points_at_its_municipality_and_says_its_field(written):
     assert categories == {"school", "socialCare", "culture", "office"}
     for entity in written["organizacie"]:
         assert entity["id"].endswith(":" + entity["legalId"]["value"])
-        assert re.fullmatch(rf"urn:ngsi-ld:AdministrativeArea:hel\.fi:{SPACE}:SK032[1-9A-D]\d{{6}}", entity["refMunicipality"]["object"])
+        assert re.fullmatch(rf"urn:ngsi-ld:AdministrativeArea:bbsk\.sk:{SPACE}:SK032[1-9A-D]\d{{6}}", entity["refMunicipality"]["object"])
         assert entity["location"]["value"]["type"] == "Point"
 
 
@@ -232,7 +232,7 @@ def test_an_empty_answer_writes_nothing():
 
 def test_a_value_outside_the_model_is_refused_by_the_schema():
     area = {
-        "id": f"urn:ngsi-ld:AdministrativeArea:hel.fi:{SPACE}:SK0321",
+        "id": f"urn:ngsi-ld:AdministrativeArea:bbsk.sk:{SPACE}:SK0321",
         "type": "AdministrativeArea",
         "areaCode": {"type": "Property", "value": "SK0421"},
         "divisionLevel": {"type": "Property", "value": "district"},

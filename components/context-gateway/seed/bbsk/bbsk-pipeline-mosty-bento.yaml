@@ -28,7 +28,7 @@ pipeline:
           root = if this.or("").string().trim() == "" { null } else { { "type": "Property", "value": this.string().trim() } }
         }
         root = this.features.or([]).filter(f -> f.properties.ID_mosta.or("").string().re_match("^M[0-9]+$") && f.geometry.or(null) != null).map_each(f -> f.properties.assign({ "_geometry": f.geometry })).map_each(p -> {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Bridge", env("JC_ORG_DOMAIN"), env("JC_SPACE"), p.ID_mosta),
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Bridge", "bbsk.sk", env("JC_SPACE"), p.ID_mosta),
           "type": "Bridge",
           "name": { "type": "LanguageProperty", "languageMap": { "sk": p."Názov_mosta".or(p.ID_mosta).string().trim() } },
           "bridgeCode": { "type": "Property", "value": p.ID_mosta },

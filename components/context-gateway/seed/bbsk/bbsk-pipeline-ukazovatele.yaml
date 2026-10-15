@@ -48,7 +48,7 @@ spec:
         "om7102rr": { "name": "obyvatelstvo-stav", "unit": "C62", "formula": "the published value of om7102rr/IN010115/SPOLU for the territory and the latest year the cube carries" },
         "zp3803rs": { "name": "emisie-tuhe-km2", "unit": "TNE", "formula": "the published value of zp3803rs/ODPAD_TONY_KM2, pollutant 1, in tonnes per km2, for the territory and the latest year the cube carries" }
       }
-      let domain = env("JC_ORG_DOMAIN")
+      let domain = "bbsk.sk"
       let space = env("JC_SPACE")
       let ran = now().ts_format("2006-01-02T15:04:05Z07:00", "UTC")
       let source_endpoint = "urn:ngsi-ld:Endpoint:%v:%v:%v".format($domain, env("JC_SOURCE_SPACE"), env("JC_SOURCE_SPACE"))

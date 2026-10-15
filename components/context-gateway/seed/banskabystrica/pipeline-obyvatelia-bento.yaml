@@ -23,7 +23,7 @@ pipeline:
         let count = this."Počet_občanov_v_danom_veku".or("").string().re_replace_all("[^0-9]", "")
         root = if $age == "" || $count == "" { deleted() } else {
           {
-            "id": "urn:ngsi-ld:%v:%v:%v:%v".format("StatisticalObservation", env("JC_ORG_DOMAIN"), env("JC_SPACE"), "%v-SK0321508438-%v-POCET-%v".format($cube, $today, $age)),
+            "id": "urn:ngsi-ld:%v:%v:%v:%v".format("StatisticalObservation", "banskabystrica.sk", env("JC_SPACE"), "%v-SK0321508438-%v-POCET-%v".format($cube, $today, $age)),
             "type": "StatisticalObservation",
             "dataSet": { "type": "Property", "value": $cube },
             "indicator": { "type": "Property", "value": "POCET" },
