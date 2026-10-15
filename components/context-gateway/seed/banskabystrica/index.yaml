@@ -155,3 +155,7 @@ banskabystrica-knowledge-web.yaml: projects/banskabystrica/assistant/sources/web
 banskabystrica-knowledge-catalogue-ngsi.yaml: projects/banskabystrica/assistant/sources/catalogue.yaml
 # The staff assistant over the website, for the answer-quality evals (T-3067).
 banskabystrica-assistant-knowledge.yaml: projects/banskabystrica/assistant/deployments/knowledge.yaml
+# The residents' public assistant of the city and the region (T-4167, Architecture/23).
+banskabystrica-knowledge-web-bbsk.yaml: projects/banskabystrica/assistant/sources/web-bbsk.yaml
+banskabystrica-knowledge-data-portal.yaml: projects/banskabystrica/assistant/sources/data-portal.yaml
+banskabystrica-assistant-public.yaml: projects/banskabystrica/assistant/deployments/banskabystrica.yaml
