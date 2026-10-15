@@ -63,6 +63,13 @@ EXPECTED_ROUTES = {
     "context-mcp-hub-portal": {
         "uri": "/api/mcp*", "priority": 20, "upstream_id": "context-mcp-hub-portal", "host": PORTAL_HOST,
     },
+    # T-4141: the named MCP servers for a caller without a bearer, counted per client IP.
+    "context-mcp-named": {
+        "uri": "/api/mcp/*", "priority": 21, "upstream_id": "context-mcp-named", "host": LOCAL_DOMAIN,
+    },
+    "context-mcp-named-portal": {
+        "uri": "/api/mcp/*", "priority": 21, "upstream_id": "context-mcp-named-portal", "host": PORTAL_HOST,
+    },
 }
 
 

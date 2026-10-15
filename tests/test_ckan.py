@@ -369,6 +369,17 @@ def test_the_session_cookies_are_secure_on_an_https_catalogue(rendered):
     assert "exit 0" not in script
 
 
+def test_the_catalogue_names_no_account_to_an_anonymous_visitor(rendered):
+    """CKAN 2.11 defaults `ckan.auth.public_user_details` to true, so dev's anonymous
+    `user_list` named every account, its last activity and which one is sysadmin (T-4172).
+    `ckanext-envvars` maps the variable to that option; false makes `user_list` and
+    `user_show` ask for a signed-in person."""
+    docs = rendered("dev")
+    plugins = env_of(ckan_container(docs))["CKAN__PLUGINS"].split()
+    assert "envvars" in plugins, plugins
+    assert env_of(ckan_container(docs)).get("CKAN__AUTH__PUBLIC_USER_DETAILS") == "false"
+
+
 @pytest.mark.parametrize(
     ("site_url", "written"),
     [

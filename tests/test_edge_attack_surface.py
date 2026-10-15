@@ -154,6 +154,14 @@ ROUTE_CLASSES = {
         "reach": EDGE_SESSION, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "the MCP hub on the Portal's origin, where the Endpoints view shows it; the edge session becomes the bearer and the gateway still decides",
     },
+    "context-mcp-named": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "the public named MCP servers for a caller without a bearer (T-4141): the hub's chain, 60 calls a minute per client IP; the gateway decides each call as the member Endpoint's own",
+    },
+    "context-mcp-named-portal": {
+        "reach": EDGE_SESSION, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "the same on the Portal's origin, so the anonymous limit is not one hostname away",
+    },
     "context-space-portal": {
         "reach": EDGE_SESSION, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "the space surface on the Portal's origin, where the UI reads it from; the edge session becomes the bearer and the gateway's PEP still decides",
