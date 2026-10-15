@@ -125,10 +125,11 @@ def test_every_seeded_manifest_of_the_city_belongs_to_one_of_its_four_spaces(see
     # Pipeline names its space through the Endpoint it writes through, which is the point. A
     # CkanInstance is the project's catalogue, which each space's Endpoint may publish to (T-2407).
     # A KnowledgeSource is a website the project's assistant answers from, and an
-    # AssistantDeployment the assistant that answers from it: neither is a space's (T-3067).
+    # AssistantDeployment the assistant that answers from it: neither is a space's (T-3067). An
+    # McpServer serves Endpoints by name, which may sit in different spaces (T-4141).
     project_scoped = {
         "Project", "ServiceAccount", "DataSource", "Pipeline", "CkanInstance", "KnowledgeSource",
-        "AssistantDeployment",
+        "AssistantDeployment", "McpServer",
     }
     for (kind, name), manifest in seed.items():
         if kind in project_scoped:

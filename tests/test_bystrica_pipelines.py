@@ -356,18 +356,23 @@ def test_every_entity_carries_the_request_that_produced_it(entities):
     """A row that cannot be fetched again is not a row, so `source` is the DataSource's own URL
     and not a shortened one that would need a human to reconstruct the query."""
     # Keyed by project: a DataSource name is unique in its project only, and the city and the
-    # region both read `susr-pr5001rr`, each for its own territory.
+    # region both read `susr-pr5001rr`, each for its own territory. Only an `http` source has a
+    # URL to repeat; the weather's `generate` source (T-4153) fetches inside its mapping.
     declared = {
         (doc["metadata"]["namespace"], doc["metadata"]["name"]): doc["spec"]["http"]["url"]
         for folder in (SEED / "bbsk", SEED / "banskabystrica")
         for path in sorted(folder.glob("*.yaml"))
         if path.name != "index.yaml" and not path.name.endswith((".linkml.yaml", "-bento.yaml"))
         for doc in yaml.safe_load_all(path.read_text())
-        if isinstance(doc, dict) and doc.get("kind") == "DataSource"
+        if isinstance(doc, dict) and doc.get("kind") == "DataSource" and "http" in doc["spec"]
     }
     for path, produced in entities.items():
         pipeline = yaml.safe_load(Path(str(path).replace("-bento.yaml", ".yaml")).read_text())
-        wanted = declared[(pipeline["metadata"]["namespace"], pipeline["spec"]["source"]["dataSourceRef"]["name"])]
+        key = (pipeline["metadata"]["namespace"], pipeline["spec"]["source"]["dataSourceRef"]["name"])
+        # a `generate` source (SHMÚ, T-4153) has no URL: its requests live in the mapping
+        if key not in declared:
+            continue
+        wanted = declared[key]
         for entity in produced:
             assert entity["source"]["value"] == wanted, path.name
 
