@@ -662,6 +662,22 @@ def test_the_footer_offers_the_assistant_as_a_disclosure_a_keyboard_opens():
     assert 'referrerpolicy="no-referrer"' in footer
 
 
+def test_the_assistant_leaves_the_page_room_and_takes_a_phone_s_whole_screen():
+    """T-4204: the button never covers the page's last line; open on a phone, the frame is the
+    screen, the page behind neither shows nor takes focus, and Escape closes it."""
+    css = (THEME / "public__jc-theme.css").read_text()
+    assert "body:has(.jc-assistant) { padding-block-end: 5rem; }" in css
+    phone = css.split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
+    assert ".jc-assistant[open] { inset: 0;" in phone
+    assert "body:has(.jc-assistant[open]) { overflow: hidden; }" in phone
+    assert "position: static; flex: 1; width: 100%" in phone
+    footer = (THEME / "footer.html").read_text()
+    assert "<script src=\"{{ h.url_for_static('/jc-assistant.js') }}\" defer></script>" in footer
+    script = (THEME / "public__jc-assistant.js").read_text()
+    assert 'matchMedia("(max-width: 40rem)")' in script and "el.inert = true" in script
+    assert 'event.key === "Escape"' in script and 'querySelector("summary").focus()' in script
+
+
 def test_the_catalogue_pod_is_told_its_assistant_only_when_the_assistant_is_deployed(rendered, rendered_variant):
     def widget(docs):
         (ckan,) = [d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"].endswith("ckan")
