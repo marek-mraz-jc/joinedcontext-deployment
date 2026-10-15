@@ -52,7 +52,9 @@ def test_the_pinned_image_answers_the_page_and_leaves_the_chat_alone(tmp_path):
         assert headers["Content-Type"].startswith("text/html"), headers
         assert "Táto stránka neexistuje." in body and "error_msg" not in body
         assert headers["X-Content-Type-Options"] == "nosniff", headers
-        assert "default-src 'none'" in headers["Content-Security-Policy"], headers
+        # OPS-34: the edge adds the baseline header, the page narrows itself to nothing.
+        assert "frame-ancestors 'none'" in headers["Content-Security-Policy"], headers
+        assert """<meta http-equiv="Content-Security-Policy" content="default-src 'none'">""" in body
         # The chat's path still goes to its upstream, closed here: a 502, not the page.
         status, _, body = answer(base + "/api/v1/d/x/chat")
         assert status == 502 and "Táto stránka" not in body
