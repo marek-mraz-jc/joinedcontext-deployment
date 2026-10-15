@@ -39,6 +39,12 @@ gitea:
   sample-apps-5:
     enabled: true
     namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "gitea") }}
+  sample-apps-6:
+    enabled: true
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "gitea") }}
+  sample-apps-7:
+    enabled: true
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "gitea") }}
   seed:
     enabled: true
     namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "gitea") }}

@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import type { Row } from "@joinedcontext/sdk";
 import { Card, Empty, Loading, Page, Problem, ProblemError, currentTokens, useClient, useEntitySelection, useSchema } from "@joinedcontext/sdk";
 import { Trend } from "../components/Trend";
+import { FindingAction } from "../components/FindingAction";
+import { useAccess } from "../access";
+import { problemText } from "../problems";
+import { findingKey, useResolutions } from "../resolutions";
 import { useServer } from "../server";
 import { ChartCard } from "../components/ChartCard";
 import type { Lang } from "../i18n";
@@ -63,13 +67,17 @@ export function completenessBarOption(types: TypeQuality[], _lang: Lang): Record
 
 /**
  * Helsinki data quality overview and type detail inspection screen. A failing entity opens in the
- * SDK's entity panel (SDK-40) by its id; the App is public, so the panel links it to the Portal,
- * where it is corrected (AP-140).
+ * SDK's entity panel (SDK-40) by its id. A steward resolves a finding or corrects its attribute
+ * through the App's Endpoint (T-3827); everyone sees what was resolved.
  */
 export function Quality({ lang }: { lang: Lang }): React.JSX.Element {
   const client = useClient();
   const server = useServer(client.config.appName);
   const { select } = useEntitySelection();
+  const { steward } = useAccess();
+  const resolutions = useResolutions(server);
+  const [acting, setActing] = useState<{ entity: string; attribute: string; id: string } | null>(null);
+  const [said, setSaid] = useState<{ text: string; problem: boolean } | null>(null);
   const { schema, error: schemaError } = useSchema();
 
   const [selectedType, setSelectedType] = useState<string | null>(() => {
@@ -119,7 +127,7 @@ export function Quality({ lang }: { lang: Lang }): React.JSX.Element {
     const currentMap = new Map<string, TypeData>();
 
     let completed = 0;
-    const promises = types.map(async (tName) => {
+    const load = async (tName: string) => {
       try {
         const rows = await client.entities.all(tName);
         if (cancelled) return;
@@ -137,7 +145,14 @@ export function Quality({ lang }: { lang: Lang }): React.JSX.Element {
           setLoadedCount(completed);
         }
       }
-    });
+    };
+    // Two types at a time: every type at once is a burst of paged reads that ran into the
+    // gateway's rate limit on dev (429 on three of thirteen types, T-3578).
+    const queue = [...types];
+    const reader = async () => {
+      for (let next = queue.shift(); next !== undefined && !cancelled; next = queue.shift()) await load(next);
+    };
+    const promises = [reader(), reader()];
 
     void Promise.all(promises).then(() => {
       if (!cancelled) {
@@ -402,6 +417,7 @@ export function Quality({ lang }: { lang: Lang }): React.JSX.Element {
                             <th scope="col">{t(lang, "id")}</th>
                             <th scope="col">{t(lang, "attribute")}</th>
                             <th scope="col">{t(lang, "failedRule")}</th>
+                            <th scope="col">{t(lang, "state")}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -416,11 +432,74 @@ export function Quality({ lang }: { lang: Lang }): React.JSX.Element {
                                 <code>{f.attribute}</code>
                               </td>
                               <td>{formatRule(f.rule, f.detail, lang)}</td>
+                              <td>
+                                {(() => {
+                                  const done = resolutions.byFinding.get(findingKey(f.entity, f.attribute));
+                                  const id = localId(f.entity);
+                                  const closed = steward ? undefined : t(lang, "stewardOnly");
+                                  if (done)
+                                    return (
+                                      <span className="app-state">
+                                        <span>{t(lang, done.corrected ? "correctedBy" : "resolvedBy", { by: done.resolverName, note: done.note })}</span>
+                                        <button
+                                          type="button"
+                                          className="jc-button"
+                                          disabled={!steward}
+                                          title={closed}
+                                          aria-label={`${t(lang, "reopen")}: ${f.attribute} ${id}`}
+                                          onClick={() => {
+                                            setSaid(null);
+                                            resolutions.reopen(done.id).then(
+                                              () => setSaid({ text: t(lang, "reopened"), problem: false }),
+                                              (error: unknown) => setSaid({ text: problemText(lang, error), problem: true }),
+                                            );
+                                          }}
+                                        >
+                                          {t(lang, "reopen")}
+                                        </button>
+                                      </span>
+                                    );
+                                  return (
+                                    <span className="app-state">
+                                      <span>{t(lang, "open")}</span>
+                                      <button
+                                        type="button"
+                                        className="jc-button"
+                                        disabled={!steward}
+                                        title={closed}
+                                        aria-label={`${t(lang, "resolve")}: ${f.attribute} ${id}`}
+                                        onClick={() => {
+                                          setSaid(null);
+                                          setActing({ entity: f.entity, attribute: f.attribute, id });
+                                        }}
+                                      >
+                                        {t(lang, "resolve")}
+                                      </button>
+                                    </span>
+                                  );
+                                })()}
+                              </td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
                     </div>
+                    <p role="status" aria-live="polite" className={said?.problem ? "app-error" : "app-note"}>
+                      {said?.text ?? (resolutions.failed ? problemText(lang, resolutions.failed) : steward ? "" : t(lang, "stewardOnly"))}
+                    </p>
+                    {acting && steward && (
+                      <FindingAction
+                        key={findingKey(acting.entity, acting.attribute)}
+                        lang={lang}
+                        resolutions={resolutions}
+                        finding={acting}
+                        onDone={(text) => {
+                          setActing(null);
+                          setSaid({ text, problem: false });
+                        }}
+                        onCancel={() => setActing(null)}
+                      />
+                    )}
                     {selectedQuality.findingsTotal > 200 && (
                       <p className="app-failing-count">
                         {t(lang, "failingCapped", {

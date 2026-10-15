@@ -16,4 +16,12 @@ spec:
     name: helsinki
   enabledRepresentations:
   - ngsi-ld
+  - ogc-features
+  roles:
+  - name: viewer
+    subjects:
+    - group: bike-weather-demand-viewer
+  - name: steward
+    subjects:
+    - group: bike-weather-demand-steward
   slug: r7bxzgiatcruw4b7l2rrkufidz

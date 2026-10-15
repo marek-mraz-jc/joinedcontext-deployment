@@ -1,6 +1,6 @@
 # Written by scripts/vendor-sample-apps.py; do not edit. The files of each sample application,
 # relative to its folder, as the forge bootstrap pushes them to its repository (T-2599).
-source: c8db6133d319255f94531a20773277d41e4f12df
+source: 5316705a4dd23f1d7723c554801d2ba3139dd89f
 apps:
   air-quality:
     - .gitea/workflows/build.yml
@@ -52,9 +52,16 @@ apps:
     - build.rs
     - grants/projects/helsinki/spaces/helsinki/endpoints/app-hsl-transport.yaml
     - grants/projects/helsinki/spaces/helsinki/policies/app-hsl-transport-1.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-hsl-transport-2.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-hsl-transport-3.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-hsl-transport-4.yaml
     - src/assets.rs
+    - src/board.rs
     - src/lib.rs
+    - src/live.rs
     - src/main.rs
+    - src/metrics.rs
+    - tests/live_tests.rs
     - tests/server_tests.rs
     - ui/e2e/responsive.spec.ts
     - ui/e2e/serve.ts
@@ -67,6 +74,7 @@ apps:
     - ui/src/index.css
     - ui/src/main.tsx
     - ui/tests/attribution.test.tsx
+    - ui/tests/board.test.tsx
     - ui/tests/map.test.tsx
     - ui/tests/panel.test.tsx
     - ui/tests/setup.ts
@@ -231,9 +239,12 @@ apps:
     - e2e/serve.ts
     - grants/projects/helsinki/spaces/helsinki/endpoints/app-alerts-heatmap.yaml
     - grants/projects/helsinki/spaces/helsinki/policies/app-alerts-heatmap-1.yaml
+    - grants/users/groups/alerts-heatmap-steward.yaml
+    - grants/users/groups/alerts-heatmap-viewer.yaml
     - index.html
     - map-worker.ts
     - migrations/0001_reports_and_weeks.sql
+    - migrations/0002_roles.sql
     - package.json
     - playwright.config.ts
     - server/Cargo.lock
@@ -243,6 +254,7 @@ apps:
     - server/src/lib.rs
     - src/App.test.tsx
     - src/App.tsx
+    - src/access.tsx
     - src/alerts.test.ts
     - src/alerts.ts
     - src/analysis.test.tsx
@@ -251,7 +263,10 @@ apps:
     - src/app.css
     - src/charts.test.ts
     - src/charts.ts
+    - src/components/Acks.tsx
+    - src/components/Changes.tsx
     - src/components/ChartCard.tsx
+    - src/components/Filters.tsx
     - src/components/HexMap.test.tsx
     - src/components/HexMap.tsx
     - src/components/Reports.tsx
@@ -263,11 +278,14 @@ apps:
     - src/i18n.ts
     - src/main.tsx
     - src/pages/Heatmap.tsx
+    - src/roles.test.tsx
     - src/server.test.ts
     - src/server.ts
     - src/test-analyser.ts
     - src/test-server.ts
     - src/testing/maplibre.ts
+    - src/testing/server.ts
+    - src/testing/sweep.ts
     - src/theme.test.tsx
     - src/theme.ts
     - src/wasm.test.ts
@@ -294,6 +312,7 @@ apps:
     - index.html
     - map-worker.ts
     - migrations/0001_plans.sql
+    - migrations/0002_roles.sql
     - package.json
     - playwright.config.ts
     - server/Cargo.lock
@@ -303,13 +322,19 @@ apps:
     - server/src/lib.rs
     - src/App.test.tsx
     - src/App.tsx
+    - src/access.tsx
     - src/app.css
     - src/components/ChartCard.tsx
+    - src/components/History.test.tsx
+    - src/components/History.tsx
+    - src/components/LevelsCard.test.tsx
+    - src/components/LevelsCard.tsx
     - src/components/MapView.tsx
     - src/components/SavedPlans.test.tsx
     - src/components/SavedPlans.tsx
     - src/components/components.css
     - src/design-tokens.json
+    - src/fixtures/memory.ts
     - src/fixtures/stations.ts
     - src/go.test.ts
     - src/go.ts
@@ -344,9 +369,12 @@ apps:
     - e2e/serve.ts
     - grants/projects/helsinki/spaces/helsinki/endpoints/app-event-day-planner.yaml
     - grants/projects/helsinki/spaces/helsinki/policies/app-event-day-planner-1.yaml
+    - grants/users/groups/event-day-planner-steward.yaml
+    - grants/users/groups/event-day-planner-viewer.yaml
     - index.html
     - map-worker.ts
     - migrations/0001_itineraries.sql
+    - migrations/0002_roles.sql
     - package.json
     - playwright.config.ts
     - server/Cargo.lock
@@ -357,16 +385,24 @@ apps:
     - server/src/lib.rs
     - src/App.test.tsx
     - src/App.tsx
+    - src/access.tsx
     - src/app.css
     - src/components/ChartCard.tsx
+    - src/components/FeaturedCard.tsx
+    - src/components/History.test.tsx
+    - src/components/History.tsx
     - src/components/MapView.tsx
+    - src/components/MyDays.test.tsx
+    - src/components/MyDays.tsx
     - src/components/ShareDay.test.tsx
     - src/components/ShareDay.tsx
     - src/components/components.css
     - src/design-tokens.json
     - src/events.test.ts
     - src/events.ts
+    - src/featured.ts
     - src/fixtures/events.ts
+    - src/fixtures/memory.ts
     - src/go.test.ts
     - src/go.ts
     - src/i18n.test.ts
@@ -400,9 +436,12 @@ apps:
     - grants/projects/helsinki/spaces/helsinki/policies/app-air-weather-explorer-1.yaml
     - grants/projects/helsinki/spaces/helsinki/policies/app-air-weather-explorer-2-history.yaml
     - grants/projects/helsinki/spaces/helsinki/policies/app-air-weather-explorer-2.yaml
+    - grants/users/groups/air-weather-explorer-steward.yaml
+    - grants/users/groups/air-weather-explorer-viewer.yaml
     - index.html
     - map-worker.ts
     - migrations/0001_cache_comparisons_exports.sql
+    - migrations/0002_roles.sql
     - package.json
     - playwright.config.ts
     - server/Cargo.lock
@@ -414,17 +453,21 @@ apps:
     - server/src/lib.rs
     - src/App.test.tsx
     - src/App.tsx
+    - src/access.tsx
     - src/analysis.test.ts
     - src/analysis.ts
     - src/analysis.worker.ts
     - src/app.css
     - src/components/ChartCard.tsx
+    - src/components/FaultsCard.tsx
+    - src/components/History.tsx
     - src/components/Keep.test.tsx
     - src/components/Keep.tsx
     - src/components/MapView.tsx
     - src/components/components.css
     - src/components/components.test.tsx
     - src/design-tokens.json
+    - src/faults.ts
     - src/fixtures/stations.ts
     - src/go.test.ts
     - src/go.ts
@@ -434,7 +477,9 @@ apps:
     - src/pages/Explore.failure.test.tsx
     - src/pages/Explore.test.tsx
     - src/pages/Explore.tsx
+    - src/pages/Places.tsx
     - src/problem.ts
+    - src/roles.test.tsx
     - src/server.test.ts
     - src/server.ts
     - src/stations.test.ts
@@ -442,6 +487,7 @@ apps:
     - src/testing/hourly.ts
     - src/testing/maplibre.ts
     - src/testing/server.ts
+    - src/testing/sweep.ts
     - src/texts.ts
     - src/theme.ts
     - src/url.ts
@@ -461,8 +507,11 @@ apps:
     - grants/projects/helsinki/spaces/helsinki-kpi/endpoints/app-kpi-forecast.yaml
     - grants/projects/helsinki/spaces/helsinki/policies/app-kpi-forecast-1-history.yaml
     - grants/projects/helsinki/spaces/helsinki/policies/app-kpi-forecast-1.yaml
+    - grants/users/groups/kpi-forecast-steward.yaml
+    - grants/users/groups/kpi-forecast-viewer.yaml
     - index.html
     - migrations/0001_forecasts.sql
+    - migrations/0002_roles.sql
     - package.json
     - playwright.config.ts
     - server/Cargo.lock
@@ -474,6 +523,7 @@ apps:
     - server/wit/server.wit
     - src/App.test.tsx
     - src/App.tsx
+    - src/access.tsx
     - src/analysis.test.tsx
     - src/analysis.ts
     - src/analysis.worker.ts
@@ -484,6 +534,9 @@ apps:
     - src/components/ChartCard.tsx
     - src/components/Earlier.test.tsx
     - src/components/Earlier.tsx
+    - src/components/FollowButton.tsx
+    - src/components/History.tsx
+    - src/components/Published.tsx
     - src/components/Report.test.tsx
     - src/components/Report.tsx
     - src/components/components.css
@@ -491,6 +544,7 @@ apps:
     - src/earlier.test.ts
     - src/earlier.ts
     - src/fixtures/kpis.ts
+    - src/follows.tsx
     - src/go.test.ts
     - src/go.ts
     - src/history.ts
@@ -499,12 +553,15 @@ apps:
     - src/kpis.test.ts
     - src/kpis.ts
     - src/main.tsx
+    - src/pages/Follows.tsx
     - src/pages/Forecast.tsx
     - src/problem.ts
+    - src/roles.test.tsx
     - src/server.test.ts
     - src/server.ts
     - src/test-analyser.ts
     - src/test-server.ts
+    - src/testing/sweep.ts
     - src/theme.test.tsx
     - src/theme.ts
     - src/wasm.test.ts
@@ -527,9 +584,12 @@ apps:
     - grants/projects/helsinki/spaces/helsinki/policies/app-transit-reach-1-history.yaml
     - grants/projects/helsinki/spaces/helsinki/policies/app-transit-reach-2.yaml
     - grants/projects/helsinki/spaces/helsinki/policies/app-transit-reach-3.yaml
+    - grants/users/groups/transit-reach-steward.yaml
+    - grants/users/groups/transit-reach-viewer.yaml
     - index.html
     - map-worker.ts
     - migrations/0001_networks_and_reach.sql
+    - migrations/0002_roles.sql
     - package.json
     - playwright.config.ts
     - server/Cargo.lock
@@ -540,16 +600,22 @@ apps:
     - server/src/lib.rs
     - src/App.test.tsx
     - src/App.tsx
+    - src/access.tsx
     - src/analysis.test.ts
     - src/analysis.ts
     - src/analysis.worker.ts
     - src/app.css
+    - src/components/History.test.tsx
+    - src/components/History.tsx
     - src/components/KeptReach.test.tsx
     - src/components/KeptReach.tsx
     - src/components/ReachMap.test.tsx
     - src/components/ReachMap.tsx
+    - src/components/SaveOrigin.test.tsx
+    - src/components/SaveOrigin.tsx
     - src/components/components.css
     - src/design-tokens.json
+    - src/fixtures/memory.ts
     - src/fixtures/network.ts
     - src/fixtures/vehicles.ts
     - src/go.test.ts
@@ -561,12 +627,16 @@ apps:
     - src/network-paging.test.tsx
     - src/network.test.ts
     - src/network.ts
+    - src/origins.ts
+    - src/pages/Origins.test.tsx
+    - src/pages/Origins.tsx
     - src/pages/Reach.tsx
     - src/problem.ts
     - src/server.test.ts
     - src/server.ts
     - src/test-analyser.ts
     - src/testing/maplibre.ts
+    - src/testing/sweep.ts
     - src/theme.test.ts
     - src/theme.ts
     - src/vehicles.test.ts
@@ -592,8 +662,11 @@ apps:
     - e2e/serve.ts
     - grants/projects/helsinki/spaces/helsinki/endpoints/app-news-topics.yaml
     - grants/projects/helsinki/spaces/helsinki/policies/app-news-topics-1.yaml
+    - grants/users/groups/news-topics-steward.yaml
+    - grants/users/groups/news-topics-viewer.yaml
     - index.html
     - migrations/0001_weekly_topics.sql
+    - migrations/0002_roles.sql
     - package.json
     - playwright.config.ts
     - server/Cargo.lock
@@ -602,11 +675,15 @@ apps:
     - server/host-test/articles.json
     - server/src/lib.rs
     - src/App.tsx
+    - src/access.tsx
     - src/app.css
+    - src/components/Changes.tsx
     - src/components/ChartCard.test.tsx
     - src/components/ChartCard.tsx
+    - src/components/Follows.tsx
     - src/components/KeptWeeks.test.tsx
     - src/components/KeptWeeks.tsx
+    - src/components/Names.tsx
     - src/components/components.css
     - src/design-tokens.json
     - src/fixtures/news.ts
@@ -615,8 +692,11 @@ apps:
     - src/main.tsx
     - src/pages/Topics.test.tsx
     - src/pages/Topics.tsx
+    - src/roles.test.tsx
     - src/server.test.ts
     - src/server.ts
+    - src/testing/server.ts
+    - src/testing/sweep.ts
     - src/topics.test.ts
     - src/topics.ts
     - src/wasm.test.ts
@@ -636,9 +716,13 @@ apps:
     - e2e/serve.ts
     - grants/projects/helsinki/spaces/helsinki/endpoints/app-district-compare.yaml
     - grants/projects/helsinki/spaces/helsinki/policies/app-district-compare-1.yaml
+    - grants/users/groups/district-compare-steward.yaml
+    - grants/users/groups/district-compare-viewer.yaml
     - index.html
     - map-worker.ts
     - migrations/0001_district_metrics.sql
+    - migrations/0002_roles.sql
+    - migrations/0003_share_tokens.sql
     - package.json
     - playwright.config.ts
     - server/Cargo.lock
@@ -652,14 +736,17 @@ apps:
     - server/src/lib.rs
     - src/App.test.tsx
     - src/App.tsx
+    - src/access.tsx
     - src/app.css
     - src/compare.test.tsx
     - src/compare.ts
     - src/compare.worker.ts
+    - src/components/Changes.tsx
     - src/components/ChartCard.tsx
     - src/components/DistrictMap.test.tsx
     - src/components/DistrictMap.tsx
     - src/components/History.tsx
+    - src/components/Saved.tsx
     - src/components/components.css
     - src/design-tokens.json
     - src/districts.test.ts
@@ -669,8 +756,11 @@ apps:
     - src/i18n.ts
     - src/main.tsx
     - src/pages/Compare.tsx
+    - src/roles.test.tsx
     - src/server.test.ts
     - src/server.ts
+    - src/testing/server.ts
+    - src/testing/sweep.ts
     - src/theme.test.ts
     - src/theme.ts
     - src/wasm.test.ts
@@ -690,8 +780,12 @@ apps:
     - e2e/serve.ts
     - grants/projects/helsinki/spaces/helsinki/endpoints/app-data-quality-inspector.yaml
     - grants/projects/helsinki/spaces/helsinki/policies/app-data-quality-inspector-1.yaml
+    - grants/projects/helsinki/spaces/helsinki/policies/app-data-quality-inspector-2-steward.yaml
+    - grants/users/groups/data-quality-inspector-steward.yaml
+    - grants/users/groups/data-quality-inspector-viewer.yaml
     - index.html
     - migrations/0001_quality_runs.sql
+    - migrations/0002_roles.sql
     - package.json
     - playwright.config.ts
     - server/Cargo.lock
@@ -699,13 +793,17 @@ apps:
     - server/host-test.json
     - server/host-test/alerts.json
     - server/host-test/events.json
+    - server/host-test/forbidden.json
     - server/host-test/index.json
     - server/host-test/json-schema.json
     - server/src/lib.rs
     - src/App.test.tsx
     - src/App.tsx
+    - src/access.tsx
     - src/app.css
     - src/components/ChartCard.tsx
+    - src/components/FindingAction.tsx
+    - src/components/History.tsx
     - src/components/Trend.tsx
     - src/components/components.css
     - src/design-tokens.json
@@ -717,10 +815,15 @@ apps:
     - src/inspect.worker.ts
     - src/main.tsx
     - src/pages/Quality.tsx
+    - src/problems.ts
     - src/quality.test.ts
     - src/quality.ts
+    - src/resolutions.ts
+    - src/roles.test.tsx
     - src/server.test.ts
     - src/server.ts
+    - src/testing/roles.ts
+    - src/testing/sweep.ts
     - src/theme.test.ts
     - src/theme.ts
     - src/wasm.test.ts
@@ -744,9 +847,12 @@ apps:
     - grants/projects/helsinki/spaces/helsinki/policies/app-bike-weather-demand-1.yaml
     - grants/projects/helsinki/spaces/helsinki/policies/app-bike-weather-demand-2-history.yaml
     - grants/projects/helsinki/spaces/helsinki/policies/app-bike-weather-demand-2.yaml
+    - grants/users/groups/bike-weather-demand-steward.yaml
+    - grants/users/groups/bike-weather-demand-viewer.yaml
     - index.html
     - map-worker.ts
     - migrations/0001_station_models.sql
+    - migrations/0002_roles.sql
     - package.json
     - playwright.config.ts
     - server/Cargo.lock
@@ -759,12 +865,15 @@ apps:
     - server/src/lib.rs
     - src/App.test.tsx
     - src/App.tsx
+    - src/access.tsx
     - src/app.css
     - src/bikes.test.ts
     - src/bikes.ts
     - src/components/ChartCard.tsx
+    - src/components/History.tsx
     - src/components/ModelHistory.test.tsx
     - src/components/ModelHistory.tsx
+    - src/components/ModelInputs.tsx
     - src/components/StationMap.test.tsx
     - src/components/StationMap.tsx
     - src/components/components.css
@@ -778,8 +887,11 @@ apps:
     - src/main.tsx
     - src/pages/Station.test.tsx
     - src/pages/Station.tsx
+    - src/roles.test.tsx
     - src/server.test.ts
     - src/server.ts
+    - src/testing/server.ts
+    - src/testing/sweep.ts
     - src/theme.test.ts
     - src/theme.ts
     - src/wasm.test.ts
