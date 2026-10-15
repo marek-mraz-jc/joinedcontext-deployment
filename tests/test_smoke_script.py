@@ -41,11 +41,23 @@ def lookup(table, default):
     return default
 
 
+# The write-out that asks for the status (`%{http_code}`, alone or with `%header{...}` beside it).
+write_out = next((a for a in args if "%{http_code}" in a), None)
+
+
+def answer(code):
+    # A write-out naming the edge's rate-limit reset gets one (T-4188); its newline is curl's.
+    said = str(code)
+    if "%header{x-ratelimit-reset}" in write_out:
+        said += " " + str(spec.get("rateLimitReset", ""))
+    return said + ("\\n" if "\\\\n" in write_out else "")
+
+
 if "--tls-max" in line:
     sys.exit(spec.get("tls11", 1))
 elif "-sSI" in args:
     sys.stdout.write(lookup("headers", spec.get("defaultHeaders", DEFAULT_HEADERS)))
-elif "%{http_code}" in args and any(all(n in line for n in (m if isinstance(m, list) else [m])) for m, _ in spec.get("statusSequences", [])):
+elif write_out is not None and any(all(n in line for n in (m if isinstance(m, list) else [m])) for m, _ in spec.get("statusSequences", [])):
     # A status that changes while the script waits (T-3424): each call takes the next answer of
     # the sequence, and the last one stands once it runs out.
     for index, (match, answers) in enumerate(spec["statusSequences"]):
@@ -54,11 +66,11 @@ elif "%{http_code}" in args and any(all(n in line for n in (m if isinstance(m, l
             counter = os.environ["STUB_SPEC"] + ".seq%d" % index
             taken = int(open(counter).read()) if os.path.exists(counter) else 0
             open(counter, "w").write(str(taken + 1))
-            sys.stdout.write(str(answers[min(taken, len(answers) - 1)]))
+            sys.stdout.write(answer(answers[min(taken, len(answers) - 1)]))
             break
-elif "%{http_code}" in args:
+elif write_out is not None:
     # A conditional read of a schema artifact is a 304, as the gateway answers it (EP-51).
-    sys.stdout.write(str(lookup("statuses", 304 if "If-None-Match" in line else 200)))
+    sys.stdout.write(answer(lookup("statuses", 304 if "If-None-Match" in line else 200)))
 elif "-D" in args:
     # The response headers of one read (T-2262): the gateway's own caching and its ETag.
     sys.stdout.write(lookup("dumpedHeaders", spec.get("schemaHeaders",
@@ -995,6 +1007,24 @@ def test_a_public_app_host_that_answers_once_the_lane_republished_is_green(tmp_p
     result = run(tmp_path, spec, "https://example.test", "https://idm.example.test", extra_env={"JC_SMOKE_POLL": "0"})
     assert "ok    public App hsl-transport answers an anonymous visitor on its own host (200)" in result.stdout
     assert "FAIL  public App hsl-transport" not in result.stdout
+
+
+def test_a_429_from_the_shared_edge_budget_is_waited_out_and_asked_again(tmp_path):
+    """T-4188: a 429 is the per-IP budget every agent on the address spends, not a check's answer;
+    the check waits out the window the edge names and keeps the answer it asks for."""
+    spec = dict(HEALTHY, rateLimitReset=0,
+                statusSequences=[["/.well-known/openid-configuration", [429, 200]]])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert "ok    keycloak OIDC discovery over valid TLS (200)" in result.stdout
+    assert "FAIL  keycloak OIDC discovery" not in result.stdout
+
+
+def test_a_429_past_three_windows_fails_the_check(tmp_path):
+    """T-4188: the wait is bounded; an edge still refusing after three windows is red."""
+    spec = dict(HEALTHY, rateLimitReset=0,
+                statusSequences=[["/.well-known/openid-configuration", [429]]])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert "FAIL  keycloak OIDC discovery over valid TLS (expected 200, got 429)" in result.stdout
 
 
 def test_a_public_app_host_still_missing_past_the_bound_fails_the_run(tmp_path):
