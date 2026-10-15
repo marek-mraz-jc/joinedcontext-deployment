@@ -126,14 +126,22 @@ def test_every_seeded_manifest_of_the_city_belongs_to_one_of_its_four_spaces(see
     # CkanInstance is the project's catalogue, which each space's Endpoint may publish to (T-2407).
     # A KnowledgeSource is a website the project's assistant answers from, and an
     # AssistantDeployment the assistant that answers from it: neither is a space's (T-3067).
+    # An McpServer is a named MCP server over the project's Endpoints (ADR-N-043 §2.1, T-4141):
+    # its members name the space, so it is checked against the Endpoints below.
     project_scoped = {
         "Project", "ServiceAccount", "DataSource", "Pipeline", "CkanInstance", "KnowledgeSource",
-        "AssistantDeployment",
+        "AssistantDeployment", "McpServer",
     }
     for (kind, name), manifest in seed.items():
         if kind in project_scoped:
             continue
         assert space_of(manifest) in spaces, f"{kind}/{name} names {space_of(manifest)}"
+    endpoint_names = {name for (kind, name) in seed if kind == "Endpoint"}
+    for (kind, name), manifest in seed.items():
+        if kind == "McpServer":
+            for member in manifest["spec"]["members"]:
+                assert member.get("namespace", "banskabystrica") == "banskabystrica", f"{name} reaches past the city"
+                assert member["name"] in endpoint_names, f"{name} names {member['name']}, which the city does not serve"
 
     endpoints = {
         f'urn:ngsi-ld:Endpoint:banskabystrica.sk:{m["spec"]["contextSpaceRef"]}:{name}'
