@@ -72,7 +72,7 @@ Specialises `Entity`.
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
 | `serviceCategory` | Property | [`ServiceCategory`](#servicecategory) | yes |  | `jc:serviceCategory` | Which kind of place it is. |
 | `facilityType` | Property | `string` |  |  | `jc:facilityType` | The publisher's own word for the kind of place, such as Mateřská škola or ticketMachine. |
-| `address` | Property | `string` |  |  | `schema:address` | The street address, one line, as the publisher writes it. |
+| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The Smart Data Models PostalAddress (T-4329): the street address as the publisher writes it, one line, in `streetAddress`, and the city and country every Prague source shares. |
 | `url` | Property | `uri` |  |  | `schema:url` | The place's own web page. |
 | `capacity` | Property | `integer` |  |  | `jc:capacity` | How many pupils the school may take, as the school register states it. |
 | `pupilCount` | Property | `integer` |  |  | `jc:pupilCount` | How many pupils the school has, a count the register publishes and never a name. |
@@ -194,6 +194,18 @@ Specialises `Entity`.
 | `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### PostalAddress
+
+The value of `address`: a postal address, never an entity of its own (Smart Data Models' common schema).
+
+IRI: `schema:PostalAddress`
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `streetAddress` | Property | `string` |  |  | `schema:streetAddress` | The street address line as the publisher writes it. |
+| `addressLocality` | Property | `string` |  |  | `schema:addressLocality` | The town, Praha. |
+| `addressCountry` | Property | `string` |  |  | `schema:addressCountry` | The country, as an ISO 3166-1 alpha-2 code. |
 
 ### Entity
 

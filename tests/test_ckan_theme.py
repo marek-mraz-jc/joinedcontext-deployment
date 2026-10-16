@@ -776,14 +776,12 @@ def test_the_catalogue_pod_is_told_its_assistant_only_when_the_assistant_is_depl
         env = {e["name"]: e.get("value") for e in container["env"]}
         return env["JC_ASSISTANT_WIDGET_URL"], json.loads(env["JC_ASSISTANT_WIDGET_URLS"])
 
-    # dev lists the assistant since T-3181, so its catalogue carries the widget: the region's by
-    # default and each publisher's own (T-4281); without the component it is told nothing.
+    # dev lists the assistant since T-3181, so its catalogue carries the widget: the one general
+    # assistant on every page, the home page, every organization's dataset and resource pages
+    # included, and no city's (T-4342); without the component it is told nothing.
     default, by_organization = widget(rendered("dev"))
-    assert default == "https://assistant.dev.joinedcontext.com/d/bbsk/widget"
-    assert by_organization == {
-        body: f"https://assistant.dev.joinedcontext.com/d/{body}/widget"
-        for body in ("banskabystrica", "bbsk", "zilina", "praha")
-    }
+    assert default == "https://assistant.dev.joinedcontext.com/d/data/widget"
+    assert by_organization == {}
 
     def without_assistant(tree):
         path = tree / "deployment/environments/dev/global.yaml.gotmpl"

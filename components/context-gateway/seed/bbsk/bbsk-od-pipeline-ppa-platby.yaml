@@ -9,8 +9,8 @@ metadata:
     en: PPA platby
 spec:
   class: scheduled
-  enabled: false
-  schedule: 46 2 * * 3
+  enabled: true
+  schedule: 46 2 * * 2
   source:
     dataSourceRef:
       kind: DataSource

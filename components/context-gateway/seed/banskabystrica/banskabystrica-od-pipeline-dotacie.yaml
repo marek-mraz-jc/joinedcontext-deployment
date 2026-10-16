@@ -9,8 +9,8 @@ metadata:
     en: Dotácie
 spec:
   class: scheduled
-  enabled: false
-  schedule: 14 1 * * 3
+  enabled: true
+  schedule: 14 1 * * 2
   source:
     dataSourceRef:
       kind: DataSource

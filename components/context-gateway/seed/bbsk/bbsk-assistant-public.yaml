@@ -24,11 +24,16 @@ spec:
   sources: [web, data-portal, catalogue]
   # Read-only tools on every member of the region's public `otvorene-data` MCP server (T-4256);
   # tests/test_public_assistant_seed.py fails when a member is added there and not here.
+  # The national open data of project slovensko, and nothing else of another project (T-4340).
+  scope: { projects: [slovensko] }
   connectors:
     - { endpoint: bbsk-registre, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
     - { endpoint: bbsk-kraj-verejne, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
     - { endpoint: bbsk-kpi, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
     - { endpoint: bbsk-otvorene-data, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    # Slovakia's air quality at every station (T-4340, owner 2026-10-16): the one national
+    # dataset every public assistant reads, through the public Endpoint of project slovensko.
+    - { endpoint: slovensko/ovzdusie-sk, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
   allowedOrigins: [https://assistant.dev.joinedcontext.com, https://dev.joinedcontext.com, https://data.dev.joinedcontext.com]
   # T-4149 item 1 defaults; $1 a day (T-4281, inside the key's $5).
   rateLimit: { requestsPerMinute: 30, perClientPerMinute: 10, perClientPerHour: 60, perClientPerDay: 200, streamsPerClient: 2 }

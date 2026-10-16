@@ -5,9 +5,10 @@ description: >-
   One cell of a published statistical table, as its publisher published it (DM-01, DM-09).
   A territory code, a period, the publisher's own indicator code, the remaining dimensions of
   the cube and the number, with the request that produced it. Nothing is renamed and nothing is
-  recomputed on the way in, so a row can always be traced back to the URL it came from; the
-  indicators computed from these rows are `KeyPerformanceIndicator` entities in the project's
-  indicator space (PF-54, PF-55).
+  recomputed on the way in, so a row can always be traced back to the URL it came from. The
+  type is the FIWARE Smart Data Model `KeyPerformanceIndicator` (dataModel.KeyPerformanceIndicator,
+  T-4329) and the number its `kpiValue`; the indicators computed from these rows are the same
+  type in the project's indicator space (PF-54, PF-55).
 
   It is deliberately not a Data Structure Definition in the sense of DM-60: a declared DSD puts
   its observations in the project's indicator space, and this space would then hold nothing.
@@ -21,6 +22,7 @@ prefixes:
   qb: http://purl.org/linked-data/cube#
   sdmx-dim: http://purl.org/linked-data/sdmx/2009/dimension#
   ucefact: https://vocabulary.uncefact.org/UnitMeasureCode#
+  sdm-kpi: https://smartdatamodels.org/dataModel.KeyPerformanceIndicator/
 default_prefix: jc
 default_range: string
 imports:
@@ -66,8 +68,8 @@ slots:
       without matching on an id pattern. Absent when the table has no further dimension.
     annotations:
       ngsi_ld_kind: Property
-  observationValue:
-    slot_uri: jc:observationValue
+  kpiValue:
+    slot_uri: sdm-kpi:kpiValue
     description: >-
       The number, exactly as published. Its unit varies with the indicator and travels on the
       Property as `unitCode`, a UN/CEFACT common code, beside `unitText`.
@@ -75,6 +77,7 @@ slots:
     required: true
     annotations:
       ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
   unitText:
     slot_uri: jc:unitText
     description: The unit in the publisher's own words, such as `v tis. m3`, kept because a UN/CEFACT code loses the scale factor.
@@ -107,8 +110,10 @@ slots:
       ngsi_ld_kind: Property
 
 classes:
-  StatisticalObservation:
-    class_uri: qb:Observation
+  KeyPerformanceIndicator:
+    class_uri: sdm-kpi:KeyPerformanceIndicator
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
     description: One cell of one published statistical table.
     is_a: Entity
     slots:
@@ -117,7 +122,7 @@ classes:
       - refArea
       - refPeriod
       - dimensionKey
-      - observationValue
+      - kpiValue
       - unitText
       - source
       - dateObserved

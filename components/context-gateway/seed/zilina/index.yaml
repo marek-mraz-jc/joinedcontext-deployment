@@ -135,3 +135,11 @@ zilina-knowledge-catalogue-ngsi.yaml: projects/zilina/assistant/sources/catalogu
 zilina-knowledge-web.yaml: projects/zilina/assistant/sources/web.yaml
 zilina-knowledge-data-portal.yaml: projects/zilina/assistant/sources/data-portal.yaml
 zilina-assistant-public.yaml: projects/zilina/assistant/deployments/zilina.yaml
+# One catalogue dataset per Smart Data Model type, or per group of types that reference
+# each other, each through its own narrowed Endpoint and Policy (T-4344).
+zilina-endpoint-ovzdusie.yaml: projects/zilina/spaces/zilina-verejne/endpoints/zilina-ovzdusie.yaml
+zilina-policy-ovzdusie-read.yaml: projects/zilina/spaces/zilina-verejne/policies/ovzdusie-read.yaml
+zilina-endpoint-pamiatky.yaml: projects/zilina/spaces/zilina-verejne/endpoints/zilina-pamiatky.yaml
+zilina-policy-pamiatky-read.yaml: projects/zilina/spaces/zilina-verejne/policies/pamiatky-read.yaml
+zilina-endpoint-stanice.yaml: projects/zilina/spaces/zilina-verejne/endpoints/zilina-zeleznicne-stanice.yaml
+zilina-policy-stanice-read.yaml: projects/zilina/spaces/zilina-verejne/policies/stanice-read.yaml

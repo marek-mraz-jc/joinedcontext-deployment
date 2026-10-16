@@ -9,8 +9,8 @@ metadata:
     en: Adresy
 spec:
   class: scheduled
-  enabled: false
-  schedule: 0 1 * * 1
+  enabled: true
+  schedule: 0 1 * * 0
   source:
     dataSourceRef:
       kind: DataSource

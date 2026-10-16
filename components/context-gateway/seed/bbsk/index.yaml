@@ -387,3 +387,17 @@ bbsk-od-datasource-zoznam-zdravotnickych-zariadeni-v-bbk.yaml: projects/bbsk/dat
 bbsk-od-pipeline-zoznam-zdravotnickych-zariadeni-v-bbk.yaml: projects/bbsk/pipelines/od-zoznam-zdravotnickych-zariadeni-v-bbk/pipeline.yaml
 bbsk-od-pipeline-zoznam-zdravotnickych-zariadeni-v-bbk-bento.yaml: projects/bbsk/pipelines/od-zoznam-zdravotnickych-zariadeni-v-bbk/bento.yaml
 # --- end of generated ---
+# One catalogue dataset per Smart Data Model type, or per group of types that reference
+# each other, each through its own narrowed Endpoint and Policy (T-4344).
+bbsk-endpoint-hranice.yaml: projects/bbsk/spaces/bbsk-registre/endpoints/bbsk-hranice.yaml
+bbsk-policy-hranice-read.yaml: projects/bbsk/spaces/bbsk-registre/policies/hranice-read.yaml
+bbsk-endpoint-organizacie.yaml: projects/bbsk/spaces/bbsk-registre/endpoints/bbsk-organizacie.yaml
+bbsk-policy-organizacie-read.yaml: projects/bbsk/spaces/bbsk-registre/policies/organizacie-read.yaml
+bbsk-endpoint-zariadenia.yaml: projects/bbsk/spaces/bbsk-registre/endpoints/bbsk-zariadenia.yaml
+bbsk-policy-zariadenia-read.yaml: projects/bbsk/spaces/bbsk-registre/policies/zariadenia-read.yaml
+bbsk-endpoint-mosty.yaml: projects/bbsk/spaces/bbsk-registre/endpoints/bbsk-mosty.yaml
+bbsk-policy-mosty-read.yaml: projects/bbsk/spaces/bbsk-registre/policies/mosty-read.yaml
+# The data catalogue's one general assistant over every publisher (T-4342): every dataset of
+# data.dev as its knowledge, every body's public Endpoints as its connectors.
+bbsk-knowledge-portal.yaml: projects/bbsk/assistant/sources/portal.yaml
+bbsk-assistant-data.yaml: projects/bbsk/assistant/deployments/data.yaml

@@ -9,8 +9,8 @@ metadata:
     en: Register investícií - polygónová vrstva
 spec:
   class: scheduled
-  enabled: false
-  schedule: 42 3 * * 4
+  enabled: true
+  schedule: 42 3 * * 3
   source:
     dataSourceRef:
       kind: DataSource

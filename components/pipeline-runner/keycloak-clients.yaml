@@ -214,6 +214,43 @@ praha-pipelines:
           access.token.claim: 'true'
           id.token.claim: 'false'
 
+# The Slovakia project's ingestion pipelines (T-4340), the same rule for project `slovensko`: its one
+# stream writes the space `ovzdusie-sk` through its endpoint of the same name.
+slovensko-pipelines:
+  # An account of the demo seed: rendered by the development profile only (T-1720, CC-73).
+  profiles: [development]
+  name: Slovakia ingestion pipelines
+  description: Service account of the Bento streams of the Slovakia project; client_credentials only, no browser flow
+  subdomain: ''
+  redirectPath: /
+  componentNamespaces:
+    - pipeline-runner
+  rawValues:
+    publicClient: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: true
+    protocolMappers:
+      - name: portal-internal-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        # The Portal's internal listener: the streams' outcome, rejected and samples sinks post
+        # with this client's own token, admitted for this project's pipelines only (T-3193, T-4038).
+        config:
+          included.custom.audience: portal-internal
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: ovzdusie-sk-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: wtvuppkop6y3qv7bnvzqwifv4uts4e2k
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+
 # The Žilina project's ingestion pipelines (T-3138), the same rule for project `zilina`: the ŠÚ SR
 # cube streams write `zilina-mesto`, the air-quality, monument and station streams `zilina-verejne`,
 # the repository stream `zilina-uniza`, and `ukazovatele` reads `zilina-mesto` and writes `zilina-kpi`.

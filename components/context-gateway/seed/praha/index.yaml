@@ -83,3 +83,19 @@ praha-assistant-knowledge.yaml: projects/praha/assistant/deployments/knowledge.y
 # Prague's public assistant over its own knowledge and Endpoint (T-4281).
 praha-knowledge-data-portal.yaml: projects/praha/assistant/sources/data-portal.yaml
 praha-assistant-public.yaml: projects/praha/assistant/deployments/praha.yaml
+# One catalogue dataset per Smart Data Model type, or per group of types that reference
+# each other, each through its own narrowed Endpoint and Policy (T-4344).
+praha-endpoint-ovzdusi.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-ovzdusi.yaml
+praha-policy-public-ovzdusi.yaml: projects/praha/spaces/praha-mesto/policies/public-ovzdusi.yaml
+praha-endpoint-kola.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-sdilena-kola.yaml
+praha-policy-public-kola.yaml: projects/praha/spaces/praha-mesto/policies/public-kola.yaml
+praha-endpoint-parkovani-pr.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-parkoviste-pr.yaml
+praha-policy-public-parkovani-pr.yaml: projects/praha/spaces/praha-mesto/policies/public-parkovani-pr.yaml
+praha-endpoint-odpad.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-trideny-odpad.yaml
+praha-policy-public-odpad.yaml: projects/praha/spaces/praha-mesto/policies/public-odpad.yaml
+praha-endpoint-rozpocet.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-rozpocet.yaml
+praha-policy-public-rozpocet.yaml: projects/praha/spaces/praha-mesto/policies/public-rozpocet.yaml
+praha-endpoint-mista.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-mista.yaml
+praha-policy-public-mista.yaml: projects/praha/spaces/praha-mesto/policies/public-mista.yaml
+praha-endpoint-mestske-casti.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-mestske-casti.yaml
+praha-policy-public-mestske-casti.yaml: projects/praha/spaces/praha-mesto/policies/public-mestske-casti.yaml

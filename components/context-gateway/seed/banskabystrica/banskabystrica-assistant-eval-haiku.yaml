@@ -1,5 +1,5 @@
-# TEMPORARY (T-4183): the assistant eval's comparison copy of `banskabystrica`, only the answer
-# model (anthropic/claude-haiku-4.5), the publicId, the planted eval page as an extra source and a lower daily cost cap
+# TEMPORARY (T-4183): the assistant eval's comparison copy of `banskabystrica`, only the router and
+# answer model (anthropic/claude-haiku-5.5, owner 2026-10-16; was claude-haiku-4.5), the publicId, the planted eval page as an extra source and a lower daily cost cap
 # changed. Removed after the run.
 apiVersion: joinedcontext.com/v1alpha1
 kind: AssistantDeployment
@@ -51,8 +51,8 @@ spec:
     outputTokensPerAnswer: 700
     messagesPerConversation: 30
     questionChars: 1000
-  # Today's model for both calls; T-4144's comparison may change `answer` (T-4149 item 6).
-  model: { router: google/gemini-3.8-flash, answer: anthropic/claude-haiku-4.5 }
+  # The compared model on both calls (owner 2026-10-16, T-4183); every call asks for reasoning effort low.
+  model: { router: anthropic/claude-haiku-5.5, answer: anthropic/claude-haiku-5.5 }
   theme:
     primaryColor: "#1f5fae"
     greeting: "Dobrý deň! Opýtajte sa ma na služby mesta Banská Bystrica a Banskobystrického kraja alebo na ich otvorené údaje."

@@ -9,8 +9,8 @@ metadata:
     en: Železničné priecestia v Banskobystrickom kraji (public view)
 spec:
   class: scheduled
-  enabled: false
-  schedule: 6 5 * * 2
+  enabled: true
+  schedule: 6 5 * * 1
   source:
     dataSourceRef:
       kind: DataSource

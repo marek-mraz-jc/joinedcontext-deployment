@@ -9,8 +9,8 @@ metadata:
     en: Stredné školy v Banskobystrickom kraji
 spec:
   class: scheduled
-  enabled: false
-  schedule: 56 3 * * 6
+  enabled: true
+  schedule: 56 3 * * 5
   source:
     dataSourceRef:
       kind: DataSource

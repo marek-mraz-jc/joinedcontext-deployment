@@ -121,6 +121,7 @@ def test_the_citys_two_stations_and_no_other_are_written(stations):
         assert entity["id"] == f"urn:ngsi-ld:WeatherObserved:{DOMAIN}:{SPACE}:{local}"
         assert entity["type"] == "WeatherObserved"
         assert not open_data.schema_errors(CITY / "banskabystrica-verejne.v1.schema.json", entity)
+        assert open_data.sdm_errors("dataModel.Weather/WeatherObserved", entity) == [], entity["id"]
     assert stations["shmu-11898"]["name"]["languageMap"]["sk"] == "Stanica SHMÚ Banská Bystrica - Zelená"
     assert stations["shmu-11898"]["location"]["value"]["coordinates"] == [19.115097, 48.733419]
 
@@ -216,6 +217,7 @@ def test_the_source_the_pipeline_and_the_catalogue_agree():
         types = {e["type"] for rule in manifest(name)["spec"]["information"] for e in rule["entities"]}
         assert "WeatherObserved" in types, name
     assert "WeatherObserved" in manifest("datamodel-verejne.yaml")["spec"]["classes"]
-    endpoint = manifest("endpoint-verejne.yaml")
+    # The weather is its own dataset (T-4344).
+    endpoint = manifest("endpoint-pocasie.yaml")
     assert "Slovak Hydrometeorological Institute" in endpoint["spec"]["catalog"]["attribution"]["en"]
     assert endpoint["spec"]["publish"]["ckan"]["license"] == "cc-by"

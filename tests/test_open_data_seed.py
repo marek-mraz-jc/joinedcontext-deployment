@@ -186,6 +186,8 @@ def test_schedules_are_valid_cron_and_follow_the_refresh():
             spec = yaml.safe_load(p.read_text())["spec"]
             fields = spec["schedule"].split()
             assert len(fields) == 5 and 0 <= int(fields[0]) < 60 and 1 <= int(fields[1]) <= 5, p.name
+            # Bento's cron reads a weekday 0-6; a 7 refused the whole stream on dev (T-4347).
+            assert fields[4] == "*" or 0 <= int(fields[4]) <= 6, p.name
     daily = next(e for e in SEEDED if e["refresh"] == "P1D")
     assert generate.schedule(daily, 3).endswith("* * *")
     assert generate.schedule({"refresh": "P1M"}, 30).split()[2] == "3"
@@ -259,7 +261,10 @@ def test_every_mapped_type_is_one_vendored_smart_data_model_at_a_pinned_commit()
     vendored = {str(p.parent.relative_to(generate.SDM)) for p in generate.SDM.glob("*/*/schema.json")
                 if p.parent.parent != generate.EXTENSIONS}
     in_use = {(e.get("baseModel") or e["smartDataModel"]).removeprefix("dataModel.") for e in MAPPED}
-    assert vendored == in_use, "vendor exactly the models in use, the bases of the extensions included"
+    # The folder also serves the city seeds' models (T-4329: Helsinki, Praha), so it holds at
+    # least the models this seed uses, the bases of the extensions included, each subject pinned.
+    assert vendored >= in_use, "vendor every model in use, the bases of the extensions included"
+    assert {f"dataModel.{v.split('/')[0]}" for v in vendored} | {"about", "data-models"} == set(PINS), "a pin per vendored subject"
 
 
 def test_a_mapped_dataset_without_a_model_or_with_one_not_vendored_is_refused():

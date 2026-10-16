@@ -9,8 +9,8 @@ metadata:
     en: Realizované verejné obstarávania
 spec:
   class: scheduled
-  enabled: false
-  schedule: 28 3 * * 2
+  enabled: true
+  schedule: 28 3 * * 1
   source:
     dataSourceRef:
       kind: DataSource

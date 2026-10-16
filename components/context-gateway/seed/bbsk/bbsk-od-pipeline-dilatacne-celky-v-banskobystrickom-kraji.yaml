@@ -9,8 +9,8 @@ metadata:
     en: Dilatačné celky v Banskobystrickom kraji (public view)
 spec:
   class: scheduled
-  enabled: false
-  schedule: 42 1 * * 7
+  enabled: true
+  schedule: 42 1 * * 6
   source:
     dataSourceRef:
       kind: DataSource

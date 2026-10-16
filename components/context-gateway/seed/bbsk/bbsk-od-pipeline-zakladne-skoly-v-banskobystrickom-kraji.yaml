@@ -9,8 +9,8 @@ metadata:
     en: Základné školy v Banskobystrickom kraji
 spec:
   class: scheduled
-  enabled: false
-  schedule: 52 4 * * 7
+  enabled: true
+  schedule: 52 4 * * 6
   source:
     dataSourceRef:
       kind: DataSource

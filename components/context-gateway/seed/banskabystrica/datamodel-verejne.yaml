@@ -9,7 +9,7 @@ spec:
   linkml: ./banskabystrica-verejne.linkml.yaml
   version: 1.1.0
   lifecycle: published
-  classes: [Event, School, AirQualityObserved, WeatherObserved]
+  classes: [Event, Organization, AirQualityObserved, WeatherObserved]
   artifacts:
     jsonSchema: ./banskabystrica-verejne.v1.schema.json
     context: ./banskabystrica-verejne.v1.context.jsonld

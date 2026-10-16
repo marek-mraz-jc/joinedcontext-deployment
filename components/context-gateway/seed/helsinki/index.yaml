@@ -100,6 +100,7 @@ helsinki-role-ckan-admin-banskabystrica-banskabystrica.yaml: users/roles/ckan-ad
 helsinki-role-ckan-admin-bbsk-bbsk.yaml: users/roles/ckan-admin-bbsk-bbsk.yaml
 helsinki-role-ckan-admin-praha-praha.yaml: users/roles/ckan-admin-praha-praha.yaml
 helsinki-role-ckan-admin-zilina-zilina.yaml: users/roles/ckan-admin-zilina-zilina.yaml
+helsinki-role-ckan-admin-slovensko-slovensko.yaml: users/roles/ckan-admin-slovensko-slovensko.yaml
 helsinki-role-model-editor.yaml: users/roles/model-editor.yaml
 helsinki-role-pipeline-editor.yaml: users/roles/pipeline-editor.yaml
 helsinki-role-endpoint-editor.yaml: users/roles/endpoint-editor.yaml
@@ -219,3 +220,15 @@ helsinki-knowledge-catalogue-ngsi.yaml: projects/helsinki/assistant/sources/cata
 helsinki-knowledge-guide.yaml: projects/helsinki/assistant/sources/guide.yaml
 # The staff assistant over the website, for the answer-quality evals (T-3067).
 helsinki-assistant-knowledge.yaml: projects/helsinki/assistant/deployments/knowledge.yaml
+# One catalogue dataset per Smart Data Model type, or per group of types that reference
+# each other, each through its own narrowed Endpoint and Policy (T-4344).
+helsinki-endpoint-water-quality.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-beach-water.yaml
+helsinki-policy-public-water-quality.yaml: projects/helsinki/spaces/helsinki/policies/public-water-quality.yaml
+helsinki-endpoint-parking.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-parking.yaml
+helsinki-policy-public-parking.yaml: projects/helsinki/spaces/helsinki/policies/public-parking.yaml
+helsinki-endpoint-permits.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-public-area-permits.yaml
+helsinki-policy-public-permits.yaml: projects/helsinki/spaces/helsinki/policies/public-permits.yaml
+helsinki-endpoint-districts.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-districts.yaml
+helsinki-policy-public-districts.yaml: projects/helsinki/spaces/helsinki/policies/public-districts.yaml
+helsinki-endpoint-places.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-places.yaml
+helsinki-policy-public-places.yaml: projects/helsinki/spaces/helsinki/policies/public-places.yaml

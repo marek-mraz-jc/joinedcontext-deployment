@@ -21,10 +21,15 @@ spec:
   # web = www.zilina.sk, data-portal = Žilina's CKAN datasets, catalogue = Žilina's public
   # Endpoints described from this repository.
   sources: [web, data-portal, catalogue]
+  # The national open data of project slovensko, and nothing else of another project (T-4340).
+  scope: { projects: [slovensko] }
   connectors:
     - { endpoint: zilina-verejne, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
     - { endpoint: zilina-kpi, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
     - { endpoint: zilina-uniza, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    # Slovakia's air quality at every station (T-4340, owner 2026-10-16): the one national
+    # dataset every public assistant reads, through the public Endpoint of project slovensko.
+    - { endpoint: slovensko/ovzdusie-sk, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
   allowedOrigins: [https://assistant.dev.joinedcontext.com, https://dev.joinedcontext.com, https://data.dev.joinedcontext.com]
   # T-4149 item 1 defaults; $0.50 a day (T-4281, inside the key's $5).
   rateLimit: { requestsPerMinute: 30, perClientPerMinute: 10, perClientPerHour: 60, perClientPerDay: 200, streamsPerClient: 2 }

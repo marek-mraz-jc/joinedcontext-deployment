@@ -9,8 +9,8 @@ metadata:
     en: DTM_BB-register-statickej-dopravy
 spec:
   class: scheduled
-  enabled: false
-  schedule: 28 1 * * 5
+  enabled: true
+  schedule: 28 1 * * 4
   source:
     dataSourceRef:
       kind: DataSource

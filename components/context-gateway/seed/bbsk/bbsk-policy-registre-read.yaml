@@ -17,6 +17,5 @@ spec:
     - entities:
         - type: AdministrativeArea
         - type: PublicOrganization
-        - type: Hospital
-        - type: SocialService
+        - type: PointOfInterest
         - type: Bridge

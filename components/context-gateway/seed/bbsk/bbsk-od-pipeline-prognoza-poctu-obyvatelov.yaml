@@ -9,7 +9,7 @@ metadata:
     en: Prognóza počtu obyvateľov (2018 - 2040)
 spec:
   class: scheduled
-  enabled: false
+  enabled: true
   schedule: 14 3 7 * *
   source:
     dataSourceRef:

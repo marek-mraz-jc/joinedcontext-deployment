@@ -9,8 +9,8 @@ metadata:
     en: Mosty v správe BBRSC (public view)
 spec:
   class: scheduled
-  enabled: false
-  schedule: 34 3 * * 2
+  enabled: true
+  schedule: 34 3 * * 1
   source:
     dataSourceRef:
       kind: DataSource
