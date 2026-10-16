@@ -1,4 +1,4 @@
-# The mapping of the od-vysoke-skoly-v-banskobystrickom-kraji pipeline, generated from the T-4254 mapping: one School per row of
+# The mapping of the od-vysoke-skoly-v-banskobystrickom-kraji pipeline, generated from the T-4254 mapping: one Organization per row of
 # "Vysoké školy v Banskobystrickom kraji" (https://data.dev.joinedcontext.com/dataset/bbsk-vysoke-skoly-v-banskobystrickom-kraji-b0be47). Do not edit: change the mapping and run scripts/open-data/generate.py.
 
 pipeline:
@@ -23,6 +23,10 @@ pipeline:
         map string {
           let v = if this == null { "" } else { this.string().trim() }
           root = if $v == "" { null } else { { "type": "Property", "value": $v } }
+        }
+        map string_list {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": [$v] } }
         }
         map uri {
           root = this.apply("string")
@@ -49,12 +53,12 @@ pipeline:
         }
         let local = "vysoke-skoly-v-banskobystrickom-kraji-" + {"Okres": this.properties."Okres", "Mesto": this.properties."Mesto", "Univerzita": this.properties."Univerzita", "Fakulta": this.properties."Fakulta", "Fakulta___štatistická_ročenka": this.properties."Fakulta___štatistická_ročenka", "Typ_univerzity": this.properties."Typ_univerzity", "Akademický_rok": this.properties."Akademický_rok", "GPS_x": this.properties."GPS_x", "GPS_y": this.properties."GPS_y", "Počet_študentov___denní__I__a_I": this.properties."Počet_študentov___denní__I__a_I", "Počet_študentov___externí__I__a": this.properties."Počet_študentov___externí__I__a", "Počet_absolventov___denní__I__a": this.properties."Počet_absolventov___denní__I__a", "Počet_absolventov___externí__I_": this.properties."Počet_absolventov___externí__I_", "Obrázok_odkaz": this.properties."Obrázok_odkaz"}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("School", "bbsk.sk", env("JC_SPACE"), $local),
-          "type": "School",
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Organization", "bbsk.sk", env("JC_SPACE"), $local),
+          "type": "Organization",
           "okres": this.properties."Okres".apply("string"),
           "mesto": this.properties."Mesto".apply("string"),
           "univerzita": this.properties."Univerzita".apply("string"),
-          "fakulta": this.properties."Fakulta".apply("string"),
+          "name": this.properties."Fakulta".apply("string"),
           "fakultaStatistickaRocenka": this.properties."Fakulta___štatistická_ročenka".apply("string"),
           "typUniverzity": this.properties."Typ_univerzity".apply("string"),
           "akademickyRok": this.properties."Akademický_rok".apply("string"),

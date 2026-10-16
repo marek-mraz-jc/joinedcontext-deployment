@@ -1,4 +1,4 @@
-# One StatisticalObservation per row of "Počet občanov podľa veku" (T-4255); generated from the T-4254 mapping.
+# One KeyPerformanceIndicator per row of "Počet občanov podľa veku" (T-4255); generated from the T-4254 mapping.
 apiVersion: joinedcontext.com/v1alpha1
 kind: Pipeline
 metadata:
@@ -10,14 +10,14 @@ metadata:
 spec:
   class: scheduled
   enabled: false
-  schedule: 35 1 6 * *
+  schedule: 14 1 3 * *
   source:
     dataSourceRef:
       kind: DataSource
       name: od-pocet-obcanov-podla-veku
   targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-otvorene-data:banskabystrica-otvorene-data
   output:
-    type: StatisticalObservation
+    type: KeyPerformanceIndicator
     mode: upsert
   quotas:
     maxMemoryMb: 128
