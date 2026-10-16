@@ -1,0 +1,24 @@
+# One GreenAreaBoundary per row of "DTM_BB-register-verejnej-zelene-3" (T-4255); the edges of the kept green areas (DTM_BB).
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: od-dtm-bb-register-verejnej-zelene-3-p3
+  namespace: banskabystrica
+  title:
+    sk: DTM_BB-register-verejnej-zelene-3
+    en: DTM_BB-register-verejnej-zelene-3
+spec:
+  class: scheduled
+  enabled: false
+  schedule: 20 3 * * 7
+  source:
+    dataSourceRef:
+      kind: DataSource
+      name: od-dtm-bb-register-verejnej-zelene-3-p3
+  targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-otvorene-data:banskabystrica-otvorene-data
+  output:
+    type: GreenAreaBoundary
+    mode: upsert
+  quotas:
+    maxMemoryMb: 256
+    cpuMillicores: 100

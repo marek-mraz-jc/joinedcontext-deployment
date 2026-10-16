@@ -30,6 +30,20 @@ slots:
     range: uri
     annotations:
       ngsi_ld_kind: Property
+  aCH:
+    description: The source column `ACH`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  aUT:
+    description: The source column `AUT`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  adresa:
+    description: The source column `Adresa`.
+    annotations:
+      ngsi_ld_kind: Property
   akcia:
     description: The source column `Akcia`.
     annotations:
@@ -39,9 +53,25 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+  bPEJ:
+    description: The source column `BPEJ`.
+    annotations:
+      ngsi_ld_kind: Property
   bT:
     description: The source column `BT`.
     range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  biotop:
+    description: The source column `Biotop`.
+    annotations:
+      ngsi_ld_kind: Property
+  bytyHBV:
+    description: The source column `Byty_HBV`.
+    annotations:
+      ngsi_ld_kind: Property
+  bytyIBV:
+    description: The source column `Byty_IBV`.
     annotations:
       ngsi_ld_kind: Property
   cASTOBCE:
@@ -53,9 +83,21 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
+  cP:
+    description: The source column `CP`.
+    annotations:
+      ngsi_ld_kind: Property
+  cZaberu:
+    description: The source column `C_zaberu`.
+    annotations:
+      ngsi_ld_kind: Property
   cZasadnutia:
     description: The source column `Č._zasadnutia`.
     range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  castMesta:
+    description: The source column `Cast_mesta`.
     annotations:
       ngsi_ld_kind: Property
   castObce:
@@ -71,6 +113,18 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
+  chranena:
+    description: The source column `Chranena`.
+    annotations:
+      ngsi_ld_kind: Property
+  cisKanala:
+    description: The source column `Cis_kanala`.
+    annotations:
+      ngsi_ld_kind: Property
+  cislo:
+    description: The source column `Cislo`.
+    annotations:
+      ngsi_ld_kind: Property
   cisloObjednavky:
     description: The source column `Číslo_objednávky`.
     range: integer
@@ -80,13 +134,36 @@ slots:
     description: The source column `content`.
     annotations:
       ngsi_ld_kind: Property
+  dC:
+    description: The source column `DC`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
   dF:
     description: The source column `DF`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+  dN:
+    description: The source column `DN`.
+    annotations:
+      ngsi_ld_kind: Property
+  dOW:
+    description: The source column `DOW`.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+  dP:
+    description: The source column `DP`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
   dPOSTA:
     description: The source column `DPOSTA`.
+    annotations:
+      ngsi_ld_kind: Property
+  dV:
+    description: The source column `DV`.
     annotations:
       ngsi_ld_kind: Property
   dateGmt:
@@ -96,6 +173,10 @@ slots:
       ngsi_ld_kind: Property
   datumPodpisu:
     description: The source column `Dátum_podpisu`.
+    annotations:
+      ngsi_ld_kind: Property
+  datumRP:
+    description: The source column `Datum_RP`.
     annotations:
       ngsi_ld_kind: Property
   datumVystavenia:
@@ -108,6 +189,21 @@ slots:
       ngsi_ld_kind: Property
   datumZverejnenia:
     description: The source column `Dátum_zverejnenia`.
+    annotations:
+      ngsi_ld_kind: Property
+  datumplatnosti:
+    description: The source column `datumplatnosti`.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+  datumvkladu:
+    description: The source column `datumvkladu`.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+  datumzmeny:
+    description: The source column `datumzmeny`.
+    range: datetime
     annotations:
       ngsi_ld_kind: Property
   den:
@@ -123,12 +219,51 @@ slots:
     description: The source column `district`.
     annotations:
       ngsi_ld_kind: Property
+  dlzkaKm:
+    description: The source column `Dlzka_km`.
+    annotations:
+      ngsi_ld_kind: Property
+  dlzky:
+    description: The source column `dlzky`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
   dodavatel:
     description: The source column `Dodávateľ`.
     annotations:
       ngsi_ld_kind: Property
+  dominanty:
+    description: The source column `Dominanty`.
+    annotations:
+      ngsi_ld_kind: Property
+  drpC:
+    description: The source column `Drp_c`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
   druh:
     description: The source column `Druh`.
+    annotations:
+      ngsi_ld_kind: Property
+  druhy:
+    description: The source column `Druhy`.
+    annotations:
+      ngsi_ld_kind: Property
+  eNTITAID:
+    description: The source column `ENTITA_ID`.
+    annotations:
+      ngsi_ld_kind: Property
+  eTAPA:
+    description: The source column `ETAPA`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  evidencnicisloobjektu:
+    description: The source column `evidencnicisloobjektu`.
+    annotations:
+      ngsi_ld_kind: Property
+  fACC:
+    description: The source column `FACC`.
     annotations:
       ngsi_ld_kind: Property
   fC:
@@ -144,6 +279,18 @@ slots:
   fW:
     description: The source column `FW`.
     range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  funkcia:
+    description: The source column `Funkcia`.
+    annotations:
+      ngsi_ld_kind: Property
+  hSLT:
+    description: The source column `HSLT`.
+    annotations:
+      ngsi_ld_kind: Property
+  hranica:
+    description: The source column `Hranica`.
     annotations:
       ngsi_ld_kind: Property
   iCO:
@@ -163,8 +310,81 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+  iDN2:
+    description: The source column `IDN2`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  iDN3:
+    description: The source column `IDN3`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  iDN4:
+    description: The source column `IDN4`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  iDOLP:
+    description: The source column `IDOLP`.
+    annotations:
+      ngsi_ld_kind: Property
+  iDPS:
+    description: The source column `IDPS`.
+    annotations:
+      ngsi_ld_kind: Property
+  ics:
+    description: The source column `ics`.
+    annotations:
+      ngsi_ld_kind: Property
   idRegad:
     description: The source column `id_regad`.
+    annotations:
+      ngsi_ld_kind: Property
+  idexterni:
+    description: The source column `idexterni`.
+    annotations:
+      ngsi_ld_kind: Property
+  idprovozovatele:
+    description: The source column `idprovozovatele`.
+    annotations:
+      ngsi_ld_kind: Property
+  idprovozovatelezezakona:
+    description: The source column `idprovozovatelezezakona`.
+    annotations:
+      ngsi_ld_kind: Property
+  idspravce:
+    description: The source column `idspravce`.
+    annotations:
+      ngsi_ld_kind: Property
+  idvlastnika:
+    description: The source column `idvlastnika`.
+    annotations:
+      ngsi_ld_kind: Property
+  idzmeny:
+    description: The source column `idzmeny`.
+    annotations:
+      ngsi_ld_kind: Property
+  indivReg:
+    description: The source column `Indiv_reg`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  intervReg:
+    description: The source column `Interv_reg`.
+    annotations:
+      ngsi_ld_kind: Property
+  intraExtra:
+    description: The source column `intra_extra`.
+    annotations:
+      ngsi_ld_kind: Property
+  jEVID:
+    description: The source column `JEV_ID`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  kPL:
+    description: The source column `KPL`.
     annotations:
       ngsi_ld_kind: Property
   kRAJ:
@@ -176,14 +396,111 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
+  kU:
+    description: The source column `KU`.
+    annotations:
+      ngsi_ld_kind: Property
+  kataster:
+    description: The source column `Kataster`.
+    annotations:
+      ngsi_ld_kind: Property
+  kategoria:
+    description: The source column `Kategoria`.
+    annotations:
+      ngsi_ld_kind: Property
+  kod:
+    description: The source column `Kod`.
+    annotations:
+      ngsi_ld_kind: Property
+  kodCely:
+    description: The source column `Kod_cely`.
+    annotations:
+      ngsi_ld_kind: Property
+  kodSV:
+    description: The source column `Kod_SV`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  kodUzemia:
+    description: The source column `Kod_uzemia`.
+    annotations:
+      ngsi_ld_kind: Property
+  kodZjednodus:
+    description: The source column `Kod_zjednodus`.
+    range: float
+    annotations:
+      ngsi_ld_kind: Property
+  kota:
+    description: The source column `Kota`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  lAU1:
+    description: The source column `LAU1`.
+    annotations:
+      ngsi_ld_kind: Property
+  lAU1CODE:
+    description: The source column `LAU1_CODE`.
+    annotations:
+      ngsi_ld_kind: Property
+  lAU2:
+    description: The source column `LAU2`.
+    annotations:
+      ngsi_ld_kind: Property
+  lAU2CODE:
+    description: The source column `LAU2_CODE`.
+    annotations:
+      ngsi_ld_kind: Property
+  lHC:
+    description: The source column `LHC`.
+    annotations:
+      ngsi_ld_kind: Property
+  label:
+    description: The source column `Label`.
+    annotations:
+      ngsi_ld_kind: Property
   link:
     description: The source column `link`.
     range: uri
     annotations:
       ngsi_ld_kind: Property
+  lokacia:
+    description: The source column `Lokacia`.
+    annotations:
+      ngsi_ld_kind: Property
+  lokalita:
+    description: The source column `Lokalita`.
+    annotations:
+      ngsi_ld_kind: Property
+  mCHU:
+    description: The source column `MCHU`.
+    annotations:
+      ngsi_ld_kind: Property
+  mETAID:
+    description: The source column `META_ID`.
+    annotations:
+      ngsi_ld_kind: Property
   mETERS:
     description: The source column `METERS`.
     range: float
+    annotations:
+      ngsi_ld_kind: Property
+  mPa:
+    description: The source column `MPa`.
+    range: float
+    annotations:
+      ngsi_ld_kind: Property
+  management:
+    description: The source column `Management`.
+    annotations:
+      ngsi_ld_kind: Property
+  material:
+    description: The source column `Material`.
+    annotations:
+      ngsi_ld_kind: Property
+  maxHl:
+    description: The source column `Max_hl`.
+    range: integer
     annotations:
       ngsi_ld_kind: Property
   mena:
@@ -209,6 +526,50 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
+  nHKP:
+    description: The source column `NHKP`.
+    annotations:
+      ngsi_ld_kind: Property
+  nM2:
+    description: The source column `NM2`.
+    annotations:
+      ngsi_ld_kind: Property
+  nM3:
+    description: The source column `NM3`.
+    annotations:
+      ngsi_ld_kind: Property
+  nM4:
+    description: The source column `NM4`.
+    annotations:
+      ngsi_ld_kind: Property
+  nP:
+    description: The source column `NP`.
+    annotations:
+      ngsi_ld_kind: Property
+  nUTS1:
+    description: The source column `NUTS1`.
+    annotations:
+      ngsi_ld_kind: Property
+  nUTS1CODE:
+    description: The source column `NUTS1_CODE`.
+    annotations:
+      ngsi_ld_kind: Property
+  nUTS2:
+    description: The source column `NUTS2`.
+    annotations:
+      ngsi_ld_kind: Property
+  nUTS2CODE:
+    description: The source column `NUTS2_CODE`.
+    annotations:
+      ngsi_ld_kind: Property
+  nUTS3:
+    description: The source column `NUTS3`.
+    annotations:
+      ngsi_ld_kind: Property
+  nUTS3CODE:
+    description: The source column `NUTS3_CODE`.
+    annotations:
+      ngsi_ld_kind: Property
   narodenych:
     description: The source column `Narodených`.
     range: integer
@@ -224,6 +585,23 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
+  nazStav:
+    description: The source column `Naz_stav`.
+    annotations:
+      ngsi_ld_kind: Property
+  nazov:
+    description: The source column `Nazov`.
+    annotations:
+      ngsi_ld_kind: Property
+  nazovUP:
+    description: The source column `Nazov_UP`.
+    annotations:
+      ngsi_ld_kind: Property
+  neuplnadata:
+    description: The source column `neuplnadata`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
   oBEC:
     description: The source column `OBEC`.
     annotations:
@@ -231,6 +609,10 @@ slots:
   oBECID:
     description: The source column `OBEC_ID`.
     range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  oBECMC:
+    description: The source column `OBEC_MC`.
     annotations:
       ngsi_ld_kind: Property
   oCADMIN8:
@@ -254,6 +636,10 @@ slots:
     description: The source column `ONEWAY`.
     annotations:
       ngsi_ld_kind: Property
+  oP:
+    description: The source column `OP`.
+    annotations:
+      ngsi_ld_kind: Property
   oRIENTC:
     description: The source column `ORIENT_C`.
     annotations:
@@ -270,8 +656,25 @@ slots:
     description: The source column `Obec`.
     annotations:
       ngsi_ld_kind: Property
+  obecMC:
+    description: The source column `Obec_MC`.
+    annotations:
+      ngsi_ld_kind: Property
   objednavkaSpolu:
     description: The source column `Objednávka_spolu`.
+    annotations:
+      ngsi_ld_kind: Property
+  objem:
+    description: The source column `Objem`.
+    annotations:
+      ngsi_ld_kind: Property
+  obstaravatel:
+    description: The source column `Obstaravatel`.
+    annotations:
+      ngsi_ld_kind: Property
+  obydlie:
+    description: The source column `Obydlie`.
+    range: integer
     annotations:
       ngsi_ld_kind: Property
   odstahovanych:
@@ -289,6 +692,15 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
+  odvKan:
+    description: The source column `Odv_kan`.
+    annotations:
+      ngsi_ld_kind: Property
+  okruhy:
+    description: The source column `Okruhy`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
   organSamospravy:
     description: The source column `Orgán_samosprávy`.
     annotations:
@@ -297,8 +709,55 @@ slots:
     description: The source column `Orient._č.`.
     annotations:
       ngsi_ld_kind: Property
+  osvedc:
+    description: The source column `Osvedc`.
+    annotations:
+      ngsi_ld_kind: Property
+  oznacenicyklostezky:
+    description: The source column `oznacenicyklostezky`.
+    annotations:
+      ngsi_ld_kind: Property
+  oznacenie:
+    description: The source column `Oznacenie`.
+    annotations:
+      ngsi_ld_kind: Property
+  pC:
+    description: The source column `PC`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  pK:
+    description: The source column `PK`.
+    annotations:
+      ngsi_ld_kind: Property
+  pLHC:
+    description: The source column `PLHC`.
+    annotations:
+      ngsi_ld_kind: Property
+  pOPIS:
+    description: The source column `POPIS`.
+    annotations:
+      ngsi_ld_kind: Property
+  pS:
+    description: The source column `PS`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
   pSC:
     description: The source column `PSC`.
+    annotations:
+      ngsi_ld_kind: Property
+  parcela:
+    description: The source column `Parcela`.
+    annotations:
+      ngsi_ld_kind: Property
+  platiOd:
+    description: The source column `Plati_od`.
+    annotations:
+      ngsi_ld_kind: Property
+  plocha:
+    description: The source column `Plocha`.
+    range: float
     annotations:
       ngsi_ld_kind: Property
   pocet:
@@ -324,12 +783,33 @@ slots:
     description: The source column `Pohlavie`.
     annotations:
       ngsi_ld_kind: Property
+  popis:
+    description: The source column `Popis`.
+    annotations:
+      ngsi_ld_kind: Property
+  popisobjektu:
+    description: The source column `popisobjektu`.
+    annotations:
+      ngsi_ld_kind: Property
+  poskytovatel:
+    description: The source column `Poskytovatel`.
+    annotations:
+      ngsi_ld_kind: Property
   pozadovaneProstriedky:
     description: The source column `Požadované_prostriedky`.
     annotations:
       ngsi_ld_kind: Property
+  poznamka:
+    description: The source column `Poznamka`.
+    annotations:
+      ngsi_ld_kind: Property
   predmet:
     description: The source column `Predmet`.
+    annotations:
+      ngsi_ld_kind: Property
+  prevazujicipovrch:
+    description: The source column `prevazujicipovrch`.
+    range: integer
     annotations:
       ngsi_ld_kind: Property
   prirastok:
@@ -367,6 +847,25 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+  rU:
+    description: The source column `RU`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  rZP:
+    description: The source column `RZP`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  referencnyPodklad:
+    description: The source column `Referencny_podklad`.
+    annotations:
+      ngsi_ld_kind: Property
+  regist:
+    description: The source column `Regist`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
   rok:
     description: The source column `Rok`.
     range: integer
@@ -377,8 +876,37 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
+  rokVybud:
+    description: The source column `Rok_vybud`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  rotace:
+    description: The source column `rotace`.
+    range: float
+    annotations:
+      ngsi_ld_kind: Property
+  rychlost:
+    description: The source column `Rychlost`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
   sCHRANKY:
     description: The source column `SCHRANKY`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  sIZE:
+    description: The source column `SIZE`.
+    range: float
+    annotations:
+      ngsi_ld_kind: Property
+  sKUEV:
+    description: The source column `SKUEV`.
+    annotations:
+      ngsi_ld_kind: Property
+  sOI:
+    description: The source column `SOI`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
@@ -413,22 +941,61 @@ slots:
     description: The source column `Schv._prostr.`.
     annotations:
       ngsi_ld_kind: Property
+  sirka:
+    description: The source column `Sirka`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  skupina:
+    description: The source column `Skupina`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
   sourceId:
     description: The source column `id`.
     range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  specReg:
+    description: The source column `Spec_reg`.
+    annotations:
+      ngsi_ld_kind: Property
+  spracovatel:
+    description: The source column `Spracovatel`.
+    annotations:
+      ngsi_ld_kind: Property
+  sprava:
+    description: The source column `Sprava`.
     annotations:
       ngsi_ld_kind: Property
   stavVybav:
     description: The source column `Stav_vybav.`.
     annotations:
       ngsi_ld_kind: Property
+  stavobjektu:
+    description: The source column `stavobjektu`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
   supC:
     description: The source column `Súp._č.`.
+    annotations:
+      ngsi_ld_kind: Property
+  surovina:
+    description: The source column `Surovina`.
+    annotations:
+      ngsi_ld_kind: Property
+  tYP:
+    description: The source column `TYP`.
     annotations:
       ngsi_ld_kind: Property
   tYPBUDOVY:
     description: The source column `TYP_BUDOVY`.
     range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  tazba:
+    description: The source column `Tazba`.
     annotations:
       ngsi_ld_kind: Property
   textObjednavky:
@@ -439,8 +1006,62 @@ slots:
     description: The source column `title`.
     annotations:
       ngsi_ld_kind: Property
+  trat:
+    description: The source column `Trat`.
+    annotations:
+      ngsi_ld_kind: Property
+  tridapresnosti:
+    description: The source column `tridapresnosti`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  tridapresnostipoloha:
+    description: The source column `tridapresnostipoloha`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  tridapresnostivyska:
+    description: The source column `tridapresnostivyska`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
   typ:
     description: The source column `Typ`.
+    annotations:
+      ngsi_ld_kind: Property
+  typpodpernehozarizeni:
+    description: The source column `typpodpernehozarizeni`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  typpozemnikomunikace:
+    description: The source column `typpozemnikomunikace`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  typsloupu:
+    description: The source column `typsloupu`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  typterennihrany:
+    description: The source column `typterennihrany`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  typudrzovanezelene:
+    description: The source column `typudrzovanezelene`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  typvodninadrze:
+    description: The source column `typvodninadrze`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  typvrstevniceTid:
+    description: The source column `typvrstevnice_tid`.
+    range: integer
     annotations:
       ngsi_ld_kind: Property
   uLICA:
@@ -450,6 +1071,14 @@ slots:
   uLICAID:
     description: The source column `ULICA_ID`.
     range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  uO:
+    description: The source column `UO`.
+    annotations:
+      ngsi_ld_kind: Property
+  uPID:
+    description: The source column `UP_ID`.
     annotations:
       ngsi_ld_kind: Property
   uRBAN:
@@ -473,9 +1102,54 @@ slots:
     description: The source column `Ulica`.
     annotations:
       ngsi_ld_kind: Property
+  urovenumisteniobjektuti:
+    description: The source column `urovenumisteniobjektuti`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  urovenumisteniobjektuzps:
+    description: The source column `urovenumisteniobjektuzps`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  vPS:
+    description: The source column `VPS`.
+    annotations:
+      ngsi_ld_kind: Property
+  vYMERA:
+    description: The source column `VYMERA`.
+    range: float
+    annotations:
+      ngsi_ld_kind: Property
   vek:
     description: The source column `Vek`.
     range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  voda:
+    description: The source column `Voda`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  vrstva:
+    description: The source column `vrstva`.
+    annotations:
+      ngsi_ld_kind: Property
+  vydal:
+    description: The source column `Vydal`.
+    annotations:
+      ngsi_ld_kind: Property
+  vymeraHa:
+    description: The source column `Vymera_ha`.
+    range: float
+    annotations:
+      ngsi_ld_kind: Property
+  vyska:
+    description: The source column `Vyska`.
+    annotations:
+      ngsi_ld_kind: Property
+  vyskavrstevnice:
+    description: The source column `vyskavrstevnice`.
     annotations:
       ngsi_ld_kind: Property
   zSJ:
@@ -487,8 +1161,25 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+  zU:
+    description: The source column `ZU`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  zabLes:
+    description: The source column `Zab_les`.
+    annotations:
+      ngsi_ld_kind: Property
+  zapisobjektu:
+    description: The source column `zapisobjektu`.
+    annotations:
+      ngsi_ld_kind: Property
   ziadatel:
     description: The source column `Žiadateľ`.
+    annotations:
+      ngsi_ld_kind: Property
+  zmeny:
+    description: The source column `Zmeny`.
     annotations:
       ngsi_ld_kind: Property
   zmluvneStrany:
@@ -497,6 +1188,10 @@ slots:
       ngsi_ld_kind: Property
   zmluvneStranySUdajomICO:
     description: The source column `Zmluvné_strany_s_údajom_IČO`.
+    annotations:
+      ngsi_ld_kind: Property
+  zobraz:
+    description: The source column `Zobraz`.
     annotations:
       ngsi_ld_kind: Property
   zomrelych:
@@ -511,6 +1206,16 @@ slots:
       ngsi_ld_kind: Property
   zomrelychZ:
     description: The source column `Zomrelých_Ž`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  zpusobporizeniti:
+    description: The source column `zpusobporizeniti`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  zpusobporizenizps:
+    description: The source column `zpusobporizenizps`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
@@ -618,6 +1323,24 @@ classes:
     - datumZasadnutia
     - organSamospravy
     - rok
+  Footway:
+    class_uri: jc:Footway
+    description: One row of DTM_BB-register-chodnikov-a-verejnych-priestranstiev.
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - datumplatnosti
+    - datumvkladu
+    - datumzmeny
+    - ics
+    - idzmeny
+    - oznacenicyklostezky
+    - popisobjektu
+    - prevazujicipovrch
+    - urovenumisteniobjektuzps
+    - vrstva
   Grant:
     class_uri: jc:Grant
     description: One row of Dotácie.
@@ -636,6 +1359,197 @@ classes:
     - stavVybav
     - typ
     - ziadatel
+  GreenArea:
+    class_uri: jc:GreenArea
+    description: One row of DTM_BB-register-verejnej-zelene-1.
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - datumplatnosti
+    - datumvkladu
+    - datumzmeny
+    - ics
+    - idzmeny
+    - popisobjektu
+    - typudrzovanezelene
+    - urovenumisteniobjektuzps
+    - vrstva
+  GreenAreaBoundary:
+    class_uri: jc:GreenAreaBoundary
+    description: One row of DTM_BB-register-verejnej-zelene-3.
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - datumplatnosti
+    - datumvkladu
+    - datumzmeny
+    - idzmeny
+    - popisobjektu
+    - tridapresnosti
+    - urovenumisteniobjektuzps
+    - vrstva
+    - zpusobporizenizps
+  LandUsePlanFeature:
+    class_uri: jc:LandUsePlanFeature
+    description: One row of DTM_BB-funkcne-vyuzitie-uzemia; DTM_BB-regulativy-a-limity-funkcneho-vyuzitia-uzemia;
+      DTM_BB-tvorba-krajiny-a-ochrana-prirody; DTM_BB-verejne-dopravne-a-technicke-vybavenie; DTM_BB-verejnoprospesne-stavby;
+      DTM_BB-vyuzitie-pody-na-nepolnohospodarske-ucely; DTM_BB-zaujmove-uzemie-a-sirsie-vztahy.
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - aCH
+    - aUT
+    - adresa
+    - bPEJ
+    - biotop
+    - bytyHBV
+    - bytyIBV
+    - cP
+    - cZaberu
+    - castMesta
+    - chranena
+    - cisKanala
+    - cislo
+    - dC
+    - dN
+    - dOW
+    - dP
+    - dV
+    - datumRP
+    - dlzkaKm
+    - dlzky
+    - dominanty
+    - drpC
+    - druhy
+    - eNTITAID
+    - eTAPA
+    - fACC
+    - funkcia
+    - hSLT
+    - hranica
+    - iDN2
+    - iDN3
+    - iDN4
+    - iDOLP
+    - iDPS
+    - indivReg
+    - intervReg
+    - intraExtra
+    - jEVID
+    - kPL
+    - kU
+    - kataster
+    - kategoria
+    - kod
+    - kodCely
+    - kodSV
+    - kodUzemia
+    - kodZjednodus
+    - kota
+    - lAU1
+    - lAU1CODE
+    - lAU2
+    - lAU2CODE
+    - lHC
+    - label
+    - lokacia
+    - lokalita
+    - mCHU
+    - mETAID
+    - mPa
+    - management
+    - material
+    - maxHl
+    - nHKP
+    - nM2
+    - nM3
+    - nM4
+    - nP
+    - nUTS1
+    - nUTS1CODE
+    - nUTS2
+    - nUTS2CODE
+    - nUTS3
+    - nUTS3CODE
+    - nazStav
+    - nazov
+    - nazovUP
+    - oBECMC
+    - oP
+    - obecMC
+    - objem
+    - obstaravatel
+    - obydlie
+    - odvKan
+    - okruhy
+    - osvedc
+    - oznacenie
+    - pC
+    - pK
+    - pLHC
+    - pOPIS
+    - pS
+    - parcela
+    - platiOd
+    - plocha
+    - popis
+    - poskytovatel
+    - poznamka
+    - rU
+    - rZP
+    - referencnyPodklad
+    - regist
+    - rokVybud
+    - rychlost
+    - sIZE
+    - sKUEV
+    - sOI
+    - sirka
+    - skupina
+    - specReg
+    - spracovatel
+    - sprava
+    - surovina
+    - tYP
+    - tazba
+    - trat
+    - typ
+    - uO
+    - uPID
+    - vPS
+    - vYMERA
+    - voda
+    - vrstva
+    - vydal
+    - vymeraHa
+    - vyska
+    - zU
+    - zabLes
+    - zmeny
+    - zobraz
+  ParkingArea:
+    class_uri: jc:ParkingArea
+    description: One row of DTM_BB-register-statickej-dopravy.
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - datumplatnosti
+    - datumvkladu
+    - datumzmeny
+    - ics
+    - idzmeny
+    - popisobjektu
+    - prevazujicipovrch
+    - urovenumisteniobjektuzps
+    - vrstva
   PurchaseOrder:
     class_uri: jc:PurchaseOrder
     description: One row of Objednávky BB.
@@ -652,6 +1566,24 @@ classes:
     - mena
     - objednavkaSpolu
     - textObjednavky
+  Road:
+    class_uri: jc:Road
+    description: One row of DTM_BB-register-miestnych-komunikacii-a-vyssich-tried.
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - datumplatnosti
+    - datumvkladu
+    - datumzmeny
+    - ics
+    - idzmeny
+    - popisobjektu
+    - prevazujicipovrch
+    - typpozemnikomunikace
+    - urovenumisteniobjektuzps
+    - vrstva
   RoadSegment:
     class_uri: jc:RoadSegment
     description: One row of DTM_BB-register-ulic.
@@ -713,3 +1645,107 @@ classes:
     - zomrelych
     - zomrelychM
     - zomrelychZ
+  StreetlightPole:
+    class_uri: jc:StreetlightPole
+    description: One row of DTM_BB-register-stlpov-VO.
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - datumplatnosti
+    - datumvkladu
+    - datumzmeny
+    - evidencnicisloobjektu
+    - ics
+    - idexterni
+    - idprovozovatele
+    - idprovozovatelezezakona
+    - idspravce
+    - idvlastnika
+    - idzmeny
+    - neuplnadata
+    - popisobjektu
+    - stavobjektu
+    - tridapresnostipoloha
+    - tridapresnostivyska
+    - typpodpernehozarizeni
+    - typsloupu
+    - urovenumisteniobjektuti
+    - vrstva
+    - zapisobjektu
+    - zpusobporizeniti
+  TerrainFeature:
+    class_uri: jc:TerrainFeature
+    description: One row of DTM_BB-vyskopis-teran.
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - datumplatnosti
+    - datumvkladu
+    - datumzmeny
+    - ics
+    - idzmeny
+    - popisobjektu
+    - rotace
+    - tridapresnosti
+    - typterennihrany
+    - typvrstevniceTid
+    - urovenumisteniobjektuzps
+    - vrstva
+    - vyskavrstevnice
+    - zapisobjektu
+    - zpusobporizenizps
+  TrafficSign:
+    class_uri: jc:TrafficSign
+    description: One row of DTM_BB-register-zvisleho-dopravneho-znacenia.
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - datumplatnosti
+    - datumvkladu
+    - datumzmeny
+    - idzmeny
+    - popisobjektu
+    - rotace
+    - urovenumisteniobjektuzps
+    - vrstva
+    - zapisobjektu
+  Tree:
+    class_uri: jc:Tree
+    description: One row of DTM_BB-register-verejnej-zelene-2.
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - datumplatnosti
+    - datumvkladu
+    - datumzmeny
+    - idzmeny
+    - popisobjektu
+    - rotace
+    - urovenumisteniobjektuzps
+    - vrstva
+    - zapisobjektu
+  WaterBody:
+    class_uri: jc:WaterBody
+    description: One row of DTM_BB-vodne-toky-a-plochy.
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - datumplatnosti
+    - datumvkladu
+    - datumzmeny
+    - ics
+    - idzmeny
+    - popisobjektu
+    - typvodninadrze
+    - urovenumisteniobjektuzps
+    - vrstva

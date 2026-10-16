@@ -73,7 +73,9 @@ COMMON = {
 TAKEN = {*COMMON, "location", "observedAt", "name"}
 LICENCE = {"cc-by": "CC BY 4.0", "cc-by-sa": "CC BY-SA 4.0"}
 # The source kinds whose rows are GeoJSON features: the columns sit under `properties`.
-FEATURES = {"esri-featureserver", "zip-geojson"}
+FEATURES = {"esri-featureserver", "esri-layers", "zip-geojson"}
+# The kinds read from an ArcGIS query, whose geometry the server sends in WGS 84.
+ESRI = {"esri-featureserver", "esri-layers"}
 
 
 def slugs(entries: list[dict]) -> dict[str, str]:
@@ -268,7 +270,7 @@ def entity(e: dict, slug: str, model_ranges: dict[str, str], source_url: str) ->
     ]
     for a, c in cols.items():
         lines.append(f"  {q(attribute(a))}: {column(path, kind, c)}.apply({q(model_ranges[attribute(a)])}),")
-    if kind == "esri-featureserver" and e["source"].get("geometry"):
+    if kind in ESRI and e["source"].get("geometry"):
         lines.append("  \"location\": if this.geometry.or(null) == null { null } else { { \"type\": \"GeoProperty\", \"value\": this.geometry } },")
     elif kind == "zip-geojson":
         lines.append("  \"location\": if this.geometry.or(null) == null { null } else { { \"type\": \"GeoProperty\", "
@@ -306,10 +308,57 @@ def esri_query(e: dict, offset: str, out_fields: str | None = None) -> str:
     return url
 
 
+def layer_query(layer: dict, offset: str) -> str:
+    """One page of one layer of the city's ArcGIS Server (T-4317): its own columns and the object id,
+    which the GeoJSON answer then carries as the feature's `id`; in object id order, so the pages
+    of one run neither skip nor repeat a row."""
+    params = {
+        "where": layer.get("where", "1=1"), "outFields": ",".join(["OBJECTID", *layer["fields"]]),
+        "orderByFields": "OBJECTID", "returnGeometry": "true",
+        "outSR": "4326", "geometryPrecision": "6", "f": "geojson",
+        "resultOffset": offset, "resultRecordCount": str(PAGE),
+    }
+    return f"{layer['url']}/query?{urllib.parse.urlencode(params, quote_via=urllib.parse.quote, safe=',*')}"
+
+
+# Rows one pipeline of the city's layers reads in a run. Bento holds every page of a run until the
+# run's end: the terrain set in one pipeline (36 062 rows, 57 pages) peaked at 897 MB, 8000 of its
+# contour lines at 422 MB (2026-10-16). So a dataset of more rows is read by several pipelines, each
+# within the 256 MB its quota names (T-4317).
+PART_ROWS = 4000
+# Who asks: the city's GIS server is a small public one, so its operator can tell our requests apart.
+AGENT = "joinedcontext-platform open-data pipeline (https://data.dev.joinedcontext.com)"
+
+
+def parts(e: dict, slug: str) -> list[tuple[dict, str]]:
+    """An `esri-layers` entry as pipelines of about PART_ROWS rows each, with their slugs: every page
+    of every layer up to half again the rows it held when mapped (ponytail: a static page count, as
+    for one Esri layer; past that the newest rows wait until the mapping is regenerated, and a page
+    past the end is empty). Any other entry is itself."""
+    s = e["source"]
+    if s["kind"] != "esri-layers":
+        return [(e, slug)]
+    groups: list[list[dict]] = [[]]
+    held = 0
+    for x in s["layers"]:
+        for o in range(max(1, -(-int(x["rows"] * 1.5) // PAGE))):
+            rows = max(0, min(PAGE, x["rows"] - o * PAGE))
+            if groups[-1] and held + rows > PART_ROWS:
+                groups.append([])
+                held = 0
+            groups[-1].append({**x, "offset": o * PAGE})
+            held += rows
+    return [({**e, "source": {**s, "pages": g}}, slug if i == 0 else f"{slug[:36].rstrip('-')}-p{i + 1}")
+            for i, g in enumerate(groups)]
+
+
 def source_url(e: dict) -> str:
     s = e["source"]
     if s["kind"] == "esri-featureserver":
         return esri_query(e, "0")
+    if s["kind"] == "esri-layers":
+        first = s["pages"][0]
+        return layer_query(first, str(first["offset"]))
     if s["kind"] == "zip-geojson":
         return s["url"]
     if s["kind"] == "ckan-datastore":
@@ -360,6 +409,43 @@ def bento(e: dict, slug: str, model_ranges: dict[str, str]) -> str:
         steps.append("""\
     - mapping: |
         root = this.features.or([])""")
+    elif s["kind"] == "esri-layers":
+        # The part's further pages, listed when generated (`parts`); its first is what the
+        # DataSource fetched. Each row learns its layer and its object id here.
+        first, *rest = s["pages"]
+        tag = lambda x: {"key": x["key"], "name": x["name"]}  # noqa: E731
+        stubs = [{**tag(x), "url": layer_query(x, str(x["offset"]))} for x in rest]
+        steps.append(f"""\
+    - mapping: |
+        let rest = {json.dumps(stubs, ensure_ascii=False)}
+        root = [{{ "page": this }}.merge({json.dumps(tag(first), ensure_ascii=False)})].concat($rest)
+    - unarchive:
+        format: json_array
+    - switch:
+        - check: this.url.or(null) != null
+          processors:
+            - mapping: |
+                meta url = this.url
+                meta key = this.key
+                meta name = this.name
+                root = ""
+            - http:
+                url: "${{! @url }}"
+                verb: GET
+                headers:
+                  Accept: application/geo+json
+                  User-Agent: {q(AGENT)}
+                timeout: 60s
+                retries: 2
+                rate_limit: pipeline_egress
+            - mapping: |
+                root = if errored() {{ throw("the page %v did not come: %v".format(@url, error())) }} else {{ {{ "page": this, "key": @key, "name": @name }} }}
+    # A layer that answers an error or no feature list is the service failing, so the run fails
+    # where it can be seen rather than writing nothing.
+    - mapping: |
+        let key = this.key
+        let name = this.name
+        root = if this.page.error.or(null) != null || this.page.features.or(null) == null {{ throw("the layer %v answered no features: %v".format($key, this.page.error.message.or(""))) }} else {{ this.page.features.map_each(f -> f.merge({{ "properties": {{ "vrstva": $name, "vrstva_id": "%v-%v".format($key, f.id) }} }})) }}""")
     elif s["kind"] == "zip-geojson":
         if s["crs"] != "EPSG:5514":
             sys.exit(f"{e['name']}: no step reprojects {s['crs']}")
@@ -513,15 +599,20 @@ def project_files(project: str, entries: list[dict], names: dict[str, str]) -> d
              f"{pre}endpoint.yaml: projects/{project}/spaces/{space}/endpoints/{space}.yaml",
              f"{pre}policy-read.yaml: projects/{project}/spaces/{space}/policies/otvorene-data-read.yaml",
              f"{pre}policy-pipelines-write.yaml: projects/{project}/spaces/{space}/policies/otvorene-data-pipelines-write.yaml"]
-    for i, e in enumerate(entries):
-        slug = names[e["name"]]
+    pipelines = [p for e in entries for p in parts(e, names[e["name"]])]
+    taken = [slug for _, slug in pipelines]
+    if len(set(taken)) != len(taken):
+        sys.exit(f"{project}: two pipelines take one name: {sorted({x for x in taken if taken.count(x) > 1})}")
+    for i, (e, slug) in enumerate(pipelines):
         rows = e["source"]["rows"]
         files[f"{pre}datasource-{slug}.yaml"] = manifest(
             f"\"{e['title']}\", {e['dataset']}: {rows} rows when mapped. {e['dataProvider']},\n"
             f"{LICENCE.get(e['license'], e['license'])}. No key. Generated by scripts/open-data/generate.py (T-4255).",
             {**head, "kind": "DataSource", "metadata": meta(f"od-{slug}", {"sk": e["title"][:120], "en": e["title"][:120]}),
              "spec": {"type": "http", "http": {"url": source_url(e), "verb": "GET",
-                                              "headers": {"Accept": "application/geo+json, application/json"}, "timeout": "60s"}}})
+                                              "headers": {"Accept": "application/geo+json, application/json",
+                                                          **({"User-Agent": AGENT} if e["source"]["kind"] == "esri-layers" else {})},
+                                              "timeout": "60s"}}})
         files[f"{pre}pipeline-{slug}.yaml"] = manifest(
             f"One {e['type']} per row of \"{e['title']}\" (T-4255); {e.get('note') or 'generated from the T-4254 mapping'}.",
             {**head, "kind": "Pipeline", "metadata": meta(f"od-{slug}", {"sk": e["title"][:120], "en": e["title"][:120]}),

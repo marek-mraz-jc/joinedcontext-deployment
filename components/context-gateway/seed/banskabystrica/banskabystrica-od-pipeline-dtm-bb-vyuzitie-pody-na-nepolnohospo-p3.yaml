@@ -1,0 +1,24 @@
+# One LandUsePlanFeature per row of "DTM_BB-vyuzitie-pody-na-nepolnohospodarske-ucely" (T-4255); the land-use plan's drawing, one entity per feature of its layers (ÚPN).
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: od-dtm-bb-vyuzitie-pody-na-nepolnohospo-p3
+  namespace: banskabystrica
+  title:
+    sk: DTM_BB-vyuzitie-pody-na-nepolnohospodarske-ucely
+    en: DTM_BB-vyuzitie-pody-na-nepolnohospodarske-ucely
+spec:
+  class: scheduled
+  enabled: false
+  schedule: 57 1 * * 3
+  source:
+    dataSourceRef:
+      kind: DataSource
+      name: od-dtm-bb-vyuzitie-pody-na-nepolnohospo-p3
+  targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-otvorene-data:banskabystrica-otvorene-data
+  output:
+    type: LandUsePlanFeature
+    mode: upsert
+  quotas:
+    maxMemoryMb: 256
+    cpuMillicores: 100

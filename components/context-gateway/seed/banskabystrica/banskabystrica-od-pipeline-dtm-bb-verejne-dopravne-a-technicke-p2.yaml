@@ -1,0 +1,24 @@
+# One LandUsePlanFeature per row of "DTM_BB-verejne-dopravne-a-technicke-vybavenie" (T-4255); the land-use plan's drawing, one entity per feature of its layers (ÚPN).
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: od-dtm-bb-verejne-dopravne-a-technicke-p2
+  namespace: banskabystrica
+  title:
+    sk: DTM_BB-verejne-dopravne-a-technicke-vybavenie
+    en: DTM_BB-verejne-dopravne-a-technicke-vybavenie
+spec:
+  class: scheduled
+  enabled: false
+  schedule: 16 4 * * 1
+  source:
+    dataSourceRef:
+      kind: DataSource
+      name: od-dtm-bb-verejne-dopravne-a-technicke-p2
+  targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-otvorene-data:banskabystrica-otvorene-data
+  output:
+    type: LandUsePlanFeature
+    mode: upsert
+  quotas:
+    maxMemoryMb: 256
+    cpuMillicores: 100

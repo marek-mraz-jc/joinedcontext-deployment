@@ -19,10 +19,21 @@ spec:
   - Building
   - Contract
   - CouncilMeeting
+  - Footway
   - Grant
+  - GreenArea
+  - GreenAreaBoundary
+  - LandUsePlanFeature
+  - ParkingArea
   - PurchaseOrder
+  - Road
   - RoadSegment
   - StatisticalObservation
+  - StreetlightPole
+  - TerrainFeature
+  - TrafficSign
+  - Tree
+  - WaterBody
   artifacts:
     jsonSchema: ./banskabystrica-otvorene-data.v1.schema.json
     context: ./banskabystrica-otvorene-data.v1.context.jsonld

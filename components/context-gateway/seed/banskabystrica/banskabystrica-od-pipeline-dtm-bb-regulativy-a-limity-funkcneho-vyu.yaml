@@ -1,0 +1,24 @@
+# One LandUsePlanFeature per row of "DTM_BB-regulativy-a-limity-funkcneho-vyuzitia-uzemia" (T-4255); the land-use plan's drawing, one entity per feature of its layers (ÚPN).
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: od-dtm-bb-regulativy-a-limity-funkcneho-vyu
+  namespace: banskabystrica
+  title:
+    sk: DTM_BB-regulativy-a-limity-funkcneho-vyuzitia-uzemia
+    en: DTM_BB-regulativy-a-limity-funkcneho-vyuzitia-uzemia
+spec:
+  class: scheduled
+  enabled: false
+  schedule: 34 3 * * 2
+  source:
+    dataSourceRef:
+      kind: DataSource
+      name: od-dtm-bb-regulativy-a-limity-funkcneho-vyu
+  targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-otvorene-data:banskabystrica-otvorene-data
+  output:
+    type: LandUsePlanFeature
+    mode: upsert
+  quotas:
+    maxMemoryMb: 256
+    cpuMillicores: 100

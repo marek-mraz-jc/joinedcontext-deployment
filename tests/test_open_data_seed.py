@@ -74,9 +74,10 @@ def test_every_mapped_dataset_has_its_pipeline_unless_a_seed_reads_it_whole():
     mapped = [e for e in MAPPING["datasets"] if e["status"] == "mapped"]
     whole = [e for e in mapped if (e.get("existing") or {}).get("covers") == "whole"]
     pipelines = {p.name for project in generate.PROJECTS for p in files(project, "pipeline")}
-    assert len(pipelines) == len(mapped) - len(whole) == len(SEEDED)
-    for e in SEEDED:
-        assert f"{e['org']}-od-pipeline-{SLUGS[e['name']]}.yaml" in pipelines, e["name"]
+    assert len(mapped) - len(whole) == len(SEEDED)
+    # A dataset of the city's layers may take several pipelines (generate.parts, T-4317).
+    want = {f"{e['org']}-od-pipeline-{slug}.yaml" for e in SEEDED for _, slug in generate.parts(e, SLUGS[e["name"]])}
+    assert pipelines == want
 
 
 def test_the_model_classes_and_both_policies_name_every_type_the_pipelines_write():
@@ -471,3 +472,147 @@ def test_an_archive_in_a_crs_no_step_reprojects_stops_the_generator():
     e["source"] = {**e["source"], "crs": "EPSG:3035"}
     with pytest.raises(SystemExit):
         generate.bento(e, "x", generate.ranges([e]))
+
+
+# --- the city's ArcGIS layers (T-4317): many layers per dataset, the server answers WGS 84 ---
+
+def layered(slug: str, document: bytes, pages: dict[tuple[int, int], bytes | None]) -> subprocess.CompletedProcess:
+    """`offline` for an `esri-layers` mapping: `pages[(layer, offset)]` answers, None is a 500, any
+    other page is empty; every request is recorded in `asked`."""
+    asked.clear()
+
+    class Service(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):
+            url = urllib.parse.urlsplit(self.path)
+            layer = int(url.path.rsplit("/", 2)[-2])
+            offset = int(urllib.parse.parse_qs(url.query)["resultOffset"][0])
+            asked.append((layer, offset, self.headers.get("User-Agent", "")))
+            body = pages.get((layer, offset), b'{"type": "FeatureCollection", "features": []}')
+            self.send_response(500 if body is None else 200)
+            self.end_headers()
+            self.wfile.write(body or b"")
+
+        def log_message(self, *_):
+            pass
+
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Service)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        text = (SEED / "banskabystrica" / f"banskabystrica-od-pipeline-{slug}-bento.yaml").read_text()
+        text = text.replace("https://dtm-banskabystrica.tmapserver.sk", f"http://127.0.0.1:{server.server_port}")
+        config = {
+            "input": {"stdin": {"scanner": {"to_the_end": {}}}},
+            "pipeline": yaml.safe_load(text)["pipeline"],
+            "rate_limit_resources": [{"label": "pipeline_egress", "local": {"count": 100, "interval": "1s"}}],
+            "output": {"stdout": {"codec": "lines"}},
+            "logger": {"level": "error"},
+        }
+        return subprocess.run(
+            ["docker", "run", "--rm", "-i", "--network", "host", "-e", "JC_ORG_DOMAIN=banskabystrica.sk",
+             "-e", "JC_SPACE=banskabystrica-otvorene-data", "-e", f"CONFIG={json.dumps(config)}", "--entrypoint", "sh",
+             open_data.BENTO, "-c", 'printf "%s" "$CONFIG" > /tmp/c.json && exec /bento -c /tmp/c.json'],
+            input=document, capture_output=True, timeout=300,
+        )
+    finally:
+        server.shutdown()
+
+
+asked: list[tuple[int, int, str]] = []
+LAYERED = [e for e in SEEDED if e["source"]["kind"] == "esri-layers"]
+PARTS = {e["name"]: generate.parts(e, SLUGS[e["name"]]) for e in LAYERED}
+
+
+def test_every_layer_page_asks_wgs84_geojson_of_the_city_host_in_pages_the_server_allows():
+    assert len(LAYERED) == 17
+    for e in LAYERED:
+        urls = []
+        for part, slug in PARTS[e["name"]]:
+            bento = (SEED / e["org"] / f"{e['org']}-od-pipeline-{slug}-bento.yaml").read_text()
+            source = yaml.safe_load((SEED / e["org"] / f"{e['org']}-od-datasource-{slug}.yaml").read_text())
+            assert source["spec"]["http"]["url"] == generate.source_url(part)
+            urls += [generate.source_url(part), *re.findall(r'"url": "([^"]+)"', bento)]
+        assert {u.split("/query?")[0] for u in urls} == {x["url"] for x in e["source"]["layers"]}, e["name"]
+        assert len(urls) == len(set(urls)), "no page is read by two pipelines"
+        for u in urls:
+            q = urllib.parse.parse_qs(urllib.parse.urlsplit(u).query)
+            assert u.startswith("https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/") and len(u) <= generate.URL_LIMIT
+            assert q["outSR"] == ["4326"] and q["f"] == ["geojson"] and int(q["resultRecordCount"][0]) <= 2000
+            assert q["outFields"][0].split(",")[0] == "OBJECTID" and q["orderByFields"] == ["OBJECTID"]
+        # The street-light poles are the supports coded 3, on every page.
+        if e["name"] == "bb-dtm-bb-register-stlpov-vo":
+            assert all(urllib.parse.parse_qs(urllib.parse.urlsplit(u).query)["where"] == ["typpodpernehozarizeni=3"] for u in urls)
+        assert not any(c in u.lower() for u in urls for c in ("vkladosoba", "zmenaosoba", "ideditora", "created_user", "last_edited_user"))
+
+
+def test_a_large_dataset_is_read_by_several_pipelines_each_under_the_row_bound():
+    teran = PARTS["bb-dtm-bb-vyskopis-teran"]
+    assert [slug for _, slug in teran][:2] == ["dtm-bb-vyskopis-teran", "dtm-bb-vyskopis-teran-p2"]
+    for e in LAYERED:
+        for part, _ in PARTS[e["name"]]:
+            pages = part["source"]["pages"]
+            held = sum(max(0, min(generate.PAGE, x["rows"] - x["offset"])) for x in pages)
+            assert held <= generate.PART_ROWS or len(pages) == 1, (e["name"], held)
+    # The 22 417 contour lines fill the first parts; a part reads where the last one stopped.
+    first, second = teran[0][0]["source"]["pages"], teran[1][0]["source"]["pages"]
+    assert (first[0]["key"], first[0]["offset"], len(first)) == ("dtm-136", 0, 4)
+    assert (second[0]["key"], second[0]["offset"]) == ("dtm-136", 4000)
+    single = generate.parts(entry("bb-adresy"), "adresy")
+    assert single == [(entry("bb-adresy"), "adresy")]
+
+
+def page(features: list[dict], more: bool = False) -> bytes:
+    return json.dumps({"type": "FeatureCollection", "features": features,
+                       **({"exceededTransferLimit": True, "properties": {"exceededTransferLimit": True}} if more else {})}).encode()
+
+
+@requires_docker
+def test_a_dataset_of_three_layers_reads_each_layer_and_tags_each_row_with_its_layer():
+    fixture = json.loads((FIXTURES / "dtm-vrstevnice.json").read_text())  # 2 rows as the server sent them, more to come
+    line = fixture["features"][1]
+    reservoir = {"type": "Feature", "id": 1, "geometry": {"type": "Point", "coordinates": [19.15, 48.73]},
+                 "properties": {"objectid": 1, "typvodninadrze": 2}}
+    channel = {**line, "id": 2, "properties": {"objectid": 2, "popisobjektu": "Bystrica"}}
+    entities = written(layered("dtm-bb-vodne-toky-a-plochy", page(fixture["features"], more=True),
+                               {(23, 0): page([reservoir]), (26, 0): page([channel])}))
+    ids = sorted(e["id"].rsplit(":", 1)[1] for e in entities)
+    assert ids == ["dtm-bb-vodne-toky-a-plochy-dtm-23-1", "dtm-bb-vodne-toky-a-plochy-dtm-26-2",
+                   "dtm-bb-vodne-toky-a-plochy-dtm-51-1", "dtm-bb-vodne-toky-a-plochy-dtm-51-2"], "object id 1 in two layers, two entities"
+    by = {e["id"].rsplit(":", 1)[1]: e for e in entities}
+    assert by["dtm-bb-vodne-toky-a-plochy-dtm-23-1"]["typvodninadrze"]["value"] == 2
+    assert by["dtm-bb-vodne-toky-a-plochy-dtm-23-1"]["vrstva"]["value"] == "vodná nádrž - db"
+    assert by["dtm-bb-vodne-toky-a-plochy-dtm-26-2"]["popisobjektu"]["value"] == "Bystrica"
+    assert by["dtm-bb-vodne-toky-a-plochy-dtm-51-2"]["location"]["value"] == line["geometry"], "WGS 84 as the server sent it"
+    assert "location" not in by["dtm-bb-vodne-toky-a-plochy-dtm-51-1"], "a row without geometry has no location"
+    assert all(schema_errors("banskabystrica", e) == [] for e in entities)
+    # The DataSource's page is never asked again; each other layer once, from its first page.
+    assert sorted((layer, o) for layer, o, _ in asked) == [(23, 0), (26, 0)]
+
+
+@requires_docker
+def test_a_part_reads_exactly_its_pages_and_an_empty_one_past_the_end_writes_nothing():
+    _, slug = PARTS["bb-dtm-bb-vyskopis-teran"][1]
+    fixture = json.loads((FIXTURES / "dtm-vrstevnice.json").read_text())
+    entities = written(layered(slug, page(fixture["features"][1:]), {}))
+    assert len(entities) == 1
+    assert sorted(o for layer, o, _ in asked if layer == 136) == list(range(5000, 8000, 1000))
+
+
+@requires_docker
+def test_a_layer_that_fails_or_answers_an_error_fails_the_run():
+    fixture = (FIXTURES / "dtm-vrstevnice.json").read_bytes()
+    down = layered("dtm-bb-vodne-toky-a-plochy", fixture, {(23, 0): None})
+    assert down.returncode != 0 or b"did not come" in down.stdout + down.stderr
+    assert b"did not come" in down.stdout + down.stderr
+    error = layered("dtm-bb-vodne-toky-a-plochy", fixture, {(26, 0): b'{"error": {"code": 400, "message": "Invalid query"}}'})
+    assert b"the layer dtm-26 answered no features: Invalid query" in error.stdout + error.stderr
+
+
+def test_every_request_to_the_city_gis_names_the_platform():
+    for e in LAYERED:
+        for _, slug in PARTS[e["name"]]:
+            source = yaml.safe_load((SEED / e["org"] / f"{e['org']}-od-datasource-{slug}.yaml").read_text())
+            assert source["spec"]["http"]["headers"]["User-Agent"] == generate.AGENT
+            bento = yaml.safe_load((SEED / e["org"] / f"{e['org']}-od-pipeline-{slug}-bento.yaml").read_text())
+            calls = [p["http"] for step in bento["pipeline"]["processors"] if "switch" in step
+                     for case in step["switch"] for p in case["processors"] if "http" in p]
+            assert all(c["headers"]["User-Agent"] == generate.AGENT for c in calls)

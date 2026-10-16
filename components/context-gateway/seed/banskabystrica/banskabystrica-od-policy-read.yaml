@@ -36,7 +36,18 @@ spec:
     - type: Building
     - type: Contract
     - type: CouncilMeeting
+    - type: Footway
     - type: Grant
+    - type: GreenArea
+    - type: GreenAreaBoundary
+    - type: LandUsePlanFeature
+    - type: ParkingArea
     - type: PurchaseOrder
+    - type: Road
     - type: RoadSegment
     - type: StatisticalObservation
+    - type: StreetlightPole
+    - type: TerrainFeature
+    - type: TrafficSign
+    - type: Tree
+    - type: WaterBody

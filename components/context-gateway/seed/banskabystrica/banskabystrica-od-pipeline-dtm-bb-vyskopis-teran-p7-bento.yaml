@@ -1,0 +1,100 @@
+# The mapping of the od-dtm-bb-vyskopis-teran-p7 pipeline, generated from the T-4254 mapping: one TerrainFeature per row of
+# "DTM_BB-vyskopis-teran" (https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-vyskopis-teran). Do not edit: change the mapping and run scripts/open-data/generate.py.
+
+pipeline:
+  processors:
+    - mapping: |
+        let rest = [{"key": "dtm-135", "name": "vrstevnice - výška", "url": "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/dtm/DTM_v_1_4_2_3_verejny/MapServer/135/query?where=1%3D1&outFields=OBJECTID,idzmeny,popisobjektu,datumvkladu,datumzmeny,datumplatnosti,urovenumisteniobjektuzps,vyskavrstevnice,zapisobjektu,rotace&orderByFields=OBJECTID&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=2000&resultRecordCount=1000"}, {"key": "dtm-135", "name": "vrstevnice - výška", "url": "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/dtm/DTM_v_1_4_2_3_verejny/MapServer/135/query?where=1%3D1&outFields=OBJECTID,idzmeny,popisobjektu,datumvkladu,datumzmeny,datumplatnosti,urovenumisteniobjektuzps,vyskavrstevnice,zapisobjektu,rotace&orderByFields=OBJECTID&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=3000&resultRecordCount=1000"}, {"key": "dtm-79", "name": "terénná hrana", "url": "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/dtm/DTM_v_1_4_2_3_verejny/MapServer/79/query?where=1%3D1&outFields=OBJECTID,idzmeny,popisobjektu,datumvkladu,datumzmeny,datumplatnosti,urovenumisteniobjektuzps,typterennihrany,zpusobporizenizps,tridapresnosti,ics&orderByFields=OBJECTID&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000"}, {"key": "dtm-79", "name": "terénná hrana", "url": "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/dtm/DTM_v_1_4_2_3_verejny/MapServer/79/query?where=1%3D1&outFields=OBJECTID,idzmeny,popisobjektu,datumvkladu,datumzmeny,datumplatnosti,urovenumisteniobjektuzps,typterennihrany,zpusobporizenizps,tridapresnosti,ics&orderByFields=OBJECTID&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=1000&resultRecordCount=1000"}]
+        root = [{ "page": this }.merge({"key": "dtm-135", "name": "vrstevnice - výška"})].concat($rest)
+    - unarchive:
+        format: json_array
+    - switch:
+        - check: this.url.or(null) != null
+          processors:
+            - mapping: |
+                meta url = this.url
+                meta key = this.key
+                meta name = this.name
+                root = ""
+            - http:
+                url: "${! @url }"
+                verb: GET
+                headers:
+                  Accept: application/geo+json
+                  User-Agent: "joinedcontext-platform open-data pipeline (https://data.dev.joinedcontext.com)"
+                timeout: 60s
+                retries: 2
+                rate_limit: pipeline_egress
+            - mapping: |
+                root = if errored() { throw("the page %v did not come: %v".format(@url, error())) } else { { "page": this, "key": @key, "name": @name } }
+    # A layer that answers an error or no feature list is the service failing, so the run fails
+    # where it can be seen rather than writing nothing.
+    - mapping: |
+        let key = this.key
+        let name = this.name
+        root = if this.page.error.or(null) != null || this.page.features.or(null) == null { throw("the layer %v answered no features: %v".format($key, this.page.error.message.or(""))) } else { this.page.features.map_each(f -> f.merge({ "properties": { "vrstva": $name, "vrstva_id": "%v-%v".format($key, f.id) } })) }
+    - unarchive:
+        format: json_array
+    - mapping: |
+        map integer {
+          let v = this.number().catch(null)
+          root = if $v == null { null } else { { "type": "Property", "value": $v.round().int64() } }
+        }
+        map float {
+          let v = this.number().catch(null)
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        map string {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": $v } }
+        }
+        map uri {
+          root = this.apply("string")
+        }
+        # An Esri date is milliseconds since the epoch; a DataStore or WordPress one is text.
+        # `match` rebinds `this` to what it matches, so the value is named first.
+        map datetime {
+          let x = this
+          let v = match $x.type() {
+            "number" => ($x / 1000).ts_format("2006-01-02T15:04:05Z", "UTC").catch(null),
+            "string" => $x.ts_parse("2006-01-02T15:04:05").ts_format("2006-01-02T15:04:05Z", "UTC").catch($x.ts_format("2006-01-02T15:04:05Z", "UTC").catch(null)),
+            _ => null,
+          }
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        map date {
+          let x = this
+          let v = match $x.type() {
+            "number" => ($x / 1000).ts_format("2006-01-02", "UTC").catch(null),
+            "string" => if $x.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}") { $x.slice(0, 10) } else { null },
+            _ => null,
+          }
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        let local = "dtm-bb-vyskopis-teran-p7-" + [this.properties."vrstva_id"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
+        root = {
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("TerrainFeature", "banskabystrica.sk", env("JC_SPACE"), $local),
+          "type": "TerrainFeature",
+          "idzmeny": this.properties."idzmeny".apply("string"),
+          "popisobjektu": this.properties."popisobjektu".apply("string"),
+          "datumvkladu": this.properties."datumvkladu".apply("datetime"),
+          "datumzmeny": this.properties."datumzmeny".apply("datetime"),
+          "datumplatnosti": this.properties."datumplatnosti".apply("datetime"),
+          "urovenumisteniobjektuzps": this.properties."urovenumisteniobjektuzps".apply("integer"),
+          "typvrstevniceTid": this.properties."typvrstevnice_tid".apply("integer"),
+          "zapisobjektu": this.properties."zapisobjektu".apply("string"),
+          "vyskavrstevnice": this.properties."vyskavrstevnice".apply("string"),
+          "rotace": this.properties."rotace".apply("float"),
+          "typterennihrany": this.properties."typterennihrany".apply("integer"),
+          "zpusobporizenizps": this.properties."zpusobporizenizps".apply("integer"),
+          "tridapresnosti": this.properties."tridapresnosti".apply("integer"),
+          "ics": this.properties."ics".apply("string"),
+          "vrstva": this.properties."vrstva".apply("string"),
+          "location": if this.geometry.or(null) == null { null } else { { "type": "GeoProperty", "value": this.geometry } },
+          "dataProvider": { "type": "Property", "value": "Mesto Banská Bystrica (CC BY-SA 4.0)" },
+          "source": { "type": "Property", "value": "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/dtm/DTM_v_1_4_2_3_verejny/MapServer/135/query?where=1%3D1&outFields=OBJECTID,idzmeny,popisobjektu,datumvkladu,datumzmeny,datumplatnosti,urovenumisteniobjektuzps,vyskavrstevnice,zapisobjektu,rotace&orderByFields=OBJECTID&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=1000&resultRecordCount=1000" },
+          "dataset": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-vyskopis-teran" }
+        }.filter(entry -> entry.value != null)
+    # One request per run's batch rather than one per row.
+    - archive:
+        format: json_array

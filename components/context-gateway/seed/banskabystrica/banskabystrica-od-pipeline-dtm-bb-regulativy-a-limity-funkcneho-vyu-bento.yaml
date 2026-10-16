@@ -1,0 +1,155 @@
+# The mapping of the od-dtm-bb-regulativy-a-limity-funkcneho-vyu pipeline, generated from the T-4254 mapping: one LandUsePlanFeature per row of
+# "DTM_BB-regulativy-a-limity-funkcneho-vyuzitia-uzemia" (https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-regulativy-a-limity-funkcneho-vyuzitia-uzemia). Do not edit: change the mapping and run scripts/open-data/generate.py.
+
+pipeline:
+  processors:
+    - mapping: |
+        let rest = [{"key": "7a-1", "name": "Hranica riešeného územia", "url": "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7a___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___funk%C4%8Dn%C3%A9_a_v%C3%BD%C5%A1kov%C3%A9_regulat%C3%ADvy_a_limity/MapServer/1/query?where=1%3D1&outFields=OBJECTID,JEV_ID,ETAPA,ENTITA_ID,UP_ID,Nazov_UP,Vydal,Plati_od,Obstaravatel,Spracovatel,Referencny_podklad,Datum_RP,Label,Poznamka,Poskytovatel,META_ID&orderByFields=OBJECTID&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000"}, {"key": "7a-2", "name": "Hranica časti mesta", "url": "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7a___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___funk%C4%8Dn%C3%A9_a_v%C3%BD%C5%A1kov%C3%A9_regulat%C3%ADvy_a_limity/MapServer/2/query?where=1%3D1&outFields=OBJECTID,JEV_ID,ETAPA,ENTITA_ID,Cislo,Nazov,Label,Poznamka,Poskytovatel,META_ID&orderByFields=OBJECTID&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000"}, {"key": "7a-3", "name": "Hranica urbanistického obvodu", "url": "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7a___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___funk%C4%8Dn%C3%A9_a_v%C3%BD%C5%A1kov%C3%A9_regulat%C3%ADvy_a_limity/MapServer/3/query?where=1%3D1&outFields=OBJECTID,JEV_ID,ETAPA,ENTITA_ID,Cislo,Nazov,Label,Poznamka,Poskytovatel,META_ID&orderByFields=OBJECTID&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000"}, {"key": "7a-4", "name": "Hranica centrálnej mestskej zóny - návrh", "url": "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7a___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___funk%C4%8Dn%C3%A9_a_v%C3%BD%C5%A1kov%C3%A9_regulat%C3%ADvy_a_limity/MapServer/4/query?where=1%3D1&outFields=OBJECTID,JEV_ID,ETAPA,ENTITA_ID,Label,Poznamka,Poskytovatel,META_ID&orderByFields=OBJECTID&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000"}, {"key": "7a-6", "name": "Hranica zastavaného územia", "url": "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7a___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___funk%C4%8Dn%C3%A9_a_v%C3%BD%C5%A1kov%C3%A9_regulat%C3%ADvy_a_limity/MapServer/6/query?where=1%3D1&outFields=OBJECTID,JEV_ID,ETAPA,ENTITA_ID,Label,Poznamka,Poskytovatel,META_ID&orderByFields=OBJECTID&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000"}, {"key": "7a-7", "name": "Pešie a priestorové vybavenie", "url": "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7a___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___funk%C4%8Dn%C3%A9_a_v%C3%BD%C5%A1kov%C3%A9_regulat%C3%ADvy_a_limity/MapServer/7/query?where=1%3D1&outFields=OBJECTID,JEV_ID,ETAPA,ENTITA_ID,Kod_cely,Kod,Kod_zjednodus,UO,Cast_mesta,Funkcia,Byty_HBV,Byty_IBV,Vyska,Nazov,VPS,RU,Spec_reg,Interv_reg,Indiv_reg,Kod_SV,dlzky,Label,Poznamka,Poskytovatel,META_ID&orderByFields=OBJECTID&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000"}, {"key": "7a-11", "name": "0 - Funkčné plochy - Stabilizovaný blok", "url": "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7a___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___funk%C4%8Dn%C3%A9_a_v%C3%BD%C5%A1kov%C3%A9_regulat%C3%ADvy_a_limity/MapServer/11/query?where=1%3D1&outFields=OBJECTID,JEV_ID,ETAPA,ENTITA_ID,Kod_cely,Kod,Kod_zjednodus,UO,Cast_mesta,Funkcia,Byty_HBV,Byty_IBV,Vyska,Nazov,VPS,RU,Spec_reg,Interv_reg,Indiv_reg,Kod_SV,dlzky,Label,Poznamka,Poskytovatel,META_ID&orderByFields=OBJECTID&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000"}, {"key": "7a-11", "name": "0 - Funkčné plochy - Stabilizovaný blok", "url": "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7a___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___funk%C4%8Dn%C3%A9_a_v%C3%BD%C5%A1kov%C3%A9_regulat%C3%ADvy_a_limity/MapServer/11/query?where=1%3D1&outFields=OBJECTID,JEV_ID,ETAPA,ENTITA_ID,Kod_cely,Kod,Kod_zjednodus,UO,Cast_mesta,Funkcia,Byty_HBV,Byty_IBV,Vyska,Nazov,VPS,RU,Spec_reg,Interv_reg,Indiv_reg,Kod_SV,dlzky,Label,Poznamka,Poskytovatel,META_ID&orderByFields=OBJECTID&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=1000&resultRecordCount=1000"}, {"key": "7a-11", "name": "0 - Funkčné plochy - Stabilizovaný blok", "url": "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7a___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___funk%C4%8Dn%C3%A9_a_v%C3%BD%C5%A1kov%C3%A9_regulat%C3%ADvy_a_limity/MapServer/11/query?where=1%3D1&outFields=OBJECTID,JEV_ID,ETAPA,ENTITA_ID,Kod_cely,Kod,Kod_zjednodus,UO,Cast_mesta,Funkcia,Byty_HBV,Byty_IBV,Vyska,Nazov,VPS,RU,Spec_reg,Interv_reg,Indiv_reg,Kod_SV,dlzky,Label,Poznamka,Poskytovatel,META_ID&orderByFields=OBJECTID&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=2000&resultRecordCount=1000"}, {"key": "7a-12", "name": "a - Funkčné plochy - Prestavba alebo rekonštrukcia so zachovaním funkcie", "url": "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7a___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___funk%C4%8Dn%C3%A9_a_v%C3%BD%C5%A1kov%C3%A9_regulat%C3%ADvy_a_limity/MapServer/12/query?where=1%3D1&outFields=OBJECTID,JEV_ID,ETAPA,ENTITA_ID,Kod_cely,Kod,Kod_zjednodus,UO,Cast_mesta,Funkcia,Byty_HBV,Byty_IBV,Vyska,Nazov,VPS,RU,Spec_reg,Interv_reg,Indiv_reg,Kod_SV,dlzky,Label,Poznamka,Poskytovatel,META_ID&orderByFields=OBJECTID&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000"}, {"key": "7a-13", "name": "b - Funkčné plochy - Prestavba alebo rekonštrukcia so zmenou funkcie", "url": "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7a___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___funk%C4%8Dn%C3%A9_a_v%C3%BD%C5%A1kov%C3%A9_regulat%C3%ADvy_a_limity/MapServer/13/query?where=1%3D1&outFields=OBJECTID,JEV_ID,ETAPA,ENTITA_ID,Kod_cely,Kod,Kod_zjednodus,UO,Cast_mesta,Funkcia,Byty_HBV,Byty_IBV,Vyska,Nazov,VPS,RU,Spec_reg,Interv_reg,Indiv_reg,Kod_SV,dlzky,Label,Poznamka,Poskytovatel,META_ID&orderByFields=OBJECTID&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000"}, {"key": "7a-14", "name": "c - Funkčné plochy - Intenzifikácia (nadstavby, dostavby, prístavby)", "url": "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7a___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___funk%C4%8Dn%C3%A9_a_v%C3%BD%C5%A1kov%C3%A9_regulat%C3%ADvy_a_limity/MapServer/14/query?where=1%3D1&outFields=OBJECTID,JEV_ID,ETAPA,ENTITA_ID,Kod_cely,Kod,Kod_zjednodus,UO,Cast_mesta,Funkcia,Byty_HBV,Byty_IBV,Vyska,Nazov,VPS,RU,Spec_reg,Interv_reg,Indiv_reg,Kod_SV,dlzky,Label,Poznamka,Poskytovatel,META_ID&orderByFields=OBJECTID&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000"}, {"key": "7a-15", "name": "d - Funkčné plochy - Nová výstavba", "url": "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7a___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___funk%C4%8Dn%C3%A9_a_v%C3%BD%C5%A1kov%C3%A9_regulat%C3%ADvy_a_limity/MapServer/15/query?where=1%3D1&outFields=OBJECTID,JEV_ID,ETAPA,ENTITA_ID,Kod_cely,Kod,Kod_zjednodus,UO,Cast_mesta,Funkcia,Byty_HBV,Byty_IBV,Vyska,Nazov,VPS,RU,Spec_reg,Interv_reg,Indiv_reg,Kod_SV,dlzky,Label,Poznamka,Poskytovatel,META_ID&orderByFields=OBJECTID&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000"}, {"key": "7b-4", "name": "Chránené pohľady a priehľady na kultúrnu pamiatku", "url": "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7b___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___priestorotvorn%C3%A9_regulat%C3%ADvy/MapServer/4/query?where=1%3D1&outFields=OBJECTID,JEV_ID,ETAPA,ENTITA_ID,Label,Poznamka,Poskytovatel,META_ID&orderByFields=OBJECTID&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000"}, {"key": "7b-5", "name": "Chranené pohľady na územie PR a jej ochranné pásmo", "url": "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7b___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___priestorotvorn%C3%A9_regulat%C3%ADvy/MapServer/5/query?where=1%3D1&outFields=OBJECTID,JEV_ID,ETAPA,ENTITA_ID,Label,Poznamka,Poskytovatel,META_ID&orderByFields=OBJECTID&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000"}, {"key": "7b-6", "name": "Výhliadkové priestory", "url": "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7b___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___priestorotvorn%C3%A9_regulat%C3%ADvy/MapServer/6/query?where=1%3D1&outFields=OBJECTID,JEV_ID,ETAPA,ENTITA_ID,Label,Poznamka,Poskytovatel,META_ID&orderByFields=OBJECTID&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000"}, {"key": "7b-7", "name": "Rýchlostná cesta", "url": "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7b___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___priestorotvorn%C3%A9_regulat%C3%ADvy/MapServer/7/query?where=1%3D1&outFields=OBJECTID,JEV_ID,ETAPA,ENTITA_ID,Kod,Kategoria,Oznacenie,Okruhy,VPS,RU,Zobraz,Label,Poznamka,Poskytovatel,META_ID,Sirka,Rychlost&orderByFields=OBJECTID&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000"}, {"key": "7b-8", "name": "Formotvorné dopravné mestské okruhy", "url": "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7b___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___priestorotvorn%C3%A9_regulat%C3%ADvy/MapServer/8/query?where=1%3D1&outFields=OBJECTID,JEV_ID,ETAPA,ENTITA_ID,Kod,Kategoria,Oznacenie,Okruhy,VPS,RU,Zobraz,Label,Poznamka,Poskytovatel,META_ID,Sirka,Rychlost&orderByFields=OBJECTID&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000"}, {"key": "7b-9", "name": "Formotvorné dopravné radiály", "url": "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7b___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___priestorotvorn%C3%A9_regulat%C3%ADvy/MapServer/9/query?where=1%3D1&outFields=OBJECTID,JEV_ID,ETAPA,ENTITA_ID,Kod,Kategoria,Oznacenie,Okruhy,VPS,RU,Zobraz,Label,Poznamka,Poskytovatel,META_ID,Sirka,Rychlost&orderByFields=OBJECTID&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000"}]
+        root = [{ "page": this }.merge({"key": "7a-0", "name": "Čistiacia stanica odpadových vôd"})].concat($rest)
+    - unarchive:
+        format: json_array
+    - switch:
+        - check: this.url.or(null) != null
+          processors:
+            - mapping: |
+                meta url = this.url
+                meta key = this.key
+                meta name = this.name
+                root = ""
+            - http:
+                url: "${! @url }"
+                verb: GET
+                headers:
+                  Accept: application/geo+json
+                  User-Agent: "joinedcontext-platform open-data pipeline (https://data.dev.joinedcontext.com)"
+                timeout: 60s
+                retries: 2
+                rate_limit: pipeline_egress
+            - mapping: |
+                root = if errored() { throw("the page %v did not come: %v".format(@url, error())) } else { { "page": this, "key": @key, "name": @name } }
+    # A layer that answers an error or no feature list is the service failing, so the run fails
+    # where it can be seen rather than writing nothing.
+    - mapping: |
+        let key = this.key
+        let name = this.name
+        root = if this.page.error.or(null) != null || this.page.features.or(null) == null { throw("the layer %v answered no features: %v".format($key, this.page.error.message.or(""))) } else { this.page.features.map_each(f -> f.merge({ "properties": { "vrstva": $name, "vrstva_id": "%v-%v".format($key, f.id) } })) }
+    - unarchive:
+        format: json_array
+    - mapping: |
+        map integer {
+          let v = this.number().catch(null)
+          root = if $v == null { null } else { { "type": "Property", "value": $v.round().int64() } }
+        }
+        map float {
+          let v = this.number().catch(null)
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        map string {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": $v } }
+        }
+        map uri {
+          root = this.apply("string")
+        }
+        # An Esri date is milliseconds since the epoch; a DataStore or WordPress one is text.
+        # `match` rebinds `this` to what it matches, so the value is named first.
+        map datetime {
+          let x = this
+          let v = match $x.type() {
+            "number" => ($x / 1000).ts_format("2006-01-02T15:04:05Z", "UTC").catch(null),
+            "string" => $x.ts_parse("2006-01-02T15:04:05").ts_format("2006-01-02T15:04:05Z", "UTC").catch($x.ts_format("2006-01-02T15:04:05Z", "UTC").catch(null)),
+            _ => null,
+          }
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        map date {
+          let x = this
+          let v = match $x.type() {
+            "number" => ($x / 1000).ts_format("2006-01-02", "UTC").catch(null),
+            "string" => if $x.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}") { $x.slice(0, 10) } else { null },
+            _ => null,
+          }
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        let local = "dtm-bb-regulativy-a-limity-funkcneho-vyu-" + [this.properties."vrstva_id"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
+        root = {
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("LandUsePlanFeature", "banskabystrica.sk", env("JC_SPACE"), $local),
+          "type": "LandUsePlanFeature",
+          "jEVID": this.properties."JEV_ID".apply("integer"),
+          "eTAPA": this.properties."ETAPA".apply("integer"),
+          "eNTITAID": this.properties."ENTITA_ID".apply("string"),
+          "nazov": this.properties."Nazov".apply("string"),
+          "label": this.properties."Label".apply("string"),
+          "poznamka": this.properties."Poznamka".apply("string"),
+          "poskytovatel": this.properties."Poskytovatel".apply("string"),
+          "mETAID": this.properties."META_ID".apply("string"),
+          "uPID": this.properties."UP_ID".apply("string"),
+          "nazovUP": this.properties."Nazov_UP".apply("string"),
+          "vydal": this.properties."Vydal".apply("string"),
+          "platiOd": this.properties."Plati_od".apply("string"),
+          "obstaravatel": this.properties."Obstaravatel".apply("string"),
+          "spracovatel": this.properties."Spracovatel".apply("string"),
+          "referencnyPodklad": this.properties."Referencny_podklad".apply("string"),
+          "datumRP": this.properties."Datum_RP".apply("string"),
+          "cislo": this.properties."Cislo".apply("string"),
+          "kodCely": this.properties."Kod_cely".apply("string"),
+          "kod": this.properties."Kod".apply("string"),
+          "kodZjednodus": this.properties."Kod_zjednodus".apply("float"),
+          "uO": this.properties."UO".apply("string"),
+          "castMesta": this.properties."Cast_mesta".apply("string"),
+          "funkcia": this.properties."Funkcia".apply("string"),
+          "bytyHBV": this.properties."Byty_HBV".apply("string"),
+          "bytyIBV": this.properties."Byty_IBV".apply("string"),
+          "vyska": this.properties."Vyska".apply("string"),
+          "vPS": this.properties."VPS".apply("string"),
+          "rU": this.properties."RU".apply("integer"),
+          "specReg": this.properties."Spec_reg".apply("string"),
+          "intervReg": this.properties."Interv_reg".apply("string"),
+          "indivReg": this.properties."Indiv_reg".apply("integer"),
+          "kodSV": this.properties."Kod_SV".apply("integer"),
+          "dlzky": this.properties."dlzky".apply("integer"),
+          "kategoria": this.properties."Kategoria".apply("string"),
+          "oznacenie": this.properties."Oznacenie".apply("string"),
+          "okruhy": this.properties."Okruhy".apply("integer"),
+          "zobraz": this.properties."Zobraz".apply("string"),
+          "sirka": this.properties."Sirka".apply("integer"),
+          "rychlost": this.properties."Rychlost".apply("integer"),
+          "typ": this.properties."Typ".apply("string"),
+          "nHKP": this.properties."NHKP".apply("string"),
+          "parcela": this.properties."Parcela".apply("string"),
+          "adresa": this.properties."Adresa".apply("string"),
+          "dominanty": this.properties."Dominanty".apply("string"),
+          "oP": this.properties."OP".apply("string"),
+          "lokalita": this.properties."Lokalita".apply("string"),
+          "objem": this.properties."Objem".apply("string"),
+          "maxHl": this.properties."Max_hl".apply("integer"),
+          "regist": this.properties."Regist".apply("integer"),
+          "obydlie": this.properties."Obydlie".apply("integer"),
+          "voda": this.properties."Voda".apply("integer"),
+          "popis": this.properties."Popis".apply("string"),
+          "oBECMC": this.properties."OBEC_MC".apply("string"),
+          "obecMC": this.properties."Obec_MC".apply("string"),
+          "dC": this.properties."DC".apply("integer"),
+          "cP": this.properties."CP".apply("string"),
+          "pS": this.properties."PS".apply("integer"),
+          "dP": this.properties."DP".apply("integer"),
+          "pC": this.properties."PC".apply("integer"),
+          "kPL": this.properties."KPL".apply("string"),
+          "rZP": this.properties."RZP".apply("integer"),
+          "iDPS": this.properties."IDPS".apply("string"),
+          "iDOLP": this.properties."IDOLP".apply("string"),
+          "plocha": this.properties."Plocha".apply("float"),
+          "lHC": this.properties."LHC".apply("string"),
+          "pLHC": this.properties."PLHC".apply("string"),
+          "pK": this.properties."PK".apply("string"),
+          "hSLT": this.properties."HSLT".apply("string"),
+          "dV": this.properties."DV".apply("string"),
+          "vrstva": this.properties."vrstva".apply("string"),
+          "location": if this.geometry.or(null) == null { null } else { { "type": "GeoProperty", "value": this.geometry } },
+          "dataProvider": { "type": "Property", "value": "Mesto Banská Bystrica (CC BY-SA 4.0)" },
+          "source": { "type": "Property", "value": "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7a___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___funk%C4%8Dn%C3%A9_a_v%C3%BD%C5%A1kov%C3%A9_regulat%C3%ADvy_a_limity/MapServer/0/query?where=1%3D1&outFields=OBJECTID,JEV_ID,ETAPA,ENTITA_ID,Nazov,Label,Poznamka,Poskytovatel,META_ID&orderByFields=OBJECTID&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },
+          "dataset": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-regulativy-a-limity-funkcneho-vyuzitia-uzemia" }
+        }.filter(entry -> entry.value != null)
+    # One request per run's batch rather than one per row.
+    - archive:
+        format: json_array
