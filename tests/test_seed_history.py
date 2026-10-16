@@ -56,10 +56,17 @@ def test_a_history_is_off_or_a_duration_and_never_forever():
             assert "reason" not in rule, (name, rule)
 
 
+# A space whose owner set another history for a type, by name (the rest follow the default).
+CHOSEN = {
+    # The national air quality keeps a week (T-4340, owner 2026-10-16).
+    ("slovensko/ovzdusie-sk", "AirQualityObserved"): "P7D",
+}
+
+
 def test_measurements_keep_thirty_days_and_the_rest_keep_none():
     for name, (spec, _) in spaces().items():
         for rule in spec.get("retention", []):
-            want = "P30D" if rule["entityType"] in MEASURED else "off"
+            want = CHOSEN.get((name, rule["entityType"]), "P30D" if rule["entityType"] in MEASURED else "off")
             assert rule["history"] == want, (name, rule)
 
 

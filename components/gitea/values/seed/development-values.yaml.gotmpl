@@ -6,7 +6,7 @@
 # JSON strings ending in exactly one newline, which is what the bootstrap's block scalars made of
 # them, so no blob already on the forge changes.
 {{- $seed := dict }}
-{{- $sources := list "context-gateway/seed/helsinki" "context-gateway/seed/banskabystrica" "context-gateway/seed/bbsk" "context-gateway/seed/praha" "context-gateway/seed/zilina" }}
+{{- $sources := list "context-gateway/seed/helsinki" "context-gateway/seed/banskabystrica" "context-gateway/seed/bbsk" "context-gateway/seed/praha" "context-gateway/seed/zilina" "context-gateway/seed/slovensko" }}
 {{- if has "agent-runner" .Values.components }}{{ $sources = append $sources "agent-runner/seed" }}{{ end }}
 {{- range $dir := $sources }}
 {{- range $file, $path := readFile (printf "../../../%s/index.yaml" $dir) | fromYaml }}

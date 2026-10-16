@@ -70,6 +70,14 @@ seed:
 {{ readFile (printf "../../../context-gateway/seed/zilina/%s" $file) | indent 4 }}
 {{- end }}
 {{- end }}
+  # Slovakia (T-4340): national open data as one project of the same organization, its first
+  # space the air quality of every Slovak station.
+{{- range $file, $path := readFile "../../../context-gateway/seed/slovensko/index.yaml" | fromYaml }}
+{{- if regexMatch "^projects/[^/]+/." $path }}{{ $_ := set $projects (index (splitList "/" $path) 1) true }}{{ else }}
+  {{ $path | replace "/" "__" }}: |
+{{ readFile (printf "../../../context-gateway/seed/slovensko/%s" $file) | indent 4 }}
+{{- end }}
+{{- end }}
 {{- if has "agent-runner" .Values.components }}
   # The builder profile the Portal loads for every agent run (AG-26): organization scope,
   # so it is committed by the forge seed and not by the gateway's own table.
@@ -81,7 +89,7 @@ seed:
 {{- end }}
 {{- end }}
 {{- /* The parts values/seed cuts a project past 600 kB into, counted from the same bytes. */}}
-{{- $sources := list "context-gateway/seed/helsinki" "context-gateway/seed/banskabystrica" "context-gateway/seed/bbsk" "context-gateway/seed/praha" "context-gateway/seed/zilina" }}
+{{- $sources := list "context-gateway/seed/helsinki" "context-gateway/seed/banskabystrica" "context-gateway/seed/bbsk" "context-gateway/seed/praha" "context-gateway/seed/zilina" "context-gateway/seed/slovensko" }}
 {{- if has "agent-runner" .Values.components }}{{ $sources = append $sources "agent-runner/seed" }}{{ end }}
 {{- $bytes := dict }}
 {{- range $dir := $sources }}
