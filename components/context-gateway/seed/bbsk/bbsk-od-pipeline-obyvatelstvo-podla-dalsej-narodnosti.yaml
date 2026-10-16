@@ -9,7 +9,7 @@ metadata:
     en: Obyvateľstvo podľa ďalšej národnosti (2021), obce
 spec:
   class: scheduled
-  enabled: true
+  enabled: false
   schedule: 9 4 28 * *
   source:
     dataSourceRef:

@@ -9,7 +9,7 @@ metadata:
     en: Hustota obyvateľstva (2021)
 spec:
   class: scheduled
-  enabled: true
+  enabled: false
   schedule: 31 2 14 * *
   source:
     dataSourceRef:

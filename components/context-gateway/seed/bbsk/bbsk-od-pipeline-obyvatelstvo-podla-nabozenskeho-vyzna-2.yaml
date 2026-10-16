@@ -9,7 +9,7 @@ metadata:
     en: Obyvateľstvo podľa náboženského vyznania (2011), okresy
 spec:
   class: scheduled
-  enabled: true
+  enabled: false
   schedule: 5 5 8 * *
   source:
     dataSourceRef:

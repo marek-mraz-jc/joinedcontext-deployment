@@ -9,7 +9,7 @@ metadata:
     en: Zasadnutia samosprávy
 spec:
   class: scheduled
-  enabled: true
+  enabled: false
   schedule: 59 4 * * 1
   source:
     dataSourceRef:

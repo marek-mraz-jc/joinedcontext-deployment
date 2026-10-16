@@ -9,7 +9,7 @@ metadata:
     en: Počet obyvateľov v obciach BBK
 spec:
   class: scheduled
-  enabled: true
+  enabled: false
   schedule: 11 2 * * *
   source:
     dataSourceRef:

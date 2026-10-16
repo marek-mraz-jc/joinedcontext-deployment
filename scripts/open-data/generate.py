@@ -541,6 +541,10 @@ def bento(e: dict, slug: str, model_ranges: dict[str, str]) -> str:
 # On since portal 47b900c5 (on dev from apply 90): an http source runs on its pipeline's cron
 # `schedule`, not every 60 s, which OOM-killed the runner on 2026-10-16 (T-4347).
 ENABLED = True
+# ponytail: every scheduled pipeline is a resident Bento stream until T-4348's serial run queue,
+# and the dev node sat at 92 % memory, so only every other pipeline runs (supervisor, T-4347);
+# set HALVES = 1 for all of them once T-4348 is on dev and the runner held the first half.
+HALVES = 2
 
 def schedule(e: dict, i: int) -> str:
     minute, hour = (i * 7) % 60, 1 + (i * 7) // 60 % 5
@@ -708,7 +712,7 @@ def project_files(project: str, entries: list[dict], names: dict[str, str]) -> d
         files[f"{pre}pipeline-{slug}.yaml"] = manifest(
             f"One {e['type']} per row of \"{e['title']}\" (T-4255); {e.get('note') or 'generated from the T-4254 mapping'}.",
             {**head, "kind": "Pipeline", "metadata": meta(f"od-{slug}", {"sk": e["title"][:120], "en": e["title"][:120]}),
-             "spec": {"class": "scheduled", "enabled": ENABLED, "schedule": schedule(e, i),
+             "spec": {"class": "scheduled", "enabled": ENABLED and i % HALVES == 0, "schedule": schedule(e, i),
                       "source": {"dataSourceRef": {"kind": "DataSource", "name": f"od-{slug}"}},
                       "targetEndpoint": f"urn:ngsi-ld:Endpoint:{p['domain']}:{space}:{space}",
                       "output": {"type": e["type"], "mode": "upsert"},

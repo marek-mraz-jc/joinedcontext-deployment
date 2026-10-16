@@ -237,6 +237,7 @@ v1/ConfigMap local/gitea-seed-bbsk--7
 v1/ConfigMap local/gitea-seed-helsinki
 v1/ConfigMap local/gitea-seed-helsinki-mobility
 v1/ConfigMap local/gitea-seed-praha
+v1/ConfigMap local/gitea-seed-slovensko
 v1/ConfigMap local/gitea-seed-zilina
 v1/ConfigMap local/keycloak-admin-permissions
 v1/ConfigMap local/keycloak-theme
@@ -274,6 +275,7 @@ v1/Secret local/keycloak-client-gitea
 v1/Secret local/keycloak-client-helsinki-pipeline-proposer
 v1/Secret local/keycloak-client-helsinki-pipelines
 v1/Secret local/keycloak-client-praha-pipelines
+v1/Secret local/keycloak-client-slovensko-pipelines
 v1/Secret local/keycloak-client-zilina-pipelines
 v1/Secret local/keycloak-config-keycloak-config-cli-config-realms
 v1/Secret local/keycloak-user-demo-approver

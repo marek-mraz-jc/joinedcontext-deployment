@@ -9,7 +9,7 @@ metadata:
     en: Počet občanov podľa dňa narodenia
 spec:
   class: scheduled
-  enabled: true
+  enabled: false
   schedule: 3 2 10 * *
   source:
     dataSourceRef:

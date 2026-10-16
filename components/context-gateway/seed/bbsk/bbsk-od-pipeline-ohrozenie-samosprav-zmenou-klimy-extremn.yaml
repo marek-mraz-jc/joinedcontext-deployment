@@ -9,7 +9,7 @@ metadata:
     en: Ohrozenie samospráv zmenou klímy - extrémne horúčavy
 spec:
   class: scheduled
-  enabled: true
+  enabled: false
   schedule: 29 1 20 * *
   source:
     dataSourceRef:

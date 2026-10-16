@@ -9,7 +9,7 @@ metadata:
     en: Zmluvy BB
 spec:
   class: scheduled
-  enabled: true
+  enabled: false
   schedule: 31 2 * * 7
   source:
     dataSourceRef:
