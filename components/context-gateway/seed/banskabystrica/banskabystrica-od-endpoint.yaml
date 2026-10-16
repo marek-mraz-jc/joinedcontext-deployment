@@ -20,6 +20,7 @@ spec:
   - geojson
   - csv
   - json
+  - xlsx
   - websocket
   - ogc-features
   - odata

@@ -189,18 +189,20 @@ def dataset(item, title, layers, source):
         "publisher_uri": source["publisherUri"],
         "license_url": licence_url,
     }
+    name = f"{source['organization']}-{slug(title)[:70].strip('-')}-{item['id'][:6]}"
     package = {
         # A fixed id per source item, so a dataset withdrawn earlier (which search no longer
         # shows) is found again by `package_show` and revived instead of clashing on its name.
         "id": str(uuid.uuid5(uuid.NAMESPACE_URL, f"{source['hub']}/datasets/{item['id']}")),
-        "name": f"{source['organization']}-{slug(title)[:70].strip('-')}-{item['id'][:6]}",
+        "name": name,
         "title": title,
         "owner_org": source["organization"],
         "notes": plain_text(item.get("description")) or plain_text(item.get("snippet")),
         "license_id": licence_id,
         "url": extras["source_url"],
         "tags": [{"name": t} for t in sorted(tags) if re.fullmatch(r"[\w .-]{2,100}", t)],
-        "resources": resources(item, layers, source),
+        # The platform's standard APIs of the dataset, when its rows were converted (T-4279).
+        "resources": resources(item, layers, source) + od_standards(name),
         "extras": [{"key": k, "value": v} for k, v in sorted(extras.items()) if v],
     }
     digest = hashlib.sha256(json.dumps(package, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
@@ -287,7 +289,8 @@ def warm_downloads(package):
     redirect means the file is ready and is not followed."""
     opener = urllib.request.build_opener(_NoRedirects())
     for resource in package["resources"]:
-        if resource["format"] in ("CSV", "GeoJSON"):
+        # The platform's APIs answer at once; only the Hub's own exports wait to be built.
+        if resource["format"] in ("CSV", "GeoJSON") and resource.get("resource_type") != "api":
             request = urllib.request.Request(resource["url"], headers={"User-Agent": USER_AGENT})
             try:
                 with opener.open(request, timeout=120) as response:

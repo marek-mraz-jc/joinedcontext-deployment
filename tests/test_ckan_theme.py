@@ -258,8 +258,13 @@ def test_the_mcp_panel_names_the_installation_s_hub_and_nothing_else(theme):
     mcp = theme.jc_mcp_install()
     hub = "https://dev.example/api/mcp"
     assert mcp["url"] == hub
-    assert mcp["claude"] == f"claude mcp add --transport http joinedcontext {hub}"
+    # One argument per line and the address alone on its JSON line, so no line is wider than the
+    # address a narrow card has to show anyway (T-4284).
+    assert mcp["claude"] == f"claude mcp add --transport http \\\n  joinedcontext \\\n  {hub}"
     assert json.loads(mcp["json"]) == {"mcpServers": {"joinedcontext": {"type": "http", "url": hub}}}
+    assert f'  "{hub}"' in mcp["json"].splitlines()
+    # The address breaks only before a single slash, never inside a word.
+    assert mcp["url_parts"] == ["https://dev.example", "/api", "/mcp"]
     assert mcp["vscode"].startswith("vscode:mcp/install?")
     assert json.loads(unquote(mcp["vscode"].split("?", 1)[1])) == {"name": "joinedcontext", "type": "http", "url": hub}
     cursor = urlsplit(mcp["cursor"])
@@ -268,7 +273,7 @@ def test_the_mcp_panel_names_the_installation_s_hub_and_nothing_else(theme):
     assert query["name"] == ["joinedcontext"]
     assert json.loads(b64decode(query["config"][0])) == {"url": hub}
     # No dataset, no token: every line is the same for every page (EP-110).
-    for line in mcp.values():
+    for line in (v for v in mcp.values() if isinstance(v, str)):
         assert "endpoint/" not in unquote(line) and "token" not in line.lower() and "bearer" not in line.lower()
 
 
@@ -286,7 +291,24 @@ def test_the_mcp_panel_is_on_the_home_page_and_every_dataset_page_with_its_copy_
         assert "url_for_static('/jc-copy.js')" in text, page
     # One status line per page: the live box's when the dataset page has one.
     assert '{% if not live %}<p class="visually-hidden" role="status"' in panel
-    assert panel.count("data-jc-copy=") == 3
+    assert panel.count("{{ copy('") == 3
+
+
+def test_the_mcp_card_puts_claude_first_and_keeps_its_code_whole():
+    """T-4284 (owner screenshot): the address and the code are never cut or broken mid-word, each
+    copy button sits in its block's header, and the Claude connector steps come first."""
+    panel = (THEME / "templates__snippets__jc_mcp_install.html").read_text()
+    order = [panel.index(key) for key in ("mcp_claude_ai_1", "mcp_vscode", "mcp_cursor", "jc-mcp-claude-label", "jc-mcp-json-label")]
+    assert order == sorted(order)
+    assert panel.count('<div class="jc-code-head">') == 3
+    assert "mcp.url_parts | join('<wbr>' | safe)" in panel
+    css = (THEME / "public__jc-theme.css").read_text()
+    assert ".jc-live .jc-code pre { white-space: pre; overflow-wrap: normal; overflow-x: auto; }" in css
+    assert ".jc-code .jc-code-url { overflow-wrap: normal; word-break: normal; }" in css
+    # The home page shows the card in the main column, where its code has room, not in the side.
+    home = (THEME / "templates__home__index.html").read_text()
+    main, side = home.index('<div class="jc-main">'), home.index('<div class="jc-side">')
+    assert main < home.index("{% snippet 'snippets/jc_mcp_install.html'") < side
 
 
 def test_each_resource_has_its_one_action_named_for_a_screen_reader():

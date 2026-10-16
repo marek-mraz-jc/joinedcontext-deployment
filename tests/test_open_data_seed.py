@@ -114,6 +114,23 @@ def test_the_new_spaces_are_writable_by_the_pipelines_and_reachable_by_the_publi
         assert re.fullmatch(r"[a-z2-7]{26,}", endpoint["slug"])
 
 
+def test_every_open_data_endpoint_serves_each_standard_and_the_catalogue_lists_each_converted_dataset():
+    """T-4279: one list of representations for both spaces, and the harvests' mapping names every
+    converted dataset once, with the Endpoint of its own project."""
+    assert "xlsx" in generate.REPRESENTATIONS and "sta" not in generate.REPRESENTATIONS
+    slugs = {}
+    for project in ("bbsk", "banskabystrica"):
+        endpoint = yaml.safe_load((SEED / project / f"{project}-od-endpoint.yaml").read_text())["spec"]
+        assert endpoint["enabledRepresentations"] == generate.REPRESENTATIONS
+        slugs[project] = endpoint["slug"]
+    rows = json.loads(generate.DISTRIBUTIONS.read_text())
+    # A dataset another seed reads whole keeps that seed's Endpoint, which this mapping does not name.
+    assert len(rows) == len({e["dataset"] for e in SEEDED})
+    for e in SEEDED:
+        row = rows[e["dataset"].rsplit("/", 1)[1]]
+        assert (row["endpoint"], row["type"], row["dataset"]) == (slugs[e["org"]], e["type"], e["dataset"])
+
+
 # --- the generator's own rules ---
 
 def test_names_are_dns_labels_unique_and_short_enough_for_a_principal():

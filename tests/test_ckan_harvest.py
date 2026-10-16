@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 SCRIPT = Path(__file__).resolve().parent.parent / "charts/ckan/files/harvest-nkod.py"
+STANDARDS = SCRIPT.with_name("od-standards.py")
 EU = "http://publications.europa.eu/resource/authority/"
 BY, BYSA = EU + "licence/CC_BY_4_0", EU + "licence/CC_BYSA_4_0"
 EGOV = "https://egov.banskabystrica.sk/Default.aspx?NavigationState="
@@ -197,9 +198,10 @@ def load(monkeypatch, catalogue=CATALOGUE, config=CONFIG):
     monkeypatch.setenv("CATALOGUE", "ckan.ckan.svc.cluster.local")
     monkeypatch.setenv("CKAN_API_TOKEN", TOKEN)
     monkeypatch.setenv("HARVEST_CONFIG", json.dumps(config))
+    # What the CronJob runs: od-standards.py, then the script (templates/harvest.yaml).
     spec = importlib.util.spec_from_file_location("harvest_nkod", SCRIPT)
     harvest = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(harvest)
+    exec(compile(STANDARDS.read_text() + "\n" + SCRIPT.read_text(), spec.origin, "exec"), harvest.__dict__)
     harvest.ckan = FakeCkan()
     harvest.OPENER = FakeWeb(harvest)
     harvest.sparql = lambda query: [{k: {"value": v} for k, v in row.items()} for row in catalogue]
@@ -345,3 +347,27 @@ def test_two_titles_that_fold_to_one_name_keep_apart(monkeypatch, capsys):
     harvest = load(monkeypatch, catalogue=catalogue)
     assert harvest.main() == 0
     assert set(harvest.ckan.packages) == {"bb-skoly-aaaaaaaa", "bb-skoly-bbbbbbbb"}
+
+
+def test_a_converted_dataset_gains_the_platform_apis_after_its_files_and_tables_stay(monkeypatch, capsys):
+    """T-4279: the mapping names the age table, so its page lists the NGSI-LD API and the files
+    filtered to its rows, OData and MCP for the type; no GeoJSON or OGC, the rows have no location.
+    The orders nobody mapped here gain nothing, and the DataStore table is still the table."""
+    monkeypatch.setenv("OD_GATEWAY", "https://dev.joinedcontext.com/")
+    monkeypatch.setenv("OD_DATASETS", json.dumps({"bb-pocet-obcanov-podla-veku": {
+        "endpoint": "abc", "type": "StatisticalObservation", "location": False,
+        "dataset": "https://data.dev.joinedcontext.com/dataset/bb-pocet-obcanov-podla-veku"}}))
+    harvest = load(monkeypatch)
+    assert harvest.main() == 0
+    ages = harvest.ckan.packages["bb-pocet-obcanov-podla-veku"]["resources"]
+    assert [r["format"] for r in ages] == ["JSON", "JSON-LD", "CSV", "JSON", "XLSX", "JSON", "JSON", "JSON", "CSV"]
+    assert ages[-1].get("url_type") == "datastore", "the table moved off the end of the list"
+    assert ages[1]["url"] == ("https://dev.joinedcontext.com/api/endpoint/abc/ngsi-ld/v1/entities?type=StatisticalObservation"
+                              "&q=dataset%3D%3D%22https%3A%2F%2Fdata.dev.joinedcontext.com%2Fdataset%2Fbb-pocet-obcanov-podla-veku%22")
+    assert ages[1]["conforms_to"].startswith("https://www.etsi.org/")
+    assert not any("geojson" in r["url"] or "/ogc/" in r["url"] for r in ages)
+    assert not any(r.get("resource_type") == "api" for r in harvest.ckan.packages["bb-objednavky-bb"]["resources"])
+    # A second run writes the same list again, nothing doubled.
+    harvest.main()
+    again = harvest.ckan.packages["bb-pocet-obcanov-podla-veku"]["resources"]
+    assert [(r["name"], r["url"]) for r in again] == [(r["name"], r["url"]) for r in ages]
