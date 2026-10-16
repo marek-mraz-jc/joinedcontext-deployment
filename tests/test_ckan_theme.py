@@ -670,7 +670,7 @@ def test_the_widget_is_offered_only_from_the_installation_s_assistant_host(theme
 def test_the_footer_offers_the_assistant_as_a_disclosure_a_keyboard_opens():
     footer = (THEME / "footer.html").read_text()
     assert "{% set widget = h.jc_assistant_widget() %}" in footer
-    assert '<details class="jc-assistant">' in footer and "<summary>{{ h.jc_t('assistant') }}</summary>" in footer
+    assert '<details class="jc-assistant">' in footer and "<summary><span>{{ h.jc_t('assistant') }}</span></summary>" in footer
     assert 'title="{{ h.jc_t(\'assistant\') }}"' in footer and 'loading="lazy"' in footer
     assert 'referrerpolicy="no-referrer"' in footer
     # T-4253: the chat opens in the page's language, the one its disclosure header is in.
@@ -1007,3 +1007,25 @@ def test_other_words_stay_ckans(theme):
 def test_a_public_publisher_card_counts_no_members():
     card = (THEME / "templates__organization__snippets__organization_item.html").read_text()
     assert "{% block members %}{% endblock %}" in card
+
+
+def test_symbol_font_bullets_become_real_ones_on_the_page_and_the_api(theme):
+    """T-4283: " Druh " drew as "□ Druh □" on data.dev's dataset list."""
+    plugin = theme.JcThemePlugin()
+    pkg = {
+        "title": "Dotácie",
+        "notes": "atribúty:  Rok  Typ Druh",
+        "resources": [{"name": " XML", "description": None}, {"url": "x"}],
+    }
+    plugin.after_dataset_show({}, pkg)
+    assert pkg["notes"] == "atribúty: • Rok ▪ Typ Druh"
+    assert pkg["resources"][0] == {"name": "✓ XML", "description": None}
+    found = plugin.after_dataset_search({"results": [{"notes": " a"}], "count": 1}, {})
+    assert found == {"results": [{"notes": "• a"}], "count": 1}
+    assert plugin.after_dataset_search({"count": 0}, {}) == {"count": 0}
+
+
+def test_no_private_use_glyph_survives_any_text(theme):
+    text = "".join(chr(c) for c in range(0xE000, 0xF900, 7))
+    assert not re.search("[-�]", theme.jc_plain_glyphs(text) or "")
+    assert theme.jc_plain_glyphs("Žilina ľ ô") == "Žilina ľ ô"

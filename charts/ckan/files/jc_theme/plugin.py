@@ -894,6 +894,32 @@ def jc_sso_error(session=None):
     return jc_t(SSO_REASONS.get(reason, "sso_other"))
 
 
+# Word's Symbol font writes bullets as private-use code points (U+F0B7 and kin); a page without
+# that font draws a box ("□ Druh □" on data.dev, T-4283). Publishers' descriptions arrive with
+# them, so the catalogue maps the common ones and drops any other private-use character.
+SYMBOL_GLYPHS = {"\uf0b7": "•", "\uf0a7": "▪", "\uf0a8": "◦", "\uf0d8": "›", "\uf0fc": "✓", "\uf076": "❖"}
+PRIVATE_USE = re.compile("[\ue000-\uf8ff]")
+
+
+def jc_plain_glyphs(text):
+    """The text with Symbol-font bullets as real ones and no other private-use character."""
+    if not isinstance(text, str):
+        return text
+    return PRIVATE_USE.sub(lambda m: SYMBOL_GLYPHS.get(m.group(), ""), text)
+
+
+def jc_clean_dataset(pkg):
+    """A dataset's words, and its resources', without glyphs no font draws."""
+    for key in ("title", "notes"):
+        if key in pkg:
+            pkg[key] = jc_plain_glyphs(pkg[key])
+    for resource in pkg.get("resources") or []:
+        for key in ("name", "description"):
+            if key in resource:
+                resource[key] = jc_plain_glyphs(resource[key])
+    return pkg
+
+
 class JcThemePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.ITemplateHelpers)
@@ -962,6 +988,14 @@ class JcThemePlugin(plugins.SingletonPlugin):
             if "*)" in search_params["q"] and "*)" not in q:
                 search_params.setdefault("defType", "edismax")
         return search_params
+
+    def after_dataset_show(self, context, pkg_dict):
+        jc_clean_dataset(pkg_dict)
+
+    def after_dataset_search(self, search_results, search_params):
+        for pkg in search_results.get("results") or []:
+            jc_clean_dataset(pkg)
+        return search_results
 
     def dataset_facets(self, facets_dict, package_type):
         """The search filters in plain words: Publisher, Topic, Keywords, Format, Licence."""
