@@ -17,8 +17,10 @@ spec:
   - Article
   - Contract
   - CouncilMeeting
+  - Garden
   - Grant
   - KeyPerformanceIndicator
+  - OffStreetParking
   - PurchaseOrder
   artifacts:
     jsonSchema: ./banskabystrica-otvorene-data.v1.schema.json

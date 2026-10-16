@@ -12,16 +12,31 @@ jc:Bridge a owl:Class,
     rdfs:label "Bridge" ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:legislativnyStav ],
+            owl:onProperty jc:komunikacia ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:spravca ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:vynimocnaZatazitelnostT ],
+            owl:onProperty jc:okres ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:zatazitelnostNaJednuNapravu ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:rokKonstrukcie ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:vyhradnaZatazitelnostT ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:vlastnik ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:dataset ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:pocetDilCelkov ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:obec ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:typKomunikacie ],
@@ -30,76 +45,61 @@ jc:Bridge a owl:Class,
             owl:onProperty jc:hodnotenie ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:typPamiatky ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:rokZasadnejRekonstrukcie ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:normalnaZatazitelnostT ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:aktualnyStavebnotechnickyStav ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:ulica ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:dataset ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:komunikacia ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:rokKonstrukcie ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:okres ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:dlzkaPremosteniaM ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:vyhradnaZatazitelnostT ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
             owl:onProperty jc:identifikacneCislo ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:triedaCesty ],
+            owl:onProperty jc:docasnostMosta ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:dataProvider ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:predmetPremostenia ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:vlastnik ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:name ],
+            owl:onProperty jc:typPamiatky ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:ojedinelaZatazitelnostT ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:materialNosnejKonstrukcie ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:obec ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:druhNosnejKonstrukcie ],
+            owl:onProperty jc:dlzkaPremosteniaM ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:source ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:pocetDilCelkov ],
+            owl:onProperty jc:druhNosnejKonstrukcie ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:docasnostMosta ],
+            owl:onProperty jc:triedaCesty ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:ulica ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:normalnaZatazitelnostT ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:legislativnyStav ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:name ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:rokZasadnejRekonstrukcie ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:predmetPremostenia ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:aktualnyStavebnotechnickyStav ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:vynimocnaZatazitelnostT ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:dataProvider ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:materialNosnejKonstrukcie ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:spravca ],
         jc:Entity ;
     skos:definition "A bridge on a road the region owns or manages." ;
     skos:exactMatch jc:Bridge ;
@@ -111,16 +111,16 @@ jc:Entity a owl:Class,
     rdfs:label "Entity" ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:location ],
-        [ a owl:Restriction ;
-            owl:cardinality 1 ;
-            owl:onProperty jc:type ],
+            owl:onProperty jc:observedAt ],
         [ a owl:Restriction ;
             owl:cardinality 1 ;
             owl:onProperty jc:id ],
         [ a owl:Restriction ;
+            owl:cardinality 1 ;
+            owl:onProperty jc:type ],
+        [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:observedAt ] ;
+            owl:onProperty jc:location ] ;
     skos:definition "The root every NGSI-LD entity class specialises." ;
     skos:exactMatch ngsi-ld:Entity ;
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/Bridge> ;

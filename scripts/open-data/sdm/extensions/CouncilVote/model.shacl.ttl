@@ -15,40 +15,11 @@ jc:CouncilVote a sh:NodeShape ;
     sh:closed true ;
     sh:ignoredProperties ( rdf:type ) ;
     sh:property [ sh:datatype xsd:string ;
-            sh:description "Where the entity is, as GeoJSON geometry." ;
+            sh:description "The source column `IČO_samosprávy`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 14 ;
-            sh:path geojson:geometry ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Téma`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 6 ;
-            sh:path sdm:name ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Orgán_samosprávy`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 8 ;
-            sh:path jc:organSamospravy ],
-        [ sh:description "The service the row was read from." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:IRI ;
-            sh:order 1 ;
-            sh:path sdm:source ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Poslanec`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 9 ;
-            sh:path jc:poslanec ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Zasadnutie`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 11 ;
-            sh:path jc:zasadnutie ],
+            sh:order 5 ;
+            sh:path jc:iCOSamospravy ],
         [ sh:datatype xsd:dateTime ;
             sh:description "The source column `Dátum`." ;
             sh:maxCount 1 ;
@@ -56,23 +27,46 @@ jc:CouncilVote a sh:NodeShape ;
             sh:order 3 ;
             sh:path jc:datum ],
         [ sh:datatype xsd:string ;
+            sh:description "Where the entity is, as GeoJSON geometry." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 14 ;
+            sh:path geojson:geometry ],
+        [ sh:datatype xsd:string ;
             sh:description "The source column `Názov_samosprávy`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 7 ;
             sh:path jc:nazovSamospravy ],
+        [ sh:description "The service the row was read from." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:order 1 ;
+            sh:path sdm:source ],
         [ sh:datatype xsd:string ;
-            sh:description "The source column `IČO_samosprávy`." ;
+            sh:description "The source column `Zasadnutie`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 5 ;
-            sh:path jc:iCOSamospravy ],
+            sh:order 11 ;
+            sh:path jc:zasadnutie ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Poslanec`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 9 ;
+            sh:path jc:poslanec ],
         [ sh:datatype xsd:dateTime ;
             sh:description "When the observation the entity reports was made." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 15 ;
             sh:path ngsi-ld:observedAt ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Orgán_samosprávy`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 8 ;
+            sh:path jc:organSamospravy ],
         [ sh:datatype xsd:string ;
             sh:description "The source column `Hlas`." ;
             sh:maxCount 1 ;
@@ -85,23 +79,29 @@ jc:CouncilVote a sh:NodeShape ;
             sh:nodeKind sh:Literal ;
             sh:order 0 ;
             sh:path sdm:dataProvider ],
+        [ sh:description "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:order 2 ;
+            sh:path jc:dataset ],
         [ sh:datatype xsd:integer ;
             sh:description "The source column `Volebné_obdobie`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 10 ;
             sh:path jc:volebneObdobie ],
-        [ sh:description "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Téma`." ;
             sh:maxCount 1 ;
-            sh:nodeKind sh:IRI ;
-            sh:order 2 ;
-            sh:path jc:dataset ] ;
+            sh:nodeKind sh:Literal ;
+            sh:order 6 ;
+            sh:path sdm:name ] ;
     sh:targetClass jc:CouncilVote .
 
 ngsi-ld:Entity a sh:NodeShape ;
     rdfs:comment "The root every NGSI-LD entity class specialises." ;
     sh:closed true ;
-    sh:ignoredProperties ( jc:iCOSamospravy sdm:name jc:zasadnutie jc:dataset sdm:source jc:volebneObdobie jc:organSamospravy jc:nazovSamospravy rdf:type jc:poslanec jc:datum jc:hlas sdm:dataProvider ) ;
+    sh:ignoredProperties ( jc:hlas jc:iCOSamospravy sdm:source jc:nazovSamospravy jc:poslanec sdm:name jc:datum rdf:type jc:volebneObdobie sdm:dataProvider jc:zasadnutie jc:dataset jc:organSamospravy ) ;
     sh:property [ sh:datatype xsd:string ;
             sh:description "Where the entity is, as GeoJSON geometry." ;
             sh:maxCount 1 ;

@@ -31,6 +31,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import math
 import re
 import secrets
 import subprocess
@@ -90,6 +91,10 @@ COMMON = {
 # model's own (the mapping renames a column to it, T-4319).
 TAKEN = {*COMMON, "location", "observedAt"}
 LICENCE = {"cc-by": "CC BY 4.0", "cc-by-sa": "CC BY-SA 4.0"}
+# The source kinds whose rows are GeoJSON features: the columns sit under `properties`.
+FEATURES = {"esri-featureserver", "esri-layers", "zip-geojson"}
+# The kinds read from an ArcGIS query, whose geometry the server sends in WGS 84.
+ESRI = {"esri-featureserver", "esri-layers"}
 
 
 def slugs(entries: list[dict]) -> dict[str, str]:
@@ -137,12 +142,19 @@ def column(path: str, kind: str, col: str) -> str:
 
 
 MAPS = """\
+# Slovak notation: a space (or a no-break one) between thousands, a comma before the decimals, so
+# "10 700,01" is 10700.01 (T-4324); a text without a comma keeps its dot, "1.5" is one and a half.
+map number {
+  let s = this.string().re_replace_all("[ \t\u00a0\u202f]", "")
+  let t = if $s.contains(",") { $s.replace_all(".", "").replace_all(",", ".") } else { $s }
+  root = $t.number().catch(null)
+}
 map integer {
-  let v = this.number().catch(null)
+  let v = if this == null { null } else { this.apply("number") }
   root = if $v == null { null } else { { "type": "Property", "value": $v.round().int64() } }
 }
 map float {
-  let v = this.number().catch(null)
+  let v = if this == null { null } else { this.apply("number") }
   root = if $v == null { null } else { { "type": "Property", "value": $v } }
 }
 map string {
@@ -171,16 +183,108 @@ map date {
   let x = this
   let v = match $x.type() {
     "number" => ($x / 1000).ts_format("2006-01-02", "UTC").catch(null),
-    "string" => if $x.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}") { $x.slice(0, 10) } else { null },
+    # ISO, or the Slovak "29.08.2026" and "1. 3. 2024".
+    "string" => if $x.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}") { $x.slice(0, 10) } else {
+      $x.re_replace_all("[.] +", ".").trim().ts_parse("2.1.2006").ts_format("2006-01-02", "UTC").catch(null)
+    },
     _ => null,
   }
   root = if $v == null { null } else { { "type": "Property", "value": $v } }
 }"""
 
 
+def krovak_maps() -> str:
+    """Bloblang maps `sjtsk` ([E, N] of EPSG:5514 to [lon, lat] of EPSG:4326, 7 decimals) and
+    `sjtsk_coords` (any GeoJSON coordinates array). EPSG guidance note 7-2, Krovak East North
+    (method 1041) inverse on Bessel 1841, then the Helmert position-vector shift of EPSG:5239
+    (S-JTSK to WGS 84, Slovakia, about 1 m) and Bowring back to latitude. Bloblang has tan, sin,
+    cos and pow but no atan or asin: atan is three Newton steps on tan from a 0.002 rad guess."""
+    a, f = 6377397.155, 1 / 299.1528128
+    e2 = 2 * f - f * f
+    e = math.sqrt(e2)
+    phi_c, lam0, alpha_c, phi_p, k_p = math.radians(49.5), math.radians(24 + 50 / 60), math.radians(30.28813972222222), math.radians(78.5), 0.9999
+    big_a = a * math.sqrt(1 - e2) / (1 - e2 * math.sin(phi_c) ** 2)
+    b = math.sqrt(1 + e2 * math.cos(phi_c) ** 4 / (1 - e2))
+    g0 = math.asin(math.sin(phi_c) / b)
+    t0 = math.tan(math.pi / 4 + g0 / 2) * ((1 + e * math.sin(phi_c)) / (1 - e * math.sin(phi_c))) ** (e * b / 2) / math.tan(math.pi / 4 + phi_c / 2) ** b
+    n = math.sin(phi_p)
+    r0 = k_p * big_a / math.tan(phi_p)
+    sec = math.pi / 180 / 3600
+    tx, ty, tz, rx, ry, rz = 485.021, 169.465, 483.839, 7.786342 * sec, 4.397554 * sec, 4.102655 * sec
+    aw, fw = 6378137.0, 1 / 298.257223563
+    e2w, bw = 2 * fw - fw * fw, aw * (1 - fw)
+    ep2 = (aw * aw - bw * bw) / (bw * bw)
+    pi, half, quarter = math.pi, math.pi / 2, math.pi / 4
+    # Bloblang reads no exponent, so every constant is written out in fixed point.
+    c = {k: f"{v:.20f}".rstrip("0").rstrip(".") for k, v in dict(
+        pi=pi, half=half, quarter=quarter, e=e, e2=e2, a=a, b=b, ib=1 / b, he=e / 2, n=n, inn=1 / n, r0=r0,
+        tp=math.tan(quarter + phi_p / 2), ca=math.cos(alpha_c), sa=math.sin(alpha_c), lam0=lam0,
+        k=t0 ** (-1 / b), tx=tx, ty=ty, tz=tz, rx=rx, ry=ry, rz=rz, aw=aw, bw=bw, e2w=e2w, ep2=ep2,
+        deg=180 / pi).items()}
+    return f"""\
+map atan1 {{
+  let x = this
+  let y0 = $x * {c['quarter']} - $x * ($x.abs() - 1) * (0.2447 + 0.0663 * $x.abs())
+  let t0 = $y0.tan()
+  let y1 = $y0 - ($t0 - $x) / (1 + $t0 * $t0)
+  let t1 = $y1.tan()
+  let y2 = $y1 - ($t1 - $x) / (1 + $t1 * $t1)
+  let t2 = $y2.tan()
+  root = $y2 - ($t2 - $x) / (1 + $t2 * $t2)
+}}
+map atan {{
+  let x = this
+  root = if $x > 1 {{ {c['half']} - (1 / $x).apply("atan1") }} else if $x < -1 {{ -{c['half']} - (1 / $x).apply("atan1") }} else {{ $x.apply("atan1") }}
+}}
+map asin {{
+  let x = this
+  root = ($x / (1 - $x * $x).pow(0.5)).apply("atan")
+}}
+map atan2 {{
+  let y = this.index(0)
+  let x = this.index(1)
+  let t = if $x == 0 {{ 0 }} else {{ ($y / $x).apply("atan") }}
+  root = if $x > 0 {{ $t }} else if $x < 0 && $y >= 0 {{ $t + {c['pi']} }} else if $x < 0 {{ $t - {c['pi']} }} else if $y > 0 {{ {c['half']} }} else {{ -{c['half']} }}
+}}
+map sjtsk_lat {{
+  let es = {c['e']} * this.phi.sin()
+  root = {{"tu": this.tu, "phi": 2 * (({c['k']} * this.tu.pow({c['ib']}) * ((1 + $es) / (1 - $es)).pow({c['he']})).apply("atan") - {c['quarter']})}}
+}}
+map sjtsk {{
+  let xp = 0 - this.index(1)
+  let yp = 0 - this.index(0)
+  let r = ($xp * $xp + $yp * $yp).pow(0.5)
+  let d = ($yp / $xp).apply("atan") * {c['inn']}
+  let t = 2 * ((({c['r0']} / $r).pow({c['inn']}) * {c['tp']}).apply("atan") - {c['quarter']})
+  let u = ({c['ca']} * $t.sin() - {c['sa']} * $t.cos() * $d.cos()).apply("asin")
+  let v = ($t.cos() * $d.sin() / $u.cos()).apply("asin")
+  let lam = {c['lam0']} - $v * {c['ib']}
+  let tu = ($u / 2 + {c['quarter']}).tan()
+  let phi = {{"phi": $u, "tu": $tu}}.apply("sjtsk_lat").apply("sjtsk_lat").apply("sjtsk_lat").apply("sjtsk_lat").phi
+  let sp = $phi.sin()
+  let nn = {c['a']} / (1 - {c['e2']} * $sp * $sp).pow(0.5)
+  let x = $nn * $phi.cos() * $lam.cos()
+  let y = $nn * $phi.cos() * $lam.sin()
+  let z = $nn * (1 - {c['e2']}) * $sp
+  let x2 = {c['tx']} + $x - {c['rz']} * $y + {c['ry']} * $z
+  let y2 = {c['ty']} + {c['rz']} * $x + $y - {c['rx']} * $z
+  let z2 = {c['tz']} - {c['ry']} * $x + {c['rx']} * $y + $z
+  let p = ($x2 * $x2 + $y2 * $y2).pow(0.5)
+  let q = [$z2 * {c['aw']}, $p * {c['bw']}].apply("atan2")
+  let sq = $q.sin()
+  let cq = $q.cos()
+  let lat = [$z2 + {c['ep2']} * {c['bw']} * $sq * $sq * $sq, $p - {c['e2w']} * {c['aw']} * $cq * $cq * $cq].apply("atan2")
+  let lon = [$y2, $x2].apply("atan2")
+  root = [($lon * {c["deg"]} * 10000000).round() / 10000000, ($lat * {c["deg"]} * 10000000).round() / 10000000]
+}}
+map sjtsk_coords {{
+  root = if this.index(0).type() == "number" {{ this.apply("sjtsk") }} else {{ this.map_each(c -> c.apply("sjtsk_coords")) }}
+}}"""
+
+
 def entity(e: dict, slug: str, model_ranges: dict[str, str], source_url: str) -> str:
     kind = e["source"]["kind"]
-    path = "this.properties" if kind == "esri-featureserver" else "this"
+    path = "this.properties" if kind in FEATURES else "this"
     cols = {a: p["column"] for a, p in e["properties"].items()}
     keys = e["entityId"].get("keys")
     if keys:
@@ -207,8 +311,11 @@ def entity(e: dict, slug: str, model_ranges: dict[str, str], source_url: str) ->
     if e.get("identifierFromId"):
         # The base requires an identifier no column holds: the entity's own key or row hash (T-4336).
         lines.append("  \"identifier\": { \"type\": \"Property\", \"value\": $local },")
-    if kind == "esri-featureserver" and e["source"].get("geometry"):
+    if kind in ESRI and e["source"].get("geometry"):
         lines.append("  \"location\": if this.geometry.or(null) == null { null } else { { \"type\": \"GeoProperty\", \"value\": this.geometry } },")
+    elif kind == "zip-geojson":
+        lines.append("  \"location\": if this.geometry.or(null) == null { null } else { { \"type\": \"GeoProperty\", "
+                     "\"value\": { \"type\": this.geometry.type, \"coordinates\": this.geometry.coordinates.apply(\"sjtsk_coords\") } } },")
     credit = f"{e['dataProvider']} ({LICENCE.get(e['license'], e['license'])})"
     lines += [
         f"  \"dataProvider\": {{ \"type\": \"Property\", \"value\": {q(credit)} }},",
@@ -242,10 +349,59 @@ def esri_query(e: dict, offset: str, out_fields: str | None = None) -> str:
     return url
 
 
+def layer_query(layer: dict, offset: str) -> str:
+    """One page of one layer of the city's ArcGIS Server (T-4317): its own columns and the object id,
+    which the GeoJSON answer then carries as the feature's `id`; in object id order, so the pages
+    of one run neither skip nor repeat a row."""
+    params = {
+        "where": layer.get("where", "1=1"), "outFields": ",".join(["OBJECTID", *layer["fields"]]),
+        "orderByFields": "OBJECTID", "returnGeometry": "true",
+        "outSR": "4326", "geometryPrecision": "6", "f": "geojson",
+        "resultOffset": offset, "resultRecordCount": str(PAGE),
+    }
+    return f"{layer['url']}/query?{urllib.parse.urlencode(params, quote_via=urllib.parse.quote, safe=',*')}"
+
+
+# Rows one pipeline of the city's layers reads in a run. Bento holds every page of a run until the
+# run's end: the terrain set in one pipeline (36 062 rows, 57 pages) peaked at 897 MB, 8000 of its
+# contour lines at 422 MB (2026-10-16). So a dataset of more rows is read by several pipelines, each
+# within the 256 MB its quota names (T-4317).
+PART_ROWS = 4000
+# Who asks: the city's GIS server is a small public one, so its operator can tell our requests apart.
+AGENT = "joinedcontext-platform open-data pipeline (https://data.dev.joinedcontext.com)"
+
+
+def parts(e: dict, slug: str) -> list[tuple[dict, str]]:
+    """An `esri-layers` entry as pipelines of about PART_ROWS rows each, with their slugs: every page
+    of every layer up to half again the rows it held when mapped (ponytail: a static page count, as
+    for one Esri layer; past that the newest rows wait until the mapping is regenerated, and a page
+    past the end is empty). Any other entry is itself."""
+    s = e["source"]
+    if s["kind"] != "esri-layers":
+        return [(e, slug)]
+    groups: list[list[dict]] = [[]]
+    held = 0
+    for x in s["layers"]:
+        for o in range(max(1, -(-int(x["rows"] * 1.5) // PAGE))):
+            rows = max(0, min(PAGE, x["rows"] - o * PAGE))
+            if groups[-1] and held + rows > PART_ROWS:
+                groups.append([])
+                held = 0
+            groups[-1].append({**x, "offset": o * PAGE})
+            held += rows
+    return [({**e, "source": {**s, "pages": g}}, slug if i == 0 else f"{slug[:36].rstrip('-')}-p{i + 1}")
+            for i, g in enumerate(groups)]
+
+
 def source_url(e: dict) -> str:
     s = e["source"]
     if s["kind"] == "esri-featureserver":
         return esri_query(e, "0")
+    if s["kind"] == "esri-layers":
+        first = s["pages"][0]
+        return layer_query(first, str(first["offset"]))
+    if s["kind"] == "zip-geojson":
+        return s["url"]
     if s["kind"] == "ckan-datastore":
         return f"{CKAN}/api/3/action/datastore_search?resource_id={s['resource']}&limit=32000"
     fields = ",".join(p["column"] for p in e["properties"].values())
@@ -294,6 +450,56 @@ def bento(e: dict, slug: str, model_ranges: dict[str, str]) -> str:
         steps.append("""\
     - mapping: |
         root = this.features.or([])""")
+    elif s["kind"] == "esri-layers":
+        # The part's further pages, listed when generated (`parts`); its first is what the
+        # DataSource fetched. Each row learns its layer and its object id here.
+        first, *rest = s["pages"]
+        tag = lambda x: {"key": x["key"], "name": x["name"]}  # noqa: E731
+        stubs = [{**tag(x), "url": layer_query(x, str(x["offset"]))} for x in rest]
+        steps.append(f"""\
+    - mapping: |
+        let rest = {json.dumps(stubs, ensure_ascii=False)}
+        root = [{{ "page": this }}.merge({json.dumps(tag(first), ensure_ascii=False)})].concat($rest)
+    - unarchive:
+        format: json_array
+    - switch:
+        - check: this.url.or(null) != null
+          processors:
+            - mapping: |
+                meta url = this.url
+                meta key = this.key
+                meta name = this.name
+                root = ""
+            - http:
+                url: "${{! @url }}"
+                verb: GET
+                headers:
+                  Accept: application/geo+json
+                  User-Agent: {q(AGENT)}
+                timeout: 60s
+                retries: 2
+                rate_limit: pipeline_egress
+            - mapping: |
+                root = if errored() {{ throw("the page %v did not come: %v".format(@url, error())) }} else {{ {{ "page": this, "key": @key, "name": @name }} }}
+    # A layer that answers an error or no feature list is the service failing, so the run fails
+    # where it can be seen rather than writing nothing.
+    - mapping: |
+        let key = this.key
+        let name = this.name
+        root = if this.page.error.or(null) != null || this.page.features.or(null) == null {{ throw("the layer %v answered no features: %v".format($key, this.page.error.message.or(""))) }} else {{ this.page.features.map_each(f -> f.merge({{ "properties": {{ "vrstva": $name, "vrstva_id": "%v-%v".format($key, f.id) }} }})) }}""")
+    elif s["kind"] == "zip-geojson":
+        if s["crs"] != "EPSG:5514":
+            sys.exit(f"{e['name']}: no step reprojects {s['crs']}")
+        steps.append("""\
+    # The whole ZIP as it came; its one GeoJSON member, picked by its ending: the archive sets no
+    # UTF-8 flag, so a name with diacritics arrives as cp437 bytes. Coordinates are S-JTSK
+    # (EPSG:5514), reprojected to WGS 84 in the mapping below (T-4317).
+    - unarchive:
+        format: zip
+    - mapping: |
+        root = if @archive_filename.or("").lowercase().has_suffix(".geojson") { this } else { deleted() }
+    - mapping: |
+        root = if this.features.or(null) == null { throw("the archive's GeoJSON holds no features") } else { this.features }""")
     elif s["kind"] == "ckan-datastore":
         steps.append("""\
     - mapping: |
@@ -302,10 +508,11 @@ def bento(e: dict, slug: str, model_ranges: dict[str, str]) -> str:
         steps.append("""\
     - mapping: |
         root = if this.type() != "array" { throw("the site answered no post list") } else { this }""")
-    body = "\n".join("        " + line for line in (MAPS + "\n" + entity(e, slug, model_ranges, read)).splitlines())
+    maps = MAPS + ("\n" + krovak_maps() if s["kind"] == "zip-geojson" else "")
+    body = "\n".join("        " + line for line in (maps + "\n" + entity(e, slug, model_ranges, read)).splitlines())
     keep = (e.get("rowFilter") or {}).get("keep")
     if keep:
-        path = "this.properties" if s["kind"] == "esri-featureserver" else "this"
+        path = "this.properties" if s["kind"] in FEATURES else "this"
         keep = f"""
     # A row stays only when its {keep["column"]} looks like one, which no Esri SQL can ask:
     # {e["rowFilter"]["why"]} (T-4255).
@@ -475,15 +682,20 @@ def project_files(project: str, entries: list[dict], names: dict[str, str]) -> d
              f"{pre}endpoint.yaml: projects/{project}/spaces/{space}/endpoints/{space}.yaml",
              f"{pre}policy-read.yaml: projects/{project}/spaces/{space}/policies/otvorene-data-read.yaml",
              f"{pre}policy-pipelines-write.yaml: projects/{project}/spaces/{space}/policies/otvorene-data-pipelines-write.yaml"]
-    for i, e in enumerate(entries):
-        slug = names[e["name"]]
+    pipelines = [p for e in entries for p in parts(e, names[e["name"]])]
+    taken = [slug for _, slug in pipelines]
+    if len(set(taken)) != len(taken):
+        sys.exit(f"{project}: two pipelines take one name: {sorted({x for x in taken if taken.count(x) > 1})}")
+    for i, (e, slug) in enumerate(pipelines):
         rows = e["source"]["rows"]
         files[f"{pre}datasource-{slug}.yaml"] = manifest(
             f"\"{e['title']}\", {e['dataset']}: {rows} rows when mapped. {e['dataProvider']},\n"
             f"{LICENCE.get(e['license'], e['license'])}. No key. Generated by scripts/open-data/generate.py (T-4255).",
             {**head, "kind": "DataSource", "metadata": meta(f"od-{slug}", {"sk": e["title"][:120], "en": e["title"][:120]}),
              "spec": {"type": "http", "http": {"url": source_url(e), "verb": "GET",
-                                              "headers": {"Accept": "application/geo+json, application/json"}, "timeout": "60s"}}})
+                                              "headers": {"Accept": "application/geo+json, application/json",
+                                                          **({"User-Agent": AGENT} if e["source"]["kind"] == "esri-layers" else {})},
+                                              "timeout": "60s"}}})
         files[f"{pre}pipeline-{slug}.yaml"] = manifest(
             f"One {e['type']} per row of \"{e['title']}\" (T-4255); {e.get('note') or 'generated from the T-4254 mapping'}.",
             {**head, "kind": "Pipeline", "metadata": meta(f"od-{slug}", {"sk": e["title"][:120], "en": e["title"][:120]}),
@@ -668,8 +880,8 @@ def extension_linkml(t: str, ext: dict, entries: list[dict], model_ranges: dict[
 
 
 def located(entry: dict) -> bool:
-    """Whether the rows of `entry` carry a `location` (only an Esri layer with its geometry does)."""
-    return entry["source"].get("kind") == "esri-featureserver" and bool(entry["source"].get("geometry"))
+    """Whether the rows of `entry` carry a `location`: a feature source with its geometry."""
+    return entry["source"].get("kind") in FEATURES and bool(entry["source"].get("geometry"))
 
 
 def distributions(mapped: list[dict]) -> str:

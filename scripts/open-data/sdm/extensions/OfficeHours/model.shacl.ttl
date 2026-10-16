@@ -14,30 +14,12 @@ jc:OfficeHours a sh:NodeShape ;
     rdfs:comment "One office's opening hours on one weekday." ;
     sh:closed true ;
     sh:ignoredProperties ( rdf:type ) ;
-    sh:property [ sh:datatype xsd:dateTime ;
-            sh:description "When the observation the entity reports was made." ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:description "The source column `Názov_samosprávy`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 14 ;
-            sh:path ngsi-ld:observedAt ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Identifikátor_kontaktného_miest`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 5 ;
-            sh:path jc:identifikatorKontaktnehoMiest ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Kód_dňa_v_týždni`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 6 ;
-            sh:path jc:kodDnaVTyzdni ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Deň_v_týždni`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 3 ;
-            sh:path jc:denVTyzdni ],
+            sh:order 8 ;
+            sh:path jc:nazovSamospravy ],
         [ sh:datatype xsd:string ;
             sh:description "The source column `IČO_samosprávy`." ;
             sh:maxCount 1 ;
@@ -45,17 +27,45 @@ jc:OfficeHours a sh:NodeShape ;
             sh:order 4 ;
             sh:path jc:iCOSamospravy ],
         [ sh:datatype xsd:string ;
-            sh:description "The source column `Názov_samosprávy`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 8 ;
-            sh:path jc:nazovSamospravy ],
-        [ sh:datatype xsd:string ;
             sh:description "Where the entity is, as GeoJSON geometry." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 13 ;
             sh:path geojson:geometry ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Identifikátor_kontaktného_miest`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 5 ;
+            sh:path jc:identifikatorKontaktnehoMiest ],
+        [ sh:description "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:order 2 ;
+            sh:path jc:dataset ],
+        [ sh:description "The service the row was read from." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:order 1 ;
+            sh:path sdm:source ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Deň_v_týždni`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 3 ;
+            sh:path jc:denVTyzdni ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Otvorené_od`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 10 ;
+            sh:path jc:otvoreneOd ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Otvorené_do`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 9 ;
+            sh:path jc:otvoreneDo ],
         [ sh:datatype xsd:string ;
             sh:description "Who published the row, with the credit its licence asks for." ;
             sh:maxCount 1 ;
@@ -68,34 +78,24 @@ jc:OfficeHours a sh:NodeShape ;
             sh:nodeKind sh:Literal ;
             sh:order 7 ;
             sh:path sdm:name ],
-        [ sh:description "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:IRI ;
-            sh:order 2 ;
-            sh:path jc:dataset ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Otvorené_do`." ;
+        [ sh:datatype xsd:dateTime ;
+            sh:description "When the observation the entity reports was made." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 9 ;
-            sh:path jc:otvoreneDo ],
-        [ sh:description "The service the row was read from." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:IRI ;
-            sh:order 1 ;
-            sh:path sdm:source ],
+            sh:order 14 ;
+            sh:path ngsi-ld:observedAt ],
         [ sh:datatype xsd:string ;
-            sh:description "The source column `Otvorené_od`." ;
+            sh:description "The source column `Kód_dňa_v_týždni`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 10 ;
-            sh:path jc:otvoreneOd ] ;
+            sh:order 6 ;
+            sh:path jc:kodDnaVTyzdni ] ;
     sh:targetClass jc:OfficeHours .
 
 ngsi-ld:Entity a sh:NodeShape ;
     rdfs:comment "The root every NGSI-LD entity class specialises." ;
     sh:closed true ;
-    sh:ignoredProperties ( jc:denVTyzdni jc:dataset jc:identifikatorKontaktnehoMiest sdm:name jc:kodDnaVTyzdni sdm:source jc:otvoreneOd jc:iCOSamospravy jc:otvoreneDo sdm:dataProvider rdf:type jc:nazovSamospravy ) ;
+    sh:ignoredProperties ( jc:dataset jc:denVTyzdni sdm:dataProvider jc:iCOSamospravy jc:nazovSamospravy jc:otvoreneOd rdf:type sdm:source jc:identifikatorKontaktnehoMiest jc:kodDnaVTyzdni sdm:name jc:otvoreneDo ) ;
     sh:property [ sh:datatype xsd:dateTime ;
             sh:description "When the observation the entity reports was made." ;
             sh:maxCount 1 ;

@@ -12,16 +12,16 @@ jc:Entity a owl:Class,
     rdfs:label "Entity" ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:cardinality 1 ;
+            owl:onProperty jc:id ],
+        [ a owl:Restriction ;
+            owl:cardinality 1 ;
             owl:onProperty jc:type ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:location ],
-        [ a owl:Restriction ;
-            owl:cardinality 1 ;
-            owl:onProperty jc:id ],
+            owl:onProperty jc:observedAt ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:observedAt ] ;
+            owl:onProperty jc:location ] ;
     skos:definition "The root every NGSI-LD entity class specialises." ;
     skos:exactMatch ngsi-ld:Entity ;
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/PurchaseOrder> ;
@@ -32,13 +32,7 @@ jc:PurchaseOrder a owl:Class,
     rdfs:label "PurchaseOrder" ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:datumVystavenia ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:datumZverejnenia ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:dataProvider ],
+            owl:onProperty jc:objednavkaSpolu ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:source ],
@@ -47,19 +41,13 @@ jc:PurchaseOrder a owl:Class,
             owl:onProperty jc:rok ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:textObjednavky ],
+            owl:onProperty jc:dataProvider ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:identifier ],
+            owl:onProperty jc:dataset ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:suma ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:predmetObjednavky ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:adresa ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:mena ],
@@ -68,13 +56,25 @@ jc:PurchaseOrder a owl:Class,
             owl:onProperty jc:dodavatel ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:dataset ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:objednavkaSpolu ],
+            owl:onProperty jc:predmetObjednavky ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:iCO ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:datumZverejnenia ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:datumVystavenia ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:identifier ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:adresa ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:textObjednavky ],
         jc:Entity ;
     skos:definition "An order the publisher issued and published." ;
     skos:exactMatch jc:PurchaseOrder ;

@@ -12,40 +12,31 @@ jc:CycleRoute a owl:Class,
     rdfs:label "CycleRoute" ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:farba ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:dataProvider ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
             owl:onProperty jc:fNazov ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:name ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:layer ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:alps ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:obnRok ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:povrch ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:sourceId ],
+            owl:onProperty jc:fName ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:ctt ],
+            owl:onProperty jc:alps ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:dataset ],
+            owl:onProperty jc:layer ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:source ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:farba ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:nazov ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:name ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:zdroj ],
@@ -54,22 +45,31 @@ jc:CycleRoute a owl:Class,
             owl:onProperty jc:typ ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:dlzka ],
+            owl:onProperty jc:dataProvider ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:spr ],
+            owl:onProperty jc:obnRok ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:stav ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:nazov ],
+            owl:onProperty jc:spr ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:dlzka ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:dataset ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:spravca ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:fName ],
+            owl:onProperty jc:ctt ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:sourceId ],
         jc:Entity ;
     skos:definition "A signed cycle touring route or one surface section of it." ;
     skos:exactMatch jc:CycleRoute ;
@@ -80,14 +80,14 @@ jc:Entity a owl:Class,
         linkml:ClassDefinition ;
     rdfs:label "Entity" ;
     rdfs:subClassOf [ a owl:Restriction ;
+            owl:cardinality 1 ;
+            owl:onProperty jc:type ],
+        [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:location ],
         [ a owl:Restriction ;
             owl:cardinality 1 ;
             owl:onProperty jc:id ],
-        [ a owl:Restriction ;
-            owl:cardinality 1 ;
-            owl:onProperty jc:type ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:observedAt ] ;

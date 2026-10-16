@@ -463,7 +463,12 @@ STRINGS = {
     },
     "created": {"en": "Created", "sk": "Vytvorené", "cs": "Vytvořeno", "de": "Erstellt"},
     "info": {"en": "About this resource", "sk": "O tomto zdroji", "cs": "O tomto zdroji", "de": "Über diese Ressource"},
-    "whole_table": {"en": "The whole table", "sk": "Celá tabuľka", "cs": "Celá tabulka", "de": "Die ganze Tabelle"},
+    "original_table": {"en": "The publisher's original table", "sk": "Pôvodná tabuľka vydavateľa", "cs": "Původní tabulka vydavatele", "de": "Die Originaltabelle des Herausgebers"},
+    "records_csv": {"en": "All records as a table", "sk": "Všetky záznamy ako tabuľka", "cs": "Všechny záznamy jako tabulka", "de": "Alle Einträge als Tabelle"},
+    "records_geojson": {"en": "All records for a map", "sk": "Všetky záznamy na mapu", "cs": "Všechny záznamy na mapu", "de": "Alle Einträge für eine Karte"},
+    "records_json": {"en": "All records for programs", "sk": "Všetky záznamy pre programy", "cs": "Všechny záznamy pro programy", "de": "Alle Einträge für Programme"},
+    "records_xlsx": {"en": "All records for Excel", "sk": "Všetky záznamy pre Excel", "cs": "Všechny záznamy pro Excel", "de": "Alle Einträge für Excel"},
+    "live_changes": {"en": "Live changes", "sk": "Zmeny naživo", "cs": "Změny živě", "de": "Änderungen live"},
     "ex_types": {"en": "The kinds of entities it holds, with curl", "sk": "Druhy entít, ktoré obsahuje, cez curl", "cs": "Druhy entit, které obsahuje, přes curl", "de": "Die Arten von Entitäten, die sie enthält, mit curl"},
     "section_source": {"en": "At the publisher", "sk": "U vydavateľa", "cs": "U vydavatele", "de": "Beim Herausgeber"},
     "source_lead": {
@@ -521,6 +526,7 @@ INTERNAL_EXTRAS = {"generated_by", "endpoint", "publisher_name", "publisher_uri"
 EXTRA_LABELS = {
     "issued": {"en": "Published by the publisher", "sk": "Zverejnené vydavateľom", "cs": "Zveřejněno vydavatelem", "de": "Vom Herausgeber veröffentlicht"},
     "modified": {"en": "Changed by the publisher", "sk": "Zmenené vydavateľom", "cs": "Změněno vydavatelem", "de": "Vom Herausgeber geändert"},
+    "quality_pass_rate": {"en": "Passed the quality checks", "sk": "Prešlo kontrolami kvality", "cs": "Prošlo kontrolami kvality", "de": "Qualitätsprüfungen bestanden"},
     "source_uri": {"en": "Original record", "sk": "Pôvodný záznam", "cs": "Původní záznam", "de": "Ursprünglicher Eintrag"},
 }
 
@@ -577,6 +583,21 @@ def jc_frequency(pkg):
     return (label, last + datetime.timedelta(days=days))
 
 
+# The NUTS 3 regions of the bodies on the platform; any other code reads as its code (T-4333).
+# ponytail: a handful of names, the Eurostat NUTS list when more countries publish.
+NUTS_NAMES = {
+    "SK010": {"en": "Bratislava Region", "sk": "Bratislavský kraj", "cs": "Bratislavský kraj", "de": "Region Bratislava"},
+    "SK021": {"en": "Trnava Region", "sk": "Trnavský kraj", "cs": "Trnavský kraj", "de": "Region Trnava"},
+    "SK022": {"en": "Trenčín Region", "sk": "Trenčiansky kraj", "cs": "Trenčínský kraj", "de": "Region Trenčín"},
+    "SK023": {"en": "Nitra Region", "sk": "Nitriansky kraj", "cs": "Nitranský kraj", "de": "Region Nitra"},
+    "SK031": {"en": "Žilina Region", "sk": "Žilinský kraj", "cs": "Žilinský kraj", "de": "Region Žilina"},
+    "SK032": {"en": "Banská Bystrica Region", "sk": "Banskobystrický kraj", "cs": "Banskobystrický kraj", "de": "Region Banská Bystrica"},
+    "SK041": {"en": "Prešov Region", "sk": "Prešovský kraj", "cs": "Prešovský kraj", "de": "Region Prešov"},
+    "SK042": {"en": "Košice Region", "sk": "Košický kraj", "cs": "Košický kraj", "de": "Region Košice"},
+    "CZ010": {"en": "Prague", "sk": "Praha", "cs": "Hlavní město Praha", "de": "Prag"},
+}
+
+
 def jc_about(pkg):
     """The rows of "About this dataset" as (label, text, link or None), empty ones left out."""
     pkg = pkg or {}
@@ -601,14 +622,26 @@ def jc_about(pkg):
     if frequency:
         rows.append((jc_t("frequency"), frequency[0], None))
     if pkg.get("metadata_modified"):
-        rows.append((jc_t("last_update"), str(pkg["metadata_modified"])[:10], None))
+        rows.append((jc_t("last_update"), _date(str(pkg["metadata_modified"])[:10]), None))
     if frequency and frequency[1]:
         # A dataset updated more than once a day promises an hour, not only a date.
-        pattern = "%Y-%m-%d %H:%M UTC" if frequency[1] - _parse(pkg["metadata_modified"]) < _DAY else "%Y-%m-%d"
-        rows.append((jc_t("next_update"), frequency[1].strftime(pattern), None))
+        hourly = frequency[1] - _parse(pkg["metadata_modified"]) < _DAY
+        # CKAN writes a date with hours as "%B %d, %Y", English order with the page's month name;
+        # the hour goes after the page's own date instead (T-4333).
+        text = _date(frequency[1])
+        rows.append((jc_t("next_update"), text + frequency[1].strftime(", %H:%M (UTC)") if hourly else text, None))
     coverage = extras.get("spatial_uri")
     if coverage:
-        rows.append((jc_t("coverage"), coverage, coverage if _is_url(coverage) else None))
+        # An EU NUTS region reads by its name where the theme knows it and by its code, linked to
+        # its definition (T-4333).
+        nuts = re.search(r"/nuts/code/([A-Z]{2}[0-9A-Z]{0,3})$", coverage)
+        text = coverage
+        if nuts:
+            names = NUTS_NAMES.get(nuts.group(1))
+            text = "NUTS " + nuts.group(1)
+            if names:
+                text = "%s (%s)" % (names.get(_language()) or names["en"], text)
+        rows.append((jc_t("coverage"), text, coverage if _is_url(coverage) else None))
     start, end = extras.get("temporal_start"), extras.get("temporal_end")
     if start or end:
         rows.append((jc_t("period"), " – ".join(v for v in (start, end) if v), None))
@@ -619,8 +652,20 @@ def jc_about(pkg):
     for key in ("identifier", "language", "conforms_to", "status"):
         value = extras.get(key)
         if value:
-            rows.append((jc_t(key), value, value if _is_url(value) else None))
+            standard = jc_standard({"conforms_to": value}) if key == "conforms_to" else None
+            rows.append((jc_t(key), standard["name"] if standard else value, value if _is_url(value) else None))
     return rows
+
+
+def _date(value, hours=False):
+    """A date (or a datetime) as CKAN writes dates in the page's language (T-4333); the ISO form
+    where CKAN's helper is not there to ask."""
+    try:
+        return toolkit.h.render_datetime(value, with_hours=hours)
+    except (AttributeError, TypeError, ValueError):
+        if isinstance(value, datetime.datetime):
+            return value.strftime("%Y-%m-%d %H:%M UTC" if hours else "%Y-%m-%d")
+        return str(value)
 
 
 def jc_more(pkg):
@@ -635,6 +680,8 @@ def jc_extra(key, value):
     words = EXTRA_LABELS.get(key)
     label = (words.get(_language()) or words["en"]) if words else str(key).replace("_", " ").capitalize()
     text = str(value)
+    if key == "quality_pass_rate" and re.match(r"^(0(\.\d+)?|1(\.0+)?)$", text):
+        text = "%d %%" % round(float(text) * 100)
     if re.match(r"^\d{4}-\d{2}-\d{2}(T[\d:.]+Z?)?$", text):
         try:
             text = toolkit.h.render_datetime(text.rstrip("Z"))
@@ -829,16 +876,17 @@ def jc_resource_sections(pkg):
 
 
 # The data model's files as `jcctl` publishes them (crates/jcctl/src/publish/ckan.rs): the
-# dataset's name, a space and the file. A reader sees what each one is instead (T-3048).
+# dataset's name, a space and the file. A reader sees what each one is instead (T-3048), named
+# once the "Data model" group around them has said what they belong to (T-4333).
 MODEL_FILES = {
     "context.jsonld": {"en": "JSON-LD context", "sk": "Kontext JSON-LD", "cs": "Kontext JSON-LD", "de": "JSON-LD-Kontext"},
-    "model.linkml.yaml": {"en": "Data model (LinkML)", "sk": "Dátový model (LinkML)", "cs": "Datový model (LinkML)", "de": "Datenmodell (LinkML)"},
-    "model.md": {"en": "Data model, described in words", "sk": "Dátový model, opísaný slovami", "cs": "Datový model, popsaný slovy", "de": "Datenmodell, in Worten beschrieben"},
-    "model.owl.ttl": {"en": "Data model (OWL)", "sk": "Dátový model (OWL)", "cs": "Datový model (OWL)", "de": "Datenmodell (OWL)"},
-    "model.rdf.ttl": {"en": "Data model (RDF)", "sk": "Dátový model (RDF)", "cs": "Datový model (RDF)", "de": "Datenmodell (RDF)"},
-    "model.schema.json": {"en": "Data model (JSON Schema)", "sk": "Dátový model (JSON Schema)", "cs": "Datový model (JSON Schema)", "de": "Datenmodell (JSON Schema)"},
-    "index.json": {"en": "Data model: list of its files", "sk": "Dátový model: zoznam súborov", "cs": "Datový model: seznam souborů", "de": "Datenmodell: Liste der Dateien"},
-    "model.shacl.ttl": {"en": "Validation rules (SHACL)", "sk": "Pravidlá kontroly (SHACL)", "cs": "Pravidla kontroly (SHACL)", "de": "Prüfregeln (SHACL)"},
+    "model.linkml.yaml": {"en": "LinkML", "sk": "LinkML", "cs": "LinkML", "de": "LinkML"},
+    "model.md": {"en": "Described in words", "sk": "Popis slovami", "cs": "Popis slovy", "de": "In Worten beschrieben"},
+    "model.owl.ttl": {"en": "OWL", "sk": "OWL", "cs": "OWL", "de": "OWL"},
+    "model.rdf.ttl": {"en": "RDF", "sk": "RDF", "cs": "RDF", "de": "RDF"},
+    "model.schema.json": {"en": "JSON Schema", "sk": "JSON Schema", "cs": "JSON Schema", "de": "JSON Schema"},
+    "index.json": {"en": "List of its files", "sk": "Zoznam súborov", "cs": "Seznam souborů", "de": "Liste der Dateien"},
+    "model.shacl.ttl": {"en": "Validation rules", "sk": "Pravidlá kontroly", "cs": "Pravidla kontroly", "de": "Prüfregeln"},
 }
 
 
@@ -856,6 +904,10 @@ def jc_resource_label(resource, pkg=None):
     if words:
         return words.get(_language()) or words["en"]
     kind = jc_kind(resource)
+    if kind in ("CSV", "JSON", "GEOJSON", "XLSX") or kind == "WEBSOCKET":
+        # The chip already says the format: the name says what is inside and what for, so the
+        # platform's files never read as twins of each other (T-4333).
+        return jc_t("records_" + kind.lower() if kind != "WEBSOCKET" else "live_changes")
     if kind in DOOR_NAMES:
         # An Endpoint's door is named by what it is, in words every language shares, with its
         # entity type once in the page header instead of on every entry: the harvest wrote
@@ -863,7 +915,7 @@ def jc_resource_label(resource, pkg=None):
         return DOOR_NAMES[kind]
     elif (resource or {}).get("datastore_active") and pkg and rest.startswith((pkg.get("title") or "\0").strip() + " ("):
         # A harvested table is named "{dataset} (tabuľka)", in Slovak on every page (T-4333).
-        return jc_t("whole_table")
+        return jc_t("original_table")
     elif jc_is_source(resource, pkg):
         # The harvest names the publisher's own page after the dataset, so it read as a twin of
         # the table (T-4333).
@@ -919,7 +971,7 @@ def jc_what(resource):
     if kind and kind != "MODEL" and kind_type:
         scope = jc_t("scope_dataset") if _filtered(resource) else jc_t("scope_type").replace("{type}", kind_type)
         line = (line + ". " if line else "") + scope
-    return line
+    return line if not line or line.endswith((".", "…")) else line + "."
 
 
 def jc_format(resource):
@@ -943,7 +995,9 @@ def jc_address(resource):
     parts, rest = split
     slug = parts.path[len("/api/endpoint/"):].split("/", 1)[0]
     short_slug = slug if len(slug) <= 10 else slug[:6] + "\u2026"
-    return {"short": "%s/api/endpoint/%s/%s" % (parts.netloc, short_slug, rest), "full": url}
+    short = "%s/api/endpoint/%s/%s" % (parts.netloc, short_slug, rest)
+    # The page breaks it only after a slash, never inside a segment such as "ngsi-ld" (T-4333).
+    return {"short": short, "segments": short.split("/"), "full": url}
 
 
 def _with(url, **params):
@@ -1034,6 +1088,8 @@ STANDARDS = (
     ("rfc4180", "CSV (RFC 4180)"),
     ("rfc8259", "JSON (RFC 8259)"),
     ("smart-data-models", "Smart Data Models"),
+    ("w3.org/tr/json-ld11", "JSON-LD 1.1"),
+    ("w3.org/tr/vocab-dcat", "DCAT"),
     ("smartdatamodels", "Smart Data Models"),
 )
 

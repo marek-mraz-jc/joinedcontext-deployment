@@ -265,11 +265,11 @@ jc:identifier a linkml:SlotDefinition ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/PublicProcurement"^^xsd:anyURI ;
     skos:mappingRelation "https://smartdatamodels.org/dataModel.CPSV-AP/identifier"^^xsd:anyURI ;
     linkml:annotations [ a linkml:Annotation ;
-            skos:example "https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld" ;
-            linkml:tag "upstream_source"^^xsd:anyURI ],
-        [ a linkml:Annotation ;
             skos:example "Property" ;
-            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ] ;
+            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ],
+        [ a linkml:Annotation ;
+            skos:example "https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld" ;
+            linkml:tag "upstream_source"^^xsd:anyURI ] ;
     linkml:definition_uri "https://joinedcontext.com/models/identifier"^^xsd:anyURI ;
     linkml:description "The source column `id`." ;
     linkml:domain_of jc:PublicProcurement ;
@@ -337,11 +337,11 @@ jc:name a linkml:SlotDefinition ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/PublicProcurement"^^xsd:anyURI ;
     skos:mappingRelation "https://smartdatamodels.org/name"^^xsd:anyURI ;
     linkml:annotations [ a linkml:Annotation ;
-            skos:example "https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld" ;
-            linkml:tag "upstream_source"^^xsd:anyURI ],
-        [ a linkml:Annotation ;
             skos:example "Property" ;
-            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ] ;
+            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ],
+        [ a linkml:Annotation ;
+            skos:example "https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld" ;
+            linkml:tag "upstream_source"^^xsd:anyURI ] ;
     linkml:definition_uri "https://joinedcontext.com/models/name"^^xsd:anyURI ;
     linkml:description "The source column `Predmet_zákazky`." ;
     linkml:domain_of jc:PublicProcurement ;
@@ -660,11 +660,11 @@ jc:type a linkml:SlotDefinition ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/PublicProcurement"^^xsd:anyURI ;
     skos:mappingRelation "https://uri.etsi.org/ngsi-ld/hasType"^^xsd:anyURI ;
     linkml:annotations [ a linkml:Annotation ;
-            skos:example "@type" ;
-            linkml:tag "jsonld_keyword"^^xsd:anyURI ],
-        [ a linkml:Annotation ;
             skos:example "ETSI NGSI-LD core context v1.8" ;
             linkml:tag "upstream_source"^^xsd:anyURI ],
+        [ a linkml:Annotation ;
+            skos:example "@type" ;
+            linkml:tag "jsonld_keyword"^^xsd:anyURI ],
         [ a linkml:Annotation ;
             skos:example "Property" ;
             linkml:tag "ngsi_ld_kind"^^xsd:anyURI ] ;
@@ -746,22 +746,22 @@ jc:PublicProcurement a linkml:ClassDefinition,
     dcterms:title "PublicProcurement, an extension of dataModel.CPSV-AP/Cost" ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/PublicProcurement"^^xsd:anyURI ;
     skos:mappingRelation "jc:PublicProcurement"^^xsd:anyURI ;
-    sh:declare [ sh:namespace "https://w3id.org/linkml/"^^xsd:anyURI ;
+    sh:declare [ sh:namespace "https://uri.etsi.org/ngsi-ld/"^^xsd:anyURI ;
+            sh:prefix "ngsi-ld" ],
+        [ sh:namespace "https://w3id.org/linkml/"^^xsd:anyURI ;
             sh:prefix "linkml" ],
-        [ sh:namespace "http://www.w3.org/2001/XMLSchema#"^^xsd:anyURI ;
-            sh:prefix "xsd" ],
+        [ sh:namespace "https://smartdatamodels.org/"^^xsd:anyURI ;
+            sh:prefix "sdm" ],
         [ sh:namespace "http://schema.org/"^^xsd:anyURI ;
             sh:prefix "schema" ],
-        [ sh:namespace "http://www.w3.org/ns/shex#"^^xsd:anyURI ;
-            sh:prefix "shex" ],
-        [ sh:namespace "https://purl.org/geojson/vocab#"^^xsd:anyURI ;
-            sh:prefix "geojson" ],
-        [ sh:namespace "https://uri.etsi.org/ngsi-ld/"^^xsd:anyURI ;
-            sh:prefix "ngsi-ld" ],
         [ sh:namespace "https://joinedcontext.com/models/"^^xsd:anyURI ;
             sh:prefix "jc" ],
-        [ sh:namespace "https://smartdatamodels.org/"^^xsd:anyURI ;
-            sh:prefix "sdm" ] ;
+        [ sh:namespace "https://purl.org/geojson/vocab#"^^xsd:anyURI ;
+            sh:prefix "geojson" ],
+        [ sh:namespace "http://www.w3.org/ns/shex#"^^xsd:anyURI ;
+            sh:prefix "shex" ],
+        [ sh:namespace "http://www.w3.org/2001/XMLSchema#"^^xsd:anyURI ;
+            sh:prefix "xsd" ] ;
     linkml:annotations [ a linkml:Annotation ;
             skos:example "https://smart-data-models.github.io/dataModel.CPSV-AP/Cost/schema.json" ;
             linkml:tag "upstream_source"^^xsd:anyURI ] ;

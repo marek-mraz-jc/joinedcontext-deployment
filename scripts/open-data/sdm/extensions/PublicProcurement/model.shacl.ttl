@@ -15,154 +15,17 @@ jc:PublicProcurement a sh:NodeShape ;
     sh:closed true ;
     sh:ignoredProperties ( rdf:type ) ;
     sh:property [ sh:datatype xsd:string ;
-            sh:description "The source column `Predpokladaná_hodnota`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 28 ;
-            sh:path jc:predpokladanaHodnota ],
-        [ sh:description "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:IRI ;
-            sh:order 2 ;
-            sh:path jc:dataset ],
-        [ sh:datatype xsd:float ;
-            sh:description "The source column `Ponuka_uchádzača`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 27 ;
-            sh:path jc:ponukaUchadzaca ],
-        [ sh:datatype xsd:float ;
-            sh:description "The source column `PHZ`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 24 ;
-            sh:path jc:pHZ ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Financovanie`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 13 ;
-            sh:path jc:financovanie ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Útvar_OvZP`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 35 ;
-            sh:path jc:utvarOvZP ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Obstarávateľ`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 23 ;
-            sh:path jc:obstaravatel ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Druh_postupu`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 11 ;
-            sh:path jc:druhPostupu ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Hlavný_CPV`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 14 ;
-            sh:path jc:hlavnyCPV ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `id`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 17 ;
-            sh:path <https://smartdatamodels.org/dataModel.CPSV-AP/identifier> ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Hlavný_CPV_časti`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 15 ;
-            sh:path jc:hlavnyCPVCasti ],
-        [ sh:datatype xsd:integer ;
-            sh:description "The source column `Počet_záujemcov`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 26 ;
-            sh:path jc:pocetZaujemcov ],
-        [ sh:datatype xsd:integer ;
-            sh:description "The source column `Počet_uchádzačov`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 25 ;
-            sh:path jc:pocetUchadzacov ],
-        [ sh:datatype xsd:integer ;
-            sh:description "The source column `ID_zákazky`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 16 ;
-            sh:path jc:iDZakazky ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Dátum_ukončenia`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 8 ;
-            sh:path jc:datumUkoncenia ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Typ_komodity`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 33 ;
-            sh:path jc:typKomodity ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Druh_komodít_alebo_služieb`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 9 ;
-            sh:path jc:druhKomoditAleboSluzieb ],
-        [ sh:datatype xsd:dateTime ;
-            sh:description "The source column `Dátum_spustenia`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 7 ;
-            sh:path jc:datumSpustenia ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Mena`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 19 ;
-            sh:path jc:mena ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Názov_časti`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 22 ;
-            sh:path jc:nazovCasti ],
-        [ sh:datatype xsd:dateTime ;
-            sh:description "The source column `Lehota_na_predkladanie`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 18 ;
-            sh:path jc:lehotaNaPredkladanie ],
-        [ sh:datatype xsd:string ;
             sh:description "Who published the row, with the credit its licence asks for." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 0 ;
             sh:path sdm:dataProvider ],
-        [ sh:datatype xsd:dateTime ;
-            sh:description "When the observation the entity reports was made." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 40 ;
-            sh:path ngsi-ld:observedAt ],
         [ sh:datatype xsd:string ;
-            sh:description "The source column `Číslo_spisu`." ;
+            sh:description "The source column `Predpokladaná_hodnota`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 6 ;
-            sh:path jc:cisloSpisu ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Rok`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 29 ;
-            sh:path jc:rok ],
+            sh:order 28 ;
+            sh:path jc:predpokladanaHodnota ],
         [ sh:datatype xsd:string ;
             sh:description "The source column `Typ_výdavku`." ;
             sh:maxCount 1 ;
@@ -170,58 +33,11 @@ jc:PublicProcurement a sh:NodeShape ;
             sh:order 34 ;
             sh:path jc:typVydavku ],
         [ sh:datatype xsd:string ;
-            sh:description "The source column `Elektronická_aukcia`." ;
+            sh:description "The source column `Adresa_najvýhodnejšieho_uchádza`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 12 ;
-            sh:path jc:elektronickaAukcia ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Druh_obstarávania`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 10 ;
-            sh:path jc:druhObstaravania ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `CPV___názov`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 5 ;
-            sh:path jc:cPVNazov ],
-        [ sh:datatype xsd:string ;
-            sh:description "Where the entity is, as GeoJSON geometry." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 39 ;
-            sh:path geojson:geometry ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Predmet_zákazky`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 21 ;
-            sh:path sdm:name ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Stav`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 32 ;
-            sh:path jc:stav ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Sociálne_zodpovedné_obstarávani`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 30 ;
-            sh:path jc:socialneZodpovedneObstaravani ],
-        [ sh:description "The service the row was read from." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:IRI ;
-            sh:order 1 ;
-            sh:path sdm:source ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `CPV_časti___názov`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 4 ;
-            sh:path jc:cPVCastiNazov ],
+            sh:order 3 ;
+            sh:path jc:adresaNajvyhodnejsiehoUchadza ],
         [ sh:datatype xsd:string ;
             sh:description "The source column `Najvýhodnejší_uchádzač`." ;
             sh:maxCount 1 ;
@@ -229,29 +45,213 @@ jc:PublicProcurement a sh:NodeShape ;
             sh:order 20 ;
             sh:path jc:najvyhodnejsiUchadzac ],
         [ sh:datatype xsd:string ;
+            sh:description "The source column `Druh_komodít_alebo_služieb`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 9 ;
+            sh:path jc:druhKomoditAleboSluzieb ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Typ_komodity`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 33 ;
+            sh:path jc:typKomodity ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Dátum_ukončenia`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 8 ;
+            sh:path jc:datumUkoncenia ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `CPV_časti___názov`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 4 ;
+            sh:path jc:cPVCastiNazov ],
+        [ sh:datatype xsd:dateTime ;
+            sh:description "The source column `Lehota_na_predkladanie`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 18 ;
+            sh:path jc:lehotaNaPredkladanie ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Mena`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 19 ;
+            sh:path jc:mena ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Druh_postupu`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 11 ;
+            sh:path jc:druhPostupu ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `CPV___názov`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 5 ;
+            sh:path jc:cPVNazov ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `id`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 17 ;
+            sh:path <https://smartdatamodels.org/dataModel.CPSV-AP/identifier> ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Číslo_spisu`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 6 ;
+            sh:path jc:cisloSpisu ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Hlavný_CPV`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 14 ;
+            sh:path jc:hlavnyCPV ],
+        [ sh:datatype xsd:integer ;
+            sh:description "The source column `ID_zákazky`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 16 ;
+            sh:path jc:iDZakazky ],
+        [ sh:datatype xsd:float ;
+            sh:description "The source column `PHZ`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 24 ;
+            sh:path jc:pHZ ],
+        [ sh:datatype xsd:integer ;
+            sh:description "The source column `Počet_uchádzačov`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 25 ;
+            sh:path jc:pocetUchadzacov ],
+        [ sh:datatype xsd:string ;
             sh:description "The source column `Spoločensky_zodpovedné_verejné_`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 31 ;
             sh:path jc:spolocenskyZodpovedneVerejne ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Adresa_najvýhodnejšieho_uchádza`." ;
+        [ sh:datatype xsd:integer ;
+            sh:description "The source column `Počet_záujemcov`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 3 ;
-            sh:path jc:adresaNajvyhodnejsiehoUchadza ],
+            sh:order 26 ;
+            sh:path jc:pocetZaujemcov ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Druh_obstarávania`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 10 ;
+            sh:path jc:druhObstaravania ],
+        [ sh:datatype xsd:string ;
+            sh:description "Where the entity is, as GeoJSON geometry." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 39 ;
+            sh:path geojson:geometry ],
+        [ sh:description "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:order 2 ;
+            sh:path jc:dataset ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Obstarávateľ`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 23 ;
+            sh:path jc:obstaravatel ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Hlavný_CPV_časti`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 15 ;
+            sh:path jc:hlavnyCPVCasti ],
+        [ sh:datatype xsd:dateTime ;
+            sh:description "When the observation the entity reports was made." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 40 ;
+            sh:path ngsi-ld:observedAt ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Útvar_OvZP`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 35 ;
+            sh:path jc:utvarOvZP ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Elektronická_aukcia`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 12 ;
+            sh:path jc:elektronickaAukcia ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Rok`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 29 ;
+            sh:path jc:rok ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Predmet_zákazky`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 21 ;
+            sh:path sdm:name ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Financovanie`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 13 ;
+            sh:path jc:financovanie ],
+        [ sh:description "The service the row was read from." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:order 1 ;
+            sh:path sdm:source ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Stav`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 32 ;
+            sh:path jc:stav ],
         [ sh:datatype xsd:string ;
             sh:description "The source column `Zelené_obstarávanie`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 36 ;
-            sh:path jc:zeleneObstaravanie ] ;
+            sh:path jc:zeleneObstaravanie ],
+        [ sh:datatype xsd:dateTime ;
+            sh:description "The source column `Dátum_spustenia`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 7 ;
+            sh:path jc:datumSpustenia ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Názov_časti`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 22 ;
+            sh:path jc:nazovCasti ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Sociálne_zodpovedné_obstarávani`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 30 ;
+            sh:path jc:socialneZodpovedneObstaravani ],
+        [ sh:datatype xsd:float ;
+            sh:description "The source column `Ponuka_uchádzača`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 27 ;
+            sh:path jc:ponukaUchadzaca ] ;
     sh:targetClass jc:PublicProcurement .
 
 ngsi-ld:Entity a sh:NodeShape ;
     rdfs:comment "The root every NGSI-LD entity class specialises." ;
     sh:closed true ;
-    sh:ignoredProperties ( jc:datumUkoncenia jc:typKomodity jc:druhObstaravania jc:datumSpustenia jc:elektronickaAukcia jc:lehotaNaPredkladanie sdm:source sdm:dataProvider jc:ponukaUchadzaca jc:predpokladanaHodnota jc:socialneZodpovedneObstaravani <https://smartdatamodels.org/dataModel.CPSV-AP/identifier> jc:stav jc:obstaravatel jc:adresaNajvyhodnejsiehoUchadza jc:dataset jc:utvarOvZP jc:typVydavku jc:cPVCastiNazov jc:hlavnyCPV rdf:type jc:pocetZaujemcov jc:druhPostupu jc:mena jc:spolocenskyZodpovedneVerejne jc:nazovCasti jc:zeleneObstaravanie jc:druhKomoditAleboSluzieb jc:pocetUchadzacov jc:najvyhodnejsiUchadzac sdm:name jc:iDZakazky jc:cPVNazov jc:pHZ jc:rok jc:cisloSpisu jc:hlavnyCPVCasti jc:financovanie ) ;
+    sh:ignoredProperties ( jc:zeleneObstaravanie jc:druhKomoditAleboSluzieb jc:dataset jc:cisloSpisu <https://smartdatamodels.org/dataModel.CPSV-AP/identifier> jc:adresaNajvyhodnejsiehoUchadza jc:hlavnyCPVCasti jc:rok jc:hlavnyCPV jc:financovanie jc:nazovCasti jc:typKomodity jc:utvarOvZP jc:pocetZaujemcov jc:obstaravatel jc:iDZakazky jc:cPVNazov sdm:source jc:pHZ jc:spolocenskyZodpovedneVerejne jc:druhPostupu jc:socialneZodpovedneObstaravani jc:ponukaUchadzaca jc:lehotaNaPredkladanie jc:predpokladanaHodnota rdf:type jc:mena jc:cPVCastiNazov sdm:dataProvider jc:elektronickaAukcia jc:najvyhodnejsiUchadzac jc:datumSpustenia jc:pocetUchadzacov jc:stav jc:datumUkoncenia sdm:name jc:typVydavku jc:druhObstaravania ) ;
     sh:property [ sh:datatype xsd:dateTime ;
             sh:description "When the observation the entity reports was made." ;
             sh:maxCount 1 ;

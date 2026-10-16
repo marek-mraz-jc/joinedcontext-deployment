@@ -67,11 +67,11 @@ jc:dataProvider a linkml:SlotDefinition ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/RiverBasin"^^xsd:anyURI ;
     skos:mappingRelation "https://smartdatamodels.org/dataProvider"^^xsd:anyURI ;
     linkml:annotations [ a linkml:Annotation ;
-            skos:example "Property" ;
-            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ],
-        [ a linkml:Annotation ;
             skos:example "https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/context.jsonld" ;
-            linkml:tag "upstream_source"^^xsd:anyURI ] ;
+            linkml:tag "upstream_source"^^xsd:anyURI ],
+        [ a linkml:Annotation ;
+            skos:example "Property" ;
+            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ] ;
     linkml:definition_uri "https://joinedcontext.com/models/dataProvider"^^xsd:anyURI ;
     linkml:description "Who published the row, with the credit its licence asks for." ;
     linkml:domain_of jc:RiverBasin ;
@@ -273,11 +273,11 @@ jc:name a linkml:SlotDefinition ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/RiverBasin"^^xsd:anyURI ;
     skos:mappingRelation "https://smartdatamodels.org/name"^^xsd:anyURI ;
     linkml:annotations [ a linkml:Annotation ;
-            skos:example "https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/context.jsonld" ;
-            linkml:tag "upstream_source"^^xsd:anyURI ],
-        [ a linkml:Annotation ;
             skos:example "Property" ;
-            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ] ;
+            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ],
+        [ a linkml:Annotation ;
+            skos:example "https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/context.jsonld" ;
+            linkml:tag "upstream_source"^^xsd:anyURI ] ;
     linkml:definition_uri "https://joinedcontext.com/models/name"^^xsd:anyURI ;
     linkml:description "The source column `nameText`." ;
     linkml:domain_of jc:RiverBasin ;
@@ -365,11 +365,11 @@ jc:source a linkml:SlotDefinition ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/RiverBasin"^^xsd:anyURI ;
     skos:mappingRelation "https://smartdatamodels.org/source"^^xsd:anyURI ;
     linkml:annotations [ a linkml:Annotation ;
-            skos:example "https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/context.jsonld" ;
-            linkml:tag "upstream_source"^^xsd:anyURI ],
-        [ a linkml:Annotation ;
             skos:example "Property" ;
-            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ] ;
+            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ],
+        [ a linkml:Annotation ;
+            skos:example "https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/context.jsonld" ;
+            linkml:tag "upstream_source"^^xsd:anyURI ] ;
     linkml:definition_uri "https://joinedcontext.com/models/source"^^xsd:anyURI ;
     linkml:description "The service the row was read from." ;
     linkml:domain_of jc:RiverBasin ;
@@ -492,11 +492,11 @@ jc:id a linkml:SlotDefinition ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/RiverBasin"^^xsd:anyURI ;
     skos:mappingRelation "https://uri.etsi.org/ngsi-ld/hasId"^^xsd:anyURI ;
     linkml:annotations [ a linkml:Annotation ;
-            skos:example "@id" ;
-            linkml:tag "jsonld_keyword"^^xsd:anyURI ],
-        [ a linkml:Annotation ;
             skos:example "ETSI NGSI-LD core context v1.8" ;
             linkml:tag "upstream_source"^^xsd:anyURI ],
+        [ a linkml:Annotation ;
+            skos:example "@id" ;
+            linkml:tag "jsonld_keyword"^^xsd:anyURI ],
         [ a linkml:Annotation ;
             skos:example "Property" ;
             linkml:tag "ngsi_ld_kind"^^xsd:anyURI ] ;
@@ -513,11 +513,11 @@ jc:location a linkml:SlotDefinition ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/RiverBasin"^^xsd:anyURI ;
     skos:mappingRelation "https://purl.org/geojson/vocab#geometry"^^xsd:anyURI ;
     linkml:annotations [ a linkml:Annotation ;
-            skos:example "GeoProperty" ;
-            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ],
-        [ a linkml:Annotation ;
             skos:example "ETSI NGSI-LD core context v1.8" ;
-            linkml:tag "upstream_source"^^xsd:anyURI ] ;
+            linkml:tag "upstream_source"^^xsd:anyURI ],
+        [ a linkml:Annotation ;
+            skos:example "GeoProperty" ;
+            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ] ;
     linkml:definition_uri "https://joinedcontext.com/models/location"^^xsd:anyURI ;
     linkml:description "Where the entity is, as GeoJSON geometry." ;
     linkml:domain_of jc:Entity ;
@@ -529,11 +529,11 @@ jc:observedAt a linkml:SlotDefinition ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/RiverBasin"^^xsd:anyURI ;
     skos:mappingRelation "https://uri.etsi.org/ngsi-ld/observedAt"^^xsd:anyURI ;
     linkml:annotations [ a linkml:Annotation ;
-            skos:example "Property" ;
-            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ],
-        [ a linkml:Annotation ;
             skos:example "ETSI NGSI-LD core context v1.8" ;
-            linkml:tag "upstream_source"^^xsd:anyURI ] ;
+            linkml:tag "upstream_source"^^xsd:anyURI ],
+        [ a linkml:Annotation ;
+            skos:example "Property" ;
+            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ] ;
     linkml:definition_uri "https://joinedcontext.com/models/observedAt"^^xsd:anyURI ;
     linkml:description "When the observation the entity reports was made." ;
     linkml:domain_of jc:Entity ;
@@ -548,11 +548,11 @@ jc:type a linkml:SlotDefinition ;
             skos:example "Property" ;
             linkml:tag "ngsi_ld_kind"^^xsd:anyURI ],
         [ a linkml:Annotation ;
-            skos:example "ETSI NGSI-LD core context v1.8" ;
-            linkml:tag "upstream_source"^^xsd:anyURI ],
-        [ a linkml:Annotation ;
             skos:example "@type" ;
-            linkml:tag "jsonld_keyword"^^xsd:anyURI ] ;
+            linkml:tag "jsonld_keyword"^^xsd:anyURI ],
+        [ a linkml:Annotation ;
+            skos:example "ETSI NGSI-LD core context v1.8" ;
+            linkml:tag "upstream_source"^^xsd:anyURI ] ;
     linkml:definition_uri "https://joinedcontext.com/models/type"^^xsd:anyURI ;
     linkml:description "The entity type, one class of a published data model." ;
     linkml:domain_of jc:Entity ;
@@ -622,13 +622,7 @@ jc:RiverBasin a linkml:ClassDefinition,
     dcterms:title "RiverBasin, an extension of dataModel.PointOfInterest/PointOfInterest" ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/RiverBasin"^^xsd:anyURI ;
     skos:mappingRelation "jc:RiverBasin"^^xsd:anyURI ;
-    sh:declare [ sh:namespace "https://smartdatamodels.org/"^^xsd:anyURI ;
-            sh:prefix "sdm" ],
-        [ sh:namespace "http://www.w3.org/ns/shex#"^^xsd:anyURI ;
-            sh:prefix "shex" ],
-        [ sh:namespace "https://purl.org/geojson/vocab#"^^xsd:anyURI ;
-            sh:prefix "geojson" ],
-        [ sh:namespace "http://schema.org/"^^xsd:anyURI ;
+    sh:declare [ sh:namespace "http://schema.org/"^^xsd:anyURI ;
             sh:prefix "schema" ],
         [ sh:namespace "https://joinedcontext.com/models/"^^xsd:anyURI ;
             sh:prefix "jc" ],
@@ -636,8 +630,14 @@ jc:RiverBasin a linkml:ClassDefinition,
             sh:prefix "ngsi-ld" ],
         [ sh:namespace "https://w3id.org/linkml/"^^xsd:anyURI ;
             sh:prefix "linkml" ],
+        [ sh:namespace "https://smartdatamodels.org/"^^xsd:anyURI ;
+            sh:prefix "sdm" ],
+        [ sh:namespace "https://purl.org/geojson/vocab#"^^xsd:anyURI ;
+            sh:prefix "geojson" ],
         [ sh:namespace "http://www.w3.org/2001/XMLSchema#"^^xsd:anyURI ;
-            sh:prefix "xsd" ] ;
+            sh:prefix "xsd" ],
+        [ sh:namespace "http://www.w3.org/ns/shex#"^^xsd:anyURI ;
+            sh:prefix "shex" ] ;
     linkml:annotations [ a linkml:Annotation ;
             skos:example "https://smart-data-models.github.io/dataModel.PointOfInterest/PointOfInterest/schema.json" ;
             linkml:tag "upstream_source"^^xsd:anyURI ] ;

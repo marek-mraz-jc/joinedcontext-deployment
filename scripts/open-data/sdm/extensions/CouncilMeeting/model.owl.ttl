@@ -12,31 +12,16 @@ jc:CouncilMeeting a owl:Class,
     rdfs:label "CouncilMeeting" ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:hyperlinkNaVysledkyHlasovani ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:dataset ],
+            owl:onProperty jc:iCOSamospravy ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:datumZasadnutia ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:cisloZasadnutia ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:iCOSamospravy ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:cZasadnutia ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:dataProvider ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
             owl:onProperty jc:hyperlinkNaPrijateUznesenia ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:hyperlinkNaZapisnicu ],
+            owl:onProperty jc:source ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:hyperlinkNaPozvanku ],
@@ -45,16 +30,31 @@ jc:CouncilMeeting a owl:Class,
             owl:onProperty jc:rok ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:hyperlinkNaDochadzku ],
+            owl:onProperty jc:dataProvider ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:source ],
+            owl:onProperty jc:dataset ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:hyperlinkNaZapisnicu ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:hyperlinkNaVysledkyHlasovani ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:cZasadnutia ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:organSamospravy ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:nazovSamospravy ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:organSamospravy ],
+            owl:onProperty jc:hyperlinkNaDochadzku ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:cisloZasadnutia ],
         jc:Entity ;
     skos:definition "A meeting of a council or another body of the self-government." ;
     skos:exactMatch jc:CouncilMeeting ;
@@ -66,10 +66,10 @@ jc:Entity a owl:Class,
     rdfs:label "Entity" ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:cardinality 1 ;
-            owl:onProperty jc:id ],
+            owl:onProperty jc:type ],
         [ a owl:Restriction ;
             owl:cardinality 1 ;
-            owl:onProperty jc:type ],
+            owl:onProperty jc:id ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:location ],
