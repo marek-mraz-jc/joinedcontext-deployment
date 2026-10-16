@@ -4,8 +4,8 @@ metadata:
   name: helsinki-catalogue
   namespace: helsinki
 spec:
-  # The data portal's assistant (T-3058, T-3181, AG-114): every page of data.dev.joinedcontext.com
-  # frames its widget (components/ckan, `ckan.catalogue.assistant`). It answers from the whole
+  # Helsinki's catalogue assistant (T-3058, T-3181, AG-114). Since T-4252 the shared catalogue's
+  # pages frame Banská Bystrica's public assistant instead; this one stays Helsinki's. It answers from the whole
   # catalogue (the data-portal source, public datasets only) and reads Helsinki's live data
   # through the public Endpoints the catalogue lists. A connector names an Endpoint of this
   # project only, so another body's live rows are reached through its dataset's links, not read.
