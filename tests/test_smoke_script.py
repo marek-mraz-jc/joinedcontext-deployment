@@ -379,7 +379,9 @@ HEALTHY_STATUSES = [
 # own primary colour, both from the block above and neither of them in any image (OPS-47).
 CATALOGUE_PAGE = (
     "<html><head><title>Example Context</title>"
-    "<style>:root { --jc-primary: #0000bf; }</style></head><body>Example Context</body></html>"
+    "<style>:root { --jc-primary: #0000bf; }</style>"
+    '<link rel="stylesheet" href="/webassets/base/1a2b3c4d_main.css">'
+    "</head><body>Example Context</body></html>"
 )
 
 # The Helsinki seed's slugs (T-0478), one per endpoint name, and the answers a healthy space
@@ -423,7 +425,10 @@ OGC_HEADERS = "HTTP/2 200\r\ncontent-type: application/geo+json\r\n"
 
 HEALTHY = {
     "ogcSeed": OGC_SEED,
-    "routes": ["portal-ui", "portal-api", "context-space", "context-endpoint", "gitea-forge", "ckan"],
+    "routes": ["portal-ui", "portal-api", "portal-public-assets", "context-space", "context-endpoint", "gitea-forge", "ckan"],
+    # The Portal's content-hashed chunks and CKAN's fingerprinted webassets are kept a year (T-4201).
+    "headers": [["/assets/", "HTTP/2 200\r\ncache-control: public, max-age=31536000, immutable\r\n"],
+                ["/webassets/", "HTTP/2 200\r\ncache-control: public, max-age=31536000, immutable\r\n"]],
     # The old path of each published App moves to its own host with no cookie (AP-133).
     "dumpedHeaders": [
         ["/ogc/features/collections/", OGC_HEADERS],
@@ -483,6 +488,7 @@ HEALTHY = {
                    {"name": "readers", "permission": "none",
                     "units_map": {"repo.code": "read", "repo.issues": "read", "repo.pulls": "read"}},
                ], separators=(",", ":"))],
+               ["portal.example.test/catalogue", '<script type="module" src="/assets/index-1a2b3c4d.js"></script>'],
                ["data.example.test/", CATALOGUE_PAGE]],
     "statuses": HEALTHY_STATUSES,
 }
@@ -961,7 +967,7 @@ def test_absent_routes_skip_instead_of_passing(tmp_path):
     assert "skip  chunked body (route portal-api not configured" in result.stdout
     assert "skip  App routes (route portal-ui not configured" in result.stdout
     assert "skip  ogc api features (route context-endpoint not configured" in result.stdout
-    assert "9 skipped" in result.stdout
+    assert "10 skipped" in result.stdout
 
 
 def test_an_app_old_path_that_serves_or_sets_a_cookie_fails_the_run(tmp_path):
