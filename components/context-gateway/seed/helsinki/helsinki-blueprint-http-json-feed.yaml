@@ -6,7 +6,12 @@ kind: Blueprint
 metadata:
   name: http-json-feed
   namespace: org
-  title: { en: "Poll a JSON feed into a Context Space", fi: "Lue JSON-syöte kontekstitilaan" }
+  title: { en: "Poll a JSON feed into a Context Space", fi: "Lue JSON-syöte kontekstitilaan", sk: "Načítavať kanál JSON do kontextového priestoru", cs: "Načítat kanál JSON do kontextového prostoru", de: "Einen JSON-Feed in einen Kontextbereich abfragen" }
+  description:
+    en: "Fetches a JSON resource on a schedule and writes its records as entities of one type."
+    sk: "Podľa plánu načíta zdroj JSON a jeho záznamy zapíše ako entity jedného typu."
+    cs: "Podle plánu načte zdroj JSON a jeho záznamy zapíše jako entity jednoho typu."
+    de: "Ruft eine JSON-Ressource nach Zeitplan ab und schreibt ihre Datensätze als Entitäten eines Typs."
 spec:
   version: 1.0.0
   category: ingestion
@@ -17,22 +22,23 @@ spec:
     required: [name, url, entityType, period]
     additionalProperties: false
     properties:
-      name: { type: string, title: "Flow name", pattern: "^[a-z][a-z0-9-]{1,40}$", description: "Names the DataSource and the Pipeline, one word with hyphens." }
-      url: { type: string, title: "URL of the JSON resource", format: uri }
-      entityType: { type: string, title: "Entity type written", pattern: "^[A-Z][A-Za-z0-9]+$", default: Event }
+      name: { type: string, title: "Flow name", x-jc-title: { sk: "Názov toku", cs: "Název toku", de: "Name des Ablaufs" }, pattern: "^[a-z][a-z0-9-]{1,40}$", description: "Names the DataSource and the Pipeline, one word with hyphens.", x-jc-description: { sk: "Pomenuje zdroj údajov a pipelinu, jedno slovo so spojovníkmi.", cs: "Pojmenuje zdroj dat a pipeline, jedno slovo se spojovníky.", de: "Benennt die Datenquelle und die Pipeline, ein Wort mit Bindestrichen." } }
+      url: { type: string, title: "URL of the JSON resource", x-jc-title: { sk: "URL zdroja JSON", cs: "URL zdroje JSON", de: "URL der JSON-Ressource" }, format: uri }
+      entityType: { type: string, title: "Entity type written", x-jc-title: { sk: "Zapisovaný typ entity", cs: "Zapisovaný typ entity", de: "Geschriebener Entitätstyp" }, pattern: "^[A-Z][A-Za-z0-9]+$", default: Event }
       period:
         type: string
         title: "Poll every"
+        x-jc-title: { sk: "Načítať každých", cs: "Načíst každých", de: "Abfragen alle" }
         default: 30m
         oneOf:
-          - { const: 1m, title: "Minute" }
-          - { const: 5m, title: "5 minutes" }
-          - { const: 15m, title: "15 minutes" }
-          - { const: 30m, title: "30 minutes" }
-          - { const: 1h, title: "Hour" }
-          - { const: 1d, title: "Day" }
-      schedule: { type: string, title: "Cron schedule", default: "*/30 * * * *", description: "The cron line of the period above." }
-      targetEndpoint: { type: string, title: "Endpoint the flow writes through", default: "urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all" }
+          - { const: 1m, title: "Minute", x-jc-title: { sk: "Minútu", cs: "Minutu", de: "Minute" } }
+          - { const: 5m, title: "5 minutes", x-jc-title: { sk: "5 minút", cs: "5 minut", de: "5 Minuten" } }
+          - { const: 15m, title: "15 minutes", x-jc-title: { sk: "15 minút", cs: "15 minut", de: "15 Minuten" } }
+          - { const: 30m, title: "30 minutes", x-jc-title: { sk: "30 minút", cs: "30 minut", de: "30 Minuten" } }
+          - { const: 1h, title: "Hour", x-jc-title: { sk: "Hodinu", cs: "Hodinu", de: "Stunde" } }
+          - { const: 1d, title: "Day", x-jc-title: { sk: "Deň", cs: "Den", de: "Tag" } }
+      schedule: { type: string, title: "Cron schedule", x-jc-title: { sk: "Plán cron", cs: "Plán cron", de: "Cron-Zeitplan" }, default: "*/30 * * * *", description: "The cron line of the period above.", x-jc-description: { sk: "Riadok cron pre interval vyššie.", cs: "Řádek cron pro interval výše.", de: "Die Cron-Zeile des Intervalls oben." } }
+      targetEndpoint: { type: string, title: "Endpoint the flow writes through", x-jc-title: { sk: "Endpoint, cez ktorý tok zapisuje", cs: "Endpoint, přes který tok zapisuje", de: "Endpoint, über den der Ablauf schreibt" }, default: "urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all" }
   templates:
     - name: datasource
       template: |
