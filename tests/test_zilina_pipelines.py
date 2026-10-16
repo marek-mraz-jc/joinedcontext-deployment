@@ -463,7 +463,7 @@ def test_the_six_indicators_are_the_cubes_newest_published_values(cubes):
     assert value("navstevnici-rok-mesto") == (sum(e["observationValue"]["value"] for e in months), "C62", year("2025"))
     for kpi in by_name.values():
         assert kpi["id"] == f"urn:ngsi-ld:KeyPerformanceIndicator:{DOMAIN}:zilina-kpi:{kpi['name']['value']}"
-        assert kpi["derivedFrom"]["object"] == f"urn:ngsi-ld:Endpoint:{DOMAIN}:zilina-mesto:zilina-mesto"
+        assert kpi["derivedFrom"]["value"] == f"urn:ngsi-ld:Endpoint:{DOMAIN}:zilina-mesto:zilina-mesto"
         assert kpi["currentValue"]["observedAt"].endswith("Z")
 
 

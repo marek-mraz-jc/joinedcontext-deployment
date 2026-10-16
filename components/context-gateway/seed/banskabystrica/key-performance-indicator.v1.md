@@ -16,8 +16,8 @@ below (Development/10 §4).
 | `currentValue` | Property | number or string | on the Property as `unitCode` | `jc:currentValue` |
 | `calculationPeriod` | Property | `{ start, end }` | RFC 3339 instants | `jc:calculationPeriod` |
 | `calculationFormula` | Property | string | | `jc:calculationFormula` |
-| `derivedFrom` | Relationship | uri | | `jc:derivedFrom` |
-| `computedBy` | Relationship | uri | | `jc:computedBy` |
+| `derivedFrom` | Property | uri | | `jc:derivedFrom` |
+| `computedBy` | Property | uri | | `jc:computedBy` |
 | `updatedAt` | Property | datetime | | `jc:updatedAt` |
 
 All seven own attributes are required, as are `id` and `type`.

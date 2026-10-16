@@ -23,8 +23,7 @@
       "@id": "jc:calculationPeriod"
     },
     "computedBy": {
-      "@id": "jc:computedBy",
-      "@type": "@id"
+      "@id": "jc:computedBy"
     },
     "currentValue": {
       "@id": "jc:currentValue"
@@ -34,8 +33,7 @@
       "@type": "xsd:integer"
     },
     "derivedFrom": {
-      "@id": "jc:derivedFrom",
-      "@type": "@id"
+      "@id": "jc:derivedFrom"
     },
     "end": {
       "@id": "jc:end",

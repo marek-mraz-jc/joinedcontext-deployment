@@ -74,7 +74,7 @@ spec:
         "currentValue": { "type": "Property", "value": c.pick.observationValue.value, "unitCode": c.spec.unit, "observedAt": c.pick.dateObserved.value },
         "calculationPeriod": { "type": "Property", "value": { "start": "%v-01-01T00:00:00Z".format(c.pick.refPeriod.value), "end": "%v-12-31T23:59:59Z".format(c.pick.refPeriod.value) } },
         "calculationFormula": { "type": "Property", "value": c.spec.formula },
-        "derivedFrom": { "type": "Relationship", "object": $source_endpoint },
-        "computedBy": { "type": "Relationship", "object": "urn:ngsi-ld:Pipeline:%v:%v:ukazovatele".format($domain, $space) },
+        "derivedFrom": { "type": "Property", "value": $source_endpoint },
+        "computedBy": { "type": "Property", "value": "urn:ngsi-ld:Pipeline:%v:%v:ukazovatele".format($domain, $space) },
         "updatedAt": { "type": "Property", "value": { "@type": "DateTime", "@value": $ran } }
       }) }
