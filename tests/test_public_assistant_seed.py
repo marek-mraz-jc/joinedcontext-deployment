@@ -75,6 +75,23 @@ def test_every_connector_is_a_public_mcp_endpoint_of_the_scope_with_read_only_to
         assert set(connector["tools"]) <= READ_ONLY, connector
 
 
+def test_the_connectors_are_every_public_mcp_endpoint_of_the_two_bodies():
+    # T-4256 (owner 2026-10-16): the assistant queries all the open data by default. The public
+    # `otvorene-data` servers of its project and scope are the curated read-only set, so every
+    # member of them is a connector, and an Endpoint added there joins without a hand edit here.
+    spec = deployment()
+    own = SCOPE[0]
+    members = {
+        member["name"] if project == own else f"{project}/{member['name']}"
+        for project in (own, *spec["scope"]["projects"])
+        for server in manifests("McpServer", project).values()
+        if server["spec"]["audience"] == "public"
+        for member in server["spec"]["members"]
+        if member["kind"] == "Endpoint"
+    }
+    assert {connector["endpoint"] for connector in spec["connectors"]} == members
+
+
 def test_the_public_mcp_servers_list_members_that_serve_mcp():
     # The gateway drops a member that does not serve MCP, so a server whose members lack it
     # lists no tool at all (T-4141's `otvorene-data` before T-4167).

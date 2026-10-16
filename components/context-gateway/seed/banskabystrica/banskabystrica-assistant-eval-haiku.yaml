@@ -26,13 +26,18 @@ spec:
   # web = www.banskabystrica.sk (T-3067), web-bbsk = www.bbsk.sk, data-portal = the two bodies'
   # CKAN datasets, catalogue = the city's public Endpoints described from this repository.
   sources: [web, web-bbsk, data-portal, catalogue, eval-uploads]
-  # Read-only tools on the public Endpoints that serve MCP; `public-air` stays out because the
-  # smoke run and the ETSI suite write test entities through it (its readings are also in
-  # banskabystrica-verejne). The region's bbsk-registre, bbsk-kraj-verejne and bbsk-kpi join as
-  # `bbsk/{endpoint}` once a connector may name a scoped project's Endpoint (T-4177); until
-  # then validation refuses any connector outside this project.
+  # Read-only tools on every member of the two bodies' public `otvorene-data` MCP servers, the
+  # region's as `bbsk/{endpoint}` (T-4177): all their open data by default (T-4256), and
+  # tests/test_public_assistant_seed.py fails when a member is added there and not here.
+  # `public-air` is no member, because the smoke run and the ETSI suite write test entities
+  # through it (its readings are also in banskabystrica-verejne).
   connectors:
     - { endpoint: banskabystrica-verejne, tools: [list_types, query_entities], timeoutSeconds: 20 }
+    - { endpoint: banskabystrica-otvorene-data, tools: [list_types, query_entities], timeoutSeconds: 20 }
+    - { endpoint: bbsk/bbsk-registre, tools: [list_types, query_entities], timeoutSeconds: 20 }
+    - { endpoint: bbsk/bbsk-kraj-verejne, tools: [list_types, query_entities], timeoutSeconds: 20 }
+    - { endpoint: bbsk/bbsk-kpi, tools: [list_types, query_entities], timeoutSeconds: 20 }
+    - { endpoint: bbsk/bbsk-otvorene-data, tools: [list_types, query_entities], timeoutSeconds: 20 }
   scope: { projects: [bbsk] }
   # The full chat page on the assistant host itself, the platform's demo page, and every page of
   # the data catalogue (dev's `ckan.catalogue.assistant`, T-4252).
