@@ -302,7 +302,8 @@ def package(ds, name, licence_id, resources, tables):
             "owner_org": CONFIG["organization"], "license_id": licence_id, "tags": tags,
             "url": ds["landing"] or ds["iri"],
             "extras": [{"key": k, "value": v} for k, v in extras.items() if v],
-            "resources": resources}
+            # The platform's standard APIs of the dataset, when its rows were converted (T-4279).
+            "resources": resources + od_standards(name)}
 
 
 def upsert(desired, tables):

@@ -10,6 +10,7 @@ import json
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from urllib.parse import quote
 
 import pytest
 import yaml
@@ -17,9 +18,12 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 FIXTURES = Path(__file__).resolve().parent / "fixtures/bbsk-hub"
 
+# What the CronJob runs: od-standards.py, then the script (templates/harvest.yaml).
 spec = importlib.util.spec_from_file_location("harvest", ROOT / "charts/ckan/files/harvest-hub.py")
 harvest = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(harvest)
+exec(compile((ROOT / "charts/ckan/files/od-standards.py").read_text() + "\n"
+             + (ROOT / "charts/ckan/files/harvest-hub.py").read_text(), spec.origin, "exec"), harvest.__dict__)
+OD_DATASETS = json.loads((ROOT / "charts/ckan/files/od-datasets.json").read_text())
 
 APS = "b5486911cb0342e48d475130d1d5e960"
 OBCE, OKRESY = "40138c783eaa46cd8cd3c8e09ab67127", "04e229d8b39b415497081c63a74c94f9"
@@ -156,6 +160,43 @@ def test_a_dataset_carries_licence_publisher_and_one_csv_and_geojson_per_layer()
     assert package["resources"][0]["name"] == "Kultúrne inštitúcie CSV"
     assert "<" not in package["notes"] and "style=" not in package["notes"]
     assert len(package["name"]) <= 100 and package["name"].startswith("bbsk-kulturne-institucie")
+
+
+def test_a_converted_dataset_lists_the_platform_apis_and_an_unconverted_one_none(monkeypatch):
+    """T-4279: the dataset whose rows became entities gains a distribution per standard, each
+    reading only its rows where the standard can filter; a dataset nobody converted gains none."""
+    monkeypatch.setattr(harvest, "OD_DATASETS", OD_DATASETS)
+    monkeypatch.setattr(harvest, "OD_GATEWAY", "https://dev.joinedcontext.com")
+    item = next(i for i in items() if i["id"] == CULTURE)
+    package = harvest.dataset(item, item["title"], layers_of(item), dev_source())
+    apis = [r for r in package["resources"] if r.get("resource_type") == "api"]
+    assert [r["format"] for r in package["resources"] if r not in apis] == ["CSV", "GeoJSON"] * 3 + ["Esri REST"]
+    entry = OD_DATASETS[package["name"]]
+    assert entry["location"], "the culture layer has points, so GeoJSON and OGC are listed"
+    root = f"https://dev.joinedcontext.com/api/endpoint/{entry['endpoint']}/"
+    urls = [r["url"] for r in apis]
+    assert [u.split("?")[0].removeprefix(root) for u in urls[:-1]] == [
+        "ngsi-ld/v1/entities", "file.geojson", "file.csv", "file.json", "file.xlsx",
+        "ogc/features/collections/PointOfInterest/items", "odata/v4/PointOfInterest", "mcp"]
+    assert apis[-1]["url"] == "wss://dev.joinedcontext.com/api/endpoint/" + entry["endpoint"] + "/ws"
+    mine = "?type=PointOfInterest&q=dataset%3D%3D%22" + quote(entry["dataset"], safe="") + "%22"
+    assert urls[0].endswith(mine) and urls[2].endswith(mine)
+    assert all("conforms_to" in r for r in apis if r["format"] in ("JSON-LD", "GeoJSON"))
+    assert all(r["description"].startswith("Every PointOfInterest") for r in apis if "?" not in r["url"])
+
+    other = next(i for i in items() if i["id"] == APS)
+    assert not any(r.get("resource_type") == "api" for r in
+                   harvest.dataset(other, other["title"], layers_of(other), dev_source())["resources"])
+    monkeypatch.setattr(harvest, "OD_GATEWAY", "")
+    assert harvest.od_standards(package["name"]) == [], "no gateway set lists nothing"
+
+
+def test_the_cronjob_carries_the_mapping_and_the_dev_gateway(rendered):
+    container = by_name(rendered("dev"), "CronJob", "ckan-harvest-bbsk")["spec"]["jobTemplate"]["spec"]["template"]["spec"]["containers"][0]
+    env = {e["name"]: e.get("value") for e in container["env"]}
+    assert json.loads(env["OD_DATASETS"]) == OD_DATASETS
+    assert env["OD_GATEWAY"] == "https://dev.joinedcontext.com"
+    assert container["args"][0].startswith((ROOT / "charts/ckan/files/od-standards.py").read_text())
 
 
 def test_a_table_has_no_geojson_and_a_link_off_the_allowed_hosts_is_dropped():
