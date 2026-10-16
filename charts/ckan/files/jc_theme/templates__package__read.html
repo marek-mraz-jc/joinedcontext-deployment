@@ -29,7 +29,8 @@
             {% if preview.total is not none %}<span class="jc-table-rows">{{ h.jc_rows(preview.total) }}</span>{% endif %}
           </summary>
           {% if preview.view %}
-            <iframe class="jc-grid" loading="lazy"
+            {# A short table gets a short frame: 20 rows a page at most (T-4333). #}
+            <iframe class="jc-grid" loading="lazy" style="--jc-rows: {{ [preview.total or 20, 20]|min }}"
                     title="{{ h.jc_t('table_title') }}: {{ name }}"
                     src="{{ h.url_for(pkg.type ~ '_resource.view', id=pkg.name, resource_id=res.id, view_id=preview.view.id) }}"></iframe>
           {% else %}
@@ -66,7 +67,8 @@
       <p>{{ h.jc_t('live_lead') }}</p>
       <div class="jc-copy">
         <label for="jc-live-url" class="visually-hidden">{{ h.jc_t('live') }}</label>
-        <input id="jc-live-url" class="form-control" type="text" readonly value="{{ live.url }}">
+        {# A block that wraps, not a field that cuts the address at a phone's edge (T-4333). #}
+        <pre id="jc-live-url" class="jc-live-url" tabindex="0"><code>{{ live.url }}</code></pre>
         <button type="button" class="btn btn-default" data-jc-copy="jc-live-url" data-jc-copied="{{ h.jc_t('copied') }}">{{ h.jc_t('copy') }}</button>
       </div>
       <p class="jc-example-label" id="jc-example-label">{{ h.jc_t('example') }}</p>
