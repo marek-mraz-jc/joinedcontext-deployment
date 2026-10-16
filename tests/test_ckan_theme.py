@@ -683,7 +683,9 @@ def test_the_assistant_leaves_the_page_room_and_takes_a_phone_s_whole_screen():
     phone = css.split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
     assert ".jc-assistant[open] { inset: 0;" in phone
     assert "body:has(.jc-assistant[open]) { overflow: hidden; }" in phone
-    assert "position: static; flex: 1; width: 100%" in phone
+    # The frame takes its size from the screen, below the 3.25rem bar (T-4248).
+    assert "block-size: 3.25rem;" in phone
+    assert "inset: 3.25rem 0 auto 0; width: 100%; height: calc(100vh - 3.25rem); height: calc(100dvh - 3.25rem);" in phone
     footer = (THEME / "footer.html").read_text()
     assert "<script src=\"{{ h.url_for_static('/jc-assistant.js') }}\" defer></script>" in footer
     script = (THEME / "public__jc-assistant.js").read_text()
