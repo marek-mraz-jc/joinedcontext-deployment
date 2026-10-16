@@ -193,3 +193,28 @@ def test_the_space_keeps_a_week_and_the_endpoint_serves_every_surface_without_na
     assert generate.SLUG == endpoint["spec"]["slug"]
     index = yaml.safe_load((SEED / "index.yaml").read_text())
     assert sorted(index) == sorted(p.name for p in SEED.iterdir() if p.name != "index.yaml")
+
+
+def message_urls(value) -> list[str]:
+    """Every `url`/`urls` value taken whole from the message: what jc-core's PL-07 check refuses."""
+    if isinstance(value, list):
+        return [u for v in value for u in message_urls(v)]
+    if not isinstance(value, dict):
+        return []
+    found = []
+    for key, inner in value.items():
+        if key == "url" and isinstance(inner, str) and inner.lstrip().startswith("${!"):
+            found.append(inner)
+        if key == "urls" and isinstance(inner, list):
+            found += [u for u in inner if isinstance(u, str) and u.lstrip().startswith("${!")]
+        found += message_urls(inner)
+    return found
+
+
+def test_no_seeded_pipeline_takes_its_url_whole_from_the_message():
+    # T-4373: dev refused ovzdusie (RunnerRefused, PL-07) for `url: "${! @url }"`.
+    refused = {}
+    for path in sorted(ROOT.glob("components/context-gateway/seed/*/*bento*.yaml")):
+        if found := message_urls(yaml.safe_load(path.read_text())):
+            refused[path.name] = found
+    assert refused == {}

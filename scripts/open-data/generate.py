@@ -469,6 +469,10 @@ def bento(e: dict, slug: str, model_ranges: dict[str, str]) -> str:
         first, *rest = s["pages"]
         tag = lambda x: {"key": x["key"], "name": x["name"]}  # noqa: E731
         stubs = [{**tag(x), "url": layer_query(x, str(x["offset"]))} for x in rest]
+        # PL-07: the step names the server; only the page's path and query come from the message.
+        split = urllib.parse.urlsplit(first["url"])
+        origin = f"{split.scheme}://{split.netloc}/"
+        assert all(x["url"].startswith(origin) for x in stubs), f"every page on {origin}"
         steps.append(f"""\
     - mapping: |
         let rest = {json.dumps(stubs, ensure_ascii=False)}
@@ -480,11 +484,12 @@ def bento(e: dict, slug: str, model_ranges: dict[str, str]) -> str:
           processors:
             - mapping: |
                 meta url = this.url
+                meta path = this.url.trim_prefix({json.dumps(origin)})
                 meta key = this.key
                 meta name = this.name
                 root = ""
             - http:
-                url: "${{! @url }}"
+                url: "{origin}${{! @path }}"
                 verb: GET
                 headers:
                   Accept: application/geo+json

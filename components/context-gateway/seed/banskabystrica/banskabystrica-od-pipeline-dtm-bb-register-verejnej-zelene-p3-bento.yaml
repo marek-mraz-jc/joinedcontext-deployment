@@ -13,11 +13,12 @@ pipeline:
           processors:
             - mapping: |
                 meta url = this.url
+                meta path = this.url.trim_prefix("https://dtm-banskabystrica.tmapserver.sk/")
                 meta key = this.key
                 meta name = this.name
                 root = ""
             - http:
-                url: "${! @url }"
+                url: "https://dtm-banskabystrica.tmapserver.sk/${! @path }"
                 verb: GET
                 headers:
                   Accept: application/geo+json
