@@ -17,7 +17,7 @@ spec:
         - type: BikeHireDockingStation
         - type: Vehicle
         - type: GtfsStop
-        - type: TransitRoute
+        - type: PublicTransportRoute
         # HSL's GTFS static feed (T-3890).
         - type: GtfsStation
         - type: GtfsAgency

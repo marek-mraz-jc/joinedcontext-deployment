@@ -345,11 +345,11 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
-### TransitRoute
+### PublicTransportRoute
 
-One HSL line in one direction: its number, where it runs to, its stops in order and the line through them. A line with several variants has one entity per variant.
+One HSL line in one direction: its number, where it runs to, its stops in order and the line through them. A line with several variants has one entity per variant. The Smart Data Model's generic public transport route (T-4329); GtfsRoute is the line without a direction.
 
-IRI: `jc:TransitRoute`
+IRI: `sdm:PublicTransportRoute`
 
 Specialises `Entity`.
 
@@ -361,6 +361,7 @@ Specialises `Entity`.
 | `headsign` | Property | `string` |  |  | `jc:headsign` | Where the line runs to in this direction, as its sign shows it. |
 | `directionId` | Property | `integer` |  |  | `jc:directionId` | HSL's direction of the line, 1 or 2. |
 | `transportMode` | Property | [`TransportMode`](#transportmode) |  |  | `jc:transportMode` | What serves the stop or runs the line. |
+| `transportationType` | Property | `integer` | yes |  | `sdm:transportationType` | What runs the line as its GTFS route type (0 tram, 1 metro, 2 train, 3 bus, 4 ferry), the number the Smart Data Model requires beside the word `transportMode` gives. |
 | `stopSequence` | Property | `string` (list) |  |  | `jc:stopSequence` | The stops the line serves in this direction, in order, each the GTFS stop id that ends the id of a GtfsStop of this space. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
@@ -418,7 +419,7 @@ Specialises `Entity`.
 
 ### GtfsRoute
 
-One HSL line as GTFS gives it, both directions and every variant: its number, its name, what runs it and who operates it. Its stops in order are TransitRoute's.
+One HSL line as GTFS gives it, both directions and every variant: its number, its name, what runs it and who operates it. Its stops in order are PublicTransportRoute's.
 
 IRI: `sdm:GtfsRoute`
 

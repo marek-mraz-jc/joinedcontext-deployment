@@ -7,7 +7,7 @@ import yaml
 
 HELSINKI = Path(__file__).resolve().parent.parent / "components/context-gateway/seed/helsinki"
 
-TRANSPORT = {"Vehicle", "GtfsStop", "TransitRoute", "GtfsStation", "GtfsAgency", "GtfsRoute", "GtfsShape",
+TRANSPORT = {"Vehicle", "GtfsStop", "PublicTransportRoute", "GtfsStation", "GtfsAgency", "GtfsRoute", "GtfsShape",
              "Alert", "OffStreetParking"}
 
 

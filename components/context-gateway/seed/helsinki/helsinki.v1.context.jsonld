@@ -52,8 +52,8 @@
     "PublicAreaPermit": {
       "@id": "jc:PublicAreaPermit"
     },
-    "TransitRoute": {
-      "@id": "jc:TransitRoute"
+    "PublicTransportRoute": {
+      "@id": "sdm:PublicTransportRoute"
     },
     "Vehicle": {
       "@id": "sdm:Vehicle"
@@ -411,6 +411,10 @@
         "text": "skos:notation"
       },
       "@id": "jc:transportMode"
+    },
+    "transportationType": {
+      "@id": "sdm:transportationType",
+      "@type": "xsd:integer"
     },
     "type": "@type",
     "unknownReference": {

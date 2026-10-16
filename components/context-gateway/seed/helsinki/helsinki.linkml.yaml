@@ -606,6 +606,18 @@ slots:
     range: TransportMode
     annotations:
       ngsi_ld_kind: Property
+  transportationType:
+    slot_uri: sdm:transportationType
+    description: >-
+      What runs the line as its GTFS route type (0 tram, 1 metro, 2 train, 3 bus, 4 ferry), the
+      number the Smart Data Model requires beside the word `transportMode` gives.
+    range: integer
+    minimum_value: 0
+    maximum_value: 7
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
   stopSequence:
     slot_uri: jc:stopSequence
     description: >-
@@ -1006,12 +1018,15 @@ classes:
       - page
       - dataProvider
       - source
-  TransitRoute:
-    class_uri: jc:TransitRoute
+  PublicTransportRoute:
+    class_uri: sdm:PublicTransportRoute
     description: >-
       One HSL line in one direction: its number, where it runs to, its stops in order and the
-      line through them. A line with several variants has one entity per variant.
+      line through them. A line with several variants has one entity per variant. The Smart Data
+      Model's generic public transport route (T-4329); GtfsRoute is the line without a direction.
     is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
     slots:
       - name
       - route
@@ -1019,6 +1034,7 @@ classes:
       - headsign
       - directionId
       - transportMode
+      - transportationType
       - stopSequence
       - dataProvider
       - source
@@ -1057,7 +1073,7 @@ classes:
     class_uri: sdm:GtfsRoute
     description: >-
       One HSL line as GTFS gives it, both directions and every variant: its number, its name,
-      what runs it and who operates it. Its stops in order are TransitRoute's.
+      what runs it and who operates it. Its stops in order are PublicTransportRoute's.
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility

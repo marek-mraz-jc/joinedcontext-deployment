@@ -904,7 +904,7 @@
     },
     "GtfsRoute": {
       "additionalProperties": false,
-      "description": "One HSL line as GTFS gives it, both directions and every variant: its number, its name, what runs it and who operates it. Its stops in order are TransitRoute's.",
+      "description": "One HSL line as GTFS gives it, both directions and every variant: its number, its name, what runs it and who operates it. Its stops in order are PublicTransportRoute's.",
       "properties": {
         "dataProvider": {
           "description": "Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space).",
@@ -2158,43 +2158,9 @@
       "title": "PublicAreaPermit",
       "type": "object"
     },
-    "ServiceCategory": {
-      "description": "",
-      "enum": [
-        "library",
-        "healthStation",
-        "swimmingHall",
-        "beach",
-        "school"
-      ],
-      "title": "ServiceCategory",
-      "type": "string",
-      "x-enum-descriptions": {
-        "beach": "A public beach.",
-        "healthStation": "A health station.",
-        "library": "A public library.",
-        "school": "A comprehensive school.",
-        "swimmingHall": "An indoor swimming hall."
-      }
-    },
-    "StreetParkingCategory": {
-      "description": "The OnStreetParking `category` values the city's layers use, a subset of the Smart Data Model's enum.",
-      "enum": [
-        "public",
-        "feeCharged",
-        "forResidents"
-      ],
-      "title": "StreetParkingCategory",
-      "type": "string",
-      "x-enum-descriptions": {
-        "feeCharged": "A parking fee zone; parking costs by the hour.",
-        "forResidents": "A resident parking zone; residents and businesses of the zone park on its permit.",
-        "public": "A parking area of the parking guide, open to anyone."
-      }
-    },
-    "TransitRoute": {
+    "PublicTransportRoute": {
       "additionalProperties": false,
-      "description": "One HSL line in one direction: its number, where it runs to, its stops in order and the line through them. A line with several variants has one entity per variant.",
+      "description": "One HSL line in one direction: its number, where it runs to, its stops in order and the line through them. A line with several variants has one entity per variant. The Smart Data Model's generic public transport route (T-4329); GtfsRoute is the line without a direction.",
       "properties": {
         "dataProvider": {
           "description": "Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space).",
@@ -2316,6 +2282,13 @@
           "description": "What serves the stop or runs the line.",
           "x-ngsi-ld-kind": "Property"
         },
+        "transportationType": {
+          "description": "What runs the line as its GTFS route type (0 tram, 1 metro, 2 train, 3 bus, 4 ferry), the number the Smart Data Model requires beside the word `transportMode` gives.",
+          "maximum": 7,
+          "minimum": 0,
+          "type": "integer",
+          "x-ngsi-ld-kind": "Property"
+        },
         "type": {
           "description": "The entity type, one class of a published data model.",
           "type": "string",
@@ -2323,11 +2296,46 @@
         }
       },
       "required": [
+        "transportationType",
         "id",
         "type"
       ],
-      "title": "TransitRoute",
+      "title": "PublicTransportRoute",
       "type": "object"
+    },
+    "ServiceCategory": {
+      "description": "",
+      "enum": [
+        "library",
+        "healthStation",
+        "swimmingHall",
+        "beach",
+        "school"
+      ],
+      "title": "ServiceCategory",
+      "type": "string",
+      "x-enum-descriptions": {
+        "beach": "A public beach.",
+        "healthStation": "A health station.",
+        "library": "A public library.",
+        "school": "A comprehensive school.",
+        "swimmingHall": "An indoor swimming hall."
+      }
+    },
+    "StreetParkingCategory": {
+      "description": "The OnStreetParking `category` values the city's layers use, a subset of the Smart Data Model's enum.",
+      "enum": [
+        "public",
+        "feeCharged",
+        "forResidents"
+      ],
+      "title": "StreetParkingCategory",
+      "type": "string",
+      "x-enum-descriptions": {
+        "feeCharged": "A parking fee zone; parking costs by the hour.",
+        "forResidents": "A resident parking zone; residents and businesses of the zone park on its permit.",
+        "public": "A parking area of the parking guide, open to anyone."
+      }
     },
     "TransportMode": {
       "description": "",

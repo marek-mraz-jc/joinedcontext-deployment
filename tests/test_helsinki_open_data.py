@@ -42,7 +42,7 @@ FEEDS = {
     "fee-parking-zones": ("payment-zones.json", "OnStreetParking", 1),
     "resident-parking-zones": ("resident-zones.json", "OnStreetParking", 2),
     # Every row of three line variants: a ferry, a metro line and a one-stop variant.
-    "transit-routes": ("hsl-routes.json", "TransitRoute", 3),
+    "transit-routes": ("hsl-routes.json", "PublicTransportRoute", 3),
 }
 
 
@@ -207,9 +207,10 @@ def test_a_line_lists_its_stops_in_order_whatever_order_its_rows_come_in(written
     expected = [r["stop_id"] for r in sorted(rows, key=lambda r: r["stop_seque"])]
     recording["features"].reverse()
     for entities in (written["transit-routes"], run("transit-routes", recording)):
-        line = next(e for e in entities if e["id"] == "urn:ngsi-ld:TransitRoute:hel.fi:helsinki:31M1-1")
+        line = next(e for e in entities if e["id"] == "urn:ngsi-ld:PublicTransportRoute:hel.fi:helsinki:31M1-1")
         assert line["stopSequence"]["value"] == expected
         assert line["transportMode"]["value"] == "metro"
+        assert line["transportationType"]["value"] == 1
         assert line["location"]["value"]["type"] == "LineString"
         assert len(line["location"]["value"]["coordinates"]) == len(expected)
     alone = next(e for e in written["transit-routes"] if e["id"].endswith(":4625-10"))
@@ -290,3 +291,12 @@ def test_the_street_parking_layers_are_the_smart_data_model_on_street_parking_to
             assert open_data.sdm_errors("dataModel.Parking/OnStreetParking", entity) == [], (name, entity["id"])
     # A zone code the model types as an integer would not be the sign's letter: it stays text.
     assert all(isinstance(e["zoneCode"]["value"], str) for e in written["resident-parking-zones"])
+
+
+@requires_docker
+def test_a_line_variant_is_the_smart_data_model_public_transport_route_with_its_gtfs_route_type(written):
+    """T-4329: the SDM requires the GTFS route type as a number; the ferry is 4, the metro 1."""
+    types = {e["transportMode"]["value"]: e["transportationType"]["value"] for e in written["transit-routes"]}
+    assert types["metro"] == 1 and types.get("ferry", 4) == 4 and all(v in range(8) for v in types.values())
+    for entity in written["transit-routes"]:
+        assert open_data.sdm_errors("dataModel.UrbanMobility/PublicTransportRoute", entity) == [], entity["id"]
