@@ -31,8 +31,9 @@ spec:
   connectors:
     - { endpoint: banskabystrica-verejne, tools: [list_types, query_entities], timeoutSeconds: 20 }
   scope: { projects: [bbsk] }
-  # The full chat page on the assistant host itself, and the platform's demo page.
-  allowedOrigins: [https://assistant.dev.joinedcontext.com, https://dev.joinedcontext.com]
+  # The full chat page on the assistant host itself, the platform's demo page, and every page of
+  # the data catalogue (dev's `ckan.catalogue.assistant`, T-4252).
+  allowedOrigins: [https://assistant.dev.joinedcontext.com, https://dev.joinedcontext.com, https://data.dev.joinedcontext.com]
   # T-4149 item 1 defaults.
   rateLimit: { requestsPerMinute: 30, perClientPerMinute: 10, perClientPerHour: 60, perClientPerDay: 200, streamsPerClient: 2 }
   budget:
