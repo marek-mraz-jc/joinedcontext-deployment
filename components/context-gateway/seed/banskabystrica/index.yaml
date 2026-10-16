@@ -180,6 +180,15 @@ banskabystrica-od-pipeline-aktuality-bento.yaml: projects/banskabystrica/pipelin
 banskabystrica-od-datasource-dotacie.yaml: projects/banskabystrica/datasources/od-dotacie.yaml
 banskabystrica-od-pipeline-dotacie.yaml: projects/banskabystrica/pipelines/od-dotacie/pipeline.yaml
 banskabystrica-od-pipeline-dotacie-bento.yaml: projects/banskabystrica/pipelines/od-dotacie/bento.yaml
+banskabystrica-od-datasource-dtm-bb-register-adries.yaml: projects/banskabystrica/datasources/od-dtm-bb-register-adries.yaml
+banskabystrica-od-pipeline-dtm-bb-register-adries.yaml: projects/banskabystrica/pipelines/od-dtm-bb-register-adries/pipeline.yaml
+banskabystrica-od-pipeline-dtm-bb-register-adries-bento.yaml: projects/banskabystrica/pipelines/od-dtm-bb-register-adries/bento.yaml
+banskabystrica-od-datasource-dtm-bb-register-stavby.yaml: projects/banskabystrica/datasources/od-dtm-bb-register-stavby.yaml
+banskabystrica-od-pipeline-dtm-bb-register-stavby.yaml: projects/banskabystrica/pipelines/od-dtm-bb-register-stavby/pipeline.yaml
+banskabystrica-od-pipeline-dtm-bb-register-stavby-bento.yaml: projects/banskabystrica/pipelines/od-dtm-bb-register-stavby/bento.yaml
+banskabystrica-od-datasource-dtm-bb-register-ulic.yaml: projects/banskabystrica/datasources/od-dtm-bb-register-ulic.yaml
+banskabystrica-od-pipeline-dtm-bb-register-ulic.yaml: projects/banskabystrica/pipelines/od-dtm-bb-register-ulic/pipeline.yaml
+banskabystrica-od-pipeline-dtm-bb-register-ulic-bento.yaml: projects/banskabystrica/pipelines/od-dtm-bb-register-ulic/bento.yaml
 banskabystrica-od-datasource-objednavky-bb.yaml: projects/banskabystrica/datasources/od-objednavky-bb.yaml
 banskabystrica-od-pipeline-objednavky-bb.yaml: projects/banskabystrica/pipelines/od-objednavky-bb/pipeline.yaml
 banskabystrica-od-pipeline-objednavky-bb-bento.yaml: projects/banskabystrica/pipelines/od-objednavky-bb/bento.yaml

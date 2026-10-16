@@ -24,6 +24,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import math
 import re
 import secrets
 import subprocess
@@ -71,6 +72,8 @@ COMMON = {
 # A column whose attribute name is one of these keeps its value as `column<Name>`.
 TAKEN = {*COMMON, "location", "observedAt", "name"}
 LICENCE = {"cc-by": "CC BY 4.0", "cc-by-sa": "CC BY-SA 4.0"}
+# The source kinds whose rows are GeoJSON features: the columns sit under `properties`.
+FEATURES = {"esri-featureserver", "zip-geojson"}
 
 
 def slugs(entries: list[dict]) -> dict[str, str]:
@@ -155,9 +158,98 @@ map date {
 }"""
 
 
+def krovak_maps() -> str:
+    """Bloblang maps `sjtsk` ([E, N] of EPSG:5514 to [lon, lat] of EPSG:4326, 7 decimals) and
+    `sjtsk_coords` (any GeoJSON coordinates array). EPSG guidance note 7-2, Krovak East North
+    (method 1041) inverse on Bessel 1841, then the Helmert position-vector shift of EPSG:5239
+    (S-JTSK to WGS 84, Slovakia, about 1 m) and Bowring back to latitude. Bloblang has tan, sin,
+    cos and pow but no atan or asin: atan is three Newton steps on tan from a 0.002 rad guess."""
+    a, f = 6377397.155, 1 / 299.1528128
+    e2 = 2 * f - f * f
+    e = math.sqrt(e2)
+    phi_c, lam0, alpha_c, phi_p, k_p = math.radians(49.5), math.radians(24 + 50 / 60), math.radians(30.28813972222222), math.radians(78.5), 0.9999
+    big_a = a * math.sqrt(1 - e2) / (1 - e2 * math.sin(phi_c) ** 2)
+    b = math.sqrt(1 + e2 * math.cos(phi_c) ** 4 / (1 - e2))
+    g0 = math.asin(math.sin(phi_c) / b)
+    t0 = math.tan(math.pi / 4 + g0 / 2) * ((1 + e * math.sin(phi_c)) / (1 - e * math.sin(phi_c))) ** (e * b / 2) / math.tan(math.pi / 4 + phi_c / 2) ** b
+    n = math.sin(phi_p)
+    r0 = k_p * big_a / math.tan(phi_p)
+    sec = math.pi / 180 / 3600
+    tx, ty, tz, rx, ry, rz = 485.021, 169.465, 483.839, 7.786342 * sec, 4.397554 * sec, 4.102655 * sec
+    aw, fw = 6378137.0, 1 / 298.257223563
+    e2w, bw = 2 * fw - fw * fw, aw * (1 - fw)
+    ep2 = (aw * aw - bw * bw) / (bw * bw)
+    pi, half, quarter = math.pi, math.pi / 2, math.pi / 4
+    # Bloblang reads no exponent, so every constant is written out in fixed point.
+    c = {k: f"{v:.20f}".rstrip("0").rstrip(".") for k, v in dict(
+        pi=pi, half=half, quarter=quarter, e=e, e2=e2, a=a, b=b, ib=1 / b, he=e / 2, n=n, inn=1 / n, r0=r0,
+        tp=math.tan(quarter + phi_p / 2), ca=math.cos(alpha_c), sa=math.sin(alpha_c), lam0=lam0,
+        k=t0 ** (-1 / b), tx=tx, ty=ty, tz=tz, rx=rx, ry=ry, rz=rz, aw=aw, bw=bw, e2w=e2w, ep2=ep2,
+        deg=180 / pi).items()}
+    return f"""\
+map atan1 {{
+  let x = this
+  let y0 = $x * {c['quarter']} - $x * ($x.abs() - 1) * (0.2447 + 0.0663 * $x.abs())
+  let t0 = $y0.tan()
+  let y1 = $y0 - ($t0 - $x) / (1 + $t0 * $t0)
+  let t1 = $y1.tan()
+  let y2 = $y1 - ($t1 - $x) / (1 + $t1 * $t1)
+  let t2 = $y2.tan()
+  root = $y2 - ($t2 - $x) / (1 + $t2 * $t2)
+}}
+map atan {{
+  let x = this
+  root = if $x > 1 {{ {c['half']} - (1 / $x).apply("atan1") }} else if $x < -1 {{ -{c['half']} - (1 / $x).apply("atan1") }} else {{ $x.apply("atan1") }}
+}}
+map asin {{
+  let x = this
+  root = ($x / (1 - $x * $x).pow(0.5)).apply("atan")
+}}
+map atan2 {{
+  let y = this.index(0)
+  let x = this.index(1)
+  let t = if $x == 0 {{ 0 }} else {{ ($y / $x).apply("atan") }}
+  root = if $x > 0 {{ $t }} else if $x < 0 && $y >= 0 {{ $t + {c['pi']} }} else if $x < 0 {{ $t - {c['pi']} }} else if $y > 0 {{ {c['half']} }} else {{ -{c['half']} }}
+}}
+map sjtsk_lat {{
+  let es = {c['e']} * this.phi.sin()
+  root = {{"tu": this.tu, "phi": 2 * (({c['k']} * this.tu.pow({c['ib']}) * ((1 + $es) / (1 - $es)).pow({c['he']})).apply("atan") - {c['quarter']})}}
+}}
+map sjtsk {{
+  let xp = 0 - this.index(1)
+  let yp = 0 - this.index(0)
+  let r = ($xp * $xp + $yp * $yp).pow(0.5)
+  let d = ($yp / $xp).apply("atan") * {c['inn']}
+  let t = 2 * ((({c['r0']} / $r).pow({c['inn']}) * {c['tp']}).apply("atan") - {c['quarter']})
+  let u = ({c['ca']} * $t.sin() - {c['sa']} * $t.cos() * $d.cos()).apply("asin")
+  let v = ($t.cos() * $d.sin() / $u.cos()).apply("asin")
+  let lam = {c['lam0']} - $v * {c['ib']}
+  let tu = ($u / 2 + {c['quarter']}).tan()
+  let phi = {{"phi": $u, "tu": $tu}}.apply("sjtsk_lat").apply("sjtsk_lat").apply("sjtsk_lat").apply("sjtsk_lat").phi
+  let sp = $phi.sin()
+  let nn = {c['a']} / (1 - {c['e2']} * $sp * $sp).pow(0.5)
+  let x = $nn * $phi.cos() * $lam.cos()
+  let y = $nn * $phi.cos() * $lam.sin()
+  let z = $nn * (1 - {c['e2']}) * $sp
+  let x2 = {c['tx']} + $x - {c['rz']} * $y + {c['ry']} * $z
+  let y2 = {c['ty']} + {c['rz']} * $x + $y - {c['rx']} * $z
+  let z2 = {c['tz']} - {c['ry']} * $x + {c['rx']} * $y + $z
+  let p = ($x2 * $x2 + $y2 * $y2).pow(0.5)
+  let q = [$z2 * {c['aw']}, $p * {c['bw']}].apply("atan2")
+  let sq = $q.sin()
+  let cq = $q.cos()
+  let lat = [$z2 + {c['ep2']} * {c['bw']} * $sq * $sq * $sq, $p - {c['e2w']} * {c['aw']} * $cq * $cq * $cq].apply("atan2")
+  let lon = [$y2, $x2].apply("atan2")
+  root = [($lon * {c["deg"]} * 10000000).round() / 10000000, ($lat * {c["deg"]} * 10000000).round() / 10000000]
+}}
+map sjtsk_coords {{
+  root = if this.index(0).type() == "number" {{ this.apply("sjtsk") }} else {{ this.map_each(c -> c.apply("sjtsk_coords")) }}
+}}"""
+
+
 def entity(e: dict, slug: str, model_ranges: dict[str, str], source_url: str) -> str:
     kind = e["source"]["kind"]
-    path = "this.properties" if kind == "esri-featureserver" else "this"
+    path = "this.properties" if kind in FEATURES else "this"
     cols = {a: p["column"] for a, p in e["properties"].items()}
     keys = e["entityId"].get("keys")
     if keys:
@@ -178,6 +270,9 @@ def entity(e: dict, slug: str, model_ranges: dict[str, str], source_url: str) ->
         lines.append(f"  {q(attribute(a))}: {column(path, kind, c)}.apply({q(model_ranges[attribute(a)])}),")
     if kind == "esri-featureserver" and e["source"].get("geometry"):
         lines.append("  \"location\": if this.geometry.or(null) == null { null } else { { \"type\": \"GeoProperty\", \"value\": this.geometry } },")
+    elif kind == "zip-geojson":
+        lines.append("  \"location\": if this.geometry.or(null) == null { null } else { { \"type\": \"GeoProperty\", "
+                     "\"value\": { \"type\": this.geometry.type, \"coordinates\": this.geometry.coordinates.apply(\"sjtsk_coords\") } } },")
     credit = f"{e['dataProvider']} ({LICENCE.get(e['license'], e['license'])})"
     lines += [
         f"  \"dataProvider\": {{ \"type\": \"Property\", \"value\": {q(credit)} }},",
@@ -215,6 +310,8 @@ def source_url(e: dict) -> str:
     s = e["source"]
     if s["kind"] == "esri-featureserver":
         return esri_query(e, "0")
+    if s["kind"] == "zip-geojson":
+        return s["url"]
     if s["kind"] == "ckan-datastore":
         return f"{CKAN}/api/3/action/datastore_search?resource_id={s['resource']}&limit=32000"
     fields = ",".join(p["column"] for p in e["properties"].values())
@@ -263,6 +360,19 @@ def bento(e: dict, slug: str, model_ranges: dict[str, str]) -> str:
         steps.append("""\
     - mapping: |
         root = this.features.or([])""")
+    elif s["kind"] == "zip-geojson":
+        if s["crs"] != "EPSG:5514":
+            sys.exit(f"{e['name']}: no step reprojects {s['crs']}")
+        steps.append("""\
+    # The whole ZIP as it came; its one GeoJSON member, picked by its ending: the archive sets no
+    # UTF-8 flag, so a name with diacritics arrives as cp437 bytes. Coordinates are S-JTSK
+    # (EPSG:5514), reprojected to WGS 84 in the mapping below (T-4317).
+    - unarchive:
+        format: zip
+    - mapping: |
+        root = if @archive_filename.or("").lowercase().has_suffix(".geojson") { this } else { deleted() }
+    - mapping: |
+        root = if this.features.or(null) == null { throw("the archive's GeoJSON holds no features") } else { this.features }""")
     elif s["kind"] == "ckan-datastore":
         steps.append("""\
     - mapping: |
@@ -271,10 +381,11 @@ def bento(e: dict, slug: str, model_ranges: dict[str, str]) -> str:
         steps.append("""\
     - mapping: |
         root = if this.type() != "array" { throw("the site answered no post list") } else { this }""")
-    body = "\n".join("        " + line for line in (MAPS + "\n" + entity(e, slug, model_ranges, read)).splitlines())
+    maps = MAPS + ("\n" + krovak_maps() if s["kind"] == "zip-geojson" else "")
+    body = "\n".join("        " + line for line in (maps + "\n" + entity(e, slug, model_ranges, read)).splitlines())
     keep = (e.get("rowFilter") or {}).get("keep")
     if keep:
-        path = "this.properties" if s["kind"] == "esri-featureserver" else "this"
+        path = "this.properties" if s["kind"] in FEATURES else "this"
         keep = f"""
     # A row stays only when its {keep["column"]} looks like one, which no Esri SQL can ask:
     # {e["rowFilter"]["why"]} (T-4255).
@@ -448,8 +559,8 @@ def render() -> dict[Path, str]:
 
 
 def located(entry: dict) -> bool:
-    """Whether the rows of `entry` carry a `location` (only an Esri layer with its geometry does)."""
-    return entry["source"].get("kind") == "esri-featureserver" and bool(entry["source"].get("geometry"))
+    """Whether the rows of `entry` carry a `location`: a feature source with its geometry."""
+    return entry["source"].get("kind") in FEATURES and bool(entry["source"].get("geometry"))
 
 
 def distributions(mapped: list[dict]) -> str:

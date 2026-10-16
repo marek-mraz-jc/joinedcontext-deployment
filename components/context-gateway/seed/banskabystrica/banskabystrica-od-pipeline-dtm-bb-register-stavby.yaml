@@ -1,0 +1,24 @@
+# One Building per row of "DTM_BB-register-stavby" (T-4255); the city's building footprints (DTM_BB), reprojected from S-JTSK.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: od-dtm-bb-register-stavby
+  namespace: banskabystrica
+  title:
+    sk: DTM_BB-register-stavby
+    en: DTM_BB-register-stavby
+spec:
+  class: scheduled
+  enabled: false
+  schedule: 28 1 * * 5
+  source:
+    dataSourceRef:
+      kind: DataSource
+      name: od-dtm-bb-register-stavby
+  targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-otvorene-data:banskabystrica-otvorene-data
+  output:
+    type: Building
+    mode: upsert
+  quotas:
+    maxMemoryMb: 256
+    cpuMillicores: 100

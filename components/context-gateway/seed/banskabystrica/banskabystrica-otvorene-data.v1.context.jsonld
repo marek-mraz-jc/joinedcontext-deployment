@@ -4,8 +4,14 @@
     "Address": {
       "@id": "jc:Address"
     },
+    "AddressPoint": {
+      "@id": "jc:AddressPoint"
+    },
     "Article": {
       "@id": "jc:Article"
+    },
+    "Building": {
+      "@id": "jc:Building"
     },
     "Contract": {
       "@id": "jc:Contract"
@@ -22,11 +28,29 @@
     "PurchaseOrder": {
       "@id": "jc:PurchaseOrder"
     },
+    "RoadSegment": {
+      "@id": "jc:RoadSegment"
+    },
     "StatisticalObservation": {
       "@id": "jc:StatisticalObservation"
     },
     "akcia": {
       "@id": "jc:akcia"
+    },
+    "area": {
+      "@id": "jc:area",
+      "@type": "xsd:float"
+    },
+    "bT": {
+      "@id": "jc:bT",
+      "@type": "xsd:integer"
+    },
+    "cASTOBCE": {
+      "@id": "jc:cASTOBCE"
+    },
+    "cOID": {
+      "@id": "jc:cOID",
+      "@type": "xsd:integer"
     },
     "cZasadnutia": {
       "@id": "jc:cZasadnutia",
@@ -48,6 +72,13 @@
     },
     "content": {
       "@id": "jc:content"
+    },
+    "dF": {
+      "@id": "jc:dF",
+      "@type": "xsd:integer"
+    },
+    "dPOSTA": {
+      "@id": "jc:dPOSTA"
     },
     "dataProvider": {
       "@id": "jc:dataProvider"
@@ -75,11 +106,30 @@
     "den": {
       "@id": "jc:den"
     },
+    "distrNum": {
+      "@id": "jc:distrNum",
+      "@type": "xsd:integer"
+    },
+    "district": {
+      "@id": "jc:district"
+    },
     "dodavatel": {
       "@id": "jc:dodavatel"
     },
     "druh": {
       "@id": "jc:druh"
+    },
+    "fC": {
+      "@id": "jc:fC",
+      "@type": "xsd:integer"
+    },
+    "fCC": {
+      "@id": "jc:fCC",
+      "@type": "xsd:integer"
+    },
+    "fW": {
+      "@id": "jc:fW",
+      "@type": "xsd:integer"
     },
     "geojson": "https://purl.org/geojson/vocab#",
     "iCO": {
@@ -91,8 +141,22 @@
     "iCOZiadatela": {
       "@id": "jc:iCOZiadatela"
     },
+    "iD": {
+      "@id": "jc:iD",
+      "@type": "xsd:float"
+    },
     "id": "@id",
+    "idRegad": {
+      "@id": "jc:idRegad"
+    },
     "jc": "https://joinedcontext.com/models/",
+    "kRAJ": {
+      "@id": "jc:kRAJ"
+    },
+    "kRAJID": {
+      "@id": "jc:kRAJID",
+      "@type": "xsd:integer"
+    },
     "link": {
       "@id": "jc:link",
       "@type": "xsd:anyURI"
@@ -101,12 +165,27 @@
     "location": {
       "@id": "geojson:geometry"
     },
+    "mETERS": {
+      "@id": "jc:mETERS",
+      "@type": "xsd:float"
+    },
     "mena": {
       "@id": "jc:mena"
     },
     "modifiedGmt": {
       "@id": "jc:modifiedGmt",
       "@type": "xsd:dateTime"
+    },
+    "munNum": {
+      "@id": "jc:munNum",
+      "@type": "xsd:integer"
+    },
+    "municipal": {
+      "@id": "jc:municipal"
+    },
+    "nC": {
+      "@id": "jc:nC",
+      "@type": "xsd:integer"
     },
     "narodenych": {
       "@id": "jc:narodenych",
@@ -121,6 +200,38 @@
       "@type": "xsd:integer"
     },
     "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
+    "oBEC": {
+      "@id": "jc:oBEC"
+    },
+    "oBECID": {
+      "@id": "jc:oBECID",
+      "@type": "xsd:integer"
+    },
+    "oCADMIN8": {
+      "@id": "jc:oCADMIN8"
+    },
+    "oCADMIN9": {
+      "@id": "jc:oCADMIN9"
+    },
+    "oKRES": {
+      "@id": "jc:oKRES"
+    },
+    "oKRESID": {
+      "@id": "jc:oKRESID",
+      "@type": "xsd:integer"
+    },
+    "oNEWAY": {
+      "@id": "jc:oNEWAY"
+    },
+    "oRIENTC": {
+      "@id": "jc:oRIENTC"
+    },
+    "oRIENTCC": {
+      "@id": "jc:oRIENTCC"
+    },
+    "oRIENTCP": {
+      "@id": "jc:oRIENTCP"
+    },
     "obec": {
       "@id": "jc:obec"
     },
@@ -148,6 +259,9 @@
     },
     "orientC": {
       "@id": "jc:orientC"
+    },
+    "pSC": {
+      "@id": "jc:pSC"
     },
     "pocet": {
       "@id": "jc:pocet",
@@ -190,6 +304,16 @@
       "@id": "jc:pristahovanychM",
       "@type": "xsd:integer"
     },
+    "rN": {
+      "@id": "jc:rN"
+    },
+    "rNE": {
+      "@id": "jc:rNE"
+    },
+    "rOADID": {
+      "@id": "jc:rOADID",
+      "@type": "xsd:float"
+    },
     "rok": {
       "@id": "jc:rok",
       "@type": "xsd:integer"
@@ -197,6 +321,31 @@
     "rokDotacie": {
       "@id": "jc:rokDotacie",
       "@type": "xsd:integer"
+    },
+    "sCHRANKY": {
+      "@id": "jc:sCHRANKY",
+      "@type": "xsd:integer"
+    },
+    "sQUARE": {
+      "@id": "jc:sQUARE",
+      "@type": "xsd:integer"
+    },
+    "sTREET": {
+      "@id": "jc:sTREET"
+    },
+    "sTREET2": {
+      "@id": "jc:sTREET2"
+    },
+    "sTREETID": {
+      "@id": "jc:sTREETID",
+      "@type": "xsd:float"
+    },
+    "sTREETID2": {
+      "@id": "jc:sTREETID2",
+      "@type": "xsd:float"
+    },
+    "sUPISNEC": {
+      "@id": "jc:sUPISNEC"
     },
     "schema": "http://schema.org/",
     "schvProstr": {
@@ -218,6 +367,10 @@
     "supC": {
       "@id": "jc:supC"
     },
+    "tYPBUDOVY": {
+      "@id": "jc:tYPBUDOVY",
+      "@type": "xsd:integer"
+    },
     "textObjednavky": {
       "@id": "jc:textObjednavky"
     },
@@ -228,6 +381,17 @@
       "@id": "jc:typ"
     },
     "type": "@type",
+    "uLICA": {
+      "@id": "jc:uLICA"
+    },
+    "uLICAID": {
+      "@id": "jc:uLICAID",
+      "@type": "xsd:integer"
+    },
+    "uRBAN": {
+      "@id": "jc:uRBAN",
+      "@type": "xsd:integer"
+    },
     "ubytok": {
       "@id": "jc:ubytok"
     },
@@ -245,6 +409,13 @@
       "@type": "xsd:integer"
     },
     "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "zSJ": {
+      "@id": "jc:zSJ"
+    },
+    "zSJID": {
+      "@id": "jc:zSJID",
+      "@type": "xsd:float"
+    },
     "ziadatel": {
       "@id": "jc:ziadatel"
     },

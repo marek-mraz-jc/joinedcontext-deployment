@@ -31,9 +31,12 @@ spec:
   information:
   - entities:
     - type: Address
+    - type: AddressPoint
     - type: Article
+    - type: Building
     - type: Contract
     - type: CouncilMeeting
     - type: Grant
     - type: PurchaseOrder
+    - type: RoadSegment
     - type: StatisticalObservation

@@ -141,65 +141,269 @@ datasets:
   org: banskabystrica
   title: DTM_BB-funkcne-vyuzitie-uzemia
   status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (201 KiB): a PDF map sheet, no data'
+  reason: 'a ZIP of 1 .pdf (201 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
+    answer its map app) and data.slovensko.sk lists only this ZIP'
 - id: fb1385c6-eddb-4412-bb4b-fc54ce7f3fb3
   name: bb-dtm-bb-polohopis-a-vyskopis-bodoveho-pola
   org: banskabystrica
   title: DTM_BB-Polohopis_a_vyskopis_bodoveho_pola
   status: not-ingestible
-  reason: '240636 Point features in S-JTSK (EPSG:5514): NGSI-LD locations are WGS 84 and no pipeline step reprojects;
-    without the geometry the rows carry little (the city''s address list without points is bb-adresy)'
+  reason: 240636 rows, more than the 100000 this round loads into the one broker
 - id: 68714ed4-1a8d-4cd8-9d8e-94d8fde8439d
   name: bb-dtm-bb-register-adries
   org: banskabystrica
   title: DTM_BB-Register-adries
-  status: not-ingestible
-  reason: '15769 Point features in S-JTSK (EPSG:5514): NGSI-LD locations are WGS 84 and no pipeline step reprojects;
-    without the geometry the rows carry little (the city''s address list without points is bb-adresy)'
+  status: mapped
+  type: AddressPoint
+  smartDataModel: null
+  source:
+    kind: zip-geojson
+    url: https://dtm-banskabystrica.tmapserver.sk/opendata/OE_01_register_adries.zip
+    member: OE_01_register_adries.geojson
+    crs: EPSG:5514
+    geometry: true
+    rows: 15769
+  entityId:
+    keys:
+    - ID
+  observedAt: null
+  space: banskabystrica-otvorene-data
+  refresh: P1W
+  dataProvider: Mesto Banská Bystrica
+  license: cc-by-sa
+  dataset: https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-adries
+  properties:
+    iD:
+      column: ID
+      range: float
+    kRAJ:
+      column: KRAJ
+      range: string
+    kRAJID:
+      column: KRAJ_ID
+      range: integer
+    oKRES:
+      column: OKRES
+      range: string
+    oKRESID:
+      column: OKRES_ID
+      range: integer
+    oBEC:
+      column: OBEC
+      range: string
+    oBECID:
+      column: OBEC_ID
+      range: integer
+    cASTOBCE:
+      column: CAST_OBCE
+      range: string
+    cOID:
+      column: CO_ID
+      range: integer
+    uLICA:
+      column: ULICA
+      range: string
+    uLICAID:
+      column: ULICA_ID
+      range: integer
+    oRIENTC:
+      column: ORIENT_C
+      range: string
+    sUPISNEC:
+      column: SUPISNE_C
+      range: string
+    oRIENTCC:
+      column: ORIENT_C_C
+      range: string
+    oRIENTCP:
+      column: ORIENT_C_P
+      range: string
+    pSC:
+      column: PSC
+      range: string
+    dPOSTA:
+      column: DPOSTA
+      range: string
+    tYPBUDOVY:
+      column: TYP_BUDOVY
+      range: integer
+    sCHRANKY:
+      column: SCHRANKY
+      range: integer
+    zSJ:
+      column: ZSJ
+      range: string
+    zSJID:
+      column: ZSJ_ID
+      range: float
+    idRegad:
+      column: id_regad
+      range: string
+  dropped:
+    columns:
+    - POINT_X
+    - POINT_Y
+    why: the point in S-JTSK; the location carries it in WGS 84
+  note: the city's address points (DTM_BB), reprojected from S-JTSK
 - id: c4fdef97-4e0b-4c8a-9b7b-9792e24ff094
   name: bb-dtm-bb-register-chodnikov-a-verejnych-priestranstiev
   org: banskabystrica
   title: DTM_BB-register-chodnikov-a-verejnych-priestranstiev
   status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data'
+  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
+    answer its map app) and data.slovensko.sk lists only this ZIP'
 - id: 5f43a3ee-cc18-4e2d-8f1d-df801bdc8bab
   name: bb-dtm-bb-register-miestnych-komunikacii-a-vyssich-tried
   org: banskabystrica
   title: DTM_BB-register-miestnych-komunikacii-a-vyssich-tried
   status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data'
+  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
+    answer its map app) and data.slovensko.sk lists only this ZIP'
 - id: ed2fa840-b6b0-4a33-acf8-6e3408375fd3
   name: bb-dtm-bb-register-statickej-dopravy
   org: banskabystrica
   title: DTM_BB-register-statickej-dopravy
   status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data'
+  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
+    answer its map app) and data.slovensko.sk lists only this ZIP'
 - id: 24326e00-8f80-4308-8a4b-51081c8b950f
   name: bb-dtm-bb-register-stavby
   org: banskabystrica
   title: DTM_BB-register-stavby
-  status: not-ingestible
-  reason: '16534 MultiPolygon features in S-JTSK (EPSG:5514): NGSI-LD locations are WGS 84 and no pipeline step
-    reprojects; without the geometry the rows carry little (the city''s address list without points is bb-adresy)'
+  status: mapped
+  type: Building
+  smartDataModel: null
+  source:
+    kind: zip-geojson
+    url: https://dtm-banskabystrica.tmapserver.sk/opendata/OE_03_register_stavieb.zip
+    member: OE_03_register_stavieb.geojson
+    crs: EPSG:5514
+    geometry: true
+    rows: 16534
+  entityId:
+    keys:
+    - Id
+  observedAt: null
+  space: banskabystrica-otvorene-data
+  refresh: P1W
+  dataProvider: Mesto Banská Bystrica
+  license: cc-by-sa
+  dataset: https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-stavby
+  properties:
+    sourceId:
+      column: Id
+      range: integer
+    municipal:
+      column: municipal
+      range: string
+    munNum:
+      column: mun_num
+      range: integer
+    district:
+      column: district
+      range: string
+    distrNum:
+      column: distr_num
+      range: integer
+    area:
+      column: area
+      range: float
+  note: the city's building footprints (DTM_BB), reprojected from S-JTSK
 - id: 2f4fcdb0-0853-42d8-8d76-2466e3b036cb
   name: bb-dtm-bb-register-stlpov-vo
   org: banskabystrica
   title: DTM_BB-register-stlpov-VO
   status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (185 KiB): a PDF map sheet, no data'
+  reason: 'a ZIP of 1 .pdf (185 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
+    answer its map app) and data.slovensko.sk lists only this ZIP'
 - id: fc06f7ea-2763-44f3-a543-4ea70b6eb668
   name: bb-dtm-bb-register-ulic
   org: banskabystrica
   title: DTM_BB-register-ulic
-  status: not-ingestible
-  reason: '6338 MultiLineString features in S-JTSK (EPSG:5514): NGSI-LD locations are WGS 84 and no pipeline step
-    reprojects; without the geometry the rows carry little (the city''s address list without points is bb-adresy)'
+  status: mapped
+  type: RoadSegment
+  smartDataModel: null
+  source:
+    kind: zip-geojson
+    url: https://dtm-banskabystrica.tmapserver.sk/opendata/OE_02_register_ulic.zip
+    member: OE_02_register_ulíc.geojson
+    crs: EPSG:5514
+    geometry: true
+    rows: 6338
+  entityId:
+    rowHash: true
+  observedAt: null
+  space: banskabystrica-otvorene-data
+  refresh: P1W
+  dataProvider: Mesto Banská Bystrica
+  license: cc-by-sa
+  dataset: https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-ulic
+  properties:
+    fCC:
+      column: FCC
+      range: integer
+    rOADID:
+      column: ROAD_ID
+      range: float
+    dF:
+      column: DF
+      range: integer
+    fW:
+      column: FW
+      range: integer
+    fC:
+      column: FC
+      range: integer
+    rN:
+      column: RN
+      range: string
+    uRBAN:
+      column: URBAN
+      range: integer
+    oCADMIN8:
+      column: OC_ADMIN8
+      range: string
+    oCADMIN9:
+      column: OC_ADMIN9
+      range: string
+    bT:
+      column: BT
+      range: integer
+    nC:
+      column: NC
+      range: integer
+    mETERS:
+      column: METERS
+      range: float
+    oNEWAY:
+      column: ONEWAY
+      range: string
+    sTREET:
+      column: STREET
+      range: string
+    sQUARE:
+      column: SQUARE
+      range: integer
+    sTREETID:
+      column: STREET_ID
+      range: float
+    rNE:
+      column: RNE
+      range: string
+    sTREETID2:
+      column: STREET_ID2
+      range: float
+    sTREET2:
+      column: STREET2
+      range: string
+  note: the city's street segments (DTM_BB), reprojected from S-JTSK
 - id: 90bb5851-fc4b-4217-ae56-733bcb438691
   name: bb-dtm-bb-register-verejnej-zelene-1
   org: banskabystrica
   title: DTM_BB-register-verejnej-zelene-1
   status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (43 KiB): a PDF map sheet, no data'
+  reason: 'a ZIP of 1 .pdf (43 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
+    answer its map app) and data.slovensko.sk lists only this ZIP'
 - id: b2057885-c4f5-4f6a-aa7b-ba8556a7a13c
   name: bb-dtm-bb-register-verejnej-zelene-2
   org: banskabystrica
@@ -212,49 +416,57 @@ datasets:
   org: banskabystrica
   title: DTM_BB-register-verejnej-zelene-3
   status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (194 KiB): a PDF map sheet, no data'
+  reason: 'a ZIP of 1 .pdf (194 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
+    answer its map app) and data.slovensko.sk lists only this ZIP'
 - id: ebcf8bb3-7248-4f1c-aa9c-2f1302abc593
   name: bb-dtm-bb-register-vodorovneho-dopravneho-znacenia
   org: banskabystrica
   title: DTM_BB-register-vodorovneho-dopravneho-znacenia
   status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data'
+  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
+    answer its map app) and data.slovensko.sk lists only this ZIP'
 - id: f5382a0f-ef29-4823-a925-d5b0254e823c
   name: bb-dtm-bb-register-zvisleho-dopravneho-znacenia
   org: banskabystrica
   title: DTM_BB-register-zvisleho-dopravneho-znacenia
   status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data'
+  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
+    answer its map app) and data.slovensko.sk lists only this ZIP'
 - id: 5e147d8b-e44f-4f37-b5b0-501f54179e56
   name: bb-dtm-bb-regulativy-a-limity-funkcneho-vyuzitia-uzemia
   org: banskabystrica
   title: DTM_BB-regulativy-a-limity-funkcneho-vyuzitia-uzemia
   status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (205 KiB): a PDF map sheet, no data'
+  reason: 'a ZIP of 1 .pdf (205 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
+    answer its map app) and data.slovensko.sk lists only this ZIP'
 - id: 42d98983-d9d4-4c82-b093-7ab459c25ca6
   name: bb-dtm-bb-tvorba-krajiny-a-ochrana-prirody
   org: banskabystrica
   title: DTM_BB-tvorba-krajiny-a-ochrana-prirody
   status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data'
+  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
+    answer its map app) and data.slovensko.sk lists only this ZIP'
 - id: c512a703-7a5e-4c78-af60-ee4dbc4b1d19
   name: bb-dtm-bb-verejne-dopravne-a-technicke-vybavenie
   org: banskabystrica
   title: DTM_BB-verejne-dopravne-a-technicke-vybavenie
   status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (198 KiB): a PDF map sheet, no data'
+  reason: 'a ZIP of 1 .pdf (198 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
+    answer its map app) and data.slovensko.sk lists only this ZIP'
 - id: 8c3c67bf-074e-4207-9cd7-b51ed756a4f8
   name: bb-dtm-bb-verejnoprospesne-stavby
   org: banskabystrica
   title: DTM_BB-verejnoprospesne-stavby
   status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (197 KiB): a PDF map sheet, no data'
+  reason: 'a ZIP of 1 .pdf (197 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
+    answer its map app) and data.slovensko.sk lists only this ZIP'
 - id: 3877e9a5-9a5d-4f00-980b-8aba89101e66
   name: bb-dtm-bb-vodne-toky-a-plochy
   org: banskabystrica
   title: DTM_BB-vodne-toky-a-plochy
   status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data'
+  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
+    answer its map app) and data.slovensko.sk lists only this ZIP'
 - id: 0bca145f-6437-4969-94b6-04732103c7d4
   name: bb-dtm-bb-vyskopis-teran
   org: banskabystrica
@@ -266,13 +478,15 @@ datasets:
   org: banskabystrica
   title: DTM_BB-vyuzitie-pody-na-nepolnohospodarske-ucely
   status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (197 KiB): a PDF map sheet, no data'
+  reason: 'a ZIP of 1 .pdf (197 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
+    answer its map app) and data.slovensko.sk lists only this ZIP'
 - id: 78b602b1-e0c1-4d7c-86a2-881f11b826a5
   name: bb-dtm-bb-zaujmove-uzemie-a-sirsie-vztahy
   org: banskabystrica
   title: DTM_BB-zaujmove-uzemie-a-sirsie-vztahy
   status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (24 KiB): a PDF map sheet, no data'
+  reason: 'a ZIP of 1 .pdf (24 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
+    answer its map app) and data.slovensko.sk lists only this ZIP'
 - id: e3715528-0a0f-40e4-8178-e42beca9da39
   name: bb-objednavky-bb
   org: banskabystrica

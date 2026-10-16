@@ -1,0 +1,141 @@
+# The mapping of the od-dtm-bb-register-ulic pipeline, generated from the T-4254 mapping: one RoadSegment per row of
+# "DTM_BB-register-ulic" (https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-ulic). Do not edit: change the mapping and run scripts/open-data/generate.py.
+
+pipeline:
+  processors:
+    # The whole ZIP as it came; its one GeoJSON member, picked by its ending: the archive sets no
+    # UTF-8 flag, so a name with diacritics arrives as cp437 bytes. Coordinates are S-JTSK
+    # (EPSG:5514), reprojected to WGS 84 in the mapping below (T-4317).
+    - unarchive:
+        format: zip
+    - mapping: |
+        root = if @archive_filename.or("").lowercase().has_suffix(".geojson") { this } else { deleted() }
+    - mapping: |
+        root = if this.features.or(null) == null { throw("the archive's GeoJSON holds no features") } else { this.features }
+    - unarchive:
+        format: json_array
+    - mapping: |
+        map integer {
+          let v = this.number().catch(null)
+          root = if $v == null { null } else { { "type": "Property", "value": $v.round().int64() } }
+        }
+        map float {
+          let v = this.number().catch(null)
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        map string {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": $v } }
+        }
+        map uri {
+          root = this.apply("string")
+        }
+        # An Esri date is milliseconds since the epoch; a DataStore or WordPress one is text.
+        # `match` rebinds `this` to what it matches, so the value is named first.
+        map datetime {
+          let x = this
+          let v = match $x.type() {
+            "number" => ($x / 1000).ts_format("2006-01-02T15:04:05Z", "UTC").catch(null),
+            "string" => $x.ts_parse("2006-01-02T15:04:05").ts_format("2006-01-02T15:04:05Z", "UTC").catch($x.ts_format("2006-01-02T15:04:05Z", "UTC").catch(null)),
+            _ => null,
+          }
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        map date {
+          let x = this
+          let v = match $x.type() {
+            "number" => ($x / 1000).ts_format("2006-01-02", "UTC").catch(null),
+            "string" => if $x.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}") { $x.slice(0, 10) } else { null },
+            _ => null,
+          }
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        map atan1 {
+          let x = this
+          let y0 = $x * 0.785398163397448279 - $x * ($x.abs() - 1) * (0.2447 + 0.0663 * $x.abs())
+          let t0 = $y0.tan()
+          let y1 = $y0 - ($t0 - $x) / (1 + $t0 * $t0)
+          let t1 = $y1.tan()
+          let y2 = $y1 - ($t1 - $x) / (1 + $t1 * $t1)
+          let t2 = $y2.tan()
+          root = $y2 - ($t2 - $x) / (1 + $t2 * $t2)
+        }
+        map atan {
+          let x = this
+          root = if $x > 1 { 1.570796326794896558 - (1 / $x).apply("atan1") } else if $x < -1 { -1.570796326794896558 - (1 / $x).apply("atan1") } else { $x.apply("atan1") }
+        }
+        map asin {
+          let x = this
+          root = ($x / (1 - $x * $x).pow(0.5)).apply("atan")
+        }
+        map atan2 {
+          let y = this.index(0)
+          let x = this.index(1)
+          let t = if $x == 0 { 0 } else { ($y / $x).apply("atan") }
+          root = if $x > 0 { $t } else if $x < 0 && $y >= 0 { $t + 3.141592653589793116 } else if $x < 0 { $t - 3.141592653589793116 } else if $y > 0 { 1.570796326794896558 } else { -1.570796326794896558 }
+        }
+        map sjtsk_lat {
+          let es = 0.08169683122252750784 * this.phi.sin()
+          root = {"tu": this.tu, "phi": 2 * ((0.99659451817804844964 * this.tu.pow(0.99940285841947362755) * ((1 + $es) / (1 - $es)).pow(0.04084841561126375392)).apply("atan") - 0.785398163397448279)}
+        }
+        map sjtsk {
+          let xp = 0 - this.index(1)
+          let yp = 0 - this.index(0)
+          let r = ($xp * $xp + $yp * $yp).pow(0.5)
+          let d = ($yp / $xp).apply("atan") * 1.02048656930936165743
+          let t = 2 * (((1298039.00462282216176390648 / $r).pow(1.02048656930936165743) * 9.93100876732584403328).apply("atan") - 0.785398163397448279)
+          let u = (0.86349996977895215888 * $t.sin() - 0.50434888935314292624 * $t.cos() * $d.cos()).apply("asin")
+          let v = ($t.cos() * $d.sin() / $u.cos()).apply("asin")
+          let lam = 0.43342343091192514493 - $v * 0.99940285841947362755
+          let tu = ($u / 2 + 0.785398163397448279).tan()
+          let phi = {"phi": $u, "tu": $tu}.apply("sjtsk_lat").apply("sjtsk_lat").apply("sjtsk_lat").apply("sjtsk_lat").phi
+          let sp = $phi.sin()
+          let nn = 6377397.15500000026077032089 / (1 - 0.00667437223180214478 * $sp * $sp).pow(0.5)
+          let x = $nn * $phi.cos() * $lam.cos()
+          let y = $nn * $phi.cos() * $lam.sin()
+          let z = $nn * (1 - 0.00667437223180214478) * $sp
+          let x2 = 485.02100000000001500666 + $x - 0.00001989023272872444 * $y + 0.00002131994342617965 * $z
+          let y2 = 169.46500000000000341061 + 0.00001989023272872444 * $x + $y - 0.00003774925127397787 * $z
+          let z2 = 483.83899999999999863576 - 0.00002131994342617965 * $x + 0.00003774925127397787 * $y + $z
+          let p = ($x2 * $x2 + $y2 * $y2).pow(0.5)
+          let q = [$z2 * 6378137, $p * 6356752.31424517929553985596].apply("atan2")
+          let sq = $q.sin()
+          let cq = $q.cos()
+          let lat = [$z2 + 0.0067394967422764341 * 6356752.31424517929553985596 * $sq * $sq * $sq, $p - 0.00669437999014131646 * 6378137 * $cq * $cq * $cq].apply("atan2")
+          let lon = [$y2, $x2].apply("atan2")
+          root = [($lon * 57.29577951308232286465 * 10000000).round() / 10000000, ($lat * 57.29577951308232286465 * 10000000).round() / 10000000]
+        }
+        map sjtsk_coords {
+          root = if this.index(0).type() == "number" { this.apply("sjtsk") } else { this.map_each(c -> c.apply("sjtsk_coords")) }
+        }
+        let local = "dtm-bb-register-ulic-" + {"FCC": this.properties."FCC", "ROAD_ID": this.properties."ROAD_ID", "DF": this.properties."DF", "FW": this.properties."FW", "FC": this.properties."FC", "RN": this.properties."RN", "URBAN": this.properties."URBAN", "OC_ADMIN8": this.properties."OC_ADMIN8", "OC_ADMIN9": this.properties."OC_ADMIN9", "BT": this.properties."BT", "NC": this.properties."NC", "METERS": this.properties."METERS", "ONEWAY": this.properties."ONEWAY", "STREET": this.properties."STREET", "SQUARE": this.properties."SQUARE", "STREET_ID": this.properties."STREET_ID", "RNE": this.properties."RNE", "STREET_ID2": this.properties."STREET_ID2", "STREET2": this.properties."STREET2"}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
+        root = {
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("RoadSegment", "banskabystrica.sk", env("JC_SPACE"), $local),
+          "type": "RoadSegment",
+          "fCC": this.properties."FCC".apply("integer"),
+          "rOADID": this.properties."ROAD_ID".apply("float"),
+          "dF": this.properties."DF".apply("integer"),
+          "fW": this.properties."FW".apply("integer"),
+          "fC": this.properties."FC".apply("integer"),
+          "rN": this.properties."RN".apply("string"),
+          "uRBAN": this.properties."URBAN".apply("integer"),
+          "oCADMIN8": this.properties."OC_ADMIN8".apply("string"),
+          "oCADMIN9": this.properties."OC_ADMIN9".apply("string"),
+          "bT": this.properties."BT".apply("integer"),
+          "nC": this.properties."NC".apply("integer"),
+          "mETERS": this.properties."METERS".apply("float"),
+          "oNEWAY": this.properties."ONEWAY".apply("string"),
+          "sTREET": this.properties."STREET".apply("string"),
+          "sQUARE": this.properties."SQUARE".apply("integer"),
+          "sTREETID": this.properties."STREET_ID".apply("float"),
+          "rNE": this.properties."RNE".apply("string"),
+          "sTREETID2": this.properties."STREET_ID2".apply("float"),
+          "sTREET2": this.properties."STREET2".apply("string"),
+          "location": if this.geometry.or(null) == null { null } else { { "type": "GeoProperty", "value": { "type": this.geometry.type, "coordinates": this.geometry.coordinates.apply("sjtsk_coords") } } },
+          "dataProvider": { "type": "Property", "value": "Mesto Banská Bystrica (CC BY-SA 4.0)" },
+          "source": { "type": "Property", "value": "https://dtm-banskabystrica.tmapserver.sk/opendata/OE_02_register_ulic.zip" },
+          "dataset": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-ulic" }
+        }.filter(entry -> entry.value != null)
+    # One request per run's batch rather than one per row.
+    - archive:
+        format: json_array

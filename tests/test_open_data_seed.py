@@ -173,8 +173,9 @@ def test_every_source_is_public_https_without_a_credential():
         for p in files(project, "datasource"):
             spec = yaml.safe_load(p.read_text())["spec"]
             url = urllib.parse.urlsplit(spec["http"]["url"])
+            # The T-MAPY host is where the city's DTM_BB archives are published (T-4317).
             assert url.scheme == "https" and url.hostname in {"services-eu1.arcgis.com", "data.dev.joinedcontext.com",
-                                                               "www.banskabystrica.sk"}, p.name
+                                                               "www.banskabystrica.sk", "dtm-banskabystrica.tmapserver.sk"}, p.name
             assert set(spec["http"]) == {"url", "verb", "headers", "timeout"} and "Authorization" not in spec["http"]["headers"]
 
 
@@ -184,7 +185,9 @@ def test_no_dropped_column_is_asked_for_or_read():
     for e in dropped:
         slug, project = SLUGS[e["name"]], e["org"]
         url = yaml.safe_load((SEED / project / f"{project}-od-datasource-{slug}.yaml").read_text())["spec"]["http"]["url"]
-        out_fields = urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)["outFields"][0].split(",")
+        # An archive is read whole, so only the mapping keeps a dropped column out (T-4317).
+        query = urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)
+        out_fields = query["outFields"][0].split(",") if e["source"]["kind"] == "esri-featureserver" else []
         bento = (SEED / project / f"{project}-od-pipeline-{slug}-bento.yaml").read_text()
         for column in e["dropped"]["columns"]:
             assert column not in out_fields, (e["name"], column)
@@ -383,3 +386,88 @@ def test_an_empty_layer_writes_nothing_and_a_failure_fails_the_run_where_it_show
     assert b"the page at 2000 did not come" in missing.stdout + missing.stderr
     table = offline("banskabystrica", "objednavky-bb", b'{"success": false}', {})
     assert b"the catalogue answered no table" in table.stdout + table.stderr
+
+
+# --- S-JTSK archives (T-4317): the ZIP read whole, its GeoJSON member reprojected to WGS 84 ---
+
+# Control points in S-JTSK (EPSG:5514) and what PROJ 9.5 (GDAL 3.10.0) answers for them with the same
+# Helmert shift: `cs2cs +proj=krovak +lat_0=49.5 +lon_0=24.83333333333333 +alpha=30.28813972222222
+# +k=0.9999 +x_0=0 +y_0=0 +ellps=bessel +towgs84=485.021,169.465,483.839,7.786342,4.397554,4.102655,0
+# +units=m +to +proj=longlat +datum=WGS84`. The first three are vertices of the city's own archives.
+CONTROL = [
+    ((-417349.9072, -1227405.1559), (19.150454056, 48.745789330)),
+    ((-420281.0068, -1222336.9984), (19.105554825, 48.789279679)),
+    ((-415867.542, -1226405.1929), (19.169552258, 48.755744569)),
+    ((-460000.0, -1250000.0), (18.597394267, 48.513365548)),
+    ((-380000.0, -1200000.0), (19.631909576, 49.015474718)),
+]
+
+
+def sjtsk_archive(features: list[dict], extra: dict[str, bytes] | None = None) -> bytes:
+    import io
+    import zipfile
+    doc = {"type": "FeatureCollection", "crs": {"type": "name", "properties": {"name": "urn:ogc:def:crs:EPSG::5514"}},
+           "features": features}
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        for name, data in (extra or {}).items():
+            z.writestr(name, data)
+        z.writestr("OE_01_register_adries.geojson", json.dumps(doc, ensure_ascii=False))
+    return buf.getvalue()
+
+
+def near(got: list, want: tuple) -> bool:
+    # 2e-7 degrees is under 2 cm: the mapping keeps 7 decimals.
+    return abs(got[0] - want[0]) < 2e-7 and abs(got[1] - want[1]) < 2e-7
+
+
+@requires_docker
+def test_an_sjtsk_address_lands_where_proj_puts_it_and_keeps_no_sjtsk_column():
+    feats = [{"type": "Feature", "geometry": {"type": "Point", "coordinates": list(src)},
+              "properties": {"ID": 10170905.0 + i, "ULICA": "Mikuláša Kováča", "OBEC": "Banská Bystrica",
+                             "POINT_X": src[0], "POINT_Y": src[1]}} for i, (src, _) in enumerate(CONTROL)]
+    entities = run_bytes("banskabystrica", "dtm-bb-register-adries",
+                         sjtsk_archive(feats, {"legenda.pdf": b"%PDF-1.4 not data"}))
+    assert len(entities) == len(CONTROL), "one address per feature, the PDF beside it read as nothing"
+    for e, (_, want) in zip(entities, CONTROL):
+        assert e["location"]["value"]["type"] == "Point"
+        assert near(e["location"]["value"]["coordinates"], want), e["location"]
+        assert e["uLICA"]["value"] == "Mikuláša Kováča"
+        assert "pOINTX" not in e and "pOINTY" not in e
+        assert schema_errors("banskabystrica", e) == []
+    assert len({e["id"] for e in entities}) == len(CONTROL)
+
+
+@requires_docker
+def test_a_street_and_a_building_reproject_every_vertex():
+    (a, pa), (b, pb), (c, pc) = CONTROL[:3]
+    street = {"type": "Feature", "geometry": {"type": "MultiLineString", "coordinates": [[list(a), list(b)]]},
+              "properties": {"STREET": "Uľanská cesta", "ROAD_ID": 10387286.0, "METERS": 8.9}}
+    roads = run_bytes("banskabystrica", "dtm-bb-register-ulic", sjtsk_archive([street]))
+    assert [[near(p, w) for p, w in zip(line, (pa, pb))] for line in roads[0]["location"]["value"]["coordinates"]] == [[True, True]]
+    assert schema_errors("banskabystrica", roads[0]) == []
+    ring = [list(a), list(b), list(c), list(a)]
+    house = {"type": "Feature", "geometry": {"type": "MultiPolygon", "coordinates": [[ring]]},
+             "properties": {"Id": 2251872, "municipal": "Banská Bystrica", "area": 1498.5}}
+    built = run_bytes("banskabystrica", "dtm-bb-register-stavby", sjtsk_archive([house]))
+    got = built[0]["location"]["value"]["coordinates"][0][0]
+    assert [near(p, w) for p, w in zip(got, (pa, pb, pc, pa))] == [True] * 4
+    assert built[0]["id"].endswith(":dtm-bb-register-stavby-2251872")
+    assert schema_errors("banskabystrica", built[0]) == []
+
+
+@requires_docker
+def test_an_archive_without_geojson_writes_nothing():
+    import io
+    import zipfile
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as z:
+        z.writestr("mapa.pdf", b"%PDF-1.4")
+    assert run_bytes("banskabystrica", "dtm-bb-register-adries", buf.getvalue()) == []
+
+
+def test_an_archive_in_a_crs_no_step_reprojects_stops_the_generator():
+    e = {**entry("bb-dtm-bb-register-adries")}
+    e["source"] = {**e["source"], "crs": "EPSG:3035"}
+    with pytest.raises(SystemExit):
+        generate.bento(e, "x", generate.ranges([e]))
