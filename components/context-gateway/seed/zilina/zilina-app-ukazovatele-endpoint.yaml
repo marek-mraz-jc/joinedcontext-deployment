@@ -19,6 +19,7 @@ spec:
     name: zilina-kpi
   enabledRepresentations:
   - ngsi-ld
+  - mcp
   - ogc-features
   - odata
   slug: xy24v6swzpq2rfphup3gtjihm3
