@@ -30,9 +30,27 @@ spec:
   - deleteSubscription
   information:
   - entities:
+    - type: AdministrativeArea
+    - type: Bridge
+    - type: CommitteeSeat
+    - type: Contract
+    - type: CouncilMeeting
+    - type: CouncilVote
+    - type: CycleRoute
+    - type: Grant
+    - type: Invoice
     - type: KeyPerformanceIndicator
+    - type: OfficeHours
     - type: Organization
     - type: Person
+    - type: Petition
     - type: PointOfInterest
+    - type: PublicInvestment
     - type: PublicOrganization
+    - type: PublicProcurement
+    - type: PurchaseOrder
+    - type: RiverBasin
     - type: RoadAccident
+    - type: RoadStructure
+    - type: Rule
+    - type: WaterBodyStatus
