@@ -9,7 +9,7 @@ spec:
   linkml: ./bbsk-registre.linkml.yaml
   version: 1.0.0
   lifecycle: published
-  classes: [AdministrativeArea, PublicOrganization, Hospital, SocialService, Bridge]
+  classes: [AdministrativeArea, PublicOrganization, PointOfInterest, Bridge]
   artifacts:
     jsonSchema: ./bbsk-registre.v1.schema.json
     context: ./bbsk-registre.v1.context.jsonld

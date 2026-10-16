@@ -33,9 +33,9 @@ FEEDS = {
     "okresy": ("AdministrativeArea", 2),
     "obce": ("AdministrativeArea", 3),
     "organizacie": ("PublicOrganization", 4),
-    "nemocnice": ("Hospital", 3),
+    "nemocnice": ("PointOfInterest", 3),
     # Seven rows: one service the register lists three times, identically, is one entity.
-    "socialne-sluzby": ("SocialService", 5),
+    "socialne-sluzby": ("PointOfInterest", 5),
     "mosty": ("Bridge", 6),
 }
 
@@ -88,6 +88,22 @@ def test_every_entity_is_one_the_gateway_accepts(written):
     for name, entities in written.items():
         for entity in entities:
             assert not schema_errors(entity), (name, entity["id"], schema_errors(entity))
+
+
+# The FIWARE Smart Data Model of each type that has one (T-4329), validated at its vendored pin.
+# Bridge and AdministrativeArea have none: see T-4329.
+SDM = {"PublicOrganization": "dataModel.CPSV-AP/PublicOrganization",
+       "PointOfInterest": "dataModel.PointOfInterest/PointOfInterest"}
+
+
+@requires_docker
+def test_hospitals_social_services_and_organizations_are_valid_smart_data_models(written):
+    seen = set()
+    for name, entities in written.items():
+        for entity in (e for e in entities if e["type"] in SDM):
+            assert open_data.sdm_errors(SDM[entity["type"]], entity) == [], (name, entity["id"])
+            seen.add(tuple(entity.get("category", {}).get("value", [entity["type"]])))
+    assert seen == {("hospital",), ("socialService",), ("PublicOrganization",)}
 
 
 @requires_docker
@@ -146,7 +162,9 @@ def test_a_hospital_is_named_by_itself_or_by_its_operator(written):
     # GEMERCLINIC registers no name of its own, so the operator's is the one a reader knows.
     gemer = by_id["66-45736987-A0001"]
     assert gemer["name"]["languageMap"]["sk"] == gemer["operatorName"]["value"] == "GEMERCLINIC, n.o."
-    assert gemer["address"]["value"] == "Jesenského 102/19, 98101 Hnúšťa"
+    assert gemer["address"]["value"] == {"streetAddress": "Jesenského 102/19", "postalCode": "98101",
+                                         "addressLocality": "Hnúšťa", "addressCountry": "SK"}
+    assert gemer["category"]["value"] == ["hospital"]
 
 
 @requires_docker
@@ -318,7 +336,8 @@ def test_the_model_classes_and_the_manifest_agree():
     linkml = yaml.safe_load((BBSK / "bbsk-registre.linkml.yaml").read_text())
     model = manifest("bbsk-datamodel-registre.yaml")
     assert linkml["name"] == model["metadata"]["name"]
-    assert set(model["spec"]["classes"]) == set(linkml["classes"])
+    # PostalAddress is the value of `address`, never an entity type.
+    assert set(model["spec"]["classes"]) == {k for k, c in linkml["classes"].items() if c.get("is_a") == "Entity"}
 
 
 def test_the_indicator_pipeline_reads_exactly_the_cubes_its_compute_uses():

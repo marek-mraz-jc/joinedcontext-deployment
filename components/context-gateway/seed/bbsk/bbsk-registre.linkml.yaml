@@ -12,6 +12,8 @@ prefixes:
   linkml: https://w3id.org/linkml/
   jc: https://joinedcontext.com/models/
   sdm: https://smartdatamodels.org/
+  sdm-poi: https://smartdatamodels.org/dataModel.PointOfInterest/
+  sdm-cpsv: https://smartdatamodels.org/dataModel.CPSV-AP/
   ngsi-ld: https://uri.etsi.org/ngsi-ld/
 default_prefix: sdm
 default_range: string
@@ -34,10 +36,59 @@ slots:
       upstream_source: https://schema.org/alternateName
   address:
     slot_uri: schema:address
-    description: The street address, one line, as the publisher writes it.
+    description: >-
+      The postal address as the register publishes it, field by field (Smart Data Models' common
+      PostalAddress, T-4329); a field the register leaves out is absent, never guessed.
+    range: PostalAddress
+    inlined: true
     annotations:
       ngsi_ld_kind: Property
-      upstream_source: https://schema.org/address
+      upstream_source: https://github.com/smart-data-models/data-models/blob/master/common-schema.json
+  streetAddress:
+    slot_uri: schema:streetAddress
+    description: The street and the house number, or the venue.
+    annotations:
+      upstream_source: https://schema.org/streetAddress
+  postalCode:
+    slot_uri: schema:postalCode
+    description: The postal code.
+    annotations:
+      upstream_source: https://schema.org/postalCode
+  addressLocality:
+    slot_uri: schema:addressLocality
+    description: The town or the municipality.
+    annotations:
+      upstream_source: https://schema.org/addressLocality
+  addressCountry:
+    slot_uri: schema:addressCountry
+    description: The country, as an ISO 3166-1 alpha-2 code.
+    annotations:
+      upstream_source: https://schema.org/addressCountry
+  category:
+    slot_uri: sdm-poi:category
+    description: >-
+      What kind of place it is: `hospital` or `socialService`. The two registers share the
+      Smart Data Model PointOfInterest, and an application asks for one with
+      `q=category=="hospital"` (T-4329).
+    range: PlaceCategory
+    multivalued: true
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.PointOfInterest
+  preferredLabel:
+    slot_uri: sdm-cpsv:preferredLabel
+    description: The organisation's official name, as CPSV-AP's PublicOrganization requires it.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.CPSV-AP
+  spatial:
+    slot_uri: sdm-cpsv:spatial
+    description: The municipality the organisation is in, by name, as CPSV-AP's PublicOrganization requires it.
+    multivalued: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.CPSV-AP
   url:
     slot_uri: schema:url
     description: The web page the publisher gives for it.
@@ -121,7 +172,6 @@ slots:
     slot_uri: jc:hospitalKind
     description: Whether the hospital is a general one or specialises in some fields.
     range: HospitalKind
-    required: true
     annotations:
       ngsi_ld_kind: Property
   operatorName:
@@ -139,7 +189,6 @@ slots:
     description: >-
       The kind of social service in the words of Act 448/2008 Z. z., such as `zariadenie pre
       seniorov` or `opatrovateľská služba`.
-    required: true
     annotations:
       ngsi_ld_kind: Property
   serviceForm:
@@ -164,7 +213,6 @@ slots:
     slot_uri: jc:providerKind
     description: Which public body provides the service.
     range: ProviderKind
-    required: true
     annotations:
       ngsi_ld_kind: Property
   bridgeCode:
@@ -269,13 +317,17 @@ classes:
       - childAreas
       - publicOrganizations
   PublicOrganization:
-    class_uri: jc:PublicOrganization
+    class_uri: sdm-cpsv:PublicOrganization
     description: >-
       One organisation the region founded: a secondary school, a social-care home, a theatre, a
-      museum or an office.
+      museum or an office. The FIWARE Smart Data Model CPSV-AP PublicOrganization (T-4329).
     is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.CPSV-AP
     slots:
       - name
+      - preferredLabel
+      - spatial
       - alternateName
       - legalId
       - organizationCategory
@@ -283,27 +335,22 @@ classes:
       - refMunicipality
       - dataProvider
       - source
-  Hospital:
-    class_uri: jc:Hospital
-    description: One general or specialised hospital in the region, by its facility number in the health-care register.
+  PointOfInterest:
+    class_uri: sdm-poi:PointOfInterest
+    description: >-
+      One hospital (by its facility number in the health-care register) or one registered social
+      service a municipality, a town or the region provides; `category` says which. The FIWARE
+      Smart Data Model PointOfInterest (T-4329): no published model is a hospital or a social
+      service. Private providers of social services are not in the space.
     is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.PointOfInterest
     slots:
       - name
+      - category
       - hospitalKind
       - operatorName
-      - legalId
       - medicalSpecialties
-      - address
-      - dataProvider
-      - source
-  SocialService:
-    class_uri: jc:SocialService
-    description: >-
-      One registered social service a municipality, a town or the region provides, where it is
-      provided and for whom. Private providers are not in the space.
-    is_a: Entity
-    slots:
-      - name
       - serviceKind
       - serviceForm
       - targetGroup
@@ -315,6 +362,18 @@ classes:
       - url
       - dataProvider
       - source
+  PostalAddress:
+    class_uri: schema:PostalAddress
+    description: >-
+      The value of `address`: a postal address, never an entity of its own (Smart Data Models'
+      common schema).
+    annotations:
+      upstream_source: https://schema.org/PostalAddress
+    slots:
+      - streetAddress
+      - postalCode
+      - addressLocality
+      - addressCountry
   Bridge:
     class_uri: jc:Bridge
     description: One bridge of the road network in the region, its road, its age, its size and who manages it.
@@ -336,6 +395,12 @@ classes:
       - source
 
 enums:
+  PlaceCategory:
+    permissible_values:
+      hospital:
+        description: A general or specialised hospital.
+      socialService:
+        description: A registered social service.
   DivisionLevel:
     permissible_values:
       district:
