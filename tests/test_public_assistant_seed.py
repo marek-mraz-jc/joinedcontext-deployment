@@ -191,7 +191,7 @@ def test_the_region_is_indexed_once():
         hosts = {urlsplit(url).hostname for url in doc["spec"].get("startUrls", [])}
         assert "www.bbsk.sk" not in hosts, doc["metadata"]["name"]
         assert "bbsk" not in doc["spec"].get("organizations", []), doc["metadata"]["name"]
-    for name in ("bb-eval-haiku", "bb-eval-deepseek"):
+    for name in ("bb-eval-haiku", "bb-eval-deepseek", "bb-eval-gemini"):
         spec = manifests("AssistantDeployment", "banskabystrica")[name]["spec"]
         assert {"bbsk/web", "bbsk/data-portal"} <= set(spec["sources"]), name
         assert spec["scope"]["projects"] == ["bbsk"], name
