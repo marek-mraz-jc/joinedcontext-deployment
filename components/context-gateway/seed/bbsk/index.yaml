@@ -393,10 +393,8 @@ bbsk-endpoint-hranice.yaml: projects/bbsk/spaces/bbsk-registre/endpoints/bbsk-hr
 bbsk-policy-hranice-read.yaml: projects/bbsk/spaces/bbsk-registre/policies/hranice-read.yaml
 bbsk-endpoint-organizacie.yaml: projects/bbsk/spaces/bbsk-registre/endpoints/bbsk-organizacie.yaml
 bbsk-policy-organizacie-read.yaml: projects/bbsk/spaces/bbsk-registre/policies/organizacie-read.yaml
-bbsk-endpoint-nemocnice.yaml: projects/bbsk/spaces/bbsk-registre/endpoints/bbsk-nemocnice.yaml
-bbsk-policy-nemocnice-read.yaml: projects/bbsk/spaces/bbsk-registre/policies/nemocnice-read.yaml
-bbsk-endpoint-socialne-sluzby.yaml: projects/bbsk/spaces/bbsk-registre/endpoints/bbsk-socialne-sluzby.yaml
-bbsk-policy-socialne-sluzby-read.yaml: projects/bbsk/spaces/bbsk-registre/policies/socialne-sluzby-read.yaml
+bbsk-endpoint-zariadenia.yaml: projects/bbsk/spaces/bbsk-registre/endpoints/bbsk-zariadenia.yaml
+bbsk-policy-zariadenia-read.yaml: projects/bbsk/spaces/bbsk-registre/policies/zariadenia-read.yaml
 bbsk-endpoint-mosty.yaml: projects/bbsk/spaces/bbsk-registre/endpoints/bbsk-mosty.yaml
 bbsk-policy-mosty-read.yaml: projects/bbsk/spaces/bbsk-registre/policies/mosty-read.yaml
 # The data catalogue's one general assistant over every publisher (T-4342): every dataset of

@@ -13,20 +13,21 @@ SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed
 # Which type references which, read from dev's public NGSI-LD on 2026-10-16 (the Relationship
 # attributes of up to 100 entities per type of each published Endpoint):
 #   GET /api/endpoint/{slug}/ngsi-ld/v1/entities?type={T}&limit=100
-# TransitRoute carries no Relationship: it is HSL's stops of one line, keyed by the GtfsRoute's id.
+# PublicTransportRoute (TransitRoute before T-4329) carries no Relationship: it is HSL's stops of
+# one line, keyed by the GtfsRoute's id.
 # GtfsShape has no entity on dev yet; GTFS draws a shape for the trips of one route.
 REFERENCES = {
     "WasteContainer": {"WasteContainerIsle"},
     "WasteContainerIsle": {"CityDistrict"},
     "GtfsRoute": {"GtfsAgency"},
     "GtfsStop": {"GtfsStation"},
-    "TransitRoute": {"GtfsRoute"},
+    "PublicTransportRoute": {"GtfsRoute"},
     "GtfsShape": {"GtfsRoute"},
     "Vehicle": {"GtfsStop"},
     "Alert": {"GtfsStop", "GtfsRoute"},
     "OffStreetParking": {"GtfsStation"},
     "WaterQualityObserved": {"PointOfInterest"},
-    "PublicAreaPermit": {"CityDistrict"},
+    "CityWork": {"CityDistrict"},
 }
 # What the bundles served before the split; none of them may be a dataset again.
 BUNDLES = {"praha-mesto", "helsinki-all", "banskabystrica-verejne", "zilina-verejne", "bbsk-registre"}
@@ -101,9 +102,9 @@ def connected(types: set[str]) -> bool:
 
 def test_relationship_check_tells_a_group_from_a_bundle():
     assert connected({"WasteContainerIsle", "WasteContainer"})
-    assert connected({"GtfsAgency", "GtfsRoute", "GtfsStop", "GtfsStation", "Vehicle", "Alert", "OffStreetParking", "TransitRoute"})
+    assert connected({"GtfsAgency", "GtfsRoute", "GtfsStop", "GtfsStation", "Vehicle", "Alert", "OffStreetParking", "PublicTransportRoute"})
     assert connected({"BudgetLine"})
-    assert not connected({"AirQualityObserved", "Event", "School", "WeatherObserved"})
+    assert not connected({"AirQualityObserved", "Event", "Organization", "WeatherObserved"})
     assert not connected({"Hospital", "Bridge"})
     assert not connected(set())
 
@@ -135,7 +136,7 @@ def test_every_published_dataset_serves_every_mandatory_surface():
 def test_a_split_policy_grants_nothing_its_space_did_not_grant_the_public():
     policies = public_policies()
     split = [(path, doc) for path, doc in docs("Policy") if "(T-4344)" in path.read_text()]
-    assert len(split) >= 24
+    assert len(split) >= 22
     for path, doc in split:
         spec = doc["spec"]
         assert spec["assignee"] == {"kind": "role", "id": "public"}, path.name
@@ -152,8 +153,8 @@ def test_a_helsinki_part_hides_the_contact_line_as_the_bundle_does():
     for path, doc in docs("Endpoint"):
         if path.name.startswith("helsinki-endpoint-") and doc["spec"].get("publish") and doc["spec"].get("policyRef"):
             types = types_of(public_policies()[("helsinki", "helsinki")][doc["spec"]["policyRef"].rsplit(":", 1)[1]])
-            if types & {"PointOfInterest", "Event", "BikeHireDockingStation", "PublicAreaPermit", "CityDistrict",
-                        "ParkingArea", "ParkingZone", "WaterQualityObserved", "Vehicle", "GtfsStop"}:
+            if types & {"PointOfInterest", "Event", "BikeHireDockingStation", "CityWork", "CityDistrict",
+                        "OnStreetParking", "WaterQualityObserved", "Vehicle", "GtfsStop"}:
                 assert "contactPoint" in doc["spec"].get("projection", {}).get("hiddenAttributes", []), path.name
 
 

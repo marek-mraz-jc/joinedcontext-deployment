@@ -1,4 +1,4 @@
-# One Smart Data Model type per catalogue dataset (T-4344): PublicAreaPermit of the space
+# One Smart Data Model type per catalogue dataset (T-4344): CityWork of the space
 # helsinki, read through its own Policy, which narrows the space's public read to these types.
 apiVersion: joinedcontext.com/v1alpha1
 kind: Endpoint

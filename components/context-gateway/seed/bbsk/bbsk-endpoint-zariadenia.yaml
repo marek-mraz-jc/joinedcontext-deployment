@@ -1,19 +1,19 @@
-# One Smart Data Model type per catalogue dataset (T-4344): Hospital of the space
+# One Smart Data Model type per catalogue dataset (T-4344): PointOfInterest of the space
 # bbsk-registre, read through its own Policy, which narrows the space's public read to these types.
 apiVersion: joinedcontext.com/v1alpha1
 kind: Endpoint
 metadata:
-  name: bbsk-nemocnice
+  name: bbsk-zariadenia
   namespace: bbsk
-  title: { sk: "Nemocnice — Banskobystrický kraj", en: "Hospitals — Banská Bystrica Region" }
+  title: { sk: "Nemocnice a sociálne služby — Banskobystrický kraj", en: "Hospitals and social services — Banská Bystrica Region" }
   description:
-    sk: "Nemocnice v kraji. Zdroj: Banskobystrický samosprávny kraj, CC BY-SA 4.0."
-    en: "The hospitals in the region. Source: Banská Bystrica Self-Governing Region, CC BY-SA 4.0."
+    sk: "Nemocnice v kraji a sociálne služby verejných poskytovateľov, každé zariadenie s kategóriou. Zdroj: Banskobystrický samosprávny kraj, CC BY-SA 4.0."
+    en: "The hospitals in the region and the social services of public providers, each facility with its category. Source: Banská Bystrica Self-Governing Region, CC BY-SA 4.0."
 spec:
   contextSpaceRef: bbsk-registre
   slug: 3tjpnb5x6uhbj7rdi34fjbpfmuxcu6cl
   audience: public
-  policyRef: urn:ngsi-ld:Policy:bbsk.sk:bbsk-registre:nemocnice-read
+  policyRef: urn:ngsi-ld:Policy:bbsk.sk:bbsk-registre:zariadenia-read
   enabledRepresentations: [ngsi-ld, geojson, csv, json, websocket, ogc-features, odata, mcp]
   publish:
     ckan:
@@ -24,10 +24,10 @@ spec:
     publisher: { name: { sk: "Banskobystrický samosprávny kraj", en: "Banská Bystrica Self-Governing Region" }, uri: "https://www.bbsk.sk/" }
     license: CC_BYSA_4_0
     attribution: { sk: "Zdroj: Banskobystrický samosprávny kraj, https://opendata.bbsk.sk/, CC BY-SA 4.0", en: "Source: Banská Bystrica Self-Governing Region, https://opendata.bbsk.sk/, CC BY-SA 4.0" }
-    themes: [HEAL]
+    themes: [HEAL, SOCI]
     keywords:
-      sk: ["nemocnice", "zdravotníctvo"]
-      en: ["hospitals", "health care"]
+      sk: ["nemocnice", "zdravotníctvo", "sociálne služby"]
+      en: ["hospitals", "health care", "social services"]
     spatial:
       - "SK032"
     frequency: WEEKLY

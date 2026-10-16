@@ -279,7 +279,7 @@ def test_the_space_is_public_and_published_under_cc_by():
     assert endpoint["spec"]["audience"] == "public"
     # One dataset per type (T-4344): the space's Endpoint stays for the Apps, off the catalogue.
     assert "publish" not in endpoint["spec"]
-    for part, kind in (("podujatia", "Event"), ("skoly", "School"), ("pocasie", "WeatherObserved")):
+    for part, kind in (("podujatia", "Event"), ("skoly", "Organization"), ("pocasie", "WeatherObserved")):
         spec = manifest(f"endpoint-{part}.yaml")["spec"]
         assert spec["audience"] == "public" and spec["contextSpaceRef"] == SPACE, part
         assert spec["publish"]["ckan"] == {

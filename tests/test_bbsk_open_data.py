@@ -315,7 +315,7 @@ def test_the_space_is_public_and_published_under_the_regions_share_alike_licence
     assert endpoint["spec"]["audience"] == "public"
     # One dataset per register type (T-4344); the space's Endpoint stays off the catalogue.
     assert "publish" not in endpoint["spec"]
-    for part in ("hranice", "organizacie", "nemocnice", "socialne-sluzby", "mosty"):
+    for part in ("hranice", "organizacie", "zariadenia", "mosty"):
         spec = manifest(f"bbsk-endpoint-{part}.yaml")["spec"]
         assert spec["publish"]["ckan"]["license"] == "cc-by-sa", part
         assert spec["publish"]["ckan"]["instanceRef"]["name"] == "bbsk", part

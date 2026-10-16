@@ -15,7 +15,7 @@ spec:
   quotas:
     contextSpaces: 100
     residentPipelines: 100
-    publicEndpoints: 110
+    publicEndpoints: 100
     apps: 100
     ingestEventsPerSecond: 500
     agentRunsPerDay: 2000

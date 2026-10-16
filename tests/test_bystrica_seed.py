@@ -76,9 +76,9 @@ def test_each_projects_quotas_hold_what_it_declares_with_room_for_the_demo():
     for folder, project, spaces, public in (
         # The region's public endpoints: its raw rows' for the trend lines (T-2934), and the region
         # map's and its grids' (T-2784).
-        # The sixth is the space of every other table of the catalogue (T-4255), and the other five
+        # The sixth is the space of every other table of the catalogue (T-4255), and the other four
         # the registers' datasets, one per type (T-4344).
-        (REGION, "bbsk", ["bbsk-kraj", "bbsk-kpi", "bbsk-registre", "bbsk-otvorene-data"], 11),
+        (REGION, "bbsk", ["bbsk-kraj", "bbsk-kpi", "bbsk-registre", "bbsk-otvorene-data"], 10),
         # The third public endpoint of the city is the air-quality App's own (T-2972), the fourth
         # and fifth the city map's and the data grids' (T-2782), the last three the public space's
         # events, schools and weather as their own datasets (T-4344).
@@ -653,8 +653,8 @@ def test_the_citys_air_quality_is_a_public_static_app_on_its_own_endpoint():
 CLEARED = {
     ("banskabystrica", "public-air"), ("banskabystrica", "banskabystrica-podujatia"),
     ("banskabystrica", "banskabystrica-skoly"), ("banskabystrica", "banskabystrica-pocasie"),
-    ("bbsk", "bbsk-kpi"), ("bbsk", "bbsk-hranice"), ("bbsk", "bbsk-organizacie"), ("bbsk", "bbsk-nemocnice"),
-    ("bbsk", "bbsk-socialne-sluzby"), ("bbsk", "bbsk-mosty"),
+    ("bbsk", "bbsk-kpi"), ("bbsk", "bbsk-hranice"), ("bbsk", "bbsk-organizacie"), ("bbsk", "bbsk-zariadenia"),
+    ("bbsk", "bbsk-mosty"),
 }
 
 

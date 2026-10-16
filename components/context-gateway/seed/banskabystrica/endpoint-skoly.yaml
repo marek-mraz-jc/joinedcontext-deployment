@@ -1,4 +1,4 @@
-# One Smart Data Model type per catalogue dataset (T-4344): School of the space
+# One Smart Data Model type per catalogue dataset (T-4344): Organization of the space
 # banskabystrica-verejne, read through its own Policy, which narrows the space's public read to these types.
 apiVersion: joinedcontext.com/v1alpha1
 kind: Endpoint
