@@ -25,7 +25,9 @@ DISCOVERY = {
     "retrieveEntityTypes", "retrieveEntityTypeDetails", "retrieveEntityTypeInfo",
     "retrieveAttrTypes", "retrieveAttrTypeDetails", "retrieveAttrTypeInfo",
 }
-ANONYMOUS_OPERATIONS = {"retrieveOps", "createSubscription", "retrieveSubscription", "updateSubscription", "deleteSubscription"} | DISCOVERY
+# The history reads of the types that keep one (T-4372).
+HISTORY = {"queryTemporal", "retrieveTemporal"}
+ANONYMOUS_OPERATIONS = {"retrieveOps", "createSubscription", "retrieveSubscription", "updateSubscription", "deleteSubscription"} | DISCOVERY | HISTORY
 
 
 def manifests(folder: Path):
@@ -112,6 +114,7 @@ def test_every_public_grant_reads_and_discovers_and_writes_no_entity():
             if doc["kind"] != "Policy" or (spec.get("assignee") or {}).get("id") != "public":
                 continue
             found += 1
-            assert DISCOVERY <= set(spec["operations"]), path.name
+            # a Policy of the history alone sits beside the read that discovers (T-4372)
+            assert DISCOVERY <= set(spec["operations"]) or set(spec["operations"]) == HISTORY, path.name
             assert set(spec["operations"]) <= ANONYMOUS_OPERATIONS, (path.name, spec["operations"])
     assert found >= 18

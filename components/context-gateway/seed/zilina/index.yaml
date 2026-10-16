@@ -116,6 +116,7 @@ zilina-pipeline-pamiatky.yaml: projects/zilina/pipelines/pamiatky/pipeline.yaml
 zilina-pipeline-pamiatky-bento.yaml: projects/zilina/pipelines/pamiatky/bento.yaml
 zilina-pipeline-ukazovatele.yaml: projects/zilina/pipelines/ukazovatele/pipeline.yaml
 zilina-policy-verejne-read.yaml: projects/zilina/spaces/zilina-verejne/policies/verejne-read.yaml
+zilina-policy-verejne-read-history.yaml: projects/zilina/spaces/zilina-verejne/policies/verejne-read-history.yaml
 zilina-policy-uniza-read.yaml: projects/zilina/spaces/zilina-uniza/policies/uniza-read.yaml
 zilina-policy-kpi-read.yaml: projects/zilina/spaces/zilina-kpi/policies/kpi-read.yaml
 zilina-app-mapa.yaml: projects/zilina/apps/zilina-mapa/app.yaml

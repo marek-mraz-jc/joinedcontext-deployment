@@ -64,8 +64,9 @@ def test_helsinki_policies_name_the_organization_by_placeholder():
     # Twelve of the city's own, the service map App's and the data grids App's (T-2788), and the
     # mobility project's station App's, seeded in this folder with the rest of hel.fi (T-3185),
     # and the members' read on the operations endpoint (bikes-ops-read, T-3957), and one public
-    # read per dataset split out of helsinki-all (T-4344).
-    assert len(policies) == 21
+    # read per dataset split out of helsinki-all (T-4344), and the history of helsinki-all's types
+    # that keep one (T-4372).
+    assert len(policies) == 22
     for path, policy in policies:
         assert policy["spec"]["assigner"] == "did:web:{orgDomain}", path.name
 

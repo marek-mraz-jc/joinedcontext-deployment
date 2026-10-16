@@ -516,7 +516,10 @@ def test_the_application_reading_both_bodies_is_a_published_static_app_on_the_re
     # The public read of the raw rows names every published column of the statistics office and
     # never the steward's own note, which is the region's annotation and not open data.
     public = one(REGION, "Policy", "kraj-public-read")["spec"]
-    assert public["assignee"] == {"kind": "role", "id": "public"} and public["operations"] == PUBLIC_READ
+    # and its history, the 30 days the space keeps (T-4372)
+    assert public["assignee"] == {"kind": "role", "id": "public"}
+    assert public["operations"] == PUBLIC_READ + ["queryTemporal", "retrieveTemporal"]
+    assert public["temporalQ"] == "timerel=after;timeAt=P-30D"
     (rule,) = public["information"]
     assert "stewardNote" not in rule["propertyNames"]
     assert set(further[1]["attrs"]) <= set(rule["propertyNames"])

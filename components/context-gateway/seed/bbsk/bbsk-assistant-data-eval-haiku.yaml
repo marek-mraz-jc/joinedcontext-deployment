@@ -81,17 +81,19 @@ spec:
   suggestions:
     sk:
       - "Aké dáta máte o doprave?"
-      - "Aká je teraz kvalita ovzdušia v Žiline a v Banskej Bystrici?"
+      - "Kvalita ovzdušia v Žiline a B. Bystrici?"
       - "Koľko obyvateľov má Banskobystrický kraj?"
       - "Ako pripojím katalóg cez MCP do Clauda?"
     en:
       - "What data do you have about transport?"
-      - "What is the air quality in Žilina and Banská Bystrica right now?"
+      - "Air quality in Žilina and Banská Bystrica?"
+      - "How many people live in the BBSK region?"
       - "How do I connect the catalogue to Claude over MCP?"
     fi:
       - "Mitä liikennedataa teillä on?"
+      - "Ilmanlaatu Žilinassa ja Banská Bystricassa?"
+      - "Montako asukasta BBSK:n alueella on?"
       - "Miten yhdistän katalogin Claudeen MCP:n kautta?"
-      - "Millä lisenssillä aineistot julkaistaan?"
   disclaimer:
     sk: "Odpovede tvorí umelá inteligencia z katalógu a z otvorených dát jeho vydavateľov. Môžu obsahovať chyby, overte si ich v uvedených zdrojoch. Nezadávajte osobné údaje."
     en: "Answers are written by AI from the catalogue and its publishers' open data. They may contain mistakes; check them in the linked sources. Do not enter personal data."

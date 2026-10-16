@@ -303,6 +303,10 @@ def test_the_general_assistant_names_no_city_and_carries_the_portal_guide():
     assert spec["theme"]["title"] == "data.dev"
     assert spec["languages"] == ["sk", "en", "fi"]
     assert set(spec["suggestions"]) == set(spec["disclaimer"]) == {"sk", "en", "fi"}
+    # Judge round 3 (T-4342): one chip set in every language, each chip on one line of the 400px panel.
+    chips = spec["suggestions"]
+    assert len({len(c) for c in chips.values()}) == 1, chips
+    assert all(len(c) <= 50 for cs in chips.values() for c in cs), chips
     prompt = spec["systemPrompt"]
     assert len(prompt) <= 6000, "the guide stays in about 1,500 tokens of the cached prefix"
     for fact in ("https://dev.joinedcontext.com/api/mcp", "ngsi-ld/v1/entities", "bbox=", "Smart Data Model",

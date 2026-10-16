@@ -7,6 +7,7 @@ is its whole list of types (DM-61), so a type without a rule would keep everythi
 
 import re
 from collections import defaultdict
+from functools import cache
 from pathlib import Path
 
 import yaml
@@ -19,15 +20,18 @@ MEASURED = {
 DURATION = re.compile(r"^P(?!$)(\d+Y)?(\d+M)?(\d+W)?(\d+D)?(T(?=\d)(\d+H)?(\d+M)?(\d+S)?)?$")
 
 
-def manifests():
-    for path in SEED.rglob("*.yaml"):
-        if path.name.endswith(".linkml.yaml"):
-            continue
-        for doc in yaml.safe_load_all(path.read_text()):
-            if isinstance(doc, dict) and "kind" in doc:
-                yield doc
+@cache
+def manifests() -> tuple[dict, ...]:
+    return tuple(
+        doc
+        for path in SEED.rglob("*.yaml")
+        if not path.name.endswith(".linkml.yaml")
+        for doc in yaml.safe_load_all(path.read_text())
+        if isinstance(doc, dict) and "kind" in doc
+    )
 
 
+@cache
 def spaces() -> dict[str, tuple[dict, set[str]]]:
     classes, found = defaultdict(set), {}
     for doc in manifests():
@@ -75,3 +79,80 @@ def test_the_duration_pattern_refuses_what_is_not_one():
         assert not DURATION.match(bad), bad
     for good in ["P30D", "PT8H", "P1Y2M", "PT5M", "P2W"]:
         assert DURATION.match(good), good
+
+
+# T-4372: what the public reads, it reads over time too, as far back as the space keeps it.
+TEMPORAL = {"queryTemporal", "retrieveTemporal"}
+# An Endpoint bound to one Policy that mixes history-keeping and history-off types: its one Policy
+# cannot grant the history of some types and not of others, so it serves no history (T-4372).
+# The space's other public Endpoints serve that history.
+MIXED_BOUND = {"helsinki/public-transport", "helsinki/public-hub"}
+
+
+def public_policies():
+    for doc in manifests():
+        spec = doc["spec"]
+        if doc["kind"] == "Policy" and spec.get("assignee", {}).get("id") == "public":
+            ref = spec["contextSpaceRef"]
+            space = f"{doc['metadata']['namespace']}/{ref['name'] if isinstance(ref, dict) else ref}"
+            yield f"{doc['metadata']['namespace']}/{doc['metadata']['name']}", space, spec
+
+
+def entries(spec: dict) -> dict[str, dict]:
+    """Each type the Policy names, with what it shows of it."""
+    return {e["type"]: {k: v for k, v in info.items() if k != "entities"}
+            for info in spec.get("information", []) for e in info["entities"]}
+
+
+def kept(space: str) -> dict[str, int]:
+    """The types of the space that keep history, with the days they keep it."""
+    spec, _ = spaces()[space]
+    return {r["entityType"]: int(r["history"][1:-1]) for r in spec.get("retention", [])
+            if r["history"] != "off" and r["history"].endswith("D")}
+
+
+def test_a_public_temporal_grant_names_only_history_and_is_capped_to_it():
+    granting = 0
+    for name, space, spec in public_policies():
+        if not TEMPORAL & set(spec["operations"]):
+            assert "temporalQ" not in spec, name
+            continue
+        granting += 1
+        assert TEMPORAL <= set(spec["operations"]), name
+        days = kept(space)
+        types = entries(spec)
+        assert types and set(types) <= set(days), f"{name}: history off for {sorted(set(types) - set(days))}"
+        assert spec.get("temporalQ") == f"timerel=after;timeAt=P-{min(max(days[t] for t in types), 30)}D", name
+    assert granting >= 15
+
+
+def test_every_public_read_of_a_history_type_reads_its_history_through_the_same_door():
+    policies = list(public_policies())
+    bound = {}
+    for doc in manifests():
+        if doc["kind"] == "Endpoint" and doc["spec"].get("policyRef"):
+            bound[f"{doc['metadata']['namespace']}/{doc['spec']['policyRef'].rsplit(':', 1)[-1]}"] = True
+    for name, space, spec in policies:
+        if "retrieveOps" not in spec["operations"]:
+            continue
+        history = {t: e for t, e in entries(spec).items() if t in kept(space)}
+        if not history or name in MIXED_BOUND:
+            continue
+        # An Endpoint bound to this Policy evaluates it alone; one bound to none, every Policy of the space.
+        doors = [spec] if name in bound else [s for _, sp, s in policies if sp == space]
+        temporal = {}
+        for door in doors:
+            if TEMPORAL <= set(door["operations"]):
+                temporal.update(entries(door))
+        for t, shown in history.items():
+            # the same Attributes over time as now, no more
+            assert temporal.get(t) == shown, f"{name}: {t} {shown} != {temporal.get(t)}"
+
+
+def test_the_mixed_bound_policies_still_mix():
+    names = {name: (space, spec) for name, space, spec in public_policies()}
+    for name in MIXED_BOUND:
+        space, spec = names[name]
+        days = kept(space)
+        assert any(t in days for t in entries(spec)) and any(t not in days for t in entries(spec)), name
+        assert not TEMPORAL & set(spec["operations"]), name

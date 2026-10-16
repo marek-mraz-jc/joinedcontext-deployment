@@ -358,6 +358,8 @@ EDGE_REDIRECT = ("https://idm.example.test/realms/dev/protocol/openid-connect/au
 
 # First match wins, so the narrower keys come first.
 HEALTHY_STATUSES = [
+    # Event keeps no history, so no Policy grants its temporal read (T-4372).
+    [["hsevents", "/temporal/entities"], 404],
     ["/invoke", 401],
     ["pipelines/test", 200],
     ["/entities?", 200],
@@ -904,6 +906,27 @@ def test_an_entity_that_lists_but_never_retrieves_fails_the_run(tmp_path):
     assert result.returncode == 1
     assert "FAIL  listed but not retrievable" in result.stdout
     assert "urn:ngsi-ld:AirQualityObserved:example.test:ovzdusie:1(400)" in result.stdout
+
+
+def test_the_public_reads_history_and_a_type_without_one_answers_404(tmp_path):
+    """T-4372: an anonymous temporal query on public-air answers from the space's history, and
+    the events endpoint, whose type keeps none, grants no history read."""
+    result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
+    assert "ok    an anonymous visitor reads the air history of public-air (200)" in result.stdout
+    assert "ok    helsinki-events serves no history (Event keeps none) (404)" in result.stdout
+
+
+@pytest.mark.parametrize("statuses, failure", [
+    ([[["ngsi-ld/v1/temporal/entities", "AirQualityObserved"], 404]],
+     "FAIL  an anonymous visitor reads the air history of public-air (expected 200, got 404)"),
+    ([[["hsevents", "/temporal/entities"], 200]],
+     "FAIL  helsinki-events serves no history (Event keeps none) (expected 404, got 200)"),
+])
+def test_a_public_history_that_is_refused_or_one_served_without_history_fails(tmp_path, statuses, failure):
+    """The 404 Claude.ai met on every public history read (T-4372), and its opposite."""
+    result = run(tmp_path, dict(HEALTHY, statuses=statuses + HEALTHY_STATUSES), "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert failure in result.stdout
 
 
 def test_a_space_holding_nothing_skips_the_retrieval(tmp_path):

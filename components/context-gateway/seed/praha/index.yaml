@@ -13,6 +13,7 @@ praha.v1.md: projects/praha/spaces/praha-mesto/datamodels/praha.v1.md
 praha-endpoint-mesto.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-mesto.yaml
 praha-policy-pipelines-write.yaml: projects/praha/spaces/praha-mesto/policies/pipelines-write.yaml
 praha-policy-public-read.yaml: projects/praha/spaces/praha-mesto/policies/public-read.yaml
+praha-policy-public-read-history.yaml: projects/praha/spaces/praha-mesto/policies/public-read-history.yaml
 praha-serviceaccount-pipelines.yaml: projects/praha/access/serviceaccounts/pipelines.yaml
 praha-ckan.yaml: projects/praha/ckan/praha.yaml
 praha-datasource-bike-stations.yaml: projects/praha/datasources/nextbike-stations.yaml
