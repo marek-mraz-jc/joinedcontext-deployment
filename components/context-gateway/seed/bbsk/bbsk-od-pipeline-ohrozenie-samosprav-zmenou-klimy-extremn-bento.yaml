@@ -1,4 +1,4 @@
-# The mapping of the od-ohrozenie-samosprav-zmenou-klimy-extremn pipeline, generated from the T-4254 mapping: one StatisticalObservation per row of
+# The mapping of the od-ohrozenie-samosprav-zmenou-klimy-extremn pipeline, generated from the T-4254 mapping: one KeyPerformanceIndicator per row of
 # "Ohrozenie samospráv zmenou klímy - extrémne horúčavy" (https://data.dev.joinedcontext.com/dataset/bbsk-ohrozenie-samosprav-zmenou-klimy-extremne-horucavy-68ff15). Do not edit: change the mapping and run scripts/open-data/generate.py.
 
 pipeline:
@@ -23,6 +23,10 @@ pipeline:
         map string {
           let v = if this == null { "" } else { this.string().trim() }
           root = if $v == "" { null } else { { "type": "Property", "value": $v } }
+        }
+        map string_list {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": [$v] } }
         }
         map uri {
           root = this.apply("string")
@@ -49,8 +53,8 @@ pipeline:
         }
         let local = "ohrozenie-samosprav-zmenou-klimy-extremn-" + [this.properties."IDN4"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("StatisticalObservation", "bbsk.sk", env("JC_SPACE"), $local),
-          "type": "StatisticalObservation",
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("KeyPerformanceIndicator", "bbsk.sk", env("JC_SPACE"), $local),
+          "type": "KeyPerformanceIndicator",
           "iDN4": this.properties."IDN4".apply("integer"),
           "nM4": this.properties."NM4".apply("string"),
           "iDN3": this.properties."IDN3".apply("integer"),

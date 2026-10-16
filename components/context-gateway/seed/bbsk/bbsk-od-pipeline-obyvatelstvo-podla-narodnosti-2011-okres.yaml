@@ -1,4 +1,4 @@
-# One StatisticalObservation per row of "Obyvateľstvo podľa národnosti (2011), okresy" (T-4255); one row per area (and year).
+# One KeyPerformanceIndicator per row of "Obyvateľstvo podľa národnosti (2011), okresy" (T-4255); one row per area (and year).
 apiVersion: joinedcontext.com/v1alpha1
 kind: Pipeline
 metadata:
@@ -10,14 +10,14 @@ metadata:
 spec:
   class: scheduled
   enabled: false
-  schedule: 33 5 12 * *
+  schedule: 2 4 27 * *
   source:
     dataSourceRef:
       kind: DataSource
       name: od-obyvatelstvo-podla-narodnosti-2011-okres
   targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-otvorene-data:bbsk-otvorene-data
   output:
-    type: StatisticalObservation
+    type: KeyPerformanceIndicator
     mode: upsert
   quotas:
     maxMemoryMb: 128

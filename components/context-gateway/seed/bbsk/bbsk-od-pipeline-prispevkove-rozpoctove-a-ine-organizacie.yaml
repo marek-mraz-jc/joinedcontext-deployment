@@ -1,4 +1,4 @@
-# One PublicOrganization per row of "Príspevkové rozpočtové a iné organizácie samosprávy" (T-4255); the name of the bbsk-registre class.
+# One PublicOrganization per row of "Príspevkové rozpočtové a iné organizácie samosprávy" (T-4255); generated from the T-4254 mapping.
 apiVersion: joinedcontext.com/v1alpha1
 kind: Pipeline
 metadata:
@@ -10,7 +10,7 @@ metadata:
 spec:
   class: scheduled
   enabled: false
-  schedule: 7 3 * * 6
+  schedule: 54 5 * * 1
   source:
     dataSourceRef:
       kind: DataSource

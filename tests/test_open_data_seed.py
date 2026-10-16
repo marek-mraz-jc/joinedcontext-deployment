@@ -5,7 +5,8 @@ the T-4254 mapping. The seed has to equal what it writes, so a hand edit of a ge
 mapping change without a regeneration fails here. Bento runs the generated mappings over recorded
 answers of the sources their DataSources name (`fixtures/open-data/`, fetched on 2026-10-16 and
 trimmed to a few rows), and every entity is checked against the generated space's JSON Schema,
-which the gateway enforces. Without a container runtime the Bento cases skip; the others do not.
+which the gateway enforces, and against its FIWARE Smart Data Model's schema.json, vendored in
+`scripts/open-data/sdm/` (T-4319). Without a container runtime the Bento cases skip; the others do not.
 """
 
 import http.server
@@ -61,6 +62,27 @@ def run_bytes(project: str, slug: str, document: bytes) -> list[dict]:
 
 def schema_errors(project: str, entity: dict) -> list[str]:
     return open_data.schema_errors(SEED / project / f"{project}-otvorene-data.v1.schema.json", entity)
+
+
+MAPPED = [e for e in MAPPING["datasets"] if e["status"] == "mapped"]
+MODEL = {e["type"]: e["smartDataModel"] for e in MAPPED}
+PINS = json.loads((generate.SDM / "pins.json").read_text())
+
+
+def sdm_errors(entity: dict) -> list[str]:
+    """The entity, as `keyValues`, against the schema.json of its type's Smart Data Model. The
+    model's `$ref`s to common-schema.json resolve to the vendored copy, never the network."""
+    jsonschema = pytest.importorskip("jsonschema")
+    from referencing import Registry, Resource
+    from referencing.jsonschema import DRAFT7
+
+    common = Resource.from_contents(json.loads((generate.SDM / "common-schema.json").read_text()), DRAFT7)
+    registry = Registry().with_resources((u, common) for u in (
+        "https://smart-data-models.github.io/data-models/common-schema.json",
+        "https://raw.githubusercontent.com/smart-data-models/data-models/master/common-schema.json"))
+    schema = json.loads(generate.sdm_schema({"name": entity["type"], "smartDataModel": MODEL[entity["type"]]}).read_text())
+    validator = jsonschema.Draft7Validator(schema, registry=registry, format_checker=jsonschema.Draft7Validator.FORMAT_CHECKER)
+    return [f"{'/'.join(map(str, e.absolute_path))}: {e.message}" for e in validator.iter_errors(open_data.key_values(entity))]
 
 
 # --- the seed is the generator's output ---
@@ -219,7 +241,101 @@ def test_a_row_filter_travels_with_every_request_of_its_layer():
             assert urllib.parse.parse_qs(urllib.parse.urlsplit(page_url).query)["where"] == [e["rowFilter"]["where"]]
 
 
+# --- Smart Data Models (T-4319): every type is a published model, every entity valid in it ---
+
+def test_every_mapped_type_is_one_vendored_smart_data_model_at_a_pinned_commit():
+    assert len(MODEL) == len({(e["type"], e["smartDataModel"]) for e in MAPPED}), "one model per type"
+    for e in MAPPED:
+        assert generate.sdm_schema(e).is_file()
+        assert re.fullmatch(r"[0-9a-f]{40}", PINS[e["smartDataModel"].split("/")[0]]), e["smartDataModel"]
+    assert re.fullmatch(r"[0-9a-f]{40}", PINS["data-models"])
+    vendored = {str(p.parent.relative_to(generate.SDM)) for p in generate.SDM.glob("*/*/schema.json")}
+    assert vendored == {m.removeprefix("dataModel.") for m in MODEL.values()}, "vendor exactly the models in use"
+
+
+def test_a_mapped_dataset_without_a_model_or_with_one_not_vendored_is_refused():
+    for model in (None, "", "dataModel.Finance/Invoice", "Organization/Organization"):
+        with pytest.raises(SystemExit, match="mapped without a vendored Smart Data Model"):
+            generate.sdm_schema({"name": "bbsk-x", "smartDataModel": model})
+    assert not [e for e in MAPPING["datasets"] if e["status"] == "removed" and SLUGS.get(e["name"])]
+    removed = {e["name"] for e in MAPPING["datasets"] if e["status"] == "removed"}
+    assert removed, "the mapping removes the types no model holds"
+    for project in generate.PROJECTS:
+        for p in files(project, "datasource"):
+            assert yaml.safe_load(p.read_text())["metadata"]["title"]["en"] not in {
+                e["title"][:120] for e in MAPPING["datasets"] if e["name"] in removed and e["org"] == project}, p.name
+
+
+def expanded(context: dict, term: str) -> str:
+    """The IRI the generated @context gives `term`, its CURIE resolved by the context's own prefixes."""
+    iri = context[term]["@id"] if isinstance(context[term], dict) else context[term]
+    prefix, _, rest = iri.partition(":")
+    return context[prefix] + rest if isinstance(context.get(prefix), str) and not rest.startswith("//") else iri
+
+
+def test_every_term_a_model_names_expands_to_its_vendored_context_and_a_source_column_stays_jc():
+    """T-4328: a client expanding with the Smart Data Model's @context reads the IRIs the broker holds."""
+    for project in generate.PROJECTS:
+        context = json.loads((SEED / project / f"{project}-otvorene-data.v1.context.jsonld").read_text())["@context"]
+        named = 0
+        for e in [e for e in SEEDED if e["org"] == project]:
+            model = e["smartDataModel"].split("/")[0]
+            sdm = json.loads((generate.SDM / model.removeprefix("dataModel.") / "context.jsonld").read_text())["@context"]
+            assert expanded(context, e["type"]) == sdm[e["type"]], e["name"]
+            for a in [*generate.COMMON, *map(generate.attribute, e["properties"]), *(e.get("constants") or {})]:
+                if isinstance(sdm.get(a), str):
+                    assert expanded(context, a) == sdm[a], (e["name"], a)
+                    named += 1
+                else:
+                    assert expanded(context, a) == f"https://joinedcontext.com/models/{a}", (e["name"], a)
+        assert named, project
+    # A source's own column (BBSK's school statistics) is the organisation's term.
+    assert expanded(json.loads((SEED / "bbsk/bbsk-otvorene-data.v1.context.jsonld").read_text())["@context"],
+                    "absolventiZaMinulyRokSpol") == "https://joinedcontext.com/models/absolventiZaMinulyRokSpol"
+
+
+def test_every_context_is_vendored_beside_its_schema_at_the_same_pin():
+    for model in {m.split("/")[0] for m in MODEL.values()}:
+        assert (generate.SDM / model.removeprefix("dataModel.") / "context.jsonld").is_file(), model
+        assert model in PINS
+
+
+def test_two_models_naming_one_term_differently_are_refused():
+    a = {"name": "x", "type": "PointOfInterest", "smartDataModel": "dataModel.PointOfInterest/PointOfInterest",
+         "properties": {"category": {}}}
+    b = {**a, "name": "y", "type": "KeyPerformanceIndicator",
+         "smartDataModel": "dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator"}
+    with pytest.raises(SystemExit, match="`category`"):
+        generate.sdm_iris([a, b])
+
+
+SAMPLE = {"string": "x", "integer": 1, "float": 1.5, "datetime": "2026-01-01T00:00:00Z", "date": "2026-01-01",
+          "uri": "https://example.org/a", "string-list": ["x"]}
+
+
+def test_every_mapping_writes_an_entity_its_model_accepts():
+    """Without Bento: the entity each mapping writes when every column holds a value of its range."""
+    for e in MAPPED:
+        entity = {"id": f"urn:ngsi-ld:{e['type']}:bbsk.sk:s:x-1", "type": e["type"],
+                  **{generate.attribute(a): {"type": "Property", "value": SAMPLE[p["range"]]} for a, p in e["properties"].items()},
+                  **{a: {"type": "Property", "value": v} for a, v in (e.get("constants") or {}).items()},
+                  **{a: {"type": "Property", "value": "https://example.org/s"} for a in ("source", "dataset")},
+                  "dataProvider": {"type": "Property", "value": "x (CC BY 4.0)"}}
+        if e["source"].get("geometry"):
+            entity["location"] = {"type": "GeoProperty", "value": {"type": "Point", "coordinates": [19.1, 48.7]}}
+        assert sdm_errors(entity) == [], e["name"]
+    # A list attribute that came through as text is what the model refuses.
+    assert sdm_errors({"id": "urn:ngsi-ld:Address:bb:x", "type": "Address", "thoroughfare": {"type": "Property", "value": "x"}})
+
+
 # --- the mappings over recorded answers ---
+
+def valid(project: str, entities: list[dict]) -> bool:
+    for e in entities:
+        assert schema_errors(project, e) == [], e["id"]
+        assert sdm_errors(e) == [], e["id"]
+    return True
+
 
 @requires_docker
 def test_a_layer_with_a_key_writes_one_point_per_row_under_its_key():
@@ -229,9 +345,10 @@ def test_a_layer_with_a_key_writes_one_point_per_row_under_its_key():
         f"urn:ngsi-ld:PointOfInterest:bbsk.sk:bbsk-otvorene-data:zoznam-lekarni-v-bbk-{r['properties']['IdZZ']}" for r in rows]
     for e, r in zip(entities, rows):
         assert e["location"] == {"type": "GeoProperty", "value": r["geometry"]}
+        assert e["name"]["value"] == r["properties"]["Názov"].strip()
         assert e["dataset"]["value"] == entry("bbsk-zoznam-lekarni-v-bbk-c564de")["dataset"]
         assert "CC BY-SA 4.0" in e["dataProvider"]["value"]
-        assert schema_errors("bbsk", e) == []
+    assert valid("bbsk", entities)
 
 
 @requires_docker
@@ -240,78 +357,81 @@ def test_a_key_with_its_year_and_a_polygon():
     rows = json.loads((FIXTURES / "pohyb-okresy.json").read_text())["features"]
     assert len(entities) == len(rows) == 2
     for e, r in zip(entities, rows):
+        assert e["id"].startswith("urn:ngsi-ld:KeyPerformanceIndicator:")
         assert e["id"].endswith(f"-{r['properties']['IDN3']}-{r['properties']['Rok']}")
         assert e["location"]["value"]["type"] == "Polygon"
-        assert schema_errors("bbsk", e) == []
+    assert valid("bbsk", entities)
+
+
+@requires_docker
+def test_a_corrected_accident_keeps_its_id_and_the_constant_its_model_requires():
+    first = run("bbsk", "nehodovost-v-bbk", "nehodovost-v-bbk")
+    rows = json.loads((FIXTURES / "nehodovost-v-bbk.json").read_text())["features"]
+    assert [e["id"] for e in first] == [
+        f"urn:ngsi-ld:RoadAccident:bbsk.sk:bbsk-otvorene-data:nehodovost-v-bbk-{r['properties']['Číslo_nehody']}"
+        for r in rows]
+    assert all(e["status"]["value"] == "archived" for e in first)
+    assert valid("bbsk", first)
+    # A corrected value updates the accident instead of adding a second one (T-4332).
+    doc = json.loads((FIXTURES / "nehodovost-v-bbk.json").read_text())
+    doc["features"][0]["properties"]["Škoda_v_EUR"] = 1.5
+    changed = run_bytes("bbsk", "nehodovost-v-bbk", json.dumps(doc).encode())
+    assert [e["id"] for e in changed] == [e["id"] for e in first]
 
 
 @requires_docker
 def test_a_table_without_a_key_takes_a_stable_row_hash():
-    first = run("bbsk", "zmluvy", "zmluvy")
-    again = run("bbsk", "zmluvy", "zmluvy")
+    first = run("banskabystrica", "adresy", "adresy")
+    again = run("banskabystrica", "adresy", "adresy")
     assert [e["id"] for e in first] == [e["id"] for e in again]
     assert len({e["id"] for e in first}) == 3
-    assert all("location" not in e and schema_errors("bbsk", e) == [] for e in first)
     # One changed value is another row, so another id.
-    doc = json.loads((FIXTURES / "zmluvy.json").read_text())
-    doc["features"][0]["properties"]["Suma_v_EUR"] = 1.5
-    changed = run_bytes("bbsk", "zmluvy", json.dumps(doc).encode())
+    doc = json.loads((FIXTURES / "adresy.json").read_text())
+    doc["result"]["records"][0]["Ulica"] = "Iná ulica"
+    changed = run_bytes("banskabystrica", "adresy", json.dumps(doc).encode())
     assert changed[0]["id"] != first[0]["id"] and changed[1]["id"] == first[1]["id"]
+
+
+@requires_docker
+def test_a_list_attribute_is_a_one_item_list_and_an_empty_name_reads_the_next_column():
+    doc = json.loads((FIXTURES / "nabijacky-a-zastavky.json").read_text())
+    doc["features"][0]["properties"]["PRIM_NAME"] = None
+    entities = run_bytes("bbsk", "nabijacky-a-zastavky", json.dumps(doc).encode())
+    rows = [f["properties"] for f in doc["features"]]
+    assert len(entities) == len(rows) == 3
+    assert entities[0]["name"]["value"] == rows[0]["Categ"]
+    assert [e["name"]["value"] for e in entities[1:]] == [r["PRIM_NAME"] for r in rows[1:]]
+    assert entities[0]["category"]["value"] == [str(rows[0]["category"])]
+    assert valid("bbsk", entities)
+    spatial = run("bbsk", "prispevkove-rozpoctove-a-ine-organizacie", "prispevkove-rozpoctove-a-ine-organizacie")
+    assert [e["spatial"]["value"] for e in spatial] == [[r["properties"]["Obec"]] for r in json.loads(
+        (FIXTURES / "prispevkove-rozpoctove-a-ine-organizacie.json").read_text())["features"]]
+    assert valid("bbsk", spatial)
 
 
 @requires_docker
 def test_a_name_where_the_ico_belongs_keeps_the_row_out():
     """The BBSK IČO columns also hold surnames padded to eight characters (`0000BIBA`), which name
     natural persons and pass the layer's `IS NOT NULL` filter (T-4255): the mapping drops them."""
-    doc = json.loads((FIXTURES / "zmluvy.json").read_text())
-    kept = [f["properties"]["IČO_dodávateľa"] for f in doc["features"][1:]]
-    doc["features"][0]["properties"]["IČO_dodávateľa"] = "0000BIBA"
-    entities = run_bytes("bbsk", "zmluvy", json.dumps(doc).encode())
-    assert len(entities) == len(kept) == 2
-    assert sorted(e["iCODodavatela"]["value"] for e in entities) == sorted(v.strip() for v in kept)
-    doc["features"][1]["properties"]["IČO_dodávateľa"] = "00177431 0006"
-    assert len(run_bytes("bbsk", "zmluvy", json.dumps(doc).encode())) == 2
+    doc = json.loads((FIXTURES / "dodavatelia.json").read_text())
+    kept = [f["properties"]["ICO"] for f in doc["features"][1:]]
+    doc["features"][0]["properties"]["ICO"] = "0000BIBA"
+    entities = run_bytes("bbsk", "dodavatelia", json.dumps(doc).encode())
+    assert sorted(e["iCO"]["value"] for e in entities) == sorted(v.strip() for v in kept)
+    assert valid("bbsk", entities)
+    doc["features"][1]["properties"]["ICO"] = "00177431 0006"
+    assert len(run_bytes("bbsk", "dodavatelia", json.dumps(doc).encode())) == 2
 
 
 @requires_docker
-def test_a_contract_with_a_party_without_an_ico_stays_out():
-    """The city's contracts name a social-service client as a party (T-4255): a contract stays only
-    when every party line of `Zmluvné_strany_s_údajom_IČO` carries an IČO."""
-    company = "IČO: 00165549 Fakultná nemocnica s poliklinikou F.D. Roosevelta Banská Bystrica"
-    records = [
-        {"Centrálne_číslo_zmluvy": "1", "Rok": 2024, "Zmluvné_strany_s_údajom_IČO": company},
-        {"Centrálne_číslo_zmluvy": "2", "Rok": 2024, "Zmluvné_strany_s_údajom_IČO": "Adam Gašpar"},
-        {"Centrálne_číslo_zmluvy": "3", "Rok": 2024, "Zmluvné_strany_s_údajom_IČO": f"{company},\rNatália Tretinová"},
-        {"Centrálne_číslo_zmluvy": "4", "Rok": 2024,
-         "Zmluvné_strany_s_údajom_IČO": f"{company},\rIČO: 30232295 Univerzita Mateja Bela"},
-        {"Centrálne_číslo_zmluvy": "5", "Rok": 2024, "Zmluvné_strany_s_údajom_IČO": None},
-    ]
-    doc = json.dumps({"success": True, "result": {"records": records}}).encode()
-    entities = run_bytes("banskabystrica", "zmluvy-bb", doc)
-    assert len(entities) == 2
-    assert not any("Gašpar" in json.dumps(e, ensure_ascii=False) or "Tretinová" in json.dumps(e, ensure_ascii=False)
-                   for e in entities)
-
-
-@requires_docker
-def test_a_catalogue_table_reads_its_records_with_their_types():
-    entities = run("banskabystrica", "objednavky-bb", "objednavky-bb")
-    rows = json.loads((FIXTURES / "objednavky-bb.json").read_text())["result"]["records"]
+def test_a_catalogue_table_reads_its_records_as_addresses():
+    entities = run("banskabystrica", "adresy", "adresy")
+    rows = json.loads((FIXTURES / "adresy.json").read_text())["result"]["records"]
     assert len(entities) == len(rows) == 3
     for e, r in zip(entities, rows):
-        assert e["id"].endswith(f"objednavky-bb-{r['Číslo_objednávky']}")
-        assert e["cisloObjednavky"]["value"] == r["Číslo_objednávky"]
-        assert schema_errors("banskabystrica", e) == []
-
-
-@requires_docker
-def test_a_wordpress_post_is_its_id_title_link_and_text_without_markup():
-    entities = run("banskabystrica", "aktuality", "aktuality")
-    posts = json.loads((FIXTURES / "aktuality.json").read_text())
-    assert [e["sourceId"]["value"] for e in entities] == [p["id"] for p in posts]
-    for e in entities:
-        assert "<" not in e["content"]["value"] and e["title"]["value"] and e["dateGmt"]["value"].endswith("Z")
-        assert schema_errors("banskabystrica", e) == []
+        assert e["id"].startswith("urn:ngsi-ld:Address:banskabystrica.sk:banskabystrica-otvorene-data:adresy-")
+        assert (e["thoroughfare"]["value"], e["postName"]["value"]) == ([r["Ulica"]], [r["Obec"]])
+    assert valid("banskabystrica", entities)
 
 
 def offline(project: str, slug: str, document: bytes, pages: dict[int, bytes | None]) -> subprocess.CompletedProcess:
@@ -362,24 +482,24 @@ def written(result: subprocess.CompletedProcess) -> list[dict]:
 
 @requires_docker
 def test_a_layer_over_one_page_is_read_page_by_page_with_its_filter():
-    page0 = json.loads((FIXTURES / "zmluvy.json").read_text())
+    page0 = json.loads((FIXTURES / "dodavatelia.json").read_text())
     rows = page0["features"]
     first = {**page0, "features": rows[:2], "properties": {"exceededTransferLimit": True}}
     second = json.dumps({**page0, "features": rows[2:]}).encode()
-    entities = written(offline("bbsk", "zmluvy", json.dumps(first).encode(), {1000: second}))
+    entities = written(offline("bbsk", "dodavatelia", json.dumps(first).encode(), {1000: second}))
     assert len({e["id"] for e in entities}) == 3, "both rows of page 0 and the row of page 1000"
-    assert all(schema_errors("bbsk", e) == [] for e in entities)
+    assert valid("bbsk", entities)
     # Without the flag the layer said it was whole: nothing else is asked for.
-    assert len(written(offline("bbsk", "zmluvy", json.dumps({**page0, "features": rows[:2]}).encode(), {1000: None}))) == 2
+    assert len(written(offline("bbsk", "dodavatelia", json.dumps({**page0, "features": rows[:2]}).encode(), {1000: None}))) == 2
 
 
 @requires_docker
 def test_an_empty_layer_writes_nothing_and_a_failure_fails_the_run_where_it_shows():
-    assert written(offline("bbsk", "peticie", b'{"type": "FeatureCollection", "features": []}', {})) == []
-    error = offline("bbsk", "peticie", b'{"error": {"code": 400, "message": "Invalid query"}}', {})
+    assert written(offline("bbsk", "dodavatelia", b'{"type": "FeatureCollection", "features": []}', {})) == []
+    error = offline("bbsk", "dodavatelia", b'{"error": {"code": 400, "message": "Invalid query"}}', {})
     assert b"the layer answered no features: Invalid query" in error.stdout + error.stderr
-    page0 = json.loads((FIXTURES / "zmluvy.json").read_text())
-    missing = offline("bbsk", "zmluvy", json.dumps({**page0, "properties": {"exceededTransferLimit": True}}).encode(), {2000: None})
+    page0 = json.loads((FIXTURES / "dodavatelia.json").read_text())
+    missing = offline("bbsk", "dodavatelia", json.dumps({**page0, "properties": {"exceededTransferLimit": True}}).encode(), {2000: None})
     assert b"the page at 2000 did not come" in missing.stdout + missing.stderr
-    table = offline("banskabystrica", "objednavky-bb", b'{"success": false}', {})
+    table = offline("banskabystrica", "adresy", b'{"success": false}', {})
     assert b"the catalogue answered no table" in table.stdout + table.stderr

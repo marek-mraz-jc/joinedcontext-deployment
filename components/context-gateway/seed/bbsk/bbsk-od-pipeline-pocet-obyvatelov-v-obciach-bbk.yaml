@@ -1,4 +1,4 @@
-# One StatisticalObservation per row of "Počet obyvateľov v obciach BBK" (T-4255); one row per area (and year).
+# One KeyPerformanceIndicator per row of "Počet obyvateľov v obciach BBK" (T-4255); one row per area (and year).
 apiVersion: joinedcontext.com/v1alpha1
 kind: Pipeline
 metadata:
@@ -10,14 +10,14 @@ metadata:
 spec:
   class: scheduled
   enabled: false
-  schedule: 11 2 * * *
+  schedule: 26 5 * * *
   source:
     dataSourceRef:
       kind: DataSource
       name: od-pocet-obyvatelov-v-obciach-bbk
   targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-otvorene-data:bbsk-otvorene-data
   output:
-    type: StatisticalObservation
+    type: KeyPerformanceIndicator
     mode: upsert
   quotas:
     maxMemoryMb: 128
