@@ -36,6 +36,11 @@ spec:
               value: /var/solr/logs
             - name: SOLR_HOME
               value: /var/solr/data
+            {{- with .Values.solr.heap }}
+            # The JVM heap (-Xms and -Xmx); unset, the image's 512m.
+            - name: SOLR_HEAP
+              value: {{ . | quote }}
+            {{- end }}
           ports:
             - name: solr
               containerPort: 8983
