@@ -29,7 +29,6 @@ spec:
         # mappings: the contact lines, applicants and contractors are never written.
         - type: PointOfInterest
         - type: WaterQualityObserved
-        - type: ParkingArea
-        - type: ParkingZone
+        - type: OnStreetParking
         - type: PublicAreaPermit
         - type: CityDistrict

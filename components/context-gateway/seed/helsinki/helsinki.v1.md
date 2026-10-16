@@ -224,17 +224,22 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
-### ParkingArea
+### OnStreetParking
 
-One parking area of the city's parking guide, its outline and the number of cars it holds when the city has estimated it.
+One street parking area of the city with its outline (T-4329): a parking area of the city's parking guide with the cars it holds when the city has estimated it (category `public`), a parking fee zone (`feeCharged`) or a resident parking zone (`forResidents`), a zone with its code and rules.
 
-IRI: `jc:ParkingArea`
+IRI: `sdm:OnStreetParking`
 
 Specialises `Entity`.
 
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language. |
+| `category` | Property | [`StreetParkingCategory`](#streetparkingcategory) (list) | yes |  | `sdm:category` | Which of the city's street parking layers the area belongs to, in the Smart Data Model's own words. |
 | `totalSpotNumber` | Property | `integer` |  |  | `sdm:totalSpotNumber` | The number of vehicles the site holds, as the publisher states or estimates it; for a park and ride site, of its own kind (car or bicycle). |
+| `zoneCode` | Property | `string` |  |  | `jc:zoneCode` | The zone's own code, a fee zone number or a resident permit letter, as the signs show it. |
+| `description` | LanguageProperty | `string` |  |  | `schema:description` | A short description, per language. |
+| `url` | Property | `uri` |  |  | `schema:url` | Where the item is published in full. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
@@ -259,28 +264,6 @@ Specialises `Entity`.
 | `capacityByType` | JsonProperty | `string` |  |  | `jc:capacityByType` | The built capacity per kind of space, as LIIPI names them in lower case (car, disabled, bicycle, electricCar, motorcycle, bicycleSecureSpace), each a count. |
 | `availableSpotNumber` | Property | `integer` |  |  | `sdm:availableSpotNumber` | Free spaces at the park and ride site when it last reported, LIIPI's spacesAvailable. |
 | `refNearestStation` | Relationship | [`GtfsStation`](#gtfsstation) |  |  | `jc:refNearestStation` | The HSL station within 500 m of the park and ride site, the nearest one, a GtfsStation of this space. |
-| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
-| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
-| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
-| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
-| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
-| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
-
-### ParkingZone
-
-One parking fee zone or resident parking zone of the city, its outline and its rules.
-
-IRI: `jc:ParkingZone`
-
-Specialises `Entity`.
-
-| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
-|---|---|---|---|---|---|---|
-| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language. |
-| `zoneKind` | Property | [`ParkingZoneKind`](#parkingzonekind) | yes |  | `jc:zoneKind` | Whether the zone sets the parking fee or the residents' and businesses' permits. |
-| `zoneCode` | Property | `string` | yes |  | `jc:zoneCode` | The zone's own code, a fee zone number or a resident permit letter, as the signs show it. |
-| `description` | LanguageProperty | `string` |  |  | `schema:description` | A short description, per language. |
-| `url` | Property | `uri` |  |  | `schema:url` | Where the item is published in full. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
@@ -514,12 +497,15 @@ IRI: `ngsi-ld:Entity`
 | `beach` | A public beach. |
 | `school` | A comprehensive school. |
 
-### ParkingZoneKind
+### StreetParkingCategory
+
+The OnStreetParking `category` values the city's layers use, a subset of the Smart Data Model's enum.
 
 | Value | Meaning |
 |---|---|
-| `fee` | The zone sets what parking costs by the hour. |
-| `resident` | Residents and businesses of the zone park on its permit. |
+| `public` | A parking area of the parking guide, open to anyone. |
+| `feeCharged` | A parking fee zone; parking costs by the hour. |
+| `forResidents` | A resident parking zone; residents and businesses of the zone park on its permit. |
 
 ### PermitKind
 

@@ -80,7 +80,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "pm10": {
-          "description": "Particulate matter up to 10 µm, the hour's mean at the station.",
+          "description": "Particulate matter up to 10 \u00b5m, the hour's mean at the station.",
           "minimum": 0,
           "type": [
             "number",
@@ -92,7 +92,7 @@
           }
         },
         "pm25": {
-          "description": "Particulate matter up to 2.5 µm, the hour's mean at the station.",
+          "description": "Particulate matter up to 2.5 \u00b5m, the hour's mean at the station.",
           "minimum": 0,
           "type": [
             "number",
@@ -1663,95 +1663,18 @@
       "title": "OffStreetParking",
       "type": "object"
     },
-    "ParkingArea": {
+    "OnStreetParking": {
       "additionalProperties": false,
-      "description": "One parking area of the city's parking guide, its outline and the number of cars it holds when the city has estimated it.",
+      "description": "One street parking area of the city with its outline (T-4329): a parking area of the city's parking guide with the cars it holds when the city has estimated it (category `public`), a parking fee zone (`feeCharged`) or a resident parking zone (`forResidents`), a zone with its code and rules.",
       "properties": {
-        "dataProvider": {
-          "description": "Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space).",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "id": {
-          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
-          "type": "string",
-          "x-ngsi-ld-kind": "Property"
-        },
-        "location": {
-          "description": "Where the entity is, as GeoJSON geometry.",
-          "properties": {
-            "coordinates": {
-              "type": "array"
-            },
-            "type": {
-              "enum": [
-                "Point",
-                "MultiPoint",
-                "LineString",
-                "MultiLineString",
-                "Polygon",
-                "MultiPolygon"
-              ],
-              "type": "string"
-            }
+        "category": {
+          "description": "Which of the city's street parking layers the area belongs to, in the Smart Data Model's own words.",
+          "items": {
+            "$ref": "#/definitions/StreetParkingCategory"
           },
-          "required": [
-            "type",
-            "coordinates"
-          ],
-          "type": [
-            "object",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "GeoProperty"
-        },
-        "observedAt": {
-          "description": "When the observation the entity reports was made.",
-          "format": "date-time",
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": "array",
           "x-ngsi-ld-kind": "Property"
         },
-        "source": {
-          "description": "The open-data service the entity was read from.",
-          "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "totalSpotNumber": {
-          "description": "The number of vehicles the site holds, as the publisher states or estimates it; for a park and ride site, of its own kind (car or bicycle).",
-          "minimum": 0,
-          "type": [
-            "integer",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "type": {
-          "description": "The entity type, one class of a published data model.",
-          "type": "string",
-          "x-ngsi-ld-kind": "Property"
-        }
-      },
-      "required": [
-        "id",
-        "type"
-      ],
-      "title": "ParkingArea",
-      "type": "object"
-    },
-    "ParkingZone": {
-      "additionalProperties": false,
-      "description": "One parking fee zone or resident parking zone of the city, its outline and its rules.",
-      "properties": {
         "dataProvider": {
           "description": "Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space).",
           "type": [
@@ -1833,6 +1756,15 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "totalSpotNumber": {
+          "description": "The number of vehicles the site holds, as the publisher states or estimates it; for a park and ride site, of its own kind (car or bicycle).",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "type": {
           "description": "The entity type, one class of a published data model.",
           "type": "string",
@@ -1849,36 +1781,20 @@
         },
         "zoneCode": {
           "description": "The zone's own code, a fee zone number or a resident permit letter, as the signs show it.",
-          "type": "string",
-          "x-ngsi-ld-kind": "Property"
-        },
-        "zoneKind": {
-          "$ref": "#/definitions/ParkingZoneKind",
-          "description": "Whether the zone sets the parking fee or the residents' and businesses' permits.",
+          "type": [
+            "string",
+            "null"
+          ],
           "x-ngsi-ld-kind": "Property"
         }
       },
       "required": [
-        "zoneKind",
-        "zoneCode",
+        "category",
         "id",
         "type"
       ],
-      "title": "ParkingZone",
+      "title": "OnStreetParking",
       "type": "object"
-    },
-    "ParkingZoneKind": {
-      "description": "",
-      "enum": [
-        "fee",
-        "resident"
-      ],
-      "title": "ParkingZoneKind",
-      "type": "string",
-      "x-enum-descriptions": {
-        "fee": "The zone sets what parking costs by the hour.",
-        "resident": "Residents and businesses of the zone park on its permit."
-      }
     },
     "PermitKind": {
       "description": "",
@@ -2259,6 +2175,21 @@
         "library": "A public library.",
         "school": "A comprehensive school.",
         "swimmingHall": "An indoor swimming hall."
+      }
+    },
+    "StreetParkingCategory": {
+      "description": "The OnStreetParking `category` values the city's layers use, a subset of the Smart Data Model's enum.",
+      "enum": [
+        "public",
+        "feeCharged",
+        "forResidents"
+      ],
+      "title": "StreetParkingCategory",
+      "type": "string",
+      "x-enum-descriptions": {
+        "feeCharged": "A parking fee zone; parking costs by the hour.",
+        "forResidents": "A resident parking zone; residents and businesses of the zone park on its permit.",
+        "public": "A parking area of the parking guide, open to anyone."
       }
     },
     "TransitRoute": {

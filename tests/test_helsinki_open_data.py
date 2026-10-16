@@ -31,7 +31,7 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures/helsinki/open-data"
 FEEDS = {
     "services": ("servicemap-units.json", "PointOfInterest", 5),
     "beach-water": ("uiras-beaches.json", "WaterQualityObserved", 3),
-    "parking-areas": ("parking-areas.json", "ParkingArea", 3),
+    "parking-areas": ("parking-areas.json", "OnStreetParking", 3),
     # Three areas, two of them one application: two permits.
     "excavation": ("excavation.json", "PublicAreaPermit", 2),
     "traffic-arrangements": ("traffic-arrangements.json", "PublicAreaPermit", 2),
@@ -39,8 +39,8 @@ FEEDS = {
     # Two features, one of them the territorial sea, which has no district number.
     "districts": ("districts.json", "CityDistrict", 1),
     "subdistricts": ("subdistricts.json", "CityDistrict", 2),
-    "fee-parking-zones": ("payment-zones.json", "ParkingZone", 1),
-    "resident-parking-zones": ("resident-zones.json", "ParkingZone", 2),
+    "fee-parking-zones": ("payment-zones.json", "OnStreetParking", 1),
+    "resident-parking-zones": ("resident-zones.json", "OnStreetParking", 2),
     # Every row of three line variants: a ferry, a metro line and a one-stop variant.
     "transit-routes": ("hsl-routes.json", "TransitRoute", 3),
 }
@@ -195,7 +195,7 @@ def test_districts_read_as_a_person_writes_them_and_sub_districts_keep_the_stati
 @requires_docker
 def test_a_zone_link_without_a_scheme_is_written_as_https(written):
     fee = written["fee-parking-zones"][0]
-    assert fee["zoneKind"]["value"] == "fee" and fee["zoneCode"]["value"] == "1"
+    assert fee["category"]["value"] == ["feeCharged"] and fee["zoneCode"]["value"] == "1"
     assert fee["url"]["value"] == "https://www.hel.fi/pysakointi"
     assert "4 euroa tunnilta" in fee["description"]["languageMap"]["fi"]
 
@@ -279,3 +279,14 @@ def test_the_model_classes_and_the_manifest_agree():
     # The entity types; a value class such as PostalAddress (T-3949) is no type of the space.
     entities = {name for name, body in linkml["classes"].items() if (body or {}).get("is_a") == "Entity"}
     assert set(manifest["spec"]["classes"]) == entities
+
+
+@requires_docker
+def test_the_street_parking_layers_are_the_smart_data_model_on_street_parking_told_apart_by_category(written):
+    """T-4329: parking areas, fee zones and resident zones are one SDM type; `category` says which."""
+    for name, category in (("parking-areas", "public"), ("fee-parking-zones", "feeCharged"), ("resident-parking-zones", "forResidents")):
+        for entity in written[name]:
+            assert entity["category"]["value"] == [category], name
+            assert open_data.sdm_errors("dataModel.Parking/OnStreetParking", entity) == [], (name, entity["id"])
+    # A zone code the model types as an integer would not be the sign's letter: it stays text.
+    assert all(isinstance(e["zoneCode"]["value"], str) for e in written["resident-parking-zones"])

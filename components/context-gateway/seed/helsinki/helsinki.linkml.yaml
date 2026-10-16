@@ -478,17 +478,9 @@ slots:
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Parking
-  zoneKind:
-    slot_uri: jc:zoneKind
-    description: Whether the zone sets the parking fee or the residents' and businesses' permits.
-    range: ParkingZoneKind
-    required: true
-    annotations:
-      ngsi_ld_kind: Property
   zoneCode:
     slot_uri: jc:zoneCode
     description: The zone's own code, a fee zone number or a resident permit letter, as the signs show it.
-    required: true
     annotations:
       ngsi_ld_kind: Property
   permitKind:
@@ -922,16 +914,31 @@ classes:
       - refPointOfInterest
       - dataProvider
       - source
-  ParkingArea:
-    class_uri: jc:ParkingArea
+  OnStreetParking:
+    class_uri: sdm:OnStreetParking
     description: >-
-      One parking area of the city's parking guide, its outline and the number of cars it holds
-      when the city has estimated it.
+      One street parking area of the city with its outline (T-4329): a parking area of the city's
+      parking guide with the cars it holds when the city has estimated it (category `public`), a
+      parking fee zone (`feeCharged`) or a resident parking zone (`forResidents`), a zone with its
+      code and rules.
     is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Parking
     slots:
+      - name
+      - category
       - totalSpotNumber
+      - zoneCode
+      - description
+      - url
       - dataProvider
       - source
+    slot_usage:
+      category:
+        description: Which of the city's street parking layers the area belongs to, in the Smart Data Model's own words.
+        range: StreetParkingCategory
+        multivalued: true
+        required: true
   OffStreetParking:
     class_uri: sdm:OffStreetParking
     description: >-
@@ -948,18 +955,6 @@ classes:
       - capacityByType
       - availableSpotNumber
       - refNearestStation
-      - dataProvider
-      - source
-  ParkingZone:
-    class_uri: jc:ParkingZone
-    description: One parking fee zone or resident parking zone of the city, its outline and its rules.
-    is_a: Entity
-    slots:
-      - name
-      - zoneKind
-      - zoneCode
-      - description
-      - url
       - dataProvider
       - source
   PublicAreaPermit:
@@ -1116,12 +1111,15 @@ enums:
         description: A public beach.
       school:
         description: A comprehensive school.
-  ParkingZoneKind:
+  StreetParkingCategory:
+    description: The OnStreetParking `category` values the city's layers use, a subset of the Smart Data Model's enum.
     permissible_values:
-      fee:
-        description: The zone sets what parking costs by the hour.
-      resident:
-        description: Residents and businesses of the zone park on its permit.
+      public:
+        description: A parking area of the parking guide, open to anyone.
+      feeCharged:
+        description: A parking fee zone; parking costs by the hour.
+      forResidents:
+        description: A resident parking zone; residents and businesses of the zone park on its permit.
   PermitKind:
     permissible_values:
       excavation:

@@ -48,13 +48,12 @@ MODELS = {
     "GtfsShape": ("dataModel.UrbanMobility", "GtfsShape"),
     "Event": ("dataModel.TourismDestinations", "Event"),
     "OffStreetParking": ("dataModel.Parking", "OffStreetParking"),
+    "OnStreetParking": ("dataModel.Parking", "OnStreetParking"),
 }
 
 #: Types with no Smart Data Model, and why the Helsinki model keeps its own.
 EXCEPTIONS = {
     "NewsArticle": "schema.org NewsArticle; SDM has no news model",
-    "ParkingArea": "Helsinki parking area polygons; SDM ParkingSpot/OffStreetParking describe a facility with capacity, which the source does not publish",
-    "ParkingZone": "Helsinki fee and resident zones; no SDM model for a tariff zone",
     "PublicAreaPermit": "Helsinki Allu permits; no SDM model",
     "CityDistrict": "Helsinki districts; SDM has no administrative-area model beyond Location",
     "KeyPerformanceIndicator": "the platform's own KPI type, outside the Helsinki feeds",
