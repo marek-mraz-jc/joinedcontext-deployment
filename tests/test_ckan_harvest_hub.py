@@ -181,7 +181,10 @@ def test_a_converted_dataset_lists_the_platform_apis_and_an_unconverted_one_none
     assert apis[-1]["url"] == "wss://dev.joinedcontext.com/api/endpoint/" + entry["endpoint"] + "/ws"
     mine = "?type=PointOfInterest&q=dataset%3D%3D%22" + quote(entry["dataset"], safe="") + "%22"
     assert urls[0].endswith(mine) and urls[2].endswith(mine)
-    assert all("conforms_to" in r for r in apis if r["format"] in ("JSON-LD", "GeoJSON"))
+    # The labels jcctl gives an Endpoint's own dataset, so the format facet counts both (T-4324).
+    assert [r["format"] for r in apis] == [
+        "NGSI-LD", "GeoJSON", "CSV", "JSON", "XLSX", "OGCFEAT", "OData", "MCP", "WebSocket"]
+    assert all("conforms_to" in r for r in apis if r["format"] in ("NGSI-LD", "GeoJSON", "OGCFEAT", "OData", "MCP"))
     assert all(r["description"].startswith("Every PointOfInterest") for r in apis if "?" not in r["url"])
 
     other = next(i for i in items() if i["id"] == APS)
