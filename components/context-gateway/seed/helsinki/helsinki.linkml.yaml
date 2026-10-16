@@ -565,7 +565,7 @@ slots:
   publicAreaPermits:
     slot_uri: jc:publicAreaPermits
     description: The public-area permits that lie in this district, computed from their refDistrict and never stored.
-    range: PublicAreaPermit
+    range: CityWork
     multivalued: true
     inverse: refDistrict
     inlined: false
@@ -969,13 +969,16 @@ classes:
       - refNearestStation
       - dataProvider
       - source
-  PublicAreaPermit:
-    class_uri: jc:PublicAreaPermit
+  CityWork:
+    class_uri: sdm:CityWork
     description: >-
       One permit of the city's public-area register: an excavation, a temporary traffic
       arrangement or an event, with every area it covers as one outline. The applicant and the
-      contractor are left out, because they can name a person.
+      contractor are left out, because they can name a person. The Smart Data Model of works
+      that occupy the street (T-4329); an event's permit covers its build and teardown on it.
     is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
     slots:
       - name
       - permitKind

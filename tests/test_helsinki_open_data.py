@@ -33,9 +33,9 @@ FEEDS = {
     "beach-water": ("uiras-beaches.json", "WaterQualityObserved", 3),
     "parking-areas": ("parking-areas.json", "OnStreetParking", 3),
     # Three areas, two of them one application: two permits.
-    "excavation": ("excavation.json", "PublicAreaPermit", 2),
-    "traffic-arrangements": ("traffic-arrangements.json", "PublicAreaPermit", 2),
-    "area-events": ("area-events.json", "PublicAreaPermit", 3),
+    "excavation": ("excavation.json", "CityWork", 2),
+    "traffic-arrangements": ("traffic-arrangements.json", "CityWork", 2),
+    "area-events": ("area-events.json", "CityWork", 3),
     # Two features, one of them the territorial sea, which has no district number.
     "districts": ("districts.json", "CityDistrict", 1),
     "subdistricts": ("subdistricts.json", "CityDistrict", 2),
@@ -101,7 +101,7 @@ def test_the_areas_of_one_application_are_one_permit_with_every_outline(written)
     numbers = [a["properties"]["hakemustunnus"] for a in areas]
     shared = next(n for n in numbers if numbers.count(n) == 2)
     permit = next(e for e in written["excavation"] if e["permitNumber"]["value"] == shared)
-    assert permit["id"] == f"urn:ngsi-ld:PublicAreaPermit:hel.fi:helsinki:{shared}"
+    assert permit["id"] == f"urn:ngsi-ld:CityWork:hel.fi:helsinki:{shared}"
     assert permit["location"]["value"]["type"] == "MultiPolygon"
     assert len(permit["location"]["value"]["coordinates"]) == 2
     # "34 PAKILA" names district 34, which the districts pipeline writes as district-34.
@@ -228,8 +228,8 @@ def test_an_empty_answer_writes_nothing():
 
 def test_a_value_outside_the_model_is_refused_by_the_schema():
     permit = {
-        "id": "urn:ngsi-ld:PublicAreaPermit:hel.fi:helsinki:KP2602482",
-        "type": "PublicAreaPermit",
+        "id": "urn:ngsi-ld:CityWork:hel.fi:helsinki:KP2602482",
+        "type": "CityWork",
         "permitKind": {"type": "Property", "value": "excavation"},
         "permitNumber": {"type": "Property", "value": "KP2602482"},
         "permitStatus": {"type": "Property", "value": "cancelled"},
@@ -300,3 +300,11 @@ def test_a_line_variant_is_the_smart_data_model_public_transport_route_with_its_
     assert types["metro"] == 1 and types.get("ferry", 4) == 4 and all(v in range(8) for v in types.values())
     for entity in written["transit-routes"]:
         assert open_data.sdm_errors("dataModel.UrbanMobility/PublicTransportRoute", entity) == [], entity["id"]
+
+
+@requires_docker
+def test_every_public_area_permit_is_the_smart_data_model_city_work(written):
+    """T-4329: excavations, traffic arrangements and event permits are SDM CityWork."""
+    for name in ("excavation", "traffic-arrangements", "area-events"):
+        for entity in written[name]:
+            assert open_data.sdm_errors("dataModel.Transportation/CityWork", entity) == [], (name, entity["id"])

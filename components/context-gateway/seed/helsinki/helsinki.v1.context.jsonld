@@ -13,6 +13,9 @@
     "CityDistrict": {
       "@id": "jc:CityDistrict"
     },
+    "CityWork": {
+      "@id": "sdm:CityWork"
+    },
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
@@ -48,9 +51,6 @@
     },
     "PostalAddress": {
       "@id": "schema:PostalAddress"
-    },
-    "PublicAreaPermit": {
-      "@id": "jc:PublicAreaPermit"
     },
     "PublicTransportRoute": {
       "@id": "sdm:PublicTransportRoute"

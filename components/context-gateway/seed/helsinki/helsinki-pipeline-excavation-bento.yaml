@@ -1,4 +1,4 @@
-# The mapping of the excavations pipeline (PL-03): one PublicAreaPermit per excavation notice of
+# The mapping of the excavations pipeline (PL-03): one CityWork per excavation notice of
 # the city's public-area register (Allu), from the open WFS layer `Kaivuilmoitus_alue`.
 #
 # The layer holds one feature per area, and one application covers up to a hundred areas, each
@@ -39,8 +39,8 @@ pipeline:
           "address": p.props.osoite.apply("text"),
           "district": p.props.kaupunginosa.or("").re_find_all("^[0-9]+").index(0).or(null)
         })).filter(p -> p.status != null && p.start != null && p.end != null).map_each(p -> {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("PublicAreaPermit", env("JC_ORG_DOMAIN"), env("JC_SPACE"), p.props.hakemustunnus),
-          "type": "PublicAreaPermit",
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("CityWork", env("JC_ORG_DOMAIN"), env("JC_SPACE"), p.props.hakemustunnus),
+          "type": "CityWork",
           "name": if p.name == null { null } else { { "type": "LanguageProperty", "languageMap": { "fi": p.name } } },
           "permitKind": { "type": "Property", "value": $kind },
           "permitNumber": { "type": "Property", "value": p.props.hakemustunnus },

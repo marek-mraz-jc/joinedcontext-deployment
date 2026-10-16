@@ -10,7 +10,7 @@ spec:
   version: 1.8.0
   lifecycle: published
   classes: [Event, BikeHireDockingStation, Vehicle, NewsArticle, WeatherObserved, Alert, AirQualityObserved,
-    PointOfInterest, WaterQualityObserved, OnStreetParking, PublicAreaPermit, CityDistrict, GtfsStop, PublicTransportRoute,
+    PointOfInterest, WaterQualityObserved, OnStreetParking, CityWork, CityDistrict, GtfsStop, PublicTransportRoute,
     GtfsStation, GtfsAgency, GtfsRoute, GtfsShape, OffStreetParking]
   artifacts:
     jsonSchema: ./helsinki.v1.schema.json

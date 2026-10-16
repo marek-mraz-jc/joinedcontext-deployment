@@ -49,13 +49,13 @@ MODELS = {
     "Event": ("dataModel.TourismDestinations", "Event"),
     "OffStreetParking": ("dataModel.Parking", "OffStreetParking"),
     "OnStreetParking": ("dataModel.Parking", "OnStreetParking"),
+    "CityWork": ("dataModel.Transportation", "CityWork"),
     "PublicTransportRoute": ("dataModel.UrbanMobility", "PublicTransportRoute"),
 }
 
 #: Types with no Smart Data Model, and why the Helsinki model keeps its own.
 EXCEPTIONS = {
     "NewsArticle": "schema.org NewsArticle; SDM has no news model",
-    "PublicAreaPermit": "Helsinki Allu permits; no SDM model",
     "CityDistrict": "Helsinki districts; SDM has no administrative-area model beyond Location",
     "KeyPerformanceIndicator": "the platform's own KPI type, outside the Helsinki feeds",
 }

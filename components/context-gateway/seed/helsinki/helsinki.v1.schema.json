@@ -577,6 +577,162 @@
       "title": "CityDistrict",
       "type": "object"
     },
+    "CityWork": {
+      "additionalProperties": false,
+      "description": "One permit of the city's public-area register: an excavation, a temporary traffic arrangement or an event, with every area it covers as one outline. The applicant and the contractor are left out, because they can name a person. The Smart Data Model of works that occupy the street (T-4329); an event's permit covers its build and teardown on it.",
+      "properties": {
+        "address": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PostalAddress"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed from a line of text.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "description": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "A short description, per language.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "permitEnd": {
+          "description": "The last day the permit covers.",
+          "format": "date",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "permitKind": {
+          "$ref": "#/definitions/PermitKind",
+          "description": "What the permit lets its holder do on the public area.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "permitNumber": {
+          "description": "The application number the city's permit register gives the permit, such as KP1900206-23.",
+          "pattern": "^[A-Z]{2}[0-9]{7}(-[0-9]+)?$",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "permitStart": {
+          "description": "The first day the permit covers.",
+          "format": "date",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "permitStatus": {
+          "$ref": "#/definitions/PermitStatus",
+          "description": "Where the permitted work or event stands today.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "refDistrict": {
+          "description": "The district the record lies in.",
+          "pattern": "^urn:ngsi-ld:CityDistrict:",
+          "type": "string",
+          "x-ngsi-ld-kind": "Relationship",
+          "x-ngsi-ld-relationship": {
+            "cardinality": "many-to-one",
+            "inverse": "publicAreaPermits",
+            "onDelete": "restrict",
+            "target": "CityDistrict",
+            "unique": false
+          }
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "permitKind",
+        "permitNumber",
+        "permitStatus",
+        "permitStart",
+        "permitEnd",
+        "id",
+        "type"
+      ],
+      "title": "CityWork",
+      "type": "object"
+    },
     "DivisionLevel": {
       "description": "",
       "enum": [
@@ -2000,162 +2156,6 @@
         }
       },
       "title": "PostalAddress",
-      "type": "object"
-    },
-    "PublicAreaPermit": {
-      "additionalProperties": false,
-      "description": "One permit of the city's public-area register: an excavation, a temporary traffic arrangement or an event, with every area it covers as one outline. The applicant and the contractor are left out, because they can name a person.",
-      "properties": {
-        "address": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/PostalAddress"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "description": "The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed from a line of text.",
-          "x-ngsi-ld-kind": "Property"
-        },
-        "dataProvider": {
-          "description": "Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space).",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "description": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "A short description, per language.",
-          "type": [
-            "object",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "LanguageProperty"
-        },
-        "id": {
-          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
-          "type": "string",
-          "x-ngsi-ld-kind": "Property"
-        },
-        "location": {
-          "description": "Where the entity is, as GeoJSON geometry.",
-          "properties": {
-            "coordinates": {
-              "type": "array"
-            },
-            "type": {
-              "enum": [
-                "Point",
-                "MultiPoint",
-                "LineString",
-                "MultiLineString",
-                "Polygon",
-                "MultiPolygon"
-              ],
-              "type": "string"
-            }
-          },
-          "required": [
-            "type",
-            "coordinates"
-          ],
-          "type": [
-            "object",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "GeoProperty"
-        },
-        "name": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "The name, per language.",
-          "type": [
-            "object",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "LanguageProperty"
-        },
-        "observedAt": {
-          "description": "When the observation the entity reports was made.",
-          "format": "date-time",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "permitEnd": {
-          "description": "The last day the permit covers.",
-          "format": "date",
-          "type": "string",
-          "x-ngsi-ld-kind": "Property"
-        },
-        "permitKind": {
-          "$ref": "#/definitions/PermitKind",
-          "description": "What the permit lets its holder do on the public area.",
-          "x-ngsi-ld-kind": "Property"
-        },
-        "permitNumber": {
-          "description": "The application number the city's permit register gives the permit, such as KP1900206-23.",
-          "pattern": "^[A-Z]{2}[0-9]{7}(-[0-9]+)?$",
-          "type": "string",
-          "x-ngsi-ld-kind": "Property"
-        },
-        "permitStart": {
-          "description": "The first day the permit covers.",
-          "format": "date",
-          "type": "string",
-          "x-ngsi-ld-kind": "Property"
-        },
-        "permitStatus": {
-          "$ref": "#/definitions/PermitStatus",
-          "description": "Where the permitted work or event stands today.",
-          "x-ngsi-ld-kind": "Property"
-        },
-        "refDistrict": {
-          "description": "The district the record lies in.",
-          "pattern": "^urn:ngsi-ld:CityDistrict:",
-          "type": "string",
-          "x-ngsi-ld-kind": "Relationship",
-          "x-ngsi-ld-relationship": {
-            "cardinality": "many-to-one",
-            "inverse": "publicAreaPermits",
-            "onDelete": "restrict",
-            "target": "CityDistrict",
-            "unique": false
-          }
-        },
-        "source": {
-          "description": "The open-data service the entity was read from.",
-          "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "type": {
-          "description": "The entity type, one class of a published data model.",
-          "type": "string",
-          "x-ngsi-ld-kind": "Property"
-        }
-      },
-      "required": [
-        "permitKind",
-        "permitNumber",
-        "permitStatus",
-        "permitStart",
-        "permitEnd",
-        "id",
-        "type"
-      ],
-      "title": "PublicAreaPermit",
       "type": "object"
     },
     "PublicTransportRoute": {

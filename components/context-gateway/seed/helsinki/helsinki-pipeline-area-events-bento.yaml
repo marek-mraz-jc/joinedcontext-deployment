@@ -1,4 +1,4 @@
-# The mapping of the area-events pipeline (PL-03): one PublicAreaPermit per event permit of the
+# The mapping of the area-events pipeline (PL-03): one CityWork per event permit of the
 # city's public-area register (Allu), from the open WFS layer `Tapahtumat_alue`. The permit
 # covers the building of the event's structures to their removal; the register leaves those
 # two dates empty for most events, and then the event's own days are what the permit covers.
@@ -41,8 +41,8 @@ pipeline:
           "address": p.props.osoite.apply("text"),
           "district": p.props.kaupunginosa.or("").re_find_all("^[0-9]+").index(0).or(null)
         })).filter(p -> p.status != null && p.start != null && p.end != null).map_each(p -> {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("PublicAreaPermit", env("JC_ORG_DOMAIN"), env("JC_SPACE"), p.props.hakemustunnus),
-          "type": "PublicAreaPermit",
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("CityWork", env("JC_ORG_DOMAIN"), env("JC_SPACE"), p.props.hakemustunnus),
+          "type": "CityWork",
           "name": if p.name == null { null } else { { "type": "LanguageProperty", "languageMap": { "fi": p.name } } },
           "permitKind": { "type": "Property", "value": $kind },
           "permitNumber": { "type": "Property", "value": p.props.hakemustunnus },

@@ -30,5 +30,5 @@ spec:
         - type: PointOfInterest
         - type: WaterQualityObserved
         - type: OnStreetParking
-        - type: PublicAreaPermit
+        - type: CityWork
         - type: CityDistrict
