@@ -191,7 +191,7 @@ def test_the_region_is_indexed_once():
         hosts = {urlsplit(url).hostname for url in doc["spec"].get("startUrls", [])}
         assert "www.bbsk.sk" not in hosts, doc["metadata"]["name"]
         assert "bbsk" not in doc["spec"].get("organizations", []), doc["metadata"]["name"]
-    for name in ("bb-eval-haiku", "bb-eval-deepseek"):
+    for name in ("bb-eval-haiku", "bb-eval-deepseek", "bb-eval-gemini"):
         spec = manifests("AssistantDeployment", "banskabystrica")[name]["spec"]
         assert {"bbsk/web", "bbsk/data-portal"} <= set(spec["sources"]), name
         assert spec["scope"]["projects"] == ["bbsk"], name
@@ -208,3 +208,31 @@ def test_the_catalogue_opens_the_publishers_assistant_and_bbsk_elsewhere():
         doc = deployment(public_id)
         assert BODIES[public_id][2] == organization
         assert "https://data.dev.joinedcontext.com" in doc["spec"]["allowedOrigins"]
+
+
+# What 2026-10-16 measured on dev (T-4286): banskabystrica's 56 requests spent 263,512 tokens
+# (253,475 in, 10,037 out) for 227,764 micro-dollars, about $0.86 a million tokens.
+MEASURED_USD_PER_TOKEN = 227_764e-6 / 263_512
+
+
+def test_no_anonymous_deployment_runs_out_of_tokens_before_its_cost_cap():
+    """T-4286: tokensPerDay 300,000 held the public assistant to about 65 answers a day for
+    everyone, and at 08:25Z every visitor read a refusal. The cost cap is the guard: on every
+    deployment anonymous visitors reach, the day's tokens at the measured price buy more than
+    costPerDayUsd, so the cost cap binds first, and past it the answers are links."""
+    checked = 0
+    for path in sorted(SEED.glob("*/*.yaml")):
+        for doc in yaml.safe_load_all(path.read_text()):
+            if not (isinstance(doc, dict) and doc.get("kind") == "AssistantDeployment"):
+                continue
+            spec = doc["spec"]
+            if spec["channel"] == "internal":
+                continue
+            budget = spec["budget"]
+            cost = budget.get("costPerDayUsd", 3)
+            assert budget["tokensPerDay"] * MEASURED_USD_PER_TOKEN >= cost, (
+                f"{path.name}: tokensPerDay {budget['tokensPerDay']} buys about "
+                f"${budget['tokensPerDay'] * MEASURED_USD_PER_TOKEN:.2f}, less than costPerDayUsd {cost}"
+            )
+            checked += 1
+    assert checked >= 3, "the public, catalogue and eval deployments are checked"
