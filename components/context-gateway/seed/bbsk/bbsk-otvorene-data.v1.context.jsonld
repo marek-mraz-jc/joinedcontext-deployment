@@ -5,22 +5,22 @@
       "@id": "ngsi-ld:Entity"
     },
     "KeyPerformanceIndicator": {
-      "@id": "jc:KeyPerformanceIndicator"
+      "@id": "sdm:dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator"
     },
     "Organization": {
-      "@id": "jc:Organization"
+      "@id": "sdm:dataModel.Organization/Organization"
     },
     "Person": {
-      "@id": "jc:Person"
+      "@id": "sdm:dataModel.Organization/Person"
     },
     "PointOfInterest": {
-      "@id": "jc:PointOfInterest"
+      "@id": "sdm:dataModel.PointOfInterest/PointOfInterest"
     },
     "PublicOrganization": {
-      "@id": "jc:PublicOrganization"
+      "@id": "sdm:dataModel.CPSV-AP/PublicOrganization"
     },
     "RoadAccident": {
-      "@id": "jc:RoadAccident"
+      "@id": "sdm:dataModel.Transportation/RoadAccident"
     },
     "abs20182040": {
       "@id": "jc:abs20182040",
@@ -258,7 +258,7 @@
       "@id": "jc:categ"
     },
     "category": {
-      "@id": "jc:category"
+      "@id": "sdm:dataModel.PointOfInterest/category"
     },
     "celkovyPrirastokObyvatelstva": {
       "@id": "jc:celkovyPrirastokObyvatelstva",
@@ -410,7 +410,7 @@
       "@type": "xsd:dateTime"
     },
     "dataProvider": {
-      "@id": "jc:dataProvider"
+      "@id": "sdm:dataProvider"
     },
     "dataset": {
       "@id": "jc:dataset",
@@ -516,7 +516,7 @@
       "@type": "xsd:float"
     },
     "email": {
-      "@id": "jc:email"
+      "@id": "sdm:email"
     },
     "evanjelickaCirkevAugsburske1": {
       "@id": "jc:evanjelickaCirkevAugsburske1",
@@ -1245,7 +1245,7 @@
       "@type": "xsd:float"
     },
     "legalName": {
-      "@id": "jc:legalName"
+      "@id": "sdm:dataModel.Organization/legalName"
     },
     "licenseKey": {
       "@id": "jc:licenseKey"
@@ -1258,7 +1258,7 @@
       "@id": "geojson:geometry"
     },
     "logo": {
-      "@id": "jc:logo"
+      "@id": "sdm:dataModel.PointOfInterest/logo"
     },
     "lon": {
       "@id": "jc:lon",
@@ -1392,7 +1392,7 @@
       "@id": "jc:nadradenaSaSZKODSKO"
     },
     "name": {
-      "@id": "jc:name"
+      "@id": "sdm:name"
     },
     "narodeniOsoba": {
       "@id": "jc:narodeniOsoba",
@@ -1907,7 +1907,7 @@
       "@type": "xsd:integer"
     },
     "preferredLabel": {
-      "@id": "jc:preferredLabel"
+      "@id": "sdm:dataModel.CPSV-AP/preferredLabel"
     },
     "prevadzkovatel": {
       "@id": "jc:prevadzkovatel"
@@ -2242,7 +2242,7 @@
       "@id": "jc:sobota"
     },
     "source": {
-      "@id": "jc:source",
+      "@id": "sdm:source",
       "@type": "xsd:anyURI"
     },
     "sourceCreatedAt": {
@@ -2264,7 +2264,7 @@
       "@type": "xsd:integer"
     },
     "spatial": {
-      "@id": "jc:spatial"
+      "@id": "sdm:dataModel.CPSV-AP/spatial"
     },
     "spolu": {
       "@id": "jc:spolu",
@@ -2321,7 +2321,7 @@
       "@id": "jc:starostaPriezvisko"
     },
     "status": {
-      "@id": "jc:status"
+      "@id": "ngsi-ld:status"
     },
     "statutari": {
       "@id": "jc:statutari"
@@ -2540,10 +2540,10 @@
       "@id": "jc:telefonneCisloVsobecne2"
     },
     "telephone": {
-      "@id": "jc:telephone"
+      "@id": "sdm:telephone"
     },
     "title": {
-      "@id": "jc:title"
+      "@id": "http://purl.org/dc/terms/title"
     },
     "titulPredMenom": {
       "@id": "jc:titulPredMenom"

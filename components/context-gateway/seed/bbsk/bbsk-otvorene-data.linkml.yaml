@@ -20,11 +20,15 @@ slots:
     description: Who published the row, with the credit its licence asks for.
     annotations:
       ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/context.jsonld
+    slot_uri: https://smartdatamodels.org/dataProvider
   source:
     description: The service the row was read from.
     range: uri
     annotations:
       ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/context.jsonld
+    slot_uri: https://smartdatamodels.org/source
   dataset:
     description: The catalogue dataset the row belongs to, where its licence and its other rows are.
     range: uri
@@ -331,6 +335,8 @@ slots:
     multivalued: true
     annotations:
       ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/context.jsonld
+    slot_uri: https://smartdatamodels.org/dataModel.PointOfInterest/category
   celkovyPrirastokObyvatelstva:
     description: The source column `Celkový_prírastok_obyvateľstva_`.
     range: float
@@ -651,6 +657,8 @@ slots:
     description: The source column `Email`.
     annotations:
       ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/context.jsonld
+    slot_uri: https://smartdatamodels.org/email
   evanjelickaCirkevAugsburske1:
     description: The source column `Evanjelická_cirkev_augsburské_1`.
     range: float
@@ -1573,6 +1581,8 @@ slots:
     description: The source column `Nazov`.
     annotations:
       ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/context.jsonld
+    slot_uri: https://smartdatamodels.org/dataModel.Organization/legalName
   licenseKey:
     description: The source column `licenseKey`.
     annotations:
@@ -1585,6 +1595,8 @@ slots:
     description: The source column `Logo`.
     annotations:
       ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/context.jsonld
+    slot_uri: https://smartdatamodels.org/dataModel.PointOfInterest/logo
   lon:
     description: The source column `lon`.
     range: float
@@ -1757,6 +1769,8 @@ slots:
     description: The source column `Miesto`.
     annotations:
       ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/context.jsonld
+    slot_uri: https://smartdatamodels.org/name
   narodeniOsoba:
     description: The source column `Narodení__Osoba_`.
     range: float
@@ -2409,6 +2423,8 @@ slots:
     description: The source column `Názov_organizácie`.
     annotations:
       ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
+    slot_uri: https://smartdatamodels.org/dataModel.CPSV-AP/preferredLabel
   prevadzkovatel:
     description: The source column `Prevádzkovateľ`.
     annotations:
@@ -2854,6 +2870,8 @@ slots:
     multivalued: true
     annotations:
       ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
+    slot_uri: https://smartdatamodels.org/dataModel.CPSV-AP/spatial
   spolu:
     description: The source column `Spolu`.
     range: integer
@@ -3199,10 +3217,14 @@ slots:
     description: The source column `telephone`.
     annotations:
       ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/context.jsonld
+    slot_uri: https://smartdatamodels.org/telephone
   title:
     description: The source column `title`.
     annotations:
       ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/context.jsonld
+    slot_uri: http://purl.org/dc/terms/title
   titulPredMenom:
     description: The source column `Titul_pred_menom`.
     annotations:
@@ -3638,9 +3660,11 @@ slots:
     description: '`archived` on every entity: the model requires it and no column holds it.'
     annotations:
       ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.Transportation/b83ede9d3db29be1365cc272eb535f46af83bed2/context.jsonld
+    slot_uri: https://uri.etsi.org/ngsi-ld/status
 classes:
   KeyPerformanceIndicator:
-    class_uri: jc:KeyPerformanceIndicator
+    class_uri: https://smartdatamodels.org/dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
     description: One row of Hustota obyvateľstva (2021); Hustota obyvateľstva v obciach BBK; Obyvateľstvo podľa
       ekonomickej aktivity (2021); Obyvateľstvo podľa materinského jazyka (2011), obce; Obyvateľstvo podľa materinského
       jazyka (2011), okresy; Obyvateľstvo podľa materinského jazyka (2021), obce; Obyvateľstvo podľa materinského
@@ -4143,8 +4167,10 @@ classes:
     - zivonarodeniOsoba
     - znecistujucaLatka
     - zomretiOsoba
+    annotations:
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.KeyPerformanceIndicator/ec7f3b642faf3f807d3c8549ccc9e0b743e05f26/context.jsonld
   Organization:
-    class_uri: jc:Organization
+    class_uri: https://smartdatamodels.org/dataModel.Organization/Organization
     description: One row of Dodávatelia; Kontakty na miestne samosprávy v BBK; Materské školy v Banskobystrickom
       kraji; Organizačná štruktúra; Stredné školy v BBK, odbory a počet študentov (2023); Stredné školy v Banskobystrickom
       kraji; Vysoké školy v Banskobystrickom kraji; Základné školy v Banskobystrickom kraji; Školy a školské zariadenia
@@ -4291,8 +4317,10 @@ classes:
     - zriadovatelEDUID
     - zriadovatelNazov
     - zriadovatelTyp
+    annotations:
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/context.jsonld
   Person:
-    class_uri: jc:Person
+    class_uri: https://smartdatamodels.org/dataModel.Organization/Person
     description: One row of Členovia samosprávy.
     is_a: Entity
     slots:
@@ -4311,8 +4339,10 @@ classes:
     - titulZaMenom
     - voFunkciiDo
     - voFunkciiOd
+    annotations:
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/context.jsonld
   PointOfInterest:
-    class_uri: jc:PointOfInterest
+    class_uri: https://smartdatamodels.org/dataModel.PointOfInterest/PointOfInterest
     description: One row of Cyklosčítače - miesta; Cykloturistické trasy - nosič/infotabuľa/odpočívadlo/značenie;
       Kontaktné miesta; Kultúrne inštitúcie BBSK; Kultúrne inštitúcie BBSK a ich pobočky; Nabíjačky a Zastávky;
       Zoznam lekární v BBK; Zoznam zdravotníckych zariadení v BBK.
@@ -4445,8 +4475,10 @@ classes:
     - youTube
     - zdroj
     - zipcode
+    annotations:
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/context.jsonld
   PublicOrganization:
-    class_uri: jc:PublicOrganization
+    class_uri: https://smartdatamodels.org/dataModel.CPSV-AP/PublicOrganization
     description: One row of Príspevkové rozpočtové a iné organizácie samosprávy.
     is_a: Entity
     slots:
@@ -4466,8 +4498,10 @@ classes:
     - preferredLabel
     - spatial
     - ulicaACisloDomu
+    annotations:
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
   RoadAccident:
-    class_uri: jc:RoadAccident
+    class_uri: https://smartdatamodels.org/dataModel.Transportation/RoadAccident
     description: One row of Cyklisti_nehodovosť; Nehodovosť v BBK.
     is_a: Entity
     slots:
@@ -4500,3 +4534,5 @@ classes:
     - usmrteni
     - usmrteniUcastnici
     - uzemie
+    annotations:
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.Transportation/b83ede9d3db29be1365cc272eb535f46af83bed2/context.jsonld
