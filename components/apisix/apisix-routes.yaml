@@ -10,3 +10,13 @@ security-txt:
   uri: '/.well-known/security.txt'
   methods: [GET, HEAD]
   priority: 50
+
+# The ChatGPT app directory's domain check (T-4315): the challenge token, as plain text, on the
+# MCP host. The edge answers it from global.openaiAppsChallenge and 404 while none is set.
+openai-apps-challenge:
+  name: openai-apps-challenge
+  description: ChatGPT app directory domain verification, answered by the edge
+  upstream: 127.0.0.1:1
+  uri: '/.well-known/openai-apps-challenge'
+  methods: [GET, HEAD]
+  priority: 50

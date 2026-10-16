@@ -60,3 +60,70 @@ security-txt:
                 "frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
             end
           end
+
+# T-4315: the token the ChatGPT app directory asks to find at /.well-known/openai-apps-challenge,
+# exactly as given and nothing else; 404 while global.openaiAppsChallenge is empty. A token is
+# letters, digits, `.`, `_` and `-`: anything else stops the render rather than reach the Lua.
+openai-apps-challenge:
+  name: openai-apps-challenge
+  description: Answer the ChatGPT app directory domain check at the edge
+  plugins:
+    request-id:
+      include_in_response: true
+    serverless-pre-function:
+      phase: rewrite
+      functions:
+        - >-
+          return function()
+            local forged = {
+              "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
+              "X-Endpoint-Slug", "X-Consumer-Identity", "X-Forwarded-User",
+              "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
+              "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
+            }
+            for _, header in ipairs(forged) do
+              ngx.req.clear_header(header)
+              ngx.req.clear_header((header:gsub("%-", "_")))
+            end
+          end
+        - >-
+          return function()
+            -- {{ if not (regexMatch "^[A-Za-z0-9._-]*$" (.Values.global.openaiAppsChallenge | default "" | toString)) }}{{ fail "global.openaiAppsChallenge holds a character a challenge token never has (T-4315)" }}{{ end }}
+            local token = "{{ .Values.global.openaiAppsChallenge | default "" }}"
+            if token == "" then
+              return ngx.exit(404)
+            end
+            ngx.header["Content-Type"] = "text/plain; charset=utf-8"
+            ngx.print(token)
+            return ngx.exit(200)
+          end
+    limit-count:
+      count: 300
+      time_window: 60
+      key_type: var
+      key: remote_addr
+      rejected_code: 429
+      policy: local
+      show_limit_quota_header: true
+    response-rewrite:
+      headers:
+        set:
+          Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+          X-Content-Type-Options: "nosniff"
+          X-Frame-Options: "DENY"
+          Referrer-Policy: "no-referrer"
+          Cache-Control: "no-store, no-cache, must-revalidate"
+    # OPS-34: the upstream owns the Content Security Policy (the Portal's, each App's, AP-12,
+    # AP-122), so the edge sets none over it and adds this baseline only to an answer that
+    # carries none, its own refusals included. `frame-ancestors` says what X-Frame-Options
+    # says. It runs after `response-rewrite`, whose `add` of an App's frame-ancestors counts.
+    serverless-post-function:
+      phase: header_filter
+      functions:
+        - >-
+          return function()
+            if ngx.header["Content-Security-Policy"] == nil then
+              ngx.header["Content-Security-Policy"] =
+                "frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
+            end
+          end

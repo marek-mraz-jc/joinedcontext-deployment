@@ -110,7 +110,8 @@ def test_security_response_headers_on_every_route(plugin_configs):
         # origin. The upstreams that are somebody else's application keep the wider value: Gitea
         # and Keycloak check the `Referer` on some form posts, and taking it away breaks a login.
         # security.txt is answered by the edge itself (T-1721): no upstream reads a `Referer`.
-        narrow = PORTAL_CONFIGS + ("security-txt",)
+        # So is the ChatGPT directory's domain token (T-4315).
+        narrow = PORTAL_CONFIGS + ("security-txt", "openai-apps-challenge")
         expected_referrer = "no-referrer" if config_id in narrow else "strict-origin-when-cross-origin"
         assert headers["Referrer-Policy"] == expected_referrer, config_id
         expected_frame = None if config_id in FRAMED_BY_PAGE else "SAMEORIGIN" if config_id in UI_CONFIGS else "DENY"

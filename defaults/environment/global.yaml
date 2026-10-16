@@ -28,6 +28,11 @@ global:
     contact: ""
     expires: ""
 
+  # The ChatGPT app directory's domain-verification token (T-4315), served as plain text by the
+  # edge at /.well-known/openai-apps-challenge on every host. Empty answers 404. Not a secret:
+  # the directory reads it from the open internet. Letters, digits, `.`, `_` and `-` only.
+  openaiAppsChallenge: ""
+
   # The one repository that holds this installation's configuration (CC-02, CC-08). The Portal
   # proposes and merges into it and the Context Gateway projects its endpoint table from a
   # checkout of it, so both of them read the name from here rather than carrying one of their

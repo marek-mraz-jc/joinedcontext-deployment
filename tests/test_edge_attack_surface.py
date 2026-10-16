@@ -210,6 +210,10 @@ ROUTE_CLASSES = {
         "reach": TERMINATES, "cacheable": False, "framing": "DENY",
         "why": "RFC 9116 security.txt is public by the RFC; the edge answers it and names only the reporting contact (T-1721)",
     },
+    "openai-apps-challenge": {
+        "reach": TERMINATES, "cacheable": False, "framing": "DENY",
+        "why": "the ChatGPT app directory reads its domain token from the open internet; the edge answers it or 404 and dials nothing (T-4315)",
+    },
     "ckan-redirect": {
         "reach": TERMINATES, "cacheable": False, "framing": "DENY",
         "why": "/ckan on the apex answers 302 to the catalogue host and never dials an upstream",
@@ -380,6 +384,11 @@ def test_every_route_carries_the_authentication_its_class_names(component_routes
 
         if reach == TERMINATES:
             answered = {"redirect", "fault-injection"} & set(plugins)
+            # Or a Lua answer that ends every path in `ngx.exit` (T-4315's token, or 404).
+            last = (plugins.get("serverless-pre-function") or {}).get("functions", [""])[-1]
+            exits = last.rstrip().removesuffix("end").rstrip().splitlines()[-1].strip()
+            if exits.startswith("return ngx.exit("):
+                answered = {"serverless-pre-function"}
             assert answered, f"{where} but answers nothing itself; it would proxy anonymously"
 
         assert expected["why"].strip(), f"{route_id} is classified without a reason"
