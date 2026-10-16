@@ -9,7 +9,7 @@ metadata:
     en: Zasadnutia orgánov samosprávy
 spec:
   class: scheduled
-  enabled: false
+  enabled: true
   schedule: 24 2 * * 6
   source:
     dataSourceRef:

@@ -9,7 +9,7 @@ metadata:
     en: Cyklosčítače - miesta
 spec:
   class: scheduled
-  enabled: false
+  enabled: true
   schedule: 14 1 * * 3
   source:
     dataSourceRef:

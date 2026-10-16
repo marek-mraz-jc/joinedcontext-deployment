@@ -9,7 +9,7 @@ metadata:
     en: Nabíjačky a Zastávky
 spec:
   class: scheduled
-  enabled: false
+  enabled: true
   schedule: 41 3 * * 3
   source:
     dataSourceRef:

@@ -30,7 +30,7 @@ spec:
     Postup pri číslach: nájdi dataset v katalógu, potom cez nástroje list_types a get_type zisti typ a atribúty a query_entities vráti hodnoty. Uveď vydavateľa a odkaz na dataset.
   # portal = every dataset of data.dev (CKAN, all organizations); catalogue = each body's public
   # Endpoints described from this repository.
-  sources: [portal, catalogue, banskabystrica/catalogue, zilina/catalogue, praha/catalogue, helsinki/catalogue]
+  sources: [portal, catalogue, banskabystrica/catalogue, zilina/catalogue, praha/catalogue, helsinki/catalogue, slovensko/catalogue]
   # Read-only tools on every publisher's public open-data Endpoints: the members of each body's
   # public MCP server, and the city Endpoints its own public assistant reads (T-4256, T-4281).
   # `public-air` is no member: the smoke run and the ETSI suite write test entities through it.
@@ -49,7 +49,8 @@ spec:
     - { endpoint: helsinki/helsinki-events, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
     - { endpoint: helsinki/helsinki-bikes, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
     - { endpoint: helsinki/helsinki-transport, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
-  scope: { projects: [banskabystrica, zilina, praha, helsinki] }
+    - { endpoint: slovensko/ovzdusie-sk, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+  scope: { projects: [banskabystrica, zilina, praha, helsinki, slovensko] }
   allowedOrigins: [https://data.dev.joinedcontext.com]
   # The city assistants' limits (T-4149 item 1, T-4286: 300 questions per visitor a month by
   # default); $1 a day, inside the key's $5 with the four city assistants.

@@ -9,7 +9,7 @@ metadata:
     en: PPA platby
 spec:
   class: scheduled
-  enabled: false
+  enabled: true
   schedule: 46 2 * * 3
   source:
     dataSourceRef:
