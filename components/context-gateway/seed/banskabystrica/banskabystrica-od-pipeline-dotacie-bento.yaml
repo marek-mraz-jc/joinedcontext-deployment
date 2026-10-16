@@ -45,7 +45,7 @@ pipeline:
         }
         let local = "dotacie-" + {"Rok_dotácie": this."Rok_dotácie", "Typ": this."Typ", "Druh": this."Druh", "Stav_vybav.": this."Stav_vybav.", "Akcia": this."Akcia", "Schv._prostr.": this."Schv._prostr.", "Mena": this."Mena", "Žiadateľ": this."Žiadateľ", "IČO_žiadateľa": this."IČO_žiadateľa", "Požadované_prostriedky": this."Požadované_prostriedky"}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Grant", "banskabystrica.sk", "banskabystrica-otvorene-data", $local),
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Grant", "banskabystrica.sk", env("JC_SPACE"), $local),
           "type": "Grant",
           "rokDotacie": this."Rok_dotácie".apply("integer"),
           "typ": this."Typ".apply("string"),

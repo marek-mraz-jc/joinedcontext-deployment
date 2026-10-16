@@ -49,7 +49,7 @@ pipeline:
         }
         let local = "clenovia-samospravy-" + {"IČO_samosprávy": this.properties."IČO_samosprávy", "Názov_samosprávy": this.properties."Názov_samosprávy", "Orgán_samosprávy": this.properties."Orgán_samosprávy", "Titul_pred_menom": this.properties."Titul_pred_menom", "Meno": this.properties."Meno", "Priezvisko": this.properties."Priezvisko", "Titul_za_menom": this.properties."Titul_za_menom", "Funkcia": this.properties."Funkcia", "Obvod": this.properties."Obvod", "Názov_klubu": this.properties."Názov_klubu", "Vo_funkcii_od": this.properties."Vo_funkcii_od", "Vo_funkcii_do": this.properties."Vo_funkcii_do"}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("CouncilMember", "bbsk.sk", "bbsk-otvorene-data", $local),
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("CouncilMember", "bbsk.sk", env("JC_SPACE"), $local),
           "type": "CouncilMember",
           "iCOSamospravy": this.properties."IČO_samosprávy".apply("string"),
           "nazovSamospravy": this.properties."Názov_samosprávy".apply("string"),

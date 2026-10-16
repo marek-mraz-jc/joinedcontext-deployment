@@ -72,7 +72,7 @@ pipeline:
         }
         let local = "realizovane-verejne-obstaravania-" + [this.properties."ID_časti"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("PublicProcurement", "bbsk.sk", "bbsk-otvorene-data", $local),
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("PublicProcurement", "bbsk.sk", env("JC_SPACE"), $local),
           "type": "PublicProcurement",
           "iDZakazky": this.properties."ID_zákazky".apply("integer"),
           "nazovPredmetu": this.properties."Názov_predmetu".apply("string"),

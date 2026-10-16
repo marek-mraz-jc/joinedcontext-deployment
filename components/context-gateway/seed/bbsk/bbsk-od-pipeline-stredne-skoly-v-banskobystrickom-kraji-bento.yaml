@@ -49,7 +49,7 @@ pipeline:
         }
         let local = "stredne-skoly-v-banskobystrickom-kraji-" + [this.properties."KODSKO"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("School", "bbsk.sk", "bbsk-otvorene-data", $local),
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("School", "bbsk.sk", env("JC_SPACE"), $local),
           "type": "School",
           "eDUID": this.properties."EDUID".apply("string"),
           "kODSKO": this.properties."KODSKO".apply("string"),

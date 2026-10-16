@@ -76,7 +76,7 @@ pipeline:
         }
         let local = "dodavatelia-" + [this.properties."ICO"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Supplier", "bbsk.sk", "bbsk-otvorene-data", $local),
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Supplier", "bbsk.sk", env("JC_SPACE"), $local),
           "type": "Supplier",
           "iCO": this.properties."ICO".apply("string"),
           "nazov": this.properties."Nazov".apply("string"),

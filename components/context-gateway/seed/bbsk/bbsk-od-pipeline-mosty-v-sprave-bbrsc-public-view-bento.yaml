@@ -72,7 +72,7 @@ pipeline:
         }
         let local = "mosty-v-sprave-bbrsc-public-view-" + [this.properties."Identifikačné_číslo"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Bridge", "bbsk.sk", "bbsk-otvorene-data", $local),
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Bridge", "bbsk.sk", env("JC_SPACE"), $local),
           "type": "Bridge",
           "identifikacneCislo": this.properties."Identifikačné_číslo".apply("string"),
           "nazov": this.properties."Názov".apply("string"),

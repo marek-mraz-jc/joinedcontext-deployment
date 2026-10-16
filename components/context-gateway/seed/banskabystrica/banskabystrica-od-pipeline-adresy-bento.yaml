@@ -45,7 +45,7 @@ pipeline:
         }
         let local = "adresy-" + {"Obec": this."Obec", "Časť_obce": this."Časť_obce", "Ulica": this."Ulica", "Súp._č.": this."Súp._č.", "Orient._č.": this."Orient._č."}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Address", "banskabystrica.sk", "banskabystrica-otvorene-data", $local),
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Address", "banskabystrica.sk", env("JC_SPACE"), $local),
           "type": "Address",
           "obec": this."Obec".apply("string"),
           "castObce": this."Časť_obce".apply("string"),
