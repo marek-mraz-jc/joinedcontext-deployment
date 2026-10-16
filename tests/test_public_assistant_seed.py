@@ -219,6 +219,15 @@ def test_the_region_is_indexed_once():
         assert spec["scope"]["projects"] == ["bbsk"], name
 
 
+def test_the_eval_copies_offer_one_tool_list_with_history():
+    # T-4183: the copies compare models, so each one reaches the same Endpoints with the same tools;
+    # bb-eval-gemini kept the two-tool list of before T-4294 and could not answer a history question.
+    lists = {name: {c["endpoint"]: c["tools"] for c in manifests("AssistantDeployment", "banskabystrica")[name]["spec"]["connectors"]}
+             for name in ("bb-eval-haiku", "bb-eval-deepseek", "bb-eval-gemini")}
+    assert lists["bb-eval-gemini"] == lists["bb-eval-haiku"] == lists["bb-eval-deepseek"], lists
+    assert all("query_temporal" in tools for tools in lists["bb-eval-gemini"].values())
+
+
 def general() -> dict:
     return manifests("AssistantDeployment", "bbsk")["data"]
 
