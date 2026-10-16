@@ -853,14 +853,28 @@ ASSISTANT_WIDGET = os.environ.get("JC_ASSISTANT_WIDGET_URL", "")
 PUBLIC_ID = r"[a-z0-9](?:[-a-z0-9]{0,61}[a-z0-9])?"
 
 
-def jc_assistant_widget():
-    """The knowledge assistant's widget page on this installation's assistant host (AG-114);
-    None when there is none, or when the address names any other host or path."""
+def _widgets():
+    """Each CKAN organization's own widget address (T-4281); empty when unset or unreadable."""
+    try:
+        found = json.loads(os.environ.get("JC_ASSISTANT_WIDGET_URLS") or "{}")
+    except ValueError:
+        return {}
+    return {k: v for k, v in found.items() if isinstance(k, str) and isinstance(v, str)} if isinstance(found, dict) else {}
+
+
+ASSISTANT_WIDGETS = _widgets()
+
+
+def jc_assistant_widget(organization=None):
+    """The knowledge assistant's widget page on this installation's assistant host (AG-114): the
+    publisher's own when `organization` has one (T-4281), else the catalogue's; None when there
+    is none, or when the address names any other host or path."""
     domain = BRANDING.get("domain")
-    if not domain or not ASSISTANT_WIDGET:
+    widget = ASSISTANT_WIDGETS.get(organization or "") or ASSISTANT_WIDGET
+    if not domain or not widget:
         return None
     pattern = r"https://assistant\.%s/d/%s/widget" % (re.escape(domain), PUBLIC_ID)
-    return ASSISTANT_WIDGET if re.fullmatch(pattern, ASSISTANT_WIDGET) else None
+    return widget if re.fullmatch(pattern, widget) else None
 
 
 def jc_branding():

@@ -9,6 +9,7 @@ the two CKAN modules they import; the templates that call them were walked on a 
 
 import importlib.util
 import json
+import os
 import re
 import sys
 import types
@@ -665,11 +666,34 @@ def test_the_table_view_stacks_its_controls_below_desktop_width():
 def test_the_widget_is_offered_only_from_the_installation_s_assistant_host(theme, address, offered):
     theme.ASSISTANT_WIDGET = address
     assert theme.jc_assistant_widget() == (address if offered else None)
+    # A publisher's own address is held to the same rule (T-4281).
+    theme.ASSISTANT_WIDGET = ""
+    theme.ASSISTANT_WIDGETS = {"bbsk": address}
+    assert theme.jc_assistant_widget("bbsk") == (address if offered else None)
+    theme.ASSISTANT_WIDGETS = {}
+
+
+def test_a_dataset_page_opens_its_publishers_assistant_and_any_other_page_the_catalogue_s(theme):
+    """T-4281: the publisher's widget by CKAN organization, the catalogue's for every page with no
+    publisher or a publisher with none of its own; an unreadable map is no map."""
+    theme.ASSISTANT_WIDGET = "https://assistant.dev.example/d/bbsk/widget"
+    theme.ASSISTANT_WIDGETS = {"praha": "https://assistant.dev.example/d/praha/widget"}
+    assert theme.jc_assistant_widget("praha") == "https://assistant.dev.example/d/praha/widget"
+    for organization in (None, "", "zilina"):
+        assert theme.jc_assistant_widget(organization) == "https://assistant.dev.example/d/bbsk/widget"
+    for raw in ("not json", "[1, 2]", '{"praha": 3}'):
+        os.environ["JC_ASSISTANT_WIDGET_URLS"] = raw
+        try:
+            assert theme._widgets() == {}
+        finally:
+            del os.environ["JC_ASSISTANT_WIDGET_URLS"]
+    theme.ASSISTANT_WIDGETS = {}
 
 
 def test_the_footer_offers_the_assistant_as_a_disclosure_a_keyboard_opens():
     footer = (THEME / "footer.html").read_text()
-    assert "{% set widget = h.jc_assistant_widget() %}" in footer
+    assert "{% set widget = h.jc_assistant_widget(publisher) %}" in footer
+    assert "{% set publisher = pkg_dict.organization.name if pkg_dict is defined" in footer
     assert '<details class="jc-assistant">' in footer and "<summary>{{ h.jc_t('assistant') }}</summary>" in footer
     assert 'title="{{ h.jc_t(\'assistant\') }}"' in footer and 'loading="lazy"' in footer
     assert 'referrerpolicy="no-referrer"' in footer
@@ -702,11 +726,17 @@ def test_the_catalogue_pod_is_told_its_assistant_only_when_the_assistant_is_depl
         (ckan,) = [d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"].endswith("ckan")
                    and any(c["name"] == "ckan" for c in d["spec"]["template"]["spec"]["containers"])]
         (container,) = [c for c in ckan["spec"]["template"]["spec"]["containers"] if c["name"] == "ckan"]
-        return {e["name"]: e.get("value") for e in container["env"]}["JC_ASSISTANT_WIDGET_URL"]
+        env = {e["name"]: e.get("value") for e in container["env"]}
+        return env["JC_ASSISTANT_WIDGET_URL"], json.loads(env["JC_ASSISTANT_WIDGET_URLS"])
 
-    # dev lists the assistant since T-3181, so its catalogue carries the widget; without the
-    # component the catalogue is told nothing.
-    assert widget(rendered("dev")) == "https://assistant.dev.joinedcontext.com/d/banskabystrica/widget"
+    # dev lists the assistant since T-3181, so its catalogue carries the widget: the region's by
+    # default and each publisher's own (T-4281); without the component it is told nothing.
+    default, by_organization = widget(rendered("dev"))
+    assert default == "https://assistant.dev.joinedcontext.com/d/bbsk/widget"
+    assert by_organization == {
+        body: f"https://assistant.dev.joinedcontext.com/d/{body}/widget"
+        for body in ("banskabystrica", "bbsk", "zilina", "praha")
+    }
 
     def without_assistant(tree):
         path = tree / "deployment/environments/dev/global.yaml.gotmpl"
@@ -714,7 +744,7 @@ def test_the_catalogue_pod_is_told_its_assistant_only_when_the_assistant_is_depl
         assert "\n  - assistant\n" in text
         path.write_text(text.replace("\n  - assistant\n", "\n", 1))
 
-    assert widget(rendered_variant("dev", without_assistant)) == ""
+    assert widget(rendered_variant("dev", without_assistant)) == ("", {})
 
 
 # The usage texts `jcctl publish ckan` writes on the API resources (T-3886), for a restricted

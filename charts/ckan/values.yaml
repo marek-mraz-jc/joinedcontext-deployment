@@ -153,6 +153,9 @@ organizations: {}
 
 # The knowledge assistant's widget page every catalogue page offers (AG-114); empty for none.
 assistantWidget: ''
+# A CKAN organization's own assistant widget, by organization name (T-4281); a dataset page of
+# an organization not listed frames `assistantWidget`.
+assistantWidgets: {}
 
 podSecurityContext: {}
 securityContext: {}
