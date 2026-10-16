@@ -543,7 +543,7 @@ HALVES = 2
 
 def schedule(e: dict, i: int) -> str:
     minute, hour = (i * 7) % 60, 1 + (i * 7) // 60 % 5
-    return {"P1D": f"{minute} {hour} * * *", "P1W": f"{minute} {hour} * * {1 + i % 7}",
+    return {"P1D": f"{minute} {hour} * * *", "P1W": f"{minute} {hour} * * {i % 7}",
             "P1M": f"{minute} {hour} {1 + i % 28} * *"}[e["refresh"]]
 
 
