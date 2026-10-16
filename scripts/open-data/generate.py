@@ -943,6 +943,12 @@ def main() -> None:
             # RDF: the model itself as triples, LinkML's own serialization of it with model-tools' imports merged.
             subprocess.run([python, "-c", RDF, tools, str(model), str(d / "model.rdf.ttl")], check=True)
             example = json.loads((d / "examples/example.json").read_text())
+            # model-tools fills a text slot with its own name; a uri slot needs a URI, or a validator
+            # that checks formats (jsonschema with rfc3987) refuses the example (T-4338).
+            for a, slot in yaml.safe_load(model.read_text())["slots"].items():
+                if slot.get("range") == "uri" and example.get(a) == a:
+                    example[a] = f"https://example.org/{a}"
+            (d / "examples/example.json").write_text(json.dumps(example, indent=2, ensure_ascii=False) + "\n")
             (d / "examples/example-normalized.jsonld").write_text(json.dumps(normalized(example, d.name), indent=2, ensure_ascii=False) + "\n")
     print(f"{len(files)} files written")
 

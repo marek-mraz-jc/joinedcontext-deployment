@@ -2,7 +2,7 @@
   "cZasadnutia": 0,
   "cisloZasadnutia": "cisloZasadnutia",
   "dataProvider": "dataProvider",
-  "dataset": "dataset",
+  "dataset": "https://example.org/dataset",
   "datumZasadnutia": "datumZasadnutia",
   "hyperlinkNaDochadzku": "hyperlinkNaDochadzku",
   "hyperlinkNaPozvanku": "hyperlinkNaPozvanku",
@@ -22,6 +22,6 @@
   "observedAt": "2026-01-01T00:00:00Z",
   "organSamospravy": "organSamospravy",
   "rok": 0,
-  "source": "source",
+  "source": "https://example.org/source",
   "type": "CouncilMeeting"
 }

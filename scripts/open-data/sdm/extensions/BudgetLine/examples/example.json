@@ -17,6 +17,6 @@
     "type": "Point"
   },
   "observedAt": "2026-01-01T00:00:00Z",
-  "source": "source",
+  "source": "https://example.org/source",
   "type": "BudgetLine"
 }

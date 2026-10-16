@@ -1,7 +1,7 @@
 {
   "cenaCelkom": "cenaCelkom",
   "dataProvider": "dataProvider",
-  "dataset": "dataset",
+  "dataset": "https://example.org/dataset",
   "datumPlatnostiDo": "2026-01-01",
   "datumPodpisu": "datumPodpisu",
   "datumPrilohy": "2026-01-01",
@@ -35,7 +35,7 @@
   "rok": 0,
   "sidloDodavatela": "sidloDodavatela",
   "sidloObjednavatela": "sidloObjednavatela",
-  "source": "source",
+  "source": "https://example.org/source",
   "sumaSpoluVEUR": "sumaSpoluVEUR",
   "sumaVEUR": "sumaVEUR",
   "typ": "typ",

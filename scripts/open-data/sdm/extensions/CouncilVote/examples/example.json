@@ -1,6 +1,6 @@
 {
   "dataProvider": "dataProvider",
-  "dataset": "dataset",
+  "dataset": "https://example.org/dataset",
   "datum": "2026-01-01T00:00:00Z",
   "hlas": "hlas",
   "iCOSamospravy": "iCOSamospravy",
@@ -17,7 +17,7 @@
   "observedAt": "2026-01-01T00:00:00Z",
   "organSamospravy": "organSamospravy",
   "poslanec": "poslanec",
-  "source": "source",
+  "source": "https://example.org/source",
   "type": "CouncilVote",
   "volebneObdobie": 0,
   "zasadnutie": "zasadnutie"

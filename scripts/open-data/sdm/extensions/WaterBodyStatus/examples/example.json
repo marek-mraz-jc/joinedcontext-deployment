@@ -6,7 +6,7 @@
   "charakter1": "charakter1",
   "dOW": "2026-01-01T00:00:00Z",
   "dataProvider": "dataProvider",
-  "dataset": "dataset",
+  "dataset": "https://example.org/dataset",
   "dlzkaVU1": 0.0,
   "ekologickyStav": 0.0,
   "fACC": "fACC",
@@ -37,7 +37,7 @@
   "sOI": 0,
   "sUBUNIT": "sUBUNIT",
   "skupina": 0.0,
-  "source": "source",
+  "source": "https://example.org/source",
   "typ": "typ",
   "type": "WaterBodyStatus",
   "vYMERA": 0.0

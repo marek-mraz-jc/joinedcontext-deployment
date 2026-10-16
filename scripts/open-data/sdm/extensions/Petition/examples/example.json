@@ -1,6 +1,6 @@
 {
   "dataProvider": "dataProvider",
-  "dataset": "dataset",
+  "dataset": "https://example.org/dataset",
   "datumDorucenia": "2026-01-01",
   "datumVybavenia": "2026-01-01",
   "id": "urn:ngsi-ld:Petition:joinedcontext.com:example:1",
@@ -18,7 +18,7 @@
   "observedAt": "2026-01-01T00:00:00Z",
   "pocetOsobPodporujucichPetici": 0,
   "poznamka": "poznamka",
-  "source": "source",
+  "source": "https://example.org/source",
   "sposobVybavenia": "sposobVybavenia",
   "text": "text",
   "type": "Petition",

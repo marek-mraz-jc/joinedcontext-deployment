@@ -1,6 +1,6 @@
 {
   "dataProvider": "dataProvider",
-  "dataset": "dataset",
+  "dataset": "https://example.org/dataset",
   "denVTyzdni": "denVTyzdni",
   "iCOSamospravy": "iCOSamospravy",
   "id": "urn:ngsi-ld:OfficeHours:joinedcontext.com:example:1",
@@ -18,6 +18,6 @@
   "observedAt": "2026-01-01T00:00:00Z",
   "otvoreneDo": "otvoreneDo",
   "otvoreneOd": "otvoreneOd",
-  "source": "source",
+  "source": "https://example.org/source",
   "type": "OfficeHours"
 }

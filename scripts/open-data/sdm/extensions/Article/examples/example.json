@@ -1,7 +1,7 @@
 {
   "content": "content",
   "dataProvider": "dataProvider",
-  "dataset": "dataset",
+  "dataset": "https://example.org/dataset",
   "dateGmt": "2026-01-01T00:00:00Z",
   "id": "urn:ngsi-ld:Article:joinedcontext.com:example:1",
   "identifier": "identifier",
@@ -15,7 +15,7 @@
   "modifiedGmt": "2026-01-01T00:00:00Z",
   "name": "name",
   "observedAt": "2026-01-01T00:00:00Z",
-  "source": "source",
+  "source": "https://example.org/source",
   "type": "Article",
-  "url": "url"
+  "url": "https://example.org/url"
 }

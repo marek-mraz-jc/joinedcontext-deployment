@@ -23,7 +23,7 @@
   },
   "dataset": {
     "type": "Property",
-    "value": "dataset"
+    "value": "https://example.org/dataset"
   },
   "datumDorucenia": {
     "type": "Property",
@@ -69,7 +69,7 @@
   },
   "source": {
     "type": "Property",
-    "value": "source"
+    "value": "https://example.org/source"
   },
   "suma": {
     "type": "Property",

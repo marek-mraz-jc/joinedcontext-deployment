@@ -1,7 +1,7 @@
 {
   "dOW": "2026-01-01T00:00:00Z",
   "dataProvider": "dataProvider",
-  "dataset": "dataset",
+  "dataset": "https://example.org/dataset",
   "fACC": "fACC",
   "fLAT": "fLAT",
   "fLON": "fLON",
@@ -30,7 +30,7 @@
   "nUTS3CODE": "nUTS3CODE",
   "name": "name",
   "observedAt": "2026-01-01T00:00:00Z",
-  "source": "source",
+  "source": "https://example.org/source",
   "typObce": "typObce",
   "type": "AdministrativeArea",
   "vYMERA": 0.0
