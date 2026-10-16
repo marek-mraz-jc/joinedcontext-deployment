@@ -1,4 +1,4 @@
-# One StatisticalObservation per row of "Vývoj imisií v BBK" (T-4255); one row per station or source and year.
+# One KeyPerformanceIndicator per row of "Vývoj imisií v BBK" (T-4255); one row per station or source and year.
 apiVersion: joinedcontext.com/v1alpha1
 kind: Pipeline
 metadata:
@@ -10,14 +10,14 @@ metadata:
 spec:
   class: scheduled
   enabled: false
-  schedule: 45 4 20 * *
+  schedule: 57 1 24 * *
   source:
     dataSourceRef:
       kind: DataSource
       name: od-vyvoj-imisii-v-bbk
   targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-otvorene-data:bbsk-otvorene-data
   output:
-    type: StatisticalObservation
+    type: KeyPerformanceIndicator
     mode: upsert
   quotas:
     maxMemoryMb: 128

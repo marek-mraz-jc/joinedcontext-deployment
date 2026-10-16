@@ -20,6 +20,10 @@ pipeline:
           let v = if this == null { "" } else { this.string().trim() }
           root = if $v == "" { null } else { { "type": "Property", "value": $v } }
         }
+        map string_list {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": [$v] } }
+        }
         map uri {
           root = this.apply("string")
         }
@@ -47,9 +51,9 @@ pipeline:
         root = {
           "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Address", "banskabystrica.sk", env("JC_SPACE"), $local),
           "type": "Address",
-          "obec": this."Obec".apply("string"),
-          "castObce": this."Časť_obce".apply("string"),
-          "ulica": this."Ulica".apply("string"),
+          "postName": this."Obec".apply("string_list"),
+          "addressArea": this."Časť_obce".apply("string_list"),
+          "thoroughfare": this."Ulica".apply("string_list"),
           "supC": this."Súp._č.".apply("string"),
           "orientC": this."Orient._č.".apply("string"),
           "dataProvider": { "type": "Property", "value": "Mesto Banská Bystrica (CC BY 4.0)" },

@@ -134,6 +134,41 @@ def _organizations():
 
 ORGANIZATIONS = _organizations()
 
+# The packages the publish gate hides (T-4318): `{name: reason}` from the chart's `hidden` value.
+# Hidden is not deleted: a sysadmin (the harvests' token) still finds, reads and updates them, so
+# the next harvest keeps them current and a package comes back by leaving the list.
+HIDDEN_FILE = os.environ.get("JC_HIDDEN_FILE", os.path.join(os.path.dirname(BRANDING_FILE), "hidden.json"))
+PACKAGE_NAME = re.compile(r"^[a-z0-9_-]{2,100}$")
+
+
+def _hidden():
+    try:
+        with open(HIDDEN_FILE, encoding="utf-8") as handle:
+            block = json.load(handle)
+    except (OSError, ValueError):
+        return frozenset()
+    return frozenset(n for n in block if isinstance(n, str) and PACKAGE_NAME.match(n)) \
+        if isinstance(block, dict) else frozenset()
+
+
+HIDDEN = _hidden()
+
+
+def jc_sees_hidden():
+    """Whether the caller is a sysadmin; outside a request nobody is."""
+    try:
+        return bool(getattr(toolkit.g.userobj, "sysadmin", False))
+    except (AttributeError, RuntimeError, TypeError):
+        return False
+
+
+def jc_hide(search_params):
+    """The search without the hidden packages, on the page, the API and the DCAT feed alike."""
+    if HIDDEN and not jc_sees_hidden():
+        clause = "-name:(" + " OR ".join(f'"{name}"' for name in sorted(HIDDEN)) + ")"
+        search_params["fq"] = f"{search_params.get('fq') or ''} {clause}".strip()
+    return search_params
+
 
 def _badge(entry):
     """The publisher's initials on its colour, as an SVG data URI: on this origin, no file to mount."""
@@ -1320,9 +1355,10 @@ class JcThemePlugin(plugins.SingletonPlugin):
         }
 
     def before_dataset_search(self, search_params):
-        """A hyphenated word searched as the phrase it is and a Slovak or Czech word with its other
+        """The hidden packages left out (T-4318), and a hyphenated word searched as the phrase it is and a Slovak or Czech word with its other
         endings, on the page and the API alike. A stem is a prefix query, which CKAN's default
         dismax parser does not take; edismax does, with the same fields and minimum match."""
+        jc_hide(search_params)
         q = search_params.get("q")
         if q:
             search_params["q"] = jc_search_words(q)
@@ -1331,6 +1367,8 @@ class JcThemePlugin(plugins.SingletonPlugin):
         return search_params
 
     def after_dataset_show(self, context, pkg_dict):
+        if pkg_dict.get("name") in HIDDEN and not jc_sees_hidden():
+            raise toolkit.ObjectNotFound("Dataset not found")
         jc_clean_dataset(pkg_dict)
 
     def after_dataset_search(self, search_results, search_params):

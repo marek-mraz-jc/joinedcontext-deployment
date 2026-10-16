@@ -14,7 +14,7 @@ datasets:
   title: Adresy
   status: mapped
   type: Address
-  smartDataModel: null
+  smartDataModel: dataModel.CPSV-AP/Address
   source:
     kind: ckan-datastore
     url: https://data.dev.joinedcontext.com/datastore/dump/dfd84e65-70bc-4842-9785-ba756ec8b738
@@ -29,15 +29,15 @@ datasets:
   license: cc-by
   dataset: https://data.dev.joinedcontext.com/dataset/bb-adresy
   properties:
-    obec:
+    postName:
       column: Obec
-      range: string
-    castObce:
+      range: string-list
+    addressArea:
       column: Časť_obce
-      range: string
-    ulica:
+      range: string-list
+    thoroughfare:
       column: Ulica
-      range: string
+      range: string-list
     supC:
       column: Súp._č.
       range: string
@@ -49,93 +49,16 @@ datasets:
   name: bb-aktuality
   org: banskabystrica
   title: Aktuality
-  status: mapped
+  status: removed
   type: Article
-  smartDataModel: null
-  source:
-    kind: json-feed
-    url: https://www.banskabystrica.sk/wp-json/wp/v2/newses
-    rows: 1557
-  entityId:
-    keys:
-    - id
-  observedAt: null
-  space: banskabystrica-otvorene-data
-  refresh: P1D
-  dataProvider: Mesto Banská Bystrica
-  license: cc-by
-  dataset: https://data.dev.joinedcontext.com/dataset/bb-aktuality
-  properties:
-    sourceId:
-      column: id
-      range: integer
-    title:
-      column: title
-      range: string
-    link:
-      column: link
-      range: uri
-    dateGmt:
-      column: date_gmt
-      range: datetime
-    modifiedGmt:
-      column: modified_gmt
-      range: datetime
-    content:
-      column: content
-      range: string
-  note: the city's news (WordPress)
+  reason: 'no smart data model: no subject of the official list (2026-07-19) holds news articles'
 - id: a9577f0a-e725-48a3-82ad-5dcc72331c06
   name: bb-dotacie
   org: banskabystrica
   title: Dotácie
-  status: mapped
+  status: removed
   type: Grant
-  smartDataModel: null
-  source:
-    kind: ckan-datastore
-    url: https://data.dev.joinedcontext.com/datastore/dump/7d9f3a85-c733-47bd-96cf-3f4fadab81eb
-    resource: 7d9f3a85-c733-47bd-96cf-3f4fadab81eb
-    rows: 1303
-  entityId:
-    rowHash: true
-  observedAt: null
-  space: banskabystrica-otvorene-data
-  refresh: P1W
-  dataProvider: Mesto Banská Bystrica
-  license: cc-by
-  dataset: https://data.dev.joinedcontext.com/dataset/bb-dotacie
-  properties:
-    rokDotacie:
-      column: Rok_dotácie
-      range: integer
-    typ:
-      column: Typ
-      range: string
-    druh:
-      column: Druh
-      range: string
-    stavVybav:
-      column: Stav_vybav.
-      range: string
-    akcia:
-      column: Akcia
-      range: string
-    schvProstr:
-      column: Schv._prostr.
-      range: string
-    mena:
-      column: Mena
-      range: string
-    ziadatel:
-      column: Žiadateľ
-      range: string
-    iCOZiadatela:
-      column: IČO_žiadateľa
-      range: string
-    pozadovaneProstriedky:
-      column: Požadované_prostriedky
-      range: string
+  reason: 'no smart data model: no subject of the official list (2026-07-19) holds grants or subsidies'
 - id: 4a64f94e-3fcb-465d-9430-92657a2d4bc0
   name: bb-dtm-bb-funkcne-vyuzitie-uzemia
   org: banskabystrica
@@ -277,62 +200,26 @@ datasets:
   name: bb-objednavky-bb
   org: banskabystrica
   title: Objednávky BB
-  status: mapped
+  status: removed
   type: PurchaseOrder
-  smartDataModel: null
-  source:
-    kind: ckan-datastore
-    url: https://data.dev.joinedcontext.com/datastore/dump/dcd35739-3b47-4722-8c80-380d89d864e8
-    resource: dcd35739-3b47-4722-8c80-380d89d864e8
-    rows: 26862
-  entityId:
-    keys:
-    - Číslo_objednávky
-  observedAt: null
-  space: banskabystrica-otvorene-data
-  refresh: P1W
-  dataProvider: Mesto Banská Bystrica
-  license: cc-by
-  dataset: https://data.dev.joinedcontext.com/dataset/bb-objednavky-bb
-  properties:
-    cisloObjednavky:
-      column: Číslo_objednávky
-      range: integer
-    dodavatel:
-      column: Dodávateľ
-      range: string
-    textObjednavky:
-      column: Text_objednávky
-      range: string
-    objednavkaSpolu:
-      column: Objednávka_spolu
-      range: string
-    mena:
-      column: Mena
-      range: string
-    datumVystavenia:
-      column: Dátum_vystavenia
-      range: string
-    datumZverejnenia:
-      column: Dátum_zverejnenia
-      range: string
-    iCO:
-      column: IČO
-      range: string
+  reason: 'no smart data model: no subject of the official list (2026-07-19) holds orders, invoices, contracts or
+    procurement'
 - id: 0248d85c-d4e8-4053-9be4-efbf7ae66c6b
   name: bb-pocet-obcanov-podla-dna-narodenia
   org: banskabystrica
   title: Počet občanov podľa dňa narodenia
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: ckan-datastore
     url: https://data.dev.joinedcontext.com/datastore/dump/c7e533af-04b7-4a0a-95bc-dc75f18ede97
     resource: c7e533af-04b7-4a0a-95bc-dc75f18ede97
     rows: 732
   entityId:
-    rowHash: true
+    keys:
+    - Deň
+    - Pohlavie
   observedAt: null
   space: banskabystrica-otvorene-data
   refresh: P1M
@@ -354,15 +241,16 @@ datasets:
   org: banskabystrica
   title: Počet občanov podľa veku
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: ckan-datastore
     url: https://data.dev.joinedcontext.com/datastore/dump/eb9bd402-c590-4667-ab82-e2c11dd9c248
     resource: eb9bd402-c590-4667-ab82-e2c11dd9c248
     rows: 105
   entityId:
-    rowHash: true
+    keys:
+    - Vek
   observedAt: null
   space: banskabystrica-otvorene-data
   refresh: P1M
@@ -388,7 +276,7 @@ datasets:
   title: Podujatia
   status: mapped
   type: Event
-  smartDataModel: null
+  smartDataModel: dataModel.TourismDestinations/Event
   source:
     kind: json-feed
     url: https://www.banskabystrica.sk/wp-json/wp/v2/events
@@ -409,7 +297,7 @@ datasets:
     title:
       column: title
       range: string
-    link:
+    url:
       column: link
       range: uri
     dateGmt:
@@ -418,7 +306,7 @@ datasets:
     modifiedGmt:
       column: modified_gmt
       range: datetime
-    content:
+    description:
       column: content
       range: string
   existing:
@@ -430,15 +318,16 @@ datasets:
   org: banskabystrica
   title: Prírastky a úbytky občanov za jednotlivé roky
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: ckan-datastore
     url: https://data.dev.joinedcontext.com/datastore/dump/4450222b-7726-40e9-980e-1fbe60a18d12
     resource: 4450222b-7726-40e9-980e-1fbe60a18d12
     rows: 27
   entityId:
-    rowHash: true
+    keys:
+    - Rok
   observedAt: Rok
   space: banskabystrica-otvorene-data
   refresh: P1M
@@ -504,97 +393,18 @@ datasets:
   name: bb-zasadnutia-organov-samospravy
   org: banskabystrica
   title: Zasadnutia orgánov samosprávy
-  status: mapped
+  status: removed
   type: CouncilMeeting
-  smartDataModel: null
-  source:
-    kind: ckan-datastore
-    url: https://data.dev.joinedcontext.com/datastore/dump/93b1c198-87a6-4d71-920a-d777221b5035
-    resource: 93b1c198-87a6-4d71-920a-d777221b5035
-    rows: 1498
-  entityId:
-    rowHash: true
-  observedAt: Rok
-  space: banskabystrica-otvorene-data
-  refresh: P1W
-  dataProvider: Mesto Banská Bystrica
-  license: cc-by
-  dataset: https://data.dev.joinedcontext.com/dataset/bb-zasadnutia-organov-samospravy
-  properties:
-    organSamospravy:
-      column: Orgán_samosprávy
-      range: string
-    rok:
-      column: Rok
-      range: integer
-    cZasadnutia:
-      column: Č._zasadnutia
-      range: integer
-    datumZasadnutia:
-      column: Dátum_zasadnutia
-      range: string
+  reason: 'no smart data model: no subject holds council meetings, votes, petitions or regulations; CPSV-AP has
+    PublicService, BusinessEvent and LifeEvent'
 - id: 90f75c36-abe7-4337-acd2-963572280173
   name: bb-zmluvy-bb
   org: banskabystrica
   title: Zmluvy BB
-  status: mapped
+  status: removed
   type: Contract
-  smartDataModel: null
-  source:
-    kind: ckan-datastore
-    url: https://data.dev.joinedcontext.com/datastore/dump/d2df226d-cbf4-4202-aa63-8ef3e38979da
-    resource: d2df226d-cbf4-4202-aa63-8ef3e38979da
-    rows: 19881
-  entityId:
-    rowHash: true
-  observedAt: null
-  space: banskabystrica-otvorene-data
-  refresh: P1W
-  dataProvider: Mesto Banská Bystrica
-  license: cc-by
-  dataset: https://data.dev.joinedcontext.com/dataset/bb-zmluvy-bb
-  properties:
-    centralneCisloZmluvy:
-      column: Centrálne_číslo_zmluvy
-      range: integer
-    rok:
-      column: Rok
-      range: integer
-    typ:
-      column: Typ
-      range: string
-    druh:
-      column: Druh
-      range: string
-    zmluvneStrany:
-      column: Zmluvné_strany
-      range: string
-    predmet:
-      column: Predmet
-      range: string
-    cenaCelkom:
-      column: Cena_celkom
-      range: string
-    mena:
-      column: Mena
-      range: string
-    datumPodpisu:
-      column: Dátum_podpisu
-      range: string
-    datumZverejnenia:
-      column: Dátum_zverejnenia
-      range: string
-    iCOOrganizacie:
-      column: IČO_organizácie
-      range: string
-    zmluvneStranySUdajomICO:
-      column: Zmluvné_strany_s_údajom_IČO
-      range: string
-  rowFilter:
-    keep:
-      column: Zmluvné_strany_s_údajom_IČO
-      pattern: ^IČO:[^\r]*(\rIČO:[^\r]*)*$
-    why: a party without an IČO is a natural person, a social-service client among them
+  reason: 'no smart data model: no subject of the official list (2026-07-19) holds orders, invoices, contracts or
+    procurement'
 - id: c1880954-0bb6-470e-aa10-d12052c528be
   name: public-air
   org: banskabystrica
@@ -606,8 +416,8 @@ datasets:
   org: bbsk
   title: Členovia samosprávy
   status: mapped
-  type: CouncilMember
-  smartDataModel: null
+  type: Person
+  smartDataModel: dataModel.Organization/Person
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/%C4%8Clenovia_samospr%C3%A1vy/FeatureServer/0
@@ -677,7 +487,11 @@ datasets:
     geometry: null
     rows: 81
   entityId:
-    rowHash: true
+    keys:
+    - Rok
+    - obdobie
+    - parameter
+    - Územie
   observedAt: Rok
   space: bbsk-otvorene-data
   refresh: P1W
@@ -721,13 +535,15 @@ datasets:
     pocetNehodVObci:
       column: počet_nehôd_v_obci
       range: integer
+  constants:
+    status: archived
 - id: 893c25ea-accb-574c-a0ce-fedc4ae8bb3e
   name: bbsk-cykloscitace-miesta-6e967d
   org: bbsk
   title: Cyklosčítače - miesta
   status: mapped
-  type: TrafficFlowObservedSite
-  smartDataModel: null
+  type: PointOfInterest
+  smartDataModel: dataModel.PointOfInterest/PointOfInterest
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/S%C4%8D%C3%ADta%C4%8De_detail_ECOVISIO/FeatureServer/0
@@ -749,7 +565,7 @@ datasets:
     scitac:
       column: Sčítač
       range: string
-    miesto:
+    name:
       column: Miesto
       range: string
     vytvoreny:
@@ -772,111 +588,18 @@ datasets:
   name: bbsk-cykloturisticke-trasy-linie-e6a1a7
   org: bbsk
   title: Cykloturistické trasy - línie
-  status: mapped
+  status: removed
   type: CycleRoute
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/2019_linie_CTT_ML/FeatureServer/0
-    geometry: esriGeometryPolyline
-    rows: 220
-  entityId:
-    keys:
-    - id
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-cykloturisticke-trasy-linie-e6a1a7
-  properties:
-    sourceId:
-      column: id
-      range: integer
-    stav:
-      column: stav
-      range: string
-    zdroj:
-      column: zdroj
-      range: string
-    ctt:
-      column: ctt
-      range: string
-    nazov:
-      column: nazov
-      range: string
-    layer:
-      column: layer
-      range: string
-    farba:
-      column: farba
-      range: string
-    spr:
-      column: spr
-      range: string
-    dlzka:
-      column: dlzka
-      range: float
-    name:
-      column: name
-      range: string
-    fName:
-      column: f_name
-      range: string
-    obnRok:
-      column: obn_rok
-      range: string
-    typ:
-      column: typ
-      range: string
+  reason: 'no smart data model: OpenStreetMap/OSMCycleRoute requires osmId and osmType; Transportation/BikeLane
+    is a lane, not a touring route'
 - id: e147a037-e9d9-5d54-88bf-fc0d6e33ac3b
   name: bbsk-cykloturisticke-trasy-linie-povrchy-2ec670
   org: bbsk
   title: Cykloturistické trasy - línie - povrchy
-  status: mapped
+  status: removed
   type: CycleRoute
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/2019_linie_povrchy_ML/FeatureServer/0
-    geometry: esriGeometryPolyline
-    rows: 785
-  entityId:
-    rowHash: true
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-cykloturisticke-trasy-linie-povrchy-2ec670
-  properties:
-    name:
-      column: name
-      range: string
-    alps:
-      column: alps
-      range: string
-    farba:
-      column: farba
-      range: string
-    spravca:
-      column: spravca
-      range: string
-    zdroj:
-      column: zdroj
-      range: string
-    sourceId:
-      column: id
-      range: integer
-    fNazov:
-      column: f_nazov
-      range: string
-    povrch:
-      column: povrch
-      range: string
-    dlzka:
-      column: dlzka
-      range: float
+  reason: 'no smart data model: OpenStreetMap/OSMCycleRoute requires osmId and osmType; Transportation/BikeLane
+    is a lane, not a touring route'
 - id: 332ad920-5852-5473-8b0d-c999b81652d1
   name: bbsk-cykloturisticke-trasy-nosic-infotabula-odpocivadlo-znacenie-f3c643
   org: bbsk
@@ -957,76 +680,17 @@ datasets:
   name: bbsk-dilatacne-celky-v-banskobystrickom-kraji-public-view-6ff77a
   org: bbsk
   title: Dilatačné celky v Banskobystrickom kraji (public view)
-  status: mapped
+  status: removed
   type: RoadStructure
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Dilata%C4%8Dn%C3%A9_celky_v_Banskobystrickom_kraji_(organization)_view/FeatureServer/2
-    geometry: esriGeometryPolyline
-    rows: 1652
-  entityId:
-    keys:
-    - ID_DC
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-dilatacne-celky-v-banskobystrickom-kraji-public-view-6ff77a
-  properties:
-    triedaPK:
-      column: Trieda_PK
-      range: string
-    cisloPK:
-      column: Číslo_PK
-      range: string
-    iDDC:
-      column: ID_DC
-      range: string
-    stavebnoTechnickyStav:
-      column: Stavebno_technický_stav
-      range: string
-    druhKonstrukcie:
-      column: Druh_konštrukcie
-      range: string
-    material:
-      column: Material
-      range: string
-    normanaZatazitelnostT:
-      column: Normána_zaťažiteľnost___t
-      range: integer
-    vyhradnaZatazitelnostT:
-      column: Výhradná_zaťažiteľnosť___t
-      range: integer
-    vynimocnaZatazitelnostT:
-      column: Výnimočná_zaťažiteľnosť___t
-      range: integer
-    predmetPremostenia:
-      column: Predmet_premostenia
-      range: string
-    vlastnikMostu:
-      column: Vlastník_mostu
-      range: string
-    spravcaMostu:
-      column: Správca_mostu
-      range: string
-    okres:
-      column: Okres
-      range: string
-    vlastnikUseku:
-      column: Vlastník_úseku
-      range: string
-    spravcaUseku:
-      column: Správca_úseku
-      range: string
+  reason: 'no smart data model: Transportation/Road and RoadSegment describe roads, not underpasses, culverts, expansion
+    joints or level crossings'
 - id: 9b107cf2-1acd-5b24-8214-81c8b5b1801a
   name: bbsk-dodavatelia-825cd0
   org: bbsk
   title: Dodávatelia
   status: mapped
-  type: Supplier
-  smartDataModel: null
+  type: Organization
+  smartDataModel: dataModel.Organization/Organization
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Pokus_dodavatelia/FeatureServer/0
@@ -1045,7 +709,7 @@ datasets:
     iCO:
       column: ICO
       range: string
-    nazov:
+    legalName:
       column: Nazov
       range: string
     adresa:
@@ -1066,486 +730,53 @@ datasets:
       column: ICO
       pattern: ^[0-9]{6,8}( ?[0-9]{4})?$
     why: a row without an IČO, or with a name where the IČO belongs, can name a natural person
+  note: suppliers with an IČO
 - id: b39156ed-ecdc-5aca-9b04-99f22660f347
   name: bbsk-dotacie-bada80
   org: bbsk
   title: Dotácie
-  status: mapped
+  status: removed
   type: Grant
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/VZN_Sharepoint_listy/FeatureServer/0
-    geometry: null
-    rows: 4792
-  entityId:
-    rowHash: true
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-dotacie-bada80
-  properties:
-    cislo:
-      column: Číslo
-      range: string
-    typDotacie:
-      column: Typ_dotácie
-      range: string
-    prveDorucenie:
-      column: Prvé_doručenie
-      range: date
-    stavFinanVyuctovania:
-      column: Stav_finan__vyúčtovania
-      range: string
-    datumDoruceniaVyuctovania:
-      column: Dátum_doručenia_vyúčtovania
-      range: date
-    datumZverejneniaZmluvy:
-      column: Dátum_zverejnenia_zmluvy
-      range: date
-    datumUhradyDotacie:
-      column: Dátum_úhrady_dotácie
-      range: date
-    cZmluvy:
-      column: Č__zmluvy
-      range: string
-    ziadatel:
-      column: Žiadateľ
-      range: string
-    cDodavatela:
-      column: Č__dodávateľa
-      range: string
-    iCO:
-      column: IČO
-      range: string
-    pravnaForma:
-      column: Právna_forma
-      range: string
-    schvalenaVyskaDotacie:
-      column: Schválená_výška_dotácie
-      range: float
-    skutocneCerpanie:
-      column: Skutočné_čerpanie
-      range: float
-    rozdielNaVratenie:
-      column: Rozdiel_na_vrátenie
-      range: float
-    vratenaNedocerpanaCastDotacieDna:
-      column: Vrátená_nedočerpaná_časť_dotácie_dňa
-      range: string
-    nazov:
-      column: Názov
-      range: string
-    pozadovanaDotacia:
-      column: Požadovaná_dotácia
-      range: integer
-    opravneneSpolu:
-      column: Oprávnené_spolu
-      range: integer
-    kampan:
-      column: Kampaň
-      range: string
-    stavZiadosti:
-      column: Stav_žiadosti
-      range: string
-    poznamky:
-      column: Poznámky
-      range: string
-    datumRealizacieProjektu:
-      column: Dátum_realizácie_projektu
-      range: string
-    ulicaACislo:
-      column: Ulica_a_číslo
-      range: string
-    rozpocet:
-      column: Rozpočet
-      range: float
-    okres:
-      column: Okres
-      range: string
-    vSuladeSPrioritamiPoskytovaniaDotacii:
-      column: V_súlade_s_prioritami_poskytovania_dotácií
-      range: string
-    iD:
-      column: ID
-      range: integer
-    statutarnyZastupca:
-      column: Štatutárny_zástupca
-      range: string
-    vZN:
-      column: VZN
-      range: string
-    pSC:
-      column: PSČ
-      range: string
-    sidlo:
-      column: Sídlo
-      range: string
-    rok:
-      column: Rok
-      range: string
-    pocetDeti:
-      column: Počet_detí
-      range: string
-    pocetDni:
-      column: Počet_dní
-      range: string
-    typTabora:
-      column: Typ_tábora
-      range: string
-    denneTabory:
-      column: Denné_tábory
-      range: string
-    pobytoveTabory:
-      column: Pobytové_tábory
-      range: string
-  rowFilter:
-    where: IČO IS NOT NULL AND IČO <> ''
-    keep:
-      column: IČO
-      pattern: ^[0-9]{6,8}( ?[0-9]{4})?$
-    why: a row without an IČO, or with a name where the IČO belongs, can name a natural person
+  reason: 'no smart data model: no subject of the official list (2026-07-19) holds grants or subsidies'
 - id: c6d2cc72-fc45-5924-935a-98c86f223a78
   name: bbsk-ekologicky-potencial-vodnych-utvarov-672eca
   org: bbsk
   title: Ekologický potenciál vodných útvarov
-  status: mapped
+  status: removed
   type: WaterBodyStatus
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Eko_potencial_project/FeatureServer/1
-    geometry: esriGeometryPolyline
-    rows: 306
-  entityId:
-    keys:
-    - KOD_VU_202
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-ekologicky-potencial-vodnych-utvarov-672eca
-  properties:
-    fIDRiekyBbskJoin:
-      column: FID_rieky_bbsk_join
-      range: integer
-    pOZNAMKA:
-      column: POZNAMKA
-      range: string
-    nAZOVVU:
-      column: NAZOV_VU
-      range: string
-    nAZOVVUD:
-      column: NAZOV_VU_D
-      range: string
-    pOVODIE:
-      column: POVODIE
-      range: string
-    sUBUNIT:
-      column: SUB_UNIT
-      range: string
-    pOZN1:
-      column: POZN_1
-      range: string
-    kODVU202:
-      column: KOD_VU_202
-      range: string
-    rkmOd1:
-      column: rkm_od_1
-      range: float
-    rkmDo1:
-      column: rkm_do_1
-      range: float
-    dlzkaVU1:
-      column: dlzka_VU_1
-      range: float
-    kod:
-      column: kod
-      range: string
-    typ:
-      column: typ
-      range: string
-    skupina:
-      column: skupina
-      range: float
-    nazovVU1:
-      column: nazov_VU_1
-      range: string
-    charakter:
-      column: charakter
-      range: string
-    celkChemStav:
-      column: celk_chem_stav
-      range: string
-    ekologickyStav:
-      column: ekologicky_stav
-      range: float
-    fIDKraj0:
-      column: FID_kraj_0
-      range: integer
-    dOW:
-      column: DOW
-      range: datetime
-    aUT:
-      column: AUT
-      range: integer
-    aCH:
-      column: ACH
-      range: integer
-    sOI:
-      column: SOI
-      range: integer
-    fACC:
-      column: FACC
-      range: string
-    iDN2:
-      column: IDN2
-      range: integer
-    nM2:
-      column: NM2
-      range: string
-    vYMERA:
-      column: VYMERA
-      range: float
-    potencial:
-      column: potencial
-      range: string
-    charakter1:
-      column: charakter_1
-      range: string
-  note: one row per water body and assessment
+  reason: 'no smart data model: WaterQuality/WaterQualityObserved and Environment/WaterObserved require dateObserved
+    and location and hold measured parameters; these rows are ecological status classes'
 - id: 257bea35-5179-56f1-bcec-63f7e7e5b51d
   name: bbsk-ekologicky-stav-vodnych-utvarov-48bbbd
   org: bbsk
   title: Ekologický stav vodných útvarov
-  status: mapped
+  status: removed
   type: WaterBodyStatus
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Eko_stav_project/FeatureServer/1
-    geometry: esriGeometryPolyline
-    rows: 306
-  entityId:
-    keys:
-    - KOD_VU_202
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-ekologicky-stav-vodnych-utvarov-48bbbd
-  properties:
-    fIDRiekyBbskJoin:
-      column: FID_rieky_bbsk_join
-      range: integer
-    pOZNAMKA:
-      column: POZNAMKA
-      range: string
-    nAZOVVU:
-      column: NAZOV_VU
-      range: string
-    nAZOVVUD:
-      column: NAZOV_VU_D
-      range: string
-    pOVODIE:
-      column: POVODIE
-      range: string
-    sUBUNIT:
-      column: SUB_UNIT
-      range: string
-    pOZN1:
-      column: POZN_1
-      range: string
-    kODVU202:
-      column: KOD_VU_202
-      range: string
-    rkmOd1:
-      column: rkm_od_1
-      range: float
-    rkmDo1:
-      column: rkm_do_1
-      range: float
-    dlzkaVU1:
-      column: dlzka_VU_1
-      range: float
-    kod:
-      column: kod
-      range: string
-    typ:
-      column: typ
-      range: string
-    skupina:
-      column: skupina
-      range: float
-    nazovVU1:
-      column: nazov_VU_1
-      range: string
-    charakter:
-      column: charakter
-      range: string
-    celkChemStav:
-      column: celk_chem_stav
-      range: string
-    ekologickyStav:
-      column: ekologicky_stav
-      range: float
-    fIDKraj0:
-      column: FID_kraj_0
-      range: integer
-    dOW:
-      column: DOW
-      range: datetime
-    aUT:
-      column: AUT
-      range: integer
-    aCH:
-      column: ACH
-      range: integer
-    sOI:
-      column: SOI
-      range: integer
-    fACC:
-      column: FACC
-      range: string
-    iDN2:
-      column: IDN2
-      range: integer
-    nM2:
-      column: NM2
-      range: string
-    vYMERA:
-      column: VYMERA
-      range: float
-    potencial:
-      column: potencial
-      range: string
-    charakter1:
-      column: charakter_1
-      range: string
-  note: one row per water body and assessment
+  reason: 'no smart data model: WaterQuality/WaterQualityObserved and Environment/WaterObserved require dateObserved
+    and location and hold measured parameters; these rows are ecological status classes'
 - id: 93fa8aa4-0103-5252-924c-a2ec74bb6eba
   name: bbsk-faktury-422b35
   org: bbsk
   title: Faktúry
-  status: mapped
+  status: removed
   type: Invoice
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Fakt%C3%BAry/FeatureServer/0
-    geometry: null
-    rows: 28844
-  entityId:
-    rowHash: true
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1D
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-faktury-422b35
-  properties:
-    cisloFaktury:
-      column: Číslo_faktúry
-      range: string
-    suma:
-      column: Suma
-      range: float
-    cisloZmluvy:
-      column: Číslo_zmluvy
-      range: string
-    cisloObjednavky:
-      column: Číslo_objednávky
-      range: string
-    datumSplatnosti:
-      column: Dátum_splatnosti
-      range: date
-    dodavatel:
-      column: Dodávateľ
-      range: string
-    adresa:
-      column: Adresa
-      range: string
-    dIC:
-      column: DIČ
-      range: string
-    datumDorucenia:
-      column: Dátum_doručenia
-      range: date
-    predmetFaktury:
-      column: Predmet_faktúry
-      range: string
-    iCO:
-      column: IČO
-      range: string
-    rok:
-      column: Rok
-      range: string
-  rowFilter:
-    where: IČO IS NOT NULL AND IČO <> ''
-    keep:
-      column: IČO
-      pattern: ^[0-9]{6,8}( ?[0-9]{4})?$
-    why: a row without an IČO, or with a name where the IČO belongs, can name a natural person
+  reason: 'no smart data model: no subject of the official list (2026-07-19) holds orders, invoices, contracts or
+    procurement'
 - id: 95278f1d-563c-5af5-94f5-54bcb707ee71
   name: bbsk-hlasovania-poslancov-ba7ca6
   org: bbsk
   title: Hlasovania poslancov
-  status: mapped
+  status: removed
   type: CouncilVote
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Hlasovania_poslancov/FeatureServer/0
-    geometry: null
-    rows: 89670
-  entityId:
-    rowHash: true
-  observedAt: Volebné_obdobie
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-hlasovania-poslancov-ba7ca6
-  properties:
-    iCOSamospravy:
-      column: IČO_samosprávy
-      range: integer
-    nazovSamospravy:
-      column: Názov_samosprávy
-      range: string
-    organSamospravy:
-      column: Orgán_samosprávy
-      range: string
-    poslanec:
-      column: Poslanec
-      range: string
-    volebneObdobie:
-      column: Volebné_obdobie
-      range: integer
-    zasadnutie:
-      column: Zasadnutie
-      range: string
-    datum:
-      column: Dátum
-      range: datetime
-    tema:
-      column: Téma
-      range: string
-    hlas:
-      column: Hlas
-      range: string
-  note: public office holders' votes
+  reason: 'no smart data model: no subject holds council meetings, votes, petitions or regulations; CPSV-AP has
+    PublicService, BusinessEvent and LifeEvent'
 - id: 97d8fe91-4ceb-5344-8ba7-9c81541f1781
   name: bbsk-hustota-obyvatelstva-2021-503a78
   org: bbsk
   title: Hustota obyvateľstva (2021)
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_hustota_obyvate%C4%BEstva/FeatureServer/0
@@ -1678,8 +909,8 @@ datasets:
   org: bbsk
   title: Hustota obyvateľstva v obciach BBK
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Hustota_obyvate%C4%BEstva_obce_BBK1/FeatureServer/0
@@ -1799,37 +1030,9 @@ datasets:
   name: bbsk-komisie-zastupitelstva-banskobystrickeho-samospravneho-kraja-59b9e4
   org: bbsk
   title: Komisie zastupiteľstva Banskobystrického samosprávneho kraja
-  status: mapped
-  type: CouncilMember
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Komisie_ZBBSK/FeatureServer/0
-    geometry: null
-    rows: 135
-  entityId:
-    rowHash: true
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-komisie-zastupitelstva-banskobystrickeho-samospravneho-kraja-59b9e4
-  properties:
-    nazovKomisie:
-      column: Názov_komisie
-      range: string
-    pozicia:
-      column: Pozícia
-      range: string
-    poznamka:
-      column: Poznámka
-      range: string
-  dropped:
-    columns:
-    - Meno
-    why: committees seat citizens who hold no office; the seats stay, the names do not
-  note: public office holders, published under Act 211/2000
+  status: removed
+  type: CommitteeSeat
+  reason: 'no smart data model: Organization/Person is a person; a seat whose holder''s name is kept out is none'
 - id: 37e29bed-a8e5-5639-bfe1-d934a7cfa2eb
   name: bbsk-kontaktne-miesta-2128a0
   org: bbsk
@@ -1855,7 +1058,7 @@ datasets:
     pC:
       column: P_č_
       range: integer
-    nazovOrganizacie:
+    name:
       column: Názov_organizácie
       range: string
     iCO:
@@ -1911,8 +1114,8 @@ datasets:
   org: bbsk
   title: Kontakty na miestne samosprávy v BBK
   status: mapped
-  type: OrganizationUnit
-  smartDataModel: null
+  type: Organization
+  smartDataModel: dataModel.Organization/Organization
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Kontakty_na_samospr%C3%A1vy/FeatureServer/0
@@ -1949,7 +1152,7 @@ datasets:
     obecICO:
       column: Obec_IČO
       range: string
-    obecDlhyNazov:
+    name:
       column: Obec_dlhý_názov
       range: string
     obecKratkyNazov:
@@ -2018,58 +1221,10 @@ datasets:
   name: bbsk-kraj-bbk-hranica-a05568
   org: bbsk
   title: Kraj BBK - hranica
-  status: mapped
+  status: removed
   type: AdministrativeArea
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Kraj3_WebMercator/FeatureServer/0
-    geometry: esriGeometryPolygon
-    rows: 8
-  entityId:
-    keys:
-    - IDN2
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-kraj-bbk-hranica-a05568
-  properties:
-    dOW:
-      column: DOW
-      range: datetime
-    fACC:
-      column: FACC
-      range: string
-    iDN2:
-      column: IDN2
-      range: integer
-    nM2:
-      column: NM2
-      range: string
-    vYMERA:
-      column: VYMERA
-      range: float
-    nUTS1:
-      column: NUTS1
-      range: string
-    nUTS1CODE:
-      column: NUTS1_CODE
-      range: string
-    nUTS2:
-      column: NUTS2
-      range: string
-    nUTS2CODE:
-      column: NUTS2_CODE
-      range: string
-    nUTS3:
-      column: NUTS3
-      range: string
-    nUTS3CODE:
-      column: NUTS3_CODE
-      range: string
-  note: the name of the bbsk-registre class
+  reason: 'no smart data model: OpenStreetMap/OSMBoundary requires osmId and osmType; these boundaries come from
+    the region''s register, not OpenStreetMap'
 - id: f26b8382-9572-5dd1-8384-ad25f0140281
   name: bbsk-kulturne-institucie-bbsk-24fbf9
   org: bbsk
@@ -2098,7 +1253,7 @@ datasets:
     typ:
       column: Typ
       range: string
-    institucia:
+    name:
       column: Inštitúcia
       range: string
     iCO:
@@ -2174,7 +1329,7 @@ datasets:
     typ1:
       column: Typ_1
       range: string
-    institucia1:
+    name:
       column: Inštitúcia_1
       range: string
     iCO:
@@ -2221,8 +1376,8 @@ datasets:
   org: bbsk
   title: Materské školy v Banskobystrickom kraji
   status: mapped
-  type: School
-  smartDataModel: null
+  type: Organization
+  smartDataModel: dataModel.Organization/Organization
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Matersk%C3%A9_%C5%A1koly/FeatureServer/0
@@ -2265,7 +1420,7 @@ datasets:
     typSaSZSkratka:
       column: TypSaSZSkratka
       range: string
-    nazov:
+    name:
       column: Nazov
       range: string
     nazovSkrateny:
@@ -2385,196 +1540,38 @@ datasets:
     longitude:
       column: Longitude
       range: float
-  note: the name of the bbsk-registre class
+  note: schools as schema.org organizations
 - id: f6080c3d-22ca-5a6c-983e-9e88740c08d7
   name: bbsk-mosty-v-banskobystrickom-kraji-public-view-3b4675
   org: bbsk
   title: Mosty v Banskobystrickom kraji (public view)
-  status: mapped
+  status: removed
   type: Bridge
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mosty_v_Banskobystrickom_kraji_(public_view)/FeatureServer/2
-    geometry: esriGeometryPolyline
-    rows: 1651
-  entityId:
-    keys:
-    - ID_mosta
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-mosty-v-banskobystrickom-kraji-public-view-3b4675
-  properties:
-    mostAkoPamiatkaText:
-      column: mostAkoPamiatkaText
-      range: string
-    materialText:
-      column: materialText
-      range: string
-    druhKonstrukcieText:
-      column: druhKonstrukcieText
-      range: string
-    triedaPK:
-      column: Trieda_PK
-      range: string
-    cisloPK:
-      column: Číslo_PK
-      range: string
-    nazovMosta:
-      column: Názov_mosta
-      range: string
-    iDMosta:
-      column: ID_mosta
-      range: string
-    rokPostavenia:
-      column: Rok_postavenia
-      range: integer
-    pocetOtvorov:
-      column: Počet_otvorov
-      range: integer
-    dlzkaPremosteniaM:
-      column: Dĺžka_premostenia___m
-      range: float
-    vlastnikMostu:
-      column: Vlastník_mostu
-      range: string
-    spravcaMostu:
-      column: Správca_mostu
-      range: string
-    okres:
-      column: Okres
-      range: string
-    vlastnikUseku:
-      column: Vlastník_úseku
-      range: string
-    spravcaUseku:
-      column: Správca_úseku
-      range: string
-  existing:
-    seed: bbsk/bbsk-datasource-mosty.yaml
-    covers: whole
-  note: the name of the bbsk-registre class
+  reason: 'no smart data model: Transportation/Road and RoadSegment describe roads; RoadSegment requires refRoad,
+    startPoint and endPoint, which a bridge register has not'
 - id: 33b9ad7f-ccfd-513b-95d0-5be0d36bb251
   name: bbsk-mosty-v-sprave-bbrsc-public-view-d3252c
   org: bbsk
   title: Mosty v správe BBRSC (public view)
-  status: mapped
+  status: removed
   type: Bridge
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mosty_v_spr%C3%A1ve_BBRSC_(public_view)/FeatureServer/2
-    geometry: esriGeometryPolyline
-    rows: 1031
-  entityId:
-    keys:
-    - Identifikačné_číslo
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-mosty-v-sprave-bbrsc-public-view-d3252c
-  properties:
-    identifikacneCislo:
-      column: Identifikačné_číslo
-      range: string
-    nazov:
-      column: Názov
-      range: string
-    pocetDilCelkov:
-      column: Počet_dil__celkov
-      range: integer
-    komunikacia:
-      column: Komunikácia
-      range: string
-    triedaCesty:
-      column: Trieda_cesty
-      range: string
-    okres:
-      column: Okres
-      range: string
-    obec:
-      column: Obec
-      range: string
-    ulica:
-      column: Ulica
-      range: string
-    vlastnik:
-      column: Vlastník
-      range: string
-    spravca:
-      column: Správca
-      range: string
-    legislativnyStav:
-      column: Legislatívny_stav
-      range: string
-    aktualnyStavebnotechnickyStav:
-      column: Aktuálny_stavebnotechnický_stav
-      range: string
-    hodnotenie:
-      column: Hodnotenie
-      range: string
-    normalnaZatazitelnostT:
-      column: Normálna_zaťažiteľnosť__t_
-      range: string
-    vyhradnaZatazitelnostT:
-      column: Výhradná_zaťažiteľnosť__t_
-      range: string
-    ojedinelaZatazitelnostT:
-      column: Ojedinelá_zaťažiteľnosť__t_
-      range: string
-    vynimocnaZatazitelnostT:
-      column: Výnimočná_zaťažiteľnosť__t_
-      range: string
-    zatazitelnostNaJednuNapravu:
-      column: Zaťažiteľnosť_na_jednu_nápravu_
-      range: string
-    rokKonstrukcie:
-      column: Rok_konštrukcie
-      range: integer
-    rokZasadnejRekonstrukcie:
-      column: Rok_zásadnej_rekonštrukcie
-      range: integer
-    materialNosnejKonstrukcie:
-      column: Materiál_nosnej_konštrukcie
-      range: string
-    druhNosnejKonstrukcie:
-      column: Druh_nosnej_konštrukcie
-      range: string
-    dlzkaPremosteniaM:
-      column: Dĺžka_premostenia__m_
-      range: float
-    docasnostMosta:
-      column: Dočasnosť_mosta
-      range: string
-    typPamiatky:
-      column: Typ_pamiatky
-      range: string
-    predmetPremostenia:
-      column: Predmet_premostenia
-      range: string
-    typKomunikacie:
-      column: Typ_komunikácie
-      range: string
-  note: the name of the bbsk-registre class
+  reason: 'no smart data model: Transportation/Road and RoadSegment describe roads; RoadSegment requires refRoad,
+    startPoint and endPoint, which a bridge register has not'
 - id: c012e18f-1880-5e26-a514-12c230938f99
   name: bbsk-nabijacky-a-zastavky-937210
   org: bbsk
   title: Nabíjačky a Zastávky
   status: mapped
-  type: EVChargingStation
-  smartDataModel: dataModel.Transportation/EVChargingStation
+  type: PointOfInterest
+  smartDataModel: dataModel.PointOfInterest/PointOfInterest
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Nab%C3%ADja%C4%8Dky_a_Zast%C3%A1vky/FeatureServer/0
     geometry: esriGeometryPoint
     rows: 606
   entityId:
-    rowHash: true
+    keys:
+    - CMS_ID
   observedAt: null
   space: bbsk-otvorene-data
   refresh: P1W
@@ -2585,9 +1582,11 @@ datasets:
     cMSID:
       column: CMS_ID
       range: integer
-    pRIMNAME:
+    name:
       column: PRIM_NAME
       range: string
+      otherwise:
+      - Categ
     categ:
       column: Categ
       range: string
@@ -2596,11 +1595,11 @@ datasets:
       range: string
     category:
       column: category
-      range: integer
+      range: string-list
     languages:
       column: languages
       range: string
-    name:
+    sourceName:
       column: name
       range: string
     importKey:
@@ -2711,6 +1710,10 @@ datasets:
     fID2:
       column: FID2
       range: integer
+  rowFilter:
+    where: Categ IS NOT NULL AND Categ <> ''
+    why: three rows of the layer hold nothing but a point, no name and no category
+  note: a tourism-portal layer of places; no socket, capacity or vehicle column for EVChargingStation
 - id: 82008199-c201-5cad-b637-f4d5b3f32047
   name: bbsk-nehodovost-v-bbk-0ea72d
   org: bbsk
@@ -2724,7 +1727,8 @@ datasets:
     geometry: esriGeometryPoint
     rows: 3046
   entityId:
-    rowHash: true
+    keys:
+    - Číslo_nehody
   observedAt: Dátum_a_čas
   space: bbsk-otvorene-data
   refresh: P1W
@@ -2771,229 +1775,39 @@ datasets:
     skodaVEUR:
       column: Škoda_v_EUR
       range: integer
+  constants:
+    status: archived
 - id: eb203dec-e317-56c9-b504-43f0d6d26f0f
   name: bbsk-obce-bbk-centroidy-cbd19f
   org: bbsk
   title: Obce BBK - centroidy
-  status: mapped
+  status: removed
   type: AdministrativeArea
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Obec_centroid/FeatureServer/0
-    geometry: esriGeometryPoint
-    rows: 516
-  entityId:
-    keys:
-    - IDN4
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-obce-bbk-centroidy-cbd19f
-  properties:
-    typObce:
-      column: typ_obce
-      range: string
-    iDN4:
-      column: IDN4
-      range: integer
-    nM4:
-      column: NM4
-      range: string
-    iDN3:
-      column: IDN3
-      range: integer
-    nM3:
-      column: NM3
-      range: string
-    iDN2:
-      column: IDN2
-      range: integer
-    nM2:
-      column: NM2
-      range: string
-    nUTS1:
-      column: NUTS1
-      range: string
-    nUTS1CODE:
-      column: NUTS1_CODE
-      range: string
-    nUTS2:
-      column: NUTS2
-      range: string
-    nUTS2CODE:
-      column: NUTS2_CODE
-      range: string
-    nUTS3:
-      column: NUTS3
-      range: string
-    nUTS3CODE:
-      column: NUTS3_CODE
-      range: string
-    lAU1:
-      column: LAU1
-      range: string
-    lAU1CODE:
-      column: LAU1_CODE
-      range: string
-    lAU2:
-      column: LAU2
-      range: string
-    lAU2CODE:
-      column: LAU2_CODE
-      range: string
-    fLAT:
-      column: F_LAT
-      range: string
-    fLON:
-      column: F_LON
-      range: string
-  note: the name of the bbsk-registre class
+  reason: 'no smart data model: OpenStreetMap/OSMBoundary requires osmId and osmType; these boundaries come from
+    the region''s register, not OpenStreetMap'
 - id: 729ed464-1884-5a77-80b6-074f72552fdc
   name: bbsk-obce-bbk-hranice-ec7ac6
   org: bbsk
   title: Obce BBK - hranice
-  status: mapped
+  status: removed
   type: AdministrativeArea
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Obec3_WebMercator/FeatureServer/0
-    geometry: esriGeometryPolygon
-    rows: 516
-  entityId:
-    keys:
-    - IDN4
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-obce-bbk-hranice-ec7ac6
-  properties:
-    dOW:
-      column: DOW
-      range: datetime
-    fACC:
-      column: FACC
-      range: string
-    iDN4:
-      column: IDN4
-      range: integer
-    nM4:
-      column: NM4
-      range: string
-    iDN3:
-      column: IDN3
-      range: integer
-    nM3:
-      column: NM3
-      range: string
-    iDN2:
-      column: IDN2
-      range: integer
-    nM2:
-      column: NM2
-      range: string
-    vYMERA:
-      column: VYMERA
-      range: float
-    nUTS1:
-      column: NUTS1
-      range: string
-    nUTS1CODE:
-      column: NUTS1_CODE
-      range: string
-    nUTS2:
-      column: NUTS2
-      range: string
-    nUTS2CODE:
-      column: NUTS2_CODE
-      range: string
-    nUTS3:
-      column: NUTS3
-      range: string
-    nUTS3CODE:
-      column: NUTS3_CODE
-      range: string
-    lAU1:
-      column: LAU1
-      range: string
-    lAU1CODE:
-      column: LAU1_CODE
-      range: string
-    lAU2:
-      column: LAU2
-      range: string
-    lAU2CODE:
-      column: LAU2_CODE
-      range: string
-  existing:
-    seed: bbsk/bbsk-datasource-obce.yaml
-    covers: whole
-  note: the name of the bbsk-registre class
+  reason: 'no smart data model: OpenStreetMap/OSMBoundary requires osmId and osmType; these boundaries come from
+    the region''s register, not OpenStreetMap'
 - id: a58d8a57-6639-549e-a64e-cb37e2702f10
   name: bbsk-objednavky-a97e8a
   org: bbsk
   title: Objednávky
-  status: mapped
+  status: removed
   type: PurchaseOrder
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Objedn%C3%A1vky/FeatureServer/0
-    geometry: null
-    rows: 18896
-  entityId:
-    keys:
-    - Číslo_objednávky
-    - Rok
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1D
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-objednavky-a97e8a
-  properties:
-    cisloObjednavky:
-      column: Číslo_objednávky
-      range: string
-    predmetObjednavky:
-      column: Predmet_objednávky
-      range: string
-    suma:
-      column: Suma
-      range: float
-    datumVystavenia:
-      column: Dátum_vystavenia
-      range: date
-    dodavatel:
-      column: Dodávateľ
-      range: string
-    adresa:
-      column: Adresa
-      range: string
-    iCO:
-      column: IČO
-      range: string
-    rok:
-      column: Rok
-      range: string
-  rowFilter:
-    where: IČO IS NOT NULL AND IČO <> ''
-    keep:
-      column: IČO
-      pattern: ^[0-9]{6,8}( ?[0-9]{4})?$
-    why: a row without an IČO, or with a name where the IČO belongs, can name a natural person
+  reason: 'no smart data model: no subject of the official list (2026-07-19) holds orders, invoices, contracts or
+    procurement'
 - id: aaf0bc46-f9cb-5fe5-baed-b09a48c8fe1e
   name: bbsk-obyvatelstvo-podla-dalsej-narodnosti-2021-obce-11667a
   org: bbsk
   title: Obyvateľstvo podľa ďalšej národnosti (2021), obce
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_%C4%8Fal%C5%A1ia_n%C3%A1rodnos%C5%A5/FeatureServer/0
@@ -3273,8 +2087,8 @@ datasets:
   org: bbsk
   title: Obyvateľstvo podľa ďalšej národnosti (2021), okresy
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_%C4%8Fal%C5%A1ia_n%C3%A1rodnos%C5%A5_okresy/FeatureServer/0
@@ -3539,8 +2353,8 @@ datasets:
   org: bbsk
   title: Obyvateľstvo podľa ekonomickej aktivity (2021)
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_pracuj%C3%BAci_nezaestnan%C3%AD/FeatureServer/0
@@ -3715,8 +2529,8 @@ datasets:
   org: bbsk
   title: Obyvateľstvo podľa materinského jazyka (2011), obce
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_materinsk%C3%BD_jazyk/FeatureServer/0
@@ -3846,8 +2660,8 @@ datasets:
   org: bbsk
   title: Obyvateľstvo podľa materinského jazyka (2011), okresy
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_materinsk%C3%BD_jazyk_okres/FeatureServer/0
@@ -4004,8 +2818,8 @@ datasets:
   org: bbsk
   title: Obyvateľstvo podľa materinského jazyka (2021), obce
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_materinsk%C3%BD_jazyk/FeatureServer/0
@@ -4261,8 +3075,8 @@ datasets:
   org: bbsk
   title: Obyvateľstvo podľa materinského jazyka (2021), okresy
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_materinsk%C3%BD_jazyk_okresy/FeatureServer/0
@@ -4506,8 +3320,8 @@ datasets:
   org: bbsk
   title: Obyvateľstvo podľa náboženského vyznania (2011), obce
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_n%C3%A1bo%C5%BEenstvo/FeatureServer/0
@@ -4670,8 +3484,8 @@ datasets:
   org: bbsk
   title: Obyvateľstvo podľa náboženského vyznania (2011), okresy
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_n%C3%A1bo%C5%BEenstvo_okresy/FeatureServer/0
@@ -4876,8 +3690,8 @@ datasets:
   org: bbsk
   title: Obyvateľstvo podľa náboženského vyznania (2021), obce
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Obyvate%C4%BEstvo_pod%C4%BEa_n%C3%A1bo%C5%BEensk%C3%A9ho_vyznania_(2021)/FeatureServer/0
@@ -5127,8 +3941,8 @@ datasets:
   org: bbsk
   title: Obyvateľstvo podľa náboženského vyznania (2021), okresy
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_n%C3%A1bo%C5%BEenstvo_okres/FeatureServer/0
@@ -5369,8 +4183,8 @@ datasets:
   org: bbsk
   title: Obyvateľstvo podľa národnosti (2011), obce
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_n%C3%A1rodnos%C5%A5_vsrstvy/FeatureServer/0
@@ -5509,8 +4323,8 @@ datasets:
   org: bbsk
   title: Obyvateľstvo podľa národnosti (2011), okresy
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Join_Features_to_Okres3_WebMercator_view/FeatureServer/0
@@ -5685,8 +4499,8 @@ datasets:
   org: bbsk
   title: Obyvateľstvo podľa národnosti (2021), obce
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_n%C3%A1rodnos%C5%A5/FeatureServer/0
@@ -5960,8 +4774,8 @@ datasets:
   org: bbsk
   title: Obyvateľstvo podľa národnosti (2021), okresy
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_n%C3%A1rodnos%C5%A5_okresy/FeatureServer/0
@@ -6226,8 +5040,8 @@ datasets:
   org: bbsk
   title: Obyvateľstvo podľa rodinného stavu (2021), obce
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_rodinn%C3%BD_stav/FeatureServer/0
@@ -6348,8 +5162,8 @@ datasets:
   org: bbsk
   title: Obyvateľstvo podľa rodinného stavu (2021), okresy
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_rodinn%C3%BD_stav_okres/FeatureServer/0
@@ -6458,8 +5272,8 @@ datasets:
   org: bbsk
   title: Obyvateľstvo podľa vekovej štruktúry (2011, 2021), obce
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_2021_ekonomick%C3%A1_aktivita/FeatureServer/0
@@ -6572,8 +5386,8 @@ datasets:
   org: bbsk
   title: Obyvateľstvo podľa vekovej štruktúry (2011, 2021), okresy
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_2021_vekov%C3%A1_%C5%A1trukt%C3%BAra_okres/FeatureServer/0
@@ -6671,8 +5485,8 @@ datasets:
   org: bbsk
   title: Obyvateľstvo podľa vzdelania (2021)
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_vzdelanie/FeatureServer/0
@@ -6808,8 +5622,8 @@ datasets:
   org: bbsk
   title: Ohrozenie samospráv zmenou klímy - extrémne horúčavy
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Dataset_hodnotenia_ohrozenia_samospr%C3%A1v_zmenou_kl%C3%ADmy_a_extr%C3%A9mnymi_prejavmi_zobrazenie/FeatureServer/0
@@ -6882,8 +5696,8 @@ datasets:
   org: bbsk
   title: Ohrozenie samospráv zmenou klímy - extrémne sucho
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Ohrozenie_samospr%C3%A1v_zmenou_kl%C3%ADmy___extr%C3%A9mne_sucho/FeatureServer/0
@@ -6953,8 +5767,8 @@ datasets:
   org: bbsk
   title: Ohrozenie samospráv zmenou klímy - extrémne zrážky
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Ohrozenie_samospr%C3%A1v_zmenou_kl%C3%ADmy___extr%C3%A9mne_zr%C3%A1%C5%BEky/FeatureServer/0
@@ -7023,80 +5837,17 @@ datasets:
   name: bbsk-okresy-bbk-hranice-17725f
   org: bbsk
   title: Okresy BBK - hranice
-  status: mapped
+  status: removed
   type: AdministrativeArea
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Okres3_WebMercator/FeatureServer/0
-    geometry: esriGeometryPolygon
-    rows: 13
-  entityId:
-    keys:
-    - IDN3
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-okresy-bbk-hranice-17725f
-  properties:
-    dOW:
-      column: DOW
-      range: datetime
-    fACC:
-      column: FACC
-      range: string
-    iDN3:
-      column: IDN3
-      range: integer
-    nM3:
-      column: NM3
-      range: string
-    iDN2:
-      column: IDN2
-      range: integer
-    nM2:
-      column: NM2
-      range: string
-    vYMERA:
-      column: VYMERA
-      range: float
-    nUTS1:
-      column: NUTS1
-      range: string
-    nUTS1CODE:
-      column: NUTS1_CODE
-      range: string
-    nUTS2:
-      column: NUTS2
-      range: string
-    nUTS2CODE:
-      column: NUTS2_CODE
-      range: string
-    nUTS3:
-      column: NUTS3
-      range: string
-    nUTS3CODE:
-      column: NUTS3_CODE
-      range: string
-    lAU1:
-      column: LAU1
-      range: string
-    lAU1CODE:
-      column: LAU1_CODE
-      range: string
-  existing:
-    seed: bbsk/bbsk-datasource-okresy.yaml
-    covers: whole
-  note: the name of the bbsk-registre class
+  reason: 'no smart data model: OpenStreetMap/OSMBoundary requires osmId and osmType; these boundaries come from
+    the region''s register, not OpenStreetMap'
 - id: 2ba5cc2b-7429-52fe-9a2e-1bc12a8e1ba6
   name: bbsk-organizacie-v-zriadovatelskej-posobnosti-bbsk-bc762a
   org: bbsk
   title: Organizácie v zriaďovateľskej pôsobnosti BBSK
   status: mapped
   type: PublicOrganization
-  smartDataModel: null
+  smartDataModel: dataModel.CPSV-AP/PublicOrganization
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/NEW_VIEW_Organiz%C3%A1cie_v_zria%C4%8Fovate%C4%BEskej_p%C3%B4sobnosti_BBSK/FeatureServer/0
@@ -7115,7 +5866,7 @@ datasets:
     iCO:
       column: IČO
       range: string
-    oficialnyNazov:
+    preferredLabel:
       column: Oficiálny_názov
       range: string
     zauzivanyNazov:
@@ -7133,9 +5884,9 @@ datasets:
     adresa:
       column: adresa
       range: string
-    obecNazov:
+    spatial:
       column: obec_nazov
-      range: string
+      range: string-list
     okresNazov:
       column: okres_nazov
       range: string
@@ -7148,14 +5899,13 @@ datasets:
   existing:
     seed: bbsk/bbsk-datasource-organizacie.yaml
     covers: whole
-  note: the name of the bbsk-registre class
 - id: d5175db0-5229-52a4-9af7-4b7bea484b61
   name: bbsk-organizacna-struktura-40329b
   org: bbsk
   title: Organizačná štruktúra
   status: mapped
-  type: OrganizationUnit
-  smartDataModel: null
+  type: Organization
+  smartDataModel: dataModel.Organization/Organization
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Organizacna_struktura/FeatureServer/0
@@ -7173,7 +5923,7 @@ datasets:
     funkcia:
       column: Funkcia
       range: string
-    utvarNazov:
+    name:
       column: Utvar_nazov
       range: string
     kancelaria:
@@ -7202,116 +5952,25 @@ datasets:
   name: bbsk-peticie-f80530
   org: bbsk
   title: Petície
-  status: mapped
+  status: removed
   type: Petition
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Pet%C3%ADcie/FeatureServer/0
-    geometry: null
-    rows: 12
-  entityId:
-    rowHash: true
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-peticie-f80530
-  properties:
-    pC:
-      column: P_č_
-      range: integer
-    vybavovatelPeticie:
-      column: Vybavovateľ_petície
-      range: string
-    nazovPeticie:
-      column: Názov_petície
-      range: string
-    text:
-      column: Text
-      range: string
-    jeKvorova:
-      column: Je_kvórová
-      range: string
-    datumDorucenia:
-      column: Dátum_doručenia
-      range: date
-    datumVybavenia:
-      column: Dátum_vybavenia
-      range: date
-    zverejnenieVysledkuVybavenia:
-      column: Zverejnenie_výsledku_vybavenia
-      range: date
-    pocetOsobPodporujucichPetici:
-      column: Počet_osôb_podporujúcich_petíci
-      range: integer
-    sposobVybavenia:
-      column: Spôsob_vybavenia
-      range: string
-    poznamka:
-      column: Poznámka
-      range: string
-    link:
-      column: Link
-      range: string
-  note: the petition, not its signatories
+  reason: 'no smart data model: no subject holds council meetings, votes, petitions or regulations; CPSV-AP has
+    PublicService, BusinessEvent and LifeEvent'
 - id: 77c23976-38b7-5329-8e7e-20001c49c48e
   name: bbsk-plan-verejneho-obstaravania-48b7e9
   org: bbsk
   title: Plán verejného obstarávania
-  status: mapped
+  status: removed
   type: PublicProcurement
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Pl%C3%A1n_verejn%C3%A9ho_obstar%C3%A1vania/FeatureServer/0
-    geometry: null
-    rows: 3836
-  entityId:
-    keys:
-    - id
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-plan-verejneho-obstaravania-48b7e9
-  properties:
-    utvarOvZP:
-      column: Útvar_OvZP
-      range: string
-    predmetZakazky:
-      column: Predmet_zákazky
-      range: string
-    druhKomoditAleboSluzieb:
-      column: Druh_komodít_alebo_služieb
-      range: string
-    typKomodity:
-      column: Typ_komodity
-      range: string
-    pHZ:
-      column: PHZ
-      range: float
-    financovanie:
-      column: Financovanie
-      range: string
-    typVydavku:
-      column: Typ_výdavku
-      range: string
-    rok:
-      column: Rok
-      range: integer
-    sourceId:
-      column: id
-      range: integer
+  reason: 'no smart data model: no subject of the official list (2026-07-19) holds orders, invoices, contracts or
+    procurement'
 - id: 706c34b8-b5fe-5819-823e-52571a313f3c
   name: bbsk-pocet-obyvatelov-v-obciach-bbk-b2adc3
   org: bbsk
   title: Počet obyvateľov v obciach BBK
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Po%C4%8Det_obyvate%C4%BEov_obce_BBK1/FeatureServer/0
@@ -7452,67 +6111,17 @@ datasets:
   name: bbsk-podjazdy-v-banskobystrickom-kraji-public-view-e6fb8f
   org: bbsk
   title: Podjazdy v Banskobystrickom kraji (public view)
-  status: mapped
+  status: removed
   type: RoadStructure
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Podjazdy_v_Banskobystrickom_kraji_(public_view)/FeatureServer/2
-    geometry: esriGeometryPolyline
-    rows: 148
-  entityId:
-    keys:
-    - Identifikačné_číslo_podjazdu
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-podjazdy-v-banskobystrickom-kraji-public-view-e6fb8f
-  properties:
-    triedaPK:
-      column: Trieda_PK
-      range: string
-    cisloPK:
-      column: Číslo_PK
-      range: string
-    identifikacneCisloPodjazdu:
-      column: Identifikačné_číslo_podjazdu
-      range: integer
-    typPodjazdu:
-      column: Typ_podjazdu
-      range: string
-    minVyskaPodjazdu:
-      column: Min__výška_podjazdu
-      range: float
-    rokStavby:
-      column: rok_stavby
-      range: integer
-    celkovaDlzkaPodjazdu:
-      column: Celková_dĺžka_podjazdu
-      range: integer
-    kraj:
-      column: Kraj
-      range: string
-    okres:
-      column: Okres
-      range: string
-    vlastnik:
-      column: Vlastník
-      range: string
-    typSpravcu:
-      column: Typ_Spravcu
-      range: string
-    spravca:
-      column: Spravca
-      range: string
+  reason: 'no smart data model: Transportation/Road and RoadSegment describe roads, not underpasses, culverts, expansion
+    joints or level crossings'
 - id: 6d82c9bb-74a2-5c47-b16d-e806bc0d5241
   name: bbsk-pohyb-obyvatelstva-v-obciach-1996-2024-919463
   org: bbsk
   title: Pohyb obyvateľstva v obciach (1996 - 2024)
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/pohyb_view/FeatureServer/0
@@ -7718,8 +6327,8 @@ datasets:
   org: bbsk
   title: Pohyb obyvateľstva v okresoch (1996 - 2024)
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/pohyb_okresy_view/FeatureServer/0
@@ -7903,150 +6512,24 @@ datasets:
   name: bbsk-povodia-banskobystrickeho-kraja-067504
   org: bbsk
   title: Povodia Banskobystrického kraja
-  status: mapped
+  status: removed
   type: RiverBasin
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/PovodiavBanskobystri_Project/FeatureServer/1
-    geometry: esriGeometryPolygon
-    rows: 3
-  entityId:
-    rowHash: true
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-povodia-banskobystrickeho-kraja-067504
-  properties:
-    fIDKraj0:
-      column: FID_kraj_0
-      range: integer
-    dOW:
-      column: DOW
-      range: datetime
-    aUT:
-      column: AUT
-      range: integer
-    aCH:
-      column: ACH
-      range: integer
-    sOI:
-      column: SOI
-      range: integer
-    fACC:
-      column: FACC
-      range: string
-    iDN2:
-      column: IDN2
-      range: integer
-    nM2:
-      column: NM2
-      range: string
-    vYMERA:
-      column: VYMERA
-      range: float
-    fIDSubpovodiaBbsk:
-      column: FID_subpovodia_bbsk
-      range: integer
-    gmlId:
-      column: gml_id
-      range: string
-    inspireIdL:
-      column: inspireIdL
-      range: integer
-    inspireIdN:
-      column: inspireIdN
-      range: string
-    thematicId:
-      column: thematicId
-      range: string
-    thematic1:
-      column: thematic_1
-      range: string
-    wiseEvolut:
-      column: wiseEvolut
-      range: string
-    nameText:
-      column: nameText
-      range: string
-    nameLangua:
-      column: nameLangua
-      range: string
-    designatio:
-      column: designatio
-      range: string
-    zoneType:
-      column: zoneType
-      range: string
-    specialise:
-      column: specialise
-      range: string
-    relatedZon:
-      column: relatedZon
-      range: string
-    relatedZ1:
-      column: relatedZ_1
-      range: string
-    link:
-      column: link
-      range: string
+  reason: 'no smart data model: OpenStreetMap/OSMWater requires osmId and osmType; the basins come from the region''s
+    register'
 - id: 4bf945da-cd87-56dd-b07a-112f85ada584
   name: bbsk-ppa-platby-f3c509
   org: bbsk
   title: PPA platby
-  status: mapped
+  status: removed
   type: Grant
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/PPA_dataset_AGOL_2/FeatureServer/0
-    geometry: null
-    rows: 13750
-  entityId:
-    rowHash: true
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-ppa-platby-f3c509
-  properties:
-    rokKampan:
-      column: Rok___kampaň
-      range: integer
-    dotacnyTitul:
-      column: Dotačný_titul
-      range: string
-    popisDotacnehoTitulu:
-      column: Popis_dotačného_titulu
-      range: string
-    obecPO:
-      column: Obec__PO_
-      range: string
-    okres:
-      column: Okres
-      range: string
-    ePZFSucet:
-      column: EPZF___súčet
-      range: float
-    ePFRVSucet:
-      column: EPFRV___súčet
-      range: float
-    sRSRSucet:
-      column: ŠR_SR___súčet
-      range: float
-    vyplatenaSumaSpoluSucet:
-      column: Vyplatená_suma_spolu___súčet
-      range: float
+  reason: 'no smart data model: no subject of the official list (2026-07-19) holds grants or subsidies'
 - id: 84ff570c-97aa-5f58-85bd-24863d1408db
   name: bbsk-ppa-platby-po-okresoch-bf09ef
   org: bbsk
   title: PPA platby po okresoch
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/PPA_dataset_AGOL_1/FeatureServer/0
@@ -8095,71 +6578,25 @@ datasets:
   name: bbsk-priepusty-v-banskobystrickom-kraji-public-view-a9ed8e
   org: bbsk
   title: Priepusty v Banskobystrickom kraji (public view)
-  status: mapped
+  status: removed
   type: RoadStructure
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Priepusty_v_Banskobystrickom_kraji_(public_view)/FeatureServer/2
-    geometry: esriGeometryMultipoint
-    rows: 7078
-  entityId:
-    keys:
-    - ID_číslo_priepustu
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-priepusty-v-banskobystrickom-kraji-public-view-a9ed8e
-  properties:
-    triedaPK:
-      column: Trieda_PK
-      range: string
-    cisloPK:
-      column: Číslo_PK
-      range: string
-    iDCisloPriepustu:
-      column: ID_číslo_priepustu
-      range: string
-    stavebnoTechnickyStav:
-      column: Stavebno_technický_stav
-      range: string
-    materialPriepustu:
-      column: Materiál_priepustu
-      range: string
-    kraj:
-      column: Kraj
-      range: string
-    okres:
-      column: Okres
-      range: string
-    vlastnik:
-      column: Vlastník
-      range: string
-    typSpravcu:
-      column: Typ_Spravcu
-      range: string
-    spravca:
-      column: Spravca
-      range: string
-    najblizsiKM:
-      column: Najbližší_KM
-      range: integer
+  reason: 'no smart data model: Transportation/Road and RoadSegment describe roads, not underpasses, culverts, expansion
+    joints or level crossings'
 - id: 2fc52266-8a11-5e2f-a364-eb7a91b786fb
   name: bbsk-prispevkove-rozpoctove-a-ine-organizacie-samospravy-cec768
   org: bbsk
   title: Príspevkové rozpočtové a iné organizácie samosprávy
   status: mapped
   type: PublicOrganization
-  smartDataModel: null
+  smartDataModel: dataModel.CPSV-AP/PublicOrganization
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Pr%C3%ADspevkov%C3%A9_rozpo%C4%8Dtov%C3%A9_a_in%C3%A9_organiz%C3%A1cie_samospr%C3%A1vy/FeatureServer/0
     geometry: esriGeometryPoint
     rows: 126
   entityId:
-    rowHash: true
+    keys:
+    - IČO_organizácie
   observedAt: null
   space: bbsk-otvorene-data
   refresh: P1W
@@ -8176,7 +6613,7 @@ datasets:
     iCOOrganizacie:
       column: IČO_organizácie
       range: string
-    nazovOrganizacie:
+    preferredLabel:
       column: Názov_organizácie
       range: string
     iDAdresy:
@@ -8185,9 +6622,9 @@ datasets:
     adresaOrganizacie:
       column: Adresa_organizácie
       range: string
-    obec:
+    spatial:
       column: Obec
-      range: string
+      range: string-list
     okres:
       column: Okres
       range: string
@@ -8206,14 +6643,13 @@ datasets:
     kodFormyPodnikania:
       column: Kód_formy_podnikania
       range: string
-  note: the name of the bbsk-registre class
 - id: e407e038-c536-53cd-9229-f59564821a39
   name: bbsk-prognoza-poctu-obyvatelov-2018-2040-3a097f
   org: bbsk
   title: Prognóza počtu obyvateľov (2018 - 2040)
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_progn%C3%B3za_po%C4%8Dtu_obyvate%C4%BEov_2018_2040/FeatureServer/0
@@ -8312,439 +6748,31 @@ datasets:
   name: bbsk-projekty-banskobystrickeho-kraja-itms21-c8bfea
   org: bbsk
   title: Projekty Banskobystrického kraja ITMS21
-  status: mapped
+  status: removed
   type: PublicInvestment
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Join_Features_to_Obce_BBK_centroidy_view_new/FeatureServer/0
-    geometry: esriGeometryPoint
-    rows: 592
-  entityId:
-    keys:
-    - ID_projektu
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-projekty-banskobystrickeho-kraja-itms21-c8bfea
-  properties:
-    typObce:
-      column: typ_obce
-      range: string
-    iDN4:
-      column: IDN4
-      range: integer
-    nM4:
-      column: NM4
-      range: string
-    iDN3:
-      column: IDN3
-      range: integer
-    nM3:
-      column: NM3
-      range: string
-    iDN2:
-      column: IDN2
-      range: integer
-    nM2:
-      column: NM2
-      range: string
-    nUTS1:
-      column: NUTS1
-      range: string
-    nUTS1CODE:
-      column: NUTS1_CODE
-      range: string
-    nUTS2:
-      column: NUTS2
-      range: string
-    nUTS2CODE:
-      column: NUTS2_CODE
-      range: string
-    nUTS3:
-      column: NUTS3
-      range: string
-    nUTS3CODE:
-      column: NUTS3_CODE
-      range: string
-    lAU1:
-      column: LAU1
-      range: string
-    lAU1CODE:
-      column: LAU1_CODE
-      range: string
-    lAU2:
-      column: LAU2
-      range: string
-    lAU2CODE:
-      column: LAU2_CODE
-      range: string
-    fLAT:
-      column: F_LAT
-      range: string
-    fLON:
-      column: F_LON
-      range: string
-    iDProjektu:
-      column: ID_projektu
-      range: string
-    kodProjektu:
-      column: Kód_projektu
-      range: string
-    nazovProjektu:
-      column: Názov_projektu
-      range: string
-    kodKraja:
-      column: Kód_kraja
-      range: string
-    nazovKraja:
-      column: Názov_kraja
-      range: string
-    platnostProjektuOd:
-      column: Platnosť_projektu_od
-      range: datetime
-    iCOPrijimatela:
-      column: IČO_prijímateľa
-      range: string
-    nazovPrijimatela:
-      column: Názov_prijímateľa
-      range: string
-    celkovaZazmluvnenaSuma:
-      column: Celková_zazmluvnená_suma
-      range: float
-    rozsahUzemiaProjektu:
-      column: Rozsah_územia_projektu
-      range: string
-    miestoRealizacieProjektu:
-      column: Miesto_realizácie_projektu
-      range: string
-    uroven:
-      column: Úroveň
-      range: string
-    miestoRealizacieProjektuObec:
-      column: Miesto_realizácie_projektu_obec
-      range: string
-    kodObce:
-      column: Kód_obce
-      range: string
-    miestoRealizacieProjektuKraj:
-      column: Miesto_realizácie_projektu_kraj
-      range: string
+  reason: 'no smart data model: no subject of the official list (2026-07-19) holds public investment projects'
 - id: 6ab2ef3b-b22b-52da-852f-9cef7de7a418
   name: bbsk-realizovane-verejne-obstaravania-754eee
   org: bbsk
   title: Realizované verejné obstarávania
-  status: mapped
+  status: removed
   type: PublicProcurement
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Realizovan%C3%A9_verejn%C3%A9_obstar%C3%A1vania/FeatureServer/0
-    geometry: null
-    rows: 6829
-  entityId:
-    keys:
-    - ID_časti
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-realizovane-verejne-obstaravania-754eee
-  properties:
-    iDZakazky:
-      column: ID_zákazky
-      range: integer
-    nazovPredmetu:
-      column: Názov_predmetu
-      range: string
-    hlavnyCPV:
-      column: Hlavný_CPV
-      range: string
-    cPVNazov:
-      column: CPV___názov
-      range: string
-    iDCasti:
-      column: ID_časti
-      range: integer
-    nazovCasti:
-      column: Názov_časti
-      range: string
-    hlavnyCPVCasti:
-      column: Hlavný_CPV_časti
-      range: string
-    cPVCastiNazov:
-      column: CPV_časti___názov
-      range: string
-    obstaravatel:
-      column: Obstarávateľ
-      range: string
-    druhObstaravania:
-      column: Druh_obstarávania
-      range: string
-    cisloSpisu:
-      column: Číslo_spisu
-      range: string
-    elektronickaAukcia:
-      column: Elektronická_aukcia
-      range: string
-    datumSpustenia:
-      column: Dátum_spustenia
-      range: datetime
-    lehotaNaPredkladanie:
-      column: Lehota_na_predkladanie
-      range: datetime
-    datumUkoncenia:
-      column: Dátum_ukončenia
-      range: string
-    predpokladanaHodnota:
-      column: Predpokladaná_hodnota
-      range: string
-    pocetZaujemcov:
-      column: Počet_záujemcov
-      range: integer
-    pocetUchadzacov:
-      column: Počet_uchádzačov
-      range: integer
-    zeleneObstaravanie:
-      column: Zelené_obstarávanie
-      range: string
-    socialneZodpovedneObstaravani:
-      column: Sociálne_zodpovedné_obstarávani
-      range: string
-    spolocenskyZodpovedneVerejne:
-      column: Spoločensky_zodpovedné_verejné_
-      range: string
-    druhPostupu:
-      column: Druh_postupu
-      range: string
-    stav:
-      column: Stav
-      range: string
-    najvyhodnejsiUchadzac:
-      column: Najvýhodnejší_uchádzač
-      range: string
-    adresaNajvyhodnejsiehoUchadza:
-      column: Adresa_najvýhodnejšieho_uchádza
-      range: string
-    ponukaUchadzaca:
-      column: Ponuka_uchádzača
-      range: float
-    mena:
-      column: Mena
-      range: string
+  reason: 'no smart data model: no subject of the official list (2026-07-19) holds orders, invoices, contracts or
+    procurement'
 - id: 13769fab-c568-5b6e-8607-9633e7ae0a94
   name: bbsk-register-investicii-bodova-vrstva-e0b3b4
   org: bbsk
   title: Register investícií - bodová vrstva
-  status: mapped
+  status: removed
   type: PublicInvestment
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Pripoji%C5%A51_FINAL_JITTERED_XYTableToPoint_ExportFeatures/FeatureServer/0
-    geometry: esriGeometryPoint
-    rows: 4853
-  entityId:
-    rowHash: true
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-register-investicii-bodova-vrstva-e0b3b4
-  properties:
-    index:
-      column: Index_
-      range: integer
-    iDIA:
-      column: ID_IA
-      range: string
-    nazov:
-      column: Názov
-      range: string
-    vecnaOblast:
-      column: Vecná_oblasť
-      range: string
-    okresKraj:
-      column: Okres_Kraj
-      range: string
-    kodOkresuKraja:
-      column: Kód_okresu_kraja
-      range: integer
-    obstaravaciaCena:
-      column: Obstarávacia_cena
-      range: float
-    rozpocetAktualny:
-      column: Rozpočet_aktuálny
-      range: float
-    cerpanieSpolu:
-      column: Čerpanie_spolu
-      range: float
-    uradOvZPOvZP:
-      column: Úrad_OvZP_OvZP
-      range: string
-    uradOvZPICO:
-      column: Úrad_OvZP_IČO
-      range: string
-    rokZaradenia:
-      column: Rok_zaradenia
-      range: string
-    iCOOrganizacia:
-      column: IČO_organizácia
-      range: string
-    aktualnyStav:
-      column: Aktuálny_stav
-      range: string
-    oBJECTID1:
-      column: OBJECTID_1
-      range: integer
-    iCO:
-      column: IČO
-      range: string
-    oficialnyNazov:
-      column: Oficiálny_názov
-      range: string
-    zauzivanyNazov:
-      column: Zaužívaný_názov
-      range: string
-    zauzivanyNazovKratky:
-      column: Zaužívaný_názov_krátky
-      range: string
-    kategoria:
-      column: Kategória
-      range: string
-    obecNUTS:
-      column: Obec_NUTS
-      range: string
-    obecNazov:
-      column: Obec_názov
-      range: string
-    okresNazov:
-      column: Okres_názov
-      range: string
-    adresa:
-      column: Adresa
-      range: string
-    aktivne:
-      column: Aktívne
-      range: string
-    datumZaniku:
-      column: Dátum_zániku
-      range: string
-    poznamka:
-      column: Poznámka
-      range: string
-    lATJitter:
-      column: LAT_jitter
-      range: float
-    lONJitter:
-      column: LON_jitter
-      range: float
-    rokText:
-      column: Rok_text
-      range: string
-    aktualnyStavUpraveny:
-      column: Aktuálny_stav_upravený
-      range: string
-    sektorOvZPUpraveny:
-      column: Sektor_OvZP_upraveny
-      range: string
-    zauzivanyNazovUpraveny:
-      column: Zaužívaný_názov_upravený
-      range: string
-    gEOMLATBACKUP:
-      column: GEOM_LAT_BACKUP
-      range: float
-    gEOMLONBACKUP:
-      column: GEOM_LON_BACKUP
-      range: float
+  reason: 'no smart data model: no subject of the official list (2026-07-19) holds public investment projects'
 - id: d5c0a7f7-63bc-566d-a080-c79a396d3a53
   name: bbsk-register-investicii-polygonova-vrstva-e902a9
   org: bbsk
   title: Register investícií - polygónová vrstva
-  status: mapped
+  status: removed
   type: PublicInvestment
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Join_Features_to_Ok_Dissolve_Export_Features/FeatureServer/0
-    geometry: esriGeometryPolygon
-    rows: 755
-  entityId:
-    rowHash: true
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-register-investicii-polygonova-vrstva-e902a9
-  properties:
-    iDN3:
-      column: IDN3
-      range: integer
-    vecnaOblast:
-      column: Vecná_oblasť
-      range: string
-    rok:
-      column: Rok
-      range: string
-    sUMCerpanieSpolu:
-      column: SUM_Čerpanie_spolu
-      range: float
-    dOW:
-      column: DOW
-      range: datetime
-    fACC:
-      column: FACC
-      range: string
-    nM3:
-      column: NM3
-      range: string
-    iDN2:
-      column: IDN2
-      range: integer
-    nM2:
-      column: NM2
-      range: string
-    vYMERA:
-      column: VYMERA
-      range: float
-    nUTS1:
-      column: NUTS1
-      range: string
-    nUTS1CODE:
-      column: NUTS1_CODE
-      range: string
-    nUTS2:
-      column: NUTS2
-      range: string
-    nUTS2CODE:
-      column: NUTS2_CODE
-      range: string
-    nUTS3:
-      column: NUTS3
-      range: string
-    nUTS3CODE:
-      column: NUTS3_CODE
-      range: string
-    lAU1:
-      column: LAU1
-      range: string
-    lAU1CODE:
-      column: LAU1_CODE
-      range: string
-    nazov:
-      column: Názov
-      range: string
-    kodOkresuKraja:
-      column: Kód_okresu_kraja
-      range: integer
-    oBJECTID1:
-      column: OBJECTID_1
-      range: integer
+  reason: 'no smart data model: no subject of the official list (2026-07-19) holds public investment projects'
 - id: 24979dde-ef9d-4d9a-bbc3-08a7127dd614
   name: bbsk-registre
   org: bbsk
@@ -8756,8 +6784,8 @@ datasets:
   org: bbsk
   title: Školy a školské zariadenia v zriaďovateľskej pôsobnosti BBSK
   status: mapped
-  type: School
-  smartDataModel: null
+  type: Organization
+  smartDataModel: dataModel.Organization/Organization
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/%C5%A0koly_a_%C5%A1kolsk%C3%A9_zariadenia_v_zria%C4%8Fovate%C4%BEskej_p%C3%B4sobnosti_BBSK_view/FeatureServer/0
@@ -8773,10 +6801,10 @@ datasets:
   license: cc-by
   dataset: https://data.dev.joinedcontext.com/dataset/bbsk-skoly-a-skolske-zariadenia-v-zriadovatelskej-posobnosti-bbsk-791897
   properties:
-    nazovZauzivany:
+    name:
       column: Názov_zaužívaný
       range: string
-    nazovOficialny:
+    legalName:
       column: Názov_oficiálny
       range: string
     adresa:
@@ -8827,14 +6855,14 @@ datasets:
     nazovSkolyOda:
       column: nazov_skoly_oda
       range: string
-  note: the name of the bbsk-registre class
+  note: schools as schema.org organizations
 - id: 9eef884e-707c-5c98-bfd2-f46b61d1df5c
   name: bbsk-stredne-skoly-v-banskobystrickom-kraji-581554
   org: bbsk
   title: Stredné školy v Banskobystrickom kraji
   status: mapped
-  type: School
-  smartDataModel: null
+  type: Organization
+  smartDataModel: dataModel.Organization/Organization
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/skoly_RIS_spolu/FeatureServer/0
@@ -8877,7 +6905,7 @@ datasets:
     typSaSZSkratka:
       column: TypSaSZSkratka
       range: string
-    nazov:
+    name:
       column: Nazov
       range: string
     nazovSkrateny:
@@ -8997,14 +7025,14 @@ datasets:
     longitude:
       column: Longitude
       range: float
-  note: the name of the bbsk-registre class
+  note: schools as schema.org organizations
 - id: db1b7131-18c0-5e4e-9bf0-382449c4cf7c
   name: bbsk-stredne-skoly-v-bbk-odbory-a-pocet-studentov-2023-e85365
   org: bbsk
   title: Stredné školy v BBK, odbory a počet študentov (2023)
   status: mapped
-  type: School
-  smartDataModel: null
+  type: Organization
+  smartDataModel: dataModel.Organization/Organization
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Join_Features_to_Stredn%C3%A9_%C5%A1koly_v_Banskobystrickom_kraji_view/FeatureServer/0
@@ -9046,7 +7074,7 @@ datasets:
     typSaSZSkratka:
       column: TypSaSZSkratka
       range: string
-    nazov:
+    name:
       column: Nazov
       range: string
     nazovSkrateny:
@@ -9274,59 +7302,22 @@ datasets:
     absolventiZaMinulyRokZeny:
       column: Absolventi_za_minulý_rok___ženy
       range: integer
-  note: the name of the bbsk-registre class
+  note: schools as schema.org organizations
 - id: 84126641-ab60-5139-954d-2b80709f0686
   name: bbsk-uradne-hodiny-c912ed
   org: bbsk
   title: Úradné hodiny
-  status: mapped
-  type: OrganizationUnit
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/%C3%9Aradn%C3%A9_hodiny/FeatureServer/0
-    geometry: null
-    rows: 14
-  entityId:
-    rowHash: true
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-uradne-hodiny-c912ed
-  properties:
-    iCOSamospravy:
-      column: IČO_samosprávy
-      range: string
-    nazovSamospravy:
-      column: Názov_samosprávy
-      range: string
-    identifikatorKontaktnehoMiest:
-      column: Identifikátor_kontaktného_miest
-      range: string
-    nazovKontaktnehoMiesta:
-      column: Názov_kontaktného_miesta
-      range: string
-    kodDnaVTyzdni:
-      column: Kód_dňa_v_týždni
-      range: string
-    denVTyzdni:
-      column: Deň_v_týždni
-      range: string
-    otvoreneOd:
-      column: Otvorené_od
-      range: string
-    otvoreneDo:
-      column: Otvorené_do
-      range: string
+  status: removed
+  type: OfficeHours
+  reason: 'no smart data model: a row is one office''s hours on one weekday; no model holds an opening slot as an
+    entity'
 - id: 491848f6-8980-5b5a-be68-abb78754dae2
   name: bbsk-vekova-struktura-v-obciach-1996-2022-6de8c3
   org: bbsk
   title: Veková štruktúra v obciach (1996 - 2022)
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Join_Features_to_Obec3_WebMercator_view/FeatureServer/0
@@ -9451,8 +7442,8 @@ datasets:
   org: bbsk
   title: Veková štruktúra v okresoch (1996 - 2022)
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/vekove_indexy_okresy_zeny_muzi_view/FeatureServer/0
@@ -9560,8 +7551,8 @@ datasets:
   org: bbsk
   title: Vysoké školy v Banskobystrickom kraji
   status: mapped
-  type: School
-  smartDataModel: null
+  type: Organization
+  smartDataModel: dataModel.Organization/Organization
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/V%C5%A0/FeatureServer/0
@@ -9585,7 +7576,7 @@ datasets:
     univerzita:
       column: Univerzita
       range: string
-    fakulta:
+    name:
       column: Fakulta
       range: string
     fakultaStatistickaRocenka:
@@ -9618,14 +7609,14 @@ datasets:
     obrazokOdkaz:
       column: Obrázok_odkaz
       range: string
-  note: the name of the bbsk-registre class
+  note: schools as schema.org organizations
 - id: 95245f82-883e-5268-ae89-44ae2d6a9ba9
   name: bbsk-vyvoj-emisii-v-bbk-c8d1ed
   org: bbsk
   title: Vývoj emisií v BBK
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/JF_to_Okresy_BBK_hranice_view/FeatureServer/0
@@ -9715,8 +7706,8 @@ datasets:
   org: bbsk
   title: Vývoj imisií v BBK
   status: mapped
-  type: StatisticalObservation
-  smartDataModel: null
+  type: KeyPerformanceIndicator
+  smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Imisie_dataset/FeatureServer/0
@@ -9764,8 +7755,8 @@ datasets:
   org: bbsk
   title: Základné školy v Banskobystrickom kraji
   status: mapped
-  type: School
-  smartDataModel: null
+  type: Organization
+  smartDataModel: dataModel.Organization/Organization
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Z%C3%A1kladn%C3%A9_%C5%A1koly/FeatureServer/0
@@ -9808,7 +7799,7 @@ datasets:
     typSaSZSkratka:
       column: TypSaSZSkratka
       range: string
-    nazov:
+    name:
       column: Nazov
       range: string
     nazovSkrateny:
@@ -9928,210 +7919,31 @@ datasets:
     longitude:
       column: Longitude
       range: float
-  note: the name of the bbsk-registre class
+  note: schools as schema.org organizations
 - id: 124e3540-9303-5e21-b796-874ee29c763d
   name: bbsk-zasadnutia-samospravy-9a27f2
   org: bbsk
   title: Zasadnutia samosprávy
-  status: mapped
+  status: removed
   type: CouncilMeeting
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Zasadnutia_samospr%C3%A1vy/FeatureServer/0
-    geometry: null
-    rows: 11
-  entityId:
-    keys:
-    - Číslo_zasadnutia
-  observedAt: Dátum_zasadnutia
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-zasadnutia-samospravy-9a27f2
-  properties:
-    iCOSamospravy:
-      column: IČO_samosprávy
-      range: integer
-    nazovSamospravy:
-      column: Názov_samosprávy
-      range: string
-    organSamospravy:
-      column: Orgán_samosprávy
-      range: string
-    cisloZasadnutia:
-      column: Číslo_zasadnutia
-      range: integer
-    datumZasadnutia:
-      column: Dátum_zasadnutia
-      range: datetime
-    hyperlinkNaPozvanku:
-      column: Hyperlink_na_pozvánku
-      range: string
-    hyperlinkNaZapisnicu:
-      column: Hyperlink_na_zápisnicu
-      range: string
-    hyperlinkNaPrijateUznesenia:
-      column: Hyperlink_na_prijaté_uznesenia
-      range: string
-    hyperlinkNaVysledkyHlasovani:
-      column: Hyperlink_na_výsledky_hlasovani
-      range: string
-    hyperlinkNaDochadzku:
-      column: Hyperlink_na_dochádzku
-      range: string
+  reason: 'no smart data model: no subject holds council meetings, votes, petitions or regulations; CPSV-AP has
+    PublicService, BusinessEvent and LifeEvent'
 - id: eff94b09-42b3-59a8-a6d5-6d08b839a56c
   name: bbsk-zeleznicne-priecestia-v-banskobystrickom-kraji-public-view-89feb8
   org: bbsk
   title: Železničné priecestia v Banskobystrickom kraji (public view)
-  status: mapped
+  status: removed
   type: RoadStructure
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/%C5%BDelezni%C4%8Dn%C3%A9_priecestia_v_Banskobystrickom_kraji_(public_view)/FeatureServer/2
-    geometry: esriGeometryPolyline
-    rows: 103
-  entityId:
-    keys:
-    - Identifikacne_čislo_žel__priec_
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-zeleznicne-priecestia-v-banskobystrickom-kraji-public-view-89feb8
-  properties:
-    triedaPK:
-      column: Trieda_PK
-      range: string
-    cisloPK:
-      column: Číslo_PK
-      range: string
-    identifikacneCisloZelPriec:
-      column: Identifikacne_čislo_žel__priec_
-      range: integer
-    pocetKolaji:
-      column: Počet_kolaji
-      range: integer
-    rokStavby:
-      column: rok_Stavby
-      range: integer
-    druhZabezpecenia:
-      column: Druh_zabezpečenia
-      range: string
-    kraj:
-      column: Kraj
-      range: string
-    okres:
-      column: Okres
-      range: string
-    vlastnik:
-      column: Vlastník
-      range: string
-    typSpravcu:
-      column: Typ_Spravcu
-      range: string
-    spravca:
-      column: Spravca
-      range: string
-    najblizsiKM:
-      column: Najbližši_KM
-      range: float
-    jICZSR:
-      column: JIČ_ŽSR
-      range: string
+  reason: 'no smart data model: Transportation/Road and RoadSegment describe roads, not underpasses, culverts, expansion
+    joints or level crossings'
 - id: 76016124-eea4-5e0f-83e0-d3fbb038d9af
   name: bbsk-zmluvy-cafee6
   org: bbsk
   title: Zmluvy
-  status: mapped
+  status: removed
   type: Contract
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Zmluvy_13_3_2025/FeatureServer/0
-    geometry: null
-    rows: 5164
-  entityId:
-    rowHash: true
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-zmluvy-cafee6
-  properties:
-    index:
-      column: Index_
-      range: string
-    zdrojNazov:
-      column: Zdroj_Názov
-      range: string
-    cisloZmluvy:
-      column: Číslo_zmluvy
-      range: string
-    iDZmluvy:
-      column: ID_zmluvy
-      range: string
-    rezort:
-      column: Rezort
-      range: string
-    nazovZmluvy:
-      column: Názov_zmluvy
-      range: string
-    nazovObjednavatela:
-      column: Názov_objednávateľa
-      range: string
-    nazovDodavatela:
-      column: Názov_dodávateľa
-      range: string
-    iCOObjednavatela:
-      column: IČO_objednávateľa
-      range: string
-    iCODodavatela:
-      column: IČO_dodávateľa
-      range: string
-    sidloObjednavatela:
-      column: Sídlo_objednávateľa
-      range: string
-    sidloDodavatela:
-      column: Sídlo_dodávateľa
-      range: string
-    datumUzavretia:
-      column: Dátum_uzavretia
-      range: date
-    datumZverejnenia:
-      column: Dátum_zverejnenia
-      range: date
-    datumUcinnosti:
-      column: Dátum_účinnosti
-      range: date
-    datumPlatnostiDo:
-      column: Dátum_platnosti_do
-      range: date
-    sumaVEUR:
-      column: Suma_v_EUR
-      range: string
-    sumaSpoluVEUR:
-      column: Suma_spolu_v_EUR
-      range: string
-    poznamka:
-      column: Poznámka
-      range: string
-    priloha:
-      column: Príloha
-      range: string
-    datumPrilohy:
-      column: Dátum_prílohy
-      range: date
-  rowFilter:
-    where: IČO_dodávateľa IS NOT NULL AND IČO_dodávateľa <> ''
-    keep:
-      column: IČO_dodávateľa
-      pattern: ^[0-9]{6,8}( ?[0-9]{4})?$
-    why: a contract whose supplier has no IČO, or a name where the IČO belongs, can name a natural person
+  reason: 'no smart data model: no subject of the official list (2026-07-19) holds orders, invoices, contracts or
+    procurement'
 - id: f6bfcbd3-ad01-5a3f-89ff-e9dafd6d6826
   name: bbsk-zoznam-lekarni-v-bbk-c564de
   org: bbsk
@@ -10157,7 +7969,7 @@ datasets:
     idZZ:
       column: IdZZ
       range: string
-    nazov:
+    name:
       column: Názov
       range: string
     druhZariadenia:
@@ -10217,8 +8029,8 @@ datasets:
   org: bbsk
   title: Zoznam poskytovateľov sociálnych služieb v BBK
   status: mapped
-  type: SocialService
-  smartDataModel: null
+  type: PointOfInterest
+  smartDataModel: dataModel.PointOfInterest/PointOfInterest
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Zoznam_poskytovate%C4%BEov_soci%C3%A1lnych_slu%C5%BEieb_v_BBK_public_2025/FeatureServer/0
@@ -10290,7 +8102,7 @@ datasets:
     zriadovatel:
       column: Zriaďovateľ
       range: string
-    obchodneMeno:
+    name:
       column: Obchodné_meno
       range: string
     iCO:
@@ -10302,59 +8114,15 @@ datasets:
   existing:
     seed: bbsk/bbsk-datasource-socialne-sluzby.yaml
     covers: whole
-  note: the name of the bbsk-registre class
+  note: a provider's place of service
 - id: 2dc6f224-a7d9-5349-b0bc-8c0b4f42d896
   name: bbsk-zoznam-ucinnych-vseobecne-zavaznych-nariadeni-vzn-80db50
   org: bbsk
   title: Zoznam účinných všeobecne záväzných nariadení (VZN)
-  status: mapped
+  status: removed
   type: Regulation
-  smartDataModel: null
-  source:
-    kind: esri-featureserver
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Zoznam_%C3%BA%C4%8Dinn%C3%BDch_v%C5%A1eobecne_z%C3%A1v%C3%A4zn%C3%BDch_nariaden%C3%AD_(VZN)/FeatureServer/0
-    geometry: null
-    rows: 34
-  entityId:
-    keys:
-    - Číslo_uznesenia
-  observedAt: null
-  space: bbsk-otvorene-data
-  refresh: P1W
-  dataProvider: Banskobystrický samosprávny kraj
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-zoznam-ucinnych-vseobecne-zavaznych-nariadeni-vzn-80db50
-  properties:
-    iCOSamospravy:
-      column: IČO_samosprávy
-      range: string
-    nazovSamospravy:
-      column: Názov_samosprávy
-      range: string
-    cisloVZN:
-      column: Číslo_VZN
-      range: string
-    nazovVZN:
-      column: Názov_VZN
-      range: string
-    uRLLinkaNaVZN:
-      column: URL_linka_na_VZN
-      range: string
-    cisloZasadnutia:
-      column: Číslo_zasadnutia
-      range: string
-    platnostOd:
-      column: Platnosť_od
-      range: datetime
-    ucinnostOd:
-      column: Účinnosť_od
-      range: datetime
-    ucinnostDo:
-      column: Účinnosť_do
-      range: string
-    cisloUznesenia:
-      column: Číslo_uznesenia
-      range: string
+  reason: 'no smart data model: no subject holds council meetings, votes, petitions or regulations; CPSV-AP has
+    PublicService, BusinessEvent and LifeEvent'
 - id: 09e0e635-3610-5b50-9a37-f1f6cb24448a
   name: bbsk-zoznam-zdravotnickych-zariadeni-v-bbk-701db2
   org: bbsk
@@ -10388,9 +8156,11 @@ datasets:
     idZZ:
       column: IdZZ
       range: string
-    vlastnyNazovZariadenia:
+    name:
       column: Vlastný_názov_zariadenia
       range: string
+      otherwise:
+      - Názov_poskytovateľa
     druhZariadenia:
       column: Druh_zariadenia
       range: string

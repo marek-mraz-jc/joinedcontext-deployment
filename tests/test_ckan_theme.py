@@ -1229,3 +1229,37 @@ def test_the_facts_name_the_standard_and_one_date_unless_another_day(theme):
     info = page[page.index("{% block resource_additional_information_inner %}"):]
     for english in ("Data last updated", "Metadata last updated", "format_resource_items"):
         assert english not in info
+
+
+def test_a_hidden_package_leaves_search_and_its_page_for_all_but_a_sysadmin(theme, tmp_path):
+    hidden = tmp_path / "hidden.json"
+    hidden.write_text(json.dumps({"bb-adresy": "accurate: 16304 entities for 16902 rows", "Bad Name;": "x"}))
+    theme.HIDDEN_FILE = str(hidden)
+    theme.HIDDEN = theme._hidden()
+    assert theme.HIDDEN == {"bb-adresy"}, "a name CKAN would not mint is never put into a Solr query"
+    toolkit = sys.modules["ckan.plugins.toolkit"]
+    plugin = theme.JcThemePlugin()
+
+    toolkit.g = types.SimpleNamespace(userobj=None)
+    params = plugin.before_dataset_search({"q": "", "fq": "+dataset_type:dataset"})
+    assert params["fq"] == '+dataset_type:dataset -name:("bb-adresy")'
+    with pytest.raises(toolkit.ObjectNotFound):
+        plugin.after_dataset_show({}, {"name": "bb-adresy", "resources": []})
+    plugin.after_dataset_show({}, {"name": "bb-dotacie", "resources": []})
+
+    toolkit.g = types.SimpleNamespace(userobj=types.SimpleNamespace(sysadmin=True))
+    assert "fq" not in plugin.before_dataset_search({"q": ""}), "the harvests still see what they wrote"
+    plugin.after_dataset_show({}, {"name": "bb-adresy", "resources": []})
+
+
+def test_without_a_hidden_list_nothing_is_filtered(theme, tmp_path):
+    theme.HIDDEN_FILE = str(tmp_path / "missing.json")
+    theme.HIDDEN = theme._hidden()
+    assert theme.HIDDEN == frozenset()
+    assert "fq" not in theme.JcThemePlugin().before_dataset_search({"q": ""})
+
+
+def test_the_chart_mounts_the_hidden_list_beside_the_organizations():
+    chart = PROJECT_ROOT / "charts/ckan/templates"
+    assert "hidden.json: |\n    {{ .Values.hidden | default dict | toJson }}" in (chart / "theme.yaml").read_text()
+    assert "- key: hidden.json\n                path: hidden.json" in (chart / "ckan.yaml").read_text()
