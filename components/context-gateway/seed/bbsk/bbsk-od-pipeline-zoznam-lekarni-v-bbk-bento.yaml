@@ -24,6 +24,10 @@ pipeline:
           let v = if this == null { "" } else { this.string().trim() }
           root = if $v == "" { null } else { { "type": "Property", "value": $v } }
         }
+        map string_list {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": [$v] } }
+        }
         map uri {
           root = this.apply("string")
         }
@@ -52,7 +56,7 @@ pipeline:
           "id": "urn:ngsi-ld:%v:%v:%v:%v".format("PointOfInterest", "bbsk.sk", env("JC_SPACE"), $local),
           "type": "PointOfInterest",
           "idZZ": this.properties."IdZZ".apply("string"),
-          "nazov": this.properties."Názov".apply("string"),
+          "name": this.properties."Názov".apply("string"),
           "druhZariadenia": this.properties."Druh_zariadenia".apply("string"),
           "ulica": this.properties."Ulica".apply("string"),
           "mesto": this.properties."Mesto".apply("string"),

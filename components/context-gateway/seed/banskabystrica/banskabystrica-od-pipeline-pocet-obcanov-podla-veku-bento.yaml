@@ -1,4 +1,4 @@
-# The mapping of the od-pocet-obcanov-podla-veku pipeline, generated from the T-4254 mapping: one StatisticalObservation per row of
+# The mapping of the od-pocet-obcanov-podla-veku pipeline, generated from the T-4254 mapping: one KeyPerformanceIndicator per row of
 # "Počet občanov podľa veku" (https://data.dev.joinedcontext.com/dataset/bb-pocet-obcanov-podla-veku). Do not edit: change the mapping and run scripts/open-data/generate.py.
 
 pipeline:
@@ -19,6 +19,10 @@ pipeline:
         map string {
           let v = if this == null { "" } else { this.string().trim() }
           root = if $v == "" { null } else { { "type": "Property", "value": $v } }
+        }
+        map string_list {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": [$v] } }
         }
         map uri {
           root = this.apply("string")
@@ -45,8 +49,8 @@ pipeline:
         }
         let local = "pocet-obcanov-podla-veku-" + {"Vek": this."Vek", "Počet_občanov_v_danom_veku": this."Počet_občanov_v_danom_veku", "Počet_mužov": this."Počet_mužov", "Počet_žien": this."Počet_žien"}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("StatisticalObservation", "banskabystrica.sk", env("JC_SPACE"), $local),
-          "type": "StatisticalObservation",
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("KeyPerformanceIndicator", "banskabystrica.sk", env("JC_SPACE"), $local),
+          "type": "KeyPerformanceIndicator",
           "vek": this."Vek".apply("integer"),
           "pocetObcanovVDanomVeku": this."Počet_občanov_v_danom_veku".apply("string"),
           "pocetMuzov": this."Počet_mužov".apply("integer"),

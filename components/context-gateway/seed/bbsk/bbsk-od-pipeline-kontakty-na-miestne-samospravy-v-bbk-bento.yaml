@@ -1,4 +1,4 @@
-# The mapping of the od-kontakty-na-miestne-samospravy-v-bbk pipeline, generated from the T-4254 mapping: one OrganizationUnit per row of
+# The mapping of the od-kontakty-na-miestne-samospravy-v-bbk pipeline, generated from the T-4254 mapping: one Organization per row of
 # "Kontakty na miestne samosprávy v BBK" (https://data.dev.joinedcontext.com/dataset/bbsk-kontakty-na-miestne-samospravy-v-bbk-fc5ecb). Do not edit: change the mapping and run scripts/open-data/generate.py.
 
 pipeline:
@@ -23,6 +23,10 @@ pipeline:
         map string {
           let v = if this == null { "" } else { this.string().trim() }
           root = if $v == "" { null } else { { "type": "Property", "value": $v } }
+        }
+        map string_list {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": [$v] } }
         }
         map uri {
           root = this.apply("string")
@@ -49,8 +53,8 @@ pipeline:
         }
         let local = "kontakty-na-miestne-samospravy-v-bbk-" + [this.properties."ID_BBSK"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("OrganizationUnit", "bbsk.sk", env("JC_SPACE"), $local),
-          "type": "OrganizationUnit",
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Organization", "bbsk.sk", env("JC_SPACE"), $local),
+          "type": "Organization",
           "iDBBSK": this.properties."ID_BBSK".apply("integer"),
           "okresLAU1ID": this.properties."Okres_LAU1_ID".apply("string"),
           "okresSTATKOD": this.properties."Okres_STAT_KOD".apply("integer"),
@@ -58,7 +62,7 @@ pipeline:
           "obecLAU2ID": this.properties."Obec_LAU2_ID".apply("string"),
           "obecSTATKOD": this.properties."Obec_STAT_KOD".apply("integer"),
           "obecICO": this.properties."Obec_IČO".apply("string"),
-          "obecDlhyNazov": this.properties."Obec_dlhý_názov".apply("string"),
+          "name": this.properties."Obec_dlhý_názov".apply("string"),
           "obecKratkyNazov": this.properties."Obec_krátky_názov".apply("string"),
           "druhSamospravy": this.properties."Druh_samosprávy".apply("string"),
           "adresaUlica": this.properties."Adresa___ulica".apply("string"),

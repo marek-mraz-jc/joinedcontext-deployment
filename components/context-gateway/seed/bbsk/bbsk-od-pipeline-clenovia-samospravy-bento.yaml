@@ -1,4 +1,4 @@
-# The mapping of the od-clenovia-samospravy pipeline, generated from the T-4254 mapping: one CouncilMember per row of
+# The mapping of the od-clenovia-samospravy pipeline, generated from the T-4254 mapping: one Person per row of
 # "Členovia samosprávy" (https://data.dev.joinedcontext.com/dataset/bbsk-clenovia-samospravy-efc2f3). Do not edit: change the mapping and run scripts/open-data/generate.py.
 
 pipeline:
@@ -23,6 +23,10 @@ pipeline:
         map string {
           let v = if this == null { "" } else { this.string().trim() }
           root = if $v == "" { null } else { { "type": "Property", "value": $v } }
+        }
+        map string_list {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": [$v] } }
         }
         map uri {
           root = this.apply("string")
@@ -49,8 +53,8 @@ pipeline:
         }
         let local = "clenovia-samospravy-" + {"IČO_samosprávy": this.properties."IČO_samosprávy", "Názov_samosprávy": this.properties."Názov_samosprávy", "Orgán_samosprávy": this.properties."Orgán_samosprávy", "Titul_pred_menom": this.properties."Titul_pred_menom", "Meno": this.properties."Meno", "Priezvisko": this.properties."Priezvisko", "Titul_za_menom": this.properties."Titul_za_menom", "Funkcia": this.properties."Funkcia", "Obvod": this.properties."Obvod", "Názov_klubu": this.properties."Názov_klubu", "Vo_funkcii_od": this.properties."Vo_funkcii_od", "Vo_funkcii_do": this.properties."Vo_funkcii_do"}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("CouncilMember", "bbsk.sk", env("JC_SPACE"), $local),
-          "type": "CouncilMember",
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Person", "bbsk.sk", env("JC_SPACE"), $local),
+          "type": "Person",
           "iCOSamospravy": this.properties."IČO_samosprávy".apply("string"),
           "nazovSamospravy": this.properties."Názov_samosprávy".apply("string"),
           "organSamospravy": this.properties."Orgán_samosprávy".apply("string"),

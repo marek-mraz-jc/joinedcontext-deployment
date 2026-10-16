@@ -22,9 +22,4 @@ spec:
   information:
   - entities:
     - type: Address
-    - type: Article
-    - type: Contract
-    - type: CouncilMeeting
-    - type: Grant
-    - type: PurchaseOrder
-    - type: StatisticalObservation
+    - type: KeyPerformanceIndicator
