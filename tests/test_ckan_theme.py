@@ -697,6 +697,26 @@ def test_the_assistant_leaves_the_page_room_and_takes_a_phone_s_whole_screen():
     assert 'event.key === "Escape"' in script and 'querySelector("summary").focus()' in script
 
 
+def test_the_open_assistant_shows_one_close_control_and_a_frame_that_fits_the_window():
+    """T-4283: open, the launcher turns into the panel's round close control (never the label
+    beside the panel); the frame takes the height the chat reports, inside 40rem and the window;
+    the button keeps clear of a phone's home bar."""
+    css = (THEME / "public__jc-theme.css").read_text()
+    desktop = css.split("@media (max-width: 40rem) {", 1)[0]
+    assert "inset-block-end: max(1rem, env(safe-area-inset-bottom));" in desktop
+    assert ".jc-assistant[open] > summary { inline-size: 2.75rem; block-size: 2.75rem; padding: 0; }" in desktop
+    assert ".jc-assistant[open] > summary > span { position: absolute;" in desktop and "clip-path: inset(50%)" in desktop
+    assert '.jc-assistant[open] > summary::after { content: "\\2715";' in desktop
+    assert "height: min(var(--jc-h, 40rem), 40rem, calc(100dvh - 6.25rem));" in desktop
+    phone = css.split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
+    assert ".jc-assistant[open] > summary > span { position: static;" in phone, "a phone's bar keeps its words"
+    script = (THEME / "public__jc-assistant.js").read_text()
+    # The height is heard from the frame's own window and origin alone, and only as a number.
+    assert "event.source !== frame.contentWindow || event.origin !== origin" in script
+    assert 'data.type !== "jc-assistant-height"' in script and "isFinite(height) && height > 0" in script
+    assert 'frame.style.setProperty("--jc-h"' in script
+
+
 def test_the_catalogue_pod_is_told_its_assistant_only_when_the_assistant_is_deployed(rendered, rendered_variant):
     def widget(docs):
         (ckan,) = [d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"].endswith("ckan")
