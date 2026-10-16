@@ -85,6 +85,17 @@ jobs:
           # credential for as long as it lives, plus a map of the claims the issuer hands out.
           regex = '''eyJ[A-Za-z0-9_\-=]{8,}\.eyJ[A-Za-z0-9_\-=]{8,}\.[A-Za-z0-9_\-+/=]{8,}'''
           keywords = ["eyJ"]
+
+          # The Smart Data Model pins of the open-data seed are public git commits of smart-data-models;
+          # gitleaks' generic-api-key rule takes one for a key because its JSON key names a model with
+          # "Key" in it (dataModel.KeyPerformanceIndicator in scripts/open-data/sdm/pins.json, T-4341).
+          # Allowed only as that whole line, a `"dataModel.<name>": "<40-hex commit>"` pin: any other value
+          # on such a line, a commit-shaped value under any other key, and every other line are scanned as
+          # before. (A `paths` + `regexes` AND allowlist let any value of the file through in v8.29.0.)
+          [[allowlists]]
+          description = "SDM commit pins"
+          regexTarget = "line"
+          regexes = ['''^\s*"dataModel\.[A-Za-z0-9-]+": "[0-9a-f]{40}",?\s*$''']
           JCLEAKS
       # `detect` reads the git history; the config it just wrote is untracked and not scanned.
       - run: gitleaks detect --config .gitleaks.toml --verbose --redact --exit-code 1

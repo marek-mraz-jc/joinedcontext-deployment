@@ -47,5 +47,9 @@ context-broker:
     repository: 'ghcr.io/marek-mraz-jc/antares-broker-jc'
     # Antares dev cc368be (train 20261016-0506 T-4258 MCP tools); no new migration or runtime
     # ANTARES_* key over b2ba711.
-    tag: 'cc368be'
-    digest: 'sha256:9e51410be9dec4c2b401dfcbef6904266c3e0e9d177312e6bc09e57f638cb350'
+    # Antares dev 7535b90 (T-4246 T-4250 T-4272 T-4275 T-4310 T-4298): migration 0009 adds one
+    # constant-default column to temporal_entities (catalog only, T-4310); schema and
+    # temporal_entities dumped before the apply (t4310/ on the postgres volume). No new runtime
+    # ANTARES_* key over cc368be.
+    tag: '7535b90'
+    digest: 'sha256:73bfef0c88dc1343dda4a4397e71729a4298db7d319e580e080f5f0a07d671da'
