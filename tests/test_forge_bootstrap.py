@@ -167,6 +167,23 @@ def test_the_script_is_valid_shell(script):
     assert result.returncode == 0, result.stderr
 
 
+def test_a_seed_file_goes_to_the_forge_in_a_body_file_not_an_argument(script):
+    """One argument is capped at 128 KiB (MAX_ARG_STRLEN), and the BBSK open-data schema is 336 kB,
+    448 kB as base64: passed inline, `curl` died with "Argument list too long" and the Job with it,
+    which stopped apply 86 (2026-10-16, T-4255). The body is written by the shell's own printf
+    into a file and handed to curl as `-d @file`."""
+    seed = script[script.index("seed_repo() {"):]
+    seed = seed[: seed.index("5b.")]
+    assert seed.count("-d @$WORK/request") == 2, seed
+    assert '\\"content\\":\\"$encoded' not in seed
+    # The shell's printf takes a value past the cap (a builtin, never exec'd); curl would not.
+    result = subprocess.run(
+        ["sh", "-c", 'big=$(head -c 300000 /dev/zero | tr "\\0" x); printf \'{"content":"%s"}\' "$big" > /dev/null'],
+        capture_output=True, text=True,
+    )
+    assert result.returncode == 0, result.stderr
+
+
 @requires_helmfile
 def test_every_step_is_idempotent(script):
     """The Job runs on every apply, so each step has to find its own work already done.
