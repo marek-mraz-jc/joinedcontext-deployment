@@ -217,7 +217,9 @@ datasets:
     resource: c7e533af-04b7-4a0a-95bc-dc75f18ede97
     rows: 732
   entityId:
-    rowHash: true
+    keys:
+    - Deň
+    - Pohlavie
   observedAt: null
   space: banskabystrica-otvorene-data
   refresh: P1M
@@ -247,7 +249,8 @@ datasets:
     resource: eb9bd402-c590-4667-ab82-e2c11dd9c248
     rows: 105
   entityId:
-    rowHash: true
+    keys:
+    - Vek
   observedAt: null
   space: banskabystrica-otvorene-data
   refresh: P1M
@@ -323,7 +326,8 @@ datasets:
     resource: 4450222b-7726-40e9-980e-1fbe60a18d12
     rows: 27
   entityId:
-    rowHash: true
+    keys:
+    - Rok
   observedAt: Rok
   space: banskabystrica-otvorene-data
   refresh: P1M
@@ -483,7 +487,11 @@ datasets:
     geometry: null
     rows: 81
   entityId:
-    rowHash: true
+    keys:
+    - Rok
+    - obdobie
+    - parameter
+    - Územie
   observedAt: Rok
   space: bbsk-otvorene-data
   refresh: P1W
@@ -1562,7 +1570,8 @@ datasets:
     geometry: esriGeometryPoint
     rows: 606
   entityId:
-    rowHash: true
+    keys:
+    - CMS_ID
   observedAt: null
   space: bbsk-otvorene-data
   refresh: P1W
@@ -1718,7 +1727,8 @@ datasets:
     geometry: esriGeometryPoint
     rows: 3046
   entityId:
-    rowHash: true
+    keys:
+    - Číslo_nehody
   observedAt: Dátum_a_čas
   space: bbsk-otvorene-data
   refresh: P1W
@@ -6585,7 +6595,8 @@ datasets:
     geometry: esriGeometryPoint
     rows: 126
   entityId:
-    rowHash: true
+    keys:
+    - IČO_organizácie
   observedAt: null
   space: bbsk-otvorene-data
   refresh: P1W
