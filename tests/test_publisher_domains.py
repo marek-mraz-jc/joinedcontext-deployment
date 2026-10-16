@@ -18,9 +18,8 @@ def test_each_publishers_policies_name_its_own_domain():
     for project, domain in DOMAINS.items():
         for path in sorted((SEED / project).glob("*.yaml")):
             for doc in yaml.safe_load_all(path.read_text()):
-                # An App's policy is the App reconciler's, compiled with the installation's domain
-                # until a project carries its own (T-4375).
-                if isinstance(doc, dict) and doc.get("kind") == "Policy" and "app-" not in path.name:
+                # An App's policy too: the Portal compiles it with its project's publisher (T-4375, PF-108).
+                if isinstance(doc, dict) and doc.get("kind") == "Policy":
                     seen += 1
                     assert doc["spec"]["assigner"] == f"did:web:{domain}", path.name
     assert seen > 20
