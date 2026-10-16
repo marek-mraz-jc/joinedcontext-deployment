@@ -4,14 +4,42 @@
     "Address": {
       "@id": "sdm:dataModel.CPSV-AP/Address"
     },
+    "Article": {
+      "@id": "jc:Article"
+    },
+    "Contract": {
+      "@id": "jc:Contract"
+    },
+    "CouncilMeeting": {
+      "@id": "jc:CouncilMeeting"
+    },
     "Entity": {
       "@id": "ngsi-ld:Entity"
+    },
+    "Grant": {
+      "@id": "jc:Grant"
     },
     "KeyPerformanceIndicator": {
       "@id": "sdm:dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator"
     },
+    "PurchaseOrder": {
+      "@id": "jc:PurchaseOrder"
+    },
     "addressArea": {
       "@id": "sdm:dataModel.CPSV-AP/addressArea"
+    },
+    "akcia": {
+      "@id": "jc:akcia"
+    },
+    "cZasadnutia": {
+      "@id": "jc:cZasadnutia",
+      "@type": "xsd:integer"
+    },
+    "cenaCelkom": {
+      "@id": "jc:cenaCelkom"
+    },
+    "content": {
+      "@id": "jc:content"
     },
     "dataProvider": {
       "@id": "sdm:dataProvider"
@@ -20,15 +48,59 @@
       "@id": "jc:dataset",
       "@type": "xsd:anyURI"
     },
+    "dateGmt": {
+      "@id": "jc:dateGmt",
+      "@type": "xsd:dateTime"
+    },
+    "datumPodpisu": {
+      "@id": "jc:datumPodpisu"
+    },
+    "datumVystavenia": {
+      "@id": "jc:datumVystavenia"
+    },
+    "datumZasadnutia": {
+      "@id": "jc:datumZasadnutia"
+    },
+    "datumZverejnenia": {
+      "@id": "jc:datumZverejnenia"
+    },
     "den": {
       "@id": "jc:den"
     },
+    "dodavatel": {
+      "@id": "jc:dodavatel"
+    },
+    "druh": {
+      "@id": "jc:druh"
+    },
     "geojson": "https://purl.org/geojson/vocab#",
+    "iCO": {
+      "@id": "jc:iCO"
+    },
+    "iCOOrganizacie": {
+      "@id": "jc:iCOOrganizacie"
+    },
+    "iCOZiadatela": {
+      "@id": "jc:iCOZiadatela"
+    },
     "id": "@id",
+    "identifier": {
+      "@id": "sdm:dataModel.CPSV-AP/identifier"
+    },
     "jc": "https://joinedcontext.com/models/",
     "linkml": "https://w3id.org/linkml/",
     "location": {
       "@id": "geojson:geometry"
+    },
+    "mena": {
+      "@id": "jc:mena"
+    },
+    "modifiedGmt": {
+      "@id": "jc:modifiedGmt",
+      "@type": "xsd:dateTime"
+    },
+    "name": {
+      "@id": "sdm:name"
     },
     "narodenych": {
       "@id": "jc:narodenych",
@@ -43,6 +115,9 @@
       "@type": "xsd:integer"
     },
     "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
+    "objednavkaSpolu": {
+      "@id": "jc:objednavkaSpolu"
+    },
     "observedAt": {
       "@id": "ngsi-ld:observedAt",
       "@type": "xsd:dateTime"
@@ -58,6 +133,9 @@
     "odstahovanychZ": {
       "@id": "jc:odstahovanychZ",
       "@type": "xsd:integer"
+    },
+    "organSamospravy": {
+      "@id": "jc:organSamospravy"
     },
     "orientC": {
       "@id": "jc:orientC"
@@ -83,6 +161,12 @@
     "postName": {
       "@id": "sdm:dataModel.CPSV-AP/postName"
     },
+    "pozadovaneProstriedky": {
+      "@id": "jc:pozadovaneProstriedky"
+    },
+    "predmet": {
+      "@id": "jc:predmet"
+    },
     "prirastok": {
       "@id": "jc:prirastok"
     },
@@ -104,18 +188,34 @@
       "@id": "jc:rok",
       "@type": "xsd:integer"
     },
+    "rokDotacie": {
+      "@id": "jc:rokDotacie",
+      "@type": "xsd:integer"
+    },
     "schema": "http://schema.org/",
+    "schvProstr": {
+      "@id": "jc:schvProstr"
+    },
     "sdm": "https://smartdatamodels.org/",
     "shex": "http://www.w3.org/ns/shex#",
     "source": {
       "@id": "sdm:source",
       "@type": "xsd:anyURI"
     },
+    "stavVybav": {
+      "@id": "jc:stavVybav"
+    },
     "supC": {
       "@id": "jc:supC"
     },
+    "textObjednavky": {
+      "@id": "jc:textObjednavky"
+    },
     "thoroughfare": {
       "@id": "sdm:dataModel.CPSV-AP/thoroughfare"
+    },
+    "typ": {
+      "@id": "jc:typ"
     },
     "type": "@type",
     "ubytok": {
@@ -127,11 +227,24 @@
     "ubytokZeny": {
       "@id": "jc:ubytokZeny"
     },
+    "url": {
+      "@id": "jc:url",
+      "@type": "xsd:anyURI"
+    },
     "vek": {
       "@id": "jc:vek",
       "@type": "xsd:integer"
     },
     "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "ziadatel": {
+      "@id": "jc:ziadatel"
+    },
+    "zmluvneStrany": {
+      "@id": "jc:zmluvneStrany"
+    },
+    "zmluvneStranySUdajomICO": {
+      "@id": "jc:zmluvneStranySUdajomICO"
+    },
     "zomrelych": {
       "@id": "jc:zomrelych",
       "@type": "xsd:integer"

@@ -1,0 +1,21 @@
+{
+  "content": "content",
+  "dataProvider": "dataProvider",
+  "dataset": "dataset",
+  "dateGmt": "2026-01-01T00:00:00Z",
+  "id": "urn:ngsi-ld:Article:joinedcontext.com:example:1",
+  "identifier": "identifier",
+  "location": {
+    "coordinates": [
+      0.0,
+      0.0
+    ],
+    "type": "Point"
+  },
+  "modifiedGmt": "2026-01-01T00:00:00Z",
+  "name": "name",
+  "observedAt": "2026-01-01T00:00:00Z",
+  "source": "source",
+  "type": "Article",
+  "url": "url"
+}

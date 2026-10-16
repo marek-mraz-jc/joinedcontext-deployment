@@ -1,0 +1,24 @@
+# One PurchaseOrder per row of "Objednávky BB" (T-4255); generated from the T-4254 mapping.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: od-objednavky-bb
+  namespace: banskabystrica
+  title:
+    sk: Objednávky BB
+    en: Objednávky BB
+spec:
+  class: scheduled
+  enabled: false
+  schedule: 21 1 * * 4
+  source:
+    dataSourceRef:
+      kind: DataSource
+      name: od-objednavky-bb
+  targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-otvorene-data:banskabystrica-otvorene-data
+  output:
+    type: PurchaseOrder
+    mode: upsert
+  quotas:
+    maxMemoryMb: 256
+    cpuMillicores: 100

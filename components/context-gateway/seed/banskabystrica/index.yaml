@@ -174,6 +174,15 @@ banskabystrica-od-policy-pipelines-write.yaml: projects/banskabystrica/spaces/ba
 banskabystrica-od-datasource-adresy.yaml: projects/banskabystrica/datasources/od-adresy.yaml
 banskabystrica-od-pipeline-adresy.yaml: projects/banskabystrica/pipelines/od-adresy/pipeline.yaml
 banskabystrica-od-pipeline-adresy-bento.yaml: projects/banskabystrica/pipelines/od-adresy/bento.yaml
+banskabystrica-od-datasource-aktuality.yaml: projects/banskabystrica/datasources/od-aktuality.yaml
+banskabystrica-od-pipeline-aktuality.yaml: projects/banskabystrica/pipelines/od-aktuality/pipeline.yaml
+banskabystrica-od-pipeline-aktuality-bento.yaml: projects/banskabystrica/pipelines/od-aktuality/bento.yaml
+banskabystrica-od-datasource-dotacie.yaml: projects/banskabystrica/datasources/od-dotacie.yaml
+banskabystrica-od-pipeline-dotacie.yaml: projects/banskabystrica/pipelines/od-dotacie/pipeline.yaml
+banskabystrica-od-pipeline-dotacie-bento.yaml: projects/banskabystrica/pipelines/od-dotacie/bento.yaml
+banskabystrica-od-datasource-objednavky-bb.yaml: projects/banskabystrica/datasources/od-objednavky-bb.yaml
+banskabystrica-od-pipeline-objednavky-bb.yaml: projects/banskabystrica/pipelines/od-objednavky-bb/pipeline.yaml
+banskabystrica-od-pipeline-objednavky-bb-bento.yaml: projects/banskabystrica/pipelines/od-objednavky-bb/bento.yaml
 banskabystrica-od-datasource-pocet-obcanov-podla-dna-narodenia.yaml: projects/banskabystrica/datasources/od-pocet-obcanov-podla-dna-narodenia.yaml
 banskabystrica-od-pipeline-pocet-obcanov-podla-dna-narodenia.yaml: projects/banskabystrica/pipelines/od-pocet-obcanov-podla-dna-narodenia/pipeline.yaml
 banskabystrica-od-pipeline-pocet-obcanov-podla-dna-narodenia-bento.yaml: projects/banskabystrica/pipelines/od-pocet-obcanov-podla-dna-narodenia/bento.yaml
@@ -183,4 +192,10 @@ banskabystrica-od-pipeline-pocet-obcanov-podla-veku-bento.yaml: projects/banskab
 banskabystrica-od-datasource-prirastky-a-ubytky-obcanov-za-jednotlive.yaml: projects/banskabystrica/datasources/od-prirastky-a-ubytky-obcanov-za-jednotlive.yaml
 banskabystrica-od-pipeline-prirastky-a-ubytky-obcanov-za-jednotlive.yaml: projects/banskabystrica/pipelines/od-prirastky-a-ubytky-obcanov-za-jednotlive/pipeline.yaml
 banskabystrica-od-pipeline-prirastky-a-ubytky-obcanov-za-jednotlive-bento.yaml: projects/banskabystrica/pipelines/od-prirastky-a-ubytky-obcanov-za-jednotlive/bento.yaml
+banskabystrica-od-datasource-zasadnutia-organov-samospravy.yaml: projects/banskabystrica/datasources/od-zasadnutia-organov-samospravy.yaml
+banskabystrica-od-pipeline-zasadnutia-organov-samospravy.yaml: projects/banskabystrica/pipelines/od-zasadnutia-organov-samospravy/pipeline.yaml
+banskabystrica-od-pipeline-zasadnutia-organov-samospravy-bento.yaml: projects/banskabystrica/pipelines/od-zasadnutia-organov-samospravy/bento.yaml
+banskabystrica-od-datasource-zmluvy-bb.yaml: projects/banskabystrica/datasources/od-zmluvy-bb.yaml
+banskabystrica-od-pipeline-zmluvy-bb.yaml: projects/banskabystrica/pipelines/od-zmluvy-bb/pipeline.yaml
+banskabystrica-od-pipeline-zmluvy-bb-bento.yaml: projects/banskabystrica/pipelines/od-zmluvy-bb/bento.yaml
 # --- end of generated ---

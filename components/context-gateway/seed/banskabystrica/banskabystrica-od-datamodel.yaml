@@ -14,7 +14,12 @@ spec:
   lifecycle: published
   classes:
   - Address
+  - Article
+  - Contract
+  - CouncilMeeting
+  - Grant
   - KeyPerformanceIndicator
+  - PurchaseOrder
   artifacts:
     jsonSchema: ./banskabystrica-otvorene-data.v1.schema.json
     context: ./banskabystrica-otvorene-data.v1.context.jsonld

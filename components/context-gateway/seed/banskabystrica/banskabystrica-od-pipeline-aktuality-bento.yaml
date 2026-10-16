@@ -1,0 +1,66 @@
+# The mapping of the od-aktuality pipeline, generated from the T-4254 mapping: one Article per row of
+# "Aktuality" (https://data.dev.joinedcontext.com/dataset/bb-aktuality). Do not edit: change the mapping and run scripts/open-data/generate.py.
+
+pipeline:
+  processors:
+    - mapping: |
+        root = if this.type() != "array" { throw("the site answered no post list") } else { this }
+    - unarchive:
+        format: json_array
+    - mapping: |
+        map integer {
+          let v = this.number().catch(null)
+          root = if $v == null { null } else { { "type": "Property", "value": $v.round().int64() } }
+        }
+        map float {
+          let v = this.number().catch(null)
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        map string {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": $v } }
+        }
+        map string_list {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": [$v] } }
+        }
+        map uri {
+          root = this.apply("string")
+        }
+        # An Esri date is milliseconds since the epoch; a DataStore or WordPress one is text.
+        # `match` rebinds `this` to what it matches, so the value is named first.
+        map datetime {
+          let x = this
+          let v = match $x.type() {
+            "number" => ($x / 1000).ts_format("2006-01-02T15:04:05Z", "UTC").catch(null),
+            "string" => $x.ts_parse("2006-01-02T15:04:05").ts_format("2006-01-02T15:04:05Z", "UTC").catch($x.ts_format("2006-01-02T15:04:05Z", "UTC").catch(null)),
+            _ => null,
+          }
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        map date {
+          let x = this
+          let v = match $x.type() {
+            "number" => ($x / 1000).ts_format("2006-01-02", "UTC").catch(null),
+            "string" => if $x.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}") { $x.slice(0, 10) } else { null },
+            _ => null,
+          }
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        let local = "aktuality-" + [this."id"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
+        root = {
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Article", "banskabystrica.sk", env("JC_SPACE"), $local),
+          "type": "Article",
+          "identifier": this."id".apply("string"),
+          "name": this.title.rendered.apply("string"),
+          "url": this."link".apply("uri"),
+          "dateGmt": this."date_gmt".apply("datetime"),
+          "modifiedGmt": this."modified_gmt".apply("datetime"),
+          "content": this.content.rendered.strip_html().catch(null).apply("string"),
+          "dataProvider": { "type": "Property", "value": "Mesto Banská Bystrica (CC BY 4.0)" },
+          "source": { "type": "Property", "value": "https://www.banskabystrica.sk/wp-json/wp/v2/newses?per_page=100&_fields=id,title,link,date_gmt,modified_gmt,content" },
+          "dataset": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bb-aktuality" }
+        }.filter(entry -> entry.value != null)
+    # One request per run's batch rather than one per row.
+    - archive:
+        format: json_array

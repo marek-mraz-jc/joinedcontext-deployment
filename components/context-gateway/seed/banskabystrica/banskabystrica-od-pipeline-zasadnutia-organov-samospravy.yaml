@@ -1,0 +1,24 @@
+# One CouncilMeeting per row of "Zasadnutia orgánov samosprávy" (T-4255); generated from the T-4254 mapping.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: od-zasadnutia-organov-samospravy
+  namespace: banskabystrica
+  title:
+    sk: Zasadnutia orgánov samosprávy
+    en: Zasadnutia orgánov samosprávy
+spec:
+  class: scheduled
+  enabled: false
+  schedule: 49 1 * * 1
+  source:
+    dataSourceRef:
+      kind: DataSource
+      name: od-zasadnutia-organov-samospravy
+  targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-otvorene-data:banskabystrica-otvorene-data
+  output:
+    type: CouncilMeeting
+    mode: upsert
+  quotas:
+    maxMemoryMb: 128
+    cpuMillicores: 100
