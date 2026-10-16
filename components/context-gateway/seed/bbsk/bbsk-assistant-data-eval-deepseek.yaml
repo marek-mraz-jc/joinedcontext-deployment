@@ -71,11 +71,13 @@ spec:
   model: { router: deepseek/deepseek-v4.1-flash, answer: deepseek/deepseek-v4.1-flash }
   # No city in the header or the greeting (owner: "nie pre konkrétne mesto"). The title is the
   # catalogue's name, the same in every language; the widget writes "Asistent"/"Assistant" beside
-  # it. The greeting is one string (Theme.greeting), so en and fi show the widget's own until the
-  # theme is per language (T-4365).
+  # it. The greeting per language (T-4365).
   theme:
     title: "data.dev"
-    greeting: "Dobrý deň! Pýtajte sa na otvorené dáta zo všetkých miest a krajov v katalógu."
+    greeting:
+      sk: "Dobrý deň! Pýtajte sa na otvorené dáta zo všetkých miest a krajov v katalógu."
+      en: "Hello! Ask about the open data of every city and region in the catalogue."
+      fi: "Hei! Kysy kaikkien katalogin kaupunkien ja alueiden avoimesta datasta."
   suggestions:
     sk:
       - "Aké dáta máte o doprave?"
