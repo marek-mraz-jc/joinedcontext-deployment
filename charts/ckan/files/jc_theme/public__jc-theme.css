@@ -524,3 +524,22 @@ body:has(.jc-assistant) { padding-block-end: 5rem; }
   .wrapper:has(> .module-resource) > .primary, .wrapper:has(> .module-resource) > .secondary { width: 100%; flex: 0 0 100%; max-width: 100%; }
   .wrapper:has(> .module-resource) > .secondary { order: 2; }
 }
+
+/* A command or address breaks only between its pieces (jc_breakable.html), never inside a
+   host, an id or "ngsi-ld"; a piece longer than the line scrolls instead (owner rule, T-4333). */
+pre .jc-nb { white-space: pre; }
+pre:has(.jc-nb), pre:has(.jc-nb) code { overflow-wrap: normal; word-break: normal; }
+pre:has(.jc-nb) { overflow-x: auto; }
+
+/* The framed table carries no developer lines (T-4333): the frame's summary already names the
+   table, the column arrows show the sort, and CKAN's label rule left a ":" after the search
+   field. Below desktop width the controls stack, so the frame grows by their height and its
+   first rows stay in view. */
+body.dt-view .resourceinfo, body.dt-view .sortinfo { display: none; }
+body.dt-view .dataTables_filter label::after { content: none; }
+@media (max-width: 991.98px) {
+  .jc-grid { height: clamp(24rem, calc(21rem + var(--jc-rows, 20) * 2.6rem), 38rem); }
+}
+@media (max-width: 575.98px) {
+  .jc-grid { height: clamp(27rem, calc(24rem + var(--jc-rows, 20) * 2.6rem), 34rem); }
+}

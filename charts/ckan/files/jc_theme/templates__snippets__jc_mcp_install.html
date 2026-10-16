@@ -42,11 +42,11 @@
 
     <div class="jc-code">
       <div class="jc-code-head"><span id="jc-mcp-claude-label">{{ h.jc_t('mcp_claude') }}</span>{{ copy('jc-mcp-claude', h.jc_t('mcp_claude')) }}</div>
-      <pre id="jc-mcp-claude" aria-labelledby="jc-mcp-claude-label" tabindex="0"><code>{{ mcp.claude }}</code></pre>
+      <pre id="jc-mcp-claude" aria-labelledby="jc-mcp-claude-label" tabindex="0"><code>{% snippet 'snippets/jc_breakable.html', text=mcp.claude %}</code></pre>
     </div>
     <div class="jc-code">
       <div class="jc-code-head"><span id="jc-mcp-json-label">{{ h.jc_t('mcp_json') }}</span>{{ copy('jc-mcp-json', h.jc_t('mcp_json')) }}</div>
-      <pre id="jc-mcp-json" aria-labelledby="jc-mcp-json-label" tabindex="0"><code>{{ mcp.json }}</code></pre>
+      <pre id="jc-mcp-json" aria-labelledby="jc-mcp-json-label" tabindex="0"><code>{% snippet 'snippets/jc_breakable.html', text=mcp.json %}</code></pre>
     </div>
     </div>
     </div>

@@ -1000,6 +1000,21 @@ def jc_address(resource):
     return {"short": short, "segments": short.split("/"), "full": url}
 
 
+def jc_pieces(text):
+    """A command or address in the pieces a line may break between (T-4333): the spaces as they
+    are, every other run cut after a slash, "?" or "&", so a line never breaks inside a word, a
+    host, an id or "ngsi-ld". The page keeps each piece whole and scrolls one longer than a line."""
+    pieces = []
+    for token in re.split(r"(\s+)", str(text or "")):
+        if not token:
+            continue
+        if token.isspace():
+            pieces.append({"text": token, "space": True})
+        else:
+            pieces.extend({"text": part, "space": False} for part in re.findall(r"[^/?&]*(?:/+|[?&])|[^/?&]+", token))
+    return pieces
+
+
 def _with(url, **params):
     """The address with these query parameters set, the others kept in order."""
     parts = urlsplit(url)
@@ -1586,6 +1601,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_what": jc_what,
             "jc_format": jc_format,
             "jc_address": jc_address,
+            "jc_pieces": jc_pieces,
             "jc_preview": jc_preview,
             "jc_examples": jc_examples,
             "jc_standard": jc_standard,
