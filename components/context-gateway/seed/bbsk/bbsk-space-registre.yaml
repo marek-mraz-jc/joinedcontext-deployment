@@ -7,7 +7,7 @@ kind: ContextSpace
 metadata:
   name: bbsk-registre
   namespace: bbsk
-  title: { sk: "Kraj — registre", en: "Region, registers" }
+  title: { sk: "Banskobystrický kraj — registre", en: "Banská Bystrica Region, registers" }
   description:
     sk: >-
       Hranice okresov a obcí, organizácie v zriaďovateľskej pôsobnosti kraja, nemocnice, sociálne

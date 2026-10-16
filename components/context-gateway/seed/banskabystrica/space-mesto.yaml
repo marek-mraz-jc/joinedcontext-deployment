@@ -6,7 +6,7 @@ kind: ContextSpace
 metadata:
   name: banskabystrica-mesto
   namespace: banskabystrica
-  title: { sk: "Mesto — zdrojové údaje", en: "City, raw data" }
+  title: { sk: "Banská Bystrica — zdrojové údaje", en: "Banská Bystrica, raw data" }
   description:
     sk: "Riadky otvorených dát pre mesto Banská Bystrica, tak ako ich publikovalo mesto a ŠÚ SR."
     en: "Open data rows for the city of Banská Bystrica, as the city and ŠÚ SR published them."

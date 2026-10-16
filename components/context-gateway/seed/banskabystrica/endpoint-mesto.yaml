@@ -5,7 +5,7 @@ kind: Endpoint
 metadata:
   name: banskabystrica-mesto
   namespace: banskabystrica
-  title: { sk: "Mesto — zdrojové údaje", en: "City, raw data" }
+  title: { sk: "Banská Bystrica — zdrojové údaje", en: "Banská Bystrica, raw data" }
 spec:
   contextSpaceRef: banskabystrica-mesto
   slug: ovr4ttzywhad2oiogf67n7zyn2g2elfc

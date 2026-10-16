@@ -4,7 +4,7 @@ kind: ContextSpace
 metadata:
   name: zilina-kpi
   namespace: zilina
-  title: { sk: "Mesto — ukazovatele", en: "City, indicators" }
+  title: { sk: "Žilina — ukazovatele", en: "Žilina, indicators" }
   description:
     sk: "Ukazovatele mesta Žilina vypočítané z otvorených dát, s vzorcom a pôvodom."
     en: "The indicators of the city of Žilina computed from open data, with their formula and provenance."

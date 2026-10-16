@@ -7,7 +7,7 @@ kind: Endpoint
 metadata:
   name: bbsk-kraj
   namespace: bbsk
-  title: { sk: "Kraj — zdrojové údaje", en: "Region, raw data" }
+  title: { sk: "Banskobystrický kraj — zdrojové údaje", en: "Banská Bystrica Region, raw data" }
 spec:
   contextSpaceRef: bbsk-kraj
   slug: 7u4ns3cdg2mqlx5gmxhk7rqai6pmokdj
