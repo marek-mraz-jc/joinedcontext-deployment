@@ -54,7 +54,7 @@ spec:
           { "start": "%v-01-01T00:00:00Z".format($water.refPeriod.value), "end": "%v-12-31T23:59:59Z".format($water.refPeriod.value) } } },
         "calculationFormula": { "type": "Property", "value": if $water == null { "vh5003rr/U03084 x 1000000 / the city register's total / the days of the year; no published value for any year" } else {
           "vh5003rr/U03084 for %v (%v thousand m3 of invoiced water) x 1000000 / %v inhabitants in the city register of %v / %v days".format($water.refPeriod.value, $water.observationValue.value, $people, $register_day, $days) } },
-        "derivedFrom": { "type": "Relationship", "object": $source_endpoint },
-        "computedBy": { "type": "Relationship", "object": $pipeline },
+        "derivedFrom": { "type": "Property", "value": $source_endpoint },
+        "computedBy": { "type": "Property", "value": $pipeline },
         "updatedAt": { "type": "Property", "value": { "@type": "DateTime", "@value": $ran } }
       }]

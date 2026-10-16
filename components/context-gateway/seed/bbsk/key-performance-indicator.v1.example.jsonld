@@ -27,12 +27,12 @@
     "value": "the published value of zp3803rs/ODPAD_TONY_KM2, pollutant 1, in tonnes per km2, for the territory and the latest year the cube carries"
   },
   "derivedFrom": {
-    "type": "Relationship",
-    "object": "urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-kraj:bbsk-kraj"
+    "type": "Property",
+    "value": "urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-kraj:bbsk-kraj"
   },
   "computedBy": {
-    "type": "Relationship",
-    "object": "urn:ngsi-ld:Pipeline:bbsk.sk:bbsk-kpi:ukazovatele"
+    "type": "Property",
+    "value": "urn:ngsi-ld:Pipeline:bbsk.sk:bbsk-kpi:ukazovatele"
   },
   "updatedAt": {
     "type": "Property",

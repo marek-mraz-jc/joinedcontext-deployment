@@ -27,12 +27,12 @@
     "value": "the newest year of vh5003rr/U03084 for the city, in thousands of m3 of billed water, divided by the city's registered inhabitants and by the days in that year"
   },
   "derivedFrom": {
-    "type": "Relationship",
-    "object": "urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-mesto:banskabystrica-mesto"
+    "type": "Property",
+    "value": "urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-mesto:banskabystrica-mesto"
   },
   "computedBy": {
-    "type": "Relationship",
-    "object": "urn:ngsi-ld:Pipeline:banskabystrica.sk:banskabystrica-kpi:ukazovatele-mesto"
+    "type": "Property",
+    "value": "urn:ngsi-ld:Pipeline:banskabystrica.sk:banskabystrica-kpi:ukazovatele-mesto"
   },
   "updatedAt": {
     "type": "Property",

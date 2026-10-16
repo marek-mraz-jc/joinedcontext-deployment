@@ -185,13 +185,13 @@ slots:
       what an indicator could see is what that endpoint''s policy let it see.'
     required: true
     annotations:
-      ngsi_ld_kind: Relationship
+      ngsi_ld_kind: Property
   computedBy:
     slot_uri: jc:computedBy
     description: The Pipeline that computed it, as its URN.
     required: true
     annotations:
-      ngsi_ld_kind: Relationship
+      ngsi_ld_kind: Property
   updatedAt:
     slot_uri: jc:updatedAt
     description: 'When the pipeline last ran, as an NGSI-LD DateTime. It is the run and not the window:

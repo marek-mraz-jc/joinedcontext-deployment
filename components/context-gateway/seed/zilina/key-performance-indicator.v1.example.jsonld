@@ -27,12 +27,12 @@
     "value": "the published value of om7101qr/IN010115/SPOLU for the city of Žilina (SK031B517402) and the latest quarter the cube carries"
   },
   "derivedFrom": {
-    "type": "Relationship",
-    "object": "urn:ngsi-ld:Endpoint:zilina.sk:zilina-mesto:zilina-mesto"
+    "type": "Property",
+    "value": "urn:ngsi-ld:Endpoint:zilina.sk:zilina-mesto:zilina-mesto"
   },
   "computedBy": {
-    "type": "Relationship",
-    "object": "urn:ngsi-ld:Pipeline:zilina.sk:zilina-kpi:ukazovatele"
+    "type": "Property",
+    "value": "urn:ngsi-ld:Pipeline:zilina.sk:zilina-kpi:ukazovatele"
   },
   "updatedAt": {
     "type": "Property",

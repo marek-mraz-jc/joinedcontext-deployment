@@ -7,7 +7,7 @@ metadata:
   description:
     sk: "Šesť ukazovateľov mesta Žilina vypočítaných z otvorených údajov ŠÚ SR: obyvatelia, index starnutia, priemerný vek, celkový prírastok, uchádzači o zamestnanie a návštevníci za rok; hodnota, jednotka, obdobie a čas výpočtu."
     en: "Six indicators of the city of Žilina computed from the Statistical Office's open data: population, ageing index, mean age, total change, jobseekers and visitors per year; value, unit, period and when it was computed."
-  title: { sk: "Mesto — ukazovatele", en: "City, indicators" }
+  title: { sk: "Žilina — ukazovatele", en: "Žilina, indicators" }
 spec:
   contextSpaceRef: zilina-kpi
   slug: ricvfpfxtaxeyzf5c3b3es7ymc6unh3o

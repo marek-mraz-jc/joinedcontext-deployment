@@ -6,7 +6,7 @@ kind: Endpoint
 metadata:
   name: zilina-mesto
   namespace: zilina
-  title: { sk: "Mesto — zdrojové údaje", en: "City, raw data" }
+  title: { sk: "Žilina — zdrojové údaje", en: "Žilina, raw data" }
 spec:
   contextSpaceRef: zilina-mesto
   slug: 6cm7hh73b7igmmekf3a5ucwmjyqspf62

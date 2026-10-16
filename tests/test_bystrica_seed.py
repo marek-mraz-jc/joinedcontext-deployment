@@ -719,3 +719,24 @@ def test_only_the_sole_writer_of_a_space_expires_and_its_policy_grants_the_sweep
         "after": "21d",
         "types": ["KeyPerformanceIndicator"],
     }
+
+
+def test_no_two_published_spaces_or_endpoints_of_the_slovak_bodies_share_a_title():
+    """T-4237 (photo audit T-4161 #14): "Mesto — verejné údaje" and "Mesto — verejné dáta" stood
+    side by side in the catalogue, told apart only by the small publisher line. Every space and
+    Endpoint title names its own body, in both languages, so no two are alike."""
+    seen = {}
+    for folder in ("banskabystrica", "bbsk", "zilina"):
+        for path in sorted((SEED / folder).glob("*.yaml")):
+            for doc in documents(path):
+                if not isinstance(doc, dict) or doc.get("kind") not in ("ContextSpace", "Endpoint"):
+                    continue
+                # An App's Endpoint is the Portal's compile and has no catalogue record of its own.
+                if (doc["metadata"].get("annotations") or {}).get("joinedcontext.com/generated-by") == "portal/app-reconciler":
+                    continue
+                title = doc["metadata"].get("title") or {}
+                for lang, text in title.items():
+                    assert not text.startswith(("Mesto —", "Kraj —", "City,", "Region,")), f"{path.name}: {text}"
+                    key = (doc["kind"], lang, text)
+                    assert key not in seen, f"{path.name} and {seen.get(key)}: {text}"
+                    seen[key] = path.name

@@ -63,7 +63,7 @@ spec:
           "end": if $newest == null { $ran } else { $newest }
         } },
         "calculationFormula": { "type": "Property", "value": "avg(%v) over AirQualityObserved, %v".format(k.attr, k.window) },
-        "derivedFrom": { "type": "Relationship", "object": $source_endpoint },
-        "computedBy": { "type": "Relationship", "object": $pipeline },
+        "derivedFrom": { "type": "Property", "value": $source_endpoint },
+        "computedBy": { "type": "Property", "value": $pipeline },
         "updatedAt": { "type": "Property", "value": { "@type": "DateTime", "@value": $ran } }
       })

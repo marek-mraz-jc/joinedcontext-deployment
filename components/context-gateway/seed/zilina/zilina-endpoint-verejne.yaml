@@ -8,7 +8,7 @@ metadata:
   description:
     sk: "Hodinové merania PM10, PM2,5, NO2, O3 a CO na stanici SK0020A, nehnuteľné národné kultúrne pamiatky mesta umiestnené podľa registra adries a železničné stanice mesta s počtom odchodov vlakov v daný deň. Zdroje: Európska environmentálna agentúra (údaje SHMÚ), Pamiatkový úrad SR, MV SR, ŽSR."
     en: "Hourly PM10, PM2.5, NO2, O3 and CO at station SK0020A, the city's immovable national cultural monuments placed through the register of addresses, and the city's railway stations with the trains leaving each that day. Sources: the European Environment Agency (SHMÚ's data), the Monuments Board of the SR, the Ministry of Interior of the SR, ŽSR."
-  title: { sk: "Mesto — verejné dáta", en: "City, public data" }
+  title: { sk: "Žilina — verejné dáta", en: "Žilina, public data" }
 spec:
   contextSpaceRef: zilina-verejne
   slug: zhu42lbyivllciy7pluenlhxmqn5hi7c

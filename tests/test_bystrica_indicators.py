@@ -304,8 +304,12 @@ def test_every_indicator_carries_the_provenance_that_makes_it_auditable(region, 
     for entity in region + air + city:
         assert REQUIRED <= set(entity), entity["id"]
         assert entity["type"] == "KeyPerformanceIndicator"
-        assert entity["derivedFrom"]["object"].startswith("urn:ngsi-ld:Endpoint:")
-        assert entity["computedBy"]["object"].startswith("urn:ngsi-ld:Pipeline:")
+        # Properties, not Relationships: a broker view refuses a Relationship to an Entity it does
+        # not show, and an Endpoint or a Pipeline is none (T-4226).
+        assert entity["derivedFrom"] == {"type": "Property", "value": entity["derivedFrom"]["value"]}
+        assert entity["derivedFrom"]["value"].startswith("urn:ngsi-ld:Endpoint:")
+        assert entity["computedBy"]["type"] == "Property"
+        assert entity["computedBy"]["value"].startswith("urn:ngsi-ld:Pipeline:")
         assert entity["calculationFormula"]["value"].strip() != ""
         assert entity["updatedAt"]["value"]["@type"] == "DateTime"
 
@@ -450,3 +454,34 @@ def test_the_read_every_indicator_pipeline_declares_is_one_a_policy_permits():
                 f"grants it queryEntity; it has {sorted(granted)}"
             )
     assert seen == 3, "the region's pipeline and the city's two"
+
+
+KPI_MODELS = [SEED / f"{folder}/key-performance-indicator" for folder in ("banskabystrica", "bbsk", "zilina")] + [
+    SEED / "helsinki/helsinki-kpi"]
+KPI_PIPELINES = [SEED / "banskabystrica/pipeline-ukazovatele-ovzdusie.yaml",
+                 SEED / "banskabystrica/pipeline-ukazovatele-mesto.yaml",
+                 SEED / "bbsk/bbsk-pipeline-ukazovatele.yaml",
+                 SEED / "zilina/zilina-pipeline-ukazovatele.yaml"]
+
+
+def test_indicator_provenance_is_a_property_in_every_pipeline_and_model():
+    """T-4226: every KPI write failed from 2026-10-13 with "a Relationship written through this
+    view must point at an Entity it shows": the broker refuses a Relationship to an Entity its
+    view hides (threat-model D7), and an Endpoint or a Pipeline is never an Entity of a KPI space.
+    Provenance is a Property holding the URN (PF-55, Architecture/03 §2)."""
+    for path in KPI_PIPELINES:
+        text = mapping_of(path)
+        for slot in ("derivedFrom", "computedBy"):
+            assert f'"{slot}": {{ "type": "Property", "value": ' in text, f"{path.name}: {slot}"
+        assert '"Relationship"' not in text, path.name
+    for base in KPI_MODELS:
+        model = yaml.safe_load(base.with_name(base.name + ".linkml.yaml").read_text())
+        schema = json.loads(base.with_name(base.name + ".v1.schema.json").read_text())
+        entity = (schema.get("$defs") or schema["definitions"])["KeyPerformanceIndicator"]
+        context = json.loads(base.with_name(base.name + ".v1.context.jsonld").read_text())["@context"]
+        example = json.loads(base.with_name(base.name + ".v1.example.jsonld").read_text())
+        for slot in ("derivedFrom", "computedBy"):
+            assert model["slots"][slot]["annotations"]["ngsi_ld_kind"] == "Property", f"{base.name}: {slot}"
+            assert entity["properties"][slot]["x-ngsi-ld-kind"] == "Property", f"{base.name}: {slot}"
+            assert "@type" not in context[slot], f"{base.name}: {slot} is no @id link"
+            assert example[slot]["type"] == "Property", f"{base.name}: {slot}"
