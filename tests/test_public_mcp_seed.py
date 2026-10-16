@@ -19,7 +19,12 @@ SERVERS = {
 }
 # What an anonymous Policy of a member may grant: reads, and the subscriptions a WebSocket
 # needs (T-4073), which the gateway hides from anonymous MCP callers (T-4168). No entity write.
-ANONYMOUS_OPERATIONS = {"retrieveOps", "createSubscription", "retrieveSubscription", "updateSubscription", "deleteSubscription"}
+# Since T-4258 also the discovery reads, so an anonymous MCP client lists types and attributes.
+DISCOVERY = {
+    "retrieveEntityTypes", "retrieveEntityTypeDetails", "retrieveEntityTypeInfo",
+    "retrieveAttrTypes", "retrieveAttrTypeDetails", "retrieveAttrTypeInfo",
+}
+ANONYMOUS_OPERATIONS = {"retrieveOps", "createSubscription", "retrieveSubscription", "updateSubscription", "deleteSubscription"} | DISCOVERY
 
 
 def manifests(folder: Path):
@@ -93,3 +98,19 @@ def test_the_conformance_endpoint_is_no_member():
     """`public-air` holds what the smoke run and the ETSI suite write; it is no open data."""
     _, doc = server("banskabystrica")
     assert "public-air" not in {m["name"] for m in doc["spec"]["members"]}
+
+
+def test_every_public_grant_reads_and_discovers_and_writes_no_entity():
+    """T-4258, EP-116: each Policy of the role `public` in the seed grants the six discovery
+    reads beside `retrieveOps`, which answer only the names the grant already reads (EP-26), and
+    no entity write."""
+    found = 0
+    for folder in sorted(p for p in SEED.iterdir() if p.is_dir()):
+        for path, doc in manifests(folder):
+            spec = doc.get("spec") or {}
+            if doc["kind"] != "Policy" or (spec.get("assignee") or {}).get("id") != "public":
+                continue
+            found += 1
+            assert DISCOVERY <= set(spec["operations"]), path.name
+            assert set(spec["operations"]) <= ANONYMOUS_OPERATIONS, (path.name, spec["operations"])
+    assert found >= 18
