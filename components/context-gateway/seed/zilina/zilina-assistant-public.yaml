@@ -29,7 +29,7 @@ spec:
   # T-4149 item 1 defaults; $0.50 a day (T-4281, inside the key's $5).
   rateLimit: { requestsPerMinute: 30, perClientPerMinute: 10, perClientPerHour: 60, perClientPerDay: 200, streamsPerClient: 2 }
   budget:
-    tokensPerDay: 150000
+    tokensPerDay: 5000000
     tokensPerConversation: 40000
     costPerDayUsd: 0.5
     outputTokensPerAnswer: 700
