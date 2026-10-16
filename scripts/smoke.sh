@@ -534,6 +534,11 @@ if has_route context-endpoint; then
 				ko "listed but not retrievable, so no steward can read or correct them:$unreadable"
 			fi
 		fi
+		# T-4372: what the public reads now it reads over time, anonymously, from the history the
+		# space keeps; the window is capped to that history by the public-read Policy.
+		since=$(date -u -d '-1 day' +%Y-%m-%dT%H:%M:%SZ)
+		status 200 "an anonymous visitor reads the air history of public-air" \
+			"$base/api/endpoint/$ep/ngsi-ld/v1/temporal/entities?type=AirQualityObserved&timerel=after&timeAt=$since&lastN=1&limit=1"
 	fi
 else
 	skip "endpoint round trip (route context-endpoint not configured in this instance)"
@@ -585,6 +590,9 @@ if has_route context-endpoint; then
 		# the neighbour's data (EP-14, 404-vs-403 narrowing keeps it a 200).
 		body=$(curl -sS --max-time 20 "$base/api/endpoint/$(slug_of bikes)/ngsi-ld/v1/entities?type=Event&limit=1" 2>/dev/null || true)
 		if [ "$body" = "[]" ]; then ok "helsinki-bikes does not serve events"; else ko "helsinki-bikes served events: ${body:0:120}"; fi
+		# T-4372: a type that keeps no history grants no history read; the temporal query is a 404.
+		status 404 "helsinki-events serves no history (Event keeps none)" \
+			"$base/api/endpoint/$(slug_of events)/ngsi-ld/v1/temporal/entities?type=Event&timerel=after&timeAt=$(date -u -d '-1 day' +%Y-%m-%dT%H:%M:%SZ)"
 		# T-4035, EP-106/107: the transport endpoint's WebSocket is public like its REST read. An
 		# anonymous client (no Origin, no token) gets its 101 and a subscribe for Vehicle its 201.
 		ws=$(python3 "$(dirname "$0")/smoke-ws.py" "$base/api/endpoint/$(slug_of transport)/ws" Vehicle 20 2>&1 || true)

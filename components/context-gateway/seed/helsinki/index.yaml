@@ -28,6 +28,7 @@ helsinki-policy-bikes-ops-steward.yaml: projects/helsinki/spaces/helsinki/polici
 helsinki-policy-bikes-ops-read.yaml: projects/helsinki/spaces/helsinki/policies/bikes-ops-read.yaml
 helsinki-policy-public-transport.yaml: projects/helsinki/spaces/helsinki/policies/public-transport.yaml
 helsinki-policy-public-all.yaml: projects/helsinki/spaces/helsinki/policies/public-all.yaml
+helsinki-policy-public-all-history.yaml: projects/helsinki/spaces/helsinki/policies/public-all-history.yaml
 helsinki-policy-public-news.yaml: projects/helsinki/spaces/helsinki/policies/public-news.yaml
 helsinki-policy-public-weather.yaml: projects/helsinki/spaces/helsinki/policies/public-weather.yaml
 helsinki-policy-public-alerts.yaml: projects/helsinki/spaces/helsinki/policies/public-alerts.yaml

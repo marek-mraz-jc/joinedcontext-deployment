@@ -118,6 +118,7 @@ banskabystrica-verejne.v1.example.jsonld: projects/banskabystrica/spaces/banskab
 banskabystrica-verejne.v1.md: projects/banskabystrica/spaces/banskabystrica-verejne/datamodels/banskabystrica-verejne.v1.md
 endpoint-verejne.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/endpoints/banskabystrica-verejne.yaml
 policy-verejne-read.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/verejne-read.yaml
+policy-verejne-read-history.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/verejne-read-history.yaml
 policy-verejne-pipelines-write.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/verejne-pipelines-write.yaml
 # The same public Endpoint as a public, read-only MCP connector for any AI client (T-4141).
 banskabystrica-mcp-otvorene-data.yaml: projects/banskabystrica/mcp/otvorene-data.yaml
@@ -170,6 +171,7 @@ banskabystrica-otvorene-data.v1.schema.json: projects/banskabystrica/spaces/bans
 banskabystrica-otvorene-data.v1.context.jsonld: projects/banskabystrica/spaces/banskabystrica-otvorene-data/datamodels/banskabystrica-otvorene-data.v1.context.jsonld
 banskabystrica-od-endpoint.yaml: projects/banskabystrica/spaces/banskabystrica-otvorene-data/endpoints/banskabystrica-otvorene-data.yaml
 banskabystrica-od-policy-read.yaml: projects/banskabystrica/spaces/banskabystrica-otvorene-data/policies/otvorene-data-read.yaml
+banskabystrica-od-policy-read-history.yaml: projects/banskabystrica/spaces/banskabystrica-otvorene-data/policies/otvorene-data-read-history.yaml
 banskabystrica-od-policy-pipelines-write.yaml: projects/banskabystrica/spaces/banskabystrica-otvorene-data/policies/otvorene-data-pipelines-write.yaml
 banskabystrica-od-datasource-adresy.yaml: projects/banskabystrica/datasources/od-adresy.yaml
 banskabystrica-od-pipeline-adresy.yaml: projects/banskabystrica/pipelines/od-adresy/pipeline.yaml

@@ -687,6 +687,16 @@ def project_files(project: str, entries: list[dict], names: dict[str, str]) -> d
                                  "retrieveEntityTypeInfo", "retrieveAttrTypes", "retrieveAttrTypeDetails",
                                  "retrieveAttrTypeInfo", "createSubscription", "retrieveSubscription", "updateSubscription", "deleteSubscription"],
                   "information": information}})
+    measured = [t for t in types if t in MEASURED]
+    if measured:
+        files[f"{pre}policy-read-history.yaml"] = manifest(
+            "Anyone reads the history of the types that keep one, as far back as the space keeps it (T-4372):\n"
+            "the same entities as the read, over time. The other types keep no history.",
+            {**head, "kind": "Policy", "metadata": meta("otvorene-data-read-history", {"sk": "Verejné čítanie histórie otvorených dát", "en": "Public read: open data history"}),
+             "spec": {"contextSpaceRef": {"kind": "ContextSpace", "name": space}, "assigner": "did:web:{orgDomain}",
+                      "assignee": {"kind": "role", "id": "public"},
+                      "operations": ["queryTemporal", "retrieveTemporal"], "temporalQ": "timerel=after;timeAt=P-30D",
+                      "information": [{"entities": [{"type": t} for t in measured]}]}})
     files[f"{pre}policy-pipelines-write.yaml"] = manifest(
         "The generated pipelines upsert; nothing deletes, since several pipelines write the space (PL-64).",
         {**head, "kind": "Policy", "metadata": meta("otvorene-data-pipelines-write", {"sk": "Kanály zapisujú otvorené dáta", "en": "The pipelines write the open data"}),
@@ -699,6 +709,8 @@ def project_files(project: str, entries: list[dict], names: dict[str, str]) -> d
                for x in ("linkml.yaml", "v1.schema.json", "v1.context.jsonld")),
              f"{pre}endpoint.yaml: projects/{project}/spaces/{space}/endpoints/{space}.yaml",
              f"{pre}policy-read.yaml: projects/{project}/spaces/{space}/policies/otvorene-data-read.yaml",
+             *([f"{pre}policy-read-history.yaml: projects/{project}/spaces/{space}/policies/otvorene-data-read-history.yaml"]
+               if measured else []),
              f"{pre}policy-pipelines-write.yaml: projects/{project}/spaces/{space}/policies/otvorene-data-pipelines-write.yaml"]
     pipelines = [p for e in entries for p in parts(e, names[e["name"]])]
     taken = [slug for _, slug in pipelines]

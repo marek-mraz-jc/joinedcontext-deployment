@@ -136,6 +136,7 @@ bbsk-otvorene-data.v1.schema.json: projects/bbsk/spaces/bbsk-otvorene-data/datam
 bbsk-otvorene-data.v1.context.jsonld: projects/bbsk/spaces/bbsk-otvorene-data/datamodels/bbsk-otvorene-data.v1.context.jsonld
 bbsk-od-endpoint.yaml: projects/bbsk/spaces/bbsk-otvorene-data/endpoints/bbsk-otvorene-data.yaml
 bbsk-od-policy-read.yaml: projects/bbsk/spaces/bbsk-otvorene-data/policies/otvorene-data-read.yaml
+bbsk-od-policy-read-history.yaml: projects/bbsk/spaces/bbsk-otvorene-data/policies/otvorene-data-read-history.yaml
 bbsk-od-policy-pipelines-write.yaml: projects/bbsk/spaces/bbsk-otvorene-data/policies/otvorene-data-pipelines-write.yaml
 bbsk-od-datasource-clenovia-samospravy.yaml: projects/bbsk/datasources/od-clenovia-samospravy.yaml
 bbsk-od-pipeline-clenovia-samospravy.yaml: projects/bbsk/pipelines/od-clenovia-samospravy/pipeline.yaml

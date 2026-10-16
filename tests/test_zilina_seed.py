@@ -189,7 +189,11 @@ def test_the_public_reads_only_and_only_the_types_of_its_space():
     for policy in policies:
         spec = policy["spec"]
         # Reading, discovery (T-4258, EP-116) and the WebSocket's subscriptions; no entity write.
-        assert spec["operations"] == READ_AND_SUBSCRIBE[:1] + DISCOVERY + READ_AND_SUBSCRIBE[1:], policy["metadata"]["name"]
+        # The history of the types that keep one is read beside them or in a Policy of its own
+        # (T-4372, tests/test_seed_history.py).
+        history = ["queryTemporal", "retrieveTemporal"]
+        read = READ_AND_SUBSCRIBE[:1] + DISCOVERY + READ_AND_SUBSCRIBE[1:]
+        assert spec["operations"] in (read, read + history, history), policy["metadata"]["name"]
         space = spec["contextSpaceRef"]["name"]
         types = {e["type"] for info in spec["information"] for e in info["entities"]}
         granted.setdefault(space, set()).update(types)
