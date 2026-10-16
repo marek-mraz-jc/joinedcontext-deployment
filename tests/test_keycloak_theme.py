@@ -201,3 +201,18 @@ def test_a_wrong_password_is_the_forms_alert_and_the_card_names_the_app_alone():
     assert '${msg("jcSignInToApp", app)}' in template
     (heading,) = [line for line in template.splitlines() if 'id="kc-page-title"' in line]
     assert "org" not in heading
+
+
+def test_the_account_console_speaks_slovak_with_keys_keycloak_knows(rendered):
+    """T-4228: keycloak.v3 ships no Slovak for most account console strings; the theme's
+    messages_sk fills the ones a person sees. Every key is one the 26.8 bundle has (a typo
+    would stay English silently), every value is filled, and a placeholder survives."""
+    text = theme_of(rendered("dev"))["data"]["account__messages__messages_sk.properties"]
+    sk = dict(line.split("=", 1) for line in text.splitlines() if line and not line.startswith("#"))
+    fixture = PROJECT_ROOT / "tests/fixtures/keycloak-account-v3-keys.txt"
+    known = {line for line in fixture.read_text().splitlines() if line and not line.startswith("#")}
+    assert set(sk) <= known, set(sk) - known
+    assert all(value.strip() for value in sk.values())
+    for key in ("personalInfo", "selectALocale", "choose", "jumpToSection", "general", "signingIn"):
+        assert key in sk, key
+    assert sk["error-invalid-length"].count("{{") == 3
