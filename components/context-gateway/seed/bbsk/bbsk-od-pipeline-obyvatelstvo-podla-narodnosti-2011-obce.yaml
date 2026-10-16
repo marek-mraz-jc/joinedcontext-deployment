@@ -9,7 +9,7 @@ metadata:
     en: Obyvateľstvo podľa národnosti (2011), obce
 spec:
   class: scheduled
-  enabled: false
+  enabled: true
   schedule: 26 5 11 * *
   source:
     dataSourceRef:

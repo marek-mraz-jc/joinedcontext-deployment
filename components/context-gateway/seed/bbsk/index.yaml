@@ -387,3 +387,7 @@ bbsk-od-datasource-zoznam-zdravotnickych-zariadeni-v-bbk.yaml: projects/bbsk/dat
 bbsk-od-pipeline-zoznam-zdravotnickych-zariadeni-v-bbk.yaml: projects/bbsk/pipelines/od-zoznam-zdravotnickych-zariadeni-v-bbk/pipeline.yaml
 bbsk-od-pipeline-zoznam-zdravotnickych-zariadeni-v-bbk-bento.yaml: projects/bbsk/pipelines/od-zoznam-zdravotnickych-zariadeni-v-bbk/bento.yaml
 # --- end of generated ---
+# The data catalogue's one general assistant over every publisher (T-4342): every dataset of
+# data.dev as its knowledge, every body's public Endpoints as its connectors.
+bbsk-knowledge-portal.yaml: projects/bbsk/assistant/sources/portal.yaml
+bbsk-assistant-data.yaml: projects/bbsk/assistant/deployments/data.yaml

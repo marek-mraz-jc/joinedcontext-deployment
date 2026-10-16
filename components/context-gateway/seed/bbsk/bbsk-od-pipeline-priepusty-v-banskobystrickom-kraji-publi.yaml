@@ -9,7 +9,7 @@ metadata:
     en: Priepusty v Banskobystrickom kraji (public view)
 spec:
   class: scheduled
-  enabled: false
+  enabled: true
   schedule: 0 3 * * 5
   source:
     dataSourceRef:

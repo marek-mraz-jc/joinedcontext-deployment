@@ -538,9 +538,9 @@ def bento(e: dict, slug: str, model_ranges: dict[str, str]) -> str:
     return "\n".join(head) + "\n" + "\n".join(steps) + "\n"
 
 
-# ponytail: off until the Portal renders an http source's `schedule` (today it reads `period` only
-# and runs every 60 s, which OOM-killed the runner on 2026-10-16); flip back with that fix.
-ENABLED = False
+# On since portal 47b900c5 (on dev from apply 90): an http source runs on its pipeline's cron
+# `schedule`, not every 60 s, which OOM-killed the runner on 2026-10-16 (T-4347).
+ENABLED = True
 
 def schedule(e: dict, i: int) -> str:
     minute, hour = (i * 7) % 60, 1 + (i * 7) // 60 % 5

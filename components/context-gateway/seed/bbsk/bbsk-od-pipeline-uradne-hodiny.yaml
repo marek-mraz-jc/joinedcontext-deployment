@@ -9,7 +9,7 @@ metadata:
     en: Úradné hodiny
 spec:
   class: scheduled
-  enabled: false
+  enabled: true
   schedule: 10 4 * * 1
   source:
     dataSourceRef:

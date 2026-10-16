@@ -9,7 +9,7 @@ metadata:
     en: Adresy
 spec:
   class: scheduled
-  enabled: false
+  enabled: true
   schedule: 0 1 * * 1
   source:
     dataSourceRef:
