@@ -217,6 +217,21 @@ def test_the_edge_alerts_are_the_two_the_runbook_names(production):
     )
 
 
+def test_a_broker_whose_pool_runs_dry_pages_somebody(production):
+    """T-4298: the series is the broker's own (antares-sql store/any.rs `db`), so the rule fires
+    on the first refused request and holds for two minutes."""
+    rules = {
+        rule["alert"]: rule
+        for prometheus_rule in of_kind(production, "PrometheusRule")
+        for group in prometheus_rule["spec"]["groups"]
+        for rule in group["rules"]
+        if "alert" in rule
+    }
+    dry = rules["ContextBrokerPoolExhausted"]
+    assert dry["expr"] == "sum(increase(antares_pg_pool_timeouts_total[5m])) > 0"
+    assert (dry["for"], dry["labels"]["severity"]) == ("2m", "critical")
+
+
 def test_the_assistant_alerts_read_the_portals_own_series(production):
     """T-2771, AG-72: a slow assistant and a run of failures page somebody, and each rule reads a
     series the Portal exports, so neither can fire never the way a misspelt name would."""
