@@ -115,7 +115,7 @@
         "computedBy": {
           "description": "The Pipeline that computed it, as its URN.",
           "type": "string",
-          "x-ngsi-ld-kind": "Relationship"
+          "x-ngsi-ld-kind": "Property"
         },
         "currentValue": {
           "$ref": "#/definitions/Any",
@@ -133,7 +133,7 @@
         "derivedFrom": {
           "description": "The Endpoint the sources were read through, as its URN. The endpoint and not the space: what an indicator could see is what that endpoint's policy let it see.",
           "type": "string",
-          "x-ngsi-ld-kind": "Relationship"
+          "x-ngsi-ld-kind": "Property"
         },
         "id": {
           "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",

@@ -27,12 +27,12 @@
     "value": "sum(availableBikeNumber) over BikeHireDockingStation"
   },
   "derivedFrom": {
-    "type": "Relationship",
-    "object": "urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-bikes"
+    "type": "Property",
+    "value": "urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-bikes"
   },
   "computedBy": {
-    "type": "Relationship",
-    "object": "urn:ngsi-ld:Pipeline:hel.fi:helsinki:bikes-available-sum"
+    "type": "Property",
+    "value": "urn:ngsi-ld:Pipeline:hel.fi:helsinki:bikes-available-sum"
   },
   "updatedAt": {
     "type": "Property",
