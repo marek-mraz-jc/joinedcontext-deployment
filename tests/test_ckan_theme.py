@@ -1321,3 +1321,28 @@ def test_the_dataset_facts_name_the_standard_and_the_region(theme):
     assert rows["Area covered"] == ("Žilina Region (NUTS SK031)", "http://data.europa.eu/nuts/code/SK031")
     assert theme.jc_about({"extras": [{"key": "spatial_uri", "value": "http://data.europa.eu/nuts/code/FI1B1"}]})[0][1] == "NUTS FI1B1"
     assert theme.jc_extra("quality_pass_rate", "1.0")[1] == "100 %"
+
+
+def test_a_command_breaks_only_between_its_pieces(theme):
+    # The owner's rule: a URL never breaks inside a word, a host, an id or "ngsi-ld" (T-4333).
+    pieces = theme.jc_pieces("curl -H 'Accept: x' 'https://dev.example/api/endpoint/4ysiqy/ngsi-ld/v1/entities?type=A&limit=5'")
+    assert "".join(p["text"] for p in pieces).startswith("curl -H 'Accept: x' 'https://")
+    words = [p["text"] for p in pieces if not p["space"]]
+    assert words[4] == "'https://" and "ngsi-ld/" in words and "4ysiqy/" in words and "entities?" in words and "type=A&" in words
+    assert all(not p["text"].isspace() or p["space"] for p in pieces)
+    assert theme.jc_pieces("") == [] and theme.jc_pieces(None) == []
+    snippet = (THEME / "templates__snippets__jc_breakable.html").read_text()
+    assert not snippet.endswith("\n")  # inside <pre> a trailing newline is a blank line
+    for name in ("templates__package__read.html", "templates__package__resource_read.html",
+                 "templates__package__snippets__jc_usage.html", "templates__snippets__jc_mcp_install.html"):
+        page = (THEME / name).read_text()
+        assert "snippets/jc_breakable.html" in page and not re.search(r"<pre[^>]*><code>\{\{", page), name
+    css = (THEME / "public__jc-theme.css").read_text()
+    assert "pre .jc-nb { white-space: pre; }" in css and "pre:has(.jc-nb) { overflow-x: auto; }" in css
+
+
+def test_the_framed_table_has_no_developer_lines_and_room_below_desktop():
+    css = (THEME / "public__jc-theme.css").read_text()
+    assert "body.dt-view .resourceinfo, body.dt-view .sortinfo { display: none; }" in css
+    assert "body.dt-view .dataTables_filter label::after { content: none; }" in css
+    assert "clamp(27rem, calc(24rem + var(--jc-rows, 20) * 2.6rem), 34rem)" in css
