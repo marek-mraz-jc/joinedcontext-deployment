@@ -49,7 +49,7 @@ pipeline:
         }
         let local = "organizacna-struktura-" + {"Funkcia": this.properties."Funkcia", "Utvar_nazov": this.properties."Utvar_nazov", "Kancelaria": this.properties."Kancelaria", "Adresa": this.properties."Adresa", "Upravené": this.properties."Upravené", "Vytvorené": this.properties."Vytvorené"}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("OrganizationUnit", env("JC_ORG_DOMAIN"), env("JC_SPACE"), $local),
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("OrganizationUnit", "bbsk.sk", "bbsk-otvorene-data", $local),
           "type": "OrganizationUnit",
           "funkcia": this.properties."Funkcia".apply("string"),
           "utvarNazov": this.properties."Utvar_nazov".apply("string"),

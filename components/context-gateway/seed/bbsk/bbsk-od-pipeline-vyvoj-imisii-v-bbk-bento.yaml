@@ -72,7 +72,7 @@ pipeline:
         }
         let local = "vyvoj-imisii-v-bbk-" + {"Meracia_stanica": this.properties."Meracia_stanica", "x": this.properties."x", "y": this.properties."y", "Ukazovateľ": this.properties."Ukazovateľ", "Znečisťujúca_látka": this.properties."Znečisťujúca_látka", "Atribút": this.properties."Atribút", "Hodnota": this.properties."Hodnota", "Photo": this.properties."Photo", "Link_pdf": this.properties."Link_pdf"}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("StatisticalObservation", env("JC_ORG_DOMAIN"), env("JC_SPACE"), $local),
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("StatisticalObservation", "bbsk.sk", "bbsk-otvorene-data", $local),
           "type": "StatisticalObservation",
           "meraciaStanica": this.properties."Meracia_stanica".apply("string"),
           "x": this.properties."x".apply("float"),

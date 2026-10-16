@@ -45,7 +45,7 @@ pipeline:
         }
         let local = "zasadnutia-organov-samospravy-" + {"Orgán_samosprávy": this."Orgán_samosprávy", "Rok": this."Rok", "Č._zasadnutia": this."Č._zasadnutia", "Dátum_zasadnutia": this."Dátum_zasadnutia"}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("CouncilMeeting", env("JC_ORG_DOMAIN"), env("JC_SPACE"), $local),
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("CouncilMeeting", "banskabystrica.sk", "banskabystrica-otvorene-data", $local),
           "type": "CouncilMeeting",
           "organSamospravy": this."Orgán_samosprávy".apply("string"),
           "rok": this."Rok".apply("integer"),

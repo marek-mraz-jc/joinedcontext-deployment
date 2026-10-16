@@ -49,7 +49,7 @@ pipeline:
         }
         let local = "zasadnutia-samospravy-" + [this.properties."Číslo_zasadnutia"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("CouncilMeeting", env("JC_ORG_DOMAIN"), env("JC_SPACE"), $local),
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("CouncilMeeting", "bbsk.sk", "bbsk-otvorene-data", $local),
           "type": "CouncilMeeting",
           "iCOSamospravy": this.properties."IČO_samosprávy".apply("string"),
           "nazovSamospravy": this.properties."Názov_samosprávy".apply("string"),

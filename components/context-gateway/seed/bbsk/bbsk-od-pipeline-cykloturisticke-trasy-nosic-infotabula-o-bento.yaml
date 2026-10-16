@@ -72,7 +72,7 @@ pipeline:
         }
         let local = "cykloturisticke-trasy-nosic-infotabula-o-" + {"mal_znac": this.properties."mal_znac", "stlp_ex": this.properties."stlp_ex", "stlp_mat": this.properties."stlp_mat", "stlp_stav": this.properties."stlp_stav", "nedost_typ": this.properties."nedost_typ", "trasa_spr": this.properties."trasa_spr", "typ": this.properties."typ", "zdroj": this.properties."zdroj", "name": this.properties."name", "id": this.properties."id", "Pozn": this.properties."Pozn", "nedost": this.properties."nedost", "trasa_no": this.properties."trasa_no", "trasa_farb": this.properties."trasa_farb", "dopln_stp": this.properties."dopln_stp", "stn": this.properties."stn", "obtiazmost": this.properties."obtiazmost", "nedostatok": this.properties."nedostatok"}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("PointOfInterest", env("JC_ORG_DOMAIN"), env("JC_SPACE"), $local),
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("PointOfInterest", "bbsk.sk", "bbsk-otvorene-data", $local),
           "type": "PointOfInterest",
           "malZnac": this.properties."mal_znac".apply("integer"),
           "stlpEx": this.properties."stlp_ex".apply("integer"),

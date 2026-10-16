@@ -49,7 +49,7 @@ pipeline:
         }
         let local = "cyklisti-nehodovost-" + {"Rok": this.properties."Rok", "obdobie": this.properties."obdobie", "parameter": this.properties."parameter", "Územie": this.properties."Územie", "počet_nehôd": this.properties."počet_nehôd", "usmrtení_účastníci": this.properties."usmrtení_účastníci", "ťažko_zranení_účastníci": this.properties."ťažko_zranení_účastníci", "ľahko_zranení_účastníci": this.properties."ľahko_zranení_účastníci", "počet_usmrtených_cyklistov_kolobežkárov": this.properties."počet_usmrtených_cyklistov_kolobežkárov", "hmotná_škoda": this.properties."hmotná_škoda", "počet_nehôd_pod_vplyvom_alkoholu": this.properties."počet_nehôd_pod_vplyvom_alkoholu", "počet_nehôd_v_obci": this.properties."počet_nehôd_v_obci"}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("RoadAccident", env("JC_ORG_DOMAIN"), env("JC_SPACE"), $local),
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("RoadAccident", "bbsk.sk", "bbsk-otvorene-data", $local),
           "type": "RoadAccident",
           "rok": this.properties."Rok".apply("string"),
           "obdobie": this.properties."obdobie".apply("string"),

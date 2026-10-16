@@ -49,7 +49,7 @@ pipeline:
         }
         let local = "ekologicky-potencial-vodnych-utvarov-" + [this.properties."KOD_VU_202"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("WaterBodyStatus", env("JC_ORG_DOMAIN"), env("JC_SPACE"), $local),
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("WaterBodyStatus", "bbsk.sk", "bbsk-otvorene-data", $local),
           "type": "WaterBodyStatus",
           "fIDRiekyBbskJoin": this.properties."FID_rieky_bbsk_join".apply("integer"),
           "pOZNAMKA": this.properties."POZNAMKA".apply("string"),

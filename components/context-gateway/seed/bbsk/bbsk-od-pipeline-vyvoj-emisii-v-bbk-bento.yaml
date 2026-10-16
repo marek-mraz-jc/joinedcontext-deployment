@@ -72,7 +72,7 @@ pipeline:
         }
         let local = "vyvoj-emisii-v-bbk-" + {"DOW": this.properties."DOW", "FACC": this.properties."FACC", "IDN3": this.properties."IDN3", "NM3": this.properties."NM3", "IDN2": this.properties."IDN2", "NM2": this.properties."NM2", "VYMERA": this.properties."VYMERA", "NUTS1": this.properties."NUTS1", "NUTS1_CODE": this.properties."NUTS1_CODE", "NUTS2": this.properties."NUTS2", "NUTS2_CODE": this.properties."NUTS2_CODE", "NUTS3": this.properties."NUTS3", "NUTS3_CODE": this.properties."NUTS3_CODE", "LAU1": this.properties."LAU1", "LAU1_CODE": this.properties."LAU1_CODE", "Kód_elementu": this.properties."Kód_elementu", "nuts": this.properties."nuts", "kód_okresu": this.properties."kód_okresu", "rok": this.properties."rok", "ukazovatel": this.properties."ukazovatel", "Kód_elementu_3": this.properties."Kód_elementu_3", "chemická_zlúčenina": this.properties."chemická_zlúčenina", "Hodnota": this.properties."Hodnota"}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("StatisticalObservation", env("JC_ORG_DOMAIN"), env("JC_SPACE"), $local),
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("StatisticalObservation", "bbsk.sk", "bbsk-otvorene-data", $local),
           "type": "StatisticalObservation",
           "dOW": this.properties."DOW".apply("datetime"),
           "fACC": this.properties."FACC".apply("string"),

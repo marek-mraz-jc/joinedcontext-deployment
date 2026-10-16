@@ -49,7 +49,7 @@ pipeline:
         }
         let local = "obyvatelstvo-podla-materinskeho-jazyk-2-" + [this.properties."IDN3"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("StatisticalObservation", env("JC_ORG_DOMAIN"), env("JC_SPACE"), $local),
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("StatisticalObservation", "bbsk.sk", "bbsk-otvorene-data", $local),
           "type": "StatisticalObservation",
           "dOW": this.properties."DOW".apply("datetime"),
           "fACC": this.properties."FACC".apply("string"),

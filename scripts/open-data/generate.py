@@ -164,7 +164,8 @@ def entity(e: dict, slug: str, model_ranges: dict[str, str], source_url: str) ->
     lines = [
         f"let local = {q(slug + '-')} + {local}.re_replace_all(\"[^A-Za-z0-9._~-]\", \"-\").slice(0, 80)",
         "root = {",
-        f"  \"id\": \"urn:ngsi-ld:%v:%v:%v:%v\".format({q(e['type'])}, env(\"JC_ORG_DOMAIN\"), env(\"JC_SPACE\"), $local),",
+        # The publisher's domain, never the runner's JC_ORG_DOMAIN, which is the installation's (T-4202).
+        f"  \"id\": \"urn:ngsi-ld:%v:%v:%v:%v\".format({q(e['type'])}, {q(PROJECTS[e['org']]['domain'])}, {q(e['space'])}, $local),",
         f"  \"type\": {q(e['type'])},",
     ]
     for a, c in cols.items():
@@ -374,7 +375,9 @@ def project_files(project: str, entries: list[dict], names: dict[str, str]) -> d
         {**head, "kind": "Policy", "metadata": meta("otvorene-data-read", {"sk": "Verejné čítanie otvorených dát", "en": "Public read: open data"}),
          "spec": {"contextSpaceRef": {"kind": "ContextSpace", "name": space}, "assigner": "did:web:{orgDomain}",
                   "assignee": {"kind": "role", "id": "public"},
-                  "operations": ["retrieveOps", "createSubscription", "retrieveSubscription", "updateSubscription", "deleteSubscription"],
+                  "operations": ["retrieveOps", "retrieveEntityTypes", "retrieveEntityTypeDetails",
+                                 "retrieveEntityTypeInfo", "retrieveAttrTypes", "retrieveAttrTypeDetails",
+                                 "retrieveAttrTypeInfo", "createSubscription", "retrieveSubscription", "updateSubscription", "deleteSubscription"],
                   "information": information}})
     files[f"{pre}policy-pipelines-write.yaml"] = manifest(
         "The generated pipelines upsert; nothing deletes, since several pipelines write the space (PL-64).",

@@ -18,6 +18,12 @@ spec:
     id: public
   operations:
   - retrieveOps
+  - retrieveEntityTypes
+  - retrieveEntityTypeDetails
+  - retrieveEntityTypeInfo
+  - retrieveAttrTypes
+  - retrieveAttrTypeDetails
+  - retrieveAttrTypeInfo
   - createSubscription
   - retrieveSubscription
   - updateSubscription

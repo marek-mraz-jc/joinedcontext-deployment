@@ -45,7 +45,7 @@ pipeline:
         }
         let local = "pocet-obcanov-podla-veku-" + {"Vek": this."Vek", "Počet_občanov_v_danom_veku": this."Počet_občanov_v_danom_veku", "Počet_mužov": this."Počet_mužov", "Počet_žien": this."Počet_žien"}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("StatisticalObservation", env("JC_ORG_DOMAIN"), env("JC_SPACE"), $local),
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("StatisticalObservation", "banskabystrica.sk", "banskabystrica-otvorene-data", $local),
           "type": "StatisticalObservation",
           "vek": this."Vek".apply("integer"),
           "pocetObcanovVDanomVeku": this."Počet_občanov_v_danom_veku".apply("string"),
