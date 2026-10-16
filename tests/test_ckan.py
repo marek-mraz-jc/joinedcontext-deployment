@@ -175,15 +175,18 @@ def test_the_instance_branding_reaches_both_the_catalogue_and_the_portal(rendere
     branding = json.loads(by_name(docs, "ConfigMap", "ckan-theme")["data"]["branding.json"])
     assert branding["instanceName"] == "joinedcontext"
     assert branding["colours"]["primary"] == "#0000bf"
-    # English only for now: the Portal ships no Finnish bundle yet, and a default the UI cannot
-    # render made the shell fall back to another language (T-0342 follow-up).
-    assert branding["languages"] == {"default": "en", "offered": ["en"]}
+    # The catalogue's own languages, Slovak first (T-4280); the Portal stays English only, since
+    # it ships no Finnish bundle yet (T-0342 follow-up, asserted in test_shared_branding).
+    assert branding["languages"] == {"default": "sk", "offered": ["sk", "en", "cs", "fi"]}
     # The logo travels as a file beside the block, never inlined into it.
     assert "logoSvg" not in branding
     assert by_name(docs, "ConfigMap", "ckan-theme")["data"]["logo.svg"].lstrip().startswith("<svg")
 
     portal_branding = yaml.safe_load(by_name(docs, "ConfigMap", "portal-branding")["data"]["branding.yaml"])
-    assert portal_branding == branding, "the two consumers must be served the same block"
+    # The same block, save the languages the catalogue sets for itself (T-4280).
+    assert portal_branding.pop("languages") == {"default": "en", "offered": ["en"]}
+    assert portal_branding == {k: v for k, v in branding.items() if k != "languages"}, \
+        "the two consumers must be served the same block"
     portal = by_name(docs, "Deployment", "portal")
     portal_env = env_of(portal["spec"]["template"]["spec"]["containers"][0])
     assert portal_env["JC_BRANDING_FILE"] == "/etc/jc/branding/branding.yaml"

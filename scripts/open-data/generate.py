@@ -56,6 +56,12 @@ PROJECTS = {
                   "en": "Every dataset of the Banská Bystrica Self-Governing Region in the catalogue (opendata.bbsk.sk)."},
     },
 }
+# Every standard the open data is served in (T-4279). No `sta`: no generated type keeps a measured
+# value over time (T-4275 keeps no history for them). No `mqtt` until 8883 opens (T-3996); the
+# WebSocket pushes changes. No `parquet`: the platform has no such representation.
+REPRESENTATIONS = ["ngsi-ld", "geojson", "csv", "json", "xlsx", "websocket", "ogc-features", "odata", "mcp"]
+# What the catalogue's harvests read to list each converted dataset's standard APIs (T-4279).
+DISTRIBUTIONS = ROOT / "charts/ckan/files/od-datasets.json"
 # The attribution every entity carries (Open data integration rules §3), declared in the model.
 COMMON = {
     "dataProvider": ("string", "Who published the row, with the credit its licence asks for."),
@@ -372,7 +378,7 @@ def project_files(project: str, entries: list[dict], names: dict[str, str]) -> d
         "`dataProvider` names. A member of the project's public MCP server, which the public assistant reads.",
         {**head, "kind": "Endpoint", "metadata": {**meta(space, p["title"]), "description": p["about"]},
          "spec": {"contextSpaceRef": space, "slug": slug_for(endpoint), "audience": "public",
-                  "enabledRepresentations": ["ngsi-ld", "geojson", "csv", "json", "websocket", "ogc-features", "odata", "mcp"]}})
+                  "enabledRepresentations": REPRESENTATIONS}})
     information = [{"entities": [{"type": t} for t in types]}]
     files[f"{pre}policy-read.yaml"] = manifest(
         "Anyone reads every type of the space: each is open data, and no mapping reads a column that names\n"
@@ -438,7 +444,23 @@ def render() -> dict[Path, str]:
         entries = [e for e in mapped if e["org"] == project]
         for name, text in project_files(project, entries, names).items():
             out[SEED / project / name] = text
+    out[DISTRIBUTIONS] = distributions(mapped)
     return out
+
+
+def located(entry: dict) -> bool:
+    """Whether the rows of `entry` carry a `location` (only an Esri layer with its geometry does)."""
+    return entry["source"].get("kind") == "esri-featureserver" and bool(entry["source"].get("geometry"))
+
+
+def distributions(mapped: list[dict]) -> str:
+    """Per CKAN dataset name: its Endpoint's slug, its entity type and whether it has a location."""
+    rows = {}
+    for e in mapped:
+        endpoint = SEED / e["org"] / f"{e['org']}-od-endpoint.yaml"
+        rows[e["dataset"].rsplit("/", 1)[1]] = {"endpoint": slug_for(endpoint), "type": e["type"],
+                                                 "dataset": e["dataset"], "location": located(e)}
+    return "{\n" + ",\n".join(f"  {json.dumps(k)}: {json.dumps(v, ensure_ascii=False)}" for k, v in sorted(rows.items())) + "\n}\n"
 
 
 def main() -> None:

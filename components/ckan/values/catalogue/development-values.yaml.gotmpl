@@ -71,6 +71,9 @@ organizations:
 # match; the dog registry locates people; contracts, orders and subsidies keep only the rows that
 # carry an IČO. HTML and PDF answers where JSON is declared are found by the fetch itself.
 harvest:
+  # Where the converted datasets' distributions point (T-4279): each dataset's od Endpoint on
+  # the dev gateway, in every standard the platform serves.
+  gateway: https://dev.joinedcontext.com
   sources:
     - name: banskabystrica
       sparql: https://data.slovensko.sk/api/sparql

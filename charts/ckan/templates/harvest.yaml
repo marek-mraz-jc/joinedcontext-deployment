@@ -64,9 +64,14 @@ spec:
                     secretKeyRef:
                       name: {{ $.Values.apiToken.secret }}
                       key: token
+                # The converted datasets and the base their Endpoints answer under (T-4279).
+                - name: OD_DATASETS
+                  value: {{ $.Files.Get "files/od-datasets.json" | fromJson | toJson | quote }}
+                - name: OD_GATEWAY
+                  value: {{ $.Values.harvest.gateway | default "" | quote }}
                 - name: HARVEST_CONFIG
                   value: {{ merge (dict "source" (printf "%s-%s" (.kind | default "nkod") .name)) (omit . "name") | toJson | quote }}
               command: [python3, -c]
               args:
-                - {{ $.Files.Get (printf "files/harvest-%s.py" (.kind | default "nkod")) | toJson }}
+                - {{ printf "%s\n%s" ($.Files.Get "files/od-standards.py") ($.Files.Get (printf "files/harvest-%s.py" (.kind | default "nkod"))) | toJson }}
 {{- end }}

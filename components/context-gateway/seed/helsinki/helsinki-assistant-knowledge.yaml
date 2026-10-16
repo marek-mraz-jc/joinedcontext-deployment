@@ -16,5 +16,5 @@ spec:
     passages you used, and say plainly when your sources do not cover the question.
   # The User Guide (T-3226): the workflow evals ask this deployment.
   sources: [web, guide]
-  budget: { tokensPerDay: 300000, tokensPerConversation: 40000 }
+  budget: { tokensPerDay: 5000000, tokensPerConversation: 40000, costPerDayUsd: 3 }
   languages: [fi, sv, en]

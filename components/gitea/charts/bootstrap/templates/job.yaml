@@ -817,13 +817,17 @@ spec:
                     current=$(grep -o '"content": *"[^"]*"' $WORK/body | head -1 | sed 's/^"content": *"//; s/"$//; s/\\n//g')
                     [ "$current" = "$encoded" ] && continue
                     sha=$(grep -o '"sha": *"[0-9a-f]\{40\}"' $WORK/body | head -1 | grep -o '[0-9a-f]\{40\}')
-                    status=$(portal_code PUT "/api/v1/repos/$ORG/$SEED_REPO/contents/$path" \
-                      -d "{\"branch\":\"$BRANCH\",\"sha\":\"$sha\",\"content\":\"$encoded\",\"message\":\"seed: update $path\"}")
+                    # The body goes through a file: one argument is capped at 128 KiB, and a
+                    # generated model of the open data is larger than that (T-4255).
+                    printf '{"branch":"%s","sha":"%s","content":"%s","message":"seed: update %s"}' \
+                      "$BRANCH" "$sha" "$encoded" "$path" > $WORK/request
+                    status=$(portal_code PUT "/api/v1/repos/$ORG/$SEED_REPO/contents/$path" -d @$WORK/request)
                     [ "$status" = 200 ] || { echo "updating $path failed: $status" >&2; cat $WORK/body >&2; exit 1; }
                     echo "seed: updated $path" ;;
                   404)
-                    status=$(portal_code POST "/api/v1/repos/$ORG/$SEED_REPO/contents/$path" \
-                      -d "{\"branch\":\"$BRANCH\",\"content\":\"$encoded\",\"message\":\"seed: add $path\"}")
+                    printf '{"branch":"%s","content":"%s","message":"seed: add %s"}' \
+                      "$BRANCH" "$encoded" "$path" > $WORK/request
+                    status=$(portal_code POST "/api/v1/repos/$ORG/$SEED_REPO/contents/$path" -d @$WORK/request)
                     [ "$status" = 201 ] || { echo "creating $path failed: $status" >&2; cat $WORK/body >&2; exit 1; }
                     echo "seed: created $path" ;;
                   *)
