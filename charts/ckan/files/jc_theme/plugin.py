@@ -320,6 +320,10 @@ STRINGS = {
     "nav_datasets": {"en": "Datasets", "sk": "Datasety", "cs": "Datové sady", "de": "Datensätze"},
     "nav_publishers": {"en": "Publishers", "sk": "Vydavatelia", "cs": "Vydavatelé", "de": "Herausgeber"},
     "nav_topics": {"en": "Topics", "sk": "Témy", "cs": "Témata", "de": "Themen"},
+    "search_publishers": {"en": "Search publishers…", "sk": "Hľadať vydavateľov…",
+                          "cs": "Hledat vydavatele…", "de": "Herausgeber suchen…"},
+    "search_topics": {"en": "Search topics…", "sk": "Hľadať témy…", "cs": "Hledat témata…",
+                      "de": "Themen suchen…"},
     "nav_about": {"en": "About", "sk": "O katalógu", "cs": "O katalogu", "de": "Über den Katalog"},
     "publishers_help": {
         "en": "The cities, regions and offices whose data this catalogue carries. Open one to see all of its datasets.",
@@ -761,6 +765,23 @@ def jc_search_words(q):
     return " ".join('"%s"' % word if HYPHENATED.match(word) else word for word in q.split())
 
 
+# CKAN's words for its organizations and groups, where a visitor reads them (T-4220): the
+# navigation said Publishers and Topics, the breadcrumb, the title and the search box
+# Organizations and Groups. Every other purpose is a staff form and keeps CKAN's word.
+HUMANIZE = {
+    "breadcrumb": "nav_%s", "page title": "nav_%s", "main nav": "nav_%s",
+    "facet label": "nav_%s", "search placeholder": "search_%s",
+}
+HUMANIZED = {"organization": "publishers", "group": "topics"}
+
+
+@toolkit.chained_helper
+def humanize_entity_type(next_helper, entity_type, object_type, purpose):
+    if entity_type == object_type and entity_type in HUMANIZED and purpose in HUMANIZE:
+        return jc_t(HUMANIZE[purpose] % HUMANIZED[entity_type])
+    return next_helper(entity_type, object_type, purpose)
+
+
 def jc_about_site():
     """What the About page says when no sysadmin wrote `ckan.site_about` (T-3028): whose
     catalogue this is, how to get at the data, and the machine entrances, all from the branding
@@ -907,6 +928,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_mcp_install": jc_mcp_install,
             "jc_assistant_widget": jc_assistant_widget,
             "jc_about_site": jc_about_site,
+            "humanize_entity_type": humanize_entity_type,
             "jc_has_topics": jc_has_topics,
             "jc_sso_error": jc_sso_error,
         }
