@@ -60,3 +60,9 @@ def test_every_endpoint_of_a_located_space_serves_ogc_api_features():
         if space in LOCATED and "ogc-features" not in served
     ]
     assert not missing, missing
+
+
+def test_no_endpoint_serves_a_zip():
+    """T-4324 (owner 2026-10-16): a catalogue offers data, never a ZIP of it."""
+    zipped = [f"{path}: {name}" for path, name, _, served in endpoints() if "zip" in served]
+    assert not zipped, zipped
