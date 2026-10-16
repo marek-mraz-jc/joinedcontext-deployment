@@ -391,3 +391,14 @@ def test_the_gateway_holds_no_delivery_key_and_nothing_generates_one(dev, gatewa
         d for d in dev
         if d.get("kind") == "Secret" and d["metadata"]["name"] == "context-gateway-delivery-key"
     ]
+
+
+def test_production_caps_the_websocket_entity_table_like_dev(rendered, gateway_env):
+    # T-4352: the fan-out keeps up to JC_GATEWAY_WS_ENTITIES full entities per Endpoint; unset,
+    # it is 50,000 each. Production holds dev's value, and the env map it adds merges with the
+    # base's, so the broker address and every other base variable stay.
+    deployment = next(d for d in rendered("production")
+                      if d.get("kind") == "Deployment" and d["metadata"]["name"] == "context-gateway")
+    env = {e["name"]: e.get("value") for e in deployment["spec"]["template"]["spec"]["containers"][0]["env"]}
+    assert env["JC_GATEWAY_WS_ENTITIES"] == gateway_env["JC_GATEWAY_WS_ENTITIES"] == "10000"
+    assert env["JC_GATEWAY_BROKER_URL"].startswith("http://context-broker.")

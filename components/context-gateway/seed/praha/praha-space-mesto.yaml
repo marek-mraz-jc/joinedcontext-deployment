@@ -27,3 +27,22 @@ spec:
   # Its one model (DM-61, ADR-N-033).
   dataModelRef: { kind: DataModel, name: praha-mesto }
   defaultLocale: cs
+  # History per type (DM-82, ADR-N-046 2.3, T-4275): a measurement series keeps 30 days, every
+  # other type keeps its current state only. Owners change it on the space's Retention tab.
+  retention:
+    - entityType: AirQualityObserved
+      history: P30D
+    - entityType: BikeHireDockingStation
+      history: P30D
+    - entityType: BudgetLine
+      history: "off"
+    - entityType: CityDistrict
+      history: "off"
+    - entityType: OffStreetParking
+      history: P30D
+    - entityType: PointOfInterest
+      history: "off"
+    - entityType: WasteContainer
+      history: "off"
+    - entityType: WasteContainerIsle
+      history: "off"
