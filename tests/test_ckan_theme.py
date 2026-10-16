@@ -935,8 +935,18 @@ def test_a_hyphenated_word_is_searched_as_written(theme, asked, searched):
 
 def test_the_dataset_search_takes_the_hyphenated_word_as_a_phrase(theme):
     plugin = theme.JcThemePlugin()
-    assert plugin.before_dataset_search({"q": "bike-sharing", "rows": 20}) == {"q": '"bike-sharing"', "rows": 20}
-    assert plugin.before_dataset_search({"fq": "x"}) == {"fq": "x"}
+    qf = theme.QUERY_FIELDS
+    assert plugin.before_dataset_search({"q": "bike-sharing", "rows": 20}) == {"q": '"bike-sharing"', "rows": 20, "qf": qf}
+    assert plugin.before_dataset_search({"fq": "x"}) == {"fq": "x", "qf": qf}
+
+
+def test_the_dataset_search_adds_the_stemmed_field_below_the_exact_ones(theme):
+    """T-4233: CKAN's own weights plus `text_sk` at half of `text`, so "ovzdušie" finds
+    "ovzdušia" and the exact form still ranks first; a caller's `qf` is theirs."""
+    plugin = theme.JcThemePlugin()
+    fields = dict(f.split("^") if "^" in f else (f, "1") for f in theme.QUERY_FIELDS.split())
+    assert fields == {"name": "4", "title": "4", "tags": "2", "groups": "2", "text": "1", "text_sk": "0.5"}
+    assert plugin.before_dataset_search({"q": "ovzdušie", "qf": "title"})["qf"] == "title"
 
 
 # T-4220 (photo audit T-4161): one concept, three names. The navigation said Publishers, the

@@ -16,15 +16,47 @@ spec:
     metadata:
       labels:
         {{- include "ckan.selectorLabels" (dict "root" . "part" $part) | nindent 8 }}
-      {{- with (include "ckan.podAnnotations" .) }}
       annotations:
+        # A changed schema reaches Solr only through a restart of the init container below.
+        checksum/schema: {{ .Files.Get "files/solr/managed-schema" | sha256sum }}
+        {{- with (include "ckan.podAnnotations" .) }}
         {{- . | nindent 8 }}
-      {{- end }}
+        {{- end }}
     spec:
       automountServiceAccountToken: false
       enableServiceLinks: false
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        # The image's `solr-precreate` copies CKAN's schema onto the claim once, when the core is
+        # created, and never again. This writes the chart's schema (CKAN's plus the stemmed
+        # Slovak field, files/solr/managed-schema) over it on every start, creating the core
+        # the way `solr-precreate` does on a new claim, which then finds it and stops.
+        - name: install-schema
+          image: {{ include "ckan.image" .Values.solr.image }}
+          imagePullPolicy: {{ .Values.solr.image.pullPolicy }}
+          command:
+            - sh
+            - -c
+            - |
+              set -eu
+              core=/var/solr/data/ckan
+              mkdir -p -m 0770 /var/solr/data
+              if [ ! -d "$core" ]; then
+                cp -r "$SOLR_CONFIG_DIR/ckan" "$core"
+                touch "$core/core.properties"
+              fi
+              cp /etc/jc/solr/managed-schema "$core/conf/managed-schema"
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/solr
+            - name: schema
+              mountPath: /etc/jc/solr
+              readOnly: true
+          resources:
+            {{- toYaml .Values.solr.resources | nindent 12 }}
       containers:
         - name: solr
           image: {{ include "ckan.image" .Values.solr.image }}
@@ -65,6 +97,9 @@ spec:
       volumes:
         - name: tmp
           emptyDir: {}
+        - name: schema
+          configMap:
+            name: {{ include "ckan.fullname" . }}-solr-schema
   volumeClaimTemplates:
     - metadata:
         name: data
@@ -77,6 +112,17 @@ spec:
         resources:
           requests:
             storage: {{ .Values.solr.storage.size }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ckan.fullname" . }}-solr-schema
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "ckan.labels" (dict "root" . "part" $part) | nindent 4 }}
+data:
+  managed-schema: |
+{{ .Files.Get "files/solr/managed-schema" | indent 4 }}
 ---
 apiVersion: v1
 kind: Service

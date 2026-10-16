@@ -835,6 +835,24 @@ if has_route ckan; then
 	else
 		ko "the CKAN API token in ckan-api-token no longer authenticates (T-0493)"
 	fi
+	# T-4233: one form of a Slovak word finds the datasets another form does, through the
+	# stemmed field of the catalogue's Solr: what "ovzdušia" finds, "ovzdušie" finds too.
+	exact=$(curl -sS --max-time 20 "$catalogue/api/3/action/package_search?rows=20&fl=name&q=ovzdu%C5%A1ia" 2>/dev/null || true)
+	other=$(curl -sS --max-time 20 "$catalogue/api/3/action/package_search?rows=100&fl=name&q=ovzdu%C5%A1ie" 2>/dev/null || true)
+	stemmed=$(python3 -c 'import json, sys
+def names(text):
+    try:
+        return {r["name"] for r in json.loads(text)["result"]["results"]}
+    except Exception:
+        return None
+exact, other = names(sys.argv[1]), names(sys.argv[2])
+print("unread" if exact is None or other is None else "none" if not exact else "found" if exact & other else "missing")' "$exact" "$other" 2>/dev/null || echo unread)
+	case "$stemmed" in
+	found) ok "catalogue search finds another form of a Slovak word (ovzdušie finds ovzdušia)" ;;
+	none) skip "catalogue search of word forms (no dataset holds \"ovzdušia\")" ;;
+	missing) ko "catalogue search for \"ovzdušie\" misses every dataset \"ovzdušia\" finds: the stemmed field is not indexed (T-4233)" ;;
+	*) ko "catalogue search did not answer package_search (T-4233)" ;;
+	esac
 else
 	skip "catalogue (route ckan not configured in this instance)"
 fi

@@ -656,3 +656,174 @@ def test_the_catalogue_speaks_slovak_and_offers_the_publishers_languages(rendere
     env = env_of(ckan_container(rendered("dev")))
     assert env.get("CKAN__LOCALE_DEFAULT") == "sk"
     assert env.get("CKAN__LOCALES_OFFERED", "").split() == ["sk", "en", "cs", "fi"]
+
+
+# T-4233: the catalogue's Solr stems Slovak, so one form of a word finds the others.
+SOLR_SCHEMA = CHART / "files/solr/managed-schema"
+
+
+def solr_schema(text: str):
+    import xml.etree.ElementTree as ET
+
+    return ET.fromstring(text)
+
+
+def test_the_solr_schema_stems_the_words_a_person_reads():
+    """Title, description, tags and resources reach `text_sk`, whose analyzer lowercases, stems
+    with the Czech light stemmer and folds diacritics after it; CKAN's own fields stay."""
+    schema = solr_schema(SOLR_SCHEMA.read_text())
+    images = yaml.safe_load((PROJECT_ROOT / "components/ckan/images.yaml").read_text())
+    # A Solr image of another CKAN minor carries another schema; this copy is that one plus jc.
+    assert schema.get("name") == "ckan-" + images["ckan"]["solr"]["tag"].split("-")[0]
+    field_type = schema.find("types/fieldType[@name='text_sk']")
+    filters = [f.get("class") for f in field_type.find("analyzer").findall("filter")]
+    assert filters == ["solr.LowerCaseFilterFactory", "solr.CzechStemFilterFactory", "solr.ASCIIFoldingFilterFactory"]
+    field = schema.find("fields/field[@name='text_sk']")
+    assert (field.get("type"), field.get("indexed"), field.get("stored")) == ("text_sk", "true", "false")
+    sources = {c.get("source") for c in schema.findall("copyField") if c.get("dest") == "text_sk"}
+    assert {"title", "notes", "tags", "res_name", "res_description"} <= sources
+    names = {f.get("name") for f in schema.findall("fields/field")}
+    assert {"index_id", "id", "name", "title", "notes", "tags", "text", "capacity", "permission_labels"} <= names
+    assert schema.findtext("uniqueKey") == "index_id"
+
+
+@requires_helmfile
+def test_the_schema_is_written_over_the_claim_before_solr_starts(rendered):
+    """`solr-precreate` copies a schema onto the claim once; the init container writes the
+    chart's on every start, and a changed schema restarts Solr through the checksum."""
+    import hashlib
+
+    docs = rendered("dev")
+    solr = by_name(docs, "StatefulSet", "ckan-solr")["spec"]["template"]
+    schema = by_name(docs, "ConfigMap", "ckan-solr-schema")["data"]["managed-schema"]
+    assert schema == SOLR_SCHEMA.read_text()
+    assert solr["metadata"]["annotations"]["checksum/schema"] == hashlib.sha256(schema.encode()).hexdigest()
+    [init] = [c for c in solr["spec"]["initContainers"] if c["name"] == "install-schema"]
+    assert init["image"] == solr["spec"]["containers"][0]["image"]
+    mounts = {m["name"]: m for m in init["volumeMounts"]}
+    assert mounts["data"]["mountPath"] == "/var/solr"
+    assert (mounts["schema"]["mountPath"], mounts["schema"]["readOnly"]) == ("/etc/jc/solr", True)
+    assert 'cp /etc/jc/solr/managed-schema "$core/conf/managed-schema"' in init["command"][-1]
+    assert init["securityContext"]["readOnlyRootFilesystem"] is True
+    assert {"name": "schema", "configMap": {"name": "ckan-solr-schema"}} in solr["spec"]["volumes"]
+
+
+def test_the_schema_init_creates_the_core_the_way_precreate_does(tmp_path):
+    """On a new claim it copies the image's core and marks it, on an old one it keeps the core
+    and its index; the schema is the chart's either way."""
+    import re
+
+    template = (CHART / "templates/solr.yaml").read_text()
+    script = re.search(r"- \|\n((?:              .*\n)+)", template).group(1)
+    script = "\n".join(line[14:] for line in script.splitlines())
+    configs = tmp_path / "configsets/ckan/conf"
+    configs.mkdir(parents=True)
+    (configs / "managed-schema").write_text("image")
+    (configs / "solrconfig.xml").write_text("config")
+    chart = tmp_path / "chart"
+    chart.mkdir()
+    (chart / "managed-schema").write_text("chart")
+    var = tmp_path / "var"
+    var.mkdir()
+    script = script.replace("/var/solr", str(var)).replace("/etc/jc/solr", str(chart))
+    env = {"PATH": "/usr/bin:/bin", "SOLR_CONFIG_DIR": str(tmp_path / "configsets")}
+    for start in (1, 2):
+        result = subprocess.run(["sh", "-c", script], env=env, capture_output=True, text=True, check=False)
+        assert result.returncode == 0, result.stderr
+        core = var / "data/ckan"
+        assert (core / "core.properties").exists()
+        assert (core / "conf/managed-schema").read_text() == "chart"
+        assert (core / "conf/solrconfig.xml").read_text() == "config"
+        (core / "data").mkdir(exist_ok=True)
+        (core / "data/index").write_text(f"kept {start}")
+    assert (core / "data/index").read_text() == "kept 2"
+
+
+class FakeSolr:
+    """A Solr that answers the counts the re-index script asks for."""
+
+    def __init__(self, titled: int, stemmed: int, field: bool = True):
+        import http.server
+        import threading
+
+        counts = {"title:*": titled, "text_sk:*": stemmed}
+
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                from urllib.parse import parse_qs, urlparse
+
+                url = urlparse(self.path)
+                if url.path.endswith("/schema/fields/text_sk") and not field:
+                    self.send_response(404)
+                    self.end_headers()
+                    return
+                q = parse_qs(url.query).get("q", [""])[0]
+                body = json.dumps({"response": {"numFound": counts.get(q, 0)}, "status": "OK"}).encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, *args):
+                pass
+
+        self.server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        threading.Thread(target=self.server.serve_forever, daemon=True).start()
+        self.url = f"http://127.0.0.1:{self.server.server_port}/solr/ckan"
+
+    def close(self):
+        self.server.shutdown()
+
+
+def source_reindex(tmp_path, solr_url: str) -> tuple[subprocess.CompletedProcess, Path]:
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    calls = tmp_path / "calls"
+    fake = bin_dir / "ckan"
+    fake.write_text(f'#!/bin/sh\nprintf "%s\\n" "$@" >> {calls}\n')
+    fake.chmod(0o755)
+    script = CHART / "files/startup/03-search-index.sh"
+    result = subprocess.run(
+        ["bash", "-c", f'. "{script}"; wait; echo sourced-to-the-end'],
+        env={"PATH": f"{bin_dir}:/usr/bin:/bin", "CKAN_INI": "/tmp/ckan.ini", "CKAN_SOLR_URL": solr_url,
+             "JC_SOLR_WAIT_SECONDS": "0"},
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "sourced-to-the-end" in result.stdout, "the script ended the entrypoint"
+    return result, calls
+
+
+@pytest.mark.parametrize(
+    ("titled", "stemmed", "field", "rebuilds", "said"),
+    [
+        (3, 0, True, True, "rebuilding it in the background"),
+        (3, 2, True, True, "rebuilding it in the background"),
+        (3, 3, True, False, "search index: current, 3 datasets"),
+        (0, 0, True, False, "search index: current, 0 datasets"),
+        (3, 0, False, False, "search index: not checked"),
+    ],
+)
+def test_the_index_is_rebuilt_once_when_it_predates_the_stemmed_field(tmp_path, titled, stemmed, field, rebuilds, said):
+    """Fewer datasets with stemmed words than with a title is an index from before the field:
+    CKAN writes every dataset again, without clearing, in the background. An index that carries
+    it, or a Solr without the field, is left alone."""
+    solr = FakeSolr(titled, stemmed, field)
+    try:
+        result, calls = source_reindex(tmp_path, solr.url)
+    finally:
+        solr.close()
+    assert said in result.stdout
+    if rebuilds:
+        assert calls.read_text().split() == ["-c", "/tmp/ckan.ini", "search-index", "rebuild", "-q"]
+    else:
+        assert not calls.exists(), calls.read_text()
+
+
+def test_a_solr_that_does_not_answer_lets_the_catalogue_start(tmp_path):
+    result, calls = source_reindex(tmp_path, "http://127.0.0.1:9/solr/ckan")
+    assert "search index: Solr did not answer" in result.stdout
+    assert not calls.exists()

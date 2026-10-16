@@ -423,6 +423,13 @@ OGC_ITEMS = ('{"type":"FeatureCollection","features":[{"type":"Feature","id":"ur
              '"geometry":null,"properties":{"name":"Kamppi"}}]}')
 OGC_HEADERS = "HTTP/2 200\r\ncontent-type: application/geo+json\r\n"
 
+def package_search(*names: str) -> str:
+    return json.dumps({"success": True, "result": {"count": len(names), "results": [{"name": n} for n in names]}})
+
+
+SEARCH_EXACT = package_search("public-air", "banskabystrica-verejne")
+SEARCH_STEMMED = package_search("praha-mesto", "public-air", "banskabystrica-verejne")
+
 HEALTHY = {
     "ogcSeed": OGC_SEED,
     "routes": ["portal-ui", "portal-api", "portal-public-assets", "context-space", "context-endpoint", "gitea-forge", "ckan"],
@@ -489,6 +496,9 @@ HEALTHY = {
                     "units_map": {"repo.code": "read", "repo.issues": "read", "repo.pulls": "read"}},
                ], separators=(",", ":"))],
                ["portal.example.test/catalogue", '<script type="module" src="/assets/index-1a2b3c4d.js"></script>'],
+               # T-4233: the exact word form, then another form of it found through the stem.
+               ["q=ovzdu%C5%A1ia", SEARCH_EXACT],
+               ["q=ovzdu%C5%A1ie", SEARCH_STEMMED],
                ["data.example.test/", CATALOGUE_PAGE]],
     "statuses": HEALTHY_STATUSES,
 }
@@ -1729,3 +1739,30 @@ def test_only_a_runner_refusal_that_still_recurs_fails_the_run(tmp_path):
                  "https://example.test", "https://idm.example.test")
     assert result.returncode == 1
     assert "FAIL  the pipeline runner refused streams: Streams CRUD Error: failed to init processor: symbol" in result.stdout
+
+
+def test_the_catalogue_finds_another_form_of_a_slovak_word(tmp_path):
+    """T-4233: what the exact form finds, another form of the word finds too."""
+    result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
+    assert "ok    catalogue search finds another form of a Slovak word (ovzdušie finds ovzdušia)" in result.stdout
+
+
+@pytest.mark.parametrize(
+    ("other", "said"),
+    [
+        (package_search("praha-mesto"), 'FAIL  catalogue search for "ovzdušie" misses every dataset "ovzdušia" finds: the stemmed field is not indexed (T-4233)'),
+        ("<html>502</html>", "FAIL  catalogue search did not answer package_search (T-4233)"),
+    ],
+)
+def test_a_catalogue_that_finds_only_the_exact_form_fails_the_run(tmp_path, other, said):
+    spec = dict(HEALTHY, bodies=[["q=ovzdu%C5%A1ie", other]] + HEALTHY["bodies"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode != 0
+    assert said in result.stdout
+
+
+def test_a_catalogue_without_the_word_skips_the_word_form_check(tmp_path):
+    spec = dict(HEALTHY, bodies=[["q=ovzdu%C5%A1ia", package_search()]] + HEALTHY["bodies"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert 'skip  catalogue search of word forms (no dataset holds "ovzdušia")' in result.stdout
+    assert "T-4233" not in result.stdout

@@ -18,6 +18,14 @@ helmfile apply -i --selector component=ckan
   object storage before it needs a replica count.
 - **Solr**, from the image the CKAN project publishes with CKAN's own schema already
   loaded. A plain Solr cannot index a CKAN: the schema is the whole point of that image.
+  The chart writes its own copy of that schema over the core on every start
+  (`charts/ckan/files/solr/managed-schema`). The copy adds one field, `text_sk`: the words of
+  a dataset reduced to their Slovak and Czech stem, so "ovzdušie" finds "kvalita ovzdušia"
+  (T-4233). The theme searches it at half the weight of `text`, so the exact form still ranks
+  first. When the schema changes, the catalogue's next start finds datasets without the field
+  and re-indexes them once, in the background (`files/startup/03-search-index.sh`). When the
+  Solr image moves to another CKAN minor, re-copy its schema and carry the `jc` blocks over;
+  `tests/test_ckan.py` fails until the schema name matches the image.
 - **Redis**, cache and job queue, with persistence off. A restart costs a rebuild of what
   CKAN recomputes anyway.
 

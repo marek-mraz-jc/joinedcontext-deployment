@@ -875,6 +875,13 @@ def jc_sso_error(session=None):
     return jc_t(SSO_REASONS.get(reason, "sso_other"))
 
 
+# CKAN's own field weights (ckan/lib/search/query.py) plus `text_sk`, the Slovak and Czech words
+# reduced to their stem (files/solr/managed-schema, T-4233): "ovzdušie" finds "kvalita ovzdušia".
+# At half the weight of `text`, a dataset with the exact form still ranks first. A caller's own
+# `qf` is kept.
+QUERY_FIELDS = "name^4 title^4 tags^2 groups^2 text text_sk^0.5"
+
+
 class JcThemePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.ITemplateHelpers)
@@ -934,9 +941,11 @@ class JcThemePlugin(plugins.SingletonPlugin):
         }
 
     def before_dataset_search(self, search_params):
-        """A hyphenated word searched as the phrase it is, on the page and the API alike."""
+        """A hyphenated word searched as the phrase it is, on the page and the API alike; and
+        another form of a Slovak word found through the stemmed field, below the exact match."""
         if search_params.get("q"):
             search_params["q"] = jc_search_words(search_params["q"])
+        search_params.setdefault("qf", QUERY_FIELDS)
         return search_params
 
     def dataset_facets(self, facets_dict, package_type):
