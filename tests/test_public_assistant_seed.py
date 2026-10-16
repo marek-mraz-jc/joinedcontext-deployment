@@ -33,6 +33,8 @@ NAMES = {
     "zilina": ("zilina", "žilin"),
     "praha": ("praha", "prague", "prahy"),
 }
+# The national dataset every public assistant reads besides its own (T-4340, owner 2026-10-16).
+NATIONAL = {"slovensko/ovzdusie-sk"}
 ORIGINS = [
     "https://assistant.dev.joinedcontext.com",
     "https://dev.joinedcontext.com",
@@ -65,10 +67,11 @@ def test_each_body_has_one_public_assistant_on_its_own_id(public_id):
     assert doc["metadata"]["namespace"] == BODIES[public_id][0]
     assert spec["channel"] == "public"
     assert spec.get("enabled", True) is True
-    # Its own project only: no source and no connector of another project (T-4281).
-    assert "scope" not in spec
+    # Its own project and the national open data only: no source and no other connector of another
+    # project (T-4281, T-4340).
+    assert spec["scope"] == {"projects": ["slovensko"]}
     assert all("/" not in name for name in spec["sources"])
-    assert all("/" not in c["endpoint"] for c in spec["connectors"])
+    assert {c["endpoint"] for c in spec["connectors"] if "/" in c["endpoint"]} == NATIONAL
 
 
 @pytest.mark.parametrize("public_id", BODIES)
@@ -95,7 +98,8 @@ def test_every_connector_is_a_public_mcp_endpoint_of_the_body_with_read_only_too
     endpoints = manifests("Endpoint", project)
     assert spec["connectors"], "the assistant reads live values through connectors"
     for connector in spec["connectors"]:
-        endpoint = endpoints[connector["endpoint"]]
+        own, _, name = connector["endpoint"].rpartition("/")
+        endpoint = (manifests("Endpoint", own) if own else endpoints)[name]
         assert endpoint["spec"]["audience"] == "public", connector["endpoint"]
         assert "mcp" in endpoint["spec"]["enabledRepresentations"], connector["endpoint"]
         assert set(connector["tools"]) <= READ_ONLY, connector
@@ -116,7 +120,7 @@ def test_the_connectors_are_every_member_of_the_bodys_public_mcp_server(public_i
         for member in server["spec"]["members"]
         if member["kind"] == "Endpoint"
     }
-    assert {c["endpoint"] for c in deployment(public_id)["spec"]["connectors"]} == members
+    assert {c["endpoint"] for c in deployment(public_id)["spec"]["connectors"]} - NATIONAL == members
 
 
 def test_the_public_mcp_servers_list_members_that_serve_mcp():

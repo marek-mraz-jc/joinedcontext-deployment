@@ -1,6 +1,7 @@
 {
   "about": "The Smart Data Models the open-data seed validates against (T-4319): each schema.json of this folder as raw.githubusercontent.com/smart-data-models/<repository>/<commit>/<Model>/schema.json served it, each <repository>/context.jsonld from the same commit (the @context whose IRIs the generated model gives the terms it names, T-4328), and common-schema.json, which they $ref, from smart-data-models/data-models. Never fetched at run time; to move a pin, fetch at the new commit and change it here and in joinedcontext-docs scripts/bb-bbsk-ngsi-ld-mapping.py SDM_SHA.",
   "dataModel.CPSV-AP": "a05d1663475fc0f79361bc9bc2550c3f24df1ba0",
+  "dataModel.Environment": "2f048407ccc243df67aee7e1b1ca5470092d743e",
   "dataModel.KeyPerformanceIndicator": "ec7f3b642faf3f807d3c8549ccc9e0b743e05f26",
   "dataModel.Organization": "77a4911e7cbc72bf87bf202ade282c1bc41a36a4",
   "dataModel.Parking": "24342efb3425c0059c7a4b82d6d201847418b29c",
