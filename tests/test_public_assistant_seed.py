@@ -294,7 +294,9 @@ def test_the_general_assistant_knows_the_whole_catalogue_and_crawls_no_website()
 
 def test_the_general_assistant_names_no_city_and_carries_the_portal_guide():
     spec = general()["spec"]
-    shown = (spec["theme"]["title"] + " " + spec["theme"]["greeting"]).lower()
+    greeting = spec["theme"]["greeting"]
+    assert set(greeting) == {"sk", "en", "fi"}, "a greeting per language (T-4365)"
+    shown = (spec["theme"]["title"] + " " + " ".join(greeting.values())).lower()
     for words in NAMES.values():
         assert not any(word in shown for word in words), shown
     assert "helsin" not in shown
