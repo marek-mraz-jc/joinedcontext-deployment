@@ -13,13 +13,16 @@ replicaCount: 1
 # HSL feed wants a steady share (T-4036); two cores cost the node nothing it reserves.
 # 2Gi since the gateway answers model refusals per entity (207, T-4011): 1536Mi was OOMKilled
 # twice in 20 min on 2026-10-12 (T-4069); T-4036 sizes it from measurements.
+# 3Gi for T-4255's 92 open-data streams: an idle stream of the rendered shape holds about
+# 4.9 MB in Bento 1.22.0 (135 MB empty, 583 MB with 92, measured 2026-10-16), so 108 streams at
+# 1.5 GiB plus 92 would sit at 95 % of 2Gi, past smoke's 80 % line, before a run buffers a page.
 resources:
   requests:
     cpu: 100m
     memory: 512Mi
   limits:
     cpu: 2000m
-    memory: 2Gi
+    memory: 3Gi
 
 # The Helsinki demo's feeds (DEMO.md step 3) are the seeded Pipeline manifests and the
 # bento.yaml beside each (../../context-gateway/seed/helsinki/): the Portal's reconciler renders
