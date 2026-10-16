@@ -157,7 +157,7 @@ def test_internal_extras_never_reach_more_details(theme):
     ])
     assert theme.jc_more(dcat) == [("source_note", "Measured by HSY")]
     rows = {label: text for label, text, _ in theme.jc_about(dcat)}
-    assert rows["Area covered"] == "http://data.europa.eu/nuts/code/CZ010"
+    assert rows["Area covered"] == "NUTS CZ010"  # linked to its definition (T-4333)
 
 
 SCHEMA = "https://dev.example/api/endpoint/praha/schema/v1/"
@@ -1154,7 +1154,9 @@ def test_the_resource_list_groups_and_names_the_type_once(theme):
     assert not any("(StatisticalObservation)" in label for label in labels.values()), labels
     assert labels["n"] == "NGSI-LD API" and labels["m"] == "Model Context Protocol"
     # The publisher's own page, named after the dataset, no longer reads as a twin of the table.
-    assert labels["p"] == "On the publisher's site" and labels["t"] == "The whole table"
+    assert labels["p"] == "On the publisher's site" and labels["t"] == "The publisher's original table"
+    # A file or a socket is named by what is in it; its chip already names the format.
+    assert labels["c"] == "All records, from the platform" and labels["w"] == "Live changes"
     assert theme.jc_entity_type(_od(theme, "m")) == theme.jc_entity_type(_od(theme, "o")) == "StatisticalObservation"
     theme.page.lang = "sk"
     model = {"name": "Data model: LinkML", "format": "LinkML", "url": OD + "schema/v1/model.linkml.yaml"}
@@ -1288,3 +1290,20 @@ def test_a_file_follows_its_format_s_rfc_and_an_api_base_lists_its_types(theme):
     assert theme.jc_examples(base)[0]["code"].endswith("ngsi-ld/v1/types'")
     # OData and OGC API without an entity set or items have no rows to preview.
     assert theme.jc_preview({"url": OD + "odata/v4/"}) is None and theme.jc_preview({"url": OD + "ogc/features/"}) is None
+
+
+def test_a_short_table_gets_a_short_frame_and_the_live_address_wraps():
+    page = (THEME / "templates__package__read.html").read_text()
+    assert 'style="--jc-rows: {{ [preview.total or 20, 20]|min }}"' in page
+    assert '<pre id="jc-live-url"' in page and 'readonly value="{{ live.url }}"' not in page
+    css = (THEME / "public__jc-theme.css").read_text()
+    assert "calc(15rem + var(--jc-rows, 20) * 2.6rem)" in css
+
+
+def test_the_dataset_facts_name_the_standard_and_the_region(theme):
+    rows = {label: (text, link) for label, text, link in theme.jc_about({"extras": [
+        {"key": "conforms_to", "value": "https://www.w3.org/TR/json-ld11/"},
+        {"key": "spatial_uri", "value": "http://data.europa.eu/nuts/code/SK031"}]})}
+    assert rows["Follows the standard"] == ("JSON-LD 1.1", "https://www.w3.org/TR/json-ld11/")
+    assert rows["Area covered"] == ("NUTS SK031", "http://data.europa.eu/nuts/code/SK031")
+    assert theme.jc_extra("quality_pass_rate", "1.0")[1] == "100 %"

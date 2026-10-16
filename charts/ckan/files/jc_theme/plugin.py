@@ -463,7 +463,9 @@ STRINGS = {
     },
     "created": {"en": "Created", "sk": "Vytvorené", "cs": "Vytvořeno", "de": "Erstellt"},
     "info": {"en": "About this resource", "sk": "O tomto zdroji", "cs": "O tomto zdroji", "de": "Über diese Ressource"},
-    "whole_table": {"en": "The whole table", "sk": "Celá tabuľka", "cs": "Celá tabulka", "de": "Die ganze Tabelle"},
+    "original_table": {"en": "The publisher's original table", "sk": "Pôvodná tabuľka vydavateľa", "cs": "Původní tabulka vydavatele", "de": "Die Originaltabelle des Herausgebers"},
+    "platform_records": {"en": "All records, from the platform", "sk": "Všetky záznamy z platformy", "cs": "Všechny záznamy z platformy", "de": "Alle Einträge, von der Plattform"},
+    "live_changes": {"en": "Live changes", "sk": "Zmeny naživo", "cs": "Změny živě", "de": "Änderungen live"},
     "ex_types": {"en": "The kinds of entities it holds, with curl", "sk": "Druhy entít, ktoré obsahuje, cez curl", "cs": "Druhy entit, které obsahuje, přes curl", "de": "Die Arten von Entitäten, die sie enthält, mit curl"},
     "section_source": {"en": "At the publisher", "sk": "U vydavateľa", "cs": "U vydavatele", "de": "Beim Herausgeber"},
     "source_lead": {
@@ -521,6 +523,7 @@ INTERNAL_EXTRAS = {"generated_by", "endpoint", "publisher_name", "publisher_uri"
 EXTRA_LABELS = {
     "issued": {"en": "Published by the publisher", "sk": "Zverejnené vydavateľom", "cs": "Zveřejněno vydavatelem", "de": "Vom Herausgeber veröffentlicht"},
     "modified": {"en": "Changed by the publisher", "sk": "Zmenené vydavateľom", "cs": "Změněno vydavatelem", "de": "Vom Herausgeber geändert"},
+    "quality_pass_rate": {"en": "Passed the quality checks", "sk": "Prešlo kontrolami kvality", "cs": "Prošlo kontrolami kvality", "de": "Qualitätsprüfungen bestanden"},
     "source_uri": {"en": "Original record", "sk": "Pôvodný záznam", "cs": "Původní záznam", "de": "Ursprünglicher Eintrag"},
 }
 
@@ -601,14 +604,16 @@ def jc_about(pkg):
     if frequency:
         rows.append((jc_t("frequency"), frequency[0], None))
     if pkg.get("metadata_modified"):
-        rows.append((jc_t("last_update"), str(pkg["metadata_modified"])[:10], None))
+        rows.append((jc_t("last_update"), _date(str(pkg["metadata_modified"])[:10]), None))
     if frequency and frequency[1]:
         # A dataset updated more than once a day promises an hour, not only a date.
-        pattern = "%Y-%m-%d %H:%M UTC" if frequency[1] - _parse(pkg["metadata_modified"]) < _DAY else "%Y-%m-%d"
-        rows.append((jc_t("next_update"), frequency[1].strftime(pattern), None))
+        hourly = frequency[1] - _parse(pkg["metadata_modified"]) < _DAY
+        rows.append((jc_t("next_update"), _date(frequency[1], hourly), None))
     coverage = extras.get("spatial_uri")
     if coverage:
-        rows.append((jc_t("coverage"), coverage, coverage if _is_url(coverage) else None))
+        # An EU NUTS region reads by its code, linked to its definition (T-4333).
+        nuts = re.search(r"/nuts/code/([A-Z]{2}[0-9A-Z]{0,3})$", coverage)
+        rows.append((jc_t("coverage"), "NUTS " + nuts.group(1) if nuts else coverage, coverage if _is_url(coverage) else None))
     start, end = extras.get("temporal_start"), extras.get("temporal_end")
     if start or end:
         rows.append((jc_t("period"), " – ".join(v for v in (start, end) if v), None))
@@ -619,8 +624,20 @@ def jc_about(pkg):
     for key in ("identifier", "language", "conforms_to", "status"):
         value = extras.get(key)
         if value:
-            rows.append((jc_t(key), value, value if _is_url(value) else None))
+            standard = jc_standard({"conforms_to": value}) if key == "conforms_to" else None
+            rows.append((jc_t(key), standard["name"] if standard else value, value if _is_url(value) else None))
     return rows
+
+
+def _date(value, hours=False):
+    """A date (or a datetime) as CKAN writes dates in the page's language (T-4333); the ISO form
+    where CKAN's helper is not there to ask."""
+    try:
+        return toolkit.h.render_datetime(value, with_hours=hours)
+    except (AttributeError, TypeError, ValueError):
+        if isinstance(value, datetime.datetime):
+            return value.strftime("%Y-%m-%d %H:%M UTC" if hours else "%Y-%m-%d")
+        return str(value)
 
 
 def jc_more(pkg):
@@ -635,6 +652,8 @@ def jc_extra(key, value):
     words = EXTRA_LABELS.get(key)
     label = (words.get(_language()) or words["en"]) if words else str(key).replace("_", " ").capitalize()
     text = str(value)
+    if key == "quality_pass_rate" and re.match(r"^(0(\.\d+)?|1(\.0+)?)$", text):
+        text = "%d %%" % round(float(text) * 100)
     if re.match(r"^\d{4}-\d{2}-\d{2}(T[\d:.]+Z?)?$", text):
         try:
             text = toolkit.h.render_datetime(text.rstrip("Z"))
@@ -856,6 +875,9 @@ def jc_resource_label(resource, pkg=None):
     if words:
         return words.get(_language()) or words["en"]
     kind = jc_kind(resource)
+    if kind in ("CSV", "JSON", "GEOJSON", "XLSX") or kind == "WEBSOCKET":
+        # The chip already says the format: the name says what is inside (T-4333).
+        return jc_t("platform_records" if kind != "WEBSOCKET" else "live_changes")
     if kind in DOOR_NAMES:
         # An Endpoint's door is named by what it is, in words every language shares, with its
         # entity type once in the page header instead of on every entry: the harvest wrote
@@ -863,7 +885,7 @@ def jc_resource_label(resource, pkg=None):
         return DOOR_NAMES[kind]
     elif (resource or {}).get("datastore_active") and pkg and rest.startswith((pkg.get("title") or "\0").strip() + " ("):
         # A harvested table is named "{dataset} (tabuľka)", in Slovak on every page (T-4333).
-        return jc_t("whole_table")
+        return jc_t("original_table")
     elif jc_is_source(resource, pkg):
         # The harvest names the publisher's own page after the dataset, so it read as a twin of
         # the table (T-4333).
@@ -919,7 +941,7 @@ def jc_what(resource):
     if kind and kind != "MODEL" and kind_type:
         scope = jc_t("scope_dataset") if _filtered(resource) else jc_t("scope_type").replace("{type}", kind_type)
         line = (line + ". " if line else "") + scope
-    return line
+    return line if not line or line.endswith((".", "…")) else line + "."
 
 
 def jc_format(resource):
@@ -1034,6 +1056,8 @@ STANDARDS = (
     ("rfc4180", "CSV (RFC 4180)"),
     ("rfc8259", "JSON (RFC 8259)"),
     ("smart-data-models", "Smart Data Models"),
+    ("w3.org/tr/json-ld11", "JSON-LD 1.1"),
+    ("w3.org/tr/vocab-dcat", "DCAT"),
     ("smartdatamodels", "Smart Data Models"),
 )
 
