@@ -44,8 +44,36 @@ def items():
     return [f["properties"] for f in json.loads((FIXTURES / "items.json").read_text())["features"]]
 
 
-def layers_of(item):
-    return json.loads((FIXTURES / "layers.json").read_text()).get(item["id"], [])
+ARTEFACTS = ["context.jsonld", "model.linkml.yaml", "model.md", "model.owl.ttl", "model.rdf.ttl",
+             "model.schema.json", "model.shacl.ttl"]
+
+
+def model_index(types, artefacts=ARTEFACTS):
+    """An Endpoint's schema/index.json models, as the gateway answers it (version 1 of one model)."""
+    return [{"name": "m", "version": 1, "types": list(types),
+             "artifacts": {f: {"bytes": 10, "sha256": f"sha-{f}", "type": "text/plain"} for f in artefacts}}]
+
+
+def name_of(ident):
+    """The CKAN name the harvest gives a kept item, from its corrected title."""
+    item, title = next((i, t) for i, t in harvest.select(items(), dev_source())[0] if i["id"] == ident)
+    return harvest.dataset(item, title, dev_source())["name"]
+
+
+@pytest.fixture
+def converted(monkeypatch):
+    """Marks source items as converted: their rows are entities of an Endpoint whose model has
+    every artefact. Returns the setter; no item is converted until it is called."""
+    monkeypatch.setattr(harvest, "OD_GATEWAY", "https://dev.joinedcontext.com")
+    monkeypatch.setattr(harvest, "OD_DATASETS", {})
+    monkeypatch.setattr(harvest, "od_models", lambda endpoint: model_index(["PointOfInterest"]))
+
+    def mark(*idents, location=True):
+        for ident in idents:
+            name = name_of(ident)
+            harvest.OD_DATASETS[name] = {"endpoint": "ep", "type": "PointOfInterest", "location": location,
+                                         "dataset": f"https://data.dev.joinedcontext.com/dataset/{name}"}
+    return mark
 
 
 class FakeCkan:
@@ -145,32 +173,36 @@ def test_a_repeated_title_keeps_the_newest_copy_and_names_the_other_as_its_dupli
     assert (older, "Obyvateľstvo podľa rodinného stavu (2021)", f"duplicate of {newer['id']}") in skipped
 
 
-def test_a_dataset_carries_licence_publisher_and_one_csv_and_geojson_per_layer():
+def test_a_dataset_carries_licence_publisher_and_none_of_the_hubs_links(converted):
+    converted(CULTURE)
     item = next(i for i in items() if i["id"] == CULTURE)
-    package = harvest.dataset(item, item["title"], layers_of(item), dev_source())
+    package = harvest.dataset(item, item["title"], dev_source())
     assert package["owner_org"] == "bbsk" and package["license_id"] == "cc-by"
     extras = {e["key"]: e["value"] for e in package["extras"]}
     assert extras["publisher_name"] == "Banskobystrický samosprávny kraj"
     assert extras["publisher_uri"].endswith("/37828100")
     assert extras["license_url"] == "https://creativecommons.org/licenses/by/4.0/"
     assert extras["source_id"] == CULTURE and extras["modified"].endswith("Z")
-    assert [r["format"] for r in package["resources"]] == ["CSV", "GeoJSON"] * 3 + ["Esri REST"]
-    assert package["resources"][0]["url"] == (
-        f"https://opendata.bbsk.sk/api/download/v1/items/{CULTURE}/csv?layers=7")
-    assert package["resources"][0]["name"] == "Kultúrne inštitúcie CSV"
+    # EP-118: no Hub CSV, GeoJSON, Esri REST or Shapefile link, only the platform's (T-4324).
+    assert all(r["url"].startswith("https://dev.joinedcontext.com/") or r["url"].startswith("wss://dev.")
+               for r in package["resources"])
+    assert not {"Esri REST", "SHP", "ZIP"} & {r["format"] for r in package["resources"]}
     assert "<" not in package["notes"] and "style=" not in package["notes"]
     assert len(package["name"]) <= 100 and package["name"].startswith("bbsk-kulturne-institucie")
 
 
-def test_a_converted_dataset_lists_the_platform_apis_and_an_unconverted_one_none(monkeypatch):
-    """T-4279: the dataset whose rows became entities gains a distribution per standard, each
-    reading only its rows where the standard can filter; a dataset nobody converted gains none."""
+def test_a_converted_dataset_lists_the_platform_apis_and_its_model_and_an_unconverted_one_none(monkeypatch):
+    """T-4279, EP-118: the dataset whose rows became entities lists a distribution per standard,
+    each reading only its rows where the standard can filter, then its data model in all seven
+    formalisms; a dataset nobody converted lists nothing, and neither does one whose model lacks
+    an artefact (T-4324)."""
     monkeypatch.setattr(harvest, "OD_DATASETS", OD_DATASETS)
     monkeypatch.setattr(harvest, "OD_GATEWAY", "https://dev.joinedcontext.com")
+    monkeypatch.setattr(harvest, "od_models", lambda endpoint: model_index(["PointOfInterest"]))
     item = next(i for i in items() if i["id"] == CULTURE)
-    package = harvest.dataset(item, item["title"], layers_of(item), dev_source())
+    package = harvest.dataset(item, item["title"], dev_source())
     apis = [r for r in package["resources"] if r.get("resource_type") == "api"]
-    assert [r["format"] for r in package["resources"] if r not in apis] == ["CSV", "GeoJSON"] * 3 + ["Esri REST"]
+    model = [r for r in package["resources"] if r not in apis]
     entry = OD_DATASETS[package["name"]]
     assert entry["location"], "the culture layer has points, so GeoJSON and OGC are listed"
     root = f"https://dev.joinedcontext.com/api/endpoint/{entry['endpoint']}/"
@@ -186,12 +218,51 @@ def test_a_converted_dataset_lists_the_platform_apis_and_an_unconverted_one_none
         "NGSI-LD", "GeoJSON", "CSV", "JSON", "XLSX", "OGCFEAT", "OData", "MCP", "WebSocket"]
     assert all("conforms_to" in r for r in apis if r["format"] in ("NGSI-LD", "GeoJSON", "OGCFEAT", "OData", "MCP"))
     assert all(r["description"].startswith("Every PointOfInterest") for r in apis if "?" not in r["url"])
+    assert [r["format"] for r in model] == [
+        "JSON Schema", "JSON-LD", "LinkML", "Markdown", "OWL", "RDF", "SHACL"]
+    assert model[0]["url"] == root + "schema/v1/model.schema.json"
+    assert model[0]["hash"] == "sha-model.schema.json" and model[0]["hash_algorithm"] == "sha256"
 
     other = next(i for i in items() if i["id"] == APS)
-    assert not any(r.get("resource_type") == "api" for r in
-                   harvest.dataset(other, other["title"], layers_of(other), dev_source())["resources"])
+    assert harvest.dataset(other, other["title"], dev_source())["resources"] == []
+    monkeypatch.setattr(harvest, "od_models", lambda endpoint: model_index(["PointOfInterest"], ARTEFACTS[1:]))
+    assert harvest.od_standards(package["name"]) == [], "a model without its @context lists nothing"
+    monkeypatch.setattr(harvest, "od_models", lambda endpoint: model_index(["Other"]))
+    assert harvest.od_standards(package["name"]) == [], "no model of the type lists nothing"
     monkeypatch.setattr(harvest, "OD_GATEWAY", "")
     assert harvest.od_standards(package["name"]) == [], "no gateway set lists nothing"
+
+
+def test_the_model_index_is_read_once_per_endpoint_and_a_failed_read_raises(monkeypatch):
+    monkeypatch.setattr(harvest, "OD_GATEWAY", "https://dev.joinedcontext.com")
+    monkeypatch.setattr(harvest, "_OD_MODELS", {})
+    asked = []
+
+    class Answer:
+        def __init__(self, body):
+            self.body = body
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def read(self, *args):
+            return self.body
+
+    def urlopen(request, timeout):
+        asked.append(request.full_url)
+        if "broken" in request.full_url:
+            raise harvest.urllib.error.URLError("timed out")
+        return Answer(json.dumps({"models": model_index(["T"])}).encode())
+
+    monkeypatch.setattr(harvest._request, "urlopen", urlopen)
+    assert harvest.od_models("ep")[0]["types"] == ["T"]
+    harvest.od_models("ep")
+    assert asked == ["https://dev.joinedcontext.com/api/endpoint/ep/schema/index.json"]
+    with pytest.raises(OSError):
+        harvest.od_models("broken")
 
 
 def test_the_cronjob_carries_the_mapping_and_the_dev_gateway(rendered):
@@ -202,15 +273,6 @@ def test_the_cronjob_carries_the_mapping_and_the_dev_gateway(rendered):
     assert container["args"][0].startswith((ROOT / "charts/ckan/files/od-standards.py").read_text())
 
 
-def test_a_table_has_no_geojson_and_a_link_off_the_allowed_hosts_is_dropped():
-    item = next(i for i in items() if i["id"] == SUPPLIERS)
-    package = harvest.dataset(item, "Dodávatelia", layers_of(item), dev_source())
-    assert [r["format"] for r in package["resources"]] == ["CSV", "Esri REST"]
-    moved = dict(item, url="http://evil.example/arcgis/rest/services/x/FeatureServer")
-    package = harvest.dataset(moved, "Dodávatelia", layers_of(item), dev_source())
-    assert [r["format"] for r in package["resources"]] == ["CSV"]
-
-
 def test_html_in_a_description_becomes_text_and_never_markup():
     text = harvest.plain_text("<p style='x'>Prvý&nbsp;odsek</p><p>Druhý <a href='https://x'>odkaz</a>"
                               "<script>alert(1)</script></p>")
@@ -218,49 +280,73 @@ def test_html_in_a_description_becomes_text_and_never_markup():
     assert harvest.plain_text(None) == ""
 
 
-def test_the_harvest_creates_then_leaves_alone_then_withdraws_only_its_own(ckan):
+def test_the_harvest_creates_then_leaves_alone_then_withdraws_only_its_own(ckan, converted):
+    converted(OBCE, OKRESY, CULTURE, SUPPLIERS)
     client = harvest.Ckan(ckan.host, "token-1")
     source = dev_source()
     ckan.packages["hand"] = {"id": "hand", "name": "rucny", "owner_org": "bbsk", "state": "active",
                              "extras": []}
 
-    warmed = []
-    counts, kept, _ = harvest.harvest(client, source, items(), layers_of, warmed.append)
+    counts, kept, _ = harvest.harvest(client, source, items())
     assert counts == {"created": 4, "updated": 0, "unchanged": 0, "withdrawn": 0}
-    assert len(warmed) == 4
     assert ckan.orgs["bbsk"]["title"] == "Banskobystrický samosprávny kraj"
     assert set(ckan.active()) == {None, OBCE, OKRESY, CULTURE, SUPPLIERS}
 
-    counts, _, _ = harvest.harvest(client, source, items(), layers_of, warmed.append)
+    counts, _, _ = harvest.harvest(client, source, items())
     assert counts == {"created": 0, "updated": 0, "unchanged": 4, "withdrawn": 0}
-    assert len(warmed) == 4, "an unchanged dataset's downloads were requested again"
     assert "organization_create" not in ckan.calls[ckan.calls.index("package_create") + 1:]
 
     renamed = [dict(i, title="Kultúrne inštitúcie") if i["id"] == CULTURE else i
                for i in items() if i["id"] != SUPPLIERS]
     name_before = ckan.active()[CULTURE]["name"]
-    counts, _, _ = harvest.harvest(client, source, renamed, layers_of)
+    counts, _, _ = harvest.harvest(client, source, renamed)
     assert counts == {"created": 0, "updated": 1, "unchanged": 2, "withdrawn": 1}
     assert ckan.active()[CULTURE]["name"] == name_before, "a retitled dataset changed its URL"
     assert SUPPLIERS not in ckan.active()
     assert ckan.packages["hand"]["state"] == "active", "a dataset the harvest did not make was withdrawn"
 
-    counts, _, _ = harvest.harvest(client, source, items(), layers_of)
+    counts, _, _ = harvest.harvest(client, source, items())
     assert counts["updated"] == 2 and SUPPLIERS in ckan.active(), "a returning dataset stayed deleted"
 
 
-def test_a_source_that_fails_halfway_withdraws_nothing(ckan):
+def test_a_dataset_whose_rows_are_not_converted_is_withdrawn_and_named(ckan, converted):
+    """EP-118 (T-4324): the catalogue lists NGSI-LD data or nothing. The first run listed four;
+    once only the culture layer is mapped, the other three are withdrawn with their reason."""
+    converted(OBCE, OKRESY, CULTURE, SUPPLIERS)
     client = harvest.Ckan(ckan.host, "token-1")
-    harvest.harvest(client, dev_source(), items(), layers_of)
+    harvest.harvest(client, dev_source(), items())
+    for ident in (OBCE, OKRESY, SUPPLIERS):
+        del harvest.OD_DATASETS[name_of(ident)]
+    counts, kept, skipped = harvest.harvest(client, dev_source(), items())
+    assert counts["withdrawn"] == 3 and [item["id"] for item, _ in kept] == [CULTURE]
+    assert set(ckan.active()) == {CULTURE}
+    reasons = {ident: reason for ident, _, reason in skipped}
+    assert reasons[SUPPLIERS] == "not converted to NGSI-LD, so not listed (EP-118)"
 
-    def broken(item):
-        if item["id"] == CULTURE:
-            raise harvest.SourceError("services-eu1.arcgis.com: timed out")
-        return layers_of(item)
 
-    with pytest.raises(harvest.SourceError):
-        harvest.harvest(client, dev_source(), [i for i in items() if i["id"] != SUPPLIERS], broken)
-    assert SUPPLIERS in ckan.active()
+def test_no_dataset_converted_at_all_withdraws_nothing(ckan, converted):
+    """A missing gateway or mapping lists no dataset; that is a broken run, not an empty catalogue."""
+    converted(CULTURE)
+    client = harvest.Ckan(ckan.host, "token-1")
+    harvest.harvest(client, dev_source(), items())
+    harvest.OD_DATASETS.clear()
+    with pytest.raises(harvest.SourceError, match="nothing is withdrawn"):
+        harvest.harvest(client, dev_source(), items())
+    assert set(ckan.active()) == {CULTURE} and "package_delete" not in ckan.calls
+
+
+def test_a_gateway_that_fails_halfway_withdraws_nothing(ckan, converted, monkeypatch):
+    converted(OBCE, OKRESY, CULTURE, SUPPLIERS)
+    client = harvest.Ckan(ckan.host, "token-1")
+    harvest.harvest(client, dev_source(), items())
+
+    def broken(endpoint):
+        raise harvest.urllib.error.URLError("dev.joinedcontext.com: timed out")
+
+    monkeypatch.setattr(harvest, "od_models", broken)
+    with pytest.raises(OSError):
+        harvest.harvest(client, dev_source(), [i for i in items() if i["id"] != SUPPLIERS])
+    assert SUPPLIERS in ckan.active() and "package_delete" not in ckan.calls
 
 
 def test_a_short_read_of_the_hub_is_an_error_not_an_empty_catalogue(monkeypatch):
@@ -304,7 +390,7 @@ def test_the_cronjob_runs_the_catalogue_image_with_the_token_by_reference(render
     assert env["CKAN_API_TOKEN"]["valueFrom"]["secretKeyRef"] == {"name": "ckan-api-token", "key": "token"}
     config = json.loads(env["HARVEST_CONFIG"]["value"])
     assert (config["source"], config["organization"], config["kind"]) == ("hub-bbsk", "bbsk", "hub")
-    assert "def warm_downloads(package):" in container["args"][0], "the hub source runs another script"
+    assert "def hub_items(source):" in container["args"][0], "the hub source runs another script"
     assert "def main():" in container["args"][0]
 
 
@@ -315,15 +401,16 @@ def test_the_harvest_reaches_dns_the_catalogue_and_https_only(rendered):
     assert sorted(p["port"] for rule in policy["egress"] for p in rule["ports"]) == [53, 53, 443, 5000]
 
 
-def test_an_empty_or_closed_hub_answer_withdraws_nothing(ckan):
+def test_an_empty_or_closed_hub_answer_withdraws_nothing(ckan, converted):
     """Integrator review 2026-10-15: an outage that lists nothing must not empty `bbsk`."""
+    converted(OBCE, OKRESY, CULTURE, SUPPLIERS)
     client = harvest.Ckan(ckan.host, "token-1")
-    harvest.harvest(client, dev_source(), items(), layers_of)
+    harvest.harvest(client, dev_source(), items())
     before = set(ckan.active())
     closed = [dict(i, license="none") for i in items()]
     for answer in ([], closed):
         with pytest.raises(harvest.SourceError, match="nothing is withdrawn"):
-            harvest.harvest(client, dev_source(), answer, layers_of)
+            harvest.harvest(client, dev_source(), answer)
         assert set(ckan.active()) == before
     assert "package_delete" not in ckan.calls
 
@@ -334,8 +421,6 @@ def test_a_service_off_the_allowed_hosts_is_skipped_and_never_fetched():
     kept, skipped = harvest.select(moved, dev_source())
     assert CULTURE not in [item["id"] for item, _ in kept]
     assert (CULTURE, "its service is not on an allowed host") in [(i, r) for i, _, r in skipped]
-    with pytest.raises(harvest.SourceError, match="not an allowed host"):
-        harvest.item_layers(moved[[i["id"] for i in moved].index(CULTURE)], {"opendata.bbsk.sk"})
 
 
 def test_a_fetch_is_refused_off_the_allowed_hosts_and_so_is_a_redirect_there():
