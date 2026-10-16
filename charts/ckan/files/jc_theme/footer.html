@@ -29,12 +29,13 @@
     </div>
   </div>
   {# The assistant (AG-114): a native disclosure, so a keyboard opens it and a closed one loads
-     nothing; the page it frames is the assistant host's, framed only by the origins it allows. #}
+     nothing; the page it frames is the assistant host's, framed only by the origins it allows.
+     It speaks the page's language, so the frame's header and the chat read alike (T-4253). #}
   {% set widget = h.jc_assistant_widget() %}
   {% if widget %}
     <details class="jc-assistant">
       <summary>{{ h.jc_t('assistant') }}</summary>
-      <iframe src="{{ widget }}" title="{{ h.jc_t('assistant') }}" loading="lazy" referrerpolicy="no-referrer"></iframe>
+      <iframe src="{{ widget }}?lang={{ h.lang()|urlencode }}" title="{{ h.jc_t('assistant') }}" loading="lazy" referrerpolicy="no-referrer"></iframe>
     </details>
     <script src="{{ h.url_for_static('/jc-assistant.js') }}" defer></script>
   {% endif %}
