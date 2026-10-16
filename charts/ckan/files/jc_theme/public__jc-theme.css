@@ -298,7 +298,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .jc-table[open] > summary::before { transform: rotate(90deg); }
 .jc-table-rows { color: var(--jc-muted); font-weight: 500; font-size: .875rem; }
 .jc-table > .jc-preview-actions { padding-bottom: 1rem; }
-.jc-grid { display: block; width: 100%; height: 38rem; border: 1px solid var(--jc-border); border-radius: var(--jc-radius-lg); background: var(--jc-surface); }
+.jc-grid { display: block; width: 100%; height: clamp(18rem, calc(15rem + var(--jc-rows, 20) * 2.6rem), 38rem); border: 1px solid var(--jc-border); border-radius: var(--jc-radius-lg); background: var(--jc-surface); }
 .jc-preview-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .75rem; }
 .jc-about-list { display: grid; grid-template-columns: minmax(9rem, max-content) 1fr; gap: 0; margin: 0;
   border: 1px solid var(--jc-border); border-radius: var(--jc-radius-lg); overflow: hidden; }
@@ -375,7 +375,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   .jc-resource { grid-template-columns: 1fr; }
   .jc-about-list { grid-template-columns: 1fr; }
   .jc-about-list dd { border-top: 0; padding-top: 0; }
-  .jc-grid { height: 26rem; }
+  .jc-grid { height: clamp(18rem, calc(15rem + var(--jc-rows, 20) * 2.6rem), 26rem); }
   .jc-copy { flex-direction: column; }
 }
 
@@ -409,7 +409,8 @@ body.dt-view .dt-button, body.dt-view .btn-secondary { background: var(--jc-surf
 
 /* The resource page's list of resources: whole names that wrap, and an editor's Edit beside each (T-3048). */
 .jc-resource-nav .nav-item { display: flex; align-items: center; gap: .5rem; }
-.jc-resource-nav .nav-item > a:first-child { flex: 1; overflow-wrap: anywhere; }
+/* The chip keeps its column and a long name wraps beside it, never under it (T-4333). */
+.jc-resource-nav .nav-item > a:first-child { flex: 1; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; gap: .375rem; overflow-wrap: anywhere; }
 .jc-resource-nav .jc-resource-edit { font-size: .875rem; white-space: nowrap; padding-inline-end: 1rem; }
 .jc-resource-address { overflow-wrap: anywhere; }
 .jc-no-view { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; padding: 1rem 0; }
@@ -461,4 +462,65 @@ body:has(.jc-assistant) { padding-block-end: 5rem; }
   /* The frame's height is the screen's less the bar: an iframe stretches neither as a flex item of
      details (its content sits in ::details-content) nor between insets, and stays 150 px (T-4248). */
   .jc-assistant[open] > iframe { position: fixed; inset: 3.25rem 0 auto 0; width: 100%; height: calc(100vh - 3.25rem); height: calc(100dvh - 3.25rem); border: 0; border-radius: 0; }
+}
+
+/* ---- A resource's page (T-4333) ---------------------------------------------------------- */
+/* The resource card sits in the same grid as the cards under it: a `.row` child is padded by half
+   a gutter, so it is inset by that much instead and wears the card's own surface. */
+.wrapper > .module-resource {
+  margin-inline: calc(var(--bs-gutter-x) * .5); padding-inline: 0; width: calc(100% - var(--bs-gutter-x));
+  background: var(--jc-surface); border: 1px solid var(--jc-border); border-radius: var(--jc-radius-lg);
+  box-shadow: var(--jc-shadow-1); margin-bottom: 1.25rem; overflow: hidden;
+}
+.module-resource .actions:empty, .module-resource .actions > :empty { display: none; }
+.module-content > h2:first-child, .module-resource .page-heading { margin-top: 0; }
+.jc-eyebrow { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; margin: 0 0 .5rem; color: var(--jc-muted); font-size: .875rem; }
+.jc-eyebrow code, .jc-facts code { color: var(--jc-ink); font-size: .875em; overflow-wrap: anywhere; }
+.module-resource .page-heading { overflow-wrap: anywhere; margin-bottom: .5rem; }
+.jc-lead { font-size: 1.0625rem; margin: 0 0 .75rem; }
+.jc-address { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; margin: 1rem 0 .25rem; padding: .75rem 1rem; background: var(--jc-n50); border: 1px solid var(--jc-border); border-radius: var(--jc-radius); }
+.jc-address-label { font-weight: 600; }
+.jc-address-short { flex: 1 1 16rem; min-width: 0; color: var(--jc-ink); overflow-wrap: normal; word-break: normal; }
+.jc-address-short > span { white-space: nowrap; }
+.jc-address .btn { flex: none; }
+.jc-address-whole { flex: 1 1 100%; min-width: 0; font-size: .875rem; }
+.jc-address-whole summary { cursor: pointer; color: var(--jc-muted); }
+.jc-address-whole pre { margin: .5rem 0 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .8125rem; }
+.jc-api { padding-block: .5rem 0; }
+.jc-api h2 { font-size: 1.25rem; margin: 1.5rem 0 .5rem; }
+.jc-api h3 { font-size: 1rem; font-weight: 650; margin: 1.25rem 0 .25rem; }
+.jc-api p { margin: .25rem 0; }
+.jc-rows-status { color: var(--jc-muted); }
+.jc-rows-table { overflow-x: auto; border: 1px solid var(--jc-border); border-radius: var(--jc-radius); }
+.jc-rows-table table { margin: 0; font-size: .875rem; }
+.jc-rows-table td, .jc-rows-table th { white-space: nowrap; max-width: 18rem; overflow: hidden; text-overflow: ellipsis; }
+.jc-facts { display: grid; grid-template-columns: minmax(8rem, max-content) 1fr; margin: 0; }
+.jc-facts > div { display: contents; }
+.jc-facts > div[hidden] { display: none; }
+.jc-facts dt, .jc-facts dd { padding: .625rem 0; border-top: 1px solid var(--jc-border); margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.jc-facts dt { font-weight: 600; padding-inline-end: 1.5rem; }
+.jc-facts > div:first-child > * { border-top: 0; }
+@media (max-width: 575.98px) {
+  .jc-facts { grid-template-columns: 1fr; }
+  .jc-facts dd { border-top: 0; padding-top: 0; }
+}
+.jc-nav-group { font-size: .75rem; font-weight: 650; text-transform: uppercase; letter-spacing: .04em; color: var(--jc-muted); margin: 0; padding: .875rem 1.25rem .375rem; border-top: 1px solid var(--jc-border); }
+.jc-resource-nav .jc-chip { margin-inline-end: 0; }
+/* Nothing on a page may push it wider than the window, or the corner button leaves it. */
+.wrapper > .primary, .wrapper > .secondary, .module-content { min-width: 0; }
+/* A command wraps inside its card at every width; Bootstrap's `pre code` would keep it one line. */
+.jc-api pre, .jc-api pre code, .jc-address-whole pre code { white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; }
+.jc-api .jc-copy-code { flex-wrap: wrap; }
+.jc-api .jc-copy-code pre { flex: 1 1 auto; width: min(100%, 40rem); }
+.jc-api .jc-copy-code .btn { align-self: flex-start; }
+/* The address box ends the header card's text; the rows and examples follow without a band. */
+.module-resource .resource-view.jc-api { margin-top: 0; padding-top: 0; }
+.jc-api > section:first-child > h2 { margin-top: 1.25rem; }
+.jc-live-url { flex: 1 1 auto; min-width: 0; margin: 0; padding: .5rem .75rem; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--jc-surface); border: 1px solid var(--jc-border); border-radius: var(--jc-radius); font-size: .875rem; }
+.jc-live .jc-live-url { padding: .5rem .75rem; background: var(--jc-surface); color: var(--jc-ink); font-size: .875rem; }
+.jc-live-url code { white-space: inherit; overflow-wrap: inherit; color: var(--jc-ink); }
+/* Below desktop a resource page is one column: the list of resources reads whole under the facts. */
+@media (max-width: 991.98px) {
+  .wrapper:has(> .module-resource) > .primary, .wrapper:has(> .module-resource) > .secondary { width: 100%; flex: 0 0 100%; max-width: 100%; }
+  .wrapper:has(> .module-resource) > .secondary { order: 2; }
 }
