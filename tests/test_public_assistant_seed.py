@@ -298,7 +298,7 @@ def test_the_general_assistant_names_no_city_and_carries_the_portal_guide():
     for words in NAMES.values():
         assert not any(word in shown for word in words), shown
     assert "helsin" not in shown
-    assert spec["theme"]["title"] == "Asistent otvorených dát"
+    assert spec["theme"]["title"] == "data.dev"
     assert spec["languages"] == ["sk", "en", "fi"]
     assert set(spec["suggestions"]) == set(spec["disclaimer"]) == {"sk", "en", "fi"}
     prompt = spec["systemPrompt"]

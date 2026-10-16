@@ -65,9 +65,12 @@ spec:
     messagesPerConversation: 30
     questionChars: 1000
   model: { router: google/gemini-3.8-flash, answer: google/gemini-3.8-flash }
-  # No city in the header or the greeting (owner: "nie pre konkrétne mesto").
+  # No city in the header or the greeting (owner: "nie pre konkrétne mesto"). The title is the
+  # catalogue's name, the same in every language; the widget writes "Asistent"/"Assistant" beside
+  # it. The greeting is one string (Theme.greeting), so en and fi show the widget's own until the
+  # theme is per language (T-4365).
   theme:
-    title: "Asistent otvorených dát"
+    title: "data.dev"
     greeting: "Dobrý deň! Pýtajte sa na otvorené dáta zo všetkých miest a krajov v katalógu."
   suggestions:
     sk:
