@@ -71,6 +71,14 @@ branding:
 {{- fail (printf "ckan.catalogue.assistant: %q is not a publicId (lowercase letters, digits and dashes)" $this.assistant) }}
 {{- end }}
 assistantWidget: "https://assistant.{{ $global.domain }}/d/{{ $this.assistant }}/widget"
+# A dataset page frames its publisher's assistant, by CKAN organization (T-4281).
+assistantWidgets:
+{{- range $organization, $publicId := (index $this "assistantByOrganization") | default dict }}
+{{- if not (regexMatch "^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$" $publicId) }}
+{{- fail (printf "ckan.catalogue.assistantByOrganization.%s: %q is not a publicId (lowercase letters, digits and dashes)" $organization $publicId) }}
+{{- end }}
+  {{ $organization | quote }}: "https://assistant.{{ $global.domain }}/d/{{ $publicId }}/widget"
+{{- end }}
 {{- end }}
 
 podSecurityContext:

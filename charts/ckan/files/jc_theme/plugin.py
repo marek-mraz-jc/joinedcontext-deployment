@@ -864,14 +864,28 @@ ASSISTANT_WIDGET = os.environ.get("JC_ASSISTANT_WIDGET_URL", "")
 PUBLIC_ID = r"[a-z0-9](?:[-a-z0-9]{0,61}[a-z0-9])?"
 
 
-def jc_assistant_widget():
-    """The knowledge assistant's widget page on this installation's assistant host (AG-114);
-    None when there is none, or when the address names any other host or path."""
+def _widgets():
+    """Each CKAN organization's own widget address (T-4281); empty when unset or unreadable."""
+    try:
+        found = json.loads(os.environ.get("JC_ASSISTANT_WIDGET_URLS") or "{}")
+    except ValueError:
+        return {}
+    return {k: v for k, v in found.items() if isinstance(k, str) and isinstance(v, str)} if isinstance(found, dict) else {}
+
+
+ASSISTANT_WIDGETS = _widgets()
+
+
+def jc_assistant_widget(organization=None):
+    """The knowledge assistant's widget page on this installation's assistant host (AG-114): the
+    publisher's own when `organization` has one (T-4281), else the catalogue's; None when there
+    is none, or when the address names any other host or path."""
     domain = BRANDING.get("domain")
-    if not domain or not ASSISTANT_WIDGET:
+    widget = ASSISTANT_WIDGETS.get(organization or "") or ASSISTANT_WIDGET
+    if not domain or not widget:
         return None
     pattern = r"https://assistant\.%s/d/%s/widget" % (re.escape(domain), PUBLIC_ID)
-    return ASSISTANT_WIDGET if re.fullmatch(pattern, ASSISTANT_WIDGET) else None
+    return widget if re.fullmatch(pattern, widget) else None
 
 
 def jc_branding():
@@ -903,6 +917,32 @@ def jc_sso_error(session=None):
     if not reason:
         return None
     return jc_t(SSO_REASONS.get(reason, "sso_other"))
+
+
+# Word's Symbol font writes bullets as private-use code points (U+F0B7 and kin); a page without
+# that font draws a box ("□ Druh □" on data.dev, T-4283). Publishers' descriptions arrive with
+# them, so the catalogue maps the common ones and drops any other private-use character.
+SYMBOL_GLYPHS = {"\uf0b7": "•", "\uf0a7": "▪", "\uf0a8": "◦", "\uf0d8": "›", "\uf0fc": "✓", "\uf076": "❖"}
+PRIVATE_USE = re.compile("[\ue000-\uf8ff]")
+
+
+def jc_plain_glyphs(text):
+    """The text with Symbol-font bullets as real ones and no other private-use character."""
+    if not isinstance(text, str):
+        return text
+    return PRIVATE_USE.sub(lambda m: SYMBOL_GLYPHS.get(m.group(), ""), text)
+
+
+def jc_clean_dataset(pkg):
+    """A dataset's words, and its resources', without glyphs no font draws."""
+    for key in ("title", "notes"):
+        if key in pkg:
+            pkg[key] = jc_plain_glyphs(pkg[key])
+    for resource in pkg.get("resources") or []:
+        for key in ("name", "description"):
+            if key in resource:
+                resource[key] = jc_plain_glyphs(resource[key])
+    return pkg
 
 
 class JcThemePlugin(plugins.SingletonPlugin):
@@ -973,6 +1013,14 @@ class JcThemePlugin(plugins.SingletonPlugin):
             if "*)" in search_params["q"] and "*)" not in q:
                 search_params.setdefault("defType", "edismax")
         return search_params
+
+    def after_dataset_show(self, context, pkg_dict):
+        jc_clean_dataset(pkg_dict)
+
+    def after_dataset_search(self, search_results, search_params):
+        for pkg in search_results.get("results") or []:
+            jc_clean_dataset(pkg)
+        return search_results
 
     def dataset_facets(self, facets_dict, package_type):
         """The search filters in plain words: Publisher, Topic, Keywords, Format, Licence."""

@@ -1,173 +1,226 @@
-"""T-4167 (Architecture/23 §6): the residents' public assistant of Banská Bystrica and its region.
+"""T-4167, T-4281 (Architecture/23 §6): one public assistant per body, over its own knowledge.
 
-`banskabystrica/banskabystrica` answers anyone on the assistant host and the demo page, so
-everything it reads is public and belongs to the city or the region: its web sources crawl
-banskabystrica.sk and bbsk.sk alone, its CKAN source lists the two bodies' organizations, its
-connectors name public Endpoints of the two projects that serve MCP with read-only tools, and
-its limits are T-4149's defaults. Prague, Helsinki and Žilina are unreachable by construction.
+Each of Banská Bystrica (the city), BBSK (the region), Žilina and Prague answers anyone on the
+assistant host, the demo page and the data catalogue under its own publicId. Everything it reads
+is public and its own body's: its web source crawls the body's site alone, its CKAN source lists
+the body's organization alone, its connectors name public Endpoints of its own project that serve
+MCP with read-only tools, and its limits are T-4149's with a daily budget per body (T-4281).
+No other body's site, organization or Endpoint is reachable from it.
 """
 
 from pathlib import Path
 from urllib.parse import urlsplit
 
+import pytest
 import yaml
 
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
-SCOPE = ("banskabystrica", "bbsk")
-WEB_HOSTS = {"www.banskabystrica.sk", "www.bbsk.sk"}
 READ_ONLY = {"list_types", "query_entities", "get_entity", "get_attribute_value", "retrieve_temporal"}
-ELSEWHERE = ("helsinki", "hel-fi", "hel.fi", "praha", "prague", "zilina", "žilina")
+# publicId: (project, web host, CKAN organization, language first, cost per day)
+BODIES = {
+    "banskabystrica": ("banskabystrica", "www.banskabystrica.sk", "banskabystrica", "sk", 1),
+    "bbsk": ("bbsk", "www.bbsk.sk", "bbsk", "sk", 1),
+    "zilina": ("zilina", "www.zilina.sk", "zilina", "sk", 0.5),
+    "praha": ("praha", "www.praha.eu", "praha", "cs", 0.5),
+}
+# Words that name a body, for the check that one body's assistant names no other.
+NAMES = {
+    "banskabystrica": ("banskabystrica", "banská bystrica"),
+    "bbsk": ("bbsk", "samosprávn"),
+    "zilina": ("zilina", "žilin"),
+    "praha": ("praha", "prague", "prahy"),
+}
+ORIGINS = [
+    "https://assistant.dev.joinedcontext.com",
+    "https://dev.joinedcontext.com",
+    "https://data.dev.joinedcontext.com",
+]
 
 
-def manifests(kind: str, project: str = "banskabystrica") -> dict[str, dict]:
+def manifests(kind: str, project: str) -> dict[str, dict]:
     found = {}
     for path in sorted((SEED / project).glob("*.yaml")):
+        if path.name == "index.yaml":
+            continue
         for doc in yaml.safe_load_all(path.read_text()):
             if isinstance(doc, dict) and doc.get("kind") == kind:
                 found[doc["metadata"]["name"]] = doc
     return found
 
 
-def deployment() -> dict:
-    return manifests("AssistantDeployment")["banskabystrica"]["spec"]
+def deployment(public_id: str) -> dict:
+    project = BODIES[public_id][0]
+    found = [d for d in manifests("AssistantDeployment", project).values() if d["spec"]["publicId"] == public_id]
+    assert len(found) == 1, public_id
+    return found[0]
 
 
-def test_the_deployment_is_public_and_answers_on_its_own_id():
-    spec = deployment()
+@pytest.mark.parametrize("public_id", BODIES)
+def test_each_body_has_one_public_assistant_on_its_own_id(public_id):
+    doc = deployment(public_id)
+    spec = doc["spec"]
+    assert doc["metadata"]["namespace"] == BODIES[public_id][0]
     assert spec["channel"] == "public"
-    assert spec["publicId"] == "banskabystrica"
     assert spec.get("enabled", True) is True
-    # The internal staff assistant stays as it was.
-    assert manifests("AssistantDeployment")["knowledge"]["spec"]["channel"] == "internal"
+    # Its own project only: no source and no connector of another project (T-4281).
+    assert "scope" not in spec
+    assert all("/" not in name for name in spec["sources"])
+    assert all("/" not in c["endpoint"] for c in spec["connectors"])
 
 
-def test_every_source_is_public_and_of_the_city_or_the_region():
-    spec = deployment()
-    sources = manifests("KnowledgeSource")
-    assert set(spec["sources"]) == {"web", "web-bbsk", "data-portal", "catalogue"}
-    hosts = set()
+@pytest.mark.parametrize("public_id", BODIES)
+def test_every_source_is_public_and_the_bodys_own(public_id):
+    project, host, organization, _, _ = BODIES[public_id]
+    spec = deployment(public_id)["spec"]
+    sources = manifests("KnowledgeSource", project)
+    assert set(spec["sources"]) == {"web", "data-portal", "catalogue"}
     for name in spec["sources"]:
         source = sources[name]["spec"]
         assert source["visibility"] == "public", name
         if source["source"] == "website":
-            hosts |= {urlsplit(url).hostname for url in source["startUrls"]}
+            assert {urlsplit(url).hostname for url in source["startUrls"]} == {host}
         if source["source"] == "ckan":
-            assert source["organizations"] and set(source["organizations"]) <= set(SCOPE), name
-            instance = manifests("CkanInstance")[source["ckanInstanceRef"]]["spec"]
+            assert source["organizations"] == [organization], name
+            instance = manifests("CkanInstance", project)[source["ckanInstanceRef"]]["spec"]
             assert instance["url"] == "https://data.dev.joinedcontext.com"
-    assert hosts == WEB_HOSTS
 
 
-def test_every_connector_is_a_public_mcp_endpoint_of_the_scope_with_read_only_tools():
-    spec = deployment()
-    assert spec["scope"]["projects"] == ["bbsk"]
-    endpoints = {**manifests("Endpoint"), **manifests("Endpoint", "bbsk")}
+@pytest.mark.parametrize("public_id", BODIES)
+def test_every_connector_is_a_public_mcp_endpoint_of_the_body_with_read_only_tools(public_id):
+    project = BODIES[public_id][0]
+    spec = deployment(public_id)["spec"]
+    endpoints = manifests("Endpoint", project)
     assert spec["connectors"], "the assistant reads live values through connectors"
     for connector in spec["connectors"]:
-        # `bbsk/bbsk-registre` names a scoped project's Endpoint (T-4177); a bare name, this project's.
-        project, _, name = connector["endpoint"].rpartition("/")
-        assert project in ("", *spec["scope"]["projects"]), connector["endpoint"]
-        endpoint = endpoints[name]
-        assert endpoint["metadata"]["namespace"] == (project or "banskabystrica"), connector["endpoint"]
-        assert endpoint["metadata"]["namespace"] in SCOPE, connector["endpoint"]
+        endpoint = endpoints[connector["endpoint"]]
         assert endpoint["spec"]["audience"] == "public", connector["endpoint"]
         assert "mcp" in endpoint["spec"]["enabledRepresentations"], connector["endpoint"]
         assert set(connector["tools"]) <= READ_ONLY, connector
 
 
-def test_the_connectors_are_every_public_mcp_endpoint_of_the_two_bodies():
+@pytest.mark.parametrize("public_id", ["banskabystrica", "bbsk"])
+def test_the_connectors_are_every_member_of_the_bodys_public_mcp_server(public_id):
     # T-4256 (owner 2026-10-16): the assistant queries all the open data by default. The public
-    # `otvorene-data` servers of its project and scope are the curated read-only set, so every
-    # member of them is a connector, and an Endpoint added there joins without a hand edit here.
-    spec = deployment()
-    own = SCOPE[0]
+    # `otvorene-data` server of its project is the curated read-only set, so every member of it
+    # is a connector, and an Endpoint added there joins without a hand edit here.
+    project = BODIES[public_id][0]
     members = {
-        member["name"] if project == own else f"{project}/{member['name']}"
-        for project in (own, *spec["scope"]["projects"])
+        member["name"]
         for server in manifests("McpServer", project).values()
         if server["spec"]["audience"] == "public"
         for member in server["spec"]["members"]
         if member["kind"] == "Endpoint"
     }
-    assert {connector["endpoint"] for connector in spec["connectors"]} == members
+    assert {c["endpoint"] for c in deployment(public_id)["spec"]["connectors"]} == members
 
 
 def test_the_public_mcp_servers_list_members_that_serve_mcp():
     # The gateway drops a member that does not serve MCP, so a server whose members lack it
     # lists no tool at all (T-4141's `otvorene-data` before T-4167).
-    for project in SCOPE:
+    for project in ("banskabystrica", "bbsk"):
         endpoints = manifests("Endpoint", project)
         for name, server in manifests("McpServer", project).items():
             for member in server["spec"]["members"]:
                 assert "mcp" in endpoints[member["name"]]["spec"]["enabledRepresentations"], (project, name, member)
 
 
-def test_no_other_body_is_named_and_no_secret_is_carried():
-    text = yaml.safe_dump(manifests("AssistantDeployment")["banskabystrica"]).lower()
-    for source in deployment()["sources"]:
-        text += yaml.safe_dump(manifests("KnowledgeSource")[source]).lower()
-    for word in ELSEWHERE:
-        assert word not in text, word
-    for word in ("secretref", "apikey", "api_key", "token:", "password"):
-        assert word not in text, word
+@pytest.mark.parametrize("public_id", BODIES)
+def test_no_other_body_is_named_and_no_secret_is_carried(public_id):
+    project = BODIES[public_id][0]
+    spec = deployment(public_id)["spec"]
+    text = yaml.safe_dump(deployment(public_id)).lower()
+    for source in spec["sources"]:
+        text += yaml.safe_dump(manifests("KnowledgeSource", project)[source]).lower()
+    for other, words in NAMES.items():
+        if other == public_id:
+            continue
+        for word in words:
+            assert word not in text, (public_id, word)
+    for word in ("hel.fi", "helsinki", "secretref", "apikey", "api_key", "token:", "password"):
+        assert word not in text, (public_id, word)
 
 
-def test_it_is_placed_on_the_assistant_host_the_demo_page_and_the_catalogue_with_t4149_limits():
-    spec = deployment()
-    assert spec["allowedOrigins"] == [
-        "https://assistant.dev.joinedcontext.com",
-        "https://dev.joinedcontext.com",
-        "https://data.dev.joinedcontext.com",
-    ]
+@pytest.mark.parametrize("public_id", BODIES)
+def test_it_is_placed_on_the_host_the_demo_page_and_the_catalogue_with_its_own_budget(public_id):
+    spec = deployment(public_id)["spec"]
+    assert spec["allowedOrigins"] == ORIGINS
     limit = spec["rateLimit"]
     assert (limit["perClientPerMinute"], limit["perClientPerHour"], limit["perClientPerDay"], limit["streamsPerClient"]) == (10, 60, 200, 2)
     budget = spec["budget"]
+    assert budget["costPerDayUsd"] == BODIES[public_id][4]
     assert budget["outputTokensPerAnswer"] == 700
     assert budget["messagesPerConversation"] == 30
     assert budget["questionChars"] == 1000
     # The cost cap is the guard; the shared token cap stays above it (T-4286).
-    assert budget["costPerDayUsd"] <= 3
     assert budget["tokensPerDay"] <= 5_000_000
     assert budget["tokensPerConversation"] <= budget["tokensPerDay"]
     assert spec["model"]["answer"] and spec["model"]["router"]
 
 
-def test_the_chat_speaks_slovak_first():
-    spec = deployment()
-    assert spec["languages"][0] == "sk"
-    assert 4 <= len(spec["suggestions"]["sk"]) <= 6
-    assert spec["disclaimer"]["sk"] and spec["disclaimer"]["en"]
+def test_the_public_budgets_stay_inside_the_keys_five_dollars():
+    assert sum(deployment(p)["spec"]["budget"]["costPerDayUsd"] for p in BODIES) <= 5
+
+
+@pytest.mark.parametrize("public_id", BODIES)
+def test_the_chat_speaks_the_bodys_language_first(public_id):
+    spec = deployment(public_id)["spec"]
+    first = BODIES[public_id][3]
+    assert spec["languages"][0] == first
+    assert 3 <= len(spec["suggestions"][first]) <= 6
+    assert spec["disclaimer"][first] and spec["disclaimer"]["en"]
     assert len(spec["theme"]["greeting"]) <= 500
 
 
-def test_the_header_names_the_two_bodies():
-    """T-4296: the widget's header shows theme.title, 1 to 60 characters (Architecture/22 §4)."""
-    title = deployment()["theme"]["title"]
+# What each widget's header shows (T-4296, Architecture/22 §4).
+TITLES = {
+    "banskabystrica": "Banská Bystrica",
+    "bbsk": "Banskobystrický kraj",
+    "zilina": "Žilina",
+    "praha": "Praha",
+}
+
+
+@pytest.mark.parametrize("public_id", BODIES)
+def test_the_header_names_the_body(public_id):
+    title = deployment(public_id)["spec"]["theme"]["title"]
     assert 1 <= len(title) <= 60
-    assert title.startswith("Banská Bystrica")
+    assert title == TITLES[public_id]
 
 
-def test_the_sources_and_the_deployment_are_seeded_at_their_kinds_paths():
-    index = yaml.safe_load((SEED / "banskabystrica/index.yaml").read_text())
-    assert index["banskabystrica-assistant-public.yaml"] == "projects/banskabystrica/assistant/deployments/banskabystrica.yaml"
-    assert index["banskabystrica-knowledge-web-bbsk.yaml"] == "projects/banskabystrica/assistant/sources/web-bbsk.yaml"
-    assert index["banskabystrica-knowledge-data-portal.yaml"] == "projects/banskabystrica/assistant/sources/data-portal.yaml"
+@pytest.mark.parametrize("public_id", BODIES)
+def test_the_sources_and_the_deployment_are_seeded_at_their_kinds_paths(public_id):
+    project = BODIES[public_id][0]
+    index = yaml.safe_load((SEED / project / "index.yaml").read_text())
+    by_path = {path: name for name, path in index.items()}
+    name = deployment(public_id)["metadata"]["name"]
+    assert f"projects/{project}/assistant/deployments/{name}.yaml" in by_path
+    for source in deployment(public_id)["spec"]["sources"]:
+        assert f"projects/{project}/assistant/sources/{source}.yaml" in by_path, source
+    for file in by_path.values():
+        assert (SEED / project / file).exists(), file
 
 
-def test_the_dev_catalogue_widget_is_this_assistant_and_reaches_the_two_bodies_alone():
-    # T-4252: every page of data.dev frames the deployment `ckan.catalogue.assistant` names; it is
-    # this one, whose project and scope are Banská Bystrica and the region, not Helsinki's.
+def test_the_region_is_indexed_once():
+    # T-4281 item 2: bbsk.sk is crawled in the bbsk project alone; the city's project holds no
+    # second copy, and the eval copies read the region's as `bbsk/{source}`.
+    for doc in manifests("KnowledgeSource", "banskabystrica").values():
+        hosts = {urlsplit(url).hostname for url in doc["spec"].get("startUrls", [])}
+        assert "www.bbsk.sk" not in hosts, doc["metadata"]["name"]
+        assert "bbsk" not in doc["spec"].get("organizations", []), doc["metadata"]["name"]
+    for name in ("bb-eval-haiku", "bb-eval-deepseek"):
+        spec = manifests("AssistantDeployment", "banskabystrica")[name]["spec"]
+        assert {"bbsk/web", "bbsk/data-portal"} <= set(spec["sources"]), name
+        assert spec["scope"]["projects"] == ["bbsk"], name
+
+
+def test_the_catalogue_opens_the_publishers_assistant_and_bbsk_elsewhere():
+    # T-4281 item 5: a dataset page frames its publisher's assistant, every other page bbsk's.
     values = Path(__file__).resolve().parent.parent / ".ci/example-deployments/environments/dev/ckan.yaml.gotmpl"
-    public_id = yaml.safe_load(values.read_text())["ckan"]["catalogue"]["assistant"]
-    found = [
-        doc
-        for project in SEED.iterdir()
-        if project.is_dir()
-        for doc in manifests("AssistantDeployment", project.name).values()
-        if doc["spec"]["publicId"] == public_id
-    ]
-    assert len(found) == 1, public_id
-    doc = found[0]
-    assert doc["spec"]["channel"] in ("public", "ckan")
-    assert {doc["metadata"]["namespace"], *doc["spec"]["scope"]["projects"]} == set(SCOPE)
-    assert "https://data.dev.joinedcontext.com" in doc["spec"]["allowedOrigins"]
+    catalogue = yaml.safe_load(values.read_text())["ckan"]["catalogue"]
+    assert catalogue["assistant"] == "bbsk"
+    by_organization = catalogue["assistantByOrganization"]
+    assert by_organization == {"banskabystrica": "banskabystrica", "bbsk": "bbsk", "zilina": "zilina", "praha": "praha"}
+    for organization, public_id in by_organization.items():
+        doc = deployment(public_id)
+        assert BODIES[public_id][2] == organization
+        assert "https://data.dev.joinedcontext.com" in doc["spec"]["allowedOrigins"]

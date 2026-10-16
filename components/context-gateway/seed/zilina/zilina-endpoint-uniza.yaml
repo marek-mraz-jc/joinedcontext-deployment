@@ -12,7 +12,7 @@ spec:
   contextSpaceRef: zilina-uniza
   slug: os4quyrmvhijr3x7x4fno2jicej4ifv5
   audience: public
-  enabledRepresentations: [ngsi-ld, csv, json, websocket, ogc-features, odata]
+  enabledRepresentations: [ngsi-ld, csv, json, websocket, ogc-features, odata, mcp]
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: zilina }
