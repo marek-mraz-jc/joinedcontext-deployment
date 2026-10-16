@@ -702,7 +702,7 @@ def test_the_catalogue_pod_is_told_its_assistant_only_when_the_assistant_is_depl
 
     # dev lists the assistant since T-3181, so its catalogue carries the widget; without the
     # component the catalogue is told nothing.
-    assert widget(rendered("dev")) == "https://assistant.dev.joinedcontext.com/d/helsinki-catalogue/widget"
+    assert widget(rendered("dev")) == "https://assistant.dev.joinedcontext.com/d/banskabystrica/widget"
 
     def without_assistant(tree):
         path = tree / "deployment/environments/dev/global.yaml.gotmpl"
