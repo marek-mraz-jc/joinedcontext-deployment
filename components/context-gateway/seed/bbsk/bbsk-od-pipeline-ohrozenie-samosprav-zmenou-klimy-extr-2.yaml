@@ -9,6 +9,7 @@ metadata:
     en: Ohrozenie samospráv zmenou klímy - extrémne sucho
 spec:
   class: scheduled
+  enabled: false
   schedule: 36 1 21 * *
   source:
     dataSourceRef:

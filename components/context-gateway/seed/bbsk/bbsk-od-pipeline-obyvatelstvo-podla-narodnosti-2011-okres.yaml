@@ -9,6 +9,7 @@ metadata:
     en: Obyvateľstvo podľa národnosti (2011), okresy
 spec:
   class: scheduled
+  enabled: false
   schedule: 33 5 12 * *
   source:
     dataSourceRef:

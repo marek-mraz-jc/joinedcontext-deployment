@@ -9,6 +9,7 @@ metadata:
     en: Obyvateľstvo podľa rodinného stavu (2021), okresy
 spec:
   class: scheduled
+  enabled: false
   schedule: 1 1 16 * *
   source:
     dataSourceRef:

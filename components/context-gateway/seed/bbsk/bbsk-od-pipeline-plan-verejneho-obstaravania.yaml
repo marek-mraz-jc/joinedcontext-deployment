@@ -9,6 +9,7 @@ metadata:
     en: Plán verejného obstarávania
 spec:
   class: scheduled
+  enabled: false
   schedule: 4 2 * * 4
   source:
     dataSourceRef:

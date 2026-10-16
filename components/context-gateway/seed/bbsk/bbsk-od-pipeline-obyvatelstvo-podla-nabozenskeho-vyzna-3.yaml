@@ -9,6 +9,7 @@ metadata:
     en: Obyvateľstvo podľa náboženského vyznania (2021), obce
 spec:
   class: scheduled
+  enabled: false
   schedule: 12 5 9 * *
   source:
     dataSourceRef:

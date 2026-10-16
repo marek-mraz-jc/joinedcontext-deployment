@@ -9,6 +9,7 @@ metadata:
     en: Obyvateľstvo podľa ekonomickej aktivity (2021)
 spec:
   class: scheduled
+  enabled: false
   schedule: 23 4 2 * *
   source:
     dataSourceRef:

@@ -9,6 +9,7 @@ metadata:
     en: Ohrozenie samospráv zmenou klímy - extrémne zrážky
 spec:
   class: scheduled
+  enabled: false
   schedule: 43 1 22 * *
   source:
     dataSourceRef:

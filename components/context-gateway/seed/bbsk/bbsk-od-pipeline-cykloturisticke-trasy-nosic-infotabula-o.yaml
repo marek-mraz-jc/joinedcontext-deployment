@@ -9,6 +9,7 @@ metadata:
     en: Cykloturistické trasy - nosič/infotabuľa/odpočívadlo/značenie
 spec:
   class: scheduled
+  enabled: false
   schedule: 35 1 * * 6
   source:
     dataSourceRef:

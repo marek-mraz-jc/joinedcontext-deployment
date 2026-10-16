@@ -9,6 +9,7 @@ metadata:
     en: Obyvateľstvo podľa ďalšej národnosti (2021), okresy
 spec:
   class: scheduled
+  enabled: false
   schedule: 16 4 1 * *
   source:
     dataSourceRef:

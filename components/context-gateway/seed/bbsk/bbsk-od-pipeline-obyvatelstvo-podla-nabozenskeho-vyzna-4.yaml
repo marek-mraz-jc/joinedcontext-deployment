@@ -9,6 +9,7 @@ metadata:
     en: Obyvateľstvo podľa náboženského vyznania (2021), okresy
 spec:
   class: scheduled
+  enabled: false
   schedule: 19 5 10 * *
   source:
     dataSourceRef:

@@ -291,6 +291,10 @@ def bento(e: dict, slug: str, model_ranges: dict[str, str]) -> str:
     return "\n".join(head) + "\n" + "\n".join(steps) + "\n"
 
 
+# ponytail: off until the Portal renders an http source's `schedule` (today it reads `period` only
+# and runs every 60 s, which OOM-killed the runner on 2026-10-16); flip back with that fix.
+ENABLED = False
+
 def schedule(e: dict, i: int) -> str:
     minute, hour = (i * 7) % 60, 1 + (i * 7) // 60 % 5
     return {"P1D": f"{minute} {hour} * * *", "P1W": f"{minute} {hour} * * {1 + i % 7}",
@@ -410,7 +414,7 @@ def project_files(project: str, entries: list[dict], names: dict[str, str]) -> d
         files[f"{pre}pipeline-{slug}.yaml"] = manifest(
             f"One {e['type']} per row of \"{e['title']}\" (T-4255); {e.get('note') or 'generated from the T-4254 mapping'}.",
             {**head, "kind": "Pipeline", "metadata": meta(f"od-{slug}", {"sk": e["title"][:120], "en": e["title"][:120]}),
-             "spec": {"class": "scheduled", "schedule": schedule(e, i),
+             "spec": {"class": "scheduled", "enabled": ENABLED, "schedule": schedule(e, i),
                       "source": {"dataSourceRef": {"kind": "DataSource", "name": f"od-{slug}"}},
                       "targetEndpoint": f"urn:ngsi-ld:Endpoint:{p['domain']}:{space}:{space}",
                       "output": {"type": e["type"], "mode": "upsert"},

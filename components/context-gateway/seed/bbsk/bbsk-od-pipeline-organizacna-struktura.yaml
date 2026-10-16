@@ -9,6 +9,7 @@ metadata:
     en: Organizačná štruktúra
 spec:
   class: scheduled
+  enabled: false
   schedule: 50 1 * * 2
   source:
     dataSourceRef:

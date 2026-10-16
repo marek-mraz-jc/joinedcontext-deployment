@@ -9,6 +9,7 @@ metadata:
     en: Kultúrne inštitúcie BBSK
 spec:
   class: scheduled
+  enabled: false
   schedule: 13 3 * * *
   source:
     dataSourceRef:

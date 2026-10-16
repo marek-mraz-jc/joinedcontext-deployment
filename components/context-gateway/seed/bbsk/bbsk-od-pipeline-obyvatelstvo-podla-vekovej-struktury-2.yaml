@@ -9,6 +9,7 @@ metadata:
     en: Obyvateľstvo podľa vekovej štruktúry (2011, 2021), okresy
 spec:
   class: scheduled
+  enabled: false
   schedule: 15 1 18 * *
   source:
     dataSourceRef:

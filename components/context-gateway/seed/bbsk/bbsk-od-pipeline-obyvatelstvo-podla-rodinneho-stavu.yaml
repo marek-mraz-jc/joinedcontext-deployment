@@ -9,6 +9,7 @@ metadata:
     en: Obyvateľstvo podľa rodinného stavu (2021), obce
 spec:
   class: scheduled
+  enabled: false
   schedule: 54 5 15 * *
   source:
     dataSourceRef:

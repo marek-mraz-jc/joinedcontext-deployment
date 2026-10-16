@@ -9,6 +9,7 @@ metadata:
     en: Hustota obyvateľstva v obciach BBK
 spec:
   class: scheduled
+  enabled: false
   schedule: 38 2 * * *
   source:
     dataSourceRef:

@@ -9,6 +9,7 @@ metadata:
     en: Obyvateľstvo podľa vzdelania (2021)
 spec:
   class: scheduled
+  enabled: false
   schedule: 22 1 19 * *
   source:
     dataSourceRef:

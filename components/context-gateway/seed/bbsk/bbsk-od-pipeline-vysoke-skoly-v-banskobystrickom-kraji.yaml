@@ -9,6 +9,7 @@ metadata:
     en: Vysoké školy v Banskobystrickom kraji
 spec:
   class: scheduled
+  enabled: false
   schedule: 31 4 * * 4
   source:
     dataSourceRef:

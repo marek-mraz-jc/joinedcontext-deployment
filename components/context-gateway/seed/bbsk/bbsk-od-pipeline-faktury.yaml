@@ -9,6 +9,7 @@ metadata:
     en: Faktúry
 spec:
   class: scheduled
+  enabled: false
   schedule: 17 2 * * *
   source:
     dataSourceRef:

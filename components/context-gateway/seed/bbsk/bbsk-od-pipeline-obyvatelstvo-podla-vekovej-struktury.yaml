@@ -9,6 +9,7 @@ metadata:
     en: Obyvateľstvo podľa vekovej štruktúry (2011, 2021), obce
 spec:
   class: scheduled
+  enabled: false
   schedule: 8 1 17 * *
   source:
     dataSourceRef:

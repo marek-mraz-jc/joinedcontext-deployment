@@ -9,6 +9,7 @@ metadata:
     en: Obyvateľstvo podľa materinského jazyka (2011), obce
 spec:
   class: scheduled
+  enabled: false
   schedule: 30 4 3 * *
   source:
     dataSourceRef:

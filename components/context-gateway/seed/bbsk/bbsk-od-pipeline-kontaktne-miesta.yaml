@@ -9,6 +9,7 @@ metadata:
     en: Kontaktné miesta
 spec:
   class: scheduled
+  enabled: false
   schedule: 52 2 * * 3
   source:
     dataSourceRef:

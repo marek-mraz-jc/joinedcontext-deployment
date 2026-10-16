@@ -9,6 +9,7 @@ metadata:
     en: Vývoj imisií v BBK
 spec:
   class: scheduled
+  enabled: false
   schedule: 45 4 20 * *
   source:
     dataSourceRef:
