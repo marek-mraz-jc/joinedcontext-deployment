@@ -1,6 +1,9 @@
 {
   "@context": {
     "@vocab": "https://smartdatamodels.org/",
+    "AdministrativeArea": {
+      "@id": "jc:AdministrativeArea"
+    },
     "AirQualityObserved": {
       "@id": "sdm:AirQualityObserved"
     },
@@ -9,9 +12,6 @@
     },
     "BudgetLine": {
       "@id": "jc:BudgetLine"
-    },
-    "CityDistrict": {
-      "@id": "jc:CityDistrict"
     },
     "Entity": {
       "@id": "ngsi-ld:Entity"
@@ -118,6 +118,9 @@
     },
     "geojson": "https://purl.org/geojson/vocab#",
     "id": "@id",
+    "identifier": {
+      "@id": "sdm:dataModel.CPSV-AP/identifier"
+    },
     "jc": "https://joinedcontext.com/models/",
     "linkml": "https://w3id.org/linkml/",
     "location": {

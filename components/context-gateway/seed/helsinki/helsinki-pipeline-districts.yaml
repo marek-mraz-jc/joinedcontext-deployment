@@ -1,4 +1,4 @@
-# One CityDistrict per record of `hel-districts`, written into the city space (T-2787).
+# One AdministrativeArea per record of `hel-districts`, written into the city space (T-2787).
 apiVersion: joinedcontext.com/v1alpha1
 kind: Pipeline
 metadata:
@@ -14,7 +14,7 @@ spec:
     dataSourceRef: { kind: DataSource, name: hel-districts }
   targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
   output:
-    type: CityDistrict
+    type: AdministrativeArea
     mode: upsert
   quotas:
     maxMemoryMb: 128

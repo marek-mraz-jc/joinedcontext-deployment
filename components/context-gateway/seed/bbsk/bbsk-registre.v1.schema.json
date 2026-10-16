@@ -5,7 +5,7 @@
   "definitions": {
     "AdministrativeArea": {
       "additionalProperties": false,
-      "description": "One district (okres) or municipality (obec) of the region, its outline and its code.",
+      "description": "One district (okres) or municipality (obec) of the region, its outline and its code, as the Smart Data Model extension AdministrativeArea (PointOfInterest base, T-4338).",
       "properties": {
         "areaCode": {
           "description": "The area's statistical code: LAU 1 (`SK0321`) for a district, LAU 2 (`SK0321508438`) for a municipality, the same codes the Statistical Office's cubes carry in `refArea`.",
@@ -130,7 +130,7 @@
     },
     "Bridge": {
       "additionalProperties": false,
-      "description": "One bridge of the road network in the region, its road, its age, its size and who manages it.",
+      "description": "One bridge of the road network in the region, its road, its age, its size and who manages it, as the Smart Data Model extension Bridge (PointOfInterest base, T-4338).",
       "properties": {
         "bridgeCode": {
           "description": "The bridge's number in the national road databank (Cestn\u00e1 databanka), such as `M9673`.",

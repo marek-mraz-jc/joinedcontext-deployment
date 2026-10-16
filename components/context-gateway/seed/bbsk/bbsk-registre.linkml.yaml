@@ -304,8 +304,10 @@ slots:
 classes:
   AdministrativeArea:
     class_uri: jc:AdministrativeArea
-    description: One district (okres) or municipality (obec) of the region, its outline and its code.
+    description: One district (okres) or municipality (obec) of the region, its outline and its code, as the Smart Data Model extension AdministrativeArea (PointOfInterest base, T-4338).
     is_a: Entity
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/AdministrativeArea
     slots:
       - name
       - areaCode
@@ -376,8 +378,10 @@ classes:
       - addressCountry
   Bridge:
     class_uri: jc:Bridge
-    description: One bridge of the road network in the region, its road, its age, its size and who manages it.
+    description: One bridge of the road network in the region, its road, its age, its size and who manages it, as the Smart Data Model extension Bridge (PointOfInterest base, T-4338).
     is_a: Entity
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Bridge
     slots:
       - name
       - bridgeCode

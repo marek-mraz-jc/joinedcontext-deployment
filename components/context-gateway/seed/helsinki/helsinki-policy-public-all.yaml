@@ -31,4 +31,4 @@ spec:
         - type: WaterQualityObserved
         - type: OnStreetParking
         - type: CityWork
-        - type: CityDistrict
+        - type: AdministrativeArea

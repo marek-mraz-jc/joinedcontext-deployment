@@ -43,7 +43,7 @@ Specialises `Entity`.
 | `nUTS2CODE` | Property | `string` |  |  | `jc:nUTS2CODE` | The source column `NUTS2_CODE`. |
 | `nUTS3` | Property | `string` |  |  | `jc:nUTS3` | The source column `NUTS3`. |
 | `nUTS3CODE` | Property | `string` |  |  | `jc:nUTS3CODE` | The source column `NUTS3_CODE`. |
-| `name` | Property | `string` |  |  | `sdm:name` | The source column `NM2`. |
+| `name` | Property | `string` |  |  | `sdm:name` | The source column `NM2`, `NM4`. |
 | `typObce` | Property | `string` |  |  | `jc:typObce` | The source column `typ_obce`. |
 | `vYMERA` | Property | `float` |  |  | `jc:vYMERA` | The source column `VYMERA`. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |

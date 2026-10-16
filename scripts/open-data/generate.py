@@ -49,6 +49,15 @@ EXTENSIONS = SDM / "extensions"
 # Where an extension and the source's own columns name their terms (T-4328's jc:).
 JC = "https://joinedcontext.com/models/"
 EXTENSION_URL = "https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions"
+# Extensions a city space's own model needs beside the mapping's (T-4338): the class of that
+# space's LinkML names the attributes the extension adds.
+SPACE_EXTENSIONS = {
+    "BudgetLine": {
+        "baseModel": "dataModel.CPSV-AP/Cost", "model": "praha/praha.linkml.yaml",
+        "description": "One line of a city budget in the national budget classification, with the approved and the adjusted amount.",
+        "why": "CPSV-AP Cost is the official model of an amount a public body sets (identifier, value, currency); no subject holds a budget line",
+    },
+}
 SDM_HEADER = ("$schema", "$schemaVersion", "$id", "modelTags", "title", "description", "derivedFrom", "license")
 JSON_TYPE = {"integer": "integer", "float": "number", "date": "string", "datetime": "string", "uri": "string", "string": "string"}
 JSON_FORMAT = {"date": "date", "datetime": "date-time"}
@@ -777,9 +786,9 @@ def extension_files(extensions: dict[str, dict], mapped: list[dict]) -> dict[Pat
     pins = json.loads((SDM / "pins.json").read_text())
     space_ranges = {project: ranges([e for e in mapped if e["org"] == project]) for project in PROJECTS}
     out: dict[Path, str] = {}
-    for t, ext in sorted(extensions.items()):
+    for t, ext in sorted({**extensions, **SPACE_EXTENSIONS}.items()):
         entries = [e for e in mapped if e["type"] == t]
-        if not entries:
+        if not entries and "model" not in ext:
             continue
         subject = ext["baseModel"].split("/")[0]
         base = json.loads((SDM / ext["baseModel"].removeprefix("dataModel.") / "schema.json").read_text())
@@ -787,8 +796,16 @@ def extension_files(extensions: dict[str, dict], mapped: list[dict]) -> dict[Pat
         known = declared(base, common)
         whole = {k: v for k, v in base.items() if k not in SDM_HEADER}
         whole = json.loads(json.dumps(whole).replace(json.dumps({"enum": [base_type(base)]})[1:-1], json.dumps({"enum": [t]})[1:-1]))
-        columns: dict[str, list[str]] = {}
+        described: dict[str, str] = {}
         emitted: dict[str, set[str]] = {}
+        if "model" in ext:
+            model = yaml.safe_load((SEED / ext["model"]).read_text())
+            for a in model["classes"][t]["slots"]:
+                slot = model["slots"][a]
+                r = "string-list" if slot.get("multivalued") else slot.get("range", "string")
+                emitted[a] = {r if r in SCHEMA_ORG else "string"}
+                described[a] = " ".join(slot.get("description", "").split()) or f"The space model's `{a}`."
+        columns: dict[str, list[str]] = {}
         for e in entries:
             for a, p in e["properties"].items():
                 a = attribute(a)
@@ -796,10 +813,12 @@ def extension_files(extensions: dict[str, dict], mapped: list[dict]) -> dict[Pat
                 if p["column"] not in columns[a]:
                     columns[a].append(p["column"])
                 emitted.setdefault(a, set()).add(space_ranges[e["org"]][a])
+        for a, cols in columns.items():
+            described[a] = "The source column " + ", ".join(f"`{c}`" for c in cols) + "."
         added: dict[str, dict] = {"type": {"type": "string", "enum": [t], "description": f"Property. NGSI Entity type. It has to be {t}"}}
-        if "dataset" not in known:
+        if "dataset" not in known and entries:
             added["dataset"] = {"type": "string", "format": "uri", "description": f"Property. Model:'https://schema.org/URL'. {COMMON['dataset'][1]}"}
-        for a in sorted(columns):
+        for a in sorted(described):
             if a in known:
                 continue
             rs = emitted[a]
@@ -808,8 +827,7 @@ def extension_files(extensions: dict[str, dict], mapped: list[dict]) -> dict[Pat
             if len(rs) == 1 and next(iter(rs)) in JSON_FORMAT:
                 prop["format"] = JSON_FORMAT[next(iter(rs))]
             r = next(iter(rs)) if len(rs) == 1 else "string"
-            cols = ", ".join(f"`{c}`" for c in columns[a])
-            prop["description"] = f"Property. Model:'https://schema.org/{SCHEMA_ORG[r]}'. The source column {cols}."
+            prop["description"] = f"Property. Model:'https://schema.org/{SCHEMA_ORG[r]}'. {described[a]}"
             added[a] = prop
         schema = {
             "$schema": "http://json-schema.org/draft-07/schema#",
@@ -827,7 +845,7 @@ def extension_files(extensions: dict[str, dict], mapped: list[dict]) -> dict[Pat
         out[EXTENSIONS / t / "schema.json"] = json.dumps(schema, indent=2, ensure_ascii=False) + "\n"
         source = f"https://raw.githubusercontent.com/smart-data-models/{subject}/{pins[subject]}/context.jsonld"
         written = {a: next(iter(rs)) if len(rs) == 1 else "float" if rs <= {"integer", "float"} else "string" for a, rs in emitted.items()}
-        out[EXTENSIONS / t / "model.linkml.yaml"] = extension_linkml(t, ext, entries, written, (context, source), base.get("$id"))
+        out[EXTENSIONS / t / "model.linkml.yaml"] = extension_linkml(t, ext, entries, described, written, (context, source), base.get("$id"))
     return out
 
 
@@ -839,20 +857,17 @@ def base_type(schema: dict) -> str:
     return found.group(1)
 
 
-def extension_linkml(t: str, ext: dict, entries: list[dict], model_ranges: dict[str, str], base_context: tuple[dict, str],
-                     base_id: str) -> str:
+def extension_linkml(t: str, ext: dict, entries: list[dict], described: dict[str, str], model_ranges: dict[str, str],
+                     base_context: tuple[dict, str], base_id: str) -> str:
     """The extension as LinkML: one class, the slots its datasets write, typed as the seed writes them; a
     term the base's @context names keeps the base's IRI, the source's own columns stay jc: (T-4328)."""
-    columns: dict[str, str] = {}
-    for e in entries:
-        for a, p in e["properties"].items():
-            columns.setdefault(attribute(a), p["column"])
+    common = {a: v for a, v in COMMON.items() if entries or a in described}
     slots: dict[str, dict] = {}
-    for a, (r, d) in COMMON.items():
+    for a, (r, d) in common.items():
         slots[a] = {"description": d, **({"range": r} if r != "string" else {}), "annotations": {"ngsi_ld_kind": "Property"}}
-    for a in sorted(columns):
+    for a in sorted(set(described) - set(common)):
         r = model_ranges[a]
-        slots[a] = {"description": f"The source column `{columns[a]}`.",
+        slots[a] = {"description": described[a],
                     **({"multivalued": True} if r == "string-list" else {"range": r} if r != "string" else {}),
                     "annotations": {"ngsi_ld_kind": "Property"}}
     if any(e.get("identifierFromId") for e in entries):
@@ -872,7 +887,7 @@ def extension_linkml(t: str, ext: dict, entries: list[dict], model_ranges: dict[
         "default_prefix": "jc", "default_range": "string", "imports": ["linkml:types", "ngsi-ld-core"],
         "slots": slots,
         "classes": {t: {"class_uri": f"jc:{t}", "description": ext["description"], "is_a": "Entity",
-                        "slots": [*COMMON, *sorted(a for a in slots if a not in COMMON)],
+                        "slots": [*common, *sorted(a for a in slots if a not in common)],
                         "annotations": {"upstream_source": base_id}}},
     }
     return manifest(f"The {t} extension of {ext['baseModel']} (T-4336). Generated by scripts/open-data/generate.py\n"

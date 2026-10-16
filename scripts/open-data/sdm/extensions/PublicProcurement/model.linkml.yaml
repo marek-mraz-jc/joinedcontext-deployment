@@ -95,7 +95,7 @@ slots:
     annotations:
       ngsi_ld_kind: Property
   identifier:
-    description: The source column `id`.
+    description: The source column `id`, `ID_časti`.
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
@@ -114,7 +114,7 @@ slots:
     annotations:
       ngsi_ld_kind: Property
   name:
-    description: The source column `Predmet_zákazky`.
+    description: The source column `Predmet_zákazky`, `Názov_predmetu`.
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld

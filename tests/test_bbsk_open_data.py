@@ -107,6 +107,16 @@ def test_hospitals_social_services_and_organizations_are_valid_smart_data_models
 
 
 @requires_docker
+def test_areas_and_bridges_are_valid_smart_data_model_extensions(written):
+    """T-4338: districts, municipalities and bridges have no official model as they are; each is the
+    extension of its nearest one (AdministrativeArea and Bridge, PointOfInterest base, T-4336)."""
+    for name in ("okresy", "obce", "mosty"):
+        for entity in written[name]:
+            model = f"extensions/{entity['type']}"
+            assert open_data.sdm_errors(model, entity) == [], (name, entity["id"], open_data.sdm_errors(model, entity))
+
+
+@requires_docker
 def test_every_id_is_the_four_segment_urn_of_the_space_and_unique(written):
     for name, entities in written.items():
         ids = [e["id"] for e in entities]

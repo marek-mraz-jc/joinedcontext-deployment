@@ -98,7 +98,7 @@ Specialises `Entity`.
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
 | `stationCode` | Property | `string` | yes |  | `jc:stationCode` | The collection point's number in the city's waste register, such as 0022/ 001. |
 | `accessRestriction` | Property | [`WasteAccess`](#wasteaccess) |  |  | `jc:accessRestriction` | Who may use the collection point. |
-| `refDistrict` | Relationship | [`CityDistrict`](#citydistrict) |  |  | `jc:refDistrict` | The city district the record lies in. |
+| `refDistrict` | Relationship | [`AdministrativeArea`](#administrativearea) |  |  | `jc:refDistrict` | The city district the record lies in. |
 | `wasteContainers` | Relationship | [`WasteContainer`](#wastecontainer) (list) |  |  | `jc:wasteContainers` | The monitored containers at this collection point, computed from their refWasteContainerIsle and never stored. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
@@ -151,11 +151,11 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
-### CityDistrict
+### AdministrativeArea
 
-One of the 57 city districts (městské části) of Prague, its outline and its code.
+One of the 57 city districts (městské části) of Prague, its outline and its code, as the Smart Data Model extension AdministrativeArea (PointOfInterest base, T-4338).
 
-IRI: `jc:CityDistrict`
+IRI: `jc:AdministrativeArea`
 
 Specialises `Entity`.
 
@@ -173,7 +173,7 @@ Specialises `Entity`.
 
 ### BudgetLine
 
-One line of the city budget of the City of Prague (Magistrát hl. m. Prahy), in the national budget classification, with the approved and the adjusted amount.
+One line of the city budget of the City of Prague (Magistrát hl. m. Prahy), in the national budget classification, with the approved and the adjusted amount, as the Smart Data Model extension BudgetLine (CPSV-AP Cost base, T-4338).
 
 IRI: `jc:BudgetLine`
 
@@ -181,6 +181,7 @@ Specialises `Entity`.
 
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
+| `identifier` | Property | `string` | yes |  | `sdm:dataModel.CPSV-AP/identifier` | The budget line's own key, the year and its codes of area, function, item and purpose (`mhmp-2026-00-612100-5011-000000000`), the identifier the BudgetLine extension requires. |
 | `fiscalYear` | Property | `integer` | yes |  | `jc:fiscalYear` | The budget year. |
 | `budgetArea` | Property | `string` |  |  | `jc:budgetArea` | The city's own area of the line (oblast), its code and name joined, such as 09 Školství; absent on a correction line the city files under none. |
 | `budgetFunction` | Property | `string` | yes |  | `jc:budgetFunction` | The section of the national budget classification (paragraf, ODPA), code and name. |

@@ -17,7 +17,7 @@ pipeline:
           "stationCode": { "type": "Property", "value": f.properties.stationnumber.trim() },
           "accessRestriction": if $access.get(f.properties.pristup.or("")) == null { null } else { { "type": "Property", "value": $access.get(f.properties.pristup) } },
           "refDistrict": if !f.properties.citydistrictruiancode.or("").string().re_match("^[0-9]{6}$") { null } else {
-            { "type": "Relationship", "object": "urn:ngsi-ld:%v:%v:%v:district-%v".format("CityDistrict", env("JC_ORG_DOMAIN"), env("JC_SPACE"), f.properties.citydistrictruiancode.string()) }
+            { "type": "Relationship", "object": "urn:ngsi-ld:%v:%v:%v:district-%v".format("AdministrativeArea", env("JC_ORG_DOMAIN"), env("JC_SPACE"), f.properties.citydistrictruiancode.string()) }
           },
           "location": { "type": "GeoProperty", "value": f.geometry },
           "dataProvider": { "type": "Property", "value": "datový podklad © IPR Praha (CC BY 4.0)" },

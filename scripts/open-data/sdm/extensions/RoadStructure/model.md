@@ -33,13 +33,13 @@ Specialises `Entity`.
 | `material` | Property | `string` |  |  | `jc:material` | The source column `Material`. |
 | `materialPriepustu` | Property | `string` |  |  | `jc:materialPriepustu` | The source column `Materiál_priepustu`. |
 | `minVyskaPodjazdu` | Property | `float` |  |  | `jc:minVyskaPodjazdu` | The source column `Min__výška_podjazdu`. |
-| `najblizsiKM` | Property | `float` |  |  | `jc:najblizsiKM` | The source column `Najbližší_KM`. |
-| `name` | Property | `string` |  |  | `sdm:name` | The source column `ID_DC`. |
+| `najblizsiKM` | Property | `float` |  |  | `jc:najblizsiKM` | The source column `Najbližší_KM`, `Najbližši_KM`. |
+| `name` | Property | `string` |  |  | `sdm:name` | The source column `ID_DC`, `Identifikačné_číslo_podjazdu`, `ID_číslo_priepustu`, `Identifikacne_čislo_žel__priec_`. |
 | `normanaZatazitelnostT` | Property | `integer` |  |  | `jc:normanaZatazitelnostT` | The source column `Normána_zaťažiteľnost___t`. |
 | `okres` | Property | `string` |  |  | `jc:okres` | The source column `Okres`. |
 | `pocetKolaji` | Property | `integer` |  |  | `jc:pocetKolaji` | The source column `Počet_kolaji`. |
 | `predmetPremostenia` | Property | `string` |  |  | `jc:predmetPremostenia` | The source column `Predmet_premostenia`. |
-| `rokStavby` | Property | `integer` |  |  | `jc:rokStavby` | The source column `rok_stavby`. |
+| `rokStavby` | Property | `integer` |  |  | `jc:rokStavby` | The source column `rok_stavby`, `rok_Stavby`. |
 | `spravca` | Property | `string` |  |  | `jc:spravca` | The source column `Spravca`. |
 | `spravcaMostu` | Property | `string` |  |  | `jc:spravcaMostu` | The source column `Správca_mostu`. |
 | `spravcaUseku` | Property | `string` |  |  | `jc:spravcaUseku` | The source column `Správca_úseku`. |

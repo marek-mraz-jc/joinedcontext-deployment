@@ -36,7 +36,7 @@ Specialises `Entity`.
 | `iCOObjednavatela` | Property | `string` |  |  | `jc:iCOObjednavatela` | The source column `IČO_objednávateľa`. |
 | `iCOOrganizacie` | Property | `string` |  |  | `jc:iCOOrganizacie` | The source column `IČO_organizácie`. |
 | `iDZmluvy` | Property | `string` |  |  | `jc:iDZmluvy` | The source column `ID_zmluvy`. |
-| `identifier` | Property | `string` |  |  | `sdm:dataModel.CPSV-AP/identifier` | The source column `Centrálne_číslo_zmluvy`. |
+| `identifier` | Property | `string` |  |  | `sdm:dataModel.CPSV-AP/identifier` | The source column `Centrálne_číslo_zmluvy`, `Číslo_zmluvy`. |
 | `index` | Property | `string` |  |  | `jc:index` | The source column `Index_`. |
 | `mena` | Property | `string` |  |  | `jc:mena` | The source column `Mena`. |
 | `name` | Property | `string` |  |  | `sdm:name` | The source column `Názov_zmluvy`. |

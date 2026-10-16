@@ -53,9 +53,9 @@ pipeline:
             { "type": "Property", "value": { "streetAddress": p.address, "addressLocality": "Helsinki", "addressCountry": "FI" } }
           },
           # The district as the register names it, "20 LÄNSISATAMA": its number is the district
-          # code of the city's division, so the permit points at that CityDistrict.
+          # code of the city's division, so the permit points at that AdministrativeArea.
           "refDistrict": if p.district == null { null } else {
-            { "type": "Relationship", "object": "urn:ngsi-ld:%v:%v:%v:district-%v".format("CityDistrict", env("JC_ORG_DOMAIN"), env("JC_SPACE"), p.district.number().int64()) }
+            { "type": "Relationship", "object": "urn:ngsi-ld:%v:%v:%v:district-%v".format("AdministrativeArea", env("JC_ORG_DOMAIN"), env("JC_SPACE"), p.district.number().int64()) }
           },
           "location": { "type": "GeoProperty", "value": { "type": "MultiPolygon", "coordinates": p.polygons } },
           "dataProvider": { "type": "Property", "value": "City of Helsinki, public-area permits (Allu)" },

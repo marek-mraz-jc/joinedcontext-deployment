@@ -73,6 +73,8 @@ PINS = json.loads((generate.SDM / "pins.json").read_text())
 def sdm_errors(entity: dict, model_of: str | None = None) -> list[str]:
     """The entity against its type's vendored Smart Data Model, or the extension the type has (T-4336)."""
     t = model_of or entity["type"]
+    if t in generate.SPACE_EXTENSIONS:
+        return open_data.sdm_errors(f"extensions/{t}", entity)
     schema = generate.sdm_schema({"name": t, "type": t, "smartDataModel": MODEL[t], "baseModel": BASE[t]})
     return open_data.sdm_errors(str(schema.parent.relative_to(generate.SDM)), entity)
 
@@ -783,6 +785,7 @@ def test_slovak_numbers_and_dates_become_numbers_and_iso_dates(tmp_path):
 # --- extensions (T-4336): the base whole under allOf, the formalisms beside, the examples valid ---
 
 EXTENDED = {t: e for t, e in (MAPPING.get("extensions") or {}).items() if any(x["type"] == t for x in SEEDED)}
+EXTENDED.update(generate.SPACE_EXTENSIONS)  # a city space's own (T-4338), checked the same way
 
 
 def test_the_mapping_extends_where_no_model_holds_and_refuses_nothing_for_want_of_one():
