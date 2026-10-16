@@ -107,9 +107,11 @@ def test_every_entity_credits_its_publisher_and_its_licence(written):
 def test_an_event_keeps_the_citys_local_date_and_time_and_its_most_specific_category(written):
     events = {e["id"].rsplit("-", 1)[1]: e for e in written["podujatia"]}
     architecture = events["117711"]
-    assert architecture["startDate"]["value"] == "2026-10-05" and architecture["startTime"]["value"] == "16:00"
+    # The published day and time, as an instant with the city's summer offset (T-4329).
+    assert architecture["startDate"]["value"] == "2026-10-05T16:00:00+02:00" and architecture["startTime"]["value"] == "16:00"
     assert architecture["endTime"]["value"] == "19:00"
-    assert architecture["address"]["value"] == "Námestie SNP 1, Banská Bystrica - Radnica, Cikkerova sieň"
+    assert architecture["address"]["value"] == {"streetAddress": "Námestie SNP 1", "addressCountry": "SK",
+                                                "addressLocality": "Banská Bystrica - Radnica, Cikkerova sieň"}
     assert architecture["location"]["value"] == {"type": "Point", "coordinates": [19.1459513, 48.7353768]}
     # WordPress's modified_gmt is UTC; `modified` would be two hours later in September.
     assert architecture["dateModified"]["value"] == "2026-09-24T10:41:20Z"
@@ -119,6 +121,9 @@ def test_an_event_keeps_the_citys_local_date_and_time_and_its_most_specific_cate
     assert events["117447"]["name"]["languageMap"]["sk"] == "Potulky s cestovateľom – Maroko"
     # An event the city announces with no time has none, rather than midnight.
     assert "startTime" not in events["117687"]
+    assert events["117687"]["startDate"]["value"].endswith("T00:00:00+02:00")
+    for e in written["podujatia"]:
+        assert open_data.sdm_errors("dataModel.TourismDestinations/Event", e) == [], e["id"]
 
 
 @requires_docker
@@ -210,7 +215,7 @@ def test_a_value_outside_the_model_is_refused_by_the_schema():
     event = {
         "id": f"urn:ngsi-ld:Event:{DOMAIN}:{SPACE}:event-1",
         "type": "Event",
-        "startDate": {"type": "Property", "value": "2026-10-05"},
+        "startDate": {"type": "Property", "value": "2026-10-05T00:00:00+02:00"},
         "eventCategory": {"type": "Property", "value": "concert"},
     }
     assert schema_errors(event)
@@ -285,7 +290,8 @@ def test_the_model_classes_and_the_manifest_agree():
     linkml = yaml.safe_load((CITY / "banskabystrica-verejne.linkml.yaml").read_text())
     model = manifest("datamodel-verejne.yaml")
     assert linkml["name"] == model["metadata"]["name"]
-    assert set(model["spec"]["classes"]) == set(linkml["classes"])
+    # PostalAddress is the value of `address`, never an entity type.
+    assert set(model["spec"]["classes"]) == {k for k, c in linkml["classes"].items() if c.get("is_a") == "Entity"}
 
 
 # T-3120: both EEA files into `ovzdusie`, the space `public-air` publishes, by one pipeline that

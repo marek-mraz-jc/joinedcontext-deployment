@@ -22,12 +22,12 @@ Specialises `Entity`.
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
-| `startDate` | Property | `date` | yes |  | `schema:startDate` | The day the event starts, in the city's local calendar. |
+| `startDate` | Property | `datetime` | yes |  | `schema:startDate` | When the event starts, an instant with the city's offset: the published day at its start time, or at local midnight when no time is published (`startTime` is then absent). |
 | `startTime` | Property | `string` |  |  | `jc:startTime` | The time the event starts, local time in Banská Bystrica (Europe/Bratislava), `HH:MM`. |
-| `endDate` | Property | `date` |  |  | `schema:endDate` | The day the event ends, in the city's local calendar. |
+| `endDate` | Property | `datetime` |  |  | `schema:endDate` | When the event ends, as `startDate`: the published last day at its end time, or at local midnight when no time is published. |
 | `endTime` | Property | `string` |  |  | `jc:endTime` | The time the event ends, local time in Banská Bystrica (Europe/Bratislava), `HH:MM`. |
 | `eventCategory` | Property | [`EventCategory`](#eventcategory) | yes |  | `jc:eventCategory` | The kind of event, from the city's own categories. |
-| `address` | Property | `string` |  |  | `schema:address` | The street address or the venue, one line, as the publisher writes it. |
+| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress, T-4329); a field the source leaves out is absent, never guessed. |
 | `url` | Property | `string` |  |  | `schema:url` | The web page the publisher gives for it. |
 | `dateModified` | Property | `datetime` |  |  | `sdm:dateModified` | When the publisher last changed the record. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
@@ -49,7 +49,7 @@ Specialises `Entity`.
 |---|---|---|---|---|---|---|
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
 | `schoolCode` | Property | `string` | yes |  | `jc:schoolCode` | The school's EDUID in the national register of schools and school facilities. |
-| `address` | Property | `string` |  |  | `schema:address` | The street address or the venue, one line, as the publisher writes it. |
+| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress, T-4329); a field the source leaves out is absent, never guessed. |
 | `url` | Property | `string` |  |  | `schema:url` | The web page the publisher gives for it. |
 | `teachingLanguage` | Property | `string` |  |  | `jc:teachingLanguage` | The language of instruction, in the register's words. |
 | `pupilCount` | Property | `integer` |  |  | `jc:pupilCount` | How many pupils or children the school or facility has, a count and never a name. |
@@ -63,6 +63,19 @@ Specialises `Entity`.
 | `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### PostalAddress
+
+The value of `address`: a postal address, never an entity of its own (Smart Data Models' common schema).
+
+IRI: `schema:PostalAddress`
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `streetAddress` | Property | `string` |  |  | `schema:streetAddress` | The street and the house number, or the venue. |
+| `postalCode` | Property | `string` |  |  | `schema:postalCode` | The postal code. |
+| `addressLocality` | Property | `string` |  |  | `schema:addressLocality` | The town or the municipality. |
+| `addressCountry` | Property | `string` |  |  | `schema:addressCountry` | The country, as an ISO 3166-1 alpha-2 code. |
 
 ### AirQualityObserved
 

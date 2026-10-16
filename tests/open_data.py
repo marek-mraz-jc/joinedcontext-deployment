@@ -106,6 +106,14 @@ def sdm_errors(model: str, entity: dict) -> list[str]:
     registry = Registry().with_resources((u, common) for u in (
         "https://smart-data-models.github.io/data-models/common-schema.json",
         "https://raw.githubusercontent.com/smart-data-models/data-models/master/common-schema.json"))
+    # A subject's own shared definitions (dataModel.Weather/weather-schema.json), at the same pin.
+    registry = registry.with_resources(
+        (f"https://smart-data-models.github.io/dataModel.{p.parent.name}/{p.name}",
+         Resource.from_contents(json.loads(p.read_text()), DRAFT7)) for p in SDM.glob("*/*-schema.json"))
     schema = json.loads((SDM / model.removeprefix("dataModel.") / "schema.json").read_text())
     validator = jsonschema.Draft7Validator(schema, registry=registry, format_checker=jsonschema.Draft7Validator.FORMAT_CHECKER)
+    # A LanguageProperty is read the way NGSI-LD `options=keyValues&lang=` answers it: one string,
+    # here its first language, which is the shape the models describe.
+    entity = {k: {"type": "Property", "value": next(iter(v["languageMap"].values()), "")}
+              if isinstance(v, dict) and v.get("type") == "LanguageProperty" else v for k, v in entity.items()}
     return [f"{'/'.join(map(str, e.absolute_path))}: {e.message}" for e in validator.iter_errors(key_values(entity))]

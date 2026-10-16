@@ -10,6 +10,9 @@
     "Event": {
       "@id": "schema:Event"
     },
+    "PostalAddress": {
+      "@id": "schema:PostalAddress"
+    },
     "School": {
       "@id": "jc:School"
     },
@@ -18,6 +21,12 @@
     },
     "address": {
       "@id": "schema:address"
+    },
+    "addressCountry": {
+      "@id": "schema:addressCountry"
+    },
+    "addressLocality": {
+      "@id": "schema:addressLocality"
     },
     "annualBudget": {
       "@id": "jc:annualBudget",
@@ -44,7 +53,7 @@
     },
     "endDate": {
       "@id": "schema:endDate",
-      "@type": "xsd:date"
+      "@type": "xsd:dateTime"
     },
     "endTime": {
       "@id": "jc:endTime"
@@ -93,6 +102,9 @@
       "@id": "sdm:pm25",
       "@type": "xsd:float"
     },
+    "postalCode": {
+      "@id": "schema:postalCode"
+    },
     "precipitation": {
       "@id": "sdm:precipitation",
       "@type": "xsd:float"
@@ -118,13 +130,16 @@
     },
     "startDate": {
       "@id": "schema:startDate",
-      "@type": "xsd:date"
+      "@type": "xsd:dateTime"
     },
     "startTime": {
       "@id": "jc:startTime"
     },
     "stationCode": {
       "@id": "jc:stationCode"
+    },
+    "streetAddress": {
+      "@id": "schema:streetAddress"
     },
     "teachingLanguage": {
       "@id": "jc:teachingLanguage"

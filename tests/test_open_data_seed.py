@@ -238,7 +238,8 @@ def test_every_mapped_type_is_one_vendored_smart_data_model_at_a_pinned_commit()
         assert re.fullmatch(r"[0-9a-f]{40}", PINS[e["smartDataModel"].split("/")[0]]), e["smartDataModel"]
     assert re.fullmatch(r"[0-9a-f]{40}", PINS["data-models"])
     vendored = {str(p.parent.relative_to(generate.SDM)) for p in generate.SDM.glob("*/*/schema.json")}
-    assert vendored == {m.removeprefix("dataModel.") for m in MODEL.values()}, "vendor exactly the models in use"
+    assert vendored >= {m.removeprefix("dataModel.") for m in MODEL.values()}
+    assert {f"dataModel.{v.split('/')[0]}" for v in vendored} | {"about", "data-models"} == set(PINS), "a pin per vendored subject"
 
 
 def test_a_mapped_dataset_without_a_model_or_with_one_not_vendored_is_refused():

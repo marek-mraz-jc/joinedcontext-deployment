@@ -24,8 +24,15 @@ pipeline:
           "type": "School",
           "name": { "type": "LanguageProperty", "languageMap": { "sk": r."Názov".trim() } },
           "schoolCode": { "type": "Property", "value": r.EDUID.trim() },
-          "address": { "type": "Property", "value": [r.Ulica.or("").trim(), r.Obec.trim()].filter(v -> v != "").join(", ") },
-          "url": if r."Web stránka".apply("text") == null { null } else { { "type": "Property", "value": r."Web stránka".trim() } },
+          # `Obec` is "97590 Banská Bystrica" on every row the filter keeps: postal code, then town.
+          "address": { "type": "Property", "value": {
+            "streetAddress": r.Ulica.or("").trim(),
+            "postalCode": r.Obec.trim().slice(0, 5),
+            "addressLocality": r.Obec.trim().slice(6),
+            "addressCountry": "SK"
+          }.filter(f -> f.value != "") },
+          # The map writes most sites without a scheme ("www.cvcbb.svsbb.sk"); a URI needs one.
+          "url": if r."Web stránka".apply("text") == null { null } else { { "type": "Property", "value": if r."Web stránka".trim().re_match("^https?://") { r."Web stránka".trim() } else { "http://" + r."Web stránka".trim() } } },
           "teachingLanguage": if r."Vyuč.jaz.".apply("text") == null { null } else { { "type": "Property", "value": r."Vyuč.jaz.".trim() } },
           "pupilCount": if r."Počet žiakov".apply("number") == null { null } else { { "type": "Property", "value": r."Počet žiakov".apply("number").int64() } },
           "teachingStaff": if r."Počet ped.zam.".apply("number") == null { null } else { { "type": "Property", "value": r."Počet ped.zam.".apply("number") } },
