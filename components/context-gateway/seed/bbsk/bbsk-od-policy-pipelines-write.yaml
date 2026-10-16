@@ -21,29 +21,9 @@ spec:
   - queryBatch
   information:
   - entities:
-    - type: AdministrativeArea
-    - type: Bridge
-    - type: Contract
-    - type: CouncilMeeting
-    - type: CouncilMember
-    - type: CouncilVote
-    - type: CycleRoute
-    - type: EVChargingStation
-    - type: Grant
-    - type: Invoice
-    - type: OrganizationUnit
-    - type: Petition
+    - type: KeyPerformanceIndicator
+    - type: Organization
+    - type: Person
     - type: PointOfInterest
-    - type: PublicInvestment
     - type: PublicOrganization
-    - type: PublicProcurement
-    - type: PurchaseOrder
-    - type: Regulation
-    - type: RiverBasin
     - type: RoadAccident
-    - type: RoadStructure
-    - type: School
-    - type: StatisticalObservation
-    - type: Supplier
-    - type: TrafficFlowObservedSite
-    - type: WaterBodyStatus

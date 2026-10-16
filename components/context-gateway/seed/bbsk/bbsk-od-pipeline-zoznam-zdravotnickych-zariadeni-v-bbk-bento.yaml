@@ -54,6 +54,10 @@ pipeline:
           let v = if this == null { "" } else { this.string().trim() }
           root = if $v == "" { null } else { { "type": "Property", "value": $v } }
         }
+        map string_list {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": [$v] } }
+        }
         map uri {
           root = this.apply("string")
         }
@@ -88,7 +92,7 @@ pipeline:
           "nazovPoskytovatela": this.properties."Názov_poskytovateľa".apply("string"),
           "sidloPoskytovatela": this.properties."Sídlo_poskytovateľa".apply("string"),
           "idZZ": this.properties."IdZZ".apply("string"),
-          "vlastnyNazovZariadenia": this.properties."Vlastný_názov_zariadenia".apply("string"),
+          "name": this.properties."Vlastný_názov_zariadenia".apply("string").or(this.properties."Názov_poskytovateľa".apply("string")),
           "druhZariadenia": this.properties."Druh_zariadenia".apply("string"),
           "odborneZameranie": this.properties."Odborné_zameranie".apply("string"),
           "ulicaPoskytovania": this.properties."Ulica_poskytovania".apply("string"),

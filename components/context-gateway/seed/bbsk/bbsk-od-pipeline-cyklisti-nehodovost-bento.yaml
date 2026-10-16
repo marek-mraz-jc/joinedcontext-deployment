@@ -31,6 +31,10 @@ pipeline:
           let v = if this == null { "" } else { this.string().trim() }
           root = if $v == "" { null } else { { "type": "Property", "value": $v } }
         }
+        map string_list {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": [$v] } }
+        }
         map uri {
           root = this.apply("string")
         }
@@ -57,7 +61,7 @@ pipeline:
           }
           root = if $v == null { null } else { { "type": "Property", "value": $v } }
         }
-        let local = "cyklisti-nehodovost-" + {"Rok": this.properties."Rok", "obdobie": this.properties."obdobie", "parameter": this.properties."parameter", "Územie": this.properties."Územie", "počet_nehôd": this.properties."počet_nehôd", "usmrtení_účastníci": this.properties."usmrtení_účastníci", "ťažko_zranení_účastníci": this.properties."ťažko_zranení_účastníci", "ľahko_zranení_účastníci": this.properties."ľahko_zranení_účastníci", "počet_usmrtených_cyklistov_kolobežkárov": this.properties."počet_usmrtených_cyklistov_kolobežkárov", "hmotná_škoda": this.properties."hmotná_škoda", "počet_nehôd_pod_vplyvom_alkoholu": this.properties."počet_nehôd_pod_vplyvom_alkoholu", "počet_nehôd_v_obci": this.properties."počet_nehôd_v_obci"}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
+        let local = "cyklisti-nehodovost-" + [this.properties."Rok", this.properties."obdobie", this.properties."parameter", this.properties."Územie"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
           "id": "urn:ngsi-ld:%v:%v:%v:%v".format("RoadAccident", "bbsk.sk", env("JC_SPACE"), $local),
           "type": "RoadAccident",
@@ -73,6 +77,7 @@ pipeline:
           "hmotnaSkoda": this.properties."hmotná_škoda".apply("integer"),
           "pocetNehodPodVplyvomAlkoholu": this.properties."počet_nehôd_pod_vplyvom_alkoholu".apply("integer"),
           "pocetNehodVObci": this.properties."počet_nehôd_v_obci".apply("integer"),
+          "status": { "type": "Property", "value": "archived" },
           "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj (CC BY-SA 4.0)" },
           "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Cyklisti_nehodovos%C5%A5_(1)/FeatureServer/0/query?where=1%3D1&outFields=Rok,obdobie,parameter,%C3%9Azemie,po%C4%8Det_neh%C3%B4d,usmrten%C3%AD_%C3%BA%C4%8Dastn%C3%ADci,%C5%A5a%C5%BEko_zranen%C3%AD_%C3%BA%C4%8Dastn%C3%ADci,%C4%BEahko_zranen%C3%AD_%C3%BA%C4%8Dastn%C3%ADci,po%C4%8Det_usmrten%C3%BDch_cyklistov_kolobe%C5%BEk%C3%A1rov,hmotn%C3%A1_%C5%A1koda,po%C4%8Det_neh%C3%B4d_pod_vplyvom_alkoholu,po%C4%8Det_neh%C3%B4d_v_obci&returnGeometry=false&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },
           "dataset": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bbsk-cyklisti-nehodovost-addf0f" }

@@ -1,4 +1,4 @@
-# The mapping of the od-obyvatelstvo-podla-materinskeho-jazyk-2 pipeline, generated from the T-4254 mapping: one StatisticalObservation per row of
+# The mapping of the od-obyvatelstvo-podla-materinskeho-jazyk-2 pipeline, generated from the T-4254 mapping: one KeyPerformanceIndicator per row of
 # "Obyvateľstvo podľa materinského jazyka (2011), okresy" (https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-materinskeho-jazyka-2011-okresy-590643). Do not edit: change the mapping and run scripts/open-data/generate.py.
 
 pipeline:
@@ -31,6 +31,10 @@ pipeline:
           let v = if this == null { "" } else { this.string().trim() }
           root = if $v == "" { null } else { { "type": "Property", "value": $v } }
         }
+        map string_list {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": [$v] } }
+        }
         map uri {
           root = this.apply("string")
         }
@@ -59,8 +63,8 @@ pipeline:
         }
         let local = "obyvatelstvo-podla-materinskeho-jazyk-2-" + [this.properties."IDN3"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("StatisticalObservation", "bbsk.sk", env("JC_SPACE"), $local),
-          "type": "StatisticalObservation",
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("KeyPerformanceIndicator", "bbsk.sk", env("JC_SPACE"), $local),
+          "type": "KeyPerformanceIndicator",
           "dOW": this.properties."DOW".apply("datetime"),
           "fACC": this.properties."FACC".apply("string"),
           "iDN3": this.properties."IDN3".apply("integer"),

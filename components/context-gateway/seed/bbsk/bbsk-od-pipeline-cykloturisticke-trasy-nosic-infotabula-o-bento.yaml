@@ -54,6 +54,10 @@ pipeline:
           let v = if this == null { "" } else { this.string().trim() }
           root = if $v == "" { null } else { { "type": "Property", "value": $v } }
         }
+        map string_list {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": [$v] } }
+        }
         map uri {
           root = this.apply("string")
         }
@@ -92,7 +96,7 @@ pipeline:
           "trasaSpr": this.properties."trasa_spr".apply("string"),
           "typ": this.properties."typ".apply("string"),
           "zdroj": this.properties."zdroj".apply("string"),
-          "columnName": this.properties."name".apply("string"),
+          "name": this.properties."name".apply("string"),
           "sourceId": this.properties."id".apply("string"),
           "pozn": this.properties."Pozn".apply("string"),
           "nedost": this.properties."nedost".apply("integer"),

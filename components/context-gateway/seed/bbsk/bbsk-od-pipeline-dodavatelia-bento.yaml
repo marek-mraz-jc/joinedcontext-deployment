@@ -1,4 +1,4 @@
-# The mapping of the od-dodavatelia pipeline, generated from the T-4254 mapping: one Supplier per row of
+# The mapping of the od-dodavatelia pipeline, generated from the T-4254 mapping: one Organization per row of
 # "Dodávatelia" (https://data.dev.joinedcontext.com/dataset/bbsk-dodavatelia-825cd0). Do not edit: change the mapping and run scripts/open-data/generate.py.
 
 pipeline:
@@ -58,6 +58,10 @@ pipeline:
           let v = if this == null { "" } else { this.string().trim() }
           root = if $v == "" { null } else { { "type": "Property", "value": $v } }
         }
+        map string_list {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": [$v] } }
+        }
         map uri {
           root = this.apply("string")
         }
@@ -86,10 +90,10 @@ pipeline:
         }
         let local = "dodavatelia-" + [this.properties."ICO"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Supplier", "bbsk.sk", env("JC_SPACE"), $local),
-          "type": "Supplier",
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Organization", "bbsk.sk", env("JC_SPACE"), $local),
+          "type": "Organization",
           "iCO": this.properties."ICO".apply("string"),
-          "nazov": this.properties."Nazov".apply("string"),
+          "legalName": this.properties."Nazov".apply("string"),
           "adresa": this.properties."Adresa".apply("string"),
           "obec": this.properties."Obec".apply("string"),
           "pSC": this.properties."PSC".apply("string"),
