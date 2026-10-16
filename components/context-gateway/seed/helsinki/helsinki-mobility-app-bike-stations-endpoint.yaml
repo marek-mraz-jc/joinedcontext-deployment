@@ -18,6 +18,7 @@ spec:
     name: mobility
   enabledRepresentations:
   - ngsi-ld
+  - mcp
   - ogc-features
   - odata
   slug: 335ub3brbavwl7sfpc3dph4zi4
