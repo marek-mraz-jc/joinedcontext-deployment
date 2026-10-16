@@ -27,3 +27,5 @@ spec:
   budget: { tokensPerDay: 5000000, tokensPerConversation: 40000, costPerDayUsd: 3 }
   theme: { greeting: "Hello! Ask me about the road weather or what is on in Helsinki." }
   languages: [en, fi, sv]
+  # How the chat picks its language (T-4343): the browser's, no first-open question.
+  widget: { language: browser }

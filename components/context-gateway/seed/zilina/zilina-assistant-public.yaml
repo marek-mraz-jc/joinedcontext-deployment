@@ -54,3 +54,5 @@ spec:
     sk: "Odpovede tvorí umelá inteligencia z webu mesta a z jeho otvorených údajov. Môžu obsahovať chyby, overte si ich v uvedených zdrojoch. Nezadávajte osobné údaje."
     en: "Answers are written by AI from the city's website and open data. They may contain mistakes; check them in the linked sources. Do not enter personal data."
   languages: [sk, en]
+  # How the chat picks its language (T-4343): the browser's, no first-open question.
+  widget: { language: browser }
