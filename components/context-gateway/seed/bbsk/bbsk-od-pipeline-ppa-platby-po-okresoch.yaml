@@ -1,4 +1,4 @@
-# One StatisticalObservation per row of "PPA platby po okresoch" (T-4255); one row per area (and year).
+# One KeyPerformanceIndicator per row of "PPA platby po okresoch" (T-4255); one row per area (and year).
 apiVersion: joinedcontext.com/v1alpha1
 kind: Pipeline
 metadata:
@@ -10,14 +10,14 @@ metadata:
 spec:
   class: scheduled
   enabled: false
-  schedule: 53 2 4 * *
+  schedule: 47 5 14 * *
   source:
     dataSourceRef:
       kind: DataSource
       name: od-ppa-platby-po-okresoch
   targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-otvorene-data:bbsk-otvorene-data
   output:
-    type: StatisticalObservation
+    type: KeyPerformanceIndicator
     mode: upsert
   quotas:
     maxMemoryMb: 128

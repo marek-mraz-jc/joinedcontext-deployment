@@ -1,4 +1,4 @@
-# One Supplier per row of "Dodávatelia" (T-4255); generated from the T-4254 mapping.
+# One Organization per row of "Dodávatelia" (T-4255); suppliers with an IČO.
 apiVersion: joinedcontext.com/v1alpha1
 kind: Pipeline
 metadata:
@@ -10,14 +10,14 @@ metadata:
 spec:
   class: scheduled
   enabled: false
-  schedule: 49 1 * * *
+  schedule: 28 1 * * *
   source:
     dataSourceRef:
       kind: DataSource
       name: od-dodavatelia
   targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-otvorene-data:bbsk-otvorene-data
   output:
-    type: Supplier
+    type: Organization
     mode: upsert
   quotas:
     maxMemoryMb: 256
