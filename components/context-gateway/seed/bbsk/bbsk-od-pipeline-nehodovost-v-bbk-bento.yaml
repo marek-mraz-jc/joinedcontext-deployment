@@ -74,7 +74,7 @@ pipeline:
           }
           root = if $v == null { null } else { { "type": "Property", "value": $v } }
         }
-        let local = "nehodovost-v-bbk-" + {"GPS_Šírka": this.properties."GPS_Šírka", "GPS_Dĺžka": this.properties."GPS_Dĺžka", "Číslo_nehody": this.properties."Číslo_nehody", "Dátum_a_čas": this.properties."Dátum_a_čas", "Povrch_vozovky": this.properties."Povrch_vozovky", "Smerové_pomery": this.properties."Smerové_pomery", "Druh_komunikácie": this.properties."Druh_komunikácie", "Hlavný_vinník": this.properties."Hlavný_vinník", "Ľahko_zranení": this.properties."Ľahko_zranení", "Ťažko_zranení": this.properties."Ťažko_zranení", "Usmrtení": this.properties."Usmrtení", "Príčiny": this.properties."Príčiny", "Škoda_v_EUR": this.properties."Škoda_v_EUR"}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
+        let local = "nehodovost-v-bbk-" + [this.properties."Číslo_nehody"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
           "id": "urn:ngsi-ld:%v:%v:%v:%v".format("RoadAccident", "bbsk.sk", env("JC_SPACE"), $local),
           "type": "RoadAccident",

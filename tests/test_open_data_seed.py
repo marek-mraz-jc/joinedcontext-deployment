@@ -266,6 +266,49 @@ def test_a_mapped_dataset_without_a_model_or_with_one_not_vendored_is_refused():
                 e["title"][:120] for e in MAPPING["datasets"] if e["name"] in removed and e["org"] == project}, p.name
 
 
+def expanded(context: dict, term: str) -> str:
+    """The IRI the generated @context gives `term`, its CURIE resolved by the context's own prefixes."""
+    iri = context[term]["@id"] if isinstance(context[term], dict) else context[term]
+    prefix, _, rest = iri.partition(":")
+    return context[prefix] + rest if isinstance(context.get(prefix), str) and not rest.startswith("//") else iri
+
+
+def test_every_term_a_model_names_expands_to_its_vendored_context_and_a_source_column_stays_jc():
+    """T-4328: a client expanding with the Smart Data Model's @context reads the IRIs the broker holds."""
+    for project in generate.PROJECTS:
+        context = json.loads((SEED / project / f"{project}-otvorene-data.v1.context.jsonld").read_text())["@context"]
+        named = 0
+        for e in [e for e in SEEDED if e["org"] == project]:
+            model = e["smartDataModel"].split("/")[0]
+            sdm = json.loads((generate.SDM / model.removeprefix("dataModel.") / "context.jsonld").read_text())["@context"]
+            assert expanded(context, e["type"]) == sdm[e["type"]], e["name"]
+            for a in [*generate.COMMON, *map(generate.attribute, e["properties"]), *(e.get("constants") or {})]:
+                if isinstance(sdm.get(a), str):
+                    assert expanded(context, a) == sdm[a], (e["name"], a)
+                    named += 1
+                else:
+                    assert expanded(context, a) == f"https://joinedcontext.com/models/{a}", (e["name"], a)
+        assert named, project
+    # A source's own column (BBSK's school statistics) is the organisation's term.
+    assert expanded(json.loads((SEED / "bbsk/bbsk-otvorene-data.v1.context.jsonld").read_text())["@context"],
+                    "absolventiZaMinulyRokSpol") == "https://joinedcontext.com/models/absolventiZaMinulyRokSpol"
+
+
+def test_every_context_is_vendored_beside_its_schema_at_the_same_pin():
+    for model in {m.split("/")[0] for m in MODEL.values()}:
+        assert (generate.SDM / model.removeprefix("dataModel.") / "context.jsonld").is_file(), model
+        assert model in PINS
+
+
+def test_two_models_naming_one_term_differently_are_refused():
+    a = {"name": "x", "type": "PointOfInterest", "smartDataModel": "dataModel.PointOfInterest/PointOfInterest",
+         "properties": {"category": {}}}
+    b = {**a, "name": "y", "type": "KeyPerformanceIndicator",
+         "smartDataModel": "dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator"}
+    with pytest.raises(SystemExit, match="`category`"):
+        generate.sdm_iris([a, b])
+
+
 SAMPLE = {"string": "x", "integer": 1, "float": 1.5, "datetime": "2026-01-01T00:00:00Z", "date": "2026-01-01",
           "uri": "https://example.org/a", "string-list": ["x"]}
 
@@ -321,17 +364,31 @@ def test_a_key_with_its_year_and_a_polygon():
 
 
 @requires_docker
-def test_a_layer_without_a_key_takes_a_stable_row_hash_and_the_constant_its_model_requires():
+def test_a_corrected_accident_keeps_its_id_and_the_constant_its_model_requires():
     first = run("bbsk", "nehodovost-v-bbk", "nehodovost-v-bbk")
-    again = run("bbsk", "nehodovost-v-bbk", "nehodovost-v-bbk")
-    assert [e["id"] for e in first] == [e["id"] for e in again]
-    assert len({e["id"] for e in first}) == 3
+    rows = json.loads((FIXTURES / "nehodovost-v-bbk.json").read_text())["features"]
+    assert [e["id"] for e in first] == [
+        f"urn:ngsi-ld:RoadAccident:bbsk.sk:bbsk-otvorene-data:nehodovost-v-bbk-{r['properties']['Číslo_nehody']}"
+        for r in rows]
     assert all(e["status"]["value"] == "archived" for e in first)
     assert valid("bbsk", first)
-    # One changed value is another row, so another id.
+    # A corrected value updates the accident instead of adding a second one (T-4332).
     doc = json.loads((FIXTURES / "nehodovost-v-bbk.json").read_text())
     doc["features"][0]["properties"]["Škoda_v_EUR"] = 1.5
     changed = run_bytes("bbsk", "nehodovost-v-bbk", json.dumps(doc).encode())
+    assert [e["id"] for e in changed] == [e["id"] for e in first]
+
+
+@requires_docker
+def test_a_table_without_a_key_takes_a_stable_row_hash():
+    first = run("banskabystrica", "adresy", "adresy")
+    again = run("banskabystrica", "adresy", "adresy")
+    assert [e["id"] for e in first] == [e["id"] for e in again]
+    assert len({e["id"] for e in first}) == 3
+    # One changed value is another row, so another id.
+    doc = json.loads((FIXTURES / "adresy.json").read_text())
+    doc["result"]["records"][0]["Ulica"] = "Iná ulica"
+    changed = run_bytes("banskabystrica", "adresy", json.dumps(doc).encode())
     assert changed[0]["id"] != first[0]["id"] and changed[1]["id"] == first[1]["id"]
 
 

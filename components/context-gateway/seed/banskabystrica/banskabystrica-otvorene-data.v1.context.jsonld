@@ -2,19 +2,19 @@
   "@context": {
     "@vocab": "https://joinedcontext.com/models/",
     "Address": {
-      "@id": "jc:Address"
+      "@id": "sdm:dataModel.CPSV-AP/Address"
     },
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
     "KeyPerformanceIndicator": {
-      "@id": "jc:KeyPerformanceIndicator"
+      "@id": "sdm:dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator"
     },
     "addressArea": {
-      "@id": "jc:addressArea"
+      "@id": "sdm:dataModel.CPSV-AP/addressArea"
     },
     "dataProvider": {
-      "@id": "jc:dataProvider"
+      "@id": "sdm:dataProvider"
     },
     "dataset": {
       "@id": "jc:dataset",
@@ -81,7 +81,7 @@
       "@id": "jc:pohlavie"
     },
     "postName": {
-      "@id": "jc:postName"
+      "@id": "sdm:dataModel.CPSV-AP/postName"
     },
     "prirastok": {
       "@id": "jc:prirastok"
@@ -108,14 +108,14 @@
     "sdm": "https://smartdatamodels.org/",
     "shex": "http://www.w3.org/ns/shex#",
     "source": {
-      "@id": "jc:source",
+      "@id": "sdm:source",
       "@type": "xsd:anyURI"
     },
     "supC": {
       "@id": "jc:supC"
     },
     "thoroughfare": {
-      "@id": "jc:thoroughfare"
+      "@id": "sdm:dataModel.CPSV-AP/thoroughfare"
     },
     "type": "@type",
     "ubytok": {

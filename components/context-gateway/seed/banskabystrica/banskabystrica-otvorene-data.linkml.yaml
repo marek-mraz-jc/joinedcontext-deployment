@@ -20,11 +20,15 @@ slots:
     description: Who published the row, with the credit its licence asks for.
     annotations:
       ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
+    slot_uri: https://smartdatamodels.org/dataProvider
   source:
     description: The service the row was read from.
     range: uri
     annotations:
       ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
+    slot_uri: https://smartdatamodels.org/source
   dataset:
     description: The catalogue dataset the row belongs to, where its licence and its other rows are.
     range: uri
@@ -35,6 +39,8 @@ slots:
     multivalued: true
     annotations:
       ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
+    slot_uri: https://smartdatamodels.org/dataModel.CPSV-AP/addressArea
   den:
     description: The source column `Deň`.
     annotations:
@@ -101,6 +107,8 @@ slots:
     multivalued: true
     annotations:
       ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
+    slot_uri: https://smartdatamodels.org/dataModel.CPSV-AP/postName
   prirastok:
     description: The source column `Prírastok`.
     annotations:
@@ -137,6 +145,8 @@ slots:
     multivalued: true
     annotations:
       ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
+    slot_uri: https://smartdatamodels.org/dataModel.CPSV-AP/thoroughfare
   ubytok:
     description: The source column `Úbytok`.
     annotations:
@@ -171,7 +181,7 @@ slots:
       ngsi_ld_kind: Property
 classes:
   Address:
-    class_uri: jc:Address
+    class_uri: https://smartdatamodels.org/dataModel.CPSV-AP/Address
     description: One row of Adresy.
     is_a: Entity
     slots:
@@ -183,8 +193,10 @@ classes:
     - postName
     - supC
     - thoroughfare
+    annotations:
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
   KeyPerformanceIndicator:
-    class_uri: jc:KeyPerformanceIndicator
+    class_uri: https://smartdatamodels.org/dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
     description: One row of Počet občanov podľa dňa narodenia; Počet občanov podľa veku; Prírastky a úbytky občanov
       za jednotlivé roky.
     is_a: Entity
@@ -217,3 +229,5 @@ classes:
     - zomrelych
     - zomrelychM
     - zomrelychZ
+    annotations:
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.KeyPerformanceIndicator/ec7f3b642faf3f807d3c8549ccc9e0b743e05f26/context.jsonld

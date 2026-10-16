@@ -335,6 +335,8 @@ spec:
                 path: branding.json
               - key: organizations.json
                 path: organizations.json
+              - key: hidden.json
+                path: hidden.json
         - name: theme
           configMap:
             name: {{ $full }}-theme
