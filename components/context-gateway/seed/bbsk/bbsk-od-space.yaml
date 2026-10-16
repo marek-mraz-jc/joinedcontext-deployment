@@ -18,3 +18,56 @@ spec:
     kind: DataModel
     name: bbsk-otvorene-data
   defaultLocale: sk
+  retention:
+  - entityType: AdministrativeArea
+    history: 'off'
+  - entityType: Bridge
+    history: 'off'
+  - entityType: Contract
+    history: 'off'
+  - entityType: CouncilMeeting
+    history: 'off'
+  - entityType: CouncilMember
+    history: 'off'
+  - entityType: CouncilVote
+    history: 'off'
+  - entityType: CycleRoute
+    history: 'off'
+  - entityType: EVChargingStation
+    history: 'off'
+  - entityType: Grant
+    history: 'off'
+  - entityType: Invoice
+    history: 'off'
+  - entityType: OrganizationUnit
+    history: 'off'
+  - entityType: Petition
+    history: 'off'
+  - entityType: PointOfInterest
+    history: 'off'
+  - entityType: PublicInvestment
+    history: 'off'
+  - entityType: PublicOrganization
+    history: 'off'
+  - entityType: PublicProcurement
+    history: 'off'
+  - entityType: PurchaseOrder
+    history: 'off'
+  - entityType: Regulation
+    history: 'off'
+  - entityType: RiverBasin
+    history: 'off'
+  - entityType: RoadAccident
+    history: 'off'
+  - entityType: RoadStructure
+    history: 'off'
+  - entityType: School
+    history: 'off'
+  - entityType: StatisticalObservation
+    history: 'off'
+  - entityType: Supplier
+    history: 'off'
+  - entityType: TrafficFlowObservedSite
+    history: 'off'
+  - entityType: WaterBodyStatus
+    history: 'off'
