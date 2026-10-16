@@ -140,6 +140,13 @@ def test_the_chat_speaks_slovak_first():
     assert len(spec["theme"]["greeting"]) <= 500
 
 
+def test_the_header_names_the_two_bodies():
+    """T-4296: the widget's header shows theme.title, 1 to 60 characters (Architecture/22 §4)."""
+    title = deployment()["theme"]["title"]
+    assert 1 <= len(title) <= 60
+    assert title.startswith("Banská Bystrica")
+
+
 def test_the_sources_and_the_deployment_are_seeded_at_their_kinds_paths():
     index = yaml.safe_load((SEED / "banskabystrica/index.yaml").read_text())
     assert index["banskabystrica-assistant-public.yaml"] == "projects/banskabystrica/assistant/deployments/banskabystrica.yaml"
