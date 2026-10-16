@@ -32,12 +32,12 @@ spec:
   # `public-air` is no member, because the smoke run and the ETSI suite write test entities
   # through it (its readings are also in banskabystrica-verejne).
   connectors:
-    - { endpoint: banskabystrica-verejne, tools: [list_types, query_entities], timeoutSeconds: 20 }
-    - { endpoint: banskabystrica-otvorene-data, tools: [list_types, query_entities], timeoutSeconds: 20 }
-    - { endpoint: bbsk/bbsk-registre, tools: [list_types, query_entities], timeoutSeconds: 20 }
-    - { endpoint: bbsk/bbsk-kraj-verejne, tools: [list_types, query_entities], timeoutSeconds: 20 }
-    - { endpoint: bbsk/bbsk-kpi, tools: [list_types, query_entities], timeoutSeconds: 20 }
-    - { endpoint: bbsk/bbsk-otvorene-data, tools: [list_types, query_entities], timeoutSeconds: 20 }
+    - { endpoint: banskabystrica-verejne, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: banskabystrica-otvorene-data, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: bbsk/bbsk-registre, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: bbsk/bbsk-kraj-verejne, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: bbsk/bbsk-kpi, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: bbsk/bbsk-otvorene-data, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
   scope: { projects: [bbsk] }
   # The full chat page on the assistant host itself, the platform's demo page, and every page of
   # the data catalogue (dev's `ckan.catalogue.assistant`, T-4252).

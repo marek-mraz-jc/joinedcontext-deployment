@@ -15,7 +15,10 @@ import yaml
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
 SCOPE = ("banskabystrica", "bbsk")
 WEB_HOSTS = {"www.banskabystrica.sk", "www.bbsk.sk"}
-READ_ONLY = {"list_types", "query_entities", "get_entity", "get_attribute_value", "retrieve_temporal"}
+# jc-assistant's READ_ONLY_TOOLS (platform crates/assistant/src/chat/mcp.rs), which the data loop
+# offers the answering model (T-4294).
+READ_ONLY = {"list_types", "get_type", "list_attributes", "query_entities", "get_entity", "get_attribute_value",
+             "query_temporal", "retrieve_temporal", "describe_schema", "describe_access"}
 ELSEWHERE = ("helsinki", "hel-fi", "hel.fi", "praha", "prague", "zilina", "žilina")
 
 
