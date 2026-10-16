@@ -14,3 +14,12 @@
     {{ self.primary_content() }}
   </div>
 {% endblock %}
+
+{# The dataset's tabs (T-4217): its topics only once the catalogue has one, and under the word
+   the navigation and the search filter use. CKAN's block, from the pinned 2.11 image. #}
+{% block content_primary_nav %}
+  {{ h.build_nav_icon(dataset_type ~ '.read', _('Dataset'), id=pkg.name, icon='sitemap') }}
+  {% if h.jc_has_topics() %}
+    {{ h.build_nav_icon(dataset_type ~ '.groups', h.jc_t('nav_topics'), id=pkg.name, icon='users') }}
+  {% endif %}
+{% endblock %}
