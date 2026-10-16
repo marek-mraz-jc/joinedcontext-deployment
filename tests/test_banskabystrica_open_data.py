@@ -260,10 +260,19 @@ def test_the_space_is_public_and_published_under_cc_by():
     endpoint = manifest("endpoint-verejne.yaml")
     space = manifest("space-verejne.yaml")
     assert endpoint["spec"]["audience"] == "public"
-    assert endpoint["spec"]["publish"]["ckan"] == {
-        "instanceRef": {"kind": "CkanInstance", "name": "banskabystrica"}, "license": "cc-by",
-        "datastore": {"representation": "csv", "refresh": "onReconcile"},
-    }
+    # One dataset per type (T-4344): the space's Endpoint stays for the Apps, off the catalogue.
+    assert "publish" not in endpoint["spec"]
+    for part, kind in (("podujatia", "Event"), ("skoly", "School"), ("pocasie", "WeatherObserved")):
+        spec = manifest(f"endpoint-{part}.yaml")["spec"]
+        assert spec["audience"] == "public" and spec["contextSpaceRef"] == SPACE, part
+        assert spec["publish"]["ckan"] == {
+            "instanceRef": {"kind": "CkanInstance", "name": "banskabystrica"}, "license": "cc-by",
+            "datastore": {"representation": "csv", "refresh": "onReconcile"},
+        }, part
+        assert spec["catalog"]["license"] == "CC_BY_4_0", part
+        policy = manifest(f"policy-{part}-read.yaml")["spec"]
+        assert spec["policyRef"] == f"urn:ngsi-ld:Policy:banskabystrica.sk:{SPACE}:{part}-read", part
+        assert [e["type"] for rule in policy["information"] for e in rule["entities"]] == [kind], part
     assert space["spec"]["urnSegment"] == SPACE
     assert space["spec"]["dataModelRef"] == {"kind": "DataModel", "name": SPACE}
     for publisher in ("banskabystrica.sk", "Digitálna mapa škôl", "European Environment Agency", "CC BY 4.0"):

@@ -74,12 +74,14 @@ def test_each_projects_quotas_hold_what_it_declares_with_room_for_the_demo():
     for folder, project, spaces, public in (
         # The region's public endpoints: its raw rows' for the trend lines (T-2934), and the region
         # map's and its grids' (T-2784).
-        # The sixth is the space of every other table of the catalogue (T-4255).
-        (REGION, "bbsk", ["bbsk-kraj", "bbsk-kpi", "bbsk-registre", "bbsk-otvorene-data"], 6),
+        # The sixth is the space of every other table of the catalogue (T-4255), and the other five
+        # the registers' datasets, one per type (T-4344).
+        (REGION, "bbsk", ["bbsk-kraj", "bbsk-kpi", "bbsk-registre", "bbsk-otvorene-data"], 11),
         # The third public endpoint of the city is the air-quality App's own (T-2972), the fourth
-        # and fifth the city map's and the data grids' (T-2782).
+        # and fifth the city map's and the data grids' (T-2782), the last three the public space's
+        # events, schools and weather as their own datasets (T-4344).
         (CITY, "banskabystrica", ["ovzdusie", "banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne",
-                                  "banskabystrica-otvorene-data"], 6),
+                                  "banskabystrica-otvorene-data"], 9),
     ):
         quotas = one(folder, "Project", project)["spec"]["quotas"]
         declared = {doc["metadata"]["name"] for _, doc in manifests(folder, "ContextSpace")}
@@ -631,9 +633,13 @@ def test_the_citys_air_quality_is_a_public_static_app_on_its_own_endpoint():
 # which are the region's own CC BY-SA publication and hold no person.
 # T-2781 ("republished to CKAN", by the rule of T-2780) adds the city's public space: events, the
 # school map and the EEA's station readings, all CC BY 4.0, none of them about a person.
+# T-4344 splits both spaces into one dataset per type; the public space's air-quality reading is
+# public-air's, so it is not published twice.
 CLEARED = {
-    ("banskabystrica", "public-air"), ("banskabystrica", "banskabystrica-verejne"),
-    ("bbsk", "bbsk-kpi"), ("bbsk", "bbsk-registre"),
+    ("banskabystrica", "public-air"), ("banskabystrica", "banskabystrica-podujatia"),
+    ("banskabystrica", "banskabystrica-skoly"), ("banskabystrica", "banskabystrica-pocasie"),
+    ("bbsk", "bbsk-kpi"), ("bbsk", "bbsk-hranice"), ("bbsk", "bbsk-organizacie"), ("bbsk", "bbsk-nemocnice"),
+    ("bbsk", "bbsk-socialne-sluzby"), ("bbsk", "bbsk-mosty"),
 }
 
 

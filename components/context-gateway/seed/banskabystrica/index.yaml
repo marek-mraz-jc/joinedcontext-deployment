@@ -214,3 +214,11 @@ banskabystrica-od-datasource-zmluvy-bb.yaml: projects/banskabystrica/datasources
 banskabystrica-od-pipeline-zmluvy-bb.yaml: projects/banskabystrica/pipelines/od-zmluvy-bb/pipeline.yaml
 banskabystrica-od-pipeline-zmluvy-bb-bento.yaml: projects/banskabystrica/pipelines/od-zmluvy-bb/bento.yaml
 # --- end of generated ---
+# One catalogue dataset per Smart Data Model type, or per group of types that reference
+# each other, each through its own narrowed Endpoint and Policy (T-4344).
+endpoint-podujatia.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/endpoints/banskabystrica-podujatia.yaml
+policy-podujatia-read.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/podujatia-read.yaml
+endpoint-skoly.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/endpoints/banskabystrica-skoly.yaml
+policy-skoly-read.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/skoly-read.yaml
+endpoint-pocasie.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/endpoints/banskabystrica-pocasie.yaml
+policy-pocasie-read.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/pocasie-read.yaml

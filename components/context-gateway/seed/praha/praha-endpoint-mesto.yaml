@@ -15,11 +15,8 @@ spec:
   slug: jw7tffshzip7igmzcszgffkkkuetnc6v
   audience: public
   enabledRepresentations: [ngsi-ld, geojson, csv, json, websocket, ogc-features, odata, mcp]
-  publish:
-    ckan:
-      instanceRef: { kind: CkanInstance, name: praha }
-      license: cc-by
-      datastore: { representation: csv, refresh: onReconcile }
+  # Off the catalogue (T-4344): its unrelated types are each their own dataset, through the
+  # narrowed Endpoints beside it. This Endpoint stays for the Apps and connectors that read it.
   # The DCAT-AP description (T-2792, EP-78, EP-79), each licence read from its source on 2026-09-25:
   # ČHMÚ CC BY 4.0 (NKOD 00020699/2d09f059…, author ČHMÚ); IPR Praha CC BY 4.0 with the credit
   # "datový podklad © IPR Praha"; ROPID's ticket points CC BY (NKOD 60437359/12cceb7b…); nextbike
