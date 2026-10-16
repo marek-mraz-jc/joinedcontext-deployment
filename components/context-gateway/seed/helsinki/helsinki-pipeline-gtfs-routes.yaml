@@ -1,5 +1,5 @@
 # One GtfsAgency per agency and one GtfsRoute per line of `hsl-gtfs-routes`, written into the city
-# space (T-3890). The lines' stops in order stay with transit-routes (TransitRoute).
+# space (T-3890). The lines' stops in order stay with transit-routes (PublicTransportRoute).
 apiVersion: joinedcontext.com/v1alpha1
 kind: Pipeline
 metadata:

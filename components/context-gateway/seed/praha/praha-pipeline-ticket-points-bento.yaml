@@ -13,7 +13,7 @@ pipeline:
           "name": { "type": "LanguageProperty", "languageMap": { "cs": p.name.trim() } },
           "serviceCategory": { "type": "Property", "value": "ticketSale" },
           "facilityType": if p.type.or("") == "" { null } else { { "type": "Property", "value": p.type } },
-          "address": if p.address.or("").trim() == "" { null } else { { "type": "Property", "value": p.address.trim() } },
+          "address": if p.address.or("").trim() == "" { null } else { { "type": "Property", "value": { "streetAddress": p.address.trim(), "addressLocality": "Praha", "addressCountry": "CZ" } } },
           "url": if !p.link.or("").has_prefix("https://") { null } else { { "type": "Property", "value": p.link } },
           "openingHours": if p.openingHours.or([]).length() == 0 { null } else {
             { "type": "LanguageProperty", "languageMap": { "cs": p.openingHours.map_each(h -> "%v%v %v".format($days.index(h.from.int64()), if h.to == h.from { "" } else { "–" + $days.index(h.to.int64()) }, h.hours)).join("\n") } }

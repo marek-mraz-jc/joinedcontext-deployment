@@ -30,10 +30,29 @@ slots:
       upstream_source: https://schema.org/name
   address:
     slot_uri: schema:address
-    description: The street address, one line, as the publisher writes it.
+    description: >-
+      The Smart Data Models PostalAddress (T-4329): the street address as the publisher writes it,
+      one line, in `streetAddress`, and the city and country every Prague source shares.
+    range: PostalAddress
+    inlined: true
     annotations:
       ngsi_ld_kind: Property
-      upstream_source: https://schema.org/address
+      upstream_source: https://github.com/smart-data-models/data-models/blob/master/common-schema.json
+  streetAddress:
+    slot_uri: schema:streetAddress
+    description: The street address line as the publisher writes it.
+    annotations:
+      upstream_source: https://schema.org/streetAddress
+  addressLocality:
+    slot_uri: schema:addressLocality
+    description: The town, Praha.
+    annotations:
+      upstream_source: https://schema.org/addressLocality
+  addressCountry:
+    slot_uri: schema:addressCountry
+    description: The country, as an ISO 3166-1 alpha-2 code.
+    annotations:
+      upstream_source: https://schema.org/addressCountry
   url:
     slot_uri: schema:url
     description: The place's own web page.
@@ -473,6 +492,17 @@ classes:
       - dataProvider
       - source
 
+  PostalAddress:
+    class_uri: schema:PostalAddress
+    description: >-
+      The value of `address`: a postal address, never an entity of its own (Smart Data Models'
+      common schema).
+    annotations:
+      upstream_source: https://schema.org/PostalAddress
+    slots:
+      - streetAddress
+      - addressLocality
+      - addressCountry
 enums:
   StationStatus:
     permissible_values:

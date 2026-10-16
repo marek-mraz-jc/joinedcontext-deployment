@@ -399,3 +399,7 @@ bbsk-endpoint-socialne-sluzby.yaml: projects/bbsk/spaces/bbsk-registre/endpoints
 bbsk-policy-socialne-sluzby-read.yaml: projects/bbsk/spaces/bbsk-registre/policies/socialne-sluzby-read.yaml
 bbsk-endpoint-mosty.yaml: projects/bbsk/spaces/bbsk-registre/endpoints/bbsk-mosty.yaml
 bbsk-policy-mosty-read.yaml: projects/bbsk/spaces/bbsk-registre/policies/mosty-read.yaml
+# The data catalogue's one general assistant over every publisher (T-4342): every dataset of
+# data.dev as its knowledge, every body's public Endpoints as its connectors.
+bbsk-knowledge-portal.yaml: projects/bbsk/assistant/sources/portal.yaml
+bbsk-assistant-data.yaml: projects/bbsk/assistant/deployments/data.yaml

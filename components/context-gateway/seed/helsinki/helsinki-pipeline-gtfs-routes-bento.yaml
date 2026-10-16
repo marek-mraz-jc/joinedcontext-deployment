@@ -2,7 +2,7 @@
 # `routes.txt`, as the archive read of `hsl-gtfs-routes` leaves them (one message per member, its
 # name in `archive_filename`, PL-72). One GtfsAgency per agency, one GtfsRoute per line with its
 # number, its name, what runs it and the agency that operates it. A line's stops in order and its
-# direction stay with TransitRoute (transit-routes), since GTFS gives them only through
+# direction stay with PublicTransportRoute (transit-routes), since GTFS gives them only through
 # `trips.txt` and `stop_times.txt`, which are never read whole (T-3889 load budget).
 #
 # route_type is GTFS's extended code, kept as the basic one Smart Data Models allows: 0 and 900

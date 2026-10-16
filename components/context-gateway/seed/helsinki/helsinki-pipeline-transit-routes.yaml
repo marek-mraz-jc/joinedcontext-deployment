@@ -1,4 +1,4 @@
-# One TransitRoute per line variant of `hsl-routes`, written into the city space (T-3356).
+# One PublicTransportRoute per line variant of `hsl-routes`, written into the city space (T-3356).
 apiVersion: joinedcontext.com/v1alpha1
 kind: Pipeline
 metadata:
@@ -14,7 +14,7 @@ spec:
     dataSourceRef: { kind: DataSource, name: hsl-routes }
   targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
   output:
-    type: TransitRoute
+    type: PublicTransportRoute
     mode: upsert
   quotas:
     # 21 MB of GeoJSON parsed at once; Bento held about 235 MB over its own baseline for it

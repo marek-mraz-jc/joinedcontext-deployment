@@ -1,4 +1,4 @@
-# The mapping of the parking-fee-zones pipeline (PL-03): one ParkingZone per parking fee zone of
+# The mapping of the parking-fee-zones pipeline (PL-03): one OnStreetParking (feeCharged, T-4329) per parking fee zone of
 # the city, from the open WFS layer `Pysakoinnin_maksuvyohykkeet_alue`, keyed by the zone number
 # the signs show. The zone's rules, the hourly fee among them, are the register's own words.
 
@@ -17,10 +17,10 @@ pipeline:
           "link": f.properties.linkki.apply("text"),
           "geometry": f.geometry
         }).map_each(z -> {
-          "id": "urn:ngsi-ld:%v:%v:%v:fee-zone-%v".format("ParkingZone", env("JC_ORG_DOMAIN"), env("JC_SPACE"), z.code.lowercase()),
-          "type": "ParkingZone",
+          "id": "urn:ngsi-ld:%v:%v:%v:fee-zone-%v".format("OnStreetParking", env("JC_ORG_DOMAIN"), env("JC_SPACE"), z.code.lowercase()),
+          "type": "OnStreetParking",
           "name": if z.name == null { null } else { { "type": "LanguageProperty", "languageMap": { "fi": z.name } } },
-          "zoneKind": { "type": "Property", "value": "fee" },
+          "category": { "type": "Property", "value": ["feeCharged"] },
           "zoneCode": { "type": "Property", "value": z.code },
           "description": if z.rules == null { null } else { { "type": "LanguageProperty", "languageMap": { "fi": z.rules } } },
           "url": if z.link == null { null } else { { "type": "Property", "value": if z.link.has_prefix("http") { z.link } else { "https://" + z.link } } },

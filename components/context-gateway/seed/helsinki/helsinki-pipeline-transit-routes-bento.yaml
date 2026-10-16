@@ -1,4 +1,4 @@
-# The mapping of the transit-routes pipeline (PL-03, T-3356): one TransitRoute per line variant
+# The mapping of the transit-routes pipeline (PL-03, T-3356): one PublicTransportRoute per line variant
 # of HSL's "stops by line" register, its stops in the order the line serves them and the line
 # through them. The register has one row per stop of a variant, so the rows are split, grouped
 # by variant and gathered back into one entity each; a variant's rows arrive in no set order.
@@ -31,14 +31,15 @@ pipeline:
         let first = $rows.index(0).properties
         let path = $rows.map_each(r -> r.geometry.coordinates)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("TransitRoute", env("JC_ORG_DOMAIN"), env("JC_SPACE"), $first.route_vari.string().trim().re_replace_all("[^A-Za-z0-9-]", "-")),
-          "type": "TransitRoute",
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("PublicTransportRoute", env("JC_ORG_DOMAIN"), env("JC_SPACE"), $first.route_vari.string().trim().re_replace_all("[^A-Za-z0-9-]", "-")),
+          "type": "PublicTransportRoute",
           "name": if $first.route_long.or("").trim() != "" { { "type": "LanguageProperty", "languageMap": { "fi": $first.route_long.trim() } } },
           "route": { "type": "Property", "value": $first.route_id.string() },
           "routeShortName": if $first.route_shor.or("").string().trim() != "" { { "type": "Property", "value": $first.route_shor.string().trim() } },
           "headsign": if $first.stop_heads.or("").trim() != "" { { "type": "Property", "value": $first.stop_heads.trim() } },
           "directionId": if [1, 2].contains($first.direction_) { { "type": "Property", "value": $first.direction_ } },
           "transportMode": { "type": "Property", "value": $first.route_type.or("3").apply("mode") },
+          "transportationType": { "type": "Property", "value": {"tram": 0, "metro": 1, "train": 2, "ferry": 4}.get($first.route_type.or("3").apply("mode")).or(3) },
           "stopSequence": { "type": "Property", "value": $rows.map_each(r -> r.properties.stop_id.string().trim()) },
           "location": { "type": "GeoProperty", "value": if $path.length() > 1 { { "type": "LineString", "coordinates": $path } } else { { "type": "Point", "coordinates": $path.index(0) } } },
           "dataProvider": { "type": "Property", "value": "Helsinki Region Transport (HSL), stops by line" },
