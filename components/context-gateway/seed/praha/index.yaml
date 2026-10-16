@@ -80,3 +80,6 @@ praha-knowledge-web.yaml: projects/praha/assistant/sources/web.yaml
 praha-knowledge-catalogue-ngsi.yaml: projects/praha/assistant/sources/catalogue.yaml
 # The staff assistant over the website, for the answer-quality evals (T-3067).
 praha-assistant-knowledge.yaml: projects/praha/assistant/deployments/knowledge.yaml
+# Prague's public assistant over its own knowledge and Endpoint (T-4281).
+praha-knowledge-data-portal.yaml: projects/praha/assistant/sources/data-portal.yaml
+praha-assistant-public.yaml: projects/praha/assistant/deployments/praha.yaml

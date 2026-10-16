@@ -14,7 +14,7 @@ spec:
   contextSpaceRef: praha-mesto
   slug: jw7tffshzip7igmzcszgffkkkuetnc6v
   audience: public
-  enabledRepresentations: [ngsi-ld, geojson, csv, json, websocket, ogc-features, odata]
+  enabledRepresentations: [ngsi-ld, geojson, csv, json, websocket, ogc-features, odata, mcp]
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: praha }
