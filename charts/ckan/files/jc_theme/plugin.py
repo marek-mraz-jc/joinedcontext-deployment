@@ -756,13 +756,32 @@ def jc_has_topics():
 HYPHENATED = re.compile(r"^\w+(?:-\w+)+$")
 
 
+# A letter only Slovak or Czech writes, and the endings their nouns and adjectives decline
+# through, longest first (T-4239).
+SLAVIC_LETTER = re.compile(r"[áäčďéěíĺľňóôŕřšťúůýž]", re.IGNORECASE)
+SLAVIC_ENDINGS = ("iach", "ách", "ami", "ých", "ými", "ého", "ému", "ia", "ie", "ii", "iu", "ej",
+                  "om", "ov", "ou", "ím", "ým", "a", "á", "e", "é", "ě", "i", "í", "o", "u", "ú", "y", "ý")
+
+
+def jc_stem(word):
+    """`(word OR stem*)` for a Slovak or Czech word, else the word (T-4239). The catalogue's Solr
+    stems in English, so "ovzdušie" missed every "ovzdušia"; the stem keeps four letters at least."""
+    if not word.isalpha() or not SLAVIC_LETTER.search(word):
+        return word
+    for ending in SLAVIC_ENDINGS:
+        if word.lower().endswith(ending) and len(word) - len(ending) >= 4:
+            return "(%s OR %s*)" % (word, word[: -len(ending)])
+    return word
+
+
 def jc_search_words(q):
-    """The visitor's search with each hyphenated word as a phrase (T-4218). Solr split
-    `bike-sharing` into parts it OR'ed, so the word found everything about either part. A query
-    with its own quotes or a field (`tags:x`) is the visitor's syntax and goes as typed."""
+    """The visitor's search with each hyphenated word as a phrase (T-4218) and each Slovak or
+    Czech word open to its other endings (T-4239). Solr split `bike-sharing` into parts it OR'ed,
+    so the word found everything about either part. A query with its own quotes or a field
+    (`tags:x`) is the visitor's syntax and goes as typed."""
     if not q or '"' in q or ":" in q:
         return q
-    return " ".join('"%s"' % word if HYPHENATED.match(word) else word for word in q.split())
+    return " ".join('"%s"' % word if HYPHENATED.match(word) else jc_stem(word) for word in q.split())
 
 
 # CKAN's words for its organizations and groups, where a visitor reads them (T-4220): the
@@ -934,9 +953,14 @@ class JcThemePlugin(plugins.SingletonPlugin):
         }
 
     def before_dataset_search(self, search_params):
-        """A hyphenated word searched as the phrase it is, on the page and the API alike."""
-        if search_params.get("q"):
-            search_params["q"] = jc_search_words(search_params["q"])
+        """A hyphenated word searched as the phrase it is and a Slovak or Czech word with its other
+        endings, on the page and the API alike. A stem is a prefix query, which CKAN's default
+        dismax parser does not take; edismax does, with the same fields and minimum match."""
+        q = search_params.get("q")
+        if q:
+            search_params["q"] = jc_search_words(q)
+            if "*)" in search_params["q"] and "*)" not in q:
+                search_params.setdefault("defType", "edismax")
         return search_params
 
     def dataset_facets(self, facets_dict, package_type):
