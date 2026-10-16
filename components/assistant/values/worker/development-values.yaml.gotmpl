@@ -14,3 +14,8 @@ resources:
   limits:
     cpu: '1'
     memory: 1Gi
+
+env:
+  # glibc keeps up to 8 malloc arenas per core, and a tokio service holds freed memory in them;
+  # two arenas trade a little allocation contention for that memory (T-4351, measured on dev).
+  MALLOC_ARENA_MAX: "2"
