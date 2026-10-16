@@ -298,6 +298,15 @@ def test_the_general_assistant_names_no_city_and_carries_the_portal_guide():
         assert word not in yaml.safe_dump(general()).lower(), word
 
 
+def test_a_conversation_of_the_general_assistant_holds_a_question_over_five_publishers():
+    # T-4342: one data question measured 33,744 tokens on dev; the cities' 40,000 refused the
+    # next one. The cost cap stays the guard and the per-visitor limits stay the cities'.
+    spec = general()["spec"]
+    assert spec["budget"]["tokensPerConversation"] >= 2 * 33_744
+    assert spec["budget"]["costPerDayUsd"] == 1
+    assert spec["rateLimit"] == deployment("bbsk")["spec"]["rateLimit"]
+
+
 def test_the_general_assistant_is_seeded_at_its_kinds_paths():
     index = yaml.safe_load((SEED / "bbsk" / "index.yaml").read_text())
     assert index["bbsk-assistant-data.yaml"] == "projects/bbsk/assistant/deployments/data.yaml"
