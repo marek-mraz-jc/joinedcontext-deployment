@@ -401,3 +401,7 @@ bbsk-policy-mosty-read.yaml: projects/bbsk/spaces/bbsk-registre/policies/mosty-r
 # data.dev as its knowledge, every body's public Endpoints as its connectors.
 bbsk-knowledge-portal.yaml: projects/bbsk/assistant/sources/portal.yaml
 bbsk-assistant-data.yaml: projects/bbsk/assistant/deployments/data.yaml
+# The open-data eval's copies of `data`, one per model (T-4359); removed after the runs.
+bbsk-assistant-data-eval-gemini.yaml: projects/bbsk/assistant/deployments/data-eval-gemini.yaml
+bbsk-assistant-data-eval-haiku.yaml: projects/bbsk/assistant/deployments/data-eval-haiku.yaml
+bbsk-assistant-data-eval-deepseek.yaml: projects/bbsk/assistant/deployments/data-eval-deepseek.yaml
