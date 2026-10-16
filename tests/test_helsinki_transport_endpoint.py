@@ -24,7 +24,9 @@ def test_a_public_reader_of_the_endpoint_sees_the_transport_types_and_nothing_el
     assert spec["assignee"] == {"kind": "role", "id": "public"}
     # T-4049: a citizen subscribes over the WebSocket; reading stays the only entity operation.
     assert spec["operations"] == [
-        "retrieveOps", "createSubscription", "retrieveSubscription", "updateSubscription", "deleteSubscription",
+        "retrieveOps", "retrieveEntityTypes", "retrieveEntityTypeDetails", "retrieveEntityTypeInfo",
+        "retrieveAttrTypes", "retrieveAttrTypeDetails", "retrieveAttrTypeInfo",
+        "createSubscription", "retrieveSubscription", "updateSubscription", "deleteSubscription",
     ]
     granted = [entity["type"] for rule in spec["information"] for entity in rule["entities"]]
     assert sorted(granted) == sorted(TRANSPORT)

@@ -14,6 +14,11 @@ import yaml
 
 # Reading, plus the subscriptions a WebSocket needs (T-4073); no entity write.
 READ_AND_SUBSCRIBE = ["retrieveOps", "createSubscription", "retrieveSubscription", "updateSubscription", "deleteSubscription"]
+# The anonymous grant also lists types and attributes (T-4258, EP-116).
+PUBLIC_READ = READ_AND_SUBSCRIBE[:1] + [
+    "retrieveEntityTypes", "retrieveEntityTypeDetails", "retrieveEntityTypeInfo",
+    "retrieveAttrTypes", "retrieveAttrTypeDetails", "retrieveAttrTypeInfo",
+] + READ_AND_SUBSCRIBE[1:]
 
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
 DEMO_USERS = yaml.safe_load(
@@ -494,7 +499,7 @@ def test_the_application_reading_both_bodies_is_a_published_static_app_on_the_re
     # The public read of the raw rows names every published column of the statistics office and
     # never the steward's own note, which is the region's annotation and not open data.
     public = one(REGION, "Policy", "kraj-public-read")["spec"]
-    assert public["assignee"] == {"kind": "role", "id": "public"} and public["operations"] == READ_AND_SUBSCRIBE
+    assert public["assignee"] == {"kind": "role", "id": "public"} and public["operations"] == PUBLIC_READ
     (rule,) = public["information"]
     assert "stewardNote" not in rule["propertyNames"]
     assert set(further[1]["attrs"]) <= set(rule["propertyNames"])

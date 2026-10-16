@@ -14,6 +14,10 @@ import yaml
 
 # Reading, plus the subscriptions a WebSocket needs (T-4073); no entity write.
 READ_AND_SUBSCRIBE = ["retrieveOps", "createSubscription", "retrieveSubscription", "updateSubscription", "deleteSubscription"]
+DISCOVERY = [
+    "retrieveEntityTypes", "retrieveEntityTypeDetails", "retrieveEntityTypeInfo",
+    "retrieveAttrTypes", "retrieveAttrTypeDetails", "retrieveAttrTypeInfo",
+]
 
 ROOT = Path(__file__).resolve().parent.parent
 SEED = ROOT / "components/context-gateway/seed"
@@ -179,7 +183,8 @@ def test_the_public_reads_only_and_only_the_types_of_its_space():
     models = by_name("DataModel")
     for policy in policies:
         spec = policy["spec"]
-        assert spec["operations"] == READ_AND_SUBSCRIBE, policy["metadata"]["name"]
+        # Reading, discovery (T-4258, EP-116) and the WebSocket's subscriptions; no entity write.
+        assert spec["operations"] == READ_AND_SUBSCRIBE[:1] + DISCOVERY + READ_AND_SUBSCRIBE[1:], policy["metadata"]["name"]
         space = spec["contextSpaceRef"]["name"]
         types = {e["type"] for info in spec["information"] for e in info["entities"]}
         linkml = yaml.safe_load((ZILINA / f"{SPACES[space]}.linkml.yaml").read_text())

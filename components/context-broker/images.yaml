@@ -45,7 +45,7 @@ context-broker:
     # Antares dev c0be313 (trains 20261013-0555, -0704, -1004): T-3645 T-3912 T-3959 T-3773 T-3945
     # T-3817 T-3937 T-3831 T-3985 T-4017 T-3962; no new migration or runtime ANTARES_* key over 79be5ab.
     repository: 'ghcr.io/marek-mraz-jc/antares-broker-jc'
-    # Antares dev 93fb991 (train 20261016-0009: T-4205 odata $search fuzz fix); no new migration
-    # or runtime ANTARES_* key over fffe184.
-    tag: '93fb991'
-    digest: 'sha256:c5624faf7eeef2c97f947676e83741c6d82b8167442ca05a18baeef129fb09d3'
+    # Antares dev b2ba711 (trains 20261016-0310 T-4246 temporal window and lastN in the store,
+    # 20261016-0350 T-4250 tests only); no new migration or runtime ANTARES_* key over 93fb991.
+    tag: 'b2ba711'
+    digest: 'sha256:fc1d1b178f190dc4269e0078a0f7a4f1cdf5b7bce27d3579f2c4b83f7dab9c56'

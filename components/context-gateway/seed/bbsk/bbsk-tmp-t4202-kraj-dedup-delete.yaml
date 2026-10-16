@@ -4,7 +4,7 @@
 apiVersion: joinedcontext.com/v1alpha1
 kind: Policy
 metadata:
-  name: tmp-t4202-dedup-delete
+  name: tmp-t4202-bbsk-kraj-dedup
   namespace: bbsk
   title: { sk: "Dočasné: odstránenie duplikátov hel.fi (T-4202)", en: "Temporary: remove the hel.fi duplicates (T-4202)" }
 spec:

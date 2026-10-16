@@ -12,7 +12,9 @@ spec:
   contextSpaceRef: { kind: ContextSpace, name: helsinki-hub }
   assigner: did:web:{orgDomain}
   assignee: { kind: role, id: public }
-  operations: [retrieveOps, createSubscription, retrieveSubscription, updateSubscription, deleteSubscription]
+  # Discovery beside the reads (T-4258, EP-116): which types and attributes the Endpoint holds,
+  # narrowed to this grant (EP-26), so an anonymous MCP client finds them before it queries.
+  operations: [retrieveOps, retrieveEntityTypes, retrieveEntityTypeDetails, retrieveEntityTypeInfo, retrieveAttrTypes, retrieveAttrTypeDetails, retrieveAttrTypeInfo, createSubscription, retrieveSubscription, updateSubscription, deleteSubscription]
   information:
     - entities:
         - type: Vehicle
