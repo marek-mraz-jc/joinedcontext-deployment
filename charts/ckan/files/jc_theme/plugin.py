@@ -740,6 +740,15 @@ def jc_recent(limit=6):
     return found.get("results") or []
 
 
+def jc_has_topics():
+    """Whether the catalogue has a topic at all (T-4217): the navigation's Topics and a
+    dataset's Topics tab led to "There are currently no groups for this site." until one did."""
+    try:
+        return bool(toolkit.get_action("group_list")({}, {"limit": 1}))
+    except (toolkit.NotAuthorized, toolkit.ObjectNotFound):
+        return False
+
+
 def jc_about_site():
     """What the About page says when no sysadmin wrote `ckan.site_about` (T-3028): whose
     catalogue this is, how to get at the data, and the machine entrances, all from the branding
@@ -885,6 +894,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_mcp_install": jc_mcp_install,
             "jc_assistant_widget": jc_assistant_widget,
             "jc_about_site": jc_about_site,
+            "jc_has_topics": jc_has_topics,
             "jc_sso_error": jc_sso_error,
         }
 

@@ -890,3 +890,25 @@ def test_a_dataset_page_puts_its_publisher_above_and_gives_the_data_the_whole_wi
     bar = (THEME / "templates__package__snippets__jc_publisher.html").read_text()
     assert "h.jc_org(organization)" in bar and "placeholder-organization.png" in bar
     assert ".jc-publisher {" in (THEME / "public__jc-theme.css").read_text()
+
+
+# T-4217 (photo audit T-4161): "Topics" in the main navigation opened "There are currently no
+# groups for this site." and every dataset carried an empty Groups tab. Both are offered only
+# once a topic exists.
+def test_topics_are_offered_only_when_one_exists(theme):
+    theme.page.actions["group_list"] = lambda data: []
+    assert theme.jc_has_topics() is False
+    theme.page.actions["group_list"] = lambda data: ["environment"]
+    assert theme.jc_has_topics() is True
+
+
+def test_a_topic_list_the_visitor_may_not_read_offers_no_topics(theme):
+    theme.page.actions["group_list"] = theme.toolkit.NotAuthorized()
+    assert theme.jc_has_topics() is False
+
+
+def test_the_navigation_and_the_dataset_tabs_ask_before_offering_topics():
+    header = (THEME / "header.html").read_text()
+    assert "h.jc_has_topics()" in header
+    tabs = (THEME / "templates__package__read_base.html").read_text()
+    assert "block content_primary_nav" in tabs and "h.jc_has_topics()" in tabs
