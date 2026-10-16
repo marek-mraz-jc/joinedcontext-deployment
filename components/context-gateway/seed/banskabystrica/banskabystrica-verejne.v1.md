@@ -37,11 +37,11 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
-### School
+### Organization
 
-One school or school facility in the city, from the national school map: its pupils, its staff and its budget, counts only.
+One school or school facility in the city, from the national school map: its pupils, its staff and its budget, counts only. The FIWARE Smart Data Model Organization (T-4329): no published model is a school.
 
-IRI: `jc:School`
+IRI: `sdm-org:Organization`
 
 Specialises `Entity`.
 

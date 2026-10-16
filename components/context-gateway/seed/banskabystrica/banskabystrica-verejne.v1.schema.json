@@ -388,49 +388,9 @@
         "sport": "Sport (\u0160portov\u00e9)."
       }
     },
-    "PostalAddress": {
+    "Organization": {
       "additionalProperties": false,
-      "description": "The value of `address`: a postal address, never an entity of its own (Smart Data Models' common schema).",
-      "properties": {
-        "addressCountry": {
-          "description": "The country, as an ISO 3166-1 alpha-2 code.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "addressLocality": {
-          "description": "The town or the municipality.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "postalCode": {
-          "description": "The postal code.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "streetAddress": {
-          "description": "The street and the house number, or the venue.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        }
-      },
-      "title": "PostalAddress",
-      "type": "object"
-    },
-    "School": {
-      "additionalProperties": false,
-      "description": "One school or school facility in the city, from the national school map: its pupils, its staff and its budget, counts only.",
+      "description": "One school or school facility in the city, from the national school map: its pupils, its staff and its budget, counts only. The FIWARE Smart Data Model Organization (T-4329): no published model is a school.",
       "properties": {
         "address": {
           "anyOf": [
@@ -592,7 +552,47 @@
         "id",
         "type"
       ],
-      "title": "School",
+      "title": "Organization",
+      "type": "object"
+    },
+    "PostalAddress": {
+      "additionalProperties": false,
+      "description": "The value of `address`: a postal address, never an entity of its own (Smart Data Models' common schema).",
+      "properties": {
+        "addressCountry": {
+          "description": "The country, as an ISO 3166-1 alpha-2 code.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "addressLocality": {
+          "description": "The town or the municipality.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "postalCode": {
+          "description": "The postal code.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "streetAddress": {
+          "description": "The street and the house number, or the venue.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "title": "PostalAddress",
       "type": "object"
     },
     "WeatherObserved": {

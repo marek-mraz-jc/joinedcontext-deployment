@@ -10,11 +10,11 @@
     "Event": {
       "@id": "schema:Event"
     },
+    "Organization": {
+      "@id": "sdm-org:Organization"
+    },
     "PostalAddress": {
       "@id": "schema:PostalAddress"
-    },
-    "School": {
-      "@id": "jc:School"
     },
     "WeatherObserved": {
       "@id": "sdm:WeatherObserved"
@@ -122,6 +122,7 @@
       "@id": "jc:schoolCode"
     },
     "sdm": "https://smartdatamodels.org/",
+    "sdm-org": "https://smartdatamodels.org/dataModel.Organization/",
     "shex": "http://www.w3.org/ns/shex#",
     "skos": "http://www.w3.org/2004/02/skos/core#",
     "source": {

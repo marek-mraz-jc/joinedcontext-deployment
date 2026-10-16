@@ -34,7 +34,7 @@ DOMAIN = "banskabystrica.sk"
 FEEDS = {
     "podujatia": ("podujatia.json", "Event", 5),
     # Six rows: five in the city, one in Považská Bystrica.
-    "skoly": ("skoly.csv", "School", 5),
+    "skoly": ("skoly.csv", "Organization", 5),
     "ovzdusie-pm10": ("eea-sk0263a-pm10.parquet", "AirQualityObserved", 1),
     "ovzdusie-pm25": ("eea-sk0263a-pm25.parquet", "AirQualityObserved", 1),
     # The station's last 24 hours of 2026-10-15 (T-4153); every O3 hour there is validity 4.
@@ -84,6 +84,18 @@ def test_every_entity_is_one_the_gateway_accepts(written):
     for name, entities in written.items():
         for entity in entities:
             assert not schema_errors(entity), (name, entity["id"], schema_errors(entity))
+
+
+# The FIWARE Smart Data Model each written type is (T-4329), validated at its vendored pin.
+SDM = {"Event": "dataModel.TourismDestinations/Event", "Organization": "dataModel.Organization/Organization",
+       "AirQualityObserved": "dataModel.Environment/AirQualityObserved"}
+
+
+@requires_docker
+def test_every_entity_is_valid_in_its_smart_data_model(written):
+    for name, entities in written.items():
+        for entity in entities:
+            assert open_data.sdm_errors(SDM[entity["type"]], entity) == [], (name, entity["id"])
 
 
 @requires_docker

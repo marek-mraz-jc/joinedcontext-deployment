@@ -13,6 +13,7 @@ prefixes:
   linkml: https://w3id.org/linkml/
   jc: https://joinedcontext.com/models/
   sdm: https://smartdatamodels.org/
+  sdm-org: https://smartdatamodels.org/dataModel.Organization/
   ngsi-ld: https://uri.etsi.org/ngsi-ld/
 default_prefix: sdm
 default_range: string
@@ -313,12 +314,15 @@ classes:
       - dateModified
       - dataProvider
       - source
-  School:
-    class_uri: jc:School
+  Organization:
+    class_uri: sdm-org:Organization
     description: >-
       One school or school facility in the city, from the national school map: its pupils, its
-      staff and its budget, counts only.
+      staff and its budget, counts only. The FIWARE Smart Data Model Organization (T-4329): no
+      published model is a school.
     is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Organization
     slots:
       - name
       - schoolCode
