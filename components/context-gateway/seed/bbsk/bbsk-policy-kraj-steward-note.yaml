@@ -10,7 +10,7 @@ metadata:
   title: { sk: "Správca údajov píše poznámku k riadku kraja", en: "The data steward writes a note on a region row" }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: bbsk-kraj }
-  assigner: did:web:{orgDomain}
+  assigner: did:web:bbsk.sk
   assignee: { kind: user, id: "demo.steward@{orgDomain}" }
   operations: [updateAttrs]
   information:

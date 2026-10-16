@@ -6,7 +6,7 @@ metadata:
   title: { sk: "Kanály zapisujú priestor zilina-mesto", en: "The pipelines write zilina-mesto" }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: zilina-mesto }
-  assigner: did:web:{orgDomain}
+  assigner: did:web:zilina.sk
   assignee: { kind: serviceAccount, id: pipelines }
   operations: [upsertBatch, createBatch, queryBatch, queryEntity]
   information:
