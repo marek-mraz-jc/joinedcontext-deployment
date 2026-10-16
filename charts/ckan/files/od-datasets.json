@@ -1,5 +1,8 @@
 {
   "bb-adresy": {"endpoint": "4ysiqy53qik5qyvawwaj7wgylpt4uoxa", "type": "Address", "dataset": "https://data.dev.joinedcontext.com/dataset/bb-adresy", "location": false},
+  "bb-dtm-bb-register-adries": {"endpoint": "4ysiqy53qik5qyvawwaj7wgylpt4uoxa", "type": "Address", "dataset": "https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-adries", "location": true},
+  "bb-dtm-bb-register-statickej-dopravy": {"endpoint": "4ysiqy53qik5qyvawwaj7wgylpt4uoxa", "type": "OffStreetParking", "dataset": "https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-statickej-dopravy", "location": true},
+  "bb-dtm-bb-register-verejnej-zelene-1": {"endpoint": "4ysiqy53qik5qyvawwaj7wgylpt4uoxa", "type": "Garden", "dataset": "https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-verejnej-zelene-1", "location": true},
   "bb-pocet-obcanov-podla-dna-narodenia": {"endpoint": "4ysiqy53qik5qyvawwaj7wgylpt4uoxa", "type": "KeyPerformanceIndicator", "dataset": "https://data.dev.joinedcontext.com/dataset/bb-pocet-obcanov-podla-dna-narodenia", "location": false},
   "bb-pocet-obcanov-podla-veku": {"endpoint": "4ysiqy53qik5qyvawwaj7wgylpt4uoxa", "type": "KeyPerformanceIndicator", "dataset": "https://data.dev.joinedcontext.com/dataset/bb-pocet-obcanov-podla-veku", "location": false},
   "bb-prirastky-a-ubytky-obcanov-za-jednotlive-roky": {"endpoint": "4ysiqy53qik5qyvawwaj7wgylpt4uoxa", "type": "KeyPerformanceIndicator", "dataset": "https://data.dev.joinedcontext.com/dataset/bb-prirastky-a-ubytky-obcanov-za-jednotlive-roky", "location": false},

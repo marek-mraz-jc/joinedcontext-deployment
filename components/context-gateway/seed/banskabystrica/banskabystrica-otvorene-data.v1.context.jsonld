@@ -7,11 +7,24 @@
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
+    "Garden": {
+      "@id": "sdm:dataModel.ParksAndGardens/Garden"
+    },
     "KeyPerformanceIndicator": {
       "@id": "sdm:dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator"
     },
+    "OffStreetParking": {
+      "@id": "sdm:dataModel.Parking/OffStreetParking"
+    },
     "addressArea": {
       "@id": "sdm:dataModel.CPSV-AP/addressArea"
+    },
+    "cOID": {
+      "@id": "jc:cOID",
+      "@type": "xsd:integer"
+    },
+    "dPOSTA": {
+      "@id": "jc:dPOSTA"
     },
     "dataProvider": {
       "@id": "sdm:dataProvider"
@@ -20,12 +33,44 @@
       "@id": "jc:dataset",
       "@type": "xsd:anyURI"
     },
+    "datumplatnosti": {
+      "@id": "jc:datumplatnosti",
+      "@type": "xsd:dateTime"
+    },
+    "datumvkladu": {
+      "@id": "jc:datumvkladu",
+      "@type": "xsd:dateTime"
+    },
+    "datumzmeny": {
+      "@id": "jc:datumzmeny",
+      "@type": "xsd:dateTime"
+    },
     "den": {
       "@id": "jc:den"
     },
     "geojson": "https://purl.org/geojson/vocab#",
+    "iD": {
+      "@id": "jc:iD",
+      "@type": "xsd:float"
+    },
+    "ics": {
+      "@id": "jc:ics"
+    },
     "id": "@id",
+    "idRegad": {
+      "@id": "jc:idRegad"
+    },
+    "idzmeny": {
+      "@id": "jc:idzmeny"
+    },
     "jc": "https://joinedcontext.com/models/",
+    "kRAJ": {
+      "@id": "jc:kRAJ"
+    },
+    "kRAJID": {
+      "@id": "jc:kRAJID",
+      "@type": "xsd:integer"
+    },
     "linkml": "https://w3id.org/linkml/",
     "location": {
       "@id": "geojson:geometry"
@@ -43,6 +88,26 @@
       "@type": "xsd:integer"
     },
     "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
+    "oBECID": {
+      "@id": "jc:oBECID",
+      "@type": "xsd:integer"
+    },
+    "oKRES": {
+      "@id": "jc:oKRES"
+    },
+    "oKRESID": {
+      "@id": "jc:oKRESID",
+      "@type": "xsd:integer"
+    },
+    "oRIENTC": {
+      "@id": "jc:oRIENTC"
+    },
+    "oRIENTCC": {
+      "@id": "jc:oRIENTCC"
+    },
+    "oRIENTCP": {
+      "@id": "jc:oRIENTCP"
+    },
     "observedAt": {
       "@id": "ngsi-ld:observedAt",
       "@type": "xsd:dateTime"
@@ -80,8 +145,18 @@
     "pohlavie": {
       "@id": "jc:pohlavie"
     },
+    "popisobjektu": {
+      "@id": "jc:popisobjektu"
+    },
+    "postCode": {
+      "@id": "sdm:dataModel.CPSV-AP/postCode"
+    },
     "postName": {
       "@id": "sdm:dataModel.CPSV-AP/postName"
+    },
+    "prevazujicipovrch": {
+      "@id": "jc:prevazujicipovrch",
+      "@type": "xsd:integer"
     },
     "prirastok": {
       "@id": "jc:prirastok"
@@ -104,6 +179,13 @@
       "@id": "jc:rok",
       "@type": "xsd:integer"
     },
+    "sCHRANKY": {
+      "@id": "jc:sCHRANKY",
+      "@type": "xsd:integer"
+    },
+    "sUPISNEC": {
+      "@id": "jc:sUPISNEC"
+    },
     "schema": "http://schema.org/",
     "sdm": "https://smartdatamodels.org/",
     "shex": "http://www.w3.org/ns/shex#",
@@ -114,10 +196,22 @@
     "supC": {
       "@id": "jc:supC"
     },
+    "tYPBUDOVY": {
+      "@id": "jc:tYPBUDOVY",
+      "@type": "xsd:integer"
+    },
     "thoroughfare": {
       "@id": "sdm:dataModel.CPSV-AP/thoroughfare"
     },
     "type": "@type",
+    "typudrzovanezelene": {
+      "@id": "jc:typudrzovanezelene",
+      "@type": "xsd:integer"
+    },
+    "uLICAID": {
+      "@id": "jc:uLICAID",
+      "@type": "xsd:integer"
+    },
     "ubytok": {
       "@id": "jc:ubytok"
     },
@@ -127,11 +221,25 @@
     "ubytokZeny": {
       "@id": "jc:ubytokZeny"
     },
+    "urovenumisteniobjektuzps": {
+      "@id": "jc:urovenumisteniobjektuzps",
+      "@type": "xsd:integer"
+    },
     "vek": {
       "@id": "jc:vek",
       "@type": "xsd:integer"
     },
+    "vrstva": {
+      "@id": "jc:vrstva"
+    },
     "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "zSJ": {
+      "@id": "jc:zSJ"
+    },
+    "zSJID": {
+      "@id": "jc:zSJID",
+      "@type": "xsd:float"
+    },
     "zomrelych": {
       "@id": "jc:zomrelych",
       "@type": "xsd:integer"

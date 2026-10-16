@@ -3,6 +3,8 @@
   "dataModel.CPSV-AP": "a05d1663475fc0f79361bc9bc2550c3f24df1ba0",
   "dataModel.KeyPerformanceIndicator": "ec7f3b642faf3f807d3c8549ccc9e0b743e05f26",
   "dataModel.Organization": "77a4911e7cbc72bf87bf202ade282c1bc41a36a4",
+  "dataModel.Parking": "24342efb3425c0059c7a4b82d6d201847418b29c",
+  "dataModel.ParksAndGardens": "4563de6c0ab462ab7db73bfc4ca90dbacfa0421d",
   "dataModel.PointOfInterest": "7e5e24963a142b9bf6fd15b144a0e24588217608",
   "dataModel.TourismDestinations": "6d78cb4ff0c1a7d16dc0c1bab7266e40d4b3a00c",
   "dataModel.Transportation": "b83ede9d3db29be1365cc272eb535f46af83bed2",
