@@ -214,7 +214,7 @@ class EveryName(dict):
 
 
 def model_index(endpoint):
-    return [{"version": 1, "types": ["T", "StatisticalObservation"],
+    return [{"version": 1, "types": ["T", "KeyPerformanceIndicator"],
              "artifacts": {f: {"bytes": 10, "sha256": f"sha-{f}", "type": "text/plain"} for f in ARTEFACTS}}]
 
 
@@ -390,7 +390,7 @@ def test_only_a_converted_dataset_is_listed_with_its_apis_model_and_table(monkey
     location. Every dataset nobody mapped is not listed, and named so."""
     monkeypatch.setenv("OD_GATEWAY", "https://dev.joinedcontext.com/")
     monkeypatch.setenv("OD_DATASETS", json.dumps({"bb-pocet-obcanov-podla-veku": {
-        "endpoint": "abc", "type": "StatisticalObservation", "location": False,
+        "endpoint": "abc", "type": "KeyPerformanceIndicator", "location": False,
         "dataset": "https://data.dev.joinedcontext.com/dataset/bb-pocet-obcanov-podla-veku"}}))
     harvest = load(monkeypatch, mapped=False)
     assert harvest.main() == 0
@@ -402,7 +402,7 @@ def test_only_a_converted_dataset_is_listed_with_its_apis_model_and_table(monkey
         "NGSI-LD", "CSV", "JSON", "XLSX", "OData", "MCP", "WebSocket",
         "JSON Schema", "JSON-LD", "LinkML", "Markdown", "OWL", "RDF", "SHACL", "CSV"]
     assert ages[-1].get("url_type") == "datastore", "the table moved off the end of the list"
-    assert ages[0]["url"] == ("https://dev.joinedcontext.com/api/endpoint/abc/ngsi-ld/v1/entities?type=StatisticalObservation"
+    assert ages[0]["url"] == ("https://dev.joinedcontext.com/api/endpoint/abc/ngsi-ld/v1/entities?type=KeyPerformanceIndicator"
                               "&q=dataset%3D%3D%22https%3A%2F%2Fdata.dev.joinedcontext.com%2Fdataset%2Fbb-pocet-obcanov-podla-veku%22")
     assert ages[0]["conforms_to"].startswith("https://www.etsi.org/")
     assert ages[7]["url"] == "https://dev.joinedcontext.com/api/endpoint/abc/schema/v1/model.schema.json"

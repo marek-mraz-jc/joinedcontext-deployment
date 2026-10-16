@@ -1,4 +1,4 @@
-# The mapping of the ubytovanie pipeline (PL-03, T-2781): one StatisticalObservation per quarter per indicator from
+# The mapping of the ubytovanie pipeline (PL-03, T-2781): one KeyPerformanceIndicator per quarter per indicator from
 # the quarterly accommodation cube of ŠÚ SR: establishments, rooms and beds available.
 # `dimensionKey` carries the quarter (`1.Q.`); the year-to-date code `1. - 4.Q.` is not asked
 # for. Revenue, prices and occupancy are euro and per cent, so another stream's.
@@ -33,8 +33,8 @@ pipeline:
         let updated = $ds.update.or("").ts_parse("2006-01-02").ts_format("2006-01-02T15:04:05Z07:00", "UTC").catch(null)
         # One entity per cell that carries a number. A cell the publisher left empty is not a zero.
         root = range(0, $ds.value.length(), 1).map_each(p -> { "at": range(0, $n, 1).map_each(k -> { $ids.index(k): $codes.index(k).index(((p / $strides.index(k)).floor().int64()) % $sizes.index(k)) }).squash(), "cell": $ds.value.index(p) }).filter(c -> c.cell != null).map_each(c -> {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("StatisticalObservation", $domain, env("JC_SPACE"), [$cube, c.at.get($area_dim), c.at.get($period_dim), c.at.get($indicator_dim)].concat($key_dims.map_each(d -> c.at.get(d))).join("-")),
-          "type": "StatisticalObservation",
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("KeyPerformanceIndicator", $domain, env("JC_SPACE"), [$cube, c.at.get($area_dim), c.at.get($period_dim), c.at.get($indicator_dim)].concat($key_dims.map_each(d -> c.at.get(d))).join("-")),
+          "type": "KeyPerformanceIndicator",
           "dataSet": { "type": "Property", "value": $cube },
           "indicator": { "type": "Property", "value": c.at.get($indicator_dim) },
           "refArea": { "type": "Property", "value": c.at.get($area_dim) },
@@ -46,7 +46,7 @@ pipeline:
           # in silence (T-2445). A cube that states no update time gets no `observedAt` at all.
           # A unit with no UN/CEFACT code (a currency) and a cube with no update time leave their
           # term out rather than write a null the broker refuses.
-          "observationValue": { "type": "Property", "value": c.cell, "unitCode": $unit_code, "observedAt": $updated }.filter(entry -> entry.value != null),
+          "kpiValue": { "type": "Property", "value": c.cell, "unitCode": $unit_code, "observedAt": $updated }.filter(entry -> entry.value != null),
           "unitText": { "type": "Property", "value": $unit_text },
           "source": { "type": "Property", "value": $source_url },
           "dateObserved": if $updated == null { null } else { { "type": "Property", "value": $updated } }

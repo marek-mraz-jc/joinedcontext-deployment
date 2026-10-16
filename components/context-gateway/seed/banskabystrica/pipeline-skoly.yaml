@@ -1,4 +1,4 @@
-# One School per record of `minedu-mapa-skol`, written into the city's public space through its one Endpoint (PL-18, T-2781).
+# One Organization per record of `minedu-mapa-skol`, written into the city's public space through its one Endpoint (PL-18, T-2781).
 apiVersion: joinedcontext.com/v1alpha1
 kind: Pipeline
 metadata:
@@ -14,7 +14,7 @@ spec:
     dataSourceRef: { kind: DataSource, name: minedu-mapa-skol }
   targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-verejne:banskabystrica-verejne
   output:
-    type: School
+    type: Organization
     mode: upsert
   quotas:
     maxMemoryMb: 256

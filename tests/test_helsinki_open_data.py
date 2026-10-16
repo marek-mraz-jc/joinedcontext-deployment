@@ -31,18 +31,18 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures/helsinki/open-data"
 FEEDS = {
     "services": ("servicemap-units.json", "PointOfInterest", 5),
     "beach-water": ("uiras-beaches.json", "WaterQualityObserved", 3),
-    "parking-areas": ("parking-areas.json", "ParkingArea", 3),
+    "parking-areas": ("parking-areas.json", "OnStreetParking", 3),
     # Three areas, two of them one application: two permits.
-    "excavation": ("excavation.json", "PublicAreaPermit", 2),
-    "traffic-arrangements": ("traffic-arrangements.json", "PublicAreaPermit", 2),
-    "area-events": ("area-events.json", "PublicAreaPermit", 3),
+    "excavation": ("excavation.json", "CityWork", 2),
+    "traffic-arrangements": ("traffic-arrangements.json", "CityWork", 2),
+    "area-events": ("area-events.json", "CityWork", 3),
     # Two features, one of them the territorial sea, which has no district number.
     "districts": ("districts.json", "CityDistrict", 1),
     "subdistricts": ("subdistricts.json", "CityDistrict", 2),
-    "fee-parking-zones": ("payment-zones.json", "ParkingZone", 1),
-    "resident-parking-zones": ("resident-zones.json", "ParkingZone", 2),
+    "fee-parking-zones": ("payment-zones.json", "OnStreetParking", 1),
+    "resident-parking-zones": ("resident-zones.json", "OnStreetParking", 2),
     # Every row of three line variants: a ferry, a metro line and a one-stop variant.
-    "transit-routes": ("hsl-routes.json", "TransitRoute", 3),
+    "transit-routes": ("hsl-routes.json", "PublicTransportRoute", 3),
 }
 
 
@@ -101,7 +101,7 @@ def test_the_areas_of_one_application_are_one_permit_with_every_outline(written)
     numbers = [a["properties"]["hakemustunnus"] for a in areas]
     shared = next(n for n in numbers if numbers.count(n) == 2)
     permit = next(e for e in written["excavation"] if e["permitNumber"]["value"] == shared)
-    assert permit["id"] == f"urn:ngsi-ld:PublicAreaPermit:hel.fi:helsinki:{shared}"
+    assert permit["id"] == f"urn:ngsi-ld:CityWork:hel.fi:helsinki:{shared}"
     assert permit["location"]["value"]["type"] == "MultiPolygon"
     assert len(permit["location"]["value"]["coordinates"]) == 2
     # "34 PAKILA" names district 34, which the districts pipeline writes as district-34.
@@ -195,7 +195,7 @@ def test_districts_read_as_a_person_writes_them_and_sub_districts_keep_the_stati
 @requires_docker
 def test_a_zone_link_without_a_scheme_is_written_as_https(written):
     fee = written["fee-parking-zones"][0]
-    assert fee["zoneKind"]["value"] == "fee" and fee["zoneCode"]["value"] == "1"
+    assert fee["category"]["value"] == ["feeCharged"] and fee["zoneCode"]["value"] == "1"
     assert fee["url"]["value"] == "https://www.hel.fi/pysakointi"
     assert "4 euroa tunnilta" in fee["description"]["languageMap"]["fi"]
 
@@ -207,9 +207,10 @@ def test_a_line_lists_its_stops_in_order_whatever_order_its_rows_come_in(written
     expected = [r["stop_id"] for r in sorted(rows, key=lambda r: r["stop_seque"])]
     recording["features"].reverse()
     for entities in (written["transit-routes"], run("transit-routes", recording)):
-        line = next(e for e in entities if e["id"] == "urn:ngsi-ld:TransitRoute:hel.fi:helsinki:31M1-1")
+        line = next(e for e in entities if e["id"] == "urn:ngsi-ld:PublicTransportRoute:hel.fi:helsinki:31M1-1")
         assert line["stopSequence"]["value"] == expected
         assert line["transportMode"]["value"] == "metro"
+        assert line["transportationType"]["value"] == 1
         assert line["location"]["value"]["type"] == "LineString"
         assert len(line["location"]["value"]["coordinates"]) == len(expected)
     alone = next(e for e in written["transit-routes"] if e["id"].endswith(":4625-10"))
@@ -227,8 +228,8 @@ def test_an_empty_answer_writes_nothing():
 
 def test_a_value_outside_the_model_is_refused_by_the_schema():
     permit = {
-        "id": "urn:ngsi-ld:PublicAreaPermit:hel.fi:helsinki:KP2602482",
-        "type": "PublicAreaPermit",
+        "id": "urn:ngsi-ld:CityWork:hel.fi:helsinki:KP2602482",
+        "type": "CityWork",
         "permitKind": {"type": "Property", "value": "excavation"},
         "permitNumber": {"type": "Property", "value": "KP2602482"},
         "permitStatus": {"type": "Property", "value": "cancelled"},
@@ -279,3 +280,31 @@ def test_the_model_classes_and_the_manifest_agree():
     # The entity types; a value class such as PostalAddress (T-3949) is no type of the space.
     entities = {name for name, body in linkml["classes"].items() if (body or {}).get("is_a") == "Entity"}
     assert set(manifest["spec"]["classes"]) == entities
+
+
+@requires_docker
+def test_the_street_parking_layers_are_the_smart_data_model_on_street_parking_told_apart_by_category(written):
+    """T-4329: parking areas, fee zones and resident zones are one SDM type; `category` says which."""
+    for name, category in (("parking-areas", "public"), ("fee-parking-zones", "feeCharged"), ("resident-parking-zones", "forResidents")):
+        for entity in written[name]:
+            assert entity["category"]["value"] == [category], name
+            assert open_data.sdm_errors("dataModel.Parking/OnStreetParking", entity) == [], (name, entity["id"])
+    # A zone code the model types as an integer would not be the sign's letter: it stays text.
+    assert all(isinstance(e["zoneCode"]["value"], str) for e in written["resident-parking-zones"])
+
+
+@requires_docker
+def test_a_line_variant_is_the_smart_data_model_public_transport_route_with_its_gtfs_route_type(written):
+    """T-4329: the SDM requires the GTFS route type as a number; the ferry is 4, the metro 1."""
+    types = {e["transportMode"]["value"]: e["transportationType"]["value"] for e in written["transit-routes"]}
+    assert types["metro"] == 1 and types.get("ferry", 4) == 4 and all(v in range(8) for v in types.values())
+    for entity in written["transit-routes"]:
+        assert open_data.sdm_errors("dataModel.UrbanMobility/PublicTransportRoute", entity) == [], entity["id"]
+
+
+@requires_docker
+def test_every_public_area_permit_is_the_smart_data_model_city_work(written):
+    """T-4329: excavations, traffic arrangements and event permits are SDM CityWork."""
+    for name in ("excavation", "traffic-arrangements", "area-events"):
+        for entity in written[name]:
+            assert open_data.sdm_errors("dataModel.Transportation/CityWork", entity) == [], (name, entity["id"])

@@ -10,17 +10,23 @@
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
-    "Hospital": {
-      "@id": "jc:Hospital"
+    "PointOfInterest": {
+      "@id": "sdm-poi:PointOfInterest"
+    },
+    "PostalAddress": {
+      "@id": "schema:PostalAddress"
     },
     "PublicOrganization": {
-      "@id": "jc:PublicOrganization"
-    },
-    "SocialService": {
-      "@id": "jc:SocialService"
+      "@id": "sdm-cpsv:PublicOrganization"
     },
     "address": {
       "@id": "schema:address"
+    },
+    "addressCountry": {
+      "@id": "schema:addressCountry"
+    },
+    "addressLocality": {
+      "@id": "schema:addressLocality"
     },
     "alternateName": {
       "@id": "schema:alternateName"
@@ -38,6 +44,18 @@
     "capacity": {
       "@id": "jc:capacity",
       "@type": "xsd:integer"
+    },
+    "category": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "sdm-poi:category"
+    },
+    "childAreas": {
+      "@id": "jc:childAreas",
+      "@type": "@id"
     },
     "dataProvider": {
       "@id": "sdm:dataProvider"
@@ -105,6 +123,12 @@
       },
       "@id": "jc:organizationCategory"
     },
+    "postalCode": {
+      "@id": "schema:postalCode"
+    },
+    "preferredLabel": {
+      "@id": "sdm-cpsv:preferredLabel"
+    },
     "providerKind": {
       "@context": {
         "description": "skos:prefLabel",
@@ -112,6 +136,10 @@
         "text": "skos:notation"
       },
       "@id": "jc:providerKind"
+    },
+    "publicOrganizations": {
+      "@id": "jc:publicOrganizations",
+      "@type": "@id"
     },
     "refMunicipality": {
       "@id": "jc:refMunicipality",
@@ -134,6 +162,8 @@
     },
     "schema": "http://schema.org/",
     "sdm": "https://smartdatamodels.org/",
+    "sdm-cpsv": "https://smartdatamodels.org/dataModel.CPSV-AP/",
+    "sdm-poi": "https://smartdatamodels.org/dataModel.PointOfInterest/",
     "serviceForm": {
       "@context": {
         "description": "skos:prefLabel",
@@ -154,6 +184,12 @@
     "spanCount": {
       "@id": "jc:spanCount",
       "@type": "xsd:integer"
+    },
+    "spatial": {
+      "@id": "sdm-cpsv:spatial"
+    },
+    "streetAddress": {
+      "@id": "schema:streetAddress"
     },
     "structureKind": {
       "@id": "jc:structureKind"

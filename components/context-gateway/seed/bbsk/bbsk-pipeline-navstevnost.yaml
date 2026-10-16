@@ -1,4 +1,4 @@
-# One StatisticalObservation per cell of the ŠÚ SR cube cr3802mr, written through the space's one Endpoint with the runner's service account (PL-18, PF-39, T-2783).
+# One KeyPerformanceIndicator per cell of the ŠÚ SR cube cr3802mr, written through the space's one Endpoint with the runner's service account (PL-18, PF-39, T-2783).
 apiVersion: joinedcontext.com/v1alpha1
 kind: Pipeline
 metadata:
@@ -14,7 +14,7 @@ spec:
     dataSourceRef: { kind: DataSource, name: susr-cr3802mr }
   targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-kraj:bbsk-kraj
   output:
-    type: StatisticalObservation
+    type: KeyPerformanceIndicator
     mode: upsert
   quotas:
     maxMemoryMb: 128

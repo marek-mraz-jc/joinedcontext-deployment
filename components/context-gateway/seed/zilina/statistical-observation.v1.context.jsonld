@@ -4,8 +4,8 @@
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
-    "StatisticalObservation": {
-      "@id": "qb:Observation"
+    "KeyPerformanceIndicator": {
+      "@id": "sdm-kpi:KeyPerformanceIndicator"
     },
     "dataSet": {
       "@id": "qb:dataSet"
@@ -23,15 +23,15 @@
       "@id": "jc:indicator"
     },
     "jc": "https://joinedcontext.com/models/",
+    "kpiValue": {
+      "@id": "sdm-kpi:kpiValue",
+      "@type": "xsd:float"
+    },
     "linkml": "https://w3id.org/linkml/",
     "location": {
       "@id": "geojson:geometry"
     },
     "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
-    "observationValue": {
-      "@id": "jc:observationValue",
-      "@type": "xsd:float"
-    },
     "observedAt": {
       "@id": "ngsi-ld:observedAt",
       "@type": "xsd:dateTime"
@@ -44,6 +44,7 @@
       "@id": "sdmx-dim:refPeriod"
     },
     "schema": "http://schema.org/",
+    "sdm-kpi": "https://smartdatamodels.org/dataModel.KeyPerformanceIndicator/",
     "sdmx-dim": "http://purl.org/linked-data/sdmx/2009/dimension#",
     "shex": "http://www.w3.org/ns/shex#",
     "source": {
