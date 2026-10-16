@@ -420,6 +420,15 @@ def test_a_dataset_unmapped_after_a_run_is_withdrawn_and_none_mapped_withdraws_n
     assert harvest.main() == 0
     assert harvest.ckan.packages["bb-objednavky-bb"]["state"] == "deleted"
     assert harvest.ckan.packages["bb-podujatia"]["state"] == "active"
+    # Withdrawn means CKAN's state=deleted, never a purge: once the dataset converts again (an
+    # extended Smart Data Model, owner 11:40Z), the next run restores the same dataset by its id.
+    withdrawn_id = harvest.ckan.packages["bb-objednavky-bb"]["id"]
+    harvest.OD_DATASETS.unconverted.discard("bb-objednavky-bb")
+    assert harvest.main() == 0
+    assert harvest.ckan.packages["bb-objednavky-bb"]["state"] == "active"
+    assert harvest.ckan.packages["bb-objednavky-bb"]["id"] == withdrawn_id
+    for script in ("harvest-nkod.py", "harvest-hub.py"):
+        assert "dataset_purge" not in (SCRIPT.parent / script).read_text(), script
     harvest.OD_GATEWAY = ""
     assert harvest.main() == 1
     assert "nothing is withdrawn" in capsys.readouterr().err

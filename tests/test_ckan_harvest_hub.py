@@ -322,6 +322,11 @@ def test_a_dataset_whose_rows_are_not_converted_is_withdrawn_and_named(ckan, con
     assert set(ckan.active()) == {CULTURE}
     reasons = {ident: reason for ident, _, reason in skipped}
     assert reasons[SUPPLIERS] == "not converted to NGSI-LD, so not listed (EP-118)"
+    # Withdrawn is CKAN's state=deleted, never a purge: converted again, the same dataset is back.
+    withdrawn = next(p for p in ckan.packages.values() if harvest.extra(p, "source_id") == SUPPLIERS)
+    converted(SUPPLIERS)
+    counts, _, _ = harvest.harvest(client, dev_source(), items())
+    assert counts["updated"] == 1 and ckan.packages[withdrawn["id"]]["state"] == "active"
 
 
 def test_no_dataset_converted_at_all_withdraws_nothing(ckan, converted):
