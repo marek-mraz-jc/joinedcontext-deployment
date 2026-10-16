@@ -4,11 +4,23 @@
     "Address": {
       "@id": "sdm:dataModel.CPSV-AP/Address"
     },
+    "Article": {
+      "@id": "jc:Article"
+    },
+    "Contract": {
+      "@id": "jc:Contract"
+    },
+    "CouncilMeeting": {
+      "@id": "jc:CouncilMeeting"
+    },
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
     "Garden": {
       "@id": "sdm:dataModel.ParksAndGardens/Garden"
+    },
+    "Grant": {
+      "@id": "jc:Grant"
     },
     "KeyPerformanceIndicator": {
       "@id": "sdm:dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator"
@@ -16,12 +28,28 @@
     "OffStreetParking": {
       "@id": "sdm:dataModel.Parking/OffStreetParking"
     },
+    "PurchaseOrder": {
+      "@id": "jc:PurchaseOrder"
+    },
     "addressArea": {
       "@id": "sdm:dataModel.CPSV-AP/addressArea"
+    },
+    "akcia": {
+      "@id": "jc:akcia"
     },
     "cOID": {
       "@id": "jc:cOID",
       "@type": "xsd:integer"
+    },
+    "cZasadnutia": {
+      "@id": "jc:cZasadnutia",
+      "@type": "xsd:integer"
+    },
+    "cenaCelkom": {
+      "@id": "jc:cenaCelkom"
+    },
+    "content": {
+      "@id": "jc:content"
     },
     "dPOSTA": {
       "@id": "jc:dPOSTA"
@@ -32,6 +60,22 @@
     "dataset": {
       "@id": "jc:dataset",
       "@type": "xsd:anyURI"
+    },
+    "dateGmt": {
+      "@id": "jc:dateGmt",
+      "@type": "xsd:dateTime"
+    },
+    "datumPodpisu": {
+      "@id": "jc:datumPodpisu"
+    },
+    "datumVystavenia": {
+      "@id": "jc:datumVystavenia"
+    },
+    "datumZasadnutia": {
+      "@id": "jc:datumZasadnutia"
+    },
+    "datumZverejnenia": {
+      "@id": "jc:datumZverejnenia"
     },
     "datumplatnosti": {
       "@id": "jc:datumplatnosti",
@@ -48,7 +92,22 @@
     "den": {
       "@id": "jc:den"
     },
+    "dodavatel": {
+      "@id": "jc:dodavatel"
+    },
+    "druh": {
+      "@id": "jc:druh"
+    },
     "geojson": "https://purl.org/geojson/vocab#",
+    "iCO": {
+      "@id": "jc:iCO"
+    },
+    "iCOOrganizacie": {
+      "@id": "jc:iCOOrganizacie"
+    },
+    "iCOZiadatela": {
+      "@id": "jc:iCOZiadatela"
+    },
     "iD": {
       "@id": "jc:iD",
       "@type": "xsd:float"
@@ -59,6 +118,9 @@
     "id": "@id",
     "idRegad": {
       "@id": "jc:idRegad"
+    },
+    "identifier": {
+      "@id": "sdm:dataModel.CPSV-AP/identifier"
     },
     "idzmeny": {
       "@id": "jc:idzmeny"
@@ -74,6 +136,16 @@
     "linkml": "https://w3id.org/linkml/",
     "location": {
       "@id": "geojson:geometry"
+    },
+    "mena": {
+      "@id": "jc:mena"
+    },
+    "modifiedGmt": {
+      "@id": "jc:modifiedGmt",
+      "@type": "xsd:dateTime"
+    },
+    "name": {
+      "@id": "sdm:name"
     },
     "narodenych": {
       "@id": "jc:narodenych",
@@ -108,6 +180,9 @@
     "oRIENTCP": {
       "@id": "jc:oRIENTCP"
     },
+    "objednavkaSpolu": {
+      "@id": "jc:objednavkaSpolu"
+    },
     "observedAt": {
       "@id": "ngsi-ld:observedAt",
       "@type": "xsd:dateTime"
@@ -123,6 +198,9 @@
     "odstahovanychZ": {
       "@id": "jc:odstahovanychZ",
       "@type": "xsd:integer"
+    },
+    "organSamospravy": {
+      "@id": "jc:organSamospravy"
     },
     "orientC": {
       "@id": "jc:orientC"
@@ -154,6 +232,12 @@
     "postName": {
       "@id": "sdm:dataModel.CPSV-AP/postName"
     },
+    "pozadovaneProstriedky": {
+      "@id": "jc:pozadovaneProstriedky"
+    },
+    "predmet": {
+      "@id": "jc:predmet"
+    },
     "prevazujicipovrch": {
       "@id": "jc:prevazujicipovrch",
       "@type": "xsd:integer"
@@ -179,6 +263,10 @@
       "@id": "jc:rok",
       "@type": "xsd:integer"
     },
+    "rokDotacie": {
+      "@id": "jc:rokDotacie",
+      "@type": "xsd:integer"
+    },
     "sCHRANKY": {
       "@id": "jc:sCHRANKY",
       "@type": "xsd:integer"
@@ -187,11 +275,17 @@
       "@id": "jc:sUPISNEC"
     },
     "schema": "http://schema.org/",
+    "schvProstr": {
+      "@id": "jc:schvProstr"
+    },
     "sdm": "https://smartdatamodels.org/",
     "shex": "http://www.w3.org/ns/shex#",
     "source": {
       "@id": "sdm:source",
       "@type": "xsd:anyURI"
+    },
+    "stavVybav": {
+      "@id": "jc:stavVybav"
     },
     "supC": {
       "@id": "jc:supC"
@@ -200,8 +294,14 @@
       "@id": "jc:tYPBUDOVY",
       "@type": "xsd:integer"
     },
+    "textObjednavky": {
+      "@id": "jc:textObjednavky"
+    },
     "thoroughfare": {
       "@id": "sdm:dataModel.CPSV-AP/thoroughfare"
+    },
+    "typ": {
+      "@id": "jc:typ"
     },
     "type": "@type",
     "typudrzovanezelene": {
@@ -221,6 +321,10 @@
     "ubytokZeny": {
       "@id": "jc:ubytokZeny"
     },
+    "url": {
+      "@id": "jc:url",
+      "@type": "xsd:anyURI"
+    },
     "urovenumisteniobjektuzps": {
       "@id": "jc:urovenumisteniobjektuzps",
       "@type": "xsd:integer"
@@ -239,6 +343,15 @@
     "zSJID": {
       "@id": "jc:zSJID",
       "@type": "xsd:float"
+    },
+    "ziadatel": {
+      "@id": "jc:ziadatel"
+    },
+    "zmluvneStrany": {
+      "@id": "jc:zmluvneStrany"
+    },
+    "zmluvneStranySUdajomICO": {
+      "@id": "jc:zmluvneStranySUdajomICO"
     },
     "zomrelych": {
       "@id": "jc:zomrelych",
