@@ -12,7 +12,7 @@ spec:
   assigner: did:web:{orgDomain}
   assignee: { kind: serviceAccount, id: pipelines }
   operations: [deleteBatch]
-  validity: { to: "2026-10-16T09:00:00Z" }
+  validity: { to: "2026-10-16T16:00:00Z" }
   information:
     - entities:
         - { type: AdministrativeArea, idPattern: '^urn:ngsi-ld:AdministrativeArea:hel\.fi:bbsk-registre:.+$' }
