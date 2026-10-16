@@ -24,6 +24,10 @@ pipeline:
           let v = if this == null { "" } else { this.string().trim() }
           root = if $v == "" { null } else { { "type": "Property", "value": $v } }
         }
+        map string_list {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": [$v] } }
+        }
         map uri {
           root = this.apply("string")
         }
@@ -53,7 +57,7 @@ pipeline:
           "type": "PointOfInterest",
           "iD": this.properties."ID".apply("integer"),
           "typ": this.properties."Typ".apply("string"),
-          "institucia": this.properties."Inštitúcia".apply("string"),
+          "name": this.properties."Inštitúcia".apply("string"),
           "iCO": this.properties."IČO".apply("string"),
           "dIC": this.properties."DIČ".apply("string"),
           "adresa": this.properties."Adresa".apply("string"),

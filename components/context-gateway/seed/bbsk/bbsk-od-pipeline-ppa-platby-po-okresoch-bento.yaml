@@ -1,4 +1,4 @@
-# The mapping of the od-ppa-platby-po-okresoch pipeline, generated from the T-4254 mapping: one StatisticalObservation per row of
+# The mapping of the od-ppa-platby-po-okresoch pipeline, generated from the T-4254 mapping: one KeyPerformanceIndicator per row of
 # "PPA platby po okresoch" (https://data.dev.joinedcontext.com/dataset/bbsk-ppa-platby-po-okresoch-bf09ef). Do not edit: change the mapping and run scripts/open-data/generate.py.
 
 pipeline:
@@ -23,6 +23,10 @@ pipeline:
         map string {
           let v = if this == null { "" } else { this.string().trim() }
           root = if $v == "" { null } else { { "type": "Property", "value": $v } }
+        }
+        map string_list {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": [$v] } }
         }
         map uri {
           root = this.apply("string")
@@ -49,8 +53,8 @@ pipeline:
         }
         let local = "ppa-platby-po-okresoch-" + [this.properties."Kód_okresu", this.properties."Rok___kampaň"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("StatisticalObservation", "bbsk.sk", env("JC_SPACE"), $local),
-          "type": "StatisticalObservation",
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("KeyPerformanceIndicator", "bbsk.sk", env("JC_SPACE"), $local),
+          "type": "KeyPerformanceIndicator",
           "okres": this.properties."Okres".apply("string"),
           "kodOkresu": this.properties."Kód_okresu".apply("string"),
           "rokKampan": this.properties."Rok___kampaň".apply("integer"),

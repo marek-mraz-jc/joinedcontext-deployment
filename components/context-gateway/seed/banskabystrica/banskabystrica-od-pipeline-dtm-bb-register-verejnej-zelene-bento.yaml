@@ -1,4 +1,4 @@
-# The mapping of the od-dtm-bb-register-verejnej-zelene pipeline, generated from the T-4254 mapping: one GreenArea per row of
+# The mapping of the od-dtm-bb-register-verejnej-zelene pipeline, generated from the T-4254 mapping: one Garden per row of
 # "DTM_BB-register-verejnej-zelene-1" (https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-verejnej-zelene-1). Do not edit: change the mapping and run scripts/open-data/generate.py.
 
 pipeline:
@@ -48,6 +48,10 @@ pipeline:
           let v = if this == null { "" } else { this.string().trim() }
           root = if $v == "" { null } else { { "type": "Property", "value": $v } }
         }
+        map string_list {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": [$v] } }
+        }
         map uri {
           root = this.apply("string")
         }
@@ -73,8 +77,8 @@ pipeline:
         }
         let local = "dtm-bb-register-verejnej-zelene-" + [this.properties."vrstva_id"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("GreenArea", "banskabystrica.sk", env("JC_SPACE"), $local),
-          "type": "GreenArea",
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Garden", "banskabystrica.sk", env("JC_SPACE"), $local),
+          "type": "Garden",
           "idzmeny": this.properties."idzmeny".apply("string"),
           "popisobjektu": this.properties."popisobjektu".apply("string"),
           "datumvkladu": this.properties."datumvkladu".apply("datetime"),

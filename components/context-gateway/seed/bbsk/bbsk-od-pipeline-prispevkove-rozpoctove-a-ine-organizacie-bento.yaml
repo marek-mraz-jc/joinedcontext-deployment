@@ -24,6 +24,10 @@ pipeline:
           let v = if this == null { "" } else { this.string().trim() }
           root = if $v == "" { null } else { { "type": "Property", "value": $v } }
         }
+        map string_list {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": [$v] } }
+        }
         map uri {
           root = this.apply("string")
         }
@@ -47,17 +51,17 @@ pipeline:
           }
           root = if $v == null { null } else { { "type": "Property", "value": $v } }
         }
-        let local = "prispevkove-rozpoctove-a-ine-organizacie-" + {"IČO_samosprávy": this.properties."IČO_samosprávy", "Názov_samosprávy": this.properties."Názov_samosprávy", "IČO_organizácie": this.properties."IČO_organizácie", "Názov_organizácie": this.properties."Názov_organizácie", "ID_adresy": this.properties."ID_adresy", "Adresa_organizácie": this.properties."Adresa_organizácie", "Obec": this.properties."Obec", "Okres": this.properties."Okres", "Ulica_a_číslo_domu": this.properties."Ulica_a_číslo_domu", "LAT": this.properties."LAT", "LON": this.properties."LON", "Forma_podnikania": this.properties."Forma_podnikania", "Kód_formy_podnikania": this.properties."Kód_formy_podnikania"}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
+        let local = "prispevkove-rozpoctove-a-ine-organizacie-" + [this.properties."IČO_organizácie"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
           "id": "urn:ngsi-ld:%v:%v:%v:%v".format("PublicOrganization", "bbsk.sk", env("JC_SPACE"), $local),
           "type": "PublicOrganization",
           "iCOSamospravy": this.properties."IČO_samosprávy".apply("string"),
           "nazovSamospravy": this.properties."Názov_samosprávy".apply("string"),
           "iCOOrganizacie": this.properties."IČO_organizácie".apply("string"),
-          "nazovOrganizacie": this.properties."Názov_organizácie".apply("string"),
+          "preferredLabel": this.properties."Názov_organizácie".apply("string"),
           "iDAdresy": this.properties."ID_adresy".apply("string"),
           "adresaOrganizacie": this.properties."Adresa_organizácie".apply("string"),
-          "obec": this.properties."Obec".apply("string"),
+          "spatial": this.properties."Obec".apply("string_list"),
           "okres": this.properties."Okres".apply("string"),
           "ulicaACisloDomu": this.properties."Ulica_a_číslo_domu".apply("string"),
           "lAT": this.properties."LAT".apply("float"),

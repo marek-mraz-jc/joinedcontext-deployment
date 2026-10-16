@@ -13,32 +13,12 @@ spec:
   version: 1.0.0
   lifecycle: published
   classes:
-  - AdministrativeArea
-  - Bridge
-  - Contract
-  - CouncilMeeting
-  - CouncilMember
-  - CouncilVote
-  - CycleRoute
-  - EVChargingStation
-  - Grant
-  - Invoice
-  - OrganizationUnit
-  - Petition
+  - KeyPerformanceIndicator
+  - Organization
+  - Person
   - PointOfInterest
-  - PublicInvestment
   - PublicOrganization
-  - PublicProcurement
-  - PurchaseOrder
-  - Regulation
-  - RiverBasin
   - RoadAccident
-  - RoadStructure
-  - School
-  - StatisticalObservation
-  - Supplier
-  - TrafficFlowObservedSite
-  - WaterBodyStatus
   artifacts:
     jsonSchema: ./bbsk-otvorene-data.v1.schema.json
     context: ./bbsk-otvorene-data.v1.context.jsonld

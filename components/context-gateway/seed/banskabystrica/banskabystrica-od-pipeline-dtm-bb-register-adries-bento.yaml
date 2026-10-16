@@ -1,4 +1,4 @@
-# The mapping of the od-dtm-bb-register-adries pipeline, generated from the T-4254 mapping: one AddressPoint per row of
+# The mapping of the od-dtm-bb-register-adries pipeline, generated from the T-4254 mapping: one Address per row of
 # "DTM_BB-Register-adries" (https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-adries). Do not edit: change the mapping and run scripts/open-data/generate.py.
 
 pipeline:
@@ -26,6 +26,10 @@ pipeline:
         map string {
           let v = if this == null { "" } else { this.string().trim() }
           root = if $v == "" { null } else { { "type": "Property", "value": $v } }
+        }
+        map string_list {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": [$v] } }
         }
         map uri {
           root = this.apply("string")
@@ -110,24 +114,24 @@ pipeline:
         }
         let local = "dtm-bb-register-adries-" + [this.properties."ID"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("AddressPoint", "banskabystrica.sk", env("JC_SPACE"), $local),
-          "type": "AddressPoint",
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Address", "banskabystrica.sk", env("JC_SPACE"), $local),
+          "type": "Address",
           "iD": this.properties."ID".apply("float"),
           "kRAJ": this.properties."KRAJ".apply("string"),
           "kRAJID": this.properties."KRAJ_ID".apply("integer"),
           "oKRES": this.properties."OKRES".apply("string"),
           "oKRESID": this.properties."OKRES_ID".apply("integer"),
-          "oBEC": this.properties."OBEC".apply("string"),
+          "postName": this.properties."OBEC".apply("string_list"),
           "oBECID": this.properties."OBEC_ID".apply("integer"),
-          "cASTOBCE": this.properties."CAST_OBCE".apply("string"),
+          "addressArea": this.properties."CAST_OBCE".apply("string_list"),
           "cOID": this.properties."CO_ID".apply("integer"),
-          "uLICA": this.properties."ULICA".apply("string"),
+          "thoroughfare": this.properties."ULICA".apply("string_list"),
           "uLICAID": this.properties."ULICA_ID".apply("integer"),
           "oRIENTC": this.properties."ORIENT_C".apply("string"),
           "sUPISNEC": this.properties."SUPISNE_C".apply("string"),
           "oRIENTCC": this.properties."ORIENT_C_C".apply("string"),
           "oRIENTCP": this.properties."ORIENT_C_P".apply("string"),
-          "pSC": this.properties."PSC".apply("string"),
+          "postCode": this.properties."PSC".apply("string_list"),
           "dPOSTA": this.properties."DPOSTA".apply("string"),
           "tYPBUDOVY": this.properties."TYP_BUDOVY".apply("integer"),
           "sCHRANKY": this.properties."SCHRANKY".apply("integer"),

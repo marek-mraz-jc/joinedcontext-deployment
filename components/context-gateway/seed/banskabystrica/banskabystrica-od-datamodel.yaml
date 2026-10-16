@@ -14,26 +14,9 @@ spec:
   lifecycle: published
   classes:
   - Address
-  - AddressPoint
-  - Article
-  - Building
-  - Contract
-  - CouncilMeeting
-  - Footway
-  - Grant
-  - GreenArea
-  - GreenAreaBoundary
-  - LandUsePlanFeature
-  - ParkingArea
-  - PurchaseOrder
-  - Road
-  - RoadSegment
-  - StatisticalObservation
-  - StreetlightPole
-  - TerrainFeature
-  - TrafficSign
-  - Tree
-  - WaterBody
+  - Garden
+  - KeyPerformanceIndicator
+  - OffStreetParking
   artifacts:
     jsonSchema: ./banskabystrica-otvorene-data.v1.schema.json
     context: ./banskabystrica-otvorene-data.v1.context.jsonld

@@ -1,4 +1,4 @@
-# One AddressPoint per row of "DTM_BB-Register-adries" (T-4255); the city's address points (DTM_BB), reprojected from S-JTSK.
+# One Address per row of "DTM_BB-Register-adries" (T-4255); the city's address points (DTM_BB), reprojected from S-JTSK.
 apiVersion: joinedcontext.com/v1alpha1
 kind: Pipeline
 metadata:
@@ -10,14 +10,14 @@ metadata:
 spec:
   class: scheduled
   enabled: false
-  schedule: 35 1 * * 6
+  schedule: 7 1 * * 2
   source:
     dataSourceRef:
       kind: DataSource
       name: od-dtm-bb-register-adries
   targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-otvorene-data:banskabystrica-otvorene-data
   output:
-    type: AddressPoint
+    type: Address
     mode: upsert
   quotas:
     maxMemoryMb: 256
