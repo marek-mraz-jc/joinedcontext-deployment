@@ -1,0 +1,23 @@
+# One StatisticalObservation per row of "Prírastky a úbytky občanov za jednotlivé roky" (T-4255); generated from the T-4254 mapping.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: od-prirastky-a-ubytky-obcanov-za-jednotlive
+  namespace: banskabystrica
+  title:
+    sk: Prírastky a úbytky občanov za jednotlivé roky
+    en: Prírastky a úbytky občanov za jednotlivé roky
+spec:
+  class: scheduled
+  schedule: 42 1 7 * *
+  source:
+    dataSourceRef:
+      kind: DataSource
+      name: od-prirastky-a-ubytky-obcanov-za-jednotlive
+  targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-otvorene-data:banskabystrica-otvorene-data
+  output:
+    type: StatisticalObservation
+    mode: upsert
+  quotas:
+    maxMemoryMb: 128
+    cpuMillicores: 100

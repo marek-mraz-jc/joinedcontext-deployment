@@ -24,3 +24,5 @@ gitea:
     chart: charts/sample-apps
   seed-2:
     chart: charts/sample-apps
+  seed-3:
+    chart: charts/sample-apps

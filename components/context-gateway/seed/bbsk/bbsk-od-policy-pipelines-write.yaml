@@ -1,0 +1,49 @@
+# The generated pipelines upsert; nothing deletes, since several pipelines write the space (PL-64).
+apiVersion: joinedcontext.com/v1alpha1
+kind: Policy
+metadata:
+  name: otvorene-data-pipelines-write
+  namespace: bbsk
+  title:
+    sk: Kanály zapisujú otvorené dáta
+    en: The pipelines write the open data
+spec:
+  contextSpaceRef:
+    kind: ContextSpace
+    name: bbsk-otvorene-data
+  assigner: did:web:{orgDomain}
+  assignee:
+    kind: serviceAccount
+    id: pipelines
+  operations:
+  - upsertBatch
+  - createBatch
+  - queryBatch
+  information:
+  - entities:
+    - type: AdministrativeArea
+    - type: Bridge
+    - type: Contract
+    - type: CouncilMeeting
+    - type: CouncilMember
+    - type: CouncilVote
+    - type: CycleRoute
+    - type: EVChargingStation
+    - type: Grant
+    - type: Invoice
+    - type: OrganizationUnit
+    - type: Petition
+    - type: PointOfInterest
+    - type: PublicInvestment
+    - type: PublicOrganization
+    - type: PublicProcurement
+    - type: PurchaseOrder
+    - type: Regulation
+    - type: RiverBasin
+    - type: RoadAccident
+    - type: RoadStructure
+    - type: School
+    - type: StatisticalObservation
+    - type: Supplier
+    - type: TrafficFlowObservedSite
+    - type: WaterBodyStatus

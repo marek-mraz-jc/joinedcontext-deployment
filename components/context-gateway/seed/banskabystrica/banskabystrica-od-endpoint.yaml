@@ -1,0 +1,26 @@
+# The space's one door, public: every row is the publisher's open data under the licence its
+# `dataProvider` names. A member of the project's public MCP server, which the public assistant reads.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: banskabystrica-otvorene-data
+  namespace: banskabystrica
+  title:
+    sk: Banská Bystrica — tabuľky katalógu
+    en: Banská Bystrica, catalogue tables
+  description:
+    sk: Všetky otvorené dáta mesta Banská Bystrica z katalógu, ktoré sa dajú čítať ako tabuľka.
+    en: Every dataset of the city of Banská Bystrica in the catalogue that reads as a table.
+spec:
+  contextSpaceRef: banskabystrica-otvorene-data
+  slug: 4ysiqy53qik5qyvawwaj7wgylpt4uoxa
+  audience: public
+  enabledRepresentations:
+  - ngsi-ld
+  - geojson
+  - csv
+  - json
+  - websocket
+  - ogc-features
+  - odata
+  - mcp

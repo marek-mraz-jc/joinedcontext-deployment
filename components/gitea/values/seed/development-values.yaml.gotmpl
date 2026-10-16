@@ -1,7 +1,8 @@
 ---
 # The files values/bootstrap/development-values.yaml.gotmpl names, read from the same indexes:
 # here the ones under projects/<project>/, there the organization's. Helsinki's projects are the
-# release gitea-seed, every other city's gitea-seed-2, so each stays well inside its Secret.
+# release gitea-seed, the region's (BBSK, past 1.5 MB with its open data, T-4255) gitea-seed-3, every
+# other city's gitea-seed-2, so each stays well inside its Secret.
 # JSON strings ending in exactly one newline, which is what the bootstrap's block scalars made of
 # them, so no blob already on the forge changes.
 {{- $seed := dict }}
@@ -18,16 +19,30 @@
 {{- $_ := set $seed $path (readFile (printf "../../../context-gateway/seed/helsinki-demo-feeds/%s" $file) | replace "DEMO_FEEDS_NAMESPACE" $demoNs) }}
 {{- end }}
 {{- end }}
+{{- /* A project past 600 kB is cut into parts, `<project>`, `<project>--2`, ..., one per started
+250 kB, each file in the part its path hashes to, so no ConfigMap nears its 1 MiB (the BBSK open
+data, T-4255). The bootstrap's values count the same bytes to name the same parts. ponytail: a
+hash, not a packing; a part that grows too big shows in test_sample_apps_seed. */}}
+{{- $bytes := dict }}
+{{- range $dir := $sources }}
+{{- range $file, $path := readFile (printf "../../../%s/index.yaml" $dir) | fromYaml }}
+{{- $p := splitList "/" $path }}
+{{- if and (eq (index $p 0) "projects") (gt (len $p) 2) }}{{ $_ := set $bytes (index $p 1) (add (index $bytes (index $p 1) | default 0) (len (readFile (printf "../../../%s/%s" $dir $file)))) }}{{ end }}
+{{- end }}
+{{- end }}
 {{- $shard := .Release.Name | trimPrefix "gitea-seed" | trimPrefix "-" | default "1" | atoi }}
 {{- $projects := dict }}
 {{- range $path, $text := $seed }}
 {{- $parts := splitList "/" $path }}
 {{- if and (eq (index $parts 0) "projects") (gt (len $parts) 2) }}
 {{- $project := index $parts 1 }}
-{{- if eq $shard (ternary 1 2 (hasPrefix "helsinki" $project)) }}
-{{- $files := index $projects $project | default dict }}
+{{- if eq $shard (ternary 1 (ternary 3 2 (eq $project "bbsk")) (hasPrefix "helsinki" $project)) }}
+{{- $n := 1 }}{{ if ge (index $bytes $project) 600000 }}{{ $n = add1 (div (index $bytes $project) 250000) }}{{ end }}
+{{- $i := mod (atoi (adler32sum $path)) $n }}
+{{- $name := ternary $project (printf "%s--%d" $project (add1 $i)) (eq $i 0) }}
+{{- $files := index $projects $name | default dict }}
 {{- $_ := set $files ($path | replace "/" "__") (regexReplaceAll "\n*\\z" $text "\n") }}
-{{- $_ := set $projects $project $files }}
+{{- $_ := set $projects $name $files }}
 {{- end }}
 {{- end }}
 {{- end }}

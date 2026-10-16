@@ -1,6 +1,7 @@
 # The city's open data as one public, read-only MCP connector (T-4141, ADR-N-043): the address a
 # resident's or an agency's AI client is given, `https://{domain}/api/mcp/banskabystrica/otvorene-data`.
-# Its one member is the city's public Endpoint; `public-air` stays out, because the smoke run and
+# Its members are the city's public Endpoint and the one of every other table of its catalogue
+# (banskabystrica-otvorene-data, T-4255); `public-air` stays out, because the smoke run and
 # the ETSI suite write test entities through it. Every call is still the member's own call, decided
 # by its anonymous Policy (verejne-read), and the gateway lists anonymous callers read-only tools
 # only (T-4168). The edge counts anonymous calls per client IP (context-mcp-named).
@@ -12,9 +13,10 @@ metadata:
   # What an AI client reads as serverInfo and initialize.instructions (EP-92).
   title: { sk: "Mesto Banská Bystrica — otvorené údaje", en: "City of Banská Bystrica, open data" }
   description:
-    sk: "Otvorené údaje mesta Banská Bystrica, len na čítanie: podujatia mesta, školy v meste a hodinové merania PM10 a PM2.5 na stanici SK0263A. Zdroje: Mesto Banská Bystrica, Ministerstvo školstva SR, Európska environmentálna agentúra (údaje SHMÚ); CC BY 4.0. Pri citovaní uveďte zdroj."
-    en: "Read-only open data of the City of Banská Bystrica, Slovakia: the city's events (Event), the schools in the city (School) and hourly PM10 and PM2.5 at air station SK0263A (AirQualityObserved). Start with list_types, then query_entities with a small limit. Texts are in Slovak. Sources: City of Banská Bystrica, Slovak Ministry of Education, European Environment Agency (SHMÚ's data); CC BY 4.0, credit the source when you quote it."
+    sk: "Otvorené údaje mesta Banská Bystrica, len na čítanie: podujatia mesta, školy v meste a hodinové merania PM10 a PM2.5 na stanici SK0263A, a ďalšie tabuľky katalógu mesta (zmluvy, objednávky, dotácie, adresy, počty obyvateľov, zasadnutia, aktuality). Zdroje: Mesto Banská Bystrica, Ministerstvo školstva SR, Európska environmentálna agentúra (údaje SHMÚ); CC BY 4.0. Pri citovaní uveďte zdroj."
+    en: "Read-only open data of the City of Banská Bystrica, Slovakia: the city's events (Event), the schools in the city (School) and hourly PM10 and PM2.5 at air station SK0263A (AirQualityObserved), and the other tables of the city's catalogue (contracts, orders, grants, addresses, population counts, council meetings, news); each entity's `dataset` links its catalogue page. Start with list_types, then query_entities with a small limit. Texts are in Slovak. Sources: City of Banská Bystrica, Slovak Ministry of Education, European Environment Agency (SHMÚ's data); CC BY 4.0, credit the source when you quote it."
 spec:
   members:
     - { kind: Endpoint, name: banskabystrica-verejne }
+    - { kind: Endpoint, name: banskabystrica-otvorene-data }
   audience: public

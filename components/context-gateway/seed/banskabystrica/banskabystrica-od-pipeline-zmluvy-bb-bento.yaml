@@ -1,0 +1,72 @@
+# The mapping of the od-zmluvy-bb pipeline, generated from the T-4254 mapping: one Contract per row of
+# "Zmluvy BB" (https://data.dev.joinedcontext.com/dataset/bb-zmluvy-bb). Do not edit: change the mapping and run scripts/open-data/generate.py.
+
+pipeline:
+  processors:
+    - mapping: |
+        root = if this.success.or(false) != true { throw("the catalogue answered no table") } else { this.result.records.or([]) }
+    - unarchive:
+        format: json_array
+    # A row stays only when its Zmluvné_strany_s_údajom_IČO looks like one, which no Esri SQL can ask:
+    # a party without an IČO is a natural person, a social-service client among them (T-4255).
+    - mapping: |
+        root = if this."Zmluvné_strany_s_údajom_IČO".or("").string().trim().re_match("^IČO:[^\\r]*(\\rIČO:[^\\r]*)*$") { this } else { deleted() }
+    - mapping: |
+        map integer {
+          let v = this.number().catch(null)
+          root = if $v == null { null } else { { "type": "Property", "value": $v.round().int64() } }
+        }
+        map float {
+          let v = this.number().catch(null)
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        map string {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": $v } }
+        }
+        map uri {
+          root = this.apply("string")
+        }
+        # An Esri date is milliseconds since the epoch; a DataStore or WordPress one is text.
+        # `match` rebinds `this` to what it matches, so the value is named first.
+        map datetime {
+          let x = this
+          let v = match $x.type() {
+            "number" => ($x / 1000).ts_format("2006-01-02T15:04:05Z", "UTC").catch(null),
+            "string" => $x.ts_parse("2006-01-02T15:04:05").ts_format("2006-01-02T15:04:05Z", "UTC").catch($x.ts_format("2006-01-02T15:04:05Z", "UTC").catch(null)),
+            _ => null,
+          }
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        map date {
+          let x = this
+          let v = match $x.type() {
+            "number" => ($x / 1000).ts_format("2006-01-02", "UTC").catch(null),
+            "string" => if $x.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}") { $x.slice(0, 10) } else { null },
+            _ => null,
+          }
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        let local = "zmluvy-bb-" + {"Centrálne_číslo_zmluvy": this."Centrálne_číslo_zmluvy", "Rok": this."Rok", "Typ": this."Typ", "Druh": this."Druh", "Zmluvné_strany": this."Zmluvné_strany", "Predmet": this."Predmet", "Cena_celkom": this."Cena_celkom", "Mena": this."Mena", "Dátum_podpisu": this."Dátum_podpisu", "Dátum_zverejnenia": this."Dátum_zverejnenia", "IČO_organizácie": this."IČO_organizácie", "Zmluvné_strany_s_údajom_IČO": this."Zmluvné_strany_s_údajom_IČO"}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
+        root = {
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Contract", env("JC_ORG_DOMAIN"), env("JC_SPACE"), $local),
+          "type": "Contract",
+          "centralneCisloZmluvy": this."Centrálne_číslo_zmluvy".apply("integer"),
+          "rok": this."Rok".apply("integer"),
+          "typ": this."Typ".apply("string"),
+          "druh": this."Druh".apply("string"),
+          "zmluvneStrany": this."Zmluvné_strany".apply("string"),
+          "predmet": this."Predmet".apply("string"),
+          "cenaCelkom": this."Cena_celkom".apply("string"),
+          "mena": this."Mena".apply("string"),
+          "datumPodpisu": this."Dátum_podpisu".apply("string"),
+          "datumZverejnenia": this."Dátum_zverejnenia".apply("string"),
+          "iCOOrganizacie": this."IČO_organizácie".apply("string"),
+          "zmluvneStranySUdajomICO": this."Zmluvné_strany_s_údajom_IČO".apply("string"),
+          "dataProvider": { "type": "Property", "value": "Mesto Banská Bystrica (CC BY 4.0)" },
+          "source": { "type": "Property", "value": "https://data.dev.joinedcontext.com/api/3/action/datastore_search?resource_id=d2df226d-cbf4-4202-aa63-8ef3e38979da&limit=32000" },
+          "dataset": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bb-zmluvy-bb" }
+        }.filter(entry -> entry.value != null)
+    # One request per run's batch rather than one per row.
+    - archive:
+        format: json_array

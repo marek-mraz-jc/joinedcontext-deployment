@@ -1,0 +1,23 @@
+# One PublicInvestment per row of "Register investícií - polygónová vrstva" (T-4255); generated from the T-4254 mapping.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: od-register-investicii-polygonova-vrstva
+  namespace: bbsk
+  title:
+    sk: Register investícií - polygónová vrstva
+    en: Register investícií - polygónová vrstva
+spec:
+  class: scheduled
+  schedule: 42 3 * * 4
+  source:
+    dataSourceRef:
+      kind: DataSource
+      name: od-register-investicii-polygonova-vrstva
+  targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-otvorene-data:bbsk-otvorene-data
+  output:
+    type: PublicInvestment
+    mode: upsert
+  quotas:
+    maxMemoryMb: 128
+    cpuMillicores: 100

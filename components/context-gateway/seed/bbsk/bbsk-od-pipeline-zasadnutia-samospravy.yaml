@@ -1,0 +1,23 @@
+# One CouncilMeeting per row of "Zasadnutia samosprávy" (T-4255); generated from the T-4254 mapping.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: od-zasadnutia-samospravy
+  namespace: bbsk
+  title:
+    sk: Zasadnutia samosprávy
+    en: Zasadnutia samosprávy
+spec:
+  class: scheduled
+  schedule: 59 4 * * 1
+  source:
+    dataSourceRef:
+      kind: DataSource
+      name: od-zasadnutia-samospravy
+  targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-otvorene-data:bbsk-otvorene-data
+  output:
+    type: CouncilMeeting
+    mode: upsert
+  quotas:
+    maxMemoryMb: 128
+    cpuMillicores: 100

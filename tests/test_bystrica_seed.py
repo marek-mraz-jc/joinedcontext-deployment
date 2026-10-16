@@ -69,10 +69,12 @@ def test_each_projects_quotas_hold_what_it_declares_with_room_for_the_demo():
     for folder, project, spaces, public in (
         # The region's public endpoints: its raw rows' for the trend lines (T-2934), and the region
         # map's and its grids' (T-2784).
-        (REGION, "bbsk", ["bbsk-kraj", "bbsk-kpi", "bbsk-registre"], 5),
+        # The sixth is the space of every other table of the catalogue (T-4255).
+        (REGION, "bbsk", ["bbsk-kraj", "bbsk-kpi", "bbsk-registre", "bbsk-otvorene-data"], 6),
         # The third public endpoint of the city is the air-quality App's own (T-2972), the fourth
         # and fifth the city map's and the data grids' (T-2782).
-        (CITY, "banskabystrica", ["ovzdusie", "banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne"], 5),
+        (CITY, "banskabystrica", ["ovzdusie", "banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne",
+                                  "banskabystrica-otvorene-data"], 6),
     ):
         quotas = one(folder, "Project", project)["spec"]["quotas"]
         declared = {doc["metadata"]["name"] for _, doc in manifests(folder, "ContextSpace")}
@@ -115,8 +117,9 @@ def test_the_citys_indicators_reach_the_region_by_a_named_share_and_nothing_wide
 
 def test_no_service_account_can_write_into_the_other_bodys_space():
     for folder, project, own in (
-        (REGION, "bbsk", {"bbsk-kraj", "bbsk-kpi", "bbsk-registre"}),
-        (CITY, "banskabystrica", {"banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne", "ovzdusie"}),
+        (REGION, "bbsk", {"bbsk-kraj", "bbsk-kpi", "bbsk-registre", "bbsk-otvorene-data"}),
+        (CITY, "banskabystrica", {"banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne", "ovzdusie",
+                                  "banskabystrica-otvorene-data"}),
     ):
         account = one(folder, "ServiceAccount", "pipelines")
         scopes = {role["scope"]["contextSpace"] for role in account["spec"]["roles"]}

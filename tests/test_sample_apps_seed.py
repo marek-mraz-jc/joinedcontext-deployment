@@ -7,12 +7,14 @@ and read the dev render for what the Job is handed.
 """
 
 import json
+import re
 import shutil
 import subprocess
 import zlib
 from pathlib import Path
 
 import pytest
+
 import yaml
 
 requires_helmfile = pytest.mark.skipif(shutil.which("helmfile") is None, reason="helmfile not installed")
@@ -406,7 +408,7 @@ def test_no_gitea_release_outgrows_the_secret_helm_keeps_it_in(dev):
     import base64
     import gzip
 
-    for release in ("gitea-bootstrap", "gitea-seed", "gitea-seed-2", "gitea-sample-apps", "gitea-sample-apps-2",
+    for release in ("gitea-bootstrap", "gitea-seed", "gitea-seed-2", "gitea-seed-3", "gitea-sample-apps", "gitea-sample-apps-2",
                     "gitea-sample-apps-3", "gitea-sample-apps-4", "gitea-sample-apps-5", "gitea-sample-apps-6",
                     "gitea-sample-apps-7"):
         docs = [
@@ -437,8 +439,8 @@ def test_the_job_mounts_every_project_s_seed_and_the_releases_split_it(dev):
         if name == "gitea-bootstrap-seed":
             assert release == "gitea-bootstrap" and not any(k.startswith("projects__") for k in cm["data"])
             continue
-        project = name.removeprefix("gitea-seed-")
-        assert release == ("gitea-seed" if project.startswith("helsinki") else "gitea-seed-2")
+        project = re.sub(r"--\d+$", "", name.removeprefix("gitea-seed-"))
+        assert release == ("gitea-seed" if project.startswith("helsinki") else "gitea-seed-3" if project == "bbsk" else "gitea-seed-2")
         assert all(k.startswith(f"projects__{project}__") for k in cm["data"])
     keys = [k for cm in rendered.values() for k in cm["data"]]
     assert len(keys) == len(set(keys)), "a file in two ConfigMaps"

@@ -1,0 +1,72 @@
+# The mapping of the od-cyklisti-nehodovost pipeline, generated from the T-4254 mapping: one RoadAccident per row of
+# "Cyklisti_nehodovosť" (https://data.dev.joinedcontext.com/dataset/bbsk-cyklisti-nehodovost-addf0f). Do not edit: change the mapping and run scripts/open-data/generate.py.
+
+pipeline:
+  processors:
+    # A layer that answers an error or no feature list is the service failing, so the run fails
+    # where it can be seen rather than writing nothing.
+    - mapping: |
+        root = if this.error.or(null) != null || this.features.or(null) == null { throw("the layer answered no features: %v".format(this.error.message.or(""))) } else { this }
+    - mapping: |
+        root = this.features.or([])
+    - unarchive:
+        format: json_array
+    - mapping: |
+        map integer {
+          let v = this.number().catch(null)
+          root = if $v == null { null } else { { "type": "Property", "value": $v.round().int64() } }
+        }
+        map float {
+          let v = this.number().catch(null)
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        map string {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": $v } }
+        }
+        map uri {
+          root = this.apply("string")
+        }
+        # An Esri date is milliseconds since the epoch; a DataStore or WordPress one is text.
+        # `match` rebinds `this` to what it matches, so the value is named first.
+        map datetime {
+          let x = this
+          let v = match $x.type() {
+            "number" => ($x / 1000).ts_format("2006-01-02T15:04:05Z", "UTC").catch(null),
+            "string" => $x.ts_parse("2006-01-02T15:04:05").ts_format("2006-01-02T15:04:05Z", "UTC").catch($x.ts_format("2006-01-02T15:04:05Z", "UTC").catch(null)),
+            _ => null,
+          }
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        map date {
+          let x = this
+          let v = match $x.type() {
+            "number" => ($x / 1000).ts_format("2006-01-02", "UTC").catch(null),
+            "string" => if $x.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}") { $x.slice(0, 10) } else { null },
+            _ => null,
+          }
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        let local = "cyklisti-nehodovost-" + {"Rok": this.properties."Rok", "obdobie": this.properties."obdobie", "parameter": this.properties."parameter", "Územie": this.properties."Územie", "počet_nehôd": this.properties."počet_nehôd", "usmrtení_účastníci": this.properties."usmrtení_účastníci", "ťažko_zranení_účastníci": this.properties."ťažko_zranení_účastníci", "ľahko_zranení_účastníci": this.properties."ľahko_zranení_účastníci", "počet_usmrtených_cyklistov_kolobežkárov": this.properties."počet_usmrtených_cyklistov_kolobežkárov", "hmotná_škoda": this.properties."hmotná_škoda", "počet_nehôd_pod_vplyvom_alkoholu": this.properties."počet_nehôd_pod_vplyvom_alkoholu", "počet_nehôd_v_obci": this.properties."počet_nehôd_v_obci"}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
+        root = {
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("RoadAccident", env("JC_ORG_DOMAIN"), env("JC_SPACE"), $local),
+          "type": "RoadAccident",
+          "rok": this.properties."Rok".apply("string"),
+          "obdobie": this.properties."obdobie".apply("string"),
+          "parameter": this.properties."parameter".apply("string"),
+          "uzemie": this.properties."Územie".apply("string"),
+          "pocetNehod": this.properties."počet_nehôd".apply("integer"),
+          "usmrteniUcastnici": this.properties."usmrtení_účastníci".apply("integer"),
+          "tazkoZraneniUcastnici": this.properties."ťažko_zranení_účastníci".apply("integer"),
+          "lahkoZraneniUcastnici": this.properties."ľahko_zranení_účastníci".apply("integer"),
+          "pocetUsmrtenychCyklistovKolobezkarov": this.properties."počet_usmrtených_cyklistov_kolobežkárov".apply("integer"),
+          "hmotnaSkoda": this.properties."hmotná_škoda".apply("integer"),
+          "pocetNehodPodVplyvomAlkoholu": this.properties."počet_nehôd_pod_vplyvom_alkoholu".apply("integer"),
+          "pocetNehodVObci": this.properties."počet_nehôd_v_obci".apply("integer"),
+          "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj (CC BY-SA 4.0)" },
+          "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Cyklisti_nehodovos%C5%A5_(1)/FeatureServer/0/query?where=1%3D1&outFields=Rok,obdobie,parameter,%C3%9Azemie,po%C4%8Det_neh%C3%B4d,usmrten%C3%AD_%C3%BA%C4%8Dastn%C3%ADci,%C5%A5a%C5%BEko_zranen%C3%AD_%C3%BA%C4%8Dastn%C3%ADci,%C4%BEahko_zranen%C3%AD_%C3%BA%C4%8Dastn%C3%ADci,po%C4%8Det_usmrten%C3%BDch_cyklistov_kolobe%C5%BEk%C3%A1rov,hmotn%C3%A1_%C5%A1koda,po%C4%8Det_neh%C3%B4d_pod_vplyvom_alkoholu,po%C4%8Det_neh%C3%B4d_v_obci&returnGeometry=false&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },
+          "dataset": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bbsk-cyklisti-nehodovost-addf0f" }
+        }.filter(entry -> entry.value != null)
+    # One request per run's batch rather than one per row.
+    - archive:
+        format: json_array

@@ -1,0 +1,97 @@
+# The mapping of the od-nehodovost-v-bbk pipeline, generated from the T-4254 mapping: one RoadAccident per row of
+# "Nehodovosť v BBK" (https://data.dev.joinedcontext.com/dataset/bbsk-nehodovost-v-bbk-0ea72d). Do not edit: change the mapping and run scripts/open-data/generate.py.
+
+pipeline:
+  processors:
+    # A layer that answers an error or no feature list is the service failing, so the run fails
+    # where it can be seen rather than writing nothing.
+    - mapping: |
+        root = if this.error.or(null) != null || this.features.or(null) == null { throw("the layer answered no features: %v".format(this.error.message.or(""))) } else { this }
+    # Page 0 as it came; when the layer says there is more, every further page up to half again
+    # the 3046 rows it held when mapped (ponytail: a static page count; past that the
+    # newest rows wait until the mapping is regenerated). A page past the end is empty.
+    - mapping: |
+        root = if this.properties.exceededTransferLimit.or(false) { [this].concat(range(1, 5).map_each(p -> { "offset": p * 1000 })) } else { [this] }
+    - unarchive:
+        format: json_array
+    - switch:
+        - check: this.offset.or(null) != null
+          processors:
+            - mapping: |
+                meta offset = this.offset.string()
+                root = ""
+            - http:
+                url: "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Export_z_vizualu_nehodovost_MINV/FeatureServer/0/query?where=1%3D1&outFields=GPS_%C5%A0%C3%ADrka,GPS_D%C4%BA%C5%BEka,%C4%8C%C3%ADslo_nehody,D%C3%A1tum_a_%C4%8Das,Povrch_vozovky,Smerov%C3%A9_pomery,Druh_komunik%C3%A1cie,Hlavn%C3%BD_vinn%C3%ADk,%C4%BDahko_zranen%C3%AD,%C5%A4a%C5%BEko_zranen%C3%AD,Usmrten%C3%AD,Pr%C3%AD%C4%8Diny,%C5%A0koda_v_EUR&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=${! @offset }&resultRecordCount=1000"
+                verb: GET
+                headers:
+                  Accept: application/geo+json
+                timeout: 60s
+                retries: 2
+                rate_limit: pipeline_egress
+            - mapping: |
+                root = if errored() { throw("the page at %v did not come: %v".format(@offset, error())) } else { this }
+    - mapping: |
+        root = this.features.or([])
+    - unarchive:
+        format: json_array
+    - mapping: |
+        map integer {
+          let v = this.number().catch(null)
+          root = if $v == null { null } else { { "type": "Property", "value": $v.round().int64() } }
+        }
+        map float {
+          let v = this.number().catch(null)
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        map string {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": $v } }
+        }
+        map uri {
+          root = this.apply("string")
+        }
+        # An Esri date is milliseconds since the epoch; a DataStore or WordPress one is text.
+        # `match` rebinds `this` to what it matches, so the value is named first.
+        map datetime {
+          let x = this
+          let v = match $x.type() {
+            "number" => ($x / 1000).ts_format("2006-01-02T15:04:05Z", "UTC").catch(null),
+            "string" => $x.ts_parse("2006-01-02T15:04:05").ts_format("2006-01-02T15:04:05Z", "UTC").catch($x.ts_format("2006-01-02T15:04:05Z", "UTC").catch(null)),
+            _ => null,
+          }
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        map date {
+          let x = this
+          let v = match $x.type() {
+            "number" => ($x / 1000).ts_format("2006-01-02", "UTC").catch(null),
+            "string" => if $x.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}") { $x.slice(0, 10) } else { null },
+            _ => null,
+          }
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        let local = "nehodovost-v-bbk-" + {"GPS_Šírka": this.properties."GPS_Šírka", "GPS_Dĺžka": this.properties."GPS_Dĺžka", "Číslo_nehody": this.properties."Číslo_nehody", "Dátum_a_čas": this.properties."Dátum_a_čas", "Povrch_vozovky": this.properties."Povrch_vozovky", "Smerové_pomery": this.properties."Smerové_pomery", "Druh_komunikácie": this.properties."Druh_komunikácie", "Hlavný_vinník": this.properties."Hlavný_vinník", "Ľahko_zranení": this.properties."Ľahko_zranení", "Ťažko_zranení": this.properties."Ťažko_zranení", "Usmrtení": this.properties."Usmrtení", "Príčiny": this.properties."Príčiny", "Škoda_v_EUR": this.properties."Škoda_v_EUR"}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
+        root = {
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("RoadAccident", env("JC_ORG_DOMAIN"), env("JC_SPACE"), $local),
+          "type": "RoadAccident",
+          "gPSSirka": this.properties."GPS_Šírka".apply("float"),
+          "gPSDlzka": this.properties."GPS_Dĺžka".apply("float"),
+          "cisloNehody": this.properties."Číslo_nehody".apply("string"),
+          "datumACas": this.properties."Dátum_a_čas".apply("datetime"),
+          "povrchVozovky": this.properties."Povrch_vozovky".apply("string"),
+          "smerovePomery": this.properties."Smerové_pomery".apply("string"),
+          "druhKomunikacie": this.properties."Druh_komunikácie".apply("string"),
+          "hlavnyVinnik": this.properties."Hlavný_vinník".apply("string"),
+          "lahkoZraneni": this.properties."Ľahko_zranení".apply("integer"),
+          "tazkoZraneni": this.properties."Ťažko_zranení".apply("integer"),
+          "usmrteni": this.properties."Usmrtení".apply("integer"),
+          "priciny": this.properties."Príčiny".apply("string"),
+          "skodaVEUR": this.properties."Škoda_v_EUR".apply("integer"),
+          "location": if this.geometry.or(null) == null { null } else { { "type": "GeoProperty", "value": this.geometry } },
+          "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj (CC BY-SA 4.0)" },
+          "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Export_z_vizualu_nehodovost_MINV/FeatureServer/0/query?where=1%3D1&outFields=GPS_%C5%A0%C3%ADrka,GPS_D%C4%BA%C5%BEka,%C4%8C%C3%ADslo_nehody,D%C3%A1tum_a_%C4%8Das,Povrch_vozovky,Smerov%C3%A9_pomery,Druh_komunik%C3%A1cie,Hlavn%C3%BD_vinn%C3%ADk,%C4%BDahko_zranen%C3%AD,%C5%A4a%C5%BEko_zranen%C3%AD,Usmrten%C3%AD,Pr%C3%AD%C4%8Diny,%C5%A0koda_v_EUR&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },
+          "dataset": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bbsk-nehodovost-v-bbk-0ea72d" }
+        }.filter(entry -> entry.value != null)
+    # One request per run's batch rather than one per row.
+    - archive:
+        format: json_array
