@@ -18,3 +18,6 @@ cb239c90751c0c49bb3dbbc93388afb9649a769d:tests/test_ckan_api_token.py:jc-jwt-bea
 bba6644bfb9f4e69a2bc7011da52c8beb28fa1cf:tests/test_lane_token.py:jwt:23
 bba6644bfb9f4e69a2bc7011da52c8beb28fa1cf:tests/test_lane_token.py:jc-jwt-bearer-token:23
 bba6644bfb9f4e69a2bc7011da52c8beb28fa1cf:components/gitea/charts/bootstrap/values.yaml:jc-keycloak-client-secret:80
+# T-4335: scripts/open-data/sdm/pins.json pins each vendored Smart Data Model to the public
+# smart-data-models commit it was fetched at (T-4319); the 40-hex commit id reads as a generic key.
+fccb3c7e3fdd9d563dbbc590af590c3823758097:scripts/open-data/sdm/pins.json:generic-api-key:4
