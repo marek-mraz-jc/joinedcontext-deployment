@@ -237,11 +237,13 @@ def test_every_page_is_read_and_only_the_openly_licensed_works_enter():
         assert work["id"].split(":")[3:5] == [DOMAIN, "zilina-uniza"]
         assert work["license"]["value"] == "http://creativecommons.org/licenses/by/4.0/"
         assert not open_data.schema_errors(schema, work), (work["id"], open_data.schema_errors(schema, work))
+        assert not open_data.sdm_errors("extensions/Article", work), (work["id"], open_data.sdm_errors("extensions/Article", work))
         assert not {"author", "creator", "contributor"} & set(work)
-    first = by_id[f"urn:ngsi-ld:CreativeWork:{DOMAIN}:zilina-uniza:hdluniza-936"]
+    first = by_id[f"urn:ngsi-ld:Article:{DOMAIN}:zilina-uniza:hdluniza-936"]
     assert first["name"]["languageMap"] == {"sk": "Accuracy of digital terrain model on forest roads using airborne LIDAR and UAV point clouds"}
     assert (first["workType"]["value"], first["yearPublished"]["value"]) == ("Conference paper", 2023)
     assert first["url"]["value"] == "http://drepo.uniza.sk/handle/hdluniza/936"
+    assert first["identifier"]["value"] == "hdluniza/936"
     # No author name of any recorded item reaches the output, in any attribute.
     assert "Kardoš" not in result.stdout.decode()
 

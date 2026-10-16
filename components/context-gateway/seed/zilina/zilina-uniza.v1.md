@@ -11,16 +11,17 @@ What the university's space carries (DM-01, DM-61): one entity per item of DREPO
 
 ## Classes
 
-### CreativeWork
+### Article
 
-One openly licensed work of the University of Žilina's digital library.
+One openly licensed work of the University of Žilina's digital library, as the Smart Data Model extension Article (CPSV-AP Evidence base, T-4338).
 
-IRI: `schema:CreativeWork`
+IRI: `jc:Article`
 
 Specialises `Entity`.
 
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
+| `identifier` | Property | `string` | yes |  | `sdm:dataModel.CPSV-AP/identifier` | The work's handle in the repository (`hdluniza/936`), the identifier the Article extension requires. |
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The work's title, per language, as the repository records it. |
 | `workType` | Property | `string` |  |  | `jc:workType` | What the work is, in the repository's words (Article, Conference paper, Thesis, …). |
 | `yearPublished` | Property | `integer` |  |  | `jc:yearPublished` | The year the work was issued. |
