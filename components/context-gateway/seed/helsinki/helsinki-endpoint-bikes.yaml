@@ -14,7 +14,7 @@ spec:
   # The one Policy this endpoint evaluates: the slice of the space it publishes (EP-14).
   policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki:public-bikes
   # `ogc-features` is the OGC API Features surface dev-smoke reads per Endpoint kind (T-3957).
-  enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, zip, mcp, ogc-features, websocket, odata]
+  enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, mcp, ogc-features, websocket, odata]
   # The organizer's contact line stays in the space for the city's own coordination and is
   # served by no public endpoint (EP-61). A projection only narrows.
   projection: { hiddenAttributes: [contactPoint] }

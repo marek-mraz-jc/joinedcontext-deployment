@@ -747,3 +747,27 @@ def test_a_layer_that_fails_or_answers_an_error_fails_the_run():
     assert b"did not come" in down.stdout + down.stderr
     error = layered(text, fixture, {(26, 0): b'{"error": {"code": 400, "message": "Invalid query"}}'})
     assert b"the layer dtm-26 answered no features: Invalid query" in error.stdout + error.stderr
+
+
+@requires_docker
+def test_slovak_numbers_and_dates_become_numbers_and_iso_dates(tmp_path):
+    """T-4324: the city's tables write "10 700,01" and "29.08.2026". The generated maps read
+    them as 10700.01 and 2026-08-29, keep a dotted decimal, and leave text that is no number null."""
+    mapping = tmp_path / "maps.yaml"
+    probe = "\n".join([
+        generate.MAPS,
+        'root = this.map_each(kv -> {"float": kv.value.apply("float"), "integer": kv.value.apply("integer"),',
+        '                            "date": kv.value.apply("date")})',
+    ])
+    mapping.write_text(yaml.safe_dump({"pipeline": {"processors": [{"mapping": probe}]}}))
+    values = {"price": "10 700,01", "nbsp": "1 234,5", "thousands": "1.234,56", "negative": "-12,5",
+              "dotted": "1.5", "number": 12, "text": "abc", "empty": None,
+              "signed": "29.08.2026", "spaced": "1. 3. 2024", "iso": "2024-03-01"}
+    out = open_data.run(mapping, json.dumps(values).encode(), "s")
+    value = lambda key, kind: (out[key][kind] or {}).get("value")
+    assert [value(k, "float") for k in ("price", "nbsp", "thousands", "negative", "dotted", "number")] == [
+        10700.01, 1234.5, 1234.56, -12.5, 1.5, 12]
+    assert value("price", "integer") == 10700
+    assert value("text", "float") is None and value("empty", "float") is None and value("signed", "float") is None
+    assert [value(k, "date") for k in ("signed", "spaced", "iso")] == ["2026-08-29", "2024-03-01", "2024-03-01"]
+    assert value("text", "date") is None

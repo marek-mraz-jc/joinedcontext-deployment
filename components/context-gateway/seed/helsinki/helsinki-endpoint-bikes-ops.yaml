@@ -15,7 +15,7 @@ spec:
   slug: ydp6nddchg4sewmylsiclg4377mlldrj
   audience: organization
   # `ogc-features` is the OGC API Features surface dev-smoke reads per Endpoint kind (T-3957).
-  enabledRepresentations: [ngsi-ld, geojson, csv, ogc-features, websocket, odata]
+  enabledRepresentations: [ngsi-ld, mcp, geojson, csv, ogc-features, websocket, odata]
   projection: { hiddenAttributes: [contactPoint] }
   catalog:
     publisher: { name: { fi: "Helsingin kaupunki", sv: "Helsingfors stad", en: "City of Helsinki" }, uri: "https://www.hel.fi/" }

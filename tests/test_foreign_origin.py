@@ -122,3 +122,11 @@ def test_a_browser_app_may_only_read_and_may_only_send_what_it_needs(cors_config
         assert "x-csrf-token" not in headers, (
             f"{name} would let another origin preflight a Portal mutation"
         )
+
+
+def test_another_origin_reads_only_the_entity_count_header(cors_configs):
+    """T-4333: a catalogue page shows how many records an NGSI-LD query matched. The count is the
+    one header the Endpoint surface exposes across origins; no other header reaches another page."""
+    exposed = {name: cors.get("expose_headers") for name, cors in cors_configs.items() if cors.get("expose_headers")}
+    assert set(exposed) == {"context-endpoint", "context-endpoint-portal"}, exposed
+    assert set(exposed.values()) == {"NGSILD-Results-Count"}, exposed

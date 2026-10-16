@@ -16,6 +16,7 @@ spec:
     name: helsinki
   enabledRepresentations:
   - ngsi-ld
+  - mcp
   - ogc-features
   - odata
   slug: hx5kv2nr7qcm3tbz6wjd4yae2p

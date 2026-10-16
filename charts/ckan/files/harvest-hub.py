@@ -6,9 +6,10 @@ corrected, and written through the CKAN action API with the catalogue's API toke
 carries the extras `harvest_source` and `source_id`; nothing else in the organization is
 touched, and a dataset is withdrawn only after a complete read of its source no longer lists it.
 
-Fetched text is data: it becomes a title, a description or a link, never an instruction, and
-a link outside the source's `allowedHosts` is dropped. TLS verification stays on. Prints counts and
-dataset names, never the token.
+A dataset lists the platform's own distributions of its converted rows and their data model, and
+none of the Hub's links (EP-118, T-4324); an item whose rows were not converted is not listed, and
+withdrawn if an earlier run listed it. Fetched text is data: it becomes a title or a description,
+never an instruction. TLS verification stays on. Prints counts and dataset names, never the token.
 """
 import hashlib
 import html.parser
@@ -25,7 +26,6 @@ import urllib.parse
 import urllib.request
 
 MAX_BODY = 32 * 1024 * 1024
-MAX_LAYERS = 10
 USER_AGENT = "joinedcontext-harvest/1 (+https://github.com/marek-mraz/joinedcontext-deployment)"
 # The source's licence code -> CKAN's licence register id and the licence's own page.
 LICENCES = {
@@ -50,11 +50,6 @@ class _CheckedRedirects(urllib.request.HTTPRedirectHandler):
         if not allowed(newurl, self.hosts):
             raise SourceError(f"redirect to {urllib.parse.urlsplit(newurl).hostname} is not an allowed host")
         return super().redirect_request(req, fp, code, msg, headers, newurl)
-
-
-class _NoRedirects(urllib.request.HTTPRedirectHandler):
-    def redirect_request(self, req, fp, code, msg, headers, newurl):
-        return None
 
 
 def fetch_json(url, hosts, attempts=3):
@@ -152,30 +147,10 @@ def select(items, source):
     return unique, skipped
 
 
-def resources(item, layers, source):
-    hub, hosts = source["hub"], set(source["allowedHosts"])
-    found = []
-    if item["type"] == "Feature Service":
-        many = len(layers) > 1
-        for layer in layers[:MAX_LAYERS]:
-            label = f"{' '.join(layer['name'].split())} " if many else ""
-            download = f"{hub}/api/download/v1/items/{item['id']}"
-            found.append({"name": f"{label}CSV", "format": "CSV", "mimetype": "text/csv",
-                          "url": f"{download}/csv?layers={layer['id']}"})
-            if layer.get("geometryType"):
-                found.append({"name": f"{label}GeoJSON", "format": "GeoJSON",
-                              "mimetype": "application/geo+json",
-                              "url": f"{download}/geojson?layers={layer['id']}"})
-        found.append({"name": "ArcGIS REST API", "format": "Esri REST", "url": item.get("url")})
-    else:
-        found.append({"name": "Shapefile", "format": "SHP", "mimetype": "application/zip",
-                      "url": f"https://www.arcgis.com/sharing/rest/content/items/{item['id']}/data"})
-    return [r for r in found if allowed(r["url"], hosts)]
-
-
-def dataset(item, title, layers, source):
-    """The CKAN package for one kept item. `name` is only a proposal: a dataset that already
-    exists keeps its own."""
+def dataset(item, title, source, name=None):
+    """The CKAN package for one kept item, under `name` when the dataset already exists (it keeps
+    its own) and a proposed name otherwise. The distributions follow that name, which is the key
+    of `od-datasets.json`."""
     licence_id, licence_url = LICENCES[item["license"]]
     tags = {t.strip() for t in item.get("tags") or []}
     tags |= {c.rsplit("/", 1)[-1].strip() for c in item.get("categories") or []}
@@ -189,7 +164,7 @@ def dataset(item, title, layers, source):
         "publisher_uri": source["publisherUri"],
         "license_url": licence_url,
     }
-    name = f"{source['organization']}-{slug(title)[:70].strip('-')}-{item['id'][:6]}"
+    name = name or f"{source['organization']}-{slug(title)[:70].strip('-')}-{item['id'][:6]}"
     package = {
         # A fixed id per source item, so a dataset withdrawn earlier (which search no longer
         # shows) is found again by `package_show` and revived instead of clashing on its name.
@@ -201,8 +176,10 @@ def dataset(item, title, layers, source):
         "license_id": licence_id,
         "url": extras["source_url"],
         "tags": [{"name": t} for t in sorted(tags) if re.fullmatch(r"[\w .-]{2,100}", t)],
-        # The platform's standard APIs of the dataset, when its rows were converted (T-4279).
-        "resources": resources(item, layers, source) + od_standards(name),
+        # The platform's own doors to the rows and their data model; the Hub's CSV, GeoJSON, Esri
+        # REST and Shapefile links are not listed (EP-118, T-4324). None means the rows were not
+        # converted, and the dataset is withdrawn.
+        "resources": od_standards(name),
         "extras": [{"key": k, "value": v} for k, v in sorted(extras.items()) if v],
     }
     digest = hashlib.sha256(json.dumps(package, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
@@ -275,35 +252,7 @@ def hub_items(source):
     return items
 
 
-def item_layers(item, hosts):
-    if item["type"] != "Feature Service":
-        return []
-    service = fetch_json(f"{item['url']}?f=json", hosts)
-    tables = [{**t, "geometryType": None} for t in service.get("tables", [])]
-    return service.get("layers", []) + tables
-
-
-def warm_downloads(package):
-    """The Hub builds an export on its first request and answers 202 until it is ready; one
-    request per new or changed download here means a visitor gets the file, not the wait. A
-    redirect means the file is ready and is not followed."""
-    opener = urllib.request.build_opener(_NoRedirects())
-    for resource in package["resources"]:
-        # The platform's APIs answer at once; only the Hub's own exports wait to be built.
-        if resource["format"] in ("CSV", "GeoJSON") and resource.get("resource_type") != "api":
-            request = urllib.request.Request(resource["url"], headers={"User-Agent": USER_AGENT})
-            try:
-                with opener.open(request, timeout=120) as response:
-                    response.read(1)
-            except urllib.error.HTTPError as error:
-                if not 300 <= error.code < 400:
-                    print(f"  could not prepare {resource['url']}: HTTP {error.code}", file=sys.stderr)
-            except (urllib.error.URLError, TimeoutError, ConnectionError) as error:
-                print(f"  could not prepare {resource['url']}: {error}", file=sys.stderr)
-            time.sleep(0.5)
-
-
-def harvest(ckan, source, items, layers_of, warm=lambda package: None):
+def harvest(ckan, source, items):
     kept, skipped = select(items, source)
     if not kept:
         # A Hub that answers nothing (or nothing open) is an outage, not a catalogue to empty.
@@ -313,27 +262,36 @@ def harvest(ckan, source, items, layers_of, warm=lambda package: None):
         ckan.call("organization_create", {"name": source["organization"], "title": source["publisherName"],
                                           "description": source.get("publisherDescription", "")})
     existing = harvested(ckan, source)
+    packages = []
     for item, title in kept:
-        package = dataset(item, title, layers_of(item), source)
-        old = existing.pop(item["id"], None) or ckan.show("package_show", package["id"])
+        proposed = dataset(item, title, source)
+        old = existing.pop(item["id"], None) or ckan.show("package_show", proposed["id"])
+        package = dataset(item, title, source, old["name"]) if old else proposed
+        if package["resources"]:
+            packages.append((item, title, package, old))
+        else:
+            skipped.append((item["id"], title, "not converted to NGSI-LD, so not listed (EP-118)"))
+            if old:
+                existing[item["id"]] = old
+    if not packages:
+        # No dataset converted at all is a missing gateway or mapping, not a catalogue to empty.
+        raise SourceError(f"none of {len(kept)} datasets lists the platform's distributions; nothing is withdrawn")
+    for item, title, package, old in packages:
         if old is None:
             ckan.call("package_create", package)
-            warm(package)
             counts["created"] += 1
         elif extra(old, "harvest_hash") == extra(package, "harvest_hash") and old.get("state") == "active":
             counts["unchanged"] += 1
         else:
-            package["name"] = old["name"]
             package["id"] = old["id"]
             package["state"] = "active"
             ckan.call("package_update", package)
-            warm(package)
             counts["updated"] += 1
     for package in existing.values():
         if package.get("state") == "active":
             ckan.call("package_delete", {"id": package["id"]})
             counts["withdrawn"] += 1
-    return counts, kept, skipped
+    return counts, [(item, title) for item, title, _, _ in packages], skipped
 
 
 def main():
@@ -341,9 +299,7 @@ def main():
     source = json.loads(os.environ["HARVEST_CONFIG"])
     try:
         items = hub_items(source)
-        hosts = set(source["allowedHosts"])
-        counts, kept, skipped = harvest(ckan, source, items, lambda item: item_layers(item, hosts),
-                                        warm_downloads)
+        counts, kept, skipped = harvest(ckan, source, items)
     except (SourceError, RuntimeError, OSError) as error:
         print(f"{source['source']}: {error}", file=sys.stderr)
         sys.exit(1)
