@@ -159,3 +159,5 @@ banskabystrica-assistant-knowledge.yaml: projects/banskabystrica/assistant/deplo
 banskabystrica-knowledge-web-bbsk.yaml: projects/banskabystrica/assistant/sources/web-bbsk.yaml
 banskabystrica-knowledge-data-portal.yaml: projects/banskabystrica/assistant/sources/data-portal.yaml
 banskabystrica-assistant-public.yaml: projects/banskabystrica/assistant/deployments/banskabystrica.yaml
+tmp-t4202-verejne-dedup-delete.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/tmp-t4202-dedup-delete.yaml
+tmp-t4202-mesto-dedup-delete.yaml: projects/banskabystrica/spaces/banskabystrica-mesto/policies/tmp-t4202-dedup-delete.yaml

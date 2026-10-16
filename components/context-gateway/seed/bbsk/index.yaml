@@ -125,3 +125,5 @@ bbsk-knowledge-web.yaml: projects/bbsk/assistant/sources/web.yaml
 bbsk-knowledge-catalogue-ngsi.yaml: projects/bbsk/assistant/sources/catalogue.yaml
 # The staff assistant over the website, for the answer-quality evals (T-3067).
 bbsk-assistant-knowledge.yaml: projects/bbsk/assistant/deployments/knowledge.yaml
+bbsk-tmp-t4202-kraj-dedup-delete.yaml: projects/bbsk/spaces/bbsk-kraj/policies/tmp-t4202-dedup-delete.yaml
+bbsk-tmp-t4202-registre-dedup-delete.yaml: projects/bbsk/spaces/bbsk-registre/policies/tmp-t4202-dedup-delete.yaml
