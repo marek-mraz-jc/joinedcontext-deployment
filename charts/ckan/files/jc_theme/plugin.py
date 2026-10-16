@@ -11,7 +11,7 @@ import html
 import json
 import os
 import re
-from urllib.parse import quote
+from urllib.parse import parse_qs, quote, urlencode, urlsplit, urlunsplit
 
 import ckan
 import ckan.plugins as plugins
@@ -411,6 +411,69 @@ STRINGS = {
     },
     "about_contact": {"en": "Questions about the data", "sk": "Otázky k dátam", "cs": "Dotazy k datům", "de": "Fragen zu den Daten"},
     "more": {"en": "More details", "sk": "Ďalšie údaje", "cs": "Další údaje", "de": "Weitere Angaben"},
+    # A resource page (T-4333): what it is, its address, its live rows and how to use it.
+    "copy_address": {"en": "Copy address", "sk": "Kopírovať adresu", "cs": "Kopírovat adresu", "de": "Adresse kopieren"},
+    "full_address": {"en": "The whole address", "sk": "Celá adresa", "cs": "Celá adresa", "de": "Die ganze Adresse"},
+    "entity_type": {"en": "Data type", "sk": "Typ dát", "cs": "Typ dat", "de": "Datentyp"},
+    "scope_dataset": {"en": "Only this dataset's records.", "sk": "Iba záznamy tohto datasetu.", "cs": "Pouze záznamy této datové sady.", "de": "Nur die Einträge dieses Datensatzes."},
+    "scope_type": {
+        "en": "Every {type} record of the publisher's open data, this dataset's among them.",
+        "sk": "Všetky záznamy typu {type} v otvorených dátach vydavateľa, vrátane tohto datasetu.",
+        "cs": "Všechny záznamy typu {type} v otevřených datech vydavatele, včetně této datové sady.",
+        "de": "Alle {type}-Einträge der offenen Daten des Herausgebers, auch die dieses Datensatzes.",
+    },
+    "preview_types": {"en": "The kinds of entities it holds, live", "sk": "Druhy entít, ktoré obsahuje, naživo", "cs": "Druhy entit, které obsahuje, živě", "de": "Die Arten von Entitäten, live"},
+    "preview_api": {"en": "The first records, live", "sk": "Prvé záznamy naživo", "cs": "První záznamy živě", "de": "Die ersten Einträge, live"},
+    "preview_loading": {"en": "Loading the first records…", "sk": "Načítavajú sa prvé záznamy…", "cs": "Načítají se první záznamy…", "de": "Die ersten Einträge werden geladen…"},
+    "preview_failed": {
+        "en": "The records did not load here; the address still answers a program.",
+        "sk": "Záznamy sa tu nenačítali; adresa programu odpovedá aj tak.",
+        "cs": "Záznamy se zde nenačetly; adresa programu odpovídá i tak.",
+        "de": "Die Einträge wurden hier nicht geladen; die Adresse antwortet einem Programm trotzdem.",
+    },
+    "preview_empty": {"en": "No records yet.", "sk": "Zatiaľ žiadne záznamy.", "cs": "Zatím žádné záznamy.", "de": "Noch keine Einträge."},
+    "preview_shown": {"en": "{shown} of {total} records", "sk": "{shown} z {total} záznamov", "cs": "{shown} z {total} záznamů", "de": "{shown} von {total} Einträgen"},
+    "records": {"en": "Records", "sk": "Počet záznamov", "cs": "Počet záznamů", "de": "Einträge"},
+    "ex_first": {"en": "The first 5 records, with curl", "sk": "Prvých 5 záznamov cez curl", "cs": "Prvních 5 záznamů přes curl", "de": "Die ersten 5 Einträge mit curl"},
+    "ex_file": {"en": "Download it with curl", "sk": "Stiahnutie cez curl", "cs": "Stažení přes curl", "de": "Mit curl herunterladen"},
+    "ex_excel": {
+        "en": "In Excel or Power BI: Data, Get Data, From OData Feed, with this address",
+        "sk": "V Exceli alebo Power BI: Údaje, Získať údaje, Z informačného kanála OData, s touto adresou",
+        "cs": "V Excelu nebo Power BI: Data, Načíst data, Z informačního kanálu OData, s touto adresou",
+        "de": "In Excel oder Power BI: Daten, Daten abrufen, Aus OData-Feed, mit dieser Adresse",
+    },
+    "ex_qgis": {
+        "en": "In QGIS: Layer, Add Layer, Add WFS / OGC API - Features Layer, a new connection with this address",
+        "sk": "V QGIS: Vrstva, Pridať vrstvu, Pridať vrstvu WFS / OGC API - Features, nové pripojenie s touto adresou",
+        "cs": "V QGIS: Vrstva, Přidat vrstvu, Přidat vrstvu WFS / OGC API - Features, nové připojení s touto adresou",
+        "de": "In QGIS: Layer, Layer hinzufügen, WFS / OGC API - Features-Layer hinzufügen, eine neue Verbindung mit dieser Adresse",
+    },
+    "ex_ws": {
+        "en": "Changes as they happen, with websocat: open the socket, then send the subscription as the first line",
+        "sk": "Zmeny naživo cez websocat: otvorte spojenie a ako prvý riadok pošlite odber",
+        "cs": "Změny živě přes websocat: otevřete spojení a jako první řádek pošlete odběr",
+        "de": "Änderungen live mit websocat: Verbindung öffnen, dann das Abonnement als erste Zeile senden",
+    },
+    "ex_chatgpt_title": {"en": "ChatGPT", "sk": "ChatGPT", "cs": "ChatGPT", "de": "ChatGPT"},
+    "ex_chatgpt": {
+        "en": "Open Settings, then Apps and Connectors, and choose Create. Paste this address as the MCP server URL, with no authentication.",
+        "sk": "Otvorte Nastavenia, potom Aplikácie a konektory, a zvoľte Vytvoriť. Vložte túto adresu ako URL MCP servera, bez overenia.",
+        "cs": "Otevřete Nastavení, pak Aplikace a konektory, a zvolte Vytvořit. Vložte tuto adresu jako URL MCP serveru, bez ověření.",
+        "de": "Öffnen Sie Einstellungen, dann Apps und Konnektoren, und wählen Sie Erstellen. Fügen Sie diese Adresse als URL des MCP-Servers ein, ohne Authentifizierung.",
+    },
+    "created": {"en": "Created", "sk": "Vytvorené", "cs": "Vytvořeno", "de": "Erstellt"},
+    "info": {"en": "About this resource", "sk": "O tomto zdroji", "cs": "O tomto zdroji", "de": "Über diese Ressource"},
+    "whole_table": {"en": "The whole table", "sk": "Celá tabuľka", "cs": "Celá tabulka", "de": "Die ganze Tabelle"},
+    "ex_types": {"en": "The kinds of entities it holds, with curl", "sk": "Druhy entít, ktoré obsahuje, cez curl", "cs": "Druhy entit, které obsahuje, přes curl", "de": "Die Arten von Entitäten, die sie enthält, mit curl"},
+    "section_source": {"en": "At the publisher", "sk": "U vydavateľa", "cs": "U vydavatele", "de": "Beim Herausgeber"},
+    "source_lead": {
+        "en": "This is the publisher's own page for the data; it opens on their site.",
+        "sk": "Toto je stránka vydavateľa s týmito dátami; otvorí sa na jeho webe.",
+        "cs": "Toto je stránka vydavatele s těmito daty; otevře se na jeho webu.",
+        "de": "Dies ist die Seite des Herausgebers zu diesen Daten; sie öffnet sich auf seiner Website.",
+    },
+    "section_source_lead": {"en": "Where the publisher keeps the original.", "sk": "Kde má vydavateľ originál.", "cs": "Kde má vydavatel originál.", "de": "Wo der Herausgeber das Original hat."},
+    "at_publisher": {"en": "On the publisher's site", "sk": "Na stránke vydavateľa", "cs": "Na stránce vydavatele", "de": "Auf der Seite des Herausgebers"},
 }
 
 # What a reader gets from each format, in one line (T-2744). A format not listed gets none.
@@ -452,7 +515,14 @@ ABOUT_EXTRAS = ("identifier", "language", "contact", "conforms_to", "status")
 # the licence the About list already links, and the themes as a JSON list of vocabulary URIs.
 INTERNAL_EXTRAS = {"generated_by", "endpoint", "publisher_name", "publisher_uri", "contact_name",
                    "contact_email", "frequency", "spatial", "spatial_uri", "temporal_start",
-                   "temporal_end", "theme", "license_url"}
+                   "temporal_end", "theme", "license_url", "harvest_source"}
+# What a harvested record says about itself, in words (T-4333): the dates the publisher gave and
+# where the record came from. Any other extra keeps its own key.
+EXTRA_LABELS = {
+    "issued": {"en": "Published by the publisher", "sk": "Zverejnené vydavateľom", "cs": "Zveřejněno vydavatelem", "de": "Vom Herausgeber veröffentlicht"},
+    "modified": {"en": "Changed by the publisher", "sk": "Zmenené vydavateľom", "cs": "Změněno vydavatelem", "de": "Vom Herausgeber geändert"},
+    "source_uri": {"en": "Original record", "sk": "Pôvodný záznam", "cs": "Původní záznam", "de": "Ursprünglicher Eintrag"},
+}
 
 
 def _language():
@@ -559,6 +629,20 @@ def jc_more(pkg):
     return sorted((k, v) for k, v in _extras(pkg).items() if k not in shown and v)
 
 
+def jc_extra(key, value):
+    """One "More details" row as (label, text, link): a known key in words, an ISO date as the
+    page writes dates, an http address as a link; anything else as it is."""
+    words = EXTRA_LABELS.get(key)
+    label = (words.get(_language()) or words["en"]) if words else str(key).replace("_", " ").capitalize()
+    text = str(value)
+    if re.match(r"^\d{4}-\d{2}-\d{2}(T[\d:.]+Z?)?$", text):
+        try:
+            text = toolkit.h.render_datetime(text.rstrip("Z"))
+        except (AttributeError, TypeError, ValueError):
+            pass
+    return label, text, text if _is_url(text) else None
+
+
 def jc_live(pkg):
     """The dataset's live NGSI-LD address and an example query, or None.
 
@@ -584,11 +668,66 @@ API_FORMATS = ("NGSI-LD", "WEBSOCKET", "MCP", "OGCFEAT", "ODATA", "STA")
 DATA_ORDER = ("CSV", "GEOJSON", "JSON", "XLSX", "ZIP")
 
 
+# What an address of the platform is, read from its path under `/api/endpoint/{slug}/` (T-4333):
+# the format a harvest wrote has been wrong (JSON-LD for NGSI-LD, JSON for MCP and WebSocket),
+# the path never is. A file the Endpoint renders is `file.{ext}`; the model is under `schema/`.
+_ENDPOINT_PATH = re.compile(r"^/api/endpoint/[^/]+/(.*)$")
+_KIND_PREFIXES = (("ngsi-ld/", "NGSI-LD"), ("odata/", "ODATA"), ("ogc/", "OGCFEAT"), ("sta/", "STA"),
+                  ("schema/", "MODEL"))
+# An Endpoint's door by its kind: product names, the same on a page in any language (T-4333).
+DOOR_NAMES = {"NGSI-LD": "NGSI-LD API", "WEBSOCKET": "WebSocket", "MCP": "Model Context Protocol",
+              "OGCFEAT": "OGC API - Features", "ODATA": "OData v4", "STA": "SensorThings API",
+              "CSV": "CSV", "JSON": "JSON", "GEOJSON": "GeoJSON", "XLSX": "Excel"}
+# The format as a reader reads it, on a chip and in the facts list.
+KIND_LABELS = {"NGSI-LD": "NGSI-LD", "WEBSOCKET": "WebSocket", "MCP": "MCP", "OGCFEAT": "OGC API",
+               "ODATA": "OData", "STA": "SensorThings", "CSV": "CSV", "JSON": "JSON",
+               "GEOJSON": "GeoJSON", "XLSX": "Excel"}
+
+
+def _split(resource):
+    """The resource's address in parts and its path below the Endpoint, or None off the platform."""
+    url = (resource or {}).get("url") or ""
+    try:
+        parts = urlsplit(url)
+    except ValueError:
+        return None
+    match = _ENDPOINT_PATH.match(parts.path or "")
+    if parts.scheme not in ("http", "https", "ws", "wss") or not parts.netloc or not match:
+        return None
+    return parts, match.group(1)
+
+
+def jc_kind(resource):
+    """NGSI-LD, MCP, WEBSOCKET, ODATA, OGCFEAT, STA, MODEL, or a file's CSV, JSON, GEOJSON or XLSX
+    for an Endpoint's address; None for anything else."""
+    split = _split(resource)
+    if not split:
+        return None
+    rest = split[1].rstrip("/")
+    for prefix, kind in _KIND_PREFIXES:
+        if rest.startswith(prefix) or rest == prefix.rstrip("/"):
+            return kind
+    if rest in ("mcp", "ws"):
+        return "MCP" if rest == "mcp" else "WEBSOCKET"
+    match = re.fullmatch(r"file\.(csv|json|geojson|xlsx)", rest)
+    return match.group(1).upper() if match else None
+
+
+def jc_is_source(resource, pkg):
+    """Whether a resource is the harvest's link to the publisher's own page, named after the
+    dataset (T-4333): it is opened there, never downloaded."""
+    title = ((pkg or {}).get("title") or "").strip()
+    return bool(title) and _off_platform(resource) and ((resource or {}).get("name") or "").strip() == title
+
+
 def _section(resource):
     url = resource.get("url") or ""
     path = url.split("?", 1)[0]
-    if "/schema/" in path:
+    kind = jc_kind(resource)
+    if kind == "MODEL" or "/schema/" in path:
         return "schema"
+    if kind:
+        return "api" if kind in API_FORMATS else "data"
     if (resource.get("format") or "").strip().upper() in API_FORMATS:
         return "api"
     return "data"
@@ -596,7 +735,8 @@ def _section(resource):
 
 def _order(resource):
     """The DataStore table first (it is the data a reader came for), then files by format."""
-    name = (resource.get("format") or "").strip().upper()
+    kind = jc_kind(resource)
+    name = kind if kind and kind != "MODEL" else (resource.get("format") or "").strip().upper()
     known = DATA_ORDER.index(name) if name in DATA_ORDER else len(DATA_ORDER)
     api = API_FORMATS.index(name) if name in API_FORMATS else len(API_FORMATS)
     return (not resource.get("datastore_active"), known, api, name, resource.get("name") or "")
@@ -669,16 +809,17 @@ def jc_guide(resource):
 def jc_resource_sections(pkg):
     """The resources in three sections, data, APIs and the data model, each in reading order
     and each resource with its one-line "what is this". Empty sections are left out."""
-    sections = {"data": [], "api": [], "schema": []}
+    sections = {"data": [], "api": [], "schema": [], "source": []}
     for resource in sorted((pkg or {}).get("resources") or [], key=_order):
-        name = (resource.get("format") or "").strip()
-        words = FORMATS.get(name.upper()) or {}
+        kind = jc_kind(resource)
+        name = KIND_LABELS.get(kind) or (resource.get("format") or "").strip()
+        words = FORMATS.get(kind or name.upper()) or {}
         if resource.get("datastore_active"):
             # A DataStore table downloads as CSV, whatever format its resource names (T-3012
             # writes its tables with none).
             name = name or "CSV"
             words = STRINGS["table_what"]
-        sections[_section(resource)].append({
+        sections["source" if jc_is_source(resource, pkg) else _section(resource)].append({
             "resource": resource,
             "format": name or "—",
             "what": words.get(_language()) or words.get("en") or "",
@@ -696,6 +837,7 @@ MODEL_FILES = {
     "model.owl.ttl": {"en": "Data model (OWL)", "sk": "Dátový model (OWL)", "cs": "Datový model (OWL)", "de": "Datenmodell (OWL)"},
     "model.rdf.ttl": {"en": "Data model (RDF)", "sk": "Dátový model (RDF)", "cs": "Datový model (RDF)", "de": "Datenmodell (RDF)"},
     "model.schema.json": {"en": "Data model (JSON Schema)", "sk": "Dátový model (JSON Schema)", "cs": "Datový model (JSON Schema)", "de": "Datenmodell (JSON Schema)"},
+    "index.json": {"en": "Data model: list of its files", "sk": "Dátový model: zoznam súborov", "cs": "Datový model: seznam souborů", "de": "Datenmodell: Liste der Dateien"},
     "model.shacl.ttl": {"en": "Validation rules (SHACL)", "sk": "Pravidlá kontroly (SHACL)", "cs": "Pravidla kontroly (SHACL)", "de": "Prüfregeln (SHACL)"},
 }
 
@@ -707,9 +849,241 @@ def jc_resource_label(resource, pkg=None):
     prefix = ((pkg or {}).get("name") or "").strip()
     rest = name[len(prefix):].strip() if prefix and name.startswith(prefix + " ") else name
     words = MODEL_FILES.get(rest)
+    if jc_kind(resource) == "MODEL":
+        # The harvest names a model file in English ("Data model: LinkML"); its file name says
+        # which one it is in any language (T-4333).
+        words = MODEL_FILES.get(((resource or {}).get("url") or "").split("?", 1)[0].rsplit("/", 1)[-1]) or words
     if words:
         return words.get(_language()) or words["en"]
+    kind = jc_kind(resource)
+    if kind in DOOR_NAMES:
+        # An Endpoint's door is named by what it is, in words every language shares, with its
+        # entity type once in the page header instead of on every entry: the harvest wrote
+        # "NGSI-LD API (StatisticalObservation)", jcctl "Live updates over WebSocket" (T-4333).
+        return DOOR_NAMES[kind]
+    elif (resource or {}).get("datastore_active") and pkg and rest.startswith((pkg.get("title") or "\0").strip() + " ("):
+        # A harvested table is named "{dataset} (tabuľka)", in Slovak on every page (T-4333).
+        return jc_t("whole_table")
+    elif jc_is_source(resource, pkg):
+        # The harvest names the publisher's own page after the dataset, so it read as a twin of
+        # the table (T-4333).
+        return jc_t("at_publisher")
     return rest or name or (resource or {}).get("format") or (resource or {}).get("id") or ""
+
+
+def _off_platform(resource):
+    """Whether a resource is a link to somewhere other than the platform and this catalogue."""
+    resource = resource or {}
+    if resource.get("datastore_active") or resource.get("url_type") == "upload":
+        return False
+    try:
+        host = urlsplit(resource.get("url") or "").hostname or ""
+    except ValueError:
+        return False
+    domain = BRANDING.get("domain") or ""
+    return bool(host) and not (domain and (host == domain or host.endswith("." + domain)))
+
+
+def jc_entity_type(resource):
+    """The entity type an Endpoint's address reads: its `type` query, or the type in an OData
+    or OGC API path. None when it names none."""
+    split = _split(resource)
+    if not split:
+        return None
+    parts, rest = split
+    found = parse_qs(parts.query).get("type")
+    if found and found[0]:
+        return found[0]
+    match = re.match(r"^(?:odata/v4|ogc/features/collections|sta/v1\.1)/([^/?]+)", rest)
+    if match:
+        return match.group(1)
+    # MCP and WebSocket read every type of the Endpoint; the harvest names the dataset's in
+    # parentheses after the door ("WebSocket (StatisticalObservation)").
+    named = re.search(r"\(([A-Za-z][A-Za-z0-9_]*)\)$", ((resource or {}).get("name") or "").strip())
+    return named.group(1) if named else None
+
+
+def _filtered(resource):
+    """Whether the address keeps only this dataset's rows (the harvest's `q=dataset==...`)."""
+    split = _split(resource)
+    return bool(split) and any("dataset==" in q for q in parse_qs(split[0].query).get("q", []))
+
+
+def jc_what(resource):
+    """One line, in the page's language, of what this resource is, and for an Endpoint's address
+    whose rows it holds (T-4333): the harvest's English sentence never reaches the page."""
+    kind = jc_kind(resource)
+    words = FORMATS.get(kind or ((resource or {}).get("format") or "").strip().upper()) or {}
+    line = words.get(_language()) or words.get("en") or ""
+    kind_type = jc_entity_type(resource)
+    if kind and kind != "MODEL" and kind_type:
+        scope = jc_t("scope_dataset") if _filtered(resource) else jc_t("scope_type").replace("{type}", kind_type)
+        line = (line + ". " if line else "") + scope
+    return line
+
+
+def jc_format(resource):
+    """The format a reader is shown: the kind of an Endpoint's address, CSV for a DataStore
+    table, the format the resource names otherwise."""
+    resource = resource or {}
+    kind = jc_kind(resource)
+    if kind in KIND_LABELS:
+        return KIND_LABELS[kind]
+    name = (resource.get("format") or "").strip()
+    return name or ("CSV" if resource.get("datastore_active") else "")
+
+
+def jc_address(resource):
+    """The address as a person reads it (T-4333): host and path, the Endpoint's 32-character
+    slug shortened, without the query a program needs; the whole address stays beside it."""
+    split = _split(resource)
+    url = (resource or {}).get("url") or ""
+    if not split:
+        return {"short": url, "full": url}
+    parts, rest = split
+    slug = parts.path[len("/api/endpoint/"):].split("/", 1)[0]
+    short_slug = slug if len(slug) <= 10 else slug[:6] + "\u2026"
+    return {"short": "%s/api/endpoint/%s/%s" % (parts.netloc, short_slug, rest), "full": url}
+
+
+def _with(url, **params):
+    """The address with these query parameters set, the others kept in order."""
+    parts = urlsplit(url)
+    query = [(k, v) for k, values in parse_qs(parts.query, keep_blank_values=True).items()
+             if k not in params for v in values]
+    query += list(params.items())
+    return urlunsplit(parts._replace(query=urlencode(query, quote_via=quote, safe="$")))
+
+
+def jc_preview(resource):
+    """The address the page's script fetches for its live preview (T-4333): five rows, read
+    anonymously by the reader's browser from an https address of the platform. None for a kind
+    without rows to show (MCP, WebSocket, a file) or an address elsewhere."""
+    kind = jc_kind(resource)
+    url = (resource or {}).get("url") or ""
+    domain = BRANDING.get("domain") or ""
+    host = urlsplit(url).hostname or "" if url else ""
+    if not (url.startswith("https://") and domain and (host == domain or host.endswith("." + domain))):
+        return None
+    path = urlsplit(url).path
+    if kind == "NGSI-LD" and "/entities" in path:
+        return {"url": _with(url, limit="5", options="keyValues", count="true"), "kind": kind}
+    if kind == "NGSI-LD":
+        # The API itself, without a type: what it holds is its list of types.
+        return {"url": url.split("?", 1)[0].rstrip("/") + "/types", "kind": "NGSI-LD-TYPES"}
+    if kind in ("ODATA", "STA") and jc_entity_type(resource):
+        return {"url": _with(url, **{"$top": "5"}), "kind": kind}
+    if kind == "OGCFEAT" and path.rstrip("/").endswith("/items"):
+        return {"url": _with(url, limit="5"), "kind": kind}
+    return None
+
+
+def jc_examples(resource):
+    """How to use an Endpoint's address, in the page's language (T-4333): each a title, the
+    steps in words and the command to copy. A non-public address carries `$TOKEN` in its
+    description, so its commands send the header with it."""
+    resource = resource or {}
+    kind = jc_kind(resource)
+    url = resource.get("url") or ""
+    if not kind or kind == "MODEL" or not url:
+        return []
+    token = "$TOKEN" in (resource.get("description") or "")
+    auth = ' -H "Authorization: Bearer $TOKEN"' if token else ""
+    key = re.sub(r"[^A-Za-z0-9_-]", "", str(resource.get("id") or "")) or "resource"
+    kind_type = jc_entity_type(resource) or ""
+    out = []
+
+    def add(title, code=None, steps=()):
+        out.append({"title": title, "steps": list(steps), "code": code,
+                    "id": "jc-ex-%s-%d" % (key, len(out))})
+
+    if kind == "NGSI-LD" and "/entities" not in urlsplit(url).path:
+        add(jc_t("ex_types"), "curl%s -H 'Accept: application/ld+json' '%s'" % (auth, url.split("?", 1)[0].rstrip("/") + "/types"))
+    elif kind == "NGSI-LD":
+        add(jc_t("ex_first"), "curl%s -H 'Accept: application/ld+json' '%s'" % (auth, _with(url, limit="5")))
+    elif kind in ("ODATA", "STA"):
+        add(jc_t("ex_first"), "curl%s '%s'" % (auth, _with(url, **{"$top": "5"})))
+        if kind == "ODATA":
+            add(jc_t("ex_excel"), url)
+    elif kind == "OGCFEAT":
+        add(jc_t("ex_first"), "curl%s '%s'" % (auth, _with(url, limit="5")))
+        add(jc_t("ex_qgis"), url.split("/collections/", 1)[0] + "/")
+    elif kind == "MCP":
+        add(jc_t("mcp_claude_ai"), url, [jc_t("mcp_claude_ai_1"), jc_t("mcp_claude_ai_2")])
+        add(jc_t("ex_chatgpt_title"), url, [jc_t("ex_chatgpt")])
+        add(jc_t("mcp_claude"), "claude mcp add --transport http joinedcontext %s" % url)
+    elif kind == "WEBSOCKET":
+        body = {"type": "Subscription"}
+        body["entities" if kind_type else "watchedAttributes"] = [{"type": kind_type}] if kind_type else ["location"]
+        message = json.dumps({"metadata": {"x-op": "x-subscribe", "x-id": "s1"}, "body": body},
+                             separators=(",", ":"), ensure_ascii=False)
+        add(jc_t("ex_ws"), "websocat --protocol ngsi-ld-ws%s '%s'\n%s" % (auth, url, message))
+    elif kind in ("CSV", "JSON", "GEOJSON", "XLSX"):
+        name = "data." + ("xlsx" if kind == "XLSX" else kind.lower())
+        add(jc_t("ex_file"), "curl%s -L -o %s '%s'" % (auth, name, url))
+    return out
+
+
+# The standards a distribution names in `conforms_to`, as a reader knows them.
+STANDARDS = (
+    ("etsi.org/deliver/etsi_gs/cim", "ETSI NGSI-LD (GS CIM 009)"),
+    ("ogcapi-features", "OGC API - Features"),
+    ("odata", "OData v4"),
+    ("modelcontextprotocol", "Model Context Protocol"),
+    ("rfc7946", "GeoJSON (RFC 7946)"),
+    ("rfc4180", "CSV (RFC 4180)"),
+    ("rfc8259", "JSON (RFC 8259)"),
+    ("smart-data-models", "Smart Data Models"),
+    ("smartdatamodels", "Smart Data Models"),
+)
+
+
+# The standard each kind of door follows, when the resource names none (jcctl's do not).
+KIND_STANDARDS = {"CSV": "https://www.rfc-editor.org/rfc/rfc4180", "GEOJSON": "https://www.rfc-editor.org/rfc/rfc7946",
+                  "JSON": "https://www.rfc-editor.org/rfc/rfc8259",
+                  "NGSI-LD": "https://www.etsi.org/deliver/etsi_gs/CIM/001_099/009/",
+                  "OGCFEAT": "http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core",
+                  "ODATA": "https://docs.oasis-open.org/odata/odata/v4.01/",
+                  "MCP": "https://modelcontextprotocol.io/specification"}
+
+
+def jc_standard(resource):
+    """The standard a distribution follows, named, with its address; a file the platform renders
+    follows its format's RFC. None when it names none or a value that is not an http address."""
+    url = ((resource or {}).get("conforms_to") or "").strip() or KIND_STANDARDS.get(jc_kind(resource), "")
+    if not _is_url(url):
+        return None
+    name = next((label for needle, label in STANDARDS if needle in url.lower()), url)
+    return {"url": url, "name": name}
+
+
+def jc_model(pkg):
+    """The dataset's data model for a resource page (T-4333): the Smart Data Model a resource
+    names, else the published JSON Schema, else None."""
+    resources = (pkg or {}).get("resources") or []
+    for resource in resources:
+        standard = jc_standard(resource)
+        if standard and standard["name"] == "Smart Data Models":
+            return {"url": standard["url"], "name": "Smart Data Model"}
+    for resource in resources:
+        url = (resource.get("url") or "").split("?", 1)[0]
+        if _section(resource) == "schema" and url.endswith("schema.json"):
+            return {"url": resource["url"], "name": jc_resource_label(resource, pkg)}
+    return None
+
+
+def jc_dates(resource):
+    """When the resource was updated, and when it was created only on another day (T-4333):
+    three rows of one date said nothing three times."""
+    resource = resource or {}
+    updated = resource.get("last_modified") or resource.get("metadata_modified") or resource.get("created")
+    rows = []
+    if updated:
+        rows.append((jc_t("updated"), toolkit.h.render_datetime(updated)))
+    created = resource.get("created")
+    if created and (not updated or str(created)[:10] != str(updated)[:10]):
+        rows.append((jc_t("created"), toolkit.h.render_datetime(created)))
+    return rows
 
 
 def jc_previews(pkg):
@@ -1021,6 +1395,18 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_resource_sections": jc_resource_sections,
             "jc_resource_label": jc_resource_label,
             "jc_is_api": jc_is_api,
+            "jc_extra": jc_extra,
+            "jc_is_source": jc_is_source,
+            "jc_kind": jc_kind,
+            "jc_entity_type": jc_entity_type,
+            "jc_what": jc_what,
+            "jc_format": jc_format,
+            "jc_address": jc_address,
+            "jc_preview": jc_preview,
+            "jc_examples": jc_examples,
+            "jc_standard": jc_standard,
+            "jc_model": jc_model,
+            "jc_dates": jc_dates,
             "jc_usage": jc_usage,
             "jc_guide": jc_guide,
             "jc_previews": jc_previews,
