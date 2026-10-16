@@ -18,7 +18,7 @@ SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed
 # GtfsShape has no entity on dev yet; GTFS draws a shape for the trips of one route.
 REFERENCES = {
     "WasteContainer": {"WasteContainerIsle"},
-    "WasteContainerIsle": {"CityDistrict"},
+    "WasteContainerIsle": {"AdministrativeArea"},
     "GtfsRoute": {"GtfsAgency"},
     "GtfsStop": {"GtfsStation"},
     "PublicTransportRoute": {"GtfsRoute"},
@@ -27,13 +27,13 @@ REFERENCES = {
     "Alert": {"GtfsStop", "GtfsRoute"},
     "OffStreetParking": {"GtfsStation"},
     "WaterQualityObserved": {"PointOfInterest"},
-    "CityWork": {"CityDistrict"},
+    "CityWork": {"AdministrativeArea"},
 }
 # What the bundles served before the split; none of them may be a dataset again.
 BUNDLES = {"praha-mesto", "helsinki-all", "banskabystrica-verejne", "zilina-verejne", "bbsk-registre"}
 MANDATORY = {"ngsi-ld", "mcp", "websocket", "csv", "json"}
 # GeoJSON and OGC API Features are mandatory when the data has a location (EP-118); these types have none.
-UNLOCATED = {"KeyPerformanceIndicator", "BudgetLine", "NewsArticle", "CreativeWork", "GtfsAgency"}
+UNLOCATED = {"KeyPerformanceIndicator", "BudgetLine", "Article", "GtfsAgency"}
 
 
 @cache
@@ -153,7 +153,7 @@ def test_a_helsinki_part_hides_the_contact_line_as_the_bundle_does():
     for path, doc in docs("Endpoint"):
         if path.name.startswith("helsinki-endpoint-") and doc["spec"].get("publish") and doc["spec"].get("policyRef"):
             types = types_of(public_policies()[("helsinki", "helsinki")][doc["spec"]["policyRef"].rsplit(":", 1)[1]])
-            if types & {"PointOfInterest", "Event", "BikeHireDockingStation", "CityWork", "CityDistrict",
+            if types & {"PointOfInterest", "Event", "BikeHireDockingStation", "CityWork", "AdministrativeArea",
                         "OnStreetParking", "WaterQualityObserved", "Vehicle", "GtfsStop"}:
                 assert "contactPoint" in doc["spec"].get("projection", {}).get("hiddenAttributes", []), path.name
 
