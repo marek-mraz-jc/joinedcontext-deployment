@@ -1319,6 +1319,133 @@ def jc_mcp_install():
     }
 
 
+# The connector's public pages (T-4315): what a directory reviewer and a visitor read before
+# adding the MCP hub to Claude or ChatGPT. Every fact is the deployment's own: no account or
+# cookie on the hub, the edge's per-IP limit held in memory, logs on container stdout only and no
+# retention period configured, so none is promised. `{url}` is the hub, `{domain}` the
+# installation's; a paragraph naming `{url}` is left out on an installation without a domain.
+PAGES = {
+    "connector": {
+        "en": {"title": "MCP connector", "sections": [
+            ("", ["Ask an AI assistant about this catalogue's open data: air quality now, hospitals in the "
+                  "region, a city's contracts. The connector is an MCP server at {url}. It needs no account "
+                  "and only reads."]),
+            ("What it can do", ["list_endpoints finds the datasets; list_types, get_type and describe_schema "
+                                "read their data models; query_entities and get_entity read the current rows; "
+                                "query_temporal and retrieve_temporal read their history; describe_access says "
+                                "what a call may read.",
+                                "Every tool reads. A tool that would write is refused without a sign-in."]),
+            ("Try it", ["What is the air quality in Helsinki right now?",
+                        "Which hospitals are in the Banská Bystrica region?",
+                        "Which datasets cover public contracts, and which fields do they have?"]),
+        ]},
+        "sk": {"title": "MCP konektor", "sections": [
+            ("", ["Pýtajte sa AI asistenta na otvorené dáta tohto katalógu: aktuálnu kvalitu ovzdušia, "
+                  "nemocnice v kraji, zmluvy mesta. Konektor je MCP server na adrese {url}. Netreba účet "
+                  "a iba číta."]),
+            ("Čo dokáže", ["list_endpoints nájde datasety; list_types, get_type a describe_schema prečítajú "
+                           "ich dátové modely; query_entities a get_entity čítajú aktuálne záznamy; "
+                           "query_temporal a retrieve_temporal ich históriu; describe_access povie, čo smie "
+                           "volanie čítať.",
+                           "Každý nástroj iba číta. Nástroj, ktorý by zapisoval, bez prihlásenia odmietne."]),
+            ("Vyskúšajte", ["Aká je teraz kvalita ovzdušia v Helsinkách?",
+                            "Ktoré nemocnice sú v Banskobystrickom kraji?",
+                            "Ktoré datasety obsahujú verejné zmluvy a aké majú polia?"]),
+        ]},
+    },
+    "privacy": {
+        "en": {"title": "Privacy", "sections": [
+            ("", ["This page covers the MCP connector at {url}."]),
+            ("No account, no cookie", ["The connector answers without an account. It sets no cookie and "
+                                       "keeps no profile of you."]),
+            ("What reaches us", ["Each call's address, the tool, its arguments and your IP address. The edge "
+                                 "counts anonymous calls per IP address to limit their rate; the counter lives "
+                                 "in memory for one time window and is not stored.",
+                                 "The services write each request to their container log on the server, which "
+                                 "the server rotates. We do not archive these logs and send them to no "
+                                 "analytics or advertising service."]),
+            ("Your assistant", ["What you type stays with the assistant you use, such as Claude or ChatGPT; "
+                                "the connector receives only the tool calls it makes. That provider's privacy "
+                                "policy covers what you type."]),
+            ("The data", ["The connector serves only datasets their publishers released as open data."]),
+        ]},
+        "sk": {"title": "Ochrana súkromia", "sections": [
+            ("", ["Táto stránka sa týka MCP konektora na adrese {url}."]),
+            ("Bez účtu, bez cookies", ["Konektor odpovedá bez účtu. Nenastavuje žiadne cookie a nevedie "
+                                       "o vás žiadny profil."]),
+            ("Čo k nám príde", ["Adresa každého volania, nástroj, jeho argumenty a vaša IP adresa. Brána "
+                                "počíta anonymné volania podľa IP adresy, aby obmedzila ich frekvenciu; "
+                                "počítadlo žije v pamäti počas jedného časového okna a neukladá sa.",
+                                "Služby zapisujú každú požiadavku do logu svojho kontajnera na serveri, "
+                                "ktorý server rotuje. Tieto logy nearchivujeme a neposielame ich žiadnej "
+                                "analytickej ani reklamnej službe."]),
+            ("Váš asistent", ["Čo napíšete, zostáva u asistenta, ktorého používate, napríklad Claude alebo "
+                              "ChatGPT; konektor dostane iba volania nástrojov, ktoré asistent urobí. Na to, "
+                              "čo napíšete, sa vzťahujú zásady ochrany súkromia toho poskytovateľa."]),
+            ("Dáta", ["Konektor poskytuje iba datasety, ktoré ich vydavatelia zverejnili ako otvorené dáta."]),
+        ]},
+    },
+    "terms": {
+        "en": {"title": "Terms of use", "sections": [
+            ("Licences", ["Each dataset names its licence on its catalogue page, and that licence governs its "
+                          "reuse. Under Creative Commons Attribution (CC BY) you may copy and reuse the data "
+                          "when you name the publisher."]),
+            ("Read only", ["The connector never changes data. Tools that would write are refused without a "
+                           "sign-in."]),
+            ("As is", ["{domain} runs as a development service. It can be slow, change or pause without "
+                       "notice, and we give no warranty that the data is complete or current. Check the "
+                       "publisher's source before you rely on a number."]),
+            ("Fair use", ["Calls are limited per IP address. Do not try to get around the limit or to reach "
+                          "data that is not public."]),
+        ]},
+        "sk": {"title": "Podmienky používania", "sections": [
+            ("Licencie", ["Každý dataset uvádza svoju licenciu na svojej stránke v katalógu a tá určuje, ako "
+                          "ho smiete použiť. Pri Creative Commons Attribution (CC BY) smiete dáta kopírovať "
+                          "a ďalej používať, ak uvediete vydavateľa."]),
+            ("Iba čítanie", ["Konektor dáta nikdy nemení. Nástroje, ktoré by zapisovali, bez prihlásenia "
+                             "odmietne."]),
+            ("Bez záruky", ["{domain} beží ako vývojová služba. Môže byť pomalá, zmeniť sa alebo prerušiť bez "
+                            "ohlásenia a neručíme za úplnosť ani aktuálnosť dát. Skôr než sa spoľahnete na "
+                            "číslo, overte ho u vydavateľa."]),
+            ("Férové používanie", ["Počet volaní je obmedzený podľa IP adresy. Neobchádzajte limit a "
+                                   "nesnažte sa dostať k dátam, ktoré nie sú verejné."]),
+        ]},
+    },
+    "support": {
+        "en": {"title": "Support", "sections": [
+            ("", ["Write to us when the connector fails or a number looks wrong. Name the dataset or the "
+                  "tool, the question you asked and the time.",
+                  "A wrong number in a dataset: tell its publisher too, named on the dataset page."]),
+        ]},
+        "sk": {"title": "Podpora", "sections": [
+            ("", ["Napíšte nám, keď konektor zlyhá alebo číslo nesedí. Uveďte dataset alebo nástroj, otázku, "
+                  "ktorú ste položili, a čas.",
+                  "Chybné číslo v datasete: oznámte ho aj jeho vydavateľovi, uvedenému na stránke datasetu."]),
+        ]},
+    },
+}
+
+
+def jc_page(name):
+    """One of the connector's pages in the page's language, English when there is none; None for
+    a name that is not one. The hub, the domain and the contact come from the branding block."""
+    words = PAGES.get(name)
+    if not words:
+        return None
+    words = words.get(_language()) or words["en"]
+    mcp = jc_mcp_install()
+    domain = BRANDING.get("domain") if mcp else None
+    email = BRANDING.get("contactEmail") or ""
+    sections = []
+    for heading, paragraphs in words["sections"]:
+        kept = [p.format(url=mcp["url"], domain=domain) if mcp else p
+                for p in paragraphs if mcp or ("{url}" not in p and "{domain}" not in p)]
+        if kept:
+            sections.append({"heading": heading, "paragraphs": kept})
+    return {"name": name, "title": words["title"], "sections": sections,
+            "email": email if "@" in email else "", "mcp": mcp, "pages": list(PAGES)}
+
+
 def jc_portal_url():
     """The Portal of this installation, for staff who signed in; None without a domain."""
     domain = BRANDING.get("domain")
@@ -1415,6 +1542,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.IFacets, inherit=True)
     plugins.implements(plugins.IPackageController, inherit=True)
+    plugins.implements(plugins.IBlueprint)
 
     def update_config(self, config):
         toolkit.add_template_directory(config, "templates")
@@ -1473,12 +1601,22 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_recent": jc_recent,
             "jc_portal_url": jc_portal_url,
             "jc_mcp_install": jc_mcp_install,
+            "jc_page": jc_page,
             "jc_assistant_widget": jc_assistant_widget,
             "jc_about_site": jc_about_site,
             "humanize_entity_type": humanize_entity_type,
             "jc_has_topics": jc_has_topics,
             "jc_sso_error": jc_sso_error,
         }
+
+    def get_blueprint(self):
+        """/connector, /privacy, /terms and /support (T-4315), one template for all four."""
+        from flask import Blueprint
+
+        blueprint = Blueprint("jc_pages", self.__module__)
+        for name in PAGES:
+            blueprint.add_url_rule("/" + name, name, lambda name=name: toolkit.render("jc/page.html", {"jc_name": name}))
+        return blueprint
 
     def before_dataset_search(self, search_params):
         """The hidden packages left out (T-4318), and a hyphenated word searched as the phrase it is and a Slovak or Czech word with its other
