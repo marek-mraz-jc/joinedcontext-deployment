@@ -21,3 +21,5 @@ bba6644bfb9f4e69a2bc7011da52c8beb28fa1cf:components/gitea/charts/bootstrap/value
 # T-4335: scripts/open-data/sdm/pins.json pins each vendored Smart Data Model to the public
 # smart-data-models commit it was fetched at (T-4319); the 40-hex commit id reads as a generic key.
 fccb3c7e3fdd9d563dbbc590af590c3823758097:scripts/open-data/sdm/pins.json:generic-api-key:4
+# T-4317: the same pin line in the merge that adds the Parking and ParksAndGardens pins (public commit ids).
+e2cb2f2ec903ae8a4835c44f17bed33bee14c901:scripts/open-data/sdm/pins.json:generic-api-key:4
