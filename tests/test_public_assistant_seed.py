@@ -230,6 +230,9 @@ def test_the_eval_copies_offer_one_tool_list_with_history():
              for name in ("bb-eval-haiku", "bb-eval-deepseek", "bb-eval-gemini")}
     assert lists["bb-eval-gemini"] == lists["bb-eval-haiku"] == lists["bb-eval-deepseek"], lists
     assert all("query_temporal" in tools for tools in lists["bb-eval-gemini"].values())
+    # Owner 2026-10-16: the haiku copy runs Claude Haiku 5.5 on the router and the answer alike.
+    model = manifests("AssistantDeployment", "banskabystrica")["bb-eval-haiku"]["spec"]["model"]
+    assert model == {"router": "anthropic/claude-haiku-5.5", "answer": "anthropic/claude-haiku-5.5"}
 
 
 def general() -> dict:
