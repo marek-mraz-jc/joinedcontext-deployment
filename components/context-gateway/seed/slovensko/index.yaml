@@ -18,3 +18,5 @@ slovensko-ckan.yaml: projects/slovensko/ckan/slovensko.yaml
 slovensko-datasource-ovzdusie.yaml: projects/slovensko/datasources/eea-sk-stations.yaml
 slovensko-pipeline-ovzdusie.yaml: projects/slovensko/pipelines/ovzdusie/pipeline.yaml
 slovensko-pipeline-ovzdusie-bento.yaml: projects/slovensko/pipelines/ovzdusie/bento.yaml
+# The project's own NGSI-LD catalogue as knowledge (T-3225), which the general assistant of data.dev reads (T-4342).
+slovensko-knowledge-catalogue-ngsi.yaml: projects/slovensko/assistant/sources/catalogue.yaml

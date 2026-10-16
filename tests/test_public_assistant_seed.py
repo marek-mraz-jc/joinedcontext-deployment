@@ -238,13 +238,14 @@ def test_the_catalogue_frames_the_general_assistant_on_every_page():
 
 
 # The CKAN organization each body publishes under, and the project its Endpoints live in.
-PUBLISHED = {"bbsk": "bbsk", "banskabystrica": "banskabystrica", "zilina": "zilina", "praha": "praha", "hel-fi": "helsinki"}
+PUBLISHED = {"bbsk": "bbsk", "banskabystrica": "banskabystrica", "zilina": "zilina", "praha": "praha", "hel-fi": "helsinki", "slovensko": "slovensko"}
 
 
 def test_the_general_assistant_reads_every_publishers_public_endpoints():
     spec = general()["spec"]
     assert spec["channel"] == "public" and spec.get("enabled", True) is True
-    assert spec["scope"]["projects"] == ["banskabystrica", "zilina", "praha", "helsinki"]
+    # And the national open data (T-4340).
+    assert spec["scope"]["projects"] == ["banskabystrica", "zilina", "praha", "helsinki", "slovensko"]
     reached = set()
     for connector in spec["connectors"]:
         project, _, name = connector["endpoint"].rpartition("/")
