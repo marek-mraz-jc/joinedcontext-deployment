@@ -1,4 +1,4 @@
-# One CouncilMember per row of "Komisie zastupiteľstva Banskobystrického samosprávneho kraja" (T-4255); public office holders, published under Act 211/2000.
+# One CommitteeSeat per row of "Komisie zastupiteľstva Banskobystrického samosprávneho kraja" (T-4255); committee seats; the citizens' names are kept out.
 apiVersion: joinedcontext.com/v1alpha1
 kind: Pipeline
 metadata:
@@ -9,6 +9,7 @@ metadata:
     en: Komisie zastupiteľstva Banskobystrického samosprávneho kraja
 spec:
   class: scheduled
+  enabled: true
   schedule: 45 2 * * 2
   source:
     dataSourceRef:
@@ -16,7 +17,7 @@ spec:
       name: od-komisie-zastupitelstva-banskobystrickeho
   targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-otvorene-data:bbsk-otvorene-data
   output:
-    type: CouncilMember
+    type: CommitteeSeat
     mode: upsert
   quotas:
     maxMemoryMb: 128

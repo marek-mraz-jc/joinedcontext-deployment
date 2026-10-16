@@ -23,23 +23,27 @@ spec:
     history: 'off'
   - entityType: Bridge
     history: 'off'
+  - entityType: CommitteeSeat
+    history: 'off'
   - entityType: Contract
     history: 'off'
   - entityType: CouncilMeeting
-    history: 'off'
-  - entityType: CouncilMember
     history: 'off'
   - entityType: CouncilVote
     history: 'off'
   - entityType: CycleRoute
     history: 'off'
-  - entityType: EVChargingStation
-    history: 'off'
   - entityType: Grant
     history: 'off'
   - entityType: Invoice
     history: 'off'
-  - entityType: OrganizationUnit
+  - entityType: KeyPerformanceIndicator
+    history: P30D
+  - entityType: OfficeHours
+    history: 'off'
+  - entityType: Organization
+    history: 'off'
+  - entityType: Person
     history: 'off'
   - entityType: Petition
     history: 'off'
@@ -53,21 +57,13 @@ spec:
     history: 'off'
   - entityType: PurchaseOrder
     history: 'off'
-  - entityType: Regulation
-    history: 'off'
   - entityType: RiverBasin
     history: 'off'
   - entityType: RoadAccident
     history: 'off'
   - entityType: RoadStructure
     history: 'off'
-  - entityType: School
-    history: 'off'
-  - entityType: StatisticalObservation
-    history: 'off'
-  - entityType: Supplier
-    history: 'off'
-  - entityType: TrafficFlowObservedSite
+  - entityType: Rule
     history: 'off'
   - entityType: WaterBodyStatus
     history: 'off'

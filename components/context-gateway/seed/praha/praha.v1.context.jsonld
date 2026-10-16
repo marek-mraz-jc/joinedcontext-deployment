@@ -22,6 +22,9 @@
     "PointOfInterest": {
       "@id": "sdm:PointOfInterest"
     },
+    "PostalAddress": {
+      "@id": "schema:PostalAddress"
+    },
     "WasteContainer": {
       "@id": "sdm:WasteContainer"
     },
@@ -38,6 +41,12 @@
     },
     "address": {
       "@id": "schema:address"
+    },
+    "addressCountry": {
+      "@id": "schema:addressCountry"
+    },
+    "addressLocality": {
+      "@id": "schema:addressLocality"
     },
     "adjustedAmount": {
       "@id": "jc:adjustedAmount",
@@ -189,6 +198,9 @@
         "text": "skos:notation"
       },
       "@id": "sdm:status"
+    },
+    "streetAddress": {
+      "@id": "schema:streetAddress"
     },
     "totalSlotNumber": {
       "@id": "sdm:totalSlotNumber",

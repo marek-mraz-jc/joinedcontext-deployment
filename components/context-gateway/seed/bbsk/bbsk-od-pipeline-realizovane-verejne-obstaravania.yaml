@@ -9,6 +9,7 @@ metadata:
     en: Realizované verejné obstarávania
 spec:
   class: scheduled
+  enabled: true
   schedule: 28 3 * * 2
   source:
     dataSourceRef:

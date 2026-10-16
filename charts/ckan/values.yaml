@@ -155,8 +155,16 @@ branding: {}
 # description in CKAN itself: `{<name>: {initials, colour: "#rrggbb", description: {en, sk}}}`.
 organizations: {}
 
+# The packages the publish gate hides (T-4318): `{<package name>: <the check that failed>}`, from
+# joinedcontext-conformance tests/assistant/publish_gate.py. Left out of search, listings and the
+# DCAT feed, and a 404 on their page, for everyone but a sysadmin; nothing is deleted.
+hidden: {}
+
 # The knowledge assistant's widget page every catalogue page offers (AG-114); empty for none.
 assistantWidget: ''
+# A CKAN organization's own assistant widget, by organization name (T-4281); a dataset page of
+# an organization not listed frames `assistantWidget`.
+assistantWidgets: {}
 
 podSecurityContext: {}
 securityContext: {}

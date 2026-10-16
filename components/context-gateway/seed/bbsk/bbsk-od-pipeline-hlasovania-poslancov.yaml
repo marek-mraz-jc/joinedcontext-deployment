@@ -9,6 +9,7 @@ metadata:
     en: Hlasovania poslancov
 spec:
   class: scheduled
+  enabled: true
   schedule: 24 2 * * 6
   source:
     dataSourceRef:

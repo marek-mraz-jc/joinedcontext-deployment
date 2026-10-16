@@ -9,6 +9,7 @@ metadata:
     en: Kraj BBK - hranica
 spec:
   class: scheduled
+  enabled: true
   schedule: 6 3 * * 5
   source:
     dataSourceRef:

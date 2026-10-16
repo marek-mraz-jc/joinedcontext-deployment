@@ -27,9 +27,13 @@ spec:
     history: 'off'
   - entityType: CouncilMeeting
     history: 'off'
+  - entityType: Garden
+    history: 'off'
   - entityType: Grant
     history: 'off'
+  - entityType: KeyPerformanceIndicator
+    history: P30D
+  - entityType: OffStreetParking
+    history: P30D
   - entityType: PurchaseOrder
-    history: 'off'
-  - entityType: StatisticalObservation
     history: 'off'

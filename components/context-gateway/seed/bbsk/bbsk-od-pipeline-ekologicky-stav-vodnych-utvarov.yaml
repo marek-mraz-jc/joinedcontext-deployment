@@ -9,6 +9,7 @@ metadata:
     en: Ekologický stav vodných útvarov
 spec:
   class: scheduled
+  enabled: true
   schedule: 10 2 * * 4
   source:
     dataSourceRef:

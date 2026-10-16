@@ -31,9 +31,7 @@ spec:
       history: "off"
     - entityType: Bridge
       history: "off"
-    - entityType: Hospital
-      history: "off"
     - entityType: PublicOrganization
       history: "off"
-    - entityType: SocialService
+    - entityType: PointOfInterest
       history: "off"

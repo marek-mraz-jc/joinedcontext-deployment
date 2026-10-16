@@ -20,11 +20,15 @@ slots:
     description: Who published the row, with the credit its licence asks for.
     annotations:
       ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/context.jsonld
+    slot_uri: https://smartdatamodels.org/dataProvider
   source:
     description: The service the row was read from.
     range: uri
     annotations:
       ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/context.jsonld
+    slot_uri: https://smartdatamodels.org/source
   dataset:
     description: The catalogue dataset the row belongs to, where its licence and its other rows are.
     range: uri
@@ -378,9 +382,11 @@ slots:
       ngsi_ld_kind: Property
   category:
     description: The source column `category`.
-    range: integer
+    multivalued: true
     annotations:
       ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/context.jsonld
+    slot_uri: https://smartdatamodels.org/dataModel.PointOfInterest/category
   celkChemStav:
     description: The source column `celk_chem_stav`.
     annotations:
@@ -561,14 +567,6 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
-  cislo:
-    description: The source column `Číslo`.
-    annotations:
-      ngsi_ld_kind: Property
-  cisloFaktury:
-    description: The source column `Číslo_faktúry`.
-    annotations:
-      ngsi_ld_kind: Property
   cisloNehody:
     description: The source column `Číslo_nehody`.
     annotations:
@@ -589,14 +587,6 @@ slots:
     description: The source column `Číslo_spisu`.
     annotations:
       ngsi_ld_kind: Property
-  cisloUznesenia:
-    description: The source column `Číslo_uznesenia`.
-    annotations:
-      ngsi_ld_kind: Property
-  cisloVZN:
-    description: The source column `Číslo_VZN`.
-    annotations:
-      ngsi_ld_kind: Property
   cisloZasadnutia:
     description: The source column `Číslo_zasadnutia`.
     annotations:
@@ -607,10 +597,6 @@ slots:
       ngsi_ld_kind: Property
   city:
     description: The source column `city`.
-    annotations:
-      ngsi_ld_kind: Property
-  columnName:
-    description: The source column `name`.
     annotations:
       ngsi_ld_kind: Property
   contentSta:
@@ -766,6 +752,12 @@ slots:
     description: The source column `descriptio`.
     annotations:
       ngsi_ld_kind: Property
+  description:
+    description: The source column `Názov_VZN`.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
+    slot_uri: http://purl.org/dc/terms/description
   designatio:
     description: The source column `designatio`.
     annotations:
@@ -937,6 +929,8 @@ slots:
     description: The source column `Email`.
     annotations:
       ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/context.jsonld
+    slot_uri: https://smartdatamodels.org/email
   evanjelickaCirkevAugsburske1:
     description: The source column `Evanjelická_cirkev_augsburské_1`.
     range: float
@@ -1260,10 +1254,6 @@ slots:
     description: The source column `Facebook`.
     annotations:
       ngsi_ld_kind: Property
-  fakulta:
-    description: The source column `Fakulta`.
-    annotations:
-      ngsi_ld_kind: Property
   fakultaStatistickaRocenka:
     description: The source column `Fakulta___štatistická_ročenka`.
     annotations:
@@ -1561,23 +1551,6 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
-  iDCasti:
-    description: The source column `ID_časti`.
-    range: integer
-    annotations:
-      ngsi_ld_kind: Property
-  iDCisloPriepustu:
-    description: The source column `ID_číslo_priepustu`.
-    annotations:
-      ngsi_ld_kind: Property
-  iDDC:
-    description: The source column `ID_DC`.
-    annotations:
-      ngsi_ld_kind: Property
-  iDIA:
-    description: The source column `ID_IA`.
-    annotations:
-      ngsi_ld_kind: Property
   iDN2:
     description: The source column `IDN2`.
     range: integer
@@ -1614,18 +1587,14 @@ slots:
     description: The source column `IdZZ`.
     annotations:
       ngsi_ld_kind: Property
+  identifier:
+    description: The source column `Číslo`.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
+    slot_uri: https://smartdatamodels.org/dataModel.CPSV-AP/identifier
   identifikacneCislo:
     description: The source column `Identifikačné_číslo`.
-    annotations:
-      ngsi_ld_kind: Property
-  identifikacneCisloPodjazdu:
-    description: The source column `Identifikačné_číslo_podjazdu`.
-    range: integer
-    annotations:
-      ngsi_ld_kind: Property
-  identifikacneCisloZelPriec:
-    description: The source column `Identifikacne_čislo_žel__priec_`.
-    range: integer
     annotations:
       ngsi_ld_kind: Property
   identifikatorKontaktnehoMiest:
@@ -1720,14 +1689,6 @@ slots:
       ngsi_ld_kind: Property
   instagram:
     description: The source column `Instagram`.
-    annotations:
-      ngsi_ld_kind: Property
-  institucia:
-    description: The source column `Inštitúcia`.
-    annotations:
-      ngsi_ld_kind: Property
-  institucia1:
-    description: The source column `Inštitúcia_1`.
     annotations:
       ngsi_ld_kind: Property
   iny:
@@ -1925,10 +1886,6 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
-  kodProjektu:
-    description: The source column `Kód_projektu`.
-    annotations:
-      ngsi_ld_kind: Property
   kodStatu:
     description: The source column `Kód_štátu`.
     annotations:
@@ -2080,6 +2037,12 @@ slots:
     description: The source column `layer`.
     annotations:
       ngsi_ld_kind: Property
+  legalName:
+    description: The source column `Nazov`.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/context.jsonld
+    slot_uri: https://smartdatamodels.org/dataModel.Organization/legalName
   legislativnyStav:
     description: The source column `Legislatívny_stav`.
     annotations:
@@ -2105,6 +2068,8 @@ slots:
     description: The source column `Logo`.
     annotations:
       ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/context.jsonld
+    slot_uri: https://smartdatamodels.org/dataModel.PointOfInterest/logo
   lon:
     description: The source column `lon`.
     range: float
@@ -2215,10 +2180,6 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
-  miesto:
-    description: The source column `Miesto`.
-    annotations:
-      ngsi_ld_kind: Property
   miestoRealizacieProjektu:
     description: The source column `Miesto_realizácie_projektu`.
     annotations:
@@ -2254,10 +2215,6 @@ slots:
   moravskaAbs:
     description: The source column `moravská__abs__`.
     range: integer
-    annotations:
-      ngsi_ld_kind: Property
-  nAZOVVU:
-    description: The source column `NAZOV_VU`.
     annotations:
       ngsi_ld_kind: Property
   nAZOVVUD:
@@ -2327,12 +2284,14 @@ slots:
     description: The source column `Najvýhodnejší_uchádzač`.
     annotations:
       ngsi_ld_kind: Property
-  nameLangua:
-    description: The source column `nameLangua`.
+  name:
+    description: The source column `Miesto`.
     annotations:
       ngsi_ld_kind: Property
-  nameText:
-    description: The source column `nameText`.
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/context.jsonld
+    slot_uri: https://smartdatamodels.org/name
+  nameLangua:
+    description: The source column `nameLangua`.
     annotations:
       ngsi_ld_kind: Property
   narodeniOsoba:
@@ -2356,14 +2315,6 @@ slots:
     description: The source column `Názov_klubu`.
     annotations:
       ngsi_ld_kind: Property
-  nazovKomisie:
-    description: The source column `Názov_komisie`.
-    annotations:
-      ngsi_ld_kind: Property
-  nazovKontaktnehoMiesta:
-    description: The source column `Názov_kontaktného_miesta`.
-    annotations:
-      ngsi_ld_kind: Property
   nazovKraja:
     description: The source column `Názov_kraja`.
     annotations:
@@ -2380,36 +2331,16 @@ slots:
     description: The source column `Názov_oblasti`.
     annotations:
       ngsi_ld_kind: Property
-  nazovOficialny:
-    description: The source column `Názov_oficiálny`.
-    annotations:
-      ngsi_ld_kind: Property
   nazovOkresu:
     description: The source column `Názov_okresu`.
-    annotations:
-      ngsi_ld_kind: Property
-  nazovOrganizacie:
-    description: The source column `Názov_organizácie`.
-    annotations:
-      ngsi_ld_kind: Property
-  nazovPeticie:
-    description: The source column `Názov_petície`.
     annotations:
       ngsi_ld_kind: Property
   nazovPoskytovatela:
     description: The source column `Názov_poskytovateľa`.
     annotations:
       ngsi_ld_kind: Property
-  nazovPredmetu:
-    description: The source column `Názov_predmetu`.
-    annotations:
-      ngsi_ld_kind: Property
   nazovPrijimatela:
     description: The source column `Názov_prijímateľa`.
-    annotations:
-      ngsi_ld_kind: Property
-  nazovProjektu:
-    description: The source column `Názov_projektu`.
     annotations:
       ngsi_ld_kind: Property
   nazovSamospravy:
@@ -2430,18 +2361,6 @@ slots:
       ngsi_ld_kind: Property
   nazovVU1:
     description: The source column `nazov_VU_1`.
-    annotations:
-      ngsi_ld_kind: Property
-  nazovVZN:
-    description: The source column `Názov_VZN`.
-    annotations:
-      ngsi_ld_kind: Property
-  nazovZauzivany:
-    description: The source column `Názov_zaužívaný`.
-    annotations:
-      ngsi_ld_kind: Property
-  nazovZmluvy:
-    description: The source column `Názov_zmluvy`.
     annotations:
       ngsi_ld_kind: Property
   nedela:
@@ -2862,10 +2781,6 @@ slots:
     description: The source column `POZNAMKA`.
     annotations:
       ngsi_ld_kind: Property
-  pRIMNAME:
-    description: The source column `PRIM_NAME`.
-    annotations:
-      ngsi_ld_kind: Property
   pSC:
     description: The source column `PSC`.
     annotations:
@@ -3218,10 +3133,6 @@ slots:
     description: The source column `Predmet_premostenia`.
     annotations:
       ngsi_ld_kind: Property
-  predmetZakazky:
-    description: The source column `Predmet_zákazky`.
-    annotations:
-      ngsi_ld_kind: Property
   predpokladanaHodnota:
     description: The source column `Predpokladaná_hodnota`.
     annotations:
@@ -3241,6 +3152,12 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
+  preferredLabel:
+    description: The source column `Názov_organizácie`.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
+    slot_uri: https://smartdatamodels.org/dataModel.CPSV-AP/preferredLabel
   prevadzkovatel:
     description: The source column `Prevádzkovateľ`.
     annotations:
@@ -3794,6 +3711,10 @@ slots:
     description: The source column `id`.
     annotations:
       ngsi_ld_kind: Property
+  sourceName:
+    description: The source column `name`.
+    annotations:
+      ngsi_ld_kind: Property
   spanielsky:
     description: The source column `španielsky____`.
     range: float
@@ -3804,6 +3725,13 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
+  spatial:
+    description: The source column `Obec`.
+    multivalued: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
+    slot_uri: https://smartdatamodels.org/dataModel.CPSV-AP/spatial
   specialise:
     description: The source column `specialise`.
     annotations:
@@ -4210,10 +4138,8 @@ slots:
     description: The source column `telephone`.
     annotations:
       ngsi_ld_kind: Property
-  tema:
-    description: The source column `Téma`.
-    annotations:
-      ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/context.jsonld
+    slot_uri: https://smartdatamodels.org/telephone
   text:
     description: The source column `Text`.
     annotations:
@@ -4230,6 +4156,8 @@ slots:
     description: The source column `title`.
     annotations:
       ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/context.jsonld
+    slot_uri: http://purl.org/dc/terms/title
   titulPredMenom:
     description: The source column `Titul_pred_menom`.
     annotations:
@@ -4482,10 +4410,6 @@ slots:
     description: The source column `Utorok`.
     annotations:
       ngsi_ld_kind: Property
-  utvarNazov:
-    description: The source column `Utvar_nazov`.
-    annotations:
-      ngsi_ld_kind: Property
   utvarOvZP:
     description: The source column `Útvar_OvZP`.
     annotations:
@@ -4563,10 +4487,6 @@ slots:
       ngsi_ld_kind: Property
   vlastnikUseku:
     description: The source column `Vlastník_úseku`.
-    annotations:
-      ngsi_ld_kind: Property
-  vlastnyNazovZariadenia:
-    description: The source column `Vlastný_názov_zariadenia`.
     annotations:
       ngsi_ld_kind: Property
   voFunkciiDo:
@@ -4837,9 +4757,15 @@ slots:
     range: date
     annotations:
       ngsi_ld_kind: Property
+  status:
+    description: '`archived` on every entity: the model requires it and no column holds it.'
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.Transportation/b83ede9d3db29be1365cc272eb535f46af83bed2/context.jsonld
+    slot_uri: https://uri.etsi.org/ngsi-ld/status
 classes:
   AdministrativeArea:
-    class_uri: jc:AdministrativeArea
+    class_uri: https://joinedcontext.com/models/AdministrativeArea
     description: One row of Kraj BBK - hranica; Obce BBK - centroidy.
     is_a: Entity
     slots:
@@ -4859,17 +4785,19 @@ classes:
     - lAU2CODE
     - nM2
     - nM3
-    - nM4
     - nUTS1
     - nUTS1CODE
     - nUTS2
     - nUTS2CODE
     - nUTS3
     - nUTS3CODE
+    - name
     - typObce
     - vYMERA
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/AdministrativeArea/context.jsonld
   Bridge:
-    class_uri: jc:Bridge
+    class_uri: https://joinedcontext.com/models/Bridge
     description: One row of Mosty v správe BBRSC (public view).
     is_a: Entity
     slots:
@@ -4885,7 +4813,7 @@ classes:
     - komunikacia
     - legislativnyStav
     - materialNosnejKonstrukcie
-    - nazov
+    - name
     - normalnaZatazitelnostT
     - obec
     - ojedinelaZatazitelnostT
@@ -4903,15 +4831,29 @@ classes:
     - vyhradnaZatazitelnostT
     - vynimocnaZatazitelnostT
     - zatazitelnostNaJednuNapravu
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Bridge/context.jsonld
+  CommitteeSeat:
+    class_uri: https://joinedcontext.com/models/CommitteeSeat
+    description: One row of Komisie zastupiteľstva Banskobystrického samosprávneho kraja.
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - name
+    - pozicia
+    - poznamka
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/CommitteeSeat/context.jsonld
   Contract:
-    class_uri: jc:Contract
+    class_uri: https://joinedcontext.com/models/Contract
     description: One row of Zmluvy.
     is_a: Entity
     slots:
     - dataProvider
     - source
     - dataset
-    - cisloZmluvy
     - datumPlatnostiDo
     - datumPrilohy
     - datumUcinnosti
@@ -4920,10 +4862,11 @@ classes:
     - iCODodavatela
     - iCOObjednavatela
     - iDZmluvy
+    - identifier
     - index
+    - name
     - nazovDodavatela
     - nazovObjednavatela
-    - nazovZmluvy
     - poznamka
     - priloha
     - rezort
@@ -4932,8 +4875,10 @@ classes:
     - sumaSpoluVEUR
     - sumaVEUR
     - zdrojNazov
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Contract/context.jsonld
   CouncilMeeting:
-    class_uri: jc:CouncilMeeting
+    class_uri: https://joinedcontext.com/models/CouncilMeeting
     description: One row of Zasadnutia samosprávy.
     is_a: Entity
     slots:
@@ -4950,31 +4895,10 @@ classes:
     - iCOSamospravy
     - nazovSamospravy
     - organSamospravy
-  CouncilMember:
-    class_uri: jc:CouncilMember
-    description: One row of Komisie zastupiteľstva Banskobystrického samosprávneho kraja; Členovia samosprávy.
-    is_a: Entity
-    slots:
-    - dataProvider
-    - source
-    - dataset
-    - funkcia
-    - iCOSamospravy
-    - meno
-    - nazovKlubu
-    - nazovKomisie
-    - nazovSamospravy
-    - obvod
-    - organSamospravy
-    - pozicia
-    - poznamka
-    - priezvisko
-    - titulPredMenom
-    - titulZaMenom
-    - voFunkciiDo
-    - voFunkciiOd
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/CouncilMeeting/context.jsonld
   CouncilVote:
-    class_uri: jc:CouncilVote
+    class_uri: https://joinedcontext.com/models/CouncilVote
     description: One row of Hlasovania poslancov.
     is_a: Entity
     slots:
@@ -4984,14 +4908,16 @@ classes:
     - datum
     - hlas
     - iCOSamospravy
+    - name
     - nazovSamospravy
     - organSamospravy
     - poslanec
-    - tema
     - volebneObdobie
     - zasadnutie
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/CouncilVote/context.jsonld
   CycleRoute:
-    class_uri: jc:CycleRoute
+    class_uri: https://joinedcontext.com/models/CycleRoute
     description: One row of Cykloturistické trasy - línie; Cykloturistické trasy - línie - povrchy.
     is_a: Entity
     slots:
@@ -4999,13 +4925,13 @@ classes:
     - source
     - dataset
     - alps
-    - columnName
     - ctt
     - dlzka
     - fName
     - fNazov
     - farba
     - layer
+    - name
     - nazov
     - obnRok
     - povrch
@@ -5015,59 +4941,10 @@ classes:
     - stav
     - typ
     - zdroj
-  EVChargingStation:
-    class_uri: jc:EVChargingStation
-    description: One row of Nabíjačky a Zastávky.
-    is_a: Entity
-    slots:
-    - dataProvider
-    - source
-    - dataset
-    - addressReg
-    - altitude
-    - author
-    - belongRegi
-    - cMSID
-    - categ
-    - category
-    - cellPhone
-    - changedByC
-    - city
-    - columnName
-    - contentSta
-    - createdBy
-    - createdIn
-    - defLanguag
-    - descriptio
-    - email
-    - fID2
-    - fax
-    - geometry
-    - hlavnaCat
-    - iD
-    - images
-    - importKey
-    - languages
-    - lastModi1
-    - lastModifi
-    - licenseKey
-    - organisati
-    - pRIMNAME
-    - primaryIma
-    - publishedA
-    - publishedB
-    - rankingPer
-    - shortDescr
-    - sourceCreatedAt
-    - streetAddr
-    - telephone
-    - title
-    - webAddress
-    - x
-    - y
-    - zipcode
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/CycleRoute/context.jsonld
   Grant:
-    class_uri: jc:Grant
+    class_uri: https://joinedcontext.com/models/Grant
     description: One row of Dotácie; PPA platby.
     is_a: Entity
     slots:
@@ -5076,7 +4953,6 @@ classes:
     - dataset
     - cDodavatela
     - cZmluvy
-    - cislo
     - datumDoruceniaVyuctovania
     - datumRealizacieProjektu
     - datumUhradyDotacie
@@ -5087,8 +4963,9 @@ classes:
     - ePZFSucet
     - iCO
     - iD
+    - identifier
     - kampan
-    - nazov
+    - name
     - obecPO
     - okres
     - opravneneSpolu
@@ -5120,8 +4997,10 @@ classes:
     - vratenaNedocerpanaCastDotacieDna
     - vyplatenaSumaSpoluSucet
     - ziadatel
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Grant/context.jsonld
   Invoice:
-    class_uri: jc:Invoice
+    class_uri: https://joinedcontext.com/models/Invoice
     description: One row of Faktúry.
     is_a: Entity
     slots:
@@ -5129,7 +5008,6 @@ classes:
     - source
     - dataset
     - adresa
-    - cisloFaktury
     - cisloObjednavky
     - cisloZmluvy
     - dIC
@@ -5137,582 +5015,14 @@ classes:
     - datumSplatnosti
     - dodavatel
     - iCO
+    - identifier
     - predmetFaktury
     - rok
     - suma
-  OrganizationUnit:
-    class_uri: jc:OrganizationUnit
-    description: One row of Kontakty na miestne samosprávy v BBK; Organizačná štruktúra; Úradné hodiny.
-    is_a: Entity
-    slots:
-    - dataProvider
-    - source
-    - dataset
-    - adresa
-    - adresaObec
-    - adresaPSC
-    - adresaUlica
-    - denVTyzdni
-    - druhSamospravy
-    - eMailVseobecny1
-    - eMailVseobecny2
-    - funkcia
-    - iCOSamospravy
-    - iDBBSK
-    - identifikatorKontaktnehoMiest
-    - kancelaria
-    - kodDnaVTyzdni
-    - lat
-    - lon
-    - nazovKontaktnehoMiesta
-    - nazovSamospravy
-    - obecDlhyNazov
-    - obecICO
-    - obecKratkyNazov
-    - obecLAU2ID
-    - obecSTATKOD
-    - okres
-    - okresDlhyNazov
-    - okresLAU1ID
-    - okresSTATKOD
-    - otvoreneDo
-    - otvoreneOd
-    - pocetObyvatelov
-    - starostaMeno
-    - starostaPriezvisko
-    - telefonneCisloVsobecne1
-    - telefonneCisloVsobecne2
-    - upravene
-    - utvarNazov
-    - vytvorene
-    - web
-  Petition:
-    class_uri: jc:Petition
-    description: One row of Petície.
-    is_a: Entity
-    slots:
-    - dataProvider
-    - source
-    - dataset
-    - datumDorucenia
-    - datumVybavenia
-    - jeKvorova
-    - link
-    - nazovPeticie
-    - pC
-    - pocetOsobPodporujucichPetici
-    - poznamka
-    - sposobVybavenia
-    - text
-    - vybavovatelPeticie
-    - zverejnenieVysledkuVybavenia
-  PointOfInterest:
-    class_uri: jc:PointOfInterest
-    description: One row of Cykloturistické trasy - nosič/infotabuľa/odpočívadlo/značenie; Kontaktné miesta; Kultúrne
-      inštitúcie BBSK; Kultúrne inštitúcie BBSK a ich pobočky; Zoznam lekární v BBK; Zoznam zdravotníckych zariadení
-      v BBK.
-    is_a: Entity
-    slots:
-    - dataProvider
-    - source
-    - dataset
-    - adresa
-    - columnName
-    - dIC
-    - datumSchvaleniaOH
-    - doplnStp
-    - druhZariadenia
-    - eMailZariadenia
-    - facebook
-    - iCO
-    - iD
-    - idZZ
-    - instagram
-    - institucia
-    - institucia1
-    - kategoria
-    - kategoriaObrazok
-    - kontakt
-    - lAT
-    - lON
-    - latitude
-    - logo
-    - longitude
-    - malZnac
-    - mesto
-    - mestoPRACOVISKO
-    - mestoPoskytovania
-    - mestoSIDLO
-    - nazov
-    - nazovOrganizacie
-    - nazovPoskytovatela
-    - nedela
-    - nedost
-    - nedostTyp
-    - nedostatok
-    - obrazokOdkaz
-    - obtiazmost
-    - odborneZameranie
-    - okres
-    - okresPRACOVISKO
-    - okresPoskytovania
-    - onlineKatalog
-    - pC
-    - pSC
-    - pSCPRACOVISKO
-    - pSCPoskytovania
-    - pSCSIDLO
-    - piatok
-    - pondelok
-    - pozn
-    - prevadzkovatel
-    - priznak
-    - riaditel
-    - riaditelEmail
-    - riaditelMobilnyTelefon
-    - riaditelPevnaLinka
-    - sidloPoskytovatela
-    - sidloPrevadzkovatela
-    - sobota
-    - sourceId
-    - stlpEx
-    - stlpMat
-    - stlpStav
-    - stn
-    - streda
-    - stvrtok
-    - telefonZariadeniaVerejny
-    - trasaFarb
-    - trasaNo
-    - trasaSpr
-    - typ
-    - typ1
-    - uRL
-    - ulica
-    - ulicaCisloPRACOVISKO
-    - ulicaCisloSIDLO
-    - ulicaPoskytovania
-    - utorok
-    - verejnyEmail
-    - verejnyTelefon
-    - vlastnyNazovZariadenia
-    - web
-    - webStranka
-    - youTube
-    - zdroj
-  PublicInvestment:
-    class_uri: jc:PublicInvestment
-    description: One row of Projekty Banskobystrického kraja ITMS21; Register investícií - bodová vrstva; Register
-      investícií - polygónová vrstva.
-    is_a: Entity
-    slots:
-    - dataProvider
-    - source
-    - dataset
-    - adresa
-    - aktivne
-    - aktualnyStav
-    - aktualnyStavUpraveny
-    - celkovaZazmluvnenaSuma
-    - cerpanieSpolu
-    - dOW
-    - datumZaniku
-    - fACC
-    - fLAT
-    - fLON
-    - gEOMLATBACKUP
-    - gEOMLONBACKUP
-    - iCO
-    - iCOOrganizacia
-    - iCOPrijimatela
-    - iDIA
-    - iDN2
-    - iDN3
-    - iDN4
-    - iDProjektu
-    - index
-    - kategoria
-    - kodKraja
-    - kodObce
-    - kodOkresuKraja
-    - kodProjektu
-    - lATJitter
-    - lAU1
-    - lAU1CODE
-    - lAU2
-    - lAU2CODE
-    - lONJitter
-    - miestoRealizacieProjektu
-    - miestoRealizacieProjektuKraj
-    - miestoRealizacieProjektuObec
-    - nM2
-    - nM3
-    - nM4
-    - nUTS1
-    - nUTS1CODE
-    - nUTS2
-    - nUTS2CODE
-    - nUTS3
-    - nUTS3CODE
-    - nazov
-    - nazovKraja
-    - nazovPrijimatela
-    - nazovProjektu
-    - oBJECTID1
-    - obecNUTS
-    - obecNazov
-    - obstaravaciaCena
-    - oficialnyNazov
-    - okresKraj
-    - okresNazov
-    - platnostProjektuOd
-    - poznamka
-    - rok
-    - rokText
-    - rokZaradenia
-    - rozpocetAktualny
-    - rozsahUzemiaProjektu
-    - sUMCerpanieSpolu
-    - sektorOvZPUpraveny
-    - typObce
-    - uradOvZPICO
-    - uradOvZPOvZP
-    - uroven
-    - vYMERA
-    - vecnaOblast
-    - zauzivanyNazov
-    - zauzivanyNazovKratky
-    - zauzivanyNazovUpraveny
-  PublicOrganization:
-    class_uri: jc:PublicOrganization
-    description: One row of Príspevkové rozpočtové a iné organizácie samosprávy.
-    is_a: Entity
-    slots:
-    - dataProvider
-    - source
-    - dataset
-    - adresaOrganizacie
-    - formaPodnikania
-    - iCOOrganizacie
-    - iCOSamospravy
-    - iDAdresy
-    - kodFormyPodnikania
-    - lAT
-    - lON
-    - nazovOrganizacie
-    - nazovSamospravy
-    - obec
-    - okres
-    - ulicaACisloDomu
-  PublicProcurement:
-    class_uri: jc:PublicProcurement
-    description: One row of Plán verejného obstarávania; Realizované verejné obstarávania.
-    is_a: Entity
-    slots:
-    - dataProvider
-    - source
-    - dataset
-    - adresaNajvyhodnejsiehoUchadza
-    - cPVCastiNazov
-    - cPVNazov
-    - cisloSpisu
-    - datumSpustenia
-    - datumUkoncenia
-    - druhKomoditAleboSluzieb
-    - druhObstaravania
-    - druhPostupu
-    - elektronickaAukcia
-    - financovanie
-    - hlavnyCPV
-    - hlavnyCPVCasti
-    - iDCasti
-    - iDZakazky
-    - lehotaNaPredkladanie
-    - mena
-    - najvyhodnejsiUchadzac
-    - nazovCasti
-    - nazovPredmetu
-    - obstaravatel
-    - pHZ
-    - pocetUchadzacov
-    - pocetZaujemcov
-    - ponukaUchadzaca
-    - predmetZakazky
-    - predpokladanaHodnota
-    - rok
-    - socialneZodpovedneObstaravani
-    - sourceId
-    - spolocenskyZodpovedneVerejne
-    - stav
-    - typKomodity
-    - typVydavku
-    - utvarOvZP
-    - zeleneObstaravanie
-  PurchaseOrder:
-    class_uri: jc:PurchaseOrder
-    description: One row of Objednávky.
-    is_a: Entity
-    slots:
-    - dataProvider
-    - source
-    - dataset
-    - adresa
-    - cisloObjednavky
-    - datumVystavenia
-    - dodavatel
-    - iCO
-    - predmetObjednavky
-    - rok
-    - suma
-  Regulation:
-    class_uri: jc:Regulation
-    description: One row of Zoznam účinných všeobecne záväzných nariadení (VZN).
-    is_a: Entity
-    slots:
-    - dataProvider
-    - source
-    - dataset
-    - cisloUznesenia
-    - cisloVZN
-    - cisloZasadnutia
-    - iCOSamospravy
-    - nazovSamospravy
-    - nazovVZN
-    - platnostOd
-    - uRLLinkaNaVZN
-    - ucinnostDo
-    - ucinnostOd
-  RiverBasin:
-    class_uri: jc:RiverBasin
-    description: One row of Povodia Banskobystrického kraja.
-    is_a: Entity
-    slots:
-    - dataProvider
-    - source
-    - dataset
-    - aCH
-    - aUT
-    - dOW
-    - designatio
-    - fACC
-    - fIDKraj0
-    - fIDSubpovodiaBbsk
-    - gmlId
-    - iDN2
-    - inspireIdL
-    - inspireIdN
-    - link
-    - nM2
-    - nameLangua
-    - nameText
-    - relatedZ1
-    - relatedZon
-    - sOI
-    - specialise
-    - thematic1
-    - thematicId
-    - vYMERA
-    - wiseEvolut
-    - zoneType
-  RoadAccident:
-    class_uri: jc:RoadAccident
-    description: One row of Cyklisti_nehodovosť; Nehodovosť v BBK.
-    is_a: Entity
-    slots:
-    - dataProvider
-    - source
-    - dataset
-    - cisloNehody
-    - datumACas
-    - druhKomunikacie
-    - gPSDlzka
-    - gPSSirka
-    - hlavnyVinnik
-    - hmotnaSkoda
-    - lahkoZraneni
-    - lahkoZraneniUcastnici
-    - obdobie
-    - parameter
-    - pocetNehod
-    - pocetNehodPodVplyvomAlkoholu
-    - pocetNehodVObci
-    - pocetUsmrtenychCyklistovKolobezkarov
-    - povrchVozovky
-    - priciny
-    - rok
-    - skodaVEUR
-    - smerovePomery
-    - tazkoZraneni
-    - tazkoZraneniUcastnici
-    - usmrteni
-    - usmrteniUcastnici
-    - uzemie
-  RoadStructure:
-    class_uri: jc:RoadStructure
-    description: One row of Dilatačné celky v Banskobystrickom kraji (public view); Podjazdy v Banskobystrickom
-      kraji (public view); Priepusty v Banskobystrickom kraji (public view); Železničné priecestia v Banskobystrickom
-      kraji (public view).
-    is_a: Entity
-    slots:
-    - dataProvider
-    - source
-    - dataset
-    - celkovaDlzkaPodjazdu
-    - cisloPK
-    - druhKonstrukcie
-    - druhZabezpecenia
-    - iDCisloPriepustu
-    - iDDC
-    - identifikacneCisloPodjazdu
-    - identifikacneCisloZelPriec
-    - jICZSR
-    - kraj
-    - material
-    - materialPriepustu
-    - minVyskaPodjazdu
-    - najblizsiKM
-    - normanaZatazitelnostT
-    - okres
-    - pocetKolaji
-    - predmetPremostenia
-    - rokStavby
-    - spravca
-    - spravcaMostu
-    - spravcaUseku
-    - stavebnoTechnickyStav
-    - triedaPK
-    - typPodjazdu
-    - typSpravcu
-    - vlastnik
-    - vlastnikMostu
-    - vlastnikUseku
-    - vyhradnaZatazitelnostT
-    - vynimocnaZatazitelnostT
-  School:
-    class_uri: jc:School
-    description: One row of Materské školy v Banskobystrickom kraji; Stredné školy v BBK, odbory a počet študentov
-      (2023); Stredné školy v Banskobystrickom kraji; Vysoké školy v Banskobystrickom kraji; Základné školy v Banskobystrickom
-      kraji; Školy a školské zariadenia v zriaďovateľskej pôsobnosti BBSK.
-    is_a: Entity
-    slots:
-    - dataProvider
-    - source
-    - dataset
-    - absolventiZaMinulyRokSpol
-    - absolventiZaMinulyRokZeny
-    - adresa
-    - akademickyRok
-    - datumZaciatkuVyucovacejCinnosti
-    - datumZaniku
-    - datumZriadenia
-    - datumZrusenia
-    - dlzkaStudia
-    - druhSaSZ
-    - druhSaSZKod
-    - druhSkoly
-    - druhStudia
-    - eDUID
-    - email
-    - exp
-    - f1Rocnik
-    - f2Rocnik
-    - f3Rocnik
-    - f4Rocnik
-    - f5Rocnik
-    - f6Rocnik
-    - f7Rocnik
-    - f8Rocnik
-    - fakulta
-    - fakultaStatistickaRocenka
-    - fax
-    - formaHospodarenia
-    - formaStudia
-    - formaVlastnictva
-    - gPSX
-    - gPSY
-    - hierarchia
-    - hlavnaSkupinaOdborov
-    - iCO
-    - iCO2
-    - iDSkoly
-    - jazyk
-    - jazykStudiaSkratka
-    - jazykovaSkola
-    - kODSKO
-    - kmenovaSaSZEDUID
-    - kmenovaSaSZKODSKO
-    - kodJazyka
-    - kodOdboru
-    - kodOdboruOdbor
-    - kodTypuZriadovatela
-    - kraj
-    - lAT
-    - lON
-    - latitude
-    - longitude
-    - mesto
-    - nadradenaSaSZEDUID
-    - nadradenaSaSZKODSKO
-    - nazov
-    - nazovOficialny
-    - nazovSkolyOda
-    - nazovSkrateny
-    - nazovZauzivany
-    - novoprijatiDo1RocnikaSpo
-    - novoprijatiDo1RocnikaZen
-    - obec
-    - obrazokOdkaz
-    - odbor
-    - odborVycvikAPrax
-    - odborVzdelania
-    - okres
-    - organizacnaZlozka
-    - orientacneCislo
-    - pSC
-    - plnoorganizovana
-    - pocetAbsolventovDenniIA
-    - pocetAbsolventovExterniI
-    - pocetStudentovDenniIAI
-    - pocetStudentovExterniIA
-    - pravnaForma
-    - pravnaFormaKod
-    - predchodcaSaSZEDUID
-    - predchodcaSaSZNazov
-    - priprNaOU
-    - pripravny8Spolu
-    - pripravny8Zeny
-    - riaditel
-    - riaditelEmail
-    - riaditelPevnaLinka
-    - riaditelPracMobil
-    - sTAV
-    - skola
-    - skolskaJedalen
-    - skolskyInternat
-    - skupinaOdborovVzdelania
-    - statutari
-    - stupenVzdelania
-    - supisneCislo
-    - sustavnaPripravaNaPovolanie
-    - telefon
-    - typ
-    - typElokovanehoPracoviska
-    - typSaSZ
-    - typSaSZKod
-    - typSaSZSkratka
-    - typUniverzity
-    - ulica
-    - univerzita
-    - vydajnaSkolskaJedalen
-    - vyucovaciJazyk
-    - web
-    - webstranka
-    - zriadovatel
-    - zriadovatelEDUID
-    - zriadovatelNazov
-    - zriadovatelTyp
-  StatisticalObservation:
-    class_uri: jc:StatisticalObservation
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Invoice/context.jsonld
+  KeyPerformanceIndicator:
+    class_uri: https://smartdatamodels.org/dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
     description: One row of Hustota obyvateľstva (2021); Hustota obyvateľstva v obciach BBK; Obyvateľstvo podľa
       ekonomickej aktivity (2021); Obyvateľstvo podľa materinského jazyka (2011), obce; Obyvateľstvo podľa materinského
       jazyka (2011), okresy; Obyvateľstvo podľa materinského jazyka (2021), obce; Obyvateľstvo podľa materinského
@@ -6215,38 +5525,656 @@ classes:
     - zivonarodeniOsoba
     - znecistujucaLatka
     - zomretiOsoba
-  Supplier:
-    class_uri: jc:Supplier
-    description: One row of Dodávatelia.
+    annotations:
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.KeyPerformanceIndicator/ec7f3b642faf3f807d3c8549ccc9e0b743e05f26/context.jsonld
+  OfficeHours:
+    class_uri: https://joinedcontext.com/models/OfficeHours
+    description: One row of Úradné hodiny.
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - denVTyzdni
+    - iCOSamospravy
+    - identifikatorKontaktnehoMiest
+    - kodDnaVTyzdni
+    - name
+    - nazovSamospravy
+    - otvoreneDo
+    - otvoreneOd
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/OfficeHours/context.jsonld
+  Organization:
+    class_uri: https://smartdatamodels.org/dataModel.Organization/Organization
+    description: One row of Dodávatelia; Kontakty na miestne samosprávy v BBK; Materské školy v Banskobystrickom
+      kraji; Organizačná štruktúra; Stredné školy v BBK, odbory a počet študentov (2023); Stredné školy v Banskobystrickom
+      kraji; Vysoké školy v Banskobystrickom kraji; Základné školy v Banskobystrickom kraji; Školy a školské zariadenia
+      v zriaďovateľskej pôsobnosti BBSK.
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - absolventiZaMinulyRokSpol
+    - absolventiZaMinulyRokZeny
+    - adresa
+    - adresaObec
+    - adresaPSC
+    - adresaUlica
+    - akademickyRok
+    - datumZaciatkuVyucovacejCinnosti
+    - datumZaniku
+    - datumZriadenia
+    - datumZrusenia
+    - dlzkaStudia
+    - druhSaSZ
+    - druhSaSZKod
+    - druhSamospravy
+    - druhSkoly
+    - druhStudia
+    - eDUID
+    - eMailVseobecny1
+    - eMailVseobecny2
+    - email
+    - exp
+    - f1Rocnik
+    - f2Rocnik
+    - f3Rocnik
+    - f4Rocnik
+    - f5Rocnik
+    - f6Rocnik
+    - f7Rocnik
+    - f8Rocnik
+    - fakultaStatistickaRocenka
+    - fax
+    - formaHospodarenia
+    - formaStudia
+    - formaVlastnictva
+    - funkcia
+    - gPSX
+    - gPSY
+    - hierarchia
+    - hlavnaSkupinaOdborov
+    - iCO
+    - iCO2
+    - iDBBSK
+    - iDSkoly
+    - jazyk
+    - jazykStudiaSkratka
+    - jazykovaSkola
+    - kODSKO
+    - kancelaria
+    - kmenovaSaSZEDUID
+    - kmenovaSaSZKODSKO
+    - kodJazyka
+    - kodOdboru
+    - kodOdboruOdbor
+    - kodTypuZriadovatela
+    - kraj
+    - lAT
+    - lON
+    - lat
+    - latitude
+    - legalName
+    - lon
+    - longitude
+    - mesto
+    - nadradenaSaSZEDUID
+    - nadradenaSaSZKODSKO
+    - name
+    - nazovSkolyOda
+    - nazovSkrateny
+    - novoprijatiDo1RocnikaSpo
+    - novoprijatiDo1RocnikaZen
+    - obec
+    - obecICO
+    - obecKratkyNazov
+    - obecLAU2ID
+    - obecSTATKOD
+    - obrazokOdkaz
+    - odbor
+    - odborVycvikAPrax
+    - odborVzdelania
+    - okres
+    - okresDlhyNazov
+    - okresLAU1ID
+    - okresSTATKOD
+    - organizacnaZlozka
+    - orientacneCislo
+    - pSC
+    - plnoorganizovana
+    - pocetAbsolventovDenniIA
+    - pocetAbsolventovExterniI
+    - pocetObyvatelov
+    - pocetStudentovDenniIAI
+    - pocetStudentovExterniIA
+    - pravnaForma
+    - pravnaFormaKod
+    - predchodcaSaSZEDUID
+    - predchodcaSaSZNazov
+    - priprNaOU
+    - pripravny8Spolu
+    - pripravny8Zeny
+    - riaditel
+    - riaditelEmail
+    - riaditelPevnaLinka
+    - riaditelPracMobil
+    - sTAV
+    - skola
+    - skolskaJedalen
+    - skolskyInternat
+    - skupinaOdborovVzdelania
+    - starostaMeno
+    - starostaPriezvisko
+    - statutari
+    - stupenVzdelania
+    - supisneCislo
+    - sustavnaPripravaNaPovolanie
+    - telefon
+    - telefonneCisloVsobecne1
+    - telefonneCisloVsobecne2
+    - typ
+    - typElokovanehoPracoviska
+    - typSaSZ
+    - typSaSZKod
+    - typSaSZSkratka
+    - typUniverzity
+    - ulica
+    - ulicaACislo
+    - univerzita
+    - upravene
+    - vydajnaSkolskaJedalen
+    - vytvorene
+    - vyucovaciJazyk
+    - web
+    - webstranka
+    - zriadovatel
+    - zriadovatelEDUID
+    - zriadovatelNazov
+    - zriadovatelTyp
+    annotations:
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/context.jsonld
+  Person:
+    class_uri: https://smartdatamodels.org/dataModel.Organization/Person
+    description: One row of Členovia samosprávy.
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - funkcia
+    - iCOSamospravy
+    - meno
+    - nazovKlubu
+    - nazovSamospravy
+    - obvod
+    - organSamospravy
+    - priezvisko
+    - titulPredMenom
+    - titulZaMenom
+    - voFunkciiDo
+    - voFunkciiOd
+    annotations:
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/context.jsonld
+  Petition:
+    class_uri: https://joinedcontext.com/models/Petition
+    description: One row of Petície.
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - datumDorucenia
+    - datumVybavenia
+    - identifier
+    - jeKvorova
+    - link
+    - name
+    - pocetOsobPodporujucichPetici
+    - poznamka
+    - sposobVybavenia
+    - text
+    - vybavovatelPeticie
+    - zverejnenieVysledkuVybavenia
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Petition/context.jsonld
+  PointOfInterest:
+    class_uri: https://smartdatamodels.org/dataModel.PointOfInterest/PointOfInterest
+    description: One row of Cyklosčítače - miesta; Cykloturistické trasy - nosič/infotabuľa/odpočívadlo/značenie;
+      Kontaktné miesta; Kultúrne inštitúcie BBSK; Kultúrne inštitúcie BBSK a ich pobočky; Nabíjačky a Zastávky;
+      Zoznam lekární v BBK; Zoznam zdravotníckych zariadení v BBK.
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - addressReg
+    - adresa
+    - altitude
+    - author
+    - belongRegi
+    - cMSID
+    - categ
+    - category
+    - cellPhone
+    - changedByC
+    - city
+    - contentSta
+    - createdBy
+    - createdIn
+    - dIC
+    - datumSchvaleniaOH
+    - defLanguag
+    - descriptio
+    - domena
+    - doplnStp
+    - druhZariadenia
+    - eMailZariadenia
+    - email
+    - fID2
+    - facebook
+    - fax
+    - geometry
+    - hlavnaCat
+    - iCO
+    - iD
+    - idZZ
+    - images
+    - importKey
+    - instagram
+    - kategoria
+    - kategoriaObrazok
+    - komentar
+    - kontakt
+    - lAT
+    - lON
+    - languages
+    - lastModi1
+    - lastModifi
+    - latitude
+    - licenseKey
+    - logo
+    - longitude
+    - malZnac
+    - mesto
+    - mestoPRACOVISKO
+    - mestoPoskytovania
+    - mestoSIDLO
+    - name
+    - nazovPoskytovatela
+    - nedela
+    - nedost
+    - nedostTyp
+    - nedostatok
+    - obrazokOdkaz
+    - obtiazmost
+    - odborneZameranie
+    - okres
+    - okresPRACOVISKO
+    - okresPoskytovania
+    - onlineKatalog
+    - organisati
+    - pC
+    - pSC
+    - pSCPRACOVISKO
+    - pSCPoskytovania
+    - pSCSIDLO
+    - piatok
+    - pondelok
+    - pozn
+    - prevadzkovatel
+    - primaryIma
+    - priznak
+    - publishedA
+    - publishedB
+    - rankingPer
+    - riaditel
+    - riaditelEmail
+    - riaditelMobilnyTelefon
+    - riaditelPevnaLinka
+    - scitac
+    - shortDescr
+    - sidloPoskytovatela
+    - sidloPrevadzkovatela
+    - sobota
+    - sourceCreatedAt
+    - sourceId
+    - sourceName
+    - stlpEx
+    - stlpMat
+    - stlpStav
+    - stn
+    - streda
+    - streetAddr
+    - stvrtok
+    - telefonZariadeniaVerejny
+    - telephone
+    - title
+    - trasaFarb
+    - trasaNo
+    - trasaSpr
+    - typ
+    - typ1
+    - uRL
+    - ulica
+    - ulicaCisloPRACOVISKO
+    - ulicaCisloSIDLO
+    - ulicaPoskytovania
+    - utorok
+    - verejnyEmail
+    - verejnyTelefon
+    - vytvoreny
+    - web
+    - webAddress
+    - webStranka
+    - x
+    - y
+    - youTube
+    - zdroj
+    - zipcode
+    annotations:
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/context.jsonld
+  PublicInvestment:
+    class_uri: https://joinedcontext.com/models/PublicInvestment
+    description: One row of Projekty Banskobystrického kraja ITMS21; Register investícií - bodová vrstva; Register
+      investícií - polygónová vrstva.
     is_a: Entity
     slots:
     - dataProvider
     - source
     - dataset
     - adresa
+    - aktivne
+    - aktualnyStav
+    - aktualnyStavUpraveny
+    - celkovaZazmluvnenaSuma
+    - cerpanieSpolu
+    - dOW
+    - datumZaniku
+    - fACC
+    - fLAT
+    - fLON
+    - gEOMLATBACKUP
+    - gEOMLONBACKUP
     - iCO
-    - nazov
-    - obec
-    - pSC
-    - ulicaACislo
-  TrafficFlowObservedSite:
-    class_uri: jc:TrafficFlowObservedSite
-    description: One row of Cyklosčítače - miesta.
+    - iCOOrganizacia
+    - iCOPrijimatela
+    - iDN2
+    - iDN3
+    - iDN4
+    - iDProjektu
+    - identifier
+    - index
+    - kategoria
+    - kodKraja
+    - kodObce
+    - kodOkresuKraja
+    - lATJitter
+    - lAU1
+    - lAU1CODE
+    - lAU2
+    - lAU2CODE
+    - lONJitter
+    - miestoRealizacieProjektu
+    - miestoRealizacieProjektuKraj
+    - miestoRealizacieProjektuObec
+    - nM2
+    - nM3
+    - nM4
+    - nUTS1
+    - nUTS1CODE
+    - nUTS2
+    - nUTS2CODE
+    - nUTS3
+    - nUTS3CODE
+    - name
+    - nazovKraja
+    - nazovPrijimatela
+    - oBJECTID1
+    - obecNUTS
+    - obecNazov
+    - obstaravaciaCena
+    - oficialnyNazov
+    - okresKraj
+    - okresNazov
+    - platnostProjektuOd
+    - poznamka
+    - rok
+    - rokText
+    - rokZaradenia
+    - rozpocetAktualny
+    - rozsahUzemiaProjektu
+    - sUMCerpanieSpolu
+    - sektorOvZPUpraveny
+    - typObce
+    - uradOvZPICO
+    - uradOvZPOvZP
+    - uroven
+    - vYMERA
+    - vecnaOblast
+    - zauzivanyNazov
+    - zauzivanyNazovKratky
+    - zauzivanyNazovUpraveny
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/PublicInvestment/context.jsonld
+  PublicOrganization:
+    class_uri: https://smartdatamodels.org/dataModel.CPSV-AP/PublicOrganization
+    description: One row of Príspevkové rozpočtové a iné organizácie samosprávy.
     is_a: Entity
     slots:
     - dataProvider
     - source
     - dataset
-    - domena
-    - iD
-    - komentar
+    - adresaOrganizacie
+    - formaPodnikania
+    - iCOOrganizacie
+    - iCOSamospravy
+    - iDAdresy
+    - kodFormyPodnikania
     - lAT
     - lON
-    - miesto
-    - scitac
-    - vytvoreny
+    - nazovSamospravy
+    - okres
+    - preferredLabel
+    - spatial
+    - ulicaACisloDomu
+    annotations:
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
+  PublicProcurement:
+    class_uri: https://joinedcontext.com/models/PublicProcurement
+    description: One row of Plán verejného obstarávania; Realizované verejné obstarávania.
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - adresaNajvyhodnejsiehoUchadza
+    - cPVCastiNazov
+    - cPVNazov
+    - cisloSpisu
+    - datumSpustenia
+    - datumUkoncenia
+    - druhKomoditAleboSluzieb
+    - druhObstaravania
+    - druhPostupu
+    - elektronickaAukcia
+    - financovanie
+    - hlavnyCPV
+    - hlavnyCPVCasti
+    - iDZakazky
+    - identifier
+    - lehotaNaPredkladanie
+    - mena
+    - najvyhodnejsiUchadzac
+    - name
+    - nazovCasti
+    - obstaravatel
+    - pHZ
+    - pocetUchadzacov
+    - pocetZaujemcov
+    - ponukaUchadzaca
+    - predpokladanaHodnota
+    - rok
+    - socialneZodpovedneObstaravani
+    - spolocenskyZodpovedneVerejne
+    - stav
+    - typKomodity
+    - typVydavku
+    - utvarOvZP
+    - zeleneObstaravanie
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/PublicProcurement/context.jsonld
+  PurchaseOrder:
+    class_uri: https://joinedcontext.com/models/PurchaseOrder
+    description: One row of Objednávky.
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - adresa
+    - datumVystavenia
+    - dodavatel
+    - iCO
+    - identifier
+    - predmetObjednavky
+    - rok
+    - suma
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/PurchaseOrder/context.jsonld
+  RiverBasin:
+    class_uri: https://joinedcontext.com/models/RiverBasin
+    description: One row of Povodia Banskobystrického kraja.
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - aCH
+    - aUT
+    - dOW
+    - designatio
+    - fACC
+    - fIDKraj0
+    - fIDSubpovodiaBbsk
+    - gmlId
+    - iDN2
+    - inspireIdL
+    - inspireIdN
+    - link
+    - nM2
+    - name
+    - nameLangua
+    - relatedZ1
+    - relatedZon
+    - sOI
+    - specialise
+    - thematic1
+    - thematicId
+    - vYMERA
+    - wiseEvolut
+    - zoneType
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/RiverBasin/context.jsonld
+  RoadAccident:
+    class_uri: https://smartdatamodels.org/dataModel.Transportation/RoadAccident
+    description: One row of Cyklisti_nehodovosť; Nehodovosť v BBK.
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - cisloNehody
+    - datumACas
+    - druhKomunikacie
+    - gPSDlzka
+    - gPSSirka
+    - hlavnyVinnik
+    - hmotnaSkoda
+    - lahkoZraneni
+    - lahkoZraneniUcastnici
+    - obdobie
+    - parameter
+    - pocetNehod
+    - pocetNehodPodVplyvomAlkoholu
+    - pocetNehodVObci
+    - pocetUsmrtenychCyklistovKolobezkarov
+    - povrchVozovky
+    - priciny
+    - rok
+    - skodaVEUR
+    - smerovePomery
+    - status
+    - tazkoZraneni
+    - tazkoZraneniUcastnici
+    - usmrteni
+    - usmrteniUcastnici
+    - uzemie
+    annotations:
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.Transportation/b83ede9d3db29be1365cc272eb535f46af83bed2/context.jsonld
+  RoadStructure:
+    class_uri: https://joinedcontext.com/models/RoadStructure
+    description: One row of Dilatačné celky v Banskobystrickom kraji (public view); Podjazdy v Banskobystrickom
+      kraji (public view); Priepusty v Banskobystrickom kraji (public view); Železničné priecestia v Banskobystrickom
+      kraji (public view).
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - celkovaDlzkaPodjazdu
+    - cisloPK
+    - druhKonstrukcie
+    - druhZabezpecenia
+    - jICZSR
+    - kraj
+    - material
+    - materialPriepustu
+    - minVyskaPodjazdu
+    - najblizsiKM
+    - name
+    - normanaZatazitelnostT
+    - okres
+    - pocetKolaji
+    - predmetPremostenia
+    - rokStavby
+    - spravca
+    - spravcaMostu
+    - spravcaUseku
+    - stavebnoTechnickyStav
+    - triedaPK
+    - typPodjazdu
+    - typSpravcu
+    - vlastnik
+    - vlastnikMostu
+    - vlastnikUseku
+    - vyhradnaZatazitelnostT
+    - vynimocnaZatazitelnostT
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/RoadStructure/context.jsonld
+  Rule:
+    class_uri: https://smartdatamodels.org/dataModel.CPSV-AP/Rule
+    description: One row of Zoznam účinných všeobecne záväzných nariadení (VZN).
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - cisloZasadnutia
+    - description
+    - iCOSamospravy
+    - identifier
+    - name
+    - nazovSamospravy
+    - platnostOd
+    - uRLLinkaNaVZN
+    - ucinnostDo
+    - ucinnostOd
+    annotations:
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
   WaterBodyStatus:
-    class_uri: jc:WaterBodyStatus
+    class_uri: https://joinedcontext.com/models/WaterBodyStatus
     description: One row of Ekologický potenciál vodných útvarov; Ekologický stav vodných útvarov.
     is_a: Entity
     slots:
@@ -6267,9 +6195,9 @@ classes:
     - iDN2
     - kODVU202
     - kod
-    - nAZOVVU
     - nAZOVVUD
     - nM2
+    - name
     - nazovVU1
     - pOVODIE
     - pOZN1
@@ -6282,3 +6210,5 @@ classes:
     - skupina
     - typ
     - vYMERA
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/WaterBodyStatus/context.jsonld

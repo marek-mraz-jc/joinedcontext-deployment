@@ -36,7 +36,7 @@ spec:
       history: P30D
     - entityType: Event
       history: "off"
-    - entityType: School
-      history: "off"
     - entityType: WeatherObserved
       history: P30D
+    - entityType: Organization
+      history: "off"

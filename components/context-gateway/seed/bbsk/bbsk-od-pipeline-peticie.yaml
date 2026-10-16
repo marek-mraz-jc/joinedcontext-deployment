@@ -9,6 +9,7 @@ metadata:
     en: Petície
 spec:
   class: scheduled
+  enabled: true
   schedule: 57 1 * * 3
   source:
     dataSourceRef:

@@ -1,4 +1,4 @@
-# The mapping of the od-nabijacky-a-zastavky pipeline, generated from the T-4254 mapping: one EVChargingStation per row of
+# The mapping of the od-nabijacky-a-zastavky pipeline, generated from the T-4254 mapping: one PointOfInterest per row of
 # "Nabíjačky a Zastávky" (https://data.dev.joinedcontext.com/dataset/bbsk-nabijacky-a-zastavky-937210). Do not edit: change the mapping and run scripts/open-data/generate.py.
 
 pipeline:
@@ -12,17 +12,28 @@ pipeline:
     - unarchive:
         format: json_array
     - mapping: |
+        # Slovak notation: a space (or a no-break one) between thousands, a comma before the decimals, so
+        # "10 700,01" is 10700.01 (T-4324); a text without a comma keeps its dot, "1.5" is one and a half.
+        map number {
+          let s = this.string().re_replace_all("[ 	  ]", "")
+          let t = if $s.contains(",") { $s.replace_all(".", "").replace_all(",", ".") } else { $s }
+          root = $t.number().catch(null)
+        }
         map integer {
-          let v = this.number().catch(null)
+          let v = if this == null { null } else { this.apply("number") }
           root = if $v == null { null } else { { "type": "Property", "value": $v.round().int64() } }
         }
         map float {
-          let v = this.number().catch(null)
+          let v = if this == null { null } else { this.apply("number") }
           root = if $v == null { null } else { { "type": "Property", "value": $v } }
         }
         map string {
           let v = if this == null { "" } else { this.string().trim() }
           root = if $v == "" { null } else { { "type": "Property", "value": $v } }
+        }
+        map string_list {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": [$v] } }
         }
         map uri {
           root = this.apply("string")
@@ -42,22 +53,25 @@ pipeline:
           let x = this
           let v = match $x.type() {
             "number" => ($x / 1000).ts_format("2006-01-02", "UTC").catch(null),
-            "string" => if $x.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}") { $x.slice(0, 10) } else { null },
+            # ISO, or the Slovak "29.08.2026" and "1. 3. 2024".
+            "string" => if $x.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}") { $x.slice(0, 10) } else {
+              $x.re_replace_all("[.] +", ".").trim().ts_parse("2.1.2006").ts_format("2006-01-02", "UTC").catch(null)
+            },
             _ => null,
           }
           root = if $v == null { null } else { { "type": "Property", "value": $v } }
         }
-        let local = "nabijacky-a-zastavky-" + {"CMS_ID": this.properties."CMS_ID", "PRIM_NAME": this.properties."PRIM_NAME", "Categ": this.properties."Categ", "Hlavna_cat": this.properties."Hlavna_cat", "category": this.properties."category", "languages": this.properties."languages", "name": this.properties."name", "importKey": this.properties."importKey", "contentSta": this.properties."contentSta", "createdBy": this.properties."createdBy", "createdAt": this.properties."createdAt", "lastModifi": this.properties."lastModifi", "lastModi_1": this.properties."lastModi_1", "changedByC": this.properties."changedByC", "publishedB": this.properties."publishedB", "publishedA": this.properties."publishedA", "defLanguag": this.properties."defLanguag", "createdIn": this.properties."createdIn", "organisati": this.properties."organisati", "geometry": this.properties."geometry", "primaryIma": this.properties."primaryIma", "author": this.properties."author", "belongRegi": this.properties."belongRegi", "title": this.properties."title", "descriptio": this.properties."descriptio", "shortDescr": this.properties."shortDescr", "images": this.properties."images", "licenseKey": this.properties."licenseKey", "email": this.properties."email", "webAddress": this.properties."webAddress", "fax": this.properties."fax", "cellPhone": this.properties."cellPhone", "telephone": this.properties."telephone", "city": this.properties."city", "zipcode": this.properties."zipcode", "streetAddr": this.properties."streetAddr", "addressReg": this.properties."addressReg", "altitude": this.properties."altitude", "rankingPer": this.properties."rankingPer", "ID": this.properties."ID", "x": this.properties."x", "y": this.properties."y", "FID2": this.properties."FID2"}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
+        let local = "nabijacky-a-zastavky-" + [this.properties."CMS_ID"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("EVChargingStation", "bbsk.sk", env("JC_SPACE"), $local),
-          "type": "EVChargingStation",
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("PointOfInterest", "bbsk.sk", env("JC_SPACE"), $local),
+          "type": "PointOfInterest",
           "cMSID": this.properties."CMS_ID".apply("integer"),
-          "pRIMNAME": this.properties."PRIM_NAME".apply("string"),
+          "name": this.properties."PRIM_NAME".apply("string").or(this.properties."Categ".apply("string")),
           "categ": this.properties."Categ".apply("string"),
           "hlavnaCat": this.properties."Hlavna_cat".apply("string"),
-          "category": this.properties."category".apply("integer"),
+          "category": this.properties."category".apply("string_list"),
           "languages": this.properties."languages".apply("string"),
-          "columnName": this.properties."name".apply("string"),
+          "sourceName": this.properties."name".apply("string"),
           "importKey": this.properties."importKey".apply("string"),
           "contentSta": this.properties."contentSta".apply("string"),
           "createdBy": this.properties."createdBy".apply("integer"),
@@ -96,7 +110,7 @@ pipeline:
           "fID2": this.properties."FID2".apply("integer"),
           "location": if this.geometry.or(null) == null { null } else { { "type": "GeoProperty", "value": this.geometry } },
           "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj (CC BY-SA 4.0)" },
-          "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Nab%C3%ADja%C4%8Dky_a_Zast%C3%A1vky/FeatureServer/0/query?where=1%3D1&outFields=CMS_ID,PRIM_NAME,Categ,Hlavna_cat,category,languages,name,importKey,contentSta,createdBy,createdAt,lastModifi,lastModi_1,changedByC,publishedB,publishedA,defLanguag,createdIn,organisati,geometry,primaryIma,author,belongRegi,title,descriptio,shortDescr,images,licenseKey,email,webAddress,fax,cellPhone,telephone,city,zipcode,streetAddr,addressReg,altitude,rankingPer,ID,x,y,FID2&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },
+          "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Nab%C3%ADja%C4%8Dky_a_Zast%C3%A1vky/FeatureServer/0/query?where=Categ%20IS%20NOT%20NULL%20AND%20Categ%20%3C%3E%20%27%27&outFields=CMS_ID,PRIM_NAME,Categ,Hlavna_cat,category,languages,name,importKey,contentSta,createdBy,createdAt,lastModifi,lastModi_1,changedByC,publishedB,publishedA,defLanguag,createdIn,organisati,geometry,primaryIma,author,belongRegi,title,descriptio,shortDescr,images,licenseKey,email,webAddress,fax,cellPhone,telephone,city,zipcode,streetAddr,addressReg,altitude,rankingPer,ID,x,y,FID2&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },
           "dataset": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bbsk-nabijacky-a-zastavky-937210" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.

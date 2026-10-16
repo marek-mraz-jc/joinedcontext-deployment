@@ -96,6 +96,20 @@ alertGroups:
         annotations:
           summary: 'APISIX edge 5xx error rate exceeded 1%'
   {{- end }}
+  {{- if has "context-broker" $components }}
+  # T-4298: the broker's database pool ran dry on dev for over half an hour and every Endpoint
+  # read answered 503 before anyone looked. A pool timeout is never normal: each one is a read or
+  # write that waited 5 s for a connection and was refused.
+  - name: context-broker
+    rules:
+      - alert: ContextBrokerPoolExhausted
+        expr: sum(increase(antares_pg_pool_timeouts_total[5m])) > 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'The context broker refuses requests: its database pool hands out no connection (antares_pg_pool_timeouts_total rising)'
+  {{- end }}
   {{- if has "portal" $components }}
   # docs Deployment/05 section 4 (T-2771): the assistant's answer budget and its failures.
   - name: assistant

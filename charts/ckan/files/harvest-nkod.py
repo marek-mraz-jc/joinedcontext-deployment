@@ -9,10 +9,12 @@ Runs as `python3 -c` in the catalogue's image, from the `harvest` CronJob. One r
    names as mislinked or personal is not ingested, an HTML or PDF answer where JSON is declared is
    not ingested, a non-ASCII URL is percent-encoded, string values are trimmed, and the rows the
    configuration says must carry an identifier (an IČO) are dropped without one;
-3. writes each ingested dataset into CKAN with its licence, the original publisher and its
-   `modified`, the files as link resources and every JSON table as a DataStore table, which CKAN
-   also serves as CSV;
-4. deletes a dataset an earlier run harvested that the publisher no longer lists, checks every
+3. writes each ingested dataset whose rows were converted to NGSI-LD into CKAN with its licence,
+   the original publisher and its `modified`, the platform's distributions and data model
+   (od-standards.py, EP-118) in place of the source's file links, and every JSON table of 50 MB
+   or less as a DataStore table, which CKAN also serves as CSV;
+4. deletes a dataset an earlier run harvested that the publisher no longer lists or whose rows
+   are not converted, unless no dataset is converted at all (a broken run), checks every
    ingested dataset (title, licence, a format on each resource, every link answered 200, every
    table holds its rows) and prints the count per state with each skipped title and its reason.
 
@@ -34,6 +36,8 @@ TOKEN = os.environ.get("CKAN_API_TOKEN", "")
 CONFIG = json.loads(os.environ.get("HARVEST_CONFIG", "{}"))
 
 MAX_BYTES = 64 * 1024 * 1024
+# A DataStore table larger than this is not kept: EP-118 lists whole files up to 50 MB only.
+MAX_TABLE_BYTES = 50 * 1024 * 1024
 CHUNK = 5000
 AGENT = "joinedcontext-harvest/1 (+https://www.joinedcontext.com)"
 EU_LICENCE = "http://publications.europa.eu/resource/authority/licence/"
@@ -287,7 +291,7 @@ def assess(ds):
 
 # --- 3. what CKAN holds --------------------------------------------------------------------------
 
-def package(ds, name, licence_id, resources, tables):
+def package(ds, name, licence_id, distributions, tables):
     dropped = sum(t["dropped"] for t in tables)
     notes = [ds["description"] or ds["title"],
              f"Zdroj: Národný katalóg otvorených dát, {ds['landing'] or ds['iri']}."]
@@ -302,8 +306,9 @@ def package(ds, name, licence_id, resources, tables):
             "owner_org": CONFIG["organization"], "license_id": licence_id, "tags": tags,
             "url": ds["landing"] or ds["iri"],
             "extras": [{"key": k, "value": v} for k, v in extras.items() if v],
-            # The platform's standard APIs of the dataset, when its rows were converted (T-4279).
-            "resources": resources + od_standards(name)}
+            # The platform's own distributions of the converted rows and their data model, never the
+            # source's file links (EP-118, T-4324); the DataStore tables follow in `upsert`.
+            "resources": distributions}
 
 
 def upsert(desired, tables):
@@ -373,12 +378,22 @@ def main():
     if ckan("organization_show", {"id": CONFIG["organization"]}) is None:
         ckan("organization_create", {"name": CONFIG["organization"], "title": CONFIG["publisherName"]})
     states, problems, kept, named = {}, [], set(), names(found)
+    converted = {ds["iri"]: od_standards(named[ds["iri"]]) for ds in found.values()}
+    if not any(converted.values()):
+        # No dataset converted at all is a missing gateway or mapping, not a catalogue to empty.
+        print(f"none of {len(found)} datasets lists the platform's distributions; nothing is withdrawn",
+              file=sys.stderr)
+        return 1
     for ds in sorted(found.values(), key=lambda d: d["title"]):
-        state, reason, resources, tables = assess(ds)
+        if not converted[ds["iri"]]:
+            states.setdefault("not-converted", []).append((ds["title"], "not converted to NGSI-LD, so not listed (EP-118)"))
+            continue
+        state, reason, _, tables = assess(ds)
         states.setdefault(state, []).append((ds["title"], reason))
         if state != "ingested":
             continue
-        desired = package(ds, named[ds["iri"]], reason, resources, tables)
+        tables = [t for t in tables if len(json.dumps(t["rows"], ensure_ascii=False).encode()) <= MAX_TABLE_BYTES]
+        desired = package(ds, named[ds["iri"]], reason, converted[ds["iri"]], tables)
         upsert(desired, tables)
         kept.add(desired["name"])
         problems += [f"{ds['title']}: {p}" for p in verify(desired, tables)]

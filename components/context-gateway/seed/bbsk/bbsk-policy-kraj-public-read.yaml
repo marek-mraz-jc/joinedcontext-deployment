@@ -16,6 +16,6 @@ spec:
   operations: [retrieveOps, retrieveEntityTypes, retrieveEntityTypeDetails, retrieveEntityTypeInfo, retrieveAttrTypes, retrieveAttrTypeDetails, retrieveAttrTypeInfo, createSubscription, retrieveSubscription, updateSubscription, deleteSubscription]
   information:
     - entities:
-        - type: StatisticalObservation
+        - type: KeyPerformanceIndicator
       propertyNames:
-        [dataSet, indicator, refArea, refPeriod, dimensionKey, observationValue, unitText, source, dateObserved]
+        [dataSet, indicator, refArea, refPeriod, dimensionKey, kpiValue, unitText, source, dateObserved]

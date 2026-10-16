@@ -23,27 +23,25 @@ spec:
   - entities:
     - type: AdministrativeArea
     - type: Bridge
+    - type: CommitteeSeat
     - type: Contract
     - type: CouncilMeeting
-    - type: CouncilMember
     - type: CouncilVote
     - type: CycleRoute
-    - type: EVChargingStation
     - type: Grant
     - type: Invoice
-    - type: OrganizationUnit
+    - type: KeyPerformanceIndicator
+    - type: OfficeHours
+    - type: Organization
+    - type: Person
     - type: Petition
     - type: PointOfInterest
     - type: PublicInvestment
     - type: PublicOrganization
     - type: PublicProcurement
     - type: PurchaseOrder
-    - type: Regulation
     - type: RiverBasin
     - type: RoadAccident
     - type: RoadStructure
-    - type: School
-    - type: StatisticalObservation
-    - type: Supplier
-    - type: TrafficFlowObservedSite
+    - type: Rule
     - type: WaterBodyStatus

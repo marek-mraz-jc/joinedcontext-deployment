@@ -9,7 +9,8 @@ metadata:
     en: Zmluvy BB
 spec:
   class: scheduled
-  schedule: 56 1 * * 2
+  enabled: true
+  schedule: 31 2 * * 7
   source:
     dataSourceRef:
       kind: DataSource

@@ -2,7 +2,7 @@
   "@context": {
     "@vocab": "https://joinedcontext.com/models/",
     "Address": {
-      "@id": "jc:Address"
+      "@id": "sdm:dataModel.CPSV-AP/Address"
     },
     "Article": {
       "@id": "jc:Article"
@@ -16,41 +16,46 @@
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
+    "Garden": {
+      "@id": "sdm:dataModel.ParksAndGardens/Garden"
+    },
     "Grant": {
       "@id": "jc:Grant"
+    },
+    "KeyPerformanceIndicator": {
+      "@id": "sdm:dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator"
+    },
+    "OffStreetParking": {
+      "@id": "sdm:dataModel.Parking/OffStreetParking"
     },
     "PurchaseOrder": {
       "@id": "jc:PurchaseOrder"
     },
-    "StatisticalObservation": {
-      "@id": "jc:StatisticalObservation"
+    "addressArea": {
+      "@id": "sdm:dataModel.CPSV-AP/addressArea"
     },
     "akcia": {
       "@id": "jc:akcia"
+    },
+    "cOID": {
+      "@id": "jc:cOID",
+      "@type": "xsd:integer"
     },
     "cZasadnutia": {
       "@id": "jc:cZasadnutia",
       "@type": "xsd:integer"
     },
-    "castObce": {
-      "@id": "jc:castObce"
-    },
     "cenaCelkom": {
       "@id": "jc:cenaCelkom"
-    },
-    "centralneCisloZmluvy": {
-      "@id": "jc:centralneCisloZmluvy",
-      "@type": "xsd:integer"
-    },
-    "cisloObjednavky": {
-      "@id": "jc:cisloObjednavky",
-      "@type": "xsd:integer"
     },
     "content": {
       "@id": "jc:content"
     },
+    "dPOSTA": {
+      "@id": "jc:dPOSTA"
+    },
     "dataProvider": {
-      "@id": "jc:dataProvider"
+      "@id": "sdm:dataProvider"
     },
     "dataset": {
       "@id": "jc:dataset",
@@ -72,6 +77,18 @@
     "datumZverejnenia": {
       "@id": "jc:datumZverejnenia"
     },
+    "datumplatnosti": {
+      "@id": "jc:datumplatnosti",
+      "@type": "xsd:dateTime"
+    },
+    "datumvkladu": {
+      "@id": "jc:datumvkladu",
+      "@type": "xsd:dateTime"
+    },
+    "datumzmeny": {
+      "@id": "jc:datumzmeny",
+      "@type": "xsd:dateTime"
+    },
     "den": {
       "@id": "jc:den"
     },
@@ -91,11 +108,30 @@
     "iCOZiadatela": {
       "@id": "jc:iCOZiadatela"
     },
+    "iD": {
+      "@id": "jc:iD",
+      "@type": "xsd:float"
+    },
+    "ics": {
+      "@id": "jc:ics"
+    },
     "id": "@id",
+    "idRegad": {
+      "@id": "jc:idRegad"
+    },
+    "identifier": {
+      "@id": "sdm:dataModel.CPSV-AP/identifier"
+    },
+    "idzmeny": {
+      "@id": "jc:idzmeny"
+    },
     "jc": "https://joinedcontext.com/models/",
-    "link": {
-      "@id": "jc:link",
-      "@type": "xsd:anyURI"
+    "kRAJ": {
+      "@id": "jc:kRAJ"
+    },
+    "kRAJID": {
+      "@id": "jc:kRAJID",
+      "@type": "xsd:integer"
     },
     "linkml": "https://w3id.org/linkml/",
     "location": {
@@ -107,6 +143,9 @@
     "modifiedGmt": {
       "@id": "jc:modifiedGmt",
       "@type": "xsd:dateTime"
+    },
+    "name": {
+      "@id": "sdm:name"
     },
     "narodenych": {
       "@id": "jc:narodenych",
@@ -121,8 +160,25 @@
       "@type": "xsd:integer"
     },
     "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
-    "obec": {
-      "@id": "jc:obec"
+    "oBECID": {
+      "@id": "jc:oBECID",
+      "@type": "xsd:integer"
+    },
+    "oKRES": {
+      "@id": "jc:oKRES"
+    },
+    "oKRESID": {
+      "@id": "jc:oKRESID",
+      "@type": "xsd:integer"
+    },
+    "oRIENTC": {
+      "@id": "jc:oRIENTC"
+    },
+    "oRIENTCC": {
+      "@id": "jc:oRIENTCC"
+    },
+    "oRIENTCP": {
+      "@id": "jc:oRIENTCP"
     },
     "objednavkaSpolu": {
       "@id": "jc:objednavkaSpolu"
@@ -167,11 +223,24 @@
     "pohlavie": {
       "@id": "jc:pohlavie"
     },
+    "popisobjektu": {
+      "@id": "jc:popisobjektu"
+    },
+    "postCode": {
+      "@id": "sdm:dataModel.CPSV-AP/postCode"
+    },
+    "postName": {
+      "@id": "sdm:dataModel.CPSV-AP/postName"
+    },
     "pozadovaneProstriedky": {
       "@id": "jc:pozadovaneProstriedky"
     },
     "predmet": {
       "@id": "jc:predmet"
+    },
+    "prevazujicipovrch": {
+      "@id": "jc:prevazujicipovrch",
+      "@type": "xsd:integer"
     },
     "prirastok": {
       "@id": "jc:prirastok"
@@ -198,6 +267,13 @@
       "@id": "jc:rokDotacie",
       "@type": "xsd:integer"
     },
+    "sCHRANKY": {
+      "@id": "jc:sCHRANKY",
+      "@type": "xsd:integer"
+    },
+    "sUPISNEC": {
+      "@id": "jc:sUPISNEC"
+    },
     "schema": "http://schema.org/",
     "schvProstr": {
       "@id": "jc:schvProstr"
@@ -205,12 +281,8 @@
     "sdm": "https://smartdatamodels.org/",
     "shex": "http://www.w3.org/ns/shex#",
     "source": {
-      "@id": "jc:source",
+      "@id": "sdm:source",
       "@type": "xsd:anyURI"
-    },
-    "sourceId": {
-      "@id": "jc:sourceId",
-      "@type": "xsd:integer"
     },
     "stavVybav": {
       "@id": "jc:stavVybav"
@@ -218,16 +290,28 @@
     "supC": {
       "@id": "jc:supC"
     },
+    "tYPBUDOVY": {
+      "@id": "jc:tYPBUDOVY",
+      "@type": "xsd:integer"
+    },
     "textObjednavky": {
       "@id": "jc:textObjednavky"
     },
-    "title": {
-      "@id": "jc:title"
+    "thoroughfare": {
+      "@id": "sdm:dataModel.CPSV-AP/thoroughfare"
     },
     "typ": {
       "@id": "jc:typ"
     },
     "type": "@type",
+    "typudrzovanezelene": {
+      "@id": "jc:typudrzovanezelene",
+      "@type": "xsd:integer"
+    },
+    "uLICAID": {
+      "@id": "jc:uLICAID",
+      "@type": "xsd:integer"
+    },
     "ubytok": {
       "@id": "jc:ubytok"
     },
@@ -237,14 +321,29 @@
     "ubytokZeny": {
       "@id": "jc:ubytokZeny"
     },
-    "ulica": {
-      "@id": "jc:ulica"
+    "url": {
+      "@id": "jc:url",
+      "@type": "xsd:anyURI"
+    },
+    "urovenumisteniobjektuzps": {
+      "@id": "jc:urovenumisteniobjektuzps",
+      "@type": "xsd:integer"
     },
     "vek": {
       "@id": "jc:vek",
       "@type": "xsd:integer"
     },
+    "vrstva": {
+      "@id": "jc:vrstva"
+    },
     "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "zSJ": {
+      "@id": "jc:zSJ"
+    },
+    "zSJID": {
+      "@id": "jc:zSJID",
+      "@type": "xsd:float"
+    },
     "ziadatel": {
       "@id": "jc:ziadatel"
     },

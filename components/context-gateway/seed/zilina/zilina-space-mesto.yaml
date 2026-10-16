@@ -18,5 +18,5 @@ spec:
   # History per type (DM-82, ADR-N-046 2.3, T-4275): a measurement series keeps 30 days, every
   # other type keeps its current state only. Owners change it on the space's Retention tab.
   retention:
-    - entityType: StatisticalObservation
-      history: "off"
+    - entityType: KeyPerformanceIndicator
+      history: P30D

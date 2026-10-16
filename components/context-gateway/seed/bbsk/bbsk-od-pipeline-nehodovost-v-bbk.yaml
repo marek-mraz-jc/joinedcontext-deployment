@@ -9,6 +9,7 @@ metadata:
     en: Nehodovosť v BBK
 spec:
   class: scheduled
+  enabled: true
   schedule: 48 3 * * 4
   source:
     dataSourceRef:

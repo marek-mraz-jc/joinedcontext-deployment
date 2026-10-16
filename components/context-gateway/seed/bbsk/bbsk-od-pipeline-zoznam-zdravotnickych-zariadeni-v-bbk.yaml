@@ -9,6 +9,7 @@ metadata:
     en: Zoznam zdravotníckych zariadení v BBK
 spec:
   class: scheduled
+  enabled: true
   schedule: 34 5 * * 6
   source:
     dataSourceRef:

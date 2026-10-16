@@ -1,4 +1,4 @@
-# The mapping of the socialne-sluzby pipeline (PL-03): one SocialService per service a
+# The mapping of the socialne-sluzby pipeline (PL-03): one PointOfInterest per service a
 # municipality, a town or the region registered. The DataSource asks for public providers only
 # (private ones can be a person running a care service) and never for the service's e-mail or
 # telephone. The register has no row id, so the localId is the provider's IČO and a hash of what
@@ -27,8 +27,9 @@ pipeline:
           }
         }
         root = this.features.or([]).map_each(f -> f.properties).filter(p -> p."IČO".or("").string().re_match("^[0-9]{8}$") && p."Druh_poskytovanej_sociálnej_slu".or("").trim() != "" && p."Typ_poskytovateľa".or("").apply("provider") != null).map_each(p -> {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v-%v".format("SocialService", "bbsk.sk", env("JC_SPACE"), p."IČO", [p."Druh_poskytovanej_sociálnej_slu", p."Forma_poskytovanej_sociálnej_sl", p."Cieľova_skupina_fyzických_osôb_", p."Ulica_sociálnej_služby", p."Obec_sociálnej_služby"].map_each(v -> v.or("").string()).join("|").hash("xxhash64").string()),
-          "type": "SocialService",
+          "id": "urn:ngsi-ld:%v:%v:%v:%v-%v".format("PointOfInterest", "bbsk.sk", env("JC_SPACE"), p."IČO", [p."Druh_poskytovanej_sociálnej_slu", p."Forma_poskytovanej_sociálnej_sl", p."Cieľova_skupina_fyzických_osôb_", p."Ulica_sociálnej_služby", p."Obec_sociálnej_služby"].map_each(v -> v.or("").string()).join("|").hash("xxhash64").string()),
+          "type": "PointOfInterest",
+          "category": { "type": "Property", "value": ["socialService"] },
           "name": { "type": "LanguageProperty", "languageMap": { "sk": "%v, %v".format(p."Druh_poskytovanej_sociálnej_slu".trim(), p."Obchodné_meno".or("").trim()).trim_suffix(", ") } },
           "serviceKind": { "type": "Property", "value": p."Druh_poskytovanej_sociálnej_slu".trim() },
           "serviceForm": if p."Forma_poskytovanej_sociálnej_sl".or("").apply("form") == null { null } else { { "type": "Property", "value": p."Forma_poskytovanej_sociálnej_sl".apply("form") } },
@@ -36,9 +37,14 @@ pipeline:
           "capacity": if p.Kapacita.type() == "number" && p.Kapacita >= 0 { { "type": "Property", "value": p.Kapacita.int64() } } else { null },
           "providerKind": { "type": "Property", "value": p."Typ_poskytovateľa".apply("provider") },
           "legalId": { "type": "Property", "value": p."IČO" },
-          "address": if p."Obec_sociálnej_služby".or("").trim() == "" { null } else { { "type": "Property", "value": [p."Ulica_sociálnej_služby".or("").trim(), "%v %v".format(p."PSČ_sociálnej_služby".or(""), p."Obec_sociálnej_služby".trim()).trim()].filter(v -> v != "").join(", ") } },
+          "address": if p."Obec_sociálnej_služby".or("").trim() == "" { null } else { { "type": "Property", "value": {
+            "streetAddress": p."Ulica_sociálnej_služby".or("").trim(),
+            "postalCode": p."PSČ_sociálnej_služby".or("").string().re_replace_all(" +", "").trim(),
+            "addressLocality": p."Obec_sociálnej_služby".trim(),
+            "addressCountry": "SK"
+          }.filter(f -> f.value != "") } },
           "districtName": if p."Okres_sociálnej_služby".or("").trim() == "" { null } else { { "type": "Property", "value": p."Okres_sociálnej_služby".trim() } },
-          "url": if p."Webová_adresa".or("").trim() == "" { null } else { { "type": "Property", "value": p."Webová_adresa".trim() } },
+          "url": if p."Webová_adresa".or("").trim() == "" { null } else { { "type": "Property", "value": if p."Webová_adresa".trim().re_match("^https?://") { p."Webová_adresa".trim() } else { "http://" + p."Webová_adresa".trim() } } },
           "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj, opendata.bbsk.sk (CC BY-SA 4.0)" },
           "source": { "type": "Property", "value": "https://opendata.bbsk.sk/" }
         }.filter(entry -> entry.value != null)).unique(e -> e.id)

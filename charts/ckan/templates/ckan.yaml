@@ -133,6 +133,8 @@ spec:
               value: /etc/jc/branding/branding.json
             - name: JC_ASSISTANT_WIDGET_URL
               value: {{ .Values.assistantWidget | quote }}
+            - name: JC_ASSISTANT_WIDGET_URLS
+              value: {{ .Values.assistantWidgets | default dict | toJson | quote }}
             - name: CKAN_SOLR_URL
               value: http://{{ $full }}-solr.{{ .Release.Namespace }}.svc.cluster.local:8983/solr/ckan
             - name: CKAN_REDIS_URL
@@ -333,6 +335,8 @@ spec:
                 path: branding.json
               - key: organizations.json
                 path: organizations.json
+              - key: hidden.json
+                path: hidden.json
         - name: theme
           configMap:
             name: {{ $full }}-theme

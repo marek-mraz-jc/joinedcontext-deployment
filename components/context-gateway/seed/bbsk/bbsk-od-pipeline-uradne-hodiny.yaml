@@ -1,4 +1,4 @@
-# One OrganizationUnit per row of "Úradné hodiny" (T-4255); generated from the T-4254 mapping.
+# One OfficeHours per row of "Úradné hodiny" (T-4255); one row per office and weekday.
 apiVersion: joinedcontext.com/v1alpha1
 kind: Pipeline
 metadata:
@@ -9,6 +9,7 @@ metadata:
     en: Úradné hodiny
 spec:
   class: scheduled
+  enabled: true
   schedule: 10 4 * * 1
   source:
     dataSourceRef:
@@ -16,7 +17,7 @@ spec:
       name: od-uradne-hodiny
   targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-otvorene-data:bbsk-otvorene-data
   output:
-    type: OrganizationUnit
+    type: OfficeHours
     mode: upsert
   quotas:
     maxMemoryMb: 128

@@ -29,7 +29,8 @@
             {% if preview.total is not none %}<span class="jc-table-rows">{{ h.jc_rows(preview.total) }}</span>{% endif %}
           </summary>
           {% if preview.view %}
-            <iframe class="jc-grid" loading="lazy"
+            {# A short table gets a short frame: 20 rows a page at most (T-4333). #}
+            <iframe class="jc-grid" loading="lazy" style="--jc-rows: {{ [preview.total or 20, 20]|min }}"
                     title="{{ h.jc_t('table_title') }}: {{ name }}"
                     src="{{ h.url_for(pkg.type ~ '_resource.view', id=pkg.name, resource_id=res.id, view_id=preview.view.id) }}"></iframe>
           {% else %}
@@ -66,11 +67,12 @@
       <p>{{ h.jc_t('live_lead') }}</p>
       <div class="jc-copy">
         <label for="jc-live-url" class="visually-hidden">{{ h.jc_t('live') }}</label>
-        <input id="jc-live-url" class="form-control" type="text" readonly value="{{ live.url }}">
+        {# A block that wraps, not a field that cuts the address at a phone's edge (T-4333). #}
+        <pre id="jc-live-url" class="jc-live-url" tabindex="0"><code>{% snippet 'snippets/jc_breakable.html', text=live.url %}</code></pre>
         <button type="button" class="btn btn-default" data-jc-copy="jc-live-url" data-jc-copied="{{ h.jc_t('copied') }}">{{ h.jc_t('copy') }}</button>
       </div>
       <p class="jc-example-label" id="jc-example-label">{{ h.jc_t('example') }}</p>
-      <pre aria-labelledby="jc-example-label"><code>{{ live.example }}</code></pre>
+      <pre aria-labelledby="jc-example-label"><code>{% snippet 'snippets/jc_breakable.html', text=live.example %}</code></pre>
       <p class="visually-hidden" role="status" aria-live="polite" id="jc-copy-status"></p>
     </section>
   {% endif %}
@@ -86,8 +88,9 @@
       <h2 id="jc-more-title">{{ h.jc_t('more') }}</h2>
       <dl class="jc-about-list">
         {% for key, value in more %}
-          <dt>{{ _(key|replace('_', ' ')|capitalize) }}</dt>
-          <dd>{{ value }}</dd>
+          {% set label, text, link = h.jc_extra(key, value) %}
+          <dt>{{ label }}</dt>
+          <dd>{% if link %}<a href="{{ link }}" rel="noreferrer">{{ text }}</a>{% else %}{{ text }}{% endif %}</dd>
         {% endfor %}
       </dl>
     </section>

@@ -80,9 +80,10 @@ def gitleaks():
     return binary
 
 
-def scan(gitleaks: str, contents: str) -> int:
+def scan(gitleaks: str, contents: str, path: str = "config.yaml") -> int:
     with tempfile.TemporaryDirectory() as work:
-        Path(work, "config.yaml").write_text(contents)
+        Path(work, path).parent.mkdir(parents=True, exist_ok=True)
+        Path(work, path).write_text(contents)
         return subprocess.run(
             [
                 gitleaks, "detect", "--no-git", "--source", work,
@@ -341,3 +342,18 @@ def test_every_pull_request_runs_kyverno_apply_on_the_rendered_manifests():
     for env in ("local", "production"):
         assert f"scripts/render.sh {env}" in script, env
     assert script.count("kyverno apply") >= 2
+
+
+PINS = "scripts/open-data/sdm/pins.json"
+
+
+def test_an_sdm_commit_pin_is_no_leak_and_nothing_else_shaped_like_it_is_let_through(gitleaks):
+    """T-4341: generic-api-key took the pin of dataModel.KeyPerformanceIndicator, a public git
+    commit, for a key. Only that line's shape, a dataModel name pinned to 40 hex, is let through."""
+    pin = "0123456789abcdef" * 2 + "01234567"
+    key = "Zx9" + "Qw7Er5Ty3Ui1Op8As6Df4Gh2Jk0Lm"
+    assert scan(gitleaks, '{\n  "dataModel.KeyPerformanceIndicator": "%s",\n}\n' % pin, PINS) == 0
+    assert scan(gitleaks, '{\n  "dataModel.KeyPerformanceIndicator": "%s",\n}\n' % key, PINS) == 1
+    assert scan(gitleaks, '{"apiKey": "%s"}\n' % pin, PINS) == 1, "a commit-shaped value under another key"
+    assert scan(gitleaks, '{"apiKey": "%s"}\n' % key, PINS) == 1
+    assert scan(gitleaks, f"secret: {LEAKS['jwt']}\n", PINS) == 1

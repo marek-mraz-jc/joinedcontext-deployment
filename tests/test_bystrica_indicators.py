@@ -277,9 +277,9 @@ def test_a_region_read_that_brought_no_row_writes_nothing_rather_than_wiping_eve
     mapping = mapping_of(SEED / "bbsk/bbsk-pipeline-ukazovatele.yaml")
     assert bento(mapping, [], env, may_drop=True) == []
     # Rows of no cube the indicators read are no answer either.
-    stranger = [{"id": "urn:ngsi-ld:StatisticalObservation:bbsk.sk:bbsk-kraj:x", "type": "StatisticalObservation",
+    stranger = [{"id": "urn:ngsi-ld:KeyPerformanceIndicator:bbsk.sk:bbsk-kraj:x", "type": "KeyPerformanceIndicator",
                  "dataSet": {"type": "Property", "value": "xx0000rr"}, "refArea": {"type": "Property", "value": "SK032"},
-                 "refPeriod": {"type": "Property", "value": "2024"}, "observationValue": {"type": "Property", "value": 1},
+                 "refPeriod": {"type": "Property", "value": "2024"}, "kpiValue": {"type": "Property", "value": 1},
                  "dateObserved": {"type": "Property", "value": "2025-10-31T00:00:00Z"}}]
     assert bento(mapping, stranger, env, may_drop=True) == []
 
@@ -337,6 +337,13 @@ def test_no_indicator_carries_an_attribute_the_platform_would_refuse(region, air
         assert set(entity) <= REQUIRED | {"@context"}, set(entity) - REQUIRED
 
 
+def indicator(spec: dict) -> bool:
+    """An indicator pipeline computes KPIs into the project's KPI space. The open-data seed writes
+    the same Smart Data Model type into its own space from a source (T-4319), which is not one."""
+    return (any(o["type"] == "KeyPerformanceIndicator" for o in outputs(spec))
+            and spec.get("targetEndpoint", "").split(":")[-1].endswith("-kpi"))
+
+
 def test_every_indicator_pipeline_reads_through_an_endpoint_and_writes_through_one():
     for folder in (SEED / "bbsk", SEED / "banskabystrica"):
         for path in sorted(folder.glob("*.yaml")):
@@ -346,7 +353,7 @@ def test_every_indicator_pipeline_reads_through_an_endpoint_and_writes_through_o
                 if not isinstance(doc, dict) or doc.get("kind") != "Pipeline":
                     continue
                 spec = doc["spec"]
-                if all(o["type"] != "KeyPerformanceIndicator" for o in outputs(spec)):
+                if not indicator(spec):
                     continue
                 assert spec["class"] == "scheduled", doc["metadata"]["name"]
                 # PL-18, PF-39: never the store, always the space's own Endpoint.
@@ -377,7 +384,7 @@ def test_no_indicator_of_one_body_can_be_computed_from_the_others_space():
                 if not isinstance(doc, dict) or doc.get("kind") != "Pipeline":
                     continue
                 spec = doc["spec"]
-                if all(o["type"] != "KeyPerformanceIndicator" for o in outputs(spec)):
+                if not indicator(spec):
                     continue
                 seen += 1
                 assert doc["metadata"]["namespace"] == project
@@ -427,7 +434,7 @@ def test_the_read_every_indicator_pipeline_declares_is_one_a_policy_permits():
             if doc.get("kind") == "Endpoint"
         }
         for doc in documents:
-            if doc.get("kind") != "Pipeline" or all(o["type"] != "KeyPerformanceIndicator" for o in outputs(doc["spec"])):
+            if doc.get("kind") != "Pipeline" or not indicator(doc["spec"]):
                 continue
             source = spaces[doc["spec"]["source"]["endpointRef"]["name"]]
             account = doc["spec"].get("serviceAccountRef", {}).get("name", "pipelines")

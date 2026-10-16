@@ -21,6 +21,9 @@
           <li><a href="{{ h.url_for('home.about') }}">{{ h.jc_t('about_site') }}</a></li>
           {% if h.jc_portal_url() %}<li><a href="{{ h.jc_portal_url() }}">{{ h.jc_t('portal') }}</a></li>{% endif %}
           <li><a href="{{ h.url_for('home.about') }}#api">{{ h.jc_t('catalogue_api') }}</a></li>
+          {% for name in ('connector', 'privacy', 'terms', 'support') %}
+            <li><a href="{{ h.url_for('jc_pages.' ~ name) }}">{{ h.jc_page(name).title }}</a></li>
+          {% endfor %}
         {% endblock %}
       </ul>
     </nav>
@@ -32,10 +35,13 @@
      nothing; the page it frames is the assistant host's, framed only by the origins it allows.
      It opens in the assistant's own language, Slovak, or the one the visitor chose in it, never
      the page's: an English page still opens a Slovak chat (T-4280). #}
-  {% set widget = h.jc_assistant_widget() %}
+  {# A dataset's or resource's page opens its publisher's assistant, any other page the
+     catalogue's (T-4281). #}
+  {% set publisher = pkg_dict.organization.name if pkg_dict is defined and pkg_dict and pkg_dict.organization else None %}
+  {% set widget = h.jc_assistant_widget(publisher) %}
   {% if widget %}
     <details class="jc-assistant">
-      <summary>{{ h.jc_t('assistant') }}</summary>
+      <summary><span>{{ h.jc_t('assistant') }}</span></summary>
       <iframe src="{{ widget }}" title="{{ h.jc_t('assistant') }}" loading="lazy" referrerpolicy="no-referrer"></iframe>
     </details>
     <script src="{{ h.url_for_static('/jc-assistant.js') }}" defer></script>

@@ -12,6 +12,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+import open_data
+
 # Reading, plus the subscriptions a WebSocket needs (T-4073); no entity write.
 READ_AND_SUBSCRIBE = ["retrieveOps", "createSubscription", "retrieveSubscription", "updateSubscription", "deleteSubscription"]
 # The anonymous grant also lists types and attributes (T-4258, EP-116).
@@ -170,9 +172,9 @@ def test_each_example_entity_names_its_own_space_and_the_contract_url_shape():
     for folder, space, domain in ((REGION, "bbsk-kraj", "bbsk.sk"),
                                   (CITY, "banskabystrica-mesto", "banskabystrica.sk")):
         example = json.loads((folder / "statistical-observation.v1.example.jsonld").read_text())
-        assert example["type"] == "StatisticalObservation"
+        assert example["type"] == "KeyPerformanceIndicator"
         segments = example["id"].split(":")
-        assert segments[:5] == ["urn", "ngsi-ld", "StatisticalObservation", domain, space], folder.name
+        assert segments[:5] == ["urn", "ngsi-ld", "KeyPerformanceIndicator", domain, space], folder.name
         assert len(segments) == 6, f"{DOCS} fixes four segments after the scheme"
         # The localId is the publisher's own key: cube, territory, period, indicator.
         cube, area, period, indicator = segments[5].split("-")[:4]
@@ -206,13 +208,26 @@ def key_values(entity: dict) -> dict:
 def test_every_example_validates_against_the_model_it_was_generated_from():
     jsonschema = pytest.importorskip("jsonschema")
     schema = json.loads((REGION / "statistical-observation.v1.schema.json").read_text())
-    validator = jsonschema.Draft7Validator(schema["definitions"]["StatisticalObservation"])
+    validator = jsonschema.Draft7Validator(schema["definitions"]["KeyPerformanceIndicator"])
     for folder in (REGION, CITY):
         example = json.loads((folder / "statistical-observation.v1.example.jsonld").read_text())
         # The wire carries `@context`; the model describes the entity inside it.
         del example["@context"]
         errors = sorted(validator.iter_errors(key_values(example)), key=str)
         assert not errors, f"{folder.name}: {[e.message for e in errors]}"
+
+
+def test_every_example_is_a_valid_smart_data_model_key_performance_indicator():
+    """T-4329: the raw cell is FIWARE's KeyPerformanceIndicator, its number the model's `kpiValue`,
+    checked against the schema.json vendored at a pinned commit (scripts/open-data/sdm)."""
+    for folder in (REGION, CITY, SEED / "zilina"):
+        example = json.loads((folder / "statistical-observation.v1.example.jsonld").read_text())
+        del example["@context"]
+        assert "kpiValue" in example, folder.name
+        assert open_data.sdm_errors("dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator", example) == [], folder.name
+        assert open_data.sdm_errors("dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator",
+                                    {**example, "calculationPeriod": {"type": "Property", "value": "2023"}}), \
+            "a value of the wrong shape for a model attribute fails"
 
 
 def test_an_attribute_the_model_does_not_declare_is_refused():
@@ -222,7 +237,7 @@ def test_an_attribute_the_model_does_not_declare_is_refused():
     example = json.loads((REGION / "statistical-observation.v1.example.jsonld").read_text())
     del example["@context"]
     invented = key_values(example) | {"territory": "kraj"}
-    errors = list(jsonschema.Draft7Validator(schema["definitions"]["StatisticalObservation"]).iter_errors(invented))
+    errors = list(jsonschema.Draft7Validator(schema["definitions"]["KeyPerformanceIndicator"]).iter_errors(invented))
     assert errors and "territory" in errors[0].message
 
 
@@ -253,7 +268,7 @@ MODEL = "statistical-observation"
 def model_slots(folder: Path) -> list[str]:
     """The slots the class declares, in the order the LinkML source lists them."""
     source = yaml.safe_load((folder / f"{MODEL}.linkml.yaml").read_text())
-    return list(source["classes"]["StatisticalObservation"]["slots"])
+    return list(source["classes"]["KeyPerformanceIndicator"]["slots"])
 
 
 def policies_of(folder: Path, space: str) -> dict[str, dict]:
@@ -286,7 +301,7 @@ def test_every_slot_the_model_declares_reaches_the_artifacts_beside_it():
         schema = json.loads((folder / f"{MODEL}.v1.schema.json").read_text())
         context = json.loads((folder / f"{MODEL}.v1.context.jsonld").read_text())["@context"]
         docs = (folder / f"{MODEL}.v1.md").read_text()
-        declared = schema["definitions"]["StatisticalObservation"]["properties"]
+        declared = schema["definitions"]["KeyPerformanceIndicator"]["properties"]
         for slot in model_slots(folder):
             assert slot in declared, f"{folder.name}: {slot} is not in the JSON Schema"
             assert slot in context, f"{folder.name}: {slot} is not in the @context"
@@ -296,10 +311,10 @@ def test_every_slot_the_model_declares_reaches_the_artifacts_beside_it():
 def test_the_note_is_optional_and_bounded_and_the_figures_stay_required():
     for folder, _, _ in RAW:
         entity = json.loads((folder / f"{MODEL}.v1.schema.json").read_text())["definitions"][
-            "StatisticalObservation"
+            "KeyPerformanceIndicator"
         ]
         assert NOTE not in entity["required"], "a row exists before anybody annotates it"
-        assert "observationValue" in entity["required"], folder.name
+        assert "kpiValue" in entity["required"], folder.name
         # `value` is an NGSI-LD core term; a slot of that name would collide with it (T-3964).
         assert "value" not in entity["properties"], folder.name
         note = entity["properties"][NOTE]
@@ -326,13 +341,13 @@ def test_a_person_may_write_the_note_and_may_not_write_a_figure():
         assert grant["operations"] == ["updateAttrs"], f"{folder.name}: one write and no other"
         assert grant["assignee"]["kind"] == "user", folder.name
         assert grant["information"] == [
-            {"entities": [{"type": "StatisticalObservation"}], "propertyNames": [NOTE]}
+            {"entities": [{"type": "KeyPerformanceIndicator"}], "propertyNames": [NOTE]}
         ], f"{folder.name}: the grant names the attribute, not the type (EP-14, GW16)"
 
 
 def test_no_grant_in_these_projects_lets_a_person_write_a_published_figure():
     # The property that has to hold however many policies are added later: a human write grant
-    # over a raw space reaches the note and nothing else, so `observationValue` cannot be edited by anyone
+    # over a raw space reaches the note and nothing else, so `kpiValue` cannot be edited by anyone
     # whose typing the next pipeline run would overwrite (AP-62, GW17).
     writes = {"createEntity", "updateEntity", "appendAttrs", "updateAttrs", "deleteAttrs",
               "deleteEntity", "mergeEntity", "replaceEntity", "replaceAttrs", "updateOps",
@@ -355,7 +370,7 @@ def test_the_steward_reads_the_columns_the_records_application_shows():
         # Every column the model declares, because a filter names an attribute and an attribute
         # the grant withholds is a filter the endpoint refuses rather than answers (T-1862).
         assert sorted(served) == sorted(model_slots(folder)), folder.name
-        assert grant["information"][0]["entities"] == [{"type": "StatisticalObservation"}]
+        assert grant["information"][0]["entities"] == [{"type": "KeyPerformanceIndicator"}]
 
 
 def test_the_raw_endpoints_stay_closed_to_the_public_while_the_note_opens():
@@ -494,7 +509,7 @@ def test_the_application_reading_both_bodies_is_a_published_static_app_on_the_re
     raw = one(REGION, "Endpoint", "bbsk-kraj-verejne")["spec"]
     assert raw["contextSpaceRef"] == "bbsk-kraj" and raw["audience"] == "public" and "publish" not in raw
     further = [need for need in app["spec"]["dataNeeds"] if need["contextSpaceRef"]["name"] != "bbsk-kpi"]
-    assert [need["types"] for need in further] == [["AdministrativeArea"], ["StatisticalObservation"]]
+    assert [need["types"] for need in further] == [["AdministrativeArea"], ["KeyPerformanceIndicator"]]
     assert all("roles" not in need for need in further)
     # The public read of the raw rows names every published column of the statistics office and
     # never the steward's own note, which is the region's annotation and not open data.

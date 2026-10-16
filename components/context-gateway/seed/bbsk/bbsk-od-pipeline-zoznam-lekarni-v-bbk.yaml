@@ -9,6 +9,7 @@ metadata:
     en: Zoznam lekární v BBK
 spec:
   class: scheduled
+  enabled: true
   schedule: 20 5 * * 4
   source:
     dataSourceRef:

@@ -194,7 +194,31 @@ class FakeWeb:
         return Response(status, kind, body)
 
 
-def load(monkeypatch, catalogue=CATALOGUE, config=CONFIG):
+ARTEFACTS = ["context.jsonld", "model.linkml.yaml", "model.md", "model.owl.ttl", "model.rdf.ttl",
+             "model.schema.json", "model.shacl.ttl"]
+
+
+class EveryName(dict):
+    """A mapping that converts every dataset, so a run lists them (EP-118); a test that needs one
+    unconverted removes it with `unconverted`."""
+
+    def __init__(self):
+        super().__init__()
+        self.unconverted = set()
+
+    def get(self, name, default=None):
+        if name in self.unconverted:
+            return default
+        return {"endpoint": "ep", "type": "T", "location": False,
+                "dataset": f"https://data.dev.joinedcontext.com/dataset/{name}"}
+
+
+def model_index(endpoint):
+    return [{"version": 1, "types": ["T", "KeyPerformanceIndicator"],
+             "artifacts": {f: {"bytes": 10, "sha256": f"sha-{f}", "type": "text/plain"} for f in ARTEFACTS}}]
+
+
+def load(monkeypatch, catalogue=CATALOGUE, config=CONFIG, mapped=True):
     monkeypatch.setenv("CATALOGUE", "ckan.ckan.svc.cluster.local")
     monkeypatch.setenv("CKAN_API_TOKEN", TOKEN)
     monkeypatch.setenv("HARVEST_CONFIG", json.dumps(config))
@@ -205,6 +229,11 @@ def load(monkeypatch, catalogue=CATALOGUE, config=CONFIG):
     harvest.ckan = FakeCkan()
     harvest.OPENER = FakeWeb(harvest)
     harvest.sparql = lambda query: [{k: {"value": v} for k, v in row.items()} for row in catalogue]
+    harvest.od_models = model_index
+    if mapped:
+        # Every dataset's rows are converted unless the test says otherwise (T-4324).
+        harvest.OD_DATASETS = EveryName()
+        harvest.OD_GATEWAY = "https://dev.joinedcontext.com"
     return harvest
 
 
@@ -234,22 +263,26 @@ def test_a_run_ingests_what_the_files_hold_and_lists_every_skip_with_its_reason(
     assert extras["modified"] == "2023-11-30T08:26:58Z"
     assert extras["publisher_name"] == "Mesto Banská Bystrica"
     assert extras["source_uri"] == "https://data.gov.sk/set/veku"
-    assert [r["format"] for r in ages["resources"]] == ["JSON", "CSV"]
-    table = fake.tables[ages["resources"][1]["id"]]
+    # EP-118: the platform's distributions and data model, the DataStore table last; no source link.
+    assert [r["format"] for r in ages["resources"]] == [
+        "NGSI-LD", "CSV", "JSON", "XLSX", "OData", "MCP", "WebSocket",
+        "JSON Schema", "JSON-LD", "LinkML", "Markdown", "OWL", "RDF", "SHACL", "CSV"]
+    assert not any(r["url"].startswith(EGOV) for r in ages["resources"] if r.get("url_type") != "datastore")
+    table = fake.tables[ages["resources"][-1]["id"]]
     # Trimmed and typed: the count is a number, and the stray space is gone.
     assert table["records"][0]["Počet_občanov_v_danom_veku"] == 612
     assert [f["type"] for f in table["fields"]] == ["int", "int", "int", "int"]
 
-    # The ZIP listed twice is one resource; the licence of the map data is the stricter one.
+    # The licence of the map data is the stricter one, and no ZIP is listed (EP-118).
     streets = fake.packages["bb-dtm-bb-register-ulic"]
-    assert len(streets["resources"]) == 1 and streets["license_id"] == "cc-by-sa"
-    # The non-ASCII file name is sent percent-encoded, and stored that way.
-    assert fake.packages["bb-dtm-bb-polohopis"]["resources"][0]["url"].endswith("v%C3%BD%C5%A1kopis_bodov%C3%A9ho_po%C4%BEa.zip")
-    # The bare host is moved to www., and a WordPress answer that is no flat table stays a link.
-    events = fake.packages["bb-podujatia"]
-    assert [r["url"] for r in events["resources"]] == ["https://www.banskabystrica.sk/wp-json/wp/v2/events"]
-    # A file is fetched at most once per run, and the ZIPs only by HEAD.
+    assert streets["license_id"] == "cc-by-sa"
+    assert not any("ZIP" in (r.get("format") or "") or r["url"].endswith(".zip")
+                   for p in fake.packages.values() for r in p["resources"])
+    # The non-ASCII file name is fetched percent-encoded, and the bare host is moved to www.
     requests = harvest.OPENER.requests
+    assert any(url.endswith("v%C3%BD%C5%A1kopis_bodov%C3%A9ho_po%C4%BEa.zip") for _, url in requests)
+    assert any(url == "https://www.banskabystrica.sk/wp-json/wp/v2/events" for _, url in requests)
+    # A file is fetched at most once per run, and the ZIPs only by HEAD.
     assert len(requests) == len(set(requests))
     assert all(method == "HEAD" for method, url in requests if url.endswith(".zip"))
 
@@ -260,8 +293,9 @@ def test_rows_without_an_identifier_are_not_published_in_any_resource(monkeypatc
     harvest = load(monkeypatch)
     assert harvest.main() == 0
     orders = harvest.ckan.packages["bb-objednavky-bb"]
-    assert [r["url_type"] for r in orders["resources"]] == ["datastore"]
-    records = harvest.ckan.tables[orders["resources"][0]["id"]]["records"]
+    assert [r.get("url_type") for r in orders["resources"]].count("datastore") == 1
+    assert orders["resources"][-1]["url_type"] == "datastore"
+    records = harvest.ckan.tables[orders["resources"][-1]["id"]]["records"]
     assert [r["Dodávateľ"] for r in records] == ["Firma s.r.o.", "Iná a.s."]
     # An IČO keeps its leading zeros: it is an identifier, not a number.
     assert records[0]["IČO"] == "00313271"
@@ -280,8 +314,8 @@ def test_a_second_run_replaces_the_tables_instead_of_adding_new_ones(monkeypatch
     assert set(harvest.ckan.tables) == tables, "a rerun added or lost a table"
     assert "package_create" not in harvest.ckan.calls[first:]
     ages = harvest.ckan.packages["bb-pocet-obcanov-podla-veku"]["resources"]
-    assert [r.get("url_type") for r in ages] == [None, "datastore"]
-    assert len(harvest.ckan.tables[ages[1]["id"]]["records"]) == 3
+    assert [r.get("url_type") for r in ages] == [None] * 14 + ["datastore"]
+    assert len(harvest.ckan.tables[ages[-1]["id"]]["records"]) == 3
 
 
 def test_a_dataset_the_publisher_no_longer_lists_is_withdrawn(monkeypatch, capsys):
@@ -349,25 +383,60 @@ def test_two_titles_that_fold_to_one_name_keep_apart(monkeypatch, capsys):
     assert set(harvest.ckan.packages) == {"bb-skoly-aaaaaaaa", "bb-skoly-bbbbbbbb"}
 
 
-def test_a_converted_dataset_gains_the_platform_apis_after_its_files_and_tables_stay(monkeypatch, capsys):
-    """T-4279: the mapping names the age table, so its page lists the NGSI-LD API and the files
-    filtered to its rows, OData and MCP for the type; no GeoJSON or OGC, the rows have no location.
-    The orders nobody mapped here gain nothing, and the DataStore table is still the table."""
+def test_only_a_converted_dataset_is_listed_with_its_apis_model_and_table(monkeypatch, capsys):
+    """T-4279, EP-118 (T-4324): the mapping names the age table only. Its page lists the NGSI-LD
+    API and the files filtered to its rows, OData, MCP and the WebSocket for the type, then the data
+    model in seven formalisms, then its DataStore table; no GeoJSON or OGC, the rows have no
+    location. Every dataset nobody mapped is not listed, and named so."""
     monkeypatch.setenv("OD_GATEWAY", "https://dev.joinedcontext.com/")
     monkeypatch.setenv("OD_DATASETS", json.dumps({"bb-pocet-obcanov-podla-veku": {
-        "endpoint": "abc", "type": "StatisticalObservation", "location": False,
+        "endpoint": "abc", "type": "KeyPerformanceIndicator", "location": False,
         "dataset": "https://data.dev.joinedcontext.com/dataset/bb-pocet-obcanov-podla-veku"}}))
-    harvest = load(monkeypatch)
+    harvest = load(monkeypatch, mapped=False)
     assert harvest.main() == 0
+    out = capsys.readouterr().out
+    assert set(harvest.ckan.packages) == {"bb-pocet-obcanov-podla-veku"}
+    assert "  - Objednávky BB: not converted to NGSI-LD, so not listed (EP-118)" in out
     ages = harvest.ckan.packages["bb-pocet-obcanov-podla-veku"]["resources"]
-    assert [r["format"] for r in ages] == ["JSON", "JSON-LD", "CSV", "JSON", "XLSX", "JSON", "JSON", "JSON", "CSV"]
+    assert [r["format"] for r in ages] == [
+        "NGSI-LD", "CSV", "JSON", "XLSX", "OData", "MCP", "WebSocket",
+        "JSON Schema", "JSON-LD", "LinkML", "Markdown", "OWL", "RDF", "SHACL", "CSV"]
     assert ages[-1].get("url_type") == "datastore", "the table moved off the end of the list"
-    assert ages[1]["url"] == ("https://dev.joinedcontext.com/api/endpoint/abc/ngsi-ld/v1/entities?type=StatisticalObservation"
+    assert ages[0]["url"] == ("https://dev.joinedcontext.com/api/endpoint/abc/ngsi-ld/v1/entities?type=KeyPerformanceIndicator"
                               "&q=dataset%3D%3D%22https%3A%2F%2Fdata.dev.joinedcontext.com%2Fdataset%2Fbb-pocet-obcanov-podla-veku%22")
-    assert ages[1]["conforms_to"].startswith("https://www.etsi.org/")
+    assert ages[0]["conforms_to"].startswith("https://www.etsi.org/")
+    assert ages[7]["url"] == "https://dev.joinedcontext.com/api/endpoint/abc/schema/v1/model.schema.json"
     assert not any("geojson" in r["url"] or "/ogc/" in r["url"] for r in ages)
-    assert not any(r.get("resource_type") == "api" for r in harvest.ckan.packages["bb-objednavky-bb"]["resources"])
     # A second run writes the same list again, nothing doubled.
     harvest.main()
     again = harvest.ckan.packages["bb-pocet-obcanov-podla-veku"]["resources"]
     assert [(r["name"], r["url"]) for r in again] == [(r["name"], r["url"]) for r in ages]
+
+
+def test_a_dataset_unmapped_after_a_run_is_withdrawn_and_none_mapped_withdraws_nothing(monkeypatch, capsys):
+    harvest = load(monkeypatch)
+    assert harvest.main() == 0
+    harvest.OD_DATASETS.unconverted.add("bb-objednavky-bb")
+    assert harvest.main() == 0
+    assert harvest.ckan.packages["bb-objednavky-bb"]["state"] == "deleted"
+    assert harvest.ckan.packages["bb-podujatia"]["state"] == "active"
+    # Withdrawn means CKAN's state=deleted, never a purge: once the dataset converts again (an
+    # extended Smart Data Model, owner 11:40Z), the next run restores the same dataset by its id.
+    withdrawn_id = harvest.ckan.packages["bb-objednavky-bb"]["id"]
+    harvest.OD_DATASETS.unconverted.discard("bb-objednavky-bb")
+    assert harvest.main() == 0
+    assert harvest.ckan.packages["bb-objednavky-bb"]["state"] == "active"
+    assert harvest.ckan.packages["bb-objednavky-bb"]["id"] == withdrawn_id
+    for script in ("harvest-nkod.py", "harvest-hub.py"):
+        assert "dataset_purge" not in (SCRIPT.parent / script).read_text(), script
+    harvest.OD_GATEWAY = ""
+    assert harvest.main() == 1
+    assert "nothing is withdrawn" in capsys.readouterr().err
+    assert harvest.ckan.packages["bb-podujatia"]["state"] == "active"
+
+
+def test_a_table_over_50_mb_is_not_kept(monkeypatch, capsys):
+    harvest = load(monkeypatch)
+    monkeypatch.setattr(harvest, "MAX_TABLE_BYTES", 10)
+    assert harvest.main() == 0
+    assert not any(r.get("url_type") == "datastore" for p in harvest.ckan.packages.values() for r in p["resources"])

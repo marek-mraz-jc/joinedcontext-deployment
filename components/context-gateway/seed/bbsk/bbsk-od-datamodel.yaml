@@ -15,29 +15,27 @@ spec:
   classes:
   - AdministrativeArea
   - Bridge
+  - CommitteeSeat
   - Contract
   - CouncilMeeting
-  - CouncilMember
   - CouncilVote
   - CycleRoute
-  - EVChargingStation
   - Grant
   - Invoice
-  - OrganizationUnit
+  - KeyPerformanceIndicator
+  - OfficeHours
+  - Organization
+  - Person
   - Petition
   - PointOfInterest
   - PublicInvestment
   - PublicOrganization
   - PublicProcurement
   - PurchaseOrder
-  - Regulation
   - RiverBasin
   - RoadAccident
   - RoadStructure
-  - School
-  - StatisticalObservation
-  - Supplier
-  - TrafficFlowObservedSite
+  - Rule
   - WaterBodyStatus
   artifacts:
     jsonSchema: ./bbsk-otvorene-data.v1.schema.json

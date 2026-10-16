@@ -9,7 +9,8 @@ metadata:
     en: Objednávky BB
 spec:
   class: scheduled
-  schedule: 21 1 * * 4
+  enabled: true
+  schedule: 56 1 * * 2
   source:
     dataSourceRef:
       kind: DataSource
