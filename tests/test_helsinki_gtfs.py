@@ -204,7 +204,7 @@ def test_each_source_reads_only_its_named_members_of_the_zip_within_a_bound():
         assert kind in model["spec"]["classes"] and kind in readable, kind
     # Paused until the runner can inflate shapes.txt under its bound (T-3953).
     assert yaml.safe_load((HELSINKI / "helsinki-pipeline-gtfs-shapes.yaml").read_text())["spec"]["enabled"] is False
-    # The ArcGIS stop register this feed replaces is gone; its lines stay for TransitRoute.
+    # The ArcGIS stop register this feed replaces is gone; its lines stay for PublicTransportRoute.
     assert "hsl-stops.yaml" not in " ".join(str(v) for v in index.values())
 
 

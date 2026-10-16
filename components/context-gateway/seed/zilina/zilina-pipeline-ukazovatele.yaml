@@ -19,7 +19,7 @@ spec:
   source:
     endpointRef: { kind: Endpoint, name: zilina-mesto }
     query:
-      type: StatisticalObservation
+      type: KeyPerformanceIndicator
       q: 'dataSet=="om7101qr","om7052rr","om7105rr","pr5001rr","cr3803mr";indicator=="IN010115","IN010087","IN010089","IN010082","U15061","U_CR_0005"'
   targetEndpoint: urn:ngsi-ld:Endpoint:zilina.sk:zilina-kpi:zilina-kpi
   output:
@@ -49,7 +49,7 @@ spec:
       let space = env("JC_SPACE")
       let ran = now().ts_format("2006-01-02T15:04:05Z07:00", "UTC")
       let source_endpoint = "urn:ngsi-ld:Endpoint:%v:%v:%v".format($domain, env("JC_SOURCE_SPACE"), env("JC_SOURCE_SPACE"))
-      let rows = this.filter(r -> r.refArea.value.or("") == "SK031B517402" && r.observationValue.value.type() == "number")
+      let rows = this.filter(r -> r.refArea.value.or("") == "SK031B517402" && r.kpiValue.value.type() == "number")
 
       # The single-value indicators: the newest period of the exact cell.
       let picks = $indicators.without("navstevnici-rok").map_each(i -> $rows.filter(r -> r.dataSet.value == i.value.cube && r.indicator.value == i.value.indicator && r.dimensionKey.value.or(null) == i.value.key).sort_by(r -> r.refPeriod.value).index(-1).catch(null))
@@ -58,7 +58,7 @@ spec:
       let year = $months.map_each(r -> r.refPeriod.value).unique().filter(y -> $months.filter(r -> r.refPeriod.value == y).map_each(r -> r.dimensionKey.value).unique().length() == 12).sort().index(-1).catch(null)
       let these = $months.filter(r -> r.refPeriod.value == $year)
       let visitors = if $year == null { null } else {
-        { "refPeriod": { "value": $year }, "observationValue": { "value": $these.map_each(r -> r.observationValue.value).sum() }, "dateObserved": $these.index(0).dateObserved }
+        { "refPeriod": { "value": $year }, "kpiValue": { "value": $these.map_each(r -> r.kpiValue.value).sum() }, "dateObserved": $these.index(0).dateObserved }
       }
       let chosen = $picks.assign({ "navstevnici-rok": $visitors })
 
@@ -80,7 +80,7 @@ spec:
         "id": "urn:ngsi-ld:KeyPerformanceIndicator:%v:%v:%v-mesto".format($domain, $space, c.name),
         "type": "KeyPerformanceIndicator",
         "name": { "type": "Property", "value": "%v-mesto".format(c.name) },
-        "currentValue": { "type": "Property", "value": c.pick.observationValue.value, "unitCode": c.spec.unit, "observedAt": c.pick.dateObserved.value.or(null) }.filter(e -> e.value != null),
+        "currentValue": { "type": "Property", "value": c.pick.kpiValue.value, "unitCode": c.spec.unit, "observedAt": c.pick.dateObserved.value.or(null) }.filter(e -> e.value != null),
         "calculationPeriod": { "type": "Property", "value": { "start": "%v-%vT00:00:00Z".format(c.period.slice(0, 4), c.days.index(0)), "end": "%v-%vT23:59:59Z".format(c.period.slice(0, 4), c.days.index(1)) } },
         "calculationFormula": { "type": "Property", "value": c.spec.formula },
         "derivedFrom": { "type": "Property", "value": $source_endpoint },

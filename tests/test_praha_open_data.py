@@ -369,7 +369,8 @@ def test_the_space_is_public_and_published_with_the_licence_of_its_most_demandin
 def test_the_model_classes_and_the_manifest_agree():
     linkml = yaml.safe_load((PRAHA / "praha.linkml.yaml").read_text())
     manifest = yaml.safe_load((PRAHA / "praha-datamodel.yaml").read_text())
-    assert set(manifest["spec"]["classes"]) == set(linkml["classes"])
+    # A value class such as PostalAddress (T-4329) is the shape of one attribute, not a type the manifest lists.
+    assert set(manifest["spec"]["classes"]) == {c for c, body in linkml["classes"].items() if body.get("is_a") == "Entity"}
 
 
 def _dataset_of(url):
@@ -399,3 +400,30 @@ def test_the_catalogue_names_every_source_the_space_reads_under_the_licence_it_p
     assert "CZ010" in catalog["spatial"]
     # A contact is a role address the owner chooses, never a person guessed here (EP-80).
     assert "contactPoint" not in catalog
+
+
+# T-4329: each Prague type and the vendored Smart Data Model it is.
+SDM_MODELS = {
+    "BikeHireDockingStation": "dataModel.Transportation/BikeHireDockingStation",
+    "AirQualityObserved": "dataModel.Environment/AirQualityObserved",
+    "PointOfInterest": "dataModel.PointOfInterest/PointOfInterest",
+    "WasteContainerIsle": "dataModel.WasteManagement/WasteContainerIsle",
+    "WasteContainer": "dataModel.WasteManagement/WasteContainer",
+    "OffStreetParking": "dataModel.Parking/OffStreetParking",
+}
+
+
+@requires_docker
+def test_every_entity_a_feed_writes_whole_is_valid_in_its_smart_data_model(written):
+    """A merge-only feed adds attributes to an entity another feed writes whole, so only the whole
+    writes are held to the model; an address is the model's PostalAddress, a container stands
+    where its collection point is."""
+    for name, entities in written.items():
+        if name in MERGED:
+            continue
+        for entity in entities:
+            model = SDM_MODELS.get(entity["type"])
+            if model:
+                assert open_data.sdm_errors(model, entity) == [], (name, entity["id"])
+    toilet = written["toilets"][0]["address"]["value"]
+    assert toilet["addressLocality"] == "Praha" and toilet["addressCountry"] == "CZ" and toilet["streetAddress"].strip()

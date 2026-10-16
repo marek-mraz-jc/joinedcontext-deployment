@@ -13,6 +13,9 @@
     "CityDistrict": {
       "@id": "jc:CityDistrict"
     },
+    "CityWork": {
+      "@id": "sdm:CityWork"
+    },
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
@@ -40,11 +43,8 @@
     "OffStreetParking": {
       "@id": "sdm:OffStreetParking"
     },
-    "ParkingArea": {
-      "@id": "jc:ParkingArea"
-    },
-    "ParkingZone": {
-      "@id": "jc:ParkingZone"
+    "OnStreetParking": {
+      "@id": "sdm:OnStreetParking"
     },
     "PointOfInterest": {
       "@id": "sdm:PointOfInterest"
@@ -52,11 +52,8 @@
     "PostalAddress": {
       "@id": "schema:PostalAddress"
     },
-    "PublicAreaPermit": {
-      "@id": "jc:PublicAreaPermit"
-    },
-    "TransitRoute": {
-      "@id": "jc:TransitRoute"
+    "PublicTransportRoute": {
+      "@id": "sdm:PublicTransportRoute"
     },
     "Vehicle": {
       "@id": "sdm:Vehicle"
@@ -415,6 +412,10 @@
       },
       "@id": "jc:transportMode"
     },
+    "transportationType": {
+      "@id": "sdm:transportationType",
+      "@type": "xsd:integer"
+    },
     "type": "@type",
     "unknownReference": {
       "@id": "jc:unknownReference"
@@ -452,14 +453,6 @@
     "xsd": "http://www.w3.org/2001/XMLSchema#",
     "zoneCode": {
       "@id": "jc:zoneCode"
-    },
-    "zoneKind": {
-      "@context": {
-        "description": "skos:prefLabel",
-        "meaning": "@id",
-        "text": "skos:notation"
-      },
-      "@id": "jc:zoneKind"
     }
   },
   "x-generator-version": "linkml-1.11.1"

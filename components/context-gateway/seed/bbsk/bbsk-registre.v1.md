@@ -28,6 +28,8 @@ Specialises `Entity`.
 | `surfaceArea` | Property | `float` |  | m2 | `jc:surfaceArea` | The area's surface as the cadastre states it. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `childAreas` | Relationship | [`AdministrativeArea`](#administrativearea) (list) |  |  | `jc:childAreas` | The municipalities of a district, computed from their refParentArea and never stored. |
+| `publicOrganizations` | Relationship | [`PublicOrganization`](#publicorganization) (list) |  |  | `jc:publicOrganizations` | The organisations the region founded in this municipality, computed from their refMunicipality and never stored. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
 | `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
@@ -35,19 +37,21 @@ Specialises `Entity`.
 
 ### PublicOrganization
 
-One organisation the region founded: a secondary school, a social-care home, a theatre, a museum or an office.
+One organisation the region founded: a secondary school, a social-care home, a theatre, a museum or an office. The FIWARE Smart Data Model CPSV-AP PublicOrganization (T-4329).
 
-IRI: `jc:PublicOrganization`
+IRI: `sdm-cpsv:PublicOrganization`
 
 Specialises `Entity`.
 
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
+| `preferredLabel` | Property | `string` |  |  | `sdm-cpsv:preferredLabel` | The organisation's official name, as CPSV-AP's PublicOrganization requires it. |
+| `spatial` | Property | `string` (list) |  |  | `sdm-cpsv:spatial` | The municipality the organisation is in, by name, as CPSV-AP's PublicOrganization requires it. |
 | `alternateName` | Property | `string` |  |  | `schema:alternateName` | The shorter name the organisation goes by, when it differs from the official one. |
 | `legalId` | Property | `string` |  |  | `jc:legalId` | The body's identification number (IČO) in the Slovak register of legal persons. |
 | `organizationCategory` | Property | [`OrganizationCategory`](#organizationcategory) | yes |  | `jc:organizationCategory` | The field the region founded the organisation for. |
-| `address` | Property | `string` |  |  | `schema:address` | The street address, one line, as the publisher writes it. |
+| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the register publishes it, field by field (Smart Data Models' common PostalAddress, T-4329); a field the register leaves out is absent, never guessed. |
 | `refMunicipality` | Relationship | [`AdministrativeArea`](#administrativearea) |  |  | `jc:refMunicipality` | The municipality the record lies in. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
@@ -56,47 +60,28 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
-### Hospital
+### PointOfInterest
 
-One general or specialised hospital in the region, by its facility number in the health-care register.
+One hospital (by its facility number in the health-care register) or one registered social service a municipality, a town or the region provides; `category` says which. The FIWARE Smart Data Model PointOfInterest (T-4329): no published model is a hospital or a social service. Private providers of social services are not in the space.
 
-IRI: `jc:Hospital`
+IRI: `sdm-poi:PointOfInterest`
 
 Specialises `Entity`.
 
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
-| `hospitalKind` | Property | [`HospitalKind`](#hospitalkind) | yes |  | `jc:hospitalKind` | Whether the hospital is a general one or specialises in some fields. |
+| `category` | Property | [`PlaceCategory`](#placecategory) (list) | yes |  | `sdm-poi:category` | What kind of place it is: `hospital` or `socialService`. The two registers share the Smart Data Model PointOfInterest, and an application asks for one with `q=category=="hospital"` (T-4329). |
+| `hospitalKind` | Property | [`HospitalKind`](#hospitalkind) |  |  | `jc:hospitalKind` | Whether the hospital is a general one or specialises in some fields. |
 | `operatorName` | Property | `string` |  |  | `jc:operatorName` | The legal person that runs it, as the register names it. |
-| `legalId` | Property | `string` |  |  | `jc:legalId` | The body's identification number (IČO) in the Slovak register of legal persons. |
 | `medicalSpecialties` | Property | `string` |  |  | `jc:medicalSpecialties` | The fields of medicine the hospital is licensed for, with their codes, as the register lists them. |
-| `address` | Property | `string` |  |  | `schema:address` | The street address, one line, as the publisher writes it. |
-| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
-| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
-| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
-| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
-| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
-| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
-
-### SocialService
-
-One registered social service a municipality, a town or the region provides, where it is provided and for whom. Private providers are not in the space.
-
-IRI: `jc:SocialService`
-
-Specialises `Entity`.
-
-| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
-|---|---|---|---|---|---|---|
-| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
-| `serviceKind` | Property | `string` | yes |  | `jc:serviceKind` | The kind of social service in the words of Act 448/2008 Z. z., such as `zariadenie pre seniorov` or `opatrovateľská služba`. |
+| `serviceKind` | Property | `string` |  |  | `jc:serviceKind` | The kind of social service in the words of Act 448/2008 Z. z., such as `zariadenie pre seniorov` or `opatrovateľská služba`. |
 | `serviceForm` | Property | [`ServiceForm`](#serviceform) |  |  | `jc:serviceForm` | How the service reaches the person it serves. |
 | `targetGroup` | Property | `string` |  |  | `jc:targetGroup` | Whom the service is for, as the provisions of the Act the register cites. |
 | `capacity` | Property | `integer` |  |  | `jc:capacity` | How many people the service may take at once, as registered; absent for a service registered without one. |
-| `providerKind` | Property | [`ProviderKind`](#providerkind) | yes |  | `jc:providerKind` | Which public body provides the service. |
+| `providerKind` | Property | [`ProviderKind`](#providerkind) |  |  | `jc:providerKind` | Which public body provides the service. |
 | `legalId` | Property | `string` |  |  | `jc:legalId` | The body's identification number (IČO) in the Slovak register of legal persons. |
-| `address` | Property | `string` |  |  | `schema:address` | The street address, one line, as the publisher writes it. |
+| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the register publishes it, field by field (Smart Data Models' common PostalAddress, T-4329); a field the register leaves out is absent, never guessed. |
 | `districtName` | Property | `string` |  |  | `jc:districtName` | The district the record lies in, by name, as the publisher writes it. |
 | `url` | Property | `string` |  |  | `schema:url` | The web page the publisher gives for it. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
@@ -105,6 +90,19 @@ Specialises `Entity`.
 | `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### PostalAddress
+
+The value of `address`: a postal address, never an entity of its own (Smart Data Models' common schema).
+
+IRI: `schema:PostalAddress`
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `streetAddress` | Property | `string` |  |  | `schema:streetAddress` | The street and the house number, or the venue. |
+| `postalCode` | Property | `string` |  |  | `schema:postalCode` | The postal code. |
+| `addressLocality` | Property | `string` |  |  | `schema:addressLocality` | The town or the municipality. |
+| `addressCountry` | Property | `string` |  |  | `schema:addressCountry` | The country, as an ISO 3166-1 alpha-2 code. |
 
 ### Bridge
 
@@ -149,6 +147,13 @@ IRI: `ngsi-ld:Entity`
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
 ## Enumerations
+
+### PlaceCategory
+
+| Value | Meaning |
+|---|---|
+| `hospital` | A general or specialised hospital. |
+| `socialService` | A registered social service. |
 
 ### DivisionLevel
 

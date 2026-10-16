@@ -80,7 +80,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "pm10": {
-          "description": "Particulate matter up to 10 µm, the hour's mean at the station.",
+          "description": "Particulate matter up to 10 \u00b5m, the hour's mean at the station.",
           "minimum": 0,
           "type": [
             "number",
@@ -92,7 +92,7 @@
           }
         },
         "pm25": {
-          "description": "Particulate matter up to 2.5 µm, the hour's mean at the station.",
+          "description": "Particulate matter up to 2.5 \u00b5m, the hour's mean at the station.",
           "minimum": 0,
           "type": [
             "number",
@@ -577,6 +577,162 @@
       "title": "CityDistrict",
       "type": "object"
     },
+    "CityWork": {
+      "additionalProperties": false,
+      "description": "One permit of the city's public-area register: an excavation, a temporary traffic arrangement or an event, with every area it covers as one outline. The applicant and the contractor are left out, because they can name a person. The Smart Data Model of works that occupy the street (T-4329); an event's permit covers its build and teardown on it.",
+      "properties": {
+        "address": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PostalAddress"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed from a line of text.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "description": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "A short description, per language.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "permitEnd": {
+          "description": "The last day the permit covers.",
+          "format": "date",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "permitKind": {
+          "$ref": "#/definitions/PermitKind",
+          "description": "What the permit lets its holder do on the public area.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "permitNumber": {
+          "description": "The application number the city's permit register gives the permit, such as KP1900206-23.",
+          "pattern": "^[A-Z]{2}[0-9]{7}(-[0-9]+)?$",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "permitStart": {
+          "description": "The first day the permit covers.",
+          "format": "date",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "permitStatus": {
+          "$ref": "#/definitions/PermitStatus",
+          "description": "Where the permitted work or event stands today.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "refDistrict": {
+          "description": "The district the record lies in.",
+          "pattern": "^urn:ngsi-ld:CityDistrict:",
+          "type": "string",
+          "x-ngsi-ld-kind": "Relationship",
+          "x-ngsi-ld-relationship": {
+            "cardinality": "many-to-one",
+            "inverse": "publicAreaPermits",
+            "onDelete": "restrict",
+            "target": "CityDistrict",
+            "unique": false
+          }
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "permitKind",
+        "permitNumber",
+        "permitStatus",
+        "permitStart",
+        "permitEnd",
+        "id",
+        "type"
+      ],
+      "title": "CityWork",
+      "type": "object"
+    },
     "DivisionLevel": {
       "description": "",
       "enum": [
@@ -904,7 +1060,7 @@
     },
     "GtfsRoute": {
       "additionalProperties": false,
-      "description": "One HSL line as GTFS gives it, both directions and every variant: its number, its name, what runs it and who operates it. Its stops in order are TransitRoute's.",
+      "description": "One HSL line as GTFS gives it, both directions and every variant: its number, its name, what runs it and who operates it. Its stops in order are PublicTransportRoute's.",
       "properties": {
         "dataProvider": {
           "description": "Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space).",
@@ -1663,95 +1819,18 @@
       "title": "OffStreetParking",
       "type": "object"
     },
-    "ParkingArea": {
+    "OnStreetParking": {
       "additionalProperties": false,
-      "description": "One parking area of the city's parking guide, its outline and the number of cars it holds when the city has estimated it.",
+      "description": "One street parking area of the city with its outline (T-4329): a parking area of the city's parking guide with the cars it holds when the city has estimated it (category `public`), a parking fee zone (`feeCharged`) or a resident parking zone (`forResidents`), a zone with its code and rules.",
       "properties": {
-        "dataProvider": {
-          "description": "Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space).",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "id": {
-          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
-          "type": "string",
-          "x-ngsi-ld-kind": "Property"
-        },
-        "location": {
-          "description": "Where the entity is, as GeoJSON geometry.",
-          "properties": {
-            "coordinates": {
-              "type": "array"
-            },
-            "type": {
-              "enum": [
-                "Point",
-                "MultiPoint",
-                "LineString",
-                "MultiLineString",
-                "Polygon",
-                "MultiPolygon"
-              ],
-              "type": "string"
-            }
+        "category": {
+          "description": "Which of the city's street parking layers the area belongs to, in the Smart Data Model's own words.",
+          "items": {
+            "$ref": "#/definitions/StreetParkingCategory"
           },
-          "required": [
-            "type",
-            "coordinates"
-          ],
-          "type": [
-            "object",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "GeoProperty"
-        },
-        "observedAt": {
-          "description": "When the observation the entity reports was made.",
-          "format": "date-time",
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": "array",
           "x-ngsi-ld-kind": "Property"
         },
-        "source": {
-          "description": "The open-data service the entity was read from.",
-          "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "totalSpotNumber": {
-          "description": "The number of vehicles the site holds, as the publisher states or estimates it; for a park and ride site, of its own kind (car or bicycle).",
-          "minimum": 0,
-          "type": [
-            "integer",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "type": {
-          "description": "The entity type, one class of a published data model.",
-          "type": "string",
-          "x-ngsi-ld-kind": "Property"
-        }
-      },
-      "required": [
-        "id",
-        "type"
-      ],
-      "title": "ParkingArea",
-      "type": "object"
-    },
-    "ParkingZone": {
-      "additionalProperties": false,
-      "description": "One parking fee zone or resident parking zone of the city, its outline and its rules.",
-      "properties": {
         "dataProvider": {
           "description": "Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space).",
           "type": [
@@ -1833,6 +1912,15 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "totalSpotNumber": {
+          "description": "The number of vehicles the site holds, as the publisher states or estimates it; for a park and ride site, of its own kind (car or bicycle).",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "type": {
           "description": "The entity type, one class of a published data model.",
           "type": "string",
@@ -1849,36 +1937,20 @@
         },
         "zoneCode": {
           "description": "The zone's own code, a fee zone number or a resident permit letter, as the signs show it.",
-          "type": "string",
-          "x-ngsi-ld-kind": "Property"
-        },
-        "zoneKind": {
-          "$ref": "#/definitions/ParkingZoneKind",
-          "description": "Whether the zone sets the parking fee or the residents' and businesses' permits.",
+          "type": [
+            "string",
+            "null"
+          ],
           "x-ngsi-ld-kind": "Property"
         }
       },
       "required": [
-        "zoneKind",
-        "zoneCode",
+        "category",
         "id",
         "type"
       ],
-      "title": "ParkingZone",
+      "title": "OnStreetParking",
       "type": "object"
-    },
-    "ParkingZoneKind": {
-      "description": "",
-      "enum": [
-        "fee",
-        "resident"
-      ],
-      "title": "ParkingZoneKind",
-      "type": "string",
-      "x-enum-descriptions": {
-        "fee": "The zone sets what parking costs by the hour.",
-        "resident": "Residents and businesses of the zone park on its permit."
-      }
     },
     "PermitKind": {
       "description": "",
@@ -2086,184 +2158,9 @@
       "title": "PostalAddress",
       "type": "object"
     },
-    "PublicAreaPermit": {
+    "PublicTransportRoute": {
       "additionalProperties": false,
-      "description": "One permit of the city's public-area register: an excavation, a temporary traffic arrangement or an event, with every area it covers as one outline. The applicant and the contractor are left out, because they can name a person.",
-      "properties": {
-        "address": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/PostalAddress"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "description": "The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed from a line of text.",
-          "x-ngsi-ld-kind": "Property"
-        },
-        "dataProvider": {
-          "description": "Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space).",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "description": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "A short description, per language.",
-          "type": [
-            "object",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "LanguageProperty"
-        },
-        "id": {
-          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
-          "type": "string",
-          "x-ngsi-ld-kind": "Property"
-        },
-        "location": {
-          "description": "Where the entity is, as GeoJSON geometry.",
-          "properties": {
-            "coordinates": {
-              "type": "array"
-            },
-            "type": {
-              "enum": [
-                "Point",
-                "MultiPoint",
-                "LineString",
-                "MultiLineString",
-                "Polygon",
-                "MultiPolygon"
-              ],
-              "type": "string"
-            }
-          },
-          "required": [
-            "type",
-            "coordinates"
-          ],
-          "type": [
-            "object",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "GeoProperty"
-        },
-        "name": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "The name, per language.",
-          "type": [
-            "object",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "LanguageProperty"
-        },
-        "observedAt": {
-          "description": "When the observation the entity reports was made.",
-          "format": "date-time",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "permitEnd": {
-          "description": "The last day the permit covers.",
-          "format": "date",
-          "type": "string",
-          "x-ngsi-ld-kind": "Property"
-        },
-        "permitKind": {
-          "$ref": "#/definitions/PermitKind",
-          "description": "What the permit lets its holder do on the public area.",
-          "x-ngsi-ld-kind": "Property"
-        },
-        "permitNumber": {
-          "description": "The application number the city's permit register gives the permit, such as KP1900206-23.",
-          "pattern": "^[A-Z]{2}[0-9]{7}(-[0-9]+)?$",
-          "type": "string",
-          "x-ngsi-ld-kind": "Property"
-        },
-        "permitStart": {
-          "description": "The first day the permit covers.",
-          "format": "date",
-          "type": "string",
-          "x-ngsi-ld-kind": "Property"
-        },
-        "permitStatus": {
-          "$ref": "#/definitions/PermitStatus",
-          "description": "Where the permitted work or event stands today.",
-          "x-ngsi-ld-kind": "Property"
-        },
-        "refDistrict": {
-          "description": "The district the record lies in.",
-          "pattern": "^urn:ngsi-ld:CityDistrict:",
-          "type": "string",
-          "x-ngsi-ld-kind": "Relationship",
-          "x-ngsi-ld-relationship": {
-            "cardinality": "many-to-one",
-            "inverse": "publicAreaPermits",
-            "onDelete": "restrict",
-            "target": "CityDistrict",
-            "unique": false
-          }
-        },
-        "source": {
-          "description": "The open-data service the entity was read from.",
-          "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "type": {
-          "description": "The entity type, one class of a published data model.",
-          "type": "string",
-          "x-ngsi-ld-kind": "Property"
-        }
-      },
-      "required": [
-        "permitKind",
-        "permitNumber",
-        "permitStatus",
-        "permitStart",
-        "permitEnd",
-        "id",
-        "type"
-      ],
-      "title": "PublicAreaPermit",
-      "type": "object"
-    },
-    "ServiceCategory": {
-      "description": "",
-      "enum": [
-        "library",
-        "healthStation",
-        "swimmingHall",
-        "beach",
-        "school"
-      ],
-      "title": "ServiceCategory",
-      "type": "string",
-      "x-enum-descriptions": {
-        "beach": "A public beach.",
-        "healthStation": "A health station.",
-        "library": "A public library.",
-        "school": "A comprehensive school.",
-        "swimmingHall": "An indoor swimming hall."
-      }
-    },
-    "TransitRoute": {
-      "additionalProperties": false,
-      "description": "One HSL line in one direction: its number, where it runs to, its stops in order and the line through them. A line with several variants has one entity per variant.",
+      "description": "One HSL line in one direction: its number, where it runs to, its stops in order and the line through them. A line with several variants has one entity per variant. The Smart Data Model's generic public transport route (T-4329); GtfsRoute is the line without a direction.",
       "properties": {
         "dataProvider": {
           "description": "Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space).",
@@ -2385,6 +2282,13 @@
           "description": "What serves the stop or runs the line.",
           "x-ngsi-ld-kind": "Property"
         },
+        "transportationType": {
+          "description": "What runs the line as its GTFS route type (0 tram, 1 metro, 2 train, 3 bus, 4 ferry), the number the Smart Data Model requires beside the word `transportMode` gives.",
+          "maximum": 7,
+          "minimum": 0,
+          "type": "integer",
+          "x-ngsi-ld-kind": "Property"
+        },
         "type": {
           "description": "The entity type, one class of a published data model.",
           "type": "string",
@@ -2392,11 +2296,46 @@
         }
       },
       "required": [
+        "transportationType",
         "id",
         "type"
       ],
-      "title": "TransitRoute",
+      "title": "PublicTransportRoute",
       "type": "object"
+    },
+    "ServiceCategory": {
+      "description": "",
+      "enum": [
+        "library",
+        "healthStation",
+        "swimmingHall",
+        "beach",
+        "school"
+      ],
+      "title": "ServiceCategory",
+      "type": "string",
+      "x-enum-descriptions": {
+        "beach": "A public beach.",
+        "healthStation": "A health station.",
+        "library": "A public library.",
+        "school": "A comprehensive school.",
+        "swimmingHall": "An indoor swimming hall."
+      }
+    },
+    "StreetParkingCategory": {
+      "description": "The OnStreetParking `category` values the city's layers use, a subset of the Smart Data Model's enum.",
+      "enum": [
+        "public",
+        "feeCharged",
+        "forResidents"
+      ],
+      "title": "StreetParkingCategory",
+      "type": "string",
+      "x-enum-descriptions": {
+        "feeCharged": "A parking fee zone; parking costs by the hour.",
+        "forResidents": "A resident parking zone; residents and businesses of the zone park on its permit.",
+        "public": "A parking area of the parking guide, open to anyone."
+      }
     },
     "TransportMode": {
       "description": "",

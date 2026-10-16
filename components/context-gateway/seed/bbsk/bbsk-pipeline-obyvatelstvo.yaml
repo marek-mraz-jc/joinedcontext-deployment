@@ -1,4 +1,4 @@
-# One StatisticalObservation per territory per year from the ŠÚ SR resident-population cube. Writes through the space's one Endpoint with the runner's service account, so the Policy applies to it as to anybody (PL-18, PF-39).
+# One KeyPerformanceIndicator per territory per year from the ŠÚ SR resident-population cube. Writes through the space's one Endpoint with the runner's service account, so the Policy applies to it as to anybody (PL-18, PF-39).
 apiVersion: joinedcontext.com/v1alpha1
 kind: Pipeline
 metadata:
@@ -15,7 +15,7 @@ spec:
     dataSourceRef: { kind: DataSource, name: susr-om7102rr }
   targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-kraj:bbsk-kraj
   output:
-    type: StatisticalObservation
+    type: KeyPerformanceIndicator
     mode: upsert
   quotas:
     maxMemoryMb: 128

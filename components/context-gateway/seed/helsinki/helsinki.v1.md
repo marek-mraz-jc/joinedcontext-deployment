@@ -224,17 +224,22 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
-### ParkingArea
+### OnStreetParking
 
-One parking area of the city's parking guide, its outline and the number of cars it holds when the city has estimated it.
+One street parking area of the city with its outline (T-4329): a parking area of the city's parking guide with the cars it holds when the city has estimated it (category `public`), a parking fee zone (`feeCharged`) or a resident parking zone (`forResidents`), a zone with its code and rules.
 
-IRI: `jc:ParkingArea`
+IRI: `sdm:OnStreetParking`
 
 Specialises `Entity`.
 
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language. |
+| `category` | Property | [`StreetParkingCategory`](#streetparkingcategory) (list) | yes |  | `sdm:category` | Which of the city's street parking layers the area belongs to, in the Smart Data Model's own words. |
 | `totalSpotNumber` | Property | `integer` |  |  | `sdm:totalSpotNumber` | The number of vehicles the site holds, as the publisher states or estimates it; for a park and ride site, of its own kind (car or bicycle). |
+| `zoneCode` | Property | `string` |  |  | `jc:zoneCode` | The zone's own code, a fee zone number or a resident permit letter, as the signs show it. |
+| `description` | LanguageProperty | `string` |  |  | `schema:description` | A short description, per language. |
+| `url` | Property | `uri` |  |  | `schema:url` | Where the item is published in full. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
@@ -266,33 +271,11 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
-### ParkingZone
+### CityWork
 
-One parking fee zone or resident parking zone of the city, its outline and its rules.
+One permit of the city's public-area register: an excavation, a temporary traffic arrangement or an event, with every area it covers as one outline. The applicant and the contractor are left out, because they can name a person. The Smart Data Model of works that occupy the street (T-4329); an event's permit covers its build and teardown on it.
 
-IRI: `jc:ParkingZone`
-
-Specialises `Entity`.
-
-| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
-|---|---|---|---|---|---|---|
-| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language. |
-| `zoneKind` | Property | [`ParkingZoneKind`](#parkingzonekind) | yes |  | `jc:zoneKind` | Whether the zone sets the parking fee or the residents' and businesses' permits. |
-| `zoneCode` | Property | `string` | yes |  | `jc:zoneCode` | The zone's own code, a fee zone number or a resident permit letter, as the signs show it. |
-| `description` | LanguageProperty | `string` |  |  | `schema:description` | A short description, per language. |
-| `url` | Property | `uri` |  |  | `schema:url` | Where the item is published in full. |
-| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
-| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
-| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
-| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
-| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
-| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
-
-### PublicAreaPermit
-
-One permit of the city's public-area register: an excavation, a temporary traffic arrangement or an event, with every area it covers as one outline. The applicant and the contractor are left out, because they can name a person.
-
-IRI: `jc:PublicAreaPermit`
+IRI: `sdm:CityWork`
 
 Specialises `Entity`.
 
@@ -329,7 +312,7 @@ Specialises `Entity`.
 | `divisionLevel` | Property | [`DivisionLevel`](#divisionlevel) | yes |  | `jc:divisionLevel` | Which of the city's two divisions the area belongs to. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
-| `publicAreaPermits` | Relationship | [`PublicAreaPermit`](#publicareapermit) (list) |  |  | `jc:publicAreaPermits` | The public-area permits that lie in this district, computed from their refDistrict and never stored. |
+| `publicAreaPermits` | Relationship | [`CityWork`](#citywork) (list) |  |  | `jc:publicAreaPermits` | The public-area permits that lie in this district, computed from their refDistrict and never stored. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
 | `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
@@ -362,11 +345,11 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
-### TransitRoute
+### PublicTransportRoute
 
-One HSL line in one direction: its number, where it runs to, its stops in order and the line through them. A line with several variants has one entity per variant.
+One HSL line in one direction: its number, where it runs to, its stops in order and the line through them. A line with several variants has one entity per variant. The Smart Data Model's generic public transport route (T-4329); GtfsRoute is the line without a direction.
 
-IRI: `jc:TransitRoute`
+IRI: `sdm:PublicTransportRoute`
 
 Specialises `Entity`.
 
@@ -378,6 +361,7 @@ Specialises `Entity`.
 | `headsign` | Property | `string` |  |  | `jc:headsign` | Where the line runs to in this direction, as its sign shows it. |
 | `directionId` | Property | `integer` |  |  | `jc:directionId` | HSL's direction of the line, 1 or 2. |
 | `transportMode` | Property | [`TransportMode`](#transportmode) |  |  | `jc:transportMode` | What serves the stop or runs the line. |
+| `transportationType` | Property | `integer` | yes |  | `sdm:transportationType` | What runs the line as its GTFS route type (0 tram, 1 metro, 2 train, 3 bus, 4 ferry), the number the Smart Data Model requires beside the word `transportMode` gives. |
 | `stopSequence` | Property | `string` (list) |  |  | `jc:stopSequence` | The stops the line serves in this direction, in order, each the GTFS stop id that ends the id of a GtfsStop of this space. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
@@ -435,7 +419,7 @@ Specialises `Entity`.
 
 ### GtfsRoute
 
-One HSL line as GTFS gives it, both directions and every variant: its number, its name, what runs it and who operates it. Its stops in order are TransitRoute's.
+One HSL line as GTFS gives it, both directions and every variant: its number, its name, what runs it and who operates it. Its stops in order are PublicTransportRoute's.
 
 IRI: `sdm:GtfsRoute`
 
@@ -514,12 +498,15 @@ IRI: `ngsi-ld:Entity`
 | `beach` | A public beach. |
 | `school` | A comprehensive school. |
 
-### ParkingZoneKind
+### StreetParkingCategory
+
+The OnStreetParking `category` values the city's layers use, a subset of the Smart Data Model's enum.
 
 | Value | Meaning |
 |---|---|
-| `fee` | The zone sets what parking costs by the hour. |
-| `resident` | Residents and businesses of the zone park on its permit. |
+| `public` | A parking area of the parking guide, open to anyone. |
+| `feeCharged` | A parking fee zone; parking costs by the hour. |
+| `forResidents` | A resident parking zone; residents and businesses of the zone park on its permit. |
 
 ### PermitKind
 

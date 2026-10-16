@@ -78,7 +78,7 @@ output over those members, every entity valid against `helsinki.v1.schema.json`.
 is paused because the runner reads a deflated member only when 1032 times its packed size fits
 the 256 MiB bound (T-3951), and `shapes.txt` is 4.2 MB packed; T-3953 bounds the inflate on its
 output instead. `stops.txt` (197 kB packed) fits that rule with 256 MiB, until it passes 260 kB
-packed. A line's stops in order and its direction stay with TransitRoute from the ArcGIS "stops by
+packed. A line's stops in order and its direction stay with PublicTransportRoute from the ArcGIS "stops by
 line" register (`transit-routes`), which transit-reach reads: GTFS gives them only through
 `trips.txt` and `stop_times.txt`. The ArcGIS stop register is gone; it named stops by the same
 GTFS stop ids, so the first run updates those entities in place, and a stop it held that the
@@ -98,7 +98,7 @@ Measured 2026-10-12 03:02Z over the live document (638 kB, 666 trips, 19 211 sto
 221 of the 231 stops appear in it): 204 stops got departures. Peak resident memory was 217 MB
 against Bento's baseline of 139 MB, about 76 MB for the 2 s each refresh holds it. HSL's v2 feed
 sends expected times and no `delay` (0 of 19 211 updates) and no headsign. So a departure names
-its line and direction, and the app takes the headsign from the TransitRoute of that line and
+its line and direction, and the app takes the headsign from the PublicTransportRoute of that line and
 direction. An empty feed keeps the departures five minutes (the runner's `departures` cache), then
 clears them.
 

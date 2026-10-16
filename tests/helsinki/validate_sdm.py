@@ -48,20 +48,16 @@ MODELS = {
     "GtfsShape": ("dataModel.UrbanMobility", "GtfsShape"),
     "Event": ("dataModel.TourismDestinations", "Event"),
     "OffStreetParking": ("dataModel.Parking", "OffStreetParking"),
+    "OnStreetParking": ("dataModel.Parking", "OnStreetParking"),
+    "CityWork": ("dataModel.Transportation", "CityWork"),
+    "PublicTransportRoute": ("dataModel.UrbanMobility", "PublicTransportRoute"),
 }
 
 #: Types with no Smart Data Model, and why the Helsinki model keeps its own.
 EXCEPTIONS = {
     "NewsArticle": "schema.org NewsArticle; SDM has no news model",
-    "ParkingArea": "Helsinki parking area polygons; SDM ParkingSpot/OffStreetParking describe a facility with capacity, which the source does not publish",
-    "ParkingZone": "Helsinki fee and resident zones; no SDM model for a tariff zone",
-    "PublicAreaPermit": "Helsinki Allu permits; no SDM model",
     "CityDistrict": "Helsinki districts; SDM has no administrative-area model beyond Location",
     "KeyPerformanceIndicator": "the platform's own KPI type, outside the Helsinki feeds",
-    "TransitRoute": "one direction of one HSL line with its headsign and drawn shape; GtfsRoute is the "
-                    "line without a direction or a shape (those are GtfsTrip and GtfsShape), so renaming "
-                    "would claim a model the entity is not; GtfsRoute from GTFS static stands beside it (T-3890), and "
-                    "transit-reach reads this one's stop order, which GTFS gives only through stop_times",
 }
 
 #: Attributes of a validated type that knowingly differ from the SDM schema, and why. A failure on

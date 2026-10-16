@@ -14,6 +14,6 @@ spec:
   information:
     - entities:
         - type: Event
-        - type: School
+        - type: Organization
         - type: AirQualityObserved
         - type: WeatherObserved

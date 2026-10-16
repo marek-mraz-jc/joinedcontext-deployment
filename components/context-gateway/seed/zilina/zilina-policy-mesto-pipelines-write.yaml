@@ -11,4 +11,4 @@ spec:
   operations: [upsertBatch, createBatch, queryBatch, queryEntity]
   information:
     - entities:
-        - type: StatisticalObservation
+        - type: KeyPerformanceIndicator
