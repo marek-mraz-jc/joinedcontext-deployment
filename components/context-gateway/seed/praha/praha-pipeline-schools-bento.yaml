@@ -13,7 +13,7 @@ pipeline:
           "name": { "type": "LanguageProperty", "languageMap": { "cs": f.properties.nazev_zar.trim() } },
           "serviceCategory": { "type": "Property", "value": "school" },
           "facilityType": if f.properties.typ_txt.or("").trim() == "" { null } else { { "type": "Property", "value": f.properties.typ_txt.trim() } },
-          "address": if f.properties.adresa_zar.or("").trim() == "" { null } else { { "type": "Property", "value": f.properties.adresa_zar.trim() } },
+          "address": if f.properties.adresa_zar.or("").trim() == "" { null } else { { "type": "Property", "value": { "streetAddress": f.properties.adresa_zar.trim(), "addressLocality": "Praha", "addressCountry": "CZ" } } },
           "capacity": if f.properties.kapacita.or(null) == null { null } else { { "type": "Property", "value": f.properties.kapacita } },
           "pupilCount": if f.properties.pocet_zaku.or(null) == null { null } else { { "type": "Property", "value": f.properties.pocet_zaku } },
           "location": { "type": "GeoProperty", "value": f.geometry },
