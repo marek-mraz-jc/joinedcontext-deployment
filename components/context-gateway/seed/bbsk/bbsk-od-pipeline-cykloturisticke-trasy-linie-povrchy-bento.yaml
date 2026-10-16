@@ -72,7 +72,7 @@ pipeline:
         }
         let local = "cykloturisticke-trasy-linie-povrchy-" + {"name": this.properties."name", "alps": this.properties."alps", "farba": this.properties."farba", "spravca": this.properties."spravca", "zdroj": this.properties."zdroj", "id": this.properties."id", "f_nazov": this.properties."f_nazov", "povrch": this.properties."povrch", "dlzka": this.properties."dlzka"}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("CycleRoute", "bbsk.sk", "bbsk-otvorene-data", $local),
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("CycleRoute", "bbsk.sk", env("JC_SPACE"), $local),
           "type": "CycleRoute",
           "columnName": this.properties."name".apply("string"),
           "alps": this.properties."alps".apply("string"),

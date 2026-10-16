@@ -169,7 +169,7 @@ def entity(e: dict, slug: str, model_ranges: dict[str, str], source_url: str) ->
         f"let local = {q(slug + '-')} + {local}.re_replace_all(\"[^A-Za-z0-9._~-]\", \"-\").slice(0, 80)",
         "root = {",
         # The publisher's domain, never the runner's JC_ORG_DOMAIN, which is the installation's (T-4202).
-        f"  \"id\": \"urn:ngsi-ld:%v:%v:%v:%v\".format({q(e['type'])}, {q(PROJECTS[e['org']]['domain'])}, {q(e['space'])}, $local),",
+        f"  \"id\": \"urn:ngsi-ld:%v:%v:%v:%v\".format({q(e['type'])}, {q(PROJECTS[e['org']]['domain'])}, env(\"JC_SPACE\"), $local),",
         f"  \"type\": {q(e['type'])},",
     ]
     for a, c in cols.items():
