@@ -15,20 +15,22 @@ OD_DATASETS = _json.loads(_os.environ.get("OD_DATASETS") or "{}")
 OD_GATEWAY = (_os.environ.get("OD_GATEWAY") or "").rstrip("/")
 
 # (path under the Endpoint, name, format, media type, conformsTo, filtered to the dataset, needs a location)
+# The format is the label jcctl's publisher gives an Endpoint's own dataset (ckan.rs `distribution`),
+# so the catalogue's format facet counts both under one name (EP-118, T-4324).
 # OGC API Features and OData read a whole type: their views refuse a filter on `dataset` (403),
 # so those two list every row of the type in the space, and say so.
 OD_STANDARDS = [
-    ("ngsi-ld/v1/entities", "NGSI-LD API", "JSON-LD", "application/ld+json",
+    ("ngsi-ld/v1/entities", "NGSI-LD API", "NGSI-LD", "application/ld+json",
      "https://www.etsi.org/deliver/etsi_gs/CIM/001_099/009/", True, False),
     ("file.geojson", "GeoJSON", "GeoJSON", "application/geo+json", "https://www.rfc-editor.org/rfc/rfc7946", True, True),
     ("file.csv", "CSV", "CSV", "text/csv", None, True, False),
     ("file.json", "JSON", "JSON", "application/json", None, True, False),
     ("file.xlsx", "Excel", "XLSX", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", None, True, False),
-    ("ogc/features/collections/{type}/items", "OGC API - Features", "GeoJSON", "application/geo+json",
+    ("ogc/features/collections/{type}/items", "OGC API - Features", "OGCFEAT", "application/geo+json",
      "http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core", False, True),
-    ("odata/v4/{type}", "OData v4", "JSON", "application/json", "https://docs.oasis-open.org/odata/odata/v4.01/", False, False),
-    ("mcp", "Model Context Protocol", "JSON", "application/json", "https://modelcontextprotocol.io/specification", False, False),
-    ("ws", "WebSocket", "JSON", "application/json", None, False, False),
+    ("odata/v4/{type}", "OData v4", "OData", "application/json", "https://docs.oasis-open.org/odata/odata/v4.01/", False, False),
+    ("mcp", "Model Context Protocol", "MCP", "application/json", "https://modelcontextprotocol.io/specification", False, False),
+    ("ws", "WebSocket", "WebSocket", "application/json", None, False, False),
 ]
 
 
