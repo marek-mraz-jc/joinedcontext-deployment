@@ -364,17 +364,31 @@ def test_a_key_with_its_year_and_a_polygon():
 
 
 @requires_docker
-def test_a_layer_without_a_key_takes_a_stable_row_hash_and_the_constant_its_model_requires():
+def test_a_corrected_accident_keeps_its_id_and_the_constant_its_model_requires():
     first = run("bbsk", "nehodovost-v-bbk", "nehodovost-v-bbk")
-    again = run("bbsk", "nehodovost-v-bbk", "nehodovost-v-bbk")
-    assert [e["id"] for e in first] == [e["id"] for e in again]
-    assert len({e["id"] for e in first}) == 3
+    rows = json.loads((FIXTURES / "nehodovost-v-bbk.json").read_text())["features"]
+    assert [e["id"] for e in first] == [
+        f"urn:ngsi-ld:RoadAccident:bbsk.sk:bbsk-otvorene-data:nehodovost-v-bbk-{r['properties']['Číslo_nehody']}"
+        for r in rows]
     assert all(e["status"]["value"] == "archived" for e in first)
     assert valid("bbsk", first)
-    # One changed value is another row, so another id.
+    # A corrected value updates the accident instead of adding a second one (T-4332).
     doc = json.loads((FIXTURES / "nehodovost-v-bbk.json").read_text())
     doc["features"][0]["properties"]["Škoda_v_EUR"] = 1.5
     changed = run_bytes("bbsk", "nehodovost-v-bbk", json.dumps(doc).encode())
+    assert [e["id"] for e in changed] == [e["id"] for e in first]
+
+
+@requires_docker
+def test_a_table_without_a_key_takes_a_stable_row_hash():
+    first = run("banskabystrica", "adresy", "adresy")
+    again = run("banskabystrica", "adresy", "adresy")
+    assert [e["id"] for e in first] == [e["id"] for e in again]
+    assert len({e["id"] for e in first}) == 3
+    # One changed value is another row, so another id.
+    doc = json.loads((FIXTURES / "adresy.json").read_text())
+    doc["result"]["records"][0]["Ulica"] = "Iná ulica"
+    changed = run_bytes("banskabystrica", "adresy", json.dumps(doc).encode())
     assert changed[0]["id"] != first[0]["id"] and changed[1]["id"] == first[1]["id"]
 
 
