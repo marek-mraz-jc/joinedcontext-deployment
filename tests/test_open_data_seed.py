@@ -66,11 +66,25 @@ def schema_errors(project: str, entity: dict) -> list[str]:
 
 MAPPED = [e for e in MAPPING["datasets"] if e["status"] == "mapped"]
 MODEL = {e["type"]: e["smartDataModel"] for e in MAPPED}
+BASE = {e["type"]: e.get("baseModel") for e in MAPPED}
 PINS = json.loads((generate.SDM / "pins.json").read_text())
 
 
-def sdm_errors(entity: dict) -> list[str]:
-    return open_data.sdm_errors(MODEL[entity["type"]], entity)
+def sdm_errors(entity: dict, model_of: str | None = None) -> list[str]:
+    """The entity, as `keyValues`, against the schema.json of its type's Smart Data Model. The
+    model's `$ref`s to common-schema.json resolve to the vendored copy, never the network."""
+    jsonschema = pytest.importorskip("jsonschema")
+    from referencing import Registry, Resource
+    from referencing.jsonschema import DRAFT7
+
+    common = Resource.from_contents(json.loads((generate.SDM / "common-schema.json").read_text()), DRAFT7)
+    registry = Registry().with_resources((u, common) for u in (
+        "https://smart-data-models.github.io/data-models/common-schema.json",
+        "https://raw.githubusercontent.com/smart-data-models/data-models/master/common-schema.json"))
+    t = model_of or entity["type"]
+    schema = json.loads(generate.sdm_schema({"name": t, "type": t, "smartDataModel": MODEL[t], "baseModel": BASE[t]}).read_text())
+    validator = jsonschema.Draft7Validator(schema, registry=registry, format_checker=jsonschema.Draft7Validator.FORMAT_CHECKER)
+    return [f"{'/'.join(map(str, e.absolute_path))}: {e.message}" for e in validator.iter_errors(open_data.key_values(entity))]
 
 
 # --- the seed is the generator's output ---
@@ -239,10 +253,15 @@ def test_every_mapped_type_is_one_vendored_smart_data_model_at_a_pinned_commit()
     assert len(MODEL) == len({(e["type"], e["smartDataModel"]) for e in MAPPED}), "one model per type"
     for e in MAPPED:
         assert generate.sdm_schema(e).is_file()
-        assert re.fullmatch(r"[0-9a-f]{40}", PINS[e["smartDataModel"].split("/")[0]]), e["smartDataModel"]
+        official = e.get("baseModel") or e["smartDataModel"]
+        assert re.fullmatch(r"[0-9a-f]{40}", PINS[official.split("/")[0]]), official
     assert re.fullmatch(r"[0-9a-f]{40}", PINS["data-models"])
-    vendored = {str(p.parent.relative_to(generate.SDM)) for p in generate.SDM.glob("*/*/schema.json")}
-    assert vendored >= {m.removeprefix("dataModel.") for m in MODEL.values()}
+    vendored = {str(p.parent.relative_to(generate.SDM)) for p in generate.SDM.glob("*/*/schema.json")
+                if p.parent.parent != generate.EXTENSIONS}
+    in_use = {(e.get("baseModel") or e["smartDataModel"]).removeprefix("dataModel.") for e in MAPPED}
+    # The folder also serves the city seeds' models (T-4329: Helsinki, Praha), so it holds at
+    # least the models this seed uses, the bases of the extensions included, each subject pinned.
+    assert vendored >= in_use, "vendor every model in use, the bases of the extensions included"
     assert {f"dataModel.{v.split('/')[0]}" for v in vendored} | {"about", "data-models"} == set(PINS), "a pin per vendored subject"
 
 
@@ -250,9 +269,13 @@ def test_a_mapped_dataset_without_a_model_or_with_one_not_vendored_is_refused():
     for model in (None, "", "dataModel.Finance/Invoice", "Organization/Organization"):
         with pytest.raises(SystemExit, match="mapped without a vendored Smart Data Model"):
             generate.sdm_schema({"name": "bbsk-x", "smartDataModel": model})
+    # An extension names a declared, vendored base and its own type (T-4336).
+    for bad in ({"baseModel": None}, {"baseModel": "dataModel.Finance/Ledger"}, {"type": "Other"}):
+        with pytest.raises(SystemExit, match="extends no vendored base"):
+            generate.sdm_schema({"name": "bbsk-x", "type": "Invoice", "smartDataModel": "extension/Invoice",
+                                 "baseModel": "dataModel.CPSV-AP/Cost", **bad})
     assert not [e for e in MAPPING["datasets"] if e["status"] == "removed" and SLUGS.get(e["name"])]
     removed = {e["name"] for e in MAPPING["datasets"] if e["status"] == "removed"}
-    assert removed, "the mapping removes the types no model holds"
     for project in generate.PROJECTS:
         for p in files(project, "datasource"):
             assert yaml.safe_load(p.read_text())["metadata"]["title"]["en"] not in {
@@ -272,9 +295,11 @@ def test_every_term_a_model_names_expands_to_its_vendored_context_and_a_source_c
         context = json.loads((SEED / project / f"{project}-otvorene-data.v1.context.jsonld").read_text())["@context"]
         named = 0
         for e in [e for e in SEEDED if e["org"] == project]:
-            model = e["smartDataModel"].split("/")[0]
+            model = (e.get("baseModel") or e["smartDataModel"]).split("/")[0]
             sdm = json.loads((generate.SDM / model.removeprefix("dataModel.") / "context.jsonld").read_text())["@context"]
-            assert expanded(context, e["type"]) == sdm[e["type"]], e["name"]
+            # An extension's type is ours (T-4336); every other term reads as its base names it.
+            want = f"https://joinedcontext.com/models/{e['type']}" if e.get("baseModel") else sdm[e["type"]]
+            assert expanded(context, e["type"]) == want, e["name"]
             for a in [*generate.COMMON, *map(generate.attribute, e["properties"]), *(e.get("constants") or {})]:
                 if isinstance(sdm.get(a), str):
                     assert expanded(context, a) == sdm[a], (e["name"], a)
@@ -288,7 +313,7 @@ def test_every_term_a_model_names_expands_to_its_vendored_context_and_a_source_c
 
 
 def test_every_context_is_vendored_beside_its_schema_at_the_same_pin():
-    for model in {m.split("/")[0] for m in MODEL.values()}:
+    for model in {(BASE[t] or m).split("/")[0] for t, m in MODEL.items()}:
         assert (generate.SDM / model.removeprefix("dataModel.") / "context.jsonld").is_file(), model
         assert model in PINS
 
@@ -308,12 +333,17 @@ SAMPLE = {"string": "x", "integer": 1, "float": 1.5, "datetime": "2026-01-01T00:
 
 def test_every_mapping_writes_an_entity_its_model_accepts():
     """Without Bento: the entity each mapping writes when every column holds a value of its range."""
+    # The range the Bento writes is the space's: integer and text columns of one name meet as text.
+    space = {project: generate.ranges([e for e in SEEDED if e["org"] == project]) for project in generate.PROJECTS}
     for e in MAPPED:
+        written = space[e["org"]] if e in SEEDED else {generate.attribute(a): p["range"] for a, p in e["properties"].items()}
         entity = {"id": f"urn:ngsi-ld:{e['type']}:bbsk.sk:s:x-1", "type": e["type"],
-                  **{generate.attribute(a): {"type": "Property", "value": SAMPLE[p["range"]]} for a, p in e["properties"].items()},
+                  **{generate.attribute(a): {"type": "Property", "value": SAMPLE[written[generate.attribute(a)]]} for a in e["properties"]},
                   **{a: {"type": "Property", "value": v} for a, v in (e.get("constants") or {}).items()},
                   **{a: {"type": "Property", "value": "https://example.org/s"} for a in ("source", "dataset")},
-                  "dataProvider": {"type": "Property", "value": "x (CC BY 4.0)"}}
+                  "dataProvider": {"type": "Property", "value": "x (CC BY 4.0)"},
+                  # The entity's own key where the base requires an identifier no column holds (T-4336).
+                  **({"identifier": {"type": "Property", "value": "x-1"}} if e.get("identifierFromId") else {})}
         if e["source"].get("geometry"):
             entity["location"] = {"type": "GeoProperty", "value": {"type": "Point", "coordinates": [19.1, 48.7]}}
         assert sdm_errors(entity) == [], e["name"]
@@ -760,3 +790,66 @@ def test_slovak_numbers_and_dates_become_numbers_and_iso_dates(tmp_path):
     assert value("text", "float") is None and value("empty", "float") is None and value("signed", "float") is None
     assert [value(k, "date") for k in ("signed", "spaced", "iso")] == ["2026-08-29", "2024-03-01", "2024-03-01"]
     assert value("text", "date") is None
+
+
+# --- extensions (T-4336): the base whole under allOf, the formalisms beside, the examples valid ---
+
+EXTENDED = {t: e for t, e in (MAPPING.get("extensions") or {}).items() if any(x["type"] == t for x in SEEDED)}
+
+
+def test_the_mapping_extends_where_no_model_holds_and_refuses_nothing_for_want_of_one():
+    # Only the city's DTM sheets (T-4317) still wait for a model; every type T-4319 removed is extended.
+    removed = [e["name"] for e in MAPPING["datasets"] if e["status"] == "removed"]
+    assert all(n.startswith("bb-dtm-") for n in removed), removed
+    assert not [e for e in MAPPING["datasets"] if e["status"] == "removed" and e.get("type") in MAPPING["extensions"]]
+    assert {e["type"] for e in MAPPED if e.get("baseModel")} == set(MAPPING["extensions"])
+    assert {d.name for d in generate.EXTENSIONS.iterdir()} == set(EXTENDED)
+
+
+def test_every_extension_keeps_its_base_whole_and_only_renames_the_type():
+    for t, ext in EXTENDED.items():
+        schema = json.loads((generate.EXTENSIONS / t / "schema.json").read_text())
+        base = json.loads((generate.SDM / ext["baseModel"].removeprefix("dataModel.") / "schema.json").read_text())
+        whole, added = schema["allOf"]
+        kept = {k: v for k, v in base.items() if k not in generate.SDM_HEADER}
+        assert json.dumps(whole).replace(f'"enum": ["{t}"]', f'"enum": ["{generate.base_type(base)}"]') == json.dumps(kept), t
+        assert set(base.get("required", [])) <= set(whole["required"]), t
+        assert added["properties"]["type"]["enum"] == [t]
+        assert not set(added["properties"]) - {"type"} & generate.declared(base, json.loads((generate.SDM / "common-schema.json").read_text())["definitions"])
+
+
+FORMALISMS = ("schema.json", "context.jsonld", "model.linkml.yaml", "model.md", "model.owl.ttl", "model.rdf.ttl",
+              "model.shacl.ttl", "examples/example.json", "examples/example-normalized.jsonld")
+
+
+def test_every_extension_ships_the_seven_formalisms_and_both_examples():
+    for t in EXTENDED:
+        for f in FORMALISMS:
+            path = generate.EXTENSIONS / t / f
+            assert path.is_file() and path.stat().st_size > 100, path
+        assert f"jc:{t}" in (generate.EXTENSIONS / t / "model.owl.ttl").read_text() or t in (generate.EXTENSIONS / t / "model.owl.ttl").read_text()
+        assert "generation_date" not in (generate.EXTENSIONS / t / "model.rdf.ttl").read_text()
+
+
+def test_every_extension_validates_its_own_examples_and_refuses_a_missing_base_requirement():
+    for t, ext in EXTENDED.items():
+        example = json.loads((generate.EXTENSIONS / t / "examples/example.json").read_text())
+        normalized = {k: v for k, v in json.loads((generate.EXTENSIONS / t / "examples/example-normalized.jsonld").read_text()).items()
+                      if k != "@context"}
+        assert example["type"] == t and open_data.key_values(normalized) == example, t
+        assert sdm_errors(normalized) == [], t
+        required = set(json.loads((generate.EXTENSIONS / t / "schema.json").read_text())["allOf"][0]["required"]) - {"id", "type"}
+        for a in required:
+            assert sdm_errors({k: v for k, v in normalized.items() if k != a}), (t, a)
+        base = json.loads((generate.SDM / ext["baseModel"].removeprefix("dataModel.") / "schema.json").read_text())
+        assert sdm_errors(dict(normalized, type=generate.base_type(base)), model_of=t), t
+
+
+@requires_docker
+def test_a_grant_without_a_number_takes_its_row_hash_as_the_identifier_its_base_requires():
+    """bb-dotacie has no number column; CPSV-AP Cost requires `identifier` (T-4336)."""
+    entities = run("banskabystrica", SLUGS["bb-dotacie"], "dotacie")
+    assert len(entities) == len({e["id"] for e in entities}) == 3
+    for e in entities:
+        assert e["type"] == "Grant" and e["id"].endswith(":" + e["identifier"]["value"])
+    assert valid("banskabystrica", entities)

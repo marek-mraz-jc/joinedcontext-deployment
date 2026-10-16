@@ -3,6 +3,1481 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "definitions": {
+    "AdministrativeArea": {
+      "additionalProperties": false,
+      "description": "One row of Kraj BBK - hranica; Obce BBK - centroidy.",
+      "properties": {
+        "dOW": {
+          "description": "The source column `DOW`.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who published the row, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataset": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "fACC": {
+          "description": "The source column `FACC`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "fLAT": {
+          "description": "The source column `F_LAT`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "fLON": {
+          "description": "The source column `F_LON`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "iDN2": {
+          "description": "The source column `IDN2`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "iDN3": {
+          "description": "The source column `IDN3`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "iDN4": {
+          "description": "The source column `IDN4`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "lAU1": {
+          "description": "The source column `LAU1`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "lAU1CODE": {
+          "description": "The source column `LAU1_CODE`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "lAU2": {
+          "description": "The source column `LAU2`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "lAU2CODE": {
+          "description": "The source column `LAU2_CODE`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "nM2": {
+          "description": "The source column `NM2`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nM3": {
+          "description": "The source column `NM3`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nUTS1": {
+          "description": "The source column `NUTS1`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nUTS1CODE": {
+          "description": "The source column `NUTS1_CODE`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nUTS2": {
+          "description": "The source column `NUTS2`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nUTS2CODE": {
+          "description": "The source column `NUTS2_CODE`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nUTS3": {
+          "description": "The source column `NUTS3`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nUTS3CODE": {
+          "description": "The source column `NUTS3_CODE`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "name": {
+          "description": "The source column `Miesto`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The service the row was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "typObce": {
+          "description": "The source column `typ_obce`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "vYMERA": {
+          "description": "The source column `VYMERA`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "AdministrativeArea",
+      "type": "object"
+    },
+    "Bridge": {
+      "additionalProperties": false,
+      "description": "One row of Mosty v spr\u00e1ve BBRSC (public view).",
+      "properties": {
+        "aktualnyStavebnotechnickyStav": {
+          "description": "The source column `Aktu\u00e1lny_stavebnotechnick\u00fd_stav`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who published the row, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataset": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dlzkaPremosteniaM": {
+          "description": "The source column `D\u013a\u017eka_premostenia__m_`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "docasnostMosta": {
+          "description": "The source column `Do\u010dasnos\u0165_mosta`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "druhNosnejKonstrukcie": {
+          "description": "The source column `Druh_nosnej_kon\u0161trukcie`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "hodnotenie": {
+          "description": "The source column `Hodnotenie`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "identifikacneCislo": {
+          "description": "The source column `Identifika\u010dn\u00e9_\u010d\u00edslo`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "komunikacia": {
+          "description": "The source column `Komunik\u00e1cia`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "legislativnyStav": {
+          "description": "The source column `Legislat\u00edvny_stav`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "materialNosnejKonstrukcie": {
+          "description": "The source column `Materi\u00e1l_nosnej_kon\u0161trukcie`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "name": {
+          "description": "The source column `Miesto`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "normalnaZatazitelnostT": {
+          "description": "The source column `Norm\u00e1lna_za\u0165a\u017eite\u013enos\u0165__t_`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "obec": {
+          "description": "The source column `Obec`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "ojedinelaZatazitelnostT": {
+          "description": "The source column `Ojedinel\u00e1_za\u0165a\u017eite\u013enos\u0165__t_`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "okres": {
+          "description": "The source column `Okres`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "pocetDilCelkov": {
+          "description": "The source column `Po\u010det_dil__celkov`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "predmetPremostenia": {
+          "description": "The source column `Predmet_premostenia`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "rokKonstrukcie": {
+          "description": "The source column `Rok_kon\u0161trukcie`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "rokZasadnejRekonstrukcie": {
+          "description": "The source column `Rok_z\u00e1sadnej_rekon\u0161trukcie`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The service the row was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "spravca": {
+          "description": "The source column `spravca`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "triedaCesty": {
+          "description": "The source column `Trieda_cesty`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "typKomunikacie": {
+          "description": "The source column `Typ_komunik\u00e1cie`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "typPamiatky": {
+          "description": "The source column `Typ_pamiatky`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "ulica": {
+          "description": "The source column `Ulica`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "vlastnik": {
+          "description": "The source column `Vlastn\u00edk`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "vyhradnaZatazitelnostT": {
+          "description": "The source column `V\u00fdhradn\u00e1_za\u0165a\u017eite\u013enos\u0165___t`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "vynimocnaZatazitelnostT": {
+          "description": "The source column `V\u00fdnimo\u010dn\u00e1_za\u0165a\u017eite\u013enos\u0165___t`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "zatazitelnostNaJednuNapravu": {
+          "description": "The source column `Za\u0165a\u017eite\u013enos\u0165_na_jednu_n\u00e1pravu_`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "Bridge",
+      "type": "object"
+    },
+    "CommitteeSeat": {
+      "additionalProperties": false,
+      "description": "One row of Komisie zastupite\u013estva Banskobystrick\u00e9ho samospr\u00e1vneho kraja.",
+      "properties": {
+        "dataProvider": {
+          "description": "Who published the row, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataset": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "description": "The source column `Miesto`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "pozicia": {
+          "description": "The source column `Poz\u00edcia`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "poznamka": {
+          "description": "The source column `Pozn\u00e1mka`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The service the row was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "CommitteeSeat",
+      "type": "object"
+    },
+    "Contract": {
+      "additionalProperties": false,
+      "description": "One row of Zmluvy.",
+      "properties": {
+        "dataProvider": {
+          "description": "Who published the row, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataset": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "datumPlatnostiDo": {
+          "description": "The source column `D\u00e1tum_platnosti_do`.",
+          "format": "date",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "datumPrilohy": {
+          "description": "The source column `D\u00e1tum_pr\u00edlohy`.",
+          "format": "date",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "datumUcinnosti": {
+          "description": "The source column `D\u00e1tum_\u00fa\u010dinnosti`.",
+          "format": "date",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "datumUzavretia": {
+          "description": "The source column `D\u00e1tum_uzavretia`.",
+          "format": "date",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "datumZverejnenia": {
+          "description": "The source column `D\u00e1tum_zverejnenia`.",
+          "format": "date",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "iCODodavatela": {
+          "description": "The source column `I\u010cO_dod\u00e1vate\u013ea`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "iCOObjednavatela": {
+          "description": "The source column `I\u010cO_objedn\u00e1vate\u013ea`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "iDZmluvy": {
+          "description": "The source column `ID_zmluvy`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "identifier": {
+          "description": "The source column `\u010c\u00edslo`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "index": {
+          "description": "The source column `Index_`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "description": "The source column `Miesto`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nazovDodavatela": {
+          "description": "The source column `N\u00e1zov_dod\u00e1vate\u013ea`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nazovObjednavatela": {
+          "description": "The source column `N\u00e1zov_objedn\u00e1vate\u013ea`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "poznamka": {
+          "description": "The source column `Pozn\u00e1mka`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "priloha": {
+          "description": "The source column `Pr\u00edloha`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "rezort": {
+          "description": "The source column `Rezort`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "sidloDodavatela": {
+          "description": "The source column `S\u00eddlo_dod\u00e1vate\u013ea`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "sidloObjednavatela": {
+          "description": "The source column `S\u00eddlo_objedn\u00e1vate\u013ea`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The service the row was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "sumaSpoluVEUR": {
+          "description": "The source column `Suma_spolu_v_EUR`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "sumaVEUR": {
+          "description": "The source column `Suma_v_EUR`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "zdrojNazov": {
+          "description": "The source column `Zdroj_N\u00e1zov`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "Contract",
+      "type": "object"
+    },
+    "CouncilMeeting": {
+      "additionalProperties": false,
+      "description": "One row of Zasadnutia samospr\u00e1vy.",
+      "properties": {
+        "cisloZasadnutia": {
+          "description": "The source column `\u010c\u00edslo_zasadnutia`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who published the row, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataset": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "datumZasadnutia": {
+          "description": "The source column `D\u00e1tum_zasadnutia`.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "hyperlinkNaDochadzku": {
+          "description": "The source column `Hyperlink_na_doch\u00e1dzku`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "hyperlinkNaPozvanku": {
+          "description": "The source column `Hyperlink_na_pozv\u00e1nku`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "hyperlinkNaPrijateUznesenia": {
+          "description": "The source column `Hyperlink_na_prijat\u00e9_uznesenia`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "hyperlinkNaVysledkyHlasovani": {
+          "description": "The source column `Hyperlink_na_v\u00fdsledky_hlasovani`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "hyperlinkNaZapisnicu": {
+          "description": "The source column `Hyperlink_na_z\u00e1pisnicu`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "iCOSamospravy": {
+          "description": "The source column `I\u010cO_samospr\u00e1vy`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "nazovSamospravy": {
+          "description": "The source column `N\u00e1zov_samospr\u00e1vy`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "organSamospravy": {
+          "description": "The source column `Org\u00e1n_samospr\u00e1vy`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The service the row was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "CouncilMeeting",
+      "type": "object"
+    },
+    "CouncilVote": {
+      "additionalProperties": false,
+      "description": "One row of Hlasovania poslancov.",
+      "properties": {
+        "dataProvider": {
+          "description": "Who published the row, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataset": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "datum": {
+          "description": "The source column `D\u00e1tum`.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "hlas": {
+          "description": "The source column `Hlas`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "iCOSamospravy": {
+          "description": "The source column `I\u010cO_samospr\u00e1vy`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "description": "The source column `Miesto`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nazovSamospravy": {
+          "description": "The source column `N\u00e1zov_samospr\u00e1vy`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "organSamospravy": {
+          "description": "The source column `Org\u00e1n_samospr\u00e1vy`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "poslanec": {
+          "description": "The source column `Poslanec`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The service the row was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "volebneObdobie": {
+          "description": "The source column `Volebn\u00e9_obdobie`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "zasadnutie": {
+          "description": "The source column `Zasadnutie`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "CouncilVote",
+      "type": "object"
+    },
+    "CycleRoute": {
+      "additionalProperties": false,
+      "description": "One row of Cykloturistick\u00e9 trasy - l\u00ednie; Cykloturistick\u00e9 trasy - l\u00ednie - povrchy.",
+      "properties": {
+        "alps": {
+          "description": "The source column `alps`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "ctt": {
+          "description": "The source column `ctt`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who published the row, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataset": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dlzka": {
+          "description": "The source column `dlzka`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "fName": {
+          "description": "The source column `f_name`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "fNazov": {
+          "description": "The source column `f_nazov`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "farba": {
+          "description": "The source column `farba`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "layer": {
+          "description": "The source column `layer`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "description": "The source column `Miesto`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nazov": {
+          "description": "The source column `nazov`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "obnRok": {
+          "description": "The source column `obn_rok`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "povrch": {
+          "description": "The source column `povrch`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The service the row was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "sourceId": {
+          "description": "The source column `id`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "spr": {
+          "description": "The source column `spr`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "spravca": {
+          "description": "The source column `spravca`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "stav": {
+          "description": "The source column `stav`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "typ": {
+          "description": "The source column `typ`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "zdroj": {
+          "description": "The source column `zdroj`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "CycleRoute",
+      "type": "object"
+    },
     "Entity": {
       "additionalProperties": false,
       "description": "The root every NGSI-LD entity class specialises.",
@@ -60,6 +1535,646 @@
         "type"
       ],
       "title": "Entity",
+      "type": "object"
+    },
+    "Grant": {
+      "additionalProperties": false,
+      "description": "One row of Dot\u00e1cie; PPA platby.",
+      "properties": {
+        "cDodavatela": {
+          "description": "The source column `\u010c__dod\u00e1vate\u013ea`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "cZmluvy": {
+          "description": "The source column `\u010c__zmluvy`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who published the row, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataset": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "datumDoruceniaVyuctovania": {
+          "description": "The source column `D\u00e1tum_doru\u010denia_vy\u00fa\u010dtovania`.",
+          "format": "date",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "datumRealizacieProjektu": {
+          "description": "The source column `D\u00e1tum_realiz\u00e1cie_projektu`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "datumUhradyDotacie": {
+          "description": "The source column `D\u00e1tum_\u00fahrady_dot\u00e1cie`.",
+          "format": "date",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "datumZverejneniaZmluvy": {
+          "description": "The source column `D\u00e1tum_zverejnenia_zmluvy`.",
+          "format": "date",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "denneTabory": {
+          "description": "The source column `Denn\u00e9_t\u00e1bory`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dotacnyTitul": {
+          "description": "The source column `Dota\u010dn\u00fd_titul`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "ePFRVSucet": {
+          "description": "The source column `EPFRV___s\u00fa\u010det`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "ePZFSucet": {
+          "description": "The source column `EPZF___s\u00fa\u010det`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "iCO": {
+          "description": "The source column `ICO`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "iD": {
+          "description": "The source column `ID`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "identifier": {
+          "description": "The source column `\u010c\u00edslo`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "kampan": {
+          "description": "The source column `Kampa\u0148`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "description": "The source column `Miesto`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "obecPO": {
+          "description": "The source column `Obec__PO_`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "okres": {
+          "description": "The source column `Okres`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "opravneneSpolu": {
+          "description": "The source column `Opr\u00e1vnen\u00e9_spolu`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "pSC": {
+          "description": "The source column `PSC`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "pobytoveTabory": {
+          "description": "The source column `Pobytov\u00e9_t\u00e1bory`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "pocetDeti": {
+          "description": "The source column `Po\u010det_det\u00ed`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "pocetDni": {
+          "description": "The source column `Po\u010det_dn\u00ed`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "popisDotacnehoTitulu": {
+          "description": "The source column `Popis_dota\u010dn\u00e9ho_titulu`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "pozadovanaDotacia": {
+          "description": "The source column `Po\u017eadovan\u00e1_dot\u00e1cia`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "poznamky": {
+          "description": "The source column `Pozn\u00e1mky`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "pravnaForma": {
+          "description": "The source column `Pr\u00e1vna_forma`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "prveDorucenie": {
+          "description": "The source column `Prv\u00e9_doru\u010denie`.",
+          "format": "date",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "rok": {
+          "description": "The source column `Rok`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "rokKampan": {
+          "description": "The source column `Rok___kampa\u0148`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "rozdielNaVratenie": {
+          "description": "The source column `Rozdiel_na_vr\u00e1tenie`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "rozpocet": {
+          "description": "The source column `Rozpo\u010det`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "sRSRSucet": {
+          "description": "The source column `\u0160R_SR___s\u00fa\u010det`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "schvalenaVyskaDotacie": {
+          "description": "The source column `Schv\u00e1len\u00e1_v\u00fd\u0161ka_dot\u00e1cie`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "sidlo": {
+          "description": "The source column `S\u00eddlo`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "skutocneCerpanie": {
+          "description": "The source column `Skuto\u010dn\u00e9_\u010derpanie`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The service the row was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "statutarnyZastupca": {
+          "description": "The source column `\u0160tatut\u00e1rny_z\u00e1stupca`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "stavFinanVyuctovania": {
+          "description": "The source column `Stav_finan__vy\u00fa\u010dtovania`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "stavZiadosti": {
+          "description": "The source column `Stav_\u017eiadosti`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "typDotacie": {
+          "description": "The source column `Typ_dot\u00e1cie`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "typTabora": {
+          "description": "The source column `Typ_t\u00e1bora`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "ulicaACislo": {
+          "description": "The source column `Ulica_a_cislo`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "vSuladeSPrioritamiPoskytovaniaDotacii": {
+          "description": "The source column `V_s\u00falade_s_prioritami_poskytovania_dot\u00e1ci\u00ed`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "vZN": {
+          "description": "The source column `VZN`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "vratenaNedocerpanaCastDotacieDna": {
+          "description": "The source column `Vr\u00e1ten\u00e1_nedo\u010derpan\u00e1_\u010das\u0165_dot\u00e1cie_d\u0148a`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "vyplatenaSumaSpoluSucet": {
+          "description": "The source column `Vyplaten\u00e1_suma_spolu___s\u00fa\u010det`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "ziadatel": {
+          "description": "The source column `\u017diadate\u013e`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "Grant",
+      "type": "object"
+    },
+    "Invoice": {
+      "additionalProperties": false,
+      "description": "One row of Fakt\u00fary.",
+      "properties": {
+        "adresa": {
+          "description": "The source column `Adresa`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "cisloObjednavky": {
+          "description": "The source column `\u010c\u00edslo_objedn\u00e1vky`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "cisloZmluvy": {
+          "description": "The source column `\u010c\u00edslo_zmluvy`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dIC": {
+          "description": "The source column `DI\u010c`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who published the row, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataset": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "datumDorucenia": {
+          "description": "The source column `D\u00e1tum_doru\u010denia`.",
+          "format": "date",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "datumSplatnosti": {
+          "description": "The source column `D\u00e1tum_splatnosti`.",
+          "format": "date",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dodavatel": {
+          "description": "The source column `Dod\u00e1vate\u013e`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "iCO": {
+          "description": "The source column `ICO`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "identifier": {
+          "description": "The source column `\u010c\u00edslo`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "predmetFaktury": {
+          "description": "The source column `Predmet_fakt\u00fary`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "rok": {
+          "description": "The source column `Rok`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The service the row was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "suma": {
+          "description": "The source column `Suma`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "Invoice",
       "type": "object"
     },
     "KeyPerformanceIndicator": {
@@ -1618,7 +3733,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "kod": {
-          "description": "The source column `K\u00f3d`.",
+          "description": "The source column `kod`.",
           "type": [
             "string",
             "null"
@@ -4092,6 +6207,155 @@
       "title": "KeyPerformanceIndicator",
       "type": "object"
     },
+    "OfficeHours": {
+      "additionalProperties": false,
+      "description": "One row of \u00daradn\u00e9 hodiny.",
+      "properties": {
+        "dataProvider": {
+          "description": "Who published the row, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataset": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "denVTyzdni": {
+          "description": "The source column `De\u0148_v_t\u00fd\u017edni`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "iCOSamospravy": {
+          "description": "The source column `I\u010cO_samospr\u00e1vy`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "identifikatorKontaktnehoMiest": {
+          "description": "The source column `Identifik\u00e1tor_kontaktn\u00e9ho_miest`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "kodDnaVTyzdni": {
+          "description": "The source column `K\u00f3d_d\u0148a_v_t\u00fd\u017edni`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "description": "The source column `Miesto`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nazovSamospravy": {
+          "description": "The source column `N\u00e1zov_samospr\u00e1vy`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "otvoreneDo": {
+          "description": "The source column `Otvoren\u00e9_do`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "otvoreneOd": {
+          "description": "The source column `Otvoren\u00e9_od`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The service the row was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "OfficeHours",
+      "type": "object"
+    },
     "Organization": {
       "additionalProperties": false,
       "description": "One row of Dod\u00e1vatelia; Kontakty na miestne samospr\u00e1vy v BBK; Matersk\u00e9 \u0161koly v Banskobystrickom kraji; Organiza\u010dn\u00e1 \u0161trukt\u00fara; Stredn\u00e9 \u0161koly v BBK, odbory a po\u010det \u0161tudentov (2023); Stredn\u00e9 \u0161koly v Banskobystrickom kraji; Vysok\u00e9 \u0161koly v Banskobystrickom kraji; Z\u00e1kladn\u00e9 \u0161koly v Banskobystrickom kraji; \u0160koly a \u0161kolsk\u00e9 zariadenia v zria\u010fovate\u013eskej p\u00f4sobnosti BBSK.",
@@ -4902,7 +7166,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "pravnaForma": {
-          "description": "The source column `PravnaForma`.",
+          "description": "The source column `Pr\u00e1vna_forma`.",
           "type": [
             "string",
             "null"
@@ -5457,6 +7721,190 @@
         "type"
       ],
       "title": "Person",
+      "type": "object"
+    },
+    "Petition": {
+      "additionalProperties": false,
+      "description": "One row of Pet\u00edcie.",
+      "properties": {
+        "dataProvider": {
+          "description": "Who published the row, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataset": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "datumDorucenia": {
+          "description": "The source column `D\u00e1tum_doru\u010denia`.",
+          "format": "date",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "datumVybavenia": {
+          "description": "The source column `D\u00e1tum_vybavenia`.",
+          "format": "date",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "identifier": {
+          "description": "The source column `\u010c\u00edslo`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "jeKvorova": {
+          "description": "The source column `Je_kv\u00f3rov\u00e1`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "link": {
+          "description": "The source column `Link`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "description": "The source column `Miesto`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "pocetOsobPodporujucichPetici": {
+          "description": "The source column `Po\u010det_os\u00f4b_podporuj\u00facich_pet\u00edci`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "poznamka": {
+          "description": "The source column `Pozn\u00e1mka`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The service the row was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "sposobVybavenia": {
+          "description": "The source column `Sp\u00f4sob_vybavenia`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "text": {
+          "description": "The source column `Text`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "vybavovatelPeticie": {
+          "description": "The source column `Vybavovate\u013e_pet\u00edcie`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "zverejnenieVysledkuVybavenia": {
+          "description": "The source column `Zverejnenie_v\u00fdsledku_vybavenia`.",
+          "format": "date",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "Petition",
       "type": "object"
     },
     "PointOfInterest": {
@@ -6544,6 +8992,669 @@
       "title": "PointOfInterest",
       "type": "object"
     },
+    "PublicInvestment": {
+      "additionalProperties": false,
+      "description": "One row of Projekty Banskobystrick\u00e9ho kraja ITMS21; Register invest\u00edci\u00ed - bodov\u00e1 vrstva; Register invest\u00edci\u00ed - polyg\u00f3nov\u00e1 vrstva.",
+      "properties": {
+        "adresa": {
+          "description": "The source column `Adresa`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "aktivne": {
+          "description": "The source column `Akt\u00edvne`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "aktualnyStav": {
+          "description": "The source column `Aktu\u00e1lny_stav`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "aktualnyStavUpraveny": {
+          "description": "The source column `Aktu\u00e1lny_stav_upraven\u00fd`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "celkovaZazmluvnenaSuma": {
+          "description": "The source column `Celkov\u00e1_zazmluvnen\u00e1_suma`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "cerpanieSpolu": {
+          "description": "The source column `\u010cerpanie_spolu`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dOW": {
+          "description": "The source column `DOW`.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who published the row, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataset": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "datumZaniku": {
+          "description": "The source column `DatumZaniku`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "fACC": {
+          "description": "The source column `FACC`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "fLAT": {
+          "description": "The source column `F_LAT`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "fLON": {
+          "description": "The source column `F_LON`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "gEOMLATBACKUP": {
+          "description": "The source column `GEOM_LAT_BACKUP`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "gEOMLONBACKUP": {
+          "description": "The source column `GEOM_LON_BACKUP`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "iCO": {
+          "description": "The source column `ICO`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "iCOOrganizacia": {
+          "description": "The source column `I\u010cO_organiz\u00e1cia`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "iCOPrijimatela": {
+          "description": "The source column `I\u010cO_prij\u00edmate\u013ea`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "iDN2": {
+          "description": "The source column `IDN2`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "iDN3": {
+          "description": "The source column `IDN3`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "iDN4": {
+          "description": "The source column `IDN4`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "iDProjektu": {
+          "description": "The source column `ID_projektu`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "identifier": {
+          "description": "The source column `\u010c\u00edslo`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "index": {
+          "description": "The source column `Index_`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "kategoria": {
+          "description": "The source column `Kateg\u00f3ria`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "kodKraja": {
+          "description": "The source column `K\u00f3d_kraja`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "kodObce": {
+          "description": "The source column `K\u00f3d_obce`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "kodOkresuKraja": {
+          "description": "The source column `K\u00f3d_okresu_kraja`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "lATJitter": {
+          "description": "The source column `LAT_jitter`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "lAU1": {
+          "description": "The source column `LAU1`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "lAU1CODE": {
+          "description": "The source column `LAU1_CODE`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "lAU2": {
+          "description": "The source column `LAU2`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "lAU2CODE": {
+          "description": "The source column `LAU2_CODE`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "lONJitter": {
+          "description": "The source column `LON_jitter`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "miestoRealizacieProjektu": {
+          "description": "The source column `Miesto_realiz\u00e1cie_projektu`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "miestoRealizacieProjektuKraj": {
+          "description": "The source column `Miesto_realiz\u00e1cie_projektu_kraj`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "miestoRealizacieProjektuObec": {
+          "description": "The source column `Miesto_realiz\u00e1cie_projektu_obec`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nM2": {
+          "description": "The source column `NM2`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nM3": {
+          "description": "The source column `NM3`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nM4": {
+          "description": "The source column `NM4`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nUTS1": {
+          "description": "The source column `NUTS1`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nUTS1CODE": {
+          "description": "The source column `NUTS1_CODE`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nUTS2": {
+          "description": "The source column `NUTS2`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nUTS2CODE": {
+          "description": "The source column `NUTS2_CODE`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nUTS3": {
+          "description": "The source column `NUTS3`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nUTS3CODE": {
+          "description": "The source column `NUTS3_CODE`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "name": {
+          "description": "The source column `Miesto`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nazovKraja": {
+          "description": "The source column `N\u00e1zov_kraja`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nazovPrijimatela": {
+          "description": "The source column `N\u00e1zov_prij\u00edmate\u013ea`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "oBJECTID1": {
+          "description": "The source column `OBJECTID_1`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "obecNUTS": {
+          "description": "The source column `Obec_NUTS`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "obecNazov": {
+          "description": "The source column `Obec_n\u00e1zov`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "obstaravaciaCena": {
+          "description": "The source column `Obstar\u00e1vacia_cena`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "oficialnyNazov": {
+          "description": "The source column `Ofici\u00e1lny_n\u00e1zov`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "okresKraj": {
+          "description": "The source column `Okres_Kraj`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "okresNazov": {
+          "description": "The source column `Okres_n\u00e1zov`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "platnostProjektuOd": {
+          "description": "The source column `Platnos\u0165_projektu_od`.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "poznamka": {
+          "description": "The source column `Pozn\u00e1mka`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "rok": {
+          "description": "The source column `Rok`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "rokText": {
+          "description": "The source column `Rok_text`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "rokZaradenia": {
+          "description": "The source column `Rok_zaradenia`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "rozpocetAktualny": {
+          "description": "The source column `Rozpo\u010det_aktu\u00e1lny`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "rozsahUzemiaProjektu": {
+          "description": "The source column `Rozsah_\u00fazemia_projektu`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "sUMCerpanieSpolu": {
+          "description": "The source column `SUM_\u010cerpanie_spolu`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "sektorOvZPUpraveny": {
+          "description": "The source column `Sektor_OvZP_upraveny`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The service the row was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "typObce": {
+          "description": "The source column `typ_obce`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "uradOvZPICO": {
+          "description": "The source column `\u00darad_OvZP_I\u010cO`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "uradOvZPOvZP": {
+          "description": "The source column `\u00darad_OvZP_OvZP`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "uroven": {
+          "description": "The source column `\u00darove\u0148`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "vYMERA": {
+          "description": "The source column `VYMERA`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "vecnaOblast": {
+          "description": "The source column `Vecn\u00e1_oblas\u0165`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "zauzivanyNazov": {
+          "description": "The source column `Zau\u017e\u00edvan\u00fd_n\u00e1zov`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "zauzivanyNazovKratky": {
+          "description": "The source column `Zau\u017e\u00edvan\u00fd_n\u00e1zov_kr\u00e1tky`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "zauzivanyNazovUpraveny": {
+          "description": "The source column `Zau\u017e\u00edvan\u00fd_n\u00e1zov_upraven\u00fd`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "PublicInvestment",
+      "type": "object"
+    },
     "PublicOrganization": {
       "additionalProperties": false,
       "description": "One row of Pr\u00edspevkov\u00e9 rozpo\u010dtov\u00e9 a in\u00e9 organiz\u00e1cie samospr\u00e1vy.",
@@ -6734,6 +9845,793 @@
         "type"
       ],
       "title": "PublicOrganization",
+      "type": "object"
+    },
+    "PublicProcurement": {
+      "additionalProperties": false,
+      "description": "One row of Pl\u00e1n verejn\u00e9ho obstar\u00e1vania; Realizovan\u00e9 verejn\u00e9 obstar\u00e1vania.",
+      "properties": {
+        "adresaNajvyhodnejsiehoUchadza": {
+          "description": "The source column `Adresa_najv\u00fdhodnej\u0161ieho_uch\u00e1dza`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "cPVCastiNazov": {
+          "description": "The source column `CPV_\u010dasti___n\u00e1zov`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "cPVNazov": {
+          "description": "The source column `CPV___n\u00e1zov`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "cisloSpisu": {
+          "description": "The source column `\u010c\u00edslo_spisu`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who published the row, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataset": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "datumSpustenia": {
+          "description": "The source column `D\u00e1tum_spustenia`.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "datumUkoncenia": {
+          "description": "The source column `D\u00e1tum_ukon\u010denia`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "druhKomoditAleboSluzieb": {
+          "description": "The source column `Druh_komod\u00edt_alebo_slu\u017eieb`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "druhObstaravania": {
+          "description": "The source column `Druh_obstar\u00e1vania`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "druhPostupu": {
+          "description": "The source column `Druh_postupu`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "elektronickaAukcia": {
+          "description": "The source column `Elektronick\u00e1_aukcia`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "financovanie": {
+          "description": "The source column `Financovanie`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "hlavnyCPV": {
+          "description": "The source column `Hlavn\u00fd_CPV`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "hlavnyCPVCasti": {
+          "description": "The source column `Hlavn\u00fd_CPV_\u010dasti`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "iDZakazky": {
+          "description": "The source column `ID_z\u00e1kazky`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "identifier": {
+          "description": "The source column `\u010c\u00edslo`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "lehotaNaPredkladanie": {
+          "description": "The source column `Lehota_na_predkladanie`.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "mena": {
+          "description": "The source column `Mena`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "najvyhodnejsiUchadzac": {
+          "description": "The source column `Najv\u00fdhodnej\u0161\u00ed_uch\u00e1dza\u010d`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "name": {
+          "description": "The source column `Miesto`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nazovCasti": {
+          "description": "The source column `N\u00e1zov_\u010dasti`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "obstaravatel": {
+          "description": "The source column `Obstar\u00e1vate\u013e`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "pHZ": {
+          "description": "The source column `PHZ`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "pocetUchadzacov": {
+          "description": "The source column `Po\u010det_uch\u00e1dza\u010dov`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "pocetZaujemcov": {
+          "description": "The source column `Po\u010det_z\u00e1ujemcov`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "ponukaUchadzaca": {
+          "description": "The source column `Ponuka_uch\u00e1dza\u010da`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "predpokladanaHodnota": {
+          "description": "The source column `Predpokladan\u00e1_hodnota`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "rok": {
+          "description": "The source column `Rok`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "socialneZodpovedneObstaravani": {
+          "description": "The source column `Soci\u00e1lne_zodpovedn\u00e9_obstar\u00e1vani`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The service the row was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "spolocenskyZodpovedneVerejne": {
+          "description": "The source column `Spolo\u010densky_zodpovedn\u00e9_verejn\u00e9_`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "stav": {
+          "description": "The source column `stav`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "typKomodity": {
+          "description": "The source column `Typ_komodity`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "typVydavku": {
+          "description": "The source column `Typ_v\u00fddavku`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "utvarOvZP": {
+          "description": "The source column `\u00datvar_OvZP`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "zeleneObstaravanie": {
+          "description": "The source column `Zelen\u00e9_obstar\u00e1vanie`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "PublicProcurement",
+      "type": "object"
+    },
+    "PurchaseOrder": {
+      "additionalProperties": false,
+      "description": "One row of Objedn\u00e1vky.",
+      "properties": {
+        "adresa": {
+          "description": "The source column `Adresa`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who published the row, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataset": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "datumVystavenia": {
+          "description": "The source column `D\u00e1tum_vystavenia`.",
+          "format": "date",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dodavatel": {
+          "description": "The source column `Dod\u00e1vate\u013e`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "iCO": {
+          "description": "The source column `ICO`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "identifier": {
+          "description": "The source column `\u010c\u00edslo`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "predmetObjednavky": {
+          "description": "The source column `Predmet_objedn\u00e1vky`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "rok": {
+          "description": "The source column `Rok`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The service the row was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "suma": {
+          "description": "The source column `Suma`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "PurchaseOrder",
+      "type": "object"
+    },
+    "RiverBasin": {
+      "additionalProperties": false,
+      "description": "One row of Povodia Banskobystrick\u00e9ho kraja.",
+      "properties": {
+        "aCH": {
+          "description": "The source column `ACH`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "aUT": {
+          "description": "The source column `AUT`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dOW": {
+          "description": "The source column `DOW`.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who published the row, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataset": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "designatio": {
+          "description": "The source column `designatio`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "fACC": {
+          "description": "The source column `FACC`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "fIDKraj0": {
+          "description": "The source column `FID_kraj_0`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "fIDSubpovodiaBbsk": {
+          "description": "The source column `FID_subpovodia_bbsk`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "gmlId": {
+          "description": "The source column `gml_id`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "iDN2": {
+          "description": "The source column `IDN2`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "inspireIdL": {
+          "description": "The source column `inspireIdL`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "inspireIdN": {
+          "description": "The source column `inspireIdN`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "link": {
+          "description": "The source column `Link`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "nM2": {
+          "description": "The source column `NM2`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "name": {
+          "description": "The source column `Miesto`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nameLangua": {
+          "description": "The source column `nameLangua`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "relatedZ1": {
+          "description": "The source column `relatedZ_1`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "relatedZon": {
+          "description": "The source column `relatedZon`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "sOI": {
+          "description": "The source column `SOI`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The service the row was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "specialise": {
+          "description": "The source column `specialise`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "thematic1": {
+          "description": "The source column `thematic_1`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "thematicId": {
+          "description": "The source column `thematicId`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "vYMERA": {
+          "description": "The source column `VYMERA`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "wiseEvolut": {
+          "description": "The source column `wiseEvolut`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "zoneType": {
+          "description": "The source column `zoneType`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "RiverBasin",
       "type": "object"
     },
     "RoadAccident": {
@@ -7028,6 +10926,800 @@
         "type"
       ],
       "title": "RoadAccident",
+      "type": "object"
+    },
+    "RoadStructure": {
+      "additionalProperties": false,
+      "description": "One row of Dilata\u010dn\u00e9 celky v Banskobystrickom kraji (public view); Podjazdy v Banskobystrickom kraji (public view); Priepusty v Banskobystrickom kraji (public view); \u017delezni\u010dn\u00e9 priecestia v Banskobystrickom kraji (public view).",
+      "properties": {
+        "celkovaDlzkaPodjazdu": {
+          "description": "The source column `Celkov\u00e1_d\u013a\u017eka_podjazdu`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "cisloPK": {
+          "description": "The source column `\u010c\u00edslo_PK`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who published the row, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataset": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "druhKonstrukcie": {
+          "description": "The source column `Druh_kon\u0161trukcie`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "druhZabezpecenia": {
+          "description": "The source column `Druh_zabezpe\u010denia`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "jICZSR": {
+          "description": "The source column `JI\u010c_\u017dSR`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "kraj": {
+          "description": "The source column `Kraj`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "material": {
+          "description": "The source column `Material`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "materialPriepustu": {
+          "description": "The source column `Materi\u00e1l_priepustu`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "minVyskaPodjazdu": {
+          "description": "The source column `Min__v\u00fd\u0161ka_podjazdu`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "najblizsiKM": {
+          "description": "The source column `Najbli\u017e\u0161\u00ed_KM`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "name": {
+          "description": "The source column `Miesto`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "normanaZatazitelnostT": {
+          "description": "The source column `Norm\u00e1na_za\u0165a\u017eite\u013enost___t`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "okres": {
+          "description": "The source column `Okres`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "pocetKolaji": {
+          "description": "The source column `Po\u010det_kolaji`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "predmetPremostenia": {
+          "description": "The source column `Predmet_premostenia`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "rokStavby": {
+          "description": "The source column `rok_stavby`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The service the row was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "spravca": {
+          "description": "The source column `spravca`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "spravcaMostu": {
+          "description": "The source column `Spr\u00e1vca_mostu`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "spravcaUseku": {
+          "description": "The source column `Spr\u00e1vca_\u00faseku`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "stavebnoTechnickyStav": {
+          "description": "The source column `Stavebno_technick\u00fd_stav`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "triedaPK": {
+          "description": "The source column `Trieda_PK`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "typPodjazdu": {
+          "description": "The source column `Typ_podjazdu`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "typSpravcu": {
+          "description": "The source column `Typ_Spravcu`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "vlastnik": {
+          "description": "The source column `Vlastn\u00edk`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "vlastnikMostu": {
+          "description": "The source column `Vlastn\u00edk_mostu`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "vlastnikUseku": {
+          "description": "The source column `Vlastn\u00edk_\u00faseku`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "vyhradnaZatazitelnostT": {
+          "description": "The source column `V\u00fdhradn\u00e1_za\u0165a\u017eite\u013enos\u0165___t`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "vynimocnaZatazitelnostT": {
+          "description": "The source column `V\u00fdnimo\u010dn\u00e1_za\u0165a\u017eite\u013enos\u0165___t`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "RoadStructure",
+      "type": "object"
+    },
+    "Rule": {
+      "additionalProperties": false,
+      "description": "One row of Zoznam \u00fa\u010dinn\u00fdch v\u0161eobecne z\u00e1v\u00e4zn\u00fdch nariaden\u00ed (VZN).",
+      "properties": {
+        "cisloZasadnutia": {
+          "description": "The source column `\u010c\u00edslo_zasadnutia`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who published the row, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataset": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "description": {
+          "description": "The source column `N\u00e1zov_VZN`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "iCOSamospravy": {
+          "description": "The source column `I\u010cO_samospr\u00e1vy`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "identifier": {
+          "description": "The source column `\u010c\u00edslo`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "description": "The source column `Miesto`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nazovSamospravy": {
+          "description": "The source column `N\u00e1zov_samospr\u00e1vy`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "platnostOd": {
+          "description": "The source column `Platnos\u0165_od`.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The service the row was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "uRLLinkaNaVZN": {
+          "description": "The source column `URL_linka_na_VZN`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "ucinnostDo": {
+          "description": "The source column `\u00da\u010dinnos\u0165_do`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "ucinnostOd": {
+          "description": "The source column `\u00da\u010dinnos\u0165_od`.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "Rule",
+      "type": "object"
+    },
+    "WaterBodyStatus": {
+      "additionalProperties": false,
+      "description": "One row of Ekologick\u00fd potenci\u00e1l vodn\u00fdch \u00fatvarov; Ekologick\u00fd stav vodn\u00fdch \u00fatvarov.",
+      "properties": {
+        "aCH": {
+          "description": "The source column `ACH`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "aUT": {
+          "description": "The source column `AUT`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "celkChemStav": {
+          "description": "The source column `celk_chem_stav`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "charakter": {
+          "description": "The source column `charakter`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "charakter1": {
+          "description": "The source column `charakter_1`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dOW": {
+          "description": "The source column `DOW`.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who published the row, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataset": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dlzkaVU1": {
+          "description": "The source column `dlzka_VU_1`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "ekologickyStav": {
+          "description": "The source column `ekologicky_stav`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "fACC": {
+          "description": "The source column `FACC`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "fIDKraj0": {
+          "description": "The source column `FID_kraj_0`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "fIDRiekyBbskJoin": {
+          "description": "The source column `FID_rieky_bbsk_join`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "iDN2": {
+          "description": "The source column `IDN2`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "kODVU202": {
+          "description": "The source column `KOD_VU_202`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "kod": {
+          "description": "The source column `kod`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "nAZOVVUD": {
+          "description": "The source column `NAZOV_VU_D`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nM2": {
+          "description": "The source column `NM2`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "name": {
+          "description": "The source column `Miesto`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "nazovVU1": {
+          "description": "The source column `nazov_VU_1`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "pOVODIE": {
+          "description": "The source column `POVODIE`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "pOZN1": {
+          "description": "The source column `POZN_1`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "pOZNAMKA": {
+          "description": "The source column `POZNAMKA`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "potencial": {
+          "description": "The source column `potencial`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "rkmDo1": {
+          "description": "The source column `rkm_do_1`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "rkmOd1": {
+          "description": "The source column `rkm_od_1`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "sOI": {
+          "description": "The source column `SOI`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "sUBUNIT": {
+          "description": "The source column `SUB_UNIT`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "skupina": {
+          "description": "The source column `skupina`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The service the row was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "typ": {
+          "description": "The source column `typ`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "vYMERA": {
+          "description": "The source column `VYMERA`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "WaterBodyStatus",
       "type": "object"
     }
   },

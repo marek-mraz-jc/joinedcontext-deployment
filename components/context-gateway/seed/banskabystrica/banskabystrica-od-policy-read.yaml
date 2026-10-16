@@ -31,6 +31,11 @@ spec:
   information:
   - entities:
     - type: Address
+    - type: Article
+    - type: Contract
+    - type: CouncilMeeting
     - type: Garden
+    - type: Grant
     - type: KeyPerformanceIndicator
     - type: OffStreetParking
+    - type: PurchaseOrder

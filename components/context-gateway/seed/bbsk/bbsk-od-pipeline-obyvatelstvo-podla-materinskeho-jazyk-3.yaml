@@ -10,7 +10,7 @@ metadata:
 spec:
   class: scheduled
   enabled: false
-  schedule: 13 3 20 * *
+  schedule: 44 4 5 * *
   source:
     dataSourceRef:
       kind: DataSource

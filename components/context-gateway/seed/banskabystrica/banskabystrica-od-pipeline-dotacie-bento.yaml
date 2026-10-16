@@ -1,0 +1,81 @@
+# The mapping of the od-dotacie pipeline, generated from the T-4254 mapping: one Grant per row of
+# "Dotácie" (https://data.dev.joinedcontext.com/dataset/bb-dotacie). Do not edit: change the mapping and run scripts/open-data/generate.py.
+
+pipeline:
+  processors:
+    - mapping: |
+        root = if this.success.or(false) != true { throw("the catalogue answered no table") } else { this.result.records.or([]) }
+    - unarchive:
+        format: json_array
+    - mapping: |
+        # Slovak notation: a space (or a no-break one) between thousands, a comma before the decimals, so
+        # "10 700,01" is 10700.01 (T-4324); a text without a comma keeps its dot, "1.5" is one and a half.
+        map number {
+          let s = this.string().re_replace_all("[ 	  ]", "")
+          let t = if $s.contains(",") { $s.replace_all(".", "").replace_all(",", ".") } else { $s }
+          root = $t.number().catch(null)
+        }
+        map integer {
+          let v = if this == null { null } else { this.apply("number") }
+          root = if $v == null { null } else { { "type": "Property", "value": $v.round().int64() } }
+        }
+        map float {
+          let v = if this == null { null } else { this.apply("number") }
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        map string {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": $v } }
+        }
+        map string_list {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": [$v] } }
+        }
+        map uri {
+          root = this.apply("string")
+        }
+        # An Esri date is milliseconds since the epoch; a DataStore or WordPress one is text.
+        # `match` rebinds `this` to what it matches, so the value is named first.
+        map datetime {
+          let x = this
+          let v = match $x.type() {
+            "number" => ($x / 1000).ts_format("2006-01-02T15:04:05Z", "UTC").catch(null),
+            "string" => $x.ts_parse("2006-01-02T15:04:05").ts_format("2006-01-02T15:04:05Z", "UTC").catch($x.ts_format("2006-01-02T15:04:05Z", "UTC").catch(null)),
+            _ => null,
+          }
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        map date {
+          let x = this
+          let v = match $x.type() {
+            "number" => ($x / 1000).ts_format("2006-01-02", "UTC").catch(null),
+            # ISO, or the Slovak "29.08.2026" and "1. 3. 2024".
+            "string" => if $x.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}") { $x.slice(0, 10) } else {
+              $x.re_replace_all("[.] +", ".").trim().ts_parse("2.1.2006").ts_format("2006-01-02", "UTC").catch(null)
+            },
+            _ => null,
+          }
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        let local = "dotacie-" + {"Rok_dotácie": this."Rok_dotácie", "Typ": this."Typ", "Druh": this."Druh", "Stav_vybav.": this."Stav_vybav.", "Akcia": this."Akcia", "Schv._prostr.": this."Schv._prostr.", "Mena": this."Mena", "Žiadateľ": this."Žiadateľ", "IČO_žiadateľa": this."IČO_žiadateľa", "Požadované_prostriedky": this."Požadované_prostriedky"}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
+        root = {
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Grant", "banskabystrica.sk", env("JC_SPACE"), $local),
+          "type": "Grant",
+          "rokDotacie": this."Rok_dotácie".apply("integer"),
+          "typ": this."Typ".apply("string"),
+          "druh": this."Druh".apply("string"),
+          "stavVybav": this."Stav_vybav.".apply("string"),
+          "akcia": this."Akcia".apply("string"),
+          "schvProstr": this."Schv._prostr.".apply("string"),
+          "mena": this."Mena".apply("string"),
+          "ziadatel": this."Žiadateľ".apply("string"),
+          "iCOZiadatela": this."IČO_žiadateľa".apply("string"),
+          "pozadovaneProstriedky": this."Požadované_prostriedky".apply("string"),
+          "identifier": { "type": "Property", "value": $local },
+          "dataProvider": { "type": "Property", "value": "Mesto Banská Bystrica (CC BY 4.0)" },
+          "source": { "type": "Property", "value": "https://data.dev.joinedcontext.com/api/3/action/datastore_search?resource_id=7d9f3a85-c733-47bd-96cf-3f4fadab81eb&limit=32000" },
+          "dataset": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bb-dotacie" }
+        }.filter(entry -> entry.value != null)
+    # One request per run's batch rather than one per row.
+    - archive:
+        format: json_array
