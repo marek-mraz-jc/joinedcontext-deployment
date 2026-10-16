@@ -11,7 +11,9 @@ spec:
   # Read only, and every published column of the statistics office's rows. stewardNote is the
   # region's own annotation (statistical-observation 1.1.0), written by its steward and not open
   # data, so it is left out (T-2934).
-  operations: [retrieveOps, createSubscription, retrieveSubscription, updateSubscription, deleteSubscription]
+  # Discovery beside the reads (T-4258, EP-116): which types and attributes the Endpoint holds,
+  # narrowed to this grant (EP-26), so an anonymous MCP client finds them before it queries.
+  operations: [retrieveOps, retrieveEntityTypes, retrieveEntityTypeDetails, retrieveEntityTypeInfo, retrieveAttrTypes, retrieveAttrTypeDetails, retrieveAttrTypeInfo, createSubscription, retrieveSubscription, updateSubscription, deleteSubscription]
   information:
     - entities:
         - type: StatisticalObservation
