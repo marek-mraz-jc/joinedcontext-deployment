@@ -125,8 +125,9 @@ def test_it_is_placed_on_the_assistant_host_the_demo_page_and_the_catalogue_with
     assert budget["outputTokensPerAnswer"] == 700
     assert budget["messagesPerConversation"] == 30
     assert budget["questionChars"] == 1000
+    # The cost cap is the guard; the shared token cap stays above it (T-4286).
     assert budget["costPerDayUsd"] <= 3
-    assert budget["tokensPerDay"] <= 500_000
+    assert budget["tokensPerDay"] <= 5_000_000
     assert budget["tokensPerConversation"] <= budget["tokensPerDay"]
     assert spec["model"]["answer"] and spec["model"]["router"]
 

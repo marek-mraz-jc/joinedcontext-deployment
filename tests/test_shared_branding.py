@@ -24,6 +24,15 @@ def test_the_catalogue_names_no_city_in_its_title_about_or_fonts(rendered):
         assert "HelsinkiGrotesk" not in stack
 
 
+def test_the_catalogue_speaks_slovak_first_and_the_portal_keeps_its_languages(rendered):
+    # T-4280: data.dev opens in Slovak; the Portal's English-only choice stays its own.
+    docs = rendered("dev")
+    catalogue = json.loads(config_map(docs, "ckan-theme")["branding.json"])["languages"]
+    assert catalogue == {"default": "sk", "offered": ["sk", "en", "cs", "fi"]}
+    portal = yaml.safe_load(config_map(docs, "portal-branding")["branding.yaml"])["languages"]
+    assert portal["default"] == "en"
+
+
 def test_the_portal_takes_the_same_name_and_fonts(rendered):
     docs = rendered("dev")
     portal = yaml.safe_load(config_map(docs, "portal-branding")["branding.yaml"])
