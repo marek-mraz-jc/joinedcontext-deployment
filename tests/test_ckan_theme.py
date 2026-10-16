@@ -673,6 +673,8 @@ def test_the_footer_offers_the_assistant_as_a_disclosure_a_keyboard_opens():
     assert '<details class="jc-assistant">' in footer and "<summary>{{ h.jc_t('assistant') }}</summary>" in footer
     assert 'title="{{ h.jc_t(\'assistant\') }}"' in footer and 'loading="lazy"' in footer
     assert 'referrerpolicy="no-referrer"' in footer
+    # T-4253: the chat opens in the page's language, the one its disclosure header is in.
+    assert '<iframe src="{{ widget }}?lang={{ h.lang()|urlencode }}"' in footer
 
 
 def test_the_assistant_leaves_the_page_room_and_takes_a_phone_s_whole_screen():
