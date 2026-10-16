@@ -186,6 +186,47 @@ edge:
           included.custom.audience: dhiw4735mzyvwkrmszljpxcvvgv32q33
           access.token.claim: 'true'
           id.token.claim: 'false'
+      # The datasets split out of helsinki-all (T-4344), one Smart Data Model type each.
+      - name: helsinki-beach-water-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: w5vgo2mi6phigetdq3pvvcjgznw73hji
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-parking-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: x6d6jph5t3tib5vr53kmiz2l5n3u3tnu
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-public-area-permits-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: rjktf6sxt7mdqgdc3cvyf56ezh6if6kh
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-districts-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: s3luopgog5nkxcpykwxdvhw22iis5n7e
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-places-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: zq6avaaqv3d7ma2avz7rvkwtxelaxkc4
+          access.token.claim: 'true'
+          id.token.claim: 'false'
       - name: helsinki-bikes-audience
         protocol: openid-connect
         protocolMapper: oidc-audience-mapper

@@ -18,12 +18,8 @@ spec:
   # mcp: the members of the public `otvorene-data` MCP server (T-4141) and the public
   # assistant's connectors (T-4167); the gateway lists a member only when it serves MCP.
   enabledRepresentations: [ngsi-ld, geojson, csv, json, websocket, ogc-features, odata, mcp]
-  publish:
-    ckan:
-      instanceRef: { kind: CkanInstance, name: bbsk }
-      # ShareAlike: the region's licence binds the republication too (T-2783).
-      license: cc-by-sa
-      datastore: { representation: csv, refresh: onReconcile }
+  # Off the catalogue (T-4344): its unrelated types are each their own dataset, through the
+  # narrowed Endpoints beside it. This Endpoint stays for the Apps and connectors that read it.
   # What the dataset page and the DCAT-AP record carry beside the title (EP-27, T-3114): the
   # region as publisher, its ShareAlike licence and credit, the themes and keywords a reader
   # searches by, the region, and the registers' weekly refresh.
