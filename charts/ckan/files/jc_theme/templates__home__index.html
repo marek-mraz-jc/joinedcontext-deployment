@@ -29,6 +29,8 @@
     </section>
 
     <div class="container"><div class="jc-home">
+      {# The main column holds the assistant card too: its code needs more width than the side (T-4284). #}
+      <div class="jc-main">
       <section aria-labelledby="jc-recent-title">
         <div class="jc-home-head">
           <h2 id="jc-recent-title">{{ h.jc_t('recent') }}</h2>
@@ -56,9 +58,10 @@
           <p class="jc-empty">{{ h.jc_t('no_datasets') }}</p>
         {% endif %}
       </section>
+      {% snippet 'snippets/jc_mcp_install.html' %}
+      </div>
 
       <div class="jc-side">
-        {% snippet 'snippets/jc_mcp_install.html' %}
         {% set publishers = h.get_facet_items_dict('organization', search_facets, limit=8) if search_facets else [] %}
         {% if publishers %}
           <section aria-labelledby="jc-publishers-title">
