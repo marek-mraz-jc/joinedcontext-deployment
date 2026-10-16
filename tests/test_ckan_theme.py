@@ -51,7 +51,7 @@ def theme(tmp_path, monkeypatch):
     plugins.implements = lambda *args, **kwargs: None
     page.loaded = set()
     plugins.plugin_loaded = lambda name: name in page.loaded
-    plugins.IConfigurer = plugins.ITemplateHelpers = plugins.IFacets = object
+    plugins.IConfigurer = plugins.ITemplateHelpers = plugins.IFacets = plugins.IPackageController = object
     ckan = types.ModuleType("ckan")
     ckan.__file__ = str(tmp_path / "ckan/__init__.py")
     ckan.plugins = plugins
@@ -912,3 +912,27 @@ def test_the_navigation_and_the_dataset_tabs_ask_before_offering_topics():
     assert "h.jc_has_topics()" in header
     tabs = (THEME / "templates__package__read_base.html").read_text()
     assert "block content_primary_nav" in tabs and "h.jc_has_topics()" in tabs
+
+
+# T-4218 (photo audit T-4161): Solr split a hyphenated word into parts it OR'ed, so "bike-sharing"
+# found every dataset about bikes or about sharing, and a word nobody wrote found them all
+# (measured on dev: 6 against 1 as a phrase, 132 of 132 against 0). Each such word is searched
+# as the phrase it is; a query with its own quotes or fields is the visitor's syntax and stays.
+@pytest.mark.parametrize("asked, searched", [
+    ("bike-sharing", '"bike-sharing"'),
+    ("kvalita-ovzdušia Žilina", '"kvalita-ovzdušia" Žilina'),
+    ("qzxwv-nothing-is-called-this", '"qzxwv-nothing-is-called-this"'),
+    ("air quality", "air quality"),
+    ("-draft", "-draft"),
+    ('"bike-sharing" x-y', '"bike-sharing" x-y'),
+    ("tags:air-quality", "tags:air-quality"),
+    ("", ""),
+])
+def test_a_hyphenated_word_is_searched_as_written(theme, asked, searched):
+    assert theme.jc_search_words(asked) == searched
+
+
+def test_the_dataset_search_takes_the_hyphenated_word_as_a_phrase(theme):
+    plugin = theme.JcThemePlugin()
+    assert plugin.before_dataset_search({"q": "bike-sharing", "rows": 20}) == {"q": '"bike-sharing"', "rows": 20}
+    assert plugin.before_dataset_search({"fq": "x"}) == {"fq": "x"}

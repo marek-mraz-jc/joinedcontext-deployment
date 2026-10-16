@@ -749,6 +749,18 @@ def jc_has_topics():
         return False
 
 
+HYPHENATED = re.compile(r"^\w+(?:-\w+)+$")
+
+
+def jc_search_words(q):
+    """The visitor's search with each hyphenated word as a phrase (T-4218). Solr split
+    `bike-sharing` into parts it OR'ed, so the word found everything about either part. A query
+    with its own quotes or a field (`tags:x`) is the visitor's syntax and goes as typed."""
+    if not q or '"' in q or ":" in q:
+        return q
+    return " ".join('"%s"' % word if HYPHENATED.match(word) else word for word in q.split())
+
+
 def jc_about_site():
     """What the About page says when no sysadmin wrote `ckan.site_about` (T-3028): whose
     catalogue this is, how to get at the data, and the machine entrances, all from the branding
@@ -846,6 +858,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.IFacets, inherit=True)
+    plugins.implements(plugins.IPackageController, inherit=True)
 
     def update_config(self, config):
         toolkit.add_template_directory(config, "templates")
@@ -897,6 +910,12 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_has_topics": jc_has_topics,
             "jc_sso_error": jc_sso_error,
         }
+
+    def before_dataset_search(self, search_params):
+        """A hyphenated word searched as the phrase it is, on the page and the API alike."""
+        if search_params.get("q"):
+            search_params["q"] = jc_search_words(search_params["q"])
+        return search_params
 
     def dataset_facets(self, facets_dict, package_type):
         """The search filters in plain words: Publisher, Topic, Keywords, Format, Licence."""
