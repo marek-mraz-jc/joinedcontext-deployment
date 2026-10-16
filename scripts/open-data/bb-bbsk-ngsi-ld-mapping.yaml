@@ -140,9 +140,13 @@ datasets:
   name: bb-dtm-bb-funkcne-vyuzitie-uzemia
   org: banskabystrica
   title: DTM_BB-funkcne-vyuzitie-uzemia
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (201 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
-    answer its map app) and data.slovensko.sk lists only this ZIP'
+  status: no-data-source
+  reason: 'a ZIP of 1 .pdf (201 KiB): a PDF map sheet, no data'
+  tried:
+  - https://dtm-banskabystrica.tmapserver.sk/opendata/OE_23.zip
+  - https://dtm-banskabystrica.tmapserver.sk/-/wfs/?service=WFS&request=GetCapabilities
+  - https://dtm-banskabystrica.tmapserver.sk/-/wms/?service=WMS&request=GetCapabilities
+  - https://data.slovensko.sk/api/sparql (dcat:distribution of https://data.gov.sk/set/0f69ed3c-ee95-479d-8606-f7fd0da177e6)
 - id: fb1385c6-eddb-4412-bb4b-fc54ce7f3fb3
   name: bb-dtm-bb-polohopis-a-vyskopis-bodoveho-pola
   org: banskabystrica
@@ -249,23 +253,35 @@ datasets:
   name: bb-dtm-bb-register-chodnikov-a-verejnych-priestranstiev
   org: banskabystrica
   title: DTM_BB-register-chodnikov-a-verejnych-priestranstiev
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
-    answer its map app) and data.slovensko.sk lists only this ZIP'
+  status: no-data-source
+  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data'
+  tried:
+  - https://dtm-banskabystrica.tmapserver.sk/opendata/OE_14.zip
+  - https://dtm-banskabystrica.tmapserver.sk/-/wfs/?service=WFS&request=GetCapabilities
+  - https://dtm-banskabystrica.tmapserver.sk/-/wms/?service=WMS&request=GetCapabilities
+  - https://data.slovensko.sk/api/sparql (dcat:distribution of https://data.gov.sk/set/6a855ed0-f087-418f-90e6-1014707fce6e)
 - id: 5f43a3ee-cc18-4e2d-8f1d-df801bdc8bab
   name: bb-dtm-bb-register-miestnych-komunikacii-a-vyssich-tried
   org: banskabystrica
   title: DTM_BB-register-miestnych-komunikacii-a-vyssich-tried
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
-    answer its map app) and data.slovensko.sk lists only this ZIP'
+  status: no-data-source
+  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data'
+  tried:
+  - https://dtm-banskabystrica.tmapserver.sk/opendata/OE_13.zip
+  - https://dtm-banskabystrica.tmapserver.sk/-/wfs/?service=WFS&request=GetCapabilities
+  - https://dtm-banskabystrica.tmapserver.sk/-/wms/?service=WMS&request=GetCapabilities
+  - https://data.slovensko.sk/api/sparql (dcat:distribution of https://data.gov.sk/set/fbee2f10-8416-4cc5-927e-00fb59fa775e)
 - id: ed2fa840-b6b0-4a33-acf8-6e3408375fd3
   name: bb-dtm-bb-register-statickej-dopravy
   org: banskabystrica
   title: DTM_BB-register-statickej-dopravy
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
-    answer its map app) and data.slovensko.sk lists only this ZIP'
+  status: no-data-source
+  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data'
+  tried:
+  - https://dtm-banskabystrica.tmapserver.sk/opendata/OE_15.zip
+  - https://dtm-banskabystrica.tmapserver.sk/-/wfs/?service=WFS&request=GetCapabilities
+  - https://dtm-banskabystrica.tmapserver.sk/-/wms/?service=WMS&request=GetCapabilities
+  - https://data.slovensko.sk/api/sparql (dcat:distribution of https://data.gov.sk/set/19403049-adf8-4e2b-b5a4-4d2443f17cb8)
 - id: 24326e00-8f80-4308-8a4b-51081c8b950f
   name: bb-dtm-bb-register-stavby
   org: banskabystrica
@@ -313,9 +329,13 @@ datasets:
   name: bb-dtm-bb-register-stlpov-vo
   org: banskabystrica
   title: DTM_BB-register-stlpov-VO
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (185 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
-    answer its map app) and data.slovensko.sk lists only this ZIP'
+  status: no-data-source
+  reason: 'a ZIP of 1 .pdf (185 KiB): a PDF map sheet, no data'
+  tried:
+  - https://dtm-banskabystrica.tmapserver.sk/opendata/bb_paosv_stoziare.zip
+  - https://dtm-banskabystrica.tmapserver.sk/-/wfs/?service=WFS&request=GetCapabilities
+  - https://dtm-banskabystrica.tmapserver.sk/-/wms/?service=WMS&request=GetCapabilities
+  - https://data.slovensko.sk/api/sparql (dcat:distribution of https://data.gov.sk/set/d46034b3-c277-4219-97a2-c7b94e240f09)
 - id: fc06f7ea-2763-44f3-a543-4ea70b6eb668
   name: bb-dtm-bb-register-ulic
   org: banskabystrica
@@ -401,72 +421,109 @@ datasets:
   name: bb-dtm-bb-register-verejnej-zelene-1
   org: banskabystrica
   title: DTM_BB-register-verejnej-zelene-1
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (43 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
-    answer its map app) and data.slovensko.sk lists only this ZIP'
+  status: no-data-source
+  reason: 'a ZIP of 1 .pdf (43 KiB): a PDF map sheet, no data'
+  tried:
+  - https://dtm-banskabystrica.tmapserver.sk/opendata/bb_pazel_t_dbf.zip
+  - https://dtm-banskabystrica.tmapserver.sk/-/wfs/?service=WFS&request=GetCapabilities
+  - https://dtm-banskabystrica.tmapserver.sk/-/wms/?service=WMS&request=GetCapabilities
+  - https://data.slovensko.sk/api/sparql (dcat:distribution of https://data.gov.sk/set/d2b2630a-c17e-4a37-8f0f-e9e8da119bcb)
 - id: b2057885-c4f5-4f6a-aa7b-ba8556a7a13c
   name: bb-dtm-bb-register-verejnej-zelene-2
   org: banskabystrica
   title: DTM_BB-register-verejnej-zelene-2
-  status: not-ingestible
-  reason: 'a ZIP of 3 .atr, 3 .cpg, 3 .dbf, 3 .shp, 3 .shx (732 KiB): Esri shapefiles; no ingestion path reads a
-    shapefile today'
+  status: no-data-source
+  reason: 'a ZIP of 3 .atr, 3 .cpg, 3 .dbf, 3 .shp, 3 .shx (732 KiB): every member is encrypted (a password is required)'
+  tried:
+  - https://dtm-banskabystrica.tmapserver.sk/opendata/bb_pazel_shp.zip
 - id: f08602e6-ec95-43a7-b13d-44320f1caa46
   name: bb-dtm-bb-register-verejnej-zelene-3
   org: banskabystrica
   title: DTM_BB-register-verejnej-zelene-3
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (194 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
-    answer its map app) and data.slovensko.sk lists only this ZIP'
+  status: no-data-source
+  reason: 'a ZIP of 1 .pdf (194 KiB): a PDF map sheet, no data'
+  tried:
+  - https://dtm-banskabystrica.tmapserver.sk/opendata/bb_pazel_c_dbf.zip
+  - https://dtm-banskabystrica.tmapserver.sk/-/wfs/?service=WFS&request=GetCapabilities
+  - https://dtm-banskabystrica.tmapserver.sk/-/wms/?service=WMS&request=GetCapabilities
+  - https://data.slovensko.sk/api/sparql (dcat:distribution of https://data.gov.sk/set/a352abb0-e3d9-4192-9149-bea8055bcd8a)
 - id: ebcf8bb3-7248-4f1c-aa9c-2f1302abc593
   name: bb-dtm-bb-register-vodorovneho-dopravneho-znacenia
   org: banskabystrica
   title: DTM_BB-register-vodorovneho-dopravneho-znacenia
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
-    answer its map app) and data.slovensko.sk lists only this ZIP'
+  status: no-data-source
+  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data'
+  tried:
+  - https://dtm-banskabystrica.tmapserver.sk/opendata/OE_17.zip
+  - https://dtm-banskabystrica.tmapserver.sk/-/wfs/?service=WFS&request=GetCapabilities
+  - https://dtm-banskabystrica.tmapserver.sk/-/wms/?service=WMS&request=GetCapabilities
+  - https://data.slovensko.sk/api/sparql (dcat:distribution of https://data.gov.sk/set/10d623e9-5b5c-4388-820b-19366ed06976)
 - id: f5382a0f-ef29-4823-a925-d5b0254e823c
   name: bb-dtm-bb-register-zvisleho-dopravneho-znacenia
   org: banskabystrica
   title: DTM_BB-register-zvisleho-dopravneho-znacenia
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
-    answer its map app) and data.slovensko.sk lists only this ZIP'
+  status: no-data-source
+  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data'
+  tried:
+  - https://dtm-banskabystrica.tmapserver.sk/opendata/OE_16.zip
+  - https://dtm-banskabystrica.tmapserver.sk/-/wfs/?service=WFS&request=GetCapabilities
+  - https://dtm-banskabystrica.tmapserver.sk/-/wms/?service=WMS&request=GetCapabilities
+  - https://data.slovensko.sk/api/sparql (dcat:distribution of https://data.gov.sk/set/ce59a87a-a3d9-4f24-9d48-ca0df97c24e2)
 - id: 5e147d8b-e44f-4f37-b5b0-501f54179e56
   name: bb-dtm-bb-regulativy-a-limity-funkcneho-vyuzitia-uzemia
   org: banskabystrica
   title: DTM_BB-regulativy-a-limity-funkcneho-vyuzitia-uzemia
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (205 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
-    answer its map app) and data.slovensko.sk lists only this ZIP'
+  status: no-data-source
+  reason: 'a ZIP of 1 .pdf (205 KiB): a PDF map sheet, no data'
+  tried:
+  - https://dtm-banskabystrica.tmapserver.sk/opendata/OE_26.zip
+  - https://dtm-banskabystrica.tmapserver.sk/-/wfs/?service=WFS&request=GetCapabilities
+  - https://dtm-banskabystrica.tmapserver.sk/-/wms/?service=WMS&request=GetCapabilities
+  - https://data.slovensko.sk/api/sparql (dcat:distribution of https://data.gov.sk/set/4e0cc517-bc95-4fcd-b4df-a508ce8a5d64)
 - id: 42d98983-d9d4-4c82-b093-7ab459c25ca6
   name: bb-dtm-bb-tvorba-krajiny-a-ochrana-prirody
   org: banskabystrica
   title: DTM_BB-tvorba-krajiny-a-ochrana-prirody
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
-    answer its map app) and data.slovensko.sk lists only this ZIP'
+  status: no-data-source
+  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data'
+  tried:
+  - https://dtm-banskabystrica.tmapserver.sk/opendata/OE_25.zip
+  - https://dtm-banskabystrica.tmapserver.sk/-/wfs/?service=WFS&request=GetCapabilities
+  - https://dtm-banskabystrica.tmapserver.sk/-/wms/?service=WMS&request=GetCapabilities
+  - https://data.slovensko.sk/api/sparql (dcat:distribution of https://data.gov.sk/set/fd4a23d6-876c-43c6-96ff-b79c6c78820c)
 - id: c512a703-7a5e-4c78-af60-ee4dbc4b1d19
   name: bb-dtm-bb-verejne-dopravne-a-technicke-vybavenie
   org: banskabystrica
   title: DTM_BB-verejne-dopravne-a-technicke-vybavenie
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (198 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
-    answer its map app) and data.slovensko.sk lists only this ZIP'
+  status: no-data-source
+  reason: 'a ZIP of 1 .pdf (198 KiB): a PDF map sheet, no data'
+  tried:
+  - https://dtm-banskabystrica.tmapserver.sk/opendata/OE_24.zip
+  - https://dtm-banskabystrica.tmapserver.sk/-/wfs/?service=WFS&request=GetCapabilities
+  - https://dtm-banskabystrica.tmapserver.sk/-/wms/?service=WMS&request=GetCapabilities
+  - https://data.slovensko.sk/api/sparql (dcat:distribution of https://data.gov.sk/set/64062f21-7ed2-4b2b-8f86-92031f2e4424)
 - id: 8c3c67bf-074e-4207-9cd7-b51ed756a4f8
   name: bb-dtm-bb-verejnoprospesne-stavby
   org: banskabystrica
   title: DTM_BB-verejnoprospesne-stavby
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (197 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
-    answer its map app) and data.slovensko.sk lists only this ZIP'
+  status: no-data-source
+  reason: 'a ZIP of 1 .pdf (197 KiB): a PDF map sheet, no data'
+  tried:
+  - https://dtm-banskabystrica.tmapserver.sk/opendata/OE_28.zip
+  - https://dtm-banskabystrica.tmapserver.sk/-/wfs/?service=WFS&request=GetCapabilities
+  - https://dtm-banskabystrica.tmapserver.sk/-/wms/?service=WMS&request=GetCapabilities
+  - https://data.slovensko.sk/api/sparql (dcat:distribution of https://data.gov.sk/set/0938a275-6e7e-444c-a679-79714e7774e9)
 - id: 3877e9a5-9a5d-4f00-980b-8aba89101e66
   name: bb-dtm-bb-vodne-toky-a-plochy
   org: banskabystrica
   title: DTM_BB-vodne-toky-a-plochy
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
-    answer its map app) and data.slovensko.sk lists only this ZIP'
+  status: no-data-source
+  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data'
+  tried:
+  - https://dtm-banskabystrica.tmapserver.sk/opendata/vodne_toky_plochy.zip
+  - https://dtm-banskabystrica.tmapserver.sk/-/wfs/?service=WFS&request=GetCapabilities
+  - https://dtm-banskabystrica.tmapserver.sk/-/wms/?service=WMS&request=GetCapabilities
+  - https://data.slovensko.sk/api/sparql (dcat:distribution of https://data.gov.sk/set/b80831e5-4a8b-4129-ad80-2beb11e3db80)
 - id: 0bca145f-6437-4969-94b6-04732103c7d4
   name: bb-dtm-bb-vyskopis-teran
   org: banskabystrica
@@ -477,16 +534,24 @@ datasets:
   name: bb-dtm-bb-vyuzitie-pody-na-nepolnohospodarske-ucely
   org: banskabystrica
   title: DTM_BB-vyuzitie-pody-na-nepolnohospodarske-ucely
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (197 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
-    answer its map app) and data.slovensko.sk lists only this ZIP'
+  status: no-data-source
+  reason: 'a ZIP of 1 .pdf (197 KiB): a PDF map sheet, no data'
+  tried:
+  - https://dtm-banskabystrica.tmapserver.sk/opendata/OE_27.zip
+  - https://dtm-banskabystrica.tmapserver.sk/-/wfs/?service=WFS&request=GetCapabilities
+  - https://dtm-banskabystrica.tmapserver.sk/-/wms/?service=WMS&request=GetCapabilities
+  - https://data.slovensko.sk/api/sparql (dcat:distribution of https://data.gov.sk/set/a91835cd-85bb-4a3b-bf39-5fefe7eb66db)
 - id: 78b602b1-e0c1-4d7c-86a2-881f11b826a5
   name: bb-dtm-bb-zaujmove-uzemie-a-sirsie-vztahy
   org: banskabystrica
   title: DTM_BB-zaujmove-uzemie-a-sirsie-vztahy
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (24 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/
-    answer its map app) and data.slovensko.sk lists only this ZIP'
+  status: no-data-source
+  reason: 'a ZIP of 1 .pdf (24 KiB): a PDF map sheet, no data'
+  tried:
+  - https://dtm-banskabystrica.tmapserver.sk/opendata/zaujmove_riesene_uzemie.zip
+  - https://dtm-banskabystrica.tmapserver.sk/-/wfs/?service=WFS&request=GetCapabilities
+  - https://dtm-banskabystrica.tmapserver.sk/-/wms/?service=WMS&request=GetCapabilities
+  - https://data.slovensko.sk/api/sparql (dcat:distribution of https://data.gov.sk/set/892f3512-73af-4650-ba5a-f832ffe9026d)
 - id: e3715528-0a0f-40e4-8178-e42beca9da39
   name: bb-objednavky-bb
   org: banskabystrica
