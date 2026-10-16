@@ -933,7 +933,7 @@ def test_the_navigation_and_the_dataset_tabs_ask_before_offering_topics():
 # as the phrase it is; a query with its own quotes or fields is the visitor's syntax and stays.
 @pytest.mark.parametrize("asked, searched", [
     ("bike-sharing", '"bike-sharing"'),
-    ("kvalita-ovzdušia Žilina", '"kvalita-ovzdušia" Žilina'),
+    ("kvalita-ovzdušia Žilina", '"kvalita-ovzdušia" (Žilina OR Žilin*)'),
     ("qzxwv-nothing-is-called-this", '"qzxwv-nothing-is-called-this"'),
     ("air quality", "air quality"),
     ("-draft", "-draft"),
@@ -949,6 +949,32 @@ def test_the_dataset_search_takes_the_hyphenated_word_as_a_phrase(theme):
     plugin = theme.JcThemePlugin()
     assert plugin.before_dataset_search({"q": "bike-sharing", "rows": 20}) == {"q": '"bike-sharing"', "rows": 20}
     assert plugin.before_dataset_search({"fq": "x"}) == {"fq": "x"}
+
+
+# T-4239 (photo audit T-4161 #3): Solr stems with the English Porter stemmer, so "ovzdušie" (air)
+# found only Praha's "ovzduší" and missed the three Slovak "ovzdušia" datasets. A word with a
+# Slovak or Czech letter is searched as itself or its stem with any ending, through edismax (the
+# only parser of CKAN's two that takes a prefix); measured on the ckan-solr 2.11 image: dismax
+# "ovzdušie" finds praha-air only, edismax "(ovzdušie OR ovzduš*)" finds praha-air and bb-air.
+@pytest.mark.parametrize("asked, searched", [
+    ("ovzdušie", "(ovzdušie OR ovzduš*)"),
+    ("kvalita ovzdušia", "kvalita (ovzdušia OR ovzduš*)"),
+    ("Kvalita ovzduší", "Kvalita (ovzduší OR ovzduš*)"),
+    ("školy", "(školy OR škol*)"),
+    ("ľad", "ľad"),
+    ("ovzduš", "ovzduš"),
+    ("air quality", "air quality"),
+    ('"ovzdušie"', '"ovzdušie"'),
+])
+def test_a_slovak_or_czech_word_finds_its_other_endings(theme, asked, searched):
+    assert theme.jc_search_words(asked) == searched
+
+
+def test_a_stemmed_search_asks_for_the_parser_that_takes_a_prefix(theme):
+    plugin = theme.JcThemePlugin()
+    assert plugin.before_dataset_search({"q": "ovzdušie"}) == {"q": "(ovzdušie OR ovzduš*)", "defType": "edismax"}
+    assert plugin.before_dataset_search({"q": "air"}) == {"q": "air"}
+    assert plugin.before_dataset_search({"q": "ovzdušie", "defType": "lucene"})["defType"] == "lucene"
 
 
 # T-4220 (photo audit T-4161): one concept, three names. The navigation said Publishers, the
