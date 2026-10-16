@@ -291,10 +291,15 @@ STRINGS = {
         "de": "Eine Adresse für den ganzen Katalog (MCP). Einmal hinzugefügt, findet Ihr Assistent jeden Datensatz, seine Attribute, sein Datenmodell und seine Zugriffsregeln selbst. Offene Daten brauchen keine Anmeldung; nach der Anmeldung kommen die Daten hinzu, die Sie lesen dürfen.",
     },
     "mcp_url": {"en": "MCP server address", "sk": "Adresa MCP servera", "cs": "Adresa MCP serveru", "de": "Adresse des MCP-Servers"},
+    "mcp_claude_ai": {"en": "Claude (claude.ai and Claude Desktop)", "sk": "Claude (claude.ai a Claude Desktop)", "cs": "Claude (claude.ai a Claude Desktop)", "de": "Claude (claude.ai und Claude Desktop)"},
+    "mcp_claude_ai_1": {"en": "Open Settings, then Connectors, and choose Add custom connector.", "sk": "Otvorte Nastavenia, potom Konektory, a zvoľte Pridať vlastný konektor.", "cs": "Otevřete Nastavení, pak Konektory, a zvolte Přidat vlastní konektor.", "de": "Öffnen Sie Einstellungen, dann Konnektoren, und wählen Sie Benutzerdefinierten Konnektor hinzufügen."},
+    "mcp_claude_ai_2": {"en": "Name it joinedcontext and paste this address:", "sk": "Pomenujte ho joinedcontext a vložte túto adresu:", "cs": "Pojmenujte ho joinedcontext a vložte tuto adresu:", "de": "Nennen Sie ihn joinedcontext und fügen Sie diese Adresse ein:"},
+    "mcp_claude_ai_3": {"en": "Leave the advanced settings empty and choose Add. Open data needs no login.", "sk": "Rozšírené nastavenia nechajte prázdne a zvoľte Pridať. Otvorené dáta nepotrebujú prihlásenie.", "cs": "Rozšířená nastavení nechte prázdná a zvolte Přidat. Otevřená data nepotřebují přihlášení.", "de": "Lassen Sie die erweiterten Einstellungen leer und wählen Sie Hinzufügen. Offene Daten brauchen keine Anmeldung."},
+    "mcp_editors": {"en": "Code editors and other assistants", "sk": "Editory kódu a iní asistenti", "cs": "Editory kódu a jiní asistenti", "de": "Code-Editoren und andere Assistenten"},
     "mcp_claude": {"en": "Claude Code", "sk": "Claude Code", "cs": "Claude Code", "de": "Claude Code"},
     "mcp_json": {"en": "Any other MCP client (JSON)", "sk": "Iný MCP klient (JSON)", "cs": "Jiný MCP klient (JSON)", "de": "Jeder andere MCP-Client (JSON)"},
     "mcp_vscode": {"en": "Add to VS Code", "sk": "Pridať do VS Code", "cs": "Přidat do VS Code", "de": "Zu VS Code hinzufügen"},
-    "mcp_cursor": {"en": "Add to Cursor", "sk": "Pridať do Cursor", "cs": "Přidat do Cursor", "de": "Zu Cursor hinzufügen"},
+    "mcp_cursor": {"en": "Add to Cursor", "sk": "Pridať do Cursoru", "cs": "Přidat do Cursoru", "de": "Zu Cursor hinzufügen"},
     "section_api_lead": {"en": "For applications and AI assistants that query the data live.", "sk": "Pre aplikácie a AI asistentov, ktorí sa na dáta pýtajú naživo.", "cs": "Pro aplikace a AI asistenty, kteří se na data ptají živě.", "de": "Für Anwendungen und KI-Assistenten, die die Daten live abfragen."},
     "section_schema": {"en": "Data model", "sk": "Dátový model", "cs": "Datový model", "de": "Datenmodell"},
     "section_schema_lead": {"en": "What each field means, in the formats validators and developers read.", "sk": "Čo znamená každé pole, vo formátoch pre validátory a vývojárov.", "cs": "Co znamená každé pole, ve formátech pro validátory a vývojáře.", "de": "Was jedes Feld bedeutet, in den Formaten für Validatoren und Entwickler."},
@@ -836,8 +841,14 @@ def jc_mcp_install():
     cursor = base64.b64encode(json.dumps({"url": url}, separators=(",", ":")).encode()).decode()
     return {
         "url": url,
-        "claude": "claude mcp add --transport http %s %s" % (MCP_NAME, url),
-        "json": json.dumps({"mcpServers": {MCP_NAME: server}}, indent=2),
+        # Where the address may break in a narrow card: before each single slash, never inside
+        # a word (T-4284). The template joins the parts with <wbr>; a copy reads them as one.
+        "url_parts": re.split(r"(?<=[^/])(?=/(?!/))", url),
+        # One argument per line, so a narrow card never breaks the command mid-flag (T-4284).
+        "claude": "claude mcp add --transport http \\\n  %s \\\n  %s" % (MCP_NAME, url),
+        # Valid JSON laid out for a phone's card: the address alone on its line, so no line is
+        # wider than the address itself (T-4284).
+        "json": '{"mcpServers": {%s: {\n  "type": "http",\n  "url":\n  %s\n}}}' % (json.dumps(MCP_NAME), json.dumps(url)),
         "vscode": "vscode:mcp/install?" + quote(vscode, safe=""),
         "cursor": "cursor://anysphere.cursor-deeplink/mcp/install?name=%s&config=%s" % (MCP_NAME, quote(cursor, safe="")),
     }
