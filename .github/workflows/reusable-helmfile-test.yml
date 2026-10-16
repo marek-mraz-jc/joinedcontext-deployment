@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: helmfile/helmfile-action@1f44bcb43e5fb17ecb2685d8b6081ec5f6aa5fcf # v2.4.7
-        with: { helmfile-args: version }
+        with: { helmfile-args: version, helmfile-version: v1.8.1 }
       - name: install the kyverno cli
         env:
           KYVERNO_VERSION: "${{ inputs.kyverno-version }}"

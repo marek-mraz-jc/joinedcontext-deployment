@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: helmfile/helmfile-action@1f44bcb43e5fb17ecb2685d8b6081ec5f6aa5fcf # v2.4.7
-        with: { helmfile-args: version }
+        with: { helmfile-args: version, helmfile-version: v1.8.1 }
       - name: kyverno cli
         run: |
           curl --fail --retry 3 --retry-all-errors -sSL "https://github.com/kyverno/kyverno/releases/download/${KYVERNO_VERSION}/kyverno-cli_${KYVERNO_VERSION}_linux_x86_64.tar.gz" | tar xz kyverno
@@ -46,7 +46,7 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: helmfile/helmfile-action@1f44bcb43e5fb17ecb2685d8b6081ec5f6aa5fcf # v2.4.7
-        with: { helmfile-args: version }
+        with: { helmfile-args: version, helmfile-version: v1.8.1 }
       - uses: extractions/setup-just@f8a3cce218d9f83db3a2ecd90e41ac3de6cdfd9b # v3.1.0
       - name: the extractor reads what it is meant to read
         run: python3 scripts/ci/check-readme-commands.py --selftest
@@ -75,7 +75,7 @@ jobs:
             /usr/share/swift /usr/local/share/powershell /opt/hostedtoolcache/CodeQL
           df -h / | tail -1
       - uses: helmfile/helmfile-action@1f44bcb43e5fb17ecb2685d8b6081ec5f6aa5fcf # v2.4.7
-        with: { helmfile-args: version }
+        with: { helmfile-args: version, helmfile-version: v1.8.1 }
       - uses: extractions/setup-just@f8a3cce218d9f83db3a2ecd90e41ac3de6cdfd9b # v3.1.0
       - run: curl --fail --retry 3 --retry-all-errors -sSL https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
       - name: linkerd cli
@@ -111,7 +111,7 @@ jobs:
             /usr/share/swift /usr/local/share/powershell /opt/hostedtoolcache/CodeQL
           df -h / | tail -1
       - uses: helmfile/helmfile-action@1f44bcb43e5fb17ecb2685d8b6081ec5f6aa5fcf # v2.4.7
-        with: { helmfile-args: version }
+        with: { helmfile-args: version, helmfile-version: v1.8.1 }
       - uses: extractions/setup-just@f8a3cce218d9f83db3a2ecd90e41ac3de6cdfd9b # v3.1.0
       - run: curl --fail --retry 3 --retry-all-errors -sSL https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
       # No linkerd CLI: the mesh axis is 0 here, and the harness only demands the binary for
@@ -168,7 +168,7 @@ jobs:
             /usr/share/swift /usr/local/share/powershell /opt/hostedtoolcache/CodeQL
           df -h / | tail -1
       - uses: helmfile/helmfile-action@1f44bcb43e5fb17ecb2685d8b6081ec5f6aa5fcf # v2.4.7
-        with: { helmfile-args: version }
+        with: { helmfile-args: version, helmfile-version: v1.8.1 }
       - uses: extractions/setup-just@f8a3cce218d9f83db3a2ecd90e41ac3de6cdfd9b # v3.1.0
       - run: curl --fail --retry 3 --retry-all-errors -sSL https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
       - run: pip install --quiet pyyaml
