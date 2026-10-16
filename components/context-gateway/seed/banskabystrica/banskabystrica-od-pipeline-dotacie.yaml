@@ -1,0 +1,23 @@
+# One Grant per row of "Dotácie" (T-4255); generated from the T-4254 mapping.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: od-dotacie
+  namespace: banskabystrica
+  title:
+    sk: Dotácie
+    en: Dotácie
+spec:
+  class: scheduled
+  schedule: 14 1 * * 3
+  source:
+    dataSourceRef:
+      kind: DataSource
+      name: od-dotacie
+  targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-otvorene-data:banskabystrica-otvorene-data
+  output:
+    type: Grant
+    mode: upsert
+  quotas:
+    maxMemoryMb: 128
+    cpuMillicores: 100

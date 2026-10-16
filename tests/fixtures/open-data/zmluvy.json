@@ -1,0 +1,86 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": null,
+   "properties": {
+    "Index_": "35104",
+    "Zdroj_Názov": "2023-06-30.xml",
+    "Číslo_zmluvy": "BBRSC/04117/2023",
+    "ID_zmluvy": "8055404",
+    "Rezort": "6215909",
+    "Názov_zmluvy": null,
+    "Názov_objednávateľa": "Banskobystrická regionálna správa ciest a.s.",
+    "Názov_dodávateľa": "SK - technik s.r.o.",
+    "IČO_objednávateľa": "36836567",
+    "IČO_dodávateľa": "36408972",
+    "Sídlo_objednávateľa": "Majerská cesta 94, 974 01 Banská Bystrica",
+    "Sídlo_dodávateľa": "Jaseňová 3223/36, 010 01 Žilina",
+    "Dátum_uzavretia": "2023-06-30",
+    "Dátum_zverejnenia": "2023-06-30",
+    "Dátum_účinnosti": "2023-07-01",
+    "Dátum_platnosti_do": "1999-01-01",
+    "Suma_v_EUR": "30 914.40 €",
+    "Suma_spolu_v_EUR": "30 914.40 €",
+    "Poznámka": "nákup IT",
+    "Príloha": "Kúpna zmluva podľa VO \"Kúpa nových notebookov, pracovných staníc a monitorov\"",
+    "Dátum_prílohy": "2023-06-30"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": null,
+   "properties": {
+    "Index_": "35444",
+    "Zdroj_Názov": "2023-06-30.xml",
+    "Číslo_zmluvy": "2409043873",
+    "ID_zmluvy": "8056085",
+    "Rezort": "1455994",
+    "Názov_zmluvy": null,
+    "Názov_objednávateľa": "Rozvojové služby BBSK, s.r.o. registrovaný sociálny podnik",
+    "Názov_dodávateľa": "Generali poisťovňa, pobočka poisťovne z iného členského štátu",
+    "IČO_objednávateľa": "52123553",
+    "IČO_dodávateľa": "54228573",
+    "Sídlo_objednávateľa": "Nám. SNP 14585/1A, 974 01 Banská Bystrica",
+    "Sídlo_dodávateľa": "Lamačská cesta 3/A, 841 04 Bratislava",
+    "Dátum_uzavretia": "2023-06-29",
+    "Dátum_zverejnenia": "2023-06-30",
+    "Dátum_účinnosti": "2023-07-03",
+    "Dátum_platnosti_do": "1999-01-01",
+    "Suma_v_EUR": "0.00 €",
+    "Suma_spolu_v_EUR": "0.00 €",
+    "Poznámka": null,
+    "Príloha": "Poistná zmluva č. 2409043873",
+    "Dátum_prílohy": "2023-06-30"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": null,
+   "properties": {
+    "Index_": "35640",
+    "Zdroj_Názov": "2023-06-30.xml",
+    "Číslo_zmluvy": "Zmluva č. 1002/2023/ODDDO",
+    "ID_zmluvy": "8056458",
+    "Rezort": "6215909",
+    "Názov_zmluvy": null,
+    "Názov_objednávateľa": "Banskobystrický samosprávny kraj",
+    "Názov_dodávateľa": "Mestské kultúrne stredisko Rimavská Sobota",
+    "IČO_objednávateľa": "37828100",
+    "IČO_dodávateľa": "358649",
+    "Sídlo_objednávateľa": "Námestie SNP 23, 974 01 Banská Bystrica",
+    "Sídlo_dodávateľa": "Nám. Š. M. Daxnera 1723/1 97901 Rimavská Sobota",
+    "Dátum_uzavretia": "2023-06-29",
+    "Dátum_zverejnenia": "2023-06-30",
+    "Dátum_účinnosti": "2023-07-01",
+    "Dátum_platnosti_do": "2023-12-31",
+    "Suma_v_EUR": "600.00 €",
+    "Suma_spolu_v_EUR": "600.00 €",
+    "Poznámka": "Con spirito - 43. ročník Hudobnej jari a Hudobnej jesene",
+    "Príloha": "Zmluva_1002_2023 Mestské kultúrne stredisko Rimavská Sobota",
+    "Dátum_prílohy": "2023-06-30"
+   }
+  }
+ ]
+}

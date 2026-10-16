@@ -1,0 +1,134 @@
+# The mapping of the od-obyvatelstvo-podla-nabozenskeho-vyzna-4 pipeline, generated from the T-4254 mapping: one StatisticalObservation per row of
+# "Obyvateľstvo podľa náboženského vyznania (2021), okresy" (https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-nabozenskeho-vyznania-2021-okresy-4d7df9). Do not edit: change the mapping and run scripts/open-data/generate.py.
+
+pipeline:
+  processors:
+    # A layer that answers an error or no feature list is the service failing, so the run fails
+    # where it can be seen rather than writing nothing.
+    - mapping: |
+        root = if this.error.or(null) != null || this.features.or(null) == null { throw("the layer answered no features: %v".format(this.error.message.or(""))) } else { this }
+    - mapping: |
+        root = this.features.or([])
+    - unarchive:
+        format: json_array
+    - mapping: |
+        map integer {
+          let v = this.number().catch(null)
+          root = if $v == null { null } else { { "type": "Property", "value": $v.round().int64() } }
+        }
+        map float {
+          let v = this.number().catch(null)
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        map string {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": $v } }
+        }
+        map uri {
+          root = this.apply("string")
+        }
+        # An Esri date is milliseconds since the epoch; a DataStore or WordPress one is text.
+        # `match` rebinds `this` to what it matches, so the value is named first.
+        map datetime {
+          let x = this
+          let v = match $x.type() {
+            "number" => ($x / 1000).ts_format("2006-01-02T15:04:05Z", "UTC").catch(null),
+            "string" => $x.ts_parse("2006-01-02T15:04:05").ts_format("2006-01-02T15:04:05Z", "UTC").catch($x.ts_format("2006-01-02T15:04:05Z", "UTC").catch(null)),
+            _ => null,
+          }
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        map date {
+          let x = this
+          let v = match $x.type() {
+            "number" => ($x / 1000).ts_format("2006-01-02", "UTC").catch(null),
+            "string" => if $x.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}") { $x.slice(0, 10) } else { null },
+            _ => null,
+          }
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        let local = "obyvatelstvo-podla-nabozenskeho-vyzna-4-" + [this.properties."IDN3"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
+        root = {
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("StatisticalObservation", "bbsk.sk", "bbsk-otvorene-data", $local),
+          "type": "StatisticalObservation",
+          "dOW": this.properties."DOW".apply("datetime"),
+          "fACC": this.properties."FACC".apply("string"),
+          "iDN3": this.properties."IDN3".apply("integer"),
+          "nM3": this.properties."NM3".apply("string"),
+          "iDN2": this.properties."IDN2".apply("integer"),
+          "nM2": this.properties."NM2".apply("string"),
+          "vYMERA": this.properties."VYMERA".apply("float"),
+          "nUTS1": this.properties."NUTS1".apply("string"),
+          "nUTS1CODE": this.properties."NUTS1_CODE".apply("string"),
+          "nUTS2": this.properties."NUTS2".apply("string"),
+          "nUTS2CODE": this.properties."NUTS2_CODE".apply("string"),
+          "nUTS3": this.properties."NUTS3".apply("string"),
+          "nUTS3CODE": this.properties."NUTS3_CODE".apply("string"),
+          "lAU1": this.properties."LAU1".apply("string"),
+          "lAU1CODE": this.properties."LAU1_CODE".apply("string"),
+          "okres": this.properties."Okres".apply("string"),
+          "cisloOkresu": this.properties."Číslo_okresu".apply("string"),
+          "rok": this.properties."Rok".apply("string"),
+          "pocetObyvatelovSpolu": this.properties."Počet_obyvateľov_spolu".apply("integer"),
+          "bezNabozenskehoVyznania": this.properties."bez_náboženského_vyznania".apply("float"),
+          "rimskokatolickaCirkevVSloven": this.properties."Rímskokatolícka_cirkev_v_Sloven".apply("integer"),
+          "evanjelickaCirkevAugsburskeho": this.properties."Evanjelická_cirkev_augsburského".apply("float"),
+          "greckokatolickaCirkevNaSlove": this.properties."Gréckokatolícka_cirkev_na_Slove".apply("integer"),
+          "reformovanaKrestanskaCirkevN": this.properties."Reformovaná_kresťanská_cirkev_n".apply("integer"),
+          "pravoslavnaCirkevNaSlovensku": this.properties."Pravoslávna_cirkev_na_Slovensku".apply("integer"),
+          "nabozenskaSpolocnostJehovovi": this.properties."Náboženská_spoločnosť_Jehovovi_".apply("float"),
+          "evanjelickaCirkevMetodisticka": this.properties."Evanjelická_cirkev_metodistická".apply("float"),
+          "krestanskeZboryNaSlovensku": this.properties."Kresťanské_zbory_na_Slovensku".apply("integer"),
+          "apostolskaCirkevNaSlovensku": this.properties."Apoštolská_cirkev_na_Slovensku".apply("integer"),
+          "bratskaJednotaBaptistovVSlo": this.properties."Bratská_jednota_baptistov_v_Slo".apply("integer"),
+          "cirkevBratskaVSlovenskejRep": this.properties."Cirkev_bratská_v_Slovenskej_rep".apply("integer"),
+          "cirkevAdventistovSiedmehoDna": this.properties."Cirkev_adventistov_siedmeho_dňa".apply("float"),
+          "zidovskaObecNaSlovenskuZid": this.properties."Židovská_obec_na_Slovensku__žid".apply("integer"),
+          "cirkevCeskoslovenskaHusitska": this.properties."Cirkev_československá_husitská_".apply("float"),
+          "starokatolickaCirkevNaSloven": this.properties."Starokatolícka_cirkev_na_Sloven".apply("integer"),
+          "bahajskeSpolocenstvoVSlovens": this.properties."Bahájske_spoločenstvo_v_Slovens".apply("integer"),
+          "cirkevJezisaKristaSvatychNe": this.properties."Cirkev_Ježiša_Krista_Svätých_ne".apply("float"),
+          "novoapostolskaCirkevVSlovens": this.properties."Novoapoštolská_cirkev_v_Slovens".apply("integer"),
+          "budhizmus": this.properties."budhizmus".apply("float"),
+          "islam": this.properties."islam".apply("float"),
+          "hinduizmus": this.properties."hinduizmus".apply("float"),
+          "ostatneANepresneUrceneKrest": this.properties."ostatné_a_nepresne_určené_kresť".apply("integer"),
+          "pohanstvoAPrirodneDuchovno": this.properties."pohanstvo_a_prírodné_duchovno".apply("integer"),
+          "adHocHnutia": this.properties."ad_hoc_hnutia".apply("float"),
+          "ine": this.properties."iné".apply("float"),
+          "nezistene": this.properties."nezistené".apply("float"),
+          "bezNabozenskehoVyznania2": this.properties."bez_náboženského_vyznania__".apply("float"),
+          "rimskokatolickaCirkevVSlov1": this.properties."Rímskokatolícka_cirkev_v_Slov_1".apply("float"),
+          "evanjelickaCirkevAugsburske1": this.properties."Evanjelická_cirkev_augsburské_1".apply("float"),
+          "greckokatolickaCirkevNaSlo1": this.properties."Gréckokatolícka_cirkev_na_Slo_1".apply("float"),
+          "reformovanaKrestanskaCirkev1": this.properties."Reformovaná_kresťanská_cirkev_1".apply("float"),
+          "pravoslavnaCirkevNaSlovens1": this.properties."Pravoslávna_cirkev_na_Slovens_1".apply("float"),
+          "nabozenskaSpolocnostJehovovi1": this.properties."Náboženská_spoločnosť_Jehovovi1".apply("float"),
+          "evanjelickaCirkevMetodistic1": this.properties."Evanjelická_cirkev_metodistic_1".apply("float"),
+          "krestanskeZboryNaSlovensku2": this.properties."Kresťanské_zbory_na_Slovensku__".apply("float"),
+          "apostolskaCirkevNaSlovensku2": this.properties."Apoštolská_cirkev_na_Slovensku_".apply("float"),
+          "bratskaJednotaBaptistovVS1": this.properties."Bratská_jednota_baptistov_v_S_1".apply("float"),
+          "cirkevBratskaVSlovenskejR1": this.properties."Cirkev_bratská_v_Slovenskej_r_1".apply("float"),
+          "cirkevAdventistovSiedmehoD1": this.properties."Cirkev_adventistov_siedmeho_d_1".apply("float"),
+          "zidovskaObecNaSlovenskuZ1": this.properties."Židovská_obec_na_Slovensku__ž_1".apply("float"),
+          "cirkevCeskoslovenskaHusitska1": this.properties."Cirkev_československá_husitská1".apply("float"),
+          "starokatolickaCirkevNaSlov1": this.properties."Starokatolícka_cirkev_na_Slov_1".apply("float"),
+          "bahajskeSpolocenstvoVSlove1": this.properties."Bahájske_spoločenstvo_v_Slove_1".apply("float"),
+          "cirkevJezisaKristaSvatych1": this.properties."Cirkev_Ježiša_Krista_Svätých__1".apply("float"),
+          "novoapostolskaCirkevVSlove1": this.properties."Novoapoštolská_cirkev_v_Slove_1".apply("float"),
+          "budhizmus2": this.properties."budhizmus__".apply("float"),
+          "islam2": this.properties."islam__".apply("float"),
+          "hinduizmus2": this.properties."hinduizmus__".apply("float"),
+          "ostatneANepresneUrceneKre1": this.properties."ostatné_a_nepresne_určené_kre_1".apply("float"),
+          "pohanstvoAPrirodneDuchovno2": this.properties."pohanstvo_a_prírodné_duchovno__".apply("float"),
+          "adHocHnutia2": this.properties."ad_hoc_hnutia__".apply("float"),
+          "ine2": this.properties."iné__".apply("float"),
+          "nezistene2": this.properties."nezistené__".apply("float"),
+          "location": if this.geometry.or(null) == null { null } else { { "type": "GeoProperty", "value": this.geometry } },
+          "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj (CC BY-SA 4.0)" },
+          "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_n%C3%A1bo%C5%BEenstvo_okres/FeatureServer/0/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },
+          "dataset": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-nabozenskeho-vyznania-2021-okresy-4d7df9" }
+        }.filter(entry -> entry.value != null)
+    # One request per run's batch rather than one per row.
+    - archive:
+        format: json_array

@@ -1,0 +1,26 @@
+# The space's one door, public: every row is the publisher's open data under the licence its
+# `dataProvider` names. A member of the project's public MCP server, which the public assistant reads.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: bbsk-otvorene-data
+  namespace: bbsk
+  title:
+    sk: Banskobystrický kraj — tabuľky katalógu
+    en: Banská Bystrica Region, catalogue tables
+  description:
+    sk: Všetky otvorené dáta Banskobystrického samosprávneho kraja z katalógu (opendata.bbsk.sk).
+    en: Every dataset of the Banská Bystrica Self-Governing Region in the catalogue (opendata.bbsk.sk).
+spec:
+  contextSpaceRef: bbsk-otvorene-data
+  slug: 6b4yqhzqieutqcoeew5rnxrx5udqeert
+  audience: public
+  enabledRepresentations:
+  - ngsi-ld
+  - geojson
+  - csv
+  - json
+  - websocket
+  - ogc-features
+  - odata
+  - mcp

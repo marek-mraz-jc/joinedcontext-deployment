@@ -1,0 +1,108 @@
+# The mapping of the od-zmluvy pipeline, generated from the T-4254 mapping: one Contract per row of
+# "Zmluvy" (https://data.dev.joinedcontext.com/dataset/bbsk-zmluvy-cafee6). Do not edit: change the mapping and run scripts/open-data/generate.py.
+
+pipeline:
+  processors:
+    # A layer that answers an error or no feature list is the service failing, so the run fails
+    # where it can be seen rather than writing nothing.
+    - mapping: |
+        root = if this.error.or(null) != null || this.features.or(null) == null { throw("the layer answered no features: %v".format(this.error.message.or(""))) } else { this }
+    # Page 0 as it came; when the layer says there is more, every further page up to half again
+    # the 5164 rows it held when mapped (ponytail: a static page count; past that the
+    # newest rows wait until the mapping is regenerated). A page past the end is empty.
+    - mapping: |
+        root = if this.properties.exceededTransferLimit.or(false) { [this].concat(range(1, 8).map_each(p -> { "offset": p * 1000 })) } else { [this] }
+    - unarchive:
+        format: json_array
+    - switch:
+        - check: this.offset.or(null) != null
+          processors:
+            - mapping: |
+                meta offset = this.offset.string()
+                root = ""
+            - http:
+                url: "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Zmluvy_13_3_2025/FeatureServer/0/query?where=I%C4%8CO_dod%C3%A1vate%C4%BEa%20IS%20NOT%20NULL%20AND%20I%C4%8CO_dod%C3%A1vate%C4%BEa%20%3C%3E%20%27%27&outFields=Index_,Zdroj_N%C3%A1zov,%C4%8C%C3%ADslo_zmluvy,ID_zmluvy,Rezort,N%C3%A1zov_zmluvy,N%C3%A1zov_objedn%C3%A1vate%C4%BEa,N%C3%A1zov_dod%C3%A1vate%C4%BEa,I%C4%8CO_objedn%C3%A1vate%C4%BEa,I%C4%8CO_dod%C3%A1vate%C4%BEa,S%C3%ADdlo_objedn%C3%A1vate%C4%BEa,S%C3%ADdlo_dod%C3%A1vate%C4%BEa,D%C3%A1tum_uzavretia,D%C3%A1tum_zverejnenia,D%C3%A1tum_%C3%BA%C4%8Dinnosti,D%C3%A1tum_platnosti_do,Suma_v_EUR,Suma_spolu_v_EUR,Pozn%C3%A1mka,Pr%C3%ADloha,D%C3%A1tum_pr%C3%ADlohy&returnGeometry=false&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=${! @offset }&resultRecordCount=1000"
+                verb: GET
+                headers:
+                  Accept: application/geo+json
+                timeout: 60s
+                retries: 2
+                rate_limit: pipeline_egress
+            - mapping: |
+                root = if errored() { throw("the page at %v did not come: %v".format(@offset, error())) } else { this }
+    - mapping: |
+        root = this.features.or([])
+    - unarchive:
+        format: json_array
+    # A row stays only when its IČO_dodávateľa looks like one, which no Esri SQL can ask:
+    # a contract whose supplier has no IČO, or a name where the IČO belongs, can name a natural person (T-4255).
+    - mapping: |
+        root = if this.properties."IČO_dodávateľa".or("").string().trim().re_match("^[0-9]{6,8}( ?[0-9]{4})?$") { this } else { deleted() }
+    - mapping: |
+        map integer {
+          let v = this.number().catch(null)
+          root = if $v == null { null } else { { "type": "Property", "value": $v.round().int64() } }
+        }
+        map float {
+          let v = this.number().catch(null)
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        map string {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": $v } }
+        }
+        map uri {
+          root = this.apply("string")
+        }
+        # An Esri date is milliseconds since the epoch; a DataStore or WordPress one is text.
+        # `match` rebinds `this` to what it matches, so the value is named first.
+        map datetime {
+          let x = this
+          let v = match $x.type() {
+            "number" => ($x / 1000).ts_format("2006-01-02T15:04:05Z", "UTC").catch(null),
+            "string" => $x.ts_parse("2006-01-02T15:04:05").ts_format("2006-01-02T15:04:05Z", "UTC").catch($x.ts_format("2006-01-02T15:04:05Z", "UTC").catch(null)),
+            _ => null,
+          }
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        map date {
+          let x = this
+          let v = match $x.type() {
+            "number" => ($x / 1000).ts_format("2006-01-02", "UTC").catch(null),
+            "string" => if $x.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}") { $x.slice(0, 10) } else { null },
+            _ => null,
+          }
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        let local = "zmluvy-" + {"Index_": this.properties."Index_", "Zdroj_Názov": this.properties."Zdroj_Názov", "Číslo_zmluvy": this.properties."Číslo_zmluvy", "ID_zmluvy": this.properties."ID_zmluvy", "Rezort": this.properties."Rezort", "Názov_zmluvy": this.properties."Názov_zmluvy", "Názov_objednávateľa": this.properties."Názov_objednávateľa", "Názov_dodávateľa": this.properties."Názov_dodávateľa", "IČO_objednávateľa": this.properties."IČO_objednávateľa", "IČO_dodávateľa": this.properties."IČO_dodávateľa", "Sídlo_objednávateľa": this.properties."Sídlo_objednávateľa", "Sídlo_dodávateľa": this.properties."Sídlo_dodávateľa", "Dátum_uzavretia": this.properties."Dátum_uzavretia", "Dátum_zverejnenia": this.properties."Dátum_zverejnenia", "Dátum_účinnosti": this.properties."Dátum_účinnosti", "Dátum_platnosti_do": this.properties."Dátum_platnosti_do", "Suma_v_EUR": this.properties."Suma_v_EUR", "Suma_spolu_v_EUR": this.properties."Suma_spolu_v_EUR", "Poznámka": this.properties."Poznámka", "Príloha": this.properties."Príloha", "Dátum_prílohy": this.properties."Dátum_prílohy"}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
+        root = {
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Contract", "bbsk.sk", "bbsk-otvorene-data", $local),
+          "type": "Contract",
+          "index": this.properties."Index_".apply("string"),
+          "zdrojNazov": this.properties."Zdroj_Názov".apply("string"),
+          "cisloZmluvy": this.properties."Číslo_zmluvy".apply("string"),
+          "iDZmluvy": this.properties."ID_zmluvy".apply("string"),
+          "rezort": this.properties."Rezort".apply("string"),
+          "nazovZmluvy": this.properties."Názov_zmluvy".apply("string"),
+          "nazovObjednavatela": this.properties."Názov_objednávateľa".apply("string"),
+          "nazovDodavatela": this.properties."Názov_dodávateľa".apply("string"),
+          "iCOObjednavatela": this.properties."IČO_objednávateľa".apply("string"),
+          "iCODodavatela": this.properties."IČO_dodávateľa".apply("string"),
+          "sidloObjednavatela": this.properties."Sídlo_objednávateľa".apply("string"),
+          "sidloDodavatela": this.properties."Sídlo_dodávateľa".apply("string"),
+          "datumUzavretia": this.properties."Dátum_uzavretia".apply("date"),
+          "datumZverejnenia": this.properties."Dátum_zverejnenia".apply("date"),
+          "datumUcinnosti": this.properties."Dátum_účinnosti".apply("date"),
+          "datumPlatnostiDo": this.properties."Dátum_platnosti_do".apply("date"),
+          "sumaVEUR": this.properties."Suma_v_EUR".apply("string"),
+          "sumaSpoluVEUR": this.properties."Suma_spolu_v_EUR".apply("string"),
+          "poznamka": this.properties."Poznámka".apply("string"),
+          "priloha": this.properties."Príloha".apply("string"),
+          "datumPrilohy": this.properties."Dátum_prílohy".apply("date"),
+          "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj (CC BY-SA 4.0)" },
+          "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Zmluvy_13_3_2025/FeatureServer/0/query?where=I%C4%8CO_dod%C3%A1vate%C4%BEa%20IS%20NOT%20NULL%20AND%20I%C4%8CO_dod%C3%A1vate%C4%BEa%20%3C%3E%20%27%27&outFields=Index_,Zdroj_N%C3%A1zov,%C4%8C%C3%ADslo_zmluvy,ID_zmluvy,Rezort,N%C3%A1zov_zmluvy,N%C3%A1zov_objedn%C3%A1vate%C4%BEa,N%C3%A1zov_dod%C3%A1vate%C4%BEa,I%C4%8CO_objedn%C3%A1vate%C4%BEa,I%C4%8CO_dod%C3%A1vate%C4%BEa,S%C3%ADdlo_objedn%C3%A1vate%C4%BEa,S%C3%ADdlo_dod%C3%A1vate%C4%BEa,D%C3%A1tum_uzavretia,D%C3%A1tum_zverejnenia,D%C3%A1tum_%C3%BA%C4%8Dinnosti,D%C3%A1tum_platnosti_do,Suma_v_EUR,Suma_spolu_v_EUR,Pozn%C3%A1mka,Pr%C3%ADloha,D%C3%A1tum_pr%C3%ADlohy&returnGeometry=false&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },
+          "dataset": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bbsk-zmluvy-cafee6" }
+        }.filter(entry -> entry.value != null)
+    # One request per run's batch rather than one per row.
+    - archive:
+        format: json_array

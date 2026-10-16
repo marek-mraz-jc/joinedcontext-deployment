@@ -1,0 +1,100 @@
+# The mapping of the od-obyvatelstvo-podla-narodnosti-2011-obce pipeline, generated from the T-4254 mapping: one StatisticalObservation per row of
+# "Obyvateľstvo podľa národnosti (2011), obce" (https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-narodnosti-2011-obce-a36024). Do not edit: change the mapping and run scripts/open-data/generate.py.
+
+pipeline:
+  processors:
+    # A layer that answers an error or no feature list is the service failing, so the run fails
+    # where it can be seen rather than writing nothing.
+    - mapping: |
+        root = if this.error.or(null) != null || this.features.or(null) == null { throw("the layer answered no features: %v".format(this.error.message.or(""))) } else { this }
+    - mapping: |
+        root = this.features.or([])
+    - unarchive:
+        format: json_array
+    - mapping: |
+        map integer {
+          let v = this.number().catch(null)
+          root = if $v == null { null } else { { "type": "Property", "value": $v.round().int64() } }
+        }
+        map float {
+          let v = this.number().catch(null)
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        map string {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": $v } }
+        }
+        map uri {
+          root = this.apply("string")
+        }
+        # An Esri date is milliseconds since the epoch; a DataStore or WordPress one is text.
+        # `match` rebinds `this` to what it matches, so the value is named first.
+        map datetime {
+          let x = this
+          let v = match $x.type() {
+            "number" => ($x / 1000).ts_format("2006-01-02T15:04:05Z", "UTC").catch(null),
+            "string" => $x.ts_parse("2006-01-02T15:04:05").ts_format("2006-01-02T15:04:05Z", "UTC").catch($x.ts_format("2006-01-02T15:04:05Z", "UTC").catch(null)),
+            _ => null,
+          }
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        map date {
+          let x = this
+          let v = match $x.type() {
+            "number" => ($x / 1000).ts_format("2006-01-02", "UTC").catch(null),
+            "string" => if $x.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}") { $x.slice(0, 10) } else { null },
+            _ => null,
+          }
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        let local = "obyvatelstvo-podla-narodnosti-2011-obce-" + [this.properties."IDN4"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
+        root = {
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("StatisticalObservation", "bbsk.sk", "bbsk-otvorene-data", $local),
+          "type": "StatisticalObservation",
+          "dOW": this.properties."DOW".apply("datetime"),
+          "fACC": this.properties."FACC".apply("string"),
+          "iDN4": this.properties."IDN4".apply("integer"),
+          "nM4": this.properties."NM4".apply("string"),
+          "iDN3": this.properties."IDN3".apply("integer"),
+          "nM3": this.properties."NM3".apply("string"),
+          "iDN2": this.properties."IDN2".apply("integer"),
+          "nM2": this.properties."NM2".apply("string"),
+          "vYMERA": this.properties."VYMERA".apply("float"),
+          "nUTS1": this.properties."NUTS1".apply("string"),
+          "nUTS1CODE": this.properties."NUTS1_CODE".apply("string"),
+          "nUTS2": this.properties."NUTS2".apply("string"),
+          "nUTS2CODE": this.properties."NUTS2_CODE".apply("string"),
+          "nUTS3": this.properties."NUTS3".apply("string"),
+          "nUTS3CODE": this.properties."NUTS3_CODE".apply("string"),
+          "lAU1": this.properties."LAU1".apply("string"),
+          "lAU1CODE": this.properties."LAU1_CODE".apply("string"),
+          "lAU2": this.properties."LAU2".apply("string"),
+          "lAU2CODE": this.properties."LAU2_CODE".apply("string"),
+          "obec": this.properties."Obec".apply("string"),
+          "okres": this.properties."Okres".apply("string"),
+          "kodObce": this.properties."Kód_obce".apply("string"),
+          "trvaloByvajuceObyvatelstvoSp": this.properties."Trvalo_bývajúce_obyvateľstvo_sp".apply("integer"),
+          "slovenska": this.properties."slovenská".apply("float"),
+          "madarska": this.properties."maďarská".apply("float"),
+          "romska": this.properties."rómska".apply("float"),
+          "rusinska": this.properties."rusínska".apply("float"),
+          "ukrajinska": this.properties."ukrajinská".apply("float"),
+          "ceska": this.properties."česká".apply("float"),
+          "nemecka": this.properties."nemecká".apply("float"),
+          "polska": this.properties."poľská".apply("float"),
+          "chorvatska": this.properties."chorvátska".apply("float"),
+          "srbska": this.properties."srbská".apply("float"),
+          "ruska": this.properties."ruská".apply("float"),
+          "zidovska": this.properties."židovská".apply("float"),
+          "moravska": this.properties."moravská".apply("float"),
+          "bulharska": this.properties."bulharská".apply("float"),
+          "ostatne": this.properties."ostatné".apply("float"),
+          "nezistena": this.properties."nezistená".apply("float"),
+          "location": if this.geometry.or(null) == null { null } else { { "type": "GeoProperty", "value": this.geometry } },
+          "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj (CC BY-SA 4.0)" },
+          "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_n%C3%A1rodnos%C5%A5_vsrstvy/FeatureServer/0/query?where=1%3D1&outFields=DOW,FACC,IDN4,NM4,IDN3,NM3,IDN2,NM2,VYMERA,NUTS1,NUTS1_CODE,NUTS2,NUTS2_CODE,NUTS3,NUTS3_CODE,LAU1,LAU1_CODE,LAU2,LAU2_CODE,Obec,Okres,K%C3%B3d_obce,Trvalo_b%C3%BDvaj%C3%BAce_obyvate%C4%BEstvo_sp,slovensk%C3%A1,ma%C4%8Farsk%C3%A1,r%C3%B3mska,rus%C3%ADnska,ukrajinsk%C3%A1,%C4%8Desk%C3%A1,nemeck%C3%A1,po%C4%BEsk%C3%A1,chorv%C3%A1tska,srbsk%C3%A1,rusk%C3%A1,%C5%BEidovsk%C3%A1,moravsk%C3%A1,bulharsk%C3%A1,ostatn%C3%A9,nezisten%C3%A1&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },
+          "dataset": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-narodnosti-2011-obce-a36024" }
+        }.filter(entry -> entry.value != null)
+    # One request per run's batch rather than one per row.
+    - archive:
+        format: json_array

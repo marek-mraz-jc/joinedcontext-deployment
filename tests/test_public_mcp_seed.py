@@ -14,8 +14,9 @@ import yaml
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
 SERVERS = {
     # project: (seed folder, members)
-    "banskabystrica": ("banskabystrica", {"banskabystrica-verejne"}),
-    "bbsk": ("bbsk", {"bbsk-registre", "bbsk-kraj-verejne", "bbsk-kpi"}),
+    # The fourth (second) member holds every other table of the body's catalogue (T-4255).
+    "banskabystrica": ("banskabystrica", {"banskabystrica-verejne", "banskabystrica-otvorene-data"}),
+    "bbsk": ("bbsk", {"bbsk-registre", "bbsk-kraj-verejne", "bbsk-kpi", "bbsk-otvorene-data"}),
 }
 # What an anonymous Policy of a member may grant: reads, and the subscriptions a WebSocket
 # needs (T-4073), which the gateway hides from anonymous MCP callers (T-4168). No entity write.

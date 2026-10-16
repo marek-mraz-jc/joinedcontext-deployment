@@ -1,0 +1,23 @@
+# One Address per row of "Adresy" (T-4255); the city's address list, without coordinates.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: od-adresy
+  namespace: banskabystrica
+  title:
+    sk: Adresy
+    en: Adresy
+spec:
+  class: scheduled
+  schedule: 0 1 * * 1
+  source:
+    dataSourceRef:
+      kind: DataSource
+      name: od-adresy
+  targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-otvorene-data:banskabystrica-otvorene-data
+  output:
+    type: Address
+    mode: upsert
+  quotas:
+    maxMemoryMb: 256
+    cpuMillicores: 100

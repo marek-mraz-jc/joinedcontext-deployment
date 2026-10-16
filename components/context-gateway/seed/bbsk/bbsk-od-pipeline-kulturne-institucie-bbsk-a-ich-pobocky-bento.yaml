@@ -1,0 +1,76 @@
+# The mapping of the od-kulturne-institucie-bbsk-a-ich-pobocky pipeline, generated from the T-4254 mapping: one PointOfInterest per row of
+# "Kultúrne inštitúcie BBSK a ich pobočky" (https://data.dev.joinedcontext.com/dataset/bbsk-kulturne-institucie-bbsk-a-ich-pobocky-2f9362). Do not edit: change the mapping and run scripts/open-data/generate.py.
+
+pipeline:
+  processors:
+    # A layer that answers an error or no feature list is the service failing, so the run fails
+    # where it can be seen rather than writing nothing.
+    - mapping: |
+        root = if this.error.or(null) != null || this.features.or(null) == null { throw("the layer answered no features: %v".format(this.error.message.or(""))) } else { this }
+    - mapping: |
+        root = this.features.or([])
+    - unarchive:
+        format: json_array
+    - mapping: |
+        map integer {
+          let v = this.number().catch(null)
+          root = if $v == null { null } else { { "type": "Property", "value": $v.round().int64() } }
+        }
+        map float {
+          let v = this.number().catch(null)
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        map string {
+          let v = if this == null { "" } else { this.string().trim() }
+          root = if $v == "" { null } else { { "type": "Property", "value": $v } }
+        }
+        map uri {
+          root = this.apply("string")
+        }
+        # An Esri date is milliseconds since the epoch; a DataStore or WordPress one is text.
+        # `match` rebinds `this` to what it matches, so the value is named first.
+        map datetime {
+          let x = this
+          let v = match $x.type() {
+            "number" => ($x / 1000).ts_format("2006-01-02T15:04:05Z", "UTC").catch(null),
+            "string" => $x.ts_parse("2006-01-02T15:04:05").ts_format("2006-01-02T15:04:05Z", "UTC").catch($x.ts_format("2006-01-02T15:04:05Z", "UTC").catch(null)),
+            _ => null,
+          }
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        map date {
+          let x = this
+          let v = match $x.type() {
+            "number" => ($x / 1000).ts_format("2006-01-02", "UTC").catch(null),
+            "string" => if $x.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}") { $x.slice(0, 10) } else { null },
+            _ => null,
+          }
+          root = if $v == null { null } else { { "type": "Property", "value": $v } }
+        }
+        let local = "kulturne-institucie-bbsk-a-ich-pobocky-" + [this.properties."IČO"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
+        root = {
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("PointOfInterest", "bbsk.sk", "bbsk-otvorene-data", $local),
+          "type": "PointOfInterest",
+          "typ1": this.properties."Typ_1".apply("string"),
+          "institucia1": this.properties."Inštitúcia_1".apply("string"),
+          "iCO": this.properties."IČO".apply("string"),
+          "dIC": this.properties."DIČ".apply("string"),
+          "adresa": this.properties."Adresa".apply("string"),
+          "riaditel": this.properties."Riaditeľ".apply("string"),
+          "riaditelEmail": this.properties."Riaditeľ___email".apply("string"),
+          "riaditelMobilnyTelefon": this.properties."Riaditeľ___mobilný_telefón".apply("string"),
+          "riaditelPevnaLinka": this.properties."Riaditeľ___pevná_linka".apply("string"),
+          "web": this.properties."Web".apply("string"),
+          "facebook": this.properties."Facebook".apply("string"),
+          "instagram": this.properties."Instagram".apply("string"),
+          "youTube": this.properties."YouTube".apply("string"),
+          "onlineKatalog": this.properties."Online_katalóg".apply("string"),
+          "logo": this.properties."Logo".apply("string"),
+          "location": if this.geometry.or(null) == null { null } else { { "type": "GeoProperty", "value": this.geometry } },
+          "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj (CC BY 4.0)" },
+          "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Kult%C3%BArne_in%C5%A1tit%C3%BAcie_view/FeatureServer/7/query?where=1%3D1&outFields=Typ_1,In%C5%A1tit%C3%BAcia_1,I%C4%8CO,DI%C4%8C,Adresa,Riadite%C4%BE,Riadite%C4%BE___email,Riadite%C4%BE___mobiln%C3%BD_telef%C3%B3n,Riadite%C4%BE___pevn%C3%A1_linka,Web,Facebook,Instagram,YouTube,Online_katal%C3%B3g,Logo&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },
+          "dataset": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bbsk-kulturne-institucie-bbsk-a-ich-pobocky-2f9362" }
+        }.filter(entry -> entry.value != null)
+    # One request per run's batch rather than one per row.
+    - archive:
+        format: json_array

@@ -1,0 +1,23 @@
+# One StatisticalObservation per row of "Počet občanov podľa dňa narodenia" (T-4255); generated from the T-4254 mapping.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: od-pocet-obcanov-podla-dna-narodenia
+  namespace: banskabystrica
+  title:
+    sk: Počet občanov podľa dňa narodenia
+    en: Počet občanov podľa dňa narodenia
+spec:
+  class: scheduled
+  schedule: 28 1 5 * *
+  source:
+    dataSourceRef:
+      kind: DataSource
+      name: od-pocet-obcanov-podla-dna-narodenia
+  targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-otvorene-data:banskabystrica-otvorene-data
+  output:
+    type: StatisticalObservation
+    mode: upsert
+  quotas:
+    maxMemoryMb: 128
+    cpuMillicores: 100

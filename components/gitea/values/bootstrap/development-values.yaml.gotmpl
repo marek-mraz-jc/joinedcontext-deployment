@@ -80,7 +80,24 @@ seed:
 {{- end }}
 {{- end }}
 {{- end }}
-seedProjects: {{ keys $projects | sortAlpha | toJson }}
+{{- /* The parts values/seed cuts a project past 600 kB into, counted from the same bytes. */}}
+{{- $sources := list "context-gateway/seed/helsinki" "context-gateway/seed/banskabystrica" "context-gateway/seed/bbsk" "context-gateway/seed/praha" "context-gateway/seed/zilina" }}
+{{- if has "agent-runner" .Values.components }}{{ $sources = append $sources "agent-runner/seed" }}{{ end }}
+{{- $bytes := dict }}
+{{- range $dir := $sources }}
+{{- range $file, $path := readFile (printf "../../../%s/index.yaml" $dir) | fromYaml }}
+{{- $p := splitList "/" $path }}
+{{- if and (eq (index $p 0) "projects") (gt (len $p) 2) }}{{ $_ := set $bytes (index $p 1) (add (index $bytes (index $p 1) | default 0) (len (readFile (printf "../../../%s/%s" $dir $file)))) }}{{ end }}
+{{- end }}
+{{- end }}
+{{- $parts := list }}
+{{- range $project := keys $projects | sortAlpha }}
+{{- $parts = append $parts $project }}
+{{- if ge (index $bytes $project | default 0) 600000 }}
+{{- range $i := untilStep 2 (int (add 2 (div (index $bytes $project) 250000))) 1 }}{{ $parts = append $parts (printf "%s--%d" $project $i) }}{{ end }}
+{{- end }}
+{{- end }}
+seedProjects: {{ $parts | toJson }}
 
 # The sample applications (T-2599, AP-75): each one its own private repository on the forge,
 # pushed from components/gitea/apps/<name>/ (vendored from a portal commit by

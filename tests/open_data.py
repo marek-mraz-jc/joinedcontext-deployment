@@ -31,6 +31,8 @@ def _bento(mapping: Path, document: bytes, space: str, domain: str, codec: str, 
         "input": {"stdin": {"scanner": {"to_the_end": {}}}},
         "pipeline": pipeline,
         "cache_resources": yaml.safe_load(RESOURCES.read_text())["cache_resources"],
+        # The runner's shared egress limit, which a mapping that fetches further pages names.
+        "rate_limit_resources": yaml.safe_load(RESOURCES.read_text())["rate_limit_resources"],
         "output": {"stdout": {"codec": codec}},
         "logger": {"level": "error"},
     }
