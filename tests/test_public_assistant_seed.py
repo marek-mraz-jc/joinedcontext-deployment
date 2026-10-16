@@ -351,3 +351,18 @@ def test_no_anonymous_deployment_runs_out_of_tokens_before_its_cost_cap():
             )
             checked += 1
     assert checked >= 3, "the public, catalogue and eval deployments are checked"
+
+
+def test_the_open_data_eval_copies_are_data_with_another_model():
+    # T-4359: a comparison of models on data.dev's assistant; each copy is `data` but for its
+    # name, publicId and the model it runs, router and answer alike, and spends its own day.
+    deployments = manifests("AssistantDeployment", "bbsk")
+    base = deployments["data"]["spec"]
+    models = {"data-eval-gemini": "google/gemini-3.8-flash", "data-eval-haiku": "anthropic/claude-haiku-5.5",
+              "data-eval-deepseek": "deepseek/deepseek-v4.1-flash"}
+    for name, model in models.items():
+        spec = deployments[name]["spec"]
+        assert spec["publicId"] == name and "eval" in name.split("-")
+        assert spec["model"] == {"router": model, "answer": model}, name
+        assert {k: v for k, v in spec.items() if k not in ("publicId", "model")} == \
+            {k: v for k, v in base.items() if k not in ("publicId", "model")}, name
