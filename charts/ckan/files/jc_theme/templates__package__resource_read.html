@@ -60,7 +60,7 @@
     {% set address = h.jc_address(res) %}
     <div class="jc-address">
       <span class="jc-address-label">{{ h.jc_t('address') }}</span>
-      <code class="jc-address-short">{{ address.short }}</code>
+      <code class="jc-address-short">{% if address.segments %}{% for part in address.segments %}<span>{{ part }}</span>{% if not loop.last %}/<wbr>{% endif %}{% endfor %}{% else %}{{ address.short }}{% endif %}</code>
       {% if res.url %}
         <button type="button" class="btn {{ 'btn-primary' if api else 'btn-default' }}" data-jc-copy="jc-address-full" data-jc-copied="{{ h.jc_t('copied') }}"><span class="jc-code-copy-label">{{ h.jc_t('copy_address') }}</span></button>
       {% endif %}
