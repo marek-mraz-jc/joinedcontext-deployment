@@ -63,8 +63,10 @@ def test_it_is_placed_on_the_data_portal_alone_and_its_spending_is_bounded():
     spec = deployment()
     assert spec["allowedOrigins"] == ["https://data.dev.joinedcontext.com"]
     assert spec["rateLimit"]["perClientPerMinute"] <= 10
-    # The owner keeps model usage down: at most half a million tokens a day.
-    assert spec["budget"]["tokensPerDay"] <= 500_000
+    # The owner keeps model usage down through the cost cap (T-4286, 2026-10-16): a shared
+    # token cap of 300k refused everyone after 56 answers, so $3 a day is the guard.
+    assert spec["budget"]["costPerDayUsd"] <= 3
+    assert spec["budget"]["tokensPerDay"] <= 5_000_000
     assert spec["budget"]["tokensPerConversation"] <= spec["budget"]["tokensPerDay"]
 
 

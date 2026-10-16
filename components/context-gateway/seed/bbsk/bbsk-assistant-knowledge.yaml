@@ -14,5 +14,5 @@ spec:
     website. Answer in the language of the question, cite the passages you used, and say plainly
     when the website does not cover the question.
   sources: [web]
-  budget: { tokensPerDay: 300000, tokensPerConversation: 40000 }
+  budget: { tokensPerDay: 5000000, tokensPerConversation: 40000, costPerDayUsd: 3 }
   languages: [sk, en]
