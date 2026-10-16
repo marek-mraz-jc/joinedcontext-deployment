@@ -439,6 +439,18 @@ def test_the_footer_carries_the_installations_links_and_none_of_ckans():
     assert "brand.organisation" in footer and "brand.footerLines" in footer
 
 
+def test_the_footers_api_link_opens_the_page_that_explains_the_api_not_raw_json():
+    """T-4234 (photo audit T-4161 #12): "Catalogue API" opened package_list's raw JSON with no
+    word on what the API offers. It opens the About page's developer section, which names the
+    address, says what it returns and links the JSON one step further."""
+    footer = (THEME / "footer.html").read_text()
+    assert "<a href=\"{{ h.url_for('home.about') }}#api\">{{ h.jc_t('catalogue_api') }}</a>" in footer
+    assert "logic_function='package_list'" not in footer
+    about = (THEME / "templates__home__about.html").read_text()
+    assert '<h2 id="api">{{ h.jc_t(\'about_machines\') }}</h2>' in about
+    assert "logic_function='package_list'" in about and "h.jc_t('about_api')" in about
+
+
 def test_a_second_deployment_restyles_the_catalogue_from_values_alone(rendered, rendered_variant):
     """T-3009: a new palette, logo, tagline and footer reach the theme with no file of it edited."""
     logo = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><rect width="1" height="1" fill="#8a1538"/></svg>'
