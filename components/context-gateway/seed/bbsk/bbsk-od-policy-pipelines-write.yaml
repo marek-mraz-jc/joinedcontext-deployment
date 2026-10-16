@@ -11,7 +11,7 @@ spec:
   contextSpaceRef:
     kind: ContextSpace
     name: bbsk-otvorene-data
-  assigner: did:web:{orgDomain}
+  assigner: did:web:bbsk.sk
   assignee:
     kind: serviceAccount
     id: pipelines

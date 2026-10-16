@@ -11,7 +11,7 @@ spec:
   contextSpaceRef:
     kind: ContextSpace
     name: banskabystrica-otvorene-data
-  assigner: did:web:{orgDomain}
+  assigner: did:web:banskabystrica.sk
   assignee:
     kind: serviceAccount
     id: pipelines

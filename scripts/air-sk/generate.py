@@ -99,12 +99,14 @@ let floor = @jc_now.or(now()).ts_parse("2006-01-02T15:04:05Z07:00").ts_unix() - 
 let stored = this.or([]).fold({}, item -> item.tally.merge({ (item.value.id.split(":").index(-1)): %s.fold({}, a -> a.tally.merge(if item.value.get(a.value).observedAt.or(null) == null { {} } else { { (a.value): item.value.get(a.value).observedAt.ts_parse("2006-01-02T15:04:05Z07:00").ts_unix() } })) }))
 root = %s.map_each(f -> f.merge({ "since": [$floor, $stored.get(f.station).get(f.attribute).or(0)].max() }))""" % (
         BACKFILL_DAYS * 86400, json.dumps(sorted(POLLUTANTS.values())), json.dumps(todo, ensure_ascii=False))
+    # The publisher's domain (the platform, the Endpoint's publisher), never the runner's
+    # JC_ORG_DOMAIN, which is the installation's (T-4202, T-4373).
     entity = """\
 let stations = %s
 let files = this.filter(m -> m.ok.or(false))
 root = if $files.length() == 0 { throw("no station file came") } else {
   $files.map_each(m -> m.records).flatten().fold({}, item -> item.tally.merge({ (item.value.station): { ("%%v".format(item.value.unix)): { (item.value.attribute): item.value } } })).key_values().sort_by(s -> s.key).map_each(s -> s.value.key_values().sort_by(h -> h.key.number()).map_each(h -> {
-    "id": "urn:ngsi-ld:AirQualityObserved:%%v:%%v:%%v".format(env("JC_ORG_DOMAIN"), env("JC_SPACE"), s.key),
+    "id": "urn:ngsi-ld:AirQualityObserved:%%v:%%v:%%v".format("joinedcontext.com", env("JC_SPACE"), s.key),
     "type": "AirQualityObserved",
     "name": { "type": "Property", "value": $stations.get(s.key).sk },
     "dateObserved": { "type": "Property", "value": h.key.number().ts_format("2006-01-02T15:04:05Z07:00", "UTC") },
