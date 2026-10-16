@@ -509,4 +509,8 @@ body:has(.jc-assistant) { padding-block-end: 5rem; }
 /* A command wraps inside its card at every width; Bootstrap's `pre code` would keep it one line. */
 .jc-api pre, .jc-api pre code, .jc-address-whole pre code { white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; }
 .jc-api .jc-copy-code { flex-wrap: wrap; }
-.jc-api .jc-copy-code pre { flex: 1 1 18rem; }
+.jc-api .jc-copy-code pre { flex: 1 1 auto; width: min(100%, 40rem); }
+.jc-api .jc-copy-code .btn { align-self: flex-start; }
+/* The address box ends the header card's text; the rows and examples follow without a band. */
+.module-resource .resource-view.jc-api { margin-top: 0; padding-top: 0; }
+.jc-api > section:first-child > h2 { margin-top: 1.25rem; }

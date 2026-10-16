@@ -315,8 +315,9 @@ def test_the_mcp_card_puts_claude_first_and_keeps_its_code_whole():
 def test_each_resource_has_its_one_action_named_for_a_screen_reader():
     item = (THEME / "templates__package__snippets__resource_item.html").read_text()
     assert "dropdown" not in item and "{{ _('Explore') }}" not in item
-    assert "h.jc_t('open') if jc_section == 'api' else h.jc_t('download')" in item
-    assert item.count('<span class="visually-hidden"> {{ name }}</span>') == 2
+    # The publisher's own page opens; only a file downloads (T-4333).
+    assert "h.jc_t('open') if jc_section in ('api', 'source') else h.jc_t('download')" in item
+    assert item.count('<span class="visually-hidden"> {{ name }}</span>') == 3
     assert "{% if not url_is_edit %}" in item and "jc_format or h.get_translated(res, 'format')" in item
 
 
@@ -1146,13 +1147,18 @@ def test_an_endpoint_address_is_read_by_its_path_not_its_format_label(theme):
 def test_the_resource_list_groups_and_names_the_type_once(theme):
     sections = {s["key"]: s for s in theme.jc_resource_sections(OD_PKG)}
     assert [i["resource"]["id"] for i in sections["api"]["items"]] == ["n", "w", "m", "o"]
-    assert {i["resource"]["id"] for i in sections["data"]["items"]} == {"c", "t", "p"}
+    assert {i["resource"]["id"] for i in sections["data"]["items"]} == {"c", "t"}
+    # The harvest's link to the publisher's page is opened at the publisher, not a twin download.
+    assert [i["resource"]["id"] for i in sections["source"]["items"]] == ["p"]
     labels = {r["id"]: theme.jc_resource_label(r, OD_PKG) for r in OD_PKG["resources"]}
     assert not any("(StatisticalObservation)" in label for label in labels.values()), labels
     assert labels["n"] == "NGSI-LD API" and labels["m"] == "Model Context Protocol"
     # The publisher's own page, named after the dataset, no longer reads as a twin of the table.
-    assert labels["p"] == "On the publisher's site"
+    assert labels["p"] == "On the publisher's site" and labels["t"] == "The whole table"
     assert theme.jc_entity_type(_od(theme, "m")) == theme.jc_entity_type(_od(theme, "o")) == "StatisticalObservation"
+    theme.page.lang = "sk"
+    model = {"name": "Data model: LinkML", "format": "LinkML", "url": OD + "schema/v1/model.linkml.yaml"}
+    assert theme.jc_resource_label(model, OD_PKG) == "Dátový model (LinkML)"
     sidebar = (THEME / "templates__package__snippets__resources.html").read_text()
     assert "h.jc_resource_sections(pkg)" in sidebar and "section.title" in sidebar
 
@@ -1263,3 +1269,22 @@ def test_the_chart_mounts_the_hidden_list_beside_the_organizations():
     chart = PROJECT_ROOT / "charts/ckan/templates"
     assert "hidden.json: |\n    {{ .Values.hidden | default dict | toJson }}" in (chart / "theme.yaml").read_text()
     assert "- key: hidden.json\n                path: hidden.json" in (chart / "ckan.yaml").read_text()
+
+
+def test_more_details_name_the_publisher_s_dates_and_record_in_words(theme):
+    theme.page.lang = "sk"
+    theme.toolkit.h.render_datetime = lambda value: "30. novembra 2023" if value.startswith("2023-11-30") else value
+    assert theme.jc_extra("issued", "2023-11-30T07:59:41Z") == ("Zverejnené vydavateľom", "30. novembra 2023", None)
+    assert theme.jc_extra("source_uri", "https://data.gov.sk/set/057d") == ("Pôvodný záznam", "https://data.gov.sk/set/057d", "https://data.gov.sk/set/057d")
+    assert theme.jc_extra("source_note", "Measured by HSY") == ("Source note", "Measured by HSY", None)
+    assert "harvest_source" not in dict(theme.jc_more({"extras": [{"key": "harvest_source", "value": "nkod-bb"}]}))
+
+
+def test_a_file_follows_its_format_s_rfc_and_an_api_base_lists_its_types(theme):
+    assert theme.jc_standard(_od(theme, "c"))["name"] == "CSV (RFC 4180)"
+    assert theme.jc_standard({"url": "https://elsewhere.example/a.csv", "format": "CSV"}) is None
+    base = {"url": OD + "ngsi-ld/v1/", "format": "NGSI-LD"}
+    assert theme.jc_preview(base) == {"url": OD + "ngsi-ld/v1/types", "kind": "NGSI-LD-TYPES"}
+    assert theme.jc_examples(base)[0]["code"].endswith("ngsi-ld/v1/types'")
+    # OData and OGC API without an entity set or items have no rows to preview.
+    assert theme.jc_preview({"url": OD + "odata/v4/"}) is None and theme.jc_preview({"url": OD + "ogc/features/"}) is None

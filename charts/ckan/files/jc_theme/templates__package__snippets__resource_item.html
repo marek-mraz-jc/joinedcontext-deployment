@@ -6,6 +6,7 @@
 {% set url_action = pkg.type ~ ('_resource.edit' if url_is_edit and can_edit else '_resource.read') %}
 {% set url = url or h.url_for(url_action, id=pkg.name, resource_id=res.id) %}
 {% set name = h.jc_resource_label(res, pkg) %}
+{% set kind = h.jc_kind(res) %}
 <li class="resource-item jc-resource" data-id="{{ res.id }}">
   <div>
     {# The format sits beside the name (T-4066): a column of its own stood empty beside a long usage text. #}
@@ -16,7 +17,6 @@
     {% set what = h.jc_what(res) if kind else jc_what %}
     {% if what %}<p>{{ what }}</p>{% endif %}
     {# An Endpoint's address shows its usage, localized, on its own page (T-4333). #}
-    {% set kind = h.jc_kind(res) %}
     {% set usage = h.jc_usage(res) if jc_section == 'api' and not url_is_edit and not kind else [] %}
     {% if usage %}
       <details class="jc-usage">
@@ -29,9 +29,12 @@
     <div class="jc-resource-actions">
       {% if res.url and h.is_url(res.url) %}
         <a class="btn btn-sm btn-outline-primary resource-url-analytics" href="{{ res.url }}" rel="noreferrer">
-          {{- h.jc_t('open') if jc_section == 'api' else h.jc_t('download') -}}
+          {{- h.jc_t('open') if jc_section in ('api', 'source') else h.jc_t('download') -}}
           <span class="visually-hidden"> {{ name }}</span>
         </a>
+      {% elif kind %}
+        {# A WebSocket address opens in no browser tab; its page says how to use it (T-4333). #}
+        <a class="btn btn-sm btn-outline-primary" href="{{ url }}">{{ h.jc_t('usage') }}<span class="visually-hidden"> {{ name }}</span></a>
       {% endif %}
       {% if can_edit %}
         <a class="btn btn-sm btn-default" href="{{ h.url_for(pkg.type ~ '_resource.edit', id=pkg.name, resource_id=res.id) }}">{{ _('Edit') }}<span class="visually-hidden"> {{ name }}</span></a>

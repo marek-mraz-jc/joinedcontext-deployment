@@ -422,6 +422,7 @@ STRINGS = {
         "cs": "Všechny záznamy typu {type} v otevřených datech vydavatele, včetně této datové sady.",
         "de": "Alle {type}-Einträge der offenen Daten des Herausgebers, auch die dieses Datensatzes.",
     },
+    "preview_types": {"en": "The kinds of entities it holds, live", "sk": "Druhy entít, ktoré obsahuje, naživo", "cs": "Druhy entit, které obsahuje, živě", "de": "Die Arten von Entitäten, live"},
     "preview_api": {"en": "The first records, live", "sk": "Prvé záznamy naživo", "cs": "První záznamy živě", "de": "Die ersten Einträge, live"},
     "preview_loading": {"en": "Loading the first records…", "sk": "Načítavajú sa prvé záznamy…", "cs": "Načítají se první záznamy…", "de": "Die ersten Einträge werden geladen…"},
     "preview_failed": {
@@ -462,6 +463,16 @@ STRINGS = {
     },
     "created": {"en": "Created", "sk": "Vytvorené", "cs": "Vytvořeno", "de": "Erstellt"},
     "info": {"en": "About this resource", "sk": "O tomto zdroji", "cs": "O tomto zdroji", "de": "Über diese Ressource"},
+    "whole_table": {"en": "The whole table", "sk": "Celá tabuľka", "cs": "Celá tabulka", "de": "Die ganze Tabelle"},
+    "ex_types": {"en": "The kinds of entities it holds, with curl", "sk": "Druhy entít, ktoré obsahuje, cez curl", "cs": "Druhy entit, které obsahuje, přes curl", "de": "Die Arten von Entitäten, die sie enthält, mit curl"},
+    "section_source": {"en": "At the publisher", "sk": "U vydavateľa", "cs": "U vydavatele", "de": "Beim Herausgeber"},
+    "source_lead": {
+        "en": "This is the publisher's own page for the data; it opens on their site.",
+        "sk": "Toto je stránka vydavateľa s týmito dátami; otvorí sa na jeho webe.",
+        "cs": "Toto je stránka vydavatele s těmito daty; otevře se na jeho webu.",
+        "de": "Dies ist die Seite des Herausgebers zu diesen Daten; sie öffnet sich auf seiner Website.",
+    },
+    "section_source_lead": {"en": "Where the publisher keeps the original.", "sk": "Kde má vydavateľ originál.", "cs": "Kde má vydavatel originál.", "de": "Wo der Herausgeber das Original hat."},
     "at_publisher": {"en": "On the publisher's site", "sk": "Na stránke vydavateľa", "cs": "Na stránce vydavatele", "de": "Auf der Seite des Herausgebers"},
 }
 
@@ -504,7 +515,14 @@ ABOUT_EXTRAS = ("identifier", "language", "contact", "conforms_to", "status")
 # the licence the About list already links, and the themes as a JSON list of vocabulary URIs.
 INTERNAL_EXTRAS = {"generated_by", "endpoint", "publisher_name", "publisher_uri", "contact_name",
                    "contact_email", "frequency", "spatial", "spatial_uri", "temporal_start",
-                   "temporal_end", "theme", "license_url"}
+                   "temporal_end", "theme", "license_url", "harvest_source"}
+# What a harvested record says about itself, in words (T-4333): the dates the publisher gave and
+# where the record came from. Any other extra keeps its own key.
+EXTRA_LABELS = {
+    "issued": {"en": "Published by the publisher", "sk": "Zverejnené vydavateľom", "cs": "Zveřejněno vydavatelem", "de": "Vom Herausgeber veröffentlicht"},
+    "modified": {"en": "Changed by the publisher", "sk": "Zmenené vydavateľom", "cs": "Změněno vydavatelem", "de": "Vom Herausgeber geändert"},
+    "source_uri": {"en": "Original record", "sk": "Pôvodný záznam", "cs": "Původní záznam", "de": "Ursprünglicher Eintrag"},
+}
 
 
 def _language():
@@ -611,6 +629,20 @@ def jc_more(pkg):
     return sorted((k, v) for k, v in _extras(pkg).items() if k not in shown and v)
 
 
+def jc_extra(key, value):
+    """One "More details" row as (label, text, link): a known key in words, an ISO date as the
+    page writes dates, an http address as a link; anything else as it is."""
+    words = EXTRA_LABELS.get(key)
+    label = (words.get(_language()) or words["en"]) if words else str(key).replace("_", " ").capitalize()
+    text = str(value)
+    if re.match(r"^\d{4}-\d{2}-\d{2}(T[\d:.]+Z?)?$", text):
+        try:
+            text = toolkit.h.render_datetime(text.rstrip("Z"))
+        except (AttributeError, TypeError, ValueError):
+            pass
+    return label, text, text if _is_url(text) else None
+
+
 def jc_live(pkg):
     """The dataset's live NGSI-LD address and an example query, or None.
 
@@ -642,6 +674,10 @@ DATA_ORDER = ("CSV", "GEOJSON", "JSON", "XLSX", "ZIP")
 _ENDPOINT_PATH = re.compile(r"^/api/endpoint/[^/]+/(.*)$")
 _KIND_PREFIXES = (("ngsi-ld/", "NGSI-LD"), ("odata/", "ODATA"), ("ogc/", "OGCFEAT"), ("sta/", "STA"),
                   ("schema/", "MODEL"))
+# An Endpoint's door by its kind: product names, the same on a page in any language (T-4333).
+DOOR_NAMES = {"NGSI-LD": "NGSI-LD API", "WEBSOCKET": "WebSocket", "MCP": "Model Context Protocol",
+              "OGCFEAT": "OGC API - Features", "ODATA": "OData v4", "STA": "SensorThings API",
+              "CSV": "CSV", "JSON": "JSON", "GEOJSON": "GeoJSON", "XLSX": "Excel"}
 # The format as a reader reads it, on a chip and in the facts list.
 KIND_LABELS = {"NGSI-LD": "NGSI-LD", "WEBSOCKET": "WebSocket", "MCP": "MCP", "OGCFEAT": "OGC API",
                "ODATA": "OData", "STA": "SensorThings", "CSV": "CSV", "JSON": "JSON",
@@ -675,6 +711,13 @@ def jc_kind(resource):
         return "MCP" if rest == "mcp" else "WEBSOCKET"
     match = re.fullmatch(r"file\.(csv|json|geojson|xlsx)", rest)
     return match.group(1).upper() if match else None
+
+
+def jc_is_source(resource, pkg):
+    """Whether a resource is the harvest's link to the publisher's own page, named after the
+    dataset (T-4333): it is opened there, never downloaded."""
+    title = ((pkg or {}).get("title") or "").strip()
+    return bool(title) and _off_platform(resource) and ((resource or {}).get("name") or "").strip() == title
 
 
 def _section(resource):
@@ -766,7 +809,7 @@ def jc_guide(resource):
 def jc_resource_sections(pkg):
     """The resources in three sections, data, APIs and the data model, each in reading order
     and each resource with its one-line "what is this". Empty sections are left out."""
-    sections = {"data": [], "api": [], "schema": []}
+    sections = {"data": [], "api": [], "schema": [], "source": []}
     for resource in sorted((pkg or {}).get("resources") or [], key=_order):
         kind = jc_kind(resource)
         name = KIND_LABELS.get(kind) or (resource.get("format") or "").strip()
@@ -776,7 +819,7 @@ def jc_resource_sections(pkg):
             # writes its tables with none).
             name = name or "CSV"
             words = STRINGS["table_what"]
-        sections[_section(resource)].append({
+        sections["source" if jc_is_source(resource, pkg) else _section(resource)].append({
             "resource": resource,
             "format": name or "—",
             "what": words.get(_language()) or words.get("en") or "",
@@ -794,6 +837,7 @@ MODEL_FILES = {
     "model.owl.ttl": {"en": "Data model (OWL)", "sk": "Dátový model (OWL)", "cs": "Datový model (OWL)", "de": "Datenmodell (OWL)"},
     "model.rdf.ttl": {"en": "Data model (RDF)", "sk": "Dátový model (RDF)", "cs": "Datový model (RDF)", "de": "Datenmodell (RDF)"},
     "model.schema.json": {"en": "Data model (JSON Schema)", "sk": "Dátový model (JSON Schema)", "cs": "Datový model (JSON Schema)", "de": "Datenmodell (JSON Schema)"},
+    "index.json": {"en": "Data model: list of its files", "sk": "Dátový model: zoznam súborov", "cs": "Datový model: seznam souborů", "de": "Datenmodell: Liste der Dateien"},
     "model.shacl.ttl": {"en": "Validation rules (SHACL)", "sk": "Pravidlá kontroly (SHACL)", "cs": "Pravidla kontroly (SHACL)", "de": "Prüfregeln (SHACL)"},
 }
 
@@ -805,15 +849,22 @@ def jc_resource_label(resource, pkg=None):
     prefix = ((pkg or {}).get("name") or "").strip()
     rest = name[len(prefix):].strip() if prefix and name.startswith(prefix + " ") else name
     words = MODEL_FILES.get(rest)
+    if jc_kind(resource) == "MODEL":
+        # The harvest names a model file in English ("Data model: LinkML"); its file name says
+        # which one it is in any language (T-4333).
+        words = MODEL_FILES.get(((resource or {}).get("url") or "").split("?", 1)[0].rsplit("/", 1)[-1]) or words
     if words:
         return words.get(_language()) or words["en"]
-    if jc_kind(resource):
-        # An Endpoint's door names its entity type once, in the page header, not on every
-        # entry: "NGSI-LD API (StatisticalObservation)" reads "NGSI-LD API" (T-4333).
-        kind_type = jc_entity_type(resource)
-        if kind_type and rest.endswith(" (%s)" % kind_type):
-            rest = rest[: -len(" (%s)" % kind_type)].strip()
-    elif _off_platform(resource) and pkg and rest and rest == (pkg.get("title") or "").strip():
+    kind = jc_kind(resource)
+    if kind in DOOR_NAMES:
+        # An Endpoint's door is named by what it is, in words every language shares, with its
+        # entity type once in the page header instead of on every entry: the harvest wrote
+        # "NGSI-LD API (StatisticalObservation)", jcctl "Live updates over WebSocket" (T-4333).
+        return DOOR_NAMES[kind]
+    elif (resource or {}).get("datastore_active") and pkg and rest.startswith((pkg.get("title") or "\0").strip() + " ("):
+        # A harvested table is named "{dataset} (tabuľka)", in Slovak on every page (T-4333).
+        return jc_t("whole_table")
+    elif jc_is_source(resource, pkg):
         # The harvest names the publisher's own page after the dataset, so it read as a twin of
         # the table (T-4333).
         return jc_t("at_publisher")
@@ -914,11 +965,15 @@ def jc_preview(resource):
     host = urlsplit(url).hostname or "" if url else ""
     if not (url.startswith("https://") and domain and (host == domain or host.endswith("." + domain))):
         return None
-    if kind == "NGSI-LD":
+    path = urlsplit(url).path
+    if kind == "NGSI-LD" and "/entities" in path:
         return {"url": _with(url, limit="5", options="keyValues", count="true"), "kind": kind}
-    if kind in ("ODATA", "STA"):
+    if kind == "NGSI-LD":
+        # The API itself, without a type: what it holds is its list of types.
+        return {"url": url.split("?", 1)[0].rstrip("/") + "/types", "kind": "NGSI-LD-TYPES"}
+    if kind in ("ODATA", "STA") and jc_entity_type(resource):
         return {"url": _with(url, **{"$top": "5"}), "kind": kind}
-    if kind == "OGCFEAT":
+    if kind == "OGCFEAT" and path.rstrip("/").endswith("/items"):
         return {"url": _with(url, limit="5"), "kind": kind}
     return None
 
@@ -942,7 +997,9 @@ def jc_examples(resource):
         out.append({"title": title, "steps": list(steps), "code": code,
                     "id": "jc-ex-%s-%d" % (key, len(out))})
 
-    if kind == "NGSI-LD":
+    if kind == "NGSI-LD" and "/entities" not in urlsplit(url).path:
+        add(jc_t("ex_types"), "curl%s -H 'Accept: application/ld+json' '%s'" % (auth, url.split("?", 1)[0].rstrip("/") + "/types"))
+    elif kind == "NGSI-LD":
         add(jc_t("ex_first"), "curl%s -H 'Accept: application/ld+json' '%s'" % (auth, _with(url, limit="5")))
     elif kind in ("ODATA", "STA"):
         add(jc_t("ex_first"), "curl%s '%s'" % (auth, _with(url, **{"$top": "5"})))
@@ -974,15 +1031,26 @@ STANDARDS = (
     ("odata", "OData v4"),
     ("modelcontextprotocol", "Model Context Protocol"),
     ("rfc7946", "GeoJSON (RFC 7946)"),
+    ("rfc4180", "CSV (RFC 4180)"),
+    ("rfc8259", "JSON (RFC 8259)"),
     ("smart-data-models", "Smart Data Models"),
     ("smartdatamodels", "Smart Data Models"),
 )
 
 
+# The standard each kind of door follows, when the resource names none (jcctl's do not).
+KIND_STANDARDS = {"CSV": "https://www.rfc-editor.org/rfc/rfc4180", "GEOJSON": "https://www.rfc-editor.org/rfc/rfc7946",
+                  "JSON": "https://www.rfc-editor.org/rfc/rfc8259",
+                  "NGSI-LD": "https://www.etsi.org/deliver/etsi_gs/CIM/001_099/009/",
+                  "OGCFEAT": "http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core",
+                  "ODATA": "https://docs.oasis-open.org/odata/odata/v4.01/",
+                  "MCP": "https://modelcontextprotocol.io/specification"}
+
+
 def jc_standard(resource):
-    """The standard a distribution follows, named, with its address; None when it names none
-    or a value that is not an http address."""
-    url = ((resource or {}).get("conforms_to") or "").strip()
+    """The standard a distribution follows, named, with its address; a file the platform renders
+    follows its format's RFC. None when it names none or a value that is not an http address."""
+    url = ((resource or {}).get("conforms_to") or "").strip() or KIND_STANDARDS.get(jc_kind(resource), "")
     if not _is_url(url):
         return None
     name = next((label for needle, label in STANDARDS if needle in url.lower()), url)
@@ -1327,6 +1395,8 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_resource_sections": jc_resource_sections,
             "jc_resource_label": jc_resource_label,
             "jc_is_api": jc_is_api,
+            "jc_extra": jc_extra,
+            "jc_is_source": jc_is_source,
             "jc_kind": jc_kind,
             "jc_entity_type": jc_entity_type,
             "jc_what": jc_what,

@@ -19,6 +19,15 @@
     if (kind === "NGSI-LD") {
       return Array.isArray(body) ? body : [];
     }
+    if (kind === "NGSI-LD-TYPES") {
+      // The API's own list of the entity types it holds, one row each.
+      var label = box.getAttribute("data-jc-type-label") || "type";
+      return (body && Array.isArray(body.typeList) ? body.typeList : []).map(function (name) {
+        var row = {};
+        row[label] = name;
+        return row;
+      });
+    }
     if (kind === "OGCFEAT") {
       return (body && body.features ? body.features : []).map(function (f) {
         return Object.assign({ id: f.id }, f.properties || {});
@@ -46,7 +55,9 @@
       }
       var total = answer.headers.get("NGSILD-Results-Count");
       return answer.json().then(function (body) {
-        return { rows: rowsOf(body).slice(0, 5), total: total };
+        var rows = rowsOf(body);
+        // A types list is shown whole (a handful of names); entities five at a time.
+        return { rows: kind === "NGSI-LD-TYPES" ? rows : rows.slice(0, 5), total: total };
       });
     })
     .then(function (result) {

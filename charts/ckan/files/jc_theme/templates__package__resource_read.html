@@ -61,8 +61,8 @@
     <div class="jc-address">
       <span class="jc-address-label">{{ h.jc_t('address') }}</span>
       <code class="jc-address-short">{{ address.short }}</code>
-      {% if api %}
-        <button type="button" class="btn btn-primary" data-jc-copy="jc-address-full" data-jc-copied="{{ h.jc_t('copied') }}"><span class="jc-code-copy-label">{{ h.jc_t('copy_address') }}</span></button>
+      {% if res.url %}
+        <button type="button" class="btn {{ 'btn-primary' if api else 'btn-default' }}" data-jc-copy="jc-address-full" data-jc-copied="{{ h.jc_t('copied') }}"><span class="jc-code-copy-label">{{ h.jc_t('copy_address') }}</span></button>
       {% endif %}
       <details class="jc-address-whole">
         <summary>{{ h.jc_t('full_address') }}</summary>
@@ -87,8 +87,8 @@
       {% if preview %}
         <section class="jc-live-rows" data-jc-preview="{{ preview.url }}" data-jc-kind="{{ preview.kind }}"
                  data-jc-failed="{{ h.jc_t('preview_failed') }}" data-jc-empty="{{ h.jc_t('preview_empty') }}"
-                 data-jc-shown="{{ h.jc_t('preview_shown') }}" aria-labelledby="jc-rows-title">
-          <h2 id="jc-rows-title">{{ h.jc_t('preview_api') }}</h2>
+                 data-jc-shown="{{ h.jc_t('preview_shown') }}" data-jc-type-label="{{ h.jc_t('entity_type') }}" aria-labelledby="jc-rows-title">
+          <h2 id="jc-rows-title">{{ h.jc_t('preview_types' if preview.kind == 'NGSI-LD-TYPES' else 'preview_api') }}</h2>
           <p class="jc-rows-status" role="status">{{ h.jc_t('preview_loading') }}</p>
           <div class="jc-rows-table" tabindex="0" hidden></div>
         </section>
@@ -112,6 +112,13 @@
         </section>
       {% elif res.description %}
         <div class="jc-usage">{% snippet 'package/snippets/jc_usage.html', blocks=h.jc_usage(res), res=res %}</div>
+      {% endif %}
+    </div>
+  {% elif h.jc_is_source(res, package) %}
+    <div class="resource-view jc-no-view">
+      <p>{{ h.jc_t('source_lead') }}</p>
+      {% if res.url and h.is_url(res.url) %}
+        <a class="btn btn-primary" href="{{ res.url }}" rel="noreferrer">{{ h.jc_t('open') }}<span class="visually-hidden"> {{ h.jc_resource_label(res, package) }}</span></a>
       {% endif %}
     </div>
   {% else %}
