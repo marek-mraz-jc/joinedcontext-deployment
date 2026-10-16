@@ -37,7 +37,8 @@ def test_a_vehicle_is_kept_five_minutes_after_its_last_report_and_its_track_eigh
 
 def test_no_other_space_declares_retention():
     keeping = [name for name, space in spaces().items() if space["spec"].get("retention")]
-    assert keeping == ["helsinki/helsinki"]
+    # And the national air quality's week of history (T-4340, owner 2026-10-16).
+    assert keeping == ["slovensko/ovzdusie-sk", "helsinki/helsinki"]
 
 
 def test_each_rule_reads_a_slot_of_its_class_and_names_itself_once():

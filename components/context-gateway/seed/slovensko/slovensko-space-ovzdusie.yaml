@@ -1,0 +1,21 @@
+# The air quality of every Slovak station, one entity per station with its latest hour (T-4340).
+apiVersion: joinedcontext.com/v1alpha1
+kind: ContextSpace
+metadata:
+  name: ovzdusie-sk
+  namespace: slovensko
+  title: { sk: "Kvalita ovzdušia — Slovensko", en: "Air quality, Slovakia" }
+  description:
+    sk: "Hodinové koncentrácie PM10, PM2,5, NO2 a O3 na všetkých staniciach monitorovania kvality ovzdušia na Slovensku."
+    en: "Hourly concentrations of PM10, PM2.5, NO2 and O3 at every air-quality monitoring station in Slovakia."
+spec:
+  # The space name is the segment its ids carry, pinned so it cannot drift (PF-84).
+  urnSegment: ovzdusie-sk
+  isSandbox: false
+  # Its one model (DM-61).
+  dataModelRef: { kind: DataModel, name: ovzdusie-sk }
+  defaultLocale: sk
+  # A measurement series: seven days of history (owner, 2026-10-16) (DM-82, T-4275).
+  retention:
+    - entityType: AirQualityObserved
+      history: P7D
