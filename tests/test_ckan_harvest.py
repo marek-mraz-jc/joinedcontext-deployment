@@ -360,7 +360,7 @@ def test_a_converted_dataset_gains_the_platform_apis_after_its_files_and_tables_
     harvest = load(monkeypatch)
     assert harvest.main() == 0
     ages = harvest.ckan.packages["bb-pocet-obcanov-podla-veku"]["resources"]
-    assert [r["format"] for r in ages] == ["JSON", "JSON-LD", "CSV", "JSON", "XLSX", "JSON", "JSON", "JSON", "CSV"]
+    assert [r["format"] for r in ages] == ["JSON", "NGSI-LD", "CSV", "JSON", "XLSX", "OData", "MCP", "WebSocket", "CSV"]
     assert ages[-1].get("url_type") == "datastore", "the table moved off the end of the list"
     assert ages[1]["url"] == ("https://dev.joinedcontext.com/api/endpoint/abc/ngsi-ld/v1/entities?type=KeyPerformanceIndicator"
                               "&q=dataset%3D%3D%22https%3A%2F%2Fdata.dev.joinedcontext.com%2Fdataset%2Fbb-pocet-obcanov-podla-veku%22")
