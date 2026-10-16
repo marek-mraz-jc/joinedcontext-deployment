@@ -8,7 +8,7 @@ kind: ContextSpace
 metadata:
   name: banskabystrica-verejne
   namespace: banskabystrica
-  title: { sk: "Mesto — verejné údaje", en: "City, open data" }
+  title: { sk: "Banská Bystrica — verejné údaje", en: "Banská Bystrica, open data" }
   description:
     sk: >-
       Podujatia mesta, školy a školské zariadenia v meste, hodinové merania prachových častíc, NO2

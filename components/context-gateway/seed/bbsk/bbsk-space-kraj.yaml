@@ -6,7 +6,7 @@ kind: ContextSpace
 metadata:
   name: bbsk-kraj
   namespace: bbsk
-  title: { sk: "Kraj — zdrojové údaje", en: "Region, raw data" }
+  title: { sk: "Banskobystrický kraj — zdrojové údaje", en: "Banská Bystrica Region, raw data" }
   description:
     sk: "Riadky otvorených dát pre kraj SK032 a jeho 13 okresov, tak ako ich publikoval ŠÚ SR."
     en: "Open data rows for the kraj SK032 and its 13 districts, as ŠÚ SR published them."

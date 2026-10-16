@@ -4,7 +4,7 @@ kind: ContextSpace
 metadata:
   name: zilina-mesto
   namespace: zilina
-  title: { sk: "Mesto — zdrojové údaje", en: "City, raw data" }
+  title: { sk: "Žilina — zdrojové údaje", en: "Žilina, raw data" }
   description:
     sk: "Riadky ŠÚ SR pre mesto Žilina (SK031B517402), tak ako ich publikoval ŠÚ SR."
     en: "ŠÚ SR rows for the city of Žilina (SK031B517402), as ŠÚ SR published them."

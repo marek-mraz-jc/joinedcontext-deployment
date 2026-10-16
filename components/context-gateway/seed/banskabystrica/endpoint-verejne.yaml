@@ -5,7 +5,7 @@ kind: Endpoint
 metadata:
   name: banskabystrica-verejne
   namespace: banskabystrica
-  title: { sk: "Mesto — verejné údaje", en: "City, open data" }
+  title: { sk: "Banská Bystrica — verejné údaje", en: "Banská Bystrica, open data" }
   # The dataset's notes in the catalogue, through this endpoint's DCAT-AP record (EP-27).
   description:
     sk: "Podujatia mesta, školy v meste, hodinové merania PM10, PM2.5, NO2 a O3 na stanici SK0263A a počasie na automatických staniciach SHMÚ Banská Bystrica - Zelená a Donovaly (každých päť minút). Zdroje: Mesto Banská Bystrica, Ministerstvo školstva SR (Digitálna mapa škôl), Európska environmentálna agentúra (údaje SHMÚ), Slovenský hydrometeorologický ústav; CC BY 4.0."
