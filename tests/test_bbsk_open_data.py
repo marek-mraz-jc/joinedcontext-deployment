@@ -332,6 +332,6 @@ def test_the_indicator_pipeline_reads_exactly_the_cubes_its_compute_uses():
     used = set(re.findall(r'"([a-z]{2}\d{4}r[rs])": \{ "name"', compute))
     assert used == {"om7102rr", "zp3803rs"}
     query = pipeline["spec"]["source"]["query"]
-    assert query["type"] == "StatisticalObservation"
+    assert query["type"] == "KeyPerformanceIndicator"
     assert set(re.findall(r'"([^"]+)"', query["q"])) == used
     assert query["q"].startswith('dataSet==')

@@ -1,4 +1,4 @@
-# One StatisticalObservation per cell of the ŠÚ SR cube pr5001rr for the city, written through the space's one Endpoint with the runner's service account (PL-18, PF-39, T-2781).
+# One KeyPerformanceIndicator per cell of the ŠÚ SR cube pr5001rr for the city, written through the space's one Endpoint with the runner's service account (PL-18, PF-39, T-2781).
 apiVersion: joinedcontext.com/v1alpha1
 kind: Pipeline
 metadata:
@@ -14,7 +14,7 @@ spec:
     dataSourceRef: { kind: DataSource, name: susr-pr5001rr }
   targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-mesto:banskabystrica-mesto
   output:
-    type: StatisticalObservation
+    type: KeyPerformanceIndicator
     mode: upsert
   quotas:
     maxMemoryMb: 128

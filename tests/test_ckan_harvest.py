@@ -355,14 +355,14 @@ def test_a_converted_dataset_gains_the_platform_apis_after_its_files_and_tables_
     The orders nobody mapped here gain nothing, and the DataStore table is still the table."""
     monkeypatch.setenv("OD_GATEWAY", "https://dev.joinedcontext.com/")
     monkeypatch.setenv("OD_DATASETS", json.dumps({"bb-pocet-obcanov-podla-veku": {
-        "endpoint": "abc", "type": "StatisticalObservation", "location": False,
+        "endpoint": "abc", "type": "KeyPerformanceIndicator", "location": False,
         "dataset": "https://data.dev.joinedcontext.com/dataset/bb-pocet-obcanov-podla-veku"}}))
     harvest = load(monkeypatch)
     assert harvest.main() == 0
     ages = harvest.ckan.packages["bb-pocet-obcanov-podla-veku"]["resources"]
     assert [r["format"] for r in ages] == ["JSON", "JSON-LD", "CSV", "JSON", "XLSX", "JSON", "JSON", "JSON", "CSV"]
     assert ages[-1].get("url_type") == "datastore", "the table moved off the end of the list"
-    assert ages[1]["url"] == ("https://dev.joinedcontext.com/api/endpoint/abc/ngsi-ld/v1/entities?type=StatisticalObservation"
+    assert ages[1]["url"] == ("https://dev.joinedcontext.com/api/endpoint/abc/ngsi-ld/v1/entities?type=KeyPerformanceIndicator"
                               "&q=dataset%3D%3D%22https%3A%2F%2Fdata.dev.joinedcontext.com%2Fdataset%2Fbb-pocet-obcanov-podla-veku%22")
     assert ages[1]["conforms_to"].startswith("https://www.etsi.org/")
     assert not any("geojson" in r["url"] or "/ogc/" in r["url"] for r in ages)

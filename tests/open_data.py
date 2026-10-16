@@ -88,3 +88,24 @@ def schema_errors(schema_file: Path, entity: dict) -> list[str]:
         format_checker=jsonschema.Draft7Validator.FORMAT_CHECKER,
     )
     return [e.message for e in validator.iter_errors(key_values(entity))]
+
+
+# The Smart Data Models the seeds validate against, vendored at the commits pins.json names (T-4319).
+SDM = Path(__file__).resolve().parent.parent / "scripts/open-data/sdm"
+
+
+def sdm_errors(model: str, entity: dict) -> list[str]:
+    """The entity, as `keyValues`, against the vendored schema.json of `model`
+    (`dataModel.Subject/Model`). Its `$ref`s to common-schema.json resolve to the vendored copy,
+    never the network."""
+    jsonschema = pytest.importorskip("jsonschema")
+    from referencing import Registry, Resource
+    from referencing.jsonschema import DRAFT7
+
+    common = Resource.from_contents(json.loads((SDM / "common-schema.json").read_text()), DRAFT7)
+    registry = Registry().with_resources((u, common) for u in (
+        "https://smart-data-models.github.io/data-models/common-schema.json",
+        "https://raw.githubusercontent.com/smart-data-models/data-models/master/common-schema.json"))
+    schema = json.loads((SDM / model.removeprefix("dataModel.") / "schema.json").read_text())
+    validator = jsonschema.Draft7Validator(schema, registry=registry, format_checker=jsonschema.Draft7Validator.FORMAT_CHECKER)
+    return [f"{'/'.join(map(str, e.absolute_path))}: {e.message}" for e in validator.iter_errors(key_values(entity))]
