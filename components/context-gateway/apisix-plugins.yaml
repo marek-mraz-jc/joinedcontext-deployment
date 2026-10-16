@@ -306,6 +306,9 @@ context-endpoint:
         - '^https://[^@/]+\.${DOMAIN_RE}$'
       allow_methods: 'GET,HEAD,OPTIONS'
       allow_headers: 'Authorization,Content-Type'
+      # A browser page reads how many entities a query matched, as the catalogue's resource
+      # page counts its records (T-4333); a count is no credential and no row.
+      expose_headers: 'NGSILD-Results-Count'
       allow_credential: false
     proxy-rewrite:
       headers:
@@ -398,6 +401,9 @@ context-endpoint-portal:
         - '^https://[^@/]+\.${DOMAIN_RE}$'
       allow_methods: 'GET,HEAD,OPTIONS'
       allow_headers: 'Authorization,Content-Type'
+      # A browser page reads how many entities a query matched, as the catalogue's resource
+      # page counts its records (T-4333); a count is no credential and no row.
+      expose_headers: 'NGSILD-Results-Count'
       allow_credential: false
     # The edge session as the bearer the gateway verifies (ADR-N-019, AP-62): `pass` leaves an
     # anonymous visitor anonymous and a presented bearer untouched, like portal-api.

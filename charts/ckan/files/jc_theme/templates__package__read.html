@@ -86,8 +86,9 @@
       <h2 id="jc-more-title">{{ h.jc_t('more') }}</h2>
       <dl class="jc-about-list">
         {% for key, value in more %}
-          <dt>{{ _(key|replace('_', ' ')|capitalize) }}</dt>
-          <dd>{{ value }}</dd>
+          {% set label, text, link = h.jc_extra(key, value) %}
+          <dt>{{ label }}</dt>
+          <dd>{% if link %}<a href="{{ link }}" rel="noreferrer">{{ text }}</a>{% else %}{{ text }}{% endif %}</dd>
         {% endfor %}
       </dl>
     </section>
