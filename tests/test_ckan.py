@@ -104,6 +104,15 @@ def test_no_credential_is_a_literal_in_the_pod(rendered):
 
 
 @requires_helmfile
+def test_solr_runs_the_dev_heap_under_its_unchanged_limit(rendered):
+    """T-4356: the dev core holds 132 documents of 2.9 MB, so Solr's heap is 256m, not the
+    image's 512m; the 1 Gi limit stays."""
+    solr = by_name(rendered("dev"), "StatefulSet", "ckan-solr")["spec"]["template"]["spec"]["containers"][0]
+    assert env_of(solr)["SOLR_HEAP"] == "256m"
+    assert solr["resources"]["limits"]["memory"] == "1Gi"
+
+
+@requires_helmfile
 def test_solr_and_redis_answer_the_catalogue_and_nothing_else(rendered):
     """An unauthenticated Solr reachable from the namespace is a full-text dump of every
     private dataset; Redis holds the sessions. Both accept CKAN only (OPS-38)."""

@@ -298,7 +298,7 @@ def test_the_general_assistant_names_no_city_and_carries_the_portal_guide():
     for words in NAMES.values():
         assert not any(word in shown for word in words), shown
     assert "helsin" not in shown
-    assert spec["theme"]["title"] == "Asistent otvorených dát"
+    assert spec["theme"]["title"] == "data.dev"
     assert spec["languages"] == ["sk", "en", "fi"]
     assert set(spec["suggestions"]) == set(spec["disclaimer"]) == {"sk", "en", "fi"}
     prompt = spec["systemPrompt"]
@@ -308,6 +308,15 @@ def test_the_general_assistant_names_no_city_and_carries_the_portal_guide():
         assert fact in prompt, fact
     for word in ("secretref", "apikey", "api_key", "token:", "password"):
         assert word not in yaml.safe_dump(general()).lower(), word
+
+
+def test_a_conversation_of_the_general_assistant_holds_a_question_over_five_publishers():
+    # T-4342: one data question measured 33,744 tokens on dev; the cities' 40,000 refused the
+    # next one. The cost cap stays the guard and the per-visitor limits stay the cities'.
+    spec = general()["spec"]
+    assert spec["budget"]["tokensPerConversation"] >= 2 * 33_744
+    assert spec["budget"]["costPerDayUsd"] == 1
+    assert spec["rateLimit"] == deployment("bbsk")["spec"]["rateLimit"]
 
 
 def test_the_general_assistant_is_seeded_at_its_kinds_paths():

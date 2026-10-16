@@ -22,6 +22,10 @@ def one(docs, kind, name):
     return next(d for d in docs if d.get("kind") == kind and d["metadata"]["name"] == name)
 
 
+def config_of(docs, name):
+    return yaml.safe_load(one(docs, "ConfigMap", name)["data"]["runner.yaml"])
+
+
 def runner_pod(docs):
     return one(docs, "Deployment", "gitea-runner")["spec"]["template"]["spec"]
 
@@ -182,7 +186,10 @@ def test_the_rust_runner_is_the_same_walls_under_its_own_label_and_memory(render
     container = rust["spec"]["containers"][0]
     assert container["image"].endswith(f"joinedcontext-app-builder-rust:main@{digest}")
     assert container["resources"]["limits"]["memory"] == "4Gi"
-    assert container["resources"]["requests"]["memory"] == "1536Mi"
+    # dev asks what the runner holds idle and keeps the build's limit; capacity 1 keeps it to one
+    # build at a time (T-4358).
+    assert container["resources"]["requests"]["memory"] == "256Mi"
+    assert config_of(docs, "gitea-runner-rust")["runner"]["capacity"] == 1
     assert rust["spec"]["automountServiceAccountToken"] is False
     assert container["securityContext"] == node["spec"]["containers"][0]["securityContext"]
     assert rust["metadata"]["labels"]["app.kubernetes.io/name"] == "gitea-runner"

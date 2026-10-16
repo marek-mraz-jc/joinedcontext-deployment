@@ -17,6 +17,8 @@ ckan:
       memory: 2Gi
 
 solr:
+  # The core holds 132 documents of 2.9 MB (2026-10-16, T-4356); 512m of heap sat mostly empty.
+  heap: 256m
   storage:
     size: 5Gi
   resources:
