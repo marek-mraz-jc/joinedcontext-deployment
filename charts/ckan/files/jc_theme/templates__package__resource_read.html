@@ -66,7 +66,7 @@
       {% endif %}
       <details class="jc-address-whole">
         <summary>{{ h.jc_t('full_address') }}</summary>
-        <pre id="jc-address-full" tabindex="0"><code>{{ address.full }}</code></pre>
+        <pre id="jc-address-full" tabindex="0"><code>{% snippet 'snippets/jc_breakable.html', text=address.full %}</code></pre>
       </details>
     </div>
   {% endif %}
@@ -102,7 +102,7 @@
             {% for step in example.steps %}<p>{{ step }}</p>{% endfor %}
             {% if example.code %}
               <div class="jc-copy jc-copy-code">
-                <pre id="{{ example.id }}" aria-label="{{ h.jc_t('snippet') }}" tabindex="0"><code>{{ example.code }}</code></pre>
+                <pre id="{{ example.id }}" aria-label="{{ h.jc_t('snippet') }}" tabindex="0"><code>{% snippet 'snippets/jc_breakable.html', text=example.code %}</code></pre>
                 <button type="button" class="btn btn-default" data-jc-copy="{{ example.id }}" data-jc-copied="{{ h.jc_t('copied') }}"><span class="jc-code-copy-label">{{ h.jc_t('copy') }}</span></button>
               </div>
             {% endif %}

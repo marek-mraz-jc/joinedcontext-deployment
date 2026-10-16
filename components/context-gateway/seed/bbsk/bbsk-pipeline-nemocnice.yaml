@@ -1,4 +1,4 @@
-# One Hospital per record of `bbsk-nemocnice`, written into the register space through its one Endpoint (PL-18, T-2783).
+# One PointOfInterest (category hospital) per record of `bbsk-nemocnice`, written into the register space through its one Endpoint (PL-18, T-2783).
 apiVersion: joinedcontext.com/v1alpha1
 kind: Pipeline
 metadata:
@@ -14,7 +14,7 @@ spec:
     dataSourceRef: { kind: DataSource, name: bbsk-nemocnice }
   targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-registre:bbsk-registre
   output:
-    type: Hospital
+    type: PointOfInterest
     mode: upsert
   quotas:
     maxMemoryMb: 128

@@ -11,7 +11,7 @@ pipeline:
           "type": "PointOfInterest",
           "name": { "type": "LanguageProperty", "languageMap": { "cs": f.properties.lokalita.trim().re_replace_all("\\s+", " ") } },
           "serviceCategory": { "type": "Property", "value": "publicToilet" },
-          "address": if f.properties.adresa.or("").trim() == "" { null } else { { "type": "Property", "value": f.properties.adresa.trim() } },
+          "address": if f.properties.adresa.or("").trim() == "" { null } else { { "type": "Property", "value": { "streetAddress": f.properties.adresa.trim(), "addressLocality": "Praha", "addressCountry": "CZ" } } },
           "wheelchairAccessible": match f.properties.vozickari.or(null) { 1 => { "type": "Property", "value": true }, 0 => { "type": "Property", "value": false }, _ => null },
           "location": { "type": "GeoProperty", "value": f.geometry },
           "dataProvider": { "type": "Property", "value": "datový podklad © IPR Praha (CC BY 4.0)" },

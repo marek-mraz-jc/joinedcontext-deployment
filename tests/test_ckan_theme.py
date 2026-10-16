@@ -54,6 +54,7 @@ def theme(tmp_path, monkeypatch):
     page.loaded = set()
     plugins.plugin_loaded = lambda name: name in page.loaded
     plugins.IConfigurer = plugins.ITemplateHelpers = plugins.IFacets = plugins.IPackageController = object
+    plugins.IBlueprint = object
     ckan = types.ModuleType("ckan")
     ckan.__file__ = str(tmp_path / "ckan/__init__.py")
     ckan.plugins = plugins
@@ -775,14 +776,12 @@ def test_the_catalogue_pod_is_told_its_assistant_only_when_the_assistant_is_depl
         env = {e["name"]: e.get("value") for e in container["env"]}
         return env["JC_ASSISTANT_WIDGET_URL"], json.loads(env["JC_ASSISTANT_WIDGET_URLS"])
 
-    # dev lists the assistant since T-3181, so its catalogue carries the widget: the region's by
-    # default and each publisher's own (T-4281); without the component it is told nothing.
+    # dev lists the assistant since T-3181, so its catalogue carries the widget: the one general
+    # assistant on every page, the home page, every organization's dataset and resource pages
+    # included, and no city's (T-4342); without the component it is told nothing.
     default, by_organization = widget(rendered("dev"))
-    assert default == "https://assistant.dev.joinedcontext.com/d/bbsk/widget"
-    assert by_organization == {
-        body: f"https://assistant.dev.joinedcontext.com/d/{body}/widget"
-        for body in ("banskabystrica", "bbsk", "zilina", "praha")
-    }
+    assert default == "https://assistant.dev.joinedcontext.com/d/data/widget"
+    assert by_organization == {}
 
     def without_assistant(tree):
         path = tree / "deployment/environments/dev/global.yaml.gotmpl"
@@ -1109,6 +1108,57 @@ def test_no_private_use_glyph_survives_any_text(theme):
     assert theme.jc_plain_glyphs("Žilina ľ ô") == "Žilina ľ ô"
 
 
+@pytest.mark.parametrize("lang", ["en", "sk"])
+def test_the_connector_privacy_terms_and_support_pages_read_in_slovak_and_english(theme, tmp_path, lang):
+    """T-4315: the pages a directory reviewer reads, from the branding block alone, no secret."""
+    branding = tmp_path / "branding.json"
+    branding.write_text(json.dumps({"domain": "dev.example", "contactEmail": "hello@dev.example"}))
+    theme.BRANDING = theme._load()
+    theme.page.lang = lang
+    for name in ("connector", "privacy", "terms", "support"):
+        page = theme.jc_page(name)
+        assert page["title"] == theme.PAGES[name][lang]["title"] and page["sections"], name
+        assert page["email"] == "hello@dev.example" and page["pages"] == ["connector", "privacy", "terms", "support"]
+        text = " ".join(p for s in page["sections"] for p in s["paragraphs"])
+        assert "{" not in text and not re.search(r"(?i)bearer|token|api[_-]?key|password", text), name
+    assert "https://dev.example/api/mcp" in " ".join(theme.jc_page("connector")["sections"][0]["paragraphs"])
+    assert theme.jc_page("privacy")["title"] != theme.PAGES["privacy"]["sk" if lang == "en" else "en"]["title"]
+    assert theme.jc_page("imprint") is None
+
+
+def test_a_page_in_another_language_reads_english_and_no_domain_drops_the_address(theme, tmp_path):
+    theme.page.lang = "de"
+    assert theme.jc_page("terms")["title"] == "Terms of use"
+    branding = tmp_path / "branding.json"
+    branding.write_text(json.dumps({"instanceName": "x", "contactEmail": "not-an-address"}))
+    theme.BRANDING = theme._load()
+    page = theme.jc_page("privacy")
+    text = " ".join(p for s in page["sections"] for p in s["paragraphs"])
+    assert page["mcp"] is None and page["email"] == "" and "{url}" not in text and "None" not in text
+    assert [s["heading"] for s in theme.jc_page("terms")["sections"]] == ["Licences", "Read only", "Fair use"]
+
+
+def test_the_four_pages_are_routes_of_one_template_and_every_page_links_them(theme, monkeypatch):
+    rules = {}
+
+    class Blueprint:
+        def __init__(self, name, module):
+            self.name = name
+
+        def add_url_rule(self, path, endpoint, view):
+            rules[path] = (endpoint, view)
+
+    monkeypatch.setitem(sys.modules, "flask", types.SimpleNamespace(Blueprint=Blueprint))
+    theme.toolkit.render = lambda template, extra: (template, extra)
+    blueprint = theme.JcThemePlugin().get_blueprint()
+    assert blueprint.name == "jc_pages" and sorted(rules) == ["/connector", "/privacy", "/support", "/terms"]
+    endpoint, view = rules["/privacy"]
+    assert endpoint == "privacy" and view() == ("jc/page.html", {"jc_name": "privacy"})
+    template = (THEME / "templates__jc__page.html").read_text()
+    assert "h.jc_page(jc_name)" in template and 'snippet "snippets/jc_mcp_install.html"' in template
+    footer = (THEME / "footer.html").read_text()
+    assert "('connector', 'privacy', 'terms', 'support')" in footer and "h.url_for('jc_pages.' ~ name)" in footer
+
 # T-4333: a resource page reads what an Endpoint's address is from its path, says it in the page's
 # language, shows an API's live rows and how to use it, and offers a file its one Download.
 OD = "https://dev.example/api/endpoint/4ysiqy53qik5qyvawwaj7wgylpt4uoxa/"
@@ -1321,3 +1371,28 @@ def test_the_dataset_facts_name_the_standard_and_the_region(theme):
     assert rows["Area covered"] == ("Žilina Region (NUTS SK031)", "http://data.europa.eu/nuts/code/SK031")
     assert theme.jc_about({"extras": [{"key": "spatial_uri", "value": "http://data.europa.eu/nuts/code/FI1B1"}]})[0][1] == "NUTS FI1B1"
     assert theme.jc_extra("quality_pass_rate", "1.0")[1] == "100 %"
+
+
+def test_a_command_breaks_only_between_its_pieces(theme):
+    # The owner's rule: a URL never breaks inside a word, a host, an id or "ngsi-ld" (T-4333).
+    pieces = theme.jc_pieces("curl -H 'Accept: x' 'https://dev.example/api/endpoint/4ysiqy/ngsi-ld/v1/entities?type=A&limit=5'")
+    assert "".join(p["text"] for p in pieces).startswith("curl -H 'Accept: x' 'https://")
+    words = [p["text"] for p in pieces if not p["space"]]
+    assert words[4] == "'https://" and "ngsi-ld/" in words and "4ysiqy/" in words and "entities?" in words and "type=A&" in words
+    assert all(not p["text"].isspace() or p["space"] for p in pieces)
+    assert theme.jc_pieces("") == [] and theme.jc_pieces(None) == []
+    snippet = (THEME / "templates__snippets__jc_breakable.html").read_text()
+    assert not snippet.endswith("\n")  # inside <pre> a trailing newline is a blank line
+    for name in ("templates__package__read.html", "templates__package__resource_read.html",
+                 "templates__package__snippets__jc_usage.html", "templates__snippets__jc_mcp_install.html"):
+        page = (THEME / name).read_text()
+        assert "snippets/jc_breakable.html" in page and not re.search(r"<pre[^>]*><code>\{\{", page), name
+    css = (THEME / "public__jc-theme.css").read_text()
+    assert "pre .jc-nb { white-space: pre; }" in css and "pre:has(.jc-nb) { overflow-x: auto; }" in css
+
+
+def test_the_framed_table_has_no_developer_lines_and_room_below_desktop():
+    css = (THEME / "public__jc-theme.css").read_text()
+    assert "body.dt-view .resourceinfo, body.dt-view .sortinfo { display: none; }" in css
+    assert "body.dt-view .dataTables_filter label::after { content: none; }" in css
+    assert "clamp(27rem, calc(24rem + var(--jc-rows, 20) * 2.6rem), 34rem)" in css

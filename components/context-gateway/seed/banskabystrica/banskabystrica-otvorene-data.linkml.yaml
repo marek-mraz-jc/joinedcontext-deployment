@@ -41,13 +41,51 @@ slots:
       ngsi_ld_kind: Property
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
     slot_uri: https://smartdatamodels.org/dataModel.CPSV-AP/addressArea
+  akcia:
+    description: The source column `Akcia`.
+    annotations:
+      ngsi_ld_kind: Property
   cOID:
     description: The source column `CO_ID`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+  cZasadnutia:
+    description: The source column `Č._zasadnutia`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  cenaCelkom:
+    description: The source column `Cena_celkom`.
+    annotations:
+      ngsi_ld_kind: Property
+  content:
+    description: The source column `content`.
+    annotations:
+      ngsi_ld_kind: Property
   dPOSTA:
     description: The source column `DPOSTA`.
+    annotations:
+      ngsi_ld_kind: Property
+  dateGmt:
+    description: The source column `date_gmt`.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+  datumPodpisu:
+    description: The source column `Dátum_podpisu`.
+    annotations:
+      ngsi_ld_kind: Property
+  datumVystavenia:
+    description: The source column `Dátum_vystavenia`.
+    annotations:
+      ngsi_ld_kind: Property
+  datumZasadnutia:
+    description: The source column `Dátum_zasadnutia`.
+    annotations:
+      ngsi_ld_kind: Property
+  datumZverejnenia:
+    description: The source column `Dátum_zverejnenia`.
     annotations:
       ngsi_ld_kind: Property
   datumplatnosti:
@@ -69,6 +107,26 @@ slots:
     description: The source column `Deň`.
     annotations:
       ngsi_ld_kind: Property
+  dodavatel:
+    description: The source column `Dodávateľ`.
+    annotations:
+      ngsi_ld_kind: Property
+  druh:
+    description: The source column `Druh`.
+    annotations:
+      ngsi_ld_kind: Property
+  iCO:
+    description: The source column `IČO`.
+    annotations:
+      ngsi_ld_kind: Property
+  iCOOrganizacie:
+    description: The source column `IČO_organizácie`.
+    annotations:
+      ngsi_ld_kind: Property
+  iCOZiadatela:
+    description: The source column `IČO_žiadateľa`.
+    annotations:
+      ngsi_ld_kind: Property
   iD:
     description: The source column `ID`.
     range: float
@@ -82,6 +140,12 @@ slots:
     description: The source column `id_regad`.
     annotations:
       ngsi_ld_kind: Property
+  identifier:
+    description: The source column `id`.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
+    slot_uri: https://smartdatamodels.org/dataModel.CPSV-AP/identifier
   idzmeny:
     description: The source column `idzmeny`.
     annotations:
@@ -95,6 +159,21 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
+  mena:
+    description: The source column `Mena`.
+    annotations:
+      ngsi_ld_kind: Property
+  modifiedGmt:
+    description: The source column `modified_gmt`.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+  name:
+    description: The source column `title`.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
+    slot_uri: https://smartdatamodels.org/name
   narodenych:
     description: The source column `Narodených`.
     range: integer
@@ -136,6 +215,10 @@ slots:
     description: The source column `ORIENT_C_P`.
     annotations:
       ngsi_ld_kind: Property
+  objednavkaSpolu:
+    description: The source column `Objednávka_spolu`.
+    annotations:
+      ngsi_ld_kind: Property
   odstahovanych:
     description: The source column `Odsťahovaných`.
     range: integer
@@ -149,6 +232,10 @@ slots:
   odstahovanychZ:
     description: The source column `Odsťahovaných_Ž`.
     range: integer
+    annotations:
+      ngsi_ld_kind: Property
+  organSamospravy:
+    description: The source column `Orgán_samosprávy`.
     annotations:
       ngsi_ld_kind: Property
   orientC:
@@ -196,6 +283,14 @@ slots:
       ngsi_ld_kind: Property
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
     slot_uri: https://smartdatamodels.org/dataModel.CPSV-AP/postName
+  pozadovaneProstriedky:
+    description: The source column `Požadované_prostriedky`.
+    annotations:
+      ngsi_ld_kind: Property
+  predmet:
+    description: The source column `Predmet`.
+    annotations:
+      ngsi_ld_kind: Property
   prevazujicipovrch:
     description: The source column `prevazujicipovrch`.
     range: integer
@@ -228,6 +323,11 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
+  rokDotacie:
+    description: The source column `Rok_dotácie`.
+    range: integer
+    annotations:
+      ngsi_ld_kind: Property
   sCHRANKY:
     description: The source column `SCHRANKY`.
     range: integer
@@ -235,6 +335,14 @@ slots:
       ngsi_ld_kind: Property
   sUPISNEC:
     description: The source column `SUPISNE_C`.
+    annotations:
+      ngsi_ld_kind: Property
+  schvProstr:
+    description: The source column `Schv._prostr.`.
+    annotations:
+      ngsi_ld_kind: Property
+  stavVybav:
+    description: The source column `Stav_vybav.`.
     annotations:
       ngsi_ld_kind: Property
   supC:
@@ -246,6 +354,10 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
+  textObjednavky:
+    description: The source column `Text_objednávky`.
+    annotations:
+      ngsi_ld_kind: Property
   thoroughfare:
     description: The source column `Ulica`.
     multivalued: true
@@ -253,6 +365,10 @@ slots:
       ngsi_ld_kind: Property
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
     slot_uri: https://smartdatamodels.org/dataModel.CPSV-AP/thoroughfare
+  typ:
+    description: The source column `Typ`.
+    annotations:
+      ngsi_ld_kind: Property
   typudrzovanezelene:
     description: The source column `typudrzovanezelene`.
     range: integer
@@ -273,6 +389,11 @@ slots:
       ngsi_ld_kind: Property
   ubytokZeny:
     description: The source column `Úbytok_ženy`.
+    annotations:
+      ngsi_ld_kind: Property
+  url:
+    description: The source column `link`.
+    range: uri
     annotations:
       ngsi_ld_kind: Property
   urovenumisteniobjektuzps:
@@ -296,6 +417,18 @@ slots:
   zSJID:
     description: The source column `ZSJ_ID`.
     range: float
+    annotations:
+      ngsi_ld_kind: Property
+  ziadatel:
+    description: The source column `Žiadateľ`.
+    annotations:
+      ngsi_ld_kind: Property
+  zmluvneStrany:
+    description: The source column `Zmluvné_strany`.
+    annotations:
+      ngsi_ld_kind: Property
+  zmluvneStranySUdajomICO:
+    description: The source column `Zmluvné_strany_s_údajom_IČO`.
     annotations:
       ngsi_ld_kind: Property
   zomrelych:
@@ -348,6 +481,58 @@ classes:
     - zSJID
     annotations:
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
+  Article:
+    class_uri: https://joinedcontext.com/models/Article
+    description: One row of Aktuality.
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - content
+    - dateGmt
+    - identifier
+    - modifiedGmt
+    - name
+    - url
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Article/context.jsonld
+  Contract:
+    class_uri: https://joinedcontext.com/models/Contract
+    description: One row of Zmluvy BB.
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - cenaCelkom
+    - datumPodpisu
+    - datumZverejnenia
+    - druh
+    - iCOOrganizacie
+    - identifier
+    - mena
+    - predmet
+    - rok
+    - typ
+    - zmluvneStrany
+    - zmluvneStranySUdajomICO
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Contract/context.jsonld
+  CouncilMeeting:
+    class_uri: https://joinedcontext.com/models/CouncilMeeting
+    description: One row of Zasadnutia orgánov samosprávy.
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - cZasadnutia
+    - datumZasadnutia
+    - organSamospravy
+    - rok
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/CouncilMeeting/context.jsonld
   Garden:
     class_uri: https://smartdatamodels.org/dataModel.ParksAndGardens/Garden
     description: One row of DTM_BB-register-verejnej-zelene-1.
@@ -367,6 +552,27 @@ classes:
     - vrstva
     annotations:
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.ParksAndGardens/4563de6c0ab462ab7db73bfc4ca90dbacfa0421d/context.jsonld
+  Grant:
+    class_uri: https://joinedcontext.com/models/Grant
+    description: One row of Dotácie.
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - akcia
+    - druh
+    - iCOZiadatela
+    - identifier
+    - mena
+    - pozadovaneProstriedky
+    - rokDotacie
+    - schvProstr
+    - stavVybav
+    - typ
+    - ziadatel
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Grant/context.jsonld
   KeyPerformanceIndicator:
     class_uri: https://smartdatamodels.org/dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
     description: One row of Počet občanov podľa dňa narodenia; Počet občanov podľa veku; Prírastky a úbytky občanov
@@ -422,3 +628,21 @@ classes:
     - vrstva
     annotations:
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.Parking/24342efb3425c0059c7a4b82d6d201847418b29c/context.jsonld
+  PurchaseOrder:
+    class_uri: https://joinedcontext.com/models/PurchaseOrder
+    description: One row of Objednávky BB.
+    is_a: Entity
+    slots:
+    - dataProvider
+    - source
+    - dataset
+    - datumVystavenia
+    - datumZverejnenia
+    - dodavatel
+    - iCO
+    - identifier
+    - mena
+    - objednavkaSpolu
+    - textObjednavky
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/PurchaseOrder/context.jsonld

@@ -1,4 +1,4 @@
-# One ParkingArea per record of `parkkiopas-parking-areas`, written into the city space (T-2787).
+# One OnStreetParking (category public, T-4329) per record of `parkkiopas-parking-areas`, written into the city space (T-2787).
 apiVersion: joinedcontext.com/v1alpha1
 kind: Pipeline
 metadata:
@@ -14,7 +14,7 @@ spec:
     dataSourceRef: { kind: DataSource, name: parkkiopas-parking-areas }
   targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
   output:
-    type: ParkingArea
+    type: OnStreetParking
     mode: upsert
   quotas:
     maxMemoryMb: 256

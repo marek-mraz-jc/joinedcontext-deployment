@@ -1,4 +1,4 @@
-# One StatisticalObservation per territory per year per pollutant from the ŠÚ SR emissions cube.
+# One KeyPerformanceIndicator per territory per year per pollutant from the ŠÚ SR emissions cube.
 apiVersion: joinedcontext.com/v1alpha1
 kind: Pipeline
 metadata:
@@ -15,7 +15,7 @@ spec:
     dataSourceRef: { kind: DataSource, name: susr-zp3803rs }
   targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-kraj:bbsk-kraj
   output:
-    type: StatisticalObservation
+    type: KeyPerformanceIndicator
     mode: upsert
   quotas:
     maxMemoryMb: 128

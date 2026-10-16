@@ -12,7 +12,7 @@ pipeline:
           "type": "PointOfInterest",
           "name": { "type": "LanguageProperty", "languageMap": { "cs": f.properties.nazev_zar.trim() } },
           "serviceCategory": { "type": "Property", "value": "culture" },
-          "address": if f.properties.adresa_zar.or("").trim() == "" { null } else { { "type": "Property", "value": f.properties.adresa_zar.trim() } },
+          "address": if f.properties.adresa_zar.or("").trim() == "" { null } else { { "type": "Property", "value": { "streetAddress": f.properties.adresa_zar.trim(), "addressLocality": "Praha", "addressCountry": "CZ" } } },
           "url": if !f.properties.web.or("").string().trim().re_match("^\\S+$") { null } else {
             { "type": "Property", "value": if f.properties.web.trim().has_prefix("http") { f.properties.web.trim() } else { "https://" + f.properties.web.trim() } }
           },

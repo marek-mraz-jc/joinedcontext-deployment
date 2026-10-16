@@ -13,7 +13,7 @@
 # What HSL's feed holds (measured 2026-10-12): each stop time update carries an expected
 # `departure.time` or `arrival.time` and no `delay` (0 of 19 211), and a trip carries its route
 # and direction but no headsign. A departure keeps the delay, and the scheduled time it implies,
-# only when HSL sends one; the headsign is the TransitRoute's of the same route and direction. A
+# only when HSL sends one; the headsign is the PublicTransportRoute's of the same route and direction. A
 # cancelled trip HSL lists with its stops marks each of them `canceled`, a skipped stop
 # `skipped`; both stay in the list, so a reader sees what will not run. A cancelled trip listed
 # without stops names no stop and is not placed.

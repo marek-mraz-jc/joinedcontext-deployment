@@ -7,7 +7,7 @@ import yaml
 
 HELSINKI = Path(__file__).resolve().parent.parent / "components/context-gateway/seed/helsinki"
 
-TRANSPORT = {"Vehicle", "GtfsStop", "TransitRoute", "GtfsStation", "GtfsAgency", "GtfsRoute", "GtfsShape",
+TRANSPORT = {"Vehicle", "GtfsStop", "PublicTransportRoute", "GtfsStation", "GtfsAgency", "GtfsRoute", "GtfsShape",
              "Alert", "OffStreetParking"}
 
 
@@ -34,7 +34,7 @@ def test_a_public_reader_of_the_endpoint_sees_the_transport_types_and_nothing_el
     model = load("helsinki.linkml.yaml")
     assert TRANSPORT <= set(model["classes"])
     # The rest of the space (events, bikes, weather, permits, districts...) stays out.
-    assert {"Event", "BikeHireDockingStation", "WeatherObserved", "PublicAreaPermit", "CityDistrict"} & set(granted) == set()
+    assert {"Event", "BikeHireDockingStation", "WeatherObserved", "CityWork", "CityDistrict"} & set(granted) == set()
 
 
 def test_the_endpoint_projects_no_internal_attribute_and_credits_its_sources():

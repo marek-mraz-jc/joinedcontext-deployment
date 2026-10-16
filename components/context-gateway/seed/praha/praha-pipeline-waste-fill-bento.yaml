@@ -16,6 +16,7 @@ pipeline:
           "wasteKind": { "type": "Property", "value": $kinds.get(c.trash_type.id.string()) },
           "fillingLevel": if c.last_measurement.percent_calculated.type() == "number" && c.last_measurement.percent_calculated >= 0 && c.last_measurement.percent_calculated <= 100 { { "type": "Property", "value": c.last_measurement.percent_calculated / 100 } } else { null },
           "dateModified": if c.last_measurement.measured_at_utc.or("").string().re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}T") { { "type": "Property", "value": c.last_measurement.measured_at_utc.ts_format("2006-01-02T15:04:05Z07:00", "UTC") } } else { null },
+          "location": { "type": "GeoProperty", "value": f.geometry },
           "refWasteContainerIsle": { "type": "Relationship", "object": "urn:ngsi-ld:%v:%v:%v:station-%v".format("WasteContainerIsle", env("JC_ORG_DOMAIN"), env("JC_SPACE"), f.properties.station_number.string().trim().lowercase().replace_all("/ ", "-").replace_all("/-", "--")) },
           "dataProvider": { "type": "Property", "value": "Golemio, Operátor ICT" },
           "source": { "type": "Property", "value": "https://api.golemio.cz/v2/sortedwastestations" }
