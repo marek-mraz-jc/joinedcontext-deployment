@@ -9,7 +9,7 @@ spec:
   linkml: ./zilina-uniza.linkml.yaml
   version: 1.0.0
   lifecycle: published
-  classes: [CreativeWork]
+  classes: [Article]
   # A published model commits all four artifacts (DM-02); the gateway serves schema/v1 from them
   # (DM-22, EP-49). Regenerate: see README.md.
   artifacts:

@@ -1,17 +1,20 @@
 {
   "@context": {
     "@vocab": "https://smartdatamodels.org/",
+    "AdministrativeArea": {
+      "@id": "jc:AdministrativeArea"
+    },
     "AirQualityObserved": {
       "@id": "sdm:AirQualityObserved"
     },
     "Alert": {
       "@id": "sdm:Alert"
     },
+    "Article": {
+      "@id": "jc:Article"
+    },
     "BikeHireDockingStation": {
       "@id": "sdm:BikeHireDockingStation"
-    },
-    "CityDistrict": {
-      "@id": "jc:CityDistrict"
     },
     "CityWork": {
       "@id": "sdm:CityWork"
@@ -36,9 +39,6 @@
     },
     "GtfsStop": {
       "@id": "sdm:GtfsStop"
-    },
-    "NewsArticle": {
-      "@id": "schema:NewsArticle"
     },
     "OffStreetParking": {
       "@id": "sdm:OffStreetParking"
@@ -194,6 +194,9 @@
       "@id": "jc:headsign"
     },
     "id": "@id",
+    "identifier": {
+      "@id": "sdm:dataModel.CPSV-AP/identifier"
+    },
     "image": {
       "@id": "schema:image",
       "@type": "xsd:anyURI"

@@ -1,7 +1,7 @@
 {
   "aktualnyStavebnotechnickyStav": "aktualnyStavebnotechnickyStav",
   "dataProvider": "dataProvider",
-  "dataset": "dataset",
+  "dataset": "https://example.org/dataset",
   "dlzkaPremosteniaM": 0.0,
   "docasnostMosta": "docasnostMosta",
   "druhNosnejKonstrukcie": "druhNosnejKonstrukcie",
@@ -28,7 +28,7 @@
   "predmetPremostenia": "predmetPremostenia",
   "rokKonstrukcie": 0,
   "rokZasadnejRekonstrukcie": 0,
-  "source": "source",
+  "source": "https://example.org/source",
   "spravca": "spravca",
   "triedaCesty": "triedaCesty",
   "typKomunikacie": "typKomunikacie",

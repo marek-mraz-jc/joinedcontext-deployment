@@ -17,6 +17,7 @@ pipeline:
         root = content().string().trim_prefix("﻿").parse_json().data.row.or([]).filter(r -> r.rok.or("").re_match("^[0-9]{4}$") && r.odpa.or("").re_match("^[0-9]{6}$") && r.pol.or("").re_match("^[0-9]{4}$") && r.uz.or("").re_match("^[0-9]{9}$") && r.rozpocet_schvaleny.or("").re_match("^-?[0-9]+(\\.[0-9]+)?$") && r.rozpocet_upraveny.or("").re_match("^-?[0-9]+(\\.[0-9]+)?$")).map_each(r -> {
           "id": "urn:ngsi-ld:%v:%v:%v:mhmp-%v-%v-%v-%v-%v".format("BudgetLine", env("JC_ORG_DOMAIN"), env("JC_SPACE"), r.rok, if r.oblast.trim() == "" { "00" } else { r.oblast.trim() }, r.odpa, r.pol, r.uz),
           "type": "BudgetLine",
+          "identifier": { "type": "Property", "value": "mhmp-%v-%v-%v-%v-%v".format(r.rok, if r.oblast.trim() == "" { "00" } else { r.oblast.trim() }, r.odpa, r.pol, r.uz) },
           "fiscalYear": { "type": "Property", "value": r.rok.number().int64() },
           "budgetArea": if { "code": r.oblast, "name": r.nazev_oblast }.apply("named") == null { null } else { { "type": "Property", "value": { "code": r.oblast, "name": r.nazev_oblast }.apply("named") } },
           "budgetFunction": { "type": "Property", "value": { "code": r.odpa, "name": r.nazev_odpa }.apply("named") },

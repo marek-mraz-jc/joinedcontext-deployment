@@ -44,7 +44,7 @@ Specialises `Entity`.
 | `iDN3` | Property | `integer` |  |  | `jc:iDN3` | The source column `IDN3`. |
 | `iDN4` | Property | `integer` |  |  | `jc:iDN4` | The source column `IDN4`. |
 | `iDProjektu` | Property | `string` |  |  | `jc:iDProjektu` | The source column `ID_projektu`. |
-| `identifier` | Property | `string` |  |  | `sdm:dataModel.CPSV-AP/identifier` | The source column `Kód_projektu`. |
+| `identifier` | Property | `string` |  |  | `sdm:dataModel.CPSV-AP/identifier` | The source column `Kód_projektu`, `ID_IA`. |
 | `index` | Property | `string` |  |  | `jc:index` | The source column `Index_`. |
 | `kategoria` | Property | `string` |  |  | `jc:kategoria` | The source column `Kategória`. |
 | `kodKraja` | Property | `string` |  |  | `jc:kodKraja` | The source column `Kód_kraja`. |
@@ -68,7 +68,7 @@ Specialises `Entity`.
 | `nUTS2CODE` | Property | `string` |  |  | `jc:nUTS2CODE` | The source column `NUTS2_CODE`. |
 | `nUTS3` | Property | `string` |  |  | `jc:nUTS3` | The source column `NUTS3`. |
 | `nUTS3CODE` | Property | `string` |  |  | `jc:nUTS3CODE` | The source column `NUTS3_CODE`. |
-| `name` | Property | `string` |  |  | `sdm:name` | The source column `Názov_projektu`. |
+| `name` | Property | `string` |  |  | `sdm:name` | The source column `Názov_projektu`, `Názov`. |
 | `nazovKraja` | Property | `string` |  |  | `jc:nazovKraja` | The source column `Názov_kraja`. |
 | `nazovPrijimatela` | Property | `string` |  |  | `jc:nazovPrijimatela` | The source column `Názov_prijímateľa`. |
 | `oBJECTID1` | Property | `integer` |  |  | `jc:oBJECTID1` | The source column `OBJECTID_1`. |

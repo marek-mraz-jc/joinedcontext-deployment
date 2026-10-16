@@ -14,4 +14,4 @@ spec:
   operations: [retrieveOps, retrieveEntityTypes, retrieveEntityTypeDetails, retrieveEntityTypeInfo, retrieveAttrTypes, retrieveAttrTypeDetails, retrieveAttrTypeInfo, createSubscription, retrieveSubscription, updateSubscription, deleteSubscription]
   information:
     - entities:
-        - type: CreativeWork
+        - type: Article

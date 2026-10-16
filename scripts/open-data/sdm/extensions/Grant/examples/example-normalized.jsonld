@@ -19,7 +19,7 @@
   },
   "dataset": {
     "type": "Property",
-    "value": "dataset"
+    "value": "https://example.org/dataset"
   },
   "datumDoruceniaVyuctovania": {
     "type": "Property",
@@ -193,7 +193,7 @@
   },
   "source": {
     "type": "Property",
-    "value": "source"
+    "value": "https://example.org/source"
   },
   "statutarnyZastupca": {
     "type": "Property",

@@ -23,13 +23,17 @@ spec:
   # live on their GtfsStop and the pipeline replaces them each round, and an Alert leaves with
   # its feed (the reapers). Owners change it on the space's Retention tab.
   retention:
+    - entityType: AdministrativeArea
+      history: "off"
     - entityType: AirQualityObserved
       history: P30D
     - entityType: Alert
       history: "off"
+    - entityType: Article
+      history: "off"
     - entityType: BikeHireDockingStation
       history: P30D
-    - entityType: CityDistrict
+    - entityType: CityWork
       history: "off"
     - entityType: Event
       history: "off"
@@ -43,11 +47,13 @@ spec:
       history: "off"
     - entityType: GtfsStop
       history: "off"
-    - entityType: NewsArticle
-      history: "off"
     - entityType: OffStreetParking
       history: P30D
+    - entityType: OnStreetParking
+      history: "off"
     - entityType: PointOfInterest
+      history: "off"
+    - entityType: PublicTransportRoute
       history: "off"
     - entityType: Vehicle
       current: PT5M
@@ -56,12 +62,6 @@ spec:
       history: P30D
     - entityType: WeatherObserved
       history: P30D
-    - entityType: CityWork
-      history: "off"
-    - entityType: OnStreetParking
-      history: "off"
-    - entityType: PublicTransportRoute
-      history: "off"
   # Plausibility beside the model's own constraints (DM-86, ADR-N-046 2.4). The area is what
   # HSL's feeds cover: its region and the commuter trains to Riihimäki (Hyvinkää is a stop of
   # the recorded GTFS); 44.5 m/s is 160 km/h, the commuter trains' top speed (Sm5; HFP takes

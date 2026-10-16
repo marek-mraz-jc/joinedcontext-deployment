@@ -71,20 +71,12 @@ PINS = json.loads((generate.SDM / "pins.json").read_text())
 
 
 def sdm_errors(entity: dict, model_of: str | None = None) -> list[str]:
-    """The entity, as `keyValues`, against the schema.json of its type's Smart Data Model. The
-    model's `$ref`s to common-schema.json resolve to the vendored copy, never the network."""
-    jsonschema = pytest.importorskip("jsonschema")
-    from referencing import Registry, Resource
-    from referencing.jsonschema import DRAFT7
-
-    common = Resource.from_contents(json.loads((generate.SDM / "common-schema.json").read_text()), DRAFT7)
-    registry = Registry().with_resources((u, common) for u in (
-        "https://smart-data-models.github.io/data-models/common-schema.json",
-        "https://raw.githubusercontent.com/smart-data-models/data-models/master/common-schema.json"))
+    """The entity against its type's vendored Smart Data Model, or the extension the type has (T-4336)."""
     t = model_of or entity["type"]
-    schema = json.loads(generate.sdm_schema({"name": t, "type": t, "smartDataModel": MODEL[t], "baseModel": BASE[t]}).read_text())
-    validator = jsonschema.Draft7Validator(schema, registry=registry, format_checker=jsonschema.Draft7Validator.FORMAT_CHECKER)
-    return [f"{'/'.join(map(str, e.absolute_path))}: {e.message}" for e in validator.iter_errors(open_data.key_values(entity))]
+    if t in generate.SPACE_EXTENSIONS:
+        return open_data.sdm_errors(f"extensions/{t}", entity)
+    schema = generate.sdm_schema({"name": t, "type": t, "smartDataModel": MODEL[t], "baseModel": BASE[t]})
+    return open_data.sdm_errors(str(schema.parent.relative_to(generate.SDM)), entity)
 
 
 # --- the seed is the generator's output ---
@@ -797,6 +789,7 @@ def test_slovak_numbers_and_dates_become_numbers_and_iso_dates(tmp_path):
 # --- extensions (T-4336): the base whole under allOf, the formalisms beside, the examples valid ---
 
 EXTENDED = {t: e for t, e in (MAPPING.get("extensions") or {}).items() if any(x["type"] == t for x in SEEDED)}
+EXTENDED.update(generate.SPACE_EXTENSIONS)  # a city space's own (T-4338), checked the same way
 
 
 def test_the_mapping_extends_where_no_model_holds_and_refuses_nothing_for_want_of_one():

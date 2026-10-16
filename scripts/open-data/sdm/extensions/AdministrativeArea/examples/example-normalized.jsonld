@@ -11,7 +11,7 @@
   },
   "dataset": {
     "type": "Property",
-    "value": "dataset"
+    "value": "https://example.org/dataset"
   },
   "fACC": {
     "type": "Property",
@@ -105,7 +105,7 @@
   },
   "source": {
     "type": "Property",
-    "value": "source"
+    "value": "https://example.org/source"
   },
   "typObce": {
     "type": "Property",

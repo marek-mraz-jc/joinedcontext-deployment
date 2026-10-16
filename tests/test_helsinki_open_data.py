@@ -37,8 +37,8 @@ FEEDS = {
     "traffic-arrangements": ("traffic-arrangements.json", "CityWork", 2),
     "area-events": ("area-events.json", "CityWork", 3),
     # Two features, one of them the territorial sea, which has no district number.
-    "districts": ("districts.json", "CityDistrict", 1),
-    "subdistricts": ("subdistricts.json", "CityDistrict", 2),
+    "districts": ("districts.json", "AdministrativeArea", 1),
+    "subdistricts": ("subdistricts.json", "AdministrativeArea", 2),
     "fee-parking-zones": ("payment-zones.json", "OnStreetParking", 1),
     "resident-parking-zones": ("resident-zones.json", "OnStreetParking", 2),
     # Every row of three line variants: a ferry, a metro line and a one-stop variant.
@@ -108,7 +108,7 @@ def test_the_areas_of_one_application_are_one_permit_with_every_outline(written)
     district = next(a for a in areas if a["properties"]["hakemustunnus"] == shared)["properties"]["kaupunginosa"]
     number = int(district.split()[0])
     assert permit["refDistrict"] == {
-        "type": "Relationship", "object": f"urn:ngsi-ld:CityDistrict:hel.fi:helsinki:district-{number}",
+        "type": "Relationship", "object": f"urn:ngsi-ld:AdministrativeArea:hel.fi:helsinki:district-{number}",
     }
 
 
@@ -303,8 +303,44 @@ def test_a_line_variant_is_the_smart_data_model_public_transport_route_with_its_
 
 
 @requires_docker
+def test_every_district_and_sub_district_is_the_administrative_area_extension(written):
+    """T-4338: no official model holds a city district; it is the extension AdministrativeArea
+    (PointOfInterest base, which requires `name`)."""
+    for name in ("districts", "subdistricts"):
+        for entity in written[name]:
+            assert open_data.sdm_errors("extensions/AdministrativeArea", entity) == [], (name, entity["id"])
+
+
+@requires_docker
 def test_every_public_area_permit_is_the_smart_data_model_city_work(written):
     """T-4329: excavations, traffic arrangements and event permits are SDM CityWork."""
     for name in ("excavation", "traffic-arrangements", "area-events"):
         for entity in written[name]:
             assert open_data.sdm_errors("dataModel.Transportation/CityWork", entity) == [], (name, entity["id"])
+
+
+RSS = """<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0"><channel><title>City of Helsinki news</title>
+<item><title>Tram 9 runs again</title><link>https://www.hel.fi/en/news/tram-9</link>
+<guid isPermaLink="false">hel-news-1001</guid><description>Works on Mannerheimintie end.</description>
+<pubDate>Thu, 15 Oct 2026 09:30:00 +0300</pubDate><enclosure url="https://www.hel.fi/img/tram.jpg" type="image/jpeg"/></item>
+<item><title>Library hours</title><link>https://www.hel.fi/en/news/library</link><guid>hel-news-1002</guid>
+<pubDate>Fri, 16 Oct 2026 08:00:00 +0300</pubDate></item>
+<item><title>No guid, no entity</title><link>https://www.hel.fi/en/news/none</link></item>
+</channel></rss>"""
+
+
+@requires_docker
+def test_a_news_item_is_the_article_extension_with_its_guid_as_identifier():
+    """T-4338: the feed writes the Smart Data Model extension Article (CPSV-AP Evidence base), whose
+    base requires `identifier` and `name`; an item without a guid has no identity and is dropped."""
+    articles = open_data.run_all(HELSINKI / "helsinki-pipeline-news-bento.yaml", RSS.encode(), "helsinki")
+    assert [a["identifier"]["value"] for a in articles] == ["hel-news-1001", "hel-news-1002"]
+    for article in articles:
+        assert article["type"] == "Article" and article["id"].startswith("urn:ngsi-ld:Article:hel.fi:helsinki:")
+        assert schema_errors(article) == [], article["id"]
+        assert open_data.sdm_errors("extensions/Article", article) == [], article["id"]
+    assert articles[0]["datePublished"]["value"] == "2026-10-15T06:30:00Z"
+    # Without its identifier the extension refuses the item.
+    bare = {k: v for k, v in articles[0].items() if k != "identifier"}
+    assert any("identifier" in e for e in open_data.sdm_errors("extensions/Article", bare))

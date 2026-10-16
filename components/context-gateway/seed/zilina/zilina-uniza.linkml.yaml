@@ -20,6 +20,13 @@ imports:
   - ngsi-ld-core
 
 slots:
+  identifier:
+    slot_uri: https://smartdatamodels.org/dataModel.CPSV-AP/identifier
+    description: The work's handle in the repository (`hdluniza/936`), the identifier the Article extension requires.
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.CPSV-AP
   name:
     slot_uri: schema:name
     description: The work's title, per language, as the repository records it.
@@ -82,13 +89,16 @@ slots:
       upstream_source: https://github.com/smart-data-models/data-models
 
 classes:
-  CreativeWork:
-    class_uri: schema:CreativeWork
-    description: One openly licensed work of the University of Žilina's digital library.
+  Article:
+    class_uri: jc:Article
+    description: >-
+      One openly licensed work of the University of Žilina's digital library, as the Smart Data
+      Model extension Article (CPSV-AP Evidence base, T-4338).
     is_a: Entity
     annotations:
-      upstream_source: https://schema.org/CreativeWork
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Article
     slots:
+      - identifier
       - name
       - workType
       - yearPublished

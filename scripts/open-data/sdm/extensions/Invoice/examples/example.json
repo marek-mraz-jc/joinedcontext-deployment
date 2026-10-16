@@ -4,7 +4,7 @@
   "cisloZmluvy": "cisloZmluvy",
   "dIC": "dIC",
   "dataProvider": "dataProvider",
-  "dataset": "dataset",
+  "dataset": "https://example.org/dataset",
   "datumDorucenia": "2026-01-01",
   "datumSplatnosti": "2026-01-01",
   "dodavatel": "dodavatel",
@@ -21,7 +21,7 @@
   "observedAt": "2026-01-01T00:00:00Z",
   "predmetFaktury": "predmetFaktury",
   "rok": "rok",
-  "source": "source",
+  "source": "https://example.org/source",
   "suma": 0.0,
   "type": "Invoice"
 }

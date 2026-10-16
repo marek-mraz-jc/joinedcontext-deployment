@@ -15,135 +15,23 @@ jc:RoadStructure a sh:NodeShape ;
     sh:closed true ;
     sh:ignoredProperties ( rdf:type ) ;
     sh:property [ sh:datatype xsd:string ;
-            sh:description "The source column `Výhradná_zaťažiteľnosť___t`." ;
+            sh:description "The source column `Materiál_priepustu`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 29 ;
-            sh:path jc:vyhradnaZatazitelnostT ],
+            sh:order 10 ;
+            sh:path jc:materialPriepustu ],
         [ sh:datatype xsd:string ;
             sh:description "The source column `Material`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 9 ;
             sh:path jc:material ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Druh_konštrukcie`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 5 ;
-            sh:path jc:druhKonstrukcie ],
-        [ sh:description "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:IRI ;
-            sh:order 2 ;
-            sh:path jc:dataset ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Číslo_PK`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 4 ;
-            sh:path jc:cisloPK ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `JIČ_ŽSR`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 7 ;
-            sh:path jc:jICZSR ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Vlastník`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 26 ;
-            sh:path jc:vlastnik ],
-        [ sh:datatype xsd:string ;
-            sh:description "Who published the row, with the credit its licence asks for." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 0 ;
-            sh:path sdm:dataProvider ],
         [ sh:datatype xsd:integer ;
-            sh:description "The source column `Normána_zaťažiteľnost___t`." ;
+            sh:description "The source column `rok_stavby`, `rok_Stavby`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 14 ;
-            sh:path jc:normanaZatazitelnostT ],
-        [ sh:description "The service the row was read from." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:IRI ;
-            sh:order 1 ;
-            sh:path sdm:source ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Vlastník_úseku`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 28 ;
-            sh:path jc:vlastnikUseku ],
-        [ sh:datatype xsd:integer ;
-            sh:description "The source column `Počet_kolaji`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 16 ;
-            sh:path jc:pocetKolaji ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Vlastník_mostu`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 27 ;
-            sh:path jc:vlastnikMostu ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Typ_Spravcu`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 25 ;
-            sh:path jc:typSpravcu ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Výnimočná_zaťažiteľnosť___t`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 30 ;
-            sh:path jc:vynimocnaZatazitelnostT ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Správca_úseku`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 21 ;
-            sh:path jc:spravcaUseku ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Kraj`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 8 ;
-            sh:path jc:kraj ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Trieda_PK`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 23 ;
-            sh:path jc:triedaPK ],
-        [ sh:datatype xsd:integer ;
-            sh:description "The source column `Celková_dĺžka_podjazdu`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 3 ;
-            sh:path jc:celkovaDlzkaPodjazdu ],
-        [ sh:datatype xsd:float ;
-            sh:description "The source column `Min__výška_podjazdu`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 11 ;
-            sh:path jc:minVyskaPodjazdu ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Okres`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 15 ;
-            sh:path jc:okres ],
-        [ sh:datatype xsd:string ;
-            sh:description "Where the entity is, as GeoJSON geometry." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 33 ;
-            sh:path geojson:geometry ],
+            sh:order 18 ;
+            sh:path jc:rokStavby ],
         [ sh:datatype xsd:string ;
             sh:description "The source column `Stavebno_technický_stav`." ;
             sh:maxCount 1 ;
@@ -151,23 +39,52 @@ jc:RoadStructure a sh:NodeShape ;
             sh:order 22 ;
             sh:path jc:stavebnoTechnickyStav ],
         [ sh:datatype xsd:string ;
-            sh:description "The source column `Materiál_priepustu`." ;
+            sh:description "The source column `Výnimočná_zaťažiteľnosť___t`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 10 ;
-            sh:path jc:materialPriepustu ],
+            sh:order 30 ;
+            sh:path jc:vynimocnaZatazitelnostT ],
         [ sh:datatype xsd:string ;
-            sh:description "The source column `Predmet_premostenia`." ;
+            sh:description "The source column `Vlastník_mostu`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 17 ;
-            sh:path jc:predmetPremostenia ],
+            sh:order 27 ;
+            sh:path jc:vlastnikMostu ],
+        [ sh:description "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:order 2 ;
+            sh:path jc:dataset ],
+        [ sh:datatype xsd:integer ;
+            sh:description "The source column `Celková_dĺžka_podjazdu`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 3 ;
+            sh:path jc:celkovaDlzkaPodjazdu ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Kraj`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 8 ;
+            sh:path jc:kraj ],
+        [ sh:datatype xsd:float ;
+            sh:description "The source column `Min__výška_podjazdu`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 11 ;
+            sh:path jc:minVyskaPodjazdu ],
         [ sh:datatype xsd:dateTime ;
             sh:description "When the observation the entity reports was made." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 34 ;
             sh:path ngsi-ld:observedAt ],
+        [ sh:datatype xsd:float ;
+            sh:description "The source column `Najbližší_KM`, `Najbližši_KM`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 12 ;
+            sh:path jc:najblizsiKM ],
         [ sh:datatype xsd:string ;
             sh:description "The source column `Spravca`." ;
             sh:maxCount 1 ;
@@ -175,11 +92,29 @@ jc:RoadStructure a sh:NodeShape ;
             sh:order 19 ;
             sh:path jc:spravca ],
         [ sh:datatype xsd:string ;
-            sh:description "The source column `Druh_zabezpečenia`." ;
+            sh:description "The source column `Predmet_premostenia`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 6 ;
-            sh:path jc:druhZabezpecenia ],
+            sh:order 17 ;
+            sh:path jc:predmetPremostenia ],
+        [ sh:datatype xsd:integer ;
+            sh:description "The source column `Počet_kolaji`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 16 ;
+            sh:path jc:pocetKolaji ],
+        [ sh:datatype xsd:string ;
+            sh:description "Where the entity is, as GeoJSON geometry." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 33 ;
+            sh:path geojson:geometry ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `JIČ_ŽSR`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 7 ;
+            sh:path jc:jICZSR ],
         [ sh:datatype xsd:string ;
             sh:description "The source column `Správca_mostu`." ;
             sh:maxCount 1 ;
@@ -187,35 +122,100 @@ jc:RoadStructure a sh:NodeShape ;
             sh:order 20 ;
             sh:path jc:spravcaMostu ],
         [ sh:datatype xsd:string ;
-            sh:description "The source column `ID_DC`." ;
+            sh:description "The source column `Správca_úseku`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 21 ;
+            sh:path jc:spravcaUseku ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Typ_Spravcu`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 25 ;
+            sh:path jc:typSpravcu ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Vlastník_úseku`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 28 ;
+            sh:path jc:vlastnikUseku ],
+        [ sh:description "The service the row was read from." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:order 1 ;
+            sh:path sdm:source ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `ID_DC`, `Identifikačné_číslo_podjazdu`, `ID_číslo_priepustu`, `Identifikacne_čislo_žel__priec_`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 13 ;
             sh:path sdm:name ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Okres`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 15 ;
+            sh:path jc:okres ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Trieda_PK`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 23 ;
+            sh:path jc:triedaPK ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Druh_zabezpečenia`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 6 ;
+            sh:path jc:druhZabezpecenia ],
         [ sh:datatype xsd:string ;
             sh:description "The source column `Typ_podjazdu`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 24 ;
             sh:path jc:typPodjazdu ],
-        [ sh:datatype xsd:float ;
-            sh:description "The source column `Najbližší_KM`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 12 ;
-            sh:path jc:najblizsiKM ],
         [ sh:datatype xsd:integer ;
-            sh:description "The source column `rok_stavby`." ;
+            sh:description "The source column `Normána_zaťažiteľnost___t`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 18 ;
-            sh:path jc:rokStavby ] ;
+            sh:order 14 ;
+            sh:path jc:normanaZatazitelnostT ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Druh_konštrukcie`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 5 ;
+            sh:path jc:druhKonstrukcie ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Číslo_PK`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 4 ;
+            sh:path jc:cisloPK ],
+        [ sh:datatype xsd:string ;
+            sh:description "Who published the row, with the credit its licence asks for." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 0 ;
+            sh:path sdm:dataProvider ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Výhradná_zaťažiteľnosť___t`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 29 ;
+            sh:path jc:vyhradnaZatazitelnostT ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Vlastník`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 26 ;
+            sh:path jc:vlastnik ] ;
     sh:targetClass jc:RoadStructure .
 
 ngsi-ld:Entity a sh:NodeShape ;
     rdfs:comment "The root every NGSI-LD entity class specialises." ;
     sh:closed true ;
-    sh:ignoredProperties ( jc:normanaZatazitelnostT jc:vlastnik jc:rokStavby jc:spravca jc:stavebnoTechnickyStav jc:vyhradnaZatazitelnostT jc:druhZabezpecenia jc:minVyskaPodjazdu jc:jICZSR jc:materialPriepustu jc:vlastnikUseku jc:najblizsiKM jc:triedaPK jc:druhKonstrukcie jc:predmetPremostenia jc:kraj rdf:type sdm:name jc:vlastnikMostu jc:vynimocnaZatazitelnostT jc:cisloPK jc:celkovaDlzkaPodjazdu sdm:source sdm:dataProvider jc:pocetKolaji jc:dataset jc:typPodjazdu jc:okres jc:material jc:spravcaMostu jc:typSpravcu jc:spravcaUseku ) ;
+    sh:ignoredProperties ( jc:typSpravcu jc:vlastnik jc:vynimocnaZatazitelnostT jc:predmetPremostenia jc:spravca jc:stavebnoTechnickyStav rdf:type sdm:name jc:spravcaUseku jc:najblizsiKM jc:rokStavby sdm:source jc:dataset jc:typPodjazdu jc:druhZabezpecenia jc:triedaPK jc:materialPriepustu jc:celkovaDlzkaPodjazdu jc:vlastnikUseku jc:druhKonstrukcie jc:vlastnikMostu jc:cisloPK jc:vyhradnaZatazitelnostT jc:normanaZatazitelnostT jc:minVyskaPodjazdu jc:pocetKolaji jc:kraj jc:material jc:okres jc:spravcaMostu sdm:dataProvider jc:jICZSR ) ;
     sh:property [ sh:datatype xsd:dateTime ;
             sh:description "When the observation the entity reports was made." ;
             sh:maxCount 1 ;

@@ -23,7 +23,7 @@
   },
   "dataset": {
     "type": "Property",
-    "value": "dataset"
+    "value": "https://example.org/dataset"
   },
   "datumSpustenia": {
     "type": "Property",
@@ -137,7 +137,7 @@
   },
   "source": {
     "type": "Property",
-    "value": "source"
+    "value": "https://example.org/source"
   },
   "spolocenskyZodpovedneVerejne": {
     "type": "Property",

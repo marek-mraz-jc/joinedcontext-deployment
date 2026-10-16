@@ -1,6 +1,6 @@
 {
   "dataProvider": "dataProvider",
-  "dataset": "dataset",
+  "dataset": "https://example.org/dataset",
   "id": "urn:ngsi-ld:CommitteeSeat:joinedcontext.com:example:1",
   "location": {
     "coordinates": [
@@ -13,6 +13,6 @@
   "observedAt": "2026-01-01T00:00:00Z",
   "pozicia": "pozicia",
   "poznamka": "poznamka",
-  "source": "source",
+  "source": "https://example.org/source",
   "type": "CommitteeSeat"
 }

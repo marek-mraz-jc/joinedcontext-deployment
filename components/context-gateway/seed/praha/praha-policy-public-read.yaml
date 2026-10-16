@@ -20,5 +20,5 @@ spec:
         - type: WasteContainerIsle
         - type: WasteContainer
         - type: OffStreetParking
-        - type: CityDistrict
+        - type: AdministrativeArea
         - type: BudgetLine

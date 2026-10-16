@@ -23,6 +23,13 @@ imports:
   - ngsi-ld-core
 
 slots:
+  identifier:
+    slot_uri: https://smartdatamodels.org/dataModel.CPSV-AP/identifier
+    description: The publisher's own identifier of the record (a news item's RSS guid), the one the Article extension requires.
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.CPSV-AP
   name:
     slot_uri: schema:name
     description: The name, per language.
@@ -521,7 +528,7 @@ slots:
   refDistrict:
     slot_uri: jc:refDistrict
     description: The district the record lies in.
-    range: CityDistrict
+    range: AdministrativeArea
     inverse: publicAreaPermits
     inlined: false
     annotations:
@@ -822,13 +829,16 @@ classes:
       - nextStop
       - delay
       - occupancy
-  NewsArticle:
-    class_uri: schema:NewsArticle
-    description: One item of the City of Helsinki's news feed.
+  Article:
+    class_uri: jc:Article
+    description: >-
+      One item of the City of Helsinki's news feed, as the Smart Data Model extension Article
+      (CPSV-AP Evidence base, T-4338).
     is_a: Entity
     annotations:
-      upstream_source: https://schema.org/NewsArticle
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Article
     slots:
+      - identifier
       - name
       - description
       - url
@@ -991,10 +1001,14 @@ classes:
       - refDistrict
       - dataProvider
       - source
-  CityDistrict:
-    class_uri: jc:CityDistrict
-    description: One district or sub-district of Helsinki, its outline and its code.
+  AdministrativeArea:
+    class_uri: jc:AdministrativeArea
+    description: >-
+      One district or sub-district of Helsinki, its outline and its code, as the Smart Data Model
+      extension AdministrativeArea (PointOfInterest base, T-4338).
     is_a: Entity
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/AdministrativeArea
     slots:
       - name
       - districtCode

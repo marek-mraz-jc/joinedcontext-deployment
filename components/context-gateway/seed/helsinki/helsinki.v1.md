@@ -81,16 +81,17 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
-### NewsArticle
+### Article
 
-One item of the City of Helsinki's news feed.
+One item of the City of Helsinki's news feed, as the Smart Data Model extension Article (CPSV-AP Evidence base, T-4338).
 
-IRI: `schema:NewsArticle`
+IRI: `jc:Article`
 
 Specialises `Entity`.
 
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
+| `identifier` | Property | `string` | yes |  | `sdm:dataModel.CPSV-AP/identifier` | The publisher's own identifier of the record (a news item's RSS guid), the one the Article extension requires. |
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language. |
 | `description` | LanguageProperty | `string` |  |  | `schema:description` | A short description, per language. |
 | `url` | Property | `uri` |  |  | `schema:url` | Where the item is published in full. |
@@ -289,7 +290,7 @@ Specialises `Entity`.
 | `permitEnd` | Property | `date` | yes |  | `jc:permitEnd` | The last day the permit covers. |
 | `description` | LanguageProperty | `string` |  |  | `schema:description` | A short description, per language. |
 | `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed from a line of text. |
-| `refDistrict` | Relationship | [`CityDistrict`](#citydistrict) |  |  | `jc:refDistrict` | The district the record lies in. |
+| `refDistrict` | Relationship | [`AdministrativeArea`](#administrativearea) |  |  | `jc:refDistrict` | The district the record lies in. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
@@ -297,11 +298,11 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
-### CityDistrict
+### AdministrativeArea
 
-One district or sub-district of Helsinki, its outline and its code.
+One district or sub-district of Helsinki, its outline and its code, as the Smart Data Model extension AdministrativeArea (PointOfInterest base, T-4338).
 
-IRI: `jc:CityDistrict`
+IRI: `jc:AdministrativeArea`
 
 Specialises `Entity`.
 

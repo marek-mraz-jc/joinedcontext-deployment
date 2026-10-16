@@ -33,7 +33,7 @@ FEEDS = {
     "bike-availability": ("bike-availability.json", "BikeHireDockingStation", 4),
     # Six rows: four registrations of Libuš, one of Legerova, one station elsewhere in the country.
     "air-quality": ("air-quality.csv", "AirQualityObserved", 2),
-    "districts": ("districts.json", "CityDistrict", 2),
+    "districts": ("districts.json", "AdministrativeArea", 2),
     "schools": ("schools.json", "PointOfInterest", 3),
     "culture": ("culture.json", "PointOfInterest", 2),
     "toilets": ("toilets.json", "PointOfInterest", 2),
@@ -146,7 +146,7 @@ def test_a_negative_reading_is_never_written_as_a_value():
 @requires_docker
 def test_a_collection_point_points_at_its_district_by_ruian_code(written):
     point = written["waste-stations"][0]
-    assert point["refDistrict"]["object"] == f"urn:ngsi-ld:CityDistrict:hel.fi:{SPACE}:district-538931"
+    assert point["refDistrict"]["object"] == f"urn:ngsi-ld:AdministrativeArea:hel.fi:{SPACE}:district-538931"
     assert point["accessRestriction"]["value"] == "public"
     assert all(re.fullmatch(r"\d{6}", e["districtCode"]["value"]) for e in written["districts"])
     assert all(e["id"].endswith("district-" + e["districtCode"]["value"]) for e in written["districts"])
@@ -205,6 +205,8 @@ def test_budget_codes_keep_their_padding_and_the_byte_order_mark_is_read(written
     assert school["approvedAmount"]["value"] == 1700 and school["adjustedAmount"]["value"] == 102413.6
     correction = lines["mhmp-2026-00-000000-0000-000000000"]
     assert "budgetArea" not in correction and correction["adjustedAmount"]["value"] == -0.03
+    # The key the id ends in is the identifier the BudgetLine extension (CPSV-AP Cost base) requires.
+    assert all(e["identifier"]["value"] == key for key, e in lines.items())
     assert recorded("budget.json").startswith(b"\xef\xbb\xbf")
 
 
@@ -436,6 +438,9 @@ SDM_MODELS = {
     "WasteContainerIsle": "dataModel.WasteManagement/WasteContainerIsle",
     "WasteContainer": "dataModel.WasteManagement/WasteContainer",
     "OffStreetParking": "dataModel.Parking/OffStreetParking",
+    # T-4338: no official model holds these as they are; each is the extension of its nearest one.
+    "AdministrativeArea": "extensions/AdministrativeArea",
+    "BudgetLine": "extensions/BudgetLine",
 }
 
 

@@ -13,7 +13,7 @@ What the region's register space carries side by side (DM-01, DM-61): the outlin
 
 ### AdministrativeArea
 
-One district (okres) or municipality (obec) of the region, its outline and its code.
+One district (okres) or municipality (obec) of the region, its outline and its code, as the Smart Data Model extension AdministrativeArea (PointOfInterest base, T-4338).
 
 IRI: `jc:AdministrativeArea`
 
@@ -106,7 +106,7 @@ IRI: `schema:PostalAddress`
 
 ### Bridge
 
-One bridge of the road network in the region, its road, its age, its size and who manages it.
+One bridge of the road network in the region, its road, its age, its size and who manages it, as the Smart Data Model extension Bridge (PointOfInterest base, T-4338).
 
 IRI: `jc:Bridge`
 

@@ -9,8 +9,8 @@ spec:
   linkml: ./helsinki.linkml.yaml
   version: 1.8.0
   lifecycle: published
-  classes: [Event, BikeHireDockingStation, Vehicle, NewsArticle, WeatherObserved, Alert, AirQualityObserved,
-    PointOfInterest, WaterQualityObserved, OnStreetParking, CityWork, CityDistrict, GtfsStop, PublicTransportRoute,
+  classes: [Event, BikeHireDockingStation, Vehicle, Article, WeatherObserved, Alert, AirQualityObserved,
+    PointOfInterest, WaterQualityObserved, OnStreetParking, CityWork, AdministrativeArea, GtfsStop, PublicTransportRoute,
     GtfsStation, GtfsAgency, GtfsRoute, GtfsShape, OffStreetParking]
   artifacts:
     jsonSchema: ./helsinki.v1.schema.json

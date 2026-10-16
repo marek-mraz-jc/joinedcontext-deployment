@@ -38,11 +38,11 @@ Specialises `Entity`.
 | `hlavnyCPV` | Property | `string` |  |  | `jc:hlavnyCPV` | The source column `Hlavný_CPV`. |
 | `hlavnyCPVCasti` | Property | `string` |  |  | `jc:hlavnyCPVCasti` | The source column `Hlavný_CPV_časti`. |
 | `iDZakazky` | Property | `integer` |  |  | `jc:iDZakazky` | The source column `ID_zákazky`. |
-| `identifier` | Property | `string` |  |  | `sdm:dataModel.CPSV-AP/identifier` | The source column `id`. |
+| `identifier` | Property | `string` |  |  | `sdm:dataModel.CPSV-AP/identifier` | The source column `id`, `ID_časti`. |
 | `lehotaNaPredkladanie` | Property | `datetime` |  |  | `jc:lehotaNaPredkladanie` | The source column `Lehota_na_predkladanie`. |
 | `mena` | Property | `string` |  |  | `jc:mena` | The source column `Mena`. |
 | `najvyhodnejsiUchadzac` | Property | `string` |  |  | `jc:najvyhodnejsiUchadzac` | The source column `Najvýhodnejší_uchádzač`. |
-| `name` | Property | `string` |  |  | `sdm:name` | The source column `Predmet_zákazky`. |
+| `name` | Property | `string` |  |  | `sdm:name` | The source column `Predmet_zákazky`, `Názov_predmetu`. |
 | `nazovCasti` | Property | `string` |  |  | `jc:nazovCasti` | The source column `Názov_časti`. |
 | `obstaravatel` | Property | `string` |  |  | `jc:obstaravatel` | The source column `Obstarávateľ`. |
 | `pHZ` | Property | `float` |  |  | `jc:pHZ` | The source column `PHZ`. |

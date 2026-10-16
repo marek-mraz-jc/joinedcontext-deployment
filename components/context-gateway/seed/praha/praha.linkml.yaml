@@ -22,6 +22,15 @@ imports:
   - ngsi-ld-core
 
 slots:
+  identifier:
+    slot_uri: https://smartdatamodels.org/dataModel.CPSV-AP/identifier
+    description: >-
+      The budget line's own key, the year and its codes of area, function, item and purpose
+      (`mhmp-2026-00-612100-5011-000000000`), the identifier the BudgetLine extension requires.
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.CPSV-AP
   name:
     slot_uri: schema:name
     description: The name, per language, as the publisher writes it.
@@ -233,7 +242,7 @@ slots:
   refDistrict:
     slot_uri: jc:refDistrict
     description: The city district the record lies in.
-    range: CityDistrict
+    range: AdministrativeArea
     inverse: wasteContainerIsles
     inlined: false
     annotations:
@@ -465,10 +474,14 @@ classes:
       - dateModified
       - dataProvider
       - source
-  CityDistrict:
-    class_uri: jc:CityDistrict
-    description: One of the 57 city districts (městské části) of Prague, its outline and its code.
+  AdministrativeArea:
+    class_uri: jc:AdministrativeArea
+    description: >-
+      One of the 57 city districts (městské části) of Prague, its outline and its code, as the
+      Smart Data Model extension AdministrativeArea (PointOfInterest base, T-4338).
     is_a: Entity
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/AdministrativeArea
     slots:
       - name
       - districtCode
@@ -479,9 +492,13 @@ classes:
     class_uri: jc:BudgetLine
     description: >-
       One line of the city budget of the City of Prague (Magistrát hl. m. Prahy), in the national
-      budget classification, with the approved and the adjusted amount.
+      budget classification, with the approved and the adjusted amount, as the Smart Data Model
+      extension BudgetLine (CPSV-AP Cost base, T-4338).
     is_a: Entity
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/BudgetLine
     slots:
+      - identifier
       - fiscalYear
       - budgetArea
       - budgetFunction

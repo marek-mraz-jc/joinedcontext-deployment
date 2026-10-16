@@ -7,7 +7,7 @@
   },
   "dataset": {
     "type": "Property",
-    "value": "dataset"
+    "value": "https://example.org/dataset"
   },
   "location": {
     "type": "GeoProperty",
@@ -37,7 +37,7 @@
   },
   "source": {
     "type": "Property",
-    "value": "source"
+    "value": "https://example.org/source"
   },
   "@context": [
     "https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/CommitteeSeat/context.jsonld",

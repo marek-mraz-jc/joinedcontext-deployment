@@ -1,8 +1,8 @@
 {
   "@context": {
     "@vocab": "https://smartdatamodels.org/",
-    "CreativeWork": {
-      "@id": "schema:CreativeWork"
+    "Article": {
+      "@id": "jc:Article"
     },
     "Entity": {
       "@id": "ngsi-ld:Entity"
@@ -12,6 +12,9 @@
     },
     "geojson": "https://purl.org/geojson/vocab#",
     "id": "@id",
+    "identifier": {
+      "@id": "sdm:dataModel.CPSV-AP/identifier"
+    },
     "isPartOf": {
       "@id": "schema:isPartOf"
     },

@@ -23,6 +23,7 @@ import urllib.parse
 import urllib.request
 from collections import Counter
 from functools import cache
+from pathlib import Path
 from typing import Any, Callable
 
 from jsonschema import Draft202012Validator, Draft7Validator
@@ -51,12 +52,15 @@ MODELS = {
     "OnStreetParking": ("dataModel.Parking", "OnStreetParking"),
     "CityWork": ("dataModel.Transportation", "CityWork"),
     "PublicTransportRoute": ("dataModel.UrbanMobility", "PublicTransportRoute"),
+    # The platform's extensions of an official model (T-4336, T-4338), read from the vendored copy.
+    "Article": ("extension", "Article"),
+    "AdministrativeArea": ("extension", "AdministrativeArea"),
 }
+
+EXTENSIONS = Path(__file__).resolve().parents[2] / "scripts/open-data/sdm/extensions"
 
 #: Types with no Smart Data Model, and why the Helsinki model keeps its own.
 EXCEPTIONS = {
-    "NewsArticle": "schema.org NewsArticle; SDM has no news model",
-    "CityDistrict": "Helsinki districts; SDM has no administrative-area model beyond Location",
     "KeyPerformanceIndicator": "the platform's own KPI type, outside the Helsinki feeds",
 }
 
@@ -131,7 +135,8 @@ def main(argv: list[str]) -> int:
         if args.type and kind not in args.type:
             continue
         sample = entities(args.endpoint, kind, args.limit)
-        check = validator(fetch(SDM.format(repo=repo, model=model)))
+        schema = json.loads((EXTENSIONS / model / "schema.json").read_text()) if repo == "extension" else fetch(SDM.format(repo=repo, model=model))
+        check = validator(schema)
         found = failures(check, sample)
         failing = sum(1 for (attribute, _), _ in found.items() if (kind, attribute) not in ACCEPTED)
         ok &= failing == 0

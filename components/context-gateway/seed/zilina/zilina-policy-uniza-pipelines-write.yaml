@@ -13,4 +13,4 @@ spec:
   operations: [upsertBatch, createBatch, queryBatch, queryEntity, deleteBatch]
   information:
     - entities:
-        - type: CreativeWork
+        - type: Article

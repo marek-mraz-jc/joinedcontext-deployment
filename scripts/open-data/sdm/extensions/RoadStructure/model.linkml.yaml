@@ -74,12 +74,12 @@ slots:
     annotations:
       ngsi_ld_kind: Property
   najblizsiKM:
-    description: The source column `Najbližší_KM`.
+    description: The source column `Najbližší_KM`, `Najbližši_KM`.
     range: float
     annotations:
       ngsi_ld_kind: Property
   name:
-    description: The source column `ID_DC`.
+    description: The source column `ID_DC`, `Identifikačné_číslo_podjazdu`, `ID_číslo_priepustu`, `Identifikacne_čislo_žel__priec_`.
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/context.jsonld
@@ -103,7 +103,7 @@ slots:
     annotations:
       ngsi_ld_kind: Property
   rokStavby:
-    description: The source column `rok_stavby`.
+    description: The source column `rok_stavby`, `rok_Stavby`.
     range: integer
     annotations:
       ngsi_ld_kind: Property

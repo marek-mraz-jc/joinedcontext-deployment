@@ -24,8 +24,9 @@ pipeline:
         let image = this.enclosure."-url".or(null)
         root = if $guid == "" { deleted() } else {
           {
-            "id": "urn:ngsi-ld:%v:%v:%v:%v".format("NewsArticle", $domain, env("JC_SPACE"), $guid),
-            "type": "NewsArticle",
+            "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Article", $domain, env("JC_SPACE"), $guid),
+            "type": "Article",
+            "identifier": { "type": "Property", "value": $guid },
             "name": { "type": "LanguageProperty", "languageMap": { "en": this.title.string().trim() } },
             "description": if $summary == "" { null } else {
               { "type": "LanguageProperty", "languageMap": { "en": $summary } }

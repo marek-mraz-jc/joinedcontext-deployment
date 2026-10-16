@@ -89,7 +89,7 @@ slots:
     annotations:
       ngsi_ld_kind: Property
   identifier:
-    description: The source column `Centrálne_číslo_zmluvy`.
+    description: The source column `Centrálne_číslo_zmluvy`, `Číslo_zmluvy`.
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
