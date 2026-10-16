@@ -10,7 +10,7 @@ metadata:
   title: { sk: "Kanály zapisujú ovzdušie", en: "The ingestion pipelines write the air-quality space" }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: ovzdusie }
-  assigner: did:web:{orgDomain}
+  assigner: did:web:banskabystrica.sk
   assignee: { kind: serviceAccount, id: pipelines }
   operations: [upsertBatch, createBatch, queryBatch, deleteBatch]
   information:

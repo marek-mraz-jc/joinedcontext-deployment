@@ -6,7 +6,7 @@ metadata:
   title: { sk: "Verejné čítanie", en: "Public read" }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: ovzdusie-sk }
-  assigner: did:web:{orgDomain}
+  assigner: did:web:joinedcontext.com
   assignee: { kind: role, id: public }
   # Read only, every type of the space: measurements of public stations, nothing about a person.
   # Discovery beside the reads (T-4258, EP-116), so an anonymous MCP client finds the types first.

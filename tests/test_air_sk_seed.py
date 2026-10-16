@@ -84,7 +84,8 @@ def written(result: subprocess.CompletedProcess) -> list[dict]:
 
 
 FILES = [BLOB + f.name for f in sorted(FIXTURES.glob("*.parquet"))]
-URN = "urn:ngsi-ld:AirQualityObserved:hel.fi:ovzdusie-sk:"
+# The publisher's domain, though the runner's JC_ORG_DOMAIN above is the installation's hel.fi (T-4373).
+URN = "urn:ngsi-ld:AirQualityObserved:joinedcontext.com:ovzdusie-sk:"
 
 
 @requires_docker

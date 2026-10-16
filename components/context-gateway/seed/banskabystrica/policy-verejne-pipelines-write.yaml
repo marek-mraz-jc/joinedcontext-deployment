@@ -6,7 +6,7 @@ metadata:
   title: { sk: "Kanály zapisujú verejné údaje mesta", en: "The ingestion pipelines write the city's open data" }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: banskabystrica-verejne }
-  assigner: did:web:{orgDomain}
+  assigner: did:web:banskabystrica.sk
   assignee: { kind: serviceAccount, id: pipelines }
   # Upsert is what a poll does; no delete: a record a source stops publishing stays until a
   # person removes it.

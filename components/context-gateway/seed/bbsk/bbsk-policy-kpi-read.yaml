@@ -6,7 +6,7 @@ metadata:
   title: { sk: "Verejné čítanie ukazovateľov", en: "Public read: indicators" }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: bbsk-kpi }
-  assigner: did:web:{orgDomain}
+  assigner: did:web:bbsk.sk
   assignee: { kind: role, id: public }
   # Discovery beside the reads (T-4258, EP-116): which types and attributes the Endpoint holds,
   # narrowed to this grant (EP-26), so an anonymous MCP client finds them before it queries.

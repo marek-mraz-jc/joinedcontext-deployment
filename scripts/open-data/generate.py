@@ -681,7 +681,7 @@ def project_files(project: str, entries: list[dict], names: dict[str, str]) -> d
         "Anyone reads every type of the space: each is open data, and no mapping reads a column that names\n"
         "or reaches a person (Research/bb-bbsk-ngsi-ld-mapping.md §5).",
         {**head, "kind": "Policy", "metadata": meta("otvorene-data-read", {"sk": "Verejné čítanie otvorených dát", "en": "Public read: open data"}),
-         "spec": {"contextSpaceRef": {"kind": "ContextSpace", "name": space}, "assigner": "did:web:{orgDomain}",
+         "spec": {"contextSpaceRef": {"kind": "ContextSpace", "name": space}, "assigner": f"did:web:{p['domain']}",
                   "assignee": {"kind": "role", "id": "public"},
                   "operations": ["retrieveOps", "retrieveEntityTypes", "retrieveEntityTypeDetails",
                                  "retrieveEntityTypeInfo", "retrieveAttrTypes", "retrieveAttrTypeDetails",
@@ -700,7 +700,7 @@ def project_files(project: str, entries: list[dict], names: dict[str, str]) -> d
     files[f"{pre}policy-pipelines-write.yaml"] = manifest(
         "The generated pipelines upsert; nothing deletes, since several pipelines write the space (PL-64).",
         {**head, "kind": "Policy", "metadata": meta("otvorene-data-pipelines-write", {"sk": "Kanály zapisujú otvorené dáta", "en": "The pipelines write the open data"}),
-         "spec": {"contextSpaceRef": {"kind": "ContextSpace", "name": space}, "assigner": "did:web:{orgDomain}",
+         "spec": {"contextSpaceRef": {"kind": "ContextSpace", "name": space}, "assigner": f"did:web:{p['domain']}",
                   "assignee": {"kind": "serviceAccount", "id": "pipelines"},
                   "operations": ["upsertBatch", "createBatch", "queryBatch"], "information": information}})
     index = [f"{pre}space.yaml: projects/{project}/spaces/{space}/space.yaml",

@@ -17,7 +17,7 @@ metadata:
   title: { sk: "Správca údajov číta zdrojové riadky kraja", en: "The data steward reads the region's raw rows" }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: bbsk-kraj }
-  assigner: did:web:{orgDomain}
+  assigner: did:web:bbsk.sk
   # The person, not a role: `steward` is a RoleBinding over manifests (users/roles/steward.yaml)
   # and never reaches a token, whose only realm role is `portal-approver`
   # (components/keycloak/demo-users.yaml). A `kind: role` assignee here would match nobody and

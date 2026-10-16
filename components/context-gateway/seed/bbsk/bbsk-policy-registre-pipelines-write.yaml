@@ -6,7 +6,7 @@ metadata:
   title: { sk: "Kanály zapisujú registre", en: "The ingestion pipelines write the registers" }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: bbsk-registre }
-  assigner: did:web:{orgDomain}
+  assigner: did:web:bbsk.sk
   assignee: { kind: serviceAccount, id: pipelines }
   # Upsert is what a poll does; no delete: a record the region stops publishing stays until a
   # person removes it.
