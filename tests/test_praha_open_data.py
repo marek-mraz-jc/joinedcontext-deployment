@@ -357,12 +357,32 @@ def test_the_seed_index_lists_every_file_beside_it_and_the_forge_seeds_it():
     assert 'context-gateway/seed/praha/index.yaml' in bootstrap
 
 
-def test_the_space_is_public_and_published_with_the_licence_of_its_most_demanding_source():
+# The space's datasets, one Smart Data Model type or one referencing group each (T-4344), with the
+# licence of the most demanding source each reads: nextbike and the city budget are CC0.
+PARTS = {
+    "praha-ovzdusi": "CC_BY_4_0", "praha-sdilena-kola": "CC0", "praha-parkoviste-pr": "CC_BY_4_0",
+    "praha-trideny-odpad": "CC_BY_4_0", "praha-rozpocet": "CC0", "praha-mista": "CC_BY_4_0",
+    "praha-mestske-casti": "CC_BY_4_0",
+}
+
+
+def _parts():
+    docs = [yaml.safe_load(p.read_text()) for p in PRAHA.glob("praha-endpoint-*.yaml")]
+    return {d["metadata"]["name"]: d for d in docs if d["spec"].get("publish")}
+
+
+def test_the_space_is_public_and_published_one_model_per_dataset_with_its_sources_licence():
     endpoint = yaml.safe_load((PRAHA / "praha-endpoint-mesto.yaml").read_text())
     space = yaml.safe_load((PRAHA / "praha-space-mesto.yaml").read_text())
     assert endpoint["spec"]["audience"] == "public"
-    assert endpoint["spec"]["publish"]["ckan"]["license"] == "cc-by"
-    assert endpoint["spec"]["publish"]["ckan"]["instanceRef"]["name"] == "praha"
+    # The whole space stays one Endpoint for the Apps, off the catalogue (T-4344).
+    assert "publish" not in endpoint["spec"]
+    parts = _parts()
+    assert {n: d["spec"]["catalog"]["license"] for n, d in parts.items()} == PARTS
+    for name, part in parts.items():
+        assert part["spec"]["audience"] == "public", name
+        assert part["spec"]["publish"]["ckan"]["instanceRef"]["name"] == "praha", name
+        assert part["spec"]["policyRef"].startswith(f"urn:ngsi-ld:Policy:praha.eu:{SPACE}:"), name
     assert space["spec"]["urnSegment"] == SPACE
     for publisher in ("nextbike", "ČHMÚ", "IPR Praha", "ROPID"):
         assert publisher in space["metadata"]["description"]["en"]
@@ -387,8 +407,14 @@ def test_the_catalogue_names_every_source_the_space_reads_under_the_licence_it_p
     the CKAN publication carries, the words in Czech and English, the place Prague."""
     endpoint = yaml.safe_load((PRAHA / "praha-endpoint-mesto.yaml").read_text())
     catalog = endpoint["spec"]["catalog"]
-    assert endpoint["spec"]["publish"]["ckan"]["license"] == "cc-by" and catalog["license"] == "CC_BY_4_0"
+    assert catalog["license"] == "CC_BY_4_0"
     named = {source["url"] for source in catalog["source"]}
+    # The datasets on the catalogue name every source between them, each as the space does.
+    by_url = {source["url"]: source for source in catalog["source"]}
+    parted = [s for part in _parts().values() for s in part["spec"]["catalog"].get("source", [])]
+    assert {s["url"] for s in parted} == named
+    for source in parted:
+        assert source == by_url[source["url"]], source["url"]
     for name in FEEDS:
         datasource = yaml.safe_load((PRAHA / f"praha-datasource-{name}.yaml").read_text())
         assert _dataset_of(datasource["spec"]["http"]["url"]) in named, name

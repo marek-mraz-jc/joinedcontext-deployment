@@ -150,15 +150,19 @@ def test_the_catalogue_is_the_projects_own_organisation():
     assert "apiTokenRef" in ckan and "token" not in ckan, "the token is a reference, never a value"
 
 
-CKAN_LICENCE = {"CC_BY_4_0": "cc-by", "CC_BYSA_4_0": "cc-by-sa"}
-PUBLIC = {"zilina-verejne", "zilina-uniza", "zilina-kpi"}
+CKAN_LICENCE = {"CC_BY_4_0": "cc-by", "CC_BYSA_4_0": "cc-by-sa", "CC0": "cc-zero"}
+PUBLIC_SPACES = {"zilina-verejne", "zilina-uniza", "zilina-kpi"}
+# The public space's three types are three datasets (T-4344); its own Endpoint stays for the Apps.
+PUBLISHED = {"zilina-uniza", "zilina-kpi", "zilina-ovzdusie", "zilina-pamiatky", "zilina-zeleznicne-stanice"}
+PUBLIC = PUBLISHED | {"zilina-verejne"}
 
 
 def test_every_public_space_is_published_to_the_projects_catalogue_with_its_record():
     """T-3139, EP-27, EP-76: the three public spaces reach CKAN with a complete DCAT-AP record."""
     endpoints = {n: e for n, e in by_name("Endpoint").items() if not n.startswith("app-")}
     assert {n for n, e in endpoints.items() if e["spec"]["audience"] == "public"} == PUBLIC
-    for name in PUBLIC:
+    assert {n for n, e in endpoints.items() if e["spec"].get("publish")} == PUBLISHED
+    for name in PUBLISHED:
         endpoint = endpoints[name]
         spec = endpoint["spec"]
         assert set(endpoint["metadata"]["description"]) == {"sk", "en"}, name
@@ -179,14 +183,17 @@ def test_every_public_space_is_published_to_the_projects_catalogue_with_its_reco
 
 def test_the_public_reads_only_and_only_the_types_of_its_space():
     policies = [p for p in manifests("Policy") if p["spec"]["assignee"] == {"kind": "role", "id": "public"}]
-    assert {p["spec"]["contextSpaceRef"]["name"] for p in policies} == PUBLIC
+    assert {p["spec"]["contextSpaceRef"]["name"] for p in policies} == PUBLIC_SPACES
     models = by_name("DataModel")
+    granted: dict[str, set[str]] = {}
     for policy in policies:
         spec = policy["spec"]
         # Reading, discovery (T-4258, EP-116) and the WebSocket's subscriptions; no entity write.
         assert spec["operations"] == READ_AND_SUBSCRIBE[:1] + DISCOVERY + READ_AND_SUBSCRIBE[1:], policy["metadata"]["name"]
         space = spec["contextSpaceRef"]["name"]
         types = {e["type"] for info in spec["information"] for e in info["entities"]}
+        granted.setdefault(space, set()).update(types)
+    for space, types in granted.items():
         linkml = yaml.safe_load((ZILINA / f"{SPACES[space]}.linkml.yaml").read_text())
         # A value class (CalculationPeriod, Any: the shape of one slot's value) is no type.
         entities = {name for name, body in linkml["classes"].items() if (body or {}).get("is_a") == "Entity"}

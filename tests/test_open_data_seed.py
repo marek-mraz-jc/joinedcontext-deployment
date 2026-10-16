@@ -178,6 +178,8 @@ def test_schedules_are_valid_cron_and_follow_the_refresh():
             spec = yaml.safe_load(p.read_text())["spec"]
             fields = spec["schedule"].split()
             assert len(fields) == 5 and 0 <= int(fields[0]) < 60 and 1 <= int(fields[1]) <= 5, p.name
+            # Bento's cron reads a weekday 0-6; a 7 refused the whole stream on dev (T-4347).
+            assert fields[4] == "*" or 0 <= int(fields[4]) <= 6, p.name
     daily = next(e for e in SEEDED if e["refresh"] == "P1D")
     assert generate.schedule(daily, 3).endswith("* * *")
     assert generate.schedule({"refresh": "P1M"}, 30).split()[2] == "3"

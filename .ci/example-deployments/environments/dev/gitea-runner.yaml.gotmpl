@@ -5,3 +5,8 @@ gitea-runner:
   # asks 1.5 GiB and a release build of air-quality peaked at 1.3 GiB (T-2616).
   rust:
     enabled: true
+    # Asks what it holds idle (14 Mi measured 2026-10-16 13:20Z, T-4358) instead of 1.5 GiB, and
+    # keeps the 4 GiB limit a build may reach; capacity 1 (runner.yaml) keeps it to one build.
+    resources:
+      requests: { cpu: 250m, memory: 256Mi }
+      limits: { cpu: '2', memory: 4Gi }

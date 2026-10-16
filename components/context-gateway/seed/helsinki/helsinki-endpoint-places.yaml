@@ -1,0 +1,42 @@
+# One Smart Data Model type per catalogue dataset (T-4344): PointOfInterest of the space
+# helsinki, read through its own Policy, which narrows the space's public read to these types.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: helsinki-places
+  namespace: helsinki
+  title: { fi: "Kaupungin palvelut — Helsinki", en: "City services — Helsinki" }
+  description:
+    fi: "Kirjastot, terveysasemat, uimahallit, uimarannat ja koulut Palvelukartasta. Lähde: Helsingin kaupunki, CC BY 4.0."
+    en: "Libraries, health stations, swimming halls, beaches and schools from the Service Map. Source: City of Helsinki, CC BY 4.0."
+spec:
+  contextSpaceRef: helsinki
+  slug: zq6avaaqv3d7ma2avz7rvkwtxelaxkc4
+  audience: public
+  policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki:public-places
+  # The contact lines stay in the space, as on helsinki-all (EP-61). A projection only narrows.
+  projection: { hiddenAttributes: [contactPoint] }
+  enabledRepresentations: [ngsi-ld, geojson, csv, json, websocket, ogc-features, odata, mcp]
+  publish:
+    ckan:
+      instanceRef: { kind: CkanInstance, name: hel-fi }
+      license: cc-by
+      datastore: { representation: csv, refresh: onReconcile }
+  catalog:
+    publisher: { name: { fi: "Helsingin kaupunki", sv: "Helsingfors stad", en: "City of Helsinki" }, uri: "https://www.hel.fi/" }
+    license: CC_BY_4_0
+    attribution: { fi: "Lähde: Helsingin kaupunki, CC BY 4.0", sv: "Källa: Helsingfors stad, CC BY 4.0", en: "Source: City of Helsinki, CC BY 4.0" }
+    themes: [EDUC, HEAL, SOCI]
+    keywords:
+      fi: ["palvelut", "kirjastot", "koulut", "uimarannat"]
+      sv: ["tjänster", "bibliotek", "skolor", "badstränder"]
+      en: ["services", "libraries", "schools", "beaches"]
+    spatial:
+      - "FI1B1"
+      - "http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/091"
+    frequency: WEEKLY
+    source:
+      - url: "https://api.hel.fi/servicemap/v2/unit/?service=813,703,729,731,661,662,601,602,149,150&municipality=helsinki&page_size=1000&format=json"
+        title: { fi: "Kaupungin palvelut (Palvelukartta)", en: "City services (Service Map)" }
+        description: { fi: "Palvelukartan rajapinta: kaupungin toimipisteet sijainteineen.", en: "The Service Map API: the city's units with their locations." }
+    pipelineRef: { kind: Pipeline, name: services }

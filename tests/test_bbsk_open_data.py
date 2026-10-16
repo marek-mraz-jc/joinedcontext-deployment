@@ -323,8 +323,13 @@ def test_the_space_is_public_and_published_under_the_regions_share_alike_licence
     endpoint = manifest("bbsk-endpoint-registre.yaml")
     space = manifest("bbsk-space-registre.yaml")
     assert endpoint["spec"]["audience"] == "public"
-    assert endpoint["spec"]["publish"]["ckan"]["license"] == "cc-by-sa"
-    assert endpoint["spec"]["publish"]["ckan"]["instanceRef"]["name"] == "bbsk"
+    # One dataset per register type (T-4344); the space's Endpoint stays off the catalogue.
+    assert "publish" not in endpoint["spec"]
+    for part in ("hranice", "organizacie", "zariadenia", "mosty"):
+        spec = manifest(f"bbsk-endpoint-{part}.yaml")["spec"]
+        assert spec["publish"]["ckan"]["license"] == "cc-by-sa", part
+        assert spec["publish"]["ckan"]["instanceRef"]["name"] == "bbsk", part
+        assert spec["catalog"]["license"] == "CC_BYSA_4_0", part
     assert space["spec"]["urnSegment"] == SPACE
     assert space["spec"]["dataModelRef"] == {"kind": "DataModel", "name": "bbsk-registre"}
     for text in (space["metadata"]["description"]["en"], endpoint["metadata"]["description"]["en"]):

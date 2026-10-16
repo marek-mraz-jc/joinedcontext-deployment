@@ -3,6 +3,9 @@ kind: Endpoint
 metadata:
   name: helsinki-news
   namespace: helsinki
+  description:
+    fi: "Helsingin kaupungin uutiset ja tiedotteet hel.fi-sivustolta. Lähde: Helsingin kaupunki, CC BY 4.0."
+    en: "The City of Helsinki's news and announcements from hel.fi. Source: City of Helsinki, CC BY 4.0."
   title: { en: "Helsinki city news" }
 spec:
   contextSpaceRef: helsinki
@@ -10,7 +13,13 @@ spec:
   audience: public
   # The one Policy this endpoint evaluates: the slice of the space it publishes (EP-14).
   policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki:public-news
-  enabledRepresentations: [ngsi-ld, geojson, csv, xlsx, mcp, websocket, ogc-features, odata]
+  enabledRepresentations: [ngsi-ld, geojson, csv, json, xlsx, mcp, websocket, ogc-features, odata]
+  # Its own dataset in the hel-fi catalogue (T-4344): one type, every mandatory surface (EP-118).
+  publish:
+    ckan:
+      instanceRef: { kind: CkanInstance, name: hel-fi }
+      license: cc-by
+      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher: { name: { fi: "Helsingin kaupunki", sv: "Helsingfors stad", en: "City of Helsinki" }, uri: "https://www.hel.fi/" }
     license: CC_BY_4_0

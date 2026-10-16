@@ -217,6 +217,7 @@ def test_the_source_the_pipeline_and_the_catalogue_agree():
         types = {e["type"] for rule in manifest(name)["spec"]["information"] for e in rule["entities"]}
         assert "WeatherObserved" in types, name
     assert "WeatherObserved" in manifest("datamodel-verejne.yaml")["spec"]["classes"]
-    endpoint = manifest("endpoint-verejne.yaml")
+    # The weather is its own dataset (T-4344).
+    endpoint = manifest("endpoint-pocasie.yaml")
     assert "Slovak Hydrometeorological Institute" in endpoint["spec"]["catalog"]["attribution"]["en"]
     assert endpoint["spec"]["publish"]["ckan"]["license"] == "cc-by"

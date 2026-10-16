@@ -19,8 +19,11 @@ resources:
     # At 1Gi it was killed again at 17:17Z the same day: 1536Mi while T-2968 finds the peak.
     memory: 1536Mi
 
-{{- if has "keycloak" .Values.components }}
 env:
+  # glibc keeps up to 8 malloc arenas per core, and a tokio service holds freed memory in them;
+  # two arenas trade a little allocation contention for that memory (T-4351, measured on dev).
+  MALLOC_ARENA_MAX: "2"
+{{- if has "keycloak" .Values.components }}
   # The live journeys sign in as the demo people and mark the assistant runs they start as
   # test runs (AG-93, T-2816). The Portal accepts the mark only from the users named here and
   # refuses it with 403 for anyone else; production names nobody. The realm stores each demo
