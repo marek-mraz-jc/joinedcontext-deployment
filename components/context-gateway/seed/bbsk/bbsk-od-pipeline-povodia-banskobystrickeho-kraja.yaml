@@ -9,7 +9,7 @@ metadata:
     en: Povodia Banskobystrického kraja
 spec:
   class: scheduled
-  enabled: true
+  enabled: false
   schedule: 39 2 * * 2
   source:
     dataSourceRef:

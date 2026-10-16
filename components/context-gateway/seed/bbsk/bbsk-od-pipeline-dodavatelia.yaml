@@ -9,7 +9,7 @@ metadata:
     en: Dodávatelia
 spec:
   class: scheduled
-  enabled: true
+  enabled: false
   schedule: 49 1 * * *
   source:
     dataSourceRef:

@@ -9,7 +9,7 @@ metadata:
     en: Cykloturistické trasy - línie
 spec:
   class: scheduled
-  enabled: true
+  enabled: false
   schedule: 21 1 * * 4
   source:
     dataSourceRef:

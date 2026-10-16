@@ -9,7 +9,7 @@ metadata:
     en: Obyvateľstvo podľa národnosti (2021), okresy
 spec:
   class: scheduled
-  enabled: true
+  enabled: false
   schedule: 47 5 14 * *
   source:
     dataSourceRef:

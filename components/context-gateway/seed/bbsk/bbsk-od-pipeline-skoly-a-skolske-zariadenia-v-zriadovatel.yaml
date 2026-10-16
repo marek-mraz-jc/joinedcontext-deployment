@@ -9,7 +9,7 @@ metadata:
     en: Školy a školské zariadenia v zriaďovateľskej pôsobnosti BBSK
 spec:
   class: scheduled
-  enabled: true
+  enabled: false
   schedule: 49 3 * * *
   source:
     dataSourceRef:

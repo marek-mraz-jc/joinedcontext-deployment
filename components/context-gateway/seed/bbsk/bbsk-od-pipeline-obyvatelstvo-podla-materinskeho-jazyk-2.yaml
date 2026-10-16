@@ -9,7 +9,7 @@ metadata:
     en: Obyvateľstvo podľa materinského jazyka (2011), okresy
 spec:
   class: scheduled
-  enabled: true
+  enabled: false
   schedule: 37 4 4 * *
   source:
     dataSourceRef:

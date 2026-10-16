@@ -9,7 +9,7 @@ metadata:
     en: Materské školy v Banskobystrickom kraji
 spec:
   class: scheduled
-  enabled: true
+  enabled: false
   schedule: 27 3 * * 1
   source:
     dataSourceRef:
