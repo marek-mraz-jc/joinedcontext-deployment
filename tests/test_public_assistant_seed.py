@@ -171,6 +171,22 @@ def test_the_chat_speaks_the_bodys_language_first(public_id):
     assert len(spec["theme"]["greeting"]) <= 500
 
 
+# What each widget's header shows (T-4296, Architecture/22 §4).
+TITLES = {
+    "banskabystrica": "Banská Bystrica",
+    "bbsk": "Banskobystrický kraj",
+    "zilina": "Žilina",
+    "praha": "Praha",
+}
+
+
+@pytest.mark.parametrize("public_id", BODIES)
+def test_the_header_names_the_body(public_id):
+    title = deployment(public_id)["spec"]["theme"]["title"]
+    assert 1 <= len(title) <= 60
+    assert title == TITLES[public_id]
+
+
 @pytest.mark.parametrize("public_id", BODIES)
 def test_the_sources_and_the_deployment_are_seeded_at_their_kinds_paths(public_id):
     project = BODIES[public_id][0]

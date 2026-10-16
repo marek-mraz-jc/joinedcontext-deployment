@@ -35,6 +35,7 @@ spec:
     questionChars: 1000
   model: { router: google/gemini-3.8-flash, answer: google/gemini-3.8-flash }
   theme:
+    title: "Praha"
     primaryColor: "#c8102e"
     greeting: "Dobrý den! Zeptejte se mě na služby hlavního města Prahy nebo na jeho otevřená data."
   suggestions:

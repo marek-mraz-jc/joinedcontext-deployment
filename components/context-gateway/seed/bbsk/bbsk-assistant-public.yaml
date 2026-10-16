@@ -41,6 +41,7 @@ spec:
     questionChars: 1000
   model: { router: google/gemini-3.8-flash, answer: google/gemini-3.8-flash }
   theme:
+    title: "Banskobystrický kraj"
     primaryColor: "#1f5fae"
     greeting: "Dobrý deň! Opýtajte sa ma na služby Banskobystrického samosprávneho kraja alebo na jeho otvorené údaje."
   suggestions:
