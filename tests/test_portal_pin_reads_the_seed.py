@@ -31,6 +31,13 @@ SINCE = {
     "retention": "2883bd06a17ebe8568f37579d0578025fc9eb963",  # T-3899
 }
 
+# A retention `history` word, and the platform commit whose jc-core first accepts it: an older
+# one refuses the value and drops the space as it drops an unknown field (T-4275).
+HISTORY_SINCE = {
+    "off": "1e5b0ec9938bd530c6e810e86d872d4dae1442fb",  # T-4275
+    "forever": "1e5b0ec9938bd530c6e810e86d872d4dae1442fb",  # T-4275
+}
+
 
 def pinned_platform() -> str:
     return yaml.safe_load((ROOT / "components/portal/images.yaml").read_text())["portal"]["portal"].get("platform", "")
@@ -80,6 +87,30 @@ def test_a_space_field_in_the_seed_is_one_the_pinned_portal_reads():
         assert known, (
             f"{files} carry `{field}`, which jc-core reads from platform {SINCE[field][:7]} on; "
             f"the pinned Portal is built on {pin[:7]}: pin a Portal that has it in the same commit"
+        )
+
+
+def history_words() -> dict[str, list[str]]:
+    """Each word of HISTORY_SINCE a seed space's retention says, with the files that say it."""
+    found: dict[str, list[str]] = {}
+    for path in sorted(ROOT.glob("components/*/seed/**/*.yaml")):
+        for document in yaml.safe_load_all(path.read_text()):
+            if isinstance(document, dict) and document.get("kind") == "ContextSpace":
+                for rule in (document.get("spec") or {}).get("retention") or []:
+                    if rule.get("history") in HISTORY_SINCE:
+                        found.setdefault(rule["history"], []).append(str(path.relative_to(ROOT)))
+    return found
+
+
+def test_a_history_word_in_the_seed_is_one_the_pinned_portal_accepts():
+    pin = pinned_platform()
+    for word, files in history_words().items():
+        known = contains(pin, HISTORY_SINCE[word])
+        if known is None:
+            pytest.skip("no platform clone and no answer from GitHub")
+        assert known, (
+            f"{sorted(set(files))} say `history: {word}`, which jc-core accepts from platform "
+            f"{HISTORY_SINCE[word][:7]} on; the pinned Portal is built on {pin[:7]}: pin a Portal that has it"
         )
 
 
