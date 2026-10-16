@@ -1,10 +1,15 @@
 ---
 ckan:
   catalogue:
-    # Every catalogue page offers the public assistant of Banská Bystrica and its region
-    # (T-3058, AG-114, T-4252); its manifest is the seed's banskabystrica-assistant-public.yaml,
-    # whose allowedOrigins names this host.
-    assistant: banskabystrica
+    # Every catalogue page offers a body's public assistant (T-3058, AG-114, T-4281): a dataset
+    # page its publisher's, by CKAN organization, and every other page the region's. Each
+    # deployment's allowedOrigins names this host (the seed's *-assistant-public.yaml).
+    assistant: bbsk
+    assistantByOrganization:
+      banskabystrica: banskabystrica
+      bbsk: bbsk
+      zilina: zilina
+      praha: praha
     # Slovak first (owner, 2026-10-16, T-4280): the catalogue's publishers are Slovak, Czech and
     # Finnish bodies, so the catalogue offers their languages while the Portal stays English.
     languages:

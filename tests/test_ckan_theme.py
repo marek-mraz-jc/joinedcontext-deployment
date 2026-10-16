@@ -9,6 +9,7 @@ the two CKAN modules they import; the templates that call them were walked on a 
 
 import importlib.util
 import json
+import os
 import re
 import sys
 import types
@@ -687,12 +688,35 @@ def test_the_table_view_stacks_its_controls_below_desktop_width():
 def test_the_widget_is_offered_only_from_the_installation_s_assistant_host(theme, address, offered):
     theme.ASSISTANT_WIDGET = address
     assert theme.jc_assistant_widget() == (address if offered else None)
+    # A publisher's own address is held to the same rule (T-4281).
+    theme.ASSISTANT_WIDGET = ""
+    theme.ASSISTANT_WIDGETS = {"bbsk": address}
+    assert theme.jc_assistant_widget("bbsk") == (address if offered else None)
+    theme.ASSISTANT_WIDGETS = {}
+
+
+def test_a_dataset_page_opens_its_publishers_assistant_and_any_other_page_the_catalogue_s(theme):
+    """T-4281: the publisher's widget by CKAN organization, the catalogue's for every page with no
+    publisher or a publisher with none of its own; an unreadable map is no map."""
+    theme.ASSISTANT_WIDGET = "https://assistant.dev.example/d/bbsk/widget"
+    theme.ASSISTANT_WIDGETS = {"praha": "https://assistant.dev.example/d/praha/widget"}
+    assert theme.jc_assistant_widget("praha") == "https://assistant.dev.example/d/praha/widget"
+    for organization in (None, "", "zilina"):
+        assert theme.jc_assistant_widget(organization) == "https://assistant.dev.example/d/bbsk/widget"
+    for raw in ("not json", "[1, 2]", '{"praha": 3}'):
+        os.environ["JC_ASSISTANT_WIDGET_URLS"] = raw
+        try:
+            assert theme._widgets() == {}
+        finally:
+            del os.environ["JC_ASSISTANT_WIDGET_URLS"]
+    theme.ASSISTANT_WIDGETS = {}
 
 
 def test_the_footer_offers_the_assistant_as_a_disclosure_a_keyboard_opens():
     footer = (THEME / "footer.html").read_text()
-    assert "{% set widget = h.jc_assistant_widget() %}" in footer
-    assert '<details class="jc-assistant">' in footer and "<summary>{{ h.jc_t('assistant') }}</summary>" in footer
+    assert "{% set widget = h.jc_assistant_widget(publisher) %}" in footer
+    assert "{% set publisher = pkg_dict.organization.name if pkg_dict is defined" in footer
+    assert '<details class="jc-assistant">' in footer and "<summary><span>{{ h.jc_t('assistant') }}</span></summary>" in footer
     assert 'title="{{ h.jc_t(\'assistant\') }}"' in footer and 'loading="lazy"' in footer
     assert 'referrerpolicy="no-referrer"' in footer
     # T-4280: the chat opens in Slovak or the visitor's own choice in it; the page's language
@@ -719,16 +743,42 @@ def test_the_assistant_leaves_the_page_room_and_takes_a_phone_s_whole_screen():
     assert 'event.key === "Escape"' in script and 'querySelector("summary").focus()' in script
 
 
+def test_the_open_assistant_shows_one_close_control_and_a_frame_that_fits_the_window():
+    """T-4283: open, the launcher turns into the panel's round close control (never the label
+    beside the panel); the frame takes the height the chat reports, inside 40rem and the window;
+    the button keeps clear of a phone's home bar."""
+    css = (THEME / "public__jc-theme.css").read_text()
+    desktop = css.split("@media (max-width: 40rem) {", 1)[0]
+    assert "inset-block-end: max(1rem, env(safe-area-inset-bottom));" in desktop
+    assert ".jc-assistant[open] > summary { inline-size: 2.75rem; block-size: 2.75rem; padding: 0; }" in desktop
+    assert ".jc-assistant[open] > summary > span { position: absolute;" in desktop and "clip-path: inset(50%)" in desktop
+    assert '.jc-assistant[open] > summary::after { content: "\\2715";' in desktop
+    assert "height: min(var(--jc-h, 40rem), 40rem, calc(100dvh - 6.25rem));" in desktop
+    phone = css.split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
+    assert ".jc-assistant[open] > summary > span { position: static;" in phone, "a phone's bar keeps its words"
+    script = (THEME / "public__jc-assistant.js").read_text()
+    # The height is heard from the frame's own window and origin alone, and only as a number.
+    assert "event.source !== frame.contentWindow || event.origin !== origin" in script
+    assert 'data.type !== "jc-assistant-height"' in script and "isFinite(height) && height > 0" in script
+    assert 'frame.style.setProperty("--jc-h"' in script
+
+
 def test_the_catalogue_pod_is_told_its_assistant_only_when_the_assistant_is_deployed(rendered, rendered_variant):
     def widget(docs):
         (ckan,) = [d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"].endswith("ckan")
                    and any(c["name"] == "ckan" for c in d["spec"]["template"]["spec"]["containers"])]
         (container,) = [c for c in ckan["spec"]["template"]["spec"]["containers"] if c["name"] == "ckan"]
-        return {e["name"]: e.get("value") for e in container["env"]}["JC_ASSISTANT_WIDGET_URL"]
+        env = {e["name"]: e.get("value") for e in container["env"]}
+        return env["JC_ASSISTANT_WIDGET_URL"], json.loads(env["JC_ASSISTANT_WIDGET_URLS"])
 
-    # dev lists the assistant since T-3181, so its catalogue carries the widget; without the
-    # component the catalogue is told nothing.
-    assert widget(rendered("dev")) == "https://assistant.dev.joinedcontext.com/d/banskabystrica/widget"
+    # dev lists the assistant since T-3181, so its catalogue carries the widget: the region's by
+    # default and each publisher's own (T-4281); without the component it is told nothing.
+    default, by_organization = widget(rendered("dev"))
+    assert default == "https://assistant.dev.joinedcontext.com/d/bbsk/widget"
+    assert by_organization == {
+        body: f"https://assistant.dev.joinedcontext.com/d/{body}/widget"
+        for body in ("banskabystrica", "bbsk", "zilina", "praha")
+    }
 
     def without_assistant(tree):
         path = tree / "deployment/environments/dev/global.yaml.gotmpl"
@@ -736,7 +786,7 @@ def test_the_catalogue_pod_is_told_its_assistant_only_when_the_assistant_is_depl
         assert "\n  - assistant\n" in text
         path.write_text(text.replace("\n  - assistant\n", "\n", 1))
 
-    assert widget(rendered_variant("dev", without_assistant)) == ""
+    assert widget(rendered_variant("dev", without_assistant)) == ("", {})
 
 
 # The usage texts `jcctl publish ckan` writes on the API resources (T-3886), for a restricted
@@ -1031,3 +1081,25 @@ def test_other_words_stay_ckans(theme):
 def test_a_public_publisher_card_counts_no_members():
     card = (THEME / "templates__organization__snippets__organization_item.html").read_text()
     assert "{% block members %}{% endblock %}" in card
+
+
+def test_symbol_font_bullets_become_real_ones_on_the_page_and_the_api(theme):
+    """T-4283: " Druh " drew as "□ Druh □" on data.dev's dataset list."""
+    plugin = theme.JcThemePlugin()
+    pkg = {
+        "title": "Dotácie",
+        "notes": "atribúty:  Rok  Typ Druh",
+        "resources": [{"name": " XML", "description": None}, {"url": "x"}],
+    }
+    plugin.after_dataset_show({}, pkg)
+    assert pkg["notes"] == "atribúty: • Rok ▪ Typ Druh"
+    assert pkg["resources"][0] == {"name": "✓ XML", "description": None}
+    found = plugin.after_dataset_search({"results": [{"notes": " a"}], "count": 1}, {})
+    assert found == {"results": [{"notes": "• a"}], "count": 1}
+    assert plugin.after_dataset_search({"count": 0}, {}) == {"count": 0}
+
+
+def test_no_private_use_glyph_survives_any_text(theme):
+    text = "".join(chr(c) for c in range(0xE000, 0xF900, 7))
+    assert not re.search("[-�]", theme.jc_plain_glyphs(text) or "")
+    assert theme.jc_plain_glyphs("Žilina ľ ô") == "Žilina ľ ô"
