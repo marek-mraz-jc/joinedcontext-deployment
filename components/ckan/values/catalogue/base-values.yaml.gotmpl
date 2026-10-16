@@ -3,6 +3,9 @@
 {{- $this := .Values.ckan.catalogue }}
 {{- $images := index .Values.images "ckan" }}
 {{- $branding := $global.branding | default dict }}
+{{- if $this.languages }}
+{{- $branding = set (deepCopy $branding) "languages" $this.languages }}
+{{- end }}
 # Checklist:
 # - [x] Containers run as non-root with `readOnlyRootFilesystem`
 # - [x] Health probes -> /api/3/action/status_show
