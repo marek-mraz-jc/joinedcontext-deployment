@@ -9,7 +9,7 @@ metadata:
     en: Počet občanov podľa veku
 spec:
   class: scheduled
-  enabled: false
+  enabled: true
   schedule: 10 2 11 * *
   source:
     dataSourceRef:
