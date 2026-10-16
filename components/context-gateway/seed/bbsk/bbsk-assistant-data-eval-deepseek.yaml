@@ -57,19 +57,24 @@ spec:
   scope: { projects: [banskabystrica, zilina, praha, helsinki, slovensko] }
   allowedOrigins: [https://data.dev.joinedcontext.com]
   # The city assistants' limits (T-4149 item 1, T-4286: 300 questions per visitor a month by
-  # default); $1 a day, inside the key's $5 with the four city assistants.
+  # default); $1 a day, inside the key's $5 with the four city assistants. One data question
+  # over five publishers measured 33,744 tokens on dev (2026-10-16, 5 model calls), so a
+  # conversation gets twice the cities' 40,000; the day's cost cap still binds first.
   rateLimit: { requestsPerMinute: 30, perClientPerMinute: 10, perClientPerHour: 60, perClientPerDay: 200, streamsPerClient: 2 }
   budget:
     tokensPerDay: 5000000
-    tokensPerConversation: 40000
+    tokensPerConversation: 80000
     costPerDayUsd: 1
     outputTokensPerAnswer: 700
     messagesPerConversation: 30
     questionChars: 1000
   model: { router: deepseek/deepseek-v4.1-flash, answer: deepseek/deepseek-v4.1-flash }
-  # No city in the header or the greeting (owner: "nie pre konkrétne mesto").
+  # No city in the header or the greeting (owner: "nie pre konkrétne mesto"). The title is the
+  # catalogue's name, the same in every language; the widget writes "Asistent"/"Assistant" beside
+  # it. The greeting is one string (Theme.greeting), so en and fi show the widget's own until the
+  # theme is per language (T-4365).
   theme:
-    title: "Asistent otvorených dát"
+    title: "data.dev"
     greeting: "Dobrý deň! Pýtajte sa na otvorené dáta zo všetkých miest a krajov v katalógu."
   suggestions:
     sk:
