@@ -1,8 +1,8 @@
 """T-3181 (AG-114, EP-81, MF-52): the data portal's public assistant answers from the whole
 catalogue and reads nothing that is not public.
 
-The deployment `helsinki/helsinki-catalogue` is framed by every page of the CKAN at
-data.dev.joinedcontext.com, so anyone reaches it without signing in. Every source it answers
+The deployment `helsinki/helsinki-catalogue` answers anyone on data.dev.joinedcontext.com
+without signing in (since T-4252 the catalogue pages frame Banská Bystrica's assistant instead). Every source it answers
 from is a public KnowledgeSource, every connector a public Endpoint that serves MCP, it is
 placed on the data portal alone, and its rate and budget are bounded.
 """

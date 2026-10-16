@@ -95,9 +95,13 @@ def test_no_other_body_is_named_and_no_secret_is_carried():
         assert word not in text, word
 
 
-def test_it_is_placed_on_the_assistant_host_and_the_demo_page_with_t4149_limits():
+def test_it_is_placed_on_the_assistant_host_the_demo_page_and_the_catalogue_with_t4149_limits():
     spec = deployment()
-    assert spec["allowedOrigins"] == ["https://assistant.dev.joinedcontext.com", "https://dev.joinedcontext.com"]
+    assert spec["allowedOrigins"] == [
+        "https://assistant.dev.joinedcontext.com",
+        "https://dev.joinedcontext.com",
+        "https://data.dev.joinedcontext.com",
+    ]
     limit = spec["rateLimit"]
     assert (limit["perClientPerMinute"], limit["perClientPerHour"], limit["perClientPerDay"], limit["streamsPerClient"]) == (10, 60, 200, 2)
     budget = spec["budget"]
@@ -123,3 +127,22 @@ def test_the_sources_and_the_deployment_are_seeded_at_their_kinds_paths():
     assert index["banskabystrica-assistant-public.yaml"] == "projects/banskabystrica/assistant/deployments/banskabystrica.yaml"
     assert index["banskabystrica-knowledge-web-bbsk.yaml"] == "projects/banskabystrica/assistant/sources/web-bbsk.yaml"
     assert index["banskabystrica-knowledge-data-portal.yaml"] == "projects/banskabystrica/assistant/sources/data-portal.yaml"
+
+
+def test_the_dev_catalogue_widget_is_this_assistant_and_reaches_the_two_bodies_alone():
+    # T-4252: every page of data.dev frames the deployment `ckan.catalogue.assistant` names; it is
+    # this one, whose project and scope are Banská Bystrica and the region, not Helsinki's.
+    values = Path(__file__).resolve().parent.parent / ".ci/example-deployments/environments/dev/ckan.yaml.gotmpl"
+    public_id = yaml.safe_load(values.read_text())["ckan"]["catalogue"]["assistant"]
+    found = [
+        doc
+        for project in SEED.iterdir()
+        if project.is_dir()
+        for doc in manifests("AssistantDeployment", project.name).values()
+        if doc["spec"]["publicId"] == public_id
+    ]
+    assert len(found) == 1, public_id
+    doc = found[0]
+    assert doc["spec"]["channel"] in ("public", "ckan")
+    assert {doc["metadata"]["namespace"], *doc["spec"]["scope"]["projects"]} == set(SCOPE)
+    assert "https://data.dev.joinedcontext.com" in doc["spec"]["allowedOrigins"]
