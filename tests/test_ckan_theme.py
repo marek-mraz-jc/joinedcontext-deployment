@@ -45,6 +45,7 @@ def theme(tmp_path, monkeypatch):
     for error in ("ObjectNotFound", "NotAuthorized", "ValidationError"):
         setattr(toolkit, error, type(error, (Exception,), {}))
     toolkit.get_action = get_action
+    toolkit.chained_helper = lambda helper: helper
     plugins = types.ModuleType("ckan.plugins")
     plugins.toolkit = toolkit
     plugins.SingletonPlugin = object
@@ -936,3 +937,31 @@ def test_the_dataset_search_takes_the_hyphenated_word_as_a_phrase(theme):
     plugin = theme.JcThemePlugin()
     assert plugin.before_dataset_search({"q": "bike-sharing", "rows": 20}) == {"q": '"bike-sharing"', "rows": 20}
     assert plugin.before_dataset_search({"fq": "x"}) == {"fq": "x"}
+
+
+# T-4220 (photo audit T-4161): one concept, three names. The navigation said Publishers, the
+# breadcrumb, title and search box Organizations, and each card counted its CKAN members.
+@pytest.mark.parametrize("entity, purpose, en, sk", [
+    ("organization", "breadcrumb", "Publishers", "Vydavatelia"),
+    ("organization", "page title", "Publishers", "Vydavatelia"),
+    ("organization", "main nav", "Publishers", "Vydavatelia"),
+    ("organization", "search placeholder", "Search publishers…", "Hľadať vydavateľov…"),
+    ("group", "breadcrumb", "Topics", "Témy"),
+    ("group", "search placeholder", "Search topics…", "Hľadať témy…"),
+])
+def test_publishers_and_topics_have_one_name(theme, entity, purpose, en, sk):
+    stock = lambda *args: None
+    assert theme.humanize_entity_type(stock, entity, entity, purpose) == en
+    theme.page.lang = "sk"
+    assert theme.humanize_entity_type(stock, entity, entity, purpose) == sk
+
+
+def test_other_words_stay_ckans(theme):
+    stock = lambda entity, object_type, purpose: "stock %s" % purpose
+    assert theme.humanize_entity_type(stock, "organization", "organization", "save label") == "stock save label"
+    assert theme.humanize_entity_type(stock, "package", "dataset", "breadcrumb") == "stock breadcrumb"
+
+
+def test_a_public_publisher_card_counts_no_members():
+    card = (THEME / "templates__organization__snippets__organization_item.html").read_text()
+    assert "{% block members %}{% endblock %}" in card

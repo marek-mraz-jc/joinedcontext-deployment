@@ -10,3 +10,5 @@
     <p class="media-description">{{ h.markdown_extract(jc.description, extract_length=80) }}</p>
   {% endif %}
 {% endblock %}
+{# A visitor reads what a publisher publishes, not how many CKAN accounts it has (T-4220). #}
+{% block members %}{% endblock %}
