@@ -1,0 +1,42 @@
+# One Smart Data Model type per catalogue dataset (T-4344): WasteContainerIsle, WasteContainer of the space
+# praha-mesto, read through its own Policy, which narrows the space's public read to these types.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: praha-trideny-odpad
+  namespace: praha
+  title: { cs: "Tříděný odpad — Praha", en: "Sorted waste — Prague" }
+  description:
+    cs: "Stanoviště tříděného odpadu a jejich kontejnery se zaplněním ze senzorů. Kontejner odkazuje na své stanoviště. Zdroje: IPR Praha (CC BY 4.0), Golemio, Operátor ICT."
+    en: "Sorted-waste collection points and their containers with the fill level their sensors read. Each container references its collection point. Sources: IPR Praha (CC BY 4.0), Golemio, Operátor ICT."
+spec:
+  contextSpaceRef: praha-mesto
+  slug: e6sryswazw3lcgip7tngpeoampsoai6z
+  audience: public
+  policyRef: urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-odpad
+  enabledRepresentations: [ngsi-ld, geojson, csv, json, websocket, ogc-features, odata, mcp]
+  publish:
+    ckan:
+      instanceRef: { kind: CkanInstance, name: praha }
+      license: cc-by
+      datastore: { representation: csv, refresh: onReconcile }
+  catalog:
+    publisher: { name: { cs: "Hlavní město Praha", en: "City of Prague" }, uri: "https://www.praha.eu/" }
+    license: CC_BY_4_0
+    attribution: { cs: "Zdroje: datový podklad © IPR Praha (CC BY 4.0); Golemio, Operátor ICT", en: "Sources: data © IPR Praha (CC BY 4.0); Golemio, Operátor ICT" }
+    themes: [ENVI]
+    keywords:
+      cs: ["Praha", "odpad", "tříděný odpad", "kontejnery"]
+      en: ["Prague", "waste", "recycling", "containers"]
+    spatial:
+      - "CZ010"
+      - "https://linked.cuzk.cz/resource/ruian/obec/554782"
+    frequency: CONT
+    source:
+      - url: "https://hub.arcgis.com/api/v3/datasets/9938b4b73b4d49a7aef5a605f4d39acf_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1"
+        title: { cs: "Stanoviště tříděného odpadu (IPR Praha)", en: "Sorted-waste collection points (IPR Praha)" }
+        description: { cs: "Stanoviště tříděného odpadu z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.", en: "Sorted-waste collection points from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha." }
+      - url: "https://api.golemio.cz/v2/sortedwastestations?onlyMonitored=true"
+        title: { cs: "Zaplněnost kontejnerů na tříděný odpad (Golemio)", en: "Sorted-waste container fill levels (Golemio)" }
+        description: { cs: "Stanoviště tříděného odpadu s poslední hodnotou zaplnění ze senzorů, Operátor ICT, otevřená data.", en: "Sorted-waste collection points with the last fill level their sensors read, Operátor ICT, open data." }
+    pipelineRef: { kind: Pipeline, name: waste-fill }
