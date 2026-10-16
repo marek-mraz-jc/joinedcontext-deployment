@@ -12,7 +12,7 @@ spec:
   contextSpaceRef:
     kind: ContextSpace
     name: banskabystrica-verejne
-  assigner: did:web:{orgDomain}
+  assigner: did:web:banskabystrica.sk
   assignee:
     kind: role
     id: public

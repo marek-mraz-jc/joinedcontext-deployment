@@ -12,7 +12,7 @@ spec:
   contextSpaceRef:
     kind: ContextSpace
     name: praha-mesto
-  assigner: did:web:{orgDomain}
+  assigner: did:web:praha.eu
   assignee:
     kind: role
     id: public

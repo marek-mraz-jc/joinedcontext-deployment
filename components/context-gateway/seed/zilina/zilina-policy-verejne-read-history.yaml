@@ -12,7 +12,7 @@ spec:
   contextSpaceRef:
     kind: ContextSpace
     name: zilina-verejne
-  assigner: did:web:{orgDomain}
+  assigner: did:web:zilina.sk
   assignee:
     kind: role
     id: public

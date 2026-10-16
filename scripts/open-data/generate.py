@@ -693,7 +693,7 @@ def project_files(project: str, entries: list[dict], names: dict[str, str]) -> d
             "Anyone reads the history of the types that keep one, as far back as the space keeps it (T-4372):\n"
             "the same entities as the read, over time. The other types keep no history.",
             {**head, "kind": "Policy", "metadata": meta("otvorene-data-read-history", {"sk": "Verejné čítanie histórie otvorených dát", "en": "Public read: open data history"}),
-             "spec": {"contextSpaceRef": {"kind": "ContextSpace", "name": space}, "assigner": "did:web:{orgDomain}",
+             "spec": {"contextSpaceRef": {"kind": "ContextSpace", "name": space}, "assigner": f"did:web:{p['domain']}",
                       "assignee": {"kind": "role", "id": "public"},
                       "operations": ["queryTemporal", "retrieveTemporal"], "temporalQ": "timerel=after;timeAt=P-30D",
                       "information": [{"entities": [{"type": t} for t in measured]}]}})
