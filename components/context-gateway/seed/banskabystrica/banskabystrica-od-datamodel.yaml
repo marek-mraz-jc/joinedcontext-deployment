@@ -14,7 +14,9 @@ spec:
   lifecycle: published
   classes:
   - Address
+  - Garden
   - KeyPerformanceIndicator
+  - OffStreetParking
   artifacts:
     jsonSchema: ./banskabystrica-otvorene-data.v1.schema.json
     context: ./banskabystrica-otvorene-data.v1.context.jsonld

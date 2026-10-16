@@ -5,7 +5,7 @@
   "definitions": {
     "Address": {
       "additionalProperties": false,
-      "description": "One row of Adresy.",
+      "description": "One row of Adresy; DTM_BB-Register-adries.",
       "properties": {
         "addressArea": {
           "description": "The source column `\u010cas\u0165_obce`.",
@@ -14,6 +14,22 @@
           },
           "type": [
             "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "cOID": {
+          "description": "The source column `CO_ID`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dPOSTA": {
+          "description": "The source column `DPOSTA`.",
+          "type": [
+            "string",
             "null"
           ],
           "x-ngsi-ld-kind": "Property"
@@ -35,9 +51,41 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "iD": {
+          "description": "The source column `ID`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "id": {
           "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
           "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "idRegad": {
+          "description": "The source column `id_regad`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "kRAJ": {
+          "description": "The source column `KRAJ`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "kRAJID": {
+          "description": "The source column `KRAJ_ID`.",
+          "type": [
+            "integer",
+            "null"
+          ],
           "x-ngsi-ld-kind": "Property"
         },
         "location": {
@@ -68,6 +116,54 @@
           ],
           "x-ngsi-ld-kind": "GeoProperty"
         },
+        "oBECID": {
+          "description": "The source column `OBEC_ID`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "oKRES": {
+          "description": "The source column `OKRES`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "oKRESID": {
+          "description": "The source column `OKRES_ID`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "oRIENTC": {
+          "description": "The source column `ORIENT_C`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "oRIENTCC": {
+          "description": "The source column `ORIENT_C_C`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "oRIENTCP": {
+          "description": "The source column `ORIENT_C_P`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "observedAt": {
           "description": "When the observation the entity reports was made.",
           "format": "date-time",
@@ -85,6 +181,17 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "postCode": {
+          "description": "The source column `PSC`.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "postName": {
           "description": "The source column `Obec`.",
           "items": {
@@ -92,6 +199,22 @@
           },
           "type": [
             "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "sCHRANKY": {
+          "description": "The source column `SCHRANKY`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "sUPISNEC": {
+          "description": "The source column `SUPISNE_C`.",
+          "type": [
+            "string",
             "null"
           ],
           "x-ngsi-ld-kind": "Property"
@@ -113,6 +236,14 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "tYPBUDOVY": {
+          "description": "The source column `TYP_BUDOVY`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "thoroughfare": {
           "description": "The source column `Ulica`.",
           "items": {
@@ -127,6 +258,30 @@
         "type": {
           "description": "The entity type, one class of a published data model.",
           "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "uLICAID": {
+          "description": "The source column `ULICA_ID`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "zSJ": {
+          "description": "The source column `ZSJ`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "zSJID": {
+          "description": "The source column `ZSJ_ID`.",
+          "type": [
+            "number",
+            "null"
+          ],
           "x-ngsi-ld-kind": "Property"
         }
       },
@@ -194,6 +349,166 @@
         "type"
       ],
       "title": "Entity",
+      "type": "object"
+    },
+    "Garden": {
+      "additionalProperties": false,
+      "description": "One row of DTM_BB-register-verejnej-zelene-1.",
+      "properties": {
+        "dataProvider": {
+          "description": "Who published the row, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataset": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "datumplatnosti": {
+          "description": "The source column `datumplatnosti`.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "datumvkladu": {
+          "description": "The source column `datumvkladu`.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "datumzmeny": {
+          "description": "The source column `datumzmeny`.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "ics": {
+          "description": "The source column `ics`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "idzmeny": {
+          "description": "The source column `idzmeny`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "popisobjektu": {
+          "description": "The source column `popisobjektu`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The service the row was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "typudrzovanezelene": {
+          "description": "The source column `typudrzovanezelene`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "urovenumisteniobjektuzps": {
+          "description": "The source column `urovenumisteniobjektuzps`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "vrstva": {
+          "description": "The source column `vrstva`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "Garden",
       "type": "object"
     },
     "KeyPerformanceIndicator": {
@@ -479,6 +794,166 @@
         "type"
       ],
       "title": "KeyPerformanceIndicator",
+      "type": "object"
+    },
+    "OffStreetParking": {
+      "additionalProperties": false,
+      "description": "One row of DTM_BB-register-statickej-dopravy.",
+      "properties": {
+        "dataProvider": {
+          "description": "Who published the row, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataset": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "datumplatnosti": {
+          "description": "The source column `datumplatnosti`.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "datumvkladu": {
+          "description": "The source column `datumvkladu`.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "datumzmeny": {
+          "description": "The source column `datumzmeny`.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "ics": {
+          "description": "The source column `ics`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "idzmeny": {
+          "description": "The source column `idzmeny`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "popisobjektu": {
+          "description": "The source column `popisobjektu`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "prevazujicipovrch": {
+          "description": "The source column `prevazujicipovrch`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The service the row was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "urovenumisteniobjektuzps": {
+          "description": "The source column `urovenumisteniobjektuzps`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "vrstva": {
+          "description": "The source column `vrstva`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "OffStreetParking",
       "type": "object"
     }
   },

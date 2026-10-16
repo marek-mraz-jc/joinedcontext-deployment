@@ -22,4 +22,6 @@ spec:
   information:
   - entities:
     - type: Address
+    - type: Garden
     - type: KeyPerformanceIndicator
+    - type: OffStreetParking

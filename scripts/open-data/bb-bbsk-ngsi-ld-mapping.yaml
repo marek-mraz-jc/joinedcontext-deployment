@@ -63,139 +63,710 @@ datasets:
   name: bb-dtm-bb-funkcne-vyuzitie-uzemia
   org: banskabystrica
   title: DTM_BB-funkcne-vyuzitie-uzemia
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (201 KiB): a PDF map sheet, no data'
+  status: removed
+  type: LandUsePlanFeature
+  reason: 'no smart data model: dataModel.UrbanPlanning holds no model yet; no other subject holds a land-use plan''s
+    zones, limits or planned works'
+  layers:
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/3a___Priestorov%C3%A9_usporiadanie_a_funk%C4%8Dn%C3%A9_vyu%C5%BEitie_%C3%BAzemia/MapServer/0
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/3a___Priestorov%C3%A9_usporiadanie_a_funk%C4%8Dn%C3%A9_vyu%C5%BEitie_%C3%BAzemia/MapServer/2
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/3a___Priestorov%C3%A9_usporiadanie_a_funk%C4%8Dn%C3%A9_vyu%C5%BEitie_%C3%BAzemia/MapServer/3
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/3a___Priestorov%C3%A9_usporiadanie_a_funk%C4%8Dn%C3%A9_vyu%C5%BEitie_%C3%BAzemia/MapServer/4
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/3a___Priestorov%C3%A9_usporiadanie_a_funk%C4%8Dn%C3%A9_vyu%C5%BEitie_%C3%BAzemia/MapServer/5
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/3a___Priestorov%C3%A9_usporiadanie_a_funk%C4%8Dn%C3%A9_vyu%C5%BEitie_%C3%BAzemia/MapServer/6
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/3a___Priestorov%C3%A9_usporiadanie_a_funk%C4%8Dn%C3%A9_vyu%C5%BEitie_%C3%BAzemia/MapServer/7
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/3a___Priestorov%C3%A9_usporiadanie_a_funk%C4%8Dn%C3%A9_vyu%C5%BEitie_%C3%BAzemia/MapServer/8
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/3a___Priestorov%C3%A9_usporiadanie_a_funk%C4%8Dn%C3%A9_vyu%C5%BEitie_%C3%BAzemia/MapServer/9
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/3a___Priestorov%C3%A9_usporiadanie_a_funk%C4%8Dn%C3%A9_vyu%C5%BEitie_%C3%BAzemia/MapServer/10
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/3a___Priestorov%C3%A9_usporiadanie_a_funk%C4%8Dn%C3%A9_vyu%C5%BEitie_%C3%BAzemia/MapServer/11
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/3a___Priestorov%C3%A9_usporiadanie_a_funk%C4%8Dn%C3%A9_vyu%C5%BEitie_%C3%BAzemia/MapServer/14
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/3a___Priestorov%C3%A9_usporiadanie_a_funk%C4%8Dn%C3%A9_vyu%C5%BEitie_%C3%BAzemia/MapServer/15
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/3a___Priestorov%C3%A9_usporiadanie_a_funk%C4%8Dn%C3%A9_vyu%C5%BEitie_%C3%BAzemia/MapServer/16
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/3a___Priestorov%C3%A9_usporiadanie_a_funk%C4%8Dn%C3%A9_vyu%C5%BEitie_%C3%BAzemia/MapServer/17
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/3a___Priestorov%C3%A9_usporiadanie_a_funk%C4%8Dn%C3%A9_vyu%C5%BEitie_%C3%BAzemia/MapServer/18
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/3a___Priestorov%C3%A9_usporiadanie_a_funk%C4%8Dn%C3%A9_vyu%C5%BEitie_%C3%BAzemia/MapServer/19
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/3a___Priestorov%C3%A9_usporiadanie_a_funk%C4%8Dn%C3%A9_vyu%C5%BEitie_%C3%BAzemia/MapServer/20
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/3a___Priestorov%C3%A9_usporiadanie_a_funk%C4%8Dn%C3%A9_vyu%C5%BEitie_%C3%BAzemia/MapServer/21
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/3a___Priestorov%C3%A9_usporiadanie_a_funk%C4%8Dn%C3%A9_vyu%C5%BEitie_%C3%BAzemia/MapServer/22
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/3a___Priestorov%C3%A9_usporiadanie_a_funk%C4%8Dn%C3%A9_vyu%C5%BEitie_%C3%BAzemia/MapServer/23
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/3a___Priestorov%C3%A9_usporiadanie_a_funk%C4%8Dn%C3%A9_vyu%C5%BEitie_%C3%BAzemia/MapServer/24
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/3a___Priestorov%C3%A9_usporiadanie_a_funk%C4%8Dn%C3%A9_vyu%C5%BEitie_%C3%BAzemia/MapServer/28
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/3a___Priestorov%C3%A9_usporiadanie_a_funk%C4%8Dn%C3%A9_vyu%C5%BEitie_%C3%BAzemia/MapServer/29
 - id: fb1385c6-eddb-4412-bb4b-fc54ce7f3fb3
   name: bb-dtm-bb-polohopis-a-vyskopis-bodoveho-pola
   org: banskabystrica
   title: DTM_BB-Polohopis_a_vyskopis_bodoveho_pola
   status: not-ingestible
-  reason: '240636 Point features in S-JTSK (EPSG:5514): NGSI-LD locations are WGS 84 and no pipeline step reprojects;
-    without the geometry the rows carry little (the city''s address list without points is bb-adresy)'
+  reason: 240638 rows, more than the 100000 this round loads into the one broker
 - id: 68714ed4-1a8d-4cd8-9d8e-94d8fde8439d
   name: bb-dtm-bb-register-adries
   org: banskabystrica
   title: DTM_BB-Register-adries
-  status: not-ingestible
-  reason: '15769 Point features in S-JTSK (EPSG:5514): NGSI-LD locations are WGS 84 and no pipeline step reprojects;
-    without the geometry the rows carry little (the city''s address list without points is bb-adresy)'
+  status: mapped
+  type: Address
+  smartDataModel: dataModel.CPSV-AP/Address
+  source:
+    kind: zip-geojson
+    url: https://dtm-banskabystrica.tmapserver.sk/opendata/OE_01_register_adries.zip
+    member: OE_01_register_adries.geojson
+    crs: EPSG:5514
+    geometry: true
+    rows: 15769
+  entityId:
+    keys:
+    - ID
+  observedAt: null
+  space: banskabystrica-otvorene-data
+  refresh: P1W
+  dataProvider: Mesto Banská Bystrica
+  license: cc-by-sa
+  dataset: https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-adries
+  properties:
+    iD:
+      column: ID
+      range: float
+    kRAJ:
+      column: KRAJ
+      range: string
+    kRAJID:
+      column: KRAJ_ID
+      range: integer
+    oKRES:
+      column: OKRES
+      range: string
+    oKRESID:
+      column: OKRES_ID
+      range: integer
+    postName:
+      column: OBEC
+      range: string-list
+    oBECID:
+      column: OBEC_ID
+      range: integer
+    addressArea:
+      column: CAST_OBCE
+      range: string-list
+    cOID:
+      column: CO_ID
+      range: integer
+    thoroughfare:
+      column: ULICA
+      range: string-list
+    uLICAID:
+      column: ULICA_ID
+      range: integer
+    oRIENTC:
+      column: ORIENT_C
+      range: string
+    sUPISNEC:
+      column: SUPISNE_C
+      range: string
+    oRIENTCC:
+      column: ORIENT_C_C
+      range: string
+    oRIENTCP:
+      column: ORIENT_C_P
+      range: string
+    postCode:
+      column: PSC
+      range: string-list
+    dPOSTA:
+      column: DPOSTA
+      range: string
+    tYPBUDOVY:
+      column: TYP_BUDOVY
+      range: integer
+    sCHRANKY:
+      column: SCHRANKY
+      range: integer
+    zSJ:
+      column: ZSJ
+      range: string
+    zSJID:
+      column: ZSJ_ID
+      range: float
+    idRegad:
+      column: id_regad
+      range: string
+  dropped:
+    columns:
+    - POINT_X
+    - POINT_Y
+    why: the point in S-JTSK; the location carries it in WGS 84
+  note: the city's address points (DTM_BB), reprojected from S-JTSK
 - id: c4fdef97-4e0b-4c8a-9b7b-9792e24ff094
   name: bb-dtm-bb-register-chodnikov-a-verejnych-priestranstiev
   org: banskabystrica
   title: DTM_BB-register-chodnikov-a-verejnych-priestranstiev
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data'
+  status: removed
+  type: Footway
+  reason: 'no smart data model: Transportation/BikeLane is a lane on a road; no model holds a footway or a pavement'
+  layers:
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/dtm/DTM_v_1_4_2_3_verejny/MapServer/4
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/dtm/DTM_v_1_4_2_3_verejny/MapServer/5
 - id: 5f43a3ee-cc18-4e2d-8f1d-df801bdc8bab
   name: bb-dtm-bb-register-miestnych-komunikacii-a-vyssich-tried
   org: banskabystrica
   title: DTM_BB-register-miestnych-komunikacii-a-vyssich-tried
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data'
+  status: removed
+  type: Road
+  reason: 'no smart data model: Transportation/Road requires name and roadClass; a DTM road point has neither, only
+    a surface code'
+  layers:
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/dtm/DTM_v_1_4_2_3_verejny/MapServer/3
 - id: ed2fa840-b6b0-4a33-acf8-6e3408375fd3
   name: bb-dtm-bb-register-statickej-dopravy
   org: banskabystrica
   title: DTM_BB-register-statickej-dopravy
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data'
+  status: mapped
+  type: OffStreetParking
+  smartDataModel: dataModel.Parking/OffStreetParking
+  source:
+    kind: esri-layers
+    geometry: true
+    rows: 535
+    layers:
+    - url: https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/dtm/DTM_v_1_4_2_3_verejny/MapServer/6
+      key: dtm-6
+      name: parkovisko, odstavná plocha - db
+      rows: 535
+      fields:
+      - idzmeny
+      - popisobjektu
+      - datumvkladu
+      - datumzmeny
+      - datumplatnosti
+      - urovenumisteniobjektuzps
+      - prevazujicipovrch
+      - ics
+  entityId:
+    keys:
+    - vrstva_id
+  observedAt: null
+  space: banskabystrica-otvorene-data
+  refresh: P1W
+  dataProvider: Mesto Banská Bystrica
+  license: cc-by-sa
+  dataset: https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-statickej-dopravy
+  properties:
+    idzmeny:
+      column: idzmeny
+      range: string
+    popisobjektu:
+      column: popisobjektu
+      range: string
+    datumvkladu:
+      column: datumvkladu
+      range: datetime
+    datumzmeny:
+      column: datumzmeny
+      range: datetime
+    datumplatnosti:
+      column: datumplatnosti
+      range: datetime
+    urovenumisteniobjektuzps:
+      column: urovenumisteniobjektuzps
+      range: integer
+    prevazujicipovrch:
+      column: prevazujicipovrch
+      range: integer
+    ics:
+      column: ics
+      range: string
+    vrstva:
+      column: vrstva
+      range: string
+  dropped:
+    columns:
+    - ideditora
+    - vkladosoba
+    - zmenaosoba
+    - created_user
+    - last_edited_user
+    why: 'who entered or edited a feature: an editor''s name or account'
+  note: the definition point of each car park off the street (DTM_BB)
 - id: 24326e00-8f80-4308-8a4b-51081c8b950f
   name: bb-dtm-bb-register-stavby
   org: banskabystrica
   title: DTM_BB-register-stavby
-  status: not-ingestible
-  reason: '16534 MultiPolygon features in S-JTSK (EPSG:5514): NGSI-LD locations are WGS 84 and no pipeline step
-    reprojects; without the geometry the rows carry little (the city''s address list without points is bb-adresy)'
+  status: removed
+  type: Building
+  reason: 'no smart data model: Building/Building requires address and category; the register has neither (municipality
+    and district only)'
 - id: 2f4fcdb0-0853-42d8-8d76-2466e3b036cb
   name: bb-dtm-bb-register-stlpov-vo
   org: banskabystrica
   title: DTM_BB-register-stlpov-VO
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (185 KiB): a PDF map sheet, no data'
+  status: removed
+  type: Streetlight
+  reason: 'no smart data model: Streetlighting/Streetlight requires status (ok, defectiveLamp, columnIssue, brokenLantern);
+    the DTM records whether a pole is operated, not the state of its lamp'
+  layers:
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/dtm/DTM_v_1_4_2_3_verejny/MapServer/226
 - id: fc06f7ea-2763-44f3-a543-4ea70b6eb668
   name: bb-dtm-bb-register-ulic
   org: banskabystrica
   title: DTM_BB-register-ulic
-  status: not-ingestible
-  reason: '6338 MultiLineString features in S-JTSK (EPSG:5514): NGSI-LD locations are WGS 84 and no pipeline step
-    reprojects; without the geometry the rows carry little (the city''s address list without points is bb-adresy)'
+  status: removed
+  type: RoadSegment
+  reason: 'no smart data model: Transportation/RoadSegment requires refRoad, startPoint, endPoint and allowedVehicleType,
+    which a street register has not'
 - id: 90bb5851-fc4b-4217-ae56-733bcb438691
   name: bb-dtm-bb-register-verejnej-zelene-1
   org: banskabystrica
   title: DTM_BB-register-verejnej-zelene-1
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (43 KiB): a PDF map sheet, no data'
+  status: mapped
+  type: Garden
+  smartDataModel: dataModel.ParksAndGardens/Garden
+  source:
+    kind: esri-layers
+    geometry: true
+    rows: 8546
+    layers:
+    - url: https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/dtm/DTM_v_1_4_2_3_verejny/MapServer/57
+      key: dtm-57
+      name: udržiavaná plocha zelene - db
+      rows: 8546
+      fields:
+      - idzmeny
+      - popisobjektu
+      - datumvkladu
+      - datumzmeny
+      - datumplatnosti
+      - urovenumisteniobjektuzps
+      - typudrzovanezelene
+      - ics
+  entityId:
+    keys:
+    - vrstva_id
+  observedAt: null
+  space: banskabystrica-otvorene-data
+  refresh: P1W
+  dataProvider: Mesto Banská Bystrica
+  license: cc-by-sa
+  dataset: https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-verejnej-zelene-1
+  properties:
+    idzmeny:
+      column: idzmeny
+      range: string
+    popisobjektu:
+      column: popisobjektu
+      range: string
+    datumvkladu:
+      column: datumvkladu
+      range: datetime
+    datumzmeny:
+      column: datumzmeny
+      range: datetime
+    datumplatnosti:
+      column: datumplatnosti
+      range: datetime
+    urovenumisteniobjektuzps:
+      column: urovenumisteniobjektuzps
+      range: integer
+    typudrzovanezelene:
+      column: typudrzovanezelene
+      range: integer
+    ics:
+      column: ics
+      range: string
+    vrstva:
+      column: vrstva
+      range: string
+  dropped:
+    columns:
+    - ideditora
+    - vkladosoba
+    - zmenaosoba
+    - created_user
+    - last_edited_user
+    why: 'who entered or edited a feature: an editor''s name or account'
+  note: the definition point of each kept green area (DTM_BB)
 - id: b2057885-c4f5-4f6a-aa7b-ba8556a7a13c
   name: bb-dtm-bb-register-verejnej-zelene-2
   org: banskabystrica
   title: DTM_BB-register-verejnej-zelene-2
-  status: not-ingestible
-  reason: 'a ZIP of 3 .atr, 3 .cpg, 3 .dbf, 3 .shp, 3 .shx (732 KiB): Esri shapefiles; no ingestion path reads a
-    shapefile today'
+  status: removed
+  type: Tree
+  reason: 'no smart data model: ParksAndGardens has Garden, FlowerBed and GreenspaceRecord (a measurement); no model
+    holds a single tree'
+  layers:
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/dtm/DTM_v_1_4_2_3_verejny/MapServer/128
 - id: f08602e6-ec95-43a7-b13d-44320f1caa46
   name: bb-dtm-bb-register-verejnej-zelene-3
   org: banskabystrica
   title: DTM_BB-register-verejnej-zelene-3
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (194 KiB): a PDF map sheet, no data'
+  status: removed
+  type: GreenAreaBoundary
+  reason: 'no smart data model: ParksAndGardens/Garden is the area; no model holds the line around it'
+  layers:
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/dtm/DTM_v_1_4_2_3_verejny/MapServer/88
 - id: ebcf8bb3-7248-4f1c-aa9c-2f1302abc593
   name: bb-dtm-bb-register-vodorovneho-dopravneho-znacenia
   org: banskabystrica
   title: DTM_BB-register-vodorovneho-dopravneho-znacenia
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data'
+  status: no-data-source
+  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, and no layer of the city''s ArcGIS services holds its data'
+  tried:
+  - https://dtm-banskabystrica.tmapserver.sk/opendata/OE_17.zip
+  - https://dtm-banskabystrica.tmapserver.sk/-/wfs/?service=WFS&request=GetCapabilities
+  - https://dtm-banskabystrica.tmapserver.sk/-/wms/?service=WMS&request=GetCapabilities
+  - https://data.slovensko.sk/api/sparql (dcat:distribution of https://data.gov.sk/set/10d623e9-5b5c-4388-820b-19366ed06976)
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/dtm/DTM_v_1_4_2_3_verejny/MapServer/layers?f=json
+    (247 layers)
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up?f=json (14 land-use plan services)
 - id: f5382a0f-ef29-4823-a925-d5b0254e823c
   name: bb-dtm-bb-register-zvisleho-dopravneho-znacenia
   org: banskabystrica
   title: DTM_BB-register-zvisleho-dopravneho-znacenia
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data'
+  status: removed
+  type: TrafficSign
+  reason: 'no smart data model: no subject of the official list (2026-07-19) holds a traffic sign but OpenStreetMap''s'
+  layers:
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/dtm/DTM_v_1_4_2_3_verejny/MapServer/175
 - id: 5e147d8b-e44f-4f37-b5b0-501f54179e56
   name: bb-dtm-bb-regulativy-a-limity-funkcneho-vyuzitia-uzemia
   org: banskabystrica
   title: DTM_BB-regulativy-a-limity-funkcneho-vyuzitia-uzemia
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (205 KiB): a PDF map sheet, no data'
+  status: removed
+  type: LandUsePlanFeature
+  reason: 'no smart data model: dataModel.UrbanPlanning holds no model yet; no other subject holds a land-use plan''s
+    zones, limits or planned works'
+  layers:
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7a___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___funk%C4%8Dn%C3%A9_a_v%C3%BD%C5%A1kov%C3%A9_regulat%C3%ADvy_a_limity/MapServer/0
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7a___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___funk%C4%8Dn%C3%A9_a_v%C3%BD%C5%A1kov%C3%A9_regulat%C3%ADvy_a_limity/MapServer/1
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7a___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___funk%C4%8Dn%C3%A9_a_v%C3%BD%C5%A1kov%C3%A9_regulat%C3%ADvy_a_limity/MapServer/2
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7a___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___funk%C4%8Dn%C3%A9_a_v%C3%BD%C5%A1kov%C3%A9_regulat%C3%ADvy_a_limity/MapServer/3
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7a___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___funk%C4%8Dn%C3%A9_a_v%C3%BD%C5%A1kov%C3%A9_regulat%C3%ADvy_a_limity/MapServer/4
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7a___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___funk%C4%8Dn%C3%A9_a_v%C3%BD%C5%A1kov%C3%A9_regulat%C3%ADvy_a_limity/MapServer/6
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7a___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___funk%C4%8Dn%C3%A9_a_v%C3%BD%C5%A1kov%C3%A9_regulat%C3%ADvy_a_limity/MapServer/7
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7a___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___funk%C4%8Dn%C3%A9_a_v%C3%BD%C5%A1kov%C3%A9_regulat%C3%ADvy_a_limity/MapServer/11
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7a___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___funk%C4%8Dn%C3%A9_a_v%C3%BD%C5%A1kov%C3%A9_regulat%C3%ADvy_a_limity/MapServer/12
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7a___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___funk%C4%8Dn%C3%A9_a_v%C3%BD%C5%A1kov%C3%A9_regulat%C3%ADvy_a_limity/MapServer/13
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7a___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___funk%C4%8Dn%C3%A9_a_v%C3%BD%C5%A1kov%C3%A9_regulat%C3%ADvy_a_limity/MapServer/14
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7a___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___funk%C4%8Dn%C3%A9_a_v%C3%BD%C5%A1kov%C3%A9_regulat%C3%ADvy_a_limity/MapServer/15
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7b___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___priestorotvorn%C3%A9_regulat%C3%ADvy/MapServer/4
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7b___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___priestorotvorn%C3%A9_regulat%C3%ADvy/MapServer/5
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7b___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___priestorotvorn%C3%A9_regulat%C3%ADvy/MapServer/6
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7b___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___priestorotvorn%C3%A9_regulat%C3%ADvy/MapServer/7
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7b___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___priestorotvorn%C3%A9_regulat%C3%ADvy/MapServer/8
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7b___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___priestorotvorn%C3%A9_regulat%C3%ADvy/MapServer/9
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7b___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___priestorotvorn%C3%A9_regulat%C3%ADvy/MapServer/10
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7b___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___priestorotvorn%C3%A9_regulat%C3%ADvy/MapServer/11
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7b___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___priestorotvorn%C3%A9_regulat%C3%ADvy/MapServer/12
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7b___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___priestorotvorn%C3%A9_regulat%C3%ADvy/MapServer/13
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7b___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___priestorotvorn%C3%A9_regulat%C3%ADvy/MapServer/14
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7b___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___priestorotvorn%C3%A9_regulat%C3%ADvy/MapServer/15
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7b___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___priestorotvorn%C3%A9_regulat%C3%ADvy/MapServer/16
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7b___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___priestorotvorn%C3%A9_regulat%C3%ADvy/MapServer/17
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7b___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___priestorotvorn%C3%A9_regulat%C3%ADvy/MapServer/18
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7b___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___priestorotvorn%C3%A9_regulat%C3%ADvy/MapServer/19
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7b___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___priestorotvorn%C3%A9_regulat%C3%ADvy/MapServer/20
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/3
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/4
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/5
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/6
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/7
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/8
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/10
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/11
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/140
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/141
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/142
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/143
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/144
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/145
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/146
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/147
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/148
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/149
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/150
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/151
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/152
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/153
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/154
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/156
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/157
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/158
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/160
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/161
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/163
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/164
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/165
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/166
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/167
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/169
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/7c___Regulat%C3%ADvy_a_limity_funk%C4%8Dn%C3%A9ho_a_priestorov%C3%A9ho_vyu%C5%BE%C3%ADvania_%C3%BAzemia___limity_%C3%BAzemia/MapServer/170
 - id: 42d98983-d9d4-4c82-b093-7ab459c25ca6
   name: bb-dtm-bb-tvorba-krajiny-a-ochrana-prirody
   org: banskabystrica
   title: DTM_BB-tvorba-krajiny-a-ochrana-prirody
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data'
+  status: removed
+  type: LandUsePlanFeature
+  reason: 'no smart data model: dataModel.UrbanPlanning holds no model yet; no other subject holds a land-use plan''s
+    zones, limits or planned works'
+  layers:
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/0
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/2
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/3
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/4
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/5
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/6
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/7
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/8
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/9
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/10
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/11
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/12
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/13
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/14
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/15
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/16
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/17
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/18
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/19
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/20
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/21
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/22
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/25
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/26
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/31
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/32
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/06___Ochrana_pr%C3%ADrody_a_tvorba_krajiny/MapServer/33
 - id: c512a703-7a5e-4c78-af60-ee4dbc4b1d19
   name: bb-dtm-bb-verejne-dopravne-a-technicke-vybavenie
   org: banskabystrica
   title: DTM_BB-verejne-dopravne-a-technicke-vybavenie
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (198 KiB): a PDF map sheet, no data'
+  status: removed
+  type: LandUsePlanFeature
+  reason: 'no smart data model: dataModel.UrbanPlanning holds no model yet; no other subject holds a land-use plan''s
+    zones, limits or planned works'
+  layers:
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/0
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/1
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/2
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/3
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/4
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/6
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/123
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/124
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/125
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/126
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/127
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/128
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/129
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/130
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/131
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/132
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/133
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/134
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/135
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/136
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/137
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/138
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/139
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/140
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/141
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/145
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/146
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/04___Verejn%C3%A9_dopravn%C3%A9_vybavenie/MapServer/147
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5a_3_Verejn%C3%A9_technick%C3%A9_vybavenie___vodn%C3%A9_hospod%C3%A1rstvo/MapServer/3
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5a_3_Verejn%C3%A9_technick%C3%A9_vybavenie___vodn%C3%A9_hospod%C3%A1rstvo/MapServer/4
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5a_3_Verejn%C3%A9_technick%C3%A9_vybavenie___vodn%C3%A9_hospod%C3%A1rstvo/MapServer/5
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5a_3_Verejn%C3%A9_technick%C3%A9_vybavenie___vodn%C3%A9_hospod%C3%A1rstvo/MapServer/6
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5a_3_Verejn%C3%A9_technick%C3%A9_vybavenie___vodn%C3%A9_hospod%C3%A1rstvo/MapServer/7
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5a_3_Verejn%C3%A9_technick%C3%A9_vybavenie___vodn%C3%A9_hospod%C3%A1rstvo/MapServer/8
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5a_3_Verejn%C3%A9_technick%C3%A9_vybavenie___vodn%C3%A9_hospod%C3%A1rstvo/MapServer/9
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5a_3_Verejn%C3%A9_technick%C3%A9_vybavenie___vodn%C3%A9_hospod%C3%A1rstvo/MapServer/10
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5a_3_Verejn%C3%A9_technick%C3%A9_vybavenie___vodn%C3%A9_hospod%C3%A1rstvo/MapServer/11
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5a_3_Verejn%C3%A9_technick%C3%A9_vybavenie___vodn%C3%A9_hospod%C3%A1rstvo/MapServer/12
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5a_3_Verejn%C3%A9_technick%C3%A9_vybavenie___vodn%C3%A9_hospod%C3%A1rstvo/MapServer/13
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5a_3_Verejn%C3%A9_technick%C3%A9_vybavenie___vodn%C3%A9_hospod%C3%A1rstvo/MapServer/14
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5a_3_Verejn%C3%A9_technick%C3%A9_vybavenie___vodn%C3%A9_hospod%C3%A1rstvo/MapServer/15
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5a_3_Verejn%C3%A9_technick%C3%A9_vybavenie___vodn%C3%A9_hospod%C3%A1rstvo/MapServer/16
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5a_3_Verejn%C3%A9_technick%C3%A9_vybavenie___vodn%C3%A9_hospod%C3%A1rstvo/MapServer/17
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5a_3_Verejn%C3%A9_technick%C3%A9_vybavenie___vodn%C3%A9_hospod%C3%A1rstvo/MapServer/18
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5a_3_Verejn%C3%A9_technick%C3%A9_vybavenie___vodn%C3%A9_hospod%C3%A1rstvo/MapServer/19
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5a_3_Verejn%C3%A9_technick%C3%A9_vybavenie___vodn%C3%A9_hospod%C3%A1rstvo/MapServer/20
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5a_3_Verejn%C3%A9_technick%C3%A9_vybavenie___vodn%C3%A9_hospod%C3%A1rstvo/MapServer/21
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5a_3_Verejn%C3%A9_technick%C3%A9_vybavenie___vodn%C3%A9_hospod%C3%A1rstvo/MapServer/23
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5a_3_Verejn%C3%A9_technick%C3%A9_vybavenie___vodn%C3%A9_hospod%C3%A1rstvo/MapServer/24
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5a_3_Verejn%C3%A9_technick%C3%A9_vybavenie___vodn%C3%A9_hospod%C3%A1rstvo/MapServer/25
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5a_3_Verejn%C3%A9_technick%C3%A9_vybavenie___vodn%C3%A9_hospod%C3%A1rstvo/MapServer/29
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5a_3_Verejn%C3%A9_technick%C3%A9_vybavenie___vodn%C3%A9_hospod%C3%A1rstvo/MapServer/30
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5b___Verejn%C3%A9_technick%C3%A9_vybavenie___plyn_a_teplo/MapServer/0
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5b___Verejn%C3%A9_technick%C3%A9_vybavenie___plyn_a_teplo/MapServer/4
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5b___Verejn%C3%A9_technick%C3%A9_vybavenie___plyn_a_teplo/MapServer/5
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5b___Verejn%C3%A9_technick%C3%A9_vybavenie___plyn_a_teplo/MapServer/6
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5b___Verejn%C3%A9_technick%C3%A9_vybavenie___plyn_a_teplo/MapServer/7
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5b___Verejn%C3%A9_technick%C3%A9_vybavenie___plyn_a_teplo/MapServer/8
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5b___Verejn%C3%A9_technick%C3%A9_vybavenie___plyn_a_teplo/MapServer/9
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5b___Verejn%C3%A9_technick%C3%A9_vybavenie___plyn_a_teplo/MapServer/10
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5b___Verejn%C3%A9_technick%C3%A9_vybavenie___plyn_a_teplo/MapServer/11
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5b___Verejn%C3%A9_technick%C3%A9_vybavenie___plyn_a_teplo/MapServer/12
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5c___Verejn%C3%A9_technick%C3%A9_vybavenie___elektrick%C3%A1_energia_a_telekomunik%C3%A1cie/MapServer/1
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5c___Verejn%C3%A9_technick%C3%A9_vybavenie___elektrick%C3%A1_energia_a_telekomunik%C3%A1cie/MapServer/3
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/5c___Verejn%C3%A9_technick%C3%A9_vybavenie___elektrick%C3%A1_energia_a_telekomunik%C3%A1cie/MapServer/19
 - id: 8c3c67bf-074e-4207-9cd7-b51ed756a4f8
   name: bb-dtm-bb-verejnoprospesne-stavby
   org: banskabystrica
   title: DTM_BB-verejnoprospesne-stavby
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (197 KiB): a PDF map sheet, no data'
+  status: removed
+  type: LandUsePlanFeature
+  reason: 'no smart data model: dataModel.UrbanPlanning holds no model yet; no other subject holds a land-use plan''s
+    zones, limits or planned works'
+  layers:
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/10___Verejno_prospe%C5%A1n%C3%A9_stavby_a_n%C3%A1sledn%C3%A9_%C3%9APN_Z/MapServer/0
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/10___Verejno_prospe%C5%A1n%C3%A9_stavby_a_n%C3%A1sledn%C3%A9_%C3%9APN_Z/MapServer/1
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/10___Verejno_prospe%C5%A1n%C3%A9_stavby_a_n%C3%A1sledn%C3%A9_%C3%9APN_Z/MapServer/2
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/10___Verejno_prospe%C5%A1n%C3%A9_stavby_a_n%C3%A1sledn%C3%A9_%C3%9APN_Z/MapServer/3
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/10___Verejno_prospe%C5%A1n%C3%A9_stavby_a_n%C3%A1sledn%C3%A9_%C3%9APN_Z/MapServer/5
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/10___Verejno_prospe%C5%A1n%C3%A9_stavby_a_n%C3%A1sledn%C3%A9_%C3%9APN_Z/MapServer/6
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/10___Verejno_prospe%C5%A1n%C3%A9_stavby_a_n%C3%A1sledn%C3%A9_%C3%9APN_Z/MapServer/7
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/10___Verejno_prospe%C5%A1n%C3%A9_stavby_a_n%C3%A1sledn%C3%A9_%C3%9APN_Z/MapServer/8
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/10___Verejno_prospe%C5%A1n%C3%A9_stavby_a_n%C3%A1sledn%C3%A9_%C3%9APN_Z/MapServer/9
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/10___Verejno_prospe%C5%A1n%C3%A9_stavby_a_n%C3%A1sledn%C3%A9_%C3%9APN_Z/MapServer/10
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/10___Verejno_prospe%C5%A1n%C3%A9_stavby_a_n%C3%A1sledn%C3%A9_%C3%9APN_Z/MapServer/11
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/10___Verejno_prospe%C5%A1n%C3%A9_stavby_a_n%C3%A1sledn%C3%A9_%C3%9APN_Z/MapServer/12
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/10___Verejno_prospe%C5%A1n%C3%A9_stavby_a_n%C3%A1sledn%C3%A9_%C3%9APN_Z/MapServer/13
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/10___Verejno_prospe%C5%A1n%C3%A9_stavby_a_n%C3%A1sledn%C3%A9_%C3%9APN_Z/MapServer/14
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/10___Verejno_prospe%C5%A1n%C3%A9_stavby_a_n%C3%A1sledn%C3%A9_%C3%9APN_Z/MapServer/15
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/10___Verejno_prospe%C5%A1n%C3%A9_stavby_a_n%C3%A1sledn%C3%A9_%C3%9APN_Z/MapServer/16
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/10___Verejno_prospe%C5%A1n%C3%A9_stavby_a_n%C3%A1sledn%C3%A9_%C3%9APN_Z/MapServer/17
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/10___Verejno_prospe%C5%A1n%C3%A9_stavby_a_n%C3%A1sledn%C3%A9_%C3%9APN_Z/MapServer/18
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/10___Verejno_prospe%C5%A1n%C3%A9_stavby_a_n%C3%A1sledn%C3%A9_%C3%9APN_Z/MapServer/19
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/10___Verejno_prospe%C5%A1n%C3%A9_stavby_a_n%C3%A1sledn%C3%A9_%C3%9APN_Z/MapServer/20
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/10___Verejno_prospe%C5%A1n%C3%A9_stavby_a_n%C3%A1sledn%C3%A9_%C3%9APN_Z/MapServer/21
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/10___Verejno_prospe%C5%A1n%C3%A9_stavby_a_n%C3%A1sledn%C3%A9_%C3%9APN_Z/MapServer/22
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/10___Verejno_prospe%C5%A1n%C3%A9_stavby_a_n%C3%A1sledn%C3%A9_%C3%9APN_Z/MapServer/26
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/10___Verejno_prospe%C5%A1n%C3%A9_stavby_a_n%C3%A1sledn%C3%A9_%C3%9APN_Z/MapServer/27
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/10___Verejno_prospe%C5%A1n%C3%A9_stavby_a_n%C3%A1sledn%C3%A9_%C3%9APN_Z/MapServer/28
 - id: 3877e9a5-9a5d-4f00-980b-8aba89101e66
   name: bb-dtm-bb-vodne-toky-a-plochy
   org: banskabystrica
   title: DTM_BB-vodne-toky-a-plochy
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data'
+  status: removed
+  type: WaterBody
+  reason: 'no smart data model: OpenChannelManagement/OpenChannel is a hydraulic model of a channel (cross sections,
+    flow); Environment/WaterObserved is a measurement; no model holds a stream or a reservoir'
+  layers:
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/dtm/DTM_v_1_4_2_3_verejny/MapServer/51
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/dtm/DTM_v_1_4_2_3_verejny/MapServer/23
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/dtm/DTM_v_1_4_2_3_verejny/MapServer/26
 - id: 0bca145f-6437-4969-94b6-04732103c7d4
   name: bb-dtm-bb-vyskopis-teran
   org: banskabystrica
   title: DTM_BB-vyskopis-teran
-  status: not-ingestible
-  reason: 'a ZIP of 1 .geojson (65889 KiB): larger than the 10 MiB this round loads into the one broker'
+  status: removed
+  type: TerrainFeature
+  reason: 'no smart data model: no subject of the official list (2026-07-19) holds contour lines or terrain edges'
+  layers:
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/dtm/DTM_v_1_4_2_3_verejny/MapServer/136
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/dtm/DTM_v_1_4_2_3_verejny/MapServer/135
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/dtm/DTM_v_1_4_2_3_verejny/MapServer/79
 - id: eccabe9d-eebf-4518-a337-1c6661d88377
   name: bb-dtm-bb-vyuzitie-pody-na-nepolnohospodarske-ucely
   org: banskabystrica
   title: DTM_BB-vyuzitie-pody-na-nepolnohospodarske-ucely
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (197 KiB): a PDF map sheet, no data'
+  status: removed
+  type: LandUsePlanFeature
+  reason: 'no smart data model: dataModel.UrbanPlanning holds no model yet; no other subject holds a land-use plan''s
+    zones, limits or planned works'
+  layers:
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/8___Perspekt%C3%ADvne_pou%C5%BEitie_PP_a_LP_na_nep%C3%B4dohospod%C3%A1rske_%C3%BA%C4%8Dely/MapServer/0
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/8___Perspekt%C3%ADvne_pou%C5%BEitie_PP_a_LP_na_nep%C3%B4dohospod%C3%A1rske_%C3%BA%C4%8Dely/MapServer/2
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/8___Perspekt%C3%ADvne_pou%C5%BEitie_PP_a_LP_na_nep%C3%B4dohospod%C3%A1rske_%C3%BA%C4%8Dely/MapServer/3
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/8___Perspekt%C3%ADvne_pou%C5%BEitie_PP_a_LP_na_nep%C3%B4dohospod%C3%A1rske_%C3%BA%C4%8Dely/MapServer/4
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/8___Perspekt%C3%ADvne_pou%C5%BEitie_PP_a_LP_na_nep%C3%B4dohospod%C3%A1rske_%C3%BA%C4%8Dely/MapServer/5
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/8___Perspekt%C3%ADvne_pou%C5%BEitie_PP_a_LP_na_nep%C3%B4dohospod%C3%A1rske_%C3%BA%C4%8Dely/MapServer/6
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/8___Perspekt%C3%ADvne_pou%C5%BEitie_PP_a_LP_na_nep%C3%B4dohospod%C3%A1rske_%C3%BA%C4%8Dely/MapServer/7
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/8___Perspekt%C3%ADvne_pou%C5%BEitie_PP_a_LP_na_nep%C3%B4dohospod%C3%A1rske_%C3%BA%C4%8Dely/MapServer/8
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/8___Perspekt%C3%ADvne_pou%C5%BEitie_PP_a_LP_na_nep%C3%B4dohospod%C3%A1rske_%C3%BA%C4%8Dely/MapServer/9
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/8___Perspekt%C3%ADvne_pou%C5%BEitie_PP_a_LP_na_nep%C3%B4dohospod%C3%A1rske_%C3%BA%C4%8Dely/MapServer/10
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/8___Perspekt%C3%ADvne_pou%C5%BEitie_PP_a_LP_na_nep%C3%B4dohospod%C3%A1rske_%C3%BA%C4%8Dely/MapServer/11
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/8___Perspekt%C3%ADvne_pou%C5%BEitie_PP_a_LP_na_nep%C3%B4dohospod%C3%A1rske_%C3%BA%C4%8Dely/MapServer/12
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/8___Perspekt%C3%ADvne_pou%C5%BEitie_PP_a_LP_na_nep%C3%B4dohospod%C3%A1rske_%C3%BA%C4%8Dely/MapServer/13
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/8___Perspekt%C3%ADvne_pou%C5%BEitie_PP_a_LP_na_nep%C3%B4dohospod%C3%A1rske_%C3%BA%C4%8Dely/MapServer/14
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/8___Perspekt%C3%ADvne_pou%C5%BEitie_PP_a_LP_na_nep%C3%B4dohospod%C3%A1rske_%C3%BA%C4%8Dely/MapServer/15
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/8___Perspekt%C3%ADvne_pou%C5%BEitie_PP_a_LP_na_nep%C3%B4dohospod%C3%A1rske_%C3%BA%C4%8Dely/MapServer/16
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/8___Perspekt%C3%ADvne_pou%C5%BEitie_PP_a_LP_na_nep%C3%B4dohospod%C3%A1rske_%C3%BA%C4%8Dely/MapServer/17
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/8___Perspekt%C3%ADvne_pou%C5%BEitie_PP_a_LP_na_nep%C3%B4dohospod%C3%A1rske_%C3%BA%C4%8Dely/MapServer/18
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/8___Perspekt%C3%ADvne_pou%C5%BEitie_PP_a_LP_na_nep%C3%B4dohospod%C3%A1rske_%C3%BA%C4%8Dely/MapServer/22
 - id: 78b602b1-e0c1-4d7c-86a2-881f11b826a5
   name: bb-dtm-bb-zaujmove-uzemie-a-sirsie-vztahy
   org: banskabystrica
   title: DTM_BB-zaujmove-uzemie-a-sirsie-vztahy
-  status: not-ingestible
-  reason: 'a ZIP of 1 .pdf (24 KiB): a PDF map sheet, no data'
+  status: removed
+  type: LandUsePlanFeature
+  reason: 'no smart data model: dataModel.UrbanPlanning holds no model yet; no other subject holds a land-use plan''s
+    zones, limits or planned works'
+  layers:
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/1
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/2
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/3
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/4
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/5
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/6
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/7
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/8
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/9
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/10
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/11
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/12
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/13
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/14
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/15
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/16
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/17
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/18
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/19
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/20
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/21
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/22
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/23
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/24
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/25
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/26
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/27
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/28
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/29
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/30
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/31
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/32
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/33
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/34
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/35
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/36
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/230
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/231
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/232
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/233
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/234
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/235
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/236
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/237
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/238
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/239
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/240
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/241
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/242
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/243
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/244
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/245
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/246
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/247
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/248
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/249
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/250
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/251
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/252
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/257
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/258
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/259
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/260
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/261
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/262
+  - https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/02___Z%C3%A1ujmov%C3%A9_%C3%BAzemie/MapServer/263
 - id: e3715528-0a0f-40e4-8178-e42beca9da39
   name: bb-objednavky-bb
   org: banskabystrica
