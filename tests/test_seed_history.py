@@ -67,10 +67,15 @@ CHOSEN = {
 }
 
 
+def chosen(name: str, kind: str) -> str | None:
+    # A ŠÚ SR cell is one entity per period, so its history would only repeat it (T-4390).
+    return CHOSEN.get((name, kind)) or ("off" if name.startswith("slovensko/susr-") else None)
+
+
 def test_measurements_keep_thirty_days_and_the_rest_keep_none():
     for name, (spec, _) in spaces().items():
         for rule in spec.get("retention", []):
-            want = CHOSEN.get((name, rule["entityType"]), "P30D" if rule["entityType"] in MEASURED else "off")
+            want = chosen(name, rule["entityType"]) or ("P30D" if rule["entityType"] in MEASURED else "off")
             assert rule["history"] == want, (name, rule)
 
 
