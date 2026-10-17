@@ -12,6 +12,9 @@ NGSI-LD data with all its doors and its data model, or not at all.
 """
 import json as _json
 import os as _os
+import sys as _sys
+import time as _time
+import urllib.error as _error
 import urllib.parse as _parse
 import urllib.request as _request
 
@@ -48,13 +51,29 @@ OD_MODEL_FILES = {
 _OD_MODELS = {}
 
 
+# The waits before each retry of a read the network broke (T-4385): a reset or a 5xx during a
+# mesh restart passes in seconds to minutes; a 4xx is the answer and is not asked again.
+OD_RETRY_WAITS = (5, 30, 120)
+
+
 def od_models(endpoint):
     """The models of Endpoint `endpoint`, as its `schema/index.json` lists them, read once a run.
     A failed read raises: a gateway that does not answer is an outage, not a catalogue to empty."""
     if endpoint not in _OD_MODELS:
         url = f"{OD_GATEWAY}/api/endpoint/{_parse.quote(endpoint)}/schema/index.json"
-        with _request.urlopen(_request.Request(url, headers={"Accept": "application/json"}), timeout=60) as answer:
-            _OD_MODELS[endpoint] = _json.load(answer).get("models") or []
+        for wait in OD_RETRY_WAITS + (None,):
+            try:
+                with _request.urlopen(_request.Request(url, headers={"Accept": "application/json"}), timeout=60) as answer:
+                    _OD_MODELS[endpoint] = _json.load(answer).get("models") or []
+                break
+            except _error.HTTPError as error:
+                if error.code < 500 or wait is None:
+                    raise
+            except (_error.URLError, ConnectionError, TimeoutError):
+                if wait is None:
+                    raise
+            print(f"{url}: read failed, again in {wait} s", file=_sys.stderr)
+            _time.sleep(wait)
     return _OD_MODELS[endpoint]
 
 
