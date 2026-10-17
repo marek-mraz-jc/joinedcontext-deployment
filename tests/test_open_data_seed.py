@@ -94,6 +94,11 @@ def test_every_mapped_dataset_has_its_pipeline_unless_a_seed_reads_it_whole():
     # A dataset of the city's layers may take several pipelines (generate.parts, T-4317).
     want = {f"{e['org']}-od-pipeline-{slug}.yaml" for e in SEEDED for _, slug in generate.parts(e, SLUGS[e["name"]])}
     assert pipelines == want
+    # Each pipeline alone writes its rows, so it replaces them whole and a dropped attribute
+    # leaves at the next run (PL-79, T-4407).
+    modes = {yaml.safe_load(p.read_text())["spec"]["output"]["mode"] for project in generate.PROJECTS
+             for p in files(project, "pipeline")}
+    assert modes == {"replace"}
 
 
 def test_the_model_classes_and_both_policies_name_every_type_the_pipelines_write():
