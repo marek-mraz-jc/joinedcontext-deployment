@@ -243,3 +243,13 @@ def test_the_journey_users_are_the_usernames_the_realm_stores(rendered):
     users = portal_env(portal_pod_spec(rendered("dev")))["JC_PORTAL_JOURNEY_USERS"].split(",")
     assert "demo.steward@hel.fi" in users
     assert all(user.endswith("@hel.fi") for user in users), users
+
+
+@requires_helmfile
+@pytest.mark.parametrize("env", ["dev", "production"])
+def test_the_portal_calls_keycloak_in_the_cluster_and_checks_tokens_against_the_public_issuer(rendered, env):
+    """T-4432: the reconciler's token and admin calls went out through idm.<domain> and the edge's
+    anonymous limit-count; they go to the Service now, and `iss` is still the public issuer."""
+    env_ = portal_env(portal_pod_spec(rendered(env)))
+    assert re.fullmatch(r"http://keycloak-app-keycloakx-http\.[a-z0-9-]+\.svc\.cluster\.local:80", env_["JC_KEYCLOAK_ADMIN_URL"])
+    assert re.fullmatch(r"https://idm\.[a-z0-9.-]+/realms/[a-z0-9-]+", env_["JC_OIDC_ISSUER"])

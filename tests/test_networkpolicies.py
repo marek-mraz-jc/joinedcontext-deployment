@@ -239,6 +239,8 @@ def test_keycloak_accepts_the_gateway_without_the_mesh(rendered, env):
     peers = [peer.get("podSelector", {}).get("matchLabels", {}).get("app.kubernetes.io/name")
              for d in docs for rule in d["spec"].get("ingress") or [] for peer in rule.get("from") or []]
     assert "context-gateway-gateway" in peers, peers
+    # The Portal's token and admin calls come in on the Service as well (T-4432).
+    assert "portal-portal" in peers, peers
 
 
 MESH_PORTS = {4143, 4190, 4191}
@@ -501,7 +503,8 @@ def test_a_workload_that_mints_its_own_token_may_reach_the_realm(rendered, env):
         spec = doc["spec"]["template"]["spec"]
         for container in spec.get("containers") or []:
             for var in container.get("env") or []:
-                if var.get("name") != "JC_OIDC_TOKEN_URL":
+                # The Portal's JC_KEYCLOAK_ADMIN_URL is the same promise (T-4432).
+                if var.get("name") not in ("JC_OIDC_TOKEN_URL", "JC_KEYCLOAK_ADMIN_URL"):
                     continue
                 if "svc.cluster.local" not in (var.get("value") or ""):
                     continue

@@ -74,6 +74,12 @@ keycloak:
             matchLabels:
               app.kubernetes.io/name: context-gateway-gateway
           componentNamespace: context-gateway
+        # The Portal's token and admin calls (JC_KEYCLOAK_ADMIN_URL, T-4432); the Linkerd
+        # mirror carries it on 4143.
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: portal-portal
+          componentNamespace: portal
     - from:
         - podSelector:
             matchLabels:
