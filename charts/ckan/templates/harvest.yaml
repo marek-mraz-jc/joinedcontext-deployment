@@ -26,7 +26,9 @@ spec:
   failedJobsHistoryLimit: 2
   jobTemplate:
     spec:
-      backoffLimit: 1
+      # A run is idempotent (fixed ids, a content hash per dataset), so a failed one is run again
+      # rather than leaving the catalogue a day behind (T-4385).
+      backoffLimit: 3
       activeDeadlineSeconds: 3600
       ttlSecondsAfterFinished: 86400
       template:

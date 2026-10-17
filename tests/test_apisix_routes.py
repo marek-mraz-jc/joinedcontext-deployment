@@ -92,7 +92,7 @@ EDGE_LOGIN_ROUTES = {
     # No route: the chain the Portal copies onto every published App's own host, with the App's
     # own client, callback and host-only cookie in place of these (ADR-N-037, AP-112).
     "apps-surface": {
-        "unauth_action": "auth", "cookie_path": "/apps/", "callback": f"https://{LOCAL_DOMAIN}/apps/callback",
+        "unauth_action": "auth", "cookie_path": "/", "callback": f"https://{LOCAL_DOMAIN}/apps/callback",  # `/`: a `__Host-` cookie must be (T-4395)
     },
     # The endpoint surface on the Portal host: the session becomes the bearer the gateway
     # verifies, and a visitor without one is passed through as anonymous, never redirected. The
@@ -211,8 +211,8 @@ def test_a_presented_bearer_is_never_verified_at_the_edge(apisix_config):
 
 @requires_helmfile
 def test_the_session_cookie_is_scoped_and_bounded_by_the_realm(apisix_config, rendered):
-    """AP-29: `Secure`, `HttpOnly`, `SameSite=Lax`, host-only, a path per surface, a name per
-    surface so a browser never presents one surface's session to another, and a lifetime that
+    """AP-29: `Secure`, `HttpOnly`, `SameSite=Lax`, host-only, a name per surface so a browser
+    never presents one surface's session to another, and a lifetime that
     never outlives the realm's SSO idle time or max lifespan. The keys are the flat
     lua-resty-session 4 ones APISIX 3.17 validates: a nested `cookie.path` is accepted and
     ignored, and the cookie would land on `/`."""
@@ -233,6 +233,26 @@ def test_the_session_cookie_is_scoped_and_bounded_by_the_realm(apisix_config, re
     # The two Portal routes share one session; the apps surface has its own.
     assert names["portal-ui"] == names["portal-api"]
     assert names["apps-surface"] != names["portal-ui"]
+
+
+@requires_helmfile
+def test_every_edge_session_cookie_is_host_prefixed(apisix_config):
+    """T-4395, AP-29: an App may set a cookie for the parent domain. The browser keeps a
+    `__Host-` cookie only when it is `Secure`, on `Path=/` and has no `Domain`, so no App plants
+    one of the same name beside the edge's session. Every `openid-connect` session, not only the
+    login routes."""
+    _, parsed = apisix_config
+    sessions = {
+        pc["id"]: pc["plugins"]["openid-connect"]["session"]
+        for pc in parsed["plugin_configs"]
+        if "session" in pc.get("plugins", {}).get("openid-connect", {})
+    }
+    assert sessions, "no edge session rendered"
+    for config_id, session in sessions.items():
+        assert session["cookie_name"].startswith("__Host-"), config_id
+        assert session["cookie_path"] == "/", config_id
+        assert session["cookie_secure"] is True, config_id
+        assert "cookie_domain" not in session, config_id
 
 
 @requires_helmfile

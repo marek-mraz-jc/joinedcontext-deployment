@@ -142,7 +142,8 @@ def test_every_open_data_endpoint_serves_each_standard_and_the_catalogue_lists_e
         slugs[project] = endpoint["slug"]
     rows = json.loads(generate.DISTRIBUTIONS.read_text())
     mapped = [e for e in MAPPING["datasets"] if e["status"] == "mapped"]
-    assert len(rows) == len({e["dataset"] for e in mapped})
+    # The susr- rows are scripts/open-data/datacube.py's (T-4390, test_datacube_generator.py).
+    assert len([k for k in rows if not k.startswith("susr-")]) == len({e["dataset"] for e in mapped})
     for e in SEEDED:
         row = rows[e["dataset"].rsplit("/", 1)[1]]
         assert (row["endpoint"], row["type"], row["dataset"], row["filtered"]) == (slugs[e["org"]], e["type"], e["dataset"], True)
@@ -862,3 +863,32 @@ def test_a_grant_without_a_number_takes_its_row_hash_as_the_identifier_its_base_
     for e in entities:
         assert e["type"] == "Grant" and e["id"].endswith(":" + e["identifier"]["value"])
     assert valid("banskabystrica", entities)
+
+
+# T-4385: what each publisher's catalogue holds once its harvest ran whole. A harvest lists a
+# dataset only when od-datasets.json gives its rows an Endpoint (EP-118), one entry per dataset;
+# beside them sit the Endpoints the platform publishes itself (`spec.publish.ckan`), into the
+# organization of their CkanInstance. dev counted 33 on 2026-10-17 with both harvests dead.
+def expected_catalogue() -> dict[str, int]:
+    od = json.loads((ROOT / "charts/ckan/files/od-datasets.json").read_text())
+    org_of = {e["name"]: e["org"] for e in MAPPING["datasets"]}
+    counts: dict[str, int] = {}
+    for name in od:
+        counts[org_of[name]] = counts.get(org_of[name], 0) + 1
+    for path in sorted(SEED.glob("*/*.yaml")):
+        for doc in yaml.safe_load_all(path.read_text()):
+            if isinstance(doc, dict) and doc.get("kind") == "Endpoint":
+                ckan = ((doc.get("spec") or {}).get("publish") or {}).get("ckan")
+                if ckan:
+                    org = ckan["instanceRef"]["name"]
+                    counts[org] = counts.get(org, 0) + 1
+    return counts
+
+
+def test_each_publisher_expects_its_converted_datasets_and_its_endpoints():
+    od = json.loads((ROOT / "charts/ckan/files/od-datasets.json").read_text())
+    mapped = {e["name"] for e in MAPPING["datasets"] if e["status"] == "mapped"}
+    assert set(od) <= mapped, "a converted dataset the mapping does not map"
+    assert len({entry["dataset"] for entry in od.values()}) == len(od), "one entry per dataset"
+    assert expected_catalogue() == {
+        "banskabystrica": 13 + 4, "bbsk": 88 + 5, "hel-fi": 11, "praha": 7, "slovensko": 1, "zilina": 5}
