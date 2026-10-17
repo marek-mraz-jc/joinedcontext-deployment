@@ -2,11 +2,11 @@
 apiVersion: joinedcontext.com/v1alpha1
 kind: DataModel
 metadata:
-  name: susr-zo-krajiny
+  name: susr-zo-kapitoly
   namespace: slovensko
   title: { sk: "Štatistická bunka", en: "One published statistical cell" }
 spec:
-  contextSpaceRef: susr-zo-krajiny
+  contextSpaceRef: susr-zo-kapitoly
   linkml: ./statistical-observation.linkml.yaml
   version: 1.0.0
   lifecycle: published

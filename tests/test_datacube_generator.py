@@ -278,7 +278,14 @@ def test_a_run_with_a_cube_over_the_limit_stops_before_it_touches_the_seed(tmp_p
     monkeypatch.setattr(datacube, "fetch", fetch)
     monkeypatch.setattr(datacube, "SEED", seed)
     monkeypatch.setattr(datacube, "TOPICS", FIXTURE_TOPICS)
-    with pytest.raises(SystemExit, match=r"over 20,000 cells: as1001rs \(.*\), as1007rs"):
+    with pytest.raises(SystemExit, match=r"over 10,000 cells: as1001rs \(.*\), as1007rs"):
         datacube.main([])
     assert [p.name for p in seed.iterdir()] == ["susr-as"]
     assert (seed / "susr-as" / "endpoint.yaml").read_text() == "kept\n"
+
+
+def test_the_limit_refuses_what_datacube_answers_too_many_results():
+    """T-4427: zo0011ms (12,096 cells) came back 400 "Too many results!" and its Endpoint stayed
+    empty; sp1838ms (9,828) came back whole. The limit sits between them, and no topic names zo0011ms."""
+    assert 9_828 <= datacube.CUBE_LIMIT < 12_096
+    assert all("zo0011ms" not in t["cubes"] for t in datacube.TOPICS)

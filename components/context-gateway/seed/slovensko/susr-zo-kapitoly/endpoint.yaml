@@ -4,13 +4,13 @@
 apiVersion: joinedcontext.com/v1alpha1
 kind: Endpoint
 metadata:
-  name: susr-zo-krajiny
+  name: susr-zo-kapitoly
   namespace: slovensko
-  title: { sk: "Zahraničný obchod podľa krajín — štatistika SR", en: "Foreign trade by country, Slovak statistics" }
-  description: { sk: "Zahraničný obchod podľa krajín: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube zo0011ms), jedna položka na zverejnenú bunku.", en: "Foreign trade by country: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube zo0011ms), one record per published cell." }
+  title: { sk: "Zahraničný obchod podľa kapitol HS — štatistika SR", en: "Foreign trade by HS chapter, Slovak statistics" }
+  description: { sk: "Zahraničný obchod podľa kapitol HS: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube zo0010ms), jedna položka na zverejnenú bunku.", en: "Foreign trade by HS chapter: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube zo0010ms), one record per published cell." }
 spec:
-  contextSpaceRef: susr-zo-krajiny
-  slug: 3bayn5lqwhce7opxqu3e7ruibkhqmfew
+  contextSpaceRef: susr-zo-kapitoly
+  slug: rj2fmnzih5dzigixvsnbmz6ecf7zhcbn
   audience: public
   enabledRepresentations: [ngsi-ld, geojson, csv, json, xlsx, parquet, websocket, ogc-features, odata, mcp]
   publish:
@@ -33,7 +33,7 @@ spec:
       - SK0
     frequency: MONTHLY
     source:
-      - url: "https://data.statistics.sk/api/v2/dataset/zo0011ms/all/all/all/all?lang=sk&type=json"
-        title: { sk: "Zahraničný obchod podľa krajín, kontinentov a ekonomických zoskupení", en: "Foreign trade by countries, continents and economic groupings" }
-        description: { sk: "Tabuľka zo0011ms v DATAcube Štatistického úradu SR: Zahraničný obchod podľa krajín, kontinentov a ekonomických zoskupení", en: "Table zo0011ms of the Statistical Office of the SR on DATAcube: Foreign trade by countries, continents and economic groupings" }
-    pipelineRef: { kind: Pipeline, name: susr-zo-krajiny }
+      - url: "https://data.statistics.sk/api/v2/dataset/zo0010ms/all/all/all/all?lang=sk&type=json"
+        title: { sk: "Zahraničný obchod podľa kapitol Harmonizovaného systému", en: "Foreign trade by Chapters in Harmonised System" }
+        description: { sk: "Tabuľka zo0010ms v DATAcube Štatistického úradu SR: Zahraničný obchod podľa kapitol Harmonizovaného systému", en: "Table zo0010ms of the Statistical Office of the SR on DATAcube: Foreign trade by Chapters in Harmonised System" }
+    pipelineRef: { kind: Pipeline, name: susr-zo-kapitoly }

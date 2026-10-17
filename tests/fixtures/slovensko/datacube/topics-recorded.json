@@ -286,12 +286,12 @@
   "sk": "Zahraničný obchod podľa mesiacov",
   "en": "Foreign trade by months"
  },
- "zo0011ms": {
+ "zo0010ms": {
   "theme": "zo",
   "update": "2026-09-08",
-  "cells": 12096,
-  "sk": "Zahraničný obchod podľa krajín, kontinentov a ekonomických zoskupení",
-  "en": "Foreign trade by countries, continents and economic groupings"
+  "cells": 4704,
+  "sk": "Zahraničný obchod podľa kapitol Harmonizovaného systému",
+  "en": "Foreign trade by Chapters in Harmonised System"
  },
  "zp1005rs": {
   "theme": "zp",
