@@ -18,7 +18,7 @@ spec:
   targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-otvorene-data:bbsk-otvorene-data
   output:
     type: Bridge
-    mode: upsert
+    mode: replace
   quotas:
     maxMemoryMb: 128
     cpuMillicores: 100

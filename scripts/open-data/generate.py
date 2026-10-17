@@ -741,7 +741,10 @@ def project_files(project: str, entries: list[dict], names: dict[str, str]) -> d
              "spec": {"class": "scheduled", "enabled": ENABLED and i % HALVES == 0, "schedule": schedule(e, i),
                       "source": {"dataSourceRef": {"kind": "DataSource", "name": f"od-{slug}"}},
                       "targetEndpoint": f"urn:ngsi-ld:Endpoint:{p['domain']}:{space}:{space}",
-                      "output": {"type": e["type"], "mode": "upsert"},
+                      # Each od pipeline alone writes its rows (the id carries its slug), so it
+                      # replaces them whole: an attribute a mapping drops leaves at the next run
+                      # (PL-79, T-4407; T-4289's `dataset`).
+                      "output": {"type": e["type"], "mode": "replace"},
                       "quotas": {"maxMemoryMb": 256 if rows > 5000 else 128, "cpuMillicores": 100}}})
         files[f"{pre}pipeline-{slug}-bento.yaml"] = bento(e, slug, model_ranges)
         index += [f"{pre}datasource-{slug}.yaml: projects/{project}/datasources/od-{slug}.yaml",
