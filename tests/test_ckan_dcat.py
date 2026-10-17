@@ -19,8 +19,8 @@ from pathlib import Path
 
 import pytest
 import yaml
-from rdflib import Graph
-from rdflib.namespace import DCAT, DCTERMS as DCT, FOAF, RDF
+from rdflib import Graph, Namespace
+from rdflib.namespace import DCAT, DCTERMS as DCT, FOAF, RDF, RDFS
 
 from test_ckan import CHART_BASE_VALUES, by_name, ckan_container, env_of, render_chart
 
@@ -115,10 +115,11 @@ def serialize(tmp_path_factory, dcat_libs):
         if mount["name"] == "theme" and source.is_file():
             mounts += ["-v", f"{source}:{mount['mountPath']}:ro"]
 
-    def run(mode: str, profiles: str, drop: tuple[str, ...] = ()) -> Graph:
+    def run(mode: str, profiles: str, drop: tuple[str, ...] = (), extras: dict | None = None) -> Graph:
         dataset = json.loads((FIXTURES / "praha-mesto.json").read_text())
         for field in drop:
             dataset.pop(field)
+        dataset["extras"] += [{"key": k, "value": v} for k, v in (extras or {}).items()]
         result = subprocess.run(
             # As the caller, so pytest's private temporary directories are readable inside.
             ["docker", "run", "--rm", "-i", "--network", "none", "--user", f"{os.getuid()}:{os.getgid()}",
@@ -177,6 +178,37 @@ def test_a_record_without_a_description_still_passes_under_its_title(serialize, 
     assert check.violations(graph, shapes) == []
     dataset = graph.value(None, RDF.type, DCAT.Dataset, any=False)
     assert graph.value(dataset, DCT.description) == graph.value(dataset, DCT.title)
+
+
+# What jcctl writes of an Endpoint's catalogue block beside the rest (T-4417, EP-78).
+CREDITED = {
+    "rights": "Zdroj: Hlavní město Praha, CC BY 4.0",
+    "source": '["https://opendata.praha.eu/datasets/rozpocet"]',
+    "was_generated_by": "pipeline od-rozpocet",
+}
+
+
+@requires_docker
+@requires_helm
+def test_the_attribution_rides_every_distribution_and_the_source_and_pipeline_the_dataset(serialize, shapes):
+    """EP-78, T-4417: dct:rights on each distribution, dct:source and prov:wasGeneratedBy on the
+    dataset, and the shapes still pass."""
+    graph = serialize("dataset", PROFILES, extras=CREDITED)
+    assert check.violations(graph, shapes) == []
+    (dataset,) = set(graph.subjects(DCT.source))
+    distributions = list(graph.objects(dataset, DCAT.distribution))
+    assert distributions
+    for distribution in distributions:
+        statement = graph.value(distribution, DCT.rights)
+        assert (statement, RDF.type, DCT.RightsStatement) in graph
+        assert str(graph.value(statement, RDFS.label)) == CREDITED["rights"]
+    assert [str(s) for s in graph.objects(dataset, DCT.source)] == ["https://opendata.praha.eu/datasets/rozpocet"]
+    prov = Namespace("http://www.w3.org/ns/prov#")
+    activity = graph.value(dataset, prov.wasGeneratedBy)
+    assert str(graph.value(activity, RDFS.label)) == "pipeline od-rozpocet"
+    # Without the extras nothing of them is invented.
+    plain = serialize("dataset", PROFILES)
+    assert not list(plain.objects(None, DCT.rights)) and not list(plain.objects(None, DCT.source))
 
 
 @requires_docker
