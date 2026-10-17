@@ -117,6 +117,9 @@ elif args[0] == "get" and args[1] == "configmaps" and "-o name" in line:
     # The sample applications the forge bootstrap seeded (T-2599); `sampleApps: []` is none.
     for app in spec.get("sampleApps", ["helsinki-bikes", "helsinki-events", "helsinki-alerts"]):
         sys.stdout.write("configmap/gitea-sample-apps-%s\\n" % app)
+    # The projects' seed, each named by the release the layout packed it into (T-4431).
+    for part in ("s1-banskabystrica", "s4-helsinki", "s4-helsinki-mobility", "s2-bbsk--2"):
+        sys.stdout.write("configmap/gitea-seed-%s\\n" % part)
 elif args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-sample-apps-") and "go-template" in line:
     # A sample app's file names: its grants (T-2667) when the spec gives it any.
     app = args[2][len("gitea-sample-apps-"):]

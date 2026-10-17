@@ -1,9 +1,8 @@
 ---
 # The files values/bootstrap/development-values.yaml.gotmpl names, read from the same indexes:
-# here the ones under projects/<project>/, there the organization's. Helsinki's projects are the
-# release gitea-seed, the region's (BBSK, past 1.5 MB with its open data, T-4255) gitea-seed-3 and
-# gitea-seed-5 (T-4288), Slovakia's (44 ŠÚ SR spaces, T-4402) gitea-seed-4, every other city's
-# gitea-seed-2, so each stays well inside its Secret.
+# here the ones under projects/<project>/, there the organization's. Each release gitea-seed ..
+# gitea-seed-8 holds the parts values/seed-layout.tpl packs into it by size (T-4431), so each
+# stays well inside its Secret.
 # JSON strings ending in exactly one newline, which is what the bootstrap's block scalars made of
 # them, so no blob already on the forge changes.
 {{- $seed := dict }}
@@ -20,30 +19,18 @@
 {{- $_ := set $seed $path (readFile (printf "../../../context-gateway/seed/helsinki-demo-feeds/%s" $file) | replace "DEMO_FEEDS_NAMESPACE" $demoNs) }}
 {{- end }}
 {{- end }}
-{{- /* A project past 600 kB is cut into parts, `<project>`, `<project>--2`, ..., one per started
-250 kB, each file in the part its path hashes to, so no ConfigMap nears its 1 MiB (the BBSK open
-data, T-4255). The bootstrap's values count the same bytes to name the same parts. ponytail: a
-hash, not a packing; a part that grows too big shows in test_sample_apps_seed. */}}
-{{- $bytes := dict }}
-{{- range $dir := $sources }}
-{{- range $file, $path := readFile (printf "../../../%s/index.yaml" $dir) | fromYaml }}
-{{- $p := splitList "/" $path }}
-{{- if and (eq (index $p 0) "projects") (gt (len $p) 2) }}{{ $_ := set $bytes (index $p 1) (add (index $bytes (index $p 1) | default 0) (len (readFile (printf "../../../%s/%s" $dir $file)))) }}{{ end }}
-{{- end }}
-{{- end }}
+{{- /* Which part of which project each release holds: values/seed-layout.tpl (T-4431). */}}
+{{- $layout := tpl (printf "%s{{ include \"gitea.seedLayout\" . }}" (readFile "../seed-layout.tpl")) (dict "sources" $sources) | fromJson }}
 {{- $shard := .Release.Name | trimPrefix "gitea-seed" | trimPrefix "-" | default "1" | atoi }}
 {{- $projects := dict }}
 {{- range $path, $text := $seed }}
 {{- $parts := splitList "/" $path }}
 {{- if and (eq (index $parts 0) "projects") (gt (len $parts) 2) }}
 {{- $project := index $parts 1 }}
-{{- $n := 1 }}{{ if ge (index $bytes $project) 600000 }}{{ $n = add1 (div (index $bytes $project) 250000) }}{{ end }}
-{{- $i := mod (atoi (adler32sum $path)) $n }}
-{{- /* BBSK's odd parts (the first, the third, ...) stay in gitea-seed-3, its even ones go to
-gitea-seed-5: its open data with the sta series (T-4288) passed the 0.75 MiB a release Secret holds. */}}
-{{- $bbsk := ternary 3 5 (eq (mod $i 2) 0) }}
-{{- if eq $shard (ternary 1 (index (dict "bbsk" $bbsk "slovensko" 4) $project | default 2) (hasPrefix "helsinki" $project)) }}
-{{- $name := ternary $project (printf "%s--%d" $project (add1 $i)) (eq $i 0) }}
+{{- $i := mod (atoi (adler32sum $path)) (index $layout.count $project | default 1) }}
+{{- $part := ternary $project (printf "%s--%d" $project (add1 $i)) (eq $i 0) }}
+{{- if eq $shard (index $layout.parts $part | default 1 | int) }}
+{{- $name := printf "s%d-%s" $shard $part }}
 {{- $files := index $projects $name | default dict }}
 {{- $_ := set $files ($path | replace "/" "__") (regexReplaceAll "\n*\\z" $text "\n") }}
 {{- $_ := set $projects $name $files }}

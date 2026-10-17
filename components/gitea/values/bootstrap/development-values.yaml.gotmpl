@@ -12,8 +12,8 @@
 # the Portal image of portal 47a97de carries jc-core 0.7.1 and knows every kind. (The image
 # before it refused the whole repository over one manifest of a kind it did not know, which
 # is why T-0479 held those eight files back for a day.)
-# Only the organization's files are here; each project's are the ConfigMap gitea-seed-<project>
-# of the releases gitea-seed and gitea-seed-2 (values/seed, T-3998), which read the same indexes.
+# Only the organization's files are here; each project's are the ConfigMaps gitea-seed-s<n>-<part>
+# of the releases gitea-seed .. gitea-seed-8 (values/seed, T-3998, T-4431), which read the same indexes.
 # The bootstrap outgrew Helm's 1 MiB Secret with every project in it (T-3175, T-3998).
 {{- $projects := dict }}
 seed:
@@ -88,21 +88,15 @@ seed:
 {{- end }}
 {{- end }}
 {{- end }}
-{{- /* The parts values/seed cuts a project past 600 kB into, counted from the same bytes. */}}
+{{- /* The ConfigMaps values/seed renders, named by the same layout (values/seed-layout.tpl, T-4431). */}}
 {{- $sources := list "context-gateway/seed/helsinki" "context-gateway/seed/banskabystrica" "context-gateway/seed/bbsk" "context-gateway/seed/praha" "context-gateway/seed/zilina" "context-gateway/seed/slovensko" }}
 {{- if has "agent-runner" .Values.components }}{{ $sources = append $sources "agent-runner/seed" }}{{ end }}
-{{- $bytes := dict }}
-{{- range $dir := $sources }}
-{{- range $file, $path := readFile (printf "../../../%s/index.yaml" $dir) | fromYaml }}
-{{- $p := splitList "/" $path }}
-{{- if and (eq (index $p 0) "projects") (gt (len $p) 2) }}{{ $_ := set $bytes (index $p 1) (add (index $bytes (index $p 1) | default 0) (len (readFile (printf "../../../%s/%s" $dir $file)))) }}{{ end }}
-{{- end }}
-{{- end }}
+{{- $layout := tpl (printf "%s{{ include \"gitea.seedLayout\" . }}" (readFile "../seed-layout.tpl")) (dict "sources" $sources) | fromJson }}
 {{- $parts := list }}
 {{- range $project := keys $projects | sortAlpha }}
-{{- $parts = append $parts $project }}
-{{- if ge (index $bytes $project | default 0) 600000 }}
-{{- range $i := untilStep 2 (int (add 2 (div (index $bytes $project) 250000))) 1 }}{{ $parts = append $parts (printf "%s--%d" $project $i) }}{{ end }}
+{{- range $i := until (index $layout.count $project | default 1 | int) }}
+{{- $part := ternary $project (printf "%s--%d" $project (add1 $i)) (eq $i 0) }}
+{{- $parts = append $parts (printf "s%d-%s" (index $layout.parts $part | default 1 | int) $part) }}
 {{- end }}
 {{- end }}
 seedProjects: {{ $parts | toJson }}
