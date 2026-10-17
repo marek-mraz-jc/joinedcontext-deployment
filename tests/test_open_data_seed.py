@@ -887,7 +887,8 @@ def expected_catalogue() -> dict[str, int]:
     counts: dict[str, int] = {}
     for name in od:
         counts[org_of[name]] = counts.get(org_of[name], 0) + 1
-    for path in sorted(SEED.glob("*/*.yaml")):
+    # The 44 ŠÚ SR Endpoints publish themselves into slovensko (T-4402).
+    for path in sorted([*SEED.glob("*/*.yaml"), *SEED.glob("slovensko/susr-*/endpoint.yaml")]):
         for doc in yaml.safe_load_all(path.read_text()):
             if isinstance(doc, dict) and doc.get("kind") == "Endpoint":
                 ckan = ((doc.get("spec") or {}).get("publish") or {}).get("ckan")
@@ -903,4 +904,4 @@ def test_each_publisher_expects_its_converted_datasets_and_its_endpoints():
     assert set(od) <= mapped, "a converted dataset the mapping does not map"
     assert len({entry["dataset"] for entry in od.values()}) == len(od), "one entry per dataset"
     assert expected_catalogue() == {
-        "banskabystrica": 13 + 4, "bbsk": 88 + 5, "hel-fi": 11, "praha": 7, "slovensko": 1, "zilina": 5}
+        "banskabystrica": 13 + 4, "bbsk": 88 + 5, "hel-fi": 11, "praha": 7, "slovensko": 1 + 44, "zilina": 5}

@@ -39,11 +39,13 @@ parts:
       - gitea.sample-apps-6
   # The projects' seed, gitea-seed-<project>, out of the bootstrap's release for the same reason
   # (T-3998): Helsinki's projects in the first, the region's in the third (T-4255), every other
-  # city's in the second.
+  # city's in the second, Slovakia's (44 ŠÚ SR spaces, T-4402) in the fourth.
   - name: seed
   - name: seed-2
     valuesFrom: seed
   - name: seed-3
+    valuesFrom: seed
+  - name: seed-4
     valuesFrom: seed
   # Its post-upgrade Job pushes six projects' seeds and the sample apps: 6 min 45 s on
   # 2026-10-07, past Helm's 300 s default, which failed an apply whose Job then succeeded (T-3207).
@@ -61,3 +63,4 @@ parts:
       - gitea.seed
       - gitea.seed-2
       - gitea.seed-3
+      - gitea.seed-4

@@ -192,8 +192,8 @@ def test_the_space_keeps_a_week_and_the_endpoint_serves_every_surface_without_na
     assert "EEA" in endpoint["spec"]["catalog"]["attribution"]["en"]
     assert generate.SLUG == endpoint["spec"]["slug"]
     index = yaml.safe_load((SEED / "index.yaml").read_text())
-    # The susr-* folders are placed by T-4391..T-4393 (scripts/open-data/datacube.py, T-4390).
-    assert sorted(index) == sorted(p.name for p in SEED.iterdir() if p.is_file() and p.name != "index.yaml")
+    # The susr-* folders are placed by scripts/open-data/datacube.py (T-4402), checked in test_datacube_generator.
+    assert sorted(k for k in index if not k.startswith("susr-")) == sorted(p.name for p in SEED.iterdir() if p.is_file() and p.name != "index.yaml")
 
 
 def message_urls(value) -> list[str]:
