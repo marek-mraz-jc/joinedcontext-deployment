@@ -227,3 +227,36 @@ def test_every_topic_cube_is_in_the_collection_and_under_the_limit():
         for code in topic["cubes"]:
             assert code in recorded, f"{topic['name']}: {code} is not in the collection"
             assert recorded[code]["theme"] == topic["theme"] and recorded[code]["cells"] <= datacube.CUBE_LIMIT, code
+
+
+def test_every_endpoint_names_its_tables_as_sources_a_role_contact_and_the_od_representations(tmp_path):
+    """T-4418 (EP-78, EP-80, EP-104): each Endpoint names its DATAcube tables as `catalog.source`,
+    the platform's role address as its contactPoint, and serves what generate.py's od Endpoints serve."""
+    spec_od = importlib.util.spec_from_file_location("generate", ROOT / "scripts/open-data/generate.py")
+    od = importlib.util.module_from_spec(spec_od)
+    spec_od.loader.exec_module(od)
+    assert datacube.REPRESENTATIONS == od.REPRESENTATIONS
+    files, _ = generate(tmp_path)
+    by = {d["code"]: d for d in items()}
+    endpoints = {p.parent.name: yaml.safe_load(t) for p, t in files.items() if p.name == "endpoint.yaml"}
+    assert endpoints.keys() == {t["name"] for t in FIXTURE_TOPICS}
+    for topic in FIXTURE_TOPICS:
+        catalog = endpoints[topic["name"]]["spec"]["catalog"]
+        assert endpoints[topic["name"]]["spec"]["enabledRepresentations"] == od.REPRESENTATIONS
+        assert catalog["contactPoint"] == {"name": "joinedcontext platform", "email": "hello@joinedcontext.com"}
+        assert [s["url"] for s in catalog["source"]] == [datacube.dataset_url(by[c]) for c in topic["cubes"]]
+        for s, code in zip(catalog["source"], topic["cubes"]):
+            assert s["url"].startswith(f"https://data.statistics.sk/api/v2/dataset/{code}/")
+            assert set(s["title"]) == set(s["description"]) == {"sk", "en"}
+            assert code in s["description"]["sk"] and code in s["description"]["en"]
+
+
+def test_the_committed_endpoints_carry_the_sources_contact_and_representations():
+    """T-4418: the seed is regenerated, not only the generator changed."""
+    topics = {t["name"]: t for t in datacube.TOPICS}
+    for folder in committed():
+        spec_ = yaml.safe_load((folder / "endpoint.yaml").read_text())["spec"]
+        assert spec_["enabledRepresentations"] == datacube.REPRESENTATIONS, folder.name
+        assert spec_["catalog"]["contactPoint"]["email"] == datacube.CONTACT["email"], folder.name
+        codes = [re.search(r"/dataset/([a-z0-9]+)/", s["url"]).group(1) for s in spec_["catalog"]["source"]]
+        assert codes == topics[folder.name]["cubes"], folder.name

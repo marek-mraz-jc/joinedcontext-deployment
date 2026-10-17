@@ -12,7 +12,7 @@ spec:
   contextSpaceRef: susr-pr
   slug: enulf35isjc5bnobvepmamp75sm3ii24
   audience: public
-  enabledRepresentations: [ngsi-ld, csv, json, ogc-features, odata, mcp]
+  enabledRepresentations: [ngsi-ld, geojson, csv, json, xlsx, parquet, websocket, ogc-features, odata, mcp]
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: slovensko }
@@ -20,6 +20,7 @@ spec:
       datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher: { name: { sk: "Platforma joinedcontext", en: "The joinedcontext platform" }, uri: "https://dev.joinedcontext.com/" }
+    contactPoint: { name: "joinedcontext platform", email: hello@joinedcontext.com }
     license: CC_BYSA_4_0
     attribution:
       sk: "Štatistický úrad Slovenskej republiky, DATAcube (data.statistics.sk), CC BY-SA 4.0"
@@ -31,4 +32,8 @@ spec:
     spatial:
       - SK0
     frequency: QUARTERLY
+    source:
+      - url: "https://data.statistics.sk/api/v2/dataset/pr0101qs/all/all/all/all?lang=sk&type=json"
+        title: { sk: "Unemployment by the Labour Force Sample Survey (since 2021)", en: "Unemployment by the Labour Force Sample Survey (since 2021)" }
+        description: { sk: "Tabuľka pr0101qs v DATAcube Štatistického úradu SR: Unemployment by the Labour Force Sample Survey (since 2021)", en: "Table pr0101qs of the Statistical Office of the SR on DATAcube: Unemployment by the Labour Force Sample Survey (since 2021)" }
     pipelineRef: { kind: Pipeline, name: susr-pr }

@@ -12,7 +12,7 @@ spec:
   contextSpaceRef: susr-pr-mzdy
   slug: ookuklgyy6dtlpgrhnaxexb5fgjj4pqy
   audience: public
-  enabledRepresentations: [ngsi-ld, csv, json, ogc-features, odata, mcp]
+  enabledRepresentations: [ngsi-ld, geojson, csv, json, xlsx, parquet, websocket, ogc-features, odata, mcp]
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: slovensko }
@@ -20,6 +20,7 @@ spec:
       datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher: { name: { sk: "Platforma joinedcontext", en: "The joinedcontext platform" }, uri: "https://dev.joinedcontext.com/" }
+    contactPoint: { name: "joinedcontext platform", email: hello@joinedcontext.com }
     license: CC_BYSA_4_0
     attribution:
       sk: "Štatistický úrad Slovenskej republiky, DATAcube (data.statistics.sk), CC BY-SA 4.0"
@@ -31,4 +32,8 @@ spec:
     spatial:
       - SK0
     frequency: QUARTERLY
+    source:
+      - url: "https://data.statistics.sk/api/v2/dataset/pr0204qs/all/all/all/all?lang=sk&type=json"
+        title: { sk: "Priemerná mesačná mzda v hospodárstve SR", en: "Average monthly wages in economy of the SR" }
+        description: { sk: "Tabuľka pr0204qs v DATAcube Štatistického úradu SR: Priemerná mesačná mzda v hospodárstve SR", en: "Table pr0204qs of the Statistical Office of the SR on DATAcube: Average monthly wages in economy of the SR" }
     pipelineRef: { kind: Pipeline, name: susr-pr-mzdy }

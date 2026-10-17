@@ -12,7 +12,7 @@ spec:
   contextSpaceRef: susr-do-preprava
   slug: a3q6ndocu5mge5dnitjrti3qomn3vy4l
   audience: public
-  enabledRepresentations: [ngsi-ld, csv, json, ogc-features, odata, mcp]
+  enabledRepresentations: [ngsi-ld, geojson, csv, json, xlsx, parquet, websocket, ogc-features, odata, mcp]
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: slovensko }
@@ -20,6 +20,7 @@ spec:
       datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher: { name: { sk: "Platforma joinedcontext", en: "The joinedcontext platform" }, uri: "https://dev.joinedcontext.com/" }
+    contactPoint: { name: "joinedcontext platform", email: hello@joinedcontext.com }
     license: CC_BYSA_4_0
     attribution:
       sk: "Štatistický úrad Slovenskej republiky, DATAcube (data.statistics.sk), CC BY-SA 4.0"
@@ -31,4 +32,8 @@ spec:
     spatial:
       - SK0
     frequency: ANNUAL
+    source:
+      - url: "https://data.statistics.sk/api/v2/dataset/do1007rs/all/all/all/all/all?lang=sk&type=json"
+        title: { sk: "Cestná doprava - nákladná a osobná", en: "Road transport - transport of goods and transport of passengers" }
+        description: { sk: "Tabuľka do1007rs v DATAcube Štatistického úradu SR: Cestná doprava - nákladná a osobná", en: "Table do1007rs of the Statistical Office of the SR on DATAcube: Road transport - transport of goods and transport of passengers" }
     pipelineRef: { kind: Pipeline, name: susr-do-preprava }

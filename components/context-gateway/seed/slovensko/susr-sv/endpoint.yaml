@@ -12,7 +12,7 @@ spec:
   contextSpaceRef: susr-sv
   slug: xutej6p46cqde27cjvjbysv6yhtamfnd
   audience: public
-  enabledRepresentations: [ngsi-ld, csv, json, ogc-features, odata, mcp]
+  enabledRepresentations: [ngsi-ld, geojson, csv, json, xlsx, parquet, websocket, ogc-features, odata, mcp]
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: slovensko }
@@ -20,6 +20,7 @@ spec:
       datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher: { name: { sk: "Platforma joinedcontext", en: "The joinedcontext platform" }, uri: "https://dev.joinedcontext.com/" }
+    contactPoint: { name: "joinedcontext platform", email: hello@joinedcontext.com }
     license: CC_BYSA_4_0
     attribution:
       sk: "Štatistický úrad Slovenskej republiky, DATAcube (data.statistics.sk), CC BY-SA 4.0"
@@ -31,4 +32,8 @@ spec:
     spatial:
       - SK0
     frequency: ANNUAL
+    source:
+      - url: "https://data.statistics.sk/api/v2/dataset/sv2005rs/all/all?lang=sk&type=json"
+        title: { sk: "Vysoké školy", en: "Higher education institutions" }
+        description: { sk: "Tabuľka sv2005rs v DATAcube Štatistického úradu SR: Vysoké školy", en: "Table sv2005rs of the Statistical Office of the SR on DATAcube: Higher education institutions" }
     pipelineRef: { kind: Pipeline, name: susr-sv }
