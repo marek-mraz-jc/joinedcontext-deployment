@@ -11,14 +11,14 @@ jc:Entity a owl:Class,
         linkml:ClassDefinition ;
     rdfs:label "Entity" ;
     rdfs:subClassOf [ a owl:Restriction ;
-            owl:cardinality 1 ;
-            owl:onProperty jc:type ],
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:observedAt ],
         [ a owl:Restriction ;
             owl:cardinality 1 ;
             owl:onProperty jc:id ],
         [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:observedAt ],
+            owl:cardinality 1 ;
+            owl:onProperty jc:type ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:location ] ;
@@ -32,28 +32,19 @@ jc:OfficeHours a owl:Class,
     rdfs:label "OfficeHours" ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:dataProvider ],
+            owl:onProperty jc:iCOSamospravy ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:name ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:source ],
+            owl:onProperty jc:kodDnaVTyzdni ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:otvoreneDo ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:otvoreneOd ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:isPartOf ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:denVTyzdni ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:iCOSamospravy ],
+            owl:onProperty jc:dataProvider ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:identifikatorKontaktnehoMiest ],
@@ -62,7 +53,16 @@ jc:OfficeHours a owl:Class,
             owl:onProperty jc:nazovSamospravy ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:kodDnaVTyzdni ],
+            owl:onProperty jc:denVTyzdni ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:source ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:otvoreneOd ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:isPartOf ],
         jc:Entity ;
     skos:definition "One office's opening hours on one weekday." ;
     skos:exactMatch jc:OfficeHours ;

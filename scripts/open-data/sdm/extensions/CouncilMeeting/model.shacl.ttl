@@ -14,18 +14,18 @@ jc:CouncilMeeting a sh:NodeShape ;
     rdfs:comment "A meeting of a council or another body of the self-government." ;
     sh:closed true ;
     sh:ignoredProperties ( rdf:type ) ;
-    sh:property [ sh:datatype xsd:string ;
-            sh:description "The source column `Dátum_zasadnutia`." ;
+    sh:property [ sh:datatype xsd:integer ;
+            sh:description "The source column `Rok`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 5 ;
-            sh:path jc:datumZasadnutia ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Orgán_samosprávy`." ;
+            sh:order 14 ;
+            sh:path jc:rok ],
+        [ sh:datatype xsd:dateTime ;
+            sh:description "When the observation the entity reports was made." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 13 ;
-            sh:path jc:organSamospravy ],
+            sh:order 18 ;
+            sh:path ngsi-ld:observedAt ],
         [ sh:datatype xsd:string ;
             sh:description "The source column `Číslo_zasadnutia`." ;
             sh:maxCount 1 ;
@@ -33,11 +33,63 @@ jc:CouncilMeeting a sh:NodeShape ;
             sh:order 4 ;
             sh:path jc:cisloZasadnutia ],
         [ sh:datatype xsd:string ;
+            sh:description "The source column `Hyperlink_na_výsledky_hlasovani`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 9 ;
+            sh:path jc:hyperlinkNaVysledkyHlasovani ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Dátum_zasadnutia`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 5 ;
+            sh:path jc:datumZasadnutia ],
+        [ sh:datatype xsd:integer ;
+            sh:description "The source column `Č._zasadnutia`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 3 ;
+            sh:path jc:cZasadnutia ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `IČO_samosprávy`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 11 ;
+            sh:path jc:iCOSamospravy ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Hyperlink_na_zápisnicu`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 10 ;
+            sh:path jc:hyperlinkNaZapisnicu ],
+        [ sh:description "The service the row was read from." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:order 1 ;
+            sh:path sdm:source ],
+        [ sh:datatype xsd:string ;
             sh:description "The source column `Názov_samosprávy`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 12 ;
             sh:path jc:nazovSamospravy ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Hyperlink_na_dochádzku`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 6 ;
+            sh:path jc:hyperlinkNaDochadzku ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Orgán_samosprávy`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 13 ;
+            sh:path jc:organSamospravy ],
+        [ sh:description "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:order 2 ;
+            sh:path jc:isPartOf ],
         [ sh:datatype xsd:string ;
             sh:description "The source column `Hyperlink_na_prijaté_uznesenia`." ;
             sh:maxCount 1 ;
@@ -50,46 +102,6 @@ jc:CouncilMeeting a sh:NodeShape ;
             sh:nodeKind sh:Literal ;
             sh:order 0 ;
             sh:path sdm:dataProvider ],
-        [ sh:datatype xsd:integer ;
-            sh:description "The source column `Rok`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 14 ;
-            sh:path jc:rok ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `IČO_samosprávy`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 11 ;
-            sh:path jc:iCOSamospravy ],
-        [ sh:description "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:IRI ;
-            sh:order 2 ;
-            sh:path jc:isPartOf ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Hyperlink_na_zápisnicu`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 10 ;
-            sh:path jc:hyperlinkNaZapisnicu ],
-        [ sh:datatype xsd:string ;
-            sh:description "Where the entity is, as GeoJSON geometry." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 17 ;
-            sh:path geojson:geometry ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Hyperlink_na_výsledky_hlasovani`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 9 ;
-            sh:path jc:hyperlinkNaVysledkyHlasovani ],
-        [ sh:description "The service the row was read from." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:IRI ;
-            sh:order 1 ;
-            sh:path sdm:source ],
         [ sh:datatype xsd:string ;
             sh:description "The source column `Hyperlink_na_pozvánku`." ;
             sh:maxCount 1 ;
@@ -97,29 +109,17 @@ jc:CouncilMeeting a sh:NodeShape ;
             sh:order 7 ;
             sh:path jc:hyperlinkNaPozvanku ],
         [ sh:datatype xsd:string ;
-            sh:description "The source column `Hyperlink_na_dochádzku`." ;
+            sh:description "Where the entity is, as GeoJSON geometry." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 6 ;
-            sh:path jc:hyperlinkNaDochadzku ],
-        [ sh:datatype xsd:dateTime ;
-            sh:description "When the observation the entity reports was made." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 18 ;
-            sh:path ngsi-ld:observedAt ],
-        [ sh:datatype xsd:integer ;
-            sh:description "The source column `Č._zasadnutia`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 3 ;
-            sh:path jc:cZasadnutia ] ;
+            sh:order 17 ;
+            sh:path geojson:geometry ] ;
     sh:targetClass jc:CouncilMeeting .
 
 ngsi-ld:Entity a sh:NodeShape ;
     rdfs:comment "The root every NGSI-LD entity class specialises." ;
     sh:closed true ;
-    sh:ignoredProperties ( jc:hyperlinkNaDochadzku jc:hyperlinkNaVysledkyHlasovani sdm:dataProvider jc:datumZasadnutia jc:iCOSamospravy sdm:source jc:isPartOf jc:nazovSamospravy jc:hyperlinkNaPozvanku jc:cisloZasadnutia jc:organSamospravy jc:cZasadnutia jc:hyperlinkNaPrijateUznesenia rdf:type jc:rok jc:hyperlinkNaZapisnicu ) ;
+    sh:ignoredProperties ( jc:rok jc:cisloZasadnutia sdm:dataProvider jc:datumZasadnutia jc:iCOSamospravy jc:hyperlinkNaPrijateUznesenia sdm:source jc:hyperlinkNaZapisnicu jc:hyperlinkNaVysledkyHlasovani jc:hyperlinkNaDochadzku jc:organSamospravy rdf:type jc:hyperlinkNaPozvanku jc:nazovSamospravy jc:cZasadnutia jc:isPartOf ) ;
     sh:property [ sh:datatype xsd:dateTime ;
             sh:description "When the observation the entity reports was made." ;
             sh:maxCount 1 ;
