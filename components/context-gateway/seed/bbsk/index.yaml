@@ -134,6 +134,8 @@ bbsk-od-datamodel.yaml: projects/bbsk/spaces/bbsk-otvorene-data/datamodels/bbsk-
 bbsk-otvorene-data.linkml.yaml: projects/bbsk/spaces/bbsk-otvorene-data/datamodels/bbsk-otvorene-data.linkml.yaml
 bbsk-otvorene-data.v1.schema.json: projects/bbsk/spaces/bbsk-otvorene-data/datamodels/bbsk-otvorene-data.v1.schema.json
 bbsk-otvorene-data.v1.context.jsonld: projects/bbsk/spaces/bbsk-otvorene-data/datamodels/bbsk-otvorene-data.v1.context.jsonld
+bbsk-otvorene-data.v1.md: projects/bbsk/spaces/bbsk-otvorene-data/datamodels/bbsk-otvorene-data.v1.md
+bbsk-otvorene-data.v1.example.jsonld: projects/bbsk/spaces/bbsk-otvorene-data/datamodels/bbsk-otvorene-data.v1.example.jsonld
 bbsk-od-endpoint.yaml: projects/bbsk/spaces/bbsk-otvorene-data/endpoints/bbsk-otvorene-data.yaml
 bbsk-od-policy-read.yaml: projects/bbsk/spaces/bbsk-otvorene-data/policies/otvorene-data-read.yaml
 bbsk-od-policy-read-history.yaml: projects/bbsk/spaces/bbsk-otvorene-data/policies/otvorene-data-read-history.yaml

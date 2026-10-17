@@ -169,6 +169,8 @@ banskabystrica-od-datamodel.yaml: projects/banskabystrica/spaces/banskabystrica-
 banskabystrica-otvorene-data.linkml.yaml: projects/banskabystrica/spaces/banskabystrica-otvorene-data/datamodels/banskabystrica-otvorene-data.linkml.yaml
 banskabystrica-otvorene-data.v1.schema.json: projects/banskabystrica/spaces/banskabystrica-otvorene-data/datamodels/banskabystrica-otvorene-data.v1.schema.json
 banskabystrica-otvorene-data.v1.context.jsonld: projects/banskabystrica/spaces/banskabystrica-otvorene-data/datamodels/banskabystrica-otvorene-data.v1.context.jsonld
+banskabystrica-otvorene-data.v1.md: projects/banskabystrica/spaces/banskabystrica-otvorene-data/datamodels/banskabystrica-otvorene-data.v1.md
+banskabystrica-otvorene-data.v1.example.jsonld: projects/banskabystrica/spaces/banskabystrica-otvorene-data/datamodels/banskabystrica-otvorene-data.v1.example.jsonld
 banskabystrica-od-endpoint.yaml: projects/banskabystrica/spaces/banskabystrica-otvorene-data/endpoints/banskabystrica-otvorene-data.yaml
 banskabystrica-od-policy-read.yaml: projects/banskabystrica/spaces/banskabystrica-otvorene-data/policies/otvorene-data-read.yaml
 banskabystrica-od-policy-read-history.yaml: projects/banskabystrica/spaces/banskabystrica-otvorene-data/policies/otvorene-data-read-history.yaml

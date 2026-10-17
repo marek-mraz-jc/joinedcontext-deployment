@@ -25,3 +25,5 @@ spec:
   artifacts:
     jsonSchema: ./banskabystrica-otvorene-data.v1.schema.json
     context: ./banskabystrica-otvorene-data.v1.context.jsonld
+    docs: ./banskabystrica-otvorene-data.v1.md
+    example: ./banskabystrica-otvorene-data.v1.example.jsonld

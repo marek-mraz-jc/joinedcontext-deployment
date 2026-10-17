@@ -1,0 +1,47 @@
+{
+  "addressArea": [
+    "addressArea"
+  ],
+  "cOID": 0,
+  "dPOSTA": "dPOSTA",
+  "dataProvider": "dataProvider",
+  "iD": 0.0,
+  "id": "urn:ngsi-ld:Address:joinedcontext.com:example:1",
+  "idRegad": "idRegad",
+  "isPartOf": "isPartOf",
+  "kRAJ": "kRAJ",
+  "kRAJID": 0,
+  "location": {
+    "coordinates": [
+      0.0,
+      0.0
+    ],
+    "type": "Point"
+  },
+  "oBECID": 0,
+  "oKRES": "oKRES",
+  "oKRESID": 0,
+  "oRIENTC": "oRIENTC",
+  "oRIENTCC": "oRIENTCC",
+  "oRIENTCP": "oRIENTCP",
+  "observedAt": "2026-01-01T00:00:00Z",
+  "orientC": "orientC",
+  "postCode": [
+    "postCode"
+  ],
+  "postName": [
+    "postName"
+  ],
+  "sCHRANKY": 0,
+  "sUPISNEC": "sUPISNEC",
+  "source": "source",
+  "supC": "supC",
+  "tYPBUDOVY": 0,
+  "thoroughfare": [
+    "thoroughfare"
+  ],
+  "type": "Address",
+  "uLICAID": 0,
+  "zSJ": "zSJ",
+  "zSJID": 0.0
+}
