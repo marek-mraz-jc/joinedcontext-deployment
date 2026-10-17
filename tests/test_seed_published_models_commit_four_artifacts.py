@@ -2,7 +2,8 @@
 
 The Portal refuses a published model whose `spec.artifacts` lacks one of `jsonSchema`,
 `context`, `docs` and `example` ("a published model commits all four generated artifacts"),
-so the seed checks it before the forge does, and that each named file sits beside the model.
+so the seed checks it before the forge does, and that each named file sits beside the model,
+at any depth of the seed (the ŠÚ SR models sit one folder deeper, T-4434).
 """
 
 from pathlib import Path
@@ -15,12 +16,12 @@ FOUR = ("jsonSchema", "context", "docs", "example")
 
 
 def published():
-    for path in sorted(SEED.glob("*/*.yaml")):
+    for path in sorted(SEED.rglob("*.yaml")):
         if path.name.endswith(("-bento.yaml", ".linkml.yaml")) or path.name == "index.yaml":
             continue
         for doc in yaml.safe_load_all(path.read_text()):
             if isinstance(doc, dict) and doc.get("kind") == "DataModel" and doc["spec"].get("lifecycle") == "published":
-                yield pytest.param(path, doc["spec"], id=f"{path.parent.name}/{doc['metadata']['name']}")
+                yield pytest.param(path, doc["spec"], id=str(path.relative_to(SEED)))
 
 
 @pytest.mark.parametrize(("path", "spec"), list(published()))
@@ -32,4 +33,4 @@ def test_a_published_model_lists_and_commits_all_four_artifacts(path, spec):
 
 
 def test_there_are_published_models_to_check():
-    assert len(list(published())) >= 2
+    assert len(list(published())) >= 46
