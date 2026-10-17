@@ -13,10 +13,6 @@
     "dataProvider": {
       "@id": "sdm:dataProvider"
     },
-    "dataset": {
-      "@id": "jc:dataset",
-      "@type": "xsd:anyURI"
-    },
     "datumPlatnostiDo": {
       "@id": "jc:datumPlatnostiDo",
       "@type": "xsd:date"
@@ -61,6 +57,10 @@
     },
     "index": {
       "@id": "jc:index"
+    },
+    "isPartOf": {
+      "@id": "jc:isPartOf",
+      "@type": "xsd:anyURI"
     },
     "jc": "https://joinedcontext.com/models/",
     "linkml": "https://w3id.org/linkml/",

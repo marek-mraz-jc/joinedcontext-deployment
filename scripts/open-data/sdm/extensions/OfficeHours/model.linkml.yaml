@@ -30,7 +30,7 @@ slots:
       ngsi_ld_kind: Property
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/context.jsonld
     slot_uri: https://smartdatamodels.org/source
-  dataset:
+  isPartOf:
     description: The catalogue dataset the row belongs to, where its licence and its other rows are.
     range: uri
     annotations:
@@ -77,7 +77,7 @@ classes:
     slots:
     - dataProvider
     - source
-    - dataset
+    - isPartOf
     - denVTyzdni
     - iCOSamospravy
     - identifikatorKontaktnehoMiest

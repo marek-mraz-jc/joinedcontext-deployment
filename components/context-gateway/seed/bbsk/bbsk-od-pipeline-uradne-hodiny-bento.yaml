@@ -75,7 +75,7 @@ pipeline:
           "otvoreneDo": this.properties."Otvorené_do".apply("string"),
           "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj (CC BY-SA 4.0)" },
           "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/%C3%9Aradn%C3%A9_hodiny/FeatureServer/0/query?where=1%3D1&outFields=I%C4%8CO_samospr%C3%A1vy,N%C3%A1zov_samospr%C3%A1vy,Identifik%C3%A1tor_kontaktn%C3%A9ho_miest,N%C3%A1zov_kontaktn%C3%A9ho_miesta,K%C3%B3d_d%C5%88a_v_t%C3%BD%C5%BEdni,De%C5%88_v_t%C3%BD%C5%BEdni,Otvoren%C3%A9_od,Otvoren%C3%A9_do&returnGeometry=false&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },
-          "dataset": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bbsk-uradne-hodiny-c912ed" }
+          "isPartOf": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bbsk-uradne-hodiny-c912ed" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.
     - archive:

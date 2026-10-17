@@ -24,15 +24,6 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
-        "dataset": {
-          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
-          "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
         "fACC": {
           "description": "The source column `FACC`.",
           "type": [
@@ -84,6 +75,15 @@
         "id": {
           "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
           "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "isPartOf": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
           "x-ngsi-ld-kind": "Property"
         },
         "lAU1": {
@@ -285,15 +285,6 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
-        "dataset": {
-          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
-          "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
         "dlzkaPremosteniaM": {
           "description": "The source column `D\u013a\u017eka_premostenia__m_`.",
           "type": [
@@ -333,6 +324,15 @@
         },
         "identifikacneCislo": {
           "description": "The source column `Identifika\u010dn\u00e9_\u010d\u00edslo`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "isPartOf": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
           "type": [
             "string",
             "null"
@@ -578,18 +578,18 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
-        "dataset": {
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "isPartOf": {
           "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
           "format": "uri",
           "type": [
             "string",
             "null"
           ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "id": {
-          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
-          "type": "string",
           "x-ngsi-ld-kind": "Property"
         },
         "location": {
@@ -687,15 +687,6 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
-        "dataset": {
-          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
-          "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
         "datumPlatnostiDo": {
           "description": "The source column `D\u00e1tum_platnosti_do`.",
           "format": "date",
@@ -780,6 +771,15 @@
         },
         "index": {
           "description": "The source column `Index_`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "isPartOf": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
           "type": [
             "string",
             "null"
@@ -953,15 +953,6 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
-        "dataset": {
-          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
-          "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
         "datumZasadnutia": {
           "description": "The source column `D\u00e1tum_zasadnutia`.",
           "format": "date-time",
@@ -1022,6 +1013,15 @@
         "id": {
           "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
           "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "isPartOf": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
           "x-ngsi-ld-kind": "Property"
         },
         "location": {
@@ -1111,15 +1111,6 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
-        "dataset": {
-          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
-          "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
         "datum": {
           "description": "The source column `D\u00e1tum`.",
           "format": "date-time",
@@ -1148,6 +1139,15 @@
         "id": {
           "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
           "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "isPartOf": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
           "x-ngsi-ld-kind": "Property"
         },
         "location": {
@@ -1285,15 +1285,6 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
-        "dataset": {
-          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
-          "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
         "dlzka": {
           "description": "The source column `dlzka`.",
           "type": [
@@ -1329,6 +1320,15 @@
         "id": {
           "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
           "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "isPartOf": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
           "x-ngsi-ld-kind": "Property"
         },
         "layer": {
@@ -1565,15 +1565,6 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
-        "dataset": {
-          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
-          "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
         "datumDoruceniaVyuctovania": {
           "description": "The source column `D\u00e1tum_doru\u010denia_vy\u00fa\u010dtovania`.",
           "format": "date",
@@ -1664,6 +1655,15 @@
         },
         "identifier": {
           "description": "The source column `\u010c\u00edslo`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "isPartOf": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
           "type": [
             "string",
             "null"
@@ -2038,15 +2038,6 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
-        "dataset": {
-          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
-          "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
         "datumDorucenia": {
           "description": "The source column `D\u00e1tum_doru\u010denia`.",
           "format": "date",
@@ -2088,6 +2079,15 @@
         },
         "identifier": {
           "description": "The source column `\u010c\u00edslo`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "isPartOf": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
           "type": [
             "string",
             "null"
@@ -2808,15 +2808,6 @@
         },
         "dataProvider": {
           "description": "Who published the row, with the credit its licence asks for.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "dataset": {
-          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
-          "format": "uri",
           "type": [
             "string",
             "null"
@@ -3632,6 +3623,15 @@
           "description": "The source column `\u00edrska__abs__`.",
           "type": [
             "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "isPartOf": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
             "null"
           ],
           "x-ngsi-ld-kind": "Property"
@@ -6219,15 +6219,6 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
-        "dataset": {
-          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
-          "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
         "denVTyzdni": {
           "description": "The source column `De\u0148_v_t\u00fd\u017edni`.",
           "type": [
@@ -6251,6 +6242,15 @@
         },
         "identifikatorKontaktnehoMiest": {
           "description": "The source column `Identifik\u00e1tor_kontaktn\u00e9ho_miest`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "isPartOf": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
           "type": [
             "string",
             "null"
@@ -6418,15 +6418,6 @@
         },
         "dataProvider": {
           "description": "Who published the row, with the credit its licence asks for.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "dataset": {
-          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
-          "format": "uri",
           "type": [
             "string",
             "null"
@@ -6734,6 +6725,15 @@
         "id": {
           "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
           "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "isPartOf": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
           "x-ngsi-ld-kind": "Property"
         },
         "jazyk": {
@@ -7553,15 +7553,6 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
-        "dataset": {
-          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
-          "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
         "funkcia": {
           "description": "The source column `Funkcia`.",
           "type": [
@@ -7581,6 +7572,15 @@
         "id": {
           "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
           "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "isPartOf": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
           "x-ngsi-ld-kind": "Property"
         },
         "location": {
@@ -7735,15 +7735,6 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
-        "dataset": {
-          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
-          "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
         "datumDorucenia": {
           "description": "The source column `D\u00e1tum_doru\u010denia`.",
           "format": "date",
@@ -7769,6 +7760,15 @@
         },
         "identifier": {
           "description": "The source column `\u010c\u00edslo`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "isPartOf": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
           "type": [
             "string",
             "null"
@@ -8043,15 +8043,6 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
-        "dataset": {
-          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
-          "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
         "datumSchvaleniaOH": {
           "description": "The source column `D\u00e1tum_schv\u00e1lenia_OH`.",
           "type": [
@@ -8203,6 +8194,15 @@
         },
         "instagram": {
           "description": "The source column `Instagram`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "isPartOf": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
           "type": [
             "string",
             "null"
@@ -9061,15 +9061,6 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
-        "dataset": {
-          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
-          "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
         "datumZaniku": {
           "description": "The source column `DatumZaniku`.",
           "type": [
@@ -9189,6 +9180,15 @@
         },
         "index": {
           "description": "The source column `Index_`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "isPartOf": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
           "type": [
             "string",
             "null"
@@ -9675,15 +9675,6 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
-        "dataset": {
-          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
-          "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
         "formaPodnikania": {
           "description": "The source column `Forma_podnikania`.",
           "type": [
@@ -9719,6 +9710,15 @@
         "id": {
           "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
           "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "isPartOf": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
           "x-ngsi-ld-kind": "Property"
         },
         "kodFormyPodnikania": {
@@ -9891,15 +9891,6 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
-        "dataset": {
-          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
-          "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
         "datumSpustenia": {
           "description": "The source column `D\u00e1tum_spustenia`.",
           "format": "date-time",
@@ -9988,6 +9979,15 @@
         },
         "identifier": {
           "description": "The source column `\u010c\u00edslo`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "isPartOf": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
           "type": [
             "string",
             "null"
@@ -10226,15 +10226,6 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
-        "dataset": {
-          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
-          "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
         "datumVystavenia": {
           "description": "The source column `D\u00e1tum_vystavenia`.",
           "format": "date",
@@ -10267,6 +10258,15 @@
         },
         "identifier": {
           "description": "The source column `\u010c\u00edslo`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "isPartOf": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
           "type": [
             "string",
             "null"
@@ -10393,15 +10393,6 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
-        "dataset": {
-          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
-          "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
         "designatio": {
           "description": "The source column `designatio`.",
           "type": [
@@ -10465,6 +10456,15 @@
         },
         "inspireIdN": {
           "description": "The source column `inspireIdN`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "isPartOf": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
           "type": [
             "string",
             "null"
@@ -10654,15 +10654,6 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
-        "dataset": {
-          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
-          "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
         "datumACas": {
           "description": "The source column `D\u00e1tum_a_\u010das`.",
           "format": "date-time",
@@ -10715,6 +10706,15 @@
         "id": {
           "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
           "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "isPartOf": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
           "x-ngsi-ld-kind": "Property"
         },
         "lahkoZraneni": {
@@ -10956,15 +10956,6 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
-        "dataset": {
-          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
-          "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
         "druhKonstrukcie": {
           "description": "The source column `Druh_kon\u0161trukcie`.",
           "type": [
@@ -10984,6 +10975,15 @@
         "id": {
           "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
           "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "isPartOf": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
           "x-ngsi-ld-kind": "Property"
         },
         "jICZSR": {
@@ -11257,15 +11257,6 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
-        "dataset": {
-          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
-          "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
         "description": {
           "description": "The source column `N\u00e1zov_VZN`.",
           "type": [
@@ -11289,6 +11280,15 @@
         },
         "identifier": {
           "description": "The source column `\u010c\u00edslo`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "isPartOf": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
           "type": [
             "string",
             "null"
@@ -11465,15 +11465,6 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
-        "dataset": {
-          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
-          "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
         "dlzkaVU1": {
           "description": "The source column `dlzka_VU_1`.",
           "type": [
@@ -11525,6 +11516,15 @@
         "id": {
           "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
           "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "isPartOf": {
+          "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
           "x-ngsi-ld-kind": "Property"
         },
         "kODVU202": {

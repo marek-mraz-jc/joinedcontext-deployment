@@ -17,10 +17,6 @@
     "type": "Property",
     "value": "dataProvider"
   },
-  "dataset": {
-    "type": "Property",
-    "value": "https://example.org/dataset"
-  },
   "designatio": {
     "type": "Property",
     "value": "designatio"
@@ -52,6 +48,10 @@
   "inspireIdN": {
     "type": "Property",
     "value": "inspireIdN"
+  },
+  "isPartOf": {
+    "type": "Property",
+    "value": "https://example.org/isPartOf"
   },
   "link": {
     "type": "Property",

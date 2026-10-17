@@ -1,13 +1,13 @@
 {
   "aktualnyStavebnotechnickyStav": "aktualnyStavebnotechnickyStav",
   "dataProvider": "dataProvider",
-  "dataset": "https://example.org/dataset",
   "dlzkaPremosteniaM": 0.0,
   "docasnostMosta": "docasnostMosta",
   "druhNosnejKonstrukcie": "druhNosnejKonstrukcie",
   "hodnotenie": "hodnotenie",
   "id": "urn:ngsi-ld:Bridge:joinedcontext.com:example:1",
   "identifikacneCislo": "identifikacneCislo",
+  "isPartOf": "https://example.org/isPartOf",
   "komunikacia": "komunikacia",
   "legislativnyStav": "legislativnyStav",
   "location": {

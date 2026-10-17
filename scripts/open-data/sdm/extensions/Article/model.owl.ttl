@@ -12,16 +12,16 @@ jc:Article a owl:Class,
     rdfs:label "Article" ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:maxCardinality 1 ;
+            owl:onProperty jc:url ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:content ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
             owl:onProperty jc:identifier ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:dataProvider ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:dateGmt ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:source ],
+            owl:onProperty jc:isPartOf ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:modifiedGmt ],
@@ -30,13 +30,13 @@ jc:Article a owl:Class,
             owl:onProperty jc:name ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:dataset ],
+            owl:onProperty jc:dataProvider ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:url ],
+            owl:onProperty jc:source ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:content ],
+            owl:onProperty jc:dateGmt ],
         jc:Entity ;
     skos:definition "A news article the publisher posted." ;
     skos:exactMatch jc:Article ;
@@ -48,16 +48,16 @@ jc:Entity a owl:Class,
     rdfs:label "Entity" ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:observedAt ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
             owl:onProperty jc:location ],
         [ a owl:Restriction ;
-            owl:cardinality 1 ;
-            owl:onProperty jc:type ],
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:observedAt ],
         [ a owl:Restriction ;
             owl:cardinality 1 ;
-            owl:onProperty jc:id ] ;
+            owl:onProperty jc:id ],
+        [ a owl:Restriction ;
+            owl:cardinality 1 ;
+            owl:onProperty jc:type ] ;
     skos:definition "The root every NGSI-LD entity class specialises." ;
     skos:exactMatch ngsi-ld:Entity ;
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/Article> ;
@@ -91,14 +91,6 @@ jc:dataProvider a owl:ObjectProperty,
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/Article> ;
     jc:ngsi_ld_kind "Property" ;
     jc:upstream_source "https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld" .
-
-jc:dataset a owl:ObjectProperty,
-        linkml:SlotDefinition ;
-    rdfs:label "dataset" ;
-    rdfs:range jc:uri ;
-    skos:definition "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
-    skos:inScheme <https://joinedcontext.com/models/sdm/extensions/Article> ;
-    jc:ngsi_ld_kind "Property" .
 
 jc:date a owl:Class,
         linkml:TypeDefinition ;
@@ -166,6 +158,14 @@ jc:integer a owl:Class,
             owl:onDataRange jc:integer ;
             owl:onProperty linkml:topValue ;
             owl:qualifiedCardinality 1 ] .
+
+jc:isPartOf a owl:ObjectProperty,
+        linkml:SlotDefinition ;
+    rdfs:label "isPartOf" ;
+    rdfs:range jc:uri ;
+    skos:definition "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
+    skos:inScheme <https://joinedcontext.com/models/sdm/extensions/Article> ;
+    jc:ngsi_ld_kind "Property" .
 
 jc:jsonpath a owl:Class,
         linkml:TypeDefinition ;

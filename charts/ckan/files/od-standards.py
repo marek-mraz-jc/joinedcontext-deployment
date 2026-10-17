@@ -4,7 +4,8 @@ Prepended to each harvest script by templates/harvest.yaml. The harvest replaces
 resource list on every run, so the distributions are part of what it writes, not added beside it
 by something the next night would erase. `OD_DATASETS` is charts/ckan/files/od-datasets.json, which
 scripts/open-data/generate.py writes from the mapping: per CKAN dataset name, the open-data
-Endpoint's slug, the entity type its rows became and whether they carry a location.
+Endpoint's slug, the entity type its rows became, whether they carry a location and whether its
+rows name their catalogue dataset (`filtered`, false for a dataset an older seed reads whole).
 `OD_GATEWAY` is the public base the Endpoints answer under; without it no dataset gains any.
 A dataset with no distributions is withdrawn by the harvest (EP-118, T-4324): the catalogue lists
 NGSI-LD data with all its doors and its data model, or not at all.
@@ -17,23 +18,24 @@ import urllib.request as _request
 OD_DATASETS = _json.loads(_os.environ.get("OD_DATASETS") or "{}")
 OD_GATEWAY = (_os.environ.get("OD_GATEWAY") or "").rstrip("/")
 
-# (path under the Endpoint, name, format, media type, conformsTo, filtered to the dataset, needs a location)
-# The format is the label jcctl's publisher gives an Endpoint's own dataset (ckan.rs `distribution`),
-# so the catalogue's format facet counts both under one name (EP-118, T-4324).
-# OGC API Features and OData read a whole type: their views refuse a filter on `dataset` (403),
-# so those two list every row of the type in the space, and say so.
+# (path under the Endpoint, name, format, media type, conformsTo, how it keeps the dataset's rows, needs
+# a location). The format is the label jcctl's publisher gives an Endpoint's own dataset (ckan.rs
+# `distribution`), so the catalogue's format facet counts both under one name (EP-118, T-4324).
+# Each row names its catalogue dataset in `isPartOf` (T-4289); an address keeps only those rows in
+# its standard's own syntax: NGSI-LD and the files `q`, OGC API Features the queryable as a parameter,
+# OData `$filter`. MCP and WebSocket read every type of the Endpoint, so they list every row and say so.
 OD_STANDARDS = [
     ("ngsi-ld/v1/entities", "NGSI-LD API", "NGSI-LD", "application/ld+json",
-     "https://www.etsi.org/deliver/etsi_gs/CIM/001_099/009/", True, False),
-    ("file.geojson", "GeoJSON", "GeoJSON", "application/geo+json", "https://www.rfc-editor.org/rfc/rfc7946", True, True),
-    ("file.csv", "CSV", "CSV", "text/csv", None, True, False),
-    ("file.json", "JSON", "JSON", "application/json", None, True, False),
-    ("file.xlsx", "Excel", "XLSX", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", None, True, False),
+     "https://www.etsi.org/deliver/etsi_gs/CIM/001_099/009/", "q", False),
+    ("file.geojson", "GeoJSON", "GeoJSON", "application/geo+json", "https://www.rfc-editor.org/rfc/rfc7946", "q", True),
+    ("file.csv", "CSV", "CSV", "text/csv", None, "q", False),
+    ("file.json", "JSON", "JSON", "application/json", None, "q", False),
+    ("file.xlsx", "Excel", "XLSX", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", None, "q", False),
     ("ogc/features/collections/{type}/items", "OGC API - Features", "OGCFEAT", "application/geo+json",
-     "http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core", False, True),
-    ("odata/v4/{type}", "OData v4", "OData", "application/json", "https://docs.oasis-open.org/odata/odata/v4.01/", False, False),
-    ("mcp", "Model Context Protocol", "MCP", "application/json", "https://modelcontextprotocol.io/specification", False, False),
-    ("ws", "WebSocket", "WebSocket", "application/json", None, False, False),
+     "http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core", "ogc", True),
+    ("odata/v4/{type}", "OData v4", "OData", "application/json", "https://docs.oasis-open.org/odata/odata/v4.01/", "odata", False),
+    ("mcp", "Model Context Protocol", "MCP", "application/json", "https://modelcontextprotocol.io/specification", None, False),
+    ("ws", "WebSocket", "WebSocket", "application/json", None, None, False),
 ]
 
 
@@ -84,16 +86,26 @@ def od_standards(name):
     model = od_model_files(root, entry["endpoint"], entry["type"])
     if not model:
         return []
-    mine = _parse.urlencode({"type": entry["type"], "q": f'dataset=="{entry["dataset"]}"'})
+    dataset = entry["dataset"]
+    mine = {
+        "q": _parse.urlencode({"type": entry["type"], "q": f'isPartOf=="{dataset}"'}),
+        "ogc": _parse.urlencode({"isPartOf": dataset}),
+        # OData string literals double a quote (OData 4.01 ABNF `SQUOTE-in-string`); a space is
+        # %20, since `+` is a space only in form encoding, not in OData's URL conventions.
+        "odata": _parse.urlencode({"$filter": "isPartOf eq '" + dataset.replace("'", "''") + "'"},
+                                  quote_via=_parse.quote),
+    }
     out = []
     for path, title, fmt, media, conforms, filtered, located in OD_STANDARDS:
         if located and not entry.get("location"):
             continue
+        # A dataset an older seed reads whole: its rows name no catalogue dataset (T-4291).
+        filtered = filtered if entry.get("filtered", True) else None
         url = root + path.replace("{type}", _parse.quote(entry["type"]))
         if path == "ws":
             url = "wss" + url[len("https"):] if url.startswith("https") else url
         if filtered:
-            url += "?" + mine
+            url += "?" + mine[filtered]
         what = ("These rows" if filtered else f"Every {entry['type']} of the space, these rows among them")
         resource = {"name": f"{title} ({entry['type']})", "url": url, "format": fmt, "mimetype": media,
                     "resource_type": "api",

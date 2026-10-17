@@ -3,7 +3,6 @@
   "cDodavatela": "cDodavatela",
   "cZmluvy": "cZmluvy",
   "dataProvider": "dataProvider",
-  "dataset": "https://example.org/dataset",
   "datumDoruceniaVyuctovania": "2026-01-01",
   "datumRealizacieProjektu": "datumRealizacieProjektu",
   "datumUhradyDotacie": "2026-01-01",
@@ -18,6 +17,7 @@
   "iD": 0,
   "id": "urn:ngsi-ld:Grant:joinedcontext.com:example:1",
   "identifier": "identifier",
+  "isPartOf": "https://example.org/isPartOf",
   "kampan": "kampan",
   "location": {
     "coordinates": [

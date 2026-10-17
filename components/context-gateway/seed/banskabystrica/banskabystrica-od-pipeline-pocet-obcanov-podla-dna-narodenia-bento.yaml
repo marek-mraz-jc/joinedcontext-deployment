@@ -66,7 +66,7 @@ pipeline:
           "pocet": this."Počet".apply("integer"),
           "dataProvider": { "type": "Property", "value": "Mesto Banská Bystrica (CC BY 4.0)" },
           "source": { "type": "Property", "value": "https://data.dev.joinedcontext.com/api/3/action/datastore_search?resource_id=c7e533af-04b7-4a0a-95bc-dc75f18ede97&limit=32000" },
-          "dataset": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bb-pocet-obcanov-podla-dna-narodenia" }
+          "isPartOf": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bb-pocet-obcanov-podla-dna-narodenia" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.
     - archive:

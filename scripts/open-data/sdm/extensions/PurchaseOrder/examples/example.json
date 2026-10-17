@@ -1,13 +1,13 @@
 {
   "adresa": "adresa",
   "dataProvider": "dataProvider",
-  "dataset": "https://example.org/dataset",
   "datumVystavenia": "datumVystavenia",
   "datumZverejnenia": "datumZverejnenia",
   "dodavatel": "dodavatel",
   "iCO": "iCO",
   "id": "urn:ngsi-ld:PurchaseOrder:joinedcontext.com:example:1",
   "identifier": "identifier",
+  "isPartOf": "https://example.org/isPartOf",
   "location": {
     "coordinates": [
       0.0,

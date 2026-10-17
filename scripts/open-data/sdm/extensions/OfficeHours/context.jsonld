@@ -10,10 +10,6 @@
     "dataProvider": {
       "@id": "sdm:dataProvider"
     },
-    "dataset": {
-      "@id": "jc:dataset",
-      "@type": "xsd:anyURI"
-    },
     "denVTyzdni": {
       "@id": "jc:denVTyzdni"
     },
@@ -24,6 +20,10 @@
     "id": "@id",
     "identifikatorKontaktnehoMiest": {
       "@id": "jc:identifikatorKontaktnehoMiest"
+    },
+    "isPartOf": {
+      "@id": "jc:isPartOf",
+      "@type": "xsd:anyURI"
     },
     "jc": "https://joinedcontext.com/models/",
     "kodDnaVTyzdni": {

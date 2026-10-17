@@ -12,40 +12,40 @@ jc:CouncilVote a owl:Class,
     rdfs:label "CouncilVote" ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:maxCardinality 1 ;
+            owl:onProperty jc:isPartOf ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:zasadnutie ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:hlas ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:source ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:poslanec ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:nazovSamospravy ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
             owl:onProperty jc:organSamospravy ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:name ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:iCOSamospravy ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:zasadnutie ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:dataset ],
+            owl:onProperty jc:dataProvider ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:datum ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:source ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
             owl:onProperty jc:volebneObdobie ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:poslanec ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:dataProvider ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:nazovSamospravy ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:hlas ],
+            owl:onProperty jc:iCOSamospravy ],
         jc:Entity ;
     skos:definition "One deputy's vote on one item of a council meeting." ;
     skos:exactMatch jc:CouncilVote ;
@@ -57,16 +57,16 @@ jc:Entity a owl:Class,
     rdfs:label "Entity" ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:cardinality 1 ;
-            owl:onProperty jc:type ],
+            owl:onProperty jc:id ],
         [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:location ],
+            owl:cardinality 1 ;
+            owl:onProperty jc:type ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:observedAt ],
         [ a owl:Restriction ;
-            owl:cardinality 1 ;
-            owl:onProperty jc:id ] ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:location ] ;
     skos:definition "The root every NGSI-LD entity class specialises." ;
     skos:exactMatch ngsi-ld:Entity ;
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/CouncilVote> ;
@@ -93,14 +93,6 @@ jc:dataProvider a owl:ObjectProperty,
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/CouncilVote> ;
     jc:ngsi_ld_kind "Property" ;
     jc:upstream_source "https://raw.githubusercontent.com/smart-data-models/dataModel.TourismDestinations/6d78cb4ff0c1a7d16dc0c1bab7266e40d4b3a00c/context.jsonld" .
-
-jc:dataset a owl:ObjectProperty,
-        linkml:SlotDefinition ;
-    rdfs:label "dataset" ;
-    rdfs:range jc:uri ;
-    skos:definition "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
-    skos:inScheme <https://joinedcontext.com/models/sdm/extensions/CouncilVote> ;
-    jc:ngsi_ld_kind "Property" .
 
 jc:date a owl:Class,
         linkml:TypeDefinition ;
@@ -167,6 +159,14 @@ jc:id a owl:ObjectProperty,
     jc:jsonld_keyword "@id" ;
     jc:ngsi_ld_kind "Property" ;
     jc:upstream_source "ETSI NGSI-LD core context v1.8" .
+
+jc:isPartOf a owl:ObjectProperty,
+        linkml:SlotDefinition ;
+    rdfs:label "isPartOf" ;
+    rdfs:range jc:uri ;
+    skos:definition "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
+    skos:inScheme <https://joinedcontext.com/models/sdm/extensions/CouncilVote> ;
+    jc:ngsi_ld_kind "Property" .
 
 jc:jsonpath a owl:Class,
         linkml:TypeDefinition ;

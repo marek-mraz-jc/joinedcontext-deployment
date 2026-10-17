@@ -2,7 +2,6 @@
   "cZasadnutia": 0,
   "cisloZasadnutia": "cisloZasadnutia",
   "dataProvider": "dataProvider",
-  "dataset": "https://example.org/dataset",
   "datumZasadnutia": "datumZasadnutia",
   "hyperlinkNaDochadzku": "hyperlinkNaDochadzku",
   "hyperlinkNaPozvanku": "hyperlinkNaPozvanku",
@@ -11,6 +10,7 @@
   "hyperlinkNaZapisnicu": "hyperlinkNaZapisnicu",
   "iCOSamospravy": "iCOSamospravy",
   "id": "urn:ngsi-ld:CouncilMeeting:joinedcontext.com:example:1",
+  "isPartOf": "https://example.org/isPartOf",
   "location": {
     "coordinates": [
       0.0,

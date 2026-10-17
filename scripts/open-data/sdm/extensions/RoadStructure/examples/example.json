@@ -2,10 +2,10 @@
   "celkovaDlzkaPodjazdu": 0,
   "cisloPK": "cisloPK",
   "dataProvider": "dataProvider",
-  "dataset": "https://example.org/dataset",
   "druhKonstrukcie": "druhKonstrukcie",
   "druhZabezpecenia": "druhZabezpecenia",
   "id": "urn:ngsi-ld:RoadStructure:joinedcontext.com:example:1",
+  "isPartOf": "https://example.org/isPartOf",
   "jICZSR": "jICZSR",
   "kraj": "kraj",
   "location": {

@@ -14,39 +14,46 @@ jc:Article a sh:NodeShape ;
     rdfs:comment "A news article the publisher posted." ;
     sh:closed true ;
     sh:ignoredProperties ( rdf:type ) ;
-    sh:property [ sh:datatype xsd:string ;
-            sh:description "The source column `id`." ;
+    sh:property [ sh:datatype xsd:dateTime ;
+            sh:description "The source column `date_gmt`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 5 ;
-            sh:path <https://smartdatamodels.org/dataModel.CPSV-AP/identifier> ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `title`." ;
+            sh:order 4 ;
+            sh:path jc:dateGmt ],
+        [ sh:datatype xsd:dateTime ;
+            sh:description "When the observation the entity reports was made." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 7 ;
-            sh:path sdm:name ],
-        [ sh:description "The service the row was read from." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:IRI ;
-            sh:order 1 ;
-            sh:path sdm:source ],
+            sh:order 12 ;
+            sh:path ngsi-ld:observedAt ],
         [ sh:datatype xsd:string ;
             sh:description "Who published the row, with the credit its licence asks for." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 0 ;
             sh:path sdm:dataProvider ],
+        [ sh:datatype xsd:string ;
+            sh:description "Where the entity is, as GeoJSON geometry." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 11 ;
+            sh:path geojson:geometry ],
         [ sh:description "The source column `link`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:IRI ;
             sh:order 8 ;
             sh:path jc:url ],
-        [ sh:description "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `content`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 3 ;
+            sh:path jc:content ],
+        [ sh:description "The service the row was read from." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:IRI ;
-            sh:order 2 ;
-            sh:path jc:dataset ],
+            sh:order 1 ;
+            sh:path sdm:source ],
         [ sh:datatype xsd:dateTime ;
             sh:description "The source column `modified_gmt`." ;
             sh:maxCount 1 ;
@@ -54,35 +61,28 @@ jc:Article a sh:NodeShape ;
             sh:order 6 ;
             sh:path jc:modifiedGmt ],
         [ sh:datatype xsd:string ;
-            sh:description "The source column `content`." ;
+            sh:description "The source column `id`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 3 ;
-            sh:path jc:content ],
-        [ sh:datatype xsd:dateTime ;
-            sh:description "The source column `date_gmt`." ;
+            sh:order 5 ;
+            sh:path <https://smartdatamodels.org/dataModel.CPSV-AP/identifier> ],
+        [ sh:description "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
             sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 4 ;
-            sh:path jc:dateGmt ],
+            sh:nodeKind sh:IRI ;
+            sh:order 2 ;
+            sh:path jc:isPartOf ],
         [ sh:datatype xsd:string ;
-            sh:description "Where the entity is, as GeoJSON geometry." ;
+            sh:description "The source column `title`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 11 ;
-            sh:path geojson:geometry ],
-        [ sh:datatype xsd:dateTime ;
-            sh:description "When the observation the entity reports was made." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 12 ;
-            sh:path ngsi-ld:observedAt ] ;
+            sh:order 7 ;
+            sh:path sdm:name ] ;
     sh:targetClass jc:Article .
 
 ngsi-ld:Entity a sh:NodeShape ;
     rdfs:comment "The root every NGSI-LD entity class specialises." ;
     sh:closed true ;
-    sh:ignoredProperties ( jc:dateGmt jc:url sdm:name sdm:dataProvider rdf:type jc:content <https://smartdatamodels.org/dataModel.CPSV-AP/identifier> jc:dataset jc:modifiedGmt sdm:source ) ;
+    sh:ignoredProperties ( jc:url rdf:type sdm:source sdm:dataProvider jc:content jc:dateGmt jc:modifiedGmt sdm:name jc:isPartOf <https://smartdatamodels.org/dataModel.CPSV-AP/identifier> ) ;
     sh:property [ sh:datatype xsd:dateTime ;
             sh:description "When the observation the entity reports was made." ;
             sh:maxCount 1 ;

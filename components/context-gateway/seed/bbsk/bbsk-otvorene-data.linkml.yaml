@@ -29,7 +29,7 @@ slots:
       ngsi_ld_kind: Property
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/context.jsonld
     slot_uri: https://smartdatamodels.org/source
-  dataset:
+  isPartOf:
     description: The catalogue dataset the row belongs to, where its licence and its other rows are.
     range: uri
     annotations:
@@ -4771,7 +4771,7 @@ classes:
     slots:
     - dataProvider
     - source
-    - dataset
+    - isPartOf
     - dOW
     - fACC
     - fLAT
@@ -4803,7 +4803,7 @@ classes:
     slots:
     - dataProvider
     - source
-    - dataset
+    - isPartOf
     - aktualnyStavebnotechnickyStav
     - dlzkaPremosteniaM
     - docasnostMosta
@@ -4840,7 +4840,7 @@ classes:
     slots:
     - dataProvider
     - source
-    - dataset
+    - isPartOf
     - name
     - pozicia
     - poznamka
@@ -4853,7 +4853,7 @@ classes:
     slots:
     - dataProvider
     - source
-    - dataset
+    - isPartOf
     - datumPlatnostiDo
     - datumPrilohy
     - datumUcinnosti
@@ -4884,7 +4884,7 @@ classes:
     slots:
     - dataProvider
     - source
-    - dataset
+    - isPartOf
     - cisloZasadnutia
     - datumZasadnutia
     - hyperlinkNaDochadzku
@@ -4904,7 +4904,7 @@ classes:
     slots:
     - dataProvider
     - source
-    - dataset
+    - isPartOf
     - datum
     - hlas
     - iCOSamospravy
@@ -4923,7 +4923,7 @@ classes:
     slots:
     - dataProvider
     - source
-    - dataset
+    - isPartOf
     - alps
     - ctt
     - dlzka
@@ -4950,7 +4950,7 @@ classes:
     slots:
     - dataProvider
     - source
-    - dataset
+    - isPartOf
     - cDodavatela
     - cZmluvy
     - datumDoruceniaVyuctovania
@@ -5006,7 +5006,7 @@ classes:
     slots:
     - dataProvider
     - source
-    - dataset
+    - isPartOf
     - adresa
     - cisloObjednavky
     - cisloZmluvy
@@ -5031,7 +5031,7 @@ classes:
     slots:
     - dataProvider
     - source
-    - dataset
+    - isPartOf
     - abs20182040
     - adHocHnutia
     - adHocHnutia2
@@ -5534,7 +5534,7 @@ classes:
     slots:
     - dataProvider
     - source
-    - dataset
+    - isPartOf
     - denVTyzdni
     - iCOSamospravy
     - identifikatorKontaktnehoMiest
@@ -5555,7 +5555,7 @@ classes:
     slots:
     - dataProvider
     - source
-    - dataset
+    - isPartOf
     - absolventiZaMinulyRokSpol
     - absolventiZaMinulyRokZeny
     - adresa
@@ -5702,7 +5702,7 @@ classes:
     slots:
     - dataProvider
     - source
-    - dataset
+    - isPartOf
     - funkcia
     - iCOSamospravy
     - meno
@@ -5724,7 +5724,7 @@ classes:
     slots:
     - dataProvider
     - source
-    - dataset
+    - isPartOf
     - datumDorucenia
     - datumVybavenia
     - identifier
@@ -5748,7 +5748,7 @@ classes:
     slots:
     - dataProvider
     - source
-    - dataset
+    - isPartOf
     - addressReg
     - adresa
     - altitude
@@ -5883,7 +5883,7 @@ classes:
     slots:
     - dataProvider
     - source
-    - dataset
+    - isPartOf
     - adresa
     - aktivne
     - aktualnyStav
@@ -5965,7 +5965,7 @@ classes:
     slots:
     - dataProvider
     - source
-    - dataset
+    - isPartOf
     - adresaOrganizacie
     - formaPodnikania
     - iCOOrganizacie
@@ -5988,7 +5988,7 @@ classes:
     slots:
     - dataProvider
     - source
-    - dataset
+    - isPartOf
     - adresaNajvyhodnejsiehoUchadza
     - cPVCastiNazov
     - cPVNazov
@@ -6032,7 +6032,7 @@ classes:
     slots:
     - dataProvider
     - source
-    - dataset
+    - isPartOf
     - adresa
     - datumVystavenia
     - dodavatel
@@ -6050,7 +6050,7 @@ classes:
     slots:
     - dataProvider
     - source
-    - dataset
+    - isPartOf
     - aCH
     - aUT
     - dOW
@@ -6084,7 +6084,7 @@ classes:
     slots:
     - dataProvider
     - source
-    - dataset
+    - isPartOf
     - cisloNehody
     - datumACas
     - druhKomunikacie
@@ -6122,7 +6122,7 @@ classes:
     slots:
     - dataProvider
     - source
-    - dataset
+    - isPartOf
     - celkovaDlzkaPodjazdu
     - cisloPK
     - druhKonstrukcie
@@ -6160,7 +6160,7 @@ classes:
     slots:
     - dataProvider
     - source
-    - dataset
+    - isPartOf
     - cisloZasadnutia
     - description
     - iCOSamospravy
@@ -6180,7 +6180,7 @@ classes:
     slots:
     - dataProvider
     - source
-    - dataset
+    - isPartOf
     - aCH
     - aUT
     - celkChemStav

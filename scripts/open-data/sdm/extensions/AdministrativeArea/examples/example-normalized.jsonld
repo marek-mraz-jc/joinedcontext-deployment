@@ -9,10 +9,6 @@
     "type": "Property",
     "value": "dataProvider"
   },
-  "dataset": {
-    "type": "Property",
-    "value": "https://example.org/dataset"
-  },
   "fACC": {
     "type": "Property",
     "value": "fACC"
@@ -36,6 +32,10 @@
   "iDN4": {
     "type": "Property",
     "value": 0
+  },
+  "isPartOf": {
+    "type": "Property",
+    "value": "https://example.org/isPartOf"
   },
   "lAU1": {
     "type": "Property",

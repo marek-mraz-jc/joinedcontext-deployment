@@ -13,10 +13,6 @@
     "type": "Property",
     "value": "dataProvider"
   },
-  "dataset": {
-    "type": "Property",
-    "value": "https://example.org/dataset"
-  },
   "druhKonstrukcie": {
     "type": "Property",
     "value": "druhKonstrukcie"
@@ -24,6 +20,10 @@
   "druhZabezpecenia": {
     "type": "Property",
     "value": "druhZabezpecenia"
+  },
+  "isPartOf": {
+    "type": "Property",
+    "value": "https://example.org/isPartOf"
   },
   "jICZSR": {
     "type": "Property",

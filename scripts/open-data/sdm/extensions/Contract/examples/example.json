@@ -1,7 +1,6 @@
 {
   "cenaCelkom": "cenaCelkom",
   "dataProvider": "dataProvider",
-  "dataset": "https://example.org/dataset",
   "datumPlatnostiDo": "2026-01-01",
   "datumPodpisu": "datumPodpisu",
   "datumPrilohy": "2026-01-01",
@@ -16,6 +15,7 @@
   "id": "urn:ngsi-ld:Contract:joinedcontext.com:example:1",
   "identifier": "identifier",
   "index": "index",
+  "isPartOf": "https://example.org/isPartOf",
   "location": {
     "coordinates": [
       0.0,

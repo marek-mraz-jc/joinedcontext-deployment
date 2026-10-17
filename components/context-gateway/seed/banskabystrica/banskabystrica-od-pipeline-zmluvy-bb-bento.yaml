@@ -79,7 +79,7 @@ pipeline:
           "zmluvneStranySUdajomICO": this."Zmluvné_strany_s_údajom_IČO".apply("string"),
           "dataProvider": { "type": "Property", "value": "Mesto Banská Bystrica (CC BY 4.0)" },
           "source": { "type": "Property", "value": "https://data.dev.joinedcontext.com/api/3/action/datastore_search?resource_id=d2df226d-cbf4-4202-aa63-8ef3e38979da&limit=32000" },
-          "dataset": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bb-zmluvy-bb" }
+          "isPartOf": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bb-zmluvy-bb" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.
     - archive:

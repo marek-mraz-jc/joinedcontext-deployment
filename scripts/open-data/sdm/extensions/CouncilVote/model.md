@@ -23,7 +23,7 @@ Specialises `Entity`.
 |---|---|---|---|---|---|---|
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who published the row, with the credit its licence asks for. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The service the row was read from. |
-| `dataset` | Property | `uri` |  |  | `jc:dataset` | The catalogue dataset the row belongs to, where its licence and its other rows are. |
+| `isPartOf` | Property | `uri` |  |  | `jc:isPartOf` | The catalogue dataset the row belongs to, where its licence and its other rows are. |
 | `datum` | Property | `datetime` |  |  | `jc:datum` | The source column `Dátum`. |
 | `hlas` | Property | `string` |  |  | `jc:hlas` | The source column `Hlas`. |
 | `iCOSamospravy` | Property | `string` |  |  | `jc:iCOSamospravy` | The source column `IČO_samosprávy`. |

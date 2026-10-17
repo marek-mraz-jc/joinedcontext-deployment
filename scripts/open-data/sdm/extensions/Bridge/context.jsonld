@@ -13,10 +13,6 @@
     "dataProvider": {
       "@id": "sdm:dataProvider"
     },
-    "dataset": {
-      "@id": "jc:dataset",
-      "@type": "xsd:anyURI"
-    },
     "dlzkaPremosteniaM": {
       "@id": "jc:dlzkaPremosteniaM",
       "@type": "xsd:float"
@@ -34,6 +30,10 @@
     "id": "@id",
     "identifikacneCislo": {
       "@id": "jc:identifikacneCislo"
+    },
+    "isPartOf": {
+      "@id": "jc:isPartOf",
+      "@type": "xsd:anyURI"
     },
     "jc": "https://joinedcontext.com/models/",
     "komunikacia": {

@@ -1,10 +1,10 @@
 {
   "content": "content",
   "dataProvider": "dataProvider",
-  "dataset": "https://example.org/dataset",
   "dateGmt": "2026-01-01T00:00:00Z",
   "id": "urn:ngsi-ld:Article:joinedcontext.com:example:1",
   "identifier": "identifier",
+  "isPartOf": "https://example.org/isPartOf",
   "location": {
     "coordinates": [
       0.0,

@@ -55,18 +55,6 @@ jc:dataProvider a linkml:SlotDefinition ;
     linkml:range jc:string ;
     linkml:slot_uri "https://smartdatamodels.org/dataProvider"^^xsd:anyURI .
 
-jc:dataset a linkml:SlotDefinition ;
-    skos:inScheme "https://joinedcontext.com/models/sdm/extensions/Contract"^^xsd:anyURI ;
-    linkml:annotations [ a linkml:Annotation ;
-            skos:example "Property" ;
-            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ] ;
-    linkml:definition_uri "https://joinedcontext.com/models/dataset"^^xsd:anyURI ;
-    linkml:description "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
-    linkml:domain_of jc:Contract ;
-    linkml:owner jc:Contract ;
-    linkml:range jc:uri ;
-    linkml:slot_uri "https://joinedcontext.com/models/dataset"^^xsd:anyURI .
-
 jc:date_or_datetime a linkml:TypeDefinition ;
     skos:editorialNote "If you are authoring schemas in LinkML YAML, the type is referenced with the lower case \"date_or_datetime\"." ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/Contract"^^xsd:anyURI ;
@@ -263,6 +251,18 @@ jc:index a linkml:SlotDefinition ;
     linkml:range jc:string ;
     linkml:slot_uri "https://joinedcontext.com/models/index"^^xsd:anyURI .
 
+jc:isPartOf a linkml:SlotDefinition ;
+    skos:inScheme "https://joinedcontext.com/models/sdm/extensions/Contract"^^xsd:anyURI ;
+    linkml:annotations [ a linkml:Annotation ;
+            skos:example "Property" ;
+            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ] ;
+    linkml:definition_uri "https://joinedcontext.com/models/isPartOf"^^xsd:anyURI ;
+    linkml:description "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
+    linkml:domain_of jc:Contract ;
+    linkml:owner jc:Contract ;
+    linkml:range jc:uri ;
+    linkml:slot_uri "https://joinedcontext.com/models/isPartOf"^^xsd:anyURI .
+
 jc:jsonpath a linkml:TypeDefinition ;
     dcterms:conformsTo "https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html" ;
     skos:editorialNote "If you are authoring schemas in LinkML YAML, the type is referenced with the lower case \"jsonpath\"." ;
@@ -451,11 +451,11 @@ jc:source a linkml:SlotDefinition ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/Contract"^^xsd:anyURI ;
     skos:mappingRelation "https://smartdatamodels.org/source"^^xsd:anyURI ;
     linkml:annotations [ a linkml:Annotation ;
-            skos:example "Property" ;
-            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ],
-        [ a linkml:Annotation ;
             skos:example "https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld" ;
-            linkml:tag "upstream_source"^^xsd:anyURI ] ;
+            linkml:tag "upstream_source"^^xsd:anyURI ],
+        [ a linkml:Annotation ;
+            skos:example "Property" ;
+            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ] ;
     linkml:definition_uri "https://joinedcontext.com/models/source"^^xsd:anyURI ;
     linkml:description "The service the row was read from." ;
     linkml:domain_of jc:Contract ;
@@ -579,11 +579,11 @@ jc:id a linkml:SlotDefinition ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/Contract"^^xsd:anyURI ;
     skos:mappingRelation "https://uri.etsi.org/ngsi-ld/hasId"^^xsd:anyURI ;
     linkml:annotations [ a linkml:Annotation ;
-            skos:example "ETSI NGSI-LD core context v1.8" ;
-            linkml:tag "upstream_source"^^xsd:anyURI ],
-        [ a linkml:Annotation ;
             skos:example "Property" ;
             linkml:tag "ngsi_ld_kind"^^xsd:anyURI ],
+        [ a linkml:Annotation ;
+            skos:example "ETSI NGSI-LD core context v1.8" ;
+            linkml:tag "upstream_source"^^xsd:anyURI ],
         [ a linkml:Annotation ;
             skos:example "@id" ;
             linkml:tag "jsonld_keyword"^^xsd:anyURI ] ;
@@ -609,11 +609,11 @@ jc:location a linkml:SlotDefinition ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/Contract"^^xsd:anyURI ;
     skos:mappingRelation "https://purl.org/geojson/vocab#geometry"^^xsd:anyURI ;
     linkml:annotations [ a linkml:Annotation ;
-            skos:example "GeoProperty" ;
-            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ],
-        [ a linkml:Annotation ;
             skos:example "ETSI NGSI-LD core context v1.8" ;
-            linkml:tag "upstream_source"^^xsd:anyURI ] ;
+            linkml:tag "upstream_source"^^xsd:anyURI ],
+        [ a linkml:Annotation ;
+            skos:example "GeoProperty" ;
+            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ] ;
     linkml:definition_uri "https://joinedcontext.com/models/location"^^xsd:anyURI ;
     linkml:description "Where the entity is, as GeoJSON geometry." ;
     linkml:domain_of jc:Entity ;
@@ -625,11 +625,11 @@ jc:observedAt a linkml:SlotDefinition ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/Contract"^^xsd:anyURI ;
     skos:mappingRelation "https://uri.etsi.org/ngsi-ld/observedAt"^^xsd:anyURI ;
     linkml:annotations [ a linkml:Annotation ;
-            skos:example "Property" ;
-            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ],
-        [ a linkml:Annotation ;
             skos:example "ETSI NGSI-LD core context v1.8" ;
-            linkml:tag "upstream_source"^^xsd:anyURI ] ;
+            linkml:tag "upstream_source"^^xsd:anyURI ],
+        [ a linkml:Annotation ;
+            skos:example "Property" ;
+            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ] ;
     linkml:definition_uri "https://joinedcontext.com/models/observedAt"^^xsd:anyURI ;
     linkml:description "When the observation the entity reports was made." ;
     linkml:domain_of jc:Entity ;
@@ -641,14 +641,14 @@ jc:type a linkml:SlotDefinition ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/Contract"^^xsd:anyURI ;
     skos:mappingRelation "https://uri.etsi.org/ngsi-ld/hasType"^^xsd:anyURI ;
     linkml:annotations [ a linkml:Annotation ;
+            skos:example "@type" ;
+            linkml:tag "jsonld_keyword"^^xsd:anyURI ],
+        [ a linkml:Annotation ;
             skos:example "Property" ;
             linkml:tag "ngsi_ld_kind"^^xsd:anyURI ],
         [ a linkml:Annotation ;
             skos:example "ETSI NGSI-LD core context v1.8" ;
-            linkml:tag "upstream_source"^^xsd:anyURI ],
-        [ a linkml:Annotation ;
-            skos:example "@type" ;
-            linkml:tag "jsonld_keyword"^^xsd:anyURI ] ;
+            linkml:tag "upstream_source"^^xsd:anyURI ] ;
     linkml:definition_uri "https://joinedcontext.com/models/type"^^xsd:anyURI ;
     linkml:description "The entity type, one class of a published data model." ;
     linkml:domain_of jc:Entity ;
@@ -710,22 +710,22 @@ jc:Contract a linkml:ClassDefinition,
     dcterms:title "Contract, an extension of dataModel.CPSV-AP/Cost" ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/Contract"^^xsd:anyURI ;
     skos:mappingRelation "jc:Contract"^^xsd:anyURI ;
-    sh:declare [ sh:namespace "http://schema.org/"^^xsd:anyURI ;
-            sh:prefix "schema" ],
+    sh:declare [ sh:namespace "https://joinedcontext.com/models/"^^xsd:anyURI ;
+            sh:prefix "jc" ],
         [ sh:namespace "https://uri.etsi.org/ngsi-ld/"^^xsd:anyURI ;
             sh:prefix "ngsi-ld" ],
         [ sh:namespace "https://smartdatamodels.org/"^^xsd:anyURI ;
             sh:prefix "sdm" ],
+        [ sh:namespace "http://www.w3.org/ns/shex#"^^xsd:anyURI ;
+            sh:prefix "shex" ],
+        [ sh:namespace "http://schema.org/"^^xsd:anyURI ;
+            sh:prefix "schema" ],
+        [ sh:namespace "https://w3id.org/linkml/"^^xsd:anyURI ;
+            sh:prefix "linkml" ],
         [ sh:namespace "https://purl.org/geojson/vocab#"^^xsd:anyURI ;
             sh:prefix "geojson" ],
         [ sh:namespace "http://www.w3.org/2001/XMLSchema#"^^xsd:anyURI ;
-            sh:prefix "xsd" ],
-        [ sh:namespace "http://www.w3.org/ns/shex#"^^xsd:anyURI ;
-            sh:prefix "shex" ],
-        [ sh:namespace "https://w3id.org/linkml/"^^xsd:anyURI ;
-            sh:prefix "linkml" ],
-        [ sh:namespace "https://joinedcontext.com/models/"^^xsd:anyURI ;
-            sh:prefix "jc" ] ;
+            sh:prefix "xsd" ] ;
     linkml:annotations [ a linkml:Annotation ;
             skos:example "https://smart-data-models.github.io/dataModel.CPSV-AP/Cost/schema.json" ;
             linkml:tag "upstream_source"^^xsd:anyURI ] ;
@@ -743,7 +743,6 @@ jc:Contract a linkml:ClassDefinition,
     linkml:slot_usage [ ] ;
     linkml:slots jc:cenaCelkom,
         jc:dataProvider,
-        jc:dataset,
         jc:datumPlatnostiDo,
         jc:datumPodpisu,
         jc:datumPrilohy,
@@ -758,6 +757,7 @@ jc:Contract a linkml:ClassDefinition,
         jc:id,
         jc:identifier,
         jc:index,
+        jc:isPartOf,
         jc:location,
         jc:mena,
         jc:name,
@@ -779,7 +779,7 @@ jc:Contract a linkml:ClassDefinition,
         jc:zdrojNazov,
         jc:zmluvneStrany,
         jc:zmluvneStranySUdajomICO ;
-    linkml:source_file_size 23582 ;
+    linkml:source_file_size 23585 ;
     linkml:types jc:boolean,
         jc:curie,
         jc:date,

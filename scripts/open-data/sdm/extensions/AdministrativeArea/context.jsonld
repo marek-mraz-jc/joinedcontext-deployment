@@ -14,10 +14,6 @@
     "dataProvider": {
       "@id": "sdm:dataProvider"
     },
-    "dataset": {
-      "@id": "jc:dataset",
-      "@type": "xsd:anyURI"
-    },
     "fACC": {
       "@id": "jc:fACC"
     },
@@ -41,6 +37,10 @@
       "@type": "xsd:integer"
     },
     "id": "@id",
+    "isPartOf": {
+      "@id": "jc:isPartOf",
+      "@type": "xsd:anyURI"
+    },
     "jc": "https://joinedcontext.com/models/",
     "lAU1": {
       "@id": "jc:lAU1"

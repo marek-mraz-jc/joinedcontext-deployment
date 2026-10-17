@@ -141,11 +141,24 @@ def test_every_open_data_endpoint_serves_each_standard_and_the_catalogue_lists_e
         assert endpoint["enabledRepresentations"] == generate.REPRESENTATIONS
         slugs[project] = endpoint["slug"]
     rows = json.loads(generate.DISTRIBUTIONS.read_text())
-    # A dataset another seed reads whole keeps that seed's Endpoint, which this mapping does not name.
-    assert len(rows) == len({e["dataset"] for e in SEEDED})
+    mapped = [e for e in MAPPING["datasets"] if e["status"] == "mapped"]
+    assert len(rows) == len({e["dataset"] for e in mapped})
     for e in SEEDED:
         row = rows[e["dataset"].rsplit("/", 1)[1]]
-        assert (row["endpoint"], row["type"], row["dataset"]) == (slugs[e["org"]], e["type"], e["dataset"])
+        assert (row["endpoint"], row["type"], row["dataset"], row["filtered"]) == (slugs[e["org"]], e["type"], e["dataset"], True)
+    # T-4291: a dataset another seed reads whole is listed through that seed's public Endpoint, over
+    # its whole type, since those rows name no catalogue dataset.
+    endpoints = {d["spec"]["slug"]: (f.parent.name, d["spec"]) for f in SEED.glob("*/*.yaml")
+                 for d in yaml.safe_load_all(f.read_text()) if isinstance(d, dict) and d.get("kind") == "Endpoint"}
+    for e in mapped:
+        if (e.get("existing") or {}).get("covers") != "whole":
+            continue
+        row = rows[e["dataset"].rsplit("/", 1)[1]]
+        project, endpoint = endpoints[row["endpoint"]]
+        assert (project, endpoint["audience"], row["filtered"]) == (e["org"], "public", False), e["name"]
+        assert {"ngsi-ld", "csv", "json", "ogc-features", "odata"} <= set(endpoint["enabledRepresentations"]), e["name"]
+    mosty = rows["bbsk-mosty-v-banskobystrickom-kraji-public-view-3b4675"]
+    assert (mosty["type"], endpoints[mosty["endpoint"]][1]["policyRef"]) == ("Bridge", "urn:ngsi-ld:Policy:bbsk.sk:bbsk-registre:mosty-read")
 
 
 # --- the generator's own rules ---
@@ -334,7 +347,7 @@ def test_every_mapping_writes_an_entity_its_model_accepts():
         entity = {"id": f"urn:ngsi-ld:{e['type']}:bbsk.sk:s:x-1", "type": e["type"],
                   **{generate.attribute(a): {"type": "Property", "value": SAMPLE[written[generate.attribute(a)]]} for a in e["properties"]},
                   **{a: {"type": "Property", "value": v} for a, v in (e.get("constants") or {}).items()},
-                  **{a: {"type": "Property", "value": "https://example.org/s"} for a in ("source", "dataset")},
+                  **{a: {"type": "Property", "value": "https://example.org/s"} for a in ("source", "isPartOf")},
                   "dataProvider": {"type": "Property", "value": "x (CC BY 4.0)"},
                   # The entity's own key where the base requires an identifier no column holds (T-4336).
                   **({"identifier": {"type": "Property", "value": "x-1"}} if e.get("identifierFromId") else {})}
@@ -363,7 +376,8 @@ def test_a_layer_with_a_key_writes_one_point_per_row_under_its_key():
     for e, r in zip(entities, rows):
         assert e["location"] == {"type": "GeoProperty", "value": r["geometry"]}
         assert e["name"]["value"] == r["properties"]["Názov"].strip()
-        assert e["dataset"]["value"] == entry("bbsk-zoznam-lekarni-v-bbk-c564de")["dataset"]
+        assert e["isPartOf"]["value"] == entry("bbsk-zoznam-lekarni-v-bbk-c564de")["dataset"]
+        assert "dataset" not in e, "the core @context owns `dataset` (T-4289)"
         assert "CC BY-SA 4.0" in e["dataProvider"]["value"]
     assert valid("bbsk", entities)
 

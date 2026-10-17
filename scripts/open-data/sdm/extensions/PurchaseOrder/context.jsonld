@@ -13,10 +13,6 @@
     "dataProvider": {
       "@id": "sdm:dataProvider"
     },
-    "dataset": {
-      "@id": "jc:dataset",
-      "@type": "xsd:anyURI"
-    },
     "datumVystavenia": {
       "@id": "jc:datumVystavenia"
     },
@@ -33,6 +29,10 @@
     "id": "@id",
     "identifier": {
       "@id": "sdm:dataModel.CPSV-AP/identifier"
+    },
+    "isPartOf": {
+      "@id": "jc:isPartOf",
+      "@type": "xsd:anyURI"
     },
     "jc": "https://joinedcontext.com/models/",
     "linkml": "https://w3id.org/linkml/",

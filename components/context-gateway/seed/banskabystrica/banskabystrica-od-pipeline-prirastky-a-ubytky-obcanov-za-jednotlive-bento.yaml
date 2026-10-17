@@ -81,7 +81,7 @@ pipeline:
           "odstahovanychZ": this."Odsťahovaných_Ž".apply("integer"),
           "dataProvider": { "type": "Property", "value": "Mesto Banská Bystrica (CC BY 4.0)" },
           "source": { "type": "Property", "value": "https://data.dev.joinedcontext.com/api/3/action/datastore_search?resource_id=4450222b-7726-40e9-980e-1fbe60a18d12&limit=32000" },
-          "dataset": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bb-prirastky-a-ubytky-obcanov-za-jednotlive-roky" }
+          "isPartOf": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bb-prirastky-a-ubytky-obcanov-za-jednotlive-roky" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.
     - archive:

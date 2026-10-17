@@ -1,10 +1,10 @@
 {
   "dataProvider": "dataProvider",
-  "dataset": "https://example.org/dataset",
   "denVTyzdni": "denVTyzdni",
   "iCOSamospravy": "iCOSamospravy",
   "id": "urn:ngsi-ld:OfficeHours:joinedcontext.com:example:1",
   "identifikatorKontaktnehoMiest": "identifikatorKontaktnehoMiest",
+  "isPartOf": "https://example.org/isPartOf",
   "kodDnaVTyzdni": "kodDnaVTyzdni",
   "location": {
     "coordinates": [

@@ -543,10 +543,6 @@
     "dataProvider": {
       "@id": "sdm:dataProvider"
     },
-    "dataset": {
-      "@id": "jc:dataset",
-      "@type": "xsd:anyURI"
-    },
     "datum": {
       "@id": "jc:datum",
       "@type": "xsd:dateTime"
@@ -1402,6 +1398,10 @@
     "irskaAbs": {
       "@id": "jc:irskaAbs",
       "@type": "xsd:integer"
+    },
+    "isPartOf": {
+      "@id": "jc:isPartOf",
+      "@type": "xsd:anyURI"
     },
     "islam": {
       "@id": "jc:islam",

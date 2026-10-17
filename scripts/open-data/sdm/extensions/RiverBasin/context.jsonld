@@ -22,10 +22,6 @@
     "dataProvider": {
       "@id": "sdm:dataProvider"
     },
-    "dataset": {
-      "@id": "jc:dataset",
-      "@type": "xsd:anyURI"
-    },
     "designatio": {
       "@id": "jc:designatio"
     },
@@ -55,6 +51,10 @@
     },
     "inspireIdN": {
       "@id": "jc:inspireIdN"
+    },
+    "isPartOf": {
+      "@id": "jc:isPartOf",
+      "@type": "xsd:anyURI"
     },
     "jc": "https://joinedcontext.com/models/",
     "link": {

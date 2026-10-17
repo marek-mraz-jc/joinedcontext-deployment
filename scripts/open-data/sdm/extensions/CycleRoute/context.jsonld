@@ -16,10 +16,6 @@
     "dataProvider": {
       "@id": "sdm:dataProvider"
     },
-    "dataset": {
-      "@id": "jc:dataset",
-      "@type": "xsd:anyURI"
-    },
     "dlzka": {
       "@id": "jc:dlzka",
       "@type": "xsd:float"
@@ -35,6 +31,10 @@
     },
     "geojson": "https://purl.org/geojson/vocab#",
     "id": "@id",
+    "isPartOf": {
+      "@id": "jc:isPartOf",
+      "@type": "xsd:anyURI"
+    },
     "jc": "https://joinedcontext.com/models/",
     "layer": {
       "@id": "jc:layer"

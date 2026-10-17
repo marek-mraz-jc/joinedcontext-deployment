@@ -81,7 +81,7 @@ pipeline:
           "location": if this.geometry.or(null) == null { null } else { { "type": "GeoProperty", "value": this.geometry } },
           "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj (CC BY-SA 4.0)" },
           "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/2019_linie_CTT_ML/FeatureServer/0/query?where=1%3D1&outFields=id,stav,zdroj,ctt,nazov,layer,farba,spr,dlzka,name,f_name,obn_rok,typ&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },
-          "dataset": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bbsk-cykloturisticke-trasy-linie-e6a1a7" }
+          "isPartOf": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bbsk-cykloturisticke-trasy-linie-e6a1a7" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.
     - archive:

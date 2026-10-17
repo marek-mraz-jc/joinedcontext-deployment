@@ -23,7 +23,7 @@ Specialises `Entity`.
 |---|---|---|---|---|---|---|
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who published the row, with the credit its licence asks for. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The service the row was read from. |
-| `dataset` | Property | `uri` |  |  | `jc:dataset` | The catalogue dataset the row belongs to, where its licence and its other rows are. |
+| `isPartOf` | Property | `uri` |  |  | `jc:isPartOf` | The catalogue dataset the row belongs to, where its licence and its other rows are. |
 | `datumDorucenia` | Property | `date` |  |  | `jc:datumDorucenia` | The source column `Dátum_doručenia`. |
 | `datumVybavenia` | Property | `date` |  |  | `jc:datumVybavenia` | The source column `Dátum_vybavenia`. |
 | `identifier` | Property | `string` |  |  | `sdm:dataModel.CPSV-AP/identifier` | The source column `P_č_`. |

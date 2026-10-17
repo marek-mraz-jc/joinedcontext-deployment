@@ -57,10 +57,6 @@
     "dataProvider": {
       "@id": "sdm:dataProvider"
     },
-    "dataset": {
-      "@id": "jc:dataset",
-      "@type": "xsd:anyURI"
-    },
     "dateGmt": {
       "@id": "jc:dateGmt",
       "@type": "xsd:dateTime"
@@ -124,6 +120,10 @@
     },
     "idzmeny": {
       "@id": "jc:idzmeny"
+    },
+    "isPartOf": {
+      "@id": "jc:isPartOf",
+      "@type": "xsd:anyURI"
     },
     "jc": "https://joinedcontext.com/models/",
     "kRAJ": {

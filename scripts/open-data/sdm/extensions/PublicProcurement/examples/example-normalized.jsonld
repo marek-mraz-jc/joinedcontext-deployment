@@ -21,10 +21,6 @@
     "type": "Property",
     "value": "dataProvider"
   },
-  "dataset": {
-    "type": "Property",
-    "value": "https://example.org/dataset"
-  },
   "datumSpustenia": {
     "type": "Property",
     "value": "2026-01-01T00:00:00Z"
@@ -68,6 +64,10 @@
   "identifier": {
     "type": "Property",
     "value": "identifier"
+  },
+  "isPartOf": {
+    "type": "Property",
+    "value": "https://example.org/isPartOf"
   },
   "lehotaNaPredkladanie": {
     "type": "Property",

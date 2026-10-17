@@ -76,7 +76,7 @@ pipeline:
           "pocetObyvatelstva": this.properties."Počet_obyvateľstva".apply("integer"),
           "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj (CC BY-SA 4.0)" },
           "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/PPA_dataset_AGOL_1/FeatureServer/0/query?where=1%3D1&outFields=Okres,K%C3%B3d_okresu,Rok___kampa%C5%88,EPZF,EPFRV,%C5%A0R_SR_,Vyplaten%C3%A1_suma_spolu,Vyplaten%C3%A1_suma_na_1_obyvate%C4%BEa,Po%C4%8Det_obyvate%C4%BEstva&returnGeometry=false&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },
-          "dataset": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bbsk-ppa-platby-po-okresoch-bf09ef" }
+          "isPartOf": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bbsk-ppa-platby-po-okresoch-bf09ef" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.
     - archive:

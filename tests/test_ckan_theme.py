@@ -1162,7 +1162,7 @@ def test_the_four_pages_are_routes_of_one_template_and_every_page_links_them(the
 # T-4333: a resource page reads what an Endpoint's address is from its path, says it in the page's
 # language, shows an API's live rows and how to use it, and offers a file its one Download.
 OD = "https://dev.example/api/endpoint/4ysiqy53qik5qyvawwaj7wgylpt4uoxa/"
-OD_QUERY = "?type=StatisticalObservation&q=dataset%3D%3D%22https%3A%2F%2Fdata.dev.example%2Fdataset%2Fbb%22"
+OD_QUERY = "?type=StatisticalObservation&q=isPartOf%3D%3D%22https%3A%2F%2Fdata.dev.example%2Fdataset%2Fbb%22"
 OD_PKG = {"name": "bb", "title": "Prírastky a úbytky občanov", "resources": [
     {"id": "n", "name": "NGSI-LD API (StatisticalObservation)", "format": "JSON-LD", "resource_type": "api",
      "url": OD + "ngsi-ld/v1/entities" + OD_QUERY, "conforms_to": "https://www.etsi.org/deliver/etsi_gs/CIM/001_099/009/",
@@ -1226,6 +1226,11 @@ def test_the_slovak_page_carries_no_english_description(theme):
     what = theme.jc_what(_od(theme, "n"))
     assert what == "Živé entity cez API. Iba záznamy tohto datasetu."
     assert "Všetky záznamy typu StatisticalObservation" in theme.jc_what(_od(theme, "o"))
+    # OGC API Features and OData keep the dataset's rows in their own syntax (T-4289).
+    mine = "https%3A%2F%2Fdata.dev.example%2Fdataset%2Fbb"
+    for url in (OD + "odata/v4/StatisticalObservation?%24filter=isPartOf%20eq%20%27" + mine + "%27",
+                OD + "ogc/features/collections/StatisticalObservation/items?isPartOf=" + mine):
+        assert theme.jc_what(dict(_od(theme, "o"), url=url)).endswith(". Iba záznamy tohto datasetu."), url
     page = (THEME / "templates__package__resource_read.html").read_text()
     # The harvest's description reaches the page only for a resource that is not an Endpoint's.
     assert "{% if res.description and not kind and not api %}" in page
@@ -1260,7 +1265,7 @@ def test_an_api_offers_no_download_and_ckan_s_top_button_is_gone():
 def test_the_live_preview_reads_five_rows_anonymously_from_the_platform_only(theme):
     preview = theme.jc_preview(_od(theme, "n"))
     assert preview["kind"] == "NGSI-LD" and "limit=5" in preview["url"] and "options=keyValues" in preview["url"]
-    assert "q=dataset%3D%3D" in preview["url"]
+    assert "q=isPartOf%3D%3D" in preview["url"]
     assert "%24top=5" in theme.jc_preview(_od(theme, "o"))["url"] or "$top=5" in theme.jc_preview(_od(theme, "o"))["url"]
     assert theme.jc_preview(_od(theme, "m")) is None and theme.jc_preview(_od(theme, "c")) is None
     assert theme.jc_preview({"url": "https://evil.example/api/endpoint/x/ngsi-ld/v1/entities"}) is None

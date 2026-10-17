@@ -23,7 +23,7 @@ Specialises `Entity`.
 |---|---|---|---|---|---|---|
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who published the row, with the credit its licence asks for. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The service the row was read from. |
-| `dataset` | Property | `uri` |  |  | `jc:dataset` | The catalogue dataset the row belongs to, where its licence and its other rows are. |
+| `isPartOf` | Property | `uri` |  |  | `jc:isPartOf` | The catalogue dataset the row belongs to, where its licence and its other rows are. |
 | `aCH` | Property | `integer` |  |  | `jc:aCH` | The source column `ACH`. |
 | `aUT` | Property | `integer` |  |  | `jc:aUT` | The source column `AUT`. |
 | `celkChemStav` | Property | `string` |  |  | `jc:celkChemStav` | The source column `celk_chem_stav`. |

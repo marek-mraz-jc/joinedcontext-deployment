@@ -1,7 +1,7 @@
 {
   "dataProvider": "dataProvider",
-  "dataset": "https://example.org/dataset",
   "id": "urn:ngsi-ld:CommitteeSeat:joinedcontext.com:example:1",
+  "isPartOf": "https://example.org/isPartOf",
   "location": {
     "coordinates": [
       0.0,

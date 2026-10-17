@@ -17,11 +17,11 @@ jc:Entity a owl:Class,
             owl:maxCardinality 1 ;
             owl:onProperty jc:observedAt ],
         [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:location ],
-        [ a owl:Restriction ;
             owl:cardinality 1 ;
-            owl:onProperty jc:type ] ;
+            owl:onProperty jc:type ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:location ] ;
     skos:definition "The root every NGSI-LD entity class specialises." ;
     skos:exactMatch ngsi-ld:Entity ;
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/RoadStructure> ;
@@ -32,22 +32,34 @@ jc:RoadStructure a owl:Class,
     rdfs:label "RoadStructure" ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:rokStavby ],
+            owl:onProperty jc:spravcaMostu ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:stavebnoTechnickyStav ],
+            owl:onProperty jc:spravca ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:kraj ],
+            owl:onProperty jc:material ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:normanaZatazitelnostT ],
+            owl:onProperty jc:dataProvider ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:triedaPK ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:vynimocnaZatazitelnostT ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:minVyskaPodjazdu ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:vlastnikUseku ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:typSpravcu ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:dataset ],
+            owl:onProperty jc:druhZabezpecenia ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:najblizsiKM ],
@@ -56,73 +68,61 @@ jc:RoadStructure a owl:Class,
             owl:onProperty jc:vyhradnaZatazitelnostT ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:spravcaUseku ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:druhKonstrukcie ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:materialPriepustu ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:material ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:spravcaMostu ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:vlastnikUseku ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:dataProvider ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:typPodjazdu ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:pocetKolaji ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:predmetPremostenia ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
             owl:onProperty jc:celkovaDlzkaPodjazdu ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:vynimocnaZatazitelnostT ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:vlastnikMostu ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:spravca ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:druhZabezpecenia ],
+            owl:onProperty jc:stavebnoTechnickyStav ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:jICZSR ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
+            owl:onProperty jc:spravcaUseku ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:materialPriepustu ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
             owl:onProperty jc:name ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:okres ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:vlastnik ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:minVyskaPodjazdu ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:triedaPK ],
+            owl:onProperty jc:typPodjazdu ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:cisloPK ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
+            owl:onProperty jc:pocetKolaji ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:isPartOf ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:vlastnikMostu ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:druhKonstrukcie ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:kraj ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:predmetPremostenia ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:okres ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
             owl:onProperty jc:source ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:rokStavby ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:vlastnik ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:normanaZatazitelnostT ],
         jc:Entity ;
     skos:definition "An underpass, culvert, expansion joint or level crossing on a regional road." ;
     skos:exactMatch jc:RoadStructure ;
@@ -165,14 +165,6 @@ jc:dataProvider a owl:ObjectProperty,
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/RoadStructure> ;
     jc:ngsi_ld_kind "Property" ;
     jc:upstream_source "https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/context.jsonld" .
-
-jc:dataset a owl:ObjectProperty,
-        linkml:SlotDefinition ;
-    rdfs:label "dataset" ;
-    rdfs:range jc:uri ;
-    skos:definition "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
-    skos:inScheme <https://joinedcontext.com/models/sdm/extensions/RoadStructure> ;
-    jc:ngsi_ld_kind "Property" .
 
 jc:date a owl:Class,
         linkml:TypeDefinition ;
@@ -224,6 +216,14 @@ jc:id a owl:ObjectProperty,
     jc:jsonld_keyword "@id" ;
     jc:ngsi_ld_kind "Property" ;
     jc:upstream_source "ETSI NGSI-LD core context v1.8" .
+
+jc:isPartOf a owl:ObjectProperty,
+        linkml:SlotDefinition ;
+    rdfs:label "isPartOf" ;
+    rdfs:range jc:uri ;
+    skos:definition "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
+    skos:inScheme <https://joinedcontext.com/models/sdm/extensions/RoadStructure> ;
+    jc:ngsi_ld_kind "Property" .
 
 jc:jICZSR a owl:ObjectProperty,
         linkml:SlotDefinition ;

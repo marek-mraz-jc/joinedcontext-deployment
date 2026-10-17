@@ -31,7 +31,7 @@ slots:
       ngsi_ld_kind: Property
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
     slot_uri: https://smartdatamodels.org/source
-  dataset:
+  isPartOf:
     description: The catalogue dataset the row belongs to, where its licence and its other rows are.
     range: uri
     annotations:
@@ -97,7 +97,7 @@ classes:
     slots:
     - dataProvider
     - source
-    - dataset
+    - isPartOf
     - adresa
     - cisloObjednavky
     - cisloZmluvy
