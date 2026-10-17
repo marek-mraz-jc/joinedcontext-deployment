@@ -104,6 +104,8 @@ echo "denied $PRINCIPAL the writes on $count clients without $MANAGED_KEY: $MANA
 # mark is an optional scope of the hub, and an `endpoint:` scope without the mark, or linked as
 # a default scope, is unlinked, because it would widen what hub tokens reach. A new Endpoint
 # reaches the hub after the next run.
+# `endpoint:*` is not one of them: the realm import writes it, unmarked, as the hub's one
+# default scope (ADR-N-025 4b), so it is left as it is (T-4459).
 HUB_CLIENT=${HUB_CLIENT:-mcp-hub}
 SCOPE_PREFIX=endpoint:
 hub_id=$(client_id "$HUB_CLIENT")
@@ -120,7 +122,7 @@ while IFS=, read -r id name mark; do
 done < <(kc get client-scopes -r "$REALM" --fields "id,name,attributes($MANAGED_KEY)" --format csv --noquotes)
 for kind in default optional; do
   while IFS=, read -r id name; do
-    if [ -z "$id" ] || [ "${name#"$SCOPE_PREFIX"}" = "$name" ]; then
+    if [ -z "$id" ] || [ "${name#"$SCOPE_PREFIX"}" = "$name" ] || [ "$name" = "${SCOPE_PREFIX}*" ]; then
       continue
     fi
     if [ "$kind" = optional ] && [ -n "${ours[$id]:-}" ]; then
