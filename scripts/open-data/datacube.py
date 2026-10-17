@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""The seed of ŠÚ SR's DATAcube as open data: 44 public Endpoints in project slovensko (T-4390, T-4402).
+"""The seed of ŠÚ SR's DATAcube as open data: 45 public Endpoints in project slovensko (T-4390, T-4402).
 
 TOPICS names each Endpoint and the one or two DATAcube tables it ingests: one per theme (the
 two-letter prefix of a code, `om7101qr` is theme `om`) and a second for the 14 largest themes,
-each table the theme's headline indicator at no more than CUBE_LIMIT cells. Every topic gets the
+each table the theme's headline indicator. Every topic gets the
 folder `components/context-gateway/seed/slovensko/<name>/`: its ContextSpace, a copy of the
 StatisticalObservation model of `../susr/`, a public Endpoint, two Policies, one DataSource per
-table (the whole JSON-stat cube, every territory it has) and one Pipeline that decodes the tables
+table (the whole JSON-stat cube, every territory it has; a cube over CUBE_LIMIT cells one per slice,
+see `slices`) and one Pipeline that decodes the tables
 into KeyPerformanceIndicator entities, one per published cell. The catalogue lists each table
 (`charts/ckan/files/od-datasets.json`, key `susr-<code>`). The generator also places the folders:
 their entries in `slovensko/index.yaml` and a `space-writer` role per space on the pipelines
@@ -26,12 +27,14 @@ import base64
 import concurrent.futures
 import hashlib
 import json
+import math
 import re
 import secrets
 import shutil
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -46,7 +49,7 @@ API = "https://data.statistics.sk/api/v2"
 CKAN = "https://data.dev.joinedcontext.com"
 INDEX = SEED / "index.yaml"
 ACCOUNT = SEED / "slovensko-serviceaccount-pipelines.yaml"
-# The largest table an Endpoint ingests, in cells (T-4402: small, so the 44 need no batching).
+# The most cells one request reads; a larger cube is read in slices (T-4433).
 # DATAcube's largest cubes run to 515 million (zo1825ms), and it answers 400 "Too many results!"
 # to a whole cube above 10,000 (sp1838ms at 9,828 comes back, st0005ms at 10,080 does not; T-4427).
 CUBE_LIMIT = 10_000
@@ -88,8 +91,8 @@ THEMES = {
     "zo": ({"sk": "Zahraničný obchod", "en": "Foreign trade"}, "ECON"),
     "zp": ({"sk": "Životné prostredie", "en": "Environment"}, "ENVI"),
 }
-# T-4402: the 44 Endpoints, each one or two headline tables of a theme (the indicator a reader
-# looks for first, its latest cadence, at most CUBE_LIMIT cells): one per theme, a second for the
+# T-4402: the 45 Endpoints, each one or two headline tables of a theme (the indicator a reader
+# looks for first, its latest cadence): one per theme, a second for the
 # 14 largest themes (cr do kp kz nu om pm pr ps sp st vt zo zp).
 TOPICS = [
     {"name": "susr-as", "theme": "as", "title": {"sk": "Obyvateľstvo podľa veku", "en": "Population by age"}, "cubes": ["as1001rs"]},
@@ -134,6 +137,8 @@ TOPICS = [
     {"name": "susr-zd", "theme": "zd", "title": {"sk": "Zdravotnícke zariadenia: lôžka a lekárne", "en": "Health facilities: beds and pharmacies"}, "cubes": ["zd1004rs"]},
     {"name": "susr-zo", "theme": "zo", "title": {"sk": "Zahraničný obchod", "en": "Foreign trade"}, "cubes": ["zo0001ms"]},
     {"name": "susr-zo-kapitoly", "theme": "zo", "title": {"sk": "Zahraničný obchod podľa kapitol HS", "en": "Foreign trade by HS chapter"}, "cubes": ["zo0010ms"]},
+    # 12,096 cells: read in slices (T-4433).
+    {"name": "susr-zo-krajiny", "theme": "zo", "title": {"sk": "Zahraničný obchod podľa krajín", "en": "Foreign trade by country"}, "cubes": ["zo0011ms"]},
     {"name": "susr-zp", "theme": "zp", "title": {"sk": "Komunálny odpad", "en": "Municipal waste"}, "cubes": ["zp1005rs"]},
     {"name": "susr-zp-emisie", "theme": "zp", "title": {"sk": "Emisie znečisťujúcich látok", "en": "Emissions of pollutants"}, "cubes": ["zp3803rs"]},
 ]
@@ -240,21 +245,61 @@ def fetch(url: str, cache: Path | None, waits=(5, 30)) -> dict:
     return data
 
 
-def sizes(ds: list[dict], get) -> dict[str, int]:
-    """code -> the cube's cell count, the product of its dimensions' category counts."""
+def categories(ds: list[dict], get) -> dict[str, dict[str, list[str]]]:
+    """code -> each dimension's category codes in their index order, dimensions in the collection's."""
     jobs = {(d["code"], name): f"{API}/dimension/{d['code']}/{name}?lang=sk&type=json"
             for d in ds for name in d["dimensions"]}
     with concurrent.futures.ThreadPoolExecutor(4) as pool:
-        counts = dict(zip(jobs, pool.map(lambda u: len(get(u).get("category", {}).get("index") or {}), jobs.values())))
-    out: dict[str, int] = {}
-    for (code, _), n in counts.items():
-        out[code] = out.get(code, 1) * n
+        found = dict(zip(jobs, pool.map(lambda u: get(u).get("category", {}).get("index") or {}, jobs.values())))
+    out: dict[str, dict[str, list[str]]] = {}
+    for (code, name), index in found.items():
+        out.setdefault(code, {})[name] = sorted(index, key=index.get) if isinstance(index, dict) else list(index)
     return out
 
 
-def dataset_url(d: dict) -> str:
-    """The whole cube: `all` for every dimension the collection lists, in its order."""
-    return f"{API}/dataset/{d['code']}/" + "/".join("all" for _ in d["dimensions"]) + "?lang=sk&type=json"
+def sizes(ds: list[dict], get) -> dict[str, int]:
+    """code -> the cube's cell count, the product of its dimensions' category counts."""
+    return {code: math.prod(len(c) for c in dims.values()) for code, dims in categories(ds, get).items()}
+
+
+def dataset_url(d: dict, only: dict[str, list[str]] | None = None) -> str:
+    """The cube: `all` for every dimension the collection lists, in its order, or the categories
+    `only` names for a dimension, comma-separated."""
+    only = only or {}
+    return f"{API}/dataset/{d['code']}/" + "/".join(
+        ",".join(urllib.parse.quote(c, safe="") for c in only[n]) if n in only else "all"
+        for n in d["dimensions"]) + "?lang=sk&type=json"
+
+
+def slices(d: dict, dims: dict[str, list[str]]) -> list[tuple[str, int]] | None:
+    """The requests that read the cube: (address, cells). The whole cube when it is at most
+    CUBE_LIMIT cells; else as few slices of one dimension as keep each request under it, the
+    categories split evenly, every one in one slice. None when no dimension can.
+
+    Decided (worker-3, owner may override; T-4433): never a period dimension. DATAcube's period codes
+    carry their status (`2026 (p)` turns `2026 (d)`) and a new period is a new code, so a slice of
+    periods would stop answering or miss the newest; an indicator or a country stays.
+    The dimension needing the fewest slices wins, then the one with the fewest categories."""
+    total = math.prod(len(c) for c in dims.values())
+    if total <= CUBE_LIMIT:
+        return [(dataset_url(d), total)]
+    best = None
+    for name, codes in dims.items():
+        if role(d["dimensions"].get(name, {}).get("note")) == "period" or not codes:
+            continue
+        rest = total // len(codes)
+        per = CUBE_LIMIT // rest
+        if per < 1:
+            continue
+        n = -(-len(codes) // per)
+        if best is None or (n, len(codes)) < best[:2]:
+            best = (n, len(codes), name)
+    if best is None:
+        return None
+    n, k, name = best
+    size = -(-k // n)
+    return [(dataset_url(d, {name: dims[name][i:i + size]}), total // k * len(dims[name][i:i + size]))
+            for i in range(0, k, size)]
 
 
 # generate.py's list, so a susr- Endpoint serves what the od Endpoints serve (T-4418, EP-104), but
@@ -341,7 +386,13 @@ def memory(cells: int) -> int:
     return min(2048, max(128, -(-cells * 2 // 1024 // 64) * 64 + 128))
 
 
-def topic_files(topic: dict, ds: list[dict], cells: dict[str, int], slug: str, index: int) -> dict[str, str]:
+def source_names(d: dict, parts: dict[str, list[tuple[str, int]]]) -> list[str]:
+    """The cube's DataSources: `susr-<code>` for a whole cube, `susr-<code>-<n>` per slice."""
+    n = len(parts[d["code"]])
+    return [f"susr-{d['code']}"] if n == 1 else [f"susr-{d['code']}-{i}" for i in range(1, n + 1)]
+
+
+def topic_files(topic: dict, ds: list[dict], parts: dict[str, list[tuple[str, int]]], slug: str, index: int) -> dict[str, str]:
     theme, space, t = topic["theme"], topic["name"], topic["title"]
     name, eu = THEMES[theme]
     head = "apiVersion: joinedcontext.com/v1alpha1"
@@ -464,10 +515,10 @@ spec:
         - type: {TYPE}
 """,
     }
-    sources = "\n".join(f"    - dataSourceRef: {{ kind: DataSource, name: susr-{d['code']} }}" for d in ds)
+    sources = "\n".join(f"    - dataSourceRef: {{ kind: DataSource, name: {n} }}" for d in ds for n in source_names(d, parts))
     steps = "\n".join("        " + line if line else "" for line in decoder(ds).splitlines())
     files["pipeline.yaml"] = f"""{BEGIN}
-# DATAcube {tables}, whole, into {space}: one KeyPerformanceIndicator per published cell,
+# DATAcube {tables}, {'in slices' if any(len(parts[d['code']]) > 1 for d in ds) else 'whole'}, into {space}: one KeyPerformanceIndicator per published cell,
 # as ŠÚ SR published it; nothing is renamed or recomputed. A daily read keeps every table within
 # a day of its release.
 apiVersion: joinedcontext.com/v1alpha2
@@ -491,22 +542,25 @@ spec:
       type: {TYPE}
       mode: upsert
   quotas:
-    maxMemoryMb: {memory(max(cells.get(d['code'], 0) for d in ds))}
+    maxMemoryMb: {memory(max(c for d in ds for _, c in parts[d['code']]))}
     cpuMillicores: 100
 """
     for d in ds:
-        files[f"datasource-{d['code']}.yaml"] = f"""{BEGIN}
-# {d['code']}: the whole cube, every territory and period it has. No key; CC BY-SA 4.0.
+        for name, (url, n) in zip(source_names(d, parts), parts[d["code"]]):
+            what = "the whole cube, every territory and period it has" if name == f"susr-{d['code']}" else \
+                f"one of {len(parts[d['code']])} slices of the cube, {n:,} cells, every period (T-4433)"
+            files[f"datasource-{name.removeprefix('susr-')}.yaml"] = f"""{BEGIN}
+# {d['code']}: {what}. No key; CC BY-SA 4.0.
 {head}
 kind: DataSource
 metadata:
-  name: susr-{d['code']}
+  name: {name}
   namespace: slovensko
-  title: {title({"sk": f"{d['title']['sk'][:100]} ({d['code']})", "en": f"{d['title']['en'][:100]} ({d['code']})"})}
+  title: {title({"sk": f"{d['title']['sk'][:100]} ({name[5:]})", "en": f"{d['title']['en'][:100]} ({name[5:]})"})}
 spec:
   type: http
   http:
-    url: {dataset_url(d)}
+    url: {url}
     verb: GET
     headers: {{ Accept: application/json }}
     timeout: 120s
@@ -514,14 +568,14 @@ spec:
     return files
 
 
-def render(chosen: list[tuple[dict, list[dict]]], cells: dict[str, int], seed: Path) -> tuple[dict[Path, str], dict]:
+def render(chosen: list[tuple[dict, list[dict]]], parts: dict[str, list[tuple[str, int]]], seed: Path) -> tuple[dict[Path, str], dict]:
     """Every file of every topic folder, and the od-datasets.json entries of their tables."""
     out: dict[Path, str] = {}
     rows = {}
     for i, (topic, ds) in enumerate(chosen):
         folder = seed / topic["name"]
         slug = slug_for(folder / "endpoint.yaml")
-        for name, text in topic_files(topic, ds, cells, slug, i).items():
+        for name, text in topic_files(topic, ds, parts, slug, i).items():
             out[folder / name] = text
         for f in MODEL_FILES:
             out[folder / f] = (MODEL / f).read_text()
@@ -531,7 +585,7 @@ def render(chosen: list[tuple[dict, list[dict]]], cells: dict[str, int], seed: P
     return out, rows
 
 
-def placed(chosen: list[tuple[dict, list[dict]]]) -> dict[str, str]:
+def placed(chosen: list[tuple[dict, list[dict]]], parts: dict[str, list[tuple[str, int]]]) -> dict[str, str]:
     """index.yaml's entries for the topic folders: seed file -> its path in the project's repository."""
     out = {}
     for topic, ds in chosen:
@@ -546,7 +600,8 @@ def placed(chosen: list[tuple[dict, list[dict]]]) -> dict[str, str]:
         out[f"{n}/policy-public-read.yaml"] = f"{space}/policies/{n}-public-read.yaml"
         out[f"{n}/pipeline.yaml"] = f"projects/slovensko/pipelines/{n}/pipeline.yaml"
         for d in ds:
-            out[f"{n}/datasource-{d['code']}.yaml"] = f"projects/slovensko/datasources/susr-{d['code']}.yaml"
+            for name in source_names(d, parts):
+                out[f"{n}/datasource-{name[5:]}.yaml"] = f"projects/slovensko/datasources/{name}.yaml"
     return out
 
 
@@ -574,7 +629,8 @@ def distributions(committed: dict, rows: dict) -> str:
     return "{\n" + ",\n".join(f"  {json.dumps(k)}: {json.dumps(v, ensure_ascii=False)}" for k, v in sorted(out.items())) + "\n}\n"
 
 
-def table(chosen: list[tuple[dict, list[dict]]], cells: dict[str, int]) -> str:
+def table(chosen: list[tuple[dict, list[dict]]], parts: dict[str, list[tuple[str, int]]]) -> str:
+    cells = {code: sum(n for _, n in p) for code, p in parts.items()}
     lines = ["| Endpoint | tables | cells | title |", "|---|---|---:|---|"]
     for topic, ds in chosen:
         lines.append(f"| {topic['name']} | {', '.join(d['code'] for d in ds)} | {sum(cells[d['code']] for d in ds):,} | {topic['title']['sk']} |")
@@ -588,11 +644,12 @@ def main(argv: list[str]) -> None:
         cache.mkdir(parents=True, exist_ok=True)
     get = lambda url: fetch(url, cache)  # noqa: E731
     chosen = selected(datasets(get(f"{API}/collection?lang=sk"), get(f"{API}/collection?lang=en")), TOPICS)
-    cells = sizes([d for _, ds in chosen for d in ds], get)
-    over = [f"{d['code']} ({cells[d['code']]:,})" for _, ds in chosen for d in ds if cells[d["code"]] > CUBE_LIMIT]
+    dims = categories([d for _, ds in chosen for d in ds], get)
+    parts = {d["code"]: slices(d, dims[d["code"]]) for _, ds in chosen for d in ds}
+    over = [f"{code} ({math.prod(len(c) for c in dims[code].values()):,})" for code, p in parts.items() if p is None]
     if over:
-        sys.exit(f"over {CUBE_LIMIT:,} cells: {', '.join(over)}")
-    files, rows = render(chosen, cells, SEED)
+        sys.exit(f"over {CUBE_LIMIT:,} cells in every slice: {', '.join(over)}")
+    files, rows = render(chosen, parts, SEED)
     names = {topic["name"] for topic, _ in chosen}
     for folder in SEED.glob("susr-*/"):
         shutil.rmtree(folder)
@@ -601,9 +658,9 @@ def main(argv: list[str]) -> None:
         path.write_text(text)
     assert {p.name for p in SEED.glob("susr-*/")} == names
     DISTRIBUTIONS.write_text(distributions(json.loads(DISTRIBUTIONS.read_text()), rows))
-    INDEX.write_text(index_text(INDEX.read_text(), placed(chosen)))
+    INDEX.write_text(index_text(INDEX.read_text(), placed(chosen, parts)))
     ACCOUNT.write_text(account_text(ACCOUNT.read_text(), [topic["name"] for topic, _ in chosen]))
-    print(table(chosen, cells))
+    print(table(chosen, parts))
 
 
 if __name__ == "__main__":
