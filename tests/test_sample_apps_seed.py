@@ -408,7 +408,7 @@ def test_no_gitea_release_outgrows_the_secret_helm_keeps_it_in(dev):
     import base64
     import gzip
 
-    for release in ("gitea-bootstrap", "gitea-seed", "gitea-seed-2", "gitea-seed-3", "gitea-seed-4", "gitea-sample-apps", "gitea-sample-apps-2",
+    for release in ("gitea-bootstrap", "gitea-seed", "gitea-seed-2", "gitea-seed-3", "gitea-seed-4", "gitea-seed-5", "gitea-sample-apps", "gitea-sample-apps-2",
                     "gitea-sample-apps-3", "gitea-sample-apps-4", "gitea-sample-apps-5", "gitea-sample-apps-6",
                     "gitea-sample-apps-7"):
         docs = [
@@ -440,8 +440,11 @@ def test_the_job_mounts_every_project_s_seed_and_the_releases_split_it(dev):
             assert release == "gitea-bootstrap" and not any(k.startswith("projects__") for k in cm["data"])
             continue
         project = re.sub(r"--\d+$", "", name.removeprefix("gitea-seed-"))
+        # BBSK's odd parts stay in the third release, its even ones in the fifth (T-4288).
+        part = int(name.rsplit("--", 1)[1]) if "--" in name else 1
+        bbsk = "gitea-seed-3" if part % 2 else "gitea-seed-5"
         assert release == ("gitea-seed" if project.startswith("helsinki")
-                           else {"bbsk": "gitea-seed-3", "slovensko": "gitea-seed-4"}.get(project, "gitea-seed-2"))
+                           else {"bbsk": bbsk, "slovensko": "gitea-seed-4"}.get(project, "gitea-seed-2"))
         assert all(k.startswith(f"projects__{project}__") for k in cm["data"])
     keys = [k for cm in rendered.values() for k in cm["data"]]
     assert len(keys) == len(set(keys)), "a file in two ConfigMaps"

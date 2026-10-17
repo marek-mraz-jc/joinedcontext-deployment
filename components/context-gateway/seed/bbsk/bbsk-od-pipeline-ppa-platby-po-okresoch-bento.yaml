@@ -49,6 +49,18 @@ pipeline:
           }
           root = if $v == null { null } else { { "type": "Property", "value": $v } }
         }
+        # The instant a row was observed, from its `observedAt` column: a bare year is its first instant,
+        # anything else reads as a datetime (T-4288).
+        map observed {
+          let x = this
+          root = if $x == null { null } else if $x.string().re_match("^[0-9]{4}$") { $x.string() + "-01-01T00:00:00Z" } else {
+            $x.apply("datetime").value.catch(null)
+          }
+        }
+        # A measured Property with the instant it holds, so SensorThings charts it (T-4288).
+        map stamped {
+          root = if this.p == null || this.at == null { this.p } else { this.p.merge({ "observedAt": this.at }) }
+        }
         map date {
           let x = this
           let v = match $x.type() {
@@ -62,18 +74,19 @@ pipeline:
           root = if $v == null { null } else { { "type": "Property", "value": $v } }
         }
         let local = "ppa-platby-po-okresoch-" + [this.properties."Kód_okresu", this.properties."Rok___kampaň"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
+        let at = this.properties."Rok___kampaň".apply("observed")
         root = {
           "id": "urn:ngsi-ld:%v:%v:%v:%v".format("KeyPerformanceIndicator", "bbsk.sk", env("JC_SPACE"), $local),
           "type": "KeyPerformanceIndicator",
           "okres": this.properties."Okres".apply("string"),
           "kodOkresu": this.properties."Kód_okresu".apply("string"),
           "rokKampan": this.properties."Rok___kampaň".apply("integer"),
-          "ePZF": this.properties."EPZF".apply("float"),
-          "ePFRV": this.properties."EPFRV".apply("float"),
-          "sRSR": this.properties."ŠR_SR_".apply("float"),
-          "vyplatenaSumaSpolu": this.properties."Vyplatená_suma_spolu".apply("float"),
-          "vyplatenaSumaNa1Obyvatela": this.properties."Vyplatená_suma_na_1_obyvateľa".apply("float"),
-          "pocetObyvatelstva": this.properties."Počet_obyvateľstva".apply("integer"),
+          "ePZF": {"p": this.properties."EPZF".apply("float"), "at": $at}.apply("stamped"),
+          "ePFRV": {"p": this.properties."EPFRV".apply("float"), "at": $at}.apply("stamped"),
+          "sRSR": {"p": this.properties."ŠR_SR_".apply("float"), "at": $at}.apply("stamped"),
+          "vyplatenaSumaSpolu": {"p": this.properties."Vyplatená_suma_spolu".apply("float"), "at": $at}.apply("stamped"),
+          "vyplatenaSumaNa1Obyvatela": {"p": this.properties."Vyplatená_suma_na_1_obyvateľa".apply("float"), "at": $at}.apply("stamped"),
+          "pocetObyvatelstva": {"p": this.properties."Počet_obyvateľstva".apply("integer"), "at": $at}.apply("stamped"),
           "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj (CC BY-SA 4.0)" },
           "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/PPA_dataset_AGOL_1/FeatureServer/0/query?where=1%3D1&outFields=Okres,K%C3%B3d_okresu,Rok___kampa%C5%88,EPZF,EPFRV,%C5%A0R_SR_,Vyplaten%C3%A1_suma_spolu,Vyplaten%C3%A1_suma_na_1_obyvate%C4%BEa,Po%C4%8Det_obyvate%C4%BEstva&returnGeometry=false&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },
           "isPartOf": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bbsk-ppa-platby-po-okresoch-bf09ef" }
