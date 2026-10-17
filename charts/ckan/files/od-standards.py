@@ -31,6 +31,8 @@ OD_STANDARDS = [
     ("file.csv", "CSV", "CSV", "text/csv", None, "q", False),
     ("file.json", "JSON", "JSON", "application/json", None, "q", False),
     ("file.xlsx", "Excel", "XLSX", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", None, "q", False),
+    ("file.parquet", "Apache Parquet", "PARQUET", "application/vnd.apache.parquet",
+     "https://parquet.apache.org/docs/file-format/", "q", False),
     ("ogc/features/collections/{type}/items", "OGC API - Features", "OGCFEAT", "application/geo+json",
      "http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core", "ogc", True),
     ("odata/v4/{type}", "OData v4", "OData", "application/json", "https://docs.oasis-open.org/odata/odata/v4.01/", "odata", False),
