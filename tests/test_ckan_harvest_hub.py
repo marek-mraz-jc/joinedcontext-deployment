@@ -422,7 +422,8 @@ def test_the_harvest_reaches_dns_the_catalogue_and_https_only(rendered):
     docs = rendered("dev")
     policy = by_name(docs, "NetworkPolicy", "ckan-harvest")["spec"]
     assert not policy.get("ingress")
-    assert sorted(p["port"] for rule in policy["egress"] for p in rule["ports"]) == [53, 53, 443, 5000]
+    # 443 and 8443 to the ingress pod as well (T-4401); test_ckan.py checks which peers they reach.
+    assert sorted(p["port"] for rule in policy["egress"] for p in rule["ports"]) == [53, 53, 443, 443, 5000, 8443]
 
 
 def test_an_empty_or_closed_hub_answer_withdraws_nothing(ckan, converted):

@@ -500,9 +500,14 @@ def test_the_harvest_writes_with_the_token_and_reaches_only_public_443(rendered)
     policy = by_name(docs, "NetworkPolicy", "ckan-harvest")["spec"]
     assert "ingress" not in policy or policy["ingress"] == []
     ports = sorted(p["port"] for rule in policy["egress"] for p in rule["ports"])
-    assert ports == [53, 53, 443, 5000]
+    assert ports == [53, 53, 443, 443, 5000, 8443]
     blocks = [peer["ipBlock"] for rule in policy["egress"] for peer in rule["to"] if "ipBlock" in peer]
     assert len(blocks) == 1 and {"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "169.254.0.0/16"} <= set(blocks[0]["except"])
+    # T-4401: the gateway's public host is rewritten to the ingress controller's pod before the
+    # filter runs, so that pod, and no other private peer, is reached over HTTPS.
+    https = [peer for rule in policy["egress"] if {443, 8443} & {p["port"] for p in rule["ports"]}
+             for peer in rule["to"] if "ipBlock" not in peer]
+    assert [{v for e in peer["podSelector"]["matchExpressions"] for v in e["values"]} for peer in https] == [{"traefik", "ingress-nginx"}]
 
 
 # --- Keycloak login (T-0403, OPS-26) -------------------------------------------------------

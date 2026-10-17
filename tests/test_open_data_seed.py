@@ -95,6 +95,11 @@ def test_every_mapped_dataset_has_its_pipeline_unless_a_seed_reads_it_whole():
     # A dataset of the city's layers may take several pipelines (generate.parts, T-4317).
     want = {f"{e['org']}-od-pipeline-{slug}.yaml" for e in SEEDED for _, slug in generate.parts(e, SLUGS[e["name"]])}
     assert pipelines == want
+    # Each pipeline alone writes its rows, so it replaces them whole and a dropped attribute
+    # leaves at the next run (PL-79, T-4407).
+    modes = {yaml.safe_load(p.read_text())["spec"]["output"]["mode"] for project in generate.PROJECTS
+             for p in files(project, "pipeline")}
+    assert modes == {"replace"}
 
 
 def test_the_model_classes_and_both_policies_name_every_type_the_pipelines_write():
@@ -885,13 +890,21 @@ def test_a_grant_without_a_number_takes_its_row_hash_as_the_identifier_its_base_
 # dataset only when od-datasets.json gives its rows an Endpoint (EP-118), one entry per dataset;
 # beside them sit the Endpoints the platform publishes itself (`spec.publish.ckan`), into the
 # organization of their CkanInstance. dev counted 33 on 2026-10-17 with both harvests dead.
-def expected_catalogue() -> dict[str, int]:
+def mapped_rows() -> dict:
+    """od-datasets.json less the ŠÚ SR rows, which scripts/open-data/datacube.py writes, not the
+    bb-bbsk mapping, and which CKAN lists only once T-4399 publishes them (T-4390)."""
     od = json.loads((ROOT / "charts/ckan/files/od-datasets.json").read_text())
+    return {name: row for name, row in od.items() if not name.startswith("susr-")}
+
+
+def expected_catalogue() -> dict[str, int]:
+    od = mapped_rows()
     org_of = {e["name"]: e["org"] for e in MAPPING["datasets"]}
     counts: dict[str, int] = {}
     for name in od:
         counts[org_of[name]] = counts.get(org_of[name], 0) + 1
-    for path in sorted(SEED.glob("*/*.yaml")):
+    # The 44 ŠÚ SR Endpoints publish themselves into slovensko (T-4402).
+    for path in sorted([*SEED.glob("*/*.yaml"), *SEED.glob("slovensko/susr-*/endpoint.yaml")]):
         for doc in yaml.safe_load_all(path.read_text()):
             if isinstance(doc, dict) and doc.get("kind") == "Endpoint":
                 ckan = ((doc.get("spec") or {}).get("publish") or {}).get("ckan")
@@ -902,9 +915,9 @@ def expected_catalogue() -> dict[str, int]:
 
 
 def test_each_publisher_expects_its_converted_datasets_and_its_endpoints():
-    od = json.loads((ROOT / "charts/ckan/files/od-datasets.json").read_text())
+    od = mapped_rows()
     mapped = {e["name"] for e in MAPPING["datasets"] if e["status"] == "mapped"}
     assert set(od) <= mapped, "a converted dataset the mapping does not map"
     assert len({entry["dataset"] for entry in od.values()}) == len(od), "one entry per dataset"
     assert expected_catalogue() == {
-        "banskabystrica": 13 + 4, "bbsk": 88 + 5, "hel-fi": 11, "praha": 7, "slovensko": 1, "zilina": 5}
+        "banskabystrica": 13 + 4, "bbsk": 88 + 5, "hel-fi": 11, "praha": 7, "slovensko": 1 + 44, "zilina": 5}

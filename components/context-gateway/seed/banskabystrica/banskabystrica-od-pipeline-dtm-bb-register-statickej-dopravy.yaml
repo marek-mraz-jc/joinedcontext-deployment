@@ -18,7 +18,7 @@ spec:
   targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-otvorene-data:banskabystrica-otvorene-data
   output:
     type: OffStreetParking
-    mode: upsert
+    mode: replace
   quotas:
     maxMemoryMb: 128
     cpuMillicores: 100

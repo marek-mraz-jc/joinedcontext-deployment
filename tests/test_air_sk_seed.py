@@ -113,6 +113,11 @@ def test_the_first_run_writes_every_valid_hour_of_the_week_oldest_first_at_its_u
     assert set(last) == {"id", "type", "name", "location", "dateObserved", "pm10", "no2"}
     # Ozone's validity 4 is a valid reading.
     assert by[URN + "SK0016A"][-1]["o3"]["value"] == 61.35
+    # Hour by hour, every station in each (T-4410): a batch repeats one id as few times as it can,
+    # so the broker's rounds of repeats stay few and a cut batch still leaves whole hours.
+    keys = [(e["dateObserved"]["value"], e["id"]) for e in out]
+    ids = [e["id"] for e in out]
+    assert keys == sorted(keys) and ids.index(URN + "SK0016A") < len(ids) - 1 - ids[::-1].index(URN + "SK0001A")
 
 
 @requires_docker
@@ -192,8 +197,8 @@ def test_the_space_keeps_a_week_and_the_endpoint_serves_every_surface_without_na
     assert "EEA" in endpoint["spec"]["catalog"]["attribution"]["en"]
     assert generate.SLUG == endpoint["spec"]["slug"]
     index = yaml.safe_load((SEED / "index.yaml").read_text())
-    # The susr-* folders are placed by T-4391..T-4393 (scripts/open-data/datacube.py, T-4390).
-    assert sorted(index) == sorted(p.name for p in SEED.iterdir() if p.is_file() and p.name != "index.yaml")
+    # The susr-* folders are placed by scripts/open-data/datacube.py (T-4402), checked in test_datacube_generator.
+    assert sorted(k for k in index if not k.startswith("susr-")) == sorted(p.name for p in SEED.iterdir() if p.is_file() and p.name != "index.yaml")
 
 
 def message_urls(value) -> list[str]:

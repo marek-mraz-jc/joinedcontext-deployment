@@ -40,3 +40,5 @@ spec:
   artifacts:
     jsonSchema: ./bbsk-otvorene-data.v1.schema.json
     context: ./bbsk-otvorene-data.v1.context.jsonld
+    docs: ./bbsk-otvorene-data.v1.md
+    example: ./bbsk-otvorene-data.v1.example.jsonld

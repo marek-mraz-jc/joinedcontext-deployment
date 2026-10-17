@@ -13,7 +13,8 @@ public Endpoint (T-4291).
     generate.py               # write the seed; then regenerate the model artifacts (below)
     generate.py --check       # CI: exit 1 when a committed file differs from what this writes
     generate.py --artifacts PYTHON MODEL_TOOLS_SRC
-                              # also run gen_json_schema.py and gen_context.py with that interpreter,
+                              # also run gen_json_schema.py, gen_context.py, gen_docs.py and
+                              # gen_example.py with that interpreter,
                               # and render each extension's formalisms (below)
 
 A type no Smart Data Model holds as is has an extension (T-4336), declared under `extensions` in
@@ -697,7 +698,8 @@ def project_files(project: str, entries: list[dict], names: dict[str, str]) -> d
         {**head, "kind": "DataModel", "metadata": meta(space, p["title"]),
          "spec": {"contextSpaceRef": space, "linkml": f"./{space}.linkml.yaml", "version": "1.0.0", "lifecycle": "published",
                   "classes": types,
-                  "artifacts": {"jsonSchema": f"./{space}.v1.schema.json", "context": f"./{space}.v1.context.jsonld"}}})
+                  "artifacts": {"jsonSchema": f"./{space}.v1.schema.json", "context": f"./{space}.v1.context.jsonld",
+                                "docs": f"./{space}.v1.md", "example": f"./{space}.v1.example.jsonld"}}})
     files[f"{space}.linkml.yaml"] = linkml(project, space, entries, model_ranges)
     endpoint = SEED / project / f"{pre}endpoint.yaml"
     files[f"{pre}endpoint.yaml"] = manifest(
@@ -736,7 +738,7 @@ def project_files(project: str, entries: list[dict], names: dict[str, str]) -> d
     index = [f"{pre}space.yaml: projects/{project}/spaces/{space}/space.yaml",
              f"{pre}datamodel.yaml: projects/{project}/spaces/{space}/datamodels/{space}.yaml",
              *(f"{space}.{x}: projects/{project}/spaces/{space}/datamodels/{space}.{x}"
-               for x in ("linkml.yaml", "v1.schema.json", "v1.context.jsonld")),
+               for x in ("linkml.yaml", "v1.schema.json", "v1.context.jsonld", "v1.md", "v1.example.jsonld")),
              f"{pre}endpoint.yaml: projects/{project}/spaces/{space}/endpoints/{space}.yaml",
              f"{pre}policy-read.yaml: projects/{project}/spaces/{space}/policies/otvorene-data-read.yaml",
              *([f"{pre}policy-read-history.yaml: projects/{project}/spaces/{space}/policies/otvorene-data-read-history.yaml"]
@@ -762,7 +764,10 @@ def project_files(project: str, entries: list[dict], names: dict[str, str]) -> d
              "spec": {"class": "scheduled", "enabled": ENABLED and i % HALVES == 0, "schedule": schedule(e, i),
                       "source": {"dataSourceRef": {"kind": "DataSource", "name": f"od-{slug}"}},
                       "targetEndpoint": f"urn:ngsi-ld:Endpoint:{p['domain']}:{space}:{space}",
-                      "output": {"type": e["type"], "mode": "upsert"},
+                      # Each od pipeline alone writes its rows (the id carries its slug), so it
+                      # replaces them whole: an attribute a mapping drops leaves at the next run
+                      # (PL-79, T-4407; T-4289's `dataset`).
+                      "output": {"type": e["type"], "mode": "replace"},
                       "quotas": {"maxMemoryMb": 256 if rows > 5000 else 128, "cpuMillicores": 100}}})
         files[f"{pre}pipeline-{slug}-bento.yaml"] = bento(e, slug, model_ranges)
         index += [f"{pre}datasource-{slug}.yaml: projects/{project}/datasources/od-{slug}.yaml",
@@ -1030,7 +1035,9 @@ def main() -> None:
         for project in PROJECTS:
             model = SEED / project / f"{project}-otvorene-data.linkml.yaml"
             stem = str(model).removesuffix(".linkml.yaml")
-            for gen, out in (("gen_json_schema.py", f"{stem}.v1.schema.json"), ("gen_context.py", f"{stem}.v1.context.jsonld")):
+            # The four artifacts a published model commits (DM-02, T-4425).
+            for gen, out in (("gen_json_schema.py", f"{stem}.v1.schema.json"), ("gen_context.py", f"{stem}.v1.context.jsonld"),
+                             ("gen_docs.py", f"{stem}.v1.md"), ("gen_example.py", f"{stem}.v1.example.jsonld")):
                 subprocess.run([python, f"{tools}/{gen}", str(model), "-o", out], check=True)
         for model in sorted(EXTENSIONS.glob("*/model.linkml.yaml")):
             d = model.parent

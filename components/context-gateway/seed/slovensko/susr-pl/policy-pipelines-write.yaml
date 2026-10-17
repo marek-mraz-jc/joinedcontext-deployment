@@ -4,7 +4,7 @@ kind: Policy
 metadata:
   name: susr-pl-pipelines-write
   namespace: slovensko
-  title: { sk: "Kanál zapisuje tému pl", en: "The pipeline writes theme pl" }
+  title: { sk: "Kanál zapisuje susr-pl", en: "The pipeline writes susr-pl" }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: susr-pl }
   assigner: did:web:joinedcontext.com

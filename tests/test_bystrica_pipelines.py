@@ -471,8 +471,10 @@ def test_every_pipeline_names_a_data_source_and_an_endpoint_the_seed_holds():
                 space = output["targetEndpoint"].split(":")[-2]
                 assert output["type"] in classes[space], name
                 # An upsert is what a re-poll of a published table is: the same cell, published
-                # again; and an indicator recomputed on a schedule is the same indicator.
-                assert output["mode"] == "upsert"
+                # again; and an indicator recomputed on a schedule is the same indicator. The
+                # generated od- pipelines replace, each the sole writer of its rows, so an
+                # attribute the table dropped leaves at the next run (T-4407, PL-79).
+                assert output["mode"] == ("replace" if name.startswith("od-") else "upsert"), name
 
 
 def test_a_pipeline_is_fed_by_a_data_source_or_by_a_query_and_the_files_beside_it_say_which():
