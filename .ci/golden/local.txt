@@ -238,6 +238,11 @@ v1/ConfigMap local/gitea-seed-helsinki
 v1/ConfigMap local/gitea-seed-helsinki-mobility
 v1/ConfigMap local/gitea-seed-praha
 v1/ConfigMap local/gitea-seed-slovensko
+v1/ConfigMap local/gitea-seed-slovensko--2
+v1/ConfigMap local/gitea-seed-slovensko--3
+v1/ConfigMap local/gitea-seed-slovensko--4
+v1/ConfigMap local/gitea-seed-slovensko--5
+v1/ConfigMap local/gitea-seed-slovensko--6
 v1/ConfigMap local/gitea-seed-zilina
 v1/ConfigMap local/keycloak-admin-permissions
 v1/ConfigMap local/keycloak-theme
