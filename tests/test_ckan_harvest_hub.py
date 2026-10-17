@@ -228,6 +228,13 @@ def test_a_converted_dataset_lists_the_platform_apis_and_its_model_and_an_unconv
     assert model[0]["url"] == root + "schema/v1/model.schema.json"
     assert model[0]["hash"] == "sha-model.schema.json" and model[0]["hash_algorithm"] == "sha256"
 
+    # T-4291: a dataset an older seed reads whole lists the same doors over its whole type.
+    monkeypatch.setitem(OD_DATASETS, package["name"], dict(entry, filtered=False))
+    whole = harvest.od_standards(package["name"])
+    assert [r["url"] for r in whole if r.get("resource_type") == "api"] == [u.split("?")[0] for u in urls]
+    assert all(r["description"].startswith("Every PointOfInterest") for r in whole if r.get("resource_type") == "api")
+    monkeypatch.setitem(OD_DATASETS, package["name"], entry)
+
     other = next(i for i in items() if i["id"] == APS)
     assert harvest.dataset(other, other["title"], dev_source())["resources"] == []
     monkeypatch.setattr(harvest, "od_models", lambda endpoint: model_index(["PointOfInterest"], ARTEFACTS[1:]))

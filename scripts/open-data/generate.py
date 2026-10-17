@@ -7,7 +7,8 @@ each project it names, this script writes one public space `{project}-otvorene-d
 model, Endpoint and two Policies, and for each mapped dataset one DataSource, one Pipeline and the
 Pipeline's Bento mapping, into `components/context-gateway/seed/{project}/` under the prefix
 `{project}-od-`, plus the block of `index.yaml` that places them. A dataset a seed already reads
-whole (`existing.covers: whole`) is left to that seed.
+whole (`existing.covers: whole`) is left to that seed; the catalogue lists it through that seed's
+public Endpoint (T-4291).
 
     generate.py               # write the seed; then regenerate the model artifacts (below)
     generate.py --check       # CI: exit 1 when a committed file differs from what this writes
@@ -783,7 +784,9 @@ def render() -> dict[Path, str]:
         entries = [e for e in mapped if e["org"] == project]
         for name, text in project_files(project, entries, names).items():
             out[SEED / project / name] = text
-    out[DISTRIBUTIONS] = distributions(mapped)
+    whole = [e for e in mapping["datasets"] if e["status"] == "mapped"
+             and (e.get("existing") or {}).get("covers") == "whole"]
+    out[DISTRIBUTIONS] = distributions(mapped, whole)
     out.update(extension_files(mapping.get("extensions") or {}, mapped))
     return out
 
@@ -928,14 +931,49 @@ def located(entry: dict) -> bool:
     return entry["source"].get("kind") in FEATURES and bool(entry["source"].get("geometry"))
 
 
-def distributions(mapped: list[dict]) -> str:
-    """Per CKAN dataset name: its Endpoint's slug, its entity type and whether it has a location."""
+def distributions(mapped: list[dict], whole: list[dict]) -> str:
+    """Per CKAN dataset name: its Endpoint's slug, its entity type, whether it has a location and
+    whether its addresses keep only its rows. A dataset an older seed reads whole is served by that
+    seed's public Endpoint, over its whole type: those rows name no catalogue dataset (T-4291)."""
     rows = {}
     for e in mapped:
         endpoint = SEED / e["org"] / f"{e['org']}-od-endpoint.yaml"
         rows[e["dataset"].rsplit("/", 1)[1]] = {"endpoint": slug_for(endpoint), "type": e["type"],
-                                                 "dataset": e["dataset"], "location": located(e)}
+                                                 "dataset": e["dataset"], "location": located(e), "filtered": True}
+    for e in whole:
+        slug, kind = existing_door(e)
+        rows[e["dataset"].rsplit("/", 1)[1]] = {"endpoint": slug, "type": kind, "dataset": e["dataset"],
+                                                 "location": located(e), "filtered": False}
     return "{\n" + ",\n".join(f"  {json.dumps(k)}: {json.dumps(v, ensure_ascii=False)}" for k, v in sorted(rows.items())) + "\n}\n"
+
+
+def existing_door(entry: dict) -> tuple[str, str]:
+    """The public Endpoint and entity type of the seed that reads `entry` whole: its DataSource's
+    Pipeline, then the public Endpoint of that Pipeline's space whose catalogue names the Pipeline,
+    else the one whose Policy grants the Pipeline's type, else the space's own (no Policy narrows it)."""
+    source = yaml.safe_load((SEED / entry["existing"]["seed"]).read_text())
+    project, name = source["metadata"]["namespace"], source["metadata"]["name"]
+    docs = [d for f in sorted((SEED / project).glob("*.yaml")) for d in yaml.safe_load_all(f.read_text())
+            if isinstance(d, dict) and (d.get("metadata") or {}).get("namespace") == project]
+    pipelines = [d for d in docs if d["kind"] == "Pipeline"
+                 and ((d["spec"].get("source") or {}).get("dataSourceRef") or {}).get("name") == name]
+    if len(pipelines) != 1:
+        sys.exit(f"{entry['name']}: {len(pipelines)} pipelines read {entry['existing']['seed']}, expected one")
+    pipeline = pipelines[0]
+    kind = pipeline["spec"]["output"]["type"]
+    space = pipeline["spec"]["targetEndpoint"].split(":")[-2]
+    public = [d for d in docs if d["kind"] == "Endpoint" and d["spec"].get("audience") == "public"
+              and d["spec"].get("contextSpaceRef") == space]
+    granting = {d["metadata"]["name"] for d in docs if d["kind"] == "Policy"
+                and any(x.get("type") == kind for i in d["spec"].get("information") or [] for x in i.get("entities") or [])}
+    for door in (
+        [d for d in public if ((d["spec"].get("catalog") or {}).get("pipelineRef") or {}).get("name") == pipeline["metadata"]["name"]],
+        [d for d in public if (d["spec"].get("policyRef") or "").rsplit(":", 1)[-1] in granting],
+        [d for d in public if not d["spec"].get("policyRef")],
+    ):
+        if door:
+            return door[0]["spec"]["slug"], kind
+    sys.exit(f"{entry['name']}: no public Endpoint over {space} serves {kind}")
 
 
 def main() -> None:
