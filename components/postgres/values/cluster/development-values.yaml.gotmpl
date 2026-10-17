@@ -17,7 +17,8 @@ cluster:
   resources:
     requests:
       cpu: 100m
-      memory: 512Mi
+      # T-4473: dev, kubectl top 2026-10-17 21:22-22:22Z: median 1,739, peak 1,893Mi.
+      memory: 1792Mi
     limits:
       # 2 cores: at 500m the kernel throttled it in 31% of its periods (4365 s in all by
       # 2026-09-25 18:30Z), the broker's 1000-entity upserts outran their time and every praha

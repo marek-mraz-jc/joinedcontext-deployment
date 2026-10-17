@@ -10,7 +10,8 @@ replicaCount: 1
 resources:
   requests:
     cpu: 100m
-    memory: 128Mi
+    # T-4473: dev, kubectl top 2026-10-17 21:22-22:22Z: median 368, peak 591Mi.
+    memory: 448Mi
   limits:
     cpu: '1'
     # 1Gi: a Load take's pipeline upserts 4 000 vehicles per poll, and at 512Mi the broker was

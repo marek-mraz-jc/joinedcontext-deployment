@@ -19,7 +19,8 @@ replicaCount: 1
 resources:
   requests:
     cpu: 100m
-    memory: 512Mi
+    # T-4473: dev, kubectl top 2026-10-17 21:22-22:22Z: median 807, peak 963Mi.
+    memory: 896Mi
   limits:
     cpu: 2000m
     memory: 3Gi

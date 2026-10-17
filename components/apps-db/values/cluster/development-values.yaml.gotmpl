@@ -6,7 +6,8 @@ cluster:
   resources:
     requests:
       cpu: 50m
-      memory: 256Mi
+      # T-4473: dev, kubectl top 2026-10-17 21:22-22:22Z: median 97, peak 111Mi.
+      memory: 128Mi
     limits:
       cpu: '1'
       memory: 768Mi
