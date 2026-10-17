@@ -280,3 +280,33 @@ def test_the_job_links_the_marked_endpoint_scopes_to_the_hub(keycloak):
     assert "linked 0 of 2 endpoint: scopes to mcp-hub" in again.stdout, again.stdout
     assert "unlinked" not in again.stdout, again.stdout
     assert again.stdout.count("updated ") == 4, again.stdout
+
+
+def test_the_job_links_a_thousand_new_scopes_within_a_minute(keycloak):
+    """T-4474 (ADR-N-025 §4d): one kcadm JVM per link took a second each, so a fresh realm with
+    10,000 Endpoint scopes never converged inside the Job's 900 s. The links go over one bash
+    process now; a thousand new ones fit in a minute."""
+    name, base = keycloak
+    ids = realm(base)
+    admin = ids["admin"]
+    status, body, headers = call(base, "POST", f"/admin/realms/{REALM}/clients", admin, {"clientId": "mcp-hub"})
+    assert status == 201, body
+    hub = headers["Location"].rsplit("/", 1)[1]
+    for n in range(1000):
+        if n % 200 == 0:
+            admin = token(base, "master", "admin-cli", user="admin")
+        status, body, _ = call(base, "POST", f"/admin/realms/{REALM}/client-scopes", admin, {
+            "name": f"endpoint:s{n:05d}", "protocol": "openid-connect",
+            "attributes": {"include.in.token.scope": "true", "managed-by": "joinedcontext"}})
+        assert status == 201, body
+
+    started = time.monotonic()
+    run = sync(name)
+    took = time.monotonic() - started
+    assert run.returncode == 0, run.stderr
+    assert "linked 1000 of 1000 endpoint: scopes to mcp-hub" in run.stdout, run.stdout
+    assert took < 60, f"{took:.1f} s"
+    admin = token(base, "master", "admin-cli", user="admin")
+    status, body, _ = call(base, "GET", f"/admin/realms/{REALM}/clients/{hub}/optional-client-scopes", admin)
+    assert status == 200, body
+    assert sum(s["name"].startswith("endpoint:s") for s in body) == 1000
