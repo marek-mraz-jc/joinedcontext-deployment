@@ -256,6 +256,22 @@ def dataset_url(d: dict) -> str:
     return f"{API}/dataset/{d['code']}/" + "/".join("all" for _ in d["dimensions"]) + "?lang=sk&type=json"
 
 
+# generate.py's list, so a susr- Endpoint serves what the od Endpoints serve (T-4418, EP-104).
+REPRESENTATIONS = ["ngsi-ld", "geojson", "csv", "json", "xlsx", "parquet", "websocket", "ogc-features", "odata", "mcp"]
+# The platform publishes these Endpoints, so its role address answers for them (EP-80); the
+# dev branding's contactEmail.
+CONTACT = {"name": "joinedcontext platform", "email": "hello@joinedcontext.com"}
+
+
+def source(d: dict) -> str:
+    """One `catalog.source` entry: the table's DATAcube address, titled and described (EP-78)."""
+    t, code = d["title"], d["code"]
+    about = {"sk": f"Tabuľka {code} v DATAcube Štatistického úradu SR: {t['sk'][:120]}",
+             "en": f"Table {code} of the Statistical Office of the SR on DATAcube: {t['en'][:120]}"}
+    return (f"      - url: {q(dataset_url(d))}\n        title: {title(t)}\n"
+            f"        description: {{ sk: {q(about['sk'])}, en: {q(about['en'])} }}")
+
+
 def q(value) -> str:
     """A YAML scalar: JSON's double-quoted string is one."""
     return json.dumps(value, ensure_ascii=False)
@@ -330,6 +346,7 @@ def topic_files(topic: dict, ds: list[dict], cells: dict[str, int], slug: str, i
     desc = {"sk": f"{t['sk']}: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube {tables}), jedna položka na zverejnenú bunku.",
             "en": f"{t['en']}: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube {tables}), one record per published cell."}
     # The topic's most frequent cadence.
+    sources_ = "\n".join(source(d) for d in ds)
     frequency = next((FREQUENCY[c] for c in "mqr" if any(d["code"][6] == c for d in ds)), "ANNUAL")
     files = {
         "space.yaml": f"""{BEGIN}
@@ -385,7 +402,7 @@ spec:
   contextSpaceRef: {space}
   slug: {slug}
   audience: public
-  enabledRepresentations: [ngsi-ld, csv, json, ogc-features, odata, mcp]
+  enabledRepresentations: [{", ".join(REPRESENTATIONS)}]
   publish:
     ckan:
       instanceRef: {{ kind: CkanInstance, name: slovensko }}
@@ -393,6 +410,7 @@ spec:
       datastore: {{ representation: csv, refresh: onReconcile }}
   catalog:
     publisher: {{ name: {{ sk: "Platforma joinedcontext", en: "The joinedcontext platform" }}, uri: "https://dev.joinedcontext.com/" }}
+    contactPoint: {{ name: {q(CONTACT["name"])}, email: {CONTACT["email"]} }}
     license: CC_BYSA_4_0
     attribution:
       sk: "Štatistický úrad Slovenskej republiky, DATAcube (data.statistics.sk), CC BY-SA 4.0"
@@ -404,6 +422,8 @@ spec:
     spatial:
       - SK0
     frequency: {frequency}
+    source:
+{sources_}
     pipelineRef: {{ kind: Pipeline, name: {space} }}
 """,
         "policy-pipelines-write.yaml": f"""{BEGIN}

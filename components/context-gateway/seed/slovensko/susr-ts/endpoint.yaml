@@ -12,7 +12,7 @@ spec:
   contextSpaceRef: susr-ts
   slug: jquhkkvh3ukkok6zm7j3vyahd4zohwj3
   audience: public
-  enabledRepresentations: [ngsi-ld, csv, json, ogc-features, odata, mcp]
+  enabledRepresentations: [ngsi-ld, geojson, csv, json, xlsx, parquet, websocket, ogc-features, odata, mcp]
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: slovensko }
@@ -20,6 +20,7 @@ spec:
       datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher: { name: { sk: "Platforma joinedcontext", en: "The joinedcontext platform" }, uri: "https://dev.joinedcontext.com/" }
+    contactPoint: { name: "joinedcontext platform", email: hello@joinedcontext.com }
     license: CC_BYSA_4_0
     attribution:
       sk: "Štatistický úrad Slovenskej republiky, DATAcube (data.statistics.sk), CC BY-SA 4.0"
@@ -31,4 +32,8 @@ spec:
     spatial:
       - SK0
     frequency: MONTHLY
+    source:
+      - url: "https://data.statistics.sk/api/v2/dataset/ts0003ms/all/all/all/all/all/all?lang=sk&type=json"
+        title: { sk: "Vybrané trhové služby - tržby za vlastné výkony a tovar (medziročný index) - mesačne", en: "Selected market services - Turnover (year-on-year index) - monthly" }
+        description: { sk: "Tabuľka ts0003ms v DATAcube Štatistického úradu SR: Vybrané trhové služby - tržby za vlastné výkony a tovar (medziročný index) - mesačne", en: "Table ts0003ms of the Statistical Office of the SR on DATAcube: Selected market services - Turnover (year-on-year index) - monthly" }
     pipelineRef: { kind: Pipeline, name: susr-ts }

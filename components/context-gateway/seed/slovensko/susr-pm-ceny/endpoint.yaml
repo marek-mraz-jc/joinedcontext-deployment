@@ -12,7 +12,7 @@ spec:
   contextSpaceRef: susr-pm-ceny
   slug: mmio3jkuh5e2naw2f4kwss7adgtqo2n7
   audience: public
-  enabledRepresentations: [ngsi-ld, csv, json, ogc-features, odata, mcp]
+  enabledRepresentations: [ngsi-ld, geojson, csv, json, xlsx, parquet, websocket, ogc-features, odata, mcp]
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: slovensko }
@@ -20,6 +20,7 @@ spec:
       datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher: { name: { sk: "Platforma joinedcontext", en: "The joinedcontext platform" }, uri: "https://dev.joinedcontext.com/" }
+    contactPoint: { name: "joinedcontext platform", email: hello@joinedcontext.com }
     license: CC_BYSA_4_0
     attribution:
       sk: "Štatistický úrad Slovenskej republiky, DATAcube (data.statistics.sk), CC BY-SA 4.0"
@@ -31,4 +32,8 @@ spec:
     spatial:
       - SK0
     frequency: MONTHLY
+    source:
+      - url: "https://data.statistics.sk/api/v2/dataset/pm0048ms/all/all/all/all/all/all?lang=sk&type=json"
+        title: { sk: "Cenové indexy priemyselných výrobcov tuzemsko podľa SK NACE Rev. 2 (bázický index) - mesačne", en: "Industrial producers prices indices domestic according to NACE Rev. 2 (basic index) - monthly" }
+        description: { sk: "Tabuľka pm0048ms v DATAcube Štatistického úradu SR: Cenové indexy priemyselných výrobcov tuzemsko podľa SK NACE Rev. 2 (bázický index) - mesačne", en: "Table pm0048ms of the Statistical Office of the SR on DATAcube: Industrial producers prices indices domestic according to NACE Rev. 2 (basic index) - monthly" }
     pipelineRef: { kind: Pipeline, name: susr-pm-ceny }

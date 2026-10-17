@@ -12,7 +12,7 @@ spec:
   contextSpaceRef: susr-st-povolenia
   slug: ssyq2yewnyqs4rypdmghumswi3haak3t
   audience: public
-  enabledRepresentations: [ngsi-ld, csv, json, ogc-features, odata, mcp]
+  enabledRepresentations: [ngsi-ld, geojson, csv, json, xlsx, parquet, websocket, ogc-features, odata, mcp]
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: slovensko }
@@ -20,6 +20,7 @@ spec:
       datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher: { name: { sk: "Platforma joinedcontext", en: "The joinedcontext platform" }, uri: "https://dev.joinedcontext.com/" }
+    contactPoint: { name: "joinedcontext platform", email: hello@joinedcontext.com }
     license: CC_BYSA_4_0
     attribution:
       sk: "Štatistický úrad Slovenskej republiky, DATAcube (data.statistics.sk), CC BY-SA 4.0"
@@ -31,4 +32,8 @@ spec:
     spatial:
       - SK0
     frequency: QUARTERLY
+    source:
+      - url: "https://data.statistics.sk/api/v2/dataset/st2024qs/all/all/all/all?lang=sk&type=json"
+        title: { sk: "Stavebné povolenia - štvrťročné údaje", en: "Building permits - quarterly data" }
+        description: { sk: "Tabuľka st2024qs v DATAcube Štatistického úradu SR: Stavebné povolenia - štvrťročné údaje", en: "Table st2024qs of the Statistical Office of the SR on DATAcube: Building permits - quarterly data" }
     pipelineRef: { kind: Pipeline, name: susr-st-povolenia }

@@ -12,7 +12,7 @@ spec:
   contextSpaceRef: susr-ku
   slug: fe7jcjxr3io6qswlcemuetb4wjp6wqrz
   audience: public
-  enabledRepresentations: [ngsi-ld, csv, json, ogc-features, odata, mcp]
+  enabledRepresentations: [ngsi-ld, geojson, csv, json, xlsx, parquet, websocket, ogc-features, odata, mcp]
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: slovensko }
@@ -20,6 +20,7 @@ spec:
       datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher: { name: { sk: "Platforma joinedcontext", en: "The joinedcontext platform" }, uri: "https://dev.joinedcontext.com/" }
+    contactPoint: { name: "joinedcontext platform", email: hello@joinedcontext.com }
     license: CC_BYSA_4_0
     attribution:
       sk: "Štatistický úrad Slovenskej republiky, DATAcube (data.statistics.sk), CC BY-SA 4.0"
@@ -31,4 +32,8 @@ spec:
     spatial:
       - SK0
     frequency: ANNUAL
+    source:
+      - url: "https://data.statistics.sk/api/v2/dataset/ku3802rr/all/all/all/all?lang=sk&type=json"
+        title: { sk: "Repertoár a návštevníci subjektov profesionálneho scénického umenia (od roku 2021) - ročne", en: "Repertory and attendance of subjects of professional performing arts (since 2021) - yearly" }
+        description: { sk: "Tabuľka ku3802rr v DATAcube Štatistického úradu SR: Repertoár a návštevníci subjektov profesionálneho scénického umenia (od roku 2021) - ročne", en: "Table ku3802rr of the Statistical Office of the SR on DATAcube: Repertory and attendance of subjects of professional performing arts (since 2021) - yearly" }
     pipelineRef: { kind: Pipeline, name: susr-ku }
