@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 import yaml
-from rdflib import Graph, Namespace
+from rdflib import Graph, Namespace, URIRef
 from rdflib.namespace import DCAT, DCTERMS as DCT, FOAF, RDF, RDFS
 
 from test_ckan import CHART_BASE_VALUES, by_name, ckan_container, env_of, render_chart
@@ -209,6 +209,16 @@ def test_the_attribution_rides_every_distribution_and_the_source_and_pipeline_th
     # Without the extras nothing of them is invented.
     plain = serialize("dataset", PROFILES)
     assert not list(plain.objects(None, DCT.rights)) and not list(plain.objects(None, DCT.source))
+    # T-4436: a source jcctl names with its title is titled so in the record, and still passes.
+    titled = serialize("dataset", PROFILES, extras=dict(CREDITED, source=json.dumps([
+        {"url": "https://opendata.praha.eu/datasets/rozpocet", "title": "Rozpočet", "description": "Rozpočet města"}])))
+    assert check.violations(titled, shapes) == []
+    source = URIRef("https://opendata.praha.eu/datasets/rozpocet")
+    assert (source, RDF.type, DCAT.Dataset) in titled
+    assert [str(t) for t in titled.objects(source, DCT.title)] == ["Rozpočet"]
+    assert [str(t) for t in titled.objects(source, DCT.description)] == ["Rozpočet města"]
+    # A bare IRI still names itself.
+    assert [str(t) for t in graph.objects(source, DCT.title)] == ["https://opendata.praha.eu/datasets/rozpocet"]
 
 
 @requires_docker
