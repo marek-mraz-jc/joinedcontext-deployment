@@ -177,6 +177,14 @@ def test_the_attribution_and_the_original_data_are_about_rows_and_never_more_det
     assert ("was_generated_by", "pipeline susr-as") in theme.jc_more(credited)
     assert theme.jc_extra("was_generated_by", "pipeline susr-as")[0] == "Produced by"
     assert not any(k in ("rights", "source") for k, _ in theme.jc_more(credited))
+    # T-4436: jcctl names each source with its title; the row shows the title, links the address.
+    titled = dict(PUBLISHED, extras=[{"key": "source", "value": json.dumps([
+        {"url": "https://data.statistics.sk/api/v2/dataset/as1001rs", "title": "Obyvateľstvo", "description": "x"},
+        {"url": "javascript:alert(1)", "title": "Click"},
+        {"url": "https://example.org/untitled"}])}])
+    assert [(text, link) for label, text, link in theme.jc_about(titled) if label == "Original data"] == [
+        ("Obyvateľstvo", "https://data.statistics.sk/api/v2/dataset/as1001rs"),
+        ("https://example.org/untitled", "https://example.org/untitled")]
     for broken in ("[not json", "{}", "ftp://x"):
         bad = dict(PUBLISHED, extras=[{"key": "source", "value": broken}])
         assert not [r for r in theme.jc_about(bad) if r[0] == "Original data"], broken

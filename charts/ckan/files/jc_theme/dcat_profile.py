@@ -89,12 +89,23 @@ def _iri(value):
 
 
 def _sources(value):
-    """The IRIs of the `source` extra jcctl writes, a JSON list; one IRI alone is read too."""
+    """(IRI, title, description) of each original dataset in the `source` extra jcctl writes: a
+    JSON list of `{url, title, description}` (T-4436) or of bare IRIs, or one IRI alone. A source
+    without a title is titled by its IRI."""
     try:
         items = json.loads(value) if isinstance(value, str) and value.startswith("[") else [value]
     except ValueError:
         return []
-    return [item for item in items if _iri(item)] if isinstance(items, list) else []
+    out = []
+    for item in items if isinstance(items, list) else []:
+        url = item.get("url") if isinstance(item, dict) else item
+        if not _iri(url):
+            continue
+        title = item.get("title") if isinstance(item, dict) else None
+        title = title if isinstance(title, str) and title else url
+        description = item.get("description") if isinstance(item, dict) else None
+        out.append((url, title, description if isinstance(description, str) and description else title))
+    return out
 
 
 class JcDcatApProfile(RDFProfile):
@@ -132,16 +143,17 @@ class JcDcatApProfile(RDFProfile):
         for point in list(g.objects(dataset_ref, DCAT.contactPoint)):
             g.add((point, RDF.type, VCARD.Kind))
 
-        # The original datasets (T-4417), each a dcat:Dataset as the shapes ask, named by its
-        # address, the one thing jcctl knows of it; a literal the EU profile may have written goes.
+        # The original datasets (T-4417), each a dcat:Dataset as the shapes ask, with the title
+        # and description the Endpoint gives it (T-4436), else its address; a literal the EU
+        # profile may have written goes.
         for source in list(g.objects(dataset_ref, DCT.source)):
             if isinstance(source, Literal):
                 g.remove((dataset_ref, DCT.source, source))
-        for url in _sources(_extra(dataset_dict, "source")):
+        for url, title, description in _sources(_extra(dataset_dict, "source")):
             g.add((dataset_ref, DCT.source, URIRef(url)))
             g.add((URIRef(url), RDF.type, DCAT.Dataset))
-            g.add((URIRef(url), DCT.title, Literal(url)))
-            g.add((URIRef(url), DCT.description, Literal(url)))
+            g.add((URIRef(url), DCT.title, Literal(title)))
+            g.add((URIRef(url), DCT.description, Literal(description)))
         generated = _extra(dataset_dict, "was_generated_by")
         if generated and (dataset_ref, PROV.wasGeneratedBy, None) not in g:
             activity = BNode()
