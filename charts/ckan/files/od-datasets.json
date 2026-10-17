@@ -141,7 +141,7 @@
   "susr-vt0002rs": {"endpoint": "gwxmhyqit2dvveu4kkhi3w7nqjunjo3p", "type": "KeyPerformanceIndicator", "dataset": "https://data.dev.joinedcontext.com/dataset/susr-vt0002rs", "location": false, "filtered": true},
   "susr-zd1004rs": {"endpoint": "eicsvjehoiwoykalzmpqqp6hakoj426t", "type": "KeyPerformanceIndicator", "dataset": "https://data.dev.joinedcontext.com/dataset/susr-zd1004rs", "location": false, "filtered": true},
   "susr-zo0001ms": {"endpoint": "25duckdheaxinjjsl3ehqnue2cu2opgu", "type": "KeyPerformanceIndicator", "dataset": "https://data.dev.joinedcontext.com/dataset/susr-zo0001ms", "location": false, "filtered": true},
-  "susr-zo0011ms": {"endpoint": "3bayn5lqwhce7opxqu3e7ruibkhqmfew", "type": "KeyPerformanceIndicator", "dataset": "https://data.dev.joinedcontext.com/dataset/susr-zo0011ms", "location": false, "filtered": true},
+  "susr-zo0010ms": {"endpoint": "rj2fmnzih5dzigixvsnbmz6ecf7zhcbn", "type": "KeyPerformanceIndicator", "dataset": "https://data.dev.joinedcontext.com/dataset/susr-zo0010ms", "location": false, "filtered": true},
   "susr-zp1005rs": {"endpoint": "h3yeindeacruy57l6c25pxcykq3zjubw", "type": "KeyPerformanceIndicator", "dataset": "https://data.dev.joinedcontext.com/dataset/susr-zp1005rs", "location": false, "filtered": true},
   "susr-zp3803rs": {"endpoint": "vbcinyfdvxajvzifutmvdjyz37wehhju", "type": "KeyPerformanceIndicator", "dataset": "https://data.dev.joinedcontext.com/dataset/susr-zp3803rs", "location": false, "filtered": true}
 }

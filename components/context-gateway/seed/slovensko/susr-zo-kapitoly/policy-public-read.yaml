@@ -2,11 +2,11 @@
 apiVersion: joinedcontext.com/v1alpha1
 kind: Policy
 metadata:
-  name: susr-zo-krajiny-public-read
+  name: susr-zo-kapitoly-public-read
   namespace: slovensko
   title: { sk: "Verejné čítanie", en: "Public read" }
 spec:
-  contextSpaceRef: { kind: ContextSpace, name: susr-zo-krajiny }
+  contextSpaceRef: { kind: ContextSpace, name: susr-zo-kapitoly }
   assigner: did:web:joinedcontext.com
   assignee: { kind: role, id: public }
   # Read only: published statistics, nothing about a person. Discovery beside the reads (EP-116).
