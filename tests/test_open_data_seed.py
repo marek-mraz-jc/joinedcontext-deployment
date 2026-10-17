@@ -921,3 +921,32 @@ def test_each_publisher_expects_its_converted_datasets_and_its_endpoints():
     assert len({entry["dataset"] for entry in od.values()}) == len(od), "one entry per dataset"
     assert expected_catalogue() == {
         "banskabystrica": 13 + 4, "bbsk": 88 + 5, "hel-fi": 11, "praha": 7, "slovensko": 1 + 44, "zilina": 5}
+
+
+def test_the_rdf_artifacts_are_canonical_whatever_order_a_generator_wrote(tmp_path):
+    """T-4437: the same graph, its triples and blank nodes written in two orders as the LinkML
+    generators do from run to run, comes out byte-identical, and still the same graph."""
+    pytest.importorskip("rdflib")
+    from rdflib import Graph
+    from rdflib.compare import isomorphic
+
+    one = """@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ex: <https://example.org/> .
+ex:Shape a sh:NodeShape ;
+    sh:property [ sh:path ex:b ; sh:maxCount 1 ] , [ sh:path ex:a ; sh:minCount 1 ] .
+"""
+    two = """@prefix ex: <https://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+_:x sh:minCount 1 ; sh:path ex:a .
+ex:Shape sh:property _:y , _:x ; a sh:NodeShape .
+_:y sh:maxCount 1 ; sh:path ex:b .
+"""
+    a, b = tmp_path / "a.ttl", tmp_path / "b.ttl"
+    a.write_text(one)
+    b.write_text(two)
+    subprocess.run([sys.executable, "-c", generate.CANONICAL, str(a), str(b)], check=True)
+    assert a.read_text() == b.read_text()
+    assert isomorphic(Graph().parse(a), Graph().parse(data=one, format="turtle"))
+    once = a.read_text()
+    subprocess.run([sys.executable, "-c", generate.CANONICAL, str(a)], check=True)
+    assert a.read_text() == once

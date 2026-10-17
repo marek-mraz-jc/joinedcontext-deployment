@@ -11,17 +11,17 @@ jc:Entity a owl:Class,
         linkml:ClassDefinition ;
     rdfs:label "Entity" ;
     rdfs:subClassOf [ a owl:Restriction ;
-            owl:cardinality 1 ;
-            owl:onProperty jc:type ],
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:observedAt ],
         [ a owl:Restriction ;
             owl:cardinality 1 ;
             owl:onProperty jc:id ],
         [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:location ],
+            owl:cardinality 1 ;
+            owl:onProperty jc:type ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:observedAt ] ;
+            owl:onProperty jc:location ] ;
     skos:definition "The root every NGSI-LD entity class specialises." ;
     skos:exactMatch ngsi-ld:Entity ;
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/PublicProcurement> ;
@@ -32,112 +32,112 @@ jc:PublicProcurement a owl:Class,
     rdfs:label "PublicProcurement" ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:source ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:pHZ ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:financovanie ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:socialneZodpovedneObstaravani ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:spolocenskyZodpovedneVerejne ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:typKomodity ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:typVydavku ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:iDZakazky ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:datumSpustenia ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:stav ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:predpokladanaHodnota ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:najvyhodnejsiUchadzac ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:pocetUchadzacov ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:utvarOvZP ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:nazovCasti ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:mena ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:cisloSpisu ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:hlavnyCPVCasti ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:hlavnyCPV ],
+            owl:onProperty jc:zeleneObstaravanie ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:druhPostupu ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:cPVNazov ],
+            owl:onProperty jc:name ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:obstaravatel ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:datumUkoncenia ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:dataProvider ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:identifier ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:adresaNajvyhodnejsiehoUchadza ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:ponukaUchadzaca ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:zeleneObstaravanie ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:druhKomoditAleboSluzieb ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:druhObstaravania ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:lehotaNaPredkladanie ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:isPartOf ],
+            owl:onProperty jc:stav ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:pocetZaujemcov ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:cPVCastiNazov ],
+            owl:onProperty jc:hlavnyCPVCasti ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:cPVNazov ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:dataProvider ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:adresaNajvyhodnejsiehoUchadza ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:najvyhodnejsiUchadzac ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:financovanie ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:pHZ ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:datumSpustenia ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:typVydavku ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:druhObstaravania ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:typKomodity ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:identifier ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:predpokladanaHodnota ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:obstaravatel ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:nazovCasti ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:spolocenskyZodpovedneVerejne ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:datumUkoncenia ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:socialneZodpovedneObstaravani ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:hlavnyCPV ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:druhKomoditAleboSluzieb ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:rok ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:name ],
+            owl:onProperty jc:iDZakazky ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:mena ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:ponukaUchadzaca ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:lehotaNaPredkladanie ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:cPVCastiNazov ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:source ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:cisloSpisu ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:utvarOvZP ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:isPartOf ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:pocetUchadzacov ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:elektronickaAukcia ],

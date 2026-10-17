@@ -12,25 +12,13 @@ jc:CouncilVote a owl:Class,
     rdfs:label "CouncilVote" ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:isPartOf ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
             owl:onProperty jc:zasadnutie ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:hlas ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:source ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:poslanec ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:nazovSamospravy ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:organSamospravy ],
+            owl:onProperty jc:iCOSamospravy ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:name ],
@@ -39,13 +27,25 @@ jc:CouncilVote a owl:Class,
             owl:onProperty jc:dataProvider ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:datum ],
+            owl:onProperty jc:poslanec ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:volebneObdobie ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:iCOSamospravy ],
+            owl:onProperty jc:datum ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:nazovSamospravy ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:source ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:isPartOf ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:organSamospravy ],
         jc:Entity ;
     skos:definition "One deputy's vote on one item of a council meeting." ;
     skos:exactMatch jc:CouncilVote ;
@@ -56,14 +56,14 @@ jc:Entity a owl:Class,
         linkml:ClassDefinition ;
     rdfs:label "Entity" ;
     rdfs:subClassOf [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:observedAt ],
+        [ a owl:Restriction ;
             owl:cardinality 1 ;
             owl:onProperty jc:id ],
         [ a owl:Restriction ;
             owl:cardinality 1 ;
             owl:onProperty jc:type ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:observedAt ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:location ] ;
