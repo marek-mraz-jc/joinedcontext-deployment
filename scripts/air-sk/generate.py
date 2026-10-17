@@ -111,7 +111,7 @@ root = if $files.length() == 0 { throw("no station file came") } else {
     "name": { "type": "Property", "value": $stations.get(s.key).sk },
     "dateObserved": { "type": "Property", "value": h.key.number().ts_format("2006-01-02T15:04:05Z07:00", "UTC") },
     "location": { "type": "GeoProperty", "value": { "type": "Point", "coordinates": $stations.get(s.key).point } }
-  }.merge(h.value.map_each(a -> { "type": "Property", "value": a.value.value, "unitCode": "GQ", "observedAt": a.value.unix.ts_format("2006-01-02T15:04:05Z07:00", "UTC") })))).flatten()
+  }.merge(h.value.map_each(a -> { "type": "Property", "value": a.value.value, "unitCode": "GQ", "observedAt": a.value.unix.ts_format("2006-01-02T15:04:05Z07:00", "UTC") })))).flatten().sort_by(e -> e.dateObserved.value + " " + e.id)
 }""" % json.dumps(table, ensure_ascii=False, sort_keys=True)
     return f"""\
 # The mapping of the ovzdusie pipeline of project slovensko (T-4340): the hourly means of PM10,
@@ -121,7 +121,9 @@ root = if $files.length() == 0 { throw("no station file came") } else {
 # Each run first reads, from the space's own public Endpoint, the latest hour it holds of each
 # station and pollutant, and then writes every valid hour after it, oldest first, back to at most
 # {BACKFILL_DAYS} days: the first run fills the week's history, every later one adds the new hour, and a
-# restart writes nothing twice. A failed read of the Endpoint fails the run before anything is
+# restart writes nothing twice. The hours go out hour by hour, every station's in each (T-4410): the
+# broker applies the repeats of one id in a batch as sequential rounds, and station by station a
+# 1000-entity batch was ~168 rounds, which the 30 s write timeout cut 2-3 days into the week. A failed read of the Endpoint fails the run before anything is
 # written. The files are read one at a time (for_each), so the runner holds one decoded file, not
 # {len(todo)}. A file that does not come is left out with a log line, so one retired sampling point
 # does not stop the other stations; a run in which no file comes fails where it can be seen. The name is

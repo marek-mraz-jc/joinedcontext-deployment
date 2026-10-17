@@ -113,6 +113,11 @@ def test_the_first_run_writes_every_valid_hour_of_the_week_oldest_first_at_its_u
     assert set(last) == {"id", "type", "name", "location", "dateObserved", "pm10", "no2"}
     # Ozone's validity 4 is a valid reading.
     assert by[URN + "SK0016A"][-1]["o3"]["value"] == 61.35
+    # Hour by hour, every station in each (T-4410): a batch repeats one id as few times as it can,
+    # so the broker's rounds of repeats stay few and a cut batch still leaves whole hours.
+    keys = [(e["dateObserved"]["value"], e["id"]) for e in out]
+    ids = [e["id"] for e in out]
+    assert keys == sorted(keys) and ids.index(URN + "SK0016A") < len(ids) - 1 - ids[::-1].index(URN + "SK0001A")
 
 
 @requires_docker
