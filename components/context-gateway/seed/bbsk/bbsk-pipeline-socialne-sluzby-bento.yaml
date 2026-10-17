@@ -30,7 +30,7 @@ pipeline:
           "id": "urn:ngsi-ld:%v:%v:%v:%v-%v".format("PointOfInterest", "bbsk.sk", env("JC_SPACE"), p."IČO", [p."Druh_poskytovanej_sociálnej_slu", p."Forma_poskytovanej_sociálnej_sl", p."Cieľova_skupina_fyzických_osôb_", p."Ulica_sociálnej_služby", p."Obec_sociálnej_služby"].map_each(v -> v.or("").string()).join("|").hash("xxhash64").string()),
           "type": "PointOfInterest",
           "category": { "type": "Property", "value": ["socialService"] },
-          "name": { "type": "LanguageProperty", "languageMap": { "sk": "%v, %v".format(p."Druh_poskytovanej_sociálnej_slu".trim(), p."Obchodné_meno".or("").trim()).trim_suffix(", ") } },
+          "name": { "type": "Property", "value": "%v, %v".format(p."Druh_poskytovanej_sociálnej_slu".trim(), p."Obchodné_meno".or("").trim()).trim_suffix(", ") },
           "serviceKind": { "type": "Property", "value": p."Druh_poskytovanej_sociálnej_slu".trim() },
           "serviceForm": if p."Forma_poskytovanej_sociálnej_sl".or("").apply("form") == null { null } else { { "type": "Property", "value": p."Forma_poskytovanej_sociálnej_sl".apply("form") } },
           "targetGroup": if p."Cieľova_skupina_fyzických_osôb_".or("").trim() == "" { null } else { { "type": "Property", "value": p."Cieľova_skupina_fyzických_osôb_".trim() } },

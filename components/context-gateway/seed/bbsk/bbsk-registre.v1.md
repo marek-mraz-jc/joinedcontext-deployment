@@ -21,11 +21,12 @@ Specialises `Entity`.
 
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
-| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
+| `name` | Property | `string` |  |  | `schema:name` | The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is (T-4523). |
 | `areaCode` | Property | `string` | yes |  | `jc:areaCode` | The area's statistical code: LAU 1 (`SK0321`) for a district, LAU 2 (`SK0321508438`) for a municipality, the same codes the Statistical Office's cubes carry in `refArea`. |
 | `divisionLevel` | Property | [`DivisionLevel`](#divisionlevel) | yes |  | `jc:divisionLevel` | Which tier of the territorial division the area is. |
 | `refParentArea` | Relationship | [`AdministrativeArea`](#administrativearea) |  |  | `jc:refParentArea` | The district a municipality lies in; absent on a district. |
 | `surfaceArea` | Property | `float` |  | m2 | `jc:surfaceArea` | The area's surface as the cadastre states it. |
+| `isPartOf` | Property | `uri` |  |  | `jc:isPartOf` | The catalogue dataset the record belongs to, which tells the region's districts from its municipalities in one type (T-4523). |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `childAreas` | Relationship | [`AdministrativeArea`](#administrativearea) (list) |  |  | `jc:childAreas` | The municipalities of a district, computed from their refParentArea and never stored. |
@@ -45,7 +46,7 @@ Specialises `Entity`.
 
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
-| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
+| `name` | Property | `string` |  |  | `schema:name` | The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is (T-4523). |
 | `preferredLabel` | Property | `string` |  |  | `sdm-cpsv:preferredLabel` | The organisation's official name, as CPSV-AP's PublicOrganization requires it. |
 | `spatial` | Property | `string` (list) |  |  | `sdm-cpsv:spatial` | The municipality the organisation is in, by name, as CPSV-AP's PublicOrganization requires it. |
 | `alternateName` | Property | `string` |  |  | `schema:alternateName` | The shorter name the organisation goes by, when it differs from the official one. |
@@ -70,7 +71,7 @@ Specialises `Entity`.
 
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
-| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
+| `name` | Property | `string` |  |  | `schema:name` | The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is (T-4523). |
 | `category` | Property | [`PlaceCategory`](#placecategory) (list) | yes |  | `sdm-poi:category` | What kind of place it is: `hospital` or `socialService`. The two registers share the Smart Data Model PointOfInterest, and an application asks for one with `q=category=="hospital"` (T-4329). |
 | `hospitalKind` | Property | [`HospitalKind`](#hospitalkind) |  |  | `jc:hospitalKind` | Whether the hospital is a general one or specialises in some fields. |
 | `operatorName` | Property | `string` |  |  | `jc:operatorName` | The legal person that runs it, as the register names it. |
@@ -114,7 +115,7 @@ Specialises `Entity`.
 
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
-| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
+| `name` | Property | `string` |  |  | `schema:name` | The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is (T-4523). |
 | `bridgeCode` | Property | `string` | yes |  | `jc:bridgeCode` | The bridge's number in the national road databank (Cestná databanka), such as `M9673`. |
 | `roadClass` | Property | [`RoadClass`](#roadclass) |  |  | `jc:roadClass` | The class of the road the bridge carries. |
 | `roadNumber` | Property | `string` |  |  | `jc:roadNumber` | The number of the road the bridge carries, such as `66b`. |

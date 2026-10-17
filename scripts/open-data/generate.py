@@ -586,10 +586,12 @@ ENABLED = True
 # 2 runs every other pipeline again (T-4347's halves) should the runner need it.
 HALVES = 1
 
-def schedule(e: dict, i: int) -> str:
+def schedule(e: dict, i: int, day: int) -> str:
+    """Pipeline i's cron: its own minute, on the day of its dataset's first part (`day`), so the
+    parts of a split dataset are written the same night, not on different weekdays (T-4517)."""
     minute, hour = (i * 7) % 60, 1 + (i * 7) // 60 % 5
-    return {"P1D": f"{minute} {hour} * * *", "P1W": f"{minute} {hour} * * {i % 7}",
-            "P1M": f"{minute} {hour} {1 + i % 28} * *"}[e["refresh"]]
+    return {"P1D": f"{minute} {hour} * * *", "P1W": f"{minute} {hour} * * {day % 7}",
+            "P1M": f"{minute} {hour} {1 + day % 28} * *"}[e["refresh"]]
 
 
 def manifest(comment: str, doc: dict) -> str:
@@ -754,7 +756,9 @@ def project_files(project: str, entries: list[dict], names: dict[str, str]) -> d
     taken = [slug for _, slug in pipelines]
     if len(set(taken)) != len(taken):
         sys.exit(f"{project}: two pipelines take one name: {sorted({x for x in taken if taken.count(x) > 1})}")
+    first: dict[str, int] = {}
     for i, (e, slug) in enumerate(pipelines):
+        first.setdefault(e["name"], i)
         rows = e["source"]["rows"]
         files[f"{pre}datasource-{slug}.yaml"] = manifest(
             f"\"{e['title']}\", {e['dataset']}: {rows} rows when mapped. {e['dataProvider']},\n"
@@ -767,7 +771,7 @@ def project_files(project: str, entries: list[dict], names: dict[str, str]) -> d
         files[f"{pre}pipeline-{slug}.yaml"] = manifest(
             f"One {e['type']} per row of \"{e['title']}\" (T-4255); {e.get('note') or 'generated from the T-4254 mapping'}.",
             {**head, "kind": "Pipeline", "metadata": meta(f"od-{slug}", {"sk": e["title"][:120], "en": e["title"][:120]}),
-             "spec": {"class": "scheduled", "enabled": ENABLED and i % HALVES == 0, "schedule": schedule(e, i),
+             "spec": {"class": "scheduled", "enabled": ENABLED and i % HALVES == 0, "schedule": schedule(e, i, first[e["name"]]),
                       "source": {"dataSourceRef": {"kind": "DataSource", "name": f"od-{slug}"}},
                       "targetEndpoint": f"urn:ngsi-ld:Endpoint:{p['domain']}:{space}:{space}",
                       # Each od pipeline alone writes its rows (the id carries its slug), so it
@@ -991,8 +995,12 @@ def distributions(mapped: list[dict], whole: list[dict]) -> str:
                                                  "filtered": True}
     for e in whole:
         slug, kind = existing_door(e)
+        # A seed that shares its door and type with another dataset tells them apart by `isPartOf`
+        # (bbsk obce and okresy, both AdministrativeArea: T-4523), so the catalogue filters on it.
+        marked = f'"isPartOf": {{ "type": "Property", "value": "{e["dataset"]}" }}'
+        filtered = any(marked in b.read_text() for b in (SEED / e["org"]).glob("*-bento.yaml"))
         rows[e["dataset"].rsplit("/", 1)[1]] = {"endpoint": slug, "type": kind, "dataset": e["dataset"],
-                                                 "location": located(e), "series": False, "filtered": False}
+                                                 "location": located(e), "series": False, "filtered": filtered}
     # The ŠÚ SR rows are scripts/open-data/datacube.py's (T-4390): kept as committed.
     rows.update({k: v for k, v in json.loads(DISTRIBUTIONS.read_text()).items() if k.startswith("susr-")})
     return "{\n" + ",\n".join(f"  {json.dumps(k)}: {json.dumps(v, ensure_ascii=False)}" for k, v in sorted(rows.items())) + "\n}\n"

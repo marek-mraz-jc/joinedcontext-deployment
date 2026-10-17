@@ -994,7 +994,7 @@ datasets:
     - Pohlavie
   observedAt: null
   space: banskabystrica-otvorene-data
-  refresh: P1M
+  refresh: P1D
   dataProvider: Mesto Banská Bystrica
   license: cc-by
   dataset: https://data.dev.joinedcontext.com/dataset/bb-pocet-obcanov-podla-dna-narodenia
@@ -1025,7 +1025,7 @@ datasets:
     - Vek
   observedAt: null
   space: banskabystrica-otvorene-data
-  refresh: P1M
+  refresh: P1D
   dataProvider: Mesto Banská Bystrica
   license: cc-by
   dataset: https://data.dev.joinedcontext.com/dataset/bb-pocet-obcanov-podla-veku

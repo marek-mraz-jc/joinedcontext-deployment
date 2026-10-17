@@ -13,5 +13,13 @@ metadata:
     en: "Every public dataset of the platform as an NGSI-LD Dataset entity and each of its public Endpoints as a DataService: title, description, theme, place, time range, entity types and counts."
 spec:
   urnSegment: catalog
+  dataModelRef: { kind: DataModel, name: catalog }
   isSandbox: false
   defaultLocale: sk
+  # The reconciler rewrites each record on every change: the current state is the catalogue, so no
+  # history (DM-82, T-4275).
+  retention:
+    - entityType: Dataset
+      history: "off"
+    - entityType: DataService
+      history: "off"

@@ -31,6 +31,15 @@
           "type": "string",
           "x-ngsi-ld-kind": "Property"
         },
+        "isPartOf": {
+          "description": "The catalogue dataset the record belongs to, which tells the region's districts from its municipalities in one type (T-4523).",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "location": {
           "description": "Where the entity is, as GeoJSON geometry.",
           "properties": {
@@ -60,15 +69,12 @@
           "x-ngsi-ld-kind": "GeoProperty"
         },
         "name": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "The name, per language, as the publisher writes it.",
+          "description": "The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is (T-4523).",
           "type": [
-            "object",
+            "string",
             "null"
           ],
-          "x-ngsi-ld-kind": "LanguageProperty"
+          "x-ngsi-ld-kind": "Property"
         },
         "observedAt": {
           "description": "When the observation the entity reports was made.",
@@ -213,15 +219,12 @@
           "x-ngsi-ld-kind": "Property"
         },
         "name": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "The name, per language, as the publisher writes it.",
+          "description": "The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is (T-4523).",
           "type": [
-            "object",
+            "string",
             "null"
           ],
-          "x-ngsi-ld-kind": "LanguageProperty"
+          "x-ngsi-ld-kind": "Property"
         },
         "observedAt": {
           "description": "When the observation the entity reports was made.",
@@ -537,15 +540,12 @@
           "x-ngsi-ld-kind": "Property"
         },
         "name": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "The name, per language, as the publisher writes it.",
+          "description": "The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is (T-4523).",
           "type": [
-            "object",
+            "string",
             "null"
           ],
-          "x-ngsi-ld-kind": "LanguageProperty"
+          "x-ngsi-ld-kind": "Property"
         },
         "observedAt": {
           "description": "When the observation the entity reports was made.",
@@ -751,15 +751,12 @@
           "x-ngsi-ld-kind": "GeoProperty"
         },
         "name": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "The name, per language, as the publisher writes it.",
+          "description": "The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is (T-4523).",
           "type": [
-            "object",
+            "string",
             "null"
           ],
-          "x-ngsi-ld-kind": "LanguageProperty"
+          "x-ngsi-ld-kind": "Property"
         },
         "observedAt": {
           "description": "When the observation the entity reports was made.",

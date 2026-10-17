@@ -17,7 +17,7 @@ pipeline:
           "id": "urn:ngsi-ld:%v:%v:%v:%v".format("PointOfInterest", "bbsk.sk", env("JC_SPACE"), p.IdZZ),
           "type": "PointOfInterest",
           "category": { "type": "Property", "value": ["hospital"] },
-          "name": { "type": "LanguageProperty", "languageMap": { "sk": p."Vlastný_názov_zariadenia".or(p."Názov_poskytovateľa").string().trim() } },
+          "name": { "type": "Property", "value": p."Vlastný_názov_zariadenia".or(p."Názov_poskytovateľa").string().trim() },
           "hospitalKind": { "type": "Property", "value": p.Druh_zariadenia.apply("kind") },
           "operatorName": if p."Názov_poskytovateľa".or("").trim() == "" { null } else { { "type": "Property", "value": p."Názov_poskytovateľa".trim() } },
           "legalId": if p."IČO".or("").string().re_match("^[0-9]{8}$") { { "type": "Property", "value": p."IČO" } } else { null },
