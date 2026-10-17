@@ -209,19 +209,19 @@ def test_a_converted_dataset_lists_the_platform_apis_and_its_model_and_an_unconv
     root = f"https://dev.joinedcontext.com/api/endpoint/{entry['endpoint']}/"
     urls = [r["url"] for r in apis]
     assert [u.split("?")[0].removeprefix(root) for u in urls[:-1]] == [
-        "ngsi-ld/v1/entities", "file.geojson", "file.csv", "file.json", "file.xlsx",
+        "ngsi-ld/v1/entities", "file.geojson", "file.csv", "file.json", "file.xlsx", "file.parquet",
         "ogc/features/collections/PointOfInterest/items", "odata/v4/PointOfInterest", "mcp"]
     assert apis[-1]["url"] == "wss://dev.joinedcontext.com/api/endpoint/" + entry["endpoint"] + "/ws"
     dataset = quote(entry["dataset"], safe="")
     mine = "?type=PointOfInterest&q=isPartOf%3D%3D%22" + dataset + "%22"
     assert urls[0].endswith(mine) and urls[2].endswith(mine)
     # OGC API Features and OData keep the same rows in their own syntax (T-4289).
-    assert urls[5].endswith("/items?isPartOf=" + dataset)
-    assert urls[6].endswith("/PointOfInterest?%24filter=isPartOf%20eq%20%27" + dataset + "%27")
-    assert all(r["description"].startswith("These rows") for r in apis[:7])
+    assert urls[6].endswith("/items?isPartOf=" + dataset)
+    assert urls[7].endswith("/PointOfInterest?%24filter=isPartOf%20eq%20%27" + dataset + "%27")
+    assert all(r["description"].startswith("These rows") for r in apis[:8])
     # The labels jcctl gives an Endpoint's own dataset, so the format facet counts both (T-4324).
     assert [r["format"] for r in apis] == [
-        "NGSI-LD", "GeoJSON", "CSV", "JSON", "XLSX", "OGCFEAT", "OData", "MCP", "WebSocket"]
+        "NGSI-LD", "GeoJSON", "CSV", "JSON", "XLSX", "PARQUET", "OGCFEAT", "OData", "MCP", "WebSocket"]
     assert all("conforms_to" in r for r in apis if r["format"] in ("NGSI-LD", "GeoJSON", "OGCFEAT", "OData", "MCP"))
     assert all(r["description"].startswith("Every PointOfInterest") for r in apis if "?" not in r["url"])
     assert [r["format"] for r in model] == [

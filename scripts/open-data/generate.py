@@ -87,8 +87,8 @@ PROJECTS = {
 }
 # Every standard the open data is served in (T-4279). No `sta`: no generated type keeps a measured
 # value over time (T-4275 keeps no history for them). No `mqtt` until 8883 opens (T-3996); the
-# WebSocket pushes changes. No `parquet`: the platform has no such representation.
-REPRESENTATIONS = ["ngsi-ld", "geojson", "csv", "json", "xlsx", "websocket", "ogc-features", "odata", "mcp"]
+# WebSocket pushes changes. `parquet` since T-4287 (EP-119).
+REPRESENTATIONS = ["ngsi-ld", "geojson", "csv", "json", "xlsx", "parquet", "websocket", "ogc-features", "odata", "mcp"]
 # What the catalogue's harvests read to list each converted dataset's standard APIs (T-4279).
 DISTRIBUTIONS = ROOT / "charts/ckan/files/od-datasets.json"
 # The attribution every entity carries (Open data integration rules §3), declared in the model.
