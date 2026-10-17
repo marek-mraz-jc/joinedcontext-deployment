@@ -17,7 +17,9 @@
 # - `session.*` are the flat lua-resty-session 4 keys APISIX 3.17 validates; a nested
 #   `session.cookie.path` is accepted and ignored, and the cookie would land on `/`.
 #
-# The session cookie is host-only (no `cookie_domain`), `Secure`, `HttpOnly`, `SameSite=Lax`;
+# The session cookie is `__Host-`, host-only on `/` (no `cookie_domain`), `Secure`, `HttpOnly`,
+# `SameSite=Lax`: an App may set a cookie for the parent domain, and the browser keeps no such
+# cookie under a `__Host-` name, so none is planted beside the real one (T-4395, AP-29);
 # its lifetime is bound to the realm's SSO idle time (3600 s) and max lifespan (36000 s), never
 # beyond them (AP-29). The Portal host and the apps surface use different cookie names so a
 # browser never presents the wrong session to a route.
@@ -76,7 +78,7 @@ portal-ui:
       set_refresh_token_header: false
       session:
         secret: ${OIDC_SESSION_SECRET}
-        cookie_name: jc_edge
+        cookie_name: __Host-jc_edge
         cookie_path: /
         cookie_secure: true
         cookie_http_only: true
@@ -165,7 +167,7 @@ portal-public:
       set_refresh_token_header: false
       session:
         secret: ${OIDC_SESSION_SECRET}
-        cookie_name: jc_edge
+        cookie_name: __Host-jc_edge
         cookie_path: /
         cookie_secure: true
         cookie_http_only: true
@@ -325,7 +327,7 @@ portal-api:
       set_refresh_token_header: false
       session:
         secret: ${OIDC_SESSION_SECRET}
-        cookie_name: jc_edge
+        cookie_name: __Host-jc_edge
         cookie_path: /
         cookie_secure: true
         cookie_http_only: true
@@ -573,8 +575,9 @@ apps-surface:
       rejected_code: 429
       policy: local
       show_limit_quota_header: true
-    # Cookie path /apps/ and its own cookie name (AP-29); the callback and the logout path are
-    # under /apps/ so this route owns them. After a logout the person lands on the Portal, a
+    # Its own cookie name (AP-29), on `/`, which a `__Host-` cookie must be (T-4395); the
+    # Portal's reconciler sets the same on each App's own host. The callback and the logout path
+    # are under /apps/ so this route owns them. After a logout the person lands on the Portal, a
     # URI the client lists, where Keycloak's post-logout check accepts it.
     openid-connect:
       client_id: edge
@@ -594,8 +597,8 @@ apps-surface:
       set_refresh_token_header: false
       session:
         secret: ${OIDC_SESSION_SECRET}
-        cookie_name: jc_edge_apps
-        cookie_path: /apps/
+        cookie_name: __Host-jc_edge_apps
+        cookie_path: /
         cookie_secure: true
         cookie_http_only: true
         cookie_same_site: Lax

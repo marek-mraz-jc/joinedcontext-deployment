@@ -207,7 +207,7 @@ context-space-portal:
       set_refresh_token_header: false
       session:
         secret: ${OIDC_SESSION_SECRET}
-        cookie_name: jc_edge
+        cookie_name: __Host-jc_edge
         cookie_path: /
         cookie_secure: true
         cookie_http_only: true
@@ -426,7 +426,7 @@ context-endpoint-portal:
       set_refresh_token_header: false
       session:
         secret: ${OIDC_SESSION_SECRET}
-        cookie_name: jc_edge
+        cookie_name: __Host-jc_edge
         cookie_path: /
         cookie_secure: true
         cookie_http_only: true
