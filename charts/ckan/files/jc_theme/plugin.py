@@ -559,12 +559,19 @@ def _is_url(value):
 
 
 def _sources(value):
-    """The http addresses of a `source` extra: a JSON list, or one address; anything else none."""
+    """(address, title) of each http source in a `source` extra: a JSON list of `{url, title}`
+    (T-4436) or of addresses, or one address; a source without a title shows its address."""
     try:
         items = json.loads(value) if isinstance(value, str) and value.startswith("[") else [value]
     except ValueError:
         return []
-    return [item for item in items if _is_url(item)] if isinstance(items, list) else []
+    out = []
+    for item in items if isinstance(items, list) else []:
+        url = item.get("url") if isinstance(item, dict) else item
+        if _is_url(url):
+            title = item.get("title") if isinstance(item, dict) else None
+            out.append((url, title if isinstance(title, str) and title else url))
+    return out
 
 
 _DAY = datetime.timedelta(days=1)
@@ -630,8 +637,8 @@ def jc_about(pkg):
     # (T-4417): `source` is the JSON list of IRIs ckanext-dcat reads as dct:source.
     if extras.get("rights"):
         rows.append((jc_t("attribution"), extras["rights"], None))
-    for url in _sources(extras.get("source")):
-        rows.append((jc_t("source"), url, url))
+    for url, title in _sources(extras.get("source")):
+        rows.append((jc_t("source"), title, url))
     groups = [g.get("display_name") or g.get("title") or g.get("name") for g in pkg.get("groups") or []]
     if groups:
         rows.append((jc_t("topic"), ", ".join(g for g in groups if g), None))

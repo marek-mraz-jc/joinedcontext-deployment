@@ -11,11 +11,11 @@ jc:Entity a owl:Class,
         linkml:ClassDefinition ;
     rdfs:label "Entity" ;
     rdfs:subClassOf [ a owl:Restriction ;
-            owl:cardinality 1 ;
-            owl:onProperty jc:id ],
-        [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:observedAt ],
+        [ a owl:Restriction ;
+            owl:cardinality 1 ;
+            owl:onProperty jc:id ],
         [ a owl:Restriction ;
             owl:cardinality 1 ;
             owl:onProperty jc:type ],
@@ -32,34 +32,61 @@ jc:RoadStructure a owl:Class,
     rdfs:label "RoadStructure" ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:spravcaMostu ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:spravca ],
+            owl:onProperty jc:vynimocnaZatazitelnostT ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:material ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
+            owl:onProperty jc:name ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:vlastnikMostu ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:spravcaMostu ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:druhZabezpecenia ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
             owl:onProperty jc:dataProvider ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:triedaPK ],
+            owl:onProperty jc:jICZSR ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:vynimocnaZatazitelnostT ],
+            owl:onProperty jc:vlastnik ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:minVyskaPodjazdu ],
+            owl:onProperty jc:rokStavby ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:predmetPremostenia ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:celkovaDlzkaPodjazdu ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:vlastnikUseku ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:typSpravcu ],
+            owl:onProperty jc:materialPriepustu ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:druhZabezpecenia ],
+            owl:onProperty jc:okres ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:druhKonstrukcie ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:triedaPK ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:spravcaUseku ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:cisloPK ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:najblizsiKM ],
@@ -68,61 +95,34 @@ jc:RoadStructure a owl:Class,
             owl:onProperty jc:vyhradnaZatazitelnostT ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:celkovaDlzkaPodjazdu ],
+            owl:onProperty jc:source ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:stavebnoTechnickyStav ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:jICZSR ],
+            owl:onProperty jc:typSpravcu ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:spravcaUseku ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:materialPriepustu ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:name ],
+            owl:onProperty jc:minVyskaPodjazdu ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:typPodjazdu ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:cisloPK ],
+            owl:onProperty jc:isPartOf ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:pocetKolaji ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:isPartOf ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:vlastnikMostu ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:druhKonstrukcie ],
+            owl:onProperty jc:normanaZatazitelnostT ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:kraj ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:predmetPremostenia ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:okres ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:source ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:rokStavby ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:vlastnik ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:normanaZatazitelnostT ],
+            owl:onProperty jc:spravca ],
         jc:Entity ;
     skos:definition "An underpass, culvert, expansion joint or level crossing on a regional road." ;
     skos:exactMatch jc:RoadStructure ;

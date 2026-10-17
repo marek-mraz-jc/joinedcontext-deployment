@@ -34,6 +34,7 @@ import base64
 import hashlib
 import json
 import math
+import os
 import re
 import secrets
 import subprocess
@@ -1032,22 +1033,26 @@ def main() -> None:
         p.write_text(text)
     if "--artifacts" in sys.argv:
         python, tools = sys.argv[sys.argv.index("--artifacts") + 1:][:2]
+        # A generator writes some lists (SHACL's ignoredProperties) in set order, which Python's
+        # string hashing reshuffles per process; one seed keeps them in one order (T-4437).
+        env = {**os.environ, "PYTHONHASHSEED": "0"}
         for project in PROJECTS:
             model = SEED / project / f"{project}-otvorene-data.linkml.yaml"
             stem = str(model).removesuffix(".linkml.yaml")
             # The four artifacts a published model commits (DM-02, T-4425).
             for gen, out in (("gen_json_schema.py", f"{stem}.v1.schema.json"), ("gen_context.py", f"{stem}.v1.context.jsonld"),
                              ("gen_docs.py", f"{stem}.v1.md"), ("gen_example.py", f"{stem}.v1.example.jsonld")):
-                subprocess.run([python, f"{tools}/{gen}", str(model), "-o", out], check=True)
+                subprocess.run([python, f"{tools}/{gen}", str(model), "-o", out], check=True, env=env)
         for model in sorted(EXTENSIONS.glob("*/model.linkml.yaml")):
             d = model.parent
             (d / "examples").mkdir(exist_ok=True)
             for args, out in ((["gen_context.py"], "context.jsonld"), (["gen_rdf_artifacts.py", "--artifact", "shacl"], "model.shacl.ttl"),
                               (["gen_rdf_artifacts.py", "--artifact", "owl"], "model.owl.ttl"), (["gen_docs.py"], "model.md"),
                               (["gen_example.py"], "examples/example.json")):
-                subprocess.run([python, f"{tools}/{args[0]}", str(model), *args[1:], "-o", str(d / out)], check=True)
+                subprocess.run([python, f"{tools}/{args[0]}", str(model), *args[1:], "-o", str(d / out)], check=True, env=env)
             # RDF: the model itself as triples, LinkML's own serialization of it with model-tools' imports merged.
-            subprocess.run([python, "-c", RDF, tools, str(model), str(d / "model.rdf.ttl")], check=True)
+            subprocess.run([python, "-c", RDF, tools, str(model), str(d / "model.rdf.ttl")], check=True, env=env)
+            subprocess.run([python, "-c", CANONICAL, *(str(d / f"model.{a}.ttl") for a in ("shacl", "owl", "rdf"))], check=True, env=env)
             example = json.loads((d / "examples/example.json").read_text())
             # model-tools fills a text slot with its own name; a uri slot needs a URI, or a validator
             # that checks formats (jsonschema with rfc3987) refuses the example (T-4338).
@@ -1072,6 +1077,24 @@ text = RDFGenerator(yaml_dumper.dumps(view.schema)).serialize()
 # The generation time is the only line that differs between two runs of the same model.
 text = re.sub(r"\\n\\s*linkml:generation_date [^\\n]*", "", text)
 open(sys.argv[3], "w", encoding="utf-8").write(text)
+"""
+
+
+# The LinkML generators write the same graph with its blank nodes and restrictions in a new order
+# each run (T-4437): one canonical Turtle per graph, so a regeneration changes a file only when
+# the model changed. Blank nodes get labels from their content, and rdflib sorts what it writes.
+CANONICAL = """\
+import sys
+from rdflib import Graph
+from rdflib.compare import to_canonical_graph
+for path in sys.argv[1:]:
+    graph = Graph().parse(path, format="turtle")
+    out = Graph(bind_namespaces="none")
+    for prefix, namespace in sorted(graph.namespaces()):
+        out.bind(prefix, namespace, override=True, replace=True)
+    for triple in to_canonical_graph(graph):
+        out.add(triple)
+    open(path, "w", encoding="utf-8").write(out.serialize(format="turtle"))
 """
 
 

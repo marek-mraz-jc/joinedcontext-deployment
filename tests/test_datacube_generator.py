@@ -235,14 +235,16 @@ def test_every_endpoint_names_its_tables_as_sources_a_role_contact_and_the_od_re
     spec_od = importlib.util.spec_from_file_location("generate", ROOT / "scripts/open-data/generate.py")
     od = importlib.util.module_from_spec(spec_od)
     spec_od.loader.exec_module(od)
-    assert datacube.REPRESENTATIONS == od.REPRESENTATIONS
+    # od's surfaces in od's order, less the live ones (websocket, T-4441) and the series one
+    # (sta, T-4288: only datasets with an observedAt column).
+    assert datacube.REPRESENTATIONS == [r for r in od.REPRESENTATIONS if r not in ("websocket", "sta")]
     files, _ = generate(tmp_path)
     by = {d["code"]: d for d in items()}
     endpoints = {p.parent.name: yaml.safe_load(t) for p, t in files.items() if p.name == "endpoint.yaml"}
     assert endpoints.keys() == {t["name"] for t in FIXTURE_TOPICS}
     for topic in FIXTURE_TOPICS:
         catalog = endpoints[topic["name"]]["spec"]["catalog"]
-        assert endpoints[topic["name"]]["spec"]["enabledRepresentations"] == od.REPRESENTATIONS
+        assert endpoints[topic["name"]]["spec"]["enabledRepresentations"] == datacube.REPRESENTATIONS
         assert catalog["contactPoint"] == {"name": "joinedcontext platform", "email": "hello@joinedcontext.com"}
         assert [s["url"] for s in catalog["source"]] == [datacube.dataset_url(by[c]) for c in topic["cubes"]]
         for s, code in zip(catalog["source"], topic["cubes"]):
@@ -289,3 +291,22 @@ def test_the_limit_refuses_what_datacube_answers_too_many_results():
     empty; sp1838ms (9,828) came back whole. The limit sits between them, and no topic names zo0011ms."""
     assert 9_828 <= datacube.CUBE_LIMIT < 12_096
     assert all("zo0011ms" not in t["cubes"] for t in datacube.TOPICS)
+
+
+# The operations a representation needs the space's read Policies to grant (API/07): the WebSocket
+# fan-out subscribes on the caller's behalf, and the broker answers 405 without the grant (T-4441).
+NEEDS = {"websocket": {"createSubscription", "retrieveSubscription", "updateSubscription", "deleteSubscription"}}
+
+
+def test_no_susr_endpoint_enables_a_representation_its_policies_cannot_serve():
+    """T-4441: an advertised surface the Policy cannot serve is a dead link in CKAN."""
+    for folder in committed():
+        enabled = yaml.safe_load((folder / "endpoint.yaml").read_text())["spec"]["enabledRepresentations"]
+        granted = set()
+        for policy in folder.glob("policy-*.yaml"):
+            spec_ = yaml.safe_load(policy.read_text())["spec"]
+            if spec_["assignee"].get("kind") == "role":
+                granted |= set(spec_["operations"])
+        for representation in enabled:
+            missing = NEEDS.get(representation, set()) - granted
+            assert not missing, f"{folder.name}: {representation} needs {sorted(missing)}"
