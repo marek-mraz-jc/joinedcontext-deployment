@@ -9,7 +9,7 @@ metadata:
     en: Kontakty na miestne samosprávy v BBK
 spec:
   class: scheduled
-  enabled: false
+  enabled: true
   schedule: 59 2 * * 3
   source:
     dataSourceRef:

@@ -9,7 +9,7 @@ metadata:
     en: Prírastky a úbytky občanov za jednotlivé roky
 spec:
   class: scheduled
-  enabled: false
+  enabled: true
   schedule: 17 2 12 * *
   source:
     dataSourceRef:

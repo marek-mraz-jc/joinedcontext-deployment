@@ -9,7 +9,7 @@ metadata:
     en: Stredné školy v BBK, odbory a počet študentov (2023)
 spec:
   class: scheduled
-  enabled: false
+  enabled: true
   schedule: 3 4 * * 6
   source:
     dataSourceRef:
