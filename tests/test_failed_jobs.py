@@ -14,8 +14,12 @@ spec.loader.exec_module(failed_jobs)
 
 def job(name, cronjob, created, **status):
     owners = [{"kind": "CronJob", "name": cronjob}] if cronjob else []
-    if status.get("failed"):
-        status["conditions"] = [{"type": "Failed", "reason": "BackoffLimitExceeded"}]
+    if status.pop("retrying", False):
+        pass
+    elif status.get("succeeded"):
+        status["conditions"] = [{"type": "Complete", "status": "True"}]
+    elif status.get("failed"):
+        status["conditions"] = [{"type": "Failed", "status": "True", "reason": "BackoffLimitExceeded"}]
     return {"metadata": {"name": name, "creationTimestamp": created, "ownerReferences": owners}, "status": status}
 
 
@@ -41,3 +45,11 @@ def test_the_script_fails_only_on_a_failed_cronjob():
     assert red.returncode == 1 and "CronJob h: its newest Job h-1 failed" in red.stdout
     green = run([])
     assert green.returncode == 0 and green.stdout == ""
+
+
+def test_a_job_retrying_under_its_backoff_limit_is_not_failed_yet():
+    jobs = {"items": [
+        job("h-2", "h", "2026-10-17T03:23:00Z", active=1, failed=1, retrying=True),
+        job("h-1", "h", "2026-10-16T03:23:00Z", succeeded=1),
+    ]}
+    assert failed_jobs.failed(jobs) == []

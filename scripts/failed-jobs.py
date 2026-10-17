@@ -10,22 +10,30 @@ import json
 import sys
 
 
+def finished(status):
+    """The Job's Complete or Failed condition that holds, or None while it runs or retries."""
+    return next((c for c in status.get("conditions") or []
+                 if c.get("type") in ("Complete", "Failed") and c.get("status") == "True"), None)
+
+
 def failed(jobs):
     """(cronjob, job, reason) for every CronJob whose newest finished Job failed."""
     newest = {}
     for job in jobs.get("items") or []:
         meta, status = job.get("metadata") or {}, job.get("status") or {}
         owner = next((o.get("name") for o in meta.get("ownerReferences") or [] if o.get("kind") == "CronJob"), None)
-        if owner is None or not (status.get("succeeded") or status.get("failed")):
+        # finished is the Job's own Complete or Failed condition: `failed` counts failed pods,
+        # which a Job retrying under its backoffLimit has too
+        if owner is None or finished(status) is None:
             continue
         if owner not in newest or meta.get("creationTimestamp", "") > newest[owner][0]:
             newest[owner] = (meta.get("creationTimestamp", ""), meta.get("name"), status)
     out = []
     for owner, (_, name, status) in sorted(newest.items()):
-        if status.get("succeeded"):
+        condition = finished(status)
+        if condition.get("type") == "Complete":
             continue
-        reason = next((c.get("reason") for c in status.get("conditions") or [] if c.get("type") == "Failed"), None)
-        out.append((owner, name, reason or "Failed"))
+        out.append((owner, name, condition.get("reason") or "Failed"))
     return out
 
 
