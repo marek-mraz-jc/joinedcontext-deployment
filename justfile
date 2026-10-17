@@ -490,6 +490,9 @@ dev-smoke:
 	# A real forge login as the demo people (T-1422): the button can fail with the rest green.
 	echo "forge login"
 	./scripts/smoke-forge-login.sh "https://{{ dev_domain }}" || rc=1
+	# A CronJob whose newest run failed (T-4385): a harvest dead since the night is no green smoke.
+	echo "cron jobs"
+	kubectl -n dev get jobs -o json | python3 scripts/failed-jobs.py || rc=1
 	exit "$rc"
 
 # Validate dev against main (T-2799): drift, image pins and signatures, NetworkPolicy probes,

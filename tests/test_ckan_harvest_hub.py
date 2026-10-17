@@ -8,6 +8,7 @@ that answers the action API in-process. The render cases check what the CronJob 
 import importlib.util
 import json
 import threading
+import urllib.error
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import quote
@@ -438,3 +439,71 @@ def test_a_fetch_is_refused_off_the_allowed_hosts_and_so_is_a_redirect_there():
     with pytest.raises(harvest.SourceError, match="redirect to 169.254.169.254"):
         handler.redirect_request(request, None, 302, "Found", {}, "http://169.254.169.254/latest/")
     assert handler.redirect_request(request, None, 302, "Found", {}, "https://opendata.bbsk.sk/b") is not None
+
+
+# T-4385: a connection reset on the gateway during a mesh restart (`[Errno 104]`) failed the
+# night's bbsk and banskabystrica harvests whole. A reset, a timeout and a 5xx are read again
+# after a wait; a 4xx is the answer; a gateway that stays down still raises, so nothing is withdrawn.
+class _Answer:
+    def __init__(self, body):
+        self.body = body
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def read(self, *args):
+        return self.body
+
+
+def _gateway(monkeypatch, failures):
+    asked, waited = [], []
+
+    def urlopen(request, timeout):
+        asked.append(request.full_url)
+        if failures:
+            failure = failures.pop(0)
+            if isinstance(failure, int):
+                raise urllib.error.HTTPError(request.full_url, failure, "x", {}, None)
+            raise failure
+        return _Answer(json.dumps({"models": [{"version": 1, "types": ["Bridge"]}]}).encode())
+
+    monkeypatch.setattr(harvest._request, "urlopen", urlopen)
+    monkeypatch.setattr(harvest._time, "sleep", waited.append)
+    monkeypatch.setattr(harvest, "_OD_MODELS", {})
+    monkeypatch.setattr(harvest, "OD_GATEWAY", "https://dev.example")
+    return asked, waited
+
+
+@pytest.mark.parametrize("failure", [
+    ConnectionResetError(104, "Connection reset by peer"),
+    urllib.error.URLError(ConnectionResetError(104, "Connection reset by peer")),
+    TimeoutError("timed out"),
+    503,
+])
+def test_a_broken_read_of_the_models_is_read_again(monkeypatch, failure):
+    asked, waited = _gateway(monkeypatch, [failure, failure])
+    assert harvest.od_models("slug")[0]["types"] == ["Bridge"]
+    assert len(asked) == 3 and waited == list(harvest.OD_RETRY_WAITS[:2])
+
+
+def test_a_refusal_is_not_asked_again(monkeypatch):
+    asked, waited = _gateway(monkeypatch, [404])
+    with pytest.raises(urllib.error.HTTPError):
+        harvest.od_models("slug")
+    assert len(asked) == 1 and waited == []
+
+
+def test_a_gateway_that_stays_down_still_fails_the_run(monkeypatch):
+    attempts = len(harvest.OD_RETRY_WAITS) + 1
+    asked, waited = _gateway(monkeypatch, [ConnectionResetError(104, "reset")] * attempts)
+    with pytest.raises(ConnectionResetError):
+        harvest.od_models("slug")
+    assert len(asked) == attempts and waited == list(harvest.OD_RETRY_WAITS)
+
+
+def test_a_failed_harvest_run_is_run_again():
+    chart = (ROOT / "charts/ckan/templates/harvest.yaml").read_text()
+    assert "backoffLimit: 3" in chart
