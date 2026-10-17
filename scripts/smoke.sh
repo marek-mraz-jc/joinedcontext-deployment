@@ -133,6 +133,24 @@ else
 	ko "workloads not ready"; tail -20 /tmp/smoke-rollouts.log
 fi
 
+echo "mesh"
+# Every meshed pod waits on the Linkerd control plane and on the CNI plugin, which live outside
+# the instance's namespaces. After a node reboot both sat not Ready for nine hours and nothing
+# said so (T-4384, dev 2026-10-17), so each pod there is read on its own Ready condition.
+for ns in linkerd linkerd-cni; do
+	pods=$(kubectl get pods -n "$ns" -o 'jsonpath={range .items[*]}{.metadata.name}={.status.conditions[?(@.type=="Ready")].status}{"\n"}{end}' 2>/dev/null || true)
+	if [ -z "$pods" ]; then
+		skip "$ns (no pod in it on this cluster)"
+		continue
+	fi
+	not_ready=$(grep -v '=True$' <<<"$pods" | cut -d= -f1 | tr '\n' ' ')
+	if [ -z "$not_ready" ]; then
+		ok "every pod in $ns is Ready"
+	else
+		ko "$ns pods not Ready: ${not_ready% }"
+	fi
+done
+
 echo "identity"
 status 200 "keycloak OIDC discovery over valid TLS" "$idm/realms/$realm/.well-known/openid-configuration"
 if curl -sS --max-time 20 "$idm/realms/$realm/.well-known/openid-configuration" 2>/dev/null |

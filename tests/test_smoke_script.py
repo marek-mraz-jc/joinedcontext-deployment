@@ -266,6 +266,12 @@ elif args[0] == "top" and "pipeline-runner-runner" in line:
     sys.stdout.write("pipeline-runner-6bf86c8c76-zmh95   pipeline-runner-runner   76m   %s\\n" % spec.get("runnerMemory", "700Mi"))
 elif args[0] == "get" and args[1] == "deployment" and args[2] == "pipeline-runner":
     sys.stdout.write(spec.get("runnerLimit", "1536Mi"))
+elif args[0] == "get" and args[1] == "pods" and args[2:4] in (["-n", "linkerd"], ["-n", "linkerd-cni"]):
+    # T-4384: `name=Ready status` per pod of the mesh's namespaces; `[]` is a cluster without it.
+    default = {"linkerd": [["linkerd-destination-c5", "True"], ["linkerd-identity-6d", "True"]],
+               "linkerd-cni": [["linkerd-cni-v2", "True"]]}
+    pods = spec.get("meshPods", default).get(args[3], [])
+    sys.stdout.write("".join("%s=%s\\n" % (name, ready) for name, ready in pods))
 elif args[0] == "get" and args[1] == "pods" and "app.kubernetes.io/name=apisix" in line:
     # T-0939: the probe aims at the APISIX pod's own address; `apisixPodIp: ""` is no pod.
     sys.stdout.write(spec.get("apisixPodIp", "10.42.0.9"))
@@ -560,6 +566,24 @@ def test_full_platform_passes(tmp_path):
     assert "ok    People lists the demo people" in result.stdout
     assert "the edge refuses TLS 1.1" in result.stdout
     assert "the edge refuses CBC and 3DES suites" in result.stdout
+
+
+def test_a_linkerd_control_plane_pod_that_is_not_ready_fails(tmp_path):
+    """T-4384: after a reboot the control plane sat not Ready and every meshed pod with it."""
+    mesh = {"linkerd": [["linkerd-destination-c5", "False"], ["linkerd-identity-6d", "True"],
+                        ["linkerd-proxy-injector-55", ""]],
+            "linkerd-cni": [["linkerd-cni-v2", "True"]]}
+    result = run(tmp_path, dict(HEALTHY, meshPods=mesh), "https://example.test", "https://idm.example.test")
+    assert result.returncode != 0
+    assert "FAIL  linkerd pods not Ready: linkerd-destination-c5 linkerd-proxy-injector-55\n" in result.stdout
+    assert "ok    every pod in linkerd-cni is Ready" in result.stdout
+
+
+def test_a_cluster_without_the_mesh_skips_its_check(tmp_path):
+    result = run(tmp_path, dict(HEALTHY, meshPods={}), "https://example.test", "https://idm.example.test")
+    assert "skip  linkerd (no pod in it on this cluster)" in result.stdout
+    assert "skip  linkerd-cni (no pod in it on this cluster)" in result.stdout
+    assert "linkerd pods not Ready" not in result.stdout
 
 
 def test_an_instance_without_the_helsinki_seed_skips_its_checks(tmp_path):
