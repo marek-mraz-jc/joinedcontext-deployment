@@ -29,7 +29,9 @@ OD_GATEWAY = (_os.environ.get("OD_GATEWAY") or "").rstrip("/")
 # its standard's own syntax: NGSI-LD and the files `q`, OGC API Features the queryable as a parameter,
 # OData and SensorThings `$filter`. MCP and WebSocket read every type of the Endpoint, so they list every row and say so.
 OD_STANDARDS = [
-    ("ngsi-ld/v1/entities", "NGSI-LD API", "NGSI-LD", "application/ld+json",
+    # application/json: what an anonymous GET without Accept answers, the @context in the Link header
+    # (CIM 009 6.3.6); ld+json only when Accept asks for it (T-4539).
+    ("ngsi-ld/v1/entities", "NGSI-LD API", "NGSI-LD", "application/json",
      "https://www.etsi.org/deliver/etsi_gs/CIM/001_099/009/", "q", None),
     ("file.geojson", "GeoJSON", "GeoJSON", "application/geo+json", "https://www.rfc-editor.org/rfc/rfc7946", "q", "location"),
     ("file.csv", "CSV", "CSV", "text/csv", None, "q", None),
