@@ -243,3 +243,14 @@ def test_the_journey_users_are_the_usernames_the_realm_stores(rendered):
     users = portal_env(portal_pod_spec(rendered("dev")))["JC_PORTAL_JOURNEY_USERS"].split(",")
     assert "demo.steward@hel.fi" in users
     assert all(user.endswith("@hel.fi") for user in users), users
+
+
+@requires_helmfile
+def test_the_portal_reaches_keycloak_at_the_service_and_checks_tokens_at_the_public_issuer(rendered):
+    """T-4450 (T-4432): the reconciler's token and admin calls go to the Keycloak Service, an
+    origin with no path, so they do not pass the public edge and its per-address limit; the
+    issuer every token is checked against stays the public host."""
+    env = portal_env(portal_pod_spec(rendered("dev")))
+    admin = env["JC_KEYCLOAK_ADMIN_URL"]
+    assert re.fullmatch(r"http://keycloak-app-keycloakx-http\.[a-z0-9-]+\.svc\.cluster\.local:80", admin), admin
+    assert env["JC_OIDC_ISSUER"].startswith("https://idm."), env["JC_OIDC_ISSUER"]
