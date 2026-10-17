@@ -49,6 +49,18 @@ pipeline:
           }
           root = if $v == null { null } else { { "type": "Property", "value": $v } }
         }
+        # The instant a row was observed, from its `observedAt` column: a bare year is its first instant,
+        # anything else reads as a datetime (T-4288).
+        map observed {
+          let x = this
+          root = if $x == null { null } else if $x.string().re_match("^[0-9]{4}$") { $x.string() + "-01-01T00:00:00Z" } else {
+            $x.apply("datetime").value.catch(null)
+          }
+        }
+        # A measured Property with the instant it holds, so SensorThings charts it (T-4288).
+        map stamped {
+          root = if this.p == null || this.at == null { this.p } else { this.p.merge({ "observedAt": this.at }) }
+        }
         map date {
           let x = this
           let v = match $x.type() {
@@ -62,16 +74,17 @@ pipeline:
           root = if $v == null { null } else { { "type": "Property", "value": $v } }
         }
         let local = "obyvatelstvo-podla-materinskeho-jazyk-2-" + [this.properties."IDN3"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
+        let at = this.properties."Rok".apply("observed")
         root = {
           "id": "urn:ngsi-ld:%v:%v:%v:%v".format("KeyPerformanceIndicator", "bbsk.sk", env("JC_SPACE"), $local),
           "type": "KeyPerformanceIndicator",
           "dOW": this.properties."DOW".apply("datetime"),
           "fACC": this.properties."FACC".apply("string"),
-          "iDN3": this.properties."IDN3".apply("integer"),
+          "iDN3": {"p": this.properties."IDN3".apply("integer"), "at": $at}.apply("stamped"),
           "nM3": this.properties."NM3".apply("string"),
-          "iDN2": this.properties."IDN2".apply("integer"),
+          "iDN2": {"p": this.properties."IDN2".apply("integer"), "at": $at}.apply("stamped"),
           "nM2": this.properties."NM2".apply("string"),
-          "vYMERA": this.properties."VYMERA".apply("float"),
+          "vYMERA": {"p": this.properties."VYMERA".apply("float"), "at": $at}.apply("stamped"),
           "nUTS1": this.properties."NUTS1".apply("string"),
           "nUTS1CODE": this.properties."NUTS1_CODE".apply("string"),
           "nUTS2": this.properties."NUTS2".apply("string"),
@@ -83,33 +96,33 @@ pipeline:
           "okres": this.properties."Okres".apply("string"),
           "cisloOkresu": this.properties."Číslo_okresu".apply("string"),
           "rok": this.properties."Rok".apply("string"),
-          "trvaloByvajuceObyvatelstvoSp": this.properties."Trvalo_bývajúce_obyvateľstvo_sp".apply("integer"),
-          "slovensky": this.properties."slovenský".apply("float"),
-          "madarsky": this.properties."maďarský".apply("float"),
-          "romsky": this.properties."rómsky".apply("float"),
-          "rusinsky": this.properties."rusínsky".apply("float"),
-          "ukrajinsky": this.properties."ukrajinský".apply("float"),
-          "cesky": this.properties."český".apply("float"),
-          "nemecky": this.properties."nemecký".apply("float"),
-          "polsky": this.properties."poľský".apply("float"),
-          "chorvatsky": this.properties."chorvátsky".apply("float"),
-          "jidis": this.properties."jidiš".apply("float"),
-          "bulharsky": this.properties."bulharský".apply("float"),
-          "ostatne": this.properties."ostatné".apply("float"),
-          "nezisteny": this.properties."nezistený".apply("float"),
-          "slovensky2": this.properties."slovenský2".apply("float"),
-          "madarsky3": this.properties."maďarský3".apply("float"),
-          "romsky4": this.properties."rómsky4".apply("float"),
-          "rusinsky5": this.properties."rusínsky5".apply("float"),
-          "ukrajinsky6": this.properties."ukrajinský6".apply("float"),
-          "cesky7": this.properties."český7".apply("float"),
-          "nemecky8": this.properties."nemecký8".apply("float"),
-          "polsky9": this.properties."poľský9".apply("float"),
-          "chorvatsky10": this.properties."chorvátsky10".apply("float"),
-          "jidis11": this.properties."jidiš11".apply("float"),
-          "bulharsky12": this.properties."bulharský12".apply("float"),
-          "ostatne13": this.properties."ostatné13".apply("float"),
-          "nezisteny14": this.properties."nezistený14".apply("float"),
+          "trvaloByvajuceObyvatelstvoSp": {"p": this.properties."Trvalo_bývajúce_obyvateľstvo_sp".apply("integer"), "at": $at}.apply("stamped"),
+          "slovensky": {"p": this.properties."slovenský".apply("float"), "at": $at}.apply("stamped"),
+          "madarsky": {"p": this.properties."maďarský".apply("float"), "at": $at}.apply("stamped"),
+          "romsky": {"p": this.properties."rómsky".apply("float"), "at": $at}.apply("stamped"),
+          "rusinsky": {"p": this.properties."rusínsky".apply("float"), "at": $at}.apply("stamped"),
+          "ukrajinsky": {"p": this.properties."ukrajinský".apply("float"), "at": $at}.apply("stamped"),
+          "cesky": {"p": this.properties."český".apply("float"), "at": $at}.apply("stamped"),
+          "nemecky": {"p": this.properties."nemecký".apply("float"), "at": $at}.apply("stamped"),
+          "polsky": {"p": this.properties."poľský".apply("float"), "at": $at}.apply("stamped"),
+          "chorvatsky": {"p": this.properties."chorvátsky".apply("float"), "at": $at}.apply("stamped"),
+          "jidis": {"p": this.properties."jidiš".apply("float"), "at": $at}.apply("stamped"),
+          "bulharsky": {"p": this.properties."bulharský".apply("float"), "at": $at}.apply("stamped"),
+          "ostatne": {"p": this.properties."ostatné".apply("float"), "at": $at}.apply("stamped"),
+          "nezisteny": {"p": this.properties."nezistený".apply("float"), "at": $at}.apply("stamped"),
+          "slovensky2": {"p": this.properties."slovenský2".apply("float"), "at": $at}.apply("stamped"),
+          "madarsky3": {"p": this.properties."maďarský3".apply("float"), "at": $at}.apply("stamped"),
+          "romsky4": {"p": this.properties."rómsky4".apply("float"), "at": $at}.apply("stamped"),
+          "rusinsky5": {"p": this.properties."rusínsky5".apply("float"), "at": $at}.apply("stamped"),
+          "ukrajinsky6": {"p": this.properties."ukrajinský6".apply("float"), "at": $at}.apply("stamped"),
+          "cesky7": {"p": this.properties."český7".apply("float"), "at": $at}.apply("stamped"),
+          "nemecky8": {"p": this.properties."nemecký8".apply("float"), "at": $at}.apply("stamped"),
+          "polsky9": {"p": this.properties."poľský9".apply("float"), "at": $at}.apply("stamped"),
+          "chorvatsky10": {"p": this.properties."chorvátsky10".apply("float"), "at": $at}.apply("stamped"),
+          "jidis11": {"p": this.properties."jidiš11".apply("float"), "at": $at}.apply("stamped"),
+          "bulharsky12": {"p": this.properties."bulharský12".apply("float"), "at": $at}.apply("stamped"),
+          "ostatne13": {"p": this.properties."ostatné13".apply("float"), "at": $at}.apply("stamped"),
+          "nezisteny14": {"p": this.properties."nezistený14".apply("float"), "at": $at}.apply("stamped"),
           "location": if this.geometry.or(null) == null { null } else { { "type": "GeoProperty", "value": this.geometry } },
           "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj (CC BY-SA 4.0)" },
           "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_materinsk%C3%BD_jazyk_okres/FeatureServer/0/query?where=1%3D1&outFields=DOW,FACC,IDN3,NM3,IDN2,NM2,VYMERA,NUTS1,NUTS1_CODE,NUTS2,NUTS2_CODE,NUTS3,NUTS3_CODE,LAU1,LAU1_CODE,Okres,%C4%8C%C3%ADslo_okresu,Rok,Trvalo_b%C3%BDvaj%C3%BAce_obyvate%C4%BEstvo_sp,slovensk%C3%BD,ma%C4%8Farsk%C3%BD,r%C3%B3msky,rus%C3%ADnsky,ukrajinsk%C3%BD,%C4%8Desk%C3%BD,nemeck%C3%BD,po%C4%BEsk%C3%BD,chorv%C3%A1tsky,jidi%C5%A1,bulharsk%C3%BD,ostatn%C3%A9,nezisten%C3%BD,slovensk%C3%BD2,ma%C4%8Farsk%C3%BD3,r%C3%B3msky4,rus%C3%ADnsky5,ukrajinsk%C3%BD6,%C4%8Desk%C3%BD7,nemeck%C3%BD8,po%C4%BEsk%C3%BD9,chorv%C3%A1tsky10,jidi%C5%A111,bulharsk%C3%BD12,ostatn%C3%A913,nezisten%C3%BD14&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },

@@ -1,9 +1,9 @@
 ---
 # The files values/bootstrap/development-values.yaml.gotmpl names, read from the same indexes:
 # here the ones under projects/<project>/, there the organization's. Helsinki's projects are the
-# release gitea-seed, the region's (BBSK, past 1.5 MB with its open data, T-4255) gitea-seed-3, Slovakia's
-# (44 ŠÚ SR spaces, T-4402) gitea-seed-4, every other city's gitea-seed-2, so each stays well inside
-# its Secret.
+# release gitea-seed, the region's (BBSK, past 1.5 MB with its open data, T-4255) gitea-seed-3 and
+# gitea-seed-5 (T-4288), Slovakia's (44 ŠÚ SR spaces, T-4402) gitea-seed-4, every other city's
+# gitea-seed-2, so each stays well inside its Secret.
 # JSON strings ending in exactly one newline, which is what the bootstrap's block scalars made of
 # them, so no blob already on the forge changes.
 {{- $seed := dict }}
@@ -37,9 +37,12 @@ hash, not a packing; a part that grows too big shows in test_sample_apps_seed. *
 {{- $parts := splitList "/" $path }}
 {{- if and (eq (index $parts 0) "projects") (gt (len $parts) 2) }}
 {{- $project := index $parts 1 }}
-{{- if eq $shard (ternary 1 (index (dict "bbsk" 3 "slovensko" 4) $project | default 2) (hasPrefix "helsinki" $project)) }}
 {{- $n := 1 }}{{ if ge (index $bytes $project) 600000 }}{{ $n = add1 (div (index $bytes $project) 250000) }}{{ end }}
 {{- $i := mod (atoi (adler32sum $path)) $n }}
+{{- /* BBSK's odd parts (the first, the third, ...) stay in gitea-seed-3, its even ones go to
+gitea-seed-5: its open data with the sta series (T-4288) passed the 0.75 MiB a release Secret holds. */}}
+{{- $bbsk := ternary 3 5 (eq (mod $i 2) 0) }}
+{{- if eq $shard (ternary 1 (index (dict "bbsk" $bbsk "slovensko" 4) $project | default 2) (hasPrefix "helsinki" $project)) }}
 {{- $name := ternary $project (printf "%s--%d" $project (add1 $i)) (eq $i 0) }}
 {{- $files := index $projects $name | default dict }}
 {{- $_ := set $files ($path | replace "/" "__") (regexReplaceAll "\n*\\z" $text "\n") }}

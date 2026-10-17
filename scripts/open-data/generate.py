@@ -86,10 +86,12 @@ PROJECTS = {
                   "en": "Every dataset of the Banská Bystrica Self-Governing Region in the catalogue (opendata.bbsk.sk)."},
     },
 }
-# Every standard the open data is served in (T-4279). No `sta`: no generated type keeps a measured
-# value over time (T-4275 keeps no history for them). No `mqtt` until 8883 opens (T-3996); the
-# WebSocket pushes changes. `parquet` since T-4287 (EP-119).
-REPRESENTATIONS = ["ngsi-ld", "geojson", "csv", "json", "xlsx", "parquet", "websocket", "ogc-features", "odata", "mcp"]
+# Every standard the open data is served in (T-4279). `sta` since T-4288: a row with an `observedAt`
+# column stamps its numbers with that instant, one Datastream per number; the catalogue lists it only
+# for those datasets (`series`). No `mqtt` until 8883 opens (T-3996); the WebSocket pushes changes.
+# `parquet` since T-4287 (EP-119).
+REPRESENTATIONS = ["ngsi-ld", "geojson", "csv", "json", "xlsx", "parquet", "websocket", "ogc-features", "odata", "sta",
+                   "mcp"]
 # What the catalogue's harvests read to list each converted dataset's standard APIs (T-4279).
 DISTRIBUTIONS = ROOT / "charts/ckan/files/od-datasets.json"
 # The attribution every entity carries (Open data integration rules §3), declared in the model.
@@ -196,6 +198,18 @@ map datetime {
     _ => null,
   }
   root = if $v == null { null } else { { "type": "Property", "value": $v } }
+}
+# The instant a row was observed, from its `observedAt` column: a bare year is its first instant,
+# anything else reads as a datetime (T-4288).
+map observed {
+  let x = this
+  root = if $x == null { null } else if $x.string().re_match("^[0-9]{4}$") { $x.string() + "-01-01T00:00:00Z" } else {
+    $x.apply("datetime").value.catch(null)
+  }
+}
+# A measured Property with the instant it holds, so SensorThings charts it (T-4288).
+map stamped {
+  root = if this.p == null || this.at == null { this.p } else { this.p.merge({ "observedAt": this.at }) }
 }
 map date {
   let x = this
@@ -312,8 +326,11 @@ def entity(e: dict, slug: str, model_ranges: dict[str, str], source_url: str) ->
         # entity (Research/bb-bbsk-ngsi-ld-mapping.md §4).
         local = "{" + ", ".join(f"{q(c)}: {column(path, kind, c)}" for c in cols.values()) + "}" \
                 ".format_json(no_indent: true).hash(\"sha256\").encode(\"hex\").slice(0, 24)"
-    lines = [
-        f"let local = {q(slug + '-')} + {local}.re_replace_all(\"[^A-Za-z0-9._~-]\", \"-\").slice(0, 80)",
+    lines = [f"let local = {q(slug + '-')} + {local}.re_replace_all(\"[^A-Za-z0-9._~-]\", \"-\").slice(0, 80)"]
+    observed = e.get("observedAt")
+    if observed:
+        lines.append(f"let at = {column(path, kind, observed)}.apply(\"observed\")")
+    lines += [
         "root = {",
         # The publisher's domain, never the runner's JC_ORG_DOMAIN, which is the installation's (T-4202).
         f"  \"id\": \"urn:ngsi-ld:%v:%v:%v:%v\".format({q(e['type'])}, {q(PROJECTS[e['org']]['domain'])}, env(\"JC_SPACE\"), $local),",
@@ -323,7 +340,11 @@ def entity(e: dict, slug: str, model_ranges: dict[str, str], source_url: str) ->
         # A column empty in a row gives way to the next the mapping names (`otherwise`, T-4319).
         read = [f"{column(path, kind, c)}.apply({q(model_ranges[attribute(a)].replace('-', '_'))})"
                 for c in [p["column"], *p.get("otherwise", [])]]
-        lines.append(f"  {q(attribute(a))}: {'.or('.join(read)}{')' * (len(read) - 1)},")
+        value = f"{'.or('.join(read)}{')' * (len(read) - 1)}"
+        # A number measured at the row's instant carries it; the instant's own column does not.
+        if observed and p["column"] != observed and model_ranges[attribute(a)] in ("integer", "float"):
+            value = f"{{\"p\": {value}, \"at\": $at}}.apply(\"stamped\")"
+        lines.append(f"  {q(attribute(a))}: {value},")
     for a, v in (e.get("constants") or {}).items():
         lines.append(f"  {q(a)}: {{ \"type\": \"Property\", \"value\": {q(v)} }},")
     if e.get("identifierFromId"):
@@ -936,19 +957,28 @@ def located(entry: dict) -> bool:
     return entry["source"].get("kind") in FEATURES and bool(entry["source"].get("geometry"))
 
 
+def series(entry: dict) -> bool:
+    """Whether the rows of `entry` are measurements at an instant: an `observedAt` column and a number
+    beside it, so SensorThings has a Datastream to answer (T-4288)."""
+    observed = entry.get("observedAt")
+    return bool(observed) and any(p["column"] != observed and p["range"] in ("integer", "float")
+                                  for p in entry["properties"].values())
+
+
 def distributions(mapped: list[dict], whole: list[dict]) -> str:
-    """Per CKAN dataset name: its Endpoint's slug, its entity type, whether it has a location and
-    whether its addresses keep only its rows. A dataset an older seed reads whole is served by that
+    """Per CKAN dataset name: its Endpoint's slug, its entity type, whether it has a location or a
+    series and whether its addresses keep only its rows. A dataset an older seed reads whole is served by that
     seed's public Endpoint, over its whole type: those rows name no catalogue dataset (T-4291)."""
     rows = {}
     for e in mapped:
         endpoint = SEED / e["org"] / f"{e['org']}-od-endpoint.yaml"
         rows[e["dataset"].rsplit("/", 1)[1]] = {"endpoint": slug_for(endpoint), "type": e["type"],
-                                                 "dataset": e["dataset"], "location": located(e), "filtered": True}
+                                                 "dataset": e["dataset"], "location": located(e), "series": series(e),
+                                                 "filtered": True}
     for e in whole:
         slug, kind = existing_door(e)
         rows[e["dataset"].rsplit("/", 1)[1]] = {"endpoint": slug, "type": kind, "dataset": e["dataset"],
-                                                 "location": located(e), "filtered": False}
+                                                 "location": located(e), "series": False, "filtered": False}
     # The ŠÚ SR rows are scripts/open-data/datacube.py's (T-4390): kept as committed.
     rows.update({k: v for k, v in json.loads(DISTRIBUTIONS.read_text()).items() if k.startswith("susr-")})
     return "{\n" + ",\n".join(f"  {json.dumps(k)}: {json.dumps(v, ensure_ascii=False)}" for k, v in sorted(rows.items())) + "\n}\n"

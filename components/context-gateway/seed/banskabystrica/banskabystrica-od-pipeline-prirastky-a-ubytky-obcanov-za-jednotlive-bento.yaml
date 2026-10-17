@@ -45,6 +45,18 @@ pipeline:
           }
           root = if $v == null { null } else { { "type": "Property", "value": $v } }
         }
+        # The instant a row was observed, from its `observedAt` column: a bare year is its first instant,
+        # anything else reads as a datetime (T-4288).
+        map observed {
+          let x = this
+          root = if $x == null { null } else if $x.string().re_match("^[0-9]{4}$") { $x.string() + "-01-01T00:00:00Z" } else {
+            $x.apply("datetime").value.catch(null)
+          }
+        }
+        # A measured Property with the instant it holds, so SensorThings charts it (T-4288).
+        map stamped {
+          root = if this.p == null || this.at == null { this.p } else { this.p.merge({ "observedAt": this.at }) }
+        }
         map date {
           let x = this
           let v = match $x.type() {
@@ -58,6 +70,7 @@ pipeline:
           root = if $v == null { null } else { { "type": "Property", "value": $v } }
         }
         let local = "prirastky-a-ubytky-obcanov-za-jednotlive-" + [this."Rok"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
+        let at = this."Rok".apply("observed")
         root = {
           "id": "urn:ngsi-ld:%v:%v:%v:%v".format("KeyPerformanceIndicator", "banskabystrica.sk", env("JC_SPACE"), $local),
           "type": "KeyPerformanceIndicator",
@@ -68,17 +81,17 @@ pipeline:
           "ubytok": this."Úbytok".apply("string"),
           "ubytokMuzi": this."Úbytok_muži".apply("string"),
           "ubytokZeny": this."Úbytok_ženy".apply("string"),
-          "narodenych": this."Narodených".apply("integer"),
-          "narodenychM": this."Narodených_M".apply("integer"),
-          "narodenychZ": this."Narodených_Ž".apply("integer"),
-          "zomrelych": this."Zomrelých".apply("integer"),
-          "zomrelychM": this."Zomrelých_M".apply("integer"),
-          "zomrelychZ": this."Zomrelých_Ž".apply("integer"),
-          "pristahovanych": this."Prisťahovaných".apply("integer"),
-          "pristahovanychM": this."Prisťahovaných_M".apply("integer"),
-          "odstahovanych": this."Odsťahovaných".apply("integer"),
-          "odstahovanychM": this."Odsťahovaných_M".apply("integer"),
-          "odstahovanychZ": this."Odsťahovaných_Ž".apply("integer"),
+          "narodenych": {"p": this."Narodených".apply("integer"), "at": $at}.apply("stamped"),
+          "narodenychM": {"p": this."Narodených_M".apply("integer"), "at": $at}.apply("stamped"),
+          "narodenychZ": {"p": this."Narodených_Ž".apply("integer"), "at": $at}.apply("stamped"),
+          "zomrelych": {"p": this."Zomrelých".apply("integer"), "at": $at}.apply("stamped"),
+          "zomrelychM": {"p": this."Zomrelých_M".apply("integer"), "at": $at}.apply("stamped"),
+          "zomrelychZ": {"p": this."Zomrelých_Ž".apply("integer"), "at": $at}.apply("stamped"),
+          "pristahovanych": {"p": this."Prisťahovaných".apply("integer"), "at": $at}.apply("stamped"),
+          "pristahovanychM": {"p": this."Prisťahovaných_M".apply("integer"), "at": $at}.apply("stamped"),
+          "odstahovanych": {"p": this."Odsťahovaných".apply("integer"), "at": $at}.apply("stamped"),
+          "odstahovanychM": {"p": this."Odsťahovaných_M".apply("integer"), "at": $at}.apply("stamped"),
+          "odstahovanychZ": {"p": this."Odsťahovaných_Ž".apply("integer"), "at": $at}.apply("stamped"),
           "dataProvider": { "type": "Property", "value": "Mesto Banská Bystrica (CC BY 4.0)" },
           "source": { "type": "Property", "value": "https://data.dev.joinedcontext.com/api/3/action/datastore_search?resource_id=4450222b-7726-40e9-980e-1fbe60a18d12&limit=32000" },
           "isPartOf": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bb-prirastky-a-ubytky-obcanov-za-jednotlive-roky" }
