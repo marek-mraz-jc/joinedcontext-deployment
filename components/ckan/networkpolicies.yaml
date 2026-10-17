@@ -285,3 +285,24 @@ ckan-harvest:
       ports:
         - protocol: TCP
           port: 443
+    # The gateway's Endpoints (od-standards.py's OD_GATEWAY) are the cluster's own public host,
+    # which the node rewrites to the ingress controller's pod before this rule is evaluated, on
+    # its container port (8443 for Traefik, 443 for ingress-nginx): the except above dropped it,
+    # and the proxy answered every read with a reset (T-4401). That pod is the one private
+    # address the harvest reaches over HTTPS, as for the pipeline runner.
+    - to:
+        - namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values: [traefik, kube-system, ingress-nginx]
+          podSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values: [traefik, ingress-nginx]
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 8443
