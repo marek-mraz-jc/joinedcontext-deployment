@@ -91,10 +91,13 @@ REPRESENTATIONS = ["ngsi-ld", "geojson", "csv", "json", "xlsx", "websocket", "og
 # What the catalogue's harvests read to list each converted dataset's standard APIs (T-4279).
 DISTRIBUTIONS = ROOT / "charts/ckan/files/od-datasets.json"
 # The attribution every entity carries (Open data integration rules §3), declared in the model.
+# The catalogue dataset is `isPartOf`, never `dataset`: the NGSI-LD core @context defines `dataset`
+# (`ngsi-ld:hasDataset`) and, being protected, wins over the space's @context, so the rows held the
+# core IRI while the model said jc:dataset and OGC and OData refused or missed a filter on it (T-4289).
 COMMON = {
     "dataProvider": ("string", "Who published the row, with the credit its licence asks for."),
     "source": ("uri", "The service the row was read from."),
-    "dataset": ("uri", "The catalogue dataset the row belongs to, where its licence and its other rows are."),
+    "isPartOf": ("uri", "The catalogue dataset the row belongs to, where its licence and its other rows are."),
 }
 # A column whose attribute name is one of these keeps its value as `column<Name>`. `name` is the
 # model's own (the mapping renames a column to it, T-4319).
@@ -333,7 +336,7 @@ def entity(e: dict, slug: str, model_ranges: dict[str, str], source_url: str) ->
     lines += [
         f"  \"dataProvider\": {{ \"type\": \"Property\", \"value\": {q(credit)} }},",
         f"  \"source\": {{ \"type\": \"Property\", \"value\": {q(source_url)} }},",
-        f"  \"dataset\": {{ \"type\": \"Property\", \"value\": {q(e['dataset'])} }}",
+        f"  \"isPartOf\": {{ \"type\": \"Property\", \"value\": {q(e['dataset'])} }}",
         "}.filter(entry -> entry.value != null)",
     ]
     return "\n".join(lines)
@@ -842,8 +845,8 @@ def extension_files(extensions: dict[str, dict], mapped: list[dict]) -> dict[Pat
         for a, cols in columns.items():
             described[a] = "The source column " + ", ".join(f"`{c}`" for c in cols) + "."
         added: dict[str, dict] = {"type": {"type": "string", "enum": [t], "description": f"Property. NGSI Entity type. It has to be {t}"}}
-        if "dataset" not in known and entries:
-            added["dataset"] = {"type": "string", "format": "uri", "description": f"Property. Model:'https://schema.org/URL'. {COMMON['dataset'][1]}"}
+        if "isPartOf" not in known and entries:
+            added["isPartOf"] = {"type": "string", "format": "uri", "description": f"Property. Model:'https://schema.org/URL'. {COMMON['isPartOf'][1]}"}
         for a in sorted(described):
             if a in known:
                 continue

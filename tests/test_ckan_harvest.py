@@ -403,7 +403,7 @@ def test_only_a_converted_dataset_is_listed_with_its_apis_model_and_table(monkey
         "JSON Schema", "JSON-LD", "LinkML", "Markdown", "OWL", "RDF", "SHACL", "CSV"]
     assert ages[-1].get("url_type") == "datastore", "the table moved off the end of the list"
     assert ages[0]["url"] == ("https://dev.joinedcontext.com/api/endpoint/abc/ngsi-ld/v1/entities?type=KeyPerformanceIndicator"
-                              "&q=dataset%3D%3D%22https%3A%2F%2Fdata.dev.joinedcontext.com%2Fdataset%2Fbb-pocet-obcanov-podla-veku%22")
+                              "&q=isPartOf%3D%3D%22https%3A%2F%2Fdata.dev.joinedcontext.com%2Fdataset%2Fbb-pocet-obcanov-podla-veku%22")
     assert ages[0]["conforms_to"].startswith("https://www.etsi.org/")
     assert ages[7]["url"] == "https://dev.joinedcontext.com/api/endpoint/abc/schema/v1/model.schema.json"
     assert not any("geojson" in r["url"] or "/ogc/" in r["url"] for r in ages)

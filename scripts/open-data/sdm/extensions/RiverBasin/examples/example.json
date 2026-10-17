@@ -3,7 +3,6 @@
   "aUT": 0,
   "dOW": "2026-01-01T00:00:00Z",
   "dataProvider": "dataProvider",
-  "dataset": "https://example.org/dataset",
   "designatio": "designatio",
   "fACC": "fACC",
   "fIDKraj0": 0,
@@ -13,6 +12,7 @@
   "id": "urn:ngsi-ld:RiverBasin:joinedcontext.com:example:1",
   "inspireIdL": 0,
   "inspireIdN": "inspireIdN",
+  "isPartOf": "https://example.org/isPartOf",
   "link": "link",
   "location": {
     "coordinates": [

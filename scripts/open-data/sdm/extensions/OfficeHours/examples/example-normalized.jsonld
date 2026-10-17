@@ -5,10 +5,6 @@
     "type": "Property",
     "value": "dataProvider"
   },
-  "dataset": {
-    "type": "Property",
-    "value": "https://example.org/dataset"
-  },
   "denVTyzdni": {
     "type": "Property",
     "value": "denVTyzdni"
@@ -20,6 +16,10 @@
   "identifikatorKontaktnehoMiest": {
     "type": "Property",
     "value": "identifikatorKontaktnehoMiest"
+  },
+  "isPartOf": {
+    "type": "Property",
+    "value": "https://example.org/isPartOf"
   },
   "kodDnaVTyzdni": {
     "type": "Property",

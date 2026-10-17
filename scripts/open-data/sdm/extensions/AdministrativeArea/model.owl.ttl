@@ -12,13 +12,70 @@ jc:AdministrativeArea a owl:Class,
     rdfs:label "AdministrativeArea" ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:maxCardinality 1 ;
+            owl:onProperty jc:iDN3 ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:vYMERA ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:nUTS3CODE ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:typObce ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:dOW ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:name ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:isPartOf ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
             owl:onProperty jc:nUTS2 ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:nUTS1 ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:source ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:lAU1CODE ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:dataProvider ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:nUTS3 ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:iDN4 ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:nM2 ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:nM3 ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:lAU1 ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:nUTS2CODE ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:nUTS1CODE ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:iDN2 ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:fACC ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:iDN2 ],
+            owl:onProperty jc:fLAT ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:lAU2CODE ],
@@ -27,64 +84,7 @@ jc:AdministrativeArea a owl:Class,
             owl:onProperty jc:lAU2 ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:iDN3 ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:nUTS1 ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:name ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:lAU1CODE ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:dataset ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:dataProvider ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:nUTS1CODE ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
             owl:onProperty jc:fLON ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:dOW ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:nUTS3CODE ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:lAU1 ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:source ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:nM2 ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:nUTS2CODE ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:nM3 ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:iDN4 ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:fLAT ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:typObce ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:nUTS3 ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:vYMERA ],
         jc:Entity ;
     skos:definition "A region, district or municipality: its boundary or centroid and its NUTS and LAU codes." ;
     skos:exactMatch jc:AdministrativeArea ;
@@ -96,13 +96,13 @@ jc:Entity a owl:Class,
     rdfs:label "Entity" ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:observedAt ],
+            owl:onProperty jc:location ],
         [ a owl:Restriction ;
             owl:cardinality 1 ;
             owl:onProperty jc:id ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:location ],
+            owl:onProperty jc:observedAt ],
         [ a owl:Restriction ;
             owl:cardinality 1 ;
             owl:onProperty jc:type ] ;
@@ -140,14 +140,6 @@ jc:dataProvider a owl:ObjectProperty,
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/AdministrativeArea> ;
     jc:ngsi_ld_kind "Property" ;
     jc:upstream_source "https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/context.jsonld" .
-
-jc:dataset a owl:ObjectProperty,
-        linkml:SlotDefinition ;
-    rdfs:label "dataset" ;
-    rdfs:range jc:uri ;
-    skos:definition "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
-    skos:inScheme <https://joinedcontext.com/models/sdm/extensions/AdministrativeArea> ;
-    jc:ngsi_ld_kind "Property" .
 
 jc:date a owl:Class,
         linkml:TypeDefinition ;
@@ -230,6 +222,14 @@ jc:id a owl:ObjectProperty,
     jc:jsonld_keyword "@id" ;
     jc:ngsi_ld_kind "Property" ;
     jc:upstream_source "ETSI NGSI-LD core context v1.8" .
+
+jc:isPartOf a owl:ObjectProperty,
+        linkml:SlotDefinition ;
+    rdfs:label "isPartOf" ;
+    rdfs:range jc:uri ;
+    skos:definition "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
+    skos:inScheme <https://joinedcontext.com/models/sdm/extensions/AdministrativeArea> ;
+    jc:ngsi_ld_kind "Property" .
 
 jc:jsonpath a owl:Class,
         linkml:TypeDefinition ;

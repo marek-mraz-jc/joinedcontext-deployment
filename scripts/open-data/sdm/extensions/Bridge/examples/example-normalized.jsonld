@@ -9,10 +9,6 @@
     "type": "Property",
     "value": "dataProvider"
   },
-  "dataset": {
-    "type": "Property",
-    "value": "https://example.org/dataset"
-  },
   "dlzkaPremosteniaM": {
     "type": "Property",
     "value": 0.0
@@ -32,6 +28,10 @@
   "identifikacneCislo": {
     "type": "Property",
     "value": "identifikacneCislo"
+  },
+  "isPartOf": {
+    "type": "Property",
+    "value": "https://example.org/isPartOf"
   },
   "komunikacia": {
     "type": "Property",

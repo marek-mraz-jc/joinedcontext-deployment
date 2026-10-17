@@ -12,106 +12,106 @@ jc:Contract a owl:Class,
     rdfs:label "Contract" ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:sidloObjednavatela ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:datumUcinnosti ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:dataset ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:poznamka ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:nazovObjednavatela ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:zdrojNazov ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:zmluvneStranySUdajomICO ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:iDZmluvy ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:cenaCelkom ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:iCODodavatela ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:sumaSpoluVEUR ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:iCOOrganizacie ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:sidloDodavatela ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:index ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:datumZverejnenia ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:datumPlatnostiDo ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:priloha ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
             owl:onProperty jc:predmet ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:name ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:dataProvider ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:mena ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:rezort ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:datumUzavretia ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:datumPrilohy ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:typ ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:source ],
+            owl:onProperty jc:datumPrilohy ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:identifier ],
+            owl:onProperty jc:mena ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:iCOObjednavatela ],
+            owl:onProperty jc:datumUcinnosti ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:druh ],
+            owl:onProperty jc:poznamka ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:sumaVEUR ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:nazovDodavatela ],
+            owl:onProperty jc:iCOOrganizacie ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:zmluvneStrany ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
+            owl:onProperty jc:druh ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:zdrojNazov ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:iDZmluvy ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:identifier ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:priloha ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:index ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:cenaCelkom ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:name ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
             owl:onProperty jc:rok ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
+            owl:onProperty jc:nazovDodavatela ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:rezort ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:sumaSpoluVEUR ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:sidloObjednavatela ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:zmluvneStranySUdajomICO ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
             owl:onProperty jc:datumPodpisu ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:nazovObjednavatela ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:sidloDodavatela ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:datumPlatnostiDo ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:datumUzavretia ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:source ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:iCOObjednavatela ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:datumZverejnenia ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:sumaVEUR ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:iCODodavatela ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:dataProvider ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:isPartOf ],
         jc:Entity ;
     skos:definition "A contract the publisher signed and published." ;
     skos:exactMatch jc:Contract ;
@@ -123,16 +123,16 @@ jc:Entity a owl:Class,
     rdfs:label "Entity" ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:cardinality 1 ;
-            owl:onProperty jc:id ],
+            owl:onProperty jc:type ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:observedAt ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:location ],
         [ a owl:Restriction ;
             owl:cardinality 1 ;
-            owl:onProperty jc:type ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:observedAt ] ;
+            owl:onProperty jc:id ] ;
     skos:definition "The root every NGSI-LD entity class specialises." ;
     skos:exactMatch ngsi-ld:Entity ;
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/Contract> ;
@@ -166,14 +166,6 @@ jc:dataProvider a owl:ObjectProperty,
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/Contract> ;
     jc:ngsi_ld_kind "Property" ;
     jc:upstream_source "https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld" .
-
-jc:dataset a owl:ObjectProperty,
-        linkml:SlotDefinition ;
-    rdfs:label "dataset" ;
-    rdfs:range jc:uri ;
-    skos:definition "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
-    skos:inScheme <https://joinedcontext.com/models/sdm/extensions/Contract> ;
-    jc:ngsi_ld_kind "Property" .
 
 jc:date_or_datetime a owl:Class,
         linkml:TypeDefinition ;
@@ -305,6 +297,14 @@ jc:index a owl:ObjectProperty,
         linkml:SlotDefinition ;
     rdfs:label "index" ;
     skos:definition "The source column `Index_`." ;
+    skos:inScheme <https://joinedcontext.com/models/sdm/extensions/Contract> ;
+    jc:ngsi_ld_kind "Property" .
+
+jc:isPartOf a owl:ObjectProperty,
+        linkml:SlotDefinition ;
+    rdfs:label "isPartOf" ;
+    rdfs:range jc:uri ;
+    skos:definition "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/Contract> ;
     jc:ngsi_ld_kind "Property" .
 

@@ -11,14 +11,14 @@ jc:Entity a owl:Class,
         linkml:ClassDefinition ;
     rdfs:label "Entity" ;
     rdfs:subClassOf [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:observedAt ],
+        [ a owl:Restriction ;
             owl:cardinality 1 ;
             owl:onProperty jc:type ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:location ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:observedAt ],
         [ a owl:Restriction ;
             owl:cardinality 1 ;
             owl:onProperty jc:id ] ;
@@ -32,49 +32,49 @@ jc:Petition a owl:Class,
     rdfs:label "Petition" ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:pocetOsobPodporujucichPetici ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:dataset ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:source ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:vybavovatelPeticie ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:identifier ],
+            owl:onProperty jc:isPartOf ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:jeKvorova ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:dataProvider ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:name ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:poznamka ],
+            owl:onProperty jc:source ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:datumDorucenia ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
+            owl:onProperty jc:identifier ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:vybavovatelPeticie ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:text ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
             owl:onProperty jc:link ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:datumVybavenia ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:sposobVybavenia ],
+            owl:onProperty jc:poznamka ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:zverejnenieVysledkuVybavenia ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:text ],
+            owl:onProperty jc:datumVybavenia ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:dataProvider ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:pocetOsobPodporujucichPetici ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:sposobVybavenia ],
+        [ a owl:Restriction ;
+            owl:maxCardinality 1 ;
+            owl:onProperty jc:name ],
         jc:Entity ;
     skos:definition "A petition filed with the publisher and how it was settled." ;
     skos:exactMatch jc:Petition ;
@@ -102,14 +102,6 @@ jc:dataProvider a owl:ObjectProperty,
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/Petition> ;
     jc:ngsi_ld_kind "Property" ;
     jc:upstream_source "https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld" .
-
-jc:dataset a owl:ObjectProperty,
-        linkml:SlotDefinition ;
-    rdfs:label "dataset" ;
-    rdfs:range jc:uri ;
-    skos:definition "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
-    skos:inScheme <https://joinedcontext.com/models/sdm/extensions/Petition> ;
-    jc:ngsi_ld_kind "Property" .
 
 jc:date_or_datetime a owl:Class,
         linkml:TypeDefinition ;
@@ -171,6 +163,14 @@ jc:identifier a owl:ObjectProperty,
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/Petition> ;
     jc:ngsi_ld_kind "Property" ;
     jc:upstream_source "https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld" .
+
+jc:isPartOf a owl:ObjectProperty,
+        linkml:SlotDefinition ;
+    rdfs:label "isPartOf" ;
+    rdfs:range jc:uri ;
+    skos:definition "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
+    skos:inScheme <https://joinedcontext.com/models/sdm/extensions/Petition> ;
+    jc:ngsi_ld_kind "Property" .
 
 jc:jeKvorova a owl:ObjectProperty,
         linkml:SlotDefinition ;

@@ -31,10 +31,6 @@
     "dataProvider": {
       "@id": "sdm:dataProvider"
     },
-    "dataset": {
-      "@id": "jc:dataset",
-      "@type": "xsd:anyURI"
-    },
     "dlzkaVU1": {
       "@id": "jc:dlzkaVU1",
       "@type": "xsd:float"
@@ -60,6 +56,10 @@
       "@type": "xsd:integer"
     },
     "id": "@id",
+    "isPartOf": {
+      "@id": "jc:isPartOf",
+      "@type": "xsd:anyURI"
+    },
     "jc": "https://joinedcontext.com/models/",
     "kODVU202": {
       "@id": "jc:kODVU202"

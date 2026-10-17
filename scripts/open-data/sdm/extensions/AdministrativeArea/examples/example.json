@@ -1,7 +1,6 @@
 {
   "dOW": "2026-01-01T00:00:00Z",
   "dataProvider": "dataProvider",
-  "dataset": "https://example.org/dataset",
   "fACC": "fACC",
   "fLAT": "fLAT",
   "fLON": "fLON",
@@ -9,6 +8,7 @@
   "iDN3": 0,
   "iDN4": 0,
   "id": "urn:ngsi-ld:AdministrativeArea:joinedcontext.com:example:1",
+  "isPartOf": "https://example.org/isPartOf",
   "lAU1": "lAU1",
   "lAU1CODE": "lAU1CODE",
   "lAU2": "lAU2",

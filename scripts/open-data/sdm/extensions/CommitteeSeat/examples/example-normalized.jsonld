@@ -5,9 +5,9 @@
     "type": "Property",
     "value": "dataProvider"
   },
-  "dataset": {
+  "isPartOf": {
     "type": "Property",
-    "value": "https://example.org/dataset"
+    "value": "https://example.org/isPartOf"
   },
   "location": {
     "type": "GeoProperty",

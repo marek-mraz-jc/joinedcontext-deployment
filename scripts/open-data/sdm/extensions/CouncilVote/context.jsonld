@@ -10,10 +10,6 @@
     "dataProvider": {
       "@id": "sdm:dataProvider"
     },
-    "dataset": {
-      "@id": "jc:dataset",
-      "@type": "xsd:anyURI"
-    },
     "datum": {
       "@id": "jc:datum",
       "@type": "xsd:dateTime"
@@ -26,6 +22,10 @@
       "@id": "jc:iCOSamospravy"
     },
     "id": "@id",
+    "isPartOf": {
+      "@id": "jc:isPartOf",
+      "@type": "xsd:anyURI"
+    },
     "jc": "https://joinedcontext.com/models/",
     "linkml": "https://w3id.org/linkml/",
     "location": {

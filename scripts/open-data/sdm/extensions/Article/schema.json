@@ -70,7 +70,7 @@
           ],
           "description": "Property. NGSI Entity type. It has to be Article"
         },
-        "dataset": {
+        "isPartOf": {
           "type": "string",
           "format": "uri",
           "description": "Property. Model:'https://schema.org/URL'. The catalogue dataset the row belongs to, where its licence and its other rows are."

@@ -4,13 +4,13 @@
   "cisloZmluvy": "cisloZmluvy",
   "dIC": "dIC",
   "dataProvider": "dataProvider",
-  "dataset": "https://example.org/dataset",
   "datumDorucenia": "2026-01-01",
   "datumSplatnosti": "2026-01-01",
   "dodavatel": "dodavatel",
   "iCO": "iCO",
   "id": "urn:ngsi-ld:Invoice:joinedcontext.com:example:1",
   "identifier": "identifier",
+  "isPartOf": "https://example.org/isPartOf",
   "location": {
     "coordinates": [
       0.0,

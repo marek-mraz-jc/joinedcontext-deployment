@@ -15,87 +15,27 @@ jc:PurchaseOrder a sh:NodeShape ;
     sh:closed true ;
     sh:ignoredProperties ( rdf:type ) ;
     sh:property [ sh:datatype xsd:string ;
-            sh:description "Who published the row, with the credit its licence asks for." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 0 ;
-            sh:path sdm:dataProvider ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Dodávateľ`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 6 ;
-            sh:path jc:dodavatel ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Predmet_objednávky`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 11 ;
-            sh:path jc:predmetObjednavky ],
-        [ sh:description "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:IRI ;
-            sh:order 2 ;
-            sh:path jc:dataset ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Dátum_vystavenia`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 4 ;
-            sh:path jc:datumVystavenia ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `IČO`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 7 ;
-            sh:path jc:iCO ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Číslo_objednávky`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 8 ;
-            sh:path <https://smartdatamodels.org/dataModel.CPSV-AP/identifier> ],
-        [ sh:description "The service the row was read from." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:IRI ;
-            sh:order 1 ;
-            sh:path sdm:source ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Adresa`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 3 ;
-            sh:path jc:adresa ],
-        [ sh:datatype xsd:dateTime ;
-            sh:description "When the observation the entity reports was made." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 18 ;
-            sh:path ngsi-ld:observedAt ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Rok`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 12 ;
-            sh:path jc:rok ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Objednávka_spolu`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 10 ;
-            sh:path jc:objednavkaSpolu ],
-        [ sh:datatype xsd:string ;
             sh:description "The source column `Dátum_zverejnenia`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 5 ;
             sh:path jc:datumZverejnenia ],
         [ sh:datatype xsd:string ;
-            sh:description "The source column `Mena`." ;
+            sh:description "The source column `Text_objednávky`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 9 ;
-            sh:path jc:mena ],
+            sh:order 14 ;
+            sh:path jc:textObjednavky ],
+        [ sh:description "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:order 2 ;
+            sh:path jc:isPartOf ],
+        [ sh:description "The service the row was read from." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:order 1 ;
+            sh:path sdm:source ],
         [ sh:datatype xsd:string ;
             sh:description "Where the entity is, as GeoJSON geometry." ;
             sh:maxCount 1 ;
@@ -103,23 +43,83 @@ jc:PurchaseOrder a sh:NodeShape ;
             sh:order 17 ;
             sh:path geojson:geometry ],
         [ sh:datatype xsd:string ;
-            sh:description "The source column `Text_objednávky`." ;
+            sh:description "The source column `Dátum_vystavenia`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 14 ;
-            sh:path jc:textObjednavky ],
+            sh:order 4 ;
+            sh:path jc:datumVystavenia ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Adresa`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 3 ;
+            sh:path jc:adresa ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Rok`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 12 ;
+            sh:path jc:rok ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Dodávateľ`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 6 ;
+            sh:path jc:dodavatel ],
+        [ sh:datatype xsd:string ;
+            sh:description "Who published the row, with the credit its licence asks for." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 0 ;
+            sh:path sdm:dataProvider ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Predmet_objednávky`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 11 ;
+            sh:path jc:predmetObjednavky ],
         [ sh:datatype xsd:float ;
             sh:description "The source column `Suma`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 13 ;
-            sh:path jc:suma ] ;
+            sh:path jc:suma ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Objednávka_spolu`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 10 ;
+            sh:path jc:objednavkaSpolu ],
+        [ sh:datatype xsd:dateTime ;
+            sh:description "When the observation the entity reports was made." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 18 ;
+            sh:path ngsi-ld:observedAt ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Číslo_objednávky`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 8 ;
+            sh:path <https://smartdatamodels.org/dataModel.CPSV-AP/identifier> ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Mena`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 9 ;
+            sh:path jc:mena ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `IČO`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 7 ;
+            sh:path jc:iCO ] ;
     sh:targetClass jc:PurchaseOrder .
 
 ngsi-ld:Entity a sh:NodeShape ;
     rdfs:comment "The root every NGSI-LD entity class specialises." ;
     sh:closed true ;
-    sh:ignoredProperties ( jc:suma jc:predmetObjednavky jc:textObjednavky jc:datumZverejnenia jc:dodavatel sdm:source rdf:type jc:dataset jc:rok jc:mena jc:adresa jc:datumVystavenia <https://smartdatamodels.org/dataModel.CPSV-AP/identifier> sdm:dataProvider jc:objednavkaSpolu jc:iCO ) ;
+    sh:ignoredProperties ( <https://smartdatamodels.org/dataModel.CPSV-AP/identifier> jc:predmetObjednavky jc:iCO sdm:source rdf:type sdm:dataProvider jc:dodavatel jc:objednavkaSpolu jc:datumVystavenia jc:datumZverejnenia jc:isPartOf jc:mena jc:textObjednavky jc:adresa jc:suma jc:rok ) ;
     sh:property [ sh:datatype xsd:dateTime ;
             sh:description "When the observation the entity reports was made." ;
             sh:maxCount 1 ;

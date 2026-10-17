@@ -71,7 +71,7 @@ pipeline:
           "iCO": this."IČO".apply("string"),
           "dataProvider": { "type": "Property", "value": "Mesto Banská Bystrica (CC BY 4.0)" },
           "source": { "type": "Property", "value": "https://data.dev.joinedcontext.com/api/3/action/datastore_search?resource_id=dcd35739-3b47-4722-8c80-380d89d864e8&limit=32000" },
-          "dataset": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bb-objednavky-bb" }
+          "isPartOf": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bb-objednavky-bb" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.
     - archive:

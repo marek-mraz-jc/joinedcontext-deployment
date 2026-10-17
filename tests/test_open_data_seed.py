@@ -334,7 +334,7 @@ def test_every_mapping_writes_an_entity_its_model_accepts():
         entity = {"id": f"urn:ngsi-ld:{e['type']}:bbsk.sk:s:x-1", "type": e["type"],
                   **{generate.attribute(a): {"type": "Property", "value": SAMPLE[written[generate.attribute(a)]]} for a in e["properties"]},
                   **{a: {"type": "Property", "value": v} for a, v in (e.get("constants") or {}).items()},
-                  **{a: {"type": "Property", "value": "https://example.org/s"} for a in ("source", "dataset")},
+                  **{a: {"type": "Property", "value": "https://example.org/s"} for a in ("source", "isPartOf")},
                   "dataProvider": {"type": "Property", "value": "x (CC BY 4.0)"},
                   # The entity's own key where the base requires an identifier no column holds (T-4336).
                   **({"identifier": {"type": "Property", "value": "x-1"}} if e.get("identifierFromId") else {})}
@@ -363,7 +363,8 @@ def test_a_layer_with_a_key_writes_one_point_per_row_under_its_key():
     for e, r in zip(entities, rows):
         assert e["location"] == {"type": "GeoProperty", "value": r["geometry"]}
         assert e["name"]["value"] == r["properties"]["Názov"].strip()
-        assert e["dataset"]["value"] == entry("bbsk-zoznam-lekarni-v-bbk-c564de")["dataset"]
+        assert e["isPartOf"]["value"] == entry("bbsk-zoznam-lekarni-v-bbk-c564de")["dataset"]
+        assert "dataset" not in e, "the core @context owns `dataset` (T-4289)"
         assert "CC BY-SA 4.0" in e["dataProvider"]["value"]
     assert valid("bbsk", entities)
 

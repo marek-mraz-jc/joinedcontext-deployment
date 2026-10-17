@@ -13,10 +13,6 @@
     "type": "Property",
     "value": "dataProvider"
   },
-  "dataset": {
-    "type": "Property",
-    "value": "https://example.org/dataset"
-  },
   "dlzka": {
     "type": "Property",
     "value": 0.0
@@ -32,6 +28,10 @@
   "farba": {
     "type": "Property",
     "value": "farba"
+  },
+  "isPartOf": {
+    "type": "Property",
+    "value": "https://example.org/isPartOf"
   },
   "layer": {
     "type": "Property",

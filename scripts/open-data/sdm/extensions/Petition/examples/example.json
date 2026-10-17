@@ -1,10 +1,10 @@
 {
   "dataProvider": "dataProvider",
-  "dataset": "https://example.org/dataset",
   "datumDorucenia": "2026-01-01",
   "datumVybavenia": "2026-01-01",
   "id": "urn:ngsi-ld:Petition:joinedcontext.com:example:1",
   "identifier": "identifier",
+  "isPartOf": "https://example.org/isPartOf",
   "jeKvorova": "jeKvorova",
   "link": "link",
   "location": {

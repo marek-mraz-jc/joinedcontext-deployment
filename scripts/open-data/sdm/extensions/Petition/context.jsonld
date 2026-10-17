@@ -10,10 +10,6 @@
     "dataProvider": {
       "@id": "sdm:dataProvider"
     },
-    "dataset": {
-      "@id": "jc:dataset",
-      "@type": "xsd:anyURI"
-    },
     "datumDorucenia": {
       "@id": "jc:datumDorucenia",
       "@type": "xsd:date"
@@ -26,6 +22,10 @@
     "id": "@id",
     "identifier": {
       "@id": "sdm:dataModel.CPSV-AP/identifier"
+    },
+    "isPartOf": {
+      "@id": "jc:isPartOf",
+      "@type": "xsd:anyURI"
     },
     "jc": "https://joinedcontext.com/models/",
     "jeKvorova": {

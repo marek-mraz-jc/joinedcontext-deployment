@@ -13,10 +13,6 @@
     "type": "Property",
     "value": "dataProvider"
   },
-  "dataset": {
-    "type": "Property",
-    "value": "https://example.org/dataset"
-  },
   "datumZasadnutia": {
     "type": "Property",
     "value": "datumZasadnutia"
@@ -44,6 +40,10 @@
   "iCOSamospravy": {
     "type": "Property",
     "value": "iCOSamospravy"
+  },
+  "isPartOf": {
+    "type": "Property",
+    "value": "https://example.org/isPartOf"
   },
   "location": {
     "type": "GeoProperty",

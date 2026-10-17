@@ -2,12 +2,12 @@
   "alps": "alps",
   "ctt": "ctt",
   "dataProvider": "dataProvider",
-  "dataset": "https://example.org/dataset",
   "dlzka": 0.0,
   "fName": "fName",
   "fNazov": "fNazov",
   "farba": "farba",
   "id": "urn:ngsi-ld:CycleRoute:joinedcontext.com:example:1",
+  "isPartOf": "https://example.org/isPartOf",
   "layer": "layer",
   "location": {
     "coordinates": [

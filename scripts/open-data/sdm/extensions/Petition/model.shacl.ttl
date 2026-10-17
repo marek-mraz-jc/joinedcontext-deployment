@@ -20,70 +20,11 @@ jc:Petition a sh:NodeShape ;
             sh:nodeKind sh:Literal ;
             sh:order 17 ;
             sh:path geojson:geometry ],
-        [ sh:datatype xsd:date ;
-            sh:description "The source column `Dátum_vybavenia`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 4 ;
-            sh:path jc:datumVybavenia ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Poznámka`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 10 ;
-            sh:path jc:poznamka ],
-        [ sh:datatype xsd:integer ;
-            sh:description "The source column `Počet_osôb_podporujúcich_petíci`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 9 ;
-            sh:path jc:pocetOsobPodporujucichPetici ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Spôsob_vybavenia`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 11 ;
-            sh:path jc:sposobVybavenia ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Je_kvórová`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 6 ;
-            sh:path jc:jeKvorova ],
-        [ sh:datatype xsd:date ;
-            sh:description "The source column `Zverejnenie_výsledku_vybavenia`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 14 ;
-            sh:path jc:zverejnenieVysledkuVybavenia ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Názov_petície`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 8 ;
-            sh:path sdm:name ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Text`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 12 ;
-            sh:path jc:text ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Link`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 7 ;
-            sh:path jc:link ],
         [ sh:description "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:IRI ;
             sh:order 2 ;
-            sh:path jc:dataset ],
-        [ sh:description "The service the row was read from." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:IRI ;
-            sh:order 1 ;
-            sh:path sdm:source ],
+            sh:path jc:isPartOf ],
         [ sh:datatype xsd:dateTime ;
             sh:description "When the observation the entity reports was made." ;
             sh:maxCount 1 ;
@@ -91,46 +32,105 @@ jc:Petition a sh:NodeShape ;
             sh:order 18 ;
             sh:path ngsi-ld:observedAt ],
         [ sh:datatype xsd:string ;
-            sh:description "The source column `P_č_`." ;
+            sh:description "The source column `Názov_petície`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 5 ;
-            sh:path <https://smartdatamodels.org/dataModel.CPSV-AP/identifier> ],
+            sh:order 8 ;
+            sh:path sdm:name ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Link`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 7 ;
+            sh:path jc:link ],
         [ sh:datatype xsd:string ;
             sh:description "Who published the row, with the credit its licence asks for." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 0 ;
             sh:path sdm:dataProvider ],
-        [ sh:datatype xsd:date ;
-            sh:description "The source column `Dátum_doručenia`." ;
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Spôsob_vybavenia`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 3 ;
-            sh:path jc:datumDorucenia ],
+            sh:order 11 ;
+            sh:path jc:sposobVybavenia ],
+        [ sh:datatype xsd:date ;
+            sh:description "The source column `Zverejnenie_výsledku_vybavenia`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 14 ;
+            sh:path jc:zverejnenieVysledkuVybavenia ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Je_kvórová`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 6 ;
+            sh:path jc:jeKvorova ],
         [ sh:datatype xsd:string ;
             sh:description "The source column `Vybavovateľ_petície`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 13 ;
-            sh:path jc:vybavovatelPeticie ] ;
+            sh:path jc:vybavovatelPeticie ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `P_č_`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 5 ;
+            sh:path <https://smartdatamodels.org/dataModel.CPSV-AP/identifier> ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Text`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 12 ;
+            sh:path jc:text ],
+        [ sh:datatype xsd:integer ;
+            sh:description "The source column `Počet_osôb_podporujúcich_petíci`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 9 ;
+            sh:path jc:pocetOsobPodporujucichPetici ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Poznámka`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 10 ;
+            sh:path jc:poznamka ],
+        [ sh:datatype xsd:date ;
+            sh:description "The source column `Dátum_vybavenia`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 4 ;
+            sh:path jc:datumVybavenia ],
+        [ sh:description "The service the row was read from." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:order 1 ;
+            sh:path sdm:source ],
+        [ sh:datatype xsd:date ;
+            sh:description "The source column `Dátum_doručenia`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 3 ;
+            sh:path jc:datumDorucenia ] ;
     sh:targetClass jc:Petition .
 
 ngsi-ld:Entity a sh:NodeShape ;
     rdfs:comment "The root every NGSI-LD entity class specialises." ;
     sh:closed true ;
-    sh:ignoredProperties ( jc:zverejnenieVysledkuVybavenia jc:sposobVybavenia jc:datumDorucenia jc:link jc:vybavovatelPeticie jc:dataset sdm:source <https://smartdatamodels.org/dataModel.CPSV-AP/identifier> jc:poznamka jc:pocetOsobPodporujucichPetici sdm:name jc:datumVybavenia rdf:type sdm:dataProvider jc:jeKvorova jc:text ) ;
-    sh:property [ sh:datatype xsd:dateTime ;
-            sh:description "When the observation the entity reports was made." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 3 ;
-            sh:path ngsi-ld:observedAt ],
-        [ sh:datatype xsd:string ;
+    sh:ignoredProperties ( sdm:source jc:vybavovatelPeticie jc:jeKvorova jc:sposobVybavenia jc:link jc:text sdm:name jc:zverejnenieVysledkuVybavenia jc:datumDorucenia rdf:type sdm:dataProvider <https://smartdatamodels.org/dataModel.CPSV-AP/identifier> jc:pocetOsobPodporujucichPetici jc:datumVybavenia jc:isPartOf jc:poznamka ) ;
+    sh:property [ sh:datatype xsd:string ;
             sh:description "Where the entity is, as GeoJSON geometry." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 2 ;
-            sh:path geojson:geometry ] ;
+            sh:path geojson:geometry ],
+        [ sh:datatype xsd:dateTime ;
+            sh:description "When the observation the entity reports was made." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 3 ;
+            sh:path ngsi-ld:observedAt ] ;
     sh:targetClass ngsi-ld:Entity .
 

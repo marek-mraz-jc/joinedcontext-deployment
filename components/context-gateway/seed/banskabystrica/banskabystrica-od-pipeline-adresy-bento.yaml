@@ -68,7 +68,7 @@ pipeline:
           "orientC": this."Orient._č.".apply("string"),
           "dataProvider": { "type": "Property", "value": "Mesto Banská Bystrica (CC BY 4.0)" },
           "source": { "type": "Property", "value": "https://data.dev.joinedcontext.com/api/3/action/datastore_search?resource_id=dfd84e65-70bc-4842-9785-ba756ec8b738&limit=32000" },
-          "dataset": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bb-adresy" }
+          "isPartOf": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bb-adresy" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.
     - archive:

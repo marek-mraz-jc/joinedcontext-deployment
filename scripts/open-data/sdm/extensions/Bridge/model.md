@@ -23,7 +23,7 @@ Specialises `Entity`.
 |---|---|---|---|---|---|---|
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who published the row, with the credit its licence asks for. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The service the row was read from. |
-| `dataset` | Property | `uri` |  |  | `jc:dataset` | The catalogue dataset the row belongs to, where its licence and its other rows are. |
+| `isPartOf` | Property | `uri` |  |  | `jc:isPartOf` | The catalogue dataset the row belongs to, where its licence and its other rows are. |
 | `aktualnyStavebnotechnickyStav` | Property | `string` |  |  | `jc:aktualnyStavebnotechnickyStav` | The source column `Aktuálny_stavebnotechnický_stav`. |
 | `dlzkaPremosteniaM` | Property | `float` |  |  | `jc:dlzkaPremosteniaM` | The source column `Dĺžka_premostenia__m_`. |
 | `docasnostMosta` | Property | `string` |  |  | `jc:docasnostMosta` | The source column `Dočasnosť_mosta`. |

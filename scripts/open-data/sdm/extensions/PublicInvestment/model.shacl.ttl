@@ -14,334 +14,24 @@ jc:PublicInvestment a sh:NodeShape ;
     rdfs:comment "A public investment project, with its place where the source has one." ;
     sh:closed true ;
     sh:ignoredProperties ( rdf:type ) ;
-    sh:property [ sh:datatype xsd:float ;
-            sh:description "The source column `Obstarávacia_cena`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 53 ;
-            sh:path jc:obstaravaciaCena ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `NUTS1_CODE`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 42 ;
-            sh:path jc:nUTS1CODE ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Rok_text`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 60 ;
-            sh:path jc:rokText ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Úroveň`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 69 ;
-            sh:path jc:uroven ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Kód_kraja`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 26 ;
-            sh:path jc:kodKraja ],
-        [ sh:datatype xsd:string ;
-            sh:description "Where the entity is, as GeoJSON geometry." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 77 ;
-            sh:path geojson:geometry ],
-        [ sh:datatype xsd:float ;
-            sh:description "The source column `Rozpočet_aktuálny`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 62 ;
-            sh:path jc:rozpocetAktualny ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `NM2`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 38 ;
-            sh:path jc:nM2 ],
-        [ sh:datatype xsd:float ;
-            sh:description "The source column `GEOM_LON_BACKUP`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 15 ;
-            sh:path jc:gEOMLONBACKUP ],
-        [ sh:description "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:IRI ;
-            sh:order 2 ;
-            sh:path jc:dataset ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Aktuálny_stav`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 5 ;
-            sh:path jc:aktualnyStav ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Miesto_realizácie_projektu_obec`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 37 ;
-            sh:path jc:miestoRealizacieProjektuObec ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `F_LAT`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 12 ;
-            sh:path jc:fLAT ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Obec_názov`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 52 ;
-            sh:path jc:obecNazov ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Aktívne`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 4 ;
-            sh:path jc:aktivne ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `ID_projektu`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 22 ;
-            sh:path jc:iDProjektu ],
-        [ sh:datatype xsd:float ;
-            sh:description "The source column `VYMERA`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 70 ;
-            sh:path jc:vYMERA ],
-        [ sh:datatype xsd:dateTime ;
-            sh:description "The source column `DOW`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 9 ;
-            sh:path jc:dOW ],
-        [ sh:description "The service the row was read from." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:IRI ;
-            sh:order 1 ;
-            sh:path sdm:source ],
-        [ sh:datatype xsd:dateTime ;
-            sh:description "The source column `Platnosť_projektu_od`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 57 ;
-            sh:path jc:platnostProjektuOd ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Dátum_zániku`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 10 ;
-            sh:path jc:datumZaniku ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `NUTS3_CODE`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 46 ;
-            sh:path jc:nUTS3CODE ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Zaužívaný_názov_krátky`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 73 ;
-            sh:path jc:zauzivanyNazovKratky ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Okres_názov`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 56 ;
-            sh:path jc:okresNazov ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `typ_obce`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 66 ;
-            sh:path jc:typObce ],
-        [ sh:datatype xsd:string ;
-            sh:description "Who published the row, with the credit its licence asks for." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 0 ;
-            sh:path sdm:dataProvider ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Kód_obce`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 27 ;
-            sh:path jc:kodObce ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `FACC`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 11 ;
-            sh:path jc:fACC ],
-        [ sh:datatype xsd:string ;
+    sh:property [ sh:datatype xsd:string ;
             sh:description "The source column `Oficiálny_názov`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 54 ;
             sh:path jc:oficialnyNazov ],
         [ sh:datatype xsd:string ;
-            sh:description "The source column `LAU1_CODE`." ;
+            sh:description "The source column `Kód_projektu`, `ID_IA`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 31 ;
-            sh:path jc:lAU1CODE ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `NUTS2_CODE`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 44 ;
-            sh:path jc:nUTS2CODE ],
+            sh:order 23 ;
+            sh:path <https://smartdatamodels.org/dataModel.CPSV-AP/identifier> ],
         [ sh:datatype xsd:integer ;
-            sh:description "The source column `IDN4`." ;
+            sh:description "The source column `OBJECTID_1`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 21 ;
-            sh:path jc:iDN4 ],
-        [ sh:datatype xsd:integer ;
-            sh:description "The source column `IDN2`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 19 ;
-            sh:path jc:iDN2 ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Miesto_realizácie_projektu`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 35 ;
-            sh:path jc:miestoRealizacieProjektu ],
-        [ sh:datatype xsd:integer ;
-            sh:description "The source column `Kód_okresu_kraja`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 28 ;
-            sh:path jc:kodOkresuKraja ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Poznámka`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 58 ;
-            sh:path jc:poznamka ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Zaužívaný_názov_upravený`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 74 ;
-            sh:path jc:zauzivanyNazovUpraveny ],
-        [ sh:datatype xsd:dateTime ;
-            sh:description "When the observation the entity reports was made." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 78 ;
-            sh:path ngsi-ld:observedAt ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `NUTS3`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 45 ;
-            sh:path jc:nUTS3 ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Rok_zaradenia`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 61 ;
-            sh:path jc:rokZaradenia ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Sektor_OvZP_upraveny`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 65 ;
-            sh:path jc:sektorOvZPUpraveny ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Kategória`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 25 ;
-            sh:path jc:kategoria ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `F_LON`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 13 ;
-            sh:path jc:fLON ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Vecná_oblasť`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 71 ;
-            sh:path jc:vecnaOblast ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `LAU2`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 32 ;
-            sh:path jc:lAU2 ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Rozsah_územia_projektu`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 63 ;
-            sh:path jc:rozsahUzemiaProjektu ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Názov_projektu`, `Názov`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 47 ;
-            sh:path sdm:name ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `NM3`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 39 ;
-            sh:path jc:nM3 ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Miesto_realizácie_projektu_kraj`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 36 ;
-            sh:path jc:miestoRealizacieProjektuKraj ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `NM4`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 40 ;
-            sh:path jc:nM4 ],
-        [ sh:datatype xsd:float ;
-            sh:description "The source column `LAT_jitter`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 29 ;
-            sh:path jc:lATJitter ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Úrad_OvZP_IČO`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 67 ;
-            sh:path jc:uradOvZPICO ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `LAU2_CODE`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 33 ;
-            sh:path jc:lAU2CODE ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Okres_Kraj`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 55 ;
-            sh:path jc:okresKraj ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `LAU1`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 30 ;
-            sh:path jc:lAU1 ],
+            sh:order 50 ;
+            sh:path jc:oBJECTID1 ],
         [ sh:datatype xsd:float ;
             sh:description "The source column `Čerpanie_spolu`." ;
             sh:maxCount 1 ;
@@ -349,47 +39,95 @@ jc:PublicInvestment a sh:NodeShape ;
             sh:order 8 ;
             sh:path jc:cerpanieSpolu ],
         [ sh:datatype xsd:string ;
-            sh:description "The source column `Rok`." ;
+            sh:description "The source column `FACC`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 59 ;
-            sh:path jc:rok ],
+            sh:order 11 ;
+            sh:path jc:fACC ],
         [ sh:datatype xsd:string ;
-            sh:description "The source column `IČO`." ;
+            sh:description "The source column `LAU2_CODE`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 16 ;
-            sh:path jc:iCO ],
-        [ sh:datatype xsd:float ;
-            sh:description "The source column `SUM_Čerpanie_spolu`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 64 ;
-            sh:path jc:sUMCerpanieSpolu ],
+            sh:order 33 ;
+            sh:path jc:lAU2CODE ],
         [ sh:datatype xsd:string ;
-            sh:description "The source column `NUTS1`." ;
+            sh:description "The source column `F_LON`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 41 ;
-            sh:path jc:nUTS1 ],
+            sh:order 13 ;
+            sh:path jc:fLON ],
         [ sh:datatype xsd:integer ;
-            sh:description "The source column `OBJECTID_1`." ;
+            sh:description "The source column `IDN2`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 50 ;
-            sh:path jc:oBJECTID1 ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Názov_kraja`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 48 ;
-            sh:path jc:nazovKraja ],
+            sh:order 19 ;
+            sh:path jc:iDN2 ],
         [ sh:datatype xsd:string ;
             sh:description "The source column `Obec_NUTS`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 51 ;
             sh:path jc:obecNUTS ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Rok_text`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 60 ;
+            sh:path jc:rokText ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `typ_obce`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 66 ;
+            sh:path jc:typObce ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Úroveň`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 69 ;
+            sh:path jc:uroven ],
+        [ sh:datatype xsd:float ;
+            sh:description "The source column `Rozpočet_aktuálny`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 62 ;
+            sh:path jc:rozpocetAktualny ],
+        [ sh:datatype xsd:float ;
+            sh:description "The source column `VYMERA`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 70 ;
+            sh:path jc:vYMERA ],
+        [ sh:datatype xsd:float ;
+            sh:description "The source column `GEOM_LON_BACKUP`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 15 ;
+            sh:path jc:gEOMLONBACKUP ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Okres_názov`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 56 ;
+            sh:path jc:okresNazov ],
+        [ sh:datatype xsd:string ;
+            sh:description "Who published the row, with the credit its licence asks for." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 0 ;
+            sh:path sdm:dataProvider ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Rozsah_územia_projektu`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 63 ;
+            sh:path jc:rozsahUzemiaProjektu ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Vecná_oblasť`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 71 ;
+            sh:path jc:vecnaOblast ],
         [ sh:datatype xsd:float ;
             sh:description "The source column `LON_jitter`." ;
             sh:maxCount 1 ;
@@ -397,59 +135,17 @@ jc:PublicInvestment a sh:NodeShape ;
             sh:order 34 ;
             sh:path jc:lONJitter ],
         [ sh:datatype xsd:string ;
-            sh:description "The source column `IČO_prijímateľa`." ;
+            sh:description "The source column `Poznámka`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 18 ;
-            sh:path jc:iCOPrijimatela ],
+            sh:order 58 ;
+            sh:path jc:poznamka ],
         [ sh:datatype xsd:string ;
-            sh:description "The source column `Úrad_OvZP_OvZP`." ;
+            sh:description "The source column `Miesto_realizácie_projektu_kraj`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 68 ;
-            sh:path jc:uradOvZPOvZP ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `NUTS2`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 43 ;
-            sh:path jc:nUTS2 ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Index_`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 24 ;
-            sh:path jc:index ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Aktuálny_stav_upravený`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 6 ;
-            sh:path jc:aktualnyStavUpraveny ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Adresa`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 3 ;
-            sh:path jc:adresa ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Zaužívaný_názov`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 72 ;
-            sh:path jc:zauzivanyNazov ],
-        [ sh:datatype xsd:integer ;
-            sh:description "The source column `IDN3`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 20 ;
-            sh:path jc:iDN3 ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Kód_projektu`, `ID_IA`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 23 ;
-            sh:path <https://smartdatamodels.org/dataModel.CPSV-AP/identifier> ],
+            sh:order 36 ;
+            sh:path jc:miestoRealizacieProjektuKraj ],
         [ sh:datatype xsd:float ;
             sh:description "The source column `GEOM_LAT_BACKUP`." ;
             sh:maxCount 1 ;
@@ -457,11 +153,47 @@ jc:PublicInvestment a sh:NodeShape ;
             sh:order 14 ;
             sh:path jc:gEOMLATBACKUP ],
         [ sh:datatype xsd:string ;
-            sh:description "The source column `Názov_prijímateľa`." ;
+            sh:description "The source column `NM3`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 49 ;
-            sh:path jc:nazovPrijimatela ],
+            sh:order 39 ;
+            sh:path jc:nM3 ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `ID_projektu`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 22 ;
+            sh:path jc:iDProjektu ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Rok`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 59 ;
+            sh:path jc:rok ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Rok_zaradenia`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 61 ;
+            sh:path jc:rokZaradenia ],
+        [ sh:datatype xsd:string ;
+            sh:description "Where the entity is, as GeoJSON geometry." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 77 ;
+            sh:path geojson:geometry ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `NM4`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 40 ;
+            sh:path jc:nM4 ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Aktuálny_stav_upravený`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 6 ;
+            sh:path jc:aktualnyStavUpraveny ],
         [ sh:datatype xsd:string ;
             sh:description "The source column `IČO_organizácia`." ;
             sh:maxCount 1 ;
@@ -473,13 +205,281 @@ jc:PublicInvestment a sh:NodeShape ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 7 ;
-            sh:path jc:celkovaZazmluvnenaSuma ] ;
+            sh:path jc:celkovaZazmluvnenaSuma ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `IČO_prijímateľa`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 18 ;
+            sh:path jc:iCOPrijimatela ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Obec_názov`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 52 ;
+            sh:path jc:obecNazov ],
+        [ sh:datatype xsd:integer ;
+            sh:description "The source column `IDN4`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 21 ;
+            sh:path jc:iDN4 ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Adresa`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 3 ;
+            sh:path jc:adresa ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `NUTS3`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 45 ;
+            sh:path jc:nUTS3 ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Kód_kraja`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 26 ;
+            sh:path jc:kodKraja ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Zaužívaný_názov`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 72 ;
+            sh:path jc:zauzivanyNazov ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Názov_kraja`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 48 ;
+            sh:path jc:nazovKraja ],
+        [ sh:description "The service the row was read from." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:order 1 ;
+            sh:path sdm:source ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `NUTS1`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 41 ;
+            sh:path jc:nUTS1 ],
+        [ sh:datatype xsd:integer ;
+            sh:description "The source column `Kód_okresu_kraja`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 28 ;
+            sh:path jc:kodOkresuKraja ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Názov_projektu`, `Názov`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 47 ;
+            sh:path sdm:name ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `NUTS3_CODE`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 46 ;
+            sh:path jc:nUTS3CODE ],
+        [ sh:datatype xsd:float ;
+            sh:description "The source column `Obstarávacia_cena`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 53 ;
+            sh:path jc:obstaravaciaCena ],
+        [ sh:datatype xsd:float ;
+            sh:description "The source column `LAT_jitter`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 29 ;
+            sh:path jc:lATJitter ],
+        [ sh:datatype xsd:float ;
+            sh:description "The source column `SUM_Čerpanie_spolu`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 64 ;
+            sh:path jc:sUMCerpanieSpolu ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Okres_Kraj`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 55 ;
+            sh:path jc:okresKraj ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `F_LAT`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 12 ;
+            sh:path jc:fLAT ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `NUTS1_CODE`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 42 ;
+            sh:path jc:nUTS1CODE ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Úrad_OvZP_OvZP`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 68 ;
+            sh:path jc:uradOvZPOvZP ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `LAU2`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 32 ;
+            sh:path jc:lAU2 ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Kód_obce`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 27 ;
+            sh:path jc:kodObce ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Miesto_realizácie_projektu_obec`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 37 ;
+            sh:path jc:miestoRealizacieProjektuObec ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Aktívne`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 4 ;
+            sh:path jc:aktivne ],
+        [ sh:datatype xsd:integer ;
+            sh:description "The source column `IDN3`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 20 ;
+            sh:path jc:iDN3 ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `NUTS2`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 43 ;
+            sh:path jc:nUTS2 ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Aktuálny_stav`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 5 ;
+            sh:path jc:aktualnyStav ],
+        [ sh:datatype xsd:dateTime ;
+            sh:description "The source column `DOW`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 9 ;
+            sh:path jc:dOW ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Zaužívaný_názov_upravený`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 74 ;
+            sh:path jc:zauzivanyNazovUpraveny ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `NM2`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 38 ;
+            sh:path jc:nM2 ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Sektor_OvZP_upraveny`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 65 ;
+            sh:path jc:sektorOvZPUpraveny ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Zaužívaný_názov_krátky`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 73 ;
+            sh:path jc:zauzivanyNazovKratky ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `LAU1`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 30 ;
+            sh:path jc:lAU1 ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Kategória`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 25 ;
+            sh:path jc:kategoria ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Index_`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 24 ;
+            sh:path jc:index ],
+        [ sh:datatype xsd:dateTime ;
+            sh:description "The source column `Platnosť_projektu_od`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 57 ;
+            sh:path jc:platnostProjektuOd ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Názov_prijímateľa`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 49 ;
+            sh:path jc:nazovPrijimatela ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `NUTS2_CODE`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 44 ;
+            sh:path jc:nUTS2CODE ],
+        [ sh:description "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:order 2 ;
+            sh:path jc:isPartOf ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Úrad_OvZP_IČO`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 67 ;
+            sh:path jc:uradOvZPICO ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Miesto_realizácie_projektu`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 35 ;
+            sh:path jc:miestoRealizacieProjektu ],
+        [ sh:datatype xsd:dateTime ;
+            sh:description "When the observation the entity reports was made." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 78 ;
+            sh:path ngsi-ld:observedAt ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Dátum_zániku`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 10 ;
+            sh:path jc:datumZaniku ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `LAU1_CODE`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 31 ;
+            sh:path jc:lAU1CODE ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `IČO`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 16 ;
+            sh:path jc:iCO ] ;
     sh:targetClass jc:PublicInvestment .
 
 ngsi-ld:Entity a sh:NodeShape ;
     rdfs:comment "The root every NGSI-LD entity class specialises." ;
     sh:closed true ;
-    sh:ignoredProperties ( jc:nUTS3CODE jc:rozsahUzemiaProjektu jc:lAU1 jc:iCOPrijimatela jc:vYMERA jc:lATJitter jc:nM4 jc:kategoria jc:obstaravaciaCena jc:vecnaOblast jc:poznamka jc:zauzivanyNazov jc:typObce jc:nUTS2 jc:oBJECTID1 jc:iCOOrganizacia jc:nUTS2CODE jc:okresKraj jc:rok jc:aktivne jc:nazovKraja sdm:name sdm:source jc:datumZaniku jc:sektorOvZPUpraveny jc:miestoRealizacieProjektuObec jc:oficialnyNazov jc:rozpocetAktualny jc:nazovPrijimatela jc:rokText jc:kodKraja jc:iDN2 jc:kodOkresuKraja jc:index jc:sUMCerpanieSpolu jc:okresNazov jc:nM3 rdf:type jc:miestoRealizacieProjektu jc:gEOMLONBACKUP jc:iCO jc:uradOvZPOvZP jc:aktualnyStavUpraveny jc:dOW jc:aktualnyStav jc:zauzivanyNazovKratky jc:lAU2 jc:obecNazov jc:platnostProjektuOd jc:kodObce jc:adresa jc:cerpanieSpolu jc:obecNUTS jc:nUTS1 jc:fACC jc:fLON jc:zauzivanyNazovUpraveny jc:iDN4 jc:uradOvZPICO jc:dataset jc:gEOMLATBACKUP jc:nUTS3 jc:fLAT jc:iDN3 <https://smartdatamodels.org/dataModel.CPSV-AP/identifier> jc:celkovaZazmluvnenaSuma jc:rokZaradenia sdm:dataProvider jc:lONJitter jc:iDProjektu jc:nM2 jc:miestoRealizacieProjektuKraj jc:lAU2CODE jc:nUTS1CODE jc:uroven jc:lAU1CODE ) ;
+    sh:ignoredProperties ( jc:nM3 jc:uroven jc:rozpocetAktualny jc:kodKraja jc:iCO jc:nazovPrijimatela jc:lAU1 jc:nUTS2CODE jc:aktivne jc:iDN3 jc:kodOkresuKraja jc:nUTS3CODE jc:iCOOrganizacia jc:nUTS1CODE sdm:dataProvider jc:miestoRealizacieProjektuKraj jc:zauzivanyNazovKratky jc:aktualnyStavUpraveny jc:nM2 jc:nUTS1 jc:fLON jc:gEOMLATBACKUP jc:sektorOvZPUpraveny jc:zauzivanyNazov jc:iDN4 jc:isPartOf jc:lAU2 jc:gEOMLONBACKUP jc:adresa jc:uradOvZPOvZP sdm:source jc:obecNazov jc:celkovaZazmluvnenaSuma jc:aktualnyStav jc:dOW jc:okresNazov jc:vecnaOblast jc:sUMCerpanieSpolu jc:lAU1CODE jc:miestoRealizacieProjektu jc:lAU2CODE jc:oBJECTID1 jc:nazovKraja jc:rok jc:fLAT jc:uradOvZPICO <https://smartdatamodels.org/dataModel.CPSV-AP/identifier> jc:lONJitter jc:iCOPrijimatela jc:obstaravaciaCena jc:cerpanieSpolu jc:lATJitter jc:nM4 jc:kategoria jc:okresKraj jc:iDProjektu jc:vYMERA jc:datumZaniku jc:typObce jc:nUTS3 jc:kodObce jc:iDN2 jc:rozsahUzemiaProjektu jc:miestoRealizacieProjektuObec jc:index jc:rokText jc:poznamka jc:rokZaradenia jc:platnostProjektuOd sdm:name jc:obecNUTS rdf:type jc:zauzivanyNazovUpraveny jc:fACC jc:oficialnyNazov jc:nUTS2 ) ;
     sh:property [ sh:datatype xsd:dateTime ;
             sh:description "When the observation the entity reports was made." ;
             sh:maxCount 1 ;

@@ -74,7 +74,7 @@ pipeline:
           "identifier": { "type": "Property", "value": $local },
           "dataProvider": { "type": "Property", "value": "Mesto Banská Bystrica (CC BY 4.0)" },
           "source": { "type": "Property", "value": "https://data.dev.joinedcontext.com/api/3/action/datastore_search?resource_id=7d9f3a85-c733-47bd-96cf-3f4fadab81eb&limit=32000" },
-          "dataset": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bb-dotacie" }
+          "isPartOf": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bb-dotacie" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.
     - archive:

@@ -33,10 +33,6 @@
     "type": "Property",
     "value": "dataProvider"
   },
-  "dataset": {
-    "type": "Property",
-    "value": "https://example.org/dataset"
-  },
   "datumZaniku": {
     "type": "Property",
     "value": "datumZaniku"
@@ -96,6 +92,10 @@
   "index": {
     "type": "Property",
     "value": "index"
+  },
+  "isPartOf": {
+    "type": "Property",
+    "value": "https://example.org/isPartOf"
   },
   "kategoria": {
     "type": "Property",

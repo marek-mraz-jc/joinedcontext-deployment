@@ -14,35 +14,17 @@ jc:CommitteeSeat a sh:NodeShape ;
     rdfs:comment "A seat of a council committee; the citizens' names are kept out." ;
     sh:closed true ;
     sh:ignoredProperties ( rdf:type ) ;
-    sh:property [ sh:datatype xsd:string ;
-            sh:description "The source column `Názov_komisie`." ;
+    sh:property [ sh:description "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
             sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 3 ;
-            sh:path sdm:name ],
+            sh:nodeKind sh:IRI ;
+            sh:order 2 ;
+            sh:path jc:isPartOf ],
         [ sh:datatype xsd:string ;
             sh:description "The source column `Pozícia`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 4 ;
             sh:path jc:pozicia ],
-        [ sh:datatype xsd:string ;
-            sh:description "Who published the row, with the credit its licence asks for." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 0 ;
-            sh:path sdm:dataProvider ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Poznámka`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 5 ;
-            sh:path jc:poznamka ],
-        [ sh:description "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:IRI ;
-            sh:order 2 ;
-            sh:path jc:dataset ],
         [ sh:datatype xsd:dateTime ;
             sh:description "When the observation the entity reports was made." ;
             sh:maxCount 1 ;
@@ -55,17 +37,35 @@ jc:CommitteeSeat a sh:NodeShape ;
             sh:nodeKind sh:Literal ;
             sh:order 8 ;
             sh:path geojson:geometry ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Poznámka`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 5 ;
+            sh:path jc:poznamka ],
         [ sh:description "The service the row was read from." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:IRI ;
             sh:order 1 ;
-            sh:path sdm:source ] ;
+            sh:path sdm:source ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Názov_komisie`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 3 ;
+            sh:path sdm:name ],
+        [ sh:datatype xsd:string ;
+            sh:description "Who published the row, with the credit its licence asks for." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 0 ;
+            sh:path sdm:dataProvider ] ;
     sh:targetClass jc:CommitteeSeat .
 
 ngsi-ld:Entity a sh:NodeShape ;
     rdfs:comment "The root every NGSI-LD entity class specialises." ;
     sh:closed true ;
-    sh:ignoredProperties ( sdm:source jc:dataset jc:pozicia rdf:type sdm:name jc:poznamka sdm:dataProvider ) ;
+    sh:ignoredProperties ( sdm:source sdm:dataProvider jc:poznamka rdf:type jc:isPartOf sdm:name jc:pozicia ) ;
     sh:property [ sh:datatype xsd:dateTime ;
             sh:description "When the observation the entity reports was made." ;
             sh:maxCount 1 ;

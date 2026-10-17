@@ -6,7 +6,6 @@
   "charakter1": "charakter1",
   "dOW": "2026-01-01T00:00:00Z",
   "dataProvider": "dataProvider",
-  "dataset": "https://example.org/dataset",
   "dlzkaVU1": 0.0,
   "ekologickyStav": 0.0,
   "fACC": "fACC",
@@ -14,6 +13,7 @@
   "fIDRiekyBbskJoin": 0,
   "iDN2": 0,
   "id": "urn:ngsi-ld:WaterBodyStatus:joinedcontext.com:example:1",
+  "isPartOf": "https://example.org/isPartOf",
   "kODVU202": "kODVU202",
   "kod": "kod",
   "location": {

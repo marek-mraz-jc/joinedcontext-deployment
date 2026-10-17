@@ -29,10 +29,6 @@
     "type": "Property",
     "value": "dataProvider"
   },
-  "dataset": {
-    "type": "Property",
-    "value": "https://example.org/dataset"
-  },
   "dlzkaVU1": {
     "type": "Property",
     "value": 0.0
@@ -56,6 +52,10 @@
   "iDN2": {
     "type": "Property",
     "value": 0
+  },
+  "isPartOf": {
+    "type": "Property",
+    "value": "https://example.org/isPartOf"
   },
   "kODVU202": {
     "type": "Property",

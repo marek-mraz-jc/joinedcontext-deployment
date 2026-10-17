@@ -17,10 +17,6 @@
     "dataProvider": {
       "@id": "sdm:dataProvider"
     },
-    "dataset": {
-      "@id": "jc:dataset",
-      "@type": "xsd:anyURI"
-    },
     "druhKonstrukcie": {
       "@id": "jc:druhKonstrukcie"
     },
@@ -29,6 +25,10 @@
     },
     "geojson": "https://purl.org/geojson/vocab#",
     "id": "@id",
+    "isPartOf": {
+      "@id": "jc:isPartOf",
+      "@type": "xsd:anyURI"
+    },
     "jICZSR": {
       "@id": "jc:jICZSR"
     },

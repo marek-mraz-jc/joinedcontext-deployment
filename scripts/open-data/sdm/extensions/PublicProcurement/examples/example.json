@@ -4,7 +4,6 @@
   "cPVNazov": "cPVNazov",
   "cisloSpisu": "cisloSpisu",
   "dataProvider": "dataProvider",
-  "dataset": "https://example.org/dataset",
   "datumSpustenia": "2026-01-01T00:00:00Z",
   "datumUkoncenia": "datumUkoncenia",
   "druhKomoditAleboSluzieb": "druhKomoditAleboSluzieb",
@@ -17,6 +16,7 @@
   "iDZakazky": 0,
   "id": "urn:ngsi-ld:PublicProcurement:joinedcontext.com:example:1",
   "identifier": "identifier",
+  "isPartOf": "https://example.org/isPartOf",
   "lehotaNaPredkladanie": "2026-01-01T00:00:00Z",
   "location": {
     "coordinates": [

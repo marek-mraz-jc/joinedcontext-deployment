@@ -23,7 +23,7 @@ Specialises `Entity`.
 |---|---|---|---|---|---|---|
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who published the row, with the credit its licence asks for. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The service the row was read from. |
-| `dataset` | Property | `uri` |  |  | `jc:dataset` | The catalogue dataset the row belongs to, where its licence and its other rows are. |
+| `isPartOf` | Property | `uri` |  |  | `jc:isPartOf` | The catalogue dataset the row belongs to, where its licence and its other rows are. |
 | `cZasadnutia` | Property | `integer` |  |  | `jc:cZasadnutia` | The source column `Č._zasadnutia`. |
 | `cisloZasadnutia` | Property | `string` |  |  | `jc:cisloZasadnutia` | The source column `Číslo_zasadnutia`. |
 | `datumZasadnutia` | Property | `string` |  |  | `jc:datumZasadnutia` | The source column `Dátum_zasadnutia`. |

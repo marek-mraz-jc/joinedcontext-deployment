@@ -12,22 +12,22 @@ jc:CommitteeSeat a owl:Class,
     rdfs:label "CommitteeSeat" ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:dataProvider ],
+            owl:onProperty jc:pozicia ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:dataset ],
+            owl:onProperty jc:poznamka ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:source ],
+            owl:onProperty jc:isPartOf ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:name ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:pozicia ],
+            owl:onProperty jc:source ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:poznamka ],
+            owl:onProperty jc:dataProvider ],
         jc:Entity ;
     skos:definition "A seat of a council committee; the citizens' names are kept out." ;
     skos:exactMatch jc:CommitteeSeat ;
@@ -42,10 +42,10 @@ jc:Entity a owl:Class,
             owl:onProperty jc:type ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:observedAt ],
+            owl:onProperty jc:location ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:location ],
+            owl:onProperty jc:observedAt ],
         [ a owl:Restriction ;
             owl:cardinality 1 ;
             owl:onProperty jc:id ] ;
@@ -75,14 +75,6 @@ jc:dataProvider a owl:ObjectProperty,
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/CommitteeSeat> ;
     jc:ngsi_ld_kind "Property" ;
     jc:upstream_source "https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/context.jsonld" .
-
-jc:dataset a owl:ObjectProperty,
-        linkml:SlotDefinition ;
-    rdfs:label "dataset" ;
-    rdfs:range jc:uri ;
-    skos:definition "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
-    skos:inScheme <https://joinedcontext.com/models/sdm/extensions/CommitteeSeat> ;
-    jc:ngsi_ld_kind "Property" .
 
 jc:date a owl:Class,
         linkml:TypeDefinition ;
@@ -134,6 +126,14 @@ jc:integer a owl:Class,
             owl:onDataRange jc:integer ;
             owl:onProperty linkml:topValue ;
             owl:qualifiedCardinality 1 ] .
+
+jc:isPartOf a owl:ObjectProperty,
+        linkml:SlotDefinition ;
+    rdfs:label "isPartOf" ;
+    rdfs:range jc:uri ;
+    skos:definition "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
+    skos:inScheme <https://joinedcontext.com/models/sdm/extensions/CommitteeSeat> ;
+    jc:ngsi_ld_kind "Property" .
 
 jc:jsonpath a owl:Class,
         linkml:TypeDefinition ;

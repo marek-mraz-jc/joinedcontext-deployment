@@ -15,11 +15,58 @@ jc:Invoice a sh:NodeShape ;
     sh:closed true ;
     sh:ignoredProperties ( rdf:type ) ;
     sh:property [ sh:datatype xsd:date ;
+            sh:description "The source column `Dátum_doručenia`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 7 ;
+            sh:path jc:datumDorucenia ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Číslo_zmluvy`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 5 ;
+            sh:path jc:cisloZmluvy ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Predmet_faktúry`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 12 ;
+            sh:path jc:predmetFaktury ],
+        [ sh:description "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:order 2 ;
+            sh:path jc:isPartOf ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Dodávateľ`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 9 ;
+            sh:path jc:dodavatel ],
+        [ sh:datatype xsd:date ;
             sh:description "The source column `Dátum_splatnosti`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 8 ;
             sh:path jc:datumSplatnosti ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Číslo_objednávky`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 4 ;
+            sh:path jc:cisloObjednavky ],
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Rok`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 13 ;
+            sh:path jc:rok ],
+        [ sh:datatype xsd:string ;
+            sh:description "Where the entity is, as GeoJSON geometry." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 17 ;
+            sh:path geojson:geometry ],
         [ sh:datatype xsd:string ;
             sh:description "The source column `IČO`." ;
             sh:maxCount 1 ;
@@ -33,104 +80,57 @@ jc:Invoice a sh:NodeShape ;
             sh:order 6 ;
             sh:path jc:dIC ],
         [ sh:datatype xsd:string ;
-            sh:description "Where the entity is, as GeoJSON geometry." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 17 ;
-            sh:path geojson:geometry ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Číslo_faktúry`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 11 ;
-            sh:path <https://smartdatamodels.org/dataModel.CPSV-AP/identifier> ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Dodávateľ`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 9 ;
-            sh:path jc:dodavatel ],
-        [ sh:description "The service the row was read from." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:IRI ;
-            sh:order 1 ;
-            sh:path sdm:source ],
-        [ sh:datatype xsd:string ;
             sh:description "Who published the row, with the credit its licence asks for." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 0 ;
             sh:path sdm:dataProvider ],
-        [ sh:description "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:IRI ;
-            sh:order 2 ;
-            sh:path jc:dataset ],
-        [ sh:datatype xsd:float ;
-            sh:description "The source column `Suma`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 14 ;
-            sh:path jc:suma ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Predmet_faktúry`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 12 ;
-            sh:path jc:predmetFaktury ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Rok`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 13 ;
-            sh:path jc:rok ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Číslo_objednávky`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 4 ;
-            sh:path jc:cisloObjednavky ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Číslo_zmluvy`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 5 ;
-            sh:path jc:cisloZmluvy ],
-        [ sh:datatype xsd:dateTime ;
-            sh:description "When the observation the entity reports was made." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 18 ;
-            sh:path ngsi-ld:observedAt ],
         [ sh:datatype xsd:string ;
             sh:description "The source column `Adresa`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 3 ;
             sh:path jc:adresa ],
-        [ sh:datatype xsd:date ;
-            sh:description "The source column `Dátum_doručenia`." ;
+        [ sh:datatype xsd:string ;
+            sh:description "The source column `Číslo_faktúry`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
-            sh:order 7 ;
-            sh:path jc:datumDorucenia ] ;
+            sh:order 11 ;
+            sh:path <https://smartdatamodels.org/dataModel.CPSV-AP/identifier> ],
+        [ sh:datatype xsd:dateTime ;
+            sh:description "When the observation the entity reports was made." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 18 ;
+            sh:path ngsi-ld:observedAt ],
+        [ sh:datatype xsd:float ;
+            sh:description "The source column `Suma`." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 14 ;
+            sh:path jc:suma ],
+        [ sh:description "The service the row was read from." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:order 1 ;
+            sh:path sdm:source ] ;
     sh:targetClass jc:Invoice .
 
 ngsi-ld:Entity a sh:NodeShape ;
     rdfs:comment "The root every NGSI-LD entity class specialises." ;
     sh:closed true ;
-    sh:ignoredProperties ( sdm:dataProvider jc:dIC jc:datumDorucenia jc:datumSplatnosti jc:predmetFaktury jc:rok jc:cisloObjednavky sdm:source jc:iCO jc:dataset jc:adresa jc:dodavatel rdf:type jc:cisloZmluvy jc:suma <https://smartdatamodels.org/dataModel.CPSV-AP/identifier> ) ;
-    sh:property [ sh:datatype xsd:dateTime ;
-            sh:description "When the observation the entity reports was made." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 3 ;
-            sh:path ngsi-ld:observedAt ],
-        [ sh:datatype xsd:string ;
+    sh:ignoredProperties ( sdm:dataProvider jc:datumSplatnosti jc:dodavatel jc:dIC jc:cisloObjednavky jc:datumDorucenia jc:suma jc:iCO jc:predmetFaktury jc:isPartOf jc:adresa sdm:source rdf:type jc:rok jc:cisloZmluvy <https://smartdatamodels.org/dataModel.CPSV-AP/identifier> ) ;
+    sh:property [ sh:datatype xsd:string ;
             sh:description "Where the entity is, as GeoJSON geometry." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 2 ;
-            sh:path geojson:geometry ] ;
+            sh:path geojson:geometry ],
+        [ sh:datatype xsd:dateTime ;
+            sh:description "When the observation the entity reports was made." ;
+            sh:maxCount 1 ;
+            sh:nodeKind sh:Literal ;
+            sh:order 3 ;
+            sh:path ngsi-ld:observedAt ] ;
     sh:targetClass ngsi-ld:Entity .
 

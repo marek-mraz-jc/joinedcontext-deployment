@@ -9,10 +9,6 @@
     "type": "Property",
     "value": "dataProvider"
   },
-  "dataset": {
-    "type": "Property",
-    "value": "https://example.org/dataset"
-  },
   "datumVystavenia": {
     "type": "Property",
     "value": "datumVystavenia"
@@ -32,6 +28,10 @@
   "identifier": {
     "type": "Property",
     "value": "identifier"
+  },
+  "isPartOf": {
+    "type": "Property",
+    "value": "https://example.org/isPartOf"
   },
   "location": {
     "type": "GeoProperty",

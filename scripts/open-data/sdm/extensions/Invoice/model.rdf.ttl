@@ -79,29 +79,17 @@ jc:dataProvider a linkml:SlotDefinition ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/Invoice"^^xsd:anyURI ;
     skos:mappingRelation "https://smartdatamodels.org/dataProvider"^^xsd:anyURI ;
     linkml:annotations [ a linkml:Annotation ;
-            skos:example "https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld" ;
-            linkml:tag "upstream_source"^^xsd:anyURI ],
-        [ a linkml:Annotation ;
             skos:example "Property" ;
-            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ] ;
+            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ],
+        [ a linkml:Annotation ;
+            skos:example "https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld" ;
+            linkml:tag "upstream_source"^^xsd:anyURI ] ;
     linkml:definition_uri "https://joinedcontext.com/models/dataProvider"^^xsd:anyURI ;
     linkml:description "Who published the row, with the credit its licence asks for." ;
     linkml:domain_of jc:Invoice ;
     linkml:owner jc:Invoice ;
     linkml:range jc:string ;
     linkml:slot_uri "https://smartdatamodels.org/dataProvider"^^xsd:anyURI .
-
-jc:dataset a linkml:SlotDefinition ;
-    skos:inScheme "https://joinedcontext.com/models/sdm/extensions/Invoice"^^xsd:anyURI ;
-    linkml:annotations [ a linkml:Annotation ;
-            skos:example "Property" ;
-            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ] ;
-    linkml:definition_uri "https://joinedcontext.com/models/dataset"^^xsd:anyURI ;
-    linkml:description "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
-    linkml:domain_of jc:Invoice ;
-    linkml:owner jc:Invoice ;
-    linkml:range jc:uri ;
-    linkml:slot_uri "https://joinedcontext.com/models/dataset"^^xsd:anyURI .
 
 jc:date_or_datetime a linkml:TypeDefinition ;
     skos:editorialNote "If you are authoring schemas in LinkML YAML, the type is referenced with the lower case \"date_or_datetime\"." ;
@@ -203,6 +191,18 @@ jc:integer a linkml:TypeDefinition ;
     linkml:description "An integer" ;
     linkml:uri "http://www.w3.org/2001/XMLSchema#integer"^^xsd:anyURI .
 
+jc:isPartOf a linkml:SlotDefinition ;
+    skos:inScheme "https://joinedcontext.com/models/sdm/extensions/Invoice"^^xsd:anyURI ;
+    linkml:annotations [ a linkml:Annotation ;
+            skos:example "Property" ;
+            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ] ;
+    linkml:definition_uri "https://joinedcontext.com/models/isPartOf"^^xsd:anyURI ;
+    linkml:description "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
+    linkml:domain_of jc:Invoice ;
+    linkml:owner jc:Invoice ;
+    linkml:range jc:uri ;
+    linkml:slot_uri "https://joinedcontext.com/models/isPartOf"^^xsd:anyURI .
+
 jc:jsonpath a linkml:TypeDefinition ;
     dcterms:conformsTo "https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html" ;
     skos:editorialNote "If you are authoring schemas in LinkML YAML, the type is referenced with the lower case \"jsonpath\"." ;
@@ -279,11 +279,11 @@ jc:source a linkml:SlotDefinition ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/Invoice"^^xsd:anyURI ;
     skos:mappingRelation "https://smartdatamodels.org/source"^^xsd:anyURI ;
     linkml:annotations [ a linkml:Annotation ;
-            skos:example "https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld" ;
-            linkml:tag "upstream_source"^^xsd:anyURI ],
-        [ a linkml:Annotation ;
             skos:example "Property" ;
-            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ] ;
+            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ],
+        [ a linkml:Annotation ;
+            skos:example "https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld" ;
+            linkml:tag "upstream_source"^^xsd:anyURI ] ;
     linkml:definition_uri "https://joinedcontext.com/models/source"^^xsd:anyURI ;
     linkml:description "The service the row was read from." ;
     linkml:domain_of jc:Invoice ;
@@ -356,14 +356,14 @@ jc:id a linkml:SlotDefinition ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/Invoice"^^xsd:anyURI ;
     skos:mappingRelation "https://uri.etsi.org/ngsi-ld/hasId"^^xsd:anyURI ;
     linkml:annotations [ a linkml:Annotation ;
-            skos:example "Property" ;
-            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ],
-        [ a linkml:Annotation ;
             skos:example "ETSI NGSI-LD core context v1.8" ;
             linkml:tag "upstream_source"^^xsd:anyURI ],
         [ a linkml:Annotation ;
             skos:example "@id" ;
-            linkml:tag "jsonld_keyword"^^xsd:anyURI ] ;
+            linkml:tag "jsonld_keyword"^^xsd:anyURI ],
+        [ a linkml:Annotation ;
+            skos:example "Property" ;
+            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ] ;
     linkml:definition_uri "https://joinedcontext.com/models/id"^^xsd:anyURI ;
     linkml:description "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}." ;
     linkml:domain_of jc:Entity ;
@@ -393,11 +393,11 @@ jc:observedAt a linkml:SlotDefinition ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/Invoice"^^xsd:anyURI ;
     skos:mappingRelation "https://uri.etsi.org/ngsi-ld/observedAt"^^xsd:anyURI ;
     linkml:annotations [ a linkml:Annotation ;
-            skos:example "ETSI NGSI-LD core context v1.8" ;
-            linkml:tag "upstream_source"^^xsd:anyURI ],
-        [ a linkml:Annotation ;
             skos:example "Property" ;
-            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ] ;
+            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ],
+        [ a linkml:Annotation ;
+            skos:example "ETSI NGSI-LD core context v1.8" ;
+            linkml:tag "upstream_source"^^xsd:anyURI ] ;
     linkml:definition_uri "https://joinedcontext.com/models/observedAt"^^xsd:anyURI ;
     linkml:description "When the observation the entity reports was made." ;
     linkml:domain_of jc:Entity ;
@@ -409,14 +409,14 @@ jc:type a linkml:SlotDefinition ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/Invoice"^^xsd:anyURI ;
     skos:mappingRelation "https://uri.etsi.org/ngsi-ld/hasType"^^xsd:anyURI ;
     linkml:annotations [ a linkml:Annotation ;
+            skos:example "Property" ;
+            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ],
+        [ a linkml:Annotation ;
             skos:example "ETSI NGSI-LD core context v1.8" ;
             linkml:tag "upstream_source"^^xsd:anyURI ],
         [ a linkml:Annotation ;
             skos:example "@type" ;
-            linkml:tag "jsonld_keyword"^^xsd:anyURI ],
-        [ a linkml:Annotation ;
-            skos:example "Property" ;
-            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ] ;
+            linkml:tag "jsonld_keyword"^^xsd:anyURI ] ;
     linkml:definition_uri "https://joinedcontext.com/models/type"^^xsd:anyURI ;
     linkml:description "The entity type, one class of a published data model." ;
     linkml:domain_of jc:Entity ;
@@ -478,22 +478,22 @@ jc:Invoice a linkml:ClassDefinition,
     dcterms:title "Invoice, an extension of dataModel.CPSV-AP/Cost" ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/Invoice"^^xsd:anyURI ;
     skos:mappingRelation "jc:Invoice"^^xsd:anyURI ;
-    sh:declare [ sh:namespace "http://www.w3.org/2001/XMLSchema#"^^xsd:anyURI ;
-            sh:prefix "xsd" ],
-        [ sh:namespace "https://joinedcontext.com/models/"^^xsd:anyURI ;
-            sh:prefix "jc" ],
-        [ sh:namespace "https://smartdatamodels.org/"^^xsd:anyURI ;
-            sh:prefix "sdm" ],
-        [ sh:namespace "https://uri.etsi.org/ngsi-ld/"^^xsd:anyURI ;
-            sh:prefix "ngsi-ld" ],
+    sh:declare [ sh:namespace "https://purl.org/geojson/vocab#"^^xsd:anyURI ;
+            sh:prefix "geojson" ],
         [ sh:namespace "http://schema.org/"^^xsd:anyURI ;
             sh:prefix "schema" ],
-        [ sh:namespace "https://purl.org/geojson/vocab#"^^xsd:anyURI ;
-            sh:prefix "geojson" ],
+        [ sh:namespace "https://uri.etsi.org/ngsi-ld/"^^xsd:anyURI ;
+            sh:prefix "ngsi-ld" ],
+        [ sh:namespace "http://www.w3.org/ns/shex#"^^xsd:anyURI ;
+            sh:prefix "shex" ],
+        [ sh:namespace "https://smartdatamodels.org/"^^xsd:anyURI ;
+            sh:prefix "sdm" ],
+        [ sh:namespace "https://joinedcontext.com/models/"^^xsd:anyURI ;
+            sh:prefix "jc" ],
         [ sh:namespace "https://w3id.org/linkml/"^^xsd:anyURI ;
             sh:prefix "linkml" ],
-        [ sh:namespace "http://www.w3.org/ns/shex#"^^xsd:anyURI ;
-            sh:prefix "shex" ] ;
+        [ sh:namespace "http://www.w3.org/2001/XMLSchema#"^^xsd:anyURI ;
+            sh:prefix "xsd" ] ;
     linkml:annotations [ a linkml:Annotation ;
             skos:example "https://smart-data-models.github.io/dataModel.CPSV-AP/Cost/schema.json" ;
             linkml:tag "upstream_source"^^xsd:anyURI ] ;
@@ -514,13 +514,13 @@ jc:Invoice a linkml:ClassDefinition,
         jc:cisloZmluvy,
         jc:dIC,
         jc:dataProvider,
-        jc:dataset,
         jc:datumDorucenia,
         jc:datumSplatnosti,
         jc:dodavatel,
         jc:iCO,
         jc:id,
         jc:identifier,
+        jc:isPartOf,
         jc:location,
         jc:observedAt,
         jc:predmetFaktury,
@@ -528,7 +528,7 @@ jc:Invoice a linkml:ClassDefinition,
         jc:source,
         jc:suma,
         jc:type ;
-    linkml:source_file_size 17478 ;
+    linkml:source_file_size 17481 ;
     linkml:types jc:boolean,
         jc:curie,
         jc:date,
