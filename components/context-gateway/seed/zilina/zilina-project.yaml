@@ -9,6 +9,8 @@ metadata:
     en: "A city of 79 617 people and its university: the open data published about them, and the indicators computed from it."
 spec:
   organizationRef: hel
+  # Who publishes this data, the did:web assigner of its Apps' Policies (PF-108); describes, grants nothing.
+  domain: zilina.sk
   # The same quotas as every demo project (T-2873, PF-73): the mechanism stays, nobody reaches it.
   quotas:
     contextSpaces: 100
