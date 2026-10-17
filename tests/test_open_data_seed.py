@@ -890,4 +890,4 @@ def test_each_publisher_expects_its_converted_datasets_and_its_endpoints():
     assert set(od) <= mapped, "a converted dataset the mapping does not map"
     assert len({entry["dataset"] for entry in od.values()}) == len(od), "one entry per dataset"
     assert expected_catalogue() == {
-        "banskabystrica": 12 + 4, "bbsk": 83 + 5, "hel-fi": 11, "praha": 7, "slovensko": 1, "zilina": 5}
+        "banskabystrica": 13 + 4, "bbsk": 88 + 5, "hel-fi": 11, "praha": 7, "slovensko": 1, "zilina": 5}
