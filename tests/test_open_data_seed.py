@@ -100,6 +100,10 @@ def test_every_mapped_dataset_has_its_pipeline_unless_a_seed_reads_it_whole():
     modes = {yaml.safe_load(p.read_text())["spec"]["output"]["mode"] for project in generate.PROJECTS
              for p in files(project, "pipeline")}
     assert modes == {"replace"}
+    # Every pipeline runs: T-4348's queue loads one batch at a time, so no dataset waits on a half (T-4515).
+    off = [p.name for project in generate.PROJECTS for p in files(project, "pipeline")
+           if not yaml.safe_load(p.read_text())["spec"]["enabled"]]
+    assert off == []
 
 
 def test_the_model_classes_and_both_policies_name_every_type_the_pipelines_write():

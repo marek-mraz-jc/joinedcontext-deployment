@@ -9,7 +9,7 @@ metadata:
     en: DTM_BB-register-verejnej-zelene-1
 spec:
   class: scheduled
-  enabled: false
+  enabled: true
   schedule: 35 1 * * 5
   source:
     dataSourceRef:

@@ -9,7 +9,7 @@ metadata:
     en: Ekologický potenciál vodných útvarov
 spec:
   class: scheduled
-  enabled: false
+  enabled: true
   schedule: 3 2 * * 2
   source:
     dataSourceRef:
