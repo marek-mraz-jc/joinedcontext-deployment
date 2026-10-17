@@ -1,0 +1,28 @@
+id: https://joinedcontext.com/models/slovensko/catalog
+name: catalog
+title: Open data catalogue
+description: >-
+  The types of the catalogue space (DM-61, T-4500, T-4525): one Smart Data Models DCAT-AP Dataset
+  per Context Space with a public Endpoint and one DataService per public Endpoint, IRIs cited
+  rather than minted (DM-04, DM-16).
+license: https://joinedcontext.com/licenses/cc-by-4.0
+prefixes:
+  linkml: https://w3id.org/linkml/
+  dcat: http://www.w3.org/ns/dcat#
+  ngsi-ld: https://uri.etsi.org/ngsi-ld/
+default_prefix: dcat
+default_range: string
+imports:
+  - linkml:types
+  - ngsi-ld-core
+classes:
+  Dataset:
+    class_uri: dcat:Dataset
+    description: One dataset of the catalogue, a Context Space with at least one public Endpoint.
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.DCAT-AP
+  DataService:
+    class_uri: dcat:DataService
+    description: One public Endpoint of a dataset, its access path.
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.DCAT-AP

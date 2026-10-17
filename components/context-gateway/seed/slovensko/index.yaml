@@ -22,6 +22,8 @@ slovensko-pipeline-ovzdusie-bento.yaml: projects/slovensko/pipelines/ovzdusie/be
 slovensko-knowledge-catalogue-ngsi.yaml: projects/slovensko/assistant/sources/catalogue.yaml
 # The NGSI-LD open-data catalogue (T-4525, T-4500): written by the Portal reconciler, read by anyone.
 slovensko-space-catalog.yaml: projects/slovensko/spaces/catalog/space.yaml
+slovensko-datamodel-catalog.yaml: projects/slovensko/spaces/catalog/datamodels/catalog.yaml
+catalog.linkml.yaml: projects/slovensko/spaces/catalog/datamodels/catalog.linkml.yaml
 slovensko-endpoint-catalog.yaml: projects/slovensko/spaces/catalog/endpoints/catalog.yaml
 slovensko-policy-catalog-public-read.yaml: projects/slovensko/spaces/catalog/policies/catalog-public-read.yaml
 slovensko-policy-catalog-portal-write.yaml: projects/slovensko/spaces/catalog/policies/catalog-portal-write.yaml
