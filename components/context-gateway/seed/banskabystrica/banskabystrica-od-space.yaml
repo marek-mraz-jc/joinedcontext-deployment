@@ -37,3 +37,13 @@ spec:
     history: P30D
   - entityType: PurchaseOrder
     history: 'off'
+  quality:
+  - name: in-area
+    entityType: Address
+    kind: area
+    attribute: location
+    bbox:
+    - 18.95
+    - 48.6
+    - 19.35
+    - 48.9
