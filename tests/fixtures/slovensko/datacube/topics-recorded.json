@@ -293,6 +293,13 @@
   "sk": "Zahraničný obchod podľa kapitol Harmonizovaného systému",
   "en": "Foreign trade by Chapters in Harmonised System"
  },
+ "zo0011ms": {
+  "theme": "zo",
+  "update": "2026-09-08",
+  "cells": 12096,
+  "sk": "Zahraničný obchod podľa krajín, kontinentov a ekonomických zoskupení",
+  "en": "Foreign trade by countries, continents and economic groupings"
+ },
  "zp1005rs": {
   "theme": "zp",
   "update": "2025-10-15",

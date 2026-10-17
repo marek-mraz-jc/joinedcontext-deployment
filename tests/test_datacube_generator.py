@@ -1,7 +1,7 @@
-"""ŠÚ SR's DATAcube as 44 public Endpoints of project slovensko (T-4390, T-4402).
+"""ŠÚ SR's DATAcube as 45 public Endpoints of project slovensko (T-4390, T-4402).
 
 `scripts/open-data/datacube.py` writes one space `slovensko/<topic>/` per entry of its TOPICS: one or
-two headline tables of a theme, each at most CUBE_LIMIT cells. Here it runs over a recorded excerpt
+two headline tables of a theme, a table over CUBE_LIMIT cells read in slices. Here it runs over a recorded excerpt
 of the collection (`fixtures/slovensko/datacube/`, fetched on 2026-10-17: themes as, ps and is), with
 the dimension sizes stubbed, and Bento runs the generated decoder over two recorded cubes. The
 committed folders are checked against TOPICS, the seed index, the pipelines' account and the catalogue.
@@ -42,8 +42,8 @@ def items() -> list[dict]:
 
 def generate(seed: Path, topics=FIXTURE_TOPICS):
     chosen = datacube.selected(items(), topics)
-    cells = {d["code"]: 1000 for _, ds in chosen for d in ds}
-    files, rows = datacube.render(chosen, cells, seed)
+    parts = {d["code"]: [(datacube.dataset_url(d), 1000)] for _, ds in chosen for d in ds}
+    files, rows = datacube.render(chosen, parts, seed)
     for path, text in files.items():
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text)
@@ -72,7 +72,7 @@ def test_a_dataset_without_an_sk_label_takes_the_en_one():
 def test_a_cubes_size_is_the_product_of_its_dimensions():
     ds = [{"code": "as1001rs", "dimensions": {"a": {}, "b": {}}}, {"code": "ps1002rs", "dimensions": {"c": {}}}]
     counts = {"a": 3, "b": 4, "c": 0}
-    get = lambda url: {"category": {"index": dict.fromkeys(range(counts[url.split("/")[-1].split("?")[0]]))}}  # noqa: E731
+    get = lambda url: {"category": {"index": {str(i): i for i in range(counts[url.split("/")[-1].split("?")[0]])}}}  # noqa: E731
     assert datacube.sizes(ds, get) == {"as1001rs": 12, "ps1002rs": 0}
 
 
@@ -121,7 +121,8 @@ def test_catalogue_rows_name_the_generated_endpoint(tmp_path):
 
 
 def test_the_index_block_and_the_account_roles_are_replaced_not_appended():
-    entries = datacube.placed(datacube.selected(items(), FIXTURE_TOPICS))
+    chosen = datacube.selected(items(), FIXTURE_TOPICS)
+    entries = datacube.placed(chosen, {d["code"]: [("", 1)] for _, ds in chosen for d in ds})
     assert entries["susr-ps/datasource-ps1002rs.yaml"] == "projects/slovensko/datasources/susr-ps1002rs.yaml"
     assert entries["susr-as/endpoint.yaml"] == "projects/slovensko/spaces/susr-as/endpoints/susr-as.yaml"
     once = datacube.index_text("a.yaml: x/a.yaml\n", entries)
@@ -176,9 +177,9 @@ def committed() -> list[Path]:
     return sorted(SEED.glob("susr-*/"))
 
 
-def test_the_committed_folders_are_the_44_topics_whole_and_listed_in_the_catalogue():
+def test_the_committed_folders_are_the_45_topics_whole_and_listed_in_the_catalogue():
     topics = {t["name"]: t for t in datacube.TOPICS}
-    assert len(topics) == len(datacube.TOPICS) == 44
+    assert len(topics) == len(datacube.TOPICS) == 45
     assert [f.name for f in committed()] == sorted(topics), "a susr- seed folder no topic names, or a topic not generated"
     assert set(t["theme"] for t in topics.values()) == set(datacube.THEMES)
     od = json.loads((ROOT / "charts/ckan/files/od-datasets.json").read_text())
@@ -191,10 +192,12 @@ def test_the_committed_folders_are_the_44_topics_whole_and_listed_in_the_catalog
         slug = yaml.safe_load((folder / "endpoint.yaml").read_text())["spec"]["slug"]
         sources = {s["dataSourceRef"]["name"] for s in yaml.safe_load((folder / "pipeline.yaml").read_text())["spec"]["sources"]}
         files = {yaml.safe_load(p.read_text())["metadata"]["name"] for p in folder.glob("datasource-*.yaml")}
-        assert sources == files == {f"susr-{c}" for c in topics[folder.name]["cubes"]}, folder.name
-        for name in files:
+        assert sources == files, folder.name
+        cubes = {f"susr-{c}" for c in topics[folder.name]["cubes"]}
+        assert {re.sub(r"-[0-9]+$", "", n) for n in files} == cubes, folder.name
+        for name in cubes:
             assert od[name]["endpoint"] == slug, name
-        named |= files
+        named |= cubes
     assert named == {k for k in od if k.startswith("susr-")}
 
 
@@ -219,14 +222,16 @@ def test_memory_grows_with_the_largest_cube_and_stays_bounded(cells, mb):
     assert datacube.memory(cells) == mb
 
 
-def test_every_topic_cube_is_in_the_collection_and_under_the_limit():
+def test_every_topic_cube_is_in_the_collection_and_read_whole_only_under_the_limit():
     # The TOPICS cubes' collection entries and cell counts (product of the dimension sizes), as
-    # `datacube.py --cache` read them on 2026-10-17; the generator refuses a cube over the limit live.
+    # `datacube.py --cache` read them on 2026-10-17; a cube over the limit has slices committed.
     recorded = json.loads((FIXTURES / "topics-recorded.json").read_text())
     for topic in datacube.TOPICS:
         for code in topic["cubes"]:
             assert code in recorded, f"{topic['name']}: {code} is not in the collection"
-            assert recorded[code]["theme"] == topic["theme"] and recorded[code]["cells"] <= datacube.CUBE_LIMIT, code
+            assert recorded[code]["theme"] == topic["theme"], code
+            whole = (SEED / topic["name"] / f"datasource-{code}.yaml").exists()
+            assert whole == (recorded[code]["cells"] <= datacube.CUBE_LIMIT), code
 
 
 def test_every_endpoint_names_its_tables_as_sources_a_role_contact_and_the_od_representations(tmp_path):
@@ -274,13 +279,13 @@ def test_a_run_with_a_cube_over_the_limit_stops_before_it_touches_the_seed(tmp_p
     def fetch(url, cache):
         if "/collection?" in url:
             return collection["sk" if "lang=sk" in url else "en"]
-        # Every dimension of every cube holds 200 categories: two of them are already 40,000 cells.
-        return {"category": {"index": {str(i): i for i in range(200)}}}
+        # Every dimension of every cube holds 20,000 categories: one alone is over the limit.
+        return {"category": {"index": {str(i): i for i in range(20_000)}}}
 
     monkeypatch.setattr(datacube, "fetch", fetch)
     monkeypatch.setattr(datacube, "SEED", seed)
     monkeypatch.setattr(datacube, "TOPICS", FIXTURE_TOPICS)
-    with pytest.raises(SystemExit, match=r"over 10,000 cells: as1001rs \(.*\), as1007rs"):
+    with pytest.raises(SystemExit, match=r"over 10,000 cells in every slice: as1001rs \(.*\), as1007rs"):
         datacube.main([])
     assert [p.name for p in seed.iterdir()] == ["susr-as"]
     assert (seed / "susr-as" / "endpoint.yaml").read_text() == "kept\n"
@@ -288,9 +293,8 @@ def test_a_run_with_a_cube_over_the_limit_stops_before_it_touches_the_seed(tmp_p
 
 def test_the_limit_refuses_what_datacube_answers_too_many_results():
     """T-4427: zo0011ms (12,096 cells) came back 400 "Too many results!" and its Endpoint stayed
-    empty; sp1838ms (9,828) came back whole. The limit sits between them, and no topic names zo0011ms."""
+    empty; sp1838ms (9,828) came back whole. The limit sits between them."""
     assert 9_828 <= datacube.CUBE_LIMIT < 12_096
-    assert all("zo0011ms" not in t["cubes"] for t in datacube.TOPICS)
 
 
 # The operations a representation needs the space's read Policies to grant (API/07): the WebSocket
@@ -310,3 +314,67 @@ def test_no_susr_endpoint_enables_a_representation_its_policies_cannot_serve():
         for representation in enabled:
             missing = NEEDS.get(representation, set()) - granted
             assert not missing, f"{folder.name}: {representation} needs {sorted(missing)}"
+
+
+# zo0011ms as DATAcube describes it on 2026-10-17: 2 periods x 12 indicators x import/export x 252 countries.
+ZO0011MS = {"code": "zo0011ms", "dimensions": {
+    "zo0011ms_rok": {"note": "Rok"}, "zo0011ms_mes": {"note": "Ukazovateľ"},
+    "zo0011ms_ukaz": {"note": "Dovoz - vývoz"}, "zo0011ms_ukaz2": {"note": "Krajina"}}}
+ZO0011MS_CATEGORIES = {"zo0011ms_rok": ["2026 (p)", "2025 (d)"], "zo0011ms_mes": [f"M{m:02}" for m in range(1, 13)],
+                       "zo0011ms_ukaz": ["UKAZ01", "UKAZ02"], "zo0011ms_ukaz2": [f"C{i:03}" for i in range(252)]}
+
+
+def requested(url: str) -> list[list[str]]:
+    """The categories a dataset address asks for, per dimension ("all" kept as is)."""
+    from urllib.parse import unquote
+    path = url.split("/dataset/zo0011ms/")[1].split("?")[0]
+    return [[unquote(c) for c in part.split(",")] for part in path.split("/")]
+
+
+def test_a_cube_over_the_limit_is_read_in_slices_each_under_it_covering_every_cell_once():
+    """T-4433: the slices cut one non-period dimension, every period in each, so a period's status
+    turning from (p) to (d), or a new period, still answers. Import/export needs as few slices
+    as the 12 indicators and has fewer codes."""
+    parts = datacube.slices(ZO0011MS, ZO0011MS_CATEGORIES)
+    assert len(parts) == 2
+    assert all(n <= datacube.CUBE_LIMIT for _, n in parts)
+    assert sum(n for _, n in parts) == 12_096
+    cut = [requested(url) for url, _ in parts]
+    assert all(c[0] == ["all"] and c[1] == ["all"] for c in cut), "never a period slice"
+    assert sorted(code for c in cut for code in c[2]) == ["UKAZ01", "UKAZ02"]
+    assert all(c[3] == ["all"] for c in cut)
+
+
+def test_a_cube_under_the_limit_is_one_whole_request_and_one_that_no_slice_fits_is_none():
+    small = {k: v[:1] for k, v in ZO0011MS_CATEGORIES.items()}
+    assert datacube.slices(ZO0011MS, small) == [(datacube.dataset_url(ZO0011MS), 1)]
+    # Only the periods could be cut: 20,000 dates by one cell each.
+    dated = {"code": "zo0011ms", "dimensions": {"zo0011ms_rok": {"note": "Rok"}, "zo0011ms_ukaz": {"note": "Ukazovateľ"}}}
+    assert datacube.slices(dated, {"zo0011ms_rok": [str(i) for i in range(20_000)], "zo0011ms_ukaz": ["UKAZ01"]}) is None
+
+
+def test_slices_split_a_dimension_evenly_and_encode_its_codes():
+    indicators = [f"M {i}/x" for i in range(12)]
+    cats = dict(ZO0011MS_CATEGORIES, zo0011ms_mes=indicators, zo0011ms_ukaz=["U1", "U2", "U3", "U4", "U5"])
+    # 30,240 cells: 5 import/export slices, 4 country slices (63 x 120) or 4 indicator slices
+    # (3 x 2,520); the indicators have the fewest codes.
+    parts = datacube.slices(ZO0011MS, cats)
+    assert [n for _, n in parts] == [7_560] * 4
+    cut = [requested(url) for url, _ in parts]
+    assert [c[1] for c in cut] == [indicators[i:i + 3] for i in range(0, 12, 3)]
+    assert all(c[0] == c[2] == c[3] == ["all"] for c in cut)
+    assert "/M%200%2Fx,M%201%2Fx,M%202%2Fx/" in parts[0][0]
+
+
+def test_the_generated_pipeline_lists_every_slice_and_its_memory_follows_the_largest(tmp_path):
+    topic = {"name": "susr-zo-krajiny", "theme": "zo", "title": TITLE, "cubes": ["zo0011ms"]}
+    d = ZO0011MS | {"theme": "zo", "update": "2026-10-01", "title": TITLE}
+    parts = {"zo0011ms": datacube.slices(d, ZO0011MS_CATEGORIES)}
+    files = datacube.topic_files(topic, [d], parts, "slug", 0)
+    pipeline = yaml.safe_load(files["pipeline.yaml"])
+    assert [s["dataSourceRef"]["name"] for s in pipeline["spec"]["sources"]] == ["susr-zo0011ms-1", "susr-zo0011ms-2"]
+    sources = {yaml.safe_load(t)["metadata"]["name"]: yaml.safe_load(t)["spec"]["http"]["url"]
+               for n, t in files.items() if n.startswith("datasource-")}
+    assert {n for n in files if n.startswith("datasource-")} == {"datasource-zo0011ms-1.yaml", "datasource-zo0011ms-2.yaml"}
+    assert sources == {f"susr-zo0011ms-{i}": url for i, (url, _) in enumerate(parts["zo0011ms"], 1)}
+    assert pipeline["spec"]["quotas"]["maxMemoryMb"] == datacube.memory(6_048)
