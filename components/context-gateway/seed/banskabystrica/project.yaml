@@ -12,6 +12,8 @@ metadata:
     en: "The city: 72 123 people, publishing what a city owns. The region is its own project, `bbsk`."
 spec:
   organizationRef: hel
+  # Who publishes this data, the did:web assigner of its Apps' Policies (PF-108); describes, grants nothing.
+  domain: banskabystrica.sk
   # Owner, 2026-09-25 (T-2873): no demo work and no city dataset is refused by a quota, so every
   # project allows 100 of each countable kind and runtime ceilings nobody reaches (PF-73). The
   # quota stays as the mechanism; what the node holds is the operator's bounds file (PF-97).

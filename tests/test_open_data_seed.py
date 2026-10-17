@@ -142,7 +142,8 @@ def test_every_open_data_endpoint_serves_each_standard_and_the_catalogue_lists_e
         slugs[project] = endpoint["slug"]
     rows = json.loads(generate.DISTRIBUTIONS.read_text())
     mapped = [e for e in MAPPING["datasets"] if e["status"] == "mapped"]
-    assert len(rows) == len({e["dataset"] for e in mapped})
+    # The susr- rows are scripts/open-data/datacube.py's (T-4390, test_datacube_generator.py).
+    assert len([k for k in rows if not k.startswith("susr-")]) == len({e["dataset"] for e in mapped})
     for e in SEEDED:
         row = rows[e["dataset"].rsplit("/", 1)[1]]
         assert (row["endpoint"], row["type"], row["dataset"], row["filtered"]) == (slugs[e["org"]], e["type"], e["dataset"], True)
@@ -868,8 +869,15 @@ def test_a_grant_without_a_number_takes_its_row_hash_as_the_identifier_its_base_
 # dataset only when od-datasets.json gives its rows an Endpoint (EP-118), one entry per dataset;
 # beside them sit the Endpoints the platform publishes itself (`spec.publish.ckan`), into the
 # organization of their CkanInstance. dev counted 33 on 2026-10-17 with both harvests dead.
-def expected_catalogue() -> dict[str, int]:
+def mapped_rows() -> dict:
+    """od-datasets.json less the ŠÚ SR rows, which scripts/open-data/datacube.py writes, not the
+    bb-bbsk mapping, and which CKAN lists only once T-4399 publishes them (T-4390)."""
     od = json.loads((ROOT / "charts/ckan/files/od-datasets.json").read_text())
+    return {name: row for name, row in od.items() if not name.startswith("susr-")}
+
+
+def expected_catalogue() -> dict[str, int]:
+    od = mapped_rows()
     org_of = {e["name"]: e["org"] for e in MAPPING["datasets"]}
     counts: dict[str, int] = {}
     for name in od:
@@ -885,7 +893,7 @@ def expected_catalogue() -> dict[str, int]:
 
 
 def test_each_publisher_expects_its_converted_datasets_and_its_endpoints():
-    od = json.loads((ROOT / "charts/ckan/files/od-datasets.json").read_text())
+    od = mapped_rows()
     mapped = {e["name"] for e in MAPPING["datasets"] if e["status"] == "mapped"}
     assert set(od) <= mapped, "a converted dataset the mapping does not map"
     assert len({entry["dataset"] for entry in od.values()}) == len(od), "one entry per dataset"
