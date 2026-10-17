@@ -35,8 +35,11 @@ trap 'rm -f "$CONFIG"' EXIT
 kc() { /opt/keycloak/bin/kcadm.sh "$@" --config "$CONFIG"; }
 fail() { echo "admin permissions: $*" >&2; exit 1; }
 
-kc config credentials --server "$KEYCLOAK_URL" --realm master \
-  --user "$KEYCLOAK_USER" --password "$KEYCLOAK_PASSWORD" >/dev/null
+login() {
+  kc config credentials --server "$KEYCLOAK_URL" --realm master \
+    --user "$KEYCLOAK_USER" --password "$KEYCLOAK_PASSWORD" >/dev/null
+}
+login
 
 client_id() {
   kc get clients -r "$REALM" -q "clientId=$1" --fields id --format csv --noquotes | head -n 1
@@ -133,10 +136,45 @@ for kind in default optional; do
     fi
   done < <(kc get "$hub/$kind-client-scopes" -r "$REALM" --fields id,name --format csv --noquotes)
 done
+# The links themselves go over bash's /dev/tcp with the token kcadm keeps in its config: a
+# kcadm JVM per link took a second each, so a fresh realm of 10,000 Endpoints never converged
+# inside the Job's timeout, and one process does a link in milliseconds (T-4474, ADR-N-025 §4d).
+# Plain http only: KEYCLOAK_URL is the in-cluster Service, which the mesh carries as mTLS.
+[[ $KEYCLOAK_URL =~ ^http://([^/:]+)(:([0-9]+))?(/.*)?$ ]] ||
+  fail "KEYCLOAK_URL is not an in-cluster http URL: $KEYCLOAK_URL"
+kc_host=${BASH_REMATCH[1]}
+kc_port=${BASH_REMATCH[3]:-80}
+kc_prefix=${BASH_REMATCH[4]%/}
+# The Host the token was issued through, as kcadm sends it: the port unless it is 80.
+kc_authority=$kc_host
+[ "$kc_port" = 80 ] || kc_authority=$kc_host:$kc_port
+admin_token() {
+  local config pattern='"token" *: *"([^"]+)"'
+  config=$(<"$CONFIG")
+  [[ $config =~ $pattern ]] || fail "kcadm keeps no token"
+  echo "${BASH_REMATCH[1]}"
+}
+# The status of one PUT under the realm's admin API.
+put_status() {
+  local status
+  exec 3<>"/dev/tcp/$kc_host/$kc_port"
+  printf 'PUT %s/admin/realms/%s/%s HTTP/1.1\r\nHost: %s\r\nAuthorization: Bearer %s\r\nContent-Length: 0\r\nConnection: close\r\n\r\n' \
+    "$kc_prefix" "$REALM" "$1" "$kc_authority" "$token" >&3
+  read -r _ status _ <&3
+  exec 3<&-
+  echo "$status"
+}
+token=$(admin_token)
 added=0
 for id in "${!ours[@]}"; do
   if [ -z "${linked[$id]:-}" ]; then
-    kc update "$hub/optional-client-scopes/$id" -r "$REALM"
+    status=$(put_status "$hub/optional-client-scopes/$id")
+    if [ "$status" = 401 ]; then
+      login
+      token=$(admin_token)
+      status=$(put_status "$hub/optional-client-scopes/$id")
+    fi
+    [ "$status" = 204 ] || fail "linking ${ours[$id]} to $HUB_CLIENT answered $status"
     added=$((added + 1))
   fi
 done
