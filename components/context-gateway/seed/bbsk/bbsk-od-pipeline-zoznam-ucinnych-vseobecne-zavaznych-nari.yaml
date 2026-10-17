@@ -9,7 +9,7 @@ metadata:
     en: Zoznam účinných všeobecne záväzných nariadení (VZN)
 spec:
   class: scheduled
-  enabled: false
+  enabled: true
   schedule: 27 5 * * 4
   source:
     dataSourceRef:

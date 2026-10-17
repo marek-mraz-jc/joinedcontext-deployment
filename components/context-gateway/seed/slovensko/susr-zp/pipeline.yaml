@@ -11,7 +11,7 @@ metadata:
 spec:
   class: auto
   period: 24h
-  schedule: "24 4 * * *"
+  schedule: "26 4 * * *"
   sources:
     - dataSourceRef: { kind: DataSource, name: susr-zp1005rs }
   steps:

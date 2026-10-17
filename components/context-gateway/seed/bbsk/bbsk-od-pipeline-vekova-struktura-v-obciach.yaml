@@ -9,7 +9,7 @@ metadata:
     en: Veková štruktúra v obciach (1996 - 2022)
 spec:
   class: scheduled
-  enabled: false
+  enabled: true
   schedule: 17 4 16 * *
   source:
     dataSourceRef:

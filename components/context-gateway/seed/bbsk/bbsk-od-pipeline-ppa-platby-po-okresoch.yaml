@@ -9,7 +9,7 @@ metadata:
     en: PPA platby po okresoch
 spec:
   class: scheduled
-  enabled: false
+  enabled: true
   schedule: 53 2 4 * *
   source:
     dataSourceRef:

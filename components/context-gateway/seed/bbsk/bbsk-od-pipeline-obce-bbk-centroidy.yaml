@@ -9,7 +9,7 @@ metadata:
     en: Obce BBK - centroidy
 spec:
   class: scheduled
-  enabled: false
+  enabled: true
   schedule: 55 3 * * 4
   source:
     dataSourceRef:

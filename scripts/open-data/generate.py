@@ -581,10 +581,10 @@ def bento(e: dict, slug: str, model_ranges: dict[str, str]) -> str:
 # On since portal 47b900c5 (on dev from apply 90): an http source runs on its pipeline's cron
 # `schedule`, not every 60 s, which OOM-killed the runner on 2026-10-16 (T-4347).
 ENABLED = True
-# ponytail: every scheduled pipeline is a resident Bento stream until T-4348's serial run queue,
-# and the dev node sat at 92 % memory, so only every other pipeline runs (supervisor, T-4347);
-# set HALVES = 1 for all of them once T-4348 is on dev and the runner held the first half.
-HALVES = 2
+# Every pipeline runs: since T-4348 (on dev from apply 95) a scheduled pipeline is loaded only for
+# its own run, one batch at a time, so the second half adds queue time, not runner memory (T-4515).
+# 2 runs every other pipeline again (T-4347's halves) should the runner need it.
+HALVES = 1
 
 def schedule(e: dict, i: int) -> str:
     minute, hour = (i * 7) % 60, 1 + (i * 7) // 60 % 5
