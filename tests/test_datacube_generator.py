@@ -227,3 +227,25 @@ def test_every_topic_cube_is_in_the_collection_and_under_the_limit():
         for code in topic["cubes"]:
             assert code in recorded, f"{topic['name']}: {code} is not in the collection"
             assert recorded[code]["theme"] == topic["theme"] and recorded[code]["cells"] <= datacube.CUBE_LIMIT, code
+
+
+def test_a_run_with_a_cube_over_the_limit_stops_before_it_touches_the_seed(tmp_path, monkeypatch):
+    seed = tmp_path / "slovensko"
+    (seed / "susr-as").mkdir(parents=True)
+    (seed / "susr-as" / "endpoint.yaml").write_text("kept\n")
+    collection = {"sk": json.loads((FIXTURES / "collection-sk.json").read_text()),
+                  "en": json.loads((FIXTURES / "collection-en.json").read_text())}
+
+    def fetch(url, cache):
+        if "/collection?" in url:
+            return collection["sk" if "lang=sk" in url else "en"]
+        # Every dimension of every cube holds 200 categories: two of them are already 40,000 cells.
+        return {"category": {"index": {str(i): i for i in range(200)}}}
+
+    monkeypatch.setattr(datacube, "fetch", fetch)
+    monkeypatch.setattr(datacube, "SEED", seed)
+    monkeypatch.setattr(datacube, "TOPICS", FIXTURE_TOPICS)
+    with pytest.raises(SystemExit, match=r"over 20,000 cells: as1001rs \(.*\), as1007rs"):
+        datacube.main([])
+    assert [p.name for p in seed.iterdir()] == ["susr-as"]
+    assert (seed / "susr-as" / "endpoint.yaml").read_text() == "kept\n"
