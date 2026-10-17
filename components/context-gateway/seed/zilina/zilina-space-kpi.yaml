@@ -20,3 +20,11 @@ spec:
   retention:
     - entityType: KeyPerformanceIndicator
       history: P30D
+  # The space's place (T-4525): the catalogue's Dataset carries it, so georel=near finds the space.
+  # the city of Žilina with a margin; a KeyPerformanceIndicator outside it is flagged, never refused (DM-87).
+  quality:
+    - name: in-area
+      entityType: KeyPerformanceIndicator
+      kind: area
+      attribute: location
+      bbox: [18.55, 49.1, 18.95, 49.35]

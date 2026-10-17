@@ -1,0 +1,16 @@
+# The catalogue's one door, public: an agent's first call (find the dataset), before its second
+# (that dataset's own Endpoint). Not a dataset itself, so no CKAN publish and no catalog block.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: catalog
+  namespace: slovensko
+  title: { sk: "Katalóg otvorených dát", en: "Open data catalogue" }
+  description:
+    sk: "Vyhľadajte dataset podľa názvu, témy alebo miesta (type=Dataset, q=searchText~=…, georel=near) a pokračujte na jeho vlastný prístupový bod."
+    en: "Find a dataset by its title, theme or place (type=Dataset, q=searchText~=…, georel=near), then go on to its own Endpoint."
+spec:
+  contextSpaceRef: catalog
+  slug: wxq5kcz6vmiowctob6erdffxb5kdg2bb
+  audience: public
+  enabledRepresentations: [ngsi-ld, mcp]

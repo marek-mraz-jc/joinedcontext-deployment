@@ -20,3 +20,11 @@ spec:
   retention:
     - entityType: KeyPerformanceIndicator
       history: P30D
+  # The space's place (T-4525): the catalogue's Dataset carries it, so georel=near finds the space.
+  # the HSL area with a margin; a KeyPerformanceIndicator outside it is flagged, never refused (DM-87).
+  quality:
+    - name: in-area
+      entityType: KeyPerformanceIndicator
+      kind: area
+      attribute: location
+      bbox: [23.9, 59.85, 25.6, 60.8]
