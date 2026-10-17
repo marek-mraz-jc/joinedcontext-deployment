@@ -134,7 +134,7 @@ def test_the_new_spaces_are_writable_by_the_pipelines_and_reachable_by_the_publi
 def test_every_open_data_endpoint_serves_each_standard_and_the_catalogue_lists_each_converted_dataset():
     """T-4279: one list of representations for both spaces, and the harvests' mapping names every
     converted dataset once, with the Endpoint of its own project."""
-    assert "xlsx" in generate.REPRESENTATIONS and "sta" not in generate.REPRESENTATIONS
+    assert {"xlsx", "parquet"} <= set(generate.REPRESENTATIONS) and "sta" not in generate.REPRESENTATIONS
     slugs = {}
     for project in ("bbsk", "banskabystrica"):
         endpoint = yaml.safe_load((SEED / project / f"{project}-od-endpoint.yaml").read_text())["spec"]

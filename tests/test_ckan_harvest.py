@@ -265,7 +265,7 @@ def test_a_run_ingests_what_the_files_hold_and_lists_every_skip_with_its_reason(
     assert extras["source_uri"] == "https://data.gov.sk/set/veku"
     # EP-118: the platform's distributions and data model, the DataStore table last; no source link.
     assert [r["format"] for r in ages["resources"]] == [
-        "NGSI-LD", "CSV", "JSON", "XLSX", "OData", "MCP", "WebSocket",
+        "NGSI-LD", "CSV", "JSON", "XLSX", "PARQUET", "OData", "MCP", "WebSocket",
         "JSON Schema", "JSON-LD", "LinkML", "Markdown", "OWL", "RDF", "SHACL", "CSV"]
     assert not any(r["url"].startswith(EGOV) for r in ages["resources"] if r.get("url_type") != "datastore")
     table = fake.tables[ages["resources"][-1]["id"]]
@@ -314,7 +314,7 @@ def test_a_second_run_replaces_the_tables_instead_of_adding_new_ones(monkeypatch
     assert set(harvest.ckan.tables) == tables, "a rerun added or lost a table"
     assert "package_create" not in harvest.ckan.calls[first:]
     ages = harvest.ckan.packages["bb-pocet-obcanov-podla-veku"]["resources"]
-    assert [r.get("url_type") for r in ages] == [None] * 14 + ["datastore"]
+    assert [r.get("url_type") for r in ages] == [None] * 15 + ["datastore"]
     assert len(harvest.ckan.tables[ages[-1]["id"]]["records"]) == 3
 
 
@@ -399,13 +399,13 @@ def test_only_a_converted_dataset_is_listed_with_its_apis_model_and_table(monkey
     assert "  - Objednávky BB: not converted to NGSI-LD, so not listed (EP-118)" in out
     ages = harvest.ckan.packages["bb-pocet-obcanov-podla-veku"]["resources"]
     assert [r["format"] for r in ages] == [
-        "NGSI-LD", "CSV", "JSON", "XLSX", "OData", "MCP", "WebSocket",
+        "NGSI-LD", "CSV", "JSON", "XLSX", "PARQUET", "OData", "MCP", "WebSocket",
         "JSON Schema", "JSON-LD", "LinkML", "Markdown", "OWL", "RDF", "SHACL", "CSV"]
     assert ages[-1].get("url_type") == "datastore", "the table moved off the end of the list"
     assert ages[0]["url"] == ("https://dev.joinedcontext.com/api/endpoint/abc/ngsi-ld/v1/entities?type=KeyPerformanceIndicator"
                               "&q=isPartOf%3D%3D%22https%3A%2F%2Fdata.dev.joinedcontext.com%2Fdataset%2Fbb-pocet-obcanov-podla-veku%22")
     assert ages[0]["conforms_to"].startswith("https://www.etsi.org/")
-    assert ages[7]["url"] == "https://dev.joinedcontext.com/api/endpoint/abc/schema/v1/model.schema.json"
+    assert ages[8]["url"] == "https://dev.joinedcontext.com/api/endpoint/abc/schema/v1/model.schema.json"
     assert not any("geojson" in r["url"] or "/ogc/" in r["url"] for r in ages)
     # A second run writes the same list again, nothing doubled.
     harvest.main()
