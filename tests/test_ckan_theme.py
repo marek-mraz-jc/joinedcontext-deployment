@@ -162,6 +162,26 @@ def test_internal_extras_never_reach_more_details(theme):
     assert rows["Area covered"] == "Prague (NUTS CZ010)"  # linked to its definition (T-4333)
 
 
+def test_the_attribution_and_the_original_data_are_about_rows_and_never_more_details(theme):
+    """T-4417: the credit the licence asks for and the data it came from, from jcctl's extras;
+    an address that is not http stays out, and the pipeline reads in words under More details."""
+    credited = dict(PUBLISHED, extras=PUBLISHED["extras"] + [
+        {"key": "rights", "value": "Štatistický úrad SR, CC BY-SA 4.0"},
+        {"key": "source", "value": '["https://data.statistics.sk/api/v2/dataset/as1001rs", "javascript:alert(1)"]'},
+        {"key": "was_generated_by", "value": "pipeline susr-as"},
+    ])
+    rows = [(label, text, link) for label, text, link in theme.jc_about(credited)]
+    assert ("Attribution", "Štatistický úrad SR, CC BY-SA 4.0", None) in rows
+    sources = [(text, link) for label, text, link in rows if label == "Original data"]
+    assert sources == [("https://data.statistics.sk/api/v2/dataset/as1001rs",) * 2]
+    assert ("was_generated_by", "pipeline susr-as") in theme.jc_more(credited)
+    assert theme.jc_extra("was_generated_by", "pipeline susr-as")[0] == "Produced by"
+    assert not any(k in ("rights", "source") for k, _ in theme.jc_more(credited))
+    for broken in ("[not json", "{}", "ftp://x"):
+        bad = dict(PUBLISHED, extras=[{"key": "source", "value": broken}])
+        assert not [r for r in theme.jc_about(bad) if r[0] == "Original data"], broken
+
+
 SCHEMA = "https://dev.example/api/endpoint/praha/schema/v1/"
 
 # The resources `jcctl` publishes for an Endpoint, in its order: the DataStore table last.

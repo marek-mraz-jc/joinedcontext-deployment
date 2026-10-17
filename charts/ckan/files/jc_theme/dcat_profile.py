@@ -9,7 +9,9 @@ controlled-vocabulary IRI the shapes ask for. Everything it adds comes from the 
 from the deployment's branding block; nothing here is a value of its own.
 """
 
-from rdflib import BNode, Literal, URIRef
+import json
+
+from rdflib import BNode, Literal, Namespace, URIRef
 from rdflib.namespace import RDF, RDFS, SKOS
 
 from ckanext.dcat.profiles import DCAT, DCT, FOAF, SPDX, VCARD, CleanedURIRef, RDFProfile
@@ -17,6 +19,7 @@ from ckanext.dcat.utils import resource_uri
 
 from ckanext_jc_theme.plugin import BRANDING
 
+PROV = Namespace("http://www.w3.org/ns/prov#")
 EU = "http://publications.europa.eu/resource/authority/"
 IANA = "http://www.iana.org/assignments/media-types/"
 
@@ -84,6 +87,15 @@ def _iri(value):
     return isinstance(value, str) and value.startswith(("http://", "https://"))
 
 
+def _sources(value):
+    """The IRIs of the `source` extra jcctl writes, a JSON list; one IRI alone is read too."""
+    try:
+        items = json.loads(value) if isinstance(value, str) and value.startswith("[") else [value]
+    except ValueError:
+        return []
+    return [item for item in items if _iri(item)] if isinstance(items, list) else []
+
+
 class JcDcatApProfile(RDFProfile):
     """Controlled vocabularies, services and the catalogue's publisher on top of euro_dcat_ap_3."""
 
@@ -119,14 +131,38 @@ class JcDcatApProfile(RDFProfile):
         for point in list(g.objects(dataset_ref, DCAT.contactPoint)):
             g.add((point, RDF.type, VCARD.Kind))
 
+        # The original datasets (T-4417), each a dcat:Dataset as the shapes ask, named by its
+        # address, the one thing jcctl knows of it; a literal the EU profile may have written goes.
+        for source in list(g.objects(dataset_ref, DCT.source)):
+            if isinstance(source, Literal):
+                g.remove((dataset_ref, DCT.source, source))
+        for url in _sources(_extra(dataset_dict, "source")):
+            g.add((dataset_ref, DCT.source, URIRef(url)))
+            g.add((URIRef(url), RDF.type, DCAT.Dataset))
+            g.add((URIRef(url), DCT.title, Literal(url)))
+            g.add((URIRef(url), DCT.description, Literal(url)))
+        generated = _extra(dataset_dict, "was_generated_by")
+        if generated and (dataset_ref, PROV.wasGeneratedBy, None) not in g:
+            activity = BNode()
+            g.add((dataset_ref, PROV.wasGeneratedBy, activity))
+            g.add((activity, RDF.type, PROV.Activity))
+            g.add((activity, RDFS.label, Literal(generated)))
+
         # The EU licence IRI jcctl carries as an extra, else CKAN's own licence page.
         licence = _extra(dataset_dict, "license_url") or dataset_dict.get("license_url")
+        rights = _extra(dataset_dict, "rights")
         resources = {CleanedURIRef(resource_uri(r)): r for r in dataset_dict.get("resources") or []}
         for distribution in list(g.objects(dataset_ref, DCAT.distribution)):
-            self._distribution(distribution, resources.get(distribution) or {}, licence, dataset_ref)
+            self._distribution(distribution, resources.get(distribution) or {}, licence, dataset_ref, rights)
 
-    def _distribution(self, distribution, resource_dict, licence, dataset_ref):
+    def _distribution(self, distribution, resource_dict, licence, dataset_ref, rights=None):
         g = self.g
+        # The credit the licence asks for travels with every distribution (EP-78, T-4417).
+        if rights and (distribution, DCT.rights, None) not in g:
+            statement = BNode()
+            g.add((distribution, DCT.rights, statement))
+            g.add((statement, RDF.type, DCT.RightsStatement))
+            g.add((statement, RDFS.label, Literal(rights)))
         for media_type in list(g.objects(distribution, DCAT.mediaType)):
             if isinstance(media_type, Literal):
                 g.remove((distribution, DCAT.mediaType, media_type))

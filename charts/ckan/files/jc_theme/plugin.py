@@ -207,6 +207,8 @@ STRINGS = {
     "about": {"en": "About this dataset", "sk": "O tomto datasete", "cs": "O této datové sadě", "de": "Über diesen Datensatz"},
     "publisher": {"en": "Publisher", "sk": "Vydavateľ", "cs": "Vydavatel", "de": "Herausgeber"},
     "licence": {"en": "Licence", "sk": "Licencia", "cs": "Licence", "de": "Lizenz"},
+    "attribution": {"en": "Attribution", "sk": "Uvedenie zdroja", "cs": "Uvedení zdroje", "de": "Quellenangabe"},
+    "source": {"en": "Original data", "sk": "Pôvodné dáta", "cs": "Původní data", "de": "Ursprüngliche Daten"},
     "topic": {"en": "Topic", "sk": "Téma", "cs": "Téma", "de": "Thema"},
     "keywords": {"en": "Keywords", "sk": "Kľúčové slová", "cs": "Klíčová slova", "de": "Schlagwörter"},
     "format": {"en": "Format", "sk": "Formát", "cs": "Formát", "de": "Format"},
@@ -520,7 +522,7 @@ ABOUT_EXTRAS = ("identifier", "language", "contact", "conforms_to", "status")
 # the licence the About list already links, and the themes as a JSON list of vocabulary URIs.
 INTERNAL_EXTRAS = {"generated_by", "endpoint", "publisher_name", "publisher_uri", "contact_name",
                    "contact_email", "frequency", "spatial", "spatial_uri", "temporal_start",
-                   "temporal_end", "theme", "license_url", "harvest_source"}
+                   "temporal_end", "theme", "license_url", "harvest_source", "rights", "source"}
 # What a harvested record says about itself, in words (T-4333): the dates the publisher gave and
 # where the record came from. Any other extra keeps its own key.
 EXTRA_LABELS = {
@@ -528,6 +530,7 @@ EXTRA_LABELS = {
     "modified": {"en": "Changed by the publisher", "sk": "Zmenené vydavateľom", "cs": "Změněno vydavatelem", "de": "Vom Herausgeber geändert"},
     "quality_pass_rate": {"en": "Passed the quality checks", "sk": "Prešlo kontrolami kvality", "cs": "Prošlo kontrolami kvality", "de": "Qualitätsprüfungen bestanden"},
     "source_uri": {"en": "Original record", "sk": "Pôvodný záznam", "cs": "Původní záznam", "de": "Ursprünglicher Eintrag"},
+    "was_generated_by": {"en": "Produced by", "sk": "Vytvoril", "cs": "Vytvořil", "de": "Erzeugt von"},
 }
 
 
@@ -551,6 +554,15 @@ def _extras(pkg):
 
 def _is_url(value):
     return isinstance(value, str) and value.startswith(("https://", "http://"))
+
+
+def _sources(value):
+    """The http addresses of a `source` extra: a JSON list, or one address; anything else none."""
+    try:
+        items = json.loads(value) if isinstance(value, str) and value.startswith("[") else [value]
+    except ValueError:
+        return []
+    return [item for item in items if _is_url(item)] if isinstance(items, list) else []
 
 
 _DAY = datetime.timedelta(days=1)
@@ -612,6 +624,12 @@ def jc_about(pkg):
         link = pkg.get("license_url")
         rows.append((jc_t("licence"), pkg.get("license_title") or pkg.get("license_id"),
                      link if _is_url(link) else None))
+    # The credit the licence asks for and the data it came from, as the Endpoint names them
+    # (T-4417): `source` is the JSON list of IRIs ckanext-dcat reads as dct:source.
+    if extras.get("rights"):
+        rows.append((jc_t("attribution"), extras["rights"], None))
+    for url in _sources(extras.get("source")):
+        rows.append((jc_t("source"), url, url))
     groups = [g.get("display_name") or g.get("title") or g.get("name") for g in pkg.get("groups") or []]
     if groups:
         rows.append((jc_t("topic"), ", ".join(g for g in groups if g), None))
