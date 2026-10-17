@@ -223,6 +223,8 @@ def test_a_converted_dataset_lists_the_platform_apis_and_its_model_and_an_unconv
     assert [r["format"] for r in apis] == [
         "NGSI-LD", "GeoJSON", "CSV", "JSON", "XLSX", "PARQUET", "OGCFEAT", "OData", "MCP", "WebSocket"]
     assert all("conforms_to" in r for r in apis if r["format"] in ("NGSI-LD", "GeoJSON", "OGCFEAT", "OData", "MCP"))
+    # T-4539: what a plain GET of the NGSI-LD address answers, not ld+json, which only an Accept asks for.
+    assert next(r for r in apis if r["format"] == "NGSI-LD")["mimetype"] == "application/json"
     assert all(r["description"].startswith("Every PointOfInterest") for r in apis if "?" not in r["url"])
     assert [r["format"] for r in model] == [
         "JSON Schema", "JSON-LD", "LinkML", "Markdown", "OWL", "RDF", "SHACL"]
