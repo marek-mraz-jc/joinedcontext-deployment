@@ -141,11 +141,16 @@ def test_an_area_is_keyed_by_the_code_the_statistical_cubes_carry(written):
     districts = {e["areaCode"]["value"]: e for e in written["okresy"]}
     assert set(districts) == {"SK0321", "SK0323"}
     assert districts["SK0321"]["id"] == f"urn:ngsi-ld:AdministrativeArea:bbsk.sk:{SPACE}:SK0321"
-    assert districts["SK0321"]["name"]["languageMap"] == {"sk": "Okres Banská Bystrica"}
+    # `name` is a string, as every Smart Data Model's is (T-4523).
+    assert districts["SK0321"]["name"] == {"type": "Property", "value": "Okres Banská Bystrica"}
     assert districts["SK0321"]["surfaceArea"] == {"type": "Property", "value": 809438509, "unitCode": "MTK"}
     capital = next(e for e in written["obce"] if e["areaCode"]["value"] == "SK0321508438")
     assert capital["refParentArea"]["object"] == districts["SK0321"]["id"]
     assert {e["location"]["value"]["type"] for e in written["obce"]} == {"Polygon", "MultiPolygon"}
+    # One door and one type for both: `isPartOf` tells a district from a municipality (T-4523).
+    parts = {name: {e["isPartOf"]["value"] for e in written[name]} for name in ("okresy", "obce")}
+    assert parts == {"okresy": {"https://data.dev.joinedcontext.com/dataset/bbsk-okresy-bbk-hranice-17725f"},
+                     "obce": {"https://data.dev.joinedcontext.com/dataset/bbsk-obce-bbk-hranice-ec7ac6"}}, parts
 
 
 @requires_docker
@@ -171,7 +176,7 @@ def test_a_hospital_is_named_by_itself_or_by_its_operator(written):
     assert {e["hospitalKind"]["value"] for e in by_id.values()} == {"general", "specialised"}
     # GEMERCLINIC registers no name of its own, so the operator's is the one a reader knows.
     gemer = by_id["66-45736987-A0001"]
-    assert gemer["name"]["languageMap"]["sk"] == gemer["operatorName"]["value"] == "GEMERCLINIC, n.o."
+    assert gemer["name"]["value"] == gemer["operatorName"]["value"] == "GEMERCLINIC, n.o."
     assert gemer["address"]["value"] == {"streetAddress": "Jesenského 102/19", "postalCode": "98101",
                                          "addressLocality": "Hnúšťa", "addressCountry": "SK"}
     assert gemer["category"]["value"] == ["hospital"]

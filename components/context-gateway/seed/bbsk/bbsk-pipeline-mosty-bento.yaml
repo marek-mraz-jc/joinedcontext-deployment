@@ -30,7 +30,7 @@ pipeline:
         root = this.features.or([]).filter(f -> f.properties.ID_mosta.or("").string().re_match("^M[0-9]+$") && f.geometry.or(null) != null).map_each(f -> f.properties.assign({ "_geometry": f.geometry })).map_each(p -> {
           "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Bridge", "bbsk.sk", env("JC_SPACE"), p.ID_mosta),
           "type": "Bridge",
-          "name": { "type": "LanguageProperty", "languageMap": { "sk": p."Názov_mosta".or(p.ID_mosta).string().trim() } },
+          "name": { "type": "Property", "value": p."Názov_mosta".or(p.ID_mosta).string().trim() },
           "bridgeCode": { "type": "Property", "value": p.ID_mosta },
           "roadClass": if p.Trieda_PK.or("").apply("road_class") == null { null } else { { "type": "Property", "value": p.Trieda_PK.apply("road_class") } },
           "roadNumber": p."Číslo_PK".apply("text"),

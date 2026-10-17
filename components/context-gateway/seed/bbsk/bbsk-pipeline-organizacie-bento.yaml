@@ -18,7 +18,7 @@ pipeline:
         root = this.features.or([]).map_each(f -> f.properties.assign({ "_geometry": f.geometry.or(null) })).filter(p -> p."IČO".or("").string().re_match("^[0-9]{8}$") && p."kategória".or("").apply("category") != null && p."Oficiálny_názov".or("").trim() != "").map_each(p -> {
           "id": "urn:ngsi-ld:%v:%v:%v:%v".format("PublicOrganization", "bbsk.sk", env("JC_SPACE"), p."IČO"),
           "type": "PublicOrganization",
-          "name": { "type": "LanguageProperty", "languageMap": { "sk": p."Oficiálny_názov".trim() } },
+          "name": { "type": "Property", "value": p."Oficiálny_názov".trim() },
           # CPSV-AP's PublicOrganization requires both (T-4329): the official name, and the place.
           "preferredLabel": { "type": "Property", "value": p."Oficiálny_názov".trim() },
           "spatial": if p.obec_nazov.or("").trim() == "" { null } else { { "type": "Property", "value": [p.obec_nazov.trim()] } },

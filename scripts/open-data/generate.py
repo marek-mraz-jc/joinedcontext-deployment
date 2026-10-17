@@ -995,8 +995,12 @@ def distributions(mapped: list[dict], whole: list[dict]) -> str:
                                                  "filtered": True}
     for e in whole:
         slug, kind = existing_door(e)
+        # A seed that shares its door and type with another dataset tells them apart by `isPartOf`
+        # (bbsk obce and okresy, both AdministrativeArea: T-4523), so the catalogue filters on it.
+        marked = f'"isPartOf": {{ "type": "Property", "value": "{e["dataset"]}" }}'
+        filtered = any(marked in b.read_text() for b in (SEED / e["org"]).glob("*-bento.yaml"))
         rows[e["dataset"].rsplit("/", 1)[1]] = {"endpoint": slug, "type": kind, "dataset": e["dataset"],
-                                                 "location": located(e), "series": False, "filtered": False}
+                                                 "location": located(e), "series": False, "filtered": filtered}
     # The ŠÚ SR rows are scripts/open-data/datacube.py's (T-4390): kept as committed.
     rows.update({k: v for k, v in json.loads(DISTRIBUTIONS.read_text()).items() if k.startswith("susr-")})
     return "{\n" + ",\n".join(f"  {json.dumps(k)}: {json.dumps(v, ensure_ascii=False)}" for k, v in sorted(rows.items())) + "\n}\n"

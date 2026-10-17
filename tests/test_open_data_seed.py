@@ -164,7 +164,9 @@ def test_every_open_data_endpoint_serves_each_standard_and_the_catalogue_lists_e
     assert series == {e["dataset"].rsplit("/", 1)[1] for e in SEEDED if e.get("observedAt")} - {
         e["dataset"].rsplit("/", 1)[1] for e in SEEDED if not generate.series(e)}
     # T-4291: a dataset another seed reads whole is listed through that seed's public Endpoint, over
-    # its whole type, since those rows name no catalogue dataset.
+    # its whole type, since those rows name no catalogue dataset; unless two datasets share that
+    # door and type, which the seed then tells apart by `isPartOf` (bbsk obce and okresy, T-4523).
+    shared = {"bbsk-obce-bbk-hranice-ec7ac6", "bbsk-okresy-bbk-hranice-17725f"}
     endpoints = {d["spec"]["slug"]: (f.parent.name, d["spec"]) for f in SEED.glob("*/*.yaml")
                  for d in yaml.safe_load_all(f.read_text()) if isinstance(d, dict) and d.get("kind") == "Endpoint"}
     for e in mapped:
@@ -172,7 +174,8 @@ def test_every_open_data_endpoint_serves_each_standard_and_the_catalogue_lists_e
             continue
         row = rows[e["dataset"].rsplit("/", 1)[1]]
         project, endpoint = endpoints[row["endpoint"]]
-        assert (project, endpoint["audience"], row["filtered"]) == (e["org"], "public", False), e["name"]
+        filtered = e["dataset"].rsplit("/", 1)[1] in shared
+        assert (project, endpoint["audience"], row["filtered"]) == (e["org"], "public", filtered), e["name"]
         assert {"ngsi-ld", "csv", "json", "ogc-features", "odata"} <= set(endpoint["enabledRepresentations"]), e["name"]
     mosty = rows["bbsk-mosty-v-banskobystrickom-kraji-public-view-3b4675"]
     assert (mosty["type"], endpoints[mosty["endpoint"]][1]["policyRef"]) == ("Bridge", "urn:ngsi-ld:Policy:bbsk.sk:bbsk-registre:mosty-read")
@@ -213,6 +216,9 @@ def test_schedules_are_valid_cron_and_follow_the_refresh():
     daily = next(e for e in SEEDED if e["refresh"] == "P1D")
     assert generate.schedule(daily, 3, 3).endswith("* * *")
     assert generate.schedule({"refresh": "P1M"}, 30, 30).split()[2] == "3"
+    # The city's register of citizens by age moves daily; read monthly, dev trailed it (T-4519).
+    register = yaml.safe_load((SEED / "banskabystrica" / "banskabystrica-od-pipeline-pocet-obcanov-podla-veku.yaml").read_text())
+    assert register["spec"]["schedule"].endswith("* * *"), register["spec"]["schedule"]
 
 
 def test_the_parts_of_a_split_dataset_run_the_same_day_at_their_own_minute():
