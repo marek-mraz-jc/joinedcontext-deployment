@@ -17,6 +17,7 @@ import subprocess
 import sys
 import threading
 import urllib.parse
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -134,7 +135,7 @@ def test_the_new_spaces_are_writable_by_the_pipelines_and_reachable_by_the_publi
 def test_every_open_data_endpoint_serves_each_standard_and_the_catalogue_lists_each_converted_dataset():
     """T-4279: one list of representations for both spaces, and the harvests' mapping names every
     converted dataset once, with the Endpoint of its own project."""
-    assert {"xlsx", "parquet"} <= set(generate.REPRESENTATIONS) and "sta" not in generate.REPRESENTATIONS
+    assert {"xlsx", "parquet", "sta"} <= set(generate.REPRESENTATIONS)
     slugs = {}
     for project in ("bbsk", "banskabystrica"):
         endpoint = yaml.safe_load((SEED / project / f"{project}-od-endpoint.yaml").read_text())["spec"]
@@ -146,6 +147,12 @@ def test_every_open_data_endpoint_serves_each_standard_and_the_catalogue_lists_e
     for e in SEEDED:
         row = rows[e["dataset"].rsplit("/", 1)[1]]
         assert (row["endpoint"], row["type"], row["dataset"], row["filtered"]) == (slugs[e["org"]], e["type"], e["dataset"], True)
+    # T-4288: SensorThings is listed for the datasets whose numbers carry an instant, and only those.
+    series = {name for name, row in rows.items() if row["series"]}
+    assert any(s.startswith("bbsk-pohyb-obyvatelstva-v-okresoch") for s in series), sorted(series)
+    assert not any(s.startswith(("bb-adresy", "bbsk-zoznam-lekarni")) for s in series)
+    assert series == {e["dataset"].rsplit("/", 1)[1] for e in SEEDED if e.get("observedAt")} - {
+        e["dataset"].rsplit("/", 1)[1] for e in SEEDED if not generate.series(e)}
     # T-4291: a dataset another seed reads whole is listed through that seed's public Endpoint, over
     # its whole type, since those rows name no catalogue dataset.
     endpoints = {d["spec"]["slug"]: (f.parent.name, d["spec"]) for f in SEED.glob("*/*.yaml")
@@ -391,6 +398,11 @@ def test_a_key_with_its_year_and_a_polygon():
         assert e["id"].startswith("urn:ngsi-ld:KeyPerformanceIndicator:")
         assert e["id"].endswith(f"-{r['properties']['IDN3']}-{r['properties']['Rok']}")
         assert e["location"]["value"]["type"] == "Polygon"
+        # Every number is stamped with its year, so SensorThings charts it; the year itself is not (T-4288).
+        numbers = {a: p for a, p in e.items() if isinstance(p, dict) and isinstance(p.get("value"), (int, float))}
+        stamped = {a for a, p in numbers.items() if p.get("observedAt") == f"{r['properties']['Rok']}-01-01T00:00:00Z"}
+        assert numbers and stamped == set(numbers) - {"rok"}, sorted(set(numbers) - stamped)
+        assert "observedAt" not in e.get("rok", {})
     assert valid("bbsk", entities)
 
 
@@ -402,6 +414,10 @@ def test_a_corrected_accident_keeps_its_id_and_the_constant_its_model_requires()
         f"urn:ngsi-ld:RoadAccident:bbsk.sk:bbsk-otvorene-data:nehodovost-v-bbk-{r['properties']['Číslo_nehody']}"
         for r in rows]
     assert all(e["status"]["value"] == "archived" for e in first)
+    # An Esri date is the instant every number of the accident was observed at (T-4288).
+    for e, r in zip(first, rows):
+        at = datetime.fromtimestamp(r["properties"]["Dátum_a_čas"] / 1000, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert {p.get("observedAt") for p in e.values() if isinstance(p, dict) and isinstance(p.get("value"), (int, float))} == {at}
     assert valid("bbsk", first)
     # A corrected value updates the accident instead of adding a second one (T-4332).
     doc = json.loads((FIXTURES / "nehodovost-v-bbk.json").read_text())

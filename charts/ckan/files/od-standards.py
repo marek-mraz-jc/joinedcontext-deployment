@@ -21,26 +21,29 @@ import urllib.request as _request
 OD_DATASETS = _json.loads(_os.environ.get("OD_DATASETS") or "{}")
 OD_GATEWAY = (_os.environ.get("OD_GATEWAY") or "").rstrip("/")
 
-# (path under the Endpoint, name, format, media type, conformsTo, how it keeps the dataset's rows, needs
-# a location). The format is the label jcctl's publisher gives an Endpoint's own dataset (ckan.rs
-# `distribution`), so the catalogue's format facet counts both under one name (EP-118, T-4324).
+# (path under the Endpoint, name, format, media type, conformsTo, how it keeps the dataset's rows, what
+# its rows must have for it to be listed: a `location`, a `series` of measured numbers, or nothing).
+# The format is the label jcctl's publisher gives an Endpoint's own dataset (ckan.rs `distribution`),
+# so the catalogue's format facet counts both under one name (EP-118, T-4324).
 # Each row names its catalogue dataset in `isPartOf` (T-4289); an address keeps only those rows in
 # its standard's own syntax: NGSI-LD and the files `q`, OGC API Features the queryable as a parameter,
-# OData `$filter`. MCP and WebSocket read every type of the Endpoint, so they list every row and say so.
+# OData and SensorThings `$filter`. MCP and WebSocket read every type of the Endpoint, so they list every row and say so.
 OD_STANDARDS = [
     ("ngsi-ld/v1/entities", "NGSI-LD API", "NGSI-LD", "application/ld+json",
-     "https://www.etsi.org/deliver/etsi_gs/CIM/001_099/009/", "q", False),
-    ("file.geojson", "GeoJSON", "GeoJSON", "application/geo+json", "https://www.rfc-editor.org/rfc/rfc7946", "q", True),
-    ("file.csv", "CSV", "CSV", "text/csv", None, "q", False),
-    ("file.json", "JSON", "JSON", "application/json", None, "q", False),
-    ("file.xlsx", "Excel", "XLSX", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", None, "q", False),
+     "https://www.etsi.org/deliver/etsi_gs/CIM/001_099/009/", "q", None),
+    ("file.geojson", "GeoJSON", "GeoJSON", "application/geo+json", "https://www.rfc-editor.org/rfc/rfc7946", "q", "location"),
+    ("file.csv", "CSV", "CSV", "text/csv", None, "q", None),
+    ("file.json", "JSON", "JSON", "application/json", None, "q", None),
+    ("file.xlsx", "Excel", "XLSX", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", None, "q", None),
     ("file.parquet", "Apache Parquet", "PARQUET", "application/vnd.apache.parquet",
-     "https://parquet.apache.org/docs/file-format/", "q", False),
+     "https://parquet.apache.org/docs/file-format/", "q", None),
     ("ogc/features/collections/{type}/items", "OGC API - Features", "OGCFEAT", "application/geo+json",
-     "http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core", "ogc", True),
-    ("odata/v4/{type}", "OData v4", "OData", "application/json", "https://docs.oasis-open.org/odata/odata/v4.01/", "odata", False),
-    ("mcp", "Model Context Protocol", "MCP", "application/json", "https://modelcontextprotocol.io/specification", None, False),
-    ("ws", "WebSocket", "WebSocket", "application/json", None, None, False),
+     "http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core", "ogc", "location"),
+    ("odata/v4/{type}", "OData v4", "OData", "application/json", "https://docs.oasis-open.org/odata/odata/v4.01/", "odata", None),
+    ("sta/v1.1/Datastreams", "SensorThings API", "STA", "application/json", "http://www.opengis.net/spec/iot_sensing/1.1",
+     "odata", "series"),
+    ("mcp", "Model Context Protocol", "MCP", "application/json", "https://modelcontextprotocol.io/specification", None, None),
+    ("ws", "WebSocket", "WebSocket", "application/json", None, None, None),
 ]
 
 
@@ -112,13 +115,14 @@ def od_standards(name):
         "q": _parse.urlencode({"type": entry["type"], "q": f'isPartOf=="{dataset}"'}),
         "ogc": _parse.urlencode({"isPartOf": dataset}),
         # OData string literals double a quote (OData 4.01 ABNF `SQUOTE-in-string`); a space is
-        # %20, since `+` is a space only in form encoding, not in OData's URL conventions.
+        # %20, since `+` is a space only in form encoding, not in OData's URL conventions. SensorThings
+        # is OData too: the gateway reads this `$filter` as the same `q` (T-4288).
         "odata": _parse.urlencode({"$filter": "isPartOf eq '" + dataset.replace("'", "''") + "'"},
                                   quote_via=_parse.quote),
     }
     out = []
-    for path, title, fmt, media, conforms, filtered, located in OD_STANDARDS:
-        if located and not entry.get("location"):
+    for path, title, fmt, media, conforms, filtered, needs in OD_STANDARDS:
+        if needs and not entry.get(needs):
             continue
         # A dataset an older seed reads whole: its rows name no catalogue dataset (T-4291).
         filtered = filtered if entry.get("filtered", True) else None

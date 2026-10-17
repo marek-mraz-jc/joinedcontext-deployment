@@ -72,6 +72,18 @@ pipeline:
           }
           root = if $v == null { null } else { { "type": "Property", "value": $v } }
         }
+        # The instant a row was observed, from its `observedAt` column: a bare year is its first instant,
+        # anything else reads as a datetime (T-4288).
+        map observed {
+          let x = this
+          root = if $x == null { null } else if $x.string().re_match("^[0-9]{4}$") { $x.string() + "-01-01T00:00:00Z" } else {
+            $x.apply("datetime").value.catch(null)
+          }
+        }
+        # A measured Property with the instant it holds, so SensorThings charts it (T-4288).
+        map stamped {
+          root = if this.p == null || this.at == null { this.p } else { this.p.merge({ "observedAt": this.at }) }
+        }
         map date {
           let x = this
           let v = match $x.type() {
@@ -85,22 +97,23 @@ pipeline:
           root = if $v == null { null } else { { "type": "Property", "value": $v } }
         }
         let local = "nehodovost-v-bbk-" + [this.properties."Číslo_nehody"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
+        let at = this.properties."Dátum_a_čas".apply("observed")
         root = {
           "id": "urn:ngsi-ld:%v:%v:%v:%v".format("RoadAccident", "bbsk.sk", env("JC_SPACE"), $local),
           "type": "RoadAccident",
-          "gPSSirka": this.properties."GPS_Šírka".apply("float"),
-          "gPSDlzka": this.properties."GPS_Dĺžka".apply("float"),
+          "gPSSirka": {"p": this.properties."GPS_Šírka".apply("float"), "at": $at}.apply("stamped"),
+          "gPSDlzka": {"p": this.properties."GPS_Dĺžka".apply("float"), "at": $at}.apply("stamped"),
           "cisloNehody": this.properties."Číslo_nehody".apply("string"),
           "datumACas": this.properties."Dátum_a_čas".apply("datetime"),
           "povrchVozovky": this.properties."Povrch_vozovky".apply("string"),
           "smerovePomery": this.properties."Smerové_pomery".apply("string"),
           "druhKomunikacie": this.properties."Druh_komunikácie".apply("string"),
           "hlavnyVinnik": this.properties."Hlavný_vinník".apply("string"),
-          "lahkoZraneni": this.properties."Ľahko_zranení".apply("integer"),
-          "tazkoZraneni": this.properties."Ťažko_zranení".apply("integer"),
-          "usmrteni": this.properties."Usmrtení".apply("integer"),
+          "lahkoZraneni": {"p": this.properties."Ľahko_zranení".apply("integer"), "at": $at}.apply("stamped"),
+          "tazkoZraneni": {"p": this.properties."Ťažko_zranení".apply("integer"), "at": $at}.apply("stamped"),
+          "usmrteni": {"p": this.properties."Usmrtení".apply("integer"), "at": $at}.apply("stamped"),
           "priciny": this.properties."Príčiny".apply("string"),
-          "skodaVEUR": this.properties."Škoda_v_EUR".apply("integer"),
+          "skodaVEUR": {"p": this.properties."Škoda_v_EUR".apply("integer"), "at": $at}.apply("stamped"),
           "status": { "type": "Property", "value": "archived" },
           "location": if this.geometry.or(null) == null { null } else { { "type": "GeoProperty", "value": this.geometry } },
           "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj (CC BY-SA 4.0)" },

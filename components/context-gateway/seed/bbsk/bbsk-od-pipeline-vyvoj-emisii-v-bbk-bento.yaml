@@ -72,6 +72,18 @@ pipeline:
           }
           root = if $v == null { null } else { { "type": "Property", "value": $v } }
         }
+        # The instant a row was observed, from its `observedAt` column: a bare year is its first instant,
+        # anything else reads as a datetime (T-4288).
+        map observed {
+          let x = this
+          root = if $x == null { null } else if $x.string().re_match("^[0-9]{4}$") { $x.string() + "-01-01T00:00:00Z" } else {
+            $x.apply("datetime").value.catch(null)
+          }
+        }
+        # A measured Property with the instant it holds, so SensorThings charts it (T-4288).
+        map stamped {
+          root = if this.p == null || this.at == null { this.p } else { this.p.merge({ "observedAt": this.at }) }
+        }
         map date {
           let x = this
           let v = match $x.type() {
@@ -85,16 +97,17 @@ pipeline:
           root = if $v == null { null } else { { "type": "Property", "value": $v } }
         }
         let local = "vyvoj-emisii-v-bbk-" + {"DOW": this.properties."DOW", "FACC": this.properties."FACC", "IDN3": this.properties."IDN3", "NM3": this.properties."NM3", "IDN2": this.properties."IDN2", "NM2": this.properties."NM2", "VYMERA": this.properties."VYMERA", "NUTS1": this.properties."NUTS1", "NUTS1_CODE": this.properties."NUTS1_CODE", "NUTS2": this.properties."NUTS2", "NUTS2_CODE": this.properties."NUTS2_CODE", "NUTS3": this.properties."NUTS3", "NUTS3_CODE": this.properties."NUTS3_CODE", "LAU1": this.properties."LAU1", "LAU1_CODE": this.properties."LAU1_CODE", "Kód_elementu": this.properties."Kód_elementu", "nuts": this.properties."nuts", "kód_okresu": this.properties."kód_okresu", "rok": this.properties."rok", "ukazovatel": this.properties."ukazovatel", "Kód_elementu_3": this.properties."Kód_elementu_3", "chemická_zlúčenina": this.properties."chemická_zlúčenina", "Hodnota": this.properties."Hodnota"}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
+        let at = this.properties."rok".apply("observed")
         root = {
           "id": "urn:ngsi-ld:%v:%v:%v:%v".format("KeyPerformanceIndicator", "bbsk.sk", env("JC_SPACE"), $local),
           "type": "KeyPerformanceIndicator",
           "dOW": this.properties."DOW".apply("datetime"),
           "fACC": this.properties."FACC".apply("string"),
-          "iDN3": this.properties."IDN3".apply("integer"),
+          "iDN3": {"p": this.properties."IDN3".apply("integer"), "at": $at}.apply("stamped"),
           "nM3": this.properties."NM3".apply("string"),
-          "iDN2": this.properties."IDN2".apply("integer"),
+          "iDN2": {"p": this.properties."IDN2".apply("integer"), "at": $at}.apply("stamped"),
           "nM2": this.properties."NM2".apply("string"),
-          "vYMERA": this.properties."VYMERA".apply("float"),
+          "vYMERA": {"p": this.properties."VYMERA".apply("float"), "at": $at}.apply("stamped"),
           "nUTS1": this.properties."NUTS1".apply("string"),
           "nUTS1CODE": this.properties."NUTS1_CODE".apply("string"),
           "nUTS2": this.properties."NUTS2".apply("string"),
@@ -108,9 +121,9 @@ pipeline:
           "kodOkresu": this.properties."kód_okresu".apply("string"),
           "rok": this.properties."rok".apply("string"),
           "ukazovatel": this.properties."ukazovatel".apply("string"),
-          "kodElementu3": this.properties."Kód_elementu_3".apply("integer"),
+          "kodElementu3": {"p": this.properties."Kód_elementu_3".apply("integer"), "at": $at}.apply("stamped"),
           "chemickaZlucenina": this.properties."chemická_zlúčenina".apply("string"),
-          "hodnota": this.properties."Hodnota".apply("float"),
+          "hodnota": {"p": this.properties."Hodnota".apply("float"), "at": $at}.apply("stamped"),
           "location": if this.geometry.or(null) == null { null } else { { "type": "GeoProperty", "value": this.geometry } },
           "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj (CC BY-SA 4.0)" },
           "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/JF_to_Okresy_BBK_hranice_view/FeatureServer/0/query?where=1%3D1&outFields=DOW,FACC,IDN3,NM3,IDN2,NM2,VYMERA,NUTS1,NUTS1_CODE,NUTS2,NUTS2_CODE,NUTS3,NUTS3_CODE,LAU1,LAU1_CODE,K%C3%B3d_elementu,nuts,k%C3%B3d_okresu,rok,ukazovatel,K%C3%B3d_elementu_3,chemick%C3%A1_zl%C3%BA%C4%8Denina,Hodnota&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },

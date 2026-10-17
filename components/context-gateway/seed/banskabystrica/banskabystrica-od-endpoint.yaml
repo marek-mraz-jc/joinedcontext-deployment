@@ -25,4 +25,5 @@ spec:
   - websocket
   - ogc-features
   - odata
+  - sta
   - mcp

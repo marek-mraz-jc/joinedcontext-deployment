@@ -49,6 +49,18 @@ pipeline:
           }
           root = if $v == null { null } else { { "type": "Property", "value": $v } }
         }
+        # The instant a row was observed, from its `observedAt` column: a bare year is its first instant,
+        # anything else reads as a datetime (T-4288).
+        map observed {
+          let x = this
+          root = if $x == null { null } else if $x.string().re_match("^[0-9]{4}$") { $x.string() + "-01-01T00:00:00Z" } else {
+            $x.apply("datetime").value.catch(null)
+          }
+        }
+        # A measured Property with the instant it holds, so SensorThings charts it (T-4288).
+        map stamped {
+          root = if this.p == null || this.at == null { this.p } else { this.p.merge({ "observedAt": this.at }) }
+        }
         map date {
           let x = this
           let v = match $x.type() {
@@ -62,16 +74,17 @@ pipeline:
           root = if $v == null { null } else { { "type": "Property", "value": $v } }
         }
         let local = "obyvatelstvo-podla-rodinneho-stavu-2-" + [this.properties."IDN3"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
+        let at = this.properties."Rok_".apply("observed")
         root = {
           "id": "urn:ngsi-ld:%v:%v:%v:%v".format("KeyPerformanceIndicator", "bbsk.sk", env("JC_SPACE"), $local),
           "type": "KeyPerformanceIndicator",
           "dOW": this.properties."DOW".apply("datetime"),
           "fACC": this.properties."FACC".apply("string"),
-          "iDN3": this.properties."IDN3".apply("integer"),
+          "iDN3": {"p": this.properties."IDN3".apply("integer"), "at": $at}.apply("stamped"),
           "nM3": this.properties."NM3".apply("string"),
-          "iDN2": this.properties."IDN2".apply("integer"),
+          "iDN2": {"p": this.properties."IDN2".apply("integer"), "at": $at}.apply("stamped"),
           "nM2": this.properties."NM2".apply("string"),
-          "vYMERA": this.properties."VYMERA".apply("float"),
+          "vYMERA": {"p": this.properties."VYMERA".apply("float"), "at": $at}.apply("stamped"),
           "nUTS1": this.properties."NUTS1".apply("string"),
           "nUTS1CODE": this.properties."NUTS1_CODE".apply("string"),
           "nUTS2": this.properties."NUTS2".apply("string"),
@@ -83,17 +96,17 @@ pipeline:
           "okres": this.properties."Okres".apply("string"),
           "cisloOkresu": this.properties."Číslo_okresu".apply("string"),
           "rok": this.properties."Rok_".apply("string"),
-          "pocetObyvatelovSpolu": this.properties."Počet_obyvateľov_spolu".apply("integer"),
-          "slobodnySlobodnaAbs": this.properties."slobodný__slobodná__abs__".apply("integer"),
-          "zenatyVydataAbs": this.properties."ženatý__vydatá__abs__".apply("integer"),
-          "rozvedenyRozvedenaAbs": this.properties."rozvedený__rozvedená__abs__".apply("integer"),
-          "vdovecVdovaAbs": this.properties."vdovec__vdova__abs__".apply("integer"),
-          "nezisteneAbs": this.properties."nezistené__abs__".apply("integer"),
-          "slobodnySlobodna": this.properties."slobodný__slobodná__".apply("float"),
-          "zenatyVydata": this.properties."ženatý__vydatá__".apply("float"),
-          "rozvedenyRozvedena": this.properties."rozvedený__rozvedená__".apply("float"),
-          "vdovecVdova": this.properties."vdovec__vdova__".apply("float"),
-          "nezistene": this.properties."nezistené__".apply("float"),
+          "pocetObyvatelovSpolu": {"p": this.properties."Počet_obyvateľov_spolu".apply("integer"), "at": $at}.apply("stamped"),
+          "slobodnySlobodnaAbs": {"p": this.properties."slobodný__slobodná__abs__".apply("integer"), "at": $at}.apply("stamped"),
+          "zenatyVydataAbs": {"p": this.properties."ženatý__vydatá__abs__".apply("integer"), "at": $at}.apply("stamped"),
+          "rozvedenyRozvedenaAbs": {"p": this.properties."rozvedený__rozvedená__abs__".apply("integer"), "at": $at}.apply("stamped"),
+          "vdovecVdovaAbs": {"p": this.properties."vdovec__vdova__abs__".apply("integer"), "at": $at}.apply("stamped"),
+          "nezisteneAbs": {"p": this.properties."nezistené__abs__".apply("integer"), "at": $at}.apply("stamped"),
+          "slobodnySlobodna": {"p": this.properties."slobodný__slobodná__".apply("float"), "at": $at}.apply("stamped"),
+          "zenatyVydata": {"p": this.properties."ženatý__vydatá__".apply("float"), "at": $at}.apply("stamped"),
+          "rozvedenyRozvedena": {"p": this.properties."rozvedený__rozvedená__".apply("float"), "at": $at}.apply("stamped"),
+          "vdovecVdova": {"p": this.properties."vdovec__vdova__".apply("float"), "at": $at}.apply("stamped"),
+          "nezistene": {"p": this.properties."nezistené__".apply("float"), "at": $at}.apply("stamped"),
           "location": if this.geometry.or(null) == null { null } else { { "type": "GeoProperty", "value": this.geometry } },
           "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj (CC BY-SA 4.0)" },
           "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_rodinn%C3%BD_stav_okres/FeatureServer/0/query?where=1%3D1&outFields=DOW,FACC,IDN3,NM3,IDN2,NM2,VYMERA,NUTS1,NUTS1_CODE,NUTS2,NUTS2_CODE,NUTS3,NUTS3_CODE,LAU1,LAU1_CODE,Okres,%C4%8C%C3%ADslo_okresu,Rok_,Po%C4%8Det_obyvate%C4%BEov_spolu,slobodn%C3%BD__slobodn%C3%A1__abs__,%C5%BEenat%C3%BD__vydat%C3%A1__abs__,rozveden%C3%BD__rozveden%C3%A1__abs__,vdovec__vdova__abs__,nezisten%C3%A9__abs__,slobodn%C3%BD__slobodn%C3%A1__,%C5%BEenat%C3%BD__vydat%C3%A1__,rozveden%C3%BD__rozveden%C3%A1__,vdovec__vdova__,nezisten%C3%A9__&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },
