@@ -24,9 +24,10 @@ imports:
 slots:
   name:
     slot_uri: schema:name
-    description: The name, per language, as the publisher writes it.
+    description: The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is (T-4523).
+    range: string
     annotations:
-      ngsi_ld_kind: LanguageProperty
+      ngsi_ld_kind: Property
       upstream_source: https://schema.org/name
   alternateName:
     slot_uri: schema:alternateName
@@ -110,6 +111,12 @@ slots:
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
+  isPartOf:
+    slot_uri: jc:isPartOf
+    description: The catalogue dataset the record belongs to, which tells the region's districts from its municipalities in one type (T-4523).
+    range: uri
+    annotations:
+      ngsi_ld_kind: Property
   areaCode:
     slot_uri: jc:areaCode
     description: >-
@@ -314,6 +321,7 @@ classes:
       - divisionLevel
       - refParentArea
       - surfaceArea
+      - isPartOf
       - dataProvider
       - source
       - childAreas

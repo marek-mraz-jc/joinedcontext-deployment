@@ -164,7 +164,9 @@ def test_every_open_data_endpoint_serves_each_standard_and_the_catalogue_lists_e
     assert series == {e["dataset"].rsplit("/", 1)[1] for e in SEEDED if e.get("observedAt")} - {
         e["dataset"].rsplit("/", 1)[1] for e in SEEDED if not generate.series(e)}
     # T-4291: a dataset another seed reads whole is listed through that seed's public Endpoint, over
-    # its whole type, since those rows name no catalogue dataset.
+    # its whole type, since those rows name no catalogue dataset; unless two datasets share that
+    # door and type, which the seed then tells apart by `isPartOf` (bbsk obce and okresy, T-4523).
+    shared = {"bbsk-obce-bbk-hranice-ec7ac6", "bbsk-okresy-bbk-hranice-17725f"}
     endpoints = {d["spec"]["slug"]: (f.parent.name, d["spec"]) for f in SEED.glob("*/*.yaml")
                  for d in yaml.safe_load_all(f.read_text()) if isinstance(d, dict) and d.get("kind") == "Endpoint"}
     for e in mapped:
@@ -172,7 +174,8 @@ def test_every_open_data_endpoint_serves_each_standard_and_the_catalogue_lists_e
             continue
         row = rows[e["dataset"].rsplit("/", 1)[1]]
         project, endpoint = endpoints[row["endpoint"]]
-        assert (project, endpoint["audience"], row["filtered"]) == (e["org"], "public", False), e["name"]
+        filtered = e["dataset"].rsplit("/", 1)[1] in shared
+        assert (project, endpoint["audience"], row["filtered"]) == (e["org"], "public", filtered), e["name"]
         assert {"ngsi-ld", "csv", "json", "ogc-features", "odata"} <= set(endpoint["enabledRepresentations"]), e["name"]
     mosty = rows["bbsk-mosty-v-banskobystrickom-kraji-public-view-3b4675"]
     assert (mosty["type"], endpoints[mosty["endpoint"]][1]["policyRef"]) == ("Bridge", "urn:ngsi-ld:Policy:bbsk.sk:bbsk-registre:mosty-read")
