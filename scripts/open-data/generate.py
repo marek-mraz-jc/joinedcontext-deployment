@@ -974,6 +974,8 @@ def distributions(mapped: list[dict], whole: list[dict]) -> str:
         slug, kind = existing_door(e)
         rows[e["dataset"].rsplit("/", 1)[1]] = {"endpoint": slug, "type": kind, "dataset": e["dataset"],
                                                  "location": located(e), "series": False, "filtered": False}
+    # The ŠÚ SR rows are scripts/open-data/datacube.py's (T-4390): kept as committed.
+    rows.update({k: v for k, v in json.loads(DISTRIBUTIONS.read_text()).items() if k.startswith("susr-")})
     return "{\n" + ",\n".join(f"  {json.dumps(k)}: {json.dumps(v, ensure_ascii=False)}" for k, v in sorted(rows.items())) + "\n}\n"
 
 

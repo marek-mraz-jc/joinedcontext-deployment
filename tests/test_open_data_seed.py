@@ -143,12 +143,13 @@ def test_every_open_data_endpoint_serves_each_standard_and_the_catalogue_lists_e
         slugs[project] = endpoint["slug"]
     rows = json.loads(generate.DISTRIBUTIONS.read_text())
     mapped = [e for e in MAPPING["datasets"] if e["status"] == "mapped"]
-    assert len(rows) == len({e["dataset"] for e in mapped})
+    # The susr- rows are scripts/open-data/datacube.py's (T-4390, test_datacube_generator.py).
+    assert len([k for k in rows if not k.startswith("susr-")]) == len({e["dataset"] for e in mapped})
     for e in SEEDED:
         row = rows[e["dataset"].rsplit("/", 1)[1]]
         assert (row["endpoint"], row["type"], row["dataset"], row["filtered"]) == (slugs[e["org"]], e["type"], e["dataset"], True)
     # T-4288: SensorThings is listed for the datasets whose numbers carry an instant, and only those.
-    series = {name for name, row in rows.items() if row["series"]}
+    series = {name for name, row in rows.items() if row.get("series")}
     assert any(s.startswith("bbsk-pohyb-obyvatelstva-v-okresoch") for s in series), sorted(series)
     assert not any(s.startswith(("bb-adresy", "bbsk-zoznam-lekarni")) for s in series)
     assert series == {e["dataset"].rsplit("/", 1)[1] for e in SEEDED if e.get("observedAt")} - {
