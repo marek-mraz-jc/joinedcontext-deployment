@@ -8,7 +8,8 @@
 resources:
   requests:
     cpu: 100m
-    memory: 256Mi
+    # T-4473: dev, kubectl top 2026-10-17 21:22-22:22Z: median 96, peak 105Mi.
+    memory: 128Mi
   limits:
     cpu: 1000m
     memory: 1024Mi

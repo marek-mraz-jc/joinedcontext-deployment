@@ -10,7 +10,8 @@ replicaCount: 1
 resources:
   requests:
     cpu: 100m
-    memory: 128Mi
+    # T-4473: dev, kubectl top 2026-10-17 21:22-22:22Z: median 387, peak 555Mi for the pod, 64Mi of it the sidecar's request.
+    memory: 384Mi
   limits:
     cpu: '1'
     # 512Mi was OOMKilled at a measured 422 MB steady peak plus every broker rollout's read burst

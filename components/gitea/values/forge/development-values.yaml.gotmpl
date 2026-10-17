@@ -14,7 +14,8 @@ strategy:
 resources:
   requests:
     cpu: 200m
-    memory: 512Mi
+    # T-4473: dev, kubectl top 2026-10-17 21:22-22:22Z: median 249, peak 306Mi.
+    memory: 320Mi
   limits:
     cpu: '1'
     memory: 1Gi

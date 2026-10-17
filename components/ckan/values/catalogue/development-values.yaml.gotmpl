@@ -11,7 +11,8 @@ ckan:
   resources:
     requests:
       cpu: 200m
-      memory: 512Mi
+      # T-4473: dev, kubectl top 2026-10-17 21:22-22:22Z: median 267, peak 273Mi.
+      memory: 352Mi
     limits:
       cpu: '2'
       memory: 2Gi

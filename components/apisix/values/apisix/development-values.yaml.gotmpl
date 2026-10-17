@@ -17,7 +17,8 @@ apisix:
 resources:
   requests:
     cpu: 100m
-    memory: 256Mi
+    # T-4473: dev, kubectl top 2026-10-17 21:22-22:22Z: median 135, peak 138Mi.
+    memory: 176Mi
   limits:
     cpu: 500m
     memory: 512Mi
