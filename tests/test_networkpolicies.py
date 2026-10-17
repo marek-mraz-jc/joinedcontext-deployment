@@ -501,7 +501,8 @@ def test_a_workload_that_mints_its_own_token_may_reach_the_realm(rendered, env):
         spec = doc["spec"]["template"]["spec"]
         for container in spec.get("containers") or []:
             for var in container.get("env") or []:
-                if var.get("name") != "JC_OIDC_TOKEN_URL":
+                # The Portal's tokens and admin calls (T-4450) are the same dial.
+                if var.get("name") not in ("JC_OIDC_TOKEN_URL", "JC_KEYCLOAK_ADMIN_URL"):
                     continue
                 if "svc.cluster.local" not in (var.get("value") or ""):
                     continue
