@@ -214,11 +214,30 @@ def test_schedules_are_valid_cron_and_follow_the_refresh():
             # Bento's cron reads a weekday 0-6; a 7 refused the whole stream on dev (T-4347).
             assert fields[4] == "*" or 0 <= int(fields[4]) <= 6, p.name
     daily = next(e for e in SEEDED if e["refresh"] == "P1D")
-    assert generate.schedule(daily, 3).endswith("* * *")
-    assert generate.schedule({"refresh": "P1M"}, 30).split()[2] == "3"
+    assert generate.schedule(daily, 3, 3).endswith("* * *")
+    assert generate.schedule({"refresh": "P1M"}, 30, 30).split()[2] == "3"
     # The city's register of citizens by age moves daily; read monthly, dev trailed it (T-4519).
     register = yaml.safe_load((SEED / "banskabystrica" / "banskabystrica-od-pipeline-pocet-obcanov-podla-veku.yaml").read_text())
     assert register["spec"]["schedule"].endswith("* * *"), register["spec"]["schedule"]
+
+
+def test_the_parts_of_a_split_dataset_run_the_same_day_at_their_own_minute():
+    # The city's green layers ran as p1 on Sunday, p3 on Friday, p2 on Saturday: a day's gate
+    # counted 4000 of 8546 rows (T-4517).
+    for project in generate.PROJECTS:
+        days: dict[str, set[str]] = {}
+        minutes: dict[str, set[str]] = {}
+        for p in files(project, "pipeline"):
+            if p.name.endswith("-bento.yaml"):
+                continue
+            doc = yaml.safe_load(p.read_text())
+            fields = doc["spec"]["schedule"].split()
+            dataset = re.sub(r"-p\d+$", "", doc["metadata"]["name"])
+            days.setdefault(dataset, set()).add(" ".join(fields[2:]))
+            minutes.setdefault(dataset, set()).add(" ".join(fields[:2]))
+        split = [d for d, m in minutes.items() if len(m) > 1]
+        assert all(len(days[d]) == 1 for d in split), {d: days[d] for d in split if len(days[d]) > 1}
+    assert generate.schedule({"refresh": "P1W"}, 9, 2).split()[2:] == ["*", "*", "2"]
 
 
 # --- Security: public sources only, no personal column, the row filters at the source ---
