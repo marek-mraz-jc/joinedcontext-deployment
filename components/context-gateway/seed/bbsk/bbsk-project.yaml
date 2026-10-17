@@ -9,6 +9,8 @@ metadata:
     en: "The region: 13 districts, 614 356 people, publishing what a region owns."
 spec:
   organizationRef: hel
+  # Who publishes this data, the did:web assigner of its Apps' Policies (PF-108); describes, grants nothing.
+  domain: bbsk.sk
   # Owner, 2026-09-25 (T-2873): no demo work and no city dataset is refused by a quota, so every
   # project allows 100 of each countable kind and runtime ceilings nobody reaches (PF-73). The
   # quota stays as the mechanism; what the node holds is the operator's bounds file (PF-97).
