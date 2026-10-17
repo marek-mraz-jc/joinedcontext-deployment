@@ -150,12 +150,14 @@ pipeline:
           - for_each:
               - mapping: |
                   meta url = this.url
+                  meta path = this.url.trim_prefix("https://eeadmz1batchservice02.blob.core.windows.net/")
                   meta station = this.station
                   meta attribute = this.attribute
                   meta since = this.since
                   root = ""
               - http:
-                  url: "${{! @url }}"
+                  # PL-07: the host is fixed in the step, only the file's path comes from the message.
+                  url: "https://eeadmz1batchservice02.blob.core.windows.net/${{! @path }}"
                   verb: GET
                   headers:
                     Accept: application/octet-stream
