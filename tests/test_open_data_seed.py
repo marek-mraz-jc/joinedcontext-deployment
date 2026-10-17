@@ -213,6 +213,9 @@ def test_schedules_are_valid_cron_and_follow_the_refresh():
     daily = next(e for e in SEEDED if e["refresh"] == "P1D")
     assert generate.schedule(daily, 3).endswith("* * *")
     assert generate.schedule({"refresh": "P1M"}, 30).split()[2] == "3"
+    # The city's register of citizens by age moves daily; read monthly, dev trailed it (T-4519).
+    register = yaml.safe_load((SEED / "banskabystrica" / "banskabystrica-od-pipeline-pocet-obcanov-podla-veku.yaml").read_text())
+    assert register["spec"]["schedule"].endswith("* * *"), register["spec"]["schedule"]
 
 
 # --- Security: public sources only, no personal column, the row filters at the source ---
