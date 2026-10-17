@@ -225,7 +225,8 @@ def test_a_realm_without_admin_permissions_fails_the_run(keycloak):
 def test_the_job_links_the_marked_endpoint_scopes_to_the_hub(keycloak):
     """T-3324, EP-88: the Portal may not link a scope to `mcp-hub` (the deny covers it), so the
     Job links every marked `endpoint:` scope there as an optional scope and unlinks an unmarked
-    one and any default `endpoint:` link; a scope outside the prefix is left as it is."""
+    one and any default `endpoint:` link; a scope outside the prefix is left as it is, and so is
+    the realm's own default `endpoint:*`, which the import writes unmarked (T-4459, ADR-N-025 4b)."""
     name, base = keycloak
     ids = realm(base)
     admin = ids["admin"]
@@ -248,8 +249,10 @@ def test_the_job_links_the_marked_endpoint_scopes_to_the_hub(keycloak):
         "endpoint:stray": scope("endpoint:stray", False),
         "endpoint:unlinked": scope("endpoint:unlinked", False),
         "weather": scope("weather", False),
+        "endpoint:*": scope("endpoint:*", False),
     }
-    for kind, scope_name in [("default", "endpoint:default"), ("optional", "endpoint:stray"), ("optional", "weather")]:
+    for kind, scope_name in [("default", "endpoint:default"), ("optional", "endpoint:stray"), ("optional", "weather"),
+                             ("default", "endpoint:*")]:
         status, body, _ = call(base, "PUT", f"/admin/realms/{REALM}/clients/{hub}/{kind}-client-scopes/{scopes[scope_name]}", admin)
         assert status == 204, body
 
@@ -262,7 +265,7 @@ def test_the_job_links_the_marked_endpoint_scopes_to_the_hub(keycloak):
     run = sync(name)
     assert run.returncode == 0, run.stderr
     assert links("optional") == ["endpoint:default", "endpoint:ours", "weather"], run.stdout
-    assert links("default") == [], run.stdout
+    assert links("default") == ["endpoint:*"], run.stdout
     assert "linked 2 of 2 endpoint: scopes to mcp-hub" in run.stdout, run.stdout
     assert "unlinked endpoint:stray from mcp-hub (optional)" in run.stdout, run.stdout
     assert "unlinked endpoint:default from mcp-hub (default)" in run.stdout, run.stdout
