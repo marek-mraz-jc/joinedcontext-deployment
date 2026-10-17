@@ -470,6 +470,7 @@ STRINGS = {
     "records_geojson": {"en": "All records for a map", "sk": "Všetky záznamy na mapu", "cs": "Všechny záznamy na mapu", "de": "Alle Einträge für eine Karte"},
     "records_json": {"en": "All records for programs", "sk": "Všetky záznamy pre programy", "cs": "Všechny záznamy pro programy", "de": "Alle Einträge für Programme"},
     "records_xlsx": {"en": "All records for Excel", "sk": "Všetky záznamy pre Excel", "cs": "Všechny záznamy pro Excel", "de": "Alle Einträge für Excel"},
+    "records_parquet": {"en": "All records for pandas, Polars or DuckDB", "sk": "Všetky záznamy pre pandas, Polars alebo DuckDB", "cs": "Všechny záznamy pro pandas, Polars nebo DuckDB", "de": "Alle Einträge für pandas, Polars oder DuckDB"},
     "live_changes": {"en": "Live changes", "sk": "Zmeny naživo", "cs": "Změny živě", "de": "Änderungen live"},
     "ex_types": {"en": "The kinds of entities it holds, with curl", "sk": "Druhy entít, ktoré obsahuje, cez curl", "cs": "Druhy entit, které obsahuje, přes curl", "de": "Die Arten von Entitäten, die sie enthält, mit curl"},
     "section_source": {"en": "At the publisher", "sk": "U vydavateľa", "cs": "U vydavatele", "de": "Beim Herausgeber"},
@@ -491,6 +492,7 @@ FORMATS = {
     "CSV": {"en": "A table for a spreadsheet", "sk": "Tabuľka pre tabuľkový procesor", "cs": "Tabulka pro tabulkový procesor", "de": "Eine Tabelle für die Tabellenkalkulation"},
     "JSON": {"en": "Machine-readable JSON", "sk": "Strojovo čitateľný JSON", "cs": "Strojově čitelný JSON", "de": "Maschinenlesbares JSON"},
     "XLSX": {"en": "A spreadsheet", "sk": "Tabuľkový súbor", "cs": "Tabulkový soubor", "de": "Eine Tabellendatei"},
+    "PARQUET": {"en": "Typed columns for data analysis (Apache Parquet)", "sk": "Typované stĺpce pre analýzu dát (Apache Parquet)", "cs": "Typované sloupce pro analýzu dat (Apache Parquet)", "de": "Typisierte Spalten für die Datenanalyse (Apache Parquet)"},
     "ZIP": {"en": "Everything in one download", "sk": "Všetko v jednom súbore", "cs": "Vše v jednom souboru", "de": "Alles in einem Download"},
     "WEBSOCKET": {"en": "Live updates as they happen (WebSocket)", "sk": "Zmeny naživo, hneď ako nastanú (WebSocket)", "cs": "Změny živě, hned jak nastanou (WebSocket)", "de": "Änderungen live, sobald sie geschehen (WebSocket)"},
     "OGCFEAT": {"en": "Map layers for GIS (OGC API - Features)", "sk": "Mapové vrstvy pre GIS (OGC API - Features)", "cs": "Mapové vrstvy pro GIS (OGC API - Features)", "de": "Kartenebenen für GIS (OGC API - Features)"},
@@ -730,7 +732,7 @@ def jc_live(pkg):
 # Where a resource belongs on the dataset page (T-3009). The model artifacts are published under
 # the endpoint's `/schema/` path; the API formats answer queries rather than being files.
 API_FORMATS = ("NGSI-LD", "WEBSOCKET", "MCP", "OGCFEAT", "ODATA", "STA")
-DATA_ORDER = ("CSV", "GEOJSON", "JSON", "XLSX", "ZIP")
+DATA_ORDER = ("CSV", "GEOJSON", "JSON", "XLSX", "PARQUET", "ZIP")
 
 
 # What an address of the platform is, read from its path under `/api/endpoint/{slug}/` (T-4333):
@@ -742,11 +744,11 @@ _KIND_PREFIXES = (("ngsi-ld/", "NGSI-LD"), ("odata/", "ODATA"), ("ogc/", "OGCFEA
 # An Endpoint's door by its kind: product names, the same on a page in any language (T-4333).
 DOOR_NAMES = {"NGSI-LD": "NGSI-LD API", "WEBSOCKET": "WebSocket", "MCP": "Model Context Protocol",
               "OGCFEAT": "OGC API - Features", "ODATA": "OData v4", "STA": "SensorThings API",
-              "CSV": "CSV", "JSON": "JSON", "GEOJSON": "GeoJSON", "XLSX": "Excel"}
+              "CSV": "CSV", "JSON": "JSON", "GEOJSON": "GeoJSON", "XLSX": "Excel", "PARQUET": "Apache Parquet"}
 # The format as a reader reads it, on a chip and in the facts list.
 KIND_LABELS = {"NGSI-LD": "NGSI-LD", "WEBSOCKET": "WebSocket", "MCP": "MCP", "OGCFEAT": "OGC API",
                "ODATA": "OData", "STA": "SensorThings", "CSV": "CSV", "JSON": "JSON",
-               "GEOJSON": "GeoJSON", "XLSX": "Excel"}
+               "GEOJSON": "GeoJSON", "XLSX": "Excel", "PARQUET": "Parquet"}
 
 
 def _split(resource):
@@ -763,7 +765,7 @@ def _split(resource):
 
 
 def jc_kind(resource):
-    """NGSI-LD, MCP, WEBSOCKET, ODATA, OGCFEAT, STA, MODEL, or a file's CSV, JSON, GEOJSON or XLSX
+    """NGSI-LD, MCP, WEBSOCKET, ODATA, OGCFEAT, STA, MODEL, or a file's CSV, JSON, GEOJSON, XLSX or PARQUET
     for an Endpoint's address; None for anything else."""
     split = _split(resource)
     if not split:
@@ -774,7 +776,7 @@ def jc_kind(resource):
             return kind
     if rest in ("mcp", "ws"):
         return "MCP" if rest == "mcp" else "WEBSOCKET"
-    match = re.fullmatch(r"file\.(csv|json|geojson|xlsx)", rest)
+    match = re.fullmatch(r"file\.(csv|json|geojson|xlsx|parquet)", rest)
     return match.group(1).upper() if match else None
 
 
@@ -922,7 +924,7 @@ def jc_resource_label(resource, pkg=None):
     if words:
         return words.get(_language()) or words["en"]
     kind = jc_kind(resource)
-    if kind in ("CSV", "JSON", "GEOJSON", "XLSX") or kind == "WEBSOCKET":
+    if kind in ("CSV", "JSON", "GEOJSON", "XLSX", "PARQUET") or kind == "WEBSOCKET":
         # The chip already says the format: the name says what is inside and what for, so the
         # platform's files never read as twins of each other (T-4333).
         return jc_t("records_" + kind.lower() if kind != "WEBSOCKET" else "live_changes")
@@ -1110,8 +1112,8 @@ def jc_examples(resource):
         message = json.dumps({"metadata": {"x-op": "x-subscribe", "x-id": "s1"}, "body": body},
                              separators=(",", ":"), ensure_ascii=False)
         add(jc_t("ex_ws"), "websocat --protocol ngsi-ld-ws%s '%s'\n%s" % (auth, url, message))
-    elif kind in ("CSV", "JSON", "GEOJSON", "XLSX"):
-        name = "data." + ("xlsx" if kind == "XLSX" else kind.lower())
+    elif kind in ("CSV", "JSON", "GEOJSON", "XLSX", "PARQUET"):
+        name = "data." + kind.lower()
         add(jc_t("ex_file"), "curl%s -L -o %s '%s'" % (auth, name, url))
     return out
 

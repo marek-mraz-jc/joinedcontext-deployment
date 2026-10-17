@@ -1254,9 +1254,9 @@ def test_the_resource_list_groups_and_names_the_type_once(theme):
     # A file or a socket is named by what is in it; its chip already names the format.
     assert labels["c"] == "All records as a table" and labels["w"] == "Live changes"
     # Each of the platform's files says what it is for, so none reads as a twin of another.
-    files = [dict(_od(theme, "c"), url=OD + "file.%s" % f, format=f) for f in ("csv", "geojson", "json", "xlsx")]
+    files = [dict(_od(theme, "c"), url=OD + "file.%s" % f, format=f) for f in ("csv", "geojson", "json", "xlsx", "parquet")]
     named = [theme.jc_resource_label(r, OD_PKG) for r in files]
-    assert [theme.jc_kind(r) for r in files] == ["CSV", "GEOJSON", "JSON", "XLSX"]
+    assert [theme.jc_kind(r) for r in files] == ["CSV", "GEOJSON", "JSON", "XLSX", "PARQUET"]
     assert len(set(named)) == len(named)
     assert theme.jc_entity_type(_od(theme, "m")) == theme.jc_entity_type(_od(theme, "o")) == "StatisticalObservation"
     theme.page.lang = "sk"
@@ -1330,6 +1330,8 @@ def test_each_kind_shows_how_to_use_it_and_a_private_one_sends_the_token(theme):
     private = dict(_od(theme, "n"), description="Send `Authorization: Bearer $TOKEN`.")
     assert '-H "Authorization: Bearer $TOKEN"' in theme.jc_examples(private)[0]["code"]
     assert theme.jc_examples(_od(theme, "t")) == [] and theme.jc_examples({}) == []
+    parquet = theme.jc_examples(dict(_od(theme, "c"), url=OD + "file.parquet"))[0]["code"]
+    assert parquet == "curl -L -o data.parquet '%sfile.parquet'" % OD
     ids = [e["id"] for e in mcp]
     assert len(set(ids)) == len(ids)
 

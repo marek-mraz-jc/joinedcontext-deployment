@@ -32,6 +32,7 @@ FILE_TYPES = {
     "JSON-LD": "JSON_LD",
     "NGSI-LD": "JSON_LD",
     "XLSX": "XLSX",
+    "PARQUET": "PARQUET",
     "ZIP": "ZIP",
     "MARKDOWN": "MARKDOWN",
     "OWL": "OWL",
