@@ -1016,7 +1016,7 @@ def test_the_navigation_and_the_dataset_tabs_ask_before_offering_topics():
     ("bike-sharing", '"bike-sharing"'),
     ("kvalita-ovzdušia Žilina", '"kvalita-ovzdušia" (Žilina OR Žilin*)'),
     ("qzxwv-nothing-is-called-this", '"qzxwv-nothing-is-called-this"'),
-    ("air quality", "air quality"),
+    ("air quality", "air (quality OR qualit*)"),
     ("-draft", "-draft"),
     ('"bike-sharing" x-y', '"bike-sharing" x-y'),
     ("tags:air-quality", "tags:air-quality"),
@@ -1039,16 +1039,41 @@ def test_the_dataset_search_takes_the_hyphenated_word_as_a_phrase(theme):
 # "ovzdušie" finds praha-air only, edismax "(ovzdušie OR ovzduš*)" finds praha-air and bb-air.
 @pytest.mark.parametrize("asked, searched", [
     ("ovzdušie", "(ovzdušie OR ovzduš*)"),
-    ("kvalita ovzdušia", "kvalita (ovzdušia OR ovzduš*)"),
-    ("Kvalita ovzduší", "Kvalita (ovzduší OR ovzduš*)"),
+    ("kvalita ovzdušia", "(kvalita OR kvalit*) (ovzdušia OR ovzduš*)"),
+    ("Kvalita ovzduší", "(Kvalita OR Kvalit*) (ovzduší OR ovzduš*)"),
     ("školy", "(školy OR škol*)"),
     ("ľad", "ľad"),
-    ("ovzduš", "ovzduš"),
-    ("air quality", "air quality"),
+    ("ovzduš", "(ovzduš OR ovzduš*)"),
     ('"ovzdušie"', '"ovzdušie"'),
 ])
 def test_a_slovak_or_czech_word_finds_its_other_endings(theme, asked, searched):
     assert theme.jc_search_words(asked) == searched
+
+
+# T-4387: a visitor types Slovak without its letters and in the singular; Solr folds the letters
+# on both sides (CKAN's `text` field ends in ASCIIFoldingFilter), so the folded word and its stem
+# reach the same Datasets. Each pair below asks for one stem: dev counted ovzdušie 4, ovzdusie 3,
+# mosty 1, most 0, cesty 1, cesta 0 before.
+@pytest.mark.parametrize("one, other, stem", [
+    ("ovzdušie", "ovzdusie", None),
+    ("most", "mosty", "most*"),
+    ("cesta", "cesty", "cest*"),
+    ("ovzdušie", "ovzdušia", "ovzduš*"),
+])
+def test_the_folded_word_and_the_singular_ask_for_the_plurals_stem(theme, one, other, stem):
+    def asked(word):
+        searched = theme.jc_search_words(word)
+        assert searched.startswith("(%s OR " % word), searched
+        return searched.split(" OR ")[1].rstrip(")")
+    if stem is None:
+        assert asked(one).replace("š", "s") == asked(other)
+    else:
+        assert asked(one) == asked(other) == stem
+
+
+@pytest.mark.parametrize("word", ["air", "bus", "ľad", "x2", "2024", "-draft", "co2"])
+def test_a_short_or_not_alphabetic_word_is_searched_as_written(theme, word):
+    assert theme.jc_search_words(word) == word
 
 
 def test_a_stemmed_search_asks_for_the_parser_that_takes_a_prefix(theme):

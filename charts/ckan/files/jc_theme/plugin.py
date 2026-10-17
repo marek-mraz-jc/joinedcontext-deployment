@@ -1241,22 +1241,23 @@ def jc_has_topics():
 HYPHENATED = re.compile(r"^\w+(?:-\w+)+$")
 
 
-# A letter only Slovak or Czech writes, and the endings their nouns and adjectives decline
-# through, longest first (T-4239).
-SLAVIC_LETTER = re.compile(r"[áäčďéěíĺľňóôŕřšťúůýž]", re.IGNORECASE)
+# The endings Slovak and Czech nouns and adjectives decline through, longest first (T-4239).
 SLAVIC_ENDINGS = ("iach", "ách", "ami", "ých", "ými", "ého", "ému", "ia", "ie", "ii", "iu", "ej",
                   "om", "ov", "ou", "ím", "ým", "a", "á", "e", "é", "ě", "i", "í", "o", "u", "ú", "y", "ý")
 
 
 def jc_stem(word):
-    """`(word OR stem*)` for a Slovak or Czech word, else the word (T-4239). The catalogue's Solr
-    stems in English, so "ovzdušie" missed every "ovzdušia"; the stem keeps four letters at least."""
-    if not word.isalpha() or not SLAVIC_LETTER.search(word):
+    """`(word OR stem*)` for a word of four letters or more, else the word (T-4239, T-4387). The
+    catalogue's Solr stems in English, so "ovzdušie" missed every "ovzdušia". Any word, since a
+    visitor types Slovak without its letters ("ovzdusie") and Solr folds them on both sides; a word
+    with no ending is its own stem, so the singular finds the plural ("most", "mosty"). The stem
+    keeps four letters at least."""
+    if not word.isalpha() or len(word) < 4:
         return word
     for ending in SLAVIC_ENDINGS:
         if word.lower().endswith(ending) and len(word) - len(ending) >= 4:
             return "(%s OR %s*)" % (word, word[: -len(ending)])
-    return word
+    return "(%s OR %s*)" % (word, word)
 
 
 def jc_search_words(q):
