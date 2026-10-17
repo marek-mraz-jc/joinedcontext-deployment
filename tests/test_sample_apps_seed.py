@@ -405,10 +405,8 @@ def test_no_gitea_release_outgrows_the_secret_helm_keeps_it_in(dev):
     Secret of at most 1 MiB; gitea-bootstrap passed it when alerts-desk joined the seed and every
     apply stopped there (T-3175). The values carry what the manifest renders, so twice the
     manifest is the estimate, and a quarter of the Secret stays free for the next app."""
-    import base64
-    import gzip
 
-    for release in ("gitea-bootstrap", "gitea-seed", "gitea-seed-2", "gitea-seed-3", "gitea-seed-4", "gitea-seed-5", "gitea-sample-apps", "gitea-sample-apps-2",
+    for release in ("gitea-bootstrap", *SEED_RELEASES, "gitea-sample-apps", "gitea-sample-apps-2",
                     "gitea-sample-apps-3", "gitea-sample-apps-4", "gitea-sample-apps-5", "gitea-sample-apps-6",
                     "gitea-sample-apps-7"):
         docs = [
@@ -416,16 +414,92 @@ def test_no_gitea_release_outgrows_the_secret_helm_keeps_it_in(dev):
             if (d.get("metadata", {}).get("labels") or {}).get("app.kubernetes.io/instance") == release
         ]
         assert docs, f"{release} renders nothing labelled as its own"
-        manifest = yaml.safe_dump_all(docs).encode()
-        stored = len(base64.b64encode(gzip.compress(manifest * 2)))
+        stored = stored_bytes(docs)
         assert stored < 0.75 * 1024 * 1024, f"{release} would be stored in {stored} bytes"
+
+
+SEED_RELEASES = ("gitea-seed", *(f"gitea-seed-{n}" for n in range(2, 9)))
+
+
+def stored_bytes(docs):
+    """What Helm's release Secret holds for these objects: values and manifest, gzipped, base64."""
+    import base64
+    import gzip
+
+    return len(base64.b64encode(gzip.compress(yaml.safe_dump_all(docs).encode() * 2)))
+
+
+def seed_configmaps(docs):
+    return [d for d in docs if d.get("kind") == "ConfigMap" and d["metadata"]["name"].startswith("gitea-seed-")]
+
+
+@requires_helmfile
+def test_every_seed_release_keeps_a_sixth_of_its_ceiling_free(dev):
+    """T-4431: the seed is packed by size over the seed releases, so today's seed leaves each of
+    them at least 15 % under the 0.75 MiB ceiling; the next open-data change fits without a hand-
+    added release."""
+    for release in SEED_RELEASES:
+        docs = [d for d in seed_configmaps(dev) if d["metadata"]["labels"]["app.kubernetes.io/instance"] == release]
+        stored = stored_bytes(docs)
+        assert stored < 0.85 * 0.75 * 1024 * 1024, f"{release} holds {stored} bytes"
+
+
+def synthetic_project(tree):
+    """A 900 kB project of seed-like manifests beside Slovakia's, in a copied tree."""
+    import random
+
+    folder = tree / "components/context-gateway/seed/slovensko"
+    index = yaml.safe_load((folder / "index.yaml").read_text())
+    words = random.Random(4431).choices(
+        ["urn", "space", "pipeline", "dataset", "obec", "kraj", "rok", "hodnota", "zdroj", "typ"], k=4000)
+    total, n = 0, 0
+    while total < 900_000:
+        name = f"zz-synth-{n:03}.yaml"
+        rng = random.Random(n)
+        body = "".join(
+            f"- id: urn:ngsi-ld:Thing:{rng.randrange(10**9)}\n  name: {' '.join(rng.choices(words, k=12))}\n"
+            for _ in range(60))
+        (folder / name).write_text(body)
+        index[name] = f"projects/zz-synthetic/spaces/zz/{name}"
+        total, n = total + len(body), n + 1
+    (folder / "index.yaml").write_text(yaml.safe_dump(index))
+    return {p.replace("/", "__") for p in index.values() if p.startswith("projects/zz-synthetic/")}
+
+
+@requires_helmfile
+def test_a_900_kb_project_is_split_over_releases_and_every_file_renders_once(rendered_variant):
+    """T-4431: a project past what one release has room for spans two releases, each of its files
+    in exactly one ConfigMap, and the Job mounts exactly the ConfigMaps rendered."""
+    keys = {}
+
+    def edit(tree):
+        keys["synthetic"] = synthetic_project(tree)
+
+    docs = rendered_variant("dev", edit)
+    cms = seed_configmaps(docs)
+    holding = [cm for cm in cms if any(k in keys["synthetic"] for k in cm["data"])]
+    releases = {cm["metadata"]["labels"]["app.kubernetes.io/instance"] for cm in holding}
+    assert len(releases) >= 2, releases
+    rendered = [k for cm in holding for k in cm["data"]]
+    assert sorted(rendered) == sorted(keys["synthetic"]), "every synthetic file once"
+    job = one(docs, "Job", "gitea-bootstrap")["spec"]["template"]["spec"]
+    seed = next(v for v in job["volumes"] if v["name"] == "seed")
+    mounted = {s["configMap"]["name"] for s in seed["projected"]["sources"]}
+    assert {cm["metadata"]["name"] for cm in cms} == {n for n in mounted if n.startswith("gitea-seed-")}
+
+
+@requires_helmfile
+def test_an_unchanged_seed_renders_the_same_bytes(dev, rendered_variant):
+    """T-4431: the packing is deterministic, so an apply of an unchanged seed changes no ConfigMap."""
+    again = rendered_variant("dev", lambda tree: None)
+    assert yaml.safe_dump_all(seed_configmaps(again)) == yaml.safe_dump_all(seed_configmaps(dev))
 
 
 @requires_helmfile
 def test_the_job_mounts_every_project_s_seed_and_the_releases_split_it(dev):
-    """The projects' seed is gitea-seed and gitea-seed-2 (T-3998): the Job's tree is the
-    organization's ConfigMap and exactly the gitea-seed-<project> ConfigMaps rendered, every file
-    of every seed index in one of them, Helsinki's projects in the first release."""
+    """The projects' seed is the gitea-seed releases (T-3998, T-4431): the Job's tree is the
+    organization's ConfigMap and exactly the gitea-seed-s<n>-<part> ConfigMaps rendered, each in
+    the release its name says, every file of every seed index in one of them."""
     rendered = {
         d["metadata"]["name"]: d for d in dev
         if d.get("kind") == "ConfigMap" and d["metadata"]["name"].startswith(("gitea-bootstrap-seed", "gitea-seed-"))
@@ -439,12 +513,9 @@ def test_the_job_mounts_every_project_s_seed_and_the_releases_split_it(dev):
         if name == "gitea-bootstrap-seed":
             assert release == "gitea-bootstrap" and not any(k.startswith("projects__") for k in cm["data"])
             continue
-        project = re.sub(r"--\d+$", "", name.removeprefix("gitea-seed-"))
-        # BBSK's odd parts stay in the third release, its even ones in the fifth (T-4288).
-        part = int(name.rsplit("--", 1)[1]) if "--" in name else 1
-        bbsk = "gitea-seed-3" if part % 2 else "gitea-seed-5"
-        assert release == ("gitea-seed" if project.startswith("helsinki")
-                           else {"bbsk": bbsk, "slovensko": "gitea-seed-4"}.get(project, "gitea-seed-2"))
+        shard, part = re.fullmatch(r"gitea-seed-s(\d+)-(.+)", name).groups()
+        project = re.sub(r"--\d+$", "", part)
+        assert release == ("gitea-seed" if shard == "1" else f"gitea-seed-{shard}")
         assert all(k.startswith(f"projects__{project}__") for k in cm["data"])
     keys = [k for cm in rendered.values() for k in cm["data"]]
     assert len(keys) == len(set(keys)), "a file in two ConfigMaps"
