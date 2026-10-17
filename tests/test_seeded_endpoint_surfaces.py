@@ -21,6 +21,16 @@ ENTITY_WRITES = {
     "purgeEntity", "upsertTemporal", "appendAttrsTemporal", "deleteAttrsTemporal", "updateAttrInstanceTemporal",
     "deleteAttrInstanceTemporal", "deleteTemporal", "writeOps",
 }
+# The open-data catalogue is no dataset (Architecture/21 §10, T-4525): its door serves NGSI-LD and
+# MCP for an agent's first call, no WebSocket or OGC Features, so its public reader holds no
+# subscription operation; its one writer is the Portal reconciler, which lists what it wrote and
+# so holds retrieveOps beside its batch writes. These three files, and only these, are outside
+# the dataset rules below.
+CATALOGUE = {
+    "slovensko-endpoint-catalog.yaml",
+    "slovensko-policy-catalog-public-read.yaml",
+    "slovensko-policy-catalog-portal-write.yaml",
+}
 
 
 def manifests(kind: str, generated: bool = False) -> list[tuple[Path, dict]]:
@@ -33,7 +43,7 @@ def manifests(kind: str, generated: bool = False) -> list[tuple[Path, dict]]:
         for doc in docs:
             if isinstance(doc, dict) and doc.get("kind") == kind:
                 by = doc["metadata"].get("annotations", {}).get("joinedcontext.com/generated-by")
-                if (by == "portal/app-reconciler") == generated:
+                if (by == "portal/app-reconciler") == generated and path.name not in CATALOGUE:
                     found.append((path, doc))
     return found
 
@@ -83,3 +93,7 @@ def test_every_app_endpoint_serves_ogc_features():
     assert len(endpoints) >= 18
     for path, doc in endpoints:
         assert "ogc-features" in doc["spec"]["enabledRepresentations"], path.name
+
+
+def test_the_catalogue_exception_names_files_that_exist():
+    assert {path.name for path in SEED.glob("*/*.yaml")} >= CATALOGUE
