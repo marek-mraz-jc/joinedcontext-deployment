@@ -19,3 +19,11 @@ spec:
   retention:
     - entityType: AirQualityObserved
       history: P7D
+  # The space's place (T-4525): the catalogue's Dataset carries it, so georel=near finds the space.
+  # Slovakia with a margin; a AirQualityObserved outside it is flagged, never refused (DM-87).
+  quality:
+    - name: in-area
+      entityType: AirQualityObserved
+      kind: area
+      attribute: location
+      bbox: [16.8, 47.7, 22.6, 49.7]

@@ -40,3 +40,11 @@ spec:
       history: P30D
     - entityType: Organization
       history: "off"
+  # The space's place (T-4525): the catalogue's Dataset carries it, so georel=near finds the space.
+  # the city of Banská Bystrica with a margin; a Event outside it is flagged, never refused (DM-87).
+  quality:
+    - name: in-area
+      entityType: Event
+      kind: area
+      attribute: location
+      bbox: [18.95, 48.6, 19.35, 48.9]

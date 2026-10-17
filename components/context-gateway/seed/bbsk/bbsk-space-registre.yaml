@@ -35,3 +35,11 @@ spec:
       history: "off"
     - entityType: PointOfInterest
       history: "off"
+  # The space's place (T-4525): the catalogue's Dataset carries it, so georel=near finds the space.
+  # the Banská Bystrica Region with a margin; a PublicOrganization outside it is flagged, never refused (DM-87).
+  quality:
+    - name: in-area
+      entityType: PublicOrganization
+      kind: area
+      attribute: location
+      bbox: [18.3, 47.9, 20.5, 49.2]

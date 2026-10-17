@@ -46,3 +46,11 @@ spec:
       history: "off"
     - entityType: WasteContainerIsle
       history: "off"
+  # The space's place (T-4525): the catalogue's Dataset carries it, so georel=near finds the space.
+  # Prague with a margin; a BikeHireDockingStation outside it is flagged, never refused (DM-87).
+  quality:
+    - name: in-area
+      entityType: BikeHireDockingStation
+      kind: area
+      attribute: location
+      bbox: [14.2, 49.9, 14.75, 50.2]
