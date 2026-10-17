@@ -234,6 +234,7 @@ v1/ConfigMap local/gitea-seed-bbsk--4
 v1/ConfigMap local/gitea-seed-bbsk--5
 v1/ConfigMap local/gitea-seed-bbsk--6
 v1/ConfigMap local/gitea-seed-bbsk--7
+v1/ConfigMap local/gitea-seed-bbsk--8
 v1/ConfigMap local/gitea-seed-helsinki
 v1/ConfigMap local/gitea-seed-helsinki-mobility
 v1/ConfigMap local/gitea-seed-praha
