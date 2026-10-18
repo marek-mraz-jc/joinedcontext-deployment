@@ -56,7 +56,7 @@ spec:
         - name: vendor
           projected:
             sources:
-              {{- range $path, $_ := .Files.Glob "files/vendor/*.min.js" }}
+              {{- range $path, $_ := .Files.Glob "files/vendor/*.{js,css,gz}" }}
               - configMap:
                   name: {{ include "renderer.fullname" $ }}-{{ base $path | trimSuffix ".min.js" | replace "." "-" }}
               {{- end }}

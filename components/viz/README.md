@@ -21,8 +21,18 @@ Two documents, two origins of trust:
   spec again and draws it with `vega-embed`, `ast: true` and `vega-interpreter`, with a loader
   that refuses every load, and offers PNG and SVG export only.
 
-The Vega builds are the npm releases byte for byte (`charts/renderer/files/vendor/SHA256SUMS`),
-one ConfigMap each, served from this host: no CDN.
+- **`#show`** (ADR-N-053 §2.9, T-4657). The host page opened as `/#show` reads no view: the
+  assistant's widget posts one `{"type": "jc-viz-show", "spec", "rows", "lang"}`, accepted only
+  from `https://{domain}` or `https://*.{domain}`. A Vega spec goes to the renderer as above; a
+  map spec (`"$schema": "urn:joinedcontext:map:v1"`, GeoJSON and a popup field list) goes to
+  **the map page** (`/map.html`, `map.js`): MapLibre on `tiles.{domain}` (T-4638), CSP
+  `connect-src https://tiles.{domain}` alone, every popup value set as text, Enter opens the
+  feature nearest the middle.
+
+The Vega, MapLibre 6.14.0 and pmtiles 4.5.0 builds are the npm releases byte for byte
+(`charts/renderer/files/vendor/SHA256SUMS`), one ConfigMap each, served from this host: no CDN.
+MapLibre's two ES modules ride gzipped (`binaryData`), and nginx serves them as they are
+(`gzip_static always`, `gunzip on`).
 
 Tests: `tests/test_viz.py` (render, headers, checksums, and `node --test` on
 `components/viz/tests/*.test.mjs`); the browser journey `components/viz/tests/journey.spec.mjs`
