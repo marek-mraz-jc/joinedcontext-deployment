@@ -294,7 +294,9 @@ def test_the_model_index_is_read_once_per_endpoint_and_a_failed_read_raises(monk
 def test_the_cronjob_carries_the_mapping_and_the_dev_gateway(rendered):
     container = by_name(rendered("dev"), "CronJob", "ckan-harvest-bbsk")["spec"]["jobTemplate"]["spec"]["template"]["spec"]["containers"][0]
     env = {e["name"]: e.get("value") for e in container["env"]}
-    assert json.loads(env["OD_DATASETS"]) == OD_DATASETS
+    # The generated file names dev's old catalogue host; the CronJob carries the instance's own (T-4679).
+    moved = json.loads(json.dumps(OD_DATASETS).replace("https://data.dev.joinedcontext.com/", "https://opendata.dev.joinedcontext.com/"))
+    assert json.loads(env["OD_DATASETS"]) == moved
     assert env["OD_GATEWAY"] == "https://api.dev.joinedcontext.com"
     assert container["args"][0].startswith((ROOT / "charts/ckan/files/od-standards.py").read_text())
 

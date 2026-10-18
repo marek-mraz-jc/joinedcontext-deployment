@@ -1,0 +1,11 @@
+---
+portal:
+  portal:
+    # A Pipeline's `secretRef` decrypts with SOPS and this instance's own age identity (T-4678),
+    # never dev's. Operator-supplied, created once from the identity kept in `.secrets/`:
+    #
+    #   kubectl -n smartcity create secret generic portal-age-identity \
+    #     --from-file=keys.txt=.secrets/age-prod.key
+    #
+    # Without it every reference is refused with "the age identity is unreadable" (fail closed).
+    sopsAgeSecret: portal-age-identity

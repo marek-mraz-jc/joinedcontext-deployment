@@ -8,9 +8,16 @@
 {{- $seed := dict }}
 {{- $sources := list "context-gateway/seed/helsinki" "context-gateway/seed/banskabystrica" "context-gateway/seed/bbsk" "context-gateway/seed/praha" "context-gateway/seed/zilina" "context-gateway/seed/slovensko" }}
 {{- if has "agent-runner" .Values.components }}{{ $sources = append $sources "agent-runner/seed" }}{{ end }}
+{{- /* The test objects of the seeds, which a production instance reading these values never holds
+       (T-4678): the eval copies of assistants, the eval-uploads source and the conformance
+       suite's account and policy. */}}
+{{- $tests := "/(deployments|sources)/[^/]*eval[^/]*\\.yaml$|/serviceaccounts/conformance\\.yaml$|/policies/conformance-[^/]*\\.yaml$" }}
+{{- $production := eq .Values.global.profile "production" }}
 {{- range $dir := $sources }}
 {{- range $file, $path := readFile (printf "../../../%s/index.yaml" $dir) | fromYaml }}
+{{- if not (and $production (regexMatch $tests $path)) }}
 {{- $_ := set $seed $path (readFile (printf "../../../%s/%s" $dir $file)) }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- if has "demo-feeds" .Values.components }}

@@ -1,4 +1,12 @@
 {{- range $app, $files := .Values.apps }}
+{{- if $.Values.rewrites }}
+{{- $out := dict }}
+{{- range $key, $text := $files }}
+{{- range $.Values.rewrites }}{{ $text = regexReplaceAll .from $text .to }}{{ end }}
+{{- $_ := set $out $key $text }}
+{{- end }}
+{{- $files = $out }}
+{{- end }}
 ---
 apiVersion: v1
 kind: ConfigMap
