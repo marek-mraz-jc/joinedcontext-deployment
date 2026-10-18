@@ -14,7 +14,7 @@ spec:
   slug: e6sryswazw3lcgip7tngpeoampsoai6z
   audience: public
   policyRef: urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-odpad
-  enabledRepresentations: [ngsi-ld, geojson, csv, json, websocket, ogc-features, odata, mcp]
+  enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: praha }

@@ -97,3 +97,31 @@ def test_every_app_endpoint_serves_ogc_features():
 
 def test_the_catalogue_exception_names_files_that_exist():
     assert {path.name for path in SEED.glob("*/*.yaml")} >= CATALOGUE
+
+
+# The file representations an Endpoint no longer publishes: file.csv and the APIs stay (owner
+# 2026-10-18, T-4597, T-4601). The gateway refuses a manifest naming one.
+REMOVED = {"xlsx", "parquet", "json", "zip", "geojson"}
+APPS = SEED.parent.parent / "gitea/apps"
+
+
+def test_no_seed_or_app_names_a_removed_representation():
+    found = []
+    for path in sorted([*SEED.rglob("*.yaml"), *APPS.rglob("*.yaml")]):
+        try:
+            docs = list(yaml.safe_load_all(path.read_text()))
+        except yaml.YAMLError:
+            continue
+        stack = [d for d in docs if d is not None]
+        while stack:
+            node = stack.pop()
+            if isinstance(node, dict):
+                for key, value in node.items():
+                    if key in ("enabledRepresentations", "disabledRepresentations", "representations") \
+                            and isinstance(value, list):
+                        found += [f"{path.relative_to(SEED.parent.parent)}: {key} {v}" for v in value if v in REMOVED]
+                    stack.append(value)
+            elif isinstance(node, list):
+                stack.extend(node)
+    assert len(list(APPS.rglob("app.yaml"))) > 0
+    assert not found, found

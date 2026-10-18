@@ -145,7 +145,7 @@ def test_the_new_spaces_are_writable_by_the_pipelines_and_reachable_by_the_publi
 def test_every_open_data_endpoint_serves_each_standard_and_the_catalogue_lists_each_converted_dataset():
     """T-4279: one list of representations for both spaces, and the harvests' mapping names every
     converted dataset once, with the Endpoint of its own project."""
-    assert {"xlsx", "parquet", "sta"} <= set(generate.REPRESENTATIONS)
+    assert "sta" in generate.REPRESENTATIONS and not {"xlsx", "parquet", "json", "zip", "geojson"} & set(generate.REPRESENTATIONS)
     slugs = {}
     for project in ("bbsk", "banskabystrica"):
         endpoint = yaml.safe_load((SEED / project / f"{project}-od-endpoint.yaml").read_text())["spec"]
@@ -177,7 +177,7 @@ def test_every_open_data_endpoint_serves_each_standard_and_the_catalogue_lists_e
         project, endpoint = endpoints[row["endpoint"]]
         filtered = e["dataset"].rsplit("/", 1)[1] in shared
         assert (project, endpoint["audience"], row["filtered"]) == (e["org"], "public", filtered), e["name"]
-        assert {"ngsi-ld", "csv", "json", "ogc-features", "odata"} <= set(endpoint["enabledRepresentations"]), e["name"]
+        assert {"ngsi-ld", "csv", "ogc-features", "odata"} <= set(endpoint["enabledRepresentations"]), e["name"]
     # T-4540: a dataset whose type holds its rows alone on its door is kept by the type, which the
     # broker counts and the gateway pages in parallel; a `q` timed out on bb-objednavky-bb's 26 862.
     doors = Counter((r["endpoint"], r["type"]) for r in rows.values())

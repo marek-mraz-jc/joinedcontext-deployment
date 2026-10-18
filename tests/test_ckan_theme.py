@@ -195,7 +195,6 @@ SCHEMA = "https://dev.example/api/endpoint/praha/schema/v1/"
 # The resources `jcctl` publishes for an Endpoint, in its order: the DataStore table last.
 PUBLISHED_RESOURCES = [
     {"id": "r-ngsi", "name": "NGSI-LD API", "format": "NGSI-LD", "url": ENDPOINT + "ngsi-ld/v1/"},
-    {"id": "r-geo", "name": "GeoJSON", "format": "GeoJSON", "url": ENDPOINT + "file.geojson"},
     {"id": "r-csv", "name": "CSV", "format": "CSV", "url": ENDPOINT + "file.csv"},
     {"id": "r-mcp", "name": "Model Context Protocol", "format": "MCP", "url": ENDPOINT + "mcp"},
     {"id": "r-index", "name": "Schema artifacts", "format": "JSON", "url": ENDPOINT + "schema/index.json"},
@@ -212,7 +211,7 @@ def test_the_datastore_table_leads_the_files_and_the_model_is_a_section_of_its_o
     sections = theme.jc_resource_sections({"resources": PUBLISHED_RESOURCES})
     ids = {s["key"]: [i["resource"]["id"] for i in s["items"]] for s in sections}
     assert [s["key"] for s in sections] == ["data", "api", "schema"]
-    assert ids["data"] == ["r-table", "r-csv", "r-geo", "r-odd"]
+    assert ids["data"] == ["r-table", "r-csv", "r-odd"]
     assert ids["api"] == ["r-ngsi", "r-mcp"]
     # Everything under the Endpoint's /schema/ path is the model, whatever format it names.
     assert sorted(ids["schema"]) == ["r-ctx", "r-index", "r-shacl"]
@@ -224,9 +223,9 @@ def test_the_datastore_table_leads_the_files_and_the_model_is_a_section_of_its_o
 
 
 def test_a_dataset_with_only_files_has_one_section_and_a_search_result_names_no_model_format(theme):
-    files = [r for r in PUBLISHED_RESOURCES if r["id"] in ("r-csv", "r-geo")]
+    files = [r for r in PUBLISHED_RESOURCES if r["id"] in ("r-csv",)]
     assert [s["key"] for s in theme.jc_resource_sections({"resources": files})] == ["data"]
-    assert theme.jc_formats({"resources": PUBLISHED_RESOURCES}) == ["CSV", "GeoJSON", "NGSI-LD", "MCP"]
+    assert theme.jc_formats({"resources": PUBLISHED_RESOURCES}) == ["CSV", "NGSI-LD", "MCP"]
 
 
 # Since T-3012 the mirror writes one DataStore table per entity type, named by the type and

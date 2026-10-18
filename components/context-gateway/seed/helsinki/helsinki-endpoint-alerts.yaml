@@ -13,7 +13,7 @@ spec:
   audience: public
   # The one Policy this endpoint evaluates: the slice of the space it publishes (EP-14).
   policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki:public-alerts
-  enabledRepresentations: [ngsi-ld, geojson, csv, json, xlsx, mcp, websocket, ogc-features, odata]
+  enabledRepresentations: [ngsi-ld, csv, mcp, websocket, ogc-features, odata]
   # Its own dataset in the hel-fi catalogue (T-4344): one type, every mandatory surface (EP-118).
   publish:
     ckan:

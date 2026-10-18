@@ -14,7 +14,7 @@ spec:
   slug: 5kcqu4qq5b4ejd3dvfu27svfpm7kd67u
   audience: public
   policyRef: urn:ngsi-ld:Policy:zilina.sk:zilina-verejne:stanice-read
-  enabledRepresentations: [ngsi-ld, geojson, csv, json, websocket, ogc-features, odata, mcp]
+  enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: zilina }

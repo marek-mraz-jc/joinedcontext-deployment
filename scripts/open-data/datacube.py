@@ -305,7 +305,7 @@ def slices(d: dict, dims: dict[str, list[str]]) -> list[tuple[str, int]] | None:
 # generate.py's list, so a susr- Endpoint serves what the od Endpoints serve (T-4418, EP-104), but
 # no websocket: the public read grants no subscription, and a table that changes once a year has
 # nothing to push (T-4441).
-REPRESENTATIONS = ["ngsi-ld", "geojson", "csv", "json", "xlsx", "parquet", "ogc-features", "odata", "mcp"]
+REPRESENTATIONS = ["ngsi-ld", "csv", "ogc-features", "odata", "mcp"]
 # The platform publishes these Endpoints, so its role address answers for them (EP-80); the
 # dev branding's contactEmail.
 CONTACT = {"name": "joinedcontext platform", "email": "hello@joinedcontext.com"}

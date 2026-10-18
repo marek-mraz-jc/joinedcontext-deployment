@@ -14,7 +14,7 @@ spec:
   slug: omto6qk5sfn5ft7zl5pdiaxunj2ljnae
   audience: public
   policyRef: urn:ngsi-ld:Policy:bbsk.sk:bbsk-registre:mosty-read
-  enabledRepresentations: [ngsi-ld, geojson, csv, json, websocket, ogc-features, odata, mcp]
+  enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: bbsk }

@@ -100,9 +100,9 @@ PROJECTS = {
 # Every standard the open data is served in (T-4279). `sta` since T-4288: a row with an `observedAt`
 # column stamps its numbers with that instant, one Datastream per number; the catalogue lists it only
 # for those datasets (`series`). No `mqtt` until 8883 opens (T-3996); the WebSocket pushes changes.
-# `parquet` since T-4287 (EP-119).
-REPRESENTATIONS = ["ngsi-ld", "geojson", "csv", "json", "xlsx", "parquet", "websocket", "ogc-features", "odata", "sta",
-                   "mcp"]
+# One file, `csv`: xlsx, parquet, json, zip and geojson were removed (owner 2026-10-18, T-4597);
+# a map reads GeoJSON from OGC API Features.
+REPRESENTATIONS = ["ngsi-ld", "csv", "websocket", "ogc-features", "odata", "sta", "mcp"]
 # What the catalogue's harvests read to list each converted dataset's standard APIs (T-4279).
 DISTRIBUTIONS = ROOT / "charts/ckan/files/od-datasets.json"
 # The attribution every entity carries (Open data integration rules §3), declared in the model.

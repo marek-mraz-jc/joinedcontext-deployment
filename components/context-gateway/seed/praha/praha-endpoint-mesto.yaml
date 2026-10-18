@@ -14,7 +14,7 @@ spec:
   contextSpaceRef: praha-mesto
   slug: jw7tffshzip7igmzcszgffkkkuetnc6v
   audience: public
-  enabledRepresentations: [ngsi-ld, geojson, csv, json, websocket, ogc-features, odata, mcp]
+  enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]
   # Off the catalogue (T-4344): its unrelated types are each their own dataset, through the
   # narrowed Endpoints beside it. This Endpoint stays for the Apps and connectors that read it.
   # The DCAT-AP description (T-2792, EP-78, EP-79), each licence read from its source on 2026-09-25:

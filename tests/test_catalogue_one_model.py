@@ -31,8 +31,8 @@ REFERENCES = {
 }
 # What the bundles served before the split; none of them may be a dataset again.
 BUNDLES = {"praha-mesto", "helsinki-all", "banskabystrica-verejne", "zilina-verejne", "bbsk-registre"}
-MANDATORY = {"ngsi-ld", "mcp", "websocket", "csv", "json"}
-# GeoJSON and OGC API Features are mandatory when the data has a location (EP-118); these types have none.
+MANDATORY = {"ngsi-ld", "mcp", "websocket", "csv"}
+# OGC API Features (GeoJSON for a map, T-4597) is mandatory when the data has a location (EP-118); these types have none.
 UNLOCATED = {"KeyPerformanceIndicator", "BudgetLine", "Article", "GtfsAgency"}
 
 
@@ -127,7 +127,7 @@ def test_every_published_dataset_serves_every_mandatory_surface():
     for path, doc, bound in published():
         served = set(doc["spec"]["enabledRepresentations"])
         types = set().union(*(types_of(p) for p in bound.values()))
-        mandatory = MANDATORY if types <= UNLOCATED else MANDATORY | {"geojson", "ogc-features"}
+        mandatory = MANDATORY if types <= UNLOCATED else MANDATORY | {"ogc-features"}
         assert mandatory <= served, f"{path.name} lacks {sorted(mandatory - served)}"
         assert "zip" not in served, path.name
         assert doc["spec"]["audience"] == "public", path.name
