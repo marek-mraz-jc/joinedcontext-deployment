@@ -275,24 +275,35 @@ def test_the_general_assistant_reads_every_publishers_public_endpoints():
     assert reached == set(PUBLISHED.values()), "an Endpoint of every published organization"
 
 
-def test_the_general_assistant_knows_the_whole_catalogue_and_crawls_no_website():
-    # Owner: no RAG crawl. Its knowledge is the catalogue's records (every organization of
-    # data.dev, refreshed after the nightly harvest) and each body's Endpoint descriptions.
+def test_the_general_assistant_knows_the_whole_catalogue_and_each_publishers_own_site():
+    # Its knowledge is the catalogue's records (every organization of data.dev, refreshed after
+    # the nightly harvest), each body's Endpoint descriptions and, since T-4680 (the owner sent
+    # bbsk.sk: its map portal and cycle pages answer what the catalogue cannot), each
+    # publisher's own website, the weekly crawl its body's assistant reads. No other site.
     spec = general()["spec"]
     assert spec.get("answer", {}).get("routes", "both") == "both"
+    webs = set()
     for name in spec["sources"]:
         project, _, source = name.rpartition("/")
         project = project or "bbsk"
         assert project == "bbsk" or project in spec["scope"]["projects"], name
         doc = manifests("KnowledgeSource", project)[source]["spec"]
         assert doc["visibility"] == "public", name
-        assert doc["source"] in ("ckan", "catalogue"), name
+        assert doc["source"] in ("ckan", "catalogue", "website"), name
+        if doc["source"] == "website":
+            webs.add(project)
+            # The body's own site, the one its own assistant crawls (T-4167).
+            own = {"bbsk": "www.bbsk.sk", "banskabystrica": "www.banskabystrica.sk", "zilina": "www.zilina.sk",
+                   "praha": "www.praha.eu", "helsinki": "www.hel.fi"}[project]
+            assert {urlsplit(url).hostname for url in doc["startUrls"]} == {own}, name
+    assert webs == {"bbsk", "banskabystrica", "zilina", "praha", "helsinki"}
     portal = manifests("KnowledgeSource", "bbsk")["portal"]["spec"]
     assert portal["source"] == "ckan" and "organizations" not in portal
     instance = manifests("CkanInstance", "bbsk")[portal["ckanInstanceRef"]]["spec"]
     assert instance["url"] == "https://data.dev.joinedcontext.com"
     assert portal["schedule"] == "50 3 * * *"  # after charts/ckan's harvest at 03:23
-    assert {f"{p}/catalogue" for p in spec["scope"]["projects"]} | {"portal", "catalogue"} == set(spec["sources"])
+    assert {f"{p}/catalogue" for p in spec["scope"]["projects"]} | {"portal", "catalogue"} | \
+        {"web"} | {f"{p}/web" for p in spec["scope"]["projects"] if p != "slovensko"} == set(spec["sources"])
 
 
 def test_the_general_assistant_names_no_city_and_carries_the_portal_guide():
