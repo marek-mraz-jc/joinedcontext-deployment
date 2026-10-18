@@ -147,6 +147,16 @@ def test_a_post_filed_only_under_the_overviews_is_not_an_event():
 
 
 @requires_docker
+def test_an_event_the_city_gives_no_start_day_is_left_out_never_dated():
+    # T-4570: a start date is the source's own, never one the mapping makes up.
+    def edit(d):
+        del d[2]["meta"]["date_start"]
+        d[3]["meta"]["date_start"] = ""
+    events = run("podujatia", events_edited(edit))
+    assert sorted(e["id"].rsplit("-", 1)[1] for e in events) == ["116585", "117687", "117711"]
+
+
+@requires_docker
 def test_an_unset_pin_or_a_bad_date_is_left_out_rather_than_written():
     def edit(d):
         d[0]["meta"]["coordinates"] = {"longitude": 0, "latitude": 0}
