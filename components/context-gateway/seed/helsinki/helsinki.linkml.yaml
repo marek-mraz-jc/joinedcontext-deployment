@@ -798,6 +798,38 @@ classes:
       - address
       - contactPoint
       - source
+    slot_usage:
+      name:
+        rank: 1
+        annotations:
+          summary: true
+          label: { tag: label, value: { sk: "Názov", cs: "Název", fi: "Nimi", en: "Name" } }
+      startDate:
+        rank: 2
+        annotations:
+          summary: true
+          label: { tag: label, value: { sk: "Začiatok", cs: "Začátek", fi: "Alkaa", en: "Start" } }
+      endDate:
+        rank: 3
+        annotations:
+          summary: true
+          label: { tag: label, value: { sk: "Koniec", cs: "Konec", fi: "Päättyy", en: "End" } }
+      address:
+        rank: 4
+        annotations:
+          summary: true
+          label: { tag: label, value: { sk: "Adresa", cs: "Adresa", fi: "Osoite", en: "Address" } }
+      eventStatus:
+        rank: 5
+        annotations:
+          label: { tag: label, value: { sk: "Stav", cs: "Stav", fi: "Tila", en: "Status" } }
+      description:
+        rank: 6
+        annotations:
+          label: { tag: label, value: { sk: "Popis", cs: "Popis", fi: "Kuvaus", en: "Description" } }
+      contactPoint:
+        annotations:
+          label: { tag: label, value: { sk: "Kontakt", cs: "Kontakt", fi: "Yhteystiedot", en: "Contact" } }
   BikeHireDockingStation:
     class_uri: sdm:BikeHireDockingStation
     description: One HSL city bike station, its position and what it holds right now.
@@ -812,6 +844,31 @@ classes:
       - status
       - dateModified
       - source
+    slot_usage:
+      name:
+        rank: 1
+        annotations:
+          summary: true
+          label: { tag: label, value: { sk: "Názov", cs: "Název", fi: "Nimi", en: "Name" } }
+      availableBikeNumber:
+        rank: 2
+        annotations:
+          summary: true
+          label: { tag: label, value: { sk: "Voľné bicykle", cs: "Volná kola", fi: "Vapaat pyörät", en: "Bikes available" } }
+      freeSlotNumber:
+        rank: 3
+        annotations:
+          summary: true
+          label: { tag: label, value: { sk: "Voľné stojany", cs: "Volné stojany", fi: "Vapaat paikat", en: "Free slots" } }
+      totalSlotNumber:
+        rank: 4
+        annotations:
+          label: { tag: label, value: { sk: "Stojany spolu", cs: "Stojanů celkem", fi: "Paikkoja yhteensä", en: "Total slots" } }
+      status:
+        rank: 5
+        annotations:
+          summary: true
+          label: { tag: label, value: { sk: "Stav", cs: "Stav", fi: "Tila", en: "Status" } }
   Vehicle:
     class_uri: sdm:Vehicle
     description: One HSL bus, tram, metro, train or ferry in service, where it is, how fast it moves and how late it runs.
@@ -829,6 +886,38 @@ classes:
       - nextStop
       - delay
       - occupancy
+    slot_usage:
+      route:
+        rank: 1
+        annotations:
+          summary: true
+          label: { tag: label, value: { sk: "Linka", cs: "Linka", fi: "Linja", en: "Route" } }
+      vehicleType:
+        rank: 2
+        annotations:
+          label: { tag: label, value: { sk: "Typ vozidla", cs: "Typ vozidla", fi: "Ajoneuvotyyppi", en: "Vehicle type" } }
+      nextStop:
+        rank: 3
+        annotations:
+          summary: true
+          label: { tag: label, value: { sk: "Ďalšia zastávka", cs: "Další zastávka", fi: "Seuraava pysäkki", en: "Next stop" } }
+      delay:
+        rank: 4
+        annotations:
+          summary: true
+          label: { tag: label, value: { sk: "Meškanie", cs: "Zpoždění", fi: "Myöhästyminen", en: "Delay" } }
+      speed:
+        rank: 5
+        annotations:
+          label: { tag: label, value: { sk: "Rýchlosť", cs: "Rychlost", fi: "Nopeus", en: "Speed" } }
+      occupancy:
+        rank: 6
+        annotations:
+          summary: true
+          label: { tag: label, value: { sk: "Obsadenosť", cs: "Obsazenost", fi: "Kuormitus", en: "Occupancy" } }
+      heading:
+        annotations:
+          label: { tag: label, value: { sk: "Smer", cs: "Směr", fi: "Suunta", en: "Heading" } }
   Article:
     class_uri: jc:Article
     description: >-
@@ -861,6 +950,41 @@ classes:
       - windDirection
       - precipitation
       - source
+    slot_usage:
+      name:
+        rank: 1
+        annotations:
+          summary: true
+          label: { tag: label, value: { sk: "Názov", cs: "Název", fi: "Nimi", en: "Name" } }
+      dateObserved:
+        rank: 2
+        annotations:
+          summary: true
+          label: { tag: label, value: { sk: "Čas merania", cs: "Čas měření", fi: "Mittausaika", en: "Observed" } }
+      temperature:
+        rank: 3
+        annotations:
+          summary: true
+          label: { tag: label, value: { sk: "Teplota", cs: "Teplota", fi: "Lämpötila", en: "Temperature" } }
+      roadSurfaceTemperature:
+        rank: 4
+        annotations:
+          summary: true
+          label: { tag: label, value: { sk: "Teplota vozovky", cs: "Teplota vozovky", fi: "Tienpinnan lämpötila", en: "Road surface temperature" } }
+      precipitation:
+        rank: 5
+        annotations:
+          label: { tag: label, value: { sk: "Zrážky", cs: "Srážky", fi: "Sademäärä", en: "Precipitation" } }
+      windSpeed:
+        rank: 6
+        annotations:
+          label: { tag: label, value: { sk: "Rýchlosť vetra", cs: "Rychlost větru", fi: "Tuulen nopeus", en: "Wind speed" } }
+      relativeHumidity:
+        annotations:
+          label: { tag: label, value: { sk: "Vlhkosť", cs: "Vlhkost", fi: "Kosteus", en: "Humidity" } }
+      windDirection:
+        annotations:
+          label: { tag: label, value: { sk: "Smer vetra", cs: "Směr větru", fi: "Tuulen suunta", en: "Wind direction" } }
   Alert:
     class_uri: sdm:Alert
     description: >-
@@ -902,6 +1026,31 @@ classes:
       - airQualityIndex
       - stewardNote
       - source
+    slot_usage:
+      name:
+        rank: 1
+        annotations:
+          summary: true
+          label: { tag: label, value: { sk: "Názov", cs: "Název", fi: "Nimi", en: "Name" } }
+      dateObserved:
+        rank: 2
+        annotations:
+          summary: true
+          label: { tag: label, value: { sk: "Čas merania", cs: "Čas měření", fi: "Mittausaika", en: "Observed" } }
+      airQualityIndex:
+        rank: 3
+        annotations:
+          summary: true
+          label: { tag: label, value: { sk: "Index kvality ovzdušia", cs: "Index kvality ovzduší", fi: "Ilmanlaatuindeksi", en: "Air quality index" } }
+      pm10:
+        rank: 4
+        annotations:
+          summary: true
+          label: { tag: label, value: { sk: "PM10", cs: "PM10", fi: "PM10", en: "PM10" } }
+      pm25:
+        rank: 5
+        annotations:
+          label: { tag: label, value: { sk: "PM2,5", cs: "PM2,5", fi: "PM2,5", en: "PM2.5" } }
   PointOfInterest:
     class_uri: sdm:PointOfInterest
     description: >-
