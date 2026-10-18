@@ -686,6 +686,31 @@ def _parse(stamp):
     return parsed if parsed.tzinfo else parsed.replace(tzinfo=datetime.timezone.utc)
 
 
+def _when(pkg, extra, own):
+    """The extra's date when it reads as one, else CKAN's own field, as an aware datetime."""
+    pkg = pkg or {}
+    for value in (_extras(pkg).get(extra), pkg.get(own)):
+        try:
+            if value:
+                return _parse(value)
+        except ValueError:
+            continue
+    return None
+
+
+def jc_created(pkg):
+    """When the dataset first appeared (T-4644): the publisher's own `issued` (a harvested record,
+    or ours restored after the 15-17 Oct re-creation), else when CKAN created it."""
+    return _when(pkg, "issued", "metadata_created")
+
+
+def jc_updated(pkg):
+    """When its data or description last changed (T-4644): the publisher's `modified` for a
+    harvested record, else CKAN's own, which a live Endpoint's DataStore mirror moves with every
+    data change and a run that changed nothing leaves alone."""
+    return _when(pkg, "modified", "metadata_modified")
+
+
 def jc_frequency(pkg):
     """(label, next update as a datetime or None) of the dataset's frequency; None when unset."""
     value = _extras(pkg).get("frequency")
@@ -697,12 +722,8 @@ def jc_frequency(pkg):
         return (str(value), None)
     words, days = known
     label = words.get(_language()) or words["en"]
-    modified = (pkg or {}).get("metadata_modified")
-    if days is None or not modified:
-        return (label, None)
-    try:
-        last = _parse(modified)
-    except ValueError:
+    last = jc_updated(pkg)
+    if days is None or not last:
         return (label, None)
     return (label, last + datetime.timedelta(days=days))
 
@@ -751,11 +772,14 @@ def jc_about(pkg):
     frequency = jc_frequency(pkg)
     if frequency:
         rows.append((jc_t("frequency"), frequency[0], None))
-    if pkg.get("metadata_modified"):
-        rows.append((jc_t("last_update"), _date(str(pkg["metadata_modified"])[:10]), None))
+    created, updated = jc_created(pkg), jc_updated(pkg)
+    if created:
+        rows.append((jc_t("created"), _date(created.date().isoformat()), None))
+    if updated:
+        rows.append((jc_t("last_update"), _date(updated.date().isoformat()), None))
     if frequency and frequency[1]:
         # A dataset updated more than once a day promises an hour, not only a date.
-        hourly = frequency[1] - _parse(pkg["metadata_modified"]) < _DAY
+        hourly = frequency[1] - updated < _DAY
         # CKAN writes a date with hours as "%B %d, %Y", English order with the page's month name;
         # the hour goes after the page's own date instead (T-4333).
         text = _date(frequency[1])
@@ -800,7 +824,8 @@ def _date(value, hours=False):
 
 def jc_more(pkg):
     """The extras the About list does not show, as (key, value), for "More details"."""
-    shown = set(ABOUT_EXTRAS) | INTERNAL_EXTRAS | {"identifier", "language", "conforms_to", "status"}
+    # `issued` and `modified` are the About list's Created and Last update (T-4644).
+    shown = set(ABOUT_EXTRAS) | INTERNAL_EXTRAS | {"identifier", "language", "conforms_to", "status", "issued", "modified"}
     return sorted((k, v) for k, v in _extras(pkg).items() if k not in shown and v)
 
 
@@ -1859,6 +1884,8 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_org": jc_org,
             "jc_t": jc_t,
             "jc_about": jc_about,
+            "jc_created": jc_created,
+            "jc_updated": jc_updated,
             "jc_more": jc_more,
             "jc_live": jc_live,
             "jc_resource_sections": jc_resource_sections,

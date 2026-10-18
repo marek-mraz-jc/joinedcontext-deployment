@@ -22,6 +22,7 @@ Fetched text is data: it is stored, never interpreted. TLS verification stays on
 distribution is fetched only over https from a host the configuration allows, redirects
 included. The API token comes from the environment and is never printed.
 """
+import hashlib
 import json
 import os
 import re
@@ -312,7 +313,18 @@ def package(ds, name, licence_id, distributions, tables):
 
 
 def upsert(desired, tables):
+    """Creates the dataset or updates it in place, never delete and create; a run whose source
+    changed nothing writes nothing, so `metadata_modified` moves only with the data (T-4644)."""
+    digest = hashlib.sha256(json.dumps([desired, [t["rows"] for t in tables]], sort_keys=True,
+                                       ensure_ascii=False).encode()).hexdigest()
+    desired["extras"].append({"key": "harvest_hash", "value": digest})
     live = ckan("package_show", {"id": desired["name"]})
+    if live is not None and live.get("state") == "active" and {"key": "harvest_hash", "value": digest} in live.get("extras", []):
+        existing = {r["name"]: r["id"] for r in live.get("resources", []) if r.get("url_type") == "datastore"}
+        if all(t["name"] in existing for t in tables):
+            for t in tables:
+                t["resource_id"] = existing[t["name"]]
+            return
     if live is None:
         live = ckan("package_create", desired)
     else:
