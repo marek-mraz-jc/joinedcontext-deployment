@@ -1037,12 +1037,14 @@ spec:
                 case "$status" in
                   200)
                     held=$(sed -n 's/.*"content": *"\([^"]*\)".*/\1/p' $WORK/body | sed 's/\\n//g' | base64 -d)
+                    # The Portal appends the lane's status to the file's own text (AP-13a).
+                    held_spec=$(printf '%s\n' "$held" | awk '/^status:/ { skip = 1; next } skip && /^[^ ]/ { skip = 0 } !skip')
                     if [ "$held" = "$(cat $WORK/app-manifest)" ]; then
                       echo "app $app: $path already names $head"
-                    elif printf '%s\n' "$held" | grep -qx "      ref: $head" && printf '%s\n' "$held" | grep -q '^status:'; then
-                      # The build lane's status.build for this very head (AP-13a): rewriting the
-                      # file would erase it, and the same head never builds again (T-2633).
-                      # ponytail: a seed edit at an unchanged head waits for the next app commit.
+                    elif [ "$held_spec" = "$(cat $WORK/app-manifest)" ]; then
+                      # The build lane's status.build for this very spec: the same head never
+                      # builds again (T-2633), so the file stays. A seed edit at the same head
+                      # (a removed representation, T-4601) is rewritten below, its status carried.
                       echo "app $app: $path already names $head and its build"
                     else
                       # A new head keeps the build that serves now (AP-80, AP-72): the lane's
