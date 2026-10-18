@@ -266,6 +266,14 @@ ROUTE_CLASSES = {
         "reach": TERMINATES, "cacheable": False, "framing": "DENY",
         "why": "an old address of a public data surface, anonymous: 308 to the same path on api.{domain} (T-4630)",
     },
+    "api-moved-mcp-named": {
+        "reach": TERMINATES, "cacheable": False, "framing": "DENY",
+        "why": "an old address of a public data surface, anonymous: 308 to the same path on api.{domain} (T-4630)",
+    },
+    "api-moved-portal-mcp-named": {
+        "reach": TERMINATES, "cacheable": False, "framing": "DENY",
+        "why": "an old address of a public data surface, anonymous: 308 to the same path on api.{domain} (T-4630)",
+    },
     "api-moved-cs": {
         "reach": TERMINATES, "cacheable": False, "framing": "DENY",
         "why": "an old address of a public data surface, anonymous: 308 to the same path on api.{domain} (T-4630)",
