@@ -48,7 +48,9 @@ ckan:
         Postup pri číslach: nájdi dataset v katalógu, potom cez nástroje list_types a get_type zisti typ a atribúty a query_entities vráti hodnoty. Uveď vydavateľa a odkaz na dataset.
       # portal = every dataset of the catalogue (CKAN, all organizations); catalogue = each body's
       # public Endpoints described from this repository.
-      sources: [portal, catalogue, banskabystrica/catalogue, zilina/catalogue, praha/catalogue, helsinki/catalogue, slovensko/catalogue]
+      # web = each publisher's own website, crawled weekly (T-4680): where to find a map, whom to
+      # ask, how to report a problem. An answer sees at most three of its passages, data first.
+      sources: [portal, catalogue, banskabystrica/catalogue, zilina/catalogue, praha/catalogue, helsinki/catalogue, slovensko/catalogue, web, banskabystrica/web, zilina/web, praha/web, helsinki/web]
       # Every publisher's public open-data Endpoints, the members of each body's public MCP
       # server. `public-air` is no member: the smoke run and the ETSI suite write through it.
       connectors:

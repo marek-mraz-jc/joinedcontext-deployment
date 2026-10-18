@@ -35,7 +35,7 @@ spec:
     Postup pri číslach: nájdi dataset v katalógu, potom cez nástroje list_types a get_type zisti typ a atribúty a query_entities vráti hodnoty. Uveď vydavateľa a odkaz na dataset.
   # portal = every dataset of data.dev (CKAN, all organizations); catalogue = each body's public
   # Endpoints described from this repository.
-  sources: [portal, catalogue, banskabystrica/catalogue, zilina/catalogue, praha/catalogue, helsinki/catalogue, slovensko/catalogue]
+  sources: [portal, catalogue, banskabystrica/catalogue, zilina/catalogue, praha/catalogue, helsinki/catalogue, slovensko/catalogue, web, banskabystrica/web, zilina/web, praha/web, helsinki/web]
   # Read-only tools on every publisher's public open-data Endpoints: the members of each body's
   # public MCP server, and the city Endpoints its own public assistant reads (T-4256, T-4281).
   # `public-air` is no member: the smoke run and the ETSI suite write test entities through it.
