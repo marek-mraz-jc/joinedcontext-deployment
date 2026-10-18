@@ -630,8 +630,8 @@ def test_the_header_is_the_joinedcontext_lockup_named_by_the_site_title():
     jinja2 = pytest.importorskip("jinja2")
     header = (THEME / "header.html").read_text()
     block = header.split("{% block header_logo %}", 1)[1].split("{% endblock %}", 1)[0]
-    html = jinja2.Environment(autoescape=True).from_string(block).render(
-        h=types.SimpleNamespace(url_for=lambda name: "/"), g=types.SimpleNamespace(site_title="Otvorené dáta"))
+    html = jinja2.Environment(autoescape=True).from_string(block).render(h=types.SimpleNamespace(
+        url_for=lambda name: "/", jc_site_logo=lambda: "/jc-logo.svg", jc_site_title=lambda: "Otvorené dáta"))
     imgs = re.findall(r"<img [^>]*>", html)
     assert imgs == ['<img src="/jc-logo.svg" alt="Otvorené dáta" width="171" height="36">'], imgs
     assert "<span" not in html
@@ -1742,3 +1742,86 @@ def test_the_corner_stays_inside_the_gutters_whatever_the_label():
     assert ".jc-seg { inline-size: 1.4375rem; }" in phone
     # the launcher itself never wraps its words: the corner wraps, not the label
     assert "white-space: nowrap;" in desktop_css().split(".jc-assistant:not([open]) > summary { ", 1)[1].split("}", 1)[0]
+
+
+def _with_branding(theme, monkeypatch, tmp_path, block):
+    """The plugin reloaded with `block` as its branding file."""
+    branding = tmp_path / "instance-branding.json"
+    branding.write_text(json.dumps(block))
+    monkeypatch.setenv("JC_BRANDING_FILE", str(branding))
+    spec = importlib.util.spec_from_file_location("jc_theme_plugin_instance", THEME / "plugin.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    module.page = theme.page
+    return module
+
+
+INSTANCE = {"domain": "dev.example", "instanceName": "joinedcontext",
+            "languages": {"default": "sk", "offered": ["sk", "en", "cs"]},
+            "siteTitle": {"sk": "Otvorené dáta", "en": "Open data"},
+            "samples": {"en": ["How many buses run now?"], "sk": ["Koľko autobusov teraz jazdí?"]}}
+
+
+def test_the_site_title_is_the_instances_in_the_readers_language(theme, monkeypatch, tmp_path):
+    """T-4636: `site.title` per language, the default language for one it lacks, the
+    installation's name when the instance sets none."""
+    module = _with_branding(theme, monkeypatch, tmp_path, INSTANCE)
+    for lang, title in (("sk", "Otvorené dáta"), ("en", "Open data"), ("cs", "Otvorené dáta")):
+        theme.page.lang = lang
+        assert module.jc_site_title() == title, lang
+    assert module.jc_site_title("en") == "Open data"
+    theme.page.lang = "en"
+    assert theme.jc_site_title() == "joinedcontext"
+    bare = _with_branding(theme, monkeypatch, tmp_path, dict(INSTANCE, siteTitle={"sk": "", "en": 3}))
+    assert bare.jc_site_title() == "joinedcontext", "nothing usable falls back to the installation's name"
+
+
+def test_the_header_logo_is_the_instances_file_or_the_lockup(theme, monkeypatch, tmp_path):
+    """T-4636: a file name in the theme's public directory, never a path or another origin."""
+    assert theme.jc_site_logo() == "/jc-logo.svg"
+    for logo, served in (("city.svg", "/city.svg"), ("example-city_2.png", "/example-city_2.png"),
+                         ("../etc/passwd", "/jc-logo.svg"), ("https://evil.example/x.svg", "/jc-logo.svg"),
+                         ("/abs.svg", "/jc-logo.svg"), ("x.svg?a", "/jc-logo.svg"), ("", "/jc-logo.svg")):
+        module = _with_branding(theme, monkeypatch, tmp_path, dict(INSTANCE, siteLogo=logo))
+        assert module.jc_site_logo() == served, logo
+
+
+def test_the_connector_pages_questions_are_the_instances(theme, monkeypatch, tmp_path):
+    """T-4636: "Try it" lists the instance's own questions in the reader's language; with none,
+    the page has no such section and names no city."""
+    module = _with_branding(theme, monkeypatch, tmp_path, INSTANCE)
+    theme.page.lang = "en"
+    sections = module.jc_page("connector")["sections"]
+    assert sections[-1] == {"heading": "Try it", "paragraphs": ["How many buses run now?"]}
+    theme.page.lang = "sk"
+    assert module.jc_page("connector")["sections"][-1]["paragraphs"] == ["Koľko autobusov teraz jazdí?"]
+    theme.page.lang = "cs"
+    assert module.jc_page("connector")["sections"][-1]["paragraphs"] == ["Koľko autobusov teraz jazdí?"], \
+        "a language without questions takes the default language's"
+    assert module.jc_page("privacy")["sections"][-1]["heading"] != "Try it"
+    theme.page.lang = "en"
+    assert all(s["heading"] != "Try it" for s in theme.jc_page("connector")["sections"])
+    odd = _with_branding(theme, monkeypatch, tmp_path, dict(INSTANCE, samples={"en": ["ok", 3, " ", None]}))
+    assert odd.jc_page("connector")["sections"][-1]["paragraphs"] == ["ok"]
+
+
+def test_the_nuts_names_are_a_data_file_beside_the_plugin(theme):
+    """T-4636: the region names moved out of the code; the chart mounts the file beside plugin.py."""
+    assert theme.NUTS_NAMES["CZ010"]["en"] == "Prague"
+    chart = (PROJECT_ROOT / "charts/ckan/templates/ckan.yaml").read_text()
+    assert "mountPath: /srv/theme/ckanext_jc_theme/nuts.json" in chart
+
+
+def test_no_city_is_named_in_the_theme_code_or_the_chart_templates():
+    """T-4636 Done when: the city names live in the instance's values, not the theme or the chart."""
+    banned = re.compile(r"bansk|bbsk|žilin|zilin|praha|helsink|data\.dev", re.I)
+    files = [THEME / "plugin.py", *THEME.glob("*.html"), *(PROJECT_ROOT / "charts/ckan/templates").glob("*")]
+    for path in files:
+        text = path.read_text()
+        if path.suffix == ".html":
+            text = re.sub(r"\{#.*?#\}", lambda m: "\n" * m.group(0).count("\n"), text, flags=re.S)
+        if path.suffix in (".yaml", ".tpl"):
+            text = re.sub(r"\{\{-?\s*/\*.*?\*/\s*-?\}\}", lambda m: "\n" * m.group(0).count("\n"), text, flags=re.S)
+        for number, line in enumerate(text.splitlines(), 1):
+            code = line.split("#", 1)[0] if path.suffix in (".py", ".yaml") else line
+            assert not banned.search(code), f"{path.name}:{number}: {line.strip()}"

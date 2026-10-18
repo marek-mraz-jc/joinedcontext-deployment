@@ -1,0 +1,56 @@
+{
+ "SK010": {
+  "en": "Bratislava Region",
+  "sk": "Bratislavský kraj",
+  "cs": "Bratislavský kraj",
+  "de": "Region Bratislava"
+ },
+ "SK021": {
+  "en": "Trnava Region",
+  "sk": "Trnavský kraj",
+  "cs": "Trnavský kraj",
+  "de": "Region Trnava"
+ },
+ "SK022": {
+  "en": "Trenčín Region",
+  "sk": "Trenčiansky kraj",
+  "cs": "Trenčínský kraj",
+  "de": "Region Trenčín"
+ },
+ "SK023": {
+  "en": "Nitra Region",
+  "sk": "Nitriansky kraj",
+  "cs": "Nitranský kraj",
+  "de": "Region Nitra"
+ },
+ "SK031": {
+  "en": "Žilina Region",
+  "sk": "Žilinský kraj",
+  "cs": "Žilinský kraj",
+  "de": "Region Žilina"
+ },
+ "SK032": {
+  "en": "Banská Bystrica Region",
+  "sk": "Banskobystrický kraj",
+  "cs": "Banskobystrický kraj",
+  "de": "Region Banská Bystrica"
+ },
+ "SK041": {
+  "en": "Prešov Region",
+  "sk": "Prešovský kraj",
+  "cs": "Prešovský kraj",
+  "de": "Region Prešov"
+ },
+ "SK042": {
+  "en": "Košice Region",
+  "sk": "Košický kraj",
+  "cs": "Košický kraj",
+  "de": "Region Košice"
+ },
+ "CZ010": {
+  "en": "Prague",
+  "sk": "Praha",
+  "cs": "Hlavní město Praha",
+  "de": "Prag"
+ }
+}

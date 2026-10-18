@@ -1,12 +1,13 @@
 {% ckan_extends %}
 
-{# The joinedcontext.com lockup, mark and name in one image (T-4627, owner): /jc-logo.svg is
+{# The joinedcontext.com lockup, mark and name in one image (T-4627, owner), unless the instance
+   names its own (site.logo, T-4636): /jc-logo.svg is
    https://www.joinedcontext.com/img/logo-light.svg, copied unchanged on 2026-10-18 (paths only,
    no script, no external reference). Its alt is the installation's name, so the link still says
    whose catalogue this is (T-2888). #}
 {% block header_logo %}
   <a class="logo jc-brand" href="{{ h.url_for('home.index') }}">
-    <img src="/jc-logo.svg" alt="{{ g.site_title }}" width="171" height="36">
+    <img src="{{ h.jc_site_logo() }}" alt="{{ h.jc_site_title() }}" width="171" height="36">
   </a>
 {% endblock %}
 
