@@ -108,7 +108,7 @@ context-space-portal-read:
     requests: 1000
 
 # The organization's DCAT-AP catalogue for harvesters (EP-84): `/catalog.jsonld` and
-# `/catalog.ttl` on the apex, anonymous, and each publisher's own (EP-125):
+# `/catalog.ttl` on the apex, anonymous, and each publisher's own (EP-127):
 # `/catalog/{project}.jsonld|.ttl`. The gateway reads no token on them and lists public
 # Endpoints only; any other name under the prefix is the gateway's 404.
 catalog-feed:
