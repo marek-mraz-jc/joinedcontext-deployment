@@ -368,7 +368,7 @@ root = $cells.filter(c -> c.v != null && c.v.type() == "number").map_each(c -> r
   "type": "{TYPE}",
   "dataSet": {{ "type": "Property", "value": $cube }},
   "indicator": {{ "type": "Property", "value": if $roles.indicator == null {{ $cube }} else {{ at.get($roles.indicator) }} }},
-  "name": {{ "type": "Property", "value": (if $roles.indicator == null {{ null }} else {{ $labels.index($at_index.get($roles.indicator)).get(at.get($roles.indicator)) }}).or($ds.label) }},
+  "name": (if $roles.indicator == null {{ null }} else {{ $labels.index($at_index.get($roles.indicator)).get(at.get($roles.indicator)) }}).or($ds.label).(n -> if n == null {{ null }} else {{ {{ "type": "Property", "value": n }} }}),
   "refArea": {{ "type": "Property", "value": if $roles.area == null {{ "SK0" }} else {{ at.get($roles.area) }} }},
   "refPeriod": {{ "type": "Property", "value": at.get($roles.period) }},
   "dimensionKey": if $keys.length() == 0 {{ null }} else {{ {{ "type": "Property", "value": $keys.map_each(d -> at.get(d)).join("-") }} }},
