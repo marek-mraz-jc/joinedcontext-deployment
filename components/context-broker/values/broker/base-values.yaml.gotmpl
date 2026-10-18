@@ -72,7 +72,9 @@ env:
   # alone serves only the broker-wide /x/ws, and every Endpoint WebSocket answered 404 (T-4048).
   # `odata` mounts /x/views/{view}/odata/v4, the OData service the gateway forwards an Endpoint's
   # /odata/v4 to; without it Power BI and Excel got 404 on the service root and $metadata.
-  ANTARES_API_SURFACES: "admin,views,mcp,access,ws,ws-views,ogc,linkml,odata"
+  # `sta` mounts /x/views/{view}/sta/v1.1, the SensorThings surface (Antares T-4462, built in `full`)
+  # the gateway's STA becomes a forward to (T-4463).
+  ANTARES_API_SURFACES: "admin,views,mcp,access,ws,ws-views,ogc,linkml,odata,sta"
   # The MCP surface answers the Host names listed here alone (rmcp's DNS-rebinding guard, MC8);
   # unset it answers loopback only, and the gateway's hop (JC_GATEWAY_BROKER_URL, T-3647) got 403.
   ANTARES_MCP_ALLOWED_HOSTS: "context-broker.{{ (index .Values "context-broker" "broker" "namespace") }}.svc.cluster.local:8080"

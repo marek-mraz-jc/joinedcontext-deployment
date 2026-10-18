@@ -59,5 +59,8 @@ context-broker:
     # 2026-10-17/18. No migration over 7ff20d6.
     # Antares dev 6fded37 (train 20261018-0325, T-4480 T-4464 T-4486 T-4507): MCP unit labels, per-type
     # query guide, temporal dedup on write (ANTARES_TEMPORAL_DEDUP, default on). No migration over ac45ec0.
-    tag: '6fded37'
-    digest: 'sha256:0dbbb9e52b387d43f47f8150178d3b7f07e6a4d0803fedf74eb729c18d594408'
+    # Antares dev 4bdbbc8 (train 20261018-0521, T-4455 T-4462 T-4537): per-type decision on multi-type
+    # view reads, the SensorThings surface (served with `sta` in ANTARES_API_SURFACES), describe_type.
+    # No migration and no new runtime ANTARES_* key over 6fded37.
+    tag: '4bdbbc8'
+    digest: 'sha256:a0e50d4d7ed39c7902670242b83461733166bfcc5c27eb0f222447805e7a1ed5'
