@@ -145,6 +145,12 @@ pipeline-ovzdusie-o3-bento.yaml: projects/banskabystrica/pipelines/ovzdusie-o3/b
 datasource-pocasie.yaml: projects/banskabystrica/datasources/shmu-aws1min.yaml
 pipeline-pocasie.yaml: projects/banskabystrica/pipelines/pocasie/pipeline.yaml
 pipeline-pocasie-bento.yaml: projects/banskabystrica/pipelines/pocasie/bento.yaml
+# OpenStreetMap's pharmacies, hospitals, clinics, defibrillators and charging stations in the
+# district, weekly, ODbL 1.0 (T-4514); the pipeline alone deletes what the map drops.
+datasource-osm.yaml: projects/banskabystrica/datasources/osm-overpass.yaml
+pipeline-osm.yaml: projects/banskabystrica/pipelines/osm/pipeline.yaml
+pipeline-osm-bento.yaml: projects/banskabystrica/pipelines/osm/bento.yaml
+policy-verejne-osm-delete.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/verejne-osm-delete.yaml
 # Both EEA files into `ovzdusie` too, so the public-air dataset carries the real reading; the
 # pipeline expires what it stops renewing (T-3120, PL-64).
 policy-ovzdusie-pipelines-write.yaml: projects/banskabystrica/spaces/ovzdusie/policies/ovzdusie-pipelines-write.yaml
@@ -226,3 +232,7 @@ endpoint-skoly.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/endpo
 policy-skoly-read.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/skoly-read.yaml
 endpoint-pocasie.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/endpoints/banskabystrica-pocasie.yaml
 policy-pocasie-read.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/pocasie-read.yaml
+endpoint-zdravie.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/endpoints/banskabystrica-zdravie.yaml
+policy-zdravie-read.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/zdravie-read.yaml
+endpoint-nabijanie.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/endpoints/banskabystrica-nabijanie.yaml
+policy-nabijanie-read.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/nabijanie-read.yaml

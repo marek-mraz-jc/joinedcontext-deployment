@@ -473,8 +473,10 @@ def test_every_pipeline_names_a_data_source_and_an_endpoint_the_seed_holds():
                 # An upsert is what a re-poll of a published table is: the same cell, published
                 # again; and an indicator recomputed on a schedule is the same indicator. The
                 # generated od- pipelines replace, each the sole writer of its rows, so an
-                # attribute the table dropped leaves at the next run (T-4407, PL-79).
-                assert output["mode"] == ("replace" if name.startswith("od-") else "upsert"), name
+                # attribute the table dropped leaves at the next run (T-4407, PL-79). The OSM
+                # pipeline is the sole writer of its osm- entities too, so a tag the map drops
+                # (an opening_hours removed) leaves the entity the same way (T-4514).
+                assert output["mode"] == ("replace" if name.startswith("od-") or name == "osm" else "upsert"), name
 
 
 def test_a_pipeline_is_fed_by_a_data_source_or_by_a_query_and_the_files_beside_it_say_which():

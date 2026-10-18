@@ -5,8 +5,9 @@ description: >-
   What the city's public space carries side by side (DM-01, DM-61): the events the city
   announces, every school and school facility of the national school map in the city, and the
   hourly particulate, nitrogen dioxide and ozone readings of the city's urban-background station
-  as the European Environment Agency republishes them, and the latest minute of SHMÚ's automatic
-  weather stations in and near the city. One model, one space, one public endpoint. Where Smart
+  as the European Environment Agency republishes them, the latest minute of SHMÚ's automatic
+  weather stations in and near the city, and the pharmacies, hospitals, clinics, defibrillators
+  and charging stations OpenStreetMap maps in the district (ODbL 1.0). One model, one space, one public endpoint. Where Smart
   Data Models has the class, its IRI is cited rather than minted (DM-04, DM-16).
 license: https://joinedcontext.com/licenses/cc-by-4.0
 prefixes:
@@ -15,6 +16,8 @@ prefixes:
   sdm: https://smartdatamodels.org/
   sdm-org: https://smartdatamodels.org/dataModel.Organization/
   sdm-parks: https://smartdatamodels.org/dataModel.ParksAndGardens/
+  sdm-poi: https://smartdatamodels.org/dataModel.PointOfInterest/
+  sdm-transport: https://smartdatamodels.org/dataModel.Transportation/
   ngsi-ld: https://uri.etsi.org/ngsi-ld/
 default_prefix: sdm
 default_range: string
@@ -308,6 +311,61 @@ slots:
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.ParksAndGardens
+  category:
+    slot_uri: sdm-poi:category
+    description: >-
+      What the place is, as OpenStreetMap tags it: `pharmacy`, `hospital` or `clinic` from its
+      `amenity`, and `defibrillator` from `emergency=defibrillator`.
+    multivalued: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: dataModel.PointOfInterest
+  openingHours:
+    slot_uri: schema:openingHours
+    description: >-
+      The opening hours exactly as OpenStreetMap's `opening_hours` tag gives them, in its own
+      syntax (for example `Mo-Fr 07:30-18:00; Sa 08:00-12:00`); never reinterpreted.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/openingHours
+  socketType:
+    slot_uri: sdm-transport:socketType
+    description: >-
+      The kinds of socket the station offers, in Smart Data Models' words, read from its
+      OpenStreetMap `socket:*` tags (type2 is Type2, type2_combo CCS/SAE, chademo CHAdeMO,
+      schuko Wall_Euro, type1 J-1772, tesla_supercharger Tesla, any other Other); absent when
+      the map names none.
+    multivalued: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: dataModel.Transportation
+  capacity:
+    slot_uri: sdm-transport:capacity
+    description: >-
+      How many vehicles the station charges at once: OpenStreetMap's `capacity` tag, or the sum
+      of its socket counts when it has none; absent when the map gives neither.
+    range: integer
+    minimum_value: 1
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: dataModel.Transportation
+  allowedVehicleType:
+    slot_uri: sdm-transport:allowedVehicleType
+    description: >-
+      The vehicles the station charges, from the OpenStreetMap tags `motorcar`, `bicycle`,
+      `motorcycle`, `bus` and `hgv` set to yes (car, bicycle, motorcycle, bus, truck); absent
+      when the map sets none.
+    multivalued: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: dataModel.Transportation
+  operator:
+    slot_uri: sdm-transport:operator
+    description: Who runs the station, as OpenStreetMap's `operator` tag names it.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: dataModel.Transportation
+
 classes:
   Event:
     class_uri: schema:Event
@@ -395,6 +453,39 @@ classes:
       - windDirection
       - precipitation
       - soilTemperature
+      - dataProvider
+      - source
+  PointOfInterest:
+    class_uri: sdm:PointOfInterest
+    description: >-
+      One pharmacy, hospital, clinic or public defibrillator in the district of Banská Bystrica
+      as OpenStreetMap maps it (© OpenStreetMap contributors, ODbL 1.0), refreshed weekly.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.PointOfInterest
+    slots:
+      - name
+      - category
+      - openingHours
+      - address
+      - dataProvider
+      - source
+  EVChargingStation:
+    class_uri: sdm:EVChargingStation
+    description: >-
+      One charging station for electric vehicles in the district of Banská Bystrica as
+      OpenStreetMap maps it (© OpenStreetMap contributors, ODbL 1.0), refreshed weekly.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+    slots:
+      - name
+      - socketType
+      - capacity
+      - allowedVehicleType
+      - operator
+      - openingHours
+      - address
       - dataProvider
       - source
 

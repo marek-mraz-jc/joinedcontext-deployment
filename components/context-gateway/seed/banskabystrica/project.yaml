@@ -20,7 +20,8 @@ spec:
   quotas:
     contextSpaces: 100
     residentPipelines: 100
-    publicEndpoints: 100
+    # 110 since T-4514 brought the city's public endpoints to 11: the room of 90 stays.
+    publicEndpoints: 110
     apps: 100
     ingestEventsPerSecond: 500
     agentRunsPerDay: 2000
