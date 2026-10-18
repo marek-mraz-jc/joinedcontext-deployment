@@ -62,5 +62,8 @@ context-broker:
     # Antares dev 4bdbbc8 (train 20261018-0521, T-4455 T-4462 T-4537): per-type decision on multi-type
     # view reads, the SensorThings surface (served with `sta` in ANTARES_API_SURFACES), describe_type.
     # No migration and no new runtime ANTARES_* key over 6fded37.
-    tag: '4bdbbc8'
-    digest: 'sha256:a0e50d4d7ed39c7902670242b83461733166bfcc5c27eb0f222447805e7a1ed5'
+    # Antares dev e67f07f (train 20261018-0754, T-4562 T-4564): batch writes admitted under an in-flight
+    # byte budget (ANTARES_BATCH_INFLIGHT_BYTES, default 4 MiB, 503 + Retry-After past it), delivery
+    # lanes 128 MiB, paged /types and /attributes details. No migration over 4bdbbc8.
+    tag: 'e67f07f'
+    digest: 'sha256:0f08c0dee873e98ed2f9d25bcce59a627a7416bf62d5475d7c0edcd56a007905'

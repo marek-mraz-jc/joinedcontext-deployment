@@ -1,0 +1,54 @@
+{% extends "page.html" %}
+
+{# "Use it in your AI assistant" (T-4585): one card per assistant, ChatGPT, Claude, Gemini, Grok,
+   each with one primary action and at most two steps, then the editors and any MCP client (the
+   "Connect an AI assistant" block without its Claude steps, which the Claude card holds). The
+   address and command stay visible, so a person without script selects them by hand; an assistant
+   without a path today says so and links nowhere. #}
+{% set page = h.jc_assistants() %}
+
+{% block subtitle %}{{ h.jc_t('assistants') }}{% endblock %}
+
+{% block breadcrumb_content %}
+  <li class="active"><a href="{{ h.url_for('jc_pages.assistants') }}">{{ h.jc_t('assistants') }}</a></li>
+{% endblock %}
+
+{% block primary %}
+  <div class="primary col-12" role="main"><article class="module-content jc-page jc-assistants">
+    <h1 class="page-heading">{{ h.jc_t('assistants') }}</h1>
+    {% if page %}
+      <p>{{ page.lead }}</p>
+      <ul class="jc-assistant-cards">
+        {% for card in page.cards %}
+          <li class="jc-assistant-card" aria-labelledby="jc-card-{{ card.id }}">
+            <h2 id="jc-card-{{ card.id }}">{{ card.name }}</h2>
+            {% if card.soon %}
+              <p class="jc-soon">{{ h.jc_t('coming_soon') }}</p>
+            {% else %}
+              <div class="jc-code">
+                <p id="jc-copy-{{ card.id }}" class="jc-code-url">{{ card.copy }}</p>
+              </div>
+              <p class="jc-mcp-links">
+                <button type="button" class="btn btn-primary" data-jc-copy="jc-copy-{{ card.id }}" data-jc-copied="{{ h.jc_t('copied') }}"><span class="jc-code-copy-label">{{ card.copy_label }}</span></button>
+                {% if card.open %}<a class="btn btn-default" href="{{ card.open }}" rel="noopener noreferrer">{{ card.open_label }}</a>{% endif %}
+              </p>
+            {% endif %}
+            <ol class="jc-mcp-steps">
+              {% for step in card.steps %}<li>{{ step }}</li>{% endfor %}
+            </ol>
+          </li>
+        {% endfor %}
+      </ul>
+      {% snippet 'snippets/jc_mcp_install.html', editors_only=True %}
+    {% else %}
+      <p class="jc-empty">{{ h.jc_t('coming_soon') }}</p>
+    {% endif %}
+  </article></div>
+{% endblock %}
+
+{% block secondary %}{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script src="{{ h.url_for_static('/jc-copy.js') }}" defer></script>
+{% endblock %}

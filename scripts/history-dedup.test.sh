@@ -2,7 +2,7 @@
 #
 # Test for scripts/history-dedup.sh (T-4509) against a throwaway Postgres in Docker:
 # runs of equal values, a run across two partitions, observedAt, datasetId, an empty tenant id,
-# the open partition, a second run and the default-partition refusal.
+# the open partition, a second run, a default row before every range and the refusal of one in a gap.
 #
 #   scripts/history-dedup.test.sh
 set -euo pipefail
@@ -80,5 +80,8 @@ grep -q '^total deleted: 0$' <<<"$("$here/history-dedup.sh")" || fail "a second 
 "$here/history-dedup.sh" attr_instances_open >/dev/null 2>&1 && fail "an open partition named on the command line must be refused"
 
 q -c "INSERT INTO attr_instances_default SELECT tenant_id, entity_id, attr_id, instance_id, dataset_id, '2020-01-01', created_at, modified_at, deleted_at, data FROM attr_instances_w1 LIMIT 1"
-"$here/history-dedup.sh" >/dev/null 2>&1 && fail "a non-empty default partition must be refused"
+# it repeats the first w1 row, so that row now goes as its copy
+grep -q '^total deleted: 1$' <<<"$("$here/history-dedup.sh")" || fail "a default row before every range must not block the run"
+q -c "INSERT INTO attr_instances_default SELECT tenant_id, entity_id, attr_id, instance_id, dataset_id, '2026-03-01', created_at, modified_at, deleted_at, data FROM attr_instances_w1 LIMIT 1"
+"$here/history-dedup.sh" >/dev/null 2>&1 && fail "a default row in a gap between the ranges must be refused"
 echo "history-dedup: ok"

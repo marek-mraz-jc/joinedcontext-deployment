@@ -35,10 +35,18 @@ if [[ "$(q -c "SELECT relkind FROM pg_class WHERE oid = 'attr_instances'::regcla
   echo "attr_instances is not a natively partitioned table (TimescaleDB?): this script does not apply" >&2
   exit 2
 fi
-# A row in the default partition may sit between two rows of a range partition; the window below
-# would not see it and could delete a real change back to an earlier value.
-if [[ "$(q -c "SELECT EXISTS (SELECT 1 FROM ONLY attr_instances_default)")" == t ]]; then
-  echo "attr_instances_default holds rows: refusing, an equal-looking pair could straddle one of them" >&2
+# A default-partition row inside the span of the range partitions (a gap between them) may sit
+# between two range rows; the window below would not see it and could delete a real change back
+# to an earlier value. Rows before or after every range only precede or follow them, and the
+# older-partition lookup below reads them, so those are fine.
+if [[ "$(q -c "
+  WITH b AS (SELECT substring(pg_get_expr(c.relpartbound, c.oid) FROM 'FROM \(''([^'']+)''\)')::timestamptz AS lo,
+                    substring(pg_get_expr(c.relpartbound, c.oid) FROM 'TO \(''([^'']+)''\)')::timestamptz AS hi
+               FROM pg_inherits i JOIN pg_class c ON c.oid = i.inhrelid
+              WHERE i.inhparent = 'attr_instances'::regclass AND pg_get_expr(c.relpartbound, c.oid) <> 'DEFAULT')
+  SELECT EXISTS (SELECT 1 FROM ONLY attr_instances_default d, (SELECT min(lo) lo, max(hi) hi FROM b) s
+                  WHERE d.observed_at >= s.lo AND d.observed_at < s.hi)")" == t ]]; then
+  echo "attr_instances_default holds rows inside the range partitions' span: refusing, an equal-looking pair could straddle one of them" >&2
   exit 2
 fi
 
