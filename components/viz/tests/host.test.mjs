@@ -91,3 +91,13 @@ test("a next page off the Endpoint stops the chart, more rows than 50,000 too", 
   const refused = async () => answer({}, 403);
   await assert.rejects(host.load(view({ source: "csv", type: "W" }), API, "en", refused, NOW), /answered 403/);
 });
+
+test("only a page on our own hosts may hand the host page a spec (T-4657)", () => {
+  const domain = "dev.joinedcontext.com";
+  assert.equal(host.ourOrigin("https://assistant.dev.joinedcontext.com", domain), true);
+  assert.equal(host.ourOrigin("https://dev.joinedcontext.com", domain), true);
+  for (const origin of ["null", "http://assistant.dev.joinedcontext.com", "https://evil.example", "https://dev.joinedcontext.com.evil.example",
+    "https://evildev.joinedcontext.com", "https://assistant.dev.joinedcontext.com:8443", "", undefined]) {
+    assert.equal(host.ourOrigin(origin, domain), false, String(origin));
+  }
+});

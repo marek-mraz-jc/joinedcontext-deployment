@@ -101,6 +101,78 @@
     return errors;
   }
 
+  // The map spec of ADR-N-053 §2.9: GeoJSON and a field list, no expression and no style.
+  // Every member is named here; anything else is refused.
+  var MAP_SCHEMA = "urn:joinedcontext:map:v1";
+  var MAP_FEATURES = 1000;
+  var MAP_BYTES = 2 * 1024 * 1024;
+  var MAP_MEMBERS = ["$schema", "title", "data", "label", "popup", "time", "link"];
+  var GEOMETRIES = { Point: 0, MultiPoint: 1, LineString: 1, MultiLineString: 2, Polygon: 2, MultiPolygon: 3 };
+
+  // A position is [longitude, latitude] within range; `depth` is how far the positions nest.
+  function positions(value, depth) {
+    if (!Array.isArray(value)) return false;
+    if (depth === 0) {
+      return value.length === 2 && typeof value[0] === "number" && typeof value[1] === "number" &&
+        value[0] >= -180 && value[0] <= 180 && value[1] >= -90 && value[1] <= 90;
+    }
+    return value.length > 0 && value.every(function (item) { return positions(item, depth - 1); });
+  }
+
+  function plain(value) {
+    return value === null || typeof value === "string" || typeof value === "boolean" ||
+      (typeof value === "number" && isFinite(value));
+  }
+
+  function refuseMap(spec, domain) {
+    var errors = [];
+    function no(pointer, rule) {
+      errors.push({ pointer: pointer, rule: rule });
+    }
+    if (!spec || typeof spec !== "object" || Array.isArray(spec)) return [{ pointer: "/", rule: "a spec is a JSON object" }];
+    if (new TextEncoder().encode(JSON.stringify(spec)).length > MAP_BYTES) no("/", "at most 2 MB");
+    if (spec.$schema !== MAP_SCHEMA) no("/$schema", "the map schema " + MAP_SCHEMA);
+    Object.keys(spec).forEach(function (key) {
+      if (MAP_MEMBERS.indexOf(key) < 0) no("/" + key, "no member of that name");
+    });
+    if (spec.title !== undefined && (typeof spec.title !== "string" || spec.title.length > 200)) no("/title", "a text of at most 200 characters");
+    if (typeof spec.label !== "string") no("/label", "the name of the label property");
+    if (spec.time !== undefined && typeof spec.time !== "string") no("/time", "the name of the time property");
+    if (spec.link !== undefined && !onOurHosts(spec.link, domain)) no("/link", "a link only on our hosts");
+    var fields = [spec.label, spec.time];
+    var popup = Array.isArray(spec.popup) ? spec.popup : null;
+    if (!popup || popup.length > 10) no("/popup", "a list of at most 10 fields");
+    (popup || []).forEach(function (f, i) {
+      var ok = f && typeof f === "object" && typeof f.field === "string" && typeof f.label === "string" &&
+        (f.unit === undefined || f.unit === null || typeof f.unit === "string") &&
+        Object.keys(f).every(function (k) { return k === "field" || k === "label" || k === "unit"; });
+      if (!ok) no("/popup/" + i, "a field, its label and its unit, nothing else");
+      else fields.push(f.field);
+    });
+    var data = spec.data;
+    if (!data || data.type !== "FeatureCollection" || !Array.isArray(data.features) || Object.keys(data).length !== 2) {
+      no("/data", "a GeoJSON FeatureCollection");
+      return errors;
+    }
+    if (data.features.length > MAP_FEATURES) no("/data/features", "at most " + MAP_FEATURES + " features");
+    data.features.slice(0, MAP_FEATURES).forEach(function (f, i) {
+      var at = "/data/features/" + i;
+      var g = f && f.geometry;
+      if (!f || f.type !== "Feature" || !g || !(g.type in GEOMETRIES) || !positions(g.coordinates, GEOMETRIES[g.type])) {
+        return no(at, "a Point, LineString, Polygon or Multi* feature in range");
+      }
+      var props = f.properties || {};
+      Object.keys(props).forEach(function (k) {
+        if (fields.indexOf(k) < 0 || !plain(props[k])) no(at + "/properties/" + k, "only the label, the popup fields and the time, as plain values");
+      });
+    });
+    return errors;
+  }
+
   root.jcRefuse = refuse;
-  if (typeof module === "object" && module.exports) module.exports = refuse;
+  root.jcRefuseMap = refuseMap;
+  if (typeof module === "object" && module.exports) {
+    module.exports = refuse;
+    module.exports.map = refuseMap;
+  }
 })(typeof self !== "undefined" ? self : this);
