@@ -255,7 +255,8 @@ hidden:
 mapBasemap:
   tiles: https://tile.openstreetmap.org/{z}/{x}/{y}.png
 
-# Gemini's card and guide on /assistants (T-4643): true once the gateway's OAuth (T-4631) is live
-# on api.{domain} (T-4630) and tasks/evidence/T-4643/gemini-oauth.sh has passed against it.
+# Gemini's card and guide on /assistants (T-4643): on since tasks/evidence/T-4643/gemini-oauth.sh
+# passed against https://api.dev.joinedcontext.com (2026-10-18T17:59Z: register 201, authorize 302,
+# token 200, the hub 200 with the token and without, a claude.ai registration 400).
 assistants:
-  gemini: false
+  gemini: true
