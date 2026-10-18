@@ -440,6 +440,9 @@ def test_no_stock_ckan_colour_survives_the_theme():
 def test_the_stylesheet_carries_no_colour_of_its_own():
     """T-3009: every colour is the branding block's or mixed from it, so values restyle it all."""
     css = (THEME / "public__jc-theme.css").read_text()
+    # T-4620: the four assistant segments wear their makers' colours, which no instance restyles
+    css, makers = re.subn(r"^\.jc-seg-(?:claude|chatgpt|gemini|mcp) \{ background: [^}]*\}$", "", css, flags=re.M)
+    assert makers == 4
     assert not re.search(r"#[0-9a-f]{3,8}\b|\brgba?\(|\bhsla?\(", css, re.I)
     named = re.findall(r":\s*(white|black|red|blue|green|gray|grey|navy|teal)\b", css, re.I)
     assert not named, named
@@ -1570,17 +1573,17 @@ LABELS = {"en": "Use the data in ChatGPT, Claude, Gemini or any MCP client",
 
 
 @pytest.mark.parametrize("lang", sorted(LABELS))
-def test_the_corner_link_is_four_colour_logos_and_no_words(theme, lang):
-    """T-4613: Claude, ChatGPT, Gemini, MCP, each on its own segment; no text, no "/"; the name is
-    the aria-label, in the page's language."""
+def test_the_corner_link_is_four_logos_and_no_words(theme, lang):
+    """T-4613, T-4620: Claude, ChatGPT, Gemini, MCP, each on its own segment; no text, no "/"; the
+    name is the aria-label, in the page's language."""
     theme.page.lang = lang
     html = render("corner.html", theme, publisher=None, widget="https://dev.example/assistant/")
     tag, link = re.search(r'(<a class="jc-assistants-link"[^>]*>)(.*?)</a>', html, re.S).groups()
     assert f'aria-label="{LABELS[lang]}"' in tag
-    segments = re.findall(r'<span class="jc-seg">(<svg class="jc-brand".*?</svg>)</span>', link, re.S)
-    assert len(segments) == 4 and link.count("<svg") == 4
-    ids = [re.search(r'id="jc-(\w+)-|fill="(#[0-9A-Fa-f]+)"', s).group(0) for s in segments]
-    assert ids == ['fill="#D97757"', 'fill="#0080F7"', 'id="jc-gemini-', 'id="jc-mcp-'], ids
+    segments = re.findall(r'<span class="jc-seg jc-seg-(\w+)">(<svg class="jc-brand".*?</svg>)</span>', link, re.S)
+    assert [mark for mark, _ in segments] == ["claude", "chatgpt", "gemini", "mcp"]
+    assert link.count("<svg") == 4
+    segments = [svg for _, svg in segments]
     assert all('aria-hidden="true"' in s for s in segments)
     # every text node of the link is blank: no word and no "/" between the logos
     assert re.sub(r"<[^>]+>", "", link).strip() == ""
@@ -1594,15 +1597,20 @@ def test_the_brand_logos_are_the_makers_own_saved_here_with_their_source():
         comment, svg = text.split("\n", 1)
         assert comment.startswith("{#") and f"from {source}" in comment, name
         # served from CKAN's origin: nothing in the mark loads from anywhere
-        assert not re.search(r"href=|url\((?!#jc-)", svg), name
+        assert not re.search(r"href=|url\(", svg), name
+        # T-4620: white on the maker's colour, which the segment behind it carries
+        assert set(re.findall(r'(?:fill|stroke)="([^"]+)"', svg)) <= {"#fff", "none"}, name
         assert svg.startswith('<svg class="jc-brand" width="24" height="24" aria-hidden="true" focusable="false"'), name
 
 
-def test_the_pill_divides_its_segments_on_a_slant_and_shrinks_on_a_phone():
+def test_the_bar_is_one_slant_in_the_makers_colours_and_shrinks_on_a_phone():
+    """T-4620: one skewed bar with its logos upright, each segment in its maker's colour."""
     css = desktop_css()
-    assert ".jc-seg + .jc-seg { margin-inline-start: calc(-1 * var(--jc-slant));" in css
-    assert "clip-path: polygon(var(--jc-slant) 0, 100% 0, 100% 100%, 0 100%)" in css
-    assert ".jc-seg + .jc-seg::before { content: \"\";" in css
-    assert "flex-wrap: nowrap;" in css and "--jc-edge: color-mix(in oklab, var(--jc-ink) 55%, var(--jc-paper))" in css
+    assert "transform: skewX(-14deg);" in css and "transform: skewX(14deg);" in css
+    assert "flex-wrap: nowrap;" in css and "border-radius: 10px;" in css
+    for mark, ground in (("claude", "#d97757"), ("chatgpt", "#10a37f"),
+                         ("gemini", "linear-gradient(135deg, #4285f4, #9b72cb 60%, #d96570)"), ("mcp", "#1f1f2e")):
+        assert f".jc-seg-{mark} {{ background: {ground}; }}" in css, mark
+    assert "--jc-slant" not in css and "clip-path: polygon" not in css
     phone = (THEME / "public__jc-theme.css").read_text().split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
-    assert ".jc-brand { inline-size: 1.25rem; block-size: 1.25rem; }" in phone
+    assert ".jc-corner .jc-assistants-link { block-size: 2.25rem; }" in phone
