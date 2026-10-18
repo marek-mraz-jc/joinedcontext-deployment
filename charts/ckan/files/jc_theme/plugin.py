@@ -1430,9 +1430,10 @@ def _viz_slug(value):
         return value
     raise toolkit.Invalid("an Endpoint slug")
 # The basemap the map draws under the data (T-4639): a style on this installation's tiles host
-# (T-4638), or OpenStreetMap's raster tiles, which their tile usage policy allows for a
-# low-traffic preview with attribution. Anything else is no basemap: a map of the data alone.
-OSM_TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+# (T-4638), whose vector tiles the page reads with pmtiles. Anything else is no basemap: a map of
+# the data alone. OpenStreetMap's own tile servers are not one (T-4661): their policy refuses
+# production use, and every visitor's address would reach them.
+PMTILES = "/pmtiles-4.5.0.js"
 MAPLIBRE = "/maplibre-gl-6.14.0/"
 MAP_CSP = "frame-ancestors *; object-src 'none'; base-uri 'self'"
 VENDOR = "/srv/app/vendor"
@@ -1449,8 +1450,6 @@ def _basemap():
     style = found.get("style")
     if isinstance(style, str) and domain and re.fullmatch(r"https://tiles\.%s/[A-Za-z0-9/._-]+\.json" % re.escape(domain), style):
         return {"style": style}
-    if found.get("tiles") == OSM_TILES:
-        return {"tiles": OSM_TILES, "attribution": "\u00a9 OpenStreetMap contributors"}
     return {}
 
 
@@ -1503,6 +1502,8 @@ def jc_map(pkg, resource_id=None):
         "layers": layers,
         "basemap": BASEMAP,
         "lib": MAPLIBRE + "maplibre-gl.mjs",
+        "pmtiles": PMTILES if BASEMAP.get("style") else "",
+        "fields": "/jc-field-order.json",
         "lang": _language(),
         "title": pkg.get("title") or name,
         "dataset": toolkit.url_for("dataset.read", id=name, _external=True),

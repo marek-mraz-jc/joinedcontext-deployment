@@ -73,5 +73,7 @@ context-broker:
     # commits over 4a42248): layered history retention (ANTARES_RETENTION_HISTORY_DEFAULT, P28D in
     # base values, owner 2026-10-18), expiry takes history (DM-97). Migration 0010 is one partial
     # index on entities, a scan of current state only, never of attr_instances.
-    tag: 'b1def0c'
-    digest: 'sha256:c6cfe3644bcd7b87c30cca636a5630bf4badecb25de39b298ca7d53a66ad9eb2'
+    # Antares dev 8e2a24c (T-4624 T-4532 over b1def0c): batch writes take at most
+    # ANTARES_BATCH_INFLIGHT (default 8) of the pool, so reads keep the rest. No migration.
+    tag: '8e2a24c'
+    digest: 'sha256:507437a9a902fa5b24d67dfa5a19c5a281dc11892185bb603fd8c667e12a4111'

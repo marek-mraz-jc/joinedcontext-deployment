@@ -448,6 +448,26 @@ api-moved-portal-mcp:
   priority: 30
   vars: [["http_authorization", "!", "~~", "."], ["cookie___Host-jc_edge", "!", "~~", "."]]
   pluginConfig: api-moved
+# The radix tree matches the longest prefix before priority: `/api/mcp/*` (context-mcp-named)
+# outranked `/api/mcp*` above, so the hub's metadata and the named servers stayed on the old host.
+api-moved-mcp-named:
+  name: api-moved-mcp-named
+  description: /api/mcp/* (the hub metadata, the named servers) on the apex, anonymous, moved to the data host
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/api/mcp/*'
+  host: '{{ .Values.global.domain }}'
+  priority: 31
+  vars: [["http_authorization", "!", "~~", "."]]
+  pluginConfig: api-moved
+api-moved-portal-mcp-named:
+  name: api-moved-portal-mcp-named
+  description: /api/mcp/* (the hub metadata, the named servers) on the Portal host, anonymous and with no edge session, moved to the data host
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/api/mcp/*'
+  subDomain: portal
+  priority: 31
+  vars: [["http_authorization", "!", "~~", "."], ["cookie___Host-jc_edge", "!", "~~", "."]]
+  pluginConfig: api-moved
 api-moved-cs:
   name: api-moved-cs
   description: /cs/* on the apex, anonymous, moved to the data host

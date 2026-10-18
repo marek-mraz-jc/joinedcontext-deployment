@@ -84,6 +84,11 @@ env:
   # A deployment with `sandbox: true` filters a long tool result with a script there (AG-112).
   JC_ASSISTANT_FUNCTIONS_URL: "http://jc-functions.{{ .Values.functions.runtime.namespace }}.svc.cluster.local:8080"
 {{- end }}
+{{- if has "viz" .Values.components }}
+  # The chart renderer (T-4657, ADR-N-053 §2.9): data answers get maps and charts drawn there,
+  # and the widget page may frame it, nothing else.
+  JC_ASSISTANT_VIZ_URL: "https://viz.{{ $global.domain }}"
+{{- end }}
   # The embedder's ONNX Runtime threads, as many as the CPU limit (T-3053). The model and the
   # runtime are in the image (JC_ASSISTANT_MODEL_DIR, ORT_DYLIB_PATH).
   JC_ASSISTANT_EMBED_THREADS: "1"

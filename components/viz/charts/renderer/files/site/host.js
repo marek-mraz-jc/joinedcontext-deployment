@@ -34,6 +34,13 @@
     return { domain: domain, api: "https://api." + domain, data: "https://data." + domain };
   }
 
+  // Whether a parent may hand this page a spec (`#show`, ADR-N-053 §2.9): https on the domain or
+  // one of its subdomains, no port and no user, so only a page on our own hosts makes us draw.
+  function ourOrigin(origin, domain) {
+    var m = /^https:\/\/([a-z0-9.-]+)$/.exec(String(origin || ""));
+    return !!m && (m[1] === domain || m[1].slice(-(domain.length + 1)) === "." + domain);
+  }
+
   // PT24H, P7D, P1DT12H: the window of a temporal source, in milliseconds; null when it is not one
   // or exceeds 31 days.
   function duration(text) {
@@ -266,6 +273,7 @@
       var height = Math.ceil(document.body.getBoundingClientRect().height);
       if (window.parent !== window) window.parent.postMessage({ type: "jc-viz-height", height: height }, "*");
     }
+    if (location.hash === "#show") return show(h, frame, fail);
     if (!where) return fail("This page draws a chart of the open-data catalogue; the address names none.");
     if (where.inline) document.body.classList.add("inline");
     var controller = new AbortController();
@@ -318,7 +326,77 @@
     window.addEventListener("resize", resize);
   }
 
+  // `#show`: the assistant's widget hands one spec and its rows by message (ADR-N-053 §2.9). A
+  // Vega spec goes to the renderer, which runs in an opaque origin as in §2.5; a map spec, which
+  // holds no expression, goes to the map page in this origin, because the tiles answer CORS for
+  // our hosts and never for `null`. Heights and errors go back to the parent's origin alone.
+  function show(h, frame, fail) {
+    var parent = null;
+    var map = false;
+    var mapFrame = null;
+    document.body.classList.add("inline", "show");
+    var tell = function (message) {
+      if (parent) window.parent.postMessage(message, parent);
+    };
+    var resize = function () {
+      tell({ type: "jc-viz-height", height: Math.ceil(document.body.getBoundingClientRect().height) });
+    };
+    var refuse = function (message) {
+      fail(message);
+      tell({ type: "jc-viz-error", message: message });
+    };
+    var pending = null;
+    var ready = false; // the frame that draws has said so; the renderer may say it before the parent speaks
+    var send = function () {
+      if (!pending || !ready) return;
+      (map ? mapFrame : frame).contentWindow.postMessage(pending, map ? location.origin : "*");
+      pending = null;
+    };
+    window.addEventListener("message", function (event) {
+      var data = event.data || {};
+      if (event.source === window.parent && !parent) {
+        if (!ourOrigin(event.origin, h.domain) || data.type !== "jc-viz-show") return;
+        parent = event.origin;
+        var lang = /^[a-z]{2}$/.test(data.lang) ? data.lang : "en";
+        document.documentElement.lang = lang;
+        map = !!data.spec && data.spec.$schema === "urn:joinedcontext:map:v1";
+        var errors = map ? root.jcRefuseMap(data.spec, h.domain) : root.jcRefuse(data.spec, h.domain);
+        if (errors.length) return refuse("The chart was refused: " + errors[0].pointer + " — " + errors[0].rule + ".");
+        var title = map ? data.spec.title : null;
+        document.getElementById("title").textContent = typeof title === "string" ? title : "";
+        pending = map
+          ? { type: "jc-viz-render", spec: data.spec, lang: lang }
+          : { type: "jc-viz-render", spec: data.spec, data: { format: "json", rows: Array.isArray(data.rows) ? data.rows.slice(0, LIMIT_ROWS) : [] }, lang: lang };
+        if (map) {
+          // The renderer frame stays empty; the map page takes its place.
+          mapFrame = document.createElement("iframe");
+          mapFrame.id = "map";
+          mapFrame.title = document.getElementById("title").textContent || "Map";
+          mapFrame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox");
+          mapFrame.src = "map.html";
+          ready = false;
+          frame.replaceWith(mapFrame);
+        }
+        return send();
+      }
+      var mine = map ? mapFrame && event.source === mapFrame.contentWindow && event.origin === location.origin
+        : event.source === frame.contentWindow && event.origin === "null";
+      if (!mine) return;
+      if (data.type === "jc-viz-ready") {
+        ready = true;
+        send();
+      }
+      if (data.type === "jc-viz-height" && typeof data.height === "number") {
+        (map ? mapFrame : frame).style.height = Math.min(Math.max(Math.round(data.height), 120), 2000) + "px";
+        resize();
+      }
+      if (data.type === "jc-viz-error") refuse(String(data.message || "The chart could not be drawn."));
+    });
+    window.addEventListener("resize", resize);
+  }
+
   root.jcHost = {
+    ourOrigin: ourOrigin,
     parseHash: parseHash,
     hosts: hosts,
     duration: duration,

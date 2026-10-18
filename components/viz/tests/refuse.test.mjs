@@ -78,3 +78,44 @@ test("words an expression has no business with, and a javascript: URL anywhere",
   assert.deepEqual(rules(JSON.parse('{"$schema":"' + VL + '","data":{"name":"source"},"__proto__":{"x":1}}')), ["/__proto__ no __proto__, constructor or prototype"]);
   assert.deepEqual(rules({ $schema: VL, data: { name: "source" }, title: " JavaScript:alert(1)" }), ["/title no javascript: URL"]);
 });
+
+// T-4657, ADR-N-053 §2.9: the map spec, GeoJSON and a field list with nothing that runs.
+const MAP = "urn:joinedcontext:map:v1";
+const station = (coordinates, properties = { name: "Námestie SNP", pm10: 21.5, observedAt: "2026-10-18T15:00:00Z" }) =>
+  ({ type: "Feature", geometry: { type: "Point", coordinates }, properties });
+const mapSpec = (over = {}) => ({
+  $schema: MAP, title: "Kvalita ovzdušia", label: "name", time: "observedAt",
+  popup: [{ field: "pm10", label: "PM10", unit: "µg/m³" }],
+  data: { type: "FeatureCollection", features: [station([19.1462, 48.7363])] },
+  link: "https://data.dev.joinedcontext.com/dataset/ovzdusie", ...over
+});
+const mapRules = (spec) => refuse.map(spec, DOMAIN).map((e) => e.pointer + " " + e.rule);
+
+test("a map spec of points, lines and polygons in range passes", () => {
+  assert.deepEqual(mapRules(mapSpec()), []);
+  const shapes = [
+    { type: "Feature", geometry: { type: "LineString", coordinates: [[24.94, 60.17], [24.95, 60.18]] }, properties: { name: "Linka" } },
+    { type: "Feature", geometry: { type: "MultiPolygon", coordinates: [[[[14.4, 50.0], [14.5, 50.0], [14.5, 50.1], [14.4, 50.0]]]] }, properties: { name: "Kontejner" } }
+  ];
+  assert.deepEqual(mapRules(mapSpec({ data: { type: "FeatureCollection", features: shapes } })), []);
+});
+
+test("a map spec is refused for a foreign link, a member of its own, a property it does not name or a position out of range", () => {
+  assert.deepEqual(mapRules(mapSpec({ link: "https://evil.example/" })), ["/link a link only on our hosts"]);
+  assert.deepEqual(mapRules(mapSpec({ link: "javascript:alert(1)" })), ["/link a link only on our hosts"]);
+  assert.deepEqual(mapRules(mapSpec({ style: "https://evil.example/style.json" })), ["/style no member of that name"]);
+  assert.deepEqual(mapRules(mapSpec({ data: { type: "FeatureCollection", features: [station([19.1, 48.7], { name: "x", secret: "y" })] } })),
+    ["/data/features/0/properties/secret only the label, the popup fields and the time, as plain values"]);
+  assert.deepEqual(mapRules(mapSpec({ data: { type: "FeatureCollection", features: [station([19.1, 48.7], { name: { html: "<b>" } })] } })),
+    ["/data/features/0/properties/name only the label, the popup fields and the time, as plain values"]);
+  assert.deepEqual(mapRules(mapSpec({ data: { type: "FeatureCollection", features: [station([190, 48.7])] } })),
+    ["/data/features/0 a Point, LineString, Polygon or Multi* feature in range"]);
+  assert.deepEqual(mapRules(mapSpec({ data: { type: "FeatureCollection", features: [{ type: "Feature", geometry: { type: "GeometryCollection", geometries: [] } }] } })),
+    ["/data/features/0 a Point, LineString, Polygon or Multi* feature in range"]);
+  assert.deepEqual(mapRules(mapSpec({ popup: [{ field: "pm10", label: "PM10", html: "<b>" }] })), ["/popup/0 a field, its label and its unit, nothing else",
+    "/data/features/0/properties/pm10 only the label, the popup fields and the time, as plain values"]);
+  assert.deepEqual(mapRules(mapSpec({ $schema: VL })), ["/$schema the map schema " + MAP]);
+  assert.deepEqual(mapRules(mapSpec({ data: { type: "FeatureCollection", features: Array(1001).fill(station([19.1, 48.7])) } })),
+    ["/data/features at most 1000 features"]);
+  assert.deepEqual(mapRules([]), ["/ a spec is a JSON object"]);
+});

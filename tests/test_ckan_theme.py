@@ -2066,15 +2066,15 @@ def test_no_map_without_the_library_an_ogc_address_on_our_host_or_a_table(mapped
 
 
 @pytest.mark.parametrize("value, expected", [
-    ({"tiles": "https://tile.openstreetmap.org/{z}/{x}/{y}.png"},
-     {"tiles": "https://tile.openstreetmap.org/{z}/{x}/{y}.png", "attribution": "© OpenStreetMap contributors"}),
+    # T-4661: OpenStreetMap's own tile servers are no basemap: their policy refuses production use.
+    ({"tiles": "https://tile.openstreetmap.org/{z}/{x}/{y}.png"}, {}),
     ({"style": "https://tiles.dev.example/styles/light.json"}, {"style": "https://tiles.dev.example/styles/light.json"}),
     ({"style": "https://tiles.evil.example/styles/light.json"}, {}),
     ({"tiles": "https://a.tile.example/{z}/{x}/{y}.png"}, {}),
     ("not json", {}),
     ([], {}),
 ])
-def test_the_basemap_is_the_tiles_host_s_style_or_openstreetmap_or_none(theme, monkeypatch, value, expected):
+def test_the_basemap_is_the_tiles_host_s_style_or_none(theme, monkeypatch, value, expected):
     monkeypatch.setenv("JC_MAP_BASEMAP", value if isinstance(value, str) else json.dumps(value))
     assert theme._basemap() == expected
 
@@ -2130,7 +2130,9 @@ def test_the_map_card_stays_hidden_until_a_feature_has_a_geometry():
     assert '<details class="jc-table jc-map-card" open hidden>' in page
     assert "<script type=\"module\" src=\"{{ h.url_for_static('/jc-map.js') }}\"></script>" in page
     script = (THEME / "public__jc-map.js").read_text()
-    assert script.index("if (!layers.length)") < script.index("card.hidden = false")
+    assert script.index("if (!latest.features.length) {") < script.index("card.hidden = false")
+    # T-4661: no probe of one feature before the page: one round trip before the first point.
+    assert 'limit: "1"' not in script and "probe(" not in script
     # Values reach the page as text only, and a `next` link never leaves the layer's address.
     assert "innerHTML" not in script and "insertAdjacentHTML" not in script
     assert "candidate.origin === base.origin && candidate.pathname === base.pathname" in script
@@ -2142,6 +2144,7 @@ def test_the_panel_reads_like_the_data_and_measures_lines_and_areas():
     script = (THEME / "public__jc-map.js").resolve().as_uri()
     code = """
 import { describe, length, area } from %s;
+import { readFileSync } from "node:fs";
 const t = { map_length: "Dĺžka", map_area: "Plocha" };
 const schema = { temperature: { "x-ogc-unit": "Cel", description: "Air temperature" }, windDirection: { "x-ogc-unit": "deg" },
   dateObserved: { format: "date-time" } };
@@ -2151,25 +2154,126 @@ const point = { id: "urn:ngsi-ld:W:1", geometry: { type: "Point", coordinates: [
   nested: { a: 1 }, type: "W", id: "urn:x", _layer: 0, _id: "urn:ngsi-ld:W:1", _n: 0, note: "<b>x</b>" } };
 const line = { geometry: { type: "LineString", coordinates: [[19, 48], [19, 48.01]] }, properties: { _id: "urn:ngsi-ld:R:road-7" } };
 const square = { geometry: { type: "Polygon", coordinates: [[[19, 48], [19.01, 48], [19.01, 48.01], [19, 48.01], [19, 48]]] }, properties: {} };
+const order = JSON.parse(readFileSync(%s, "utf8"));
 console.log(JSON.stringify({
-  point: describe(point, schema, { lang: "sk", t }),
+  point: describe(point, schema, { lang: "sk", t, order }),
   line: describe(line, {}, { lang: "en", t }),
   square: describe(square, {}, { lang: "en", t }),
   length: length(line.geometry), area: area(square.geometry) }));
-""" % json.dumps(script)
+""" % (json.dumps(script), json.dumps(str(THEME / "public__jc-field-order.json")))
     done = subprocess.run(["node", "--input-type=module", "-e", code], capture_output=True, text=True, timeout=60)
     assert done.returncode == 0, done.stderr
     out = json.loads(done.stdout)
-    rows = dict((label, value) for label, value, _ in out["point"]["rows"])
+    rows = dict((label, value) for label, value, _, _ in out["point"]["rows"])
     assert out["point"]["title"] == "Stanica Donovaly"
-    assert rows["temperature"] == "12,4\u00a0°C" and rows["windDirection"] == "38,5°"
-    assert rows["dateObserved"] == "pred 5 minútami"
-    assert rows["note"] == "<b>x</b>"  # shown as text by textContent, never parsed
-    assert not {"refParent", "other", "nested", "type", "id", "_layer", "_id", "_n", "name"} & set(rows)
+    assert rows["Teplota"] == "12,4\u00a0°C" and rows["Smer vetra"] == "38,5°"
+    assert rows["Dátum pozorovania"] == "pred 5 minútami"
+    assert rows["Note"] == "<b>x</b>"  # shown as text by textContent, never parsed
+    assert not {"refParent", "Other", "Nested", "Typ", "id", "_layer", "_id", "_n", "Názov"} & set(rows)
     assert out["line"]["title"] == "road-7"
     assert out["line"]["rows"][0][0] == "Dĺžka" and re.fullmatch(r"1\.1\d\u00a0km", out["line"]["rows"][0][1])
     assert 1100 < out["length"] < 1125  # 0.01° of latitude
     assert 0.8e6 < out["area"] < 0.85e6 and out["square"]["rows"][0][1].endswith("\u00a0ha")
+
+
+# T-4661: the popup reads in the DataStore table's order, with its labels, from one table.
+FIELD_ORDER_SHA256 = "4e949e7dc19acbe9d53a689f88ef07805d018a26791f7d52f631b925fa21c325"
+
+
+def test_the_field_order_is_jc_core_s_byte_for_byte():
+    # Copied from joinedcontext-platform crates/jc-core/data/field-order.json, which pins the same
+    # hash (field_order::tests): a change lands in both repositories or the check goes red.
+    import hashlib
+    data = (THEME / "public__jc-field-order.json").read_bytes()
+    assert hashlib.sha256(data).hexdigest() == FIELD_ORDER_SHA256
+    order = json.loads(data)
+    assert [g["group"] for g in order["groups"]][:3] == ["name", "time", "value"]
+    assert order["labels"]["startDate"]["sk"] == "Začiatok"
+    assert order["enums"]["museumsGalleriesLibraries"]["sk"] == "Múzeá, galérie, knižnice"
+
+
+def _describe(feature, lang="sk", order=True):
+    script = (THEME / "public__jc-map.js").resolve().as_uri()
+    code = """
+import { describe } from %s;
+import { readFileSync } from "node:fs";
+const order = %s ? JSON.parse(readFileSync(%s, "utf8")) : undefined;
+console.log(JSON.stringify(describe(%s, {}, { lang: %s, t: {}, order })));
+""" % (json.dumps(script), "true" if order else "false", json.dumps(str(THEME / "public__jc-field-order.json")),
+       json.dumps(feature), json.dumps(lang))
+    done = subprocess.run(["node", "--input-type=module", "-e", code], capture_output=True, text=True, timeout=60)
+    assert done.returncode == 0, done.stderr
+    return json.loads(done.stdout)
+
+
+EVENT = {"geometry": {"type": "Point", "coordinates": [19.15, 48.73]}, "properties": {
+    "dataProvider": "Mesto Banská Bystrica", "dateModified": "2026-10-09T10:42:00Z", "endDate": "2026-11-10",
+    "eventCategory": "museumsGalleriesLibraries", "name": {"languageMap": {"sk": "Výstava v Bábkarskej dielni"}},
+    "source": "https://www.banskabystrica.sk/podujatia/", "startDate": "2026-10-15", "startTime": "18:00",
+    "url": "https://www.banskabystrica.sk/podujatie/123", "price": 5, "_id": "urn:ngsi-ld:Event:1", "_n": 0}}
+
+
+@pytest.mark.skipif(not shutil.which("node"), reason="node is not installed")
+def test_an_event_reads_name_start_category_link_then_the_source_in_small_type():
+    out = _describe(EVENT)
+    assert out["title"] == "Výstava v Bábkarskej dielni"
+    labels = [row[0] for row in out["rows"]]
+    assert labels == ["Začiatok", "Koniec", "Price", "Kategória", "Odkaz", "Zdroj", "Poskytovateľ", "Zmenené"]
+    rows = {row[0]: row for row in out["rows"]}
+    # The start takes its time along; the time is no row of its own.
+    assert rows["Začiatok"][1] == "15. 10. 2026, 18:00" and "Čas" not in rows
+    assert rows["Koniec"][1] == "10. 11. 2026"
+    assert rows["Kategória"][1] == "Múzeá, galérie, knižnice"
+    assert rows["Odkaz"][1:] == ["https://www.banskabystrica.sk/podujatie/123", "", "link"]
+    assert [rows[k][3] for k in ("Zdroj", "Poskytovateľ", "Zmenené")] == ["meta", "meta", "meta"]
+    assert rows["Začiatok"][3] == ""
+
+
+@pytest.mark.skipif(not shutil.which("node"), reason="node is not installed")
+def test_only_an_http_address_is_a_link_and_an_unknown_code_reads_as_words():
+    feature = {"geometry": None, "properties": {"url": "javascript:alert(1)", "eventCategory": "openAirCinema",
+                                                "startDate": "2026-10-15T18:00:00", "startTime": "19:00"}}
+    rows = {row[0]: row for row in _describe(feature, "en")["rows"]}
+    assert rows["Link"][1:] == ["javascript:alert(1)", "", ""]
+    assert rows["Category"][1] == "Open air cinema"
+    # A start that has its time keeps it, and the separate time is not repeated.
+    assert "Time" not in rows and rows["Start"][1].startswith("Oct 15, 2026")
+
+
+@pytest.mark.skipif(not shutil.which("node"), reason="node is not installed")
+def test_without_the_table_the_panel_still_shows_every_value():
+    rows = _describe(EVENT, "sk", order=False)["rows"]
+    assert len(rows) == 8 and rows[0][0] == "Data provider"
+
+
+def test_the_map_page_loads_the_labels_and_the_basemap_from_our_hosts_only():
+    plugin = (THEME / "plugin.py").read_text()
+    assert '"fields": "/jc-field-order.json"' in plugin and 'PMTILES = "/pmtiles-4.5.0.js"' in plugin
+    assert "openstreetmap" not in (THEME / "public__jc-map.js").read_text()
+    import hashlib
+    pmtiles = (THEME / "public__pmtiles-4.5.0.js").read_bytes()
+    # pmtiles 4.5.0 (BSD-3-Clause), package/dist/pmtiles.js as npm publishes it; the viz map's copy.
+    assert hashlib.sha256(pmtiles).hexdigest() == "caf981bc46f6327ee7e65d5dc964d89d38a69f60edca2bd4c5c890c21b554c6c"
+    snippet = (THEME / "templates__snippets__jc_map.html").read_text()
+    assert "{% if jc_map_config.pmtiles %}<script src=\"{{ h.url_for_static(jc_map_config.pmtiles) }}\"></script>{% endif %}" in snippet
+
+
+def test_no_ckan_values_point_a_map_at_openstreetmap_s_tile_servers():
+    files = [PROJECT_ROOT / "charts/ckan/values.yaml", *sorted((PROJECT_ROOT / "components/ckan").rglob("*.y*ml*"))]
+    for path in files:
+        assert "tile.openstreetmap.org" not in path.read_text(), path
+    dev = (PROJECT_ROOT / "components/ckan/values/catalogue/development-values.yaml.gotmpl").read_text()
+    assert "style: https://tiles.{{ .Values.global.domain }}/styles/light-sk.json" in dev
+
+
+def test_the_table_headers_are_the_publisher_s_labels_and_id_reads_as_a_row_number():
+    css = (THEME / "public__jc-theme.css").read_text()
+    assert 'body.dt-view #dtprv thead th[data-name="_id"] { font-size: 0; }' in css
+    assert 'content: "#"' in css
+    # CKAN shows `info.label` while data_dictionary_labels is on, its default; nothing turns it off.
+    for path in [PROJECT_ROOT / "charts/ckan/values.yaml", *(PROJECT_ROOT / "components/ckan").rglob("*.y*ml*"),
+                 *(PROJECT_ROOT / "charts/ckan/templates").glob("*.yaml")]:
+        assert "data_dictionary_labels" not in path.read_text().lower(), path
 
 
 # T-4643: Gemini's card behind its flag, and one guide per assistant for a non-technical reader.

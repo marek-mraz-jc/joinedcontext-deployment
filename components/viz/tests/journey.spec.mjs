@@ -7,6 +7,7 @@
 //   PLAYWRIGHT_BROWSERS_PATH=/ms-playwright npx playwright test -c components/viz/tests
 import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
+import { gunzipSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
@@ -15,7 +16,7 @@ const chart = path.join(here, "../charts/renderer");
 const DOMAIN = "dev.joinedcontext.com";
 const VIZ = `viz.${DOMAIN}`;
 const SLUG = "3iasem46w7d7pxxypwdfdzheyaodv3qn";
-const OURS = new Set([VIZ, `api.${DOMAIN}`, `data.${DOMAIN}`]);
+const OURS = new Set([VIZ, `api.${DOMAIN}`, `data.${DOMAIN}`, `tiles.${DOMAIN}`, `assistant.${DOMAIN}`]);
 
 // The CSP of each page, read from nginx.conf as the chart renders it.
 const conf = readFileSync(path.join(chart, "files/nginx.conf"), "utf8").replaceAll("__HOST__", VIZ).replaceAll("__DOMAIN__", DOMAIN);
@@ -103,13 +104,15 @@ export async function serve(context, { trustless = false } = {}) {
     const json = (body) => route.fulfill({ status: 200, contentType: "application/json", headers: { "Access-Control-Allow-Origin": `https://${VIZ}` }, body: JSON.stringify(body) });
     if (url.hostname === VIZ) {
       const file = url.pathname === "/" ? "site/index.html" : url.pathname.startsWith("/vendor/") ? url.pathname.slice(1) : `site${url.pathname}`;
-      const headers = { "Content-Security-Policy": url.pathname === "/" ? csp("/") : url.pathname === "/render.html" ? csp("/render.html") : "default-src 'none'; frame-ancestors 'none'" };
+      const page = ["/", "/render.html", "/map.html"].includes(url.pathname);
+      const headers = { "Content-Security-Policy": page ? csp(url.pathname) : "default-src 'none'; frame-ancestors 'none'" };
       // The second line of defence alone: the renderer with its refusal list switched off.
       if (trustless && url.pathname === "/refuse.js") {
         return route.fulfill({ status: 200, contentType: "text/javascript", headers, body: "self.jcRefuse = function () { return []; };" });
       }
       try {
-        const body = readFileSync(path.join(chart, "files", file));
+        // MapLibre's modules are stored gzipped; nginx unpacks them (gzip_static), so does this.
+        const body = file.endsWith(".mjs") ? gunzipSync(readFileSync(path.join(chart, "files", file + ".gz"))) : readFileSync(path.join(chart, "files", file));
         const type = file.endsWith(".html") ? "text/html" : file.endsWith(".css") ? "text/css" : "text/javascript";
         return route.fulfill({ status: 200, contentType: type, headers, body });
       } catch {
@@ -130,6 +133,25 @@ export async function serve(context, { trustless = false } = {}) {
           <script>${readFileSync(path.join(here, "../../../charts/ckan/files/jc_theme/public__jc-viz.js"), "utf8")}</script>`
       });
     }
+    if (url.hostname === `tiles.${DOMAIN}` && url.pathname.startsWith("/styles/light-")) {
+      // A basemap with no tiles: the journey is about the data on it.
+      return route.fulfill({ status: 200, contentType: "application/json", headers: { "Access-Control-Allow-Origin": `https://${VIZ}` },
+        body: JSON.stringify({ version: 8, sources: {}, layers: [{ id: "paper", type: "background", paint: { "background-color": "#eeeeee" } }] }) });
+    }
+    if (url.hostname === `assistant.${DOMAIN}` || url.hostname === "evil.example") {
+      // The assistant's widget as it frames a chart (T-4657), and a stranger doing the same.
+      const shown = SHOWN[url.pathname.slice(1)];
+      return route.fulfill({
+        status: 200, contentType: "text/html; charset=utf-8",
+        body: `<!doctype html><title>widget</title><iframe id="viz" style="width:100%;height:200px;border:0"
+          sandbox="allow-scripts allow-same-origin allow-downloads allow-popups allow-popups-to-escape-sandbox" src="https://${VIZ}/#show"></iframe>
+          <script>
+          const f = document.getElementById("viz");
+          f.addEventListener("load", () => f.contentWindow.postMessage(${JSON.stringify(shown)}, "https://${VIZ}"));
+          addEventListener("message", (e) => { if (e.origin === "https://${VIZ}" && e.data.type === "jc-viz-height") f.style.height = e.data.height + "px"; });
+          </script>`
+      });
+    }
     if (url.hostname === `api.${DOMAIN}`) {
       const base = `/api/endpoint/${SLUG}/`;
       if (url.pathname === `${base}ngsi-ld/v1/temporal/entities`) return json(TEMPORAL);
@@ -141,6 +163,22 @@ export async function serve(context, { trustless = false } = {}) {
   });
   return requests;
 }
+
+// What the assistant's widget hands the host page in `#show` (ADR-N-053 §2.9).
+const MAP_SPEC = {
+  $schema: "urn:joinedcontext:map:v1", title: "Kvalita ovzdušia", label: "name", time: "observedAt",
+  popup: [{ field: "no2", label: "NO₂", unit: "µg/m³" }, { field: "pm10", label: "PM10", unit: "µg/m³" }],
+  data: { type: "FeatureCollection", features: [{ type: "Feature", geometry: { type: "Point", coordinates: [19.1462, 48.7363] },
+    properties: { name: "SK0214A <img src=x onerror=alert(1)>", no2: 14.2, pm10: 21.5, observedAt: "2026-10-18T15:00:00Z" } }] },
+  link: `https://data.${DOMAIN}/dataset/ovzdusie`
+};
+const SHOWN = {
+  map: { type: "jc-viz-show", spec: MAP_SPEC, lang: "sk" },
+  bar: { type: "jc-viz-show", lang: "sk", rows: [{ name: "Donovaly", temperature: 11.5 }, { name: "Zelená", temperature: 13.4 }],
+    spec: { $schema: VL, data: { name: "source" }, mark: { type: "bar", tooltip: true },
+      encoding: { y: { field: "name", type: "nominal", title: null }, x: { field: "temperature", type: "quantitative", title: "°C" } } } },
+  foreignLink: { type: "jc-viz-show", lang: "sk", spec: { ...MAP_SPEC, link: "https://evil.example/" } }
+};
 
 const renderer = (page) => page.frameLocator("#viz").frameLocator("#frame");
 const host = (page) => page.frameLocator("#viz");
@@ -208,3 +246,54 @@ for (const key of ["dataUrl", "javascriptHref", "windowExpr"]) {
     expect(dialog).toBe(false);
   });
 }
+
+// T-4657: the assistant's widget hands a map spec; a click on the station opens its popup, text only.
+test("show: a map spec draws on our basemap, and a click opens the popup as text", async ({ page, context }) => {
+  const errors = [];
+  page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
+  let dialog = false;
+  page.on("dialog", (d) => { dialog = true; return d.dismiss(); });
+  const requests = await serve(context);
+  await page.goto(`https://assistant.${DOMAIN}/map`);
+  const map = page.frameLocator("#viz").frameLocator("#map");
+  await expect(map.locator("canvas.maplibregl-canvas")).toBeVisible({ timeout: 20000 });
+  const frame = await expect.poll(() => page.frames().find((f) => f.url().endsWith("/map.html")) ? true : false).toBe(true)
+    .then(() => page.frames().find((f) => f.url().endsWith("/map.html")));
+  await expect.poll(() => frame.evaluate(() => self.jcMapReady === true), { timeout: 20000 }).toBe(true);
+  // One station: the view centres on it, so it sits in the middle of the map.
+  const box = await map.locator("#map").boundingBox();
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  const pop = map.locator(".jc-pop");
+  await expect(pop).toBeVisible();
+  await expect(pop.locator("strong")).toHaveText("SK0214A <img src=x onerror=alert(1)>");
+  await expect(pop.locator("dd").nth(1)).toHaveText("21,5 µg/m³");
+  await expect(pop.locator("a")).toHaveAttribute("href", `https://data.${DOMAIN}/dataset/ovzdusie`);
+  expect(await pop.locator("img").count()).toBe(0);
+  expect(dialog).toBe(false);
+  // Enter on the map opens the same popup from the keyboard.
+  await map.locator(".maplibregl-popup-close-button").click();
+  await map.locator("canvas.maplibregl-canvas").focus();
+  await page.keyboard.press("Enter");
+  await expect(pop).toBeVisible();
+  expect(foreign(requests)).toEqual([]);
+  expect(errors).toEqual([]);
+  await expect.poll(async () => page.locator("#viz").evaluate((f) => f.style.height)).not.toBe("200px");
+});
+
+test("show: a Vega spec with its rows draws in the sandboxed renderer", async ({ page, context }) => {
+  const requests = await serve(context);
+  await page.goto(`https://assistant.${DOMAIN}/bar`);
+  await expect(renderer(page).locator("svg.marks .mark-rect path").first()).toBeAttached({ timeout: 15000 });
+  await expect(renderer(page).locator("svg.marks")).toContainText("Donovaly");
+  expect(foreign(requests)).toEqual([]);
+});
+
+test("show: a page on another site gets nothing drawn, and a map linking out is refused", async ({ page, context }) => {
+  await serve(context);
+  await page.goto("https://evil.example/map");
+  await page.waitForTimeout(2000);
+  await expect(page.frameLocator("#viz").locator("#map")).toHaveCount(0);
+  await page.goto(`https://assistant.${DOMAIN}/foreignLink`);
+  await expect(page.frameLocator("#viz").locator("#status")).toContainText("/link", { timeout: 10000 });
+  await expect(page.frameLocator("#viz").locator("#map")).toHaveCount(0);
+});
