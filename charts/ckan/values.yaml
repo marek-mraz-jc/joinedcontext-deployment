@@ -168,8 +168,7 @@ assistantWidget: ''
 # an organization not listed frames `assistantWidget`.
 assistantWidgets: {}
 # The basemap of the dataset map (T-4639): `style`, a MapLibre style on https://tiles.{domain}
-# (T-4638), or `tiles: https://tile.openstreetmap.org/{z}/{x}/{y}.png` under OpenStreetMap's
-# tile usage policy. Empty draws the data on a plain background.
+# (T-4638). Empty draws the data on a plain background.
 mapBasemap: {}
 # The assistants page's optional cards (T-4643): `gemini: true` shows Gemini's card and guide, only
 # where the gateway's own OAuth (T-4631) answers on the api host (T-4630) and a scripted register,
