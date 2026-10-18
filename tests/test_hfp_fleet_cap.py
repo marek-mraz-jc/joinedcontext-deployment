@@ -348,12 +348,11 @@ def test_a_line_or_stop_the_space_does_not_hold_is_left_out_and_the_position_sti
     assert not any({"onRoute", "nextStop"} & set(e) for e in bento(frames, threads=1))
 
 
-def test_the_topics_are_a_fixed_list_without_the_whole_bus_fleet():
+def test_the_topics_are_the_owners_five_lines_and_never_a_whole_mode():
+    """T-4624: bus 550, tram 4, metro M1 and M2, the Suomenlinna ferry; one line per topic."""
     topics = yaml.safe_load(
         (ROOT / "components/context-gateway/seed/helsinki/helsinki-datasource-hfp.yaml").read_text()
     )["spec"]["mqtt"]["topics"]
     vp = "/hfp/v2/journey/ongoing/vp/"
-    assert [t for t in topics if not t.startswith(vp + "bus/")] == [
-        vp + f"{mode}/#" for mode in ("tram", "metro", "train", "ferry")]
-    assert all(t.startswith(vp + "bus/+/+/") and not t.startswith(vp + "bus/+/+/+") for t in topics if "/bus/" in t)
-    assert len(topics) == 8
+    assert topics == [vp + f"{mode}/+/+/{route}/#" for mode, route in
+                      [("bus", "2550"), ("tram", "1004"), ("metro", "31M1"), ("metro", "31M2"), ("ferry", "1019")]]

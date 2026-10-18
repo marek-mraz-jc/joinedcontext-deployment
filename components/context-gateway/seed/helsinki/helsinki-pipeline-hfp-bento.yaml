@@ -1,5 +1,5 @@
 # The mapping of the hsl-hfp-vehicles pipeline (PL-03): HSL vehicles from the high-frequency
-# positioning broker, buses of four trunk lines and every tram, metro, train and ferry, capped per
+# positioning broker, the five lines its DataSource names (T-4624), capped per
 # mode (PL-22, T-3893): 30 buses, 30 trams, 10 metros, 15 trains, 5 ferries at a time. An
 # admitted vehicle reports about once a second; one report in thirty seconds of it is written
 # (T-4624: a write a second per vehicle, 811 upserts in two minutes, held every broker connection
