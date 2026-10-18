@@ -1509,16 +1509,15 @@ def test_the_assistants_page_names_the_installation_s_own_hub_and_assistants_in_
     hub = f"https://{domain}/api/mcp"
     assert page["mcp"]["url"] == hub and name in page["lead"] and "{" not in page["lead"]
     cards = {card["id"]: card for card in page["cards"]}
-    assert [card["id"] for card in page["cards"]] == ["chatgpt", "claude", "gemini", "grok"]
-    # T-4628: the two stores are the only links; the Gemini and Grok apps take no connectors.
+    # T-4634: Gemini's app needs OAuth (T-4631), so it has no card until the gateway offers it.
+    assert [card["id"] for card in page["cards"]] == ["chatgpt", "claude", "grok"]
     assert cards["chatgpt"]["open"] == theme.CHATGPT_PLUGINS == "https://chatgpt.com/plugins"
     assert cards["claude"]["open"] == theme.CLAUDE_CONNECTORS == "https://claude.ai/customize/connectors"
     assert cards["chatgpt"]["open_label"] == "Add to ChatGPT"
-    for id in ("gemini", "grok"):
-        assert cards[id]["soon"] and "open" not in cards[id], id
+    assert cards["grok"]["open"] == theme.GROK_CONNECTORS == "https://grok.com/connectors"
     assert page["gemini"] == f"gemini mcp add --transport http joinedcontext {hub}"
     for card in page["cards"]:
-        assert set(card) <= {"id", "name", "logo", "open", "open_label", "soon"}, card
+        assert set(card) == {"id", "name", "logo", "open", "open_label"}, card
         assert (THEME / ("templates__" + card["logo"].replace("/", "__"))).is_file(), card["logo"]
         assert "token" not in json.dumps(card).lower()
 
@@ -1531,9 +1530,9 @@ def test_the_assistants_page_is_left_empty_without_a_plain_domain(theme):
 def test_the_assistants_page_reads_in_slovak(theme):
     theme.page.lang = "sk"
     page = theme.jc_assistants()
-    assert [card.get("open_label") for card in page["cards"]] == ["Pridať do ChatGPT", "Pridať do Claude", None, None]
+    assert [card["open_label"] for card in page["cards"]] == ["Pridať do ChatGPT", "Pridať do Claude", "Pridať do Grok"]
     assert theme.jc_t("coming_soon") == "Čoskoro" and theme.jc_t("for_developers") == "Pre vývojárov"
-    assert theme.jc_t("store_address") == "V obchode zvoľte Pridať vlastný konektor a vložte túto adresu:"
+    assert theme.jc_t("store_address") == "V ChatGPT, Claude alebo Grok pridajte vlastný konektor a vložte túto adresu:"
     for key in ("assistants", "assistants_lead", "add_to", "store_address", "for_developers", "coming_soon",
                 "copy", "gemini_1", "any_client"):
         assert set(theme.STRINGS[key]) == {"en", "sk", "cs", "de"}, key
@@ -1545,8 +1544,9 @@ def test_the_assistants_page_offers_each_card_s_own_action_and_links_nowhere_els
     template = (THEME / "templates__jc__assistants.html").read_text()
     assert "{% set page = h.jc_assistants() %}" in template
     assert 'href="{{ card.open }}" target="_blank" rel="noopener noreferrer"' in template and template.count("href=") == 2
+    # T-4634: no card says "Coming soon"; the page's empty state alone does.
+    assert template.count("coming_soon") == 1 and "{% if card.soon %}" not in template
     assert template.count("data-jc-copy=") == 1 and 'data-jc-copy="jc-store-url"' in template
-    assert "{% if card.soon %}" in template and "h.jc_t('coming_soon')" in template
     assert "<img" not in template and "<script>" not in template
 
 
@@ -1599,18 +1599,14 @@ def test_each_assistant_card_is_its_logo_its_name_and_at_most_one_link(theme):
     assert "built-in method" not in html and "0x" not in html
     blocks = re.findall(r'<li class="jc-assistant-card">(.*?)</li>', html, re.S)
     cards = {re.search(r'id="jc-card-(\w+)"', block).group(1): block for block in blocks}
-    assert list(cards) == ["chatgpt", "claude", "gemini", "grok"]
-    stores = {"chatgpt": theme.CHATGPT_PLUGINS, "claude": theme.CLAUDE_CONNECTORS}
+    assert list(cards) == ["chatgpt", "claude", "grok"]
+    stores = {"chatgpt": theme.CHATGPT_PLUGINS, "claude": theme.CLAUDE_CONNECTORS, "grok": theme.GROK_CONNECTORS}
     for id, card in cards.items():
         heading = re.search(r"<h2[^>]*>(.*?)</h2>", card, re.S).group(1)
         assert heading.startswith('<svg class="jc-ai-logo" width="32" height="32" aria-hidden="true"'), id
-        assert re.sub(r"<svg.*</svg>", "", heading, flags=re.S).strip() in {"ChatGPT", "Claude", "Gemini", "Grok"}, id
-        links = re.findall(r'<a [^>]*href="([^"]*)"[^>]*>', card)
-        assert links == ([stores[id]] if id in stores else []), id
-        if id in stores:
-            assert 'target="_blank" rel="noopener noreferrer"' in card, id
-        else:
-            assert '<p class="jc-soon">Coming soon</p>' in card, id
+        assert re.sub(r"<svg.*</svg>", "", heading, flags=re.S).strip() in {"ChatGPT", "Claude", "Grok"}, id
+        assert re.findall(r'<a [^>]*href="([^"]*)"[^>]*>', card) == [stores[id]], id
+        assert 'target="_blank" rel="noopener noreferrer"' in card and "Coming soon" not in card, id
         assert "jc-code" not in card and "<button" not in card and "<pre" not in card, id
     # The address once for the page, as text with one copy button; nothing technical above the fold.
     hub = "https://dev.example/api/mcp"
@@ -1635,9 +1631,9 @@ def test_the_developers_fold_holds_every_command_and_stays_closed():
 
 def test_the_card_logos_are_the_makers_own_in_their_colours_and_safe():
     sources = {"chatgpt": "https://developers.openai.com/favicon.svg", "claude": "https://claude.ai/favicon.svg",
-               "gemini": "https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d4735304ff6292a690345.svg",
                "grok": "https://grok.com/images/favicon.svg"}
-    colours = {"chatgpt": "#0080F7", "claude": "#D97757", "gemini": "#1BA1E3", "grok": "#050505"}
+    colours = {"chatgpt": "#0080F7", "claude": "#D97757", "grok": "#050505"}
+    assert sorted(p.name for p in THEME.glob("templates__jc__card-*.svg")) == [f"templates__jc__card-{id}.svg" for id in sorted(sources)]
     for id, source in sources.items():
         comment, svg = (THEME / f"templates__jc__card-{id}.svg").read_text().split("-#}\n", 1)
         assert source in comment and "fetched 2026-10-18" in comment, id
@@ -1654,11 +1650,10 @@ def test_the_card_logos_are_the_makers_own_in_their_colours_and_safe():
     assert not re.search(r"(^|\n)\s*\.jc-ai-logo \{", css)
 
 
-def test_the_cards_sit_four_two_or_one_to_a_row():
+def test_the_cards_sit_in_one_row_or_as_many_as_fit():
     css = (THEME / "public__jc-theme.css").read_text()
-    assert "display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 1rem; }" in css
-    assert "@media (max-width: 64rem) { .jc-assistant-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }" in css
-    assert "@media (max-width: 30rem) { .jc-assistant-cards { grid-template-columns: minmax(0, 1fr); } }" in css
+    assert "display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); grid-auto-rows: 1fr; gap: 1rem; }" in css
+    assert ".jc-soon" not in css
     assert ".jc-card-link::after { content: \"\"; position: absolute; inset: 0; border-radius: inherit; }" in css
     assert ".jc-assistant-card:has(.jc-card-link:focus-visible) { outline: 3px solid var(--jc-accent); outline-offset: 2px; }" in css
 
