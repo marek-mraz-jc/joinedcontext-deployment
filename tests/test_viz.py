@@ -120,3 +120,11 @@ def test_the_refusal_list_and_the_host_page_logic_under_node():
     assert len(tests) == 3
     run = subprocess.run(["node", "--test", *tests], capture_output=True, text=True, timeout=120)
     assert run.returncode == 0, run.stdout[-4000:] + run.stderr[-2000:]
+
+
+def test_the_assistant_draws_its_maps_and_charts_on_this_host(dev):
+    # T-4657: with the viz component on, the assistant knows the renderer's origin, so its data
+    # answers get maps and charts and its widget page may frame this host alone.
+    pod = one(dev, "Deployment", "jc-assistant")["spec"]["template"]["spec"]
+    env = {e["name"]: e.get("value") for c in pod["containers"] for e in c.get("env", [])}
+    assert env["JC_ASSISTANT_VIZ_URL"] == f"https://{HOST}"
