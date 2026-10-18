@@ -349,3 +349,47 @@ def test_the_status_script_lists_the_failed_first_and_exits_red_until_all_are_gr
     assert rows[2].split("\t")[:4] == ["dev-aa", "Synced", "Healthy", "abcdef1"] and rows[-1] == "NOT GREEN"
     green = status([app("dev-aa")])
     assert green.returncode == 0 and "NOT GREEN" not in green.stdout
+
+
+def _pin_images():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("pin_images", ROOT / "scripts/pin-images.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_a_platform_pin_moves_every_block_of_that_image_and_no_other():
+    pin = _pin_images().pin
+    new = "sha256:" + "e" * 64
+    gateway = (ROOT / "components/context-gateway/images.yaml").read_text()
+    text, n = pin(gateway, "joinedcontext-platform", new)
+    assert n == 1
+    blocks = yaml.safe_load(text)["context-gateway"]
+    assert blocks["gateway"]["digest"] == new
+    assert blocks["checkouts"]["digest"] != new and blocks["git-sync"]["digest"] != new
+    text, n = pin((ROOT / "components/wasm-host/images.yaml").read_text(), "joinedcontext-platform", new)
+    assert n == 3 and all(b["digest"] == new for b in yaml.safe_load(text)["wasm-host"].values())
+    # Antares is a hand pin: no source the script knows names it.
+    assert not any("antares" in image for _, images in _pin_images().SOURCES.values() for image in images)
+
+
+def test_the_pin_waits_for_a_green_ci_and_refuses_an_image_image_yml_did_not_sign(monkeypatch, capsys):
+    module = _pin_images()
+    commit = "a" * 40
+    calls = []
+
+    def fake(*args, check=True):
+        calls.append(args[0])
+        out = {"git": f"{commit}\trefs/heads/main\n", "gh": json.dumps(fake.ci),
+               "docker": "Name: x\nMediaType: y\nDigest:    sha256:" + "b" * 64 + "\n"}.get(args[0], "")
+        return subprocess.CompletedProcess(args, 0 if args[0] != "cosign" else fake.cosign, out, "")
+
+    monkeypatch.setattr(module, "run", fake)
+    monkeypatch.setattr(module, "pin_files", lambda pins: pytest.fail("pinned"))
+    fake.ci, fake.cosign = [{"status": "in_progress", "conclusion": ""}], 0
+    module.main("platform")
+    assert "docker" not in calls and "ci is not green" in capsys.readouterr().err
+    fake.ci, fake.cosign = [{"status": "completed", "conclusion": "success"}], 1
+    with pytest.raises(SystemExit, match="no signature"):
+        module.main("platform")
