@@ -73,3 +73,14 @@ def test_every_recorded_stop_lies_in_the_area():
     # Rautatientori lies inside, Tampere does not: the box is HSL's, not Finland's.
     assert min_lon <= 24.94 <= max_lon and min_lat <= 60.17 <= max_lat
     assert not (min_lat <= 61.5 <= max_lat)
+
+
+def test_bike_stations_record_a_change_and_an_hourly_heartbeat_and_no_slot_is_a_count():
+    """T-4669 (ADR-N-054 2.2, DM-110): onChange fits levels only, never a quantity per interval."""
+    (bikes,) = [rule for rule in helsinki()["retention"] if rule["entityType"] == "BikeHireDockingStation"]
+    assert bikes == {"entityType": "BikeHireDockingStation", "history": "P30D", "record": "onChange", "heartbeat": "PT1H"}
+    model = yaml.safe_load((HELSINKI / "helsinki.linkml.yaml").read_text())
+    slots = model["classes"]["BikeHireDockingStation"]["slots"]
+    counted = [slot for slot in slots
+               if (model.get("slots", {}).get(slot) or {}).get("annotations", {}).get("quantity") == "perInterval"]
+    assert counted == []
