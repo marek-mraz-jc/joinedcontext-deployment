@@ -57,5 +57,7 @@ context-broker:
     # Antares dev ac45ec0 (train 20261018-0230, T-4549): a byte budget over the delivery lanes
     # (ANTARES_DELIVERY_LANE_BYTES, default 256 MiB), the fix for the OOMKills at 1536Mi on dev
     # 2026-10-17/18. No migration over 7ff20d6.
-    tag: 'ac45ec0'
-    digest: 'sha256:c32c2197fe49350f6c5faece6d3a58d408b827361e3a4f7412b23b43ce737b9e'
+    # Antares dev 6fded37 (train 20261018-0325, T-4480 T-4464 T-4486 T-4507): MCP unit labels, per-type
+    # query guide, temporal dedup on write (ANTARES_TEMPORAL_DEDUP, default on). No migration over ac45ec0.
+    tag: '6fded37'
+    digest: 'sha256:0dbbb9e52b387d43f47f8150178d3b7f07e6a4d0803fedf74eb729c18d594408'
