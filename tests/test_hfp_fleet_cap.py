@@ -143,7 +143,7 @@ def test_a_report_without_a_gps_fix_is_dropped_and_a_missing_speed_is_left_out()
     """
     def report(vehicle: int, **fields) -> str:
         vp = {"oper": 22, "veh": vehicle, "long": 24.94, "lat": 60.17, "spd": 8.5, "hdg": 90,
-              "route": "2510", "tst": "2026-10-06T17:26:13.575Z", "loc": "GPS"}
+              "route": "2510", "tst": "2026-10-06T17:26:30.575Z", "loc": "GPS"}
         vp.update(fields)
         return json.dumps({"topic": topic("bus", 22, vehicle, "2510"), "VP": vp})
 
@@ -217,10 +217,11 @@ def test_a_full_fleet_and_a_repeat_count_no_processor_error():
 
 
 @requires_docker
-def test_every_frame_of_an_admitted_bus_is_a_write():
-    """T-3906: an admitted bus writes every position report it sends, about one a second, so the
-    map follows the feed; the cap on how many buses are admitted is what bounds the load. A
-    15-second throttle once made the map move in jumps."""
+def test_an_admitted_bus_writes_one_report_in_thirty_seconds():
+    """T-4624: a write a second per vehicle (T-3906) held every broker connection and starved the
+    visitors' reads, so one report in thirty seconds is written: a minute and a second of reports,
+    one a second, are three writes, those stamped :00 and :30. A report without a readable time is
+    none of them."""
     config = {
         "input": {"stdin": {"scanner": {"lines": {}}}},
         "pipeline": pipeline(),
@@ -228,11 +229,12 @@ def test_every_frame_of_an_admitted_bus_is_a_write():
         "output": {"stdout": {"codec": "lines"}},
         "logger": {"level": "error"},
     }
+    stamps = [f"2026-10-12T08:{i // 60:02d}:{i % 60:02d}.{i * 7 % 1000:03d}Z" for i in range(61)]
     frames = [
         json.dumps({"topic": topic("bus", 22, 7, "2550"), "VP": {
             "oper": 22, "veh": 7, "long": 24.94 + i / 1000, "lat": 60.17, "spd": 8.5, "hdg": 90,
-            "route": "2550", "tst": f"2026-10-12T08:00:0{i}.000Z"}})
-        for i in range(10)
+            "route": "2550", "tst": tst}})
+        for i, tst in enumerate(stamps + ["", "soon"])
     ]
     result = subprocess.run(
         ["docker", "run", "--rm", "-i", "-e", "JC_ORG_DOMAIN=hel.fi", "-e", "JC_SPACE=helsinki",
@@ -242,9 +244,7 @@ def test_every_frame_of_an_admitted_bus_is_a_write():
     )
     assert result.returncode == 0, result.stderr
     written = [json.loads(line) for line in result.stdout.splitlines() if line.strip()]
-    assert sorted(e["location"]["observedAt"] for e in written) == [
-        f"2026-10-12T08:00:0{i}.000Z" for i in range(10)
-    ], written
+    assert sorted(e["location"]["observedAt"] for e in written) == [stamps[0], stamps[30], stamps[60]], written
     assert {e["fleetVehicleId"]["value"] for e in written} == {"22-7"}
 
 

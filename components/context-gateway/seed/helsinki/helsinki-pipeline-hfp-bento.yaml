@@ -1,8 +1,9 @@
 # The mapping of the hsl-hfp-vehicles pipeline (PL-03): HSL vehicles from the high-frequency
 # positioning broker, buses of four trunk lines and every tram, metro, train and ferry, capped per
-# mode (PL-22, T-3893): 30 buses, 30 trams, 10 metros, 15 trains, 5 ferries at a time. Every
-# position report of an admitted vehicle, about one a second, is one write and one notification
-# (T-3906); when the load budget is exceeded, the caps go down, never the rate. The
+# mode (PL-22, T-3893): 30 buses, 30 trams, 10 metros, 15 trains, 5 ferries at a time. An
+# admitted vehicle reports about once a second; one report in thirty seconds of it is written
+# (T-4624: a write a second per vehicle, 811 upserts in two minutes, held every broker connection
+# and starved the visitors' reads). The
 # reconciler renders the MQTT input of the hsl-hfp DataSource in front and the endpoint upsert
 # after (PL-39, PL-16); the `fleet` cache is the runner's resource.
 
@@ -116,6 +117,15 @@ pipeline:
         result_map: 'meta slot = content().string()'
     - mapping: |
         root = if meta("slot").or("0").re_match("^[1-9][0-9]*$") { this } else { deleted() }
+
+    # One report in thirty seconds per vehicle (T-4624): the one stamped on second :00 or :30. A
+    # vehicle reports about once a second, so each hits both, with no state to keep; one that
+    # misses a few is still refreshed well inside the five minutes its space keeps it. Every
+    # frame above has already refreshed its slot.
+    # ponytail: no "only when it moved" test, which needs the last position per vehicle in a
+    # cache; a parked bus is one write in thirty seconds.
+    - mapping: |
+        root = if this.tst.or("").string().slice(17, 19).number().catch(1) % 30 == 0 { this } else { deleted() }
 
     # onRoute and nextStop name the GTFS line and stop by HSL's ids (T-3890), and only ones the
     # daily GTFS read wrote into the space: the view refuses a whole Vehicle whose relationship

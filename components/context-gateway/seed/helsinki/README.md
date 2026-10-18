@@ -49,7 +49,7 @@ one `GET` each from the sandbox; the sizes are bytes received, the times the who
 | GTFS-RT trip updates | `https://realtime.hsl.fi/realtime/trip-updates/v2/hsl` | CC BY 4.0 | 7 630 B (night) | 0.26 s | continuous | no | yes, T-3891: departures for a curated stop set only, as a property of those stops; no entity per trip |
 | GTFS-RT vehicle positions | `https://realtime.hsl.fi/realtime/vehicle-positions/v2/hsl` | CC BY 4.0 | 1 231 B (night) | 0.26 s | continuous | no | no: HFP below carries the same positions with less work; T-3893 widens HFP to every mode inside the vehicle cap |
 | GTFS-RT service alerts | `https://realtime.hsl.fi/realtime/service-alerts/v2/hsl` | CC BY 4.0 | 21 615 B | 0.32 s | on change | no | yes, T-3892: one Alert per HSL alert, beside the Digitraffic ones |
-| HFP (MQTT) | `mqtts://mqtt.hsl.fi:8883/hfp/v2/journey/ongoing/vp/#` | CC BY 4.0 | a stream, not a document: not measured by `GET` | — | one `vp` message a second per vehicle (HSL HFP documentation) | no | yes: 4 bus trunk lines and every tram, metro, train and ferry, capped per mode (T-3893, below); every position of an admitted vehicle written (T-3906) |
+| HFP (MQTT) | `mqtts://mqtt.hsl.fi:8883/hfp/v2/journey/ongoing/vp/#` | CC BY 4.0 | a stream, not a document: not measured by `GET` | — | one `vp` message a second per vehicle (HSL HFP documentation) | no | yes: 4 bus trunk lines and every tram, metro, train and ferry, capped per mode (T-3893, below); one position in thirty seconds of an admitted vehicle written (T-4624) |
 | Park and ride (LIIPI) | `https://parking.fintraffic.fi/api/v1` (`/facilities`, `/utilizations`, `/hubs`); `p.hsl.fi` is gone, Fintraffic took the service over in May 2024 | CC BY 4.0 | facilities of the HSL area 1 007 120 B (545); utilisations 6 191 B (39 rows, the whole country) | — | utilisations live | no | yes, T-3894: one OffStreetParking per facility, daily; free spaces every 5 min |
 | City bikes (GBFS) | the `citybikes-gbfs` pipelines | CC BY 4.0 | in place | — | 1 min | no | in place |
 | Digitransit GraphQL | `https://api.digitransit.fi/routing/v2/hsl/gtfs/v1` | CC BY 4.0 | `401` without a key | 0.09 s | live | **yes** | Owner action: a Digitransit subscription key, never committed; nothing waits for it, because GTFS and GTFS-RT above carry the same data |
@@ -125,9 +125,9 @@ Bento's baseline of 96 MB, so about 44 MB for the moment each refresh holds it.
 `vp/train/#`, `vp/ferry/#`; never `vp/#` or `vp/bus/#`. `hsl-hfp-vehicles` admits 30 buses, 30
 trams, 10 metros, 15 trains and 5 ferries at a time (90 in all), each mode in its own slots of the
 `fleet` cache, so a full mode never takes another's; a vehicle silent for five minutes frees its
-slot. Every frame of an admitted vehicle is a write, about one a second (T-3906): at most 90
-writes a second against 30 before. When the load budget is exceeded, lower the caps in the
-mapping, not the rate.
+slot. One report of an admitted vehicle in thirty seconds is a write, the one stamped :00 or :30
+(T-4624): a write a second per vehicle (T-3906) held every broker connection and starved the
+visitors' reads. At most 90 writes in thirty seconds; a vehicle keeps an hour of positions.
 
 A Vehicle now says its `transportMode`, the Smart Data Models `vehicleType` (bus, tram,
 passengerVessel, other), `delay` in seconds behind the timetable (HSL's `dl` with the sign
