@@ -153,6 +153,8 @@ datasets:
       range: string
     name:
       column: title
+      otherwise:
+      - slug
       range: string
     url:
       column: link
