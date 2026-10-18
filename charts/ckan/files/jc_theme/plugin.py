@@ -322,6 +322,8 @@ STRINGS = {
         "de": "Die Karte konnte ihre Daten nicht laden; die Tabelle oben funktioniert.",
     },
     "map_close": {"en": "Close", "sk": "Zavrieť", "cs": "Zavřít", "de": "Schließen"},
+    # The attributes after a feature's key ones (T-4672).
+    "map_more": {"en": "More", "sk": "Viac", "cs": "Více", "de": "Mehr"},
     "map_loading": {"en": "Loading the map's data…", "sk": "Načítavam údaje mapy…", "cs": "Načítám data mapy…", "de": "Die Kartendaten werden geladen…"},
     "map_panel": {"en": "Selected place", "sk": "Vybrané miesto", "cs": "Vybrané místo", "de": "Ausgewählter Ort"},
     "map_length": {"en": "Length", "sk": "Dĺžka", "cs": "Délka", "de": "Länge"},
@@ -1456,6 +1458,49 @@ def _basemap():
 BASEMAP = _basemap()
 
 
+def _leaf(column):
+    """The innermost named part of a DataStore column: `streetAddress` of
+    `address.value.streetAddress`, `name` of `name.languageMap.sk` (jc-core's field_order::leaf)."""
+    parts = [part.split("[")[0] for part in column.split(".")]
+    found = parts[0]
+    skip = False
+    for part in parts[1:]:
+        if skip:
+            skip = False
+        elif part == "languageMap":
+            skip = True
+        elif part not in ("value", "object", ""):
+            found = part
+    return found
+
+
+def _display_fields(resource_id):
+    """The order, labels and key attributes the publisher wrote into a DataStore table's data
+    dictionary (T-4672, DM-98…DM-101): one entry per attribute in the table's column order, `a`
+    the attribute, `l` its labels per language, `s` whether it is a key attribute. None when the
+    DataStore does not answer or the table carries none."""
+    try:
+        fields = toolkit.get_action("datastore_search")({}, {"resource_id": resource_id, "limit": 0}).get("fields") or []
+    except (toolkit.ObjectNotFound, toolkit.NotAuthorized, toolkit.ValidationError):
+        return None
+    out = []
+    for field in fields:
+        column = str(field.get("id") or "")
+        attribute = column.split(".")[0].split("[")[0]
+        if not attribute or attribute.startswith("_") or attribute == "entity_id":
+            continue
+        info = field.get("info") if isinstance(field.get("info"), dict) else {}
+        entry = next((e for e in out if e["a"] == attribute), None)
+        if entry is None:
+            entry = {"a": attribute, "l": {}, "s": False}
+            out.append(entry)
+        labels = info.get("labels")
+        if _leaf(column) == attribute and isinstance(labels, dict):
+            entry["l"] = {str(k): str(v) for k, v in labels.items() if isinstance(v, str)}
+        entry["s"] = entry["s"] or info.get("summary") is True
+    return out if any(e["l"] or e["s"] for e in out) else None
+
+
 def jc_map(pkg, resource_id=None):
     """What the dataset's map reads (T-4639): per DataStore table, the OGC API Features items of
     its entity type on the dataset's own Endpoint, with the collection's schema for units, or
@@ -1489,11 +1534,15 @@ def jc_map(pkg, resource_id=None):
                 collection = path[:-len("/items")]
             else:
                 collection = "%s/collections/%s" % (path, kind_type)
-            layers.append({
+            layer = {
                 "type": kind_type,
                 "items": urlunsplit(parts._replace(path=collection + "/items")),
                 "schema": urlunsplit(parts._replace(path=collection + "/schema", query="")),
-            })
+            }
+            fields = _display_fields(resource.get("id"))
+            if fields:
+                layer["fields"] = fields
+            layers.append(layer)
             break
     if not layers:
         return None
@@ -1503,13 +1552,13 @@ def jc_map(pkg, resource_id=None):
         "basemap": BASEMAP,
         "lib": MAPLIBRE + "maplibre-gl.mjs",
         "pmtiles": PMTILES if BASEMAP.get("style") else "",
-        "fields": "/jc-field-order.json",
+        "enums": "/jc-enums.json",
         "lang": _language(),
         "title": pkg.get("title") or name,
         "dataset": toolkit.url_for("dataset.read", id=name, _external=True),
         "embed": toolkit.url_for("jc_pages.map", id=name, _external=True),
         "t": {key: jc_t(key) for key in ("map_cap", "map_failed", "map_loading", "map_close", "map_panel",
-                                          "map_length", "map_area", "map_keys", "map_title")},
+                                          "map_length", "map_area", "map_keys", "map_title", "map_more")},
     }
 
 
