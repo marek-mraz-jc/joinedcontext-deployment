@@ -198,6 +198,10 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "Grafana signs everyone in through the realm; anonymous access and the login form are off",
     },
+    "argocd": {
+        "reach": UPSTREAM, "cacheable": False, "framing": "DENY",
+        "why": "Argo CD verifies every token itself; login is the realm's PKCE flow, anonymous access and the local admin are off (ADR-N-056 §2.8)",
+    },
     "ckan": {
         "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "an open-data catalogue is public reading; writing is CKAN's own session",

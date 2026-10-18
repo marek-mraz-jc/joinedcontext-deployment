@@ -30,8 +30,11 @@ Two documents, two origins of trust:
   feature nearest the middle.
 
 The Vega, MapLibre 6.14.0 and pmtiles 4.5.0 builds are the npm releases byte for byte
-(`charts/renderer/files/vendor/SHA256SUMS`), one ConfigMap each, served from this host: no CDN.
-MapLibre's two ES modules ride gzipped (`binaryData`), and nginx serves them as they are
+(`images/viz/vendor/SHA256SUMS`), served from this host: no CDN. They are baked into the image
+`ghcr.io/<owner>/joinedcontext-viz` (`images/viz/Dockerfile`, which checks the sums at build time;
+built and signed by `.github/workflows/image-viz.yml`), because as chart files they took the Helm
+release past the 1 MiB its Secret holds (T-4657). The image is pinned by digest in `images.yaml`.
+MapLibre's two ES modules are stored gzipped, and nginx serves them as they are
 (`gzip_static always`, `gunzip on`).
 
 Tests: `tests/test_viz.py` (render, headers, checksums, and `node --test` on

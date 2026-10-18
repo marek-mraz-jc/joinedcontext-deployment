@@ -119,6 +119,30 @@ classes:
       - derivedFrom
       - computedBy
       - updatedAt
+    slot_usage:
+      name:
+        rank: 1
+        annotations:
+          summary: true
+          label: { tag: label, value: { sk: "Názov", cs: "Název", fi: "Nimi", en: "Name" } }
+      currentValue:
+        rank: 2
+        annotations:
+          summary: true
+          label: { tag: label, value: { sk: "Hodnota", cs: "Hodnota", fi: "Arvo", en: "Value" } }
+      calculationPeriod:
+        rank: 3
+        annotations:
+          summary: true
+          label: { tag: label, value: { sk: "Obdobie", cs: "Období", fi: "Jakso", en: "Period" } }
+      updatedAt:
+        rank: 4
+        annotations:
+          summary: true
+          label: { tag: label, value: { sk: "Aktualizované", cs: "Aktualizováno", fi: "Päivitetty", en: "Updated" } }
+      calculationFormula:
+        annotations:
+          label: { tag: label, value: { sk: "Výpočet", cs: "Výpočet", fi: "Laskentakaava", en: "Formula" } }
 
   CalculationPeriod:
     class_uri: jc:CalculationPeriod

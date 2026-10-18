@@ -21,7 +21,7 @@ jobs:
 ```
 
 `reusable-container-scan.yml` and `reusable-container-sign.yml` are called by nothing today: each image lane
-(`image.yml` in `joinedcontext-platform` and `joinedcontext-portal`, `image-ckan.yml` here) carries the Trivy scan
+(`image.yml` in `joinedcontext-platform` and `joinedcontext-portal`, `image-ckan.yml` and `image-viz.yml` here) carries the Trivy scan
 and the `cosign` signature inline, next to the build step that produced the digest they read. They
 are kept as the building blocks of a component image lane that does not exist yet; delete them only together, and
 only once nothing is meant to grow into that lane (T-2415).

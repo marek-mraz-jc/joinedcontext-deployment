@@ -4,6 +4,9 @@
 viz:
   renderer:
     # Static files only, as uid 101, writing /tmp and its cache: the image basemap serves with.
+    # Next pin: `ghcr.io/marek-mraz-jc/joinedcontext-viz:1.30.4`, this image plus the vendored
+    # Vega and MapLibre builds (`images/viz/`, T-4657), with the digest `image-viz.yml` writes to
+    # its run summary. Until then the pages load but /vendor/ answers 404, so no chart or map draws.
     server:
       repository: 'docker.io/nginxinc/nginx-unprivileged'
       tag: '1.30.4-alpine-slim'

@@ -43,7 +43,6 @@ spec:
           volumeMounts:
             - {name: config, mountPath: /etc/nginx/conf.d/default.conf, subPath: default.conf, readOnly: true}
             - {name: site, mountPath: /srv/site, readOnly: true}
-            - {name: vendor, mountPath: /srv/vendor, readOnly: true}
             - {name: tmp, mountPath: /tmp}
             - {name: cache, mountPath: /var/cache/nginx}
       volumes:
@@ -53,13 +52,6 @@ spec:
         - name: site
           configMap:
             name: {{ include "renderer.fullname" . }}-site
-        - name: vendor
-          projected:
-            sources:
-              {{- range $path, $_ := .Files.Glob "files/vendor/*.{js,css,gz}" }}
-              - configMap:
-                  name: {{ include "renderer.fullname" $ }}-{{ base $path | trimSuffix ".min.js" | replace "." "-" }}
-              {{- end }}
         - name: tmp
           emptyDir: {}
         - name: cache
