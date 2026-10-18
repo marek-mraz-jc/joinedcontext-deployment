@@ -1318,6 +1318,7 @@ def jc_previews(pkg):
 # low-traffic preview with attribution. Anything else is no basemap: a map of the data alone.
 OSM_TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
 MAPLIBRE = "/maplibre-gl-6.14.0/"
+MAP_CSP = "frame-ancestors *; object-src 'none'; base-uri 'self'"
 VENDOR = "/srv/app/vendor"
 
 
@@ -1397,7 +1398,8 @@ def jc_map(pkg, resource_id=None):
 
 def jc_map_page(id, resource_id=None):
     """The map of one dataset as a page of its own, for a site to frame (T-4639): no header,
-    no footer, no form; the edge lets any site frame /map/ and strips its cookie."""
+    no footer, no form. The page names its own policy, any ancestor, as the upstream owns its
+    CSP (OPS-34); the edge strips the cookie."""
     try:
         pkg = toolkit.get_action("package_show")({}, {"id": id})
     except (toolkit.ObjectNotFound, toolkit.NotAuthorized):
@@ -1405,7 +1407,8 @@ def jc_map_page(id, resource_id=None):
     config = jc_map(pkg, resource_id)
     if not config:
         return toolkit.abort(404)
-    return toolkit.render("jc/map.html", {"pkg": pkg, "jc_map_config": config})
+    page = toolkit.render("jc/map.html", {"pkg": pkg, "jc_map_config": config})
+    return page, 200, {"Content-Security-Policy": MAP_CSP}
 
 
 def jc_total(previews):

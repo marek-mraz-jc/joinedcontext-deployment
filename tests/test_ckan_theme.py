@@ -1958,16 +1958,16 @@ def test_the_map_page_is_a_404_for_an_unknown_or_unmapped_dataset(mapped):
     with pytest.raises(Abort):
         mapped.jc_map_page("empty")
     mapped.page.actions["package_show"] = lambda d: MAP_PKG
-    template, extra = mapped.jc_map_page("pocasie", "w")
+    (template, extra), status, headers = mapped.jc_map_page("pocasie", "w")
     assert template == "jc/map.html" and extra["jc_map_config"]["layers"][0]["type"] == "WeatherObserved"
+    # The page owns its policy (OPS-34): any site may frame it, nothing else is loosened.
+    assert status == 200 and headers == {"Content-Security-Policy": "frame-ancestors *; object-src 'none'; base-uri 'self'"}
 
 
 def test_the_map_page_may_be_framed_anywhere_and_carries_no_cookie():
     plugins = yaml.safe_load((PROJECT_ROOT / "components/ckan/apisix-plugins.yaml").read_text())["ckan-map"]["plugins"]
     assert "X-Frame-Options" not in plugins["response-rewrite"]["headers"]["set"]
-    lua = "\n".join(plugins["serverless-post-function"]["functions"])
-    assert "\"frame-ancestors *; object-src 'none'; base-uri 'self'\"" in lua
-    assert 'ngx.header["Set-Cookie"] = nil' in lua
+    assert plugins["response-rewrite"]["headers"]["remove"] == ["Set-Cookie"]
     route = yaml.safe_load((PROJECT_ROOT / "components/ckan/apisix-routes.yaml").read_text())["ckan-map"]
     pattern = re.compile(route["vars"][0][2])
     for path in ("/map/pocasie", "/sk/map/pocasie", "/en_GB/map/pocasie/6c9b58e0"):

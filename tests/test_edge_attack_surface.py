@@ -208,7 +208,7 @@ ROUTE_CLASSES = {
     },
     "ckan-map": {
         "reach": UPSTREAM, "cacheable": True, "framing": FRAMED_BY_UPSTREAM,
-        "why": "a dataset's map any site may frame (T-4639): the page holds no data, no form and no session; the visitor's browser reads the Endpoint's public OGC API Features anonymously, and the edge sets frame-ancestors * and strips the session cookie",
+        "why": "a dataset's map any site may frame (T-4639): the page holds no data, no form and no session; the visitor's browser reads the Endpoint's public OGC API Features anonymously, and CKAN's page names frame-ancestors * itself while the edge strips the session cookie",
     },
     "security-txt": {
         "reach": TERMINATES, "cacheable": False, "framing": "DENY",

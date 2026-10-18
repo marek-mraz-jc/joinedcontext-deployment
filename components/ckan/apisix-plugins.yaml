@@ -119,16 +119,20 @@ ckan-map:
           Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
           X-Content-Type-Options: "nosniff"
           Referrer-Policy: "strict-origin-when-cross-origin"
-    # The map page sets no policy of its own, so the edge's is the page's: any ancestor, no
-    # plugin content, no base change; and CKAN's session cookie never reaches the framing site.
+        # CKAN's session cookie never reaches the site that frames the map.
+        remove:
+          - Set-Cookie
+    # The map page names its own frame-ancestors * (jc_map_page); an answer without a policy,
+    # a 404 say, gets the DENY baseline (OPS-34).
     serverless-post-function:
       phase: header_filter
       functions:
         - >-
           return function()
-            ngx.header["Content-Security-Policy"] =
-              "frame-ancestors *; object-src 'none'; base-uri 'self'"
-            ngx.header["Set-Cookie"] = nil
+            if ngx.header["Content-Security-Policy"] == nil then
+              ngx.header["Content-Security-Policy"] =
+                "frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
+            end
           end
 
 ckan-redirect:
