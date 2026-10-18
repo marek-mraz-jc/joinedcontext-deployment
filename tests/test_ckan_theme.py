@@ -314,12 +314,14 @@ def test_the_mcp_panel_is_left_out_without_a_plain_domain(theme, domain):
     assert theme.jc_mcp_install() is None
 
 
-def test_the_mcp_panel_is_on_the_home_page_and_every_dataset_page_with_its_copy_script():
+def test_the_mcp_panel_is_on_the_assistants_page_and_every_dataset_page_with_its_copy_script():
     panel = (THEME / "templates__snippets__jc_mcp_install.html").read_text()
-    for page in ("templates__home__index.html", "templates__package__read.html"):
+    for page in ("templates__jc__assistants.html", "templates__package__read.html"):
         text = (THEME / page).read_text()
         assert "{% snippet 'snippets/jc_mcp_install.html'" in text, page
         assert "url_for_static('/jc-copy.js')" in text, page
+    # The home page keeps the corner button only (T-4585).
+    assert "jc_mcp_install.html" not in (THEME / "templates__home__index.html").read_text()
     # One status line per page: the live box's when the dataset page has one.
     assert '{% if not live %}<p class="visually-hidden" role="status"' in panel
     assert panel.count("{{ copy('") == 3
@@ -336,10 +338,8 @@ def test_the_mcp_card_puts_claude_first_and_keeps_its_code_whole():
     css = (THEME / "public__jc-theme.css").read_text()
     assert ".jc-live .jc-code pre { white-space: pre; overflow-wrap: normal; overflow-x: auto; }" in css
     assert ".jc-code .jc-code-url { overflow-wrap: normal; word-break: normal; }" in css
-    # The home page shows the card in the main column, where its code has room, not in the side.
-    home = (THEME / "templates__home__index.html").read_text()
-    main, side = home.index('<div class="jc-main">'), home.index('<div class="jc-side">')
-    assert main < home.index("{% snippet 'snippets/jc_mcp_install.html'") < side
+    # On /assistants the Claude card holds Claude's steps, so the block leaves them out (T-4585).
+    assert panel.index("{% if not editors_only %}\n    <div>") < panel.index("mcp_claude_ai_1") < panel.index("{% endif %}\n    <div>\n    <h3 class=\"jc-mcp-client\">{{ h.jc_t('mcp_editors') }}")
 
 
 def test_each_resource_has_its_one_action_named_for_a_screen_reader():
@@ -762,9 +762,9 @@ def test_the_assistant_leaves_the_page_room_and_takes_a_phone_s_whole_screen():
     """T-4204: the button never covers the page's last line; open on a phone, the frame is the
     screen, the page behind neither shows nor takes focus, and Escape closes it."""
     css = (THEME / "public__jc-theme.css").read_text()
-    assert "body:has(.jc-assistant) { padding-block-end: 5rem; }" in css
+    assert "body:has(.jc-corner) { padding-block-end: 5rem; }" in css
     phone = css.split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
-    assert ".jc-assistant[open] { inset: 0;" in phone
+    assert ".jc-assistant[open] { position: fixed; inset: 0;" in phone
     assert "body:has(.jc-assistant[open]) { overflow: hidden; }" in phone
     # The frame takes its size from the screen, below the 3.25rem bar (T-4248).
     assert "block-size: 3.25rem;" in phone
@@ -1204,7 +1204,8 @@ def test_the_four_pages_are_routes_of_one_template_and_every_page_links_them(the
     monkeypatch.setitem(sys.modules, "flask", types.SimpleNamespace(Blueprint=Blueprint))
     theme.toolkit.render = lambda template, extra: (template, extra)
     blueprint = theme.JcThemePlugin().get_blueprint()
-    assert blueprint.name == "jc_pages" and sorted(rules) == ["/connector", "/privacy", "/support", "/terms"]
+    assert blueprint.name == "jc_pages" and sorted(rules) == ["/assistants", "/connector", "/privacy", "/support", "/terms"]
+    assert rules["/assistants"][0] == "assistants" and rules["/assistants"][1]() == ("jc/assistants.html", {})
     endpoint, view = rules["/privacy"]
     assert endpoint == "privacy" and view() == ("jc/page.html", {"jc_name": "privacy"})
     template = (THEME / "templates__jc__page.html").read_text()
@@ -1456,3 +1457,63 @@ def test_the_framed_table_has_no_developer_lines_and_room_below_desktop():
     assert "body.dt-view .resourceinfo, body.dt-view .sortinfo { display: none; }" in css
     assert "body.dt-view .dataTables_filter label::after { content: none; }" in css
     assert "clamp(27rem, calc(24rem + var(--jc-rows, 20) * 2.6rem), 34rem)" in css
+
+
+# T-4585: "Use it in your AI assistant", one page per installation and a button beside the chat's.
+@pytest.mark.parametrize("domain, name", [("data.dev.example", "Banská Bystrica otvorené dáta"), ("hel.example", "Helsinki Open Data")])
+def test_the_assistants_page_names_the_installation_s_own_hub_and_assistants_in_order(theme, tmp_path, domain, name):
+    branding = tmp_path / "branding.json"
+    branding.write_text(json.dumps({"domain": domain, "instanceName": name}))
+    theme.BRANDING = theme._load()
+    page = theme.jc_assistants()
+    hub = f"https://{domain}/api/mcp"
+    assert page["mcp"]["url"] == hub and name in page["lead"] and "{" not in page["lead"]
+    cards = {card["id"]: card for card in page["cards"]}
+    assert [card["id"] for card in page["cards"]] == ["chatgpt", "claude", "gemini", "grok"]
+    assert cards["chatgpt"]["open"] == "https://chatgpt.com/plugins" and cards["chatgpt"]["copy"] == hub
+    assert cards["claude"]["open"] == "https://claude.ai/customize/connectors" and cards["claude"]["copy"] == hub
+    assert cards["gemini"]["copy"] == f"gemini mcp add --transport http joinedcontext {hub}" and "open" not in cards["gemini"]
+    # Grok has no path today: "Coming soon", no link and nothing to copy.
+    assert cards["grok"]["soon"] and "open" not in cards["grok"] and "copy" not in cards["grok"]
+    for card in page["cards"]:
+        assert 1 <= len(card["steps"]) <= 2, card["id"]
+        assert "token" not in json.dumps(card).lower()
+
+
+def test_the_assistants_page_is_left_empty_without_a_plain_domain(theme):
+    theme.BRANDING["domain"] = "dev.example/evil"
+    assert theme.jc_assistants() is None
+
+
+def test_the_assistants_page_reads_in_slovak(theme):
+    theme.page.lang = "sk"
+    page = theme.jc_assistants()
+    assert page["cards"][0]["copy_label"] == "Kopírovať adresu" and "Čoskoro" == theme.jc_t("coming_soon")
+    for key in ("assistants", "assistants_lead", "copy_address", "copy_command", "open_settings", "coming_soon",
+                "chatgpt_1", "chatgpt_2", "claude_1", "claude_2", "gemini_1", "gemini_2", "grok_1", "any_client"):
+        assert set(theme.STRINGS[key]) >= {"en", "sk"}, key
+
+
+def test_the_assistants_page_offers_each_card_s_own_action_and_links_nowhere_else():
+    template = (THEME / "templates__jc__assistants.html").read_text()
+    assert "{% set page = h.jc_assistants() %}" in template
+    assert 'href="{{ card.open }}" rel="noopener noreferrer"' in template and template.count("href=") == 2
+    assert 'data-jc-copy="jc-copy-{{ card.id }}"' in template and '<p id="jc-copy-{{ card.id }}"' in template
+    assert "{% if card.soon %}" in template and "h.jc_t('coming_soon')" in template
+    assert "<img" not in template and "<script>" not in template
+
+
+def test_the_corner_offers_the_assistants_page_beside_the_chat_and_stacks_on_a_phone():
+    footer = (THEME / "footer.html").read_text()
+    corner = footer.split('<div class="jc-corner">', 1)[1].split("</div>", 1)[0]
+    link = corner.index('href="{{ h.url_for(\'jc_pages.assistants\') }}"')
+    assert link < corner.index('<details class="jc-assistant">')
+    assert "{{ h.jc_t('assistants_button') }}</a>" in corner
+    assert "{% set assistants = h.jc_mcp_install() %}" in footer and "{% if widget or assistants %}" in footer
+    css = (THEME / "public__jc-theme.css").read_text()
+    desktop = css.split("@media (max-width: 40rem) {", 1)[0]
+    assert ".jc-corner { position: fixed;" in desktop and "display: flex; align-items: flex-end; gap: .5rem; }" in desktop
+    assert ".jc-assistant { position: relative; }" in desktop and "min-block-size: 2.75rem;" in desktop
+    phone = css.split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
+    assert ".jc-corner { flex-direction: column; align-items: flex-end; }" in phone
+
