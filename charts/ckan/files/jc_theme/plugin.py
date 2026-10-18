@@ -344,7 +344,7 @@ STRINGS = {
     # (geminicli.com/docs/tools/mcp-server). Grok takes remote MCP only through the xAI API
     # (docs.x.ai remote MCP tools), so its card says so instead of linking anywhere.
     "assistants": {"en": "Use it in your AI assistant", "sk": "Použite v AI asistentovi", "cs": "Použijte v AI asistentovi", "de": "In Ihrem KI-Assistenten nutzen"},
-    "assistants_button": {"en": "ChatGPT / Claude / Gemini / Grok / MCP", "sk": "ChatGPT / Claude / Gemini / Grok / MCP", "cs": "ChatGPT / Claude / Gemini / Grok / MCP", "de": "ChatGPT / Claude / Gemini / Grok / MCP"},
+    "assistants_label": {"en": "Use the data in ChatGPT, Claude, Gemini or any MCP client", "sk": "Použite dáta v ChatGPT, Claude, Gemini alebo v akomkoľvek klientovi MCP", "cs": "Použijte data v ChatGPT, Claude, Gemini nebo v libovolném klientovi MCP", "de": "Die Daten in ChatGPT, Claude, Gemini oder jedem MCP-Client nutzen"},
     "assistants_lead": {
         "en": "Add {name} to the assistant you already use, and ask it about this catalogue's open data. One address covers every dataset; no account is needed.",
         "sk": "Pridajte {name} do asistenta, ktorého už používate, a pýtajte sa ho na otvorené dáta tohto katalógu. Jedna adresa pokrýva všetky datasety; účet netreba.",

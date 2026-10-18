@@ -395,7 +395,8 @@ def test_the_theme_loads_nothing_from_another_origin():
         if path.suffix == ".py":
             continue
         text = path.read_text()
-        assert not re.search(r"<script>|(src|href)=\"(https?:)?//|(?<!\w)url\(|@import", text), path.name
+        # `url(#id)` names a gradient or mask in the same SVG (the T-4613 logos) and loads nothing.
+        assert not re.search(r"<script>|(src|href)=\"(https?:)?//|(?<!\w)url\((?!#)|@import", text), path.name
 
 
 # --- T-2888: the catalogue wears the installation's look, and a failed sign-in says why ---------
@@ -1502,12 +1503,12 @@ def test_the_assistants_page_offers_each_card_s_own_action_and_links_nowhere_els
     assert "<img" not in template and "<script>" not in template
 
 
-def test_the_corner_offers_the_assistants_page_beside_the_chat_and_stacks_on_a_phone():
+def test_the_corner_offers_the_assistants_page_beside_the_chat_in_one_row():
     footer = (THEME / "footer.html").read_text()
     corner = footer.split('<div class="jc-corner">', 1)[1].split("</div>", 1)[0]
     link = corner.index('href="{{ h.url_for(\'jc_pages.assistants\') }}"')
     assert link < corner.index('<details class="jc-assistant">')
-    assert "{{ h.jc_t('assistants_button') }}</a>" in corner
+    assert "aria-label=\"{{ h.jc_t('assistants_label') }}\"" in corner
     # T-4609: the footer's light link colour no longer reaches it, and the open panel hides it.
     assert ".jc-corner .jc-assistants-link { box-sizing" in desktop_css() and ".jc-corner:has(.jc-assistant[open]) .jc-assistants-link { display: none; }" in desktop_css()
     assert "{% set assistants = h.jc_mcp_install() %}" in footer and "{% if widget or assistants %}" in footer
@@ -1516,7 +1517,9 @@ def test_the_corner_offers_the_assistants_page_beside_the_chat_and_stacks_on_a_p
     assert ".jc-corner { position: fixed;" in desktop and "display: flex; align-items: flex-end; gap: .5rem; }" in desktop
     assert ".jc-assistant { position: relative; }" in desktop and "min-block-size: 2.75rem;" in desktop
     phone = css.split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
-    assert ".jc-corner { flex-direction: column; align-items: flex-end; }" in phone
+    # T-4613: the logo pill fits beside the launcher, so a phone keeps one row and the desktop's room.
+    assert ".jc-corner { align-items: center; }" in phone and "flex-direction: column" not in phone.split(".jc-assistant[open]")[0]
+    assert "padding-block-end: 8.5rem" not in phone
 
 
 
@@ -1561,8 +1564,46 @@ def test_each_assistant_card_shows_its_own_address_or_command_and_its_mark(theme
         assert 'fill="currentColor"' in text and "CC0" in text and "http" not in text.split("<svg", 1)[1], mark.name
 
 
-def test_the_corner_link_carries_the_marks_and_reads_dark_on_light(theme):
+LABELS = {"en": "Use the data in ChatGPT, Claude, Gemini or any MCP client",
+          "sk": "Použite dáta v ChatGPT, Claude, Gemini alebo v akomkoľvek klientovi MCP",
+          "cs": "Použijte data v ChatGPT, Claude, Gemini nebo v libovolném klientovi MCP",
+          "de": "Die Daten in ChatGPT, Claude, Gemini oder jedem MCP-Client nutzen"}
+
+
+@pytest.mark.parametrize("lang", sorted(LABELS))
+def test_the_corner_link_is_four_colour_logos_and_no_words(theme, lang):
+    """T-4613: Claude, ChatGPT, Gemini, MCP, each on its own segment; no text, no "/"; the name is
+    the aria-label, in the page's language."""
+    theme.page.lang = lang
     html = render("corner.html", theme, publisher=None, widget="https://dev.example/assistant/")
-    link = re.search(r'<a class="jc-assistants-link"[^>]*>(.*?)</a>', html, re.S).group(1)
-    assert link.count('<svg class="jc-logo"') == 3 and "ChatGPT / Claude / Gemini / Grok / MCP" in link
+    tag, link = re.search(r'(<a class="jc-assistants-link"[^>]*>)(.*?)</a>', html, re.S).groups()
+    assert f'aria-label="{LABELS[lang]}"' in tag
+    segments = re.findall(r'<span class="jc-seg">(<svg class="jc-brand".*?</svg>)</span>', link, re.S)
+    assert len(segments) == 4 and link.count("<svg") == 4
+    ids = [re.search(r'id="jc-(\w+)-|fill="(#[0-9A-Fa-f]+)"', s).group(0) for s in segments]
+    assert ids == ['fill="#D97757"', 'fill="#0080F7"', 'id="jc-gemini-', 'id="jc-mcp-'], ids
+    assert all('aria-hidden="true"' in s for s in segments)
+    # every text node of the link is blank: no word and no "/" between the logos
+    assert re.sub(r"<[^>]+>", "", link).strip() == ""
     assert '<details class="jc-assistant">' in html
+
+
+def test_the_brand_logos_are_the_makers_own_saved_here_with_their_source():
+    for name, source in (("claude", "https://claude.ai/"), ("chatgpt", "https://developers.openai.com/"),
+                         ("gemini", "https://www.gstatic.com/"), ("mcp", "https://modelcontextprotocol.io/")):
+        text = (THEME / f"templates__jc__brand-{name}.svg").read_text()
+        comment, svg = text.split("\n", 1)
+        assert comment.startswith("{#") and f"from {source}" in comment, name
+        # served from CKAN's origin: nothing in the mark loads from anywhere
+        assert not re.search(r"href=|url\((?!#jc-)", svg), name
+        assert svg.startswith('<svg class="jc-brand" width="24" height="24" aria-hidden="true" focusable="false"'), name
+
+
+def test_the_pill_divides_its_segments_on_a_slant_and_shrinks_on_a_phone():
+    css = desktop_css()
+    assert ".jc-seg + .jc-seg { margin-inline-start: calc(-1 * var(--jc-slant));" in css
+    assert "clip-path: polygon(var(--jc-slant) 0, 100% 0, 100% 100%, 0 100%)" in css
+    assert ".jc-seg + .jc-seg::before { content: \"\";" in css
+    assert "flex-wrap: nowrap;" in css and "--jc-edge: color-mix(in oklab, var(--jc-ink) 55%, var(--jc-paper))" in css
+    phone = (THEME / "public__jc-theme.css").read_text().split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
+    assert ".jc-brand { inline-size: 1.25rem; block-size: 1.25rem; }" in phone
