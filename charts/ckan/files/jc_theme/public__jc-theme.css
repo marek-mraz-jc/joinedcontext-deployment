@@ -482,17 +482,15 @@ body.dt-view input[type="search"]::-webkit-search-cancel-button { display: none;
    shadow, its words upright again and on one line. Open, it is the ✕ below as before. */
 .jc-assistant:not([open]) > summary { block-size: 3rem; min-block-size: 0; padding-block: 0; margin-inline: .375rem; border-radius: 10px; transform: skewX(-14deg); white-space: nowrap; box-shadow: 0 4px 14px color-mix(in oklab, var(--jc-ink) 25%, transparent); }
 .jc-assistant:not([open]) > summary > span { display: inline-block; transform: skewX(14deg); }
-/* Open, the launcher becomes the panel's close control, a round ✕ in its place: the corner never
-   shows both (T-4283). Its words stay for a screen reader. */
-.jc-assistant[open] > summary { inline-size: 2.75rem; block-size: 2.75rem; padding: 0; }
-.jc-assistant[open] > summary > span { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.jc-assistant[open] > summary::after { content: "\2715"; font-size: 1.25rem; line-height: 1; }
-/* One tall frame, 760px and never taller than the window less the button, its gap and a margin
-   above, whatever the chat holds (T-4592, as the widget's own panel). */
-.jc-assistant > iframe { position: absolute; inset-inline-end: 0; inset-block-end: calc(100% + .5rem); width: min(26rem, calc(100vw - 2rem)); height: min(760px, calc(100vh - 6.25rem)); height: min(760px, calc(100dvh - 6.25rem)); border: 1px solid var(--jc-border); border-radius: .75rem; background: var(--jc-surface); }
+/* Open, the launcher goes: the ✕ in the chat's own header closes the panel (T-4635, the widget's
+   embed mode), so no circle stays in the corner. */
+.jc-assistant[open] > summary { display: none; }
+/* One tall frame in the corner where the launcher was, 760px and never taller than the window
+   less its two 1rem margins, with nothing under it (T-4592, T-4635). */
+.jc-assistant > iframe { position: fixed; inset-inline-end: 1rem; inset-block-end: max(1rem, env(safe-area-inset-bottom)); width: min(26rem, calc(100vw - 2rem)); height: min(760px, calc(100vh - 2rem)); height: min(760px, calc(100dvh - 2rem)); border: 1px solid var(--jc-border); border-radius: .75rem; background: var(--jc-surface); }
 /* T-4204: the page keeps room at its end, so the button never covers its last line. */
 body:has(.jc-corner) { padding-block-end: 5rem; }
-/* On a phone the open assistant takes the whole screen, its button the bar that closes it; the
+/* On a phone the open assistant takes the whole screen, the chat's header with its ✕ on top; the
    page behind neither shows nor scrolls (jc-assistant.js also makes it inert and adds Escape). */
 @media (max-width: 40rem) {
   /* T-4620: the bar is narrow enough to stay beside the launcher, one row as on a desktop. */
@@ -510,12 +508,9 @@ body:has(.jc-corner) { padding-block-end: 5rem; }
   .jc-corner:has(.jc-assistant[open]) { z-index: 2000; }
   body:has(.jc-assistant[open]) { overflow: hidden; }
   .jc-assistant[open] { position: fixed; inset: 0; z-index: 2000; display: flex; flex-direction: column; background: var(--jc-surface); }
-  .jc-assistant[open] > summary { box-sizing: border-box; inline-size: auto; block-size: 3.25rem; padding: 0 1.25rem; border-radius: 0; box-shadow: none; display: flex; justify-content: space-between; align-items: center; }
-  .jc-assistant[open] > summary > span { position: static; inline-size: auto; block-size: auto; clip-path: none; }
-  .jc-assistant[open] > summary::after { content: "\2715"; font-size: 1.25rem; line-height: 1; }
-  /* The frame's height is the screen's less the bar: an iframe stretches neither as a flex item of
-     details (its content sits in ::details-content) nor between insets, and stays 150 px (T-4248). */
-  .jc-assistant[open] > iframe { position: fixed; inset: 3.25rem 0 auto 0; width: 100%; height: calc(100vh - 3.25rem); height: calc(100dvh - 3.25rem); border: 0; border-radius: 0; }
+  /* The frame's height is the screen's: an iframe stretches neither as a flex item of details (its
+     content sits in ::details-content) nor between insets, and stays 150 px (T-4248). */
+  .jc-assistant[open] > iframe { position: fixed; inset: 0; width: 100%; height: 100vh; height: 100dvh; border: 0; border-radius: 0; }
 }
 
 /* ---- A resource's page (T-4333) ---------------------------------------------------------- */

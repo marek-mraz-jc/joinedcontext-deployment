@@ -12,7 +12,7 @@
   <div role="main">
     <section class="jc-hero" aria-labelledby="jc-hero-title">
       <div class="container">
-        <h1 id="jc-hero-title">{{ g.site_title }}</h1>
+        <h1 id="jc-hero-title">{{ h.jc_site_title() }}</h1>
         <p class="jc-hero-lead">{{ brand.tagline or h.jc_t('tagline') }}</p>
         <form class="jc-hero-search" role="search" method="get" action="{{ h.url_for(dataset_type ~ '.search') }}">
           <label for="jc-hero-q">{{ h.jc_t('hero_search') }}</label>

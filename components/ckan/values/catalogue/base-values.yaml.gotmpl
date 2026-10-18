@@ -6,6 +6,18 @@
 {{- if $this.languages }}
 {{- $branding = set (deepCopy $branding) "languages" $this.languages }}
 {{- end }}
+{{- /* The instance's own words (T-4636): its name per language, its header image and the
+       connector page's sample questions, set once in `ckan.<instance>` and read by the theme. */}}
+{{- $site := $this.site | default dict }}
+{{- if $site.title }}
+{{- $branding = set (deepCopy $branding) "siteTitle" $site.title }}
+{{- end }}
+{{- if $site.logo }}
+{{- $branding = set (deepCopy $branding) "siteLogo" $site.logo }}
+{{- end }}
+{{- if $this.samples }}
+{{- $branding = set (deepCopy $branding) "samples" $this.samples }}
+{{- end }}
 # Checklist:
 # - [x] Containers run as non-root with `readOnlyRootFilesystem`
 # - [x] Health probes -> /api/3/action/status_show
