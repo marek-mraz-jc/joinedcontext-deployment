@@ -2,11 +2,10 @@ name: pinned-images
 # Every image components/*/images.yaml pins, scanned by its digest (T-3289): a CRITICAL with a
 # fixed version, or a fixed HIGH that CISA lists as exploited, fails the job, and tasks/ci files a
 # task for the red run. Excuses live in .ci/pinned-images-ignore.yaml, each with a reason, a task
-# and an expiry. On demand only for now: this repository is private and its Actions minutes are
-# metered (T-0402, T-0521). Put `schedule: [{ cron: "23 4 * * *" }]` and
-# `push: { branches: [main], paths: ["components/*/images.yaml", ".ci/pinned-images-ignore.yaml"] }`
-# back under `on:` when the minutes are back.
+# and an expiry. Daily, and on every change of a pin or an excuse (T-3289).
 on:
+  push: { branches: [main], paths: ["components/*/images.yaml", ".ci/pinned-images-ignore.yaml"] }
+  schedule: [{ cron: "23 4 * * *" }]
   workflow_dispatch:
 permissions: { contents: read, packages: read }
 concurrency: { group: "pinned-images-${{ github.ref }}", cancel-in-progress: false }
