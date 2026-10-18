@@ -69,11 +69,14 @@ spec:
     messagesPerConversation: 30
     questionChars: 1000
   model: { router: google/gemini-3.8-flash, answer: google/gemini-3.8-flash }
-  # No city in the header or the greeting (owner: "nie pre konkrétne mesto"). The title is the
-  # catalogue's name, the same in every language; the widget writes "Asistent"/"Assistant" beside
-  # it. The greeting per language (T-4365).
+  # No city in the header or the greeting (owner: "nie pre konkrétne mesto"), and no host name
+  # either (owner 2026-10-18: "remove data.dev and just write open data", T-4635); the widget
+  # writes "Asistent"/"Assistant" beside the title. Title and greeting per language (T-4365).
   theme:
-    title: "data.dev"
+    title:
+      sk: "Otvorené dáta"
+      en: "Open data"
+      fi: "Avoin data"
     greeting:
       sk: "Dobrý deň! Pýtajte sa na otvorené dáta zo všetkých miest a krajov v katalógu."
       en: "Hello! Ask about the open data of every city and region in the catalogue."
