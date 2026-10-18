@@ -455,9 +455,7 @@ body.dt-view .dt-button, body.dt-view .btn-secondary { background: var(--jc-surf
 .jc-seg-gemini { background: linear-gradient(135deg, #4285f4, #9b72cb 60%, #d96570); }
 .jc-seg-mcp { background: #1f1f2e; }
 .jc-corner .jc-assistants-link:hover .jc-seg, .jc-corner .jc-assistants-link:focus-visible .jc-seg { filter: brightness(1.08); }
-.jc-ai-logo { flex: none; display: block; inline-size: 1.375rem; block-size: 1.375rem; transform: skewX(14deg); }
-.jc-logo { flex: none; inline-size: 1.25rem; block-size: 1.25rem; vertical-align: -.2em; }
-.jc-assistant-card h2 .jc-logo { margin-inline-end: .5rem; }
+.jc-seg .jc-ai-logo { flex: none; display: block; inline-size: 1.375rem; block-size: 1.375rem; transform: skewX(14deg); }
 .jc-assistants-link:focus-visible { outline: 3px solid var(--jc-accent); outline-offset: 2px; }
 .jc-assistant > summary { list-style: none; cursor: pointer; box-sizing: border-box; min-block-size: 2.75rem; display: flex; align-items: center; justify-content: center; background: var(--jc-primary); color: var(--jc-primary-fg); border-radius: 999px; padding: .75rem 1.25rem; font-weight: 600; box-shadow: 0 .25rem 1rem color-mix(in oklab, var(--jc-ink) 25%, transparent); }
 .jc-assistant > summary::-webkit-details-marker { display: none; }
@@ -488,7 +486,7 @@ body:has(.jc-corner) { padding-block-end: 5rem; }
   .jc-corner { flex-wrap: wrap; justify-content: flex-end; max-inline-size: calc(100vw - 2rem); }
   body:has(.jc-corner) { padding-block-end: 7.5rem; }
   .jc-seg { inline-size: 1.4375rem; }
-  .jc-ai-logo { inline-size: 1.125rem; block-size: 1.125rem; }
+  .jc-seg .jc-ai-logo { inline-size: 1.125rem; block-size: 1.125rem; }
   .jc-brand img { block-size: 1.75rem; }
   .jc-assistant:not([open]) > summary { block-size: 2.75rem; font-size: .9375rem; padding-inline: 1.125rem; }
   .jc-corner:has(.jc-assistant[open]) { z-index: 2000; }
@@ -583,10 +581,23 @@ body.dt-view .dataTables_filter label::after { content: none; }
 }
 
 /* ---- Use it in your AI assistant (T-4585) ------------------------------------------------ */
-.jc-assistant-cards { list-style: none; margin: 1.5rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: 1rem; }
-.jc-assistant-card { min-width: 0; padding: 1rem 1.25rem; background: var(--jc-surface); border: 1px solid var(--jc-border); border-radius: var(--jc-radius-lg); box-shadow: var(--jc-shadow-1); --jc-code-pad: .875rem; }
-.jc-assistant-card h2 { font-size: 1.25rem; margin: 0 0 .75rem; }
-.jc-assistant-card .jc-code { margin: 0 0 .75rem; }
-.jc-assistant-card .jc-code-url { margin: 0; padding: .75rem var(--jc-code-pad); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .8125rem; overflow-wrap: anywhere; }
-.jc-soon { display: inline-block; margin: 0 0 .75rem; padding: .25rem .75rem; border-radius: 999px; background: var(--jc-n50); color: var(--jc-muted); font-weight: 600; }
-.jc-assistants > .jc-mcp { margin-top: 2.5rem; }
+/* T-4628: four cards in a row, two by two below 64rem, one column on a phone, all one height
+   (the grid stretches each row). A card's link covers the whole card, and the card shows its focus. */
+.jc-assistant-cards { list-style: none; margin: 1.5rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 1rem; }
+@media (max-width: 64rem) { .jc-assistant-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 30rem) { .jc-assistant-cards { grid-template-columns: minmax(0, 1fr); } }
+.jc-assistant-card { position: relative; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: .75rem; padding: 1.25rem; background: var(--jc-surface); border: 1px solid var(--jc-border); border-radius: var(--jc-radius-lg); box-shadow: var(--jc-shadow-1); }
+.jc-assistant-card h2 { display: flex; align-items: center; gap: .75rem; font-size: 1.25rem; margin: 0; }
+.jc-assistant-card .jc-ai-logo { flex: none; display: block; inline-size: 2rem; block-size: 2rem; }
+.jc-card-link { margin-block-start: auto; font-weight: 600; }
+.jc-card-link::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+.jc-assistant-card:has(.jc-card-link) { cursor: pointer; }
+.jc-assistant-card:has(.jc-card-link:hover) { border-color: var(--jc-primary); }
+.jc-card-link:focus-visible { outline: none; }
+.jc-assistant-card:has(.jc-card-link:focus-visible) { outline: 3px solid var(--jc-accent); outline-offset: 2px; }
+.jc-soon { margin: auto 0 0; padding: .25rem .75rem; border-radius: 999px; background: var(--jc-n50); color: var(--jc-muted); font-weight: 600; }
+.jc-store-address { margin: 1.5rem 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.jc-store-url { font-weight: 600; overflow-wrap: anywhere; }
+.jc-developers { margin-top: 2.5rem; }
+.jc-developers > summary { cursor: pointer; font-weight: 600; font-size: 1.125rem; }
+.jc-developers > .jc-mcp { margin-top: 1rem; }

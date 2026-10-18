@@ -337,12 +337,12 @@ STRINGS = {
     "mcp_json": {"en": "Any other MCP client (JSON)", "sk": "Iný MCP klient (JSON)", "cs": "Jiný MCP klient (JSON)", "de": "Jeder andere MCP-Client (JSON)"},
     "mcp_vscode": {"en": "Add to VS Code", "sk": "Pridať do VS Code", "cs": "Přidat do VS Code", "de": "Zu VS Code hinzufügen"},
     "mcp_cursor": {"en": "Add to Cursor", "sk": "Pridať do Cursoru", "cs": "Přidat do Cursoru", "de": "Zu Cursor hinzufügen"},
-    # The "Use it in your AI assistant" page and its button (T-4585). Each assistant's steps are the
-    # ones its maker documents, read 2026-10-18: ChatGPT at chatgpt.com/plugins
+    # The "Use it in your AI assistant" page and its button (T-4585). The stores are the ones each
+    # maker documents, read 2026-10-18: ChatGPT at chatgpt.com/plugins
     # (developers.openai.com/apps-sdk/deploy/connect-chatgpt), Claude at Customize > Connectors
     # (support.claude.com article 11175166), Gemini CLI's `gemini mcp add --transport http`
-    # (geminicli.com/docs/tools/mcp-server). Grok takes remote MCP only through the xAI API
-    # (docs.x.ai remote MCP tools), so its card says so instead of linking anywhere.
+    # (geminicli.com/docs/tools/mcp-server). The Gemini and Grok apps take no connectors (Grok
+    # remote MCP only through the xAI API, docs.x.ai), so their cards link nowhere.
     "assistants": {"en": "Use it in your AI assistant", "sk": "Použite v AI asistentovi", "cs": "Použijte v AI asistentovi", "de": "In Ihrem KI-Assistenten nutzen"},
     "assistants_label": {"en": "Use the data in ChatGPT, Claude, Gemini or any MCP client", "sk": "Použite dáta v ChatGPT, Claude, Gemini alebo v akomkoľvek klientovi MCP", "cs": "Použijte data v ChatGPT, Claude, Gemini nebo v libovolném klientovi MCP", "de": "Die Daten in ChatGPT, Claude, Gemini oder jedem MCP-Client nutzen"},
     "assistants_lead": {
@@ -351,17 +351,15 @@ STRINGS = {
         "cs": "Přidejte {name} do asistenta, kterého už používáte, a ptejte se ho na otevřená data tohoto katalogu. Jedna adresa pokrývá všechny datové sady; účet není potřeba.",
         "de": "Fügen Sie {name} dem Assistenten hinzu, den Sie schon nutzen, und fragen Sie ihn nach den offenen Daten dieses Katalogs. Eine Adresse deckt alle Datensätze ab; kein Konto nötig.",
     },
-    "copy_address": {"en": "Copy the address", "sk": "Kopírovať adresu", "cs": "Kopírovat adresu", "de": "Adresse kopieren"},
-    "copy_command": {"en": "Copy the command", "sk": "Kopírovať príkaz", "cs": "Kopírovat příkaz", "de": "Befehl kopieren"},
-    "open_settings": {"en": "Open {name} settings", "sk": "Otvoriť nastavenia {name}", "cs": "Otevřít nastavení {name}", "de": "{name}-Einstellungen öffnen"},
     "coming_soon": {"en": "Coming soon", "sk": "Čoskoro", "cs": "Brzy", "de": "Demnächst"},
-    "chatgpt_1": {"en": "Copy the address, open ChatGPT's plugins, choose + and Add custom MCP server.", "sk": "Skopírujte adresu, otvorte doplnky ChatGPT, zvoľte + a Add custom MCP server.", "cs": "Zkopírujte adresu, otevřete pluginy ChatGPT, zvolte + a Add custom MCP server.", "de": "Kopieren Sie die Adresse, öffnen Sie die Plugins von ChatGPT, wählen Sie + und Add custom MCP server."},
-    "chatgpt_2": {"en": "Name it, paste the address, choose no authentication and Create as a plugin.", "sk": "Pomenujte ho, vložte adresu, zvoľte bez overenia a Create as a plugin.", "cs": "Pojmenujte ho, vložte adresu, zvolte bez ověření a Create as a plugin.", "de": "Benennen Sie es, fügen Sie die Adresse ein, wählen Sie keine Authentifizierung und Create as a plugin."},
-    "claude_1": {"en": "Copy the address, open Claude's connectors, choose + Add and Add custom connector.", "sk": "Skopírujte adresu, otvorte konektory Claude, zvoľte + Pridať a Pridať vlastný konektor.", "cs": "Zkopírujte adresu, otevřete konektory Claude, zvolte + Přidat a Přidat vlastní konektor.", "de": "Kopieren Sie die Adresse, öffnen Sie die Konnektoren von Claude, wählen Sie + Hinzufügen und Benutzerdefinierten Konnektor hinzufügen."},
-    "claude_2": {"en": "Name it, paste the address, choose No sign in and Add.", "sk": "Pomenujte ho, vložte adresu, zvoľte Bez prihlásenia a Pridať.", "cs": "Pojmenujte ho, vložte adresu, zvolte Bez přihlášení a Přidat.", "de": "Benennen Sie ihn, fügen Sie die Adresse ein, wählen Sie Ohne Anmeldung und Hinzufügen."},
+    # T-4628: a card is the logo, the name and one link to that assistant's connector store.
+    "add_to": {"en": "Add to {name}", "sk": "Pridať do {name}", "cs": "Přidat do {name}", "de": "Zu {name} hinzufügen"},
+    "store_address": {"en": "In the store, choose Add custom connector and paste this address:",
+                      "sk": "V obchode zvoľte Pridať vlastný konektor a vložte túto adresu:",
+                      "cs": "V obchodě zvolte Přidat vlastní konektor a vložte tuto adresu:",
+                      "de": "Wählen Sie im Store Benutzerdefinierten Konnektor hinzufügen und fügen Sie diese Adresse ein:"},
+    "for_developers": {"en": "For developers", "sk": "Pre vývojárov", "cs": "Pro vývojáře", "de": "Für Entwickler"},
     "gemini_1": {"en": "In Gemini CLI: run this command in a terminal, then start gemini.", "sk": "V Gemini CLI: spustite tento príkaz v termináli a potom gemini.", "cs": "V Gemini CLI: spusťte tento příkaz v terminálu a pak gemini.", "de": "In der Gemini CLI: Führen Sie diesen Befehl im Terminal aus und starten Sie dann gemini."},
-    "gemini_2": {"en": "The Gemini app does not take its own connectors yet.", "sk": "Aplikácia Gemini zatiaľ vlastné konektory neprijíma.", "cs": "Aplikace Gemini zatím vlastní konektory nepřijímá.", "de": "Die Gemini-App nimmt noch keine eigenen Konnektoren an."},
-    "grok_1": {"en": "Grok's app does not take connectors yet; developers can name this address in the xAI API.", "sk": "Aplikácia Grok zatiaľ konektory neprijíma; vývojári môžu túto adresu uviesť v xAI API.", "cs": "Aplikace Grok zatím konektory nepřijímá; vývojáři mohou tuto adresu uvést v xAI API.", "de": "Die Grok-App nimmt noch keine Konnektoren an; Entwickler können diese Adresse in der xAI-API angeben."},
     "any_client": {"en": "Any MCP client", "sk": "Akýkoľvek MCP klient", "cs": "Jakýkoli MCP klient", "de": "Jeder MCP-Client"},
     "section_api_lead": {"en": "For applications and AI assistants that query the data live.", "sk": "Pre aplikácie a AI asistentov, ktorí sa na dáta pýtajú naživo.", "cs": "Pro aplikace a AI asistenty, kteří se na data ptají živě.", "de": "Für Anwendungen und KI-Assistenten, die die Daten live abfragen."},
     "section_schema": {"en": "Data model", "sk": "Dátový model", "cs": "Datový model", "de": "Datenmodell"},
@@ -1398,37 +1396,33 @@ CLAUDE_CONNECTORS = "https://claude.ai/customize/connectors"
 
 
 def jc_assistants():
-    """The "Use it in your AI assistant" page (T-4585): a card per assistant, ChatGPT, Claude,
-    Gemini, Grok, in that order, each with its one action, then any MCP client; None without the
-    hub. An assistant with no path today has no link (`soon`), never a dead one.
+    """The "Use it in your AI assistant" page (T-4585, T-4628): a card per assistant, ChatGPT,
+    Claude, Gemini, Grok, in that order, each its logo, its name and at most one link, to its
+    connector store; None without the hub. An assistant whose app takes no connectors today has
+    no link (`soon`), never a dead one. The hub's address stands once under the cards, because our
+    connector is not listed in either store yet; the Gemini CLI command goes to the developers'
+    fold with the editors.
 
-    `value` is the address or command a card shows: Jinja reads `card.copy` as `dict.copy` before
-    the key, which printed "<built-in method copy …>" (T-4609). `logo` is the card's Simple Icons
-    mark, a template beside this file; Simple Icons 16.34.0 has no ChatGPT/OpenAI or Grok mark, so
-    those two cards show their name alone."""
+    `logo` is the card's mark in its brand colours, a template beside this file."""
     mcp = jc_mcp_install()
     if not mcp:
         return None
     name = BRANDING.get("instanceName") or MCP_NAME
 
-    def words(key):
-        return jc_t(key).replace("{name}", name)
+    def card(id, title, store=None):
+        found = {"id": id, "name": title, "logo": "jc/card-%s.svg" % id}
+        if store:
+            found.update(open=store, open_label=jc_t("add_to").replace("{name}", title))
+        else:
+            found["soon"] = True
+        return found
 
     return {
-        "lead": words("assistants_lead"),
+        "lead": jc_t("assistants_lead").replace("{name}", name),
         "mcp": mcp,
-        "cards": [
-            {"id": "chatgpt", "name": "ChatGPT", "logo": None, "value": mcp["url"], "copy_label": jc_t("copy_address"),
-             "open": CHATGPT_PLUGINS, "open_label": jc_t("open_settings").replace("{name}", "ChatGPT"),
-             "steps": [jc_t("chatgpt_1"), jc_t("chatgpt_2")]},
-            {"id": "claude", "name": "Claude", "logo": "jc/logo-claude.svg", "value": mcp["url"], "copy_label": jc_t("copy_address"),
-             "open": CLAUDE_CONNECTORS, "open_label": jc_t("open_settings").replace("{name}", "Claude"),
-             "steps": [jc_t("claude_1"), jc_t("claude_2")]},
-            {"id": "gemini", "name": "Gemini", "logo": "jc/logo-gemini.svg",
-             "value": "gemini mcp add --transport http %s %s" % (MCP_NAME, mcp["url"]),
-             "copy_label": jc_t("copy_command"), "steps": [jc_t("gemini_1"), jc_t("gemini_2")]},
-            {"id": "grok", "name": "Grok", "logo": None, "soon": True, "steps": [jc_t("grok_1")]},
-        ],
+        "cards": [card("chatgpt", "ChatGPT", CHATGPT_PLUGINS), card("claude", "Claude", CLAUDE_CONNECTORS),
+                  card("gemini", "Gemini"), card("grok", "Grok")],
+        "gemini": "gemini mcp add --transport http %s %s" % (MCP_NAME, mcp["url"]),
     }
 
 

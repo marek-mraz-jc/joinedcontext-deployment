@@ -323,7 +323,7 @@ def test_the_mcp_panel_is_on_the_assistants_page_and_every_dataset_page_with_its
     assert "jc_mcp_install.html" not in (THEME / "templates__home__index.html").read_text()
     # One status line per page: the live box's when the dataset page has one.
     assert '{% if not live %}<p class="visually-hidden" role="status"' in panel
-    assert panel.count("{{ copy('") == 3
+    assert panel.count("{{ copy('") == 4  # the address, Claude Code, JSON and the Gemini CLI on /assistants (T-4628)
 
 
 def test_the_mcp_card_puts_claude_first_and_keeps_its_code_whole():
@@ -332,7 +332,7 @@ def test_the_mcp_card_puts_claude_first_and_keeps_its_code_whole():
     panel = (THEME / "templates__snippets__jc_mcp_install.html").read_text()
     order = [panel.index(key) for key in ("mcp_claude_ai_1", "mcp_vscode", "mcp_cursor", "jc-mcp-claude-label", "jc-mcp-json-label")]
     assert order == sorted(order)
-    assert panel.count('<div class="jc-code-head">') == 3
+    assert panel.count('<div class="jc-code-head">') == 4
     assert "mcp.url_parts | join('<wbr>' | safe)" in panel
     css = (THEME / "public__jc-theme.css").read_text()
     assert ".jc-live .jc-code pre { white-space: pre; overflow-wrap: normal; overflow-x: auto; }" in css
@@ -1503,13 +1503,16 @@ def test_the_assistants_page_names_the_installation_s_own_hub_and_assistants_in_
     assert page["mcp"]["url"] == hub and name in page["lead"] and "{" not in page["lead"]
     cards = {card["id"]: card for card in page["cards"]}
     assert [card["id"] for card in page["cards"]] == ["chatgpt", "claude", "gemini", "grok"]
-    assert cards["chatgpt"]["open"] == "https://chatgpt.com/plugins" and cards["chatgpt"]["value"] == hub
-    assert cards["claude"]["open"] == "https://claude.ai/customize/connectors" and cards["claude"]["value"] == hub
-    assert cards["gemini"]["value"] == f"gemini mcp add --transport http joinedcontext {hub}" and "open" not in cards["gemini"]
-    # Grok has no path today: "Coming soon", no link and nothing to copy.
-    assert cards["grok"]["soon"] and "open" not in cards["grok"] and "value" not in cards["grok"]
+    # T-4628: the two stores are the only links; the Gemini and Grok apps take no connectors.
+    assert cards["chatgpt"]["open"] == theme.CHATGPT_PLUGINS == "https://chatgpt.com/plugins"
+    assert cards["claude"]["open"] == theme.CLAUDE_CONNECTORS == "https://claude.ai/customize/connectors"
+    assert cards["chatgpt"]["open_label"] == "Add to ChatGPT"
+    for id in ("gemini", "grok"):
+        assert cards[id]["soon"] and "open" not in cards[id], id
+    assert page["gemini"] == f"gemini mcp add --transport http joinedcontext {hub}"
     for card in page["cards"]:
-        assert 1 <= len(card["steps"]) <= 2, card["id"]
+        assert set(card) <= {"id", "name", "logo", "open", "open_label", "soon"}, card
+        assert (THEME / ("templates__" + card["logo"].replace("/", "__"))).is_file(), card["logo"]
         assert "token" not in json.dumps(card).lower()
 
 
@@ -1521,17 +1524,21 @@ def test_the_assistants_page_is_left_empty_without_a_plain_domain(theme):
 def test_the_assistants_page_reads_in_slovak(theme):
     theme.page.lang = "sk"
     page = theme.jc_assistants()
-    assert page["cards"][0]["copy_label"] == "Kopírovať adresu" and "Čoskoro" == theme.jc_t("coming_soon")
-    for key in ("assistants", "assistants_lead", "copy_address", "copy_command", "open_settings", "coming_soon",
-                "chatgpt_1", "chatgpt_2", "claude_1", "claude_2", "gemini_1", "gemini_2", "grok_1", "any_client"):
-        assert set(theme.STRINGS[key]) >= {"en", "sk"}, key
+    assert [card.get("open_label") for card in page["cards"]] == ["Pridať do ChatGPT", "Pridať do Claude", None, None]
+    assert theme.jc_t("coming_soon") == "Čoskoro" and theme.jc_t("for_developers") == "Pre vývojárov"
+    assert theme.jc_t("store_address") == "V obchode zvoľte Pridať vlastný konektor a vložte túto adresu:"
+    for key in ("assistants", "assistants_lead", "add_to", "store_address", "for_developers", "coming_soon",
+                "copy", "gemini_1", "any_client"):
+        assert set(theme.STRINGS[key]) == {"en", "sk", "cs", "de"}, key
+        # T-4628: the owner read English store words inside the Slovak steps.
+        assert "Add custom" not in theme.STRINGS[key]["sk"] and "Create as" not in theme.STRINGS[key]["sk"], key
 
 
 def test_the_assistants_page_offers_each_card_s_own_action_and_links_nowhere_else():
     template = (THEME / "templates__jc__assistants.html").read_text()
     assert "{% set page = h.jc_assistants() %}" in template
-    assert 'href="{{ card.open }}" rel="noopener noreferrer"' in template and template.count("href=") == 2
-    assert 'data-jc-copy="jc-copy-{{ card.id }}"' in template and '<p id="jc-copy-{{ card.id }}"' in template
+    assert 'href="{{ card.open }}" target="_blank" rel="noopener noreferrer"' in template and template.count("href=") == 2
+    assert template.count("data-jc-copy=") == 1 and 'data-jc-copy="jc-store-url"' in template
     assert "{% if card.soon %}" in template and "h.jc_t('coming_soon')" in template
     assert "<img" not in template and "<script>" not in template
 
@@ -1578,23 +1585,75 @@ def render(template, theme, **context):
     return env.get_template(template).render(h=h, **context)
 
 
-def test_each_assistant_card_shows_its_own_address_or_command_and_its_mark(theme):
-    """T-4609: `card.copy` printed "<built-in method copy of dict object …>", Jinja reads a dict's
-    method before its key; and every assistant Simple Icons has a mark for shows it."""
+def test_each_assistant_card_is_its_logo_its_name_and_at_most_one_link(theme):
+    """T-4628, the owner: "just logo, name and link to the market place with connectors". T-4609
+    printed `card.copy` as "<built-in method copy …>": Jinja reads a dict's method before its key."""
     html = render("jc/assistants.html", theme)
     assert "built-in method" not in html and "0x" not in html
-    codes = re.findall(r'<p id="jc-copy-(\w+)" class="jc-code-url">([^<]*)</p>', html)
+    blocks = re.findall(r'<li class="jc-assistant-card">(.*?)</li>', html, re.S)
+    cards = {re.search(r'id="jc-card-(\w+)"', block).group(1): block for block in blocks}
+    assert list(cards) == ["chatgpt", "claude", "gemini", "grok"]
+    stores = {"chatgpt": theme.CHATGPT_PLUGINS, "claude": theme.CLAUDE_CONNECTORS}
+    for id, card in cards.items():
+        heading = re.search(r"<h2[^>]*>(.*?)</h2>", card, re.S).group(1)
+        assert heading.startswith('<svg class="jc-ai-logo" width="32" height="32" aria-hidden="true"'), id
+        assert re.sub(r"<svg.*</svg>", "", heading, flags=re.S).strip() in {"ChatGPT", "Claude", "Gemini", "Grok"}, id
+        links = re.findall(r'<a [^>]*href="([^"]*)"[^>]*>', card)
+        assert links == ([stores[id]] if id in stores else []), id
+        if id in stores:
+            assert 'target="_blank" rel="noopener noreferrer"' in card, id
+        else:
+            assert '<p class="jc-soon">Coming soon</p>' in card, id
+        assert "jc-code" not in card and "<button" not in card and "<pre" not in card, id
+    # The address once for the page, as text with one copy button; nothing technical above the fold.
     hub = "https://dev.example/api/mcp"
-    assert codes == [("chatgpt", hub), ("claude", hub), ("gemini", f"gemini mcp add --transport http joinedcontext {hub}")]
-    headings = dict(re.findall(r'<h2 id="jc-card-(\w+)">(.*?)</h2>', html, re.S))
-    assert set(headings) == {"chatgpt", "claude", "gemini", "grok"}
-    for card in ("claude", "gemini"):
-        assert '<svg class="jc-logo"' in headings[card] and 'aria-hidden="true"' in headings[card], card
-    # Simple Icons 16.34.0 has no ChatGPT/OpenAI or Grok mark: those two keep their name alone.
-    assert headings["chatgpt"] == "ChatGPT" and headings["grok"] == "Grok"
-    for mark in THEME.glob("templates__jc__logo-*.svg"):
-        text = mark.read_text()
-        assert 'fill="currentColor"' in text and "CC0" in text and "http" not in text.split("<svg", 1)[1], mark.name
+    above, fold = html.split('<details class="jc-developers">', 1)
+    # It breaks only before a slash, never inside a word (T-4284), and a copy reads it whole.
+    assert '<span id="jc-store-url" class="jc-store-url">https://dev.example<wbr>/api<wbr>/mcp</span>' in above
+    assert above.replace("<wbr>", "").count(hub) == 1
+    assert above.count("<button") == 1 and not re.search(r"class=\"jc-code[ \"]", above) and "<pre" not in above and "<code" not in above
+    assert fold.startswith("\n        <summary>For developers</summary>")
+
+
+def test_the_developers_fold_holds_every_command_and_stays_closed():
+    page = (THEME / "templates__jc__assistants.html").read_text()
+    fold = page.split('<details class="jc-developers">', 1)[1].split("</details>", 1)[0]
+    assert "{% snippet 'snippets/jc_mcp_install.html', editors_only=True, live=True, gemini=page.gemini %}" in fold
+    assert re.findall(r"<details[^>]*>", page) == ['<details class="jc-developers">']
+    snippet = (THEME / "templates__snippets__jc_mcp_install.html").read_text()
+    editors = snippet.split("{% if not editors_only %}\n    <div>", 1)[1].split("{% endif %}", 1)[1]
+    for block in ('id="jc-mcp-gemini"', "text=gemini", "mcp.vscode", "mcp.cursor", 'id="jc-mcp-claude"', 'id="jc-mcp-json"'):
+        assert block in editors, block
+
+
+def test_the_card_logos_are_the_makers_own_in_their_colours_and_safe():
+    sources = {"chatgpt": "https://developers.openai.com/favicon.svg", "claude": "https://claude.ai/favicon.svg",
+               "gemini": "https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d4735304ff6292a690345.svg",
+               "grok": "https://grok.com/images/favicon.svg"}
+    colours = {"chatgpt": "#0080F7", "claude": "#D97757", "gemini": "#1BA1E3", "grok": "#050505"}
+    for id, source in sources.items():
+        comment, svg = (THEME / f"templates__jc__card-{id}.svg").read_text().split("-#}\n", 1)
+        assert source in comment and "fetched 2026-10-18" in comment, id
+        assert svg.startswith('<svg class="jc-ai-logo" width="32" height="32" aria-hidden="true" focusable="false"'), id
+        assert colours[id] in svg and 'fill="#fff"' not in svg, id
+        assert not re.search(r"<script|<foreignObject|\son\w+=|href=|filter=|<style", svg, re.I), id
+        # Ids are prefixed, so two marks on one page never take each other's gradient or mask.
+        assert all(i.startswith(f"jc-{id}-") for i in re.findall(r'\sid="([^"]+)"', svg)), id
+        assert all(u.startswith(f"#jc-{id}-") for u in re.findall(r"url\(([^)]+)\)", svg)), id
+    css = (THEME / "public__jc-theme.css").read_text()
+    assert ".jc-assistant-card .jc-ai-logo { flex: none; display: block; inline-size: 2rem; block-size: 2rem; }" in css
+    # The corner's slant stays on the corner's segments.
+    assert ".jc-seg .jc-ai-logo { flex: none; display: block; inline-size: 1.375rem; block-size: 1.375rem; transform: skewX(14deg); }" in css
+    assert not re.search(r"(^|\n)\s*\.jc-ai-logo \{", css)
+
+
+def test_the_cards_sit_four_two_or_one_to_a_row():
+    css = (THEME / "public__jc-theme.css").read_text()
+    assert "display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 1rem; }" in css
+    assert "@media (max-width: 64rem) { .jc-assistant-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }" in css
+    assert "@media (max-width: 30rem) { .jc-assistant-cards { grid-template-columns: minmax(0, 1fr); } }" in css
+    assert ".jc-card-link::after { content: \"\"; position: absolute; inset: 0; border-radius: inherit; }" in css
+    assert ".jc-assistant-card:has(.jc-card-link:focus-visible) { outline: 3px solid var(--jc-accent); outline-offset: 2px; }" in css
 
 
 LABELS = {"en": "Use the data in ChatGPT, Claude, Gemini or any MCP client",
