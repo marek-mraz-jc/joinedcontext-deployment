@@ -115,11 +115,13 @@ def serialize(tmp_path_factory, dcat_libs):
         if mount["name"] == "theme" and source.is_file():
             mounts += ["-v", f"{source}:{mount['mountPath']}:ro"]
 
-    def run(mode: str, profiles: str, drop: tuple[str, ...] = (), extras: dict | None = None) -> Graph:
+    def run(mode: str, profiles: str, drop: tuple[str, ...] = (), extras: dict | None = None,
+            resources: list[dict] = ()) -> Graph:
         dataset = json.loads((FIXTURES / "praha-mesto.json").read_text())
         for field in drop:
             dataset.pop(field)
         dataset["extras"] += [{"key": k, "value": v} for k, v in (extras or {}).items()]
+        dataset["resources"] += list(resources)
         result = subprocess.run(
             # As the caller, so pytest's private temporary directories are readable inside.
             ["docker", "run", "--rm", "-i", "--network", "none", "--user", f"{os.getuid()}:{os.getgid()}",
@@ -235,6 +237,37 @@ def test_the_catalogue_page_is_valid_dcat_ap_3_and_names_its_publisher(serialize
         "http://publications.europa.eu/resource/authority/language/ENG",
         "http://publications.europa.eu/resource/authority/language/FIN",
     }
+
+
+# What CKAN held on dev for every schema OWL artifact (T-4586): a media type with a parameter.
+OWL_ARTIFACT = {
+    "id": "c3f0a3e2-0000-4000-8000-000000000001",
+    "package_id": "bc2d847b-00a9-4605-8d12-cf3f6c302492",
+    "name": "praha-mesto model.owl.ttl",
+    "url": "https://dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v2/model.owl.ttl",
+    "format": "OWL",
+    "mimetype": 'text/turtle; profile="owl"',
+}
+
+
+@requires_docker
+@requires_helm
+def test_a_media_type_with_a_parameter_is_its_bare_iana_type_and_the_catalogue_still_writes(serialize, shapes):
+    """T-4586: /catalog.ttl answered 500 because `text/turtle; profile="owl"` became an IRI with a
+    space and quotes. The register names the bare type; a profile that is no IRI is dropped, one
+    that is an IRI is the distribution's dct:conformsTo."""
+    graph = serialize("catalog", PROFILES, resources=[OWL_ARTIFACT])
+    assert check.violations(graph, shapes, DCAT.Catalog) == []
+    (owl,) = set(graph.subjects(DCAT.accessURL, URIRef(OWL_ARTIFACT["url"])))
+    assert [str(m) for m in graph.objects(owl, DCAT.mediaType)] == ["http://www.iana.org/assignments/media-types/text/turtle"]
+    assert graph.value(owl, DCT.conformsTo) is None
+
+    shacl = dict(OWL_ARTIFACT, id="c3f0a3e2-0000-4000-8000-000000000002", url=OWL_ARTIFACT["url"].replace("owl", "shacl"),
+                 mimetype='text/turtle; profile="http://www.w3.org/ns/shacl#"')
+    graph = serialize("dataset", PROFILES, resources=[shacl])
+    assert check.violations(graph, shapes) == []
+    (distribution,) = set(graph.subjects(DCAT.accessURL, URIRef(shacl["url"])))
+    assert str(graph.value(distribution, DCT.conformsTo)) == "http://www.w3.org/ns/shacl#"
 
 
 def test_an_empty_document_is_not_a_pass(shapes):

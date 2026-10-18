@@ -8,6 +8,9 @@ spec:
   domain: hel.fi
   locales: [en, sk]
   defaultLocale: en
+  # The national DCAT-AP renderings its records and catalogues are also served in (API/08 §5):
+  # Banská Bystrica and BBSK publish to data.slovensko.sk, Praha to data.gov.cz (T-4586).
+  dcatProfiles: [dcat-ap-sk, dcat-ap-cz]
   projects:
     # Every signed-in person of the organization holds the seeded viewer role (PF-61), and a
     # project is opened by whoever holds propose on Project (PF-65).
