@@ -206,6 +206,10 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "CKAN's fingerprinted stylesheets and scripts, the same files for everyone, kept a year by the browser (T-4201)",
     },
+    "ckan-map": {
+        "reach": UPSTREAM, "cacheable": True, "framing": FRAMED_BY_UPSTREAM,
+        "why": "a dataset's map any site may frame (T-4639): the page holds no data, no form and no session; the visitor's browser reads the Endpoint's public OGC API Features anonymously, and the edge sets frame-ancestors * and strips the session cookie",
+    },
     "security-txt": {
         "reach": TERMINATES, "cacheable": False, "framing": "DENY",
         "why": "RFC 9116 security.txt is public by the RFC; the edge answers it and names only the reporting contact (T-1721)",

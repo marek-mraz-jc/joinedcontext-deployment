@@ -288,6 +288,41 @@ STRINGS = {
     "rows": {"en": ("row", "rows", "rows"), "sk": ("riadok", "riadky", "riadkov"),
              "cs": ("řádek", "řádky", "řádků"), "de": ("Zeile", "Zeilen", "Zeilen")},
     "table_title": {"en": "Table of the data", "sk": "Tabuľka dát", "cs": "Tabulka dat", "de": "Tabelle der Daten"},
+    # The dataset map (T-4639).
+    "map": {"en": "Map", "sk": "Mapa", "cs": "Mapa", "de": "Karte"},
+    "map_title": {"en": "Map of the data", "sk": "Mapa dát", "cs": "Mapa dat", "de": "Karte der Daten"},
+    "map_as_table": {"en": "Show as a table", "sk": "Zobraziť ako tabuľku", "cs": "Zobrazit jako tabulku", "de": "Als Tabelle anzeigen"},
+    "map_in_catalogue": {"en": "Show in the catalogue", "sk": "Zobraziť v katalógu", "cs": "Zobrazit v katalogu", "de": "Im Katalog anzeigen"},
+    "map_embed": {"en": "Embed on your site", "sk": "Vložiť na web", "cs": "Vložit na web", "de": "Auf Ihrer Website einbetten"},
+    "map_embed_lead": {
+        "en": "Paste this into your page; the map stays live and shows only public data.",
+        "sk": "Vložte to do svojej stránky; mapa zostáva živá a ukazuje len verejné údaje.",
+        "cs": "Vložte to do své stránky; mapa zůstává živá a ukazuje jen veřejná data.",
+        "de": "Fügen Sie dies in Ihre Seite ein; die Karte bleibt aktuell und zeigt nur öffentliche Daten.",
+    },
+    "map_cap": {
+        "en": "Showing the first {n}; zoom in to see the rest.",
+        "sk": "Zobrazených prvých {n}, priblížte mapu.",
+        "cs": "Zobrazeno prvních {n}, přibližte mapu.",
+        "de": "Die ersten {n} werden gezeigt; zoomen Sie hinein.",
+    },
+    "map_failed": {
+        "en": "The map could not load its data; the table above still works.",
+        "sk": "Mapa nenačítala údaje; tabuľka vyššie funguje.",
+        "cs": "Mapa nenačetla data; tabulka výše funguje.",
+        "de": "Die Karte konnte ihre Daten nicht laden; die Tabelle oben funktioniert.",
+    },
+    "map_close": {"en": "Close", "sk": "Zavrieť", "cs": "Zavřít", "de": "Schließen"},
+    "map_loading": {"en": "Loading the map's data…", "sk": "Načítavam údaje mapy…", "cs": "Načítám data mapy…", "de": "Die Kartendaten werden geladen…"},
+    "map_panel": {"en": "Selected place", "sk": "Vybrané miesto", "cs": "Vybrané místo", "de": "Ausgewählter Ort"},
+    "map_length": {"en": "Length", "sk": "Dĺžka", "cs": "Délka", "de": "Länge"},
+    "map_area": {"en": "Area", "sk": "Plocha", "cs": "Plocha", "de": "Fläche"},
+    "map_keys": {
+        "en": "Arrow keys move the map, + and - zoom, Enter opens the place in the middle.",
+        "sk": "Šípky posúvajú mapu, + a - menia priblíženie, Enter otvorí miesto v strede.",
+        "cs": "Šipky posouvají mapu, + a - mění přiblížení, Enter otevře místo uprostřed.",
+        "de": "Pfeiltasten verschieben die Karte, + und - zoomen, Enter öffnet den Ort in der Mitte.",
+    },
     "tables": {"en": "tables", "sk": "tabuľky", "cs": "tabulky", "de": "Tabellen"},
     "table_what": {"en": "The table above, as one file", "sk": "Tabuľka vyššie ako jeden súbor", "cs": "Tabulka výše jako jeden soubor", "de": "Die Tabelle oben als eine Datei"},
     "open_table": {"en": "Open the table on its own page", "sk": "Otvoriť tabuľku na samostatnej stránke", "cs": "Otevřít tabulku na samostatné stránce", "de": "Tabelle auf eigener Seite öffnen"},
@@ -1269,6 +1304,101 @@ def jc_previews(pkg):
     return out
 
 
+# The basemap the map draws under the data (T-4639): a style on this installation's tiles host
+# (T-4638), or OpenStreetMap's raster tiles, which their tile usage policy allows for a
+# low-traffic preview with attribution. Anything else is no basemap: a map of the data alone.
+OSM_TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+MAPLIBRE = "/maplibre-gl-6.14.0/"
+VENDOR = "/srv/app/vendor"
+
+
+def _basemap():
+    try:
+        found = json.loads(os.environ.get("JC_MAP_BASEMAP") or "{}")
+    except ValueError:
+        return {}
+    if not isinstance(found, dict):
+        return {}
+    domain = BRANDING.get("domain") or ""
+    style = found.get("style")
+    if isinstance(style, str) and domain and re.fullmatch(r"https://tiles\.%s/[A-Za-z0-9/._-]+\.json" % re.escape(domain), style):
+        return {"style": style}
+    if found.get("tiles") == OSM_TILES:
+        return {"tiles": OSM_TILES, "attribution": "\u00a9 OpenStreetMap contributors"}
+    return {}
+
+
+BASEMAP = _basemap()
+
+
+def jc_map(pkg, resource_id=None):
+    """What the dataset's map reads (T-4639): per DataStore table, the OGC API Features items of
+    its entity type on the dataset's own Endpoint, with the collection's schema for units, or
+    only `resource_id`'s. The reader's browser asks each for one feature and shows the map only
+    when one has a geometry. None without such an address or without the map library."""
+    pkg = pkg or {}
+    if not os.path.isdir(VENDOR):
+        return None
+    domain = BRANDING.get("domain") or ""
+    resources = pkg.get("resources") or []
+    bases = []
+    for resource in resources:
+        url = resource.get("url") or ""
+        parts = urlsplit(url)
+        host = parts.hostname or ""
+        if jc_kind(resource) != "OGCFEAT" or not (url.startswith("https://") and domain and (host == domain or host.endswith("." + domain))):
+            continue
+        bases.append(parts)
+    layers = []
+    for resource in resources:
+        kind_type = resource.get("name") or ""
+        if not resource.get("datastore_active") or (resource_id and resource.get("id") != resource_id):
+            continue
+        if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*", kind_type):
+            continue
+        for parts in bases:
+            path = parts.path.rstrip("/")
+            if path.endswith("/items"):
+                if not path.endswith("/collections/%s/items" % kind_type):
+                    continue
+                collection = path[:-len("/items")]
+            else:
+                collection = "%s/collections/%s" % (path, kind_type)
+            layers.append({
+                "type": kind_type,
+                "items": urlunsplit(parts._replace(path=collection + "/items")),
+                "schema": urlunsplit(parts._replace(path=collection + "/schema", query="")),
+            })
+            break
+    if not layers:
+        return None
+    name = pkg.get("name") or ""
+    return {
+        "layers": layers,
+        "basemap": BASEMAP,
+        "lib": MAPLIBRE + "maplibre-gl.mjs",
+        "lang": _language(),
+        "title": pkg.get("title") or name,
+        "dataset": toolkit.url_for("dataset.read", id=name, _external=True),
+        "embed": toolkit.url_for("jc_pages.map", id=name, _external=True),
+        "t": {key: jc_t(key) for key in ("map_cap", "map_failed", "map_loading", "map_close", "map_panel",
+                                          "map_length", "map_area", "map_keys", "map_title")},
+    }
+
+
+def jc_map_page(id, resource_id=None):
+    """The map of one dataset as a page of its own, for a site to frame (T-4639): no header,
+    no footer, no form; the edge lets any site frame /map/ and strips its cookie."""
+    try:
+        pkg = toolkit.get_action("package_show")({}, {"id": id})
+    except (toolkit.ObjectNotFound, toolkit.NotAuthorized):
+        return toolkit.abort(404)
+    config = jc_map(pkg, resource_id)
+    if not config:
+        return toolkit.abort(404)
+    return toolkit.render("jc/map.html", {"pkg": pkg, "jc_map_config": config})
+
+
 def jc_total(previews):
     """All rows of the tables, or None when any table's count is unknown."""
     totals = [p["total"] for p in previews or []]
@@ -1688,6 +1818,9 @@ class JcThemePlugin(plugins.SingletonPlugin):
         # The logo is a file beside this package, so CKAN serves it from its own origin and
         # no page reaches a third party for an asset.
         toolkit.add_public_directory(config, "public")
+        # MapLibre, baked into the image beside CKAN (T-4639); without it there is no map.
+        if os.path.isdir(VENDOR):
+            toolkit.add_public_directory(config, VENDOR)
         # CKAN keeps one title; the pages ask jc_site_title for the reader's language (T-4636).
         title = jc_site_title((BRANDING.get("languages") or {}).get("default"))
         if title:
@@ -1735,6 +1868,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_usage": jc_usage,
             "jc_guide": jc_guide,
             "jc_previews": jc_previews,
+            "jc_map": jc_map,
             "jc_total": jc_total,
             "jc_number": jc_number,
             "jc_rows": jc_rows,
@@ -1754,14 +1888,17 @@ class JcThemePlugin(plugins.SingletonPlugin):
         }
 
     def get_blueprint(self):
-        """/connector, /privacy, /terms and /support (T-4315), one template for all four, and
-        /assistants (T-4585)."""
+        """/connector, /privacy, /terms and /support (T-4315), one template for all four,
+        /assistants (T-4585) and /map/{dataset} (T-4639)."""
         from flask import Blueprint
 
         blueprint = Blueprint("jc_pages", self.__module__)
         for name in PAGES:
             blueprint.add_url_rule("/" + name, name, lambda name=name: toolkit.render("jc/page.html", {"jc_name": name}))
         blueprint.add_url_rule("/assistants", "assistants", lambda: toolkit.render("jc/assistants.html", {}))
+        # The framable map of a dataset, or of one of its tables (T-4639).
+        blueprint.add_url_rule("/map/<id>", "map", jc_map_page)
+        blueprint.add_url_rule("/map/<id>/<resource_id>", "map_resource", jc_map_page)
         return blueprint
 
     def before_dataset_search(self, search_params):
