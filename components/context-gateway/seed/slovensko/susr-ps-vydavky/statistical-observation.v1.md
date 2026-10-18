@@ -23,6 +23,7 @@ Specialises `Entity`.
 |---|---|---|---|---|---|---|
 | `dataSet` | Property | `string` | yes |  | `qb:dataSet` | The publisher's own code for the table this cell comes from, such as `zp3803rs`. |
 | `indicator` | Property | `string` | yes |  | `jc:indicator` | The publisher's own code for the measure, such as `ODPAD_TONY_KM2`. |
+| `name` | Property | `string` |  |  | `sdm-kpi:name` | What the number is, in the publisher's own words: the label of its indicator, such as `Miera nezamestnanosti (v %)`, or the table's title when the cube names no indicator. Absent when the publisher labels neither. |
 | `refArea` | Property | `string` | yes |  | `sdmx-dim:refArea` | The territory the cell describes, as the publisher codes it: a NUTS code for the kraj or an okres (`SK032`, `SK0323`), a LAU code for a municipality (`SK0321508438`). |
 | `refPeriod` | Property | `string` | yes |  | `sdmx-dim:refPeriod` | The period the cell covers, as the publisher labels it, such as `2023` or `2025Q2`. |
 | `dimensionKey` | Property | `string` |  |  | `jc:dimensionKey` | The cube's remaining dimensions beyond territory and period, as their codes joined by a hyphen and in the cube's own dimension order, such as `1` for the solid-emissions pollutant. It is the tail of the `{localId}`, repeated here so a query can select a slice without matching on an id pattern. Absent when the table has no further dimension. |

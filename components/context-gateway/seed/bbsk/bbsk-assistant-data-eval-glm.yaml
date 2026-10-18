@@ -54,7 +54,10 @@ spec:
     - { endpoint: helsinki/helsinki-events, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
     - { endpoint: helsinki/helsinki-bikes, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
     - { endpoint: helsinki/helsinki-transport, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: helsinki/helsinki-beach-water, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
     - { endpoint: slovensko/ovzdusie-sk, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-pr, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-pr-mzdy, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
   scope: { projects: [banskabystrica, zilina, praha, helsinki, slovensko] }
   allowedOrigins: [https://data.dev.joinedcontext.com]
   # The city assistants' limits (T-4149 item 1, T-4286: 300 questions per visitor a month by

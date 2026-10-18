@@ -66,7 +66,12 @@ ckan:
         - helsinki/helsinki-events
         - helsinki/helsinki-bikes
         - helsinki/helsinki-transport
+        - helsinki/helsinki-beach-water
         - slovensko/ovzdusie-sk
+        # ŠÚ SR's labour market (T-4680): its 45 tables share one type, and the router tells
+        # connectors apart by name and type alone, so only these two join for now.
+        - slovensko/susr-pr
+        - slovensko/susr-pr-mzdy
       scope: [banskabystrica, zilina, praha, helsinki, slovensko]
       languages: [sk, en, fi]
       greeting:
