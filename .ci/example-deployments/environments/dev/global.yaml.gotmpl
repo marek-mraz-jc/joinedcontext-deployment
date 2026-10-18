@@ -6,6 +6,8 @@
 
 components:
   - prepare
+  # The local-path helper's SELinux type, so released volumes delete on the MicroOS node (T-3431).
+  - node-storage
   - secrets
   - networkpolicies
   - runtime-policies

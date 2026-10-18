@@ -1,0 +1,17 @@
+---
+component: node-storage
+parts:
+  - name: local-path
+    hooks:
+      # The ConfigMap is k3s's until Helm adopts it: helm refuses an object it did not create
+      # unless it carries the release's ownership annotations and label.
+      - events: ["presync"]
+        showlogs: true
+        command: sh
+        args:
+          - -ec
+          - |
+            kubectl -n kube-system get configmap local-path-config >/dev/null 2>&1 || exit 0
+            kubectl -n kube-system annotate configmap local-path-config --overwrite \
+              meta.helm.sh/release-name=node-storage-local-path meta.helm.sh/release-namespace=kube-system
+            kubectl -n kube-system label configmap local-path-config --overwrite app.kubernetes.io/managed-by=Helm

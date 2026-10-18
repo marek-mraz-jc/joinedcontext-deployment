@@ -1,0 +1,7 @@
+---
+node-storage:
+  local-path:
+    # Off by default: only a k3s node whose SELinux is enforcing (dev's MicroOS) needs it (T-3431).
+    enabled: false
+    # The ConfigMap k3s's local-path-provisioner reads; it lives beside the provisioner.
+    namespace: kube-system
