@@ -184,10 +184,10 @@ pipeline:
         let rows = this.data.or([]).filter(r -> $stations.get(r.ind_kli.string()) != null && r.minuta.type() == "string")
         root = $stations.keys().sort().map_each(code -> $rows.filter(r -> r.ind_kli.string() == code).sort_by(r -> r.minuta)).filter(rs -> rs.length() > 0).map_each(rs -> rs.slice(-1).index(0).assign({
           "_at": rs.slice(-1).index(0).minuta.apply("utc"),
-          # The ten minutes up to the latest one, as far as the file holds them.
           # Soil temperature at the depths the station measures (`t_pod{cm}`), one instance per
           # depth, told apart by its datasetId (NGSI-LD multi-attribute, T-4557).
           "_soil": [5, 10, 20, 50, 100].filter(d -> rs.slice(-1).index(0).get("t_pod" + d.string()).type() == "number").map_each(d -> { "type": "Property", "value": rs.slice(-1).index(0).get("t_pod" + d.string()), "unitCode": "CEL", "datasetId": "urn:ngsi-ld:Dataset:shmu:soil-depth-%vcm".format(d) }),
+          # The ten minutes up to the latest one, as far as the file holds them.
           "_rain": rs.filter(r -> r.minuta.ts_parse("2006-01-02T15:04:05").ts_unix() > rs.slice(-1).index(0).minuta.ts_parse("2006-01-02T15:04:05").ts_unix() - 600 && r.zra_uhrn.type() == "number").map_each(r -> r.zra_uhrn).sum()
         })).map_each(r -> {
           "id": "urn:ngsi-ld:%v:%v:%v:shmu-%v".format("WeatherObserved", "banskabystrica.sk", env("JC_SPACE"), r.ind_kli),
