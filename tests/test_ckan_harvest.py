@@ -318,6 +318,42 @@ def test_a_second_run_replaces_the_tables_instead_of_adding_new_ones(monkeypatch
     assert len(harvest.ckan.tables[ages[-1]["id"]]["records"]) == 3
 
 
+def test_a_run_over_an_unchanged_source_writes_nothing(monkeypatch, capsys):
+    # T-4644: metadata_modified is "Aktualizované"; a run that changed nothing must not move it.
+    harvest = load(monkeypatch)
+    assert harvest.main() == 0
+    first = len(harvest.ckan.calls)
+    assert harvest.main() == 0
+    writes = [c for c in harvest.ckan.calls[first:] if not c.endswith(("_show", "_search"))]
+    assert writes == [], writes
+
+
+def test_a_changed_source_updates_in_place_and_keeps_the_dataset_and_its_issued(monkeypatch, capsys):
+    rows = [dict(r, issued="2019-04-02T10:00:00Z") for r in CATALOGUE]
+    harvest = load(monkeypatch, catalogue=rows)
+    assert harvest.main() == 0
+    ages = harvest.ckan.packages["bb-pocet-obcanov-podla-veku"]
+    identity, first = ages["id"], len(harvest.ckan.calls)
+    grown = AGES + [{"Vek": "2", "Počet_občanov_v_danom_veku": "1", "Počet_mužov": "1", "Počet_žien": "0"}]
+    monkeypatch.setitem(WEB, EGOV + "920:0::plac1140:_144053_5_8", (200, "application/json", json.dumps(grown).encode()))
+    assert harvest.main() == 0
+    calls = harvest.ckan.calls[first:]
+    assert "package_create" not in calls and "package_delete" not in calls and calls.count("package_update") == 1
+    ages = harvest.ckan.packages["bb-pocet-obcanov-podla-veku"]
+    assert ages["id"] == identity
+    assert {"key": "issued", "value": "2019-04-02T10:00:00Z"} in ages["extras"]
+
+
+def test_a_withdrawn_dataset_that_returns_is_updated_never_created_again(monkeypatch, capsys):
+    harvest = load(monkeypatch)
+    assert harvest.main() == 0
+    harvest.ckan.packages["bb-pocet-obcanov-podla-veku"]["state"] = "deleted"
+    first = len(harvest.ckan.calls)
+    assert harvest.main() == 0
+    assert "package_create" not in harvest.ckan.calls[first:]
+    assert harvest.ckan.packages["bb-pocet-obcanov-podla-veku"]["state"] == "active"
+
+
 def test_a_dataset_the_publisher_no_longer_lists_is_withdrawn(monkeypatch, capsys):
     harvest = load(monkeypatch)
     assert harvest.main() == 0

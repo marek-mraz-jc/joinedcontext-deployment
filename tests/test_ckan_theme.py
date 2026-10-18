@@ -121,6 +121,28 @@ def test_an_hourly_dataset_promises_an_hour_and_an_irregular_one_no_date(theme):
     assert (label, next_update) == ("Every day", None)
 
 
+def test_created_is_the_true_origin_and_updated_the_last_real_change(theme):
+    # T-4644: the publisher's (or our restored) `issued` before CKAN's re-creation date, the
+    # source's `modified` before CKAN's own; a value that is no date falls back, never shows.
+    restored = dict(PUBLISHED, metadata_created="2026-10-16T14:14:13.049715",
+                    extras=PUBLISHED["extras"] + [{"key": "issued", "value": "2026-09-07T09:00:00Z"}])
+    assert theme.jc_created(restored).isoformat() == "2026-09-07T09:00:00+00:00"
+    assert theme.jc_updated(restored).isoformat() == "2026-09-25T08:00:00+00:00"
+    rows = {label: text for label, text, _ in theme.jc_about(restored)}
+    assert rows["Created"] == "2026-09-07" and rows["Last update"] == "2026-09-25"
+    assert "issued" not in dict(theme.jc_more(restored))
+    harvested = dict(restored, extras=[{"key": "issued", "value": "2019-04-02"}, {"key": "modified", "value": "2023-11-30T08:26:58Z"}])
+    assert theme.jc_created(harvested).date().isoformat() == "2019-04-02"
+    assert theme.jc_updated(harvested).isoformat() == "2023-11-30T08:26:58+00:00"
+    assert theme.jc_frequency(dict(harvested, extras=harvested["extras"] + [{"key": "frequency", "value": "DAILY"}]))[1].date().isoformat() == "2023-12-01"
+    broken = dict(restored, extras=[{"key": "issued", "value": "unknown"}])
+    assert theme.jc_created(broken).isoformat() == "2026-10-16T14:14:13.049715+00:00"
+    assert theme.jc_created({}) is None and theme.jc_updated({}) is None
+    for template in ("templates__home__index.html", "templates__snippets__package_item.html"):
+        page = (THEME / template).read_text()
+        assert "h.jc_updated(" in page and "metadata_modified" not in page, template
+
+
 def test_a_bare_dataset_shows_only_what_it_has_and_the_publisher_falls_back_to_the_organization(theme):
     assert theme.jc_about({}) == []
     bare = {"organization": {"name": "helsinki", "title": "City of Helsinki"}}

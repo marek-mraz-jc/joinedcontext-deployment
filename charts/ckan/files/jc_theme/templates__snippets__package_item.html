@@ -10,8 +10,9 @@
     {% endif %}
     <span class="jc-item-facts">
       {%- if package.organization %}{{ package.organization.title or package.organization.name }}{% endif -%}
-      {%- if package.organization and package.metadata_modified %} · {% endif -%}
-      {%- if package.metadata_modified %}{{ h.jc_t('updated') }} {{ h.render_datetime(package.metadata_modified) }}{% endif -%}
+      {%- set updated = h.jc_updated(package) -%}
+      {%- if package.organization and updated %} · {% endif -%}
+      {%- if updated %}{{ h.jc_t('updated') }} {{ h.render_datetime(updated) }}{% endif -%}
     </span>
   </div>
 {% endblock %}

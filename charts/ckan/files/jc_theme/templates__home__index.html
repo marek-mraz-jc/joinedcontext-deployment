@@ -45,8 +45,9 @@
                 {% if notes %}<p class="jc-card-text">{{ notes }}</p>{% endif %}
                 <div class="jc-card-foot">
                   {% for format in h.jc_formats(pkg)[:4] %}<span class="jc-chip">{{ format }}</span>{% endfor %}
-                  {% if pkg.metadata_modified %}
-                    <time datetime="{{ pkg.metadata_modified }}">{{ h.jc_t('updated') }} {{ h.render_datetime(pkg.metadata_modified) }}</time>
+                  {% set updated = h.jc_updated(pkg) %}
+                  {% if updated %}
+                    <time datetime="{{ updated.isoformat() }}">{{ h.jc_t('updated') }} {{ h.render_datetime(updated) }}</time>
                   {% endif %}
                 </div>
               </li>
