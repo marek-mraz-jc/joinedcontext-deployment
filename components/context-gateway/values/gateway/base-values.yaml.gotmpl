@@ -75,6 +75,9 @@ env:
   JC_GATEWAY_INTERNAL_BIND: "0.0.0.0:8082"
   # The runner's headless Service: a broker admits a tokenless CONNECT only from its pods (T-4004).
   JC_GATEWAY_MQTT_RUNNER_HOST: "pipeline-runner-pods.{{ index .Values "pipeline-runner" "runner" "namespace" }}.svc.cluster.local"
+  # The anonymous OAuth server redirects to Google's relay alone: OAuth is for Gemini only, Claude,
+  # ChatGPT and Grok read the open data without a token (owner 2026-10-18, ADR-N-052 §2.3, T-4630).
+  JC_GATEWAY_OAUTH_REDIRECT_HOSTS: oauth-redirect.googleusercontent.com
   JC_GATEWAY_PUBLIC_URL: "https://api.{{ $global.domain }}"
   JC_OIDC_ISSUER: "https://idm.{{ $global.domain }}/realms/{{ $global.instanceSlug }}"
   # The gateway's own client on the Portal's internal listener (T-1500, PF-46, AG-52), proved by

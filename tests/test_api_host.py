@@ -121,6 +121,8 @@ def test_the_gateway_names_the_data_host_and_reads_its_oauth_key_from_a_secret(r
     gateway = next(d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"] == "context-gateway")
     env = {e["name"]: e for c in gateway["spec"]["template"]["spec"]["containers"] for e in c.get("env", [])}
     assert env["JC_GATEWAY_PUBLIC_URL"]["value"] == f"https://{API_HOST}"
+    # OAuth is for Gemini only (owner 2026-10-18, ADR-N-052 §2.3): no other assistant's host.
+    assert env["JC_GATEWAY_OAUTH_REDIRECT_HOSTS"]["value"] == "oauth-redirect.googleusercontent.com"
     key = env["JC_GATEWAY_OAUTH_KEY"]
     assert "value" not in key and key["valueFrom"]["secretKeyRef"] == {"name": "context-gateway-oauth-key", "key": "key"}
     secret = next(d for d in docs if d.get("kind") == "Secret" and d["metadata"]["name"] == "context-gateway-oauth-key")
