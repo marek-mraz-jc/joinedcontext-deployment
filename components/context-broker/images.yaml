@@ -69,5 +69,9 @@ context-broker:
     # across many views (/x/views/_union, ANTARES_UNION_MAX_VIEWS), OGC file writers bounded by
     # ANTARES_EXPORT_FILES (503 past it), the NGSI-LD primer as MCP instructions. No migration
     # over e67f07f. (9d7a594, with T-4610, failed its ETSI image gate and was not pushed.)
-    tag: '4a42248'
-    digest: 'sha256:03458c28189baa3872bc4cb84075e6493b0bb65def5f8738e7f8a1b459fdb9bb'
+    # Antares dev b1def0c (trains to 20261018-1311, T-4414 T-4610 T-4477 T-2890 T-4487 and 23
+    # commits over 4a42248): layered history retention (ANTARES_RETENTION_HISTORY_DEFAULT, P28D in
+    # base values, owner 2026-10-18), expiry takes history (DM-97). Migration 0010 is one partial
+    # index on entities, a scan of current state only, never of attr_instances.
+    tag: 'b1def0c'
+    digest: 'sha256:c6cfe3644bcd7b87c30cca636a5630bf4badecb25de39b298ca7d53a66ad9eb2'
