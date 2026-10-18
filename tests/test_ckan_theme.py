@@ -896,6 +896,25 @@ def test_the_open_assistant_has_one_close_control_and_a_frame_with_nothing_under
     assert 'box.querySelector("summary").focus();' in script
 
 
+def test_the_chat_grows_to_the_window_on_its_own_frames_word_alone():
+    """T-4658: the chat's expand button asks for the window; the page grows the frame only for its
+    own frame's message from the frame's origin, to 60rem inside the 1rem gutter and the safe
+    areas, and holds the page behind still. A phone keeps its whole-screen frame."""
+    css = (THEME / "public__jc-theme.css").read_text()
+    desktop = css.split("@media (max-width: 40rem) {", 1)[0]
+    full = desktop.split(".jc-assistant.jc-full > iframe { ", 1)[1].split("}", 1)[0]
+    assert "width: min(60rem, calc(100vw - 2rem));" in full
+    assert "inset-block-start: max(1rem, env(safe-area-inset-top));" in full
+    assert "height: calc(100dvh - max(1rem, env(safe-area-inset-top)) - max(1rem, env(safe-area-inset-bottom)));" in full
+    assert "body:has(.jc-assistant.jc-full[open]) { overflow: hidden; }" in desktop
+    assert css.index(".jc-assistant.jc-full > iframe") < css.index("@media (max-width: 40rem) {"), "the phone's frame wins"
+    script = (THEME / "public__jc-assistant.js").read_text()
+    size = script.split('data.type === "jc-assistant-size"', 1)
+    assert len(size) == 2 and "event.source === frame.contentWindow && event.origin === origin &&" in size[0].rsplit("else if", 1)[1]
+    assert '(data.size === "full" || data.size === "panel")' in size[1]
+    assert 'phone.matches || box.classList.contains("jc-full")' in script
+
+
 def test_the_catalogue_pod_is_told_its_assistant_only_when_the_assistant_is_deployed(rendered, rendered_variant):
     def widget(docs):
         (ckan,) = [d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"].endswith("ckan")

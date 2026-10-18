@@ -488,6 +488,11 @@ body.dt-view input[type="search"]::-webkit-search-cancel-button { display: none;
 /* One tall frame in the corner where the launcher was, 760px and never taller than the window
    less its two 1rem margins, with nothing under it (T-4592, T-4635). */
 .jc-assistant > iframe { position: fixed; inset-inline-end: 1rem; inset-block-end: max(1rem, env(safe-area-inset-bottom)); width: min(26rem, calc(100vw - 2rem)); height: min(760px, calc(100vh - 2rem)); height: min(760px, calc(100dvh - 2rem)); border: 1px solid var(--jc-border); border-radius: .75rem; background: var(--jc-surface); }
+/* Expanded by the chat's button (T-4658): the window less the 1rem gutter and the safe areas, at
+   most 60rem wide and centred; an iframe does not stretch between insets, so both sizes are set.
+   The page behind does not scroll (jc-assistant.js makes it inert). */
+.jc-assistant.jc-full > iframe { inset-inline-end: max(1rem, calc((100vw - 60rem) / 2)); inset-block-start: max(1rem, env(safe-area-inset-top)); width: min(60rem, calc(100vw - 2rem)); height: calc(100vh - max(1rem, env(safe-area-inset-top)) - max(1rem, env(safe-area-inset-bottom))); height: calc(100dvh - max(1rem, env(safe-area-inset-top)) - max(1rem, env(safe-area-inset-bottom))); }
+body:has(.jc-assistant.jc-full[open]) { overflow: hidden; }
 /* T-4204: the page keeps room at its end, so the button never covers its last line. */
 body:has(.jc-corner) { padding-block-end: 5rem; }
 /* On a phone the open assistant takes the whole screen, the chat's header with its ✕ on top; the
