@@ -703,6 +703,17 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "soilTemperature": {
+          "description": "Soil temperature at one depth under the station, the minute's mean. One instance per depth the station measures (5, 10, 20, 50 and 100 cm, SHM\u00da's `t_pod5` to `t_pod100`), each told apart by its datasetId, `urn:ngsi-ld:Dataset:shmu:soil-depth-{cm}cm`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "Cel"
+          }
+        },
         "source": {
           "description": "The open-data service the entity was read from.",
           "format": "uri",
