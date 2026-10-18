@@ -171,6 +171,11 @@ assistantWidgets: {}
 # (T-4638), or `tiles: https://tile.openstreetmap.org/{z}/{x}/{y}.png` under OpenStreetMap's
 # tile usage policy. Empty draws the data on a plain background.
 mapBasemap: {}
+# The assistants page's optional cards (T-4643): `gemini: true` shows Gemini's card and guide, only
+# where the gateway's own OAuth (T-4631) answers on the api host (T-4630) and a scripted register,
+# authorize and token run against it has passed.
+assistants:
+  gemini: false
 
 podSecurityContext: {}
 securityContext: {}

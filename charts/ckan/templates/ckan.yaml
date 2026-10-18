@@ -139,6 +139,9 @@ spec:
             # style or OpenStreetMap's tiles, so anything else draws the data alone.
             - name: JC_MAP_BASEMAP
               value: {{ .Values.mapBasemap | default dict | toJson | quote }}
+            # Gemini's card on the assistants page (T-4643), off until its sign-in works here.
+            - name: JC_ASSISTANT_GEMINI
+              value: {{ (.Values.assistants | default dict).gemini | default false | toString | quote }}
             - name: CKAN_SOLR_URL
               value: http://{{ $full }}-solr.{{ .Release.Namespace }}.svc.cluster.local:8983/solr/ckan
             - name: CKAN_REDIS_URL
