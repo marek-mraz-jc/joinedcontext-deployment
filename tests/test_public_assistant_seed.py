@@ -313,7 +313,7 @@ def test_the_general_assistant_names_no_city_and_carries_the_portal_guide():
     assert all(len(c) <= 50 for cs in chips.values() for c in cs), chips
     prompt = spec["systemPrompt"]
     assert len(prompt) <= 6000, "the guide stays in about 1,500 tokens of the cached prefix"
-    for fact in ("https://dev.joinedcontext.com/api/mcp", "ngsi-ld/v1/entities", "bbox=", "Smart Data Model",
+    for fact in ("https://api.dev.joinedcontext.com/api/mcp", "ngsi-ld/v1/entities", "bbox=", "Smart Data Model",
                  "300 otázok", "vydavateľa"):
         assert fact in prompt, fact
     for word in ("secretref", "apikey", "api_key", "token:", "password"):

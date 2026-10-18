@@ -1665,7 +1665,8 @@ def jc_mcp_install():
     domain = BRANDING.get("domain")
     if not (isinstance(domain, str) and _HOST.match(domain)):
         return None
-    url = "https://%s/api/mcp" % domain
+    # The data host, api.{domain} (ADR-N-052 §2.1, T-4632): the apex moves an anonymous client there.
+    url = "https://api.%s/api/mcp" % domain
     server = {"type": "http", "url": url}
     vscode = json.dumps(dict(name=MCP_NAME, **server), separators=(",", ":"))
     cursor = base64.b64encode(json.dumps({"url": url}, separators=(",", ":")).encode()).decode()

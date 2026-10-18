@@ -81,8 +81,8 @@ organizations:
 # carry an IČO. HTML and PDF answers where JSON is declared are found by the fetch itself.
 harvest:
   # Where the converted datasets' distributions point (T-4279): each dataset's od Endpoint on
-  # the dev gateway, in every standard the platform serves.
-  gateway: https://dev.joinedcontext.com
+  # the dev data host (ADR-N-052 §2.1), in every standard the platform serves.
+  gateway: https://api.dev.joinedcontext.com
   sources:
     - name: banskabystrica
       sparql: https://data.slovensko.sk/api/sparql
@@ -248,7 +248,7 @@ hidden:
   bbsk-zmluvy-cafee6: "ngsi-ld: no entity on dev"
   bbsk-zoznam-poskytovatelov-socialnych-sluzieb-v-bbk-9ab090: "ngsi-ld: no entity on dev"
   bbsk-zoznam-ucinnych-vseobecne-zavaznych-nariadeni-vzn-80db50: "ngsi-ld: no entity on dev"
-  susr-zo-krajiny: "ngsi-ld: no entity behind the NGSI-LD distribution (the hub lists no type for https://dev.joinedcontext.com/api/endpoint/3bayn5lqwhce7opxqu3e7ruibkhqmfew/)"
+  susr-zo-krajiny: "ngsi-ld: no entity behind the NGSI-LD distribution (the hub lists no type for https://api.dev.joinedcontext.com/api/endpoint/3bayn5lqwhce7opxqu3e7ruibkhqmfew/)"
 
 # The dataset map's basemap on dev (T-4639): OpenStreetMap's raster tiles, with attribution,
 # until the tiles host of T-4638 serves a style; then `style: https://tiles.{domain}/...json`.
