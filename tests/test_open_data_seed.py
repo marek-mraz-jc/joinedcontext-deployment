@@ -515,6 +515,21 @@ def test_a_name_where_the_ico_belongs_keeps_the_row_out():
 
 
 @requires_docker
+def test_every_article_has_a_name_from_its_title_or_else_its_slug():
+    """WordPress renders a title as HTML, so "&#8222;" reads as the quote mark; a post with no title
+    is named by its slug rather than left without a name (T-4569)."""
+    posts = json.loads((FIXTURES / "aktuality.json").read_text())
+    entities = run("banskabystrica", "aktuality", "aktuality")
+    assert [e["identifier"]["value"] for e in entities] == [str(p["id"]) for p in posts]
+    titled, untitled = entities
+    assert titled["name"]["value"] == "Tretí ročník Svetla v meste poodhalí „druhý plán“ historického centra"
+    assert untitled["name"]["value"] == posts[1]["slug"].replace("-", " ")
+    assert [e["url"]["value"] for e in entities] == [p["link"] for p in posts]
+    assert all("<" not in e["content"]["value"] and "&#" not in e["content"]["value"] for e in entities)
+    assert valid("banskabystrica", entities)
+
+
+@requires_docker
 def test_a_catalogue_table_reads_its_records_as_addresses():
     entities = run("banskabystrica", "adresy", "adresy")
     rows = json.loads((FIXTURES / "adresy.json").read_text())["result"]["records"]

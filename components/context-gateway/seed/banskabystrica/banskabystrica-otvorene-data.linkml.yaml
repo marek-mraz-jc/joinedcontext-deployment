@@ -2,8 +2,9 @@
 # mapping names, one slot per column it reads; do not edit by hand.
 id: https://joinedcontext.com/models/banskabystrica/banskabystrica-otvorene-data
 name: banskabystrica-otvorene-data
-title: Banská Bystrica, catalogue tables
-description: Every dataset of the city of Banská Bystrica in the catalogue that reads as a table.
+title: Banská Bystrica, the city's open data
+description: 'The open data of the city of Banská Bystrica from the catalogue: registers and tables (addresses,
+  contracts, orders, grants, council meetings, greenery, parking) and the city''s news (Aktuality) as Articles.'
 license: https://joinedcontext.com/licenses/cc-by-4.0
 prefixes:
   linkml: https://w3id.org/linkml/

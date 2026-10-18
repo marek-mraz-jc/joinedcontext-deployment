@@ -74,13 +74,13 @@ pipeline:
           "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Article", "banskabystrica.sk", env("JC_SPACE"), $local),
           "type": "Article",
           "identifier": this."id".apply("string"),
-          "name": this.title.rendered.apply("string"),
+          "name": this.title.rendered.strip_html().unescape_html().catch(null).apply("string").or(this.slug.or("").string().replace_all("-", " ").apply("string")),
           "url": this."link".apply("uri"),
           "dateGmt": this."date_gmt".apply("datetime"),
           "modifiedGmt": this."modified_gmt".apply("datetime"),
-          "content": this.content.rendered.strip_html().catch(null).apply("string"),
+          "content": this.content.rendered.strip_html().unescape_html().catch(null).apply("string"),
           "dataProvider": { "type": "Property", "value": "Mesto Banská Bystrica (CC BY 4.0)" },
-          "source": { "type": "Property", "value": "https://www.banskabystrica.sk/wp-json/wp/v2/newses?per_page=100&_fields=id,title,link,date_gmt,modified_gmt,content" },
+          "source": { "type": "Property", "value": "https://www.banskabystrica.sk/wp-json/wp/v2/newses?per_page=100&_fields=id,title,slug,link,date_gmt,modified_gmt,content" },
           "isPartOf": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bb-aktuality" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.

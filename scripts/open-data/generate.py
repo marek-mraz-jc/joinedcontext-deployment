@@ -77,9 +77,14 @@ CKAN = "https://data.dev.joinedcontext.com"
 PROJECTS = {
     "banskabystrica": {
         "domain": "banskabystrica.sk",
-        "title": {"sk": "Banská Bystrica — tabuľky katalógu", "en": "Banská Bystrica, catalogue tables"},
-        "about": {"sk": "Všetky otvorené dáta mesta Banská Bystrica z katalógu, ktoré sa dajú čítať ako tabuľka.",
-                  "en": "Every dataset of the city of Banská Bystrica in the catalogue that reads as a table."},
+        # Registers and tables, and the city's news as Articles: "tables" alone told an agent the
+        # press releases were rows of numbers (T-4569).
+        "title": {"sk": "Banská Bystrica — otvorené dáta mesta", "en": "Banská Bystrica, the city's open data"},
+        "about": {"sk": "Otvorené dáta mesta Banská Bystrica z katalógu: registre a tabuľky (adresy, zmluvy, objednávky, "
+                        "dotácie, zasadnutia, zeleň, parkovanie) a správy mesta (Aktuality) ako články (Article).",
+                  "en": "The open data of the city of Banská Bystrica from the catalogue: registers and tables (addresses, "
+                        "contracts, orders, grants, council meetings, greenery, parking) and the city's news (Aktuality) "
+                        "as Articles."},
         # The city with a margin: the space's place, which the catalogue's Dataset carries (T-4525).
         "area": [18.95, 48.6, 19.35, 48.9],
     },
@@ -162,8 +167,11 @@ def q(text: str) -> str:
 
 def column(path: str, kind: str, col: str) -> str:
     if kind == "json-feed" and col in ("title", "content"):
-        expr = f"{path}.{col}.rendered"
-        return f"{expr}.strip_html().catch(null)" if col == "content" else expr
+        # WordPress renders both as HTML: "&#8222;" in a title is a quote mark (T-4569).
+        return f"{path}.{col}.rendered.strip_html().unescape_html().catch(null)"
+    if kind == "json-feed" and col == "slug":
+        # A post without a title is named by its slug, "krizovatka-pri-kazacku" as words (T-4569).
+        return f"{path}.slug.or(\"\").string().replace_all(\"-\", \" \")"
     return f"{path}.{q(col)}"
 
 
@@ -449,7 +457,7 @@ def source_url(e: dict) -> str:
         return s["url"]
     if s["kind"] == "ckan-datastore":
         return f"{CKAN}/api/3/action/datastore_search?resource_id={s['resource']}&limit=32000"
-    fields = ",".join(p["column"] for p in e["properties"].values())
+    fields = ",".join(c for p in e["properties"].values() for c in [p["column"], *p.get("otherwise", [])])
     return f"{s['url']}?per_page=100&_fields={fields}"
 
 
