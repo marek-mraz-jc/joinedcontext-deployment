@@ -7,7 +7,8 @@
 # production broker on one database instance; large needs its own nodes.
 small:
   broker:
-    requests: {cpu: 100m, memory: 128Mi}
+    # 448Mi: the dev broker's request since T-4473 (median 368, peak 591Mi).
+    requests: {cpu: 100m, memory: 448Mi}
     limits: {cpu: '1', memory: 1536Mi}
   db:
     instances: 1
