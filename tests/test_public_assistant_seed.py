@@ -45,7 +45,8 @@ ORIGINS = [
 
 def manifests(kind: str, project: str) -> dict[str, dict]:
     found = {}
-    for path in sorted((SEED / project).glob("*.yaml")):
+    # A topic folder, such as slovensko/susr-pr/, holds its own manifests (T-4390).
+    for path in sorted((SEED / project).rglob("*.yaml")):
         if path.name == "index.yaml":
             continue
         for doc in yaml.safe_load_all(path.read_text()):
