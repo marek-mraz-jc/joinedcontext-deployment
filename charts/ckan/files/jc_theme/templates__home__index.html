@@ -29,7 +29,6 @@
     </section>
 
     <div class="container"><div class="jc-home">
-      {# The main column holds the assistant card too: its code needs more width than the side (T-4284). #}
       <div class="jc-main">
       <section aria-labelledby="jc-recent-title">
         <div class="jc-home-head">
@@ -58,7 +57,6 @@
           <p class="jc-empty">{{ h.jc_t('no_datasets') }}</p>
         {% endif %}
       </section>
-      {% snippet 'snippets/jc_mcp_install.html' %}
       </div>
 
       <div class="jc-side">
@@ -87,9 +85,4 @@
       </div>
     </div></div>
   </div>
-{% endblock %}
-
-{% block scripts %}
-  {{ super() }}
-  <script src="{{ h.url_for_static('/jc-copy.js') }}" defer></script>
 {% endblock %}
