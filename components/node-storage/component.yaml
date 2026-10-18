@@ -4,7 +4,8 @@ parts:
   - name: local-path
     hooks:
       # The ConfigMap is k3s's until Helm adopts it: helm refuses an object it did not create
-      # unless it carries the release's ownership annotations and label.
+      # unless it carries the release's ownership annotations and label, and its server-side
+      # apply conflicts with k3s's field manager ("deploy@<node>") until that ownership is cleared.
       - events: ["presync"]
         showlogs: true
         command: sh
@@ -12,6 +13,9 @@ parts:
           - -ec
           - |
             kubectl -n kube-system get configmap local-path-config >/dev/null 2>&1 || exit 0
+            managers=$(kubectl -n kube-system get configmap local-path-config -o jsonpath='{.metadata.managedFields[*].manager}')
+            case " $managers " in *" deploy@"*) ;; *) exit 0 ;; esac
+            kubectl -n kube-system patch configmap local-path-config --type=merge -p '{"metadata":{"managedFields":[{}]}}'
             kubectl -n kube-system annotate configmap local-path-config --overwrite \
               meta.helm.sh/release-name=node-storage-local-path meta.helm.sh/release-namespace=kube-system
             kubectl -n kube-system label configmap local-path-config --overwrite app.kubernetes.io/managed-by=Helm

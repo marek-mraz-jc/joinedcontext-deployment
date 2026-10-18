@@ -48,3 +48,21 @@ def test_spc_t_appears_nowhere_else_on_dev(dev):
 
 def test_off_outside_dev(rendered):
     assert config(rendered("local")) == []
+
+
+def test_nothing_else_lands_in_or_targets_kube_system_on_dev(dev):
+    # A part `namespace` of kube-system once rendered default-deny-node-storage there, which would
+    # have cut CoreDNS off, and put kube-system in the prepare hook's mesh injection.
+    placed = [
+        f'{d["kind"]}/{d["metadata"]["name"]}'
+        for d in dev
+        if d["metadata"].get("namespace") == "kube-system"
+    ]
+    assert placed == ["ConfigMap/local-path-config"]
+    matched = [
+        d["metadata"]["name"]
+        for d in dev
+        if d.get("kind") == "ClusterPolicy"
+        and "kube-system" in yaml.safe_dump([r.get("match") for r in d["spec"].get("rules", [])])
+    ]
+    assert matched == [], "a Kyverno policy matches kube-system"

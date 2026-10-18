@@ -36,7 +36,10 @@ releases:
       {{- range $key, $value := (index $part "extraLabels" | default dict) }}
       {{ $key }}: {{ $value }}
       {{- end }}
-    namespace: {{ index $root $component $part.name "namespace" }}
+    # Literal, not a `namespace` value: prepare, networkpolicies and runtime-policies collect every
+    # part's `namespace` and would annotate kube-system for the mesh, default-deny it and scope Pod
+    # Security policies to it (T-3431).
+    namespace: kube-system
     {{- if ne $repoUrl "" }}
     chart: cc2-{{ index $root.charts $component $part.name "chart" }}
     {{- else }}
