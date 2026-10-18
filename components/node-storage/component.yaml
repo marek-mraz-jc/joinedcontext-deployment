@@ -9,7 +9,6 @@ parts:
       # manager touched is deleted and the release creates it a moment later; the provisioner
       # reads it per volume, so only a volume made in that second would retry.
       - events: ["presync"]
-        showlogs: true
         command: sh
         args:
           - -ec
@@ -22,7 +21,6 @@ parts:
       # checksum annotation of ours can roll it. After a sync that changed the ConfigMap, stamp
       # the data's hash on its pod template; a changed stamp restarts it, an unchanged one is a no-op.
       - events: ["postsync"]
-        showlogs: true
         command: sh
         args:
           - -ec

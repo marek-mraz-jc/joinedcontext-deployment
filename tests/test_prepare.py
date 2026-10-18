@@ -70,7 +70,10 @@ def test_every_namespace_a_component_deploys_into_is_ensured(hook, dev):
     # T-2675 is restricted and unmeshed, which the hook's Linkerd annotation would undo.
     owned = {d["metadata"]["name"] for d in dev if d.get("kind") == "Namespace"}
     assert not owned & set(ensured(hook)), f"ensured and meshed by the hook too: {sorted(owned & set(ensured(hook)))}"
-    missing = wanted - owned - set(ensured(hook))
+    # kube-system is the distribution's: node-storage puts k3s's own ConfigMap there (T-3431), and
+    # the hook must never mesh it.
+    assert "kube-system" not in ensured(hook)
+    missing = wanted - owned - set(ensured(hook)) - {"kube-system"}
     assert not missing, f"not ensured: {sorted(missing)}"
 
 
