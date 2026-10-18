@@ -1,6 +1,16 @@
 ---
 {{- $global := .Values.global }}
+{{- /* The instance this release serves (T-4636): `catalogue`, or a global.catalogues entry named
+       by the release's `catalogue` label, whose words are `ckan.<name>` and host its entry's. */}}
+{{- $name := index .Release.Labels "catalogue" | default "catalogue" }}
 {{- $this := .Values.ckan.catalogue }}
+{{- if ne $name "catalogue" }}
+{{- $this = dict "assistant" "" "languages" dict "site" dict "samples" dict }}
+{{- $this = merge (deepCopy (index .Values.ckan $name | default dict)) $this }}
+{{- range $c := .Values.global.catalogues | default list }}
+{{- if eq $c.name $name }}{{ $_ := set $this "subDomain" $c.subDomain }}{{ end }}
+{{- end }}
+{{- end }}
 {{- $images := index .Values.images "ckan" }}
 {{- $branding := $global.branding | default dict }}
 {{- if $this.languages }}
@@ -45,7 +55,9 @@ ckan:
   # plugin here and the egress to the realm in the NetworkPolicy together — one flag, and the
   # image pinned above has to be the one that carries the extension (T-0403).
   sso:
-    enabled: {{ $global.ckan.sso | default false }}
+    # ponytail: a further catalogue (T-4636) has no Keycloak client of its own yet and signs in
+    # with its local administrator; add a client per instance when a city logs in through the realm.
+    enabled: {{ and ($global.ckan.sso | default false) (eq $name "catalogue") }}
     clientId: ckan
     issuer: "https://idm.{{ $global.domain }}/realms/{{ $global.instanceSlug }}"
   # DCAT-AP for harvesters: `global.ckan.dcat`, against an image that carries ckanext-dcat
@@ -83,14 +95,14 @@ branding:
 # its AssistantDeployment allows, so that deployment's allowedOrigins names this catalogue.
 {{- if and (has "assistant" .Values.components) ($this.assistant | default "") }}
 {{- if not (regexMatch "^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$" $this.assistant) }}
-{{- fail (printf "ckan.catalogue.assistant: %q is not a publicId (lowercase letters, digits and dashes)" $this.assistant) }}
+{{- fail (printf "ckan.%s.assistant: %q is not a publicId (lowercase letters, digits and dashes)" $name $this.assistant) }}
 {{- end }}
 assistantWidget: "https://assistant.{{ $global.domain }}/d/{{ $this.assistant }}/widget"
 # A dataset page frames its publisher's assistant, by CKAN organization (T-4281).
 assistantWidgets:
 {{- range $organization, $publicId := (index $this "assistantByOrganization") | default dict }}
 {{- if not (regexMatch "^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$" $publicId) }}
-{{- fail (printf "ckan.catalogue.assistantByOrganization.%s: %q is not a publicId (lowercase letters, digits and dashes)" $organization $publicId) }}
+{{- fail (printf "ckan.%s.assistantByOrganization.%s: %q is not a publicId (lowercase letters, digits and dashes)" $name $organization $publicId) }}
 {{- end }}
   {{ $organization | quote }}: "https://assistant.{{ $global.domain }}/d/{{ $publicId }}/widget"
 {{- end }}
