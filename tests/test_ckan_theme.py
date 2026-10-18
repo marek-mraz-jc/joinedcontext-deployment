@@ -1613,4 +1613,28 @@ def test_the_bar_is_one_slant_in_the_makers_colours_and_shrinks_on_a_phone():
         assert f".jc-seg-{mark} {{ background: {ground}; }}" in css, mark
     assert "--jc-slant" not in css and "clip-path: polygon" not in css
     phone = (THEME / "public__jc-theme.css").read_text().split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
-    assert ".jc-corner .jc-assistants-link { block-size: 2.25rem; }" in phone
+    assert ".jc-corner .jc-assistants-link { block-size: 2.75rem; }" in phone
+
+
+def test_the_closed_launcher_takes_the_bar_s_shape_and_the_open_one_does_not():
+    """T-4622: closed, the launcher has the bar's slant, corners, shadow and height, its words
+    upright on one line; open, it stays the round close control on a desktop and the top bar on a
+    phone, so no skew reaches it."""
+    css = desktop_css()
+    bar = css.split(".jc-corner .jc-assistants-link { ", 1)[1].split("}", 1)[0]
+    closed = css.split(".jc-assistant:not([open]) > summary { ", 1)[1].split("}", 1)[0]
+    for shared in ("block-size: 3rem;", "border-radius: 10px;", "transform: skewX(-14deg);",
+                   "margin-inline: .375rem;",
+                   "box-shadow: 0 4px 14px color-mix(in oklab, var(--jc-ink) 25%, transparent);"):
+        assert shared in bar and shared in closed, shared
+    assert "white-space: nowrap;" in closed
+    assert ".jc-assistant:not([open]) > summary > span { display: inline-block; transform: skewX(14deg); }" in css
+    for rule in re.findall(r"[^{}]*\{[^}]*skewX[^}]*\}", css):
+        assert "[open]" not in rule.split("{", 1)[0] or ":not([open])" in rule, rule
+    assert "transition" not in closed and "animation" not in closed
+    phone = (THEME / "public__jc-theme.css").read_text().split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
+    assert ".jc-assistant:not([open]) > summary { block-size: 2.75rem; font-size: .9375rem; padding-inline: 1.125rem; }" in phone
+    assert ".jc-assistant[open] > summary { box-sizing: border-box; inline-size: auto; block-size: 3.25rem;" in phone
+    # the closed summary's focus ring stays: no rule takes the outline away
+    assert ".jc-assistant > summary:focus-visible { outline: 3px solid var(--jc-accent); outline-offset: 2px; }" in css
+    assert "outline: none" not in closed and "outline: 0" not in closed

@@ -443,7 +443,7 @@ body.dt-view .dt-button, body.dt-view .btn-secondary { background: var(--jc-surf
 .jc-assistant { position: relative; }
 /* T-4620: one bar on a slant, a segment per assistant in its maker's colour, its logo in white and
    upright again; no border and no dividers, the colours divide it. */
-.jc-corner .jc-assistants-link { box-sizing: border-box; block-size: 2.875rem; margin-inline: .375rem; display: flex; flex-wrap: nowrap; overflow: hidden; border-radius: 10px; transform: skewX(-14deg); text-decoration: none; box-shadow: 0 4px 14px color-mix(in oklab, var(--jc-ink) 25%, transparent); }
+.jc-corner .jc-assistants-link { box-sizing: border-box; block-size: 3rem; margin-inline: .375rem; display: flex; flex-wrap: nowrap; overflow: hidden; border-radius: 10px; transform: skewX(-14deg); text-decoration: none; box-shadow: 0 4px 14px color-mix(in oklab, var(--jc-ink) 25%, transparent); }
 .jc-corner .jc-assistants-link:hover, .jc-corner .jc-assistants-link:focus { text-decoration: none; }
 .jc-corner:has(.jc-assistant[open]) .jc-assistants-link { display: none; }
 .jc-seg { display: flex; align-items: center; justify-content: center; inline-size: 3.125rem; }
@@ -459,6 +459,10 @@ body.dt-view .dt-button, body.dt-view .btn-secondary { background: var(--jc-surf
 .jc-assistant > summary { list-style: none; cursor: pointer; box-sizing: border-box; min-block-size: 2.75rem; display: flex; align-items: center; justify-content: center; background: var(--jc-primary); color: var(--jc-primary-fg); border-radius: 999px; padding: .75rem 1.25rem; font-weight: 600; box-shadow: 0 .25rem 1rem color-mix(in oklab, var(--jc-ink) 25%, transparent); }
 .jc-assistant > summary::-webkit-details-marker { display: none; }
 .jc-assistant > summary:focus-visible { outline: 3px solid var(--jc-accent); outline-offset: 2px; }
+/* T-4622: closed, the launcher takes the logo bar's shape: the same slant, corners, height and
+   shadow, its words upright again and on one line. Open, it is the ✕ below as before. */
+.jc-assistant:not([open]) > summary { block-size: 3rem; min-block-size: 0; padding-block: 0; margin-inline: .375rem; border-radius: 10px; transform: skewX(-14deg); white-space: nowrap; box-shadow: 0 4px 14px color-mix(in oklab, var(--jc-ink) 25%, transparent); }
+.jc-assistant:not([open]) > summary > span { display: inline-block; transform: skewX(14deg); }
 /* Open, the launcher becomes the panel's close control, a round ✕ in its place: the corner never
    shows both (T-4283). Its words stay for a screen reader. */
 .jc-assistant[open] > summary { inline-size: 2.75rem; block-size: 2.75rem; padding: 0; }
@@ -474,9 +478,12 @@ body:has(.jc-corner) { padding-block-end: 5rem; }
 @media (max-width: 40rem) {
   /* T-4620: the bar is narrow enough to stay beside the launcher, one row as on a desktop. */
   .jc-corner { align-items: center; }
-  .jc-corner .jc-assistants-link { block-size: 2.25rem; }
-  .jc-seg { inline-size: 2.5rem; }
+  .jc-corner .jc-assistants-link { block-size: 2.75rem; }
+  /* T-4622: 26px segments, so the bar and the Slovak launcher's one line fit 390px between the
+     1rem gutters (measured on data.dev: 21.5px left, 16.5px right). */
+  .jc-seg { inline-size: 1.625rem; }
   .jc-brand { inline-size: 1.125rem; block-size: 1.125rem; }
+  .jc-assistant:not([open]) > summary { block-size: 2.75rem; font-size: .9375rem; padding-inline: 1.125rem; }
   .jc-corner:has(.jc-assistant[open]) { z-index: 2000; }
   body:has(.jc-assistant[open]) { overflow: hidden; }
   .jc-assistant[open] { position: fixed; inset: 0; z-index: 2000; display: flex; flex-direction: column; background: var(--jc-surface); }
