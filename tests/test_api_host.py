@@ -165,8 +165,9 @@ def test_the_pinned_image_moves_an_anonymous_call_and_serves_a_bearer(tmp_path):
 @requires_helmfile
 def test_what_the_platform_hands_out_names_the_data_host(rendered):
     """T-4632: the addresses the assistant cites and the harvest writes into CKAN are on
-    `api.{domain}`, so an anonymous reader is never sent through the apex's 308."""
-    docs = rendered("local")
+    `api.{domain}`, so an anonymous reader is never sent through the apex's 308. The assistant
+    is in the `dev` environment only."""
+    docs = rendered("dev")
     env = {e["name"]: e.get("value") for d in docs if d.get("kind") == "Deployment"
            for c in d["spec"]["template"]["spec"]["containers"] for e in c.get("env", [])}
-    assert env["JC_ASSISTANT_ENDPOINT_URL"] == f"https://{API_HOST}"
+    assert env["JC_ASSISTANT_ENDPOINT_URL"] == "https://api.dev.joinedcontext.com"
