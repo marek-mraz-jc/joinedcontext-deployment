@@ -107,12 +107,15 @@ global:
   #       storageClass: ''
   contextBrokers: []
 
-  # Additional CKAN catalogues beside the default instance `catalogue` (T-4636). Each entry names
-  # a top-level values block of the same name, shaped like `catalogue`: its own subDomain, site
-  # title and logo, samples, and an optional public assistant (`assistant` publicId plus
-  # `assistantSeed`), which the Gitea seed renders into the block's project.
+  # Further CKAN catalogues beside the default instance `catalogue` (T-4636), one per city. An entry
+  # names the instance and its host; each becomes a release, Secrets, databases and an edge route of
+  # its own (ckan-{name}, db-ckan-{name}, ckan_{name}, {subDomain}.{domain}), checked by
+  # catalogues-guard.yaml.gotmpl. The instance's words sit in `ckan.{name}`, shaped like
+  # `ckan.catalogue` (site, samples, languages, assistant, assistantSeed), and its publishers and
+  # sizes in components/ckan/values/{name}/; components/ckan/values/example-city is the example.
   #   catalogues:
-  #     - name: catalogue-example
+  #     - name: example-city
+  #       subDomain: opendata
   catalogues: []
 
   # Service mesh configuration

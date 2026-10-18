@@ -466,7 +466,7 @@ def test_the_table_view_wears_the_theme_and_the_theme_s_templates_win():
 def test_the_home_page_replaces_ckan_s_sample_page():
     home = (THEME / "templates__home__index.html").read_text()
     assert "{% block primary_content %}" in home
-    for part in ("brand.tagline or h.jc_t('tagline')", "h.get_site_statistics()", "h.jc_recent(6)",
+    for part in ("h.jc_site_tagline()", "h.get_site_statistics()", "h.jc_recent(6)",
                  "get_facet_items_dict('organization'", 'role="search"', '<label for="jc-hero-q">'):
         assert part in home, part
     assert "home/snippets/" not in home
@@ -1808,6 +1808,25 @@ def test_the_site_title_is_the_instances_in_the_readers_language(theme, monkeypa
     assert theme.jc_site_title() == "joinedcontext"
     bare = _with_branding(theme, monkeypatch, tmp_path, dict(INSTANCE, siteTitle={"sk": "", "en": 3}))
     assert bare.jc_site_title() == "joinedcontext", "nothing usable falls back to the installation's name"
+
+
+def test_the_tagline_is_the_instances_then_the_installations_then_the_themes(theme, monkeypatch, tmp_path):
+    """T-4636, owner 15:18Z: `site.tagline` per language under the title, which it no longer
+    repeats; the installation's tagline, then the theme's own line, where the instance sets none."""
+    module = _with_branding(theme, monkeypatch, tmp_path,
+                            dict(INSTANCE, siteTagline={"sk": "Dáta mesta.", "en": "The city's data."}))
+    theme.page.lang = "en"
+    assert module.jc_site_tagline() == "The city's data."
+    theme.page.lang = "cs"
+    assert module.jc_site_tagline() == "Dáta mesta.", "a language it lacks takes the default's"
+    theme.page.lang = "sk"
+    plain = _with_branding(theme, monkeypatch, tmp_path, dict(INSTANCE, tagline="Ours."))
+    assert plain.jc_site_tagline() == "Ours."
+    bare = _with_branding(theme, monkeypatch, tmp_path, INSTANCE)
+    assert bare.jc_site_tagline() == "Prezrite si ich, stiahnite alebo sa na ne opýtajte asistenta."
+    assert "Otvorené dáta" not in bare.jc_site_tagline(), "the line does not repeat the title"
+    home = (THEME / "templates__home__index.html").read_text()
+    assert "h.jc_site_tagline()" in home
 
 
 def test_the_header_logo_is_the_instances_file_or_the_lockup(theme, monkeypatch, tmp_path):

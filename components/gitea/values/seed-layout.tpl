@@ -68,21 +68,27 @@ lists, gitea.catalogueAssistants>); gives JSON
 {{- /*
 Each catalogue instance's assistant (T-4636): the AssistantDeployment components/ckan/seed/
 assistant.yaml.gotmpl renders from `ckan.<instance>`, for the default instance `catalogue` and every
-name in `global.catalogues` whose block names a publicId (`assistant`) and an `assistantSeed.project`.
+`global.catalogues` entry (its host from the entry) whose block names a publicId (`assistant`) and an `assistantSeed.project`.
 Takes (dict "values" <.Values>); gives JSON {"projects/<project>/assistant/deployments/<publicId>.yaml": text}.
 */ -}}
 {{- define "gitea.catalogueAssistants" -}}
 {{- $v := .values }}
 {{- $files := dict }}
 {{- if has "ckan" $v.components }}
-{{- $names := list "catalogue" }}
-{{- range $c := index $v.global "catalogues" | default list }}{{ $names = append $names $c.name }}{{ end }}
-{{- range $name := $names }}
-{{- $i := index $v.ckan $name | default dict }}
+{{- $instances := list (dict "name" "catalogue" "words" $v.ckan.catalogue) }}
+{{- range $c := index $v.global "catalogues" | default list }}
+{{- $words := merge (dict "subDomain" $c.subDomain) (index $v.ckan $c.name | default dict) }}
+{{- $instances = append $instances (dict "name" $c.name "words" $words) }}
+{{- end }}
+{{- range $instance := $instances }}
+{{- $name := $instance.name }}
+{{- $i := $instance.words }}
 {{- $seed := index $i "assistantSeed" | default dict }}
 {{- if and (index $i "assistant") (index $seed "project") }}
 {{- $text := tpl (readFile "../../../ckan/seed/assistant.yaml.gotmpl") (dict "name" $name "instance" $i "domain" $v.global.domain) }}
-{{- $_ := set $files (printf "projects/%s/assistant/deployments/%s.yaml" $seed.project $i.assistant) $text }}
+{{- $path := printf "projects/%s/assistant/deployments/%s.yaml" $seed.project $i.assistant }}
+{{- if hasKey $files $path }}{{ fail (printf "ckan.%s.assistant: %q is another catalogue's assistant in %s (T-4636)" $name $i.assistant $seed.project) }}{{ end }}
+{{- $_ := set $files $path $text }}
 {{- end }}
 {{- end }}
 {{- end }}
