@@ -38,13 +38,18 @@ def test_dev_renders_the_job_the_volume_the_server_and_its_route(dev):
     assert data["persistentVolumeClaim"]["readOnly"] is True
     mount = next(m for m in server["containers"][0]["volumeMounts"] if m["name"] == "data")
     assert mount["readOnly"] is True, "the server never writes the tiles"
-    for spec in (server, cron["jobTemplate"]["spec"]["template"]["spec"]):
+    job = cron["jobTemplate"]["spec"]["template"]["spec"]
+    # One volume, two pods: on an SELinux node both need the same MCS level or the server cannot
+    # read what the job wrote (403 on dev 2026-10-18); the type stays the runtime's container_t.
+    levels = {s["securityContext"]["seLinuxOptions"]["level"] for s in (server, job)}
+    assert len(levels) == 1 and all(set(s["securityContext"]["seLinuxOptions"]) == {"level"} for s in (server, job))
+    for spec in (server, job):
         assert spec["securityContext"]["runAsNonRoot"] is True
         for container in spec["containers"]:
             assert container["securityContext"]["readOnlyRootFilesystem"] is True
             assert container["securityContext"]["capabilities"]["drop"] == ["ALL"]
             assert "@sha256:" in container["image"]
-            assert container["resources"]["limits"]["memory"] in ("64Mi", "256Mi")
+            assert container["resources"]["limits"]["memory"] in ("64Mi", "1Gi")
     one(dev, "Service", "basemap-tiles")
     routes = yaml.safe_load((COMPONENT / "apisix-routes.yaml").read_text().replace("{{", "#{{"))
     assert routes["basemap"]["subDomain"] == "tiles" and routes["basemap"]["uri"] == "/*"
