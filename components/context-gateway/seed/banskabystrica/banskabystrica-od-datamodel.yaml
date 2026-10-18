@@ -5,8 +5,8 @@ metadata:
   name: banskabystrica-otvorene-data
   namespace: banskabystrica
   title:
-    sk: Banská Bystrica — tabuľky katalógu
-    en: Banská Bystrica, catalogue tables
+    sk: Banská Bystrica — otvorené dáta mesta
+    en: Banská Bystrica, the city's open data
 spec:
   contextSpaceRef: banskabystrica-otvorene-data
   linkml: ./banskabystrica-otvorene-data.linkml.yaml
