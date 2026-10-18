@@ -123,8 +123,13 @@
     },
     "sdm": "https://smartdatamodels.org/",
     "sdm-org": "https://smartdatamodels.org/dataModel.Organization/",
+    "sdm-parks": "https://smartdatamodels.org/dataModel.ParksAndGardens/",
     "shex": "http://www.w3.org/ns/shex#",
     "skos": "http://www.w3.org/2004/02/skos/core#",
+    "soilTemperature": {
+      "@id": "sdm-parks:soilTemperature",
+      "@type": "xsd:float"
+    },
     "source": {
       "@id": "sdm:source",
       "@type": "xsd:anyURI"

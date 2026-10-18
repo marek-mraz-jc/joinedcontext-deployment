@@ -119,6 +119,7 @@ Specialises `Entity`.
 | `windSpeed` | Property | `float` |  | m/s | `sdm:windSpeed` | Wind speed, the minute's scalar mean. |
 | `windDirection` | Property | `float` |  | deg | `sdm:windDirection` | Where the wind comes from, degrees clockwise from north, the minute's vector mean. |
 | `precipitation` | Property | `float` |  | mm | `sdm:precipitation` | Rain and melted snow over the ten minutes up to `dateObserved`. |
+| `soilTemperature` | Property | `float` |  | Cel | `sdm-parks:soilTemperature` | Soil temperature at one depth under the station, the minute's mean. One instance per depth the station measures (5, 10, 20, 50 and 100 cm, SHMÚ's `t_pod5` to `t_pod100`), each told apart by its datasetId, `urn:ngsi-ld:Dataset:shmu:soil-depth-{cm}cm`. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
