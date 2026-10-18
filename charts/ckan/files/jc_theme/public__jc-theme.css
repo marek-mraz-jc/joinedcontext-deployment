@@ -593,6 +593,40 @@ body.dt-view .dataTables_filter label::after { content: none; }
   .jc-grid { height: clamp(27rem, calc(24rem + var(--jc-rows, 20) * 2.6rem), 34rem); }
 }
 
+/* ---- The dataset map (T-4639) ----------------------------------------------------------- */
+/* Border to border of its card, like the table's frame; the panel over its right side on a
+   desktop, a sheet over its lower half on a phone. Clusters are buttons with their count. */
+.jc-map { position: relative; }
+.jc-map-card .jc-map { margin-inline: -1rem; }
+.jc-map-area { height: 26rem; background: var(--jc-surface); }
+.jc-map-area:focus-within { outline: 2px solid var(--jc-primary); outline-offset: -2px; }
+.jc-map-note:empty { display: none; }
+.jc-map-note { margin: .5rem 1rem 0; color: var(--jc-muted); font-size: .875rem; }
+.jc-map-panel { position: absolute; z-index: 3; top: .75rem; inset-inline-end: .75rem; width: min(20rem, calc(100% - 1.5rem)); max-height: calc(100% - 1.5rem); overflow: auto; padding: .75rem 1rem 1rem; background: var(--jc-surface); color: var(--jc-ink); border: 1px solid var(--jc-border); border-radius: var(--jc-radius-lg); box-shadow: var(--jc-shadow-2); user-select: text; }
+.jc-map-panel h3 { margin: 0 2rem .5rem 0; font-size: 1.0625rem; overflow-wrap: anywhere; }
+.jc-map-panel dl { display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr); gap: .25rem .75rem; margin: 0; font-size: .875rem; }
+.jc-map-panel dt { color: var(--jc-muted); font-weight: 500; overflow-wrap: anywhere; }
+.jc-map-panel dd { margin: 0; overflow-wrap: anywhere; }
+.jc-map-close { position: absolute; top: .5rem; inset-inline-end: .5rem; inline-size: 2rem; block-size: 2rem; border: 0; border-radius: 50%; background: transparent; color: var(--jc-ink); font-size: 1rem; line-height: 1; }
+.jc-map-close:hover, .jc-map-close:focus-visible { background: var(--jc-border); }
+.jc-map-cluster { min-inline-size: 2.25rem; block-size: 2.25rem; padding: 0 .5rem; border: 2px solid var(--jc-paper); border-radius: 1.125rem; background: var(--jc-primary); color: var(--jc-primary-fg); font-weight: 700; font-size: .8125rem; box-shadow: var(--jc-shadow-2); cursor: pointer; }
+.jc-map-cluster:focus-visible { outline: 3px solid var(--jc-accent); outline-offset: 2px; }
+.jc-map-embed { flex-basis: 100%; }
+.jc-map-embed > summary { list-style: none; display: inline-block; }
+.jc-map-embed > summary::-webkit-details-marker { display: none; }
+.jc-map-embed[open] > summary { margin-bottom: .5rem; }
+.jc-map-embed textarea { font-family: var(--bs-font-monospace, monospace); font-size: .8125rem; margin-bottom: .5rem; }
+@media (max-width: 599.98px) {
+  .jc-map-area { height: 22rem; }
+  .jc-map-panel { top: auto; bottom: 0; inset-inline: 0; width: auto; max-height: 55%; border-radius: var(--jc-radius-lg) var(--jc-radius-lg) 0 0; }
+}
+/* The map as a page of its own, framed by another site: the map and two links, nothing else. */
+body.jc-embed { margin: 0; background: var(--jc-surface); }
+.jc-map-page { display: flex; flex-direction: column; height: 100vh; }
+.jc-map-page .jc-map { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.jc-map-page .jc-map-area { flex: 1; height: auto; min-height: 12rem; }
+.jc-map-links { display: flex; flex-wrap: wrap; gap: .25rem 1rem; margin: 0; padding: .5rem .75rem; font-size: .875rem; border-top: 1px solid var(--jc-border); }
+
 /* ---- Use it in your AI assistant (T-4585) ------------------------------------------------ */
 /* T-4628, T-4634: every card in one row on a desktop, as many as fit at 14rem below it, one column
    on a phone, all one height. A card's link covers the whole card, and the card shows its focus. */

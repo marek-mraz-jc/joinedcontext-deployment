@@ -11,6 +11,8 @@ import importlib.util
 import json
 import os
 import re
+import shutil
+import subprocess
 import sys
 import types
 from pathlib import Path
@@ -467,7 +469,7 @@ def test_the_table_view_wears_the_theme_and_the_theme_s_templates_win():
 def test_the_home_page_replaces_ckan_s_sample_page():
     home = (THEME / "templates__home__index.html").read_text()
     assert "{% block primary_content %}" in home
-    for part in ("brand.tagline or h.jc_t('tagline')", "h.get_site_statistics()", "h.jc_recent(6)",
+    for part in ("h.jc_site_tagline()", "h.get_site_statistics()", "h.jc_recent(6)",
                  "get_facet_items_dict('organization'", 'role="search"', '<label for="jc-hero-q">'):
         assert part in home, part
     assert "home/snippets/" not in home
@@ -1279,7 +1281,7 @@ def test_the_four_pages_are_routes_of_one_template_and_every_page_links_them(the
     monkeypatch.setitem(sys.modules, "flask", types.SimpleNamespace(Blueprint=Blueprint))
     theme.toolkit.render = lambda template, extra: (template, extra)
     blueprint = theme.JcThemePlugin().get_blueprint()
-    assert blueprint.name == "jc_pages" and sorted(rules) == ["/assistants", "/connector", "/privacy", "/support", "/terms"]
+    assert blueprint.name == "jc_pages" and sorted(rules) == ["/assistants", "/connector", "/map/<id>", "/map/<id>/<resource_id>", "/privacy", "/support", "/terms"]
     assert rules["/assistants"][0] == "assistants" and rules["/assistants"][1]() == ("jc/assistants.html", {})
     endpoint, view = rules["/privacy"]
     assert endpoint == "privacy" and view() == ("jc/page.html", {"jc_name": "privacy"})
@@ -1811,6 +1813,25 @@ def test_the_site_title_is_the_instances_in_the_readers_language(theme, monkeypa
     assert bare.jc_site_title() == "joinedcontext", "nothing usable falls back to the installation's name"
 
 
+def test_the_tagline_is_the_instances_then_the_installations_then_the_themes(theme, monkeypatch, tmp_path):
+    """T-4636, owner 15:18Z: `site.tagline` per language under the title, which it no longer
+    repeats; the installation's tagline, then the theme's own line, where the instance sets none."""
+    module = _with_branding(theme, monkeypatch, tmp_path,
+                            dict(INSTANCE, siteTagline={"sk": "Dáta mesta.", "en": "The city's data."}))
+    theme.page.lang = "en"
+    assert module.jc_site_tagline() == "The city's data."
+    theme.page.lang = "cs"
+    assert module.jc_site_tagline() == "Dáta mesta.", "a language it lacks takes the default's"
+    theme.page.lang = "sk"
+    plain = _with_branding(theme, monkeypatch, tmp_path, dict(INSTANCE, tagline="Ours."))
+    assert plain.jc_site_tagline() == "Ours."
+    bare = _with_branding(theme, monkeypatch, tmp_path, INSTANCE)
+    assert bare.jc_site_tagline() == "Prezrite si ich, stiahnite alebo sa na ne opýtajte asistenta."
+    assert "Otvorené dáta" not in bare.jc_site_tagline(), "the line does not repeat the title"
+    home = (THEME / "templates__home__index.html").read_text()
+    assert "h.jc_site_tagline()" in home
+
+
 def test_the_header_logo_is_the_instances_file_or_the_lockup(theme, monkeypatch, tmp_path):
     """T-4636: a file name in the theme's public directory, never a path or another origin."""
     assert theme.jc_site_logo() == "/jc-logo.svg"
@@ -1950,3 +1971,154 @@ def test_ckan_answers_cors_for_the_renderer_alone(rendered):
     env = {e["name"]: e.get("value") for c in ckan["spec"]["template"]["spec"]["containers"] for e in c.get("env", [])}
     assert env["CKAN__CORS__ORIGIN_WHITELIST"] == "https://viz.dev.joinedcontext.com"
     assert "CKAN__CORS__ORIGIN_ALLOW_ALL" not in env
+# --- T-4639: the dataset map and its framable page -------------------------------------------
+
+
+MAP_PKG = {"name": "pocasie", "title": "Počasie", "resources": [
+    {"id": "o", "format": "OGCFEAT", "url": "https://dev.example/api/endpoint/abc/ogc/features/"},
+    {"id": "x", "format": "OGCFEAT", "url": "https://elsewhere.example/api/endpoint/abc/ogc/features/"},
+    {"id": "w", "name": "WeatherObserved", "datastore_active": True},
+    {"id": "b", "name": "not a type", "datastore_active": True},
+    {"id": "c", "name": "CSV"},
+]}
+
+
+@pytest.fixture
+def mapped(theme, tmp_path, monkeypatch):
+    vendor = tmp_path / "vendor"
+    vendor.mkdir()
+    monkeypatch.setattr(theme, "VENDOR", str(vendor))
+    theme.toolkit.url_for = lambda route, **kw: "https://data.dev.example/%s/%s" % (route, kw["id"])
+    return theme
+
+
+def test_the_map_reads_each_table_s_type_from_the_dataset_s_own_ogc_features(mapped):
+    config = mapped.jc_map(MAP_PKG)
+    base = "https://dev.example/api/endpoint/abc/ogc/features/collections/WeatherObserved"
+    assert config["layers"] == [{"type": "WeatherObserved", "items": base + "/items", "schema": base + "/schema"}]
+    assert config["lib"] == "/maplibre-gl-6.14.0/maplibre-gl.mjs"
+    assert config["embed"] == "https://data.dev.example/jc_pages.map/pocasie"
+    assert config["title"] == "Počasie" and set(config["t"]) >= {"map_cap", "map_close", "map_area"}
+    # One table only, by its resource id; a dataset filter on a shared Endpoint stays on the items.
+    assert mapped.jc_map(MAP_PKG, resource_id="b") is None
+    shared = {"name": "od", "resources": [
+        {"format": "OGCFEAT", "url": "https://dev.example/api/endpoint/od/ogc/features/collections/Obs/items?isPartOf=urn%3Ax"},
+        {"id": "s", "name": "Obs", "datastore_active": True}, {"id": "t", "name": "Other", "datastore_active": True}]}
+    layers = mapped.jc_map(shared)["layers"]
+    assert layers == [{"type": "Obs", "items": "https://dev.example/api/endpoint/od/ogc/features/collections/Obs/items?isPartOf=urn%3Ax",
+                       "schema": "https://dev.example/api/endpoint/od/ogc/features/collections/Obs/schema"}]
+
+
+def test_no_map_without_the_library_an_ogc_address_on_our_host_or_a_table(mapped, monkeypatch):
+    assert mapped.jc_map({"resources": [r for r in MAP_PKG["resources"] if r["id"] != "o"]}) is None
+    assert mapped.jc_map({"resources": [r for r in MAP_PKG["resources"] if r["id"] != "w"]}) is None
+    assert mapped.jc_map(None) is None
+    monkeypatch.setattr(mapped, "VENDOR", "/nonexistent")
+    assert mapped.jc_map(MAP_PKG) is None
+
+
+@pytest.mark.parametrize("value, expected", [
+    ({"tiles": "https://tile.openstreetmap.org/{z}/{x}/{y}.png"},
+     {"tiles": "https://tile.openstreetmap.org/{z}/{x}/{y}.png", "attribution": "© OpenStreetMap contributors"}),
+    ({"style": "https://tiles.dev.example/styles/light.json"}, {"style": "https://tiles.dev.example/styles/light.json"}),
+    ({"style": "https://tiles.evil.example/styles/light.json"}, {}),
+    ({"tiles": "https://a.tile.example/{z}/{x}/{y}.png"}, {}),
+    ("not json", {}),
+    ([], {}),
+])
+def test_the_basemap_is_the_tiles_host_s_style_or_openstreetmap_or_none(theme, monkeypatch, value, expected):
+    monkeypatch.setenv("JC_MAP_BASEMAP", value if isinstance(value, str) else json.dumps(value))
+    assert theme._basemap() == expected
+
+
+def test_the_map_page_is_a_404_for_an_unknown_or_unmapped_dataset(mapped):
+    class Abort(Exception):
+        pass
+
+    def abort(code):
+        raise Abort(code)
+
+    mapped.toolkit.abort = abort
+    mapped.toolkit.render = lambda template, extra: (template, extra)
+    mapped.page.actions["package_show"] = mapped.toolkit.ObjectNotFound()
+    with pytest.raises(Abort):
+        mapped.jc_map_page("nope")
+    mapped.page.actions["package_show"] = lambda d: {"name": d["id"], "resources": []}
+    with pytest.raises(Abort):
+        mapped.jc_map_page("empty")
+    mapped.page.actions["package_show"] = lambda d: MAP_PKG
+    (template, extra), status, headers = mapped.jc_map_page("pocasie", "w")
+    assert template == "jc/map.html" and extra["jc_map_config"]["layers"][0]["type"] == "WeatherObserved"
+    # The page owns its policy (OPS-34): any site may frame it, nothing else is loosened.
+    assert status == 200 and headers == {"Content-Security-Policy": "frame-ancestors *; object-src 'none'; base-uri 'self'"}
+
+
+def test_the_map_page_may_be_framed_anywhere_and_carries_no_cookie():
+    plugins = yaml.safe_load((PROJECT_ROOT / "components/ckan/apisix-plugins.yaml").read_text())["ckan-map"]["plugins"]
+    assert "X-Frame-Options" not in plugins["response-rewrite"]["headers"]["set"]
+    assert plugins["response-rewrite"]["headers"]["remove"] == ["Set-Cookie"]
+    route = yaml.safe_load((PROJECT_ROOT / "components/ckan/apisix-routes.yaml").read_text())["ckan-map"]
+    pattern = re.compile(route["vars"][0][2])
+    for path in ("/map/pocasie", "/sk/map/pocasie", "/en_GB/map/pocasie/6c9b58e0"):
+        assert pattern.search(path), path
+    for path in ("/dataset/pocasie/map", "/map/", "/map/a/b/c", "/xmap/a", "/sk/dataset/map/a"):
+        assert not pattern.search(path), path
+    page = (THEME / "templates__jc__map.html").read_text()
+    assert "<form" not in page and "csrf" not in page.lower() and "{% extends" not in page
+
+
+def test_the_map_library_is_pinned_by_checksum_and_served_where_the_theme_asks():
+    dockerfile = (PROJECT_ROOT / "images/ckan/Dockerfile").read_text()
+    assert re.search(r"ADD --checksum=sha256:[0-9a-f]{64} \\\n    https://registry\.npmjs\.org/maplibre-gl/-/maplibre-gl-6\.14\.0\.tgz", dockerfile)
+    assert "/srv/app/vendor/maplibre-gl-6.14.0/" in dockerfile and "MapLibre GL JS 6.14.0 (BSD-3-Clause" in dockerfile
+    plugin = (THEME / "plugin.py").read_text()
+    assert 'MAPLIBRE = "/maplibre-gl-6.14.0/"' in plugin and 'VENDOR = "/srv/app/vendor"' in plugin
+    snippet = (THEME / "templates__snippets__jc_map.html").read_text()
+    assert "url_for_static('/maplibre-gl-6.14.0/maplibre-gl.css')" in snippet
+
+
+def test_the_map_card_stays_hidden_until_a_feature_has_a_geometry():
+    page = (THEME / "templates__package__read.html").read_text()
+    assert '<details class="jc-table jc-map-card" open hidden>' in page
+    assert "<script type=\"module\" src=\"{{ h.url_for_static('/jc-map.js') }}\"></script>" in page
+    script = (THEME / "public__jc-map.js").read_text()
+    assert script.index("if (!layers.length)") < script.index("card.hidden = false")
+    # Values reach the page as text only, and a `next` link never leaves the layer's address.
+    assert "innerHTML" not in script and "insertAdjacentHTML" not in script
+    assert "candidate.origin === base.origin && candidate.pathname === base.pathname" in script
+    assert 'credentials: "omit"' in script
+
+
+@pytest.mark.skipif(not shutil.which("node"), reason="node is not installed")
+def test_the_panel_reads_like_the_data_and_measures_lines_and_areas():
+    script = (THEME / "public__jc-map.js").resolve().as_uri()
+    code = """
+import { describe, length, area } from %s;
+const t = { map_length: "Dĺžka", map_area: "Plocha" };
+const schema = { temperature: { "x-ogc-unit": "Cel", description: "Air temperature" }, windDirection: { "x-ogc-unit": "deg" },
+  dateObserved: { format: "date-time" } };
+const point = { id: "urn:ngsi-ld:W:1", geometry: { type: "Point", coordinates: [19, 48] }, properties: {
+  name: { languageMap: { en: "Donovaly station", sk: "Stanica Donovaly" } }, temperature: 12.4, windDirection: 38.5,
+  dateObserved: new Date(Date.now() - 5 * 60000).toISOString(), refParent: "urn:x", other: "urn:ngsi-ld:A:1",
+  nested: { a: 1 }, type: "W", id: "urn:x", _layer: 0, _id: "urn:ngsi-ld:W:1", _n: 0, note: "<b>x</b>" } };
+const line = { geometry: { type: "LineString", coordinates: [[19, 48], [19, 48.01]] }, properties: { _id: "urn:ngsi-ld:R:road-7" } };
+const square = { geometry: { type: "Polygon", coordinates: [[[19, 48], [19.01, 48], [19.01, 48.01], [19, 48.01], [19, 48]]] }, properties: {} };
+console.log(JSON.stringify({
+  point: describe(point, schema, { lang: "sk", t }),
+  line: describe(line, {}, { lang: "en", t }),
+  square: describe(square, {}, { lang: "en", t }),
+  length: length(line.geometry), area: area(square.geometry) }));
+""" % json.dumps(script)
+    done = subprocess.run(["node", "--input-type=module", "-e", code], capture_output=True, text=True, timeout=60)
+    assert done.returncode == 0, done.stderr
+    out = json.loads(done.stdout)
+    rows = dict((label, value) for label, value, _ in out["point"]["rows"])
+    assert out["point"]["title"] == "Stanica Donovaly"
+    assert rows["temperature"] == "12,4\u00a0°C" and rows["windDirection"] == "38,5°"
+    assert rows["dateObserved"] == "pred 5 minútami"
+    assert rows["note"] == "<b>x</b>"  # shown as text by textContent, never parsed
+    assert not {"refParent", "other", "nested", "type", "id", "_layer", "_id", "_n", "name"} & set(rows)
+    assert out["line"]["title"] == "road-7"
+    assert out["line"]["rows"][0][0] == "Dĺžka" and re.fullmatch(r"1\.1\d\u00a0km", out["line"]["rows"][0][1])
+    assert 1100 < out["length"] < 1125  # 0.01° of latitude
+    assert 0.8e6 < out["area"] < 0.85e6 and out["square"]["rows"][0][1].endswith("\u00a0ha")

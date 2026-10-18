@@ -46,6 +46,24 @@
           </div>
         </details>
       {% endfor %}
+      {# The map beside the tables (T-4639), hidden until jc-map.js finds a geometry. #}
+      {% set map = h.jc_map(pkg) %}
+      {% if map %}
+        <details class="jc-table jc-map-card" open hidden>
+          <summary><span class="jc-table-name">{{ h.jc_t('map') }}</span></summary>
+          {% snippet 'snippets/jc_map.html', jc_map_config=map %}
+          <div class="jc-preview-actions">
+            <a class="btn btn-default" href="#jc-preview-title">{{ h.jc_t('map_as_table') }}</a>
+            <details class="jc-map-embed">
+              <summary class="btn btn-default">{{ h.jc_t('map_embed') }}</summary>
+              <p class="jc-lead">{{ h.jc_t('map_embed_lead') }}</p>
+              {# The textarea shows markup as text: the title is escaped once more for the copy. #}
+              <textarea id="jc-map-embed" class="form-control" rows="3" readonly><iframe src="{{ map.embed }}" width="100%" height="480" title="{{ map.title|replace('&', '&amp;')|replace('"', '&quot;') }}" style="border:0" loading="lazy"></iframe></textarea>
+              <button type="button" class="btn btn-default" data-jc-copy="jc-map-embed" data-jc-copied="{{ h.jc_t('copied') }}"><span class="jc-code-copy-label">{{ h.jc_t('copy') }}</span></button>
+            </details>
+          </div>
+        </details>
+      {% endif %}
     </section>
   {% endif %}
   {% snippet 'package/snippets/jc_visualizations.html', pkg=pkg %}
@@ -103,4 +121,5 @@
   <script src="{{ h.url_for_static('/jc-copy.js') }}" defer></script>
   <script src="{{ h.url_for_static('/jc-frame.js') }}" defer></script>
   <script src="{{ h.url_for_static('/jc-viz.js') }}" defer></script>
+  <script type="module" src="{{ h.url_for_static('/jc-map.js') }}"></script>
 {% endblock %}

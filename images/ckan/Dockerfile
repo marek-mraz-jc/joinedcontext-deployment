@@ -73,6 +73,19 @@ RUN pip install --no-cache-dir 'setuptools==81' 'wheel>=0.46.2' \
     && python3 -m pip uninstall --yes pip \
     && rm -rf /usr/local/lib/python3.10/site-packages/pip-*.dist-info /usr/local/bin/pip*
 
+# The dataset map (T-4639): MapLibre GL JS 6.14.0 (BSD-3-Clause, published 2026-10-11), the
+# npm release checked against its sha256, served by CKAN from /vendor beside the theme so no page
+# reaches a CDN. Its ES modules (1.7 MB) outgrow the theme's ConfigMap, hence the image. The
+# worker module is found next to the main one (import.meta.url), so the two stay side by side.
+ADD --checksum=sha256:f799682e7a2d189e43d18ccf6889d09d1e8547e2cab4ba79d7360cc96630207e \
+    https://registry.npmjs.org/maplibre-gl/-/maplibre-gl-6.14.0.tgz /tmp/maplibre-gl.tgz
+RUN install -d /srv/app/vendor/maplibre-gl-6.14.0 \
+    && tar -xzf /tmp/maplibre-gl.tgz -C /tmp package/dist/maplibre-gl.mjs package/dist/maplibre-gl-worker.mjs \
+        package/dist/maplibre-gl.css package/LICENSE.txt \
+    && cp /tmp/package/dist/maplibre-gl.mjs /tmp/package/dist/maplibre-gl-worker.mjs /tmp/package/dist/maplibre-gl.css \
+        /tmp/package/LICENSE.txt /srv/app/vendor/maplibre-gl-6.14.0/ \
+    && rm -rf /tmp/maplibre-gl.tgz /tmp/package
+
 FROM python:3.10-slim-trixie@sha256:6ff506466f8b1e981719b468cc0023b8ef000b983cdec0eafe119d01f379e31d
 
 # The security updates that exist on the day the image is built (OPS-27); libpq and libmagic are

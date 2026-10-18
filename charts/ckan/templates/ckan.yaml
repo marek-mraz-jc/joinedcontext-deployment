@@ -141,6 +141,10 @@ spec:
               value: {{ .Values.assistantWidget | quote }}
             - name: JC_ASSISTANT_WIDGET_URLS
               value: {{ .Values.assistantWidgets | default dict | toJson | quote }}
+            # The basemap under the dataset map (T-4639); the theme accepts only the tiles host's
+            # style or OpenStreetMap's tiles, so anything else draws the data alone.
+            - name: JC_MAP_BASEMAP
+              value: {{ .Values.mapBasemap | default dict | toJson | quote }}
             - name: CKAN_SOLR_URL
               value: http://{{ $full }}-solr.{{ .Release.Namespace }}.svc.cluster.local:8983/solr/ckan
             - name: CKAN_REDIS_URL
