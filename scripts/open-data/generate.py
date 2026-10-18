@@ -40,6 +40,7 @@ import secrets
 import subprocess
 import sys
 import urllib.parse
+from collections import Counter
 from pathlib import Path
 
 import yaml
@@ -1001,6 +1002,12 @@ def distributions(mapped: list[dict], whole: list[dict]) -> str:
         filtered = any(marked in b.read_text() for b in (SEED / e["org"]).glob("*-bento.yaml"))
         rows[e["dataset"].rsplit("/", 1)[1]] = {"endpoint": slug, "type": kind, "dataset": e["dataset"],
                                                  "location": located(e), "series": False, "filtered": filtered}
+    # A dataset whose type holds only its rows on its door is kept by the type alone (`sole`): a `q`
+    # the broker checks row by row can neither be counted past 10 000 stored rows nor read in parallel
+    # pages, so bb-objednavky-bb's 26 862 rows timed out in every file and its count was 403 (T-4540).
+    doors = Counter((r["endpoint"], r["type"]) for r in rows.values())
+    for r in rows.values():
+        r["sole"] = r["filtered"] and doors[(r["endpoint"], r["type"])] == 1
     # The ŠÚ SR rows are scripts/open-data/datacube.py's (T-4390): kept as committed.
     rows.update({k: v for k, v in json.loads(DISTRIBUTIONS.read_text()).items() if k.startswith("susr-")})
     return "{\n" + ",\n".join(f"  {json.dumps(k)}: {json.dumps(v, ensure_ascii=False)}" for k, v in sorted(rows.items())) + "\n}\n"
