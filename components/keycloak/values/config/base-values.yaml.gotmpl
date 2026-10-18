@@ -664,7 +664,7 @@ config:
         {{- end }}
         {{- end }}
         {{- /* And the owner's of a production realm (T-4678). */}}
-        {{- range (($this.initialUser | default dict).groups | default list) }}
+        {{- range (index ($this.initialUser | default dict) "groups" | default list) }}
         {{- $_ := set $declared . true }}
         {{- end }}
         {{- range $group, $_ := $declared }}
