@@ -74,7 +74,7 @@ context-space:
 
 catalog-feed:
   name: catalog-feed
-  description: The DCAT-AP catalogue feed, anonymous (EP-84)
+  description: The DCAT-AP catalogue feeds, anonymous (EP-84, EP-127)
   plugins:
     request-id:
       include_in_response: true

@@ -148,7 +148,7 @@ ROUTE_CLASSES = {
     },
     "catalog-feed": {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
-        "why": "the DCAT-AP feed a national portal harvests (EP-84): the gateway reads no token on it and lists public Endpoints only",
+        "why": "the DCAT-AP feeds a national portal harvests, the organization's and each publisher's (EP-84, EP-127): the gateway reads no token on them and lists public Endpoints only",
     },
     "context-endpoint": {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
