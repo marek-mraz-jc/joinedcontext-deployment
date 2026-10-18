@@ -32,7 +32,7 @@ REFERENCES = {
 # What the bundles served before the split; none of them may be a dataset again.
 BUNDLES = {"praha-mesto", "helsinki-all", "banskabystrica-verejne", "zilina-verejne", "bbsk-registre"}
 MANDATORY = {"ngsi-ld", "mcp", "websocket", "csv"}
-# OGC API Features (GeoJSON for a map, T-4597) is mandatory when the data has a location (EP-118); these types have none.
+# OGC API Features is mandatory when the data has a location (EP-118); these types have none.
 UNLOCATED = {"KeyPerformanceIndicator", "BudgetLine", "Article", "GtfsAgency"}
 
 

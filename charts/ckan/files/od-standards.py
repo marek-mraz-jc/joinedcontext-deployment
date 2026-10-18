@@ -29,7 +29,8 @@ OD_GATEWAY = (_os.environ.get("OD_GATEWAY") or "").rstrip("/")
 # Each row names its catalogue dataset in `isPartOf` (T-4289); an address keeps only those rows in
 # its standard's own syntax: NGSI-LD and file.csv `q`, OGC API Features the queryable as a parameter,
 # OData and SensorThings `$filter`. MCP and WebSocket read every type of the Endpoint, so they list every row and say so.
-# file.csv is the one file an Endpoint publishes; GeoJSON for a map comes from OGC API Features (T-4597).
+# file.csv is the one file an Endpoint publishes; a map reads GeoJSON from NGSI-LD (Accept:
+# application/geo+json) or OGC API Features (API/02 §3, T-4597).
 OD_STANDARDS = [
     # application/json: what an anonymous GET without Accept answers, the @context in the Link header
     # (CIM 009 6.3.6); ld+json only when Accept asks for it (T-4539).

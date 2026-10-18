@@ -101,7 +101,7 @@ PROJECTS = {
 # column stamps its numbers with that instant, one Datastream per number; the catalogue lists it only
 # for those datasets (`series`). No `mqtt` until 8883 opens (T-3996); the WebSocket pushes changes.
 # One file, `csv`: xlsx, parquet, json, zip and geojson were removed (owner 2026-10-18, T-4597);
-# a map reads GeoJSON from OGC API Features.
+# a map reads GeoJSON from NGSI-LD (Accept: application/geo+json) or OGC API Features.
 REPRESENTATIONS = ["ngsi-ld", "csv", "websocket", "ogc-features", "odata", "sta", "mcp"]
 # What the catalogue's harvests read to list each converted dataset's standard APIs (T-4279).
 DISTRIBUTIONS = ROOT / "charts/ckan/files/od-datasets.json"
