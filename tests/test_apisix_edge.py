@@ -402,6 +402,7 @@ def test_new_hostnames_are_proven_on_the_staging_issuer_first(rendered, rendered
         "idm.next.example.org",
         "portal.next.example.org",
         "tiles.next.example.org",
+        "viz.next.example.org",
     ]
     assert not any("*" in name for name in certificate["dnsNames"]), "no wildcard over HTTP-01"
 
@@ -431,6 +432,7 @@ def test_certificate_covers_the_apex_and_every_routed_subdomain(rendered):
         "idm.dev.joinedcontext.com",
         "portal.dev.joinedcontext.com",
         "tiles.dev.joinedcontext.com",
+        "viz.dev.joinedcontext.com",
     ]
 
     ingress = objects["Ingress"]

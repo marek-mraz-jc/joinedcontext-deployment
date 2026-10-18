@@ -282,6 +282,14 @@ ROUTE_CLASSES = {
         "reach": TERMINATES, "cacheable": False, "framing": "DENY",
         "why": "/ckan on the apex answers 302 to the catalogue host and never dials an upstream",
     },
+    "basemap": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "the background map's tiles, style, fonts and sprites (T-4638): public map data under the OpenStreetMap licence, read-only, and nginx keeps them a day",
+    },
+    "viz": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": FRAMED_BY_UPSTREAM,
+        "why": "the chart renderer (T-4641, ADR-N-053): static pages with no data, no token and no cookie; nginx sets each page's frame-ancestors and Cache-Control, any site may frame the host page and the frame that runs a spec connects nowhere",
+    },
 }
 
 # Plugin configs no route of the base names: the Portal copies each onto the routes it composes

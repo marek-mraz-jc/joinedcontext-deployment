@@ -232,6 +232,15 @@ STRINGS = {
     "example": {"en": "Start here: the kinds of entities it holds", "sk": "Začnite tu: aké druhy entít obsahuje", "cs": "Začněte zde: jaké druhy entit obsahuje", "de": "Hier beginnen: welche Arten von Entitäten es enthält"},
     "copy": {"en": "Copy", "sk": "Kopírovať", "cs": "Kopírovat", "de": "Kopieren"},
     "copied": {"en": "Copied", "sk": "Skopírované", "cs": "Zkopírováno", "de": "Kopiert"},
+    "visualizations": {"en": "Charts", "sk": "Grafy", "cs": "Grafy", "de": "Diagramme"},
+    "viz_embed": {"en": "Embed on a website", "sk": "Vložiť na web", "cs": "Vložit na web", "de": "Auf einer Website einbetten"},
+    "viz_embed_lead": {
+        "en": "Paste this code into your page; the chart keeps reading the current data.",
+        "sk": "Vložte tento kód do svojej stránky; graf bude stále čítať aktuálne dáta.",
+        "cs": "Vložte tento kód do své stránky; graf bude stále číst aktuální data.",
+        "de": "Fügen Sie diesen Code in Ihre Seite ein; das Diagramm liest weiter die aktuellen Daten.",
+    },
+    "viz_table": {"en": "The data as a table", "sk": "Údaje ako tabuľka", "cs": "Údaje jako tabulka", "de": "Die Daten als Tabelle"},
     "resources": {"en": "Data and downloads", "sk": "Dáta na stiahnutie", "cs": "Data ke stažení", "de": "Daten und Downloads"},
     "no_resources": {"en": "This dataset has no downloads yet.", "sk": "Tento dataset zatiaľ nemá nič na stiahnutie.", "cs": "Tato datová sada zatím nemá nic ke stažení.", "de": "Dieser Datensatz hat noch keine Downloads."},
     "empty": {
@@ -1354,6 +1363,72 @@ def jc_previews(pkg):
     return out
 
 
+VIEW_ID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+SLUG = re.compile(r"^[a-z0-9]{16,64}$")
+SPEC_BYTES = 200 * 1024
+
+
+def _json(value):
+    """A JSON text from a view's config as the value it holds, None when it is not JSON."""
+    try:
+        return json.loads(value) if isinstance(value, str) else None
+    except ValueError:
+        return None
+
+
+def jc_viz_origin():
+    """The renderer's host, viz.{domain} (ADR-N-053 §2.5); None when the branding names no domain."""
+    domain = BRANDING.get("domain")
+    return "https://viz." + domain if isinstance(domain, str) and re.fullmatch(r"[a-z0-9.-]+", domain) else None
+
+
+def jc_visualization(view):
+    """One published chart (T-4641) for a template: its title and description in the page's
+    language, the frame's address on the renderer's host and the snippet that embeds it on another
+    site. The frame is named by the view id alone: the renderer reads the spec from CKAN itself."""
+    origin = jc_viz_origin()
+    if not origin or not view or view.get("view_type") != "jc_visualization" or not VIEW_ID.match(view.get("id") or ""):
+        return None
+    language = _language()
+    title = _localized(_json(view.get("titles")), language) or view.get("title") or ""
+    description = _localized(_json(view.get("descriptions")), language) or view.get("description") or ""
+    embed = "%s/#%s&lang=%s" % (origin, view["id"], language)
+    # The host page reads CKAN and the API under its own origin, so it keeps it
+    # (`allow-same-origin` on a frame of another site gives it nothing of the embedding page);
+    # the spec itself runs one frame deeper, sandboxed to an opaque origin.
+    code = ('<iframe src="%s" title="%s" width="100%%" height="480" style="border:0" loading="lazy" '
+            'referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-downloads '
+            'allow-popups allow-popups-to-escape-sandbox"></iframe>') % (embed, html.escape(title, quote=True))
+    return {"id": view["id"], "title": title, "description": description, "origin": origin,
+            "src": "%s/#%s&inline&lang=%s" % (origin, view["id"], language), "code": code,
+            "package": view.get("package_id")}
+
+
+def jc_visualizations(pkg):
+    """Every chart published on the dataset's resources, in the resources' order (ADR-N-053)."""
+    out = []
+    for resource in sorted((pkg or {}).get("resources") or [], key=_order):
+        try:
+            views = toolkit.get_action("resource_view_list")({}, {"id": resource["id"]})
+        except (toolkit.ObjectNotFound, toolkit.NotAuthorized):
+            views = []
+        out.extend(item for item in map(jc_visualization, views or []) if item)
+    return out
+
+
+def _viz_object(value):
+    """A view config member that must be a JSON object: the spec within 200 KB (EP-130)."""
+    if value in (None, ""):
+        return value
+    if not isinstance(value, str) or len(value.encode("utf-8")) > SPEC_BYTES or not isinstance(_json(value), dict):
+        raise toolkit.Invalid("a JSON object of at most 200 KB")
+    return value
+
+
+def _viz_slug(value):
+    if value in (None, "") or (isinstance(value, str) and SLUG.match(value)):
+        return value
+    raise toolkit.Invalid("an Endpoint slug")
 # The basemap the map draws under the data (T-4639): a style on this installation's tiles host
 # (T-4638), or OpenStreetMap's raster tiles, which their tile usage policy allows for a
 # low-traffic preview with attribution. Anything else is no basemap: a map of the data alone.
@@ -2143,6 +2218,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IFacets, inherit=True)
     plugins.implements(plugins.IPackageController, inherit=True)
     plugins.implements(plugins.IBlueprint)
+    plugins.implements(plugins.IResourceView, inherit=True)
 
     def update_config(self, config):
         toolkit.add_template_directory(config, "templates")
@@ -2201,6 +2277,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_usage": jc_usage,
             "jc_guide": jc_guide,
             "jc_previews": jc_previews,
+            "jc_visualizations": jc_visualizations,
             "jc_map": jc_map,
             "jc_total": jc_total,
             "jc_number": jc_number,
@@ -2220,6 +2297,27 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_has_topics": jc_has_topics,
             "jc_sso_error": jc_sso_error,
         }
+
+    def info(self):
+        """`jc_visualization` (ADR-N-053, EP-132): a Vega-Lite or Vega chart the reconciler publishes
+        from an Endpoint's `spec.catalog.visualizations`. The config holds the spec, its source
+        and the Endpoint; the page shows a frame of the renderer on viz.{domain}."""
+        ignore, text = toolkit.get_validator("ignore_missing"), toolkit.get_validator("unicode_safe")
+        schema = {name: [ignore, text, _viz_object] for name in ("spec", "source", "titles", "descriptions")}
+        schema["endpoint"] = [ignore, text, _viz_slug]
+        return {"name": "jc_visualization", "title": "Visualization", "icon": "chart-line",
+                "iframed": False, "always_available": False, "preview_enabled": False, "schema": schema}
+
+    def can_view(self, data_dict):
+        """Never offered in CKAN's "New view" list, never created as a default view: a chart is
+        published from its Endpoint's manifest, reviewed there (ADR-N-053 §2.7)."""
+        return False
+
+    def view_template(self, context, data_dict):
+        return "jc/visualization.html"
+
+    def setup_template_variables(self, context, data_dict):
+        return {"viz": jc_visualization(data_dict.get("resource_view"))}
 
     def get_blueprint(self):
         """/connector, /privacy, /terms and /support (T-4315), one template for all four,

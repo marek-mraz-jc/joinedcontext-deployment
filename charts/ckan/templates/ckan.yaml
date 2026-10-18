@@ -121,6 +121,12 @@ spec:
             # language only under its offered prefix (/sk/…), and with English alone a Slovak
             # visitor had no way to Slovak at all (T-4199). Slovak is the default, the others a
             # click in the footer's menu away.
+            {{- if .Values.vizOrigin }}
+            # The chart renderer's host page reads a published view anonymously through the
+            # action API (T-4641, ADR-N-053 §2.5); no other origin gets a CORS answer.
+            - name: CKAN__CORS__ORIGIN_WHITELIST
+              value: {{ .Values.vizOrigin | quote }}
+            {{- end }}
             - name: CKAN__LOCALE_DEFAULT
               value: {{ .Values.ckan.locales.default | quote }}
             - name: CKAN__LOCALES_OFFERED
