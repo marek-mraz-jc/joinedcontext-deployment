@@ -9,7 +9,7 @@
   },
   {
    "key": "endpoint",
-   "value": "https://portal.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/"
+   "value": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/"
   },
   {
    "key": "frequency",
@@ -94,7 +94,7 @@
    "resource_type": null,
    "size": null,
    "state": "active",
-   "url": "https://portal.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/ngsi-ld/v1/",
+   "url": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/ngsi-ld/v1/",
    "url_type": null
   },
   {
@@ -116,7 +116,7 @@
    "resource_type": null,
    "size": null,
    "state": "active",
-   "url": "https://portal.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/file.csv",
+   "url": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/file.csv",
    "url_type": null
   },
   {
@@ -138,7 +138,7 @@
    "resource_type": null,
    "size": null,
    "state": "active",
-   "url": "https://portal.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/mcp",
+   "url": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/mcp",
    "url_type": null
   },
   {
@@ -160,7 +160,7 @@
    "resource_type": null,
    "size": null,
    "state": "active",
-   "url": "https://portal.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/index.json",
+   "url": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/index.json",
    "url_type": null
   },
   {
@@ -183,7 +183,7 @@
    "resource_type": null,
    "size": 3688,
    "state": "active",
-   "url": "https://dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/context.jsonld",
+   "url": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/context.jsonld",
    "url_type": null
   },
   {
@@ -206,7 +206,7 @@
    "resource_type": null,
    "size": 10365,
    "state": "active",
-   "url": "https://dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/model.linkml.yaml",
+   "url": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/model.linkml.yaml",
    "url_type": null
   },
   {
@@ -229,7 +229,7 @@
    "resource_type": null,
    "size": 9048,
    "state": "active",
-   "url": "https://dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/model.md",
+   "url": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/model.md",
    "url_type": null
   },
   {
@@ -252,7 +252,7 @@
    "resource_type": null,
    "size": 22417,
    "state": "active",
-   "url": "https://dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/model.owl.ttl",
+   "url": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/model.owl.ttl",
    "url_type": null
   },
   {
@@ -275,7 +275,7 @@
    "resource_type": null,
    "size": 14731,
    "state": "active",
-   "url": "https://dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/model.rdf.ttl",
+   "url": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/model.rdf.ttl",
    "url_type": null
   },
   {
@@ -298,7 +298,7 @@
    "resource_type": null,
    "size": 21467,
    "state": "active",
-   "url": "https://dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/model.schema.json",
+   "url": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/model.schema.json",
    "url_type": null
   },
   {
@@ -321,7 +321,7 @@
    "resource_type": null,
    "size": 19501,
    "state": "active",
-   "url": "https://dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/model.shacl.ttl",
+   "url": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/model.shacl.ttl",
    "url_type": null
   },
   {
@@ -492,6 +492,6 @@
  ],
  "title": "Praha — městská data",
  "type": "dataset",
- "url": "https://portal.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/",
+ "url": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/",
  "version": null
 }
