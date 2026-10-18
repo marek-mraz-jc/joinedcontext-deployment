@@ -66,6 +66,7 @@
       {% endif %}
     </section>
   {% endif %}
+  {% snippet 'package/snippets/jc_visualizations.html', pkg=pkg %}
   {% set about = h.jc_about(pkg) %}
   {% if about %}
     <section class="jc-about" aria-labelledby="jc-about-title">
@@ -119,5 +120,6 @@
   {{ super() }}
   <script src="{{ h.url_for_static('/jc-copy.js') }}" defer></script>
   <script src="{{ h.url_for_static('/jc-frame.js') }}" defer></script>
+  <script src="{{ h.url_for_static('/jc-viz.js') }}" defer></script>
   <script type="module" src="{{ h.url_for_static('/jc-map.js') }}"></script>
 {% endblock %}
