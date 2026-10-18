@@ -236,6 +236,11 @@ def test_a_converted_dataset_lists_the_platform_apis_and_its_model_and_an_unconv
     whole = harvest.od_standards(package["name"])
     assert [r["url"] for r in whole if r.get("resource_type") == "api"] == [u.split("?")[0] for u in urls]
     assert all(r["description"].startswith("Every PointOfInterest") for r in whole if r.get("resource_type") == "api")
+    # T-4540: a dataset whose type holds its rows alone is kept by the type, still "these rows".
+    monkeypatch.setitem(OD_DATASETS, package["name"], dict(entry, sole=True))
+    sole = [r for r in harvest.od_standards(package["name"]) if r.get("resource_type") == "api"]
+    assert [r["url"] for r in sole] == [u.split("?")[0] for u in urls]
+    assert all(r["description"].startswith("These rows") for r in sole)
     # T-4288: a dataset of measured numbers also lists SensorThings, its Datastreams over the same rows.
     monkeypatch.setitem(OD_DATASETS, package["name"], dict(entry, series=True))
     sta = next(r for r in harvest.od_standards(package["name"]) if r["format"] == "STA")

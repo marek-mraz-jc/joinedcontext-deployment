@@ -17,6 +17,7 @@ import subprocess
 import sys
 import threading
 import urllib.parse
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -177,6 +178,14 @@ def test_every_open_data_endpoint_serves_each_standard_and_the_catalogue_lists_e
         filtered = e["dataset"].rsplit("/", 1)[1] in shared
         assert (project, endpoint["audience"], row["filtered"]) == (e["org"], "public", filtered), e["name"]
         assert {"ngsi-ld", "csv", "json", "ogc-features", "odata"} <= set(endpoint["enabledRepresentations"]), e["name"]
+    # T-4540: a dataset whose type holds its rows alone on its door is kept by the type, which the
+    # broker counts and the gateway pages in parallel; a `q` timed out on bb-objednavky-bb's 26 862.
+    doors = Counter((r["endpoint"], r["type"]) for r in rows.values())
+    for name, row in rows.items():
+        if not name.startswith("susr-"):
+            assert row["sole"] == (row["filtered"] and doors[(row["endpoint"], row["type"])] == 1), name
+    assert rows["bb-objednavky-bb"]["sole"] and rows["bb-dotacie"]["sole"]
+    assert not any(rows[name]["sole"] for name in shared), "obce and okresy share a door and a type"
     mosty = rows["bbsk-mosty-v-banskobystrickom-kraji-public-view-3b4675"]
     assert (mosty["type"], endpoints[mosty["endpoint"]][1]["policyRef"]) == ("Bridge", "urn:ngsi-ld:Policy:bbsk.sk:bbsk-registre:mosty-read")
 

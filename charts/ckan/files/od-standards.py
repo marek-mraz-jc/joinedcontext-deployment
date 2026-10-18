@@ -5,7 +5,8 @@ resource list on every run, so the distributions are part of what it writes, not
 by something the next night would erase. `OD_DATASETS` is charts/ckan/files/od-datasets.json, which
 scripts/open-data/generate.py writes from the mapping: per CKAN dataset name, the open-data
 Endpoint's slug, the entity type its rows became, whether they carry a location and whether its
-rows name their catalogue dataset (`filtered`, false for a dataset an older seed reads whole).
+rows name their catalogue dataset (`filtered`, false for a dataset an older seed reads whole) and
+whether its type holds only its rows on that Endpoint (`sole`).
 `OD_GATEWAY` is the public base the Endpoints answer under; without it no dataset gains any.
 A dataset with no distributions is withdrawn by the harvest (EP-118, T-4324): the catalogue lists
 NGSI-LD data with all its doors and its data model, or not at all.
@@ -126,14 +127,17 @@ def od_standards(name):
     for path, title, fmt, media, conforms, filtered, needs in OD_STANDARDS:
         if needs and not entry.get(needs):
             continue
-        # A dataset an older seed reads whole: its rows name no catalogue dataset (T-4291).
-        filtered = filtered if entry.get("filtered", True) else None
+        # A dataset an older seed reads whole: its rows name no catalogue dataset (T-4291). One whose
+        # type holds its rows alone on the door is kept by the type: a `q` cannot be counted or paged
+        # in parallel, and timed out on 26 862 rows (`sole`, T-4540).
+        sole = entry.get("sole", False)
+        filtered = filtered if entry.get("filtered", True) and not sole else None
         url = root + path.replace("{type}", _parse.quote(entry["type"]))
         if path == "ws":
             url = "wss" + url[len("https"):] if url.startswith("https") else url
         if filtered:
             url += "?" + mine[filtered]
-        what = ("These rows" if filtered else f"Every {entry['type']} of the space, these rows among them")
+        what = ("These rows" if filtered or sole else f"Every {entry['type']} of the space, these rows among them")
         resource = {"name": f"{title} ({entry['type']})", "url": url, "format": fmt, "mimetype": media,
                     "resource_type": "api",
                     "description": f"{what}, through the platform's {title} (NGSI-LD data, read-only)."}
