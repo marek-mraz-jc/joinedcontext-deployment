@@ -8,7 +8,7 @@ gateway mounts each under its own name in the flat `/repo`.
 
 One ContextSpace, `helsinki`, holds three things side by side: `Event` from the city's Linked
 Events register, `BikeHireDockingStation` from the HSL city bike GBFS feeds, `Vehicle` from HSL's
-high-frequency positioning of four trunk lines. Four public Endpoints publish it: `helsinki-events`,
+high-frequency positioning of five lines. Four public Endpoints publish it: `helsinki-events`,
 `helsinki-bikes` and `helsinki-transport` each carry `spec.policyRef` to the Policy that grants
 one type, so the gateway evaluates that Policy alone (EP-14, GW8); `helsinki-all` carries none
 and evaluates every Policy of the space, which is also why the pipelines write through it: the
@@ -49,7 +49,7 @@ one `GET` each from the sandbox; the sizes are bytes received, the times the who
 | GTFS-RT trip updates | `https://realtime.hsl.fi/realtime/trip-updates/v2/hsl` | CC BY 4.0 | 7 630 B (night) | 0.26 s | continuous | no | yes, T-3891: departures for a curated stop set only, as a property of those stops; no entity per trip |
 | GTFS-RT vehicle positions | `https://realtime.hsl.fi/realtime/vehicle-positions/v2/hsl` | CC BY 4.0 | 1 231 B (night) | 0.26 s | continuous | no | no: HFP below carries the same positions with less work; T-3893 widens HFP to every mode inside the vehicle cap |
 | GTFS-RT service alerts | `https://realtime.hsl.fi/realtime/service-alerts/v2/hsl` | CC BY 4.0 | 21 615 B | 0.32 s | on change | no | yes, T-3892: one Alert per HSL alert, beside the Digitraffic ones |
-| HFP (MQTT) | `mqtts://mqtt.hsl.fi:8883/hfp/v2/journey/ongoing/vp/#` | CC BY 4.0 | a stream, not a document: not measured by `GET` | — | one `vp` message a second per vehicle (HSL HFP documentation) | no | yes: 4 bus trunk lines and every tram, metro, train and ferry, capped per mode (T-3893, below); one position in thirty seconds of an admitted vehicle written (T-4624) |
+| HFP (MQTT) | `mqtts://mqtt.hsl.fi:8883/hfp/v2/journey/ongoing/vp/#` | CC BY 4.0 | a stream, not a document: not measured by `GET` | — | one `vp` message a second per vehicle (HSL HFP documentation) | no | yes: bus 550, tram 4, metro M1 and M2, the Suomenlinna ferry (T-4624, below); one position in thirty seconds of an admitted vehicle written (T-4624) |
 | Park and ride (LIIPI) | `https://parking.fintraffic.fi/api/v1` (`/facilities`, `/utilizations`, `/hubs`); `p.hsl.fi` is gone, Fintraffic took the service over in May 2024 | CC BY 4.0 | facilities of the HSL area 1 007 120 B (545); utilisations 6 191 B (39 rows, the whole country) | — | utilisations live | no | yes, T-3894: one OffStreetParking per facility, daily; free spaces every 5 min |
 | City bikes (GBFS) | the `citybikes-gbfs` pipelines | CC BY 4.0 | in place | — | 1 min | no | in place |
 | Digitransit GraphQL | `https://api.digitransit.fi/routing/v2/hsl/gtfs/v1` | CC BY 4.0 | `401` without a key | 0.09 s | live | **yes** | Owner action: a Digitransit subscription key, never committed; nothing waits for it, because GTFS and GTFS-RT above carry the same data |
@@ -121,8 +121,8 @@ Bento's baseline of 96 MB, so about 44 MB for the moment each refresh holds it.
 
 ### HFP vehicles of every mode (T-3893)
 
-`hsl-hfp` subscribes to a fixed list: the four bus trunk lines and `vp/tram/#`, `vp/metro/#`,
-`vp/train/#`, `vp/ferry/#`; never `vp/#` or `vp/bus/#`. `hsl-hfp-vehicles` admits 30 buses, 30
+`hsl-hfp` subscribes to five lines the owner chose (T-4624): bus 550, tram 4, metro M1 and M2 and
+the Suomenlinna ferry, about 30 to 60 vehicles; never a whole mode or `vp/#`. `hsl-hfp-vehicles` admits 30 buses, 30
 trams, 10 metros, 15 trains and 5 ferries at a time (90 in all), each mode in its own slots of the
 `fleet` cache, so a full mode never takes another's; a vehicle silent for five minutes frees its
 slot. One report of an admitted vehicle in thirty seconds is a write, the one stamped :00 or :30

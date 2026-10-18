@@ -3,7 +3,7 @@ kind: Pipeline
 metadata:
   name: hsl-hfp-vehicles
   namespace: helsinki
-  title: { en: "HSL vehicles into the space: trunk-line buses, trams, metros, trains, ferries" }
+  title: { en: "HSL vehicles into the space: bus 550, tram 4, metro, Suomenlinna ferry" }
 spec:
   class: auto
   source:
