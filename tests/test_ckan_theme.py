@@ -1469,11 +1469,11 @@ def test_the_assistants_page_names_the_installation_s_own_hub_and_assistants_in_
     assert page["mcp"]["url"] == hub and name in page["lead"] and "{" not in page["lead"]
     cards = {card["id"]: card for card in page["cards"]}
     assert [card["id"] for card in page["cards"]] == ["chatgpt", "claude", "gemini", "grok"]
-    assert cards["chatgpt"]["open"] == "https://chatgpt.com/plugins" and cards["chatgpt"]["copy"] == hub
-    assert cards["claude"]["open"] == "https://claude.ai/customize/connectors" and cards["claude"]["copy"] == hub
-    assert cards["gemini"]["copy"] == f"gemini mcp add --transport http joinedcontext {hub}" and "open" not in cards["gemini"]
+    assert cards["chatgpt"]["open"] == "https://chatgpt.com/plugins" and cards["chatgpt"]["value"] == hub
+    assert cards["claude"]["open"] == "https://claude.ai/customize/connectors" and cards["claude"]["value"] == hub
+    assert cards["gemini"]["value"] == f"gemini mcp add --transport http joinedcontext {hub}" and "open" not in cards["gemini"]
     # Grok has no path today: "Coming soon", no link and nothing to copy.
-    assert cards["grok"]["soon"] and "open" not in cards["grok"] and "copy" not in cards["grok"]
+    assert cards["grok"]["soon"] and "open" not in cards["grok"] and "value" not in cards["grok"]
     for card in page["cards"]:
         assert 1 <= len(card["steps"]) <= 2, card["id"]
         assert "token" not in json.dumps(card).lower()
@@ -1508,6 +1508,8 @@ def test_the_corner_offers_the_assistants_page_beside_the_chat_and_stacks_on_a_p
     link = corner.index('href="{{ h.url_for(\'jc_pages.assistants\') }}"')
     assert link < corner.index('<details class="jc-assistant">')
     assert "{{ h.jc_t('assistants_button') }}</a>" in corner
+    # T-4609: the footer's light link colour no longer reaches it, and the open panel hides it.
+    assert ".jc-corner .jc-assistants-link { box-sizing" in desktop_css() and ".jc-corner:has(.jc-assistant[open]) .jc-assistants-link { display: none; }" in desktop_css()
     assert "{% set assistants = h.jc_mcp_install() %}" in footer and "{% if widget or assistants %}" in footer
     css = (THEME / "public__jc-theme.css").read_text()
     desktop = css.split("@media (max-width: 40rem) {", 1)[0]
@@ -1516,3 +1518,51 @@ def test_the_corner_offers_the_assistants_page_beside_the_chat_and_stacks_on_a_p
     phone = css.split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
     assert ".jc-corner { flex-direction: column; align-items: flex-end; }" in phone
 
+
+
+def desktop_css():
+    return (THEME / "public__jc-theme.css").read_text().split("@media (max-width: 40rem) {", 1)[0]
+
+
+def render(template, theme, **context):
+    """A theme template through Jinja, as CKAN renders it: `page.html` a stand-in that prints the
+    blocks, CKAN's `{% snippet %}` tag dropped (its own template is tested above)."""
+    jinja2 = pytest.importorskip("jinja2")
+    sources = {path.name.replace("templates__", "", 1).replace("__", "/"): path.read_text()
+               for path in THEME.glob("templates__*")}
+    sources["page.html"] = "{% block primary %}{% endblock %}{% block scripts %}{% endblock %}"
+    # The footer's corner alone: the rest of the footer extends CKAN's own.
+    footer = (THEME / "footer.html").read_text()
+    sources["corner.html"] = footer[footer.index("{% set widget"):footer.rindex("{% endblock %}", 0, footer.index("{% block footer_links_ckan"))]
+    sources = {k: re.sub(r"{%\s*snippet [^%]*%}", "", v) for k, v in sources.items()}
+    env = jinja2.Environment(loader=jinja2.DictLoader(sources), autoescape=True)
+    h = types.SimpleNamespace(jc_assistants=theme.jc_assistants, jc_t=theme.jc_t, jc_mcp_install=theme.jc_mcp_install,
+                              jc_assistant_widget=lambda publisher: context.get("widget"),
+                              url_for=lambda name: "/assistants", url_for_static=lambda path: path)
+    return env.get_template(template).render(h=h, **context)
+
+
+def test_each_assistant_card_shows_its_own_address_or_command_and_its_mark(theme):
+    """T-4609: `card.copy` printed "<built-in method copy of dict object …>", Jinja reads a dict's
+    method before its key; and every assistant Simple Icons has a mark for shows it."""
+    html = render("jc/assistants.html", theme)
+    assert "built-in method" not in html and "0x" not in html
+    codes = re.findall(r'<p id="jc-copy-(\w+)" class="jc-code-url">([^<]*)</p>', html)
+    hub = "https://dev.example/api/mcp"
+    assert codes == [("chatgpt", hub), ("claude", hub), ("gemini", f"gemini mcp add --transport http joinedcontext {hub}")]
+    headings = dict(re.findall(r'<h2 id="jc-card-(\w+)">(.*?)</h2>', html, re.S))
+    assert set(headings) == {"chatgpt", "claude", "gemini", "grok"}
+    for card in ("claude", "gemini"):
+        assert '<svg class="jc-logo"' in headings[card] and 'aria-hidden="true"' in headings[card], card
+    # Simple Icons 16.34.0 has no ChatGPT/OpenAI or Grok mark: those two keep their name alone.
+    assert headings["chatgpt"] == "ChatGPT" and headings["grok"] == "Grok"
+    for mark in THEME.glob("templates__jc__logo-*.svg"):
+        text = mark.read_text()
+        assert 'fill="currentColor"' in text and "CC0" in text and "http" not in text.split("<svg", 1)[1], mark.name
+
+
+def test_the_corner_link_carries_the_marks_and_reads_dark_on_light(theme):
+    html = render("corner.html", theme, publisher=None, widget="https://dev.example/assistant/")
+    link = re.search(r'<a class="jc-assistants-link"[^>]*>(.*?)</a>', html, re.S).group(1)
+    assert link.count('<svg class="jc-logo"') == 3 and "ChatGPT / Claude / Gemini / Grok / MCP" in link
+    assert '<details class="jc-assistant">' in html

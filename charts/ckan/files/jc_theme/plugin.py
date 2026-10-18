@@ -1400,7 +1400,12 @@ CLAUDE_CONNECTORS = "https://claude.ai/customize/connectors"
 def jc_assistants():
     """The "Use it in your AI assistant" page (T-4585): a card per assistant, ChatGPT, Claude,
     Gemini, Grok, in that order, each with its one action, then any MCP client; None without the
-    hub. An assistant with no path today has no link (`soon`), never a dead one."""
+    hub. An assistant with no path today has no link (`soon`), never a dead one.
+
+    `value` is the address or command a card shows: Jinja reads `card.copy` as `dict.copy` before
+    the key, which printed "<built-in method copy …>" (T-4609). `logo` is the card's Simple Icons
+    mark, a template beside this file; Simple Icons 16.34.0 has no ChatGPT/OpenAI or Grok mark, so
+    those two cards show their name alone."""
     mcp = jc_mcp_install()
     if not mcp:
         return None
@@ -1413,16 +1418,16 @@ def jc_assistants():
         "lead": words("assistants_lead"),
         "mcp": mcp,
         "cards": [
-            {"id": "chatgpt", "name": "ChatGPT", "copy": mcp["url"], "copy_label": jc_t("copy_address"),
+            {"id": "chatgpt", "name": "ChatGPT", "logo": None, "value": mcp["url"], "copy_label": jc_t("copy_address"),
              "open": CHATGPT_PLUGINS, "open_label": jc_t("open_settings").replace("{name}", "ChatGPT"),
              "steps": [jc_t("chatgpt_1"), jc_t("chatgpt_2")]},
-            {"id": "claude", "name": "Claude", "copy": mcp["url"], "copy_label": jc_t("copy_address"),
+            {"id": "claude", "name": "Claude", "logo": "jc/logo-claude.svg", "value": mcp["url"], "copy_label": jc_t("copy_address"),
              "open": CLAUDE_CONNECTORS, "open_label": jc_t("open_settings").replace("{name}", "Claude"),
              "steps": [jc_t("claude_1"), jc_t("claude_2")]},
-            {"id": "gemini", "name": "Gemini",
-             "copy": "gemini mcp add --transport http %s %s" % (MCP_NAME, mcp["url"]),
+            {"id": "gemini", "name": "Gemini", "logo": "jc/logo-gemini.svg",
+             "value": "gemini mcp add --transport http %s %s" % (MCP_NAME, mcp["url"]),
              "copy_label": jc_t("copy_command"), "steps": [jc_t("gemini_1"), jc_t("gemini_2")]},
-            {"id": "grok", "name": "Grok", "soon": True, "steps": [jc_t("grok_1")]},
+            {"id": "grok", "name": "Grok", "logo": None, "soon": True, "steps": [jc_t("grok_1")]},
         ],
     }
 
