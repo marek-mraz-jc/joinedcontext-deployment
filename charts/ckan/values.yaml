@@ -167,6 +167,10 @@ assistantWidget: ''
 # A CKAN organization's own assistant widget, by organization name (T-4281); a dataset page of
 # an organization not listed frames `assistantWidget`.
 assistantWidgets: {}
+# The basemap of the dataset map (T-4639): `style`, a MapLibre style on https://tiles.{domain}
+# (T-4638), or `tiles: https://tile.openstreetmap.org/{z}/{x}/{y}.png` under OpenStreetMap's
+# tile usage policy. Empty draws the data on a plain background.
+mapBasemap: {}
 
 podSecurityContext: {}
 securityContext: {}
