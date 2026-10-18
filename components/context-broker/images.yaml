@@ -54,5 +54,8 @@ context-broker:
     # Antares dev 7ff20d6 (trains to 20261018-0050, T-4543 and 85 commits over 7535b90): Subscriptions
     # made over a socket are leased (ANTARES_WS_SUBSCRIPTION_LEASE_SECS, default 121) and swept, so
     # a closed socket or a dead gateway leaves none behind. No migration over 7535b90.
-    tag: '7ff20d6'
-    digest: 'sha256:d610253c959e5ac944ad55c9e13083fbffa21026c55e4e2e3812e05a4facc499'
+    # Antares dev ac45ec0 (train 20261018-0230, T-4549): a byte budget over the delivery lanes
+    # (ANTARES_DELIVERY_LANE_BYTES, default 256 MiB), the fix for the OOMKills at 1536Mi on dev
+    # 2026-10-17/18. No migration over 7ff20d6.
+    tag: 'ac45ec0'
+    digest: 'sha256:c32c2197fe49350f6c5faece6d3a58d408b827361e3a4f7412b23b43ce737b9e'
