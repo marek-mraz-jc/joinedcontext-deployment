@@ -249,6 +249,11 @@ portal:
     # (T-3899), so the Helsinki seed that carries them comes back in the same apply (T-4054).
     # portal f311196: a failed forge build no longer flags the App's catalog card (owner, 2026-10-13).
     digest: 'sha256:bfc0cd0f7da2f70cd4cb82e7185bd4a2c499a353d89e95c0708285754ec89085'
+    # The Portal commit this digest is the image of, and the docs commit its /docs pages are
+    # (public-docs/COMMIT at that commit): scripts/pin-portal.sh writes both with the digest, and
+    # scripts/check-docs-pin.sh holds those docs to the code this release runs (T-4483).
+    commit: '9076dd20f3f7563f32ab47e6b146d44b7eaf612d'
+    docs: '35d358c1204bab1d1b002af69008c17945a8d029'
     # The platform commit the image's jc-core is built from (the portal's Cargo.toml `rev`): a
     # seed field this jc-core does not know makes the Portal drop the whole manifest, so
     # tests/test_portal_pin_reads_the_seed.py holds every seed to it (T-4054).

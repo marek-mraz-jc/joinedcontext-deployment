@@ -30,12 +30,16 @@ docker run --rm --entrypoint cat "$registry/joinedcontext-app-builder@$builder" 
 docker run --rm --entrypoint cat "$registry/joinedcontext-app-builder@$builder" /usr/local/bin/build-app >"$work/build-app"
 python3 scripts/check-builder-contract.py "$work/lane.mjs" "$work/build-app" components/gitea/apps/*/.gitea/workflows/build.yml
 
+# The docs commit the image's /docs pages are, beside the digest (T-4483).
+docs=$(curl -fsSL "https://raw.githubusercontent.com/marek-mraz-jc/joinedcontext-portal/$commit/public-docs/COMMIT")
+[[ "$docs" =~ ^[0-9a-f]{40}$ ]] || { echo "portal $commit names no docs commit in public-docs/COMMIT" >&2; exit 1; }
+
 short=${commit:0:7}
-python3 - "$short" "$portal" "$builder" "$rust" <<'EOF'
+python3 - "$short" "$portal" "$builder" "$rust" "$commit" "$docs" <<'EOF'
 import re
 import sys
 
-short, portal, builder, rust = sys.argv[1:]
+short, portal, builder, rust, commit, docs = sys.argv[1:]
 
 def pin(path, pins):
     text = open(path).read()
@@ -48,9 +52,16 @@ def pin(path, pins):
     open(path, "w").write(text)
 
 pin("components/portal/images.yaml", [("joinedcontext-portal", portal)])
+text = open("components/portal/images.yaml").read()
+for key, value in (("commit", commit), ("docs", docs)):
+    text, n = re.subn(rf"(\n    {key}: )'[0-9a-f]{{40}}'", rf"\g<1>'{value}'", text, count=1)
+    if n != 1:
+        sys.exit(f"components/portal/images.yaml: no {key} pin")
+open("components/portal/images.yaml", "w").write(text)
 pin("components/gitea-runner/images.yaml",
     [("joinedcontext-app-builder", builder), ("joinedcontext-app-builder-rust", rust)])
 text = open("components/gitea-runner/images.yaml").read()
 open("components/gitea-runner/images.yaml", "w").write(re.sub(r"Pinned to portal [0-9a-f]{7}", f"Pinned to portal {short}", text))
 EOF
-echo "pinned portal $short: portal $portal, builder $builder, rust $rust"
+echo "pinned portal $short: portal $portal, docs ${docs:0:7}, builder $builder, rust $rust"
+scripts/check-docs-pin.sh
