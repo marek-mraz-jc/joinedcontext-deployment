@@ -52,7 +52,7 @@ pipeline:
         # zero at every station would tell residents the trains stopped.
         root = if $leaving.length() == 0 { throw("the timetable runs no train from the city on %v".format($today)) } else {
           $stations.map_each(s -> {
-            "id": "urn:ngsi-ld:%v:%v:%v:%v".format("GtfsStop", env("JC_ORG_DOMAIN"), env("JC_SPACE"), "zsr-" + s.stop_id),
+            "id": "urn:ngsi-ld:%v:%v:%v:%v".format("GtfsStop", "zilina.sk", env("JC_SPACE"), "zsr-" + s.stop_id),
             "type": "GtfsStop",
             "name": { "type": "LanguageProperty", "languageMap": { "sk": s.stop_name } },
             "stopCode": { "type": "Property", "value": s.stop_id },

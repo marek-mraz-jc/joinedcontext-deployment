@@ -123,6 +123,12 @@ COMMON = {
 # A column whose attribute name is one of these keeps its value as `column<Name>`. `name` is the
 # model's own (the mapping renames a column to it, T-4319).
 TAKEN = {*COMMON, "location", "observedAt"}
+# What a visitor reads for the common slots, in each language the widget speaks (T-4682).
+COMMON_LABELS = {
+    "dataProvider": {"sk": "Poskytovateľ údajov", "cs": "Poskytovatel dat", "en": "Data provider", "de": "Datenanbieter"},
+    "source": {"sk": "Zdroj", "cs": "Zdroj", "en": "Source", "de": "Quelle"},
+    "isPartOf": {"sk": "Dataset", "cs": "Datová sada", "en": "Dataset", "de": "Datensatz"},
+}
 LICENCE = {"cc-by": "CC BY 4.0", "cc-by-sa": "CC BY-SA 4.0"}
 # The types whose history matters, a measurement series read over time; every other type keeps its
 # current state only (T-4275, DM-82). The space's owner changes either on its Retention tab.
@@ -152,6 +158,18 @@ def slugs(entries: list[dict]) -> dict[str, str]:
 
 def attribute(name: str) -> str:
     return "column" + name[0].upper() + name[1:] if name in TAKEN else name
+
+
+def heading(col: str) -> str | None:
+    """The Slovak heading a source column already is (`Dĺžka_premostenia__m_` → "Dĺžka premostenia (m)"),
+    the slot's `sk` label at no model cost (T-4682); None for a code (`KRAJ_ID`, `datumzmeny`, `TypSaSZKod`)."""
+    unit = re.fullmatch(r"(.+?)__([^_]+)_", col)
+    text, unit = (unit.group(1), unit.group(2)) if unit else (col, None)
+    text = re.sub(r"_+", " ", text).strip()
+    human = not text.isascii() or re.fullmatch(r"[A-Z][a-z]+(?: [A-Za-z]+)*", text)
+    if not human or re.search(r"[a-z][A-Z]", text):
+        return None
+    return text[0].upper() + text[1:] + (f" ({unit})" if unit else "")
 
 
 def ranges(entries: list[dict]) -> dict[str, str]:
@@ -642,7 +660,8 @@ def sdm_iris(entries: list[dict]) -> dict[str, tuple[str, str]]:
 def linkml(project: str, space: str, entries: list[dict], model_ranges: dict[str, str]) -> str:
     slots: dict[str, dict] = {}
     for a, (r, d) in COMMON.items():
-        slots[a] = {"description": d, **({"range": r} if r != "string" else {}), "annotations": {"ngsi_ld_kind": "Property"}}
+        slots[a] = {"description": d, **({"range": r} if r != "string" else {}),
+                    "annotations": {"ngsi_ld_kind": "Property", "label": COMMON_LABELS[a]}}
     columns: dict[str, str] = {}
     for e in entries:
         for a, p in e["properties"].items():
@@ -651,7 +670,8 @@ def linkml(project: str, space: str, entries: list[dict], model_ranges: dict[str
         r = model_ranges[a]
         slots[a] = {"description": f"The source column `{columns[a]}`.",
                     **({"multivalued": True} if r == "string-list" else {"range": r} if r != "string" else {}),
-                    "annotations": {"ngsi_ld_kind": "Property"}}
+                    "annotations": {"ngsi_ld_kind": "Property",
+                                    **({"label": {"sk": h}} if (h := heading(columns[a])) else {})}}
     for e in entries:
         for a, v in (e.get("constants") or {}).items():
             slots.setdefault(a, {"description": f"`{v}` on every entity: the model requires it and no column holds it.",
