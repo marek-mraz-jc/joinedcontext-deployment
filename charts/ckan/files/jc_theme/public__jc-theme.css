@@ -458,9 +458,9 @@ body.dt-view .dt-button, body.dt-view .btn-secondary { background: var(--jc-surf
 .jc-assistant[open] > summary { inline-size: 2.75rem; block-size: 2.75rem; padding: 0; }
 .jc-assistant[open] > summary > span { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .jc-assistant[open] > summary::after { content: "\2715"; font-size: 1.25rem; line-height: 1; }
-/* The frame is as tall as the chat says its content is (--jc-h, set by jc-assistant.js), and never
-   taller than 40rem or the window less the button, its gap and a margin above (T-4283). */
-.jc-assistant > iframe { position: absolute; inset-inline-end: 0; inset-block-end: calc(100% + .5rem); width: min(26rem, calc(100vw - 2rem)); height: min(var(--jc-h, 40rem), 40rem, calc(100vh - 6.25rem)); height: min(var(--jc-h, 40rem), 40rem, calc(100dvh - 6.25rem)); border: 1px solid var(--jc-border); border-radius: .75rem; background: var(--jc-surface); }
+/* One tall frame, 760px and never taller than the window less the button, its gap and a margin
+   above, whatever the chat holds (T-4592, as the widget's own panel). */
+.jc-assistant > iframe { position: absolute; inset-inline-end: 0; inset-block-end: calc(100% + .5rem); width: min(26rem, calc(100vw - 2rem)); height: min(760px, calc(100vh - 6.25rem)); height: min(760px, calc(100dvh - 6.25rem)); border: 1px solid var(--jc-border); border-radius: .75rem; background: var(--jc-surface); }
 /* T-4204: the page keeps room at its end, so the button never covers its last line. */
 body:has(.jc-corner) { padding-block-end: 5rem; }
 /* On a phone the open assistant takes the whole screen, its button the bar that closes it; the
