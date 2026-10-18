@@ -295,13 +295,17 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .jc-preview p.jc-lead { color: var(--jc-muted); margin: .25rem 0 1rem; }
 .jc-table { border: 1px solid var(--jc-border); border-radius: var(--jc-radius-lg); background: var(--jc-surface); padding: 0 1rem; }
 .jc-table + .jc-table { margin-top: .75rem; }
-.jc-table > summary { cursor: pointer; list-style: none; display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem 1rem; padding: .75rem 0; font-weight: 600; }
+.jc-table > summary { position: relative; cursor: pointer; list-style: none; display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem 1rem; padding: .75rem 0; font-weight: 600; }
 .jc-table > summary::-webkit-details-marker { display: none; }
-.jc-table > summary::before { content: "\25B8"; color: var(--jc-muted); transition: transform .15s; }
+/* The arrow hangs in the card's padding, so the table's name starts on the edge the table does (T-4637). */
+.jc-table > summary::before { content: "\25B8"; position: absolute; inset-inline-start: -.75rem; top: .75rem; font-size: .875rem; line-height: 1.5rem; color: var(--jc-muted); transition: transform .15s; }
 .jc-table[open] > summary::before { transform: rotate(90deg); }
 .jc-table-rows { color: var(--jc-muted); font-weight: 500; font-size: .875rem; }
 .jc-table > .jc-preview-actions { padding-bottom: 1rem; }
-.jc-grid { display: block; width: 100%; height: clamp(18rem, calc(15rem + var(--jc-rows, 20) * 2.6rem), 38rem); border: 1px solid var(--jc-border); border-radius: var(--jc-radius-lg); background: var(--jc-surface); }
+/* The frame runs from border to border of its card: the card's border is the only one, and the
+   view inside keeps the card's 1rem (T-4637). This height holds until the view says its own
+   (jc-frame.js). */
+.jc-grid { display: block; margin-inline: -1rem; width: calc(100% + 2rem); height: clamp(18rem, calc(15rem + var(--jc-rows, 20) * 2.6rem), 38rem); border: 0; background: var(--jc-surface); }
 .jc-preview-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .75rem; }
 .jc-about-list { display: grid; grid-template-columns: minmax(9rem, max-content) 1fr; gap: 0; margin: 0;
   border: 1px solid var(--jc-border); border-radius: var(--jc-radius-lg); overflow: hidden; }
@@ -419,23 +423,37 @@ body.dt-view .dt-button, body.dt-view .btn-secondary { background: var(--jc-surf
 .jc-no-view { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; padding: 1rem 0; }
 .jc-no-view p { margin: 0; flex: 1 1 20rem; }
 
-/* The table view in a narrow frame (T-3048): its controls float side by side for a desktop and
-   overlapped below desktop width ("Search:" over "Showing 1 to 20 of 529 entries"). Below 992 px they
-   stack, each the frame's width, the search field taking what its label leaves. The view's own
-   rules name the table's id, so these do too. */
-@media (max-width: 991.98px) {
-  body.dt-view #dtprv_wrapper { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
-  body.dt-view #dtprv_wrapper > div:not(.dataTables_processing) { float: none; width: 100%; margin: 0; text-align: start; }
-  body.dt-view #dtprv_wrapper > .dataTables_length { width: auto; }
-  body.dt-view #dtprv_wrapper > .dataTables_filter { order: 1; display: flex; align-items: center; gap: .25rem; }
-  body.dt-view #dtprv_wrapper .dataTables_filter label { display: flex; flex: 1; align-items: center; gap: .5rem; margin: 0; }
-  body.dt-view #dtprv_wrapper .dataTables_filter input { flex: 1; min-width: 0; margin-left: 0; }
-  body.dt-view #dtprv_wrapper > .dataTables_info { order: 2; padding-top: 0; white-space: normal; }
-  body.dt-view #dtprv_wrapper > .dataTables_scroll { order: 3; }
-  body.dt-view #dtprv_wrapper > .resourceinfo,
-  body.dt-view #dtprv_wrapper > .sortinfo,
-  body.dt-view #dtprv_wrapper > .dataTables_paginate { order: 4; }
-  body.dt-view #dtprv_wrapper .dataTables_paginate .pagination { flex-wrap: wrap; justify-content: flex-start; }
+/* The framed table (T-3048, T-4637): one row of controls above the table, the length choice left
+   and the search, then the buttons, right; one row under it, the count left and the pages right.
+   The frame has no border of its own, the card's is the only one, and the wrapper's 1rem is the
+   card's padding, so the card's title, the controls and the table share one left edge. The view's
+   own rules name `#dtprv_wrapper`, so these do too. */
+body.dt-view #resize_wrapper { inset: 0; }
+body.dt-view #dtprv_wrapper { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; padding: 1rem; }
+body.dt-view #dtprv_wrapper > div:not(.dataTables_processing) { float: none; margin: 0; text-align: start; }
+body.dt-view #dtprv_wrapper > div.dataTables_length { order: 1; margin-inline-end: auto; }
+body.dt-view #dtprv_wrapper > .dataTables_filter { order: 2; display: flex; align-items: center; gap: .25rem; }
+body.dt-view #dtprv_wrapper .dataTables_filter label { display: flex; flex: 1; align-items: center; gap: .5rem; margin: 0; }
+body.dt-view #dtprv_wrapper .dataTables_filter input { flex: 1; min-width: 0; margin-left: 0; }
+body.dt-view #dtprv_wrapper > .dt-buttons { order: 3; }
+body.dt-view #dtprv_wrapper > .dataTables_scroll { order: 4; flex: 1 0 100%; }
+body.dt-view #dtprv_wrapper > div.dataTables_info { order: 5; padding: 0; margin-inline-end: auto; white-space: normal; }
+body.dt-view #dtprv_wrapper > .dataTables_paginate { order: 6; }
+body.dt-view #dtprv_wrapper .dataTables_paginate .pagination { flex-wrap: wrap; margin: 0; }
+/* The body is as tall as its rows, up to 26rem, then scrolls: the view's scrollResize filled the
+   frame and left a band under two rows. Its heights are inline, hence !important. */
+body.dt-view #dtprv_wrapper .dataTables_scrollBody { height: auto !important; max-height: 26rem !important; }
+/* The view's stylesheet draws the search field's clear button with an icon it does not ship (a
+   404 on every page); the field is cleared as any field is, so the button goes (T-4637). */
+body.dt-view input[type="search"]::-webkit-search-cancel-button { display: none; }
+/* A narrow frame: the buttons get their own row above, then length and search stack. */
+@media (max-width: 47.99rem) {
+  body.dt-view #dtprv_wrapper > .dt-buttons { order: 0; flex: 1 0 100%; justify-content: flex-end; }
+  body.dt-view #dtprv_wrapper > .dt-buttons > * { flex: 0 0 auto; }
+}
+@media (max-width: 29.99rem) {
+  body.dt-view #dtprv_wrapper > .dataTables_length,
+  body.dt-view #dtprv_wrapper > .dataTables_filter { flex: 1 0 100%; }
 }
 
 /* The assistant (AG-114): a button in the corner, its frame opening above it, never wider than
@@ -464,17 +482,15 @@ body.dt-view .dt-button, body.dt-view .btn-secondary { background: var(--jc-surf
    shadow, its words upright again and on one line. Open, it is the ✕ below as before. */
 .jc-assistant:not([open]) > summary { block-size: 3rem; min-block-size: 0; padding-block: 0; margin-inline: .375rem; border-radius: 10px; transform: skewX(-14deg); white-space: nowrap; box-shadow: 0 4px 14px color-mix(in oklab, var(--jc-ink) 25%, transparent); }
 .jc-assistant:not([open]) > summary > span { display: inline-block; transform: skewX(14deg); }
-/* Open, the launcher becomes the panel's close control, a round ✕ in its place: the corner never
-   shows both (T-4283). Its words stay for a screen reader. */
-.jc-assistant[open] > summary { inline-size: 2.75rem; block-size: 2.75rem; padding: 0; }
-.jc-assistant[open] > summary > span { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.jc-assistant[open] > summary::after { content: "\2715"; font-size: 1.25rem; line-height: 1; }
-/* One tall frame, 760px and never taller than the window less the button, its gap and a margin
-   above, whatever the chat holds (T-4592, as the widget's own panel). */
-.jc-assistant > iframe { position: absolute; inset-inline-end: 0; inset-block-end: calc(100% + .5rem); width: min(26rem, calc(100vw - 2rem)); height: min(760px, calc(100vh - 6.25rem)); height: min(760px, calc(100dvh - 6.25rem)); border: 1px solid var(--jc-border); border-radius: .75rem; background: var(--jc-surface); }
+/* Open, the launcher goes: the ✕ in the chat's own header closes the panel (T-4635, the widget's
+   embed mode), so no circle stays in the corner. */
+.jc-assistant[open] > summary { display: none; }
+/* One tall frame in the corner where the launcher was, 760px and never taller than the window
+   less its two 1rem margins, with nothing under it (T-4592, T-4635). */
+.jc-assistant > iframe { position: fixed; inset-inline-end: 1rem; inset-block-end: max(1rem, env(safe-area-inset-bottom)); width: min(26rem, calc(100vw - 2rem)); height: min(760px, calc(100vh - 2rem)); height: min(760px, calc(100dvh - 2rem)); border: 1px solid var(--jc-border); border-radius: .75rem; background: var(--jc-surface); }
 /* T-4204: the page keeps room at its end, so the button never covers its last line. */
 body:has(.jc-corner) { padding-block-end: 5rem; }
-/* On a phone the open assistant takes the whole screen, its button the bar that closes it; the
+/* On a phone the open assistant takes the whole screen, the chat's header with its ✕ on top; the
    page behind neither shows nor scrolls (jc-assistant.js also makes it inert and adds Escape). */
 @media (max-width: 40rem) {
   /* T-4620: the bar is narrow enough to stay beside the launcher, one row as on a desktop. */
@@ -492,12 +508,9 @@ body:has(.jc-corner) { padding-block-end: 5rem; }
   .jc-corner:has(.jc-assistant[open]) { z-index: 2000; }
   body:has(.jc-assistant[open]) { overflow: hidden; }
   .jc-assistant[open] { position: fixed; inset: 0; z-index: 2000; display: flex; flex-direction: column; background: var(--jc-surface); }
-  .jc-assistant[open] > summary { box-sizing: border-box; inline-size: auto; block-size: 3.25rem; padding: 0 1.25rem; border-radius: 0; box-shadow: none; display: flex; justify-content: space-between; align-items: center; }
-  .jc-assistant[open] > summary > span { position: static; inline-size: auto; block-size: auto; clip-path: none; }
-  .jc-assistant[open] > summary::after { content: "\2715"; font-size: 1.25rem; line-height: 1; }
-  /* The frame's height is the screen's less the bar: an iframe stretches neither as a flex item of
-     details (its content sits in ::details-content) nor between insets, and stays 150 px (T-4248). */
-  .jc-assistant[open] > iframe { position: fixed; inset: 3.25rem 0 auto 0; width: 100%; height: calc(100vh - 3.25rem); height: calc(100dvh - 3.25rem); border: 0; border-radius: 0; }
+  /* The frame's height is the screen's: an iframe stretches neither as a flex item of details (its
+     content sits in ::details-content) nor between insets, and stays 150 px (T-4248). */
+  .jc-assistant[open] > iframe { position: fixed; inset: 0; width: 100%; height: 100vh; height: 100dvh; border: 0; border-radius: 0; }
 }
 
 /* ---- A resource's page (T-4333) ---------------------------------------------------------- */
