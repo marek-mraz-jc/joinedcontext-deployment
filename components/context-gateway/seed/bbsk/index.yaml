@@ -401,9 +401,9 @@ bbsk-policy-zariadenia-read.yaml: projects/bbsk/spaces/bbsk-registre/policies/za
 bbsk-endpoint-mosty.yaml: projects/bbsk/spaces/bbsk-registre/endpoints/bbsk-mosty.yaml
 bbsk-policy-mosty-read.yaml: projects/bbsk/spaces/bbsk-registre/policies/mosty-read.yaml
 # The data catalogue's one general assistant over every publisher (T-4342): every dataset of
-# data.dev as its knowledge, every body's public Endpoints as its connectors.
+# the catalogue as its knowledge, every body's public Endpoints as its connectors; the deployment
+# itself renders from dev's ckan.catalogue (components/ckan/seed/assistant.yaml.gotmpl, T-4636).
 bbsk-knowledge-portal.yaml: projects/bbsk/assistant/sources/portal.yaml
-bbsk-assistant-data.yaml: projects/bbsk/assistant/deployments/data.yaml
 # The open-data eval's copies of `data`, one per model (T-4359); removed after the runs.
 bbsk-assistant-data-eval-gemini.yaml: projects/bbsk/assistant/deployments/data-eval-gemini.yaml
 bbsk-assistant-data-eval-haiku.yaml: projects/bbsk/assistant/deployments/data-eval-haiku.yaml

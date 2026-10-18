@@ -1,5 +1,6 @@
 # TEMPORARY (T-4359): the open-data eval's copy of `data` on anthropic/claude-haiku-5.5, router and answer alike.
-# Only metadata.name, publicId and model differ from bbsk-assistant-data.yaml
+# Only metadata.name, publicId and model differ from `data`, which renders from dev's ckan.catalogue
+# (components/ckan/seed/assistant.yaml.gotmpl, T-4636)
 # (tests/test_public_assistant_seed.py holds it to that); its $1 a day is its own, never the
 # visitors'. Removed after the T-4359 runs.
 apiVersion: joinedcontext.com/v1alpha1
