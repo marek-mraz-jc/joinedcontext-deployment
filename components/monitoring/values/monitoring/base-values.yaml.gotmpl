@@ -67,6 +67,14 @@ serviceMonitors:
     # Bento serves its Prometheus text on the same port as its API (PL-24).
     port: http
   {{- end }}
+  {{- if has "gitops" $components }}
+  # Argo CD's sync and health of every Application (ADR-N-056 §2.9).
+  - name: argocd-application-controller
+    namespace: {{ index $root "gitops" "argocd" "namespace" }}
+    selector:
+      app.kubernetes.io/name: argocd-metrics
+    port: http-metrics
+  {{- end }}
 
 # APISIX is deliberately absent: its own chart renders a ServiceMonitor for port 9091
 # (/apisix/prometheus/metrics) as soon as global.metrics.enabled is set, on the same 15s
@@ -95,6 +103,33 @@ alertGroups:
           severity: warning
         annotations:
           summary: 'APISIX edge 5xx error rate exceeded 1%'
+  {{- end }}
+  {{- if has "gitops" $components }}
+  # ADR-N-056 §2.9 (T-4674): Argo CD keeps the environment on main; an Application that stays
+  # out of sync or degraded, or a sync that failed (the smoke gate's included), is the deployer's
+  # next job. Never rolled back by itself (OPS-58).
+  - name: gitops
+    rules:
+      - alert: ArgoCDApplicationOutOfSync
+        expr: max by (name) (argocd_app_info{sync_status!="Synced"}) == 1
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Argo CD Application {{`{{ $labels.name }}`}} has not been in sync for 15 minutes'
+      - alert: ArgoCDApplicationDegraded
+        expr: max by (name) (argocd_app_info{health_status=~"Degraded|Missing"}) == 1
+        for: 15m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Argo CD Application {{`{{ $labels.name }}`}} has been degraded for 15 minutes'
+      - alert: ArgoCDSyncFailed
+        expr: sum by (name) (increase(argocd_app_sync_total{phase=~"Error|Failed"}[15m])) > 0
+        labels:
+          severity: critical
+        annotations:
+          summary: 'An Argo CD sync of {{`{{ $labels.name }}`}} failed: fix forward on main or revert the commit'
   {{- end }}
   {{- if has "context-broker" $components }}
   # T-4298: the broker's database pool ran dry on dev for over half an hour and every Endpoint

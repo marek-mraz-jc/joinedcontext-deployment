@@ -689,6 +689,10 @@ config:
           # proposal; a user without it can browse and propose only.
           - name: portal-approver
             description: May approve and merge change proposals in the Portal
+          # Administers the operator UIs: Argo CD's role:admin (components/gitops, ADR-N-056
+          # §2.8) and Grafana's Admin. The owner grants it; nobody holds it by default.
+          - name: platform-admin
+            description: Administers the operator UIs (Argo CD, Grafana)
         client:
           {{- range $clientId, $client := .Values.keycloakClients }}
           {{- if index $client "roles" }}
