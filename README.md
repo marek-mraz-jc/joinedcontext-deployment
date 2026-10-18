@@ -16,6 +16,7 @@ cluster. Forked from the CIVITAS/CORE v2 deployment repository (EUPL 1.2, see `L
 | `apisix` | the edge gateway, standalone file mode: no etcd, no Admin API (ADR-N-007) |
 | `artifact-store` | RustFS: the S3 API the reconciler writes rendered state to (PF-29, PF-30) |
 | `audit-logging` | a Vector daemonset shipping the audit trail of the gateway, Keycloak and the forge |
+| `basemap` | the background map from the cluster: a Protomaps PMTiles extract, its style, fonts and sprites on `tiles.{domain}` (T-4638) |
 | `ckan` | the open-data catalogue: the public face of a published Endpoint |
 | `context-broker` | AntaresBroker, the NGSI-LD broker behind the gateway (ADR-N-008) |
 | `context-gateway` | the enforcement point in front of every broker surface |
