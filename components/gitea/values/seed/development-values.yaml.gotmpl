@@ -19,8 +19,11 @@
 {{- $_ := set $seed $path (readFile (printf "../../../context-gateway/seed/helsinki-demo-feeds/%s" $file) | replace "DEMO_FEEDS_NAMESPACE" $demoNs) }}
 {{- end }}
 {{- end }}
+{{- /* Each catalogue instance's assistant, rendered from its values block (T-4636). */}}
+{{- $assistants := tpl (printf "%s{{ include \"gitea.catalogueAssistants\" . }}" (readFile "../seed-layout.tpl")) (dict "values" .Values) | fromJson }}
+{{- range $path, $text := $assistants }}{{ $_ := set $seed $path $text }}{{ end }}
 {{- /* Which part of which project each release holds: values/seed-layout.tpl (T-4431). */}}
-{{- $layout := tpl (printf "%s{{ include \"gitea.seedLayout\" . }}" (readFile "../seed-layout.tpl")) (dict "sources" $sources) | fromJson }}
+{{- $layout := tpl (printf "%s{{ include \"gitea.seedLayout\" . }}" (readFile "../seed-layout.tpl")) (dict "sources" $sources "extra" $assistants) | fromJson }}
 {{- $shard := .Release.Name | trimPrefix "gitea-seed" | trimPrefix "-" | default "1" | atoi }}
 {{- $projects := dict }}
 {{- range $path, $text := $seed }}

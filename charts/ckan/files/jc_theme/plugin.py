@@ -401,10 +401,10 @@ STRINGS = {
     "section_schema_lead": {"en": "What each field means, in the formats validators and developers read.", "sk": "Čo znamená každé pole, vo formátoch pre validátory a vývojárov.", "cs": "Co znamená každé pole, ve formátech pro validátory a vývojáře.", "de": "Was jedes Feld bedeutet, in den Formaten für Validatoren und Entwickler."},
     # The home page (T-3009).
     "tagline": {
-        "en": "Open data you can browse, download and query live.",
-        "sk": "Otvorené dáta, ktoré si prezriete, stiahnete a dopytujete naživo.",
-        "cs": "Otevřená data, která si prohlédnete, stáhnete a dotazujete živě.",
-        "de": "Offene Daten zum Durchsuchen, Herunterladen und Live-Abfragen.",
+        "en": "Browse them, download them or ask the assistant about them.",
+        "sk": "Prezrite si ich, stiahnite alebo sa na ne opýtajte asistenta.",
+        "cs": "Prohlédněte si je, stáhněte nebo se na ně zeptejte asistenta.",
+        "de": "Ansehen, herunterladen oder den Assistenten dazu fragen.",
     },
     "no_datasets": {"en": "No dataset is published yet.", "sk": "Zatiaľ nie je zverejnený žiadny dataset.", "cs": "Zatím není zveřejněna žádná datová sada.", "de": "Noch ist kein Datensatz veröffentlicht."},
     "hero_search": {"en": "Search the open data", "sk": "Hľadať v otvorených dátach", "cs": "Hledat v otevřených datech", "de": "Offene Daten durchsuchen"},
@@ -627,6 +627,15 @@ def jc_site_title(language=None):
     installation's name."""
     title = _localized(BRANDING.get("siteTitle"), language or _language())
     return title if isinstance(title, str) else BRANDING.get("instanceName") or "joinedcontext"
+
+
+def jc_site_tagline(language=None):
+    """The line under the home page's title (T-4636): the instance's `site.tagline` in the page's
+    language, else the installation's tagline, else the theme's."""
+    tagline = _localized(BRANDING.get("siteTagline"), language or _language())
+    if isinstance(tagline, str):
+        return tagline
+    return BRANDING.get("tagline") or jc_t("tagline")
 
 
 def jc_site_logo():
@@ -1879,6 +1888,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_assistants": jc_assistants,
             "jc_page": jc_page,
             "jc_site_title": jc_site_title,
+            "jc_site_tagline": jc_site_tagline,
             "jc_site_logo": jc_site_logo,
             "jc_assistant_widget": jc_assistant_widget,
             "jc_about_site": jc_about_site,

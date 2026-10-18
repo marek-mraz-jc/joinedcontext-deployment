@@ -493,6 +493,17 @@ dev-smoke:
 	# A CronJob whose newest run failed (T-4385): a harvest dead since the night is no green smoke.
 	echo "cron jobs"
 	kubectl -n dev get jobs -o json | python3 scripts/failed-jobs.py || rc=1
+	# The background map (T-4638): a range request answers 206, and the monthly refresh kept the
+	# file younger than 40 days (Last-Modified is the file's own time).
+	echo "basemap"
+	hdr=$(curl -sS -o /dev/null -D - -m 20 -H 'Range: bytes=0-16383' "https://tiles.{{ dev_domain }}/basemap.pmtiles" 2>&1 | tr -d '\r' || true)
+	status=$(printf '%s\n' "$hdr" | awk 'NR == 1 { print $2 }')
+	lm=$(printf '%s\n' "$hdr" | sed -n 's/^[Ll]ast-[Mm]odified: //p')
+	modified=$( { [ -n "$lm" ] && date -u -d "$lm" +%s; } 2>/dev/null || echo 0)
+	age=$(( ($(date -u +%s) - modified) / 86400 ))
+	if [ "$status" != 206 ]; then echo "  FAIL  basemap: a range request answered '${status}', not 206"; rc=1
+	elif [ "$age" -gt 40 ]; then echo "  FAIL  basemap: the file is ${age} days old, the refresh is overdue"; rc=1
+	else echo "  ok    basemap: 206, the file is ${age} days old"; fi
 	# The postgres data volume (T-4414): the broker's history once filled it ~30 GB a week, every
 	# smoke green. Every instance of the cluster, wherever its namespace is; no reading fails too.
 	echo "postgres data volume"

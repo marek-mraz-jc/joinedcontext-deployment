@@ -72,5 +72,49 @@ releases:
       - {{- index $root $component $part.name "rawValues" | default dict | toYaml | nindent 8 }}
   {{- end }}
 
+  {{- /* Every catalogue beside `catalogue` (T-4636; global.catalogues, checked by
+         defaults/environment/catalogues-guard.yaml.gotmpl): a CKAN release of its own beside the
+         default instance, with its own Solr, Redis, storage, Secrets and databases. base-values
+         reads the instance's words from `ckan.<name>` by the release's `catalogue` label; its
+         publishers and sizes are values/<name>/. */}}
+  {{- $catalogue := $root.ckan.catalogue }}
+  {{- range $c := $root.global.catalogues | default list }}
+    {{- $name := $c.name }}
+    {{- $release := printf "ckan-%s" $name }}
+    {{- if eq $c.subDomain $catalogue.subDomain }}
+      {{- fail (printf "global.catalogues: %s: subDomain %q is the default catalogue's (T-4636)" $name $c.subDomain) }}
+    {{- end }}
+    {{- $n := $name | replace "-" "_" }}
+  - name: {{ $release }}
+    labels:
+      release: {{ $release }}
+      catalogue: {{ $name }}
+    namespace: {{ $catalogue.namespace }}
+    chart: {{ index $root.charts $component "catalogue" "chart" }}
+    createNamespace: {{ $root.global.createNamespaces }}
+    installed: {{ $catalogue.enabled }}
+    values:
+      - values/catalogue/base-values.yaml.gotmpl
+      - values/{{ $name }}/{{ $root.global.profile }}-values.yaml.gotmpl
+      - fullnameOverride: {{ $release }}
+        database:
+          name: ckan_{{ $n }}
+          user: ckan_{{ $n }}
+          datastoreName: ckan_datastore_{{ $n }}
+          secret:
+            name: db-ckan-{{ $name }}
+          datastoreRead:
+            user: ckan_datastore_read_{{ $n }}
+            secret:
+              name: db-ckan-datastore-read-{{ $name }}
+        secrets:
+          session:
+            name: ckan-session-{{ $name }}
+          admin:
+            name: ckan-admin-credentials-{{ $name }}
+        apiToken:
+          secret: {{ $release }}-api-token
+  {{- end }}
+
 commonLabels:
   component: {{ $component }}

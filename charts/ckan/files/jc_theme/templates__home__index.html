@@ -6,14 +6,13 @@
   ("Welcome to CKAN", a 420 x 220 placeholder), which no deployment ever filled in.
 #}
 {% block primary_content %}
-  {% set brand = h.jc_branding() %}
   {% set stats = h.get_site_statistics() %}
   {% set dataset_type = h.default_package_type() %}
   <div role="main">
     <section class="jc-hero" aria-labelledby="jc-hero-title">
       <div class="container">
         <h1 id="jc-hero-title">{{ h.jc_site_title() }}</h1>
-        <p class="jc-hero-lead">{{ brand.tagline or h.jc_t('tagline') }}</p>
+        <p class="jc-hero-lead">{{ h.jc_site_tagline() }}</p>
         <form class="jc-hero-search" role="search" method="get" action="{{ h.url_for(dataset_type ~ '.search') }}">
           <label for="jc-hero-q">{{ h.jc_t('hero_search') }}</label>
           <div class="jc-hero-field">
