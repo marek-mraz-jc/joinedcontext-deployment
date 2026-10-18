@@ -15,7 +15,7 @@ import yaml
 
 from conftest import PROJECT_ROOT, TREE_IGNORE, set_global
 
-EXAMPLE = [{"name": "example-city", "subDomain": "opendata"}]
+EXAMPLE = [{"name": "example-city", "subDomain": "mesto"}]
 DEFAULT, OTHER = "ckan-catalogue", "ckan-example-city"
 
 
@@ -108,16 +108,16 @@ def test_secrets_and_claims_are_disjoint_and_rendered(docs):
 def test_each_instance_has_its_own_databases_and_host(docs):
     env = {e["name"]: e.get("value") for d in pods(docs, OTHER) if d["metadata"]["name"] == OTHER
            for e in d["spec"]["template"]["spec"]["containers"][0].get("env", [])}
-    assert env["CKAN_SITE_URL"] == "https://opendata.dev.joinedcontext.com"
+    assert env["CKAN_SITE_URL"] == "https://mesto.dev.joinedcontext.com"
     assert env["CKAN_SQLALCHEMY_URL"].endswith("/ckan_example_city")
     assert env["CKAN_DATASTORE_READ_URL"].startswith("postgresql://ckan_datastore_read_example_city:")
     assert f"//{OTHER}-solr." in env["CKAN_SOLR_URL"] and f"//{OTHER}-redis." in env["CKAN_REDIS_URL"]
     databases = {d["metadata"]["name"] for d in docs if d["kind"] == "Database"}
     assert {"ckan-example-city", "ckan-datastore-example-city"} <= databases
     hosts = {r["host"] for d in docs if d["kind"] == "Ingress" for r in d["spec"]["rules"]}
-    assert {"data.dev.joinedcontext.com", "opendata.dev.joinedcontext.com"} <= hosts
+    assert {"opendata.dev.joinedcontext.com", "mesto.dev.joinedcontext.com"} <= hosts
     certificate = [d for d in docs if d["kind"] == "Certificate" and d["metadata"]["name"] == "apisix-edge"][0]
-    assert "opendata.dev.joinedcontext.com" in certificate["spec"]["dnsNames"], "HTTP-01, one name each"
+    assert "mesto.dev.joinedcontext.com" in certificate["spec"]["dnsNames"], "HTTP-01, one name each"
 
 
 def test_its_pods_reach_their_own_solr_and_redis_alone(docs):
@@ -143,7 +143,7 @@ def test_its_theme_and_assistant_come_from_its_block(docs):
     assert len(assistant) == 1
     spec = assistant[0]["spec"]
     assert assistant[0]["metadata"]["namespace"] == "example-city"
-    assert spec["allowedOrigins"] == ["https://opendata.dev.joinedcontext.com"]
+    assert spec["allowedOrigins"] == ["https://mesto.dev.joinedcontext.com"]
     assert spec["scope"]["projects"] == [] and spec["sources"] == ["catalogue"], "its own spaces alone"
     assert spec["theme"]["title"] == {"en": "Example City open data", "sk": "Otvorené dáta Example City"}
 
@@ -171,7 +171,7 @@ def test_its_generated_secrets_meet_the_declared_lengths(rendered_file):
     ([{"name": "a", "subDomain": "x"}, {"name": "a", "subDomain": "y"}], "not a catalogue name"),
     ([{"name": "a", "subDomain": "x"}, {"name": "b", "subDomain": "x"}], "not a DNS label of its own"),
     ([{"name": "a"}], "not a DNS label of its own"),
-    ([{"name": "a", "subDomain": "data"}], "is the default catalogue's"),
+    ([{"name": "a", "subDomain": "opendata"}], "is the default catalogue's"),
 ])
 def test_a_bad_entry_stops_the_render(tmp_path_factory, catalogues, says):
     result = render(tmp_path_factory, catalogues)

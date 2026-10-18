@@ -5,3 +5,18 @@
 # at most 1 MiB, and the Helsinki transit seed took gitea-bootstrap past its budget.
 configMaps: gitea-seed
 apps: {}
+
+{{- /* dev's seeds rendered for a production instance that reads dev's values (T-4678): its own
+       hosts, the owner where the seeds name the demo steward, and no other demo person. */}}
+{{- if and (eq .Values.global.profile "production") .Values.global.valuesProfile }}
+rewrites:
+  # The catalogue's host first: opendata.{domain} since T-4679.
+  - from: '(^|[^a-z0-9.-])data\.dev\.joinedcontext\.com'
+    to: '${1}opendata.{{ .Values.global.domain }}'
+  - from: 'dev\.joinedcontext\.com'
+    to: {{ .Values.global.domain | quote }}
+  - from: 'demo\.steward@[A-Za-z0-9.-]+'
+    to: {{ .Values.global.initialUserEmail | quote }}
+  - from: '(?m)^[ \t]*- user: demo\.[a-z]+@[A-Za-z0-9.-]+[ \t]*\r?\n'
+    to: ''
+{{- end }}

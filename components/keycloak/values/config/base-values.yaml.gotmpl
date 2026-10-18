@@ -63,6 +63,13 @@ extraEnv:
         key: {{ $key }}
 {{- end }}
 {{- end }}
+  {{- if $this.initialUser }}
+  - name: USER_PASSWORD_INITIAL
+    valueFrom:
+      secretKeyRef:
+        name: keycloak-user-initial
+        key: password
+  {{- end }}
   {{- range $name, $_ := $this.demoUsers | default dict }}
   - name: USER_PASSWORD_{{ $name | upper | replace "." "_" }}
     valueFrom:
@@ -491,7 +498,28 @@ config:
             - /{{ . }}
             {{- end }}
         {{- end }}
-        {{- if and (not ($this.demoUsers | default dict)) (not $serviceAccounts) }}
+        {{- with $this.initialUser }}
+        {{- /* The owner's account of a production realm (T-4678): the only human at start, with the
+               demo steward's roles and groups; its password is the cluster-generated Secret
+               keycloak-user-initial, rotated like every other generated Secret. */}}
+        - username: {{ .email }}
+          enabled: true
+          emailVerified: true
+          email: {{ .email }}
+          requiredActions: []
+          credentials:
+            - type: password
+              value: "$(USER_PASSWORD_INITIAL)"
+              temporary: false
+          realmRoles:
+            {{- toYaml (.realmRoles | default list) | nindent 12 }}
+          groups:
+            - /platform-readers
+            {{- range (.groups | default list) }}
+            - /{{ . }}
+            {{- end }}
+        {{- end }}
+        {{- if and (not ($this.demoUsers | default dict)) (not $serviceAccounts) (not $this.initialUser) }}
         []
         {{- end }}
       clients:

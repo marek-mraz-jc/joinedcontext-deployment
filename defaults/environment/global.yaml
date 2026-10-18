@@ -46,6 +46,10 @@ global:
   # Deployment profile: "development" or "production"
   # Controls resource limits, replica counts, scaling
   profile: development
+  # Which profile's values files the components read, when not the profile's own. A single-node
+  # production instance carrying dev's seeds (smartcity, T-4678) sets "development": dev's measured
+  # sizes and seeds, under the production profile's guards, accounts and test-object exclusions.
+  valuesProfile: ''
 
   # Whether Helmfile should create the namespaces automatically
   createNamespaces: true

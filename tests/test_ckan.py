@@ -24,7 +24,7 @@ requires_helmfile = pytest.mark.skipif(shutil.which("helmfile") is None, reason=
 requires_helm = pytest.mark.skipif(shutil.which("helm") is None, reason="helm not installed")
 
 DEV_DOMAIN = "dev.joinedcontext.com"
-CATALOGUE_HOST = f"data.{DEV_DOMAIN}"
+CATALOGUE_HOST = f"opendata.{DEV_DOMAIN}"
 
 
 def by_name(docs, kind, name):

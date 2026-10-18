@@ -68,7 +68,7 @@ releases:
     {{- end }}
     values:
       - values/{{ index $part "valuesFrom" | default $part.name | kebabcase }}/base-values.yaml.gotmpl
-      - values/{{ index $part "valuesFrom" | default $part.name | kebabcase }}/{{ $root.global.profile }}-values.yaml.gotmpl
+      - values/{{ index $part "valuesFrom" | default $part.name | kebabcase }}/{{ $root.global.valuesProfile | default $root.global.profile }}-values.yaml.gotmpl
       - {{- index $root $component $part.name "rawValues" | default dict | toYaml | nindent 8 }}
   {{- end }}
 

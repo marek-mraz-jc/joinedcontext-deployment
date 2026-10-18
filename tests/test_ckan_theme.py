@@ -312,7 +312,7 @@ def test_the_mcp_panel_names_the_installation_s_hub_and_nothing_else(theme):
     from urllib.parse import parse_qs, unquote, urlsplit
 
     mcp = theme.jc_mcp_install()
-    hub = "https://dev.example/api/mcp"
+    hub = "https://api.dev.example/api/mcp"
     assert mcp["url"] == hub
     # One argument per line and the address alone on its JSON line, so no line is wider than the
     # address a narrow card has to show anyway (T-4284).
@@ -320,7 +320,7 @@ def test_the_mcp_panel_names_the_installation_s_hub_and_nothing_else(theme):
     assert json.loads(mcp["json"]) == {"mcpServers": {"joinedcontext": {"type": "http", "url": hub}}}
     assert f'  "{hub}"' in mcp["json"].splitlines()
     # The address breaks only before a single slash, never inside a word.
-    assert mcp["url_parts"] == ["https://dev.example", "/api", "/mcp"]
+    assert mcp["url_parts"] == ["https://api.dev.example", "/api", "/mcp"]
     assert mcp["vscode"].startswith("vscode:mcp/install?")
     assert json.loads(unquote(mcp["vscode"].split("?", 1)[1])) == {"name": "joinedcontext", "type": "http", "url": hub}
     cursor = urlsplit(mcp["cursor"])
@@ -1293,7 +1293,7 @@ def test_the_connector_privacy_terms_and_support_pages_read_in_slovak_and_englis
         assert page["email"] == "hello@dev.example" and page["pages"] == ["connector", "privacy", "terms", "support"]
         text = " ".join(p for s in page["sections"] for p in s["paragraphs"])
         assert "{" not in text and not re.search(r"(?i)bearer|token|api[_-]?key|password", text), name
-    assert "https://dev.example/api/mcp" in " ".join(theme.jc_page("connector")["sections"][0]["paragraphs"])
+    assert "https://api.dev.example/api/mcp" in " ".join(theme.jc_page("connector")["sections"][0]["paragraphs"])
     assert theme.jc_page("privacy")["title"] != theme.PAGES["privacy"]["sk" if lang == "en" else "en"]["title"]
     assert theme.jc_page("imprint") is None
 
@@ -1586,7 +1586,7 @@ def test_the_assistants_page_names_the_installation_s_own_hub_and_assistants_in_
     branding.write_text(json.dumps({"domain": domain, "instanceName": name}))
     theme.BRANDING = theme._load()
     page = theme.jc_assistants()
-    hub = f"https://{domain}/api/mcp"
+    hub = f"https://api.{domain}/api/mcp"
     assert page["mcp"]["url"] == hub and name in page["lead"] and "{" not in page["lead"]
     cards = {card["id"]: card for card in page["cards"]}
     # T-4634, T-4643: Gemini's app needs OAuth (T-4631), so it has no card until its flag is on.
@@ -1693,10 +1693,10 @@ def test_each_assistant_card_is_its_logo_its_name_and_at_most_one_link(theme):
         assert 'target="_blank" rel="noopener noreferrer"' in card and "Coming soon" not in card, id
         assert "jc-code" not in card and "<button" not in card and "<pre" not in card, id
     # The address once for the page, as text with one copy button; nothing technical above the fold.
-    hub = "https://dev.example/api/mcp"
+    hub = "https://api.dev.example/api/mcp"
     above, fold = html.split('<details class="jc-developers">', 1)
     # It breaks only before a slash, never inside a word (T-4284), and a copy reads it whole.
-    assert '<span id="jc-store-url" class="jc-store-url">https://dev.example<wbr>/api<wbr>/mcp</span>' in above
+    assert '<span id="jc-store-url" class="jc-store-url">https://api.dev.example<wbr>/api<wbr>/mcp</span>' in above
     assert above.replace("<wbr>", "").count(hub) == 1
     assert above.count("<button") == 1 and not re.search(r"class=\"jc-code[ \"]", above) and "<pre" not in above and "<code" not in above
     assert fold.startswith("\n        <summary>For developers</summary>")
@@ -2335,7 +2335,7 @@ def test_each_guide_page_reads_top_to_bottom_without_a_technical_word(theme, mon
     items = re.findall(r"<li>(.*?)</li>", steps, re.S)
     assert len(items) == len(theme.GUIDES[id]["en"]["steps"]) and "{name}" not in html
     # The address once, in a box inside the step that asks for it, with the one copy button.
-    hub = "https://dev.example/api/mcp"
+    hub = "https://api.dev.example/api/mcp"
     boxed = [i for i, item in enumerate(items) if 'id="jc-store-url"' in item]
     assert boxed == [theme.GUIDES[id]["paste"]] and html.replace("<wbr>", "").count(hub) == 1
     assert html.count("<button") == 1 and html.count("data-jc-copy=") == 1

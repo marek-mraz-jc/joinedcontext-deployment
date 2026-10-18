@@ -4,3 +4,6 @@
 # The ConfigMaps' name before `-<app>`, the same in every release that carries some of the apps.
 configMaps: gitea-sample-apps
 apps: {}
+
+# Regex rewrites (from, to) applied to every seed file, in order (T-4678).
+rewrites: []
