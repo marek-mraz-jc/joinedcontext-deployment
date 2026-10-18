@@ -4,6 +4,9 @@
     "AirQualityObserved": {
       "@id": "sdm:AirQualityObserved"
     },
+    "EVChargingStation": {
+      "@id": "sdm:EVChargingStation"
+    },
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
@@ -12,6 +15,9 @@
     },
     "Organization": {
       "@id": "sdm-org:Organization"
+    },
+    "PointOfInterest": {
+      "@id": "sdm:PointOfInterest"
     },
     "PostalAddress": {
       "@id": "schema:PostalAddress"
@@ -28,6 +34,9 @@
     "addressLocality": {
       "@id": "schema:addressLocality"
     },
+    "allowedVehicleType": {
+      "@id": "sdm-transport:allowedVehicleType"
+    },
     "annualBudget": {
       "@id": "jc:annualBudget",
       "@type": "xsd:float"
@@ -39,6 +48,13 @@
     "budgetYear": {
       "@id": "jc:budgetYear",
       "@type": "xsd:integer"
+    },
+    "capacity": {
+      "@id": "sdm-transport:capacity",
+      "@type": "xsd:integer"
+    },
+    "category": {
+      "@id": "sdm-poi:category"
     },
     "dataProvider": {
       "@id": "sdm:dataProvider"
@@ -94,6 +110,12 @@
       "@id": "ngsi-ld:observedAt",
       "@type": "xsd:dateTime"
     },
+    "openingHours": {
+      "@id": "schema:openingHours"
+    },
+    "operator": {
+      "@id": "sdm-transport:operator"
+    },
     "pm10": {
       "@id": "sdm:pm10",
       "@type": "xsd:float"
@@ -124,8 +146,13 @@
     "sdm": "https://smartdatamodels.org/",
     "sdm-org": "https://smartdatamodels.org/dataModel.Organization/",
     "sdm-parks": "https://smartdatamodels.org/dataModel.ParksAndGardens/",
+    "sdm-poi": "https://smartdatamodels.org/dataModel.PointOfInterest/",
+    "sdm-transport": "https://smartdatamodels.org/dataModel.Transportation/",
     "shex": "http://www.w3.org/ns/shex#",
     "skos": "http://www.w3.org/2004/02/skos/core#",
+    "socketType": {
+      "@id": "sdm-transport:socketType"
+    },
     "soilTemperature": {
       "@id": "sdm-parks:soilTemperature",
       "@type": "xsd:float"

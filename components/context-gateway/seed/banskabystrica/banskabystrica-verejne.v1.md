@@ -3,7 +3,7 @@
 <!-- Generated from the LinkML source by Model Tools. Do not edit: `jcctl model
      generate` overwrites this file and CI fails on any difference (DM-01, DM-02). -->
 
-What the city's public space carries side by side (DM-01, DM-61): the events the city announces, every school and school facility of the national school map in the city, and the hourly particulate, nitrogen dioxide and ozone readings of the city's urban-background station as the European Environment Agency republishes them, and the latest minute of SHMÚ's automatic weather stations in and near the city. One model, one space, one public endpoint. Where Smart Data Models has the class, its IRI is cited rather than minted (DM-04, DM-16).
+What the city's public space carries side by side (DM-01, DM-61): the events the city announces, every school and school facility of the national school map in the city, and the hourly particulate, nitrogen dioxide and ozone readings of the city's urban-background station as the European Environment Agency republishes them, the latest minute of SHMÚ's automatic weather stations in and near the city, and the pharmacies, hospitals, clinics, defibrillators and charging stations OpenStreetMap maps in the district (ODbL 1.0). One model, one space, one public endpoint. Where Smart Data Models has the class, its IRI is cited rather than minted (DM-04, DM-16).
 
 - Namespace: `https://joinedcontext.com/models/banskabystrica/banskabystrica-verejne`
 - Rendered by: `linkml-1.11.1`
@@ -120,6 +120,51 @@ Specialises `Entity`.
 | `windDirection` | Property | `float` |  | deg | `sdm:windDirection` | Where the wind comes from, degrees clockwise from north, the minute's vector mean. |
 | `precipitation` | Property | `float` |  | mm | `sdm:precipitation` | Rain and melted snow over the ten minutes up to `dateObserved`. |
 | `soilTemperature` | Property | `float` |  | Cel | `sdm-parks:soilTemperature` | Soil temperature at one depth under the station, the minute's mean. One instance per depth the station measures (5, 10, 20, 50 and 100 cm, SHMÚ's `t_pod5` to `t_pod100`), each told apart by its datasetId, `urn:ngsi-ld:Dataset:shmu:soil-depth-{cm}cm`. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### PointOfInterest
+
+One pharmacy, hospital, clinic or public defibrillator in the district of Banská Bystrica as OpenStreetMap maps it (© OpenStreetMap contributors, ODbL 1.0), refreshed weekly.
+
+IRI: `sdm:PointOfInterest`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
+| `category` | Property | `string` (list) |  |  | `sdm-poi:category` | What the place is, as OpenStreetMap tags it: `pharmacy`, `hospital` or `clinic` from its `amenity`, and `defibrillator` from `emergency=defibrillator`. |
+| `openingHours` | Property | `string` |  |  | `schema:openingHours` | The opening hours exactly as OpenStreetMap's `opening_hours` tag gives them, in its own syntax (for example `Mo-Fr 07:30-18:00; Sa 08:00-12:00`); never reinterpreted. |
+| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress, T-4329); a field the source leaves out is absent, never guessed. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### EVChargingStation
+
+One charging station for electric vehicles in the district of Banská Bystrica as OpenStreetMap maps it (© OpenStreetMap contributors, ODbL 1.0), refreshed weekly.
+
+IRI: `sdm:EVChargingStation`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
+| `socketType` | Property | `string` (list) |  |  | `sdm-transport:socketType` | The kinds of socket the station offers, in Smart Data Models' words, read from its OpenStreetMap `socket:*` tags (type2 is Type2, type2_combo CCS/SAE, chademo CHAdeMO, schuko Wall_Euro, type1 J-1772, tesla_supercharger Tesla, any other Other); absent when the map names none. |
+| `capacity` | Property | `integer` |  |  | `sdm-transport:capacity` | How many vehicles the station charges at once: OpenStreetMap's `capacity` tag, or the sum of its socket counts when it has none; absent when the map gives neither. |
+| `allowedVehicleType` | Property | `string` (list) |  |  | `sdm-transport:allowedVehicleType` | The vehicles the station charges, from the OpenStreetMap tags `motorcar`, `bicycle`, `motorcycle`, `bus` and `hgv` set to yes (car, bicycle, motorcycle, bus, truck); absent when the map sets none. |
+| `operator` | Property | `string` |  |  | `sdm-transport:operator` | Who runs the station, as OpenStreetMap's `operator` tag names it. |
+| `openingHours` | Property | `string` |  |  | `schema:openingHours` | The opening hours exactly as OpenStreetMap's `opening_hours` tag gives them, in its own syntax (for example `Mo-Fr 07:30-18:00; Sa 08:00-12:00`); never reinterpreted. |
+| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress, T-4329); a field the source leaves out is absent, never guessed. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
