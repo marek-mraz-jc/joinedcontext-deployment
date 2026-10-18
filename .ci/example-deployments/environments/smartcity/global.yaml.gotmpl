@@ -145,9 +145,10 @@ global:
 
   ingress:
     enabled: true
-    # Staging for the first apply, then prod once every staging certificate is Ready: dev and this
-    # instance share the joinedcontext.com limits of Let's Encrypt (T-4678).
-    clusterIssuer: {{ env "JC_SMARTCITY_ISSUER" | default "letsencrypt-staging" | quote }}
+    # Staging proved all nine hostnames by HTTP-01 on 2026-10-18 (T-4678); dev and this instance
+    # share the joinedcontext.com limits of Let's Encrypt, so prod certificates are issued once.
+    # JC_SMARTCITY_ISSUER=letsencrypt-staging proves a new hostname first.
+    clusterIssuer: {{ env "JC_SMARTCITY_ISSUER" | default "letsencrypt-prod" | quote }}
     ingressClass: 'traefik'
 
   storage:

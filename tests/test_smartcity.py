@@ -90,12 +90,12 @@ def test_placeholder_hosts_only_inside_an_apps_own_test_fixtures(smartcity):
     assert DETECTORS["placeholder_domains"](outside) == []
 
 
-def test_the_instance_is_its_own_host_on_traefik_with_staging_certificates_first(smartcity):
+def test_the_instance_is_its_own_host_on_traefik_with_production_certificates(smartcity):
     ingresses = [d for d in smartcity if d.get("kind") == "Ingress"]
     assert ingresses
     assert {d["spec"].get("ingressClassName") for d in ingresses} == {"traefik"}
     issuers = {d["spec"]["issuerRef"]["name"] for d in smartcity if d.get("kind") == "Certificate"}
-    assert issuers == {"letsencrypt-staging"}
+    assert issuers == {"letsencrypt-prod"}
     hosts = {r["host"] for d in ingresses for r in d["spec"].get("rules", [])}
     assert {DOMAIN, f"idm.{DOMAIN}", f"opendata.{DOMAIN}", f"data.{DOMAIN}"} <= hosts
     assert all(h == DOMAIN or h.endswith("." + DOMAIN) for h in hosts)
