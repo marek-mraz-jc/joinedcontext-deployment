@@ -618,4 +618,4 @@ prod-smoke:
 	#!/usr/bin/env bash
 	set -euo pipefail
 	just _prod-guard
-	just _smoke "{{ prod_domain }}" smartcity
+	JC_SMOKE_NO_TEST_WRITER=1 just _smoke "{{ prod_domain }}" smartcity
