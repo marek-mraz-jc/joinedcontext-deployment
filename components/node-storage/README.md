@@ -13,4 +13,7 @@ k3s re-applies its `local-storage` addon on every server start. The dev node car
 leaves this ConfigMap alone and the provisioner Deployment, StorageClass and RBAC stay as k3s made
 them. A new cluster needs that marker before this part takes effect.
 
+The provisioner reads `helperPod.yaml` once at start. After a sync that changed the ConfigMap, a
+postsync hook stamps the data's hash on the provisioner's pod template, which restarts it once.
+
 Off by default; dev turns it on.

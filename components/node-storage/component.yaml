@@ -18,3 +18,17 @@ parts:
             others=$(printf '%s\n' $managers | grep -vx helm || true)
             [ -n "$managers" ] && [ -z "$others" ] && exit 0
             kubectl -n kube-system delete configmap local-path-config
+      # The provisioner reads helperPod.yaml once at start, and its Deployment is k3s's, so no
+      # checksum annotation of ours can roll it. After a sync that changed the ConfigMap, stamp
+      # the data's hash on its pod template; a changed stamp restarts it, an unchanged one is a no-op.
+      - events: ["postsync"]
+        showlogs: true
+        command: sh
+        args:
+          - -ec
+          - |
+            sum=$(kubectl -n kube-system get configmap local-path-config -o jsonpath='{.data}' | sha256sum | cut -c1-16)
+            have=$(kubectl -n kube-system get deploy local-path-provisioner -o jsonpath='{.spec.template.metadata.annotations.joinedcontext\.com/local-path-config}')
+            [ "$sum" = "$have" ] && exit 0
+            kubectl -n kube-system patch deploy local-path-provisioner --type=merge \
+              -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"joinedcontext.com/local-path-config\":\"$sum\"}}}}}"
