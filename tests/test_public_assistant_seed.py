@@ -374,11 +374,18 @@ def test_the_open_data_eval_copies_are_data_with_another_model():
     # name, publicId and the model it runs, router and answer alike, and spends its own day.
     deployments = manifests("AssistantDeployment", "bbsk")
     base = general()["spec"]
-    models = {"data-eval-gemini": "google/gemini-3.8-flash", "data-eval-haiku": "anthropic/claude-haiku-5.5",
-              "data-eval-deepseek": "deepseek/deepseek-v4.1-flash"}
+    # T-4656 (owner): Haiku, GPT-6 Luna, GLM 5.3 on its EU providers alone, Argon as the ceiling;
+    # no DeepSeek and no Mistral model.
+    def same(model, **more):
+        return {"router": model, "answer": model, **more}
+    models = {"data-eval-gemini": same("google/gemini-3.8-flash"), "data-eval-haiku": same("anthropic/claude-haiku-5.5"),
+              "data-eval-haiku-medium": same("anthropic/claude-haiku-5.5", reasoning={"answer": "medium"}),
+              "data-eval-luna": same("openai/gpt-6-luna"), "data-eval-argon": same("google/gemini-4-argon"),
+              "data-eval-glm": same("z-ai/glm-5.3", provider={"order": ["mistral", "nebius"], "allowFallbacks": False})}
+    assert sorted(n for n in deployments if n.startswith("data-eval-")) == sorted(models)
     for name, model in models.items():
         spec = deployments[name]["spec"]
         assert spec["publicId"] == name and "eval" in name.split("-")
-        assert spec["model"] == {"router": model, "answer": model}, name
+        assert spec["model"] == model, name
         assert {k: v for k, v in spec.items() if k not in ("publicId", "model")} == \
             {k: v for k, v in base.items() if k not in ("publicId", "model")}, name
