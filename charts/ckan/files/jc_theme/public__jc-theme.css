@@ -58,7 +58,7 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
-h1, h2, h3, h4, .navbar-brand, .jc-brand span { font-family: var(--jc-font-heading); color: var(--jc-ink); letter-spacing: -.01em; }
+h1, h2, h3, h4, .navbar-brand { font-family: var(--jc-font-heading); color: var(--jc-ink); letter-spacing: -.01em; }
 h1 { font-size: clamp(1.625rem, 1.2rem + 1.4vw, 2.25rem); font-weight: 700; line-height: 1.2; margin-bottom: .75rem; }
 h2 { font-size: 1.375rem; font-weight: 650; line-height: 1.3; margin: 2rem 0 .75rem; }
 h3 { font-size: 1.0625rem; font-weight: 650; line-height: 1.4; }
@@ -80,9 +80,12 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .masthead { background: var(--jc-surface); color: var(--jc-ink); border-bottom: 1px solid var(--jc-border); padding: .75rem 0; box-shadow: none; }
 .masthead .navbar { padding: 0; }
 .masthead a, .masthead .navbar a { color: var(--jc-ink); }
-.jc-brand { display: inline-flex; align-items: center; gap: .625rem; text-decoration: none; }
-.jc-brand img { height: 2.25rem; width: 2.25rem; }
-.jc-brand span { font-size: 1.375rem; font-weight: 700; }
+.jc-brand { text-decoration: none; }
+/* CKAN sets the logo link inline-block on a text line, which left room for descenders under the
+   image and lifted it above the navigation's centre: its box is a flex row of the image alone. */
+.masthead .header-image { display: flex; align-items: center; }
+/* T-4627: the joinedcontext.com lockup, mark and name in one image, on one line at every width. */
+.jc-brand img { display: block; block-size: 2.25rem; inline-size: auto; }
 .masthead .navbar-nav { gap: .25rem; }
 /* CKAN writes these at (0,2,3) with white text and its dark teal behind hover and active. */
 .masthead .main-navbar ul li a {
@@ -452,7 +455,7 @@ body.dt-view .dt-button, body.dt-view .btn-secondary { background: var(--jc-surf
 .jc-seg-gemini { background: linear-gradient(135deg, #4285f4, #9b72cb 60%, #d96570); }
 .jc-seg-mcp { background: #1f1f2e; }
 .jc-corner .jc-assistants-link:hover .jc-seg, .jc-corner .jc-assistants-link:focus-visible .jc-seg { filter: brightness(1.08); }
-.jc-brand { flex: none; display: block; inline-size: 1.375rem; block-size: 1.375rem; transform: skewX(14deg); }
+.jc-ai-logo { flex: none; display: block; inline-size: 1.375rem; block-size: 1.375rem; transform: skewX(14deg); }
 .jc-logo { flex: none; inline-size: 1.25rem; block-size: 1.25rem; vertical-align: -.2em; }
 .jc-assistant-card h2 .jc-logo { margin-inline-end: .5rem; }
 .jc-assistants-link:focus-visible { outline: 3px solid var(--jc-accent); outline-offset: 2px; }
@@ -485,7 +488,8 @@ body:has(.jc-corner) { padding-block-end: 5rem; }
   .jc-corner { flex-wrap: wrap; justify-content: flex-end; max-inline-size: calc(100vw - 2rem); }
   body:has(.jc-corner) { padding-block-end: 7.5rem; }
   .jc-seg { inline-size: 1.4375rem; }
-  .jc-brand { inline-size: 1.125rem; block-size: 1.125rem; }
+  .jc-ai-logo { inline-size: 1.125rem; block-size: 1.125rem; }
+  .jc-brand img { block-size: 1.75rem; }
   .jc-assistant:not([open]) > summary { block-size: 2.75rem; font-size: .9375rem; padding-inline: 1.125rem; }
   .jc-corner:has(.jc-assistant[open]) { z-index: 2000; }
   body:has(.jc-assistant[open]) { overflow: hidden; }

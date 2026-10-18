@@ -610,6 +610,37 @@ def test_the_header_names_the_sections_as_the_search_filters_do():
     assert "_('Organizations')" not in header and "_('Groups')" not in header
 
 
+def test_the_header_class_is_never_reused_for_icons():
+    """T-4627: T-4613 gave the corner's AI logos the header's `.jc-brand`, whose 22px block and
+    skew then hit the header anchor and stacked the mark over the name. `.jc-brand` is the header
+    link alone: no rule for it sizes, blocks or skews it."""
+    css = (THEME / "public__jc-theme.css").read_text()
+    for selectors, body in re.findall(r"([^{}]+)\{([^{}]*)\}", css):
+        names = [s.strip() for s in selectors.split(",")]
+        if any(re.fullmatch(r"\.jc-brand(:[\w-]+)*", n) for n in names):
+            for banned in ("inline-size", "display: block", "transform"):
+                assert banned not in body, (selectors.strip(), banned)
+    for mark in ("claude", "chatgpt", "gemini", "mcp"):
+        assert 'class="jc-ai-logo"' in (THEME / f"templates__jc__brand-{mark}.svg").read_text(), mark
+
+
+def test_the_header_is_the_joinedcontext_lockup_named_by_the_site_title():
+    """T-4627: one image, the joinedcontext.com lockup copied into the chart, its alt the
+    installation's name; no span beside it."""
+    jinja2 = pytest.importorskip("jinja2")
+    header = (THEME / "header.html").read_text()
+    block = header.split("{% block header_logo %}", 1)[1].split("{% endblock %}", 1)[0]
+    html = jinja2.Environment(autoescape=True).from_string(block).render(
+        h=types.SimpleNamespace(url_for=lambda name: "/"), g=types.SimpleNamespace(site_title="Otvorené dáta"))
+    imgs = re.findall(r"<img [^>]*>", html)
+    assert imgs == ['<img src="/jc-logo.svg" alt="Otvorené dáta" width="171" height="36">'], imgs
+    assert "<span" not in html
+    logo = (THEME / "public__jc-logo.svg").read_text()
+    assert logo.startswith('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 266 56"')
+    assert not re.search(r"<script|\son\w+=|href=|<image|<foreignObject", logo, re.I)
+    assert set(re.findall(r"url\(([^)]*)\)", logo)) <= {f"#{i}" for i in re.findall(r'id="([^"]+)"', logo)}
+
+
 def test_publisher_and_topic_cards_are_a_grid_that_wraps_at_words():
     css = (THEME / "public__jc-theme.css").read_text()
     assert re.search(r"\.media-grid \{ clear: both; display: grid;", css)
@@ -1580,7 +1611,7 @@ def test_the_corner_link_is_four_logos_and_no_words(theme, lang):
     html = render("corner.html", theme, publisher=None, widget="https://dev.example/assistant/")
     tag, link = re.search(r'(<a class="jc-assistants-link"[^>]*>)(.*?)</a>', html, re.S).groups()
     assert f'aria-label="{LABELS[lang]}"' in tag
-    segments = re.findall(r'<span class="jc-seg jc-seg-(\w+)">(<svg class="jc-brand".*?</svg>)</span>', link, re.S)
+    segments = re.findall(r'<span class="jc-seg jc-seg-(\w+)">(<svg class="jc-ai-logo".*?</svg>)</span>', link, re.S)
     assert [mark for mark, _ in segments] == ["claude", "chatgpt", "gemini", "mcp"]
     assert link.count("<svg") == 4
     segments = [svg for _, svg in segments]
@@ -1600,7 +1631,7 @@ def test_the_brand_logos_are_the_makers_own_saved_here_with_their_source():
         assert not re.search(r"href=|url\(", svg), name
         # T-4620: white on the maker's colour, which the segment behind it carries
         assert set(re.findall(r'(?:fill|stroke)="([^"]+)"', svg)) <= {"#fff", "none"}, name
-        assert svg.startswith('<svg class="jc-brand" width="24" height="24" aria-hidden="true" focusable="false"'), name
+        assert svg.startswith('<svg class="jc-ai-logo" width="24" height="24" aria-hidden="true" focusable="false"'), name
 
 
 def test_the_bar_is_one_slant_in_the_makers_colours_and_shrinks_on_a_phone():
