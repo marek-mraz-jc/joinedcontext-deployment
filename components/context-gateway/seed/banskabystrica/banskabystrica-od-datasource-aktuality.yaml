@@ -11,7 +11,7 @@ metadata:
 spec:
   type: http
   http:
-    url: https://www.banskabystrica.sk/wp-json/wp/v2/newses?per_page=100&_fields=id,title,link,date_gmt,modified_gmt,content
+    url: https://www.banskabystrica.sk/wp-json/wp/v2/newses?per_page=100&_fields=id,title,slug,link,date_gmt,modified_gmt,content
     verb: GET
     headers:
       Accept: application/geo+json, application/json
