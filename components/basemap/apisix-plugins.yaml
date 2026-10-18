@@ -61,6 +61,6 @@ basemap:
           return function()
             if ngx.header["Content-Security-Policy"] == nil then
               ngx.header["Content-Security-Policy"] =
-                "frame-ancestors 'none'; object-src 'none'; base-uri 'none'"
+                "frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
             end
           end
