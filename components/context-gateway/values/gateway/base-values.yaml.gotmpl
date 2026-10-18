@@ -117,6 +117,15 @@ env:
   # Architecture/03 §3). Only `enforce` reads it.
   JC_GATEWAY_DOMAIN_VERIFICATIONS_URL: "http://portal.{{ .Values.portal.portal.namespace }}.svc.cluster.local:9090/internal/domain-verifications"
 {{- end }}
+{{- if has "assistant" .Values.components }}
+  # `search_documents` (EP-133, EP-134, T-4659): the assistant's public-passage search on its
+  # internal path, which the edge never routes (AG-119); without the URL the tool is listed
+  # nowhere. The hub searches the cities' websites; a project's MCP server names its own
+  # sources in `spec.knowledgeSources` (MF-57). An `eval-*` source is never named here
+  # (test_seed_knowledge_sources_never_serve_an_eval_source).
+  JC_GATEWAY_ASSISTANT_URL: "http://jc-assistant.{{ .Values.assistant.worker.namespace }}.svc.cluster.local:8080"
+  JC_GATEWAY_HUB_KNOWLEDGE_SOURCES: "banskabystrica/web,bbsk/web,zilina/web,praha/web,helsinki/web"
+{{- end }}
   # `report` records and shows the domain state and refuses nothing; `enforce` refuses a write
   # to a space until the Organization's domain is verified, and needs the URL above. The
   # owner's switch once the seeds verify (T-2572).
