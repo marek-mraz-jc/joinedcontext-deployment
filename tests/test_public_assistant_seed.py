@@ -325,6 +325,9 @@ def test_a_conversation_of_the_general_assistant_holds_a_question_over_five_publ
     # next one. The cost cap stays the guard and the per-visitor limits stay the cities'.
     spec = general()["spec"]
     assert spec["budget"]["tokensPerConversation"] >= 2 * 33_744
+    # T-4660: the owner's fourth question was refused at 117,171 tokens; a conversation holds five
+    # questions at the platform's 60,000 per question.
+    assert spec["budget"]["tokensPerConversation"] >= 5 * 60_000
     assert spec["budget"]["costPerDayUsd"] == 1
     assert spec["rateLimit"] == deployment("bbsk")["spec"]["rateLimit"]
 
