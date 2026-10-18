@@ -13,6 +13,7 @@ import path from "node:path";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const chart = path.join(here, "../charts/renderer");
+const vendor = path.join(here, "../../../images/viz/vendor");
 const DOMAIN = "dev.joinedcontext.com";
 const VIZ = `viz.${DOMAIN}`;
 const SLUG = "3iasem46w7d7pxxypwdfdzheyaodv3qn";
@@ -112,7 +113,8 @@ export async function serve(context, { trustless = false } = {}) {
       }
       try {
         // MapLibre's modules are stored gzipped; nginx unpacks them (gzip_static), so does this.
-        const body = file.endsWith(".mjs") ? gunzipSync(readFileSync(path.join(chart, "files", file + ".gz"))) : readFileSync(path.join(chart, "files", file));
+        const at = file.startsWith("vendor/") ? path.join(vendor, file.slice("vendor/".length)) : path.join(chart, "files", file);
+        const body = file.endsWith(".mjs") ? gunzipSync(readFileSync(at + ".gz")) : readFileSync(at);
         const type = file.endsWith(".html") ? "text/html" : file.endsWith(".css") ? "text/css" : "text/javascript";
         return route.fulfill({ status: 200, contentType: type, headers, body });
       } catch {

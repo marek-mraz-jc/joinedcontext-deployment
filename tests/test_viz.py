@@ -15,6 +15,7 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 COMPONENT = ROOT / "components/viz"
 FILES = COMPONENT / "charts/renderer/files"
+VENDOR = ROOT / "images/viz/vendor"
 HOST = "viz.dev.joinedcontext.com"
 
 
@@ -36,7 +37,7 @@ def test_dev_renders_a_read_only_server_and_its_route_on_its_own_host(dev):
     assert "@sha256:" in container["image"]
     assert container["securityContext"]["readOnlyRootFilesystem"] is True
     assert container["securityContext"]["capabilities"]["drop"] == ["ALL"]
-    assert all(m["readOnly"] for m in container["volumeMounts"] if m["name"] in ("config", "site", "vendor"))
+    assert all(m["readOnly"] for m in container["volumeMounts"] if m["name"] in ("config", "site"))
     one(dev, "Service", "viz-renderer")
     routes = yaml.safe_load((COMPONENT / "apisix-routes.yaml").read_text().replace("{{", "#{{"))
     assert routes["viz"]["subDomain"] == "viz" and routes["viz"]["uri"] == "/*"
@@ -53,24 +54,38 @@ UNPACKED = {
 }
 
 
-def test_the_vendored_files_are_the_releases_byte_for_byte_and_each_fits_a_configmap(dev):
-    vendor = FILES / "vendor"
-    sums = [line.split() for line in (vendor / "SHA256SUMS").read_text().splitlines() if line and not line.startswith("#")]
-    assert sorted(name for _, name in sums) == sorted(p.name for p in vendor.iterdir() if p.name != "SHA256SUMS")
+def test_the_vendored_files_are_the_releases_byte_for_byte_and_ride_in_the_image():
+    sums = [line.split() for line in (VENDOR / "SHA256SUMS").read_text().splitlines() if line and not line.startswith("#")]
+    assert sorted(name for _, name in sums) == sorted(p.name for p in VENDOR.iterdir() if p.name != "SHA256SUMS")
     for digest, name in sums:
-        assert hashlib.sha256((vendor / name).read_bytes()).hexdigest() == digest, name
+        assert hashlib.sha256((VENDOR / name).read_bytes()).hexdigest() == digest, name
     for name, digest in UNPACKED.items():
-        assert hashlib.sha256(gzip.decompress((vendor / name).read_bytes())).hexdigest() == digest, name
-        assert digest in (vendor / "SHA256SUMS").read_text()
+        assert hashlib.sha256(gzip.decompress((VENDOR / name).read_bytes())).hexdigest() == digest, name
+        assert digest in (VENDOR / "SHA256SUMS").read_text()
     pages = (FILES / "site/render.html").read_text() + (FILES / "site/map.html").read_text() + (FILES / "site/map.js").read_text()
     for _, name in sums:
         assert name.removesuffix(".gz") in pages, name
-        cm = one(dev, "ConfigMap", "viz-renderer-" + name.removesuffix(".min.js").replace(".", "-"))
-        size = len(base64.b64decode(cm["binaryData"][name])) if name.endswith(".gz") else len(cm["data"][name].encode())
-        assert size < 1024 * 1024 - 4096, name
+    # The image checks the same sums when it is built, so a changed file fails the build.
+    dockerfile = (VENDOR.parent / "Dockerfile").read_text()
+    assert "COPY vendor/ /srv/vendor/" in dockerfile and "sha256sum -c" in dockerfile
+    assert "alias /srv/vendor/;" in (FILES / "nginx.conf").read_text()
     # No page loads a script from anywhere but this host.
     for path in (FILES / "site").glob("*.html"):
         assert not re.search(r"(src|href)=\"(https?:)?//", path.read_text()), path.name
+
+
+def test_the_release_stays_well_inside_the_secret_helm_stores_it_in(dev):
+    """T-4657: Helm keeps a release (its chart files and the rendered manifest, gzipped, base64)
+    in one Secret of at most 1 MiB; the vendored builds took the renderer to 2.2 MB. Under
+    0.75 MiB, as the seed releases are held (test_sample_apps_seed)."""
+    chart = FILES.parent
+    files = b"".join(p.read_bytes() for p in sorted(chart.rglob("*")) if p.is_file())
+    manifest = yaml.safe_dump_all(
+        [d for d in dev if d.get("metadata", {}).get("labels", {}).get("app.kubernetes.io/instance") == "viz-renderer"]
+    ).encode()
+    assert b"viz-renderer" in manifest
+    stored = len(base64.b64encode(gzip.compress(files + manifest)))
+    assert stored < 0.75 * 1024 * 1024, f"the viz-renderer release would be stored in {stored} bytes"
 
 
 def csp(conf, location):
