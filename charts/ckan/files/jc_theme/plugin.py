@@ -389,10 +389,26 @@ STRINGS = {
     "coming_soon": {"en": "Coming soon", "sk": "Čoskoro", "cs": "Brzy", "de": "Demnächst"},
     # T-4628: a card is the logo, the name and one link to that assistant's connector store.
     "add_to": {"en": "Add to {name}", "sk": "Pridať do {name}", "cs": "Přidat do {name}", "de": "Zu {name} hinzufügen"},
-    "store_address": {"en": "In ChatGPT, Claude or Grok, add a custom connector and paste this address:",
-                      "sk": "V ChatGPT, Claude alebo Grok pridajte vlastný konektor a vložte túto adresu:",
-                      "cs": "V ChatGPT, Claude nebo Grok přidejte vlastní konektor a vložte tuto adresu:",
-                      "de": "Fügen Sie in ChatGPT, Claude oder Grok einen eigenen Konnektor hinzu und geben Sie diese Adresse ein:"},
+    "store_address": {"en": "Each guide shows where to paste this address:",
+                      "sk": "Každý návod ukazuje, kam vložiť túto adresu:",
+                      "cs": "Každý návod ukazuje, kam vložit tuto adresu:",
+                      "de": "Jede Anleitung zeigt, wo Sie diese Adresse einfügen:"},
+    # T-4643: one guide per assistant, for someone who has never added anything to one.
+    "guide": {"en": "Guide", "sk": "Návod", "cs": "Návod", "de": "Anleitung"},
+    "guide_title": {"en": "{name}, step by step", "sk": "{name} krok za krokom", "cs": "{name} krok za krokem", "de": "{name} Schritt für Schritt"},
+    "guide_who": {"en": "Who can use it", "sk": "Kto to môže použiť", "cs": "Kdo to může použít", "de": "Wer es nutzen kann"},
+    "guide_steps": {"en": "Steps", "sk": "Postup", "cs": "Postup", "de": "Schritte"},
+    "guide_try": {"en": "Try it", "sk": "Vyskúšajte", "cs": "Vyzkoušejte", "de": "Probieren Sie es aus"},
+    "guide_example": {"en": "Which datasets about air quality do you have?", "sk": "Aké datasety o kvalite ovzdušia máte?",
+                      "cs": "Jaké datové sady o kvalitě ovzduší máte?", "de": "Welche Datensätze zur Luftqualität gibt es?"},
+    "guide_good": {"en": "A good first answer names records from this catalogue and says which dataset they come from. If the answer is general or from the web, write: use {name}.",
+                   "sk": "Dobrá prvá odpoveď vymenuje záznamy z tohto katalógu a povie, z ktorého datasetu sú. Ak je odpoveď všeobecná alebo z webu, napíšte: použi {name}.",
+                   "cs": "Dobrá první odpověď vyjmenuje záznamy z tohoto katalogu a řekne, ze které datové sady jsou. Pokud je odpověď obecná nebo z webu, napište: použij {name}.",
+                   "de": "Eine gute erste Antwort nennt Einträge aus diesem Katalog und sagt, aus welchem Datensatz sie stammen. Ist die Antwort allgemein oder aus dem Web, schreiben Sie: nutze {name}."},
+    "guide_trouble": {"en": "If it does not work", "sk": "Ak to nejde", "cs": "Když to nejde", "de": "Wenn es nicht klappt"},
+    "guide_checked": {"en": "Checked on {date} against {maker}'s own help:", "sk": "Overené dňa {date} podľa pomocníka {maker}:",
+                      "cs": "Ověřeno dne {date} podle nápovědy {maker}:", "de": "Geprüft am {date} anhand der Hilfe von {maker}:"},
+    "guide_back": {"en": "All assistants", "sk": "Všetci asistenti", "cs": "Všichni asistenti", "de": "Alle Assistenten"},
     "for_developers": {"en": "For developers", "sk": "Pre vývojárov", "cs": "Pro vývojáře", "de": "Für Entwickler"},
     "gemini_1": {"en": "In Gemini CLI: run this command in a terminal, then start gemini.", "sk": "V Gemini CLI: spustite tento príkaz v termináli a potom gemini.", "cs": "V Gemini CLI: spusťte tento příkaz v terminálu a pak gemini.", "de": "In der Gemini CLI: Führen Sie diesen Befehl im Terminal aus und starten Sie dann gemini."},
     "any_client": {"en": "Any MCP client", "sk": "Akýkoľvek MCP klient", "cs": "Jakýkoli MCP klient", "de": "Jeder MCP-Client"},
@@ -1573,15 +1589,24 @@ CLAUDE_CONNECTORS = "https://claude.ai/customize/connectors"
 # Grok's web app takes a custom MCP connector there, New Connector > Custom (T-4634, read
 # 2026-10-18: docs.x.ai/build/features/mcp-servers).
 GROK_CONNECTORS = "https://grok.com/connectors"
+# Gemini's Connected Apps, where a custom app is added (T-4643, read 2026-10-18: Google's help
+# support.google.com/gemini/answer/17209137).
+GEMINI_APPS = "https://gemini.google.com/apps"
+
+
+def jc_gemini_on():
+    """Gemini's card, only once its sign-in through the gateway's own OAuth works on this
+    installation (T-4631, T-4630): the chart's `assistants.gemini`, off unless set."""
+    return os.environ.get("JC_ASSISTANT_GEMINI") == "true"
 
 
 def jc_assistants():
-    """The "Use it in your AI assistant" page (T-4585, T-4628, T-4634): a card per assistant whose
-    app takes our connector, ChatGPT, Claude, Grok, in that order, each its logo, its name and one
-    link, to its connector store; None without the hub. Gemini's app connects only through OAuth,
-    so its card comes with the gateway's (T-4631) and the Gemini CLI command waits in the
-    developers' fold. The hub's address stands once under the cards, because our connector is
-    listed in no store yet.
+    """The "Use it in your AI assistant" page (T-4585, T-4628, T-4634, T-4643): a card per assistant
+    whose app takes our connector, ChatGPT, Claude, Grok, then Gemini once its flag is on, each its
+    logo, its name, a link to its connector store and one to our guide; None without the hub.
+    Gemini's app connects only through OAuth, so its card waits for the gateway's (T-4631); the
+    Gemini CLI command stays in the developers' fold. The hub's address stands once under the
+    cards, because our connector is listed in no store yet.
 
     `logo` is the card's mark in its brand colours, a template beside this file."""
     mcp = jc_mcp_install()
@@ -1591,15 +1616,284 @@ def jc_assistants():
 
     def card(id, title, store):
         return {"id": id, "name": title, "logo": "jc/card-%s.svg" % id, "open": store,
-                "open_label": jc_t("add_to").replace("{name}", title)}
+                "open_label": jc_t("add_to").replace("{name}", title), "guide_label": jc_t("guide")}
+
+    cards = [card("chatgpt", "ChatGPT", CHATGPT_PLUGINS), card("claude", "Claude", CLAUDE_CONNECTORS),
+             card("grok", "Grok", GROK_CONNECTORS)]
+    if jc_gemini_on():
+        cards.append(card("gemini", "Gemini", GEMINI_APPS))
 
     return {
         "lead": jc_t("assistants_lead").replace("{name}", name),
         "mcp": mcp,
-        "cards": [card("chatgpt", "ChatGPT", CHATGPT_PLUGINS), card("claude", "Claude", CLAUDE_CONNECTORS),
-                  card("grok", "Grok", GROK_CONNECTORS)],
+        "cards": cards,
         "gemini": "gemini mcp add --transport http %s %s" % (MCP_NAME, mcp["url"]),
     }
+
+
+# One guide per assistant at /assistants/{id} (T-4643), for someone who has never added anything to
+# an assistant: who may, numbered steps in the assistant's own words, a question to try and what
+# goes wrong. `paste` is the step whose address box follows it; `{name}` the catalogue's connector.
+# Every step was read against the maker's own help page on `checked`; screenshots come from the
+# owner later, so no step leans on one. No step names a protocol: those words stay in the fold.
+GUIDES = {
+    "chatgpt": {
+        "name": "ChatGPT", "start": CHATGPT_PLUGINS, "checked": "2026-10-18", "paste": 3,
+        "help": "https://help.openai.com/en/articles/12584461",
+        "en": {
+            "who": ["On chatgpt.com in a computer's browser, with ChatGPT Business, Enterprise or Edu. With Pro, turn on developer mode in the settings first; it then reads only, which is all this catalogue needs.",
+                    "OpenAI names no other plan, so Free and Plus may not offer it yet."],
+            "steps": ["Open chatgpt.com/plugins on your computer and sign in.",
+                      "Click + and choose to add your own server.",
+                      "Type {name} as the name.",
+                      "Paste this address into the connection field:",
+                      "Under sign-in, choose no authentication.",
+                      "Read the warning, tick that you understand, and create the plugin.",
+                      "Install it, start a new chat, type @ and pick {name}."],
+            "trouble": [("There is no option to add your own server.", "Your plan does not offer it: see who can use it above. In a company account, your administrator has to allow it."),
+                        ("ChatGPT cannot reach the address.", "Copy the address again with the button and paste it whole, with nothing before or after it."),
+                        ("The answer does not use the catalogue.", "Start a new chat, type @, pick {name} and ask again.")],
+        },
+        "sk": {
+            "who": ["Na chatgpt.com v prehliadači v počítači, s plánom ChatGPT Business, Enterprise alebo Edu. S plánom Pro najprv v nastaveniach zapnite režim pre vývojárov; potom iba číta, čo tomuto katalógu stačí.",
+                    "Iné plány OpenAI neuvádza, Free a Plus to teda zatiaľ nemusia ponúkať."],
+            "steps": ["Na počítači otvorte chatgpt.com/plugins a prihláste sa.",
+                      "Kliknite na + a vyberte pridanie vlastného servera.",
+                      "Ako názov napíšte {name}.",
+                      "Do poľa pre pripojenie vložte túto adresu:",
+                      "Pri prihlasovaní zvoľte možnosť bez overenia.",
+                      "Prečítajte si upozornenie, označte, že mu rozumiete, a doplnok vytvorte.",
+                      "Nainštalujte ho, otvorte nový rozhovor, napíšte @ a vyberte {name}."],
+            "trouble": [("Možnosť pridať vlastný server tam nie je.", "Váš plán ju nemá: pozrite, kto to môže použiť. Vo firemnom účte ju musí povoliť správca."),
+                        ("ChatGPT sa na adresu nedostane.", "Skopírujte adresu znova tlačidlom a vložte ju celú, bez ničoho pred ňou a za ňou."),
+                        ("Odpoveď katalóg nepoužije.", "Otvorte nový rozhovor, napíšte @, vyberte {name} a opýtajte sa znova.")],
+        },
+        "cs": {
+            "who": ["Na chatgpt.com v prohlížeči v počítači, s plánem ChatGPT Business, Enterprise nebo Edu. S plánem Pro nejprve v nastavení zapněte režim pro vývojáře; pak jen čte, což tomuto katalogu stačí.",
+                    "Jiné plány OpenAI neuvádí, Free a Plus to tedy zatím nemusí nabízet."],
+            "steps": ["Na počítači otevřete chatgpt.com/plugins a přihlaste se.",
+                      "Klikněte na + a vyberte přidání vlastního serveru.",
+                      "Jako název napište {name}.",
+                      "Do pole pro připojení vložte tuto adresu:",
+                      "U přihlašování zvolte možnost bez ověření.",
+                      "Přečtěte si upozornění, označte, že mu rozumíte, a doplněk vytvořte.",
+                      "Nainstalujte ho, otevřete nový rozhovor, napište @ a vyberte {name}."],
+            "trouble": [("Možnost přidat vlastní server tam není.", "Váš plán ji nemá: podívejte se, kdo to může použít. Ve firemním účtu ji musí povolit správce."),
+                        ("ChatGPT se na adresu nedostane.", "Zkopírujte adresu znovu tlačítkem a vložte ji celou, bez ničeho před ní a za ní."),
+                        ("Odpověď katalog nepoužije.", "Otevřete nový rozhovor, napište @, vyberte {name} a zeptejte se znovu.")],
+        },
+        "de": {
+            "who": ["Auf chatgpt.com im Browser am Computer, mit ChatGPT Business, Enterprise oder Edu. Mit Pro schalten Sie zuerst in den Einstellungen den Entwicklermodus ein; dann liest er nur, was diesem Katalog genügt.",
+                    "Andere Pläne nennt OpenAI nicht, Free und Plus bieten es also womöglich noch nicht an."],
+            "steps": ["Öffnen Sie am Computer chatgpt.com/plugins und melden Sie sich an.",
+                      "Klicken Sie auf + und wählen Sie, einen eigenen Server hinzuzufügen.",
+                      "Geben Sie als Namen {name} ein.",
+                      "Fügen Sie diese Adresse in das Feld für die Verbindung ein:",
+                      "Wählen Sie bei der Anmeldung die Möglichkeit ohne Authentifizierung.",
+                      "Lesen Sie die Warnung, bestätigen Sie, dass Sie sie verstehen, und erstellen Sie das Plugin.",
+                      "Installieren Sie es, beginnen Sie einen neuen Chat, tippen Sie @ und wählen Sie {name}."],
+            "trouble": [("Es gibt keine Möglichkeit, einen eigenen Server hinzuzufügen.", "Ihr Plan bietet sie nicht: siehe oben, wer es nutzen kann. In einem Firmenkonto muss Ihre Administration sie erlauben."),
+                        ("ChatGPT erreicht die Adresse nicht.", "Kopieren Sie die Adresse erneut mit der Schaltfläche und fügen Sie sie vollständig ein, ohne etwas davor oder danach."),
+                        ("Die Antwort nutzt den Katalog nicht.", "Beginnen Sie einen neuen Chat, tippen Sie @, wählen Sie {name} und fragen Sie erneut.")],
+        },
+    },
+    "claude": {
+        "name": "Claude", "start": CLAUDE_CONNECTORS, "checked": "2026-10-18", "paste": 3,
+        "help": "https://support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp",
+        "en": {
+            "who": ["Every Claude plan, the free one too: a free account may add one connector of its own.",
+                    "In a Team or Enterprise account, the organization's owner adds it once; you then only connect to it."],
+            "steps": ["Open claude.ai/customize/connectors and sign in.",
+                      "Click + Add and choose to add your own connector.",
+                      "Type {name} as the name.",
+                      "Paste this address and continue:",
+                      "Keep the settings Claude found and continue.",
+                      "Under sign-in, choose no sign-in, then click Add.",
+                      "In a new chat, click + at the bottom left, open the connectors and switch {name} on."],
+            "trouble": [("Claude says you cannot add another connector.", "A free account keeps one connector of its own: remove the one you no longer use and add this one."),
+                        ("There is no button to add one.", "In a Team or Enterprise account, ask the organization's owner to add it."),
+                        ("Claude asks you to sign in.", "No sign-in is needed. Remove the connector and add it again, choosing no sign-in: Claude does not let you change it afterwards.")],
+        },
+        "sk": {
+            "who": ["Všetky plány Claude, aj bezplatný: bezplatný účet smie pridať jeden vlastný konektor.",
+                    "V účte Team alebo Enterprise ho raz pridá vlastník organizácie; vy sa k nemu potom iba pripojíte."],
+            "steps": ["Otvorte claude.ai/customize/connectors a prihláste sa.",
+                      "Kliknite na + a vyberte pridanie vlastného konektora.",
+                      "Ako názov napíšte {name}.",
+                      "Vložte túto adresu a pokračujte:",
+                      "Nastavenia, ktoré Claude našiel, nechajte a pokračujte.",
+                      "Pri prihlásení zvoľte možnosť bez prihlásenia a kliknite na pridať.",
+                      "V novom rozhovore kliknite vľavo dole na +, otvorte konektory a zapnite {name}."],
+            "trouble": [("Claude hlási, že ďalší konektor pridať nemôžete.", "Bezplatný účet má jeden vlastný konektor: odstráňte ten, ktorý už nepoužívate, a pridajte tento."),
+                        ("Tlačidlo na pridanie tam nie je.", "V účte Team alebo Enterprise požiadajte vlastníka organizácie, aby ho pridal."),
+                        ("Claude žiada prihlásenie.", "Prihlásenie netreba. Konektor odstráňte a pridajte znova s možnosťou bez prihlásenia: Claude ju neskôr zmeniť nedovolí.")],
+        },
+        "cs": {
+            "who": ["Všechny plány Claude, i bezplatný: bezplatný účet smí přidat jeden vlastní konektor.",
+                    "V účtu Team nebo Enterprise ho jednou přidá vlastník organizace; vy se k němu pak jen připojíte."],
+            "steps": ["Otevřete claude.ai/customize/connectors a přihlaste se.",
+                      "Klikněte na + a vyberte přidání vlastního konektoru.",
+                      "Jako název napište {name}.",
+                      "Vložte tuto adresu a pokračujte:",
+                      "Nastavení, která Claude našel, ponechte a pokračujte.",
+                      "U přihlášení zvolte možnost bez přihlášení a klikněte na přidat.",
+                      "V novém rozhovoru klikněte vlevo dole na +, otevřete konektory a zapněte {name}."],
+            "trouble": [("Claude hlásí, že další konektor přidat nemůžete.", "Bezplatný účet má jeden vlastní konektor: odstraňte ten, který už nepoužíváte, a přidejte tento."),
+                        ("Tlačítko pro přidání tam není.", "V účtu Team nebo Enterprise požádejte vlastníka organizace, aby ho přidal."),
+                        ("Claude chce přihlášení.", "Přihlášení není potřeba. Konektor odstraňte a přidejte znovu s možností bez přihlášení: Claude ji později změnit nedovolí.")],
+        },
+        "de": {
+            "who": ["Alle Claude-Pläne, auch der kostenlose: ein kostenloses Konto darf einen eigenen Konnektor hinzufügen.",
+                    "In einem Team- oder Enterprise-Konto fügt ihn die Inhaberin oder der Inhaber der Organisation einmal hinzu; Sie verbinden sich dann nur noch."],
+            "steps": ["Öffnen Sie claude.ai/customize/connectors und melden Sie sich an.",
+                      "Klicken Sie auf + und wählen Sie, einen eigenen Konnektor hinzuzufügen.",
+                      "Geben Sie als Namen {name} ein.",
+                      "Fügen Sie diese Adresse ein und fahren Sie fort:",
+                      "Behalten Sie die Einstellungen, die Claude gefunden hat, und fahren Sie fort.",
+                      "Wählen Sie bei der Anmeldung die Möglichkeit ohne Anmeldung und klicken Sie auf Hinzufügen.",
+                      "Klicken Sie in einem neuen Chat unten links auf +, öffnen Sie die Konnektoren und schalten Sie {name} ein."],
+            "trouble": [("Claude meldet, dass Sie keinen weiteren Konnektor hinzufügen können.", "Ein kostenloses Konto hat einen eigenen Konnektor: Entfernen Sie den, den Sie nicht mehr nutzen, und fügen Sie diesen hinzu."),
+                        ("Es gibt keine Schaltfläche zum Hinzufügen.", "Bitten Sie in einem Team- oder Enterprise-Konto die Inhaberin oder den Inhaber der Organisation, ihn hinzuzufügen."),
+                        ("Claude verlangt eine Anmeldung.", "Eine Anmeldung ist nicht nötig. Entfernen Sie den Konnektor und fügen Sie ihn ohne Anmeldung erneut hinzu: Claude lässt das später nicht ändern.")],
+        },
+    },
+    "grok": {
+        "name": "Grok", "start": GROK_CONNECTORS, "checked": "2026-10-18", "paste": 2,
+        "help": "https://docs.x.ai/grok/connectors",
+        "en": {
+            "who": ["Every Grok user, on grok.com; on a phone the same page is under Settings, Connectors.",
+                    "In a Grok Business or Enterprise team, the team's administrator adds it first."],
+            "steps": ["Open grok.com/connectors and sign in.",
+                      "Click New Connector and choose Custom.",
+                      "Paste this address and confirm:",
+                      "Start a new chat and ask your question."],
+            "trouble": [("Grok refuses the address.", "Copy the address again with the button and paste it whole, with nothing before or after it."),
+                        ("There is no button for a new connector.", "In a team account, ask your administrator to add it."),
+                        ("The answer does not use the catalogue.", "Start a new chat and write: use {name}.")],
+        },
+        "sk": {
+            "who": ["Každý používateľ Groku, na grok.com; v telefóne je tá istá stránka v Nastaveniach, v časti Konektory.",
+                    "V tíme Grok Business alebo Enterprise ho najprv pridá správca tímu."],
+            "steps": ["Otvorte grok.com/connectors a prihláste sa.",
+                      "Kliknite na nový konektor a vyberte vlastný.",
+                      "Vložte túto adresu a potvrďte:",
+                      "Otvorte nový rozhovor a položte otázku."],
+            "trouble": [("Grok adresu odmietne.", "Skopírujte adresu znova tlačidlom a vložte ju celú, bez ničoho pred ňou a za ňou."),
+                        ("Tlačidlo na nový konektor tam nie je.", "V tímovom účte požiadajte správcu, aby ho pridal."),
+                        ("Odpoveď katalóg nepoužije.", "Otvorte nový rozhovor a napíšte: použi {name}.")],
+        },
+        "cs": {
+            "who": ["Každý uživatel Groku, na grok.com; v telefonu je tatáž stránka v Nastavení, v části Konektory.",
+                    "V týmu Grok Business nebo Enterprise ho nejprve přidá správce týmu."],
+            "steps": ["Otevřete grok.com/connectors a přihlaste se.",
+                      "Klikněte na nový konektor a vyberte vlastní.",
+                      "Vložte tuto adresu a potvrďte:",
+                      "Otevřete nový rozhovor a položte otázku."],
+            "trouble": [("Grok adresu odmítne.", "Zkopírujte adresu znovu tlačítkem a vložte ji celou, bez ničeho před ní a za ní."),
+                        ("Tlačítko pro nový konektor tam není.", "V týmovém účtu požádejte správce, aby ho přidal."),
+                        ("Odpověď katalog nepoužije.", "Otevřete nový rozhovor a napište: použij {name}.")],
+        },
+        "de": {
+            "who": ["Alle Grok-Nutzerinnen und -Nutzer, auf grok.com; am Telefon ist dieselbe Seite unter Einstellungen, Konnektoren.",
+                    "In einem Team mit Grok Business oder Enterprise fügt ihn zuerst die Team-Administration hinzu."],
+            "steps": ["Öffnen Sie grok.com/connectors und melden Sie sich an.",
+                      "Klicken Sie auf New Connector und wählen Sie Custom.",
+                      "Fügen Sie diese Adresse ein und bestätigen Sie:",
+                      "Beginnen Sie einen neuen Chat und stellen Sie Ihre Frage."],
+            "trouble": [("Grok lehnt die Adresse ab.", "Kopieren Sie die Adresse erneut mit der Schaltfläche und fügen Sie sie vollständig ein, ohne etwas davor oder danach."),
+                        ("Es gibt keine Schaltfläche für einen neuen Konnektor.", "Bitten Sie in einem Team-Konto Ihre Administration, ihn hinzuzufügen."),
+                        ("Die Antwort nutzt den Katalog nicht.", "Beginnen Sie einen neuen Chat und schreiben Sie: nutze {name}.")],
+        },
+    },
+    "gemini": {
+        "name": "Gemini", "start": GEMINI_APPS, "checked": "2026-10-18", "paste": 3,
+        "help": "https://support.google.com/gemini/answer/17209137",
+        "en": {
+            "who": ["Google offers it to people aged 18 or over in the US, with a personal Google account (not a work or school one) and Gemini's activity setting switched on.",
+                    "You add it in the Gemini web app, and it then works in the phone app too. It answers in English only."],
+            "steps": ["On your computer, open gemini.google.com and sign in with your personal Google account.",
+                      "At the bottom, click Settings, then Connected Apps.",
+                      "Under custom apps, click to add a custom app.",
+                      "Paste this address and click Next:",
+                      "A short window opens and closes by itself: there is nothing to sign in to or fill in.",
+                      "In a chat, type @, pick {name} and ask in English."],
+            "trouble": [("There are no custom apps in the settings.", "Google offers them only to personal accounts, from 18, in the US, with the activity setting on."),
+                        ("The window closes and no app is added.", "Try again in a minute. If it keeps failing, write to us from the support page."),
+                        ("Gemini does not use the catalogue.", "Type @, pick {name} and ask your question in English.")],
+        },
+        "sk": {
+            "who": ["Google to ponúka ľuďom od 18 rokov v USA, s osobným účtom Google (nie pracovným ani školským) a so zapnutým ukladaním aktivity v Gemini. Na Slovensku to Google zatiaľ neponúka.",
+                    "Pridáva sa vo webovej aplikácii Gemini a potom funguje aj v telefóne. Odpovedá iba po anglicky."],
+            "steps": ["Na počítači otvorte gemini.google.com a prihláste sa osobným účtom Google.",
+                      "Dole kliknite na Nastavenia a potom na prepojené aplikácie.",
+                      "V časti vlastných aplikácií kliknite na pridanie vlastnej aplikácie.",
+                      "Vložte túto adresu a kliknite na ďalej:",
+                      "Otvorí sa krátke okno a samo sa zavrie: netreba sa nikde prihlasovať ani nič vypĺňať.",
+                      "V rozhovore napíšte @, vyberte {name} a pýtajte sa po anglicky."],
+            "trouble": [("V nastaveniach vlastné aplikácie nie sú.", "Google ich ponúka iba osobným účtom, od 18 rokov, v USA a so zapnutým ukladaním aktivity."),
+                        ("Okno sa zavrie a aplikácia sa nepridá.", "Skúste to znova o minútu. Ak to stále nejde, napíšte nám zo stránky podpory."),
+                        ("Gemini katalóg nepoužije.", "Napíšte @, vyberte {name} a otázku položte po anglicky.")],
+        },
+        "cs": {
+            "who": ["Google to nabízí lidem od 18 let v USA, s osobním účtem Google (ne pracovním ani školním) a se zapnutým ukládáním aktivity v Gemini. V Česku to Google zatím nenabízí.",
+                    "Přidává se ve webové aplikaci Gemini a pak funguje i v telefonu. Odpovídá jen anglicky."],
+            "steps": ["Na počítači otevřete gemini.google.com a přihlaste se osobním účtem Google.",
+                      "Dole klikněte na Nastavení a pak na propojené aplikace.",
+                      "V části vlastních aplikací klikněte na přidání vlastní aplikace.",
+                      "Vložte tuto adresu a klikněte na další:",
+                      "Otevře se krátké okno a samo se zavře: není třeba se nikde přihlašovat ani nic vyplňovat.",
+                      "V rozhovoru napište @, vyberte {name} a ptejte se anglicky."],
+            "trouble": [("V nastavení vlastní aplikace nejsou.", "Google je nabízí jen osobním účtům, od 18 let, v USA a se zapnutým ukládáním aktivity."),
+                        ("Okno se zavře a aplikace se nepřidá.", "Zkuste to znovu za minutu. Pokud to stále nejde, napište nám ze stránky podpory."),
+                        ("Gemini katalog nepoužije.", "Napište @, vyberte {name} a otázku položte anglicky.")],
+        },
+        "de": {
+            "who": ["Google bietet es Personen ab 18 Jahren in den USA an, mit einem privaten Google-Konto (keinem Arbeits- oder Schulkonto) und eingeschalteter Gemini-Aktivität. In Europa bietet Google es noch nicht an.",
+                    "Sie fügen es in der Gemini-Web-App hinzu, danach funktioniert es auch in der App am Telefon. Es antwortet nur auf Englisch."],
+            "steps": ["Öffnen Sie am Computer gemini.google.com und melden Sie sich mit Ihrem privaten Google-Konto an.",
+                      "Klicken Sie unten auf Einstellungen und dann auf verbundene Apps.",
+                      "Klicken Sie unter den eigenen Apps darauf, eine eigene App hinzuzufügen.",
+                      "Fügen Sie diese Adresse ein und klicken Sie auf Weiter:",
+                      "Ein kurzes Fenster öffnet sich und schließt sich von selbst: Sie müssen sich nirgends anmelden und nichts ausfüllen.",
+                      "Tippen Sie im Chat @, wählen Sie {name} und fragen Sie auf Englisch."],
+            "trouble": [("In den Einstellungen gibt es keine eigenen Apps.", "Google bietet sie nur privaten Konten an, ab 18, in den USA und mit eingeschalteter Aktivität."),
+                        ("Das Fenster schließt sich und keine App wird hinzugefügt.", "Versuchen Sie es in einer Minute erneut. Wenn es weiter nicht klappt, schreiben Sie uns über die Support-Seite."),
+                        ("Gemini nutzt den Katalog nicht.", "Tippen Sie @, wählen Sie {name} und stellen Sie Ihre Frage auf Englisch.")],
+        },
+    },
+}
+
+
+def jc_assistant_guide(id):
+    """The guide to one assistant in the page's language (T-4643), or None for an assistant without
+    a card on this installation: an unknown id, Gemini while its flag is off, or no hub."""
+    page = jc_assistants()
+    if not page or id not in {card["id"] for card in page["cards"]}:
+        return None
+    guide = GUIDES[id]
+    words = guide.get(_language()) or guide["en"]
+    name = BRANDING.get("instanceName") or MCP_NAME
+    steps = [step.replace("{name}", name) for step in words["steps"]]
+    # Gemini's custom apps answer in English only, so its question to try is the English one.
+    asked = "en" if id == "gemini" else _language()
+    own = BRANDING.get("samples")
+    samples = _samples(asked) if asked != "en" or not isinstance(own, dict) or own.get("en") else []
+    return {
+        "id": id, "name": guide["name"], "start": guide["start"], "help": guide["help"],
+        "title": jc_t("guide_title").replace("{name}", guide["name"]),
+        "who": words["who"], "steps": steps, "paste": guide["paste"], "mcp": page["mcp"],
+        "example": samples[0] if samples else STRINGS["guide_example"].get(asked) or STRINGS["guide_example"]["en"],
+        "good": jc_t("guide_good").replace("{name}", name),
+        "trouble": [(problem, fix.replace("{name}", name)) for problem, fix in words["trouble"]],
+        "checked": jc_t("guide_checked").replace("{date}", guide["checked"]).replace("{maker}", guide["name"]),
+    }
+
+
+def jc_guide_page(id):
+    guide = jc_assistant_guide(id)
+    if not guide:
+        return toolkit.abort(404)
+    return toolkit.render("jc/guide.html", {"jc_guide": guide})
 
 
 # The connector's public pages (T-4315): what a directory reviewer and a visitor read before
@@ -1902,13 +2196,15 @@ class JcThemePlugin(plugins.SingletonPlugin):
 
     def get_blueprint(self):
         """/connector, /privacy, /terms and /support (T-4315), one template for all four,
-        /assistants (T-4585) and /map/{dataset} (T-4639)."""
+        /assistants (T-4585), a guide per assistant at /assistants/{id} (T-4643) and
+        /map/{dataset} (T-4639)."""
         from flask import Blueprint
 
         blueprint = Blueprint("jc_pages", self.__module__)
         for name in PAGES:
             blueprint.add_url_rule("/" + name, name, lambda name=name: toolkit.render("jc/page.html", {"jc_name": name}))
         blueprint.add_url_rule("/assistants", "assistants", lambda: toolkit.render("jc/assistants.html", {}))
+        blueprint.add_url_rule("/assistants/<id>", "guide", jc_guide_page)
         # The framable map of a dataset, or of one of its tables (T-4639).
         blueprint.add_url_rule("/map/<id>", "map", jc_map_page)
         blueprint.add_url_rule("/map/<id>/<resource_id>", "map_resource", jc_map_page)

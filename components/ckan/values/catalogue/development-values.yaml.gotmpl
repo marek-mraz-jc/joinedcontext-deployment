@@ -254,3 +254,8 @@ hidden:
 # until the tiles host of T-4638 serves a style; then `style: https://tiles.{domain}/...json`.
 mapBasemap:
   tiles: https://tile.openstreetmap.org/{z}/{x}/{y}.png
+
+# Gemini's card and guide on /assistants (T-4643): true once the gateway's OAuth (T-4631) is live
+# on api.{domain} (T-4630) and tasks/evidence/T-4643/gemini-oauth.sh has passed against it.
+assistants:
+  gemini: false

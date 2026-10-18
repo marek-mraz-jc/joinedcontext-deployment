@@ -634,7 +634,10 @@ body.jc-embed { margin: 0; background: var(--jc-surface); }
 .jc-assistant-card { position: relative; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: .75rem; padding: 1.25rem; background: var(--jc-surface); border: 1px solid var(--jc-border); border-radius: var(--jc-radius-lg); box-shadow: var(--jc-shadow-1); }
 .jc-assistant-card h2 { display: flex; align-items: center; gap: .75rem; font-size: 1.25rem; margin: 0; }
 .jc-assistant-card .jc-ai-logo { flex: none; display: block; inline-size: 2rem; block-size: 2rem; }
-.jc-card-link { margin-block-start: auto; font-weight: 600; }
+.jc-card-links { margin: auto 0 0; display: flex; flex-wrap: wrap; gap: .5rem 1rem; }
+.jc-card-link { font-weight: 600; }
+/* T-4643: the guide sits above the card's whole-card link, so it stays its own target. */
+.jc-card-guide { position: relative; z-index: 1; }
 .jc-card-link::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
 .jc-assistant-card:has(.jc-card-link) { cursor: pointer; }
 .jc-assistant-card:has(.jc-card-link:hover) { border-color: var(--jc-primary); }
@@ -642,6 +645,15 @@ body.jc-embed { margin: 0; background: var(--jc-surface); }
 .jc-assistant-card:has(.jc-card-link:focus-visible) { outline: 3px solid var(--jc-accent); outline-offset: 2px; }
 .jc-store-address { margin: 1.5rem 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
 .jc-store-url { font-weight: 600; overflow-wrap: anywhere; }
+/* One assistant, step by step (T-4643). */
+.jc-guide h1 { display: flex; align-items: center; gap: .75rem; }
+.jc-guide h1 .jc-ai-logo { flex: none; inline-size: 2rem; block-size: 2rem; }
+.jc-guide-steps li { margin-block-end: .75rem; }
+.jc-guide-steps .jc-store-address { margin-block-start: .5rem; }
+.jc-guide-example { margin: 0 0 1rem; padding: .75rem 1rem; border-inline-start: 4px solid var(--jc-primary); background: var(--jc-surface); }
+.jc-guide-trouble dt { font-weight: 600; margin-block-start: .75rem; }
+.jc-guide-trouble dd { margin: .25rem 0 0; }
+.jc-guide-checked { color: var(--jc-muted); overflow-wrap: anywhere; }
 .jc-developers { margin-top: 2.5rem; }
 .jc-developers > summary { cursor: pointer; font-weight: 600; font-size: 1.125rem; }
 .jc-developers > .jc-mcp { margin-top: 1rem; }
