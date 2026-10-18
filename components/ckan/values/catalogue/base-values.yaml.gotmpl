@@ -101,3 +101,7 @@ securityContext:
 
 serviceMesh:
   enabled: {{ and ($global.serviceMesh.enable | default false) (eq ($global.serviceMesh.type | default "") "linkerd") }}
+{{- if has "viz" .Values.components }}
+# The chart renderer (T-4641, components/viz) reads published views through the action API.
+vizOrigin: "https://viz.{{ $global.domain }}"
+{{- end }}

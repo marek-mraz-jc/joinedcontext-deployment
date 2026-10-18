@@ -172,3 +172,7 @@ podSecurityContext: {}
 securityContext: {}
 serviceMesh:
   enabled: false
+
+# The chart renderer's origin, https://viz.{domain} (T-4641): the one origin CKAN's action API
+# answers CORS for, so the renderer reads a published `jc_visualization` view. Empty: none.
+vizOrigin: ''

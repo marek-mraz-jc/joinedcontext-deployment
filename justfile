@@ -504,6 +504,14 @@ dev-smoke:
 	if [ "$status" != 206 ]; then echo "  FAIL  basemap: a range request answered '${status}', not 206"; rc=1
 	elif [ "$age" -gt 40 ]; then echo "  FAIL  basemap: the file is ${age} days old, the refresh is overdue"; rc=1
 	else echo "  ok    basemap: 206, the file is ${age} days old"; fi
+	# The chart renderer (T-4641): the frame that runs a spec may connect nowhere, and CKAN answers
+	# CORS to the host page that reads the views.
+	echo "viz"
+	csp=$(curl -sS -o /dev/null -D - -m 20 "https://viz.{{ dev_domain }}/render.html" 2>&1 | tr -d '\r' | sed -n 's/^[Cc]ontent-[Ss]ecurity-[Pp]olicy: //p')
+	cors=$(curl -sS -o /dev/null -D - -m 20 -H "Origin: https://viz.{{ dev_domain }}" "https://data.{{ dev_domain }}/api/3/action/status_show" 2>&1 | tr -d '\r' | sed -n 's/^[Aa]ccess-[Cc]ontrol-[Aa]llow-[Oo]rigin: //p')
+	case "$csp" in *"connect-src 'none'"*) ;; *) echo "  FAIL  viz: render.html answered no connect-src 'none' ('${csp}')"; rc=1;; esac
+	if [ "$cors" != "https://viz.{{ dev_domain }}" ]; then echo "  FAIL  viz: CKAN answered CORS '${cors}' to the renderer"; rc=1
+	else echo "  ok    viz: the renderer connects nowhere, CKAN answers its host page"; fi
 	# The postgres data volume (T-4414): the broker's history once filled it ~30 GB a week, every
 	# smoke green. Every instance of the cluster, wherever its namespace is; no reading fails too.
 	echo "postgres data volume"

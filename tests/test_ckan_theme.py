@@ -43,10 +43,11 @@ def theme(tmp_path, monkeypatch):
             return answer(data_dict)
         return action
 
-    for error in ("ObjectNotFound", "NotAuthorized", "ValidationError"):
+    for error in ("ObjectNotFound", "NotAuthorized", "ValidationError", "Invalid"):
         setattr(toolkit, error, type(error, (Exception,), {}))
     toolkit.get_action = get_action
     toolkit.chained_helper = lambda helper: helper
+    toolkit.get_validator = lambda name: (lambda value: value)
     plugins = types.ModuleType("ckan.plugins")
     plugins.toolkit = toolkit
     plugins.SingletonPlugin = object
@@ -54,7 +55,7 @@ def theme(tmp_path, monkeypatch):
     page.loaded = set()
     plugins.plugin_loaded = lambda name: name in page.loaded
     plugins.IConfigurer = plugins.ITemplateHelpers = plugins.IFacets = plugins.IPackageController = object
-    plugins.IBlueprint = object
+    plugins.IBlueprint = plugins.IResourceView = object
     ckan = types.ModuleType("ckan")
     ckan.__file__ = str(tmp_path / "ckan/__init__.py")
     ckan.plugins = plugins
@@ -1859,3 +1860,93 @@ def test_no_city_is_named_in_the_theme_code_or_the_chart_templates():
         for number, line in enumerate(text.splitlines(), 1):
             code = line.split("#", 1)[0] if path.suffix in (".py", ".yaml") else line
             assert not banned.search(code), f"{path.name}:{number}: {line.strip()}"
+
+
+# --- T-4641, ADR-N-053: a published chart is a jc_visualization view, framed from viz.{domain} --
+
+VIEW = {
+    "id": "6f1c2b9e-0d0a-4c35-9a51-3a3f8f6c1d20", "view_type": "jc_visualization", "package_id": "pocasie",
+    "title": "temperature-24h", "description": "",
+    "titles": json.dumps({"sk": "Teplota za 24 hodín", "en": "Temperature over 24 hours"}),
+    "descriptions": json.dumps({"sk": "Hodinový priemer", "en": "Hourly mean"}),
+    "spec": json.dumps({"$schema": "https://vega.github.io/schema/vega-lite/v5.json", "mark": "line"}),
+    "source": json.dumps({"source": "temporal", "type": "WeatherObserved"}), "endpoint": "3iasem46w7d7pxxypwdfdzheyaodv3qn",
+}
+
+
+def test_a_chart_is_framed_by_its_view_id_alone_on_the_renderer_host(theme):
+    theme.page.lang = "sk"
+    viz = theme.jc_visualization(VIEW)
+    assert viz["title"] == "Teplota za 24 hodín" and viz["description"] == "Hodinový priemer"
+    assert viz["src"] == "https://viz.dev.example/#%s&inline&lang=sk" % VIEW["id"]
+    # The frame names no spec, no Endpoint and no URL of data: the renderer reads those itself.
+    assert "3iasem46" not in viz["src"] and "vega" not in viz["src"]
+    assert 'src="https://viz.dev.example/#%s&lang=sk"' % VIEW["id"] in viz["code"]
+    assert 'sandbox="allow-scripts allow-same-origin allow-downloads allow-popups allow-popups-to-escape-sandbox"' in viz["code"]
+    theme.page.lang = "fi"
+    assert theme.jc_visualization(VIEW)["title"] == "Temperature over 24 hours", "the default language's"
+    theme.page.lang = "en"
+
+
+def test_a_title_cannot_break_out_of_the_embed_snippet(theme):
+    view = dict(VIEW, titles=json.dumps({"en": '"><script>alert(1)</script>'}))
+    code = theme.jc_visualization(view)["code"]
+    assert "<script>" not in code and "&quot;&gt;&lt;script&gt;" in code
+
+
+def test_only_a_jc_visualization_with_a_view_id_and_a_domain_becomes_a_chart(theme):
+    assert theme.jc_visualization(dict(VIEW, view_type="image_view")) is None
+    assert theme.jc_visualization(dict(VIEW, id="../../x")) is None
+    assert theme.jc_visualization(None) is None
+    theme.BRANDING["domain"] = "evil.example/x"
+    assert theme.jc_visualization(VIEW) is None and theme.jc_viz_origin() is None
+
+
+def test_the_dataset_lists_the_charts_of_every_resource_and_skips_what_it_may_not_read(theme):
+    views = {"r1": [{"id": "v", "view_type": "datatables_view"}, VIEW], "r2": theme.toolkit.NotAuthorized()}
+
+    def listed(d):
+        answer = views[d["id"]]
+        if isinstance(answer, Exception):
+            raise answer
+        return answer
+    theme.page.actions = {"resource_view_list": listed}
+    charts = theme.jc_visualizations({"resources": [{"id": "r2"}, {"id": "r1"}]})
+    assert [c["id"] for c in charts] == [VIEW["id"]]
+
+
+def test_the_view_type_is_never_offered_in_ckan_and_its_config_is_checked(theme):
+    plugin = theme.JcThemePlugin()
+    info = plugin.info()
+    assert info["name"] == "jc_visualization" and info["iframed"] is False and info["always_available"] is False
+    assert plugin.can_view({"resource": {"format": "CSV"}}) is False, "never in the New view list"
+    spec = info["schema"]["spec"][-1]
+    assert spec(VIEW["spec"]) == VIEW["spec"]
+    for bad in ("[1, 2]", "not json", json.dumps({"a": "x" * 210_000})):
+        with pytest.raises(theme.toolkit.Invalid):
+            spec(bad)
+    slug = info["schema"]["endpoint"][-1]
+    assert slug(VIEW["endpoint"]) == VIEW["endpoint"]
+    for bad in ("https://evil.example/", "../x", "ABC"):
+        with pytest.raises(theme.toolkit.Invalid):
+            slug(bad)
+    assert plugin.view_template({}, {}) == "jc/visualization.html"
+    assert plugin.setup_template_variables({}, {"resource_view": VIEW})["viz"]["id"] == VIEW["id"]
+
+
+def test_the_dataset_page_shows_the_charts_and_sizes_their_frames_from_the_renderer_only():
+    read = (THEME / "templates__package__read.html").read_text()
+    assert read.index("jc_visualizations.html") < read.index("h.jc_about(pkg)"), "the charts follow the table"
+    assert "/jc-viz.js" in read and "/jc-viz.js" in (THEME / "templates__package__resource_read.html").read_text()
+    figure = (THEME / "templates__jc__visualization.html").read_text()
+    assert 'sandbox="allow-scripts allow-same-origin allow-downloads"' in figure and 'data-jc-viz="{{ viz.origin }}"' in figure
+    script = (THEME / "public__jc-viz.js").read_text()
+    assert "frame.contentWindow === event.source" in script
+    assert 'frame.getAttribute("data-jc-viz") === event.origin' in script
+
+
+def test_ckan_answers_cors_for_the_renderer_alone(rendered):
+    ckan = next(d for d in rendered("dev") if d.get("kind") == "Deployment" and d["metadata"]["name"] == "ckan")
+    env = {e["name"]: e.get("value") for c in ckan["spec"]["template"]["spec"]["containers"] for e in c.get("env", [])}
+    assert env["CKAN__CORS__ORIGIN_WHITELIST"] == "https://viz.dev.joinedcontext.com"
+    assert "CKAN__CORS__ORIGIN_ALLOW_ALL" not in env

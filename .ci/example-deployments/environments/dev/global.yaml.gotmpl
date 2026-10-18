@@ -60,6 +60,8 @@ components:
   # The background map from the cluster (T-4638): tiles.{domain}, for the catalogue's maps. It
   # needs nothing above it.
   - basemap
+  # The chart renderer of ADR-N-053 (T-4641): viz.{domain}, framed by the catalogue's datasets.
+  - viz
 
 global:
   domain: {{ env "JC_DEV_DOMAIN" | default "dev.joinedcontext.com" }}

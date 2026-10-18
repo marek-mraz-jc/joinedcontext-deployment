@@ -32,7 +32,8 @@ ANCESTORS = {"DENY": "'none'", "SAMEORIGIN": "'self'"}
 # The routes whose upstream names in its own `frame-ancestors` the sites that may frame its page
 # (AG-114, and a public form's page, EP-101); the edge sets no X-Frame-Options there, and an
 # answer without a policy gets DENY's.
-FRAMED_BY_UPSTREAM = {"assistant/assistant-widget", "portal/portal-public-form"}
+# The chart renderer (T-4641) too: any site may frame its host page.
+FRAMED_BY_UPSTREAM = {"assistant/assistant-widget", "portal/portal-public-form", "viz/viz"}
 
 
 def baseline(framing: str) -> str:
