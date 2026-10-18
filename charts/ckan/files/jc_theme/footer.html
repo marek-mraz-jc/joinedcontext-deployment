@@ -49,7 +49,7 @@
       {% if widget %}
         <details class="jc-assistant">
           <summary><span>{{ h.jc_t('assistant') }}</span></summary>
-          <iframe src="{{ widget }}" title="{{ h.jc_t('assistant') }}" loading="lazy" referrerpolicy="no-referrer"></iframe>
+          <iframe src="{{ widget }}?embed=1" title="{{ h.jc_t('assistant') }}" loading="lazy" referrerpolicy="no-referrer"></iframe>
         </details>
       {% endif %}
     </div>

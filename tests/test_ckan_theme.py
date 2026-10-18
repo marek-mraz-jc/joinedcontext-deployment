@@ -788,7 +788,8 @@ def test_the_footer_offers_the_assistant_as_a_disclosure_a_keyboard_opens():
     assert 'referrerpolicy="no-referrer"' in footer
     # T-4280: the chat opens in Slovak or the visitor's own choice in it; the page's language
     # (T-4253) no longer reaches it.
-    assert '<iframe src="{{ widget }}"' in footer
+    # T-4635: embed mode, so the chat's header carries the ✕ that closes the panel.
+    assert '<iframe src="{{ widget }}?embed=1"' in footer
     assert "lang=" not in footer.split("<iframe", 1)[1].split(">", 1)[0]
 
 
@@ -800,9 +801,9 @@ def test_the_assistant_leaves_the_page_room_and_takes_a_phone_s_whole_screen():
     phone = css.split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
     assert ".jc-assistant[open] { position: fixed; inset: 0;" in phone
     assert "body:has(.jc-assistant[open]) { overflow: hidden; }" in phone
-    # The frame takes its size from the screen, below the 3.25rem bar (T-4248).
-    assert "block-size: 3.25rem;" in phone
-    assert "inset: 3.25rem 0 auto 0; width: 100%; height: calc(100vh - 3.25rem); height: calc(100dvh - 3.25rem);" in phone
+    # The frame takes its size from the screen, the whole of it, with no bar above (T-4248, T-4635).
+    assert ".jc-assistant[open] > iframe { position: fixed; inset: 0; width: 100%; height: 100vh; height: 100dvh;" in phone
+    assert "3.25rem" not in phone
     footer = (THEME / "footer.html").read_text()
     assert "<script src=\"{{ h.url_for_static('/jc-assistant.js') }}\" defer></script>" in footer
     script = (THEME / "public__jc-assistant.js").read_text()
@@ -810,23 +811,29 @@ def test_the_assistant_leaves_the_page_room_and_takes_a_phone_s_whole_screen():
     assert 'event.key === "Escape"' in script and 'querySelector("summary").focus()' in script
 
 
-def test_the_open_assistant_shows_one_close_control_and_a_frame_that_fits_the_window():
-    """T-4283: open, the launcher turns into the panel's round close control (never the label
-    beside the panel); the frame is one tall height, 760px inside the window, whatever the chat
-    holds (T-4592); the button keeps clear of a phone's home bar."""
+def test_the_open_assistant_has_one_close_control_and_a_frame_with_nothing_under_it():
+    """T-4635 (owner's option C): open, the launcher is hidden on a desktop and a phone, and the ✕
+    in the chat's header is the one close control; the frame sits in the corner the launcher left,
+    1rem from the window's edge and clear of a phone's home bar, one tall height, 760px inside the
+    window (T-4592)."""
     css = (THEME / "public__jc-theme.css").read_text()
     desktop = css.split("@media (max-width: 40rem) {", 1)[0]
-    assert "inset-block-end: max(1rem, env(safe-area-inset-bottom));" in desktop
-    assert ".jc-assistant[open] > summary { inline-size: 2.75rem; block-size: 2.75rem; padding: 0; }" in desktop
-    assert ".jc-assistant[open] > summary > span { position: absolute;" in desktop and "clip-path: inset(50%)" in desktop
-    assert '.jc-assistant[open] > summary::after { content: "\\2715";' in desktop
-    assert "height: min(760px, calc(100vh - 6.25rem)); height: min(760px, calc(100dvh - 6.25rem));" in desktop
+    assert ".jc-assistant[open] > summary { display: none; }" in desktop
+    frame = desktop.split(".jc-assistant > iframe { ", 1)[1].split("}", 1)[0]
+    assert "position: fixed; inset-inline-end: 1rem; inset-block-end: max(1rem, env(safe-area-inset-bottom));" in frame
+    assert "height: min(760px, calc(100vh - 2rem)); height: min(760px, calc(100dvh - 2rem));" in frame
+    assert "100%" not in frame, "the frame no longer hangs above the launcher"
     assert "--jc-h" not in css
     phone = css.split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
-    assert ".jc-assistant[open] > summary > span { position: static;" in phone, "a phone's bar keeps its words"
-    # T-4592: the chat no longer reports a height, so the page listens for none.
+    assert ".jc-assistant[open] > summary" not in phone, "no bar on a phone either"
+    assert "\\2715" not in css, "the page draws no ✕ of its own"
+    # The chat's ✕ closes it: only the frame's own message, from the frame's origin, and focus
+    # goes back to the launcher. No height is reported (T-4592).
     script = (THEME / "public__jc-assistant.js").read_text()
-    assert "jc-assistant-height" not in script and 'addEventListener("message"' not in script
+    assert "jc-assistant-height" not in script
+    assert 'data.type === "jc-assistant-close"' in script
+    assert "event.source === frame.contentWindow && event.origin === origin" in script
+    assert 'box.querySelector("summary").focus();' in script
 
 
 def test_the_catalogue_pod_is_told_its_assistant_only_when_the_assistant_is_deployed(rendered, rendered_variant):
@@ -1708,8 +1715,7 @@ def test_the_bar_is_one_slant_in_the_makers_colours_and_shrinks_on_a_phone():
 
 def test_the_closed_launcher_takes_the_bar_s_shape_and_the_open_one_does_not():
     """T-4622: closed, the launcher has the bar's slant, corners, shadow and height, its words
-    upright on one line; open, it stays the round close control on a desktop and the top bar on a
-    phone, so no skew reaches it."""
+    upright on one line; open, it is hidden (T-4635), so no skew reaches it."""
     css = desktop_css()
     bar = css.split(".jc-corner .jc-assistants-link { ", 1)[1].split("}", 1)[0]
     closed = css.split(".jc-assistant:not([open]) > summary { ", 1)[1].split("}", 1)[0]
@@ -1724,7 +1730,6 @@ def test_the_closed_launcher_takes_the_bar_s_shape_and_the_open_one_does_not():
     assert "transition" not in closed and "animation" not in closed
     phone = (THEME / "public__jc-theme.css").read_text().split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
     assert ".jc-assistant:not([open]) > summary { block-size: 2.75rem; font-size: .9375rem; padding-inline: 1.125rem; }" in phone
-    assert ".jc-assistant[open] > summary { box-sizing: border-box; inline-size: auto; block-size: 3.25rem;" in phone
     # the closed summary's focus ring stays: no rule takes the outline away
     assert ".jc-assistant > summary:focus-visible { outline: 3px solid var(--jc-accent); outline-offset: 2px; }" in css
     assert "outline: none" not in closed and "outline: 0" not in closed
