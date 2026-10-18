@@ -63,3 +63,35 @@ spec:
         factor: 2
         maxDuration: 5m
 {{- end }}
+---
+# The smoke gate, after the last wave: its PostSync Job waits for every Application above to be
+# Synced at the same revision and Healthy, then checks the public surfaces (ADR-N-054 §2.6).
+{{- $last := 0 }}
+{{- range .Values.components }}{{ $last = max $last .wave }}{{ end }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ printf "%s-smoke" .Values.environment }}
+  namespace: {{ .Values.argocdNamespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: {{ add1 $last | quote }}
+spec:
+  project: platform
+  source:
+    repoURL: {{ .Values.repoURL }}
+    targetRevision: {{ .Values.targetRevision }}
+    path: .
+    plugin:
+      name: helmfile
+      env:
+        - name: ENVIRONMENT
+          value: {{ .Values.environment }}
+        - name: COMPONENT
+          value: smoke
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ .Values.argocdNamespace }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

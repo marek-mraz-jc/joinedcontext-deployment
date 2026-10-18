@@ -18,6 +18,14 @@ namespace="${ARGOCD_ENV_NAMESPACE:-}"
 }
 selector="component=$component${namespace:+,namespace=$namespace}"
 
+# The smoke gate (ADR-N-054 §2.6): its own chart, carrying the revision it runs for, in the
+# plugin's own image.
+if [ "$component" = smoke ]; then
+	image=$(yq '.gitops.helmfile | .repository + ":" + .tag + "@" + .digest' components/gitops/images.yaml)
+	exec helm template "$env-smoke" gitops/smoke --namespace "${ARGOCD_APP_NAMESPACE:-argocd}" \
+		-f "gitops/$env.yaml" --set-string "revision=${ARGOCD_APP_REVISION:?}" --set-string "image=$image"
+fi
+
 # The assemble step of `just _dev-assemble`, on this copy of the repository.
 rm -rf deployment
 cp -r defaults/deployment deployment

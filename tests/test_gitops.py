@@ -48,10 +48,12 @@ def documents(text):
     return [d for d in yaml.safe_load_all(text) if d]
 
 
-def applications():
+def applications(smoke=False):
+    """The component Applications, or with `smoke` the gate's Application alone."""
     rendered = root()
     assert rendered.returncode == 0, rendered.stderr
-    return [d for d in documents(rendered.stdout) if d["kind"] == "Application"]
+    apps = [d for d in documents(rendered.stdout) if d["kind"] == "Application"]
+    return [a for a in apps if (a["metadata"]["name"] == "dev-smoke") == smoke]
 
 
 def plugin_env(app):
@@ -92,6 +94,9 @@ def test_every_enabled_release_has_exactly_one_application_and_the_waves_keep_he
     assert waves == sorted(waves) and waves == [c["wave"] for c in listed]
     assert all(plugin_env(a)["ENVIRONMENT"] == "dev" and a["spec"]["source"]["plugin"]["name"] == "helmfile" for a in apps)
     assert "gitops" not in {plugin_env(a)["COMPONENT"] for a in apps}, "Argo CD never manages itself"
+    [smoke] = applications(smoke=True)
+    assert int(smoke["metadata"]["annotations"]["argocd.argoproj.io/sync-wave"]) == waves[-1] + 1
+    assert plugin_env(smoke) == {"ENVIRONMENT": "dev", "COMPONENT": "smoke"}
 
 
 def test_every_application_syncs_by_itself_and_never_rewrites_a_secret():
@@ -221,3 +226,126 @@ def test_argocd_and_its_root_render_in_the_addons_environment_within_600_mi(rend
     rbac = next(d for d in argocd if d["kind"] == "ConfigMap" and d["metadata"]["name"] == "argocd-rbac-cm")["data"]
     assert rbac["policy.default"] == "role:readonly" and rbac["policy.csv"].strip() == "g, platform-admin, role:admin"
     assert not [d for d in argocd if d["kind"] == "Deployment" and "dex" in d["metadata"]["name"]]
+
+
+GATE = ROOT / "gitops/smoke/files/gate.sh"
+
+
+def gate(tmp_path, apps, answers, wait="0"):
+    """gate.sh with `kubectl` answering `apps` and `curl` answering `answers` by URL."""
+    bin_ = tmp_path / "bin"
+    bin_.mkdir(exist_ok=True)
+    (tmp_path / "apps.json").write_text(json.dumps({"items": apps}))
+    (bin_ / "kubectl").write_text(f"#!/bin/sh\ncat {tmp_path / 'apps.json'}\n")
+    lookup = "\n".join(f'  "{url}") echo {code} ;;' for url, code in answers.items())
+    (bin_ / "curl").write_text(f'#!/bin/sh\nfor a; do url="$a"; done\ncase "$url" in\n{lookup}\n  *) exit 7 ;;\nesac\n')
+    for tool in ("kubectl", "curl"):
+        (bin_ / tool).chmod(0o755)
+    checks = tmp_path / "checks"
+    checks.write_text("".join(f"{200 if 'health' in url else 401} {url}\n" for url in answers))
+    return subprocess.run(
+        ["bash", str(GATE)], capture_output=True, text=True, timeout=60,
+        env={"PATH": f"{bin_}:/usr/bin:/bin", "REVISION": "abc", "SELF": "dev-smoke", "NAMESPACE": "argocd",
+             "WAIT_SECONDS": wait, "CHECKS": str(checks)},
+    )
+
+
+def app(name, sync="Synced", health="Healthy", revision="abc", project="platform"):
+    return {"metadata": {"name": name}, "spec": {"project": project},
+            "status": {"sync": {"status": sync, "revision": revision}, "health": {"status": health}}}
+
+
+def test_the_gate_waits_for_every_application_at_the_revision_then_checks_each_surface(tmp_path):
+    if shutil.which("jq") is None:
+        pytest.skip("jq not installed")
+    surfaces = {"https://portal.x/api/v1/health": "200", "https://portal.x/api/v1/auth/me": "401"}
+    green = gate(tmp_path, [app("dev-portal"), app("dev-smoke", sync="OutOfSync"), app("other", project="default", health="Degraded")], surfaces)
+    assert green.returncode == 0, green.stdout + green.stderr
+    assert "ok    https://portal.x/api/v1/auth/me (401)" in green.stdout
+
+    for stale in (app("dev-portal", revision="old"), app("dev-portal", health="Progressing"), app("dev-portal", sync="OutOfSync")):
+        red = gate(tmp_path, [stale], surfaces)
+        assert red.returncode == 1 and "FAIL  not every Application is Synced at abc" in red.stdout, red.stdout
+        assert "dev-portal" in red.stdout and "https://" not in red.stdout, "no surface is checked before the sync"
+
+    wrong = gate(tmp_path, [app("dev-portal")], {**surfaces, "https://portal.x/api/v1/auth/me": "200"})
+    assert wrong.returncode == 1 and "FAIL  https://portal.x/api/v1/auth/me (expected 401, got 200)" in wrong.stdout
+    down = gate(tmp_path, [app("dev-portal")], surfaces | {"https://gone.x/health": "unreachable"})
+    assert down.returncode == 1
+
+
+def test_the_gate_chart_runs_after_the_sync_reads_only_and_checks_only_deployed_surfaces():
+    image = "ghcr.io/helmfile/helmfile:v1.8.1@sha256:" + "0" * 64
+    rendered = subprocess.run(
+        ["helm", "template", "dev-smoke", "gitops/smoke", "--namespace", "argocd", "-f", "gitops/dev.yaml",
+         "--set-string", "revision=abc", "--set-string", f"image={image}"],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    assert rendered.returncode == 0, rendered.stderr
+    docs = {d["kind"]: d for d in documents(rendered.stdout)}
+    job = docs["Job"]
+    assert job["metadata"]["annotations"]["argocd.argoproj.io/hook"] == "PostSync"
+    assert job["spec"]["backoffLimit"] == 0
+    pod = job["spec"]["template"]
+    assert pod["metadata"]["labels"]["app.kubernetes.io/part-of"] == "argocd", "Argo CD's NetworkPolicy"
+    assert pod["spec"]["containers"][0]["image"] == image
+    assert docs["Role"]["rules"] == [{"apiGroups": ["argoproj.io"], "resources": ["applications"], "verbs": ["get", "list"]}]
+    cm = docs["ConfigMap"]["data"]
+    assert cm["revision"] == "abc"
+    lines = cm["checks"].strip().splitlines()
+    assert lines[0] == "200 https://idm.dev.joinedcontext.com/realms/dev/.well-known/openid-configuration"
+    assert "200 https://viz.dev.joinedcontext.com/render.html" in lines
+    no_viz = subprocess.run(
+        ["helm", "template", "dev-smoke", "gitops/smoke", "-f", "gitops/dev.yaml", "--set-string", "revision=abc",
+         "--set-string", f"image={image}", "--set", "components=null"],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    assert [line for line in documents(no_viz.stdout)[1]["data"]["checks"].splitlines() if line] == lines[:1]
+    unpinned = subprocess.run(
+        ["helm", "template", "x", "gitops/smoke", "-f", "gitops/dev.yaml", "--set-string", f"image={image}"],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    assert unpinned.returncode != 0 and "revision is required" in unpinned.stderr
+
+
+def test_argocd_is_scraped_and_a_stuck_or_failed_sync_alerts_where_monitoring_runs(rendered_variant):
+    def with_monitoring(tree):
+        path = tree / "deployment/environments/addons/global.yaml.gotmpl"
+        path.write_text(path.read_text().replace("  - gitops\n", "  - gitops\n  - monitoring\n", 1))
+
+    docs = rendered_variant("addons", with_monitoring)
+    [monitor] = [d for d in docs if d["kind"] == "ServiceMonitor" and d["metadata"]["name"] == "argocd-application-controller"]
+    services = [d for d in docs if d["kind"] == "Service" and d["metadata"].get("namespace") == "argocd"
+                and d["metadata"].get("labels", {}).get("app.kubernetes.io/name") == "argocd-metrics"]
+    assert [p["name"] for s in services for p in s["spec"]["ports"]] == [monitor["spec"]["endpoints"][0]["port"]]
+    rules = next(d for d in docs if d["kind"] == "PrometheusRule")
+    [group] = [g for g in rules["spec"]["groups"] if g["name"] == "gitops"]
+    alerts = {r["alert"]: r for r in group["rules"]}
+    assert set(alerts) == {"ArgoCDApplicationOutOfSync", "ArgoCDApplicationDegraded", "ArgoCDSyncFailed"}
+    assert alerts["ArgoCDApplicationOutOfSync"]["for"] == "15m" and alerts["ArgoCDApplicationDegraded"]["for"] == "15m"
+    assert "{{ $labels.name }}" in alerts["ArgoCDApplicationDegraded"]["annotations"]["summary"]
+
+
+def test_the_status_script_lists_the_failed_first_and_exits_red_until_all_are_green(tmp_path):
+    if shutil.which("jq") is None:
+        pytest.skip("jq not installed")
+
+    def status(apps):
+        (tmp_path / "apps.json").write_text(json.dumps({"items": apps}))
+        stub = tmp_path / "kubectl"
+        stub.write_text(f"#!/bin/sh\ncat {tmp_path / 'apps.json'}\n")
+        stub.chmod(0o755)
+        return subprocess.run(
+            [str(ROOT / "scripts/gitops-status.sh")], capture_output=True, text=True,
+            env={"PATH": f"{tmp_path}:/usr/bin:/bin"},
+        )
+
+    failed = app("dev-zz", sync="OutOfSync", health="Degraded")
+    failed["status"]["operationState"] = {"phase": "Failed", "message": "smoke\nred", "finishedAt": "2026-10-18T21:00:00Z"}
+    red = status([app("dev-aa", revision="abcdef1234"), failed])
+    assert red.returncode == 1
+    rows = red.stdout.splitlines()
+    assert rows[1].split("\t")[:5] == ["dev-zz", "OutOfSync", "Degraded", "abc", "Failed"] and "smoke red" in rows[1]
+    assert rows[2].split("\t")[:4] == ["dev-aa", "Synced", "Healthy", "abcdef1"] and rows[-1] == "NOT GREEN"
+    green = status([app("dev-aa")])
+    assert green.returncode == 0 and "NOT GREEN" not in green.stdout
