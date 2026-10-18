@@ -1,6 +1,6 @@
 # gitops
 
-Argo CD, keeping an environment on `main` of this repository (ADR-N-054, T-4674; docs
+Argo CD, keeping an environment on `main` of this repository (ADR-N-056, T-4674; docs
 Deployment/15-gitops.md).
 
 - `argocd`: the upstream `argo-cd` chart, pinned by version and every image by digest, in its

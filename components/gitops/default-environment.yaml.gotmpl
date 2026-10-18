@@ -7,7 +7,7 @@ gitops:
     # Its own namespace, never the instance's: Argo CD holds cluster-wide write, and the
     # instance namespace's policies and roles stay about the instance.
     namespace: argocd
-    # The UI's host, argocd.{domain}, behind Keycloak only (ADR-N-054 §2.8).
+    # The UI's host, argocd.{domain}, behind Keycloak only (ADR-N-056 §2.8).
     subDomain: argocd
     # The realm role that gets role:admin, the one Grafana's Admin reads too; every other
     # login reads. The owner grants it.

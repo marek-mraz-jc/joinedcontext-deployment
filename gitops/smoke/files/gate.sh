@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The PostSync gate (ADR-N-054 §2.6, OPS-58): every Application of the project Synced at this
+# The PostSync gate (ADR-N-056 §2.6, OPS-58): every Application of the project Synced at this
 # revision and Healthy, then each public surface in the checks file answers with its exact
 # status over valid TLS. A failure fails the Job, the Job fails the smoke Application's sync,
 # and the sync's failure is the alert and the issue. It reads; it creates, execs and mints

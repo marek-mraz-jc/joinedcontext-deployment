@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The Applications Argo CD keeps one environment with (ADR-N-054 §2.3, OPS-54).
+"""The Applications Argo CD keeps one environment with (ADR-N-056 §2.3, OPS-54).
 
     python3 scripts/gitops-apps.py dev > gitops/dev.yaml
 

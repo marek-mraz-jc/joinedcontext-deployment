@@ -68,7 +68,7 @@ serviceMonitors:
     port: http
   {{- end }}
   {{- if has "gitops" $components }}
-  # Argo CD's sync and health of every Application (ADR-N-054 §2.9).
+  # Argo CD's sync and health of every Application (ADR-N-056 §2.9).
   - name: argocd-application-controller
     namespace: {{ index $root "gitops" "argocd" "namespace" }}
     selector:
@@ -105,7 +105,7 @@ alertGroups:
           summary: 'APISIX edge 5xx error rate exceeded 1%'
   {{- end }}
   {{- if has "gitops" $components }}
-  # ADR-N-054 §2.9 (T-4674): Argo CD keeps the environment on main; an Application that stays
+  # ADR-N-056 §2.9 (T-4674): Argo CD keeps the environment on main; an Application that stays
   # out of sync or degraded, or a sync that failed (the smoke gate's included), is the deployer's
   # next job. Never rolled back by itself (OPS-58).
   - name: gitops

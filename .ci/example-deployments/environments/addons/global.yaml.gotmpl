@@ -23,7 +23,7 @@ components:
   # Operational dashboards (OPS-16). The Prometheus is named below; without it the component
   # refuses to render rather than serving four panels that all say "No data".
   - grafana
-  # Argo CD keeping an environment on main (ADR-N-054, T-4674), with its root Application on.
+  # Argo CD keeping an environment on main (ADR-N-056, T-4674), with its root Application on.
   - gitops
 
 global:
@@ -43,7 +43,7 @@ global:
   metrics:
     enabled: true
 
-# Argo CD with its root Application on, so the render covers the switch-over (ADR-N-054).
+# Argo CD with its root Application on, so the render covers the switch-over (ADR-N-056).
 gitops:
   root:
     enabled: true

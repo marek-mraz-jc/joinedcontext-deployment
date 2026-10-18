@@ -1,7 +1,7 @@
 ---
 component: gitops
 parts:
-  # ADR-N-054, T-4674: Argo CD, which keeps the environment on `main` by rendering this
+  # ADR-N-056, T-4674: Argo CD, which keeps the environment on `main` by rendering this
   # repository's helmfile through its helmfile plugin. Installed by helmfile and never by
   # itself, so `just dev-apply` can always rebuild it.
   - name: argocd

@@ -2,7 +2,7 @@
 {{- if not (index $.Values $key) }}{{ fail (printf "gitops smoke: %s is required" $key) }}{{ end }}
 {{- end }}
 # The revision this gate runs for: a new commit changes it, so the smoke Application syncs and
-# its PostSync Job runs after every commit (ADR-N-054 §2.6).
+# its PostSync Job runs after every commit (ADR-N-056 §2.6).
 apiVersion: v1
 kind: ConfigMap
 metadata:

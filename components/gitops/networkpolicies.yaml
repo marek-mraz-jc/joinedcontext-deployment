@@ -1,5 +1,5 @@
 ---
-# Argo CD's network life (ADR-N-054 §2.1, OPS-26): its pods talk to each other, the edge reaches
+# Argo CD's network life (ADR-N-056 §2.1, OPS-26): its pods talk to each other, the edge reaches
 # the server, Prometheus reads the metrics, and out of the namespace go only DNS, the Kubernetes
 # API and HTTPS to the public internet (GitHub for the repository, the chart repositories and
 # the realm's public issuer). No pod or service of the instance is reachable from here.

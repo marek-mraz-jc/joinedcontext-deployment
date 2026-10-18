@@ -6,7 +6,7 @@ metadata:
   name: platform
   namespace: {{ .Values.argocdNamespace }}
 spec:
-  description: The joinedcontext platform on {{ .Values.environment }}, rendered from helmfile (ADR-N-054)
+  description: The joinedcontext platform on {{ .Values.environment }}, rendered from helmfile (ADR-N-056)
   sourceRepos:
     - {{ .Values.repoURL }}
   destinations:

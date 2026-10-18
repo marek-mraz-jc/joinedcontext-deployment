@@ -1,5 +1,5 @@
 name: pin-images
-# ADR-N-054 §2.4, OPS-57: pin the images of the head of platform and Portal `main` once their
+# ADR-N-056 §2.4, OPS-57: pin the images of the head of platform and Portal `main` once their
 # ci is green, cosign verifies the signature of their own image.yml on main, and the dev render
 # passes; Argo CD takes the pin commit from here. Antares stays a hand pin (its pins carry
 # migration notes). The repositories are public: the workflow's own token is enough. A push made

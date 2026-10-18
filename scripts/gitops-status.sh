@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Each Argo CD Application with its sync and health status, revision and last sync, failed and
-# stuck ones first (docs Deployment/15-gitops.md §4, ADR-N-054 §2.9). Exit 1 when any is not
+# stuck ones first (docs Deployment/15-gitops.md §4, ADR-N-056 §2.9). Exit 1 when any is not
 # Synced and Healthy, so the deployer's round can act on the code alone.
 #   KUBECONFIG=.secrets/kubeconfig-dev.yaml scripts/gitops-status.sh [namespace]
 set -euo pipefail

@@ -200,7 +200,7 @@ ROUTE_CLASSES = {
     },
     "argocd": {
         "reach": UPSTREAM, "cacheable": False, "framing": "DENY",
-        "why": "Argo CD verifies every token itself; login is the realm's PKCE flow, anonymous access and the local admin are off (ADR-N-054 §2.8)",
+        "why": "Argo CD verifies every token itself; login is the realm's PKCE flow, anonymous access and the local admin are off (ADR-N-056 §2.8)",
     },
     "ckan": {
         "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",

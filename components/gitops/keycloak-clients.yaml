@@ -1,5 +1,5 @@
 ---
-# Browser login for Argo CD (ADR-N-054 §2.8): a public client with PKCE, so no secret exists to
+# Browser login for Argo CD (ADR-N-056 §2.8): a public client with PKCE, so no secret exists to
 # leak. Argo CD's RBAC reads the realm roles from a top-level `roles` claim: `platform-admin`
 # administers, as it does in Grafana, and every other login reads.
 argocd:

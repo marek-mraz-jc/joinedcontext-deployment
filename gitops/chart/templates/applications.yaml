@@ -65,7 +65,7 @@ spec:
 {{- end }}
 ---
 # The smoke gate, after the last wave: its PostSync Job waits for every Application above to be
-# Synced at the same revision and Healthy, then checks the public surfaces (ADR-N-054 §2.6).
+# Synced at the same revision and Healthy, then checks the public surfaces (ADR-N-056 §2.6).
 {{- $last := 0 }}
 {{- range .Values.components }}{{ $last = max $last .wave }}{{ end }}
 apiVersion: argoproj.io/v1alpha1

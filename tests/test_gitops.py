@@ -1,4 +1,4 @@
-"""T-4674, ADR-N-054: Argo CD keeps dev on main by rendering the helmfile deployment.
+"""T-4674, ADR-N-056: Argo CD keeps dev on main by rendering the helmfile deployment.
 
 The generated component list is the one the generator writes, every enabled release belongs to
 exactly one Application with a sync wave, the hold switch stops every Application but the root,

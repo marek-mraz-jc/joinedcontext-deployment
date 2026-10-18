@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Pin the images of the head of a source repository's `main` (ADR-N-054 §2.4, OPS-57).
+"""Pin the images of the head of a source repository's `main` (ADR-N-056 §2.4, OPS-57).
 
     python3 scripts/pin-images.py platform     # or: portal
 

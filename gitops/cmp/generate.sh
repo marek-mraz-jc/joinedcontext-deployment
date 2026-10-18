@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Argo CD's helmfile plugin (ADR-N-054 §2.2, OPS-54, OPS-55): what one component of one
+# Argo CD's helmfile plugin (ADR-N-056 §2.2, OPS-54, OPS-55): what one component of one
 # environment renders to, as `just dev-apply` would apply it.
 #
 # Argo CD runs it in the plugin sidecar, in its own copy of the repository, with the
@@ -18,7 +18,7 @@ namespace="${ARGOCD_ENV_NAMESPACE:-}"
 }
 selector="component=$component${namespace:+,namespace=$namespace}"
 
-# The smoke gate (ADR-N-054 §2.6): its own chart, carrying the revision it runs for, in the
+# The smoke gate (ADR-N-056 §2.6): its own chart, carrying the revision it runs for, in the
 # plugin's own image.
 if [ "$component" = smoke ]; then
 	image=$(yq '.gitops.helmfile | .repository + ":" + .tag + "@" + .digest' components/gitops/images.yaml)

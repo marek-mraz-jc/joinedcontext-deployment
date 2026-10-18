@@ -5,7 +5,7 @@
 {{- $argocd := index $images "argocd" }}
 {{- $redis := index $images "redis" }}
 {{- $helmfile := index $images "helmfile" }}
-# ADR-N-054: Argo CD for one environment, small enough for the single node (§2.1, 600 Mi of
+# ADR-N-056: Argo CD for one environment, small enough for the single node (§2.1, 600 Mi of
 # requests in all, docs Deployment/15-gitops.md §7).
 # Checklist:
 # - [x] Runs as non-root -> the chart's 999, every capability dropped, read-only root

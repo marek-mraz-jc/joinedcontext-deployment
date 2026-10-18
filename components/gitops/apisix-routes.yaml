@@ -1,5 +1,5 @@
 ---
-# The Argo CD UI and API on argocd.{domain} (ADR-N-054 §2.8). `subDomain` also puts the host on
+# The Argo CD UI and API on argocd.{domain} (ADR-N-056 §2.8). `subDomain` also puts the host on
 # the edge Ingress and in the certificate's SAN list (HTTP-01 per hostname). Argo CD verifies
 # every token itself; the edge only forwards.
 argocd:
