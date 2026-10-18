@@ -156,6 +156,15 @@ def test_the_render_passes_kubeconform(rendered_file):
     assert result.returncode == 0, result.stdout[-3000:] + result.stderr[-3000:]
 
 
+def test_its_generated_secrets_meet_the_declared_lengths(rendered_file):
+    """scripts/check-secrets.py, as CI runs it per environment, holds each further catalogue's
+    Secrets to the lengths components/ckan/secrets.yaml declares for the default instance's."""
+    result = subprocess.run(["python3", str(PROJECT_ROOT / "scripts/check-secrets.py"), str(rendered_file),
+                             str(PROJECT_ROOT / "components")], capture_output=True, text=True)
+    assert result.returncode == 0, result.stdout[-3000:]
+    assert "0 problem(s)" in result.stdout
+
+
 @pytest.mark.parametrize("catalogues, says", [
     ([{"name": "catalogue", "subDomain": "x"}], "not a catalogue name"),
     ([{"name": "Bad_Name", "subDomain": "x"}], "not a catalogue name"),

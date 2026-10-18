@@ -11,6 +11,7 @@ password in a component file fails here instead of quietly weakening a credentia
 """
 
 import base64
+import re
 import sys
 from pathlib import Path
 
@@ -26,6 +27,11 @@ DERIVED_KEYS = {"client-secret": 32}
 # component `secrets.yaml`. The names are read, not matched by prefix: a generated
 # `keycloak-user-*` Secret for a user that file does not name still fails.
 DEMO_USER_KEYS = {"password": 32}
+# Every further catalogue (global.catalogues, T-4636) gets the default instance's CKAN Secrets
+# under its own name, `<family>-<catalogue>` (defaults/environment/secrets.yaml.gotmpl), so each is
+# held to the length components/ckan/secrets.yaml declares for its family.
+CATALOGUE_FAMILIES = ("db-ckan-datastore-read", "db-ckan", "ckan-session", "ckan-admin-credentials")
+CATALOGUE_NAME = re.compile(r"[a-z]([a-z0-9-]{0,14}[a-z0-9])?")
 # Kept Secrets that hold no generated value: the APISIX rule file, which helm seeds with the base
 # and the Portal's reconciler then owns (ADR-N-030, AP-112). `keep` stops a sync deleting it once
 # helm no longer renders it, not a credential rotation; check-rendered-secrets.py and gitleaks
@@ -79,6 +85,10 @@ def main() -> int:
         expected = declared.get(meta["name"])
         if expected is None and meta["name"].startswith(DERIVED_PREFIX):
             expected = DERIVED_KEYS
+        if expected is None:
+            expected = next((declared.get(family) for family in CATALOGUE_FAMILIES
+                             if meta["name"].startswith(family + "-")
+                             and CATALOGUE_NAME.fullmatch(meta["name"][len(family) + 1:])), None)
         if expected is None:
             problems.append(f"{where}: generated Secret with no declaration in any components/*/secrets.yaml")
             continue
