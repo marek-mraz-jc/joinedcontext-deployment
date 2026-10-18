@@ -67,8 +67,12 @@ spec:
                       name: {{ $.Values.apiToken.secret }}
                       key: token
                 # The converted datasets and the base their Endpoints answer under (T-4279).
+                # The generated file names the catalogue it was generated against; each instance's
+                # datasets live on its own catalogue (T-4678, T-4679).
+                {{- $datasets := $.Files.Get "files/od-datasets.json" }}
+                {{- with $.Values.harvest.datasetsBase }}{{ $datasets = replace . (printf "%s/" (trimSuffix "/" $.Values.siteUrl)) $datasets }}{{ end }}
                 - name: OD_DATASETS
-                  value: {{ $.Files.Get "files/od-datasets.json" | fromJson | toJson | quote }}
+                  value: {{ $datasets | fromJson | toJson | quote }}
                 - name: OD_GATEWAY
                   value: {{ $.Values.harvest.gateway | default "" | quote }}
                 - name: HARVEST_CONFIG

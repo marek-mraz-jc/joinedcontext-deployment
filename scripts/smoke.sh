@@ -847,7 +847,7 @@ fi
 echo "catalogue"
 if has_route ckan; then
 	# The catalogue has a host of its own, derived the way the route derives it.
-	catalogue="${JC_CATALOGUE_URL:-https://data.${base#https://}}"
+	catalogue="${JC_CATALOGUE_URL:-https://opendata.${base#https://}}"
 	status 200 "catalogue front page over valid TLS" "$catalogue/"
 	status 200 "catalogue Action API answers" "$catalogue/api/3/action/status_show"
 	# The theme is the whole point of OPS-47: the front page has to carry the instance's

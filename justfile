@@ -469,34 +469,30 @@ dev-apply:
 	helmfile -f deployment/helmfile.yaml -e dev sync --concurrency {{helmfile_concurrency}}
 	./scripts/wait-rollouts.sh dev
 
-# Verify the dev cluster (see scripts/smoke.sh)
+# The checks dev-smoke and prod-smoke share, against one instance (its domain and namespace)
 [group('dev cluster')]
-dev-smoke:
+_smoke domain namespace:
 	#!/usr/bin/env bash
 	set -euo pipefail
-	just _dev-guard
 	rc=0
 	# One lookup, then every curl goes to that address (T-3420): the sandbox resolver stalls up
 	# to 15 s per lookup, which ate the 20 s request budget and failed checks the cluster passed.
 	# TLS is still verified per hostname; the wildcard record is checked here instead.
-	edge=$(getent ahostsv4 "{{ dev_domain }}" | awk 'NR==1{print $1}')
-	wild=$(getent ahostsv4 "smoke-$RANDOM.apps.{{ dev_domain }}" | awk 'NR==1{print $1}')
+	edge=$(getent ahostsv4 "{{ domain }}" | awk 'NR==1{print $1}')
+	wild=$(getent ahostsv4 "smoke-$RANDOM.apps.{{ domain }}" | awk 'NR==1{print $1}')
 	if [ -z "$edge" ] || [ "$wild" != "$edge" ]; then
-		echo "  FAIL  *.{{ dev_domain }} resolves to '${wild}', the apex to '${edge}'"; exit 1
+		echo "  FAIL  *.{{ domain }} resolves to '${wild}', the apex to '${edge}'"; exit 1
 	fi
 	export CURL_HOME; CURL_HOME=$(mktemp -d); trap 'rm -rf "$CURL_HOME"' EXIT
 	printf 'resolve = *:443:%s\nresolve = *:80:%s\n' "$edge" "$edge" >"$CURL_HOME/.curlrc"
-	./scripts/smoke.sh "https://{{ dev_domain }}" "https://idm.{{ dev_domain }}" || rc=1
-	# A real forge login as the demo people (T-1422): the button can fail with the rest green.
-	echo "forge login"
-	./scripts/smoke-forge-login.sh "https://{{ dev_domain }}" || rc=1
+	JC_REALM="{{ namespace }}" ./scripts/smoke.sh "https://{{ domain }}" "https://idm.{{ domain }}" || rc=1
 	# A CronJob whose newest run failed (T-4385): a harvest dead since the night is no green smoke.
 	echo "cron jobs"
-	kubectl -n dev get jobs -o json | python3 scripts/failed-jobs.py || rc=1
+	kubectl -n "{{ namespace }}" get jobs -o json | python3 scripts/failed-jobs.py || rc=1
 	# The background map (T-4638): a range request answers 206, and the monthly refresh kept the
 	# file younger than 40 days (Last-Modified is the file's own time).
 	echo "basemap"
-	hdr=$(curl -sS -o /dev/null -D - -m 20 -H 'Range: bytes=0-16383' "https://tiles.{{ dev_domain }}/basemap.pmtiles" 2>&1 | tr -d '\r' || true)
+	hdr=$(curl -sS -o /dev/null -D - -m 20 -H 'Range: bytes=0-16383' "https://tiles.{{ domain }}/basemap.pmtiles" 2>&1 | tr -d '\r' || true)
 	status=$(printf '%s\n' "$hdr" | awk 'NR == 1 { print $2 }')
 	lm=$(printf '%s\n' "$hdr" | sed -n 's/^[Ll]ast-[Mm]odified: //p')
 	modified=$( { [ -n "$lm" ] && date -u -d "$lm" +%s; } 2>/dev/null || echo 0)
@@ -507,10 +503,10 @@ dev-smoke:
 	# The chart renderer (T-4641): the frame that runs a spec may connect nowhere, and CKAN answers
 	# CORS to the host page that reads the views.
 	echo "viz"
-	csp=$(curl -sS -o /dev/null -D - -m 20 "https://viz.{{ dev_domain }}/render.html" 2>&1 | tr -d '\r' | sed -n 's/^[Cc]ontent-[Ss]ecurity-[Pp]olicy: //p')
-	cors=$(curl -sS -o /dev/null -D - -m 20 -H "Origin: https://viz.{{ dev_domain }}" "https://data.{{ dev_domain }}/api/3/action/status_show" 2>&1 | tr -d '\r' | sed -n 's/^[Aa]ccess-[Cc]ontrol-[Aa]llow-[Oo]rigin: //p')
+	csp=$(curl -sS -o /dev/null -D - -m 20 "https://viz.{{ domain }}/render.html" 2>&1 | tr -d '\r' | sed -n 's/^[Cc]ontent-[Ss]ecurity-[Pp]olicy: //p')
+	cors=$(curl -sS -o /dev/null -D - -m 20 -H "Origin: https://viz.{{ domain }}" "https://opendata.{{ domain }}/api/3/action/status_show" 2>&1 | tr -d '\r' | sed -n 's/^[Aa]ccess-[Cc]ontrol-[Aa]llow-[Oo]rigin: //p')
 	case "$csp" in *"connect-src 'none'"*) ;; *) echo "  FAIL  viz: render.html answered no connect-src 'none' ('${csp}')"; rc=1;; esac
-	if [ "$cors" != "https://viz.{{ dev_domain }}" ]; then echo "  FAIL  viz: CKAN answered CORS '${cors}' to the renderer"; rc=1
+	if [ "$cors" != "https://viz.{{ domain }}" ]; then echo "  FAIL  viz: CKAN answered CORS '${cors}' to the renderer"; rc=1
 	else echo "  ok    viz: the renderer connects nowhere, CKAN answers its host page"; fi
 	# The postgres data volume (T-4414): the broker's history once filled it ~30 GB a week, every
 	# smoke green. Every instance of the cluster, wherever its namespace is; no reading fails too.
@@ -522,6 +518,19 @@ dev-smoke:
 		kubectl -n "${pod%%/*}" exec "${pod##*/}" -c postgres -- df -P /var/lib/postgresql/data 2>&1 \
 			| python3 scripts/disk-full.py --max 85 --label "postgres data of ${pod##*/}" || rc=1
 	done
+	exit "$rc"
+
+# Verify the dev cluster (see scripts/smoke.sh)
+[group('dev cluster')]
+dev-smoke:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	just _dev-guard
+	rc=0
+	just _smoke "{{ dev_domain }}" dev || rc=1
+	# A real forge login as the demo people (T-1422): the button can fail with the rest green.
+	echo "forge login"
+	./scripts/smoke-forge-login.sh "https://{{ dev_domain }}" || rc=1
 	exit "$rc"
 
 # Validate dev against main (T-2799): drift, image pins and signatures, NetworkPolicy probes,
@@ -572,3 +581,41 @@ dev-destroy:
 		kubectl delete namespace "$ns" --ignore-not-found --timeout=300s || true
 	done
 	echo "remaining platform namespaces:"; kubectl get ns -o name | sed 's|namespace/||' | grep -E '^(dev|jc-operators)' || echo "  none"
+
+# ---------------------------------------------------------------------------
+# The production instance smartcity (T-4678, docs Deployment/14): its own cluster, never dev.
+# Run with KUBECONFIG=.secrets/kubeconfig-prod.yaml per command; the guard refuses anything else.
+# ---------------------------------------------------------------------------
+
+prod_domain := 'smartcity.joinedcontext.com'
+prod_node_ip := '2.28.56.179'
+
+# Refuse to touch anything but the production cluster
+[group('prod cluster')]
+_prod-guard:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	ip="{{ prod_node_ip }}"
+	server=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}' 2>/dev/null || true)
+	case "$server" in
+		"https://${ip}:"*|"https://${ip}") ;;
+		*) echo "refusing: current kube context points at '${server:-<none>}', not the production cluster ($ip). Set KUBECONFIG=.secrets/kubeconfig-prod.yaml" >&2; exit 1 ;;
+	esac
+
+# Apply the smartcity environment to the production cluster and wait for every rollout
+[group('prod cluster')]
+prod-apply:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	just _prod-guard
+	just _dev-assemble
+	helmfile -f deployment/helmfile.yaml -e smartcity sync --concurrency {{helmfile_concurrency}}
+	./scripts/wait-rollouts.sh smartcity
+
+# Verify the production instance (scripts/smoke.sh and the shared checks; no demo login exists there)
+[group('prod cluster')]
+prod-smoke:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	just _prod-guard
+	just _smoke "{{ prod_domain }}" smartcity

@@ -286,6 +286,10 @@ ROUTE_CLASSES = {
         "reach": TERMINATES, "cacheable": False, "framing": "DENY",
         "why": "an old address of a public data surface, anonymous: 308 to the same path on api.{domain} (T-4630)",
     },
+    "ckan-old-host": {
+        "reach": TERMINATES, "cacheable": False, "framing": "DENY",
+        "why": "data.{domain}, the catalogue's old host, answers 301 to opendata.{domain} with the same path and never dials an upstream (T-4679)",
+    },
     "ckan-redirect": {
         "reach": TERMINATES, "cacheable": False, "framing": "DENY",
         "why": "/ckan on the apex answers 302 to the catalogue host and never dials an upstream",

@@ -1,0 +1,130 @@
+"""T-4678: the production instance smartcity carries dev's seeds and none of dev's test objects.
+
+smartcity renders the production profile with dev's values files (`global.valuesProfile`), so it
+holds the cities' projects, pipelines and Apps that `test_production_is_not_dev.py` reports as a
+demo for the generic production example. This module runs that file's other detectors as they
+are and replaces the three that a city seed trips by what they stand for: no demo account and no
+binding to one, no eval or conformance object, no demo feed, and placeholder hosts only inside an
+App's own test fixtures. It also proves the production guard of the recipes refuses dev.
+"""
+
+import base64
+import json
+import os
+import re
+import shutil
+import subprocess
+from datetime import datetime, timezone
+
+import pytest
+
+from test_dev_recipes import DEV_SERVER, PROJECT_ROOT, kubeconfig
+from test_production_is_not_dev import DETECTORS, name_of, strings
+
+PROD_SERVER = "https://2.28.56.179:6443"
+DOMAIN = "smartcity.joinedcontext.com"
+# The detectors a city seed trips by design; each is replaced by a narrower test below.
+REPLACED = {"demo_accounts_and_feeds", "demo_people", "placeholder_domains"}
+
+
+@pytest.fixture(scope="module")
+def smartcity(rendered):
+    return rendered("smartcity")
+
+
+def realm(docs) -> dict:
+    """The realm keycloak-config-cli imports, from its Secret."""
+    secret = next(d for d in docs if d.get("kind") == "Secret" and d["metadata"]["name"].endswith("config-cli-config-realms"))
+    return json.loads(base64.b64decode(secret["data"]["smartcity.json"]))
+
+
+def config_maps(docs, prefix=""):
+    return [d for d in docs if d.get("kind") == "ConfigMap" and d["metadata"]["name"].startswith(prefix)]
+
+
+@pytest.mark.parametrize("detector", sorted(set(DETECTORS) - REPLACED))
+def test_smartcity_renders_nothing_of_dev(detector, smartcity):
+    assert DETECTORS[detector](smartcity) == []
+
+
+def test_no_demo_account_exists_or_is_bound(smartcity):
+    secrets = [name_of(d) for d in smartcity if (d.get("metadata") or {}).get("name", "").startswith("keycloak-user-demo")]
+    bindings = sorted(
+        f"{name_of(d)}: {key}"
+        for d in config_maps(smartcity, "gitea-")
+        for key, text in (d.get("data") or {}).items()
+        if re.search(r"(?m)^\s*-\s*(user|username|email):\s*demo\.[a-z]+@", text)
+    )
+    realm_users = sorted(u["username"] for u in realm(smartcity)["users"] if u["username"].startswith("demo."))
+    assert (secrets, bindings, realm_users) == ([], [], [])
+
+
+def test_the_owner_is_the_realm_account_and_holds_the_stewards_bindings(smartcity):
+    owner = "marek.mraz@joinedcontext.com"
+    humans = [u for u in realm(smartcity)["users"] if not u["username"].startswith("service-account-")]
+    assert [u["username"] for u in humans] == [owner]
+    assert humans[0]["credentials"][0]["value"] == "$(USER_PASSWORD_INITIAL)"
+    # keycloak-config-cli fails the whole import on a membership of a group the realm lacks.
+    groups = {g["path"] for g in realm(smartcity)["groups"]}
+    assert set(humans[0]["groups"]) <= groups
+    admins = [
+        text for d in config_maps(smartcity, "gitea-bootstrap")
+        for key, text in (d.get("data") or {}).items() if key == "users__assignments__admins.yaml"
+    ]
+    assert admins and all(owner in text for text in admins)
+
+
+def test_no_eval_or_conformance_object_is_seeded(smartcity):
+    keys = [key for d in config_maps(smartcity, "gitea-") for key in (d.get("data") or {})]
+    tests = [k for k in keys if re.search(r"__(deployments|sources)__[^_]*eval[^/]*\.yaml$|__serviceaccounts__conformance\.yaml$|__policies__conformance-", k)]
+    clients = [name_of(d) for d in smartcity for _, s in strings(d) if "banskabystrica-conformance" in s]
+    feeds = [name_of(d) for d in smartcity
+             if ((d.get("metadata") or {}).get("labels") or {}).get("app.kubernetes.io/instance", "").startswith("demo-feeds")]
+    assert (tests, sorted(set(clients)), feeds) == ([], [], [])
+    # The filter keeps the cities' own assistants and sources: it is not a blanket drop.
+    assert any(k.endswith("__assistant__deployments__data.yaml") for k in keys)
+
+
+def test_placeholder_hosts_only_inside_an_apps_own_test_fixtures(smartcity):
+    outside = [d for d in smartcity if not name_of(d).startswith("ConfigMap/smartcity/gitea-sample-apps-")]
+    assert DETECTORS["placeholder_domains"](outside) == []
+
+
+def test_the_instance_is_its_own_host_on_traefik_with_staging_certificates_first(smartcity):
+    ingresses = [d for d in smartcity if d.get("kind") == "Ingress"]
+    assert ingresses
+    assert {d["spec"].get("ingressClassName") for d in ingresses} == {"traefik"}
+    issuers = {d["spec"]["issuerRef"]["name"] for d in smartcity if d.get("kind") == "Certificate"}
+    assert issuers == {"letsencrypt-staging"}
+    hosts = {r["host"] for d in ingresses for r in d["spec"].get("rules", [])}
+    assert {DOMAIN, f"idm.{DOMAIN}", f"opendata.{DOMAIN}", f"data.{DOMAIN}"} <= hosts
+    assert all(h == DOMAIN or h.endswith("." + DOMAIN) for h in hosts)
+
+
+def test_the_old_catalogue_host_answers_301_to_the_same_path(smartcity):
+    routes = "\n".join(s for d in config_maps(smartcity, "apisix-standalone") for _, s in strings(d))
+    assert "https://opendata.${DOMAIN}$request_uri" in routes or f"https://opendata.{DOMAIN}$request_uri" in routes
+
+
+def test_security_txt_expires_in_the_future():
+    text = (PROJECT_ROOT / ".ci/example-deployments/environments/smartcity/global.yaml.gotmpl").read_text()
+    expires = re.search(r'expires: "([^"]+)"', text).group(1)
+    assert datetime.fromisoformat(expires.replace("Z", "+00:00")) > datetime.now(timezone.utc)
+
+
+def run_prod_guard(tmp_path, server):
+    env = dict(os.environ, KUBECONFIG=str(kubeconfig(tmp_path, server)))
+    return subprocess.run(["just", "_prod-guard"], cwd=PROJECT_ROOT, env=env, capture_output=True, text=True, check=False)
+
+
+@pytest.mark.skipif(shutil.which("just") is None or shutil.which("kubectl") is None, reason="just and kubectl")
+@pytest.mark.parametrize("server", [DEV_SERVER, "https://2.28.56.17:6443", "https://12.28.56.179:6443"])
+def test_the_prod_guard_refuses_dev_and_lookalikes(tmp_path, server):
+    result = run_prod_guard(tmp_path, server)
+    assert result.returncode != 0 and "refusing" in result.stderr
+
+
+@pytest.mark.skipif(shutil.which("just") is None or shutil.which("kubectl") is None, reason="just and kubectl")
+def test_the_prod_guard_accepts_the_production_cluster(tmp_path):
+    result = run_prod_guard(tmp_path, PROD_SERVER)
+    assert result.returncode == 0, result.stderr

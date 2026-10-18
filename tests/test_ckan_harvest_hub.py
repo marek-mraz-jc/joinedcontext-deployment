@@ -65,7 +65,7 @@ def name_of(ident):
 def converted(monkeypatch):
     """Marks source items as converted: their rows are entities of an Endpoint whose model has
     every artefact. Returns the setter; no item is converted until it is called."""
-    monkeypatch.setattr(harvest, "OD_GATEWAY", "https://dev.joinedcontext.com")
+    monkeypatch.setattr(harvest, "OD_GATEWAY", "https://api.dev.joinedcontext.com")
     monkeypatch.setattr(harvest, "OD_DATASETS", {})
     monkeypatch.setattr(harvest, "od_models", lambda endpoint: model_index(["PointOfInterest"]))
 
@@ -185,7 +185,7 @@ def test_a_dataset_carries_licence_publisher_and_none_of_the_hubs_links(converte
     assert extras["license_url"] == "https://creativecommons.org/licenses/by/4.0/"
     assert extras["source_id"] == CULTURE and extras["modified"].endswith("Z")
     # EP-118: no Hub CSV, GeoJSON, Esri REST or Shapefile link, only the platform's (T-4324).
-    assert all(r["url"].startswith("https://dev.joinedcontext.com/") or r["url"].startswith("wss://dev.")
+    assert all(r["url"].startswith("https://api.dev.joinedcontext.com/") or r["url"].startswith("wss://api.dev.")
                for r in package["resources"])
     assert not {"Esri REST", "SHP", "ZIP"} & {r["format"] for r in package["resources"]}
     assert "<" not in package["notes"] and "style=" not in package["notes"]
@@ -198,7 +198,7 @@ def test_a_converted_dataset_lists_the_platform_apis_and_its_model_and_an_unconv
     formalisms; a dataset nobody converted lists nothing, and neither does one whose model lacks
     an artefact (T-4324)."""
     monkeypatch.setattr(harvest, "OD_DATASETS", OD_DATASETS)
-    monkeypatch.setattr(harvest, "OD_GATEWAY", "https://dev.joinedcontext.com")
+    monkeypatch.setattr(harvest, "OD_GATEWAY", "https://api.dev.joinedcontext.com")
     monkeypatch.setattr(harvest, "od_models", lambda endpoint: model_index(["PointOfInterest"]))
     item = next(i for i in items() if i["id"] == CULTURE)
     package = harvest.dataset(item, item["title"], dev_source())
@@ -206,12 +206,12 @@ def test_a_converted_dataset_lists_the_platform_apis_and_its_model_and_an_unconv
     model = [r for r in package["resources"] if r not in apis]
     entry = OD_DATASETS[package["name"]]
     assert entry["location"], "the culture layer has points, so OGC API Features is listed"
-    root = f"https://dev.joinedcontext.com/api/endpoint/{entry['endpoint']}/"
+    root = f"https://api.dev.joinedcontext.com/api/endpoint/{entry['endpoint']}/"
     urls = [r["url"] for r in apis]
     assert [u.split("?")[0].removeprefix(root) for u in urls[:-1]] == [
         "ngsi-ld/v1/entities", "file.csv",
         "ogc/features/collections/PointOfInterest/items", "odata/v4/PointOfInterest", "mcp"]
-    assert apis[-1]["url"] == "wss://dev.joinedcontext.com/api/endpoint/" + entry["endpoint"] + "/ws"
+    assert apis[-1]["url"] == "wss://api.dev.joinedcontext.com/api/endpoint/" + entry["endpoint"] + "/ws"
     dataset = quote(entry["dataset"], safe="")
     mine = "?type=PointOfInterest&q=isPartOf%3D%3D%22" + dataset + "%22"
     assert urls[0].endswith(mine) and urls[1].endswith(mine)
@@ -260,7 +260,7 @@ def test_a_converted_dataset_lists_the_platform_apis_and_its_model_and_an_unconv
 
 
 def test_the_model_index_is_read_once_per_endpoint_and_a_failed_read_raises(monkeypatch):
-    monkeypatch.setattr(harvest, "OD_GATEWAY", "https://dev.joinedcontext.com")
+    monkeypatch.setattr(harvest, "OD_GATEWAY", "https://api.dev.joinedcontext.com")
     monkeypatch.setattr(harvest, "_OD_MODELS", {})
     asked = []
 
@@ -286,7 +286,7 @@ def test_the_model_index_is_read_once_per_endpoint_and_a_failed_read_raises(monk
     monkeypatch.setattr(harvest._request, "urlopen", urlopen)
     assert harvest.od_models("ep")[0]["types"] == ["T"]
     harvest.od_models("ep")
-    assert asked == ["https://dev.joinedcontext.com/api/endpoint/ep/schema/index.json"]
+    assert asked == ["https://api.dev.joinedcontext.com/api/endpoint/ep/schema/index.json"]
     with pytest.raises(OSError):
         harvest.od_models("broken")
 
@@ -294,8 +294,10 @@ def test_the_model_index_is_read_once_per_endpoint_and_a_failed_read_raises(monk
 def test_the_cronjob_carries_the_mapping_and_the_dev_gateway(rendered):
     container = by_name(rendered("dev"), "CronJob", "ckan-harvest-bbsk")["spec"]["jobTemplate"]["spec"]["template"]["spec"]["containers"][0]
     env = {e["name"]: e.get("value") for e in container["env"]}
-    assert json.loads(env["OD_DATASETS"]) == OD_DATASETS
-    assert env["OD_GATEWAY"] == "https://dev.joinedcontext.com"
+    # The generated file names dev's old catalogue host; the CronJob carries the instance's own (T-4679).
+    moved = json.loads(json.dumps(OD_DATASETS).replace("https://data.dev.joinedcontext.com/", "https://opendata.dev.joinedcontext.com/"))
+    assert json.loads(env["OD_DATASETS"]) == moved
+    assert env["OD_GATEWAY"] == "https://api.dev.joinedcontext.com"
     assert container["args"][0].startswith((ROOT / "charts/ckan/files/od-standards.py").read_text())
 
 
