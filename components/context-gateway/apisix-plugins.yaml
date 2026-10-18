@@ -508,3 +508,14 @@ api-moved:
           X-Frame-Options: "DENY"
           Referrer-Policy: "strict-origin-when-cross-origin"
           Cache-Control: "no-store, no-cache, must-revalidate"
+    # OPS-34: the 308 carries no policy of its own, so the edge adds the DENY baseline.
+    serverless-post-function:
+      phase: header_filter
+      functions:
+        - >-
+          return function()
+            if ngx.header["Content-Security-Policy"] == nil then
+              ngx.header["Content-Security-Policy"] =
+                "frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
+            end
+          end
