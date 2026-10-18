@@ -51,5 +51,8 @@ context-broker:
     # constant-default column to temporal_entities (catalog only, T-4310); schema and
     # temporal_entities dumped before the apply (t4310/ on the postgres volume). No new runtime
     # ANTARES_* key over cc368be.
-    tag: '7535b90'
-    digest: 'sha256:73bfef0c88dc1343dda4a4397e71729a4298db7d319e580e080f5f0a07d671da'
+    # Antares dev 7ff20d6 (trains to 20261018-0050, T-4543 and 85 commits over 7535b90): Subscriptions
+    # made over a socket are leased (ANTARES_WS_SUBSCRIPTION_LEASE_SECS, default 121) and swept, so
+    # a closed socket or a dead gateway leaves none behind. No migration over 7535b90.
+    tag: '7ff20d6'
+    digest: 'sha256:d610253c959e5ac944ad55c9e13083fbffa21026c55e4e2e3812e05a4facc499'
