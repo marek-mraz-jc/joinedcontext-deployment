@@ -107,6 +107,14 @@ global:
   #       storageClass: ''
   contextBrokers: []
 
+  # Additional CKAN catalogues beside the default instance `catalogue` (T-4636). Each entry names
+  # a top-level values block of the same name, shaped like `catalogue`: its own subDomain, site
+  # title and logo, samples, and an optional public assistant (`assistant` publicId plus
+  # `assistantSeed`), which the Gitea seed renders into the block's project.
+  #   catalogues:
+  #     - name: catalogue-example
+  catalogues: []
+
   # Service mesh configuration
   serviceMesh:
     enable: true
