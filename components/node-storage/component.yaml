@@ -3,19 +3,18 @@ component: node-storage
 parts:
   - name: local-path
     hooks:
-      # The ConfigMap is k3s's until Helm adopts it: helm refuses an object it did not create
-      # unless it carries the release's ownership annotations and label, and its server-side
-      # apply conflicts with k3s's field manager ("deploy@<node>") until that ownership is cleared.
+      # The ConfigMap is k3s's until this release makes it. Helm cannot adopt it in place: its
+      # server-side apply conflicts with k3s's field manager ("deploy@<node>"), and clearing the
+      # managed fields only renames that owner ("before-first-apply"). So a ConfigMap any other
+      # manager touched is deleted and the release creates it a moment later; the provisioner
+      # reads it per volume, so only a volume made in that second would retry.
       - events: ["presync"]
         showlogs: true
         command: sh
         args:
           - -ec
           - |
-            kubectl -n kube-system get configmap local-path-config >/dev/null 2>&1 || exit 0
-            managers=$(kubectl -n kube-system get configmap local-path-config -o jsonpath='{.metadata.managedFields[*].manager}')
-            case " $managers " in *" deploy@"*) ;; *) exit 0 ;; esac
-            kubectl -n kube-system patch configmap local-path-config --type=merge -p '{"metadata":{"managedFields":[{}]}}'
-            kubectl -n kube-system annotate configmap local-path-config --overwrite \
-              meta.helm.sh/release-name=node-storage-local-path meta.helm.sh/release-namespace=kube-system
-            kubectl -n kube-system label configmap local-path-config --overwrite app.kubernetes.io/managed-by=Helm
+            managers=$(kubectl -n kube-system get configmap local-path-config -o jsonpath='{.metadata.managedFields[*].manager}' 2>/dev/null) || exit 0
+            others=$(printf '%s\n' $managers | grep -vx helm || true)
+            [ -n "$managers" ] && [ -z "$others" ] && exit 0
+            kubectl -n kube-system delete configmap local-path-config
