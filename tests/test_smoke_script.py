@@ -50,6 +50,9 @@ def answer(code):
     said = str(code)
     if "%header{x-ratelimit-reset}" in write_out:
         said += " " + str(spec.get("rateLimitReset", ""))
+    # A write-out naming the redirect target gets the one its URL is moved to (T-4630).
+    if "%{redirect_url}" in write_out:
+        said += " " + lookup("locations", "")
     return said + ("\\n" if "\\\\n" in write_out else "")
 
 
@@ -367,6 +370,8 @@ EDGE_REDIRECT = ("https://idm.example.test/realms/dev/protocol/openid-connect/au
 
 # First match wins, so the narrower keys come first.
 HEALTHY_STATUSES = [
+    # The apex moves an anonymous call of the hub to the data host (T-4630, EP-128).
+    ["example.test/api/mcp/.well-known/oauth-protected-resource?x=1", 308],
     # Event keeps no history, so no Policy grants its temporal read (T-4372).
     [["hsevents", "/temporal/entities"], 404],
     ["/invoke", 401],
@@ -434,9 +439,13 @@ OGC_ITEMS = ('{"type":"FeatureCollection","features":[{"type":"Feature","id":"ur
              '"geometry":null,"properties":{"name":"Kamppi"}}]}')
 OGC_HEADERS = "HTTP/2 200\r\ncontent-type: application/geo+json\r\n"
 
+HUB_METADATA = '{"resource":"https://api.example.test/api/mcp","authorization_servers":["https://api.example.test"]}'
+
 HEALTHY = {
     "ogcSeed": OGC_SEED,
-    "routes": ["portal-ui", "portal-api", "portal-public-assets", "context-space", "context-endpoint", "gitea-forge", "ckan"],
+    "routes": ["portal-ui", "portal-api", "portal-public-assets", "context-space", "context-endpoint", "context-mcp-hub",
+               "gitea-forge", "ckan"],
+    "locations": [["oauth-protected-resource?x=1", "https://api.example.test/api/mcp/.well-known/oauth-protected-resource?x=1"]],
     # The Portal's content-hashed chunks and CKAN's fingerprinted webassets are kept a year (T-4201).
     "headers": [["/assets/", "HTTP/2 200\r\ncache-control: public, max-age=31536000, immutable\r\n"],
                 ["/webassets/", "HTTP/2 200\r\ncache-control: public, max-age=31536000, immutable\r\n"]],
@@ -449,7 +458,8 @@ HEALTHY = {
         ["hsl-transport.apps.example.test/", "HTTP/2 200\r\n" + APP_POLICY],
     ],
     "helsinkiSeed": HELSINKI_SEED,
-    "bodies": [["/ogc/features/collections/", OGC_ITEMS],
+    "bodies": [["https://api.example.test/api/mcp/.well-known/oauth-protected-resource", HUB_METADATA],
+               ["/ogc/features/collections/", OGC_ITEMS],
                ["/ogc/features/collections", OGC_COLLECTIONS],
                ["/api/v1/projects/helsinki/apps/helsinki-", BUILT_APP],
                ["/api/v1/projects/helsinki/apps", PUBLISHED_APPS],
@@ -1017,7 +1027,8 @@ def test_absent_routes_skip_instead_of_passing(tmp_path):
     assert "skip  chunked body (route portal-api not configured" in result.stdout
     assert "skip  App routes (route portal-ui not configured" in result.stdout
     assert "skip  ogc api features (route context-endpoint not configured" in result.stdout
-    assert "10 skipped" in result.stdout
+    assert "skip  api host (route context-mcp-hub not configured" in result.stdout
+    assert "11 skipped" in result.stdout
 
 
 def test_an_app_old_path_that_serves_or_sets_a_cookie_fails_the_run(tmp_path):
@@ -1779,3 +1790,18 @@ def test_only_a_runner_refusal_that_still_recurs_fails_the_run(tmp_path):
                  "https://example.test", "https://idm.example.test")
     assert result.returncode == 1
     assert "FAIL  the pipeline runner refused streams: Streams CRUD Error: failed to init processor: symbol" in result.stdout
+
+
+def test_the_data_host_is_checked_and_the_old_address_must_move(tmp_path):
+    """T-4630, EP-128: the hub answers on `api.{domain}` from the gateway, and the apex address
+    people copied is a 308 to the same path and query there."""
+    result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
+    assert "  ok    the api host serves the hub from the gateway" in result.stdout
+    assert "  ok    the apex sends the old hub address to the api host (308)" in result.stdout
+    # An apex that still serves the hub itself, and a data host that is not the gateway, both fail.
+    spec = dict(HEALTHY, statuses=HEALTHY_STATUSES[1:], locations=[],
+                bodies=[["https://api.example.test/api/mcp/.well-known", "<html>404</html>"], *HEALTHY["bodies"][1:]])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode != 0
+    assert "  FAIL  the api host does not serve the hub's metadata naming https://api.example.test/api/mcp" in result.stdout
+    assert "  FAIL  the apex answers the old hub address 200 without a Location, not 308 to https://api.example.test" in result.stdout

@@ -57,7 +57,14 @@ probes:
 # The issuer is what tokens carry in `iss`; the JWKS is fetched in-cluster over plain http,
 # which the gateway insists on (a TLS client behind the mesh would verify nothing useful).
 # JC_GATEWAY_PUBLIC_URL makes the RFC 8707 resource indicator https://{host}/api/endpoint/{slug}
-# an accepted audience next to the bare slug (PF-45).
+# an accepted audience next to the bare slug (PF-45); it is the public data host `api.{domain}`
+# (ADR-N-052 §2.1, EP-128, T-4630), the issuer of the gateway's anonymous OAuth server too.
+# The anonymous OAuth server's signing key (ADR-N-052 §2.2.6, T-4630), from the Secret
+# components/context-gateway/secrets.yaml generates; never a value in this file.
+envSecret:
+  JC_GATEWAY_OAUTH_KEY:
+    secret: context-gateway-oauth-key
+    key: key
 env:
   JC_GATEWAY_BROKER_URL: "http://context-broker.{{ (index .Values "context-broker" "broker" "namespace") }}.svc.cluster.local:8080"
   # Every ContextBroker beside `main`, `{broker}` its name (ADR-N-046 §2.3, T-3989): the release
@@ -68,7 +75,7 @@ env:
   JC_GATEWAY_INTERNAL_BIND: "0.0.0.0:8082"
   # The runner's headless Service: a broker admits a tokenless CONNECT only from its pods (T-4004).
   JC_GATEWAY_MQTT_RUNNER_HOST: "pipeline-runner-pods.{{ index .Values "pipeline-runner" "runner" "namespace" }}.svc.cluster.local"
-  JC_GATEWAY_PUBLIC_URL: "https://{{ $global.domain }}"
+  JC_GATEWAY_PUBLIC_URL: "https://api.{{ $global.domain }}"
   JC_OIDC_ISSUER: "https://idm.{{ $global.domain }}/realms/{{ $global.instanceSlug }}"
   # The gateway's own client on the Portal's internal listener (T-1500, PF-46, AG-52), proved by
   # this pod's projected token and no secret (PF-47, T-2868; the volume below).
