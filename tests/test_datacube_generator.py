@@ -168,6 +168,8 @@ def test_a_unit_dimension_is_the_unit_text_and_every_other_dimension_a_key(tmp_p
     assert len({e["id"] for e in entities}) == len(entities) == 132
     e = next(e for e in entities if e["refPeriod"]["value"] == "2015" and e["dimensionKey"]["value"] == "TOTAL-SPECU_RATE-TOTAL")
     assert e["unitText"]["value"] == "v %" and e["indicator"]["value"] == "U_PS_0001" and e["kpiValue"]["value"] == 17.3
+    # T-4680: what the number is, in the publisher's words, so a reader of the entity alone knows it.
+    assert e["name"]["value"] == "Miera rizika chudoby alebo sociálneho vylúčenia"
     assert e["isPartOf"]["value"] == "https://data.dev.joinedcontext.com/dataset/susr-ps1002rs"
     for e in entities:
         assert not open_data.schema_errors(SCHEMA, e)

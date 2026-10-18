@@ -43,6 +43,15 @@ slots:
     required: true
     annotations:
       ngsi_ld_kind: Property
+  name:
+    slot_uri: sdm-kpi:name
+    description: >-
+      What the number is, in the publisher's own words: the label of its indicator, such as
+      `Miera nezamestnanosti (v %)`, or the table's title when the cube names no indicator.
+      Absent when the publisher labels neither.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
   refArea:
     slot_uri: sdmx-dim:refArea
     description: >-
@@ -130,6 +139,7 @@ classes:
     slots:
       - dataSet
       - indicator
+      - name
       - refArea
       - refPeriod
       - dimensionKey
