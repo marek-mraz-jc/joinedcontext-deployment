@@ -64,6 +64,9 @@ def test_the_owner_is_the_realm_account_and_holds_the_stewards_bindings(smartcit
     humans = [u for u in realm(smartcity)["users"] if not u["username"].startswith("service-account-")]
     assert [u["username"] for u in humans] == [owner]
     assert humans[0]["credentials"][0]["value"] == "$(USER_PASSWORD_INITIAL)"
+    # keycloak-config-cli fails the whole import on a membership of a group the realm lacks.
+    groups = {g["path"] for g in realm(smartcity)["groups"]}
+    assert set(humans[0]["groups"]) <= groups
     admins = [
         text for d in config_maps(smartcity, "gitea-bootstrap")
         for key, text in (d.get("data") or {}).items() if key == "users__assignments__admins.yaml"
