@@ -1,4 +1,4 @@
-# TEMPORARY (T-4359): the open-data eval's copy of `data` on deepseek/deepseek-v4.1-flash, router and answer alike.
+# TEMPORARY (T-4359, T-4656): the open-data eval's copy of `data` on openai/gpt-6-luna, router and answer alike.
 # Only metadata.name, publicId and model differ from `data`, which renders from dev's ckan.catalogue
 # (components/ckan/seed/assistant.yaml.gotmpl, T-4636)
 # (tests/test_public_assistant_seed.py holds it to that); its $1 a day is its own, never the
@@ -6,7 +6,7 @@
 apiVersion: joinedcontext.com/v1alpha1
 kind: AssistantDeployment
 metadata:
-  name: data-eval-deepseek
+  name: data-eval-luna
   namespace: bbsk
 spec:
   # The data catalogue's one general assistant (T-4342, owner 2026-10-16): every page of
@@ -16,7 +16,7 @@ spec:
   # Endpoints. No website is crawled for it (owner: no RAG crawl); the city assistants keep theirs.
   # It lives in bbsk only because a deployment belongs to one project; the other bodies are in
   # `scope.projects`, and only their public Endpoints and sources are reachable (MF-52).
-  publicId: data-eval-deepseek
+  publicId: data-eval-luna
   channel: public
   # Nothing here may hurt if it leaks (T-4149 item 4). The guide is written from the docs and the
   # catalogue's own pages, not crawled; it stays in the cached prefix (AG-108).
@@ -69,7 +69,7 @@ spec:
     outputTokensPerAnswer: 700
     messagesPerConversation: 30
     questionChars: 1000
-  model: { router: deepseek/deepseek-v4.1-flash, answer: deepseek/deepseek-v4.1-flash }
+  model: { router: openai/gpt-6-luna, answer: openai/gpt-6-luna }
   # No city in the header or the greeting (owner: "nie pre konkrétne mesto"), and no host name
   # either (owner 2026-10-18: "remove data.dev and just write open data", T-4635); the widget
   # writes "Asistent"/"Assistant" beside the title. Title and greeting per language (T-4365).
