@@ -65,5 +65,9 @@ context-broker:
     # Antares dev e67f07f (train 20261018-0754, T-4562 T-4564): batch writes admitted under an in-flight
     # byte budget (ANTARES_BATCH_INFLIGHT_BYTES, default 4 MiB, 503 + Retry-After past it), delivery
     # lanes 128 MiB, paged /types and /attributes details. No migration over 4bdbbc8.
-    tag: 'e67f07f'
-    digest: 'sha256:0f08c0dee873e98ed2f9d25bcce59a627a7416bf62d5475d7c0edcd56a007905'
+    # Antares dev 4a42248 (train 20261018-1009, T-4494 and 22 commits over e67f07f): one Query Entities
+    # across many views (/x/views/_union, ANTARES_UNION_MAX_VIEWS), OGC file writers bounded by
+    # ANTARES_EXPORT_FILES (503 past it), the NGSI-LD primer as MCP instructions. No migration
+    # over e67f07f. (9d7a594, with T-4610, failed its ETSI image gate and was not pushed.)
+    tag: '4a42248'
+    digest: 'sha256:03458c28189baa3872bc4cb84075e6493b0bb65def5f8738e7f8a1b459fdb9bb'
