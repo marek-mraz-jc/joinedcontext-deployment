@@ -493,6 +493,15 @@ dev-smoke:
 	# A CronJob whose newest run failed (T-4385): a harvest dead since the night is no green smoke.
 	echo "cron jobs"
 	kubectl -n dev get jobs -o json | python3 scripts/failed-jobs.py || rc=1
+	# The postgres data volume (T-4414): the broker's history once filled it ~30 GB a week, every
+	# smoke green. Every instance of the cluster, wherever its namespace is; no reading fails too.
+	echo "postgres data volume"
+	pods=$(kubectl get pods -A -l cnpg.io/cluster=postgres-cluster -o jsonpath='{range .items[*]}{.metadata.namespace}/{.metadata.name}{"\n"}{end}')
+	[ -n "$pods" ] || { echo "  FAIL  postgres data: no pod of postgres-cluster"; rc=1; }
+	for pod in $pods; do
+		kubectl -n "${pod%%/*}" exec "${pod##*/}" -c postgres -- df -P /var/lib/postgresql/data 2>&1 \
+			| python3 scripts/disk-full.py --max 85 --label "postgres data of ${pod##*/}" || rc=1
+	done
 	exit "$rc"
 
 # Validate dev against main (T-2799): drift, image pins and signatures, NetworkPolicy probes,

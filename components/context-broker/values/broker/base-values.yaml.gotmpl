@@ -90,6 +90,12 @@ env:
   # T-4132): the gateway ends a token caller's socket at the token's 300 s itself.
   ANTARES_WS_MAX_LIFETIME_SECS: "86400"
   ANTARES_SCHEMA_MAX_BYTES: "1048576"
+  # The platform's history retention (owner 2026-10-18, T-4414, DM-97): an attribute instance of an
+  # Entity no historyRetention of its own, no type rule and no `*` rule of its space covers is
+  # deleted after 28 days. A type a space keeps `forever` is untouched; without this the history
+  # grew ~30 GB a week and was never deleted. ANTARES_TEMPORAL_RETENTION_DAYS stays unset: it
+  # drops whole weeks and would cut a type that keeps longer.
+  ANTARES_RETENTION_HISTORY_DEFAULT: "P28D"
   # The browser Origin the gateway forwards to the MCP surface (MC8, T-3814): rmcp refuses every
   # request whose Origin is not listed, so unset the Portal's MCP page got 403. The Portal and
   # the apex alone, each on 443 (an entry without a port matching any port is deprecated in rmcp).
