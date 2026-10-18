@@ -252,3 +252,226 @@ context-endpoint-portal:
     size: 320
     idleTimeout: 60
     requests: 1000
+
+# The public data host (ADR-N-052 §2.1, EP-128, T-4630): `api.{domain}` serves the four surfaces
+# that hand data to the outside, each on the apex route's own plugin chain, so its sanitising,
+# limits and CORS are the apex's. Each `subDomain: api` also puts the host on the edge
+# certificate (one SAN, HTTP-01, never a wildcard) and on the ingress. The apex routes above stay
+# for a caller with a bearer, which a redirect would strip; an anonymous one is sent here (below).
+api-context-space:
+  name: api-context-space
+  description: Context space direct NGSI-LD surface on the data host
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/cs/*'
+  subDomain: api
+  priority: 15
+  pluginConfig: context-space
+  timeout:
+    connect: 6
+    send: 60
+    read: 300
+  keepalivePool:
+    size: 320
+    idleTimeout: 60
+    requests: 1000
+
+api-context-space-read:
+  name: api-context-space-read
+  description: The context space surface on the data host, reads
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/cs/*'
+  subDomain: api
+  priority: 16
+  methods: [GET, HEAD]
+  pluginConfig: context-space
+  rateClass: dataRead
+  plugins:
+    limit-count:
+      count: 1200
+      time_window: 60
+      key_type: var
+      key: http_authorization
+      rejected_code: 429
+      policy: local
+      show_limit_quota_header: true
+  timeout:
+    connect: 6
+    send: 60
+    read: 300
+  keepalivePool:
+    size: 320
+    idleTimeout: 60
+    requests: 1000
+
+api-catalog-feed:
+  name: api-catalog-feed
+  description: The DCAT-AP catalogue feed on the data host, anonymous
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/catalog*'
+  subDomain: api
+  priority: 20
+  methods: [GET, HEAD]
+  pluginConfig: catalog-feed
+
+api-context-endpoint:
+  name: api-context-endpoint
+  description: Context endpoint representation surface on the data host
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/api/endpoint/*'
+  subDomain: api
+  priority: 20
+  pluginConfig: context-endpoint
+  websocket: true
+  timeout:
+    connect: 6
+    send: 60
+    read: 300
+  keepalivePool:
+    size: 320
+    idleTimeout: 60
+    requests: 1000
+
+api-mcp-hub:
+  name: api-mcp-hub
+  description: The MCP hub on the data host
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/api/mcp*'
+  subDomain: api
+  priority: 20
+  pluginConfig: context-endpoint
+  timeout:
+    connect: 6
+    send: 60
+    read: 300
+
+api-mcp-named:
+  name: api-mcp-named
+  description: Named MCP servers on the data host, anonymous callers, counted per client IP
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/api/mcp/*'
+  subDomain: api
+  priority: 21
+  vars: [["http_authorization", "!", "~~", "."]]
+  pluginConfig: context-endpoint
+  plugins:
+    limit-count:
+      count: 60
+      time_window: 60
+      key_type: var
+      key: remote_addr
+      rejected_code: 429
+      policy: local
+      show_limit_quota_header: true
+  timeout:
+    connect: 6
+    send: 60
+    read: 300
+
+# The gateway's stateless OAuth server for anonymous MCP (ADR-N-052 §2.2, platform T-4631):
+# registration, authorize, token, and the RFC 8414 and RFC 9728 documents at the host's root.
+# Nothing behind it is stored, so what an abuser can spend is minting; 30 a minute per client
+# address (`remote_addr`, never a client header) is a few connector setups and no flood.
+api-oauth:
+  name: api-oauth
+  description: The anonymous OAuth server on the data host, counted per client IP
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/oauth/*'
+  subDomain: api
+  priority: 20
+  methods: [GET, POST]
+  pluginConfig: context-endpoint
+  plugins:
+    limit-count:
+      count: 30
+      time_window: 60
+      key_type: var
+      key: remote_addr
+      rejected_code: 429
+      policy: local
+      show_limit_quota_header: true
+  timeout:
+    connect: 6
+    send: 30
+    read: 30
+
+api-oauth-metadata:
+  name: api-oauth-metadata
+  description: The OAuth server and protected-resource documents on the data host
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/.well-known/oauth-*'
+  subDomain: api
+  priority: 20
+  methods: [GET, HEAD]
+  pluginConfig: context-endpoint
+
+# The addresses people copied before the move (ADR-N-052 §2.1.3): an anonymous request for one
+# of the four surfaces on the apex or the Portal host is a 308 to the same path and query on the
+# data host, so a connector, a GIS layer or a harvester keeps working. A request with a bearer is
+# still served where it is: a client drops `Authorization` on a redirect to another host, so
+# redirecting it would only refuse it. On the Portal host the edge session cookie, which is
+# host-only, keeps the Portal's own screens served there. The Portal host never served the feed,
+# and `/catalog*` there would take its own `/catalogue` page, so the feed moves from the apex
+# alone. Removed in release v0.2.0.
+api-moved-endpoint:
+  name: api-moved-endpoint
+  description: /api/endpoint/* on the apex, anonymous, moved to the data host
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/api/endpoint/*'
+  host: '{{ .Values.global.domain }}'
+  priority: 30
+  vars: [["http_authorization", "!", "~~", "."]]
+  pluginConfig: api-moved
+api-moved-portal-endpoint:
+  name: api-moved-portal-endpoint
+  description: /api/endpoint/* on the Portal host, anonymous and with no edge session, moved to the data host
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/api/endpoint/*'
+  subDomain: portal
+  priority: 30
+  vars: [["http_authorization", "!", "~~", "."], ["cookie___Host-jc_edge", "!", "~~", "."]]
+  pluginConfig: api-moved
+api-moved-mcp:
+  name: api-moved-mcp
+  description: /api/mcp* on the apex, anonymous, moved to the data host
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/api/mcp*'
+  host: '{{ .Values.global.domain }}'
+  priority: 30
+  vars: [["http_authorization", "!", "~~", "."]]
+  pluginConfig: api-moved
+api-moved-portal-mcp:
+  name: api-moved-portal-mcp
+  description: /api/mcp* on the Portal host, anonymous and with no edge session, moved to the data host
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/api/mcp*'
+  subDomain: portal
+  priority: 30
+  vars: [["http_authorization", "!", "~~", "."], ["cookie___Host-jc_edge", "!", "~~", "."]]
+  pluginConfig: api-moved
+api-moved-cs:
+  name: api-moved-cs
+  description: /cs/* on the apex, anonymous, moved to the data host
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/cs/*'
+  host: '{{ .Values.global.domain }}'
+  priority: 30
+  vars: [["http_authorization", "!", "~~", "."]]
+  pluginConfig: api-moved
+api-moved-portal-cs:
+  name: api-moved-portal-cs
+  description: /cs/* on the Portal host, anonymous and with no edge session, moved to the data host
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/cs/*'
+  subDomain: portal
+  priority: 30
+  vars: [["http_authorization", "!", "~~", "."], ["cookie___Host-jc_edge", "!", "~~", "."]]
+  pluginConfig: api-moved
+api-moved-catalog:
+  name: api-moved-catalog
+  description: /catalog* on the apex, anonymous, moved to the data host
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/catalog*'
+  host: '{{ .Values.global.domain }}'
+  priority: 30
+  vars: [["http_authorization", "!", "~~", "."]]
+  pluginConfig: api-moved

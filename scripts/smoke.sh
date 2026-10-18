@@ -15,6 +15,9 @@ slug="${JC_INSTANCE:-$realm}"
 # The Portal has a host of its own behind the edge login (ADR-N-019), derived the way the
 # route derives it; the apex keeps the shared surfaces and redirects the rest there.
 portal="${JC_PORTAL_URL:-https://portal.${base#https://}}"
+# The public data host (ADR-N-052 §2.1, EP-128, T-4630): /api/endpoint, /api/mcp, /cs and
+# /catalog answer there; the apex and the Portal host send an anonymous caller to it with 308.
+api="${JC_API_URL:-https://api.${base#https://}}"
 # The ceiling on the egress settle window (OPS-27, SEC-GAP-05). The network plugin programs a
 # new pod's egress chains after that pod is already on the network, and the egress probe below
 # measures how long that takes. Over this many seconds the run fails instead of printing a
@@ -64,7 +67,7 @@ smoke_started=$(date +%s)
 # asking an endpoint what types it has is a 403 by design. The access document is how a client
 # learns the type, and what a probe reads for the same reason.
 type_of() {
-	curl -sS --max-time 20 -H 'Accept: application/json' "$base/api/endpoint/$1/access" 2>/dev/null |
+	curl -sS --max-time 20 -H 'Accept: application/json' "$api/api/endpoint/$1/access" 2>/dev/null |
 		python3 -c 'import json,sys
 try:
     document = json.load(sys.stdin)
@@ -170,6 +173,25 @@ else
 fi
 
 echo "edge"
+# T-4630, EP-128: the data host answers from the gateway (its RFC 9728 document names the host),
+# and the address people copied before the move is a 308 to the same path there.
+if has_route context-mcp-hub; then
+	metadata=$(curl -sS --max-time 20 "$api/api/mcp/.well-known/oauth-protected-resource" 2>/dev/null || true)
+	if grep -q "\"resource\":\"$api/api/mcp\"" <<<"$metadata"; then
+		ok "the api host serves the hub from the gateway"
+	else
+		ko "the api host does not serve the hub's metadata naming $api/api/mcp (got: ${metadata:0:160})"
+	fi
+	read -r got location < <(curl -sS -o /dev/null -w '%{http_code} %{redirect_url}\n' --max-time 20 \
+		"$base/api/mcp/.well-known/oauth-protected-resource?x=1" 2>/dev/null || echo curl-error)
+	if [ "$got" = 308 ] && [ "$location" = "$api/api/mcp/.well-known/oauth-protected-resource?x=1" ]; then
+		ok "the apex sends the old hub address to the api host (308)"
+	else
+		ko "the apex answers the old hub address $got ${location:-without a Location}, not 308 to $api"
+	fi
+else
+	skip "api host (route context-mcp-hub not configured in this instance)"
+fi
 # The Portal host is the DEMO entry: a missing Ingress rule for it fails silently as a 404
 # from the ingress controller, and a missing SAN as a handshake error. Unauthenticated, the
 # edge login answers a 302 to the realm's authorization endpoint with the `edge` client and
@@ -504,22 +526,22 @@ if has_route context-endpoint; then
 		urn="urn:ngsi-ld:AirQualityObserved:${org}:ovzdusie:smoke-1"
 		body='{"id":"'"$urn"'","type":"AirQualityObserved","dateObserved":{"type":"Property","value":"2026-01-01T00:00:00Z"}}'
 		status 201 "entity create through the endpoint" -X POST -H 'Content-Type: application/json' \
-			-H "Authorization: Bearer $ep_token" -d "$body" "$base/api/endpoint/$ep/ngsi-ld/v1/entities"
-		status 200 "entity read back" -H "Authorization: Bearer $ep_token" "$base/api/endpoint/$ep/ngsi-ld/v1/entities/$urn"
+			-H "Authorization: Bearer $ep_token" -d "$body" "$api/api/endpoint/$ep/ngsi-ld/v1/entities"
+		status 200 "entity read back" -H "Authorization: Bearer $ep_token" "$api/api/endpoint/$ep/ngsi-ld/v1/entities/$urn"
 		# An id that is no NGSI-LD URN is refused by the gateway, not stored (PF-43).
 		bad='{"id":"smoke-not-a-urn","type":"AirQualityObserved","dateObserved":{"type":"Property","value":"2026-01-01T00:00:00Z"}}'
 		status 400 "write with an id that is no NGSI-LD URN is refused" -X POST -H 'Content-Type: application/json' \
-			-H "Authorization: Bearer $ep_token" -d "$bad" "$base/api/endpoint/$ep/ngsi-ld/v1/entities"
+			-H "Authorization: Bearer $ep_token" -d "$bad" "$api/api/endpoint/$ep/ngsi-ld/v1/entities"
 		# A URN naming another organization is an id like any other since ADR-N-041: it lands in
 		# this endpoint's space and is removed again, so dev keeps nothing (a run before the rule
 		# changed may have left it: it is deleted first).
 		other="urn:ngsi-ld:AirQualityObserved:someone-else.sk:ovzdusie:smoke-2"
 		curl -sS -o /dev/null --max-time 20 -X DELETE -H "Authorization: Bearer $ep_token" \
-			"$base/api/endpoint/$ep/ngsi-ld/v1/entities/$other" 2>/dev/null || true
+			"$api/api/endpoint/$ep/ngsi-ld/v1/entities/$other" 2>/dev/null || true
 		status 201 "an id naming another organization lands in this space (ADR-N-041)" -X POST -H 'Content-Type: application/json' \
-			-H "Authorization: Bearer $ep_token" -d '{"id":"'"$other"'","type":"AirQualityObserved","dateObserved":{"type":"Property","value":"2026-01-01T00:00:00Z"}}' "$base/api/endpoint/$ep/ngsi-ld/v1/entities"
-		status 204 "and is deleted again" -X DELETE -H "Authorization: Bearer $ep_token" "$base/api/endpoint/$ep/ngsi-ld/v1/entities/$other"
-		status 204 "entity delete" -X DELETE -H "Authorization: Bearer $ep_token" "$base/api/endpoint/$ep/ngsi-ld/v1/entities/$urn"
+			-H "Authorization: Bearer $ep_token" -d '{"id":"'"$other"'","type":"AirQualityObserved","dateObserved":{"type":"Property","value":"2026-01-01T00:00:00Z"}}' "$api/api/endpoint/$ep/ngsi-ld/v1/entities"
+		status 204 "and is deleted again" -X DELETE -H "Authorization: Bearer $ep_token" "$api/api/endpoint/$ep/ngsi-ld/v1/entities/$other"
+		status 204 "entity delete" -X DELETE -H "Authorization: Bearer $ep_token" "$api/api/endpoint/$ep/ngsi-ld/v1/entities/$urn"
 
 		# T-4109: a hand probe an earlier debugging session left in this space; a visitor of the
 		# demo dataset sees it beside the real station. Removed when present, named when removed.
@@ -527,7 +549,7 @@ if has_route context-endpoint; then
 		# instance's JC_ORG_DOMAIN (hel.fi on dev), and the ogc star row reads it (T-4116).
 		for stale in urn:ngsi-ld:AirQualityObserved:hel.fi:ovzdusie:deployer-probe; do
 			got=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 -X DELETE \
-				-H "Authorization: Bearer $ep_token" "$base/api/endpoint/$ep/ngsi-ld/v1/entities/$stale" 2>/dev/null) || got=""
+				-H "Authorization: Bearer $ep_token" "$api/api/endpoint/$ep/ngsi-ld/v1/entities/$stale" 2>/dev/null) || got=""
 			[ "$got" = "204" ] && ok "removed the stale test entity $stale"
 		done
 
@@ -537,7 +559,7 @@ if has_route context-endpoint; then
 		# round trip of the script's own entity would never see that: the rows that drift are
 		# the ones somebody else wrote.
 		listed=$(curl -sS --max-time 20 -H "Authorization: Bearer $ep_token" \
-			"$base/api/endpoint/$ep/ngsi-ld/v1/entities?type=AirQualityObserved&limit=50" 2>/dev/null |
+			"$api/api/endpoint/$ep/ngsi-ld/v1/entities?type=AirQualityObserved&limit=50" 2>/dev/null |
 			tr ',' '\n' | sed -n 's/.*"id":"\(urn:ngsi-ld:[^"]*\)".*/\1/p' | sort -u)
 		if [ -z "$listed" ]; then
 			skip "every listed entity retrieves by id (the space holds none)"
@@ -546,7 +568,7 @@ if has_route context-endpoint; then
 			for one in $listed; do
 				got=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 \
 					-H "Authorization: Bearer $ep_token" \
-					"$base/api/endpoint/$ep/ngsi-ld/v1/entities/$one" 2>/dev/null) || got="curl-error"
+					"$api/api/endpoint/$ep/ngsi-ld/v1/entities/$one" 2>/dev/null) || got="curl-error"
 				[ "$got" = "200" ] || unreadable="$unreadable $one($got)"
 			done
 			if [ -z "$unreadable" ]; then
@@ -559,7 +581,7 @@ if has_route context-endpoint; then
 		# space keeps; the window is capped to that history by the public-read Policy.
 		since=$(date -u -d '-1 day' +%Y-%m-%dT%H:%M:%SZ)
 		status 200 "an anonymous visitor reads the air history of public-air" \
-			"$base/api/endpoint/$ep/ngsi-ld/v1/temporal/entities?type=AirQualityObserved&timerel=after&timeAt=$since&lastN=1&limit=1"
+			"$api/api/endpoint/$ep/ngsi-ld/v1/temporal/entities?type=AirQualityObserved&timerel=after&timeAt=$since&lastN=1&limit=1"
 	fi
 else
 	skip "endpoint round trip (route context-endpoint not configured in this instance)"
@@ -584,16 +606,16 @@ if has_route context-endpoint; then
 				ko "helsinki-$name names no type in its access document"
 				continue
 			fi
-			status 200 "helsinki-$name serves NGSI-LD" "$base/api/endpoint/$hs/ngsi-ld/v1/entities?type=$granted&limit=1"
-			status 200 "helsinki-$name serves the LinkML model" "$base/api/endpoint/$hs/schema/v1/linkml"
-			status 200 "helsinki-$name answers its DCAT record on the Portal host" "$portal/api/endpoint/$hs/"
+			status 200 "helsinki-$name serves NGSI-LD" "$api/api/endpoint/$hs/ngsi-ld/v1/entities?type=$granted&limit=1"
+			status 200 "helsinki-$name serves the LinkML model" "$api/api/endpoint/$hs/schema/v1/linkml"
+			status 200 "helsinki-$name answers its DCAT record on the api host" "$api/api/endpoint/$hs/"
 			status 200 "helsinki-$name answers an MCP tools/list" -X POST -H 'Content-Type: application/json' \
-				-H 'Accept: application/json, text/event-stream' -d "$mcp" "$base/api/endpoint/$hs/mcp"
+				-H 'Accept: application/json, text/event-stream' -d "$mcp" "$api/api/endpoint/$hs/mcp"
 		done
 		# EP-51, T-2262: a schema artifact is revalidated, not downloaded again. The gateway sends
 		# `private, no-cache` and a strong ETag, and the edge no longer replaces that with
 		# `no-store`; the second read with the ETag it answered is a 304 with no body.
-		artifact="$base/api/endpoint/$all/schema/v1/linkml"
+		artifact="$api/api/endpoint/$all/schema/v1/linkml"
 		first=$(curl -sS -D - -o /dev/null --max-time 20 "$artifact" 2>/dev/null | tr -d '\r' || true)
 		etag=$(printf '%s\n' "$first" | sed -n 's/^[Ee][Tt][Aa][Gg]: *//p' | head -1)
 		cache=$(printf '%s\n' "$first" | sed -n 's/^[Cc]ache-[Cc]ontrol: *//p' | head -1)
@@ -609,14 +631,14 @@ if has_route context-endpoint; then
 		fi
 		# The slice is real: a type the endpoint's Policy does not grant is an empty answer, not
 		# the neighbour's data (EP-14, 404-vs-403 narrowing keeps it a 200).
-		body=$(curl -sS --max-time 20 "$base/api/endpoint/$(slug_of bikes)/ngsi-ld/v1/entities?type=Event&limit=1" 2>/dev/null || true)
+		body=$(curl -sS --max-time 20 "$api/api/endpoint/$(slug_of bikes)/ngsi-ld/v1/entities?type=Event&limit=1" 2>/dev/null || true)
 		if [ "$body" = "[]" ]; then ok "helsinki-bikes does not serve events"; else ko "helsinki-bikes served events: ${body:0:120}"; fi
 		# T-4372: a type that keeps no history grants no history read; the temporal query is a 404.
 		status 404 "helsinki-events serves no history (Event keeps none)" \
-			"$base/api/endpoint/$(slug_of events)/ngsi-ld/v1/temporal/entities?type=Event&timerel=after&timeAt=$(date -u -d '-1 day' +%Y-%m-%dT%H:%M:%SZ)"
+			"$api/api/endpoint/$(slug_of events)/ngsi-ld/v1/temporal/entities?type=Event&timerel=after&timeAt=$(date -u -d '-1 day' +%Y-%m-%dT%H:%M:%SZ)"
 		# T-4035, EP-106/107: the transport endpoint's WebSocket is public like its REST read. An
 		# anonymous client (no Origin, no token) gets its 101 and a subscribe for Vehicle its 201.
-		ws=$(python3 "$(dirname "$0")/smoke-ws.py" "$base/api/endpoint/$(slug_of transport)/ws" Vehicle 20 2>&1 || true)
+		ws=$(python3 "$(dirname "$0")/smoke-ws.py" "$api/api/endpoint/$(slug_of transport)/ws" Vehicle 20 2>&1 || true)
 		if [ "$ws" = "101 201" ]; then
 			ok "helsinki-transport opens its WebSocket anonymously and subscribes to Vehicle (101 201)"
 		else
@@ -627,7 +649,7 @@ if has_route context-endpoint; then
 		flowing() { # type seconds
 			deadline=$(( $(date +%s) + $2 ))
 			while :; do
-				body=$(curl -sS --max-time 20 "$base/api/endpoint/$all/ngsi-ld/v1/entities?type=$1&limit=1" 2>/dev/null || true)
+				body=$(curl -sS --max-time 20 "$api/api/endpoint/$all/ngsi-ld/v1/entities?type=$1&limit=1" 2>/dev/null || true)
 				case "$body" in "[{"*) return 0 ;; esac
 				[ "$(date +%s)" -ge "$deadline" ] && return 1
 				sleep 10
@@ -654,7 +676,7 @@ if has_route context-endpoint; then
 		local kind="$1" name="$2" ep="$3" hidden="$4" auth=() root conf coll head type body verdict
 		if [ -z "$ep" ]; then skip "ogc $kind ($name is not seeded in this instance)"; return; fi
 		[ -n "$5" ] && auth=(-H "Authorization: Bearer $5")
-		root="$base/api/endpoint/$ep/ogc/features"
+		root="$api/api/endpoint/$ep/ogc/features"
 		conf=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "${auth[@]}" "$root/conformance" 2>/dev/null) || conf="curl-error"
 		if [ "$conf" != "200" ]; then ko "ogc $kind ($name $ep): /conformance answered $conf"; return; fi
 		# The collections are the view's LinkML classes (T-3752), and a class may hold no entity in
