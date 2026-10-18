@@ -74,6 +74,7 @@ slots:
       Who publishes the data the entity was read from, with the credit its licence asks for, as
       an application shows it beside the data.
     annotations:
+      label: { tag: label, value: { sk: "Poskytovateľ", cs: "Poskytovatel", fi: "Tarjoaja", en: "Provider", de: "Anbieter" } }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
   source:
@@ -81,6 +82,7 @@ slots:
     description: The open-data service the entity was read from.
     range: uri
     annotations:
+      label: { tag: label, value: { sk: "Zdroj", cs: "Zdroj", fi: "Lähde", en: "Source", de: "Quelle" } }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
   dateModified:
@@ -88,6 +90,7 @@ slots:
     description: When the publisher last changed the record.
     range: datetime
     annotations:
+      label: { tag: label, value: { sk: "Zmenené", cs: "Změněno", fi: "Muokattu", en: "Modified", de: "Geändert" } }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
   startDate:
@@ -390,37 +393,37 @@ classes:
         rank: 1
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Názov", cs: "Název", fi: "Nimi", en: "Name" } }
+          label: { tag: label, value: { sk: "Názov", cs: "Název", fi: "Nimi", en: "Name", de: "Name" } }
       startDate:
         rank: 2
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Začiatok", cs: "Začátek", fi: "Alkaa", en: "Start" } }
+          label: { tag: label, value: { sk: "Začiatok", cs: "Začátek", fi: "Alkaa", en: "Start", de: "Beginn" } }
       startTime:
         rank: 3
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Čas začiatku", cs: "Čas začátku", fi: "Alkamisaika", en: "Start time" } }
+          label: { tag: label, value: { sk: "Čas začiatku", cs: "Čas začátku", fi: "Alkamisaika", en: "Start time", de: "Startzeit" } }
       endDate:
         rank: 4
         annotations:
-          label: { tag: label, value: { sk: "Koniec", cs: "Konec", fi: "Päättyy", en: "End" } }
+          label: { tag: label, value: { sk: "Koniec", cs: "Konec", fi: "Päättyy", en: "End", de: "Ende" } }
       endTime:
         rank: 5
         annotations:
-          label: { tag: label, value: { sk: "Čas konca", cs: "Čas konce", fi: "Päättymisaika", en: "End time" } }
+          label: { tag: label, value: { sk: "Čas konca", cs: "Čas konce", fi: "Päättymisaika", en: "End time", de: "Endzeit" } }
       address:
         rank: 6
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Adresa", cs: "Adresa", fi: "Osoite", en: "Address" } }
+          label: { tag: label, value: { sk: "Adresa", cs: "Adresa", fi: "Osoite", en: "Address", de: "Adresse" } }
       eventCategory:
         rank: 7
         annotations:
-          label: { tag: label, value: { sk: "Kategória", cs: "Kategorie", fi: "Luokka", en: "Category" } }
+          label: { tag: label, value: { sk: "Kategória", cs: "Kategorie", fi: "Luokka", en: "Category", de: "Kategorie" } }
       url:
         annotations:
-          label: { tag: label, value: { sk: "Odkaz", cs: "Odkaz", fi: "Linkki", en: "Link" } }
+          label: { tag: label, value: { sk: "Odkaz", cs: "Odkaz", fi: "Linkki", en: "Link", de: "Link" } }
   Organization:
     class_uri: sdm-org:Organization
     description: >-
@@ -476,33 +479,33 @@ classes:
         rank: 1
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Názov", cs: "Název", fi: "Nimi", en: "Name" } }
+          label: { tag: label, value: { sk: "Názov", cs: "Název", fi: "Nimi", en: "Name", de: "Name" } }
       dateObserved:
         rank: 2
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Čas merania", cs: "Čas měření", fi: "Mittausaika", en: "Observed" } }
+          label: { tag: label, value: { sk: "Čas merania", cs: "Čas měření", fi: "Mittausaika", en: "Observed", de: "Gemessen" } }
       pm10:
         rank: 3
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "PM10", cs: "PM10", fi: "PM10", en: "PM10" } }
+          label: { tag: label, value: { sk: "PM10", cs: "PM10", fi: "PM10", en: "PM10", de: "PM10" } }
       pm25:
         rank: 4
         annotations:
-          label: { tag: label, value: { sk: "PM2,5", cs: "PM2,5", fi: "PM2,5", en: "PM2.5" } }
+          label: { tag: label, value: { sk: "PM2,5", cs: "PM2,5", fi: "PM2,5", en: "PM2.5", de: "PM2,5" } }
       no2:
         rank: 5
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "NO₂", cs: "NO₂", fi: "NO₂", en: "NO₂" } }
+          label: { tag: label, value: { sk: "NO₂", cs: "NO₂", fi: "NO₂", en: "NO₂", de: "NO₂" } }
       o3:
         rank: 6
         annotations:
-          label: { tag: label, value: { sk: "O₃", cs: "O₃", fi: "O₃", en: "O₃" } }
+          label: { tag: label, value: { sk: "O₃", cs: "O₃", fi: "O₃", en: "O₃", de: "O₃" } }
       stationCode:
         annotations:
-          label: { tag: label, value: { sk: "Kód stanice", cs: "Kód stanice", fi: "Asematunnus", en: "Station code" } }
+          label: { tag: label, value: { sk: "Kód stanice", cs: "Kód stanice", fi: "Asematunnus", en: "Station code", de: "Stationscode" } }
   WeatherObserved:
     class_uri: sdm:WeatherObserved
     description: >-
@@ -528,39 +531,39 @@ classes:
         rank: 1
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Názov", cs: "Název", fi: "Nimi", en: "Name" } }
+          label: { tag: label, value: { sk: "Názov", cs: "Název", fi: "Nimi", en: "Name", de: "Name" } }
       dateObserved:
         rank: 2
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Čas merania", cs: "Čas měření", fi: "Mittausaika", en: "Observed" } }
+          label: { tag: label, value: { sk: "Čas merania", cs: "Čas měření", fi: "Mittausaika", en: "Observed", de: "Gemessen" } }
       temperature:
         rank: 3
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Teplota", cs: "Teplota", fi: "Lämpötila", en: "Temperature" } }
+          label: { tag: label, value: { sk: "Teplota", cs: "Teplota", fi: "Lämpötila", en: "Temperature", de: "Temperatur" } }
       precipitation:
         rank: 4
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Zrážky", cs: "Srážky", fi: "Sademäärä", en: "Precipitation" } }
+          label: { tag: label, value: { sk: "Zrážky", cs: "Srážky", fi: "Sademäärä", en: "Precipitation", de: "Niederschlag" } }
       windSpeed:
         rank: 5
         annotations:
-          label: { tag: label, value: { sk: "Rýchlosť vetra", cs: "Rychlost větru", fi: "Tuulen nopeus", en: "Wind speed" } }
+          label: { tag: label, value: { sk: "Rýchlosť vetra", cs: "Rychlost větru", fi: "Tuulen nopeus", en: "Wind speed", de: "Windgeschwindigkeit" } }
       relativeHumidity:
         rank: 6
         annotations:
-          label: { tag: label, value: { sk: "Vlhkosť", cs: "Vlhkost", fi: "Kosteus", en: "Humidity" } }
+          label: { tag: label, value: { sk: "Vlhkosť", cs: "Vlhkost", fi: "Kosteus", en: "Humidity", de: "Luftfeuchtigkeit" } }
       atmosphericPressure:
         annotations:
-          label: { tag: label, value: { sk: "Tlak", cs: "Tlak", fi: "Ilmanpaine", en: "Pressure" } }
+          label: { tag: label, value: { sk: "Tlak", cs: "Tlak", fi: "Ilmanpaine", en: "Pressure", de: "Luftdruck" } }
       windDirection:
         annotations:
-          label: { tag: label, value: { sk: "Smer vetra", cs: "Směr větru", fi: "Tuulen suunta", en: "Wind direction" } }
+          label: { tag: label, value: { sk: "Smer vetra", cs: "Směr větru", fi: "Tuulen suunta", en: "Wind direction", de: "Windrichtung" } }
       soilTemperature:
         annotations:
-          label: { tag: label, value: { sk: "Teplota pôdy", cs: "Teplota půdy", fi: "Maan lämpötila", en: "Soil temperature" } }
+          label: { tag: label, value: { sk: "Teplota pôdy", cs: "Teplota půdy", fi: "Maan lämpötila", en: "Soil temperature", de: "Bodentemperatur" } }
   PointOfInterest:
     class_uri: sdm:PointOfInterest
     description: >-

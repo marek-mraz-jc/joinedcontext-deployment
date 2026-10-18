@@ -2405,3 +2405,36 @@ def test_the_guide_link_stays_its_own_target_above_the_card_link_and_wraps_on_a_
     assert ".jc-card-guide { position: relative; z-index: 1; }" in css
     assert ".jc-card-links { margin: auto 0 0; display: flex; flex-wrap: wrap;" in css
     assert ".jc-guide-checked { color: var(--jc-muted); overflow-wrap: anywhere; }" in css
+
+
+LABELLED_SEEDS = ["banskabystrica/banskabystrica-verejne", "helsinki/helsinki"]
+
+
+@pytest.mark.parametrize("seed", LABELLED_SEEDS)
+def test_every_attribute_the_map_popup_shows_has_a_label_in_sk_cs_en_and_de(seed):
+    """T-4648: the popup reads the model's labels in the page's language, so an attribute without
+    one would read in English words on a Slovak, Czech or German page."""
+    model = yaml.safe_load((PROJECT_ROOT / f"components/context-gateway/seed/{seed}.linkml.yaml").read_text())
+    slots = model.get("slots") or {}
+    missing = []
+    for name, cls in (model.get("classes") or {}).items():
+        usage = cls.get("slot_usage") or {}
+
+        def label(slot):
+            for node in (usage.get(slot) or {}, slots.get(slot) or {}):
+                found = (node.get("annotations") or {}).get("label")
+                if found:
+                    return found["value"]
+            return None
+
+        # A class the model gives labels of its own; the others keep their attribute names for now.
+        if not any((node.get("annotations") or {}).get("label") for node in usage.values()):
+            continue
+        for slot in cls.get("slots") or []:
+            if slot == "location" or re.match(r"^ref[A-Z]", slot) or (slots.get(slot) or {}).get("range") in model.get("classes", {}):
+                continue
+            labels = label(slot) or {}
+            gaps = {"sk", "cs", "en", "de"} - set(labels)
+            if gaps:
+                missing.append(f"{name}.{slot}: {sorted(gaps)}")
+    assert not missing, missing
