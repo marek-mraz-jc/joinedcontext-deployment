@@ -441,21 +441,18 @@ body.dt-view .dt-button, body.dt-view .btn-secondary { background: var(--jc-surf
    buttons of one size; the launcher's frame opens above the launcher as before. */
 .jc-corner { position: fixed; inset-inline-end: 1rem; inset-block-end: max(1rem, env(safe-area-inset-bottom)); z-index: 1040; display: flex; align-items: flex-end; gap: .5rem; }
 .jc-assistant { position: relative; }
-.jc-corner .jc-assistants-link { box-sizing: border-box; --jc-edge: color-mix(in oklab, var(--jc-ink) 55%, var(--jc-paper)); --jc-slant: .5rem; min-block-size: 2.75rem; display: flex; flex-wrap: nowrap; align-items: stretch; overflow: hidden; border-radius: 999px; background: var(--jc-surface); border: 1px solid var(--jc-edge); text-decoration: none; box-shadow: 0 .25rem 1rem color-mix(in oklab, var(--jc-ink) 25%, transparent); }
-/* `.jc-corner` outranks the footer's light link colour (.site-footer a), which washed the link out
-   on its white ground (T-4609). Open, the assistant's panel owns the corner: the link goes. */
+/* T-4620: one bar on a slant, a segment per assistant in its maker's colour, its logo in white and
+   upright again; no border and no dividers, the colours divide it. */
+.jc-corner .jc-assistants-link { box-sizing: border-box; block-size: 2.875rem; margin-inline: .375rem; display: flex; flex-wrap: nowrap; overflow: hidden; border-radius: 10px; transform: skewX(-14deg); text-decoration: none; box-shadow: 0 4px 14px color-mix(in oklab, var(--jc-ink) 25%, transparent); }
 .jc-corner .jc-assistants-link:hover, .jc-corner .jc-assistants-link:focus { text-decoration: none; }
 .jc-corner:has(.jc-assistant[open]) .jc-assistants-link { display: none; }
-/* T-4613: one segment per logo, every other one shaded; a segment after the first overlaps the one
-   before by --jc-slant and cuts its own start on a slant, and a 2px stripe in the pill's edge
-   colour draws that slanted border. Its edge colour is 3:1 or more against the page. */
-.jc-seg { position: relative; display: flex; align-items: center; padding-block: .5rem; padding-inline: .875rem; background: var(--jc-surface); }
-.jc-seg:nth-child(even) { background: var(--jc-n100); }
-.jc-seg + .jc-seg { margin-inline-start: calc(-1 * var(--jc-slant)); padding-inline-start: calc(.875rem + var(--jc-slant)); clip-path: polygon(var(--jc-slant) 0, 100% 0, 100% 100%, 0 100%); }
-.jc-seg + .jc-seg::before { content: ""; position: absolute; inset: 0; background: var(--jc-edge); clip-path: polygon(var(--jc-slant) 0, calc(var(--jc-slant) + 2px) 0, 2px 100%, 0 100%); }
-.jc-corner .jc-assistants-link:hover .jc-seg { background: var(--jc-n50); }
-.jc-corner .jc-assistants-link:hover .jc-seg:nth-child(even) { background: var(--jc-n200); }
-.jc-brand { flex: none; display: block; inline-size: 1.5rem; block-size: 1.5rem; }
+.jc-seg { display: flex; align-items: center; justify-content: center; inline-size: 3.125rem; }
+.jc-seg-claude { background: #d97757; }
+.jc-seg-chatgpt { background: #10a37f; }
+.jc-seg-gemini { background: linear-gradient(135deg, #4285f4, #9b72cb 60%, #d96570); }
+.jc-seg-mcp { background: #1f1f2e; }
+.jc-corner .jc-assistants-link:hover .jc-seg, .jc-corner .jc-assistants-link:focus-visible .jc-seg { filter: brightness(1.08); }
+.jc-brand { flex: none; display: block; inline-size: 1.375rem; block-size: 1.375rem; transform: skewX(14deg); }
 .jc-logo { flex: none; inline-size: 1.25rem; block-size: 1.25rem; vertical-align: -.2em; }
 .jc-assistant-card h2 .jc-logo { margin-inline-end: .5rem; }
 .jc-assistants-link:focus-visible { outline: 3px solid var(--jc-accent); outline-offset: 2px; }
@@ -475,12 +472,11 @@ body:has(.jc-corner) { padding-block-end: 5rem; }
 /* On a phone the open assistant takes the whole screen, its button the bar that closes it; the
    page behind neither shows nor scrolls (jc-assistant.js also makes it inert and adds Escape). */
 @media (max-width: 40rem) {
-  /* T-4613: the logo pill is narrow enough to stay beside the launcher, one row as on a desktop. */
+  /* T-4620: the bar is narrow enough to stay beside the launcher, one row as on a desktop. */
   .jc-corner { align-items: center; }
-  .jc-corner .jc-assistants-link { min-block-size: 2.25rem; --jc-slant: .375rem; }
-  .jc-seg { padding-block: .375rem; padding-inline: .625rem; }
-  .jc-seg + .jc-seg { padding-inline-start: calc(.625rem + var(--jc-slant)); }
-  .jc-brand { inline-size: 1.25rem; block-size: 1.25rem; }
+  .jc-corner .jc-assistants-link { block-size: 2.25rem; }
+  .jc-seg { inline-size: 2.5rem; }
+  .jc-brand { inline-size: 1.125rem; block-size: 1.125rem; }
   .jc-corner:has(.jc-assistant[open]) { z-index: 2000; }
   body:has(.jc-assistant[open]) { overflow: hidden; }
   .jc-assistant[open] { position: fixed; inset: 0; z-index: 2000; display: flex; flex-direction: column; background: var(--jc-surface); }
