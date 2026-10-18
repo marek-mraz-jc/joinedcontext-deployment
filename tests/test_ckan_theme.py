@@ -726,16 +726,50 @@ def test_a_search_filter_with_nothing_to_choose_is_left_out_and_labels_are_whole
     assert guard < facets.index('<p class="module-footer">') < facets.index("{% endif %}\n      </section>")
 
 
-def test_the_table_view_stacks_its_controls_below_desktop_width():
-    """The view's own rules name `#dtprv_wrapper`; a rule on the class alone loses to them, which is
-    how the first try left "Search:" under the toolbar."""
+def test_the_framed_table_shares_the_card_s_edge_one_border_and_one_row_of_controls():
+    """T-4637 (was T-3048's stacking): the frame runs border to border with no border of its own,
+    the view keeps the card's 1rem, controls and footer are one row each until the frame is
+    narrow. The view's own rules name `#dtprv_wrapper`, so these do too, and the two margins that
+    push search and pages right outrank the rule that zeroes every control's margin."""
     css = (THEME / "public__jc-theme.css").read_text()
-    block = css[css.index("@media (max-width: 991.98px) {\n  body.dt-view"):]
-    block = block[:block.index("\n}\n") + 3]
-    assert "body.dt-view #dtprv_wrapper { display: flex; flex-wrap: wrap;" in block
-    assert "float: none; width: 100%; margin: 0;" in block
-    for selector in (".dataTables_filter", ".dataTables_info", ".dataTables_paginate"):
-        assert all("#dtprv_wrapper" in line for line in block.splitlines() if selector in line), selector
+    grid = next(line for line in css.splitlines() if line.startswith(".jc-grid {"))
+    assert "margin-inline: -1rem; width: calc(100% + 2rem);" in grid and "border: 0;" in grid
+    assert ".jc-table { border: 1px solid var(--jc-border);" in css and "padding: 0 1rem; }" in css
+    assert "body.dt-view #resize_wrapper { inset: 0; }" in css
+    assert "body.dt-view #dtprv_wrapper { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; padding: 1rem; }" in css
+    assert "body.dt-view #dtprv_wrapper > div.dataTables_length { order: 1; margin-inline-end: auto; }" in css
+    assert "body.dt-view #dtprv_wrapper > div.dataTables_info { order: 5; padding: 0; margin-inline-end: auto;" in css
+    assert "body.dt-view #dtprv_wrapper > .dataTables_scroll { order: 4; flex: 1 0 100%; }" in css
+    for selector in (".dataTables_filter", ".dataTables_info", ".dataTables_paginate", ".dt-buttons"):
+        lines = [line for line in css.splitlines() if "body.dt-view" in line and selector in line and "::" not in line]
+        assert lines and all("#dtprv_wrapper" in line for line in lines), selector
+    # The body holds its rows, so no band under two of them; its heights are inline.
+    assert "body.dt-view #dtprv_wrapper .dataTables_scrollBody { height: auto !important; max-height: 26rem !important; }" in css
+    narrow = css[css.index("@media (max-width: 47.99rem) {\n  body.dt-view"):]
+    assert "> .dt-buttons { order: 0; flex: 1 0 100%; justify-content: flex-end; }" in narrow[:narrow.index("\n}\n")]
+    # The summary's arrow hangs in the card's padding, so the table's name starts on the table's edge.
+    assert '.jc-table > summary::before { content: "\\25B8"; position: absolute; inset-inline-start: -.75rem;' in css
+
+
+def test_the_table_view_asks_for_no_missing_icon():
+    """T-4637: the view's stylesheet names vendor/FontAwesome/images/times-circle-solid.svg for the
+    search field's clear button, which the extension does not ship; the theme hides that button, so nothing asks for the icon."""
+    css = (THEME / "public__jc-theme.css").read_text()
+    assert 'body.dt-view input[type="search"]::-webkit-search-cancel-button { display: none; }' in css
+    assert "times-circle" not in css
+
+
+def test_the_frame_takes_the_height_its_view_says_from_the_same_origin_only():
+    """T-4637: the view inside the frame posts its height; the page that frames it sets it on
+    the frame the message came from, a number between 160 and 1280, same origin only."""
+    script = (THEME / "public__jc-frame.js").read_text()
+    assert 'postMessage({ type: TYPE, height: height }, window.location.origin)' in script
+    assert "event.origin !== window.location.origin" in script and "contentWindow === event.source" in script
+    assert "Math.min(Math.max(height, 160), 1280)" in script and "isFinite(height)" in script
+    view = (THEME / "templates__datatables__datatables_view.html").read_text()
+    assert "url_for_static('/jc-frame.js') }}\" defer></script>" in view
+    for page in ("templates__package__read.html", "templates__package__resource_read.html"):
+        assert "url_for_static('/jc-frame.js')" in (THEME / page).read_text(), page
 
 
 

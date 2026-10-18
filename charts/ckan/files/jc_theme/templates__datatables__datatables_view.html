@@ -4,4 +4,6 @@
    Its own template empties this block, which is why base.html's styles never reached it. #}
 {% block custom_styles %}
   {% snippet 'snippets/jc_styles.html' %}
+  {# It tells the page that frames it how tall it is (T-4637). #}
+  <script src="{{ h.url_for_static('/jc-frame.js') }}" defer></script>
 {% endblock %}
