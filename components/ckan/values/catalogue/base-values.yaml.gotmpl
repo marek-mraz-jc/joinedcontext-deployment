@@ -12,6 +12,9 @@
 {{- if $site.title }}
 {{- $branding = set (deepCopy $branding) "siteTitle" $site.title }}
 {{- end }}
+{{- if $site.tagline }}
+{{- $branding = set (deepCopy $branding) "siteTagline" $site.tagline }}
+{{- end }}
 {{- if $site.logo }}
 {{- $branding = set (deepCopy $branding) "siteLogo" $site.logo }}
 {{- end }}
