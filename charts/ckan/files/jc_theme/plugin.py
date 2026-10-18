@@ -395,6 +395,16 @@ STRINGS = {
         "cs": "Přidejte {name} do asistenta, kterého už používáte, a ptejte se ho na otevřená data tohoto katalogu. Jedna adresa pokrývá všechny datové sady; účet není potřeba.",
         "de": "Fügen Sie {name} dem Assistenten hinzu, den Sie schon nutzen, und fragen Sie ihn nach den offenen Daten dieses Katalogs. Eine Adresse deckt alle Datensätze ab; kein Konto nötig.",
     },
+    # T-4659: the websites the hub's search_documents reads, so a visitor sees what it covers.
+    "assistants_sources": {"en": "What the assistant can search", "sk": "Čo asistent prehľadáva",
+                           "cs": "Co asistent prohledává", "de": "Was der Assistent durchsucht"},
+    "assistants_sources_lead": {
+        "en": "Beside the datasets, the connector searches the public pages and documents of these websites:",
+        "sk": "Okrem datasetov konektor prehľadáva verejné stránky a dokumenty týchto webov:",
+        "cs": "Kromě datových sad konektor prohledává veřejné stránky a dokumenty těchto webů:",
+        "de": "Neben den Datensätzen durchsucht der Connector die öffentlichen Seiten und Dokumente dieser Websites:",
+    },
+    "assistants_source_languages": {"en": "Languages", "sk": "Jazyky", "cs": "Jazyky", "de": "Sprachen"},
     "coming_soon": {"en": "Coming soon", "sk": "Čoskoro", "cs": "Brzy", "de": "Demnächst"},
     # T-4628: a card is the logo, the name and one link to that assistant's connector store.
     "add_to": {"en": "Add to {name}", "sk": "Pridať do {name}", "cs": "Přidat do {name}", "de": "Zu {name} hinzufügen"},
@@ -1701,6 +1711,28 @@ def jc_gemini_on():
     return os.environ.get("JC_ASSISTANT_GEMINI") == "true"
 
 
+def jc_assistant_sources():
+    """The websites the hub's `search_documents` reads (T-4659), from the chart's
+    `assistants.sources`: each its host, address, publisher and languages. A malformed list or entry,
+    or an address that is not https, is left out rather than shown half."""
+    try:
+        listed = json.loads(os.environ.get("JC_ASSISTANT_SOURCES") or "[]")
+    except ValueError:
+        return []
+    sources = []
+    for entry in listed if isinstance(listed, list) else []:
+        if not isinstance(entry, dict):
+            continue
+        url, publisher = entry.get("url"), entry.get("publisher")
+        languages = entry.get("languages") or []
+        host = urlsplit(url).hostname if isinstance(url, str) and url.startswith("https://") else None
+        if not host or not isinstance(publisher, str) or not isinstance(languages, list):
+            continue
+        sources.append({"site": host, "url": url, "publisher": publisher,
+                        "languages": ", ".join(str(code) for code in languages)})
+    return sources
+
+
 def jc_assistants():
     """The "Use it in your AI assistant" page (T-4585, T-4628, T-4634, T-4643): a card per assistant
     whose app takes our connector, ChatGPT, Claude, Grok, then Gemini once its flag is on, each its
@@ -1728,6 +1760,7 @@ def jc_assistants():
         "lead": jc_t("assistants_lead").replace("{name}", name),
         "mcp": mcp,
         "cards": cards,
+        "sources": jc_assistant_sources(),
         "gemini": "gemini mcp add --transport http %s %s" % (MCP_NAME, mcp["url"]),
     }
 
