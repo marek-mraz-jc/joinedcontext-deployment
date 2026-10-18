@@ -423,7 +423,9 @@ def test_the_catalogue_names_every_source_the_space_reads_under_the_licence_it_p
     }, "a source the space does not read"
     for source in catalog["source"]:
         assert set(source["title"]) == set(source["description"]) == {"cs", "en"}, source["url"]
-    assert set(catalog["keywords"]) == set(catalog["attribution"]) == set(catalog["publisher"]["name"]) == {"cs", "en"}
+    assert set(catalog["keywords"]) == set(catalog["attribution"]) == {"cs", "en"}
+    # The publisher is the Project's, by its RPP IRI (T-4596): the record names none of its own.
+    assert "publisher" not in catalog
     assert len(catalog["keywords"]["cs"]) == len(catalog["keywords"]["en"])
     assert "CZ010" in catalog["spatial"]
     # A contact is a role address the owner chooses, never a person guessed here (EP-80).

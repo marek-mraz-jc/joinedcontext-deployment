@@ -23,7 +23,9 @@ spec:
       license: odc-odbl
       datastore: { representation: csv, refresh: onReconcile }
   catalog:
-    publisher: { name: { sk: "Mesto Banská Bystrica", en: "City of Banská Bystrica" }, uri: "https://www.banskabystrica.sk/" }
+    # The publisher and contact desk are the Project's spec.catalog, its registry IRI (T-4596).
+    # Aggregates of public facilities and readings: no record names a person (T-4596).
+    personalData: does-not-contain
     license: ODC_ODBL
     attribution: { sk: "© prispievatelia OpenStreetMap, ODbL 1.0 (openstreetmap.org/copyright)", en: "© OpenStreetMap contributors, ODbL 1.0 (openstreetmap.org/copyright)" }
     themes: [TRAN]

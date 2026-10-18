@@ -25,3 +25,28 @@ spec:
   - odata
   - sta
   - mcp
+  catalog:
+    license: CC_BYSA_4_0
+    themes:
+    - GOVE
+    - REGI
+    frequency: DAILY
+    keywords:
+      sk:
+      - Banská Bystrica
+      - zmluvy
+      - objednávky
+      - dotácie
+      - adresy
+      - verejná zeleň
+      en:
+      - Banská Bystrica
+      - contracts
+      - orders
+      - grants
+      - addresses
+      - public greenery
+    spatial:
+    - SK032
+    - https://data.gov.sk/id/lau2/SK0321508438
+    personalData: does-not-contain
