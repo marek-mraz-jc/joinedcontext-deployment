@@ -21,12 +21,12 @@
       <ul class="jc-assistant-cards">
         {% for card in page.cards %}
           <li class="jc-assistant-card" aria-labelledby="jc-card-{{ card.id }}">
-            <h2 id="jc-card-{{ card.id }}">{{ card.name }}</h2>
+            <h2 id="jc-card-{{ card.id }}">{% if card.logo %}{% include card.logo %}{% endif %}{{ card.name }}</h2>
             {% if card.soon %}
               <p class="jc-soon">{{ h.jc_t('coming_soon') }}</p>
             {% else %}
               <div class="jc-code">
-                <p id="jc-copy-{{ card.id }}" class="jc-code-url">{{ card.copy }}</p>
+                <p id="jc-copy-{{ card.id }}" class="jc-code-url">{{ card.value }}</p>
               </div>
               <p class="jc-mcp-links">
                 <button type="button" class="btn btn-primary" data-jc-copy="jc-copy-{{ card.id }}" data-jc-copied="{{ h.jc_t('copied') }}"><span class="jc-code-copy-label">{{ card.copy_label }}</span></button>
