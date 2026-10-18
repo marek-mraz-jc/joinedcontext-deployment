@@ -496,7 +496,8 @@ dev-smoke:
 	# The postgres data volume (T-4414): the broker's history once filled it ~30 GB a week, every
 	# smoke green. Every instance of the cluster, wherever its namespace is; no reading fails too.
 	echo "postgres data volume"
-	pods=$(kubectl get pods -A -l cnpg.io/cluster=postgres-cluster -o jsonpath='{range .items[*]}{.metadata.namespace}/{.metadata.name}{"\n"}{end}')
+	# Instances only: the cluster's completed initdb Job pod carries the same cluster label (smoke 13:45Z).
+	pods=$(kubectl get pods -A -l cnpg.io/cluster=postgres-cluster,cnpg.io/podRole=instance -o jsonpath='{range .items[*]}{.metadata.namespace}/{.metadata.name}{"\n"}{end}')
 	[ -n "$pods" ] || { echo "  FAIL  postgres data: no pod of postgres-cluster"; rc=1; }
 	for pod in $pods; do
 		kubectl -n "${pod%%/*}" exec "${pod##*/}" -c postgres -- df -P /var/lib/postgresql/data 2>&1 \
