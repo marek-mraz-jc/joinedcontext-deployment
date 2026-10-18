@@ -479,9 +479,12 @@ body:has(.jc-corner) { padding-block-end: 5rem; }
   /* T-4620: the bar is narrow enough to stay beside the launcher, one row as on a desktop. */
   .jc-corner { align-items: center; }
   .jc-corner .jc-assistants-link { block-size: 2.75rem; }
-  /* T-4622: 26px segments, so the bar and the Slovak launcher's one line fit 390px between the
-     1rem gutters (measured on data.dev: 21.5px left, 16.5px right). */
-  .jc-seg { inline-size: 1.625rem; }
+  /* T-4622: 23px segments keep the bar beside the Slovak launcher down to a 375px phone; where a
+     label is longer than the room (German, or any label at 320px), the bar goes on a row of its
+     own above the launcher, both inside the 1rem gutters, and the page keeps room for two rows. */
+  .jc-corner { flex-wrap: wrap; justify-content: flex-end; max-inline-size: calc(100vw - 2rem); }
+  body:has(.jc-corner) { padding-block-end: 7.5rem; }
+  .jc-seg { inline-size: 1.4375rem; }
   .jc-brand { inline-size: 1.125rem; block-size: 1.125rem; }
   .jc-assistant:not([open]) > summary { block-size: 2.75rem; font-size: .9375rem; padding-inline: 1.125rem; }
   .jc-corner:has(.jc-assistant[open]) { z-index: 2000; }

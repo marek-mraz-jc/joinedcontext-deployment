@@ -1638,3 +1638,17 @@ def test_the_closed_launcher_takes_the_bar_s_shape_and_the_open_one_does_not():
     # the closed summary's focus ring stays: no rule takes the outline away
     assert ".jc-assistant > summary:focus-visible { outline: 3px solid var(--jc-accent); outline-offset: 2px; }" in css
     assert "outline: none" not in closed and "outline: 0" not in closed
+
+
+def test_the_corner_stays_inside_the_gutters_whatever_the_label():
+    """T-4622 review: the German label is 278px at 15px, so at 320px no row holds it and the bar.
+    On a phone the corner is at most the screen less the two 1rem gutters and wraps the bar onto
+    a row above the launcher instead of pushing it off the left edge; the page keeps room for
+    the second row. Measured on data.dev (Playwright, every label, 390/375/360/320): sk and cs
+    keep one row down to 375, en to 360, and no box leaves [16, width - 16]."""
+    phone = (THEME / "public__jc-theme.css").read_text().split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
+    assert ".jc-corner { flex-wrap: wrap; justify-content: flex-end; max-inline-size: calc(100vw - 2rem); }" in phone
+    assert "body:has(.jc-corner) { padding-block-end: 7.5rem; }" in phone
+    assert ".jc-seg { inline-size: 1.4375rem; }" in phone
+    # the launcher itself never wraps its words: the corner wraps, not the label
+    assert "white-space: nowrap;" in desktop_css().split(".jc-assistant:not([open]) > summary { ", 1)[1].split("}", 1)[0]
