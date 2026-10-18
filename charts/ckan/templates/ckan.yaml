@@ -287,6 +287,11 @@ spec:
               mountPath: /srv/theme/ckanext_jc_theme/dcat_profile.py
               subPath: dcat_profile.py
               readOnly: true
+            # The NUTS region names plugin.py reads beside itself (T-4636).
+            - name: theme
+              mountPath: /srv/theme/ckanext_jc_theme/nuts.json
+              subPath: nuts.json
+              readOnly: true
             - name: theme
               mountPath: /srv/theme/ckanext_jc_theme/templates/header.html
               subPath: header.html

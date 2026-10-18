@@ -12,3 +12,13 @@ ckan:
     # The catalogue's own languages (T-4280), `{default, offered}` as in `global.branding.languages`,
     # which they replace for the catalogue alone; empty takes the branding block's.
     languages: {}
+    # The instance's own words (T-4636), read by the theme and by its assistant's seed:
+    # `title` per language (the page header, the home page, the browser tab), `tagline` per
+    # language (the line under the home page's title; empty: the theme's), `logo` a file in the
+    # theme's public directory (empty: the joinedcontext.com lockup).
+    site:
+      title: {}
+      tagline: {}
+      logo: ""
+    # The MCP connector page's "Try it" questions per language, about this instance's publishers.
+    samples: {}

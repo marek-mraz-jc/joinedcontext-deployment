@@ -15,7 +15,8 @@ ponytail: the budget counts plain bytes, and gzip shrinks the seed's YAML to abo
 test_sample_apps_seed measures what each release's Secret really holds, and a release that nears
 it is one more release here.
 
-Takes (dict "sources" <seed folders under components/>); gives JSON
+Takes (dict "sources" <seed folders under components/> "extra" <path: text of seeded files no index
+lists, gitea.catalogueAssistants>); gives JSON
 {"parts": {"<part>": <release>}, "count": {"<project>": <parts>}}.
 */ -}}
 {{- define "gitea.seedLayout" -}}
@@ -28,6 +29,7 @@ Takes (dict "sources" <seed folders under components/>); gives JSON
 {{- if and (eq (index $p 0) "projects") (gt (len $p) 2) }}{{ $_ := set $sizes $path (len (readFile (printf "../../../%s/%s" $dir $file))) }}{{ end }}
 {{- end }}
 {{- end }}
+{{- range $path, $text := .extra | default dict }}{{ $_ := set $sizes $path (len $text) }}{{ end }}
 {{- $bytes := dict }}
 {{- range $path, $n := $sizes }}{{ $project := index (splitList "/" $path) 1 }}{{ $_ := set $bytes $project (add (index $bytes $project | default 0) $n) }}{{ end }}
 {{- $count := dict }}
@@ -60,4 +62,35 @@ Takes (dict "sources" <seed folders under components/>); gives JSON
 {{- end }}
 {{- end }}
 {{- dict "parts" $parts "count" $count | toJson }}
+{{- end -}}
+
+
+{{- /*
+Each catalogue instance's assistant (T-4636): the AssistantDeployment components/ckan/seed/
+assistant.yaml.gotmpl renders from `ckan.<instance>`, for the default instance `catalogue` and every
+`global.catalogues` entry (its host from the entry) whose block names a publicId (`assistant`) and an `assistantSeed.project`.
+Takes (dict "values" <.Values>); gives JSON {"projects/<project>/assistant/deployments/<publicId>.yaml": text}.
+*/ -}}
+{{- define "gitea.catalogueAssistants" -}}
+{{- $v := .values }}
+{{- $files := dict }}
+{{- if has "ckan" $v.components }}
+{{- $instances := list (dict "name" "catalogue" "words" $v.ckan.catalogue) }}
+{{- range $c := index $v.global "catalogues" | default list }}
+{{- $words := merge (dict "subDomain" $c.subDomain) (index $v.ckan $c.name | default dict) }}
+{{- $instances = append $instances (dict "name" $c.name "words" $words) }}
+{{- end }}
+{{- range $instance := $instances }}
+{{- $name := $instance.name }}
+{{- $i := $instance.words }}
+{{- $seed := index $i "assistantSeed" | default dict }}
+{{- if and (index $i "assistant") (index $seed "project") }}
+{{- $text := tpl (readFile "../../../ckan/seed/assistant.yaml.gotmpl") (dict "name" $name "instance" $i "domain" $v.global.domain) }}
+{{- $path := printf "projects/%s/assistant/deployments/%s.yaml" $seed.project $i.assistant }}
+{{- if hasKey $files $path }}{{ fail (printf "ckan.%s.assistant: %q is another catalogue's assistant in %s (T-4636)" $name $i.assistant $seed.project) }}{{ end }}
+{{- $_ := set $files $path $text }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- $files | toJson }}
 {{- end -}}

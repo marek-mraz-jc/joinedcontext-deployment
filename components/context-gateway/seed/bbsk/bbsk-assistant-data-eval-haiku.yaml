@@ -1,5 +1,6 @@
 # TEMPORARY (T-4359): the open-data eval's copy of `data` on anthropic/claude-haiku-5.5, router and answer alike.
-# Only metadata.name, publicId and model differ from bbsk-assistant-data.yaml
+# Only metadata.name, publicId and model differ from `data`, which renders from dev's ckan.catalogue
+# (components/ckan/seed/assistant.yaml.gotmpl, T-4636)
 # (tests/test_public_assistant_seed.py holds it to that); its $1 a day is its own, never the
 # visitors'. Removed after the T-4359 runs.
 apiVersion: joinedcontext.com/v1alpha1
@@ -69,11 +70,14 @@ spec:
     messagesPerConversation: 30
     questionChars: 1000
   model: { router: anthropic/claude-haiku-5.5, answer: anthropic/claude-haiku-5.5 }
-  # No city in the header or the greeting (owner: "nie pre konkrétne mesto"). The title is the
-  # catalogue's name, the same in every language; the widget writes "Asistent"/"Assistant" beside
-  # it. The greeting per language (T-4365).
+  # No city in the header or the greeting (owner: "nie pre konkrétne mesto"), and no host name
+  # either (owner 2026-10-18: "remove data.dev and just write open data", T-4635); the widget
+  # writes "Asistent"/"Assistant" beside the title. Title and greeting per language (T-4365).
   theme:
-    title: "data.dev"
+    title:
+      sk: "Otvorené dáta"
+      en: "Open data"
+      fi: "Avoin data"
     greeting:
       sk: "Dobrý deň! Pýtajte sa na otvorené dáta zo všetkých miest a krajov v katalógu."
       en: "Hello! Ask about the open data of every city and region in the catalogue."

@@ -13,6 +13,7 @@ from urllib.parse import urlsplit
 
 import pytest
 import yaml
+from conftest import dev_catalogue, render_catalogue_assistant
 
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
 # jc-assistant's READ_ONLY_TOOLS (platform crates/assistant/src/chat/mcp.rs), which the data loop
@@ -236,7 +237,8 @@ def test_the_eval_copies_offer_one_tool_list_with_history():
 
 
 def general() -> dict:
-    return manifests("AssistantDeployment", "bbsk")["data"]
+    """dev's catalogue assistant, rendered from its instance block (T-4636)."""
+    return yaml.safe_load(render_catalogue_assistant(dev_catalogue(), "dev.joinedcontext.com"))
 
 
 def test_the_catalogue_frames_the_general_assistant_on_every_page():
@@ -296,11 +298,13 @@ def test_the_general_assistant_names_no_city_and_carries_the_portal_guide():
     spec = general()["spec"]
     greeting = spec["theme"]["greeting"]
     assert set(greeting) == {"sk", "en", "fi"}, "a greeting per language (T-4365)"
-    shown = (spec["theme"]["title"] + " " + " ".join(greeting.values())).lower()
+    title = spec["theme"]["title"]
+    assert title == {"sk": "Otvorené dáta", "en": "Open data", "fi": "Avoin data"}, "no host name in the header (T-4635)"
+    shown = (" ".join(title.values()) + " " + " ".join(greeting.values())).lower()
     for words in NAMES.values():
         assert not any(word in shown for word in words), shown
     assert "helsin" not in shown
-    assert spec["theme"]["title"] == "data.dev"
+    assert "data.dev" not in shown
     assert spec["languages"] == ["sk", "en", "fi"]
     assert set(spec["suggestions"]) == set(spec["disclaimer"]) == {"sk", "en", "fi"}
     # Judge round 3 (T-4342): one chip set in every language, each chip on one line of the 400px panel.
@@ -326,8 +330,14 @@ def test_a_conversation_of_the_general_assistant_holds_a_question_over_five_publ
 
 
 def test_the_general_assistant_is_seeded_at_its_kinds_paths():
+    # T-4636: the deployment renders from the instance block into its project, gitea's
+    # catalogueAssistants writes it at projects/<project>/assistant/deployments/<publicId>.yaml, and
+    # no fixed copy in the seed folder competes with it.
     index = yaml.safe_load((SEED / "bbsk" / "index.yaml").read_text())
-    assert index["bbsk-assistant-data.yaml"] == "projects/bbsk/assistant/deployments/data.yaml"
+    catalogue = dev_catalogue()
+    assert (catalogue["assistantSeed"]["project"], catalogue["assistant"]) == ("bbsk", "data")
+    assert general()["metadata"] == {"name": "data", "namespace": "bbsk"}
+    assert "projects/bbsk/assistant/deployments/data.yaml" not in index.values()
     assert index["bbsk-knowledge-portal.yaml"] == "projects/bbsk/assistant/sources/portal.yaml"
 
 
@@ -363,7 +373,7 @@ def test_the_open_data_eval_copies_are_data_with_another_model():
     # T-4359: a comparison of models on data.dev's assistant; each copy is `data` but for its
     # name, publicId and the model it runs, router and answer alike, and spends its own day.
     deployments = manifests("AssistantDeployment", "bbsk")
-    base = deployments["data"]["spec"]
+    base = general()["spec"]
     models = {"data-eval-gemini": "google/gemini-3.8-flash", "data-eval-haiku": "anthropic/claude-haiku-5.5",
               "data-eval-deepseek": "deepseek/deepseek-v4.1-flash"}
     for name, model in models.items():

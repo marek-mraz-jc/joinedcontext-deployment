@@ -466,7 +466,7 @@ def test_the_table_view_wears_the_theme_and_the_theme_s_templates_win():
 def test_the_home_page_replaces_ckan_s_sample_page():
     home = (THEME / "templates__home__index.html").read_text()
     assert "{% block primary_content %}" in home
-    for part in ("brand.tagline or h.jc_t('tagline')", "h.get_site_statistics()", "h.jc_recent(6)",
+    for part in ("h.jc_site_tagline()", "h.get_site_statistics()", "h.jc_recent(6)",
                  "get_facet_items_dict('organization'", 'role="search"', '<label for="jc-hero-q">'):
         assert part in home, part
     assert "home/snippets/" not in home
@@ -630,8 +630,8 @@ def test_the_header_is_the_joinedcontext_lockup_named_by_the_site_title():
     jinja2 = pytest.importorskip("jinja2")
     header = (THEME / "header.html").read_text()
     block = header.split("{% block header_logo %}", 1)[1].split("{% endblock %}", 1)[0]
-    html = jinja2.Environment(autoescape=True).from_string(block).render(
-        h=types.SimpleNamespace(url_for=lambda name: "/"), g=types.SimpleNamespace(site_title="Otvorené dáta"))
+    html = jinja2.Environment(autoescape=True).from_string(block).render(h=types.SimpleNamespace(
+        url_for=lambda name: "/", jc_site_logo=lambda: "/jc-logo.svg", jc_site_title=lambda: "Otvorené dáta"))
     imgs = re.findall(r"<img [^>]*>", html)
     assert imgs == ['<img src="/jc-logo.svg" alt="Otvorené dáta" width="171" height="36">'], imgs
     assert "<span" not in html
@@ -726,16 +726,50 @@ def test_a_search_filter_with_nothing_to_choose_is_left_out_and_labels_are_whole
     assert guard < facets.index('<p class="module-footer">') < facets.index("{% endif %}\n      </section>")
 
 
-def test_the_table_view_stacks_its_controls_below_desktop_width():
-    """The view's own rules name `#dtprv_wrapper`; a rule on the class alone loses to them, which is
-    how the first try left "Search:" under the toolbar."""
+def test_the_framed_table_shares_the_card_s_edge_one_border_and_one_row_of_controls():
+    """T-4637 (was T-3048's stacking): the frame runs border to border with no border of its own,
+    the view keeps the card's 1rem, controls and footer are one row each until the frame is
+    narrow. The view's own rules name `#dtprv_wrapper`, so these do too, and the two margins that
+    push search and pages right outrank the rule that zeroes every control's margin."""
     css = (THEME / "public__jc-theme.css").read_text()
-    block = css[css.index("@media (max-width: 991.98px) {\n  body.dt-view"):]
-    block = block[:block.index("\n}\n") + 3]
-    assert "body.dt-view #dtprv_wrapper { display: flex; flex-wrap: wrap;" in block
-    assert "float: none; width: 100%; margin: 0;" in block
-    for selector in (".dataTables_filter", ".dataTables_info", ".dataTables_paginate"):
-        assert all("#dtprv_wrapper" in line for line in block.splitlines() if selector in line), selector
+    grid = next(line for line in css.splitlines() if line.startswith(".jc-grid {"))
+    assert "margin-inline: -1rem; width: calc(100% + 2rem);" in grid and "border: 0;" in grid
+    assert ".jc-table { border: 1px solid var(--jc-border);" in css and "padding: 0 1rem; }" in css
+    assert "body.dt-view #resize_wrapper { inset: 0; }" in css
+    assert "body.dt-view #dtprv_wrapper { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; padding: 1rem; }" in css
+    assert "body.dt-view #dtprv_wrapper > div.dataTables_length { order: 1; margin-inline-end: auto; }" in css
+    assert "body.dt-view #dtprv_wrapper > div.dataTables_info { order: 5; padding: 0; margin-inline-end: auto;" in css
+    assert "body.dt-view #dtprv_wrapper > .dataTables_scroll { order: 4; flex: 1 0 100%; }" in css
+    for selector in (".dataTables_filter", ".dataTables_info", ".dataTables_paginate", ".dt-buttons"):
+        lines = [line for line in css.splitlines() if "body.dt-view" in line and selector in line and "::" not in line]
+        assert lines and all("#dtprv_wrapper" in line for line in lines), selector
+    # The body holds its rows, so no band under two of them; its heights are inline.
+    assert "body.dt-view #dtprv_wrapper .dataTables_scrollBody { height: auto !important; max-height: 26rem !important; }" in css
+    narrow = css[css.index("@media (max-width: 47.99rem) {\n  body.dt-view"):]
+    assert "> .dt-buttons { order: 0; flex: 1 0 100%; justify-content: flex-end; }" in narrow[:narrow.index("\n}\n")]
+    # The summary's arrow hangs in the card's padding, so the table's name starts on the table's edge.
+    assert '.jc-table > summary::before { content: "\\25B8"; position: absolute; inset-inline-start: -.75rem;' in css
+
+
+def test_the_table_view_asks_for_no_missing_icon():
+    """T-4637: the view's stylesheet names vendor/FontAwesome/images/times-circle-solid.svg for the
+    search field's clear button, which the extension does not ship; the theme hides that button, so nothing asks for the icon."""
+    css = (THEME / "public__jc-theme.css").read_text()
+    assert 'body.dt-view input[type="search"]::-webkit-search-cancel-button { display: none; }' in css
+    assert "times-circle" not in css
+
+
+def test_the_frame_takes_the_height_its_view_says_from_the_same_origin_only():
+    """T-4637: the view inside the frame posts its height; the page that frames it sets it on
+    the frame the message came from, a number between 160 and 1280, same origin only."""
+    script = (THEME / "public__jc-frame.js").read_text()
+    assert 'postMessage({ type: TYPE, height: height }, window.location.origin)' in script
+    assert "event.origin !== window.location.origin" in script and "contentWindow === event.source" in script
+    assert "Math.min(Math.max(height, 160), 1280)" in script and "isFinite(height)" in script
+    view = (THEME / "templates__datatables__datatables_view.html").read_text()
+    assert "url_for_static('/jc-frame.js') }}\" defer></script>" in view
+    for page in ("templates__package__read.html", "templates__package__resource_read.html"):
+        assert "url_for_static('/jc-frame.js')" in (THEME / page).read_text(), page
 
 
 
@@ -788,7 +822,8 @@ def test_the_footer_offers_the_assistant_as_a_disclosure_a_keyboard_opens():
     assert 'referrerpolicy="no-referrer"' in footer
     # T-4280: the chat opens in Slovak or the visitor's own choice in it; the page's language
     # (T-4253) no longer reaches it.
-    assert '<iframe src="{{ widget }}"' in footer
+    # T-4635: embed mode, so the chat's header carries the ✕ that closes the panel.
+    assert '<iframe src="{{ widget }}?embed=1"' in footer
     assert "lang=" not in footer.split("<iframe", 1)[1].split(">", 1)[0]
 
 
@@ -800,9 +835,9 @@ def test_the_assistant_leaves_the_page_room_and_takes_a_phone_s_whole_screen():
     phone = css.split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
     assert ".jc-assistant[open] { position: fixed; inset: 0;" in phone
     assert "body:has(.jc-assistant[open]) { overflow: hidden; }" in phone
-    # The frame takes its size from the screen, below the 3.25rem bar (T-4248).
-    assert "block-size: 3.25rem;" in phone
-    assert "inset: 3.25rem 0 auto 0; width: 100%; height: calc(100vh - 3.25rem); height: calc(100dvh - 3.25rem);" in phone
+    # The frame takes its size from the screen, the whole of it, with no bar above (T-4248, T-4635).
+    assert ".jc-assistant[open] > iframe { position: fixed; inset: 0; width: 100%; height: 100vh; height: 100dvh;" in phone
+    assert "3.25rem" not in phone
     footer = (THEME / "footer.html").read_text()
     assert "<script src=\"{{ h.url_for_static('/jc-assistant.js') }}\" defer></script>" in footer
     script = (THEME / "public__jc-assistant.js").read_text()
@@ -810,23 +845,29 @@ def test_the_assistant_leaves_the_page_room_and_takes_a_phone_s_whole_screen():
     assert 'event.key === "Escape"' in script and 'querySelector("summary").focus()' in script
 
 
-def test_the_open_assistant_shows_one_close_control_and_a_frame_that_fits_the_window():
-    """T-4283: open, the launcher turns into the panel's round close control (never the label
-    beside the panel); the frame is one tall height, 760px inside the window, whatever the chat
-    holds (T-4592); the button keeps clear of a phone's home bar."""
+def test_the_open_assistant_has_one_close_control_and_a_frame_with_nothing_under_it():
+    """T-4635 (owner's option C): open, the launcher is hidden on a desktop and a phone, and the ✕
+    in the chat's header is the one close control; the frame sits in the corner the launcher left,
+    1rem from the window's edge and clear of a phone's home bar, one tall height, 760px inside the
+    window (T-4592)."""
     css = (THEME / "public__jc-theme.css").read_text()
     desktop = css.split("@media (max-width: 40rem) {", 1)[0]
-    assert "inset-block-end: max(1rem, env(safe-area-inset-bottom));" in desktop
-    assert ".jc-assistant[open] > summary { inline-size: 2.75rem; block-size: 2.75rem; padding: 0; }" in desktop
-    assert ".jc-assistant[open] > summary > span { position: absolute;" in desktop and "clip-path: inset(50%)" in desktop
-    assert '.jc-assistant[open] > summary::after { content: "\\2715";' in desktop
-    assert "height: min(760px, calc(100vh - 6.25rem)); height: min(760px, calc(100dvh - 6.25rem));" in desktop
+    assert ".jc-assistant[open] > summary { display: none; }" in desktop
+    frame = desktop.split(".jc-assistant > iframe { ", 1)[1].split("}", 1)[0]
+    assert "position: fixed; inset-inline-end: 1rem; inset-block-end: max(1rem, env(safe-area-inset-bottom));" in frame
+    assert "height: min(760px, calc(100vh - 2rem)); height: min(760px, calc(100dvh - 2rem));" in frame
+    assert "100%" not in frame, "the frame no longer hangs above the launcher"
     assert "--jc-h" not in css
     phone = css.split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
-    assert ".jc-assistant[open] > summary > span { position: static;" in phone, "a phone's bar keeps its words"
-    # T-4592: the chat no longer reports a height, so the page listens for none.
+    assert ".jc-assistant[open] > summary" not in phone, "no bar on a phone either"
+    assert "\\2715" not in css, "the page draws no ✕ of its own"
+    # The chat's ✕ closes it: only the frame's own message, from the frame's origin, and focus
+    # goes back to the launcher. No height is reported (T-4592).
     script = (THEME / "public__jc-assistant.js").read_text()
-    assert "jc-assistant-height" not in script and 'addEventListener("message"' not in script
+    assert "jc-assistant-height" not in script
+    assert 'data.type === "jc-assistant-close"' in script
+    assert "event.source === frame.contentWindow && event.origin === origin" in script
+    assert 'box.querySelector("summary").focus();' in script
 
 
 def test_the_catalogue_pod_is_told_its_assistant_only_when_the_assistant_is_deployed(rendered, rendered_variant):
@@ -1502,16 +1543,15 @@ def test_the_assistants_page_names_the_installation_s_own_hub_and_assistants_in_
     hub = f"https://{domain}/api/mcp"
     assert page["mcp"]["url"] == hub and name in page["lead"] and "{" not in page["lead"]
     cards = {card["id"]: card for card in page["cards"]}
-    assert [card["id"] for card in page["cards"]] == ["chatgpt", "claude", "gemini", "grok"]
-    # T-4628: the two stores are the only links; the Gemini and Grok apps take no connectors.
+    # T-4634: Gemini's app needs OAuth (T-4631), so it has no card until the gateway offers it.
+    assert [card["id"] for card in page["cards"]] == ["chatgpt", "claude", "grok"]
     assert cards["chatgpt"]["open"] == theme.CHATGPT_PLUGINS == "https://chatgpt.com/plugins"
     assert cards["claude"]["open"] == theme.CLAUDE_CONNECTORS == "https://claude.ai/customize/connectors"
     assert cards["chatgpt"]["open_label"] == "Add to ChatGPT"
-    for id in ("gemini", "grok"):
-        assert cards[id]["soon"] and "open" not in cards[id], id
+    assert cards["grok"]["open"] == theme.GROK_CONNECTORS == "https://grok.com/connectors"
     assert page["gemini"] == f"gemini mcp add --transport http joinedcontext {hub}"
     for card in page["cards"]:
-        assert set(card) <= {"id", "name", "logo", "open", "open_label", "soon"}, card
+        assert set(card) == {"id", "name", "logo", "open", "open_label"}, card
         assert (THEME / ("templates__" + card["logo"].replace("/", "__"))).is_file(), card["logo"]
         assert "token" not in json.dumps(card).lower()
 
@@ -1524,9 +1564,9 @@ def test_the_assistants_page_is_left_empty_without_a_plain_domain(theme):
 def test_the_assistants_page_reads_in_slovak(theme):
     theme.page.lang = "sk"
     page = theme.jc_assistants()
-    assert [card.get("open_label") for card in page["cards"]] == ["Pridať do ChatGPT", "Pridať do Claude", None, None]
+    assert [card["open_label"] for card in page["cards"]] == ["Pridať do ChatGPT", "Pridať do Claude", "Pridať do Grok"]
     assert theme.jc_t("coming_soon") == "Čoskoro" and theme.jc_t("for_developers") == "Pre vývojárov"
-    assert theme.jc_t("store_address") == "V obchode zvoľte Pridať vlastný konektor a vložte túto adresu:"
+    assert theme.jc_t("store_address") == "V ChatGPT, Claude alebo Grok pridajte vlastný konektor a vložte túto adresu:"
     for key in ("assistants", "assistants_lead", "add_to", "store_address", "for_developers", "coming_soon",
                 "copy", "gemini_1", "any_client"):
         assert set(theme.STRINGS[key]) == {"en", "sk", "cs", "de"}, key
@@ -1538,8 +1578,9 @@ def test_the_assistants_page_offers_each_card_s_own_action_and_links_nowhere_els
     template = (THEME / "templates__jc__assistants.html").read_text()
     assert "{% set page = h.jc_assistants() %}" in template
     assert 'href="{{ card.open }}" target="_blank" rel="noopener noreferrer"' in template and template.count("href=") == 2
+    # T-4634: no card says "Coming soon"; the page's empty state alone does.
+    assert template.count("coming_soon") == 1 and "{% if card.soon %}" not in template
     assert template.count("data-jc-copy=") == 1 and 'data-jc-copy="jc-store-url"' in template
-    assert "{% if card.soon %}" in template and "h.jc_t('coming_soon')" in template
     assert "<img" not in template and "<script>" not in template
 
 
@@ -1592,18 +1633,14 @@ def test_each_assistant_card_is_its_logo_its_name_and_at_most_one_link(theme):
     assert "built-in method" not in html and "0x" not in html
     blocks = re.findall(r'<li class="jc-assistant-card">(.*?)</li>', html, re.S)
     cards = {re.search(r'id="jc-card-(\w+)"', block).group(1): block for block in blocks}
-    assert list(cards) == ["chatgpt", "claude", "gemini", "grok"]
-    stores = {"chatgpt": theme.CHATGPT_PLUGINS, "claude": theme.CLAUDE_CONNECTORS}
+    assert list(cards) == ["chatgpt", "claude", "grok"]
+    stores = {"chatgpt": theme.CHATGPT_PLUGINS, "claude": theme.CLAUDE_CONNECTORS, "grok": theme.GROK_CONNECTORS}
     for id, card in cards.items():
         heading = re.search(r"<h2[^>]*>(.*?)</h2>", card, re.S).group(1)
         assert heading.startswith('<svg class="jc-ai-logo" width="32" height="32" aria-hidden="true"'), id
-        assert re.sub(r"<svg.*</svg>", "", heading, flags=re.S).strip() in {"ChatGPT", "Claude", "Gemini", "Grok"}, id
-        links = re.findall(r'<a [^>]*href="([^"]*)"[^>]*>', card)
-        assert links == ([stores[id]] if id in stores else []), id
-        if id in stores:
-            assert 'target="_blank" rel="noopener noreferrer"' in card, id
-        else:
-            assert '<p class="jc-soon">Coming soon</p>' in card, id
+        assert re.sub(r"<svg.*</svg>", "", heading, flags=re.S).strip() in {"ChatGPT", "Claude", "Grok"}, id
+        assert re.findall(r'<a [^>]*href="([^"]*)"[^>]*>', card) == [stores[id]], id
+        assert 'target="_blank" rel="noopener noreferrer"' in card and "Coming soon" not in card, id
         assert "jc-code" not in card and "<button" not in card and "<pre" not in card, id
     # The address once for the page, as text with one copy button; nothing technical above the fold.
     hub = "https://dev.example/api/mcp"
@@ -1628,9 +1665,9 @@ def test_the_developers_fold_holds_every_command_and_stays_closed():
 
 def test_the_card_logos_are_the_makers_own_in_their_colours_and_safe():
     sources = {"chatgpt": "https://developers.openai.com/favicon.svg", "claude": "https://claude.ai/favicon.svg",
-               "gemini": "https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d4735304ff6292a690345.svg",
                "grok": "https://grok.com/images/favicon.svg"}
-    colours = {"chatgpt": "#0080F7", "claude": "#D97757", "gemini": "#1BA1E3", "grok": "#050505"}
+    colours = {"chatgpt": "#0080F7", "claude": "#D97757", "grok": "#050505"}
+    assert sorted(p.name for p in THEME.glob("templates__jc__card-*.svg")) == [f"templates__jc__card-{id}.svg" for id in sorted(sources)]
     for id, source in sources.items():
         comment, svg = (THEME / f"templates__jc__card-{id}.svg").read_text().split("-#}\n", 1)
         assert source in comment and "fetched 2026-10-18" in comment, id
@@ -1647,11 +1684,10 @@ def test_the_card_logos_are_the_makers_own_in_their_colours_and_safe():
     assert not re.search(r"(^|\n)\s*\.jc-ai-logo \{", css)
 
 
-def test_the_cards_sit_four_two_or_one_to_a_row():
+def test_the_cards_sit_in_one_row_or_as_many_as_fit():
     css = (THEME / "public__jc-theme.css").read_text()
-    assert "display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 1rem; }" in css
-    assert "@media (max-width: 64rem) { .jc-assistant-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }" in css
-    assert "@media (max-width: 30rem) { .jc-assistant-cards { grid-template-columns: minmax(0, 1fr); } }" in css
+    assert "display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); grid-auto-rows: 1fr; gap: 1rem; }" in css
+    assert ".jc-soon" not in css
     assert ".jc-card-link::after { content: \"\"; position: absolute; inset: 0; border-radius: inherit; }" in css
     assert ".jc-assistant-card:has(.jc-card-link:focus-visible) { outline: 3px solid var(--jc-accent); outline-offset: 2px; }" in css
 
@@ -1708,8 +1744,7 @@ def test_the_bar_is_one_slant_in_the_makers_colours_and_shrinks_on_a_phone():
 
 def test_the_closed_launcher_takes_the_bar_s_shape_and_the_open_one_does_not():
     """T-4622: closed, the launcher has the bar's slant, corners, shadow and height, its words
-    upright on one line; open, it stays the round close control on a desktop and the top bar on a
-    phone, so no skew reaches it."""
+    upright on one line; open, it is hidden (T-4635), so no skew reaches it."""
     css = desktop_css()
     bar = css.split(".jc-corner .jc-assistants-link { ", 1)[1].split("}", 1)[0]
     closed = css.split(".jc-assistant:not([open]) > summary { ", 1)[1].split("}", 1)[0]
@@ -1724,7 +1759,6 @@ def test_the_closed_launcher_takes_the_bar_s_shape_and_the_open_one_does_not():
     assert "transition" not in closed and "animation" not in closed
     phone = (THEME / "public__jc-theme.css").read_text().split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
     assert ".jc-assistant:not([open]) > summary { block-size: 2.75rem; font-size: .9375rem; padding-inline: 1.125rem; }" in phone
-    assert ".jc-assistant[open] > summary { box-sizing: border-box; inline-size: auto; block-size: 3.25rem;" in phone
     # the closed summary's focus ring stays: no rule takes the outline away
     assert ".jc-assistant > summary:focus-visible { outline: 3px solid var(--jc-accent); outline-offset: 2px; }" in css
     assert "outline: none" not in closed and "outline: 0" not in closed
@@ -1742,3 +1776,105 @@ def test_the_corner_stays_inside_the_gutters_whatever_the_label():
     assert ".jc-seg { inline-size: 1.4375rem; }" in phone
     # the launcher itself never wraps its words: the corner wraps, not the label
     assert "white-space: nowrap;" in desktop_css().split(".jc-assistant:not([open]) > summary { ", 1)[1].split("}", 1)[0]
+
+
+def _with_branding(theme, monkeypatch, tmp_path, block):
+    """The plugin reloaded with `block` as its branding file."""
+    branding = tmp_path / "instance-branding.json"
+    branding.write_text(json.dumps(block))
+    monkeypatch.setenv("JC_BRANDING_FILE", str(branding))
+    spec = importlib.util.spec_from_file_location("jc_theme_plugin_instance", THEME / "plugin.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    module.page = theme.page
+    return module
+
+
+INSTANCE = {"domain": "dev.example", "instanceName": "joinedcontext",
+            "languages": {"default": "sk", "offered": ["sk", "en", "cs"]},
+            "siteTitle": {"sk": "Otvorené dáta", "en": "Open data"},
+            "samples": {"en": ["How many buses run now?"], "sk": ["Koľko autobusov teraz jazdí?"]}}
+
+
+def test_the_site_title_is_the_instances_in_the_readers_language(theme, monkeypatch, tmp_path):
+    """T-4636: `site.title` per language, the default language for one it lacks, the
+    installation's name when the instance sets none."""
+    module = _with_branding(theme, monkeypatch, tmp_path, INSTANCE)
+    for lang, title in (("sk", "Otvorené dáta"), ("en", "Open data"), ("cs", "Otvorené dáta")):
+        theme.page.lang = lang
+        assert module.jc_site_title() == title, lang
+    assert module.jc_site_title("en") == "Open data"
+    theme.page.lang = "en"
+    assert theme.jc_site_title() == "joinedcontext"
+    bare = _with_branding(theme, monkeypatch, tmp_path, dict(INSTANCE, siteTitle={"sk": "", "en": 3}))
+    assert bare.jc_site_title() == "joinedcontext", "nothing usable falls back to the installation's name"
+
+
+def test_the_tagline_is_the_instances_then_the_installations_then_the_themes(theme, monkeypatch, tmp_path):
+    """T-4636, owner 15:18Z: `site.tagline` per language under the title, which it no longer
+    repeats; the installation's tagline, then the theme's own line, where the instance sets none."""
+    module = _with_branding(theme, monkeypatch, tmp_path,
+                            dict(INSTANCE, siteTagline={"sk": "Dáta mesta.", "en": "The city's data."}))
+    theme.page.lang = "en"
+    assert module.jc_site_tagline() == "The city's data."
+    theme.page.lang = "cs"
+    assert module.jc_site_tagline() == "Dáta mesta.", "a language it lacks takes the default's"
+    theme.page.lang = "sk"
+    plain = _with_branding(theme, monkeypatch, tmp_path, dict(INSTANCE, tagline="Ours."))
+    assert plain.jc_site_tagline() == "Ours."
+    bare = _with_branding(theme, monkeypatch, tmp_path, INSTANCE)
+    assert bare.jc_site_tagline() == "Prezrite si ich, stiahnite alebo sa na ne opýtajte asistenta."
+    assert "Otvorené dáta" not in bare.jc_site_tagline(), "the line does not repeat the title"
+    home = (THEME / "templates__home__index.html").read_text()
+    assert "h.jc_site_tagline()" in home
+
+
+def test_the_header_logo_is_the_instances_file_or_the_lockup(theme, monkeypatch, tmp_path):
+    """T-4636: a file name in the theme's public directory, never a path or another origin."""
+    assert theme.jc_site_logo() == "/jc-logo.svg"
+    for logo, served in (("city.svg", "/city.svg"), ("example-city_2.png", "/example-city_2.png"),
+                         ("../etc/passwd", "/jc-logo.svg"), ("https://evil.example/x.svg", "/jc-logo.svg"),
+                         ("/abs.svg", "/jc-logo.svg"), ("x.svg?a", "/jc-logo.svg"), ("", "/jc-logo.svg")):
+        module = _with_branding(theme, monkeypatch, tmp_path, dict(INSTANCE, siteLogo=logo))
+        assert module.jc_site_logo() == served, logo
+
+
+def test_the_connector_pages_questions_are_the_instances(theme, monkeypatch, tmp_path):
+    """T-4636: "Try it" lists the instance's own questions in the reader's language; with none,
+    the page has no such section and names no city."""
+    module = _with_branding(theme, monkeypatch, tmp_path, INSTANCE)
+    theme.page.lang = "en"
+    sections = module.jc_page("connector")["sections"]
+    assert sections[-1] == {"heading": "Try it", "paragraphs": ["How many buses run now?"]}
+    theme.page.lang = "sk"
+    assert module.jc_page("connector")["sections"][-1]["paragraphs"] == ["Koľko autobusov teraz jazdí?"]
+    theme.page.lang = "cs"
+    assert module.jc_page("connector")["sections"][-1]["paragraphs"] == ["Koľko autobusov teraz jazdí?"], \
+        "a language without questions takes the default language's"
+    assert module.jc_page("privacy")["sections"][-1]["heading"] != "Try it"
+    theme.page.lang = "en"
+    assert all(s["heading"] != "Try it" for s in theme.jc_page("connector")["sections"])
+    odd = _with_branding(theme, monkeypatch, tmp_path, dict(INSTANCE, samples={"en": ["ok", 3, " ", None]}))
+    assert odd.jc_page("connector")["sections"][-1]["paragraphs"] == ["ok"]
+
+
+def test_the_nuts_names_are_a_data_file_beside_the_plugin(theme):
+    """T-4636: the region names moved out of the code; the chart mounts the file beside plugin.py."""
+    assert theme.NUTS_NAMES["CZ010"]["en"] == "Prague"
+    chart = (PROJECT_ROOT / "charts/ckan/templates/ckan.yaml").read_text()
+    assert "mountPath: /srv/theme/ckanext_jc_theme/nuts.json" in chart
+
+
+def test_no_city_is_named_in_the_theme_code_or_the_chart_templates():
+    """T-4636 Done when: the city names live in the instance's values, not the theme or the chart."""
+    banned = re.compile(r"bansk|bbsk|žilin|zilin|praha|helsink|data\.dev", re.I)
+    files = [THEME / "plugin.py", *THEME.glob("*.html"), *(PROJECT_ROOT / "charts/ckan/templates").glob("*")]
+    for path in files:
+        text = path.read_text()
+        if path.suffix == ".html":
+            text = re.sub(r"\{#.*?#\}", lambda m: "\n" * m.group(0).count("\n"), text, flags=re.S)
+        if path.suffix in (".yaml", ".tpl"):
+            text = re.sub(r"\{\{-?\s*/\*.*?\*/\s*-?\}\}", lambda m: "\n" * m.group(0).count("\n"), text, flags=re.S)
+        for number, line in enumerate(text.splitlines(), 1):
+            code = line.split("#", 1)[0] if path.suffix in (".py", ".yaml") else line
+            assert not banned.search(code), f"{path.name}:{number}: {line.strip()}"

@@ -354,10 +354,10 @@ STRINGS = {
     "coming_soon": {"en": "Coming soon", "sk": "Čoskoro", "cs": "Brzy", "de": "Demnächst"},
     # T-4628: a card is the logo, the name and one link to that assistant's connector store.
     "add_to": {"en": "Add to {name}", "sk": "Pridať do {name}", "cs": "Přidat do {name}", "de": "Zu {name} hinzufügen"},
-    "store_address": {"en": "In the store, choose Add custom connector and paste this address:",
-                      "sk": "V obchode zvoľte Pridať vlastný konektor a vložte túto adresu:",
-                      "cs": "V obchodě zvolte Přidat vlastní konektor a vložte tuto adresu:",
-                      "de": "Wählen Sie im Store Benutzerdefinierten Konnektor hinzufügen und fügen Sie diese Adresse ein:"},
+    "store_address": {"en": "In ChatGPT, Claude or Grok, add a custom connector and paste this address:",
+                      "sk": "V ChatGPT, Claude alebo Grok pridajte vlastný konektor a vložte túto adresu:",
+                      "cs": "V ChatGPT, Claude nebo Grok přidejte vlastní konektor a vložte tuto adresu:",
+                      "de": "Fügen Sie in ChatGPT, Claude oder Grok einen eigenen Konnektor hinzu und geben Sie diese Adresse ein:"},
     "for_developers": {"en": "For developers", "sk": "Pre vývojárov", "cs": "Pro vývojáře", "de": "Für Entwickler"},
     "gemini_1": {"en": "In Gemini CLI: run this command in a terminal, then start gemini.", "sk": "V Gemini CLI: spustite tento príkaz v termináli a potom gemini.", "cs": "V Gemini CLI: spusťte tento příkaz v terminálu a pak gemini.", "de": "In der Gemini CLI: Führen Sie diesen Befehl im Terminal aus und starten Sie dann gemini."},
     "any_client": {"en": "Any MCP client", "sk": "Akýkoľvek MCP klient", "cs": "Jakýkoli MCP klient", "de": "Jeder MCP-Client"},
@@ -366,10 +366,10 @@ STRINGS = {
     "section_schema_lead": {"en": "What each field means, in the formats validators and developers read.", "sk": "Čo znamená každé pole, vo formátoch pre validátory a vývojárov.", "cs": "Co znamená každé pole, ve formátech pro validátory a vývojáře.", "de": "Was jedes Feld bedeutet, in den Formaten für Validatoren und Entwickler."},
     # The home page (T-3009).
     "tagline": {
-        "en": "Open data you can browse, download and query live.",
-        "sk": "Otvorené dáta, ktoré si prezriete, stiahnete a dopytujete naživo.",
-        "cs": "Otevřená data, která si prohlédnete, stáhnete a dotazujete živě.",
-        "de": "Offene Daten zum Durchsuchen, Herunterladen und Live-Abfragen.",
+        "en": "Browse them, download them or ask the assistant about them.",
+        "sk": "Prezrite si ich, stiahnite alebo sa na ne opýtajte asistenta.",
+        "cs": "Prohlédněte si je, stáhněte nebo se na ně zeptejte asistenta.",
+        "de": "Ansehen, herunterladen oder den Assistenten dazu fragen.",
     },
     "no_datasets": {"en": "No dataset is published yet.", "sk": "Zatiaľ nie je zverejnený žiadny dataset.", "cs": "Zatím není zveřejněna žádná datová sada.", "de": "Noch ist kein Datensatz veröffentlicht."},
     "hero_search": {"en": "Search the open data", "sk": "Hľadať v otvorených dátach", "cs": "Hledat v otevřených datech", "de": "Offene Daten durchsuchen"},
@@ -391,6 +391,7 @@ STRINGS = {
     "search_topics": {"en": "Search topics…", "sk": "Hľadať témy…", "cs": "Hledat témata…",
                       "de": "Themen suchen…"},
     "nav_about": {"en": "About", "sk": "O katalógu", "cs": "O katalogu", "de": "Über den Katalog"},
+    "try_it": {"en": "Try it", "sk": "Vyskúšajte", "cs": "Vyzkoušejte", "de": "Probieren Sie es aus"},
     "publishers_help": {
         "en": "The cities, regions and offices whose data this catalogue carries. Open one to see all of its datasets.",
         "sk": "Mestá, kraje a úrady, ktorých dáta tento katalóg obsahuje. Otvorte jedného a uvidíte všetky jeho datasety.",
@@ -574,6 +575,49 @@ def jc_t(key):
     return words.get(_language()) or words.get("en") or key
 
 
+def _localized(values, language):
+    """`values[language]`, else the catalogue's default language's, else the first; a plain value
+    is the same in every language. None when nothing usable is there."""
+    if not isinstance(values, dict):
+        return values or None
+    default = (BRANDING.get("languages") or {}).get("default")
+    for code in (language, default):
+        if values.get(code):
+            return values[code]
+    return next((value for value in values.values() if value), None)
+
+
+def jc_site_title(language=None):
+    """The catalogue's name in the page's language (T-4636): its instance's `site.title`, else the
+    installation's name."""
+    title = _localized(BRANDING.get("siteTitle"), language or _language())
+    return title if isinstance(title, str) else BRANDING.get("instanceName") or "joinedcontext"
+
+
+def jc_site_tagline(language=None):
+    """The line under the home page's title (T-4636): the instance's `site.tagline` in the page's
+    language, else the installation's tagline, else the theme's."""
+    tagline = _localized(BRANDING.get("siteTagline"), language or _language())
+    if isinstance(tagline, str):
+        return tagline
+    return BRANDING.get("tagline") or jc_t("tagline")
+
+
+def jc_site_logo():
+    """The header's image on this origin (T-4636): the instance's `site.logo`, a file in the
+    theme's public directory, else the joinedcontext.com lockup (T-4627)."""
+    logo = BRANDING.get("siteLogo")
+    if isinstance(logo, str) and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*\.(svg|png|webp)", logo):
+        return "/" + logo
+    return "/jc-logo.svg"
+
+
+def _samples(language):
+    """The instance's sample questions for the page's language (T-4636): strings only."""
+    found = _localized(BRANDING.get("samples"), language)
+    return [q for q in found if isinstance(q, str) and q.strip()] if isinstance(found, list) else []
+
+
 def _extras(pkg):
     return {e.get("key"): e.get("value") for e in (pkg or {}).get("extras") or [] if e.get("key")}
 
@@ -628,19 +672,19 @@ def jc_frequency(pkg):
     return (label, last + datetime.timedelta(days=days))
 
 
-# The NUTS 3 regions of the bodies on the platform; any other code reads as its code (T-4333).
+# The NUTS 3 regions of the bodies on the platform, by code and language (T-4333); any other code
+# reads as its code. A data file beside this one, so no country's names sit in the code (T-4636).
 # ponytail: a handful of names, the Eurostat NUTS list when more countries publish.
-NUTS_NAMES = {
-    "SK010": {"en": "Bratislava Region", "sk": "Bratislavský kraj", "cs": "Bratislavský kraj", "de": "Region Bratislava"},
-    "SK021": {"en": "Trnava Region", "sk": "Trnavský kraj", "cs": "Trnavský kraj", "de": "Region Trnava"},
-    "SK022": {"en": "Trenčín Region", "sk": "Trenčiansky kraj", "cs": "Trenčínský kraj", "de": "Region Trenčín"},
-    "SK023": {"en": "Nitra Region", "sk": "Nitriansky kraj", "cs": "Nitranský kraj", "de": "Region Nitra"},
-    "SK031": {"en": "Žilina Region", "sk": "Žilinský kraj", "cs": "Žilinský kraj", "de": "Region Žilina"},
-    "SK032": {"en": "Banská Bystrica Region", "sk": "Banskobystrický kraj", "cs": "Banskobystrický kraj", "de": "Region Banská Bystrica"},
-    "SK041": {"en": "Prešov Region", "sk": "Prešovský kraj", "cs": "Prešovský kraj", "de": "Region Prešov"},
-    "SK042": {"en": "Košice Region", "sk": "Košický kraj", "cs": "Košický kraj", "de": "Region Košice"},
-    "CZ010": {"en": "Prague", "sk": "Praha", "cs": "Hlavní město Praha", "de": "Prag"},
-}
+def _nuts_names():
+    try:
+        with open(os.path.join(os.path.dirname(__file__), "nuts.json"), encoding="utf-8") as handle:
+            names = json.load(handle)
+    except (OSError, ValueError):
+        return {}
+    return names if isinstance(names, dict) else {}
+
+
+NUTS_NAMES = _nuts_names()
 
 
 def jc_about(pkg):
@@ -1393,15 +1437,18 @@ def jc_mcp_install():
 
 CHATGPT_PLUGINS = "https://chatgpt.com/plugins"
 CLAUDE_CONNECTORS = "https://claude.ai/customize/connectors"
+# Grok's web app takes a custom MCP connector there, New Connector > Custom (T-4634, read
+# 2026-10-18: docs.x.ai/build/features/mcp-servers).
+GROK_CONNECTORS = "https://grok.com/connectors"
 
 
 def jc_assistants():
-    """The "Use it in your AI assistant" page (T-4585, T-4628): a card per assistant, ChatGPT,
-    Claude, Gemini, Grok, in that order, each its logo, its name and at most one link, to its
-    connector store; None without the hub. An assistant whose app takes no connectors today has
-    no link (`soon`), never a dead one. The hub's address stands once under the cards, because our
-    connector is not listed in either store yet; the Gemini CLI command goes to the developers'
-    fold with the editors.
+    """The "Use it in your AI assistant" page (T-4585, T-4628, T-4634): a card per assistant whose
+    app takes our connector, ChatGPT, Claude, Grok, in that order, each its logo, its name and one
+    link, to its connector store; None without the hub. Gemini's app connects only through OAuth,
+    so its card comes with the gateway's (T-4631) and the Gemini CLI command waits in the
+    developers' fold. The hub's address stands once under the cards, because our connector is
+    listed in no store yet.
 
     `logo` is the card's mark in its brand colours, a template beside this file."""
     mcp = jc_mcp_install()
@@ -1409,19 +1456,15 @@ def jc_assistants():
         return None
     name = BRANDING.get("instanceName") or MCP_NAME
 
-    def card(id, title, store=None):
-        found = {"id": id, "name": title, "logo": "jc/card-%s.svg" % id}
-        if store:
-            found.update(open=store, open_label=jc_t("add_to").replace("{name}", title))
-        else:
-            found["soon"] = True
-        return found
+    def card(id, title, store):
+        return {"id": id, "name": title, "logo": "jc/card-%s.svg" % id, "open": store,
+                "open_label": jc_t("add_to").replace("{name}", title)}
 
     return {
         "lead": jc_t("assistants_lead").replace("{name}", name),
         "mcp": mcp,
         "cards": [card("chatgpt", "ChatGPT", CHATGPT_PLUGINS), card("claude", "Claude", CLAUDE_CONNECTORS),
-                  card("gemini", "Gemini"), card("grok", "Grok")],
+                  card("grok", "Grok", GROK_CONNECTORS)],
         "gemini": "gemini mcp add --transport http %s %s" % (MCP_NAME, mcp["url"]),
     }
 
@@ -1441,10 +1484,7 @@ PAGES = {
                                 "read their data models; query_entities and get_entity read the current rows; "
                                 "query_temporal and retrieve_temporal read their history; describe_access says "
                                 "what a call may read.",
-                                "Every tool reads. A tool that would write is refused without a sign-in."]),
-            ("Try it", ["What is the air quality in Helsinki right now?",
-                        "Which hospitals are in the Banská Bystrica region?",
-                        "Which datasets cover public contracts, and which fields do they have?"]),
+                                "Every tool reads. A tool that would write is refused without a sign-in."])
         ]},
         "sk": {"title": "MCP konektor", "sections": [
             ("", ["Pýtajte sa AI asistenta na otvorené dáta tohto katalógu: aktuálnu kvalitu ovzdušia, "
@@ -1454,10 +1494,7 @@ PAGES = {
                            "ich dátové modely; query_entities a get_entity čítajú aktuálne záznamy; "
                            "query_temporal a retrieve_temporal ich históriu; describe_access povie, čo smie "
                            "volanie čítať.",
-                           "Každý nástroj iba číta. Nástroj, ktorý by zapisoval, bez prihlásenia odmietne."]),
-            ("Vyskúšajte", ["Aká je teraz kvalita ovzdušia v Helsinkách?",
-                            "Ktoré nemocnice sú v Banskobystrickom kraji?",
-                            "Ktoré datasety obsahujú verejné zmluvy a aké majú polia?"]),
+                           "Každý nástroj iba číta. Nástroj, ktorý by zapisoval, bez prihlásenia odmietne."])
         ]},
     },
     "privacy": {
@@ -1549,6 +1586,10 @@ def jc_page(name):
                 for p in paragraphs if mcp or ("{url}" not in p and "{domain}" not in p)]
         if kept:
             sections.append({"heading": heading, "paragraphs": kept})
+    # The connector's questions are the instance's own, about its own publishers (T-4636).
+    samples = _samples(_language()) if name == "connector" else []
+    if samples:
+        sections.append({"heading": jc_t("try_it"), "paragraphs": samples})
     return {"name": name, "title": words["title"], "sections": sections,
             "email": email if "@" in email else "", "mcp": mcp, "pages": list(PAGES)}
 
@@ -1656,7 +1697,8 @@ class JcThemePlugin(plugins.SingletonPlugin):
         # The logo is a file beside this package, so CKAN serves it from its own origin and
         # no page reaches a third party for an asset.
         toolkit.add_public_directory(config, "public")
-        title = BRANDING.get("instanceName")
+        # CKAN keeps one title; the pages ask jc_site_title for the reader's language (T-4636).
+        title = jc_site_title((BRANDING.get("languages") or {}).get("default"))
         if title:
             config["ckan.site_title"] = title
             config["ckan.site_description"] = BRANDING.get("organisation", "")
@@ -1711,6 +1753,9 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_mcp_install": jc_mcp_install,
             "jc_assistants": jc_assistants,
             "jc_page": jc_page,
+            "jc_site_title": jc_site_title,
+            "jc_site_tagline": jc_site_tagline,
+            "jc_site_logo": jc_site_logo,
             "jc_assistant_widget": jc_assistant_widget,
             "jc_about_site": jc_about_site,
             "humanize_entity_type": humanize_entity_type,

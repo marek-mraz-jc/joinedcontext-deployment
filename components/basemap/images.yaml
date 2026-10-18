@@ -1,0 +1,17 @@
+---
+# Re-pin a digest with (the manifest list, so every architecture keeps its image):
+#   curl -s "https://hub.docker.com/v2/repositories/<repo>/tags/<tag>" | jq -r .digest
+basemap:
+  tiles:
+    # The static server: nginx answers range requests on a file by itself, runs as uid 101 and
+    # writes only to /tmp and its cache directory. The stable line, at least 7 days old.
+    server:
+      repository: 'docker.io/nginxinc/nginx-unprivileged'
+      tag: '1.30.4-alpine-slim'
+      digest: 'sha256:7bbe8940bc478e5618e6d4cfbeda406e5b4217cacc06faacd665aca5e468595e'
+    # The refresh job's shell: wget with TLS, tar, sha256sum and df from busybox. The pmtiles
+    # CLI it runs is a release binary checked by sha256 (default-environment.yaml.gotmpl).
+    refresh:
+      repository: 'docker.io/library/alpine'
+      tag: '3.24.2'
+      digest: 'sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6'

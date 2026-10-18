@@ -206,6 +206,10 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "CKAN's fingerprinted stylesheets and scripts, the same files for everyone, kept a year by the browser (T-4201)",
     },
+    "basemap": {
+        "reach": UPSTREAM, "cacheable": True, "framing": "DENY",
+        "why": "the background map's tiles, style, fonts and sprites on tiles.{domain} (T-4638): public map data, read-only nginx answering GET/HEAD/preflight, the same files for everyone, its own larger bucket",
+    },
     "security-txt": {
         "reach": TERMINATES, "cacheable": False, "framing": "DENY",
         "why": "RFC 9116 security.txt is public by the RFC; the edge answers it and names only the reporting contact (T-1721)",
