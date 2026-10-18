@@ -1,5 +1,5 @@
 name: ci
-# The one lane of this private repository (Actions minutes are metered): render and gate every
+# The fast lane, on every push (ci-full and pinned-images run daily beside it): render and gate every
 # environment in a single job, run the tests in another, scan the history for secrets. Every
 # tool is downloaded once; the environments loop inside the job instead of a matrix, which
 # paid the setup four times over.

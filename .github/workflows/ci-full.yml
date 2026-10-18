@@ -1,9 +1,9 @@
 name: ci-full
 # slow lane: policy gates on the rendered output and the k3d deployment test; never a PR gate.
-# On demand only for now: this repository is private and its Actions minutes are metered
-# (T-0402, T-0521). Put `push: { branches: [main] }` and `schedule: [{ cron: "37 2 * * *" }]`
-# back under `on:` when the minutes are back.
+# Once a day and on demand, not on every push: the shared runner queue keeps room for the
+# Antares trains (T-3289).
 on:
+  schedule: [{ cron: "37 2 * * *" }]
   workflow_dispatch:
 permissions: { contents: read }
 concurrency: { group: "ci-full-${{ github.ref }}", cancel-in-progress: false }
