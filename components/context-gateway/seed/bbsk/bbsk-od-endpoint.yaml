@@ -23,3 +23,25 @@ spec:
   - odata
   - sta
   - mcp
+  catalog:
+    license: CC_BYSA_4_0
+    themes:
+    - GOVE
+    - REGI
+    frequency: DAILY
+    keywords:
+      sk:
+      - Banskobystrický kraj
+      - školy
+      - sociálne služby
+      - cesty
+      - kultúra
+      en:
+      - Banská Bystrica Region
+      - schools
+      - social services
+      - roads
+      - culture
+    spatial:
+    - SK032
+    personalData: does-not-contain

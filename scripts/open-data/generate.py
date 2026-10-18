@@ -87,6 +87,9 @@ PROJECTS = {
                         "as Articles."},
         # The city with a margin: the space's place, which the catalogue's Dataset carries (T-4525).
         "area": [18.95, 48.6, 19.35, 48.9],
+        "keywords": {"sk": ["Banská Bystrica", "zmluvy", "objednávky", "dotácie", "adresy", "verejná zeleň"],
+                     "en": ["Banská Bystrica", "contracts", "orders", "grants", "addresses", "public greenery"]},
+        "spatial": ["SK032", "https://data.gov.sk/id/lau2/SK0321508438"],
     },
     "bbsk": {
         "domain": "bbsk.sk",
@@ -95,6 +98,9 @@ PROJECTS = {
                   "en": "Every dataset of the Banská Bystrica Self-Governing Region in the catalogue (opendata.bbsk.sk)."},
         # The region with a margin (its data reaches 18.54 E in the Žarnovica district).
         "area": [18.3, 47.9, 20.5, 49.2],
+        "keywords": {"sk": ["Banskobystrický kraj", "školy", "sociálne služby", "cesty", "kultúra"],
+                     "en": ["Banská Bystrica Region", "schools", "social services", "roads", "culture"]},
+        "spatial": ["SK032"],
     },
 }
 # Every standard the open data is served in (T-4279). `sta` since T-4288: a row with an `observedAt`
@@ -724,7 +730,7 @@ def project_files(project: str, entries: list[dict], names: dict[str, str]) -> d
         "`dataProvider` names. A member of the project's public MCP server, which the public assistant reads.",
         {**head, "kind": "Endpoint", "metadata": {**meta(space, p["title"]), "description": p["about"]},
          "spec": {"contextSpaceRef": space, "slug": slug_for(endpoint), "audience": "public",
-                  "enabledRepresentations": REPRESENTATIONS}})
+                  "enabledRepresentations": REPRESENTATIONS, "catalog": catalog_block(project, p, entries)}})
     information = [{"entities": [{"type": t} for t in types]}]
     files[f"{pre}policy-read.yaml"] = manifest(
         "Anyone reads every type of the space: each is open data, and no mapping reads a column that names\n"
@@ -977,6 +983,16 @@ def area_rule(p: dict, entries: list[dict]) -> dict:
     kind = next((e["type"] for e in entries if located(e)), None)
     return {"quality": [{"name": "in-area", "entityType": kind, "kind": "area", "attribute": "location",
                          "bbox": p["area"]}]} if kind else {}
+
+
+def catalog_block(project: str, p: dict, entries: list[dict]) -> dict:
+    """What DCAT-AP-SK asks of the door's record (T-4596); the publisher and desk are the Project's.
+    CC BY-SA 4.0 covers every mapped dataset of either project, the CC BY ones included; the news
+    and the address register are read every night; no mapping reads a column that names a person."""
+    licences = {e.get("license") for e in entries}
+    assert licences <= {"cc-by", "cc-by-sa"}, f"{project}: a licence CC BY-SA does not cover: {licences}"
+    return {"license": "CC_BYSA_4_0", "themes": ["GOVE", "REGI"], "frequency": "DAILY",
+            "keywords": p["keywords"], "spatial": p["spatial"], "personalData": "does-not-contain"}
 
 
 def located(entry: dict) -> bool:
