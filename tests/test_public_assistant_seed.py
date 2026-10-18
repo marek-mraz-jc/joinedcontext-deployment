@@ -296,11 +296,13 @@ def test_the_general_assistant_names_no_city_and_carries_the_portal_guide():
     spec = general()["spec"]
     greeting = spec["theme"]["greeting"]
     assert set(greeting) == {"sk", "en", "fi"}, "a greeting per language (T-4365)"
-    shown = (spec["theme"]["title"] + " " + " ".join(greeting.values())).lower()
+    title = spec["theme"]["title"]
+    assert title == {"sk": "Otvorené dáta", "en": "Open data", "fi": "Avoin data"}, "no host name in the header (T-4635)"
+    shown = (" ".join(title.values()) + " " + " ".join(greeting.values())).lower()
     for words in NAMES.values():
         assert not any(word in shown for word in words), shown
     assert "helsin" not in shown
-    assert spec["theme"]["title"] == "data.dev"
+    assert "data.dev" not in shown
     assert spec["languages"] == ["sk", "en", "fi"]
     assert set(spec["suggestions"]) == set(spec["disclaimer"]) == {"sk", "en", "fi"}
     # Judge round 3 (T-4342): one chip set in every language, each chip on one line of the 400px panel.

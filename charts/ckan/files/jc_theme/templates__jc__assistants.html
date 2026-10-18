@@ -1,9 +1,8 @@
 {% extends "page.html" %}
 
-{# "Use it in your AI assistant" (T-4585, T-4628), for a citizen or a clerk: one card per
-   assistant, ChatGPT, Claude, Gemini, Grok, each its logo, its name and at most one link, the
-   whole card the link, to that assistant's connector store; an assistant whose app takes no
-   connectors says so and links nowhere. The address the stores ask for stands once under the
+{# "Use it in your AI assistant" (T-4585, T-4628, T-4634), for a citizen or a clerk: one card per
+   assistant whose app takes our connector, ChatGPT, Claude, Grok, each its logo, its name and one
+   link, the whole card the link, to that assistant's connector store. The address the stores ask for stands once under the
    cards, as text a person without script selects by hand. Everything for developers (the Gemini
    CLI, the editors, any MCP client) folds away at the end, closed. #}
 {% set page = h.jc_assistants() %}
@@ -23,11 +22,7 @@
         {% for card in page.cards %}
           <li class="jc-assistant-card">
             <h2 id="jc-card-{{ card.id }}">{% include card.logo %}{{ card.name }}</h2>
-            {% if card.soon %}
-              <p class="jc-soon">{{ h.jc_t('coming_soon') }}</p>
-            {% else %}
-              <a class="jc-card-link" href="{{ card.open }}" target="_blank" rel="noopener noreferrer">{{ card.open_label }}</a>
-            {% endif %}
+            <a class="jc-card-link" href="{{ card.open }}" target="_blank" rel="noopener noreferrer">{{ card.open_label }}</a>
           </li>
         {% endfor %}
       </ul>

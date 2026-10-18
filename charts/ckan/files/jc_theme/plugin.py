@@ -354,10 +354,10 @@ STRINGS = {
     "coming_soon": {"en": "Coming soon", "sk": "Čoskoro", "cs": "Brzy", "de": "Demnächst"},
     # T-4628: a card is the logo, the name and one link to that assistant's connector store.
     "add_to": {"en": "Add to {name}", "sk": "Pridať do {name}", "cs": "Přidat do {name}", "de": "Zu {name} hinzufügen"},
-    "store_address": {"en": "In the store, choose Add custom connector and paste this address:",
-                      "sk": "V obchode zvoľte Pridať vlastný konektor a vložte túto adresu:",
-                      "cs": "V obchodě zvolte Přidat vlastní konektor a vložte tuto adresu:",
-                      "de": "Wählen Sie im Store Benutzerdefinierten Konnektor hinzufügen und fügen Sie diese Adresse ein:"},
+    "store_address": {"en": "In ChatGPT, Claude or Grok, add a custom connector and paste this address:",
+                      "sk": "V ChatGPT, Claude alebo Grok pridajte vlastný konektor a vložte túto adresu:",
+                      "cs": "V ChatGPT, Claude nebo Grok přidejte vlastní konektor a vložte tuto adresu:",
+                      "de": "Fügen Sie in ChatGPT, Claude oder Grok einen eigenen Konnektor hinzu und geben Sie diese Adresse ein:"},
     "for_developers": {"en": "For developers", "sk": "Pre vývojárov", "cs": "Pro vývojáře", "de": "Für Entwickler"},
     "gemini_1": {"en": "In Gemini CLI: run this command in a terminal, then start gemini.", "sk": "V Gemini CLI: spustite tento príkaz v termináli a potom gemini.", "cs": "V Gemini CLI: spusťte tento příkaz v terminálu a pak gemini.", "de": "In der Gemini CLI: Führen Sie diesen Befehl im Terminal aus und starten Sie dann gemini."},
     "any_client": {"en": "Any MCP client", "sk": "Akýkoľvek MCP klient", "cs": "Jakýkoli MCP klient", "de": "Jeder MCP-Client"},
@@ -1428,15 +1428,18 @@ def jc_mcp_install():
 
 CHATGPT_PLUGINS = "https://chatgpt.com/plugins"
 CLAUDE_CONNECTORS = "https://claude.ai/customize/connectors"
+# Grok's web app takes a custom MCP connector there, New Connector > Custom (T-4634, read
+# 2026-10-18: docs.x.ai/build/features/mcp-servers).
+GROK_CONNECTORS = "https://grok.com/connectors"
 
 
 def jc_assistants():
-    """The "Use it in your AI assistant" page (T-4585, T-4628): a card per assistant, ChatGPT,
-    Claude, Gemini, Grok, in that order, each its logo, its name and at most one link, to its
-    connector store; None without the hub. An assistant whose app takes no connectors today has
-    no link (`soon`), never a dead one. The hub's address stands once under the cards, because our
-    connector is not listed in either store yet; the Gemini CLI command goes to the developers'
-    fold with the editors.
+    """The "Use it in your AI assistant" page (T-4585, T-4628, T-4634): a card per assistant whose
+    app takes our connector, ChatGPT, Claude, Grok, in that order, each its logo, its name and one
+    link, to its connector store; None without the hub. Gemini's app connects only through OAuth,
+    so its card comes with the gateway's (T-4631) and the Gemini CLI command waits in the
+    developers' fold. The hub's address stands once under the cards, because our connector is
+    listed in no store yet.
 
     `logo` is the card's mark in its brand colours, a template beside this file."""
     mcp = jc_mcp_install()
@@ -1444,19 +1447,15 @@ def jc_assistants():
         return None
     name = BRANDING.get("instanceName") or MCP_NAME
 
-    def card(id, title, store=None):
-        found = {"id": id, "name": title, "logo": "jc/card-%s.svg" % id}
-        if store:
-            found.update(open=store, open_label=jc_t("add_to").replace("{name}", title))
-        else:
-            found["soon"] = True
-        return found
+    def card(id, title, store):
+        return {"id": id, "name": title, "logo": "jc/card-%s.svg" % id, "open": store,
+                "open_label": jc_t("add_to").replace("{name}", title)}
 
     return {
         "lead": jc_t("assistants_lead").replace("{name}", name),
         "mcp": mcp,
         "cards": [card("chatgpt", "ChatGPT", CHATGPT_PLUGINS), card("claude", "Claude", CLAUDE_CONNECTORS),
-                  card("gemini", "Gemini"), card("grok", "Grok")],
+                  card("grok", "Grok", GROK_CONNECTORS)],
         "gemini": "gemini mcp add --transport http %s %s" % (MCP_NAME, mcp["url"]),
     }
 
