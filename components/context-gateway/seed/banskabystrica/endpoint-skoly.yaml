@@ -14,7 +14,7 @@ spec:
   slug: bkc4g3zfirh6zae3owdike7am2upayjs
   audience: public
   policyRef: urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:skoly-read
-  enabledRepresentations: [ngsi-ld, geojson, csv, json, websocket, ogc-features, odata, mcp]
+  enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: banskabystrica }

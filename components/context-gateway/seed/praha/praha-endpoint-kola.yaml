@@ -14,7 +14,7 @@ spec:
   slug: yw7epl4ai3dujdj4itt4uwvhwcz6tib2
   audience: public
   policyRef: urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-kola
-  enabledRepresentations: [ngsi-ld, geojson, csv, json, websocket, ogc-features, odata, mcp]
+  enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: praha }

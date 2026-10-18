@@ -14,7 +14,7 @@ spec:
   slug: yl5ifsuftssvaghx2ke4atgvuxx4zonl
   audience: public
   policyRef: urn:ngsi-ld:Policy:zilina.sk:zilina-verejne:pamiatky-read
-  enabledRepresentations: [ngsi-ld, geojson, csv, json, websocket, ogc-features, odata, mcp]
+  enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: zilina }

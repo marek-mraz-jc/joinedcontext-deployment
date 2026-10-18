@@ -19,11 +19,7 @@ spec:
   audience: public
   enabledRepresentations:
   - ngsi-ld
-  - geojson
   - csv
-  - json
-  - xlsx
-  - parquet
   - websocket
   - ogc-features
   - odata

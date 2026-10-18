@@ -13,7 +13,7 @@ spec:
   contextSpaceRef: zilina-verejne
   slug: zhu42lbyivllciy7pluenlhxmqn5hi7c
   audience: public
-  enabledRepresentations: [ngsi-ld, geojson, csv, json, websocket, ogc-features, odata, mcp]
+  enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]
   # Off the catalogue (T-4344): its unrelated types are each their own dataset, through the
   # narrowed Endpoints beside it. This Endpoint stays for the Apps and connectors that read it.
   # The dataset page and the DCAT-AP record beside the title (EP-27, T-3139). The space is a

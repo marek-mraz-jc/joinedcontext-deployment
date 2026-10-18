@@ -14,7 +14,7 @@ spec:
   slug: 4qt5psgy3oxnd5eiuh4ku4thx7ozqgbl
   audience: public
   policyRef: urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-parkovani-pr
-  enabledRepresentations: [ngsi-ld, geojson, csv, json, websocket, ogc-features, odata, mcp]
+  enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: praha }

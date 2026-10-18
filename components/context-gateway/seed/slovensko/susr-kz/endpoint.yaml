@@ -12,7 +12,7 @@ spec:
   contextSpaceRef: susr-kz
   slug: 6icyuts7sj2fvg53hcgrq4s7nw5qs2jo
   audience: public
-  enabledRepresentations: [ngsi-ld, geojson, csv, json, xlsx, parquet, ogc-features, odata, mcp]
+  enabledRepresentations: [ngsi-ld, csv, ogc-features, odata, mcp]
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: slovensko }

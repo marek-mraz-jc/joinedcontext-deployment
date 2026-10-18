@@ -13,7 +13,7 @@ spec:
   # only on a public endpoint, so the kpi-read grant (role public) applies to a signed-in
   # steward and a dashboard alike (EP-16, GW22). On an organization endpoint nobody held it.
   audience: public
-  enabledRepresentations: [ngsi-ld, mcp, csv, json, websocket, ogc-features, odata]
+  enabledRepresentations: [ngsi-ld, mcp, csv, websocket, ogc-features, odata]
   # No licence: an indicator is computed by a pipeline or the assistant from whatever the city space
   # holds, and no seeded source names its inputs; the licence waits for that (T-2793).
   catalog:

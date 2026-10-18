@@ -19,4 +19,4 @@ spec:
   audience: public
   # mcp: the members of the public `otvorene-data` MCP server (T-4141) and the public
   # assistant's connectors (T-4167); the gateway lists a member only when it serves MCP.
-  enabledRepresentations: [ngsi-ld, csv, json, websocket, ogc-features, odata, mcp]
+  enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]
