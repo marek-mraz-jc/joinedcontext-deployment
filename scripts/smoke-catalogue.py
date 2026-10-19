@@ -8,7 +8,7 @@ Reads only public data, anonymously: CKAN's package_search and the gateway's DCA
 inventory, then per dataset NGSI-LD, MCP, OData, OGC API Features and the data model (every run),
 and the datastore count, WebSocket, map and CSV (rotating, least recently checked first).
 One request at a time, at most 50 a minute, 500 a run and 10 minutes (owner limit, T-4716).
-Writes `<out-dir>/smoke-catalogue-<env>-<time>.tsv` (default out-dir `deployment`) and exits 1
+Writes `<out-dir>/smoke-catalogue-<env>-<time>.tsv` (default out-dir `.smoke`) and exits 1
 on any ko. Testing/05 §4.1 is the contract.
 """
 
@@ -36,6 +36,9 @@ MAX_BODY = 1 << 20  # an interface answer: limit=1, or the head of file.csv
 MAX_INVENTORY = 64 << 20  # package_search and the DCAT feed, read whole
 TOLERANCE = 0.01
 RETRIES = 3
+# The tables stay where an apply leaves them: _dev-assemble deletes deployment/, and the
+# rotation reads the previous table (gitignored).
+DEFAULT_OUT = ".smoke"
 CORE = ["ngsi-ld", "mcp", "odata", "ogc", "model"]
 ROTATING = ["datastore", "websocket", "map", "csv"]
 COLUMNS = ["inventory", *CORE, *ROTATING]
@@ -506,7 +509,7 @@ def main(argv: list[str]) -> int:
     # One lookup per host for the whole run: the smoke host's resolver can stall seconds per
     # lookup (T-3420), which a 500-request run would pay 500 times.
     socket.getaddrinfo = functools.lru_cache(maxsize=64)(socket.getaddrinfo)
-    return run(argv[1], argv[2], Path(argv[3] if len(argv) == 4 else "deployment"))
+    return run(argv[1], argv[2], Path(argv[3] if len(argv) == 4 else DEFAULT_OUT))
 
 
 if __name__ == "__main__":

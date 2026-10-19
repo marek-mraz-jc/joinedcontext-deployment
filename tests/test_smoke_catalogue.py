@@ -365,3 +365,11 @@ def test_a_trickling_answer_is_cut_at_the_timeout_in_total(monkeypatch):
     started = time.monotonic()
     got = smoke.send("GET", f"http://127.0.0.1:{listener.getsockname()[1]}/", {}, None)
     assert got.error == "timeout after 1 s" and time.monotonic() - started < 3
+
+
+def test_the_tables_live_where_an_apply_leaves_them_and_git_ignores_them():
+    root = SCRIPT.parent.parent
+    justfile = (root / "justfile").read_text()
+    removed = [line.split("rm -rf", 1)[1].split() for line in justfile.splitlines() if "rm -rf" in line]
+    assert all(smoke.DEFAULT_OUT not in words and "." not in words for words in removed)
+    assert f"/{smoke.DEFAULT_OUT}/" in (root / ".gitignore").read_text().splitlines()

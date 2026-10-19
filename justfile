@@ -487,7 +487,7 @@ _smoke domain namespace:
 	printf 'resolve = *:443:%s\nresolve = *:80:%s\n' "$edge" "$edge" >"$CURL_HOME/.curlrc"
 	JC_REALM="{{ namespace }}" ./scripts/smoke.sh "https://{{ domain }}" "https://idm.{{ domain }}" || rc=1
 	# Every catalogue dataset and public Endpoint on every interface (T-4716): read-only,
-	# 50 requests a minute, 10 minutes at most; its table lands in deployment/.
+	# 50 requests a minute, 10 minutes at most; its table lands in .smoke/.
 	echo "catalogue"
 	python3 scripts/smoke-catalogue.py "{{ domain }}" "{{ namespace }}" || rc=1
 	# A CronJob whose newest run failed (T-4385): a harvest dead since the night is no green smoke.
