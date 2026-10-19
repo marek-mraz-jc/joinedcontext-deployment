@@ -1672,13 +1672,11 @@ def test_the_assistants_page_names_the_installation_s_own_hub_and_assistants_in_
     cards = {card["id"]: card for card in page["cards"]}
     # T-4634, T-4643: Gemini's app needs OAuth (T-4631), so it has no card until its flag is on.
     assert [card["id"] for card in page["cards"]] == ["chatgpt", "claude", "grok"]
-    assert cards["chatgpt"]["open"] == theme.CHATGPT_PLUGINS == "https://chatgpt.com/plugins"
-    assert cards["claude"]["open"] == theme.CLAUDE_CONNECTORS == "https://claude.ai/customize/connectors"
-    assert cards["chatgpt"]["open_label"] == "Add to ChatGPT"
-    assert cards["grok"]["open"] == theme.GROK_CONNECTORS == "https://grok.com/connectors"
+    assert cards["chatgpt"]["guide_label"] == "Guide"
     assert "gemini" not in page  # no Gemini CLI command either (T-4735)
     for card in page["cards"]:
-        assert set(card) == {"id", "name", "logo", "open", "open_label", "guide_label"}, card
+        # T-4735: no store link; the card is its logo, its name and its guide.
+        assert set(card) == {"id", "name", "logo", "guide_label"}, card
         assert (THEME / ("templates__" + card["logo"].replace("/", "__"))).is_file(), card["logo"]
         assert "token" not in json.dumps(card).lower()
 
@@ -1691,10 +1689,13 @@ def test_the_assistants_page_is_left_empty_without_a_plain_domain(theme):
 def test_the_assistants_page_reads_in_slovak(theme):
     theme.page.lang = "sk"
     page = theme.jc_assistants()
-    assert [card["open_label"] for card in page["cards"]] == ["Pridať do ChatGPT", "Pridať do Claude", "Pridať do Grok"]
+    assert [card["guide_label"] for card in page["cards"]] == ["Návod"] * 3
+    assert theme.jc_t("connector_status") == ("Konektor pripravujeme: v adresároch Claude a ChatGPT ešte nie je "
+                                              "zverejnený. Zatiaľ ho pridáte ako vlastný konektor podľa návodu.")
     assert theme.jc_t("coming_soon") == "Čoskoro" and theme.jc_t("for_developers") == "Pre vývojárov"
     assert theme.jc_t("store_address") == "Každý návod ukazuje, kam vložiť túto adresu:"
-    for key in ("assistants", "assistants_lead", "add_to", "store_address", "for_developers", "coming_soon",
+    assert "add_to" not in theme.STRINGS
+    for key in ("assistants", "assistants_lead", "connector_status", "store_address", "for_developers", "coming_soon",
                 "copy", "any_client", "guide", "guide_title", "guide_who", "guide_steps", "guide_try",
                 "guide_example", "guide_good", "guide_trouble", "guide_checked", "guide_back"):
         assert set(theme.STRINGS[key]) == {"en", "sk", "cs", "de"}, key
@@ -1702,13 +1703,15 @@ def test_the_assistants_page_reads_in_slovak(theme):
         assert "Add custom" not in theme.STRINGS[key]["sk"] and "Create as" not in theme.STRINGS[key]["sk"], key
 
 
-def test_the_assistants_page_offers_each_card_s_own_action_and_links_nowhere_else():
+def test_the_assistants_page_offers_each_card_s_own_guide_and_links_nowhere_else():
     template = (THEME / "templates__jc__assistants.html").read_text()
     assert "{% set page = h.jc_assistants() %}" in template
-    assert 'href="{{ card.open }}" target="_blank" rel="noopener noreferrer"' in template and template.count("href=") == 4
-    # The fourth: each website the hub searches (T-4659), its own address.
+    assert template.count("href=") == 3 and "card.open" not in template and 'target="_blank"' not in template
+    # The third: each website the hub searches (T-4659), its own address.
     assert '<a href="{{ source.url }}" rel="noopener noreferrer">' in template
-    assert '<a class="jc-card-guide" href="{{ h.url_for(\'jc_pages.guide\', id=card.id) }}">{{ card.guide_label }}</a>' in template
+    # T-4735: the guide is the card's one link, and the whole card opens it.
+    assert ('<a class="jc-card-link" href="{{ h.url_for(\'jc_pages.guide\', id=card.id) }}" '
+            'aria-describedby="jc-card-{{ card.id }}">{{ card.guide_label }}</a>') in template
     # T-4634: no card says "Coming soon"; the page's empty state alone does.
     assert template.count("coming_soon") == 1 and "{% if card.soon %}" not in template
     assert template.count("data-jc-copy=") == 1 and 'data-jc-copy="jc-store-url"' in template
@@ -1752,28 +1755,33 @@ def render(template, theme, **context):
     sources = {k: re.sub(r"{%\s*snippet [^%]*%}", "", v) for k, v in sources.items()}
     env = jinja2.Environment(loader=jinja2.DictLoader(sources), autoescape=True)
     h = types.SimpleNamespace(jc_assistants=theme.jc_assistants, jc_t=theme.jc_t, jc_mcp_install=theme.jc_mcp_install,
+                              jc_page=theme.jc_page,
                               jc_assistant_widget=lambda publisher: context.get("widget"),
                               url_for=lambda name, **kw: "/assistants" + ("/" + kw["id"] if "id" in kw else ""),
                               url_for_static=lambda path: path)
     return env.get_template(template).render(h=h, **context)
 
 
-def test_each_assistant_card_is_its_logo_its_name_and_at_most_one_link(theme):
-    """T-4628, the owner: "just logo, name and link to the market place with connectors". T-4609
+@pytest.mark.parametrize("lang", ["sk", "en", "cs", "de"])
+def test_each_assistant_card_is_its_logo_its_name_and_its_guide(theme, lang):
+    """T-4628, T-4735, the owner: "there should be just návod/guide", no store link. T-4609
     printed `card.copy` as "<built-in method copy …>": Jinja reads a dict's method before its key."""
+    theme.page.lang = lang
     html = render("jc/assistants.html", theme)
     assert "built-in method" not in html and "0x" not in html
     blocks = re.findall(r'<li class="jc-assistant-card">(.*?)</li>', html, re.S)
     cards = {re.search(r'id="jc-card-(\w+)"', block).group(1): block for block in blocks}
     assert list(cards) == ["chatgpt", "claude", "grok"]
-    stores = {"chatgpt": theme.CHATGPT_PLUGINS, "claude": theme.CLAUDE_CONNECTORS, "grok": theme.GROK_CONNECTORS}
+    # T-4735: one calm line says no directory lists the connector yet, above the cards.
+    assert html.count('<p class="jc-connector-status">') == 1
+    assert html.index("jc-connector-status") < html.index("jc-assistant-cards")
+    assert not re.search(r"Pridať do|Add to|Přidat do|Zu \w+ hinzufügen|chatgpt\.com/plugins|claude\.ai/customize|grok\.com/connectors", html)
     for id, card in cards.items():
         heading = re.search(r"<h2[^>]*>(.*?)</h2>", card, re.S).group(1)
         assert heading.startswith('<svg class="jc-ai-logo" width="32" height="32" aria-hidden="true"'), id
         assert re.sub(r"<svg.*</svg>", "", heading, flags=re.S).strip() in {"ChatGPT", "Claude", "Grok"}, id
-        # T-4643: the store, and our own guide beside it.
-        assert re.findall(r'<a [^>]*href="([^"]*)"[^>]*>', card) == [stores[id], f"/assistants/{id}"], id
-        assert 'target="_blank" rel="noopener noreferrer"' in card and "Coming soon" not in card, id
+        assert re.findall(r'<a [^>]*href="([^"]*)"[^>]*>', card) == [f"/assistants/{id}"], id
+        assert 'class="jc-card-link"' in card and "target=" not in card and "Coming soon" not in card, id
         assert "jc-code" not in card and "<button" not in card and "<pre" not in card, id
     # The address once for the page, as text with one copy button; nothing technical above the fold.
     hub = "https://api.dev.example/api/mcp"
@@ -1782,7 +1790,20 @@ def test_each_assistant_card_is_its_logo_its_name_and_at_most_one_link(theme):
     assert '<span id="jc-store-url" class="jc-store-url">https://api.dev.example<wbr>/api<wbr>/mcp</span>' in above
     assert above.replace("<wbr>", "").count(hub) == 1
     assert above.count("<button") == 1 and not re.search(r"class=\"jc-code[ \"]", above) and "<pre" not in above and "<code" not in above
-    assert fold.startswith("\n        <summary>For developers</summary>")
+    if lang == "en":
+        assert fold.startswith("\n        <summary>For developers</summary>")
+
+
+@pytest.mark.parametrize("lang, line", [
+    ("sk", "Konektor pripravujeme: v adresároch Claude a ChatGPT ešte nie je zverejnený."),
+    ("en", "We are still preparing this connector: it is not yet published in the Claude or ChatGPT directories.")])
+def test_the_connector_page_says_once_under_its_heading_that_no_directory_lists_it_yet(theme, lang, line):
+    """T-4735, the owner: the connector "is working on, yet, not published"; /privacy says nothing of it."""
+    theme.page.lang = lang
+    html = render("jc/page.html", theme, jc_name="connector")
+    assert html.count(line) == 1 and html.index("page-heading") < html.index(line) < html.index("<h2")
+    assert "jc-connector-status" not in render("jc/page.html", theme, jc_name="privacy")
+    assert line in render("jc/assistants.html", theme)
 
 
 def test_the_developers_fold_holds_every_command_and_stays_closed():
@@ -2406,7 +2427,6 @@ def test_gemini_has_a_card_and_a_guide_only_while_its_flag_is_on(theme, monkeypa
     monkeypatch.setenv("JC_ASSISTANT_GEMINI", "true")
     cards = theme.jc_assistants()["cards"]
     assert [card["id"] for card in cards] == ["chatgpt", "claude", "grok", "gemini"]
-    assert cards[-1]["open"] == theme.GEMINI_APPS == "https://gemini.google.com/apps"
     assert theme.jc_assistant_guide("gemini")["name"] == "Gemini"
     html = render("jc/assistants.html", theme)
     assert 'id="jc-card-gemini"' in html and 'href="/assistants/gemini"' in html
@@ -2424,7 +2444,8 @@ def test_an_unknown_assistant_or_no_hub_has_no_guide_and_its_page_is_a_404(theme
 
 MAKERS = {"chatgpt": ("chatgpt.com", "help.openai.com"), "claude": ("claude.ai", "support.claude.com"),
           "grok": ("grok.com", "docs.x.ai"), "gemini": ("gemini.google.com", "support.google.com")}
-TECHNICAL = re.compile(r"\b(MCP|OAuth|endpoint|JSON)\b", re.I)
+# "MCP server" is the one protocol word a guide uses: what the reader adds (T-4735, the owner).
+TECHNICAL = re.compile(r"\b(MCP(?![ -][Ss]erver)|OAuth|endpoint|JSON)\b", re.I)
 
 
 def test_every_guide_is_written_in_four_languages_with_the_same_steps(theme):
@@ -2472,6 +2493,9 @@ def test_each_guide_page_reads_top_to_bottom_without_a_technical_word(theme, mon
     text = re.sub(r"<[^>]+>", " ", text)
     assert not TECHNICAL.search(text), TECHNICAL.search(text)
     assert guide["example"] in html and len(re.findall(r"<dt>", html)) == len(guide["trouble"])
+    # T-4735: no store button, and our server is never a plugin; ChatGPT's page is named Plugins.
+    assert "btn-primary" not in html and not re.search(r"Pridať do|Add to|Přidat do|Zu \w+ hinzufügen", html)
+    assert not re.search(r"doplnok|doplněk|plugin", text.replace("Plugins", ""), re.I), id
 
 
 def test_a_guide_asks_the_instance_s_own_question_first(theme, monkeypatch):
@@ -2485,9 +2509,9 @@ def test_a_guide_asks_the_instance_s_own_question_first(theme, monkeypatch):
     assert theme.jc_assistant_guide("gemini")["example"] == "Which datasets about air quality do you have?"
 
 
-def test_the_guide_link_stays_its_own_target_above_the_card_link_and_wraps_on_a_phone():
+def test_the_guide_link_opens_the_whole_card_and_wraps_on_a_phone():
     css = (THEME / "public__jc-theme.css").read_text()
-    assert ".jc-card-guide { position: relative; z-index: 1; }" in css
+    assert ".jc-card-guide" not in css
     assert ".jc-card-links { margin: auto 0 0; display: flex; flex-wrap: wrap;" in css
     assert ".jc-guide-checked { color: var(--jc-muted); overflow-wrap: anywhere; }" in css
 

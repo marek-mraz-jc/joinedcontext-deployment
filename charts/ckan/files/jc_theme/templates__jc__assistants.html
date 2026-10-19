@@ -2,8 +2,8 @@
 
 {# "Use it in your AI assistant" (T-4585, T-4628, T-4634, T-4643), for a citizen or a clerk: one
    card per assistant whose app takes our connector, ChatGPT, Claude, Grok and Gemini behind its flag (off since
-   T-4735), each its logo, its name, one link to that assistant's connector store (the whole card) and
-   one to our guide. The address the stores ask for stands once under the
+   T-4735), each its logo, its name and one link to our guide, which the whole card opens; no store
+   link, since no directory lists the connector yet (T-4735). The address the guides paste stands once under the
    cards, as text a person without script selects by hand. Everything for developers (Claude Code,
    the editors, any MCP client) folds away at the end, closed. #}
 {% set page = h.jc_assistants() %}
@@ -19,13 +19,13 @@
     <h1 class="page-heading">{{ h.jc_t('assistants') }}</h1>
     {% if page %}
       <p>{{ page.lead }}</p>
+      <p class="jc-connector-status">{{ h.jc_t('connector_status') }}</p>
       <ul class="jc-assistant-cards">
         {% for card in page.cards %}
           <li class="jc-assistant-card">
             <h2 id="jc-card-{{ card.id }}">{% include card.logo %}{{ card.name }}</h2>
             <p class="jc-card-links">
-              <a class="jc-card-link" href="{{ card.open }}" target="_blank" rel="noopener noreferrer">{{ card.open_label }}</a>
-              <a class="jc-card-guide" href="{{ h.url_for('jc_pages.guide', id=card.id) }}">{{ card.guide_label }}</a>
+              <a class="jc-card-link" href="{{ h.url_for('jc_pages.guide', id=card.id) }}" aria-describedby="jc-card-{{ card.id }}">{{ card.guide_label }}</a>
             </p>
           </li>
         {% endfor %}
