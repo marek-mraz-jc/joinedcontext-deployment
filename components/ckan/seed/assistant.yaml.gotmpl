@@ -40,11 +40,14 @@ spec:
   # default); $1 a day. One data question over five publishers measured 33,744 tokens on dev
   # (2026-10-16, 5 model calls). T-4660: the owner's third question used up 80,000 (117,171
   # tokens in 3 questions), so a conversation gets 300,000 and each question's loop answers by
-  # 60,000 (the platform's QUESTION_TOKENS); the day's cost cap still binds first.
+  # 60,000 (the platform's QUESTION_TOKENS); the day's cost cap still binds first. T-4737: data
+  # answers measured 194,597 tokens mean and 296,985 p90 (dev turns, 2026-10-19), so 300,000 refused
+  # the owner's second question on prod; 3,000,000 holds 10 answers at the p90 and the day's cost
+  # cap binds before it.
   rateLimit: { requestsPerMinute: 30, perClientPerMinute: 10, perClientPerHour: 60, perClientPerDay: 200, streamsPerClient: 2 }
   budget:
     tokensPerDay: 5000000
-    tokensPerConversation: 300000
+    tokensPerConversation: 3000000
     costPerDayUsd: 1
     outputTokensPerAnswer: 700
     messagesPerConversation: 30
