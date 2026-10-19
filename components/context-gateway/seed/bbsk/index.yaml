@@ -413,3 +413,6 @@ bbsk-assistant-data-eval-luna.yaml: projects/bbsk/assistant/deployments/data-eva
 bbsk-assistant-data-eval-haiku-medium.yaml: projects/bbsk/assistant/deployments/data-eval-haiku-medium.yaml
 bbsk-assistant-data-eval-glm.yaml: projects/bbsk/assistant/deployments/data-eval-glm.yaml
 bbsk-assistant-data-eval-argon.yaml: projects/bbsk/assistant/deployments/data-eval-argon.yaml
+# The website eval's copy and its planted page (T-4688); removed after the runs.
+bbsk-assistant-web-eval-gemini.yaml: projects/bbsk/assistant/deployments/web-eval-gemini.yaml
+bbsk-knowledge-eval-uploads.yaml: projects/bbsk/assistant/sources/eval-uploads.yaml
