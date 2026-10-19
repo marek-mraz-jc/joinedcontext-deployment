@@ -8,7 +8,7 @@
   {% if block.code %}
     <div class="jc-copy jc-copy-code">
       <pre id="{{ block.id }}" aria-label="{{ h.jc_t('snippet') }}" tabindex="0"><code>{% snippet 'snippets/jc_breakable.html', text=block.text %}</code></pre>
-      <button type="button" class="btn btn-default" data-jc-copy="{{ block.id }}" data-jc-copied="{{ h.jc_t('copied') }}">{{ h.jc_t('copy') }}</button>
+      <button type="button" class="btn btn-default" data-jc-copy="{{ block.id }}" data-jc-copied="{{ h.jc_t('copied') }}" data-jc-select="{{ h.jc_t('copy_select') }}">{{ h.jc_t('copy') }}</button>
     </div>
   {% else %}
     {{ h.render_markdown(block.text) }}
