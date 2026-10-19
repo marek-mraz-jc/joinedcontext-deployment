@@ -18,6 +18,9 @@ spec:
   # and where each Endpoint is, from its public Endpoints alone.
   # The platform's User Guide (T-3226, AG-118): public, so the public channel may read it.
   sources: [catalogue, guide]
+  # The EU themes of what it reads (AG-124, T-4694): the union of its connectors' themes; the
+  # context page lists them. The curated connectors stay: no selector gives exactly this set.
+  categories: [EDUC, ENVI, TRAN]
   connectors:
     - { endpoint: helsinki-weather, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
     - { endpoint: helsinki-events, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }

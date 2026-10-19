@@ -398,6 +398,48 @@ def test_the_pin_waits_for_a_green_ci_and_refuses_an_image_image_yml_did_not_sig
         module.main("platform")
 
 
+def test_a_red_image_build_or_a_refusing_pin_portal_pins_nothing_and_says_so(monkeypatch, capsys, tmp_path):
+    """Supervisor 2026-10-19 (pin-images 39193766897): the Portal's image.yml failed after some
+    images were out, and pin-portal.sh then crashed the job. A red image.yml waits like an
+    unfinished ci; a pin-portal.sh that refuses is said in words and leaves no half pin."""
+    module = _pin_images()
+    commit = "c" * 40
+    runs = {}
+
+    def fake(*args, check=True):
+        if args[0] == "gh":
+            workflow = args[args.index("--workflow") + 1]
+            return subprocess.CompletedProcess(args, 0, json.dumps(runs[workflow]), "")
+        out = {"git": f"{commit}\trefs/heads/main\n",
+               "docker": "Name: x\nMediaType: y\nDigest:    sha256:" + "d" * 64 + "\n"}.get(args[0], "")
+        return subprocess.CompletedProcess(args, 0, out, "")
+
+    monkeypatch.setattr(module, "run", fake)
+    monkeypatch.setattr(module, "pin_files", lambda pins: pytest.fail("pinned"))
+    ok = [{"status": "completed", "conclusion": "success"}]
+    runs.update({"ci.yml": ok, "image.yml": [{"status": "completed", "conclusion": "failure"}]})
+    module.main("portal")
+    captured = capsys.readouterr()
+    assert "image.yml is not green" in captured.err and captured.out == ""
+    runs["image.yml"] = ok
+    ran = []
+    real_run = subprocess.run
+    monkeypatch.setattr(module.subprocess, "run",
+                        lambda argv, **kw: ran.append(argv) or subprocess.CompletedProcess(argv, 255 if argv[0].endswith("pin-portal.sh") else 0))
+    module.main("portal")
+    captured = capsys.readouterr()
+    assert "pin-portal.sh refused (exit 255); nothing pinned" in captured.err and captured.out == ""
+    assert ran[-1] == ["git", "checkout", "--", "components"]
+    # The script itself names a missing image in words instead of dying in set -e.
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    (bin_dir / "docker").write_text("#!/bin/sh\nexit 1\n")
+    (bin_dir / "docker").chmod(0o755)
+    env = dict(os.environ, PATH=f"{bin_dir}:{os.environ['PATH']}")
+    script = real_run([str(ROOT / "scripts/pin-portal.sh"), commit], env=env, capture_output=True, text=True)
+    assert script.returncode == 1 and "not all three images are published" in script.stderr
+
+
 @pytest.mark.skipif(shutil.which("just") is None, reason="just not installed")
 def test_promotion_takes_only_dev_green_commits_and_release_only_moves_forward(tmp_path):
     """prod's Argo CD follows `release` (T-4678): promote, rollback, promote again, never forced."""
