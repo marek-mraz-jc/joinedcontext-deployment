@@ -397,6 +397,7 @@ def test_new_hostnames_are_proven_on_the_staging_issuer_first(rendered, rendered
     assert certificate["secretName"] == "apisix-edge-staging-tls"
     assert certificate["dnsNames"] == [
         "next.example.org",
+        "ai.next.example.org",
         "api.next.example.org",
         "assistant.next.example.org",
         "data.next.example.org",
