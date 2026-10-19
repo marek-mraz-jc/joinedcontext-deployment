@@ -12,7 +12,8 @@ Runs as `python3 -c` in the catalogue's image, from the `harvest` CronJob. One r
 3. writes each ingested dataset whose rows were converted to NGSI-LD into CKAN with its licence,
    the original publisher and its `modified`, the platform's distributions and data model
    (od-standards.py, EP-118) in place of the source's file links, and every JSON table of 50 MB
-   or less as a DataStore table, which CKAN also serves as CSV;
+   or less as a DataStore table, which CKAN also serves as CSV; a dataset whose files hold no
+   such table gets the Endpoint's own rows as its table instead (T-4742);
 4. deletes a dataset an earlier run harvested that the publisher no longer lists or whose rows
    are not converted, unless no dataset is converted at all (a broken run), checks every
    ingested dataset (title, licence, a format on each resource, every link answered 200, every
@@ -38,9 +39,6 @@ TOKEN = os.environ.get("CKAN_API_TOKEN", "")
 CONFIG = json.loads(os.environ.get("HARVEST_CONFIG", "{}"))
 
 MAX_BYTES = 64 * 1024 * 1024
-# A DataStore table larger than this is not kept: EP-118 lists whole files up to 50 MB only.
-MAX_TABLE_BYTES = 50 * 1024 * 1024
-CHUNK = 5000
 AGENT = "joinedcontext-harvest/1 (+https://www.joinedcontext.com)"
 EU_LICENCE = "http://publications.europa.eu/resource/authority/licence/"
 # The EU licence vocabulary to CKAN's own licence ids, in order of how much each one binds a
@@ -225,27 +223,6 @@ def table(body, title):
     return rows, dropped
 
 
-INTEGER = re.compile(r"-?(0|[1-9][0-9]*)")
-
-
-def fields(rows):
-    """DataStore fields in the file's column order; a column is int only when every value is a
-    plain integer without a leading zero, so an IČO or a postcode stays text."""
-    names = list(dict.fromkeys(k for r in rows for k in r))
-    out = []
-    for name in names:
-        values = [r.get(name) for r in rows if r.get(name) not in (None, "")]
-        whole = values and all(isinstance(v, int) or (isinstance(v, str) and INTEGER.fullmatch(v)) for v in values)
-        out.append({"id": name, "type": "int" if whole else "text"})
-    return out
-
-
-def records(rows, columns):
-    ints = {c["id"] for c in columns if c["type"] == "int"}
-    return [{k: (int(v) if k in ints and v not in (None, "") else (None if v == "" else v)) for k, v in r.items()}
-            for r in rows]
-
-
 def assess(ds):
     """Decides one dataset: (state, reason, resources, tables). Only `ingested` is written."""
     skip = CONFIG.get("skip", {}).get(ds["title"])
@@ -338,26 +315,9 @@ def upsert(desired, tables):
         live = ckan("package_create", desired)
     else:
         payload = dict(desired, id=live["id"], state="active")
-        # package_update replaces the resource list: the DataStore tables are carried over by
-        # id, or CKAN drops them with their rows.
-        names = {t["name"] for t in tables}
-        payload["resources"] = desired["resources"] + [
-            r for r in live.get("resources", []) if r.get("url_type") == "datastore" and r["name"] in names]
+        payload["resources"] = desired["resources"] + od_datastore_resources(live, tables)
         live = ckan("package_update", payload)
-    existing = {r["name"]: r["id"] for r in live.get("resources", []) if r.get("url_type") == "datastore"}
-    for t in tables:
-        columns = fields(t["rows"]) if t["rows"] else [{"id": "empty", "type": "text"}]
-        rows = records(t["rows"], columns)
-        if t["name"] in existing:
-            target = {"resource_id": existing[t["name"]]}
-            ckan("datastore_delete", dict(target, force=True))
-        else:
-            target = {"resource": {"package_id": live["id"], "name": t["name"], "format": "CSV"}}
-        created = ckan("datastore_create", dict(target, force=True, fields=columns, records=rows[:CHUNK]))
-        for start in range(CHUNK, len(rows), CHUNK):
-            ckan("datastore_upsert", {"resource_id": created["resource_id"], "method": "insert",
-                                      "force": True, "records": rows[start:start + CHUNK]})
-        t["resource_id"] = created["resource_id"]
+    od_write_tables(ckan, live, tables)
 
 
 def harvested_names():
@@ -413,7 +373,11 @@ def main():
         states.setdefault(state, []).append((ds["title"], reason))
         if state != "ingested":
             continue
-        tables = [t for t in tables if len(json.dumps(t["rows"], ensure_ascii=False).encode()) <= MAX_TABLE_BYTES]
+        tables = [t for t in tables if len(json.dumps(t["rows"], ensure_ascii=False).encode()) <= OD_MAX_SHEET_BYTES]
+        if not tables:
+            # Every public dataset has an active DataStore (T-4742): the Endpoint's rows.
+            sheet = od_sheet(named[ds["iri"]])
+            tables = [sheet] if sheet else []
         desired = package(ds, named[ds["iri"]], reason, converted[ds["iri"]], tables)
         upsert(desired, tables)
         kept.add(desired["name"])

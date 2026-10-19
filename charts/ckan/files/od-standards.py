@@ -10,8 +10,15 @@ whether its type holds only its rows on that Endpoint (`sole`).
 `OD_GATEWAY` is the public base the Endpoints answer under; without it no dataset gains any.
 A dataset with no distributions is withdrawn by the harvest (EP-118, T-4324): the catalogue lists
 NGSI-LD data with all its doors and its data model, or not at all.
+
+Every public converted dataset also gets a DataStore table (T-4742): the rows its Endpoint serves
+anonymously as `file.csv`, so the sheet holds no attribute the Policy hides. `OD_HIDDEN` lists the
+datasets the publish gate hides (T-4318); they get no sheet.
 """
+import csv as _csv
+import io as _io
 import json as _json
+import re as _re
 import os as _os
 import sys as _sys
 import time as _time
@@ -21,6 +28,7 @@ import urllib.request as _request
 
 OD_DATASETS = _json.loads(_os.environ.get("OD_DATASETS") or "{}")
 OD_GATEWAY = (_os.environ.get("OD_GATEWAY") or "").rstrip("/")
+OD_HIDDEN = set(_json.loads(_os.environ.get("OD_HIDDEN") or "[]"))
 
 # (path under the Endpoint, name, format, media type, conformsTo, how it keeps the dataset's rows, what
 # its rows must have for it to be listed: a `location`, a `series` of measured numbers, or nothing).
@@ -61,24 +69,37 @@ _OD_MODELS = {}
 OD_RETRY_WAITS = (5, 30, 120)
 
 
+def _od_transient(error):
+    """Whether an HTTP error passes by itself: the edge's 429 (T-4717) or a 5xx."""
+    return error.code == 429 or error.code >= 500
+
+
+def od_read(url, accept="application/json", limit=64 * 1024 * 1024):
+    """The body of an anonymous GET of `url`, at most `limit` bytes; read again after a broken
+    connection, a 429 of the edge or a 5xx. Any other 4xx raises at once: it is the answer."""
+    for wait in OD_RETRY_WAITS + (None,):
+        try:
+            with _request.urlopen(_request.Request(url, headers={"Accept": accept}), timeout=300) as answer:
+                body = answer.read(limit + 1)
+            if len(body) > limit:
+                raise ValueError(f"{url}: answered more than {limit} bytes")
+            return body
+        except _error.HTTPError as error:
+            if not _od_transient(error) or wait is None:
+                raise
+        except (_error.URLError, ConnectionError, TimeoutError):
+            if wait is None:
+                raise
+        print(f"{url}: read failed, again in {wait} s", file=_sys.stderr)
+        _time.sleep(wait)
+
+
 def od_models(endpoint):
     """The models of Endpoint `endpoint`, as its `schema/index.json` lists them, read once a run.
     A failed read raises: a gateway that does not answer is an outage, not a catalogue to empty."""
     if endpoint not in _OD_MODELS:
         url = f"{OD_GATEWAY}/api/endpoint/{_parse.quote(endpoint)}/schema/index.json"
-        for wait in OD_RETRY_WAITS + (None,):
-            try:
-                with _request.urlopen(_request.Request(url, headers={"Accept": "application/json"}), timeout=60) as answer:
-                    _OD_MODELS[endpoint] = _json.load(answer).get("models") or []
-                break
-            except _error.HTTPError as error:
-                if error.code < 500 or wait is None:
-                    raise
-            except (_error.URLError, ConnectionError, TimeoutError):
-                if wait is None:
-                    raise
-            print(f"{url}: read failed, again in {wait} s", file=_sys.stderr)
-            _time.sleep(wait)
+        _OD_MODELS[endpoint] = _json.loads(od_read(url)).get("models") or []
     return _OD_MODELS[endpoint]
 
 
@@ -99,6 +120,36 @@ def od_model_files(root, endpoint, kind):
             for file, label in OD_MODEL_FILES.items()]
 
 
+def _od_address(entry, path, filtered):
+    """The URL of `path` under the dataset's Endpoint, keeping only its rows the way `filtered`
+    says (`q`, `ogc`, `odata`) or every row of its type (None)."""
+    root = f"{OD_GATEWAY}/api/endpoint/{entry['endpoint']}/"
+    dataset = entry["dataset"]
+    mine = {
+        "q": _parse.urlencode({"type": entry["type"], "q": f'isPartOf=="{dataset}"'}),
+        "ogc": _parse.urlencode({"isPartOf": dataset}),
+        # OData string literals double a quote (OData 4.01 ABNF `SQUOTE-in-string`); a space is
+        # %20, since `+` is a space only in form encoding, not in OData's URL conventions. SensorThings
+        # is OData too: the gateway reads this `$filter` as the same `q` (T-4288).
+        "odata": _parse.urlencode({"$filter": "isPartOf eq '" + dataset.replace("'", "''") + "'"},
+                                  quote_via=_parse.quote),
+    }
+    url = root + path.replace("{type}", _parse.quote(entry["type"]))
+    if path == "ws":
+        url = "wss" + url[len("https"):] if url.startswith("https") else url
+    if filtered:
+        url += "?" + mine[filtered]
+    return url
+
+
+def _od_filter(entry, filtered):
+    """How a standard keeps the dataset's rows on its Endpoint, None for every row of the type.
+    A dataset an older seed reads whole: its rows name no catalogue dataset (T-4291). One whose
+    type holds its rows alone on the door is kept by the type: a `q` cannot be counted or paged
+    in parallel, and timed out on 26 862 rows (`sole`, T-4540)."""
+    return filtered if entry.get("filtered", True) and not entry.get("sole", False) else None
+
+
 def od_standards(name):
     """The distributions of CKAN dataset `name` (EP-118), or none when it cannot list them all:
     its rows were not converted, or its Endpoint's model lacks an artefact. A harvest withdraws a
@@ -110,35 +161,96 @@ def od_standards(name):
     model = od_model_files(root, entry["endpoint"], entry["type"])
     if not model:
         return []
-    dataset = entry["dataset"]
-    mine = {
-        "q": _parse.urlencode({"type": entry["type"], "q": f'isPartOf=="{dataset}"'}),
-        "ogc": _parse.urlencode({"isPartOf": dataset}),
-        # OData string literals double a quote (OData 4.01 ABNF `SQUOTE-in-string`); a space is
-        # %20, since `+` is a space only in form encoding, not in OData's URL conventions. SensorThings
-        # is OData too: the gateway reads this `$filter` as the same `q` (T-4288).
-        "odata": _parse.urlencode({"$filter": "isPartOf eq '" + dataset.replace("'", "''") + "'"},
-                                  quote_via=_parse.quote),
-    }
     out = []
     for path, title, fmt, media, conforms, filtered, needs in OD_STANDARDS:
         if needs and not entry.get(needs):
             continue
-        # A dataset an older seed reads whole: its rows name no catalogue dataset (T-4291). One whose
-        # type holds its rows alone on the door is kept by the type: a `q` cannot be counted or paged
-        # in parallel, and timed out on 26 862 rows (`sole`, T-4540).
-        sole = entry.get("sole", False)
-        filtered = filtered if entry.get("filtered", True) and not sole else None
-        url = root + path.replace("{type}", _parse.quote(entry["type"]))
-        if path == "ws":
-            url = "wss" + url[len("https"):] if url.startswith("https") else url
-        if filtered:
-            url += "?" + mine[filtered]
-        what = ("These rows" if filtered or sole else f"Every {entry['type']} of the space, these rows among them")
-        resource = {"name": f"{title} ({entry['type']})", "url": url, "format": fmt, "mimetype": media,
-                    "resource_type": "api",
+        filtered = _od_filter(entry, filtered)
+        what = ("These rows" if filtered or entry.get("sole", False)
+                else f"Every {entry['type']} of the space, these rows among them")
+        resource = {"name": f"{title} ({entry['type']})", "url": _od_address(entry, path, filtered),
+                    "format": fmt, "mimetype": media, "resource_type": "api",
                     "description": f"{what}, through the platform's {title} (NGSI-LD data, read-only)."}
         if conforms:
             resource["conforms_to"] = conforms
         out.append(resource)
     return out + model
+
+
+# A DataStore table larger than this is not kept: EP-118 lists whole files up to 50 MB only.
+OD_MAX_SHEET_BYTES = 50 * 1024 * 1024
+
+
+def od_sheet(name):
+    """The DataStore table of CKAN dataset `name` (T-4742): `{name, header, rows, dropped}` from
+    the `file.csv` its Endpoint serves anonymously, filtered as its CSV distribution is, so the
+    sheet carries only what the public may read. None when the rows were not converted, the
+    publish gate hides the dataset (T-4318), or the Endpoint refuses the file for good (too
+    large: a 4xx, said on stderr). An outage or a 429 raises: a live sheet is never dropped
+    because one read failed."""
+    entry = OD_DATASETS.get(name)
+    if not entry or not OD_GATEWAY or name in OD_HIDDEN:
+        return None
+    url = _od_address(entry, "file.csv", _od_filter(entry, "q"))
+    try:
+        body = od_read(url, "text/csv", OD_MAX_SHEET_BYTES)
+    except (_error.HTTPError, ValueError) as error:
+        if isinstance(error, _error.HTTPError) and _od_transient(error):
+            raise
+        print(f"{name}: no sheet, {url} answered {error}", file=_sys.stderr)
+        return None
+    reader = _csv.DictReader(_io.StringIO(body.decode("utf-8-sig")))
+    rows = [{k: v for k, v in row.items() if k is not None} for row in reader]
+    return {"name": f"Tabuľka ({entry['type']})", "header": list(reader.fieldnames or []), "rows": rows, "dropped": 0}
+
+
+OD_INTEGER = _re.compile(r"-?(0|[1-9][0-9]*)")
+OD_CHUNK = 5000
+
+
+def od_fields(rows, header=()):
+    """DataStore fields in the file's column order; a column is int only when every value is a
+    plain integer without a leading zero that fits CKAN's 32-bit `int`, so an IČO, a postcode or
+    a millisecond timestamp stays text. No column at all is one text column `empty`, since CKAN
+    refuses a table without fields."""
+    names = list(dict.fromkeys([*header, *(k for r in rows for k in r)]))
+    out = []
+    for name in names:
+        values = [r.get(name) for r in rows if r.get(name) not in (None, "")]
+        whole = values and all((isinstance(v, int) or (isinstance(v, str) and OD_INTEGER.fullmatch(v)))
+                               and -2**31 <= int(v) < 2**31 for v in values)
+        out.append({"id": name, "type": "int" if whole else "text"})
+    return out or [{"id": "empty", "type": "text"}]
+
+
+def od_records(rows, columns):
+    ints = {c["id"] for c in columns if c["type"] == "int"}
+    return [{k: (int(v) if k in ints and v not in (None, "") else (None if v == "" else v)) for k, v in r.items()}
+            for r in rows]
+
+
+def od_datastore_resources(live, tables):
+    """The live DataStore resources of `tables` by name: what a `package_update`, which replaces
+    the resource list, carries over by id, or CKAN drops them with their rows."""
+    names = {t["name"] for t in tables}
+    return [r for r in live.get("resources", []) if r.get("url_type") == "datastore" and r["name"] in names]
+
+
+def od_write_tables(call, live, tables):
+    """Writes each table into package `live` through `call(action, payload)`: a live table of the
+    same name is replaced, any other is created as a CSV resource. An empty table is still
+    created, so the dataset's sheet is active with 0 rows. Sets each table's `resource_id`."""
+    existing = {r["name"]: r["id"] for r in live.get("resources", []) if r.get("url_type") == "datastore"}
+    for t in tables:
+        columns = od_fields(t["rows"], t.get("header", ()))
+        rows = od_records(t["rows"], columns)
+        if t["name"] in existing:
+            target = {"resource_id": existing[t["name"]]}
+            call("datastore_delete", dict(target, force=True))
+        else:
+            target = {"resource": {"package_id": live["id"], "name": t["name"], "format": "CSV"}}
+        created = call("datastore_create", dict(target, force=True, fields=columns, records=rows[:OD_CHUNK]))
+        for start in range(OD_CHUNK, len(rows), OD_CHUNK):
+            call("datastore_upsert", {"resource_id": created["resource_id"], "method": "insert",
+                                      "force": True, "records": rows[start:start + OD_CHUNK]})
+        t["resource_id"] = created["resource_id"]
