@@ -5,8 +5,9 @@
     scripts/smoke-catalogue.py <domain> <env> [out-dir]
 
 Reads only public data, anonymously: CKAN's package_search and the gateway's DCAT feed for the
-inventory, then per dataset NGSI-LD, MCP, OData, OGC API Features and the data model (every run),
-and the datastore count, WebSocket, map and CSV (rotating, least recently checked first).
+inventory, then per dataset NGSI-LD, MCP, OData, OGC API Features, the data model, a sample of
+rows against it with its relationships, and the CKAN views (every run), and the datastore count,
+WebSocket, map and CSV (rotating, least recently checked first).
 One request at a time, at most 50 a minute, 500 a run and 10 minutes (owner limit, T-4716).
 Writes `<out-dir>/smoke-catalogue-<env>-<time>.tsv` (default out-dir `.smoke`) and exits 1
 on any ko. Testing/05 §4.1 is the contract.
@@ -26,6 +27,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -35,17 +37,34 @@ BUDGET = 500
 DEADLINE = 600.0
 TIMEOUT = 20.0
 MAX_BODY = 1 << 20  # an interface answer: limit=1, or the head of file.csv
-MAX_INVENTORY = 64 << 20  # package_search and the DCAT feed, read whole
+MAX_INVENTORY = 64 << 20  # package_search, the DCAT feed and a model's JSON Schema, read whole
+SAMPLE = 20  # rows of NGSI-LD the data check validates (T-4743)
 TOLERANCE = 0.01
 RETRIES = 3
 # The tables stay where an apply leaves them: _dev-assemble deletes deployment/, and the
 # rotation reads the previous table (gitignored).
 DEFAULT_OUT = ".smoke"
-CORE = ["ngsi-ld", "mcp", "odata", "ogc", "model"]
+CORE = ["ngsi-ld", "mcp", "odata", "ogc", "model", "data", "views"]
 ROTATING = ["datastore", "websocket", "map", "csv"]
 COLUMNS = ["inventory", *CORE, *ROTATING]
 MCP_LIST = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "tools/list"}).encode()
 NOT_THIS_RUN = re.compile(r"not this run \(last: (\S+) (\w+)\)")
+# Members of a row that no model defines (NGSI-LD's own and the system times).
+CORE_MEMBERS = {"id", "type", "@context", "scope", "createdAt", "modifiedAt", "deletedAt"}
+# A population count belongs to a place (AdministrativeArea), not an organization or a person: the
+# municipality in BBSK's Organization (T-4740) passed every interface and its own model.
+PLACE_COUNT = re.compile(r"(?i)^(population|pocetObyvatel\w*)$")
+PEOPLE = re.compile(r"(Organi[sz]ation|Person)$")
+URN_TYPE = re.compile(r"^urn:ngsi-ld:([A-Za-z][\w]*):")
+# ponytail: the NUTS regions the catalogues name today, as (west, south, east, north) rounded
+# outward; a code missing here is checked against its parent, add a box when a city brings one.
+REGIONS = {
+    "SK0": (16.78, 47.68, 22.62, 49.66),
+    "SK031": (18.25, 48.70, 20.05, 49.66),
+    "SK032": (18.40, 47.90, 20.55, 49.05),
+    "CZ010": (14.17, 49.89, 14.76, 50.23),
+    "FI1B1": (22.70, 59.60, 26.70, 60.90),
+}
 
 
 class OutOfBudget(Exception):
@@ -237,6 +256,8 @@ class Dataset:
     part_of: str = ""
     foreign: list = None
     why: str = ""
+    org: str = ""
+    region: str = ""
 
 
 def endpoint_slug(url: str) -> str:
@@ -246,7 +267,11 @@ def endpoint_slug(url: str) -> str:
 
 def describe(package: dict, domain: str) -> Dataset:
     """What one CKAN dataset says about itself: its Endpoint, type, distributions, datastore."""
-    data = Dataset(package["name"], formats={}, datastore=[], foreign=[])
+    data = Dataset(package["name"], formats={}, datastore=[], foreign=[],
+                   org=(package.get("organization") or {}).get("name") or "")
+    for extra in package.get("extras") or []:
+        if extra.get("key") == "spatial_uri":
+            data.region = (extra.get("value") or "").rstrip("/").rsplit("/", 1)[-1]
     for resource in package.get("resources", []):
         url, fmt = resource.get("url") or "", resource.get("format") or ""
         if resource.get("datastore_active"):
@@ -283,12 +308,122 @@ def mcp_tools(answer: Answer) -> int:
         return 0
 
 
+def sample_query(data: Dataset) -> dict:
+    """The NGSI-LD query of the dataset's own rows: its isPartOf when it lists one."""
+    query = {"type": data.type, "limit": SAMPLE}
+    if data.part_of:
+        query["q"] = f'isPartOf=="{data.part_of}"'
+    return query
+
+
+def region_box(code: str):
+    """The bounding box of a NUTS code, else of its nearest parent; None when none is known."""
+    while len(code) >= 3:
+        if code in REGIONS:
+            return code, REGIONS[code]
+        code = code[:-1]
+    return None
+
+
+def positions(geometry):
+    """Every [lon, lat] of a GeoJSON geometry; None when it is not one."""
+    if not isinstance(geometry, dict):
+        return None
+    found = []
+
+    def walk(node):
+        if isinstance(node, list) and len(node) >= 2 and all(isinstance(n, (int, float)) for n in node[:2]):
+            found.append(node[:2])
+            return True
+        return isinstance(node, list) and bool(node) and all(walk(n) for n in node)
+
+    if geometry.get("type") == "GeometryCollection":
+        parts = [positions(g) for g in geometry.get("geometries") or []]
+        return None if not parts or None in parts else [p for part in parts for p in part]
+    return found if walk(geometry.get("coordinates")) else None
+
+
+def blank(attribute) -> bool:
+    """A name with no text: missing, an empty value, or a LanguageProperty empty in every language."""
+    if not isinstance(attribute, dict):
+        return not (isinstance(attribute, str) and attribute.strip())
+    if "languageMap" in attribute:
+        texts = (attribute.get("languageMap") or {}).values()
+        return not any(isinstance(text, str) and text.strip() for text in texts)
+    value = attribute.get("value")
+    return not (isinstance(value, str) and value.strip())
+
+
+def row_problems(rows: list, typ: str, schema: dict, region) -> list:
+    """What is wrong with sampled NGSI-LD rows, by row id and attribute name, never a value."""
+    known = set(schema.get("properties") or {})
+    required = [a for a in schema.get("required") or [] if isinstance(a, str)]
+    problems, seen = [], set()
+    for row in rows:
+        if not isinstance(row, dict):
+            problems.append("a row that is not an entity")
+            continue
+        rid = str(row.get("id") or "(no id)")
+        if rid in seen:
+            problems.append(f"{rid} twice")
+        seen.add(rid)
+        if row.get("type") != typ:
+            problems.append(f"{rid} is a {row.get('type')}")
+        problems += [f"{rid} has no {a}" for a in required if a not in row]
+        problems += [f"{rid} has {a}, which the {typ} model does not define"
+                     for a in sorted(set(row) - known - CORE_MEMBERS)]
+        if PEOPLE.search(typ):
+            problems += [f"{rid} has {a}, a place's count, not an {typ}'s"
+                         for a in sorted(row) if PLACE_COUNT.match(a)]
+        if blank(row.get("name")):
+            problems.append(f"{rid} has no name")
+        if "location" in row and region:
+            code, (west, south, east, north) = region
+            points = positions((row["location"] or {}).get("value") if isinstance(row["location"], dict) else None)
+            if points is None:
+                problems.append(f"{rid} location is no GeoJSON geometry")
+            elif any(not (west <= lon <= east and south <= lat <= north) for lon, lat in points):
+                problems.append(f"{rid} location lies outside {code}")
+    return problems
+
+
+def relationships(rows: list) -> dict:
+    """Every Relationship object of the rows, by its URN's type: {type: {object: (row id, attribute)}}."""
+    found = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        for name, attribute in sorted(row.items()):
+            if not isinstance(attribute, dict) or attribute.get("type") != "Relationship":
+                continue
+            objects = attribute.get("object")
+            for target in objects if isinstance(objects, list) else [objects]:
+                kind = URN_TYPE.match(target) if isinstance(target, str) else None
+                found.setdefault(kind.group(1) if kind else "", {}).setdefault(target, (str(row.get("id")), name))
+    return found
+
+
+def series(rows: list) -> bool:
+    """Whether the rows hold a numeric value observed at a time: a chart's subject."""
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        dated = "dateObserved" in row
+        for attribute in row.values():
+            if isinstance(attribute, dict) and attribute.get("type") == "Property":
+                value = attribute.get("value")
+                if isinstance(value, (int, float)) and not isinstance(value, bool) and (dated or "observedAt" in attribute):
+                    return True
+    return False
+
+
 class Run:
     def __init__(self, client: Client, domain: str, previous: dict, previous_at: str, now: str):
         self.client, self.domain = client, domain
         self.previous, self.previous_at, self.now = previous, previous_at, now
         self.counts = {}  # dataset -> (platform count, how)
         self.shared = {}  # (slug, type) -> datasets without isPartOf
+        self.samples = {}  # dataset -> its NGSI-LD rows
 
     def base(self, data: Dataset) -> str:
         return f"https://api.{self.domain}/api/endpoint/{data.slug}/"
@@ -303,12 +438,20 @@ class Run:
         return data.type
 
     def ngsi_ld(self, data: Dataset) -> str:
-        url = self.base(data) + "ngsi-ld/v1/entities?" + urllib.parse.urlencode({"type": data.type, "limit": 1})
-        answer = self.client.fetch(url)
+        url = self.base(data) + "ngsi-ld/v1/entities?" + urllib.parse.urlencode(sample_query(data))
+        answer = self.client.fetch(url, limit=MAX_INVENTORY)
         if answer.status != 200 or "json" not in answer.ctype:
             return ko(f"entities answered {answer.why()}")
         body = answer.json()
-        return ok() if isinstance(body, list) and body else ko(f"no {data.type} entity")
+        if not isinstance(body, list):
+            return ko("entities answered no list")
+        self.samples[data.name] = body
+        return ok() if body else ko(f"no {data.type} entity")
+
+    def located(self, data: Dataset):
+        """Whether the dataset's sampled rows carry a location; None without a sample."""
+        rows = self.samples.get(data.name)
+        return None if rows is None else any(isinstance(r, dict) and "location" in r for r in rows)
 
     def mcp(self, data: Dataset) -> str:
         answer = self.client.fetch(self.base(data) + "mcp", "POST", {
@@ -330,6 +473,8 @@ class Run:
 
     def ogc(self, data: Dataset) -> str:
         if "OGCFEAT" not in data.formats:
+            if self.located(data):
+                return ko("its rows carry a location, but the dataset lists no OGC distribution")
             return skip("the dataset lists no OGC distribution (its type has no location)")
         query = {"limit": 1, **({"isPartOf": data.part_of} if data.part_of else {})}
         url = self.base(data) + f"ogc/features/collections/{data.type}/items?" + urllib.parse.urlencode(query)
@@ -341,12 +486,89 @@ class Run:
             self.counts[data.name] = (body["numberMatched"], "OGC numberMatched of its isPartOf")
         return ok() if body.get("features") else ko(f"no {data.type} feature")
 
+    def models(self, data: Dataset) -> list:
+        return (self.client.fetch(self.base(data) + "schema/index.json").json() or {}).get("models") or []
+
     def model(self, data: Dataset) -> str:
         answer = self.client.fetch(self.base(data) + "schema/index.json")
         if answer.status != 200:
             return ko(f"schema/index.json answered {answer.why()}")
-        listed = {t for m in (answer.json() or {}).get("models", []) for t in m.get("types", [])}
-        return ok() if data.type in listed else ko(f"no model lists {data.type}")
+        listed = {t for m in self.models(data) for t in m.get("types", [])}
+        if data.type not in listed:
+            return ko(f"no model lists {data.type}")
+        # Every type the Endpoint serves has a model, not only the dataset's (T-4743).
+        answer = self.client.fetch(self.base(data) + "ngsi-ld/v1/types")
+        served = (answer.json() or {}).get("typeList") if answer.status == 200 else None
+        if not isinstance(served, list):
+            return ko(f"ngsi-ld/v1/types answered {answer.why()}")
+        missing = sorted({t for t in served if isinstance(t, str)} - listed)
+        return ko(f"served without a model: {', '.join(missing)}") if missing else ok()
+
+    def data(self, data: Dataset) -> str:
+        rows = self.samples.get(data.name)
+        if rows is None:
+            return skip("no NGSI-LD sample this run")
+        if not rows:
+            return ko("no rows")
+        version = next((m.get("version") for m in self.models(data) if data.type in m.get("types", [])), None)
+        if not isinstance(version, int):
+            return skip(f"no model lists {data.type}")
+        answer = self.client.fetch(self.base(data) + f"schema/v{version}/model.schema.json", limit=MAX_INVENTORY)
+        schema = ((answer.json() or {}).get("definitions") or {}).get(data.type) if answer.status == 200 else None
+        if not isinstance(schema, dict):
+            return ko(f"model.schema.json answered {answer.why()}, no {data.type}" if answer.status != 200
+                      else f"model.schema.json defines no {data.type}")
+        region = region_box(data.region)
+        problems = row_problems(rows, data.type, schema, region) + self.dangling(data, rows)
+        if problems:
+            more = f" (+{len(problems) - 3} more)" if len(problems) > 3 else ""
+            return ko("; ".join(problems[:3]) + more)
+        where = f"inside {region[0]}" if region else (
+            f"location not checked: no box for {data.region}" if data.region else "location not checked: no region")
+        return ok(f"{len(rows)} rows, {where}")
+
+    def dangling(self, data: Dataset, rows: list) -> list:
+        """The Relationships of the rows whose object the dataset's Endpoint does not hold."""
+        problems = []
+        for kind, targets in sorted(relationships(rows).items()):
+            if not kind:
+                problems += [f"{rid} {name} is no NGSI-LD URN" for rid, name in targets.values()]
+                continue
+            query = {"type": kind, "id": ",".join(sorted(targets)), "limit": min(len(targets), 1000)}
+            answer = self.client.fetch(self.base(data) + "ngsi-ld/v1/entities?" + urllib.parse.urlencode(query),
+                                       limit=MAX_INVENTORY)
+            body = answer.json() if answer.status == 200 else None
+            if not isinstance(body, list):
+                problems.append(f"{kind} answered {answer.why()}")
+                continue
+            held = {e.get("id") for e in body if isinstance(e, dict)}
+            problems += [f"{rid} {name} points to no entity" for target, (rid, name) in sorted(targets.items())
+                         if target not in held]
+        return problems
+
+    def views(self, data: Dataset) -> str:
+        if not data.datastore:
+            return skip("no datastore table")
+        kinds = []
+        for resource in data.datastore:
+            url = f"https://opendata.{self.domain}/api/3/action/resource_view_list?" + urllib.parse.urlencode(
+                {"id": resource})
+            answer = self.client.fetch(url)
+            views = (answer.json() or {}).get("result") if answer.status == 200 else None
+            if not isinstance(views, list):
+                return ko(f"resource_view_list answered {answer.why()}")
+            kinds.append({v.get("view_type") for v in views if isinstance(v, dict)})
+        tableless = sum("datatables_view" not in k for k in kinds)
+        if tableless:
+            return ko(f"no table view on {tableless} of {len(kinds)} datastore tables")
+        rows = self.samples.get(data.name)
+        if rows is None:
+            return ok("table; chart not checked, no sample this run")
+        if not series(rows):
+            return ok("table; no chart: no numeric value over time")
+        if not any("jc_visualization" in k for k in kinds):
+            return ko("a numeric value over time and no chart view")
+        return ok("table, chart")
 
     def datastore(self, data: Dataset) -> str:
         # ponytail: the first datastore table only; a dataset of several tables compares one.
@@ -379,10 +601,19 @@ class Run:
             return ok("not served, refused 404 as API/02 names")
         return ko(f"not served, but the upgrade answered {status}{' (' + error + ')' if error else ''}")
 
-    def map(self, data: Dataset) -> str:
+    def map(self, data: Dataset, ogc: str = "") -> str:
+        url = f"https://opendata.{self.domain}/map/{urllib.parse.quote(data.name)}"
         if "OGCFEAT" not in data.formats:
-            return skip("no OGC distribution, no map")
-        answer = self.client.fetch(f"https://opendata.{self.domain}/map/{urllib.parse.quote(data.name)}")
+            located = self.located(data)
+            if located is None:
+                return skip("no OGC distribution and no sample this run")
+            if located:
+                return ko("its rows carry a location, but there is no OGC distribution to map")
+            answer = self.client.fetch(url)
+            if answer.status == 404:
+                return ok("no location, no map page")
+            return ko(f"no location, but the map page answered {answer.why()}")
+        answer = self.client.fetch(url)
         if answer.status != 200:
             return ko(f"map page answered {answer.why()}")
         found = re.search(r"data-jc-map='([^']*)'", answer.body.decode(errors="replace"))
@@ -390,7 +621,9 @@ class Run:
             layers = json.loads(html.unescape(found.group(1))).get("layers") if found else None
         except ValueError:
             layers = None
-        return ok() if layers else ko("the map page has no map layer")
+        if not layers:
+            return ko("the map page has no map layer")
+        return ko(f"no feature to show, OGC {ogc[4:]}") if verdict(ogc) == "ko" else ok()
 
     def csv(self, data: Dataset) -> str:
         # file.csv takes the entities query (API/02): one row is enough for a header line.
@@ -453,7 +686,8 @@ class Run:
                 row = rows[data.name]
                 for column in ROTATING:
                     if column not in row:
-                        row[column] = getattr(self, column)(data)
+                        row[column] = (self.map(data, row.get("ogc", "")) if column == "map"
+                                       else getattr(self, column)(data))
         except OutOfBudget:
             pass
         for row in rows.values():
@@ -483,7 +717,16 @@ def inventory(client: Client, domain: str) -> tuple[list, set]:
     if not isinstance(feed, dict):
         raise SystemExit(f"  FAIL  catalogue: catalog.jsonld answered {answer.why()}")
     public = {endpoint_slug(d.get("@id", "")) for d in feed.get("dcat:dataset", [])} - {""}
-    return [describe(p, domain) for p in packages], public
+    datasets = [describe(p, domain) for p in packages]
+    # A dataset without a spatial_uri lies where most of its organization's datasets say they do.
+    named = {}
+    for data in datasets:
+        if data.region:
+            named.setdefault(data.org, Counter())[data.region] += 1
+    for data in datasets:
+        if not data.region and data.org in named:
+            data.region = named[data.org].most_common(1)[0][0]
+    return datasets, public
 
 
 def previous_table(out: Path, env: str) -> tuple[dict, str]:

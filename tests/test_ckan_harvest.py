@@ -10,6 +10,7 @@ import importlib.util
 import io
 import json
 import urllib.error
+import urllib.parse
 from pathlib import Path
 
 import pytest
@@ -91,6 +92,7 @@ CATALOGUE = (
 class FakeCkan:
     def __init__(self):
         self.packages, self.tables, self.organizations, self.calls = {}, {}, set(), []
+        self.views = []
         self.next_id = 0
 
     def new_id(self):
@@ -162,6 +164,13 @@ class FakeCkan:
     def datastore_search(self, p):
         return {"total": len(self.tables[p["resource_id"]]["records"])}
 
+    def resource_view_list(self, p):
+        return [v for v in self.views if v["resource_id"] == p["id"]]
+
+    def resource_view_create(self, p):
+        self.views.append(dict(p, id=self.new_id()))
+        return self.views[-1]
+
 
 class Response(io.BytesIO):
     def __init__(self, status, kind, body):
@@ -213,6 +222,19 @@ class EveryName(dict):
                 "dataset": f"https://opendata.dev.joinedcontext.com/dataset/{name}"}
 
 
+# What an Endpoint's file.csv answers (T-4742): one row unless a test names the URL in SHEETS.
+SHEET = b"id,name\r\nurn:ngsi-ld:T:1,Prvy\r\n"
+SHEETS = {}
+
+
+def endpoint_file(url, accept="application/json", limit=1 << 30):
+    """od_read as the gateway answers it, refusing what is over `limit` as the real one does."""
+    body = SHEETS.get(url, SHEET)
+    if len(body) > limit:
+        raise ValueError(f"{url}: answered more than {limit} bytes")
+    return body
+
+
 def model_index(endpoint):
     return [{"version": 1, "types": ["T", "KeyPerformanceIndicator"],
              "artifacts": {f: {"bytes": 10, "sha256": f"sha-{f}", "type": "text/plain"} for f in ARTEFACTS}}]
@@ -230,6 +252,7 @@ def load(monkeypatch, catalogue=CATALOGUE, config=CONFIG, mapped=True):
     harvest.OPENER = FakeWeb(harvest)
     harvest.sparql = lambda query: [{k: {"value": v} for k, v in row.items()} for row in catalogue]
     harvest.od_models = model_index
+    harvest.od_read = endpoint_file
     if mapped:
         # Every dataset's rows are converted unless the test says otherwise (T-4324).
         harvest.OD_DATASETS = EveryName()
@@ -324,7 +347,7 @@ def test_a_run_over_an_unchanged_source_writes_nothing(monkeypatch, capsys):
     assert harvest.main() == 0
     first = len(harvest.ckan.calls)
     assert harvest.main() == 0
-    writes = [c for c in harvest.ckan.calls[first:] if not c.endswith(("_show", "_search"))]
+    writes = [c for c in harvest.ckan.calls[first:] if not c.endswith(("_show", "_search", "_list"))]
     assert writes == [], writes
 
 
@@ -473,7 +496,8 @@ def test_a_dataset_unmapped_after_a_run_is_withdrawn_and_none_mapped_withdraws_n
 
 def test_a_table_over_50_mb_is_not_kept(monkeypatch, capsys):
     harvest = load(monkeypatch)
-    monkeypatch.setattr(harvest, "MAX_TABLE_BYTES", 10)
+    # Over the limit both the source's table and the Endpoint's sheet are left out.
+    monkeypatch.setattr(harvest, "OD_MAX_SHEET_BYTES", 10)
     assert harvest.main() == 0
     assert not any(r.get("url_type") == "datastore" for p in harvest.ckan.packages.values() for r in p["resources"])
 
@@ -503,3 +527,42 @@ def test_a_refused_connection_to_the_catalogue_is_tried_again_and_other_errors_a
     monkeypatch.setattr(harvest.urllib.request, "urlopen", unreachable)
     with pytest.raises(urllib.error.URLError):
         harvest.ckan("organization_show", {"id": "bb"})
+
+
+def test_a_dataset_whose_files_hold_no_table_gets_its_endpoint_rows_and_a_source_table_stays(monkeypatch, capsys):
+    """T-4742: bb-dtm-bb-register-statickej-dopravy listed ZIPs only, so it had no DataStore and
+    showed datastore_active=false. Every ingested dataset now holds exactly one table: its JSON
+    file's, or else the rows its Endpoint serves anonymously, filtered to the dataset."""
+    harvest = load(monkeypatch)
+    url = ("https://api.dev.joinedcontext.com/api/endpoint/ep/file.csv?type=T&q="
+           + urllib.parse.quote('isPartOf=="https://opendata.dev.joinedcontext.com/dataset/bb-dtm-bb-register-ulic"', safe=""))
+    monkeypatch.setitem(SHEETS, url, b"id,length\r\nurn:ngsi-ld:T:u1,120\r\nurn:ngsi-ld:T:u2,\r\n")
+    assert harvest.main() == 0
+    fake = harvest.ckan
+    for name, package in fake.packages.items():
+        assert [r.get("url_type") for r in package["resources"]].count("datastore") == 1, name
+    streets = fake.packages["bb-dtm-bb-register-ulic"]["resources"][-1]
+    assert streets["name"] == "T"
+    assert fake.tables[streets["id"]] == {"fields": [{"id": "id", "type": "text"}, {"id": "length", "type": "int"}],
+                                          "records": [{"id": "urn:ngsi-ld:T:u1", "length": 120},
+                                                      {"id": "urn:ngsi-ld:T:u2", "length": None}]}
+    ages = fake.packages["bb-pocet-obcanov-podla-veku"]["resources"][-1]
+    assert ages["name"] != "T", "a source table was replaced by the Endpoint's"
+    # Every table, the source's ones included, has its one table view.
+    tables = {r["id"] for p in fake.packages.values() for r in p["resources"] if r.get("url_type") == "datastore"}
+    assert sorted(v["resource_id"] for v in fake.views) == sorted(tables)
+    assert {v["view_type"] for v in fake.views} == {"datatables_view"}
+
+
+def test_a_hidden_dataset_without_a_table_stays_without_one(monkeypatch, capsys):
+    harvest = load(monkeypatch)
+    harvest.OD_HIDDEN = {"bb-dtm-bb-polohopis"}
+    assert harvest.main() == 0
+    assert not any(r.get("url_type") == "datastore" for r in harvest.ckan.packages["bb-dtm-bb-polohopis"]["resources"])
+    assert any(r.get("url_type") == "datastore" for r in harvest.ckan.packages["bb-dtm-bb-register-ulic"]["resources"])
+
+
+def test_a_column_is_int_only_when_every_value_fits_ckans_int(monkeypatch):
+    harvest = load(monkeypatch)
+    rows = [{"n": "2147483647", "big": "1760889600000", "ico": "00313271", "neg": "-5"}, {"n": "", "big": "1", "ico": "1", "neg": "0"}]
+    assert [f["type"] for f in harvest.od_fields(rows)] == ["int", "text", "text", "int"]
