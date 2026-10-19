@@ -964,7 +964,11 @@ def test_the_assistant_docks_beside_the_page_and_stays_across_its_links():
     assert "::view-transition-group(root)" in reduced and "animation: none;" in reduced
     base = (THEME / "templates__base.html").read_text()
     assert "<script src=\"{{ h.url_for_static('/jc-dock.js') }}\"></script>" in base
+    # A failed jc-assistant.js (a CKAN rollout, owner report 05:55Z) gives the docked room back.
     early = (THEME / "public__jc-dock.js").read_text()
+    guard = early.split('addEventListener("DOMContentLoaded"', 1)[1]
+    assert "window.jcAssistant !== true" in guard and 'root.classList.remove("jc-docked")' in guard and "expect.remove()" in guard
+    assert "window.jcAssistant = true;" in (THEME / "public__jc-assistant.js").read_text()
     assert 'expect.rel = "expect";' in early and 'expect.href = "#jc-assistant";' in early and 'setAttribute("blocking", "render")' in early
     assert "token" not in early.lower()
     script = (THEME / "public__jc-assistant.js").read_text()
