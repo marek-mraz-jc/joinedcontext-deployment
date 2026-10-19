@@ -10,8 +10,9 @@ is in the deployment's `allowedOrigins`. A city site embeds it with
 
 and app.js shows the framed copy only inside the deployment's own origins.
 
-Refresh the bundle after a widget change on platform `main`:
+Refresh the bundle after a widget change on platform `main` (the sources at that commit, not
+the clone's working tree; it rewrites `bundle.lock`):
 
-    node ../joinedcontext-platform/crates/assistant/widget/app/build.mjs --template --out components/ai/charts/app/files/site
+    scripts/ai-bundle.sh ../joinedcontext-platform <platform sha>
 
-Tests: `tests/test_ai_app.py`.
+Tests: `tests/test_ai_app.py`; CI fetches the locked commit and rebuilds the bundle from it.

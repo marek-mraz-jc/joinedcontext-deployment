@@ -3,8 +3,12 @@ read-only static server, the bundle with the chat host filled in, the route and 
 name; the page's policy runs only its own scripts and asks only the chat's host."""
 
 import gzip
-import re
+import hashlib
+import os
+import shutil
+import subprocess
 from pathlib import Path
+import re
 
 import pytest
 import yaml
@@ -58,9 +62,31 @@ def test_the_bundle_asks_only_the_chat_host_and_runs_only_its_own_scripts(dev):
     assert "location = /index.html { return 404; }" in conf
 
 
-def test_the_committed_bundle_is_the_template_build():
-    """build.mjs --template leaves the placeholders for the chart; a hand edit would drop them."""
+LOCK = COMPONENT / "bundle.lock"
+
+
+def test_the_committed_bundle_is_the_locked_one():
+    """bundle.lock names the platform commit and each file's sha256 (scripts/ai-bundle.sh)."""
+    lines = LOCK.read_text().splitlines()
+    assert re.fullmatch(r"platform: [0-9a-f]{40}", lines[0])
+    locked = dict(reversed(line.split("  ", 1)) for line in lines[1:])
+    assert sorted(locked) == sorted(p.name for p in SITE.iterdir())
+    for name, digest in locked.items():
+        assert hashlib.sha256((SITE / name).read_bytes()).hexdigest() == digest, f"{name} was edited by hand"
     page = (SITE / "index.html").read_text()
     assert "connect-src __API__;" in page and '<meta name="jc-api" content="__API__">' in page
-    widget = (SITE / "widget.js").read_text()
-    assert widget.startswith("var JC_FIELDS = ") and "JCRender.connector" in widget
+
+
+def test_the_locked_platform_commit_builds_the_committed_bundle(tmp_path):
+    """CI fetches the locked commit into JC_PLATFORM_DIR; locally the sibling clone serves."""
+    platform = Path(os.environ.get("JC_PLATFORM_DIR") or ROOT.parent / "joinedcontext-platform")
+    sha = LOCK.read_text().splitlines()[0].split(": ", 1)[1]
+    if shutil.which("node") is None or subprocess.run(
+        ["git", "-C", str(platform), "cat-file", "-e", f"{sha}^{{commit}}"], capture_output=True
+    ).returncode != 0:
+        pytest.skip(f"no node, or platform {sha} not in {platform}")
+    out = tmp_path / "site"
+    subprocess.run([str(ROOT / "scripts/ai-bundle.sh"), str(platform), sha, str(out)], check=True)
+    for path in SITE.iterdir():
+        assert (out / path.name).read_bytes() == path.read_bytes(), f"{path.name} differs from platform {sha}"
+    assert sorted(p.name for p in out.iterdir()) == sorted(p.name for p in SITE.iterdir())
