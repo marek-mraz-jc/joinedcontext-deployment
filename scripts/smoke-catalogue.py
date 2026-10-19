@@ -516,7 +516,7 @@ def run(domain: str, env: str, out: Path, client: Client | None = None, now: str
     seconds = client.elapsed()
     summary = (f"catalogue: {len(named)} datasets, {complete} complete, {len(named) - complete} ko, "
                f"{len(rows) - len(named)} public Endpoints without a dataset; "
-               f"{client.count} requests in {seconds / 60:.0f} min {seconds % 60:.0f} s; {path}")
+               f"{client.count} requests in {int(seconds // 60)} min {int(seconds % 60)} s; {path}")
     print(f"  {'FAIL' if bad else 'ok  '}  {summary}")
     return 1 if bad else 0
 

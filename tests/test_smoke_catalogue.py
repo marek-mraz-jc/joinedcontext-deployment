@@ -374,3 +374,11 @@ def test_the_tables_live_where_an_apply_leaves_them_and_git_ignores_them():
     removed = [line.split("rm -rf", 1)[1].split() for line in justfile.splitlines() if "rm -rf" in line]
     assert all(smoke.DEFAULT_OUT not in words and "." not in words for words in removed)
     assert f"/{smoke.DEFAULT_OUT}/" in (root / ".gitignore").read_text().splitlines()
+
+
+def test_the_summary_says_the_real_duration(tmp_path, capsys):
+    fake = Fake(world([package("air", "a1", "AirQualityObserved")], ["a1"]))
+    client = fake.client()
+    client.elapsed = lambda: 580.0  # 9 min 40 s, which a rounded minute printed as "10 min 40 s"
+    smoke.run(DOMAIN, "prod", tmp_path, client, "t")
+    assert " in 9 min " in capsys.readouterr().out
