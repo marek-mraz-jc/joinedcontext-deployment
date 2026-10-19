@@ -843,13 +843,13 @@ def test_the_footer_offers_the_assistant_as_a_disclosure_a_keyboard_opens():
     footer = (THEME / "footer.html").read_text()
     assert "{% set widget = h.jc_assistant_widget(publisher) %}" in footer
     assert "{% set publisher = pkg_dict.organization.name if pkg_dict is defined" in footer
-    assert '<details class="jc-assistant">' in footer and "<summary><span>{{ h.jc_t('assistant') }}</span></summary>" in footer
+    assert '<details class="jc-assistant" id="jc-assistant">' in footer and "<summary><span>{{ h.jc_t('assistant') }}</span></summary>" in footer
     assert 'title="{{ h.jc_t(\'assistant\') }}"' in footer and 'loading="lazy"' in footer
     assert 'referrerpolicy="no-referrer"' in footer
     # T-4280: the chat opens in Slovak or the visitor's own choice in it; the page's language
     # (T-4253) no longer reaches it.
     # T-4635: embed mode, so the chat's header carries the ✕ that closes the panel.
-    assert '<iframe src="{{ widget }}?embed=1"' in footer
+    assert '<iframe src="{{ widget }}?embed=1&amp;dock=1"' in footer
     assert "lang=" not in footer.split("<iframe", 1)[1].split(">", 1)[0]
 
 
@@ -865,7 +865,7 @@ def test_the_assistant_leaves_the_page_room_and_takes_a_phone_s_whole_screen():
     assert ".jc-assistant[open] > iframe { position: fixed; inset: 0; width: 100%; height: 100vh; height: 100dvh;" in phone
     assert "3.25rem" not in phone
     footer = (THEME / "footer.html").read_text()
-    assert "<script src=\"{{ h.url_for_static('/jc-assistant.js') }}\" defer></script>" in footer
+    assert "<script src=\"{{ h.url_for_static('/jc-assistant.js') }}\"></script>" in footer
     script = (THEME / "public__jc-assistant.js").read_text()
     assert 'matchMedia("(max-width: 40rem)")' in script and "el.inert = true" in script
     assert 'event.key === "Escape"' in script and 'querySelector("summary").focus()' in script
@@ -892,7 +892,8 @@ def test_the_open_assistant_has_one_close_control_and_a_frame_with_nothing_under
     script = (THEME / "public__jc-assistant.js").read_text()
     assert "jc-assistant-height" not in script
     assert 'data.type === "jc-assistant-close"' in script
-    assert "event.source === frame.contentWindow && event.origin === origin" in script
+    heard = script.split('window.addEventListener("message", function (event) {', 1)[1]
+    assert heard.index("event.source !== frame.contentWindow || event.origin !== origin") < heard.index('"jc-assistant-close"')
     assert 'box.querySelector("summary").focus();' in script
 
 
@@ -910,9 +911,53 @@ def test_the_chat_grows_to_the_window_on_its_own_frames_word_alone():
     assert css.index(".jc-assistant.jc-full > iframe") < css.index("@media (max-width: 40rem) {"), "the phone's frame wins"
     script = (THEME / "public__jc-assistant.js").read_text()
     size = script.split('data.type === "jc-assistant-size"', 1)
-    assert len(size) == 2 and "event.source === frame.contentWindow && event.origin === origin &&" in size[0].rsplit("else if", 1)[1]
-    assert '(data.size === "full" || data.size === "panel")' in size[1]
+    assert len(size) == 2 and "event.source !== frame.contentWindow || event.origin !== origin" in size[0].rsplit("addEventListener(\"message\"", 1)[1]
+    assert '(data.size === "full" || data.size === "panel" || data.size === "dock")' in size[1]
     assert 'phone.matches || box.classList.contains("jc-full")' in script
+
+
+def test_the_assistant_docks_beside_the_page_and_stays_across_its_links():
+    """T-4685 (API/05 §1.6.1): on a wide screen the open chat docks to the right edge and the
+    page shrinks beside it; a link is a normal page load with the panel held by a view transition,
+    open again before the first paint, on the assistant it had."""
+    css = (THEME / "public__jc-theme.css").read_text()
+    dock = css.split("@media (min-width: 1100px) {", 1)[1].split("\n}\n", 1)[0]
+    assert "html.jc-docked { --jc-dock-w: clamp(360px, var(--jc-dock, 34vw), 50vw); }" in dock
+    assert "html.jc-docked body { margin-inline-end: var(--jc-dock-w); }" in dock
+    assert "html.jc-docked .jc-assistant[open]:not(.jc-full) > iframe { inset-block: 0; inset-inline-end: 0; width: var(--jc-dock-w);" in dock
+    assert "@view-transition { navigation: auto; }" in css
+    assert ".jc-assistant[open] > iframe { view-transition-name: jc-assistant; }" in css
+    assert css.index("@media (min-width: 1100px) {") < css.index("@media (max-width: 40rem) {"), "a phone's frame wins"
+    reduced = css.split("@media (prefers-reduced-motion: reduce) {", 1)[1].split("\n}\n", 1)[0]
+    assert "::view-transition-group(root)" in reduced and "animation: none;" in reduced
+    base = (THEME / "templates__base.html").read_text()
+    assert "<script src=\"{{ h.url_for_static('/jc-dock.js') }}\"></script>" in base
+    early = (THEME / "public__jc-dock.js").read_text()
+    assert 'expect.rel = "expect";' in early and 'expect.href = "#jc-assistant";' in early and 'setAttribute("blocking", "render")' in early
+    assert "token" not in early.lower()
+    script = (THEME / "public__jc-assistant.js").read_text()
+    # The width: dragged or with the arrow keys, 360 px to half the window, kept per browser.
+    assert 'setAttribute("role", "separator")' in script and "Math.max(px, 360)" in script and "window.innerWidth / 2" in script
+    assert 'localStorage.setItem(WIDTH' in script and 'sessionStorage.setItem(KEY' in script
+    # The kept assistant is one of this host's widget pages, never another address.
+    ours = script.split("function ours(url) {", 1)[1].split("\n  }\n", 1)[0]
+    assert "to.origin === origin" in ours and "\\/widget$/" in ours and "!to.search && !to.hash" in ours
+
+
+def test_a_done_answer_opens_its_dataset_on_this_catalogue_alone():
+    """T-4685: the chat names a dataset; the page opens it only on its own origin, a dataset path,
+    not the page already open, and not while the visitor selects or types, and says so to the
+    chat first. Only its own frame, from the frame's origin, is heard."""
+    script = (THEME / "public__jc-assistant.js").read_text()
+    opens = script.split("function opens(url) {", 1)[1].split("\n  }\n", 1)[0]
+    assert "to.origin !== location.origin" in opens
+    assert "/^\\/dataset\\/[a-z0-9_-]{2,100}\\/?$/.test(to.pathname)" in opens
+    assert "=== here" in opens and "getSelection" in opens and "INPUT|TEXTAREA|SELECT" in opens
+    heard = script.split('window.addEventListener("message", function (event) {', 1)[1]
+    assert heard.index("event.source !== frame.contentWindow || event.origin !== origin") < heard.index('"jc-assistant-dataset"')
+    dataset = heard.split('"jc-assistant-dataset"', 1)[1].split("} else if", 1)[0]
+    assert dataset.index('postMessage({ type: "jc-assistant-opened", url: data.url }, origin)') < dataset.index("location.assign(path)")
+    assert 'data.type === "jc-assistant-back"' in heard and "history.back()" in heard
 
 
 def test_the_catalogue_pod_is_told_its_assistant_only_when_the_assistant_is_deployed(rendered, rendered_variant):
@@ -1638,7 +1683,7 @@ def test_the_corner_offers_the_assistants_page_beside_the_chat_in_one_row():
     footer = (THEME / "footer.html").read_text()
     corner = footer.split('<div class="jc-corner">', 1)[1].split("</div>", 1)[0]
     link = corner.index('href="{{ h.url_for(\'jc_pages.assistants\') }}"')
-    assert link < corner.index('<details class="jc-assistant">')
+    assert link < corner.index('<details class="jc-assistant" id="jc-assistant">')
     assert "aria-label=\"{{ h.jc_t('assistants_label') }}\"" in corner
     # T-4609: the footer's light link colour no longer reaches it, and the open panel hides it.
     assert ".jc-corner .jc-assistants-link { box-sizing" in desktop_css() and ".jc-corner:has(.jc-assistant[open]) .jc-assistants-link { display: none; }" in desktop_css()
@@ -1766,7 +1811,7 @@ def test_the_corner_link_is_four_logos_and_no_words(theme, lang):
     assert all('aria-hidden="true"' in s for s in segments)
     # every text node of the link is blank: no word and no "/" between the logos
     assert re.sub(r"<[^>]+>", "", link).strip() == ""
-    assert '<details class="jc-assistant">' in html
+    assert '<details class="jc-assistant" id="jc-assistant">' in html
 
 
 def test_the_brand_logos_are_the_makers_own_saved_here_with_their_source():

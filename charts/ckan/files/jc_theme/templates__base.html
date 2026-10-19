@@ -5,4 +5,6 @@
 {% block custom_styles %}
   {{ super() }}
   {% snippet 'snippets/jc_styles.html' %}
+  {# T-4685: room for an assistant docked on the page before, before the first paint. #}
+  <script src="{{ h.url_for_static('/jc-dock.js') }}"></script>
 {% endblock %}
