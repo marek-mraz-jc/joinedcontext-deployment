@@ -28,9 +28,11 @@ ckan:
               ngx.req.clear_header((header:gsub("%-", "_")))
             end
           end
-    # Class 1 (standard web): a catalogue is browsed and crawled, not called in a loop.
+    # Data class (T-4717): 600 requests a minute per client address, 10 a second, for the
+    # pages and the CKAN action API alike. A bot can read the whole catalogue at that rate and
+    # only that bot gets 429; the fingerprinted assets count apart (ckan-webassets).
     limit-count:
-      count: 300
+      count: 600
       time_window: 60
       key_type: var
       key: remote_addr

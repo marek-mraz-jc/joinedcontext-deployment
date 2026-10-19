@@ -220,10 +220,10 @@ def test_space_reads_and_writes_count_apart(rendered):
             assert (limit["count"], limit["key"]) == (ANONYMOUS_ROUTE_LIMITS[route["id"]], "remote_addr")
             assert route["vars"] == [["http_authorization", "!", "~~", "."]], route["id"]
         elif route["id"] == "ckan-webassets":
-            # T-4201: its one plugin of its own keeps the config's CSP baseline and adds the
-            # year-long cache of a content-hashed file (tests/test_edge_asset_cache.py); the
-            # limit is the config's, unchanged.
-            assert "labels" not in route and set(route["plugins"]) == {"serverless-post-function"}, route["id"]
+            # T-4201: it keeps the config's CSP baseline and adds the year-long cache of a
+            # content-hashed file; T-4717: and counts its assets in a bucket of their own
+            # (tests/test_edge_asset_cache.py).
+            assert "labels" not in route and set(route["plugins"]) == {"serverless-post-function", "limit-count"}, route["id"]
         elif route["id"] == "api-oauth":
             # T-4630, ADR-N-052 §4: minting an anonymous token counts per client address.
             assert "labels" not in route and set(route["plugins"]) == {"limit-count"}, route["id"]

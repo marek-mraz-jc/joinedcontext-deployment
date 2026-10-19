@@ -44,6 +44,16 @@ ckan-webassets:
               ngx.header["Cache-Control"] = "public, max-age=31536000, immutable"
             end
           end
+    # A page load fetches a dozen of these and a carrier's CGNAT puts many people behind one
+    # address, so they count in a bucket of their own, far above any page rate (T-4717).
+    limit-count:
+      count: 3000
+      time_window: 60
+      key_type: var
+      key: remote_addr
+      rejected_code: 429
+      policy: local
+      show_limit_quota_header: true
 
 # T-4639: the dataset map a site may frame, /map/{dataset}[/{resource}] with CKAN's language
 # prefix or without; its own plugin config drops X-Frame-Options and the cookie.

@@ -6,8 +6,9 @@ re-creation, not of the first publication. For every dataset without an `issued`
 takes, in this order:
 
 1. the source publisher's own date: `dct:issued` of the NKOD record whose distribution is the
-   dataset's source (or the record named in RECORDS), `metadata_created` of a HRI record, `created`
-   of an ArcGIS Hub item;
+   dataset's source (or the record named in RECORDS), of the NKOD record of the same ŠÚ SR
+   DATAcube table (its `dct:modified` when it has no `dct:issued`: the latest the table can have
+   appeared), `metadata_created` of a HRI record, `created` of an ArcGIS Hub item;
 2. otherwise the platform's first publication: the first commit of this repository that names the
    dataset's Endpoint slug or its name;
 3. otherwise nothing: the dataset keeps `metadata_created`.
@@ -109,6 +110,29 @@ def nkod_by_page(url):
     return nkod_record(f"https://data.gov.sk/set/{found.group(1)}") if found else None
 
 
+def datacube(url):
+    """A ŠÚ SR DATAcube table: NKOD lists each cube once, with its downloads on
+    statdata.statistics.sk rather than the API the pipeline reads, so the record is found by the
+    cube's code (T-4718). Those records carry no `dct:issued`, only `dct:modified`: the table was
+    at the source by then at the latest, so that date is shown, never one earlier."""
+    found = re.match(r"https://data\.statistics\.sk/api/v2/dataset/([a-z0-9]+)/", url)
+    if not found:
+        return None
+    rows = sparql(
+        "PREFIX dct: <http://purl.org/dc/terms/> PREFIX dcat: <http://www.w3.org/ns/dcat#> "
+        "SELECT DISTINCT ?ds ?issued ?modified WHERE { ?ds dcat:distribution ?d . "
+        "{ ?d dcat:accessURL ?u } UNION { ?d dcat:downloadURL ?u } "
+        'FILTER(CONTAINS(LCASE(STR(?u)), "statistics.sk/") && CONTAINS(LCASE(STR(?u)), "/dataset/%s/")) '
+        "OPTIONAL { ?ds dct:issued ?issued } OPTIONAL { ?ds dct:modified ?modified } }" % found.group(1))
+    if len({r["ds"] for r in rows}) != 1:
+        return None
+    for term in ("issued", "modified"):
+        dates = sorted(filter(None, (iso(r.get(term)) for r in rows)))
+        if dates:
+            return dates[0], f"NKOD {rows[0]['ds']} dct:{term} (DATAcube {found.group(1)})"
+    return None
+
+
 def hri(url):
     found = re.match(r"https://hri\.fi/data/[a-zA-Z_]+/dataset/([a-z0-9-]+)$", url)
     if not found:
@@ -135,7 +159,7 @@ def source_date(pkg):
     if pkg["name"] in RECORDS:
         return nkod_record(RECORDS[pkg["name"]])
     for url in sources(pkg):
-        for reader in (nkod_by_page, hri, arcgis, nkod_by_distribution):
+        for reader in (nkod_by_page, hri, arcgis, nkod_by_distribution, datacube):
             try:
                 found = reader(url)
             except (OSError, ValueError, KeyError) as error:
