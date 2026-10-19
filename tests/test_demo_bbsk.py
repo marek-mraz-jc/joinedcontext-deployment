@@ -3,7 +3,7 @@
 `demos/bbsk/` renders its own catalogue, database, edge and NetworkPolicies into namespace
 `demo-bbsk` and nothing else; the platform's environments render none of it. Its catalogue harvests
 only the city's and the region's sources, says DEMO on every page and keeps search engines out,
-and its assistant reads only the two bodies' public sources and Endpoints with read-only tools.
+and its assistant reads only the region's public sources and its McpServer (owner 2026-10-19T17:55Z).
 """
 
 import shutil
@@ -133,28 +133,27 @@ def doc_text(docs, key: str) -> str:
     return "".join(d.get("data", {}).get(key, "") for d in docs if d["kind"] == "ConfigMap")
 
 
-def test_the_demo_assistant_reads_only_the_two_bodies_public_data():
+def test_the_demo_assistant_reads_only_the_regions_public_data_through_its_server():
+    # Owner 2026-10-19T17:55Z: BBSK only, no source or Endpoint of the city; T-4750: the data
+    # through the region's one public McpServer, never a connector list beside it.
     spec = deployment_named("bbsk-demo")["spec"]
     assert spec["channel"] == "public" and spec["publicId"] == "bbsk-demo"
-    assert spec["scope"] == {"projects": ["banskabystrica"]}
-    assert spec["sources"] == ["web", "data-portal", "catalogue", "banskabystrica/web"]
+    assert "scope" not in spec and "connectors" not in spec and "select" not in spec
+    assert spec["sources"] == ["web", "data-portal", "catalogue"]
     for name in spec["sources"]:
-        project, _, source = name.rpartition("/")
-        assert manifests("KnowledgeSource", project or "bbsk")[source]["spec"]["visibility"] == "public", name
-    members = {
-        project: {
-            m["name"]
-            for server in manifests("McpServer", project).values() if server["spec"]["audience"] == "public"
-            for m in server["spec"]["members"] if m["kind"] == "Endpoint"
-        }
-        for project in PUBLISHERS
-    }
-    expected = members["bbsk"] | {f"banskabystrica/{name}" for name in members["banskabystrica"]}
-    assert {c["endpoint"] for c in spec["connectors"]} == expected
-    for connector in spec["connectors"]:
-        assert set(connector["tools"]) <= READ_ONLY, connector
-        project, _, name = connector["endpoint"].rpartition("/")
-        assert manifests("Endpoint", project or "bbsk")[name]["spec"]["audience"] == "public", connector
+        assert "/" not in name, name
+        assert manifests("KnowledgeSource", "bbsk")[name]["spec"]["visibility"] == "public", name
+    assert spec["mcpServer"] == "bbsk/otvorene-data"
+    server = manifests("McpServer", "bbsk")["otvorene-data"]["spec"]
+    assert server["audience"] == "public" and "select" not in server
+    for member in server["members"]:
+        assert member["kind"] == "Endpoint" and member.get("namespace", "bbsk") == "bbsk", member
+        assert manifests("Endpoint", "bbsk")[member["name"]]["spec"]["audience"] == "public", member
+    prompt = spec["systemPrompt"]
+    assert prompt.startswith("Si ukážkový asistent (DEMO) nad otvorenými dátami Banskobystrického samosprávneho kraja.")
+    assert '"Táto ukážka obsahuje len dáta Banskobystrického samosprávneho kraja."' in prompt
+    for text in (*spec["theme"]["subtitle"].values(), spec["theme"]["greeting"], *spec["disclaimer"].values()):
+        assert "mesta" not in text and "Banskej Bystrice" not in text and "city" not in text, text
     assert spec["allowedOrigins"] == [f"https://{HOSTS['smartcity']}", f"https://{HOSTS['dev']}"]
     # Owner 2026-10-19T13:49Z: two cards from www.bbsk.sk, then the open-data ones, only those proven 3 of 3.
     # The Zvolen schools card is off since the owner's 16:22Z run read Organization (supervisor 16:35Z).
