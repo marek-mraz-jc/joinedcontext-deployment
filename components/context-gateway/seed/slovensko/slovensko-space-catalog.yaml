@@ -1,6 +1,7 @@
-# The open-data catalogue as NGSI-LD (T-4500, T-4525, ADR-N-025): one SDM DCAT-AP Dataset per
-# space with a public Endpoint and one DataService per public Endpoint, written by the Portal
-# reconciler from the gateway's DCAT-AP feed. Nothing in it is authored here. The reconciler
+# The open-data catalogue as NGSI-LD (T-4500, T-4525, T-4746, ADR-N-025, EP-140): one SDM DCAT-AP
+# Dataset per public CKAN dataset with its Organization, one DataService per public Endpoint, and
+# a Dataset of its own for an Endpoint no CKAN dataset names, written by the Portal reconciler
+# from the gateway's DCAT-AP feed and CKAN. Nothing in it is authored here. The reconciler
 # writes to the Endpoint named `catalog` on the space named `catalog`, one per repository.
 apiVersion: joinedcontext.com/v1alpha1
 kind: ContextSpace
@@ -9,8 +10,8 @@ metadata:
   namespace: slovensko
   title: { sk: "Katalóg otvorených dát", en: "Open data catalogue" }
   description:
-    sk: "Každý verejný dataset platformy ako NGSI-LD entita Dataset a každý jeho verejný prístupový bod ako DataService: názov, popis, téma, miesto, obdobie, typy a počty entít."
-    en: "Every public dataset of the platform as an NGSI-LD Dataset entity and each of its public Endpoints as a DataService: title, description, theme, place, time range, entity types and counts."
+    sk: "Každý verejný dataset platformy ako NGSI-LD entita Dataset, jeho vydavateľ ako Organization a každý jeho verejný prístupový bod ako DataService: názov, popis, téma, miesto, obdobie, typy a počty entít."
+    en: "Every public dataset of the platform as an NGSI-LD Dataset entity, its publisher as an Organization and each of its public Endpoints as a DataService: title, description, theme, place, time range, entity types and counts."
 spec:
   urnSegment: catalog
   dataModelRef: { kind: DataModel, name: catalog }
@@ -22,4 +23,6 @@ spec:
     - entityType: Dataset
       history: "off"
     - entityType: DataService
+      history: "off"
+    - entityType: Organization
       history: "off"

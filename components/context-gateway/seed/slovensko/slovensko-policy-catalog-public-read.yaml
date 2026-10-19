@@ -14,3 +14,4 @@ spec:
     - entities:
         - type: Dataset
         - type: DataService
+        - type: Organization
