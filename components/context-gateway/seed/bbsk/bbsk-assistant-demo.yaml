@@ -56,8 +56,9 @@ spec:
     primaryColor: "#264a96"
     font: '"Roboto", "Helvetica Neue", Arial, system-ui, sans-serif'
     greeting: "Dobrý deň! Toto je ukážka (DEMO), nie oficiálna služba BBSK. Opýtajte sa ma na otvorené dáta kraja a mesta Banská Bystrica."
-  # The starting cards (owner 2026-10-19T13:49Z): two answered from www.bbsk.sk, then two from the
-  # open data, each proven 3 of 3 on the environment the page runs on (T-4740 evidence table).
+  # The starting cards (owner 2026-10-19T13:49Z): two answered from www.bbsk.sk, then the open
+  # data, each proven 3 of 3 on the environment the page runs on (T-4740 evidence table). The
+  # Zvolen schools card is off until it passes (owner's run 2026-10-19T16:22Z read Organization).
   suggestions:
     sk:
       - "Ako nahlásim výtlk na ceste v kraji?"
