@@ -434,6 +434,18 @@ STRINGS = {
     "guide_who": {"en": "Who can use it", "sk": "Kto to môže použiť", "cs": "Kdo to může použít", "de": "Wer es nutzen kann"},
     "guide_steps": {"en": "Steps", "sk": "Postup", "cs": "Postup", "de": "Schritte"},
     "guide_try": {"en": "Try it", "sk": "Vyskúšajte", "cs": "Vyzkoušejte", "de": "Probieren Sie es aus"},
+    # T-4735 (owner 11:07Z, 11:08Z): an assistant seldom reaches for a connector unasked, so
+    # /assistants and each guide say to name it in the question, by the name the guide gave it.
+    "connector_note": {"en": "Important: the assistant usually won't use the connector on its own. Ask for it in your question, for example:",
+                       "sk": "Dôležité: asistent konektor väčšinou sám nepoužije. Napíšte mu to v otázke, napríklad:",
+                       "cs": "Důležité: asistent konektor většinou sám nepoužije. Napište mu to v otázce, například:",
+                       "de": "Wichtig: Der Assistent nutzt den Connector meist nicht von selbst. Bitten Sie in Ihrer Frage darum, zum Beispiel:"},
+    "connector_why": {"en": "The assistant recognises the connector by the name you gave it when you added it.",
+                      "sk": "Asistent spozná konektor podľa mena, ktoré ste mu dali pri pridaní.",
+                      "cs": "Asistent pozná konektor podle jména, které jste mu dali při přidání.",
+                      "de": "Der Assistent erkennt den Connector an dem Namen, den Sie ihm beim Hinzufügen gegeben haben."},
+    # The question to try, in the note and on each guide, names the connector first (T-4735).
+    "guide_use": {"en": "Use {connector}: ", "sk": "Použi {connector}: ", "cs": "Použij {connector}: ", "de": "Nutze {connector}: "},
     "guide_example": {"en": "Which datasets about air quality do you have?", "sk": "Aké datasety o kvalite ovzdušia máte?",
                       "cs": "Jaké datové sady o kvalitě ovzduší máte?", "de": "Welche Datensätze zur Luftqualität gibt es?"},
     "guide_good": {"en": "A good first answer names records from this catalogue and says which dataset they come from. If the answer is general or from the web, write: use {name}.",
@@ -1729,6 +1741,9 @@ def jc_about_site():
 
 _HOST = re.compile(r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$")
 MCP_NAME = "joinedcontext"
+# The name a person gives the connector in an assistant and then names in a question: the hub's
+# own title (serverInfo.title, T-4732), one name on every page (T-4735). MCP_NAME stays the key.
+CONNECTOR_NAME = "Joinedcontext Open Data"
 MCP_SERVER = re.compile(r"d/[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?")
 
 
@@ -1805,7 +1820,6 @@ def jc_assistants():
     mcp = jc_mcp_install()
     if not mcp:
         return None
-    name = BRANDING.get("instanceName") or MCP_NAME
 
     def card(id, title):
         return {"id": id, "name": title, "logo": "jc/card-%s.svg" % id, "guide_label": jc_t("guide")}
@@ -1815,7 +1829,9 @@ def jc_assistants():
         cards.append(card("gemini", "Gemini"))
 
     return {
-        "lead": jc_t("assistants_lead").replace("{name}", name),
+        # One connector name on every page, the one each guide has the person type (T-4735).
+        "lead": jc_t("assistants_lead").replace("{name}", CONNECTOR_NAME),
+        "prompt": jc_try(_language()),
         "mcp": mcp,
         "cards": cards,
         "sources": jc_assistant_sources(),
@@ -2056,6 +2072,15 @@ GUIDES = {
 }
 
 
+def jc_try(language):
+    """The question to try in `language`, naming the connector first (T-4735): the instance's first
+    sample question, else the theme's own; the theme names no city (T-4636)."""
+    own = BRANDING.get("samples")
+    samples = _samples(language) if language != "en" or not isinstance(own, dict) or own.get("en") else []
+    question = samples[0] if samples else STRINGS["guide_example"].get(language) or STRINGS["guide_example"]["en"]
+    return STRINGS["guide_use"].get(language, STRINGS["guide_use"]["en"]).replace("{connector}", CONNECTOR_NAME) + question
+
+
 def jc_assistant_guide(id):
     """The guide to one assistant in the page's language (T-4643), or None for an assistant without
     a card on this installation: an unknown id, Gemini while its flag is off, or no hub."""
@@ -2064,17 +2089,16 @@ def jc_assistant_guide(id):
         return None
     guide = GUIDES[id]
     words = guide.get(_language()) or guide["en"]
-    name = BRANDING.get("instanceName") or MCP_NAME
+    name = CONNECTOR_NAME
     steps = [step.replace("{name}", name) for step in words["steps"]]
     # Gemini's custom apps answer in English only, so its question to try is the English one.
     asked = "en" if id == "gemini" else _language()
-    own = BRANDING.get("samples")
-    samples = _samples(asked) if asked != "en" or not isinstance(own, dict) or own.get("en") else []
     return {
         "id": id, "name": guide["name"], "help": guide["help"],
         "title": jc_t("guide_title").replace("{name}", guide["name"]),
         "who": words["who"], "steps": steps, "paste": guide["paste"], "mcp": page["mcp"],
-        "example": samples[0] if samples else STRINGS["guide_example"].get(asked) or STRINGS["guide_example"]["en"],
+        "example": jc_try(asked),
+        "prompt": jc_try(asked),
         "good": jc_t("guide_good").replace("{name}", name),
         "trouble": [(problem, fix.replace("{name}", name)) for problem, fix in words["trouble"]],
         "checked": jc_t("guide_checked").replace("{date}", guide["checked"]).replace("{maker}", guide["name"]),
