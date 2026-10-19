@@ -25,26 +25,23 @@
 # hop and a second thing to lose the trail in.
 role: Agent
 
-# The chart's own defaults add /proc and /sys as well, because its default configuration has a
-# `host_metrics` source. This collector has one source and it is `kubernetes_logs`, so those two
-# would be host access with nothing reading it. What is left is what reading a node's container
-# logs actually costs: /var/log holds the log bodies, and /var/lib resolves the symlinks under
-# /var/log/containers on the runtimes that keep the bodies elsewhere. Both stay read-only, and
-# both are what policy-exceptions.yaml records rather than hides.
+# The chart's own defaults add /proc, /sys and the whole of /var/lib as well, because its default
+# configuration has a `host_metrics` source and it caters for the Docker runtime, which keeps the
+# log bodies under /var/lib/docker/containers. This collector has one source, `kubernetes_logs`,
+# and the clusters it runs on (k3s, kind) run containerd, whose kubelet writes the bodies under
+# /var/log/pods; /var/log/containers links there. So /var/log is the one host path it reads, and
+# read-only. The node's /var/lib holds every container's root filesystem and the kubelet's pod
+# volumes, Secrets among them, and is not mounted (T-4775). The chart's data directory
+# (/var/lib/vector, the checkpoint store) is a volume of its own. policy-exceptions.yaml records
+# this rather than hides it.
 defaultVolumes:
   - name: var-log
     hostPath:
       path: "/var/log/"
-  - name: var-lib
-    hostPath:
-      path: "/var/lib/"
 
 defaultVolumeMounts:
   - name: var-log
     mountPath: "/var/log/"
-    readOnly: true
-  - name: var-lib
-    mountPath: "/var/lib"
     readOnly: true
 
 image:
