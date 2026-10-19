@@ -106,14 +106,17 @@ def send(method: str, url: str, headers: dict, body: bytes | None, limit: int = 
     started = time.monotonic()
     request = urllib.request.Request(url, data=body, method=method, headers=headers)
     try:
-        with cut_at(TIMEOUT), OPENER.open(request, timeout=TIMEOUT) as response:
-            return Answer(response.status, response.headers.get("Content-Type", ""),
-                          response.read(limit), time.monotonic() - started)
+        with cut_at(TIMEOUT):
+            try:
+                with OPENER.open(request, timeout=TIMEOUT) as response:
+                    return Answer(response.status, response.headers.get("Content-Type", ""),
+                                  response.read(limit), time.monotonic() - started)
+            except urllib.error.HTTPError as error:
+                # Its body is read inside the same timer as the rest of the request.
+                return Answer(error.code, error.headers.get("Content-Type", ""), error.read(limit),
+                              time.monotonic() - started, retry_after=error.headers.get("Retry-After", ""))
     except Overtime:
         return Answer(0, seconds=TIMEOUT, error=f"timeout after {TIMEOUT:.0f} s")
-    except urllib.error.HTTPError as error:
-        return Answer(error.code, error.headers.get("Content-Type", ""), error.read(limit),
-                      time.monotonic() - started, retry_after=error.headers.get("Retry-After", ""))
     except (TimeoutError, socket.timeout):
         return Answer(0, seconds=TIMEOUT, error=f"timeout after {TIMEOUT:.0f} s")
     except (urllib.error.URLError, OSError) as error:

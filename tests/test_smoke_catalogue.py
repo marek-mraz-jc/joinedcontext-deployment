@@ -382,3 +382,32 @@ def test_the_summary_says_the_real_duration(tmp_path, capsys):
     client.elapsed = lambda: 580.0  # 9 min 40 s, which a rounded minute printed as "10 min 40 s"
     smoke.run(DOMAIN, "prod", tmp_path, client, "t")
     assert " in 9 min " in capsys.readouterr().out
+
+
+def test_a_trickling_error_body_is_cut_at_the_timeout_too(monkeypatch):
+    import socket
+    import threading
+    import time
+
+    monkeypatch.setattr(smoke, "TIMEOUT", 1.0)
+    listener = socket.socket()
+    listener.bind(("127.0.0.1", 0))
+    listener.listen(1)
+
+    def serve():
+        conn, _ = listener.accept()
+        conn.recv(4096)
+        conn.sendall(b"HTTP/1.1 503 Service Unavailable\r\nContent-Length: 100000\r\n\r\n")
+        for _ in range(30):
+            try:
+                conn.sendall(b"x" * 1000)
+                time.sleep(0.2)
+            except OSError:
+                break
+        conn.close()
+        listener.close()
+
+    threading.Thread(target=serve, daemon=True).start()
+    started = time.monotonic()
+    got = smoke.send("GET", f"http://127.0.0.1:{listener.getsockname()[1]}/", {}, None)
+    assert got.error == "timeout after 1 s" and time.monotonic() - started < 3
