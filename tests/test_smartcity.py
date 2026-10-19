@@ -145,6 +145,12 @@ def test_postgres_is_dumped_nightly_and_the_dump_job_may_reach_it(smartcity):
         and any(p.get("port") == 4143 for rule in d["spec"].get("egress", []) for p in rule.get("ports", []))
     ]
     assert selected, "no egress policy lets the dump job's proxy reach postgres on 4143"
+    # local-path binds the volume only for a pod that mounts it: a Job of the apply does, or the
+    # release waits on a Pending PVC until the night (prod apply 2026-10-19).
+    now = [d for d in smartcity if d.get("kind") == "Job" and d["metadata"]["name"] == "postgres-cluster-local-backup-now"]
+    assert len(now) == 1 and now[0]["spec"]["ttlSecondsAfterFinished"] > 0
+    claims = {v["persistentVolumeClaim"]["claimName"] for v in now[0]["spec"]["template"]["spec"]["volumes"] if "persistentVolumeClaim" in v}
+    assert claims == {"postgres-cluster-local-backup"}
 
 
 # smartcity's copies of dev's environment files, which differ from dev's in the domain alone.
