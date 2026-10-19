@@ -47,7 +47,7 @@
   {% set assistants = h.jc_mcp_install() %}
   {% if widget or assistants %}
     <div class="jc-corner">
-      {% if assistants %}<a class="jc-assistants-link" href="{{ h.url_for('jc_pages.assistants') }}" aria-label="{{ h.jc_t('assistants_label') }}">{% for mark in ('claude', 'chatgpt', 'gemini', 'mcp') %}<span class="jc-seg jc-seg-{{ mark }}">{% include 'jc/brand-' ~ mark ~ '.svg' %}</span>{% endfor %}</a>{% endif %}
+      {% if assistants %}<a class="jc-assistants-link" href="{{ h.url_for('jc_pages.assistants') }}" aria-label="{{ h.jc_t('assistants_label') }}">{% for mark in ('claude', 'chatgpt', 'mcp') %}<span class="jc-seg jc-seg-{{ mark }}">{% include 'jc/brand-' ~ mark ~ '.svg' %}</span>{% endfor %}</a>{% endif %}
       {% if widget %}
         <details class="jc-assistant" id="jc-assistant">
           <summary><span>{{ h.jc_t('assistant') }}</span></summary>

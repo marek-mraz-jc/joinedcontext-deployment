@@ -364,7 +364,7 @@ def test_the_mcp_panel_is_on_the_assistants_page_and_every_dataset_page_with_its
     assert "jc_mcp_install.html" not in (THEME / "templates__home__index.html").read_text()
     # One status line per page: the live box's when the dataset page has one.
     assert '{% if not live %}<p class="visually-hidden" role="status"' in panel
-    assert panel.count("{{ copy('") == 4  # the address, Claude Code, JSON and the Gemini CLI on /assistants (T-4628)
+    assert panel.count("{{ copy('") == 3  # the address, Claude Code and JSON (T-4628; no Gemini CLI since T-4735)
 
 
 def test_the_mcp_card_puts_claude_first_and_keeps_its_code_whole():
@@ -373,7 +373,7 @@ def test_the_mcp_card_puts_claude_first_and_keeps_its_code_whole():
     panel = (THEME / "templates__snippets__jc_mcp_install.html").read_text()
     order = [panel.index(key) for key in ("mcp_claude_ai_1", "mcp_vscode", "mcp_cursor", "jc-mcp-claude-label", "jc-mcp-json-label")]
     assert order == sorted(order)
-    assert panel.count('<div class="jc-code-head">') == 4
+    assert panel.count('<div class="jc-code-head">') == 3
     assert "mcp.url_parts | join('<wbr>' | safe)" in panel
     css = (THEME / "public__jc-theme.css").read_text()
     assert ".jc-live .jc-code pre { white-space: pre; overflow-wrap: normal; overflow-x: auto; }" in css
@@ -481,9 +481,9 @@ def test_no_stock_ckan_colour_survives_the_theme():
 def test_the_stylesheet_carries_no_colour_of_its_own():
     """T-3009: every colour is the branding block's or mixed from it, so values restyle it all."""
     css = (THEME / "public__jc-theme.css").read_text()
-    # T-4620: the four assistant segments wear their makers' colours, which no instance restyles
-    css, makers = re.subn(r"^\.jc-seg-(?:claude|chatgpt|gemini|mcp) \{ background: [^}]*\}$", "", css, flags=re.M)
-    assert makers == 4
+    # T-4620: the three assistant segments wear their makers' colours, which no instance restyles
+    css, makers = re.subn(r"^\.jc-seg-(?:claude|chatgpt|mcp) \{ background: [^}]*\}$", "", css, flags=re.M)
+    assert makers == 3
     assert not re.search(r"#[0-9a-f]{3,8}\b|\brgba?\(|\bhsla?\(", css, re.I)
     named = re.findall(r":\s*(white|black|red|blue|green|gray|grey|navy|teal)\b", css, re.I)
     assert not named, named
@@ -678,7 +678,7 @@ def test_the_header_class_is_never_reused_for_icons():
         if any(re.fullmatch(r"\.jc-brand(:[\w-]+)*", n) for n in names):
             for banned in ("inline-size", "display: block", "transform"):
                 assert banned not in body, (selectors.strip(), banned)
-    for mark in ("claude", "chatgpt", "gemini", "mcp"):
+    for mark in ("claude", "chatgpt", "mcp"):
         assert 'class="jc-ai-logo"' in (THEME / f"templates__jc__brand-{mark}.svg").read_text(), mark
 
 
@@ -1676,7 +1676,7 @@ def test_the_assistants_page_names_the_installation_s_own_hub_and_assistants_in_
     assert cards["claude"]["open"] == theme.CLAUDE_CONNECTORS == "https://claude.ai/customize/connectors"
     assert cards["chatgpt"]["open_label"] == "Add to ChatGPT"
     assert cards["grok"]["open"] == theme.GROK_CONNECTORS == "https://grok.com/connectors"
-    assert page["gemini"] == f"gemini mcp add --transport http joinedcontext {hub}"
+    assert "gemini" not in page  # no Gemini CLI command either (T-4735)
     for card in page["cards"]:
         assert set(card) == {"id", "name", "logo", "open", "open_label", "guide_label"}, card
         assert (THEME / ("templates__" + card["logo"].replace("/", "__"))).is_file(), card["logo"]
@@ -1695,7 +1695,7 @@ def test_the_assistants_page_reads_in_slovak(theme):
     assert theme.jc_t("coming_soon") == "Čoskoro" and theme.jc_t("for_developers") == "Pre vývojárov"
     assert theme.jc_t("store_address") == "Každý návod ukazuje, kam vložiť túto adresu:"
     for key in ("assistants", "assistants_lead", "add_to", "store_address", "for_developers", "coming_soon",
-                "copy", "gemini_1", "any_client", "guide", "guide_title", "guide_who", "guide_steps", "guide_try",
+                "copy", "any_client", "guide", "guide_title", "guide_who", "guide_steps", "guide_try",
                 "guide_example", "guide_good", "guide_trouble", "guide_checked", "guide_back"):
         assert set(theme.STRINGS[key]) == {"en", "sk", "cs", "de"}, key
         # T-4628: the owner read English store words inside the Slovak steps.
@@ -1788,11 +1788,12 @@ def test_each_assistant_card_is_its_logo_its_name_and_at_most_one_link(theme):
 def test_the_developers_fold_holds_every_command_and_stays_closed():
     page = (THEME / "templates__jc__assistants.html").read_text()
     fold = page.split('<details class="jc-developers">', 1)[1].split("</details>", 1)[0]
-    assert "{% snippet 'snippets/jc_mcp_install.html', editors_only=True, live=True, gemini=page.gemini %}" in fold
+    assert "{% snippet 'snippets/jc_mcp_install.html', editors_only=True, live=True %}" in fold
     assert re.findall(r"<details[^>]*>", page) == ['<details class="jc-developers">']
     snippet = (THEME / "templates__snippets__jc_mcp_install.html").read_text()
     editors = snippet.split("{% if not editors_only %}\n    <div>", 1)[1].split("{% endif %}", 1)[1]
-    for block in ('id="jc-mcp-gemini"', "text=gemini", "mcp.vscode", "mcp.cursor", 'id="jc-mcp-claude"', 'id="jc-mcp-json"'):
+    assert "gemini" not in snippet.lower()  # T-4735
+    for block in ("mcp.vscode", "mcp.cursor", 'id="jc-mcp-claude"', 'id="jc-mcp-json"'):
         assert block in editors, block
 
 
@@ -1826,23 +1827,24 @@ def test_the_cards_sit_in_one_row_or_as_many_as_fit():
     assert ".jc-assistant-card:has(.jc-card-link:focus-visible) { outline: 3px solid var(--jc-accent); outline-offset: 2px; }" in css
 
 
-LABELS = {"en": "Use the data in ChatGPT, Claude, Gemini or any MCP client",
-          "sk": "Použite dáta v ChatGPT, Claude, Gemini alebo v akomkoľvek klientovi MCP",
-          "cs": "Použijte data v ChatGPT, Claude, Gemini nebo v libovolném klientovi MCP",
-          "de": "Die Daten in ChatGPT, Claude, Gemini oder jedem MCP-Client nutzen"}
+LABELS = {"en": "Use the data in ChatGPT, Claude or any MCP client",
+          "sk": "Použite dáta v ChatGPT, Claude alebo v akomkoľvek klientovi MCP",
+          "cs": "Použijte data v ChatGPT, Claude nebo v libovolném klientovi MCP",
+          "de": "Die Daten in ChatGPT, Claude oder jedem MCP-Client nutzen"}
 
 
 @pytest.mark.parametrize("lang", sorted(LABELS))
-def test_the_corner_link_is_four_logos_and_no_words(theme, lang):
-    """T-4613, T-4620: Claude, ChatGPT, Gemini, MCP, each on its own segment; no text, no "/"; the
-    name is the aria-label, in the page's language."""
+def test_the_corner_link_is_three_logos_and_no_words(theme, lang):
+    """T-4613, T-4620, T-4735: Claude, ChatGPT, MCP, each on its own segment, and no Gemini; no
+    text, no "/"; the name is the aria-label, in the page's language."""
     theme.page.lang = lang
     html = render("corner.html", theme, publisher=None, widget="https://dev.example/assistant/")
     tag, link = re.search(r'(<a class="jc-assistants-link"[^>]*>)(.*?)</a>', html, re.S).groups()
     assert f'aria-label="{LABELS[lang]}"' in tag
     segments = re.findall(r'<span class="jc-seg jc-seg-(\w+)">(<svg class="jc-ai-logo".*?</svg>)</span>', link, re.S)
-    assert [mark for mark, _ in segments] == ["claude", "chatgpt", "gemini", "mcp"]
-    assert link.count("<svg") == 4
+    assert [mark for mark, _ in segments] == ["claude", "chatgpt", "mcp"]
+    assert link.count("<svg") == 3
+    assert "gemini" not in html.lower()
     segments = [svg for _, svg in segments]
     assert all('aria-hidden="true"' in s for s in segments)
     # every text node of the link is blank: no word and no "/" between the logos
@@ -1852,7 +1854,7 @@ def test_the_corner_link_is_four_logos_and_no_words(theme, lang):
 
 def test_the_brand_logos_are_the_makers_own_saved_here_with_their_source():
     for name, source in (("claude", "https://claude.ai/"), ("chatgpt", "https://developers.openai.com/"),
-                         ("gemini", "https://www.gstatic.com/"), ("mcp", "https://modelcontextprotocol.io/")):
+                         ("mcp", "https://modelcontextprotocol.io/")):
         text = (THEME / f"templates__jc__brand-{name}.svg").read_text()
         comment, svg = text.split("\n", 1)
         assert comment.startswith("{#") and f"from {source}" in comment, name
@@ -1868,9 +1870,9 @@ def test_the_bar_is_one_slant_in_the_makers_colours_and_shrinks_on_a_phone():
     css = desktop_css()
     assert "transform: skewX(-14deg);" in css and "transform: skewX(14deg);" in css
     assert "flex-wrap: nowrap;" in css and "border-radius: 10px;" in css
-    for mark, ground in (("claude", "#d97757"), ("chatgpt", "#10a37f"),
-                         ("gemini", "linear-gradient(135deg, #4285f4, #9b72cb 60%, #d96570)"), ("mcp", "#1f1f2e")):
+    for mark, ground in (("claude", "#d97757"), ("chatgpt", "#10a37f"), ("mcp", "#1f1f2e")):
         assert f".jc-seg-{mark} {{ background: {ground}; }}" in css, mark
+    assert "jc-seg-gemini" not in css  # T-4735
     assert "--jc-slant" not in css and "clip-path: polygon" not in css
     phone = (THEME / "public__jc-theme.css").read_text().split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
     assert ".jc-corner .jc-assistants-link { block-size: 2.75rem; }" in phone

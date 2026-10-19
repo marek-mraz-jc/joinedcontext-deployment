@@ -476,7 +476,6 @@ body.dt-view input[type="search"]::-webkit-search-cancel-button { display: none;
 .jc-seg { display: flex; align-items: center; justify-content: center; inline-size: 3.125rem; }
 .jc-seg-claude { background: #d97757; }
 .jc-seg-chatgpt { background: #10a37f; }
-.jc-seg-gemini { background: linear-gradient(135deg, #4285f4, #9b72cb 60%, #d96570); }
 .jc-seg-mcp { background: #1f1f2e; }
 .jc-corner .jc-assistants-link:hover .jc-seg, .jc-corner .jc-assistants-link:focus-visible .jc-seg { filter: brightness(1.08); }
 .jc-seg .jc-ai-logo { flex: none; display: block; inline-size: 1.375rem; block-size: 1.375rem; transform: skewX(14deg); }
