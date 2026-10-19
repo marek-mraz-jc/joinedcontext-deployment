@@ -33,6 +33,12 @@ spec:
       history: "off"
     - entityType: BikeHireDockingStation
       history: P30D
+      # A station's bikes, free slots, slots and status are levels a write repeats every
+      # minute and a half: a row when one changes and at least one an hour, the same answers
+      # from about 97 % fewer rows (T-4669, ADR-N-054 2.2). None of its slots is a count per
+      # interval, so none records every.
+      record: onChange
+      heartbeat: PT1H
     - entityType: CityWork
       history: "off"
     - entityType: Event
