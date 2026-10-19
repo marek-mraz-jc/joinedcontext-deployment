@@ -17,11 +17,20 @@ digest() {
   # A missing image is an empty digest, refused below with words, never a bare exit of set -e.
   { docker buildx imagetools inspect "$registry/$1:$commit" 2>/dev/null || true; } | awk '/^Digest:/ { print $2; exit }'
 }
+# The builder images' own pins, kept when the commit did not rebuild them.
+pinned() {
+  awk -v repo="$registry/$1" '$0 ~ "repository: .*" repo "\x27" { mine = 1 } mine && /digest:/ { gsub(/\x27/, "", $2); print $2; exit }' components/gitea-runner/images.yaml
+}
 portal=$(digest joinedcontext-portal)
+[[ "$portal" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "no portal image is published for $commit" >&2; exit 1; }
+# image.yml builds only what a push's paths need (T-2485): a commit that changed no builder
+# publishes no builder, and the builders pinned now are still the ones the workflows run.
 builder=$(digest joinedcontext-app-builder)
 rust=$(digest joinedcontext-app-builder-rust)
-for d in "$portal" "$builder" "$rust"; do
-  [[ "$d" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "not all three images are published for $commit" >&2; exit 1; }
+[[ -n "$builder" ]] || builder=$(pinned joinedcontext-app-builder)
+[[ -n "$rust" ]] || rust=$(pinned joinedcontext-app-builder-rust)
+for d in "$builder" "$rust"; do
+  [[ "$d" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "no builder image is published for $commit and none is pinned" >&2; exit 1; }
 done
 
 work=$(mktemp -d)
@@ -59,10 +68,13 @@ for key, value in (("commit", commit), ("docs", docs)):
     if n != 1:
         sys.exit(f"components/portal/images.yaml: no {key} pin")
 open("components/portal/images.yaml", "w").write(text)
+before = open("components/gitea-runner/images.yaml").read()
 pin("components/gitea-runner/images.yaml",
     [("joinedcontext-app-builder", builder), ("joinedcontext-app-builder-rust", rust)])
 text = open("components/gitea-runner/images.yaml").read()
-open("components/gitea-runner/images.yaml", "w").write(re.sub(r"Pinned to portal [0-9a-f]{7}", f"Pinned to portal {short}", text))
+# The comment names the portal commit the builders are of: it moves only with them.
+if text != before:
+    open("components/gitea-runner/images.yaml", "w").write(re.sub(r"Pinned to portal [0-9a-f]{7}", f"Pinned to portal {short}", text))
 EOF
 echo "pinned portal $short: portal $portal, docs ${docs:0:7}, builder $builder, rust $rust"
 scripts/check-docs-pin.sh
