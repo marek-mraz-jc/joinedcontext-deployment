@@ -28,9 +28,10 @@ ai:
               ngx.req.clear_header((header:gsub("%-", "_")))
             end
           end
-    # Class 1 (standard web): a visit loads one page and five files.
+    # Static class (T-4717): a visit loads one page and five files, for everyone behind one
+    # CGNAT address; the conversation itself counts the assistant's own lower limit.
     limit-count:
-      count: 300
+      count: 3000
       time_window: 60
       key_type: var
       key: remote_addr

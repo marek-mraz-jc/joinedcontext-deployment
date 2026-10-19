@@ -28,9 +28,10 @@ viz:
               ngx.req.clear_header((header:gsub("%-", "_")))
             end
           end
-    # Class 1 (standard web): a page with charts asks for two pages and six files per chart.
+    # Static class (T-4717): a page with charts asks for two pages and six files per chart, and a
+    # carrier's CGNAT puts many people behind one address; the files hold no data.
     limit-count:
-      count: 300
+      count: 3000
       time_window: 60
       key_type: var
       key: remote_addr

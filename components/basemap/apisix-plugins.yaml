@@ -28,10 +28,10 @@ basemap:
               ngx.req.clear_header((header:gsub("%-", "_")))
             end
           end
-    # A map view asks for tens of tiles and a font range per label script, and a pan or a zoom
-    # as many again: four times the Class 1 count, still per address.
+    # Static class (T-4717): a map view asks for tens of tiles and a font range per label script,
+    # and a pan or a zoom as many again, for everyone behind one CGNAT address.
     limit-count:
-      count: 1200
+      count: 3000
       time_window: 60
       key_type: var
       key: remote_addr

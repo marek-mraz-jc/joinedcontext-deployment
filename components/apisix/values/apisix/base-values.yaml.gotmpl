@@ -318,7 +318,7 @@ apisix:
           add_header Referrer-Policy "no-referrer" always;
           add_header Cache-Control "no-store, no-cache, must-revalidate" always;
           add_header Content-Security-Policy "frame-ancestors 'none'; object-src 'none'; base-uri 'self'" always;
-          return 429 '{"type":"https://joinedcontext.com/errors/too-many-requests","title":"Too Many Requests","status":429,"detail":"the rate limit of this route was reached; retry after the window in the Retry-After header"}';
+          return 429 '{"type":"https://joinedcontext.com/errors/too-many-requests","title":"Too Many Requests","status":429,"detail":"the rate limit of this route was reached; retry after the window in the Retry-After header. To read a whole dataset, download it once: every Endpoint serves {endpoint}/file.csv, and every catalogue dataset its datastore dump"}';
         }
 ingress:
   enabled: true
