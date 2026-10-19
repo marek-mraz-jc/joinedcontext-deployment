@@ -172,8 +172,70 @@ ckan-redirect:
     # The route terminates here: APISIX answers 302 in the rewrite phase and never dials
     # the upstream the route declares.
     redirect:
-      uri: "https://data.${DOMAIN}/"
+      uri: "https://opendata.${DOMAIN}/"
       ret_code: 302
+    response-rewrite:
+      headers:
+        set:
+          Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+          X-Content-Type-Options: "nosniff"
+          X-Frame-Options: "DENY"
+          Referrer-Policy: "strict-origin-when-cross-origin"
+          Cache-Control: "no-store, no-cache, must-revalidate"
+    # OPS-34: the upstream owns the Content Security Policy (the Portal's, each App's, AP-12,
+    # AP-122), so the edge sets none over it and adds this baseline only to an answer that
+    # carries none, its own refusals included. `frame-ancestors` says what X-Frame-Options
+    # says. It runs after `response-rewrite`, whose `add` of an App's frame-ancestors counts.
+    serverless-post-function:
+      phase: header_filter
+      functions:
+        - >-
+          return function()
+            if ngx.header["Content-Security-Policy"] == nil then
+              ngx.header["Content-Security-Policy"] =
+                "frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
+            end
+          end
+
+ckan-old-host:
+  name: ckan-old-host
+  description: The catalogue's old host data.{domain} answers 301 to opendata.{domain}, same path and query (T-4679)
+  plugins:
+    request-id:
+      include_in_response: true
+    # A route that answers by itself is still a route (T-1672): the sanitisation and the
+    # response headers of every other route apply here too, so the rule stays mechanical and
+    # nothing depends on this route continuing to terminate.
+    serverless-pre-function:
+      phase: rewrite
+      functions:
+        - >-
+          return function()
+            local forged = {
+              "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
+              "X-Endpoint-Slug", "X-Consumer-Identity", "X-Forwarded-User",
+              "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
+              "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
+            }
+            for _, header in ipairs(forged) do
+              ngx.req.clear_header(header)
+              ngx.req.clear_header((header:gsub("%-", "_")))
+            end
+          end
+    # Class 1 (standard web), the same bucket the sibling redirect on the apex uses.
+    limit-count:
+      count: 300
+      time_window: 60
+      key_type: var
+      key: remote_addr
+      rejected_code: 429
+      policy: local
+      show_limit_quota_header: true
+    # Shared links, harvesters and the DCAT isPartOf values in the broker name the old host:
+    # the same path and query on the new one, never a target read from the request.
+    redirect:
+      uri: "https://opendata.${DOMAIN}$request_uri"
+      ret_code: 301
     response-rewrite:
       headers:
         set:

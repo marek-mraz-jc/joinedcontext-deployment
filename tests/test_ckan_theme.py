@@ -312,7 +312,7 @@ def test_the_mcp_panel_names_the_installation_s_hub_and_nothing_else(theme):
     from urllib.parse import parse_qs, unquote, urlsplit
 
     mcp = theme.jc_mcp_install()
-    hub = "https://dev.example/api/mcp"
+    hub = "https://api.dev.example/api/mcp"
     assert mcp["url"] == hub
     # One argument per line and the address alone on its JSON line, so no line is wider than the
     # address a narrow card has to show anyway (T-4284).
@@ -320,7 +320,7 @@ def test_the_mcp_panel_names_the_installation_s_hub_and_nothing_else(theme):
     assert json.loads(mcp["json"]) == {"mcpServers": {"joinedcontext": {"type": "http", "url": hub}}}
     assert f'  "{hub}"' in mcp["json"].splitlines()
     # The address breaks only before a single slash, never inside a word.
-    assert mcp["url_parts"] == ["https://dev.example", "/api", "/mcp"]
+    assert mcp["url_parts"] == ["https://api.dev.example", "/api", "/mcp"]
     assert mcp["vscode"].startswith("vscode:mcp/install?")
     assert json.loads(unquote(mcp["vscode"].split("?", 1)[1])) == {"name": "joinedcontext", "type": "http", "url": hub}
     cursor = urlsplit(mcp["cursor"])
@@ -1293,7 +1293,7 @@ def test_the_connector_privacy_terms_and_support_pages_read_in_slovak_and_englis
         assert page["email"] == "hello@dev.example" and page["pages"] == ["connector", "privacy", "terms", "support"]
         text = " ".join(p for s in page["sections"] for p in s["paragraphs"])
         assert "{" not in text and not re.search(r"(?i)bearer|token|api[_-]?key|password", text), name
-    assert "https://dev.example/api/mcp" in " ".join(theme.jc_page("connector")["sections"][0]["paragraphs"])
+    assert "https://api.dev.example/api/mcp" in " ".join(theme.jc_page("connector")["sections"][0]["paragraphs"])
     assert theme.jc_page("privacy")["title"] != theme.PAGES["privacy"]["sk" if lang == "en" else "en"]["title"]
     assert theme.jc_page("imprint") is None
 
@@ -1586,7 +1586,7 @@ def test_the_assistants_page_names_the_installation_s_own_hub_and_assistants_in_
     branding.write_text(json.dumps({"domain": domain, "instanceName": name}))
     theme.BRANDING = theme._load()
     page = theme.jc_assistants()
-    hub = f"https://{domain}/api/mcp"
+    hub = f"https://api.{domain}/api/mcp"
     assert page["mcp"]["url"] == hub and name in page["lead"] and "{" not in page["lead"]
     cards = {card["id"]: card for card in page["cards"]}
     # T-4634, T-4643: Gemini's app needs OAuth (T-4631), so it has no card until its flag is on.
@@ -1695,10 +1695,10 @@ def test_each_assistant_card_is_its_logo_its_name_and_at_most_one_link(theme):
         assert 'target="_blank" rel="noopener noreferrer"' in card and "Coming soon" not in card, id
         assert "jc-code" not in card and "<button" not in card and "<pre" not in card, id
     # The address once for the page, as text with one copy button; nothing technical above the fold.
-    hub = "https://dev.example/api/mcp"
+    hub = "https://api.dev.example/api/mcp"
     above, fold = html.split('<details class="jc-developers">', 1)
     # It breaks only before a slash, never inside a word (T-4284), and a copy reads it whole.
-    assert '<span id="jc-store-url" class="jc-store-url">https://dev.example<wbr>/api<wbr>/mcp</span>' in above
+    assert '<span id="jc-store-url" class="jc-store-url">https://api.dev.example<wbr>/api<wbr>/mcp</span>' in above
     assert above.replace("<wbr>", "").count(hub) == 1
     assert above.count("<button") == 1 and not re.search(r"class=\"jc-code[ \"]", above) and "<pre" not in above and "<code" not in above
     assert fold.startswith("\n        <summary>For developers</summary>")
@@ -2039,6 +2039,7 @@ def mapped(theme, tmp_path, monkeypatch):
     vendor.mkdir()
     monkeypatch.setattr(theme, "VENDOR", str(vendor))
     theme.toolkit.url_for = lambda route, **kw: "https://data.dev.example/%s/%s" % (route, kw["id"])
+    theme.page.actions["datastore_search"] = lambda d: {"total": 0, "fields": []}
     return theme
 
 
@@ -2156,17 +2157,24 @@ const point = { id: "urn:ngsi-ld:W:1", geometry: { type: "Point", coordinates: [
   nested: { a: 1 }, type: "W", id: "urn:x", _layer: 0, _id: "urn:ngsi-ld:W:1", _n: 0, note: "<b>x</b>" } };
 const line = { geometry: { type: "LineString", coordinates: [[19, 48], [19, 48.01]] }, properties: { _id: "urn:ngsi-ld:R:road-7" } };
 const square = { geometry: { type: "Polygon", coordinates: [[[19, 48], [19.01, 48], [19.01, 48.01], [19, 48.01], [19, 48]]] }, properties: {} };
-const order = JSON.parse(readFileSync(%s, "utf8"));
+const enums = JSON.parse(readFileSync(%s, "utf8"));
+const layers = [{ fields: [
+  { a: "temperature", l: { sk: "Teplota", en: "Temperature" }, s: true },
+  { a: "windDirection", l: { sk: "Smer vetra" }, s: true },
+  { a: "dateObserved", l: { sk: "Dátum pozorovania" }, s: false },
+  { a: "note", l: {}, s: false } ] }];
 console.log(JSON.stringify({
-  point: describe(point, schema, { lang: "sk", t, order }),
+  point: describe(point, schema, { lang: "sk", t, enums, layers }),
   line: describe(line, {}, { lang: "en", t }),
   square: describe(square, {}, { lang: "en", t }),
   length: length(line.geometry), area: area(square.geometry) }));
-""" % (json.dumps(script), json.dumps(str(THEME / "public__jc-field-order.json")))
+""" % (json.dumps(script), json.dumps(str(THEME / "public__jc-enums.json")))
     done = subprocess.run(["node", "--input-type=module", "-e", code], capture_output=True, text=True, timeout=60)
     assert done.returncode == 0, done.stderr
     out = json.loads(done.stdout)
-    rows = dict((label, value) for label, value, _, _ in out["point"]["rows"])
+    rows = dict((label, value) for label, value, _, _ in out["point"]["rows"] + out["point"]["more"])
+    # The key attributes come first; the rest folds under "Viac" (T-4672).
+    assert [r[0] for r in out["point"]["rows"]] == ["Teplota", "Smer vetra"]
     assert out["point"]["title"] == "Stanica Donovaly"
     assert rows["Teplota"] == "12,4\u00a0°C" and rows["Smer vetra"] == "38,5°"
     assert rows["Dátum pozorovania"] == "pred 5 minútami"
@@ -2178,31 +2186,37 @@ console.log(JSON.stringify({
     assert 0.8e6 < out["area"] < 0.85e6 and out["square"]["rows"][0][1].endswith("\u00a0ha")
 
 
-# T-4661: the popup reads in the DataStore table's order, with its labels, from one table.
-FIELD_ORDER_SHA256 = "4e949e7dc19acbe9d53a689f88ef07805d018a26791f7d52f631b925fa21c325"
+# T-4672: the popup reads in the order, with the labels and key attributes, the publisher wrote
+# into the DataStore table from the data model; the theme keeps only its words for code values.
+def test_the_theme_keeps_only_its_enum_words():
+    words = json.loads((THEME / "public__jc-enums.json").read_text())
+    assert set(words) == {"$comment", "enums"}
+    assert words["enums"]["museumsGalleriesLibraries"]["sk"] == "Múzeá, galérie, knižnice"
+    assert not (THEME / "public__jc-field-order.json").exists(), "no copy of jc-core's heuristic"
 
 
-def test_the_field_order_is_jc_core_s_byte_for_byte():
-    # Copied from joinedcontext-platform crates/jc-core/data/field-order.json, which pins the same
-    # hash (field_order::tests): a change lands in both repositories or the check goes red.
-    import hashlib
-    data = (THEME / "public__jc-field-order.json").read_bytes()
-    assert hashlib.sha256(data).hexdigest() == FIELD_ORDER_SHA256
-    order = json.loads(data)
-    assert [g["group"] for g in order["groups"]][:3] == ["name", "time", "value"]
-    assert order["labels"]["startDate"]["sk"] == "Začiatok"
-    assert order["enums"]["museumsGalleriesLibraries"]["sk"] == "Múzeá, galérie, knižnice"
+# What the BB events table carries after `jcctl publish`, as plugin._display_fields gives it.
+EVENT_FIELDS = [
+    {"a": "startDate", "l": {"sk": "Začiatok", "en": "Start"}, "s": True},
+    {"a": "address", "l": {"sk": "Adresa", "en": "Address"}, "s": True},
+    {"a": "endDate", "l": {"sk": "Koniec", "en": "End"}, "s": False},
+    {"a": "eventCategory", "l": {"sk": "Kategória", "en": "Category"}, "s": False},
+    {"a": "url", "l": {"sk": "Odkaz", "en": "Link"}, "s": False},
+    {"a": "source", "l": {"sk": "Zdroj", "en": "Source"}, "s": False},
+    {"a": "dataProvider", "l": {"sk": "Poskytovateľ", "en": "Data provider"}, "s": False},
+    {"a": "dateModified", "l": {"sk": "Zmenené", "en": "Modified"}, "s": False},
+]
 
 
-def _describe(feature, lang="sk", order=True):
+def _describe(feature, lang="sk", fields=EVENT_FIELDS):
     script = (THEME / "public__jc-map.js").resolve().as_uri()
     code = """
 import { describe } from %s;
 import { readFileSync } from "node:fs";
-const order = %s ? JSON.parse(readFileSync(%s, "utf8")) : undefined;
-console.log(JSON.stringify(describe(%s, {}, { lang: %s, t: {}, order })));
-""" % (json.dumps(script), "true" if order else "false", json.dumps(str(THEME / "public__jc-field-order.json")),
-       json.dumps(feature), json.dumps(lang))
+const enums = JSON.parse(readFileSync(%s, "utf8"));
+console.log(JSON.stringify(describe(%s, {}, { lang: %s, t: {}, enums, layers: [{ fields: %s }] })));
+""" % (json.dumps(script), json.dumps(str(THEME / "public__jc-enums.json")), json.dumps(feature), json.dumps(lang),
+       json.dumps(fields))
     done = subprocess.run(["node", "--input-type=module", "-e", code], capture_output=True, text=True, timeout=60)
     assert done.returncode == 0, done.stderr
     return json.loads(done.stdout)
@@ -2212,45 +2226,68 @@ EVENT = {"geometry": {"type": "Point", "coordinates": [19.15, 48.73]}, "properti
     "dataProvider": "Mesto Banská Bystrica", "dateModified": "2026-10-09T10:42:00Z", "endDate": "2026-11-10",
     "eventCategory": "museumsGalleriesLibraries", "name": {"languageMap": {"sk": "Výstava v Bábkarskej dielni"}},
     "source": "https://www.banskabystrica.sk/podujatia/", "startDate": "2026-10-15", "startTime": "18:00",
-    "url": "https://www.banskabystrica.sk/podujatie/123", "price": 5, "_id": "urn:ngsi-ld:Event:1", "_n": 0}}
+    "url": "https://www.banskabystrica.sk/podujatie/123", "price": 5, "_layer": 0, "_id": "urn:ngsi-ld:Event:1", "_n": 0}}
 
 
 @pytest.mark.skipif(not shutil.which("node"), reason="node is not installed")
-def test_an_event_reads_name_start_category_link_then_the_source_in_small_type():
+def test_an_event_shows_its_key_attributes_then_the_rest_in_the_tables_order_and_labels():
     out = _describe(EVENT)
     assert out["title"] == "Výstava v Bábkarskej dielni"
-    labels = [row[0] for row in out["rows"]]
-    assert labels == ["Začiatok", "Koniec", "Price", "Kategória", "Odkaz", "Zdroj", "Poskytovateľ", "Zmenené"]
-    rows = {row[0]: row for row in out["rows"]}
+    # Key attributes first, the rest under "Viac"; `price` is no column of the table: not shown.
+    assert [row[0] for row in out["rows"]] == ["Začiatok"]
+    assert [row[0] for row in out["more"]] == ["Koniec", "Kategória", "Odkaz", "Zdroj", "Poskytovateľ", "Zmenené"]
+    rows = {row[0]: row for row in out["rows"] + out["more"]}
     # The start takes its time along; the time is no row of its own.
     assert rows["Začiatok"][1] == "15. 10. 2026, 18:00" and "Čas" not in rows
     assert rows["Koniec"][1] == "10. 11. 2026"
     assert rows["Kategória"][1] == "Múzeá, galérie, knižnice"
     assert rows["Odkaz"][1:] == ["https://www.banskabystrica.sk/podujatie/123", "", "link"]
     assert [rows[k][3] for k in ("Zdroj", "Poskytovateľ", "Zmenené")] == ["meta", "meta", "meta"]
-    assert rows["Začiatok"][3] == ""
+    # On an English page the same table reads in English (T-4648).
+    english = _describe(EVENT, "en")
+    assert [row[0] for row in english["rows"] + english["more"]][:3] == ["Start", "End", "Category"]
 
 
 @pytest.mark.skipif(not shutil.which("node"), reason="node is not installed")
 def test_only_an_http_address_is_a_link_and_an_unknown_code_reads_as_words():
     feature = {"geometry": None, "properties": {"url": "javascript:alert(1)", "eventCategory": "openAirCinema",
-                                                "startDate": "2026-10-15T18:00:00", "startTime": "19:00"}}
-    rows = {row[0]: row for row in _describe(feature, "en")["rows"]}
+                                                "startDate": "2026-10-15T18:00:00", "startTime": "19:00", "_layer": 0}}
+    out = _describe(feature, "en")
+    rows = {row[0]: row for row in out["rows"] + out["more"]}
     assert rows["Link"][1:] == ["javascript:alert(1)", "", ""]
     assert rows["Category"][1] == "Open air cinema"
     # A start that has its time keeps it, and the separate time is not repeated.
-    assert "Time" not in rows and rows["Start"][1].startswith("Oct 15, 2026")
+    assert "Start time" not in rows and rows["Start"][1].startswith("Oct 15, 2026")
 
 
 @pytest.mark.skipif(not shutil.which("node"), reason="node is not installed")
-def test_without_the_table_the_panel_still_shows_every_value():
-    rows = _describe(EVENT, "sk", order=False)["rows"]
-    assert len(rows) == 8 and rows[0][0] == "Data provider"
+def test_without_the_tables_order_the_panel_still_shows_every_value():
+    out = _describe(EVENT, "sk", fields=[])
+    assert len(out["rows"]) == 8 and out["more"] == [] and out["rows"][0][0] == "Data provider"
+
+
+def test_the_map_layer_carries_the_order_labels_and_key_flags_of_its_table(mapped):
+    mapped.page.actions["datastore_search"] = lambda d: {"total": 2, "fields": [
+        {"id": "entity_id", "type": "text", "info": {"label": "Identifikátor"}},
+        {"id": "name.languageMap.sk", "type": "text", "info": {"label": "Názov", "labels": {"sk": "Názov", "en": "Name"}, "summary": True}},
+        {"id": "address.value.streetAddress", "type": "text", "info": {"label": "Ulica", "labels": {"sk": "Ulica"}}},
+        {"id": "address.value", "type": "text", "info": {"label": "Adresa", "labels": {"sk": "Adresa", "en": "Address"}}},
+        {"id": "_id", "type": "int"},
+    ]}
+    assert mapped.jc_map(MAP_PKG)["layers"][0]["fields"] == [
+        {"a": "name", "l": {"sk": "Názov", "en": "Name"}, "s": True},
+        {"a": "address", "l": {"sk": "Adresa", "en": "Address"}, "s": False},
+    ]
+    # A table the publisher wrote before T-4672 carries no labels: no fields, the popup's fallback.
+    mapped.page.actions["datastore_search"] = lambda d: {"fields": [{"id": "name.value", "type": "text", "info": {"label": "Názov"}}]}
+    assert "fields" not in mapped.jc_map(MAP_PKG)["layers"][0]
+    mapped.page.actions["datastore_search"] = mapped.toolkit.NotAuthorized()
+    assert "fields" not in mapped.jc_map(MAP_PKG)["layers"][0]
 
 
 def test_the_map_page_loads_the_labels_and_the_basemap_from_our_hosts_only():
     plugin = (THEME / "plugin.py").read_text()
-    assert '"fields": "/jc-field-order.json"' in plugin and 'PMTILES = "/pmtiles-4.5.0.js"' in plugin
+    assert '"enums": "/jc-enums.json"' in plugin and 'PMTILES = "/pmtiles-4.5.0.js"' in plugin
     assert "openstreetmap" not in (THEME / "public__jc-map.js").read_text()
     import hashlib
     pmtiles = (THEME / "public__pmtiles-4.5.0.js").read_bytes()
@@ -2337,7 +2374,7 @@ def test_each_guide_page_reads_top_to_bottom_without_a_technical_word(theme, mon
     items = re.findall(r"<li>(.*?)</li>", steps, re.S)
     assert len(items) == len(theme.GUIDES[id]["en"]["steps"]) and "{name}" not in html
     # The address once, in a box inside the step that asks for it, with the one copy button.
-    hub = "https://dev.example/api/mcp"
+    hub = "https://api.dev.example/api/mcp"
     boxed = [i for i, item in enumerate(items) if 'id="jc-store-url"' in item]
     assert boxed == [theme.GUIDES[id]["paste"]] and html.replace("<wbr>", "").count(hub) == 1
     assert html.count("<button") == 1 and html.count("data-jc-copy=") == 1
@@ -2411,3 +2448,36 @@ def test_dev_lists_the_hub_s_knowledge_sources_as_the_seed_declares_them():
         seed = yaml.safe_load((root / f"components/context-gateway/seed/{s['publisher']}/{s['publisher']}-knowledge-web.yaml").read_text())
         assert s["url"] == seed["spec"]["startUrls"][0], s
         assert s["languages"] == seed["spec"]["languages"], s
+
+
+LABELLED_SEEDS = ["banskabystrica/banskabystrica-verejne", "helsinki/helsinki"]
+
+
+@pytest.mark.parametrize("seed", LABELLED_SEEDS)
+def test_every_attribute_the_map_popup_shows_has_a_label_in_sk_cs_en_and_de(seed):
+    """T-4648: the popup reads the model's labels in the page's language, so an attribute without
+    one would read in English words on a Slovak, Czech or German page."""
+    model = yaml.safe_load((PROJECT_ROOT / f"components/context-gateway/seed/{seed}.linkml.yaml").read_text())
+    slots = model.get("slots") or {}
+    missing = []
+    for name, cls in (model.get("classes") or {}).items():
+        usage = cls.get("slot_usage") or {}
+
+        def label(slot):
+            for node in (usage.get(slot) or {}, slots.get(slot) or {}):
+                found = (node.get("annotations") or {}).get("label")
+                if found:
+                    return found["value"]
+            return None
+
+        # A class the model gives labels of its own; the others keep their attribute names for now.
+        if not any((node.get("annotations") or {}).get("label") for node in usage.values()):
+            continue
+        for slot in cls.get("slots") or []:
+            if slot == "location" or re.match(r"^ref[A-Z]", slot) or (slots.get(slot) or {}).get("range") in model.get("classes", {}):
+                continue
+            labels = label(slot) or {}
+            gaps = {"sk", "cs", "en", "de"} - set(labels)
+            if gaps:
+                missing.append(f"{name}.{slot}: {sorted(gaps)}")
+    assert not missing, missing

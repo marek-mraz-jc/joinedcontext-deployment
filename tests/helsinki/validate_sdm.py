@@ -9,7 +9,7 @@ catalogue has no model for is listed with the reason the Helsinki model keeps it
 it, and exits 1 when a type fails.
 
     python3 tests/helsinki/validate_sdm.py \\
-        https://dev.joinedcontext.com/api/endpoint/si6epqkx364lprho5uaigutk274r5grb
+        https://api.dev.joinedcontext.com/api/endpoint/si6epqkx364lprho5uaigutk274r5grb
 
 Only reads, anonymously: it sends no token.
 """

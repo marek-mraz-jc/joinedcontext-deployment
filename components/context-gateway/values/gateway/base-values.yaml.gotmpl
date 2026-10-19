@@ -116,6 +116,9 @@ env:
   # The Organization's domain state, read from the same listener with the same token (PF-41,
   # Architecture/03 §3). Only `enforce` reads it.
   JC_GATEWAY_DOMAIN_VERIFICATIONS_URL: "http://portal.{{ .Values.portal.portal.namespace }}.svc.cluster.local:9090/internal/domain-verifications"
+  # A person's own MCP connectors, read from the same listener with the same token, so
+  # `/api/mcp/me/{name}` answers (EP-123, T-4538, T-4546); unset, no personal address is served.
+  JC_GATEWAY_CONNECTORS_URL: "http://portal.{{ .Values.portal.portal.namespace }}.svc.cluster.local:9090/internal/connectors"
 {{- end }}
 {{- if has "assistant" .Values.components }}
   # `search_documents` (EP-133, EP-134, T-4659): the assistant's public-passage search on its

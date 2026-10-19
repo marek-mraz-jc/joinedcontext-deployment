@@ -198,6 +198,10 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "Grafana signs everyone in through the realm; anonymous access and the login form are off",
     },
+    "argocd": {
+        "reach": UPSTREAM, "cacheable": False, "framing": "DENY",
+        "why": "Argo CD verifies every token itself; login is the realm's PKCE flow, anonymous access and the local admin are off (ADR-N-056 §2.8)",
+    },
     "ckan": {
         "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "an open-data catalogue is public reading; writing is CKAN's own session",
@@ -285,6 +289,10 @@ ROUTE_CLASSES = {
     "api-moved-catalog": {
         "reach": TERMINATES, "cacheable": False, "framing": "DENY",
         "why": "an old address of a public data surface, anonymous: 308 to the same path on api.{domain} (T-4630)",
+    },
+    "ckan-old-host": {
+        "reach": TERMINATES, "cacheable": False, "framing": "DENY",
+        "why": "data.{domain}, the catalogue's old host, answers 301 to opendata.{domain} with the same path and never dials an upstream (T-4679)",
     },
     "ckan-redirect": {
         "reach": TERMINATES, "cacheable": False, "framing": "DENY",

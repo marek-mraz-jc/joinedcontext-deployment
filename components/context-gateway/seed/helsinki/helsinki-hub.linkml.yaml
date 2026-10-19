@@ -69,12 +69,14 @@ slots:
     description: What serves the stop or runs the line.
     range: TransportMode
     annotations:
+      label: { tag: label, value: { sk: "Druh dopravy", cs: "Druh dopravy", fi: "Kulkumuoto", en: "Transport mode", de: "Verkehrsmittel" } }
       ngsi_ld_kind: Property
   onRoute:
     slot_uri: jc:onRoute
     description: The line the vehicle is running, the URN of a GtfsRoute of this space.
     range: uriorcurie
     annotations:
+      label: { tag: label, value: { sk: "Na trase", cs: "Na trase", fi: "Reitillä", en: "On route", de: "Auf der Strecke" } }
       ngsi_ld_kind: Relationship
   nextStop:
     slot_uri: jc:nextStop
@@ -139,6 +141,7 @@ slots:
     slot_uri: sdm:fleetVehicleId
     description: The operator and vehicle number HSL publishes, operator-vehicle.
     annotations:
+      label: { tag: label, value: { sk: "Číslo vozidla", cs: "Číslo vozidla", fi: "Kalustonumero", en: "Fleet number", de: "Wagennummer" } }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   name:

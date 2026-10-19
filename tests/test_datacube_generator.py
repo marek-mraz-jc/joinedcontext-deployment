@@ -141,12 +141,13 @@ def test_roles_come_from_the_collection_notes():
     assert datacube.roles({"a_poh": {"note": "Pohlavie"}})["period"] is None
 
 
-def decode(theme: str, fixture: str, tmp_path: Path) -> list[dict]:
+def decode(theme: str, fixture: str, tmp_path: Path, body: bytes | None = None) -> list[dict]:
     files, _ = generate(tmp_path)
     steps = yaml.safe_load(files[tmp_path / f"susr-{theme}/pipeline.yaml"])["spec"]["steps"]
     rendered = tmp_path / "steps.yaml"
     rendered.write_text(yaml.safe_dump({"pipeline": {"processors": [{"mapping": s["bloblang"]} for s in steps]}}))
-    return open_data.run(rendered, (FIXTURES / fixture).read_bytes(), f"susr-{theme}", "joinedcontext.com")
+    body = body if body is not None else (FIXTURES / fixture).read_bytes()
+    return open_data.run(rendered, body, f"susr-{theme}", "joinedcontext.com")
 
 
 @requires_docker
@@ -168,9 +169,39 @@ def test_a_unit_dimension_is_the_unit_text_and_every_other_dimension_a_key(tmp_p
     assert len({e["id"] for e in entities}) == len(entities) == 132
     e = next(e for e in entities if e["refPeriod"]["value"] == "2015" and e["dimensionKey"]["value"] == "TOTAL-SPECU_RATE-TOTAL")
     assert e["unitText"]["value"] == "v %" and e["indicator"]["value"] == "U_PS_0001" and e["kpiValue"]["value"] == 17.3
+    # T-4680: what the number is, in the publisher's words, so a reader of the entity alone knows it.
+    assert e["name"]["value"] == "Miera rizika chudoby alebo sociálneho vylúčenia"
     assert e["isPartOf"]["value"] == "https://data.dev.joinedcontext.com/dataset/susr-ps1002rs"
     for e in entities:
         assert not open_data.schema_errors(SCHEMA, e)
+
+
+@requires_docker
+def test_a_cube_without_labels_has_no_name_rather_than_a_null_one(tmp_path):
+    # The broker refuses a Property whose value is null (integrator-2 on T-4680).
+    cube = json.loads((FIXTURES / "ps1002rs.json").read_text())
+    cube.pop("label", None)
+    for dimension in cube["dimension"].values():
+        dimension.pop("label", None)
+        dimension["category"].pop("label", None)
+    entities = decode("ps", "ps1002rs.json", tmp_path, json.dumps(cube).encode())
+    assert len(entities) == 132
+    assert not [e["id"] for e in entities if "name" in e]
+    for e in entities:
+        assert not open_data.schema_errors(SCHEMA, e)
+
+
+def test_the_committed_pipelines_decode_with_the_generators_steps(tmp_path):
+    # A change to the decoder reaches every committed topic, not only a fresh generation.
+    files, _ = generate(tmp_path)
+    for path, text in files.items():
+        if path.name != "pipeline.yaml":
+            continue
+        steps = yaml.safe_load(text)["spec"]["steps"]
+        mine = yaml.safe_load((SEED / path.parent.name / "pipeline.yaml").read_text())["spec"]["steps"]
+        # The cube table is the live collection's, the fixture's here; the rest is the decoder.
+        decoder = lambda ss: [re.sub(r"(?m)^let cubes = .*$", "", s["bloblang"]) for s in ss]  # noqa: E731
+        assert decoder(mine) == decoder(steps), path.parent.name
 
 
 def committed() -> list[Path]:

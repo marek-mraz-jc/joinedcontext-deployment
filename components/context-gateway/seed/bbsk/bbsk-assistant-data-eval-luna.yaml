@@ -27,15 +27,15 @@ spec:
     Sprievodca portálom (odpovedaj z neho na otázky o portáli, formátoch a pripojení):
     - data.dev je katalóg otvorených dát (CKAN) platformy joinedcontext. Každý dataset má stránku s popisom, vydavateľom, licenciou (väčšinou Creative Commons Attribution 4.0), frekvenciou aktualizácie a zdrojmi. Dáta sú verejné, bez prihlásenia.
     - Zdroje datasetu: NGSI-LD API (živé entity, štandard ETSI NGSI-LD), WebSocket (zmeny naživo), MCP (pre AI asistentov), OGC API - Features (mapové vrstvy pre GIS), OData v4 (Excel, Power BI), súbory CSV, JSON a GeoJSON na stiahnutie a dátový model v siedmich formátoch (JSON Schema, LinkML, OWL, RDF, SHACL, kontext JSON-LD, popis slovami).
-    - Príklad NGSI-LD: curl -H 'Accept: application/ld+json' 'https://dev.joinedcontext.com/api/endpoint/{endpoint}/ngsi-ld/v1/entities?type=AirQualityObserved&limit=5'. Zoznam typov: …/ngsi-ld/v1/types. Presnú adresu nájdete na stránke zdroja (tlačidlo Kopírovať adresu).
+    - Príklad NGSI-LD: curl -H 'Accept: application/ld+json' 'https://api.dev.joinedcontext.com/api/endpoint/{endpoint}/ngsi-ld/v1/entities?type=AirQualityObserved&limit=5'. Zoznam typov: …/ngsi-ld/v1/types. Presnú adresu nájdete na stránke zdroja (tlačidlo Kopírovať adresu).
     - Príklad OGC API - Features: …/ogc/features/collections/{typ}/items?bbox=19.0,48.6,19.3,48.8 (dĺžka, šírka) vráti GeoJSON pre mapu. CSV: tlačidlo Stiahnuť na stránke zdroja.
-    - MCP: jedna adresa pre celý katalóg https://dev.joinedcontext.com/api/mcp. Claude (claude.ai a Claude Desktop): Nastavenia, potom Konektory, Pridať vlastný konektor, vložiť adresu, overenie nechať prázdne. ChatGPT: Nastavenia, potom Aplikácie a konektory, Vytvoriť, adresa ako URL MCP servera, bez overenia. Claude Code: claude mcp add --transport http joinedcontext https://dev.joinedcontext.com/api/mcp. Každý dataset má aj vlastnú MCP adresu na stránke zdroja MCP.
+    - MCP: jedna adresa pre celý katalóg https://api.dev.joinedcontext.com/api/mcp. Claude (claude.ai a Claude Desktop): Nastavenia, potom Konektory, Pridať vlastný konektor, vložiť adresu, overenie nechať prázdne. ChatGPT: Nastavenia, potom Aplikácie a konektory, Vytvoriť, adresa ako URL MCP servera, bez overenia. Claude Code: claude mcp add --transport http joinedcontext https://api.dev.joinedcontext.com/api/mcp. Každý dataset má aj vlastnú MCP adresu na stránke zdroja MCP.
     - Smart Data Model: otvorený spoločný dátový model (smartdatamodels.org, FIWARE, TM Forum, IUDX, OASC), napríklad AirQualityObserved alebo PointOfInterest. Rovnaký typ znamená rovnaké atribúty u každého vydavateľa, takže dáta viacerých miest sa dajú porovnať jedným dopytom.
     - Limity: najviac 300 otázok na návštevníka za mesiac; po ich vyčerpaní asistent ukáže odkazy na zdroje namiesto odpovede. Odpovede tvorí AI a môžu obsahovať chyby.
     Postup pri číslach: nájdi dataset v katalógu, potom cez nástroje list_types a get_type zisti typ a atribúty a query_entities vráti hodnoty. Uveď vydavateľa a odkaz na dataset.
   # portal = every dataset of data.dev (CKAN, all organizations); catalogue = each body's public
   # Endpoints described from this repository.
-  sources: [portal, catalogue, banskabystrica/catalogue, zilina/catalogue, praha/catalogue, helsinki/catalogue, slovensko/catalogue]
+  sources: [portal, catalogue, banskabystrica/catalogue, zilina/catalogue, praha/catalogue, helsinki/catalogue, slovensko/catalogue, web, banskabystrica/web, zilina/web, praha/web, helsinki/web]
   # Read-only tools on every publisher's public open-data Endpoints: the members of each body's
   # public MCP server, and the city Endpoints its own public assistant reads (T-4256, T-4281).
   # `public-air` is no member: the smoke run and the ETSI suite write test entities through it.
@@ -54,7 +54,53 @@ spec:
     - { endpoint: helsinki/helsinki-events, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
     - { endpoint: helsinki/helsinki-bikes, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
     - { endpoint: helsinki/helsinki-transport, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: helsinki/helsinki-beach-water, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
     - { endpoint: slovensko/ovzdusie-sk, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-as, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-cr, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-cr-navstevnici, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-do, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-do-preprava, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-en, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-ik, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-kp, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-kp-priemysel, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-ku, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-kz, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-kz-zdravie, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-np, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-nu, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-nu-odvetvia, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-ob, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-od, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-og, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-om, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-om-pohyb, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-pl, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-pm, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-pm-ceny, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-pr, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-pr-mzdy, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-ps, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-ps-vydavky, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-ra, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-sk, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-so, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-sp, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-sp-jadrova, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-st, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-st-povolenia, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-sv, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-ts, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-vh, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-vt, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-vt-pracovnici, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-zd, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-zo, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-zo-kapitoly, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-zo-krajiny, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-zp, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/susr-zp-emisie, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
   scope: { projects: [banskabystrica, zilina, praha, helsinki, slovensko] }
   allowedOrigins: [https://data.dev.joinedcontext.com]
   # The city assistants' limits (T-4149 item 1, T-4286: 300 questions per visitor a month by

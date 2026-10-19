@@ -619,6 +619,10 @@ body.dt-view .dataTables_filter label::after { content: none; }
 /* The record's source, provider and dates close the list in small type (T-4661). */
 .jc-map-panel .jc-map-meta { font-size: .75rem; }
 .jc-map-panel dd a { overflow-wrap: anywhere; }
+/* The attributes after a feature's key ones, folded under "Viac" (T-4672). */
+.jc-map-panel details { margin-top: .5rem; }
+.jc-map-panel summary { cursor: pointer; color: var(--jc-primary); font-size: .875rem; font-weight: 500; }
+.jc-map-panel details dl { margin-top: .375rem; }
 /* While features load the note sits over the map, not under an empty one (T-4661). */
 .jc-map[data-state="loading"] .jc-map-note { position: absolute; z-index: 2; top: .75rem; inset-inline-start: .75rem; margin: 0; padding: .25rem .75rem; background: var(--jc-surface); color: var(--jc-ink); border: 1px solid var(--jc-border); border-radius: 999px; box-shadow: var(--jc-shadow-2); }
 .jc-map-panel dd { margin: 0; overflow-wrap: anywhere; }

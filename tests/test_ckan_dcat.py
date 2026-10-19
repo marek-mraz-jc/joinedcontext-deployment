@@ -244,7 +244,7 @@ OWL_ARTIFACT = {
     "id": "c3f0a3e2-0000-4000-8000-000000000001",
     "package_id": "bc2d847b-00a9-4605-8d12-cf3f6c302492",
     "name": "praha-mesto model.owl.ttl",
-    "url": "https://dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v2/model.owl.ttl",
+    "url": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v2/model.owl.ttl",
     "format": "OWL",
     "mimetype": 'text/turtle; profile="owl"',
 }

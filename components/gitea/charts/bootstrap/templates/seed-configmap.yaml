@@ -2,6 +2,7 @@
 {{- range $group := include "bootstrap.seedGroups" . | fromJsonArray }}
 {{- $data := dict }}
 {{- range $key, $text := $.Values.seed }}
+{{- range $.Values.rewrites }}{{ $text = regexReplaceAll .from $text .to }}{{ end }}
 {{- if eq (include "bootstrap.seedGroup" $key) $group }}{{ $_ := set $data $key $text }}{{ end }}
 {{- end }}
 ---

@@ -22,24 +22,3 @@ data:
   {{- range $path, $_ := .Files.Glob "files/site/*" }}
   {{ base $path }}: {{ $.Files.Get $path | quote }}
   {{- end }}
----
-# The pinned Vega, MapLibre and PMTiles builds (files/vendor/SHA256SUMS), one ConfigMap each:
-# Vega alone is half a megabyte and a ConfigMap holds one. MapLibre's ES modules ride gzipped as
-# binary data; nginx serves the .gz as it is (gzip_static).
-{{- range $path, $_ := .Files.Glob "files/vendor/*.{js,css,gz}" }}
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ include "renderer.fullname" $ }}-{{ base $path | trimSuffix ".min.js" | replace "." "-" }}
-  namespace: {{ $.Release.Namespace }}
-  labels:
-    {{- include "renderer.labels" $ | nindent 4 }}
-{{- if hasSuffix ".gz" $path }}
-binaryData:
-  {{ base $path }}: {{ $.Files.Get $path | b64enc }}
-{{- else }}
-data:
-  {{ base $path }}: {{ $.Files.Get $path | quote }}
-{{- end }}
----
-{{- end }}

@@ -143,6 +143,9 @@ apiToken:
 # skip: {<item id>: <reason>}, titles: {<item id>: <title>}, spelling: {<wrong>: <right>}}`.
 harvest:
   schedule: '23 3 * * *'
+  # The catalogue base the generated files/od-datasets.json names, replaced by this instance's
+  # siteUrl; empty leaves the file as it is.
+  datasetsBase: ''
   sources: []
   # The public base of the platform's Endpoints, such as https://dev.joinedcontext.com: each
   # converted dataset (files/od-datasets.json) gains its standard APIs as distributions (T-4279).

@@ -134,6 +134,14 @@
           ],
           "x-ngsi-ld-kind": "GeoProperty"
         },
+        "name": {
+          "description": "What the number is, in the publisher's own words: the label of its indicator, such as `Miera nezamestnanosti (v %)`, or the table's title when the cube names no indicator. Absent when the publisher labels neither.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "observedAt": {
           "description": "When the observation the entity reports was made.",
           "format": "date-time",

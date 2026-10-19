@@ -233,7 +233,7 @@ def load(monkeypatch, catalogue=CATALOGUE, config=CONFIG, mapped=True):
     if mapped:
         # Every dataset's rows are converted unless the test says otherwise (T-4324).
         harvest.OD_DATASETS = EveryName()
-        harvest.OD_GATEWAY = "https://dev.joinedcontext.com"
+        harvest.OD_GATEWAY = "https://api.dev.joinedcontext.com"
     return harvest
 
 
@@ -424,7 +424,7 @@ def test_only_a_converted_dataset_is_listed_with_its_apis_model_and_table(monkey
     API and the files filtered to its rows, OData, MCP and the WebSocket for the type, then the data
     model in seven formalisms, then its DataStore table; no GeoJSON or OGC, the rows have no
     location. Every dataset nobody mapped is not listed, and named so."""
-    monkeypatch.setenv("OD_GATEWAY", "https://dev.joinedcontext.com/")
+    monkeypatch.setenv("OD_GATEWAY", "https://api.dev.joinedcontext.com/")
     monkeypatch.setenv("OD_DATASETS", json.dumps({"bb-pocet-obcanov-podla-veku": {
         "endpoint": "abc", "type": "KeyPerformanceIndicator", "location": False,
         "dataset": "https://data.dev.joinedcontext.com/dataset/bb-pocet-obcanov-podla-veku"}}))
@@ -438,10 +438,10 @@ def test_only_a_converted_dataset_is_listed_with_its_apis_model_and_table(monkey
         "NGSI-LD", "CSV", "OData", "MCP", "WebSocket",
         "JSON Schema", "JSON-LD", "LinkML", "Markdown", "OWL", "RDF", "SHACL", "CSV"]
     assert ages[-1].get("url_type") == "datastore", "the table moved off the end of the list"
-    assert ages[0]["url"] == ("https://dev.joinedcontext.com/api/endpoint/abc/ngsi-ld/v1/entities?type=KeyPerformanceIndicator"
+    assert ages[0]["url"] == ("https://api.dev.joinedcontext.com/api/endpoint/abc/ngsi-ld/v1/entities?type=KeyPerformanceIndicator"
                               "&q=isPartOf%3D%3D%22https%3A%2F%2Fdata.dev.joinedcontext.com%2Fdataset%2Fbb-pocet-obcanov-podla-veku%22")
     assert ages[0]["conforms_to"].startswith("https://www.etsi.org/")
-    assert ages[5]["url"] == "https://dev.joinedcontext.com/api/endpoint/abc/schema/v1/model.schema.json"
+    assert ages[5]["url"] == "https://api.dev.joinedcontext.com/api/endpoint/abc/schema/v1/model.schema.json"
     assert not any("geojson" in r["url"] or "/ogc/" in r["url"] for r in ages)
     # A second run writes the same list again, nothing doubled.
     harvest.main()

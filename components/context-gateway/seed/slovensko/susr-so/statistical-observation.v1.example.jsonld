@@ -7,6 +7,7 @@
   "type": "KeyPerformanceIndicator",
   "dataSet": { "type": "Property", "value": "as1001rs" },
   "indicator": { "type": "Property", "value": "UKAZ01" },
+  "name": { "type": "Property", "value": "Počet obyvateľov k 31. 12." },
   "refArea": { "type": "Property", "value": "SK0" },
   "refPeriod": { "type": "Property", "value": "2024" },
   "dimensionKey": { "type": "Property", "value": "TOTAL" },

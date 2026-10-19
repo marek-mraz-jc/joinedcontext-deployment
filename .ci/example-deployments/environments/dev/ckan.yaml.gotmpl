@@ -40,15 +40,17 @@ ckan:
         Sprievodca portálom (odpovedaj z neho na otázky o portáli, formátoch a pripojení):
         - data.dev je katalóg otvorených dát (CKAN) platformy joinedcontext. Každý dataset má stránku s popisom, vydavateľom, licenciou (väčšinou Creative Commons Attribution 4.0), frekvenciou aktualizácie a zdrojmi. Dáta sú verejné, bez prihlásenia.
         - Zdroje datasetu: NGSI-LD API (živé entity, štandard ETSI NGSI-LD), WebSocket (zmeny naživo), MCP (pre AI asistentov), OGC API - Features (mapové vrstvy pre GIS), OData v4 (Excel, Power BI), súbory CSV, JSON a GeoJSON na stiahnutie a dátový model v siedmich formátoch (JSON Schema, LinkML, OWL, RDF, SHACL, kontext JSON-LD, popis slovami).
-        - Príklad NGSI-LD: curl -H 'Accept: application/ld+json' 'https://dev.joinedcontext.com/api/endpoint/{endpoint}/ngsi-ld/v1/entities?type=AirQualityObserved&limit=5'. Zoznam typov: …/ngsi-ld/v1/types. Presnú adresu nájdete na stránke zdroja (tlačidlo Kopírovať adresu).
+        - Príklad NGSI-LD: curl -H 'Accept: application/ld+json' 'https://api.dev.joinedcontext.com/api/endpoint/{endpoint}/ngsi-ld/v1/entities?type=AirQualityObserved&limit=5'. Zoznam typov: …/ngsi-ld/v1/types. Presnú adresu nájdete na stránke zdroja (tlačidlo Kopírovať adresu).
         - Príklad OGC API - Features: …/ogc/features/collections/{typ}/items?bbox=19.0,48.6,19.3,48.8 (dĺžka, šírka) vráti GeoJSON pre mapu. CSV: tlačidlo Stiahnuť na stránke zdroja.
-        - MCP: jedna adresa pre celý katalóg https://dev.joinedcontext.com/api/mcp. Claude (claude.ai a Claude Desktop): Nastavenia, potom Konektory, Pridať vlastný konektor, vložiť adresu, overenie nechať prázdne. ChatGPT: Nastavenia, potom Aplikácie a konektory, Vytvoriť, adresa ako URL MCP servera, bez overenia. Claude Code: claude mcp add --transport http joinedcontext https://dev.joinedcontext.com/api/mcp. Každý dataset má aj vlastnú MCP adresu na stránke zdroja MCP.
+        - MCP: jedna adresa pre celý katalóg https://api.dev.joinedcontext.com/api/mcp. Claude (claude.ai a Claude Desktop): Nastavenia, potom Konektory, Pridať vlastný konektor, vložiť adresu, overenie nechať prázdne. ChatGPT: Nastavenia, potom Aplikácie a konektory, Vytvoriť, adresa ako URL MCP servera, bez overenia. Claude Code: claude mcp add --transport http joinedcontext https://api.dev.joinedcontext.com/api/mcp. Každý dataset má aj vlastnú MCP adresu na stránke zdroja MCP.
         - Smart Data Model: otvorený spoločný dátový model (smartdatamodels.org, FIWARE, TM Forum, IUDX, OASC), napríklad AirQualityObserved alebo PointOfInterest. Rovnaký typ znamená rovnaké atribúty u každého vydavateľa, takže dáta viacerých miest sa dajú porovnať jedným dopytom.
         - Limity: najviac 300 otázok na návštevníka za mesiac; po ich vyčerpaní asistent ukáže odkazy na zdroje namiesto odpovede. Odpovede tvorí AI a môžu obsahovať chyby.
         Postup pri číslach: nájdi dataset v katalógu, potom cez nástroje list_types a get_type zisti typ a atribúty a query_entities vráti hodnoty. Uveď vydavateľa a odkaz na dataset.
       # portal = every dataset of the catalogue (CKAN, all organizations); catalogue = each body's
       # public Endpoints described from this repository.
-      sources: [portal, catalogue, banskabystrica/catalogue, zilina/catalogue, praha/catalogue, helsinki/catalogue, slovensko/catalogue]
+      # web = each publisher's own website, crawled weekly (T-4680): where to find a map, whom to
+      # ask, how to report a problem. An answer sees at most three of its passages, data first.
+      sources: [portal, catalogue, banskabystrica/catalogue, zilina/catalogue, praha/catalogue, helsinki/catalogue, slovensko/catalogue, web, banskabystrica/web, zilina/web, praha/web, helsinki/web]
       # Every publisher's public open-data Endpoints, the members of each body's public MCP
       # server. `public-air` is no member: the smoke run and the ETSI suite write through it.
       connectors:
@@ -66,7 +68,55 @@ ckan:
         - helsinki/helsinki-events
         - helsinki/helsinki-bikes
         - helsinki/helsinki-transport
+        - helsinki/helsinki-beach-water
         - slovensko/ovzdusie-sk
+        # ŠÚ SR's tables (T-4680): every topic is its own Endpoint of one type, told apart
+        # by its title in the router's list.
+        - slovensko/susr-as
+        - slovensko/susr-cr
+        - slovensko/susr-cr-navstevnici
+        - slovensko/susr-do
+        - slovensko/susr-do-preprava
+        - slovensko/susr-en
+        - slovensko/susr-ik
+        - slovensko/susr-kp
+        - slovensko/susr-kp-priemysel
+        - slovensko/susr-ku
+        - slovensko/susr-kz
+        - slovensko/susr-kz-zdravie
+        - slovensko/susr-np
+        - slovensko/susr-nu
+        - slovensko/susr-nu-odvetvia
+        - slovensko/susr-ob
+        - slovensko/susr-od
+        - slovensko/susr-og
+        - slovensko/susr-om
+        - slovensko/susr-om-pohyb
+        - slovensko/susr-pl
+        - slovensko/susr-pm
+        - slovensko/susr-pm-ceny
+        - slovensko/susr-pr
+        - slovensko/susr-pr-mzdy
+        - slovensko/susr-ps
+        - slovensko/susr-ps-vydavky
+        - slovensko/susr-ra
+        - slovensko/susr-sk
+        - slovensko/susr-so
+        - slovensko/susr-sp
+        - slovensko/susr-sp-jadrova
+        - slovensko/susr-st
+        - slovensko/susr-st-povolenia
+        - slovensko/susr-sv
+        - slovensko/susr-ts
+        - slovensko/susr-vh
+        - slovensko/susr-vt
+        - slovensko/susr-vt-pracovnici
+        - slovensko/susr-zd
+        - slovensko/susr-zo
+        - slovensko/susr-zo-kapitoly
+        - slovensko/susr-zo-krajiny
+        - slovensko/susr-zp
+        - slovensko/susr-zp-emisie
       scope: [banskabystrica, zilina, praha, helsinki, slovensko]
       languages: [sk, en, fi]
       greeting:

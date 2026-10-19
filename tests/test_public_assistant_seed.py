@@ -45,7 +45,8 @@ ORIGINS = [
 
 def manifests(kind: str, project: str) -> dict[str, dict]:
     found = {}
-    for path in sorted((SEED / project).glob("*.yaml")):
+    # A topic folder, such as slovensko/susr-pr/, holds its own manifests (T-4390).
+    for path in sorted((SEED / project).rglob("*.yaml")):
         if path.name == "index.yaml":
             continue
         for doc in yaml.safe_load_all(path.read_text()):
@@ -274,24 +275,50 @@ def test_the_general_assistant_reads_every_publishers_public_endpoints():
     assert reached == set(PUBLISHED.values()), "an Endpoint of every published organization"
 
 
-def test_the_general_assistant_knows_the_whole_catalogue_and_crawls_no_website():
-    # Owner: no RAG crawl. Its knowledge is the catalogue's records (every organization of
-    # data.dev, refreshed after the nightly harvest) and each body's Endpoint descriptions.
+def test_the_general_assistant_reads_every_national_public_endpoint():
+    # T-4680: each ŠÚ SR topic is its own Endpoint of one type, KeyPerformanceIndicator; the
+    # router tells them apart by their titles, so every one joins and none is left unreachable.
+    # The catalogue's own records (`catalog`) are read through the search sources instead.
+    endpoints = manifests("Endpoint", "slovensko")
+    national = {f"slovensko/{name}" for name, e in endpoints.items() if name != "catalog"
+                and e["spec"]["audience"] == "public" and "mcp" in e["spec"]["enabledRepresentations"]}
+    assert len([n for n in national if n.startswith("slovensko/susr-")]) == 45
+    connected = {c["endpoint"] for c in general()["spec"]["connectors"]}
+    assert national <= connected, sorted(national - connected)
+    for name in national:
+        title = endpoints[name.split("/")[1]]["metadata"]["title"]
+        assert title.get("en") and len(title["en"]) <= 80, name
+
+
+def test_the_general_assistant_knows_the_whole_catalogue_and_each_publishers_own_site():
+    # Its knowledge is the catalogue's records (every organization of data.dev, refreshed after
+    # the nightly harvest), each body's Endpoint descriptions and, since T-4680 (the owner sent
+    # bbsk.sk: its map portal and cycle pages answer what the catalogue cannot), each
+    # publisher's own website, the weekly crawl its body's assistant reads. No other site.
     spec = general()["spec"]
     assert spec.get("answer", {}).get("routes", "both") == "both"
+    webs = set()
     for name in spec["sources"]:
         project, _, source = name.rpartition("/")
         project = project or "bbsk"
         assert project == "bbsk" or project in spec["scope"]["projects"], name
         doc = manifests("KnowledgeSource", project)[source]["spec"]
         assert doc["visibility"] == "public", name
-        assert doc["source"] in ("ckan", "catalogue"), name
+        assert doc["source"] in ("ckan", "catalogue", "website"), name
+        if doc["source"] == "website":
+            webs.add(project)
+            # The body's own site, the one its own assistant crawls (T-4167).
+            own = {"bbsk": "www.bbsk.sk", "banskabystrica": "www.banskabystrica.sk", "zilina": "www.zilina.sk",
+                   "praha": "www.praha.eu", "helsinki": "www.hel.fi"}[project]
+            assert {urlsplit(url).hostname for url in doc["startUrls"]} == {own}, name
+    assert webs == {"bbsk", "banskabystrica", "zilina", "praha", "helsinki"}
     portal = manifests("KnowledgeSource", "bbsk")["portal"]["spec"]
     assert portal["source"] == "ckan" and "organizations" not in portal
     instance = manifests("CkanInstance", "bbsk")[portal["ckanInstanceRef"]]["spec"]
     assert instance["url"] == "https://data.dev.joinedcontext.com"
     assert portal["schedule"] == "50 3 * * *"  # after charts/ckan's harvest at 03:23
-    assert {f"{p}/catalogue" for p in spec["scope"]["projects"]} | {"portal", "catalogue"} == set(spec["sources"])
+    assert {f"{p}/catalogue" for p in spec["scope"]["projects"]} | {"portal", "catalogue"} | \
+        {"web"} | {f"{p}/web" for p in spec["scope"]["projects"] if p != "slovensko"} == set(spec["sources"])
 
 
 def test_the_general_assistant_names_no_city_and_carries_the_portal_guide():
@@ -313,7 +340,7 @@ def test_the_general_assistant_names_no_city_and_carries_the_portal_guide():
     assert all(len(c) <= 50 for cs in chips.values() for c in cs), chips
     prompt = spec["systemPrompt"]
     assert len(prompt) <= 6000, "the guide stays in about 1,500 tokens of the cached prefix"
-    for fact in ("https://dev.joinedcontext.com/api/mcp", "ngsi-ld/v1/entities", "bbox=", "Smart Data Model",
+    for fact in ("https://api.dev.joinedcontext.com/api/mcp", "ngsi-ld/v1/entities", "bbox=", "Smart Data Model",
                  "300 otázok", "vydavateľa"):
         assert fact in prompt, fact
     for word in ("secretref", "apikey", "api_key", "token:", "password"):

@@ -34,6 +34,17 @@ keycloak:
       {{- else }}
       {}
       {{- end }}
+    # The owner's account of a production realm that carries dev's seeds (T-4678): the demo
+    # steward's rights under the owner's address, so the seeds' bindings have a holder.
+    initialUser:
+      {{- if and (eq .Values.global.profile "production") .Values.global.valuesProfile }}
+      {{- $steward := index (readFile "../../components/keycloak/demo-users.yaml" | fromYaml) "demo.steward" }}
+      email: {{ .Values.global.initialUserEmail | quote }}
+      realmRoles: {{ $steward.realmRoles | toJson }}
+      groups: {{ $steward.groups | toJson }}
+      {{- else }}
+      {}
+      {{- end }}
   # The Portal administers the clients it manages and no other (T-2725, AP-27).
   adminPermissions:
     enabled: true

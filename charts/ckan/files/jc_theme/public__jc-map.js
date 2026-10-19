@@ -38,7 +38,7 @@ async function start(box) {
   const all = fetchAll(config.layers, null, (got) => { latest = got; arrived(); if (shown) shown(got); });
   all.then(arrived, arrived);
   const units = schemas(config.layers);
-  const [maplibre, order] = await Promise.all([import(config.lib), fieldOrder(config.fields), firstPage]);
+  const [maplibre, enums] = await Promise.all([import(config.lib), enumWords(config.enums), firstPage]);
   if (!latest.features.length) await all;
   if (!latest.features.length) {
     if (!card) note.textContent = config.t.map_failed;
@@ -61,7 +61,7 @@ async function start(box) {
     area.addEventListener("pointerdown", wake, { once: true });
     area.addEventListener("focusin", wake, { once: true });
   }
-  const panel = makePanel(box, Object.assign({}, config, { order }), map);
+  const panel = makePanel(box, Object.assign({}, config, { enums }), map);
   await new Promise((resolve) => map.once("load", resolve));
   const schemasOf = await units;
 
@@ -179,9 +179,8 @@ async function start(box) {
 
 let pmtilesAdded = false;
 
-// The importance order and labels the DataStore table and the assistant share (T-4661); without
-// them the panel reads the attribute names in the broker's order.
-async function fieldOrder(url) {
+// The theme's words for code values (T-4672); without them a code reads as words.
+async function enumWords(url) {
   try {
     return url ? await getJson(new URL(url, location.href).href) : null;
   } catch {
@@ -284,7 +283,13 @@ function makePanel(box, config, map) {
   close.textContent = "✕";
   const title = document.createElement("h3");
   const list = document.createElement("dl");
-  panel.append(close, title, list);
+  // The attributes after the key ones, folded (T-4672).
+  const rest = document.createElement("details");
+  const restLabel = document.createElement("summary");
+  restLabel.textContent = config.t.map_more || "More";
+  const restList = document.createElement("dl");
+  rest.append(restLabel, restList);
+  panel.append(close, title, list, rest);
   box.append(panel);
   let selected = null; // { source, id } of the drawn feature
   const shut = () => {
@@ -306,7 +311,10 @@ function makePanel(box, config, map) {
       const rows = describe(feature, schema, config);
       title.textContent = rows.title;
       list.replaceChildren();
-      for (const [label, value, hint, kind] of rows.rows) {
+      rest.hidden = !rows.more.length;
+      rest.open = false;
+      restList.replaceChildren();
+      for (const [target, entries] of [[list, rows.rows], [restList, rows.more]]) for (const [label, value, hint, kind] of entries) {
         const dt = document.createElement("dt");
         dt.textContent = label;
         if (hint) dt.title = hint;
@@ -322,7 +330,7 @@ function makePanel(box, config, map) {
           dd.textContent = value;
         }
         if (kind === "meta") dt.className = dd.className = "jc-map-meta";
-        list.append(dt, dd);
+        target.append(dt, dd);
       }
       panel.hidden = false;
       close.focus();
@@ -330,16 +338,20 @@ function makePanel(box, config, map) {
   };
 }
 
-// A feature's properties as rows a person reads, in the order and with the labels the DataStore
-// table has (T-4661, `config.order`): the page's language of a name as the title, the start with
-// its time, numbers with their unit, a category in words, a link, the rest, and the record's
-// source and dates last in small type. A time reads as "5 min ago" or a date, a line's length
-// and an area's size follow. Identifiers, links to other entities and nested objects stay out.
+// A feature's properties as rows a person reads, in the order, with the labels and the key
+// attributes the publisher wrote into the layer's DataStore table from the data model (T-4672,
+// `fields` of `config.layers[n]`): the page's language of a name as the title, the key attributes
+// as `rows` and the rest as `more`; an attribute the table does not carry is not shown. Without
+// them every value shows in the Endpoint's order under its name spelt as words. The start takes
+// its time along, numbers their unit, a code reads as words, an http(s) address is a link, and the
+// record's source and dates read in small type. A line's length and an area's size follow.
+// Identifiers, links to other entities and nested objects stay out.
 // Each row is [label, text, hint, kind], kind "link" (an http(s) address), "meta" or "".
 export function describe(feature, schema, config) {
   const lang = String(config.lang || "en").split(/[-_]/)[0];
-  const order = config.order || { groups: [], labels: {}, enums: {} };
   const props = feature.properties || {};
+  const layer = (config.layers || [])[props._layer] || {};
+  const fields = Array.isArray(layer.fields) && layer.fields.length ? layer.fields : null;
   const plain = {};
   let title = "";
   for (const [key, raw] of Object.entries(props)) {
@@ -361,14 +373,16 @@ export function describe(feature, schema, config) {
       delete plain[time];
     }
   }
-  const at = (key) => rank(order, key, typeof plain[key] === "number");
+  const field = (key) => (fields ? fields.find((f) => f.a === key) : null);
+  const keys = fields ? fields.map((f) => f.a).filter((key) => key in plain) : Object.keys(plain);
+  const keyed = fields && fields.some((f) => f.s);
   const rows = [];
-  for (const key of Object.keys(plain).sort((a, b) => at(a) - at(b))) {
+  const more = [];
+  for (const key of keys) {
     const value = plain[key];
     const meta = schema[key] || {};
-    const group = groupOf(order, key, typeof value === "number");
     let text;
-    let kind = group === "meta" ? "meta" : "";
+    let kind = META.has(key) ? "meta" : "";
     if (typeof value === "number") {
       text = value.toLocaleString(lang, { maximumFractionDigits: 3 });
       const unit = UNITS[meta["x-ogc-unit"]] ?? meta["x-ogc-unit"];
@@ -377,43 +391,29 @@ export function describe(feature, schema, config) {
       text = dated(value, lang);
     } else if (typeof value === "string" && (meta.format === "date-time" || /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value))) {
       text = when(value, lang);
-    } else if (group === "link" && web(value)) {
+    } else if (!kind && web(value)) {
       text = String(value);
       kind = "link";
-    } else if (group === "category" && typeof value === "string") {
-      text = words(order.enums, value, lang, /^[a-z]+([A-Z][a-z0-9]*)+$/.test(value));
+    } else if (typeof value === "string" && /^[a-z]+([A-Z][a-z0-9]*)+$/.test(value)) {
+      text = words(config.enums && config.enums.enums, value, lang, true);
     } else {
       text = String(value);
     }
-    rows.push([words(order.labels, key, lang, true), text, meta.description || "", kind]);
+    const labels = (field(key) || {}).l || {};
+    const row = [labels[lang] || labels.en || words(null, key, lang, true), text, meta.description || "", kind];
+    (keyed && !field(key).s ? more : rows).push(row);
   }
   const g = feature.geometry || {};
   if (g.type === "LineString" || g.type === "MultiLineString") rows.push([config.t.map_length, distance(length(g), lang), "", ""]);
   if (g.type === "Polygon" || g.type === "MultiPolygon") rows.push([config.t.map_area, surface(area(g), lang), "", ""]);
-  return { title: title || (feature.properties && feature.properties._id ? String(feature.properties._id).split(":").pop() : ""), rows };
+  return { title: title || (feature.properties && feature.properties._id ? String(feature.properties._id).split(":").pop() : ""), rows, more };
 }
 
 // The times that are a date on a calendar, not a moment just measured.
 const DATED = new Set(["startDate", "endDate", "validFrom", "validTo"]);
 
-// Ranks per group, as jc-core's field_order: a group's index times this plus the attribute's
-// place in its list; one it does not list goes last among the values (a number) or the rest.
-const PER_GROUP = 1000;
-
-function rank(order, key, numeric) {
-  const groups = order.groups || [];
-  for (const [index, g] of groups.entries()) {
-    const at = (g.attributes || []).indexOf(key);
-    if (at >= 0) return index * PER_GROUP + at;
-  }
-  const index = groups.findIndex((g) => g.group === (numeric ? "value" : "other"));
-  return index < 0 ? Number.MAX_SAFE_INTEGER : index * PER_GROUP + PER_GROUP - 1;
-}
-
-function groupOf(order, key, numeric) {
-  const g = (order.groups || [])[Math.floor(rank(order, key, numeric) / PER_GROUP)];
-  return g ? g.group : "other";
-}
+// The record's own source and dates, read in small type.
+const META = new Set(["source", "dataProvider", "dateCreated", "dateModified"]);
 
 // The entry of `table` in `lang`, else in English, else the code spelt as words when `spell`.
 function words(table, code, lang, spell) {

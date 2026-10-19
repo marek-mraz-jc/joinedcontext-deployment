@@ -14,6 +14,9 @@ environments:
     values: []
   dev:
     values: []
+  # The production instance smartcity.joinedcontext.com (T-4678).
+  smartcity:
+    values: []
   recovery-test:
     values: []
   # The render surface of the optional add-ons; see environments/addons/global.yaml.gotmpl.
@@ -30,5 +33,6 @@ helmfiles:
           - staging
           - smoke-test
           - dev
+          - smartcity
           - recovery-test
           - addons
