@@ -72,7 +72,10 @@ subjects:
     name: {{ $name }}
     namespace: {{ $.Release.Namespace }}
 ---
-{{- /* The last result. The job patches `data`; the chart renders none, so an upgrade keeps it. */}}
+{{- /*
+  The last result. The job patches `data`; the chart renders it empty, the same in every
+  release, so Helm's three-way merge never touches the keys the job wrote.
+*/}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -80,6 +83,7 @@ metadata:
   namespace: {{ $.Release.Namespace }}
   labels:
     {{- include "database.labels" $ | nindent 4 }}
+data: {}
 ---
 apiVersion: v1
 kind: ConfigMap
