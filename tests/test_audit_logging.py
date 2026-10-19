@@ -177,6 +177,21 @@ def test_the_collector_runs_unprivileged_and_pinned(production):
     assert "@sha256:" in container["image"]
 
 
+def test_the_collector_reads_only_the_node_logs_from_the_host(production):
+    """T-4775: the `kubernetes_logs` source reads /var/log/pods, where the kubelet keeps the log
+    bodies on containerd (k3s, kind). The node's /var/lib holds every container's root
+    filesystem and the kubelet's pod volumes, Secrets among them, so it is not mounted; the
+    only other host path is the chart's own data directory, the one writable mount."""
+    pod = one(production, "DaemonSet", "audit-logging-collector-vector")["spec"]["template"]["spec"]
+    host = {v["name"]: v["hostPath"]["path"].rstrip("/") for v in pod["volumes"] if "hostPath" in v}
+    mounts = {m["name"]: m for m in pod["containers"][0]["volumeMounts"] if m["name"] in host}
+    data = [n for n, m in mounts.items() if m["mountPath"].rstrip("/") == "/vector-data-dir"]
+    assert len(data) == 1, mounts
+    assert host[data[0]] == "/var/lib/vector"
+    assert sorted(p for n, p in host.items() if n not in data) == ["/var/log"]
+    assert all(m.get("readOnly") is True for n, m in mounts.items() if n not in data), mounts
+
+
 def test_the_component_is_off_until_a_bucket_is_named(local):
     """A collector shipping into a bucket that does not exist looks healthy while the trail
     goes nowhere, so an installation that has not named one runs no collector at all."""

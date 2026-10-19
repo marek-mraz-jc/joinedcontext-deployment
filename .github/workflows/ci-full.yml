@@ -51,6 +51,16 @@ jobs:
       - name: the extractor reads what it is meant to read
         run: python3 scripts/ci/check-readme-commands.py --selftest
       - run: python3 scripts/ci/check-readme-commands.py
+  rbac-redteam:
+    # T-4775: replays the escalation attempts against the Portal's and the sandbox reaper's
+    # cluster-wide rights on a kind cluster, where the API server judges RBAC, the admission
+    # policies (namespaceObject included, which the kyverno CLI cannot supply) and Pod Security.
+    # kind, kubectl and helm come with the ubuntu-latest image.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - run: tests/rbac-redteam.sh
   deployment-variants:
     # scripts/test-deployment-variants.sh brings up k3d clusters, far too slow for the PR gate.
     # One job per variant: a variant takes 10 to 12 minutes, so the eight in one job (about 90)

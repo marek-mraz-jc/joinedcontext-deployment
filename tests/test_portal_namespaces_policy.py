@@ -23,17 +23,26 @@ requires_helm = pytest.mark.skipif(shutil.which("helm") is None, reason="helm no
 pytestmark = [requires_kyverno, requires_helm]
 
 
-@pytest.fixture(scope="module")
-def policy(tmp_path_factory):
+def rendered(tmp_path_factory, template: str) -> Path:
     out = tmp_path_factory.mktemp("policy") / "policy.yaml"
     out.write_text(
         subprocess.run(
-            ["helm", "template", "portal-namespaces", str(CHART), "--show-only", "templates/policy.yaml",
+            ["helm", "template", "portal-namespaces", str(CHART), "--show-only", f"templates/{template}",
              "--set", "release=dev", "--set", "serviceAccount.namespace=dev"],
             capture_output=True, text=True, check=True,
         ).stdout
     )
     return out
+
+
+@pytest.fixture(scope="module")
+def policy(tmp_path_factory):
+    return rendered(tmp_path_factory, "policy.yaml")
+
+
+@pytest.fixture(scope="module")
+def workload_policy(tmp_path_factory):
+    return rendered(tmp_path_factory, "workload-policy.yaml")
 
 
 def judged(policy: Path, resource: dict, tmp_path: Path, username: str = PORTAL, operation: str = "CREATE") -> str:
@@ -72,6 +81,8 @@ def namespace(name: str, **labels: str) -> dict:
 
 
 MANAGED = {"joinedcontext.com/managed-by": "joinedcontext-portal"}
+# What the Portal writes on every apps namespace (joinedcontext-portal src/apps/project_namespace.rs).
+RESTRICTED = {f"pod-security.kubernetes.io/{mode}": "restricted" for mode in ("enforce", "audit", "warn")}
 
 
 def binding(ns: str, role: str = "dev-portal-apps", kind: str = "ClusterRole", subjects=None) -> dict:
@@ -86,8 +97,34 @@ def binding(ns: str, role: str = "dev-portal-apps", kind: str = "ClusterRole", s
 
 @pytest.mark.parametrize("operation", ["CREATE", "UPDATE", "DELETE"])
 def test_the_portal_may_write_its_projects_apps_namespace(policy, tmp_path, operation):
-    ns = namespace("dev-ovzdusie-apps", **MANAGED, **{"joinedcontext.com/project": "ovzdusie"})
+    ns = namespace("dev-ovzdusie-apps", **MANAGED, **RESTRICTED, **{"joinedcontext.com/project": "ovzdusie"})
     assert judged(policy, ns, tmp_path, operation=operation) == "pass"
+
+
+@pytest.mark.parametrize(
+    "pss",
+    [
+        {},
+        {**RESTRICTED, "pod-security.kubernetes.io/enforce": "privileged"},
+        {**RESTRICTED, "pod-security.kubernetes.io/enforce": "baseline"},
+        {**RESTRICTED, "pod-security.kubernetes.io/enforce-version": "v1.0"},
+    ],
+    ids=["no-pod-security", "privileged", "baseline", "pinned-old-version"],
+)
+@pytest.mark.parametrize("operation", ["CREATE", "UPDATE"])
+def test_an_apps_namespace_without_restricted_pod_security_is_refused(policy, tmp_path, pss, operation):
+    """T-4775: Kyverno's Pod Security policies list the deployment's own namespaces, not the
+    apps namespaces the Portal makes at run time, so the namespace's Pod Security label is the
+    only thing between a Deployment the Portal writes and a privileged pod with the node's
+    filesystem. The Portal must not be able to leave it off or lower it."""
+    ns = namespace("dev-ovzdusie-apps", **MANAGED, **pss, **{"joinedcontext.com/project": "ovzdusie"})
+    assert judged(policy, ns, tmp_path, operation=operation) == "fail"
+
+
+def test_the_portal_may_name_the_latest_pod_security_version(policy, tmp_path):
+    labels = {**MANAGED, **RESTRICTED, "pod-security.kubernetes.io/enforce-version": "latest"}
+    ns = namespace("dev-ovzdusie-apps", **labels, **{"joinedcontext.com/project": "ovzdusie"})
+    assert judged(policy, ns, tmp_path) == "pass"
 
 
 @pytest.mark.parametrize(
@@ -135,3 +172,64 @@ def test_the_portal_may_bind_the_apps_role_to_itself_in_an_apps_namespace(policy
 )
 def test_any_other_binding_is_refused_to_the_portal(policy, tmp_path, rb):
     assert judged(policy, rb, tmp_path) == "fail"
+
+
+def workload(kind: str = "Deployment", **pod) -> dict:
+    """What the Portal's App reconciler writes (joinedcontext-portal src/apps/reconciler.rs), with
+    `pod` merged over its pod spec."""
+    spec = {
+        "automountServiceAccountToken": False,
+        "containers": [{"name": "app", "image": "registry.example/app@sha256:" + "0" * 64}],
+        **pod,
+    }
+    body = {"template": {"metadata": {"labels": {"app": "a"}}, "spec": spec}}
+    if kind == "Deployment":
+        body["selector"] = {"matchLabels": {"app": "a"}}
+    return {
+        "apiVersion": "apps/v1" if kind == "Deployment" else "batch/v1",
+        "kind": kind,
+        "metadata": {"name": "a", "namespace": "dev"},
+        "spec": body,
+    }
+
+
+@pytest.mark.parametrize("kind", ["Deployment", "Job"])
+@pytest.mark.parametrize("operation", ["CREATE", "UPDATE"])
+def test_the_portal_may_write_a_workload_without_a_token(workload_policy, tmp_path, kind, operation):
+    assert judged(workload_policy, workload(kind), tmp_path, operation=operation) == "pass"
+
+
+TOKEN_VOLUME = {"name": "t", "projected": {"sources": [{"serviceAccountToken": {"path": "token"}}]}}
+
+
+@pytest.mark.parametrize(
+    "pod",
+    [
+        {"automountServiceAccountToken": True, "serviceAccountName": "postgres-cluster-dr-drill"},
+        {"automountServiceAccountToken": None},
+        {"serviceAccountName": "pipeline-tokens", "volumes": [TOKEN_VOLUME]},
+        {"volumes": [{"name": "root", "hostPath": {"path": "/"}}]},
+        {"hostNetwork": True},
+        {"hostPID": True},
+        {"hostIPC": True},
+        {"containers": [{"name": "app", "image": "x", "securityContext": {"privileged": True}}]},
+        {"initContainers": [{"name": "init", "image": "x", "securityContext": {"privileged": True}}]},
+    ],
+    ids=["another-accounts-token", "token-by-default", "projected-token", "host-path", "host-network",
+         "host-pid", "host-ipc", "privileged", "privileged-init"],
+)
+@pytest.mark.parametrize("kind", ["Deployment", "Job"])
+def test_a_workload_with_a_token_or_the_node_is_refused_to_the_portal(workload_policy, tmp_path, pod, kind):
+    """T-4775: the Portal's namespace holds the ServiceAccounts of the restore drill, the token
+    minters and the forge bootstrap. A Deployment or Job the Portal writes must not run as one of
+    them with its token, nor reach the node."""
+    resource = workload(kind, **pod)
+    spec = resource["spec"]["template"]["spec"]
+    if spec.get("automountServiceAccountToken") is None:
+        del spec["automountServiceAccountToken"]
+    assert judged(workload_policy, resource, tmp_path) == "fail"
+
+
+def test_someone_elses_workload_is_not_the_policys_business(workload_policy, tmp_path):
+    resource = workload(automountServiceAccountToken=True)
+    assert judged(workload_policy, resource, tmp_path, username="system:serviceaccount:dev:someone") == "skip"

@@ -11,10 +11,8 @@
   adopt a namespace it did not create nor let one go. A RoleBinding it writes sits in such a
   namespace and binds `{release}-portal-apps` to the Portal and nobody else.
 
-  ponytail: the RoleBinding rule matches the namespace by name, not by its labels
-  (namespaceObject), so the kyverno CLI can test it offline; a `{release}-*-apps` namespace
-  someone else created would still take the Portal's binding. Check namespaceObject's labels
-  when a test cluster runs in CI.
+  The RoleBinding rule matches the namespace by name; binding-policy.yaml checks that the
+  namespace is one the Portal made (T-4775).
 */}}
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy
@@ -50,6 +48,20 @@ spec:
           && n.metadata.name == "{{ $release }}-" + n.metadata.labels["joinedcontext.com/project"] + "-apps")
       messageExpression: >-
         "The Portal may only write a namespace named {{ $release }}-{project}-apps that carries joinedcontext.com/managed-by=joinedcontext-portal and joinedcontext.com/project={project}, not " + request.name + " (AP-117)."
+    # Kyverno's Pod Security policies list the namespaces this deployment owns, not the apps
+    # namespaces the Portal makes at run time, so the namespace's own Pod Security label is what
+    # keeps a Deployment the Portal writes from becoming a privileged pod on the node (T-4775).
+    # The namespace after the change must enforce `restricted` at the latest version; DELETE
+    # has no after.
+    - expression: >-
+        request.resource.resource != "namespaces" || object == null || (
+          has(object.metadata.labels)
+          && "pod-security.kubernetes.io/enforce" in object.metadata.labels
+          && object.metadata.labels["pod-security.kubernetes.io/enforce"] == "restricted"
+          && (!("pod-security.kubernetes.io/enforce-version" in object.metadata.labels)
+            || object.metadata.labels["pod-security.kubernetes.io/enforce-version"] == "latest"))
+      messageExpression: >-
+        "The Portal may only write a namespace that enforces the restricted Pod Security Standard at the latest version (pod-security.kubernetes.io/enforce=restricted), not " + request.name + " (AP-117)."
     - expression: >-
         request.resource.resource != "rolebindings" || (
           request.namespace.matches("^{{ $release }}-[a-z0-9]([-a-z0-9]*[a-z0-9])?-apps$")
