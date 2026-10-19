@@ -44,7 +44,7 @@ def test_anyone_reads_the_catalogue_and_only_the_portal_reconciler_writes_it():
     public = [d for d in policies if d["spec"]["assignee"] == {"kind": "role", "id": "public"}]
     assert public and all(op.startswith("retrieve") for d in public for op in d["spec"]["operations"])
     for d in policies:
-        assert {e["type"] for i in d["spec"]["information"] for e in i["entities"]} == {"Dataset", "DataService"}
+        assert {e["type"] for i in d["spec"]["information"] for e in i["entities"]} == {"Dataset", "DataService", "Organization"}
 
 
 def test_every_placed_space_has_one_area_in_wgs84():
