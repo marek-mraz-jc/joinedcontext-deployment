@@ -82,9 +82,11 @@ def app_repository(path: str, method: str, call: dict, state: dict) -> tuple[int
         repos[body["name"]] = {"files": files, "private": body.get("private"), "head": head_of(files)}
         return 201, json.dumps({"name": body["name"]})
     match = re.fullmatch(rf"/api/v1/repos/{re.escape(ORG)}/([^/?]+)/(git/trees/main|contents|branches/main)(\?.*)?", path)
-    if not match or match.group(1) == REPO or match.group(1) not in repos:
+    if not match or (match.group(1) != REPO and match.group(1) not in repos):
         return None
-    repo = repos[match.group(1)]
+    # The configuration repository keeps its files in `contents` (the seed's tree and commit,
+    # T-4709), any other one in `repos[name].files`.
+    repo = {"files": state["contents"]} if match.group(1) == REPO else repos[match.group(1)]
     what = match.group(2)
     if what == "git/trees/main" and method == "GET":
         tree = [
@@ -111,6 +113,9 @@ def app_repository(path: str, method: str, call: dict, state: dict) -> tuple[int
         repo["files"] = files
         repo["head"] = head_of(files)
         repo.setdefault("commits", []).append(body["message"])
+        if match.group(1) == REPO:
+            state["contents"] = files
+            state.setdefault("commits", []).append(body["message"])
         return 201, json.dumps({"commit": {"sha": repo["head"]}})
     return None
 
