@@ -13,6 +13,8 @@
   if (!box) {
     return;
   }
+  // jc/dock.js gives the docked room back unless this ran (a failed load during a rollout).
+  window.jcAssistant = true;
   var KEY = "jc-assistant";
   var WIDTH = "jc-dock-width";
   var root = document.documentElement;
