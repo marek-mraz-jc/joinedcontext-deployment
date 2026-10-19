@@ -16,6 +16,6 @@
     "type": "Property",
     "value": "https://data.statistics.sk/api/v2/dataset/as1001rs/all/all/all?lang=sk&type=json"
   },
-  "isPartOf": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/susr-as1001rs" },
+  "isPartOf": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/dataset/susr-as1001rs" },
   "dateObserved": { "type": "Property", "value": "2025-12-19T00:00:00Z" }
 }

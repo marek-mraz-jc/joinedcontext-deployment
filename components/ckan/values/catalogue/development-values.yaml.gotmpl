@@ -83,8 +83,8 @@ harvest:
   # Where the converted datasets' distributions point (T-4279): each dataset's od Endpoint on
   # the data host api.{domain} (ADR-N-052 §2.1), in every standard the platform serves.
   gateway: https://api.{{ .Values.global.domain }}
-  # scripts/open-data generated od-datasets.json against dev's old catalogue host (T-4679).
-  datasetsBase: https://data.dev.joinedcontext.com/
+  # scripts/open-data generates od-datasets.json against dev's catalogue; each instance puts its own in (T-4679).
+  datasetsBase: https://opendata.dev.joinedcontext.com/
   sources:
     - name: banskabystrica
       sparql: https://data.slovensko.sk/api/sparql

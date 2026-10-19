@@ -31,7 +31,7 @@
   // viz.{domain} → {domain}: the hosts the page reads are named by its own, never by a parameter.
   function hosts(hostname) {
     var domain = String(hostname).replace(/^viz\./, "");
-    return { domain: domain, api: "https://api." + domain, data: "https://data." + domain };
+    return { domain: domain, api: "https://api." + domain, data: "https://opendata." + domain };
   }
 
   // Whether a parent may hand this page a spec (`#show`, ADR-N-053 §2.9): https on the domain or

@@ -242,15 +242,15 @@ What a harvester reads comes from two places, and nothing in it is typed into th
 | dataset `dcat:contactPoint` when the record names none | `global.branding.contactEmail`, under `instanceName` |
 
 **Harvesting us.** Another CKAN adds a harvest source of type **DCAT RDF Harvester**
-(`ckanext-dcat`'s `dcat_rdf` harvester) with the URL `https://data.{domain}/catalog.ttl`; it
+(`ckanext-dcat`'s `dcat_rdf` harvester) with the URL `https://opendata.{domain}/catalog.ttl`; it
 follows the pages itself. data.europa.eu and a national portal (data.gov.sk, data.gov.cz)
 take the same URL as their DCAT-AP source. A re-harvest updates rather than duplicates
-because each dataset keeps its URI (`https://data.{domain}/dataset/{CKAN id}`, which lives
+because each dataset keeps its URI (`https://opendata.{domain}/dataset/{CKAN id}`, which lives
 as long as the dataset) and its `dct:identifier` (the Endpoint's slug, which never changes);
 the publisher is the organization the Endpoint publishes under, so renaming it in CKAN
 changes the name a harvester shows and nothing else.
 
-**Checking it.** `scripts/check-dcat-ap.py https://data.{domain}` reads every catalogue page
+**Checking it.** `scripts/check-dcat-ap.py https://opendata.{domain}` reads every catalogue page
 and every dataset and validates each against the DCAT-AP 3.0.1 shapes in
 `scripts/dcat-ap-3.0.1/` (from github.com/SEMICeu/DCAT-AP, `releases/3.0.1/shacl`); it
 exits 1 on any violation and on an empty catalogue. `tests/test_ckan_dcat.py` runs the same
@@ -258,8 +258,10 @@ check in CI on a real record serialized inside the pinned image.
 
 ## Routing
 
-The catalogue is published on `data.{domain}`, derived from the route's `subDomain`, which
-also puts the host on the edge Ingress and in the certificate SAN list. `/ckan` on the
+The catalogue is published on `opendata.{domain}`, derived from the route's `subDomain`, which
+also puts the host on the edge Ingress and in the certificate SAN list. Its old host
+`data.{domain}` keeps its Ingress rule and certificate and answers only a 301 to the same path
+and query on `opendata.{domain}` (T-4679), for links shared before the move. `/ckan` on the
 primary host answers a 302 to that host rather than proxying: CKAN builds every link it
 renders from `CKAN_SITE_URL`, so a proxied prefix would emit links off the prefix anyway.
 

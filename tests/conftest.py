@@ -184,6 +184,6 @@ def render_catalogue_assistant(instance: dict, domain: str, name: str = "catalog
 
 def dev_catalogue(name: str = "catalogue") -> dict:
     """`ckan.<name>` as dev sets it, over the component's defaults (its host label among them)."""
-    defaults = {"subDomain": "data", "site": {"title": {}, "logo": ""}}
+    defaults = {"subDomain": "opendata", "site": {"title": {}, "logo": ""}}
     values = yaml.safe_load((PROJECT_ROOT / ".ci/example-deployments/environments/dev/ckan.yaml.gotmpl").read_text())
     return {**defaults, **values["ckan"][name]}

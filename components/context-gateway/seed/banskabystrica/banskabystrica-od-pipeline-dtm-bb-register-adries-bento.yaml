@@ -1,5 +1,5 @@
 # The mapping of the od-dtm-bb-register-adries pipeline, generated from the T-4254 mapping: one Address per row of
-# "DTM_BB-Register-adries" (https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-adries). Do not edit: change the mapping and run scripts/open-data/generate.py.
+# "DTM_BB-Register-adries" (https://opendata.dev.joinedcontext.com/dataset/bb-dtm-bb-register-adries). Do not edit: change the mapping and run scripts/open-data/generate.py.
 
 pipeline:
   processors:
@@ -163,7 +163,7 @@ pipeline:
           "location": if this.geometry.or(null) == null { null } else { { "type": "GeoProperty", "value": { "type": this.geometry.type, "coordinates": this.geometry.coordinates.apply("sjtsk_coords") } } },
           "dataProvider": { "type": "Property", "value": "Mesto Banská Bystrica (CC BY-SA 4.0)" },
           "source": { "type": "Property", "value": "https://dtm-banskabystrica.tmapserver.sk/opendata/OE_01_register_adries.zip" },
-          "isPartOf": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-adries" }
+          "isPartOf": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/dataset/bb-dtm-bb-register-adries" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.
     - archive:

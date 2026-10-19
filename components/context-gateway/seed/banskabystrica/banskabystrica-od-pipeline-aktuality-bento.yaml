@@ -1,5 +1,5 @@
 # The mapping of the od-aktuality pipeline, generated from the T-4254 mapping: one Article per row of
-# "Aktuality" (https://data.dev.joinedcontext.com/dataset/bb-aktuality). Do not edit: change the mapping and run scripts/open-data/generate.py.
+# "Aktuality" (https://opendata.dev.joinedcontext.com/dataset/bb-aktuality). Do not edit: change the mapping and run scripts/open-data/generate.py.
 
 pipeline:
   processors:
@@ -81,7 +81,7 @@ pipeline:
           "content": this.content.rendered.strip_html().unescape_html().catch(null).apply("string"),
           "dataProvider": { "type": "Property", "value": "Mesto Banská Bystrica (CC BY 4.0)" },
           "source": { "type": "Property", "value": "https://www.banskabystrica.sk/wp-json/wp/v2/newses?per_page=100&_fields=id,title,slug,link,date_gmt,modified_gmt,content" },
-          "isPartOf": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bb-aktuality" }
+          "isPartOf": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/dataset/bb-aktuality" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.
     - archive:

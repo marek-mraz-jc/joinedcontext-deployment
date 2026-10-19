@@ -257,7 +257,7 @@ def test_every_source_is_public_https_without_a_credential():
             spec = yaml.safe_load(p.read_text())["spec"]
             url = urllib.parse.urlsplit(spec["http"]["url"])
             # The T-MAPY host is where the city's DTM_BB archives are published (T-4317).
-            assert url.scheme == "https" and url.hostname in {"services-eu1.arcgis.com", "data.dev.joinedcontext.com",
+            assert url.scheme == "https" and url.hostname in {"services-eu1.arcgis.com", "opendata.dev.joinedcontext.com",
                                                                "www.banskabystrica.sk", "dtm-banskabystrica.tmapserver.sk"}, p.name
             assert set(spec["http"]) == {"url", "verb", "headers", "timeout"} and "Authorization" not in spec["http"]["headers"]
 

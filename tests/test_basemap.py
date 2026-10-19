@@ -87,7 +87,7 @@ def test_the_server_is_read_only_and_shares_with_our_hosts_alone(dev):
     conf = one(dev, "ConfigMap", "basemap-tiles")["data"]["default.conf"]
     assert '"~^https://([a-z0-9-]+\\.)*dev\\.joinedcontext\\.com$" $http_origin;' in conf
     origin = re.compile(r"^https://([a-z0-9-]+\.)*dev\.joinedcontext\.com$")
-    assert origin.match("https://data.dev.joinedcontext.com")
+    assert origin.match("https://opendata.dev.joinedcontext.com")
     assert not origin.match("https://evildev.joinedcontext.com")
     assert not origin.match("https://dev.joinedcontext.com.evil.example")
     assert conf.count("limit_except GET") == 2, "GET and HEAD (and the preflight) only"

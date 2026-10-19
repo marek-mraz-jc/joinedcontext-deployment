@@ -99,7 +99,7 @@ datasets:
   smartDataModel: dataModel.CPSV-AP/Address
   source:
     kind: ckan-datastore
-    url: https://data.dev.joinedcontext.com/datastore/dump/dfd84e65-70bc-4842-9785-ba756ec8b738
+    url: https://opendata.dev.joinedcontext.com/datastore/dump/dfd84e65-70bc-4842-9785-ba756ec8b738
     resource: dfd84e65-70bc-4842-9785-ba756ec8b738
     rows: 16902
   entityId:
@@ -109,7 +109,7 @@ datasets:
   refresh: P1W
   dataProvider: Mesto Banská Bystrica
   license: cc-by
-  dataset: https://data.dev.joinedcontext.com/dataset/bb-adresy
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bb-adresy
   properties:
     postName:
       column: Obec
@@ -146,7 +146,7 @@ datasets:
   refresh: P1D
   dataProvider: Mesto Banská Bystrica
   license: cc-by
-  dataset: https://data.dev.joinedcontext.com/dataset/bb-aktuality
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bb-aktuality
   properties:
     identifier:
       column: id
@@ -179,7 +179,7 @@ datasets:
   smartDataModel: extension/Grant
   source:
     kind: ckan-datastore
-    url: https://data.dev.joinedcontext.com/datastore/dump/7d9f3a85-c733-47bd-96cf-3f4fadab81eb
+    url: https://opendata.dev.joinedcontext.com/datastore/dump/7d9f3a85-c733-47bd-96cf-3f4fadab81eb
     resource: 7d9f3a85-c733-47bd-96cf-3f4fadab81eb
     rows: 1303
   entityId:
@@ -189,7 +189,7 @@ datasets:
   refresh: P1W
   dataProvider: Mesto Banská Bystrica
   license: cc-by
-  dataset: https://data.dev.joinedcontext.com/dataset/bb-dotacie
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bb-dotacie
   properties:
     rokDotacie:
       column: Rok_dotácie
@@ -284,7 +284,7 @@ datasets:
   refresh: P1W
   dataProvider: Mesto Banská Bystrica
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-adries
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bb-dtm-bb-register-adries
   properties:
     iD:
       column: ID
@@ -411,7 +411,7 @@ datasets:
   refresh: P1W
   dataProvider: Mesto Banská Bystrica
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-statickej-dopravy
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bb-dtm-bb-register-statickej-dopravy
   properties:
     idzmeny:
       column: idzmeny
@@ -508,7 +508,7 @@ datasets:
   refresh: P1W
   dataProvider: Mesto Banská Bystrica
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-verejnej-zelene-1
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bb-dtm-bb-register-verejnej-zelene-1
   properties:
     idzmeny:
       column: idzmeny
@@ -940,7 +940,7 @@ datasets:
   smartDataModel: extension/PurchaseOrder
   source:
     kind: ckan-datastore
-    url: https://data.dev.joinedcontext.com/datastore/dump/dcd35739-3b47-4722-8c80-380d89d864e8
+    url: https://opendata.dev.joinedcontext.com/datastore/dump/dcd35739-3b47-4722-8c80-380d89d864e8
     resource: dcd35739-3b47-4722-8c80-380d89d864e8
     rows: 26862
   entityId:
@@ -951,7 +951,7 @@ datasets:
   refresh: P1W
   dataProvider: Mesto Banská Bystrica
   license: cc-by
-  dataset: https://data.dev.joinedcontext.com/dataset/bb-objednavky-bb
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bb-objednavky-bb
   properties:
     identifier:
       column: Číslo_objednávky
@@ -987,7 +987,7 @@ datasets:
   smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: ckan-datastore
-    url: https://data.dev.joinedcontext.com/datastore/dump/c7e533af-04b7-4a0a-95bc-dc75f18ede97
+    url: https://opendata.dev.joinedcontext.com/datastore/dump/c7e533af-04b7-4a0a-95bc-dc75f18ede97
     resource: c7e533af-04b7-4a0a-95bc-dc75f18ede97
     rows: 732
   entityId:
@@ -999,7 +999,7 @@ datasets:
   refresh: P1D
   dataProvider: Mesto Banská Bystrica
   license: cc-by
-  dataset: https://data.dev.joinedcontext.com/dataset/bb-pocet-obcanov-podla-dna-narodenia
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bb-pocet-obcanov-podla-dna-narodenia
   properties:
     den:
       column: Deň
@@ -1019,7 +1019,7 @@ datasets:
   smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: ckan-datastore
-    url: https://data.dev.joinedcontext.com/datastore/dump/eb9bd402-c590-4667-ab82-e2c11dd9c248
+    url: https://opendata.dev.joinedcontext.com/datastore/dump/eb9bd402-c590-4667-ab82-e2c11dd9c248
     resource: eb9bd402-c590-4667-ab82-e2c11dd9c248
     rows: 105
   entityId:
@@ -1030,7 +1030,7 @@ datasets:
   refresh: P1D
   dataProvider: Mesto Banská Bystrica
   license: cc-by
-  dataset: https://data.dev.joinedcontext.com/dataset/bb-pocet-obcanov-podla-veku
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bb-pocet-obcanov-podla-veku
   properties:
     vek:
       column: Vek
@@ -1063,7 +1063,7 @@ datasets:
   refresh: P1D
   dataProvider: Mesto Banská Bystrica
   license: cc-by
-  dataset: https://data.dev.joinedcontext.com/dataset/bb-podujatia
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bb-podujatia
   properties:
     sourceId:
       column: id
@@ -1096,7 +1096,7 @@ datasets:
   smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
     kind: ckan-datastore
-    url: https://data.dev.joinedcontext.com/datastore/dump/4450222b-7726-40e9-980e-1fbe60a18d12
+    url: https://opendata.dev.joinedcontext.com/datastore/dump/4450222b-7726-40e9-980e-1fbe60a18d12
     resource: 4450222b-7726-40e9-980e-1fbe60a18d12
     rows: 27
   entityId:
@@ -1107,7 +1107,7 @@ datasets:
   refresh: P1M
   dataProvider: Mesto Banská Bystrica
   license: cc-by
-  dataset: https://data.dev.joinedcontext.com/dataset/bb-prirastky-a-ubytky-obcanov-za-jednotlive-roky
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bb-prirastky-a-ubytky-obcanov-za-jednotlive-roky
   properties:
     rok:
       column: Rok
@@ -1172,7 +1172,7 @@ datasets:
   smartDataModel: extension/CouncilMeeting
   source:
     kind: ckan-datastore
-    url: https://data.dev.joinedcontext.com/datastore/dump/93b1c198-87a6-4d71-920a-d777221b5035
+    url: https://opendata.dev.joinedcontext.com/datastore/dump/93b1c198-87a6-4d71-920a-d777221b5035
     resource: 93b1c198-87a6-4d71-920a-d777221b5035
     rows: 1498
   entityId:
@@ -1182,7 +1182,7 @@ datasets:
   refresh: P1W
   dataProvider: Mesto Banská Bystrica
   license: cc-by
-  dataset: https://data.dev.joinedcontext.com/dataset/bb-zasadnutia-organov-samospravy
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bb-zasadnutia-organov-samospravy
   properties:
     organSamospravy:
       column: Orgán_samosprávy
@@ -1206,7 +1206,7 @@ datasets:
   smartDataModel: extension/Contract
   source:
     kind: ckan-datastore
-    url: https://data.dev.joinedcontext.com/datastore/dump/d2df226d-cbf4-4202-aa63-8ef3e38979da
+    url: https://opendata.dev.joinedcontext.com/datastore/dump/d2df226d-cbf4-4202-aa63-8ef3e38979da
     resource: d2df226d-cbf4-4202-aa63-8ef3e38979da
     rows: 19881
   entityId:
@@ -1216,7 +1216,7 @@ datasets:
   refresh: P1W
   dataProvider: Mesto Banská Bystrica
   license: cc-by
-  dataset: https://data.dev.joinedcontext.com/dataset/bb-zmluvy-bb
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bb-zmluvy-bb
   properties:
     identifier:
       column: Centrálne_číslo_zmluvy
@@ -1285,7 +1285,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-clenovia-samospravy-efc2f3
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-clenovia-samospravy-efc2f3
   properties:
     iCOSamospravy:
       column: IČO_samosprávy
@@ -1352,7 +1352,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-cyklisti-nehodovost-addf0f
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-cyklisti-nehodovost-addf0f
   properties:
     rok:
       column: Rok
@@ -1412,7 +1412,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-cykloscitace-miesta-6e967d
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-cykloscitace-miesta-6e967d
   properties:
     iD:
       column: ID
@@ -1459,7 +1459,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-cykloturisticke-trasy-linie-e6a1a7
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-cykloturisticke-trasy-linie-e6a1a7
   properties:
     sourceId:
       column: id
@@ -1520,7 +1520,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-cykloturisticke-trasy-linie-povrchy-2ec670
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-cykloturisticke-trasy-linie-povrchy-2ec670
   properties:
     name:
       column: name
@@ -1569,7 +1569,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-cykloturisticke-trasy-nosic-infotabula-odpocivadlo-znacenie-f3c643
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-cykloturisticke-trasy-nosic-infotabula-odpocivadlo-znacenie-f3c643
   properties:
     malZnac:
       column: mal_znac
@@ -1646,7 +1646,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-dilatacne-celky-v-banskobystrickom-kraji-public-view-6ff77a
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-dilatacne-celky-v-banskobystrickom-kraji-public-view-6ff77a
   properties:
     triedaPK:
       column: Trieda_PK
@@ -1714,7 +1714,7 @@ datasets:
   refresh: P1D
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-dodavatelia-825cd0
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-dodavatelia-825cd0
   properties:
     iCO:
       column: ICO
@@ -1760,7 +1760,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-dotacie-bada80
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-dotacie-bada80
   properties:
     identifier:
       column: Číslo
@@ -1903,7 +1903,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-ekologicky-potencial-vodnych-utvarov-672eca
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-ekologicky-potencial-vodnych-utvarov-672eca
   properties:
     fIDRiekyBbskJoin:
       column: FID_rieky_bbsk_join
@@ -2014,7 +2014,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-ekologicky-stav-vodnych-utvarov-48bbbd
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-ekologicky-stav-vodnych-utvarov-48bbbd
   properties:
     fIDRiekyBbskJoin:
       column: FID_rieky_bbsk_join
@@ -2124,7 +2124,7 @@ datasets:
   refresh: P1D
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-faktury-422b35
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-faktury-422b35
   properties:
     identifier:
       column: Číslo_faktúry
@@ -2188,7 +2188,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-hlasovania-poslancov-ba7ca6
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-hlasovania-poslancov-ba7ca6
   properties:
     iCOSamospravy:
       column: IČO_samosprávy
@@ -2239,7 +2239,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-hustota-obyvatelstva-2021-503a78
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-hustota-obyvatelstva-2021-503a78
   properties:
     dOW:
       column: DOW
@@ -2373,7 +2373,7 @@ datasets:
   refresh: P1D
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-hustota-obyvatelstva-v-obciach-bbk-79fd96
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-hustota-obyvatelstva-v-obciach-bbk-79fd96
   properties:
     okres:
       column: Okres
@@ -2494,7 +2494,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-komisie-zastupitelstva-banskobystrickeho-samospravneho-kraja-59b9e4
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-komisie-zastupitelstva-banskobystrickeho-samospravneho-kraja-59b9e4
   properties:
     name:
       column: Názov_komisie
@@ -2531,7 +2531,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-kontaktne-miesta-2128a0
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-kontaktne-miesta-2128a0
   properties:
     pC:
       column: P_č_
@@ -2607,7 +2607,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-kontakty-na-miestne-samospravy-v-bbk-fc5ecb
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-kontakty-na-miestne-samospravy-v-bbk-fc5ecb
   properties:
     iDBBSK:
       column: ID_BBSK
@@ -2715,7 +2715,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-kraj-bbk-hranica-a05568
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-kraj-bbk-hranica-a05568
   properties:
     dOW:
       column: DOW
@@ -2772,7 +2772,7 @@ datasets:
   refresh: P1D
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-kulturne-institucie-bbsk-24fbf9
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-kulturne-institucie-bbsk-24fbf9
   properties:
     iD:
       column: ID
@@ -2851,7 +2851,7 @@ datasets:
   refresh: P1D
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-kulturne-institucie-bbsk-a-ich-pobocky-2f9362
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-kulturne-institucie-bbsk-a-ich-pobocky-2f9362
   properties:
     typ1:
       column: Typ_1
@@ -2918,7 +2918,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-materske-skoly-v-banskobystrickom-kraji-3f7d07
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-materske-skoly-v-banskobystrickom-kraji-3f7d07
   properties:
     eDUID:
       column: EDUID
@@ -3088,7 +3088,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-mosty-v-banskobystrickom-kraji-public-view-3b4675
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-mosty-v-banskobystrickom-kraji-public-view-3b4675
   properties:
     mostAkoPamiatkaText:
       column: mostAkoPamiatkaText
@@ -3160,7 +3160,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-mosty-v-sprave-bbrsc-public-view-d3252c
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-mosty-v-sprave-bbrsc-public-view-d3252c
   properties:
     identifikacneCislo:
       column: Identifikačné_číslo
@@ -3265,7 +3265,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-nabijacky-a-zastavky-937210
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-nabijacky-a-zastavky-937210
   properties:
     cMSID:
       column: CMS_ID
@@ -3422,7 +3422,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-nehodovost-v-bbk-0ea72d
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-nehodovost-v-bbk-0ea72d
   properties:
     gPSSirka:
       column: GPS_Šírka
@@ -3485,7 +3485,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-obce-bbk-centroidy-cbd19f
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-obce-bbk-centroidy-cbd19f
   properties:
     typObce:
       column: typ_obce
@@ -3566,7 +3566,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-obce-bbk-hranice-ec7ac6
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-obce-bbk-hranice-ec7ac6
   properties:
     dOW:
       column: DOW
@@ -3651,7 +3651,7 @@ datasets:
   refresh: P1D
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-objednavky-a97e8a
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-objednavky-a97e8a
   properties:
     identifier:
       column: Číslo_objednávky
@@ -3704,7 +3704,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-dalsej-narodnosti-2021-obce-11667a
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-dalsej-narodnosti-2021-obce-11667a
   properties:
     dOW:
       column: DOW
@@ -3985,7 +3985,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-dalsej-narodnosti-2021-okresy-54bc2c
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-dalsej-narodnosti-2021-okresy-54bc2c
   properties:
     dOW:
       column: DOW
@@ -4251,7 +4251,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-ekonomickej-aktivity-2021-984966
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-ekonomickej-aktivity-2021-984966
   properties:
     dOW:
       column: DOW
@@ -4427,7 +4427,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-materinskeho-jazyka-2011-obce-c0f097
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-materinskeho-jazyka-2011-obce-c0f097
   properties:
     dOW:
       column: DOW
@@ -4558,7 +4558,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-materinskeho-jazyka-2011-okresy-590643
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-materinskeho-jazyka-2011-okresy-590643
   properties:
     dOW:
       column: DOW
@@ -4716,7 +4716,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-materinskeho-jazyka-2021-obce-fc02ff
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-materinskeho-jazyka-2021-obce-fc02ff
   properties:
     dOW:
       column: DOW
@@ -4973,7 +4973,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-materinskeho-jazyka-2021-okresy-404a3d
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-materinskeho-jazyka-2021-okresy-404a3d
   properties:
     dOW:
       column: DOW
@@ -5218,7 +5218,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-nabozenskeho-vyznania-2011-obce-81576b
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-nabozenskeho-vyznania-2011-obce-81576b
   properties:
     dOW:
       column: DOW
@@ -5382,7 +5382,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-nabozenskeho-vyznania-2011-okresy-3844c8
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-nabozenskeho-vyznania-2011-okresy-3844c8
   properties:
     dOW:
       column: DOW
@@ -5588,7 +5588,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-nabozenskeho-vyznania-2021-obce-5fb2e9
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-nabozenskeho-vyznania-2021-obce-5fb2e9
   properties:
     dOW:
       column: DOW
@@ -5839,7 +5839,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-nabozenskeho-vyznania-2021-okresy-4d7df9
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-nabozenskeho-vyznania-2021-okresy-4d7df9
   properties:
     dOW:
       column: DOW
@@ -6081,7 +6081,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-narodnosti-2011-obce-a36024
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-narodnosti-2011-obce-a36024
   properties:
     dOW:
       column: DOW
@@ -6221,7 +6221,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-narodnosti-2011-okresy-09f7d6
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-narodnosti-2011-okresy-09f7d6
   properties:
     dOW:
       column: DOW
@@ -6397,7 +6397,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-narodnosti-2021-obce-bf372d
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-narodnosti-2021-obce-bf372d
   properties:
     dOW:
       column: DOW
@@ -6672,7 +6672,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-narodnosti-2021-okresy-d559c2
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-narodnosti-2021-okresy-d559c2
   properties:
     dOW:
       column: DOW
@@ -6938,7 +6938,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-rodinneho-stavu-2021-obce-40138c
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-rodinneho-stavu-2021-obce-40138c
   properties:
     dOW:
       column: DOW
@@ -7060,7 +7060,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-rodinneho-stavu-2021-okresy-04e229
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-rodinneho-stavu-2021-okresy-04e229
   properties:
     dOW:
       column: DOW
@@ -7171,7 +7171,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-vekovej-struktury-2011-2021-obce-281902
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-vekovej-struktury-2011-2021-obce-281902
   properties:
     dOW:
       column: DOW
@@ -7285,7 +7285,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-vekovej-struktury-2011-2021-okresy-5e08d3
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-vekovej-struktury-2011-2021-okresy-5e08d3
   properties:
     dOW:
       column: DOW
@@ -7383,7 +7383,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-vzdelania-2021-2481df
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-vzdelania-2021-2481df
   properties:
     dOW:
       column: DOW
@@ -7520,7 +7520,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-ohrozenie-samosprav-zmenou-klimy-extremne-horucavy-68ff15
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-ohrozenie-samosprav-zmenou-klimy-extremne-horucavy-68ff15
   properties:
     iDN4:
       column: IDN4
@@ -7594,7 +7594,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-ohrozenie-samosprav-zmenou-klimy-extremne-sucho-576a4f
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-ohrozenie-samosprav-zmenou-klimy-extremne-sucho-576a4f
   properties:
     iDN4:
       column: IDN4
@@ -7665,7 +7665,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-ohrozenie-samosprav-zmenou-klimy-extremne-zrazky-a0f87f
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-ohrozenie-samosprav-zmenou-klimy-extremne-zrazky-a0f87f
   properties:
     iDN4:
       column: IDN4
@@ -7736,7 +7736,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-okresy-bbk-hranice-17725f
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-okresy-bbk-hranice-17725f
   properties:
     dOW:
       column: DOW
@@ -7808,7 +7808,7 @@ datasets:
   refresh: P1D
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-organizacie-v-zriadovatelskej-posobnosti-bbsk-bc762a
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-organizacie-v-zriadovatelskej-posobnosti-bbsk-bc762a
   properties:
     iCO:
       column: IČO
@@ -7865,7 +7865,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-organizacna-struktura-40329b
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-organizacna-struktura-40329b
   properties:
     funkcia:
       column: Funkcia
@@ -7914,7 +7914,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-peticie-f80530
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-peticie-f80530
   properties:
     identifier:
       column: P_č_
@@ -7974,7 +7974,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-plan-verejneho-obstaravania-48b7e9
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-plan-verejneho-obstaravania-48b7e9
   properties:
     utvarOvZP:
       column: Útvar_OvZP
@@ -8024,7 +8024,7 @@ datasets:
   refresh: P1D
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-pocet-obyvatelov-v-obciach-bbk-b2adc3
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-pocet-obyvatelov-v-obciach-bbk-b2adc3
   properties:
     okres:
       column: Okres
@@ -8167,7 +8167,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-podjazdy-v-banskobystrickom-kraji-public-view-e6fb8f
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-podjazdy-v-banskobystrickom-kraji-public-view-e6fb8f
   properties:
     triedaPK:
       column: Trieda_PK
@@ -8227,7 +8227,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-pohyb-obyvatelstva-v-obciach-1996-2024-919463
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-pohyb-obyvatelstva-v-obciach-1996-2024-919463
   properties:
     dOW:
       column: DOW
@@ -8434,7 +8434,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-pohyb-obyvatelstva-v-okresoch-1996-2024-8b7fa1
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-pohyb-obyvatelstva-v-okresoch-1996-2024-8b7fa1
   properties:
     dOW:
       column: DOW
@@ -8618,7 +8618,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-povodia-banskobystrickeho-kraja-067504
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-povodia-banskobystrickeho-kraja-067504
   properties:
     fIDKraj0:
       column: FID_kraj_0
@@ -8712,7 +8712,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-ppa-platby-f3c509
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-ppa-platby-f3c509
   properties:
     rokKampan:
       column: Rok___kampaň
@@ -8764,7 +8764,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-ppa-platby-po-okresoch-bf09ef
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-ppa-platby-po-okresoch-bf09ef
   properties:
     okres:
       column: Okres
@@ -8814,7 +8814,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-priepusty-v-banskobystrickom-kraji-public-view-a9ed8e
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-priepusty-v-banskobystrickom-kraji-public-view-a9ed8e
   properties:
     triedaPK:
       column: Trieda_PK
@@ -8870,7 +8870,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-prispevkove-rozpoctove-a-ine-organizacie-samospravy-cec768
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-prispevkove-rozpoctove-a-ine-organizacie-samospravy-cec768
   properties:
     iCOSamospravy:
       column: IČO_samosprávy
@@ -8931,7 +8931,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-prognoza-poctu-obyvatelov-2018-2040-3a097f
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-prognoza-poctu-obyvatelov-2018-2040-3a097f
   properties:
     dOW:
       column: DOW
@@ -9032,7 +9032,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-projekty-banskobystrickeho-kraja-itms21-c8bfea
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-projekty-banskobystrickeho-kraja-itms21-c8bfea
   properties:
     typObce:
       column: typ_obce
@@ -9157,7 +9157,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-realizovane-verejne-obstaravania-754eee
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-realizovane-verejne-obstaravania-754eee
   properties:
     iDZakazky:
       column: ID_zákazky
@@ -9260,7 +9260,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-register-investicii-bodova-vrstva-e0b3b4
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-register-investicii-bodova-vrstva-e0b3b4
   properties:
     index:
       column: Index_
@@ -9387,7 +9387,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-register-investicii-polygonova-vrstva-e902a9
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-register-investicii-polygonova-vrstva-e902a9
   properties:
     iDN3:
       column: IDN3
@@ -9480,7 +9480,7 @@ datasets:
   refresh: P1D
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-skoly-a-skolske-zariadenia-v-zriadovatelskej-posobnosti-bbsk-791897
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-skoly-a-skolske-zariadenia-v-zriadovatelskej-posobnosti-bbsk-791897
   properties:
     name:
       column: Názov_zaužívaný
@@ -9557,7 +9557,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-stredne-skoly-v-banskobystrickom-kraji-581554
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-stredne-skoly-v-banskobystrickom-kraji-581554
   properties:
     eDUID:
       column: EDUID
@@ -9726,7 +9726,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-stredne-skoly-v-bbk-odbory-a-pocet-studentov-2023-e85365
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-stredne-skoly-v-bbk-odbory-a-pocet-studentov-2023-e85365
   properties:
     eDUID:
       column: EDUID
@@ -10003,7 +10003,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-uradne-hodiny-c912ed
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-uradne-hodiny-c912ed
   properties:
     iCOSamospravy:
       column: IČO_samosprávy
@@ -10052,7 +10052,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-vekova-struktura-v-obciach-1996-2022-6de8c3
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-vekova-struktura-v-obciach-1996-2022-6de8c3
   properties:
     dOW:
       column: DOW
@@ -10176,7 +10176,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-vekova-struktura-v-okresoch-1996-2022-29ed8a
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-vekova-struktura-v-okresoch-1996-2022-29ed8a
   properties:
     dOW:
       column: DOW
@@ -10285,7 +10285,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-vysoke-skoly-v-banskobystrickom-kraji-b0be47
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-vysoke-skoly-v-banskobystrickom-kraji-b0be47
   properties:
     okres:
       column: Okres
@@ -10349,7 +10349,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-vyvoj-emisii-v-bbk-c8d1ed
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-vyvoj-emisii-v-bbk-c8d1ed
   properties:
     dOW:
       column: DOW
@@ -10440,7 +10440,7 @@ datasets:
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-vyvoj-imisii-v-bbk-377176
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-vyvoj-imisii-v-bbk-377176
   properties:
     meraciaStanica:
       column: Meracia_stanica
@@ -10490,7 +10490,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-zakladne-skoly-v-banskobystrickom-kraji-13a8b6
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-zakladne-skoly-v-banskobystrickom-kraji-13a8b6
   properties:
     eDUID:
       column: EDUID
@@ -10660,7 +10660,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-zasadnutia-samospravy-9a27f2
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-zasadnutia-samospravy-9a27f2
   properties:
     iCOSamospravy:
       column: IČO_samosprávy
@@ -10713,7 +10713,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-zeleznicne-priecestia-v-banskobystrickom-kraji-public-view-89feb8
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-zeleznicne-priecestia-v-banskobystrickom-kraji-public-view-89feb8
   properties:
     triedaPK:
       column: Trieda_PK
@@ -10774,7 +10774,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-zmluvy-cafee6
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-zmluvy-cafee6
   properties:
     index:
       column: Index_
@@ -10866,7 +10866,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-zoznam-lekarni-v-bbk-c564de
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-zoznam-lekarni-v-bbk-c564de
   properties:
     idZZ:
       column: IdZZ
@@ -10945,7 +10945,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-zoznam-poskytovatelov-socialnych-sluzieb-v-bbk-9ab090
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-zoznam-poskytovatelov-socialnych-sluzieb-v-bbk-9ab090
   properties:
     kategoria:
       column: Kategória
@@ -11037,7 +11037,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-zoznam-ucinnych-vseobecne-zavaznych-nariadeni-vzn-80db50
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-zoznam-ucinnych-vseobecne-zavaznych-nariadeni-vzn-80db50
   properties:
     iCOSamospravy:
       column: IČO_samosprávy
@@ -11089,7 +11089,7 @@ datasets:
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bbsk-zoznam-zdravotnickych-zariadeni-v-bbk-701db2
+  dataset: https://opendata.dev.joinedcontext.com/dataset/bbsk-zoznam-zdravotnickych-zariadeni-v-bbk-701db2
   properties:
     iCO:
       column: IČO

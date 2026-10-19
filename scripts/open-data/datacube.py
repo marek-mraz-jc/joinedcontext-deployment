@@ -46,7 +46,7 @@ MODEL_FILES = ("statistical-observation.linkml.yaml", "statistical-observation.v
                "statistical-observation.v1.example.jsonld")
 DISTRIBUTIONS = ROOT / "charts/ckan/files/od-datasets.json"
 API = "https://data.statistics.sk/api/v2"
-CKAN = "https://data.dev.joinedcontext.com"
+CKAN = "https://opendata.dev.joinedcontext.com"
 INDEX = SEED / "index.yaml"
 ACCOUNT = SEED / "slovensko-serviceaccount-pipelines.yaml"
 # The most cells one request reads; a larger cube is read in slices (T-4433).

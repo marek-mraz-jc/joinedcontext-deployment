@@ -9,7 +9,7 @@ Two documents, two origins of trust:
 
 - **The host page** (`/#{viewId}`, `files/site/index.html` and `host.js`). Our code, no spec
   runs here. It reads the view anonymously from CKAN's action API (`resource_view_show` on
-  `data.{domain}`, which answers CORS for this origin alone), checks the spec against the
+  `opendata.{domain}`, which answers CORS for this origin alone), checks the spec against the
   refusal list (`refuse.js`), fetches the declared source of that Endpoint on `api.{domain}`
   without a token (`csv`, `ogc`, `odata` or `temporal`), stops at 15 seconds, 50,000 rows or
   20 MB, and posts spec and rows to the renderer. `&inline` hides its title, description and

@@ -1,5 +1,5 @@
 # The mapping of the od-register-investicii-polygonova-vrstva pipeline, generated from the T-4254 mapping: one PublicInvestment per row of
-# "Register investícií - polygónová vrstva" (https://data.dev.joinedcontext.com/dataset/bbsk-register-investicii-polygonova-vrstva-e902a9). Do not edit: change the mapping and run scripts/open-data/generate.py.
+# "Register investícií - polygónová vrstva" (https://opendata.dev.joinedcontext.com/dataset/bbsk-register-investicii-polygonova-vrstva-e902a9). Do not edit: change the mapping and run scripts/open-data/generate.py.
 
 pipeline:
   processors:
@@ -125,7 +125,7 @@ pipeline:
           "location": if this.geometry.or(null) == null { null } else { { "type": "GeoProperty", "value": this.geometry } },
           "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj (CC BY-SA 4.0)" },
           "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Join_Features_to_Ok_Dissolve_Export_Features/FeatureServer/0/query?where=1%3D1&outFields=IDN3,Vecn%C3%A1_oblas%C5%A5,Rok,SUM_%C4%8Cerpanie_spolu,DOW,FACC,NM3,IDN2,NM2,VYMERA,NUTS1,NUTS1_CODE,NUTS2,NUTS2_CODE,NUTS3,NUTS3_CODE,LAU1,LAU1_CODE,N%C3%A1zov,K%C3%B3d_okresu_kraja,OBJECTID_1&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },
-          "isPartOf": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bbsk-register-investicii-polygonova-vrstva-e902a9" }
+          "isPartOf": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/dataset/bbsk-register-investicii-polygonova-vrstva-e902a9" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.
     - archive:

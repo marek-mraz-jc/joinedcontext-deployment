@@ -1,5 +1,5 @@
 # The mapping of the od-clenovia-samospravy pipeline, generated from the T-4254 mapping: one Person per row of
-# "Členovia samosprávy" (https://data.dev.joinedcontext.com/dataset/bbsk-clenovia-samospravy-efc2f3). Do not edit: change the mapping and run scripts/open-data/generate.py.
+# "Členovia samosprávy" (https://opendata.dev.joinedcontext.com/dataset/bbsk-clenovia-samospravy-efc2f3). Do not edit: change the mapping and run scripts/open-data/generate.py.
 
 pipeline:
   processors:
@@ -91,7 +91,7 @@ pipeline:
           "voFunkciiDo": this.properties."Vo_funkcii_do".apply("string"),
           "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj (CC BY-SA 4.0)" },
           "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/%C4%8Clenovia_samospr%C3%A1vy/FeatureServer/0/query?where=1%3D1&outFields=I%C4%8CO_samospr%C3%A1vy,N%C3%A1zov_samospr%C3%A1vy,Org%C3%A1n_samospr%C3%A1vy,Titul_pred_menom,Meno,Priezvisko,Titul_za_menom,Funkcia,Obvod,N%C3%A1zov_klubu,Vo_funkcii_od,Vo_funkcii_do&returnGeometry=false&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },
-          "isPartOf": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bbsk-clenovia-samospravy-efc2f3" }
+          "isPartOf": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/dataset/bbsk-clenovia-samospravy-efc2f3" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.
     - archive:

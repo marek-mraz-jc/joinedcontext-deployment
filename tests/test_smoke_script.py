@@ -372,6 +372,8 @@ EDGE_REDIRECT = ("https://idm.example.test/realms/dev/protocol/openid-connect/au
 HEALTHY_STATUSES = [
     # The apex moves an anonymous call of the hub to the data host (T-4630, EP-128).
     ["example.test/api/mcp/.well-known/oauth-protected-resource?x=1", 308],
+    # The catalogue's old host moves to opendata.{domain} with path and query (T-4679).
+    ["https://data.example.test/dataset/x?q=1", 301],
     # Event keeps no history, so no Policy grants its temporal read (T-4372).
     [["hsevents", "/temporal/entities"], 404],
     ["/invoke", 401],
@@ -445,7 +447,8 @@ HEALTHY = {
     "ogcSeed": OGC_SEED,
     "routes": ["portal-ui", "portal-api", "portal-public-assets", "context-space", "context-endpoint", "context-mcp-hub",
                "gitea-forge", "ckan"],
-    "locations": [["oauth-protected-resource?x=1", "https://api.example.test/api/mcp/.well-known/oauth-protected-resource?x=1"]],
+    "locations": [["oauth-protected-resource?x=1", "https://api.example.test/api/mcp/.well-known/oauth-protected-resource?x=1"],
+                  ["https://data.example.test/dataset/x?q=1", "https://opendata.example.test/dataset/x?q=1"]],
     # The Portal's content-hashed chunks and CKAN's fingerprinted webassets are kept a year (T-4201).
     "headers": [["/assets/", "HTTP/2 200\r\ncache-control: public, max-age=31536000, immutable\r\n"],
                 ["/webassets/", "HTTP/2 200\r\ncache-control: public, max-age=31536000, immutable\r\n"]],
@@ -559,6 +562,7 @@ def test_full_platform_passes(tmp_path):
     assert "ok    and is deleted again (204)" in result.stdout
     assert "git forge answers under the /git prefix (200)" in result.stdout
     assert "catalogue front page carries the instance name" in result.stdout
+    assert "ok    data.{domain} answers 301 to the same path on opendata.{domain}" in result.stdout
     assert "ok    pipeline test runs a candidate on the runner and captures the output (200)" in result.stdout
     assert "ok    helsinki lists 4 endpoints, none of them residue of takes or e2e" in result.stdout
     assert "ok    helsinki lists 2 pipelines, none of them residue of takes or e2e" in result.stdout
@@ -1805,3 +1809,18 @@ def test_the_data_host_is_checked_and_the_old_address_must_move(tmp_path):
     assert result.returncode != 0
     assert "  FAIL  the api host does not serve the hub's metadata naming https://api.example.test/api/mcp" in result.stdout
     assert "  FAIL  the apex answers the old hub address 200 without a Location, not 308 to https://api.example.test" in result.stdout
+
+
+@pytest.mark.parametrize("status, location", [
+    (200, ""),  # the old host still serves the catalogue itself
+    (301, "https://opendata.example.test/"),  # moved, but path and query lost
+    (301, "https://evil.example/dataset/x?q=1"),  # moved off our domain
+])
+def test_the_old_catalogue_host_must_redirect_with_path_and_query(tmp_path, status, location):
+    """T-4679: data.{domain} answers only a 301 to the same path and query on opendata.{domain}."""
+    old = "https://data.example.test/dataset/x?q=1"
+    spec = dict(HEALTHY, statuses=[[old, status], *HEALTHY["statuses"]],
+                locations=[[old, location], *HEALTHY["locations"]])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode != 0
+    assert "FAIL  data.{domain} does not redirect to opendata.{domain} with path and query" in result.stdout

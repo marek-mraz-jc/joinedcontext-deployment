@@ -1,5 +1,5 @@
 # The mapping of the od-dtm-bb-register-verejnej-zelene pipeline, generated from the T-4254 mapping: one Garden per row of
-# "DTM_BB-register-verejnej-zelene-1" (https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-verejnej-zelene-1). Do not edit: change the mapping and run scripts/open-data/generate.py.
+# "DTM_BB-register-verejnej-zelene-1" (https://opendata.dev.joinedcontext.com/dataset/bb-dtm-bb-register-verejnej-zelene-1). Do not edit: change the mapping and run scripts/open-data/generate.py.
 
 pipeline:
   processors:
@@ -22,7 +22,7 @@ pipeline:
                 verb: GET
                 headers:
                   Accept: application/geo+json
-                  User-Agent: "joinedcontext-platform open-data pipeline (https://data.dev.joinedcontext.com)"
+                  User-Agent: "joinedcontext-platform open-data pipeline (https://opendata.dev.joinedcontext.com)"
                 timeout: 60s
                 retries: 2
                 rate_limit: pipeline_egress
@@ -114,7 +114,7 @@ pipeline:
           "location": if this.geometry.or(null) == null { null } else { { "type": "GeoProperty", "value": this.geometry } },
           "dataProvider": { "type": "Property", "value": "Mesto Banská Bystrica (CC BY-SA 4.0)" },
           "source": { "type": "Property", "value": "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/dtm/DTM_v_1_4_2_3_verejny/MapServer/57/query?where=1%3D1&outFields=OBJECTID,idzmeny,popisobjektu,datumvkladu,datumzmeny,datumplatnosti,urovenumisteniobjektuzps,typudrzovanezelene,ics&orderByFields=OBJECTID&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },
-          "isPartOf": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-verejnej-zelene-1" }
+          "isPartOf": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/dataset/bb-dtm-bb-register-verejnej-zelene-1" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.
     - archive:

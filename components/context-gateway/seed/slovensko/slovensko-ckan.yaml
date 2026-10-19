@@ -7,7 +7,7 @@ metadata:
   namespace: slovensko
   title: { sk: "Slovensko — otvorené dáta", en: "Slovakia, open data" }
 spec:
-  url: https://data.dev.joinedcontext.com
+  url: https://opendata.dev.joinedcontext.com
   organizationDefault: slovensko
   apiTokenRef:
     name: ckan-api-token

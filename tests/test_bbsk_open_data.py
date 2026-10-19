@@ -149,8 +149,8 @@ def test_an_area_is_keyed_by_the_code_the_statistical_cubes_carry(written):
     assert {e["location"]["value"]["type"] for e in written["obce"]} == {"Polygon", "MultiPolygon"}
     # One door and one type for both: `isPartOf` tells a district from a municipality (T-4523).
     parts = {name: {e["isPartOf"]["value"] for e in written[name]} for name in ("okresy", "obce")}
-    assert parts == {"okresy": {"https://data.dev.joinedcontext.com/dataset/bbsk-okresy-bbk-hranice-17725f"},
-                     "obce": {"https://data.dev.joinedcontext.com/dataset/bbsk-obce-bbk-hranice-ec7ac6"}}, parts
+    assert parts == {"okresy": {"https://opendata.dev.joinedcontext.com/dataset/bbsk-okresy-bbk-hranice-17725f"},
+                     "obce": {"https://opendata.dev.joinedcontext.com/dataset/bbsk-obce-bbk-hranice-ec7ac6"}}, parts
 
 
 @requires_docker

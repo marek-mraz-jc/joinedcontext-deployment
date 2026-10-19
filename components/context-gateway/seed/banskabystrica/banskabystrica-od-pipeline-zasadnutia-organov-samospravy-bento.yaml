@@ -1,5 +1,5 @@
 # The mapping of the od-zasadnutia-organov-samospravy pipeline, generated from the T-4254 mapping: one CouncilMeeting per row of
-# "Zasadnutia orgánov samosprávy" (https://data.dev.joinedcontext.com/dataset/bb-zasadnutia-organov-samospravy). Do not edit: change the mapping and run scripts/open-data/generate.py.
+# "Zasadnutia orgánov samosprávy" (https://opendata.dev.joinedcontext.com/dataset/bb-zasadnutia-organov-samospravy). Do not edit: change the mapping and run scripts/open-data/generate.py.
 
 pipeline:
   processors:
@@ -78,8 +78,8 @@ pipeline:
           "cZasadnutia": this."Č._zasadnutia".apply("integer"),
           "datumZasadnutia": this."Dátum_zasadnutia".apply("string"),
           "dataProvider": { "type": "Property", "value": "Mesto Banská Bystrica (CC BY 4.0)" },
-          "source": { "type": "Property", "value": "https://data.dev.joinedcontext.com/api/3/action/datastore_search?resource_id=93b1c198-87a6-4d71-920a-d777221b5035&limit=32000" },
-          "isPartOf": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bb-zasadnutia-organov-samospravy" }
+          "source": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/api/3/action/datastore_search?resource_id=93b1c198-87a6-4d71-920a-d777221b5035&limit=32000" },
+          "isPartOf": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/dataset/bb-zasadnutia-organov-samospravy" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.
     - archive:

@@ -96,7 +96,7 @@ def csp(conf, location):
 def test_each_page_carries_the_headers_that_keep_a_spec_harmless(dev):
     conf = one(dev, "ConfigMap", "viz-renderer")["data"]["default.conf"]
     host = csp(conf, "/")
-    assert "connect-src https://api.dev.joinedcontext.com https://data.dev.joinedcontext.com;" in host
+    assert "connect-src https://api.dev.joinedcontext.com https://opendata.dev.joinedcontext.com;" in host
     assert f"script-src https://{HOST};" in host and "frame-ancestors *" in host
     render = csp(conf, "/render.html")
     assert "connect-src 'none'" in render, "the frame that runs a spec calls no host"

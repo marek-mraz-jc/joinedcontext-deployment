@@ -875,6 +875,14 @@ if has_route ckan; then
 	fi
 	# The one path on the primary host that leads to the catalogue.
 	status 302 "/ckan on the primary host redirects to the catalogue" "$base/ckan"
+	# T-4679: the old host answers 301 to the same path and query on opendata.{domain}.
+	moved=$(curl -sS -o /dev/null -w '%{http_code} %{redirect_url}' --max-time 20 \
+		"https://data.${base#https://}/dataset/x?q=1" 2>/dev/null || echo curl-error)
+	if [ "$moved" = "301 https://opendata.${base#https://}/dataset/x?q=1" ]; then
+		ok "data.{domain} answers 301 to the same path on opendata.{domain}"
+	else
+		ko "data.{domain} does not redirect to opendata.{domain} with path and query (got: $moved)"
+	fi
 	# The publisher's token (T-0493): the catalogue's api-token Job keeps one of the site
 	# administrator in `ckan-api-token`. Listing that user's tokens is refused to anonymous, and
 	# CKAN reads a token signed with a key it no longer has as anonymous, so a 200 here is a

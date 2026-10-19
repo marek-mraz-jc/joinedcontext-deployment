@@ -7,7 +7,7 @@ metadata:
   namespace: praha
   title: { cs: "Hlavní město Praha", en: "City of Prague" }
 spec:
-  url: https://data.dev.joinedcontext.com
+  url: https://opendata.dev.joinedcontext.com
   organizationDefault: praha
   apiTokenRef:
     name: ckan-api-token

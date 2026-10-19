@@ -1,5 +1,5 @@
 # The mapping of the od-obyvatelstvo-podla-materinskeho-jazyk-2 pipeline, generated from the T-4254 mapping: one KeyPerformanceIndicator per row of
-# "Obyvateľstvo podľa materinského jazyka (2011), okresy" (https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-materinskeho-jazyka-2011-okresy-590643). Do not edit: change the mapping and run scripts/open-data/generate.py.
+# "Obyvateľstvo podľa materinského jazyka (2011), okresy" (https://opendata.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-materinskeho-jazyka-2011-okresy-590643). Do not edit: change the mapping and run scripts/open-data/generate.py.
 
 pipeline:
   processors:
@@ -126,7 +126,7 @@ pipeline:
           "location": if this.geometry.or(null) == null { null } else { { "type": "GeoProperty", "value": this.geometry } },
           "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj (CC BY-SA 4.0)" },
           "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_materinsk%C3%BD_jazyk_okres/FeatureServer/0/query?where=1%3D1&outFields=DOW,FACC,IDN3,NM3,IDN2,NM2,VYMERA,NUTS1,NUTS1_CODE,NUTS2,NUTS2_CODE,NUTS3,NUTS3_CODE,LAU1,LAU1_CODE,Okres,%C4%8C%C3%ADslo_okresu,Rok,Trvalo_b%C3%BDvaj%C3%BAce_obyvate%C4%BEstvo_sp,slovensk%C3%BD,ma%C4%8Farsk%C3%BD,r%C3%B3msky,rus%C3%ADnsky,ukrajinsk%C3%BD,%C4%8Desk%C3%BD,nemeck%C3%BD,po%C4%BEsk%C3%BD,chorv%C3%A1tsky,jidi%C5%A1,bulharsk%C3%BD,ostatn%C3%A9,nezisten%C3%BD,slovensk%C3%BD2,ma%C4%8Farsk%C3%BD3,r%C3%B3msky4,rus%C3%ADnsky5,ukrajinsk%C3%BD6,%C4%8Desk%C3%BD7,nemeck%C3%BD8,po%C4%BEsk%C3%BD9,chorv%C3%A1tsky10,jidi%C5%A111,bulharsk%C3%BD12,ostatn%C3%A913,nezisten%C3%BD14&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },
-          "isPartOf": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-materinskeho-jazyka-2011-okresy-590643" }
+          "isPartOf": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-materinskeho-jazyka-2011-okresy-590643" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.
     - archive:

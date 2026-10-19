@@ -39,7 +39,7 @@ NATIONAL = {"slovensko/ovzdusie-sk"}
 ORIGINS = [
     "https://assistant.dev.joinedcontext.com",
     "https://dev.joinedcontext.com",
-    "https://data.dev.joinedcontext.com",
+    "https://opendata.dev.joinedcontext.com",
     # The standalone assistant's own host (T-4694): its page asks the chat from there.
     "https://ai.dev.joinedcontext.com",
 ]
@@ -92,7 +92,7 @@ def test_every_source_is_public_and_the_bodys_own(public_id):
         if source["source"] == "ckan":
             assert source["organizations"] == [organization], name
             instance = manifests("CkanInstance", project)[source["ckanInstanceRef"]]["spec"]
-            assert instance["url"] == "https://data.dev.joinedcontext.com"
+            assert instance["url"] == "https://opendata.dev.joinedcontext.com"
 
 
 @pytest.mark.parametrize("public_id", BODIES)
@@ -253,7 +253,7 @@ def test_the_catalogue_frames_the_general_assistant_on_every_page():
     catalogue = yaml.safe_load(values.read_text())["ckan"]["catalogue"]
     assert catalogue["assistant"] == "data" and "assistantByOrganization" not in catalogue
     assert general()["spec"]["publicId"] == "data"
-    assert general()["spec"]["allowedOrigins"] == ["https://data.dev.joinedcontext.com"]
+    assert general()["spec"]["allowedOrigins"] == ["https://opendata.dev.joinedcontext.com"]
 
 
 # The CKAN organization each body publishes under, and the project its Endpoints live in.
@@ -319,7 +319,7 @@ def test_the_general_assistant_knows_the_whole_catalogue_and_each_publishers_own
     portal = manifests("KnowledgeSource", "bbsk")["portal"]["spec"]
     assert portal["source"] == "ckan" and "organizations" not in portal
     instance = manifests("CkanInstance", "bbsk")[portal["ckanInstanceRef"]]["spec"]
-    assert instance["url"] == "https://data.dev.joinedcontext.com"
+    assert instance["url"] == "https://opendata.dev.joinedcontext.com"
     assert portal["schedule"] == "50 3 * * *"  # after charts/ckan's harvest at 03:23
     assert {f"{p}/catalogue" for p in spec["scope"]["projects"]} | {"portal", "catalogue"} | \
         {"web"} | {f"{p}/web" for p in spec["scope"]["projects"] if p != "slovensko"} == set(spec["sources"])
