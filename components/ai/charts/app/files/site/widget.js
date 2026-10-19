@@ -441,7 +441,7 @@ var JCRender = (function () {
 
   /**
    * A `data` event as a table to show (T-4138, T-4140): its columns and at most 50 rows of
-   * text, and its dataset and download links when they are http(s); null when nothing to show.
+   * text, and its dataset, download and GeoJSON links when they are http(s); null when nothing to show.
    */
   // Headers a person reads (T-4650): the common Smart Data Models attributes and types in the
   // widget's languages; any other key is spelt out from its camelCase.
@@ -614,7 +614,8 @@ var JCRender = (function () {
       numeric: numeric,
       rows: rows,
       dataset: safeUrl(data.dataset),
-      download: safeUrl(data.download)
+      download: safeUrl(data.download),
+      geojson: safeUrl(data.geojson)
     };
   }
 
@@ -820,6 +821,10 @@ var JCRender = (function () {
       var at = typeof t.at === "string" && stamp(t.at);
       if (askedAt) turn.askedAt = askedAt.datetime;
       if (at) turn.at = at.datetime;
+      var opened = t.opened && dataset([{ url: t.opened.url, title: t.opened.title }]);
+      if (opened) turn.opened = opened;
+      var more = followups({ questions: t.followups });
+      if (more.length > 0) turn.followups = more;
       return turn;
     });
     var asked = Number.isInteger(kept.asked) && kept.asked >= 0 ? kept.asked : 0;
@@ -1031,6 +1036,56 @@ var JCRender = (function () {
    * framed by (its `frame-ancestors`); a target that is not the parent drops the message.
    * Anything but an http(s) origin is left out.
    */
+  // A catalogue dataset page (T-4685): https (http on this machine alone), a path
+  // /dataset/{name}, nothing after it.
+  var DATASET = /^(?:https:\/\/[a-z0-9.-]+|http:\/\/(?:localhost|127\.0\.0\.1))(?::\d{1,5})?\/dataset\/[a-z0-9_-]{2,100}\/?$/i;
+
+  /**
+   * The one dataset an answer is about (T-4685, API/05 §1.6.1): `{ url, title }` when the
+   * citations link exactly one catalogue dataset page and the first citation is it; null for a
+   * broad answer that links several, or none.
+   */
+  function dataset(citations) {
+    var pages = (Array.isArray(citations) ? citations : []).filter(function (c) {
+      return c && typeof c.url === "string" && DATASET.test(c.url.split(/[?#]/)[0]);
+    }).map(function (c) {
+      return { url: c.url.split(/[?#]/)[0].replace(/\/$/, ""), title: typeof c.title === "string" ? c.title.slice(0, 200) : "" };
+    });
+    if (pages.length === 0 || !citations[0] || typeof citations[0].url !== "string") return null;
+    var first = pages[0];
+    var one = pages.every(function (p) { return p.url === first.url; });
+    return one && citations[0].url.split(/[?#]/)[0].replace(/\/$/, "") === first.url ? first : null;
+  }
+
+  /**
+   * The panel's view kept across a page change (T-4685) read back from `raw`: the draft, its
+   * caret, the scroll, whether the input had focus and an answer still streaming; null when it
+   * is not of that shape.
+   */
+  function view(raw) {
+    var v;
+    try { v = JSON.parse(raw); } catch (e) { return null; }
+    if (!v || typeof v !== "object") return null;
+    var draft = typeof v.draft === "string" ? v.draft.slice(0, 4000) : "";
+    var out = {
+      draft: draft,
+      caret: Number.isInteger(v.caret) ? Math.max(0, Math.min(v.caret, draft.length)) : draft.length,
+      scroll: typeof v.scroll === "number" && isFinite(v.scroll) && v.scroll >= 0 ? v.scroll : null,
+      focused: v.focused === true,
+      streaming: null
+    };
+    var s = v.streaming;
+    if (s && typeof s === "object" && typeof s.turn === "string" && UUID.test(s.turn) &&
+        typeof s.conversation === "string" && UUID.test(s.conversation) &&
+        Number.isInteger(s.number) && s.number >= 1 && typeof s.question === "string") {
+      out.streaming = { turn: s.turn, conversation: s.conversation, number: s.number,
+        question: s.question.slice(0, 4000), text: typeof s.text === "string" ? s.text.slice(0, 64000) : "" };
+      var askedAt = typeof s.askedAt === "string" && stamp(s.askedAt);
+      if (askedAt) out.streaming.askedAt = askedAt.datetime;
+    }
+    return out;
+  }
+
   function closeTargets(ancestors, frameOrigins) {
     var origin = function (value) {
       var match = /^(https?:\/\/[a-z0-9.-]+(?::\d{1,5})?)\/?$/i.exec(String(value || ""));
@@ -1101,7 +1156,7 @@ var JCRender = (function () {
   }
 
   return {
-    closeTargets: closeTargets, connector: connector,
+    closeTargets: closeTargets, connector: connector, dataset: dataset, view: view,
     monogram: monogram, sourceCount: sourceCount, badges: badges, chosen: chosen, asksLanguage: asksLanguage, ordered: ordered,
     followups: followups, restore: restore, remember: remember, stamp: stamp,
     lasting: lasting, recalled: recalled, privacyLines: privacyLines,
@@ -1135,7 +1190,7 @@ if (typeof module !== "undefined") module.exports = JCRender;
       hello: "Dobrý deň! Na čo sa chcete opýtať?",
       reading: "Čítam", live: "Živé dáta", source: "Zdroj", allRows: "Zobraziť všetky v datasete", fresh: "Nová konverzácia", expand: "Celá obrazovka", collapse: "Zmenšiť", copy: "Kopírovať",
       copied: "Odpoveď je skopírovaná.", close: "Zavrieť", suggested: "Môžete sa opýtať",
-      dataset: "Otvoriť dataset", download: "Stiahnuť údaje", language: "Jazyk",
+      dataset: "Otvoriť dataset", download: "Stiahnuť údaje", geojson: "Stiahnuť GeoJSON", language: "Jazyk",
       table: "Údaje, z ktorých asistent odpovedá", up: "Užitočná odpoveď", down: "Neužitočná odpoveď",
       missing: "Čo chýbalo? (nepovinné)", sendNote: "Odoslať", skip: "Preskočiť",
       thanks: "Ďakujeme za hodnotenie.", more: "Ďalšie otázky", contact: "Kontakt", map: "Zobraziť na mape", steps: "Postup", retry: "Skúsiť znova",
@@ -1154,7 +1209,9 @@ if (typeof module !== "undefined") module.exports = JCRender;
       keptNone: "Obsah konverzácií neuchovávame.",
       askHeading: "Otázky k osobným údajom",
       askData: "Chcete sa opýtať na spracúvanie údajov alebo požiadať o prístup, opravu či vymazanie? Napíšte nám:",
-      documents: "Informácie o ochrane osobných údajov", moreInfo: "Viac", lessInfo: "Menej", tabTable: "Tabuľka", tabMap: "Mapa", chart: "Graf" },
+      documents: "Informácie o ochrane osobných údajov", moreInfo: "Viac", lessInfo: "Menej", tabTable: "Tabuľka", tabMap: "Mapa", chart: "Graf",
+      dock: "Pripnúť k okraju", undock: "Plávajúce okno", follow: "Otvárať dataset automaticky",
+      opened: "Otvoril som dataset {title}", back: "Späť", changed: "Stránka zmenená na dataset {title}" },
     en: { ask: "Type your question", send: "Send", stop: "Stop", stopped: "You stopped the answer.",
       tools: "Live data the assistant may read", thinking: "Looking it up…",
       script: "Script the assistant ran", failed: "The answer could not be loaded. Try again.",
@@ -1164,7 +1221,7 @@ if (typeof module !== "undefined") module.exports = JCRender;
       hello: "Hello! What would you like to ask?",
       reading: "Reading", live: "Live data", source: "Source", allRows: "Show all in the dataset", fresh: "New conversation", expand: "Full screen", collapse: "Collapse", copy: "Copy",
       copied: "The answer is copied.", close: "Close", suggested: "You can ask",
-      dataset: "Open the dataset", download: "Download the data", language: "Language",
+      dataset: "Open the dataset", download: "Download the data", geojson: "Download GeoJSON", language: "Language",
       table: "The data the assistant answers from", up: "Helpful answer", down: "Not helpful",
       missing: "What was missing? (optional)", sendNote: "Send", skip: "Skip",
       thanks: "Thank you for the feedback.", more: "More questions", contact: "Contact", map: "Show on the map", steps: "Steps", retry: "Try again",
@@ -1183,7 +1240,9 @@ if (typeof module !== "undefined") module.exports = JCRender;
       keptNone: "We keep no conversation content.",
       askHeading: "Questions about personal data",
       askData: "Want to ask about how data is processed, or request access, correction or erasure? Write to us:",
-      documents: "Privacy information", moreInfo: "More", lessInfo: "Less", tabTable: "Table", tabMap: "Map", chart: "Chart" },
+      documents: "Privacy information", moreInfo: "More", lessInfo: "Less", tabTable: "Table", tabMap: "Map", chart: "Chart",
+      dock: "Dock to the side", undock: "Floating window", follow: "Open the dataset automatically",
+      opened: "I opened the dataset {title}", back: "Back", changed: "The page changed to the dataset {title}" },
     cs: { ask: "Napište otázku", send: "Odeslat", stop: "Zastavit", stopped: "Odpověď jste zastavili.",
       tools: "Živá data, která smí asistent číst", thinking: "Hledám…",
       script: "Skript, který asistent spustil", failed: "Odpověď se nepodařilo načíst. Zkuste to znovu.",
@@ -1193,7 +1252,7 @@ if (typeof module !== "undefined") module.exports = JCRender;
       hello: "Dobrý den! Na co se chcete zeptat?",
       reading: "Čtu", live: "Živá data", source: "Zdroj", allRows: "Zobrazit všechny v datové sadě", fresh: "Nová konverzace", expand: "Celá obrazovka", collapse: "Zmenšit", copy: "Kopírovat",
       copied: "Odpověď je zkopírovaná.", close: "Zavřít", suggested: "Můžete se zeptat",
-      dataset: "Otevřít dataset", download: "Stáhnout data", language: "Jazyk",
+      dataset: "Otevřít dataset", download: "Stáhnout data", geojson: "Stáhnout GeoJSON", language: "Jazyk",
       table: "Data, ze kterých asistent odpovídá", up: "Užitečná odpověď", down: "Neužitečná odpověď",
       missing: "Co chybělo? (nepovinné)", sendNote: "Odeslat", skip: "Přeskočit",
       thanks: "Děkujeme za hodnocení.", more: "Další otázky", contact: "Kontakt", map: "Zobrazit na mapě", steps: "Postup", retry: "Zkusit znovu",
@@ -1212,7 +1271,9 @@ if (typeof module !== "undefined") module.exports = JCRender;
       keptNone: "Obsah konverzací neuchováváme.",
       askHeading: "Dotazy k osobním údajům",
       askData: "Chcete se zeptat na zpracování údajů nebo požádat o přístup, opravu či smazání? Napište nám:",
-      documents: "Informace o ochraně osobních údajů", moreInfo: "Více", lessInfo: "Méně", tabTable: "Tabulka", tabMap: "Mapa", chart: "Graf" }
+      documents: "Informace o ochraně osobních údajů", moreInfo: "Více", lessInfo: "Méně", tabTable: "Tabulka", tabMap: "Mapa", chart: "Graf",
+      dock: "Připnout k okraji", undock: "Plovoucí okno", follow: "Otevírat dataset automaticky",
+      opened: "Otevřel jsem dataset {title}", back: "Zpět", changed: "Stránka změněna na dataset {title}" }
   };
   // Each language's name in itself, for the toggle's labels and the `ask` mode's chooser (T-4283).
   var NATIVE = { sk: "Slovensky", en: "English", cs: "Česky" };
@@ -1278,6 +1339,8 @@ if (typeof module !== "undefined") module.exports = JCRender;
     close: "M6 6l12 12M18 6L6 18",
     expand: "M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5",
     collapse: "M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5",
+    dock: "M4 4h16v16H4zM14 4v16",
+    undock: "M4 4h16v16H4zM11 11h6v6h-6z",
     chat: "M4 5h16v11H9l-5 4z",
     plug: "M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4",
     send: "M5 12h13M12 5l7 7-7 7",
@@ -1362,11 +1425,29 @@ if (typeof module !== "undefined") module.exports = JCRender;
   var fresh = iconButton("jc-fresh", "fresh", "fresh");
   actions.appendChild(fresh);
   // Embedded, the panel grows to the full window and back (T-4658); on a phone it already fills
-  // the screen, so the button is left out there.
+  // the screen, so the button is left out there. A host that frames it with `dock=1` (the
+  // catalogue, T-4685) docks it to its right edge on a wide screen, docked by default.
   var size = null;
+  var dock = null;
+  var placed = null;
+  try { placed = sessionStorage.getItem("jc-chat-size:" + config.publicId); } catch (e) { /* panel */ }
+  var docking = embedded && params.get("dock") === "1" && screen.width >= 1100;
   var expanded = false;
+  var docked = docking && placed !== "panel";
+  if (docking) {
+    dock = el("button", "jc-icon-button jc-dock");
+    dock.type = "button";
+    dock.appendChild(icon(docked ? "undock" : "dock"));
+    var docks = function () { return w[docked ? "undock" : "dock"]; };
+    words(dock, docks, "ariaLabel");
+    words(dock, docks, "title");
+    dock.setAttribute("aria-pressed", String(docked));
+    dock.addEventListener("click", function () { place(docked ? "panel" : "dock"); });
+    actions.appendChild(dock);
+  }
   if (embedded && screen.width >= 600) {
-    try { expanded = sessionStorage.getItem("jc-chat-size:" + config.publicId) === "full"; } catch (e) { /* panel */ }
+    expanded = placed === "full";
+    if (dock) dock.hidden = expanded;
     size = el("button", "jc-icon-button jc-size");
     size.type = "button";
     size.appendChild(icon(expanded ? "collapse" : "expand"));
@@ -1466,8 +1547,28 @@ if (typeof module !== "undefined") module.exports = JCRender;
   rememberLabel.appendChild(rememberBox);
   rememberLabel.appendChild(words(el("span"), "remember"));
   var rememberHint = words(el("p", "jc-hint"), "rememberHint");
+  // On a docking host (T-4685): whether a done answer about one dataset opens it beside the
+  // panel; on by default, kept in this browser.
+  var FOLLOW = "jc-chat-follow:" + config.publicId;
+  var followLabel = el("label", "jc-remember");
+  var followBox = el("input");
+  followBox.type = "checkbox";
+  followBox.setAttribute("role", "switch");
+  followBox.checked = following();
+  followBox.addEventListener("change", function () {
+    try {
+      if (followBox.checked) localStorage.removeItem(FOLLOW);
+      else localStorage.setItem(FOLLOW, "off");
+    } catch (e) { /* this page only */ }
+  });
+  followLabel.appendChild(followBox);
+  followLabel.appendChild(words(el("span"), "follow"));
   var aboutClose = button("jc-about-close", "close");
-  [aboutTitle, aboutLead, rememberLabel, rememberHint, aboutBody, aboutClose].forEach(function (n) { about.appendChild(n); });
+  [aboutTitle, aboutLead, rememberLabel, rememberHint].concat(docking ? [followLabel] : [], [aboutBody, aboutClose])
+    .forEach(function (n) { about.appendChild(n); });
+  function following() {
+    try { return localStorage.getItem(FOLLOW) !== "off"; } catch (e) { return true; }
+  }
 
   var connect = el("dialog", "jc-about jc-connect");
   connect.setAttribute("aria-labelledby", "jc-connect-title");
@@ -1623,6 +1724,15 @@ if (typeof module !== "undefined") module.exports = JCRender;
   }
 
   // The empty chat: the greeting and the suggested questions, nothing else above the fold.
+  // Once asked, the greeting stays above the conversation and its suggestions go.
+  function greeted() {
+    if (!intro) return;
+    var list = intro.querySelector(".jc-suggest");
+    if (list) list.remove();
+    if (intro.children.length === 0) intro.remove();
+    intro = null;
+  }
+
   function welcome() {
     intro = el("li", "jc-intro");
     var hello = JCRender.greeting(config.greeting, config.languages, lang, w.hello);
@@ -2088,12 +2198,14 @@ if (typeof module !== "undefined") module.exports = JCRender;
     var drawn = plot(JCRender.chart(data));
     if (drawn) figure.appendChild(drawn);
     if (VIZ && data.map && typeof data.map === "object") mapTabs(figure, scroll, drawn, data);
-    if (shown.dataset || shown.download) {
+    if (shown.dataset || shown.download || shown.geojson) {
       var links = el("p", "jc-data-links");
       // More rows than the panel shows: the dataset holds them all (T-4682).
       var more = typeof data.total === "number" && data.total > shown.rows.length;
       if (shown.dataset) links.appendChild(link(shown.dataset, more ? w.allRows : w.dataset));
       if (shown.download) links.appendChild(link(shown.download, w.download));
+      // One area's own outline, as the Endpoint serves it (T-4697).
+      if (shown.geojson) links.appendChild(link(shown.geojson, w.geojson));
       figure.appendChild(links);
     }
     visual(item, figure);
@@ -2156,6 +2268,8 @@ if (typeof module !== "undefined") module.exports = JCRender;
       conversation = data.id;
       asked += 1;
       item.turn = asked;
+      // The turn a page change resumes (T-4685, API/05 §1.6.2).
+      if (typeof data.turn === "string") item.resumable = data.turn;
     } else if (name === "stage" && item.status) {
       (item.stages = item.stages || []).push(Object.assign({}, data, { ms: Date.now() - (item.startedMs || Date.now()) }));
       var line = JCRender.stage(data, lang);
@@ -2197,6 +2311,7 @@ if (typeof module !== "undefined") module.exports = JCRender;
       history.push({ role: "assistant", text: item.pending.slice(0, 4000) });
     } else if (name === "citations") {
       var cited = Array.isArray(data) ? data : [];
+      item.cited = cited;
       show(item, item.pending || "", cited, item.turn);
       var took = JCRender.steps(item.stages, lang);
       if (took) {
@@ -2211,6 +2326,12 @@ if (typeof module !== "undefined") module.exports = JCRender;
       item.pending = null;
     } else if (name === "followups") {
       chips(item, JCRender.followups(data));
+      // Kept with the answer, so a page change shows them again under the last one (T-4685).
+      var last = kept && kept.turns[kept.turns.length - 1];
+      if (last && last.turn === item.turn && conversation === kept.conversation) {
+        last.followups = JCRender.followups(data);
+        keep();
+      }
     } else if (name === "error") {
       fail(item, JCRender.trouble(data.status, data.title), data.detail);
     }
@@ -2286,6 +2407,25 @@ if (typeof module !== "undefined") module.exports = JCRender;
     var response = await post(held);
     // A token the service no longer knows (a restart, an hour gone) is earned again, once.
     if (response.status === 401) response = await post(await visitorToken(true));
+    await read(response, item);
+  }
+
+  // A resumed answer (T-4685): every event of the turn again, into an item whose text starts
+  // empty, so nothing shows twice and nothing is asked again.
+  async function replay(id, item, signal) {
+    var held = await visitorToken();
+    var response = await fetch("/api/v1/d/" + encodeURIComponent(config.publicId) + "/turns/" +
+      encodeURIComponent(id) + "/resume?after=0", {
+      headers: { Accept: "text/event-stream", "X-JC-Visitor": held.token },
+      credentials: "omit",
+      signal: signal
+    });
+    await read(response, item);
+  }
+
+  // The answer's events as they stream, then its final view and, when it is about one dataset,
+  // the host is asked to open it.
+  async function read(response, item) {
     if (!response.ok || !response.body) {
       var problem = await response.json().catch(function () { return {}; });
       fail(item, refusal(response.status, problem.title), problem.detail);
@@ -2297,9 +2437,9 @@ if (typeof module !== "undefined") module.exports = JCRender;
     for (;;) {
       var chunk = await reader.read();
       if (chunk.done) break;
-      var read = JCRender.events(buffer + decoder.decode(chunk.value, { stream: true }));
-      buffer = read.rest;
-      read.events.forEach(function (event) { handle(item, event.name, event.data); });
+      var parsed = JCRender.events(buffer + decoder.decode(chunk.value, { stream: true }));
+      buffer = parsed.rest;
+      parsed.events.forEach(function (event) { handle(item, event.name, event.data); });
     }
     if (item.pending !== null && item.pending !== undefined) {
       show(item, item.pending, [], item.turn);
@@ -2309,7 +2449,39 @@ if (typeof module !== "undefined") module.exports = JCRender;
       show(item, item.text, [], item.turn);
     }
     log.scrollTop = log.scrollHeight;
+    follow(item);
   }
+
+  // T-4685, API/05 §1.6.1: a done answer whose citations link one dataset, an empty input and
+  // the visitor's switch on; the host checks the rest and answers `jc-assistant-opened`.
+  var opening = null;
+  function follow(item) {
+    var target = docking && following() && input.value.trim() === "" ? JCRender.dataset(item.cited) : null;
+    if (!target) return;
+    opening = { item: item, target: target };
+    toParent({ type: "jc-assistant-dataset", url: target.url, title: target.title });
+  }
+  function openedLine(item, target) {
+    var name = function () { return target.title || target.url; };
+    var line = el("p", "jc-opened");
+    line.appendChild(words(el("span"), function () { return w.opened.replace("{title}", name()) + " · "; }));
+    var back = button("jc-more", "back");
+    back.addEventListener("click", function () { toParent({ type: "jc-assistant-back" }); });
+    line.appendChild(back);
+    item.appendChild(line);
+  }
+  window.addEventListener("message", function (event) {
+    var data = event.data || {};
+    if (!embedded || event.source !== window.parent || data.type !== "jc-assistant-opened" ||
+        !opening || data.url !== opening.target.url ||
+        JCRender.closeTargets(location.ancestorOrigins, config.frameOrigins).indexOf(event.origin) < 0) return;
+    var done = opening;
+    opening = null;
+    openedLine(done.item, done.target);
+    (kept ? kept.turns : []).forEach(function (t) { if (t.turn === done.item.turn) t.opened = done.target; });
+    keep();
+    announce.textContent = w.changed.replace("{title}", done.target.title || done.target.url);
+  });
 
   function settle() {
     busy = null;
@@ -2321,12 +2493,7 @@ if (typeof module !== "undefined") module.exports = JCRender;
   function submit(question) {
     question = String(question || "").trim();
     if (!question || busy) return;
-    if (intro) {
-      var list = intro.querySelector(".jc-suggest");
-      if (list) list.remove();
-      if (intro.children.length === 0) intro.remove();
-      intro = null;
-    }
+    greeted();
     Array.prototype.forEach.call(log.querySelectorAll(".jc-followups"), function (l) { l.remove(); });
     var mine = turn("jc-you", "you");
     mine.appendChild(el("p", "", question));
@@ -2342,11 +2509,18 @@ if (typeof module !== "undefined") module.exports = JCRender;
     item.status.setAttribute("role", "status");
     item.appendChild(item.status);
     item.startedMs = Date.now();
+    run(item, function (signal) { return ask(question, item, signal); });
+  }
+
+  // One answer at a time, `start` reading it; Stop keeps what arrived.
+  var live = null;
+  function run(item, start) {
     busy = new AbortController();
+    live = item;
     send.hidden = true;
     stop.hidden = false;
     var controller = busy;
-    ask(question, item, controller.signal).catch(function (error) {
+    start(controller.signal).catch(function (error) {
       if (controller.signal.aborted) {
         // What arrived stays; the visitor sees that they stopped it.
         if (item.status) item.status.remove();
@@ -2374,14 +2548,26 @@ if (typeof module !== "undefined") module.exports = JCRender;
     });
   }
 
-  // The launcher sizes the panel; the state lives in this tab's sessionStorage (T-4658).
+  // The launcher sizes the panel; the state lives in this tab's sessionStorage (T-4658):
+  // `full`, `dock` (T-4685) or `panel`. Collapsed, a docking host docks it again.
   function resize(full) {
-    expanded = full;
-    try { sessionStorage.setItem("jc-chat-size:" + config.publicId, full ? "full" : "panel"); } catch (e) { /* this open only */ }
-    size.replaceChild(icon(full ? "collapse" : "expand"), size.firstChild);
-    size.setAttribute("aria-pressed", String(full));
+    place(full ? "full" : docked ? "dock" : "panel");
+  }
+  function place(mode) {
+    expanded = mode === "full";
+    if (!expanded) docked = mode === "dock";
+    try { sessionStorage.setItem("jc-chat-size:" + config.publicId, mode); } catch (e) { /* this open only */ }
+    if (size) {
+      size.replaceChild(icon(expanded ? "collapse" : "expand"), size.firstChild);
+      size.setAttribute("aria-pressed", String(expanded));
+    }
+    if (dock) {
+      dock.replaceChild(icon(docked ? "undock" : "dock"), dock.firstChild);
+      dock.setAttribute("aria-pressed", String(docked));
+      dock.hidden = expanded;
+    }
     relabel(lang);
-    toParent({ type: "jc-assistant-size", size: full ? "full" : "panel" });
+    toParent({ type: "jc-assistant-size", size: mode });
   }
 
   form.addEventListener("submit", function (event) {
@@ -2420,20 +2606,25 @@ if (typeof module !== "undefined") module.exports = JCRender;
   });
 
   relabel(lang);
-  if (expanded) toParent({ type: "jc-assistant-size", size: "full" });
+  if (expanded || docking) toParent({ type: "jc-assistant-size", size: expanded ? "full" : docked ? "dock" : "panel" });
   // The conversation open before a page change on the host site, shown again as it was.
   kept = config.enabled === false ? null : kept0();
   if (kept && kept.turns.length > 0) {
     conversation = kept.conversation;
     asked = kept.asked;
+    // As the panel looked: the greeting above, no suggestions (T-4685).
     log.textContent = "";
-    intro = null;
-    kept.turns.forEach(function (t) {
+    welcome();
+    greeted();
+    kept.turns.forEach(function (t, i) {
       var mine = turn("jc-you", "you");
       mine.appendChild(el("p", "", t.question));
       var time = when(t.askedAt);
       if (time) mine.appendChild(time);
-      show(turn("jc-bot", "assistant"), t.text, t.citations, t.turn, t.at || null);
+      var answered = turn("jc-bot", "assistant");
+      show(answered, t.text, t.citations, t.turn, t.at || null);
+      if (t.opened) openedLine(answered, t.opened);
+      if (t.followups && i === kept.turns.length - 1) chips(answered, t.followups);
       history.push({ role: "user", text: t.question });
       history.push({ role: "assistant", text: t.text });
     });
@@ -2447,6 +2638,55 @@ if (typeof module !== "undefined") module.exports = JCRender;
     log.appendChild(paused);
     form.hidden = true;
     fresh.hidden = true;
+  }
+  // The draft, its caret, the scroll and an answer still streaming, as they were before a page
+  // change on the host site (T-4685, API/05 §1.6.1); the answer goes on through its resume.
+  var VIEW = "jc-chat-view:" + config.publicId;
+  var view = null;
+  try {
+    view = JCRender.view(sessionStorage.getItem(VIEW));
+    sessionStorage.removeItem(VIEW);
+  } catch (e) { /* storage off */ }
+  if (view && config.enabled !== false) {
+    var resumed = view.streaming;
+    if (resumed && (!kept || kept.conversation === resumed.conversation)) resume(resumed);
+    input.value = view.draft;
+    grow();
+    input.setSelectionRange(view.caret, view.caret);
+    if (view.scroll !== null) log.scrollTop = view.scroll;
+    if (view.focused) input.focus();
+  }
+  window.addEventListener("pagehide", function () {
+    var now = { draft: input.value, caret: input.selectionStart, scroll: log.scrollTop, focused: document.activeElement === input };
+    if (busy && live && live.resumable && conversation) {
+      now.streaming = { turn: live.resumable, conversation: conversation, number: live.turn, question: live.question,
+        text: live.text || "", askedAt: live.askedAt };
+    }
+    try { sessionStorage.setItem(VIEW, JSON.stringify(now)); } catch (e) { /* not kept */ }
+  });
+  function resume(s) {
+    greeted();
+    conversation = s.conversation;
+    asked = Math.max(asked, s.number);
+    var mine = turn("jc-you", "you");
+    mine.appendChild(el("p", "", s.question));
+    var time = when(s.askedAt);
+    if (time) mine.appendChild(time);
+    history.push({ role: "user", text: s.question });
+    var item = turn("jc-bot", "assistant");
+    item.question = s.question;
+    item.askedAt = s.askedAt;
+    item.turn = s.number;
+    item.resumable = s.turn;
+    item.startedMs = Date.now();
+    if (s.text) {
+      item.streaming = el("div", "jc-answer jc-streaming");
+      item.appendChild(item.streaming);
+      item.text = s.text;
+      paint(item);
+    }
+    item.text = "";
+    run(item, function (signal) { return replay(s.turn, item, signal); });
   }
   if (config.enabled) visitorToken().catch(function () {});
   if (JCRender.asksLanguage({ mode: mode, offered: offered, stored: stored, kept: Boolean(kept && kept.turns.length > 0),
