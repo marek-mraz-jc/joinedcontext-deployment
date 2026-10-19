@@ -32,14 +32,23 @@ jobs:
           n=0
           while read -r image; do
             n=$((n + 1))
-            # ECR Public answers TOOMANYREQUESTS (data limit) to shared runners now and then:
-            # the same digest again after a pause, never a skipped image (runs 39202611676, 39231220139).
+            # ECR Public answers TOOMANYREQUESTS (data limit) to shared runners for many minutes
+            # (runs 39202611676, 39231220139, 39237147977). Its docker/library is Docker's official
+            # images, so a retry reads the same digest from mirror.gcr.io and the report keeps the
+            # pinned name: the same bytes scanned, never a skipped image.
             for try in 1 2 3; do
+              src=$image
+              if [ "$try" != 1 ]; then
+                case $image in ecr-public.aws.com/docker/library/*) src="mirror.gcr.io/library/${image#ecr-public.aws.com/docker/library/}" ;; esac
+              fi
               trivy image --quiet --scanners vuln --severity CRITICAL,HIGH --format json \
-                --output "reports/${n}.json" "$image" && break
+                --output "reports/${n}.json" "$src" && break
               [ "$try" = 3 ] && exit 1
-              sleep 120
+              sleep 30
             done
+            if [ "$src" != "$image" ]; then
+              jq --arg name "$image" '.ArtifactName = $name' "reports/${n}.json" > report.tmp && mv report.tmp "reports/${n}.json"
+            fi
           done < pinned.txt
       - name: CISA known exploited vulnerabilities
         # CISA's own copy on GitHub: its web site answers 403 to a script.
