@@ -1,11 +1,11 @@
 {% extends "page.html" %}
 
 {# "Use it in your AI assistant" (T-4585, T-4628, T-4634, T-4643), for a citizen or a clerk: one
-   card per assistant whose app takes our connector, ChatGPT, Claude, Grok and Gemini once it is
-   on, each its logo, its name, one link to that assistant's connector store (the whole card) and
+   card per assistant whose app takes our connector, ChatGPT, Claude, Grok and Gemini behind its flag (off since
+   T-4735), each its logo, its name, one link to that assistant's connector store (the whole card) and
    one to our guide. The address the stores ask for stands once under the
-   cards, as text a person without script selects by hand. Everything for developers (the Gemini
-   CLI, the editors, any MCP client) folds away at the end, closed. #}
+   cards, as text a person without script selects by hand. Everything for developers (Claude Code,
+   the editors, any MCP client) folds away at the end, closed. #}
 {% set page = h.jc_assistants() %}
 
 {% block subtitle %}{{ h.jc_t('assistants') }}{% endblock %}
@@ -51,7 +51,7 @@
       {% endif %}
       <details class="jc-developers">
         <summary>{{ h.jc_t('for_developers') }}</summary>
-        {% snippet 'snippets/jc_mcp_install.html', editors_only=True, live=True, gemini=page.gemini %}
+        {% snippet 'snippets/jc_mcp_install.html', editors_only=True, live=True %}
       </details>
     {% else %}
       <p class="jc-empty">{{ h.jc_t('coming_soon') }}</p>

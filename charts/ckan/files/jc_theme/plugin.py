@@ -394,11 +394,10 @@ STRINGS = {
     # The "Use it in your AI assistant" page and its button (T-4585). The stores are the ones each
     # maker documents, read 2026-10-18: ChatGPT at chatgpt.com/plugins
     # (developers.openai.com/apps-sdk/deploy/connect-chatgpt), Claude at Customize > Connectors
-    # (support.claude.com article 11175166), Gemini CLI's `gemini mcp add --transport http`
-    # (geminicli.com/docs/tools/mcp-server). The Gemini and Grok apps take no connectors (Grok
+    # (support.claude.com article 11175166). The Grok app takes no connectors (Grok
     # remote MCP only through the xAI API, docs.x.ai), so their cards link nowhere.
     "assistants": {"en": "Use it in your AI assistant", "sk": "Použite v AI asistentovi", "cs": "Použijte v AI asistentovi", "de": "In Ihrem KI-Assistenten nutzen"},
-    "assistants_label": {"en": "Use the data in ChatGPT, Claude, Gemini or any MCP client", "sk": "Použite dáta v ChatGPT, Claude, Gemini alebo v akomkoľvek klientovi MCP", "cs": "Použijte data v ChatGPT, Claude, Gemini nebo v libovolném klientovi MCP", "de": "Die Daten in ChatGPT, Claude, Gemini oder jedem MCP-Client nutzen"},
+    "assistants_label": {"en": "Use the data in ChatGPT, Claude or any MCP client", "sk": "Použite dáta v ChatGPT, Claude alebo v akomkoľvek klientovi MCP", "cs": "Použijte data v ChatGPT, Claude nebo v libovolném klientovi MCP", "de": "Die Daten in ChatGPT, Claude oder jedem MCP-Client nutzen"},
     "assistants_lead": {
         "en": "Add {name} to the assistant you already use, and ask it about this catalogue's open data. One address covers every dataset; no account is needed.",
         "sk": "Pridajte {name} do asistenta, ktorého už používate, a pýtajte sa ho na otvorené dáta tohto katalógu. Jedna adresa pokrýva všetky datasety; účet netreba.",
@@ -439,7 +438,6 @@ STRINGS = {
                       "cs": "Ověřeno dne {date} podle nápovědy {maker}:", "de": "Geprüft am {date} anhand der Hilfe von {maker}:"},
     "guide_back": {"en": "All assistants", "sk": "Všetci asistenti", "cs": "Všichni asistenti", "de": "Alle Assistenten"},
     "for_developers": {"en": "For developers", "sk": "Pre vývojárov", "cs": "Pro vývojáře", "de": "Für Entwickler"},
-    "gemini_1": {"en": "In Gemini CLI: run this command in a terminal, then start gemini.", "sk": "V Gemini CLI: spustite tento príkaz v termináli a potom gemini.", "cs": "V Gemini CLI: spusťte tento příkaz v terminálu a pak gemini.", "de": "In der Gemini CLI: Führen Sie diesen Befehl im Terminal aus und starten Sie dann gemini."},
     "any_client": {"en": "Any MCP client", "sk": "Akýkoľvek MCP klient", "cs": "Jakýkoli MCP klient", "de": "Jeder MCP-Client"},
     "section_api_lead": {"en": "For applications and AI assistants that query the data live.", "sk": "Pre aplikácie a AI asistentov, ktorí sa na dáta pýtajú naživo.", "cs": "Pro aplikace a AI asistenty, kteří se na data ptají živě.", "de": "Für Anwendungen und KI-Assistenten, die die Daten live abfragen."},
     "section_schema": {"en": "Data model", "sk": "Dátový model", "cs": "Datový model", "de": "Datenmodell"},
@@ -1801,8 +1799,8 @@ def jc_assistants():
     """The "Use it in your AI assistant" page (T-4585, T-4628, T-4634, T-4643): a card per assistant
     whose app takes our connector, ChatGPT, Claude, Grok, then Gemini once its flag is on, each its
     logo, its name, a link to its connector store and one to our guide; None without the hub.
-    Gemini's app connects only through OAuth, so its card waits for the gateway's (T-4631); the
-    Gemini CLI command stays in the developers' fold. The hub's address stands once under the
+    Gemini's card stays off: the owner removed the option (T-4735), so neither its card nor the
+    Gemini CLI command shows. The hub's address stands once under the
     cards, because our connector is listed in no store yet.
 
     `logo` is the card's mark in its brand colours, a template beside this file."""
@@ -1825,7 +1823,6 @@ def jc_assistants():
         "mcp": mcp,
         "cards": cards,
         "sources": jc_assistant_sources(),
-        "gemini": "gemini mcp add --transport http %s %s" % (MCP_NAME, mcp["url"]),
     }
 
 
