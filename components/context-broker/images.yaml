@@ -78,5 +78,11 @@ context-broker:
     # Antares dev aa47684 (train 20261018-2259, T-4672 over 8e2a24c): LinkML slots carry rank and
     # title, which the T-4672 seeds already write; 8e2a24c closed the LinkML and OGC surface of
     # every view whose model has them (prod smoke 81/8, 2026-10-19). linkml-model only, no migration.
-    tag: 'aa47684'
-    digest: 'sha256:4e91ae0c39409bcaeffdbfe28732119c99349e497970c7883aecb41afeeb7ea5'
+    # Antares dev deceaf1 (train 0825-1, T-4669 T-4721 and 27 commits over aa47684), the first ship
+    # image (dev-3, ship.yml@refs/heads/dev): migration 0011 adds attr_instances.version (constant
+    # default) and provenance and the attr_versions table; 0012 adds entity_types with its triggers,
+    # two indexes on entities (first type, partial GIN over multi-typed) and one backfill scan.
+    # New keys ANTARES_HISTORY_BACKFILL (default off), ANTARES_PROVENANCE_FROM (unset: channel api)
+    # and ANTARES_SUMMARY_* (MCP summarize budgets, defaults in code).
+    tag: 'dev-3'
+    digest: 'sha256:8684a03901cb6b7402d45263423fd11b94dd9eaf5bf48d75e3e6c8d1cd0bb9a7'
