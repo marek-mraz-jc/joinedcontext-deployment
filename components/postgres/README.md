@@ -108,6 +108,6 @@ Without `backups.enabled` there is no archive, and the drill records `no-backup`
 backup to drill") and creates nothing. Run it by hand with
 `kubectl create job --from=cronjob/postgres-cluster-dr-drill dr-drill-now -n <namespace>`.
 
-The job's Role holds every verb but `create` on clusters to the source and the copy, and
+The job's Role reads the source Cluster and nothing more, creates and deletes only the copy, and holds
 `pods/exec` to their instances: counting rows with the instances' own psql needs no database
 password in the job.

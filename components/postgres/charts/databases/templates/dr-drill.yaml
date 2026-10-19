@@ -20,7 +20,7 @@ automountServiceAccountToken: false
 ---
 {{- /*
   `create` cannot be narrowed to a name, so the job can create a Cluster of any name here; every
-  other verb is held to the source and the copy. `pods/exec` reaches the source's instances
+  other verb is held to a name: the source is only read, the copy is waited on and deleted. `pods/exec` reaches the source's instances
   (their names are `{cluster}-{n}`) and the copy's one, to count rows with the local psql.
 */}}
 apiVersion: rbac.authorization.k8s.io/v1
@@ -34,10 +34,15 @@ rules:
   - apiGroups: [postgresql.cnpg.io]
     resources: [clusters]
     verbs: [create]
+  # The source is only read (its current primary); only the copy is waited on and deleted.
   - apiGroups: [postgresql.cnpg.io]
     resources: [clusters]
-    resourceNames: [{{ $.Values.cluster.name }}, {{ $drill }}]
-    verbs: [get, patch, delete, watch, list]
+    resourceNames: [{{ $.Values.cluster.name }}]
+    verbs: [get]
+  - apiGroups: [postgresql.cnpg.io]
+    resources: [clusters]
+    resourceNames: [{{ $drill }}]
+    verbs: [get, delete, watch, list]
   - apiGroups: ['']
     resources: [pods/exec]
     resourceNames:

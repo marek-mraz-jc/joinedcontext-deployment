@@ -55,7 +55,7 @@ def run(docs: list[dict], tmp_path: Path, rows: dict[str, tuple[str, str]], mem_
         #!/bin/sh
         d={tmp_path}
         case "$1" in
-          apply) echo "apply" >> $d/log ;;
+          create) echo "create" >> $d/log ;;
           delete) echo "delete $3" >> $d/log ;;
           wait) {"exit 0" if ready else "exit 1"} ;;
           get) echo postgres-cluster-1 ;;
@@ -97,7 +97,7 @@ def test_a_full_restore_passes_with_rto_rpo_and_counts_read_from_the_clusters(pr
     assert result["result"] == "passed"
     assert result["rpoSeconds"] == "42" and result["rtoSeconds"].isdigit()
     assert result["detail"] == "portal=990/1000 keycloak=50/50"
-    assert log[0] == "delete postgres-cluster-drill" and "apply" in log
+    assert log[0] == "delete postgres-cluster-drill" and "create" in log
     assert log[-1] == "delete postgres-cluster-drill", "the copy is deleted when the drill ends"
 
 
@@ -128,6 +128,11 @@ def test_the_job_is_held_to_its_own_names(production):
     role = one(production, "Role", NAME)
     named = [r for r in role["rules"] if r["verbs"] != ["create"] or r["resources"] != ["clusters"]]
     assert all(r.get("resourceNames") for r in named), "every verb but create is held to names"
+    clusters = [r for r in role["rules"] if r["resources"] == ["clusters"] and r.get("resourceNames")]
+    on_source = {v for r in clusters if "postgres-cluster" in r["resourceNames"] for v in r["verbs"]}
+    assert on_source == {"get"}, f"the source Cluster is only read, got {on_source}"
+    on_copy = {v for r in clusters if "postgres-cluster-drill" in r["resourceNames"] for v in r["verbs"]}
+    assert "delete" in on_copy and "patch" not in on_copy
     exec_names = next(r for r in role["rules"] if r["resources"] == ["pods/exec"])["resourceNames"]
     assert "postgres-cluster-drill-1" in exec_names and "postgres-cluster-1" in exec_names
     assert not [d for d in production if d.get("kind") in ("ClusterRole", "ClusterRoleBinding")

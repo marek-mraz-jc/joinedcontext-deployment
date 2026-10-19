@@ -53,7 +53,7 @@ kubectl delete cluster "$DRILL" --ignore-not-found --wait=true >/dev/null
 trap 'kubectl delete cluster "$DRILL" --ignore-not-found --wait=false >/dev/null' EXIT
 
 restore_start=$(date +%s)
-if ! kubectl apply -f /opt/drill/cluster.yaml >/dev/null; then
+if ! kubectl create -f /opt/drill/cluster.yaml >/dev/null; then
   detail="the throwaway cluster was refused"
   finish
 fi
