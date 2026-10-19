@@ -79,6 +79,7 @@ def world(packages, public, rows=10, datastore_total=10, overrides=None):
             base + f"ogc/features/collections/{t}/items?limit=1": answer(body={"features": [{}]}, ctype=GEO),
             base + "schema/index.json": answer(body={"models": [{"types": [t], "version": 1}]}),
             base + "schema/v1/model.schema.json": answer(body=model(t)),
+            base + "ngsi-ld/v1/types": answer(body={"typeList": [t]}),
             base + "file.csv?" + urllib.parse.urlencode({"type": t, "limit": 1}): answer(body=b"id,type\nurn:1,T\n", ctype=CSV),
         })
         if "OGCFEAT" in data.formats:  # CKAN's /map/ is a 404 without one (jc_map_page)
@@ -87,6 +88,8 @@ def world(packages, public, rows=10, datastore_total=10, overrides=None):
         for ds in data.datastore:
             answers[f"{CKAN}/api/3/action/datastore_search?resource_id={ds}&limit=0"] = answer(
                 body={"result": {"total": datastore_total}})
+            answers[f"{CKAN}/api/3/action/resource_view_list?id={ds}"] = answer(
+                body={"result": [{"view_type": "datatables_view"}]})
     answers.update(overrides or {})
     return answers
 
@@ -268,9 +271,9 @@ def test_the_slow_checks_rotate_least_recently_checked_first(tmp_path):
         writer.writerow({"dataset": "d0", **{c: "ok" for c in smoke.COLUMNS}})
         writer.writerow({"dataset": "d1", **{c: "ok" for c in smoke.COLUMNS},
                          **{c: "not this run (last: 20261019T030000Z ko)" for c in smoke.ROTATING}})
-    # 2 inventory + 3 × 6 core shared nothing (the data check's JSON Schema the sixth): 20, then
-    # room for one dataset's 4 slow checks.
-    rows, fake = table(world(packages, ["e0", "e1", "e2"]), tmp_path=tmp_path, budget=24)
+    # 2 inventory + 3 × 8 core requests shared nothing (types, the JSON Schema and the views the
+    # last three): 26, then room for one dataset's 4 slow checks.
+    rows, fake = table(world(packages, ["e0", "e1", "e2"]), tmp_path=tmp_path, budget=30)
     assert smoke.verdict(rows["d2"]["csv"]) == "ok", "never checked goes first"
     assert rows["d1"]["csv"] == "not this run (last: 20261019T030000Z ko)", "the carried time stays"
     assert rows["d0"]["csv"] == "not this run (last: 20261019T050000Z ok)"
@@ -552,3 +555,74 @@ def test_the_sample_reads_twenty_rows_of_the_dataset_s_own_is_part_of():
     data = smoke.Dataset("x", type="Road", part_of="https://x/dataset/three")
     assert smoke.sample_query(data) == {"type": "Road", "limit": 20, "q": 'isPartOf=="https://x/dataset/three"'}
 
+
+
+# The owner's addendum (T-4743, 17:10Z): relationships, every served type modelled, CKAN views.
+
+def test_a_dangling_relationship_is_a_ko_with_its_attribute():
+    poi = "urn:ngsi-ld:PointOfInterest:hel.fi:helsinki:servicemap-41960"
+    beach = row("Organization", 1, refPointOfInterest={"type": "Relationship", "object": poi})
+    p = package("schools", "o1", "Organization")
+    data = smoke.describe(p, DOMAIN)
+    sample = f"{API}/o1/ngsi-ld/v1/entities?" + urllib.parse.urlencode(smoke.sample_query(data))
+    lookup = f"{API}/o1/ngsi-ld/v1/entities?" + urllib.parse.urlencode({"type": "PointOfInterest", "id": poi, "limit": 1})
+    schema = model("Organization", "refPointOfInterest")
+    over = {sample: answer(body=[beach], ctype=JSON), f"{API}/o1/schema/v1/model.schema.json": answer(body=schema)}
+    rows, _ = table(world([p], ["o1"], overrides={**over, lookup: answer(body=[], ctype=JSON)}))
+    assert rows["schools"]["data"] == "ko: urn:ngsi-ld:Organization:1 refPointOfInterest points to no entity"
+    rows, _ = table(world([p], ["o1"], overrides={**over, lookup: answer(body=[{"id": poi}], ctype=JSON)}))
+    assert rows["schools"]["data"] == "ok: 1 rows, inside SK032"
+
+
+def test_a_relationship_that_is_no_urn_is_a_ko():
+    odd = row("Organization", 1, refPublisher={"type": "Relationship", "object": "bbsk"})
+    cell = data_cell([odd], model("Organization", "refPublisher"))
+    assert cell["data"] == "ko: urn:ngsi-ld:Organization:1 refPublisher is no NGSI-LD URN"
+    many = row("Organization", 2, refArea={"type": "Relationship", "object": [
+        "urn:ngsi-ld:AdministrativeArea:a", "urn:ngsi-ld:AdministrativeArea:b"]})
+    assert smoke.relationships([many]) == {"AdministrativeArea": {
+        "urn:ngsi-ld:AdministrativeArea:a": ("urn:ngsi-ld:Organization:2", "refArea"),
+        "urn:ngsi-ld:AdministrativeArea:b": ("urn:ngsi-ld:Organization:2", "refArea")}}
+
+
+def test_a_type_the_endpoint_serves_without_a_model_is_a_ko():
+    p = package("air", "a1", "AirQualityObserved")
+    rows, _ = table(world([p], ["a1"], overrides={
+        f"{API}/a1/ngsi-ld/v1/types": answer(body={"typeList": ["AirQualityObserved", "Device"]})}))
+    assert rows["air"]["model"] == "ko: served without a model: Device"
+
+
+def series_dataset(views):
+    p = package("beach", "w1", "WaterQualityObserved")
+    data = smoke.describe(p, DOMAIN)
+    observed = row("WaterQualityObserved", 1, temperature={"type": "Property", "value": 17.5,
+                                                           "observedAt": "2026-10-19T06:00:00Z"})
+    rows, _ = table(world([p], ["w1"], overrides={
+        f"{API}/w1/ngsi-ld/v1/entities?" + urllib.parse.urlencode(smoke.sample_query(data)): answer(body=[observed], ctype=JSON),
+        f"{API}/w1/schema/v1/model.schema.json": answer(body=model("WaterQualityObserved", "temperature")),
+        f"{CKAN}/api/3/action/resource_view_list?id=ds-beach": answer(body={"result": views})}))
+    return rows["beach"]["views"]
+
+
+def test_a_water_quality_dataset_without_a_chart_view_is_a_ko():
+    assert series_dataset([{"view_type": "datatables_view"}]) == "ko: a numeric value over time and no chart view"
+    assert series_dataset([{"view_type": "datatables_view"}, {"view_type": "jc_visualization"}]) == "ok: table, chart"
+
+
+def test_every_datastore_table_needs_a_table_view():
+    assert series_dataset([{"view_type": "jc_visualization"}]) == "ko: no table view on 1 of 1 datastore tables"
+
+
+def test_a_register_without_a_value_over_time_needs_only_the_table():
+    rows, _ = table(world([package("schools", "o1", "Organization")], ["o1"]))
+    assert rows["schools"]["views"] == "ok: table; no chart: no numeric value over time"
+    nothing, _ = table(world([package("schools", "o1", "Organization", datastore="")], ["o1"]))
+    assert nothing["schools"]["views"] == "skip: no datastore table"
+
+
+def test_a_count_without_a_time_is_no_series():
+    assert not smoke.series([row("Organization", pupils={"type": "Property", "value": 300})])
+    assert smoke.series([row("KeyPerformanceIndicator", kpiValue={"type": "Property", "value": 4.2},
+                             dateObserved={"type": "Property", "value": "2026-01-01"})])
+    assert not smoke.series([row("Organization", open={"type": "Property", "value": True,
+                                                       "observedAt": "2026-10-19T06:00:00Z"})])
