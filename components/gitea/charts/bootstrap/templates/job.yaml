@@ -774,6 +774,10 @@ spec:
               #        paths, before anything is written. The gateway would refuse them at
               #        start-up; refusing here says which two files, while there is still a
               #        person reading the output.
+              # blob_id <file>: what `git hash-object` answers for it.
+              blob_id() {
+                { printf 'blob %s\000' "$(wc -c < "$1" | tr -d ' ')"; cat "$1"; } | sha1sum | cut -c1-40
+              }
               # seed_repo <repository> <folder>: steps 5 to 5c for one repository and its seed.
               seed_repo() {
               SEED_REPO=$1; SEED_FROM=$2
@@ -806,33 +810,57 @@ spec:
                 exit 1
               fi
 
+              # What the branch holds: one `path sha` line per blob, every page of the tree.
+              : > $WORK/seed-remote
+              page=1
+              while :; do
+                status=$(portal_code GET "/api/v1/repos/$ORG/$SEED_REPO/git/trees/$BRANCH?recursive=true&per_page=1000&page=$page")
+                [ "$status" = 200 ] || { echo "reading the tree of $ORG/$SEED_REPO failed: $status" >&2; cat $WORK/body >&2; exit 1; }
+                sed 's/},{/}\n{/g' $WORK/body | grep '"type": *"blob"' \
+                  | sed -n 's/.*"path": *"\([^"]*\)".*"sha": *"\([0-9a-f]\{40\}\)".*/\1 \2/p' >> $WORK/seed-remote
+                grep -q '"truncated": *true' $WORK/body || break
+                page=$((page + 1))
+              done
+              sort -o $WORK/seed-remote $WORK/seed-remote
+              # held <path>: the blob id the branch holds at the path, or nothing.
+              held() {
+                awk -v p="$1" '$1 == p {print $2}' $WORK/seed-remote
+              }
+
+              # One commit for the whole seed (T-4709): a commit per file cost the forge a clone
+              # each, and 1,600 of them outran helm's 900 s on a fresh cluster. Each operation
+              # names the blob it replaces, so a file changed under the Job fails the commit
+              # instead of being overwritten. The body goes through a file: one argument is
+              # capped at 128 KiB, and a generated model of the open data is larger (T-4255).
+              printf '{"branch":"%s","message":"seed: converge on the platform seed","files":[' "$BRANCH" > $WORK/request
+              changes=0
+              # change <operation> <path> [<sha>] [<file>]: one operation of the commit.
+              change() {
+                [ "$changes" -eq 0 ] || printf ',' >> $WORK/request
+                printf '{"operation":"%s","path":"%s"' "$1" "$2" >> $WORK/request
+                [ -z "${3:-}" ] || printf ',"sha":"%s"' "$3" >> $WORK/request
+                if [ -n "${4:-}" ]; then
+                  printf ',"content":"' >> $WORK/request
+                  base64 < "$4" | tr -d '\n' >> $WORK/request
+                  printf '"' >> $WORK/request
+                fi
+                printf '}' >> $WORK/request
+                changes=$((changes + 1))
+              }
+
               seeded=0
               for f in "$SEED_FROM"/* "$SEED_FROM"/.[!.]*; do
                 [ -f "$f" ] || continue
                 path=$(basename "$f" | sed 's|__|/|g')
-                encoded=$(base64 < "$f" | tr -d '\n')
-                status=$(portal_code GET "/api/v1/repos/$ORG/$SEED_REPO/contents/$path?ref=$BRANCH")
-                case "$status" in
-                  200)
-                    current=$(grep -o '"content": *"[^"]*"' $WORK/body | head -1 | sed 's/^"content": *"//; s/"$//; s/\\n//g')
-                    [ "$current" = "$encoded" ] && continue
-                    sha=$(grep -o '"sha": *"[0-9a-f]\{40\}"' $WORK/body | head -1 | grep -o '[0-9a-f]\{40\}')
-                    # The body goes through a file: one argument is capped at 128 KiB, and a
-                    # generated model of the open data is larger than that (T-4255).
-                    printf '{"branch":"%s","sha":"%s","content":"%s","message":"seed: update %s"}' \
-                      "$BRANCH" "$sha" "$encoded" "$path" > $WORK/request
-                    status=$(portal_code PUT "/api/v1/repos/$ORG/$SEED_REPO/contents/$path" -d @$WORK/request)
-                    [ "$status" = 200 ] || { echo "updating $path failed: $status" >&2; cat $WORK/body >&2; exit 1; }
-                    echo "seed: updated $path" ;;
-                  404)
-                    printf '{"branch":"%s","content":"%s","message":"seed: add %s"}' \
-                      "$BRANCH" "$encoded" "$path" > $WORK/request
-                    status=$(portal_code POST "/api/v1/repos/$ORG/$SEED_REPO/contents/$path" -d @$WORK/request)
-                    [ "$status" = 201 ] || { echo "creating $path failed: $status" >&2; cat $WORK/body >&2; exit 1; }
-                    echo "seed: created $path" ;;
-                  *)
-                    echo "the forge answered $status for $path" >&2; cat $WORK/body >&2; exit 1 ;;
-                esac
+                sha=$(held "$path")
+                [ "$sha" = "$(blob_id "$f")" ] && continue
+                if [ -n "$sha" ]; then
+                  change update "$path" "$sha" "$f"
+                  echo "seed: updated $path"
+                else
+                  change create "$path" "" "$f"
+                  echo "seed: created $path"
+                fi
                 seeded=$((seeded + 1))
               done
               echo "seed: $seeded file(s) written, the rest already matched"
@@ -840,12 +868,10 @@ spec:
               # 5b. What the seed owned last run and does not own now. `comm -23` is the paths
               #     that are in the committed record and not in this run's list; a path that is
               #     already gone is not an error, because this step is repeated on every apply.
-              manifest_sha=
               : > $WORK/seed-previous
               status=$(portal_code GET "/api/v1/repos/$ORG/$SEED_REPO/contents/$SEED_MANIFEST?ref=$BRANCH")
               case "$status" in
                 200)
-                  manifest_sha=$(grep -o '"sha": *"[0-9a-f]\{40\}"' $WORK/body | head -1 | grep -o '[0-9a-f]\{40\}')
                   grep -o '"content": *"[^"]*"' $WORK/body | head -1 \
                     | sed 's/^"content": *"//; s/"$//; s/\\n//g' | base64 -d > $WORK/seed-previous
                   sort -o $WORK/seed-previous $WORK/seed-previous ;;
@@ -859,32 +885,30 @@ spec:
               comm -23 $WORK/seed-previous $WORK/seed-paths > $WORK/seed-gone
               while IFS= read -r gone; do
                 [ -n "$gone" ] || continue
-                status=$(portal_code GET "/api/v1/repos/$ORG/$SEED_REPO/contents/$gone?ref=$BRANCH")
-                if [ "$status" = 404 ]; then
+                sha=$(held "$gone")
+                if [ -z "$sha" ]; then
                   echo "seed: $gone is already gone"
                   continue
                 fi
-                [ "$status" = 200 ] || { echo "the forge answered $status for $gone" >&2; cat $WORK/body >&2; exit 1; }
-                sha=$(grep -o '"sha": *"[0-9a-f]\{40\}"' $WORK/body | head -1 | grep -o '[0-9a-f]\{40\}')
-                status=$(portal_code DELETE "/api/v1/repos/$ORG/$SEED_REPO/contents/$gone" \
-                  -d "{\"branch\":\"$BRANCH\",\"sha\":\"$sha\",\"message\":\"seed: remove $gone, which the seed no longer owns\"}")
-                [ "$status" = 200 ] || { echo "removing $gone failed: $status" >&2; cat $WORK/body >&2; exit 1; }
+                change delete "$gone" "$sha"
                 echo "seed: removed $gone"
                 removed=$((removed + 1))
               done < $WORK/seed-gone
               echo "seed: $removed file(s) removed"
 
-              # 5c. The record for the next run, written last: a run that died before here
-              #     leaves the older record, and the next one does the same work again.
-              encoded=$(base64 < $WORK/seed-paths | tr -d '\n')
-              if [ -n "$manifest_sha" ]; then
-                status=$(portal_code PUT "/api/v1/repos/$ORG/$SEED_REPO/contents/$SEED_MANIFEST" \
-                  -d "{\"branch\":\"$BRANCH\",\"sha\":\"$manifest_sha\",\"content\":\"$encoded\",\"message\":\"seed: update the record of what the seed owns\"}")
-                [ "$status" = 200 ] || { echo "updating $SEED_MANIFEST failed: $status" >&2; cat $WORK/body >&2; exit 1; }
-              else
-                status=$(portal_code POST "/api/v1/repos/$ORG/$SEED_REPO/contents/$SEED_MANIFEST" \
-                  -d "{\"branch\":\"$BRANCH\",\"content\":\"$encoded\",\"message\":\"seed: record what the seed owns\"}")
-                [ "$status" = 201 ] || { echo "writing $SEED_MANIFEST failed: $status" >&2; cat $WORK/body >&2; exit 1; }
+              # 5c. The record for the next run, in the same commit as what it records: a run
+              #     that died before the commit leaves the older record and the older files
+              #     together, and the next one does the same work again.
+              sha=$(held "$SEED_MANIFEST")
+              if [ "$sha" != "$(blob_id $WORK/seed-paths)" ]; then
+                if [ -n "$sha" ]; then change update "$SEED_MANIFEST" "$sha" $WORK/seed-paths
+                else change create "$SEED_MANIFEST" "" $WORK/seed-paths; fi
+              fi
+              printf ']}' >> $WORK/request
+              if [ "$changes" -gt 0 ]; then
+                status=$(portal_code POST "/api/v1/repos/$ORG/$SEED_REPO/contents" -d @$WORK/request)
+                [ "$status" = 201 ] || { echo "committing the seed to $ORG/$SEED_REPO failed: $status" >&2; cat $WORK/body >&2; exit 1; }
+                echo "seed: $changes change(s) committed to $ORG/$SEED_REPO in one commit"
               fi
               }
 
@@ -946,10 +970,6 @@ spec:
               #    manifest is committed into the project with `source.git` pinned to the
               #    repository's head, which is the commit the build lane builds (AP-80).
               APPS_DIR=${APPS_DIR:-/apps}
-              # blob_id <file>: what `git hash-object` answers for it.
-              blob_id() {
-                { printf 'blob %s\000' "$(wc -c < "$1" | tr -d ' ')"; cat "$1"; } | sha1sum | cut -c1-40
-              }
               for dir in "$APPS_DIR"/*/; do
                 [ -d "$dir" ] || continue
                 app=$(basename "$dir")
