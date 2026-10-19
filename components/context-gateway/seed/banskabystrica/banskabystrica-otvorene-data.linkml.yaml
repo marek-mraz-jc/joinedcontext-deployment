@@ -21,6 +21,11 @@ slots:
     description: Who published the row, with the credit its licence asks for.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Poskytovateľ údajov
+        cs: Poskytovatel dat
+        en: Data provider
+        de: Datenanbieter
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
     slot_uri: https://smartdatamodels.org/dataProvider
   source:
@@ -28,6 +33,11 @@ slots:
     range: uri
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Zdroj
+        cs: Zdroj
+        en: Source
+        de: Quelle
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
     slot_uri: https://smartdatamodels.org/source
   isPartOf:
@@ -35,17 +45,26 @@ slots:
     range: uri
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dataset
+        cs: Datová sada
+        en: Dataset
+        de: Datensatz
   addressArea:
     description: The source column `Časť_obce`.
     multivalued: true
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Časť obce
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
     slot_uri: https://smartdatamodels.org/dataModel.CPSV-AP/addressArea
   akcia:
     description: The source column `Akcia`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Akcia
   cOID:
     description: The source column `CO_ID`.
     range: integer
@@ -56,10 +75,14 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Č. zasadnutia
   cenaCelkom:
     description: The source column `Cena_celkom`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Cena celkom
   content:
     description: The source column `content`.
     annotations:
@@ -77,18 +100,26 @@ slots:
     description: The source column `Dátum_podpisu`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dátum podpisu
   datumVystavenia:
     description: The source column `Dátum_vystavenia`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dátum vystavenia
   datumZasadnutia:
     description: The source column `Dátum_zasadnutia`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dátum zasadnutia
   datumZverejnenia:
     description: The source column `Dátum_zverejnenia`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dátum zverejnenia
   datumplatnosti:
     description: The source column `datumplatnosti`.
     range: datetime
@@ -108,26 +139,38 @@ slots:
     description: The source column `Deň`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Deň
   dodavatel:
     description: The source column `Dodávateľ`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dodávateľ
   druh:
     description: The source column `Druh`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Druh
   iCO:
     description: The source column `IČO`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: IČO
   iCOOrganizacie:
     description: The source column `IČO_organizácie`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: IČO organizácie
   iCOZiadatela:
     description: The source column `IČO_žiadateľa`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: IČO žiadateľa
   iD:
     description: The source column `ID`.
     range: float
@@ -164,6 +207,8 @@ slots:
     description: The source column `Mena`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Mena
   modifiedGmt:
     description: The source column `modified_gmt`.
     range: datetime
@@ -180,16 +225,22 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Narodených
   narodenychM:
     description: The source column `Narodených_M`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Narodených M
   narodenychZ:
     description: The source column `Narodených_Ž`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Narodených Ž
   oBECID:
     description: The source column `OBEC_ID`.
     range: integer
@@ -220,52 +271,74 @@ slots:
     description: The source column `Objednávka_spolu`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Objednávka spolu
   odstahovanych:
     description: The source column `Odsťahovaných`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Odsťahovaných
   odstahovanychM:
     description: The source column `Odsťahovaných_M`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Odsťahovaných M
   odstahovanychZ:
     description: The source column `Odsťahovaných_Ž`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Odsťahovaných Ž
   organSamospravy:
     description: The source column `Orgán_samosprávy`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Orgán samosprávy
   orientC:
     description: The source column `Orient._č.`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Orient. č.
   pocet:
     description: The source column `Počet`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Počet
   pocetMuzov:
     description: The source column `Počet_mužov`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Počet mužov
   pocetObcanovVDanomVeku:
     description: The source column `Počet_občanov_v_danom_veku`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Počet občanov v danom veku
   pocetZien:
     description: The source column `Počet_žien`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Počet žien
   pohlavie:
     description: The source column `Pohlavie`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Pohlavie
   popisobjektu:
     description: The source column `popisobjektu`.
     annotations:
@@ -282,16 +355,22 @@ slots:
     multivalued: true
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Obec
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
     slot_uri: https://smartdatamodels.org/dataModel.CPSV-AP/postName
   pozadovaneProstriedky:
     description: The source column `Požadované_prostriedky`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Požadované prostriedky
   predmet:
     description: The source column `Predmet`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Predmet
   prevazujicipovrch:
     description: The source column `prevazujicipovrch`.
     range: integer
@@ -301,34 +380,48 @@ slots:
     description: The source column `Prírastok`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Prírastok
   prirastokMuzi:
     description: The source column `Prírastok_muži`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Prírastok muži
   prirastokZeny:
     description: The source column `Prírastok_ženy`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Prírastok ženy
   pristahovanych:
     description: The source column `Prisťahovaných`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Prisťahovaných
   pristahovanychM:
     description: The source column `Prisťahovaných_M`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Prisťahovaných M
   rok:
     description: The source column `Rok`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rok
   rokDotacie:
     description: The source column `Rok_dotácie`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rok dotácie
   sCHRANKY:
     description: The source column `SCHRANKY`.
     range: integer
@@ -350,6 +443,8 @@ slots:
     description: The source column `Súp._č.`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súp. č.
   tYPBUDOVY:
     description: The source column `TYP_BUDOVY`.
     range: integer
@@ -359,17 +454,23 @@ slots:
     description: The source column `Text_objednávky`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Text objednávky
   thoroughfare:
     description: The source column `Ulica`.
     multivalued: true
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ulica
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
     slot_uri: https://smartdatamodels.org/dataModel.CPSV-AP/thoroughfare
   typ:
     description: The source column `Typ`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Typ
   typudrzovanezelene:
     description: The source column `typudrzovanezelene`.
     range: integer
@@ -384,14 +485,20 @@ slots:
     description: The source column `Úbytok`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Úbytok
   ubytokMuzi:
     description: The source column `Úbytok_muži`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Úbytok muži
   ubytokZeny:
     description: The source column `Úbytok_ženy`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Úbytok ženy
   url:
     description: The source column `link`.
     range: uri
@@ -407,6 +514,8 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Vek
   vrstva:
     description: The source column `vrstva`.
     annotations:
@@ -424,29 +533,41 @@ slots:
     description: The source column `Žiadateľ`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Žiadateľ
   zmluvneStrany:
     description: The source column `Zmluvné_strany`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Zmluvné strany
   zmluvneStranySUdajomICO:
     description: The source column `Zmluvné_strany_s_údajom_IČO`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Zmluvné strany s údajom IČO
   zomrelych:
     description: The source column `Zomrelých`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Zomrelých
   zomrelychM:
     description: The source column `Zomrelých_M`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Zomrelých M
   zomrelychZ:
     description: The source column `Zomrelých_Ž`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Zomrelých Ž
 classes:
   Address:
     class_uri: https://smartdatamodels.org/dataModel.CPSV-AP/Address
