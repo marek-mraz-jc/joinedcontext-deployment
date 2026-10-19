@@ -116,7 +116,7 @@ data:
         {{- end }}
       resources:
         requests: { cpu: 100m, memory: 512Mi }
-        limits: { memory: 1Gi }
+        limits: { cpu: "1", memory: 1Gi }
       bootstrap:
         recovery:
           source: origin
@@ -205,7 +205,8 @@ spec:
                   value: /tmp
               resources:
                 requests: { cpu: 10m, memory: 32Mi }
-                limits: { memory: 128Mi }
+                # The production policy require-resources asks every container for a CPU limit.
+                limits: { cpu: 200m, memory: 128Mi }
               volumeMounts:
                 - name: script
                   mountPath: /opt/drill
