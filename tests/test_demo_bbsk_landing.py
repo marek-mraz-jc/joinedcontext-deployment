@@ -1,8 +1,10 @@
 """T-4740: the BBSK demo's host serves a landing page with the demo assistant docked, not a CKAN.
 
-The page is static: files from demos/bbsk/chart/files/landing/ and the catalogue theme's dock
-scripts, on the platform's pinned nginx. It says DEMO in its ribbon, title and footer, keeps search
-engines out, carries no coat of arms or third-party file, and frames only the demo assistant.
+The page is static: a snapshot of the www.bbsk.sk home page (owner 2026-10-19T12:55Z: its texts and
+layout, no logo, photos as colour blocks, links to the real pages) with the assistant, its six
+questions, the MCP block and the AI notice added, plus the catalogue theme's dock scripts, on the
+platform's pinned nginx. It says DEMO in its ribbon, title and footer, keeps search engines out,
+loads no file of another host and frames only the demo assistant.
 """
 
 import shutil
@@ -22,8 +24,7 @@ pytestmark = pytest.mark.xdist_group("docker-demo-bbsk-landing")
 
 ROOT = Path(__file__).resolve().parent.parent
 THEME = ROOT / "charts/ckan/files/jc_theme"
-RIBBON = {"index.html": "DEMO · ukážka od joinedcontext, nie oficiálna stránka BBSK",
-          "en.html": "DEMO · a demo by joinedcontext, not BBSK's official site"}
+RIBBON = {"index.html": "DEMO · ukážka od joinedcontext, nie oficiálna stránka BBSK"}
 
 
 @pytest.fixture(scope="module", params=sorted(HOSTS))
@@ -41,7 +42,7 @@ class Page(HTMLParser):
 
     def __init__(self):
         super().__init__()
-        self.loads, self.frames, self.meta, self.text = [], [], {}, []
+        self.loads, self.frames, self.meta, self.text, self.links = [], [], {}, [], []
 
     def handle_starttag(self, tag, attrs):
         a = dict(attrs)
@@ -53,6 +54,8 @@ class Page(HTMLParser):
             self.loads.append(a.get("src") or a.get("data") or "")
         elif tag == "iframe":
             self.frames.append(a["src"])
+        elif tag == "a":
+            self.links.append(a)
         elif tag == "meta" and "name" in a:
             self.meta[a["name"]] = a["content"]
 
@@ -78,7 +81,7 @@ def test_the_page_is_static_on_the_pinned_nginx_and_closed_but_for_the_edge(land
     assert policy["ingress"][0]["ports"] == [{"protocol": "TCP", "port": 8080}]
 
 
-def test_both_pages_say_demo_keep_search_engines_out_and_load_nothing_third_party(landing):
+def test_the_page_says_demo_keeps_search_engines_out_and_loads_nothing_third_party(landing):
     _, domain, _, site, _ = landing
     for name, ribbon in RIBBON.items():
         page = parse(site[name])
@@ -99,7 +102,7 @@ def test_both_pages_say_demo_keep_search_engines_out_and_load_nothing_third_part
 def test_the_six_cards_are_the_demo_assistants_own_questions(landing):
     _, _, _, site, _ = landing
     seed = yaml.safe_load((ROOT / "components/context-gateway/seed/bbsk/bbsk-assistant-demo.yaml").read_text())
-    for name, lang in (("index.html", "sk"), ("en.html", "en")):
+    for name, lang in (("index.html", "sk"),):
         cards = [part.split("</strong>")[0] for part in site[name].split('<button type="button" data-ask><span class="head">')[1:]]
         cards = [card.split("<strong>")[1] for card in cards]
         assert cards == seed["spec"]["suggestions"][lang], name
@@ -179,13 +182,25 @@ def test_the_served_page_answers_with_noindex_and_nothing_else_is_served(served)
     assert status == 200 and "text/html" in headers["Content-Type"] and RIBBON["index.html"] in body
     assert headers["X-Robots-Tag"] == "noindex, nofollow" and "frame-ancestors 'none'" in headers["Content-Security-Policy"]
     assert "Set-Cookie" not in headers
-    status, _, body = fetch(served + "/en/")
-    assert status == 200 and RIBBON["en.html"] in body
-    # A relative redirect, so the edge's https host stays in the address.
-    status, headers, _ = fetch(served + "/en")
-    assert status == 301 and headers["Location"] == "/en/"
     for path in ("/landing.css", "/landing.js", "/jc-dock.js", "/jc-assistant.js"):
         assert fetch(served + path)[0] == 200, path
-    for path in ("/index.html", "/en.html", "/default.conf", "/.git", "/admin", "/api/3/action/package_list"):
+    for path in ("/index.html", "/en/", "/default.conf", "/.git", "/admin", "/api/3/action/package_list"):
         assert fetch(served + path)[0] == 404, path
     assert fetch(served + "/", "POST")[0] == 403
+
+
+def test_the_snapshot_keeps_bbsk_sks_texts_links_to_its_pages_and_shows_no_logo(landing):
+    _, _, _, site, _ = landing
+    page = parse(site["index.html"])
+    text = " ".join(page.text)
+    # The home page's own sections and texts, as fetched on 2026-10-19.
+    for words in ("O kraji", "Aktuality", "Dôležité", "Služby", "Sociálne služby", "Kalendár", "Možno hľadáte",
+                  "Viac o BBSK", "O stránke", "Námestie SNP 23"):
+        assert words in text, words
+    # Their links go to the real pages, never to a copy here.
+    theirs = [a for a in page.links if a.get("href", "").startswith("https://www.bbsk.sk")]
+    assert len(theirs) > 50 and all(a.get("rel") == "noopener" for a in theirs)
+    assert all(a.get("href", "").startswith(("https://", "#")) for a in page.links), "no relative link to a page this host lacks"
+    # Ours is marked as ours, and the name stands where the logo was.
+    assert text.count("DEMO · pridané joinedcontext") == 2
+    assert "Banskobystrický samosprávny kraj · DEMO" in text
