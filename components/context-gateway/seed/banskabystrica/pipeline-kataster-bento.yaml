@@ -30,7 +30,14 @@ pipeline:
         }
         # 30 pages of 1,000: the largest area of the city has 19,773 parcels.
         let pages = 30
-        root = $zones.keys().sort().map_each(code -> range(0, $pages, 1).map_each(page -> { "code": code, "name": $zones.get(code), "start": page * 1000, "pages": $pages })).flatten()
+        # A run writes one third of the pages, so it ends inside the Portal's 15 min run limit:
+        # 14 pages of parcels with outlines took the whole limit on dev (T-4697). The three runs
+        # of a Sunday (02:41, 10:41, 18:41) fall in three different 8 h slots of the day and so
+        # write the three thirds; JC_KATASTER_THIRD (0, 1 or 2) names one by hand.
+        let thirds = 3
+        let third = env("JC_KATASTER_THIRD").or("").number().catch((timestamp_unix() / 28800).floor() % $thirds)
+        let size = ($pages / $thirds).ceil()
+        root = $zones.keys().sort().map_each(code -> range($third * $size, [($third + 1) * $size, $pages].min(), 1).map_each(page -> { "code": code, "name": $zones.get(code), "start": page * 1000, "pages": $pages })).flatten()
     - unarchive:
         format: json_array
     - mapping: |

@@ -55,7 +55,7 @@ def page() -> dict:
     return json.loads(PAGE.read_text())
 
 
-def kataster(first: dict | None = None, status: int = 200) -> subprocess.CompletedProcess:
+def kataster(first: dict | None = None, status: int = 200, third: str | None = "0") -> subprocess.CompletedProcess:
     Stand.first = (status, json.dumps(page() if first is None else first).encode())
     Stand.asked = []
     server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Stand)
@@ -72,6 +72,7 @@ def kataster(first: dict | None = None, status: int = 200) -> subprocess.Complet
         }
         return subprocess.run(
             ["docker", "run", "--rm", "--network", "host", "-e", f"JC_SPACE={SPACE}",
+             *(["-e", f"JC_KATASTER_THIRD={third}"] if third is not None else []),
              "-e", f"CONFIG={json.dumps(config)}", "--entrypoint", "sh",
              BENTO, "-c", 'printf "%s" "$CONFIG" > /tmp/c.json && exec /bento -c /tmp/c.json'],
             capture_output=True, timeout=180,
@@ -128,11 +129,28 @@ def test_only_the_parcels_own_slots_are_kept_and_no_owner(parcels):
 
 
 @requires_docker
-def test_one_area_is_asked_for_page_by_page_by_its_code():
+def test_one_area_is_asked_for_page_by_page_by_its_code_a_third_of_the_pages_a_run():
     assert len(written(kataster())) == 4
     assert {q["filter"] for q in Stand.asked} == {"nationalCadastralReference LIKE '801062_%'"}
-    assert sorted(int(q["startIndex"]) for q in Stand.asked) == [n * 1000 for n in range(30)]
     assert all(q["limit"] == "1000" and q["filter-lang"] == "cql-text" for q in Stand.asked)
+    # The three thirds together ask every page once: a run fits the Portal's 15 min limit.
+    asked = []
+    for third in ("0", "1", "2"):
+        kataster(third=third)
+        pages = sorted(int(q["startIndex"]) for q in Stand.asked)
+        assert len(pages) == 10, (third, pages)
+        asked += pages
+    assert sorted(asked) == [n * 1000 for n in range(30)]
+    # Without a third named, the run's 8 h slot of the day picks one.
+    kataster(third=None)
+    assert len(Stand.asked) == 10
+
+
+def test_the_three_sunday_runs_fall_in_three_slots_and_no_period_overrides_them():
+    spec = yaml.safe_load((CITY / "pipeline-kataster.yaml").read_text())["spec"]
+    assert "period" not in spec and spec["class"] == "scheduled"
+    minute, hours, *_ = spec["schedule"].split()
+    assert sorted({int(h) // 8 for h in hours.split(",")}) == [0, 1, 2]
 
 
 @requires_docker
@@ -180,7 +198,7 @@ def test_the_parcels_keep_no_history_and_the_pipeline_runs_weekly_over_the_https
     space = yaml.safe_load((CITY / "space-verejne.yaml").read_text())["spec"]
     assert {"entityType": "CadastralParcel", "history": "off"} in space["retention"]
     pipeline = yaml.safe_load((CITY / "pipeline-kataster.yaml").read_text())["spec"]
-    assert pipeline["period"] == "168h" and pipeline["output"]["type"] == "CadastralParcel"
+    assert pipeline["output"]["type"] == "CadastralParcel"
     assert pipeline["targetEndpoint"] == f"urn:ngsi-ld:Endpoint:banskabystrica.sk:{SPACE}:{SPACE}"
     processors = yaml.safe_load(MAPPING.read_text())["pipeline"]["processors"]
     (fetch,) = [p["http"] for p in processors if "http" in p]
