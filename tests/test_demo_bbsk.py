@@ -1,0 +1,171 @@
+"""T-4687: the BBSK demo is outside the platform's deployment and holds only BB and BBSK.
+
+`demos/bbsk/` renders its own catalogue, database, edge and NetworkPolicies into namespace
+`demo-bbsk` and nothing else; the platform's environments render none of it. Its catalogue harvests
+only the city's and the region's sources, says DEMO on every page and keeps search engines out,
+and its assistant reads only the two bodies' public sources and Endpoints with read-only tools.
+"""
+
+import shutil
+import subprocess
+from pathlib import Path
+
+import pytest
+import yaml
+from test_public_assistant_seed import READ_ONLY, deployment, general, manifests
+
+ROOT = Path(__file__).resolve().parent.parent
+HOSTS = {"dev": "bbsk-demo.apps.dev.joinedcontext.com", "smartcity": "bbsk.smartcity.joinedcontext.com"}
+PUBLISHERS = {"banskabystrica", "bbsk"}
+
+
+def render(env: str) -> list[dict]:
+    if shutil.which("helmfile") is None:
+        pytest.skip("helmfile not installed")
+    result = subprocess.run(
+        ["helmfile", "-f", "demos/bbsk/helmfile.yaml.gotmpl", "-e", env, "template", "--skip-deps"],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    return [d for d in yaml.safe_load_all(result.stdout) if isinstance(d, dict)]
+
+
+@pytest.fixture(scope="module", params=sorted(HOSTS))
+def demo(request):
+    return request.param, render(request.param)
+
+
+def one(docs, kind, name=None):
+    found = [d for d in docs if d["kind"] == kind and (name is None or d["metadata"]["name"] == name)]
+    assert len(found) == 1, (kind, name, len(found))
+    return found[0]
+
+
+def demo_objects(docs):
+    return [d for d in docs if d["metadata"].get("namespace") == "demo-bbsk" or "demo-bbsk" in d["metadata"]["name"]]
+
+
+def test_every_object_of_the_demo_is_in_its_own_namespace(demo):
+    _, docs = demo
+    assert docs
+    assert {d["metadata"].get("namespace") for d in docs} == {"demo-bbsk"}
+
+
+def test_the_platform_renders_no_object_of_the_demo(rendered):
+    assert demo_objects(rendered("dev")) == []
+
+
+def test_the_host_has_its_own_certificate_and_every_answer_says_noindex(demo):
+    env, docs = demo
+    host = HOSTS[env]
+    certificate = one(docs, "Certificate")["spec"]
+    assert certificate["dnsNames"] == [host] and certificate["issuerRef"]["kind"] == "ClusterIssuer"
+    ingress = one(docs, "Ingress")
+    assert [rule["host"] for rule in ingress["spec"]["rules"]] == [host]
+    assert ingress["spec"]["tls"] == [{"hosts": [host], "secretName": certificate["secretName"]}]
+    middleware = ingress["metadata"]["annotations"]["traefik.ingress.kubernetes.io/router.middlewares"]
+    assert middleware == "demo-bbsk-demo-bbsk-headers@kubernetescrd"
+    headers = one(docs, "Middleware", "demo-bbsk-headers")["spec"]["headers"]
+    assert headers["customResponseHeaders"]["X-Robots-Tag"] == "noindex, nofollow"
+    assert one(docs, "Deployment", "ckan-demo-bbsk")
+    backend = ingress["spec"]["rules"][0]["http"]["paths"][0]["backend"]["service"]
+    assert backend == {"name": "ckan-demo-bbsk", "port": {"number": 5000}}
+
+
+def test_the_namespace_is_closed_but_for_the_edge_and_public_https(demo):
+    _, docs = demo
+    policies = {d["metadata"]["name"]: d["spec"] for d in docs if d["kind"] == "NetworkPolicy"}
+    default = policies["demo-bbsk-default"]
+    assert default["podSelector"] == {} and default["policyTypes"] == ["Ingress", "Egress"]
+    # Inside the namespace only: no rule of the default names another namespace but DNS.
+    assert default["ingress"] == [{"from": [{"podSelector": {}}]}]
+    harvest = policies["demo-bbsk-harvest"]["egress"][0]["to"][0]["ipBlock"]
+    assert harvest["cidr"] == "0.0.0.0/0" and "10.0.0.0/8" in harvest["except"]
+    assert policies["demo-bbsk-edge"]["ingress"][0]["ports"] == [{"protocol": "TCP", "port": 5000}]
+
+
+def test_the_catalogue_runs_on_the_demos_own_database_and_secrets(demo):
+    _, docs = demo
+    db = one(docs, "StatefulSet", "demo-bbsk-db")["spec"]["template"]["spec"]["containers"][0]
+    assert "@sha256:" in db["image"]
+    secrets = {d["metadata"]["name"]: d for d in docs if d["kind"] == "Secret"}
+    assert set(secrets) == {"db-ckan", "db-ckan-datastore-read", "ckan-session", "ckan-admin-credentials"}
+    assert all(s["metadata"]["annotations"]["helm.sh/resource-policy"] == "keep" for s in secrets.values())
+    ckan = one(docs, "Deployment", "ckan-demo-bbsk")["spec"]["template"]["spec"]
+    env = {e["name"]: e for c in ckan["containers"] for e in c.get("env", [])}
+    assert "@demo-bbsk-db.demo-bbsk.svc.cluster.local:5432/ckan" in env["CKAN_SQLALCHEMY_URL"]["value"]
+
+
+def test_the_catalogue_harvests_only_the_city_and_the_region(demo):
+    _, docs = demo
+    harvests = [d for d in docs if d["kind"] == "CronJob" and "harvest" in d["metadata"]["name"]]
+    configs = []
+    for job in harvests:
+        container = job["spec"]["jobTemplate"]["spec"]["template"]["spec"]["containers"][0]
+        env = {e["name"]: e.get("value") for e in container["env"]}
+        configs.append(yaml.safe_load(env["HARVEST_CONFIG"]))
+    assert {c["organization"] for c in configs} == PUBLISHERS
+
+
+def test_every_page_says_demo_and_frames_the_demo_assistant(demo):
+    env, docs = demo
+    branding = None
+    for doc in docs:
+        if doc["kind"] == "ConfigMap" and "branding.json" in doc.get("data", {}):
+            branding = yaml.safe_load(doc["data"]["branding.json"])
+    assert branding, "the theme's branding block is rendered"
+    assert branding["ribbon"].startswith("DEMO") and branding["noindex"] is True
+    assert branding["ribbon"] in branding["footerLines"]
+    assert branding["siteTitle"].startswith("DEMO")
+    # "Add to your AI assistant" names the demo assistant's own server, not the platform's hub.
+    assert branding["mcpServer"] == "d/bbsk-demo"
+    assert set(branding["languages"]["offered"]) == {"sk", "en"}
+    rendered = yaml.safe_dump(docs)
+    domain = HOSTS[env].split(".", 1)[1].removeprefix("apps.")
+    assert f"https://assistant.{domain}/d/bbsk-demo/widget" in rendered
+    # Another body's organization is never offered.
+    for other in ("praha", "zilina", "hel-fi", "slovensko"):
+        assert f'"{other}":' not in doc_text(docs, "organizations.json"), other
+
+
+def doc_text(docs, key: str) -> str:
+    return "".join(d.get("data", {}).get(key, "") for d in docs if d["kind"] == "ConfigMap")
+
+
+def test_the_demo_assistant_reads_only_the_two_bodies_public_data():
+    spec = deployment_named("bbsk-demo")["spec"]
+    assert spec["channel"] == "public" and spec["publicId"] == "bbsk-demo"
+    assert spec["scope"] == {"projects": ["banskabystrica"]}
+    assert spec["sources"] == ["web", "data-portal", "catalogue", "banskabystrica/web"]
+    for name in spec["sources"]:
+        project, _, source = name.rpartition("/")
+        assert manifests("KnowledgeSource", project or "bbsk")[source]["spec"]["visibility"] == "public", name
+    members = {
+        project: {
+            m["name"]
+            for server in manifests("McpServer", project).values() if server["spec"]["audience"] == "public"
+            for m in server["spec"]["members"] if m["kind"] == "Endpoint"
+        }
+        for project in PUBLISHERS
+    }
+    expected = members["bbsk"] | {f"banskabystrica/{name}" for name in members["banskabystrica"]}
+    assert {c["endpoint"] for c in spec["connectors"]} == expected
+    for connector in spec["connectors"]:
+        assert set(connector["tools"]) <= READ_ONLY, connector
+        project, _, name = connector["endpoint"].rpartition("/")
+        assert manifests("Endpoint", project or "bbsk")[name]["spec"]["audience"] == "public", connector
+    assert spec["allowedOrigins"] == [f"https://{HOSTS['smartcity']}", f"https://{HOSTS['dev']}"]
+    assert len(spec["suggestions"]["sk"]) == 6
+
+
+def test_the_demo_stays_inside_the_keys_five_dollars_with_the_public_assistants():
+    bodies = ("banskabystrica", "bbsk", "zilina", "praha")
+    total = sum(deployment(p)["spec"]["budget"]["costPerDayUsd"] for p in bodies)
+    total += general()["spec"]["budget"]["costPerDayUsd"]
+    assert total + deployment_named("bbsk-demo")["spec"]["budget"]["costPerDayUsd"] <= 5
+
+
+def deployment_named(public_id: str) -> dict:
+    found = [d for d in manifests("AssistantDeployment", "bbsk").values() if d["spec"]["publicId"] == public_id]
+    assert len(found) == 1, public_id
+    return found[0]

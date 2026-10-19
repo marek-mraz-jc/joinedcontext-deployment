@@ -369,6 +369,67 @@ slots:
       ngsi_ld_kind: Property
       upstream_source: dataModel.Transportation
 
+  parcelNumber:
+    slot_uri: jc:parcelNumber
+    description: >-
+      The parcel's number in its cadastral area as the cadastre writes it, `1266/16`: the main
+      number, a slash and the subdivision. Unique only together with the cadastral area and the
+      register.
+    required: true
+    pattern: "^[0-9]+(/[0-9]+)?$"
+    examples:
+      - value: 1266/16
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://inspire.ec.europa.eu/id/document/tg/cp
+  register:
+    slot_uri: jc:register
+    description: >-
+      The register the parcel belongs to: `C` for the parcels of the map of the cadastre (KN-C),
+      `E` for the parcels of the original land plots (KN-E).
+    required: true
+    range: CadastralRegister
+    annotations:
+      ngsi_ld_kind: Property
+  cadastralAreaCode:
+    slot_uri: jc:cadastralAreaCode
+    description: The six-digit code of the cadastral area (katastrálne územie) the parcel lies in, `801062`.
+    required: true
+    pattern: "^[0-9]{6}$"
+    examples:
+      - value: "801062"
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://inspire.ec.europa.eu/id/document/tg/cp
+  cadastralAreaName:
+    slot_uri: jc:cadastralAreaName
+    description: The name of that cadastral area, `Banská Bystrica`.
+    annotations:
+      ngsi_ld_kind: Property
+  nationalCadastralReference:
+    slot_uri: jc:nationalCadastralReference
+    description: >-
+      The parcel's reference in the national cadastre, as INSPIRE publishes it: the cadastral
+      area's code, the parcel number and the register, `801062_1266/16.C`.
+    required: true
+    pattern: "^[0-9]{6}_[0-9]+(/[0-9]+)?\\.[CE]$"
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://inspire.ec.europa.eu/id/document/tg/cp
+  areaValue:
+    slot_uri: jc:areaValue
+    description: >-
+      The parcel's area as the cadastre states it, in square metres (INSPIRE `areaValue`),
+      measured in the national plane projection; a geodesic area of the outline differs by a few
+      tenths of a percent.
+    range: float
+    minimum_value: 0
+    unit:
+      ucum_code: m2
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://inspire.ec.europa.eu/id/document/tg/cp
+
 classes:
   Event:
     class_uri: schema:Event
@@ -598,6 +659,29 @@ classes:
       - dataProvider
       - source
 
+  CadastralParcel:
+    class_uri: jc:CadastralParcel
+    description: >-
+      One parcel of the cadastre of Slovakia in Banská Bystrica (T-4697): its number, register,
+      cadastral area, the area the cadastre states and its outline, from the INSPIRE Cadastral
+      Parcels service of ÚGKK SR (CC BY 4.0), refreshed weekly. No owner and no other personal
+      data: the INSPIRE parcels carry none. Smart Data Models has no cadastral parcel (its
+      AgriParcel is a farmed field), so the class follows INSPIRE's CadastralParcel and the SDM
+      conventions.
+    is_a: Entity
+    annotations:
+      upstream_source: https://inspire.ec.europa.eu/id/document/tg/cp
+    slots:
+      - name
+      - parcelNumber
+      - register
+      - cadastralAreaCode
+      - cadastralAreaName
+      - nationalCadastralReference
+      - areaValue
+      - dataProvider
+      - source
+
 enums:
   EventCategory:
     permissible_values:
@@ -611,3 +695,9 @@ enums:
         description: Exhibitions (Výstavy).
       other:
         description: Any other event (Iné podujatia).
+  CadastralRegister:
+    permissible_values:
+      C:
+        description: The register of parcels of the cadastral map (register C, KN-C).
+      E:
+        description: The register of parcels of the original land plots (register E, KN-E).

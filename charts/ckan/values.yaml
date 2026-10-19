@@ -178,6 +178,10 @@ mapBasemap: {}
 # authorize and token run against it has passed.
 assistants:
   gemini: false
+  # The websites the hub's `search_documents` reads (T-4659), listed on the page so a visitor sees
+  # what the answers cover: each `{publisher, url, languages}`, the same sources as the gateway's
+  # JC_GATEWAY_HUB_KNOWLEDGE_SOURCES. Empty lists none.
+  sources: []
 
 podSecurityContext: {}
 securityContext: {}

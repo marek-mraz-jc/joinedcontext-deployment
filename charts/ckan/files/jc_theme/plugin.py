@@ -39,6 +39,10 @@ NEUTRAL = {
     # demo disclaimer, an imprint): words only a deployment knows, so they are values too.
     "tagline": "",
     "footerLines": [],
+    # A line across the top of every page and a request to search engines to stay out, for an
+    # installation that is a demo and must never pass for the publisher's own site (T-4687).
+    "ribbon": "",
+    "noindex": False,
 }
 
 HEX = set("0123456789abcdefABCDEF")
@@ -75,6 +79,10 @@ def _load():
     lines = branding.get("footerLines")
     branding["footerLines"] = [line for line in lines if isinstance(line, str) and line.strip()] \
         if isinstance(lines, list) else []
+    if not isinstance(branding.get("ribbon"), str):
+        branding["ribbon"] = ""
+    branding["ribbon"] = branding["ribbon"].strip()
+    branding["noindex"] = branding.get("noindex") is True
     red, green, blue = _rgb(colours["primary"])
     branding["primaryRgb"] = "%d, %d, %d" % (red, green, blue)
     # The text on the primary colour, by the YIQ rule the login theme uses too
@@ -397,6 +405,16 @@ STRINGS = {
         "cs": "Přidejte {name} do asistenta, kterého už používáte, a ptejte se ho na otevřená data tohoto katalogu. Jedna adresa pokrývá všechny datové sady; účet není potřeba.",
         "de": "Fügen Sie {name} dem Assistenten hinzu, den Sie schon nutzen, und fragen Sie ihn nach den offenen Daten dieses Katalogs. Eine Adresse deckt alle Datensätze ab; kein Konto nötig.",
     },
+    # T-4659: the websites the hub's search_documents reads, so a visitor sees what it covers.
+    "assistants_sources": {"en": "What the assistant can search", "sk": "Čo asistent prehľadáva",
+                           "cs": "Co asistent prohledává", "de": "Was der Assistent durchsucht"},
+    "assistants_sources_lead": {
+        "en": "Beside the datasets, the connector searches the public pages and documents of these websites:",
+        "sk": "Okrem datasetov konektor prehľadáva verejné stránky a dokumenty týchto webov:",
+        "cs": "Kromě datových sad konektor prohledává veřejné stránky a dokumenty těchto webů:",
+        "de": "Neben den Datensätzen durchsucht der Connector die öffentlichen Seiten und Dokumente dieser Websites:",
+    },
+    "assistants_source_languages": {"en": "Languages", "sk": "Jazyky", "cs": "Jazyky", "de": "Sprachen"},
     "coming_soon": {"en": "Coming soon", "sk": "Čoskoro", "cs": "Brzy", "de": "Demnächst"},
     # T-4628: a card is the logo, the name and one link to that assistant's connector store.
     "add_to": {"en": "Add to {name}", "sk": "Pridať do {name}", "cs": "Přidat do {name}", "de": "Zu {name} hinzufügen"},
@@ -1706,6 +1724,7 @@ def jc_about_site():
 
 _HOST = re.compile(r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$")
 MCP_NAME = "joinedcontext"
+MCP_SERVER = re.compile(r"d/[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?")
 
 
 def jc_mcp_install():
@@ -1717,6 +1736,11 @@ def jc_mcp_install():
         return None
     # The data host, api.{domain} (ADR-N-052 §2.1, T-4632): the apex moves an anonymous client there.
     url = "https://api.%s/api/mcp" % domain
+    # An installation that offers one assistant's own server instead of the hub, such as a demo
+    # (T-4687): branding `mcpServer` `d/{publicId}`, that assistant's Endpoints and sources (T-4691).
+    own = BRANDING.get("mcpServer")
+    if isinstance(own, str) and MCP_SERVER.fullmatch(own):
+        url += "/" + own
     server = {"type": "http", "url": url}
     vscode = json.dumps(dict(name=MCP_NAME, **server), separators=(",", ":"))
     cursor = base64.b64encode(json.dumps({"url": url}, separators=(",", ":")).encode()).decode()
@@ -1751,6 +1775,28 @@ def jc_gemini_on():
     return os.environ.get("JC_ASSISTANT_GEMINI") == "true"
 
 
+def jc_assistant_sources():
+    """The websites the hub's `search_documents` reads (T-4659), from the chart's
+    `assistants.sources`: each its host, address, publisher and languages. A malformed list or entry,
+    or an address that is not https, is left out rather than shown half."""
+    try:
+        listed = json.loads(os.environ.get("JC_ASSISTANT_SOURCES") or "[]")
+    except ValueError:
+        return []
+    sources = []
+    for entry in listed if isinstance(listed, list) else []:
+        if not isinstance(entry, dict):
+            continue
+        url, publisher = entry.get("url"), entry.get("publisher")
+        languages = entry.get("languages") or []
+        host = urlsplit(url).hostname if isinstance(url, str) and url.startswith("https://") else None
+        if not host or not isinstance(publisher, str) or not isinstance(languages, list):
+            continue
+        sources.append({"site": host, "url": url, "publisher": publisher,
+                        "languages": ", ".join(str(code) for code in languages)})
+    return sources
+
+
 def jc_assistants():
     """The "Use it in your AI assistant" page (T-4585, T-4628, T-4634, T-4643): a card per assistant
     whose app takes our connector, ChatGPT, Claude, Grok, then Gemini once its flag is on, each its
@@ -1778,6 +1824,7 @@ def jc_assistants():
         "lead": jc_t("assistants_lead").replace("{name}", name),
         "mcp": mcp,
         "cards": cards,
+        "sources": jc_assistant_sources(),
         "gemini": "gemini mcp add --transport http %s %s" % (MCP_NAME, mcp["url"]),
     }
 

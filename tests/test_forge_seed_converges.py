@@ -31,6 +31,7 @@ requires_helmfile = pytest.mark.skipif(
 ORG = "joinedcontext"
 REPO = "configuration"
 MANIFEST = ".jc/seed-manifest.txt"
+COMMIT = f"POST http://forge.test/api/v1/repos/{ORG}/{REPO}/contents"
 
 SHARE = """apiVersion: joinedcontext.com/v1alpha1
 kind: SharedSpaceReference
@@ -173,10 +174,7 @@ def test_a_renamed_seed_path_leaves_exactly_one_file(script, tmp_path):
         "the old path stayed, which is the duplicate identity the gateway refuses on"
     )
     assert "seed: removed projects/bbsk/shares/mesto-kpi.yaml" in second.stdout
-    assert (
-        f"DELETE http://forge.test/api/v1/repos/{ORG}/{REPO}/contents/"
-        "projects/bbsk/shares/mesto-kpi.yaml" in forge.log
-    ), forge.log
+    assert forge.log.count(COMMIT) == 2, "each run that changed something is one commit"
     assert forge.contents[MANIFEST].splitlines() == [
         "projects/bbsk/project.yaml",
         "projects/bbsk/shared/mesto-kpi.yaml",
@@ -187,6 +185,7 @@ def test_a_renamed_seed_path_leaves_exactly_one_file(script, tmp_path):
     assert third.returncode == 0, third.stderr
     assert "seed: 0 file(s) removed" in third.stdout
     assert "seed: 0 file(s) written" in third.stdout
+    assert forge.log.count(COMMIT) == 2, "a run with nothing to change committed"
 
 
 @requires_helmfile
@@ -230,7 +229,7 @@ def test_two_seed_files_of_one_identity_fail_the_job_before_anything_is_written(
     for path in ("projects/bbsk/shares/mesto-kpi.yaml", "projects/bbsk/shared/mesto-kpi.yaml"):
         assert path in result.stderr, result.stderr
     assert forge.contents == {}, "the Job wrote before it refused"
-    assert not any(call.startswith(("PUT", "POST")) and "/contents/" in call for call in forge.log)
+    assert not any(call.startswith(("PUT", "POST", "DELETE")) and "/contents" in call for call in forge.log)
 
 
 @requires_helmfile
@@ -257,8 +256,9 @@ def test_a_file_that_is_not_a_manifest_takes_part_in_no_clash(script, tmp_path):
 
 
 @requires_helmfile
-def test_the_record_is_written_after_the_removals_and_names_no_secret(script, tmp_path):
-    """Order matters: a run that dies before the record leaves the older one, and repeats itself.
+def test_the_record_is_committed_with_what_it_records_and_names_no_secret(script, tmp_path):
+    """A run that dies before its commit leaves the older record beside the older files, and
+    repeats itself: the record and the files it names land in one commit or not at all.
 
     The record is also a file in the configuration repository, so it holds paths and nothing else
     — no token, no admin password, nothing the Job read out of a Secret."""
@@ -266,21 +266,42 @@ def test_the_record_is_written_after_the_removals_and_names_no_secret(script, tm
     forge.put("projects/bbsk/project.yaml", PROJECT)
     assert forge.run(script).returncode == 0
 
-    contents_calls = [call for call in forge.log if "/contents/" in call]
-    record_writes = [
-        index for index, call in enumerate(contents_calls)
-        if call.startswith(("POST", "PUT")) and call.split("/contents/")[1].startswith(".jc/")
-    ]
-    assert record_writes, contents_calls
-    assert record_writes[-1] == len(contents_calls) - 1, (
-        "the record was written before the last file was judged"
-    )
+    writes = [call for call in forge.log if "/contents" in call and not call.startswith("GET")]
+    assert writes == [COMMIT], writes
     record = forge.contents[MANIFEST]
     assert "not-a-real-password" not in record
     for secret in forge.secrets.values():
         token = base64.b64decode(secret["data"]["token"]).decode()
         assert token not in record
     assert record == "projects/bbsk/project.yaml\n"
+
+
+@requires_helmfile
+def test_a_fresh_seed_of_many_files_is_one_commit(script, tmp_path):
+    """T-4709: the seed grew to 1,600 files, and a commit per file (a clone of the repository in
+    the forge each time) kept the Job past helm's 900 s on every fresh k3d cluster of ci-full.
+    However many files, a run is one commit, and a file is judged by its blob id, not read back
+    one request at a time."""
+    forge = Forge(tmp_path, {})
+    forge.put("projects/bbsk/project.yaml", PROJECT)
+    for index in range(40):
+        forge.put(f"projects/bbsk/datamodels/m{index}.md", f"# Model {index}\n")
+    first = forge.run(script)
+    assert first.returncode == 0, first.stderr
+    assert "seed: 41 file(s) written" in first.stdout
+    assert len(forge.contents) == 42, forge.contents  # the files and the record
+    assert forge.log.count(COMMIT) == 1, forge.log
+    assert not [call for call in forge.log if "/contents/projects/" in call], (
+        "a seed file was read or written on its own"
+    )
+
+    forge.put("projects/bbsk/datamodels/m0.md", "# Model zero\n")
+    second = forge.run(script)
+    assert second.returncode == 0, second.stderr
+    assert "seed: updated projects/bbsk/datamodels/m0.md" in second.stdout
+    assert "seed: 1 file(s) written" in second.stdout
+    assert forge.contents["projects/bbsk/datamodels/m0.md"] == "# Model zero\n"
+    assert forge.log.count(COMMIT) == 2, forge.log
 
 
 @requires_helmfile

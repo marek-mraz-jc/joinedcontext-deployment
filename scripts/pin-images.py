@@ -5,7 +5,7 @@
 
 For the commit at the head of `main` of the source repository it pins, in every
 `components/*/images.yaml`, the digest each image of that commit was published under, but only
-when the repository's `ci` run on the commit is green and `cosign verify` accepts the signature
+when the repository's `ci` and `image.yml` runs on the commit are green and `cosign verify` accepts the signature
 the repository's own `image.yml` made on `main`. It writes the files and prints the commit
 message; it commits nothing (`.github/workflows/pin-images.yml` renders, commits and pushes).
 Exit 0 with nothing written when the pins are current or the commit is not ready yet.
@@ -47,9 +47,9 @@ def head(repository):
     return commit
 
 
-def ci_green(repository, commit):
-    """The `ci` workflow's newest run on the commit finished green."""
-    out = run("gh", "run", "list", "-R", f"{OWNER}/{repository}", "--workflow", "ci.yml", "--commit", commit,
+def green(repository, workflow, commit):
+    """The workflow's newest run on the commit finished green."""
+    out = run("gh", "run", "list", "-R", f"{OWNER}/{repository}", "--workflow", workflow, "--commit", commit,
               "--json", "status,conclusion", "--limit", "1").stdout
     runs = json.loads(out or "[]")
     return bool(runs) and runs[0]["status"] == "completed" and runs[0]["conclusion"] == "success"
@@ -91,8 +91,13 @@ def pin_files(pins):
 def main(source):
     repository, images = SOURCES[source]
     commit = head(repository)
-    if not ci_green(repository, commit):
+    if not green(repository, "ci.yml", commit):
         print(f"{source} {commit[:7]}: ci is not green yet; nothing pinned", file=sys.stderr)
+        return
+    # A red or unfinished image.yml may have published some images and not others: wait for it
+    # like an unfinished ci, never pin half a commit.
+    if not green(repository, "image.yml", commit):
+        print(f"{source} {commit[:7]}: image.yml is not green (red or still running); nothing pinned", file=sys.stderr)
         return
     pins = {}
     for n, image in enumerate(images):
@@ -107,7 +112,13 @@ def main(source):
         pins[image] = digest
     if source == "portal":
         # The builder contract check and the builders' own comment line are pin-portal.sh's.
-        subprocess.run([str(ROOT / "scripts/pin-portal.sh"), commit], cwd=ROOT, check=True)
+        refused = subprocess.run([str(ROOT / "scripts/pin-portal.sh"), commit], cwd=ROOT, check=False)
+        if refused.returncode != 0:
+            # Whatever it wrote before it stopped goes back: a pin is all three images or none.
+            subprocess.run(["git", "checkout", "--", "components"], cwd=ROOT, check=False)
+            print(f"{source} {commit[:7]}: pin-portal.sh refused (exit {refused.returncode}); nothing pinned",
+                  file=sys.stderr)
+            return
     elif not pin_files(pins):
         print(f"{source} {commit[:7]}: already pinned", file=sys.stderr)
         return

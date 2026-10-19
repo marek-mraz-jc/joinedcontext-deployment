@@ -333,6 +333,21 @@ def test_the_mcp_panel_names_the_installation_s_hub_and_nothing_else(theme):
         assert "endpoint/" not in unquote(line) and "token" not in line.lower() and "bearer" not in line.lower()
 
 
+@pytest.mark.parametrize("server, path", [
+    ("d/bbsk-demo", "/api/mcp/d/bbsk-demo"),
+    # Anything but `d/{publicId}` leaves the hub: no other path, no climbing, no query.
+    ("d/../admin", "/api/mcp"), ("x/bbsk-demo", "/api/mcp"), ("d/Bbsk", "/api/mcp"),
+    ("d/bbsk?x=1", "/api/mcp"), ("d/", "/api/mcp"), (7, "/api/mcp"), (None, "/api/mcp"),
+])
+def test_a_demo_offers_its_assistant_s_own_server_and_nothing_else(theme, server, path):
+    """T-4687: branding `mcpServer` names one assistant's server (T-4691) for every client line."""
+    theme.BRANDING["mcpServer"] = server
+    mcp = theme.jc_mcp_install()
+    url = "https://api.dev.example" + path
+    assert mcp["url"] == url
+    assert mcp["claude"].endswith(url) and json.loads(mcp["json"])["mcpServers"]["joinedcontext"]["url"] == url
+
+
 @pytest.mark.parametrize("domain", [None, "", "dev.example\" onmouseover=\"x", "dev.example/evil", "localhost", 7])
 def test_the_mcp_panel_is_left_out_without_a_plain_domain(theme, domain):
     theme.BRANDING["domain"] = domain
@@ -510,6 +525,23 @@ def test_tagline_and_footer_lines_are_read_as_words_and_nothing_else(theme, tmp_
     block.write_text(json.dumps({"tagline": {"x": 1}, "footerLines": "not a list"}))
     loaded = theme._load()
     assert loaded["tagline"] == "" and loaded["footerLines"] == []
+
+
+def test_a_demo_ribbon_and_noindex_come_from_the_branding_block_alone(theme, tmp_path):
+    """T-4687: a demo says so on every page and keeps search engines out; nothing else does."""
+    assert theme.BRANDING["ribbon"] == "" and theme.BRANDING["noindex"] is False
+    block = tmp_path / "demo.json"
+    block.write_text(json.dumps({"ribbon": "  DEMO · ukážka  ", "noindex": True}))
+    theme.BRANDING_FILE = str(block)
+    loaded = theme._load()
+    assert loaded["ribbon"] == "DEMO · ukážka" and loaded["noindex"] is True
+    block.write_text(json.dumps({"ribbon": ["DEMO"], "noindex": "yes"}))
+    loaded = theme._load()
+    assert loaded["ribbon"] == "" and loaded["noindex"] is False
+    header = (THEME / "header.html").read_text()
+    assert '{% if ribbon %}<div class="jc-ribbon" role="note">{{ ribbon }}</div>{% endif %}' in header
+    assert '<meta name="robots" content="noindex, nofollow">' in (THEME / "templates__base.html").read_text()
+    assert ".jc-ribbon { position: sticky; top: 0;" in (THEME / "public__jc-theme.css").read_text()
 
 
 def test_the_footer_carries_the_installations_links_and_none_of_ckans():
@@ -843,13 +875,13 @@ def test_the_footer_offers_the_assistant_as_a_disclosure_a_keyboard_opens():
     footer = (THEME / "footer.html").read_text()
     assert "{% set widget = h.jc_assistant_widget(publisher) %}" in footer
     assert "{% set publisher = pkg_dict.organization.name if pkg_dict is defined" in footer
-    assert '<details class="jc-assistant">' in footer and "<summary><span>{{ h.jc_t('assistant') }}</span></summary>" in footer
+    assert '<details class="jc-assistant" id="jc-assistant">' in footer and "<summary><span>{{ h.jc_t('assistant') }}</span></summary>" in footer
     assert 'title="{{ h.jc_t(\'assistant\') }}"' in footer and 'loading="lazy"' in footer
     assert 'referrerpolicy="no-referrer"' in footer
     # T-4280: the chat opens in Slovak or the visitor's own choice in it; the page's language
     # (T-4253) no longer reaches it.
     # T-4635: embed mode, so the chat's header carries the ✕ that closes the panel.
-    assert '<iframe src="{{ widget }}?embed=1"' in footer
+    assert '<iframe src="{{ widget }}?embed=1&amp;dock=1"' in footer
     assert "lang=" not in footer.split("<iframe", 1)[1].split(">", 1)[0]
 
 
@@ -865,7 +897,7 @@ def test_the_assistant_leaves_the_page_room_and_takes_a_phone_s_whole_screen():
     assert ".jc-assistant[open] > iframe { position: fixed; inset: 0; width: 100%; height: 100vh; height: 100dvh;" in phone
     assert "3.25rem" not in phone
     footer = (THEME / "footer.html").read_text()
-    assert "<script src=\"{{ h.url_for_static('/jc-assistant.js') }}\" defer></script>" in footer
+    assert "<script src=\"{{ h.url_for_static('/jc-assistant.js') }}\"></script>" in footer
     script = (THEME / "public__jc-assistant.js").read_text()
     assert 'matchMedia("(max-width: 40rem)")' in script and "el.inert = true" in script
     assert 'event.key === "Escape"' in script and 'querySelector("summary").focus()' in script
@@ -892,7 +924,8 @@ def test_the_open_assistant_has_one_close_control_and_a_frame_with_nothing_under
     script = (THEME / "public__jc-assistant.js").read_text()
     assert "jc-assistant-height" not in script
     assert 'data.type === "jc-assistant-close"' in script
-    assert "event.source === frame.contentWindow && event.origin === origin" in script
+    heard = script.split('window.addEventListener("message", function (event) {', 1)[1]
+    assert heard.index("event.source !== frame.contentWindow || event.origin !== origin") < heard.index('"jc-assistant-close"')
     assert 'box.querySelector("summary").focus();' in script
 
 
@@ -910,9 +943,53 @@ def test_the_chat_grows_to_the_window_on_its_own_frames_word_alone():
     assert css.index(".jc-assistant.jc-full > iframe") < css.index("@media (max-width: 40rem) {"), "the phone's frame wins"
     script = (THEME / "public__jc-assistant.js").read_text()
     size = script.split('data.type === "jc-assistant-size"', 1)
-    assert len(size) == 2 and "event.source === frame.contentWindow && event.origin === origin &&" in size[0].rsplit("else if", 1)[1]
-    assert '(data.size === "full" || data.size === "panel")' in size[1]
+    assert len(size) == 2 and "event.source !== frame.contentWindow || event.origin !== origin" in size[0].rsplit("addEventListener(\"message\"", 1)[1]
+    assert '(data.size === "full" || data.size === "panel" || data.size === "dock")' in size[1]
     assert 'phone.matches || box.classList.contains("jc-full")' in script
+
+
+def test_the_assistant_docks_beside_the_page_and_stays_across_its_links():
+    """T-4685 (API/05 §1.6.1): on a wide screen the open chat docks to the right edge and the
+    page shrinks beside it; a link is a normal page load with the panel held by a view transition,
+    open again before the first paint, on the assistant it had."""
+    css = (THEME / "public__jc-theme.css").read_text()
+    dock = css.split("@media (min-width: 1100px) {", 1)[1].split("\n}\n", 1)[0]
+    assert "html.jc-docked { --jc-dock-w: clamp(360px, var(--jc-dock, 34vw), 50vw); }" in dock
+    assert "html.jc-docked body { margin-inline-end: var(--jc-dock-w); }" in dock
+    assert "html.jc-docked .jc-assistant[open]:not(.jc-full) > iframe { inset-block: 0; inset-inline-end: 0; width: var(--jc-dock-w);" in dock
+    assert "@view-transition { navigation: auto; }" in css
+    assert ".jc-assistant[open] > iframe { view-transition-name: jc-assistant; }" in css
+    assert css.index("@media (min-width: 1100px) {") < css.index("@media (max-width: 40rem) {"), "a phone's frame wins"
+    reduced = css.split("@media (prefers-reduced-motion: reduce) {", 1)[1].split("\n}\n", 1)[0]
+    assert "::view-transition-group(root)" in reduced and "animation: none;" in reduced
+    base = (THEME / "templates__base.html").read_text()
+    assert "<script src=\"{{ h.url_for_static('/jc-dock.js') }}\"></script>" in base
+    early = (THEME / "public__jc-dock.js").read_text()
+    assert 'expect.rel = "expect";' in early and 'expect.href = "#jc-assistant";' in early and 'setAttribute("blocking", "render")' in early
+    assert "token" not in early.lower()
+    script = (THEME / "public__jc-assistant.js").read_text()
+    # The width: dragged or with the arrow keys, 360 px to half the window, kept per browser.
+    assert 'setAttribute("role", "separator")' in script and "Math.max(px, 360)" in script and "window.innerWidth / 2" in script
+    assert 'localStorage.setItem(WIDTH' in script and 'sessionStorage.setItem(KEY' in script
+    # The kept assistant is one of this host's widget pages, never another address.
+    ours = script.split("function ours(url) {", 1)[1].split("\n  }\n", 1)[0]
+    assert "to.origin === origin" in ours and "\\/widget$/" in ours and "!to.search && !to.hash" in ours
+
+
+def test_a_done_answer_opens_its_dataset_on_this_catalogue_alone():
+    """T-4685: the chat names a dataset; the page opens it only on its own origin, a dataset path,
+    not the page already open, and not while the visitor selects or types, and says so to the
+    chat first. Only its own frame, from the frame's origin, is heard."""
+    script = (THEME / "public__jc-assistant.js").read_text()
+    opens = script.split("function opens(url) {", 1)[1].split("\n  }\n", 1)[0]
+    assert "to.origin !== location.origin" in opens
+    assert "/^\\/dataset\\/[a-z0-9_-]{2,100}\\/?$/.test(to.pathname)" in opens
+    assert "=== here" in opens and "getSelection" in opens and "INPUT|TEXTAREA|SELECT" in opens
+    heard = script.split('window.addEventListener("message", function (event) {', 1)[1]
+    assert heard.index("event.source !== frame.contentWindow || event.origin !== origin") < heard.index('"jc-assistant-dataset"')
+    dataset = heard.split('"jc-assistant-dataset"', 1)[1].split("} else if", 1)[0]
+    assert dataset.index('postMessage({ type: "jc-assistant-opened", url: data.url }, origin)') < dataset.index("location.assign(path)")
+    assert 'data.type === "jc-assistant-back"' in heard and "history.back()" in heard
 
 
 def test_the_catalogue_pod_is_told_its_assistant_only_when_the_assistant_is_deployed(rendered, rendered_variant):
@@ -1624,7 +1701,9 @@ def test_the_assistants_page_reads_in_slovak(theme):
 def test_the_assistants_page_offers_each_card_s_own_action_and_links_nowhere_else():
     template = (THEME / "templates__jc__assistants.html").read_text()
     assert "{% set page = h.jc_assistants() %}" in template
-    assert 'href="{{ card.open }}" target="_blank" rel="noopener noreferrer"' in template and template.count("href=") == 3
+    assert 'href="{{ card.open }}" target="_blank" rel="noopener noreferrer"' in template and template.count("href=") == 4
+    # The fourth: each website the hub searches (T-4659), its own address.
+    assert '<a href="{{ source.url }}" rel="noopener noreferrer">' in template
     assert '<a class="jc-card-guide" href="{{ h.url_for(\'jc_pages.guide\', id=card.id) }}">{{ card.guide_label }}</a>' in template
     # T-4634: no card says "Coming soon"; the page's empty state alone does.
     assert template.count("coming_soon") == 1 and "{% if card.soon %}" not in template
@@ -1636,7 +1715,7 @@ def test_the_corner_offers_the_assistants_page_beside_the_chat_in_one_row():
     footer = (THEME / "footer.html").read_text()
     corner = footer.split('<div class="jc-corner">', 1)[1].split("</div>", 1)[0]
     link = corner.index('href="{{ h.url_for(\'jc_pages.assistants\') }}"')
-    assert link < corner.index('<details class="jc-assistant">')
+    assert link < corner.index('<details class="jc-assistant" id="jc-assistant">')
     assert "aria-label=\"{{ h.jc_t('assistants_label') }}\"" in corner
     # T-4609: the footer's light link colour no longer reaches it, and the open panel hides it.
     assert ".jc-corner .jc-assistants-link { box-sizing" in desktop_css() and ".jc-corner:has(.jc-assistant[open]) .jc-assistants-link { display: none; }" in desktop_css()
@@ -1764,7 +1843,7 @@ def test_the_corner_link_is_four_logos_and_no_words(theme, lang):
     assert all('aria-hidden="true"' in s for s in segments)
     # every text node of the link is blank: no word and no "/" between the logos
     assert re.sub(r"<[^>]+>", "", link).strip() == ""
-    assert '<details class="jc-assistant">' in html
+    assert '<details class="jc-assistant" id="jc-assistant">' in html
 
 
 def test_the_brand_logos_are_the_makers_own_saved_here_with_their_source():
@@ -2405,6 +2484,47 @@ def test_the_guide_link_stays_its_own_target_above_the_card_link_and_wraps_on_a_
     assert ".jc-card-guide { position: relative; z-index: 1; }" in css
     assert ".jc-card-links { margin: auto 0 0; display: flex; flex-wrap: wrap;" in css
     assert ".jc-guide-checked { color: var(--jc-muted); overflow-wrap: anywhere; }" in css
+
+
+# T-4659: the assistants page lists the websites the hub's search_documents reads.
+def test_the_assistants_page_lists_the_hub_s_websites_and_drops_a_malformed_entry(theme, monkeypatch):
+    monkeypatch.setenv("JC_ASSISTANT_SOURCES", json.dumps([
+        {"publisher": "banskabystrica", "url": "https://www.banskabystrica.sk/", "languages": ["sk"]},
+        {"publisher": "helsinki", "url": "https://www.hel.fi/", "languages": ["fi", "sv", "en"]},
+        {"publisher": "evil", "url": "javascript:alert(1)", "languages": []},
+        {"publisher": "plain", "url": "http://example.org/", "languages": []},
+        {"url": "https://nopublisher.example/"},
+        "not an entry",
+    ]))
+    assert theme.jc_assistants()["sources"] == [
+        {"site": "www.banskabystrica.sk", "url": "https://www.banskabystrica.sk/", "publisher": "banskabystrica", "languages": "sk"},
+        {"site": "www.hel.fi", "url": "https://www.hel.fi/", "publisher": "helsinki", "languages": "fi, sv, en"},
+    ]
+    monkeypatch.setenv("JC_ASSISTANT_SOURCES", "{not json")
+    assert theme.jc_assistant_sources() == []
+    monkeypatch.delenv("JC_ASSISTANT_SOURCES")
+    assert theme.jc_assistant_sources() == []
+    template = (THEME / "templates__jc__assistants.html").read_text()
+    assert "{% if page.sources %}" in template and 'aria-labelledby="jc-assistant-sources"' in template
+    for key in ("assistants_sources", "assistants_sources_lead", "assistants_source_languages"):
+        assert set(theme.STRINGS[key]) == {"en", "sk", "cs", "de"}, key
+
+
+def test_dev_lists_the_hub_s_knowledge_sources_as_the_seed_declares_them():
+    """The page's list is the gateway's hub list, each site the seed source's first start URL and
+    its languages, so the page never names a site the hub does not search."""
+    root = Path(__file__).resolve().parent.parent
+    values = (root / "components/ckan/values/catalogue/development-values.yaml.gotmpl").read_text()
+    block = values[values.index("\nassistants:\n"):]
+    listed = yaml.safe_load(block.split("\n\n")[0])["assistants"]["sources"]
+    gateway = (root / "components/context-gateway/values/gateway/base-values.yaml.gotmpl").read_text()
+    (hub,) = [line.split(":", 1)[1].strip().strip('"') for line in gateway.splitlines()
+              if "JC_GATEWAY_HUB_KNOWLEDGE_SOURCES:" in line]
+    assert [f"{s['publisher']}/web" for s in listed] == hub.split(",")
+    for s in listed:
+        seed = yaml.safe_load((root / f"components/context-gateway/seed/{s['publisher']}/{s['publisher']}-knowledge-web.yaml").read_text())
+        assert s["url"] == seed["spec"]["startUrls"][0], s
+        assert s["languages"] == seed["spec"]["languages"], s
 
 
 LABELLED_SEEDS = ["banskabystrica/banskabystrica-verejne", "helsinki/helsinki"]

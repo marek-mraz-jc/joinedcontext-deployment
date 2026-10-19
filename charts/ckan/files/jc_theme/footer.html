@@ -37,6 +37,8 @@
      the page's: an English page still opens a Slovak chat (T-4280). #}
   {# A dataset's or resource's page opens its publisher's assistant, any other page the
      catalogue's (T-4281). #}
+  {# Docked beside the page on a wide screen (T-4685): `dock=1` tells the chat this host docks it,
+     and the panel stays open across the catalogue's links. #}
   {# Beside it, the same size, the page that adds the catalogue to the visitor's own assistant
      (T-4585), in one row on a phone too. Its face is the four assistants' own logos in colour,
      no words, its name in the aria-label (T-4613). #}
@@ -47,13 +49,15 @@
     <div class="jc-corner">
       {% if assistants %}<a class="jc-assistants-link" href="{{ h.url_for('jc_pages.assistants') }}" aria-label="{{ h.jc_t('assistants_label') }}">{% for mark in ('claude', 'chatgpt', 'gemini', 'mcp') %}<span class="jc-seg jc-seg-{{ mark }}">{% include 'jc/brand-' ~ mark ~ '.svg' %}</span>{% endfor %}</a>{% endif %}
       {% if widget %}
-        <details class="jc-assistant">
+        <details class="jc-assistant" id="jc-assistant">
           <summary><span>{{ h.jc_t('assistant') }}</span></summary>
-          <iframe src="{{ widget }}?embed=1" title="{{ h.jc_t('assistant') }}" loading="lazy" referrerpolicy="no-referrer"></iframe>
+          <iframe src="{{ widget }}?embed=1&amp;dock=1" title="{{ h.jc_t('assistant') }}" loading="lazy" referrerpolicy="no-referrer"></iframe>
         </details>
       {% endif %}
     </div>
-    {% if widget %}<script src="{{ h.url_for_static('/jc-assistant.js') }}" defer></script>{% endif %}
+    {# T-4685: not deferred, so a panel open on the page before is open again before the first
+       paint (jc-dock.js holds that paint until here). #}
+    {% if widget %}<script src="{{ h.url_for_static('/jc-assistant.js') }}"></script>{% endif %}
   {% endif %}
 {% endblock %}
 

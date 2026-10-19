@@ -33,7 +33,7 @@ pipeline:
         let valid = content().parse_json().or([]).filter(r -> [1, 2, 3].contains(r.Validity) && r.End.type() == "array" && r.End.length() == 3 && r.Value.number().catch(-1) >= 0)
         let latest = $valid.sort_by(r -> r.End.index(2) * 86400 + (r.End.index(1) * 4294967296 + r.End.index(0)) / 1000000000).slice(-1).index(0).catch(null)
         root = if $latest == null { [] } else { [{
-          "id": "urn:ngsi-ld:%v:%v:%v:eea-%v".format("AirQualityObserved", env("JC_ORG_DOMAIN"), env("JC_SPACE"), $station),
+          "id": "urn:ngsi-ld:%v:%v:%v:eea-%v".format("AirQualityObserved", "zilina.sk", env("JC_SPACE"), $station),
           "type": "AirQualityObserved",
           "name": { "type": "LanguageProperty", "languageMap": { "sk": "Stanica SK0020A, mestské pozadie", "en": "Station SK0020A, urban background" } },
           "stationCode": { "type": "Property", "value": $station },

@@ -22,3 +22,10 @@ postgres:
     repository: ghcr.io/cloudnative-pg/postgis
     tag: '16-3.6-system-trixie'
     digest: 'sha256:06e22a518417c6ecfec4c23f7c2f8a4608405e559b97143e98b54f363ac03507'
+  # The monthly restore drill (T-0046) is a shell script around kubectl: it creates the
+  # throwaway Cluster, waits for it, counts rows through `kubectl exec` and deletes it. The same
+  # kubectl-on-Alpine pin as the sandbox reaper; re-pin both with the cluster's upgrade.
+  drDrill:
+    repository: alpine/kubectl
+    tag: '1.33.4'
+    digest: 'sha256:f032392d7c23894ac391425ff5ff9658c064279d8519df8eb8c7d38dde867ce5'

@@ -128,3 +128,42 @@ def test_the_prod_guard_refuses_dev_and_lookalikes(tmp_path, server):
 def test_the_prod_guard_accepts_the_production_cluster(tmp_path):
     result = run_prod_guard(tmp_path, PROD_SERVER)
     assert result.returncode == 0, result.stderr
+
+
+def test_postgres_is_dumped_nightly_and_the_dump_job_may_reach_it(smartcity):
+    """No object store yet, so a nightly pg_dumpall onto the node is the backup (T-4678)."""
+    jobs = [d for d in smartcity if d.get("kind") == "CronJob" and d["metadata"]["name"] == "postgres-cluster-local-backup"]
+    assert len(jobs) == 1
+    pod = jobs[0]["spec"]["jobTemplate"]["spec"]["template"]
+    script = pod["spec"]["containers"][0]["command"][-1]
+    assert "pg_dumpall" in script and "exit 1" in script
+    labels = pod["metadata"]["labels"]
+    selected = [
+        d for d in smartcity if d.get("kind") == "NetworkPolicy"
+        and "Egress" in d["spec"].get("policyTypes", [])
+        and (d["spec"]["podSelector"].get("matchLabels") or {}).items() <= labels.items()
+        and any(p.get("port") == 4143 for rule in d["spec"].get("egress", []) for p in rule.get("ports", []))
+    ]
+    assert selected, "no egress policy lets the dump job's proxy reach postgres on 4143"
+    # local-path binds the volume only for a pod that mounts it: a Job of the apply does, or the
+    # release waits on a Pending PVC until the night (prod apply 2026-10-19).
+    now = [d for d in smartcity if d.get("kind") == "Job" and d["metadata"]["name"] == "postgres-cluster-local-backup-now"]
+    assert len(now) == 1 and now[0]["spec"]["ttlSecondsAfterFinished"] > 0
+    claims = {v["persistentVolumeClaim"]["claimName"] for v in now[0]["spec"]["template"]["spec"]["volumes"] if "persistentVolumeClaim" in v}
+    assert claims == {"postgres-cluster-local-backup"}
+
+
+# smartcity's copies of dev's environment files, which differ from dev's in the domain alone.
+# global and portal carry the instance's own choices and are tested above instead.
+COPIES = ["ckan", "gitea", "gitea-runner", "node-storage", "pipeline-runner", "wasm-host"]
+
+
+@pytest.mark.parametrize("name", COPIES)
+def test_the_environment_copies_differ_from_dev_in_the_domain_alone(name):
+    """A copy edited on one side drifts silently: T-4632's api.{domain} reached dev's assistant
+    prompt and not prod's (found by scripts/parity.py, 2026-10-19)."""
+    environments = PROJECT_ROOT / ".ci/example-deployments/environments"
+    dev = (environments / f"dev/{name}.yaml.gotmpl").read_text()
+    copy = (environments / f"smartcity/{name}.yaml.gotmpl").read_text()
+    expected = re.sub(r"data\.dev\b", "data.smartcity", dev.replace("dev.joinedcontext.com", DOMAIN))
+    assert copy == expected, f"smartcity/{name}.yaml.gotmpl: regenerate it from dev's with the domain replaced"

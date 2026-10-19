@@ -33,7 +33,7 @@ pipeline:
         let updated = $ds.update.or("").ts_parse("2006-01-02").ts_format("2006-01-02T15:04:05Z07:00", "UTC").catch(null)
         # One entity per cell that carries a number. A cell the publisher left empty is not a zero.
         root = range(0, $ds.value.length(), 1).map_each(p -> { "at": range(0, $n, 1).map_each(k -> { $ids.index(k): $codes.index(k).index(((p / $strides.index(k)).floor().int64()) % $sizes.index(k)) }).squash(), "cell": $ds.value.index(p) }).filter(c -> c.cell != null).map_each(c -> {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("KeyPerformanceIndicator", env("JC_ORG_DOMAIN"), env("JC_SPACE"), [$cube, c.at.get($area_dim), c.at.get($period_dim), c.at.get($indicator_dim)].concat($key_dims.map_each(d -> c.at.get(d))).join("-")),
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("KeyPerformanceIndicator", "zilina.sk", env("JC_SPACE"), [$cube, c.at.get($area_dim), c.at.get($period_dim), c.at.get($indicator_dim)].concat($key_dims.map_each(d -> c.at.get(d))).join("-")),
           "type": "KeyPerformanceIndicator",
           "dataSet": { "type": "Property", "value": $cube },
           "indicator": { "type": "Property", "value": c.at.get($indicator_dim) },

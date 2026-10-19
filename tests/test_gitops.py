@@ -6,6 +6,7 @@ no Application rewrites a Secret, the helmfile plugin marks every object that ho
 is never pruned (OPS-55), and Argo CD fits the 600 Mi the node has for it."""
 
 import json
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -65,12 +66,13 @@ def labels(release):
 
 
 @requires_helmfile
-def test_the_committed_component_list_is_what_the_generator_writes(assembled):
+@pytest.mark.parametrize("env", ["dev", "smartcity"])
+def test_the_committed_component_list_is_what_the_generator_writes(assembled, env):
     out = subprocess.run(
-        ["python3", "scripts/gitops-apps.py", "dev"], cwd=ROOT, check=True, capture_output=True, text=True,
+        ["python3", "scripts/gitops-apps.py", env], cwd=ROOT, check=True, capture_output=True, text=True,
     ).stdout
-    assert out == (ROOT / "gitops/dev.yaml").read_text(), (
-        "gitops/dev.yaml is stale: python3 scripts/gitops-apps.py dev > gitops/dev.yaml"
+    assert out == (ROOT / f"gitops/{env}.yaml").read_text(), (
+        f"gitops/{env}.yaml is stale: python3 scripts/gitops-apps.py {env} > gitops/{env}.yaml"
     )
 
 
@@ -203,7 +205,8 @@ def test_argocd_and_its_root_render_in_the_addons_environment_within_600_mi(rend
     [app] = [d for d in argocd if d["kind"] == "Application"]
     assert app["metadata"]["name"] == "addons" and app["spec"]["project"] == "default"
     assert app["spec"]["source"]["path"] == "gitops/chart"
-    assert app["spec"]["source"]["helm"]["valueFiles"] == ["../addons.yaml", "../hold.yaml"]
+    assert app["spec"]["source"]["helm"]["valueFiles"] == ["../addons.yaml", "../hold.yaml", "../hold-addons.yaml"]
+    assert app["spec"]["source"]["helm"]["ignoreMissingValueFiles"] is True
 
     requested = 0
     for workload in argocd:
@@ -275,7 +278,7 @@ def test_the_gate_waits_for_every_application_at_the_revision_then_checks_each_s
 
 
 def test_the_gate_chart_runs_after_the_sync_reads_only_and_checks_only_deployed_surfaces():
-    image = "ghcr.io/helmfile/helmfile:v1.8.1@sha256:" + "0" * 64
+    image = "ghcr.io/marek-mraz-jc/joinedcontext-gitops-helmfile:1.8.1@sha256:" + "0" * 64
     rendered = subprocess.run(
         ["helm", "template", "dev-smoke", "gitops/smoke", "--namespace", "argocd", "-f", "gitops/dev.yaml",
          "--set-string", "revision=abc", "--set-string", f"image={image}"],
@@ -393,3 +396,88 @@ def test_the_pin_waits_for_a_green_ci_and_refuses_an_image_image_yml_did_not_sig
     fake.ci, fake.cosign = [{"status": "completed", "conclusion": "success"}], 1
     with pytest.raises(SystemExit, match="no signature"):
         module.main("platform")
+
+
+def test_a_red_image_build_or_a_refusing_pin_portal_pins_nothing_and_says_so(monkeypatch, capsys, tmp_path):
+    """Supervisor 2026-10-19 (pin-images 39193766897): the Portal's image.yml failed after some
+    images were out, and pin-portal.sh then crashed the job. A red image.yml waits like an
+    unfinished ci; a pin-portal.sh that refuses is said in words and leaves no half pin."""
+    module = _pin_images()
+    commit = "c" * 40
+    runs = {}
+
+    def fake(*args, check=True):
+        if args[0] == "gh":
+            workflow = args[args.index("--workflow") + 1]
+            return subprocess.CompletedProcess(args, 0, json.dumps(runs[workflow]), "")
+        out = {"git": f"{commit}\trefs/heads/main\n",
+               "docker": "Name: x\nMediaType: y\nDigest:    sha256:" + "d" * 64 + "\n"}.get(args[0], "")
+        return subprocess.CompletedProcess(args, 0, out, "")
+
+    monkeypatch.setattr(module, "run", fake)
+    monkeypatch.setattr(module, "pin_files", lambda pins: pytest.fail("pinned"))
+    ok = [{"status": "completed", "conclusion": "success"}]
+    runs.update({"ci.yml": ok, "image.yml": [{"status": "completed", "conclusion": "failure"}]})
+    module.main("portal")
+    captured = capsys.readouterr()
+    assert "image.yml is not green" in captured.err and captured.out == ""
+    runs["image.yml"] = ok
+    ran = []
+    real_run = subprocess.run
+    monkeypatch.setattr(module.subprocess, "run",
+                        lambda argv, **kw: ran.append(argv) or subprocess.CompletedProcess(argv, 255 if argv[0].endswith("pin-portal.sh") else 0))
+    module.main("portal")
+    captured = capsys.readouterr()
+    assert "pin-portal.sh refused (exit 255); nothing pinned" in captured.err and captured.out == ""
+    assert ran[-1] == ["git", "checkout", "--", "components"]
+    # The script itself names a missing image in words instead of dying in set -e.
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    (bin_dir / "docker").write_text("#!/bin/sh\nexit 1\n")
+    (bin_dir / "docker").chmod(0o755)
+    env = dict(os.environ, PATH=f"{bin_dir}:{os.environ['PATH']}")
+    script = real_run([str(ROOT / "scripts/pin-portal.sh"), commit], env=env, capture_output=True, text=True)
+    assert script.returncode == 1 and "not all three images are published" in script.stderr
+
+
+@pytest.mark.skipif(shutil.which("just") is None, reason="just not installed")
+def test_promotion_takes_only_dev_green_commits_and_release_only_moves_forward(tmp_path):
+    """prod's Argo CD follows `release` (T-4678): promote, rollback, promote again, never forced."""
+    def git(*args, cwd=tmp_path / "work"):
+        return subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True).stdout.strip()
+
+    def just(*args):
+        env = dict(os.environ, JUST_NO_DOTENV="true", GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@t",
+                   GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@t")
+        return subprocess.run(["just", *args], cwd=tmp_path / "work", env=env, capture_output=True, text=True)
+
+    subprocess.run(["git", "init", "-q", "--bare", "-b", "main", str(tmp_path / "origin")], check=True)
+    git("clone", "-q", str(tmp_path / "origin"), "work", cwd=tmp_path)
+    git("config", "user.email", "t@t"); git("config", "user.name", "t")
+    shutil.copy(ROOT / "justfile", tmp_path / "work/justfile")
+    shas = []
+    for n in range(3):
+        (tmp_path / "work/pin").write_text(f"{n}\n")
+        git("add", "-A"); git("commit", "-qm", f"pin {n}"); shas.append(git("rev-parse", "HEAD"))
+    git("push", "-q", "origin", "main")
+
+    assert just("dev-green", shas[0]).returncode == 0
+    refused = just("promote", shas[1])
+    assert refused.returncode != 0 and "not green on dev" in refused.stderr
+    assert just("promote", shas[0]).returncode == 0
+    assert git("ls-remote", "origin", "refs/heads/release").split()[0] == shas[0]
+    first = next(t for t in git("ls-remote", "--tags", "origin").split() if t.startswith("refs/tags/prod-"))
+
+    assert just("dev-green", shas[2]).returncode == 0
+    assert just("promote", shas[2]).returncode == 0
+    back = just("rollback", first.removeprefix("refs/tags/"))
+    assert back.returncode == 0, back.stderr
+    git("fetch", "-q", "origin", "release")
+    assert git("show", "origin/release:pin") == "0"
+    assert git("merge-base", "--is-ancestor", shas[2], "origin/release") == ""
+
+    again = just("promote", shas[2])
+    assert again.returncode == 0, again.stderr
+    git("fetch", "-q", "origin", "release")
+    assert git("show", "origin/release:pin") == "2"
+    assert just("rollback", "main").returncode != 0

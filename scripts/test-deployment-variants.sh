@@ -353,6 +353,11 @@ global:
   instanceSlug: dev
   initialUserEmail: admin@joinedcontext.test
   singleNamespace: ${single}
+  # The layout dev and smartcity run (CC-85). In layout 1 the whole development seed is one
+  # repository of more than a thousand tree entries, past the one page of its tree the Portal
+  # reads, and the Portal never became ready on any variant (ci-full 39197981231, T-4709).
+  configRepo:
+    layout: 2
   ingress:
     # No backticks in this heredoc: EOF is unquoted so the variant toggles interpolate, which
     # means a backtick would run as a command substitution and land its output in the file.

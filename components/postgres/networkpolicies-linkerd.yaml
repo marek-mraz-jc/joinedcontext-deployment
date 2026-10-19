@@ -17,7 +17,7 @@ postgres-allow-linkerd:
           componentNamespace: postgres
         - podSelector:
             matchLabels:
-              app.kubernetes.io/component: database-role-setup
+              joinedcontext.com/psql-client: "true"
               app.kubernetes.io/name: databases
           componentNamespace: postgres
         - podSelector:
@@ -90,6 +90,10 @@ postgres-operator-linkerd:
             matchLabels:
               cnpg.io/cluster: postgres-cluster
           componentNamespace: postgres
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: postgres-cluster-drill
+          componentNamespace: postgres
       ports:
         - protocol: TCP
           port: 4143
@@ -102,7 +106,7 @@ postgres-operator-linkerd:
 # The ingress half is already in `postgres-allow-linkerd` above.
 role-setup-linkerd:
   podSelector:
-    app.kubernetes.io/component: database-role-setup
+    joinedcontext.com/psql-client: "true"
     app.kubernetes.io/name: databases
   policyTypes:
     - Egress
@@ -126,3 +130,56 @@ role-setup-linkerd:
       ports:
         - protocol: TCP
           port: 4143
+
+# The restore drill's copy and its job (T-0046), meshed like the rest of the namespace: the
+# control plane for both, and the operator's way in to the copy's proxy.
+postgres-drill-linkerd:
+  podSelector:
+    cnpg.io/cluster: postgres-cluster-drill
+  policyTypes:
+    - Ingress
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: linkerd
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 8086
+        - protocol: TCP
+          port: 8090
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: cloudnative-pg
+          componentNamespace: postgres.operator
+      ports:
+        - port: 4143
+          protocol: TCP
+        - port: 4190
+          protocol: TCP
+        - port: 4191
+          protocol: TCP
+
+dr-drill-linkerd:
+  podSelector:
+    app.kubernetes.io/component: database-dr-drill
+    app.kubernetes.io/name: databases
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: linkerd
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 8086
+        - protocol: TCP
+          port: 8090

@@ -619,3 +619,86 @@ prod-smoke:
 	set -euo pipefail
 	just _prod-guard
 	JC_SMOKE_NO_TEST_WRITER=1 just _smoke "{{ prod_domain }}" smartcity
+
+# Moves the `dev-green` branch forward to that commit (never back, never forced).
+# Record a commit as green on dev: run after a green `just dev-apply` + `just dev-smoke` of it
+[group('prod cluster')]
+dev-green sha='HEAD':
+	#!/usr/bin/env bash
+	set -euo pipefail
+	sha=$(git rev-parse --verify "{{ sha }}^{commit}")
+	git fetch -q origin main dev-green 2>/dev/null || git fetch -q origin main
+	git merge-base --is-ancestor "$sha" origin/main || { echo "refusing: $sha is not on main" >&2; exit 1; }
+	git push origin "$sha:refs/heads/dev-green"
+
+# The push is fast-forward only: after a rollback the promotion is a merge commit carrying the
+# promoted tree. A rollback is `just rollback prod-<UTC>`.
+# Promote a dev-green commit to production, whose Argo CD syncs the `release` branch (T-4678)
+[group('prod cluster')]
+promote sha='origin/dev-green':
+	#!/usr/bin/env bash
+	set -euo pipefail
+	git fetch -q --tags origin main dev-green release 2>/dev/null || git fetch -q --tags origin main dev-green
+	sha=$(git rev-parse --verify "{{ sha }}^{commit}")
+	git merge-base --is-ancestor "$sha" origin/dev-green || { echo "refusing: $sha is not green on dev (not in origin/dev-green)" >&2; exit 1; }
+	tag="prod-$(date -u +%Y%m%dT%H%MZ)"
+	if git rev-parse -q --verify origin/release >/dev/null && ! git merge-base --is-ancestor origin/release "$sha"; then
+		sha=$(git commit-tree "$sha^{tree}" -p origin/release -p "$sha" -m "promote $sha to production")
+	fi
+	git push origin "$sha:refs/heads/release"
+	git tag "$tag" "$sha" && git push -q origin "refs/tags/$tag"
+	echo "promoted $sha as $tag"
+
+# A new commit on `release` with that tag's tree, so the branch only ever moves forward.
+# Put production back on what an earlier promotion shipped
+[group('prod cluster')]
+rollback tag:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	git fetch -q --tags origin release
+	[[ "{{ tag }}" == prod-* ]] || { echo "refusing: '{{ tag }}' is no promotion tag (prod-*)" >&2; exit 1; }
+	tree=$(git rev-parse --verify "refs/tags/{{ tag }}^{tree}")
+	commit=$(git commit-tree "$tree" -p origin/release -m "rollback production to {{ tag }}")
+	git push origin "$commit:refs/heads/release"
+	echo "release is now $commit, the tree of {{ tag }}"
+
+# ---------------------------------------------------------------------------
+# The BBSK demo (T-4687, demos/bbsk/): its own helmfile and namespace `demo-bbsk`, outside the
+# platform's deployment, on dev (the preview) or smartcity. Each recipe refuses a cluster that is
+# not the environment's own, as dev-apply and prod-apply do.
+# ---------------------------------------------------------------------------
+
+# Refuse an environment other than dev or smartcity, or a cluster that is not that one
+[group('demo bbsk')]
+_demo-bbsk-guard env:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	case "{{ env }}" in
+		dev) just _dev-guard ;;
+		smartcity) just _prod-guard ;;
+		*) echo "refusing: the BBSK demo runs on dev or smartcity, not '{{ env }}'" >&2; exit 1 ;;
+	esac
+
+# Render the BBSK demo for one environment to stdout (no cluster needed)
+[group('demo bbsk')]
+demo-bbsk-render env:
+	helmfile -f demos/bbsk/helmfile.yaml.gotmpl -e {{ env }} template --skip-deps --concurrency {{helmfile_concurrency}}
+
+# Install or update the BBSK demo on dev or smartcity
+[group('demo bbsk')]
+demo-bbsk-apply env:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	just _demo-bbsk-guard {{ env }}
+	helmfile -f demos/bbsk/helmfile.yaml.gotmpl -e {{ env }} sync --concurrency {{helmfile_concurrency}}
+	kubectl -n demo-bbsk rollout status statefulset/demo-bbsk-db --timeout=300s
+	kubectl -n demo-bbsk rollout status deployment/ckan-demo-bbsk --timeout=600s
+
+# Remove the BBSK demo whole: its releases, volumes and namespace, and nothing of the platform
+[group('demo bbsk')]
+demo-bbsk-destroy env:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	just _demo-bbsk-guard {{ env }}
+	helmfile -f demos/bbsk/helmfile.yaml.gotmpl -e {{ env }} destroy --concurrency {{helmfile_concurrency}} --skip-deps || true
+	kubectl delete namespace demo-bbsk --ignore-not-found --timeout=300s

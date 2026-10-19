@@ -60,6 +60,22 @@ jobs:
             python3 scripts/check-secrets.py "rendered-${env}.yaml"
             echo "::endgroup::"
           done
+      - name: render and gate the BBSK demo
+        # T-4687: demos/bbsk/ is its own helmfile outside the platform's environments, held to the
+        # same gates: kubeconform, digest pins, the admission policies, no plaintext secret.
+        run: |
+          set -eu
+          for env in dev smartcity; do
+            echo "::group::demo-bbsk ${env}"
+            helmfile -f demos/bbsk/helmfile.yaml.gotmpl -e "${env}" template --skip-deps > "rendered-demo-bbsk-${env}.yaml"
+            ./kubeconform -strict -ignore-missing-schemas -summary "rendered-demo-bbsk-${env}.yaml"
+            python3 scripts/ci/check-image-digests.py "rendered-demo-bbsk-${env}.yaml"
+            ./conftest test --all-namespaces -p policies "rendered-demo-bbsk-${env}.yaml"
+            python3 scripts/check-rendered-secrets.py "rendered-demo-bbsk-${env}.yaml" /tmp/scan/rendered.yaml
+            ./gitleaks detect --no-git --source /tmp/scan --config .ci/gitleaks-rendered.toml --redact --exit-code 1
+            python3 scripts/check-secrets.py "rendered-demo-bbsk-${env}.yaml"
+            echo "::endgroup::"
+          done
       - name: rendered objects match the golden list
         run: |
           scripts/render.sh local golden-check.yaml --deployed >/dev/null
@@ -161,4 +177,12 @@ jobs:
       # A module that rewrites deployment/environments/testing does it in its own copy of the tree
       # (own_tree), and each environment is rendered once for all workers (T-2895).
       # Every test file lands in exactly one shard: line n of the sorted list in shard n mod 3 (3 for 0).
+      # T-4694: the platform commit components/ai/bundle.lock names, so tests/test_ai_app.py
+      # rebuilds the standalone assistant's bundle and compares it with the committed one.
+      - name: the platform commit of the ai bundle
+        run: |
+          sha=$(sed -n 's/^platform: //p' components/ai/bundle.lock)
+          git init -q "$RUNNER_TEMP/platform"
+          git -C "$RUNNER_TEMP/platform" fetch -q --depth 1 https://github.com/marek-mraz-jc/joinedcontext-platform "$sha"
+          echo "JC_PLATFORM_DIR=$RUNNER_TEMP/platform" >> "$GITHUB_ENV"
       - run: pytest -q -n auto --dist loadgroup $(ls tests/test_*.py | sort | awk -v s=${{ matrix.shard }} 'NR % 3 == s % 3')

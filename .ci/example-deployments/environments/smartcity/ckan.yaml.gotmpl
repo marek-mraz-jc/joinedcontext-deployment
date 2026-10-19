@@ -10,7 +10,7 @@ ckan:
     languages:
       default: sk
       offered: [sk, en, cs, fi]
-    # The catalogue's name (owner, 2026-10-18: "remove data.dev and just write open data", T-4636).
+    # The catalogue's name (owner, 2026-10-18: "remove data.smartcity and just write open data", T-4636).
     site:
       title:
         sk: Otvorené dáta
@@ -30,7 +30,7 @@ ckan:
     # writes into `project`, publicId `assistant` above. The one general assistant over every
     # publisher (T-4342, owner 2026-10-16: "nie pre konkrétne mesto"); no website is crawled for
     # it (owner: no RAG crawl). `title` empty: the catalogue's own name (owner 2026-10-18:
-    # "remove data.dev and just write open data", T-4635).
+    # "remove data.smartcity and just write open data", T-4635).
     assistantSeed:
       project: bbsk
       systemPrompt: |-
@@ -40,9 +40,9 @@ ckan:
         Sprievodca portálom (odpovedaj z neho na otázky o portáli, formátoch a pripojení):
         - data.smartcity je katalóg otvorených dát (CKAN) platformy joinedcontext. Každý dataset má stránku s popisom, vydavateľom, licenciou (väčšinou Creative Commons Attribution 4.0), frekvenciou aktualizácie a zdrojmi. Dáta sú verejné, bez prihlásenia.
         - Zdroje datasetu: NGSI-LD API (živé entity, štandard ETSI NGSI-LD), WebSocket (zmeny naživo), MCP (pre AI asistentov), OGC API - Features (mapové vrstvy pre GIS), OData v4 (Excel, Power BI), súbory CSV, JSON a GeoJSON na stiahnutie a dátový model v siedmich formátoch (JSON Schema, LinkML, OWL, RDF, SHACL, kontext JSON-LD, popis slovami).
-        - Príklad NGSI-LD: curl -H 'Accept: application/ld+json' 'https://smartcity.joinedcontext.com/api/endpoint/{endpoint}/ngsi-ld/v1/entities?type=AirQualityObserved&limit=5'. Zoznam typov: …/ngsi-ld/v1/types. Presnú adresu nájdete na stránke zdroja (tlačidlo Kopírovať adresu).
+        - Príklad NGSI-LD: curl -H 'Accept: application/ld+json' 'https://api.smartcity.joinedcontext.com/api/endpoint/{endpoint}/ngsi-ld/v1/entities?type=AirQualityObserved&limit=5'. Zoznam typov: …/ngsi-ld/v1/types. Presnú adresu nájdete na stránke zdroja (tlačidlo Kopírovať adresu).
         - Príklad OGC API - Features: …/ogc/features/collections/{typ}/items?bbox=19.0,48.6,19.3,48.8 (dĺžka, šírka) vráti GeoJSON pre mapu. CSV: tlačidlo Stiahnuť na stránke zdroja.
-        - MCP: jedna adresa pre celý katalóg https://smartcity.joinedcontext.com/api/mcp. Claude (claude.ai a Claude Desktop): Nastavenia, potom Konektory, Pridať vlastný konektor, vložiť adresu, overenie nechať prázdne. ChatGPT: Nastavenia, potom Aplikácie a konektory, Vytvoriť, adresa ako URL MCP servera, bez overenia. Claude Code: claude mcp add --transport http joinedcontext https://smartcity.joinedcontext.com/api/mcp. Každý dataset má aj vlastnú MCP adresu na stránke zdroja MCP.
+        - MCP: jedna adresa pre celý katalóg https://api.smartcity.joinedcontext.com/api/mcp. Claude (claude.ai a Claude Desktop): Nastavenia, potom Konektory, Pridať vlastný konektor, vložiť adresu, overenie nechať prázdne. ChatGPT: Nastavenia, potom Aplikácie a konektory, Vytvoriť, adresa ako URL MCP servera, bez overenia. Claude Code: claude mcp add --transport http joinedcontext https://api.smartcity.joinedcontext.com/api/mcp. Každý dataset má aj vlastnú MCP adresu na stránke zdroja MCP.
         - Smart Data Model: otvorený spoločný dátový model (smartdatamodels.org, FIWARE, TM Forum, IUDX, OASC), napríklad AirQualityObserved alebo PointOfInterest. Rovnaký typ znamená rovnaké atribúty u každého vydavateľa, takže dáta viacerých miest sa dajú porovnať jedným dopytom.
         - Limity: najviac 300 otázok na návštevníka za mesiac; po ich vyčerpaní asistent ukáže odkazy na zdroje namiesto odpovede. Odpovede tvorí AI a môžu obsahovať chyby.
         Postup pri číslach: nájdi dataset v katalógu, potom cez nástroje list_types a get_type zisti typ a atribúty a query_entities vráti hodnoty. Uveď vydavateľa a odkaz na dataset.

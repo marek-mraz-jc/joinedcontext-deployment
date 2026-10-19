@@ -236,3 +236,9 @@ endpoint-zdravie.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/end
 policy-zdravie-read.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/zdravie-read.yaml
 endpoint-nabijanie.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/endpoints/banskabystrica-nabijanie.yaml
 policy-nabijanie-read.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/nabijanie-read.yaml
+# The cadastre's parcels of Banská Bystrica, register C, weekly, CC BY 4.0 ÚGKK SR (T-4697).
+datasource-kataster.yaml: projects/banskabystrica/datasources/kataster-inspire.yaml
+pipeline-kataster.yaml: projects/banskabystrica/pipelines/kataster/pipeline.yaml
+pipeline-kataster-bento.yaml: projects/banskabystrica/pipelines/kataster/bento.yaml
+endpoint-kataster.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/endpoints/banskabystrica-kataster.yaml
+policy-kataster-read.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/kataster-read.yaml

@@ -1,0 +1,228 @@
+{{- /*
+The monthly restore drill (OPS-11, OPS-12, T-0046): a CronJob restores the latest base backup
+and WAL of the cluster into a throwaway Cluster `{cluster}-drill` beside it, compares row
+counts, records RTO and RPO in the ConfigMap `{cluster}-dr-drill` and deletes the copy. The
+copy lives in the source's namespace, so the job needs a Role there and never a ClusterRole.
+*/ -}}
+{{- with .Values.drDrill }}
+{{- if .enabled }}
+{{- $name := printf "%s-dr-drill" $.Values.cluster.name }}
+{{- $drill := printf "%s-drill" $.Values.cluster.name }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "database.labels" $ | nindent 4 }}
+automountServiceAccountToken: false
+---
+{{- /*
+  `create` cannot be narrowed to a name, so the job can create a Cluster of any name here; every
+  other verb is held to a name: the source is only read, the copy is waited on and deleted. `pods/exec` reaches the source's instances
+  (their names are `{cluster}-{n}`) and the copy's one, to count rows with the local psql.
+*/}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "database.labels" $ | nindent 4 }}
+rules:
+  - apiGroups: [postgresql.cnpg.io]
+    resources: [clusters]
+    verbs: [create]
+  # The source is only read (its current primary); only the copy is waited on and deleted.
+  - apiGroups: [postgresql.cnpg.io]
+    resources: [clusters]
+    resourceNames: [{{ $.Values.cluster.name }}]
+    verbs: [get]
+  - apiGroups: [postgresql.cnpg.io]
+    resources: [clusters]
+    resourceNames: [{{ $drill }}]
+    verbs: [get, delete, watch, list]
+  - apiGroups: ['']
+    resources: [pods/exec]
+    resourceNames:
+      {{- range $n := until 9 }}
+      - {{ $.Values.cluster.name }}-{{ add1 $n }}
+      {{- end }}
+      - {{ $drill }}-1
+    verbs: [create]
+  - apiGroups: ['']
+    resources: [configmaps]
+    resourceNames: [{{ $name }}]
+    verbs: [get, patch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "database.labels" $ | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ $name }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ $name }}
+    namespace: {{ $.Release.Namespace }}
+---
+{{- /*
+  The last result. The job patches `data`; the chart renders it empty, the same in every
+  release, so Helm's three-way merge never touches the keys the job wrote.
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "database.labels" $ | nindent 4 }}
+data: {}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $name }}-script
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "database.labels" $ | nindent 4 }}
+data:
+  dr-drill.sh: |
+    {{- $.Files.Get "files/dr-drill.sh" | nindent 4 }}
+  cluster.yaml: |
+    apiVersion: postgresql.cnpg.io/v1
+    kind: Cluster
+    metadata:
+      name: {{ $drill }}
+      namespace: {{ $.Release.Namespace }}
+      labels:
+        joinedcontext.com/drill: "true"
+      annotations:
+        # The same two the source carries (components/postgres cluster values): the probe
+        # port outside mandatory mTLS, and why the instance manager reads the API.
+        config.linkerd.io/skip-inbound-ports: "8000"
+        security.joinedcontext.com/api-access-reason: >-
+          CloudNativePG instance manager of the restore drill's throwaway copy: watches its
+          own Cluster resource and reports instance status back to the operator.
+    spec:
+      instances: 1
+      imageName: {{ .clusterImage }}
+      storage:
+        size: {{ .storageSize }}
+        {{- with .storageClass }}
+        storageClass: {{ . }}
+        {{- end }}
+      resources:
+        requests: { cpu: 100m, memory: 512Mi }
+        limits: { cpu: "1", memory: 1Gi }
+      bootstrap:
+        recovery:
+          source: origin
+      externalClusters:
+        - name: origin
+          barmanObjectStore:
+            serverName: {{ $.Values.cluster.name }}
+            destinationPath: {{ .backups.destinationPath | quote }}
+            {{- with .backups.endpointURL }}
+            endpointURL: {{ . | quote }}
+            {{- end }}
+            s3Credentials:
+              accessKeyId:
+                name: {{ .backups.existingSecret }}
+                key: ACCESS_KEY_ID
+              secretAccessKey:
+                name: {{ .backups.existingSecret }}
+                key: ACCESS_SECRET_KEY
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "database.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: database-dr-drill
+spec:
+  schedule: {{ .schedule | quote }}
+  timeZone: UTC
+  # Two drills would restore into the same copy and delete it under each other.
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      # A failed drill is a finding, not something to retry over the top of.
+      backoffLimit: 0
+      activeDeadlineSeconds: {{ mul (add .timeoutMinutes 15) 60 }}
+      template:
+        metadata:
+          labels:
+            {{- include "database.selectorLabels" $ | nindent 12 }}
+            app.kubernetes.io/component: database-dr-drill
+          annotations:
+            security.joinedcontext.com/api-access-reason: >-
+              Restore drill: creates and deletes its throwaway Cluster, reads the source
+              Cluster's primary, counts rows through pods/exec on the instances and patches
+              its result ConfigMap; a Role in this namespace holds it to those names.
+            {{- if .serviceMesh }}
+            # Without this the proxy keeps running after the script exits and the Job never
+            # completes.
+            linkerd.io/inject: enabled
+            config.alpha.linkerd.io/proxy-enable-native-sidecar: "true"
+            {{- end }}
+        spec:
+          restartPolicy: Never
+          serviceAccountName: {{ $name }}
+          automountServiceAccountToken: true
+          securityContext:
+            {{- toYaml $.Values.securityDefaults.podSecurityContext | nindent 12 }}
+          containers:
+            - name: drill
+              image: {{ .image }}
+              securityContext:
+                {{- toYaml $.Values.securityDefaults.securityContext | nindent 16 }}
+              command: [/bin/sh, /opt/drill/dr-drill.sh]
+              env:
+                - name: SOURCE
+                  value: {{ $.Values.cluster.name | quote }}
+                - name: DRILL
+                  value: {{ $drill | quote }}
+                - name: RESULT
+                  value: {{ $name | quote }}
+                - name: BACKUPS_ENABLED
+                  value: {{ .backups.enabled | quote }}
+                - name: TOLERANCE_PERCENT
+                  value: {{ .tolerancePercent | quote }}
+                - name: MIN_MEM_MIB
+                  value: {{ .minMemAvailableMiB | quote }}
+                - name: TIMEOUT_MINUTES
+                  value: {{ .timeoutMinutes | quote }}
+                # kubectl writes its cache under $HOME, and the root filesystem is read-only.
+                - name: HOME
+                  value: /tmp
+              resources:
+                requests: { cpu: 10m, memory: 32Mi }
+                # The production policy require-resources asks every container for a CPU limit.
+                limits: { cpu: 200m, memory: 128Mi }
+              volumeMounts:
+                - name: script
+                  mountPath: /opt/drill
+                  readOnly: true
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: script
+              configMap:
+                name: {{ $name }}-script
+                defaultMode: 0555
+            - name: tmp
+              emptyDir: {}
+{{- end }}
+{{- end }}

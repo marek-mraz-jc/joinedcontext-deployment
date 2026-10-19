@@ -132,10 +132,12 @@ jobs:
           kubectl get all -A -o wide > diagnostics/resources.txt 2>&1 || true
           kubectl get events -A --sort-by=.lastTimestamp > diagnostics/events.txt 2>&1 || true
           kubectl get pods -A \
-            -o jsonpath='{range .items[?(@.status.phase!="Succeeded")]}{.metadata.namespace}{" "}{.metadata.name}{" "}{.status.containerStatuses[*].ready}{"\n"}{end}' \
+            -o jsonpath='{range .items[?(@.status.phase!="Succeeded")]}{.metadata.namespace}{" "}{.metadata.name}{" "}{.status.containerStatuses[*].ready}{" "}{.status.containerStatuses[*].restartCount}{"\n"}{end}' \
             > diagnostics/pods.txt 2>&1 || true
-          while read -r namespace pod ready; do
-            case "$ready" in *false*|"") ;; *) continue ;; esac
+          # A pod that is Ready again after a restart (a Job retrying, T-4709) says why in its
+          # previous log, so it is collected too.
+          while read -r namespace pod ready restarts; do
+            case "$ready $restarts" in *false*|" "*|*[1-9]*) ;; *) continue ;; esac
             kubectl describe pod -n "$namespace" "$pod" > "diagnostics/${namespace}.${pod}.describe.txt" 2>&1 || true
             kubectl logs -n "$namespace" "$pod" --all-containers --tail=200 \
               > "diagnostics/${namespace}.${pod}.log" 2>&1 || true
