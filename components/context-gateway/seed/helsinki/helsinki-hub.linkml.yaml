@@ -178,10 +178,12 @@ slots:
   calculationFormula:
     slot_uri: jc:calculationFormula
     description: 'How the value was computed, in words a reader can check the number against: the measure,
-      the aggregation, the window and any divisor, such as `per km² of the district''s own area`.'
+      the aggregation, the window and any divisor, such as `per km² of the district''s own area`.
+      English plain text: a table leaves it out, so a Slovak answer never shows English prose (T-4727).'
     required: true
     annotations:
       ngsi_ld_kind: Property
+      hidden: true
   derivedFrom:
     slot_uri: jc:derivedFrom
     description: 'The Endpoint the sources were read through, as its URN. The endpoint and not the space:
