@@ -16,10 +16,12 @@ ckan:
     # The instance's own words (T-4636), read by the theme and by its assistant's seed:
     # `title` per language (the page header, the home page, the browser tab), `tagline` per
     # language (the line under the home page's title; empty: the theme's), `logo` a file in the
-    # theme's public directory (empty: the joinedcontext.com lockup).
+    # theme's public directory (empty: the joinedcontext.com lockup), `issued` the day the
+    # catalogue went public, its DCAT `dct:issued` (`YYYY-MM-DD`; empty: none, T-4733).
     site:
       title: {}
       tagline: {}
       logo: ""
+      issued: ""
     # The MCP connector page's "Try it" questions per language, about this instance's publishers.
     samples: {}
