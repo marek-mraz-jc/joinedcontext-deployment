@@ -63,12 +63,10 @@ spec:
       - "Ako nahlásim výtlk na ceste v kraji?"
       - "Kde nájdem cestovné poriadky autobusov v kraji?"
       - "Koľko mostov spravuje kraj a koľko je starších ako 100 rokov?"
-      - "Ktoré stredné školy sú v okrese Zvolen?"
     en:
       - "How do I report a pothole on a road in the region?"
       - "Where can I find the region's bus timetables?"
       - "How many bridges does the region manage, and how many are over 100 years old?"
-      - "Which secondary schools are in the Zvolen district?"
   disclaimer:
     sk: "DEMO, nie oficiálna služba BBSK. Odpovede tvorí umelá inteligencia z verejných stránok a otvorených dát kraja a mesta. Môžu obsahovať chyby, overte si dôležité informácie v uvedených zdrojoch. Rozhovory uchovávame 90 dní na zlepšenie služby. Nezadávajte osobné údaje."
     en: "DEMO, not an official BBSK service. Answers are written by AI from the region's and the city's public pages and open data. They may contain mistakes; check important facts in the linked sources. Conversations are kept for 90 days to improve the service. Do not enter personal data."
