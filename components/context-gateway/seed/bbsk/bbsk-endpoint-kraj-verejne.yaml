@@ -20,3 +20,7 @@ spec:
   # mcp: the members of the public `otvorene-data` MCP server (T-4141) and the public
   # assistant's connectors (T-4167); the gateway lists a member only when it serves MCP.
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]
+  # Not a catalogue dataset: the region's catalogue entry is bbsk-kpi's and the ŠÚ SR cubes are datasets of their own. Its own record stays;
+  # the harvest feeds leave it out (EP-139, T-4744).
+  catalog:
+    harvest: false

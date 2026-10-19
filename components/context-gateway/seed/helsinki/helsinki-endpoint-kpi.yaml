@@ -17,6 +17,9 @@ spec:
   # No licence: an indicator is computed by a pipeline or the assistant from whatever the city space
   # holds, and no seeded source names its inputs; the licence waits for that (T-2793).
   catalog:
+    # Not a catalogue dataset: a door over the space; its indicators are datasets of their own, read by the Apps.
+    # Its own record stays; the harvest feeds leave it out (EP-139, T-4744).
+    harvest: false
     publisher: { name: { fi: "Helsingin kaupunki", sv: "Helsingfors stad", en: "City of Helsinki" }, uri: "https://www.hel.fi/" }
     themes: [REGI]
     keywords:

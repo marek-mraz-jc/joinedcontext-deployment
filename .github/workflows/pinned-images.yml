@@ -22,6 +22,12 @@ jobs:
           curl --fail --retry 3 --retry-all-errors -sSL -o checksums.txt "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_checksums.txt"
           grep " trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz$" checksums.txt | sed 's/ .*//' | sed "s/\$/  trivy.tgz/" | sha256sum -c -
           tar xzf trivy.tgz trivy && sudo install -m 0755 trivy /usr/local/bin/trivy
+      - name: retry wrapper test
+        run: scripts/trivy-scan-retry.test.sh
+      # The vulnerability DB and the image layers of a digest seen before are not downloaded again
+      # (T-4704): fewer bytes asked of ECR Public's data limit.
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with: { path: ~/.cache/trivy, key: "trivy-${{ hashFiles('components/*/images.yaml') }}", restore-keys: "trivy-" }
       - name: scan every pinned image
         env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
         run: |
@@ -32,23 +38,7 @@ jobs:
           n=0
           while read -r image; do
             n=$((n + 1))
-            # ECR Public answers TOOMANYREQUESTS (data limit) to shared runners for many minutes
-            # (runs 39202611676, 39231220139, 39237147977). Its docker/library is Docker's official
-            # images, so a retry reads the same digest from mirror.gcr.io and the report keeps the
-            # pinned name: the same bytes scanned, never a skipped image.
-            for try in 1 2 3; do
-              src=$image
-              if [ "$try" != 1 ]; then
-                case $image in ecr-public.aws.com/docker/library/*) src="mirror.gcr.io/library/${image#ecr-public.aws.com/docker/library/}" ;; esac
-              fi
-              trivy image --quiet --scanners vuln --severity CRITICAL,HIGH --format json \
-                --output "reports/${n}.json" "$src" && break
-              [ "$try" = 3 ] && exit 1
-              sleep 30
-            done
-            if [ "$src" != "$image" ]; then
-              jq --arg name "$image" '.ArtifactName = $name' "reports/${n}.json" > report.tmp && mv report.tmp "reports/${n}.json"
-            fi
+            scripts/trivy-scan-retry.sh "$image" "reports/${n}.json"
           done < pinned.txt
       - name: CISA known exploited vulnerabilities
         # CISA's own copy on GitHub: its web site answers 403 to a script.

@@ -23,6 +23,9 @@ spec:
   # ODbL 1.0: the space holds the city bikes feed, and its share-alike duty governs the whole; every
   # other source is CC BY 4.0 and keeps its attribution.
   catalog:
+    # Not a catalogue dataset: a door over the space; T-4344 split its types into datasets of their own, read by the Apps.
+    # Its own record stays; the harvest feeds leave it out (EP-139, T-4744).
+    harvest: false
     publisher: { name: { fi: "Helsingin kaupunki", sv: "Helsingfors stad", en: "City of Helsinki" }, uri: "https://www.hel.fi/" }
     license: ODC_ODBL
     attribution: { fi: "Lähteet: HSL, Fintraffic / digitraffic.fi, Ilmatieteen laitos, Helsingin kaupunki (CC BY 4.0); Kaupunkipyörät-syöte (Inurba), ODbL 1.0", sv: "Källor: HRT, Fintraffic / digitraffic.fi, Meteorologiska institutet, Helsingfors stad (CC BY 4.0); stadscykelflödet (Inurba), ODbL 1.0", en: "Sources: HSL, Fintraffic / digitraffic.fi, Finnish Meteorological Institute, City of Helsinki (CC BY 4.0); City Bikes feed (Inurba), ODbL 1.0" }
