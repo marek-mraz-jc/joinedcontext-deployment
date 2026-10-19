@@ -165,8 +165,10 @@ pre { background: var(--ink); color: var(--white); padding: 1rem; overflow-x: au
 body:has(.jc-assistant.jc-full[open]) { overflow: hidden; }
 .jc-dock-edge { display: none; }
 @media (min-width: 1100px) {
-  html.jc-docked { --jc-dock-w: clamp(360px, var(--jc-dock, 34vw), 50vw); }
-  html.jc-docked body { margin-right: var(--jc-dock-w); }
+  /* Docked, the page scrolls in its body beside the frame, not the window behind it: one bar at the
+     screen's edge, the chat's (T-4767). */
+  html.jc-docked { --jc-dock-w: clamp(360px, var(--jc-dock, 34vw), 50vw); overflow: hidden; }
+  html.jc-docked body { margin-right: var(--jc-dock-w); height: 100vh; height: 100dvh; overflow-y: auto; scroll-padding-top: calc(var(--ribbon) + 1rem); }
   html.jc-docked .ribbon { right: var(--jc-dock-w); }
   html.jc-docked .jc-assistant[open]:not(.jc-full) > iframe { top: var(--ribbon); bottom: auto; right: 0; width: var(--jc-dock-w); height: calc(100vh - var(--ribbon)); height: calc(100dvh - var(--ribbon)); border-width: 0 0 0 1px; border-radius: 0; box-shadow: none; }
   html.jc-docked .jc-assistant[open]:not(.jc-full) > .jc-dock-edge { display: block; position: fixed; top: var(--ribbon); bottom: 0; right: calc(var(--jc-dock-w) - 4px); width: 8px; cursor: col-resize; touch-action: none; z-index: 1; }
