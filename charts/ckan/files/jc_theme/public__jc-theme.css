@@ -681,12 +681,12 @@ body.jc-embed { margin: 0; background: var(--jc-surface); }
 .jc-card-links { margin: auto 0 0; display: flex; flex-wrap: wrap; gap: .5rem 1rem; }
 .jc-card-link { font-weight: 600; }
 /* T-4643: the guide sits above the card's whole-card link, so it stays its own target. */
-.jc-card-guide { position: relative; z-index: 1; }
 .jc-card-link::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
 .jc-assistant-card:has(.jc-card-link) { cursor: pointer; }
 .jc-assistant-card:has(.jc-card-link:hover) { border-color: var(--jc-primary); }
 .jc-card-link:focus-visible { outline: none; }
 .jc-assistant-card:has(.jc-card-link:focus-visible) { outline: 3px solid var(--jc-accent); outline-offset: 2px; }
+.jc-connector-status { margin: 0 0 1rem; padding: .75rem 1rem; background: var(--jc-primary-soft); color: var(--jc-primary-soft-fg); border-inline-start: 4px solid var(--jc-primary); border-radius: var(--jc-radius); }
 .jc-store-address { margin: 1.5rem 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
 .jc-store-url { font-weight: 600; overflow-wrap: anywhere; }
 /* One assistant, step by step (T-4643). */

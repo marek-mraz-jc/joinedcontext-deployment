@@ -415,8 +415,14 @@ STRINGS = {
     },
     "assistants_source_languages": {"en": "Languages", "sk": "Jazyky", "cs": "Jazyky", "de": "Sprachen"},
     "coming_soon": {"en": "Coming soon", "sk": "Čoskoro", "cs": "Brzy", "de": "Demnächst"},
-    # T-4628: a card is the logo, the name and one link to that assistant's connector store.
-    "add_to": {"en": "Add to {name}", "sk": "Pridať do {name}", "cs": "Přidat do {name}", "de": "Zu {name} hinzufügen"},
+    # T-4735 (owner 2026-10-19): no directory lists the connector yet, so /assistants and
+    # /connector say so once, above the cards; the line goes when a directory lists us.
+    "connector_status": {
+        "en": "We are still preparing this connector: it is not yet published in the Claude or ChatGPT directories. Until then, add it as a custom connector by following the guide.",
+        "sk": "Konektor pripravujeme: v adresároch Claude a ChatGPT ešte nie je zverejnený. Zatiaľ ho pridáte ako vlastný konektor podľa návodu.",
+        "cs": "Konektor připravujeme: v adresářích Claude a ChatGPT zatím není zveřejněný. Do té doby ho přidáte jako vlastní konektor podle návodu.",
+        "de": "Wir bereiten diesen Connector noch vor: In den Verzeichnissen von Claude und ChatGPT ist er noch nicht veröffentlicht. Bis dahin fügen Sie ihn als eigenen Connector nach der Anleitung hinzu.",
+    },
     "store_address": {"en": "Each guide shows where to paste this address:",
                       "sk": "Každý návod ukazuje, kam vložiť túto adresu:",
                       "cs": "Každý návod ukazuje, kam vložit tuto adresu:",
@@ -1757,16 +1763,6 @@ def jc_mcp_install():
     }
 
 
-CHATGPT_PLUGINS = "https://chatgpt.com/plugins"
-CLAUDE_CONNECTORS = "https://claude.ai/customize/connectors"
-# Grok's web app takes a custom MCP connector there, New Connector > Custom (T-4634, read
-# 2026-10-18: docs.x.ai/build/features/mcp-servers).
-GROK_CONNECTORS = "https://grok.com/connectors"
-# Gemini's Connected Apps, where a custom app is added (T-4643, read 2026-10-18: Google's help
-# support.google.com/gemini/answer/17209137).
-GEMINI_APPS = "https://gemini.google.com/apps"
-
-
 def jc_gemini_on():
     """Gemini's card, only once its sign-in through the gateway's own OAuth works on this
     installation (T-4631, T-4630): the chart's `assistants.gemini`, off unless set."""
@@ -1798,7 +1794,8 @@ def jc_assistant_sources():
 def jc_assistants():
     """The "Use it in your AI assistant" page (T-4585, T-4628, T-4634, T-4643): a card per assistant
     whose app takes our connector, ChatGPT, Claude, Grok, then Gemini once its flag is on, each its
-    logo, its name, a link to its connector store and one to our guide; None without the hub.
+    logo, its name and its guide, which the whole card opens; None without the hub. No card links
+    to a store: our connector is listed in none yet, so each guide adds it as a custom one (T-4735).
     Gemini's card stays off: the owner removed the option (T-4735), so neither its card nor the
     Gemini CLI command shows. The hub's address stands once under the
     cards, because our connector is listed in no store yet.
@@ -1809,14 +1806,12 @@ def jc_assistants():
         return None
     name = BRANDING.get("instanceName") or MCP_NAME
 
-    def card(id, title, store):
-        return {"id": id, "name": title, "logo": "jc/card-%s.svg" % id, "open": store,
-                "open_label": jc_t("add_to").replace("{name}", title), "guide_label": jc_t("guide")}
+    def card(id, title):
+        return {"id": id, "name": title, "logo": "jc/card-%s.svg" % id, "guide_label": jc_t("guide")}
 
-    cards = [card("chatgpt", "ChatGPT", CHATGPT_PLUGINS), card("claude", "Claude", CLAUDE_CONNECTORS),
-             card("grok", "Grok", GROK_CONNECTORS)]
+    cards = [card("chatgpt", "ChatGPT"), card("claude", "Claude"), card("grok", "Grok")]
     if jc_gemini_on():
-        cards.append(card("gemini", "Gemini", GEMINI_APPS))
+        cards.append(card("gemini", "Gemini"))
 
     return {
         "lead": jc_t("assistants_lead").replace("{name}", name),
@@ -1830,70 +1825,71 @@ def jc_assistants():
 # an assistant: who may, numbered steps in the assistant's own words, a question to try and what
 # goes wrong. `paste` is the step whose address box follows it; `{name}` the catalogue's connector.
 # Every step was read against the maker's own help page on `checked`; screenshots come from the
-# owner later, so no step leans on one. No step names a protocol: those words stay in the fold.
+# owner later, so no step leans on one. Each adds our address as a custom MCP
+# server, never a plugin or a store listing (T-4735).
 GUIDES = {
     "chatgpt": {
-        "name": "ChatGPT", "start": CHATGPT_PLUGINS, "checked": "2026-10-18", "paste": 3,
+        "name": "ChatGPT", "checked": "2026-10-18", "paste": 3,
         "help": "https://help.openai.com/en/articles/12584461",
         "en": {
             "who": ["On chatgpt.com in a computer's browser, with ChatGPT Business, Enterprise or Edu. With Pro, turn on developer mode in the settings first; it then reads only, which is all this catalogue needs.",
                     "OpenAI names no other plan, so Free and Plus may not offer it yet."],
-            "steps": ["Open chatgpt.com/plugins on your computer and sign in.",
-                      "Click + and choose to add your own server.",
+            "steps": ["On your computer, open chatgpt.com, sign in and go to Plugins.",
+                      "Click + and choose Add custom MCP server.",
                       "Type {name} as the name.",
                       "Paste this address into the connection field:",
                       "Under sign-in, choose no authentication.",
-                      "Read the warning, tick that you understand, and create the plugin.",
-                      "Install it, start a new chat, type @ and pick {name}."],
-            "trouble": [("There is no option to add your own server.", "Your plan does not offer it: see who can use it above. In a company account, your administrator has to allow it."),
+                      "Read the warning, tick that you understand, and click Create.",
+                      "In a new chat type @ and choose {name}."],
+            "trouble": [("There is no option to add a custom MCP server.", "Your plan does not offer it: see who can use it above. In a company account, your administrator has to allow it."),
                         ("ChatGPT cannot reach the address.", "Copy the address again with the button and paste it whole, with nothing before or after it."),
                         ("The answer does not use the catalogue.", "Start a new chat, type @, pick {name} and ask again.")],
         },
         "sk": {
             "who": ["Na chatgpt.com v prehliadači v počítači, s plánom ChatGPT Business, Enterprise alebo Edu. S plánom Pro najprv v nastaveniach zapnite režim pre vývojárov; potom iba číta, čo tomuto katalógu stačí.",
                     "Iné plány OpenAI neuvádza, Free a Plus to teda zatiaľ nemusia ponúkať."],
-            "steps": ["Na počítači otvorte chatgpt.com/plugins a prihláste sa.",
-                      "Kliknite na + a vyberte pridanie vlastného servera.",
+            "steps": ["Na počítači otvorte chatgpt.com, prihláste sa a prejdite na Plugins.",
+                      "Kliknite na + a pridajte vlastný MCP server.",
                       "Ako názov napíšte {name}.",
                       "Do poľa pre pripojenie vložte túto adresu:",
                       "Pri prihlasovaní zvoľte možnosť bez overenia.",
-                      "Prečítajte si upozornenie, označte, že mu rozumiete, a doplnok vytvorte.",
-                      "Nainštalujte ho, otvorte nový rozhovor, napíšte @ a vyberte {name}."],
-            "trouble": [("Možnosť pridať vlastný server tam nie je.", "Váš plán ju nemá: pozrite, kto to môže použiť. Vo firemnom účte ju musí povoliť správca."),
+                      "Prečítajte si upozornenie, označte, že mu rozumiete, a kliknite na vytvoriť.",
+                      "V novom rozhovore napíšte @ a vyberte {name}."],
+            "trouble": [("Možnosť pridať vlastný MCP server tam nie je.", "Váš plán ju nemá: pozrite, kto to môže použiť. Vo firemnom účte ju musí povoliť správca."),
                         ("ChatGPT sa na adresu nedostane.", "Skopírujte adresu znova tlačidlom a vložte ju celú, bez ničoho pred ňou a za ňou."),
                         ("Odpoveď katalóg nepoužije.", "Otvorte nový rozhovor, napíšte @, vyberte {name} a opýtajte sa znova.")],
         },
         "cs": {
             "who": ["Na chatgpt.com v prohlížeči v počítači, s plánem ChatGPT Business, Enterprise nebo Edu. S plánem Pro nejprve v nastavení zapněte režim pro vývojáře; pak jen čte, což tomuto katalogu stačí.",
                     "Jiné plány OpenAI neuvádí, Free a Plus to tedy zatím nemusí nabízet."],
-            "steps": ["Na počítači otevřete chatgpt.com/plugins a přihlaste se.",
-                      "Klikněte na + a vyberte přidání vlastního serveru.",
+            "steps": ["Na počítači otevřete chatgpt.com, přihlaste se a přejděte na Plugins.",
+                      "Klikněte na + a přidejte vlastní MCP server.",
                       "Jako název napište {name}.",
                       "Do pole pro připojení vložte tuto adresu:",
                       "U přihlašování zvolte možnost bez ověření.",
-                      "Přečtěte si upozornění, označte, že mu rozumíte, a doplněk vytvořte.",
-                      "Nainstalujte ho, otevřete nový rozhovor, napište @ a vyberte {name}."],
-            "trouble": [("Možnost přidat vlastní server tam není.", "Váš plán ji nemá: podívejte se, kdo to může použít. Ve firemním účtu ji musí povolit správce."),
+                      "Přečtěte si upozornění, označte, že mu rozumíte, a klikněte na vytvořit.",
+                      "V novém rozhovoru napište @ a vyberte {name}."],
+            "trouble": [("Možnost přidat vlastní MCP server tam není.", "Váš plán ji nemá: podívejte se, kdo to může použít. Ve firemním účtu ji musí povolit správce."),
                         ("ChatGPT se na adresu nedostane.", "Zkopírujte adresu znovu tlačítkem a vložte ji celou, bez ničeho před ní a za ní."),
                         ("Odpověď katalog nepoužije.", "Otevřete nový rozhovor, napište @, vyberte {name} a zeptejte se znovu.")],
         },
         "de": {
             "who": ["Auf chatgpt.com im Browser am Computer, mit ChatGPT Business, Enterprise oder Edu. Mit Pro schalten Sie zuerst in den Einstellungen den Entwicklermodus ein; dann liest er nur, was diesem Katalog genügt.",
                     "Andere Pläne nennt OpenAI nicht, Free und Plus bieten es also womöglich noch nicht an."],
-            "steps": ["Öffnen Sie am Computer chatgpt.com/plugins und melden Sie sich an.",
-                      "Klicken Sie auf + und wählen Sie, einen eigenen Server hinzuzufügen.",
+            "steps": ["Öffnen Sie am Computer chatgpt.com, melden Sie sich an und gehen Sie zu Plugins.",
+                      "Klicken Sie auf + und fügen Sie einen eigenen MCP-Server hinzu.",
                       "Geben Sie als Namen {name} ein.",
                       "Fügen Sie diese Adresse in das Feld für die Verbindung ein:",
                       "Wählen Sie bei der Anmeldung die Möglichkeit ohne Authentifizierung.",
-                      "Lesen Sie die Warnung, bestätigen Sie, dass Sie sie verstehen, und erstellen Sie das Plugin.",
-                      "Installieren Sie es, beginnen Sie einen neuen Chat, tippen Sie @ und wählen Sie {name}."],
-            "trouble": [("Es gibt keine Möglichkeit, einen eigenen Server hinzuzufügen.", "Ihr Plan bietet sie nicht: siehe oben, wer es nutzen kann. In einem Firmenkonto muss Ihre Administration sie erlauben."),
+                      "Lesen Sie die Warnung, bestätigen Sie, dass Sie sie verstehen, und klicken Sie auf Erstellen.",
+                      "Tippen Sie in einem neuen Chat @ und wählen Sie {name}."],
+            "trouble": [("Es gibt keine Möglichkeit, einen eigenen MCP-Server hinzuzufügen.", "Ihr Plan bietet sie nicht: siehe oben, wer es nutzen kann. In einem Firmenkonto muss Ihre Administration sie erlauben."),
                         ("ChatGPT erreicht die Adresse nicht.", "Kopieren Sie die Adresse erneut mit der Schaltfläche und fügen Sie sie vollständig ein, ohne etwas davor oder danach."),
                         ("Die Antwort nutzt den Katalog nicht.", "Beginnen Sie einen neuen Chat, tippen Sie @, wählen Sie {name} und fragen Sie erneut.")],
         },
     },
     "claude": {
-        "name": "Claude", "start": CLAUDE_CONNECTORS, "checked": "2026-10-18", "paste": 3,
+        "name": "Claude", "checked": "2026-10-18", "paste": 3,
         "help": "https://support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp",
         "en": {
             "who": ["Every Claude plan, the free one too: a free account may add one connector of its own.",
@@ -1953,7 +1949,7 @@ GUIDES = {
         },
     },
     "grok": {
-        "name": "Grok", "start": GROK_CONNECTORS, "checked": "2026-10-18", "paste": 2,
+        "name": "Grok", "checked": "2026-10-18", "paste": 2,
         "help": "https://docs.x.ai/grok/connectors",
         "en": {
             "who": ["Every Grok user, on grok.com; on a phone the same page is under Settings, Connectors.",
@@ -2001,7 +1997,7 @@ GUIDES = {
         },
     },
     "gemini": {
-        "name": "Gemini", "start": GEMINI_APPS, "checked": "2026-10-18", "paste": 3,
+        "name": "Gemini", "checked": "2026-10-18", "paste": 3,
         "help": "https://support.google.com/gemini/answer/17209137",
         "en": {
             "who": ["Google offers it to people aged 18 or over in the US, with a personal Google account (not a work or school one) and Gemini's activity setting switched on.",
@@ -2074,7 +2070,7 @@ def jc_assistant_guide(id):
     own = BRANDING.get("samples")
     samples = _samples(asked) if asked != "en" or not isinstance(own, dict) or own.get("en") else []
     return {
-        "id": id, "name": guide["name"], "start": guide["start"], "help": guide["help"],
+        "id": id, "name": guide["name"], "help": guide["help"],
         "title": jc_t("guide_title").replace("{name}", guide["name"]),
         "who": words["who"], "steps": steps, "paste": guide["paste"], "mcp": page["mcp"],
         "example": samples[0] if samples else STRINGS["guide_example"].get(asked) or STRINGS["guide_example"]["en"],

@@ -2,8 +2,8 @@
 
 {# One assistant, step by step (T-4643), for someone who has never added anything to one: who may,
    numbered steps with the address to paste inside the step that asks for it, a question to try,
-   what goes wrong, and the maker's help page the steps were checked against. No protocol words:
-   they stay in the developers' fold of /assistants. #}
+   what goes wrong, and the maker's help page the steps were checked against. Each adds our address
+   as a custom MCP server, never a plugin or a store listing, and has no store button (T-4735). #}
 {% set guide = jc_guide %}
 
 {% block subtitle %}{{ guide.title }}{% endblock %}
@@ -32,7 +32,6 @@
       {% endfor %}
     </ol>
     <p class="visually-hidden" role="status" aria-live="polite" id="jc-copy-status"></p>
-    <p><a class="btn btn-primary" href="{{ guide.start }}" target="_blank" rel="noopener noreferrer">{{ h.jc_t('add_to').replace('{name}', guide.name) }}</a></p>
     <h2>{{ h.jc_t('guide_try') }}</h2>
     <blockquote class="jc-guide-example">{{ guide.example }}</blockquote>
     <p>{{ guide.good }}</p>
