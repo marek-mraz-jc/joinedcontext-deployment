@@ -47,6 +47,11 @@ def docs_tree(commit: str, into: Path) -> bool:
     return True
 
 
+# Built, never written whole: this tree is part of the code the checker reads, and a literal
+# name here would count as read.
+MISSING = "JC_NO_SUCH_" + "VARIABLE"
+
+
 def test_docs_naming_a_route_and_a_variable_the_pinned_code_lacks_are_refused(tmp_path):
     if not docs_tree(pins()["docs"], tmp_path):
         pytest.skip("GitHub cannot be reached")
@@ -54,7 +59,7 @@ def test_docs_naming_a_route_and_a_variable_the_pinned_code_lacks_are_refused(tm
     page.write_text(
         "---\ntitle: Fixture\n---\n\n# Fixture\n\n## 1. Route\n\n"
         "```http\nGET /api/v1/no-such-route\n```\n\n"
-        "Set `JC_NO_SUCH_VARIABLE` to turn it on.\n"
+        f"Set `{MISSING}` to turn it on.\n"
     )
     run = subprocess.run([str(ROOT / "scripts/check-docs-pin.sh"), "--docs", str(tmp_path)],
                          capture_output=True, text=True, timeout=600)
@@ -63,4 +68,4 @@ def test_docs_naming_a_route_and_a_variable_the_pinned_code_lacks_are_refused(tm
         pytest.skip("the registry or GitHub cannot be reached")
     assert run.returncode == 1, out
     assert "API/99-fixture.md" in out and "GET /api/v1/no-such-route is in no path" in out, out
-    assert "JC_NO_SUCH_VARIABLE" in out, out
+    assert MISSING in out, out
