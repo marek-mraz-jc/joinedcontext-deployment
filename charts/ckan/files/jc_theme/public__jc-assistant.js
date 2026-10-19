@@ -122,7 +122,7 @@
   if (state.open && frame) {
     frame.loading = "eager";
     if (state.widget && ours(state.widget) && state.widget !== frame.src.split("?")[0]) {
-      frame.src = state.widget + "?embed=1&dock=1";
+      frame.src = state.widget + "?embed=1&dock=1&scheme=light";
     }
     box.open = true;
     // Focus stays in the chat across the page change, as it was.

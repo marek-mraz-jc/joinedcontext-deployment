@@ -972,7 +972,7 @@ def test_the_footer_offers_the_assistant_as_a_disclosure_a_keyboard_opens():
     # T-4280: the chat opens in Slovak or the visitor's own choice in it; the page's language
     # (T-4253) no longer reaches it.
     # T-4635: embed mode, so the chat's header carries the ✕ that closes the panel.
-    assert '<iframe src="{{ widget }}?embed=1&amp;dock=1"' in footer
+    assert '<iframe src="{{ widget }}?embed=1&amp;dock=1&amp;scheme=light"' in footer
     assert "lang=" not in footer.split("<iframe", 1)[1].split(">", 1)[0]
 
 
