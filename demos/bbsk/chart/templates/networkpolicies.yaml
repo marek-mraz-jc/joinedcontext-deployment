@@ -1,5 +1,5 @@
 {{- /*
-  The demo's namespace is closed (T-4687): nothing comes in but the ingress controller to CKAN and
+  The demo's namespace is closed (T-4687): nothing comes in but the ingress controller to the landing page (T-4740), CKAN and
   to cert-manager's HTTP-01 solver, and nothing goes out but DNS, the pods of this namespace, the
   harvests to public 443 and the API token Job to the Kubernetes API. Nothing reaches a platform
   namespace and no platform namespace reaches here.
@@ -42,6 +42,23 @@ spec:
         - {{ toYaml $edge | nindent 10 | trim }}
       ports:
         - { protocol: TCP, port: 5000 }
+---
+# The landing page (T-4740): the ingress controller only, on nginx's port.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: demo-bbsk-landing
+  namespace: {{ $ns }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: demo-bbsk-landing
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - {{ toYaml $edge | nindent 10 | trim }}
+      ports:
+        - { protocol: TCP, port: 8080 }
 ---
 # cert-manager's solver pod answers the ACME HTTP-01 challenge for the host's certificate.
 apiVersion: networking.k8s.io/v1

@@ -1,0 +1,149 @@
+/* The BBSK demo's landing page (T-4740). The look of www.bbsk.sk rebuilt in our own CSS: its blue,
+   dark and light grey, the utility bar, the two-line wordmark, the blue band of three links and
+   the card grid with a blue head. No file, font or image of theirs; no coat of arms. */
+:root {
+  --blue: #264a96;
+  --blue-dark: #1d3871;
+  --blue-light: #d5dceb;
+  --red: #da2125;
+  --ink: #21252b;
+  --muted: #56595d;
+  --ground: #f4f6fa;
+  --line: #d3d3d5;
+  --white: #fff;
+  --ribbon: 2.25rem;
+  --sans: "Roboto", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --display: "Manrope", "Segoe UI", "Helvetica Neue", Arial, system-ui, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html { scroll-padding-top: calc(var(--ribbon) + 1rem); }
+body { margin: 0; padding-top: var(--ribbon); font: 300 1rem/1.7 var(--sans); color: var(--ink); background: var(--white); }
+a { color: var(--blue); }
+a:hover { color: var(--blue-dark); }
+a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px solid var(--red); outline-offset: 2px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 700; line-height: 1.2; color: var(--ink); }
+h2 { font-size: clamp(1.75rem, 3vw, 2.5rem); margin: 0 0 1.5rem; }
+.wrap { max-width: 1140px; margin: 0 auto; padding: 0 1rem; }
+.skip { position: absolute; left: -9999px; }
+.skip:focus { left: 1rem; top: calc(var(--ribbon) + .5rem); z-index: 30; background: var(--white); padding: .5rem 1rem; }
+
+/* DEMO on every width, above everything but the open assistant. */
+.ribbon { position: fixed; inset: 0 0 auto; z-index: 20; min-height: var(--ribbon); display: flex; align-items: center; justify-content: center; padding: .25rem 1rem; background: var(--red); color: var(--white); font: 600 .875rem/1.3 var(--sans); text-align: center; }
+
+.utility { background: var(--ground); font-size: .8125rem; }
+.utility .wrap { display: flex; flex-wrap: wrap; gap: .25rem 1.5rem; align-items: center; justify-content: space-between; min-height: 2.25rem; }
+.utility nav { display: flex; flex-wrap: wrap; gap: .25rem 1.25rem; }
+.utility a { color: var(--muted); text-decoration: none; }
+.utility a:hover { color: var(--blue); }
+.utility .lang a[aria-current] { color: var(--blue); font-weight: 700; }
+
+.header { background: var(--white); }
+.header .wrap { display: flex; align-items: stretch; justify-content: space-between; min-height: 5.25rem; padding-right: 0; }
+.wordmark { display: flex; align-items: center; gap: .75rem; text-decoration: none; color: var(--blue); padding: .75rem 0; }
+.wordmark span { font: 800 1.125rem/1.1 var(--display); text-transform: uppercase; letter-spacing: .01em; }
+.wordmark span small { display: block; font-weight: 500; font-size: 1.0625rem; }
+.wordmark b { font: 800 .75rem/1 var(--sans); color: var(--white); background: var(--red); padding: .3rem .45rem; border-radius: 3px; letter-spacing: .08em; }
+.actions { display: flex; }
+.actions a, .actions button { display: flex; align-items: center; gap: .6rem; padding: 0 2rem; color: var(--white); text-decoration: none; font-weight: 500; }
+.actions .ask { background: var(--ink); cursor: pointer; border: 0; font: inherit; font-weight: 500; }
+.actions .data { background: var(--blue); }
+.actions svg { width: 1.1rem; height: 1.1rem; fill: currentColor; }
+
+.band { background: var(--blue); color: var(--white); }
+.band ul { list-style: none; margin: 0 auto; padding: 1.25rem 1rem; max-width: 1140px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.band li + li { border-left: 1px solid rgba(255, 255, 255, .25); padding-left: 2rem; }
+.band a { color: var(--white); text-decoration: none; display: block; }
+.band strong { font: 600 1.25rem/1.3 var(--display); display: block; }
+.band strong::after { content: " ›"; }
+.band small { font-size: .8125rem; opacity: .85; }
+
+/* The hero: hills drawn by gradients, no photograph, and a white card on them. */
+.hero { background:
+    linear-gradient(170deg, transparent 58%, rgba(29, 56, 113, .55) 58.2%, rgba(29, 56, 113, .55) 100%),
+    linear-gradient(185deg, transparent 66%, rgba(38, 74, 150, .7) 66.2%),
+    linear-gradient(180deg, #9db4dc 0%, #d5dceb 55%, #f4f6fa 100%);
+  padding: 4rem 0; }
+.hero .card { background: var(--white); max-width: 46rem; padding: 2.25rem 2.5rem; border-radius: 4px; box-shadow: 0 8px 30px rgba(29, 56, 113, .18); }
+.hero h1 { font-size: clamp(1.75rem, 3.6vw, 2.75rem); margin: 0 0 1rem; color: var(--blue); }
+.hero p { margin: 0 0 1.5rem; font-size: 1.0625rem; }
+.button { display: inline-flex; align-items: center; gap: .5rem; background: var(--blue); color: var(--white); border: 0; border-radius: 3px; padding: .8rem 1.5rem; font: 500 1rem/1.2 var(--sans); cursor: pointer; text-decoration: none; }
+.button:hover { background: var(--blue-dark); color: var(--white); }
+.note { font-size: .875rem; color: var(--muted); }
+.hero .note { margin: 1.25rem 0 0; }
+
+section { padding: 4rem 0; }
+section.grey { background: var(--ground); }
+.lead { max-width: 46rem; margin: -.5rem 0 2rem; }
+
+/* The question cards, in the look of bbsk.sk's service grid. */
+.cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr)); gap: 1.25rem; }
+.cards li { display: flex; }
+.cards button { flex: 1; display: flex; flex-direction: column; text-align: left; padding: 0; border: 0; background: var(--ground); cursor: pointer; font: inherit; color: inherit; border-radius: 0; }
+section.grey .cards button { background: var(--white); }
+.cards .head { display: flex; align-items: center; justify-content: center; height: 6.25rem; width: 100%; background: var(--blue); color: var(--white); }
+.cards .head svg { width: 3rem; height: 3rem; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.cards strong { display: block; padding: 1.25rem 1.25rem .25rem; font: 600 1.1875rem/1.35 var(--display); color: var(--blue); }
+.cards strong::after { content: " ›"; }
+.cards small { display: block; padding: 0 1.25rem 1.25rem; color: var(--muted); font-size: .875rem; }
+.cards button:hover strong { color: var(--blue-dark); text-decoration: underline; }
+
+.steps { counter-reset: step; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: 1.25rem; }
+.steps li { counter-increment: step; background: var(--white); padding: 1.5rem; border-top: 4px solid var(--blue); }
+.steps li::before { content: counter(step); display: block; font: 800 2rem/1 var(--display); color: var(--blue); margin-bottom: .75rem; }
+.steps h3 { margin: 0 0 .5rem; font-size: 1.125rem; }
+.steps p { margin: 0; }
+
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 1.25rem; }
+.panel { background: var(--ground); padding: 1.5rem; }
+section.grey .panel { background: var(--white); }
+.panel h3 { margin: 0 0 .5rem; font-size: 1.25rem; }
+.panel ol, .panel ul { padding-left: 1.25rem; margin: .5rem 0 0; }
+code, pre { font: 400 .875rem/1.5 SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+pre { background: var(--ink); color: var(--white); padding: 1rem; overflow-x: auto; margin: .75rem 0 0; white-space: pre-wrap; word-break: break-all; }
+.url { display: block; background: var(--white); border: 1px solid var(--line); padding: .75rem 1rem; word-break: break-all; font-size: 1rem; }
+
+.footer { background: var(--blue-dark); color: var(--white); padding: 3rem 0 2.5rem; font-size: .875rem; }
+.footer a { color: var(--white); }
+.footer .demo { font-weight: 600; font-size: 1rem; margin: 0 0 1rem; }
+.footer p { margin: .25rem 0; opacity: .9; }
+
+/* The assistant (T-4685): a button until opened; open, a panel at the corner, docked to the right
+   edge on a wide screen with the page beside it, the whole screen on a phone. jc-assistant.js,
+   the catalogue's own, moves it between those and keeps it open across reloads in this tab. */
+.jc-assistant { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 15; }
+.jc-assistant > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: .5rem; background: var(--blue); color: var(--white); border-radius: 3px; padding: .9rem 1.4rem; font-weight: 600; box-shadow: 0 6px 18px rgba(29, 56, 113, .35); }
+.jc-assistant > summary::-webkit-details-marker { display: none; }
+.jc-assistant[open] > summary { display: none; }
+.jc-assistant > iframe { position: fixed; right: 1rem; bottom: max(1rem, env(safe-area-inset-bottom)); width: min(26rem, calc(100vw - 2rem)); height: min(760px, calc(100vh - var(--ribbon) - 2rem)); height: min(760px, calc(100dvh - var(--ribbon) - 2rem)); border: 1px solid var(--line); border-radius: 6px; background: var(--white); box-shadow: 0 8px 30px rgba(0, 0, 0, .25); }
+.jc-assistant.jc-full > iframe { right: max(1rem, calc((100vw - 60rem) / 2)); top: calc(var(--ribbon) + 1rem); width: min(60rem, calc(100vw - 2rem)); height: calc(100vh - var(--ribbon) - 2rem); height: calc(100dvh - var(--ribbon) - 2rem); }
+body:has(.jc-assistant.jc-full[open]) { overflow: hidden; }
+.jc-dock-edge { display: none; }
+@media (min-width: 1100px) {
+  html.jc-docked { --jc-dock-w: clamp(360px, var(--jc-dock, 34vw), 50vw); }
+  html.jc-docked body { margin-right: var(--jc-dock-w); }
+  html.jc-docked .ribbon { right: var(--jc-dock-w); }
+  html.jc-docked .jc-assistant[open]:not(.jc-full) > iframe { top: var(--ribbon); bottom: auto; right: 0; width: var(--jc-dock-w); height: calc(100vh - var(--ribbon)); height: calc(100dvh - var(--ribbon)); border-width: 0 0 0 1px; border-radius: 0; box-shadow: none; }
+  html.jc-docked .jc-assistant[open]:not(.jc-full) > .jc-dock-edge { display: block; position: fixed; top: var(--ribbon); bottom: 0; right: calc(var(--jc-dock-w) - 4px); width: 8px; cursor: col-resize; touch-action: none; z-index: 1; }
+  .jc-dock-edge:focus-visible { outline: 3px solid var(--red); outline-offset: -3px; }
+  html.jc-dragging .jc-assistant > iframe { pointer-events: none; }
+}
+
+@media (max-width: 900px) {
+  .band ul { grid-template-columns: 1fr; }
+  .band li + li { border-left: 0; padding-left: 0; border-top: 1px solid rgba(255, 255, 255, .25); padding-top: 1rem; }
+  .actions a, .actions button { padding: 0 1rem; }
+}
+@media (max-width: 640px) {
+  :root { --ribbon: 2.75rem; }
+  .header .wrap { flex-wrap: wrap; padding-right: 1rem; }
+  .actions { width: 100%; }
+  .actions > * { flex: 1; justify-content: center; min-height: 3rem; }
+  .hero { padding: 2rem 0; }
+  .hero .card { padding: 1.5rem; }
+  section { padding: 2.5rem 0; }
+  body:has(.jc-assistant[open]) { overflow: hidden; }
+  .jc-assistant[open] { inset: 0; z-index: 25; }
+  .jc-assistant[open] > iframe { inset: 0; width: 100%; height: 100vh; height: 100dvh; border: 0; border-radius: 0; }
+}
+@media (prefers-reduced-motion: no-preference) { .cards button, .button { transition: background-color .15s; } }

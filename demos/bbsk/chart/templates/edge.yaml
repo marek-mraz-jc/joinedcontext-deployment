@@ -1,5 +1,5 @@
 {{- /*
-  The demo's own public host (T-4687), on the cluster's ingress controller and not on the
+  The demo's own public host (T-4687), serving its landing page (T-4740), on the cluster's ingress controller and not on the
   platform's APISIX, so removing the demo touches no platform route. One explicit certificate by
   HTTP-01 for the one name, as the platform edge does (T-0045). Every answer says noindex, so a
   search engine never lists a demo as BBSK's site.
@@ -73,6 +73,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ .Values.ckanService }}
+                name: demo-bbsk-landing
                 port:
-                  number: 5000
+                  number: 8080

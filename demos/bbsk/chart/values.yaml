@@ -4,8 +4,20 @@ host: ''
 # cert-manager's ClusterIssuer for the host's certificate (HTTP-01, one name, never a wildcard).
 clusterIssuer: letsencrypt-prod
 ingressClass: traefik
-# The CKAN release's Service, which the edge sends the host to.
+# The platform's domain: the landing page frames assistant.{domain} and links api.{domain} and
+# opendata.{domain} (T-4740).
+domain: ''
+# The CKAN release's Service. Since T-4740 the host serves the landing page; the catalogue stays
+# behind it, unrouted, until the owner OKs the page and it is removed.
 ckanService: ckan-demo-bbsk
+landing:
+  # The platform's pinned nginx (components/basemap/images.yaml), `repository:tag@digest`.
+  image: ''
+  # The catalogue theme's dock scripts by file name, filled from charts/ckan (values/base.yaml.gotmpl).
+  scripts: {}
+  resources:
+    requests: { cpu: 10m, memory: 16Mi }
+    limits: { memory: 64Mi }
 # The namespaces the ingress controller may run in (kube-hetzner: traefik; k3s: kube-system).
 ingressNamespaces: [traefik, kube-system]
 postgres:

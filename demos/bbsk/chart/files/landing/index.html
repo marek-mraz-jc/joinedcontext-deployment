@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>DEMO · AI asistent nad dátami Banskobystrického kraja (ukážka, nie oficiálna stránka BBSK)</title>
+<meta name="description" content="Ukážka od joinedcontext: AI asistent nad otvorenými dátami Banskobystrického samosprávneho kraja a mesta Banská Bystrica. Nie je to oficiálna stránka BBSK.">
+<link rel="stylesheet" href="/landing.css">
+<script src="/jc-dock.js"></script>
+</head>
+<body>
+<a class="skip" href="#obsah">Preskočiť na obsah</a>
+<div class="ribbon" role="note">DEMO · ukážka od joinedcontext, nie oficiálna stránka BBSK</div>
+
+<div class="utility">
+  <div class="wrap">
+    <nav aria-label="Rýchle odkazy">
+      <a href="#vyskusajte">Vyskúšajte asistenta</a>
+      <a href="#ako-to-funguje">Ako to funguje</a>
+      <a href="#mcp">Pripojiť vlastného AI asistenta</a>
+      <a href="https://opendata.__DOMAIN__/organization/bbsk">Otvorené dáta</a>
+    </nav>
+    <nav class="lang" aria-label="Jazyk"><a href="/en/" hreflang="en" lang="en">EN</a> <a href="/" aria-current="page">SK</a></nav>
+  </div>
+</div>
+
+<header class="header">
+  <div class="wrap">
+    <a class="wordmark" href="/" aria-label="Banskobystrický samosprávny kraj, DEMO, úvod">
+      <span>Banskobystrický<small>samosprávny kraj</small></span><b>DEMO</b>
+    </a>
+    <div class="actions">
+      <button type="button" class="ask" data-ask><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>Opýtať sa asistenta</button>
+      <a class="data" href="https://opendata.__DOMAIN__/organization/bbsk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v3H3zM3 10.5h18v3H3zM3 16h18v3H3z"/></svg>Datasety</a>
+    </div>
+  </div>
+</header>
+
+<nav class="band" aria-label="Na tejto stránke">
+  <ul>
+    <li><a href="#vyskusajte"><strong>Vyskúšajte asistenta</strong><small>Šesť otázok na dáta kraja a mesta</small></a></li>
+    <li><a href="#ako-to-funguje"><strong>Ako to funguje</strong><small>Od dát k odpovedi so zdrojom</small></a></li>
+    <li><a href="#mcp"><strong>Váš AI asistent</strong><small>Tie isté dáta v Claude, ChatGPT či VS Code</small></a></li>
+  </ul>
+</nav>
+
+<main id="obsah">
+<div class="hero">
+  <div class="wrap">
+    <div class="card">
+      <h1>AI asistent nad dátami vášho kraja: vyskúšajte ho</h1>
+      <p>Opýtajte sa po slovensky na cyklotrasy, mosty, školy, lekárne či nehodovosť v Banskobystrickom kraji. Asistent odpovedá z webu www.bbsk.sk a z otvorených dát kraja a mesta Banská Bystrica a pri každom fakte uvedie zdroj.</p>
+      <button type="button" class="button" data-ask>Otvoriť asistenta</button>
+      <p class="note">Ukážka (DEMO) od joinedcontext pre Banskobystrický samosprávny kraj. Nejde o oficiálnu službu BBSK.</p>
+    </div>
+  </div>
+</div>
+
+<section id="vyskusajte">
+  <div class="wrap">
+    <h2>Vyskúšajte</h2>
+    <p class="lead">Kliknite na otázku: otvorí sa asistent a rovnakú otázku v ňom nájdete medzi návrhmi. Alebo napíšte vlastnú.</p>
+    <ul class="cards">
+      <li><button type="button" data-ask><span class="head"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="12" cy="32" r="8"/><circle cx="36" cy="32" r="8"/><path d="M12 32l8-14h12l4 14M20 18l-3-5h-4M24 32l8-14"/></svg></span><strong>Kde nájdem mapu cyklotrás v kraji?</strong><small>Mapa z dát kraja</small></button></li>
+      <li><button type="button" data-ask><span class="head"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M4 22h40M4 22c8 0 12 8 20 8s12-8 20-8M10 22v16M24 30v8M38 22v16M4 38h40"/></svg></span><strong>Koľko mostov spravuje kraj a koľko je starších ako 100 rokov?</strong><small>Register mostov</small></button></li>
+      <li><button type="button" data-ask><span class="head"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M4 18l20-9 20 9-20 9zM12 22v10c0 3 6 6 12 6s12-3 12-6V22M44 18v12"/></svg></span><strong>Ktoré stredné školy sú v okrese Zvolen?</strong><small>Školy v zriaďovateľskej pôsobnosti kraja</small></button></li>
+      <li><button type="button" data-ask><span class="head"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="18"/><path d="M24 14v20M14 24h20"/></svg></span><strong>Kde je najbližšia lekáreň k Námestiu SNP?</strong><small>Zoznam lekární na mape</small></button></li>
+      <li><button type="button" data-ask><span class="head"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 6v36h36M12 34l8-10 7 5 13-15"/></svg></span><strong>Ako sa vyvíja nehodovosť v kraji?</strong><small>Graf z rokov, ktoré dáta obsahujú</small></button></li>
+      <li><button type="button" data-ask><span class="head"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 8h36v24H20l-10 8v-8H6zM24 14v9M24 27v.5"/></svg></span><strong>Kde môžem nahlásiť problém na cyklochodníku?</strong><small>Odpoveď z webu www.bbsk.sk</small></button></li>
+    </ul>
+  </div>
+</section>
+
+<section id="ako-to-funguje" class="grey">
+  <div class="wrap">
+    <h2>Ako to funguje</h2>
+    <ol class="steps">
+      <li><h3>Dáta kraja a mesta</h3><p>Otvorené dáta BBSK (opendata.bbsk.sk) a mesta Banská Bystrica sa načítajú do dátového priestoru NGSI-LD podľa štandardných modelov Smart Data Models.</p></li>
+      <li><h3>Endpoint a pravidlá</h3><p>Každý verejný dataset má svoj Endpoint s pravidlami prístupu. Verejne sa dá len čítať, nikto cez neho nič nezmení.</p></li>
+      <li><h3>MCP</h3><p>Asistent sa na Endpointy pýta cez otvorený protokol MCP, rovnako ako ktorýkoľvek AI asistent, ktorý si pripojíte sami.</p></li>
+      <li><h3>Web kraja (RAG)</h3><p>Stránky www.bbsk.sk a www.banskabystrica.sk asistent prehľadáva vo vlastnom indexe, ktorý sa obnovuje každý týždeň.</p></li>
+    </ol>
+    <p>Ukážka obsahuje len dáta BBSK a mesta Banská Bystrica. Všetky datasety nájdete v katalógu: <a href="https://opendata.__DOMAIN__/organization/bbsk">Banskobystrický samosprávny kraj</a> a <a href="https://opendata.__DOMAIN__/organization/banskabystrica">mesto Banská Bystrica</a>.</p>
+  </div>
+</section>
+
+<section id="mcp">
+  <div class="wrap">
+    <h2>Pripojte vlastného AI asistenta (MCP)</h2>
+    <p class="lead">Tie isté dáta a ten istý web kraja máte aj vo svojom AI asistentovi. Konektor len číta, nepotrebuje prihlásenie ani kľúč.</p>
+    <p><strong>Adresa konektora</strong><code class="url">https://api.__DOMAIN__/api/mcp/d/bbsk-demo</code></p>
+    <div class="two">
+      <div class="panel">
+        <h3>Claude (claude.ai a Claude Desktop)</h3>
+        <ol>
+          <li>Otvorte Prispôsobiť, potom Konektory, zvoľte + Pridať a Pridať vlastný konektor.</li>
+          <li>Pomenujte ho napríklad „BBSK demo“ a vložte adresu vyššie.</li>
+          <li>Rozšírené nastavenia nechajte prázdne a zvoľte Pridať.</li>
+        </ol>
+        <p>Potom sa opýtajte: „Kde nájdem mapu cyklotrás v kraji?“</p>
+      </div>
+      <div class="panel">
+        <h3>Claude Code, VS Code a iní klienti MCP</h3>
+        <pre>claude mcp add --transport http bbsk-demo https://api.__DOMAIN__/api/mcp/d/bbsk-demo</pre>
+        <pre>{ "servers": { "bbsk-demo": { "type": "http", "url": "https://api.__DOMAIN__/api/mcp/d/bbsk-demo" } } }</pre>
+        <p>ChatGPT: podľa <a href="https://developers.openai.com/apps-sdk/deploy/connect-chatgpt">návodu OpenAI na pripojenie vlastného konektora</a>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sukromie" class="grey">
+  <div class="wrap">
+    <h2>Súkromie a limity</h2>
+    <div class="two">
+      <div class="panel">
+        <h3>Odpovede tvorí umelá inteligencia</h3>
+        <p>Môžu obsahovať chyby. Dôležité informácie si overte v uvedených zdrojoch alebo na <a href="https://www.bbsk.sk/kontakty">www.bbsk.sk/kontakty</a>.</p>
+      </div>
+      <div class="panel">
+        <h3>Čo uchovávame</h3>
+        <p>Rozhovory uchovávame 90 dní na zlepšenie služby, osobné údaje v nich maskujeme. Nezadávajte osobné údaje. Stránka nepoužíva cookies ani analytiku. Asistent má denný limit; keď sa minie, povie to a odpovedá znova na druhý deň.</p>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <p class="demo">DEMO · ukážka od joinedcontext, nie oficiálna stránka BBSK</p>
+    <p>Oficiálna stránka Banskobystrického samosprávneho kraja je <a href="https://www.bbsk.sk/">www.bbsk.sk</a>.</p>
+    <p>Dáta: otvorené dáta Banskobystrického samosprávneho kraja a mesta Banská Bystrica, s licenciou, ktorú uvádza každý dataset.</p>
+    <p>Prevádzkuje joinedcontext.</p>
+  </div>
+</footer>
+
+<details class="jc-assistant" id="jc-assistant">
+  <summary><span>Asistent</span></summary>
+  <iframe src="https://assistant.__DOMAIN__/d/bbsk-demo/widget?embed=1&amp;dock=1" title="Asistent" loading="lazy" referrerpolicy="no-referrer"></iframe>
+</details>
+<script src="/jc-assistant.js"></script>
+<script src="/landing.js"></script>
+</body>
+</html>
