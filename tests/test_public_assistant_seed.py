@@ -419,3 +419,21 @@ def test_the_open_data_eval_copies_are_data_with_another_model():
         assert spec["model"] == model, name
         assert {k: v for k, v in spec.items() if k not in ("publicId", "model")} == \
             {k: v for k, v in base.items() if k not in ("publicId", "model")}, name
+
+
+# The EU data themes in their table's order (platform jc-core DataTheme::ALL).
+THEMES = ["AGRI", "ECON", "EDUC", "ENER", "ENVI", "GOVE", "HEAL", "INTR", "JUST", "REGI", "SOCI", "TECH", "TRAN"]
+
+
+@pytest.mark.parametrize("public_id", BODIES)
+def test_the_categories_are_the_themes_of_what_it_reads(public_id):
+    """T-4694 (AG-124): the categories the context page shows are its connectors' themes, each once, in
+    the table's order; a connector added or dropped without its theme fails here."""
+    spec = deployment(public_id)["spec"]
+    own = BODIES[public_id][0]
+    read = set()
+    for connector in spec["connectors"]:
+        project, _, name = connector["endpoint"].rpartition("/")
+        endpoint = manifests("Endpoint", project or own)[name]
+        read |= set(endpoint["spec"].get("catalog", {}).get("themes", []))
+    assert spec["categories"] == [t for t in THEMES if t in read]

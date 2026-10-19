@@ -26,6 +26,9 @@ spec:
   # tests/test_public_assistant_seed.py fails when a member is added there and not here.
   # The national open data of project slovensko, and nothing else of another project (T-4340).
   scope: { projects: [slovensko] }
+  # The EU themes of what it reads (AG-124, T-4694): the union of its connectors' themes; the
+  # context page lists them. The curated connectors stay: no selector gives exactly this set.
+  categories: [ENVI, GOVE, HEAL, REGI, SOCI, TRAN]
   connectors:
     - { endpoint: bbsk-registre, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
     - { endpoint: bbsk-kraj-verejne, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }

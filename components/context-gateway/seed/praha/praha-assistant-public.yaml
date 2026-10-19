@@ -23,6 +23,9 @@ spec:
   sources: [web, data-portal, catalogue]
   # The national open data of project slovensko, and nothing else of another project (T-4340).
   scope: { projects: [slovensko] }
+  # The EU themes of what it reads (AG-124, T-4694): the union of its connectors' themes; the
+  # context page lists them. The curated connectors stay: no selector gives exactly this set.
+  categories: [ECON, EDUC, ENVI, GOVE, REGI, TRAN]
   connectors:
     - { endpoint: praha-mesto, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
     # Slovakia's air quality at every station (T-4340, owner 2026-10-16): the one national
