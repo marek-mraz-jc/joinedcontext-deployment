@@ -402,6 +402,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .jc-footer-brand { display: flex; align-items: center; gap: .625rem; margin-bottom: .75rem; }
 .jc-footer-brand img { height: 2rem; width: 2rem; }
 .jc-footer-brand span { font-family: var(--jc-font-heading); font-size: 1.25rem; font-weight: 700; color: var(--jc-paper); }
+.jc-ribbon { position: sticky; top: 0; z-index: 1030; padding: .375rem 1rem; text-align: center; font-weight: 600; background: var(--jc-accent); color: var(--jc-text); }
 .jc-footer-lines { font-size: .875rem; }
 .jc-footer-lines p { margin: 0 0 .375rem; }
 .site-footer .form-select, .site-footer select { background-color: color-mix(in oklab, var(--jc-paper) 10%, var(--jc-ink)); color: var(--jc-paper); border-color: color-mix(in oklab, var(--jc-paper) 25%, var(--jc-ink)); }

@@ -333,6 +333,21 @@ def test_the_mcp_panel_names_the_installation_s_hub_and_nothing_else(theme):
         assert "endpoint/" not in unquote(line) and "token" not in line.lower() and "bearer" not in line.lower()
 
 
+@pytest.mark.parametrize("server, path", [
+    ("d/bbsk-demo", "/api/mcp/d/bbsk-demo"),
+    # Anything but `d/{publicId}` leaves the hub: no other path, no climbing, no query.
+    ("d/../admin", "/api/mcp"), ("x/bbsk-demo", "/api/mcp"), ("d/Bbsk", "/api/mcp"),
+    ("d/bbsk?x=1", "/api/mcp"), ("d/", "/api/mcp"), (7, "/api/mcp"), (None, "/api/mcp"),
+])
+def test_a_demo_offers_its_assistant_s_own_server_and_nothing_else(theme, server, path):
+    """T-4687: branding `mcpServer` names one assistant's server (T-4691) for every client line."""
+    theme.BRANDING["mcpServer"] = server
+    mcp = theme.jc_mcp_install()
+    url = "https://api.dev.example" + path
+    assert mcp["url"] == url
+    assert mcp["claude"].endswith(url) and json.loads(mcp["json"])["mcpServers"]["joinedcontext"]["url"] == url
+
+
 @pytest.mark.parametrize("domain", [None, "", "dev.example\" onmouseover=\"x", "dev.example/evil", "localhost", 7])
 def test_the_mcp_panel_is_left_out_without_a_plain_domain(theme, domain):
     theme.BRANDING["domain"] = domain
@@ -510,6 +525,23 @@ def test_tagline_and_footer_lines_are_read_as_words_and_nothing_else(theme, tmp_
     block.write_text(json.dumps({"tagline": {"x": 1}, "footerLines": "not a list"}))
     loaded = theme._load()
     assert loaded["tagline"] == "" and loaded["footerLines"] == []
+
+
+def test_a_demo_ribbon_and_noindex_come_from_the_branding_block_alone(theme, tmp_path):
+    """T-4687: a demo says so on every page and keeps search engines out; nothing else does."""
+    assert theme.BRANDING["ribbon"] == "" and theme.BRANDING["noindex"] is False
+    block = tmp_path / "demo.json"
+    block.write_text(json.dumps({"ribbon": "  DEMO · ukážka  ", "noindex": True}))
+    theme.BRANDING_FILE = str(block)
+    loaded = theme._load()
+    assert loaded["ribbon"] == "DEMO · ukážka" and loaded["noindex"] is True
+    block.write_text(json.dumps({"ribbon": ["DEMO"], "noindex": "yes"}))
+    loaded = theme._load()
+    assert loaded["ribbon"] == "" and loaded["noindex"] is False
+    header = (THEME / "header.html").read_text()
+    assert '{% if ribbon %}<div class="jc-ribbon" role="note">{{ ribbon }}</div>{% endif %}' in header
+    assert '<meta name="robots" content="noindex, nofollow">' in (THEME / "templates__base.html").read_text()
+    assert ".jc-ribbon { position: sticky; top: 0;" in (THEME / "public__jc-theme.css").read_text()
 
 
 def test_the_footer_carries_the_installations_links_and_none_of_ckans():
