@@ -32,7 +32,7 @@ spec:
   # Read-only tools on the bodies' public open-data Endpoints (T-4256, T-4281).
   connectors:
 {{- range $e := $a.connectors }}
-    - { endpoint: {{ $e }}, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: {{ $e }}, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
 {{- end }}
   scope: { projects: [{{ join ", " $a.scope }}] }
   allowedOrigins: [https://{{ $i.subDomain }}.{{ .domain }}]

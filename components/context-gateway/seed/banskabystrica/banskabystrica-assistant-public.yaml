@@ -30,11 +30,11 @@ spec:
   # The national open data of project slovensko, and nothing else of another project (T-4340).
   scope: { projects: [slovensko] }
   connectors:
-    - { endpoint: banskabystrica-verejne, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: banskabystrica-otvorene-data, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: banskabystrica-verejne, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: banskabystrica-otvorene-data, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
     # Slovakia's air quality at every station (T-4340, owner 2026-10-16): the one national
     # dataset every public assistant reads, through the public Endpoint of project slovensko.
-    - { endpoint: slovensko/ovzdusie-sk, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: slovensko/ovzdusie-sk, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
   # The full chat page on the assistant host itself, the platform's demo page, and every page of
   # the city's dataset pages in the data catalogue (dev's `ckan.catalogue`, T-4281).
   allowedOrigins: [https://assistant.dev.joinedcontext.com, https://dev.joinedcontext.com, https://data.dev.joinedcontext.com]
