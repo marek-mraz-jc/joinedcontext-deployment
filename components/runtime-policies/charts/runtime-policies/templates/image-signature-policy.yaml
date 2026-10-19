@@ -43,3 +43,53 @@ spec:
                     rekor:
                       url: https://rekor.sigstore.dev
 {{- end }}
+{{- /*
+T-4721: a namespace labelled `joinedcontext.com/tier=production` admits only images that passed
+the full tests: besides the signature above, the digest must carry the `full-tests/v1`
+attestation the source repository's promote.yml adds when its full suites were green. A
+`dev-<N>` digest (built and smoke-tested by ship) has none and is refused. Selected by the
+namespace label, so switching an environment to fully tested images is one label, no code;
+`failurePolicy: Fail`, because a production pod nobody could verify must not start.
+*/ -}}
+{{- $tier := $sig.productionTier }}
+{{- if and $sig.enabled $tier.enabled }}
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-full-tests-in-production
+  annotations:
+    policies.kyverno.io/title: Production runs only fully tested images
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/subject: Pod
+spec:
+  background: false
+  failurePolicy: Fail
+  webhookTimeoutSeconds: 15
+  rules:
+    - name: full-tests-attested
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaceSelector:
+                matchLabels:
+                  {{ $tier.label }}: production
+      verifyImages:
+        - imageReferences:
+            {{- toYaml $sig.references | nindent 12 }}
+          failureAction: Enforce
+          mutateDigest: false
+          verifyDigest: true
+          required: true
+          attestations:
+            - type: {{ $tier.attestationType | quote }}
+              attestors:
+                - entries:
+                    - keyless:
+                        issuer: {{ $sig.issuer | quote }}
+                        subjectRegExp: {{ $tier.subjectRegExp | quote }}
+                        rekor:
+                          url: https://rekor.sigstore.dev
+{{- end }}
