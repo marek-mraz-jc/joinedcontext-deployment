@@ -512,6 +512,23 @@ def test_tagline_and_footer_lines_are_read_as_words_and_nothing_else(theme, tmp_
     assert loaded["tagline"] == "" and loaded["footerLines"] == []
 
 
+def test_a_demo_ribbon_and_noindex_come_from_the_branding_block_alone(theme, tmp_path):
+    """T-4687: a demo says so on every page and keeps search engines out; nothing else does."""
+    assert theme.BRANDING["ribbon"] == "" and theme.BRANDING["noindex"] is False
+    block = tmp_path / "demo.json"
+    block.write_text(json.dumps({"ribbon": "  DEMO · ukážka  ", "noindex": True}))
+    theme.BRANDING_FILE = str(block)
+    loaded = theme._load()
+    assert loaded["ribbon"] == "DEMO · ukážka" and loaded["noindex"] is True
+    block.write_text(json.dumps({"ribbon": ["DEMO"], "noindex": "yes"}))
+    loaded = theme._load()
+    assert loaded["ribbon"] == "" and loaded["noindex"] is False
+    header = (THEME / "header.html").read_text()
+    assert '{% if ribbon %}<div class="jc-ribbon" role="note">{{ ribbon }}</div>{% endif %}' in header
+    assert '<meta name="robots" content="noindex, nofollow">' in (THEME / "templates__base.html").read_text()
+    assert ".jc-ribbon { position: sticky; top: 0;" in (THEME / "public__jc-theme.css").read_text()
+
+
 def test_the_footer_carries_the_installations_links_and_none_of_ckans():
     footer = (THEME / "footer.html").read_text()
     assert "{% block footer_links_ckan %}{% endblock %}" in footer

@@ -60,6 +60,22 @@ jobs:
             python3 scripts/check-secrets.py "rendered-${env}.yaml"
             echo "::endgroup::"
           done
+      - name: render and gate the BBSK demo
+        # T-4687: demos/bbsk/ is its own helmfile outside the platform's environments, held to the
+        # same gates: kubeconform, digest pins, the admission policies, no plaintext secret.
+        run: |
+          set -eu
+          for env in dev smartcity; do
+            echo "::group::demo-bbsk ${env}"
+            helmfile -f demos/bbsk/helmfile.yaml.gotmpl -e "${env}" template --skip-deps > "rendered-demo-bbsk-${env}.yaml"
+            ./kubeconform -strict -ignore-missing-schemas -summary "rendered-demo-bbsk-${env}.yaml"
+            python3 scripts/ci/check-image-digests.py "rendered-demo-bbsk-${env}.yaml"
+            ./conftest test --all-namespaces -p policies "rendered-demo-bbsk-${env}.yaml"
+            python3 scripts/check-rendered-secrets.py "rendered-demo-bbsk-${env}.yaml" /tmp/scan/rendered.yaml
+            ./gitleaks detect --no-git --source /tmp/scan --config .ci/gitleaks-rendered.toml --redact --exit-code 1
+            python3 scripts/check-secrets.py "rendered-demo-bbsk-${env}.yaml"
+            echo "::endgroup::"
+          done
       - name: rendered objects match the golden list
         run: |
           scripts/render.sh local golden-check.yaml --deployed >/dev/null

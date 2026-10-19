@@ -39,6 +39,10 @@ NEUTRAL = {
     # demo disclaimer, an imprint): words only a deployment knows, so they are values too.
     "tagline": "",
     "footerLines": [],
+    # A line across the top of every page and a request to search engines to stay out, for an
+    # installation that is a demo and must never pass for the publisher's own site (T-4687).
+    "ribbon": "",
+    "noindex": False,
 }
 
 HEX = set("0123456789abcdefABCDEF")
@@ -75,6 +79,10 @@ def _load():
     lines = branding.get("footerLines")
     branding["footerLines"] = [line for line in lines if isinstance(line, str) and line.strip()] \
         if isinstance(lines, list) else []
+    if not isinstance(branding.get("ribbon"), str):
+        branding["ribbon"] = ""
+    branding["ribbon"] = branding["ribbon"].strip()
+    branding["noindex"] = branding.get("noindex") is True
     red, green, blue = _rgb(colours["primary"])
     branding["primaryRgb"] = "%d, %d, %d" % (red, green, blue)
     # The text on the primary colour, by the YIQ rule the login theme uses too
