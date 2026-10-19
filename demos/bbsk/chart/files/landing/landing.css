@@ -69,12 +69,16 @@ ul { list-style: none; margin: 0; padding: 0; }
 .banners strong::after { content: " ›"; }
 .banners small { font-size: .8125rem; opacity: .85; }
 
-/* The hero: the photo of Kráľova hoľa as a block of sky and hills, three white lists on it. */
-.hero { position: relative; padding: 8rem 0 7rem; background:
-    linear-gradient(172deg, transparent 62%, rgba(86, 89, 93, .55) 62.3%),
-    linear-gradient(186deg, transparent 54%, rgba(112, 137, 96, .55) 54.3%),
-    linear-gradient(180deg, #9db4dc 0%, #c9d6ec 50%, #e7ecf5 100%); }
-.photo-caption { position: absolute; right: 1.5rem; bottom: .5rem; margin: 0; font-size: .75rem; color: var(--white); text-shadow: 0 1px 2px rgba(0, 0, 0, .5); }
+/* The hero: where bbsk.sk has its photo, a solid band in the page's blue with the assistant's
+   invitation, then the three white lists (owner 13:50Z item 7). */
+.hero { padding: 4rem 0 6rem; background: var(--blue-mid); color: var(--white); }
+.hero__ai { margin-bottom: 3.5rem; }
+.hero__ai .ai__tag { color: var(--blue-light); }
+.hero__ai h2 { color: var(--white); font-size: clamp(1.75rem, 3.5vw, 2.75rem); max-width: 40rem; margin: .25rem 0 1.75rem; }
+.hero__ask, .jc-assistant > summary { display: inline-flex; align-items: center; gap: .6rem; border: 0; border-radius: 999px; font: 600 1rem/1.2 var(--sans); cursor: pointer; }
+.hero__ask { background: var(--white); color: var(--blue); padding: .9rem 1.6rem; }
+.hero__ask:hover { background: var(--blue-light); }
+.hero__ask svg, .jc-assistant > summary svg { width: 1.35rem; height: 1.35rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
 .hero__lists { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4.5rem; }
 .hero__list { background: var(--white); padding: 2rem 1.75rem 2.5rem; box-shadow: 0 6px 20px rgba(29, 56, 113, .12); }
 .hero__list h2 { font-size: 1.75rem; margin: 0 0 1.25rem; }
@@ -148,7 +152,9 @@ pre { background: var(--ink); color: var(--white); padding: 1rem; overflow-x: au
    edge on a wide screen with the page beside it, the whole screen on a phone. jc-assistant.js,
    the catalogue's own, moves it between those and keeps it open across reloads in this tab. */
 .jc-assistant { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 15; }
-.jc-assistant > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: .5rem; background: var(--red); color: var(--white); border-radius: 3px; padding: .9rem 1.4rem; font-weight: 600; box-shadow: 0 6px 18px rgba(29, 56, 113, .35); }
+/* The launcher: a pill in the page's blue, not the ribbon's red, which reads as a warning. */
+.jc-assistant > summary { list-style: none; background: var(--blue); color: var(--white); padding: .85rem 1.4rem; box-shadow: 0 6px 18px rgba(29, 56, 113, .35); }
+.jc-assistant > summary:hover { background: var(--blue-dark); }
 .jc-assistant > summary::-webkit-details-marker { display: none; }
 .jc-assistant[open] > summary { display: none; }
 .jc-assistant > iframe { position: fixed; right: 1rem; bottom: max(1rem, env(safe-area-inset-bottom)); width: min(26rem, calc(100vw - 2rem)); height: min(760px, calc(100vh - var(--ribbon) - 2rem)); height: min(760px, calc(100dvh - var(--ribbon) - 2rem)); border: 1px solid var(--line); border-radius: 6px; background: var(--white); box-shadow: 0 8px 30px rgba(0, 0, 0, .25); }
@@ -176,7 +182,14 @@ body:has(.jc-assistant.jc-full[open]) { overflow: hidden; }
   .header__functions .search, .menu > summary { padding: 0 1.25rem; }
 }
 @media (max-width: 640px) {
-  :root { --ribbon: 2.75rem; }
+  /* One line of DEMO on a phone; the launcher shrinks to its icon and keeps clear of the text. */
+  .ribbon__long { display: none; }
+  .hero { padding: 2.5rem 0 3rem; }
+  .hero__ai { margin-bottom: 2rem; }
+  .jc-assistant { right: 1rem; bottom: max(1rem, env(safe-area-inset-bottom)); }
+  .jc-assistant > summary { padding: .9rem; }
+  .jc-assistant > summary span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .footer { padding-bottom: 5rem; }
   .wrap { padding: 0 1rem; }
   .header__main { background: var(--white); }
   .header__main .wrap { flex-wrap: wrap; padding-right: 1rem; }
