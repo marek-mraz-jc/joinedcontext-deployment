@@ -539,13 +539,15 @@ if has_route context-endpoint; then
 		# A URN naming another organization is an id like any other since ADR-N-041: it lands in
 		# this endpoint's space and is removed again, so dev keeps nothing (a run before the rule
 		# changed may have left it: it is deleted first).
+		# A delete names why (JC-Reason, T-4666): without one the gateway answers 400.
+		why="JC-Reason: smoke%20test%20cleanup"
 		other="urn:ngsi-ld:AirQualityObserved:someone-else.sk:ovzdusie:smoke-2"
-		curl -sS -o /dev/null --max-time 20 -X DELETE -H "Authorization: Bearer $ep_token" \
+		curl -sS -o /dev/null --max-time 20 -X DELETE -H "$why" -H "Authorization: Bearer $ep_token" \
 			"$api/api/endpoint/$ep/ngsi-ld/v1/entities/$other" 2>/dev/null || true
 		status 201 "an id naming another organization lands in this space (ADR-N-041)" -X POST -H 'Content-Type: application/json' \
 			-H "Authorization: Bearer $ep_token" -d '{"id":"'"$other"'","type":"AirQualityObserved","dateObserved":{"type":"Property","value":"2026-01-01T00:00:00Z"}}' "$api/api/endpoint/$ep/ngsi-ld/v1/entities"
-		status 204 "and is deleted again" -X DELETE -H "Authorization: Bearer $ep_token" "$api/api/endpoint/$ep/ngsi-ld/v1/entities/$other"
-		status 204 "entity delete" -X DELETE -H "Authorization: Bearer $ep_token" "$api/api/endpoint/$ep/ngsi-ld/v1/entities/$urn"
+		status 204 "and is deleted again" -X DELETE -H "$why" -H "Authorization: Bearer $ep_token" "$api/api/endpoint/$ep/ngsi-ld/v1/entities/$other"
+		status 204 "entity delete" -X DELETE -H "$why" -H "Authorization: Bearer $ep_token" "$api/api/endpoint/$ep/ngsi-ld/v1/entities/$urn"
 
 		# T-4109: a hand probe an earlier debugging session left in this space; a visitor of the
 		# demo dataset sees it beside the real station. Removed when present, named when removed.
@@ -553,7 +555,7 @@ if has_route context-endpoint; then
 		# instance's JC_ORG_DOMAIN (hel.fi on dev), and the ogc star row reads it (T-4116).
 		for stale in urn:ngsi-ld:AirQualityObserved:hel.fi:ovzdusie:deployer-probe; do
 			got=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 -X DELETE \
-				-H "Authorization: Bearer $ep_token" "$api/api/endpoint/$ep/ngsi-ld/v1/entities/$stale" 2>/dev/null) || got=""
+				-H "$why" -H "Authorization: Bearer $ep_token" "$api/api/endpoint/$ep/ngsi-ld/v1/entities/$stale" 2>/dev/null) || got=""
 			[ "$got" = "204" ] && ok "removed the stale test entity $stale"
 		done
 
