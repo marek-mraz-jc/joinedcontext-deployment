@@ -476,3 +476,30 @@ def test_a_table_over_50_mb_is_not_kept(monkeypatch, capsys):
     monkeypatch.setattr(harvest, "MAX_TABLE_BYTES", 10)
     assert harvest.main() == 0
     assert not any(r.get("url_type") == "datastore" for p in harvest.ckan.packages.values() for r in p["resources"])
+
+
+def test_a_refused_connection_to_the_catalogue_is_tried_again_and_other_errors_are_not(monkeypatch):
+    """A new pod is refused until the network-policy controller admits it (prod demo-bbsk)."""
+    harvest = load(monkeypatch)
+    # load() fakes the catalogue; run the script again for its real ckan(), urlopen faked below.
+    exec(compile(SCRIPT.read_text(), str(SCRIPT), "exec"), harvest.__dict__)
+    sleeps, calls = [], []
+    monkeypatch.setattr(harvest.time, "sleep", sleeps.append)
+
+    def refused_twice(request, timeout):
+        calls.append(request.full_url)
+        if len(calls) <= 2:
+            raise urllib.error.URLError(ConnectionRefusedError(111, "Connection refused"))
+        return io.BytesIO(json.dumps({"result": {"name": "bb"}}).encode())
+
+    monkeypatch.setattr(harvest.urllib.request, "urlopen", refused_twice)
+    assert harvest.ckan("organization_show", {"id": "bb"}) == {"name": "bb"}
+    assert len(calls) == 3 and sleeps == [3, 3]
+
+    def unreachable(request, timeout):
+        raise urllib.error.URLError(OSError(113, "No route to host"))
+
+    calls.clear()
+    monkeypatch.setattr(harvest.urllib.request, "urlopen", unreachable)
+    with pytest.raises(urllib.error.URLError):
+        harvest.ckan("organization_show", {"id": "bb"})

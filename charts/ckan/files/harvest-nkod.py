@@ -27,6 +27,7 @@ import json
 import os
 import re
 import sys
+import time
 import unicodedata
 import urllib.error
 import urllib.parse
@@ -132,14 +133,22 @@ def ckan(action, payload):
         f"http://{host}:{port or 5000}/api/3/action/{action}",
         data=json.dumps(payload).encode(),
         headers={"Content-Type": "application/json", "Authorization": TOKEN})
-    try:
-        with urllib.request.urlopen(request, timeout=300) as response:
-            return json.load(response)["result"]
-    except urllib.error.HTTPError as error:
-        if error.code == 404:
-            return None
-        detail = error.read(2000).decode("utf-8", "replace")
-        raise RuntimeError(f"{action} answered {error.code}: {detail}") from None
+    # A new pod is refused for its first seconds, until the node's network-policy controller
+    # admits its address (prod demo-bbsk, 2026-10-19: refused at 0 s, open at 5 s); the first
+    # call comes sooner, so a refused connection is tried again, and nothing else is.
+    for attempt in range(6):
+        try:
+            with urllib.request.urlopen(request, timeout=300) as response:
+                return json.load(response)["result"]
+        except urllib.error.HTTPError as error:
+            if error.code == 404:
+                return None
+            detail = error.read(2000).decode("utf-8", "replace")
+            raise RuntimeError(f"{action} answered {error.code}: {detail}") from None
+        except urllib.error.URLError as error:
+            if not isinstance(error.reason, ConnectionRefusedError) or attempt == 5:
+                raise
+            time.sleep(3)
 
 
 # --- 1. what the catalogue lists ---------------------------------------------------------------
