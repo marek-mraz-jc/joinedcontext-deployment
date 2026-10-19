@@ -1,8 +1,10 @@
 # TEMPORARY (T-4359): the open-data eval's copy of `data` on google/gemini-3.8-flash, router and answer alike.
-# Only metadata.name, publicId and model differ from `data`, which renders from dev's ckan.catalogue
-# (components/ckan/seed/assistant.yaml.gotmpl, T-4636)
-# (tests/test_public_assistant_seed.py holds it to that); its $1 a day is its own, never the
-# visitors'. Removed after the T-4359 runs.
+# Only metadata.name, publicId, model and its day's cost differ from `data`, which renders from
+# dev's ckan.catalogue (components/ckan/seed/assistant.yaml.gotmpl, T-4636)
+# (tests/test_public_assistant_seed.py holds it to that). Its $4 a day is its own, never the
+# visitors': one address may spend a tenth of it (chat/mod.rs VISITOR_COST_SHARE), so the frozen
+# iteration set and the 25-question rerun of T-4729 fit one run; the key's stop line still binds.
+# Removed after the T-4359 runs.
 apiVersion: joinedcontext.com/v1alpha1
 kind: AssistantDeployment
 metadata:
@@ -111,7 +113,7 @@ spec:
   budget:
     tokensPerDay: 5000000
     tokensPerConversation: 300000
-    costPerDayUsd: 1
+    costPerDayUsd: 4
     outputTokensPerAnswer: 700
     messagesPerConversation: 30
     questionChars: 1000

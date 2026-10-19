@@ -421,8 +421,12 @@ def test_the_open_data_eval_copies_are_data_with_another_model():
         spec = deployments[name]["spec"]
         assert spec["publicId"] == name and "eval" in name.split("-")
         assert spec["model"] == model, name
-        assert {k: v for k, v in spec.items() if k not in ("publicId", "model")} == \
-            {k: v for k, v in base.items() if k not in ("publicId", "model")}, name
+        assert {k: v for k, v in spec.items() if k not in ("publicId", "model", "budget")} == \
+            {k: v for k, v in base.items() if k not in ("publicId", "model", "budget")}, name
+        # T-4729: only the day's cost may differ, and only upward to the run's own $4 (its tokensPerDay buys about $4.32).
+        day = spec["budget"]["costPerDayUsd"]
+        assert {**spec["budget"], "costPerDayUsd": base["budget"]["costPerDayUsd"]} == base["budget"], name
+        assert base["budget"]["costPerDayUsd"] <= day <= 4, name
 
 
 def test_the_website_eval_copy_is_the_regions_assistant_over_its_website_alone():
@@ -434,7 +438,8 @@ def test_the_website_eval_copy_is_the_regions_assistant_over_its_website_alone()
     assert spec["sources"] == ["web", "eval-uploads"]
     assert "connectors" not in spec and "scope" not in spec
     assert spec["systemPrompt"] == base["systemPrompt"] and spec["model"] == base["model"]
-    assert spec["budget"]["costPerDayUsd"] <= 0.5
+    # Its own day (T-4286); $3 so the 25-question rerun of T-4729 fits one address's tenth.
+    assert spec["budget"]["costPerDayUsd"] <= 3
     planted = manifests("KnowledgeSource", "bbsk")["eval-uploads"]["spec"]
     assert planted == {"source": "upload", "languages": ["sk"], "visibility": "public"}
     assert "eval-uploads" not in base["sources"], "visitors never read the planted page"
