@@ -45,8 +45,9 @@ spec:
   rateLimit: { requestsPerMinute: 30, perClientPerMinute: 10, perClientPerHour: 60, perClientPerDay: 200, streamsPerClient: 2 }
   budget:
     tokensPerDay: 5000000
-    tokensPerConversation: 40000
+    tokensPerConversation: 100000
     costPerDayUsd: 1
+    costPerConversationUsd: 0.15
     outputTokensPerAnswer: 700
     messagesPerConversation: 30
     questionChars: 1000

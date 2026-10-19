@@ -155,6 +155,9 @@ pre { background: var(--ink); color: var(--white); padding: 1rem; overflow-x: au
 /* The launcher: a pill in the page's blue, not the ribbon's red, which reads as a warning. */
 .jc-assistant > summary { list-style: none; background: var(--blue); color: var(--white); padding: .85rem 1.4rem; box-shadow: 0 6px 18px rgba(29, 56, 113, .35); }
 .jc-assistant > summary:hover { background: var(--blue-dark); }
+/* Its focus ring is white with a dark blue edge, seen on the white page and on the blue hero; never
+   the ribbon's red, which read as an error after the panel closed and gave focus back (T-4761). */
+.jc-assistant > summary:focus-visible { outline: 3px solid var(--white); outline-offset: 2px; box-shadow: 0 0 0 7px var(--blue-dark), 0 6px 18px rgba(29, 56, 113, .35); }
 .jc-assistant > summary::-webkit-details-marker { display: none; }
 .jc-assistant[open] > summary { display: none; }
 .jc-assistant > iframe { position: fixed; right: 1rem; bottom: max(1rem, env(safe-area-inset-bottom)); width: min(26rem, calc(100vw - 2rem)); height: min(760px, calc(100vh - var(--ribbon) - 2rem)); height: min(760px, calc(100dvh - var(--ribbon) - 2rem)); border: 1px solid var(--line); border-radius: 6px; background: var(--white); box-shadow: 0 8px 30px rgba(0, 0, 0, .25); }
@@ -167,7 +170,7 @@ body:has(.jc-assistant.jc-full[open]) { overflow: hidden; }
   html.jc-docked .ribbon { right: var(--jc-dock-w); }
   html.jc-docked .jc-assistant[open]:not(.jc-full) > iframe { top: var(--ribbon); bottom: auto; right: 0; width: var(--jc-dock-w); height: calc(100vh - var(--ribbon)); height: calc(100dvh - var(--ribbon)); border-width: 0 0 0 1px; border-radius: 0; box-shadow: none; }
   html.jc-docked .jc-assistant[open]:not(.jc-full) > .jc-dock-edge { display: block; position: fixed; top: var(--ribbon); bottom: 0; right: calc(var(--jc-dock-w) - 4px); width: 8px; cursor: col-resize; touch-action: none; z-index: 1; }
-  .jc-dock-edge:focus-visible { outline: 3px solid var(--red); outline-offset: -3px; }
+  .jc-dock-edge:focus-visible { outline: 3px solid var(--blue); outline-offset: -3px; }
   html.jc-dragging .jc-assistant > iframe { pointer-events: none; }
 }
 

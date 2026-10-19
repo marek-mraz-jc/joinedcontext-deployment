@@ -27,7 +27,7 @@ spec:
   allowedOrigins: [https://dev.joinedcontext.com, https://portal.dev.joinedcontext.com]
   rateLimit: { requestsPerMinute: 30, perClientPerMinute: 6 }
   # About 0.1 USD a day at most (google/gemini-3.8-flash, 2026-10-06).
-  budget: { tokensPerDay: 5000000, tokensPerConversation: 40000, costPerDayUsd: 3 }
+  budget: { tokensPerDay: 5000000, tokensPerConversation: 100000, costPerDayUsd: 3, costPerConversationUsd: 0.15 }
   theme: { greeting: "Hello! Ask me about the road weather or what is on in Helsinki." }
   languages: [en, fi, sv]
   # How the chat picks its language (T-4343): the browser's, no first-open question.
