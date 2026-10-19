@@ -87,19 +87,24 @@ def signed(repository, image, digest):
     return result.returncode == 0
 
 
-def pin(text, image, digest):
-    """`text` with every block naming `ghcr.io/OWNER/image` pinned to `digest`, and how many."""
-    pattern = rf"(repository: 'ghcr\.io/{OWNER}/{re.escape(image)}'\n(?:    .*\n)*?    digest: )'sha256:[0-9a-f]{{64}}'"
-    return re.subn(pattern, rf"\g<1>'{digest}'", text)
+def pin(text, image, digest, commit=None):
+    """`text` with every block naming `ghcr.io/OWNER/image` pinned to `digest`, and how many. A
+    block that records its source commit (`commit:`, read by scripts/check-docs-pin.sh) moves it
+    to `commit` with the digest."""
+    block = rf"(repository: 'ghcr\.io/{OWNER}/{re.escape(image)}'\n(?:    .*\n)*?    "
+    text, n = re.subn(block + r"digest: )'sha256:[0-9a-f]{64}'", rf"\g<1>'{digest}'", text)
+    if commit:
+        text, _ = re.subn(block + r"commit: )'[0-9a-f]{40}'", rf"\g<1>'{commit}'", text)
+    return text, n
 
 
-def pin_files(pins):
+def pin_files(pins, commit=None):
     """Pin every images.yaml; the paths that changed."""
     changed = []
     for path in sorted(ROOT.glob("components/*/images.yaml")):
         text = original = path.read_text()
         for image, digest in pins.items():
-            text, _ = pin(text, image, digest)
+            text, _ = pin(text, image, digest, commit)
         if text != original:
             path.write_text(text)
             changed.append(path)
@@ -144,7 +149,7 @@ def main(source, tier="dev"):
             print(f"{source} {commit[:7]}: pin-portal.sh refused (exit {refused.returncode}); nothing pinned",
                   file=sys.stderr)
             return
-    elif not pin_files(pins):
+    elif not pin_files(pins, commit):
         print(f"{source} {commit[:7]}: already pinned", file=sys.stderr)
         return
     print(f"pin {source} {commit[:7]} (ci green, signed by {repository} image.yml on main)")

@@ -19,7 +19,7 @@ def pin(monkeypatch):
     monkeypatch.setattr(module, "green", lambda repository, workflow, commit: True)
     monkeypatch.setattr(module, "published", lambda image, commit: DIGEST)
     monkeypatch.setattr(module, "signed", lambda repository, image, digest: True)
-    monkeypatch.setattr(module, "pin_files", lambda pins: written.append(pins) or [Path("x")])
+    monkeypatch.setattr(module, "pin_files", lambda pins, commit=None: written.append(pins) or [Path("x")])
     module.written = written
     return module
 
@@ -52,3 +52,26 @@ def test_the_attestation_is_checked_against_promote_yml_on_main(pin, monkeypatch
     [args] = calls
     assert args[:4] == ("cosign", "verify-attestation", "--type", pin.FULL_TESTS)
     assert "https://github.com/marek-mraz-jc/joinedcontext-platform/.github/workflows/promote.yml@refs/heads/main" in args
+
+
+def test_a_pin_moves_the_commit_its_block_records(pin):
+    """check-docs-pin.sh reads `commit:` beside the gateway's digest (T-4483); a pin that moved only
+    the digest left a pair the registry does not hold (2026-10-19, platform 4976de6)."""
+    old_digest, new_digest = "sha256:" + "1" * 64, "sha256:" + "2" * 64
+    text = (
+        "  image:\n"
+        "    repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'\n"
+        "    tag: 'main'\n"
+        f"    digest: '{old_digest}'\n"
+        "    # the platform commit\n"
+        f"    commit: '{'a' * 40}'\n"
+        "  checkouts:\n"
+        "    repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform/checkouts'\n"
+        f"    digest: '{old_digest}'\n"
+    )
+    out, n = pin.pin(text, "joinedcontext-platform", new_digest, "b" * 40)
+    assert n == 1
+    assert f"commit: '{'b' * 40}'" in out and f"digest: '{new_digest}'" in out
+    # the next block keeps its own digest, and a pin without a commit leaves the line alone
+    assert out.endswith(f"digest: '{old_digest}'\n")
+    assert f"commit: '{'a' * 40}'" in pin.pin(text, "joinedcontext-platform", new_digest)[0]
