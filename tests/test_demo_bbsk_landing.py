@@ -110,6 +110,14 @@ def test_the_cards_are_the_demo_assistants_own_questions_and_the_panel_speaks_sl
         assert "/d/bbsk-demo/widget?embed=1&amp;dock=1&amp;lang=sk" in site[name], name
 
 
+def test_docked_the_page_scrolls_beside_the_panel_not_behind_it(landing):
+    """T-4767: one scrollbar at the screen's edge, the chat's; the page's own stands beside the panel."""
+    _, _, _, site, _ = landing
+    dock = site["landing.css"].split("@media (min-width: 1100px) {", 1)[1].split("\n}\n", 1)[0]
+    assert "html.jc-docked { --jc-dock-w: clamp(360px, var(--jc-dock, 34vw), 50vw); overflow: hidden; }" in dock
+    assert "html.jc-docked body { margin-right: var(--jc-dock-w); height: 100vh; height: 100dvh; overflow-y: auto; scroll-padding-top: calc(var(--ribbon) + 1rem); }" in dock
+
+
 def test_the_dock_is_the_catalogues_own_and_the_policy_frames_only_the_assistant(landing):
     _, domain, _, site, conf = landing
     for script in ("jc-dock.js", "jc-assistant.js"):

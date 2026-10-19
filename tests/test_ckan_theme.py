@@ -955,8 +955,12 @@ def test_the_assistant_docks_beside_the_page_and_stays_across_its_links():
     open again before the first paint, on the assistant it had."""
     css = (THEME / "public__jc-theme.css").read_text()
     dock = css.split("@media (min-width: 1100px) {", 1)[1].split("\n}\n", 1)[0]
-    assert "html.jc-docked { --jc-dock-w: clamp(360px, var(--jc-dock, 34vw), 50vw); }" in dock
-    assert "html.jc-docked body { margin-inline-end: var(--jc-dock-w); }" in dock
+    # T-4767: docked, the body scrolls beside the frame and the window does not, so the page's bar is
+    # not a second one beside the chat's at the screen's edge; a change of place keeps the offset.
+    assert "html.jc-docked { --jc-dock-w: clamp(360px, var(--jc-dock, 34vw), 50vw); overflow: hidden; }" in dock
+    assert "html.jc-docked body { margin-inline-end: var(--jc-dock-w); block-size: 100vh; block-size: 100dvh; overflow-y: auto; }" in dock
+    held = (THEME / "public__jc-assistant.js").read_text().split("function place() {", 1)[1].split("\n  }\n", 1)[0]
+    assert held.index("var top = scroller().scrollTop;") < held.index('root.classList.toggle("jc-docked"') < held.index("scroller().scrollTop = top;")
     assert "html.jc-docked .jc-assistant[open]:not(.jc-full) > iframe { inset-block: 0; inset-inline-end: 0; width: var(--jc-dock-w);" in dock
     assert "@view-transition { navigation: auto; }" in css
     assert ".jc-assistant[open] > iframe { view-transition-name: jc-assistant; }" in css
