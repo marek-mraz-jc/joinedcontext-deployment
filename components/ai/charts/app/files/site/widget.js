@@ -457,10 +457,23 @@ var JCRender = (function () {
     OffStreetParking: { sk: "Parkoviská", cs: "Parkoviště", en: "Car parks", de: "Parkplätze" },
     WaterQualityObserved: { sk: "Kvalita vody", cs: "Kvalita vody", en: "Water quality", de: "Wasserqualität" },
     TrafficFlowObserved: { sk: "Doprava", cs: "Doprava", en: "Traffic", de: "Verkehr" },
-    KeyPerformanceIndicator: { sk: "Ukazovatele", cs: "Ukazatele", en: "Indicators", de: "Kennzahlen" }
+    KeyPerformanceIndicator: { sk: "Ukazovatele", cs: "Ukazatele", en: "Indicators", de: "Kennzahlen" },
+    Bridge: { sk: "Mosty", cs: "Mosty", en: "Bridges", de: "Brücken" },
+    GtfsStop: { sk: "Zastávky", cs: "Zastávky", en: "Stops", de: "Haltestellen" },
+    BikeHireDockingStation: { sk: "Stanice bicyklov", cs: "Stanice kol", en: "Bike stations", de: "Fahrradstationen" },
+    Event: { sk: "Podujatia", cs: "Akce", en: "Events", de: "Veranstaltungen" },
+    Vehicle: { sk: "Vozidlá", cs: "Vozidla", en: "Vehicles", de: "Fahrzeuge" }
   };
   var YES_NO = { sk: ["Áno", "Nie"], cs: ["Ano", "Ne"], en: ["Yes", "No"], de: ["Ja", "Nein"] };
   var OF = { sk: "z", cs: "z", en: "of", de: "von" };
+  var FIRST = { sk: "prvých", cs: "prvních", en: "first", de: "die ersten" };
+  // A long address in a cell reads as this word, a link (T-4682).
+  var LINK = { sk: "Zdroj", cs: "Zdroj", en: "Source", de: "Quelle" };
+  // The rows a table shows in the panel; the dataset holds the rest (T-4682).
+  var ROWS = 20;
+  // A row measured a day or more before the table's newest says so beside its time (T-4682).
+  var STALE = { sk: "neaktuálne", cs: "neaktuální", en: "out of date", de: "veraltet" };
+  var STALE_MS = 24 * 3600 * 1000;
 
   // `dateObserved` → "Date observed", `AirQualityObserved` → "Air quality observed".
   function spelt(key) {
@@ -482,11 +495,16 @@ var JCRender = (function () {
    * A spec as the visitor reads it (T-4657): a map's popup labels and a chart's axis titles in
    * `lang`, a unit in brackets kept. A copy; the renderer checks it again and sets it as text.
    */
-  function vizSpec(spec, lang) {
+  function vizSpec(spec, lang, labels) {
     var copy = JSON.parse(JSON.stringify(spec || {}));
+    // The model's words for a column (T-4682) before the shared table's.
+    var named = function (key) {
+      var own = labels && typeof labels === "object" && labels[key] && typeof labels[key] === "object" ? labels[key] : null;
+      return (own && (entry(own, lang) || entry(own, "en"))) || word(LABELS, key, lang);
+    };
     if (Array.isArray(copy.popup)) {
       copy.popup.forEach(function (f) {
-        if (f && typeof f.field === "string") f.label = word(LABELS, f.field, lang);
+        if (f && typeof f.field === "string") f.label = named(f.field);
       });
     }
     var encoding = copy.encoding && typeof copy.encoding === "object" ? copy.encoding : {};
@@ -494,7 +512,7 @@ var JCRender = (function () {
       var title = encoding[channel] && encoding[channel].title;
       if (typeof title !== "string") return;
       var parts = /^(.*?)( \([^()]*\))?$/.exec(title);
-      encoding[channel].title = word(LABELS, parts[1], lang) + (parts[2] || "");
+      encoding[channel].title = named(parts[1]) + (parts[2] || "");
     });
     return copy;
   }
@@ -520,10 +538,14 @@ var JCRender = (function () {
   }
 
   /**
-   * A `data` event as the table the widget shows (T-4650): the caption is the type's name and the
-   * row count, each header its label and unit, each cell text in `lang` — numbers with the
-   * locale's separator and at most three decimals, times as `when` says, booleans as words, an
-   * empty cell as "–". Everything is text; nothing here becomes HTML.
+   * A `data` event as the table the widget shows (T-4650, T-4682): the caption is the type's name
+   * and the row count, each header its label and unit, each cell text in `lang`. Numbers take the
+   * locale's separator and at most three decimals, but a year or a code (a column named for one)
+   * is never grouped: 1953, not "1 953". Times read as `when` says, booleans as words, and an enum
+   * as the words the table's `enums` give it. An http(s) address becomes `{text, href}`, a short
+   * link. An empty cell stays empty. The entity's URN is never a column: an unnamed row is called
+   * by the URN's last segment, and a column of references is left out. At most 20 rows; the
+   * caption says how many more the dataset holds. Everything is text; nothing here becomes HTML.
    */
   function table(data, lang, now) {
     if (!data || !Array.isArray(data.columns) || data.columns.length === 0) return null;
@@ -531,38 +553,63 @@ var JCRender = (function () {
     now = typeof now === "number" ? now : Date.now();
     var numbers = new Intl.NumberFormat(lang, { maximumFractionDigits: 3 });
     var units = Array.isArray(data.units) ? data.units : [];
-    var width = data.columns.length;
-    var cell = function (v, column) {
-      if (v === null || v === undefined || v === "") return "–";
-      if (typeof v === "number") return isFinite(v) ? numbers.format(v) : "–";
+    var modelled = Array.isArray(data.labels) ? data.labels : [];
+    var enums = Array.isArray(data.enums) ? data.enums : [];
+    var raw = (Array.isArray(data.rows) ? data.rows : []).filter(Array.isArray).slice(0, ROWS);
+    var urn = function (v) { return typeof v === "string" && /^urn:/i.test(v); };
+    // The columns shown: an `id` column becomes the row's name, a column of references goes.
+    var keep = [];
+    data.columns.forEach(function (c, i) {
+      var filled = raw.filter(function (row) { return row[i] !== null && row[i] !== undefined && row[i] !== ""; });
+      if (c !== "id" && filled.length > 0 && filled.every(function (row) { return urn(row[i]); })) return;
+      keep.push(i);
+    });
+    var plain = function (column) { return /year|code$/i.test(String(column)) || /Id$|^id$/.test(String(column)); };
+    var cell = function (v, column, i) {
+      if (v === null || v === undefined || v === "") return "";
+      if (column === "id" && urn(v)) return String(v).split(":").pop();
+      if (typeof v === "number") {
+        if (!isFinite(v)) return "";
+        return plain(column) && Number.isInteger(v) ? String(v) : numbers.format(v);
+      }
       if (typeof v === "boolean") return YES_NO[lang][v ? 0 : 1];
       if (typeof v === "object") return JSON.stringify(v);
+      var words = enums[i] && typeof enums[i] === "object" && Object.prototype.hasOwnProperty.call(enums[i], v) ? enums[i][v] : null;
+      if (words && typeof words === "object") return entry(words, lang) || entry(words, "en") || String(v);
+      if (safeUrl(v)) return { text: LINK[lang], href: v };
       if (column === "observedAt" || (TIME.test(v) && v.length > 10)) return when(v, lang, now);
       return String(v);
     };
-    var rows = (Array.isArray(data.rows) ? data.rows : []).filter(Array.isArray).slice(0, 50)
-      .map(function (row) {
-        var out = [];
-        for (var i = 0; i < width; i += 1) out.push(cell(row[i], data.columns[i]));
-        return out;
+    var at = data.columns.indexOf("observedAt");
+    var times = raw.map(function (row) { return at < 0 || typeof row[at] !== "string" ? NaN : Date.parse(row[at]); });
+    var newest = Math.max.apply(null, times.filter(isFinite).concat([-Infinity]));
+    var rows = raw.map(function (row, r) {
+      return keep.map(function (i) {
+        var shown = cell(row[i], data.columns[i], i);
+        return i === at && newest - times[r] >= STALE_MS ? shown + " · " + STALE[lang] : shown;
       });
-    var numeric = data.columns.map(function (_, i) {
-      return rows.length > 0 && (data.rows || []).filter(Array.isArray).slice(0, 50).every(function (row) {
+    });
+    var numeric = keep.map(function (i) {
+      return raw.length > 0 && raw.every(function (row) {
         return row[i] === null || row[i] === undefined || typeof row[i] === "number";
       });
     });
     // The data model's labels where the table carries them (T-4672), else the shared table's.
-    var modelled = Array.isArray(data.labels) ? data.labels : [];
-    var columns = data.columns.map(function (c, i) {
+    var columns = keep.map(function (i) {
+      var c = data.columns[i];
       var own = modelled[i] && typeof modelled[i] === "object" ? entry(modelled[i], lang) || entry(modelled[i], "en") : "";
-      var label = own || word(LABELS, String(c), lang);
+      var label = own || word(LABELS, c === "id" ? "name" : String(c), lang);
       return typeof units[i] === "string" && units[i] ? label + " (" + units[i] + ")" : label;
     });
-    var count = typeof data.total === "number" && data.total > rows.length
-      ? numbers.format(rows.length) + " " + OF[lang] + " " + numbers.format(data.total)
-      : numbers.format(rows.length);
+    var named = typeof data.type === "string" && data.type ? word(TYPES, data.type, lang) : "";
+    var caption = "";
+    if (named && typeof data.total === "number" && data.total > rows.length) {
+      caption = named + " — " + FIRST[lang] + " " + numbers.format(rows.length) + " " + OF[lang] + " " + numbers.format(data.total);
+    } else if (named) {
+      caption = named + " (" + numbers.format(rows.length) + ")";
+    }
     return {
-      caption: typeof data.type === "string" && data.type ? word(TYPES, data.type, lang) + " (" + count + ")" : "",
+      caption: caption,
       columns: columns,
       numeric: numeric,
       rows: rows,
@@ -712,6 +759,9 @@ var JCRender = (function () {
     var name = data && data.stage;
     if (name === "steps" || !Object.prototype.hasOwnProperty.call(words, name)) return null;
     var topic = text(data.topic, 60);
+    // A search names the visitor's own words; a read names its data in words or nothing, never an
+    // Endpoint slug or a type name (T-4682).
+    if (name !== "searching") topic = Object.prototype.hasOwnProperty.call(TYPES, topic) ? word(TYPES, topic, lang) : "";
     if (STEPS.indexOf(name) >= 0) {
       return words[name] + (topic ? ": „" + topic + "“…" : "…");
     }
@@ -726,7 +776,13 @@ var JCRender = (function () {
   function steps(stages, lang) {
     var lines = (Array.isArray(stages) ? stages : [])
       .filter(function (data) { return data && STEPS.indexOf(data.stage) >= 0; })
-      .map(function (data) { return stage(data, lang); })
+      .map(function (data) {
+        var line = stage(data, lang);
+        // Each step with when it began, in seconds after the question (T-4682).
+        var ms = data.ms;
+        if (!line || typeof ms !== "number" || !isFinite(ms) || ms < 0) return line;
+        return line + " (" + new Intl.NumberFormat(YES_NO[lang] ? lang : "en", { maximumFractionDigits: 1 }).format(ms / 1000) + " s)";
+      })
       .filter(Boolean);
     if (lines.length < 2) return null;
     return { summary: (STAGES[lang] || STAGES.en).steps + " (" + lines.length + ")", lines: lines };
@@ -854,7 +910,8 @@ var JCRender = (function () {
   // The service's error titles (API/05 §1.6), English and stable, to the widget's own words.
   var TROUBLE = {
     "Conversation Budget Spent": "full", "Model Unavailable": "unreachable",
-    "No Answer": "unanswered", "Answer Took Too Long": "slow", "Declined": "declined"
+    "No Answer": "unanswered", "Answer Took Too Long": "slow", "Declined": "declined",
+    "Daily Limit Reached": "limit", "Monthly Limit Reached": "limit", "Visitor Limit Reached": "limit"
   };
 
   /**
@@ -871,11 +928,21 @@ var JCRender = (function () {
   }
 
   /**
-   * Whether asking the same again can help: not once the conversation's share is spent. A spent
-   * day is no error at all: the service answers it with links (T-4286).
+   * Whether asking the same again can help: not once the conversation's share is spent, and not
+   * past a limit before it resets (T-4671).
    */
   function retryable(word) {
-    return word !== "full" && word !== "declined";
+    return word !== "full" && word !== "declined" && word !== "limit";
+  }
+
+  /**
+   * The line a failed answer shows: the service's own sentence for a limit, which names when it
+   * resets, while the chat reads the service's language (Slovak); the widget's word otherwise.
+   */
+  function said(word, detail, lang, words) {
+    return word === "limit" && lang === "sk" && typeof detail === "string" && detail.trim()
+      ? detail.trim()
+      : words[word];
   }
 
   /**
@@ -1041,7 +1108,7 @@ var JCRender = (function () {
     cards: cards, stage: stage, steps: steps, tel: tel, mailto: mailto,
     markdown: markdown, streamable: streamable, sources: sources, label: label, linkHost: linkHost,
     safeUrl: safeUrl, events: events, language: language, table: table, chart: chart, greeting: greeting, title: title,
-    suggestions: suggestions, trouble: trouble, retryable: retryable, retry: retry,
+    suggestions: suggestions, trouble: trouble, retryable: retryable, said: said, retry: retry,
     vizOrigin: vizOrigin, vizSpec: vizSpec, mapFirst: mapFirst
   };
 })();
@@ -1064,9 +1131,9 @@ if (typeof module !== "undefined") module.exports = JCRender;
       script: "Skript, ktorý asistent spustil", failed: "Odpoveď sa nepodarilo načítať. Skúste to znova.",
       offline: "Nepodarilo sa spojiť so službou. Skontrolujte pripojenie a skúste to znova.",
       busy: "Položili ste veľa otázok naraz. Počkajte chvíľu a skúste to znova.",
-      paused: "Asistent teraz neodpovedá. Skúste to neskôr.", you: "Vy", assistant: "Asistent", bot: "AI asistent",
+      paused: "Asistent teraz neodpovedá. Skúste to neskôr.", limit: "Asistent dosiahol svoj limit. Skúste to znova neskôr.", you: "Vy", assistant: "Asistent", bot: "AI asistent",
       hello: "Dobrý deň! Na čo sa chcete opýtať?",
-      reading: "Čítam", live: "Živé dáta", source: "Zdroj", fresh: "Nová konverzácia", expand: "Zväčšiť", collapse: "Zmenšiť", copy: "Kopírovať",
+      reading: "Čítam", live: "Živé dáta", source: "Zdroj", allRows: "Zobraziť všetky v datasete", fresh: "Nová konverzácia", expand: "Celá obrazovka", collapse: "Zmenšiť", copy: "Kopírovať",
       copied: "Odpoveď je skopírovaná.", close: "Zavrieť", suggested: "Môžete sa opýtať",
       dataset: "Otvoriť dataset", download: "Stiahnuť údaje", language: "Jazyk",
       table: "Údaje, z ktorých asistent odpovedá", up: "Užitočná odpoveď", down: "Neužitočná odpoveď",
@@ -1093,9 +1160,9 @@ if (typeof module !== "undefined") module.exports = JCRender;
       script: "Script the assistant ran", failed: "The answer could not be loaded. Try again.",
       offline: "The service could not be reached. Check your connection and try again.",
       busy: "You asked many questions at once. Wait a moment and try again.",
-      paused: "The assistant is not answering right now. Try again later.", you: "You", assistant: "Assistant", bot: "AI assistant",
+      paused: "The assistant is not answering right now. Try again later.", limit: "The assistant has reached its limit. Try again later.", you: "You", assistant: "Assistant", bot: "AI assistant",
       hello: "Hello! What would you like to ask?",
-      reading: "Reading", live: "Live data", source: "Source", fresh: "New conversation", expand: "Expand", collapse: "Collapse", copy: "Copy",
+      reading: "Reading", live: "Live data", source: "Source", allRows: "Show all in the dataset", fresh: "New conversation", expand: "Full screen", collapse: "Collapse", copy: "Copy",
       copied: "The answer is copied.", close: "Close", suggested: "You can ask",
       dataset: "Open the dataset", download: "Download the data", language: "Language",
       table: "The data the assistant answers from", up: "Helpful answer", down: "Not helpful",
@@ -1122,9 +1189,9 @@ if (typeof module !== "undefined") module.exports = JCRender;
       script: "Skript, který asistent spustil", failed: "Odpověď se nepodařilo načíst. Zkuste to znovu.",
       offline: "Službu se nepodařilo zastihnout. Zkontrolujte připojení a zkuste to znovu.",
       busy: "Položili jste mnoho otázek najednou. Chvíli počkejte a zkuste to znovu.",
-      paused: "Asistent teď neodpovídá. Zkuste to později.", you: "Vy", assistant: "Asistent", bot: "AI asistent",
+      paused: "Asistent teď neodpovídá. Zkuste to později.", limit: "Asistent dosáhl svého limitu. Zkuste to znovu později.", you: "Vy", assistant: "Asistent", bot: "AI asistent",
       hello: "Dobrý den! Na co se chcete zeptat?",
-      reading: "Čtu", live: "Živá data", source: "Zdroj", fresh: "Nová konverzace", expand: "Zvětšit", collapse: "Zmenšit", copy: "Kopírovat",
+      reading: "Čtu", live: "Živá data", source: "Zdroj", allRows: "Zobrazit všechny v datové sadě", fresh: "Nová konverzace", expand: "Celá obrazovka", collapse: "Zmenšit", copy: "Kopírovat",
       copied: "Odpověď je zkopírovaná.", close: "Zavřít", suggested: "Můžete se zeptat",
       dataset: "Otevřít dataset", download: "Stáhnout data", language: "Jazyk",
       table: "Data, ze kterých asistent odpovídá", up: "Užitečná odpověď", down: "Neužitečná odpověď",
@@ -1695,7 +1762,7 @@ if (typeof module !== "undefined") module.exports = JCRender;
       item.replaceChild(body, item.streaming);
       item.streaming = null;
     } else {
-      item.appendChild(body);
+      item.insertBefore(body, item.visuals || null);
     }
     announce.textContent = body.textContent;
     // One row under the answer (T-4364): who and when, copy, thumbs, then the sources' badges and
@@ -1906,7 +1973,7 @@ if (typeof module !== "undefined") module.exports = JCRender;
     frame.title = title;
     frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-downloads allow-popups allow-popups-to-escape-sandbox");
     frame.setAttribute("referrerpolicy", "no-referrer");
-    var message = { type: "jc-viz-show", spec: JCRender.vizSpec(payload.spec, lang), rows: payload.rows, lang: lang };
+    var message = { type: "jc-viz-show", spec: JCRender.vizSpec(payload.spec, lang, payload.labels), rows: payload.rows, lang: lang };
     frame.addEventListener("load", function () {
       frame.contentWindow.postMessage(message, VIZ);
     });
@@ -1931,7 +1998,7 @@ if (typeof module !== "undefined") module.exports = JCRender;
     var figure = el("figure", "jc-data jc-viz-card");
     var title = typeof data.spec.title === "string" && data.spec.title ? data.spec.title : w.chart;
     figure.appendChild(vizFrame(data, title, function () { figure.remove(); }));
-    item.insertBefore(figure, item.status && item.status.parentNode === item ? item.status : null);
+    visual(item, figure);
   }
 
   // "Table | Map" over a data card whose rows have places; the map loads when it is first shown,
@@ -1969,16 +2036,30 @@ if (typeof module !== "undefined") module.exports = JCRender;
     pick(JCRender.mapFirst(data));
   }
 
+  // An answer's visuals sit under its text (T-4682): one box the text is put before, and with more
+  // than one visual each is folded to its caption.
+  function visual(item, figure) {
+    if (!item.visuals) {
+      item.visuals = el("div", "jc-visuals");
+      item.insertBefore(item.visuals, item.status && item.status.parentNode === item ? item.status : null);
+    }
+    item.visuals.appendChild(figure);
+    var folds = item.visuals.querySelectorAll("details.jc-data");
+    if (item.visuals.children.length > 1) Array.prototype.forEach.call(folds, function (d) { d.open = false; });
+  }
+
   function showData(item, data) {
     var shown = JCRender.table(data, lang);
     if (!shown) return;
-    var figure = el("figure", "jc-data");
+    var figure = el("details", "jc-data");
+    figure.open = true;
+    figure.appendChild(el("summary", "", shown.caption || w.table));
     var scroll = el("div", "jc-data-scroll");
     scroll.tabIndex = 0;
     scroll.setAttribute("role", "region");
     scroll.setAttribute("aria-label", w.table);
     var table = el("table");
-    if (shown.caption) table.appendChild(el("caption", "", shown.caption));
+    if (shown.caption) table.appendChild(el("caption", "jc-sr", shown.caption));
     var headRow = el("tr");
     shown.columns.forEach(function (c, i) {
       var th = el("th", shown.numeric[i] ? "jc-num" : "", c);
@@ -1992,6 +2073,12 @@ if (typeof module !== "undefined") module.exports = JCRender;
       row.forEach(function (cell, i) {
         // A long text keeps two lines; the whole of it is its title.
         var td = tr.appendChild(el("td", shown.numeric[i] ? "jc-num" : "", ""));
+        if (cell && typeof cell === "object") {
+          // A long address reads as one short word, the whole of it its title (T-4682).
+          var a = td.appendChild(link(cell.href, cell.text));
+          a.title = cell.href;
+          return;
+        }
         var text = td.appendChild(el("span", "jc-cell", cell));
         if (cell.length > 40) text.title = cell;
       });
@@ -2003,24 +2090,27 @@ if (typeof module !== "undefined") module.exports = JCRender;
     if (VIZ && data.map && typeof data.map === "object") mapTabs(figure, scroll, drawn, data);
     if (shown.dataset || shown.download) {
       var links = el("p", "jc-data-links");
-      if (shown.dataset) links.appendChild(link(shown.dataset, w.dataset));
+      // More rows than the panel shows: the dataset holds them all (T-4682).
+      var more = typeof data.total === "number" && data.total > shown.rows.length;
+      if (shown.dataset) links.appendChild(link(shown.dataset, more ? w.allRows : w.dataset));
       if (shown.download) links.appendChild(link(shown.download, w.download));
       figure.appendChild(links);
     }
-    item.insertBefore(figure, item.status && item.status.parentNode === item ? item.status : null);
+    visual(item, figure);
     item.data = figure;
   }
 
   // A failed answer as one quiet line in the visitor's language and a Retry that asks the same
-  // question again, through the same route and its per-visitor limit (T-4253).
-  function fail(item, word) {
+  // question again, through the same route and its per-visitor limit (T-4253); a limit offers no
+  // Retry, since nothing changes before it resets (T-4671).
+  function fail(item, word, detail) {
     if (item.status) item.status.remove();
     if (item.streaming) {
       item.streaming.remove();
       item.streaming = null;
     }
     item.classList.add("jc-error");
-    var p = el("p", "", w[word]);
+    var p = el("p", "", JCRender.said(word, detail, lang, w));
     p.setAttribute("role", "alert");
     item.appendChild(p);
     if (word === "full") {
@@ -2067,7 +2157,7 @@ if (typeof module !== "undefined") module.exports = JCRender;
       asked += 1;
       item.turn = asked;
     } else if (name === "stage" && item.status) {
-      (item.stages = item.stages || []).push(data);
+      (item.stages = item.stages || []).push(Object.assign({}, data, { ms: Date.now() - (item.startedMs || Date.now()) }));
       var line = JCRender.stage(data, lang);
       if (line) {
         item.status.textContent = line;
@@ -2093,7 +2183,7 @@ if (typeof module !== "undefined") module.exports = JCRender;
       }
       if (!item.streaming) {
         item.streaming = el("div", "jc-answer jc-streaming");
-        item.appendChild(item.streaming);
+        item.insertBefore(item.streaming, item.visuals || null);
       }
       item.text = (item.text || "") + data.text;
       if (!item.frame) item.frame = requestAnimationFrame(function () { paint(item); });
@@ -2122,7 +2212,7 @@ if (typeof module !== "undefined") module.exports = JCRender;
     } else if (name === "followups") {
       chips(item, JCRender.followups(data));
     } else if (name === "error") {
-      fail(item, JCRender.trouble(data.status, data.title));
+      fail(item, JCRender.trouble(data.status, data.title), data.detail);
     }
   }
 
@@ -2198,7 +2288,7 @@ if (typeof module !== "undefined") module.exports = JCRender;
     if (response.status === 401) response = await post(await visitorToken(true));
     if (!response.ok || !response.body) {
       var problem = await response.json().catch(function () { return {}; });
-      fail(item, refusal(response.status, problem.title));
+      fail(item, refusal(response.status, problem.title), problem.detail);
       return;
     }
     var reader = response.body.getReader();
@@ -2251,6 +2341,7 @@ if (typeof module !== "undefined") module.exports = JCRender;
     item.status = el("p", "jc-status", w.thinking);
     item.status.setAttribute("role", "status");
     item.appendChild(item.status);
+    item.startedMs = Date.now();
     busy = new AbortController();
     send.hidden = true;
     stop.hidden = false;
