@@ -145,3 +145,19 @@ def test_postgres_is_dumped_nightly_and_the_dump_job_may_reach_it(smartcity):
         and any(p.get("port") == 4143 for rule in d["spec"].get("egress", []) for p in rule.get("ports", []))
     ]
     assert selected, "no egress policy lets the dump job's proxy reach postgres on 4143"
+
+
+# smartcity's copies of dev's environment files, which differ from dev's in the domain alone.
+# global and portal carry the instance's own choices and are tested above instead.
+COPIES = ["ckan", "gitea", "gitea-runner", "node-storage", "pipeline-runner", "wasm-host"]
+
+
+@pytest.mark.parametrize("name", COPIES)
+def test_the_environment_copies_differ_from_dev_in_the_domain_alone(name):
+    """A copy edited on one side drifts silently: T-4632's api.{domain} reached dev's assistant
+    prompt and not prod's (found by scripts/parity.py, 2026-10-19)."""
+    environments = PROJECT_ROOT / ".ci/example-deployments/environments"
+    dev = (environments / f"dev/{name}.yaml.gotmpl").read_text()
+    copy = (environments / f"smartcity/{name}.yaml.gotmpl").read_text()
+    expected = re.sub(r"data\.dev\b", "data.smartcity", dev.replace("dev.joinedcontext.com", DOMAIN))
+    assert copy == expected, f"smartcity/{name}.yaml.gotmpl: regenerate it from dev's with the domain replaced"
