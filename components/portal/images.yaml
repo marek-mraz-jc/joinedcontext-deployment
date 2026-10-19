@@ -248,11 +248,11 @@ portal:
     # portal dfd0b23: jc-core of platform 2883bd0 reads a space's `quality` and `retention`
     # (T-3899), so the Helsinki seed that carries them comes back in the same apply (T-4054).
     # portal f311196: a failed forge build no longer flags the App's catalog card (owner, 2026-10-13).
-    digest: 'sha256:f397a3a0e9c3ad5a5b8f629feb034e621e39e7c64ac232e52479e053df63ac85'
+    digest: 'sha256:a703f21d9dc598cbcb474a7336b192f8b84b25d2debf07288b7aa3cce1f662f8'
     # The Portal commit this digest is the image of, and the docs commit its /docs pages are
     # (public-docs/COMMIT at that commit): scripts/pin-portal.sh writes both with the digest, and
     # scripts/check-docs-pin.sh holds those docs to the code this release runs (T-4483).
-    commit: '6ebf7f6d08c2d03c25e30c86fec83f2833c10a6d'
+    commit: '616473259e98bd5f39d96fa55d7c2f6539a3d24f'
     docs: '2974c06afaa9e361c69672be53d9aae3e4ae6396'
     # The platform commit the image's jc-core is built from (the portal's Cargo.toml `rev`): a
     # seed field this jc-core does not know makes the Portal drop the whole manifest, so
