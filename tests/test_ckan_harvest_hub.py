@@ -9,6 +9,7 @@ import importlib.util
 import json
 import threading
 import urllib.error
+import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import quote
@@ -24,6 +25,7 @@ spec = importlib.util.spec_from_file_location("harvest", ROOT / "charts/ckan/fil
 harvest = importlib.util.module_from_spec(spec)
 exec(compile((ROOT / "charts/ckan/files/od-standards.py").read_text() + "\n"
              + (ROOT / "charts/ckan/files/harvest-hub.py").read_text(), spec.origin, "exec"), harvest.__dict__)
+READ = harvest.od_read  # the real read, for a test that fakes the network under it
 OD_DATASETS = json.loads((ROOT / "charts/ckan/files/od-datasets.json").read_text())
 
 APS = "b5486911cb0342e48d475130d1d5e960"
@@ -61,6 +63,19 @@ def name_of(ident):
     return harvest.dataset(item, title, dev_source())["name"]
 
 
+# What an Endpoint's file.csv answers (T-4742): one row unless a test names the URL in SHEETS.
+SHEET = b"id,name\r\nurn:ngsi-ld:PointOfInterest:1,Hrad\r\n"
+SHEETS = {}
+
+
+def endpoint_file(url, accept="application/json", limit=1 << 30):
+    """od_read as the gateway answers it, refusing what is over `limit` as the real one does."""
+    body = SHEETS.get(url, SHEET)
+    if len(body) > limit:
+        raise ValueError(f"{url}: answered more than {limit} bytes")
+    return body
+
+
 @pytest.fixture
 def converted(monkeypatch):
     """Marks source items as converted: their rows are entities of an Endpoint whose model has
@@ -68,6 +83,7 @@ def converted(monkeypatch):
     monkeypatch.setattr(harvest, "OD_GATEWAY", "https://api.dev.joinedcontext.com")
     monkeypatch.setattr(harvest, "OD_DATASETS", {})
     monkeypatch.setattr(harvest, "od_models", lambda endpoint: model_index(["PointOfInterest"]))
+    monkeypatch.setattr(harvest, "od_read", endpoint_file)
 
     def mark(*idents, location=True):
         for ident in idents:
@@ -83,6 +99,7 @@ class FakeCkan:
 
     def __init__(self):
         self.orgs, self.packages, self.calls = {}, {}, []
+        self.tables, self.dropped, self.views = {}, [], []
         fake = self
 
         class Handler(BaseHTTPRequestHandler):
@@ -132,10 +149,35 @@ class FakeCkan:
             self.packages[package["id"]] = package
             return ok(package)
         if action == "package_update":
+            kept = {r.get("id") for r in body.get("resources", [])}
+            for r in self.packages[body["id"]].get("resources", []):
+                if r.get("id") not in kept and r.get("id") in self.tables:
+                    self.dropped.append(self.tables.pop(r["id"]))  # CKAN drops a table with its resource
             self.packages[body["id"]] = dict(body)
             return ok(body)
         if action == "package_delete":
             self.packages[body["id"]]["state"] = "deleted"
+            return ok(None)
+        if action == "datastore_create":
+            if "resource" in body:
+                package = self.packages[body["resource"]["package_id"]]
+                rid = f"table-{len(self.tables) + len(self.dropped)}"
+                package.setdefault("resources", []).append(dict(body["resource"], id=rid, url_type="datastore"))
+            else:
+                rid = body["resource_id"]
+                assert rid not in self.tables, "datastore_create on a live table"
+            self.tables[rid] = {"fields": body["fields"], "records": list(body["records"])}
+            return ok({"resource_id": rid})
+        if action == "resource_view_list":
+            return ok([v for v in self.views if v["resource_id"] == body["id"]])
+        if action == "resource_view_create":
+            self.views.append(dict(body, id=f"view-{len(self.views)}"))
+            return ok(self.views[-1])
+        if action == "datastore_upsert":
+            self.tables[body["resource_id"]]["records"] += body["records"]
+            return ok(None)
+        if action == "datastore_delete":
+            self.dropped.append(self.tables.pop(body["resource_id"]))
             return ok(None)
         return 400, {"success": False, "error": {"__type": "Bad request", "message": f"Action name not known: {action}"}}
 
@@ -284,11 +326,14 @@ def test_the_model_index_is_read_once_per_endpoint_and_a_failed_read_raises(monk
         return Answer(json.dumps({"models": model_index(["T"])}).encode())
 
     monkeypatch.setattr(harvest._request, "urlopen", urlopen)
+    slept = []
+    monkeypatch.setattr(harvest._time, "sleep", slept.append)
     assert harvest.od_models("ep")[0]["types"] == ["T"]
     harvest.od_models("ep")
     assert asked == ["https://api.dev.joinedcontext.com/api/endpoint/ep/schema/index.json"]
     with pytest.raises(OSError):
         harvest.od_models("broken")
+    assert slept == list(harvest.OD_RETRY_WAITS), "a broken connection is read again after each wait"
 
 
 def test_the_cronjob_carries_the_mapping_and_the_dev_gateway(rendered):
@@ -535,3 +580,175 @@ def test_a_gateway_that_stays_down_still_fails_the_run(monkeypatch):
 def test_a_failed_harvest_run_is_run_again():
     chart = (ROOT / "charts/ckan/templates/harvest.yaml").read_text()
     assert "backoffLimit: 3" in chart
+
+
+def datastore(ckan, ident):
+    package = ckan.active()[ident]
+    return [r for r in package.get("resources", []) if r.get("url_type") == "datastore"]
+
+
+def sheet_url(ident):
+    name = name_of(ident)
+    dataset = f"https://opendata.dev.joinedcontext.com/dataset/{name}"
+    return ("https://api.dev.joinedcontext.com/api/endpoint/ep/file.csv?type=PointOfInterest&q="
+            + quote(f'isPartOf=="{dataset}"', safe=""))
+
+
+def test_every_listed_dataset_holds_its_endpoint_rows_as_an_active_sheet(ckan, converted, monkeypatch):
+    """T-4742: a converted dataset without a sheet showed datastore_active=false on dev and prod.
+    The sheet is the Endpoint's own file.csv of the dataset's rows; unchanged rows write nothing,
+    changed rows replace the one table in place."""
+    converted(OBCE, CULTURE)
+    read = []
+    monkeypatch.setattr(harvest, "od_read", lambda url, *args: read.append(url) or endpoint_file(url, *args))
+    client = harvest.Ckan(ckan.host, "token-1")
+    harvest.harvest(client, dev_source(), items())
+    assert sheet_url(OBCE) in read and sheet_url(CULTURE) in read
+    for ident in (OBCE, CULTURE):
+        [table] = datastore(ckan, ident)
+        assert table["name"] == "PointOfInterest" and table["format"] == "CSV"
+        assert ckan.tables[table["id"]] == {
+            "fields": [{"id": "id", "type": "text"}, {"id": "name", "type": "text"}],
+            "records": [{"id": "urn:ngsi-ld:PointOfInterest:1", "name": "Hrad"}]}
+
+    first = len(ckan.calls)
+    counts, _, _ = harvest.harvest(client, dev_source(), items())
+    assert counts["unchanged"] == 2
+    assert [c for c in ckan.calls[first:] if not c.endswith(("_show", "_search", "_list"))] == []
+
+    monkeypatch.setitem(SHEETS, sheet_url(CULTURE), SHEET + b"urn:ngsi-ld:PointOfInterest:2,Kastiel\r\n")
+    counts, _, _ = harvest.harvest(client, dev_source(), items())
+    assert counts == {"created": 0, "updated": 1, "unchanged": 1, "withdrawn": 0}
+    [table] = datastore(ckan, CULTURE)
+    assert [r["name"] for r in ckan.tables[table["id"]]["records"]] == ["Hrad", "Kastiel"]
+    assert len(ckan.tables) == 2, "a changed sheet added a second table"
+
+
+def test_a_lost_sheet_is_written_again_although_the_dataset_is_unchanged(ckan, converted):
+    converted(CULTURE)
+    client = harvest.Ckan(ckan.host, "token-1")
+    harvest.harvest(client, dev_source(), items())
+    package = ckan.active()[CULTURE]
+    package["resources"] = [r for r in package["resources"] if r.get("url_type") != "datastore"]
+    counts, _, _ = harvest.harvest(client, dev_source(), items())
+    assert counts["updated"] == 1 and len(datastore(ckan, CULTURE)) == 1
+
+
+def test_an_empty_dataset_still_gets_an_active_sheet_of_its_columns(ckan, converted, monkeypatch):
+    converted(CULTURE)
+    monkeypatch.setitem(SHEETS, sheet_url(CULTURE), b"id,name\r\n")
+    harvest.harvest(harvest.Ckan(ckan.host, "token-1"), dev_source(), items())
+    [table] = datastore(ckan, CULTURE)
+    assert ckan.tables[table["id"]] == {"fields": [{"id": "id", "type": "text"}, {"id": "name", "type": "text"}],
+                                        "records": []}
+    monkeypatch.setitem(SHEETS, sheet_url(CULTURE), b"")
+    assert harvest.od_sheet(name_of(CULTURE))["rows"] == []
+    assert harvest.od_fields([], []) == [{"id": "empty", "type": "text"}], "CKAN refuses a table without fields"
+
+
+def test_a_dataset_the_publish_gate_hides_gets_no_sheet(ckan, converted, monkeypatch):
+    """T-4318: a hidden dataset is still harvested, but nothing reads its rows into a sheet."""
+    converted(OBCE, CULTURE)
+    monkeypatch.setattr(harvest, "OD_HIDDEN", {name_of(OBCE)})
+    harvest.harvest(harvest.Ckan(ckan.host, "token-1"), dev_source(), items())
+    assert datastore(ckan, OBCE) == [] and len(datastore(ckan, CULTURE)) == 1
+    assert OBCE in ckan.active()
+
+
+def test_a_file_the_endpoint_refuses_leaves_the_dataset_without_a_sheet_and_says_so(ckan, converted, monkeypatch, capsys):
+    converted(CULTURE)
+
+    def too_large(url, *args):
+        raise harvest.urllib.error.HTTPError(url, 413, "Content Too Large", {}, None)
+
+    monkeypatch.setattr(harvest, "od_read", too_large)
+    counts, _, _ = harvest.harvest(harvest.Ckan(ckan.host, "token-1"), dev_source(), items())
+    assert counts["created"] == 1 and datastore(ckan, CULTURE) == []
+    assert f"{name_of(CULTURE)}: no sheet" in capsys.readouterr().err
+
+
+
+def test_a_sheet_read_the_edge_refuses_for_load_keeps_the_live_sheet(ckan, converted, monkeypatch):
+    """A 429 (T-4717) or an outage is not an empty sheet: the run fails and the table stays."""
+    converted(CULTURE)
+    client = harvest.Ckan(ckan.host, "token-1")
+    harvest.harvest(client, dev_source(), items())
+    tables = dict(ckan.tables)
+    slept = []
+    monkeypatch.setattr(harvest._time, "sleep", slept.append)
+
+    def busy(request, timeout):
+        raise harvest.urllib.error.HTTPError(request.full_url, 429, "Too Many Requests", {}, None)
+
+    monkeypatch.setattr(harvest, "od_read", READ)
+    monkeypatch.setattr(harvest._request, "urlopen", busy)
+    with pytest.raises(harvest.urllib.error.HTTPError):
+        harvest.harvest(client, dev_source(), items())
+    assert slept == list(harvest.OD_RETRY_WAITS), "a 429 is asked again after each wait"
+    assert ckan.tables == tables and len(datastore(ckan, CULTURE)) == 1
+
+    def outage(request, timeout):
+        raise harvest.urllib.error.URLError("timed out")
+
+    monkeypatch.setattr(harvest._request, "urlopen", outage)
+    with pytest.raises(OSError):
+        harvest.harvest(client, dev_source(), items())
+    assert ckan.tables == tables
+
+
+def test_the_sheet_is_read_anonymously_so_it_holds_only_public_attributes(monkeypatch):
+    """The sheet must carry nothing the Endpoint's Policy hides from the public: the read sends
+    no credential, whatever the harvest holds."""
+    monkeypatch.setenv("CKAN_API_TOKEN", "token-1")
+    sent = []
+
+    class Answer:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def read(self, *args):
+            return b"id\r\n"
+
+    def urlopen(request, timeout):
+        sent.append(dict(request.header_items()))
+        return Answer()
+
+    monkeypatch.setattr(harvest._request, "urlopen", urlopen)
+    assert harvest.od_read("https://api.dev.joinedcontext.com/api/endpoint/ep/file.csv", "text/csv") == b"id\r\n"
+    assert sent == [{"Accept": "text/csv"}]
+
+
+def test_the_cronjob_names_the_datasets_the_gate_hides(rendered):
+    container = by_name(rendered("dev"), "CronJob", "ckan-harvest-bbsk")["spec"]["jobTemplate"]["spec"]["template"]["spec"]["containers"][0]
+    env = {e["name"]: e.get("value") for e in container["env"]}
+    values = (ROOT / "components/ckan/values/catalogue/development-values.yaml.gotmpl").read_text()
+    hidden = yaml.safe_load(values.replace('{{"{{"}}', "{{").replace('{{"}}"}}', "}}"))["hidden"]
+    assert json.loads(env["OD_HIDDEN"]) == sorted(hidden) and "bb-adresy" in hidden
+
+
+def test_each_sheet_has_one_table_view_and_a_located_one_its_map(ckan, converted):
+    """T-4742 views: a table view on every sheet, created once and again only when it is gone;
+    a located dataset's sheet is named by its type beside its OGC API Features distribution,
+    which is what the theme's dataset map reads (T-4639); a register without location has none."""
+    converted(CULTURE)
+    converted(OBCE, location=False)
+    client = harvest.Ckan(ckan.host, "token-1")
+    harvest.harvest(client, dev_source(), items())
+    for ident in (CULTURE, OBCE):
+        [table] = datastore(ckan, ident)
+        assert [v["view_type"] for v in ckan.views if v["resource_id"] == table["id"]] == ["datatables_view"]
+    harvest.harvest(client, dev_source(), items())
+    assert len(ckan.views) == 2, "a second run added a view"
+    ckan.views.clear()
+    harvest.harvest(client, dev_source(), items())
+    assert len(ckan.views) == 2, "a deleted table view was not written again"
+
+    def ogc(ident):
+        return [r["url"] for r in ckan.active()[ident]["resources"] if r.get("format") == "OGCFEAT"]
+
+    [items_url] = ogc(CULTURE)
+    assert urllib.parse.urlsplit(items_url).path.endswith(f"/collections/{datastore(ckan, CULTURE)[0]['name']}/items")
+    assert ogc(OBCE) == [], "a register without location gets no map"

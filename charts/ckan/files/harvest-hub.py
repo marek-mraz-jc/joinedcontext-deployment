@@ -8,8 +8,9 @@ touched, and a dataset is withdrawn only after a complete read of its source no 
 
 A dataset lists the platform's own distributions of its converted rows and their data model, and
 none of the Hub's links (EP-118, T-4324); an item whose rows were not converted is not listed, and
-withdrawn if an earlier run listed it. Fetched text is data: it becomes a title or a description,
-never an instruction. TLS verification stays on. Prints counts and dataset names, never the token.
+withdrawn if an earlier run listed it. A listed dataset that the publish gate does not hide holds
+its Endpoint's public rows as a DataStore table (T-4742). Fetched text is data: it becomes a title
+or a description, never an instruction. TLS verification stays on. Prints counts and dataset names, never the token.
 """
 import hashlib
 import html.parser
@@ -191,6 +192,15 @@ def extra(package, key):
     return next((e["value"] for e in package.get("extras", []) if e["key"] == key), None)
 
 
+def with_sheet(package, sheet):
+    """Makes the `harvest_hash` of `package` cover the rows of its sheet too, so changed rows
+    update the dataset and unchanged ones leave it alone (T-4644, T-4742)."""
+    rows = json.dumps([sheet["header"], sheet["rows"]], sort_keys=True, ensure_ascii=False)
+    digest = hashlib.sha256((extra(package, "harvest_hash") + rows).encode()).hexdigest()
+    package["extras"] = [e for e in package["extras"] if e["key"] != "harvest_hash"]
+    package["extras"].append({"key": "harvest_hash", "value": digest})
+
+
 class Ckan:
     def __init__(self, host, token):
         self.host, _, port = host.partition(":")
@@ -277,16 +287,33 @@ def harvest(ckan, source, items):
         # No dataset converted at all is a missing gateway or mapping, not a catalogue to empty.
         raise SourceError(f"none of {len(kept)} datasets lists the platform's distributions; nothing is withdrawn")
     for item, title, package, old in packages:
+        sheet = od_sheet(package["name"])
+        tables = []
+        if sheet:
+            with_sheet(package, sheet)
+            tables = [sheet]
+        carried = od_datastore_resources(old, tables) if old else []
         if old is None:
-            ckan.call("package_create", package)
+            live = ckan.call("package_create", package)
             counts["created"] += 1
-        elif extra(old, "harvest_hash") == extra(package, "harvest_hash") and old.get("state") == "active":
+        elif (extra(old, "harvest_hash") == extra(package, "harvest_hash") and old.get("state") == "active"
+              and len(carried) == len(tables)):
             counts["unchanged"] += 1
+            ids = {r["name"]: r["id"] for r in carried}
+            for t in tables:
+                t["resource_id"] = ids[t["name"]]
+            od_table_views(ckan.call, tables)
+            continue
         else:
             package["id"] = old["id"]
             package["state"] = "active"
-            ckan.call("package_update", package)
+            # package_update replaces the resource list: the sheet is carried over by id, or CKAN
+            # drops it with its rows.
+            package["resources"] = package["resources"] + carried
+            live = ckan.call("package_update", package)
             counts["updated"] += 1
+        od_write_tables(ckan.call, live, tables)
+        od_table_views(ckan.call, tables)
     for package in existing.values():
         if package.get("state") == "active":
             ckan.call("package_delete", {"id": package["id"]})
