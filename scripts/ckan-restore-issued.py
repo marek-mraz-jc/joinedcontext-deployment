@@ -20,6 +20,8 @@ and changes nothing else. A second run finds every dataset carrying `issued` and
     scripts/ckan-restore-issued.py https://opendata.dev.joinedcontext.com            # dry run
     CKAN_API_TOKEN=... scripts/ckan-restore-issued.py https://... --write       # the token from the
                                                                                 # ckan-api-token secret
+    scripts/ckan-restore-issued.py https://... --not-after 2026-09-28           # T-4733: no issued
+                                                                                # later than that day
 """
 import argparse
 import datetime
@@ -216,23 +218,31 @@ def packages(base):
             return found
 
 
-def restore(base, repo, write, token=None):
-    """One row per dataset: (name, metadata_created, issued or None, evidence, action)."""
+def restore(base, repo, write, token=None, not_after=None):
+    """One row per dataset: (name, metadata_created, issued or None, evidence, action).
+
+    With `not_after` (T-4733) no dataset keeps an `issued` later than it: an older true date stays,
+    a later or missing one becomes `not_after`."""
     rows = []
     for pkg in sorted(packages(base), key=lambda p: p["name"]):
         created = iso(pkg.get("metadata_created"))
-        if extras(pkg).get("issued"):
+        current = iso(extras(pkg).get("issued"))
+        if extras(pkg).get("issued") and (not_after is None or (current and current <= not_after)):
             rows.append((pkg["name"], created, extras(pkg)["issued"], "issued already set", "kept"))
             continue
         found = choose(pkg, repo)
-        if not found or found[0] >= created:
+        if not_after is not None:
+            if not found or found[0] > not_after:
+                was = found[0] if found else current or "none"
+                found = (not_after, f"--not-after {not_after} (evidence {was})")
+        elif not found or found[0] >= created:
             evidence = found[1] if found else "no evidence"
             rows.append((pkg["name"], created, None, evidence, "unchanged"))
             continue
         issued, evidence = found
         if write:
-            ckan(base, "package_patch", {"id": pkg["id"], "extras": (pkg.get("extras") or []) + [
-                {"key": "issued", "value": issued}]}, token)
+            kept = [e for e in pkg.get("extras") or [] if e["key"] != "issued"]
+            ckan(base, "package_patch", {"id": pkg["id"], "extras": kept + [{"key": "issued", "value": issued}]}, token)
         rows.append((pkg["name"], created, issued, evidence, "written" if write else "would write"))
     return rows
 
@@ -243,12 +253,17 @@ def main():
     parser.add_argument("--repo", default=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                         help="the joinedcontext-deployment clone whose history is the evidence")
     parser.add_argument("--write", action="store_true", help="add the issued extras (default: dry run)")
+    parser.add_argument("--not-after", help="no issued later than this date, e.g. 2026-09-28 (T-4733)")
     args = parser.parse_args()
+    not_after = iso(args.not_after) if args.not_after else None
+    if args.not_after and not not_after:
+        print(f"--not-after {args.not_after!r} is no date", file=sys.stderr)
+        return 2
     token = os.environ.get("CKAN_API_TOKEN")
     if args.write and not token:
         print("--write needs CKAN_API_TOKEN", file=sys.stderr)
         return 2
-    rows = restore(args.catalogue, args.repo, args.write, token)
+    rows = restore(args.catalogue, args.repo, args.write, token, not_after)
     print("| dataset | metadata_created | issued | evidence | action |")
     print("|---|---|---|---|---|")
     for name, created, issued, evidence, action in rows:

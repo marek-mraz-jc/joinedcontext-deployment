@@ -130,3 +130,36 @@ def test_a_datacube_source_without_another_record_takes_its_cube_date_over_the_f
     history = repo(tmp_path, "endpoints:\n  - slug: slugas\n")
     rows = {r[0]: r[2:] for r in restore.restore("https://ckan", history, write=False)}
     assert rows["susr-as"] == ("2025-12-19T09:00:00Z", f"NKOD {CUBE_SET} dct:modified (DATAcube as1001rs)", "would write")
+
+
+def test_not_after_clamps_a_later_date_keeps_an_older_one_and_fills_a_missing_one(tmp_path):
+    """T-4733: with --not-after no dataset keeps an `issued` later than the day; an older true date
+    stays, a set `issued` that is later is replaced (not added twice), and a rerun writes nothing."""
+    restore = load()
+    restore.sparql = lambda query: [{"ds": NKOD_SET, "issued": "2015-12-30T15:10:37Z"}] if SOURCE in query else []
+    catalogue = Catalogue([
+        pkg("older-source", source=f'[{{"url": "{SOURCE}"}}]', identifier="slugsk"),
+        pkg("old-issued", issued="2019-04-02T10:00:00Z"),
+        pkg("late-issued", issued="2026-10-15T08:00:00Z", source="https://example.org/x"),
+        pkg("late-commit", identifier="mostyslug0123456789"),
+        pkg("no-evidence", identifier="neverinthehistory"),
+    ])
+    restore.ckan = catalogue
+    history = repo(tmp_path, "endpoints:\n  - slug: mostyslug0123456789\n")
+    day = restore.iso("2026-09-28")
+
+    rows = {r[0]: r[2:] for r in restore.restore("https://ckan", history, write=False, not_after=day)}
+    assert rows["older-source"][0] == "2015-12-30T15:10:37Z"
+    assert rows["old-issued"] == ("2019-04-02T10:00:00Z", "issued already set", "kept")
+    assert rows["late-issued"][0] == day and "2026-10-15T08:00:00Z" in rows["late-issued"][1]
+    assert rows["late-commit"][0] == "2026-09-20T10:00:00Z", "a first commit before the day is the truth"
+    assert rows["no-evidence"][0] == day and rows["no-evidence"][2] == "would write"
+    assert catalogue.writes == []
+
+    restore.restore("https://ckan", history, write=True, token="secret", not_after=day)
+    late = next(p for p in catalogue.packages if p["name"] == "late-issued")
+    assert [e for e in late["extras"] if e["key"] == "issued"] == [{"key": "issued", "value": day}]
+    assert {e["key"] for e in late["extras"]} == {"issued", "source"}
+    written = len(catalogue.writes)
+    again = restore.restore("https://ckan", history, write=True, token="secret", not_after=day)
+    assert len(catalogue.writes) == written and {r[4] for r in again} == {"kept"}
