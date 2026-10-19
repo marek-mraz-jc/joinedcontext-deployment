@@ -1695,6 +1695,9 @@ def test_the_assistants_page_reads_in_slovak(theme):
     assert theme.jc_t("coming_soon") == "Čoskoro" and theme.jc_t("for_developers") == "Pre vývojárov"
     assert theme.jc_t("store_address") == "Každý návod ukazuje, kam vložiť túto adresu:"
     assert "add_to" not in theme.STRINGS
+    # Nothing on /assistants says "Pridať do …", the editors' buttons in its fold included (T-4735).
+    assert not [k for k, words in theme.STRINGS.items()
+                if re.search(r"Pridať do|Add to|Přidat do|^Zu \w+ hinzufügen", " ".join(map(str, words.values())))]
     for key in ("assistants", "assistants_lead", "connector_status", "store_address", "for_developers", "coming_soon",
                 "copy", "any_client", "guide", "guide_title", "guide_who", "guide_steps", "guide_try",
                 "guide_example", "guide_good", "guide_trouble", "guide_checked", "guide_back"):
