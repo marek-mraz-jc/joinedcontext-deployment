@@ -89,5 +89,7 @@ context-broker:
     # about 10 s); the types timing test asserts the probe plan. No migration.
     # Antares dev 5e18030 (dev-7, train 1239-1 T-4722 over 919dce7): OData route.rs dispatches
     # $apply, OGC terms/crs modules moved, xray gate runs under bash. No migration.
-    tag: 'dev-7'
-    digest: 'sha256:cce37e1bd5b0416f65e3fc6d3651465c8dd9d54887fd4a83141b4780f607a065'
+    # Antares dev b6013fd (dev-8, train 1623 T-4669 over 5e18030): the temporal dedup reads the
+    # newest stored row only, not the attribute's whole history. No migration.
+    tag: 'dev-8'
+    digest: 'sha256:36594b141f5ad188cefeacc7eb5292892804248595b8603663826188abc02b62'

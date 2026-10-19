@@ -75,6 +75,9 @@ spec:
                   value: {{ $datasets | fromJson | toJson | quote }}
                 - name: OD_GATEWAY
                   value: {{ $.Values.harvest.gateway | default "" | quote }}
+                # The datasets the publish gate hides get no DataStore sheet (T-4318, T-4742).
+                - name: OD_HIDDEN
+                  value: {{ keys ($.Values.hidden | default dict) | sortAlpha | toJson | quote }}
                 - name: HARVEST_CONFIG
                   value: {{ merge (dict "source" (printf "%s-%s" (.kind | default "nkod") .name)) (omit . "name") | toJson | quote }}
               command: [python3, -c]

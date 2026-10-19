@@ -156,8 +156,10 @@ def test_the_demo_assistant_reads_only_the_two_bodies_public_data():
         project, _, name = connector["endpoint"].rpartition("/")
         assert manifests("Endpoint", project or "bbsk")[name]["spec"]["audience"] == "public", connector
     assert spec["allowedOrigins"] == [f"https://{HOSTS['smartcity']}", f"https://{HOSTS['dev']}"]
-    # Owner 2026-10-19T13:49Z: four cards, two from www.bbsk.sk, then two from the open data, in both languages.
-    assert len(spec["suggestions"]["sk"]) == len(spec["suggestions"]["en"]) == 4
+    # Owner 2026-10-19T13:49Z: two cards from www.bbsk.sk, then the open-data ones, only those proven 3 of 3.
+    # The Zvolen schools card is off since the owner's 16:22Z run read Organization (supervisor 16:35Z).
+    assert len(spec["suggestions"]["sk"]) == len(spec["suggestions"]["en"]) == 3
+    assert not any("Zvolen" in q for q in spec["suggestions"]["sk"] + spec["suggestions"]["en"])
     # T-4740: the panel is "AI asistent" in the landing page's blue, never a name its initials stand for.
     assert spec["theme"]["title"]["sk"] == "AI asistent" and spec["theme"]["primaryColor"] == "#264a96"
 
