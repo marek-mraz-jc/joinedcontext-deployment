@@ -1724,6 +1724,7 @@ def jc_about_site():
 
 _HOST = re.compile(r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$")
 MCP_NAME = "joinedcontext"
+MCP_SERVER = re.compile(r"d/[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?")
 
 
 def jc_mcp_install():
@@ -1735,6 +1736,11 @@ def jc_mcp_install():
         return None
     # The data host, api.{domain} (ADR-N-052 §2.1, T-4632): the apex moves an anonymous client there.
     url = "https://api.%s/api/mcp" % domain
+    # An installation that offers one assistant's own server instead of the hub, such as a demo
+    # (T-4687): branding `mcpServer` `d/{publicId}`, that assistant's Endpoints and sources (T-4691).
+    own = BRANDING.get("mcpServer")
+    if isinstance(own, str) and MCP_SERVER.fullmatch(own):
+        url += "/" + own
     server = {"type": "http", "url": url}
     vscode = json.dumps(dict(name=MCP_NAME, **server), separators=(",", ":"))
     cursor = base64.b64encode(json.dumps({"url": url}, separators=(",", ":")).encode()).decode()

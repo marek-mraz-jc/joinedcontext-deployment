@@ -333,6 +333,21 @@ def test_the_mcp_panel_names_the_installation_s_hub_and_nothing_else(theme):
         assert "endpoint/" not in unquote(line) and "token" not in line.lower() and "bearer" not in line.lower()
 
 
+@pytest.mark.parametrize("server, path", [
+    ("d/bbsk-demo", "/api/mcp/d/bbsk-demo"),
+    # Anything but `d/{publicId}` leaves the hub: no other path, no climbing, no query.
+    ("d/../admin", "/api/mcp"), ("x/bbsk-demo", "/api/mcp"), ("d/Bbsk", "/api/mcp"),
+    ("d/bbsk?x=1", "/api/mcp"), ("d/", "/api/mcp"), (7, "/api/mcp"), (None, "/api/mcp"),
+])
+def test_a_demo_offers_its_assistant_s_own_server_and_nothing_else(theme, server, path):
+    """T-4687: branding `mcpServer` names one assistant's server (T-4691) for every client line."""
+    theme.BRANDING["mcpServer"] = server
+    mcp = theme.jc_mcp_install()
+    url = "https://api.dev.example" + path
+    assert mcp["url"] == url
+    assert mcp["claude"].endswith(url) and json.loads(mcp["json"])["mcpServers"]["joinedcontext"]["url"] == url
+
+
 @pytest.mark.parametrize("domain", [None, "", "dev.example\" onmouseover=\"x", "dev.example/evil", "localhost", 7])
 def test_the_mcp_panel_is_left_out_without_a_plain_domain(theme, domain):
     theme.BRANDING["domain"] = domain
