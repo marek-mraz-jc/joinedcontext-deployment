@@ -81,8 +81,17 @@ def send(method: str, url: str, headers: dict, body: bytes | None, limit: int = 
     request = urllib.request.Request(url, data=body, method=method, headers=headers)
     try:
         with OPENER.open(request, timeout=TIMEOUT) as response:
-            return Answer(response.status, response.headers.get("Content-Type", ""),
-                          response.read(limit), time.monotonic() - started)
+            # urllib's timeout is per read: a trickling answer is cut at TIMEOUT in total.
+            body = b""
+            while len(body) < limit:
+                chunk = response.read1(min(1 << 16, limit - len(body)))
+                if not chunk:
+                    break
+                body += chunk
+                if time.monotonic() - started > TIMEOUT:
+                    return Answer(0, seconds=TIMEOUT, error=f"timeout after {TIMEOUT:.0f} s")
+            return Answer(response.status, response.headers.get("Content-Type", ""), body,
+                          time.monotonic() - started)
     except urllib.error.HTTPError as error:
         return Answer(error.code, error.headers.get("Content-Type", ""), error.read(limit),
                       time.monotonic() - started, retry_after=error.headers.get("Retry-After", ""))

@@ -336,3 +336,32 @@ def test_a_dataset_without_a_type_reads_the_endpoint_s_types_and_names_a_failure
     assert rows["stats"]["type"] == "Thing" and smoke.verdict(rows["stats"]["odata"]) == "ok"
     rows, _ = table({**healthy, **search, types: answer(500)})
     assert rows["stats"]["ngsi-ld"] == "ko: no entity type: types answered 500 application/json"
+
+
+def test_a_trickling_answer_is_cut_at_the_timeout_in_total(monkeypatch):
+    import socket
+    import threading
+    import time
+
+    monkeypatch.setattr(smoke, "TIMEOUT", 1.0)
+    listener = socket.socket()
+    listener.bind(("127.0.0.1", 0))
+    listener.listen(1)
+
+    def serve():
+        conn, _ = listener.accept()
+        conn.recv(4096)
+        conn.sendall(b"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 100000\r\n\r\n")
+        for _ in range(30):
+            try:
+                conn.sendall(b"x" * 1000)
+                time.sleep(0.2)
+            except OSError:
+                break
+        conn.close()
+        listener.close()
+
+    threading.Thread(target=serve, daemon=True).start()
+    started = time.monotonic()
+    got = smoke.send("GET", f"http://127.0.0.1:{listener.getsockname()[1]}/", {}, None)
+    assert got.error == "timeout after 1 s" and time.monotonic() - started < 3
