@@ -12,12 +12,14 @@ Writes `<out-dir>/smoke-catalogue-<env>-<time>.tsv` (default out-dir `.smoke`) a
 on any ko. Testing/05 §4.1 is the contract.
 """
 
+import contextlib
 import csv
 import functools
 import html
 import importlib.util
 import json
 import re
+import signal
 import socket
 import sys
 import time
@@ -78,23 +80,37 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 OPENER = urllib.request.build_opener(NoRedirect)
 
 
+class Overtime(Exception):
+    """A request past TIMEOUT in total; not an OSError, so urllib does not wrap it."""
+
+
+@contextlib.contextmanager
+def cut_at(seconds: float):
+    """Interrupt whatever runs inside after `seconds` of wall time. urllib's own timeout is per
+    connect and per read, so a slow handshake, a slow first byte and a trickle each got it whole
+    (dev runs 2 and 3 overran 10 minutes by 40 s). Main thread only; the script has no other."""
+    def expire(signum, frame):
+        raise Overtime()
+
+    previous = signal.signal(signal.SIGALRM, expire)
+    signal.setitimer(signal.ITIMER_REAL, seconds)
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous)
+
+
 def send(method: str, url: str, headers: dict, body: bytes | None, limit: int = MAX_BODY) -> Answer:
-    """One HTTP request through urllib, at most `limit` bytes read; never raises."""
+    """One HTTP request through urllib, at most `limit` bytes and TIMEOUT seconds; never raises."""
     started = time.monotonic()
     request = urllib.request.Request(url, data=body, method=method, headers=headers)
     try:
-        with OPENER.open(request, timeout=TIMEOUT) as response:
-            # urllib's timeout is per read: a trickling answer is cut at TIMEOUT in total.
-            body = b""
-            while len(body) < limit:
-                chunk = response.read1(min(1 << 16, limit - len(body)))
-                if not chunk:
-                    break
-                body += chunk
-                if time.monotonic() - started > TIMEOUT:
-                    return Answer(0, seconds=TIMEOUT, error=f"timeout after {TIMEOUT:.0f} s")
-            return Answer(response.status, response.headers.get("Content-Type", ""), body,
-                          time.monotonic() - started)
+        with cut_at(TIMEOUT), OPENER.open(request, timeout=TIMEOUT) as response:
+            return Answer(response.status, response.headers.get("Content-Type", ""),
+                          response.read(limit), time.monotonic() - started)
+    except Overtime:
+        return Answer(0, seconds=TIMEOUT, error=f"timeout after {TIMEOUT:.0f} s")
     except urllib.error.HTTPError as error:
         return Answer(error.code, error.headers.get("Content-Type", ""), error.read(limit),
                       time.monotonic() - started, retry_after=error.headers.get("Retry-After", ""))
@@ -119,16 +135,19 @@ def open_socket(url: str, entity_type: str) -> tuple[int, int, str]:
     """scripts/smoke-ws.py's upgrade and subscribe: (upgrade status, x-status, error)."""
     ws = smoke_ws()
     try:
-        sock, status = ws.connect(url, TIMEOUT)
+        with cut_at(TIMEOUT):
+            sock, status = ws.connect(url, TIMEOUT)
+            with sock:
+                if status != 101:
+                    return status, 0, ""
+                try:
+                    return 101, ws.subscribe(sock, entity_type), ""
+                except (OSError, ValueError) as error:
+                    return 101, 0, str(error)
+    except Overtime:
+        return 0, 0, f"timeout after {TIMEOUT:.0f} s"
     except OSError as error:
         return 0, 0, str(error)
-    with sock:
-        if status != 101:
-            return status, 0, ""
-        try:
-            return 101, ws.subscribe(sock, entity_type), ""
-        except (OSError, ValueError) as error:
-            return 101, 0, str(error)
 
 
 class Client:

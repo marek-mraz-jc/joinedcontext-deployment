@@ -351,6 +351,7 @@ def test_a_trickling_answer_is_cut_at_the_timeout_in_total(monkeypatch):
     def serve():
         conn, _ = listener.accept()
         conn.recv(4096)
+        time.sleep(0.6)  # a slow first byte, then a trickle: neither alone reaches the timeout
         conn.sendall(b"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 100000\r\n\r\n")
         for _ in range(30):
             try:
