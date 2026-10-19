@@ -156,7 +156,10 @@ def test_the_demo_assistant_reads_only_the_two_bodies_public_data():
         project, _, name = connector["endpoint"].rpartition("/")
         assert manifests("Endpoint", project or "bbsk")[name]["spec"]["audience"] == "public", connector
     assert spec["allowedOrigins"] == [f"https://{HOSTS['smartcity']}", f"https://{HOSTS['dev']}"]
-    assert len(spec["suggestions"]["sk"]) == 6
+    # Owner 2026-10-19T13:49Z: four cards, two from www.bbsk.sk, then two from the open data, in both languages.
+    assert len(spec["suggestions"]["sk"]) == len(spec["suggestions"]["en"]) == 4
+    # T-4740: the panel is "AI asistent" in the landing page's blue, never a name its initials stand for.
+    assert spec["theme"]["title"]["sk"] == "AI asistent" and spec["theme"]["primaryColor"] == "#264a96"
 
 
 def test_the_demo_stays_inside_the_keys_five_dollars_with_the_public_assistants():

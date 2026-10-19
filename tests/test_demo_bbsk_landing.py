@@ -1,7 +1,7 @@
 """T-4740: the BBSK demo's host serves a landing page with the demo assistant docked, not a CKAN.
 
 The page is static: a snapshot of the www.bbsk.sk home page (owner 2026-10-19T12:55Z: its texts and
-layout, no logo, photos as colour blocks, links to the real pages) with the assistant, its six
+layout, no logo, photos as colour blocks, links to the real pages) with the assistant, its four
 questions, the MCP block and the AI notice added, plus the catalogue theme's dock scripts, on the
 platform's pinned nginx. It says DEMO in its ribbon, title and footer, keeps search engines out,
 loads no file of another host and frames only the demo assistant.
@@ -85,13 +85,13 @@ def test_the_page_says_demo_keeps_search_engines_out_and_loads_nothing_third_par
     _, domain, _, site, _ = landing
     for name, ribbon in RIBBON.items():
         page = parse(site[name])
-        text = " ".join(page.text)
+        text = "".join(page.text)
         assert text.count(ribbon) == 2, name  # the ribbon and the footer
         assert ribbon.split(" · ")[0] in site[name].split("<title>")[1].split("</title>")[0], name
         assert page.meta["robots"] == "noindex, nofollow", name
         # Every script and style is this host's own; the one frame is the demo assistant.
         assert page.loads and all(src and src.startswith("/") for src in page.loads), (name, page.loads)
-        assert page.frames == [f"https://assistant.{domain}/d/bbsk-demo/widget?embed=1&dock=1"], name
+        assert page.frames == [f"https://assistant.{domain}/d/bbsk-demo/widget?embed=1&dock=1&lang=sk"], name
         assert f"https://api.{domain}/api/mcp/d/bbsk-demo" in text, name
         assert "<form" not in site[name] and "__DOMAIN__" not in site[name], name
         # No coat of arms, no logo and no file of bbsk.sk: their site is only linked.
@@ -99,13 +99,15 @@ def test_the_page_says_demo_keeps_search_engines_out_and_loads_nothing_third_par
         assert "bbsk.sk/themes" not in site[name] and "bbsk.sk/storage" not in site[name], name
 
 
-def test_the_six_cards_are_the_demo_assistants_own_questions(landing):
+def test_the_four_cards_are_the_demo_assistants_own_questions_and_the_panel_speaks_slovak(landing):
     _, _, _, site, _ = landing
     seed = yaml.safe_load((ROOT / "components/context-gateway/seed/bbsk/bbsk-assistant-demo.yaml").read_text())
     for name, lang in (("index.html", "sk"),):
         cards = [part.split("</strong>")[0] for part in site[name].split('<button type="button" data-ask><span class="head">')[1:]]
         cards = [card.split("<strong>")[1] for card in cards]
         assert cards == seed["spec"]["suggestions"][lang], name
+        # The page is Slovak, so the panel opens in Slovak whatever the browser says (owner 13:50Z item 3).
+        assert "/d/bbsk-demo/widget?embed=1&amp;dock=1&amp;lang=sk" in site[name], name
 
 
 def test_the_dock_is_the_catalogues_own_and_the_policy_frames_only_the_assistant(landing):
@@ -202,5 +204,5 @@ def test_the_snapshot_keeps_bbsk_sks_texts_links_to_its_pages_and_shows_no_logo(
     assert len(theirs) > 50 and all(a.get("rel") == "noopener" for a in theirs)
     assert all(a.get("href", "").startswith(("https://", "#")) for a in page.links), "no relative link to a page this host lacks"
     # Ours is marked as ours, and the name stands where the logo was.
-    assert text.count("DEMO · pridané joinedcontext") == 2
+    assert text.count("DEMO · pridané joinedcontext") == 3  # the hero, the cards, the MCP block
     assert "Banskobystrický samosprávny kraj · DEMO" in text
