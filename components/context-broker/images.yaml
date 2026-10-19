@@ -94,5 +94,7 @@ context-broker:
     # Antares dev c51c56e (dev-9, train 1859 T-4669 T-4753 over b6013fd): entity writes lock FOR NO
     # KEY UPDATE, so history appends stop lock-timing out; writes take the union of holding view
     # rules. No migration.
-    tag: 'dev-9'
-    digest: 'sha256:9c03afc67c76ea8b8b4730f56c5c3d3f7b9dcf9582ff5fc800f3b8d1510317c3'
+    # Antares dev a8e8129 (dev-10, train 1913 T-4755 over c51c56e): one filter path; a socket's own
+    # Subscription is decided as Query Entities (ADR-0026 rule 4). No migration.
+    tag: 'dev-10'
+    digest: 'sha256:5a6f4bbe42480f81ddeea322ca78bdeaf047fe12c5f686def367dc77490cbb7f'
