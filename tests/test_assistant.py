@@ -203,3 +203,18 @@ def test_the_widget_is_served_from_the_assistants_host_which_the_chat_admits(doc
     assert route["uri"] == "/d/*" and route["host"] == "assistant.dev.joinedcontext.com"
     plugins = next(pc for pc in edge["plugin_configs"] if pc["id"] == "assistant-widget")["plugins"]
     assert "X-Frame-Options" not in plugins["response-rewrite"]["headers"]["set"]
+
+
+def test_each_environment_runs_as_many_embedder_threads_as_its_cpu_limit():
+    """T-4749: prod embeds its first full index on two cores; an environment that raises the CPU
+    limit without the threads (or the other way round) wastes the core or starves the model."""
+    import pathlib
+    import re
+    import yaml
+
+    values = pathlib.Path(__file__).resolve().parents[1] / "components/assistant/values/worker"
+    base = re.search(r'JC_ASSISTANT_EMBED_THREADS: "(\d+)"', (values / "base-values.yaml.gotmpl").read_text())
+    for env in ("development", "production"):
+        own = yaml.safe_load((values / f"{env}-values.yaml.gotmpl").read_text())
+        threads = (own.get("env") or {}).get("JC_ASSISTANT_EMBED_THREADS", base.group(1))
+        assert threads == str(own["resources"]["limits"]["cpu"]), env
