@@ -28,6 +28,9 @@
 {{- if $site.logo }}
 {{- $branding = set (deepCopy $branding) "siteLogo" $site.logo }}
 {{- end }}
+{{- with index $site "issued" }}
+{{- $branding = set (deepCopy $branding) "siteIssued" . }}
+{{- end }}
 {{- if $this.samples }}
 {{- $branding = set (deepCopy $branding) "samples" $this.samples }}
 {{- end }}

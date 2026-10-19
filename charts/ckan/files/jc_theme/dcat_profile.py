@@ -13,7 +13,7 @@ import json
 import re
 
 from rdflib import BNode, Literal, Namespace, URIRef
-from rdflib.namespace import RDF, RDFS, SKOS
+from rdflib.namespace import RDF, RDFS, SKOS, XSD
 
 from ckanext.dcat.profiles import DCAT, DCT, FOAF, SPDX, VCARD, CleanedURIRef, RDFProfile
 from ckanext.dcat.utils import resource_uri
@@ -184,8 +184,19 @@ class JcDcatApProfile(RDFProfile):
         licence = _extra(dataset_dict, "license_url") or dataset_dict.get("license_url")
         rights = _extra(dataset_dict, "rights")
         resources = {CleanedURIRef(resource_uri(r)): r for r in dataset_dict.get("resources") or []}
+        # A distribution went public with its dataset (T-4733): the EU profile dates it by the
+        # resource's `created`, which a republish resets because `package_update` re-creates the
+        # resources, so a later date is the dataset's `dct:issued`.
+        issued = g.value(dataset_ref, DCT.issued)
         for distribution in list(g.objects(dataset_ref, DCAT.distribution)):
             self._distribution(distribution, resources.get(distribution) or {}, licence, dataset_ref, rights)
+            if issued is None:
+                continue
+            for own in list(g.objects(distribution, DCT.issued)):
+                if str(own) > str(issued):
+                    g.remove((distribution, DCT.issued, own))
+            if (distribution, DCT.issued, None) not in g:
+                g.add((distribution, DCT.issued, issued))
 
     def _distribution(self, distribution, resource_dict, licence, dataset_ref, rights=None):
         g = self.g
@@ -254,6 +265,13 @@ class JcDcatApProfile(RDFProfile):
         if (catalog_ref, DCT.description, None) not in g:
             title = g.value(catalog_ref, DCT.title) or BRANDING.get("instanceName")
             g.add((catalog_ref, DCT.description, Literal("%s open-data catalogue" % title, lang="en")))
+
+        # The day the catalogue went public, from the instance's `site.issued` (T-4733); CKAN
+        # keeps no such date of its own.
+        issued = BRANDING.get("siteIssued")
+        if isinstance(issued, str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}", issued) \
+                and (catalog_ref, DCT.issued, None) not in g:
+            g.add((catalog_ref, DCT.issued, Literal(issued, datatype=XSD.date)))
 
         for homepage in list(g.objects(catalog_ref, FOAF.homepage)):
             g.add((homepage, RDF.type, FOAF.Document))
