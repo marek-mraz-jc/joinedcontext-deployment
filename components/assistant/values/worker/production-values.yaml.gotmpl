@@ -12,5 +12,11 @@ resources:
     cpu: 50m
     memory: 640Mi
   limits:
-    cpu: '1'
+    # Two cores for the first full index of every city's documents (T-4749, ~7,300 PDFs): the
+    # embedder runs on both, memory stays as measured. Back to 1 once the daily load is known.
+    cpu: '2'
     memory: 1Gi
+
+env:
+  # As many embedder threads as the CPU limit (T-3053).
+  JC_ASSISTANT_EMBED_THREADS: "2"
