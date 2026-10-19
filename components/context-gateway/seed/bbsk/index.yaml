@@ -32,6 +32,8 @@ bbsk-policy-kpi-pipelines-write.yaml: projects/bbsk/spaces/bbsk-kpi/policies/kpi
 bbsk-policy-kpi-read.yaml: projects/bbsk/spaces/bbsk-kpi/policies/kpi-read.yaml
 # The region's three public Endpoints as one public, read-only MCP connector (T-4141).
 bbsk-mcp-otvorene-data.yaml: projects/bbsk/mcp/otvorene-data.yaml
+# The region's and the city's public Endpoints by select (T-4750).
+bbsk-mcp-kraj-a-mesto.yaml: projects/bbsk/mcp/kraj-a-mesto.yaml
 bbsk-serviceaccount-pipelines.yaml: projects/bbsk/access/serviceaccounts/pipelines.yaml
 bbsk-share-mesto-kpi.yaml: projects/bbsk/shared/mesto-kpi.yaml
 # The two ingestion pipelines and their mappings (T-2305). The reconciler renders each Pipeline

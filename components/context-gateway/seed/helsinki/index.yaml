@@ -15,6 +15,8 @@ helsinki.v1.context.jsonld: projects/helsinki/spaces/helsinki/datamodels/helsink
 helsinki.v1.example.jsonld: projects/helsinki/spaces/helsinki/datamodels/helsinki.v1.example.jsonld
 helsinki.v1.md: projects/helsinki/spaces/helsinki/datamodels/helsinki.v1.md
 helsinki-endpoint-events.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-events.yaml
+# Helsinki's public MCP server, which helsinki-public reads through (T-4750).
+helsinki-mcp-otvorene-data.yaml: projects/helsinki/mcp/otvorene-data.yaml
 helsinki-endpoint-bikes.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-bikes.yaml
 helsinki-endpoint-bikes-ops.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-bikes-ops.yaml
 helsinki-endpoint-transport.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-transport.yaml

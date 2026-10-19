@@ -38,6 +38,8 @@ zilina-endpoint-kpi.yaml: projects/zilina/spaces/zilina-kpi/endpoints/zilina-kpi
 zilina-endpoint-mesto.yaml: projects/zilina/spaces/zilina-mesto/endpoints/zilina-mesto.yaml
 zilina-endpoint-uniza.yaml: projects/zilina/spaces/zilina-uniza/endpoints/zilina-uniza.yaml
 zilina-endpoint-verejne.yaml: projects/zilina/spaces/zilina-verejne/endpoints/zilina-verejne.yaml
+# Žilina's public MCP server, which its public assistant reads through (T-4750).
+zilina-mcp-otvorene-data.yaml: projects/zilina/mcp/otvorene-data.yaml
 zilina-policy-kpi-pipelines-write.yaml: projects/zilina/spaces/zilina-kpi/policies/kpi-pipelines-write.yaml
 zilina-policy-mesto-pipelines-write.yaml: projects/zilina/spaces/zilina-mesto/policies/mesto-pipelines-write.yaml
 zilina-policy-uniza-pipelines-write.yaml: projects/zilina/spaces/zilina-uniza/policies/uniza-pipelines-write.yaml

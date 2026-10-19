@@ -17,7 +17,14 @@ SERVERS = {
     # The fourth (second) member holds every other table of the body's catalogue (T-4255).
     "banskabystrica": ("banskabystrica", {"banskabystrica-verejne", "banskabystrica-otvorene-data"}),
     "bbsk": ("bbsk", {"bbsk-registre", "bbsk-kraj-verejne", "bbsk-kpi", "bbsk-otvorene-data"}),
+    # One per public assistant (T-4750): the assistant reads its body's data through it.
+    "helsinki": ("helsinki", {"helsinki-weather", "helsinki-events"}),
+    "praha": ("praha", {"praha-mesto"}),
+    "zilina": ("zilina", {"zilina-verejne", "zilina-kpi", "zilina-uniza"}),
 }
+# The owner's case of more Endpoints than ten members (T-4750): the city's and the region's public
+# Endpoints by `select`, one server.
+COMBINED = ("bbsk", "kraj-a-mesto", {"projects": ["banskabystrica", "bbsk"], "accessLevel": ["public"]})
 # What an anonymous Policy of a member may grant: reads, and the subscriptions a WebSocket
 # needs (T-4073), which the gateway hides from anonymous MCP callers (T-4168). No entity write.
 # Since T-4258 also the discovery reads, so an anonymous MCP client lists types and attributes.
@@ -41,8 +48,8 @@ def manifests(folder: Path):
 
 def server(project: str):
     folder = SEED / SERVERS[project][0]
-    found = [(p, d) for p, d in manifests(folder) if d["kind"] == "McpServer"]
-    assert len(found) == 1, f"{folder.name} holds {len(found)} McpServer manifests"
+    found = [(p, d) for p, d in manifests(folder) if d["kind"] == "McpServer" and d["metadata"]["name"] == "otvorene-data"]
+    assert len(found) == 1, f"{folder.name} holds {len(found)} otvorene-data servers"
     return found[0]
 
 
@@ -118,3 +125,26 @@ def test_every_public_grant_reads_and_discovers_and_writes_no_entity():
             assert DISCOVERY <= set(spec["operations"]) or set(spec["operations"]) == HISTORY, path.name
             assert set(spec["operations"]) <= ANONYMOUS_OPERATIONS, (path.name, spec["operations"])
     assert found >= 18
+
+
+def test_more_than_ten_endpoints_are_one_server_by_select():
+    project, name, select = COMBINED
+    found = [(p, d) for p, d in manifests(SEED / project) if d["kind"] == "McpServer" and d["metadata"]["name"] == name]
+    assert len(found) == 1, found
+    path, doc = found[0]
+    assert doc["metadata"]["namespace"] == project
+    assert doc["spec"] == doc["spec"] | {"audience": "public", "select": select}
+    # a selector never reaches past the server's audience; members stay for the curated sets
+    assert "members" not in doc["spec"] and "allowedProjects" not in doc["spec"]
+    for text in ("title", "description"):
+        assert set(doc["metadata"][text]) == {"sk", "en"}
+    index = yaml.safe_load((path.parent / "index.yaml").read_text())
+    assert index[path.name] == f"projects/{project}/mcp/{name}.yaml"
+
+
+def test_helsinkis_public_assistant_reads_through_its_server():
+    deployments = [d for _, d in manifests(SEED / "helsinki") if d["kind"] == "AssistantDeployment" and d["metadata"]["name"] == "helsinki-public"]
+    assert len(deployments) == 1
+    spec = deployments[0]["spec"]
+    assert spec["mcpServer"] == "helsinki/otvorene-data"
+    assert "connectors" not in spec and "scope" not in spec
