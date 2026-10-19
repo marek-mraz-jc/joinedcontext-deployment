@@ -22,13 +22,16 @@ trap 'rm -f "$log"' EXIT
 
 src=$image
 for wait in 30 90 270 last; do
-  if "$trivy" image --quiet --scanners vuln --severity CRITICAL,HIGH --format json --output "$out" "$src" 2> >(tee "$log" >&2); then
+  # stderr goes to a file, then to the log: a `2> >(tee ...)` raced the grep below on the runner.
+  rc=0
+  "$trivy" image --quiet --scanners vuln --severity CRITICAL,HIGH --format json --output "$out" "$src" 2> "$log" || rc=$?
+  cat "$log" >&2
+  if [ "$rc" -eq 0 ]; then
     if [ "$src" != "$image" ]; then
       jq --arg name "$image" '.ArtifactName = $name' "$out" > "$out.tmp" && mv "$out.tmp" "$out"
     fi
     exit 0
   fi
-  wait  # the tee of stderr has written $log
   if ! grep -Eqi 'TOOMANYREQUESTS|429 Too Many Requests|status(code)?[: ]+429' "$log"; then
     echo "trivy failed on $src (not a rate limit), not scanned" >&2
     exit 1
