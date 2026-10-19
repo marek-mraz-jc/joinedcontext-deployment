@@ -452,12 +452,35 @@ def test_the_platform_images_are_verified_against_their_workflow_identity(pod_se
 
 
 
+@pytest.fixture(scope="module")
+def production_tier(tmp_path_factory):
+    """The chart with the production tier switched on, as the first labelled environment will."""
+    out = tmp_path_factory.mktemp("production-tier") / "policies.yaml"
+    out.write_text(subprocess.run(
+        ["helm", "template", "runtime-policies", str(CHART),
+         "--set", "failureAction=Enforce", "--set", "linkerd.enabled=false",
+         "--set", "operators.enabled=false", "--set", "podSecurity.namespaces={dev}",
+         "--set", "imageSignatures.productionTier.enabled=true", "--namespace", "dev"],
+        capture_output=True, text=True, check=True,
+    ).stdout)
+    return out
+
+
 @requires_helm
-def test_a_production_tier_namespace_admits_only_fully_tested_images(pod_security):
+def test_the_production_tier_is_off_until_an_environment_turns_it_on(pod_security):
+    """T-4721: failing closed in front of every Pod with no production namespace yet would let a
+    Kyverno outage hold the whole node, so the default renders no such policy."""
+    names = {d["metadata"]["name"] for d in yaml.safe_load_all(pod_security.read_text()) if d}
+    assert "require-full-tests-in-production" not in names
+    assert "verify-platform-images" in names
+
+
+@requires_helm
+def test_a_production_tier_namespace_admits_only_fully_tested_images(production_tier):
     """T-4721: a namespace labelled tier=production admits our images only with promote.yml's
     full-tests attestation, enforced and failing closed; a dev-<N> digest has none. Selected by
     the label alone, so no namespace is judged until one carries it."""
-    docs = {d["metadata"]["name"]: d for d in yaml.safe_load_all(pod_security.read_text()) if d}
+    docs = {d["metadata"]["name"]: d for d in yaml.safe_load_all(production_tier.read_text()) if d}
     policy = docs["require-full-tests-in-production"]["spec"]
     assert policy["failurePolicy"] == "Fail"
     [rule] = policy["rules"]
@@ -547,7 +570,7 @@ SHIPPED = ("ghcr.io/marek-mraz-jc/joinedcontext-platform"
 @requires_kyverno
 @requires_helm
 @pytest.mark.parametrize("tier, refused", [("production", True), ("demo", False)])
-def test_a_signed_dev_image_is_refused_only_in_a_production_tier_namespace(pod_security, tmp_path, tier, refused):
+def test_a_signed_dev_image_is_refused_only_in_a_production_tier_namespace(production_tier, tmp_path, tier, refused):
     """T-4721, against the registry: a digest ship signed but promote never attested starts in a
     demo-tier namespace and is refused in a production-tier one."""
     pod = tmp_path / "pod.yaml"
@@ -556,7 +579,7 @@ def test_a_signed_dev_image_is_refused_only_in_a_production_tier_namespace(pod_s
     values = tmp_path / "values.yaml"
     values.write_text(yaml.safe_dump({"apiVersion": "cli.kyverno.io/v1alpha1", "kind": "Values",
                                       "namespaceSelector": [{"name": "ns", "labels": {"joinedcontext.com/tier": tier}}]}))
-    docs = [d for d in yaml.safe_load_all(pod_security.read_text())
+    docs = [d for d in yaml.safe_load_all(production_tier.read_text())
             if d and d["metadata"]["name"] in ("verify-platform-images", "require-full-tests-in-production")]
     policy = tmp_path / "policy.yaml"
     policy.write_text(yaml.safe_dump_all(docs))

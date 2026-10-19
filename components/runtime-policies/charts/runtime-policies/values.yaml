@@ -48,9 +48,11 @@ imageSignatures:
   issuer: https://token.actions.githubusercontent.com
   subjectRegExp: "^https://github.com/marek-mraz-jc/"
   # T-4721: namespaces labelled `<label>: production` admit only digests that carry promote.yml's
-  # full-tests attestation. No namespace carries the label yet (smartcity is tier demo).
+  # full-tests attestation. Off until the first namespace carries the label (smartcity is tier
+  # demo): with `failurePolicy: Fail` the webhook would otherwise stand in front of every Pod, and
+  # a Kyverno outage would hold every Pod on the single node. Turn it on with that first label.
   productionTier:
-    enabled: true
+    enabled: false
     label: joinedcontext.com/tier
     attestationType: https://joinedcontext.com/attestations/full-tests/v1
     # promote.yml on main (platform, Portal); image-jc.yml on dev (the broker's nightly ETSI promote)
