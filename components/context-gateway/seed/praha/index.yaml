@@ -11,6 +11,8 @@ praha.v1.context.jsonld: projects/praha/spaces/praha-mesto/datamodels/praha.v1.c
 praha.v1.example.jsonld: projects/praha/spaces/praha-mesto/datamodels/praha.v1.example.jsonld
 praha.v1.md: projects/praha/spaces/praha-mesto/datamodels/praha.v1.md
 praha-endpoint-mesto.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-mesto.yaml
+# Prague's public MCP server, which its public assistant reads through (T-4750).
+praha-mcp-otvorene-data.yaml: projects/praha/mcp/otvorene-data.yaml
 praha-policy-pipelines-write.yaml: projects/praha/spaces/praha-mesto/policies/pipelines-write.yaml
 praha-policy-public-read.yaml: projects/praha/spaces/praha-mesto/policies/public-read.yaml
 praha-policy-public-read-history.yaml: projects/praha/spaces/praha-mesto/policies/public-read-history.yaml

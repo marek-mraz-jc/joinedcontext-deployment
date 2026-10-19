@@ -320,6 +320,12 @@ def test_the_mcp_panel_names_the_installation_s_hub_and_nothing_else(theme):
     assert mcp["claude"] == f"claude mcp add --transport http \\\n  joinedcontext \\\n  {hub}"
     assert json.loads(mcp["json"]) == {"mcpServers": {"joinedcontext": {"type": "http", "url": hub}}}
     assert f'  "{hub}"' in mcp["json"].splitlines()
+    # The buttons copy the command on one line, so it runs as pasted in cmd and PowerShell too,
+    # and the JSON in its usual layout (T-4762, owner on Windows).
+    assert mcp["claude_copy"] == f"claude mcp add --transport http joinedcontext {hub}"
+    assert "\n" not in mcp["claude_copy"] and "\\" not in mcp["claude_copy"]
+    assert json.loads(mcp["json_copy"]) == json.loads(mcp["json"])
+    assert f'      "url": "{hub}"' in mcp["json_copy"].splitlines()
     # The address breaks only before a single slash, never inside a word.
     assert mcp["url_parts"] == ["https://api.dev.example", "/api", "/mcp"]
     assert mcp["vscode"].startswith("vscode:mcp/install?")
@@ -355,17 +361,101 @@ def test_the_mcp_panel_is_left_out_without_a_plain_domain(theme, domain):
     assert theme.jc_mcp_install() is None
 
 
-def test_the_mcp_panel_is_on_the_assistants_page_and_every_dataset_page_with_its_copy_script():
+def test_the_mcp_panel_is_on_the_assistants_connector_and_every_dataset_page_with_its_copy_script():
     panel = (THEME / "templates__snippets__jc_mcp_install.html").read_text()
-    for page in ("templates__jc__assistants.html", "templates__package__read.html"):
+    for page in ("templates__jc__assistants.html", "templates__package__read.html", "templates__jc__page.html"):
         text = (THEME / page).read_text()
-        assert "{% snippet 'snippets/jc_mcp_install.html'" in text, page
-        assert "url_for_static('/jc-copy.js')" in text, page
+        assert re.search(r"\{% snippet ['\"]snippets/jc_mcp_install.html['\"]", text), page
+    # T-4762: /connector showed three dead buttons, its page never loaded the script. base.html
+    # loads it once for every page; a second copy would copy and announce twice.
+    loads = [f.name for f in THEME.glob("templates__*.html") if "/jc-copy.js" in f.read_text()]
+    assert loads == ["templates__base.html"]
+    # Every copy button says what to do when the browser refuses the clipboard.
+    for f in THEME.glob("templates__*.html"):
+        for button in re.findall(r"<button[^>]*data-jc-copy=[^>]*>", f.read_text()):
+            assert "data-jc-select=\"{{ h.jc_t('copy_select') }}\"" in button, f.name
+    assert "{{ copy('jc-mcp-claude', h.jc_t('mcp_claude'), mcp.claude_copy) }}" in panel
+    assert "{{ copy('jc-mcp-json', h.jc_t('mcp_json'), mcp.json_copy) }}" in panel
     # The home page keeps the corner button only (T-4585).
     assert "jc_mcp_install.html" not in (THEME / "templates__home__index.html").read_text()
     # One status line per page: the live box's when the dataset page has one.
     assert '{% if not live %}<p class="visually-hidden" role="status"' in panel
     assert panel.count("{{ copy('") == 3  # the address, Claude Code and JSON (T-4628; no Gemini CLI since T-4735)
+
+
+def _copy_click(clipboard, exec_copy, text=None, field_value=None):
+    """Runs jc-copy.js on one button in node with a DOM of the few calls it makes, and returns
+    what reached the clipboard, the selection and the words the page said."""
+    script = (THEME / "public__jc-copy.js").read_text()
+    code = """
+const state = { clipboard: null, selected: null, status: "", label: "Kopírovať", execs: [] };
+const field = %s === null
+  ? { textContent: "claude mcp add --transport http \\\\\\n  joinedcontext \\\\\\n  https://api.x/api/mcp" }
+  : { value: %s, select() { state.selected = this.value; } };
+const label = { textContent: "Kopírovať", attrs: {}, getAttribute(n) { return this.attrs[n] ?? null; },
+  setAttribute(n, v) { this.attrs[n] = v; } };
+const status = { set textContent(v) { state.status = v; } };
+const button = { attrs: { "data-jc-copy": "f", "data-jc-copied": "Skopírované", "data-jc-select": "Označené: stlačte Ctrl+C" },
+  getAttribute(n) { return this.attrs[n] ?? null; }, querySelector() { return label; } };
+if (%s !== null) button.attrs["data-jc-text"] = %s;
+let listener;
+let area;
+globalThis.window = { getSelection: () => ({ removeAllRanges() {}, addRange(r) { state.selected = r.node.textContent; } }) };
+globalThis.document = {
+  addEventListener: (type, fn) => { listener = fn; },
+  getElementById: (id) => ({ f: field, "jc-copy-status": status })[id] ?? null,
+  createElement: () => (area = { value: "", style: {}, setAttribute() {}, select() { state.picked = this.value; }, remove() {} }),
+  createRange: () => ({ selectNodeContents(node) { this.node = node; } }),
+  body: { appendChild() {} },
+  execCommand: (cmd) => { state.execs.push(cmd); if (%s === "throw") throw new Error("no"); if (%s) state.clipboard = state.picked; return %s === true; },
+};
+Object.defineProperty(globalThis, "navigator", { value: %s === "missing" ? {} : { clipboard: { writeText: (t) =>
+  %s === "refuse" ? Promise.reject(new DOMException("denied", "NotAllowedError")) : (state.clipboard = t, Promise.resolve()) } },
+  configurable: true });
+globalThis.setTimeout = () => 0;
+globalThis.clearTimeout = () => {};
+%s
+listener({ target: { closest: () => button } });
+await new Promise((resolve) => setImmediate(resolve));
+state.label = label.textContent;
+console.log(JSON.stringify(state));
+""" % (json.dumps(field_value), json.dumps(field_value), json.dumps(text), json.dumps(text), json.dumps(exec_copy),
+       json.dumps(exec_copy), json.dumps(exec_copy), json.dumps(clipboard), json.dumps(clipboard), script)
+    done = subprocess.run(["node", "--input-type=module", "-e", code], capture_output=True, text=True, timeout=60)
+    assert done.returncode == 0, done.stderr
+    return json.loads(done.stdout)
+
+
+@pytest.mark.skipif(not shutil.which("node"), reason="node is not installed")
+def test_a_copy_button_puts_its_one_line_text_on_the_clipboard_and_says_so():
+    """T-4762: the Claude Code button copies the one-line command, never the card's wrapped block."""
+    line = "claude mcp add --transport http joinedcontext https://api.x/api/mcp"
+    out = _copy_click("works", False, text=line)
+    assert out["clipboard"] == line and out["execs"] == []
+    assert out["status"] == "Skopírované" and out["label"] == "Skopírované"
+    # A field without its own text copies the field's value.
+    assert _copy_click("works", False, field_value="https://api.x/api/mcp")["clipboard"] == "https://api.x/api/mcp"
+
+
+@pytest.mark.skipif(not shutil.which("node"), reason="node is not installed")
+@pytest.mark.parametrize("clipboard", ["refuse", "missing"])
+def test_a_refused_clipboard_falls_back_to_the_copy_command(clipboard):
+    """A frame without clipboard-write or an http origin: the browser's copy command still copies."""
+    out = _copy_click(clipboard, True, text='{"a": 1}')
+    assert out["clipboard"] == '{"a": 1}' and out["execs"] == ["copy"]
+    assert out["status"] == "Skopírované" and out["selected"] is None
+
+
+@pytest.mark.skipif(not shutil.which("node"), reason="node is not installed")
+@pytest.mark.parametrize("clipboard, exec_copy", [("refuse", False), ("missing", False), ("missing", "throw")])
+def test_without_any_clipboard_the_text_is_selected_and_the_button_says_press_ctrl_c(clipboard, exec_copy):
+    """No silent failure: the block is selected for Ctrl+C and the button and screen reader say so."""
+    out = _copy_click(clipboard, exec_copy, text="one line")
+    assert out["clipboard"] is None
+    assert out["selected"].startswith("claude mcp add")
+    assert out["status"] == out["label"] == "Označené: stlačte Ctrl+C"
+    field = _copy_click(clipboard, exec_copy, field_value="https://api.x/api/mcp")
+    assert field["selected"] == "https://api.x/api/mcp"
 
 
 def test_the_mcp_card_puts_claude_first_and_keeps_its_code_whole():
@@ -1096,7 +1186,8 @@ def test_the_websocket_guide_is_linked_only_from_the_installation_s_documentatio
 def test_an_api_resource_page_shows_its_usage_where_ckan_said_no_view():
     page = (THEME / "templates__package__resource_read.html").read_text()
     assert "(not api and h.check_access('resource_view_create'" in page
-    assert "package/snippets/jc_usage.html" in page and "/jc-copy.js" in page
+    # Its copy buttons work by base.html's jc-copy.js, loaded once for every page (T-4762).
+    assert "package/snippets/jc_usage.html" in page and "/jc-copy.js" in (THEME / "templates__base.html").read_text()
     item = (THEME / "templates__package__snippets__resource_item.html").read_text()
     assert "h.jc_usage(res) if jc_section == 'api' and not url_is_edit" in item
     snippet = (THEME / "templates__package__snippets__jc_usage.html").read_text()

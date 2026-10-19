@@ -113,29 +113,27 @@ def test_every_connector_is_a_public_mcp_endpoint_of_the_body_with_read_only_too
         assert "summarize" in connector["tools"], connector
 
 
-@pytest.mark.parametrize("public_id", ["banskabystrica", "bbsk"])
-def test_the_connectors_are_every_member_of_the_bodys_public_mcp_server(public_id):
-    # T-4256 (owner 2026-10-16): the assistant queries all the open data by default. The public
-    # `otvorene-data` server of its project is the curated read-only set, so every member of it
-    # is a connector, and an Endpoint added there joins without a hand edit here.
+@pytest.mark.parametrize("public_id", BODIES)
+def test_the_assistant_reads_its_bodys_data_through_its_public_mcp_server(public_id):
+    # T-4256 (owner 2026-10-16): the assistant queries all the open data by default; T-4750: it
+    # reads it through the public `otvorene-data` server of its project, so an Endpoint added
+    # there joins without a hand edit here and the tool set is the server's, not one per member.
     project = BODIES[public_id][0]
-    members = {
-        member["name"]
-        for server in manifests("McpServer", project).values()
-        if server["spec"]["audience"] == "public"
-        for member in server["spec"]["members"]
-        if member["kind"] == "Endpoint"
-    }
-    assert {c["endpoint"] for c in deployment(public_id)["spec"]["connectors"]} - NATIONAL == members
+    spec = deployment(public_id)["spec"]
+    assert spec["mcpServer"] == f"{project}/otvorene-data"
+    server = manifests("McpServer", project)["otvorene-data"]["spec"]
+    assert server["audience"] == "public"
+    # only the national dataset stays a connector of its own
+    assert {c["endpoint"] for c in spec["connectors"]} == NATIONAL
 
 
 def test_the_public_mcp_servers_list_members_that_serve_mcp():
     # The gateway drops a member that does not serve MCP, so a server whose members lack it
     # lists no tool at all (T-4141's `otvorene-data` before T-4167).
-    for project in ("banskabystrica", "bbsk"):
+    for project in ("banskabystrica", "bbsk", "helsinki", "praha", "zilina"):
         endpoints = manifests("Endpoint", project)
         for name, server in manifests("McpServer", project).items():
-            for member in server["spec"]["members"]:
+            for member in server["spec"].get("members", []):
                 assert "mcp" in endpoints[member["name"]]["spec"]["enabledRepresentations"], (project, name, member)
 
 
@@ -476,13 +474,16 @@ THEMES = ["AGRI", "ECON", "EDUC", "ENER", "ENVI", "GOVE", "HEAL", "INTR", "JUST"
 
 @pytest.mark.parametrize("public_id", BODIES)
 def test_the_categories_are_the_themes_of_what_it_reads(public_id):
-    """T-4694 (AG-124): the categories the context page shows are its connectors' themes, each once, in
+    """T-4694 (AG-124): the categories the context page shows are the themes of its connectors and server members, each once, in
     the table's order; a connector added or dropped without its theme fails here."""
     spec = deployment(public_id)["spec"]
     own = BODIES[public_id][0]
     read = set()
-    for connector in spec["connectors"]:
-        project, _, name = connector["endpoint"].rpartition("/")
+    # the members of its McpServer (T-4750) beside its own connectors
+    server = manifests("McpServer", own)[spec["mcpServer"].split("/")[1]]["spec"]
+    named = [c["endpoint"] for c in spec["connectors"]] + [m["name"] for m in server["members"]]
+    for full in named:
+        project, _, name = full.rpartition("/")
         endpoint = manifests("Endpoint", project or own)[name]
         read |= set(endpoint["spec"].get("catalog", {}).get("themes", []))
     assert spec["categories"] == [t for t in THEMES if t in read]

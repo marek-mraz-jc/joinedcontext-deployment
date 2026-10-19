@@ -22,18 +22,16 @@ spec:
   # web = www.bbsk.sk (T-3067), data-portal = the region's CKAN datasets, catalogue = the region's
   # public Endpoints described from this repository.
   sources: [web, data-portal, catalogue]
-  # Read-only tools on every member of the region's public `otvorene-data` MCP server (T-4256);
-  # tests/test_public_assistant_seed.py fails when a member is added there and not here.
   # The national open data of project slovensko, and nothing else of another project (T-4340).
   scope: { projects: [slovensko] }
   # The EU themes of what it reads (AG-124, T-4694): the union of its connectors' themes; the
   # context page lists them. The curated connectors stay: no selector gives exactly this set.
   categories: [ENVI, GOVE, HEAL, REGI, SOCI, TRAN]
+  # Its own body's data through its project's public McpServer (T-4750): the server's members
+  # with the server's read tools, `endpoint` a parameter; an Endpoint added to the server joins
+  # without an edit here (tests/test_public_assistant_seed.py).
+  mcpServer: bbsk/otvorene-data
   connectors:
-    - { endpoint: bbsk-registre, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: bbsk-kraj-verejne, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: bbsk-kpi, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: bbsk-otvorene-data, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
     # Slovakia's air quality at every station (T-4340, owner 2026-10-16): the one national
     # dataset every public assistant reads, through the public Endpoint of project slovensko.
     - { endpoint: slovensko/ovzdusie-sk, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }

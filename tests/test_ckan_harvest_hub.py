@@ -301,6 +301,24 @@ def test_a_converted_dataset_lists_the_platform_apis_and_its_model_and_an_unconv
     assert harvest.od_standards(package["name"]) == [], "no gateway set lists nothing"
 
 
+def test_a_converted_dataset_names_its_endpoint_in_the_extras_and_an_unconverted_one_none(monkeypatch):
+    """T-4765: the `endpoint` extra holds the Endpoint's public URL with its trailing slash, the
+    value jcctl's publisher writes (ckan.rs), so make_requests.py and the catalogue count every
+    converted dataset; a dataset nobody converted, or a run without a gateway, writes none."""
+    monkeypatch.setattr(harvest, "OD_DATASETS", OD_DATASETS)
+    monkeypatch.setattr(harvest, "OD_GATEWAY", "https://api.dev.joinedcontext.com")
+    monkeypatch.setattr(harvest, "od_models", lambda endpoint: model_index(["PointOfInterest"]))
+    item = next(i for i in items() if i["id"] == CULTURE)
+    package = harvest.dataset(item, item["title"], dev_source())
+    endpoint = OD_DATASETS[package["name"]]["endpoint"]
+    assert [e["value"] for e in package["extras"] if e["key"] == "endpoint"] == [
+        f"https://api.dev.joinedcontext.com/api/endpoint/{endpoint}/"]
+    other = next(i for i in items() if i["id"] == APS)
+    assert not [e for e in harvest.dataset(other, other["title"], dev_source())["extras"] if e["key"] == "endpoint"]
+    monkeypatch.setattr(harvest, "OD_GATEWAY", "")
+    assert harvest.od_extras(package["name"]) == []
+
+
 def test_the_model_index_is_read_once_per_endpoint_and_a_failed_read_raises(monkeypatch):
     monkeypatch.setattr(harvest, "OD_GATEWAY", "https://api.dev.joinedcontext.com")
     monkeypatch.setattr(harvest, "_OD_MODELS", {})
@@ -752,3 +770,18 @@ def test_each_sheet_has_one_table_view_and_a_located_one_its_map(ckan, converted
     [items_url] = ogc(CULTURE)
     assert urllib.parse.urlsplit(items_url).path.endswith(f"/collections/{datastore(ckan, CULTURE)[0]['name']}/items")
     assert ogc(OBCE) == [], "a register without location gets no map"
+
+
+BBSK_SCHOOLS = ["bbsk-materske-skoly-v-banskobystrickom-kraji-3f7d07", "bbsk-zakladne-skoly-v-banskobystrickom-kraji-13a8b6",
+                "bbsk-stredne-skoly-v-banskobystrickom-kraji-581554", "bbsk-vysoke-skoly-v-banskobystrickom-kraji-b0be47"]
+
+
+@pytest.mark.parametrize("name", BBSK_SCHOOLS)
+def test_each_bbsk_school_dataset_is_published_with_its_endpoint(name):
+    """T-4766: the four school registers answer bbsk-demo's school questions (T-4740), so none is
+    hidden and each names the BBSK open-data Endpoint and its type."""
+    values = (ROOT / "components/ckan/values/catalogue/development-values.yaml.gotmpl").read_text()
+    hidden = yaml.safe_load(values.replace('{{"{{"}}', "{{").replace('{{"}}"}}', "}}"))["hidden"]
+    assert name not in hidden
+    entry = OD_DATASETS[name]
+    assert (entry["endpoint"], entry["type"]) == ("6b4yqhzqieutqcoeew5rnxrx5udqeert", "Organization")
