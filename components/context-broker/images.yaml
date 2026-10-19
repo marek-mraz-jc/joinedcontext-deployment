@@ -96,5 +96,9 @@ context-broker:
     # rules. No migration.
     # Antares dev a8e8129 (dev-10, train 1913 T-4755 over c51c56e): one filter path; a socket's own
     # Subscription is decided as Query Entities (ADR-0026 rule 4). No migration.
-    tag: 'dev-10'
-    digest: 'sha256:5a6f4bbe42480f81ddeea322ca78bdeaf047fe12c5f686def367dc77490cbb7f'
+    # Antares dev dfbd3ad (dev-11, train 2242 T-4781 over a8e8129): the type page reads through
+    # two leakproof index arms. Migration 0013 builds i_entities_first_type_id and
+    # i_entities_multi_type_id (plain CREATE INDEX, writes wait) and drops i_entities_first_type:
+    # roll it with the broker scaled to 0 so no old pod holds a write against the build.
+    tag: 'dev-11'
+    digest: 'sha256:8478eddf6020e66e1e1f813e12577e537387849711871244133f656368906f09'
