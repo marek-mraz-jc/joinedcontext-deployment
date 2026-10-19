@@ -389,8 +389,9 @@ STRINGS = {
     "mcp_editors": {"en": "Code editors and other assistants", "sk": "Editory kódu a iní asistenti", "cs": "Editory kódu a jiní asistenti", "de": "Code-Editoren und andere Assistenten"},
     "mcp_claude": {"en": "Claude Code", "sk": "Claude Code", "cs": "Claude Code", "de": "Claude Code"},
     "mcp_json": {"en": "Any other MCP client (JSON)", "sk": "Iný MCP klient (JSON)", "cs": "Jiný MCP klient (JSON)", "de": "Jeder andere MCP-Client (JSON)"},
-    "mcp_vscode": {"en": "Add to VS Code", "sk": "Pridať do VS Code", "cs": "Přidat do VS Code", "de": "Zu VS Code hinzufügen"},
-    "mcp_cursor": {"en": "Add to Cursor", "sk": "Pridať do Cursoru", "cs": "Přidat do Cursoru", "de": "Zu Cursor hinzufügen"},
+    # "Install", not "Add to" (T-4735): no "Pridať do …" stays on /assistants, whose store links went.
+    "mcp_vscode": {"en": "Install in VS Code", "sk": "Nainštalovať vo VS Code", "cs": "Nainstalovat ve VS Code", "de": "In VS Code installieren"},
+    "mcp_cursor": {"en": "Install in Cursor", "sk": "Nainštalovať v Cursore", "cs": "Nainstalovat v Cursoru", "de": "In Cursor installieren"},
     # The "Use it in your AI assistant" page and its button (T-4585). The stores are the ones each
     # maker documents, read 2026-10-18: ChatGPT at chatgpt.com/plugins
     # (developers.openai.com/apps-sdk/deploy/connect-chatgpt), Claude at Customize > Connectors
