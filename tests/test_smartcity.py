@@ -153,6 +153,14 @@ def test_postgres_is_dumped_nightly_and_the_dump_job_may_reach_it(smartcity):
     assert claims == {"postgres-cluster-local-backup"}
 
 
+
+def test_the_portal_syncs_every_15_minutes_without_a_push(smartcity):
+    """Each run republishes the catalogue through the public edge, ~1,000 requests a minute at
+    the 60 s default (T-4717); a merge still syncs at once through the forge's webhook."""
+    portal = next(d for d in smartcity if d.get("kind") == "Deployment" and d["metadata"]["name"] == "portal")
+    env = {e["name"]: e.get("value") for e in portal["spec"]["template"]["spec"]["containers"][0]["env"]}
+    assert env["JC_PORTAL_SYNC_INTERVAL"] == "900"
+
 # smartcity's copies of dev's environment files, which differ from dev's in the domain alone.
 # global and portal carry the instance's own choices and are tested above instead.
 COPIES = ["ckan", "gitea", "gitea-runner", "node-storage", "pipeline-runner", "wasm-host"]

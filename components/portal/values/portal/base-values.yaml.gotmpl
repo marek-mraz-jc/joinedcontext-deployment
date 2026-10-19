@@ -157,6 +157,10 @@ envSecret:
 # Kubernetes expands $(VAR) references in container env definitions when the referenced variable appears earlier in the list.
 env:
   JC_PORTAL_BIND: "0.0.0.0:8080"
+  # How often the reconciler runs without a push (whole seconds). A merge still syncs at once
+  # through the forge's webhook. Each run republishes the open-data catalogue through the
+  # public edge, so a short period on a large catalogue is a bot of our own (T-4717).
+  JC_PORTAL_SYNC_INTERVAL: {{ $thisPortal.syncInterval | default 60 | quote }}
   # The Portal lives on its own host behind the edge login (ADR-N-019); the apex redirects
   # here. The forge's public URL below stays on the apex, where /git/* is served.
   JC_PORTAL_PUBLIC_URL: "https://portal.{{ $global.domain }}"
