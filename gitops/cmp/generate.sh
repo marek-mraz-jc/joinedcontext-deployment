@@ -4,7 +4,7 @@
 #
 # Argo CD runs it in the plugin sidecar, in its own copy of the repository, with the
 # Application's plugin env as ARGOCD_ENV_ENVIRONMENT, ARGOCD_ENV_COMPONENT and, for a component
-# whose releases span namespaces, ARGOCD_ENV_NAMESPACE; the sidecar is the stock helmfile image
+# whose releases span namespaces, ARGOCD_ENV_NAMESPACE; the sidecar is images/gitops-helmfile
 # (helmfile, helm, yq). Locally:
 #   ARGOCD_ENV_ENVIRONMENT=dev ARGOCD_ENV_COMPONENT=viz gitops/cmp/generate.sh
 set -euo pipefail
