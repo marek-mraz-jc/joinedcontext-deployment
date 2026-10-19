@@ -139,6 +139,13 @@
   "sk": "Vybrané ukazovatele pohybu obyvateľstva v SR",
   "en": "Selected indicators of the population change of the SR"
  },
+ "om7104rr": {
+  "theme": "om",
+  "update": "2026-03-31",
+  "cells": 142560,
+  "sk": "Prehľad pohybu obyvateľstva - SR-oblasť-kraj-okres, m-v (ročne)",
+  "en": "Population Change - SR-Area-Reg-District, U-R (yearly)"
+ },
  "pl2016rs": {
   "theme": "pl",
   "update": "2026-04-23",

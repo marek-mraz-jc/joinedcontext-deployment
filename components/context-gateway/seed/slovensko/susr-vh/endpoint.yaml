@@ -7,7 +7,7 @@ metadata:
   name: susr-vh
   namespace: slovensko
   title: { sk: "Verejné vodovody a kanalizácie — štatistika SR", en: "Public water supply and sewerage, Slovak statistics" }
-  description: { sk: "Verejné vodovody a kanalizácie: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube vh3001rr), jedna položka na zverejnenú bunku.", en: "Public water supply and sewerage: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube vh3001rr), one record per published cell." }
+  description: { sk: "Verejné vodovody a kanalizácie: oficiálna štatistika Štatistického úradu SR za Slovensko aj jeho územia (kraje, okresy alebo obce, ako ich tabuľka člení; územie v refArea, SK0 je celá SR) (DATAcube vh3001rr), jedna položka na zverejnenú bunku.", en: "Public water supply and sewerage: official statistics of the Statistical Office of the Slovak Republic for Slovakia and its territories (regions, districts or municipalities as the table divides them; the territory in refArea, SK0 the whole country) (DATAcube vh3001rr), one record per published cell." }
 spec:
   contextSpaceRef: susr-vh
   slug: vx42gnf6fksxmc53pb2hsbbp3glxtlul

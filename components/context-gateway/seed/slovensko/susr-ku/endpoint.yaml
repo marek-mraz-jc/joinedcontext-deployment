@@ -7,7 +7,7 @@ metadata:
   name: susr-ku
   namespace: slovensko
   title: { sk: "Divadlá a scénické umenie: repertoár a návštevnosť — štatistika SR", en: "Performing arts: repertory and attendance, Slovak statistics" }
-  description: { sk: "Divadlá a scénické umenie: repertoár a návštevnosť: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube ku3802rr), jedna položka na zverejnenú bunku.", en: "Performing arts: repertory and attendance: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube ku3802rr), one record per published cell." }
+  description: { sk: "Divadlá a scénické umenie: repertoár a návštevnosť: oficiálna štatistika Štatistického úradu SR za Slovensko aj jeho územia (kraje, okresy alebo obce, ako ich tabuľka člení; územie v refArea, SK0 je celá SR) (DATAcube ku3802rr), jedna položka na zverejnenú bunku.", en: "Performing arts: repertory and attendance: official statistics of the Statistical Office of the Slovak Republic for Slovakia and its territories (regions, districts or municipalities as the table divides them; the territory in refArea, SK0 the whole country) (DATAcube ku3802rr), one record per published cell." }
 spec:
   contextSpaceRef: susr-ku
   slug: fe7jcjxr3io6qswlcemuetb4wjp6wqrz

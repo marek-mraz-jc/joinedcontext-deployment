@@ -409,3 +409,19 @@ def test_the_generated_pipeline_lists_every_slice_and_its_memory_follows_the_lar
     assert {n for n in files if n.startswith("datasource-")} == {"datasource-zo0011ms-1.yaml", "datasource-zo0011ms-2.yaml"}
     assert sources == {f"susr-zo0011ms-{i}": url for i, (url, _) in enumerate(parts["zo0011ms"], 1)}
     assert pipeline["spec"]["quotas"]["maxMemoryMb"] == datacube.memory(6_048)
+
+
+def test_population_change_is_read_by_region_and_district_and_says_so():
+    """T-4741: the assistant suggested births in Banskobystrický kraj and found nothing, because
+    the population cubes were SK0 only. om7104rr carries kraje and okresy in om7104rr_vuc: its
+    entities get that refArea, and every topic with an area cube names territories in its
+    description, so the router knows a region is there to read."""
+    folder = SEED / "susr-om-pohyb"
+    cubes = json.loads(re.search(r"let cubes = (\{.*\})\n", (folder / "pipeline.yaml").read_text()).group(1))
+    assert cubes["om7104rr"]["area"] == "om7104rr_vuc"
+    assert "refArea" in (folder / "pipeline.yaml").read_text()
+    for topic in committed():
+        cubes = json.loads(re.search(r"let cubes = (\{.*\})\n", (topic / "pipeline.yaml").read_text()).group(1))
+        en = yaml.safe_load((topic / "endpoint.yaml").read_text())["metadata"]["description"]["en"]
+        regional = any(c["area"] for c in cubes.values())
+        assert ("its territories" in en) == regional, topic.name
