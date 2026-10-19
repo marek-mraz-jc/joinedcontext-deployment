@@ -45,8 +45,12 @@ def test_the_asset_route_keeps_its_config_and_adds_the_cache_line(routes, route,
     assert len(added) == 1, added
     assert "ngx.status == 200 or ngx.status == 304" in added[0], "an error is never cached"
     assert f'"{IMMUTABLE}"' in added[0]
-    # Nothing else on the route: the limit, the session and the security headers are the config's.
-    assert set(entry["plugins"]) == {"serverless-post-function"}, entry["plugins"]
+    # Besides its own bucket (T-4717), the session and the security headers are the config's.
+    assert set(entry["plugins"]) == {"serverless-post-function", "limit-count"}, entry["plugins"]
+    limit = entry["plugins"]["limit-count"]
+    page = load(plugins)[config]["plugins"]["limit-count"]
+    assert (limit["count"], limit["key"], limit["rejected_code"]) == (3000, "remote_addr", 429)
+    assert (page["count"], page["key"]) == (600, "remote_addr"), "pages and the action API: 10 a second"
 
 
 def test_no_other_route_is_cached_for_a_year():
