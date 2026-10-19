@@ -20,6 +20,7 @@
     {% if page %}
       <p>{{ page.lead }}</p>
       <p class="jc-connector-status">{{ h.jc_t('connector_status') }}</p>
+      {% with prompt = page.prompt %}{% include "jc/connector_note.html" %}{% endwith %}
       <ul class="jc-assistant-cards">
         {% for card in page.cards %}
           <li class="jc-assistant-card">

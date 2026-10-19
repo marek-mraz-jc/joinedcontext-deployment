@@ -8,6 +8,7 @@ the two CKAN modules they import; the templates that call them were walked on a 
 """
 
 import importlib.util
+import html as html_lib
 import json
 import os
 import re
@@ -1668,7 +1669,9 @@ def test_the_assistants_page_names_the_installation_s_own_hub_and_assistants_in_
     theme.BRANDING = theme._load()
     page = theme.jc_assistants()
     hub = f"https://api.{domain}/api/mcp"
-    assert page["mcp"]["url"] == hub and name in page["lead"] and "{" not in page["lead"]
+    # T-4735: the lead names the connector as each guide has the person name it, not the instance.
+    assert page["mcp"]["url"] == hub and "Joinedcontext Open Data" in page["lead"] and "{" not in page["lead"]
+    assert name not in page["lead"]
     cards = {card["id"]: card for card in page["cards"]}
     # T-4634, T-4643: Gemini's app needs OAuth (T-4631), so it has no card until its flag is on.
     assert [card["id"] for card in page["cards"]] == ["chatgpt", "claude", "grok"]
@@ -1718,6 +1721,7 @@ def test_the_assistants_page_offers_each_card_s_own_guide_and_links_nowhere_else
     # T-4634: no card says "Coming soon"; the page's empty state alone does.
     assert template.count("coming_soon") == 1 and "{% if card.soon %}" not in template
     assert template.count("data-jc-copy=") == 1 and 'data-jc-copy="jc-store-url"' in template
+    assert '{% include "jc/connector_note.html" %}' in template
     assert "<img" not in template and "<script>" not in template
 
 
@@ -1792,7 +1796,8 @@ def test_each_assistant_card_is_its_logo_its_name_and_its_guide(theme, lang):
     # It breaks only before a slash, never inside a word (T-4284), and a copy reads it whole.
     assert '<span id="jc-store-url" class="jc-store-url">https://api.dev.example<wbr>/api<wbr>/mcp</span>' in above
     assert above.replace("<wbr>", "").count(hub) == 1
-    assert above.count("<button") == 1 and not re.search(r"class=\"jc-code[ \"]", above) and "<pre" not in above and "<code" not in above
+    # The address's copy button and the note's example question's (T-4735).
+    assert above.count("<button") == 2 and not re.search(r"class=\"jc-code[ \"]", above) and "<pre" not in above and "<code" not in above
     if lang == "en":
         assert fold.startswith("\n        <summary>For developers</summary>")
 
@@ -1807,6 +1812,55 @@ def test_the_connector_page_says_once_under_its_heading_that_no_directory_lists_
     assert html.count(line) == 1 and html.index("page-heading") < html.index(line) < html.index("<h2")
     assert "jc-connector-status" not in render("jc/page.html", theme, jc_name="privacy")
     assert line in render("jc/assistants.html", theme)
+
+
+NOTE = {"sk": ("Dôležité: asistent konektor väčšinou sám nepoužije.",
+               "Použi Joinedcontext Open Data: Aké datasety o kvalite ovzdušia máte?",
+               "Asistent spozná konektor podľa mena, ktoré ste mu dali pri pridaní.", "Vyskúšajte"),
+        "en": ("Important: the assistant usually won't use the connector on its own.",
+               "Use Joinedcontext Open Data: Which datasets about air quality do you have?",
+               "The assistant recognises the connector by the name you gave it when you added it.", "Try it")}
+
+
+@pytest.mark.parametrize("lang", sorted(NOTE))
+@pytest.mark.parametrize("page", ["assistants", "chatgpt", "claude", "grok"])
+def test_the_note_says_to_name_the_connector_with_an_example_to_copy(theme, lang, page):
+    """T-4735, the owner: an assistant seldom uses the connector unasked; one calm note says to name
+    it, by the name the guide has the person give it, with an example question and its copy button."""
+    theme.page.lang = lang
+    theme.BRANDING["samples"] = {}
+    if page == "assistants":
+        html = render("jc/assistants.html", theme)
+        # Right under the status line, above the cards.
+        assert html.index("jc-connector-status") < html.index("jc-connector-note") < html.index("jc-assistant-cards")
+    else:
+        html = render("jc/guide.html", theme, jc_guide=theme.jc_assistant_guide(page))
+        # After the steps, above "Try it"; the guide's own question names the connector first too.
+        assert html.index("</ol>") < html.index("jc-connector-note") < html.index(f">{NOTE[lang][3]}</h2>")
+        example = re.search(r'<blockquote class="jc-guide-example">(.*?)</blockquote>', html).group(1)
+        assert html_lib.unescape(example) == NOTE[lang][1], example
+        # A step that names the connector types the same name; no other name is given.
+        steps = " ".join(re.findall(r"<li>(.*?)</li>", html, re.S))
+        assert page == "grok" or "Joinedcontext Open Data" in steps
+        assert "joinedcontext<" not in html and " joinedcontext." not in html
+    note = html_lib.unescape(re.search(r'<div class="jc-connector-note" role="note">(.*?)\n</div>', html, re.S).group(1))
+    lead, prompt, why, _ = NOTE[lang]
+    assert lead in note and why in note and 'aria-hidden="true"' in note
+    assert f'<q id="jc-note-prompt">{prompt}</q>' in note
+    assert 'data-jc-copy="jc-note-prompt"' in note and html.count('id="jc-note-prompt"') == 1
+
+
+def test_the_note_is_calm_and_every_language_has_its_words(theme):
+    css = (THEME / "public__jc-theme.css").read_text()
+    rule = re.search(r"^\.jc-connector-note \{([^}]*)\}", css, re.M).group(1)
+    assert "var(--jc-primary-soft)" in rule and "danger" not in rule and "red" not in rule
+    for key in ("connector_note", "connector_why", "guide_use"):
+        assert set(theme.STRINGS[key]) == {"en", "sk", "cs", "de"}, key
+    assert all("{connector}" in words for words in theme.STRINGS["guide_use"].values())
+    # The instance's own question, named: dev asks about Helsinki's air (T-4636 keeps cities out of the theme).
+    theme.BRANDING["samples"] = {"sk": ["Aká je teraz kvalita ovzdušia v Helsinkách?"]}
+    assert theme.jc_try("sk") == "Použi Joinedcontext Open Data: Aká je teraz kvalita ovzdušia v Helsinkách?"
+    assert theme.CONNECTOR_NAME == "Joinedcontext Open Data" and theme.MCP_NAME == "joinedcontext"
 
 
 def test_the_developers_fold_holds_every_command_and_stays_closed():
@@ -2484,7 +2538,8 @@ def test_each_guide_page_reads_top_to_bottom_without_a_technical_word(theme, mon
     hub = "https://api.dev.example/api/mcp"
     boxed = [i for i, item in enumerate(items) if 'id="jc-store-url"' in item]
     assert boxed == [theme.GUIDES[id]["paste"]] and html.replace("<wbr>", "").count(hub) == 1
-    assert html.count("<button") == 1 and html.count("data-jc-copy=") == 1
+    # The address's copy button and the note's example question's (T-4735).
+    assert html.count("<button") == 2 and html.count("data-jc-copy=") == 2
     assert f"{checked} {theme.GUIDES[id]['checked']}" in html
     # Links only to the maker's own domains, and back to our own pages.
     for href in re.findall(r'href="([^"]*)"', html):
@@ -2504,12 +2559,12 @@ def test_each_guide_page_reads_top_to_bottom_without_a_technical_word(theme, mon
 def test_a_guide_asks_the_instance_s_own_question_first(theme, monkeypatch):
     theme.BRANDING["samples"] = {"sk": ["Aké podujatia sú zajtra v Banskej Bystrici?"]}
     theme.page.lang = "sk"
-    assert theme.jc_assistant_guide("grok")["example"] == "Aké podujatia sú zajtra v Banskej Bystrici?"
+    assert theme.jc_assistant_guide("grok")["example"] == "Použi Joinedcontext Open Data: Aké podujatia sú zajtra v Banskej Bystrici?"
     theme.BRANDING["samples"] = {}
-    assert theme.jc_assistant_guide("grok")["example"] == "Aké datasety o kvalite ovzdušia máte?"
+    assert theme.jc_assistant_guide("grok")["example"] == "Použi Joinedcontext Open Data: Aké datasety o kvalite ovzdušia máte?"
     # Gemini answers in English only, so its guide asks in English on a Slovak page too.
     monkeypatch.setenv("JC_ASSISTANT_GEMINI", "true")
-    assert theme.jc_assistant_guide("gemini")["example"] == "Which datasets about air quality do you have?"
+    assert theme.jc_assistant_guide("gemini")["example"] == "Use Joinedcontext Open Data: Which datasets about air quality do you have?"
 
 
 def test_the_guide_link_opens_the_whole_card_and_wraps_on_a_phone():

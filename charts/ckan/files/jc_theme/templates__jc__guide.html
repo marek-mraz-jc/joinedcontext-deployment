@@ -32,6 +32,7 @@
       {% endfor %}
     </ol>
     <p class="visually-hidden" role="status" aria-live="polite" id="jc-copy-status"></p>
+    {% with prompt = guide.prompt %}{% include "jc/connector_note.html" %}{% endwith %}
     <h2>{{ h.jc_t('guide_try') }}</h2>
     <blockquote class="jc-guide-example">{{ guide.example }}</blockquote>
     <p>{{ guide.good }}</p>
