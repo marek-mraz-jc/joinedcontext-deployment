@@ -7,6 +7,7 @@ is never pruned (OPS-55), and Argo CD fits the 600 Mi the node has for it."""
 
 import json
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -437,7 +438,7 @@ def test_a_red_image_build_or_a_refusing_pin_portal_pins_nothing_and_says_so(mon
     (bin_dir / "docker").chmod(0o755)
     env = dict(os.environ, PATH=f"{bin_dir}:{os.environ['PATH']}")
     script = real_run([str(ROOT / "scripts/pin-portal.sh"), commit], env=env, capture_output=True, text=True)
-    assert script.returncode == 1 and "not all three images are published" in script.stderr
+    assert script.returncode == 1 and "no portal image is published" in script.stderr
 
 
 @pytest.mark.skipif(shutil.which("just") is None, reason="just not installed")
@@ -481,3 +482,24 @@ def test_promotion_takes_only_dev_green_commits_and_release_only_moves_forward(t
     git("fetch", "-q", "origin", "release")
     assert git("show", "origin/release:pin") == "2"
     assert just("rollback", "main").returncode != 0
+
+
+def test_a_portal_commit_that_built_no_builder_keeps_the_pinned_builders(tmp_path):
+    """image.yml builds only what a push's paths need (T-2485), so most portal commits publish the
+    portal image alone; pin-portal.sh refused every one of them, which held T-4717's flood fix and
+    T-4483's docs off dev and prod. Such a commit keeps the builders pinned now and checks those."""
+    runner = (ROOT / "components/gitea-runner/images.yaml").read_text()
+    kept = re.search(r"app-builder'\n(?:    .*\n)*?    digest: '(sha256:[0-9a-f]{64})'", runner).group(1)
+    bin_dir, log = tmp_path / "bin", tmp_path / "docker.log"
+    bin_dir.mkdir()
+    # Publishes the portal's image only; any pull stops the script after the decision.
+    (bin_dir / "docker").write_text(
+        f'#!/bin/sh\necho "$*" >> {log}\n'
+        'case "$*" in *joinedcontext-portal:*) echo "Digest:    sha256:' + "e" * 64 + '"; exit 0;; '
+        '*imagetools*) exit 1;; esac\nexit 3\n')
+    (bin_dir / "docker").chmod(0o755)
+    env = dict(os.environ, PATH=f"{bin_dir}:{os.environ['PATH']}")
+    script = subprocess.run([str(ROOT / "scripts/pin-portal.sh"), "c" * 40], env=env, capture_output=True, text=True)
+    assert "no builder image" not in script.stderr and "no portal image" not in script.stderr
+    pulls = [line for line in log.read_text().splitlines() if line.startswith("pull")]
+    assert pulls == [f"pull -q ghcr.io/marek-mraz-jc/joinedcontext-app-builder@{kept}"], log.read_text()

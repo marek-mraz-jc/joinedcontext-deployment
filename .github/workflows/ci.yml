@@ -140,6 +140,12 @@ jobs:
         # the other repositories.
         run: gitleaks detect --source . --config .ci/shared/gitleaks.toml --redact --exit-code 1
       - run: pip install --quiet pytest pytest-xdist pyyaml "jsonschema>=4.18" pyshacl jinja2
+      - name: the docs this release serves hold for the code it runs (T-4483, TS-19)
+        # The Portal's /docs is the docs commit pinned beside its digest; the pinned Portal and
+        # platform commits and this tree are checked out and that docs commit's own checkers
+        # run against them. tests/test_docs_pin.py proves it red on a page the code lacks.
+        if: matrix.shard == 1
+        run: scripts/check-docs-pin.sh
       - name: the images the tests run
         # tests/test_observability_collector.py runs `otelcol validate` on the rendered
         # config and one record through the allow-list (T-0349); tests/test_audit_logging.py
