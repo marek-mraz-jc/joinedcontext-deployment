@@ -271,27 +271,18 @@ context-endpoint:
               ngx.req.clear_header((header:gsub("%-", "_")))
             end
           end
-    # Class 3 (high-throughput streams): 5,000 requests per minute. The endpoint surface is
-    # what the pipeline runners write telemetry to, so it carries the stream ceiling rather
-    # than the 1,200 API one; separating a Class 2 caller from a Class 3 one needs the stable
-    # client identity APISIX cannot key on yet (see portal-api).
+    # Class 3 (data APIs, T-4717): 600 requests a minute, 10 a second, per client address and
+    # bearer. A bot reads a whole catalogue at that rate and only that bot gets 429; the edge
+    # sees real addresses since T-4717 step 1, and the pipeline runners write in-cluster, not
+    # here. Class 4 (bulk exports, 10 at once) is the `*-bulk` routes' own limit-conn.
     limit-count:
-      count: 5000
+      count: 600
       time_window: 60
       key_type: var_combination
       key: '$http_authorization $remote_addr'
       rejected_code: 429
       policy: local
       show_limit_quota_header: true
-    # Class 4 (bulk file exports): 10 concurrent requests per client. A GeoJSON or CSV export
-    # holds its connection for minutes, so a count per minute does not bound them — concurrency does.
-    limit-conn:
-      conn: 10
-      burst: 0
-      default_conn_delay: 0.1
-      key_type: var_combination
-      key: '$http_authorization $remote_addr'
-      rejected_code: 429
     # No openid-connect here: the realm signs ES256 only (TR-03187 AR-11) and the plugin
     # (lua-resty-openidc) verifies RS/HS signatures only, so it would refuse every token.
     # Anonymous and bearer requests both reach the gateway PEP, which verifies the token itself and decides between a public representation and 401 (docs Deployment/10 §4, OPS-33).
@@ -366,27 +357,18 @@ context-endpoint-portal:
               ngx.req.clear_header((header:gsub("%-", "_")))
             end
           end
-    # Class 3 (high-throughput streams): 5,000 requests per minute. The endpoint surface is
-    # what the pipeline runners write telemetry to, so it carries the stream ceiling rather
-    # than the 1,200 API one; separating a Class 2 caller from a Class 3 one needs the stable
-    # client identity APISIX cannot key on yet (see portal-api).
+    # Class 3 (data APIs, T-4717): 600 requests a minute, 10 a second, per client address and
+    # bearer. A bot reads a whole catalogue at that rate and only that bot gets 429; the edge
+    # sees real addresses since T-4717 step 1, and the pipeline runners write in-cluster, not
+    # here. Class 4 (bulk exports, 10 at once) is the `*-bulk` routes' own limit-conn.
     limit-count:
-      count: 5000
+      count: 600
       time_window: 60
       key_type: var_combination
       key: '$http_authorization $remote_addr'
       rejected_code: 429
       policy: local
       show_limit_quota_header: true
-    # Class 4 (bulk file exports): 10 concurrent requests per client. A GeoJSON or CSV export
-    # holds its connection for minutes, so a count per minute does not bound them — concurrency does.
-    limit-conn:
-      conn: 10
-      burst: 0
-      default_conn_delay: 0.1
-      key_type: var_combination
-      key: '$http_authorization $remote_addr'
-      rejected_code: 429
     # No openid-connect here: the realm signs ES256 only (TR-03187 AR-11) and the plugin
     # (lua-resty-openidc) verifies RS/HS signatures only, so it would refuse every token.
     # Anonymous and bearer requests both reach the gateway PEP, which verifies the token itself and decides between a public representation and 401 (docs Deployment/10 §4, OPS-33).

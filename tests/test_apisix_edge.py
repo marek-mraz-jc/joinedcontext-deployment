@@ -5,6 +5,7 @@ docs/Deployment/08-security-hardening.md section 2, layer 9 (edge TLS).
 """
 
 import re
+from pathlib import Path
 
 import pytest
 import yaml
@@ -140,14 +141,32 @@ def test_rate_limit_classes(plugin_configs):
     assert portal["key"].split() == ["$http_authorization", "$http_x_access_token", "$remote_addr"]
     assert "X-Access-Token" in plugin_configs["portal-api"]["serverless-pre-function"]["functions"][0]
 
-    stream = plugin_configs["context-endpoint"]["limit-count"]
-    assert (stream["count"], stream["time_window"]) == (5000, 60)
-    bulk = plugin_configs["context-endpoint"]["limit-conn"]
-    assert bulk["conn"] == 10
-    # The endpoint surface passes anonymous requests through, so the bucket cannot be keyed
-    # on the bearer token alone — every anonymous caller would share one.
-    assert bulk["key_type"] == "var_combination"
-    assert "remote_addr" in bulk["key"]
+    # T-4717: the data class is 10 a second per address and bearer, now that the edge sees the
+    # real address; a bot above it gets 429 alone.
+    for config_id in ("context-endpoint", "context-endpoint-portal"):
+        stream = plugin_configs[config_id]["limit-count"]
+        assert (stream["count"], stream["time_window"]) == (600, 60), config_id
+        # T-4714: a limit-conn on the whole surface held every WebSocket and quick read to 10.
+        assert "limit-conn" not in plugin_configs[config_id], config_id
+    routes = yaml.safe_load((Path(__file__).resolve().parent.parent / "components/context-gateway/apisix-routes.yaml").read_text())
+    for parent in ("context-endpoint", "api-context-endpoint", "context-endpoint-portal"):
+        route, base = routes[f"{parent}-bulk"], routes[parent]
+        assert route.get("pluginConfig") == base.get("pluginConfig", parent)
+        assert (route.get("host"), route.get("subDomain")) == (base.get("host"), base.get("subDomain"))
+        assert route["uri"] == base["uri"] and route["priority"] > base["priority"]
+        bulk = route["plugins"]["limit-conn"]
+        assert bulk["conn"] == 10
+        # The endpoint surface passes anonymous requests through, so the bucket cannot be keyed
+        # on the bearer token alone — every anonymous caller would share one.
+        assert bulk["key_type"] == "var_combination"
+        assert "remote_addr" in bulk["key"]
+        pattern = re.compile(route["vars"][0][2])
+        for path in ("/api/endpoint/abc/file.csv", "/api/endpoint/abc/file.geojson",
+                     "/api/endpoint/abc/ngsi-ld/v1/temporal/entities"):
+            assert pattern.search(path), (parent, path)
+        for path in ("/api/endpoint/abc/ws", "/api/endpoint/abc/ngsi-ld/v1/entities",
+                     "/api/endpoint/abc/odata/v4/Thing", "/api/endpoint/file.csv/mcp"):
+            assert not pattern.search(path), (parent, path)
 
 
 # ADR-N-035: each chain the Organization tunes, its class, and the catalog default helm renders.
@@ -158,8 +177,8 @@ RATE_CLASSES = {
     "apps-surface": ("web", 300),
     "portal-redirect": ("web", 300),
     "portal-api": ("api", 1200),
-    "context-endpoint": ("publicEndpoint", 5000),
-    "context-endpoint-portal": ("publicEndpoint", 5000),
+    "context-endpoint": ("publicEndpoint", 600),
+    "context-endpoint-portal": ("publicEndpoint", 600),
     "context-space": ("dataWrite", 1200),
     "context-space-portal": ("dataWrite", 1200),
 }
@@ -224,6 +243,9 @@ def test_space_reads_and_writes_count_apart(rendered):
             # content-hashed file; T-4717: and counts its assets in a bucket of their own
             # (tests/test_edge_asset_cache.py).
             assert "labels" not in route and set(route["plugins"]) == {"serverless-post-function", "limit-count"}, route["id"]
+        elif route["id"].endswith("context-endpoint-bulk") or route["id"] == "context-endpoint-portal-bulk":
+            # T-4717: the bulk exports add their concurrency limit to the surface's chain.
+            assert "labels" not in route and set(route["plugins"]) == {"limit-conn"}, route["id"]
         elif route["id"] == "api-oauth":
             # T-4630, ADR-N-052 §4: minting an anonymous token counts per client address.
             assert "labels" not in route and set(route["plugins"]) == {"limit-count"}, route["id"]
