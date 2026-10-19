@@ -113,6 +113,14 @@ def test_each_page_carries_the_headers_that_keep_a_spec_harmless(dev):
     assert "connect-src https://tiles.dev.joinedcontext.com;" in mapped and "unsafe-eval" not in mapped
     assert f"script-src https://{HOST};" in mapped and "worker-src blob: https://" + HOST in mapped
     assert "gzip_static always;" in conf and "text/javascript js mjs;" in conf
+    # T-4711: scripts and styles leave gzipped, and a versioned vendor file is cached for good.
+    assert "gzip on;" in conf and "gzip_types text/javascript application/javascript text/css application/json" in conf
+    vendor = conf.split("location /vendor/")[1]
+    assert 'add_header Cache-Control "public, max-age=31536000, immutable" always;' in vendor
+    assert "max-age=86400" not in vendor
+    mapped_page = (FILES / "site/map.html").read_text()
+    assert '<link rel="modulepreload" href="/vendor/maplibre-gl-6.14.0.mjs">' in mapped_page
+    assert "maplibre-gl-6.14.0.mjs" in (FILES / "site/map.js").read_text(), "the preload names the module map.js imports"
 
 
 def test_the_renderer_draws_through_the_interpreter_and_loads_nothing():
