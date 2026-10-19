@@ -32,3 +32,18 @@ test("the view fits every position, and Enter opens the feature nearest the midd
   assert.equal(map.nearest(features, [18.91, 48.51]), 2);
   assert.equal(map.nearest([], [0, 0]), -1);
 });
+
+test("every line and polygon gets a point on itself, with its id; a point gets none (T-4727)", () => {
+  const features = [
+    { id: 0, geometry: { type: "Point", coordinates: [19.14, 48.73] }, properties: { name: "a" } },
+    { id: 1, geometry: { type: "LineString", coordinates: [[19.0, 48.6], [19.1, 48.7], [19.3, 48.9]] }, properties: { name: "bridge" } },
+    { id: 2, geometry: { type: "MultiPolygon", coordinates: [[[[18.9, 48.5], [19.0, 48.5], [19.0, 48.6], [18.9, 48.5]]]] }, properties: {} },
+    { id: 3, geometry: { type: "MultiPoint", coordinates: [[19.2, 48.8]] }, properties: {} }
+  ];
+  const got = map.anchors(features);
+  assert.deepEqual(got.map((f) => f.id), [1, 2]);
+  assert.deepEqual(got[0].geometry, { type: "Point", coordinates: [19.1, 48.7] });
+  assert.equal(got[0].properties.name, "bridge", "the anchor opens the feature's own popup");
+  assert.deepEqual(got[1].geometry.coordinates, [19.0, 48.6]);
+  assert.deepEqual(map.anchors([]), []);
+});
