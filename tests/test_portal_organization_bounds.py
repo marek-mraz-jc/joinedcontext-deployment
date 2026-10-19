@@ -27,20 +27,25 @@ def bounds_file(docs):
     return yaml.safe_load(config_map["data"][name])
 
 
-@pytest.mark.parametrize("environment", ["dev", "local"])
+DATA_API = "spec.limits.edge.requestsPerMinute.publicEndpoint"
+
+
+@pytest.mark.parametrize("environment", ["dev", "local", "smartcity"])
 def test_the_portal_reads_the_operators_bounds_from_a_mounted_file(rendered, environment):
-    # Nothing set is an empty map: every entry keeps its built-in bound.
-    assert bounds_file(rendered(environment)) in ({}, None)
+    # T-4717: the one default bound holds the data APIs at 10 a second, the catalog's 5000
+    # included; every other entry keeps its built-in bound.
+    assert bounds_file(rendered(environment)) == {DATA_API: {"max": 600}}
 
 
 def with_bounds(tree):
     path = tree / "components/portal/default-environment.yaml.gotmpl"
     text = path.read_text()
-    assert "    organizationBounds: {}\n" in text
+    line = f"      {DATA_API}: {{ max: 600 }}\n"
+    assert line in text
     path.write_text(
         text.replace(
-            "    organizationBounds: {}\n",
-            "    organizationBounds:\n"
+            line,
+            line +
             "      spec.projects.quota.contextSpaces: { max: 20 }\n"
             "      spec.limits.signIn.sessionIdleMinutes: { min: 15, max: 120 }\n",
         )
@@ -49,6 +54,7 @@ def with_bounds(tree):
 
 def test_the_bounds_the_operator_sets_are_the_file_the_portal_reads(rendered_variant):
     assert bounds_file(rendered_variant("dev", with_bounds)) == {
+        DATA_API: {"max": 600},
         "spec.projects.quota.contextSpaces": {"max": 20},
         "spec.limits.signIn.sessionIdleMinutes": {"min": 15, "max": 120},
     }

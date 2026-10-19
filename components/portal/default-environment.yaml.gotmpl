@@ -28,7 +28,11 @@ portal:
     # keeps the catalog's built-in bound; a security setting's bound may only tighten it. The
     # Portal refuses to start on a path the catalog lacks or a loosened security bound, so a
     # typo shows at the apply rather than as a limit nobody set.
-    organizationBounds: {}
+    organizationBounds:
+      # The public Endpoints' data APIs at 600 requests a minute per address and bearer, 10 a
+      # second (T-4717). The bound holds the catalog's default of 5000 too, which the Portal
+      # writes over the chart's count of every chain labelled publicEndpoint.
+      spec.limits.edge.requestsPerMinute.publicEndpoint: { max: 600 }
   # Mailpit, where App mail lands on an installation whose relay is not named yet (T-3583): the
   # Portal sends to it in the clear inside the namespace, it keeps the messages in memory and
   # reaches nothing. Off here; an environment turns it on, or names a relay instead in the Secret
