@@ -161,4 +161,12 @@ jobs:
       # A module that rewrites deployment/environments/testing does it in its own copy of the tree
       # (own_tree), and each environment is rendered once for all workers (T-2895).
       # Every test file lands in exactly one shard: line n of the sorted list in shard n mod 3 (3 for 0).
+      # T-4694: the platform commit components/ai/bundle.lock names, so tests/test_ai_app.py
+      # rebuilds the standalone assistant's bundle and compares it with the committed one.
+      - name: the platform commit of the ai bundle
+        run: |
+          sha=$(sed -n 's/^platform: //p' components/ai/bundle.lock)
+          git init -q "$RUNNER_TEMP/platform"
+          git -C "$RUNNER_TEMP/platform" fetch -q --depth 1 https://github.com/marek-mraz-jc/joinedcontext-platform "$sha"
+          echo "JC_PLATFORM_DIR=$RUNNER_TEMP/platform" >> "$GITHUB_ENV"
       - run: pytest -q -n auto --dist loadgroup $(ls tests/test_*.py | sort | awk -v s=${{ matrix.shard }} 'NR % 3 == s % 3')
