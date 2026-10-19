@@ -3,12 +3,49 @@
 // window and back. On a phone, or expanded, where the open frame takes the screen (jc-theme.css),
 // the page behind is inert so focus and a screen reader stay in the chat. Without script the
 // button still opens and closes it.
+// T-4685 (API/05 §1.6.1): on a wide screen the chat docks to the right edge and the page shrinks
+// beside it; the visitor drags its edge. The panel stays open, docked and on the same assistant
+// across the catalogue's links (this tab's sessionStorage, read again by jc-dock.js before the
+// first paint), and a done answer about one dataset opens that dataset's page. The script runs
+// right after the frame is parsed, before the page is first drawn.
 (function () {
   var box = document.querySelector("details.jc-assistant");
   if (!box) {
     return;
   }
+  var KEY = "jc-assistant";
+  var WIDTH = "jc-dock-width";
+  var root = document.documentElement;
   var phone = window.matchMedia("(max-width: 40rem)");
+  var wide = window.matchMedia("(min-width: 1100px)");
+  var frame = box.querySelector("iframe");
+  var origin = frame ? new URL(frame.src, location.href).origin : null;
+  var state = { open: false, mode: wide.matches ? "dock" : "panel", widget: null, focused: false };
+  try {
+    var held = JSON.parse(sessionStorage.getItem(KEY) || "null");
+    if (held && typeof held === "object") {
+      state.open = held.open === true;
+      if (held.mode === "dock" || held.mode === "panel" || held.mode === "full") {
+        state.mode = held.mode;
+      }
+      state.widget = typeof held.widget === "string" ? held.widget : null;
+      state.focused = held.focused === true;
+    }
+  } catch (e) { /* a fresh panel */ }
+  function save() {
+    try { sessionStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* this page only */ }
+  }
+  // The assistant the panel was open with stays while it stays open: the same host, one widget
+  // path, never another address.
+  function ours(url) {
+    try {
+      var to = new URL(url);
+      return to.origin === origin && /^\/d\/[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\/widget$/.test(to.pathname) && !to.search && !to.hash;
+    } catch (e) {
+      return false;
+    }
+  }
+
   var silenced = [];
   function silence(on) {
     silenced.forEach(function (el) { el.inert = false; });
@@ -25,30 +62,127 @@
       });
     }
   }
+  function place() {
+    box.classList.toggle("jc-full", state.mode === "full");
+    root.classList.toggle("jc-docked", box.open && state.mode === "dock");
+    silence(box.open);
+  }
   function close() {
     box.open = false;
     box.querySelector("summary").focus();
   }
-  box.addEventListener("toggle", function () { silence(box.open); });
+
+  // The dock's edge: dragged, or moved with the arrow keys, between 360 px and half the window.
+  var edge = document.createElement("div");
+  edge.className = "jc-dock-edge";
+  edge.tabIndex = 0;
+  edge.setAttribute("role", "separator");
+  edge.setAttribute("aria-orientation", "vertical");
+  edge.setAttribute("aria-label", /^cs/.test(root.lang) ? "Šířka asistenta" : /^en/.test(root.lang) ? "Assistant width" : "Šírka asistenta");
+  function width(px, keep) {
+    var most = Math.max(360, Math.floor(window.innerWidth / 2));
+    var w = Math.round(Math.min(Math.max(px, 360), most));
+    root.style.setProperty("--jc-dock", w + "px");
+    edge.setAttribute("aria-valuemin", "360");
+    edge.setAttribute("aria-valuemax", String(most));
+    edge.setAttribute("aria-valuenow", String(w));
+    if (keep) {
+      try { localStorage.setItem(WIDTH, String(w)); } catch (e) { /* this tab only */ }
+    }
+  }
+  var kept = NaN;
+  try { kept = parseInt(localStorage.getItem(WIDTH), 10); } catch (e) { /* the default */ }
+  width(kept > 0 ? kept : window.innerWidth * 0.34, false);
+  edge.addEventListener("pointerdown", function (event) {
+    edge.setPointerCapture(event.pointerId);
+    root.classList.add("jc-dragging");
+  });
+  edge.addEventListener("pointermove", function (event) {
+    if (edge.hasPointerCapture(event.pointerId)) {
+      width(window.innerWidth - event.clientX, false);
+    }
+  });
+  edge.addEventListener("pointerup", function (event) {
+    edge.releasePointerCapture(event.pointerId);
+    root.classList.remove("jc-dragging");
+    width(window.innerWidth - event.clientX, true);
+  });
+  edge.addEventListener("keydown", function (event) {
+    var now = parseInt(edge.getAttribute("aria-valuenow"), 10);
+    if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+      event.preventDefault();
+      width(now + (event.key === "ArrowLeft" ? 24 : -24), true);
+    }
+  });
+  box.appendChild(edge);
+
+  // Open on the page before: open again now, on the assistant it had, before the first paint.
+  if (state.open && frame) {
+    frame.loading = "eager";
+    if (state.widget && ours(state.widget) && state.widget !== frame.src.split("?")[0]) {
+      frame.src = state.widget + "?embed=1&dock=1";
+    }
+    box.open = true;
+    // Focus stays in the chat across the page change, as it was.
+    if (state.focused) {
+      frame.focus();
+    }
+  }
+  place();
+  window.addEventListener("pagehide", function () {
+    state.focused = box.open && document.activeElement === frame;
+    save();
+  });
+
+  box.addEventListener("toggle", function () {
+    state.open = box.open;
+    state.widget = box.open && frame ? frame.src.split("?")[0] : null;
+    save();
+    place();
+  });
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape" && box.open) {
       close();
     }
   });
-  // The ✕ in the chat's header (T-4635) and its expand button (T-4658): the frame says close or
-  // full / panel and carries nothing else; only the frame this page opened, from its own origin,
-  // is heard.
-  var frame = box.querySelector("iframe");
-  var origin = frame ? new URL(frame.src, location.href).origin : null;
+  // T-4685: the one dataset a done answer is about, on this catalogue alone; never while the
+  // visitor selects text or types in the page, never the page already open.
+  function opens(url) {
+    var to;
+    try { to = new URL(url); } catch (e) { return null; }
+    var here = location.pathname.replace(/\/$/, "");
+    if (to.origin !== location.origin || !/^\/dataset\/[a-z0-9_-]{2,100}\/?$/.test(to.pathname) || to.pathname.replace(/\/$/, "") === here) {
+      return null;
+    }
+    var active = document.activeElement;
+    if (String(window.getSelection ? window.getSelection() : "") !== "" ||
+        (active && active !== frame && (/^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName) || active.isContentEditable))) {
+      return null;
+    }
+    return to.pathname;
+  }
+  // The ✕ in the chat's header (T-4635), its expand button (T-4658), its dock button and its
+  // dataset (T-4685): only the frame this page opened, from its own origin, is heard, and each
+  // message carries nothing else.
   window.addEventListener("message", function (event) {
     var data = event.data;
-    if (box.open && frame && event.source === frame.contentWindow && event.origin === origin &&
-        data && data.type === "jc-assistant-close") {
+    if (!frame || event.source !== frame.contentWindow || event.origin !== origin || !data) {
+      return;
+    }
+    if (box.open && data.type === "jc-assistant-close") {
       close();
-    } else if (frame && event.source === frame.contentWindow && event.origin === origin &&
-        data && data.type === "jc-assistant-size" && (data.size === "full" || data.size === "panel")) {
-      box.classList.toggle("jc-full", data.size === "full");
-      silence(box.open);
+    } else if (data.type === "jc-assistant-size" && (data.size === "full" || data.size === "panel" || data.size === "dock")) {
+      state.mode = data.size;
+      save();
+      place();
+    } else if (box.open && data.type === "jc-assistant-dataset" && typeof data.url === "string") {
+      var path = opens(data.url);
+      if (path) {
+        frame.contentWindow.postMessage({ type: "jc-assistant-opened", url: data.url }, origin);
+        location.assign(path);
+      }
+    } else if (box.open && data.type === "jc-assistant-back") {
+      history.back();
     }
   });
 })();

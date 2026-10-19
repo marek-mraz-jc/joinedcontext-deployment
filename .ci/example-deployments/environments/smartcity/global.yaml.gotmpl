@@ -60,9 +60,8 @@ components:
   - basemap
   # The chart renderer of ADR-N-053 (T-4641): viz.{domain}, framed by the catalogue's datasets.
   - viz
-  # Argo CD (ADR-N-056, T-4678): installed by `just prod-apply`, never by itself; it syncs
-  # only the promoted revision, the `release` branch `just promote` moves.
-  - gitops
+  # Argo CD (ADR-N-056, T-4678) goes here, `- gitops`, once its images carry no CRITICAL CVE
+  # (T-4706: argocd v3.5.4 and the helmfile v1.8.1 plugin image); everything else it needs is set.
 
 global:
   domain: smartcity.joinedcontext.com

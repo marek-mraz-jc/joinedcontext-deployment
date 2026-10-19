@@ -20,6 +20,11 @@ slots:
     description: Who published the row, with the credit its licence asks for.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Poskytovateľ údajov
+        cs: Poskytovatel dat
+        en: Data provider
+        de: Datenanbieter
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/context.jsonld
     slot_uri: https://smartdatamodels.org/dataProvider
   source:
@@ -27,6 +32,11 @@ slots:
     range: uri
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Zdroj
+        cs: Zdroj
+        en: Source
+        de: Quelle
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/context.jsonld
     slot_uri: https://smartdatamodels.org/source
   isPartOf:
@@ -34,6 +44,11 @@ slots:
     range: uri
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dataset
+        cs: Datová sada
+        en: Dataset
+        de: Datensatz
   aCH:
     description: The source column `ACH`.
     range: integer
@@ -54,11 +69,15 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Absolventi za minulý rok spol
   absolventiZaMinulyRokZeny:
     description: The source column `Absolventi_za_minulý_rok___ženy`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Absolventi za minulý rok ženy
   adHocHnutia:
     description: The source column `ad_hoc_hnutia____`.
     range: float
@@ -82,66 +101,96 @@ slots:
     description: The source column `Adresa`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Adresa
   adresaNajvyhodnejsiehoUchadza:
     description: The source column `Adresa_najvýhodnejšieho_uchádza`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Adresa najvýhodnejšieho uchádza
   adresaObec:
     description: The source column `Adresa___Obec`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Adresa Obec
   adresaOrganizacie:
     description: The source column `Adresa_organizácie`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Adresa organizácie
   adresaPSC:
     description: The source column `Adresa___PSČ`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Adresa PSČ
   adresaUlica:
     description: The source column `Adresa___ulica`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Adresa ulica
   akademickyRok:
     description: The source column `Akademický_rok`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Akademický rok
   aktivne:
     description: The source column `Aktívne`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Aktívne
   aktualnyStav:
     description: The source column `Aktuálny_stav`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Aktuálny stav
   aktualnyStavUpraveny:
     description: The source column `Aktuálny_stav_upravený`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Aktuálny stav upravený
   aktualnyStavebnotechnickyStav:
     description: The source column `Aktuálny_stavebnotechnický_stav`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Aktuálny stavebnotechnický stav
   albanska:
     description: The source column `albánska____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Albánska
   albanskaAbs:
     description: The source column `albánska__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Albánska abs
   albansky:
     description: The source column `albánsky____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Albánsky
   albanskyAbs:
     description: The source column `albánsky__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Albánsky abs
   alps:
     description: The source column `alps`.
     annotations:
@@ -155,61 +204,85 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Anglická
   anglickaAbs:
     description: The source column `anglická__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Anglická abs
   anglicky:
     description: The source column `anglický____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Anglický
   anglickyAbs:
     description: The source column `anglický__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Anglický abs
   apostolskaCirkev:
     description: The source column `Apoštolská_cirkev`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Apoštolská cirkev
   apostolskaCirkev2:
     description: The source column `Apoštolská_cirkev__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Apoštolská cirkev
   apostolskaCirkevNaSlovensku:
     description: The source column `Apoštolská_cirkev_na_Slovensku_`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Apoštolská cirkev na Slovensku
   apostolskaCirkevNaSlovensku1:
     description: The source column `Apoštolská_cirkev_na_Slovensku1`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Apoštolská cirkev na Slovensku1
   apostolskaCirkevNaSlovensku2:
     description: The source column `Apoštolská_cirkev_na_Slovensku_`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Apoštolská cirkev na Slovensku
   arabsky:
     description: The source column `arabský____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Arabský
   arabskyAbs:
     description: The source column `arabský__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Arabský abs
   atribut:
     description: The source column `Atribút`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Atribút
   author:
     description: The source column `author`.
     range: integer
@@ -220,21 +293,29 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Bahájske spoločenstvo
   bahajskeSpolocenstvo2:
     description: The source column `Bahájske_spoločenstvo__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Bahájske spoločenstvo
   bahajskeSpolocenstvoVSlove1:
     description: The source column `Bahájske_spoločenstvo_v_Slove_1`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Bahájske spoločenstvo v Slove 1
   bahajskeSpolocenstvoVSlovens:
     description: The source column `Bahájske_spoločenstvo_v_Slovens`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Bahájske spoločenstvo v Slovens
   belongRegi:
     description: The source column `belongRegi`.
     range: integer
@@ -245,36 +326,50 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Bez náboženského vyznania
   bezNabozenskehoVyznania2:
     description: The source column `bez_náboženského_vyznania__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Bez náboženského vyznania
   bezNabozenskehoVyznaniaAbs:
     description: The source column `bez_náboženského_vyznania__abs_`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Bez náboženského vyznania (abs)
   bezSkolskehoVzdelaniaOso1:
     description: The source column `bez_školského_vzdelania___oso_1`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Bez školského vzdelania oso 1
   bezSkolskehoVzdelaniaOsoby:
     description: The source column `bez_školského_vzdelania___osoby`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Bez školského vzdelania osoby
   bezUkoncenehoVzdelaniaOs1:
     description: The source column `bez_ukončeného_vzdelania___os_1`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Bez ukončeného vzdelania os 1
   bezUkoncenehoVzdelaniaOsob:
     description: The source column `bez_ukončeného_vzdelania___osob`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Bez ukončeného vzdelania osob
   bezVyznania:
     description: The source column `bez_vyznania`.
     range: float
@@ -290,26 +385,36 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Billeterov index
   bratskaJednotaBaptistov:
     description: The source column `Bratská_jednota_baptistov`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Bratská jednota baptistov
   bratskaJednotaBaptistov2:
     description: The source column `Bratská_jednota_baptistov__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Bratská jednota baptistov
   bratskaJednotaBaptistovVS1:
     description: The source column `Bratská_jednota_baptistov_v_S_1`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Bratská jednota baptistov v S 1
   bratskaJednotaBaptistovVSlo:
     description: The source column `Bratská_jednota_baptistov_v_Slo`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Bratská jednota baptistov v Slo
   budhizmus:
     description: The source column `budhizmus____`.
     range: float
@@ -330,35 +435,49 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Bulharská
   bulharska2:
     description: The source column `bulharská__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Bulharská
   bulharskaAbs:
     description: The source column `bulharská__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Bulharská abs
   bulharsky:
     description: The source column `bulharský`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Bulharský
   bulharsky12:
     description: The source column `bulharský12`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Bulharský12
   bulharskyAbs:
     description: The source column `bulharský__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Bulharský abs
   cDodavatela:
     description: The source column `Č__dodávateľa`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Č dodávateľa
   cMSID:
     description: The source column `CMS_ID`.
     range: integer
@@ -368,18 +487,26 @@ slots:
     description: The source column `CPV_časti___názov`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: CPV časti názov
   cPVNazov:
     description: The source column `CPV___názov`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: CPV názov
   cZmluvy:
     description: The source column `Č__zmluvy`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Č zmluvy
   categ:
     description: The source column `Categ`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Categ
   category:
     description: The source column `category`.
     multivalued: true
@@ -396,16 +523,22 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Celková dĺžka podjazdu
   celkovaZazmluvnenaSuma:
     description: The source column `Celková_zazmluvnená_suma`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Celková zazmluvnená suma
   celkovyPrirastokObyvatelstva:
     description: The source column `Celkový_prírastok_obyvateľstva_`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Celkový prírastok obyvateľstva
   cellPhone:
     description: The source column `cellPhone`.
     annotations:
@@ -415,36 +548,50 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Čerpanie spolu
   ceska:
     description: The source column `česká____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Česká
   ceska2:
     description: The source column `česká__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Česká
   ceskaAbs:
     description: The source column `česká__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Česká abs
   cesky:
     description: The source column `český`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Český
   cesky7:
     description: The source column `český7`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Český7
   ceskyAbs:
     description: The source column `český__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Český abs
   changedByC:
     description: The source column `changedByC`.
     range: datetime
@@ -462,56 +609,78 @@ slots:
     description: The source column `chemická_zlúčenina`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Chemická zlúčenina
   chorvatska:
     description: The source column `chorvátska____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Chorvátska
   chorvatska2:
     description: The source column `chorvátska__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Chorvátska
   chorvatskaAbs:
     description: The source column `chorvátska__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Chorvátska abs
   chorvatsky:
     description: The source column `chorvátsky`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Chorvátsky
   chorvatsky10:
     description: The source column `chorvátsky10`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Chorvátsky10
   chorvatskyAbs:
     description: The source column `chorvátsky__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Chorvátsky abs
   cinska:
     description: The source column `čínska____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Čínska
   cinskaAbs:
     description: The source column `čínska__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Čínska abs
   cinsky:
     description: The source column `čínsky____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Čínsky
   cinskyAbs:
     description: The source column `čínsky__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Čínsky abs
   cirkevAdventistovSiedmehoD1:
     description: The source column `Cirkev_adventistov_siedmeho_d_1`.
     range: float
@@ -522,79 +691,113 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Cirkev adventistov siedmeho dňa
   cirkevBratska:
     description: The source column `Cirkev_bratská`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Cirkev bratská
   cirkevBratska2:
     description: The source column `Cirkev_bratská__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Cirkev bratská
   cirkevBratskaVSlovenskejR1:
     description: The source column `Cirkev_bratská_v_Slovenskej_r_1`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Cirkev bratská v Slovenskej r 1
   cirkevBratskaVSlovenskejRep:
     description: The source column `Cirkev_bratská_v_Slovenskej_rep`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Cirkev bratská v Slovenskej rep
   cirkevCeskoslovenskaHusitska:
     description: The source column `Cirkev_československá_husitská`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Cirkev československá husitská
   cirkevCeskoslovenskaHusitska1:
     description: The source column `Cirkev_československá_husitská1`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Cirkev československá husitská1
   cirkevCeskoslovenskaHusitska2:
     description: The source column `Cirkev_československá_husitská_`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Cirkev československá husitská
   cirkevJezisaKristaSvatych1:
     description: The source column `Cirkev_Ježiša_Krista_svätých__1`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Cirkev Ježiša Krista svätých 1
   cirkevJezisaKristaSvatychNe:
     description: The source column `Cirkev_Ježiša_Krista_svätých_ne`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Cirkev Ježiša Krista svätých ne
   cisloNehody:
     description: The source column `Číslo_nehody`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Číslo nehody
   cisloObjednavky:
     description: The source column `Číslo_objednávky`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Číslo objednávky
   cisloOkresu:
     description: The source column `Číslo_okresu`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Číslo okresu
   cisloPK:
     description: The source column `Číslo_PK`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Číslo PK
   cisloSpisu:
     description: The source column `Číslo_spisu`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Číslo spisu
   cisloZasadnutia:
     description: The source column `Číslo_zasadnutia`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Číslo zasadnutia
   cisloZmluvy:
     description: The source column `Číslo_zmluvy`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Číslo zmluvy
   city:
     description: The source column `city`.
     annotations:
@@ -621,6 +824,8 @@ slots:
     description: The source column `DIČ`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: DIČ
   dOW:
     description: The source column `DOW`.
     range: datetime
@@ -631,78 +836,110 @@ slots:
     range: datetime
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dátum
   datumACas:
     description: The source column `Dátum_a_čas`.
     range: datetime
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dátum a čas
   datumDorucenia:
     description: The source column `Dátum_doručenia`.
     range: date
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dátum doručenia
   datumDoruceniaVyuctovania:
     description: The source column `Dátum_doručenia_vyúčtovania`.
     range: date
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dátum doručenia vyúčtovania
   datumPlatnostiDo:
     description: The source column `Dátum_platnosti_do`.
     range: date
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dátum platnosti do
   datumPrilohy:
     description: The source column `Dátum_prílohy`.
     range: date
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dátum prílohy
   datumRealizacieProjektu:
     description: The source column `Dátum_realizácie_projektu`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dátum realizácie projektu
   datumSchvaleniaOH:
     description: The source column `Dátum_schválenia_OH`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dátum schválenia OH
   datumSplatnosti:
     description: The source column `Dátum_splatnosti`.
     range: date
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dátum splatnosti
   datumSpustenia:
     description: The source column `Dátum_spustenia`.
     range: datetime
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dátum spustenia
   datumUcinnosti:
     description: The source column `Dátum_účinnosti`.
     range: date
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dátum účinnosti
   datumUhradyDotacie:
     description: The source column `Dátum_úhrady_dotácie`.
     range: date
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dátum úhrady dotácie
   datumUkoncenia:
     description: The source column `Dátum_ukončenia`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dátum ukončenia
   datumUzavretia:
     description: The source column `Dátum_uzavretia`.
     range: date
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dátum uzavretia
   datumVybavenia:
     description: The source column `Dátum_vybavenia`.
     range: date
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dátum vybavenia
   datumVystavenia:
     description: The source column `Dátum_vystavenia`.
     range: date
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dátum vystavenia
   datumZaciatkuVyucovacejCinnosti:
     description: The source column `DatumZaciatkuVyucovacejCinnosti`.
     range: datetime
@@ -717,6 +954,8 @@ slots:
     range: datetime
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dátum zasadnutia
   datumZriadenia:
     description: The source column `DatumZriadenia`.
     range: datetime
@@ -731,11 +970,15 @@ slots:
     range: date
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dátum zverejnenia
   datumZverejneniaZmluvy:
     description: The source column `Dátum_zverejnenia_zmluvy`.
     range: date
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dátum zverejnenia zmluvy
   defLanguag:
     description: The source column `defLanguag`.
     annotations:
@@ -744,10 +987,14 @@ slots:
     description: The source column `Deň_v_týždni`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Deň v týždni
   denneTabory:
     description: The source column `Denné_tábory`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Denné tábory
   descriptio:
     description: The source column `descriptio`.
     annotations:
@@ -756,6 +1003,8 @@ slots:
     description: The source column `Názov_VZN`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Názov VZN
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
     slot_uri: http://purl.org/dc/terms/description
   designatio:
@@ -767,11 +1016,15 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dieťa do začatia povinnej ško 1
   dietaDoZacatiaPovinnejSkols:
     description: The source column `dieťa_do_začatia_povinnej_škols`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dieťa do začatia povinnej škols
   dlzka:
     description: The source column `dlzka`.
     range: float
@@ -782,11 +1035,15 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dĺžka premostenia (m)
   dlzkaStudia:
     description: The source column `Dĺžka_štúdia`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dĺžka štúdia
   dlzkaVU1:
     description: The source column `dlzka_VU_1`.
     range: float
@@ -796,29 +1053,41 @@ slots:
     description: The source column `Dočasnosť_mosta`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dočasnosť mosta
   dochodca:
     description: The source column `dôchodca____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dôchodca
   dochodcaAbs:
     description: The source column `dôchodca__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dôchodca abs
   dodavatel:
     description: The source column `Dodávateľ`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dodávateľ
   dojcenskaUmrtnostOsoba:
     description: The source column `Dojčenská_úmrtnosť__Osoba_`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dojčenská úmrtnosť (Osoba)
   domena:
     description: The source column `Doména`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Doména
   doplnStp:
     description: The source column `dopln_stp`.
     range: integer
@@ -828,30 +1097,44 @@ slots:
     description: The source column `Dotačný_titul`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Dotačný titul
   druhKomoditAleboSluzieb:
     description: The source column `Druh_komodít_alebo_služieb`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Druh komodít alebo služieb
   druhKomunikacie:
     description: The source column `Druh_komunikácie`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Druh komunikácie
   druhKonstrukcie:
     description: The source column `Druh_konštrukcie`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Druh konštrukcie
   druhNosnejKonstrukcie:
     description: The source column `Druh_nosnej_konštrukcie`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Druh nosnej konštrukcie
   druhObstaravania:
     description: The source column `Druh_obstarávania`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Druh obstarávania
   druhPostupu:
     description: The source column `Druh_postupu`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Druh postupu
   druhSaSZ:
     description: The source column `DruhSaSZ`.
     annotations:
@@ -864,22 +1147,32 @@ slots:
     description: The source column `Druh_samosprávy`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Druh samosprávy
   druhSkoly:
     description: The source column `Druh_školy`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Druh školy
   druhStudia:
     description: The source column `Druh_štúdia`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Druh štúdia
   druhZabezpecenia:
     description: The source column `Druh_zabezpečenia`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Druh zabezpečenia
   druhZariadenia:
     description: The source column `Druh_zariadenia`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Druh zariadenia
   eDUID:
     description: The source column `EDUID`.
     annotations:
@@ -888,10 +1181,14 @@ slots:
     description: The source column `E_mail_všeobecný_1`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: E mail všeobecný 1
   eMailVseobecny2:
     description: The source column `E_mail_všeobecný_2`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: E mail všeobecný 2
   eMailZariadenia:
     description: The source column `E_mail_zariadenia`.
     annotations:
@@ -906,6 +1203,8 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: EPFRV súčet
   ePZF:
     description: The source column `EPZF`.
     range: float
@@ -916,6 +1215,8 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: EPZF súčet
   ekologickyStav:
     description: The source column `ekologicky_stav`.
     range: float
@@ -925,10 +1226,14 @@ slots:
     description: The source column `Elektronická_aukcia`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Elektronická aukcia
   email:
     description: The source column `Email`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Email
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/context.jsonld
     slot_uri: https://smartdatamodels.org/email
   evanjelickaCirkevAugsburske1:
@@ -936,21 +1241,29 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Evanjelická cirkev augsburské 1
   evanjelickaCirkevAugsburskeho:
     description: The source column `Evanjelická_cirkev_augsburského`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Evanjelická cirkev augsburského
   evanjelickaCirkevMetodistic1:
     description: The source column `Evanjelická_cirkev_metodistic_1`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Evanjelická cirkev metodistic 1
   evanjelickaCirkevMetodisticka:
     description: The source column `Evanjelická_cirkev_metodistická`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Evanjelická cirkev metodistická
   exp:
     description: The source column `exp_`.
     annotations:
@@ -960,11 +1273,15 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Extrémne horúčavy stupeň ohroz
   extremneZrazkyStupenOhrozen:
     description: The source column `Extrémne_zrážky__stupeň_ohrozen`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Extrémne zrážky stupeň ohrozen
   f1993:
     description: The source column `F1993`.
     range: integer
@@ -1005,6 +1322,8 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: F1 ročník
   f2000:
     description: The source column `F2000`.
     range: float
@@ -1160,36 +1479,50 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: F2 ročník
   f3Rocnik:
     description: The source column `F3__ročník`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: F3 ročník
   f4Rocnik:
     description: The source column `F4__ročník`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: F4 ročník
   f5Rocnik:
     description: The source column `F5__ročník`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: F5 ročník
   f6Rocnik:
     description: The source column `F6__ročník`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: F6 ročník
   f7Rocnik:
     description: The source column `F7__ročník`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: F7 ročník
   f8Rocnik:
     description: The source column `F8__ročník`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: F8 ročník
   fACC:
     description: The source column `FACC`.
     annotations:
@@ -1235,16 +1568,22 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: F poproduktívny
   fPredproduktivny:
     description: The source column `F__predproduktívny`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: F predproduktívny
   fProduktivny:
     description: The source column `F__produktívny`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: F produktívny
   fRozdielZaporny:
     description: The source column `F__rozdiel___zaporny`.
     range: float
@@ -1254,10 +1593,14 @@ slots:
     description: The source column `Facebook`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Facebook
   fakultaStatistickaRocenka:
     description: The source column `Fakulta___štatistická_ročenka`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Fakulta štatistická ročenka
   farba:
     description: The source column `farba`.
     annotations:
@@ -1266,10 +1609,14 @@ slots:
     description: The source column `Fax`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Fax
   financovanie:
     description: The source column `Financovanie`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Financovanie
   formaHospodarenia:
     description: The source column `FormaHospodarenia`.
     annotations:
@@ -1278,10 +1625,14 @@ slots:
     description: The source column `Forma_podnikania`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Forma podnikania
   formaStudia:
     description: The source column `Forma_štúdia`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Forma štúdia
   formaVlastnictva:
     description: The source column `FormaVlastnictva`.
     annotations:
@@ -1291,25 +1642,35 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Francúzska
   francuzskaAbs:
     description: The source column `francúzska__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Francúzska abs
   francuzsky:
     description: The source column `francúzsky____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Francúzsky
   francuzskyAbs:
     description: The source column `francúzsky__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Francúzsky abs
   funkcia:
     description: The source column `Funkcia`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Funkcia
   gEOMLATBACKUP:
     description: The source column `GEOM_LAT_BACKUP`.
     range: float
@@ -1325,11 +1686,15 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: GPS Dĺžka
   gPSSirka:
     description: The source column `GPS_Šírka`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: GPS Šírka
   gPSX:
     description: The source column `GPS_x`.
     range: float
@@ -1353,35 +1718,49 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Grécka
   greckaAbs:
     description: The source column `grécka__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Grécka abs
   greckokatolickaCirkev:
     description: The source column `Gréckokatolícka_cirkev`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Gréckokatolícka cirkev
   greckokatolickaCirkev2:
     description: The source column `Gréckokatolícka_cirkev__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Gréckokatolícka cirkev
   greckokatolickaCirkevNaSlo1:
     description: The source column `Gréckokatolícka_cirkev_na_Slo_1`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Gréckokatolícka cirkev na Slo 1
   greckokatolickaCirkevNaSlove:
     description: The source column `Gréckokatolícka_cirkev_na_Slove`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Gréckokatolícka cirkev na Slove
   hierarchia:
     description: The source column `Hierarchia`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Hierarchia
   hinduizmus:
     description: The source column `hinduizmus____`.
     range: float
@@ -1401,110 +1780,158 @@ slots:
     description: The source column `Hlas`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Hlas
   hlavnaCat:
     description: The source column `Hlavna_cat`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Hlavna cat
   hlavnaSkupinaOdborov:
     description: The source column `Hlavná_skupina_odborov`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Hlavná skupina odborov
   hlavnyCPV:
     description: The source column `Hlavný_CPV`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Hlavný CPV
   hlavnyCPVCasti:
     description: The source column `Hlavný_CPV_časti`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Hlavný CPV časti
   hlavnyVinnik:
     description: The source column `Hlavný_vinník`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Hlavný vinník
   hmotnaSkoda:
     description: The source column `hmotná_škoda`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Hmotná škoda
   hodnota:
     description: The source column `Hodnota`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Hodnota
   hodnotenie:
     description: The source column `Hodnotenie`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Hodnotenie
   hrubaMieraCelkovehoPrirastku:
     description: The source column `Hrubá_miera_celkového_prírastku`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Hrubá miera celkového prírastku
   hrubaMieraMigracnehoSaldaP:
     description: The source column `Hrubá_miera_migračného_salda__P`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Hrubá miera migračného salda P
   hrubaMieraPotratovostiPromi:
     description: The source column `Hrubá_miera_potratovosti__Promi`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Hrubá miera potratovosti Promi
   hrubaMieraPrirodzenehoPriras:
     description: The source column `Hrubá_miera_prirodzeného_príras`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Hrubá miera prirodzeného príras
   hrubaMieraRozvodovostiPromi:
     description: The source column `Hrubá_miera_rozvodovosti__Promi`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Hrubá miera rozvodovosti Promi
   hrubaMieraSobasnostiPromile:
     description: The source column `Hrubá_miera_sobášnosti__Promile`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Hrubá miera sobášnosti Promile
   hrubaMieraUkoncenychTehotens:
     description: The source column `Hrubá_miera_ukončených_tehotens`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Hrubá miera ukončených tehotens
   hrubaMieraUmrtnostiPromile:
     description: The source column `Hrubá_miera_úmrtnosti__Promile_`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Hrubá miera úmrtnosti (Promile)
   hrubaMieraZivorodenostiProm:
     description: The source column `Hrubá_miera_živorodenosti__Prom`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Hrubá miera živorodenosti Prom
   hustotaOsobyKm:
     description: The source column `Hustota__osoby_km__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Hustota osoby km
   hyperlinkNaDochadzku:
     description: The source column `Hyperlink_na_dochádzku`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Hyperlink na dochádzku
   hyperlinkNaPozvanku:
     description: The source column `Hyperlink_na_pozvánku`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Hyperlink na pozvánku
   hyperlinkNaPrijateUznesenia:
     description: The source column `Hyperlink_na_prijaté_uznesenia`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Hyperlink na prijaté uznesenia
   hyperlinkNaVysledkyHlasovani:
     description: The source column `Hyperlink_na_výsledky_hlasovani`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Hyperlink na výsledky hlasovani
   hyperlinkNaZapisnicu:
     description: The source column `Hyperlink_na_zápisnicu`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Hyperlink na zápisnicu
   iCO:
     description: The source column `ICO`.
     annotations:
@@ -1513,30 +1940,44 @@ slots:
     description: The source column `IČO`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: IČO
   iCODodavatela:
     description: The source column `IČO_dodávateľa`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: IČO dodávateľa
   iCOObjednavatela:
     description: The source column `IČO_objednávateľa`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: IČO objednávateľa
   iCOOrganizacia:
     description: The source column `IČO_organizácia`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: IČO organizácia
   iCOOrganizacie:
     description: The source column `IČO_organizácie`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: IČO organizácie
   iCOPrijimatela:
     description: The source column `IČO_prijímateľa`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: IČO prijímateľa
   iCOSamospravy:
     description: The source column `IČO_samosprávy`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: IČO samosprávy
   iD:
     description: The source column `ID`.
     range: integer
@@ -1574,11 +2015,15 @@ slots:
     description: The source column `ID_školy`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: ID školy
   iDZakazky:
     description: The source column `ID_zákazky`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: ID zákazky
   iDZmluvy:
     description: The source column `ID_zmluvy`.
     annotations:
@@ -1591,16 +2036,22 @@ slots:
     description: The source column `Číslo`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Číslo
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
     slot_uri: https://smartdatamodels.org/dataModel.CPSV-AP/identifier
   identifikacneCislo:
     description: The source column `Identifikačné_číslo`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Identifikačné číslo
   identifikatorKontaktnehoMiest:
     description: The source column `Identifikátor_kontaktného_miest`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Identifikátor kontaktného miest
   images:
     description: The source column `images`.
     range: integer
@@ -1615,69 +2066,97 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Iná
   inaAbs:
     description: The source column `iná__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Iná abs
   index:
     description: The source column `Index_`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Index
   indexEkonomickehoZatazenia:
     description: The source column `Index_ekonomického_zaťaženia___`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Index ekonomického zaťaženia
   indexEkonomickehoZatazeniaOs:
     description: The source column `Index_ekonomického_zaťaženia_os`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Index ekonomického zaťaženia os
   indexEkonomickejZavislostiMl:
     description: The source column `Index_ekonomickej_závislosti_ml`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Index ekonomickej závislosti ml
   indexEkonomickejZavislostiSt:
     description: The source column `Index_ekonomickej_závislosti_st`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Index ekonomickej závislosti st
   indexPotratovostiPercento:
     description: The source column `Index_potratovosti__Percento_`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Index potratovosti (Percento)
   indexRozvodovostiPercento:
     description: The source column `Index_rozvodovosti__Percento_`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Index rozvodovosti (Percento)
   indexStarnutia:
     description: The source column `Index_starnutia____`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Index starnutia
   indexStarnutiaPercento:
     description: The source column `Index_starnutia__Percento_`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Index starnutia (Percento)
   ine:
     description: The source column `iné`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Iné
   ine2:
     description: The source column `iné__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Iné
   ineAbs:
     description: The source column `iné__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Iné abs
   inspireIdL:
     description: The source column `inspireIdL`.
     range: integer
@@ -1691,36 +2170,50 @@ slots:
     description: The source column `Instagram`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Instagram
   iny:
     description: The source column `iný____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Iný
   inyAbs:
     description: The source column `iný__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Iný abs
   iranska:
     description: The source column `iránska____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Iránska
   iranskaAbs:
     description: The source column `iránska__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Iránska abs
   irska:
     description: The source column `írska____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Írska
   irskaAbs:
     description: The source column `írska__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Írska abs
   islam:
     description: The source column `islam____`.
     range: float
@@ -1740,42 +2233,60 @@ slots:
     description: The source column `JIČ_ŽSR`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: JIČ ŽSR
   jazyk:
     description: The source column `Jazyk`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Jazyk
   jazykStudiaSkratka:
     description: The source column `Jazyk_štúdia___skratka`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Jazyk štúdia skratka
   jazykovaSkola:
     description: The source column `Jazyková_škola`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Jazyková škola
   jeKvorova:
     description: The source column `Je_kvórová`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Je kvórová
   jidis:
     description: The source column `jidiš`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Jidiš
   jidis11:
     description: The source column `jidiš11`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Jidiš11
   jidisAleboHebrejsky:
     description: The source column `jidiš_alebo_hebrejský____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Jidiš alebo hebrejský
   jidisAleboHebrejskyAbs:
     description: The source column `jidiš_alebo_hebrejský__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Jidiš alebo hebrejský abs
   kODNUTSObec:
     description: The source column `KOD_NUTS_obec`.
     annotations:
@@ -1800,28 +2311,40 @@ slots:
     description: The source column `Kampaň`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kampaň
   kanadska:
     description: The source column `kanadská____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kanadská
   kanadskaAbs:
     description: The source column `kanadská__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kanadská abs
   kancelaria:
     description: The source column `Kancelaria`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kancelaria
   kategoria:
     description: The source column `Kategória`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kategória
   kategoriaObrazok:
     description: The source column `Kategória_obrázok`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kategória obrázok
   kmenovaSaSZEDUID:
     description: The source column `KmenovaSaSZ_EDUID`.
     range: integer
@@ -1840,129 +2363,187 @@ slots:
     description: The source column `Kód_dňa_v_týždni`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kód dňa v týždni
   kodElementu:
     description: The source column `Kód_elementu`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kód elementu
   kodElementu3:
     description: The source column `Kód_elementu_3`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kód elementu 3
   kodFormyPodnikania:
     description: The source column `Kód_formy_podnikania`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kód formy podnikania
   kodJazyka:
     description: The source column `Kód_jazyka`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kód jazyka
   kodKraja:
     description: The source column `Kód_kraja`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kód kraja
   kodObce:
     description: The source column `Kód_obce`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kód obce
   kodOblasti:
     description: The source column `Kód_oblasti`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kód oblasti
   kodOdboru:
     description: The source column `Kód_odboru`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kód odboru
   kodOdboruOdbor:
     description: The source column `Kód_odboru___odbor`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kód odboru odbor
   kodOkresu:
     description: The source column `Kód_okresu`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kód okresu
   kodOkresuKraja:
     description: The source column `Kód_okresu_kraja`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kód okresu kraja
   kodStatu:
     description: The source column `Kód_štátu`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kód štátu
   kodTypuZriadovatela:
     description: The source column `Kód_typu_zriaďovateľa`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kód typu zriaďovateľa
   komentar:
     description: The source column `Komentár`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Komentár
   komunikacia:
     description: The source column `Komunikácia`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Komunikácia
   kontakt:
     description: The source column `Kontakt`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kontakt
   korejska:
     description: The source column `kórejská____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kórejská
   korejskaAbs:
     description: The source column `kórejská__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kórejská abs
   korejsky:
     description: The source column `kórejský____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kórejský
   korejskyAbs:
     description: The source column `kórejský__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kórejský abs
   kraj:
     description: The source column `Kraj`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kraj
   krajDlhyNazov:
     description: The source column `Kraj_dlhý_názov`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kraj dlhý názov
   krajID:
     description: The source column `Kraj_ID`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kraj ID
   krestanskeZbory:
     description: The source column `Kresťanské_zbory`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kresťanské zbory
   krestanskeZbory2:
     description: The source column `Kresťanské_zbory__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kresťanské zbory
   krestanskeZboryNaSlovensku:
     description: The source column `Kresťanské_zbory_na_Slovensku__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kresťanské zbory na Slovensku
   krestanskeZboryNaSlovensku1:
     description: The source column `Kresťanské_zbory_na_Slovensku_1`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kresťanské zbory na Slovensku 1
   krestanskeZboryNaSlovensku2:
     description: The source column `Kresťanské_zbory_na_Slovensku__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Kresťanské zbory na Slovensku
   lAT:
     description: The source column `LAT`.
     range: float
@@ -2004,11 +2585,15 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ľahko zranení
   lahkoZraneniUcastnici:
     description: The source column `ľahko_zranení_účastníci`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ľahko zranení účastníci
   languages:
     description: The source column `languages`.
     annotations:
@@ -2033,6 +2618,8 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Latitude
   layer:
     description: The source column `layer`.
     annotations:
@@ -2041,17 +2628,23 @@ slots:
     description: The source column `Nazov`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Nazov
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/context.jsonld
     slot_uri: https://smartdatamodels.org/dataModel.Organization/legalName
   legislativnyStav:
     description: The source column `Legislatívny_stav`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Legislatívny stav
   lehotaNaPredkladanie:
     description: The source column `Lehota_na_predkladanie`.
     range: datetime
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Lehota na predkladanie
   licenseKey:
     description: The source column `licenseKey`.
     annotations:
@@ -2060,14 +2653,20 @@ slots:
     description: The source column `Link`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Link
   linkPdf:
     description: The source column `Link_pdf`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Link pdf
   logo:
     description: The source column `Logo`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Logo
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/context.jsonld
     slot_uri: https://smartdatamodels.org/dataModel.PointOfInterest/logo
   lon:
@@ -2080,36 +2679,50 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Longitude
   madarska:
     description: The source column `maďarská____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Maďarská
   madarska2:
     description: The source column `maďarská__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Maďarská
   madarskaAbs:
     description: The source column `maďarská__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Maďarská abs
   madarsky:
     description: The source column `maďarský`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Maďarský
   madarsky3:
     description: The source column `maďarský3`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Maďarský3
   madarskyAbs:
     description: The source column `maďarský__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Maďarský abs
   malZnac:
     description: The source column `mal_znac`.
     range: integer
@@ -2119,104 +2732,150 @@ slots:
     description: The source column `Material`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Material
   materialNosnejKonstrukcie:
     description: The source column `Materiál_nosnej_konštrukcie`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Materiál nosnej konštrukcie
   materialPriepustu:
     description: The source column `Materiál_priepustu`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Materiál priepustu
   medianovyVek:
     description: The source column `Mediánový_vek`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Mediánový vek
   medianovyVekRok:
     description: The source column `Mediánový_vek__Rok_`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Mediánový vek (Rok)
   mena:
     description: The source column `Mena`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Mena
   meno:
     description: The source column `Meno`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Meno
   meraciaStanica:
     description: The source column `Meracia_stanica`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Meracia stanica
   mesto:
     description: The source column `Mesto`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Mesto
   mestoPRACOVISKO:
     description: The source column `Mesto_PRACOVISKO`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Mesto PRACOVISKO
   mestoPoskytovania:
     description: The source column `Mesto_poskytovania`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Mesto poskytovania
   mestoSIDLO:
     description: The source column `Mesto_SÍDLO`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Mesto SÍDLO
   mieraDojcenskejUmrtnostiPro:
     description: The source column `Miera_dojčenskej_úmrtnosti__Pro`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Miera dojčenskej úmrtnosti Pro
   mieraNovorodeneckejUmrtnosti:
     description: The source column `Miera_novorodeneckej_úmrtnosti_`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Miera novorodeneckej úmrtnosti
   mieraPerinatalnejUmrtnostiP:
     description: The source column `Miera_perinatálnej_úmrtnosti__P`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Miera perinatálnej úmrtnosti P
   miestoRealizacieProjektu:
     description: The source column `Miesto_realizácie_projektu`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Miesto realizácie projektu
   miestoRealizacieProjektuKraj:
     description: The source column `Miesto_realizácie_projektu_kraj`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Miesto realizácie projektu kraj
   miestoRealizacieProjektuObec:
     description: The source column `Miesto_realizácie_projektu_obec`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Miesto realizácie projektu obec
   migracneSaldoOsoba:
     description: The source column `Migračné_saldo__Osoba_`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Migračné saldo (Osoba)
   minVyskaPodjazdu:
     description: The source column `Min__výška_podjazdu`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Min výška podjazdu
   moravska:
     description: The source column `moravská____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Moravská
   moravska2:
     description: The source column `moravská__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Moravská
   moravskaAbs:
     description: The source column `moravská__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Moravská abs
   nAZOVVUD:
     description: The source column `NAZOV_VU_D`.
     annotations:
@@ -2262,11 +2921,15 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Náboženská spoločnosť Jehovovi
   nabozenskaSpolocnostJehovovi1:
     description: The source column `Náboženská_spoločnosť_Jehovovi1`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Náboženská spoločnosť Jehovovi1
   nadradenaSaSZEDUID:
     description: The source column `NadradenaSaSZ_EDUID`.
     annotations:
@@ -2280,14 +2943,20 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Najbližší KM
   najvyhodnejsiUchadzac:
     description: The source column `Najvýhodnejší_uchádzač`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Najvýhodnejší uchádzač
   name:
     description: The source column `Miesto`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Miesto
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/context.jsonld
     slot_uri: https://smartdatamodels.org/name
   nameLangua:
@@ -2299,6 +2968,8 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Narodení (Osoba)
   nazov:
     description: The source column `nazov`.
     annotations:
@@ -2307,46 +2978,68 @@ slots:
     description: The source column `Názov_časti`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Názov časti
   nazovDodavatela:
     description: The source column `Názov_dodávateľa`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Názov dodávateľa
   nazovKlubu:
     description: The source column `Názov_klubu`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Názov klubu
   nazovKraja:
     description: The source column `Názov_kraja`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Názov kraja
   nazovObce:
     description: The source column `Názov_obce`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Názov obce
   nazovObjednavatela:
     description: The source column `Názov_objednávateľa`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Názov objednávateľa
   nazovOblasti:
     description: The source column `Názov_oblasti`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Názov oblasti
   nazovOkresu:
     description: The source column `Názov_okresu`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Názov okresu
   nazovPoskytovatela:
     description: The source column `Názov_poskytovateľa`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Názov poskytovateľa
   nazovPrijimatela:
     description: The source column `Názov_prijímateľa`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Názov prijímateľa
   nazovSamospravy:
     description: The source column `Názov_samosprávy`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Názov samosprávy
   nazovSkolyOda:
     description: The source column `nazov_skoly_oda`.
     annotations:
@@ -2359,6 +3052,8 @@ slots:
     description: The source column `Názov_štátu`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Názov štátu
   nazovVU1:
     description: The source column `nazov_VU_1`.
     annotations:
@@ -2367,6 +3062,8 @@ slots:
     description: The source column `Nedeľa`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Nedeľa
   nedost:
     description: The source column `nedost`.
     range: integer
@@ -2385,130 +3082,182 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Nemecká
   nemecka2:
     description: The source column `nemecká__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Nemecká
   nemeckaAbs:
     description: The source column `nemecká__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Nemecká abs
   nemecky:
     description: The source column `nemecký`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Nemecký
   nemecky8:
     description: The source column `nemecký8`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Nemecký8
   nemeckyAbs:
     description: The source column `nemecký__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Nemecký abs
   nezamestnany:
     description: The source column `nezamestnaný____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Nezamestnaný
   nezamestnanyAbs:
     description: The source column `nezamestnaný__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Nezamestnaný abs
   nezistena:
     description: The source column `nezistená____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Nezistená
   nezistena2:
     description: The source column `nezistená__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Nezistená
   nezistenaAbs:
     description: The source column `nezistená__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Nezistená abs
   nezistene:
     description: The source column `nezistené____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Nezistené
   nezistene2:
     description: The source column `nezistené__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Nezistené
   nezisteneAbs:
     description: The source column `nezistené__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Nezistené abs
   nezisteny:
     description: The source column `nezistený`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Nezistený
   nezisteny14:
     description: The source column `nezistený14`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Nezistený14
   nezistenyAbs:
     description: The source column `nezistený__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Nezistený abs
   normalnaZatazitelnostT:
     description: The source column `Normálna_zaťažiteľnosť__t_`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Normálna zaťažiteľnosť (t)
   normanaZatazitelnostT:
     description: The source column `Normána_zaťažiteľnost___t`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Normána zaťažiteľnost t
   novoapostolskaCirkev:
     description: The source column `Novoapoštolská_cirkev`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Novoapoštolská cirkev
   novoapostolskaCirkev2:
     description: The source column `Novoapoštolská_cirkev__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Novoapoštolská cirkev
   novoapostolskaCirkevVSlove1:
     description: The source column `Novoapoštolská_cirkev_v_Slove_1`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Novoapoštolská cirkev v Slove 1
   novoapostolskaCirkevVSlovens:
     description: The source column `Novoapoštolská_cirkev_v_Slovens`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Novoapoštolská cirkev v Slovens
   novoprijatiDo1RocnikaSpo:
     description: The source column `Novoprijatí_do_1__ročníka___spo`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Novoprijatí do 1 ročníka spo
   novoprijatiDo1RocnikaZen:
     description: The source column `Novoprijatí_do_1__ročníka___žen`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Novoprijatí do 1 ročníka žen
   novorodeneckaUmrtnostOsoba:
     description: The source column `Novorodenecká_úmrtnosť__Osoba_`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Novorodenecká úmrtnosť (Osoba)
   nuts:
     description: The source column `nuts`.
     annotations:
@@ -2538,18 +3287,26 @@ slots:
     description: The source column `Obec`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Obec
   obecDlhyNazov:
     description: The source column `Obec_dlhy_nazov`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Obec dlhy nazov
   obecICO:
     description: The source column `Obec_IČO`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Obec IČO
   obecID:
     description: The source column `Obec_ID`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Obec ID
   obecKratkyNazov:
     description: The source column `obec_kratkyNazov`.
     annotations:
@@ -2562,27 +3319,39 @@ slots:
     description: The source column `Obec_NUTS`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Obec NUTS
   obecNazov:
     description: The source column `Obec_názov`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Obec názov
   obecNazovDlhy:
     description: The source column `Obec_názov_dlhý`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Obec názov dlhý
   obecNazovKratky:
     description: The source column `Obec_názov_krátky`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Obec názov krátky
   obecPO:
     description: The source column `Obec__PO_`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Obec (PO)
   obecSTATKOD:
     description: The source column `Obec_STAT_KOD`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Obec STAT KOD
   obnRok:
     description: The source column `obn_rok`.
     annotations:
@@ -2591,15 +3360,21 @@ slots:
     description: The source column `Obrazok_odkaz`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Obrazok odkaz
   obstaravaciaCena:
     description: The source column `Obstarávacia_cena`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Obstarávacia cena
   obstaravatel:
     description: The source column `Obstarávateľ`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Obstarávateľ
   obtiazmost:
     description: The source column `obtiazmost`.
     annotations:
@@ -2608,47 +3383,69 @@ slots:
     description: The source column `Obvod`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Obvod
   odbor:
     description: The source column `Odbor`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Odbor
   odborVycvikAPrax:
     description: The source column `Odbor__výcvik_a_prax_`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Odbor výcvik a prax
   odborVzdelania:
     description: The source column `Odbor_vzdelania`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Odbor vzdelania
   odborneZameranie:
     description: The source column `Odborné_zameranie`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Odborné zameranie
   oficialnyNazov:
     description: The source column `Oficiálny_názov`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Oficiálny názov
   ojedinelaZatazitelnostT:
     description: The source column `Ojedinelá_zaťažiteľnosť__t_`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ojedinelá zaťažiteľnosť (t)
   okres:
     description: The source column `Okres`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Okres
   okresDlhyNazov:
     description: The source column `Okres_dlhy_nazov`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Okres dlhy nazov
   okresID:
     description: The source column `Okres_ID`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Okres ID
   okresKraj:
     description: The source column `Okres_Kraj`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Okres Kraj
   okresLAU1ID:
     description: The source column `Okres_LAU1_ID`.
     annotations:
@@ -2657,32 +3454,46 @@ slots:
     description: The source column `Okres_názov`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Okres názov
   okresPRACOVISKO:
     description: The source column `Okres_PRACOVISKO`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Okres PRACOVISKO
   okresPoskytovania:
     description: The source column `Okres_poskytovania`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Okres poskytovania
   okresSTATKOD:
     description: The source column `Okres_STAT_KOD`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Okres STAT KOD
   onlineKatalog:
     description: The source column `Online_katalóg`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Online katalóg
   opravneneSpolu:
     description: The source column `Oprávnené_spolu`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Oprávnené spolu
   organSamospravy:
     description: The source column `Orgán_samosprávy`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Orgán samosprávy
   organisati:
     description: The source column `organisati`.
     range: integer
@@ -2711,59 +3522,83 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Osoba na rodičovskej dovolenke
   osobaNaRodicovskejDovolenke1:
     description: The source column `osoba_na_rodičovskej_dovolenke1`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Osoba na rodičovskej dovolenke1
   osobaVDomacnosti:
     description: The source column `osoba_v_domácnosti____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Osoba v domácnosti
   osobaVDomacnostiAbs:
     description: The source column `osoba_v_domácnosti__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Osoba v domácnosti abs
   ostatne:
     description: The source column `ostatné`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ostatné
   ostatne13:
     description: The source column `ostatné13`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ostatné13
   ostatne2:
     description: The source column `ostatné__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ostatné
   ostatneANepresneUrceneKre1:
     description: The source column `ostatné_a_nepresne_určené_kre_1`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ostatné a nepresne určené kre 1
   ostatneANepresneUrceneKrest:
     description: The source column `ostatné_a_nepresne_určené_kresť`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ostatné a nepresne určené kresť
   otvoreneDo:
     description: The source column `Otvorené_do`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Otvorené do
   otvoreneOd:
     description: The source column `Otvorené_od`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Otvorené od
   pC:
     description: The source column `P_č_`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: P č
   pHZ:
     description: The source column `PHZ`.
     range: float
@@ -2789,14 +3624,20 @@ slots:
     description: The source column `PSČ_PRACOVISKO`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: PSČ PRACOVISKO
   pSCPoskytovania:
     description: The source column `PSČ_poskytovania`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: PSČ poskytovania
   pSCSIDLO:
     description: The source column `PSČ_SÍDLO`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: PSČ SÍDLO
   parameter:
     description: The source column `parameter`.
     annotations:
@@ -2806,227 +3647,321 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Perinatálna úmrtnosť (Osoba)
   perzsky:
     description: The source column `perzský____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Perzský
   perzskyAbs:
     description: The source column `perzský__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Perzský abs
   photo:
     description: The source column `Photo`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Photo
   piatok:
     description: The source column `Piatok`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Piatok
   platnostOd:
     description: The source column `Platnosť_od`.
     range: datetime
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Platnosť od
   platnostProjektuOd:
     description: The source column `Platnosť_projektu_od`.
     range: datetime
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Platnosť projektu od
   plnoorganizovana:
     description: The source column `Plnoorganizovana`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Plnoorganizovana
   pobytoveTabory:
     description: The source column `Pobytové_tábory`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Pobytové tábory
   pocetAbsolventovDenniIA:
     description: The source column `Počet_absolventov___denní__I__a`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Počet absolventov denní I a
   pocetAbsolventovExterniI:
     description: The source column `Počet_absolventov___externí__I_`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Počet absolventov externí (I)
   pocetDeti:
     description: The source column `Počet_detí`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Počet detí
   pocetDilCelkov:
     description: The source column `Počet_dil__celkov`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Počet dil celkov
   pocetDni:
     description: The source column `Počet_dní`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Počet dní
   pocetKolaji:
     description: The source column `Počet_kolaji`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Počet kolaji
   pocetNehod:
     description: The source column `počet_nehôd`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Počet nehôd
   pocetNehodPodVplyvomAlkoholu:
     description: The source column `počet_nehôd_pod_vplyvom_alkoholu`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Počet nehôd pod vplyvom alkoholu
   pocetNehodVObci:
     description: The source column `počet_nehôd_v_obci`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Počet nehôd v obci
   pocetObyvatelov:
     description: The source column `Pocet_obyvatelov`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Pocet obyvatelov
   pocetObyvatelovSpolu:
     description: The source column `Počet_obyvateľov_spolu`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Počet obyvateľov spolu
   pocetObyvatelstva:
     description: The source column `Počet_obyvateľstva`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Počet obyvateľstva
   pocetOsobPodporujucichPetici:
     description: The source column `Počet_osôb_podporujúcich_petíci`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Počet osôb podporujúcich petíci
   pocetStudentovDenniIAI:
     description: The source column `Počet_študentov___denní__I__a_I`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Počet študentov denní I a I
   pocetStudentovExterniIA:
     description: The source column `Počet_študentov___externí__I__a`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Počet študentov externí I a
   pocetUchadzacov:
     description: The source column `Počet_uchádzačov`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Počet uchádzačov
   pocetUsmrtenychCyklistovKolobezkarov:
     description: The source column `počet_usmrtených_cyklistov_kolobežkárov`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Počet usmrtených cyklistov kolobežkárov
   pocetZaujemcov:
     description: The source column `Počet_záujemcov`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Počet záujemcov
   podielOsobVPoproduktivnomVe:
     description: The source column `Podiel_osôb_v_poproduktívnom_ve`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Podiel osôb v poproduktívnom ve
   podielOsobVPredproduktivnom:
     description: The source column `Podiel_osôb_v_predproduktívnom_`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Podiel osôb v predproduktívnom
   podielOsobVProduktivnomVeku:
     description: The source column `Podiel_osôb_v_produktívnom_veku`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Podiel osôb v produktívnom veku
   pohanstvoAPrirodneDuchovno:
     description: The source column `pohanstvo_a_prírodné_duchovno__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Pohanstvo a prírodné duchovno
   pohanstvoAPrirodneDuchovno1:
     description: The source column `pohanstvo_a_prírodné_duchovno_1`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Pohanstvo a prírodné duchovno 1
   pohanstvoAPrirodneDuchovno2:
     description: The source column `pohanstvo_a_prírodné_duchovno__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Pohanstvo a prírodné duchovno
   pohlavie:
     description: The source column `Pohlavie`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Pohlavie
   polska:
     description: The source column `poľská____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Poľská
   polska2:
     description: The source column `poľská__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Poľská
   polskaAbs:
     description: The source column `poľská__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Poľská abs
   polsky:
     description: The source column `poľský`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Poľský
   polsky9:
     description: The source column `poľský9`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Poľský9
   polskyAbs:
     description: The source column `poľský__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Poľský abs
   pondelok:
     description: The source column `Pondelok`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Pondelok
   ponukaUchadzaca:
     description: The source column `Ponuka_uchádzača`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ponuka uchádzača
   popisDotacnehoTitulu:
     description: The source column `Popis_dotačného_titulu`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Popis dotačného titulu
   poproduktivny:
     description: The source column `poproduktívny`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Poproduktívny
   poproduktivnyVek:
     description: The source column `Poproduktívny_vek____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Poproduktívny vek
   poproduktivnyVekPocetObyvat:
     description: The source column `Poproduktívny_vek__počet_obyvat`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Poproduktívny vek počet obyvat
   poslanec:
     description: The source column `Poslanec`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Poslanec
   potencial:
     description: The source column `potencial`.
     annotations:
@@ -3036,6 +3971,8 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Potraty Počet v jednotkách
   povrch:
     description: The source column `povrch`.
     annotations:
@@ -3044,51 +3981,73 @@ slots:
     description: The source column `Povrch_vozovky`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Povrch vozovky
   pozadovanaDotacia:
     description: The source column `Požadovaná_dotácia`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Požadovaná dotácia
   pozicia:
     description: The source column `Pozícia`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Pozícia
   pozn:
     description: The source column `Pozn`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Pozn
   poznamka:
     description: The source column `Poznámka`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Poznámka
   poznamky:
     description: The source column `Poznámky`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Poznámky
   pracujuciDochodca:
     description: The source column `pracujúci_dôchodca____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Pracujúci dôchodca
   pracujuciDochodcaAbs:
     description: The source column `pracujúci_dôchodca__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Pracujúci dôchodca abs
   pracujuciOkremDochodcov:
     description: The source column `pracujúci__okrem_dôchodcov_____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Pracujúci okrem dôchodcov
   pracujuciOkremDochodcovAb:
     description: The source column `pracujúci__okrem_dôchodcov___ab`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Pracujúci okrem dôchodcov ab
   pravnaForma:
     description: The source column `Právna_forma`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Právna forma
   pravnaFormaKod:
     description: The source column `PravnaFormaKod`.
     annotations:
@@ -3098,21 +4057,29 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Pravoslávna cirkev
   pravoslavnaCirkev2:
     description: The source column `Pravoslávna_cirkev__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Pravoslávna cirkev
   pravoslavnaCirkevNaSlovens1:
     description: The source column `Pravoslávna_cirkev_na_Slovens_1`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Pravoslávna cirkev na Slovens 1
   pravoslavnaCirkevNaSlovensku:
     description: The source column `Pravoslávna_cirkev_na_Slovensku`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Pravoslávna cirkev na Slovensku
   predchodcaSaSZEDUID:
     description: The source column `PredchodcaSaSZ_EDUID`.
     annotations:
@@ -3125,75 +4092,107 @@ slots:
     description: The source column `Predmet_faktúry`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Predmet faktúry
   predmetObjednavky:
     description: The source column `Predmet_objednávky`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Predmet objednávky
   predmetPremostenia:
     description: The source column `Predmet_premostenia`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Predmet premostenia
   predpokladanaHodnota:
     description: The source column `Predpokladaná_hodnota`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Predpokladaná hodnota
   predproduktivny:
     description: The source column `predproduktívny`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Predproduktívny
   predproduktivnyVek:
     description: The source column `Predproduktívny_vek____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Predproduktívny vek
   predproduktivnyVekPocetObyv:
     description: The source column `Predproduktívny_vek__počet_obyv`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Predproduktívny vek počet obyv
   preferredLabel:
     description: The source column `Názov_organizácie`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Názov organizácie
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
     slot_uri: https://smartdatamodels.org/dataModel.CPSV-AP/preferredLabel
   prevadzkovatel:
     description: The source column `Prevádzkovateľ`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Prevádzkovateľ
   priciny:
     description: The source column `Príčiny`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Príčiny
   priemernyVek:
     description: The source column `Priemerný_vek`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Priemerný vek
   priemernyVekObyvatelaRok:
     description: The source column `Priemerný_vek_obyvateľa__Rok_`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Priemerný vek obyvateľa (Rok)
   priezvisko:
     description: The source column `Priezvisko`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Priezvisko
   prijemcaKapitalovychPrijmov:
     description: The source column `príjemca_kapitálových_príjmov__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Príjemca kapitálových príjmov
   prijemcaKapitalovychPrijmov1:
     description: The source column `príjemca_kapitálových_príjmov_1`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Príjemca kapitálových príjmov 1
   priloha:
     description: The source column `Príloha`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Príloha
   primaryIma:
     description: The source column `primaryIma`.
     annotations:
@@ -3203,50 +4202,70 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Prípr na OU
   pripravny8Spolu:
     description: The source column `Prípravný___8____spolu`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Prípravný 8 spolu
   pripravny8Zeny:
     description: The source column `Prípravný___8____ženy`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Prípravný 8 ženy
   prirodzenyPrirastokObyvatelst:
     description: The source column `Prirodzený_prírastok_obyvateľst`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Prirodzený prírastok obyvateľst
   pristahovaniNaTrvalyPobytO:
     description: The source column `Prisťahovaní_na_trvalý_pobyt__O`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Prisťahovaní na trvalý pobyt O
   priznak:
     description: The source column `Priznak`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Priznak
   produktivny:
     description: The source column `produktívny`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Produktívny
   produktivnyVek:
     description: The source column `Produktívny_vek____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Produktívny vek
   produktivnyVekPocetObyvatel:
     description: The source column `Produktívny_vek__počet_obyvateľ`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Produktívny vek počet obyvateľ
   prveDorucenie:
     description: The source column `Prvé_doručenie`.
     range: date
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Prvé doručenie
   publishedA:
     description: The source column `publishedA`.
     range: datetime
@@ -3262,11 +4281,15 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rakúska
   rakuskaAbs:
     description: The source column `rakúska__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rakúska abs
   rankingPer:
     description: The source column `rankingPer`.
     range: integer
@@ -3277,21 +4300,29 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Reformovaná kresťanská cirkev
   reformovanaKrestanskaCirkev1:
     description: The source column `Reformovaná_kresťanská_cirkev_1`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Reformovaná kresťanská cirkev 1
   reformovanaKrestanskaCirkev2:
     description: The source column `Reformovaná_kresťanská_cirkev__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Reformovaná kresťanská cirkev
   reformovanaKrestanskaCirkevN:
     description: The source column `Reformovaná_kresťanská_cirkev_n`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Reformovaná kresťanská cirkev n
   relatedZ1:
     description: The source column `relatedZ_1`.
     annotations:
@@ -3304,46 +4335,66 @@ slots:
     description: The source column `Rezort`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rezort
   riaditel:
     description: The source column `Riaditeľ`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Riaditeľ
   riaditelEmail:
     description: The source column `Riaditeľ___email`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Riaditeľ email
   riaditelMobilnyTelefon:
     description: The source column `Riaditeľ___mobilný_telefón`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Riaditeľ mobilný telefón
   riaditelPevnaLinka:
     description: The source column `Riaditeľ___pevná_linka`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Riaditeľ pevná linka
   riaditelPracMobil:
     description: The source column `Riaditeľ___prac__mobil`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Riaditeľ prac mobil
   rimskokatolickaCirkev:
     description: The source column `Rímskokatolícka_cirkev`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rímskokatolícka cirkev
   rimskokatolickaCirkev2:
     description: The source column `Rímskokatolícka_cirkev__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rímskokatolícka cirkev
   rimskokatolickaCirkevVSlov1:
     description: The source column `Rímskokatolícka_cirkev_v_Slov_1`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rímskokatolícka cirkev v Slov 1
   rimskokatolickaCirkevVSloven:
     description: The source column `Rímskokatolícka_cirkev_v_Sloven`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rímskokatolícka cirkev v Sloven
   rkmDo1:
     description: The source column `rkm_do_1`.
     range: float
@@ -3358,16 +4409,22 @@ slots:
     description: The source column `Rok`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rok
   rokKampan:
     description: The source column `Rok___kampaň`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rok kampaň
   rokKonstrukcie:
     description: The source column `Rok_konštrukcie`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rok konštrukcie
   rokStavby:
     description: The source column `rok_stavby`.
     range: integer
@@ -3377,154 +4434,216 @@ slots:
     description: The source column `Rok_text`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rok text
   rokZaradenia:
     description: The source column `Rok_zaradenia`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rok zaradenia
   rokZasadnejRekonstrukcie:
     description: The source column `Rok_zásadnej_rekonštrukcie`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rok zásadnej rekonštrukcie
   romska:
     description: The source column `rómska____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rómska
   romska2:
     description: The source column `rómska__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rómska
   romskaAbs:
     description: The source column `rómska__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rómska abs
   romsky:
     description: The source column `rómsky`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rómsky
   romsky4:
     description: The source column `rómsky4`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rómsky4
   romskyAbs:
     description: The source column `rómsky__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rómsky abs
   rozdielNaVratenie:
     description: The source column `Rozdiel_na_vrátenie`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rozdiel na vrátenie
   rozpocet:
     description: The source column `Rozpočet`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rozpočet
   rozpocetAktualny:
     description: The source column `Rozpočet_aktuálny`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rozpočet aktuálny
   rozsahUzemiaProjektu:
     description: The source column `Rozsah_územia_projektu`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rozsah územia projektu
   rozvedenyRozvedena:
     description: The source column `rozvedený__rozvedená____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rozvedený rozvedená
   rozvedenyRozvedenaAbs:
     description: The source column `rozvedený__rozvedená__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rozvedený rozvedená abs
   rozvodyPocetVJednotkach:
     description: The source column `Rozvody__Počet_v_jednotkách_`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rozvody Počet v jednotkách
   rumunska:
     description: The source column `rumunská____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rumunská
   rumunskaAbs:
     description: The source column `rumunská__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rumunská abs
   rumunsky:
     description: The source column `rumunský____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rumunský
   rumunskyAbs:
     description: The source column `rumunský__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rumunský abs
   rusinska:
     description: The source column `rusínska____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rusínska
   rusinska2:
     description: The source column `rusínska__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rusínska
   rusinskaAbs:
     description: The source column `rusínska__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rusínska abs
   rusinsky:
     description: The source column `rusínsky`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rusínsky
   rusinsky5:
     description: The source column `rusínsky5`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rusínsky5
   rusinskyAbs:
     description: The source column `rusínsky__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Rusínsky abs
   ruska:
     description: The source column `ruská____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ruská
   ruska2:
     description: The source column `ruská__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ruská
   ruskaAbs:
     description: The source column `ruská__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ruská abs
   rusky:
     description: The source column `ruský____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ruský
   ruskyAbs:
     description: The source column `ruský__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ruský abs
   sOI:
     description: The source column `SOI`.
     range: integer
@@ -3535,11 +4654,15 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: ŠR SR
   sRSRSucet:
     description: The source column `ŠR_SR___súčet`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: ŠR SR súčet
   sTATKODObec:
     description: The source column `STAT_KOD_obec`.
     annotations:
@@ -3557,15 +4680,21 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: SUM Čerpanie spolu
   schvalenaVyskaDotacie:
     description: The source column `Schválená_výška_dotácie`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Schválená výška dotácie
   scitac:
     description: The source column `Sčítač`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Sčítač
   sektorOvZPUpraveny:
     description: The source column `Sektor_OvZP_upraveny`.
     annotations:
@@ -3578,39 +4707,57 @@ slots:
     description: The source column `Sídlo`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Sídlo
   sidloDodavatela:
     description: The source column `Sídlo_dodávateľa`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Sídlo dodávateľa
   sidloObjednavatela:
     description: The source column `Sídlo_objednávateľa`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Sídlo objednávateľa
   sidloPoskytovatela:
     description: The source column `Sídlo_poskytovateľa`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Sídlo poskytovateľa
   sidloPrevadzkovatela:
     description: The source column `Sídlo_prevádzkovateľa`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Sídlo prevádzkovateľa
   skodaVEUR:
     description: The source column `Škoda_v_EUR`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Škoda v EUR
   skola:
     description: The source column `Škola`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Škola
   skolskaJedalen:
     description: The source column `Školská_jedáleň`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Školská jedáleň
   skolskyInternat:
     description: The source column `Školský_internát`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Školský internát
   skupina:
     description: The source column `skupina`.
     range: float
@@ -3620,11 +4767,15 @@ slots:
     description: The source column `Skupina_odborov_vzdelania`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Skupina odborov vzdelania
   skutocneCerpanie:
     description: The source column `Skutočné_čerpanie`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Skutočné čerpanie
   sliezska:
     description: The source column `sliezska____`.
     range: float
@@ -3640,68 +4791,96 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Slobodný slobodná
   slobodnySlobodnaAbs:
     description: The source column `slobodný__slobodná__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Slobodný slobodná abs
   slovenska:
     description: The source column `slovenská____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Slovenská
   slovenska2:
     description: The source column `slovenská__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Slovenská
   slovenskaAbs:
     description: The source column `slovenská__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Slovenská abs
   slovensky:
     description: The source column `slovenský`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Slovenský
   slovensky2:
     description: The source column `slovenský2`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Slovenský2
   slovenskyAbs:
     description: The source column `slovenský__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Slovenský abs
   slovenskyPosunkovyJazyk:
     description: The source column `slovenský_posunkový_jazyk____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Slovenský posunkový jazyk
   slovenskyPosunkovyJazykAbs:
     description: The source column `slovenský_posunkový_jazyk__abs_`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Slovenský posunkový jazyk (abs)
   smerovePomery:
     description: The source column `Smerové_pomery`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Smerové pomery
   sobasePocetVJednotkach:
     description: The source column `Sobáše__Počet_v_jednotkách_`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Sobáše Počet v jednotkách
   sobota:
     description: The source column `Sobota`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Sobota
   socialneZodpovedneObstaravani:
     description: The source column `Sociálne_zodpovedné_obstarávani`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Sociálne zodpovedné obstarávani
   sourceCreatedAt:
     description: The source column `createdAt`.
     range: datetime
@@ -3720,16 +4899,22 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Španielsky
   spanielskyAbs:
     description: The source column `španielsky__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Španielsky abs
   spatial:
     description: The source column `Obec`.
     multivalued: true
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Obec
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
     slot_uri: https://smartdatamodels.org/dataModel.CPSV-AP/spatial
   specialise:
@@ -3740,15 +4925,21 @@ slots:
     description: The source column `Spoločensky_zodpovedné_verejné_`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Spoločensky zodpovedné verejné
   spolu:
     description: The source column `Spolu`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Spolu
   sposobVybavenia:
     description: The source column `Spôsob_vybavenia`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Spôsob vybavenia
   spr:
     description: The source column `spr`.
     annotations:
@@ -3761,81 +4952,115 @@ slots:
     description: The source column `Správca_mostu`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Správca mostu
   spravcaUseku:
     description: The source column `Správca_úseku`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Správca úseku
   srbska:
     description: The source column `srbská____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Srbská
   srbska2:
     description: The source column `srbská__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Srbská
   srbskaAbs:
     description: The source column `srbská__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Srbská abs
   srbsky:
     description: The source column `srbský____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Srbský
   srbskyAbs:
     description: The source column `srbský__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Srbský abs
   standardnaDojcenskaUmrtnost:
     description: The source column `Štandardná_dojčenská_úmrtnosť__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Štandardná dojčenská úmrtnosť
   standardnaNovorodeneckaUmrtno:
     description: The source column `Štandardná_novorodenecká_úmrtno`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Štandardná novorodenecká úmrtno
   starokatolickaCirkev:
     description: The source column `Starokatolícka_cirkev`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Starokatolícka cirkev
   starokatolickaCirkev2:
     description: The source column `Starokatolícka_cirkev__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Starokatolícka cirkev
   starokatolickaCirkevNaSlov1:
     description: The source column `Starokatolícka_cirkev_na_Slov_1`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Starokatolícka cirkev na Slov 1
   starokatolickaCirkevNaSloven:
     description: The source column `Starokatolícka_cirkev_na_Sloven`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Starokatolícka cirkev na Sloven
   starostaMeno:
     description: The source column `Starosta_meno`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Starosta meno
   starostaPriezvisko:
     description: The source column `Starosta_priezvisko`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Starosta priezvisko
   statutari:
     description: The source column `Statutari`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Statutari
   statutarnyZastupca:
     description: The source column `Štatutárny_zástupca`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Štatutárny zástupca
   stav:
     description: The source column `stav`.
     annotations:
@@ -3844,29 +5069,41 @@ slots:
     description: The source column `Stav_finan__vyúčtovania`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Stav finan vyúčtovania
   stavTrvaleByvajucehoObyvat1:
     description: The source column `Stav_trvale_bývajúceho_obyvat_1`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Stav trvale bývajúceho obyvat 1
   stavTrvaleByvajucehoObyvat2:
     description: The source column `Stav_trvale_bývajúceho_obyvat_2`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Stav trvale bývajúceho obyvat 2
   stavTrvaleByvajucehoObyvatel:
     description: The source column `Stav_trvale_bývajúceho_obyvateľ`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Stav trvale bývajúceho obyvateľ
   stavZiadosti:
     description: The source column `Stav_žiadosti`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Stav žiadosti
   stavebnoTechnickyStav:
     description: The source column `Stavebno_technický_stav`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Stavebno technický stav
   stlpEx:
     description: The source column `stlp_ex`.
     range: integer
@@ -3889,16 +5126,22 @@ slots:
     description: The source column `Streda`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Streda
   stredneOdborneUcnovskeVz1:
     description: The source column `stredné_odborné__učňovské__vz_1`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Stredné odborné učňovské vz 1
   stredneOdborneUcnovskeVzde:
     description: The source column `stredné_odborné__učňovské__vzde`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Stredné odborné učňovské vzde
   streetAddr:
     description: The source column `streetAddr`.
     annotations:
@@ -3908,177 +5151,249 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Študent vysokej školy
   studentVysokejSkolyAbs:
     description: The source column `študent_vysokej_školy__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Študent vysokej školy abs
   stupenVzdelania:
     description: The source column `Stupeň_vzdelania`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Stupeň vzdelania
   stvrtok:
     description: The source column `Štvrtok`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Štvrtok
   sucetZAlbanskyAbs:
     description: The source column `Súčet_z_albánsky__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z albánsky abs
   sucetZAnglickyAbs:
     description: The source column `Súčet_z_anglický__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z anglický abs
   sucetZArabskyAbs:
     description: The source column `Súčet_z_arabský__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z arabský abs
   sucetZBulharskyAbs:
     description: The source column `Súčet_z_bulharský__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z bulharský abs
   sucetZCeskyAbs:
     description: The source column `Súčet_z_český__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z český abs
   sucetZChorvatskyAbs:
     description: The source column `Súčet_z_chorvátsky__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z chorvátsky abs
   sucetZCinskyAbs:
     description: The source column `Súčet_z_čínsky__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z čínsky abs
   sucetZFrancuzskyAbs:
     description: The source column `Súčet_z_francúzsky__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z francúzsky abs
   sucetZInyAbs:
     description: The source column `Súčet_z_iný__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z iný abs
   sucetZJidisAleboHebrejsky:
     description: The source column `Súčet_z_jidiš_alebo_hebrejský__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z jidiš alebo hebrejský
   sucetZKorejskyAbs:
     description: The source column `Súčet_z_kórejský__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z kórejský abs
   sucetZMadarskyAbs:
     description: The source column `Súčet_z_maďarský__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z maďarský abs
   sucetZNemeckyAbs:
     description: The source column `Súčet_z_nemecký__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z nemecký abs
   sucetZNezistenyAbs:
     description: The source column `Súčet_z_nezistený__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z nezistený abs
   sucetZPerzskyAbs:
     description: The source column `Súčet_z_perzský__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z perzský abs
   sucetZPolskyAbs:
     description: The source column `Súčet_z_poľský__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z poľský abs
   sucetZRomskyAbs:
     description: The source column `Súčet_z_rómsky__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z rómsky abs
   sucetZRumunskyAbs:
     description: The source column `Súčet_z_rumunský__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z rumunský abs
   sucetZRusinskyAbs:
     description: The source column `Súčet_z_rusínsky__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z rusínsky abs
   sucetZRuskyAbs:
     description: The source column `Súčet_z_ruský__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z ruský abs
   sucetZSlovenskyAbs:
     description: The source column `Súčet_z_slovenský__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z slovenský abs
   sucetZSlovenskyPosunkovyJaz:
     description: The source column `Súčet_z_slovenský_posunkový_jaz`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z slovenský posunkový jaz
   sucetZSpanielskyAbs:
     description: The source column `Súčet_z_španielsky__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z španielsky abs
   sucetZSrbskyAbs:
     description: The source column `Súčet_z_srbský__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z srbský abs
   sucetZTalianskyAbs:
     description: The source column `Súčet_z_taliansky__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z taliansky abs
   sucetZTureckyAbs:
     description: The source column `Súčet_z_turecký__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z turecký abs
   sucetZUkrajinskyAbs:
     description: The source column `Súčet_z_ukrajinský__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z ukrajinský abs
   sucetZVietnamskyAbs:
     description: The source column `Súčet_z_vietnamský__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Súčet z vietnamský abs
   suchoStupenOhrozenia:
     description: The source column `Sucho__stupeň_ohrozenia`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Sucho stupeň ohrozenia
   suma:
     description: The source column `Suma`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Suma
   sumaSpoluVEUR:
     description: The source column `Suma_spolu_v_EUR`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Suma spolu v EUR
   sumaVEUR:
     description: The source column `Suma_v_EUR`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Suma v EUR
   supisneCislo:
     description: The source column `SupisneCislo`.
     annotations:
@@ -4113,27 +5428,39 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ťažko zranení
   tazkoZraneniUcastnici:
     description: The source column `ťažko_zranení_účastníci`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ťažko zranení účastníci
   telefon:
     description: The source column `Telefon`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Telefon
   telefonZariadeniaVerejny:
     description: The source column `Telefón_zariadenia_verejný`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Telefón zariadenia verejný
   telefonneCisloVsobecne1:
     description: The source column `Telefónne_číslo___všobecné_1`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Telefónne číslo všobecné 1
   telefonneCisloVsobecne2:
     description: The source column `Telefónne_číslo___všobecné_2`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Telefónne číslo všobecné 2
   telephone:
     description: The source column `telephone`.
     annotations:
@@ -4144,6 +5471,8 @@ slots:
     description: The source column `Text`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Text
   thematic1:
     description: The source column `thematic_1`.
     annotations:
@@ -4162,10 +5491,14 @@ slots:
     description: The source column `Titul_pred_menom`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Titul pred menom
   titulZaMenom:
     description: The source column `Titul_za_menom`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Titul za menom
   trasaFarb:
     description: The source column `trasa_farb`.
     annotations:
@@ -4182,35 +5515,49 @@ slots:
     description: The source column `Trieda_cesty`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Trieda cesty
   triedaPK:
     description: The source column `Trieda_PK`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Trieda PK
   trvaloByvajuceObyvatelstvoSp:
     description: The source column `Trvalo_bývajúce_obyvateľstvo_sp`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Trvalo bývajúce obyvateľstvo sp
   turecka:
     description: The source column `turecká____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Turecká
   tureckaAbs:
     description: The source column `turecká__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Turecká abs
   turecky:
     description: The source column `turecký____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Turecký
   tureckyAbs:
     description: The source column `turecký__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Turecký abs
   typ:
     description: The source column `typ`.
     annotations:
@@ -4223,6 +5570,8 @@ slots:
     description: The source column `Typ_dotácie`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Typ dotácie
   typElokovanehoPracoviska:
     description: The source column `TypElokovanehoPracoviska`.
     annotations:
@@ -4231,10 +5580,14 @@ slots:
     description: The source column `Typ_komodity`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Typ komodity
   typKomunikacie:
     description: The source column `Typ_komunikácie`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Typ komunikácie
   typObce:
     description: The source column `typ_obce`.
     annotations:
@@ -4243,10 +5596,14 @@ slots:
     description: The source column `Typ_pamiatky`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Typ pamiatky
   typPodjazdu:
     description: The source column `Typ_podjazdu`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Typ podjazdu
   typSaSZ:
     description: The source column `TypSaSZ`.
     annotations:
@@ -4263,18 +5620,26 @@ slots:
     description: The source column `Typ_Spravcu`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Typ Spravcu
   typTabora:
     description: The source column `Typ_tábora`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Typ tábora
   typUniverzity:
     description: The source column `Typ_univerzity`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Typ univerzity
   typVydavku:
     description: The source column `Typ_výdavku`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Typ výdavku
   uRL:
     description: The source column `URL`.
     annotations:
@@ -4287,11 +5652,15 @@ slots:
     description: The source column `Účinnosť_do`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Účinnosť do
   ucinnostOd:
     description: The source column `Účinnosť_od`.
     range: datetime
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Účinnosť od
   ukazovatel:
     description: The source column `ukazovatel`.
     annotations:
@@ -4301,79 +5670,113 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ukončené tehotenstvá Počet v j
   ukrajinska:
     description: The source column `ukrajinská____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ukrajinská
   ukrajinska2:
     description: The source column `ukrajinská__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ukrajinská
   ukrajinskaAbs:
     description: The source column `ukrajinská__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ukrajinská abs
   ukrajinsky:
     description: The source column `ukrajinský`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ukrajinský
   ukrajinsky6:
     description: The source column `ukrajinský6`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ukrajinský6
   ukrajinskyAbs:
     description: The source column `ukrajinský__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ukrajinský abs
   ulica:
     description: The source column `Ulica`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ulica
   ulicaACislo:
     description: The source column `Ulica_a_cislo`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ulica a cislo
   ulicaACisloDomu:
     description: The source column `Ulica_a_číslo_domu`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ulica a číslo domu
   ulicaCisloPRACOVISKO:
     description: The source column `Ulica_číslo_PRACOVISKO`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ulica číslo PRACOVISKO
   ulicaCisloSIDLO:
     description: The source column `Ulica_číslo_SÍDLO`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ulica číslo SÍDLO
   ulicaPoskytovania:
     description: The source column `Ulica_poskytovania`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ulica poskytovania
   univerzita:
     description: The source column `Univerzita`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Univerzita
   uplneStredneVzdelanieSMa1:
     description: The source column `úplné_stredné_vzdelanie__s_ma_1`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Úplné stredné vzdelanie s ma 1
   uplneStredneVzdelanieSMatu:
     description: The source column `úplné_stredné_vzdelanie__s_matu`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Úplné stredné vzdelanie s matu
   upravene:
     description: The source column `Upravené`.
     range: datetime
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Upravené
   uradOvZPICO:
     description: The source column `Úrad_OvZP_IČO`.
     annotations:
@@ -4386,30 +5789,42 @@ slots:
     description: The source column `Úroveň`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Úroveň
   usmrteni:
     description: The source column `Usmrtení`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Usmrtení
   usmrteniUcastnici:
     description: The source column `usmrtení_účastníci`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Usmrtení účastníci
   ustrednyZvazZidovskychNabo1:
     description: The source column `Ústredný_zväz_židovských_nábo_1`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ústredný zväz židovských nábo 1
   ustrednyZvazZidovskychNaboze:
     description: The source column `Ústredný_zväz_židovských_nábože`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ústredný zväz židovských nábože
   utorok:
     description: The source column `Utorok`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Utorok
   utvarOvZP:
     description: The source column `Útvar_OvZP`.
     annotations:
@@ -4418,14 +5833,20 @@ slots:
     description: The source column `Územie`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Územie
   uzemnaJednotka:
     description: The source column `Územná_jednotka`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Územná jednotka
   vSuladeSPrioritamiPoskytovaniaDotacii:
     description: The source column `V_súlade_s_prioritami_poskytovania_dotácií`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: V súlade s prioritami poskytovania dotácií
   vYMERA:
     description: The source column `VYMERA`.
     range: float
@@ -4449,130 +5870,186 @@ slots:
     description: The source column `Vecná_oblasť`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Vecná oblasť
   verejnyEmail:
     description: The source column `Verejný_email`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Verejný email
   verejnyTelefon:
     description: The source column `Verejný_telefón`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Verejný telefón
   vietnamska:
     description: The source column `vietnamská____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Vietnamská
   vietnamskaAbs:
     description: The source column `vietnamská__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Vietnamská abs
   vietnamsky:
     description: The source column `vietnamský____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Vietnamský
   vietnamskyAbs:
     description: The source column `vietnamský__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Vietnamský abs
   vlastnik:
     description: The source column `Vlastník`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Vlastník
   vlastnikMostu:
     description: The source column `Vlastník_mostu`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Vlastník mostu
   vlastnikUseku:
     description: The source column `Vlastník_úseku`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Vlastník úseku
   voFunkciiDo:
     description: The source column `Vo_funkcii_do`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Vo funkcii do
   voFunkciiOd:
     description: The source column `Vo_funkcii_od`.
     range: datetime
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Vo funkcii od
   volebneObdobie:
     description: The source column `Volebné_obdobie`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Volebné obdobie
   vratenaNedocerpanaCastDotacieDna:
     description: The source column `Vrátená_nedočerpaná_časť_dotácie_dňa`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Vrátená nedočerpaná časť dotácie dňa
   vybavovatelPeticie:
     description: The source column `Vybavovateľ_petície`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Vybavovateľ petície
   vydajnaSkolskaJedalen:
     description: The source column `Výdajná_školská_jedáleň`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Výdajná školská jedáleň
   vyhradnaZatazitelnostT:
     description: The source column `Výhradná_zaťažiteľnosť___t`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Výhradná zaťažiteľnosť t
   vynimocnaZatazitelnostT:
     description: The source column `Výnimočná_zaťažiteľnosť___t`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Výnimočná zaťažiteľnosť t
   vyplatenaSumaNa1Obyvatela:
     description: The source column `Vyplatená_suma_na_1_obyvateľa`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Vyplatená suma na 1 obyvateľa
   vyplatenaSumaSpolu:
     description: The source column `Vyplatená_suma_spolu`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Vyplatená suma spolu
   vyplatenaSumaSpoluSucet:
     description: The source column `Vyplatená_suma_spolu___súčet`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Vyplatená suma spolu súčet
   vysokoskolskeVzdelanie:
     description: The source column `vysokoškolské_vzdelanie____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Vysokoškolské vzdelanie
   vysokoskolskeVzdelanieAbs:
     description: The source column `vysokoškolské_vzdelanie__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Vysokoškolské vzdelanie abs
   vyssieOdborneVzdelanie:
     description: The source column `vyššie_odborné_vzdelanie____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Vyššie odborné vzdelanie
   vyssieOdborneVzdelanieAbs:
     description: The source column `vyššie_odborné_vzdelanie__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Vyššie odborné vzdelanie abs
   vystahovaniZTrvalehoPobytu:
     description: The source column `Vysťahovaní_z_trvalého_pobytu__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Vysťahovaní z trvalého pobytu
   vytvorene:
     description: The source column `Vytvorené`.
     range: datetime
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Vytvorené
   vytvoreny:
     description: The source column `Vytvorený`.
     range: date
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Vytvorený
   vyucovaciJazyk:
     description: The source column `VyucovaciJazyk`.
     annotations:
@@ -4581,6 +6058,8 @@ slots:
     description: The source column `Web`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Web
   webAddress:
     description: The source column `webAddress`.
     annotations:
@@ -4589,10 +6068,14 @@ slots:
     description: The source column `web_stránka`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Web stránka
   webstranka:
     description: The source column `Webstránka`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Webstránka
   wiseEvolut:
     description: The source column `wiseEvolut`.
     annotations:
@@ -4616,31 +6099,45 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Základné vzdelanie
   zakladneVzdelanieAbs:
     description: The source column `základné_vzdelanie__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Základné vzdelanie abs
   zasadnutie:
     description: The source column `Zasadnutie`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Zasadnutie
   zatazitelnostNaJednuNapravu:
     description: The source column `Zaťažiteľnosť_na_jednu_nápravu_`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Zaťažiteľnosť na jednu nápravu
   zauzivanyNazov:
     description: The source column `Zaužívaný_názov`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Zaužívaný názov
   zauzivanyNazovKratky:
     description: The source column `Zaužívaný_názov_krátky`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Zaužívaný názov krátky
   zauzivanyNazovUpraveny:
     description: The source column `Zaužívaný_názov_upravený`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Zaužívaný názov upravený
   zdroj:
     description: The source column `zdroj`.
     annotations:
@@ -4649,69 +6146,97 @@ slots:
     description: The source column `Zdroj_Názov`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Zdroj Názov
   zeleneObstaravanie:
     description: The source column `Zelené_obstarávanie`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Zelené obstarávanie
   zenatyVydata:
     description: The source column `ženatý__vydatá____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ženatý vydatá
   zenatyVydataAbs:
     description: The source column `ženatý__vydatá__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Ženatý vydatá abs
   ziadatel:
     description: The source column `Žiadateľ`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Žiadateľ
   ziakStrednejSkoly:
     description: The source column `žiak_strednej_školy____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Žiak strednej školy
   ziakStrednejSkolyAbs:
     description: The source column `žiak_strednej_školy__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Žiak strednej školy abs
   ziakZakladnejSkoly:
     description: The source column `žiak_základnej_školy____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Žiak základnej školy
   ziakZakladnejSkolyAbs:
     description: The source column `žiak_základnej_školy__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Žiak základnej školy abs
   zidovska:
     description: The source column `židovská____`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Židovská
   zidovska2:
     description: The source column `židovská__`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Židovská
   zidovskaAbs:
     description: The source column `židovská__abs__`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Židovská abs
   zidovskaObecNaSlovenskuZ1:
     description: The source column `Židovská_obec_na_Slovensku__ž_1`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Židovská obec na Slovensku ž 1
   zidovskaObecNaSlovenskuZid:
     description: The source column `Židovská_obec_na_Slovensku__žid`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Židovská obec na Slovensku žid
   zipcode:
     description: The source column `zipcode`.
     range: integer
@@ -4722,15 +6247,21 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Živonarodení (Osoba)
   znecistujucaLatka:
     description: The source column `Znečisťujúca_látka`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Znečisťujúca látka
   zomretiOsoba:
     description: The source column `Zomretí__Osoba_`.
     range: float
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Zomretí (Osoba)
   zoneType:
     description: The source column `zoneType`.
     annotations:
@@ -4739,24 +6270,34 @@ slots:
     description: The source column `Zriaďovateľ`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Zriaďovateľ
   zriadovatelEDUID:
     description: The source column `Zriadovatel_EDUID`.
     range: integer
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Zriadovatel EDUID
   zriadovatelNazov:
     description: The source column `Zriadovatel_Nazov`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Zriadovatel Nazov
   zriadovatelTyp:
     description: The source column `Zriadovatel_Typ`.
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Zriadovatel Typ
   zverejnenieVysledkuVybavenia:
     description: The source column `Zverejnenie_výsledku_vybavenia`.
     range: date
     annotations:
       ngsi_ld_kind: Property
+      label:
+        sk: Zverejnenie výsledku vybavenia
   status:
     description: '`archived` on every entity: the model requires it and no column holds it.'
     annotations:

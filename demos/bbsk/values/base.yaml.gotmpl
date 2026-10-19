@@ -1,0 +1,5 @@
+{{- $pg := (readFile "../../../components/postgres/images.yaml" | fromYaml).postgres.cluster }}
+host: {{ .Values.host }}
+ckanService: ckan-demo-bbsk
+postgres:
+  image: {{ printf "%s:%s@%s" $pg.repository $pg.tag $pg.digest }}

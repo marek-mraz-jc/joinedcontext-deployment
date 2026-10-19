@@ -39,6 +39,10 @@ NEUTRAL = {
     # demo disclaimer, an imprint): words only a deployment knows, so they are values too.
     "tagline": "",
     "footerLines": [],
+    # A line across the top of every page and a request to search engines to stay out, for an
+    # installation that is a demo and must never pass for the publisher's own site (T-4687).
+    "ribbon": "",
+    "noindex": False,
 }
 
 HEX = set("0123456789abcdefABCDEF")
@@ -75,6 +79,10 @@ def _load():
     lines = branding.get("footerLines")
     branding["footerLines"] = [line for line in lines if isinstance(line, str) and line.strip()] \
         if isinstance(lines, list) else []
+    if not isinstance(branding.get("ribbon"), str):
+        branding["ribbon"] = ""
+    branding["ribbon"] = branding["ribbon"].strip()
+    branding["noindex"] = branding.get("noindex") is True
     red, green, blue = _rgb(colours["primary"])
     branding["primaryRgb"] = "%d, %d, %d" % (red, green, blue)
     # The text on the primary colour, by the YIQ rule the login theme uses too
@@ -1716,6 +1724,7 @@ def jc_about_site():
 
 _HOST = re.compile(r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$")
 MCP_NAME = "joinedcontext"
+MCP_SERVER = re.compile(r"d/[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?")
 
 
 def jc_mcp_install():
@@ -1727,6 +1736,11 @@ def jc_mcp_install():
         return None
     # The data host, api.{domain} (ADR-N-052 §2.1, T-4632): the apex moves an anonymous client there.
     url = "https://api.%s/api/mcp" % domain
+    # An installation that offers one assistant's own server instead of the hub, such as a demo
+    # (T-4687): branding `mcpServer` `d/{publicId}`, that assistant's Endpoints and sources (T-4691).
+    own = BRANDING.get("mcpServer")
+    if isinstance(own, str) and MCP_SERVER.fullmatch(own):
+        url += "/" + own
     server = {"type": "http", "url": url}
     vscode = json.dumps(dict(name=MCP_NAME, **server), separators=(",", ":"))
     cursor = base64.b64encode(json.dumps({"url": url}, separators=(",", ":")).encode()).decode()

@@ -19,3 +19,4 @@ spec:
         - type: WeatherObserved
         - type: PointOfInterest
         - type: EVChargingStation
+        - type: CadastralParcel

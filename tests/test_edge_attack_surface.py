@@ -302,6 +302,10 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "the background map's tiles, style, fonts and sprites (T-4638): public map data under the OpenStreetMap licence, read-only, and nginx keeps them a day",
     },
+    "ai": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": FRAMED_BY_UPSTREAM,
+        "why": "the standalone assistant (T-4694): static pages with no data, no token and no cookie; a launcher on a city's site frames /{publicId}, app.js shows it only inside the deployment's origins and the chat answers those alone",
+    },
     "viz": {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": FRAMED_BY_UPSTREAM,
         "why": "the chart renderer (T-4641, ADR-N-053): static pages with no data, no token and no cookie; nginx sets each page's frame-ancestors and Cache-Control, any site may frame the host page and the frame that runs a spec connects nowhere",

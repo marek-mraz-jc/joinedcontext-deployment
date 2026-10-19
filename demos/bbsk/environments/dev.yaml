@@ -1,0 +1,3 @@
+# The preview on dev (T-4687): the platform's domain and the demo's own host under it.
+domain: dev.joinedcontext.com
+host: bbsk-demo.apps.dev.joinedcontext.com

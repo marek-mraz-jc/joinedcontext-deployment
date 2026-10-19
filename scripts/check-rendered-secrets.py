@@ -14,7 +14,9 @@ import sys
 
 import yaml
 
-GENERATOR_CHART_PREFIX = "secrets-"
+# The charts that generate a Secret's values at install and keep the live ones (`lookup`): the
+# platform's secrets component and the BBSK demo's own base chart (demos/bbsk/chart, T-4687).
+GENERATOR_CHART_PREFIXES = ("secrets-", "demo-bbsk-base-")
 
 # Third-party charts that ship non-credential content as `stringData`: Gitea keeps its
 # app.ini sections and its init shell scripts there. Their credentials are not in them —
@@ -48,7 +50,7 @@ def main(src: str, dst: str) -> int:
         )
         if doc.get("stringData") and not allowed:
             problems.append(f"{name}: stringData is a plaintext credential in a manifest")
-        if chart.startswith(GENERATOR_CHART_PREFIX):
+        if chart.startswith(GENERATOR_CHART_PREFIXES):
             doc["data"] = {key: "REDACTED" for key in doc.get("data") or {}}
 
     if problems:
