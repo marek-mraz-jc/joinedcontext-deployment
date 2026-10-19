@@ -154,6 +154,10 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "an Endpoint publishes what its Policy grants, to anonymous callers by design (EP-01)",
     },
+    "context-endpoint-bulk": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "context-endpoint's bulk exports (T-4717): the same chain, 10 at once per client",
+    },
     "context-mcp-hub": {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "the MCP hub (EP-87): the gateway verifies the bearer and decides each call as the named Endpoint's own",
@@ -177,6 +181,10 @@ ROUTE_CLASSES = {
     "context-endpoint-portal": {
         "reach": EDGE_SESSION, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "the same surface on the Portal's origin, with the edge session turned into a bearer",
+    },
+    "context-endpoint-portal-bulk": {
+        "reach": EDGE_SESSION, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "context-endpoint-portal's bulk exports (T-4717): the same chain, 10 at once per client",
     },
     "gitea-forge": {
         "reach": UPSTREAM, "cacheable": False, "framing": "SAMEORIGIN",
@@ -237,6 +245,10 @@ ROUTE_CLASSES = {
     "api-context-endpoint": {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "context-endpoint on the data host (T-4630): an Endpoint publishes what its Policy grants",
+    },
+    "api-context-endpoint-bulk": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "api-context-endpoint's bulk exports (T-4717): the same chain, 10 at once per client",
     },
     "api-mcp-hub": {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",

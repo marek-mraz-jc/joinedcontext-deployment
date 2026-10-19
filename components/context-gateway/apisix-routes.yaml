@@ -495,3 +495,81 @@ api-moved-catalog:
   priority: 30
   vars: [["http_authorization", "!", "~~", "."]]
   pluginConfig: api-moved
+
+# Class 4 (T-4717): the bulk exports, `{endpoint}/file.*` and the temporal history, hold their
+# connection for minutes, so 10 at once per address and bearer bounds them where a count per
+# minute does not. Only here: a limit-conn on the whole surface held every WebSocket and every
+# quick read to the same 10 (T-4714). The parent route's chain, plus this one plugin.
+context-endpoint-bulk:
+  name: context-endpoint-bulk
+  description: Bulk exports of the apex Endpoint surface, 10 at once per client
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/api/endpoint/*'
+  vars: [["uri", "~~", "^/api/endpoint/[^/]+/(file\\.|ngsi-ld/v1/temporal/)"]]
+  host: '{{ .Values.global.domain }}'
+  priority: 21
+  pluginConfig: context-endpoint
+  timeout:
+    connect: 6
+    send: 60
+    read: 300
+  plugins:
+    limit-conn:
+      conn: 10
+      burst: 0
+      default_conn_delay: 0.1
+      key_type: var_combination
+      key: '$http_authorization $remote_addr'
+      rejected_code: 429
+
+# Class 4 (T-4717): the bulk exports, `{endpoint}/file.*` and the temporal history, hold their
+# connection for minutes, so 10 at once per address and bearer bounds them where a count per
+# minute does not. Only here: a limit-conn on the whole surface held every WebSocket and every
+# quick read to the same 10 (T-4714). The parent route's chain, plus this one plugin.
+api-context-endpoint-bulk:
+  name: api-context-endpoint-bulk
+  description: Bulk exports of the data host's Endpoint surface, 10 at once per client
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/api/endpoint/*'
+  vars: [["uri", "~~", "^/api/endpoint/[^/]+/(file\\.|ngsi-ld/v1/temporal/)"]]
+  subDomain: api
+  priority: 21
+  pluginConfig: context-endpoint
+  timeout:
+    connect: 6
+    send: 60
+    read: 300
+  plugins:
+    limit-conn:
+      conn: 10
+      burst: 0
+      default_conn_delay: 0.1
+      key_type: var_combination
+      key: '$http_authorization $remote_addr'
+      rejected_code: 429
+
+# Class 4 (T-4717): the bulk exports, `{endpoint}/file.*` and the temporal history, hold their
+# connection for minutes, so 10 at once per address and bearer bounds them where a count per
+# minute does not. Only here: a limit-conn on the whole surface held every WebSocket and every
+# quick read to the same 10 (T-4714). The parent route's chain, plus this one plugin.
+context-endpoint-portal-bulk:
+  name: context-endpoint-portal-bulk
+  description: Bulk exports of the Endpoint surface on the Portal host, 10 at once per client
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/api/endpoint/*'
+  vars: [["uri", "~~", "^/api/endpoint/[^/]+/(file\\.|ngsi-ld/v1/temporal/)"]]
+  subDomain: portal
+  priority: 21
+  pluginConfig: context-endpoint-portal
+  timeout:
+    connect: 6
+    send: 60
+    read: 300
+  plugins:
+    limit-conn:
+      conn: 10
+      burst: 0
+      default_conn_delay: 0.1
+      key_type: var_combination
+      key: '$http_authorization $remote_addr'
+      rejected_code: 429
