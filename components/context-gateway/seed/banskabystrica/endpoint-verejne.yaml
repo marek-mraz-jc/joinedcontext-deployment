@@ -23,6 +23,9 @@ spec:
   # publisher, the licence and each source's credit, the themes and keywords a reader searches
   # by, the city, and how often it changes (continuous: the weather every five minutes).
   catalog:
+    # Not a catalogue dataset: a door over the space; T-4344 split its types into datasets of their own, read by the Apps.
+    # Its own record stays; the harvest feeds leave it out (EP-139, T-4744).
+    harvest: false
     # The publisher and contact desk are the Project's spec.catalog, its registry IRI (T-4596).
     # Aggregates of public facilities and readings: no record names a person (T-4596).
     personalData: does-not-contain

@@ -2,11 +2,13 @@
 space named `catalog`, read by anyone, written only by the Portal reconciler; and a place on
 every space whose Dataset the catalogue locates."""
 
+import json
 from pathlib import Path
 
 import yaml
 
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
+OD_DATASETS = SEED.parent.parent.parent / "charts/ckan/files/od-datasets.json"
 WRITES = {"create", "update", "upsert", "delete", "append", "merge", "replace", "purge"}
 
 
@@ -63,3 +65,24 @@ def test_every_placed_space_has_one_area_in_wgs84():
     # The bb air Dataset's station sits inside its space's area (georel=near around 19.146, 48.736).
     w, s, e, n = areas["ovzdusie"]
     assert w <= 19.146 <= e and s <= 48.736 <= n
+
+
+def test_every_public_endpoint_is_a_catalogue_dataset_or_a_door_the_feeds_leave_out():
+    # T-4744, EP-139: the gateway's harvest feeds list every public Endpoint but an App's door and
+    # one with `catalog.harvest: false`; the catalogue smoke counts each listed one without a CKAN
+    # dataset as a gap. So a public Endpoint publishes to CKAN, is named by a source dataset of the
+    # catalogue chart, or says it is no dataset; `harvest: false` beside a publication is refused.
+    named = {d.get("endpoint") for d in json.loads(OD_DATASETS.read_text()).values()}
+    gaps, contradictions = [], []
+    for path, doc in manifests():
+        spec = doc.get("spec") or {}
+        if doc["kind"] != "Endpoint" or spec.get("audience") != "public" or spec.get("callerRole"):
+            continue
+        published = bool((spec.get("publish") or {}).get("ckan"))
+        harvested = (spec.get("catalog") or {}).get("harvest", True) is not False
+        if harvested and not published and spec.get("slug") not in named:
+            gaps.append(str(path.relative_to(SEED)))
+        if published and not harvested:
+            contradictions.append(str(path.relative_to(SEED)))
+    assert not gaps, f"public, in the harvest feeds, and no catalogue dataset names it: {gaps}"
+    assert not contradictions, f"harvest: false beside spec.publish.ckan: {contradictions}"
