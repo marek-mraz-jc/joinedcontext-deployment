@@ -205,7 +205,8 @@ def test_argocd_and_its_root_render_in_the_addons_environment_within_600_mi(rend
     [app] = [d for d in argocd if d["kind"] == "Application"]
     assert app["metadata"]["name"] == "addons" and app["spec"]["project"] == "default"
     assert app["spec"]["source"]["path"] == "gitops/chart"
-    assert app["spec"]["source"]["helm"]["valueFiles"] == ["../addons.yaml", "../hold.yaml"]
+    assert app["spec"]["source"]["helm"]["valueFiles"] == ["../addons.yaml", "../hold.yaml", "../hold-addons.yaml"]
+    assert app["spec"]["source"]["helm"]["ignoreMissingValueFiles"] is True
 
     requested = 0
     for workload in argocd:
