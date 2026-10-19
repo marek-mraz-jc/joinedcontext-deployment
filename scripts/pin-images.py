@@ -3,6 +3,7 @@
 
     python3 scripts/pin-images.py platform     # or: portal
     python3 scripts/pin-images.py platform --tier production
+    PIN_COMMIT=<40 hex> python3 scripts/pin-images.py platform   # a green commit behind the head
 
 For the commit at the head of `main` of the source repository it pins, in every
 `components/*/images.yaml`, the digest each image of that commit was published under, but only
@@ -21,6 +22,7 @@ records the migrations and runtime keys it brings (components/context-broker/ima
 """
 
 import json
+import os
 import re
 import subprocess
 import sys
@@ -106,7 +108,11 @@ def pin_files(pins):
 
 def main(source, tier="dev"):
     repository, images = SOURCES[source]
-    commit = head(repository)
+    # PIN_COMMIT pins a green commit while newer merges keep `main`'s head red or building; the
+    # signature check below still requires the image.yml of `main` to have signed its images.
+    commit = os.environ.get("PIN_COMMIT") or head(repository)
+    if not re.fullmatch(r"[0-9a-f]{40}", commit):
+        sys.exit(f"{source}: PIN_COMMIT must be a full 40-hex commit, not {commit!r}")
     if not green(repository, "ci.yml", commit):
         print(f"{source} {commit[:7]}: ci is not green yet; nothing pinned", file=sys.stderr)
         return
