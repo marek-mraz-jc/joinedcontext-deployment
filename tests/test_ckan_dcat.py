@@ -38,6 +38,7 @@ BRANDING = {
     "organisation": "City of Helsinki (demo instance, not affiliated)",
     "contactEmail": "hello@joinedcontext.com",
     "languages": {"default": "en", "offered": ["en", "fi"]},
+    "siteIssued": "2026-09-28",
 }
 
 requires_docker = pytest.mark.skipif(shutil.which("docker") is None, reason="docker not installed")
@@ -237,6 +238,36 @@ def test_the_catalogue_page_is_valid_dcat_ap_3_and_names_its_publisher(serialize
         "http://publications.europa.eu/resource/authority/language/ENG",
         "http://publications.europa.eu/resource/authority/language/FIN",
     }
+    # The day the catalogue went public, from the instance's `site.issued` (T-4733).
+    assert [str(d) for d in graph.objects(catalogue, DCT.issued)] == ["2026-09-28"]
+
+
+# A resource a republish re-created today (T-4733): CKAN dates it by `created`.
+RECREATED = {
+    "id": "c3f0a3e2-0000-4000-8000-000000000002",
+    "package_id": "bc2d847b-00a9-4605-8d12-cf3f6c302492",
+    "name": "praha-mesto data.csv",
+    "url": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/data.csv",
+    "format": "CSV",
+    "mimetype": "text/csv",
+    "created": "2026-10-19T08:00:00.000000",
+}
+
+
+@requires_docker
+@requires_helm
+def test_no_distribution_is_dated_after_its_dataset(serialize, shapes):
+    """T-4733: a republish re-creates the resources, so `created` is no publication date. A later
+    one is the dataset's dct:issued, an earlier one stays; the shapes still pass."""
+    graph = serialize("dataset", PROFILES, extras={"issued": "2026-09-28T00:00:00Z"}, resources=[RECREATED])
+    assert check.violations(graph, shapes) == []
+    dataset = graph.value(None, RDF.type, DCAT.Dataset, any=False)
+    dates = {str(d).rsplit("/", 1)[-1]: [str(i) for i in graph.objects(d, DCT.issued)]
+             for d in graph.objects(dataset, DCAT.distribution)}
+    (recreated,) = dates.pop(RECREATED["id"])
+    assert recreated.startswith("2026-09-28T00:00:00"), recreated
+    # Every other resource of the fixture was created 2026-09-25 and keeps it.
+    assert dates and all(len(v) == 1 and v[0].startswith("2026-09-25") for v in dates.values()), dates
 
 
 # What CKAN held on dev for every schema OWL artifact (T-4586): a media type with a parameter.

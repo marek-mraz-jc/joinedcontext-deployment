@@ -194,8 +194,10 @@ def test_the_instance_branding_reaches_both_the_catalogue_and_the_portal(rendere
     portal_branding = yaml.safe_load(by_name(docs, "ConfigMap", "portal-branding")["data"]["branding.yaml"])
     # The same block, save what the catalogue sets for itself: its languages (T-4280) and its
     # instance's words, the name per language and the connector page's questions (T-4636).
-    own = {"languages", "siteTitle", "siteTagline", "siteLogo", "samples"}
+    own = {"languages", "siteTitle", "siteTagline", "siteLogo", "siteIssued", "samples"}
     assert branding["siteTitle"]["sk"] == "Otvorené dáta"
+    # The day the catalogue went public, its DCAT dct:issued (owner 2026-10-19, T-4733).
+    assert branding["siteIssued"] == "2026-09-28"
     assert portal_branding.pop("languages") == {"default": "en", "offered": ["en"]}
     assert portal_branding == {k: v for k, v in branding.items() if k not in own}, \
         "the two consumers must be served the same block"
