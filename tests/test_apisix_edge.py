@@ -427,6 +427,7 @@ def test_certificate_covers_the_apex_and_every_routed_subdomain(rendered):
     # on the certificate three times (ADR-N-019).
     assert certificate["spec"]["dnsNames"] == [
         "dev.joinedcontext.com",
+        "ai.dev.joinedcontext.com",
         "api.dev.joinedcontext.com",
         "assistant.dev.joinedcontext.com",
         "data.dev.joinedcontext.com",

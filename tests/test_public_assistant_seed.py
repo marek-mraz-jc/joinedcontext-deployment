@@ -40,6 +40,8 @@ ORIGINS = [
     "https://assistant.dev.joinedcontext.com",
     "https://dev.joinedcontext.com",
     "https://data.dev.joinedcontext.com",
+    # The standalone assistant's own host (T-4694): its page asks the chat from there.
+    "https://ai.dev.joinedcontext.com",
 ]
 
 
