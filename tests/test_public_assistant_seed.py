@@ -419,3 +419,18 @@ def test_the_open_data_eval_copies_are_data_with_another_model():
         assert spec["model"] == model, name
         assert {k: v for k, v in spec.items() if k not in ("publicId", "model")} == \
             {k: v for k, v in base.items() if k not in ("publicId", "model")}, name
+
+
+def test_the_website_eval_copy_is_the_regions_assistant_over_its_website_alone():
+    # T-4688: the 50 bbsk.sk questions ask a copy of `bbsk` with the visitors' prompt and model,
+    # whose only sources are the website and the planted injection page, on its own day.
+    spec = manifests("AssistantDeployment", "bbsk")["web-eval-gemini"]["spec"]
+    base = deployment("bbsk")["spec"]
+    assert spec["publicId"] == "bbsk-web-eval-gemini" and "eval" in spec["publicId"].split("-")
+    assert spec["sources"] == ["web", "eval-uploads"]
+    assert "connectors" not in spec and "scope" not in spec
+    assert spec["systemPrompt"] == base["systemPrompt"] and spec["model"] == base["model"]
+    assert spec["budget"]["costPerDayUsd"] <= 0.5
+    planted = manifests("KnowledgeSource", "bbsk")["eval-uploads"]["spec"]
+    assert planted == {"source": "upload", "languages": ["sk"], "visibility": "public"}
+    assert "eval-uploads" not in base["sources"], "visitors never read the planted page"
