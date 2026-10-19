@@ -380,6 +380,7 @@ def main():
             tables = [sheet] if sheet else []
         desired = package(ds, named[ds["iri"]], reason, converted[ds["iri"]], tables)
         upsert(desired, tables)
+        od_table_views(ckan, tables)
         kept.add(desired["name"])
         problems += [f"{ds['title']}: {p}" for p in verify(desired, tables)]
     for name in sorted(harvested_names() - kept):

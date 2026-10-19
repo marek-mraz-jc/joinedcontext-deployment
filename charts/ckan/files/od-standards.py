@@ -201,7 +201,9 @@ def od_sheet(name):
         return None
     reader = _csv.DictReader(_io.StringIO(body.decode("utf-8-sig")))
     rows = [{k: v for k, v in row.items() if k is not None} for row in reader]
-    return {"name": f"Tabuľka ({entry['type']})", "header": list(reader.fieldnames or []), "rows": rows, "dropped": 0}
+    # Named by its entity type, as jcctl names an Endpoint's tables: the theme draws the dataset's
+    # map from a table of that name and the OGC API Features distribution (T-4639).
+    return {"name": entry["type"], "header": list(reader.fieldnames or []), "rows": rows, "dropped": 0}
 
 
 OD_INTEGER = _re.compile(r"-?(0|[1-9][0-9]*)")
@@ -254,3 +256,14 @@ def od_write_tables(call, live, tables):
             call("datastore_upsert", {"resource_id": created["resource_id"], "method": "insert",
                                       "force": True, "records": rows[start:start + OD_CHUNK]})
         t["resource_id"] = created["resource_id"]
+
+
+def od_table_views(call, tables):
+    """A table view on each table (T-4742): CKAN keeps a resource's views when its table is
+    replaced, but a table written before it had any, or whose view somebody deleted, has none and
+    shows no rows on its page. Asked each run, created only when missing."""
+    for t in tables:
+        views = call("resource_view_list", {"id": t["resource_id"]}) or []
+        if not any(v.get("view_type") == "datatables_view" for v in views):
+            call("resource_view_create", {"resource_id": t["resource_id"], "view_type": "datatables_view",
+                                          "title": "Tabuľka"})

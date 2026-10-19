@@ -299,6 +299,10 @@ def harvest(ckan, source, items):
         elif (extra(old, "harvest_hash") == extra(package, "harvest_hash") and old.get("state") == "active"
               and len(carried) == len(tables)):
             counts["unchanged"] += 1
+            ids = {r["name"]: r["id"] for r in carried}
+            for t in tables:
+                t["resource_id"] = ids[t["name"]]
+            od_table_views(ckan.call, tables)
             continue
         else:
             package["id"] = old["id"]
@@ -309,6 +313,7 @@ def harvest(ckan, source, items):
             live = ckan.call("package_update", package)
             counts["updated"] += 1
         od_write_tables(ckan.call, live, tables)
+        od_table_views(ckan.call, tables)
     for package in existing.values():
         if package.get("state") == "active":
             ckan.call("package_delete", {"id": package["id"]})

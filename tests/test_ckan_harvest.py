@@ -92,6 +92,7 @@ CATALOGUE = (
 class FakeCkan:
     def __init__(self):
         self.packages, self.tables, self.organizations, self.calls = {}, {}, set(), []
+        self.views = []
         self.next_id = 0
 
     def new_id(self):
@@ -162,6 +163,13 @@ class FakeCkan:
 
     def datastore_search(self, p):
         return {"total": len(self.tables[p["resource_id"]]["records"])}
+
+    def resource_view_list(self, p):
+        return [v for v in self.views if v["resource_id"] == p["id"]]
+
+    def resource_view_create(self, p):
+        self.views.append(dict(p, id=self.new_id()))
+        return self.views[-1]
 
 
 class Response(io.BytesIO):
@@ -339,7 +347,7 @@ def test_a_run_over_an_unchanged_source_writes_nothing(monkeypatch, capsys):
     assert harvest.main() == 0
     first = len(harvest.ckan.calls)
     assert harvest.main() == 0
-    writes = [c for c in harvest.ckan.calls[first:] if not c.endswith(("_show", "_search"))]
+    writes = [c for c in harvest.ckan.calls[first:] if not c.endswith(("_show", "_search", "_list"))]
     assert writes == [], writes
 
 
@@ -534,12 +542,16 @@ def test_a_dataset_whose_files_hold_no_table_gets_its_endpoint_rows_and_a_source
     for name, package in fake.packages.items():
         assert [r.get("url_type") for r in package["resources"]].count("datastore") == 1, name
     streets = fake.packages["bb-dtm-bb-register-ulic"]["resources"][-1]
-    assert streets["name"] == "Tabuľka (T)"
+    assert streets["name"] == "T"
     assert fake.tables[streets["id"]] == {"fields": [{"id": "id", "type": "text"}, {"id": "length", "type": "int"}],
                                           "records": [{"id": "urn:ngsi-ld:T:u1", "length": 120},
                                                       {"id": "urn:ngsi-ld:T:u2", "length": None}]}
     ages = fake.packages["bb-pocet-obcanov-podla-veku"]["resources"][-1]
-    assert ages["name"] != "Tabuľka (T)", "a source table was replaced by the Endpoint's"
+    assert ages["name"] != "T", "a source table was replaced by the Endpoint's"
+    # Every table, the source's ones included, has its one table view.
+    tables = {r["id"] for p in fake.packages.values() for r in p["resources"] if r.get("url_type") == "datastore"}
+    assert sorted(v["resource_id"] for v in fake.views) == sorted(tables)
+    assert {v["view_type"] for v in fake.views} == {"datatables_view"}
 
 
 def test_a_hidden_dataset_without_a_table_stays_without_one(monkeypatch, capsys):

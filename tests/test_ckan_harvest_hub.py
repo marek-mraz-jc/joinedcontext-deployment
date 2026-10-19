@@ -9,6 +9,7 @@ import importlib.util
 import json
 import threading
 import urllib.error
+import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import quote
@@ -98,7 +99,7 @@ class FakeCkan:
 
     def __init__(self):
         self.orgs, self.packages, self.calls = {}, {}, []
-        self.tables, self.dropped = {}, []
+        self.tables, self.dropped, self.views = {}, [], []
         fake = self
 
         class Handler(BaseHTTPRequestHandler):
@@ -167,6 +168,11 @@ class FakeCkan:
                 assert rid not in self.tables, "datastore_create on a live table"
             self.tables[rid] = {"fields": body["fields"], "records": list(body["records"])}
             return ok({"resource_id": rid})
+        if action == "resource_view_list":
+            return ok([v for v in self.views if v["resource_id"] == body["id"]])
+        if action == "resource_view_create":
+            self.views.append(dict(body, id=f"view-{len(self.views)}"))
+            return ok(self.views[-1])
         if action == "datastore_upsert":
             self.tables[body["resource_id"]]["records"] += body["records"]
             return ok(None)
@@ -600,7 +606,7 @@ def test_every_listed_dataset_holds_its_endpoint_rows_as_an_active_sheet(ckan, c
     assert sheet_url(OBCE) in read and sheet_url(CULTURE) in read
     for ident in (OBCE, CULTURE):
         [table] = datastore(ckan, ident)
-        assert table["name"] == "Tabuľka (PointOfInterest)" and table["format"] == "CSV"
+        assert table["name"] == "PointOfInterest" and table["format"] == "CSV"
         assert ckan.tables[table["id"]] == {
             "fields": [{"id": "id", "type": "text"}, {"id": "name", "type": "text"}],
             "records": [{"id": "urn:ngsi-ld:PointOfInterest:1", "name": "Hrad"}]}
@@ -608,7 +614,7 @@ def test_every_listed_dataset_holds_its_endpoint_rows_as_an_active_sheet(ckan, c
     first = len(ckan.calls)
     counts, _, _ = harvest.harvest(client, dev_source(), items())
     assert counts["unchanged"] == 2
-    assert [c for c in ckan.calls[first:] if not c.endswith(("_show", "_search"))] == []
+    assert [c for c in ckan.calls[first:] if not c.endswith(("_show", "_search", "_list"))] == []
 
     monkeypatch.setitem(SHEETS, sheet_url(CULTURE), SHEET + b"urn:ngsi-ld:PointOfInterest:2,Kastiel\r\n")
     counts, _, _ = harvest.harvest(client, dev_source(), items())
@@ -721,3 +727,28 @@ def test_the_cronjob_names_the_datasets_the_gate_hides(rendered):
     values = (ROOT / "components/ckan/values/catalogue/development-values.yaml.gotmpl").read_text()
     hidden = yaml.safe_load(values.replace('{{"{{"}}', "{{").replace('{{"}}"}}', "}}"))["hidden"]
     assert json.loads(env["OD_HIDDEN"]) == sorted(hidden) and "bb-adresy" in hidden
+
+
+def test_each_sheet_has_one_table_view_and_a_located_one_its_map(ckan, converted):
+    """T-4742 views: a table view on every sheet, created once and again only when it is gone;
+    a located dataset's sheet is named by its type beside its OGC API Features distribution,
+    which is what the theme's dataset map reads (T-4639); a register without location has none."""
+    converted(CULTURE)
+    converted(OBCE, location=False)
+    client = harvest.Ckan(ckan.host, "token-1")
+    harvest.harvest(client, dev_source(), items())
+    for ident in (CULTURE, OBCE):
+        [table] = datastore(ckan, ident)
+        assert [v["view_type"] for v in ckan.views if v["resource_id"] == table["id"]] == ["datatables_view"]
+    harvest.harvest(client, dev_source(), items())
+    assert len(ckan.views) == 2, "a second run added a view"
+    ckan.views.clear()
+    harvest.harvest(client, dev_source(), items())
+    assert len(ckan.views) == 2, "a deleted table view was not written again"
+
+    def ogc(ident):
+        return [r["url"] for r in ckan.active()[ident]["resources"] if r.get("format") == "OGCFEAT"]
+
+    [items_url] = ogc(CULTURE)
+    assert urllib.parse.urlsplit(items_url).path.endswith(f"/collections/{datastore(ckan, CULTURE)[0]['name']}/items")
+    assert ogc(OBCE) == [], "a register without location gets no map"
