@@ -510,6 +510,10 @@ if has_route context-endpoint; then
 	ep_token=""
 	if [ -z "$ep" ]; then
 		skip "endpoint round trip (no Endpoint seeded on the gateway in this instance)"
+	elif [ -n "${JC_SMOKE_NO_TEST_WRITER:-}" ]; then
+		# A production instance holds no test account (T-4678): its pipelines' writes are what the
+		# entity checks below read back.
+		skip "endpoint round trip (this instance has no test writer by design)"
 	elif [ -z "$ep_secret" ]; then
 		ko "no client secret for $ep_client (set JC_SMOKE_ENDPOINT_CLIENT_SECRET or point KUBECONFIG at the instance)"
 	else
