@@ -26,7 +26,7 @@ def answer(status=200, body=b"", ctype=JSON, **kw):
     return smoke.Answer(status, ctype, body, **kw)
 
 
-def package(name, slug, typ, ogc=True, ws=True, datastore="ds-" , host=None):
+def package(name, slug, typ, ogc=True, ws=True, datastore="ds-" , host=None, region="SK032", org=""):
     base = f"https://{host or 'api.' + DOMAIN}/api/endpoint/{slug}/"
     resources = [
         {"format": "NGSI-LD", "url": base + "ngsi-ld/v1/entities", "name": f"NGSI-LD API ({typ})"},
@@ -42,7 +42,21 @@ def package(name, slug, typ, ogc=True, ws=True, datastore="ds-" , host=None):
     if datastore:
         resources.append({"format": "CSV", "url": f"{CKAN}/datastore/dump/{datastore}{name}",
                           "datastore_active": True, "id": f"{datastore}{name}"})
-    return {"name": name, "resources": resources}
+    extras = [{"key": "spatial_uri", "value": f"http://data.europa.eu/nuts/code/{region}"}] if region else []
+    return {"name": name, "resources": resources, "extras": extras, "organization": {"name": org}}
+
+
+def row(typ, n=1, located=True, **attrs):
+    """One clean NGSI-LD row, normalized; Banská Bystrica when located."""
+    entity = {"id": f"urn:ngsi-ld:{typ}:{n}", "type": typ, "name": {"type": "Property", "value": f"{typ} {n}"}}
+    if located:
+        entity["location"] = {"type": "GeoProperty", "value": {"type": "Point", "coordinates": [19.15, 48.74]}}
+    return {**entity, **attrs}
+
+
+def model(typ, *attrs, required=()):
+    return {"definitions": {typ: {"properties": {a: {} for a in ("name", "location", *attrs)},
+                                  **({"required": list(required)} if required else {})}}}
 
 
 def world(packages, public, rows=10, datastore_total=10, overrides=None):
@@ -57,15 +71,19 @@ def world(packages, public, rows=10, datastore_total=10, overrides=None):
         data = smoke.describe(p, DOMAIN)
         base, t = f"{API}/{data.slug}/", data.type
         answers.update({
-            base + "ngsi-ld/v1/entities?" + urllib.parse.urlencode({"type": t, "limit": 1}):
-                answer(body=[{"id": f"urn:ngsi-ld:{t}:1", "type": t}], ctype="application/ld+json"),
+            base + "ngsi-ld/v1/entities?" + urllib.parse.urlencode(smoke.sample_query(data)):
+                answer(body=[row(t, 1, "OGCFEAT" in data.formats), row(t, 2, "OGCFEAT" in data.formats)],
+                       ctype="application/ld+json"),
             base + "mcp": answer(body={"result": {"tools": [{"name": "query"}]}}),
             base + f"odata/v4/{t}?%24top=1&%24count=true": answer(body={"@odata.count": rows, "value": [{}]}),
             base + f"ogc/features/collections/{t}/items?limit=1": answer(body={"features": [{}]}, ctype=GEO),
-            base + "schema/index.json": answer(body={"models": [{"types": [t]}]}),
+            base + "schema/index.json": answer(body={"models": [{"types": [t], "version": 1}]}),
+            base + "schema/v1/model.schema.json": answer(body=model(t)),
             base + "file.csv?" + urllib.parse.urlencode({"type": t, "limit": 1}): answer(body=b"id,type\nurn:1,T\n", ctype=CSV),
-            f"{CKAN}/map/{p['name']}": answer(body=b"<div data-jc-map='{&#34;layers&#34;: [{}]}'>", ctype="text/html"),
         })
+        if "OGCFEAT" in data.formats:  # CKAN's /map/ is a 404 without one (jc_map_page)
+            answers[f"{CKAN}/map/{p['name']}"] = answer(body=b"<div data-jc-map='{&#34;layers&#34;: [{}]}'>",
+                                                        ctype="text/html")
         for ds in data.datastore:
             answers[f"{CKAN}/api/3/action/datastore_search?resource_id={ds}&limit=0"] = answer(
                 body={"result": {"total": datastore_total}})
@@ -184,11 +202,14 @@ def test_a_websocket_not_served_is_ok_only_with_the_documented_404():
     assert served["air"]["websocket"] == "ko: upgrade 101, subscribe 403"
 
 
-def test_a_type_without_location_skips_ogc_and_the_map():
+def test_a_type_without_location_skips_ogc_and_has_no_map_page():
     rows, fake = table(world([package("budget", "b1", "Budget", ogc=False)], ["b1"]))
     assert rows["budget"]["ogc"].startswith("skip: the dataset lists no OGC distribution")
-    assert rows["budget"]["map"].startswith("skip:")
-    assert not any("/ogc/" in url or "/map/" in url for _, url in fake.sent)
+    assert rows["budget"]["map"] == "ok: no location, no map page"
+    assert not any("/ogc/" in url for _, url in fake.sent)
+    shown, _ = table(world([package("budget", "b1", "Budget", ogc=False)], ["b1"], overrides={
+        f"{CKAN}/map/budget": answer(body=b"<div data-jc-map='{}'>", ctype="text/html")}))
+    assert shown["budget"]["map"] == "ko: no location, but the map page answered 200 text/html"
 
 
 def test_a_timeout_is_a_ko_with_its_time():
@@ -247,8 +268,9 @@ def test_the_slow_checks_rotate_least_recently_checked_first(tmp_path):
         writer.writerow({"dataset": "d0", **{c: "ok" for c in smoke.COLUMNS}})
         writer.writerow({"dataset": "d1", **{c: "ok" for c in smoke.COLUMNS},
                          **{c: "not this run (last: 20261019T030000Z ko)" for c in smoke.ROTATING}})
-    # 2 inventory + 3 × 5 core shared nothing: 17, then room for one dataset's 4 slow checks.
-    rows, fake = table(world(packages, ["e0", "e1", "e2"]), tmp_path=tmp_path, budget=21)
+    # 2 inventory + 3 × 6 core shared nothing (the data check's JSON Schema the sixth): 20, then
+    # room for one dataset's 4 slow checks.
+    rows, fake = table(world(packages, ["e0", "e1", "e2"]), tmp_path=tmp_path, budget=24)
     assert smoke.verdict(rows["d2"]["csv"]) == "ok", "never checked goes first"
     assert rows["d1"]["csv"] == "not this run (last: 20261019T030000Z ko)", "the carried time stays"
     assert rows["d0"]["csv"] == "not this run (last: 20261019T050000Z ok)"
@@ -411,3 +433,122 @@ def test_a_trickling_error_body_is_cut_at_the_timeout_too(monkeypatch):
     started = time.monotonic()
     got = smoke.send("GET", f"http://127.0.0.1:{listener.getsockname()[1]}/", {}, None)
     assert got.error == "timeout after 1 s" and time.monotonic() - started < 3
+
+
+# The data check (T-4743): the rows themselves, against their model, name and region.
+
+def data_cell(rows_body=None, schema=None, **pkg):
+    p = package("schools", "o1", "Organization", **pkg)
+    data = smoke.describe(p, DOMAIN)
+    overrides = {}
+    if rows_body is not None:
+        overrides[f"{API}/o1/ngsi-ld/v1/entities?" + urllib.parse.urlencode(smoke.sample_query(data))] = answer(
+            body=rows_body, ctype="application/ld+json")
+    if schema is not None:
+        overrides[f"{API}/o1/schema/v1/model.schema.json"] = answer(body=schema)
+    rows, _ = table(world([p], ["o1"], overrides=overrides))
+    return rows["schools"]
+
+
+def test_a_clean_dataset_passes_the_data_check_inside_its_region():
+    assert data_cell()["data"] == "ok: 2 rows, inside SK032"
+
+
+def test_a_municipality_row_in_organization_is_a_ko_even_when_its_model_lists_the_count():
+    town = row("Organization", 419, pocetObyvatelov={"type": "Property", "value": 599})
+    cell = data_cell([row("Organization"), town], model("Organization", "pocetObyvatelov"))
+    assert cell["data"] == ("ko: urn:ngsi-ld:Organization:419 has pocetObyvatelov, "
+                            "a place's count, not an Organization's")
+    assert "599" not in cell["data"], "the table names the attribute, never its value"
+
+
+def test_an_attribute_the_model_does_not_define_and_a_missing_required_one_are_ko():
+    cell = data_cell([row("Organization", stray={"type": "Property", "value": 1})],
+                     model("Organization", "legalId", required=["legalId"]))
+    assert cell["data"] == ("ko: urn:ngsi-ld:Organization:1 has no legalId; "
+                            "urn:ngsi-ld:Organization:1 has stray, which the Organization model does not define")
+
+
+@pytest.mark.parametrize("name", [None, {"type": "Property", "value": "  "},
+                                  {"type": "LanguageProperty", "languageMap": {"sk": "", "en": " "}}])
+def test_a_blank_name_is_a_ko(name):
+    bare = row("Organization", 2)
+    bare.pop("name")
+    if name is not None:
+        bare["name"] = name
+    assert data_cell([row("Organization"), bare])["data"] == "ko: urn:ngsi-ld:Organization:2 has no name"
+
+
+def test_a_name_in_one_language_is_enough():
+    named = row("Organization", name={"type": "LanguageProperty", "languageMap": {"sk": "", "fi": "Koulu"}})
+    assert smoke.verdict(data_cell([named])["data"]) == "ok"
+
+
+def test_a_shared_id_and_a_row_of_another_type_are_ko():
+    cell = data_cell([row("Organization"), row("Organization"), row("PublicOrganization", 3)])
+    assert cell["data"] == ("ko: urn:ngsi-ld:Organization:1 twice; "
+                            "urn:ngsi-ld:PublicOrganization:3 is a PublicOrganization")
+
+
+def test_a_point_outside_the_region_is_a_ko_and_a_parent_code_is_used():
+    prague = row("Organization", 7, location={"type": "GeoProperty",
+                                              "value": {"type": "Point", "coordinates": [14.42, 50.08]}})
+    assert data_cell([row("Organization"), prague])["data"] == (
+        "ko: urn:ngsi-ld:Organization:7 location lies outside SK032")
+    # SK0323 (an okres) has no box of its own: its kraj's box holds.
+    assert data_cell([prague], region="SK0323")["data"] == "ko: urn:ngsi-ld:Organization:7 location lies outside SK032"
+    line = row("Organization", 8, location={"type": "GeoProperty", "value": {
+        "type": "LineString", "coordinates": [[19.1, 48.7], [24.9, 60.2]]}})
+    assert data_cell([line])["data"] == "ko: urn:ngsi-ld:Organization:8 location lies outside SK032"
+    broken = row("Organization", 9, location={"type": "GeoProperty", "value": {"type": "Point"}})
+    assert data_cell([broken])["data"] == "ko: urn:ngsi-ld:Organization:9 location is no GeoJSON geometry"
+
+
+def test_a_dataset_without_a_region_takes_its_organization_s_or_says_it_did_not_check():
+    a = package("schools", "o1", "Organization", region="", org="bbsk")
+    b = package("roads", "o2", "Road", org="bbsk")
+    rows, _ = table(world([a, b], ["o1", "o2"]))
+    assert rows["schools"]["data"] == "ok: 2 rows, inside SK032"
+    alone, _ = table(world([package("schools", "o1", "Organization", region="", org="x")], ["o1"]))
+    assert alone["schools"]["data"] == "ok: 2 rows, location not checked: no region"
+    far, _ = table(world([package("schools", "o1", "Organization", region="DE300")], ["o1"]))
+    assert far["schools"]["data"] == "ok: 2 rows, location not checked: no box for DE300"
+
+
+def test_an_empty_dataset_is_a_ko_with_no_rows():
+    cell = data_cell([])
+    assert cell["data"] == "ko: no rows"
+    assert cell["ngsi-ld"] == "ko: no Organization entity"
+
+
+def test_more_than_three_problems_are_counted_not_listed():
+    rows_body = [row("Organization", n, name={"type": "Property", "value": ""}) for n in range(5)]
+    assert data_cell(rows_body)["data"].endswith("urn:ngsi-ld:Organization:2 has no name (+2 more)")
+
+
+def test_a_missing_json_schema_is_a_ko():
+    p = package("schools", "o1", "Organization")
+    rows, _ = table(world([p], ["o1"], overrides={f"{API}/o1/schema/v1/model.schema.json": answer(404)}))
+    assert rows["schools"]["data"] == "ko: model.schema.json answered 404 application/json, no Organization"
+
+
+def test_a_located_dataset_without_ogc_is_a_ko_on_ogc_and_map():
+    p = package("stops", "o1", "Organization", ogc=False)
+    data = smoke.describe(p, DOMAIN)
+    url = f"{API}/o1/ngsi-ld/v1/entities?" + urllib.parse.urlencode(smoke.sample_query(data))
+    rows, _ = table(world([p], ["o1"], overrides={url: answer(body=[row("Organization")], ctype=JSON)}))
+    assert rows["stops"]["ogc"] == "ko: its rows carry a location, but the dataset lists no OGC distribution"
+    assert rows["stops"]["map"] == "ko: its rows carry a location, but there is no OGC distribution to map"
+
+
+def test_a_map_without_a_feature_is_a_ko():
+    p = package("air", "a1", "AirQualityObserved")
+    rows, _ = table(world([p], ["a1"], overrides={
+        f"{API}/a1/ogc/features/collections/AirQualityObserved/items?limit=1": answer(body={"features": []}, ctype=GEO)}))
+    assert rows["air"]["map"] == "ko: no feature to show, OGC no AirQualityObserved feature"
+
+
+def test_the_sample_reads_twenty_rows_of_the_dataset_s_own_is_part_of():
+    data = smoke.Dataset("x", type="Road", part_of="https://x/dataset/three")
+    assert smoke.sample_query(data) == {"type": "Road", "limit": 20, "q": 'isPartOf=="https://x/dataset/three"'}
+
