@@ -14,9 +14,13 @@ spec:
     targetRevision: {{ .Values.targetRevision }}
     path: gitops/chart
     helm:
+      # hold.yaml holds every environment; hold-<environment>.yaml, where it exists, holds
+      # only this one (a release branch adopting a cluster, T-4678).
       valueFiles:
         - ../{{ .Values.environment }}.yaml
         - ../hold.yaml
+        - ../hold-{{ .Values.environment }}.yaml
+      ignoreMissingValueFiles: true
   destination:
     server: https://kubernetes.default.svc
     namespace: {{ .Release.Namespace }}
