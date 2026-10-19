@@ -147,6 +147,8 @@ harvest:
 # acurate and can be in ngsi-ld and for AI assitent to query"): each package and the first check
 # it failed. Hidden, not deleted; regenerate from joinedcontext-conformance evidence/publish-gate-T-4448.json
 # of the next run (tests/assistant/publish_gate.py --also <this list>) and a package passes back in.
+# Passed back in by hand (T-4766, 2026-10-19): bbsk-materske-skoly-...-3f7d07 (405 Organization rows on
+# dev and prod) and bbsk-vysoke-skoly-...-b0be47 (224 rows on prod, the source's 224 features).
 hidden:
   bb-adresy: "ngsi-ld: the Endpoint answered 403 TooManyResults"
   bb-aktuality: "ngsi-ld: no entity on dev"
@@ -192,7 +194,6 @@ hidden:
   bbsk-kontakty-na-miestne-samospravy-v-bbk-fc5ecb: "ngsi-ld: no entity on dev"
   bbsk-kraj-bbk-hranica-a05568: "accurate: urn:ngsi-ld:AdministrativeArea:bbsk.sk:bbsk-otvorene-data:kraj-bbk-hranica-1 at (17.338519, 48.650915) is outside bbsk's box"
   bbsk-kulturne-institucie-bbsk-24fbf9: "ngsi-ld: no entity on dev"
-  bbsk-materske-skoly-v-banskobystrickom-kraji-3f7d07: "ngsi-ld: no entity on dev"
   bbsk-mosty-v-banskobystrickom-kraji-public-view-3b4675: "ngsi-ld: no entity on dev"
   bbsk-mosty-v-sprave-bbrsc-public-view-d3252c: "accurate: urn:ngsi-ld:Bridge:bbsk.sk:bbsk-otvorene-data:mosty-v-sprave-bbrsc-public-view-M1398 at (18.548736, 48.345263) is outside bbsk's box"
   bbsk-nabijacky-a-zastavky-937210: "ngsi-ld: no entity on dev"
@@ -243,7 +244,6 @@ hidden:
   bbsk-stredne-skoly-v-bbk-odbory-a-pocet-studentov-2023-e85365: "ngsi-ld: no entity on dev"
   bbsk-vekova-struktura-v-obciach-1996-2022-6de8c3: "ngsi-ld: no entity on dev"
   bbsk-vekova-struktura-v-okresoch-1996-2022-29ed8a: "ngsi-ld: no entity on dev"
-  bbsk-vysoke-skoly-v-banskobystrickom-kraji-b0be47: "ngsi-ld: no entity on dev"
   bbsk-vyvoj-emisii-v-bbk-c8d1ed: "ngsi-ld: no entity on dev"
   bbsk-vyvoj-imisii-v-bbk-377176: "ngsi-ld: no entity on dev"
   bbsk-zasadnutia-samospravy-9a27f2: "ngsi-ld: no entity on dev"
