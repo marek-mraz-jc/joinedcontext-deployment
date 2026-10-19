@@ -21,9 +21,10 @@ spec:
   # The EU themes of what it reads (AG-124, T-4694): the union of its connectors' themes; the
   # context page lists them. The curated connectors stay: no selector gives exactly this set.
   categories: [EDUC, ENVI, TRAN]
-  connectors:
-    - { endpoint: helsinki-weather, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: helsinki-events, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
+  # Its own body's data through its project's public McpServer (T-4750): the server's members
+  # with the server's read tools, `endpoint` a parameter; an Endpoint added to the server joins
+  # without an edit here (tests/test_public_assistant_seed.py).
+  mcpServer: helsinki/otvorene-data
   allowedOrigins: [https://dev.joinedcontext.com, https://portal.dev.joinedcontext.com]
   rateLimit: { requestsPerMinute: 30, perClientPerMinute: 6 }
   # About 0.1 USD a day at most (google/gemini-3.8-flash, 2026-10-06).
