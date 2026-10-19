@@ -20,6 +20,9 @@ spec:
   # compilation of four publishers' open data, so the publisher is the project that compiled it
   # and each source keeps its credit in the attribution.
   catalog:
+    # Not a catalogue dataset: a door over the space; T-4344 split its types into datasets of their own, read by the Apps.
+    # Its own record stays; the harvest feeds leave it out (EP-139, T-4744).
+    harvest: false
     publisher: { name: { sk: "Projekt Žilina, platforma joinedcontext", en: "The Žilina project, joinedcontext platform" }, uri: "https://dev.joinedcontext.com/" }
     license: CC_BY_4_0
     attribution:

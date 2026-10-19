@@ -1,5 +1,5 @@
 # The catalogue's one door, public: an agent's first call (find the dataset), before its second
-# (that dataset's own Endpoint). Not a dataset itself, so no CKAN publish and no catalog block.
+# (that dataset's own Endpoint). Not a dataset itself: no CKAN publish, and harvest: false below.
 apiVersion: joinedcontext.com/v1alpha1
 kind: Endpoint
 metadata:
@@ -14,3 +14,7 @@ spec:
   slug: wxq5kcz6vmiowctob6erdffxb5kdg2bb
   audience: public
   enabledRepresentations: [ngsi-ld, mcp]
+  # Not a catalogue dataset: the catalogue's own door, an agent's first call. Its own record stays;
+  # the harvest feeds leave it out (EP-139, T-4744).
+  catalog:
+    harvest: false
