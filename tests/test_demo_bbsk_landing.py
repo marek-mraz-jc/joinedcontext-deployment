@@ -1,7 +1,7 @@
 """T-4740: the BBSK demo's host serves a landing page with the demo assistant docked, not a CKAN.
 
 The page is static: a snapshot of the www.bbsk.sk home page (owner 2026-10-19T12:55Z: its texts and
-layout, no logo, photos as colour blocks, links to the real pages) with the assistant, its four
+layout, no logo, photos as colour blocks, links to the real pages) with the assistant, its proven
 questions, the MCP block and the AI notice added, plus the catalogue theme's dock scripts, on the
 platform's pinned nginx. It says DEMO in its ribbon, title and footer, keeps search engines out,
 loads no file of another host and frames only the demo assistant.
@@ -99,7 +99,7 @@ def test_the_page_says_demo_keeps_search_engines_out_and_loads_nothing_third_par
         assert "bbsk.sk/themes" not in site[name] and "bbsk.sk/storage" not in site[name], name
 
 
-def test_the_four_cards_are_the_demo_assistants_own_questions_and_the_panel_speaks_slovak(landing):
+def test_the_cards_are_the_demo_assistants_own_questions_and_the_panel_speaks_slovak(landing):
     _, _, _, site, _ = landing
     seed = yaml.safe_load((ROOT / "components/context-gateway/seed/bbsk/bbsk-assistant-demo.yaml").read_text())
     for name, lang in (("index.html", "sk"),):
