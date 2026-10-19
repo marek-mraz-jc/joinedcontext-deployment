@@ -9,7 +9,8 @@
 # requests in all, docs Deployment/15-gitops.md §7).
 # Checklist:
 # - [x] Runs as non-root -> the chart's 999, every capability dropped, read-only root
-# - [x] Health probes -> the chart's
+# - [x] Health probes -> the chart's, switched on where it ships them off; readiness alone,
+#       a liveness identical to it is what validate-probes refuses
 # - [x] Standard labels -> the chart's
 # - [x] ServiceAccount with least privilege -> the controller's cluster role is Argo CD's job
 # - [x] Ingress with TLS -> the APISIX route of apisix-routes.yaml, never an Ingress here
@@ -104,12 +105,16 @@ dex:
 # No ApplicationSet is used; the chart has no switch, so its Deployment stays at none.
 applicationSet:
   replicas: 0
+  readinessProbe:
+    enabled: true
   resources:
     requests: {cpu: 10m, memory: 32Mi}
     limits: {cpu: 100m, memory: 128Mi}
 
 notifications:
   enabled: true
+  readinessProbe:
+    enabled: true
   resources:
     requests: {cpu: 10m, memory: 32Mi}
     limits: {cpu: 100m, memory: 128Mi}
@@ -177,6 +182,11 @@ repoServer:
       image: {{ printf "%s:%s@%s" $helmfile.repository $helmfile.tag $helmfile.digest | quote }}
       imagePullPolicy: IfNotPresent
       command: [/var/run/argocd/argocd-cmp-server]
+      # Ready once the plugin server listens on its socket, the one the repo server dials.
+      readinessProbe:
+        exec:
+          command: [test, -S, /home/argocd/cmp-server/plugins/helmfile.sock]
+        periodSeconds: 10
       env:
         # The image's helm home is root's; the caches go to the writable /tmp.
         - {name: HOME, value: /tmp}
@@ -216,6 +226,8 @@ redis:
     create: true
     automountServiceAccountToken: false
   automountServiceAccountToken: false
+  readinessProbe:
+    enabled: true
   # A cache: no volume, nothing to back up.
   resources:
     requests: {cpu: 10m, memory: 32Mi}

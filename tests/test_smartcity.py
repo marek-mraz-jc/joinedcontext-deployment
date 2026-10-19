@@ -128,3 +128,20 @@ def test_the_prod_guard_refuses_dev_and_lookalikes(tmp_path, server):
 def test_the_prod_guard_accepts_the_production_cluster(tmp_path):
     result = run_prod_guard(tmp_path, PROD_SERVER)
     assert result.returncode == 0, result.stderr
+
+
+def test_postgres_is_dumped_nightly_and_the_dump_job_may_reach_it(smartcity):
+    """No object store yet, so a nightly pg_dumpall onto the node is the backup (T-4678)."""
+    jobs = [d for d in smartcity if d.get("kind") == "CronJob" and d["metadata"]["name"] == "postgres-cluster-local-backup"]
+    assert len(jobs) == 1
+    pod = jobs[0]["spec"]["jobTemplate"]["spec"]["template"]
+    script = pod["spec"]["containers"][0]["command"][-1]
+    assert "pg_dumpall" in script and "exit 1" in script
+    labels = pod["metadata"]["labels"]
+    selected = [
+        d for d in smartcity if d.get("kind") == "NetworkPolicy"
+        and "Egress" in d["spec"].get("policyTypes", [])
+        and (d["spec"]["podSelector"].get("matchLabels") or {}).items() <= labels.items()
+        and any(p.get("port") == 4143 for rule in d["spec"].get("egress", []) for p in rule.get("ports", []))
+    ]
+    assert selected, "no egress policy lets the dump job's proxy reach postgres on 4143"

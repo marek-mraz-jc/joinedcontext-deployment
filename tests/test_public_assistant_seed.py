@@ -275,6 +275,21 @@ def test_the_general_assistant_reads_every_publishers_public_endpoints():
     assert reached == set(PUBLISHED.values()), "an Endpoint of every published organization"
 
 
+def test_the_general_assistant_reads_every_national_public_endpoint():
+    # T-4680: each ŠÚ SR topic is its own Endpoint of one type, KeyPerformanceIndicator; the
+    # router tells them apart by their titles, so every one joins and none is left unreachable.
+    # The catalogue's own records (`catalog`) are read through the search sources instead.
+    endpoints = manifests("Endpoint", "slovensko")
+    national = {f"slovensko/{name}" for name, e in endpoints.items() if name != "catalog"
+                and e["spec"]["audience"] == "public" and "mcp" in e["spec"]["enabledRepresentations"]}
+    assert len([n for n in national if n.startswith("slovensko/susr-")]) == 45
+    connected = {c["endpoint"] for c in general()["spec"]["connectors"]}
+    assert national <= connected, sorted(national - connected)
+    for name in national:
+        title = endpoints[name.split("/")[1]]["metadata"]["title"]
+        assert title.get("en") and len(title["en"]) <= 80, name
+
+
 def test_the_general_assistant_knows_the_whole_catalogue_and_each_publishers_own_site():
     # Its knowledge is the catalogue's records (every organization of data.dev, refreshed after
     # the nightly harvest), each body's Endpoint descriptions and, since T-4680 (the owner sent

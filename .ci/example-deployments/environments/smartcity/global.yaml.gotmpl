@@ -60,6 +60,8 @@ components:
   - basemap
   # The chart renderer of ADR-N-053 (T-4641): viz.{domain}, framed by the catalogue's datasets.
   - viz
+  # Argo CD (ADR-N-056, T-4678) goes here, `- gitops`, once its images carry no CRITICAL CVE
+  # (T-4706: argocd v3.5.4 and the helmfile v1.8.1 plugin image); everything else it needs is set.
 
 global:
   domain: smartcity.joinedcontext.com
@@ -167,3 +169,16 @@ postgres:
       destinationPath: 's3://joinedcontext-prod-backup/postgres'
       region: 'nbg1'
       bucket: 'joinedcontext-prod-backup'
+  # Until then a nightly pg_dumpall onto the node, 7 days (T-4678): a bad migration, not a lost node.
+  databases:
+    localBackup:
+      enabled: true
+
+# Prod's own Argo CD (T-4678): the deployment repository is public, so it reads it with no key,
+# and it follows `release`, never `main`: `just promote <sha>` moves that branch to a commit that
+# passed dev-smoke. The root Application is the switch; gitops/hold-smartcity.yaml holds it.
+gitops:
+  argocd:
+    targetRevision: release
+  root:
+    enabled: true

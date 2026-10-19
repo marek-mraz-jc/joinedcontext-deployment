@@ -35,6 +35,20 @@
         <button type="button" class="btn btn-default" data-jc-copy="jc-store-url" data-jc-copied="{{ h.jc_t('copied') }}"><span class="jc-code-copy-label">{{ h.jc_t('copy') }}</span></button>
       </p>
       <p class="visually-hidden" role="status" aria-live="polite" id="jc-copy-status"></p>
+      {% if page.sources %}
+        {# T-4659: the websites the connector's search_documents reads, so a visitor sees what it covers. #}
+        <section class="jc-assistant-sources" aria-labelledby="jc-assistant-sources">
+          <h2 id="jc-assistant-sources">{{ h.jc_t('assistants_sources') }}</h2>
+          <p>{{ h.jc_t('assistants_sources_lead') }}</p>
+          <ul>
+            {% for source in page.sources %}
+              <li><a href="{{ source.url }}" rel="noopener noreferrer">{{ source.site }}</a>
+                <span class="jc-source-publisher">{{ source.publisher }}</span>
+                <span class="jc-source-languages">{{ h.jc_t('assistants_source_languages') }}: {{ source.languages }}</span></li>
+            {% endfor %}
+          </ul>
+        </section>
+      {% endif %}
       <details class="jc-developers">
         <summary>{{ h.jc_t('for_developers') }}</summary>
         {% snippet 'snippets/jc_mcp_install.html', editors_only=True, live=True, gemini=page.gemini %}

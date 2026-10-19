@@ -6,6 +6,7 @@ no Application rewrites a Secret, the helmfile plugin marks every object that ho
 is never pruned (OPS-55), and Argo CD fits the 600 Mi the node has for it."""
 
 import json
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -65,12 +66,13 @@ def labels(release):
 
 
 @requires_helmfile
-def test_the_committed_component_list_is_what_the_generator_writes(assembled):
+@pytest.mark.parametrize("env", ["dev", "smartcity"])
+def test_the_committed_component_list_is_what_the_generator_writes(assembled, env):
     out = subprocess.run(
-        ["python3", "scripts/gitops-apps.py", "dev"], cwd=ROOT, check=True, capture_output=True, text=True,
+        ["python3", "scripts/gitops-apps.py", env], cwd=ROOT, check=True, capture_output=True, text=True,
     ).stdout
-    assert out == (ROOT / "gitops/dev.yaml").read_text(), (
-        "gitops/dev.yaml is stale: python3 scripts/gitops-apps.py dev > gitops/dev.yaml"
+    assert out == (ROOT / f"gitops/{env}.yaml").read_text(), (
+        f"gitops/{env}.yaml is stale: python3 scripts/gitops-apps.py {env} > gitops/{env}.yaml"
     )
 
 
@@ -393,3 +395,46 @@ def test_the_pin_waits_for_a_green_ci_and_refuses_an_image_image_yml_did_not_sig
     fake.ci, fake.cosign = [{"status": "completed", "conclusion": "success"}], 1
     with pytest.raises(SystemExit, match="no signature"):
         module.main("platform")
+
+
+@pytest.mark.skipif(shutil.which("just") is None, reason="just not installed")
+def test_promotion_takes_only_dev_green_commits_and_release_only_moves_forward(tmp_path):
+    """prod's Argo CD follows `release` (T-4678): promote, rollback, promote again, never forced."""
+    def git(*args, cwd=tmp_path / "work"):
+        return subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True).stdout.strip()
+
+    def just(*args):
+        env = dict(os.environ, JUST_NO_DOTENV="true", GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@t",
+                   GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@t")
+        return subprocess.run(["just", *args], cwd=tmp_path / "work", env=env, capture_output=True, text=True)
+
+    subprocess.run(["git", "init", "-q", "--bare", "-b", "main", str(tmp_path / "origin")], check=True)
+    git("clone", "-q", str(tmp_path / "origin"), "work", cwd=tmp_path)
+    git("config", "user.email", "t@t"); git("config", "user.name", "t")
+    shutil.copy(ROOT / "justfile", tmp_path / "work/justfile")
+    shas = []
+    for n in range(3):
+        (tmp_path / "work/pin").write_text(f"{n}\n")
+        git("add", "-A"); git("commit", "-qm", f"pin {n}"); shas.append(git("rev-parse", "HEAD"))
+    git("push", "-q", "origin", "main")
+
+    assert just("dev-green", shas[0]).returncode == 0
+    refused = just("promote", shas[1])
+    assert refused.returncode != 0 and "not green on dev" in refused.stderr
+    assert just("promote", shas[0]).returncode == 0
+    assert git("ls-remote", "origin", "refs/heads/release").split()[0] == shas[0]
+    first = next(t for t in git("ls-remote", "--tags", "origin").split() if t.startswith("refs/tags/prod-"))
+
+    assert just("dev-green", shas[2]).returncode == 0
+    assert just("promote", shas[2]).returncode == 0
+    back = just("rollback", first.removeprefix("refs/tags/"))
+    assert back.returncode == 0, back.stderr
+    git("fetch", "-q", "origin", "release")
+    assert git("show", "origin/release:pin") == "0"
+    assert git("merge-base", "--is-ancestor", shas[2], "origin/release") == ""
+
+    again = just("promote", shas[2])
+    assert again.returncode == 0, again.stderr
+    git("fetch", "-q", "origin", "release")
+    assert git("show", "origin/release:pin") == "2"
+    assert just("rollback", "main").returncode != 0

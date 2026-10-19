@@ -48,3 +48,27 @@ postgres:
   databases:
     enabled: true
     namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "postgres") }}
+    # A nightly pg_dumpall of the cluster onto a node volume, kept `keepDays` days. Only for an
+    # instance without the object store above: it covers a bad migration, not a lost node.
+    localBackup:
+      enabled: false
+      schedule: '30 2 * * *'
+      keepDays: 7
+      size: 10Gi
+    # The monthly restore drill (OPS-11, OPS-12, T-0046): restores the latest base backup and
+    # WAL from the archive above into a throwaway Cluster `{cluster}-drill`, compares every
+    # database's row count with the source, measures RTO and RPO, writes the result into the
+    # ConfigMap `{cluster}-dr-drill` and one JSON line into its log, and deletes the copy. With
+    # `backups.enabled: false` it restores nothing and records "no off-site backup to drill".
+    drDrill:
+      enabled: true
+      # 04:00 UTC on the 1st, after the 03:00 base backup.
+      schedule: '0 4 1 * *'
+      # How far a restored database's row count may trail the source (writes after the last
+      # archived WAL segment), in percent of the source's.
+      tolerancePercent: 5
+      # The drill waits while the node has less memory available than this, at most
+      # `timeoutMinutes`, and then records that it was skipped.
+      minMemAvailableMiB: 1536
+      timeoutMinutes: 60
+      storageSize: 8Gi
