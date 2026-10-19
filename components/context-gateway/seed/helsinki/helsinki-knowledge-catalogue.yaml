@@ -1,5 +1,5 @@
 # Every public dataset of the data portal (T-3181, T-3054, AG-114): the CKAN at
-# data.dev.joinedcontext.com holds the catalogues of all five bodies (Banská Bystrica, the Banská
+# opendata.dev.joinedcontext.com holds the catalogues of all five bodies (Banská Bystrica, the Banská
 # Bystrica region, Prague, Helsinki and Žilina). The source lists it anonymously with
 # package_search, so a private dataset never reaches it, and indexes each dataset's description
 # and resources with its page as the citation. Read once a night to keep the crawl small.

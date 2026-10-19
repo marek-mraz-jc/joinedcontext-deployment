@@ -1,5 +1,5 @@
 # The mapping of the od-prirastky-a-ubytky-obcanov-za-jednotlive pipeline, generated from the T-4254 mapping: one KeyPerformanceIndicator per row of
-# "Prírastky a úbytky občanov za jednotlivé roky" (https://data.dev.joinedcontext.com/dataset/bb-prirastky-a-ubytky-obcanov-za-jednotlive-roky). Do not edit: change the mapping and run scripts/open-data/generate.py.
+# "Prírastky a úbytky občanov za jednotlivé roky" (https://opendata.dev.joinedcontext.com/dataset/bb-prirastky-a-ubytky-obcanov-za-jednotlive-roky). Do not edit: change the mapping and run scripts/open-data/generate.py.
 
 pipeline:
   processors:
@@ -93,8 +93,8 @@ pipeline:
           "odstahovanychM": {"p": this."Odsťahovaných_M".apply("integer"), "at": $at}.apply("stamped"),
           "odstahovanychZ": {"p": this."Odsťahovaných_Ž".apply("integer"), "at": $at}.apply("stamped"),
           "dataProvider": { "type": "Property", "value": "Mesto Banská Bystrica (CC BY 4.0)" },
-          "source": { "type": "Property", "value": "https://data.dev.joinedcontext.com/api/3/action/datastore_search?resource_id=4450222b-7726-40e9-980e-1fbe60a18d12&limit=32000" },
-          "isPartOf": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bb-prirastky-a-ubytky-obcanov-za-jednotlive-roky" }
+          "source": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/api/3/action/datastore_search?resource_id=4450222b-7726-40e9-980e-1fbe60a18d12&limit=32000" },
+          "isPartOf": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/dataset/bb-prirastky-a-ubytky-obcanov-za-jednotlive-roky" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.
     - archive:

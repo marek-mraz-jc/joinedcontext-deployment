@@ -2,7 +2,7 @@
 image: {repository: '', tag: '', digest: ''}
 imagePullPolicy: IfNotPresent
 
-# viz.{domain}; the page reads api.{domain} and data.{domain}.
+# viz.{domain}; the page reads api.{domain} and opendata.{domain}.
 host: ''
 domain: ''
 

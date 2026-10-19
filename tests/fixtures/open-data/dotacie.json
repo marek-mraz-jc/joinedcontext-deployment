@@ -1,5 +1,5 @@
 {
- "help": "https://data.dev.joinedcontext.com/api/3/action/help_show?name=datastore_search",
+ "help": "https://opendata.dev.joinedcontext.com/api/3/action/help_show?name=datastore_search",
  "success": true,
  "result": {
   "include_total": true,

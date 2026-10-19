@@ -1,5 +1,5 @@
 # The mapping of the od-pocet-obcanov-podla-dna-narodenia pipeline, generated from the T-4254 mapping: one KeyPerformanceIndicator per row of
-# "Počet občanov podľa dňa narodenia" (https://data.dev.joinedcontext.com/dataset/bb-pocet-obcanov-podla-dna-narodenia). Do not edit: change the mapping and run scripts/open-data/generate.py.
+# "Počet občanov podľa dňa narodenia" (https://opendata.dev.joinedcontext.com/dataset/bb-pocet-obcanov-podla-dna-narodenia). Do not edit: change the mapping and run scripts/open-data/generate.py.
 
 pipeline:
   processors:
@@ -77,8 +77,8 @@ pipeline:
           "pohlavie": this."Pohlavie".apply("string"),
           "pocet": this."Počet".apply("integer"),
           "dataProvider": { "type": "Property", "value": "Mesto Banská Bystrica (CC BY 4.0)" },
-          "source": { "type": "Property", "value": "https://data.dev.joinedcontext.com/api/3/action/datastore_search?resource_id=c7e533af-04b7-4a0a-95bc-dc75f18ede97&limit=32000" },
-          "isPartOf": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bb-pocet-obcanov-podla-dna-narodenia" }
+          "source": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/api/3/action/datastore_search?resource_id=c7e533af-04b7-4a0a-95bc-dc75f18ede97&limit=32000" },
+          "isPartOf": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/dataset/bb-pocet-obcanov-podla-dna-narodenia" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.
     - archive:

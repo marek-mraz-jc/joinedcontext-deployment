@@ -1,5 +1,5 @@
 # The mapping of the od-pocet-obyvatelov-v-obciach-bbk pipeline, generated from the T-4254 mapping: one KeyPerformanceIndicator per row of
-# "Počet obyvateľov v obciach BBK" (https://data.dev.joinedcontext.com/dataset/bbsk-pocet-obyvatelov-v-obciach-bbk-b2adc3). Do not edit: change the mapping and run scripts/open-data/generate.py.
+# "Počet obyvateľov v obciach BBK" (https://opendata.dev.joinedcontext.com/dataset/bbsk-pocet-obyvatelov-v-obciach-bbk-b2adc3). Do not edit: change the mapping and run scripts/open-data/generate.py.
 
 pipeline:
   processors:
@@ -119,7 +119,7 @@ pipeline:
           "f2025": this.properties."F2025".apply("float"),
           "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj (CC BY-SA 4.0)" },
           "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Po%C4%8Det_obyvate%C4%BEov_obce_BBK1/FeatureServer/0/query?where=1%3D1&outFields=Okres,KOD_NUTS_okres,KOD_STAT_okres,obec_kratkyNazov,Obec_dlhy_nazov,KOD_NUTS_obec,STAT_KOD_obec,F1993,F1994,F1995,F1996,F1997,F1998,F1999,F2000,F2001,F2002,F2003,F2004,F2005,F2006,F2007,F2008,F2009,F2010,F2011,F2012,F2013,F2014,F2015,F2016,F2017,F2018,F2019,F2020,F2021,F2022,F2023,F2024,F2025&returnGeometry=false&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },
-          "isPartOf": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bbsk-pocet-obyvatelov-v-obciach-bbk-b2adc3" }
+          "isPartOf": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/dataset/bbsk-pocet-obyvatelov-v-obciach-bbk-b2adc3" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.
     - archive:

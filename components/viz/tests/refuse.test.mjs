@@ -19,7 +19,7 @@ test("the docs' examples and a brush pass", () => {
     { transform: [{ filter: { param: "time" } }, { calculate: "datum.temperature * 9 / 5 + 32", as: "f" }], mark: "bar" }] };
   const vega = { $schema: VEGA, data: [{ name: "source" }, { name: "hot", source: "source", transform: [{ type: "filter", expr: "datum.t > 20" }] }], marks: [] };
   const inline = { $schema: "https://vega.github.io/schema/vega-lite/v5.17.0.json", data: { values: [{ a: 1 }] }, mark: "point" };
-  const ours = { $schema: VL, data: { name: "source" }, mark: "point", encoding: { href: { value: "https://data.dev.joinedcontext.com/dataset/x" } } };
+  const ours = { $schema: VL, data: { name: "source" }, mark: "point", encoding: { href: { value: "https://opendata.dev.joinedcontext.com/dataset/x" } } };
   for (const spec of [line, brush, vega, inline, ours]) assert.deepEqual(rules(spec), []);
 });
 
@@ -87,7 +87,7 @@ const mapSpec = (over = {}) => ({
   $schema: MAP, title: "Kvalita ovzdušia", label: "name", time: "observedAt",
   popup: [{ field: "pm10", label: "PM10", unit: "µg/m³" }],
   data: { type: "FeatureCollection", features: [station([19.1462, 48.7363])] },
-  link: "https://data.dev.joinedcontext.com/dataset/ovzdusie", ...over
+  link: "https://opendata.dev.joinedcontext.com/dataset/ovzdusie", ...over
 });
 const mapRules = (spec) => refuse.map(spec, DOMAIN).map((e) => e.pointer + " " + e.rule);
 

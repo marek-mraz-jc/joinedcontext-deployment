@@ -8,7 +8,7 @@ metadata:
   namespace: bbsk
   title: { sk: "Banskobystrický samosprávny kraj", en: "Banská Bystrica Self-Governing Region" }
 spec:
-  url: https://data.dev.joinedcontext.com
+  url: https://opendata.dev.joinedcontext.com
   organizationDefault: bbsk
   apiTokenRef:
     name: ckan-api-token

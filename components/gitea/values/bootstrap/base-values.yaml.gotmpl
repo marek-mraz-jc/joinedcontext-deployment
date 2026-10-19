@@ -148,9 +148,7 @@ serviceMesh:
        hosts, the owner where the seeds name the demo steward, and no other demo person. */}}
 {{- if and (eq .Values.global.profile "production") .Values.global.valuesProfile }}
 rewrites:
-  # The catalogue's host first: opendata.{domain} since T-4679.
-  - from: '(^|[^a-z0-9.-])data\.dev\.joinedcontext\.com'
-    to: '${1}opendata.{{ .Values.global.domain }}'
+  # The seeds name the catalogue opendata.dev.joinedcontext.com, so the domain rule below moves it too (T-4679).
   - from: 'dev\.joinedcontext\.com'
     to: {{ .Values.global.domain | quote }}
   - from: 'demo\.steward@[A-Za-z0-9.-]+'

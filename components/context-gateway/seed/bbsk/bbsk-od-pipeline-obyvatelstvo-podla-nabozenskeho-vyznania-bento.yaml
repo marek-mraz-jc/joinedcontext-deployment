@@ -1,5 +1,5 @@
 # The mapping of the od-obyvatelstvo-podla-nabozenskeho-vyznania pipeline, generated from the T-4254 mapping: one KeyPerformanceIndicator per row of
-# "Obyvateľstvo podľa náboženského vyznania (2011), obce" (https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-nabozenskeho-vyznania-2011-obce-81576b). Do not edit: change the mapping and run scripts/open-data/generate.py.
+# "Obyvateľstvo podľa náboženského vyznania (2011), obce" (https://opendata.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-nabozenskeho-vyznania-2011-obce-81576b). Do not edit: change the mapping and run scripts/open-data/generate.py.
 
 pipeline:
   processors:
@@ -127,7 +127,7 @@ pipeline:
           "location": if this.geometry.or(null) == null { null } else { { "type": "GeoProperty", "value": this.geometry } },
           "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj (CC BY-SA 4.0)" },
           "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_n%C3%A1bo%C5%BEenstvo/FeatureServer/0/query?where=1%3D1&outFields=DOW,FACC,IDN4,NM4,IDN3,NM3,IDN2,NM2,VYMERA,NUTS1,NUTS1_CODE,NUTS2,NUTS2_CODE,NUTS3,NUTS3_CODE,LAU1,LAU1_CODE,LAU2,LAU2_CODE,Obec,Okres,K%C3%B3d_obce,K%C3%B3d_okresu,K%C3%B3d_kraja,Kraj,Trvalo_b%C3%BDvaj%C3%BAce_obyvate%C4%BEstvo_sp,R%C3%ADmskokatol%C3%ADcka_cirkev,Gr%C3%A9ckokatol%C3%ADcka_cirkev,Pravosl%C3%A1vna_cirkev,Evanjelick%C3%A1_cirkev_augsbursk%C3%A9ho,Reformovan%C3%A1_kres%C5%A5ansk%C3%A1_cirkev,N%C3%A1bo%C5%BEensk%C3%A1_spolo%C4%8Dnos%C5%A5_Jehovovi_,Evanjelick%C3%A1_cirkev_metodistick%C3%A1,Kres%C5%A5ansk%C3%A9_zbory,Apo%C5%A1tolsk%C3%A1_cirkev,Bratsk%C3%A1_jednota_baptistov,Cirkev_adventistov_siedmeho_d%C5%88a,Cirkev_bratsk%C3%A1,%C3%9Astredn%C3%BD_zv%C3%A4z_%C5%BEidovsk%C3%BDch_n%C3%A1bo%C5%BEe,Starokatol%C3%ADcka_cirkev,Cirkev_%C4%8Deskoslovensk%C3%A1_husitsk%C3%A1,Novoapo%C5%A1tolsk%C3%A1_cirkev,Bah%C3%A1jske_spolo%C4%8Denstvo,Cirkev_Je%C5%BEi%C5%A1a_Krista_sv%C3%A4t%C3%BDch_ne,in%C3%A9,bez_vyznania,nezisten%C3%A9&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },
-          "isPartOf": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-nabozenskeho-vyznania-2011-obce-81576b" }
+          "isPartOf": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/dataset/bbsk-obyvatelstvo-podla-nabozenskeho-vyznania-2011-obce-81576b" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.
     - archive:

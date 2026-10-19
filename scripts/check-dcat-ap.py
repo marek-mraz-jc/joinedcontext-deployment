@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Is the catalogue valid DCAT-AP 3? (T-3010)
 
-usage: check-dcat-ap.py <catalogue-url>          e.g. https://data.dev.joinedcontext.com
+usage: check-dcat-ap.py <catalogue-url>          e.g. https://opendata.dev.joinedcontext.com
        check-dcat-ap.py --file <document.ttl>...
 
 Reads /catalog.ttl, every page of it, then /dataset/{id}.ttl for each dataset the catalogue

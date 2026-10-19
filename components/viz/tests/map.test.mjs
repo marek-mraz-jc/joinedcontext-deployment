@@ -5,7 +5,7 @@ import { createRequire } from "node:module";
 
 const map = createRequire(import.meta.url)("../charts/renderer/files/site/map.js");
 const spec = {
-  label: "name", time: "observedAt", link: "https://data.dev.joinedcontext.com/dataset/ovzdusie",
+  label: "name", time: "observedAt", link: "https://opendata.dev.joinedcontext.com/dataset/ovzdusie",
   popup: [{ field: "no2", label: "NO₂", unit: "µg/m³" }, { field: "pm10", label: "PM10", unit: "µg/m³" }, { field: "open", label: "Open" }]
 };
 

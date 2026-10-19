@@ -8,7 +8,7 @@ metadata:
   namespace: banskabystrica
   title: { sk: "Mesto Banská Bystrica", en: "City of Banská Bystrica" }
 spec:
-  url: https://data.dev.joinedcontext.com
+  url: https://opendata.dev.joinedcontext.com
   organizationDefault: banskabystrica
   apiTokenRef:
     name: ckan-api-token

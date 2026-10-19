@@ -1,7 +1,7 @@
 """T-3181 (AG-114, EP-81, MF-52): the data portal's public assistant answers from the whole
 catalogue and reads nothing that is not public.
 
-The deployment `helsinki/helsinki-catalogue` answers anyone on data.dev.joinedcontext.com
+The deployment `helsinki/helsinki-catalogue` answers anyone on opendata.dev.joinedcontext.com
 without signing in (since T-4252 the catalogue pages frame Banská Bystrica's assistant instead). Every source it answers
 from is a public KnowledgeSource, every connector a public Endpoint that serves MCP, it is
 placed on the data portal alone, and its rate and budget are bounded.
@@ -38,7 +38,7 @@ def test_the_catalogue_assistant_answers_from_the_whole_data_portal():
     assert portal["source"] == "ckan"
     instance = manifests("CkanInstance")[portal["ckanInstanceRef"]]["spec"]
     # One CKAN holds every body's catalogue; the source lists it whole, not one organization.
-    assert instance["url"] == "https://data.dev.joinedcontext.com"
+    assert instance["url"] == "https://opendata.dev.joinedcontext.com"
     for body in BODIES:
         assert body in spec["systemPrompt"], body
     assert {"sk", "cs", "en", "fi"} <= set(spec["languages"])
@@ -61,7 +61,7 @@ def test_a_public_channel_reads_public_sources_and_public_endpoints_only():
 
 def test_it_is_placed_on_the_data_portal_alone_and_its_spending_is_bounded():
     spec = deployment()
-    assert spec["allowedOrigins"] == ["https://data.dev.joinedcontext.com"]
+    assert spec["allowedOrigins"] == ["https://opendata.dev.joinedcontext.com"]
     assert spec["rateLimit"]["perClientPerMinute"] <= 10
     # The owner keeps model usage down through the cost cap (T-4286, 2026-10-16): a shared
     # token cap of 300k refused everyone after 56 answers, so $3 a day is the guard.

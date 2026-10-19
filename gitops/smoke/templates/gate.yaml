@@ -24,7 +24,8 @@ data:
     200 https://{{ $d }}/git/api/healthz
     {{- end }}
     {{- if has "ckan" $names }}
-    200 https://data.{{ $d }}/api/3/action/status_show
+    200 https://opendata.{{ $d }}/api/3/action/status_show
+    301 https://data.{{ $d }}/api/3/action/status_show
     {{- end }}
     {{- if has "viz" $names }}
     200 https://viz.{{ $d }}/render.html

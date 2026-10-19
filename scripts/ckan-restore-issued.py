@@ -17,7 +17,7 @@ Every date is read from the source it names, never typed. A dry run (the default
 dataset with the chosen date and its evidence; `--write` adds the `issued` extra with package_patch
 and changes nothing else. A second run finds every dataset carrying `issued` and writes nothing.
 
-    scripts/ckan-restore-issued.py https://data.dev.joinedcontext.com            # dry run
+    scripts/ckan-restore-issued.py https://opendata.dev.joinedcontext.com            # dry run
     CKAN_API_TOKEN=... scripts/ckan-restore-issued.py https://... --write       # the token from the
                                                                                 # ckan-api-token secret
 """
@@ -239,7 +239,7 @@ def restore(base, repo, write, token=None):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
-    parser.add_argument("catalogue", help="the CKAN base address, e.g. https://data.dev.joinedcontext.com")
+    parser.add_argument("catalogue", help="the CKAN base address, e.g. https://opendata.dev.joinedcontext.com")
     parser.add_argument("--repo", default=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                         help="the joinedcontext-deployment clone whose history is the evidence")
     parser.add_argument("--write", action="store_true", help="add the issued extras (default: dry run)")

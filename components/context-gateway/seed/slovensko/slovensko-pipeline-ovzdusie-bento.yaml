@@ -49,7 +49,7 @@ pipeline:
                   verb: GET
                   headers:
                     Accept: application/octet-stream
-                    User-Agent: "joinedcontext-platform open-data pipeline (https://data.dev.joinedcontext.com)"
+                    User-Agent: "joinedcontext-platform open-data pipeline (https://opendata.dev.joinedcontext.com)"
                   timeout: 60s
                   retries: 2
                   rate_limit: pipeline_egress

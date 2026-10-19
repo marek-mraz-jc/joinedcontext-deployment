@@ -15,7 +15,7 @@ test("the fragment names a view id, inline and a language, nothing else", () => 
   assert.deepEqual(host.parseHash(`#${id}&inline&lang=sk`), { id, inline: true, lang: "sk" });
   assert.deepEqual(host.parseHash(`#${id}`), { id, inline: false, lang: null });
   for (const bad of ["", "#", "#https://evil.example/", `#${id}x`, "#../../x"]) assert.equal(host.parseHash(bad), null);
-  assert.deepEqual(host.hosts("viz.dev.joinedcontext.com"), { domain: "dev.joinedcontext.com", api: API, data: "https://data.dev.joinedcontext.com" });
+  assert.deepEqual(host.hosts("viz.dev.joinedcontext.com"), { domain: "dev.joinedcontext.com", api: API, data: "https://opendata.dev.joinedcontext.com" });
 });
 
 test("a window of at most 31 days", () => {

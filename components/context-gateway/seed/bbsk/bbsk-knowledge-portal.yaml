@@ -8,7 +8,7 @@ kind: KnowledgeSource
 metadata:
   name: portal
   namespace: bbsk
-  title: { sk: "Všetky datasety katalógu data.dev", en: "Every dataset of the data.dev catalogue" }
+  title: { sk: "Všetky datasety katalógu opendata.dev", en: "Every dataset of the opendata.dev catalogue" }
 spec:
   source: ckan
   ckanInstanceRef: bbsk

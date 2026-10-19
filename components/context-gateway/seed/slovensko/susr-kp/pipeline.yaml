@@ -50,7 +50,7 @@ spec:
           "kpiValue": { "type": "Property", "value": at._v, "observedAt": $updated }.filter(e -> e.value != null),
           "unitText": if $roles.unit == null { null } else { { "type": "Property", "value": $labels.index($at_index.get($roles.unit)).get(at.get($roles.unit)).or(at.get($roles.unit)) } },
           "source": { "type": "Property", "value": $roles.source },
-          "isPartOf": { "type": "Property", "value": "https://data.dev.joinedcontext.com/dataset/susr-%v".format($cube) },
+          "isPartOf": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/dataset/susr-%v".format($cube) },
           "dateObserved": if $updated == null { null } else { { "type": "Property", "value": $updated } }
         }.filter(e -> e.value != null))
   outputs:

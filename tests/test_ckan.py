@@ -398,7 +398,7 @@ def test_the_catalogue_names_no_account_to_an_anonymous_visitor(rendered):
 @pytest.mark.parametrize(
     ("site_url", "written"),
     [
-        ("https://data.dev.joinedcontext.com", ["SESSION_COOKIE_SECURE=true", "REMEMBER_COOKIE_SECURE=true"]),
+        ("https://opendata.dev.joinedcontext.com", ["SESSION_COOKIE_SECURE=true", "REMEMBER_COOKIE_SECURE=true"]),
         ("http://data.localhost", None),
         ("", None),
     ],
