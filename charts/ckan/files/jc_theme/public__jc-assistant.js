@@ -64,9 +64,18 @@
       });
     }
   }
+  // Docked on a wide screen the page scrolls in its body, not the window (T-4767, jc-theme.css):
+  // a change of place keeps the reader where they were, and Back or a reload finds the body's
+  // offset again, as the browser does for the window's.
+  var SCROLL = "jc-assistant-scroll";
+  function scroller() {
+    return getComputedStyle(root).overflowY === "hidden" ? document.body : document.scrollingElement || root;
+  }
   function place() {
+    var top = scroller().scrollTop;
     box.classList.toggle("jc-full", state.mode === "full");
     root.classList.toggle("jc-docked", box.open && state.mode === "dock");
+    scroller().scrollTop = top;
     silence(box.open);
   }
   function close() {
@@ -122,7 +131,7 @@
   if (state.open && frame) {
     frame.loading = "eager";
     if (state.widget && ours(state.widget) && state.widget !== frame.src.split("?")[0]) {
-      frame.src = state.widget + "?embed=1&dock=1";
+      frame.src = state.widget + "?embed=1&dock=1&scheme=light";
     }
     box.open = true;
     // Focus stays in the chat across the page change, as it was.
@@ -131,9 +140,20 @@
     }
   }
   place();
+  try {
+    var kept = JSON.parse(sessionStorage.getItem(SCROLL) || "null");
+    var arrival = (performance.getEntriesByType("navigation")[0] || {}).type;
+    if (kept && kept.url === location.href && typeof kept.top === "number" && (arrival === "back_forward" || arrival === "reload") &&
+        scroller() === document.body) {
+      document.body.scrollTop = kept.top;
+    }
+  } catch (e) { /* the page opens at its top */ }
   window.addEventListener("pagehide", function () {
     state.focused = box.open && document.activeElement === frame;
     save();
+    try {
+      sessionStorage.setItem(SCROLL, JSON.stringify({ url: location.href, top: scroller() === document.body ? document.body.scrollTop : 0 }));
+    } catch (e) { /* this page only */ }
   });
 
   box.addEventListener("toggle", function () {

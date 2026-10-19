@@ -501,11 +501,13 @@ body:has(.jc-assistant.jc-full[open]) { overflow: hidden; }
 /* Docked (T-4685, API/05 §1.6.1): on a screen 1100px wide or more the frame takes the right edge
    at full height, 34% of the window by default and 360px to half the window as the visitor drags
    its edge (jc-assistant.js), and the page shrinks beside it, never under it: search, filters,
-   maps and tables stay usable. Narrower, the floating panel stays. */
+   maps and tables stay usable. Narrower, the floating panel stays. Docked, the page scrolls in its
+   body beside the frame, never the window behind it, so the page's bar and the chat's never stand
+   side by side at the screen's edge (T-4767). */
 .jc-dock-edge { display: none; }
 @media (min-width: 1100px) {
-  html.jc-docked { --jc-dock-w: clamp(360px, var(--jc-dock, 34vw), 50vw); }
-  html.jc-docked body { margin-inline-end: var(--jc-dock-w); }
+  html.jc-docked { --jc-dock-w: clamp(360px, var(--jc-dock, 34vw), 50vw); overflow: hidden; }
+  html.jc-docked body { margin-inline-end: var(--jc-dock-w); block-size: 100vh; block-size: 100dvh; overflow-y: auto; }
   html.jc-docked .jc-assistant[open]:not(.jc-full) > iframe { inset-block: 0; inset-inline-end: 0; width: var(--jc-dock-w); height: 100vh; height: 100dvh; border-width: 0 0 0 1px; border-radius: 0; }
   html.jc-docked .jc-assistant[open]:not(.jc-full) > .jc-dock-edge { display: block; position: fixed; inset-block: 0; inset-inline-end: calc(var(--jc-dock-w) - 4px); inline-size: 8px; cursor: col-resize; touch-action: none; z-index: 1; }
   .jc-dock-edge:focus-visible { outline: 3px solid var(--jc-accent); outline-offset: -3px; }

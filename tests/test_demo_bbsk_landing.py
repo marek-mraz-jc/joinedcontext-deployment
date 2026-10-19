@@ -91,7 +91,7 @@ def test_the_page_says_demo_keeps_search_engines_out_and_loads_nothing_third_par
         assert page.meta["robots"] == "noindex, nofollow", name
         # Every script and style is this host's own; the one frame is the demo assistant.
         assert page.loads and all(src and src.startswith("/") for src in page.loads), (name, page.loads)
-        assert page.frames == [f"https://assistant.{domain}/d/bbsk-demo/widget?embed=1&dock=1&lang=sk"], name
+        assert page.frames == [f"https://assistant.{domain}/d/bbsk-demo/widget?embed=1&dock=1&lang=sk&scheme=light"], name
         assert f"https://api.{domain}/api/mcp/d/bbsk-demo" in text, name
         assert "<form" not in site[name] and "__DOMAIN__" not in site[name], name
         # No coat of arms, no logo and no file of bbsk.sk: their site is only linked.
@@ -107,7 +107,15 @@ def test_the_cards_are_the_demo_assistants_own_questions_and_the_panel_speaks_sl
         cards = [card.split("<strong>")[1] for card in cards]
         assert cards == seed["spec"]["suggestions"][lang], name
         # The page is Slovak, so the panel opens in Slovak whatever the browser says (owner 13:50Z item 3).
-        assert "/d/bbsk-demo/widget?embed=1&amp;dock=1&amp;lang=sk" in site[name], name
+        assert "/d/bbsk-demo/widget?embed=1&amp;dock=1&amp;lang=sk&amp;scheme=light" in site[name], name
+
+
+def test_docked_the_page_scrolls_beside_the_panel_not_behind_it(landing):
+    """T-4767: one scrollbar at the screen's edge, the chat's; the page's own stands beside the panel."""
+    _, _, _, site, _ = landing
+    dock = site["landing.css"].split("@media (min-width: 1100px) {", 1)[1].split("\n}\n", 1)[0]
+    assert "html.jc-docked { --jc-dock-w: clamp(360px, var(--jc-dock, 34vw), 50vw); overflow: hidden; }" in dock
+    assert "html.jc-docked body { margin-right: var(--jc-dock-w); height: 100vh; height: 100dvh; overflow-y: auto; scroll-padding-top: calc(var(--ribbon) + 1rem); }" in dock
 
 
 def test_the_dock_is_the_catalogues_own_and_the_policy_frames_only_the_assistant(landing):
@@ -206,3 +214,17 @@ def test_the_snapshot_keeps_bbsk_sks_texts_links_to_its_pages_and_shows_no_logo(
     # Ours is marked as ours, and the name stands where the logo was.
     assert text.count("DEMO · pridané joinedcontext") == 3  # the hero, the cards, the MCP block
     assert "Banskobystrický samosprávny kraj · DEMO" in text
+
+
+def test_the_launcher_and_the_dock_edge_never_show_a_red_focus_ring():
+    # T-4761 (owner 2026-10-19T19:59Z, "this red does not looks good"): closing the panel gives
+    # focus back to the launcher, which drew the page's red focus ring. The ring stays (WCAG 2.4.7)
+    # in white with a dark blue edge.
+    css = (Path(__file__).resolve().parent.parent / "demos/bbsk/chart/files/landing/landing.css").read_text()
+    rules = dict(
+        (selector.strip(), body)
+        for selector, body in (line.split("{", 1) for line in css.splitlines() if ":focus-visible" in line and "{" in line)
+    )
+    launcher = rules[".jc-assistant > summary:focus-visible"]
+    assert "outline: 3px solid var(--white)" in launcher and "var(--blue-dark)" in launcher
+    assert "var(--red)" not in rules[".jc-dock-edge:focus-visible"]
