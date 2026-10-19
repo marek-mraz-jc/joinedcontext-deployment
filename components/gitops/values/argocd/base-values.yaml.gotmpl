@@ -175,7 +175,7 @@ repoServer:
     limits: {cpu: 500m, memory: 384Mi}
   metrics:
     enabled: true
-  # The helmfile plugin (§2.2): the stock helmfile image, run as Argo CD's 999 by the
+  # The helmfile plugin (§2.2): images/gitops-helmfile (T-4706), run as Argo CD's 999 by the
   # plugin server the repo server shares with it.
   extraContainers:
     - name: helmfile
@@ -188,7 +188,7 @@ repoServer:
           command: [test, -S, /home/argocd/cmp-server/plugins/helmfile.sock]
         periodSeconds: 10
       env:
-        # The image's helm home is root's; the caches go to the writable /tmp.
+        # The caches go to the writable /tmp: the root filesystem is read-only.
         - {name: HOME, value: /tmp}
         - {name: HELM_CACHE_HOME, value: /tmp/helm/cache}
         - {name: HELM_CONFIG_HOME, value: /tmp/helm/config}

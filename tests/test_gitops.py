@@ -278,7 +278,7 @@ def test_the_gate_waits_for_every_application_at_the_revision_then_checks_each_s
 
 
 def test_the_gate_chart_runs_after_the_sync_reads_only_and_checks_only_deployed_surfaces():
-    image = "ghcr.io/helmfile/helmfile:v1.8.1@sha256:" + "0" * 64
+    image = "ghcr.io/marek-mraz-jc/joinedcontext-gitops-helmfile:1.8.1@sha256:" + "0" * 64
     rendered = subprocess.run(
         ["helm", "template", "dev-smoke", "gitops/smoke", "--namespace", "argocd", "-f", "gitops/dev.yaml",
          "--set-string", "revision=abc", "--set-string", f"image={image}"],
