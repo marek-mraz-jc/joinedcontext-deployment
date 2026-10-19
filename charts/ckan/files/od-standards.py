@@ -150,6 +150,16 @@ def _od_filter(entry, filtered):
     return filtered if entry.get("filtered", True) and not entry.get("sole", False) else None
 
 
+def od_extras(name):
+    """The `endpoint` extra of CKAN dataset `name` (T-4765): its Endpoint's public URL, the value
+    jcctl's publisher writes for an Endpoint's own dataset (ckan.rs, `{url}/`), so the catalogue
+    and its readers find every dataset's Endpoint under one key. None for an unconverted one."""
+    entry = OD_DATASETS.get(name)
+    if not entry or not OD_GATEWAY:
+        return []
+    return [{"key": "endpoint", "value": f"{OD_GATEWAY}/api/endpoint/{entry['endpoint']}/"}]
+
+
 def od_standards(name):
     """The distributions of CKAN dataset `name` (EP-118), or none when it cannot list them all:
     its rows were not converted, or its Endpoint's model lacks an artefact. A harvest withdraws a

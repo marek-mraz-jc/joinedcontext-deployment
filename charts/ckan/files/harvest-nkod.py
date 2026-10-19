@@ -292,7 +292,7 @@ def package(ds, name, licence_id, distributions, tables):
     return {"name": name, "title": ds["title"], "notes": "\n\n".join(notes),
             "owner_org": CONFIG["organization"], "license_id": licence_id, "tags": tags,
             "url": ds["landing"] or ds["iri"],
-            "extras": [{"key": k, "value": v} for k, v in extras.items() if v],
+            "extras": [{"key": k, "value": v} for k, v in extras.items() if v] + od_extras(name),
             # The platform's own distributions of the converted rows and their data model, never the
             # source's file links (EP-118, T-4324); the DataStore tables follow in `upsert`.
             "resources": distributions}

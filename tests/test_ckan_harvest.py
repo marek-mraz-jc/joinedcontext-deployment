@@ -286,6 +286,8 @@ def test_a_run_ingests_what_the_files_hold_and_lists_every_skip_with_its_reason(
     assert extras["modified"] == "2023-11-30T08:26:58Z"
     assert extras["publisher_name"] == "Mesto Banská Bystrica"
     assert extras["source_uri"] == "https://data.gov.sk/set/veku"
+    # T-4765: the Endpoint under the key jcctl's publisher writes, its trailing slash included.
+    assert extras["endpoint"] == "https://api.dev.joinedcontext.com/api/endpoint/ep/"
     # EP-118: the platform's distributions and data model, the DataStore table last; no source link.
     assert [r["format"] for r in ages["resources"]] == [
         "NGSI-LD", "CSV", "OData", "MCP", "WebSocket",
