@@ -20,3 +20,6 @@ dev-deployment/.ssl/crlnumber*
 # The render the golden check compares against; CI writes it into the checkout and so does
 # anyone reproducing a golden failure by hand (ci.yml, `just golden-update`).
 /golden-check.yaml
+
+# The catalogue smoke's tables (T-4716): the next run rotates from the newest one.
+/.smoke/
