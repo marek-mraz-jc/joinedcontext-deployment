@@ -157,3 +157,33 @@ def seed_configmap(docs):
             data.update(d["data"])
     assert data, "no forge seed rendered"
     return {"data": data}
+
+
+CATALOGUE_ASSISTANT = PROJECT_ROOT / "components/ckan/seed/assistant.yaml.gotmpl"
+
+
+def render_catalogue_assistant(instance: dict, domain: str, name: str = "catalogue") -> str:
+    """The AssistantDeployment a catalogue instance's block renders (T-4636), through Helm's own
+    template engine: a throwaway chart whose one template includes the seed template, so the test
+    reads exactly what the forge seed does."""
+    if shutil.which("helm") is None:
+        pytest.skip("helm not installed")
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        chart = Path(tmp)
+        (chart / "templates").mkdir()
+        (chart / "Chart.yaml").write_text("apiVersion: v2\nname: seed\nversion: 0.0.0\n")
+        (chart / "templates/_seed.tpl").write_text(
+            '{{- define "seed" -}}\n' + CATALOGUE_ASSISTANT.read_text() + "\n{{- end -}}\n")
+        (chart / "templates/out.yaml").write_text(
+            '{{ include "seed" (dict "name" .Values.name "instance" .Values.instance "domain" .Values.domain) }}\n')
+        (chart / "values.yaml").write_text(yaml.safe_dump({"name": name, "instance": instance, "domain": domain}))
+        out = subprocess.run(["helm", "template", "x", str(chart)], capture_output=True, text=True, check=True).stdout
+    return out.split("# Source: seed/templates/out.yaml\n", 1)[1]
+
+
+def dev_catalogue(name: str = "catalogue") -> dict:
+    """`ckan.<name>` as dev sets it, over the component's defaults (its host label among them)."""
+    defaults = {"subDomain": "data", "site": {"title": {}, "logo": ""}}
+    values = yaml.safe_load((PROJECT_ROOT / ".ci/example-deployments/environments/dev/ckan.yaml.gotmpl").read_text())
+    return {**defaults, **values["ckan"][name]}

@@ -145,7 +145,7 @@ def test_the_new_spaces_are_writable_by_the_pipelines_and_reachable_by_the_publi
 def test_every_open_data_endpoint_serves_each_standard_and_the_catalogue_lists_each_converted_dataset():
     """T-4279: one list of representations for both spaces, and the harvests' mapping names every
     converted dataset once, with the Endpoint of its own project."""
-    assert {"xlsx", "parquet", "sta"} <= set(generate.REPRESENTATIONS)
+    assert "sta" in generate.REPRESENTATIONS and not {"xlsx", "parquet", "json", "zip", "geojson"} & set(generate.REPRESENTATIONS)
     slugs = {}
     for project in ("bbsk", "banskabystrica"):
         endpoint = yaml.safe_load((SEED / project / f"{project}-od-endpoint.yaml").read_text())["spec"]
@@ -177,7 +177,7 @@ def test_every_open_data_endpoint_serves_each_standard_and_the_catalogue_lists_e
         project, endpoint = endpoints[row["endpoint"]]
         filtered = e["dataset"].rsplit("/", 1)[1] in shared
         assert (project, endpoint["audience"], row["filtered"]) == (e["org"], "public", filtered), e["name"]
-        assert {"ngsi-ld", "csv", "json", "ogc-features", "odata"} <= set(endpoint["enabledRepresentations"]), e["name"]
+        assert {"ngsi-ld", "csv", "ogc-features", "odata"} <= set(endpoint["enabledRepresentations"]), e["name"]
     # T-4540: a dataset whose type holds its rows alone on its door is kept by the type, which the
     # broker counts and the gateway pages in parallel; a `q` timed out on bb-objednavky-bb's 26 862.
     doors = Counter((r["endpoint"], r["type"]) for r in rows.values())
@@ -512,6 +512,21 @@ def test_a_name_where_the_ico_belongs_keeps_the_row_out():
     assert valid("bbsk", entities)
     doc["features"][1]["properties"]["ICO"] = "00177431 0006"
     assert len(run_bytes("bbsk", "dodavatelia", json.dumps(doc).encode())) == 2
+
+
+@requires_docker
+def test_every_article_has_a_name_from_its_title_or_else_its_slug():
+    """WordPress renders a title as HTML, so "&#8222;" reads as the quote mark; a post with no title
+    is named by its slug rather than left without a name (T-4569)."""
+    posts = json.loads((FIXTURES / "aktuality.json").read_text())
+    entities = run("banskabystrica", "aktuality", "aktuality")
+    assert [e["identifier"]["value"] for e in entities] == [str(p["id"]) for p in posts]
+    titled, untitled = entities
+    assert titled["name"]["value"] == "Tretí ročník Svetla v meste poodhalí „druhý plán“ historického centra"
+    assert untitled["name"]["value"] == posts[1]["slug"].replace("-", " ")
+    assert [e["url"]["value"] for e in entities] == [p["link"] for p in posts]
+    assert all("<" not in e["content"]["value"] and "&#" not in e["content"]["value"] for e in entities)
+    assert valid("banskabystrica", entities)
 
 
 @requires_docker
@@ -958,7 +973,7 @@ def test_each_publisher_expects_its_converted_datasets_and_its_endpoints():
     assert set(od) <= mapped, "a converted dataset the mapping does not map"
     assert len({entry["dataset"] for entry in od.values()}) == len(od), "one entry per dataset"
     assert expected_catalogue() == {
-        "banskabystrica": 13 + 4, "bbsk": 88 + 5, "hel-fi": 11, "praha": 7, "slovensko": 1 + 45, "zilina": 5}
+        "banskabystrica": 13 + 6, "bbsk": 88 + 5, "hel-fi": 11, "praha": 7, "slovensko": 1 + 45, "zilina": 5}
 
 
 def test_the_rdf_artifacts_are_canonical_whatever_order_a_generator_wrote(tmp_path):

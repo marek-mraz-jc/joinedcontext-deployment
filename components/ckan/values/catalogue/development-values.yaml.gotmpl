@@ -81,8 +81,10 @@ organizations:
 # carry an IČO. HTML and PDF answers where JSON is declared are found by the fetch itself.
 harvest:
   # Where the converted datasets' distributions point (T-4279): each dataset's od Endpoint on
-  # the dev gateway, in every standard the platform serves.
-  gateway: https://dev.joinedcontext.com
+  # the data host api.{domain} (ADR-N-052 §2.1), in every standard the platform serves.
+  gateway: https://api.{{ .Values.global.domain }}
+  # scripts/open-data generated od-datasets.json against dev's old catalogue host (T-4679).
+  datasetsBase: https://data.dev.joinedcontext.com/
   sources:
     - name: banskabystrica
       sparql: https://data.slovensko.sk/api/sparql
@@ -248,4 +250,23 @@ hidden:
   bbsk-zmluvy-cafee6: "ngsi-ld: no entity on dev"
   bbsk-zoznam-poskytovatelov-socialnych-sluzieb-v-bbk-9ab090: "ngsi-ld: no entity on dev"
   bbsk-zoznam-ucinnych-vseobecne-zavaznych-nariadeni-vzn-80db50: "ngsi-ld: no entity on dev"
-  susr-zo-krajiny: "ngsi-ld: no entity behind the NGSI-LD distribution (the hub lists no type for https://dev.joinedcontext.com/api/endpoint/3bayn5lqwhce7opxqu3e7ruibkhqmfew/)"
+  susr-zo-krajiny: "ngsi-ld: no entity behind the NGSI-LD distribution (the hub lists no type for https://api.{{ .Values.global.domain }}/api/endpoint/3bayn5lqwhce7opxqu3e7ruibkhqmfew/)"
+
+# The dataset map's basemap on dev (T-4639, T-4661): the tiles host's style (T-4638), which the
+# page swaps for its own language (light-en.json, light-cs.json…); never OpenStreetMap's servers.
+mapBasemap:
+  style: https://tiles.{{ .Values.global.domain }}/styles/light-sk.json
+
+# Gemini's card and guide on /assistants (T-4643): on since tasks/evidence/T-4643/gemini-oauth.sh
+# passed against https://api.dev.joinedcontext.com (2026-10-18T17:59Z: register 201, authorize 302,
+# token 200, the hub 200 with the token and without, a claude.ai registration 400).
+assistants:
+  gemini: true
+  # The hub's knowledge sources (T-4659): the gateway's JC_GATEWAY_HUB_KNOWLEDGE_SOURCES, each with
+  # its seed KnowledgeSource's first start URL and languages (test_ckan_theme holds them equal).
+  sources:
+    - { publisher: banskabystrica, url: "https://www.banskabystrica.sk/", languages: [sk] }
+    - { publisher: bbsk, url: "https://www.bbsk.sk/", languages: [sk] }
+    - { publisher: zilina, url: "https://www.zilina.sk/", languages: [sk] }
+    - { publisher: praha, url: "https://www.praha.eu/", languages: [cs] }
+    - { publisher: helsinki, url: "https://www.hel.fi/", languages: [fi, sv, en] }

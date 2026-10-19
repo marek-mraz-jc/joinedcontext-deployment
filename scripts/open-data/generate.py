@@ -77,11 +77,19 @@ CKAN = "https://data.dev.joinedcontext.com"
 PROJECTS = {
     "banskabystrica": {
         "domain": "banskabystrica.sk",
-        "title": {"sk": "Banská Bystrica — tabuľky katalógu", "en": "Banská Bystrica, catalogue tables"},
-        "about": {"sk": "Všetky otvorené dáta mesta Banská Bystrica z katalógu, ktoré sa dajú čítať ako tabuľka.",
-                  "en": "Every dataset of the city of Banská Bystrica in the catalogue that reads as a table."},
+        # Registers and tables, and the city's news as Articles: "tables" alone told an agent the
+        # press releases were rows of numbers (T-4569).
+        "title": {"sk": "Banská Bystrica — otvorené dáta mesta", "en": "Banská Bystrica, the city's open data"},
+        "about": {"sk": "Otvorené dáta mesta Banská Bystrica z katalógu: registre a tabuľky (adresy, zmluvy, objednávky, "
+                        "dotácie, zasadnutia, zeleň, parkovanie) a správy mesta (Aktuality) ako články (Article).",
+                  "en": "The open data of the city of Banská Bystrica from the catalogue: registers and tables (addresses, "
+                        "contracts, orders, grants, council meetings, greenery, parking) and the city's news (Aktuality) "
+                        "as Articles."},
         # The city with a margin: the space's place, which the catalogue's Dataset carries (T-4525).
         "area": [18.95, 48.6, 19.35, 48.9],
+        "keywords": {"sk": ["Banská Bystrica", "zmluvy", "objednávky", "dotácie", "adresy", "verejná zeleň"],
+                     "en": ["Banská Bystrica", "contracts", "orders", "grants", "addresses", "public greenery"]},
+        "spatial": ["SK032", "https://data.gov.sk/id/lau2/SK0321508438"],
     },
     "bbsk": {
         "domain": "bbsk.sk",
@@ -90,14 +98,17 @@ PROJECTS = {
                   "en": "Every dataset of the Banská Bystrica Self-Governing Region in the catalogue (opendata.bbsk.sk)."},
         # The region with a margin (its data reaches 18.54 E in the Žarnovica district).
         "area": [18.3, 47.9, 20.5, 49.2],
+        "keywords": {"sk": ["Banskobystrický kraj", "školy", "sociálne služby", "cesty", "kultúra"],
+                     "en": ["Banská Bystrica Region", "schools", "social services", "roads", "culture"]},
+        "spatial": ["SK032"],
     },
 }
 # Every standard the open data is served in (T-4279). `sta` since T-4288: a row with an `observedAt`
 # column stamps its numbers with that instant, one Datastream per number; the catalogue lists it only
 # for those datasets (`series`). No `mqtt` until 8883 opens (T-3996); the WebSocket pushes changes.
-# `parquet` since T-4287 (EP-119).
-REPRESENTATIONS = ["ngsi-ld", "geojson", "csv", "json", "xlsx", "parquet", "websocket", "ogc-features", "odata", "sta",
-                   "mcp"]
+# One file, `csv`: xlsx, parquet, json, zip and geojson were removed (owner 2026-10-18, T-4597);
+# a map reads GeoJSON from NGSI-LD (Accept: application/geo+json) or OGC API Features.
+REPRESENTATIONS = ["ngsi-ld", "csv", "websocket", "ogc-features", "odata", "sta", "mcp"]
 # What the catalogue's harvests read to list each converted dataset's standard APIs (T-4279).
 DISTRIBUTIONS = ROOT / "charts/ckan/files/od-datasets.json"
 # The attribution every entity carries (Open data integration rules §3), declared in the model.
@@ -112,6 +123,12 @@ COMMON = {
 # A column whose attribute name is one of these keeps its value as `column<Name>`. `name` is the
 # model's own (the mapping renames a column to it, T-4319).
 TAKEN = {*COMMON, "location", "observedAt"}
+# What a visitor reads for the common slots, in each language the widget speaks (T-4682).
+COMMON_LABELS = {
+    "dataProvider": {"sk": "Poskytovateľ údajov", "cs": "Poskytovatel dat", "en": "Data provider", "de": "Datenanbieter"},
+    "source": {"sk": "Zdroj", "cs": "Zdroj", "en": "Source", "de": "Quelle"},
+    "isPartOf": {"sk": "Dataset", "cs": "Datová sada", "en": "Dataset", "de": "Datensatz"},
+}
 LICENCE = {"cc-by": "CC BY 4.0", "cc-by-sa": "CC BY-SA 4.0"}
 # The types whose history matters, a measurement series read over time; every other type keeps its
 # current state only (T-4275, DM-82). The space's owner changes either on its Retention tab.
@@ -143,6 +160,18 @@ def attribute(name: str) -> str:
     return "column" + name[0].upper() + name[1:] if name in TAKEN else name
 
 
+def heading(col: str) -> str | None:
+    """The Slovak heading a source column already is (`Dĺžka_premostenia__m_` → "Dĺžka premostenia (m)"),
+    the slot's `sk` label at no model cost (T-4682); None for a code (`KRAJ_ID`, `datumzmeny`, `TypSaSZKod`)."""
+    unit = re.fullmatch(r"(.+?)__([^_]+)_", col)
+    text, unit = (unit.group(1), unit.group(2)) if unit else (col, None)
+    text = re.sub(r"_+", " ", text).strip()
+    human = not text.isascii() or re.fullmatch(r"[A-Z][a-z]+(?: [A-Za-z]+)*", text)
+    if not human or re.search(r"[a-z][A-Z]", text):
+        return None
+    return text[0].upper() + text[1:] + (f" ({unit})" if unit else "")
+
+
 def ranges(entries: list[dict]) -> dict[str, str]:
     """One range per attribute name across a model: slots are the model's, not a class's. Integer
     and float meet as float; any other two ranges meet as string."""
@@ -162,8 +191,11 @@ def q(text: str) -> str:
 
 def column(path: str, kind: str, col: str) -> str:
     if kind == "json-feed" and col in ("title", "content"):
-        expr = f"{path}.{col}.rendered"
-        return f"{expr}.strip_html().catch(null)" if col == "content" else expr
+        # WordPress renders both as HTML: "&#8222;" in a title is a quote mark (T-4569).
+        return f"{path}.{col}.rendered.strip_html().unescape_html().catch(null)"
+    if kind == "json-feed" and col == "slug":
+        # A post without a title is named by its slug, "krizovatka-pri-kazacku" as words (T-4569).
+        return f"{path}.slug.or(\"\").string().replace_all(\"-\", \" \")"
     return f"{path}.{q(col)}"
 
 
@@ -449,7 +481,7 @@ def source_url(e: dict) -> str:
         return s["url"]
     if s["kind"] == "ckan-datastore":
         return f"{CKAN}/api/3/action/datastore_search?resource_id={s['resource']}&limit=32000"
-    fields = ",".join(p["column"] for p in e["properties"].values())
+    fields = ",".join(c for p in e["properties"].values() for c in [p["column"], *p.get("otherwise", [])])
     return f"{s['url']}?per_page=100&_fields={fields}"
 
 
@@ -628,7 +660,8 @@ def sdm_iris(entries: list[dict]) -> dict[str, tuple[str, str]]:
 def linkml(project: str, space: str, entries: list[dict], model_ranges: dict[str, str]) -> str:
     slots: dict[str, dict] = {}
     for a, (r, d) in COMMON.items():
-        slots[a] = {"description": d, **({"range": r} if r != "string" else {}), "annotations": {"ngsi_ld_kind": "Property"}}
+        slots[a] = {"description": d, **({"range": r} if r != "string" else {}),
+                    "annotations": {"ngsi_ld_kind": "Property", "label": COMMON_LABELS[a]}}
     columns: dict[str, str] = {}
     for e in entries:
         for a, p in e["properties"].items():
@@ -637,7 +670,8 @@ def linkml(project: str, space: str, entries: list[dict], model_ranges: dict[str
         r = model_ranges[a]
         slots[a] = {"description": f"The source column `{columns[a]}`.",
                     **({"multivalued": True} if r == "string-list" else {"range": r} if r != "string" else {}),
-                    "annotations": {"ngsi_ld_kind": "Property"}}
+                    "annotations": {"ngsi_ld_kind": "Property",
+                                    **({"label": {"sk": h}} if (h := heading(columns[a])) else {})}}
     for e in entries:
         for a, v in (e.get("constants") or {}).items():
             slots.setdefault(a, {"description": f"`{v}` on every entity: the model requires it and no column holds it.",
@@ -716,7 +750,7 @@ def project_files(project: str, entries: list[dict], names: dict[str, str]) -> d
         "`dataProvider` names. A member of the project's public MCP server, which the public assistant reads.",
         {**head, "kind": "Endpoint", "metadata": {**meta(space, p["title"]), "description": p["about"]},
          "spec": {"contextSpaceRef": space, "slug": slug_for(endpoint), "audience": "public",
-                  "enabledRepresentations": REPRESENTATIONS}})
+                  "enabledRepresentations": REPRESENTATIONS, "catalog": catalog_block(project, p, entries)}})
     information = [{"entities": [{"type": t} for t in types]}]
     files[f"{pre}policy-read.yaml"] = manifest(
         "Anyone reads every type of the space: each is open data, and no mapping reads a column that names\n"
@@ -969,6 +1003,16 @@ def area_rule(p: dict, entries: list[dict]) -> dict:
     kind = next((e["type"] for e in entries if located(e)), None)
     return {"quality": [{"name": "in-area", "entityType": kind, "kind": "area", "attribute": "location",
                          "bbox": p["area"]}]} if kind else {}
+
+
+def catalog_block(project: str, p: dict, entries: list[dict]) -> dict:
+    """What DCAT-AP-SK asks of the door's record (T-4596); the publisher and desk are the Project's.
+    CC BY-SA 4.0 covers every mapped dataset of either project, the CC BY ones included; the news
+    and the address register are read every night; no mapping reads a column that names a person."""
+    licences = {e.get("license") for e in entries}
+    assert licences <= {"cc-by", "cc-by-sa"}, f"{project}: a licence CC BY-SA does not cover: {licences}"
+    return {"license": "CC_BYSA_4_0", "themes": ["GOVE", "REGI"], "frequency": "DAILY",
+            "keywords": p["keywords"], "spatial": p["spatial"], "personalData": "does-not-contain"}
 
 
 def located(entry: dict) -> bool:

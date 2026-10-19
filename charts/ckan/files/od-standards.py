@@ -27,19 +27,16 @@ OD_GATEWAY = (_os.environ.get("OD_GATEWAY") or "").rstrip("/")
 # The format is the label jcctl's publisher gives an Endpoint's own dataset (ckan.rs `distribution`),
 # so the catalogue's format facet counts both under one name (EP-118, T-4324).
 # Each row names its catalogue dataset in `isPartOf` (T-4289); an address keeps only those rows in
-# its standard's own syntax: NGSI-LD and the files `q`, OGC API Features the queryable as a parameter,
+# its standard's own syntax: NGSI-LD and file.csv `q`, OGC API Features the queryable as a parameter,
 # OData and SensorThings `$filter`. MCP and WebSocket read every type of the Endpoint, so they list every row and say so.
+# file.csv is the one file an Endpoint publishes; a map reads GeoJSON from NGSI-LD (Accept:
+# application/geo+json) or OGC API Features (API/02 §3, T-4597).
 OD_STANDARDS = [
     # application/json: what an anonymous GET without Accept answers, the @context in the Link header
     # (CIM 009 6.3.6); ld+json only when Accept asks for it (T-4539).
     ("ngsi-ld/v1/entities", "NGSI-LD API", "NGSI-LD", "application/json",
      "https://www.etsi.org/deliver/etsi_gs/CIM/001_099/009/", "q", None),
-    ("file.geojson", "GeoJSON", "GeoJSON", "application/geo+json", "https://www.rfc-editor.org/rfc/rfc7946", "q", "location"),
     ("file.csv", "CSV", "CSV", "text/csv", None, "q", None),
-    ("file.json", "JSON", "JSON", "application/json", None, "q", None),
-    ("file.xlsx", "Excel", "XLSX", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", None, "q", None),
-    ("file.parquet", "Apache Parquet", "PARQUET", "application/vnd.apache.parquet",
-     "https://parquet.apache.org/docs/file-format/", "q", None),
     ("ogc/features/collections/{type}/items", "OGC API - Features", "OGCFEAT", "application/geo+json",
      "http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core", "ogc", "location"),
     ("odata/v4/{type}", "OData v4", "OData", "application/json", "https://docs.oasis-open.org/odata/odata/v4.01/", "odata", None),

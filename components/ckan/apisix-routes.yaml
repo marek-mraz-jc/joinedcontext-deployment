@@ -1,11 +1,11 @@
 ---
-# The catalogue on its own host. `subDomain` also puts data.{domain} on the edge Ingress
+# The catalogue on its own host. `subDomain` also puts opendata.{domain} on the edge Ingress
 # and in the certificate SAN list, both derived from this map.
 ckan:
   name: ckan
   description: Open-data catalogue (CKAN)
   upstream: ckan.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "ckan") }}.svc.cluster.local:5000 # yamllint disable-line rule:line-length
-  subDomain: data
+  subDomain: opendata
   uri: '/*'
   # Harvesting a large resource and rendering a dataset page with fifty resources are both
   # slower than a portal page; the platform defaults would cut them off mid-response.
@@ -23,7 +23,7 @@ ckan-webassets:
   name: ckan-webassets
   description: CKAN's fingerprinted stylesheets and scripts, cached for a year
   upstream: ckan.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "ckan") }}.svc.cluster.local:5000 # yamllint disable-line rule:line-length
-  subDomain: data
+  subDomain: opendata
   uri: '/webassets/*'
   priority: 5
   pluginConfig: ckan
@@ -45,9 +45,20 @@ ckan-webassets:
             end
           end
 
+# T-4639: the dataset map a site may frame, /map/{dataset}[/{resource}] with CKAN's language
+# prefix or without; its own plugin config drops X-Frame-Options and the cookie.
+ckan-map:
+  name: ckan-map
+  description: The framable dataset map
+  upstream: ckan.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "ckan") }}.svc.cluster.local:5000 # yamllint disable-line rule:line-length
+  subDomain: opendata
+  uri: '/*'
+  vars: [["uri", "~~", "^/([a-z]{2}(_[A-Z]{2})?/)?map/[^/]+(/[^/]+)?$"]]
+  priority: 5
+
 # One stable path on the primary host that leads to the catalogue, for the people who only
 # ever learn one hostname. It answers a redirect and never proxies (see apisix-plugins.yaml),
-# because CKAN renders every link from its site URL and would emit data.{domain} links from
+# because CKAN renders every link from its site URL and would emit opendata.{domain} links from
 # a /ckan page anyway.
 ckan-redirect:
   name: ckan-redirect
@@ -57,3 +68,12 @@ ckan-redirect:
   uri: '/ckan*'
   # Above the portal UI's `/*` at priority 1, below its API routes.
   priority: 5
+
+# T-4679 (owner 2026-10-18): the catalogue moved from data.{domain} to opendata.{domain}; the old
+# host stays on the Ingress and its certificate and answers 301 to the same path on the new one.
+ckan-old-host:
+  name: ckan-old-host
+  description: data.{domain} answers 301 to opendata.{domain}
+  upstream: ckan.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "ckan") }}.svc.cluster.local:5000 # yamllint disable-line rule:line-length
+  subDomain: data
+  uri: '/*'

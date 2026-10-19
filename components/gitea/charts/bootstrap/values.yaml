@@ -148,3 +148,6 @@ sampleApps:
   project: ''
   publicBase: ''
   apps: {}
+
+# Regex rewrites (from, to) applied to every seed file, in order (T-4678).
+rewrites: []

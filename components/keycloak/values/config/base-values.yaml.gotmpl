@@ -63,6 +63,13 @@ extraEnv:
         key: {{ $key }}
 {{- end }}
 {{- end }}
+  {{- if $this.initialUser }}
+  - name: USER_PASSWORD_INITIAL
+    valueFrom:
+      secretKeyRef:
+        name: keycloak-user-initial
+        key: password
+  {{- end }}
   {{- range $name, $_ := $this.demoUsers | default dict }}
   - name: USER_PASSWORD_{{ $name | upper | replace "." "_" }}
     valueFrom:
@@ -491,7 +498,28 @@ config:
             - /{{ . }}
             {{- end }}
         {{- end }}
-        {{- if and (not ($this.demoUsers | default dict)) (not $serviceAccounts) }}
+        {{- with $this.initialUser }}
+        {{- /* The owner's account of a production realm (T-4678): the only human at start, with the
+               demo steward's roles and groups; its password is the cluster-generated Secret
+               keycloak-user-initial, rotated like every other generated Secret. */}}
+        - username: {{ .email }}
+          enabled: true
+          emailVerified: true
+          email: {{ .email }}
+          requiredActions: []
+          credentials:
+            - type: password
+              value: "$(USER_PASSWORD_INITIAL)"
+              temporary: false
+          realmRoles:
+            {{- toYaml (.realmRoles | default list) | nindent 12 }}
+          groups:
+            - /platform-readers
+            {{- range (.groups | default list) }}
+            - /{{ . }}
+            {{- end }}
+        {{- end }}
+        {{- if and (not ($this.demoUsers | default dict)) (not $serviceAccounts) (not $this.initialUser) }}
         []
         {{- end }}
       clients:
@@ -635,6 +663,10 @@ config:
         {{- $_ := set $declared . true }}
         {{- end }}
         {{- end }}
+        {{- /* And the owner's of a production realm (T-4678). */}}
+        {{- range (index ($this.initialUser | default dict) "groups" | default list) }}
+        {{- $_ := set $declared . true }}
+        {{- end }}
         {{- range $group, $_ := $declared }}
         - name: {{ $group }}
           path: /{{ $group }}
@@ -657,6 +689,10 @@ config:
           # proposal; a user without it can browse and propose only.
           - name: portal-approver
             description: May approve and merge change proposals in the Portal
+          # Administers the operator UIs: Argo CD's role:admin (components/gitops, ADR-N-056
+          # §2.8) and Grafana's Admin. The owner grants it; nobody holds it by default.
+          - name: platform-admin
+            description: Administers the operator UIs (Argo CD, Grafana)
         client:
           {{- range $clientId, $client := .Values.keycloakClients }}
           {{- if index $client "roles" }}

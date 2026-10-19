@@ -35,6 +35,9 @@
     "location": {
       "@id": "geojson:geometry"
     },
+    "name": {
+      "@id": "sdm-kpi:name"
+    },
     "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
     "observedAt": {
       "@id": "ngsi-ld:observedAt",

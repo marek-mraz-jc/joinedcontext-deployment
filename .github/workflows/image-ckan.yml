@@ -1,10 +1,10 @@
 name: image-ckan
-# The catalogue image: stock CKAN plus `ckanext-oauth2` (T-0403). Dispatch only, because the
-# Actions minutes of this private repository are metered (T-0402, T-0521) and the base image
-# changes a few times a year. Put these back when they are restored:
-#   push: { branches: [main], paths: ["images/ckan/**", ".github/workflows/image-ckan.yml"] }
-#   schedule: [{ cron: "0 4 1 * *" }]
+# The catalogue image: stock CKAN plus `ckanext-oauth2` (T-0403). Built when its files change
+# and once a month for the base image's fixes; the repository is public, so its minutes are not
+# metered (T-3289).
 on:
+  push: { branches: [main], paths: ["images/ckan/**", ".github/workflows/image-ckan.yml"] }
+  schedule: [{ cron: "0 4 1 * *" }]
   workflow_dispatch:
 permissions: { contents: read, packages: write, id-token: write }
 concurrency: { group: "image-ckan", cancel-in-progress: true }

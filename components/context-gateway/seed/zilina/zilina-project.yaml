@@ -11,6 +11,13 @@ spec:
   organizationRef: hel
   # Who publishes this data, the did:web assigner of its Apps' Policies (PF-108); describes, grants nothing.
   domain: zilina.sk
+  # The body that publishes the project's catalogue /catalog/zilina.jsonld, by its registry IRI
+  # (EP-127, API/08 section 6). The desk is the installation's own, so no address is invented (T-4596).
+  catalog:
+    publisher:
+      name: { sk: "Mesto Žilina", en: "City of Žilina" }
+      uri: "https://data.gov.sk/id/legal-subject/00321796"
+    contactPoint: { name: "joinedcontext platform", email: hello@joinedcontext.com }
   # The same quotas as every demo project (T-2873, PF-73): the mechanism stays, nobody reaches it.
   quotas:
     contextSpaces: 100

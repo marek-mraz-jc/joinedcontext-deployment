@@ -290,6 +290,14 @@ def test_the_gateway_reads_the_forge_checkout_git_sync_keeps(dev, gateway_pod, g
 
 
 @requires_helmfile
+def test_the_gateway_reads_a_persons_connectors_from_the_portals_internal_listener(gateway_env):
+    """T-4546: `/api/mcp/me/{name}` needs the Portal's connector list (EP-123), on the internal
+    listener the previews come from, which admits the gateway and its token alone."""
+    previews = gateway_env["JC_GATEWAY_PREVIEWS_URL"]
+    assert gateway_env["JC_GATEWAY_CONNECTORS_URL"] == previews.replace("/internal/previews", "/internal/connectors")
+    assert gateway_env["JC_GATEWAY_CONNECTORS_URL"] == "http://portal.dev.svc.cluster.local:9090/internal/connectors"
+
+
 def test_a_forge_outage_after_the_first_clone_keeps_the_gateway_in_service(gateway_pod):
     """T-2978: git-sync exits on its first failed fetch by default, and a crash-looping sidecar
     makes the only gateway pod NotReady: a Postgres restart took Gitea and with it every endpoint

@@ -184,6 +184,9 @@ pipeline:
         let rows = this.data.or([]).filter(r -> $stations.get(r.ind_kli.string()) != null && r.minuta.type() == "string")
         root = $stations.keys().sort().map_each(code -> $rows.filter(r -> r.ind_kli.string() == code).sort_by(r -> r.minuta)).filter(rs -> rs.length() > 0).map_each(rs -> rs.slice(-1).index(0).assign({
           "_at": rs.slice(-1).index(0).minuta.apply("utc"),
+          # Soil temperature at the depths the station measures (`t_pod{cm}`), one instance per
+          # depth, told apart by its datasetId (NGSI-LD multi-attribute, T-4557).
+          "_soil": [5, 10, 20, 50, 100].filter(d -> rs.slice(-1).index(0).get("t_pod" + d.string()).type() == "number").map_each(d -> { "type": "Property", "value": rs.slice(-1).index(0).get("t_pod" + d.string()), "unitCode": "CEL", "datasetId": "urn:ngsi-ld:Dataset:shmu:soil-depth-%vcm".format(d) }),
           # The ten minutes up to the latest one, as far as the file holds them.
           "_rain": rs.filter(r -> r.minuta.ts_parse("2006-01-02T15:04:05").ts_unix() > rs.slice(-1).index(0).minuta.ts_parse("2006-01-02T15:04:05").ts_unix() - 600 && r.zra_uhrn.type() == "number").map_each(r -> r.zra_uhrn).sum()
         })).map_each(r -> {
@@ -197,6 +200,7 @@ pipeline:
           "windSpeed": if r.vie_pr_rych.type() == "number" && r.vie_pr_rych >= 0 { { "type": "Property", "value": r.vie_pr_rych, "unitCode": "MTS", "observedAt": r._at } } else { deleted() },
           "windDirection": if r.vie_vp_smer.type() == "number" && r.vie_vp_smer >= 0 && r.vie_vp_smer <= 360 { { "type": "Property", "value": r.vie_vp_smer, "unitCode": "DD", "observedAt": r._at } } else { deleted() },
           "precipitation": { "type": "Property", "value": (r._rain * 10).round() / 10, "unitCode": "MMT", "observedAt": r._at },
+          "soilTemperature": if r._soil.length() > 0 { r._soil.map_each(i -> i.merge({ "observedAt": r._at })) } else { deleted() },
           "location": { "type": "GeoProperty", "value": { "type": "Point", "coordinates": $stations.get(r.ind_kli.string()).at } },
           "dataProvider": { "type": "Property", "value": "Slovenský hydrometeorologický ústav (SHMÚ), CC BY 4.0" },
           "source": { "type": "Property", "value": "https://opendata.shmu.sk/meteorology/climate/now/" }

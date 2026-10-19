@@ -148,7 +148,7 @@ ROUTE_CLASSES = {
     },
     "catalog-feed": {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
-        "why": "the DCAT-AP feed a national portal harvests (EP-84): the gateway reads no token on it and lists public Endpoints only",
+        "why": "the DCAT-AP feeds a national portal harvests, the organization's and each publisher's (EP-84, EP-127): the gateway reads no token on them and lists public Endpoints only",
     },
     "context-endpoint": {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
@@ -198,6 +198,10 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "Grafana signs everyone in through the realm; anonymous access and the login form are off",
     },
+    "argocd": {
+        "reach": UPSTREAM, "cacheable": False, "framing": "DENY",
+        "why": "Argo CD verifies every token itself; login is the realm's PKCE flow, anonymous access and the local admin are off (ADR-N-056 §2.8)",
+    },
     "ckan": {
         "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "an open-data catalogue is public reading; writing is CKAN's own session",
@@ -206,19 +210,111 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "CKAN's fingerprinted stylesheets and scripts, the same files for everyone, kept a year by the browser (T-4201)",
     },
+    "ckan-map": {
+        "reach": UPSTREAM, "cacheable": True, "framing": FRAMED_BY_UPSTREAM,
+        "why": "a dataset's map any site may frame (T-4639): the page holds no data, no form and no session; the visitor's browser reads the Endpoint's public OGC API Features anonymously, and CKAN's page names frame-ancestors * itself while the edge strips the session cookie",
+    },
+    "basemap": {
+        "reach": UPSTREAM, "cacheable": True, "framing": "DENY",
+        "why": "the background map's tiles, style, fonts and sprites on tiles.{domain} (T-4638): public map data, read-only nginx answering GET/HEAD/preflight, the same files for everyone, its own larger bucket",
+    },
     "security-txt": {
         "reach": TERMINATES, "cacheable": False, "framing": "DENY",
         "why": "RFC 9116 security.txt is public by the RFC; the edge answers it and names only the reporting contact (T-1721)",
     },
+    "api-context-space": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "context-space on the public data host api.{domain} (T-4630, ADR-N-052 §2.1): the same chain, the gateway enforces the space's Policy",
+    },
+    "api-context-space-read": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "context-space-read on the data host (T-4630): its reads counted apart, as on the apex",
+    },
+    "api-catalog-feed": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "catalog-feed on the data host (T-4630): the DCAT-AP feeds, public Endpoints only",
+    },
+    "api-context-endpoint": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "context-endpoint on the data host (T-4630): an Endpoint publishes what its Policy grants",
+    },
+    "api-mcp-hub": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "context-mcp-hub on the data host (T-4630): the gateway decides each call as the named Endpoint's own",
+    },
+    "api-mcp-named": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "context-mcp-named on the data host (T-4630): anonymous callers, 60 calls a minute per client IP",
+    },
+    "api-oauth": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "the gateway's stateless anonymous OAuth server (T-4630, platform T-4631, ADR-N-052 §2.2): nothing stored, 30 a minute per client IP, redirects only to Google's relay",
+    },
+    "api-oauth-metadata": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "the RFC 8414 and RFC 9728 documents of the anonymous OAuth server (T-4630): public by the RFCs",
+    },
+    "api-moved-endpoint": {
+        "reach": TERMINATES, "cacheable": False, "framing": "DENY",
+        "why": "an old address of a public data surface, anonymous: 308 to the same path on api.{domain} (T-4630)",
+    },
+    "api-moved-portal-endpoint": {
+        "reach": TERMINATES, "cacheable": False, "framing": "DENY",
+        "why": "an old address of a public data surface, anonymous: 308 to the same path on api.{domain} (T-4630)",
+    },
+    "api-moved-mcp": {
+        "reach": TERMINATES, "cacheable": False, "framing": "DENY",
+        "why": "an old address of a public data surface, anonymous: 308 to the same path on api.{domain} (T-4630)",
+    },
+    "api-moved-portal-mcp": {
+        "reach": TERMINATES, "cacheable": False, "framing": "DENY",
+        "why": "an old address of a public data surface, anonymous: 308 to the same path on api.{domain} (T-4630)",
+    },
+    "api-moved-mcp-named": {
+        "reach": TERMINATES, "cacheable": False, "framing": "DENY",
+        "why": "an old address of a public data surface, anonymous: 308 to the same path on api.{domain} (T-4630)",
+    },
+    "api-moved-portal-mcp-named": {
+        "reach": TERMINATES, "cacheable": False, "framing": "DENY",
+        "why": "an old address of a public data surface, anonymous: 308 to the same path on api.{domain} (T-4630)",
+    },
+    "api-moved-cs": {
+        "reach": TERMINATES, "cacheable": False, "framing": "DENY",
+        "why": "an old address of a public data surface, anonymous: 308 to the same path on api.{domain} (T-4630)",
+    },
+    "api-moved-portal-cs": {
+        "reach": TERMINATES, "cacheable": False, "framing": "DENY",
+        "why": "an old address of a public data surface, anonymous: 308 to the same path on api.{domain} (T-4630)",
+    },
+    "api-moved-catalog": {
+        "reach": TERMINATES, "cacheable": False, "framing": "DENY",
+        "why": "an old address of a public data surface, anonymous: 308 to the same path on api.{domain} (T-4630)",
+    },
+    "ckan-old-host": {
+        "reach": TERMINATES, "cacheable": False, "framing": "DENY",
+        "why": "data.{domain}, the catalogue's old host, answers 301 to opendata.{domain} with the same path and never dials an upstream (T-4679)",
+    },
     "ckan-redirect": {
         "reach": TERMINATES, "cacheable": False, "framing": "DENY",
         "why": "/ckan on the apex answers 302 to the catalogue host and never dials an upstream",
+    },
+    "basemap": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "the background map's tiles, style, fonts and sprites (T-4638): public map data under the OpenStreetMap licence, read-only, and nginx keeps them a day",
+    },
+    "viz": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": FRAMED_BY_UPSTREAM,
+        "why": "the chart renderer (T-4641, ADR-N-053): static pages with no data, no token and no cookie; nginx sets each page's frame-ancestors and Cache-Control, any site may frame the host page and the frame that runs a spec connects nowhere",
     },
 }
 
 # Plugin configs no route of the base names: the Portal copies each onto the routes it composes
 # (ADR-N-037), so they carry the headers and the limit of the class those routes get.
 TEMPLATE_CLASSES = {
+    "api-moved": {
+        "reach": TERMINATES, "cacheable": False, "framing": "DENY",
+        "why": "the shared plugin config of the api-moved-* routes: the 308 from the apex and the Portal host to the data host for an anonymous caller (T-4630, ADR-N-052 §2.1.3): answers in rewrite, never dials the gateway",
+    },
     "apps-surface": {
         "reach": EDGE_LOGIN, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "every App's own host, whose pages ask for a login before they show anything (AP-133)",

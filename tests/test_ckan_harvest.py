@@ -233,7 +233,7 @@ def load(monkeypatch, catalogue=CATALOGUE, config=CONFIG, mapped=True):
     if mapped:
         # Every dataset's rows are converted unless the test says otherwise (T-4324).
         harvest.OD_DATASETS = EveryName()
-        harvest.OD_GATEWAY = "https://dev.joinedcontext.com"
+        harvest.OD_GATEWAY = "https://api.dev.joinedcontext.com"
     return harvest
 
 
@@ -265,7 +265,7 @@ def test_a_run_ingests_what_the_files_hold_and_lists_every_skip_with_its_reason(
     assert extras["source_uri"] == "https://data.gov.sk/set/veku"
     # EP-118: the platform's distributions and data model, the DataStore table last; no source link.
     assert [r["format"] for r in ages["resources"]] == [
-        "NGSI-LD", "CSV", "JSON", "XLSX", "PARQUET", "OData", "MCP", "WebSocket",
+        "NGSI-LD", "CSV", "OData", "MCP", "WebSocket",
         "JSON Schema", "JSON-LD", "LinkML", "Markdown", "OWL", "RDF", "SHACL", "CSV"]
     assert not any(r["url"].startswith(EGOV) for r in ages["resources"] if r.get("url_type") != "datastore")
     table = fake.tables[ages["resources"][-1]["id"]]
@@ -314,8 +314,44 @@ def test_a_second_run_replaces_the_tables_instead_of_adding_new_ones(monkeypatch
     assert set(harvest.ckan.tables) == tables, "a rerun added or lost a table"
     assert "package_create" not in harvest.ckan.calls[first:]
     ages = harvest.ckan.packages["bb-pocet-obcanov-podla-veku"]["resources"]
-    assert [r.get("url_type") for r in ages] == [None] * 15 + ["datastore"]
+    assert [r.get("url_type") for r in ages] == [None] * 12 + ["datastore"]
     assert len(harvest.ckan.tables[ages[-1]["id"]]["records"]) == 3
+
+
+def test_a_run_over_an_unchanged_source_writes_nothing(monkeypatch, capsys):
+    # T-4644: metadata_modified is "Aktualizované"; a run that changed nothing must not move it.
+    harvest = load(monkeypatch)
+    assert harvest.main() == 0
+    first = len(harvest.ckan.calls)
+    assert harvest.main() == 0
+    writes = [c for c in harvest.ckan.calls[first:] if not c.endswith(("_show", "_search"))]
+    assert writes == [], writes
+
+
+def test_a_changed_source_updates_in_place_and_keeps_the_dataset_and_its_issued(monkeypatch, capsys):
+    rows = [dict(r, issued="2019-04-02T10:00:00Z") for r in CATALOGUE]
+    harvest = load(monkeypatch, catalogue=rows)
+    assert harvest.main() == 0
+    ages = harvest.ckan.packages["bb-pocet-obcanov-podla-veku"]
+    identity, first = ages["id"], len(harvest.ckan.calls)
+    grown = AGES + [{"Vek": "2", "Počet_občanov_v_danom_veku": "1", "Počet_mužov": "1", "Počet_žien": "0"}]
+    monkeypatch.setitem(WEB, EGOV + "920:0::plac1140:_144053_5_8", (200, "application/json", json.dumps(grown).encode()))
+    assert harvest.main() == 0
+    calls = harvest.ckan.calls[first:]
+    assert "package_create" not in calls and "package_delete" not in calls and calls.count("package_update") == 1
+    ages = harvest.ckan.packages["bb-pocet-obcanov-podla-veku"]
+    assert ages["id"] == identity
+    assert {"key": "issued", "value": "2019-04-02T10:00:00Z"} in ages["extras"]
+
+
+def test_a_withdrawn_dataset_that_returns_is_updated_never_created_again(monkeypatch, capsys):
+    harvest = load(monkeypatch)
+    assert harvest.main() == 0
+    harvest.ckan.packages["bb-pocet-obcanov-podla-veku"]["state"] = "deleted"
+    first = len(harvest.ckan.calls)
+    assert harvest.main() == 0
+    assert "package_create" not in harvest.ckan.calls[first:]
+    assert harvest.ckan.packages["bb-pocet-obcanov-podla-veku"]["state"] == "active"
 
 
 def test_a_dataset_the_publisher_no_longer_lists_is_withdrawn(monkeypatch, capsys):
@@ -388,7 +424,7 @@ def test_only_a_converted_dataset_is_listed_with_its_apis_model_and_table(monkey
     API and the files filtered to its rows, OData, MCP and the WebSocket for the type, then the data
     model in seven formalisms, then its DataStore table; no GeoJSON or OGC, the rows have no
     location. Every dataset nobody mapped is not listed, and named so."""
-    monkeypatch.setenv("OD_GATEWAY", "https://dev.joinedcontext.com/")
+    monkeypatch.setenv("OD_GATEWAY", "https://api.dev.joinedcontext.com/")
     monkeypatch.setenv("OD_DATASETS", json.dumps({"bb-pocet-obcanov-podla-veku": {
         "endpoint": "abc", "type": "KeyPerformanceIndicator", "location": False,
         "dataset": "https://data.dev.joinedcontext.com/dataset/bb-pocet-obcanov-podla-veku"}}))
@@ -399,13 +435,13 @@ def test_only_a_converted_dataset_is_listed_with_its_apis_model_and_table(monkey
     assert "  - Objednávky BB: not converted to NGSI-LD, so not listed (EP-118)" in out
     ages = harvest.ckan.packages["bb-pocet-obcanov-podla-veku"]["resources"]
     assert [r["format"] for r in ages] == [
-        "NGSI-LD", "CSV", "JSON", "XLSX", "PARQUET", "OData", "MCP", "WebSocket",
+        "NGSI-LD", "CSV", "OData", "MCP", "WebSocket",
         "JSON Schema", "JSON-LD", "LinkML", "Markdown", "OWL", "RDF", "SHACL", "CSV"]
     assert ages[-1].get("url_type") == "datastore", "the table moved off the end of the list"
-    assert ages[0]["url"] == ("https://dev.joinedcontext.com/api/endpoint/abc/ngsi-ld/v1/entities?type=KeyPerformanceIndicator"
+    assert ages[0]["url"] == ("https://api.dev.joinedcontext.com/api/endpoint/abc/ngsi-ld/v1/entities?type=KeyPerformanceIndicator"
                               "&q=isPartOf%3D%3D%22https%3A%2F%2Fdata.dev.joinedcontext.com%2Fdataset%2Fbb-pocet-obcanov-podla-veku%22")
     assert ages[0]["conforms_to"].startswith("https://www.etsi.org/")
-    assert ages[8]["url"] == "https://dev.joinedcontext.com/api/endpoint/abc/schema/v1/model.schema.json"
+    assert ages[5]["url"] == "https://api.dev.joinedcontext.com/api/endpoint/abc/schema/v1/model.schema.json"
     assert not any("geojson" in r["url"] or "/ogc/" in r["url"] for r in ages)
     # A second run writes the same list again, nothing doubled.
     harvest.main()

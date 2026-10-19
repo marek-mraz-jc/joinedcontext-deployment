@@ -16,14 +16,16 @@ spec:
   audience: public
   # mcp: the members of the public `otvorene-data` MCP server (T-4141) and the public
   # assistant's connectors (T-4167); the gateway lists a member only when it serves MCP.
-  enabledRepresentations: [ngsi-ld, geojson, csv, json, websocket, ogc-features, odata, mcp]
+  enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]
   # Off the catalogue (T-4344): its unrelated types are each their own dataset, through the
   # narrowed Endpoints beside it. This Endpoint stays for the Apps and connectors that read it.
   # What the dataset page and the DCAT-AP record carry beside the title (EP-27, T-3112): the
   # publisher, the licence and each source's credit, the themes and keywords a reader searches
   # by, the city, and how often it changes (continuous: the weather every five minutes).
   catalog:
-    publisher: { name: { sk: "Mesto Banská Bystrica", en: "City of Banská Bystrica" }, uri: "https://www.banskabystrica.sk/" }
+    # The publisher and contact desk are the Project's spec.catalog, its registry IRI (T-4596).
+    # Aggregates of public facilities and readings: no record names a person (T-4596).
+    personalData: does-not-contain
     license: CC_BY_4_0
     attribution:
       sk: "Zdroje: Mesto Banská Bystrica (podujatia), Ministerstvo školstva SR, Digitálna mapa škôl (školy), Európska environmentálna agentúra, údaje SHMÚ (ovzdušie), Slovenský hydrometeorologický ústav (počasie); CC BY 4.0"

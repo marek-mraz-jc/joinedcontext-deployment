@@ -24,7 +24,7 @@ env:
   # glibc keeps up to 8 malloc arenas per core, and a tokio service holds freed memory in them;
   # two arenas trade a little allocation contention for that memory (T-4351, measured on dev).
   MALLOC_ARENA_MAX: "2"
-{{- if has "keycloak" .Values.components }}
+{{- if and (has "keycloak" .Values.components) (eq $global.profile "development") }}
   # The live journeys sign in as the demo people and mark the assistant runs they start as
   # test runs (AG-93, T-2816). The Portal accepts the mark only from the users named here and
   # refuses it with 403 for anyone else; production names nobody. The realm stores each demo

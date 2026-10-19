@@ -89,6 +89,15 @@ def repos(forge):
     return json.loads(forge.state.read_text())["repos"]
 
 
+def write_status(forge, path, commit):
+    """The Portal appends the lane's status to the manifest's own text, comments kept (AP-13a)."""
+    state = json.loads(forge.state.read_text())
+    text = state["contents"][path]
+    status = {"status": {"build": {"commit": commit, "digest": "sha256:" + "a" * 64}}}
+    state["contents"][path] = text.rstrip("\n") + "\n" + yaml.safe_dump(status, sort_keys=False)
+    forge.state.write_text(json.dumps(state))
+
+
 @requires_helmfile
 def test_each_app_gets_a_private_repository_holding_its_tree_and_a_manifest_pinned_to_it(script, tmp_path):
     """AP-75, AP-80: the repository is created private under the Portal's naming, holds the tree
@@ -138,11 +147,7 @@ def test_a_rerun_keeps_the_build_the_lane_wrote_for_the_same_head(script, tmp_pa
     assert run(forge, script).returncode == 0
     path = "projects/helsinki/apps/helsinki-bikes/app.yaml"
     head = repos(forge)["helsinki_helsinki-bikes"]["head"]
-    built = yaml.safe_load(forge.contents[path])
-    built["status"] = {"build": {"commit": head, "digest": "sha256:" + "a" * 64}}
-    state = json.loads(forge.state.read_text())
-    state["contents"][path] = yaml.safe_dump(built, sort_keys=False)
-    forge.state.write_text(json.dumps(state))
+    write_status(forge, path, head)
 
     second = run(forge, script)
     assert second.returncode == 0, second.stderr
@@ -162,6 +167,31 @@ def test_a_rerun_keeps_the_build_the_lane_wrote_for_the_same_head(script, tmp_pa
     fourth = run(forge, script)
     assert fourth.returncode == 0, fourth.stderr
     assert f"{path} already names {new_head} and its build" in fourth.stdout
+
+
+@requires_helmfile
+def test_a_seed_edit_at_the_same_head_reaches_a_built_manifest_and_keeps_its_build(script, tmp_path):
+    """T-4601/T-4597: the seed dropped a removed representation from app.yaml while the App's
+    tree stayed at the same head; the built manifest kept the old spec, stopped parsing and took
+    five Apps off the edge. The spec moves, the lane's build stays."""
+    forge, app = seeded(tmp_path)
+    assert run(forge, script).returncode == 0
+    path = "projects/helsinki/apps/helsinki-bikes/app.yaml"
+    head = repos(forge)["helsinki_helsinki-bikes"]["head"]
+    write_status(forge, path, head)
+
+    (app / "app.yaml").write_text(MANIFEST + "# edited\n")
+    second = run(forge, script)
+    assert second.returncode == 0, second.stderr
+    held = forge.contents[path]
+    assert "# edited" in held
+    moved = yaml.safe_load(held)
+    assert moved["spec"]["source"]["git"]["ref"] == head
+    assert moved["status"] == {"build": {"commit": head, "digest": "sha256:" + "a" * 64}}
+
+    third = run(forge, script)
+    assert third.returncode == 0, third.stderr
+    assert f"{path} already names {head} and its build" in third.stdout
 
 
 @requires_helmfile

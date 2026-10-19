@@ -44,6 +44,8 @@ context-gateway:
 banskabystrica-conformance:
   # An account of the demo seed: rendered by the development profile only (T-1720, CC-73).
   profiles: [development]
+  # A test object: never in a production realm, even one that reads dev's values (T-4678).
+  test: true
   name: Conformance suite
   description: Service account of the ETSI conformance suite; client_credentials only, no browser flow
   subdomain: ''

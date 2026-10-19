@@ -6,14 +6,13 @@
   ("Welcome to CKAN", a 420 x 220 placeholder), which no deployment ever filled in.
 #}
 {% block primary_content %}
-  {% set brand = h.jc_branding() %}
   {% set stats = h.get_site_statistics() %}
   {% set dataset_type = h.default_package_type() %}
   <div role="main">
     <section class="jc-hero" aria-labelledby="jc-hero-title">
       <div class="container">
-        <h1 id="jc-hero-title">{{ g.site_title }}</h1>
-        <p class="jc-hero-lead">{{ brand.tagline or h.jc_t('tagline') }}</p>
+        <h1 id="jc-hero-title">{{ h.jc_site_title() }}</h1>
+        <p class="jc-hero-lead">{{ h.jc_site_tagline() }}</p>
         <form class="jc-hero-search" role="search" method="get" action="{{ h.url_for(dataset_type ~ '.search') }}">
           <label for="jc-hero-q">{{ h.jc_t('hero_search') }}</label>
           <div class="jc-hero-field">
@@ -29,7 +28,6 @@
     </section>
 
     <div class="container"><div class="jc-home">
-      {# The main column holds the assistant card too: its code needs more width than the side (T-4284). #}
       <div class="jc-main">
       <section aria-labelledby="jc-recent-title">
         <div class="jc-home-head">
@@ -47,8 +45,9 @@
                 {% if notes %}<p class="jc-card-text">{{ notes }}</p>{% endif %}
                 <div class="jc-card-foot">
                   {% for format in h.jc_formats(pkg)[:4] %}<span class="jc-chip">{{ format }}</span>{% endfor %}
-                  {% if pkg.metadata_modified %}
-                    <time datetime="{{ pkg.metadata_modified }}">{{ h.jc_t('updated') }} {{ h.render_datetime(pkg.metadata_modified) }}</time>
+                  {% set updated = h.jc_updated(pkg) %}
+                  {% if updated %}
+                    <time datetime="{{ updated.isoformat() }}">{{ h.jc_t('updated') }} {{ h.render_datetime(updated) }}</time>
                   {% endif %}
                 </div>
               </li>
@@ -58,7 +57,6 @@
           <p class="jc-empty">{{ h.jc_t('no_datasets') }}</p>
         {% endif %}
       </section>
-      {% snippet 'snippets/jc_mcp_install.html' %}
       </div>
 
       <div class="jc-side">
@@ -87,9 +85,4 @@
       </div>
     </div></div>
   </div>
-{% endblock %}
-
-{% block scripts %}
-  {{ super() }}
-  <script src="{{ h.url_for_static('/jc-copy.js') }}" defer></script>
 {% endblock %}

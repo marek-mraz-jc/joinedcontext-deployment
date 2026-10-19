@@ -51,5 +51,29 @@ context-broker:
     # constant-default column to temporal_entities (catalog only, T-4310); schema and
     # temporal_entities dumped before the apply (t4310/ on the postgres volume). No new runtime
     # ANTARES_* key over cc368be.
-    tag: '7535b90'
-    digest: 'sha256:73bfef0c88dc1343dda4a4397e71729a4298db7d319e580e080f5f0a07d671da'
+    # Antares dev 7ff20d6 (trains to 20261018-0050, T-4543 and 85 commits over 7535b90): Subscriptions
+    # made over a socket are leased (ANTARES_WS_SUBSCRIPTION_LEASE_SECS, default 121) and swept, so
+    # a closed socket or a dead gateway leaves none behind. No migration over 7535b90.
+    # Antares dev ac45ec0 (train 20261018-0230, T-4549): a byte budget over the delivery lanes
+    # (ANTARES_DELIVERY_LANE_BYTES, default 256 MiB), the fix for the OOMKills at 1536Mi on dev
+    # 2026-10-17/18. No migration over 7ff20d6.
+    # Antares dev 6fded37 (train 20261018-0325, T-4480 T-4464 T-4486 T-4507): MCP unit labels, per-type
+    # query guide, temporal dedup on write (ANTARES_TEMPORAL_DEDUP, default on). No migration over ac45ec0.
+    # Antares dev 4bdbbc8 (train 20261018-0521, T-4455 T-4462 T-4537): per-type decision on multi-type
+    # view reads, the SensorThings surface (served with `sta` in ANTARES_API_SURFACES), describe_type.
+    # No migration and no new runtime ANTARES_* key over 6fded37.
+    # Antares dev e67f07f (train 20261018-0754, T-4562 T-4564): batch writes admitted under an in-flight
+    # byte budget (ANTARES_BATCH_INFLIGHT_BYTES, default 4 MiB, 503 + Retry-After past it), delivery
+    # lanes 128 MiB, paged /types and /attributes details. No migration over 4bdbbc8.
+    # Antares dev 4a42248 (train 20261018-1009, T-4494 and 22 commits over e67f07f): one Query Entities
+    # across many views (/x/views/_union, ANTARES_UNION_MAX_VIEWS), OGC file writers bounded by
+    # ANTARES_EXPORT_FILES (503 past it), the NGSI-LD primer as MCP instructions. No migration
+    # over e67f07f. (9d7a594, with T-4610, failed its ETSI image gate and was not pushed.)
+    # Antares dev b1def0c (trains to 20261018-1311, T-4414 T-4610 T-4477 T-2890 T-4487 and 23
+    # commits over 4a42248): layered history retention (ANTARES_RETENTION_HISTORY_DEFAULT, P28D in
+    # base values, owner 2026-10-18), expiry takes history (DM-97). Migration 0010 is one partial
+    # index on entities, a scan of current state only, never of attr_instances.
+    # Antares dev 8e2a24c (T-4624 T-4532 over b1def0c): batch writes take at most
+    # ANTARES_BATCH_INFLIGHT (default 8) of the pool, so reads keep the rest. No migration.
+    tag: '8e2a24c'
+    digest: 'sha256:507437a9a902fa5b24d67dfa5a19c5a281dc11892185bb603fd8c667e12a4111'

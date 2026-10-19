@@ -232,6 +232,15 @@ STRINGS = {
     "example": {"en": "Start here: the kinds of entities it holds", "sk": "Začnite tu: aké druhy entít obsahuje", "cs": "Začněte zde: jaké druhy entit obsahuje", "de": "Hier beginnen: welche Arten von Entitäten es enthält"},
     "copy": {"en": "Copy", "sk": "Kopírovať", "cs": "Kopírovat", "de": "Kopieren"},
     "copied": {"en": "Copied", "sk": "Skopírované", "cs": "Zkopírováno", "de": "Kopiert"},
+    "visualizations": {"en": "Charts", "sk": "Grafy", "cs": "Grafy", "de": "Diagramme"},
+    "viz_embed": {"en": "Embed on a website", "sk": "Vložiť na web", "cs": "Vložit na web", "de": "Auf einer Website einbetten"},
+    "viz_embed_lead": {
+        "en": "Paste this code into your page; the chart keeps reading the current data.",
+        "sk": "Vložte tento kód do svojej stránky; graf bude stále čítať aktuálne dáta.",
+        "cs": "Vložte tento kód do své stránky; graf bude stále číst aktuální data.",
+        "de": "Fügen Sie diesen Code in Ihre Seite ein; das Diagramm liest weiter die aktuellen Daten.",
+    },
+    "viz_table": {"en": "The data as a table", "sk": "Údaje ako tabuľka", "cs": "Údaje jako tabulka", "de": "Die Daten als Tabelle"},
     "resources": {"en": "Data and downloads", "sk": "Dáta na stiahnutie", "cs": "Data ke stažení", "de": "Daten und Downloads"},
     "no_resources": {"en": "This dataset has no downloads yet.", "sk": "Tento dataset zatiaľ nemá nič na stiahnutie.", "cs": "Tato datová sada zatím nemá nic ke stažení.", "de": "Dieser Datensatz hat noch keine Downloads."},
     "empty": {
@@ -288,6 +297,43 @@ STRINGS = {
     "rows": {"en": ("row", "rows", "rows"), "sk": ("riadok", "riadky", "riadkov"),
              "cs": ("řádek", "řádky", "řádků"), "de": ("Zeile", "Zeilen", "Zeilen")},
     "table_title": {"en": "Table of the data", "sk": "Tabuľka dát", "cs": "Tabulka dat", "de": "Tabelle der Daten"},
+    # The dataset map (T-4639).
+    "map": {"en": "Map", "sk": "Mapa", "cs": "Mapa", "de": "Karte"},
+    "map_title": {"en": "Map of the data", "sk": "Mapa dát", "cs": "Mapa dat", "de": "Karte der Daten"},
+    "map_as_table": {"en": "Show as a table", "sk": "Zobraziť ako tabuľku", "cs": "Zobrazit jako tabulku", "de": "Als Tabelle anzeigen"},
+    "map_in_catalogue": {"en": "Show in the catalogue", "sk": "Zobraziť v katalógu", "cs": "Zobrazit v katalogu", "de": "Im Katalog anzeigen"},
+    "map_embed": {"en": "Embed on your site", "sk": "Vložiť na web", "cs": "Vložit na web", "de": "Auf Ihrer Website einbetten"},
+    "map_embed_lead": {
+        "en": "Paste this into your page; the map stays live and shows only public data.",
+        "sk": "Vložte to do svojej stránky; mapa zostáva živá a ukazuje len verejné údaje.",
+        "cs": "Vložte to do své stránky; mapa zůstává živá a ukazuje jen veřejná data.",
+        "de": "Fügen Sie dies in Ihre Seite ein; die Karte bleibt aktuell und zeigt nur öffentliche Daten.",
+    },
+    "map_cap": {
+        "en": "Showing the first {n}; zoom in to see the rest.",
+        "sk": "Zobrazených prvých {n}, priblížte mapu.",
+        "cs": "Zobrazeno prvních {n}, přibližte mapu.",
+        "de": "Die ersten {n} werden gezeigt; zoomen Sie hinein.",
+    },
+    "map_failed": {
+        "en": "The map could not load its data; the table above still works.",
+        "sk": "Mapa nenačítala údaje; tabuľka vyššie funguje.",
+        "cs": "Mapa nenačetla data; tabulka výše funguje.",
+        "de": "Die Karte konnte ihre Daten nicht laden; die Tabelle oben funktioniert.",
+    },
+    "map_close": {"en": "Close", "sk": "Zavrieť", "cs": "Zavřít", "de": "Schließen"},
+    # The attributes after a feature's key ones (T-4672).
+    "map_more": {"en": "More", "sk": "Viac", "cs": "Více", "de": "Mehr"},
+    "map_loading": {"en": "Loading the map's data…", "sk": "Načítavam údaje mapy…", "cs": "Načítám data mapy…", "de": "Die Kartendaten werden geladen…"},
+    "map_panel": {"en": "Selected place", "sk": "Vybrané miesto", "cs": "Vybrané místo", "de": "Ausgewählter Ort"},
+    "map_length": {"en": "Length", "sk": "Dĺžka", "cs": "Délka", "de": "Länge"},
+    "map_area": {"en": "Area", "sk": "Plocha", "cs": "Plocha", "de": "Fläche"},
+    "map_keys": {
+        "en": "Arrow keys move the map, + and - zoom, Enter opens the place in the middle.",
+        "sk": "Šípky posúvajú mapu, + a - menia priblíženie, Enter otvorí miesto v strede.",
+        "cs": "Šipky posouvají mapu, + a - mění přiblížení, Enter otevře místo uprostřed.",
+        "de": "Pfeiltasten verschieben die Karte, + und - zoomen, Enter öffnet den Ort in der Mitte.",
+    },
     "tables": {"en": "tables", "sk": "tabuľky", "cs": "tabulky", "de": "Tabellen"},
     "table_what": {"en": "The table above, as one file", "sk": "Tabuľka vyššie ako jeden súbor", "cs": "Tabulka výše jako jeden soubor", "de": "Die Tabelle oben als eine Datei"},
     "open_table": {"en": "Open the table on its own page", "sk": "Otvoriť tabuľku na samostatnej stránke", "cs": "Otevřít tabulku na samostatné stránce", "de": "Tabelle auf eigener Seite öffnen"},
@@ -329,7 +375,7 @@ STRINGS = {
     },
     "mcp_url": {"en": "MCP server address", "sk": "Adresa MCP servera", "cs": "Adresa MCP serveru", "de": "Adresse des MCP-Servers"},
     "mcp_claude_ai": {"en": "Claude (claude.ai and Claude Desktop)", "sk": "Claude (claude.ai a Claude Desktop)", "cs": "Claude (claude.ai a Claude Desktop)", "de": "Claude (claude.ai und Claude Desktop)"},
-    "mcp_claude_ai_1": {"en": "Open Settings, then Connectors, and choose Add custom connector.", "sk": "Otvorte Nastavenia, potom Konektory, a zvoľte Pridať vlastný konektor.", "cs": "Otevřete Nastavení, pak Konektory, a zvolte Přidat vlastní konektor.", "de": "Öffnen Sie Einstellungen, dann Konnektoren, und wählen Sie Benutzerdefinierten Konnektor hinzufügen."},
+    "mcp_claude_ai_1": {"en": "Open Customize, then Connectors, choose + Add and Add custom connector.", "sk": "Otvorte Prispôsobiť, potom Konektory, zvoľte + Pridať a Pridať vlastný konektor.", "cs": "Otevřete Přizpůsobit, pak Konektory, zvolte + Přidat a Přidat vlastní konektor.", "de": "Öffnen Sie Anpassen, dann Konnektoren, wählen Sie + Hinzufügen und Benutzerdefinierten Konnektor hinzufügen."},
     "mcp_claude_ai_2": {"en": "Name it joinedcontext and paste this address:", "sk": "Pomenujte ho joinedcontext a vložte túto adresu:", "cs": "Pojmenujte ho joinedcontext a vložte tuto adresu:", "de": "Nennen Sie ihn joinedcontext und fügen Sie diese Adresse ein:"},
     "mcp_claude_ai_3": {"en": "Leave the advanced settings empty and choose Add. Open data needs no login.", "sk": "Rozšírené nastavenia nechajte prázdne a zvoľte Pridať. Otvorené dáta nepotrebujú prihlásenie.", "cs": "Rozšířená nastavení nechte prázdná a zvolte Přidat. Otevřená data nepotřebují přihlášení.", "de": "Lassen Sie die erweiterten Einstellungen leer und wählen Sie Hinzufügen. Offene Daten brauchen keine Anmeldung."},
     "mcp_editors": {"en": "Code editors and other assistants", "sk": "Editory kódu a iní asistenti", "cs": "Editory kódu a jiní asistenti", "de": "Code-Editoren und andere Assistenten"},
@@ -337,15 +383,65 @@ STRINGS = {
     "mcp_json": {"en": "Any other MCP client (JSON)", "sk": "Iný MCP klient (JSON)", "cs": "Jiný MCP klient (JSON)", "de": "Jeder andere MCP-Client (JSON)"},
     "mcp_vscode": {"en": "Add to VS Code", "sk": "Pridať do VS Code", "cs": "Přidat do VS Code", "de": "Zu VS Code hinzufügen"},
     "mcp_cursor": {"en": "Add to Cursor", "sk": "Pridať do Cursoru", "cs": "Přidat do Cursoru", "de": "Zu Cursor hinzufügen"},
+    # The "Use it in your AI assistant" page and its button (T-4585). The stores are the ones each
+    # maker documents, read 2026-10-18: ChatGPT at chatgpt.com/plugins
+    # (developers.openai.com/apps-sdk/deploy/connect-chatgpt), Claude at Customize > Connectors
+    # (support.claude.com article 11175166), Gemini CLI's `gemini mcp add --transport http`
+    # (geminicli.com/docs/tools/mcp-server). The Gemini and Grok apps take no connectors (Grok
+    # remote MCP only through the xAI API, docs.x.ai), so their cards link nowhere.
+    "assistants": {"en": "Use it in your AI assistant", "sk": "Použite v AI asistentovi", "cs": "Použijte v AI asistentovi", "de": "In Ihrem KI-Assistenten nutzen"},
+    "assistants_label": {"en": "Use the data in ChatGPT, Claude, Gemini or any MCP client", "sk": "Použite dáta v ChatGPT, Claude, Gemini alebo v akomkoľvek klientovi MCP", "cs": "Použijte data v ChatGPT, Claude, Gemini nebo v libovolném klientovi MCP", "de": "Die Daten in ChatGPT, Claude, Gemini oder jedem MCP-Client nutzen"},
+    "assistants_lead": {
+        "en": "Add {name} to the assistant you already use, and ask it about this catalogue's open data. One address covers every dataset; no account is needed.",
+        "sk": "Pridajte {name} do asistenta, ktorého už používate, a pýtajte sa ho na otvorené dáta tohto katalógu. Jedna adresa pokrýva všetky datasety; účet netreba.",
+        "cs": "Přidejte {name} do asistenta, kterého už používáte, a ptejte se ho na otevřená data tohoto katalogu. Jedna adresa pokrývá všechny datové sady; účet není potřeba.",
+        "de": "Fügen Sie {name} dem Assistenten hinzu, den Sie schon nutzen, und fragen Sie ihn nach den offenen Daten dieses Katalogs. Eine Adresse deckt alle Datensätze ab; kein Konto nötig.",
+    },
+    # T-4659: the websites the hub's search_documents reads, so a visitor sees what it covers.
+    "assistants_sources": {"en": "What the assistant can search", "sk": "Čo asistent prehľadáva",
+                           "cs": "Co asistent prohledává", "de": "Was der Assistent durchsucht"},
+    "assistants_sources_lead": {
+        "en": "Beside the datasets, the connector searches the public pages and documents of these websites:",
+        "sk": "Okrem datasetov konektor prehľadáva verejné stránky a dokumenty týchto webov:",
+        "cs": "Kromě datových sad konektor prohledává veřejné stránky a dokumenty těchto webů:",
+        "de": "Neben den Datensätzen durchsucht der Connector die öffentlichen Seiten und Dokumente dieser Websites:",
+    },
+    "assistants_source_languages": {"en": "Languages", "sk": "Jazyky", "cs": "Jazyky", "de": "Sprachen"},
+    "coming_soon": {"en": "Coming soon", "sk": "Čoskoro", "cs": "Brzy", "de": "Demnächst"},
+    # T-4628: a card is the logo, the name and one link to that assistant's connector store.
+    "add_to": {"en": "Add to {name}", "sk": "Pridať do {name}", "cs": "Přidat do {name}", "de": "Zu {name} hinzufügen"},
+    "store_address": {"en": "Each guide shows where to paste this address:",
+                      "sk": "Každý návod ukazuje, kam vložiť túto adresu:",
+                      "cs": "Každý návod ukazuje, kam vložit tuto adresu:",
+                      "de": "Jede Anleitung zeigt, wo Sie diese Adresse einfügen:"},
+    # T-4643: one guide per assistant, for someone who has never added anything to one.
+    "guide": {"en": "Guide", "sk": "Návod", "cs": "Návod", "de": "Anleitung"},
+    "guide_title": {"en": "{name}, step by step", "sk": "{name} krok za krokom", "cs": "{name} krok za krokem", "de": "{name} Schritt für Schritt"},
+    "guide_who": {"en": "Who can use it", "sk": "Kto to môže použiť", "cs": "Kdo to může použít", "de": "Wer es nutzen kann"},
+    "guide_steps": {"en": "Steps", "sk": "Postup", "cs": "Postup", "de": "Schritte"},
+    "guide_try": {"en": "Try it", "sk": "Vyskúšajte", "cs": "Vyzkoušejte", "de": "Probieren Sie es aus"},
+    "guide_example": {"en": "Which datasets about air quality do you have?", "sk": "Aké datasety o kvalite ovzdušia máte?",
+                      "cs": "Jaké datové sady o kvalitě ovzduší máte?", "de": "Welche Datensätze zur Luftqualität gibt es?"},
+    "guide_good": {"en": "A good first answer names records from this catalogue and says which dataset they come from. If the answer is general or from the web, write: use {name}.",
+                   "sk": "Dobrá prvá odpoveď vymenuje záznamy z tohto katalógu a povie, z ktorého datasetu sú. Ak je odpoveď všeobecná alebo z webu, napíšte: použi {name}.",
+                   "cs": "Dobrá první odpověď vyjmenuje záznamy z tohoto katalogu a řekne, ze které datové sady jsou. Pokud je odpověď obecná nebo z webu, napište: použij {name}.",
+                   "de": "Eine gute erste Antwort nennt Einträge aus diesem Katalog und sagt, aus welchem Datensatz sie stammen. Ist die Antwort allgemein oder aus dem Web, schreiben Sie: nutze {name}."},
+    "guide_trouble": {"en": "If it does not work", "sk": "Ak to nejde", "cs": "Když to nejde", "de": "Wenn es nicht klappt"},
+    "guide_checked": {"en": "Checked on {date} against {maker}'s own help:", "sk": "Overené dňa {date} podľa pomocníka {maker}:",
+                      "cs": "Ověřeno dne {date} podle nápovědy {maker}:", "de": "Geprüft am {date} anhand der Hilfe von {maker}:"},
+    "guide_back": {"en": "All assistants", "sk": "Všetci asistenti", "cs": "Všichni asistenti", "de": "Alle Assistenten"},
+    "for_developers": {"en": "For developers", "sk": "Pre vývojárov", "cs": "Pro vývojáře", "de": "Für Entwickler"},
+    "gemini_1": {"en": "In Gemini CLI: run this command in a terminal, then start gemini.", "sk": "V Gemini CLI: spustite tento príkaz v termináli a potom gemini.", "cs": "V Gemini CLI: spusťte tento příkaz v terminálu a pak gemini.", "de": "In der Gemini CLI: Führen Sie diesen Befehl im Terminal aus und starten Sie dann gemini."},
+    "any_client": {"en": "Any MCP client", "sk": "Akýkoľvek MCP klient", "cs": "Jakýkoli MCP klient", "de": "Jeder MCP-Client"},
     "section_api_lead": {"en": "For applications and AI assistants that query the data live.", "sk": "Pre aplikácie a AI asistentov, ktorí sa na dáta pýtajú naživo.", "cs": "Pro aplikace a AI asistenty, kteří se na data ptají živě.", "de": "Für Anwendungen und KI-Assistenten, die die Daten live abfragen."},
     "section_schema": {"en": "Data model", "sk": "Dátový model", "cs": "Datový model", "de": "Datenmodell"},
     "section_schema_lead": {"en": "What each field means, in the formats validators and developers read.", "sk": "Čo znamená každé pole, vo formátoch pre validátory a vývojárov.", "cs": "Co znamená každé pole, ve formátech pro validátory a vývojáře.", "de": "Was jedes Feld bedeutet, in den Formaten für Validatoren und Entwickler."},
     # The home page (T-3009).
     "tagline": {
-        "en": "Open data you can browse, download and query live.",
-        "sk": "Otvorené dáta, ktoré si prezriete, stiahnete a dopytujete naživo.",
-        "cs": "Otevřená data, která si prohlédnete, stáhnete a dotazujete živě.",
-        "de": "Offene Daten zum Durchsuchen, Herunterladen und Live-Abfragen.",
+        "en": "Browse them, download them or ask the assistant about them.",
+        "sk": "Prezrite si ich, stiahnite alebo sa na ne opýtajte asistenta.",
+        "cs": "Prohlédněte si je, stáhněte nebo se na ně zeptejte asistenta.",
+        "de": "Ansehen, herunterladen oder den Assistenten dazu fragen.",
     },
     "no_datasets": {"en": "No dataset is published yet.", "sk": "Zatiaľ nie je zverejnený žiadny dataset.", "cs": "Zatím není zveřejněna žádná datová sada.", "de": "Noch ist kein Datensatz veröffentlicht."},
     "hero_search": {"en": "Search the open data", "sk": "Hľadať v otvorených dátach", "cs": "Hledat v otevřených datech", "de": "Offene Daten durchsuchen"},
@@ -367,6 +463,7 @@ STRINGS = {
     "search_topics": {"en": "Search topics…", "sk": "Hľadať témy…", "cs": "Hledat témata…",
                       "de": "Themen suchen…"},
     "nav_about": {"en": "About", "sk": "O katalógu", "cs": "O katalogu", "de": "Über den Katalog"},
+    "try_it": {"en": "Try it", "sk": "Vyskúšajte", "cs": "Vyzkoušejte", "de": "Probieren Sie es aus"},
     "publishers_help": {
         "en": "The cities, regions and offices whose data this catalogue carries. Open one to see all of its datasets.",
         "sk": "Mestá, kraje a úrady, ktorých dáta tento katalóg obsahuje. Otvorte jedného a uvidíte všetky jeho datasety.",
@@ -550,6 +647,49 @@ def jc_t(key):
     return words.get(_language()) or words.get("en") or key
 
 
+def _localized(values, language):
+    """`values[language]`, else the catalogue's default language's, else the first; a plain value
+    is the same in every language. None when nothing usable is there."""
+    if not isinstance(values, dict):
+        return values or None
+    default = (BRANDING.get("languages") or {}).get("default")
+    for code in (language, default):
+        if values.get(code):
+            return values[code]
+    return next((value for value in values.values() if value), None)
+
+
+def jc_site_title(language=None):
+    """The catalogue's name in the page's language (T-4636): its instance's `site.title`, else the
+    installation's name."""
+    title = _localized(BRANDING.get("siteTitle"), language or _language())
+    return title if isinstance(title, str) else BRANDING.get("instanceName") or "joinedcontext"
+
+
+def jc_site_tagline(language=None):
+    """The line under the home page's title (T-4636): the instance's `site.tagline` in the page's
+    language, else the installation's tagline, else the theme's."""
+    tagline = _localized(BRANDING.get("siteTagline"), language or _language())
+    if isinstance(tagline, str):
+        return tagline
+    return BRANDING.get("tagline") or jc_t("tagline")
+
+
+def jc_site_logo():
+    """The header's image on this origin (T-4636): the instance's `site.logo`, a file in the
+    theme's public directory, else the joinedcontext.com lockup (T-4627)."""
+    logo = BRANDING.get("siteLogo")
+    if isinstance(logo, str) and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*\.(svg|png|webp)", logo):
+        return "/" + logo
+    return "/jc-logo.svg"
+
+
+def _samples(language):
+    """The instance's sample questions for the page's language (T-4636): strings only."""
+    found = _localized(BRANDING.get("samples"), language)
+    return [q for q in found if isinstance(q, str) and q.strip()] if isinstance(found, list) else []
+
+
 def _extras(pkg):
     return {e.get("key"): e.get("value") for e in (pkg or {}).get("extras") or [] if e.get("key")}
 
@@ -583,6 +723,31 @@ def _parse(stamp):
     return parsed if parsed.tzinfo else parsed.replace(tzinfo=datetime.timezone.utc)
 
 
+def _when(pkg, extra, own):
+    """The extra's date when it reads as one, else CKAN's own field, as an aware datetime."""
+    pkg = pkg or {}
+    for value in (_extras(pkg).get(extra), pkg.get(own)):
+        try:
+            if value:
+                return _parse(value)
+        except ValueError:
+            continue
+    return None
+
+
+def jc_created(pkg):
+    """When the dataset first appeared (T-4644): the publisher's own `issued` (a harvested record,
+    or ours restored after the 15-17 Oct re-creation), else when CKAN created it."""
+    return _when(pkg, "issued", "metadata_created")
+
+
+def jc_updated(pkg):
+    """When its data or description last changed (T-4644): the publisher's `modified` for a
+    harvested record, else CKAN's own, which a live Endpoint's DataStore mirror moves with every
+    data change and a run that changed nothing leaves alone."""
+    return _when(pkg, "modified", "metadata_modified")
+
+
 def jc_frequency(pkg):
     """(label, next update as a datetime or None) of the dataset's frequency; None when unset."""
     value = _extras(pkg).get("frequency")
@@ -594,29 +759,25 @@ def jc_frequency(pkg):
         return (str(value), None)
     words, days = known
     label = words.get(_language()) or words["en"]
-    modified = (pkg or {}).get("metadata_modified")
-    if days is None or not modified:
-        return (label, None)
-    try:
-        last = _parse(modified)
-    except ValueError:
+    last = jc_updated(pkg)
+    if days is None or not last:
         return (label, None)
     return (label, last + datetime.timedelta(days=days))
 
 
-# The NUTS 3 regions of the bodies on the platform; any other code reads as its code (T-4333).
+# The NUTS 3 regions of the bodies on the platform, by code and language (T-4333); any other code
+# reads as its code. A data file beside this one, so no country's names sit in the code (T-4636).
 # ponytail: a handful of names, the Eurostat NUTS list when more countries publish.
-NUTS_NAMES = {
-    "SK010": {"en": "Bratislava Region", "sk": "Bratislavský kraj", "cs": "Bratislavský kraj", "de": "Region Bratislava"},
-    "SK021": {"en": "Trnava Region", "sk": "Trnavský kraj", "cs": "Trnavský kraj", "de": "Region Trnava"},
-    "SK022": {"en": "Trenčín Region", "sk": "Trenčiansky kraj", "cs": "Trenčínský kraj", "de": "Region Trenčín"},
-    "SK023": {"en": "Nitra Region", "sk": "Nitriansky kraj", "cs": "Nitranský kraj", "de": "Region Nitra"},
-    "SK031": {"en": "Žilina Region", "sk": "Žilinský kraj", "cs": "Žilinský kraj", "de": "Region Žilina"},
-    "SK032": {"en": "Banská Bystrica Region", "sk": "Banskobystrický kraj", "cs": "Banskobystrický kraj", "de": "Region Banská Bystrica"},
-    "SK041": {"en": "Prešov Region", "sk": "Prešovský kraj", "cs": "Prešovský kraj", "de": "Region Prešov"},
-    "SK042": {"en": "Košice Region", "sk": "Košický kraj", "cs": "Košický kraj", "de": "Region Košice"},
-    "CZ010": {"en": "Prague", "sk": "Praha", "cs": "Hlavní město Praha", "de": "Prag"},
-}
+def _nuts_names():
+    try:
+        with open(os.path.join(os.path.dirname(__file__), "nuts.json"), encoding="utf-8") as handle:
+            names = json.load(handle)
+    except (OSError, ValueError):
+        return {}
+    return names if isinstance(names, dict) else {}
+
+
+NUTS_NAMES = _nuts_names()
 
 
 def jc_about(pkg):
@@ -648,11 +809,14 @@ def jc_about(pkg):
     frequency = jc_frequency(pkg)
     if frequency:
         rows.append((jc_t("frequency"), frequency[0], None))
-    if pkg.get("metadata_modified"):
-        rows.append((jc_t("last_update"), _date(str(pkg["metadata_modified"])[:10]), None))
+    created, updated = jc_created(pkg), jc_updated(pkg)
+    if created:
+        rows.append((jc_t("created"), _date(created.date().isoformat()), None))
+    if updated:
+        rows.append((jc_t("last_update"), _date(updated.date().isoformat()), None))
     if frequency and frequency[1]:
         # A dataset updated more than once a day promises an hour, not only a date.
-        hourly = frequency[1] - _parse(pkg["metadata_modified"]) < _DAY
+        hourly = frequency[1] - updated < _DAY
         # CKAN writes a date with hours as "%B %d, %Y", English order with the page's month name;
         # the hour goes after the page's own date instead (T-4333).
         text = _date(frequency[1])
@@ -697,7 +861,8 @@ def _date(value, hours=False):
 
 def jc_more(pkg):
     """The extras the About list does not show, as (key, value), for "More details"."""
-    shown = set(ABOUT_EXTRAS) | INTERNAL_EXTRAS | {"identifier", "language", "conforms_to", "status"}
+    # `issued` and `modified` are the About list's Created and Last update (T-4644).
+    shown = set(ABOUT_EXTRAS) | INTERNAL_EXTRAS | {"identifier", "language", "conforms_to", "status", "issued", "modified"}
     return sorted((k, v) for k, v in _extras(pkg).items() if k not in shown and v)
 
 
@@ -1210,6 +1375,218 @@ def jc_previews(pkg):
     return out
 
 
+VIEW_ID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+SLUG = re.compile(r"^[a-z0-9]{16,64}$")
+SPEC_BYTES = 200 * 1024
+
+
+def _json(value):
+    """A JSON text from a view's config as the value it holds, None when it is not JSON."""
+    try:
+        return json.loads(value) if isinstance(value, str) else None
+    except ValueError:
+        return None
+
+
+def jc_viz_origin():
+    """The renderer's host, viz.{domain} (ADR-N-053 §2.5); None when the branding names no domain."""
+    domain = BRANDING.get("domain")
+    return "https://viz." + domain if isinstance(domain, str) and re.fullmatch(r"[a-z0-9.-]+", domain) else None
+
+
+def jc_visualization(view):
+    """One published chart (T-4641) for a template: its title and description in the page's
+    language, the frame's address on the renderer's host and the snippet that embeds it on another
+    site. The frame is named by the view id alone: the renderer reads the spec from CKAN itself."""
+    origin = jc_viz_origin()
+    if not origin or not view or view.get("view_type") != "jc_visualization" or not VIEW_ID.match(view.get("id") or ""):
+        return None
+    language = _language()
+    title = _localized(_json(view.get("titles")), language) or view.get("title") or ""
+    description = _localized(_json(view.get("descriptions")), language) or view.get("description") or ""
+    embed = "%s/#%s&lang=%s" % (origin, view["id"], language)
+    # The host page reads CKAN and the API under its own origin, so it keeps it
+    # (`allow-same-origin` on a frame of another site gives it nothing of the embedding page);
+    # the spec itself runs one frame deeper, sandboxed to an opaque origin.
+    code = ('<iframe src="%s" title="%s" width="100%%" height="480" style="border:0" loading="lazy" '
+            'referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-downloads '
+            'allow-popups allow-popups-to-escape-sandbox"></iframe>') % (embed, html.escape(title, quote=True))
+    return {"id": view["id"], "title": title, "description": description, "origin": origin,
+            "src": "%s/#%s&inline&lang=%s" % (origin, view["id"], language), "code": code,
+            "package": view.get("package_id")}
+
+
+def jc_visualizations(pkg):
+    """Every chart published on the dataset's resources, in the resources' order (ADR-N-053)."""
+    out = []
+    for resource in sorted((pkg or {}).get("resources") or [], key=_order):
+        try:
+            views = toolkit.get_action("resource_view_list")({}, {"id": resource["id"]})
+        except (toolkit.ObjectNotFound, toolkit.NotAuthorized):
+            views = []
+        out.extend(item for item in map(jc_visualization, views or []) if item)
+    return out
+
+
+def _viz_object(value):
+    """A view config member that must be a JSON object: the spec within 200 KB (EP-130)."""
+    if value in (None, ""):
+        return value
+    if not isinstance(value, str) or len(value.encode("utf-8")) > SPEC_BYTES or not isinstance(_json(value), dict):
+        raise toolkit.Invalid("a JSON object of at most 200 KB")
+    return value
+
+
+def _viz_slug(value):
+    if value in (None, "") or (isinstance(value, str) and SLUG.match(value)):
+        return value
+    raise toolkit.Invalid("an Endpoint slug")
+# The basemap the map draws under the data (T-4639): a style on this installation's tiles host
+# (T-4638), whose vector tiles the page reads with pmtiles. Anything else is no basemap: a map of
+# the data alone. OpenStreetMap's own tile servers are not one (T-4661): their policy refuses
+# production use, and every visitor's address would reach them.
+PMTILES = "/pmtiles-4.5.0.js"
+MAPLIBRE = "/maplibre-gl-6.14.0/"
+MAP_CSP = "frame-ancestors *; object-src 'none'; base-uri 'self'"
+VENDOR = "/srv/app/vendor"
+
+
+def _basemap():
+    try:
+        found = json.loads(os.environ.get("JC_MAP_BASEMAP") or "{}")
+    except ValueError:
+        return {}
+    if not isinstance(found, dict):
+        return {}
+    domain = BRANDING.get("domain") or ""
+    style = found.get("style")
+    if isinstance(style, str) and domain and re.fullmatch(r"https://tiles\.%s/[A-Za-z0-9/._-]+\.json" % re.escape(domain), style):
+        return {"style": style}
+    return {}
+
+
+BASEMAP = _basemap()
+
+
+def _leaf(column):
+    """The innermost named part of a DataStore column: `streetAddress` of
+    `address.value.streetAddress`, `name` of `name.languageMap.sk` (jc-core's field_order::leaf)."""
+    parts = [part.split("[")[0] for part in column.split(".")]
+    found = parts[0]
+    skip = False
+    for part in parts[1:]:
+        if skip:
+            skip = False
+        elif part == "languageMap":
+            skip = True
+        elif part not in ("value", "object", ""):
+            found = part
+    return found
+
+
+def _display_fields(resource_id):
+    """The order, labels and key attributes the publisher wrote into a DataStore table's data
+    dictionary (T-4672, DM-98…DM-101): one entry per attribute in the table's column order, `a`
+    the attribute, `l` its labels per language, `s` whether it is a key attribute. None when the
+    DataStore does not answer or the table carries none."""
+    try:
+        fields = toolkit.get_action("datastore_search")({}, {"resource_id": resource_id, "limit": 0}).get("fields") or []
+    except (toolkit.ObjectNotFound, toolkit.NotAuthorized, toolkit.ValidationError):
+        return None
+    out = []
+    for field in fields:
+        column = str(field.get("id") or "")
+        attribute = column.split(".")[0].split("[")[0]
+        if not attribute or attribute.startswith("_") or attribute == "entity_id":
+            continue
+        info = field.get("info") if isinstance(field.get("info"), dict) else {}
+        entry = next((e for e in out if e["a"] == attribute), None)
+        if entry is None:
+            entry = {"a": attribute, "l": {}, "s": False}
+            out.append(entry)
+        labels = info.get("labels")
+        if _leaf(column) == attribute and isinstance(labels, dict):
+            entry["l"] = {str(k): str(v) for k, v in labels.items() if isinstance(v, str)}
+        entry["s"] = entry["s"] or info.get("summary") is True
+    return out if any(e["l"] or e["s"] for e in out) else None
+
+
+def jc_map(pkg, resource_id=None):
+    """What the dataset's map reads (T-4639): per DataStore table, the OGC API Features items of
+    its entity type on the dataset's own Endpoint, with the collection's schema for units, or
+    only `resource_id`'s. The reader's browser asks each for one feature and shows the map only
+    when one has a geometry. None without such an address or without the map library."""
+    pkg = pkg or {}
+    if not os.path.isdir(VENDOR):
+        return None
+    domain = BRANDING.get("domain") or ""
+    resources = pkg.get("resources") or []
+    bases = []
+    for resource in resources:
+        url = resource.get("url") or ""
+        parts = urlsplit(url)
+        host = parts.hostname or ""
+        if jc_kind(resource) != "OGCFEAT" or not (url.startswith("https://") and domain and (host == domain or host.endswith("." + domain))):
+            continue
+        bases.append(parts)
+    layers = []
+    for resource in resources:
+        kind_type = resource.get("name") or ""
+        if not resource.get("datastore_active") or (resource_id and resource.get("id") != resource_id):
+            continue
+        if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*", kind_type):
+            continue
+        for parts in bases:
+            path = parts.path.rstrip("/")
+            if path.endswith("/items"):
+                if not path.endswith("/collections/%s/items" % kind_type):
+                    continue
+                collection = path[:-len("/items")]
+            else:
+                collection = "%s/collections/%s" % (path, kind_type)
+            layer = {
+                "type": kind_type,
+                "items": urlunsplit(parts._replace(path=collection + "/items")),
+                "schema": urlunsplit(parts._replace(path=collection + "/schema", query="")),
+            }
+            fields = _display_fields(resource.get("id"))
+            if fields:
+                layer["fields"] = fields
+            layers.append(layer)
+            break
+    if not layers:
+        return None
+    name = pkg.get("name") or ""
+    return {
+        "layers": layers,
+        "basemap": BASEMAP,
+        "lib": MAPLIBRE + "maplibre-gl.mjs",
+        "pmtiles": PMTILES if BASEMAP.get("style") else "",
+        "enums": "/jc-enums.json",
+        "lang": _language(),
+        "title": pkg.get("title") or name,
+        "dataset": toolkit.url_for("dataset.read", id=name, _external=True),
+        "embed": toolkit.url_for("jc_pages.map", id=name, _external=True),
+        "t": {key: jc_t(key) for key in ("map_cap", "map_failed", "map_loading", "map_close", "map_panel",
+                                          "map_length", "map_area", "map_keys", "map_title", "map_more")},
+    }
+
+
+def jc_map_page(id, resource_id=None):
+    """The map of one dataset as a page of its own, for a site to frame (T-4639): no header,
+    no footer, no form. The page names its own policy, any ancestor, as the upstream owns its
+    CSP (OPS-34); the edge strips the cookie."""
+    try:
+        pkg = toolkit.get_action("package_show")({}, {"id": id})
+    except (toolkit.ObjectNotFound, toolkit.NotAuthorized):
+        return toolkit.abort(404)
+    config = jc_map(pkg, resource_id)
+    if not config:
+        return toolkit.abort(404)
+    page = toolkit.render("jc/map.html", {"pkg": pkg, "jc_map_config": config})
+    return page, 200, {"Content-Security-Policy": MAP_CSP}
+
+
 def jc_total(previews):
     """All rows of the tables, or None when any table's count is unknown."""
     totals = [p["total"] for p in previews or []]
@@ -1348,7 +1725,8 @@ def jc_mcp_install():
     domain = BRANDING.get("domain")
     if not (isinstance(domain, str) and _HOST.match(domain)):
         return None
-    url = "https://%s/api/mcp" % domain
+    # The data host, api.{domain} (ADR-N-052 §2.1, T-4632): the apex moves an anonymous client there.
+    url = "https://api.%s/api/mcp" % domain
     server = {"type": "http", "url": url}
     vscode = json.dumps(dict(name=MCP_NAME, **server), separators=(",", ":"))
     cursor = base64.b64encode(json.dumps({"url": url}, separators=(",", ":")).encode()).decode()
@@ -1367,6 +1745,341 @@ def jc_mcp_install():
     }
 
 
+CHATGPT_PLUGINS = "https://chatgpt.com/plugins"
+CLAUDE_CONNECTORS = "https://claude.ai/customize/connectors"
+# Grok's web app takes a custom MCP connector there, New Connector > Custom (T-4634, read
+# 2026-10-18: docs.x.ai/build/features/mcp-servers).
+GROK_CONNECTORS = "https://grok.com/connectors"
+# Gemini's Connected Apps, where a custom app is added (T-4643, read 2026-10-18: Google's help
+# support.google.com/gemini/answer/17209137).
+GEMINI_APPS = "https://gemini.google.com/apps"
+
+
+def jc_gemini_on():
+    """Gemini's card, only once its sign-in through the gateway's own OAuth works on this
+    installation (T-4631, T-4630): the chart's `assistants.gemini`, off unless set."""
+    return os.environ.get("JC_ASSISTANT_GEMINI") == "true"
+
+
+def jc_assistant_sources():
+    """The websites the hub's `search_documents` reads (T-4659), from the chart's
+    `assistants.sources`: each its host, address, publisher and languages. A malformed list or entry,
+    or an address that is not https, is left out rather than shown half."""
+    try:
+        listed = json.loads(os.environ.get("JC_ASSISTANT_SOURCES") or "[]")
+    except ValueError:
+        return []
+    sources = []
+    for entry in listed if isinstance(listed, list) else []:
+        if not isinstance(entry, dict):
+            continue
+        url, publisher = entry.get("url"), entry.get("publisher")
+        languages = entry.get("languages") or []
+        host = urlsplit(url).hostname if isinstance(url, str) and url.startswith("https://") else None
+        if not host or not isinstance(publisher, str) or not isinstance(languages, list):
+            continue
+        sources.append({"site": host, "url": url, "publisher": publisher,
+                        "languages": ", ".join(str(code) for code in languages)})
+    return sources
+
+
+def jc_assistants():
+    """The "Use it in your AI assistant" page (T-4585, T-4628, T-4634, T-4643): a card per assistant
+    whose app takes our connector, ChatGPT, Claude, Grok, then Gemini once its flag is on, each its
+    logo, its name, a link to its connector store and one to our guide; None without the hub.
+    Gemini's app connects only through OAuth, so its card waits for the gateway's (T-4631); the
+    Gemini CLI command stays in the developers' fold. The hub's address stands once under the
+    cards, because our connector is listed in no store yet.
+
+    `logo` is the card's mark in its brand colours, a template beside this file."""
+    mcp = jc_mcp_install()
+    if not mcp:
+        return None
+    name = BRANDING.get("instanceName") or MCP_NAME
+
+    def card(id, title, store):
+        return {"id": id, "name": title, "logo": "jc/card-%s.svg" % id, "open": store,
+                "open_label": jc_t("add_to").replace("{name}", title), "guide_label": jc_t("guide")}
+
+    cards = [card("chatgpt", "ChatGPT", CHATGPT_PLUGINS), card("claude", "Claude", CLAUDE_CONNECTORS),
+             card("grok", "Grok", GROK_CONNECTORS)]
+    if jc_gemini_on():
+        cards.append(card("gemini", "Gemini", GEMINI_APPS))
+
+    return {
+        "lead": jc_t("assistants_lead").replace("{name}", name),
+        "mcp": mcp,
+        "cards": cards,
+        "sources": jc_assistant_sources(),
+        "gemini": "gemini mcp add --transport http %s %s" % (MCP_NAME, mcp["url"]),
+    }
+
+
+# One guide per assistant at /assistants/{id} (T-4643), for someone who has never added anything to
+# an assistant: who may, numbered steps in the assistant's own words, a question to try and what
+# goes wrong. `paste` is the step whose address box follows it; `{name}` the catalogue's connector.
+# Every step was read against the maker's own help page on `checked`; screenshots come from the
+# owner later, so no step leans on one. No step names a protocol: those words stay in the fold.
+GUIDES = {
+    "chatgpt": {
+        "name": "ChatGPT", "start": CHATGPT_PLUGINS, "checked": "2026-10-18", "paste": 3,
+        "help": "https://help.openai.com/en/articles/12584461",
+        "en": {
+            "who": ["On chatgpt.com in a computer's browser, with ChatGPT Business, Enterprise or Edu. With Pro, turn on developer mode in the settings first; it then reads only, which is all this catalogue needs.",
+                    "OpenAI names no other plan, so Free and Plus may not offer it yet."],
+            "steps": ["Open chatgpt.com/plugins on your computer and sign in.",
+                      "Click + and choose to add your own server.",
+                      "Type {name} as the name.",
+                      "Paste this address into the connection field:",
+                      "Under sign-in, choose no authentication.",
+                      "Read the warning, tick that you understand, and create the plugin.",
+                      "Install it, start a new chat, type @ and pick {name}."],
+            "trouble": [("There is no option to add your own server.", "Your plan does not offer it: see who can use it above. In a company account, your administrator has to allow it."),
+                        ("ChatGPT cannot reach the address.", "Copy the address again with the button and paste it whole, with nothing before or after it."),
+                        ("The answer does not use the catalogue.", "Start a new chat, type @, pick {name} and ask again.")],
+        },
+        "sk": {
+            "who": ["Na chatgpt.com v prehliadači v počítači, s plánom ChatGPT Business, Enterprise alebo Edu. S plánom Pro najprv v nastaveniach zapnite režim pre vývojárov; potom iba číta, čo tomuto katalógu stačí.",
+                    "Iné plány OpenAI neuvádza, Free a Plus to teda zatiaľ nemusia ponúkať."],
+            "steps": ["Na počítači otvorte chatgpt.com/plugins a prihláste sa.",
+                      "Kliknite na + a vyberte pridanie vlastného servera.",
+                      "Ako názov napíšte {name}.",
+                      "Do poľa pre pripojenie vložte túto adresu:",
+                      "Pri prihlasovaní zvoľte možnosť bez overenia.",
+                      "Prečítajte si upozornenie, označte, že mu rozumiete, a doplnok vytvorte.",
+                      "Nainštalujte ho, otvorte nový rozhovor, napíšte @ a vyberte {name}."],
+            "trouble": [("Možnosť pridať vlastný server tam nie je.", "Váš plán ju nemá: pozrite, kto to môže použiť. Vo firemnom účte ju musí povoliť správca."),
+                        ("ChatGPT sa na adresu nedostane.", "Skopírujte adresu znova tlačidlom a vložte ju celú, bez ničoho pred ňou a za ňou."),
+                        ("Odpoveď katalóg nepoužije.", "Otvorte nový rozhovor, napíšte @, vyberte {name} a opýtajte sa znova.")],
+        },
+        "cs": {
+            "who": ["Na chatgpt.com v prohlížeči v počítači, s plánem ChatGPT Business, Enterprise nebo Edu. S plánem Pro nejprve v nastavení zapněte režim pro vývojáře; pak jen čte, což tomuto katalogu stačí.",
+                    "Jiné plány OpenAI neuvádí, Free a Plus to tedy zatím nemusí nabízet."],
+            "steps": ["Na počítači otevřete chatgpt.com/plugins a přihlaste se.",
+                      "Klikněte na + a vyberte přidání vlastního serveru.",
+                      "Jako název napište {name}.",
+                      "Do pole pro připojení vložte tuto adresu:",
+                      "U přihlašování zvolte možnost bez ověření.",
+                      "Přečtěte si upozornění, označte, že mu rozumíte, a doplněk vytvořte.",
+                      "Nainstalujte ho, otevřete nový rozhovor, napište @ a vyberte {name}."],
+            "trouble": [("Možnost přidat vlastní server tam není.", "Váš plán ji nemá: podívejte se, kdo to může použít. Ve firemním účtu ji musí povolit správce."),
+                        ("ChatGPT se na adresu nedostane.", "Zkopírujte adresu znovu tlačítkem a vložte ji celou, bez ničeho před ní a za ní."),
+                        ("Odpověď katalog nepoužije.", "Otevřete nový rozhovor, napište @, vyberte {name} a zeptejte se znovu.")],
+        },
+        "de": {
+            "who": ["Auf chatgpt.com im Browser am Computer, mit ChatGPT Business, Enterprise oder Edu. Mit Pro schalten Sie zuerst in den Einstellungen den Entwicklermodus ein; dann liest er nur, was diesem Katalog genügt.",
+                    "Andere Pläne nennt OpenAI nicht, Free und Plus bieten es also womöglich noch nicht an."],
+            "steps": ["Öffnen Sie am Computer chatgpt.com/plugins und melden Sie sich an.",
+                      "Klicken Sie auf + und wählen Sie, einen eigenen Server hinzuzufügen.",
+                      "Geben Sie als Namen {name} ein.",
+                      "Fügen Sie diese Adresse in das Feld für die Verbindung ein:",
+                      "Wählen Sie bei der Anmeldung die Möglichkeit ohne Authentifizierung.",
+                      "Lesen Sie die Warnung, bestätigen Sie, dass Sie sie verstehen, und erstellen Sie das Plugin.",
+                      "Installieren Sie es, beginnen Sie einen neuen Chat, tippen Sie @ und wählen Sie {name}."],
+            "trouble": [("Es gibt keine Möglichkeit, einen eigenen Server hinzuzufügen.", "Ihr Plan bietet sie nicht: siehe oben, wer es nutzen kann. In einem Firmenkonto muss Ihre Administration sie erlauben."),
+                        ("ChatGPT erreicht die Adresse nicht.", "Kopieren Sie die Adresse erneut mit der Schaltfläche und fügen Sie sie vollständig ein, ohne etwas davor oder danach."),
+                        ("Die Antwort nutzt den Katalog nicht.", "Beginnen Sie einen neuen Chat, tippen Sie @, wählen Sie {name} und fragen Sie erneut.")],
+        },
+    },
+    "claude": {
+        "name": "Claude", "start": CLAUDE_CONNECTORS, "checked": "2026-10-18", "paste": 3,
+        "help": "https://support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp",
+        "en": {
+            "who": ["Every Claude plan, the free one too: a free account may add one connector of its own.",
+                    "In a Team or Enterprise account, the organization's owner adds it once; you then only connect to it."],
+            "steps": ["Open claude.ai/customize/connectors and sign in.",
+                      "Click + Add and choose to add your own connector.",
+                      "Type {name} as the name.",
+                      "Paste this address and continue:",
+                      "Keep the settings Claude found and continue.",
+                      "Under sign-in, choose no sign-in, then click Add.",
+                      "In a new chat, click + at the bottom left, open the connectors and switch {name} on."],
+            "trouble": [("Claude says you cannot add another connector.", "A free account keeps one connector of its own: remove the one you no longer use and add this one."),
+                        ("There is no button to add one.", "In a Team or Enterprise account, ask the organization's owner to add it."),
+                        ("Claude asks you to sign in.", "No sign-in is needed. Remove the connector and add it again, choosing no sign-in: Claude does not let you change it afterwards.")],
+        },
+        "sk": {
+            "who": ["Všetky plány Claude, aj bezplatný: bezplatný účet smie pridať jeden vlastný konektor.",
+                    "V účte Team alebo Enterprise ho raz pridá vlastník organizácie; vy sa k nemu potom iba pripojíte."],
+            "steps": ["Otvorte claude.ai/customize/connectors a prihláste sa.",
+                      "Kliknite na + a vyberte pridanie vlastného konektora.",
+                      "Ako názov napíšte {name}.",
+                      "Vložte túto adresu a pokračujte:",
+                      "Nastavenia, ktoré Claude našiel, nechajte a pokračujte.",
+                      "Pri prihlásení zvoľte možnosť bez prihlásenia a kliknite na pridať.",
+                      "V novom rozhovore kliknite vľavo dole na +, otvorte konektory a zapnite {name}."],
+            "trouble": [("Claude hlási, že ďalší konektor pridať nemôžete.", "Bezplatný účet má jeden vlastný konektor: odstráňte ten, ktorý už nepoužívate, a pridajte tento."),
+                        ("Tlačidlo na pridanie tam nie je.", "V účte Team alebo Enterprise požiadajte vlastníka organizácie, aby ho pridal."),
+                        ("Claude žiada prihlásenie.", "Prihlásenie netreba. Konektor odstráňte a pridajte znova s možnosťou bez prihlásenia: Claude ju neskôr zmeniť nedovolí.")],
+        },
+        "cs": {
+            "who": ["Všechny plány Claude, i bezplatný: bezplatný účet smí přidat jeden vlastní konektor.",
+                    "V účtu Team nebo Enterprise ho jednou přidá vlastník organizace; vy se k němu pak jen připojíte."],
+            "steps": ["Otevřete claude.ai/customize/connectors a přihlaste se.",
+                      "Klikněte na + a vyberte přidání vlastního konektoru.",
+                      "Jako název napište {name}.",
+                      "Vložte tuto adresu a pokračujte:",
+                      "Nastavení, která Claude našel, ponechte a pokračujte.",
+                      "U přihlášení zvolte možnost bez přihlášení a klikněte na přidat.",
+                      "V novém rozhovoru klikněte vlevo dole na +, otevřete konektory a zapněte {name}."],
+            "trouble": [("Claude hlásí, že další konektor přidat nemůžete.", "Bezplatný účet má jeden vlastní konektor: odstraňte ten, který už nepoužíváte, a přidejte tento."),
+                        ("Tlačítko pro přidání tam není.", "V účtu Team nebo Enterprise požádejte vlastníka organizace, aby ho přidal."),
+                        ("Claude chce přihlášení.", "Přihlášení není potřeba. Konektor odstraňte a přidejte znovu s možností bez přihlášení: Claude ji později změnit nedovolí.")],
+        },
+        "de": {
+            "who": ["Alle Claude-Pläne, auch der kostenlose: ein kostenloses Konto darf einen eigenen Konnektor hinzufügen.",
+                    "In einem Team- oder Enterprise-Konto fügt ihn die Inhaberin oder der Inhaber der Organisation einmal hinzu; Sie verbinden sich dann nur noch."],
+            "steps": ["Öffnen Sie claude.ai/customize/connectors und melden Sie sich an.",
+                      "Klicken Sie auf + und wählen Sie, einen eigenen Konnektor hinzuzufügen.",
+                      "Geben Sie als Namen {name} ein.",
+                      "Fügen Sie diese Adresse ein und fahren Sie fort:",
+                      "Behalten Sie die Einstellungen, die Claude gefunden hat, und fahren Sie fort.",
+                      "Wählen Sie bei der Anmeldung die Möglichkeit ohne Anmeldung und klicken Sie auf Hinzufügen.",
+                      "Klicken Sie in einem neuen Chat unten links auf +, öffnen Sie die Konnektoren und schalten Sie {name} ein."],
+            "trouble": [("Claude meldet, dass Sie keinen weiteren Konnektor hinzufügen können.", "Ein kostenloses Konto hat einen eigenen Konnektor: Entfernen Sie den, den Sie nicht mehr nutzen, und fügen Sie diesen hinzu."),
+                        ("Es gibt keine Schaltfläche zum Hinzufügen.", "Bitten Sie in einem Team- oder Enterprise-Konto die Inhaberin oder den Inhaber der Organisation, ihn hinzuzufügen."),
+                        ("Claude verlangt eine Anmeldung.", "Eine Anmeldung ist nicht nötig. Entfernen Sie den Konnektor und fügen Sie ihn ohne Anmeldung erneut hinzu: Claude lässt das später nicht ändern.")],
+        },
+    },
+    "grok": {
+        "name": "Grok", "start": GROK_CONNECTORS, "checked": "2026-10-18", "paste": 2,
+        "help": "https://docs.x.ai/grok/connectors",
+        "en": {
+            "who": ["Every Grok user, on grok.com; on a phone the same page is under Settings, Connectors.",
+                    "In a Grok Business or Enterprise team, the team's administrator adds it first."],
+            "steps": ["Open grok.com/connectors and sign in.",
+                      "Click New Connector and choose Custom.",
+                      "Paste this address and confirm:",
+                      "Start a new chat and ask your question."],
+            "trouble": [("Grok refuses the address.", "Copy the address again with the button and paste it whole, with nothing before or after it."),
+                        ("There is no button for a new connector.", "In a team account, ask your administrator to add it."),
+                        ("The answer does not use the catalogue.", "Start a new chat and write: use {name}.")],
+        },
+        "sk": {
+            "who": ["Každý používateľ Groku, na grok.com; v telefóne je tá istá stránka v Nastaveniach, v časti Konektory.",
+                    "V tíme Grok Business alebo Enterprise ho najprv pridá správca tímu."],
+            "steps": ["Otvorte grok.com/connectors a prihláste sa.",
+                      "Kliknite na nový konektor a vyberte vlastný.",
+                      "Vložte túto adresu a potvrďte:",
+                      "Otvorte nový rozhovor a položte otázku."],
+            "trouble": [("Grok adresu odmietne.", "Skopírujte adresu znova tlačidlom a vložte ju celú, bez ničoho pred ňou a za ňou."),
+                        ("Tlačidlo na nový konektor tam nie je.", "V tímovom účte požiadajte správcu, aby ho pridal."),
+                        ("Odpoveď katalóg nepoužije.", "Otvorte nový rozhovor a napíšte: použi {name}.")],
+        },
+        "cs": {
+            "who": ["Každý uživatel Groku, na grok.com; v telefonu je tatáž stránka v Nastavení, v části Konektory.",
+                    "V týmu Grok Business nebo Enterprise ho nejprve přidá správce týmu."],
+            "steps": ["Otevřete grok.com/connectors a přihlaste se.",
+                      "Klikněte na nový konektor a vyberte vlastní.",
+                      "Vložte tuto adresu a potvrďte:",
+                      "Otevřete nový rozhovor a položte otázku."],
+            "trouble": [("Grok adresu odmítne.", "Zkopírujte adresu znovu tlačítkem a vložte ji celou, bez ničeho před ní a za ní."),
+                        ("Tlačítko pro nový konektor tam není.", "V týmovém účtu požádejte správce, aby ho přidal."),
+                        ("Odpověď katalog nepoužije.", "Otevřete nový rozhovor a napište: použij {name}.")],
+        },
+        "de": {
+            "who": ["Alle Grok-Nutzerinnen und -Nutzer, auf grok.com; am Telefon ist dieselbe Seite unter Einstellungen, Konnektoren.",
+                    "In einem Team mit Grok Business oder Enterprise fügt ihn zuerst die Team-Administration hinzu."],
+            "steps": ["Öffnen Sie grok.com/connectors und melden Sie sich an.",
+                      "Klicken Sie auf New Connector und wählen Sie Custom.",
+                      "Fügen Sie diese Adresse ein und bestätigen Sie:",
+                      "Beginnen Sie einen neuen Chat und stellen Sie Ihre Frage."],
+            "trouble": [("Grok lehnt die Adresse ab.", "Kopieren Sie die Adresse erneut mit der Schaltfläche und fügen Sie sie vollständig ein, ohne etwas davor oder danach."),
+                        ("Es gibt keine Schaltfläche für einen neuen Konnektor.", "Bitten Sie in einem Team-Konto Ihre Administration, ihn hinzuzufügen."),
+                        ("Die Antwort nutzt den Katalog nicht.", "Beginnen Sie einen neuen Chat und schreiben Sie: nutze {name}.")],
+        },
+    },
+    "gemini": {
+        "name": "Gemini", "start": GEMINI_APPS, "checked": "2026-10-18", "paste": 3,
+        "help": "https://support.google.com/gemini/answer/17209137",
+        "en": {
+            "who": ["Google offers it to people aged 18 or over in the US, with a personal Google account (not a work or school one) and Gemini's activity setting switched on.",
+                    "You add it in the Gemini web app, and it then works in the phone app too. It answers in English only."],
+            "steps": ["On your computer, open gemini.google.com and sign in with your personal Google account.",
+                      "At the bottom, click Settings, then Connected Apps.",
+                      "Under custom apps, click to add a custom app.",
+                      "Paste this address and click Next:",
+                      "A short window opens and closes by itself: there is nothing to sign in to or fill in.",
+                      "In a chat, type @, pick {name} and ask in English."],
+            "trouble": [("There are no custom apps in the settings.", "Google offers them only to personal accounts, from 18, in the US, with the activity setting on."),
+                        ("The window closes and no app is added.", "Try again in a minute. If it keeps failing, write to us from the support page."),
+                        ("Gemini does not use the catalogue.", "Type @, pick {name} and ask your question in English.")],
+        },
+        "sk": {
+            "who": ["Google to ponúka ľuďom od 18 rokov v USA, s osobným účtom Google (nie pracovným ani školským) a so zapnutým ukladaním aktivity v Gemini. Na Slovensku to Google zatiaľ neponúka.",
+                    "Pridáva sa vo webovej aplikácii Gemini a potom funguje aj v telefóne. Odpovedá iba po anglicky."],
+            "steps": ["Na počítači otvorte gemini.google.com a prihláste sa osobným účtom Google.",
+                      "Dole kliknite na Nastavenia a potom na prepojené aplikácie.",
+                      "V časti vlastných aplikácií kliknite na pridanie vlastnej aplikácie.",
+                      "Vložte túto adresu a kliknite na ďalej:",
+                      "Otvorí sa krátke okno a samo sa zavrie: netreba sa nikde prihlasovať ani nič vypĺňať.",
+                      "V rozhovore napíšte @, vyberte {name} a pýtajte sa po anglicky."],
+            "trouble": [("V nastaveniach vlastné aplikácie nie sú.", "Google ich ponúka iba osobným účtom, od 18 rokov, v USA a so zapnutým ukladaním aktivity."),
+                        ("Okno sa zavrie a aplikácia sa nepridá.", "Skúste to znova o minútu. Ak to stále nejde, napíšte nám zo stránky podpory."),
+                        ("Gemini katalóg nepoužije.", "Napíšte @, vyberte {name} a otázku položte po anglicky.")],
+        },
+        "cs": {
+            "who": ["Google to nabízí lidem od 18 let v USA, s osobním účtem Google (ne pracovním ani školním) a se zapnutým ukládáním aktivity v Gemini. V Česku to Google zatím nenabízí.",
+                    "Přidává se ve webové aplikaci Gemini a pak funguje i v telefonu. Odpovídá jen anglicky."],
+            "steps": ["Na počítači otevřete gemini.google.com a přihlaste se osobním účtem Google.",
+                      "Dole klikněte na Nastavení a pak na propojené aplikace.",
+                      "V části vlastních aplikací klikněte na přidání vlastní aplikace.",
+                      "Vložte tuto adresu a klikněte na další:",
+                      "Otevře se krátké okno a samo se zavře: není třeba se nikde přihlašovat ani nic vyplňovat.",
+                      "V rozhovoru napište @, vyberte {name} a ptejte se anglicky."],
+            "trouble": [("V nastavení vlastní aplikace nejsou.", "Google je nabízí jen osobním účtům, od 18 let, v USA a se zapnutým ukládáním aktivity."),
+                        ("Okno se zavře a aplikace se nepřidá.", "Zkuste to znovu za minutu. Pokud to stále nejde, napište nám ze stránky podpory."),
+                        ("Gemini katalog nepoužije.", "Napište @, vyberte {name} a otázku položte anglicky.")],
+        },
+        "de": {
+            "who": ["Google bietet es Personen ab 18 Jahren in den USA an, mit einem privaten Google-Konto (keinem Arbeits- oder Schulkonto) und eingeschalteter Gemini-Aktivität. In Europa bietet Google es noch nicht an.",
+                    "Sie fügen es in der Gemini-Web-App hinzu, danach funktioniert es auch in der App am Telefon. Es antwortet nur auf Englisch."],
+            "steps": ["Öffnen Sie am Computer gemini.google.com und melden Sie sich mit Ihrem privaten Google-Konto an.",
+                      "Klicken Sie unten auf Einstellungen und dann auf verbundene Apps.",
+                      "Klicken Sie unter den eigenen Apps darauf, eine eigene App hinzuzufügen.",
+                      "Fügen Sie diese Adresse ein und klicken Sie auf Weiter:",
+                      "Ein kurzes Fenster öffnet sich und schließt sich von selbst: Sie müssen sich nirgends anmelden und nichts ausfüllen.",
+                      "Tippen Sie im Chat @, wählen Sie {name} und fragen Sie auf Englisch."],
+            "trouble": [("In den Einstellungen gibt es keine eigenen Apps.", "Google bietet sie nur privaten Konten an, ab 18, in den USA und mit eingeschalteter Aktivität."),
+                        ("Das Fenster schließt sich und keine App wird hinzugefügt.", "Versuchen Sie es in einer Minute erneut. Wenn es weiter nicht klappt, schreiben Sie uns über die Support-Seite."),
+                        ("Gemini nutzt den Katalog nicht.", "Tippen Sie @, wählen Sie {name} und stellen Sie Ihre Frage auf Englisch.")],
+        },
+    },
+}
+
+
+def jc_assistant_guide(id):
+    """The guide to one assistant in the page's language (T-4643), or None for an assistant without
+    a card on this installation: an unknown id, Gemini while its flag is off, or no hub."""
+    page = jc_assistants()
+    if not page or id not in {card["id"] for card in page["cards"]}:
+        return None
+    guide = GUIDES[id]
+    words = guide.get(_language()) or guide["en"]
+    name = BRANDING.get("instanceName") or MCP_NAME
+    steps = [step.replace("{name}", name) for step in words["steps"]]
+    # Gemini's custom apps answer in English only, so its question to try is the English one.
+    asked = "en" if id == "gemini" else _language()
+    own = BRANDING.get("samples")
+    samples = _samples(asked) if asked != "en" or not isinstance(own, dict) or own.get("en") else []
+    return {
+        "id": id, "name": guide["name"], "start": guide["start"], "help": guide["help"],
+        "title": jc_t("guide_title").replace("{name}", guide["name"]),
+        "who": words["who"], "steps": steps, "paste": guide["paste"], "mcp": page["mcp"],
+        "example": samples[0] if samples else STRINGS["guide_example"].get(asked) or STRINGS["guide_example"]["en"],
+        "good": jc_t("guide_good").replace("{name}", name),
+        "trouble": [(problem, fix.replace("{name}", name)) for problem, fix in words["trouble"]],
+        "checked": jc_t("guide_checked").replace("{date}", guide["checked"]).replace("{maker}", guide["name"]),
+    }
+
+
+def jc_guide_page(id):
+    guide = jc_assistant_guide(id)
+    if not guide:
+        return toolkit.abort(404)
+    return toolkit.render("jc/guide.html", {"jc_guide": guide})
+
+
 # The connector's public pages (T-4315): what a directory reviewer and a visitor read before
 # adding the MCP hub to Claude or ChatGPT. Every fact is the deployment's own: no account or
 # cookie on the hub, the edge's per-IP limit held in memory, logs on container stdout only and no
@@ -1382,10 +2095,7 @@ PAGES = {
                                 "read their data models; query_entities and get_entity read the current rows; "
                                 "query_temporal and retrieve_temporal read their history; describe_access says "
                                 "what a call may read.",
-                                "Every tool reads. A tool that would write is refused without a sign-in."]),
-            ("Try it", ["What is the air quality in Helsinki right now?",
-                        "Which hospitals are in the Banská Bystrica region?",
-                        "Which datasets cover public contracts, and which fields do they have?"]),
+                                "Every tool reads. A tool that would write is refused without a sign-in."])
         ]},
         "sk": {"title": "MCP konektor", "sections": [
             ("", ["Pýtajte sa AI asistenta na otvorené dáta tohto katalógu: aktuálnu kvalitu ovzdušia, "
@@ -1395,10 +2105,7 @@ PAGES = {
                            "ich dátové modely; query_entities a get_entity čítajú aktuálne záznamy; "
                            "query_temporal a retrieve_temporal ich históriu; describe_access povie, čo smie "
                            "volanie čítať.",
-                           "Každý nástroj iba číta. Nástroj, ktorý by zapisoval, bez prihlásenia odmietne."]),
-            ("Vyskúšajte", ["Aká je teraz kvalita ovzdušia v Helsinkách?",
-                            "Ktoré nemocnice sú v Banskobystrickom kraji?",
-                            "Ktoré datasety obsahujú verejné zmluvy a aké majú polia?"]),
+                           "Každý nástroj iba číta. Nástroj, ktorý by zapisoval, bez prihlásenia odmietne."])
         ]},
     },
     "privacy": {
@@ -1490,6 +2197,10 @@ def jc_page(name):
                 for p in paragraphs if mcp or ("{url}" not in p and "{domain}" not in p)]
         if kept:
             sections.append({"heading": heading, "paragraphs": kept})
+    # The connector's questions are the instance's own, about its own publishers (T-4636).
+    samples = _samples(_language()) if name == "connector" else []
+    if samples:
+        sections.append({"heading": jc_t("try_it"), "paragraphs": samples})
     return {"name": name, "title": words["title"], "sections": sections,
             "email": email if "@" in email else "", "mcp": mcp, "pages": list(PAGES)}
 
@@ -1591,13 +2302,18 @@ class JcThemePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IFacets, inherit=True)
     plugins.implements(plugins.IPackageController, inherit=True)
     plugins.implements(plugins.IBlueprint)
+    plugins.implements(plugins.IResourceView, inherit=True)
 
     def update_config(self, config):
         toolkit.add_template_directory(config, "templates")
         # The logo is a file beside this package, so CKAN serves it from its own origin and
         # no page reaches a third party for an asset.
         toolkit.add_public_directory(config, "public")
-        title = BRANDING.get("instanceName")
+        # MapLibre, baked into the image beside CKAN (T-4639); without it there is no map.
+        if os.path.isdir(VENDOR):
+            toolkit.add_public_directory(config, VENDOR)
+        # CKAN keeps one title; the pages ask jc_site_title for the reader's language (T-4636).
+        title = jc_site_title((BRANDING.get("languages") or {}).get("default"))
         if title:
             config["ckan.site_title"] = title
             config["ckan.site_description"] = BRANDING.get("organisation", "")
@@ -1622,6 +2338,8 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_org": jc_org,
             "jc_t": jc_t,
             "jc_about": jc_about,
+            "jc_created": jc_created,
+            "jc_updated": jc_updated,
             "jc_more": jc_more,
             "jc_live": jc_live,
             "jc_resource_sections": jc_resource_sections,
@@ -1643,6 +2361,8 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_usage": jc_usage,
             "jc_guide": jc_guide,
             "jc_previews": jc_previews,
+            "jc_visualizations": jc_visualizations,
+            "jc_map": jc_map,
             "jc_total": jc_total,
             "jc_number": jc_number,
             "jc_rows": jc_rows,
@@ -1650,7 +2370,11 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_recent": jc_recent,
             "jc_portal_url": jc_portal_url,
             "jc_mcp_install": jc_mcp_install,
+            "jc_assistants": jc_assistants,
             "jc_page": jc_page,
+            "jc_site_title": jc_site_title,
+            "jc_site_tagline": jc_site_tagline,
+            "jc_site_logo": jc_site_logo,
             "jc_assistant_widget": jc_assistant_widget,
             "jc_about_site": jc_about_site,
             "humanize_entity_type": humanize_entity_type,
@@ -1658,13 +2382,41 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_sso_error": jc_sso_error,
         }
 
+    def info(self):
+        """`jc_visualization` (ADR-N-053, EP-132): a Vega-Lite or Vega chart the reconciler publishes
+        from an Endpoint's `spec.catalog.visualizations`. The config holds the spec, its source
+        and the Endpoint; the page shows a frame of the renderer on viz.{domain}."""
+        ignore, text = toolkit.get_validator("ignore_missing"), toolkit.get_validator("unicode_safe")
+        schema = {name: [ignore, text, _viz_object] for name in ("spec", "source", "titles", "descriptions")}
+        schema["endpoint"] = [ignore, text, _viz_slug]
+        return {"name": "jc_visualization", "title": "Visualization", "icon": "chart-line",
+                "iframed": False, "always_available": False, "preview_enabled": False, "schema": schema}
+
+    def can_view(self, data_dict):
+        """Never offered in CKAN's "New view" list, never created as a default view: a chart is
+        published from its Endpoint's manifest, reviewed there (ADR-N-053 §2.7)."""
+        return False
+
+    def view_template(self, context, data_dict):
+        return "jc/visualization.html"
+
+    def setup_template_variables(self, context, data_dict):
+        return {"viz": jc_visualization(data_dict.get("resource_view"))}
+
     def get_blueprint(self):
-        """/connector, /privacy, /terms and /support (T-4315), one template for all four."""
+        """/connector, /privacy, /terms and /support (T-4315), one template for all four,
+        /assistants (T-4585), a guide per assistant at /assistants/{id} (T-4643) and
+        /map/{dataset} (T-4639)."""
         from flask import Blueprint
 
         blueprint = Blueprint("jc_pages", self.__module__)
         for name in PAGES:
             blueprint.add_url_rule("/" + name, name, lambda name=name: toolkit.render("jc/page.html", {"jc_name": name}))
+        blueprint.add_url_rule("/assistants", "assistants", lambda: toolkit.render("jc/assistants.html", {}))
+        blueprint.add_url_rule("/assistants/<id>", "guide", jc_guide_page)
+        # The framable map of a dataset, or of one of its tables (T-4639).
+        blueprint.add_url_rule("/map/<id>", "map", jc_map_page)
+        blueprint.add_url_rule("/map/<id>/<resource_id>", "map_resource", jc_map_page)
         return blueprint
 
     def before_dataset_search(self, search_params):

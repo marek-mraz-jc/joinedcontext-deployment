@@ -37,14 +37,23 @@
      the page's: an English page still opens a Slovak chat (T-4280). #}
   {# A dataset's or resource's page opens its publisher's assistant, any other page the
      catalogue's (T-4281). #}
+  {# Beside it, the same size, the page that adds the catalogue to the visitor's own assistant
+     (T-4585), in one row on a phone too. Its face is the four assistants' own logos in colour,
+     no words, its name in the aria-label (T-4613). #}
   {% set publisher = pkg_dict.organization.name if pkg_dict is defined and pkg_dict and pkg_dict.organization else None %}
   {% set widget = h.jc_assistant_widget(publisher) %}
-  {% if widget %}
-    <details class="jc-assistant">
-      <summary><span>{{ h.jc_t('assistant') }}</span></summary>
-      <iframe src="{{ widget }}" title="{{ h.jc_t('assistant') }}" loading="lazy" referrerpolicy="no-referrer"></iframe>
-    </details>
-    <script src="{{ h.url_for_static('/jc-assistant.js') }}" defer></script>
+  {% set assistants = h.jc_mcp_install() %}
+  {% if widget or assistants %}
+    <div class="jc-corner">
+      {% if assistants %}<a class="jc-assistants-link" href="{{ h.url_for('jc_pages.assistants') }}" aria-label="{{ h.jc_t('assistants_label') }}">{% for mark in ('claude', 'chatgpt', 'gemini', 'mcp') %}<span class="jc-seg jc-seg-{{ mark }}">{% include 'jc/brand-' ~ mark ~ '.svg' %}</span>{% endfor %}</a>{% endif %}
+      {% if widget %}
+        <details class="jc-assistant">
+          <summary><span>{{ h.jc_t('assistant') }}</span></summary>
+          <iframe src="{{ widget }}?embed=1" title="{{ h.jc_t('assistant') }}" loading="lazy" referrerpolicy="no-referrer"></iframe>
+        </details>
+      {% endif %}
+    </div>
+    {% if widget %}<script src="{{ h.url_for_static('/jc-assistant.js') }}" defer></script>{% endif %}
   {% endif %}
 {% endblock %}
 

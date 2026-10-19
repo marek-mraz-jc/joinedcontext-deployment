@@ -305,7 +305,7 @@ def slices(d: dict, dims: dict[str, list[str]]) -> list[tuple[str, int]] | None:
 # generate.py's list, so a susr- Endpoint serves what the od Endpoints serve (T-4418, EP-104), but
 # no websocket: the public read grants no subscription, and a table that changes once a year has
 # nothing to push (T-4441).
-REPRESENTATIONS = ["ngsi-ld", "geojson", "csv", "json", "xlsx", "parquet", "ogc-features", "odata", "mcp"]
+REPRESENTATIONS = ["ngsi-ld", "csv", "ogc-features", "odata", "mcp"]
 # The platform publishes these Endpoints, so its role address answers for them (EP-80); the
 # dev branding's contactEmail.
 CONTACT = {"name": "joinedcontext platform", "email": "hello@joinedcontext.com"}
@@ -368,6 +368,7 @@ root = $cells.filter(c -> c.v != null && c.v.type() == "number").map_each(c -> r
   "type": "{TYPE}",
   "dataSet": {{ "type": "Property", "value": $cube }},
   "indicator": {{ "type": "Property", "value": if $roles.indicator == null {{ $cube }} else {{ at.get($roles.indicator) }} }},
+  "name": (if $roles.indicator == null {{ null }} else {{ $labels.index($at_index.get($roles.indicator)).get(at.get($roles.indicator)) }}).or($ds.label).(n -> if n == null {{ null }} else {{ {{ "type": "Property", "value": n }} }}),
   "refArea": {{ "type": "Property", "value": if $roles.area == null {{ "SK0" }} else {{ at.get($roles.area) }} }},
   "refPeriod": {{ "type": "Property", "value": at.get($roles.period) }},
   "dimensionKey": if $keys.length() == 0 {{ null }} else {{ {{ "type": "Property", "value": $keys.map_each(d -> at.get(d)).join("-") }} }},
@@ -432,7 +433,7 @@ metadata:
 spec:
   contextSpaceRef: {space}
   linkml: ./statistical-observation.linkml.yaml
-  version: 1.0.0
+  version: 1.1.0
   lifecycle: published
   classes: [{TYPE}]
   # Copies of ../susr/, the one model every theme uses.

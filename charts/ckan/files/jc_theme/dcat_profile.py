@@ -10,6 +10,7 @@ from the deployment's branding block; nothing here is a value of its own.
 """
 
 import json
+import re
 
 from rdflib import BNode, Literal, Namespace, URIRef
 from rdflib.namespace import RDF, RDFS, SKOS
@@ -86,6 +87,24 @@ def _extra(dataset_dict, key):
 
 def _iri(value):
     return isinstance(value, str) and value.startswith(("http://", "https://"))
+
+
+def _media_type(value):
+    """(`type/subtype`, profile IRI or None) of a CKAN mimetype. The IANA register names the bare
+    type; a parameter such as `text/turtle; profile="owl"` kept in the IRI is a space and quotes,
+    which the Turtle writer refuses and /catalog.ttl answered 500 for (T-4586). A `profile`
+    parameter that is an IRI is the standard the file conforms to; any other one is dropped."""
+    bare, _, params = value.partition(";")
+    bare = bare.strip().lower()
+    if not re.fullmatch(r"[a-z0-9][a-z0-9!#$&^_.+-]*/[a-z0-9][a-z0-9!#$&^_.+-]*", bare):
+        bare = None
+    profile = None
+    for param in params.split(";"):
+        key, _, val = param.partition("=")
+        val = val.strip().strip('"')
+        if key.strip().lower() == "profile" and _iri(val) and not re.search(r'[\s"<>]', val):
+            profile = val
+    return bare, profile
 
 
 def _sources(value):
@@ -179,9 +198,14 @@ class JcDcatApProfile(RDFProfile):
         for media_type in list(g.objects(distribution, DCAT.mediaType)):
             if isinstance(media_type, Literal):
                 g.remove((distribution, DCAT.mediaType, media_type))
-                iri = URIRef(IANA + str(media_type).strip())
-                g.add((distribution, DCAT.mediaType, iri))
-                g.add((iri, RDF.type, DCT.MediaType))
+                bare, profile = _media_type(str(media_type))
+                if bare:
+                    iri = URIRef(IANA + bare)
+                    g.add((distribution, DCAT.mediaType, iri))
+                    g.add((iri, RDF.type, DCT.MediaType))
+                if profile and (distribution, DCT.conformsTo, None) not in g:
+                    g.add((distribution, DCT.conformsTo, URIRef(profile)))
+                    g.add((URIRef(profile), RDF.type, DCT.Standard))
 
         label = (resource_dict.get("format") or "").strip().upper()
         for fmt in list(g.objects(distribution, DCT["format"])):

@@ -57,7 +57,14 @@ probes:
 # The issuer is what tokens carry in `iss`; the JWKS is fetched in-cluster over plain http,
 # which the gateway insists on (a TLS client behind the mesh would verify nothing useful).
 # JC_GATEWAY_PUBLIC_URL makes the RFC 8707 resource indicator https://{host}/api/endpoint/{slug}
-# an accepted audience next to the bare slug (PF-45).
+# an accepted audience next to the bare slug (PF-45); it is the public data host `api.{domain}`
+# (ADR-N-052 §2.1, EP-128, T-4630), the issuer of the gateway's anonymous OAuth server too.
+# The anonymous OAuth server's signing key (ADR-N-052 §2.2.6, T-4630), from the Secret
+# components/context-gateway/secrets.yaml generates; never a value in this file.
+envSecret:
+  JC_GATEWAY_OAUTH_KEY:
+    secret: context-gateway-oauth-key
+    key: key
 env:
   JC_GATEWAY_BROKER_URL: "http://context-broker.{{ (index .Values "context-broker" "broker" "namespace") }}.svc.cluster.local:8080"
   # Every ContextBroker beside `main`, `{broker}` its name (ADR-N-046 §2.3, T-3989): the release
@@ -68,7 +75,10 @@ env:
   JC_GATEWAY_INTERNAL_BIND: "0.0.0.0:8082"
   # The runner's headless Service: a broker admits a tokenless CONNECT only from its pods (T-4004).
   JC_GATEWAY_MQTT_RUNNER_HOST: "pipeline-runner-pods.{{ index .Values "pipeline-runner" "runner" "namespace" }}.svc.cluster.local"
-  JC_GATEWAY_PUBLIC_URL: "https://{{ $global.domain }}"
+  # The anonymous OAuth server redirects to Google's relay alone: OAuth is for Gemini only, Claude,
+  # ChatGPT and Grok read the open data without a token (owner 2026-10-18, ADR-N-052 §2.3, T-4630).
+  JC_GATEWAY_OAUTH_REDIRECT_HOSTS: oauth-redirect.googleusercontent.com
+  JC_GATEWAY_PUBLIC_URL: "https://api.{{ $global.domain }}"
   JC_OIDC_ISSUER: "https://idm.{{ $global.domain }}/realms/{{ $global.instanceSlug }}"
   # The gateway's own client on the Portal's internal listener (T-1500, PF-46, AG-52), proved by
   # this pod's projected token and no secret (PF-47, T-2868; the volume below).
@@ -106,6 +116,18 @@ env:
   # The Organization's domain state, read from the same listener with the same token (PF-41,
   # Architecture/03 §3). Only `enforce` reads it.
   JC_GATEWAY_DOMAIN_VERIFICATIONS_URL: "http://portal.{{ .Values.portal.portal.namespace }}.svc.cluster.local:9090/internal/domain-verifications"
+  # A person's own MCP connectors, read from the same listener with the same token, so
+  # `/api/mcp/me/{name}` answers (EP-123, T-4538, T-4546); unset, no personal address is served.
+  JC_GATEWAY_CONNECTORS_URL: "http://portal.{{ .Values.portal.portal.namespace }}.svc.cluster.local:9090/internal/connectors"
+{{- end }}
+{{- if has "assistant" .Values.components }}
+  # `search_documents` (EP-133, EP-134, T-4659): the assistant's public-passage search on its
+  # internal path, which the edge never routes (AG-119); without the URL the tool is listed
+  # nowhere. The hub searches the cities' websites; a project's MCP server names its own
+  # sources in `spec.knowledgeSources` (MF-57). An `eval-*` source is never named here
+  # (test_seed_knowledge_sources_never_serve_an_eval_source).
+  JC_GATEWAY_ASSISTANT_URL: "http://jc-assistant.{{ .Values.assistant.worker.namespace }}.svc.cluster.local:8080"
+  JC_GATEWAY_HUB_KNOWLEDGE_SOURCES: "banskabystrica/web,bbsk/web,zilina/web,praha/web,helsinki/web"
 {{- end }}
   # `report` records and shows the domain state and refuses nothing; `enforce` refuses a write
   # to a space until the Organization's domain is verified, and needs the URL above. The

@@ -1,2 +1,22 @@
 routes:
 {{ include "jc.configFiles" (dict "components" .Values.components "file" "apisix-routes.yaml" "global" .) | nindent 2 }}
+{{- /* Every catalogue beside `catalogue` (T-4636): the default instance's two routes, on its own
+       host and to its own Service; the /ckan redirect stays the default instance's. */}}
+{{- if has "ckan" .Values.components }}
+{{- $ckan := tpl (readFile "../../components/ckan/apisix-routes.yaml") . | fromYaml }}
+{{- $seen := dict }}
+{{- range $c := .Values.global.catalogues | default list }}
+{{- /* A repeated name is catalogues-guard.yaml.gotmpl's to report, after this file. */}}
+{{- if not (hasKey $seen (toString $c.name)) }}
+{{- $_ := set $seen (toString $c.name) true }}
+{{- range $key := list "ckan" "ckan-webassets" }}
+{{- $route := deepCopy (index $ckan $key) }}
+{{- $_ := set $route "name" (printf "%s-%s" $key $c.name) }}
+{{- $_ = set $route "subDomain" (index $c "subDomain" | default "") }}
+{{- $_ = set $route "upstream" (printf "ckan-%s.%s" $c.name (trimPrefix "ckan." $route.upstream)) }}
+  {{ $key }}-{{ $c.name }}:
+    {{- $route | toYaml | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

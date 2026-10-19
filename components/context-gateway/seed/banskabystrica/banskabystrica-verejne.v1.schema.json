@@ -154,6 +154,152 @@
       "title": "AirQualityObserved",
       "type": "object"
     },
+    "EVChargingStation": {
+      "additionalProperties": false,
+      "description": "One charging station for electric vehicles in the district of Bansk\u00e1 Bystrica as OpenStreetMap maps it (\u00a9 OpenStreetMap contributors, ODbL 1.0), refreshed weekly.",
+      "properties": {
+        "address": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PostalAddress"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress, T-4329); a field the source leaves out is absent, never guessed.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "allowedVehicleType": {
+          "description": "The vehicles the station charges, from the OpenStreetMap tags `motorcar`, `bicycle`, `motorcycle`, `bus` and `hgv` set to yes (car, bicycle, motorcycle, bus, truck); absent when the map sets none.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "capacity": {
+          "description": "How many vehicles the station charges at once: OpenStreetMap's `capacity` tag, or the sum of its socket counts when it has none; absent when the map gives neither.",
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language, as the publisher writes it.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "openingHours": {
+          "description": "The opening hours exactly as OpenStreetMap's `opening_hours` tag gives them, in its own syntax (for example `Mo-Fr 07:30-18:00; Sa 08:00-12:00`); never reinterpreted.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "operator": {
+          "description": "Who runs the station, as OpenStreetMap's `operator` tag names it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "socketType": {
+          "description": "The kinds of socket the station offers, in Smart Data Models' words, read from its OpenStreetMap `socket:*` tags (type2 is Type2, type2_combo CCS/SAE, chademo CHAdeMO, schuko Wall_Euro, type1 J-1772, tesla_supercharger Tesla, any other Other); absent when the map names none.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "EVChargingStation",
+      "type": "object"
+    },
     "Entity": {
       "additionalProperties": false,
       "description": "The root every NGSI-LD entity class specialises.",
@@ -555,6 +701,124 @@
       "title": "Organization",
       "type": "object"
     },
+    "PointOfInterest": {
+      "additionalProperties": false,
+      "description": "One pharmacy, hospital, clinic or public defibrillator in the district of Bansk\u00e1 Bystrica as OpenStreetMap maps it (\u00a9 OpenStreetMap contributors, ODbL 1.0), refreshed weekly.",
+      "properties": {
+        "address": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PostalAddress"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress, T-4329); a field the source leaves out is absent, never guessed.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "category": {
+          "description": "What the place is, as OpenStreetMap tags it: `pharmacy`, `hospital` or `clinic` from its `amenity`, and `defibrillator` from `emergency=defibrillator`.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language, as the publisher writes it.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "openingHours": {
+          "description": "The opening hours exactly as OpenStreetMap's `opening_hours` tag gives them, in its own syntax (for example `Mo-Fr 07:30-18:00; Sa 08:00-12:00`); never reinterpreted.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "PointOfInterest",
+      "type": "object"
+    },
     "PostalAddress": {
       "additionalProperties": false,
       "description": "The value of `address`: a postal address, never an entity of its own (Smart Data Models' common schema).",
@@ -702,6 +966,17 @@
             "null"
           ],
           "x-ngsi-ld-kind": "Property"
+        },
+        "soilTemperature": {
+          "description": "Soil temperature at one depth under the station, the minute's mean. One instance per depth the station measures (5, 10, 20, 50 and 100 cm, SHM\u00da's `t_pod5` to `t_pod100`), each told apart by its datasetId, `urn:ngsi-ld:Dataset:shmu:soil-depth-{cm}cm`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "Cel"
+          }
         },
         "source": {
           "description": "The open-data service the entity was read from.",

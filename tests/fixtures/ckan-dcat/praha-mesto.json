@@ -9,7 +9,7 @@
   },
   {
    "key": "endpoint",
-   "value": "https://portal.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/"
+   "value": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/"
   },
   {
    "key": "frequency",
@@ -56,7 +56,7 @@
  "metadata_modified": "2026-09-25T23:57:53.367745",
  "name": "praha-mesto",
  "notes": "Sdílená kola, kvalita ovzduší, městské části, školy, kultura, veřejné toalety, tříděný odpad a zaplněnost kontejnerů, P+R a jejich obsazenost, prodejní místa PID a rozpočet města. Zdroje: nextbike (CC0), ČHMÚ, IPR Praha (datový podklad © IPR Praha) a ROPID pod CC BY 4.0, Magistrát hl. m. Prahy bez výhrad, Golemio (Operátor ICT, s daty TSK hl. m. Prahy) jako otevřená data.",
- "num_resources": 14,
+ "num_resources": 12,
  "num_tags": 20,
  "organization": {
   "approval_status": "approved",
@@ -94,29 +94,7 @@
    "resource_type": null,
    "size": null,
    "state": "active",
-   "url": "https://portal.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/ngsi-ld/v1/",
-   "url_type": null
-  },
-  {
-   "cache_last_updated": null,
-   "cache_url": null,
-   "created": "2026-09-25T23:57:53.408933",
-   "datastore_active": false,
-   "description": null,
-   "format": "GeoJSON",
-   "hash": "",
-   "id": "eccb564d-5bc1-437a-9f43-9f2a5d9964cc",
-   "last_modified": null,
-   "metadata_modified": "2026-09-25T23:57:53.377210",
-   "mimetype": "application/geo+json",
-   "mimetype_inner": null,
-   "name": "GeoJSON",
-   "package_id": "bc2d847b-00a9-4605-8d12-cf3f6c302492",
-   "position": 1,
-   "resource_type": null,
-   "size": null,
-   "state": "active",
-   "url": "https://portal.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/file.geojson",
+   "url": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/ngsi-ld/v1/",
    "url_type": null
   },
   {
@@ -134,33 +112,11 @@
    "mimetype_inner": null,
    "name": "CSV",
    "package_id": "bc2d847b-00a9-4605-8d12-cf3f6c302492",
-   "position": 2,
+   "position": 1,
    "resource_type": null,
    "size": null,
    "state": "active",
-   "url": "https://portal.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/file.csv",
-   "url_type": null
-  },
-  {
-   "cache_last_updated": null,
-   "cache_url": null,
-   "created": "2026-09-25T23:57:53.408934",
-   "datastore_active": false,
-   "description": null,
-   "format": "JSON",
-   "hash": "",
-   "id": "4d3893c6-33e1-4013-acda-98096f7efc00",
-   "last_modified": null,
-   "metadata_modified": "2026-09-25T23:57:53.377328",
-   "mimetype": "application/json",
-   "mimetype_inner": null,
-   "name": "JSON",
-   "package_id": "bc2d847b-00a9-4605-8d12-cf3f6c302492",
-   "position": 3,
-   "resource_type": null,
-   "size": null,
-   "state": "active",
-   "url": "https://portal.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/file.json",
+   "url": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/file.csv",
    "url_type": null
   },
   {
@@ -178,11 +134,11 @@
    "mimetype_inner": null,
    "name": "Model Context Protocol",
    "package_id": "bc2d847b-00a9-4605-8d12-cf3f6c302492",
-   "position": 4,
+   "position": 2,
    "resource_type": null,
    "size": null,
    "state": "active",
-   "url": "https://portal.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/mcp",
+   "url": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/mcp",
    "url_type": null
   },
   {
@@ -200,11 +156,11 @@
    "mimetype_inner": null,
    "name": "Schema artifacts",
    "package_id": "bc2d847b-00a9-4605-8d12-cf3f6c302492",
-   "position": 5,
+   "position": 3,
    "resource_type": null,
    "size": null,
    "state": "active",
-   "url": "https://portal.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/index.json",
+   "url": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/index.json",
    "url_type": null
   },
   {
@@ -223,11 +179,11 @@
    "mimetype_inner": null,
    "name": "praha-mesto context.jsonld",
    "package_id": "bc2d847b-00a9-4605-8d12-cf3f6c302492",
-   "position": 6,
+   "position": 4,
    "resource_type": null,
    "size": 3688,
    "state": "active",
-   "url": "https://dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/context.jsonld",
+   "url": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/context.jsonld",
    "url_type": null
   },
   {
@@ -246,11 +202,11 @@
    "mimetype_inner": null,
    "name": "praha-mesto model.linkml.yaml",
    "package_id": "bc2d847b-00a9-4605-8d12-cf3f6c302492",
-   "position": 7,
+   "position": 5,
    "resource_type": null,
    "size": 10365,
    "state": "active",
-   "url": "https://dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/model.linkml.yaml",
+   "url": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/model.linkml.yaml",
    "url_type": null
   },
   {
@@ -269,11 +225,11 @@
    "mimetype_inner": null,
    "name": "praha-mesto model.md",
    "package_id": "bc2d847b-00a9-4605-8d12-cf3f6c302492",
-   "position": 8,
+   "position": 6,
    "resource_type": null,
    "size": 9048,
    "state": "active",
-   "url": "https://dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/model.md",
+   "url": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/model.md",
    "url_type": null
   },
   {
@@ -292,11 +248,11 @@
    "mimetype_inner": null,
    "name": "praha-mesto model.owl.ttl",
    "package_id": "bc2d847b-00a9-4605-8d12-cf3f6c302492",
-   "position": 9,
+   "position": 7,
    "resource_type": null,
    "size": 22417,
    "state": "active",
-   "url": "https://dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/model.owl.ttl",
+   "url": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/model.owl.ttl",
    "url_type": null
   },
   {
@@ -315,11 +271,11 @@
    "mimetype_inner": null,
    "name": "praha-mesto model.rdf.ttl",
    "package_id": "bc2d847b-00a9-4605-8d12-cf3f6c302492",
-   "position": 10,
+   "position": 8,
    "resource_type": null,
    "size": 14731,
    "state": "active",
-   "url": "https://dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/model.rdf.ttl",
+   "url": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/model.rdf.ttl",
    "url_type": null
   },
   {
@@ -338,11 +294,11 @@
    "mimetype_inner": null,
    "name": "praha-mesto model.schema.json",
    "package_id": "bc2d847b-00a9-4605-8d12-cf3f6c302492",
-   "position": 11,
+   "position": 9,
    "resource_type": null,
    "size": 21467,
    "state": "active",
-   "url": "https://dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/model.schema.json",
+   "url": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/model.schema.json",
    "url_type": null
   },
   {
@@ -361,11 +317,11 @@
    "mimetype_inner": null,
    "name": "praha-mesto model.shacl.ttl",
    "package_id": "bc2d847b-00a9-4605-8d12-cf3f6c302492",
-   "position": 12,
+   "position": 10,
    "resource_type": null,
    "size": 19501,
    "state": "active",
-   "url": "https://dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/model.shacl.ttl",
+   "url": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/schema/v1/model.shacl.ttl",
    "url_type": null
   },
   {
@@ -383,7 +339,7 @@
    "mimetype_inner": null,
    "name": "DataStore",
    "package_id": "bc2d847b-00a9-4605-8d12-cf3f6c302492",
-   "position": 13,
+   "position": 11,
    "resource_type": null,
    "size": null,
    "state": "active",
@@ -536,6 +492,6 @@
  ],
  "title": "Praha — městská data",
  "type": "dataset",
- "url": "https://portal.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/",
+ "url": "https://api.dev.joinedcontext.com/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/",
  "version": null
 }

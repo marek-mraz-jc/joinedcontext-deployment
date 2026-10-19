@@ -61,7 +61,7 @@ pipeline:
         let collection = this._embedded.owningCollection.name.catch(null)
         root = {
           # The handle is the item's persistent name; its slash would open a URN segment.
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Article", env("JC_ORG_DOMAIN"), env("JC_SPACE"), this.handle.replace_all("/", "-")),
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Article", "zilina.sk", env("JC_SPACE"), this.handle.replace_all("/", "-")),
           "type": "Article",
           "identifier": { "type": "Property", "value": this.handle },
           "name": { "type": "LanguageProperty", "languageMap": { $language: $values."dc.title".index(0).value } },

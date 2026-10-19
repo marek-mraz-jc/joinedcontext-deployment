@@ -66,7 +66,11 @@ def key_values(entity: dict) -> dict:
     """The entity as `keyValues`, the shape the generated JSON Schema describes."""
     out = {}
     for name, attribute in entity.items():
-        if not isinstance(attribute, dict) or "type" not in attribute:
+        if isinstance(attribute, list) and all(isinstance(i, dict) and "type" in i for i in attribute):
+            # A multi-instance attribute (one instance per datasetId): the schema describes one
+            # instance, so the last one stands for the slot here; schema_errors checks each.
+            out[name] = key_values({name: attribute[-1]})[name] if attribute else attribute
+        elif not isinstance(attribute, dict) or "type" not in attribute:
             out[name] = attribute
         elif attribute["type"] == "Relationship":
             out[name] = attribute["object"]
@@ -87,7 +91,12 @@ def schema_errors(schema_file: Path, entity: dict) -> list[str]:
         {**schema["definitions"][entity["type"]], "definitions": schema["definitions"]},
         format_checker=jsonschema.Draft7Validator.FORMAT_CHECKER,
     )
-    return [e.message for e in validator.iter_errors(key_values(entity))]
+    errors = [e.message for e in validator.iter_errors(key_values(entity))]
+    for name, attribute in entity.items():
+        if isinstance(attribute, list) and attribute and all(isinstance(i, dict) and "type" in i for i in attribute):
+            for instance in attribute[:-1]:
+                errors += [e.message for e in validator.iter_errors(key_values({**entity, name: instance}))]
+    return errors
 
 
 # The Smart Data Models the seeds validate against, vendored at the commits pins.json names (T-4319).

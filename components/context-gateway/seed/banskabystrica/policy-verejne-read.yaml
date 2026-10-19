@@ -18,3 +18,5 @@ spec:
         - type: Organization
         - type: AirQualityObserved
         - type: WeatherObserved
+        - type: PointOfInterest
+        - type: EVChargingStation

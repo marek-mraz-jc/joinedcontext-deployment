@@ -1,0 +1,30 @@
+{{- if not .Values.environment }}{{ fail "gitops root: environment is required" }}{{ end }}
+# The root of the app of apps: gitops/chart with this environment's generated component list
+# and the hold switch. It syncs itself and prunes the Applications of a component that left
+# the list; the Applications have no finalizer, so their objects stay (OPS-55).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ .Values.environment }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  project: default
+  source:
+    repoURL: {{ .Values.repoURL }}
+    targetRevision: {{ .Values.targetRevision }}
+    path: gitops/chart
+    helm:
+      # hold.yaml holds every environment; hold-<environment>.yaml, where it exists, holds
+      # only this one (a release branch adopting a cluster, T-4678).
+      valueFiles:
+        - ../{{ .Values.environment }}.yaml
+        - ../hold.yaml
+        - ../hold-{{ .Values.environment }}.yaml
+      ignoreMissingValueFiles: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ .Release.Namespace }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

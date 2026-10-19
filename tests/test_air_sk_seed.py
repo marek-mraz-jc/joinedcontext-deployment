@@ -191,7 +191,7 @@ def test_the_space_keeps_a_week_and_the_endpoint_serves_every_surface_without_na
     assert space["spec"]["retention"] == [{"entityType": "AirQualityObserved", "history": "P7D"}]
     endpoint = yaml.safe_load((SEED / "slovensko-endpoint-ovzdusie.yaml").read_text())
     assert endpoint["spec"]["audience"] == "public"
-    assert {"ngsi-ld", "mcp", "websocket", "csv", "json", "geojson", "ogc-features"} <= set(endpoint["spec"]["enabledRepresentations"])
+    assert {"ngsi-ld", "mcp", "websocket", "csv", "ogc-features"} <= set(endpoint["spec"]["enabledRepresentations"])
     named = json.dumps([endpoint["metadata"]["title"], endpoint["metadata"]["description"], space["metadata"]], ensure_ascii=False)
     assert not any(word in named for word in ("EEA", "SHMÚ", "aqicn", "Agentúra", "Agency"))
     assert "EEA" in endpoint["spec"]["catalog"]["attribution"]["en"]

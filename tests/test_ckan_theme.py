@@ -11,9 +11,12 @@ import importlib.util
 import json
 import os
 import re
+import shutil
+import subprocess
 import sys
 import types
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import pytest
 import yaml
@@ -43,10 +46,11 @@ def theme(tmp_path, monkeypatch):
             return answer(data_dict)
         return action
 
-    for error in ("ObjectNotFound", "NotAuthorized", "ValidationError"):
+    for error in ("ObjectNotFound", "NotAuthorized", "ValidationError", "Invalid"):
         setattr(toolkit, error, type(error, (Exception,), {}))
     toolkit.get_action = get_action
     toolkit.chained_helper = lambda helper: helper
+    toolkit.get_validator = lambda name: (lambda value: value)
     plugins = types.ModuleType("ckan.plugins")
     plugins.toolkit = toolkit
     plugins.SingletonPlugin = object
@@ -54,7 +58,7 @@ def theme(tmp_path, monkeypatch):
     page.loaded = set()
     plugins.plugin_loaded = lambda name: name in page.loaded
     plugins.IConfigurer = plugins.ITemplateHelpers = plugins.IFacets = plugins.IPackageController = object
-    plugins.IBlueprint = object
+    plugins.IBlueprint = plugins.IResourceView = object
     ckan = types.ModuleType("ckan")
     ckan.__file__ = str(tmp_path / "ckan/__init__.py")
     ckan.plugins = plugins
@@ -119,6 +123,28 @@ def test_an_hourly_dataset_promises_an_hour_and_an_irregular_one_no_date(theme):
     assert rows["Updated"] == "Irregularly" and "Next update expected" not in rows
     label, next_update = theme.jc_frequency(dict(PUBLISHED, metadata_modified="not a date"))
     assert (label, next_update) == ("Every day", None)
+
+
+def test_created_is_the_true_origin_and_updated_the_last_real_change(theme):
+    # T-4644: the publisher's (or our restored) `issued` before CKAN's re-creation date, the
+    # source's `modified` before CKAN's own; a value that is no date falls back, never shows.
+    restored = dict(PUBLISHED, metadata_created="2026-10-16T14:14:13.049715",
+                    extras=PUBLISHED["extras"] + [{"key": "issued", "value": "2026-09-07T09:00:00Z"}])
+    assert theme.jc_created(restored).isoformat() == "2026-09-07T09:00:00+00:00"
+    assert theme.jc_updated(restored).isoformat() == "2026-09-25T08:00:00+00:00"
+    rows = {label: text for label, text, _ in theme.jc_about(restored)}
+    assert rows["Created"] == "2026-09-07" and rows["Last update"] == "2026-09-25"
+    assert "issued" not in dict(theme.jc_more(restored))
+    harvested = dict(restored, extras=[{"key": "issued", "value": "2019-04-02"}, {"key": "modified", "value": "2023-11-30T08:26:58Z"}])
+    assert theme.jc_created(harvested).date().isoformat() == "2019-04-02"
+    assert theme.jc_updated(harvested).isoformat() == "2023-11-30T08:26:58+00:00"
+    assert theme.jc_frequency(dict(harvested, extras=harvested["extras"] + [{"key": "frequency", "value": "DAILY"}]))[1].date().isoformat() == "2023-12-01"
+    broken = dict(restored, extras=[{"key": "issued", "value": "unknown"}])
+    assert theme.jc_created(broken).isoformat() == "2026-10-16T14:14:13.049715+00:00"
+    assert theme.jc_created({}) is None and theme.jc_updated({}) is None
+    for template in ("templates__home__index.html", "templates__snippets__package_item.html"):
+        page = (THEME / template).read_text()
+        assert "h.jc_updated(" in page and "metadata_modified" not in page, template
 
 
 def test_a_bare_dataset_shows_only_what_it_has_and_the_publisher_falls_back_to_the_organization(theme):
@@ -195,7 +221,6 @@ SCHEMA = "https://dev.example/api/endpoint/praha/schema/v1/"
 # The resources `jcctl` publishes for an Endpoint, in its order: the DataStore table last.
 PUBLISHED_RESOURCES = [
     {"id": "r-ngsi", "name": "NGSI-LD API", "format": "NGSI-LD", "url": ENDPOINT + "ngsi-ld/v1/"},
-    {"id": "r-geo", "name": "GeoJSON", "format": "GeoJSON", "url": ENDPOINT + "file.geojson"},
     {"id": "r-csv", "name": "CSV", "format": "CSV", "url": ENDPOINT + "file.csv"},
     {"id": "r-mcp", "name": "Model Context Protocol", "format": "MCP", "url": ENDPOINT + "mcp"},
     {"id": "r-index", "name": "Schema artifacts", "format": "JSON", "url": ENDPOINT + "schema/index.json"},
@@ -212,7 +237,7 @@ def test_the_datastore_table_leads_the_files_and_the_model_is_a_section_of_its_o
     sections = theme.jc_resource_sections({"resources": PUBLISHED_RESOURCES})
     ids = {s["key"]: [i["resource"]["id"] for i in s["items"]] for s in sections}
     assert [s["key"] for s in sections] == ["data", "api", "schema"]
-    assert ids["data"] == ["r-table", "r-csv", "r-geo", "r-odd"]
+    assert ids["data"] == ["r-table", "r-csv", "r-odd"]
     assert ids["api"] == ["r-ngsi", "r-mcp"]
     # Everything under the Endpoint's /schema/ path is the model, whatever format it names.
     assert sorted(ids["schema"]) == ["r-ctx", "r-index", "r-shacl"]
@@ -224,9 +249,9 @@ def test_the_datastore_table_leads_the_files_and_the_model_is_a_section_of_its_o
 
 
 def test_a_dataset_with_only_files_has_one_section_and_a_search_result_names_no_model_format(theme):
-    files = [r for r in PUBLISHED_RESOURCES if r["id"] in ("r-csv", "r-geo")]
+    files = [r for r in PUBLISHED_RESOURCES if r["id"] in ("r-csv",)]
     assert [s["key"] for s in theme.jc_resource_sections({"resources": files})] == ["data"]
-    assert theme.jc_formats({"resources": PUBLISHED_RESOURCES}) == ["CSV", "GeoJSON", "NGSI-LD", "MCP"]
+    assert theme.jc_formats({"resources": PUBLISHED_RESOURCES}) == ["CSV", "NGSI-LD", "MCP"]
 
 
 # Since T-3012 the mirror writes one DataStore table per entity type, named by the type and
@@ -287,7 +312,7 @@ def test_the_mcp_panel_names_the_installation_s_hub_and_nothing_else(theme):
     from urllib.parse import parse_qs, unquote, urlsplit
 
     mcp = theme.jc_mcp_install()
-    hub = "https://dev.example/api/mcp"
+    hub = "https://api.dev.example/api/mcp"
     assert mcp["url"] == hub
     # One argument per line and the address alone on its JSON line, so no line is wider than the
     # address a narrow card has to show anyway (T-4284).
@@ -295,7 +320,7 @@ def test_the_mcp_panel_names_the_installation_s_hub_and_nothing_else(theme):
     assert json.loads(mcp["json"]) == {"mcpServers": {"joinedcontext": {"type": "http", "url": hub}}}
     assert f'  "{hub}"' in mcp["json"].splitlines()
     # The address breaks only before a single slash, never inside a word.
-    assert mcp["url_parts"] == ["https://dev.example", "/api", "/mcp"]
+    assert mcp["url_parts"] == ["https://api.dev.example", "/api", "/mcp"]
     assert mcp["vscode"].startswith("vscode:mcp/install?")
     assert json.loads(unquote(mcp["vscode"].split("?", 1)[1])) == {"name": "joinedcontext", "type": "http", "url": hub}
     cursor = urlsplit(mcp["cursor"])
@@ -314,15 +339,17 @@ def test_the_mcp_panel_is_left_out_without_a_plain_domain(theme, domain):
     assert theme.jc_mcp_install() is None
 
 
-def test_the_mcp_panel_is_on_the_home_page_and_every_dataset_page_with_its_copy_script():
+def test_the_mcp_panel_is_on_the_assistants_page_and_every_dataset_page_with_its_copy_script():
     panel = (THEME / "templates__snippets__jc_mcp_install.html").read_text()
-    for page in ("templates__home__index.html", "templates__package__read.html"):
+    for page in ("templates__jc__assistants.html", "templates__package__read.html"):
         text = (THEME / page).read_text()
         assert "{% snippet 'snippets/jc_mcp_install.html'" in text, page
         assert "url_for_static('/jc-copy.js')" in text, page
+    # The home page keeps the corner button only (T-4585).
+    assert "jc_mcp_install.html" not in (THEME / "templates__home__index.html").read_text()
     # One status line per page: the live box's when the dataset page has one.
     assert '{% if not live %}<p class="visually-hidden" role="status"' in panel
-    assert panel.count("{{ copy('") == 3
+    assert panel.count("{{ copy('") == 4  # the address, Claude Code, JSON and the Gemini CLI on /assistants (T-4628)
 
 
 def test_the_mcp_card_puts_claude_first_and_keeps_its_code_whole():
@@ -331,15 +358,13 @@ def test_the_mcp_card_puts_claude_first_and_keeps_its_code_whole():
     panel = (THEME / "templates__snippets__jc_mcp_install.html").read_text()
     order = [panel.index(key) for key in ("mcp_claude_ai_1", "mcp_vscode", "mcp_cursor", "jc-mcp-claude-label", "jc-mcp-json-label")]
     assert order == sorted(order)
-    assert panel.count('<div class="jc-code-head">') == 3
+    assert panel.count('<div class="jc-code-head">') == 4
     assert "mcp.url_parts | join('<wbr>' | safe)" in panel
     css = (THEME / "public__jc-theme.css").read_text()
     assert ".jc-live .jc-code pre { white-space: pre; overflow-wrap: normal; overflow-x: auto; }" in css
     assert ".jc-code .jc-code-url { overflow-wrap: normal; word-break: normal; }" in css
-    # The home page shows the card in the main column, where its code has room, not in the side.
-    home = (THEME / "templates__home__index.html").read_text()
-    main, side = home.index('<div class="jc-main">'), home.index('<div class="jc-side">')
-    assert main < home.index("{% snippet 'snippets/jc_mcp_install.html'") < side
+    # On /assistants the Claude card holds Claude's steps, so the block leaves them out (T-4585).
+    assert panel.index("{% if not editors_only %}\n    <div>") < panel.index("mcp_claude_ai_1") < panel.index("{% endif %}\n    <div>\n    <h3 class=\"jc-mcp-client\">{{ h.jc_t('mcp_editors') }}")
 
 
 def test_each_resource_has_its_one_action_named_for_a_screen_reader():
@@ -396,7 +421,8 @@ def test_the_theme_loads_nothing_from_another_origin():
         if path.suffix == ".py":
             continue
         text = path.read_text()
-        assert not re.search(r"<script>|(src|href)=\"(https?:)?//|(?<!\w)url\(|@import", text), path.name
+        # `url(#id)` names a gradient or mask in the same SVG (the T-4613 logos) and loads nothing.
+        assert not re.search(r"<script>|(src|href)=\"(https?:)?//|(?<!\w)url\((?!#)|@import", text), path.name
 
 
 # --- T-2888: the catalogue wears the installation's look, and a failed sign-in says why ---------
@@ -440,6 +466,9 @@ def test_no_stock_ckan_colour_survives_the_theme():
 def test_the_stylesheet_carries_no_colour_of_its_own():
     """T-3009: every colour is the branding block's or mixed from it, so values restyle it all."""
     css = (THEME / "public__jc-theme.css").read_text()
+    # T-4620: the four assistant segments wear their makers' colours, which no instance restyles
+    css, makers = re.subn(r"^\.jc-seg-(?:claude|chatgpt|gemini|mcp) \{ background: [^}]*\}$", "", css, flags=re.M)
+    assert makers == 4
     assert not re.search(r"#[0-9a-f]{3,8}\b|\brgba?\(|\bhsla?\(", css, re.I)
     named = re.findall(r":\s*(white|black|red|blue|green|gray|grey|navy|teal)\b", css, re.I)
     assert not named, named
@@ -463,7 +492,7 @@ def test_the_table_view_wears_the_theme_and_the_theme_s_templates_win():
 def test_the_home_page_replaces_ckan_s_sample_page():
     home = (THEME / "templates__home__index.html").read_text()
     assert "{% block primary_content %}" in home
-    for part in ("brand.tagline or h.jc_t('tagline')", "h.get_site_statistics()", "h.jc_recent(6)",
+    for part in ("h.jc_site_tagline()", "h.get_site_statistics()", "h.jc_recent(6)",
                  "get_facet_items_dict('organization'", 'role="search"', '<label for="jc-hero-q">'):
         assert part in home, part
     assert "home/snippets/" not in home
@@ -607,6 +636,37 @@ def test_the_header_names_the_sections_as_the_search_filters_do():
     assert "_('Organizations')" not in header and "_('Groups')" not in header
 
 
+def test_the_header_class_is_never_reused_for_icons():
+    """T-4627: T-4613 gave the corner's AI logos the header's `.jc-brand`, whose 22px block and
+    skew then hit the header anchor and stacked the mark over the name. `.jc-brand` is the header
+    link alone: no rule for it sizes, blocks or skews it."""
+    css = (THEME / "public__jc-theme.css").read_text()
+    for selectors, body in re.findall(r"([^{}]+)\{([^{}]*)\}", css):
+        names = [s.strip() for s in selectors.split(",")]
+        if any(re.fullmatch(r"\.jc-brand(:[\w-]+)*", n) for n in names):
+            for banned in ("inline-size", "display: block", "transform"):
+                assert banned not in body, (selectors.strip(), banned)
+    for mark in ("claude", "chatgpt", "gemini", "mcp"):
+        assert 'class="jc-ai-logo"' in (THEME / f"templates__jc__brand-{mark}.svg").read_text(), mark
+
+
+def test_the_header_is_the_joinedcontext_lockup_named_by_the_site_title():
+    """T-4627: one image, the joinedcontext.com lockup copied into the chart, its alt the
+    installation's name; no span beside it."""
+    jinja2 = pytest.importorskip("jinja2")
+    header = (THEME / "header.html").read_text()
+    block = header.split("{% block header_logo %}", 1)[1].split("{% endblock %}", 1)[0]
+    html = jinja2.Environment(autoescape=True).from_string(block).render(h=types.SimpleNamespace(
+        url_for=lambda name: "/", jc_site_logo=lambda: "/jc-logo.svg", jc_site_title=lambda: "Otvorené dáta"))
+    imgs = re.findall(r"<img [^>]*>", html)
+    assert imgs == ['<img src="/jc-logo.svg" alt="Otvorené dáta" width="171" height="36">'], imgs
+    assert "<span" not in html
+    logo = (THEME / "public__jc-logo.svg").read_text()
+    assert logo.startswith('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 266 56"')
+    assert not re.search(r"<script|\son\w+=|href=|<image|<foreignObject", logo, re.I)
+    assert set(re.findall(r"url\(([^)]*)\)", logo)) <= {f"#{i}" for i in re.findall(r'id="([^"]+)"', logo)}
+
+
 def test_publisher_and_topic_cards_are_a_grid_that_wraps_at_words():
     css = (THEME / "public__jc-theme.css").read_text()
     assert re.search(r"\.media-grid \{ clear: both; display: grid;", css)
@@ -692,16 +752,50 @@ def test_a_search_filter_with_nothing_to_choose_is_left_out_and_labels_are_whole
     assert guard < facets.index('<p class="module-footer">') < facets.index("{% endif %}\n      </section>")
 
 
-def test_the_table_view_stacks_its_controls_below_desktop_width():
-    """The view's own rules name `#dtprv_wrapper`; a rule on the class alone loses to them, which is
-    how the first try left "Search:" under the toolbar."""
+def test_the_framed_table_shares_the_card_s_edge_one_border_and_one_row_of_controls():
+    """T-4637 (was T-3048's stacking): the frame runs border to border with no border of its own,
+    the view keeps the card's 1rem, controls and footer are one row each until the frame is
+    narrow. The view's own rules name `#dtprv_wrapper`, so these do too, and the two margins that
+    push search and pages right outrank the rule that zeroes every control's margin."""
     css = (THEME / "public__jc-theme.css").read_text()
-    block = css[css.index("@media (max-width: 991.98px) {\n  body.dt-view"):]
-    block = block[:block.index("\n}\n") + 3]
-    assert "body.dt-view #dtprv_wrapper { display: flex; flex-wrap: wrap;" in block
-    assert "float: none; width: 100%; margin: 0;" in block
-    for selector in (".dataTables_filter", ".dataTables_info", ".dataTables_paginate"):
-        assert all("#dtprv_wrapper" in line for line in block.splitlines() if selector in line), selector
+    grid = next(line for line in css.splitlines() if line.startswith(".jc-grid {"))
+    assert "margin-inline: -1rem; width: calc(100% + 2rem);" in grid and "border: 0;" in grid
+    assert ".jc-table { border: 1px solid var(--jc-border);" in css and "padding: 0 1rem; }" in css
+    assert "body.dt-view #resize_wrapper { inset: 0; }" in css
+    assert "body.dt-view #dtprv_wrapper { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; padding: 1rem; }" in css
+    assert "body.dt-view #dtprv_wrapper > div.dataTables_length { order: 1; margin-inline-end: auto; }" in css
+    assert "body.dt-view #dtprv_wrapper > div.dataTables_info { order: 5; padding: 0; margin-inline-end: auto;" in css
+    assert "body.dt-view #dtprv_wrapper > .dataTables_scroll { order: 4; flex: 1 0 100%; }" in css
+    for selector in (".dataTables_filter", ".dataTables_info", ".dataTables_paginate", ".dt-buttons"):
+        lines = [line for line in css.splitlines() if "body.dt-view" in line and selector in line and "::" not in line]
+        assert lines and all("#dtprv_wrapper" in line for line in lines), selector
+    # The body holds its rows, so no band under two of them; its heights are inline.
+    assert "body.dt-view #dtprv_wrapper .dataTables_scrollBody { height: auto !important; max-height: 26rem !important; }" in css
+    narrow = css[css.index("@media (max-width: 47.99rem) {\n  body.dt-view"):]
+    assert "> .dt-buttons { order: 0; flex: 1 0 100%; justify-content: flex-end; }" in narrow[:narrow.index("\n}\n")]
+    # The summary's arrow hangs in the card's padding, so the table's name starts on the table's edge.
+    assert '.jc-table > summary::before { content: "\\25B8"; position: absolute; inset-inline-start: -.75rem;' in css
+
+
+def test_the_table_view_asks_for_no_missing_icon():
+    """T-4637: the view's stylesheet names vendor/FontAwesome/images/times-circle-solid.svg for the
+    search field's clear button, which the extension does not ship; the theme hides that button, so nothing asks for the icon."""
+    css = (THEME / "public__jc-theme.css").read_text()
+    assert 'body.dt-view input[type="search"]::-webkit-search-cancel-button { display: none; }' in css
+    assert "times-circle" not in css
+
+
+def test_the_frame_takes_the_height_its_view_says_from_the_same_origin_only():
+    """T-4637: the view inside the frame posts its height; the page that frames it sets it on
+    the frame the message came from, a number between 160 and 1280, same origin only."""
+    script = (THEME / "public__jc-frame.js").read_text()
+    assert 'postMessage({ type: TYPE, height: height }, window.location.origin)' in script
+    assert "event.origin !== window.location.origin" in script and "contentWindow === event.source" in script
+    assert "Math.min(Math.max(height, 160), 1280)" in script and "isFinite(height)" in script
+    view = (THEME / "templates__datatables__datatables_view.html").read_text()
+    assert "url_for_static('/jc-frame.js') }}\" defer></script>" in view
+    for page in ("templates__package__read.html", "templates__package__resource_read.html"):
+        assert "url_for_static('/jc-frame.js')" in (THEME / page).read_text(), page
 
 
 
@@ -754,7 +848,8 @@ def test_the_footer_offers_the_assistant_as_a_disclosure_a_keyboard_opens():
     assert 'referrerpolicy="no-referrer"' in footer
     # T-4280: the chat opens in Slovak or the visitor's own choice in it; the page's language
     # (T-4253) no longer reaches it.
-    assert '<iframe src="{{ widget }}"' in footer
+    # T-4635: embed mode, so the chat's header carries the ✕ that closes the panel.
+    assert '<iframe src="{{ widget }}?embed=1"' in footer
     assert "lang=" not in footer.split("<iframe", 1)[1].split(">", 1)[0]
 
 
@@ -762,13 +857,13 @@ def test_the_assistant_leaves_the_page_room_and_takes_a_phone_s_whole_screen():
     """T-4204: the button never covers the page's last line; open on a phone, the frame is the
     screen, the page behind neither shows nor takes focus, and Escape closes it."""
     css = (THEME / "public__jc-theme.css").read_text()
-    assert "body:has(.jc-assistant) { padding-block-end: 5rem; }" in css
+    assert "body:has(.jc-corner) { padding-block-end: 5rem; }" in css
     phone = css.split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
-    assert ".jc-assistant[open] { inset: 0;" in phone
+    assert ".jc-assistant[open] { position: fixed; inset: 0;" in phone
     assert "body:has(.jc-assistant[open]) { overflow: hidden; }" in phone
-    # The frame takes its size from the screen, below the 3.25rem bar (T-4248).
-    assert "block-size: 3.25rem;" in phone
-    assert "inset: 3.25rem 0 auto 0; width: 100%; height: calc(100vh - 3.25rem); height: calc(100dvh - 3.25rem);" in phone
+    # The frame takes its size from the screen, the whole of it, with no bar above (T-4248, T-4635).
+    assert ".jc-assistant[open] > iframe { position: fixed; inset: 0; width: 100%; height: 100vh; height: 100dvh;" in phone
+    assert "3.25rem" not in phone
     footer = (THEME / "footer.html").read_text()
     assert "<script src=\"{{ h.url_for_static('/jc-assistant.js') }}\" defer></script>" in footer
     script = (THEME / "public__jc-assistant.js").read_text()
@@ -776,24 +871,48 @@ def test_the_assistant_leaves_the_page_room_and_takes_a_phone_s_whole_screen():
     assert 'event.key === "Escape"' in script and 'querySelector("summary").focus()' in script
 
 
-def test_the_open_assistant_shows_one_close_control_and_a_frame_that_fits_the_window():
-    """T-4283: open, the launcher turns into the panel's round close control (never the label
-    beside the panel); the frame takes the height the chat reports, inside 40rem and the window;
-    the button keeps clear of a phone's home bar."""
+def test_the_open_assistant_has_one_close_control_and_a_frame_with_nothing_under_it():
+    """T-4635 (owner's option C): open, the launcher is hidden on a desktop and a phone, and the ✕
+    in the chat's header is the one close control; the frame sits in the corner the launcher left,
+    1rem from the window's edge and clear of a phone's home bar, one tall height, 760px inside the
+    window (T-4592)."""
     css = (THEME / "public__jc-theme.css").read_text()
     desktop = css.split("@media (max-width: 40rem) {", 1)[0]
-    assert "inset-block-end: max(1rem, env(safe-area-inset-bottom));" in desktop
-    assert ".jc-assistant[open] > summary { inline-size: 2.75rem; block-size: 2.75rem; padding: 0; }" in desktop
-    assert ".jc-assistant[open] > summary > span { position: absolute;" in desktop and "clip-path: inset(50%)" in desktop
-    assert '.jc-assistant[open] > summary::after { content: "\\2715";' in desktop
-    assert "height: min(var(--jc-h, 40rem), 40rem, calc(100dvh - 6.25rem));" in desktop
+    assert ".jc-assistant[open] > summary { display: none; }" in desktop
+    frame = desktop.split(".jc-assistant > iframe { ", 1)[1].split("}", 1)[0]
+    assert "position: fixed; inset-inline-end: 1rem; inset-block-end: max(1rem, env(safe-area-inset-bottom));" in frame
+    assert "height: min(760px, calc(100vh - 2rem)); height: min(760px, calc(100dvh - 2rem));" in frame
+    assert "100%" not in frame, "the frame no longer hangs above the launcher"
+    assert "--jc-h" not in css
     phone = css.split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
-    assert ".jc-assistant[open] > summary > span { position: static;" in phone, "a phone's bar keeps its words"
+    assert ".jc-assistant[open] > summary" not in phone, "no bar on a phone either"
+    assert "\\2715" not in css, "the page draws no ✕ of its own"
+    # The chat's ✕ closes it: only the frame's own message, from the frame's origin, and focus
+    # goes back to the launcher. No height is reported (T-4592).
     script = (THEME / "public__jc-assistant.js").read_text()
-    # The height is heard from the frame's own window and origin alone, and only as a number.
-    assert "event.source !== frame.contentWindow || event.origin !== origin" in script
-    assert 'data.type !== "jc-assistant-height"' in script and "isFinite(height) && height > 0" in script
-    assert 'frame.style.setProperty("--jc-h"' in script
+    assert "jc-assistant-height" not in script
+    assert 'data.type === "jc-assistant-close"' in script
+    assert "event.source === frame.contentWindow && event.origin === origin" in script
+    assert 'box.querySelector("summary").focus();' in script
+
+
+def test_the_chat_grows_to_the_window_on_its_own_frames_word_alone():
+    """T-4658: the chat's expand button asks for the window; the page grows the frame only for its
+    own frame's message from the frame's origin, to 60rem inside the 1rem gutter and the safe
+    areas, and holds the page behind still. A phone keeps its whole-screen frame."""
+    css = (THEME / "public__jc-theme.css").read_text()
+    desktop = css.split("@media (max-width: 40rem) {", 1)[0]
+    full = desktop.split(".jc-assistant.jc-full > iframe { ", 1)[1].split("}", 1)[0]
+    assert "width: min(60rem, calc(100vw - 2rem));" in full
+    assert "inset-block-start: max(1rem, env(safe-area-inset-top));" in full
+    assert "height: calc(100dvh - max(1rem, env(safe-area-inset-top)) - max(1rem, env(safe-area-inset-bottom)));" in full
+    assert "body:has(.jc-assistant.jc-full[open]) { overflow: hidden; }" in desktop
+    assert css.index(".jc-assistant.jc-full > iframe") < css.index("@media (max-width: 40rem) {"), "the phone's frame wins"
+    script = (THEME / "public__jc-assistant.js").read_text()
+    size = script.split('data.type === "jc-assistant-size"', 1)
+    assert len(size) == 2 and "event.source === frame.contentWindow && event.origin === origin &&" in size[0].rsplit("else if", 1)[1]
+    assert '(data.size === "full" || data.size === "panel")' in size[1]
+    assert 'phone.matches || box.classList.contains("jc-full")' in script
 
 
 def test_the_catalogue_pod_is_told_its_assistant_only_when_the_assistant_is_deployed(rendered, rendered_variant):
@@ -1174,7 +1293,7 @@ def test_the_connector_privacy_terms_and_support_pages_read_in_slovak_and_englis
         assert page["email"] == "hello@dev.example" and page["pages"] == ["connector", "privacy", "terms", "support"]
         text = " ".join(p for s in page["sections"] for p in s["paragraphs"])
         assert "{" not in text and not re.search(r"(?i)bearer|token|api[_-]?key|password", text), name
-    assert "https://dev.example/api/mcp" in " ".join(theme.jc_page("connector")["sections"][0]["paragraphs"])
+    assert "https://api.dev.example/api/mcp" in " ".join(theme.jc_page("connector")["sections"][0]["paragraphs"])
     assert theme.jc_page("privacy")["title"] != theme.PAGES["privacy"]["sk" if lang == "en" else "en"]["title"]
     assert theme.jc_page("imprint") is None
 
@@ -1204,7 +1323,9 @@ def test_the_four_pages_are_routes_of_one_template_and_every_page_links_them(the
     monkeypatch.setitem(sys.modules, "flask", types.SimpleNamespace(Blueprint=Blueprint))
     theme.toolkit.render = lambda template, extra: (template, extra)
     blueprint = theme.JcThemePlugin().get_blueprint()
-    assert blueprint.name == "jc_pages" and sorted(rules) == ["/connector", "/privacy", "/support", "/terms"]
+    assert blueprint.name == "jc_pages" and sorted(rules) == ["/assistants", "/assistants/<id>", "/connector", "/map/<id>", "/map/<id>/<resource_id>", "/privacy", "/support", "/terms"]
+    assert rules["/assistants"][0] == "assistants" and rules["/assistants"][1]() == ("jc/assistants.html", {})
+    assert rules["/assistants/<id>"] == ("guide", theme.jc_guide_page)
     endpoint, view = rules["/privacy"]
     assert endpoint == "privacy" and view() == ("jc/page.html", {"jc_name": "privacy"})
     template = (THEME / "templates__jc__page.html").read_text()
@@ -1456,3 +1577,907 @@ def test_the_framed_table_has_no_developer_lines_and_room_below_desktop():
     assert "body.dt-view .resourceinfo, body.dt-view .sortinfo { display: none; }" in css
     assert "body.dt-view .dataTables_filter label::after { content: none; }" in css
     assert "clamp(27rem, calc(24rem + var(--jc-rows, 20) * 2.6rem), 34rem)" in css
+
+
+# T-4585: "Use it in your AI assistant", one page per installation and a button beside the chat's.
+@pytest.mark.parametrize("domain, name", [("data.dev.example", "Banská Bystrica otvorené dáta"), ("hel.example", "Helsinki Open Data")])
+def test_the_assistants_page_names_the_installation_s_own_hub_and_assistants_in_order(theme, tmp_path, domain, name):
+    branding = tmp_path / "branding.json"
+    branding.write_text(json.dumps({"domain": domain, "instanceName": name}))
+    theme.BRANDING = theme._load()
+    page = theme.jc_assistants()
+    hub = f"https://api.{domain}/api/mcp"
+    assert page["mcp"]["url"] == hub and name in page["lead"] and "{" not in page["lead"]
+    cards = {card["id"]: card for card in page["cards"]}
+    # T-4634, T-4643: Gemini's app needs OAuth (T-4631), so it has no card until its flag is on.
+    assert [card["id"] for card in page["cards"]] == ["chatgpt", "claude", "grok"]
+    assert cards["chatgpt"]["open"] == theme.CHATGPT_PLUGINS == "https://chatgpt.com/plugins"
+    assert cards["claude"]["open"] == theme.CLAUDE_CONNECTORS == "https://claude.ai/customize/connectors"
+    assert cards["chatgpt"]["open_label"] == "Add to ChatGPT"
+    assert cards["grok"]["open"] == theme.GROK_CONNECTORS == "https://grok.com/connectors"
+    assert page["gemini"] == f"gemini mcp add --transport http joinedcontext {hub}"
+    for card in page["cards"]:
+        assert set(card) == {"id", "name", "logo", "open", "open_label", "guide_label"}, card
+        assert (THEME / ("templates__" + card["logo"].replace("/", "__"))).is_file(), card["logo"]
+        assert "token" not in json.dumps(card).lower()
+
+
+def test_the_assistants_page_is_left_empty_without_a_plain_domain(theme):
+    theme.BRANDING["domain"] = "dev.example/evil"
+    assert theme.jc_assistants() is None
+
+
+def test_the_assistants_page_reads_in_slovak(theme):
+    theme.page.lang = "sk"
+    page = theme.jc_assistants()
+    assert [card["open_label"] for card in page["cards"]] == ["Pridať do ChatGPT", "Pridať do Claude", "Pridať do Grok"]
+    assert theme.jc_t("coming_soon") == "Čoskoro" and theme.jc_t("for_developers") == "Pre vývojárov"
+    assert theme.jc_t("store_address") == "Každý návod ukazuje, kam vložiť túto adresu:"
+    for key in ("assistants", "assistants_lead", "add_to", "store_address", "for_developers", "coming_soon",
+                "copy", "gemini_1", "any_client", "guide", "guide_title", "guide_who", "guide_steps", "guide_try",
+                "guide_example", "guide_good", "guide_trouble", "guide_checked", "guide_back"):
+        assert set(theme.STRINGS[key]) == {"en", "sk", "cs", "de"}, key
+        # T-4628: the owner read English store words inside the Slovak steps.
+        assert "Add custom" not in theme.STRINGS[key]["sk"] and "Create as" not in theme.STRINGS[key]["sk"], key
+
+
+def test_the_assistants_page_offers_each_card_s_own_action_and_links_nowhere_else():
+    template = (THEME / "templates__jc__assistants.html").read_text()
+    assert "{% set page = h.jc_assistants() %}" in template
+    assert 'href="{{ card.open }}" target="_blank" rel="noopener noreferrer"' in template and template.count("href=") == 4
+    # The fourth: each website the hub searches (T-4659), its own address.
+    assert '<a href="{{ source.url }}" rel="noopener noreferrer">' in template
+    assert '<a class="jc-card-guide" href="{{ h.url_for(\'jc_pages.guide\', id=card.id) }}">{{ card.guide_label }}</a>' in template
+    # T-4634: no card says "Coming soon"; the page's empty state alone does.
+    assert template.count("coming_soon") == 1 and "{% if card.soon %}" not in template
+    assert template.count("data-jc-copy=") == 1 and 'data-jc-copy="jc-store-url"' in template
+    assert "<img" not in template and "<script>" not in template
+
+
+def test_the_corner_offers_the_assistants_page_beside_the_chat_in_one_row():
+    footer = (THEME / "footer.html").read_text()
+    corner = footer.split('<div class="jc-corner">', 1)[1].split("</div>", 1)[0]
+    link = corner.index('href="{{ h.url_for(\'jc_pages.assistants\') }}"')
+    assert link < corner.index('<details class="jc-assistant">')
+    assert "aria-label=\"{{ h.jc_t('assistants_label') }}\"" in corner
+    # T-4609: the footer's light link colour no longer reaches it, and the open panel hides it.
+    assert ".jc-corner .jc-assistants-link { box-sizing" in desktop_css() and ".jc-corner:has(.jc-assistant[open]) .jc-assistants-link { display: none; }" in desktop_css()
+    assert "{% set assistants = h.jc_mcp_install() %}" in footer and "{% if widget or assistants %}" in footer
+    css = (THEME / "public__jc-theme.css").read_text()
+    desktop = css.split("@media (max-width: 40rem) {", 1)[0]
+    assert ".jc-corner { position: fixed;" in desktop and "display: flex; align-items: flex-end; gap: .5rem; }" in desktop
+    assert ".jc-assistant { position: relative; }" in desktop and "min-block-size: 2.75rem;" in desktop
+    phone = css.split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
+    # T-4613: the logo pill fits beside the launcher, so a phone keeps one row and the desktop's room.
+    assert ".jc-corner { align-items: center; }" in phone and "flex-direction: column" not in phone.split(".jc-assistant[open]")[0]
+    assert "padding-block-end: 8.5rem" not in phone
+
+
+
+def desktop_css():
+    return (THEME / "public__jc-theme.css").read_text().split("@media (max-width: 40rem) {", 1)[0]
+
+
+def render(template, theme, **context):
+    """A theme template through Jinja, as CKAN renders it: `page.html` a stand-in that prints the
+    blocks, CKAN's `{% snippet %}` tag dropped (its own template is tested above)."""
+    jinja2 = pytest.importorskip("jinja2")
+    sources = {path.name.replace("templates__", "", 1).replace("__", "/"): path.read_text()
+               for path in THEME.glob("templates__*")}
+    sources["page.html"] = "{% block primary %}{% endblock %}{% block scripts %}{% endblock %}"
+    # The footer's corner alone: the rest of the footer extends CKAN's own.
+    footer = (THEME / "footer.html").read_text()
+    sources["corner.html"] = footer[footer.index("{% set widget"):footer.rindex("{% endblock %}", 0, footer.index("{% block footer_links_ckan"))]
+    sources = {k: re.sub(r"{%\s*snippet [^%]*%}", "", v) for k, v in sources.items()}
+    env = jinja2.Environment(loader=jinja2.DictLoader(sources), autoescape=True)
+    h = types.SimpleNamespace(jc_assistants=theme.jc_assistants, jc_t=theme.jc_t, jc_mcp_install=theme.jc_mcp_install,
+                              jc_assistant_widget=lambda publisher: context.get("widget"),
+                              url_for=lambda name, **kw: "/assistants" + ("/" + kw["id"] if "id" in kw else ""),
+                              url_for_static=lambda path: path)
+    return env.get_template(template).render(h=h, **context)
+
+
+def test_each_assistant_card_is_its_logo_its_name_and_at_most_one_link(theme):
+    """T-4628, the owner: "just logo, name and link to the market place with connectors". T-4609
+    printed `card.copy` as "<built-in method copy …>": Jinja reads a dict's method before its key."""
+    html = render("jc/assistants.html", theme)
+    assert "built-in method" not in html and "0x" not in html
+    blocks = re.findall(r'<li class="jc-assistant-card">(.*?)</li>', html, re.S)
+    cards = {re.search(r'id="jc-card-(\w+)"', block).group(1): block for block in blocks}
+    assert list(cards) == ["chatgpt", "claude", "grok"]
+    stores = {"chatgpt": theme.CHATGPT_PLUGINS, "claude": theme.CLAUDE_CONNECTORS, "grok": theme.GROK_CONNECTORS}
+    for id, card in cards.items():
+        heading = re.search(r"<h2[^>]*>(.*?)</h2>", card, re.S).group(1)
+        assert heading.startswith('<svg class="jc-ai-logo" width="32" height="32" aria-hidden="true"'), id
+        assert re.sub(r"<svg.*</svg>", "", heading, flags=re.S).strip() in {"ChatGPT", "Claude", "Grok"}, id
+        # T-4643: the store, and our own guide beside it.
+        assert re.findall(r'<a [^>]*href="([^"]*)"[^>]*>', card) == [stores[id], f"/assistants/{id}"], id
+        assert 'target="_blank" rel="noopener noreferrer"' in card and "Coming soon" not in card, id
+        assert "jc-code" not in card and "<button" not in card and "<pre" not in card, id
+    # The address once for the page, as text with one copy button; nothing technical above the fold.
+    hub = "https://api.dev.example/api/mcp"
+    above, fold = html.split('<details class="jc-developers">', 1)
+    # It breaks only before a slash, never inside a word (T-4284), and a copy reads it whole.
+    assert '<span id="jc-store-url" class="jc-store-url">https://api.dev.example<wbr>/api<wbr>/mcp</span>' in above
+    assert above.replace("<wbr>", "").count(hub) == 1
+    assert above.count("<button") == 1 and not re.search(r"class=\"jc-code[ \"]", above) and "<pre" not in above and "<code" not in above
+    assert fold.startswith("\n        <summary>For developers</summary>")
+
+
+def test_the_developers_fold_holds_every_command_and_stays_closed():
+    page = (THEME / "templates__jc__assistants.html").read_text()
+    fold = page.split('<details class="jc-developers">', 1)[1].split("</details>", 1)[0]
+    assert "{% snippet 'snippets/jc_mcp_install.html', editors_only=True, live=True, gemini=page.gemini %}" in fold
+    assert re.findall(r"<details[^>]*>", page) == ['<details class="jc-developers">']
+    snippet = (THEME / "templates__snippets__jc_mcp_install.html").read_text()
+    editors = snippet.split("{% if not editors_only %}\n    <div>", 1)[1].split("{% endif %}", 1)[1]
+    for block in ('id="jc-mcp-gemini"', "text=gemini", "mcp.vscode", "mcp.cursor", 'id="jc-mcp-claude"', 'id="jc-mcp-json"'):
+        assert block in editors, block
+
+
+def test_the_card_logos_are_the_makers_own_in_their_colours_and_safe():
+    sources = {"chatgpt": "https://developers.openai.com/favicon.svg", "claude": "https://claude.ai/favicon.svg",
+               "grok": "https://grok.com/images/favicon.svg",
+               "gemini": "https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d4735304ff6292a690345.svg"}
+    colours = {"chatgpt": "#0080F7", "claude": "#D97757", "grok": "#050505", "gemini": "#1BA1E3"}
+    assert sorted(p.name for p in THEME.glob("templates__jc__card-*.svg")) == [f"templates__jc__card-{id}.svg" for id in sorted(sources)]
+    for id, source in sources.items():
+        comment, svg = (THEME / f"templates__jc__card-{id}.svg").read_text().split("-#}\n", 1)
+        assert source in comment and "fetched 2026-10-18" in comment, id
+        assert svg.startswith('<svg class="jc-ai-logo" width="32" height="32" aria-hidden="true" focusable="false"'), id
+        assert colours[id] in svg and 'fill="#fff"' not in svg, id
+        assert not re.search(r"<script|<foreignObject|\son\w+=|href=|filter=|<style", svg, re.I), id
+        # Ids are prefixed, so two marks on one page never take each other's gradient or mask.
+        assert all(i.startswith(f"jc-{id}-") for i in re.findall(r'\sid="([^"]+)"', svg)), id
+        assert all(u.startswith(f"#jc-{id}-") for u in re.findall(r"url\(([^)]+)\)", svg)), id
+    css = (THEME / "public__jc-theme.css").read_text()
+    assert ".jc-assistant-card .jc-ai-logo { flex: none; display: block; inline-size: 2rem; block-size: 2rem; }" in css
+    # The corner's slant stays on the corner's segments.
+    assert ".jc-seg .jc-ai-logo { flex: none; display: block; inline-size: 1.375rem; block-size: 1.375rem; transform: skewX(14deg); }" in css
+    assert not re.search(r"(^|\n)\s*\.jc-ai-logo \{", css)
+
+
+def test_the_cards_sit_in_one_row_or_as_many_as_fit():
+    css = (THEME / "public__jc-theme.css").read_text()
+    assert "display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); grid-auto-rows: 1fr; gap: 1rem; }" in css
+    assert ".jc-soon" not in css
+    assert ".jc-card-link::after { content: \"\"; position: absolute; inset: 0; border-radius: inherit; }" in css
+    assert ".jc-assistant-card:has(.jc-card-link:focus-visible) { outline: 3px solid var(--jc-accent); outline-offset: 2px; }" in css
+
+
+LABELS = {"en": "Use the data in ChatGPT, Claude, Gemini or any MCP client",
+          "sk": "Použite dáta v ChatGPT, Claude, Gemini alebo v akomkoľvek klientovi MCP",
+          "cs": "Použijte data v ChatGPT, Claude, Gemini nebo v libovolném klientovi MCP",
+          "de": "Die Daten in ChatGPT, Claude, Gemini oder jedem MCP-Client nutzen"}
+
+
+@pytest.mark.parametrize("lang", sorted(LABELS))
+def test_the_corner_link_is_four_logos_and_no_words(theme, lang):
+    """T-4613, T-4620: Claude, ChatGPT, Gemini, MCP, each on its own segment; no text, no "/"; the
+    name is the aria-label, in the page's language."""
+    theme.page.lang = lang
+    html = render("corner.html", theme, publisher=None, widget="https://dev.example/assistant/")
+    tag, link = re.search(r'(<a class="jc-assistants-link"[^>]*>)(.*?)</a>', html, re.S).groups()
+    assert f'aria-label="{LABELS[lang]}"' in tag
+    segments = re.findall(r'<span class="jc-seg jc-seg-(\w+)">(<svg class="jc-ai-logo".*?</svg>)</span>', link, re.S)
+    assert [mark for mark, _ in segments] == ["claude", "chatgpt", "gemini", "mcp"]
+    assert link.count("<svg") == 4
+    segments = [svg for _, svg in segments]
+    assert all('aria-hidden="true"' in s for s in segments)
+    # every text node of the link is blank: no word and no "/" between the logos
+    assert re.sub(r"<[^>]+>", "", link).strip() == ""
+    assert '<details class="jc-assistant">' in html
+
+
+def test_the_brand_logos_are_the_makers_own_saved_here_with_their_source():
+    for name, source in (("claude", "https://claude.ai/"), ("chatgpt", "https://developers.openai.com/"),
+                         ("gemini", "https://www.gstatic.com/"), ("mcp", "https://modelcontextprotocol.io/")):
+        text = (THEME / f"templates__jc__brand-{name}.svg").read_text()
+        comment, svg = text.split("\n", 1)
+        assert comment.startswith("{#") and f"from {source}" in comment, name
+        # served from CKAN's origin: nothing in the mark loads from anywhere
+        assert not re.search(r"href=|url\(", svg), name
+        # T-4620: white on the maker's colour, which the segment behind it carries
+        assert set(re.findall(r'(?:fill|stroke)="([^"]+)"', svg)) <= {"#fff", "none"}, name
+        assert svg.startswith('<svg class="jc-ai-logo" width="24" height="24" aria-hidden="true" focusable="false"'), name
+
+
+def test_the_bar_is_one_slant_in_the_makers_colours_and_shrinks_on_a_phone():
+    """T-4620: one skewed bar with its logos upright, each segment in its maker's colour."""
+    css = desktop_css()
+    assert "transform: skewX(-14deg);" in css and "transform: skewX(14deg);" in css
+    assert "flex-wrap: nowrap;" in css and "border-radius: 10px;" in css
+    for mark, ground in (("claude", "#d97757"), ("chatgpt", "#10a37f"),
+                         ("gemini", "linear-gradient(135deg, #4285f4, #9b72cb 60%, #d96570)"), ("mcp", "#1f1f2e")):
+        assert f".jc-seg-{mark} {{ background: {ground}; }}" in css, mark
+    assert "--jc-slant" not in css and "clip-path: polygon" not in css
+    phone = (THEME / "public__jc-theme.css").read_text().split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
+    assert ".jc-corner .jc-assistants-link { block-size: 2.75rem; }" in phone
+
+
+def test_the_closed_launcher_takes_the_bar_s_shape_and_the_open_one_does_not():
+    """T-4622: closed, the launcher has the bar's slant, corners, shadow and height, its words
+    upright on one line; open, it is hidden (T-4635), so no skew reaches it."""
+    css = desktop_css()
+    bar = css.split(".jc-corner .jc-assistants-link { ", 1)[1].split("}", 1)[0]
+    closed = css.split(".jc-assistant:not([open]) > summary { ", 1)[1].split("}", 1)[0]
+    for shared in ("block-size: 3rem;", "border-radius: 10px;", "transform: skewX(-14deg);",
+                   "margin-inline: .375rem;",
+                   "box-shadow: 0 4px 14px color-mix(in oklab, var(--jc-ink) 25%, transparent);"):
+        assert shared in bar and shared in closed, shared
+    assert "white-space: nowrap;" in closed
+    assert ".jc-assistant:not([open]) > summary > span { display: inline-block; transform: skewX(14deg); }" in css
+    for rule in re.findall(r"[^{}]*\{[^}]*skewX[^}]*\}", css):
+        assert "[open]" not in rule.split("{", 1)[0] or ":not([open])" in rule, rule
+    assert "transition" not in closed and "animation" not in closed
+    phone = (THEME / "public__jc-theme.css").read_text().split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
+    assert ".jc-assistant:not([open]) > summary { block-size: 2.75rem; font-size: .9375rem; padding-inline: 1.125rem; }" in phone
+    # the closed summary's focus ring stays: no rule takes the outline away
+    assert ".jc-assistant > summary:focus-visible { outline: 3px solid var(--jc-accent); outline-offset: 2px; }" in css
+    assert "outline: none" not in closed and "outline: 0" not in closed
+
+
+def test_the_corner_stays_inside_the_gutters_whatever_the_label():
+    """T-4622 review: the German label is 278px at 15px, so at 320px no row holds it and the bar.
+    On a phone the corner is at most the screen less the two 1rem gutters and wraps the bar onto
+    a row above the launcher instead of pushing it off the left edge; the page keeps room for
+    the second row. Measured on data.dev (Playwright, every label, 390/375/360/320): sk and cs
+    keep one row down to 375, en to 360, and no box leaves [16, width - 16]."""
+    phone = (THEME / "public__jc-theme.css").read_text().split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
+    assert ".jc-corner { flex-wrap: wrap; justify-content: flex-end; max-inline-size: calc(100vw - 2rem); }" in phone
+    assert "body:has(.jc-corner) { padding-block-end: 7.5rem; }" in phone
+    assert ".jc-seg { inline-size: 1.4375rem; }" in phone
+    # the launcher itself never wraps its words: the corner wraps, not the label
+    assert "white-space: nowrap;" in desktop_css().split(".jc-assistant:not([open]) > summary { ", 1)[1].split("}", 1)[0]
+
+
+def _with_branding(theme, monkeypatch, tmp_path, block):
+    """The plugin reloaded with `block` as its branding file."""
+    branding = tmp_path / "instance-branding.json"
+    branding.write_text(json.dumps(block))
+    monkeypatch.setenv("JC_BRANDING_FILE", str(branding))
+    spec = importlib.util.spec_from_file_location("jc_theme_plugin_instance", THEME / "plugin.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    module.page = theme.page
+    return module
+
+
+INSTANCE = {"domain": "dev.example", "instanceName": "joinedcontext",
+            "languages": {"default": "sk", "offered": ["sk", "en", "cs"]},
+            "siteTitle": {"sk": "Otvorené dáta", "en": "Open data"},
+            "samples": {"en": ["How many buses run now?"], "sk": ["Koľko autobusov teraz jazdí?"]}}
+
+
+def test_the_site_title_is_the_instances_in_the_readers_language(theme, monkeypatch, tmp_path):
+    """T-4636: `site.title` per language, the default language for one it lacks, the
+    installation's name when the instance sets none."""
+    module = _with_branding(theme, monkeypatch, tmp_path, INSTANCE)
+    for lang, title in (("sk", "Otvorené dáta"), ("en", "Open data"), ("cs", "Otvorené dáta")):
+        theme.page.lang = lang
+        assert module.jc_site_title() == title, lang
+    assert module.jc_site_title("en") == "Open data"
+    theme.page.lang = "en"
+    assert theme.jc_site_title() == "joinedcontext"
+    bare = _with_branding(theme, monkeypatch, tmp_path, dict(INSTANCE, siteTitle={"sk": "", "en": 3}))
+    assert bare.jc_site_title() == "joinedcontext", "nothing usable falls back to the installation's name"
+
+
+def test_the_tagline_is_the_instances_then_the_installations_then_the_themes(theme, monkeypatch, tmp_path):
+    """T-4636, owner 15:18Z: `site.tagline` per language under the title, which it no longer
+    repeats; the installation's tagline, then the theme's own line, where the instance sets none."""
+    module = _with_branding(theme, monkeypatch, tmp_path,
+                            dict(INSTANCE, siteTagline={"sk": "Dáta mesta.", "en": "The city's data."}))
+    theme.page.lang = "en"
+    assert module.jc_site_tagline() == "The city's data."
+    theme.page.lang = "cs"
+    assert module.jc_site_tagline() == "Dáta mesta.", "a language it lacks takes the default's"
+    theme.page.lang = "sk"
+    plain = _with_branding(theme, monkeypatch, tmp_path, dict(INSTANCE, tagline="Ours."))
+    assert plain.jc_site_tagline() == "Ours."
+    bare = _with_branding(theme, monkeypatch, tmp_path, INSTANCE)
+    assert bare.jc_site_tagline() == "Prezrite si ich, stiahnite alebo sa na ne opýtajte asistenta."
+    assert "Otvorené dáta" not in bare.jc_site_tagline(), "the line does not repeat the title"
+    home = (THEME / "templates__home__index.html").read_text()
+    assert "h.jc_site_tagline()" in home
+
+
+def test_the_header_logo_is_the_instances_file_or_the_lockup(theme, monkeypatch, tmp_path):
+    """T-4636: a file name in the theme's public directory, never a path or another origin."""
+    assert theme.jc_site_logo() == "/jc-logo.svg"
+    for logo, served in (("city.svg", "/city.svg"), ("example-city_2.png", "/example-city_2.png"),
+                         ("../etc/passwd", "/jc-logo.svg"), ("https://evil.example/x.svg", "/jc-logo.svg"),
+                         ("/abs.svg", "/jc-logo.svg"), ("x.svg?a", "/jc-logo.svg"), ("", "/jc-logo.svg")):
+        module = _with_branding(theme, monkeypatch, tmp_path, dict(INSTANCE, siteLogo=logo))
+        assert module.jc_site_logo() == served, logo
+
+
+def test_the_connector_pages_questions_are_the_instances(theme, monkeypatch, tmp_path):
+    """T-4636: "Try it" lists the instance's own questions in the reader's language; with none,
+    the page has no such section and names no city."""
+    module = _with_branding(theme, monkeypatch, tmp_path, INSTANCE)
+    theme.page.lang = "en"
+    sections = module.jc_page("connector")["sections"]
+    assert sections[-1] == {"heading": "Try it", "paragraphs": ["How many buses run now?"]}
+    theme.page.lang = "sk"
+    assert module.jc_page("connector")["sections"][-1]["paragraphs"] == ["Koľko autobusov teraz jazdí?"]
+    theme.page.lang = "cs"
+    assert module.jc_page("connector")["sections"][-1]["paragraphs"] == ["Koľko autobusov teraz jazdí?"], \
+        "a language without questions takes the default language's"
+    assert module.jc_page("privacy")["sections"][-1]["heading"] != "Try it"
+    theme.page.lang = "en"
+    assert all(s["heading"] != "Try it" for s in theme.jc_page("connector")["sections"])
+    odd = _with_branding(theme, monkeypatch, tmp_path, dict(INSTANCE, samples={"en": ["ok", 3, " ", None]}))
+    assert odd.jc_page("connector")["sections"][-1]["paragraphs"] == ["ok"]
+
+
+def test_the_nuts_names_are_a_data_file_beside_the_plugin(theme):
+    """T-4636: the region names moved out of the code; the chart mounts the file beside plugin.py."""
+    assert theme.NUTS_NAMES["CZ010"]["en"] == "Prague"
+    chart = (PROJECT_ROOT / "charts/ckan/templates/ckan.yaml").read_text()
+    assert "mountPath: /srv/theme/ckanext_jc_theme/nuts.json" in chart
+
+
+def test_no_city_is_named_in_the_theme_code_or_the_chart_templates():
+    """T-4636 Done when: the city names live in the instance's values, not the theme or the chart."""
+    banned = re.compile(r"bansk|bbsk|žilin|zilin|praha|helsink|data\.dev", re.I)
+    files = [THEME / "plugin.py", *THEME.glob("*.html"), *(PROJECT_ROOT / "charts/ckan/templates").glob("*")]
+    for path in files:
+        text = path.read_text()
+        if path.suffix == ".html":
+            text = re.sub(r"\{#.*?#\}", lambda m: "\n" * m.group(0).count("\n"), text, flags=re.S)
+        if path.suffix in (".yaml", ".tpl"):
+            text = re.sub(r"\{\{-?\s*/\*.*?\*/\s*-?\}\}", lambda m: "\n" * m.group(0).count("\n"), text, flags=re.S)
+        for number, line in enumerate(text.splitlines(), 1):
+            code = line.split("#", 1)[0] if path.suffix in (".py", ".yaml") else line
+            assert not banned.search(code), f"{path.name}:{number}: {line.strip()}"
+
+
+# --- T-4641, ADR-N-053: a published chart is a jc_visualization view, framed from viz.{domain} --
+
+VIEW = {
+    "id": "6f1c2b9e-0d0a-4c35-9a51-3a3f8f6c1d20", "view_type": "jc_visualization", "package_id": "pocasie",
+    "title": "temperature-24h", "description": "",
+    "titles": json.dumps({"sk": "Teplota za 24 hodín", "en": "Temperature over 24 hours"}),
+    "descriptions": json.dumps({"sk": "Hodinový priemer", "en": "Hourly mean"}),
+    "spec": json.dumps({"$schema": "https://vega.github.io/schema/vega-lite/v5.json", "mark": "line"}),
+    "source": json.dumps({"source": "temporal", "type": "WeatherObserved"}), "endpoint": "3iasem46w7d7pxxypwdfdzheyaodv3qn",
+}
+
+
+def test_a_chart_is_framed_by_its_view_id_alone_on_the_renderer_host(theme):
+    theme.page.lang = "sk"
+    viz = theme.jc_visualization(VIEW)
+    assert viz["title"] == "Teplota za 24 hodín" and viz["description"] == "Hodinový priemer"
+    assert viz["src"] == "https://viz.dev.example/#%s&inline&lang=sk" % VIEW["id"]
+    # The frame names no spec, no Endpoint and no URL of data: the renderer reads those itself.
+    assert "3iasem46" not in viz["src"] and "vega" not in viz["src"]
+    assert 'src="https://viz.dev.example/#%s&lang=sk"' % VIEW["id"] in viz["code"]
+    assert 'sandbox="allow-scripts allow-same-origin allow-downloads allow-popups allow-popups-to-escape-sandbox"' in viz["code"]
+    theme.page.lang = "fi"
+    assert theme.jc_visualization(VIEW)["title"] == "Temperature over 24 hours", "the default language's"
+    theme.page.lang = "en"
+
+
+def test_a_title_cannot_break_out_of_the_embed_snippet(theme):
+    view = dict(VIEW, titles=json.dumps({"en": '"><script>alert(1)</script>'}))
+    code = theme.jc_visualization(view)["code"]
+    assert "<script>" not in code and "&quot;&gt;&lt;script&gt;" in code
+
+
+def test_only_a_jc_visualization_with_a_view_id_and_a_domain_becomes_a_chart(theme):
+    assert theme.jc_visualization(dict(VIEW, view_type="image_view")) is None
+    assert theme.jc_visualization(dict(VIEW, id="../../x")) is None
+    assert theme.jc_visualization(None) is None
+    theme.BRANDING["domain"] = "evil.example/x"
+    assert theme.jc_visualization(VIEW) is None and theme.jc_viz_origin() is None
+
+
+def test_the_dataset_lists_the_charts_of_every_resource_and_skips_what_it_may_not_read(theme):
+    views = {"r1": [{"id": "v", "view_type": "datatables_view"}, VIEW], "r2": theme.toolkit.NotAuthorized()}
+
+    def listed(d):
+        answer = views[d["id"]]
+        if isinstance(answer, Exception):
+            raise answer
+        return answer
+    theme.page.actions = {"resource_view_list": listed}
+    charts = theme.jc_visualizations({"resources": [{"id": "r2"}, {"id": "r1"}]})
+    assert [c["id"] for c in charts] == [VIEW["id"]]
+
+
+def test_the_view_type_is_never_offered_in_ckan_and_its_config_is_checked(theme):
+    plugin = theme.JcThemePlugin()
+    info = plugin.info()
+    assert info["name"] == "jc_visualization" and info["iframed"] is False and info["always_available"] is False
+    assert plugin.can_view({"resource": {"format": "CSV"}}) is False, "never in the New view list"
+    spec = info["schema"]["spec"][-1]
+    assert spec(VIEW["spec"]) == VIEW["spec"]
+    for bad in ("[1, 2]", "not json", json.dumps({"a": "x" * 210_000})):
+        with pytest.raises(theme.toolkit.Invalid):
+            spec(bad)
+    slug = info["schema"]["endpoint"][-1]
+    assert slug(VIEW["endpoint"]) == VIEW["endpoint"]
+    for bad in ("https://evil.example/", "../x", "ABC"):
+        with pytest.raises(theme.toolkit.Invalid):
+            slug(bad)
+    assert plugin.view_template({}, {}) == "jc/visualization.html"
+    assert plugin.setup_template_variables({}, {"resource_view": VIEW})["viz"]["id"] == VIEW["id"]
+
+
+def test_the_dataset_page_shows_the_charts_and_sizes_their_frames_from_the_renderer_only():
+    read = (THEME / "templates__package__read.html").read_text()
+    assert read.index("jc_visualizations.html") < read.index("h.jc_about(pkg)"), "the charts follow the table"
+    assert "/jc-viz.js" in read and "/jc-viz.js" in (THEME / "templates__package__resource_read.html").read_text()
+    figure = (THEME / "templates__jc__visualization.html").read_text()
+    assert 'sandbox="allow-scripts allow-same-origin allow-downloads"' in figure and 'data-jc-viz="{{ viz.origin }}"' in figure
+    script = (THEME / "public__jc-viz.js").read_text()
+    assert "frame.contentWindow === event.source" in script
+    assert 'frame.getAttribute("data-jc-viz") === event.origin' in script
+
+
+def test_ckan_answers_cors_for_the_renderer_alone(rendered):
+    ckan = next(d for d in rendered("dev") if d.get("kind") == "Deployment" and d["metadata"]["name"] == "ckan")
+    env = {e["name"]: e.get("value") for c in ckan["spec"]["template"]["spec"]["containers"] for e in c.get("env", [])}
+    assert env["CKAN__CORS__ORIGIN_WHITELIST"] == "https://viz.dev.joinedcontext.com"
+    assert "CKAN__CORS__ORIGIN_ALLOW_ALL" not in env
+# --- T-4639: the dataset map and its framable page -------------------------------------------
+
+
+MAP_PKG = {"name": "pocasie", "title": "Počasie", "resources": [
+    {"id": "o", "format": "OGCFEAT", "url": "https://dev.example/api/endpoint/abc/ogc/features/"},
+    {"id": "x", "format": "OGCFEAT", "url": "https://elsewhere.example/api/endpoint/abc/ogc/features/"},
+    {"id": "w", "name": "WeatherObserved", "datastore_active": True},
+    {"id": "b", "name": "not a type", "datastore_active": True},
+    {"id": "c", "name": "CSV"},
+]}
+
+
+@pytest.fixture
+def mapped(theme, tmp_path, monkeypatch):
+    vendor = tmp_path / "vendor"
+    vendor.mkdir()
+    monkeypatch.setattr(theme, "VENDOR", str(vendor))
+    theme.toolkit.url_for = lambda route, **kw: "https://data.dev.example/%s/%s" % (route, kw["id"])
+    theme.page.actions["datastore_search"] = lambda d: {"total": 0, "fields": []}
+    return theme
+
+
+def test_the_map_reads_each_table_s_type_from_the_dataset_s_own_ogc_features(mapped):
+    config = mapped.jc_map(MAP_PKG)
+    base = "https://dev.example/api/endpoint/abc/ogc/features/collections/WeatherObserved"
+    assert config["layers"] == [{"type": "WeatherObserved", "items": base + "/items", "schema": base + "/schema"}]
+    assert config["lib"] == "/maplibre-gl-6.14.0/maplibre-gl.mjs"
+    assert config["embed"] == "https://data.dev.example/jc_pages.map/pocasie"
+    assert config["title"] == "Počasie" and set(config["t"]) >= {"map_cap", "map_close", "map_area"}
+    # One table only, by its resource id; a dataset filter on a shared Endpoint stays on the items.
+    assert mapped.jc_map(MAP_PKG, resource_id="b") is None
+    shared = {"name": "od", "resources": [
+        {"format": "OGCFEAT", "url": "https://dev.example/api/endpoint/od/ogc/features/collections/Obs/items?isPartOf=urn%3Ax"},
+        {"id": "s", "name": "Obs", "datastore_active": True}, {"id": "t", "name": "Other", "datastore_active": True}]}
+    layers = mapped.jc_map(shared)["layers"]
+    assert layers == [{"type": "Obs", "items": "https://dev.example/api/endpoint/od/ogc/features/collections/Obs/items?isPartOf=urn%3Ax",
+                       "schema": "https://dev.example/api/endpoint/od/ogc/features/collections/Obs/schema"}]
+
+
+def test_no_map_without_the_library_an_ogc_address_on_our_host_or_a_table(mapped, monkeypatch):
+    assert mapped.jc_map({"resources": [r for r in MAP_PKG["resources"] if r["id"] != "o"]}) is None
+    assert mapped.jc_map({"resources": [r for r in MAP_PKG["resources"] if r["id"] != "w"]}) is None
+    assert mapped.jc_map(None) is None
+    monkeypatch.setattr(mapped, "VENDOR", "/nonexistent")
+    assert mapped.jc_map(MAP_PKG) is None
+
+
+@pytest.mark.parametrize("value, expected", [
+    # T-4661: OpenStreetMap's own tile servers are no basemap: their policy refuses production use.
+    ({"tiles": "https://tile.openstreetmap.org/{z}/{x}/{y}.png"}, {}),
+    ({"style": "https://tiles.dev.example/styles/light.json"}, {"style": "https://tiles.dev.example/styles/light.json"}),
+    ({"style": "https://tiles.evil.example/styles/light.json"}, {}),
+    ({"tiles": "https://a.tile.example/{z}/{x}/{y}.png"}, {}),
+    ("not json", {}),
+    ([], {}),
+])
+def test_the_basemap_is_the_tiles_host_s_style_or_none(theme, monkeypatch, value, expected):
+    monkeypatch.setenv("JC_MAP_BASEMAP", value if isinstance(value, str) else json.dumps(value))
+    assert theme._basemap() == expected
+
+
+def test_the_map_page_is_a_404_for_an_unknown_or_unmapped_dataset(mapped):
+    class Abort(Exception):
+        pass
+
+    def abort(code):
+        raise Abort(code)
+
+    mapped.toolkit.abort = abort
+    mapped.toolkit.render = lambda template, extra: (template, extra)
+    mapped.page.actions["package_show"] = mapped.toolkit.ObjectNotFound()
+    with pytest.raises(Abort):
+        mapped.jc_map_page("nope")
+    mapped.page.actions["package_show"] = lambda d: {"name": d["id"], "resources": []}
+    with pytest.raises(Abort):
+        mapped.jc_map_page("empty")
+    mapped.page.actions["package_show"] = lambda d: MAP_PKG
+    (template, extra), status, headers = mapped.jc_map_page("pocasie", "w")
+    assert template == "jc/map.html" and extra["jc_map_config"]["layers"][0]["type"] == "WeatherObserved"
+    # The page owns its policy (OPS-34): any site may frame it, nothing else is loosened.
+    assert status == 200 and headers == {"Content-Security-Policy": "frame-ancestors *; object-src 'none'; base-uri 'self'"}
+
+
+def test_the_map_page_may_be_framed_anywhere_and_carries_no_cookie():
+    plugins = yaml.safe_load((PROJECT_ROOT / "components/ckan/apisix-plugins.yaml").read_text())["ckan-map"]["plugins"]
+    assert "X-Frame-Options" not in plugins["response-rewrite"]["headers"]["set"]
+    assert plugins["response-rewrite"]["headers"]["remove"] == ["Set-Cookie"]
+    route = yaml.safe_load((PROJECT_ROOT / "components/ckan/apisix-routes.yaml").read_text())["ckan-map"]
+    pattern = re.compile(route["vars"][0][2])
+    for path in ("/map/pocasie", "/sk/map/pocasie", "/en_GB/map/pocasie/6c9b58e0"):
+        assert pattern.search(path), path
+    for path in ("/dataset/pocasie/map", "/map/", "/map/a/b/c", "/xmap/a", "/sk/dataset/map/a"):
+        assert not pattern.search(path), path
+    page = (THEME / "templates__jc__map.html").read_text()
+    assert "<form" not in page and "csrf" not in page.lower() and "{% extends" not in page
+
+
+def test_the_map_library_is_pinned_by_checksum_and_served_where_the_theme_asks():
+    dockerfile = (PROJECT_ROOT / "images/ckan/Dockerfile").read_text()
+    assert re.search(r"ADD --checksum=sha256:[0-9a-f]{64} \\\n    https://registry\.npmjs\.org/maplibre-gl/-/maplibre-gl-6\.14\.0\.tgz", dockerfile)
+    assert "/srv/app/vendor/maplibre-gl-6.14.0/" in dockerfile and "MapLibre GL JS 6.14.0 (BSD-3-Clause" in dockerfile
+    plugin = (THEME / "plugin.py").read_text()
+    assert 'MAPLIBRE = "/maplibre-gl-6.14.0/"' in plugin and 'VENDOR = "/srv/app/vendor"' in plugin
+    snippet = (THEME / "templates__snippets__jc_map.html").read_text()
+    assert "url_for_static('/maplibre-gl-6.14.0/maplibre-gl.css')" in snippet
+
+
+def test_the_map_card_stays_hidden_until_a_feature_has_a_geometry():
+    page = (THEME / "templates__package__read.html").read_text()
+    assert '<details class="jc-table jc-map-card" open hidden>' in page
+    assert "<script type=\"module\" src=\"{{ h.url_for_static('/jc-map.js') }}\"></script>" in page
+    script = (THEME / "public__jc-map.js").read_text()
+    assert script.index("if (!latest.features.length) {") < script.index("card.hidden = false")
+    # T-4661: no probe of one feature before the page: one round trip before the first point.
+    assert 'limit: "1"' not in script and "probe(" not in script
+    # Values reach the page as text only, and a `next` link never leaves the layer's address.
+    assert "innerHTML" not in script and "insertAdjacentHTML" not in script
+    assert "candidate.origin === base.origin && candidate.pathname === base.pathname" in script
+    assert 'credentials: "omit"' in script
+
+
+@pytest.mark.skipif(not shutil.which("node"), reason="node is not installed")
+def test_the_panel_reads_like_the_data_and_measures_lines_and_areas():
+    script = (THEME / "public__jc-map.js").resolve().as_uri()
+    code = """
+import { describe, length, area } from %s;
+import { readFileSync } from "node:fs";
+const t = { map_length: "Dĺžka", map_area: "Plocha" };
+const schema = { temperature: { "x-ogc-unit": "Cel", description: "Air temperature" }, windDirection: { "x-ogc-unit": "deg" },
+  dateObserved: { format: "date-time" } };
+const point = { id: "urn:ngsi-ld:W:1", geometry: { type: "Point", coordinates: [19, 48] }, properties: {
+  name: { languageMap: { en: "Donovaly station", sk: "Stanica Donovaly" } }, temperature: 12.4, windDirection: 38.5,
+  dateObserved: new Date(Date.now() - 5 * 60000).toISOString(), refParent: "urn:x", other: "urn:ngsi-ld:A:1",
+  nested: { a: 1 }, type: "W", id: "urn:x", _layer: 0, _id: "urn:ngsi-ld:W:1", _n: 0, note: "<b>x</b>" } };
+const line = { geometry: { type: "LineString", coordinates: [[19, 48], [19, 48.01]] }, properties: { _id: "urn:ngsi-ld:R:road-7" } };
+const square = { geometry: { type: "Polygon", coordinates: [[[19, 48], [19.01, 48], [19.01, 48.01], [19, 48.01], [19, 48]]] }, properties: {} };
+const enums = JSON.parse(readFileSync(%s, "utf8"));
+const layers = [{ fields: [
+  { a: "temperature", l: { sk: "Teplota", en: "Temperature" }, s: true },
+  { a: "windDirection", l: { sk: "Smer vetra" }, s: true },
+  { a: "dateObserved", l: { sk: "Dátum pozorovania" }, s: false },
+  { a: "note", l: {}, s: false } ] }];
+console.log(JSON.stringify({
+  point: describe(point, schema, { lang: "sk", t, enums, layers }),
+  line: describe(line, {}, { lang: "en", t }),
+  square: describe(square, {}, { lang: "en", t }),
+  length: length(line.geometry), area: area(square.geometry) }));
+""" % (json.dumps(script), json.dumps(str(THEME / "public__jc-enums.json")))
+    done = subprocess.run(["node", "--input-type=module", "-e", code], capture_output=True, text=True, timeout=60)
+    assert done.returncode == 0, done.stderr
+    out = json.loads(done.stdout)
+    rows = dict((label, value) for label, value, _, _ in out["point"]["rows"] + out["point"]["more"])
+    # The key attributes come first; the rest folds under "Viac" (T-4672).
+    assert [r[0] for r in out["point"]["rows"]] == ["Teplota", "Smer vetra"]
+    assert out["point"]["title"] == "Stanica Donovaly"
+    assert rows["Teplota"] == "12,4\u00a0°C" and rows["Smer vetra"] == "38,5°"
+    assert rows["Dátum pozorovania"] == "pred 5 minútami"
+    assert rows["Note"] == "<b>x</b>"  # shown as text by textContent, never parsed
+    assert not {"refParent", "Other", "Nested", "Typ", "id", "_layer", "_id", "_n", "Názov"} & set(rows)
+    assert out["line"]["title"] == "road-7"
+    assert out["line"]["rows"][0][0] == "Dĺžka" and re.fullmatch(r"1\.1\d\u00a0km", out["line"]["rows"][0][1])
+    assert 1100 < out["length"] < 1125  # 0.01° of latitude
+    assert 0.8e6 < out["area"] < 0.85e6 and out["square"]["rows"][0][1].endswith("\u00a0ha")
+
+
+# T-4672: the popup reads in the order, with the labels and key attributes, the publisher wrote
+# into the DataStore table from the data model; the theme keeps only its words for code values.
+def test_the_theme_keeps_only_its_enum_words():
+    words = json.loads((THEME / "public__jc-enums.json").read_text())
+    assert set(words) == {"$comment", "enums"}
+    assert words["enums"]["museumsGalleriesLibraries"]["sk"] == "Múzeá, galérie, knižnice"
+    assert not (THEME / "public__jc-field-order.json").exists(), "no copy of jc-core's heuristic"
+
+
+# What the BB events table carries after `jcctl publish`, as plugin._display_fields gives it.
+EVENT_FIELDS = [
+    {"a": "startDate", "l": {"sk": "Začiatok", "en": "Start"}, "s": True},
+    {"a": "address", "l": {"sk": "Adresa", "en": "Address"}, "s": True},
+    {"a": "endDate", "l": {"sk": "Koniec", "en": "End"}, "s": False},
+    {"a": "eventCategory", "l": {"sk": "Kategória", "en": "Category"}, "s": False},
+    {"a": "url", "l": {"sk": "Odkaz", "en": "Link"}, "s": False},
+    {"a": "source", "l": {"sk": "Zdroj", "en": "Source"}, "s": False},
+    {"a": "dataProvider", "l": {"sk": "Poskytovateľ", "en": "Data provider"}, "s": False},
+    {"a": "dateModified", "l": {"sk": "Zmenené", "en": "Modified"}, "s": False},
+]
+
+
+def _describe(feature, lang="sk", fields=EVENT_FIELDS):
+    script = (THEME / "public__jc-map.js").resolve().as_uri()
+    code = """
+import { describe } from %s;
+import { readFileSync } from "node:fs";
+const enums = JSON.parse(readFileSync(%s, "utf8"));
+console.log(JSON.stringify(describe(%s, {}, { lang: %s, t: {}, enums, layers: [{ fields: %s }] })));
+""" % (json.dumps(script), json.dumps(str(THEME / "public__jc-enums.json")), json.dumps(feature), json.dumps(lang),
+       json.dumps(fields))
+    done = subprocess.run(["node", "--input-type=module", "-e", code], capture_output=True, text=True, timeout=60)
+    assert done.returncode == 0, done.stderr
+    return json.loads(done.stdout)
+
+
+EVENT = {"geometry": {"type": "Point", "coordinates": [19.15, 48.73]}, "properties": {
+    "dataProvider": "Mesto Banská Bystrica", "dateModified": "2026-10-09T10:42:00Z", "endDate": "2026-11-10",
+    "eventCategory": "museumsGalleriesLibraries", "name": {"languageMap": {"sk": "Výstava v Bábkarskej dielni"}},
+    "source": "https://www.banskabystrica.sk/podujatia/", "startDate": "2026-10-15", "startTime": "18:00",
+    "url": "https://www.banskabystrica.sk/podujatie/123", "price": 5, "_layer": 0, "_id": "urn:ngsi-ld:Event:1", "_n": 0}}
+
+
+@pytest.mark.skipif(not shutil.which("node"), reason="node is not installed")
+def test_an_event_shows_its_key_attributes_then_the_rest_in_the_tables_order_and_labels():
+    out = _describe(EVENT)
+    assert out["title"] == "Výstava v Bábkarskej dielni"
+    # Key attributes first, the rest under "Viac"; `price` is no column of the table: not shown.
+    assert [row[0] for row in out["rows"]] == ["Začiatok"]
+    assert [row[0] for row in out["more"]] == ["Koniec", "Kategória", "Odkaz", "Zdroj", "Poskytovateľ", "Zmenené"]
+    rows = {row[0]: row for row in out["rows"] + out["more"]}
+    # The start takes its time along; the time is no row of its own.
+    assert rows["Začiatok"][1] == "15. 10. 2026, 18:00" and "Čas" not in rows
+    assert rows["Koniec"][1] == "10. 11. 2026"
+    assert rows["Kategória"][1] == "Múzeá, galérie, knižnice"
+    assert rows["Odkaz"][1:] == ["https://www.banskabystrica.sk/podujatie/123", "", "link"]
+    assert [rows[k][3] for k in ("Zdroj", "Poskytovateľ", "Zmenené")] == ["meta", "meta", "meta"]
+    # On an English page the same table reads in English (T-4648).
+    english = _describe(EVENT, "en")
+    assert [row[0] for row in english["rows"] + english["more"]][:3] == ["Start", "End", "Category"]
+
+
+@pytest.mark.skipif(not shutil.which("node"), reason="node is not installed")
+def test_only_an_http_address_is_a_link_and_an_unknown_code_reads_as_words():
+    feature = {"geometry": None, "properties": {"url": "javascript:alert(1)", "eventCategory": "openAirCinema",
+                                                "startDate": "2026-10-15T18:00:00", "startTime": "19:00", "_layer": 0}}
+    out = _describe(feature, "en")
+    rows = {row[0]: row for row in out["rows"] + out["more"]}
+    assert rows["Link"][1:] == ["javascript:alert(1)", "", ""]
+    assert rows["Category"][1] == "Open air cinema"
+    # A start that has its time keeps it, and the separate time is not repeated.
+    assert "Start time" not in rows and rows["Start"][1].startswith("Oct 15, 2026")
+
+
+@pytest.mark.skipif(not shutil.which("node"), reason="node is not installed")
+def test_without_the_tables_order_the_panel_still_shows_every_value():
+    out = _describe(EVENT, "sk", fields=[])
+    assert len(out["rows"]) == 8 and out["more"] == [] and out["rows"][0][0] == "Data provider"
+
+
+def test_the_map_layer_carries_the_order_labels_and_key_flags_of_its_table(mapped):
+    mapped.page.actions["datastore_search"] = lambda d: {"total": 2, "fields": [
+        {"id": "entity_id", "type": "text", "info": {"label": "Identifikátor"}},
+        {"id": "name.languageMap.sk", "type": "text", "info": {"label": "Názov", "labels": {"sk": "Názov", "en": "Name"}, "summary": True}},
+        {"id": "address.value.streetAddress", "type": "text", "info": {"label": "Ulica", "labels": {"sk": "Ulica"}}},
+        {"id": "address.value", "type": "text", "info": {"label": "Adresa", "labels": {"sk": "Adresa", "en": "Address"}}},
+        {"id": "_id", "type": "int"},
+    ]}
+    assert mapped.jc_map(MAP_PKG)["layers"][0]["fields"] == [
+        {"a": "name", "l": {"sk": "Názov", "en": "Name"}, "s": True},
+        {"a": "address", "l": {"sk": "Adresa", "en": "Address"}, "s": False},
+    ]
+    # A table the publisher wrote before T-4672 carries no labels: no fields, the popup's fallback.
+    mapped.page.actions["datastore_search"] = lambda d: {"fields": [{"id": "name.value", "type": "text", "info": {"label": "Názov"}}]}
+    assert "fields" not in mapped.jc_map(MAP_PKG)["layers"][0]
+    mapped.page.actions["datastore_search"] = mapped.toolkit.NotAuthorized()
+    assert "fields" not in mapped.jc_map(MAP_PKG)["layers"][0]
+
+
+def test_the_map_page_loads_the_labels_and_the_basemap_from_our_hosts_only():
+    plugin = (THEME / "plugin.py").read_text()
+    assert '"enums": "/jc-enums.json"' in plugin and 'PMTILES = "/pmtiles-4.5.0.js"' in plugin
+    assert "openstreetmap" not in (THEME / "public__jc-map.js").read_text()
+    import hashlib
+    pmtiles = (THEME / "public__pmtiles-4.5.0.js").read_bytes()
+    # pmtiles 4.5.0 (BSD-3-Clause), package/dist/pmtiles.js as npm publishes it; the viz map's copy.
+    assert hashlib.sha256(pmtiles).hexdigest() == "caf981bc46f6327ee7e65d5dc964d89d38a69f60edca2bd4c5c890c21b554c6c"
+    snippet = (THEME / "templates__snippets__jc_map.html").read_text()
+    assert "{% if jc_map_config.pmtiles %}<script src=\"{{ h.url_for_static(jc_map_config.pmtiles) }}\"></script>{% endif %}" in snippet
+
+
+def test_no_ckan_values_point_a_map_at_openstreetmap_s_tile_servers():
+    files = [PROJECT_ROOT / "charts/ckan/values.yaml", *sorted((PROJECT_ROOT / "components/ckan").rglob("*.y*ml*"))]
+    for path in files:
+        assert "tile.openstreetmap.org" not in path.read_text(), path
+    dev = (PROJECT_ROOT / "components/ckan/values/catalogue/development-values.yaml.gotmpl").read_text()
+    assert "style: https://tiles.{{ .Values.global.domain }}/styles/light-sk.json" in dev
+
+
+def test_the_table_headers_are_the_publisher_s_labels_and_id_reads_as_a_row_number():
+    css = (THEME / "public__jc-theme.css").read_text()
+    assert 'body.dt-view #dtprv thead th[data-name="_id"] { font-size: 0; }' in css
+    assert 'content: "#"' in css
+    # CKAN shows `info.label` while data_dictionary_labels is on, its default; nothing turns it off.
+    for path in [PROJECT_ROOT / "charts/ckan/values.yaml", *(PROJECT_ROOT / "components/ckan").rglob("*.y*ml*"),
+                 *(PROJECT_ROOT / "charts/ckan/templates").glob("*.yaml")]:
+        assert "data_dictionary_labels" not in path.read_text().lower(), path
+
+
+# T-4643: Gemini's card behind its flag, and one guide per assistant for a non-technical reader.
+def test_gemini_has_a_card_and_a_guide_only_while_its_flag_is_on(theme, monkeypatch):
+    assert theme.jc_assistant_guide("gemini") is None
+    monkeypatch.setenv("JC_ASSISTANT_GEMINI", "1")
+    assert theme.jc_assistant_guide("gemini") is None, "only the chart's literal true turns it on"
+    monkeypatch.setenv("JC_ASSISTANT_GEMINI", "true")
+    cards = theme.jc_assistants()["cards"]
+    assert [card["id"] for card in cards] == ["chatgpt", "claude", "grok", "gemini"]
+    assert cards[-1]["open"] == theme.GEMINI_APPS == "https://gemini.google.com/apps"
+    assert theme.jc_assistant_guide("gemini")["name"] == "Gemini"
+    html = render("jc/assistants.html", theme)
+    assert 'id="jc-card-gemini"' in html and 'href="/assistants/gemini"' in html
+
+
+def test_an_unknown_assistant_or_no_hub_has_no_guide_and_its_page_is_a_404(theme):
+    theme.toolkit.abort = lambda code: ("abort", code)
+    theme.toolkit.render = lambda template, extra: (template, extra)
+    for id in ("gemini", "copilot", "", "../chatgpt", "__class__"):
+        assert theme.jc_assistant_guide(id) is None and theme.jc_guide_page(id) == ("abort", 404), id
+    assert theme.jc_guide_page("claude")[0] == "jc/guide.html"
+    theme.BRANDING["domain"] = "dev.example/evil"
+    assert theme.jc_assistant_guide("claude") is None
+
+
+MAKERS = {"chatgpt": ("chatgpt.com", "help.openai.com"), "claude": ("claude.ai", "support.claude.com"),
+          "grok": ("grok.com", "docs.x.ai"), "gemini": ("gemini.google.com", "support.google.com")}
+TECHNICAL = re.compile(r"\b(MCP|OAuth|endpoint|JSON)\b", re.I)
+
+
+def test_every_guide_is_written_in_four_languages_with_the_same_steps(theme):
+    assert list(theme.GUIDES) == list(MAKERS)
+    for id, guide in theme.GUIDES.items():
+        assert {"sk", "en", "cs", "de"} <= set(guide) and re.fullmatch(r"\d{4}-\d{2}-\d{2}", guide["checked"]), id
+        counts = {lang: len(guide[lang]["steps"]) for lang in ("sk", "en", "cs", "de")}
+        assert len(set(counts.values())) == 1 and 3 <= counts["en"] <= 8, (id, counts)
+        assert 0 <= guide["paste"] < counts["en"], id
+        for lang in ("sk", "en", "cs", "de"):
+            words = guide[lang]
+            assert 1 <= len(words["who"]) <= 2 and 2 <= len(words["trouble"]) <= 3, (id, lang)
+            # The step that asks for the address is the one its box follows.
+            assert words["steps"][guide["paste"]].endswith(":"), (id, lang)
+            text = " ".join(words["who"] + words["steps"] + [t for pair in words["trouble"] for t in pair])
+            assert not TECHNICAL.search(text), (id, lang, TECHNICAL.search(text))
+            # T-4628: the owner read English store words inside the Slovak steps.
+            if lang in ("sk", "cs"):
+                assert not re.search(r"Add custom|Create as|New Connector|Connected Apps", text), (id, lang)
+
+
+@pytest.mark.parametrize("lang, checked", [("sk", "Overené dňa"), ("en", "Checked on"), ("cs", "Ověřeno dne"), ("de", "Geprüft am")])
+@pytest.mark.parametrize("id", list(MAKERS))
+def test_each_guide_page_reads_top_to_bottom_without_a_technical_word(theme, monkeypatch, id, lang, checked):
+    monkeypatch.setenv("JC_ASSISTANT_GEMINI", "true")
+    theme.page.lang = lang
+    guide = theme.jc_assistant_guide(id)
+    html = render("jc/guide.html", theme, jc_guide=guide)
+    steps = re.search(r'<ol class="jc-guide-steps">(.*?)</ol>', html, re.S).group(1)
+    items = re.findall(r"<li>(.*?)</li>", steps, re.S)
+    assert len(items) == len(theme.GUIDES[id]["en"]["steps"]) and "{name}" not in html
+    # The address once, in a box inside the step that asks for it, with the one copy button.
+    hub = "https://api.dev.example/api/mcp"
+    boxed = [i for i, item in enumerate(items) if 'id="jc-store-url"' in item]
+    assert boxed == [theme.GUIDES[id]["paste"]] and html.replace("<wbr>", "").count(hub) == 1
+    assert html.count("<button") == 1 and html.count("data-jc-copy=") == 1
+    assert f"{checked} {theme.GUIDES[id]['checked']}" in html
+    # Links only to the maker's own domains, and back to our own pages.
+    for href in re.findall(r'href="([^"]*)"', html):
+        host = urlsplit(href).hostname
+        assert host is None and href.startswith("/assistants") or host in MAKERS[id], href
+    assert theme.GUIDES[id]["help"] in html and "<script>" not in html
+    # What a reader reads: the page's words, without the address box and the help page's address.
+    text = re.sub(r'<span id="jc-store-url".*?</span>', "", html, flags=re.S).replace(theme.GUIDES[id]["help"], "")
+    text = re.sub(r"<[^>]+>", " ", text)
+    assert not TECHNICAL.search(text), TECHNICAL.search(text)
+    assert guide["example"] in html and len(re.findall(r"<dt>", html)) == len(guide["trouble"])
+
+
+def test_a_guide_asks_the_instance_s_own_question_first(theme, monkeypatch):
+    theme.BRANDING["samples"] = {"sk": ["Aké podujatia sú zajtra v Banskej Bystrici?"]}
+    theme.page.lang = "sk"
+    assert theme.jc_assistant_guide("grok")["example"] == "Aké podujatia sú zajtra v Banskej Bystrici?"
+    theme.BRANDING["samples"] = {}
+    assert theme.jc_assistant_guide("grok")["example"] == "Aké datasety o kvalite ovzdušia máte?"
+    # Gemini answers in English only, so its guide asks in English on a Slovak page too.
+    monkeypatch.setenv("JC_ASSISTANT_GEMINI", "true")
+    assert theme.jc_assistant_guide("gemini")["example"] == "Which datasets about air quality do you have?"
+
+
+def test_the_guide_link_stays_its_own_target_above_the_card_link_and_wraps_on_a_phone():
+    css = (THEME / "public__jc-theme.css").read_text()
+    assert ".jc-card-guide { position: relative; z-index: 1; }" in css
+    assert ".jc-card-links { margin: auto 0 0; display: flex; flex-wrap: wrap;" in css
+    assert ".jc-guide-checked { color: var(--jc-muted); overflow-wrap: anywhere; }" in css
+
+
+# T-4659: the assistants page lists the websites the hub's search_documents reads.
+def test_the_assistants_page_lists_the_hub_s_websites_and_drops_a_malformed_entry(theme, monkeypatch):
+    monkeypatch.setenv("JC_ASSISTANT_SOURCES", json.dumps([
+        {"publisher": "banskabystrica", "url": "https://www.banskabystrica.sk/", "languages": ["sk"]},
+        {"publisher": "helsinki", "url": "https://www.hel.fi/", "languages": ["fi", "sv", "en"]},
+        {"publisher": "evil", "url": "javascript:alert(1)", "languages": []},
+        {"publisher": "plain", "url": "http://example.org/", "languages": []},
+        {"url": "https://nopublisher.example/"},
+        "not an entry",
+    ]))
+    assert theme.jc_assistants()["sources"] == [
+        {"site": "www.banskabystrica.sk", "url": "https://www.banskabystrica.sk/", "publisher": "banskabystrica", "languages": "sk"},
+        {"site": "www.hel.fi", "url": "https://www.hel.fi/", "publisher": "helsinki", "languages": "fi, sv, en"},
+    ]
+    monkeypatch.setenv("JC_ASSISTANT_SOURCES", "{not json")
+    assert theme.jc_assistant_sources() == []
+    monkeypatch.delenv("JC_ASSISTANT_SOURCES")
+    assert theme.jc_assistant_sources() == []
+    template = (THEME / "templates__jc__assistants.html").read_text()
+    assert "{% if page.sources %}" in template and 'aria-labelledby="jc-assistant-sources"' in template
+    for key in ("assistants_sources", "assistants_sources_lead", "assistants_source_languages"):
+        assert set(theme.STRINGS[key]) == {"en", "sk", "cs", "de"}, key
+
+
+def test_dev_lists_the_hub_s_knowledge_sources_as_the_seed_declares_them():
+    """The page's list is the gateway's hub list, each site the seed source's first start URL and
+    its languages, so the page never names a site the hub does not search."""
+    root = Path(__file__).resolve().parent.parent
+    values = (root / "components/ckan/values/catalogue/development-values.yaml.gotmpl").read_text()
+    block = values[values.index("\nassistants:\n"):]
+    listed = yaml.safe_load(block.split("\n\n")[0])["assistants"]["sources"]
+    gateway = (root / "components/context-gateway/values/gateway/base-values.yaml.gotmpl").read_text()
+    (hub,) = [line.split(":", 1)[1].strip().strip('"') for line in gateway.splitlines()
+              if "JC_GATEWAY_HUB_KNOWLEDGE_SOURCES:" in line]
+    assert [f"{s['publisher']}/web" for s in listed] == hub.split(",")
+    for s in listed:
+        seed = yaml.safe_load((root / f"components/context-gateway/seed/{s['publisher']}/{s['publisher']}-knowledge-web.yaml").read_text())
+        assert s["url"] == seed["spec"]["startUrls"][0], s
+        assert s["languages"] == seed["spec"]["languages"], s
+
+
+LABELLED_SEEDS = ["banskabystrica/banskabystrica-verejne", "helsinki/helsinki"]
+
+
+@pytest.mark.parametrize("seed", LABELLED_SEEDS)
+def test_every_attribute_the_map_popup_shows_has_a_label_in_sk_cs_en_and_de(seed):
+    """T-4648: the popup reads the model's labels in the page's language, so an attribute without
+    one would read in English words on a Slovak, Czech or German page."""
+    model = yaml.safe_load((PROJECT_ROOT / f"components/context-gateway/seed/{seed}.linkml.yaml").read_text())
+    slots = model.get("slots") or {}
+    missing = []
+    for name, cls in (model.get("classes") or {}).items():
+        usage = cls.get("slot_usage") or {}
+
+        def label(slot):
+            for node in (usage.get(slot) or {}, slots.get(slot) or {}):
+                found = (node.get("annotations") or {}).get("label")
+                if found:
+                    return found["value"]
+            return None
+
+        # A class the model gives labels of its own; the others keep their attribute names for now.
+        if not any((node.get("annotations") or {}).get("label") for node in usage.values()):
+            continue
+        for slot in cls.get("slots") or []:
+            if slot == "location" or re.match(r"^ref[A-Z]", slot) or (slots.get(slot) or {}).get("range") in model.get("classes", {}):
+                continue
+            labels = label(slot) or {}
+            gaps = {"sk", "cs", "en", "de"} - set(labels)
+            if gaps:
+                missing.append(f"{name}.{slot}: {sorted(gaps)}")
+    assert not missing, missing

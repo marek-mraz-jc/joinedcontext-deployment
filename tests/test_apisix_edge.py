@@ -167,6 +167,7 @@ RATE_CLASSES = {
 ROUTE_RATE_CLASSES = {
     "context-space-read": ("dataRead", 1200, "context-space"),
     "context-space-portal-read": ("dataRead", 1200, "context-space-portal"),
+    "api-context-space-read": ("dataRead", 1200, "api-context-space"),
 }
 
 
@@ -189,7 +190,7 @@ def test_the_organization_tunes_each_class_by_its_label(rendered):
 
 
 # The named MCP servers' anonymous callers, per client IP a minute (T-4141).
-ANONYMOUS_ROUTE_LIMITS = {"context-mcp-named": 60, "context-mcp-named-portal": 60}
+ANONYMOUS_ROUTE_LIMITS = {"context-mcp-named": 60, "context-mcp-named-portal": 60, "api-mcp-named": 60}
 
 
 def test_space_reads_and_writes_count_apart(rendered):
@@ -203,7 +204,7 @@ def test_space_reads_and_writes_count_apart(rendered):
     for route_id, (rate_class, count, chain) in ROUTE_RATE_CLASSES.items():
         read, write = routes[route_id], routes[chain]
         assert read["labels"] == {"jc-rate-class": rate_class}, route_id
-        assert read["plugin_config_id"] == write["plugin_config_id"] == chain, route_id
+        assert read["plugin_config_id"] == write["plugin_config_id"], route_id
         assert read["methods"] == ["GET", "HEAD"] and "methods" not in write, route_id
         assert (read["uri"], read.get("host")) == (write["uri"], write.get("host")), route_id
         assert read["priority"] > write["priority"], route_id
@@ -223,6 +224,9 @@ def test_space_reads_and_writes_count_apart(rendered):
             # year-long cache of a content-hashed file (tests/test_edge_asset_cache.py); the
             # limit is the config's, unchanged.
             assert "labels" not in route and set(route["plugins"]) == {"serverless-post-function"}, route["id"]
+        elif route["id"] == "api-oauth":
+            # T-4630, ADR-N-052 §4: minting an anonymous token counts per client address.
+            assert "labels" not in route and set(route["plugins"]) == {"limit-count"}, route["id"]
         elif route["id"] not in ROUTE_RATE_CLASSES:
             assert "labels" not in route and "plugins" not in route, route["id"]
 
@@ -392,10 +396,14 @@ def test_new_hostnames_are_proven_on_the_staging_issuer_first(rendered, rendered
     assert certificate["secretName"] == "apisix-edge-staging-tls"
     assert certificate["dnsNames"] == [
         "next.example.org",
+        "api.next.example.org",
         "assistant.next.example.org",
         "data.next.example.org",
         "idm.next.example.org",
+        "opendata.next.example.org",
         "portal.next.example.org",
+        "tiles.next.example.org",
+        "viz.next.example.org",
     ]
     assert not any("*" in name for name in certificate["dnsNames"]), "no wildcard over HTTP-01"
 
@@ -419,10 +427,14 @@ def test_certificate_covers_the_apex_and_every_routed_subdomain(rendered):
     # on the certificate three times (ADR-N-019).
     assert certificate["spec"]["dnsNames"] == [
         "dev.joinedcontext.com",
+        "api.dev.joinedcontext.com",
         "assistant.dev.joinedcontext.com",
         "data.dev.joinedcontext.com",
         "idm.dev.joinedcontext.com",
+        "opendata.dev.joinedcontext.com",
         "portal.dev.joinedcontext.com",
+        "tiles.dev.joinedcontext.com",
+        "viz.dev.joinedcontext.com",
     ]
 
     ingress = objects["Ingress"]

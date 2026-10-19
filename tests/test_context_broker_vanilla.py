@@ -38,7 +38,7 @@ def test_the_broker_runs_the_surfaces_and_requires_its_admin_credential(broker_p
     subject headers the gateway sets (platform T-3641), and `/q` behind the mounted secret with only
     the metrics open."""
     env = {e["name"]: e.get("value") for e in broker_pod["containers"][0].get("env", [])}
-    assert env["ANTARES_API_SURFACES"].split(",") == ["admin", "views", "mcp", "access", "ws", "ws-views", "ogc", "linkml", "odata"]
+    assert env["ANTARES_API_SURFACES"].split(",") == ["admin", "views", "mcp", "access", "ws", "ws-views", "ogc", "linkml", "odata", "sta"]
     # T-3905: the view WebSocket is bounded for the one node, under the broker's own defaults.
     assert 0 < int(env["ANTARES_WS_MAX_CONNECTIONS_PER_TENANT"]) <= int(env["ANTARES_WS_MAX_CONNECTIONS"]) <= 1000
     assert 0 < int(env["ANTARES_WS_MAX_SUBSCRIPTIONS"]) <= 64
@@ -52,6 +52,10 @@ def test_the_broker_runs_the_surfaces_and_requires_its_admin_credential(broker_p
     assert env["ANTARES_ADMIN_TOKEN_FILE"] == "/var/run/secrets/antares/admin/token"
     assert env["ANTARES_ADMIN_METRICS"] == "open"
     assert int(env["ANTARES_SCHEMA_MAX_BYTES"]) > 0
+    # T-4414 (DM-97, owner 2026-10-18): 28 days of history where nothing more specific rules, and
+    # never the partition-dropping horizon, which would cut a type its space keeps longer.
+    assert env["ANTARES_RETENTION_HISTORY_DEFAULT"] == "P28D"
+    assert "ANTARES_TEMPORAL_RETENTION_DAYS" not in env
     # T-3768: the joinedcontext engine decides every request, after the gateway's own hops carry
     # a subject (T-3767) and a participant's DID is a header it reads (T-3810).
     assert env["ANTARES_POLICY"] == "joinedcontext"

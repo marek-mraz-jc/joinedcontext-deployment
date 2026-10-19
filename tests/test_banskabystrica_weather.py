@@ -145,6 +145,25 @@ def test_each_station_reports_its_latest_minute_in_utc_and_the_models_units(stat
 
 
 @requires_docker
+def test_soil_temperature_is_one_instance_per_measured_depth(stations):
+    row = latest(11898, recorded_file()["data"])
+    soil = stations["shmu-11898"]["soilTemperature"]
+    assert [i["datasetId"] for i in soil] == [f"urn:ngsi-ld:Dataset:shmu:soil-depth-{d}cm" for d in (5, 10, 20, 50, 100)]
+    assert [i["value"] for i in soil] == [row[f"t_pod{d}"] for d in (5, 10, 20, 50, 100)]
+    assert all(i["unitCode"] == "CEL" and i["observedAt"] == stations["shmu-11898"]["dateObserved"]["value"] for i in soil)
+    # 11894 has no soil sensors: every t_pod is null, so the attribute is left out, not empty.
+    assert "soilTemperature" not in stations["shmu-11894"]
+
+
+def test_a_soil_instance_of_the_wrong_type_is_a_schema_error():
+    entity = {"id": "urn:ngsi-ld:WeatherObserved:x", "type": "WeatherObserved", "soilTemperature": [
+        {"type": "Property", "value": 8.2, "datasetId": "urn:ngsi-ld:Dataset:a"},
+        {"type": "Property", "value": "warm", "datasetId": "urn:ngsi-ld:Dataset:b"},
+        {"type": "Property", "value": 9.1, "datasetId": "urn:ngsi-ld:Dataset:c"}]}
+    assert open_data.schema_errors(CITY / "banskabystrica-verejne.v1.schema.json", entity)
+
+
+@requires_docker
 def test_rain_is_the_sum_of_the_last_ten_minutes_only():
     document = recorded_file()
     rows = sorted((r for r in document["data"] if r["ind_kli"] == 11898), key=lambda r: r["minuta"])

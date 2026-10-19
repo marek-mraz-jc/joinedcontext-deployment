@@ -64,6 +64,8 @@ def test_a_history_is_off_or_a_duration_and_never_forever():
 CHOSEN = {
     # The national air quality keeps a week (T-4340, owner 2026-10-16).
     ("slovensko/ovzdusie-sk", "AirQualityObserved"): "P7D",
+    # A vehicle keeps an hour of track, never more (T-4624, owner 2026-10-18).
+    ("helsinki/helsinki", "Vehicle"): "PT1H",
 }
 
 

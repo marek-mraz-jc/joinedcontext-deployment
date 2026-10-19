@@ -1,0 +1,184 @@
+---
+# The production instance smartcity.joinedcontext.com (T-4678, docs Deployment/14): one Hetzner
+# cpx52 (kube-hetzner, k3s 1.35) with Traefik, cert-manager, Kyverno, Linkerd and local-path, the
+# same platform and seeds as dev under the production profile. 12 vCPU / 24 GB on one node, so
+# single replicas and one PostgreSQL instance; the daily backups are the recovery path.
+
+components:
+  - prepare
+  # The local-path helper's SELinux type, so released volumes delete on the MicroOS node (T-3431).
+  - node-storage
+  - secrets
+  - networkpolicies
+  - runtime-policies
+  - postgres
+  # The server WASM Apps' database (ADR-N-044, AP-149): one schema and role per App, a login
+  # per shard, the Portal's login that makes them (T-3344).
+  - apps-db
+  # The S3 API for everything the platform renders: schemas, compiled mappings, dumps,
+  # export bundles, app builds and the gateway's file cache (PF-29, Architecture/17).
+  # Before the Portal, whose reconciler mints a writer and a reader per Organization from
+  # the root credential both namespaces hold (T-0422).
+  - artifact-store
+  - keycloak
+  - apisix
+  # After Keycloak and the edge: the forge's init registers its OIDC login against
+  # idm.<domain> through APISIX (`gitea admin auth add-oauth` fetches the discovery document),
+  # and a fresh cluster has neither yet (T-0653). Still before the two components that read a
+  # token it mints (gitea-token-portal, gitea-token-gateway).
+  - gitea
+  # After the forge: its bootstrap writes the registration token the runner reads (T-2608).
+  - gitea-runner
+  - context-broker
+  - context-gateway
+  - pipeline-runner
+  # The MQTT edge brokers (ADR-N-048, T-3993): after the gateway, whose CONNECT check they
+  # call, and the runner, the one client of their internal listener.
+  - mqtt-brokers
+  # The credential proxy of the builder runs (AG-49); before the portal, which reads the
+  # proxy's namespace for its address and mounts the token both share.
+  - agent-runner
+  # The generator behind the LinkML editor; before the portal, which takes its address.
+  - model-tools
+  # The runtime of generated applications' functions; before the portal, which takes its address.
+  - functions
+  # The open-data catalogue (EP-62..67). It is the demo instance's public face, so dev
+  # carries it; other environments opt in the same way. Before the portal: its Job mints
+  # `ckan-api-token`, which the portal's reconciler publishes with (T-2469).
+  - ckan
+  - portal
+  # The shared host of server WASM Apps, one Deployment per shard (ADR-N-044, T-3361): AFTER the
+  # Portal, whose reconciler writes each shard's placement ConfigMap and store-key Secret, which a
+  # shard mounts and waits for (AP-157, AP-158); synced before it, a fresh cluster's shards waited
+  # out the apply (T-3429). Components sync in this order, and `needs` does not cross them.
+  - wasm-host
+  # The knowledge assistant (ADR-N-040, T-3052): its chat behind the data portal's widget and the
+  # public channel (T-3181). After the portal, whose internal routes it administers through.
+  - assistant
+  # The background map from the cluster (T-4638): tiles.{domain}, for the catalogue's maps. It
+  # needs nothing above it.
+  - basemap
+  # The chart renderer of ADR-N-053 (T-4641): viz.{domain}, framed by the catalogue's datasets.
+  - viz
+  # Argo CD (ADR-N-056, T-4678) goes here, `- gitops`, once its images carry no CRITICAL CVE
+  # (T-4706: argocd v3.5.4 and the helmfile v1.8.1 plugin image); everything else it needs is set.
+
+global:
+  domain: smartcity.joinedcontext.com
+
+  instanceSlug: smartcity
+
+  # The URN segment of every entity on this cluster (urn:ngsi-ld:{Type}:hel.fi:{space}:{id});
+  # the gateway checks it on every write (PF-42), the realm's demo users carry it as their
+  # email domain. Moved to Helsinki with the demo data (T-0343) while the broker held no
+  # entity, so nothing was renamed.
+  orgDomain: hel.fi
+  # Layout 2 since 2026-10-06 (T-2647): the organization repository joinedcontext/configuration
+  # holds the registry, each project its own repository with its history (ADR-N-029, CC-85).
+  configRepo:
+    layout: 2
+
+  # What this installation is called and what it looks like (OPS-46, UI-30, T-0342).
+  # A demo instance of the platform for the Helsinki region: the name, the colours and the
+  # languages are the only difference from any other installation, and nothing below is
+  # baked into an image. The colours are Helsinki Design System values (brand blue, bus blue,
+  # engel, black-90). The name and the mark are the platform's own, joinedcontext (owner's
+  # decision). The installation serves five publishers (Helsinki, Banská Bystrica, BBSK, Žilina,
+  # Praha), so the publisher it names is the demo itself, not one of them: each dataset and
+  # Endpoint carries its own publisher (T-4202).
+  branding:
+    instanceName: joinedcontext
+    shortName: joinedcontext
+    city: Helsinki
+    organisation: joinedcontext demo
+    # The publisher's own domain, which is what a DCAT-AP record and a did:web name. The
+    # URN segment above is separate and stays until the demo data moves with it (T-0343).
+    orgDomain: hel.fi
+    domain: smartcity.joinedcontext.com
+    contactEmail: hello@joinedcontext.com
+    # The public API and User Guide pages the Portal serves to anyone (T-4063): the catalogue's
+    # usage texts link their guides under it, the WebSocket's included (T-4064, EP-108).
+    documentationBaseUrl: https://smartcity.joinedcontext.com/docs
+    licenseDefault: CC-BY-4.0
+    logo: logo.svg
+    favicon: logo.svg
+    logoSvg: |
+{{ readFile "branding/logo.svg" | indent 6 }}
+    colours:
+      primary: '#0000bf'
+      secondary: '#0072c6'
+      accent: '#ffe977'
+      background: '#ffffff'
+      text: '#1a1a1a'
+    fonts:
+      # Self-hosted or system only: nothing on a page fetches from a third-party origin.
+      # No HelsinkiGrotesk: it has no š, ž or ř, and Slovak and Czech headings fell back letter
+      # by letter to another face (T-4202).
+      heading: system-ui, sans-serif
+      body: system-ui, sans-serif
+    # English only, for now, by the owner's decision: the Portal ships no Finnish or Swedish
+    # bundle, so offering them showed a switcher that fell back to another language. The
+    # Portal and the catalogue both take this block.
+    languages:
+      default: en
+      offered:
+        - en
+
+  # The production profile: its guards (CC-73, T-1720, T-1721), no demo people, no test objects of
+  # the seeds; with dev's values files (`valuesProfile`), whose sizes were measured
+  # on one node under this same load and which carry the seeds the owner wants here (T-4678).
+  profile: production
+  valuesProfile: development
+  # The owner's account is the only one at start (T-4678).
+  initialUserEmail: marek.mraz@joinedcontext.com
+  # security.txt (T-1721): the owner's contact as on dev, a year of validity from the first apply.
+  securityTxt:
+    contact: mailto:contact@marek-mraz.com
+    expires: "2027-10-18T00:00:00Z"
+  # Off until the monitoring stack exists on this cluster (owner's order of 2026-10-18: platform,
+  # Argo CD, parity, then monitoring and alerts; the cluster has no Prometheus CRDs yet).
+  metrics:
+    enabled: false
+
+  serviceMesh:
+    # Traefik is installed by the kit outside the mesh and has no Linkerd identity,
+    # so the APISIX data-plane edge must accept plaintext traffic from it.
+    allowUnauthenticatedIngress: true
+
+  ingress:
+    enabled: true
+    # Staging proved all nine hostnames by HTTP-01 on 2026-10-18 (T-4678); dev and this instance
+    # share the joinedcontext.com limits of Let's Encrypt, so prod certificates are issued once.
+    # JC_SMARTCITY_ISSUER=letsencrypt-staging proves a new hostname first.
+    clusterIssuer: {{ env "JC_SMARTCITY_ISSUER" | default "letsencrypt-prod" | quote }}
+    ingressClass: 'traefik'
+
+  storage:
+    storageClass:
+      rwo: 'local-path'
+      loc: 'local-path'
+
+# The PostgreSQL backups and WAL archive (OPS-10), to Hetzner Object Storage, through the
+# operator-supplied Secret `postgres-backup-s3`. Off until the owner's keys exist (owner 2026-10-18:
+# S3 does not block the first deploy, T-4678); until then prod has no off-site backup.
+postgres:
+  cluster:
+    backups:
+      enabled: false
+      endpointURL: 'https://nbg1.your-objectstorage.com'
+      destinationPath: 's3://joinedcontext-prod-backup/postgres'
+      region: 'nbg1'
+      bucket: 'joinedcontext-prod-backup'
+  # Until then a nightly pg_dumpall onto the node, 7 days (T-4678): a bad migration, not a lost node.
+  databases:
+    localBackup:
+      enabled: true
+
+# Prod's own Argo CD (T-4678): the deployment repository is public, so it reads it with no key,
+# and it follows `release`, never `main`: `just promote <sha>` moves that branch to a commit that
+# passed dev-smoke. The root Application is the switch; gitops/hold-smartcity.yaml holds it.
+gitops:
+  argocd:
+    targetRevision: release
+  root:
+    enabled: true

@@ -14,14 +14,16 @@ spec:
   slug: bkc4g3zfirh6zae3owdike7am2upayjs
   audience: public
   policyRef: urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:skoly-read
-  enabledRepresentations: [ngsi-ld, geojson, csv, json, websocket, ogc-features, odata, mcp]
+  enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: banskabystrica }
       license: cc-by
       datastore: { representation: csv, refresh: onReconcile }
   catalog:
-    publisher: { name: { sk: "Mesto Banská Bystrica", en: "City of Banská Bystrica" }, uri: "https://www.banskabystrica.sk/" }
+    # The publisher and contact desk are the Project's spec.catalog, its registry IRI (T-4596).
+    # Aggregates of public facilities and readings: no record names a person (T-4596).
+    personalData: does-not-contain
     license: CC_BY_4_0
     attribution: { sk: "Zdroj: Ministerstvo školstva SR, Digitálna mapa škôl, CC BY 4.0", en: "Source: Slovak Ministry of Education, Digitálna mapa škôl, CC BY 4.0" }
     themes: [EDUC]

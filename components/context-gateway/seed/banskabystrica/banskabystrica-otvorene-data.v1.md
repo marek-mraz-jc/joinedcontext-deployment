@@ -1,9 +1,9 @@
-# Banská Bystrica, catalogue tables
+# Banská Bystrica, the city's open data
 
 <!-- Generated from the LinkML source by Model Tools. Do not edit: `jcctl model
      generate` overwrites this file and CI fails on any difference (DM-01, DM-02). -->
 
-Every dataset of the city of Banská Bystrica in the catalogue that reads as a table.
+The open data of the city of Banská Bystrica from the catalogue: registers and tables (addresses, contracts, orders, grants, council meetings, greenery, parking) and the city's news (Aktuality) as Articles.
 
 - Namespace: `https://joinedcontext.com/models/banskabystrica/banskabystrica-otvorene-data`
 - Rendered by: `linkml-1.11.1`

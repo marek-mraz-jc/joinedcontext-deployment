@@ -1,0 +1,18 @@
+# The browser builds of the pinned releases, byte for byte as npm publishes them (package/build/*.min.js):
+#   vega 5.33.1 (2026-01-05), vega-lite 5.23.0 (2024-12-10), vega-embed 6.29.0 (2024-11-19),
+#   vega-interpreter 1.2.1 (the last for Vega 5). Re-check with: npm pack <name>@<version>, then
+#   sha256sum package/build/<name>.min.js. tests/test_viz.py holds every file to its line.
+# The map page (T-4657): MapLibre GL JS 6.14.0 (BSD-3-Clause, the tarball of T-4639, sha256
+#   f799682e7a2d189e43d18ccf6889d09d1e8547e2cab4ba79d7360cc96630207e) and pmtiles 4.5.0
+#   (BSD-3-Clause, 2026-08-10, package/dist/pmtiles.js). The two ES modules are `gzip -9 -n` of
+#   package/dist/maplibre-gl.mjs (sha256 244d36122c1398da3a8259817cc6d71e04321afe6404f32606b4b6c6cc4f26fb)
+#   and package/dist/maplibre-gl-worker.mjs (sha256 5f1e2f0e1624082b7e88a06e4c86085992b0f8c02929801e552f3f7a119856a9):
+#   the main one is over a ConfigMap's megabyte, and nginx serves the .gz files as they are.
+463f3db6a40b20e9747b4ed38f37ed0add508838f9141b1cf8366784b07b30c8  vega-5.33.1.min.js
+12d02acfbe3ec59ef9a37dd4822a2e04e2961b5bbb671bbe661d2221715b99da  vega-embed-6.29.0.min.js
+ee191cf04168e0c043214cea7c4e5ef80e908daa0e757c19c8061df5f898cf89  vega-interpreter-1.2.1.min.js
+58c27358e26f2d319cf62f45bc17a4c8362f08645001df2ec8d341eee4097c7f  vega-lite-5.23.0.min.js
+bacba6a85a867fcf602f2ff88331b8acf7edf3fbd063a519888cfbff39970193  maplibre-gl-6.14.0.css
+3457078e0aa524a24ca8d55f52356b0b0776ebbaafb14d961982155ad7453a5c  maplibre-gl-6.14.0.mjs.gz
+f908a56aacc79059bc6f7349ce5de77b74a76ffc68b8e6669e50e2065df338b9  maplibre-gl-worker-6.14.0.mjs.gz
+caf981bc46f6327ee7e65d5dc964d89d38a69f60edca2bd4c5c890c21b554c6c  pmtiles-4.5.0.js

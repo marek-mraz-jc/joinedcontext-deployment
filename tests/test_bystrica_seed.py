@@ -80,10 +80,11 @@ def test_each_projects_quotas_hold_what_it_declares_with_room_for_the_demo():
         # the registers' datasets, one per type (T-4344).
         (REGION, "bbsk", ["bbsk-kraj", "bbsk-kpi", "bbsk-registre", "bbsk-otvorene-data"], 10),
         # The third public endpoint of the city is the air-quality App's own (T-2972), the fourth
-        # and fifth the city map's and the data grids' (T-2782), the last three the public space's
-        # events, schools and weather as their own datasets (T-4344).
+        # and fifth the city map's and the data grids' (T-2782), then the public space's events,
+        # schools and weather as their own datasets (T-4344), and OpenStreetMap's health places
+        # and charging stations (T-4514).
         (CITY, "banskabystrica", ["ovzdusie", "banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne",
-                                  "banskabystrica-otvorene-data"], 9),
+                                  "banskabystrica-otvorene-data"], 11),
     ):
         quotas = one(folder, "Project", project)["spec"]["quotas"]
         declared = {doc["metadata"]["name"] for _, doc in manifests(folder, "ContextSpace")}
@@ -653,9 +654,12 @@ def test_the_citys_air_quality_is_a_public_static_app_on_its_own_endpoint():
 # school map and the EEA's station readings, all CC BY 4.0, none of them about a person.
 # T-4344 splits both spaces into one dataset per type; the public space's air-quality reading is
 # public-air's, so it is not published twice.
+# T-4514 (owner, 2026-10-17: more sources, "the CKAN dataset carries ODbL") adds OpenStreetMap's
+# health places and charging stations in the district, ODbL 1.0, none of them about a person.
 CLEARED = {
     ("banskabystrica", "public-air"), ("banskabystrica", "banskabystrica-podujatia"),
     ("banskabystrica", "banskabystrica-skoly"), ("banskabystrica", "banskabystrica-pocasie"),
+    ("banskabystrica", "banskabystrica-zdravie"), ("banskabystrica", "banskabystrica-nabijanie"),
     ("bbsk", "bbsk-kpi"), ("bbsk", "bbsk-hranice"), ("bbsk", "bbsk-organizacie"), ("bbsk", "bbsk-zariadenia"),
     ("bbsk", "bbsk-mosty"),
 }

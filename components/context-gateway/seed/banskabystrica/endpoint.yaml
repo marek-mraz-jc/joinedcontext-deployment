@@ -22,7 +22,7 @@ spec:
   # Architecture/21 §3, T-2432). `xlsx` is the same rows for a person who opens them in a
   # spreadsheet; `zip` is left out, a third copy of the same readings nobody rebuilds.
   # `ogc-features` is the OGC API Features surface dev-smoke reads per Endpoint kind (T-3957).
-  enabledRepresentations: [ngsi-ld, geojson, csv, json, xlsx, mcp, ogc-features, websocket, odata]
+  enabledRepresentations: [ngsi-ld, csv, mcp, ogc-features, websocket, odata]
   # Published under CC BY 4.0 by the owner's decision (T-2407, 2026-09-25). Since T-3120 the
   # space holds the real hourly EEA reading of SK0263A (pipeline public-air), and the 13 seeded
   # test stations age out through that pipeline's expiry (PL-64).
@@ -32,8 +32,10 @@ spec:
       license: cc-by
       datastore: { representation: csv, refresh: onReconcile }
   catalog:
+    # The publisher and contact desk are the Project's spec.catalog, its registry IRI (T-4596).
+    # Aggregates of public facilities and readings: no record names a person (T-4596).
+    personalData: does-not-contain
     license: CC_BY_4_0
-    publisher: { name: { sk: "Mesto Banská Bystrica", en: "City of Banská Bystrica" }, uri: "https://www.banskabystrica.sk/" }
     themes: [ENVI, HEAL]
     # The EEA streams renew the reading every hour.
     frequency: HOURLY

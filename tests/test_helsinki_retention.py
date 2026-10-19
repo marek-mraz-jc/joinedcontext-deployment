@@ -1,7 +1,7 @@
 """T-3904: the helsinki space keeps its transport data under retention and quality rules.
 
 The values are the owner's (DM-81, DM-86, ADR-N-046): a vehicle is gone five minutes after its
-last report and keeps no track (T-4275: its positions are live only); positions lie in what
+last report and keeps an hour of track, never more (owner, T-4624); positions lie in what
 HSL's feeds cover, speeds up to 160 km/h (the Sm5 commuter trains), and no report is ahead of the clock. No other type
 of the seed loses its current state.
 """
@@ -31,9 +31,16 @@ def helsinki() -> dict:
     return spaces()["helsinki/helsinki"]["spec"]
 
 
-def test_a_vehicle_is_kept_five_minutes_after_its_last_report_and_keeps_no_track():
+def test_a_vehicle_is_kept_five_minutes_after_its_last_report_and_an_hour_of_its_track():
     (vehicle,) = [rule for rule in helsinki()["retention"] if rule["entityType"] == "Vehicle"]
-    assert vehicle == {"entityType": "Vehicle", "current": "PT5M", "history": "off"}
+    assert vehicle == {"entityType": "Vehicle", "current": "PT5M", "history": "PT1H"}
+
+
+def test_no_vehicle_of_any_space_keeps_more_than_an_hour_of_track():
+    """The owner's order (T-4624) holds for every live vehicle feed, not only HSL's."""
+    rules = [(name, rule.get("history")) for name, space in spaces().items()
+             for rule in space["spec"].get("retention", []) if rule["entityType"] == "Vehicle"]
+    assert rules and all(history in ("off", "PT1H", "PT30M", "PT5M") for _, history in rules), rules
 
 
 def test_no_other_type_loses_its_current_state():

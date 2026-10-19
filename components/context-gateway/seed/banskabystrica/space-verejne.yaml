@@ -12,16 +12,19 @@ metadata:
   description:
     sk: >-
       Podujatia mesta, školy a školské zariadenia v meste, hodinové merania prachových častíc, NO2
-      a ozónu na mestskej stanici a počasie na automatických staniciach SHMÚ každých päť minút.
+      a ozónu na mestskej stanici, počasie na automatických staniciach SHMÚ každých päť minút a
+      lekárne, nemocnice, ambulancie, defibrilátory a nabíjacie stanice v okrese z OpenStreetMap.
       Zdroje: Mesto Banská Bystrica (banskabystrica.sk), Ministerstvo školstva SR (Digitálna mapa
       škôl), Európska environmentálna agentúra (údaje SHMÚ) a Slovenský hydrometeorologický ústav,
-      všetky pod CC BY 4.0.
+      pod CC BY 4.0, a © prispievatelia OpenStreetMap pod ODbL 1.0.
     en: >-
       The city's events, the schools and school facilities in the city, the hourly particulate,
       NO2 and ozone readings of the city's station, and the weather at SHMÚ's automatic stations
-      every five minutes. Sources: the City of Banská Bystrica (banskabystrica.sk), the Slovak
-      Ministry of Education (Digitálna mapa škôl), the European Environment Agency (SHMÚ's data)
-      and the Slovak Hydrometeorological Institute, all under CC BY 4.0.
+      every five minutes, and the pharmacies, hospitals, clinics, defibrillators and charging
+      stations in the district from OpenStreetMap. Sources: the City of Banská Bystrica
+      (banskabystrica.sk), the Slovak Ministry of Education (Digitálna mapa škôl), the European
+      Environment Agency (SHMÚ's data) and the Slovak Hydrometeorological Institute, under CC BY
+      4.0, and © OpenStreetMap contributors under ODbL 1.0.
 spec:
   # The space name is the segment its ids carry, pinned so it cannot drift (PF-84).
   urnSegment: banskabystrica-verejne
@@ -39,6 +42,10 @@ spec:
     - entityType: WeatherObserved
       history: P30D
     - entityType: Organization
+      history: "off"
+    - entityType: PointOfInterest
+      history: "off"
+    - entityType: EVChargingStation
       history: "off"
   # The space's place (T-4525): the catalogue's Dataset carries it, so georel=near finds the space.
   # the city of Banská Bystrica with a margin; a Event outside it is flagged, never refused (DM-87).

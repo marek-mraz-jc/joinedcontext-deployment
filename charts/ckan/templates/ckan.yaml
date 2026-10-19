@@ -121,6 +121,12 @@ spec:
             # language only under its offered prefix (/sk/…), and with English alone a Slovak
             # visitor had no way to Slovak at all (T-4199). Slovak is the default, the others a
             # click in the footer's menu away.
+            {{- if .Values.vizOrigin }}
+            # The chart renderer's host page reads a published view anonymously through the
+            # action API (T-4641, ADR-N-053 §2.5); no other origin gets a CORS answer.
+            - name: CKAN__CORS__ORIGIN_WHITELIST
+              value: {{ .Values.vizOrigin | quote }}
+            {{- end }}
             - name: CKAN__LOCALE_DEFAULT
               value: {{ .Values.ckan.locales.default | quote }}
             - name: CKAN__LOCALES_OFFERED
@@ -135,6 +141,16 @@ spec:
               value: {{ .Values.assistantWidget | quote }}
             - name: JC_ASSISTANT_WIDGET_URLS
               value: {{ .Values.assistantWidgets | default dict | toJson | quote }}
+            # The basemap under the dataset map (T-4639); the theme accepts only the tiles host's
+            # style or OpenStreetMap's tiles, so anything else draws the data alone.
+            - name: JC_MAP_BASEMAP
+              value: {{ .Values.mapBasemap | default dict | toJson | quote }}
+            # Gemini's card on the assistants page (T-4643), off until its sign-in works here.
+            - name: JC_ASSISTANT_GEMINI
+              value: {{ (.Values.assistants | default dict).gemini | default false | toString | quote }}
+            # The websites the hub's search_documents reads, listed on the assistants page (T-4659).
+            - name: JC_ASSISTANT_SOURCES
+              value: {{ (.Values.assistants | default dict).sources | default list | toJson | quote }}
             - name: CKAN_SOLR_URL
               value: http://{{ $full }}-solr.{{ .Release.Namespace }}.svc.cluster.local:8983/solr/ckan
             - name: CKAN_REDIS_URL
@@ -286,6 +302,11 @@ spec:
             - name: theme
               mountPath: /srv/theme/ckanext_jc_theme/dcat_profile.py
               subPath: dcat_profile.py
+              readOnly: true
+            # The NUTS region names plugin.py reads beside itself (T-4636).
+            - name: theme
+              mountPath: /srv/theme/ckanext_jc_theme/nuts.json
+              subPath: nuts.json
               readOnly: true
             - name: theme
               mountPath: /srv/theme/ckanext_jc_theme/templates/header.html

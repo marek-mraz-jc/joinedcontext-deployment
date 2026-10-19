@@ -61,7 +61,7 @@ EXPECTED_ROUTES = {
         "uri": "/live-notify/*", "priority": 5, "upstream_id": "portal-live-notify", "host": PORTAL_HOST,
     },
     # T-2726: the organization's DCAT-AP feed for harvesters, anonymous (EP-84).
-    "catalog-feed": {"uri": "/catalog.*", "priority": 20, "upstream_id": "catalog-feed", "host": LOCAL_DOMAIN},
+    "catalog-feed": {"uri": "/catalog*", "priority": 20, "upstream_id": "catalog-feed", "host": LOCAL_DOMAIN},
     # T-2490: the MCP hub over several Endpoints, bearer only (EP-87).
     "context-mcp-hub": {"uri": "/api/mcp*", "priority": 20, "upstream_id": "context-mcp-hub", "host": LOCAL_DOMAIN},
     "context-mcp-hub-portal": {
@@ -140,7 +140,8 @@ def test_only_the_endpoint_surface_passes_a_websocket_upgrade(apisix_config):
     (platform T-3885); every other route keeps APISIX's default and drops the upgrade."""
     _, parsed = apisix_config
     upgraded = sorted(r["id"] for r in parsed.get("routes", []) if r.get("enable_websocket"))
-    assert upgraded == ["context-endpoint", "context-endpoint-portal"]
+    # T-4630: and the same surface on the data host api.{domain}.
+    assert upgraded == ["api-context-endpoint", "context-endpoint", "context-endpoint-portal"]
 
 
 @requires_helmfile
