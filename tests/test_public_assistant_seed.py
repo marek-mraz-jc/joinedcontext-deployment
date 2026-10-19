@@ -18,8 +18,8 @@ from conftest import dev_catalogue, render_catalogue_assistant
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
 # jc-assistant's READ_ONLY_TOOLS (platform crates/assistant/src/chat/mcp.rs), which the data loop
 # offers the answering model (T-4294).
-READ_ONLY = {"list_types", "get_type", "list_attributes", "query_entities", "get_entity", "get_attribute_value",
-             "query_temporal", "retrieve_temporal", "describe_schema", "describe_access"}
+READ_ONLY = {"list_types", "get_type", "list_attributes", "query_entities", "summarize", "get_entity",
+             "get_attribute_value", "query_temporal", "retrieve_temporal", "describe_schema", "describe_access"}
 # publicId: (project, web host, CKAN organization, language first, cost per day)
 BODIES = {
     "banskabystrica": ("banskabystrica", "www.banskabystrica.sk", "banskabystrica", "sk", 1),
@@ -109,6 +109,8 @@ def test_every_connector_is_a_public_mcp_endpoint_of_the_body_with_read_only_too
         assert set(connector["tools"]) <= READ_ONLY, connector
         # The data loop reads the schema and history before it queries (T-4294).
         assert {"get_type", "list_attributes", "query_temporal"} <= set(connector["tools"]), connector
+        # T-4680: a broad read gives the answer the broker's profile of the type, not 15 rows.
+        assert "summarize" in connector["tools"], connector
 
 
 @pytest.mark.parametrize("public_id", ["banskabystrica", "bbsk"])

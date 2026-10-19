@@ -22,8 +22,8 @@ spec:
   # context page lists them. The curated connectors stay: no selector gives exactly this set.
   categories: [EDUC, ENVI, TRAN]
   connectors:
-    - { endpoint: helsinki-weather, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: helsinki-events, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: helsinki-weather, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
+    - { endpoint: helsinki-events, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
   allowedOrigins: [https://dev.joinedcontext.com, https://portal.dev.joinedcontext.com]
   rateLimit: { requestsPerMinute: 30, perClientPerMinute: 6 }
   # About 0.1 USD a day at most (google/gemini-3.8-flash, 2026-10-06).
