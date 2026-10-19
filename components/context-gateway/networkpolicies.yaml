@@ -76,6 +76,16 @@ context-gateway:
       ports:
         - protocol: TCP
           port: 9090
+    # `search_documents` asks the assistant's internal search (AG-119, T-4659); the other half
+    # is the assistant's ingress rule naming this pod.
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: assistant-worker
+          componentNamespace: assistant
+      ports:
+        - protocol: TCP
+          port: 8080
     # The git-sync sidecar clones the configuration repository out of the forge (T-0278).
     - to:
         - podSelector:

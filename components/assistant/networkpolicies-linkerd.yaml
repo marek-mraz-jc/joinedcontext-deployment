@@ -16,6 +16,10 @@ assistant-allow-linkerd:
             matchLabels:
               app.kubernetes.io/name: portal-portal
           componentNamespace: portal
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: context-gateway-gateway
+          componentNamespace: context-gateway
       ports:
         - port: 4143
           protocol: TCP

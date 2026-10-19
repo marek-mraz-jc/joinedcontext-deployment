@@ -87,6 +87,15 @@ context-gateway-linkerd-control-plane:
       ports:
         - protocol: TCP
           port: 4143
+    # `search_documents` to the assistant, meshed (AG-119, T-4659).
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: assistant-worker
+          componentNamespace: assistant
+      ports:
+        - protocol: TCP
+          port: 4143
     # git-sync fetches the configuration repository through the mesh (T-0278).
     - to:
         - podSelector:

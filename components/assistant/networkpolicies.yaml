@@ -1,5 +1,6 @@
 ---
-# jc-assistant (T-3052, T-3055) is called by the edge alone, on its chat route. It reads its own
+# jc-assistant (T-3052, T-3055) is called by the edge on its chat route, by the Portal and by
+# the gateway on the paths the edge never routes. It reads its own
 # database, the forge (git-sync and the checkouts sidecar, read-only token) and CoreDNS; asks
 # jc-agent-proxy for the model, the gateway's Endpoint MCP surfaces for its connectors and the
 # realm for its own token; and crawls the
@@ -24,6 +25,12 @@ assistant-worker:
             matchLabels:
               app.kubernetes.io/name: portal-portal
           componentNamespace: portal
+        # The gateway's `search_documents` on /internal/v1/search (AG-119, T-4659): public
+        # passages only, and the worker refuses a call that came through a proxy.
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: context-gateway-gateway
+          componentNamespace: context-gateway
       ports:
         - protocol: TCP
           port: 8080

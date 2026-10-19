@@ -62,3 +62,23 @@ def test_helsinki_seeds_the_user_guide_for_its_internal_and_public_assistants():
     assert deployments["helsinki-public"]["channel"] == "public"
     for name in ("knowledge", "helsinki-public"):
         assert "guide" in deployments[name]["sources"], name
+
+
+def test_seed_knowledge_sources_never_serve_an_eval_source():
+    """T-4659: `eval-*` sources hold the eval fixtures (T-4144's injection page among them) and are
+    public for the eval copies alone. No McpServer, no hub list and no AssistantDeployment other
+    than an eval copy names one, so `search_documents` and the public chat never serve it."""
+    named = []
+    for project in sorted(p.name for p in SEED.iterdir() if p.is_dir()):
+        for doc in documents(project):
+            spec = doc.get("spec") or {}
+            if doc["kind"] == "McpServer":
+                named += [(doc["metadata"]["name"], s) for s in spec.get("knowledgeSources", [])]
+            elif doc["kind"] == "AssistantDeployment" and "eval-" not in doc["metadata"]["name"]:
+                named += [(doc["metadata"]["name"], s) for s in spec.get("sources", [])]
+    values = (SEED.parent / "values/gateway/base-values.yaml.gotmpl").read_text()
+    (hub,) = [line.split(":", 1)[1].strip().strip('"') for line in values.splitlines() if "JC_GATEWAY_HUB_KNOWLEDGE_SOURCES:" in line]
+    named += [("hub", entry) for entry in hub.split(",")]
+    assert any(owner == "hub" for owner, _ in named)
+    leaked = [(owner, s) for owner, s in named if str(s).split("/")[-1].startswith("eval-")]
+    assert leaked == [], leaked

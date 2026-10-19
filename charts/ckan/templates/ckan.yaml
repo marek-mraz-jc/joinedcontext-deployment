@@ -148,6 +148,9 @@ spec:
             # Gemini's card on the assistants page (T-4643), off until its sign-in works here.
             - name: JC_ASSISTANT_GEMINI
               value: {{ (.Values.assistants | default dict).gemini | default false | toString | quote }}
+            # The websites the hub's search_documents reads, listed on the assistants page (T-4659).
+            - name: JC_ASSISTANT_SOURCES
+              value: {{ (.Values.assistants | default dict).sources | default list | toJson | quote }}
             - name: CKAN_SOLR_URL
               value: http://{{ $full }}-solr.{{ .Release.Namespace }}.svc.cluster.local:8983/solr/ckan
             - name: CKAN_REDIS_URL

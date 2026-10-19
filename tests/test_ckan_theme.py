@@ -1624,7 +1624,9 @@ def test_the_assistants_page_reads_in_slovak(theme):
 def test_the_assistants_page_offers_each_card_s_own_action_and_links_nowhere_else():
     template = (THEME / "templates__jc__assistants.html").read_text()
     assert "{% set page = h.jc_assistants() %}" in template
-    assert 'href="{{ card.open }}" target="_blank" rel="noopener noreferrer"' in template and template.count("href=") == 3
+    assert 'href="{{ card.open }}" target="_blank" rel="noopener noreferrer"' in template and template.count("href=") == 4
+    # The fourth: each website the hub searches (T-4659), its own address.
+    assert '<a href="{{ source.url }}" rel="noopener noreferrer">' in template
     assert '<a class="jc-card-guide" href="{{ h.url_for(\'jc_pages.guide\', id=card.id) }}">{{ card.guide_label }}</a>' in template
     # T-4634: no card says "Coming soon"; the page's empty state alone does.
     assert template.count("coming_soon") == 1 and "{% if card.soon %}" not in template
@@ -2405,6 +2407,47 @@ def test_the_guide_link_stays_its_own_target_above_the_card_link_and_wraps_on_a_
     assert ".jc-card-guide { position: relative; z-index: 1; }" in css
     assert ".jc-card-links { margin: auto 0 0; display: flex; flex-wrap: wrap;" in css
     assert ".jc-guide-checked { color: var(--jc-muted); overflow-wrap: anywhere; }" in css
+
+
+# T-4659: the assistants page lists the websites the hub's search_documents reads.
+def test_the_assistants_page_lists_the_hub_s_websites_and_drops_a_malformed_entry(theme, monkeypatch):
+    monkeypatch.setenv("JC_ASSISTANT_SOURCES", json.dumps([
+        {"publisher": "banskabystrica", "url": "https://www.banskabystrica.sk/", "languages": ["sk"]},
+        {"publisher": "helsinki", "url": "https://www.hel.fi/", "languages": ["fi", "sv", "en"]},
+        {"publisher": "evil", "url": "javascript:alert(1)", "languages": []},
+        {"publisher": "plain", "url": "http://example.org/", "languages": []},
+        {"url": "https://nopublisher.example/"},
+        "not an entry",
+    ]))
+    assert theme.jc_assistants()["sources"] == [
+        {"site": "www.banskabystrica.sk", "url": "https://www.banskabystrica.sk/", "publisher": "banskabystrica", "languages": "sk"},
+        {"site": "www.hel.fi", "url": "https://www.hel.fi/", "publisher": "helsinki", "languages": "fi, sv, en"},
+    ]
+    monkeypatch.setenv("JC_ASSISTANT_SOURCES", "{not json")
+    assert theme.jc_assistant_sources() == []
+    monkeypatch.delenv("JC_ASSISTANT_SOURCES")
+    assert theme.jc_assistant_sources() == []
+    template = (THEME / "templates__jc__assistants.html").read_text()
+    assert "{% if page.sources %}" in template and 'aria-labelledby="jc-assistant-sources"' in template
+    for key in ("assistants_sources", "assistants_sources_lead", "assistants_source_languages"):
+        assert set(theme.STRINGS[key]) == {"en", "sk", "cs", "de"}, key
+
+
+def test_dev_lists_the_hub_s_knowledge_sources_as_the_seed_declares_them():
+    """The page's list is the gateway's hub list, each site the seed source's first start URL and
+    its languages, so the page never names a site the hub does not search."""
+    root = Path(__file__).resolve().parent.parent
+    values = (root / "components/ckan/values/catalogue/development-values.yaml.gotmpl").read_text()
+    block = values[values.index("\nassistants:\n"):]
+    listed = yaml.safe_load(block.split("\n\n")[0])["assistants"]["sources"]
+    gateway = (root / "components/context-gateway/values/gateway/base-values.yaml.gotmpl").read_text()
+    (hub,) = [line.split(":", 1)[1].strip().strip('"') for line in gateway.splitlines()
+              if "JC_GATEWAY_HUB_KNOWLEDGE_SOURCES:" in line]
+    assert [f"{s['publisher']}/web" for s in listed] == hub.split(",")
+    for s in listed:
+        seed = yaml.safe_load((root / f"components/context-gateway/seed/{s['publisher']}/{s['publisher']}-knowledge-web.yaml").read_text())
+        assert s["url"] == seed["spec"]["startUrls"][0], s
+        assert s["languages"] == seed["spec"]["languages"], s
 
 
 LABELLED_SEEDS = ["banskabystrica/banskabystrica-verejne", "helsinki/helsinki"]

@@ -122,6 +122,7 @@ def test_the_worker_reaches_its_database_the_forge_dns_and_public_addresses_only
     assert [f["podSelector"]["matchLabels"] for f in inbound["from"]] == [
         {"app.kubernetes.io/name": "apisix"},
         {"app.kubernetes.io/name": "portal-portal"},
+        {"app.kubernetes.io/name": "context-gateway-gateway"},
     ]
     assert [p["port"] for p in inbound["ports"]] == [8080]
     for name, port in (
@@ -135,6 +136,27 @@ def test_the_worker_reaches_its_database_the_forge_dns_and_public_addresses_only
         (inbound,) = one(docs, "NetworkPolicy", name)["spec"]["ingress"]
         assert [f["podSelector"]["matchLabels"] for f in inbound["from"]] == [{"app.kubernetes.io/name": "assistant-worker"}]
         assert [p["port"] for p in inbound["ports"]] == [port]
+
+
+def test_the_gateway_searches_the_assistants_documents_in_the_cluster(docs):
+    """`search_documents` (EP-133, AG-119, T-4659): the gateway names the worker's Service, the hub
+    names the cities' websites only, and the gateway's egress, plain and meshed, reaches the
+    worker that admits it."""
+    pod = one(docs, "Deployment", "context-gateway")["spec"]["template"]["spec"]
+    env = env_of(pod["containers"][0])
+    assert env["JC_GATEWAY_ASSISTANT_URL"] == "http://jc-assistant.dev.svc.cluster.local:8080"
+    hub = env["JC_GATEWAY_HUB_KNOWLEDGE_SOURCES"].split(",")
+    assert hub and all(entry.split("/")[1] == "web" for entry in hub), hub
+    worker = {"app.kubernetes.io/name": "assistant-worker"}
+    for name, port in (("context-gateway", 8080), ("context-gateway-linkerd-control-plane", 4143)):
+        egress = one(docs, "NetworkPolicy", name)["spec"]["egress"]
+        assert any(
+            peer.get("podSelector", {}).get("matchLabels") == worker and [p["port"] for p in r["ports"]] == [port]
+            for r in egress
+            for peer in r["to"]
+        ), name
+    (meshed,) = one(docs, "NetworkPolicy", "assistant-allow-linkerd")["spec"]["ingress"]
+    assert {"app.kubernetes.io/name": "context-gateway-gateway"} in [f["podSelector"]["matchLabels"] for f in meshed["from"]]
 
 
 def test_the_chat_is_published_on_its_own_host_and_its_client_names_the_proxy(docs):
