@@ -53,4 +53,5 @@ imageSignatures:
     enabled: true
     label: joinedcontext.com/tier
     attestationType: https://joinedcontext.com/attestations/full-tests/v1
-    subjectRegExp: "^https://github.com/marek-mraz-jc/[^/]+/\\.github/workflows/promote\\.yml@refs/heads/main$"
+    # promote.yml on main (platform, Portal); image-jc.yml on dev (the broker's nightly ETSI promote)
+    subjectRegExp: "^https://github.com/marek-mraz-jc/[^/]+/\\.github/workflows/(promote\\.yml@refs/heads/main|image-jc\\.yml@refs/heads/dev)$"

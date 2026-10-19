@@ -475,6 +475,9 @@ def test_a_production_tier_namespace_admits_only_fully_tested_images(pod_securit
     # ship's own signature is not the full-tests one, nor is a promote.yml run off main
     assert not subject.search(promote.replace("promote.yml", "image.yml"))
     assert not subject.search(promote.replace("refs/heads/main", "refs/heads/agent/x"))
+    broker = "https://github.com/marek-mraz-jc/Antares-NGSI-LD-Context-Broker/.github/workflows/image-jc.yml@refs/heads/dev"
+    assert subject.search(broker)
+    assert not subject.search(broker.replace("image-jc.yml", "ship.yml"))
 
 BAD_PODS = {
     # T-2480: one pod per step of the attack, each refused by its own rule.
