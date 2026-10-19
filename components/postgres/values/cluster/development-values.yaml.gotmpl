@@ -26,7 +26,11 @@ cluster:
       # 3 cores: at 2 it was throttled in 22% of its periods (22 499 s in 14 h, 2026-10-12), each
       # broker transaction waited a median 0.15 s to begin and a gateway upsert took 1 s, which
       # capped the HSL vehicle stream at about 62 writes/s (T-4075).
-      cpu: '3'
+      # 6 cores: prod sat at 3.07 of 3 under the assistant's type warming and the HSL feed
+      # (2026-10-19 04:58Z, T-4683); both clusters were patched to 6 by hand at 04:59/05:29Z and
+      # this carries it, so the next sync does not restart the single instance a third time.
+      # The request stays 100m: a limit only lets it burst into an idle node.
+      cpu: '6'
       memory: 2Gi
 
   storage:

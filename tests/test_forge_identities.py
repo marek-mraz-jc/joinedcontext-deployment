@@ -141,7 +141,8 @@ def test_the_seed_commits_as_the_portal_and_never_as_the_administrator(script, t
     forge.put("projects/bbsk/project.yaml", "apiVersion: v1\nkind: Project\nmetadata:\n  name: bbsk\n")
     assert forge.run(script).returncode == 0
     portal = "token:" + token_of(forge, "gitea-token-portal")
-    writes = [w for w in state(forge)["writes"] if "/contents/" in w["url"]]
+    # One ChangeFiles commit per repository (T-4709) or a single file: both are `/contents`.
+    writes = [w for w in state(forge)["writes"] if "/contents" in w["url"]]
     assert writes, "the seed wrote nothing"
     assert {w["who"] for w in writes} == {portal}, writes
 
