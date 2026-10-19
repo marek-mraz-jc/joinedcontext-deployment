@@ -7,8 +7,7 @@ namespaceAnnotations: {linkerd.io/inject: enabled, config.linkerd.io/default-inb
 components:
 - {name: node-storage, component: node-storage, namespace: kube-system, wave: 1}
 - {name: secrets, component: secrets, namespace: smartcity, wave: 2}
-- {name: networkpolicies-argocd, component: networkpolicies, namespace: argocd, wave: 3}
-- {name: networkpolicies-smartcity, component: networkpolicies, namespace: smartcity, wave: 3}
+- {name: networkpolicies, component: networkpolicies, namespace: smartcity, wave: 3}
 - {name: runtime-policies, component: runtime-policies, namespace: smartcity, wave: 4}
 - {name: postgres, component: postgres, namespace: smartcity, wave: 5}
 - {name: apps-db, component: apps-db, namespace: smartcity, wave: 6}
