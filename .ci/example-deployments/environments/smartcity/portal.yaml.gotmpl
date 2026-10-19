@@ -9,7 +9,9 @@ portal:
     #
     # Without it every reference is refused with "the age identity is unreadable" (fail closed).
     sopsAgeSecret: portal-age-identity
-    # 15 min between runs without a push: each run republished all 97 datasets through the
-    # public edge, about 1,000 requests a minute, and emptied the one shared bucket while the
-    # edge still saw every caller as 10.42.0.1 (T-4717, 2026-10-19 05:25Z).
-    syncInterval: 900
+    # 2 min between runs. At the 60 s default each run republished all 97 datasets through the
+    # public edge, about 1,000 requests a minute, while the edge still saw every caller as
+    # 10.42.0.1 (T-4717, 05:25Z); the Portal now skips unchanged datasets (~630 requests a run,
+    # 07:01Z). Not longer: this Portal has no forge webhook secret, so the timer is the only sync,
+    # and after an apply the edge file waits for the first run of the new pod as leader.
+    syncInterval: 120

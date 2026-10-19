@@ -154,12 +154,12 @@ def test_postgres_is_dumped_nightly_and_the_dump_job_may_reach_it(smartcity):
 
 
 
-def test_the_portal_syncs_every_15_minutes_without_a_push(smartcity):
-    """Each run republishes the catalogue through the public edge, ~1,000 requests a minute at
-    the 60 s default (T-4717); a merge still syncs at once through the forge's webhook."""
+def test_the_portal_syncs_every_2_minutes(smartcity):
+    """Each run republishes the catalogue through the public edge (T-4717), and the timer is the
+    only sync on this instance (no forge webhook secret), so neither 60 s nor 15 min."""
     portal = next(d for d in smartcity if d.get("kind") == "Deployment" and d["metadata"]["name"] == "portal")
     env = {e["name"]: e.get("value") for e in portal["spec"]["template"]["spec"]["containers"][0]["env"]}
-    assert env["JC_PORTAL_SYNC_INTERVAL"] == "900"
+    assert env["JC_PORTAL_SYNC_INTERVAL"] == "120"
 
 # smartcity's copies of dev's environment files, which differ from dev's in the domain alone.
 # global and portal carry the instance's own choices and are tested above instead.
