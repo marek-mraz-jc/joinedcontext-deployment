@@ -89,3 +89,44 @@ def test_a_date_that_does_not_read_is_none():
     assert restore.iso("unknown") is None
     assert restore.iso("2022-05-12T00:00:00") == "2022-05-12T00:00:00Z"
     assert restore.iso("2021-07-13T18:43:22+02:00") == "2021-07-13T16:43:22Z"
+
+
+CUBE = "https://data.statistics.sk/api/v2/dataset/as1001rs/all/all/all?lang=sk&type=json"
+CUBE_SET = "https://data.gov.sk/set/a64119dc63a065ea8f6e4614b968271e"
+
+
+def test_a_datacube_table_is_found_by_its_code_and_its_modified_date_is_the_latest_it_appeared():
+    """T-4718: NKOD lists a DATAcube table under statdata.statistics.sk downloads, in upper case
+    where the code sits, with `dct:modified` and no `dct:issued`. The cube's code finds the record;
+    `issued` wins where it is there, `modified` is the fallback, and two records are no evidence."""
+    restore = load()
+    queries = []
+
+    def answer(rows):
+        def sparql(query):
+            queries.append(query)
+            return rows
+        return sparql
+
+    restore.sparql = answer([{"ds": CUBE_SET, "modified": "2025-12-19T09:00:00"}])
+    assert restore.datacube(CUBE) == ("2025-12-19T09:00:00Z", f"NKOD {CUBE_SET} dct:modified (DATAcube as1001rs)")
+    assert "LCASE(STR(?u))" in queries[-1] and '"/dataset/as1001rs/"' in queries[-1]
+
+    restore.sparql = answer([{"ds": CUBE_SET, "issued": "2021-07-13T18:43:22+02:00", "modified": "2025-12-19T09:00:00"}])
+    assert restore.datacube(CUBE)[0] == "2021-07-13T16:43:22Z"
+
+    restore.sparql = answer([{"ds": CUBE_SET, "modified": "2025-12-19T09:00:00"}, {"ds": CUBE_SET + "x", "modified": "2020-01-01"}])
+    assert restore.datacube(CUBE) is None, "two records for one cube are no evidence of which one it is"
+    restore.sparql = answer([{"ds": CUBE_SET, "modified": "19.12.2025"}])
+    assert restore.datacube(CUBE) is None, "a date that does not read is no date"
+    assert restore.datacube("https://data.statistics.sk/api/v2/dataset/as1001rs") is None
+    assert restore.datacube("https://example.org/api/v2/dataset/as1001rs/all") is None
+
+
+def test_a_datacube_source_without_another_record_takes_its_cube_date_over_the_first_commit(tmp_path):
+    restore = load()
+    restore.sparql = lambda query: [{"ds": CUBE_SET, "modified": "2025-12-19T09:00:00Z"}] if "as1001rs" in query and "LCASE" in query else []
+    restore.ckan = Catalogue([pkg("susr-as", source=f'[{{"url": "{CUBE}"}}]', identifier="slugas")])
+    history = repo(tmp_path, "endpoints:\n  - slug: slugas\n")
+    rows = {r[0]: r[2:] for r in restore.restore("https://ckan", history, write=False)}
+    assert rows["susr-as"] == ("2025-12-19T09:00:00Z", f"NKOD {CUBE_SET} dct:modified (DATAcube as1001rs)", "would write")
