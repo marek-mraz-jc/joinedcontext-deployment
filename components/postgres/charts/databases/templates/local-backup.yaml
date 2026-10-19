@@ -1,0 +1,103 @@
+{{- /*
+A nightly pg_dumpall of the cluster onto a volume of the node, kept `keepDays` days. It is the
+stopgap while an instance has no object store for CNPG's base backups and WAL archive
+(smartcity until the owner's S3 keys exist, T-4678): it survives a dropped table or a broken
+migration, not the loss of the node, so an instance with it still has no off-site backup.
+*/ -}}
+{{- with .Values.localBackup }}
+{{- if .enabled }}
+{{- $name := printf "%s-local-backup" $.Values.cluster.name }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "database.labels" $ | nindent 4 }}
+  annotations:
+    # The dumps outlive an uninstall of the release: they are the thing to restore from.
+    helm.sh/resource-policy: keep
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: {{ .size }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "database.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: database-local-backup
+spec:
+  schedule: {{ .schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            {{- include "database.selectorLabels" $ | nindent 12 }}
+            app.kubernetes.io/component: database-local-backup
+            joinedcontext.com/psql-client: "true"
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          securityContext:
+            {{- toYaml $.Values.securityDefaults.podSecurityContext | nindent 12 }}
+          volumes:
+          - name: home
+            emptyDir: {}
+          - name: backup
+            persistentVolumeClaim:
+              claimName: {{ $name }}
+          containers:
+          - name: dump
+            image: {{ $.Values.roleJob.image }}
+            securityContext:
+              {{- toYaml $.Values.securityDefaults.securityContext | nindent 14 }}
+            volumeMounts:
+            - name: home
+              mountPath: /tmp
+            - name: backup
+              mountPath: /backup
+            resources:
+              requests: { cpu: 100m, memory: 128Mi }
+              limits: { memory: 512Mi }
+            env:
+            - name: HOME
+              value: /tmp
+            - name: PGHOST
+              value: {{ $.Values.cluster.name }}-rw.{{ $.Release.Namespace }}.svc.cluster.local
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.cluster.name }}-superuser
+                  key: username
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.cluster.name }}-superuser
+                  key: password
+            - name: KEEP_DAYS
+              value: {{ .keepDays | quote }}
+            command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              file=/backup/$(date -u +%Y-%m-%dT%H%MZ).sql.gz
+              # pipefail is not POSIX: a failed pg_dumpall would hide behind gzip's exit 0.
+              { pg_dumpall --clean --if-exists || echo FAILED > /tmp/failed; } | gzip > "$file.part"
+              if [ -e /tmp/failed ]; then rm -f "$file.part"; echo "pg_dumpall failed" >&2; exit 1; fi
+              mv "$file.part" "$file"
+              find /backup -name '*.sql.gz' -mtime +"$KEEP_DAYS" -delete
+              ls -l /backup
+{{- end }}
+{{- end }}

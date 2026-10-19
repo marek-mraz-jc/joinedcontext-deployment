@@ -17,7 +17,7 @@ postgres-allow-linkerd:
           componentNamespace: postgres
         - podSelector:
             matchLabels:
-              app.kubernetes.io/component: database-role-setup
+              joinedcontext.com/psql-client: "true"
               app.kubernetes.io/name: databases
           componentNamespace: postgres
         - podSelector:
@@ -102,7 +102,7 @@ postgres-operator-linkerd:
 # The ingress half is already in `postgres-allow-linkerd` above.
 role-setup-linkerd:
   podSelector:
-    app.kubernetes.io/component: database-role-setup
+    joinedcontext.com/psql-client: "true"
     app.kubernetes.io/name: databases
   policyTypes:
     - Egress

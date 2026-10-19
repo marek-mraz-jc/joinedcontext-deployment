@@ -18,6 +18,9 @@ securityDefaults:
   securityContext:
     {{ .Values.securityDefaults.securityContext | toYaml | nindent 4 }}
 
+localBackup:
+  {{- $this.localBackup | toYaml | nindent 2 }}
+
 databases:
 {{- range $component, $config := .Values.databases }}
   {{- if eq $config.embedded true }}

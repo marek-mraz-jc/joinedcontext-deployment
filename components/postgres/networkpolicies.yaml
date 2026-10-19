@@ -69,7 +69,7 @@ postgres:
           componentNamespace: postgres
         - podSelector:
             matchLabels:
-              app.kubernetes.io/component: database-role-setup
+              joinedcontext.com/psql-client: "true"
               app.kubernetes.io/name: databases
           componentNamespace: postgres
     # Keycloak
@@ -150,7 +150,7 @@ postgres-operator-egress:
 # allows it in, and without this it could not resolve the service name to try.
 database-role-setup:
   podSelector:
-    app.kubernetes.io/component: database-role-setup
+    joinedcontext.com/psql-client: "true"
     app.kubernetes.io/name: databases
   policyTypes:
     - Egress

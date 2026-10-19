@@ -48,3 +48,10 @@ postgres:
   databases:
     enabled: true
     namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "postgres") }}
+    # A nightly pg_dumpall of the cluster onto a node volume, kept `keepDays` days. Only for an
+    # instance without the object store above: it covers a bad migration, not a lost node.
+    localBackup:
+      enabled: false
+      schedule: '30 2 * * *'
+      keepDays: 7
+      size: 10Gi

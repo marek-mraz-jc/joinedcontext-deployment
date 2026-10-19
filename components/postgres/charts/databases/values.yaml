@@ -6,6 +6,13 @@ roleJob:
   # components/postgres/images.yaml; this default only keeps `helm template` of the bare chart
   # from failing, and is not what a cluster runs.
   image: ghcr.io/cloudnative-pg/postgis@sha256:06e22a518417c6ecfec4c23f7c2f8a4608405e559b97143e98b54f363ac03507
+# A nightly pg_dumpall onto a node volume (templates/local-backup.yaml): the stopgap while there
+# is no object store for CNPG's backups. Off by default.
+localBackup:
+  enabled: false
+  schedule: '30 2 * * *'
+  keepDays: 7
+  size: 10Gi
 databases:
   []
   # Example database configuration:

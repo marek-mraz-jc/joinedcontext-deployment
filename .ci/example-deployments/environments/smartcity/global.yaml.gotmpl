@@ -167,3 +167,7 @@ postgres:
       destinationPath: 's3://joinedcontext-prod-backup/postgres'
       region: 'nbg1'
       bucket: 'joinedcontext-prod-backup'
+  # Until then a nightly pg_dumpall onto the node, 7 days (T-4678): a bad migration, not a lost node.
+  databases:
+    localBackup:
+      enabled: true
