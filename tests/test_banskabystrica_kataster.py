@@ -63,6 +63,8 @@ def kataster(first: dict | None = None, status: int = 200, third: str | None = "
     try:
         # The fetch goes to the stand-in; the `source` each parcel names stays the service's own.
         text = MAPPING.read_text().replace(f'url: "{SERVICE}', f'url: "http://127.0.0.1:{server.server_port}')
+        if third is not None:
+            text = text.replace("let third = (timestamp_unix() / 28800).floor() % $thirds", f"let third = {third}")
         config = {
             "input": {"generate": {"mapping": 'root = ""', "count": 1, "interval": ""}},
             "pipeline": yaml.safe_load(text)["pipeline"],
@@ -72,7 +74,6 @@ def kataster(first: dict | None = None, status: int = 200, third: str | None = "
         }
         return subprocess.run(
             ["docker", "run", "--rm", "--network", "host", "-e", f"JC_SPACE={SPACE}",
-             *(["-e", f"JC_KATASTER_THIRD={third}"] if third is not None else []),
              "-e", f"CONFIG={json.dumps(config)}", "--entrypoint", "sh",
              BENTO, "-c", 'printf "%s" "$CONFIG" > /tmp/c.json && exec /bento -c /tmp/c.json'],
             capture_output=True, timeout=180,
