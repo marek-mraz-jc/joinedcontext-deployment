@@ -87,5 +87,7 @@ context-broker:
     # Antares dev 919dce7 (dev-6, ship 39255876184, trains 1045-1 T-4683 and 1228-1 T-4736 over
     # deceaf1): /types?details=true reads each Entity once by a keyset walk (100k pg 1.5 s against
     # about 10 s); the types timing test asserts the probe plan. No migration.
-    tag: 'dev-6'
-    digest: 'sha256:e26c871bed5bcb3e69274bbff109184c674c54e36489eb1cc50676d1068c9858'
+    # Antares dev 5e18030 (dev-7, train 1239-1 T-4722 over 919dce7): OData route.rs dispatches
+    # $apply, OGC terms/crs modules moved, xray gate runs under bash. No migration.
+    tag: 'dev-7'
+    digest: 'sha256:cce37e1bd5b0416f65e3fc6d3651465c8dd9d54887fd4a83141b4780f607a065'
