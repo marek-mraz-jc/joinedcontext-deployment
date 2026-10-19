@@ -114,7 +114,7 @@ TOPICS = [
     {"name": "susr-od", "theme": "od", "title": {"sk": "Mzdy vo vybraných odvetviach", "en": "Wages in selected branches"}, "cubes": ["od0008ms"]},
     {"name": "susr-og", "theme": "og", "title": {"sk": "Ekonomické subjekty podľa právnej formy", "en": "Business units by legal form"}, "cubes": ["og2019qs"]},
     {"name": "susr-om", "theme": "om", "title": {"sk": "Stav obyvateľstva", "en": "Population"}, "cubes": ["om2019rs"]},
-    {"name": "susr-om-pohyb", "theme": "om", "title": {"sk": "Pohyb obyvateľstva", "en": "Population change"}, "cubes": ["om2801ms"]},
+    {"name": "susr-om-pohyb", "theme": "om", "title": {"sk": "Pohyb obyvateľstva", "en": "Population change"}, "cubes": ["om2801ms", "om7104rr"]},
     {"name": "susr-pl", "theme": "pl", "title": {"sk": "Hospodárske zvieratá", "en": "Livestock"}, "cubes": ["pl2016rs"]},
     {"name": "susr-pm", "theme": "pm", "title": {"sk": "Priemyselná produkcia", "en": "Industrial production"}, "cubes": ["pm0043ms"]},
     {"name": "susr-pm-ceny", "theme": "pm", "title": {"sk": "Ceny priemyselných výrobcov", "en": "Industrial producer prices"}, "cubes": ["pm0048ms"]},
@@ -398,8 +398,15 @@ def topic_files(topic: dict, ds: list[dict], parts: dict[str, list[tuple[str, in
     name, eu = THEMES[theme]
     head = "apiVersion: joinedcontext.com/v1alpha1"
     tables = ", ".join(d["code"] for d in ds)
-    desc = {"sk": f"{t['sk']}: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube {tables}), jedna položka na zverejnenú bunku.",
-            "en": f"{t['en']}: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube {tables}), one record per published cell."}
+    # A table with an area dimension holds its territories too, and the router must read that
+    # here: "for the whole of Slovakia" sent BBSK's births to "not published" (T-4741).
+    if any(roles(d["dimensions"])["area"] for d in ds):
+        where = {"sk": "za Slovensko aj jeho územia (kraje, okresy alebo obce, ako ich tabuľka člení; územie v refArea, SK0 je celá SR)",
+                 "en": "for Slovakia and its territories (regions, districts or municipalities as the table divides them; the territory in refArea, SK0 the whole country)"}
+    else:
+        where = {"sk": "za celé Slovensko", "en": "for the whole of Slovakia"}
+    desc = {"sk": f"{t['sk']}: oficiálna štatistika Štatistického úradu SR {where['sk']} (DATAcube {tables}), jedna položka na zverejnenú bunku.",
+            "en": f"{t['en']}: official statistics of the Statistical Office of the Slovak Republic {where['en']} (DATAcube {tables}), one record per published cell."}
     # The topic's most frequent cadence.
     sources_ = "\n".join(source(d) for d in ds)
     frequency = next((FREQUENCY[c] for c in "mqr" if any(d["code"][6] == c for d in ds)), "ANNUAL")

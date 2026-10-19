@@ -120,6 +120,7 @@
   "susr-og2019qs": {"endpoint": "p3ibd2fuzpslybehopzpqsaysbgummui", "type": "KeyPerformanceIndicator", "dataset": "https://opendata.dev.joinedcontext.com/dataset/susr-og2019qs", "location": false, "filtered": true},
   "susr-om2019rs": {"endpoint": "fkgbhpcfvzfkpiegsg5xprfsr2tmnn4h", "type": "KeyPerformanceIndicator", "dataset": "https://opendata.dev.joinedcontext.com/dataset/susr-om2019rs", "location": false, "filtered": true},
   "susr-om2801ms": {"endpoint": "ptj22i44igzp4z3qxsvnunoh2gfg2yjb", "type": "KeyPerformanceIndicator", "dataset": "https://opendata.dev.joinedcontext.com/dataset/susr-om2801ms", "location": false, "filtered": true},
+  "susr-om7104rr": {"endpoint": "ptj22i44igzp4z3qxsvnunoh2gfg2yjb", "type": "KeyPerformanceIndicator", "dataset": "https://opendata.dev.joinedcontext.com/dataset/susr-om7104rr", "location": false, "filtered": true},
   "susr-pl2016rs": {"endpoint": "xfstyj3wts2bjaho4fkzhbl3v5l7xgfy", "type": "KeyPerformanceIndicator", "dataset": "https://opendata.dev.joinedcontext.com/dataset/susr-pl2016rs", "location": false, "filtered": true},
   "susr-pm0043ms": {"endpoint": "q5zciruevofcmaeyvu7mu4k4vzzevnpb", "type": "KeyPerformanceIndicator", "dataset": "https://opendata.dev.joinedcontext.com/dataset/susr-pm0043ms", "location": false, "filtered": true},
   "susr-pm0048ms": {"endpoint": "mmio3jkuh5e2naw2f4kwss7adgtqo2n7", "type": "KeyPerformanceIndicator", "dataset": "https://opendata.dev.joinedcontext.com/dataset/susr-pm0048ms", "location": false, "filtered": true},

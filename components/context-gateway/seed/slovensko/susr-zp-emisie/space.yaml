@@ -6,7 +6,7 @@ metadata:
   name: susr-zp-emisie
   namespace: slovensko
   title: { sk: "Emisie znečisťujúcich látok — ŠÚ SR", en: "Emissions of pollutants, Statistical Office of the SR" }
-  description: { sk: "Emisie znečisťujúcich látok: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube zp3803rs), jedna položka na zverejnenú bunku.", en: "Emissions of pollutants: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube zp3803rs), one record per published cell." }
+  description: { sk: "Emisie znečisťujúcich látok: oficiálna štatistika Štatistického úradu SR za Slovensko aj jeho územia (kraje, okresy alebo obce, ako ich tabuľka člení; územie v refArea, SK0 je celá SR) (DATAcube zp3803rs), jedna položka na zverejnenú bunku.", en: "Emissions of pollutants: official statistics of the Statistical Office of the Slovak Republic for Slovakia and its territories (regions, districts or municipalities as the table divides them; the territory in refArea, SK0 the whole country) (DATAcube zp3803rs), one record per published cell." }
 spec:
   urnSegment: susr-zp-emisie
   isSandbox: false
