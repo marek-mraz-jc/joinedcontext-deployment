@@ -175,6 +175,24 @@ def test_the_public_budgets_stay_inside_the_keys_five_dollars():
     assert total + general()["spec"]["budget"]["costPerDayUsd"] <= 5
 
 
+def test_a_conversation_holds_100000_tokens_and_costs_at_most_15_cents():
+    # T-4761 (owner 2026-10-19 20:1xZ): bbsk-demo's 40,000 refused the owner's second question
+    # ("Tento rozhovor je už dlhý"); one data answer alone can spend that. Owner: ten questions
+    # in a row, about 15 cents at most: the conversation's cost cap is the money guard, and
+    # T-4763 cuts what one answer costs. The data-eval copies measure answers and keep 3,000,000.
+    seen = 0
+    for path in sorted(SEED.rglob("*.yaml")):
+        for doc in yaml.safe_load_all(path.read_text()):
+            if isinstance(doc, dict) and doc.get("kind") == "AssistantDeployment":
+                seen += 1
+                budget = doc["spec"]["budget"]
+                assert budget["tokensPerConversation"] >= 100_000, path.name
+                if not doc["metadata"]["name"].startswith("data-eval-"):
+                    assert 0 < budget["costPerConversationUsd"] <= 0.15, path.name
+                    assert budget["costPerConversationUsd"] <= budget["costPerDayUsd"], path.name
+    assert seen >= 15
+
+
 @pytest.mark.parametrize("public_id", BODIES)
 def test_the_chat_speaks_the_bodys_language_first(public_id):
     spec = deployment(public_id)["spec"]
@@ -361,6 +379,8 @@ def test_a_conversation_of_the_general_assistant_holds_a_question_over_five_publ
     # data answers at the measured p90 (296,985 tokens, dev turns 2026-10-19).
     assert spec["budget"]["tokensPerConversation"] >= 10 * 296_985
     assert spec["budget"]["costPerDayUsd"] == 1
+    # T-4761 (owner 2026-10-19): ten questions in a row, about 15 cents at most.
+    assert spec["budget"]["costPerConversationUsd"] == 0.15
     assert spec["rateLimit"] == deployment("bbsk")["spec"]["rateLimit"]
 
 
@@ -426,7 +446,9 @@ def test_the_open_data_eval_copies_are_data_with_another_model():
             {k: v for k, v in base.items() if k not in ("publicId", "model", "budget")}, name
         # T-4729: only the day's cost may differ, and only upward to the run's own $4 (its tokensPerDay buys about $4.32).
         day = spec["budget"]["costPerDayUsd"]
-        assert {**spec["budget"], "costPerDayUsd": base["budget"]["costPerDayUsd"]} == base["budget"], name
+        # The visitors' 15-cent conversation cap (T-4761) is not a measurement's: a copy is measured whole.
+        assert {**spec["budget"], "costPerDayUsd": base["budget"]["costPerDayUsd"],
+                "costPerConversationUsd": base["budget"]["costPerConversationUsd"]} == base["budget"], name
         assert base["budget"]["costPerDayUsd"] <= day <= 4, name
 
 
