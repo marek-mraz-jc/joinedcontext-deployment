@@ -59,7 +59,7 @@ git tag "$NEXT"
 image() {
 	python3 -c 'import sys, yaml
 p = yaml.safe_load(open("components/artifact-store/images.yaml"))["artifact-store"][sys.argv[1]]
-print(f"{p[\"repository\"]}:{p[\"tag\"]}@{p[\"digest\"]}")' "$1"
+print("%s:%s@%s" % (p["repository"], p["tag"], p["digest"]))' "$1"
 }
 KEY="$(openssl rand -hex 12)"
 SECRET="$(openssl rand -hex 24)"
