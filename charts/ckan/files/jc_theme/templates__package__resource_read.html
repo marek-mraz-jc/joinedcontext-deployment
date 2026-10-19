@@ -62,7 +62,7 @@
       <span class="jc-address-label">{{ h.jc_t('address') }}</span>
       <code class="jc-address-short">{% if address.segments %}{% for part in address.segments %}<span>{{ part }}</span>{% if not loop.last %}/<wbr>{% endif %}{% endfor %}{% else %}{{ address.short }}{% endif %}</code>
       {% if res.url %}
-        <button type="button" class="btn {{ 'btn-primary' if api else 'btn-default' }}" data-jc-copy="jc-address-full" data-jc-copied="{{ h.jc_t('copied') }}"><span class="jc-code-copy-label">{{ h.jc_t('copy_address') }}</span></button>
+        <button type="button" class="btn {{ 'btn-primary' if api else 'btn-default' }}" data-jc-copy="jc-address-full" data-jc-copied="{{ h.jc_t('copied') }}" data-jc-select="{{ h.jc_t('copy_select') }}"><span class="jc-code-copy-label">{{ h.jc_t('copy_address') }}</span></button>
       {% endif %}
       <details class="jc-address-whole">
         <summary>{{ h.jc_t('full_address') }}</summary>
@@ -103,7 +103,7 @@
             {% if example.code %}
               <div class="jc-copy jc-copy-code">
                 <pre id="{{ example.id }}" aria-label="{{ h.jc_t('snippet') }}" tabindex="0"><code>{% snippet 'snippets/jc_breakable.html', text=example.code %}</code></pre>
-                <button type="button" class="btn btn-default" data-jc-copy="{{ example.id }}" data-jc-copied="{{ h.jc_t('copied') }}"><span class="jc-code-copy-label">{{ h.jc_t('copy') }}</span></button>
+                <button type="button" class="btn btn-default" data-jc-copy="{{ example.id }}" data-jc-copied="{{ h.jc_t('copied') }}" data-jc-select="{{ h.jc_t('copy_select') }}"><span class="jc-code-copy-label">{{ h.jc_t('copy') }}</span></button>
               </div>
             {% endif %}
           {% endfor %}
@@ -160,7 +160,6 @@
 
 {% block scripts %}
   {{ super() }}
-  <script src="{{ h.url_for_static('/jc-copy.js') }}" defer></script>
   <script src="{{ h.url_for_static('/jc-frame.js') }}" defer></script>
   <script src="{{ h.url_for_static('/jc-preview.js') }}" defer></script>
   <script src="{{ h.url_for_static('/jc-viz.js') }}" defer></script>

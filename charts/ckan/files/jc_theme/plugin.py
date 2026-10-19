@@ -240,6 +240,8 @@ STRINGS = {
     "example": {"en": "Start here: the kinds of entities it holds", "sk": "Začnite tu: aké druhy entít obsahuje", "cs": "Začněte zde: jaké druhy entit obsahuje", "de": "Hier beginnen: welche Arten von Entitäten es enthält"},
     "copy": {"en": "Copy", "sk": "Kopírovať", "cs": "Kopírovat", "de": "Kopieren"},
     "copied": {"en": "Copied", "sk": "Skopírované", "cs": "Zkopírováno", "de": "Kopiert"},
+    # The browser refused the clipboard (T-4762): the text is selected for the person's own copy.
+    "copy_select": {"en": "Selected: press Ctrl+C", "sk": "Označené: stlačte Ctrl+C", "cs": "Označeno: stiskněte Ctrl+C", "de": "Markiert: Strg+C drücken"},
     "visualizations": {"en": "Charts", "sk": "Grafy", "cs": "Grafy", "de": "Diagramme"},
     "viz_embed": {"en": "Embed on a website", "sk": "Vložiť na web", "cs": "Vložit na web", "de": "Auf einer Website einbetten"},
     "viz_embed_lead": {
@@ -1774,6 +1776,11 @@ def jc_mcp_install():
         # Valid JSON laid out for a phone's card: the address alone on its line, so no line is
         # wider than the address itself (T-4284).
         "json": '{"mcpServers": {%s: {\n  "type": "http",\n  "url":\n  %s\n}}}' % (json.dumps(MCP_NAME), json.dumps(url)),
+        # What the copy buttons put on the clipboard (T-4762): the command on one line, which runs
+        # as pasted in any shell (a `\` continuation fails in cmd and PowerShell), and the JSON
+        # in its usual layout, the address on the line of its key.
+        "claude_copy": "claude mcp add --transport http %s %s" % (MCP_NAME, url),
+        "json_copy": json.dumps({"mcpServers": {MCP_NAME: server}}, indent=2),
         "vscode": "vscode:mcp/install?" + quote(vscode, safe=""),
         "cursor": "cursor://anysphere.cursor-deeplink/mcp/install?name=%s&config=%s" % (MCP_NAME, quote(cursor, safe="")),
     }

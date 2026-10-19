@@ -59,7 +59,7 @@
               <p class="jc-lead">{{ h.jc_t('map_embed_lead') }}</p>
               {# The textarea shows markup as text: the title is escaped once more for the copy. #}
               <textarea id="jc-map-embed" class="form-control" rows="3" readonly><iframe src="{{ map.embed }}" width="100%" height="480" title="{{ map.title|replace('&', '&amp;')|replace('"', '&quot;') }}" style="border:0" loading="lazy"></iframe></textarea>
-              <button type="button" class="btn btn-default" data-jc-copy="jc-map-embed" data-jc-copied="{{ h.jc_t('copied') }}"><span class="jc-code-copy-label">{{ h.jc_t('copy') }}</span></button>
+              <button type="button" class="btn btn-default" data-jc-copy="jc-map-embed" data-jc-copied="{{ h.jc_t('copied') }}" data-jc-select="{{ h.jc_t('copy_select') }}"><span class="jc-code-copy-label">{{ h.jc_t('copy') }}</span></button>
             </details>
           </div>
         </details>
@@ -88,7 +88,7 @@
         <label for="jc-live-url" class="visually-hidden">{{ h.jc_t('live') }}</label>
         {# A block that wraps, not a field that cuts the address at a phone's edge (T-4333). #}
         <pre id="jc-live-url" class="jc-live-url" tabindex="0"><code>{% snippet 'snippets/jc_breakable.html', text=live.url %}</code></pre>
-        <button type="button" class="btn btn-default" data-jc-copy="jc-live-url" data-jc-copied="{{ h.jc_t('copied') }}">{{ h.jc_t('copy') }}</button>
+        <button type="button" class="btn btn-default" data-jc-copy="jc-live-url" data-jc-copied="{{ h.jc_t('copied') }}" data-jc-select="{{ h.jc_t('copy_select') }}">{{ h.jc_t('copy') }}</button>
       </div>
       <p class="jc-example-label" id="jc-example-label">{{ h.jc_t('example') }}</p>
       <pre aria-labelledby="jc-example-label"><code>{% snippet 'snippets/jc_breakable.html', text=live.example %}</code></pre>
@@ -118,7 +118,6 @@
 
 {% block scripts %}
   {{ super() }}
-  <script src="{{ h.url_for_static('/jc-copy.js') }}" defer></script>
   <script src="{{ h.url_for_static('/jc-frame.js') }}" defer></script>
   <script src="{{ h.url_for_static('/jc-viz.js') }}" defer></script>
   <script type="module" src="{{ h.url_for_static('/jc-map.js') }}"></script>
