@@ -181,7 +181,7 @@ def dataset(item, title, source, name=None):
         # REST and Shapefile links are not listed (EP-118, T-4324). None means the rows were not
         # converted, and the dataset is withdrawn.
         "resources": od_standards(name),
-        "extras": [{"key": k, "value": v} for k, v in sorted(extras.items()) if v],
+        "extras": [{"key": k, "value": v} for k, v in sorted(extras.items()) if v] + od_extras(name),
     }
     digest = hashlib.sha256(json.dumps(package, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
     package["extras"].append({"key": "harvest_hash", "value": digest})
