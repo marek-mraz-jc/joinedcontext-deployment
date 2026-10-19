@@ -770,3 +770,18 @@ def test_each_sheet_has_one_table_view_and_a_located_one_its_map(ckan, converted
     [items_url] = ogc(CULTURE)
     assert urllib.parse.urlsplit(items_url).path.endswith(f"/collections/{datastore(ckan, CULTURE)[0]['name']}/items")
     assert ogc(OBCE) == [], "a register without location gets no map"
+
+
+BBSK_SCHOOLS = ["bbsk-materske-skoly-v-banskobystrickom-kraji-3f7d07", "bbsk-zakladne-skoly-v-banskobystrickom-kraji-13a8b6",
+                "bbsk-stredne-skoly-v-banskobystrickom-kraji-581554", "bbsk-vysoke-skoly-v-banskobystrickom-kraji-b0be47"]
+
+
+@pytest.mark.parametrize("name", BBSK_SCHOOLS)
+def test_each_bbsk_school_dataset_is_published_with_its_endpoint(name):
+    """T-4766: the four school registers answer bbsk-demo's school questions (T-4740), so none is
+    hidden and each names the BBSK open-data Endpoint and its type."""
+    values = (ROOT / "components/ckan/values/catalogue/development-values.yaml.gotmpl").read_text()
+    hidden = yaml.safe_load(values.replace('{{"{{"}}', "{{").replace('{{"}}"}}', "}}"))["hidden"]
+    assert name not in hidden
+    entry = OD_DATASETS[name]
+    assert (entry["endpoint"], entry["type"]) == ("6b4yqhzqieutqcoeew5rnxrx5udqeert", "Organization")

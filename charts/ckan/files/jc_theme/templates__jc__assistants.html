@@ -33,7 +33,7 @@
       </ul>
       <p class="jc-store-address">{{ h.jc_t('store_address') }}
         <span id="jc-store-url" class="jc-store-url">{{ page.mcp.url_parts | join('<wbr>' | safe) }}</span>
-        <button type="button" class="btn btn-default" data-jc-copy="jc-store-url" data-jc-copied="{{ h.jc_t('copied') }}"><span class="jc-code-copy-label">{{ h.jc_t('copy') }}</span></button>
+        <button type="button" class="btn btn-default" data-jc-copy="jc-store-url" data-jc-copied="{{ h.jc_t('copied') }}" data-jc-select="{{ h.jc_t('copy_select') }}"><span class="jc-code-copy-label">{{ h.jc_t('copy') }}</span></button>
       </p>
       <p class="visually-hidden" role="status" aria-live="polite" id="jc-copy-status"></p>
       {% if page.sources %}
@@ -61,8 +61,3 @@
 {% endblock %}
 
 {% block secondary %}{% endblock %}
-
-{% block scripts %}
-  {{ super() }}
-  <script src="{{ h.url_for_static('/jc-copy.js') }}" defer></script>
-{% endblock %}
