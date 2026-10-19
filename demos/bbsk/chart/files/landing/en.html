@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>DEMO · An AI assistant on the Banská Bystrica Region's data (a demo, not BBSK's official site)</title>
+<meta name="description" content="A demo by joinedcontext: an AI assistant on the open data of the Banská Bystrica self-governing region and the city of Banská Bystrica. Not BBSK's official site.">
+<link rel="stylesheet" href="/landing.css">
+<script src="/jc-dock.js"></script>
+</head>
+<body>
+<a class="skip" href="#obsah">Skip to content</a>
+<div class="ribbon" role="note">DEMO · a demo by joinedcontext, not BBSK's official site</div>
+
+<div class="utility">
+  <div class="wrap">
+    <nav aria-label="Quick links">
+      <a href="#try">Try the assistant</a>
+      <a href="#how">How it works</a>
+      <a href="#mcp">Connect your own AI assistant</a>
+      <a href="https://opendata.__DOMAIN__/organization/bbsk">Open data</a>
+    </nav>
+    <nav class="lang" aria-label="Language"><a href="/en/" aria-current="page">EN</a> <a href="/" hreflang="sk" lang="sk">SK</a></nav>
+  </div>
+</div>
+
+<header class="header">
+  <div class="wrap">
+    <a class="wordmark" href="/en/" aria-label="Banskobystrický samosprávny kraj, DEMO, home">
+      <span>Banskobystrický<small>samosprávny kraj</small></span><b>DEMO</b>
+    </a>
+    <div class="actions">
+      <button type="button" class="ask" data-ask><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>Ask the assistant</button>
+      <a class="data" href="https://opendata.__DOMAIN__/organization/bbsk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v3H3zM3 10.5h18v3H3zM3 16h18v3H3z"/></svg>Datasets</a>
+    </div>
+  </div>
+</header>
+
+<nav class="band" aria-label="On this page">
+  <ul>
+    <li><a href="#try"><strong>Try the assistant</strong><small>Six questions on the region's and the city's data</small></a></li>
+    <li><a href="#how"><strong>How it works</strong><small>From the data to an answer with its source</small></a></li>
+    <li><a href="#mcp"><strong>Your AI assistant</strong><small>The same data in Claude, ChatGPT or VS Code</small></a></li>
+  </ul>
+</nav>
+
+<main id="obsah">
+<div class="hero">
+  <div class="wrap">
+    <div class="card">
+      <h1>An AI assistant on your region's data: try it</h1>
+      <p>Ask about cycle routes, bridges, schools, pharmacies or road accidents in the Banská Bystrica Region, in Slovak or English. The assistant answers from www.bbsk.sk and from the open data of the region and the city of Banská Bystrica, and names the source of every fact.</p>
+      <button type="button" class="button" data-ask>Open the assistant</button>
+      <p class="note">A demo by joinedcontext for the Banská Bystrica self-governing region. It is not an official BBSK service.</p>
+    </div>
+  </div>
+</div>
+
+<section id="try">
+  <div class="wrap">
+    <h2>Try it</h2>
+    <p class="lead">Choose a question: the assistant opens and offers the same question among its suggestions. Or write your own.</p>
+    <ul class="cards">
+      <li><button type="button" data-ask><span class="head"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="12" cy="32" r="8"/><circle cx="36" cy="32" r="8"/><path d="M12 32l8-14h12l4 14M20 18l-3-5h-4M24 32l8-14"/></svg></span><strong>Where is a map of the region's cycle routes?</strong><small>A map from the region's data</small></button></li>
+      <li><button type="button" data-ask><span class="head"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M4 22h40M4 22c8 0 12 8 20 8s12-8 20-8M10 22v16M24 30v8M38 22v16M4 38h40"/></svg></span><strong>How many bridges does the region manage, and how many are over 100 years old?</strong><small>The bridge register</small></button></li>
+      <li><button type="button" data-ask><span class="head"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M4 18l20-9 20 9-20 9zM12 22v10c0 3 6 6 12 6s12-3 12-6V22M44 18v12"/></svg></span><strong>Which secondary schools are in the Zvolen district?</strong><small>The schools the region runs</small></button></li>
+      <li><button type="button" data-ask><span class="head"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="18"/><path d="M24 14v20M14 24h20"/></svg></span><strong>Where is the nearest pharmacy to SNP Square?</strong><small>The list of pharmacies on a map</small></button></li>
+      <li><button type="button" data-ask><span class="head"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 6v36h36M12 34l8-10 7 5 13-15"/></svg></span><strong>How are traffic accidents in the region developing?</strong><small>A chart over the years the data holds</small></button></li>
+      <li><button type="button" data-ask><span class="head"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 8h36v24H20l-10 8v-8H6zM24 14v9M24 27v.5"/></svg></span><strong>Where can I report a problem on a cycle path?</strong><small>An answer from www.bbsk.sk</small></button></li>
+    </ul>
+  </div>
+</section>
+
+<section id="how" class="grey">
+  <div class="wrap">
+    <h2>How it works</h2>
+    <ol class="steps">
+      <li><h3>The region's and the city's data</h3><p>The open data of BBSK (opendata.bbsk.sk) and of the city of Banská Bystrica are loaded into an NGSI-LD context space, in the standard Smart Data Models.</p></li>
+      <li><h3>Endpoint and rules</h3><p>Every public dataset has its Endpoint with access rules. The public can only read; nobody changes anything through it.</p></li>
+      <li><h3>MCP</h3><p>The assistant asks the Endpoints through the open MCP protocol, as any AI assistant you connect yourself does.</p></li>
+      <li><h3>The region's website (RAG)</h3><p>The assistant searches www.bbsk.sk and www.banskabystrica.sk in an index of its own, refreshed every week.</p></li>
+    </ol>
+    <p>The demo holds only the data of BBSK and the city of Banská Bystrica. Every dataset is in the catalogue: <a href="https://opendata.__DOMAIN__/organization/bbsk">the Banská Bystrica self-governing region</a> and <a href="https://opendata.__DOMAIN__/organization/banskabystrica">the city of Banská Bystrica</a>.</p>
+  </div>
+</section>
+
+<section id="mcp">
+  <div class="wrap">
+    <h2>Connect your own AI assistant (MCP)</h2>
+    <p class="lead">Your own AI assistant gets the same data and the same website. The connector only reads and needs no login and no key.</p>
+    <p><strong>Connector address</strong><code class="url">https://api.__DOMAIN__/api/mcp/d/bbsk-demo</code></p>
+    <div class="two">
+      <div class="panel">
+        <h3>Claude (claude.ai and Claude Desktop)</h3>
+        <ol>
+          <li>Open Customize, then Connectors, choose + Add and Add custom connector.</li>
+          <li>Name it, for example, “BBSK demo” and paste the address above.</li>
+          <li>Leave the advanced settings empty and choose Add.</li>
+        </ol>
+        <p>Then ask: “Where is a map of the region's cycle routes?”</p>
+      </div>
+      <div class="panel">
+        <h3>Claude Code, VS Code and other MCP clients</h3>
+        <pre>claude mcp add --transport http bbsk-demo https://api.__DOMAIN__/api/mcp/d/bbsk-demo</pre>
+        <pre>{ "servers": { "bbsk-demo": { "type": "http", "url": "https://api.__DOMAIN__/api/mcp/d/bbsk-demo" } } }</pre>
+        <p>ChatGPT: follow <a href="https://developers.openai.com/apps-sdk/deploy/connect-chatgpt">OpenAI's guide to connecting a custom connector</a>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="privacy" class="grey">
+  <div class="wrap">
+    <h2>Privacy and limits</h2>
+    <div class="two">
+      <div class="panel">
+        <h3>Answers are written by AI</h3>
+        <p>They may contain mistakes. Check important facts in the linked sources or at <a href="https://www.bbsk.sk/kontakty">www.bbsk.sk/kontakty</a>.</p>
+      </div>
+      <div class="panel">
+        <h3>What we keep</h3>
+        <p>Conversations are kept for 90 days to improve the service, with personal data masked. Do not enter personal data. This page uses no cookies and no analytics. The assistant has a daily limit; when it is spent, it says so and answers again the next day.</p>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <p class="demo">DEMO · a demo by joinedcontext, not BBSK's official site</p>
+    <p>The official site of the Banská Bystrica self-governing region is <a href="https://www.bbsk.sk/">www.bbsk.sk</a>.</p>
+    <p>Data: the open data of the Banská Bystrica self-governing region and the city of Banská Bystrica, under the licence each dataset names.</p>
+    <p>Run by joinedcontext.</p>
+  </div>
+</footer>
+
+<details class="jc-assistant" id="jc-assistant">
+  <summary><span>Assistant</span></summary>
+  <iframe src="https://assistant.__DOMAIN__/d/bbsk-demo/widget?embed=1&amp;dock=1" title="Assistant" loading="lazy" referrerpolicy="no-referrer"></iframe>
+</details>
+<script src="/jc-assistant.js"></script>
+<script src="/landing.js"></script>
+</body>
+</html>

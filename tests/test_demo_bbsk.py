@@ -67,9 +67,10 @@ def test_the_host_has_its_own_certificate_and_every_answer_says_noindex(demo):
     assert middleware == "demo-bbsk-demo-bbsk-headers@kubernetescrd"
     headers = one(docs, "Middleware", "demo-bbsk-headers")["spec"]["headers"]
     assert headers["customResponseHeaders"]["X-Robots-Tag"] == "noindex, nofollow"
+    # T-4740: the host serves the landing page; the catalogue runs behind it until it is removed.
     assert one(docs, "Deployment", "ckan-demo-bbsk")
     backend = ingress["spec"]["rules"][0]["http"]["paths"][0]["backend"]["service"]
-    assert backend == {"name": "ckan-demo-bbsk", "port": {"number": 5000}}
+    assert backend == {"name": "demo-bbsk-landing", "port": {"number": 8080}}
 
 
 def test_the_namespace_is_closed_but_for_the_edge_and_public_https(demo):

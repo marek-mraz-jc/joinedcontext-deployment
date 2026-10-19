@@ -709,6 +709,7 @@ demo-bbsk-apply env:
 	helmfile -f demos/bbsk/helmfile.yaml.gotmpl -e {{ env }} sync --concurrency {{helmfile_concurrency}}
 	kubectl -n demo-bbsk rollout status statefulset/demo-bbsk-db --timeout=300s
 	kubectl -n demo-bbsk rollout status deployment/ckan-demo-bbsk --timeout=600s
+	kubectl -n demo-bbsk rollout status deployment/demo-bbsk-landing --timeout=120s
 
 # Remove the BBSK demo whole: its releases, volumes and namespace, and nothing of the platform
 [group('demo bbsk')]
