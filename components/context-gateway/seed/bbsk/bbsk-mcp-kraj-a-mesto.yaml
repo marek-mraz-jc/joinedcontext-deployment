@@ -1,8 +1,9 @@
 # The region's and the city's public data as one read-only MCP connector (T-4750, owner's case of
 # 30 Endpoints): `https://{domain}/api/mcp/bbsk/kraj-a-mesto`. Members stop at ten, so it names
-# no member and selects every public Endpoint of the projects bbsk and banskabystrica (MF-55); an
-# Endpoint either body publishes joins it without an edit here. No assistant reads it: the BBSK
-# demo reads the region only (owner 2026-10-19T17:55Z).
+# no member and selects every public Endpoint of the two bodies' open-data spaces (MF-55); an
+# Endpoint either body adds to one of them joins without an edit here. Spaces, not projects:
+# the city's `ovzdusie` space holds what the smoke run and the ETSI suite write (public-air).
+# The BBSK demo's assistant reads through it (owner 2026-10-19T19:50Z).
 apiVersion: joinedcontext.com/v1alpha1
 kind: McpServer
 metadata:
@@ -15,6 +16,12 @@ metadata:
     en: "Every public open dataset of the Banská Bystrica Self-Governing Region and the City of Banská Bystrica, Slovakia, read-only, in one server. Each tool takes an `endpoint`; list_endpoints names them. Start with list_types, then query_entities with a small limit. Texts are in Slovak. Credit the source each Endpoint names when you quote it."
 spec:
   select:
-    projects: [banskabystrica, bbsk]
+    spaces:
+      - banskabystrica/banskabystrica-verejne
+      - banskabystrica/banskabystrica-otvorene-data
+      - bbsk/bbsk-registre
+      - bbsk/bbsk-kraj
+      - bbsk/bbsk-kpi
+      - bbsk/bbsk-otvorene-data
     accessLevel: [public]
   audience: public
