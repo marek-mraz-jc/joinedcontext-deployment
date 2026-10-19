@@ -47,6 +47,16 @@
     return best;
   }
 
+  // A point on every line and polygon, with the feature's id: a bridge of 30 m is a dot at any
+  // zoom instead of a stroke too short to see or click (T-4727). Its middle position, so it sits on
+  // the line itself.
+  function anchors(features) {
+    return features.filter(function (f) { return !/Point$/.test(f.geometry.type); }).map(function (f) {
+      var all = flat(f.geometry.coordinates);
+      return { type: "Feature", id: f.id, geometry: { type: "Point", coordinates: all[Math.floor(all.length / 2)] }, properties: f.properties };
+    });
+  }
+
   // What a feature's popup says, as plain strings: the label, each field with its unit, the time
   // and the link. The DOM gets these through textContent alone.
   function lines(spec, props, lang) {
@@ -130,8 +140,10 @@
     var is = function (types) { return ["in", ["geometry-type"], ["literal", types]]; };
     map.addLayer({ id: "jc-fill", type: "fill", source: "jc", filter: is(["Polygon", "MultiPolygon"]), paint: { "fill-color": COLOUR, "fill-opacity": 0.25 } });
     map.addLayer({ id: "jc-line", type: "line", source: "jc", filter: is(["LineString", "MultiLineString", "Polygon", "MultiPolygon"]), paint: { "line-color": COLOUR, "line-width": 3 } });
+    map.addSource("jc-anchor", { type: "geojson", data: { type: "FeatureCollection", features: anchors(features) } });
+    map.addLayer({ id: "jc-anchor", type: "circle", source: "jc-anchor", paint: { "circle-color": COLOUR, "circle-radius": 5, "circle-stroke-color": "#fff", "circle-stroke-width": 2 } });
     map.addLayer({ id: "jc-point", type: "circle", source: "jc", filter: is(["Point", "MultiPoint"]), paint: { "circle-color": COLOUR, "circle-radius": 7, "circle-stroke-color": "#fff", "circle-stroke-width": 2 } });
-    var layers = ["jc-point", "jc-line", "jc-fill"];
+    var layers = ["jc-point", "jc-anchor", "jc-line", "jc-fill"];
     var open = function (i, at) {
       new maplibre.Popup({ maxWidth: "280px" }).setLngLat(at).setDOMContent(popupNode(lines(spec, features[i].properties, lang))).addTo(map);
     };
@@ -151,7 +163,7 @@
   }
 
   if (typeof module === "object" && module.exports) {
-    module.exports = { bounds: bounds, nearest: nearest, lines: lines };
+    module.exports = { anchors: anchors, bounds: bounds, nearest: nearest, lines: lines };
     return;
   }
   window.addEventListener("message", function (event) {
