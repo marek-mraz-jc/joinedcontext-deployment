@@ -5,6 +5,7 @@ through and still block anyone else claiming those labels (T-0232 / T-0234). The
 Security Standards policies must hold for the workloads this deployment owns and stop at
 its namespaces (T-0008)."""
 
+import os
 import re
 import shutil
 import subprocess
@@ -450,6 +451,31 @@ def test_the_platform_images_are_verified_against_their_workflow_identity(pod_se
     assert keyless["subjectRegExp"] == "^https://github.com/marek-mraz-jc/"
 
 
+
+@requires_helm
+def test_a_production_tier_namespace_admits_only_fully_tested_images(pod_security):
+    """T-4721: a namespace labelled tier=production admits our images only with promote.yml's
+    full-tests attestation, enforced and failing closed; a dev-<N> digest has none. Selected by
+    the label alone, so no namespace is judged until one carries it."""
+    docs = {d["metadata"]["name"]: d for d in yaml.safe_load_all(pod_security.read_text()) if d}
+    policy = docs["require-full-tests-in-production"]["spec"]
+    assert policy["failurePolicy"] == "Fail"
+    [rule] = policy["rules"]
+    [match] = rule["match"]["any"]
+    assert match["resources"]["namespaceSelector"] == {"matchLabels": {"joinedcontext.com/tier": "production"}}
+    assert "namespaces" not in match["resources"]
+    [verify] = rule["verifyImages"]
+    assert verify["imageReferences"] == ["ghcr.io/marek-mraz-jc/*"]
+    assert verify["failureAction"] == "Enforce" and verify["required"] is True
+    [attestation] = verify["attestations"]
+    assert attestation["type"] == "https://joinedcontext.com/attestations/full-tests/v1"
+    subject = re.compile(attestation["attestors"][0]["entries"][0]["keyless"]["subjectRegExp"])
+    promote = "https://github.com/marek-mraz-jc/joinedcontext-platform/.github/workflows/promote.yml@refs/heads/main"
+    assert subject.search(promote)
+    # ship's own signature is not the full-tests one, nor is a promote.yml run off main
+    assert not subject.search(promote.replace("promote.yml", "image.yml"))
+    assert not subject.search(promote.replace("refs/heads/main", "refs/heads/agent/x"))
+
 BAD_PODS = {
     # T-2480: one pod per step of the attack, each refused by its own rule.
     "privileged": ({"securityContext": {"privileged": True}}, {}, "privileged-containers"),
@@ -505,3 +531,33 @@ def test_an_environment_without_an_action_fails_the_render_instead_of_auditing(a
         shutil.rmtree(env_dir, ignore_errors=True)
     assert result.returncode != 0
     assert "failureAction must be Audit or Enforce" in result.stderr + result.stdout
+
+
+# Online: kyverno fetches the real signature and attestations from ghcr.io and Rekor, so it runs
+# only when asked (JC_KYVERNO_ONLINE=1), never as a flaky fast-lane gate.
+requires_online = pytest.mark.skipif(os.environ.get("JC_KYVERNO_ONLINE") != "1", reason="set JC_KYVERNO_ONLINE=1")
+SHIPPED = ("ghcr.io/marek-mraz-jc/joinedcontext-platform"
+           "@sha256:2f75206823a576a2e9f958311063daff0d9c61a7d3b51920612c00051927f835")  # signed, never promoted
+
+
+@requires_online
+@requires_kyverno
+@requires_helm
+@pytest.mark.parametrize("tier, refused", [("production", True), ("demo", False)])
+def test_a_signed_dev_image_is_refused_only_in_a_production_tier_namespace(pod_security, tmp_path, tier, refused):
+    """T-4721, against the registry: a digest ship signed but promote never attested starts in a
+    demo-tier namespace and is refused in a production-tier one."""
+    pod = tmp_path / "pod.yaml"
+    pod.write_text(yaml.safe_dump({"apiVersion": "v1", "kind": "Pod", "metadata": {"name": "gw", "namespace": "ns"},
+                                   "spec": {"containers": [{"name": "gw", "image": SHIPPED}]}}))
+    values = tmp_path / "values.yaml"
+    values.write_text(yaml.safe_dump({"apiVersion": "cli.kyverno.io/v1alpha1", "kind": "Values",
+                                      "namespaceSelector": [{"name": "ns", "labels": {"joinedcontext.com/tier": tier}}]}))
+    docs = [d for d in yaml.safe_load_all(pod_security.read_text())
+            if d and d["metadata"]["name"] in ("verify-platform-images", "require-full-tests-in-production")]
+    policy = tmp_path / "policy.yaml"
+    policy.write_text(yaml.safe_dump_all(docs))
+    out = subprocess.run(["kyverno", "apply", str(policy), "--resource", str(pod), "--values-file", str(values)],
+                         capture_output=True, text=True, timeout=120).stdout
+    assert ("require-full-tests-in-production -> resource ns/Pod/gw failed" in out) is refused, out
+    assert "error: 0" in out, out

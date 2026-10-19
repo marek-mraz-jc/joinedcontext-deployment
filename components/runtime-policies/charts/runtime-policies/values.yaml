@@ -47,3 +47,10 @@ imageSignatures:
     - "ghcr.io/marek-mraz-jc/*"
   issuer: https://token.actions.githubusercontent.com
   subjectRegExp: "^https://github.com/marek-mraz-jc/"
+  # T-4721: namespaces labelled `<label>: production` admit only digests that carry promote.yml's
+  # full-tests attestation. No namespace carries the label yet (smartcity is tier demo).
+  productionTier:
+    enabled: true
+    label: joinedcontext.com/tier
+    attestationType: https://joinedcontext.com/attestations/full-tests/v1
+    subjectRegExp: "^https://github.com/marek-mraz-jc/[^/]+/\\.github/workflows/promote\\.yml@refs/heads/main$"

@@ -42,6 +42,7 @@ kyverno.io/v1/ClusterPolicy -/explain-linkerd-cni-opt-out
 kyverno.io/v1/ClusterPolicy -/justify-api-token-access
 kyverno.io/v1/ClusterPolicy -/justify-linkerd-inject-opt-out
 kyverno.io/v1/ClusterPolicy -/protect-operator-owned-labels
+kyverno.io/v1/ClusterPolicy -/require-full-tests-in-production
 kyverno.io/v1/ClusterPolicy -/require-image-checksum
 kyverno.io/v1/ClusterPolicy -/require-linkerd-sidecar
 kyverno.io/v1/ClusterPolicy -/require-meshed-namespace-inbound-policy

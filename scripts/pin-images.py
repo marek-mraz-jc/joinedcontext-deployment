@@ -2,6 +2,7 @@
 """Pin the images of the head of a source repository's `main` (ADR-N-056 §2.4, OPS-57).
 
     python3 scripts/pin-images.py platform     # or: portal
+    python3 scripts/pin-images.py platform --tier production
 
 For the commit at the head of `main` of the source repository it pins, in every
 `components/*/images.yaml`, the digest each image of that commit was published under, but only
@@ -9,6 +10,10 @@ when the repository's `ci` and `image.yml` runs on the commit are green and `cos
 the repository's own `image.yml` made on `main`. It writes the files and prints the commit
 message; it commits nothing (`.github/workflows/pin-images.yml` renders, commits and pushes).
 Exit 0 with nothing written when the pins are current or the commit is not ready yet.
+
+Tiers (T-4721): `dev` (the default) pins the `dev-<N>` images ship publishes, built and
+smoke-tested. `production` pins only a digest that also carries the `full-tests/v1` attestation
+the repository's `promote.yml` adds when ci-full passed on it, and refuses any other.
 
 The Portal's commit goes through scripts/pin-portal.sh, which also checks the app builders
 against the workflows the seeded applications carry. Antares stays a hand pin: each of its pins
@@ -62,6 +67,17 @@ def published(image, commit):
     return digest if digest and DIGEST.match(digest) else None
 
 
+FULL_TESTS = "https://joinedcontext.com/attestations/full-tests/v1"
+
+
+def attested(repository, image, digest):
+    """The digest carries the full-tests attestation of the repository's promote.yml on main."""
+    identity = f"https://github.com/{OWNER}/{repository}/.github/workflows/promote.yml@refs/heads/main"
+    result = run("cosign", "verify-attestation", "--type", FULL_TESTS, "--certificate-oidc-issuer", ISSUER,
+                 "--certificate-identity", identity, f"ghcr.io/{OWNER}/{image}@{digest}", check=False)
+    return result.returncode == 0
+
+
 def signed(repository, image, digest):
     identity = f"https://github.com/{OWNER}/{repository}/.github/workflows/image.yml@refs/heads/main"
     result = run("cosign", "verify", "--certificate-oidc-issuer", ISSUER, "--certificate-identity", identity,
@@ -88,7 +104,7 @@ def pin_files(pins):
     return changed
 
 
-def main(source):
+def main(source, tier="dev"):
     repository, images = SOURCES[source]
     commit = head(repository)
     if not green(repository, "ci.yml", commit):
@@ -109,6 +125,9 @@ def main(source):
             continue
         if not signed(repository, image, digest):
             sys.exit(f"{source} {commit[:7]}: {image}@{digest} carries no signature of {repository}'s image.yml on main")
+        if tier == "production" and not attested(repository, image, digest):
+            sys.exit(f"{source} {commit[:7]}: {image}@{digest} has not passed the full tests (no full-tests "
+                     f"attestation of {repository}'s promote.yml); a production tier pins only promoted images")
         pins[image] = digest
     if source == "portal":
         # The builder contract check and the builders' own comment line are pin-portal.sh's.
@@ -126,6 +145,12 @@ def main(source):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2 or sys.argv[1] not in SOURCES:
-        sys.exit(f"usage: pin-images.py {{{'|'.join(SOURCES)}}}")
-    main(sys.argv[1])
+    args = sys.argv[1:]
+    if args[1:2] == ["--tier"] and len(args) == 3 and args[2] in ("dev", "production"):
+        tier = args.pop()
+        args.pop()
+    else:
+        tier = "dev"
+    if len(args) != 1 or args[0] not in SOURCES:
+        sys.exit(f"usage: pin-images.py {{{'|'.join(SOURCES)}}} [--tier dev|production]")
+    main(args[0], tier)
