@@ -87,3 +87,27 @@ Turn `recovery.enabled` back to `false` once the data is verified, keeping the n
 `destinationPath`. Left on, it restores the same old instant again the next time the
 `Cluster` object is recreated. The procedure around all of this — stopping the writers,
 deleting the damaged cluster, watching the replay — is Runbook 6 in the operations guide.
+
+## Restore drill
+
+A CronJob (`postgres-cluster-dr-drill`, 04:00 UTC on the 1st, `postgres.databases.drDrill`)
+proves the archive restores (OPS-11, OPS-12, T-0046):
+
+1. It waits while the node has less than `minMemAvailableMiB` available, at most
+   `timeoutMinutes`, and otherwise records `skipped`.
+2. It restores the latest base backup and WAL into the throwaway Cluster
+   `postgres-cluster-drill` beside the source (one instance, 1 GiB memory limit).
+3. It counts every database's rows on the source's primary and on the copy through
+   `kubectl exec`; a copy short by more than `tolerancePercent`, or missing a database, fails.
+4. It records RTO (the restore's time to Ready) and RPO (now minus the last replayed
+   transaction), as one JSON line (`"event":"dr-drill"`) in its log and in the ConfigMap
+   `postgres-cluster-dr-drill` (`result`, `rtoSeconds`, `rpoSeconds`, `at`, `detail`).
+5. It deletes the copy however the drill ends; a copy a crashed drill left is deleted first.
+
+Without `backups.enabled` there is no archive, and the drill records `no-backup` ("no off-site
+backup to drill") and creates nothing. Run it by hand with
+`kubectl create job --from=cronjob/postgres-cluster-dr-drill dr-drill-now -n <namespace>`.
+
+The job's Role holds every verb but `create` on clusters to the source and the copy, and
+`pods/exec` to their instances: counting rows with the instances' own psql needs no database
+password in the job.

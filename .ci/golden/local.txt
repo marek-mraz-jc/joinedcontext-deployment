@@ -26,6 +26,7 @@ apps/v1/Deployment local/postgres-operator-cloudnative-pg
 apps/v1/StatefulSet local/artifact-store
 apps/v1/StatefulSet local/keycloak-app-keycloakx
 batch/v1/CronJob local/gitea-lane-token
+batch/v1/CronJob local/postgres-cluster-dr-drill
 batch/v1/CronJob local/sandbox-reaper-reaper
 batch/v1/Job local/artifact-store-bucket
 batch/v1/Job local/gitea-bootstrap
@@ -70,6 +71,7 @@ networking.k8s.io/v1/NetworkPolicy local/context-broker-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy local/context-gateway
 networking.k8s.io/v1/NetworkPolicy local/context-gateway-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy local/context-gateway-linkerd-control-plane
+networking.k8s.io/v1/NetworkPolicy local/database-dr-drill
 networking.k8s.io/v1/NetworkPolicy local/database-role-setup
 networking.k8s.io/v1/NetworkPolicy local/default-deny-apisix
 networking.k8s.io/v1/NetworkPolicy local/default-deny-artifact-store
@@ -90,6 +92,7 @@ networking.k8s.io/v1/NetworkPolicy local/default-deny-postgres
 networking.k8s.io/v1/NetworkPolicy local/default-deny-runtime-policies
 networking.k8s.io/v1/NetworkPolicy local/default-deny-sandbox-reaper
 networking.k8s.io/v1/NetworkPolicy local/default-deny-secrets
+networking.k8s.io/v1/NetworkPolicy local/dr-drill-linkerd
 networking.k8s.io/v1/NetworkPolicy local/gateway-from-mqtt-brokers
 networking.k8s.io/v1/NetworkPolicy local/gateway-from-mqtt-brokers-linkerd
 networking.k8s.io/v1/NetworkPolicy local/gitea
@@ -151,6 +154,8 @@ networking.k8s.io/v1/NetworkPolicy local/portal-to-mqtt-brokers
 networking.k8s.io/v1/NetworkPolicy local/portal-to-mqtt-brokers-linkerd
 networking.k8s.io/v1/NetworkPolicy local/postgres
 networking.k8s.io/v1/NetworkPolicy local/postgres-allow-linkerd
+networking.k8s.io/v1/NetworkPolicy local/postgres-drill
+networking.k8s.io/v1/NetworkPolicy local/postgres-drill-linkerd
 networking.k8s.io/v1/NetworkPolicy local/postgres-from-context-broker
 networking.k8s.io/v1/NetworkPolicy local/postgres-from-gitea
 networking.k8s.io/v1/NetworkPolicy local/postgres-from-portal
@@ -192,6 +197,7 @@ rbac.authorization.k8s.io/v1/Role local/portal
 rbac.authorization.k8s.io/v1/Role local/portal-build-pods
 rbac.authorization.k8s.io/v1/Role local/portal-mqtt-brokers
 rbac.authorization.k8s.io/v1/Role local/portal-reconciler-token
+rbac.authorization.k8s.io/v1/Role local/postgres-cluster-dr-drill
 rbac.authorization.k8s.io/v1/Role local/postgres-operator-cloudnative-pg
 rbac.authorization.k8s.io/v1/RoleBinding local-app-tests/app-test-runner
 rbac.authorization.k8s.io/v1/RoleBinding local/edge-file-composer
@@ -200,6 +206,7 @@ rbac.authorization.k8s.io/v1/RoleBinding local/portal
 rbac.authorization.k8s.io/v1/RoleBinding local/portal-build-pods
 rbac.authorization.k8s.io/v1/RoleBinding local/portal-mqtt-brokers
 rbac.authorization.k8s.io/v1/RoleBinding local/portal-reconciler-token
+rbac.authorization.k8s.io/v1/RoleBinding local/postgres-cluster-dr-drill
 rbac.authorization.k8s.io/v1/RoleBinding local/postgres-operator-cloudnative-pg
 v1/ConfigMap local/apisix
 v1/ConfigMap local/apisix-standalone-base
@@ -252,6 +259,8 @@ v1/ConfigMap local/keycloak-theme
 v1/ConfigMap local/observability-collector-config
 v1/ConfigMap local/pipeline-runner-helsinki-streams
 v1/ConfigMap local/portal-branding
+v1/ConfigMap local/postgres-cluster-dr-drill
+v1/ConfigMap local/postgres-cluster-dr-drill-script
 v1/ConfigMap local/postgres-cluster-monitoring-logical-replication
 v1/ConfigMap local/sandbox-reaper-reaper
 v1/LimitRange local-app-tests/app-tests
@@ -321,5 +330,6 @@ v1/ServiceAccount local/observability-collector
 v1/ServiceAccount local/pipeline-runner
 v1/ServiceAccount local/portal
 v1/ServiceAccount local/portal-reconciler
+v1/ServiceAccount local/postgres-cluster-dr-drill
 v1/ServiceAccount local/postgres-operator-cloudnative-pg
 v1/ServiceAccount local/sandbox-reaper-reaper
