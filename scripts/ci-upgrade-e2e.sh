@@ -40,10 +40,13 @@ git worktree add --detach --quiet "$WORK/prev" "$PREV"
 (cd "$WORK/prev" && ./scripts/test-deployment-variants.sh --keep 0,0,0)
 
 # The upgrade runs from this checkout and copies its deployment/ into the release's tree; the
-# environment is the one the previous release was installed with.
+# environment is the one the previous release was installed with. Its harness removes that
+# scratch file on exit, --keep included (ci-full 39335432708, T-4784), so it is written again
+# here by the previous release's own write_env_overlay for variant 0,0,0.
 JUST_NO_DOTENV=true just _dev-assemble >/dev/null
 rm -rf "deployment/environments/${ENV}"
-cp -r "$WORK/prev/deployment/environments/${ENV}" "deployment/environments/${ENV}"
+./scripts/prev-env-overlay.sh "$WORK/prev/scripts/test-deployment-variants.sh" \
+	"deployment/environments/${ENV}/global.yaml.gotmpl"
 
 # 2. HEAD as a pre-release
 ./scripts/release-notes.py "$NEXT"
