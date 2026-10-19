@@ -145,7 +145,21 @@ def test_postgres_is_dumped_nightly_and_the_dump_job_may_reach_it(smartcity):
         and any(p.get("port") == 4143 for rule in d["spec"].get("egress", []) for p in rule.get("ports", []))
     ]
     assert selected, "no egress policy lets the dump job's proxy reach postgres on 4143"
+    # local-path binds the volume only for a pod that mounts it: a Job of the apply does, or the
+    # release waits on a Pending PVC until the night (prod apply 2026-10-19).
+    now = [d for d in smartcity if d.get("kind") == "Job" and d["metadata"]["name"] == "postgres-cluster-local-backup-now"]
+    assert len(now) == 1 and now[0]["spec"]["ttlSecondsAfterFinished"] > 0
+    claims = {v["persistentVolumeClaim"]["claimName"] for v in now[0]["spec"]["template"]["spec"]["volumes"] if "persistentVolumeClaim" in v}
+    assert claims == {"postgres-cluster-local-backup"}
 
+
+
+def test_the_portal_syncs_every_15_minutes_without_a_push(smartcity):
+    """Each run republishes the catalogue through the public edge, ~1,000 requests a minute at
+    the 60 s default (T-4717); a merge still syncs at once through the forge's webhook."""
+    portal = next(d for d in smartcity if d.get("kind") == "Deployment" and d["metadata"]["name"] == "portal")
+    env = {e["name"]: e.get("value") for e in portal["spec"]["template"]["spec"]["containers"][0]["env"]}
+    assert env["JC_PORTAL_SYNC_INTERVAL"] == "900"
 
 # smartcity's copies of dev's environment files, which differ from dev's in the domain alone.
 # global and portal carry the instance's own choices and are tested above instead.

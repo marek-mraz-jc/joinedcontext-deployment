@@ -30,3 +30,4 @@ components:
 - {name: assistant, component: assistant, namespace: dev, wave: 23}
 - {name: basemap, component: basemap, namespace: dev, wave: 24}
 - {name: viz, component: viz, namespace: dev, wave: 25}
+- {name: ai, component: ai, namespace: dev, wave: 26}

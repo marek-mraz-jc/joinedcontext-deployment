@@ -75,5 +75,8 @@ context-broker:
     # index on entities, a scan of current state only, never of attr_instances.
     # Antares dev 8e2a24c (T-4624 T-4532 over b1def0c): batch writes take at most
     # ANTARES_BATCH_INFLIGHT (default 8) of the pool, so reads keep the rest. No migration.
-    tag: '8e2a24c'
-    digest: 'sha256:507437a9a902fa5b24d67dfa5a19c5a281dc11892185bb603fd8c667e12a4111'
+    # Antares dev aa47684 (train 20261018-2259, T-4672 over 8e2a24c): LinkML slots carry rank and
+    # title, which the T-4672 seeds already write; 8e2a24c closed the LinkML and OGC surface of
+    # every view whose model has them (prod smoke 81/8, 2026-10-19). linkml-model only, no migration.
+    tag: 'aa47684'
+    digest: 'sha256:4e91ae0c39409bcaeffdbfe28732119c99349e497970c7883aecb41afeeb7ea5'

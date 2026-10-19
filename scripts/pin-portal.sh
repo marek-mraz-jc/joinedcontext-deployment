@@ -14,7 +14,8 @@ cd "$(dirname "$0")/.."
 registry=ghcr.io/marek-mraz-jc
 
 digest() {
-  docker buildx imagetools inspect "$registry/$1:$commit" | awk '/^Digest:/ { print $2; exit }'
+  # A missing image is an empty digest, refused below with words, never a bare exit of set -e.
+  { docker buildx imagetools inspect "$registry/$1:$commit" 2>/dev/null || true; } | awk '/^Digest:/ { print $2; exit }'
 }
 portal=$(digest joinedcontext-portal)
 builder=$(digest joinedcontext-app-builder)

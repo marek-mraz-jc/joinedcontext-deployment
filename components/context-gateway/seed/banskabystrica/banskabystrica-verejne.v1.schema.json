@@ -154,6 +154,153 @@
       "title": "AirQualityObserved",
       "type": "object"
     },
+    "CadastralParcel": {
+      "additionalProperties": false,
+      "description": "One parcel of the cadastre of Slovakia in Bansk\u00e1 Bystrica (T-4697): its number, register, cadastral area, the area the cadastre states and its outline, from the INSPIRE Cadastral Parcels service of \u00daGKK SR (CC BY 4.0), refreshed weekly. No owner and no other personal data: the INSPIRE parcels carry none. Smart Data Models has no cadastral parcel (its AgriParcel is a farmed field), so the class follows INSPIRE's CadastralParcel and the SDM conventions.",
+      "properties": {
+        "areaValue": {
+          "description": "The parcel's area as the cadastre states it, in square metres (INSPIRE `areaValue`), measured in the national plane projection; a geodesic area of the outline differs by a few tenths of a percent.",
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "m2"
+          }
+        },
+        "cadastralAreaCode": {
+          "description": "The six-digit code of the cadastral area (katastr\u00e1lne \u00fazemie) the parcel lies in, `801062`.",
+          "pattern": "^[0-9]{6}$",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "cadastralAreaName": {
+          "description": "The name of that cadastral area, `Bansk\u00e1 Bystrica`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language, as the publisher writes it.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "nationalCadastralReference": {
+          "description": "The parcel's reference in the national cadastre, as INSPIRE publishes it: the cadastral area's code, the parcel number and the register, `801062_1266/16.C`.",
+          "pattern": "^[0-9]{6}_[0-9]+(/[0-9]+)?\\.[CE]$",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "parcelNumber": {
+          "description": "The parcel's number in its cadastral area as the cadastre writes it, `1266/16`: the main number, a slash and the subdivision. Unique only together with the cadastral area and the register.",
+          "pattern": "^[0-9]+(/[0-9]+)?$",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "register": {
+          "$ref": "#/definitions/CadastralRegister",
+          "description": "The register the parcel belongs to: `C` for the parcels of the map of the cadastre (KN-C), `E` for the parcels of the original land plots (KN-E).",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "parcelNumber",
+        "register",
+        "cadastralAreaCode",
+        "nationalCadastralReference",
+        "id",
+        "type"
+      ],
+      "title": "CadastralParcel",
+      "type": "object"
+    },
+    "CadastralRegister": {
+      "description": "",
+      "enum": [
+        "C",
+        "E"
+      ],
+      "title": "CadastralRegister",
+      "type": "string",
+      "x-enum-descriptions": {
+        "C": "The register of parcels of the cadastral map (register C, KN-C).",
+        "E": "The register of parcels of the original land plots (register E, KN-E)."
+      }
+    },
     "EVChargingStation": {
       "additionalProperties": false,
       "description": "One charging station for electric vehicles in the district of Bansk\u00e1 Bystrica as OpenStreetMap maps it (\u00a9 OpenStreetMap contributors, ODbL 1.0), refreshed weekly.",

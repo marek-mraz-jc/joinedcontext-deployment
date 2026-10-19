@@ -173,8 +173,9 @@ def test_a_seed_file_goes_to_the_forge_in_a_body_file_not_an_argument(script):
     which stopped apply 86 (2026-10-16, T-4255). The body is written by the shell's own printf
     into a file and handed to curl as `-d @file`."""
     seed = script[script.index("seed_repo() {"):]
-    seed = seed[: seed.index("5b.")]
-    assert seed.count("-d @$WORK/request") == 2, seed
+    seed = seed[: seed.index("5d.")]
+    # One commit of the whole seed (T-4709), and its body in a file.
+    assert seed.count("-d @$WORK/request") == 1, seed
     assert '\\"content\\":\\"$encoded' not in seed
     # The shell's printf takes a value past the cap (a builtin, never exec'd); curl would not.
     result = subprocess.run(

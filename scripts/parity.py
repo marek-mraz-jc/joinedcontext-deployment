@@ -12,6 +12,8 @@ A snapshot holds, per instance:
   owner account, the demo users), so a changed schedule, sampling or setting shows as "differs";
 - the App repositories;
 - the CKAN catalogue: datasets, organizations, groups and the resource count;
+- per dataset with an Endpoint, whether its data model is served: `schema/index.json` answers 200
+  with at least one model (the gateway answers an empty list when the broker's index fails);
 - the broker's entities, counted per tenant and type;
 - the pipelines that have reported a status to the Portal.
 
@@ -30,6 +32,8 @@ import os
 import re
 import subprocess
 import sys
+import time
+import urllib.error
 import urllib.request
 
 INSTANCES = {
@@ -99,16 +103,51 @@ def ckan(env: str) -> dict:
     base = f"https://opendata.{INSTANCES[env]['domain']}/api/3/action/"
 
     def call(action: str):
-        with urllib.request.urlopen(base + action, timeout=60) as r:
-            return json.load(r)["result"]
+        for attempt in range(3):
+            try:
+                with urllib.request.urlopen(base + action, timeout=60) as r:
+                    return json.load(r)["result"]
+            except urllib.error.HTTPError as e:
+                # The edge limits the catalogue's API: wait as it says, then ask again.
+                if e.code != 429 or attempt == 2:
+                    raise
+                time.sleep(min(int(e.headers.get("Retry-After") or 10), 60))
 
-    datasets = call("package_search?rows=1000&fl=name,num_resources")["results"]
+    datasets = call("package_search?rows=1000")["results"]
     return {
         "datasets": sorted(d["name"] for d in datasets),
         "resources": sum(d.get("num_resources", 0) for d in datasets),
         "organizations": sorted(call("organization_list")),
         "groups": sorted(call("group_list")),
+        "models": models(env, datasets),
     }
+
+
+def endpoint_of(dataset: dict) -> str | None:
+    """The Endpoint slug a dataset's resources point at, or None for a dataset without one."""
+    for resource in dataset.get("resources") or []:
+        if m := re.search(r"/api/endpoint/([a-z0-9]+)/", resource.get("url") or ""):
+            return m[1]
+    return None
+
+
+def served(index: dict) -> bool:
+    return bool(index.get("models"))
+
+
+def models(env: str, datasets: list[dict]) -> dict[str, bool]:
+    """Per dataset with an Endpoint: is its data model served (T-4678, the owner's catalogue)?"""
+    out = {}
+    for dataset in datasets:
+        if not (slug := endpoint_of(dataset)):
+            continue
+        url = f"https://api.{INSTANCES[env]['domain']}/api/endpoint/{slug}/schema/index.json"
+        try:
+            with urllib.request.urlopen(url, timeout=60) as r:
+                out[dataset["name"]] = served(json.load(r))
+        except (OSError, ValueError):
+            out[dataset["name"]] = False
+    return out
 
 
 def snapshot(env: str) -> dict:
@@ -193,6 +232,9 @@ def compare(dev: dict, prod: dict, seeded: dict | None = None) -> tuple[list[str
                        ("CKAN group", dev["ckan"]["groups"], prod["ckan"]["groups"])):
         fail += [f"{kind} missing on prod: {n}" for n in sorted(set(a) - set(b))]
         fail += [f"{kind} only on prod: {n}" for n in sorted(set(b) - set(a))]
+    for name, ok in sorted(dev["ckan"].get("models", {}).items()):
+        if ok and not prod["ckan"].get("models", {}).get(name, False) and name in prod["ckan"]["datasets"]:
+            fail.append(f"data model not served on prod: {name}")
     if not live_tolerance(dev["ckan"]["resources"], prod["ckan"]["resources"]):
         fail.append(f"CKAN resources: dev {dev['ckan']['resources']}, prod {prod['ckan']['resources']}")
     for key in sorted(set(dev["entities"]) | set(prod["entities"])):

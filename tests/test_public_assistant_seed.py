@@ -18,8 +18,8 @@ from conftest import dev_catalogue, render_catalogue_assistant
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
 # jc-assistant's READ_ONLY_TOOLS (platform crates/assistant/src/chat/mcp.rs), which the data loop
 # offers the answering model (T-4294).
-READ_ONLY = {"list_types", "get_type", "list_attributes", "query_entities", "get_entity", "get_attribute_value",
-             "query_temporal", "retrieve_temporal", "describe_schema", "describe_access"}
+READ_ONLY = {"list_types", "get_type", "list_attributes", "query_entities", "summarize", "get_entity",
+             "get_attribute_value", "query_temporal", "retrieve_temporal", "describe_schema", "describe_access"}
 # publicId: (project, web host, CKAN organization, language first, cost per day)
 BODIES = {
     "banskabystrica": ("banskabystrica", "www.banskabystrica.sk", "banskabystrica", "sk", 1),
@@ -40,6 +40,8 @@ ORIGINS = [
     "https://assistant.dev.joinedcontext.com",
     "https://dev.joinedcontext.com",
     "https://data.dev.joinedcontext.com",
+    # The standalone assistant's own host (T-4694): its page asks the chat from there.
+    "https://ai.dev.joinedcontext.com",
 ]
 
 
@@ -107,6 +109,8 @@ def test_every_connector_is_a_public_mcp_endpoint_of_the_body_with_read_only_too
         assert set(connector["tools"]) <= READ_ONLY, connector
         # The data loop reads the schema and history before it queries (T-4294).
         assert {"get_type", "list_attributes", "query_temporal"} <= set(connector["tools"]), connector
+        # T-4680: a broad read gives the answer the broker's profile of the type, not 15 rows.
+        assert "summarize" in connector["tools"], connector
 
 
 @pytest.mark.parametrize("public_id", ["banskabystrica", "bbsk"])
@@ -419,3 +423,36 @@ def test_the_open_data_eval_copies_are_data_with_another_model():
         assert spec["model"] == model, name
         assert {k: v for k, v in spec.items() if k not in ("publicId", "model")} == \
             {k: v for k, v in base.items() if k not in ("publicId", "model")}, name
+
+
+def test_the_website_eval_copy_is_the_regions_assistant_over_its_website_alone():
+    # T-4688: the 50 bbsk.sk questions ask a copy of `bbsk` with the visitors' prompt and model,
+    # whose only sources are the website and the planted injection page, on its own day.
+    spec = manifests("AssistantDeployment", "bbsk")["web-eval-gemini"]["spec"]
+    base = deployment("bbsk")["spec"]
+    assert spec["publicId"] == "bbsk-web-eval-gemini" and "eval" in spec["publicId"].split("-")
+    assert spec["sources"] == ["web", "eval-uploads"]
+    assert "connectors" not in spec and "scope" not in spec
+    assert spec["systemPrompt"] == base["systemPrompt"] and spec["model"] == base["model"]
+    assert spec["budget"]["costPerDayUsd"] <= 0.5
+    planted = manifests("KnowledgeSource", "bbsk")["eval-uploads"]["spec"]
+    assert planted == {"source": "upload", "languages": ["sk"], "visibility": "public"}
+    assert "eval-uploads" not in base["sources"], "visitors never read the planted page"
+
+
+# The EU data themes in their table's order (platform jc-core DataTheme::ALL).
+THEMES = ["AGRI", "ECON", "EDUC", "ENER", "ENVI", "GOVE", "HEAL", "INTR", "JUST", "REGI", "SOCI", "TECH", "TRAN"]
+
+
+@pytest.mark.parametrize("public_id", BODIES)
+def test_the_categories_are_the_themes_of_what_it_reads(public_id):
+    """T-4694 (AG-124): the categories the context page shows are its connectors' themes, each once, in
+    the table's order; a connector added or dropped without its theme fails here."""
+    spec = deployment(public_id)["spec"]
+    own = BODIES[public_id][0]
+    read = set()
+    for connector in spec["connectors"]:
+        project, _, name = connector["endpoint"].rpartition("/")
+        endpoint = manifests("Endpoint", project or own)[name]
+        read |= set(endpoint["spec"].get("catalog", {}).get("themes", []))
+    assert spec["categories"] == [t for t in THEMES if t in read]

@@ -486,6 +486,10 @@ _smoke domain namespace:
 	export CURL_HOME; CURL_HOME=$(mktemp -d); trap 'rm -rf "$CURL_HOME"' EXIT
 	printf 'resolve = *:443:%s\nresolve = *:80:%s\n' "$edge" "$edge" >"$CURL_HOME/.curlrc"
 	JC_REALM="{{ namespace }}" ./scripts/smoke.sh "https://{{ domain }}" "https://idm.{{ domain }}" || rc=1
+	# Every catalogue dataset and public Endpoint on every interface (T-4716): read-only,
+	# 50 requests a minute, 10 minutes at most; its table lands in .smoke/.
+	echo "catalogue"
+	python3 scripts/smoke-catalogue.py "{{ domain }}" "{{ namespace }}" || rc=1
 	# A CronJob whose newest run failed (T-4385): a harvest dead since the night is no green smoke.
 	echo "cron jobs"
 	kubectl -n "{{ namespace }}" get jobs -o json | python3 scripts/failed-jobs.py || rc=1
@@ -661,3 +665,56 @@ rollback tag:
 	commit=$(git commit-tree "$tree" -p origin/release -m "rollback production to {{ tag }}")
 	git push origin "$commit:refs/heads/release"
 	echo "release is now $commit, the tree of {{ tag }}"
+
+# ---------------------------------------------------------------------------
+# The BBSK demo (T-4687, demos/bbsk/): its own helmfile and namespace `demo-bbsk`, outside the
+# platform's deployment, on dev (the preview) or smartcity. Each recipe refuses a cluster that is
+# not the environment's own, as dev-apply and prod-apply do.
+# ---------------------------------------------------------------------------
+
+# The catalogue smoke alone (T-4716, Testing/05 §4.1): dev or smartcity, read-only
+[group('dev cluster')]
+catalogue-smoke env:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	case "{{ env }}" in
+		dev) just _dev-guard; domain="{{ dev_domain }}" ;;
+		smartcity) just _prod-guard; domain="{{ prod_domain }}" ;;
+		*) echo "refusing: the catalogue smoke runs on dev or smartcity, not '{{ env }}'" >&2; exit 1 ;;
+	esac
+	python3 scripts/smoke-catalogue.py "$domain" "{{ env }}"
+
+# Refuse an environment other than dev or smartcity, or a cluster that is not that one
+[group('demo bbsk')]
+_demo-bbsk-guard env:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	case "{{ env }}" in
+		dev) just _dev-guard ;;
+		smartcity) just _prod-guard ;;
+		*) echo "refusing: the BBSK demo runs on dev or smartcity, not '{{ env }}'" >&2; exit 1 ;;
+	esac
+
+# Render the BBSK demo for one environment to stdout (no cluster needed)
+[group('demo bbsk')]
+demo-bbsk-render env:
+	helmfile -f demos/bbsk/helmfile.yaml.gotmpl -e {{ env }} template --skip-deps --concurrency {{helmfile_concurrency}}
+
+# Install or update the BBSK demo on dev or smartcity
+[group('demo bbsk')]
+demo-bbsk-apply env:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	just _demo-bbsk-guard {{ env }}
+	helmfile -f demos/bbsk/helmfile.yaml.gotmpl -e {{ env }} sync --concurrency {{helmfile_concurrency}}
+	kubectl -n demo-bbsk rollout status statefulset/demo-bbsk-db --timeout=300s
+	kubectl -n demo-bbsk rollout status deployment/ckan-demo-bbsk --timeout=600s
+
+# Remove the BBSK demo whole: its releases, volumes and namespace, and nothing of the platform
+[group('demo bbsk')]
+demo-bbsk-destroy env:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	just _demo-bbsk-guard {{ env }}
+	helmfile -f demos/bbsk/helmfile.yaml.gotmpl -e {{ env }} destroy --concurrency {{helmfile_concurrency}} --skip-deps || true
+	kubectl delete namespace demo-bbsk --ignore-not-found --timeout=300s

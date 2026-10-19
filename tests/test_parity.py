@@ -16,7 +16,8 @@ APP = "joinedcontext/helsinki.git:apps/air-quality/app.yaml"
 SNAPSHOT = {
     "objects": {ENDPOINT: "a1", APP: "b2", EVAL: "c3"},
     "apps": ["helsinki_air-quality.git"],
-    "ckan": {"datasets": ["hel-bikes"], "organizations": ["hel-fi"], "groups": [], "resources": 400},
+    "ckan": {"datasets": ["hel-bikes"], "organizations": ["hel-fi"], "groups": [], "resources": 400,
+             "models": {"hel-bikes": True}},
     "entities": {"helsinki|BikeHireDockingStation": 1000, "helsinki|Vehicle": 30},
     "pipelines": ["helsinki/bikes"],
 }
@@ -106,3 +107,21 @@ def test_seed_keys_map_to_forge_paths():
     assert parity.seed_path("gitea-bootstrap-config", "users__assignments__admins.yaml") == \
         "joinedcontext/configuration.git:users/assignments/admins.yaml"
     assert parity.seed_path("gitea-sample-apps-helsinki", "src__main.ts") is None
+
+
+def test_a_data_model_served_on_dev_and_not_on_prod_fails_by_dataset():
+    prod = prod_of(SNAPSHOT)
+    prod["ckan"]["models"]["hel-bikes"] = False
+    assert parity.compare(SNAPSHOT, prod)[0] == ["data model not served on prod: hel-bikes"]
+    dev = copy.deepcopy(SNAPSHOT)
+    dev["ckan"]["models"]["hel-bikes"] = False
+    assert parity.compare(dev, prod_of(dev))[0] == []
+
+
+def test_the_endpoint_is_read_from_a_resource_and_an_empty_index_is_no_model():
+    dataset = {"resources": [{"url": "https://opendata.x/download.csv"},
+                             {"url": "https://api.x/api/endpoint/scsd2eeh42/ngsi-ld/v1/entities?type=A"}]}
+    assert parity.endpoint_of(dataset) == "scsd2eeh42"
+    assert parity.endpoint_of({"resources": [{"url": None}]}) is None
+    assert parity.served({"endpoint": "x", "models": []}) is False
+    assert parity.served({"models": [{"name": "helsinki"}]}) is True

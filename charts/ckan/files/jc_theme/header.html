@@ -1,5 +1,13 @@
 {% ckan_extends %}
 
+{# A demo says so above everything else on every page (T-4687): words from the branding block,
+   kept in view while the page scrolls. #}
+{% block header_wrapper %}
+  {% set ribbon = h.jc_branding().ribbon %}
+  {% if ribbon %}<div class="jc-ribbon" role="note">{{ ribbon }}</div>{% endif %}
+  {{ super() }}
+{% endblock %}
+
 {# The joinedcontext.com lockup, mark and name in one image (T-4627, owner), unless the instance
    names its own (site.logo, T-4636): /jc-logo.svg is
    https://www.joinedcontext.com/img/logo-light.svg, copied unchanged on 2026-10-18 (paths only,

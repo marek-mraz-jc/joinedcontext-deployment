@@ -4,6 +4,9 @@
     "AirQualityObserved": {
       "@id": "sdm:AirQualityObserved"
     },
+    "CadastralParcel": {
+      "@id": "jc:CadastralParcel"
+    },
     "EVChargingStation": {
       "@id": "sdm:EVChargingStation"
     },
@@ -41,6 +44,10 @@
       "@id": "jc:annualBudget",
       "@type": "xsd:float"
     },
+    "areaValue": {
+      "@id": "jc:areaValue",
+      "@type": "xsd:float"
+    },
     "atmosphericPressure": {
       "@id": "sdm:atmosphericPressure",
       "@type": "xsd:float"
@@ -48,6 +55,12 @@
     "budgetYear": {
       "@id": "jc:budgetYear",
       "@type": "xsd:integer"
+    },
+    "cadastralAreaCode": {
+      "@id": "jc:cadastralAreaCode"
+    },
+    "cadastralAreaName": {
+      "@id": "jc:cadastralAreaName"
     },
     "capacity": {
       "@id": "sdm-transport:capacity",
@@ -93,6 +106,9 @@
       "@container": "@language",
       "@id": "schema:name"
     },
+    "nationalCadastralReference": {
+      "@id": "jc:nationalCadastralReference"
+    },
     "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
     "no2": {
       "@id": "sdm:no2",
@@ -116,6 +132,9 @@
     "operator": {
       "@id": "sdm-transport:operator"
     },
+    "parcelNumber": {
+      "@id": "jc:parcelNumber"
+    },
     "pm10": {
       "@id": "sdm:pm10",
       "@type": "xsd:float"
@@ -134,6 +153,14 @@
     "pupilCount": {
       "@id": "jc:pupilCount",
       "@type": "xsd:integer"
+    },
+    "register": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:register"
     },
     "relativeHumidity": {
       "@id": "sdm:relativeHumidity",

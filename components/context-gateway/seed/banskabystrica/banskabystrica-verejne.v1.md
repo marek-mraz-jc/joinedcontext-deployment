@@ -172,6 +172,30 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
+### CadastralParcel
+
+One parcel of the cadastre of Slovakia in Banská Bystrica (T-4697): its number, register, cadastral area, the area the cadastre states and its outline, from the INSPIRE Cadastral Parcels service of ÚGKK SR (CC BY 4.0), refreshed weekly. No owner and no other personal data: the INSPIRE parcels carry none. Smart Data Models has no cadastral parcel (its AgriParcel is a farmed field), so the class follows INSPIRE's CadastralParcel and the SDM conventions.
+
+IRI: `jc:CadastralParcel`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
+| `parcelNumber` | Property | `string` | yes |  | `jc:parcelNumber` | The parcel's number in its cadastral area as the cadastre writes it, `1266/16`: the main number, a slash and the subdivision. Unique only together with the cadastral area and the register. |
+| `register` | Property | [`CadastralRegister`](#cadastralregister) | yes |  | `jc:register` | The register the parcel belongs to: `C` for the parcels of the map of the cadastre (KN-C), `E` for the parcels of the original land plots (KN-E). |
+| `cadastralAreaCode` | Property | `string` | yes |  | `jc:cadastralAreaCode` | The six-digit code of the cadastral area (katastrálne územie) the parcel lies in, `801062`. |
+| `cadastralAreaName` | Property | `string` |  |  | `jc:cadastralAreaName` | The name of that cadastral area, `Banská Bystrica`. |
+| `nationalCadastralReference` | Property | `string` | yes |  | `jc:nationalCadastralReference` | The parcel's reference in the national cadastre, as INSPIRE publishes it: the cadastral area's code, the parcel number and the register, `801062_1266/16.C`. |
+| `areaValue` | Property | `float` |  | m2 | `jc:areaValue` | The parcel's area as the cadastre states it, in square metres (INSPIRE `areaValue`), measured in the national plane projection; a geodesic area of the outline differs by a few tenths of a percent. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
 ### Entity
 
 The root every NGSI-LD entity class specialises.
@@ -196,3 +220,10 @@ IRI: `ngsi-ld:Entity`
 | `sport` | Sport (Športové). |
 | `exhibition` | Exhibitions (Výstavy). |
 | `other` | Any other event (Iné podujatia). |
+
+### CadastralRegister
+
+| Value | Meaning |
+|---|---|
+| `C` | The register of parcels of the cadastral map (register C, KN-C). |
+| `E` | The register of parcels of the original land plots (register E, KN-E). |

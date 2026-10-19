@@ -220,10 +220,10 @@ def test_space_reads_and_writes_count_apart(rendered):
             assert (limit["count"], limit["key"]) == (ANONYMOUS_ROUTE_LIMITS[route["id"]], "remote_addr")
             assert route["vars"] == [["http_authorization", "!", "~~", "."]], route["id"]
         elif route["id"] == "ckan-webassets":
-            # T-4201: its one plugin of its own keeps the config's CSP baseline and adds the
-            # year-long cache of a content-hashed file (tests/test_edge_asset_cache.py); the
-            # limit is the config's, unchanged.
-            assert "labels" not in route and set(route["plugins"]) == {"serverless-post-function"}, route["id"]
+            # T-4201: it keeps the config's CSP baseline and adds the year-long cache of a
+            # content-hashed file; T-4717: and counts its assets in a bucket of their own
+            # (tests/test_edge_asset_cache.py).
+            assert "labels" not in route and set(route["plugins"]) == {"serverless-post-function", "limit-count"}, route["id"]
         elif route["id"] == "api-oauth":
             # T-4630, ADR-N-052 §4: minting an anonymous token counts per client address.
             assert "labels" not in route and set(route["plugins"]) == {"limit-count"}, route["id"]
@@ -270,7 +270,8 @@ def test_every_config_variable_is_declared_for_the_nginx_workers(rendered):
     ignored while the ConfigMap looks perfectly correct.
     """
     docs = rendered("local")
-    configmaps = {d["metadata"]["name"]: d["data"] for d in docs if d.get("kind") == "ConfigMap"}
+    # A ConfigMap a Job fills at run time renders no data (postgres-cluster-dr-drill, T-0046).
+    configmaps = {d["metadata"]["name"]: d.get("data") or {} for d in docs if d.get("kind") == "ConfigMap"}
     referenced = set(re.findall(r"\$\{\{(\w+)\}\}", configmaps["apisix-standalone-base"]["apisix.yaml"]))
     declared = set(yaml.safe_load(configmaps["apisix"]["config.yaml"])["nginx_config"]["envs"])
     assert referenced <= declared, f"not declared in apisix.nginx.envs: {sorted(referenced - declared)}"
@@ -396,6 +397,7 @@ def test_new_hostnames_are_proven_on_the_staging_issuer_first(rendered, rendered
     assert certificate["secretName"] == "apisix-edge-staging-tls"
     assert certificate["dnsNames"] == [
         "next.example.org",
+        "ai.next.example.org",
         "api.next.example.org",
         "assistant.next.example.org",
         "data.next.example.org",
@@ -427,6 +429,7 @@ def test_certificate_covers_the_apex_and_every_routed_subdomain(rendered):
     # on the certificate three times (ADR-N-019).
     assert certificate["spec"]["dnsNames"] == [
         "dev.joinedcontext.com",
+        "ai.dev.joinedcontext.com",
         "api.dev.joinedcontext.com",
         "assistant.dev.joinedcontext.com",
         "data.dev.joinedcontext.com",

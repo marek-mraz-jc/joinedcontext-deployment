@@ -5,4 +5,12 @@
 {% block custom_styles %}
   {{ super() }}
   {% snippet 'snippets/jc_styles.html' %}
+  {# T-4685: room for an assistant docked on the page before, before the first paint. #}
+  <script src="{{ h.url_for_static('/jc-dock.js') }}"></script>
+{% endblock %}
+
+{# A demo's pages ask search engines to stay out (T-4687); its edge also says so in X-Robots-Tag. #}
+{% block meta %}
+  {{ super() }}
+  {% if h.jc_branding().noindex %}<meta name="robots" content="noindex, nofollow">{% endif %}
 {% endblock %}
