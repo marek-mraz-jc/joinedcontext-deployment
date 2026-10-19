@@ -486,6 +486,10 @@ _smoke domain namespace:
 	export CURL_HOME; CURL_HOME=$(mktemp -d); trap 'rm -rf "$CURL_HOME"' EXIT
 	printf 'resolve = *:443:%s\nresolve = *:80:%s\n' "$edge" "$edge" >"$CURL_HOME/.curlrc"
 	JC_REALM="{{ namespace }}" ./scripts/smoke.sh "https://{{ domain }}" "https://idm.{{ domain }}" || rc=1
+	# Every catalogue dataset and public Endpoint on every interface (T-4716): read-only,
+	# 50 requests a minute, 10 minutes at most; its table lands in deployment/.
+	echo "catalogue"
+	python3 scripts/smoke-catalogue.py "{{ domain }}" "{{ namespace }}" || rc=1
 	# A CronJob whose newest run failed (T-4385): a harvest dead since the night is no green smoke.
 	echo "cron jobs"
 	kubectl -n "{{ namespace }}" get jobs -o json | python3 scripts/failed-jobs.py || rc=1
@@ -667,6 +671,18 @@ rollback tag:
 # platform's deployment, on dev (the preview) or smartcity. Each recipe refuses a cluster that is
 # not the environment's own, as dev-apply and prod-apply do.
 # ---------------------------------------------------------------------------
+
+# The catalogue smoke alone (T-4716, Testing/05 §4.1): dev or smartcity, read-only
+[group('dev cluster')]
+catalogue-smoke env:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	case "{{ env }}" in
+		dev) just _dev-guard; domain="{{ dev_domain }}" ;;
+		smartcity) just _prod-guard; domain="{{ prod_domain }}" ;;
+		*) echo "refusing: the catalogue smoke runs on dev or smartcity, not '{{ env }}'" >&2; exit 1 ;;
+	esac
+	python3 scripts/smoke-catalogue.py "$domain" "{{ env }}"
 
 # Refuse an environment other than dev or smartcity, or a cluster that is not that one
 [group('demo bbsk')]
