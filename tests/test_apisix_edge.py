@@ -270,7 +270,8 @@ def test_every_config_variable_is_declared_for_the_nginx_workers(rendered):
     ignored while the ConfigMap looks perfectly correct.
     """
     docs = rendered("local")
-    configmaps = {d["metadata"]["name"]: d["data"] for d in docs if d.get("kind") == "ConfigMap"}
+    # A ConfigMap a Job fills at run time renders no data (postgres-cluster-dr-drill, T-0046).
+    configmaps = {d["metadata"]["name"]: d.get("data") or {} for d in docs if d.get("kind") == "ConfigMap"}
     referenced = set(re.findall(r"\$\{\{(\w+)\}\}", configmaps["apisix-standalone-base"]["apisix.yaml"]))
     declared = set(yaml.safe_load(configmaps["apisix"]["config.yaml"])["nginx_config"]["envs"])
     assert referenced <= declared, f"not declared in apisix.nginx.envs: {sorted(referenced - declared)}"
