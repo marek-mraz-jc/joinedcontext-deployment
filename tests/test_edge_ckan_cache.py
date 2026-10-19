@@ -34,7 +34,8 @@ def test_the_cache_route_is_the_action_api_on_the_catalogue_chain():
     cache = ROUTE["plugins"]["proxy-cache"]
     assert cache["cache_strategy"] == "disk" and cache["cache_ttl"] == 60
     for field in ("cache_bypass", "no_cache"):
-        assert set(cache[field]) >= {"$http_cookie", "$http_authorization"}, field
+        # CKAN reads a token from Authorization and from the legacy X-CKAN-API-Key.
+        assert set(cache[field]) >= {"$http_cookie", "$http_authorization", "$http_x_ckan_api_key"}, field
     assert cache["cache_http_status"] == [200] and cache["cache_method"] == ["GET", "HEAD"]
 
 
@@ -122,6 +123,8 @@ def test_an_anonymous_read_is_kept_and_a_session_or_a_token_is_never_served_from
     assert with_cookie["n"] != first["n"] and with_cookie["cookie"] == "ckan=person"
     with_token, _ = get(edge + "/api/3/action/package_show?id=a", Authorization="token")
     assert with_token["n"] != first["n"]
+    with_key, _ = get(edge + "/api/3/action/package_show?id=a", **{"X-CKAN-API-Key": "token"})
+    assert with_key["n"] != first["n"]
     # Neither filled the cache with their answer.
     assert get(edge + "/api/3/action/package_show?id=a")[0] == first
 
