@@ -84,5 +84,8 @@ context-broker:
     # two indexes on entities (first type, partial GIN over multi-typed) and one backfill scan.
     # New keys ANTARES_HISTORY_BACKFILL (default off), ANTARES_PROVENANCE_FROM (unset: channel api)
     # and ANTARES_SUMMARY_* (MCP summarize budgets, defaults in code).
-    tag: 'dev-3'
-    digest: 'sha256:8684a03901cb6b7402d45263423fd11b94dd9eaf5bf48d75e3e6c8d1cd0bb9a7'
+    # Antares dev 919dce7 (dev-6, ship 39255876184, trains 1045-1 T-4683 and 1228-1 T-4736 over
+    # deceaf1): /types?details=true reads each Entity once by a keyset walk (100k pg 1.5 s against
+    # about 10 s); the types timing test asserts the probe plan. No migration.
+    tag: 'dev-6'
+    digest: 'sha256:e26c871bed5bcb3e69274bbff109184c674c54e36489eb1cc50676d1068c9858'
