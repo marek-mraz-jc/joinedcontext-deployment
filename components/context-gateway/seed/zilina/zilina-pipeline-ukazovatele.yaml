@@ -45,7 +45,7 @@ spec:
         "navstevnici-rok": { "cube": "cr3803mr", "indicator": "U_CR_0005", "key": "VISIT_TOTAL", "unit": "C62", "formula": "the sum of cr3803mr/U_CR_0005/VISIT_TOTAL over the twelve months of the newest year that carries all twelve" }
       }
       let quarters = { "Q1": ["01-01", "03-31"], "Q2": ["04-01", "06-30"], "Q3": ["07-01", "09-30"], "Q4": ["10-01", "12-31"] }
-      let domain = env("JC_ORG_DOMAIN")
+      let domain = "zilina.sk"
       let space = env("JC_SPACE")
       let ran = now().ts_format("2006-01-02T15:04:05Z07:00", "UTC")
       let source_endpoint = "urn:ngsi-ld:Endpoint:%v:%v:%v".format($domain, env("JC_SOURCE_SPACE"), env("JC_SOURCE_SPACE"))

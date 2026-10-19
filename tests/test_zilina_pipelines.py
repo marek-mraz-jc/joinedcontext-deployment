@@ -30,6 +30,8 @@ ROOT = Path(__file__).resolve().parent.parent
 SEED = ROOT / "components/context-gateway/seed/zilina"
 FIXTURES = Path(__file__).resolve().parent / "fixtures/zilina"
 DOMAIN = "zilina.sk"
+# What the one runner carries: the installation's organization, never the city (T-4202, T-4682).
+RUNNER_DOMAIN = "hel.fi"
 CITY = "SK031B517402"
 
 
@@ -54,7 +56,7 @@ STATIONS = pipelines("eea-")
 def run(pipeline: dict, space: str) -> list[dict]:
     suffix = ".parquet" if pipeline["source"].startswith("eea-") else ".json"
     document = (FIXTURES / (pipeline["source"] + suffix)).read_bytes()
-    return open_data.run(pipeline["bento"], document, space, DOMAIN)
+    return open_data.run(pipeline["bento"], document, space, RUNNER_DOMAIN)
 
 
 @pytest.fixture(scope="module")
@@ -78,6 +80,18 @@ def test_every_inventoried_source_has_its_pipeline():
         assert spec["targetEndpoint"].startswith("urn:ngsi-ld:Endpoint:zilina.sk:")
         assert spec["schedule"], "every stream runs on a schedule"
         assert (SEED / f"zilina-datasource-{p['manifest']['metadata']['name']}.yaml").is_file()
+
+
+def test_every_mapping_mints_the_citys_own_domain_never_the_runners():
+    """The runner's `JC_ORG_DOMAIN` is hel.fi, so a mapping that read it minted Žilina's stops
+    as `urn:ngsi-ld:GtfsStop:hel.fi:…` (T-4680 item 8, T-4682); the city's domain is a literal."""
+    mappings = sorted(SEED.glob("zilina-pipeline-*-bento.yaml"))
+    assert mappings
+    for path in mappings:
+        text = path.read_text()
+        assert "JC_ORG_DOMAIN" not in text and "hel.fi" not in text, path.name
+        if "urn:ngsi-ld:" in text:
+            assert f'"{DOMAIN}"' in text, path.name
 
 
 def test_every_stream_starts_with_the_empty_read_guard():
@@ -204,7 +218,7 @@ def offline(mapping: Path, host: str, space: str, document: bytes) -> subprocess
             "logger": {"level": "error"},
         }
         return subprocess.run(
-            ["docker", "run", "--rm", "-i", "--network", "host", "-e", f"JC_ORG_DOMAIN={DOMAIN}",
+            ["docker", "run", "--rm", "-i", "--network", "host", "-e", f"JC_ORG_DOMAIN={RUNNER_DOMAIN}",
              "-e", f"JC_SPACE={space}", "-e", f"CONFIG={json.dumps(config)}", "--entrypoint", "sh",
              BENTO, "-c", 'printf "%s" "$CONFIG" > /tmp/c.json && exec /bento -c /tmp/c.json'],
             input=document, capture_output=True, timeout=180,
@@ -295,7 +309,7 @@ def vlaky(document: bytes, day: str) -> subprocess.CompletedProcess:
     assert text.count("now()") == 1, "the mapping reads the clock once, which the test sets"
     text = text.replace("now()", f'"{day}T10:00:00Z".ts_parse("2006-01-02T15:04:05Z07:00")')
     return subprocess.run(
-        ["docker", "run", "--rm", "-i", "-e", f"JC_ORG_DOMAIN={DOMAIN}", "-e", "JC_SPACE=zilina-verejne",
+        ["docker", "run", "--rm", "-i", "-e", f"JC_ORG_DOMAIN={RUNNER_DOMAIN}", "-e", "JC_SPACE=zilina-verejne",
          "-e", "CONFIG=" + json.dumps({"input": {"stdin": {"scanner": {"to_the_end": {}}}},
                                       "pipeline": yaml.safe_load(text)["pipeline"],
                                       "output": {"stdout": {"codec": "all-bytes"}}, "logger": {"level": "error"}}),
@@ -419,7 +433,7 @@ def test_a_register_without_the_city_and_missing_addresses_fail_the_run():
 
 
 UKAZOVATELE = SEED / "zilina-pipeline-ukazovatele.yaml"
-KPI_ENV = {"JC_ORG_DOMAIN": DOMAIN, "JC_SPACE": "zilina-kpi", "JC_SOURCE_SPACE": "zilina-mesto"}
+KPI_ENV = {"JC_ORG_DOMAIN": RUNNER_DOMAIN, "JC_SPACE": "zilina-kpi", "JC_SOURCE_SPACE": "zilina-mesto"}
 
 
 def indicators(rows: list[dict]) -> list[dict]:

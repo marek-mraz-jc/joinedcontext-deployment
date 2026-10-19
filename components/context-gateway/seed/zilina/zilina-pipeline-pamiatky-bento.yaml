@@ -54,7 +54,7 @@ pipeline:
           # A corner building has an entrance on each street; the one the register names wins.
           "_at": r._entrances.filter(e -> e.number == r."Orientačné číslo".trim()).concat(r._entrances).index(0).catch(null)
         })).map_each(r -> {
-          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("PointOfInterest", env("JC_ORG_DOMAIN"), env("JC_SPACE"), "uzpf-%v-%v".format(r."Č. ÚZPF NNKP", r."Index PO")),
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("PointOfInterest", "zilina.sk", env("JC_SPACE"), "uzpf-%v-%v".format(r."Č. ÚZPF NNKP", r."Index PO")),
           "type": "PointOfInterest",
           "name": { "type": "LanguageProperty", "languageMap": { "sk": if r."Zaužívaný názov NNKP".trim() == "" { r."Unifikovaný názov NNKP".trim() } else { r."Zaužívaný názov NNKP".trim() } } },
           "monumentNumber": { "type": "Property", "value": "%v/%v".format(r."Č. ÚZPF NNKP", r."Index PO") },
