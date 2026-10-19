@@ -158,10 +158,8 @@ if [[ -e "$ENV_FILE" ]] && git ls-files --error-unmatch "$ENV_FILE" >/dev/null 2
   err "$ENV_FILE is tracked by git; refusing to overwrite. Pick a different scratch env."
   exit 1
 fi
-# Remove the generated scratch env file on exit so the repo is left clean, except under --keep:
-# the kept cluster was installed with it, and ci-upgrade-e2e.sh upgrades that install (T-4784).
-# shellcheck disable=SC2317 # run by the EXIT trap
-cleanup_env() { $KEEP_CLUSTER || { rm -f "$ENV_FILE"; rmdir "deployment/environments/${ENV}" 2>/dev/null || true; }; }
+# Remove the generated scratch env file on exit so the repo is left clean.
+cleanup_env() { rm -f "$ENV_FILE"; rmdir "deployment/environments/${ENV}" 2>/dev/null || true; }
 trap cleanup_env EXIT
 
 # --- tooling pre-flight -----------------------------------------------------

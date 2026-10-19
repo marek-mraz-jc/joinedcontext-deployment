@@ -44,12 +44,6 @@ git worktree add --detach --quiet "$WORK/prev" "$PREV"
 # scratch file on exit, --keep included (ci-full 39335432708, T-4784), so it is written again
 # here by the previous release's own write_env_overlay for variant 0,0,0.
 JUST_NO_DOTENV=true just _dev-assemble >/dev/null
-# A release up to v0.1.0 deleted its scratch env on exit even under --keep (T-4784): write it
-# again with that release's own writer, for the 0,0,0 variant it installed.
-if [ ! -d "$WORK/prev/deployment/environments/${ENV}" ]; then
-	(cd "$WORK/prev" && ENV_FILE="deployment/environments/${ENV}/global.yaml.gotmpl" PROFILE=development \
-		bash -c 'set -euo pipefail; eval "$(sed -n "/^write_env_overlay()/,/^}/p" scripts/test-deployment-variants.sh)"; write_env_overlay 0 0')
-fi
 rm -rf "deployment/environments/${ENV}"
 ./scripts/prev-env-overlay.sh "$WORK/prev/scripts/test-deployment-variants.sh" \
 	"deployment/environments/${ENV}/global.yaml.gotmpl"
