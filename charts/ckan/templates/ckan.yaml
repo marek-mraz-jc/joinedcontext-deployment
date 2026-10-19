@@ -117,6 +117,10 @@ spec:
             # `ckanext-envvars` maps this name to that option.
             - name: CKAN__AUTH__PUBLIC_USER_DETAILS
               value: "false"
+            # An anonymous action API answer is public for 60 s (T-4717), which is what lets the
+            # edge's ckan-action-cache route keep it; a page with a session stays `private`.
+            - name: CKAN__CACHE_EXPIRES
+              value: "60"
             # The catalogue's publishers are Slovak, Czech and Finnish bodies: CKAN serves a
             # language only under its offered prefix (/sk/…), and with English alone a Slovak
             # visitor had no way to Slovak at all (T-4199). Slovak is the default, the others a

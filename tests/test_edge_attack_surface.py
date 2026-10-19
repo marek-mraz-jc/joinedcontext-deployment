@@ -218,6 +218,10 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "CKAN's fingerprinted stylesheets and scripts, the same files for everyone, kept a year by the browser (T-4201)",
     },
+    "ckan-action-cache": {
+        "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",
+        "why": "CKAN's anonymous action API reads kept 60 s at the edge; a cookie or a token bypasses it (T-4717)",
+    },
     "ckan-map": {
         "reach": UPSTREAM, "cacheable": True, "framing": FRAMED_BY_UPSTREAM,
         "why": "a dataset's map any site may frame (T-4639): the page holds no data, no form and no session; the visitor's browser reads the Endpoint's public OGC API Features anonymously, and CKAN's page names frame-ancestors * itself while the edge strips the session cookie",
