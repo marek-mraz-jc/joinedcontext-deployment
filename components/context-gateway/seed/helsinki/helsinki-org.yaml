@@ -3,10 +3,11 @@ kind: Organization
 metadata:
   name: hel
   namespace: org
-  title: { en: "City of Helsinki", sk: "Mesto Helsinki" }
+  title: { en: "City of Helsinki", fi: "Helsingin kaupunki", sk: "Mesto Helsinki" }
 spec:
   domain: hel.fi
-  locales: [en, sk]
+  # fi: the city's own language, so its models are titled in Finnish (T-4829).
+  locales: [en, fi, sk]
   defaultLocale: en
   # The national DCAT-AP renderings its records and catalogues are also served in (API/08 §5):
   # Banská Bystrica and BBSK publish to data.slovensko.sk, Praha to data.gov.cz (T-4586).
