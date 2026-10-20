@@ -246,6 +246,12 @@ def test_space_reads_and_writes_count_apart(rendered):
         elif route["id"].endswith("context-endpoint-bulk") or route["id"] == "context-endpoint-portal-bulk":
             # T-4717: the bulk exports add their concurrency limit to the surface's chain.
             assert "labels" not in route and set(route["plugins"]) == {"limit-conn"}, route["id"]
+        elif route["id"].endswith("-ws") and route["id"].startswith(("context-endpoint", "api-context-endpoint")):
+            # T-4873: the Endpoint WebSockets bound open sockets per client address at the edge.
+            assert "labels" not in route and set(route["plugins"]) == {"limit-conn"}, route["id"]
+            limit = route["plugins"]["limit-conn"]
+            assert (limit["conn"], limit["burst"], limit["key"]) == (50, 0, "$remote_addr"), route["id"]
+            assert route["enable_websocket"] is True, route["id"]
         elif route["id"] == "api-oauth":
             # T-4630, ADR-N-052 §4: minting an anonymous token counts per client address.
             assert "labels" not in route and set(route["plugins"]) == {"limit-count"}, route["id"]
