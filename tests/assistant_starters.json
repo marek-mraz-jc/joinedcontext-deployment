@@ -249,6 +249,68 @@
    ],
    "reference": "Jedna adresa pre celý katalóg https://api.{domain}/api/mcp; Claude: Nastavenia, Konektory, Pridať vlastný konektor, overenie prázdne; Claude Code: claude mcp add --transport http joinedcontext https://api.{domain}/api/mcp.",
    "source": "the catalogue assistant's own guide (.ci/example-deployments/environments/<env>/ckan.yaml.gotmpl systemPrompt, which links the step-by-step page /assistants/claude since T-4769); initialize on https://api.smartcity.joinedcontext.com/api/mcp answered 2026-10-19T20:55Z"
+  },
+  {
+   "id": "bbsk-sk-air-quality",
+   "assistant": "bbsk-demo",
+   "lang": "sk",
+   "card": false,
+   "q": "Aká je kvalita ovzdušia v BB?",
+   "must": [
+    [
+     "SK0263A"
+    ],
+    [
+     "PM10",
+     "PM₁₀"
+    ]
+   ],
+   "live": {
+    "url": "https://api.{domain}/api/endpoint/32ea6ze7db7g6u7qnlgezpwp75/ngsi-ld/v1/entities/urn:ngsi-ld:AirQualityObserved:banskabystrica.sk:banskabystrica-verejne:eea-SK0263A",
+    "attr": "pm10"
+   },
+   "links": [
+    "https://opendata.{domain}/dataset/public-air"
+   ],
+   "reference": "Stanica SK0263A (mestské pozadie) v Banskej Bystrici: PM10 a ďalšie znečisťujúce látky s časom merania (2026-10-20T08:00Z: PM10 19,9 µg/m³).",
+   "source": "prod Endpoint 32ea6ze7db7g6u7qnlgezpwp75 (banskabystrica-verejne), AirQualityObserved eea-SK0263A read 2026-10-20T09:40Z; owner question on bbsk-demo 2026-10-20T09:08Z (T-4810)"
+  },
+  {
+   "id": "bbsk-sk-datasets",
+   "assistant": "bbsk-demo",
+   "lang": "sk",
+   "card": false,
+   "q": "K akým datasetom máš prístup?",
+   "must": [
+    [
+     "most"
+    ],
+    [
+     "úradn",
+     "uradn"
+    ],
+    [
+     "faktúr",
+     "faktur"
+    ],
+    [
+     "zmluv"
+    ],
+    [
+     "cyklotras",
+     "cyklotrás"
+    ],
+    [
+     "ovzduš",
+     "ovzdus"
+    ]
+   ],
+   "links": [
+    "https://opendata.{domain}/dataset/bbsk-mosty",
+    "https://opendata.{domain}/dataset/public-air"
+   ],
+   "reference": "Živé dáta kraja (registre, tabuľky katalógu: mosty, úradné hodiny, faktúry, zmluvy, cyklotrasy, ukazovatele) a mesta Banská Bystrica (kvalita ovzdušia, podujatia, otvorené dáta mesta), zoskupené podľa vydavateľa: 11 verejných Endpointov servera bbsk/kraj-a-mesto.",
+   "source": "prod MCP list_endpoints of bbsk/kraj-a-mesto, 11 public Endpoints, read 2026-10-20T09:40Z; owner question on bbsk-demo 2026-10-20T09:09Z (T-4810)"
   }
  ]
 }
