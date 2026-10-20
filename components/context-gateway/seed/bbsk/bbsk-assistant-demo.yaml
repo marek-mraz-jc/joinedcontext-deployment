@@ -53,20 +53,19 @@ spec:
     primaryColor: "#264a96"
     font: '"Roboto", "Helvetica Neue", Arial, system-ui, sans-serif'
     greeting: "Dobrý deň! Toto je ukážka (DEMO), nie oficiálna služba BBSK. Opýtajte sa ma na otvorené dáta Banskobystrického samosprávneho kraja a mesta Banská Bystrica."
-  # The starting cards (owner 2026-10-19T13:49Z, T-4769 20:45Z): the office's hours and seat from
-  # the open data (OfficeHours and PointOfInterest of bbsk-otvorene-data), the bus timetables from
-  # www.bbsk.sk, then the bridge register. Each one has its expected answer and link in
-  # tests/assistant_starters.json and passes 3 of 3 on prod (T-4769 table). The Zvolen schools card
+  # The starting cards (owner 2026-10-19T13:49Z, T-4769): the bus timetables from www.bbsk.sk and
+  # the bridge register. Each one has its expected answer and link in tests/assistant_starters.json
+  # and passes 3 of 3 on prod (T-4769 table). Off until they pass: office hours and seat (prod
+  # 2026-10-20: no seat, and only bbsk-otvorene-data's schema/index.json as source) and the
+  # population (bbsk-kpi not found, or dated by its publication day). The Zvolen schools card
   # is off until it passes (owner's run 2026-10-19T16:22Z read Organization).
   suggestions:
     sk:
-      - "Aké sú úradné hodiny Úradu BBSK a kde sídli?"
       - "Kde nájdem cestovné poriadky autobusov v kraji?"
-      - "Koľko mostov spravuje kraj a koľko je starších ako 100 rokov?"
+      - "Koľko mostov je v registri mostov kraja a koľko je postavených pred rokom 1900?"
     en:
-      - "What are the office hours of the BBSK Office and where is it?"
       - "Where can I find the region's bus timetables?"
-      - "How many bridges does the region manage, and how many are over 100 years old?"
+      - "How many bridges are in the region's bridge register, and how many were built before 1900?"
   disclaimer:
     sk: "DEMO, nie oficiálna služba BBSK. Odpovede tvorí umelá inteligencia z verejných stránok a otvorených dát kraja a mesta Banská Bystrica. Môžu obsahovať chyby, overte si dôležité informácie v uvedených zdrojoch. Rozhovory uchovávame 90 dní na zlepšenie služby. Nezadávajte osobné údaje."
     en: "DEMO, not an official BBSK service. Answers are written by AI from the public pages and open data of the region and the City of Banská Bystrica. They may contain mistakes; check important facts in the linked sources. Conversations are kept for 90 days to improve the service. Do not enter personal data."

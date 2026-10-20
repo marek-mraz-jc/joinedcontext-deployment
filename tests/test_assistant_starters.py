@@ -15,7 +15,7 @@ DEMO = ROOT / "components/context-gateway/seed/bbsk/bbsk-assistant-demo.yaml"
 CATALOGUE = [ROOT / f".ci/example-deployments/environments/{env}/ckan.yaml.gotmpl" for env in ("smartcity", "dev")]
 # A page a person reads: a dataset page or an assistant guide of the catalogue, or a page of the
 # body's own site.
-HUMAN = re.compile(r"https://(opendata\.\{domain\}/(dataset/[a-z0-9-]+|assistants/[a-z]+)|www\.bbsk\.sk/[a-z0-9-]+)")
+HUMAN = re.compile(r"https://(opendata\.\{domain\}/(dataset/[a-z0-9-]+|assistants/[a-z]+)|www\.bbsk\.sk/[a-z0-9-]+|www\.idsbbsk\.sk)")
 KEYS = {"id", "assistant", "lang", "q", "must", "links", "reference", "source"}
 
 
@@ -58,10 +58,17 @@ def test_each_row_names_what_the_answer_must_hold_and_a_page_a_person_can_open()
             assert row["live"]["url"].startswith("https://api.{domain}/api/endpoint/"), row["id"]
 
 
-def test_the_office_hours_card_replaces_the_pothole_card():
-    # Owner 2026-10-19T20:45Z: "Ako nahlásim výtlk na ceste v kraji?" becomes office hours and address.
+def test_the_pothole_card_is_gone_and_no_card_needs_a_machine_link():
+    # Owner 2026-10-19T20:45Z: the pothole card goes. Prod 2026-10-20: the office hours card cited
+    # only schema/index.json, so it is off until its answer links a dataset page.
     demo = yaml.safe_load(DEMO.read_text())["spec"]["suggestions"]
     assert not any(re.search(r"výtlk|pothole", q, re.I) for q in demo["sk"] + demo["en"])
-    hours = next(r for r in STARTERS if r["assistant"] == "bbsk-demo" and r["lang"] == "sk" and "úradné hodiny" in r["q"])
-    assert ["Námestie SNP 23"] in hours["must"]
-    assert "https://opendata.{domain}/dataset/bbsk-uradne-hodiny-c912ed" in hours["links"]
+    assert all("/api/endpoint/" not in link for row in STARTERS for link in row["links"])
+
+
+def test_an_age_question_names_its_year():
+    # Prod 2026-10-20: "starších ako 100 rokov" read as built in 1926 or before (51, not 48); a
+    # bridge card names the year it counts from.
+    for row in STARTERS:
+        if re.search(r"most|bridge", row["q"], re.I) and len(row["must"]) > 1:
+            assert re.search(r"\b1900\b", row["q"]), row["id"]
