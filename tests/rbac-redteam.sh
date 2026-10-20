@@ -56,7 +56,7 @@ helm template portal-namespaces "$ROOT/components/portal/charts/namespaces" \
 helm template sandbox-reaper "$ROOT/components/sandbox-reaper/charts/reaper" --namespace ops \
 	--show-only templates/rbac.yaml --show-only templates/policy.yaml | k apply -f - >/dev/null
 # The Portal's Role in its own namespace (components/portal/values/portal/base-values.yaml.gotmpl
-# rbac.rules, and gitea-runner's portal-build-pods for Jobs), and two ServiceAccounts that share
+# rbac.rules, and gitea-runner's portal-build-pods for Jobs), a platform credential beside it, and two ServiceAccounts that share
 # that namespace on dev: the restore drill's and a token minter's.
 k apply -f - >/dev/null <<-'EOF'
 	apiVersion: v1
@@ -79,13 +79,22 @@ k apply -f - >/dev/null <<-'EOF'
 	    verbs: [get, create, patch, delete]
 	  - apiGroups: [""]
 	    resources: [secrets]
-	    verbs: [get, create, patch, delete]
+	    resourceNames: [app-registry]
+	    verbs: [get]
+	  - apiGroups: [""]
+	    resources: [secrets]
+	    verbs: [create, patch]
 	---
 	apiVersion: rbac.authorization.k8s.io/v1
 	kind: RoleBinding
 	metadata: {name: portal, namespace: dev}
 	roleRef: {apiGroup: rbac.authorization.k8s.io, kind: Role, name: portal}
 	subjects: [{kind: ServiceAccount, name: portal, namespace: dev}]
+	---
+	apiVersion: v1
+	kind: Secret
+	metadata: {name: db-keycloak, namespace: dev}
+	stringData: {password: platform-credential}
 	---
 	apiVersion: v1
 	kind: Namespace
@@ -194,6 +203,28 @@ k create serviceaccount default -n dev-ovzdusie-apps --dry-run=client -o yaml | 
 EXPECT=PodSecurity refused "a root pod in its apps namespace (Pod Security)" - run probe -n dev-ovzdusie-apps --image=registry.k8s.io/pause:3.10 --dry-run=server
 
 unset EXPECT
+echo "== Portal ServiceAccount: Secrets in the release namespace (T-4798)"
+secret() { # secret <name> [type [annotations flow map]]
+	printf 'apiVersion: v1\nkind: Secret\nmetadata: {name: %s, namespace: dev, annotations: {%s}}\ntype: %s\nstringData: {k: v}\n' "$1" "${3:-}" "${2:-Opaque}"
+}
+cannot "get the database secret" "$PORTAL" get secrets/db-keycloak -n dev
+cannot "get the forge admin secret" "$PORTAL" get secrets/gitea-admin-credentials -n dev
+cannot "get a build token secret" "$PORTAL" get secrets/build-bikes-42 -n dev
+cannot "delete secrets in dev" "$PORTAL" delete secrets -n dev
+export EXPECT=dev-portal-secrets
+refused "overwrite the database secret by server-side apply" "$PORTAL" apply --server-side --force-conflicts -f <(secret db-keycloak)
+refused "create a Secret under a platform name" "$PORTAL" apply --server-side -f <(secret keycloak-admin-user)
+refused "a token-typed Secret under a handed-over name" "$PORTAL" apply --server-side -f <(secret artifact-store-reader-x kubernetes.io/service-account-token "kubernetes.io/service-account.name: postgres-cluster-dr-drill")
+unset EXPECT
+allowed "apply the pipeline runner's Secret" "$PORTAL" apply --server-side -f <(secret pipeline-secrets)
+allowed "apply an organization's reader Secret" "$PORTAL" apply --server-side -f <(secret artifact-store-reader-hel)
+if [ "$(k get secret db-keycloak -n dev -o jsonpath='{.data.password}' | base64 -d)" = platform-credential ]; then
+	echo "ok    the database secret is unchanged"
+else
+	echo "FAIL  the database secret was changed"
+	failures=$((failures + 1))
+fi
+
 echo "== sandbox reaper ServiceAccount"
 export EXPECT=sandbox-reaper
 refused "delete kube-node-lease" "$REAPER" delete namespace kube-node-lease --dry-run=server

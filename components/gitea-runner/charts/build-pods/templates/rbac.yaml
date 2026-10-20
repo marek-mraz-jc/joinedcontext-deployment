@@ -2,13 +2,14 @@
 {{- /*
   What the Portal writes in the runner's namespace to start an App's build (AP-130): the Job,
   the Secret holding that one job's registration token, which the Job owns, and the App's cache
-  claim. Server-side apply is get + create + patch. Jobs and claims are deleted by the Portal
-  (a Job whose token never arrived, the claim of a retired App); a token Secret goes with its
-  Job. No pods, no exec, no logs: the Portal never reaches into a build.
+  claim. Server-side apply is create + patch. Jobs and claims are deleted by the Portal (a Job
+  whose token never arrived, the claim of a retired App); a token Secret goes with its Job. No
+  pods, no exec, no logs: the Portal never reaches into a build.
 
-  `get` on Secrets also reaches `gitea-runner-registration`, the organization's registration
-  token. RBAC cannot name a prefix, and that token gives the Portal nothing it lacks: its forge
-  account already mints registration tokens.
+  No `get` on Secrets (T-4798): this namespace holds the forge's and, on a single-namespace
+  installation, the whole platform's credentials. The Portal tells a Job that holds its token
+  by an annotation on the Job. RBAC cannot name the `build-` prefix, so the admission policy
+  `{release}-portal-secrets` (components/portal/charts/namespaces) bounds what it writes.
 */}}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -25,7 +26,7 @@ rules:
     verbs: ["get", "create", "patch", "delete"]
   - apiGroups: [""]
     resources: ["secrets"]
-    verbs: ["get", "create", "patch"]
+    verbs: ["create", "patch"]
   - apiGroups: [""]
     resources: ["persistentvolumeclaims"]
     verbs: ["get", "list", "create", "patch", "delete"]

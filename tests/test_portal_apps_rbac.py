@@ -238,3 +238,48 @@ def test_no_role_of_the_portal_lists_or_watches_secrets(rendered, environment):
             assert "*" not in verbs and not verbs & {"list", "watch"}, f"{where} lists Secrets: {sorted(verbs)}"
             assert verbs <= SECRET_VERBS | {"update"}, f"{where}: {sorted(verbs)}"
     assert checked >= 2, "the Portal's own Role and the apps role both name Secrets"
+
+
+@requires_helmfile
+@pytest.mark.parametrize("environment", ["local", "dev", "production"])
+def test_outside_an_apps_namespace_the_portal_reads_secrets_by_name_and_deletes_none(
+    rendered, environment
+):
+    """T-4798: Role `portal` and `portal-build-pods` sit in the release namespace on a
+    single-namespace installation, beside the database, Keycloak and forge credentials, whose
+    names the charts publish. Every rule there that reads a Secret names it; none deletes one;
+    the writes RBAC cannot name are bounded by the `{release}-portal-secrets` admission policy."""
+    docs = rendered(environment)
+    slug = portal_env(docs)["JC_PORTAL_RELEASE"]
+    roles = [
+        d
+        for d in docs
+        if d.get("kind") == "Role" and d["metadata"]["name"] in {"portal", "portal-build-pods"}
+    ]
+    assert "portal" in {r["metadata"]["name"] for r in roles}
+    unnamed_writes = False
+    for role in roles:
+        for rule in role["rules"]:
+            if "secrets" not in rule["resources"]:
+                continue
+            where = f"{environment}: Role {role['metadata']['name']}"
+            verbs = set(rule["verbs"])
+            assert "delete" not in verbs, f"{where} deletes Secrets"
+            if "get" in verbs:
+                assert rule.get("resourceNames"), f"{where} reads any Secret it can name"
+            unnamed_writes |= not rule.get("resourceNames") and bool(verbs & {"create", "patch", "update"})
+    read = {
+        name
+        for rule in portal_role(docs)["rules"]
+        if "secrets" in rule["resources"] and "get" in rule["verbs"]
+        for name in rule["resourceNames"]
+    }
+    assert read <= {"app-registry"}, f"{environment}: {read}"
+    if unnamed_writes:
+        by_name = {(d.get("kind"), d["metadata"]["name"]): d for d in docs}
+        policy = by_name[("ValidatingAdmissionPolicy", f"{slug}-portal-secrets")]
+        assert policy["spec"]["failurePolicy"] == "Fail"
+        assert by_name[("ValidatingAdmissionPolicyBinding", f"{slug}-portal-secrets")]["spec"] == {
+            "policyName": f"{slug}-portal-secrets",
+            "validationActions": ["Deny"],
+        }

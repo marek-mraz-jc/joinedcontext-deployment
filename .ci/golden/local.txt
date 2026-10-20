@@ -1,10 +1,12 @@
 admissionregistration.k8s.io/v1/MutatingWebhookConfiguration -/cnpg-mutating-webhook-configuration
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/local-portal-apps-bindings
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/local-portal-apps-namespaces
+admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/local-portal-secrets
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/local-portal-workloads
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/sandbox-reaper-reaper
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/local-portal-apps-bindings
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/local-portal-apps-namespaces
+admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/local-portal-secrets
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/local-portal-workloads
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/sandbox-reaper-reaper
 admissionregistration.k8s.io/v1/ValidatingWebhookConfiguration -/cnpg-validating-webhook-configuration

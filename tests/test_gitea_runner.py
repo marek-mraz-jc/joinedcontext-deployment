@@ -288,7 +288,7 @@ def test_the_portal_may_start_build_jobs_in_the_runner_namespace_and_nothing_els
     rules = {(tuple(r["apiGroups"]), tuple(r["resources"])): set(r["verbs"]) for r in role["rules"]}
     assert rules == {
         (("batch",), ("jobs",)): {"get", "create", "patch", "delete"},
-        (("",), ("secrets",)): {"get", "create", "patch"},
+        (("",), ("secrets",)): {"create", "patch"},
         (("",), ("persistentvolumeclaims",)): {"get", "list", "create", "patch", "delete"},
     }
     assert not any("resourceNames" in r or "*" in r["verbs"] for r in role["rules"])
