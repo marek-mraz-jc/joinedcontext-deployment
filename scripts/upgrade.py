@@ -289,7 +289,10 @@ class Upgrade:
         after = json.loads(run(["helm", "list", "-A", "-o", "json"], check=False) or "[]")
         print("RED: rolling back every helm release this run changed", flush=True)
         for name, namespace, revision in changed_releases(before, after):
-            if not stream(["helm", "rollback", name, str(revision), "-n", namespace, "--wait"]):
+            # helm's own 5 min default ended the wait while an old pod was still terminating
+            # (ci-full 39353463338: "Pending termination: 1"); the rollback gets the run's budget.
+            if not stream(["helm", "rollback", name, str(revision), "-n", namespace, "--wait",
+                           "--timeout", f"{self.timeout}s"]):
                 print(f"  {namespace}/{name} did not roll back to revision {revision}", flush=True)
         for release in new_releases(before, after):
             print(f"  {release} is new in this release and stays installed: remove it by hand if "
