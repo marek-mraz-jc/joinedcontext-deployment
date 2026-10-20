@@ -175,7 +175,7 @@ def test_a_red_smoke_rolls_back_what_changed_and_deletes_nothing(repo):
     result, calls = upgrade_run(repo, "prod", "v1.1.0", smoke=1)
     assert result.returncode == 1
     rollbacks = [c[1:-1] for c in calls if c[0] == "helm" and c[1] == "rollback"]
-    assert rollbacks == [["rollback", "portal-portal", "1", "-n", "prod", "--wait"]]
+    assert rollbacks == [["rollback", "portal-portal", "1", "-n", "prod", "--wait", "--timeout", "1800s"]]
     assert "prod/mqtt-brokers-brokers is new in this release and stays installed" in result.stdout
     assert "restore prod/postgres-cluster-pre-v1-1-0-" in result.stdout
     assert "Nothing was deleted." in result.stdout
