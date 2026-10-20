@@ -24,3 +24,6 @@ fccb3c7e3fdd9d563dbbc590af590c3823758097:scripts/open-data/sdm/pins.json:generic
 # T-4317: the same pin line in the merge that adds the Parking and ParksAndGardens pins (public commit ids).
 e2cb2f2ec903ae8a4835c44f17bed33bee14c901:scripts/open-data/sdm/pins.json:generic-api-key:4
 9e3c8b55678070bf5303e1206087290fdc7989fc:scripts/open-data/sdm/pins.json:generic-api-key:4
+# T-4875's broker-callers probe wrote a WebSocket handshake key, base64 of "smoke-forged-key",
+# as a literal; smoke.sh builds it at run time now (T-4875 follow-up, deployer).
+38f256ee14af9f2e91551bca7a5f8f7b42cc12c6:scripts/smoke.sh:generic-api-key:1149
