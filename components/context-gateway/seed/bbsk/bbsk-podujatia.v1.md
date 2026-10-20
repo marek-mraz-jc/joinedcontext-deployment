@@ -1,0 +1,66 @@
+# Events in Slovakia
+
+<!-- Generated from the LinkML source by Model Tools. Do not edit: `jcctl model
+     generate` overwrites this file and CI fails on any difference (DM-01, DM-02). -->
+
+One public event as a town, a region or a cultural body announces it on its web site or feed: what it is, when it starts and ends, and where, as a GPS point. The class is schema.org's Event under the names Smart Data Models and schema.org use, so the space's iCalendar surface (RFC 5545, EP-125) reads it as published: `id` the UID, `name` the SUMMARY, `startDate` and `endDate` DTSTART and DTEND, `description`, `address`, `location` and `url` DESCRIPTION, LOCATION, GEO and URL. An event without a name, a start or a point in Slovakia is refused by the pipeline and never reaches the space (owner 2026-10-20). One event announced by two sources is one entity: its id is `urn:ngsi-ld:Event:bbsk-podujatia:` followed by the first 16 hex digits of the SHA-256 of `lower(trim(name)) \| startDate \| lower(addressLocality)`, so the second source overwrites the first rather than adding a copy.
+
+- Namespace: `https://joinedcontext.com/models/bbsk/bbsk-podujatia`
+- Rendered by: `linkml-1.11.1`
+- License: https://joinedcontext.com/licenses/cc-by-4.0
+
+## Classes
+
+### Event
+
+One public event: its name, its start and its place as a GPS point are required (owner 2026-10-20), the rest is kept where the source gives it.
+
+IRI: `schema:Event`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | Property | `string` | yes |  | `schema:name` | The title of the event as the source writes it, in Slovak. |
+| `startDate` | Property | `string` | yes |  | `schema:startDate` | When the event starts: an RFC 3339 instant with its offset (`2026-11-14T19:00:00+01:00`, Europe/Bratislava as the source publishes it), or a date alone (`2026-11-14`) for an event that lasts whole days. |
+| `endDate` | Property | `string` |  |  | `schema:endDate` | When the event ends, written as `startDate`; for a whole-day event its last day, inclusive. Absent when the source gives no end: the calendar then shows the start alone. |
+| `location` | GeoProperty | `string` | yes |  | `geojson:geometry` | Where the event takes place, a GeoJSON Point in WGS 84 inside Slovakia (longitude 16.8 to 22.6, latitude 47.7 to 49.7), from the source or from the venue table checked by hand; never a town's centre. |
+| `venue` | Property | `string` |  |  | `jc:venue` | The name of the place, as the source writes it (a hall, a square, a museum). |
+| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address of the venue, field by field (Smart Data Models' common PostalAddress); `addressLocality` is the town a calendar filters on. A field the source leaves out is absent, never guessed. |
+| `eventCategory` | Property | `string` |  |  | `jc:eventCategory` | The kind of event in the source's own words (`koncert`, `výstava`, `šport`). |
+| `description` | Property | `string` |  |  | `schema:description` | What the source says about the event, as plain text without markup. |
+| `url` | Property | `uri` |  |  | `schema:url` | The page of the event at its source, where a person reads more or buys a ticket. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who announced the event (the town, the region, the cultural body), as the credit names it. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The feed or the page the pipeline read the event from. |
+| `sourceId` | Property | `string` |  |  | `jc:sourceId` | The event's own identifier at its source, so a record can be traced back. |
+| `dateModified` | Property | `datetime` |  |  | `sdm:dateModified` | When the source last changed the record. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### PostalAddress
+
+The value of `address`, never an entity of its own.
+
+IRI: `schema:PostalAddress`
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `streetAddress` | Property | `string` |  |  | `schema:streetAddress` | The street and the house number. |
+| `postalCode` | Property | `string` |  |  | `schema:postalCode` | The postal code. |
+| `addressLocality` | Property | `string` |  |  | `schema:addressLocality` | The town or the municipality, by its Slovak name with diacritics (`Banská Bystrica`). |
+| `addressRegion` | Property | `string` |  |  | `schema:addressRegion` | The self-governing region, by its Slovak name (`Banskobystrický kraj`). |
+| `addressCountry` | Property | `string` |  |  | `schema:addressCountry` | The country, as an ISO 3166-1 alpha-2 code. |
+
+### Entity
+
+The root every NGSI-LD entity class specialises.
+
+IRI: `ngsi-ld:Entity`
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |

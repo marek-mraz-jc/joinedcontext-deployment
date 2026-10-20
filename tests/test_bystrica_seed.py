@@ -77,8 +77,8 @@ def test_each_projects_quotas_hold_what_it_declares_with_room_for_the_demo():
         # The region's public endpoints: its raw rows' for the trend lines (T-2934), and the region
         # map's and its grids' (T-2784).
         # The sixth is the space of every other table of the catalogue (T-4255), and the other four
-        # the registers' datasets, one per type (T-4344).
-        (REGION, "bbsk", ["bbsk-kraj", "bbsk-kpi", "bbsk-registre", "bbsk-otvorene-data"], 10),
+        # the registers' datasets, one per type (T-4344); the events of the region and of Slovakia (T-4895).
+        (REGION, "bbsk", ["bbsk-kraj", "bbsk-kpi", "bbsk-registre", "bbsk-otvorene-data", "bbsk-podujatia"], 12),
         # The third public endpoint of the city is the air-quality App's own (T-2972), the fourth
         # and fifth the city map's and the data grids' (T-2782), then the public space's events,
         # schools and weather as their own datasets (T-4344), and OpenStreetMap's health places
@@ -127,7 +127,7 @@ def test_the_citys_indicators_reach_the_region_by_a_named_share_and_nothing_wide
 
 def test_no_service_account_can_write_into_the_other_bodys_space():
     for folder, project, own in (
-        (REGION, "bbsk", {"bbsk-kraj", "bbsk-kpi", "bbsk-registre", "bbsk-otvorene-data"}),
+        (REGION, "bbsk", {"bbsk-kraj", "bbsk-kpi", "bbsk-registre", "bbsk-otvorene-data", "bbsk-podujatia"}),
         (CITY, "banskabystrica", {"banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne", "ovzdusie",
                                   "banskabystrica-otvorene-data"}),
     ):
@@ -664,6 +664,8 @@ CLEARED = {
     ("banskabystrica", "banskabystrica-kataster"),
     ("bbsk", "bbsk-kpi"), ("bbsk", "bbsk-hranice"), ("bbsk", "bbsk-organizacie"), ("bbsk", "bbsk-zariadenia"),
     ("bbsk", "bbsk-mosty"),
+    # The events, cleared by the owner (2026-10-20): the region's and Slovakia's (T-4895).
+    ("bbsk", "bbsk-podujatia"), ("bbsk", "bbsk-podujatia-slovensko"),
 }
 
 
