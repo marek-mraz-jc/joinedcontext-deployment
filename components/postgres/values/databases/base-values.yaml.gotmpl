@@ -18,6 +18,14 @@ securityDefaults:
   securityContext:
     {{ .Values.securityDefaults.securityContext | toYaml | nindent 4 }}
 
+# The stat-statements Job waits for the library when the cluster preloads it: CNPG preloads
+# pg_stat_statements when any pg_stat_statements.* parameter is set (T-4904).
+{{- $params := dig "rawValues" "cluster" "postgresql" "parameters" dict .Values.postgres.cluster }}
+{{- $preload := false }}
+{{- range $key, $_ := $params }}{{ if hasPrefix "pg_stat_statements." $key }}{{ $preload = true }}{{ end }}{{ end }}
+statStatements:
+  preloaded: {{ $preload }}
+
 localBackup:
   {{- $this.localBackup | toYaml | nindent 2 }}
 
