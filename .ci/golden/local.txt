@@ -251,10 +251,11 @@ v1/ConfigMap local/gitea-seed-s2-bbsk--2
 v1/ConfigMap local/gitea-seed-s2-bbsk--3
 v1/ConfigMap local/gitea-seed-s2-bbsk--4
 v1/ConfigMap local/gitea-seed-s2-bbsk--5
-v1/ConfigMap local/gitea-seed-s2-bbsk--6
+v1/ConfigMap local/gitea-seed-s3-bbsk--6
 v1/ConfigMap local/gitea-seed-s3-bbsk--7
 v1/ConfigMap local/gitea-seed-s3-bbsk--8
-v1/ConfigMap local/gitea-seed-s4-bbsk--9
+v1/ConfigMap local/gitea-seed-s3-bbsk--9
+v1/ConfigMap local/gitea-seed-s4-bbsk--10
 v1/ConfigMap local/gitea-seed-s5-helsinki
 v1/ConfigMap local/gitea-seed-s6-helsinki-mobility
 v1/ConfigMap local/gitea-seed-s6-slovensko--5
