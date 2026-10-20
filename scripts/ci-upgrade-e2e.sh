@@ -97,8 +97,13 @@ export CURL_CA_BUNDLE="$WORK/ca-bundle.pem" SSL_CERT_FILE="$WORK/ca-bundle.pem"
 
 record() { kubectl get configmap -A --field-selector metadata.name=jc-release -o jsonpath='{.items[0].data.version}'; }
 
+# The gate is scripts/edge-smoke.sh, what k3d-deploy proves after a fresh install: smoke.sh is the
+# live installation's smoke and needs feeds, an Actions runner and APISIX as the outer hop, none of
+# which k3d has (ci-full 39353463338, 39362707152: 35 red, every one of those classes; T-4795).
+SMOKE=scripts/edge-smoke.sh
+
 # 4. green
-just upgrade "$ENV" "$NEXT" --domain "$DOMAIN"
+just upgrade "$ENV" "$NEXT" --domain "$DOMAIN" --smoke "$SMOKE"
 echo "jc-release after the green upgrade: $(record)"
 [ "$(record)" = "$NEXT" ]
 
@@ -109,7 +114,7 @@ objects() {
 }
 objects >"$WORK/objects-before"
 helm list -A -o json >"$WORK/helm-before.json"
-if just upgrade "$ENV" "$NEXT" --domain smoke-red.invalid 2>&1 | tee "$WORK/red.log"; then
+if JC_EDGE_SMOKE_SECONDS=30 just upgrade "$ENV" "$NEXT" --domain smoke-red.invalid --smoke "$SMOKE" 2>&1 | tee "$WORK/red.log"; then
 	echo "the upgrade against an unreachable domain ended green" >&2
 	exit 1
 fi
