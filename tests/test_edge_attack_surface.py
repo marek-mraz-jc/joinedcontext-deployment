@@ -154,6 +154,10 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "an Endpoint publishes what its Policy grants, to anonymous callers by design (EP-01)",
     },
+    "context-endpoint-ws": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "context-endpoint's WebSockets (T-4873): the same chain, 50 open per client address",
+    },
     "context-endpoint-bulk": {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "context-endpoint's bulk exports (T-4717): the same chain, 10 at once per client",
@@ -185,6 +189,10 @@ ROUTE_CLASSES = {
     "context-endpoint-portal": {
         "reach": EDGE_SESSION, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "the same surface on the Portal's origin, with the edge session turned into a bearer",
+    },
+    "context-endpoint-portal-ws": {
+        "reach": EDGE_SESSION, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "context-endpoint-portal's WebSockets (T-4873): the same chain, 50 open per client address",
     },
     "context-endpoint-portal-bulk": {
         "reach": EDGE_SESSION, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
@@ -257,6 +265,10 @@ ROUTE_CLASSES = {
     "api-context-endpoint": {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "context-endpoint on the data host (T-4630): an Endpoint publishes what its Policy grants",
+    },
+    "api-context-endpoint-ws": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "api-context-endpoint's WebSockets (T-4873): the same chain, 50 open per client address",
     },
     "api-context-endpoint-bulk": {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
