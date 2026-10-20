@@ -616,6 +616,12 @@ prod-apply:
 	set -euo pipefail
 	just _prod-guard
 	just _dev-assemble
+	# The public assistant is asked every 15 s while the rollouts run (T-4809, at most 40 questions);
+	# its summary line closes the apply's output on success and on failure, for the apply report.
+	probe_log=$(mktemp -t assistant-probe.XXXXXX)
+	./scripts/assistant-probe.py "https://assistant.{{ prod_domain }}" 2>"$probe_log" >"$probe_log.summary" &
+	probe=$!
+	trap 'kill "$probe" 2>/dev/null; wait "$probe" 2>/dev/null; cat "$probe_log.summary"; echo "assistant probe log: $probe_log"' EXIT
 	helmfile -f deployment/helmfile.yaml -e smartcity sync --concurrency {{helmfile_concurrency}}
 	./scripts/wait-rollouts.sh smartcity
 
