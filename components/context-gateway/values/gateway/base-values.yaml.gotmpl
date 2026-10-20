@@ -78,6 +78,12 @@ env:
   # The anonymous OAuth server redirects to Google's relay alone: OAuth is for Gemini only, Claude,
   # ChatGPT and Grok read the open data without a token (owner 2026-10-18, ADR-N-052 §2.3, T-4630).
   JC_GATEWAY_OAUTH_REDIRECT_HOSTS: oauth-redirect.googleusercontent.com
+  # glibc raises its mmap threshold to the largest block freed (up to 32 MiB), so after the first
+  # big broker answer every 1-8 MiB body comes from the heap and stays there once the load ends:
+  # prod idled at 929 Mi of 1 Gi after T-4754's 100 req/s. A fixed 128 KiB threshold maps each
+  # large body on its own and hands it back on free (T-4782, measured in context-gateway's
+  # in_flight_tests: idle +9 MiB with it, about +100 MiB without).
+  MALLOC_MMAP_THRESHOLD_: "131072"
   JC_GATEWAY_PUBLIC_URL: "https://api.{{ $global.domain }}"
   JC_OIDC_ISSUER: "https://idm.{{ $global.domain }}/realms/{{ $global.instanceSlug }}"
   # The gateway's own client on the Portal's internal listener (T-1500, PF-46, AG-52), proved by
