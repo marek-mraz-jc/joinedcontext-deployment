@@ -33,7 +33,9 @@ def cards():
 
 
 def test_every_starter_has_one_eval_row_and_no_row_is_stale():
-    rows = [(r["assistant"], r["lang"], r["q"]) for r in STARTERS]
+    # A row with "card": false evaluates an owner's question that is no card yet: it becomes one
+    # after 3 of 3 on prod (T-4810).
+    rows = [(r["assistant"], r["lang"], r["q"]) for r in STARTERS if r.get("card", True)]
     assert len(rows) == len(set(rows)), "one row per card and language"
     assert len({r["id"] for r in STARTERS}) == len(STARTERS), "ids are unique"
     offered = cards()
@@ -48,7 +50,8 @@ def test_both_catalogue_environments_offer_the_same_cards():
 
 def test_each_row_names_what_the_answer_must_hold_and_a_page_a_person_can_open():
     for row in STARTERS:
-        assert KEYS <= set(row) <= KEYS | {"live"}, row["id"]
+        assert KEYS <= set(row) <= KEYS | {"live", "card"}, row["id"]
+        assert row.get("card", False) is False, row["id"]
         assert row["must"] and all(group and all(isinstance(a, str) and a for a in group) for group in row["must"]), row["id"]
         assert row["links"] and all(HUMAN.fullmatch(link) for link in row["links"]), row["id"]
         assert row["reference"].strip() and row["source"].strip(), row["id"]
@@ -78,3 +81,14 @@ def test_an_age_question_names_its_year():
     for row in STARTERS:
         if re.search(r"most|bridge", row["q"], re.I) and len(row["must"]) > 1:
             assert re.search(r"\b1900\b", row["q"]), row["id"]
+
+
+def test_the_owner_s_air_quality_and_datasets_questions_are_evaluated():
+    # T-4810: bbsk-demo answered "no data" on air quality and listed 8 CKAN datasets of the 11
+    # Endpoints it reads (prod 2026-10-20T09:08Z).
+    rows = {row["id"]: row for row in STARTERS}
+    air, datasets = rows["bbsk-sk-air-quality"], rows["bbsk-sk-datasets"]
+    assert ["SK0263A"] in air["must"] and air["live"]["attr"] == "pm10"
+    assert "eea-SK0263A" in air["live"]["url"]
+    words = {group[0] for group in datasets["must"]}
+    assert {"most", "faktúr", "zmluv", "cyklotras", "ovzduš"} <= words
