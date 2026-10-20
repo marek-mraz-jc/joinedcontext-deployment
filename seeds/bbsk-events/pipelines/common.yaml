@@ -1,0 +1,84 @@
+# The tail every events template ends with (T-4896). A template turns its feed into one array of
+# plain records: name, start, end (RFC 3339 with offset, or a bare date for a whole-day event),
+# venue, streetAddress, postalCode, locality, lat, lon, url, category, description, sourceId,
+# modified. This tail keeps the upcoming ones, the 100 soonest, and writes each as an Event.
+#
+# generate.py fills each double-underscored placeholder with a JSON literal, never with code.
+- mapping: |
+    # The end as unix seconds: a datetime end as written, a whole-day end the next midnight
+    # (CET, so up to an hour late in summer), no end the start plus a day (owner 2026-10-20).
+    map unix {
+      root = if this == null { null } else if this.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") { this.ts_parse("2006-01-02").ts_unix() - 3600 } else { this.ts_unix().catch(null) }
+    }
+    let now = timestamp_unix()
+    let records = this.map_each(r -> r.merge({
+      "_start": r.start.apply("unix"),
+      "_end": if r.end != null && r.end.apply("unix") != null {
+        r.end.apply("unix") + if r.end.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") { 86400 } else { 0 }
+      } else { r.start.apply("unix").(s -> if s != null { s + 86400 } else { null }) }
+    }))
+    # Only upcoming events (owner 2026-10-20): one whose end is past is never loaded. A record
+    # with no readable start stays, so the model check refuses it where the run report shows it.
+    let upcoming = $records.filter(r -> r._end == null || r._end >= $now)
+    let dated = $upcoming.filter(r -> r._start != null).sort_by(r -> r._start)
+    root = $dated.slice(0, [$dated.length(), 100].min()).concat($upcoming.filter(r -> r._start == null))
+- unarchive:
+    format: json_array
+- mapping: |
+    map key {
+      root = this.lowercase().re_replace_all("\\([^)]*\\)", " ").re_replace_all("[,;]", " ").re_replace_all("\\s+", " ").trim()
+    }
+    map text {
+      root = if this == null { null } else { this.string().strip_html().unescape_html().re_replace_all("\\s+", " ").trim().(t -> if t == "" { null } else { t }) }
+    }
+    map prop {
+      root = if this == null { null } else { { "type": "Property", "value": this } }
+    }
+    let venues = __VENUES__
+    let name = this.name.apply("text")
+    let venue_text = this.venue.apply("text")
+    let venue_key = if $venue_text != null { $venue_text.apply("key") } else { "" }
+    let known = $venues.filter(v -> v.match == $venue_key).index(0).catch(null)
+    # GPS from the feed, else from the venue table checked by hand; never a town's centre (owner
+    # 2026-10-20). An event with neither keeps no location and the model check refuses it.
+    let lat = this.lat.number().catch($known.lat.or(null))
+    let lon = this.lon.number().catch($known.lon.or(null))
+    let point = if $lat != null && $lon != null && $lat >= 47.7 && $lat <= 49.7 && $lon >= 16.8 && $lon <= 22.6 { { "type": "Point", "coordinates": [$lon, $lat] } } else { null }
+    let locality = this.locality.apply("text").or($known.addressLocality.or(__TOWN__))
+    let town = $known.town.or(__TOWN_SLUG__)
+    # One event announced by two sources is one entity: the id hashes the name, the start (to the
+    # minute in UTC, or the day) and the town, the dedup key of the Event model (T-4895).
+    let start_key = if this._start == null { null } else if this.start.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") { this.start } else { this._start.ts_format("2006-01-02T15:04Z", "UTC") }
+    let key = if $name != null && $start_key != null { "%s|%s|%s".format($name.lowercase(), $start_key, $locality.or("").lowercase()) } else { "source|" + this.url.or(this.sourceId).or("").string() }
+    let address = {
+      "streetAddress": this.streetAddress.apply("text").or($known.streetAddress.or(null)),
+      "postalCode": this.postalCode.apply("text"),
+      "addressLocality": $locality,
+      "addressRegion": "Banskobystrický kraj",
+      "addressCountry": "SK"
+    }.filter(kv -> kv.value != null && kv.value != "")
+    root = {
+      "id": "urn:ngsi-ld:Event:%s:%s".format(env("JC_SPACE"), $key.hash("sha256").encode("hex").slice(0, 16)),
+      "type": "Event",
+      "scope": if $town != null { "/SK/BB/" + $town } else { "/SK/BB" },
+      "name": $name.apply("prop"),
+      "startDate": this.start.apply("prop"),
+      "endDate": this.end.apply("prop"),
+      "location": if $point != null { { "type": "GeoProperty", "value": $point } } else { null },
+      "venue": $known.venue.or($venue_text).apply("prop"),
+      "address": { "type": "Property", "value": $address },
+      "eventCategory": this.category.apply("text").apply("prop"),
+      # A source that states no licence gives its facts only: what, when, where and the link back
+      # (integrator 2026-10-20, T-4894); its text stays on its own page.
+      # Contact e-mails and phone numbers stay on the source's page: they may name a person.
+      "description": if __FACTS_ONLY__ { null } else { this.description.apply("text").(d -> if d != null { d.re_replace_all("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "").re_replace_all("(\\+421|\\b0)[0-9][0-9 /]{7,}[0-9]", "").re_replace_all("\\s+", " ").trim() } else { null }).(d -> if d != null && d != "" { d.slice(0, [d.length(), 2000].min()) } else { null }).apply("prop") },
+      "url": this.url.apply("prop"),
+      "source": { "type": "Property", "value": __SOURCE__ },
+      "sourceId": this.sourceId.string().catch(null).apply("prop"),
+      "dataProvider": { "type": "Property", "value": __PROVIDER__ },
+      "dateModified": this.modified.ts_format("2006-01-02T15:04:05Z", "UTC").catch(null).apply("prop"),
+      # The event leaves the space when it is over (owner 2026-10-20, DM-130).
+      "expiresAt": this._end.ts_format("2006-01-02T15:04:05Z", "UTC").catch(null)
+    }.filter(kv -> kv.value != null)
+- archive:
+    format: json_array

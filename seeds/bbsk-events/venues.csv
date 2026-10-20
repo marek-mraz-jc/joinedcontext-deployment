@@ -1,0 +1,14 @@
+town,match,regional,venue,streetAddress,addressLocality,lat,lon,osm,checked_on
+detva,dom kultúry a. sládkoviča v detve,y,Dom kultúry A. Sládkoviča,Obrancov mieru 871/1,Detva,48.5419222,19.4074269,way/292648504,2026-10-20
+detva,zimný štadión v detve,y,Zimný štadión,M. R. Štefánika,Detva,48.5497865,19.4125602,way/46896068,2026-10-20
+detva,amfiteáter,n,Amfiteáter,,Detva,48.5736489,19.4212542,way/80041978,2026-10-20
+lucenec,kino apollo v lučenci,y,Kino Apollo,Novohradská 2978/5,Lučenec,48.3319139,19.6642043,node/59772282,2026-10-20
+lucenec,mestské múzeum lučenec/radnica- dr. herza 1 lučenec,n,Mestské múzeum Lučenec (Radnica),Dr. Herza 1,Lučenec,48.3275449,19.6685542,node/6773922278,2026-10-20
+lucenec,radnica lučenec- dr. herza 1 lučenec,n,Radnica Lučenec,Dr. Herza 1,Lučenec,48.3275449,19.6685542,node/6773922278,2026-10-20
+lucenec,synagóga lučenec,y,Synagóga Lučenec,Adyho,Lučenec,48.3250515,19.6670861,way/59707419,2026-10-20
+lucenec,tržnica lučenec,n,Mestská tržnica,Vajanského 2996/11,Lučenec,48.3264228,19.6679618,way/41201602,2026-10-20
+lucenec,mestská tržnica lučenec,n,Mestská tržnica,Vajanského 2996/11,Lučenec,48.3264228,19.6679618,way/41201602,2026-10-20
+velky-krtis,kino baník veľký krtíš,y,Kino Baník,Námestie A. H. Škultétyho 738/4,Veľký Krtíš,48.2079533,19.348242,node/170971283,2026-10-20
+zvolen,sng zvolen,y,SNG – Zvolenský zámok,Námestie SNP 594/1,Zvolen,48.5729001,19.1276837,relation/69079,2026-10-20
+zvolen,zvolenský zámok,y,SNG – Zvolenský zámok,Námestie SNP 594/1,Zvolen,48.5729001,19.1276837,relation/69079,2026-10-20
+banska-stiavnica,art café,n,Art Café,Akademická 327/2,Banská Štiavnica,48.4585939,18.8960644,way/60876167,2026-10-20
