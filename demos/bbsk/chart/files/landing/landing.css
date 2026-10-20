@@ -117,6 +117,7 @@ section.grey { background: var(--ground); padding-bottom: 4.5rem; margin-top: 3.
 .calendar:hover { text-decoration: none; color: var(--white); }
 .calendar__image { display: flex; align-items: flex-end; padding: 1rem 1.25rem; font-size: .8125rem; background: linear-gradient(180deg, #e8b88a 0%, #c9d6ec 45%, #6f8f6a 100%); }
 .calendar__text { display: flex; flex-direction: column; justify-content: center; padding: 3rem 6rem; background: var(--blue); }
+.calendar__text .ai__tag { align-self: flex-start; }
 .calendar__text strong { font: 600 2.75rem/1.2 var(--display); margin-bottom: 1rem; }
 .calendar__text strong::after { content: " ›"; }
 

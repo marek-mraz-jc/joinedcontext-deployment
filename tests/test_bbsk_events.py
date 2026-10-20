@@ -145,7 +145,8 @@ def test_a_point_outside_slovakia_is_flagged():
 
 
 def test_two_endpoints_serve_the_calendar_and_event_alone():
-    endpoints = of_space("Endpoint")
+    # The dashboard's own endpoint is the Portal's to compile (T-4897), tested below.
+    endpoints = {n: e for n, e in of_space("Endpoint").items() if not n.startswith("app-")}
     policies = of_space("Policy")
     assert set(endpoints) == set(ENDPOINTS)
     for name, policy in ENDPOINTS.items():
@@ -179,8 +180,47 @@ def test_only_the_pipelines_write_and_never_delete():
 
 def test_every_file_is_placed_by_the_index():
     index = yaml.safe_load((SEED / "index.yaml").read_text())
-    generated = ("bbsk-datasource-", "bbsk-pipeline-")  # T-4896's pipelines, placed outside spaces/
+    # T-4896's pipelines and T-4897's App, placed outside spaces/ or tested on their own.
+    generated = ("bbsk-datasource-", "bbsk-pipeline-", "bbsk-app-")
     ours = sorted(p.name for p in SEED.glob("bbsk-*podujatia*") if not p.name.startswith(generated))
     assert len(ours) == 12
     assert [f for f in ours if f not in index] == []
     assert {index[f].split("/spaces/")[1].split("/")[0] for f in ours} == {SPACE}
+
+
+GENERATED = {"joinedcontext.com/generated-by": "portal/app-reconciler"}
+
+
+def test_the_dashboard_reads_the_region_through_its_own_public_endpoint_and_writes_nothing():
+    """T-4897: the events dashboard is a public static App the Portal image ships. Its one need is
+    Event in this space, narrowed to the region's scope; the Endpoint and Policy the Portal compiles
+    for it are seeded beside it, public, read only, and they serve the calendar it links."""
+    (app,) = [d for _, d in manifests() if d["kind"] == "App" and d["metadata"]["name"] == "bbsk-podujatia"]
+    assert app["metadata"]["namespace"] == "bbsk"
+    assert app["metadata"]["annotations"]["joinedcontext.com/shipped-with"] == "portal"
+    spec = app["spec"]
+    assert (spec["kind"], spec["visibility"], spec["lifecycle"]) == ("ui", "public", "published")
+    assert spec["source"] == {"path": "./apps/bbsk-podujatia"}
+    (need,) = spec["dataNeeds"]
+    assert need["contextSpaceRef"]["name"] == SPACE
+    assert need["types"] == ["Event"] and need["scopeQ"] == "/SK/BB/#"
+    assert need["operations"] == ["queryEntity", "retrieveEntity"]
+    assert "ical" in need["representations"]
+
+    endpoint = of_space("Endpoint")["app-bbsk-podujatia"]
+    assert endpoint["metadata"]["annotations"] == GENERATED
+    assert endpoint["spec"]["audience"] == "public"
+    assert set(endpoint["spec"]["enabledRepresentations"]) >= {"ngsi-ld", "ical"}
+    policy = of_space("Policy")["app-bbsk-podujatia-1"]
+    assert policy["metadata"]["annotations"] == GENERATED
+    grant = policy["spec"]
+    assert grant["assignee"] == {"kind": "role", "id": "endpoint:bbsk/app-bbsk-podujatia"}
+    assert grant["scopeQ"] == "/SK/BB/#"
+    assert grant["operations"] == ["queryEntity", "retrieveEntity"]
+    assert [e["type"] for e in grant["information"][0]["entities"]] == ["Event"]
+    assert grant["information"][0]["propertyNames"] == need["attrs"]
+
+    index = yaml.safe_load((SEED / "index.yaml").read_text())
+    assert index["bbsk-app-podujatia.yaml"] == "projects/bbsk/apps/bbsk-podujatia/app.yaml"
+    assert index["bbsk-app-podujatia-endpoint.yaml"] == f"projects/bbsk/spaces/{SPACE}/endpoints/app-bbsk-podujatia.yaml"
+    assert index["bbsk-app-podujatia-policy.yaml"] == f"projects/bbsk/spaces/{SPACE}/policies/app-bbsk-podujatia-1.yaml"
