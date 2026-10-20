@@ -25,7 +25,9 @@ def test_every_test_file_lands_in_exactly_one_shard():
         subprocess.run([sys.executable, str(SCRIPT), str(i), "4"], check=True, capture_output=True, text=True).stdout.split()
         for i in range(1, 5)
     ]
-    assert sorted(itertools.chain(*printed)) == names
+    # ci.yml hands the printed paths to pytest in the repo root; bare names collected nothing (T-4791)
+    assert all((test_shard.ROOT / path).is_file() for path in itertools.chain(*printed))
+    assert sorted(Path(path).name for path in itertools.chain(*printed)) == names
     assert all(printed)
 
 

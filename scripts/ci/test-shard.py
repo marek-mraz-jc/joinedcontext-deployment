@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The test files one ci.yml `tests` shard runs, balanced by measured time (T-4789).
 
-usage: scripts/ci/test-shard.py <shard> <shards>      prints that shard's files, one per line
+usage: scripts/ci/test-shard.py <shard> <shards>      prints that shard's files (tests/<name>), one per line
        scripts/ci/test-shard.py --record <pytest log>  rewrites .ci/test-durations.json from the
                                                        output of `pytest --durations=0`
 
@@ -63,7 +63,8 @@ def main(argv: list[str]) -> int:
         print(__doc__.split("\n\n")[1], file=sys.stderr)
         return 2
     weights = json.loads(TABLE.read_text(encoding="utf-8"))
-    print("\n".join(shards(files(), weights, int(argv[1]))[int(argv[0]) - 1]))
+    # paths from the repo root, where ci.yml runs pytest: a bare name collects nothing (T-4791)
+    print("\n".join(f"tests/{n}" for n in shards(files(), weights, int(argv[1]))[int(argv[0]) - 1]))
     return 0
 
 
