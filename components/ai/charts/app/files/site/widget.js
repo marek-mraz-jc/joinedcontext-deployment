@@ -319,6 +319,7 @@ var JCRender = (function () {
    * letters, digits, dots and dashes (a `user@host`, a backslash) never matches.
    */
   function linkHost(url, hosts) {
+    if (machine(url)) return false;
     var match = /^https?:\/\/([^/?#]+)(?:[/?#]|$)/i.exec(String(url || ""));
     if (!match) return false;
     var host = match[1].toLowerCase();
@@ -380,9 +381,31 @@ var JCRender = (function () {
     return source.endpoint || "";
   }
 
-  /** An `http(s)` address as given, anything else (a `javascript:` link, a relative path) null. */
+  /**
+   * Whether a source is rows of a type no catalogue dataset publishes (T-4802): live data named
+   * by its type with no page a person can open. Its card says so instead of linking anything.
+   */
+  function unlisted(source) {
+    return Boolean(source && source.live && source.title && !safeUrl(source.url));
+  }
+
+  /**
+   * Whether `url` is an address for programs (T-4761): a schema, an MCP or NGSI-LD path, a JSON,
+   * JSON-LD or GeoJSON file, or a JSON format parameter. A person who clicks it gets raw JSON.
+   */
+  function machine(url) {
+    var parts = /^[^?#]*/.exec(String(url || ""))[0].toLowerCase();
+    var query = /\?([^#]*)/.exec(String(url || ""));
+    return /\/(schema|mcp|ngsi-ld)(\/|$)|\.(json|jsonld|geojson)$/.test(parts) ||
+      Boolean(query && /(^|&)(f|format)=(geo)?json(-?ld)?(&|$)/i.test(query[1]));
+  }
+
+  /**
+   * An `http(s)` address a person can open, as given; anything else (a `javascript:` link, a
+   * relative path, an address for programs) null.
+   */
   function safeUrl(url) {
-    return typeof url === "string" && /^https?:\/\/[^\s]+$/i.test(url) ? url : null;
+    return typeof url === "string" && /^https?:\/\/[^\s]+$/i.test(url) && !machine(url) ? url : null;
   }
 
   /**
@@ -553,6 +576,10 @@ var JCRender = (function () {
     now = typeof now === "number" ? now : Date.now();
     var numbers = new Intl.NumberFormat(lang, { maximumFractionDigits: 3 });
     var units = Array.isArray(data.units) ? data.units : [];
+    // A measured value to one decimal (11,5 µg/m³, never 11,506), a plain number to two (T-4711).
+    var measured = new Intl.NumberFormat(lang, { maximumFractionDigits: 1 });
+    var plainNumber = new Intl.NumberFormat(lang, { maximumFractionDigits: 2 });
+    var small = new Intl.NumberFormat(lang, { maximumSignificantDigits: 2 });
     var modelled = Array.isArray(data.labels) ? data.labels : [];
     var enums = Array.isArray(data.enums) ? data.enums : [];
     var raw = (Array.isArray(data.rows) ? data.rows : []).filter(Array.isArray).slice(0, ROWS);
@@ -570,7 +597,10 @@ var JCRender = (function () {
       if (column === "id" && urn(v)) return String(v).split(":").pop();
       if (typeof v === "number") {
         if (!isFinite(v)) return "";
-        return plain(column) && Number.isInteger(v) ? String(v) : numbers.format(v);
+        if (plain(column) && Number.isInteger(v)) return String(v);
+        // Below 1, two significant digits: 0,04 mg/m³ never reads as 0 (integrator, T-4711).
+        if (v !== 0 && Math.abs(v) < 1) return small.format(v);
+        return (typeof units[i] === "string" && units[i] ? measured : plainNumber).format(v);
       }
       if (typeof v === "boolean") return YES_NO[lang][v ? 0 : 1];
       if (typeof v === "object") return JSON.stringify(v);
@@ -615,6 +645,7 @@ var JCRender = (function () {
       rows: rows,
       dataset: safeUrl(data.dataset),
       download: safeUrl(data.download),
+      // An address for programs is neither a link nor text: the dataset page names it (T-4799).
       geojson: safeUrl(data.geojson)
     };
   }
@@ -676,16 +707,40 @@ var JCRender = (function () {
     var isTime = function (i) {
       return rows.every(function (row) { return typeof row[i] === "string" && TIME.test(row[i]) && isFinite(Date.parse(row[i])); });
     };
+    // T-4711, owner 04:46Z: no chart unless every check passes; a failed check is no chart, never
+    // a repaired one. A line needs time with 3 distinct moments; one moment is categories (bars).
     var time = named.filter(isTime)[0];
+    if (time !== undefined) {
+      var moments = {};
+      rows.forEach(function (row) { moments[Date.parse(row[time])] = true; });
+      var distinct = Object.keys(moments).length;
+      if (distinct === 2) return null;
+      if (distinct < 3) {
+        named = named.filter(function (i) { return i !== time; });
+        time = undefined;
+      }
+    }
     var by = time !== undefined ? time : named[0];
     if (by === undefined) return null;
+    // Nothing truncated: a chart of the first rows of more would mislead.
+    if (typeof data.total === "number" && data.total > rows.length) return null;
     var v = values[0];
     var points = rows.filter(function (row) { return finite(row[v]); }).slice(0, 50).map(function (row) {
       var name = row[by] === null || row[by] === undefined ? "" : String(row[by]);
       return { label: name.slice(0, 40), value: row[v] };
     });
     if (time !== undefined) points.sort(function (a, b) { return Date.parse(a.label) - Date.parse(b.label); });
-    if (points.length < 2) return null;
+    if (points.length < (time !== undefined ? 3 : 2)) return null;
+    if (time === undefined) {
+      // Bars name each category once, by a person's name, never a slug or an id.
+      var labels = points.map(function (p) { return p.label; });
+      var SLUG = /^[a-z0-9]+(-[a-z0-9]+){2,}$|^urn:/i;
+      if (labels.some(function (l) { return !l.trim() || SLUG.test(l); })) return null;
+      if (labels.some(function (l, i) { return labels.indexOf(l) !== i; })) return null;
+      // No total drawn beside its own parts: one bar that is the sum of the others.
+      var sum = points.reduce(function (a, p) { return a + p.value; }, 0);
+      if (points.length > 2 && points.some(function (p) { return Math.abs(p.value * 2 - sum) <= Math.abs(p.value) * 0.005; })) return null;
+    }
     return { kind: time !== undefined ? "line" : "bar", value: String(data.columns[v]), by: String(data.columns[by]), points: points };
   }
 
@@ -750,6 +805,13 @@ var JCRender = (function () {
   };
   // The stages that are one step of the answer's work, listed under it (T-4294).
   var STEPS = ["searching", "reading", "history", "schema"];
+  // The `done` event's `stagesMs`, in the order they run, by name (T-4729).
+  var TIMED = ["route", "search", "judge", "answer"];
+  var TIMED_WORDS = {
+    sk: { route: "Výber zdroja", search: "Vyhľadávanie v zdrojoch", judge: "Kontrola nájdeného", answer: "Odpoveď" },
+    en: { route: "Choosing the sources", search: "Searching the sources", judge: "Checking what was found", answer: "Answer" },
+    cs: { route: "Výběr zdroje", search: "Vyhledávání ve zdrojích", judge: "Kontrola nalezeného", answer: "Odpověď" }
+  };
 
   /**
    * The progress line of a `stage` event (T-4155): fixed words per step, a search or a read
@@ -770,11 +832,57 @@ var JCRender = (function () {
   }
 
 
+  // The words of a read's step (T-4801).
+  var READ_WORDS = {
+    sk: { read: "Hľadal som v", query: "dotaz", all: "všetky záznamy" },
+    en: { read: "Searched", query: "query", all: "all records" },
+    cs: { read: "Hledal jsem v", query: "dotaz", all: "všechny záznamy" }
+  };
+
   /**
-   * The steps an answer took, for the collapsed list under it (T-4294): the line of each stage
-   * that did work, in order; null for fewer than two, which need no list.
+   * A `step` event (T-4801) as the steps list reads it: the source's title, the type, the `q`,
+   * the count the source returned and the dataset page, each checked; null when it names neither
+   * a source nor a type.
    */
-  function steps(stages, lang) {
+  function read(data) {
+    if (!data || typeof data !== "object") return null;
+    var count = typeof data.count === "number" && isFinite(data.count) && data.count >= 0 ? Math.floor(data.count) : null;
+    var out = { source: text(data.source, 80), type: text(data.type, 80), q: text(data.q, 200), count: count, url: safeUrl(data.url) };
+    return out.source || out.type ? out : null;
+  }
+
+  /** A read's line: `Hľadal som v: Registre kraja / Bridge · dotaz: yearBuilt<1900 → 32`. */
+  function readLine(r, lang) {
+    var words = READ_WORDS[lang] || READ_WORDS.en;
+    var line = words.read + ": " + [r.source, r.type].filter(Boolean).join(" / ");
+    if (r.count === null) return line;
+    var n = new Intl.NumberFormat(YES_NO[lang] ? lang : "en").format(r.count);
+    return line + " · " + words.query + ": " + (r.q || words.all) + " → " + n;
+  }
+
+  /**
+   * The steps an answer took, for the collapsed list under it (T-4294): with the `step` events
+   * of its reads, each read by its source, query and count, with the dataset page in `links`
+   * (T-4801); else with the `done` event's `stagesMs`, each stage that ran by its name and how
+   * long it took (T-4729); without them, the line of each stage that did work, in order; null for
+   * fewer than two stages, which need no list.
+   */
+  function steps(stages, lang, timed, reads) {
+    var checked = (Array.isArray(reads) ? reads : []).map(read).filter(Boolean);
+    if (checked.length > 0) {
+      return { summary: (STAGES[lang] || STAGES.en).steps + " (" + checked.length + ")",
+        lines: checked.map(function (r) { return readLine(r, lang); }),
+        links: checked.map(function (r) { return r.url; }) };
+    }
+    var seconds = new Intl.NumberFormat(YES_NO[lang] ? lang : "en", { maximumFractionDigits: 1 });
+    var words = TIMED_WORDS[lang] || TIMED_WORDS.en;
+    var named = TIMED.filter(function (name) {
+      var ms = timed && typeof timed === "object" ? timed[name] : undefined;
+      return typeof ms === "number" && isFinite(ms) && ms > 0;
+    }).map(function (name) { return words[name] + " " + seconds.format(timed[name] / 1000) + " s"; });
+    if (named.length >= 2) {
+      return { summary: (STAGES[lang] || STAGES.en).steps + " (" + named.length + ")", lines: named };
+    }
     var lines = (Array.isArray(stages) ? stages : [])
       .filter(function (data) { return data && STEPS.indexOf(data.stage) >= 0; })
       .map(function (data) {
@@ -960,12 +1068,6 @@ var JCRender = (function () {
     return { question: last.text, history: history.slice(0, -1) };
   }
 
-  /** The header's monogram (T-4283): the first letters of the first two words, upper case. */
-  function monogram(title) {
-    var words = String(title || "").trim().split(/[\s\-–]+/).filter(function (word) { return /^\p{L}/u.test(word); });
-    return words.slice(0, 2).map(function (word) { return word.charAt(0).toLocaleUpperCase(); }).join("");
-  }
-
   // The count's noun per plural category; which category a number takes is Intl.PluralRules' (T-4364).
   var SOURCE_FORMS = {
     sk: { one: "zdroj", few: "zdroje", other: "zdrojov" },
@@ -986,22 +1088,15 @@ var JCRender = (function () {
   }
 
   /**
-   * The footer's source badges (T-4364): one per site, at most three, each the site's first letter
-   * on a hue derived from its name. A monogram, never a favicon, so the widget asks no third party.
+   * The footer's source kinds (T-4740): "page" when the answer cites a web page or a document,
+   * "table" when it cites a dataset or live data, each once, the page first.
    */
   function badges(list) {
-    var out = [];
-    var seen = {};
+    var kinds = {};
     (list || []).forEach(function (source) {
-      var site = source.domain || source.endpoint || label(source);
-      if (!site || seen[site] || out.length >= 3) return;
-      seen[site] = true;
-      var letter = (String(site).match(/\p{L}|\p{N}/u) || ["?"])[0].toLocaleUpperCase();
-      var hash = 0;
-      for (var i = 0; i < site.length; i++) hash = (hash * 31 + site.charCodeAt(i)) % 360;
-      out.push({ site: site, letter: letter, hue: hash });
+      kinds[source.live || (source.url && DATASET.test(source.url.split(/[?#]/)[0])) ? "table" : "page"] = true;
     });
-    return out;
+    return ["page", "table"].filter(function (kind) { return kinds[kind]; });
   }
 
   /** The language this browser chose before, when the deployment still offers it; else null. */
@@ -1103,7 +1198,7 @@ var JCRender = (function () {
       open: "Pridať do svojho AI asistenta",
       title: "Pridať do svojho AI asistenta",
       lead: "Tie isté údaje a dokumenty, z ktorých odpovedá tento asistent, môžete čítať aj vo vlastnom AI asistentovi. Konektor len číta, netreba účet ani kľúč.",
-      address: "Adresa konektora", copy: "Kopírovať adresu", copied: "Adresa je skopírovaná.", tryIt: "Skúste sa tam opýtať:",
+      address: "Adresa konektora", copy: "Kopírovať adresu", copied: "Adresa je skopírovaná.", selected: "Adresa je označená: stlačte Ctrl+C.", tryIt: "Skúste sa tam opýtať:",
       claude: ["V Claude otvorte Customize → Connectors.", "Zvoľte + Add a potom Add custom connector.", "Zadajte názov, vložte adresu a zvoľte Continue.", "Pri prihlásení zvoľte No sign in a potom Add.", "V rozhovore ho zapnete cez + → Connectors. Plán Free dovoľuje jeden vlastný konektor."],
       chatgpt: ["V ChatGPT otvorte Plugins, zvoľte + a potom Add custom MCP server.", "Zadajte názov, adresu vložte pod Connection a zvoľte prihlásenie bez autentifikácie.", "Potvrďte upozornenie (I understand and want to continue).", "Staršia verzia: Settings → Connectors → Advanced → Developer mode, potom Create. Vlastné servery ChatGPT ponúka len v niektorých plánoch a len na webe."],
       code: ["VS Code: súbor .vscode/mcp.json v projekte:", "Cursor: súbor .cursor/mcp.json v projekte alebo ~/.cursor/mcp.json:", "Claude Code: v termináli spustite:"]
@@ -1112,7 +1207,7 @@ var JCRender = (function () {
       open: "Přidat do svého AI asistenta",
       title: "Přidat do svého AI asistenta",
       lead: "Stejná data a dokumenty, ze kterých odpovídá tento asistent, můžete číst i ve vlastním AI asistentovi. Konektor jen čte, není potřeba účet ani klíč.",
-      address: "Adresa konektoru", copy: "Kopírovat adresu", copied: "Adresa je zkopírovaná.", tryIt: "Zkuste se tam zeptat:",
+      address: "Adresa konektoru", copy: "Kopírovat adresu", copied: "Adresa je zkopírovaná.", selected: "Adresa je označená: stiskněte Ctrl+C.", tryIt: "Zkuste se tam zeptat:",
       claude: ["V Claude otevřete Customize → Connectors.", "Zvolte + Add a potom Add custom connector.", "Zadejte název, vložte adresu a zvolte Continue.", "U přihlášení zvolte No sign in a potom Add.", "V konverzaci ho zapnete přes + → Connectors. Plán Free dovoluje jeden vlastní konektor."],
       chatgpt: ["V ChatGPT otevřete Plugins, zvolte + a potom Add custom MCP server.", "Zadejte název, adresu vložte pod Connection a zvolte přihlášení bez autentizace.", "Potvrďte upozornění (I understand and want to continue).", "Starší verze: Settings → Connectors → Advanced → Developer mode, potom Create. Vlastní servery ChatGPT nabízí jen v některých plánech a jen na webu."],
       code: ["VS Code: soubor .vscode/mcp.json v projektu:", "Cursor: soubor .cursor/mcp.json v projektu nebo ~/.cursor/mcp.json:", "Claude Code: v terminálu spusťte:"]
@@ -1121,7 +1216,7 @@ var JCRender = (function () {
       open: "Add to your AI assistant",
       title: "Add to your AI assistant",
       lead: "The same data and documents this assistant answers from, in your own AI assistant. The connector only reads; it needs no account and no key.",
-      address: "Connector address", copy: "Copy the address", copied: "The address is copied.", tryIt: "Try asking there:",
+      address: "Connector address", copy: "Copy the address", copied: "The address is copied.", selected: "The address is selected: press Ctrl+C.", tryIt: "Try asking there:",
       claude: ["In Claude, open Customize → Connectors.", "Choose + Add, then Add custom connector.", "Enter a name, paste the address and choose Continue.", "Under authentication choose No sign in, then Add.", "Turn it on in a chat under + → Connectors. The Free plan allows one custom connector."],
       chatgpt: ["In ChatGPT, open Plugins, choose + and then Add custom MCP server.", "Enter a name, paste the address under Connection and choose no authentication.", "Confirm the warning (I understand and want to continue).", "An older version: Settings → Connectors → Advanced → Developer mode, then Create. ChatGPT offers custom servers on some plans only, and on the web only."],
       code: ["VS Code: the file .vscode/mcp.json in your project:", "Cursor: the file .cursor/mcp.json in your project or ~/.cursor/mcp.json:", "Claude Code: run in a terminal:"]
@@ -1142,7 +1237,7 @@ var JCRender = (function () {
     var cursor = {};
     cursor[name] = { url: url };
     return {
-      open: t.open, title: t.title, lead: t.lead, address: t.address, copy: t.copy, copied: t.copied, tryIt: t.tryIt,
+      open: t.open, title: t.title, lead: t.lead, address: t.address, copy: t.copy, copied: t.copied, selected: t.selected, tryIt: t.tryIt,
       clients: [
         { name: "Claude", steps: t.claude.map(function (text) { return { text: text }; }) },
         { name: "ChatGPT", steps: t.chatgpt.map(function (text) { return { text: text }; }) },
@@ -1157,11 +1252,11 @@ var JCRender = (function () {
 
   return {
     closeTargets: closeTargets, connector: connector, dataset: dataset, view: view,
-    monogram: monogram, sourceCount: sourceCount, badges: badges, chosen: chosen, asksLanguage: asksLanguage, ordered: ordered,
+    sourceCount: sourceCount, badges: badges, chosen: chosen, asksLanguage: asksLanguage, ordered: ordered,
     followups: followups, restore: restore, remember: remember, stamp: stamp,
     lasting: lasting, recalled: recalled, privacyLines: privacyLines,
     cards: cards, stage: stage, steps: steps, tel: tel, mailto: mailto,
-    markdown: markdown, streamable: streamable, sources: sources, label: label, linkHost: linkHost,
+    markdown: markdown, streamable: streamable, sources: sources, label: label, unlisted: unlisted, linkHost: linkHost,
     safeUrl: safeUrl, events: events, language: language, table: table, chart: chart, greeting: greeting, title: title,
     suggestions: suggestions, trouble: trouble, retryable: retryable, said: said, retry: retry,
     vizOrigin: vizOrigin, vizSpec: vizSpec, mapFirst: mapFirst
@@ -1188,13 +1283,13 @@ if (typeof module !== "undefined") module.exports = JCRender;
       busy: "Položili ste veľa otázok naraz. Počkajte chvíľu a skúste to znova.",
       paused: "Asistent teraz neodpovedá. Skúste to neskôr.", limit: "Asistent dosiahol svoj limit. Skúste to znova neskôr.", you: "Vy", assistant: "Asistent", bot: "AI asistent",
       hello: "Dobrý deň! Na čo sa chcete opýtať?",
-      reading: "Čítam", live: "Živé dáta", source: "Zdroj", allRows: "Zobraziť všetky v datasete", fresh: "Nová konverzácia", expand: "Celá obrazovka", collapse: "Zmenšiť", copy: "Kopírovať",
-      copied: "Odpoveď je skopírovaná.", close: "Zavrieť", suggested: "Môžete sa opýtať",
+      reading: "Čítam", live: "Živé dáta", unlisted: "nie je v katalógu otvorených dát", source: "Zdroj", allRows: "Zobraziť všetky v datasete", fresh: "Nová konverzácia", expand: "Celá obrazovka", collapse: "Zmenšiť", copy: "Kopírovať",
+      copied: "Odpoveď je skopírovaná.", selected: "Odpoveď je označená: stlačte Ctrl+C.", close: "Zavrieť", suggested: "Môžete sa opýtať",
       dataset: "Otvoriť dataset", download: "Stiahnuť údaje", geojson: "Stiahnuť GeoJSON", language: "Jazyk",
       table: "Údaje, z ktorých asistent odpovedá", up: "Užitočná odpoveď", down: "Neužitočná odpoveď",
       missing: "Čo chýbalo? (nepovinné)", sendNote: "Odoslať", skip: "Preskočiť",
       thanks: "Ďakujeme za hodnotenie.", more: "Ďalšie otázky", contact: "Kontakt", map: "Zobraziť na mape", steps: "Postup", retry: "Skúsiť znova",
-      full: "Tento rozhovor už minul svoj podiel asistenta. Ak sa chcete pýtať ďalej, začnite nový rozhovor.",
+      full: "Tento rozhovor je už dlhý. Pokračujte v novom rozhovore, otázku v ňom položím znova.",
       unreachable: "Asistent sa teraz nevie spojiť so svojím modelom. Skúste to o minútu znova.",
       unanswered: "Asistent nevedel zostaviť odpoveď. Skúste sa opýtať inými slovami.",
       slow: "Odpoveď trvala príliš dlho. Skúste otázku položiť kratšie alebo inak.",
@@ -1219,13 +1314,13 @@ if (typeof module !== "undefined") module.exports = JCRender;
       busy: "You asked many questions at once. Wait a moment and try again.",
       paused: "The assistant is not answering right now. Try again later.", limit: "The assistant has reached its limit. Try again later.", you: "You", assistant: "Assistant", bot: "AI assistant",
       hello: "Hello! What would you like to ask?",
-      reading: "Reading", live: "Live data", source: "Source", allRows: "Show all in the dataset", fresh: "New conversation", expand: "Full screen", collapse: "Collapse", copy: "Copy",
-      copied: "The answer is copied.", close: "Close", suggested: "You can ask",
+      reading: "Reading", live: "Live data", unlisted: "not in the open data catalogue", source: "Source", allRows: "Show all in the dataset", fresh: "New conversation", expand: "Full screen", collapse: "Collapse", copy: "Copy",
+      copied: "The answer is copied.", selected: "The answer is selected: press Ctrl+C.", close: "Close", suggested: "You can ask",
       dataset: "Open the dataset", download: "Download the data", geojson: "Download GeoJSON", language: "Language",
       table: "The data the assistant answers from", up: "Helpful answer", down: "Not helpful",
       missing: "What was missing? (optional)", sendNote: "Send", skip: "Skip",
       thanks: "Thank you for the feedback.", more: "More questions", contact: "Contact", map: "Show on the map", steps: "Steps", retry: "Try again",
-      full: "This conversation has used up its share of the assistant. To ask more, start a new conversation.",
+      full: "This conversation is already long. Continue in a new conversation; I will ask your question there again.",
       unreachable: "The assistant cannot reach its model right now. Try again in a minute.",
       unanswered: "The assistant could not put an answer together. Try asking in other words.",
       slow: "The answer took too long. Try a shorter or different question.",
@@ -1250,13 +1345,13 @@ if (typeof module !== "undefined") module.exports = JCRender;
       busy: "Položili jste mnoho otázek najednou. Chvíli počkejte a zkuste to znovu.",
       paused: "Asistent teď neodpovídá. Zkuste to později.", limit: "Asistent dosáhl svého limitu. Zkuste to znovu později.", you: "Vy", assistant: "Asistent", bot: "AI asistent",
       hello: "Dobrý den! Na co se chcete zeptat?",
-      reading: "Čtu", live: "Živá data", source: "Zdroj", allRows: "Zobrazit všechny v datové sadě", fresh: "Nová konverzace", expand: "Celá obrazovka", collapse: "Zmenšit", copy: "Kopírovat",
-      copied: "Odpověď je zkopírovaná.", close: "Zavřít", suggested: "Můžete se zeptat",
+      reading: "Čtu", live: "Živá data", unlisted: "není v katalogu otevřených dat", source: "Zdroj", allRows: "Zobrazit všechny v datové sadě", fresh: "Nová konverzace", expand: "Celá obrazovka", collapse: "Zmenšit", copy: "Kopírovat",
+      copied: "Odpověď je zkopírovaná.", selected: "Odpověď je označená: stiskněte Ctrl+C.", close: "Zavřít", suggested: "Můžete se zeptat",
       dataset: "Otevřít dataset", download: "Stáhnout data", geojson: "Stáhnout GeoJSON", language: "Jazyk",
       table: "Data, ze kterých asistent odpovídá", up: "Užitečná odpověď", down: "Neužitečná odpověď",
       missing: "Co chybělo? (nepovinné)", sendNote: "Odeslat", skip: "Přeskočit",
       thanks: "Děkujeme za hodnocení.", more: "Další otázky", contact: "Kontakt", map: "Zobrazit na mapě", steps: "Postup", retry: "Zkusit znovu",
-      full: "Tento rozhovor už vyčerpal svůj podíl asistenta. Chcete-li se ptát dál, začněte novou konverzaci.",
+      full: "Tento rozhovor je už dlouhý. Pokračujte v novém rozhovoru, otázku v něm položím znovu.",
       unreachable: "Asistent se teď nemůže spojit se svým modelem. Zkuste to za minutu znovu.",
       unanswered: "Asistent nedokázal sestavit odpověď. Zkuste se zeptat jinými slovy.",
       slow: "Odpověď trvala příliš dlouho. Zkuste otázku položit kratší nebo jinak.",
@@ -1279,6 +1374,9 @@ if (typeof module !== "undefined") module.exports = JCRender;
   var NATIVE = { sk: "Slovensky", en: "English", cs: "Česky" };
   var params = new URLSearchParams(location.search);
   var embedded = params.get("embed") === "1" && window.parent !== window;
+  // A light host page asks for the light scheme (T-4761): a cross-origin frame never inherits
+  // the host's colours, so a dark system would paint a dark chat inside a light page.
+  if (params.get("scheme") === "light") document.documentElement.setAttribute("data-scheme", "light");
   var page = document.body.classList.contains("jc-page");
   var offered = JCRender.ordered((config.languages || []).filter(function (l) { return WORDS[l]; }));
   // How the chat picks its language and whether it shows the toggle, the deployment's
@@ -1303,12 +1401,46 @@ if (typeof module !== "undefined") module.exports = JCRender;
   if (/^#[0-9a-fA-F]{6}$/.test(config.color || "")) {
     document.documentElement.style.setProperty("--accent", config.color);
   }
+  // The host page's type (T-4740): family names only, as the server checked them.
+  if (/^[\p{L}\p{N} ,'"-]{1,200}$/u.test(config.font || "")) {
+    document.documentElement.style.setProperty("--font", config.font);
+  }
 
   function el(tag, cls, text) {
     var node = document.createElement(tag);
     if (cls) node.className = cls;
     if (text !== undefined) node.textContent = text;
     return node;
+  }
+
+  // Copies `value`, then `done`. Where the browser refuses the clipboard (an http page, a frame
+  // without clipboard-write) its own copy command; failing that `node` stays selected for Ctrl+C
+  // and `refused` says so, never a silent button (T-4762).
+  function copyText(value, node, done, refused) {
+    var fallback = function () {
+      var area = el("textarea");
+      area.value = value;
+      area.setAttribute("readonly", "");
+      area.style.position = "fixed";
+      area.style.opacity = "0";
+      document.body.appendChild(area);
+      area.select();
+      var copied = false;
+      try { copied = document.execCommand("copy"); } catch (error) { copied = false; }
+      area.remove();
+      if (copied) return done();
+      if (node.select) node.select();
+      else {
+        var range = document.createRange();
+        range.selectNodeContents(node);
+        var selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+      refused();
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(value).then(done, fallback);
+    else fallback();
   }
 
   // Every word on the page is bound to its key, so the language switch relabels them in place.
@@ -1339,9 +1471,12 @@ if (typeof module !== "undefined") module.exports = JCRender;
     close: "M6 6l12 12M18 6L6 18",
     expand: "M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5",
     collapse: "M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5",
-    dock: "M4 4h16v16H4zM14 4v16",
-    undock: "M4 4h16v16H4zM11 11h6v6h-6z",
+    // Dock: a window with a panel at its right edge; undock: a window with a title bar (T-4767).
+    dock: "M6 5h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zM15 5v14",
+    undock: "M6 5h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zM4 9h16",
     chat: "M4 5h16v11H9l-5 4z",
+    page: "M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6",
+    table: "M4 5h16v14H4zM4 10h16M4 15h16M10 5v14",
     plug: "M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4",
     send: "M5 12h13M12 5l7 7-7 7",
     stop: "M7 7h10v10H7z",
@@ -1367,22 +1502,24 @@ if (typeof module !== "undefined") module.exports = JCRender;
   var head = el("header", "jc-head");
   var brand = el("div", "jc-brand");
   var named = JCRender.title(config.title, config.languages, lang) !== "";
+  // The chat icon always, never a monogram of the name (T-4740).
   var avatar = el("span", "jc-avatar");
   avatar.setAttribute("aria-hidden", "true");
-  if (!named) avatar.appendChild(icon("chat"));
+  avatar.appendChild(icon("chat"));
   var title = el("h1", "jc-title");
   var name = el("span", "jc-name");
   // The title in the chat's language, again on every language switch (T-4365).
   function retitle() {
     var text = JCRender.title(config.title, config.languages, lang);
-    avatar.textContent = JCRender.monogram(text);
     name.textContent = text;
     name.title = text;
   }
   if (named) {
     retitle();
     title.appendChild(name);
-    title.appendChild(words(el("span", "jc-role"), "assistant"));
+    title.appendChild(words(el("span", "jc-role"), function () {
+      return JCRender.title(config.subtitle, config.languages, lang) || WORDS[lang].assistant;
+    }));
   } else {
     title.appendChild(words(el("span", "jc-name"), "assistant"));
   }
@@ -1593,9 +1730,7 @@ if (typeof module !== "undefined") module.exports = JCRender;
     var copyIt = el("button", "jc-about-close", text.copy);
     copyIt.type = "button";
     copyIt.addEventListener("click", function () {
-      var done = function () { copied.textContent = text.copied; };
-      if (navigator.clipboard) navigator.clipboard.writeText(config.mcp).then(done, function () { address.select(); });
-      else address.select();
+      copyText(config.mcp, address, function () { copied.textContent = text.copied; }, function () { copied.textContent = text.selected; });
     });
     connect.appendChild(copyIt);
     connect.appendChild(copied);
@@ -1716,7 +1851,11 @@ if (typeof module !== "undefined") module.exports = JCRender;
       first.focus();
     }
   });
-  about.addEventListener("close", function () { privacyOpen.focus(); });
+  // The close event comes a task later: focus the visitor already moved (the question box) stays.
+  about.addEventListener("close", function () {
+    var at = document.activeElement;
+    if (!at || at === document.body || about.contains(at)) privacyOpen.focus();
+  });
 
   function perLanguage(map) {
     if (!map) return null;
@@ -1879,6 +2018,7 @@ if (typeof module !== "undefined") module.exports = JCRender;
     // count, which open the cards under the row.
     var tools = el("div", "jc-answer-tools");
     var by = el("span", "jc-by");
+    by.appendChild(icon("chat"));
     by.appendChild(words(el("span"), "bot"));
     var time = when(at === undefined ? Date.now() : at);
     if (time) {
@@ -1888,8 +2028,7 @@ if (typeof module !== "undefined") module.exports = JCRender;
     tools.appendChild(by);
     var copy = iconButton("jc-copy", "copy", "copy");
     copy.addEventListener("click", function () {
-      if (!navigator.clipboard) return;
-      navigator.clipboard.writeText(text).then(function () { announce.textContent = w.copied; }, function () {});
+      copyText(text, body, function () { announce.textContent = w.copied; }, function () { announce.textContent = w.selected; });
     });
     tools.appendChild(copy);
     if (turn && config.feedback !== false) thumbs(tools, turn);
@@ -1900,9 +2039,11 @@ if (typeof module !== "undefined") module.exports = JCRender;
     open.id = ids + "-toggle";
     var stack = el("span", "jc-badges");
     stack.setAttribute("aria-hidden", "true");
-    JCRender.badges(grouped.list).forEach(function (badge) {
-      var b = el("span", "jc-badge", badge.letter);
-      b.style.setProperty("--badge", "hsl(" + badge.hue + " 45% 38%)");
+    // A page for web sources, a table for data, in the text's colour; no letter, no hue (T-4740).
+    JCRender.badges(grouped.list).forEach(function (kind) {
+      var b = icon(kind);
+      b.setAttribute("class", "jc-icon jc-badge");
+      b.setAttribute("data-kind", kind);
       stack.appendChild(b);
     });
     open.appendChild(stack);
@@ -1924,6 +2065,8 @@ if (typeof module !== "undefined") module.exports = JCRender;
       li.appendChild(el("span", "jc-card-n", String(i + 1)));
       li.appendChild(heading);
       if (source.domain && !source.live) li.appendChild(el("span", "jc-domain", source.domain));
+      // Rows of a type no dataset publishes: said in words, nothing to open (T-4802).
+      if (JCRender.unlisted(source)) li.appendChild(el("span", "jc-domain", w.unlisted));
       source.cards.forEach(function (card) { li.appendChild(showCard(card)); });
       list.appendChild(li);
     });
@@ -2043,6 +2186,7 @@ if (typeof module !== "undefined") module.exports = JCRender;
       list.appendChild(li);
     });
     item.appendChild(list);
+    item.chips = list;
   }
 
   // A data round's one numeric column as a small line or bar chart under its table (T-4198). The
@@ -2183,6 +2327,8 @@ if (typeof module !== "undefined") module.exports = JCRender;
       row.forEach(function (cell, i) {
         // A long text keeps two lines; the whole of it is its title.
         var td = tr.appendChild(el("td", shown.numeric[i] ? "jc-num" : "", ""));
+        // Below 600 px a row is a card and each value carries its column's name (T-4711).
+        td.setAttribute("data-label", shown.columns[i]);
         if (cell && typeof cell === "object") {
           // A long address reads as one short word, the whole of it its title (T-4682).
           var a = td.appendChild(link(cell.href, cell.text));
@@ -2313,17 +2459,16 @@ if (typeof module !== "undefined") module.exports = JCRender;
       var cited = Array.isArray(data) ? data : [];
       item.cited = cited;
       show(item, item.pending || "", cited, item.turn);
-      var took = JCRender.steps(item.stages, lang);
-      if (took) {
-        var list = el("details", "jc-steps");
-        list.appendChild(el("summary", "", took.summary));
-        var ol = el("ol");
-        took.lines.forEach(function (line) { ol.appendChild(el("li", "", line)); });
-        list.appendChild(ol);
-        item.appendChild(list);
-      }
+      stepsPanel(item);
       saved(item, item.pending || "", cited);
       item.pending = null;
+    } else if (name === "done" && data && data.stagesMs) {
+      // The stages by name and duration replace the progress lines (T-4729).
+      item.timed = data.stagesMs;
+      if (item.cited) stepsPanel(item);
+    } else if (name === "step") {
+      // A read of the answer, listed under it by its source, query and count (T-4801).
+      (item.reads = item.reads || []).push(data);
     } else if (name === "followups") {
       chips(item, JCRender.followups(data));
       // Kept with the answer, so a page change shows them again under the last one (T-4685).
@@ -2335,6 +2480,28 @@ if (typeof module !== "undefined") module.exports = JCRender;
     } else if (name === "error") {
       fail(item, JCRender.trouble(data.status, data.title), data.detail);
     }
+  }
+
+  // The collapsed list of the steps an answer took, made again when its stage times arrive.
+  function stepsPanel(item) {
+    var took = JCRender.steps(item.stages, lang, item.timed, item.reads);
+    if (item.stepsList) item.stepsList.remove();
+    item.stepsList = null;
+    if (!took) return;
+    var list = el("details", "jc-steps");
+    list.appendChild(el("summary", "", took.summary));
+    var ol = el("ol");
+    took.lines.forEach(function (line, i) {
+      var li = ol.appendChild(el("li", "", line));
+      var page = took.links && took.links[i];
+      if (page) {
+        li.appendChild(document.createTextNode(" "));
+        li.appendChild(link(page, w.dataset));
+      }
+    });
+    list.appendChild(ol);
+    item.insertBefore(list, item.chips || null);
+    item.stepsList = list;
   }
 
   // The answered turn into the panel's sessionStorage, with the question it answered.
@@ -2458,7 +2625,7 @@ if (typeof module !== "undefined") module.exports = JCRender;
   function follow(item) {
     var target = docking && following() && input.value.trim() === "" ? JCRender.dataset(item.cited) : null;
     if (!target) return;
-    opening = { item: item, target: target };
+    opening = { item: item, target: target, at: Date.now() };
     toParent({ type: "jc-assistant-dataset", url: target.url, title: target.title });
   }
   function openedLine(item, target) {
@@ -2470,6 +2637,10 @@ if (typeof module !== "undefined") module.exports = JCRender;
     line.appendChild(back);
     item.appendChild(line);
   }
+  function noteOpened(done) {
+    (kept ? kept.turns : []).forEach(function (t) { if (t.turn === done.item.turn) t.opened = done.target; });
+    keep();
+  }
   window.addEventListener("message", function (event) {
     var data = event.data || {};
     if (!embedded || event.source !== window.parent || data.type !== "jc-assistant-opened" ||
@@ -2478,8 +2649,7 @@ if (typeof module !== "undefined") module.exports = JCRender;
     var done = opening;
     opening = null;
     openedLine(done.item, done.target);
-    (kept ? kept.turns : []).forEach(function (t) { if (t.turn === done.item.turn) t.opened = done.target; });
-    keep();
+    noteOpened(done);
     announce.textContent = w.changed.replace("{title}", done.target.title || done.target.url);
   });
 
@@ -2663,6 +2833,9 @@ if (typeof module !== "undefined") module.exports = JCRender;
         text: live.text || "", askedAt: live.askedAt };
     }
     try { sessionStorage.setItem(VIEW, JSON.stringify(now)); } catch (e) { /* not kept */ }
+    // The host answers `jc-assistant-opened` and changes the page at once, so the page can go
+    // before that answer arrives; a page that goes within 2 s of the request is that change.
+    if (opening && Date.now() - opening.at < 2000) noteOpened(opening);
   });
   function resume(s) {
     greeted();
