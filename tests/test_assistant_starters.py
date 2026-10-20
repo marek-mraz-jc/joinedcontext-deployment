@@ -59,10 +59,16 @@ def test_each_row_names_what_the_answer_must_hold_and_a_page_a_person_can_open()
 
 
 def test_the_pothole_card_is_gone_and_no_card_needs_a_machine_link():
-    # Owner 2026-10-19T20:45Z: the pothole card goes. Prod 2026-10-20: the office hours card cited
-    # only schema/index.json, so it is off until its answer links a dataset page.
+    # Owner 2026-10-19T20:45Z: the pothole card goes, office hours and the address come instead. Prod
+    # 2026-10-20 cited only schema/index.json for it; since T-4793 its rows cite their datasets.
     demo = yaml.safe_load(DEMO.read_text())["spec"]["suggestions"]
     assert not any(re.search(r"výtlk|pothole", q, re.I) for q in demo["sk"] + demo["en"])
+    hours = {row["lang"]: row for row in STARTERS if row["id"] in ("bbsk-sk-hours", "bbsk-en-hours")}
+    assert [demo["sk"][0], demo["en"][0]] == [hours["sk"]["q"], hours["en"]["q"]]
+    for row in hours.values():
+        assert ["Námestie SNP 23"] in row["must"], row["id"]
+        assert row["links"] == ["https://opendata.{domain}/dataset/bbsk-uradne-hodiny-c912ed",
+                                "https://opendata.{domain}/dataset/bbsk-kontaktne-miesta-2128a0"], row["id"]
     assert all("/api/endpoint/" not in link for row in STARTERS for link in row["links"])
 
 
