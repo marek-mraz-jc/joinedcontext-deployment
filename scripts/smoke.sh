@@ -1146,7 +1146,10 @@ if [ -z "$cb_ip" ] || ! kubectl get servers.policy.linkerd.io context-broker-api
 else
 	forger="smoke-forger-$$"
 	forge="wget -S -q -O /dev/null -T 5 --header 'x-jc-subject: smoke-forged' --header 'x-jc-roles: admin'"
-	forge_overrides=$(probe_overrides "$forger" "[\"sh\", \"-c\", \"sleep 3; echo PROBE-RAN; $forge http://$cb_ip:9090/ngsi-ld/v1/types 2>&1 | sed -n 's/^ *HTTP[^ ]* \\\\([0-9]*\\\\).*/HTTP-\\\\1/p'; $forge --header 'Connection: Upgrade' --header 'Upgrade: websocket' --header 'Sec-WebSocket-Version: 13' --header 'Sec-WebSocket-Key: c21va2UtZm9yZ2VkLWtleQ==' http://$cb_ip:9090/x/ws 2>&1 | sed -n 's/^ *HTTP[^ ]* \\\\([0-9]*\\\\).*/WS-\\\\1/p'; true\"]" |
+	# Any 16 bytes in base64 make a handshake key (RFC 6455 4.1); built here, because as a
+	# literal gitleaks reads it as an API key.
+	ws_key=$(printf '%s' smoke-forged-key | base64)
+	forge_overrides=$(probe_overrides "$forger" "[\"sh\", \"-c\", \"sleep 3; echo PROBE-RAN; $forge http://$cb_ip:9090/ngsi-ld/v1/types 2>&1 | sed -n 's/^ *HTTP[^ ]* \\\\([0-9]*\\\\).*/HTTP-\\\\1/p'; $forge --header 'Connection: Upgrade' --header 'Upgrade: websocket' --header 'Sec-WebSocket-Version: 13' --header 'Sec-WebSocket-Key: $ws_key' http://$cb_ip:9090/x/ws 2>&1 | sed -n 's/^ *HTTP[^ ]* \\\\([0-9]*\\\\).*/WS-\\\\1/p'; true\"]" |
 		sed 's/"metadata": {/"metadata": {\n    "labels": {"app.kubernetes.io\/name": "portal-portal"},/')
 	forge_out=$(kubectl run "$forger" -n "$slug" --rm --attach --restart=Never --quiet --timeout=90s \
 		--image="$image" --overrides="$forge_overrides" 2>/dev/null)

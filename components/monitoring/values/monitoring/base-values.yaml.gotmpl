@@ -104,6 +104,38 @@ alertGroups:
         annotations:
           summary: 'APISIX edge 5xx error rate exceeded 1%'
   {{- end }}
+  {{- if has "context-gateway" $components }}
+  # T-4873, API/07 §3: the WebSocket limits at work. Each fires on a client held to its share,
+  # which is the limit doing its job once, and a pattern worth a look when it repeats.
+  - name: context-gateway-websocket
+    rules:
+      - alert: GatewayWebSocketFanoutFull
+        # Every fan-out hub has a client: new Endpoints' WebSockets answer 503 until one leaves.
+        expr: sum(increase(jc_gateway_ws_refused_total{reason="fan-out-full"}[10m])) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: 'The gateway refused WebSockets: every fan-out hub is in use (raise JC_GATEWAY_WS_HUBS or add a replica)'
+      - alert: GatewayWebSocketClientsOverRate
+        # Clients closed with 1008 for sending more frames than API/07 §3 allows.
+        expr: sum(increase(jc_gateway_ws_closed_total{reason="rate"}[10m])) > 10
+        labels:
+          severity: warning
+        annotations:
+          summary: 'More than 10 WebSockets closed in 10 minutes for flooding messages'
+  {{- end }}
+  {{- if has "apisix" $components }}
+  - name: apisix-websocket
+    rules:
+      - alert: EdgeWebSocketAddressAtItsShare
+        # One client address holds 50 open Endpoint WebSockets and is refused more (T-4873);
+        # the APISIX access log names the address.
+        expr: sum by (route) (increase(apisix_http_status{code="429",route=~"(api-)?context-endpoint(-portal)?-ws"}[10m])) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: 'A client address reached its 50 open WebSockets on {{`{{ $labels.route }}`}}'
+  {{- end }}
   {{- if has "gitops" $components }}
   # ADR-N-056 §2.9 (T-4674): Argo CD keeps the environment on main; an Application that stays
   # out of sync or degraded, or a sync that failed (the smoke gate's included), is the deployer's
