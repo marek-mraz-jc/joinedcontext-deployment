@@ -110,5 +110,8 @@ context-broker:
     # Antares dev 6230e20 (dev-15, T-4800 over ec5be07): temporal values and entity pages up to
     # 1,000 (ANTARES_TEMPORAL_INSTANCE_LIMIT / ANTARES_MAX_LIMIT), MCP names "more" and the
     # hourly aggregation. No migration.
-    tag: 'dev-15'
-    digest: 'sha256:feacd14b2d6c4d9dd9de3d5cc15bf454710d5add1de18103f6472496fd101b0b'
+    # Antares dev 0109b05 (dev-16, T-4804 over 6230e20): entity pages without limit and temporal
+    # reads without lastN answer 100; the ceilings stay 1,000; /q/health publishes the limits.
+    # No migration.
+    tag: 'dev-16'
+    digest: 'sha256:dea5b73f78765cfb6c8690abb65f597fd1b73d26c9592546fa1f79e78768007c'
