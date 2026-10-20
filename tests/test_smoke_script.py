@@ -17,6 +17,17 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SMOKE = PROJECT_ROOT / "scripts" / "smoke.sh"
 
+LIVING = json.dumps([
+    {"id": "urn:ngsi-ld:Vehicle:hel.fi:helsinki:22-7", "type": "Vehicle", "expiresAt": "2026-10-20T10:05:00.000Z",
+     "location": {"type": "GeoProperty", "value": {"type": "Point", "coordinates": [24.9, 60.1]},
+                  "observedAt": "2026-10-20T10:00:00.000Z"}},
+    {"id": "urn:ngsi-ld:Alert:hel.fi:helsinki:GUID1", "type": "Alert", "expiresAt": "2026-10-20T11:00:00Z",
+     "alertSource": {"type": "Property", "value": "Fintraffic"},
+     "validTo": {"type": "Property", "value": "2026-10-20T11:00:00Z"}},
+    {"id": "urn:ngsi-ld:Alert:hel.fi:helsinki:hsl-1", "type": "Alert",
+     "alertSource": {"type": "Property", "value": "HSL"}},
+])
+
 CURL_STUB = '''#!/usr/bin/env python3
 import json, os, sys
 spec = json.load(open(os.environ["STUB_SPEC"]))
@@ -484,6 +495,9 @@ HEALTHY = {
                ["hstransport/access", '{"permissions":[{"resource":{"type":"Vehicle"}}]}'],
                ["hsall/access", '{"permissions":[{"resource":{"type":"Event"}}]}'],
                ["hsbikes/ngsi-ld/v1/entities?type=Event", "[]"],
+               # What the lifetime check reads (T-4823): a bus five minutes from its position, a
+               # Fintraffic Alert ending at its validTo, and an HSL one, which keeps no lifetime.
+               ["hsall/ngsi-ld/v1/entities?type=Vehicle,Alert", LIVING],
                ["hsall/ngsi-ld/v1/entities?type=", '[{"id":"urn:ngsi-ld:x"}]'],
                # What the endpoint's space lists, so the smoke can retrieve each of them by id
                # (T-0945). A healthy space serves everything it lists.
@@ -572,6 +586,7 @@ def test_full_platform_passes(tmp_path):
     assert "ok    helsinki-transport opens its WebSocket anonymously and subscribes to Vehicle (101 201)" in result.stdout
     assert "ok    city bike stations are flowing into the space" in result.stdout
     assert "ok    buses are flowing into the space" in result.stdout
+    assert "ok    every vehicle and Fintraffic Alert carries its expiresAt (2)" in result.stdout
     assert "catalogue front page carries the branded primary colour" in result.stdout
     assert "ok    the publisher's CKAN API token authenticates as the site administrator" in result.stdout
     assert "postgres refuses a pod outside the allowed selectors" in result.stdout
@@ -615,6 +630,20 @@ def test_a_transport_websocket_that_is_not_public_fails_with_its_answer(tmp_path
     result = run(tmp_path, dict(HEALTHY, ws="404 -"), "https://example.test", "https://idm.example.test")
     assert result.returncode != 0
     assert "FAIL  helsinki-transport WebSocket answered '404 -', expected '101 201'" in result.stdout
+
+
+def test_a_vehicle_or_alert_without_its_lifetime_fails_the_run(tmp_path):
+    """T-4823: with the reapers gone, a bus or a Fintraffic Alert without `expiresAt` stays in the
+    space after its feed goes quiet; the run names one."""
+    immortal = json.loads(LIVING)
+    del immortal[0]["expiresAt"]
+    late = json.loads(LIVING)
+    late[1]["expiresAt"] = "2026-10-20T12:00:00Z"
+    for living, culprit in ((immortal, "Vehicle:hel.fi:helsinki:22-7"), (late, "Alert:hel.fi:helsinki:GUID1")):
+        bodies = [["hsall/ngsi-ld/v1/entities?type=Vehicle,Alert", json.dumps(living)]] + HEALTHY["bodies"]
+        result = run(tmp_path, dict(HEALTHY, bodies=bodies), "https://example.test", "https://idm.example.test")
+        assert result.returncode != 0
+        assert f"FAIL  vehicles and Alerts: 1 of 2 carry no lifetime, e.g. urn:ngsi-ld:{culprit}\n" in result.stdout
 
 
 def test_a_schema_artifact_is_revalidated_and_answers_304(tmp_path):

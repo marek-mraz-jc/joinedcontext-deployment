@@ -5,6 +5,3 @@ modelTools:
   # is one commit that also carries every artifact the new generator renders differently.
   image: ghcr.io/marek-mraz-jc/joinedcontext-platform/model-tools@sha256:51c6129072227b9e0aeddceaac40830794e8db87a6b870af180f32f92f728132
   generatorVersion: linkml-1.11.1
-retention:
-  # How long the temporal history of an entity is kept before the partitions are pruned.
-  history: 90d

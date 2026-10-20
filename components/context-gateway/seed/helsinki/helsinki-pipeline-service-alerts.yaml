@@ -1,6 +1,6 @@
 # One Alert per HSL service alert, with the lines and stops it affects, every 60 s; an alert HSL
 # withdraws is deleted on the next refresh (T-3892). Beside the Digitraffic Alerts, which keep
-# their own feed and reaper.
+# their own feed and leave by their expiresAt (T-4823).
 apiVersion: joinedcontext.com/v1alpha1
 kind: Pipeline
 metadata:

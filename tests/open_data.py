@@ -62,10 +62,17 @@ def run_all(mapping: Path, document: bytes, space: str, domain: str = "hel.fi", 
     return entities
 
 
+SYSTEM_MEMBERS = {"expiresAt", "createdAt", "modifiedAt", "deletedAt"}
+
+
 def key_values(entity: dict) -> dict:
-    """The entity as `keyValues`, the shape the generated JSON Schema describes."""
+    """The entity as `keyValues`, the shape the generated JSON Schema describes. The NGSI-LD
+    system members (`expiresAt`, NGSI-LD 4.22, and the broker's timestamps) are no attribute of
+    a model, so the schema does not describe them and they are left out."""
     out = {}
     for name, attribute in entity.items():
+        if name in SYSTEM_MEMBERS:
+            continue
         if isinstance(attribute, list) and all(isinstance(i, dict) and "type" in i for i in attribute):
             # A multi-instance attribute (one instance per datasetId): the schema describes one
             # instance, so the last one stands for the slot here; schema_errors checks each.

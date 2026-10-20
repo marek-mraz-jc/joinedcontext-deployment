@@ -9,7 +9,7 @@
 # not state is dropped rather than guessed at.
 #
 # ponytail: a permit that leaves the layer stays in the space with its last state; a reader
-# filters on `permitEnd`. A reaper like the vehicles' one is the upgrade if stale permits matter.
+# filters on `permitEnd`. An `expiresAt` from `permitEnd` is the upgrade if stale permits matter.
 
 pipeline:
   processors:

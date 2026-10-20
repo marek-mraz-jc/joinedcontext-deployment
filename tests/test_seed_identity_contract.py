@@ -50,13 +50,11 @@ def test_no_mapping_types_its_space_or_project_in():
                 continue
             assert not literal.search(line), f"{path.name}:{number}: {stripped}"
         minted += 'env("JC_SPACE")' in path.read_text()
-    # Every mapping that mints an id reads its space from the environment. The one exception is
-    # named rather than counted around: the two reapers write nothing, they delete buses whose
-    # position went stale and Alerts whose validTo passed, so they have no id to mint.
+    # Every mapping mints its ids from the space in the environment. The two reapers that minted
+    # none are gone: their entities carry `expiresAt` now (T-4823).
     silent = {p.name for p in bentos if 'env("JC_SPACE")' not in p.read_text()}
-    assert silent == {"helsinki-pipeline-vehicles-reaper-bento.yaml",
-                      "helsinki-pipeline-alerts-reaper-bento.yaml"}, silent
-    assert minted == len(bentos) - 2
+    assert silent == set(), silent
+    assert minted == len(bentos)
 
 
 def test_helsinki_policies_name_the_organization_by_placeholder():
@@ -65,8 +63,8 @@ def test_helsinki_policies_name_the_organization_by_placeholder():
     # mobility project's station App's, seeded in this folder with the rest of hel.fi (T-3185),
     # and the members' read on the operations endpoint (bikes-ops-read, T-3957), and one public
     # read per dataset split out of helsinki-all (T-4344), and the history of helsinki-all's types
-    # that keep one (T-4372).
-    assert len(policies) == 22
+    # that keep one (T-4372), and the pipelines' delete of withdrawn Alerts (T-4823).
+    assert len(policies) == 23
     for path, policy in policies:
         assert policy["spec"]["assigner"] == "did:web:{orgDomain}", path.name
 
