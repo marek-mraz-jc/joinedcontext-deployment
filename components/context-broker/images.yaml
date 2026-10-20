@@ -100,5 +100,8 @@ context-broker:
     # two leakproof index arms. Migration 0013 builds i_entities_first_type_id and
     # i_entities_multi_type_id (plain CREATE INDEX, writes wait) and drops i_entities_first_type:
     # roll it with the broker scaled to 0 so no old pod holds a write against the build.
-    tag: 'dev-11'
-    digest: 'sha256:8478eddf6020e66e1e1f813e12577e537387849711871244133f656368906f09'
+    # Antares dev a53c40c (dev-12, train 0039 T-4773 T-4778 over dfbd3ad): antares-api split into
+    # router/ops/notify modules (no logic change), SQL injection and RLS mutant-killing tests. No
+    # migration.
+    tag: 'dev-12'
+    digest: 'sha256:8f40bd9d19148522fb3a4b16cb1362de808f230de0ca2ee374b70870bacb604d'
