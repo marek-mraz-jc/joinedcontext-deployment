@@ -1134,6 +1134,35 @@ else
 	fi
 fi
 
+# A forged caller at the broker (T-4875): the broker believes the x-jc-* subject a request
+# carries, so only the gateway's and the Portal's mesh identities may reach its port. The probe
+# wears the Portal's pod label, which the NetworkPolicies admit, and stays out of the mesh: the
+# Linkerd Server on 9090 is then the only thing that can refuse it. An HTTP status other than 403
+# or 101/200 means the proxy did not answer and nothing was measured.
+echo "broker callers"
+cb_ip=$(kubectl get pods -n "$slug" -l app.kubernetes.io/name=context-broker-broker -o jsonpath='{.items[0].status.podIP}' 2>/dev/null)
+if [ -z "$cb_ip" ] || ! kubectl get servers.policy.linkerd.io context-broker-api -n "$slug" >/dev/null 2>&1; then
+	skip "broker callers (no meshed context broker with its Server in this instance)"
+else
+	forger="smoke-forger-$$"
+	forge="wget -S -q -O /dev/null -T 5 --header 'x-jc-subject: smoke-forged' --header 'x-jc-roles: admin'"
+	forge_overrides=$(probe_overrides "$forger" "[\"sh\", \"-c\", \"sleep 3; echo PROBE-RAN; $forge http://$cb_ip:9090/ngsi-ld/v1/types 2>&1 | sed -n 's/^ *HTTP[^ ]* \\\\([0-9]*\\\\).*/HTTP-\\\\1/p'; $forge --header 'Connection: Upgrade' --header 'Upgrade: websocket' --header 'Sec-WebSocket-Version: 13' --header 'Sec-WebSocket-Key: c21va2UtZm9yZ2VkLWtleQ==' http://$cb_ip:9090/x/ws 2>&1 | sed -n 's/^ *HTTP[^ ]* \\\\([0-9]*\\\\).*/WS-\\\\1/p'; true\"]" |
+		sed 's/"metadata": {/"metadata": {\n    "labels": {"app.kubernetes.io\/name": "portal-portal"},/')
+	forge_out=$(kubectl run "$forger" -n "$slug" --rm --attach --restart=Never --quiet --timeout=90s \
+		--image="$image" --overrides="$forge_overrides" 2>/dev/null)
+	http_code=$(printf '%s' "$forge_out" | sed -n 's/^HTTP-\([0-9]*\)\r*$/\1/p' | head -1)
+	ws_code=$(printf '%s' "$forge_out" | sed -n 's/^WS-\([0-9]*\)\r*$/\1/p' | head -1)
+	if ! grep -q PROBE-RAN <<<"$forge_out"; then
+		ko "the forged-caller probe never ran, so who may speak to the broker was not measured"
+	elif [ "$http_code" = 403 ] && [ "$ws_code" = 403 ]; then
+		ok "the broker's proxy refuses a forged x-jc-subject from a pod outside the gateway and the Portal (HTTP and WebSocket: 403)"
+	elif [ -z "$http_code" ] || [ -z "$ws_code" ]; then
+		ko "the forged-caller probe got no answer from the broker at $cb_ip:9090 (HTTP '${http_code}', WebSocket '${ws_code}'), so the refusal was not measured"
+	else
+		ko "a pod outside the gateway and the Portal reached the broker with a forged subject (HTTP $http_code, WebSocket $ws_code): it can read as anyone (T-4875)"
+	fi
+fi
+
 # The sample applications (T-2599, AP-75, AP-80): the forge bootstrap pushed each into its own
 # repository and committed its manifest, and the build lane builds it on that push. Built means
 # the Portal accepted `status.build` for the repository's head. A fresh seed takes minutes, so

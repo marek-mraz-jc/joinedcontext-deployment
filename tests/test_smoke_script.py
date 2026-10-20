@@ -292,6 +292,21 @@ elif args[0] == "get" and args[1] == "pods" and args[2:4] in (["-n", "linkerd"],
 elif args[0] == "get" and args[1] == "pods" and "app.kubernetes.io/name=apisix" in line:
     # T-0939: the probe aims at the APISIX pod's own address; `apisixPodIp: ""` is no pod.
     sys.stdout.write(spec.get("apisixPodIp", "10.42.0.9"))
+elif args[0] == "get" and args[1] == "pods" and "app.kubernetes.io/name=context-broker-broker" in line:
+    # T-4875: the forged-caller probe aims at the broker pod's own address; "" is no pod.
+    sys.stdout.write(spec.get("brokerPodIp", "10.42.0.30"))
+elif args[0] == "get" and args[1] == "servers.policy.linkerd.io":
+    sys.exit(0 if spec.get("brokerServer", True) else 1)
+elif args[0] == "run" and args[1].startswith("smoke-forger"):
+    # T-4875: the status the broker's proxy gave the forged HTTP request and WebSocket upgrade,
+    # and only to a pod that wears the Portal's label and stays out of the mesh.
+    if spec.get("forgerRan", True):
+        sys.stdout.write("PROBE-RAN\\n")
+    unmeshed = '"linkerd.io/inject": "disabled"' in line
+    portal = '"app.kubernetes.io/name": "portal-portal"' in line
+    for kind, code in zip(("HTTP", "WS"), spec.get("forgerCodes", [403, 403]) if unmeshed and portal else []):
+        if code is not None:
+            sys.stdout.write("%s-%s\\n" % (kind, code))
 elif args[0] == "run" and args[1].startswith("smoke-edgepeer"):
     # T-0939: like the egress probe, it reports by what it prints. `edgePeerRan: False` is a
     # probe that never ran, which must not read as "the policy refused it".
@@ -1853,3 +1868,31 @@ def test_the_old_catalogue_host_must_redirect_with_path_and_query(tmp_path, stat
     result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
     assert result.returncode != 0
     assert "FAIL  data.{domain} does not redirect to opendata.{domain} with path and query" in result.stdout
+
+
+def test_the_broker_refusing_a_forged_caller_passes(tmp_path):
+    """T-4875: the probe wears the Portal's label outside the mesh; the broker's proxy says 403."""
+    result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
+    assert "ok    the broker's proxy refuses a forged x-jc-subject" in result.stdout
+
+
+def test_a_forged_caller_the_broker_answers_fails_the_run(tmp_path):
+    """T-4875: a forged x-jc-subject that reaches the broker reads as anyone."""
+    spec = dict(HEALTHY, forgerCodes=[200, 101])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "reached the broker with a forged subject (HTTP 200, WebSocket 101)" in result.stdout
+
+
+def test_a_forged_caller_probe_without_an_answer_fails_the_run(tmp_path):
+    """T-4875: no status at all is a probe that never reached the proxy, not a refusal."""
+    for spec in (dict(HEALTHY, forgerCodes=[403, None]), dict(HEALTHY, forgerRan=False)):
+        result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+        assert result.returncode == 1
+        assert "so the refusal was not measured" in result.stdout or "the forged-caller probe never ran" in result.stdout
+
+
+def test_an_instance_without_a_meshed_broker_skips_the_forged_caller_probe(tmp_path):
+    for spec in (dict(HEALTHY, brokerServer=False), dict(HEALTHY, brokerPodIp="")):
+        result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+        assert "broker callers (no meshed context broker with its Server in this instance)" in result.stdout
