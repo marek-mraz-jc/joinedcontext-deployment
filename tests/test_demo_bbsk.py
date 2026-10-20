@@ -160,7 +160,8 @@ def test_the_demo_assistant_reads_the_regions_and_the_citys_public_data_through_
     assert spec["allowedOrigins"] == [f"https://{HOSTS['smartcity']}", f"https://{HOSTS['dev']}"]
     # Owner 2026-10-19T13:49Z: two cards from www.bbsk.sk, then the open-data ones, only those proven 3 of 3.
     # The Zvolen schools card is off since the owner's 16:22Z run read Organization (supervisor 16:35Z);
-    # office hours and population since prod's 2026-10-20 run (T-4769): at most three, each language alike.
+    # the population since prod's 2026-10-20 run (T-4769); office hours back with dataset links (T-4793):
+    # at most three, each language alike.
     assert len(spec["suggestions"]["sk"]) == len(spec["suggestions"]["en"]) in (2, 3)
     assert not any("Zvolen" in q for q in spec["suggestions"]["sk"] + spec["suggestions"]["en"])
     # T-4740: the panel is "AI asistent" in the landing page's blue, never a name its initials stand for.
