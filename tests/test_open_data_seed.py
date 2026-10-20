@@ -973,7 +973,7 @@ def test_each_publisher_expects_its_converted_datasets_and_its_endpoints():
     assert set(od) <= mapped, "a converted dataset the mapping does not map"
     assert len({entry["dataset"] for entry in od.values()}) == len(od), "one entry per dataset"
     assert expected_catalogue() == {
-        "banskabystrica": 13 + 7, "bbsk": 88 + 5, "hel-fi": 11, "praha": 7, "slovensko": 1 + 45, "zilina": 5}
+        "banskabystrica": 13 + 7, "bbsk": 88 + 7, "hel-fi": 11, "praha": 7, "slovensko": 1 + 45, "zilina": 5}
 
 
 def test_the_rdf_artifacts_are_canonical_whatever_order_a_generator_wrote(tmp_path):
