@@ -86,7 +86,7 @@ def repo(tmp_path):
     repo = tmp_path / "repo"
     (repo / "scripts").mkdir(parents=True)
     shutil.copy(ROOT / "scripts/upgrade.py", repo / "scripts/upgrade.py")
-    (repo / "scripts/wait-rollouts.sh").write_text("#!/bin/sh\nexit 0\n")
+    (repo / "scripts/wait-rollouts.sh").write_text('#!/bin/sh\necho "wait-rollouts $1"\nexit 0\n')
     (repo / "scripts/smoke.sh").write_text('#!/bin/sh\necho "smoke $1"\nexit "${FAKE_SMOKE_RC:-0}"\n')
     (repo / "releases/steps").mkdir(parents=True)
     (repo / "releases/v1.1.0.md").write_text(NOTES)
@@ -100,6 +100,9 @@ def repo(tmp_path):
     git(repo, "tag", "v1.1.0")
     (repo / "deployment/environments/prod").mkdir(parents=True)
     (repo / "deployment/environments/dev").mkdir(parents=True)
+    (repo / "deployment/environments/testing").mkdir(parents=True)
+    (repo / "deployment/environments/testing/global.yaml.gotmpl").write_text(
+        "---\n# Generated\nglobal:\n  profile: development\n  instanceSlug: dev\n")
     (repo / "deployment/helmfile.yaml").write_text("---\n")
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
@@ -187,6 +190,16 @@ def test_green_runs_the_steps_and_records_the_version(repo):
     assert len(applied(calls, "Backup")) == 1
     assert len(applied(calls, "ConfigMap")) == 1
     assert not [c for c in calls if c[0] == "helm" and c[1] == "rollback"]
+
+
+def test_the_rollouts_are_awaited_in_the_instance_the_environment_names(repo):
+    # ci-full 39342677129: environment testing installs instance dev; waiting on a namespace
+    # named after the environment found none and rolled a green upgrade back.
+    result, _ = upgrade_run(repo, "testing", "v1.1.0")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "wait-rollouts dev" in result.stdout
+    result, _ = upgrade_run(repo, "prod", "v1.1.0")
+    assert "wait-rollouts prod" in result.stdout
 
 
 def test_a_failed_sync_rolls_back_without_running_the_steps(repo):
