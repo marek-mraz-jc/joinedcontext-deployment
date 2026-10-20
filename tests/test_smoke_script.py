@@ -91,7 +91,7 @@ elif "-D" in args:
         'HTTP/2 200\\r\\ncache-control: private, no-cache\\r\\netag: "e3b0c442"\\r\\n')))
 elif "/q/health" in line:
     # The broker's own health over the port-forward (T-3905): the surfaces the deployment mounts.
-    surfaces = spec.get("brokerSurfaces", ["views", "mcp", "access", "ws", "ogc"])
+    surfaces = spec.get("brokerSurfaces", ["views", "mcp", "access", "ws", "ogc", "ical"])
     sys.stdout.write(lookup("bodies", json.dumps({"status": "UP", "surfaces": {s: "UP" for s in surfaces}})))
 else:
     sys.stdout.write(lookup("bodies", ""))
@@ -345,6 +345,11 @@ def sandbox(tmp_path: Path, spec: dict) -> dict:
     scripts.mkdir(parents=True, exist_ok=True)
     (scripts / "smoke.sh").write_text(SMOKE.read_text())
     (scripts / "smoke.sh").chmod(0o755)
+    # The events calendars' Endpoints, whose slugs the smoke reads from the seed beside it (T-4895).
+    seed = tmp_path / "components/context-gateway/seed/bbsk"
+    seed.mkdir(parents=True, exist_ok=True)
+    for name in ("bbsk-endpoint-podujatia.yaml", "bbsk-endpoint-podujatia-slovensko.yaml"):
+        (seed / name).write_text((PROJECT_ROOT / "components/context-gateway/seed/bbsk" / name).read_text())
     (scripts / "wait-rollouts.sh").write_text(ROLLOUTS_STUB)
     (scripts / "wait-rollouts.sh").chmod(0o755)
     (scripts / "smoke-ws.py").write_text(WS_STUB)
@@ -400,6 +405,8 @@ HEALTHY_STATUSES = [
     ["example.test/api/mcp/.well-known/oauth-protected-resource?x=1", 308],
     # The catalogue's old host moves to opendata.{domain} with path and query (T-4679).
     ["https://data.example.test/dataset/x?q=1", 301],
+    # The events calendars refuse an anonymous write (T-4895).
+    ["smoke-anonymous-write", 403],
     # Event keeps no history, so no Policy grants its temporal read (T-4372).
     [["hsevents", "/temporal/entities"], 404],
     ["/invoke", 401],
@@ -542,6 +549,8 @@ HEALTHY = {
                     "units_map": {"repo.code": "read", "repo.issues": "read", "repo.pulls": "read"}},
                ], separators=(",", ":"))],
                ["portal.example.test/catalogue", '<script type="module" src="/assets/index-1a2b3c4d.js"></script>'],
+               # The events calendars (T-4895): an RFC 5545 feed, CRLF line ends.
+               ["/ical/v1/events.ics", "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Antares//antares-ical//EN\r\nEND:VCALENDAR\r\n"],
                ["data.example.test/", CATALOGUE_PAGE]],
     "statuses": HEALTHY_STATUSES,
 }
@@ -598,6 +607,9 @@ def test_full_platform_passes(tmp_path):
     assert "ok    helsinki lists 2 spaces, none of them residue of takes or e2e" in result.stdout
     assert "ok    agent proxy client mints tokens with audience context-gateway" in result.stdout
     assert "ok    helsinki-bikes does not serve events" in result.stdout
+    assert "ok    bbsk-podujatia serves its events as an iCalendar feed" in result.stdout
+    assert "ok    bbsk-podujatia-slovensko refuses an anonymous write (403)" in result.stdout
+    assert "ok    the broker mounts the ical surface" in result.stdout
     assert "ok    helsinki-transport opens its WebSocket anonymously and subscribes to Vehicle (101 201)" in result.stdout
     assert "ok    city bike stations are flowing into the space" in result.stdout
     assert "ok    buses are flowing into the space" in result.stdout
@@ -793,6 +805,15 @@ def test_jc_functions_open_to_any_pod_or_closed_to_the_portal_fails_the_run(tmp_
     result = run(tmp_path, dict(HEALTHY, functionsPortalReaches=False), "https://example.test", "https://idm.example.test")
     assert result.returncode != 0
     assert "FAIL  a pod with the Portal's label cannot reach jc-functions:8080" in result.stdout
+
+
+def test_an_events_endpoint_without_its_calendar_fails_the_run(tmp_path):
+    """T-4895: the calendar a person pasted answers a problem document, not an iCalendar feed,
+    when the broker lacks `ical` or the Endpoint does not list it."""
+    problem = [["/ical/v1/events.ics", '{"status":404,"title":"Not Found"}']]
+    result = run(tmp_path, dict(HEALTHY, bodies=problem + HEALTHY["bodies"]), "https://example.test", "https://idm.example.test")
+    assert result.returncode != 0
+    assert "FAIL  bbsk-podujatia serves no iCalendar feed at /ical/v1/events.ics" in result.stdout
 
 
 def test_a_surface_the_broker_does_not_mount_fails_the_run(tmp_path):
