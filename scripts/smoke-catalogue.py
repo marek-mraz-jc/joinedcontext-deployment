@@ -291,10 +291,21 @@ def describe(package: dict, domain: str) -> Dataset:
                  or re.search(r"/collections/([A-Za-z][\w]*)/items", url)
                  or re.search(r"\(([A-Za-z][\w]*)\)$", resource.get("name") or ""))
         data.type = data.type or (found.group(1) if found else "")
-        if fmt == "OGCFEAT":
-            query = urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)
-            data.part_of = (query.get("isPartOf") or [""])[0]
+        data.part_of = data.part_of or is_part_of(url)
     return data
+
+
+def is_part_of(url: str) -> str:
+    """The catalogue dataset a distribution keeps its rows to (T-4289): OGC's `isPartOf=`, NGSI-LD's
+    and file.csv's `q=isPartOf=="…"` or OData's `$filter=isPartOf eq '…'`; '' for a whole type."""
+    query = urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)
+    for q in query.get("q", []):
+        if found := re.fullmatch(r'isPartOf=="(.*)"', q):
+            return found.group(1)
+    for f in query.get("$filter", []):
+        if found := re.fullmatch(r"isPartOf eq '(.*)'", f):
+            return found.group(1).replace("''", "'")
+    return (query.get("isPartOf") or [""])[0]
 
 
 def mcp_tools(answer: Answer) -> int:
@@ -308,11 +319,19 @@ def mcp_tools(answer: Answer) -> int:
         return 0
 
 
-def sample_query(data: Dataset) -> dict:
+def sample_query(data: Dataset, limit: int = SAMPLE) -> dict:
     """The NGSI-LD query of the dataset's own rows: its isPartOf when it lists one."""
-    query = {"type": data.type, "limit": SAMPLE}
+    query = {"type": data.type, "limit": limit}
     if data.part_of:
         query["q"] = f'isPartOf=="{data.part_of}"'
+    return query
+
+
+def odata_query(data: Dataset) -> dict:
+    """The OData count of the dataset's own rows, filtered as its CKAN link is."""
+    query = {"$top": 1, "$count": "true"}
+    if data.part_of:
+        query["$filter"] = "isPartOf eq '" + data.part_of.replace("'", "''") + "'"
     return query
 
 
@@ -462,13 +481,13 @@ class Run:
         return ok(f"{tools} tools") if tools else ko("tools/list lists no tool")
 
     def odata(self, data: Dataset) -> str:
-        url = self.base(data) + f"odata/v4/{data.type}?" + urllib.parse.urlencode({"$top": 1, "$count": "true"})
+        url = self.base(data) + f"odata/v4/{data.type}?" + urllib.parse.urlencode(odata_query(data))
         answer = self.client.fetch(url)
         count = (answer.json() or {}).get("@odata.count") if answer.status == 200 else None
         if not isinstance(count, int):
             return ko(f"{data.type} answered {answer.why()}, no @odata.count")
-        if not data.part_of:
-            self.counts.setdefault(data.name, (count, "OData @odata.count"))
+        how = "OData @odata.count of its isPartOf" if data.part_of else "OData @odata.count"
+        self.counts.setdefault(data.name, (count, how))
         return ok(f"{count} rows") if count >= 1 else ko(f"@odata.count is {count}")
 
     def ogc(self, data: Dataset) -> str:
@@ -626,13 +645,16 @@ class Run:
         return ko(f"no feature to show, OGC {ogc[4:]}") if verdict(ogc) == "ko" else ok()
 
     def csv(self, data: Dataset) -> str:
-        # file.csv takes the entities query (API/02): one row is enough for a header line.
-        url = self.base(data) + "file.csv?" + urllib.parse.urlencode({"type": data.type, "limit": 1})
+        # file.csv takes the entities query (API/02) and the dataset's own isPartOf, as its CKAN
+        # link does: a header with no row is the empty download of T-4908.
+        url = self.base(data) + "file.csv?" + urllib.parse.urlencode(sample_query(data, 1))
         answer = self.client.fetch(url)
-        header = answer.body.decode(errors="replace").split("\n", 1)[0].strip()
+        lines = [line for line in answer.body.decode(errors="replace").splitlines() if line.strip()]
         if answer.status != 200 or "text/csv" not in answer.ctype:
             return ko(f"file.csv answered {answer.why()}")
-        return ok() if header else ko("file.csv has no header line")
+        if not lines:
+            return ko("file.csv has no header line")
+        return ok() if len(lines) > 1 else ko(f"file.csv has no {data.type} row")
 
     def last(self, name: str, column: str) -> tuple[str, str]:
         """When the previous tables last ran this cell, and its verdict; ('', '') for never."""

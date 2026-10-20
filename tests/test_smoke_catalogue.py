@@ -75,12 +75,12 @@ def world(packages, public, rows=10, datastore_total=10, overrides=None):
                 answer(body=[row(t, 1, "OGCFEAT" in data.formats), row(t, 2, "OGCFEAT" in data.formats)],
                        ctype="application/ld+json"),
             base + "mcp": answer(body={"result": {"tools": [{"name": "query"}]}}),
-            base + f"odata/v4/{t}?%24top=1&%24count=true": answer(body={"@odata.count": rows, "value": [{}]}),
+            base + f"odata/v4/{t}?" + urllib.parse.urlencode(smoke.odata_query(data)): answer(body={"@odata.count": rows, "value": [{}]}),
             base + f"ogc/features/collections/{t}/items?limit=1": answer(body={"features": [{}]}, ctype=GEO),
             base + "schema/index.json": answer(body={"models": [{"types": [t], "version": 1}]}),
             base + "schema/v1/model.schema.json": answer(body=model(t)),
             base + "ngsi-ld/v1/types": answer(body={"typeList": [t]}),
-            base + "file.csv?" + urllib.parse.urlencode({"type": t, "limit": 1}): answer(body=b"id,type\nurn:1,T\n", ctype=CSV),
+            base + "file.csv?" + urllib.parse.urlencode(smoke.sample_query(data, 1)): answer(body=b"id,type\nurn:1,T\n", ctype=CSV),
         })
         if "OGCFEAT" in data.formats:  # CKAN's /map/ is a 404 without one (jc_map_page)
             answers[f"{CKAN}/map/{p['name']}"] = answer(body=b"<div data-jc-map='{&#34;layers&#34;: [{}]}'>",
@@ -555,6 +555,47 @@ def test_the_sample_reads_twenty_rows_of_the_dataset_s_own_is_part_of():
     data = smoke.Dataset("x", type="Road", part_of="https://x/dataset/three")
     assert smoke.sample_query(data) == {"type": "Road", "limit": 20, "q": 'isPartOf=="https://x/dataset/three"'}
 
+
+
+def filtered(name, slug, typ, part_of):
+    """A dataset whose CKAN links keep its rows by isPartOf, as od-standards.py writes them."""
+    p = package(name, slug, typ, ogc=False)
+    for r in p["resources"]:
+        if r["format"] == "NGSI-LD" or r["url"].endswith("file.csv"):
+            r["url"] += "?" + urllib.parse.urlencode({"type": typ, "q": f'isPartOf=="{part_of}"'})
+        elif r["format"] == "OData":
+            r["url"] += "?" + urllib.parse.urlencode({"$filter": f"isPartOf eq '{part_of}'"})
+    return p
+
+
+def test_a_dataset_without_ogc_takes_its_is_part_of_from_any_link():
+    """T-4908: CKAN linked opendata.{domain} while the rows named data.{domain}; without an OGC
+    link the smoke read the whole type and missed the empty download."""
+    data = smoke.describe(filtered("schools", "o1", "Organization", "https://x/dataset/o'k"), DOMAIN)
+    assert data.part_of == "https://x/dataset/o'k"
+    assert smoke.is_part_of("https://a/ogc/features/collections/T/items?isPartOf=https%3A%2F%2Fx%2Fd") == "https://x/d"
+    assert smoke.is_part_of("https://a/odata/v4/T?%24filter=isPartOf+eq+%27a%27%27b%27") == "a'b"
+    assert smoke.is_part_of("https://a/ngsi-ld/v1/entities?type=T&q=name%3D%3D%22x%22") == ""
+
+
+def test_an_empty_download_of_the_dataset_s_rows_is_a_ko_on_every_interface():
+    p = filtered("schools", "o1", "Organization", "https://opendata.example.org/dataset/schools")
+    data = smoke.describe(p, DOMAIN)
+    base = f"{API}/o1/"
+    rows, fake = table(world([p], ["o1"], overrides={
+        base + "ngsi-ld/v1/entities?" + urllib.parse.urlencode(smoke.sample_query(data)): answer(body=[]),
+        base + "odata/v4/Organization?" + urllib.parse.urlencode(smoke.odata_query(data)):
+            answer(body={"@odata.count": 0, "value": []}),
+        base + "file.csv?" + urllib.parse.urlencode(smoke.sample_query(data, 1)): answer(body=b"id,type\n", ctype=CSV),
+    }))
+    row = rows["schools"]
+    assert row["ngsi-ld"] == "ko: no Organization entity"
+    assert row["odata"] == "ko: @odata.count is 0"
+    assert row["csv"] == "ko: file.csv has no Organization row"
+    sent = [url for _, url in fake.sent]
+    assert any("file.csv?" in u and "isPartOf" in urllib.parse.unquote_plus(u) for u in sent), "the CKAN link's own filter"
+    healthy, _ = table(world([p], ["o1"]))
+    assert [smoke.verdict(healthy["schools"][c]) for c in ("ngsi-ld", "odata", "csv")] == ["ok"] * 3
 
 
 # The owner's addendum (T-4743, 17:10Z): relationships, every served type modelled, CKAN views.
