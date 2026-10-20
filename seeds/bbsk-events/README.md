@@ -90,3 +90,33 @@ python3 seeds/bbsk-events/check-sources.py --all    # skip rows too
 - T-4895 events space and Event model, T-4896 pipelines, T-4897 dashboard, T-4899 Slovakia.
 - docs Requirements PL-19, PL-47, PL-50, PL-72, DM-83; iCalendar SurfaceRequirement in
   platform `crates/jc-core/src/kinds/endpoint.rs`.
+
+## Pipelines (T-4896)
+
+`generate.py` writes one DataSource, Pipeline and Bento mapping per `pipeline` row whose feed kind has a template, into
+`components/context-gateway/seed/bbsk/bbsk-{datasource,pipeline}-podujatia-<host>.yaml` and their lines in that folder's
+`index.yaml`. Change a template, `sources.csv` or `venues.csv`, then run `python3 seeds/bbsk-events/generate.py`;
+`tests/test_bbsk_events_pipelines.py` fails while the seed differs from what the script writes.
+
+| Template (`pipelines/`) | Feed kind | Sources | Where the date and the place come from |
+|---|---|---|---|
+| `wp-rest-sc.yaml` | wp-rest-sc | Banská Bystrica | Meta Box fields, GPS included |
+| `tribe-rest.yaml` | tribe-rest | visitbanskabystrica.sk | The Events Calendar REST, venue GPS when set |
+| `ical.yaml` | ical | centralslovakia.eu | DTSTART/DTEND, GEO, else LOCATION in the venue table |
+| `weby-feed.yaml` | weby-feed | 11 towns | the feed's /akcia/ links, each page read once, 1 s apart |
+| `mec-jsonld.yaml` | mec-rest | banskastiavnica.travel | the event page's schema.org Event JSON-LD, 1 s apart |
+
+`common.yaml` closes every template: it keeps events whose end is now or later, the 100 soonest by start; finds the
+point in the feed or in `venues.csv`; mints the id from name, start and town, so one event announced by two sources is
+one entity; writes `expiresAt` at the event's end (start + 1 day without an end) and scope `/SK/BB/<town>`.
+
+- `venues.csv` holds venues checked by hand against OpenStreetMap (the object's id in `osm`), matched by the place
+  text in lower case without parentheses and commas, per town; `regional=y` rows also serve the region's iCal feed.
+  A venue nobody checked gives no point, and the Event model refuses the event into the run's rejected list.
+  Not found as the named building on 2026-10-20: Kultúrny dom Veľký Krtíš, Kultúrny dom v Žarnovici, Dom kultúry
+  Podborová (Zvolen), Športová hala Arena (Lučenec).
+- A source with no licence stated gives facts only (name, time, place, link back), never its description;
+  Banská Bystrica's feed is CC BY 4.0 and keeps the text, without organiser e-mail or phone.
+- Each run is daily, staggered 00:00-02:34 UTC (01:00-05:00 in Bratislava, winter and summer); the Portal's
+  run-now button starts one source.
+- Not built yet: `wp-rss` (Sliač writes its dates only in free text) and every `pipeline-html` row (one parser per CMS).

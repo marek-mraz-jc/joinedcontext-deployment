@@ -179,7 +179,8 @@ def test_only_the_pipelines_write_and_never_delete():
 
 def test_every_file_is_placed_by_the_index():
     index = yaml.safe_load((SEED / "index.yaml").read_text())
-    ours = sorted(p.name for p in SEED.glob("bbsk-*podujatia*"))
+    generated = ("bbsk-datasource-", "bbsk-pipeline-")  # T-4896's pipelines, placed outside spaces/
+    ours = sorted(p.name for p in SEED.glob("bbsk-*podujatia*") if not p.name.startswith(generated))
     assert len(ours) == 12
     assert [f for f in ours if f not in index] == []
     assert {index[f].split("/spaces/")[1].split("/")[0] for f in ours} == {SPACE}

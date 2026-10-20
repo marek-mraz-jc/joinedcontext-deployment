@@ -1,0 +1,39 @@
+# Modern Events Calendar (WordPress plugin): REST /wp-json/wp/v2/mec-events lists the events
+# without their dates, and each event page carries them as schema.org Event JSON-LD, so each page is
+# read once, a second apart.
+- mapping: |
+    root = if this.type() != "array" { throw("the events API answered no list") } else { this }
+- mapping: |
+    root = this.map_each(e -> {
+      "name": e.title.rendered.or(null),
+      "url": e.link.or(null),
+      "sourceId": e.id.or(null),
+      "modified": e.modified_gmt.or(null).(m -> if m != null { m + "Z" } else { null })
+    })
+- unarchive:
+    format: json_array
+- branch:
+    request_map: |
+      let path = this.url.or("").re_find_object("^__HOST_RE__/events/(?P<p>[A-Za-z0-9._%-]{1,200}/?)$").p.or(null)
+      root = if $path == null { deleted() } else { "" }
+      meta event_path = $path
+    processors:
+      - sleep:
+          duration: 1s
+      - http:
+          url: __HOST__/events/${! @event_path }
+          verb: GET
+          headers:
+            User-Agent: joinedcontext-platform/1.0 (+https://dev.joinedcontext.com; public events)
+            Accept: text/html
+          timeout: 20s
+          retries: 1
+    result_map: |
+      let ld = content().string().re_find_all_object("<script type=\"application/ld\\+json\">(?P<j>[^<]*)</script>").map_each(m -> m.j.parse_json().catch(null)).filter(j -> j != null && j."@type".or("") == "Event").index(0).catch(null)
+      # MEC writes the end equal to the start when the author gave none: that is no end.
+      root.start = $ld.startDate.or(null)
+      root.end = if $ld.endDate.or(null) != $ld.startDate.or(null) { $ld.endDate.or(null) } else { null }
+      root.venue = $ld.location.name.or(null)
+      root.streetAddress = $ld.location.address.or(null).(a -> if a.type() == "string" { a } else { a.streetAddress.or(null) })
+- archive:
+    format: json_array
