@@ -128,7 +128,7 @@ pipeline:
           }.filter(f -> f.value != null))
 
     # Withdrawn alerts: the HSL Alerts the space holds that this feed no longer lists are deleted
-    # through the city endpoint (deleteBatch of the pipelines-write Policy).
+    # through the city endpoint (deleteBatch of the pipelines-delete-alerts Policy, Alerts only).
     - branch:
         request_map: 'root = { "current": this.map_each(e -> e.id) }'
         processors:
