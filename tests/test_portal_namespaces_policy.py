@@ -245,8 +245,12 @@ def secret(name: str, ns: str = "dev", kind: str = "Opaque") -> dict:
 
 
 # What the Portal hands over outside an apps namespace (joinedcontext-portal pipeline_secrets.rs,
-# artifact_store.rs, apps/build_pods.rs).
-@pytest.mark.parametrize("name", ["pipeline-secrets", "artifact-store-reader-hel", "build-bikes-42", "apps-host-1-store"])
+# artifact_store.rs, apps/build_pods.rs) and the edge file it composes (reconciler/edge_file.rs:
+# refused, no route or limit change reaches APISIX, prod 2026-10-20 07:30Z).
+@pytest.mark.parametrize(
+    "name",
+    ["pipeline-secrets", "artifact-store-reader-hel", "build-bikes-42", "apps-host-1-store", "apisix-standalone-config"],
+)
 @pytest.mark.parametrize("operation", ["CREATE", "UPDATE"])
 def test_the_portal_may_write_the_secrets_it_hands_over(secrets_policy, tmp_path, name, operation):
     assert judged(secrets_policy, secret(name), tmp_path, operation=operation) == "pass"
