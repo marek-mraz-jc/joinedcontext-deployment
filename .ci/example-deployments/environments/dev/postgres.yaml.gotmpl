@@ -1,0 +1,34 @@
+---
+# Postgres sized for the broker on dev only (T-4904). smartcity reuses dev's values profile
+# (`valuesProfile: development`), so these sit in dev's environment and reach prod only after dev
+# is measured with them.
+#
+# Measured 2026-10-20 20:45Z: shared_buffers 128MB (the default), work_mem 4MB, cache hit 72.8 %,
+# 2,543 broker statements over 1 s an hour, node memory 96 % used. The pod keeps its 2Gi limit
+# (development-values): the node has no memory to give it.
+postgres:
+  cluster:
+    rawValues:
+      cluster:
+        postgresql:
+          parameters:
+            # A quarter of the 2Gi limit. Shared memory counts against the limit and is not
+            # reclaimed, so 512MB plus the ~530Mi resident seen under the seeded pipelines leaves
+            # ~1Gi for sorts and the page cache.
+            shared_buffers: "512MB"
+            # The planner's guess of what is cached: shared_buffers plus the page cache the
+            # cgroup lets the pod keep.
+            effective_cache_size: "1536MB"
+            # Per sort or hash node: 16MB x 2 nodes x the broker's 20 connections is 640MB at the
+            # worst moment, inside what the limit leaves.
+            work_mem: "16MB"
+            maintenance_work_mem: "128MB"
+            track_io_timing: "on"
+            log_min_duration_statement: "500ms"
+            # A slow statement is logged without its bind values: they carry entity data and,
+            # for Keycloak, credentials.
+            log_parameter_max_length: "0"
+            # Any pg_stat_statements.* key makes CNPG preload the library and create the
+            # extension; the databases chart's stat-statements Job then takes it from PUBLIC.
+            pg_stat_statements.track: "top"
+            pg_stat_statements.max: "5000"
