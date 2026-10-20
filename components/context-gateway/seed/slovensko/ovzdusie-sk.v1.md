@@ -3,7 +3,7 @@
 <!-- Generated from the LinkML source by Model Tools. Do not edit: `jcctl model
      generate` overwrites this file and CI fails on any difference (DM-01, DM-02). -->
 
-What the national air-quality space carries (DM-01, DM-61, T-4340): one entity per Slovak air-quality station, its name, its place and the hourly mean of each pollutant it measures, and nothing else (owner, 2026-10-16). Smart Data Models' AirQualityObserved, its IRIs cited rather than minted (DM-04, DM-16).
+What the national air-quality space carries (DM-01, DM-61): one entity per Slovak air-quality station, its name, its place and the hourly mean of each pollutant it measures, and nothing else (owner, 2026-10-16). Smart Data Models' AirQualityObserved, its IRIs cited rather than minted (DM-04, DM-16).
 
 - Namespace: `https://joinedcontext.com/models/slovensko/ovzdusie-sk`
 - Rendered by: `linkml-1.11.1`

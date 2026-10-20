@@ -96,7 +96,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "isPartOf": {
-          "description": "The catalogue dataset the cell belongs to, the page of its \u0160\u00da SR table, where its licence and its other cells are (T-4390). Never `dataset`: the NGSI-LD core @context protects that term (T-4289).",
+          "description": "The catalogue dataset the cell belongs to, the page of its \u0160\u00da SR table, where its licence and its other cells are. Never `dataset`: the NGSI-LD core @context protects that term.",
           "format": "uri",
           "type": "string",
           "x-ngsi-ld-kind": "Property"

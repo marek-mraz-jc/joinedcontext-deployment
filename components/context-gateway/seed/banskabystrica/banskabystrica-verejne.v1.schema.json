@@ -156,7 +156,7 @@
     },
     "CadastralParcel": {
       "additionalProperties": false,
-      "description": "One parcel of the cadastre of Slovakia in Bansk\u00e1 Bystrica (T-4697): its number, register, cadastral area, the area the cadastre states and its outline, from the INSPIRE Cadastral Parcels service of \u00daGKK SR (CC BY 4.0), refreshed weekly. No owner and no other personal data: the INSPIRE parcels carry none. Smart Data Models has no cadastral parcel (its AgriParcel is a farmed field), so the class follows INSPIRE's CadastralParcel and the SDM conventions.",
+      "description": "One parcel of the cadastre of Slovakia in Bansk\u00e1 Bystrica: its number, register, cadastral area, the area the cadastre states and its outline, from the INSPIRE Cadastral Parcels service of \u00daGKK SR (CC BY 4.0), refreshed weekly. No owner and no other personal data: the INSPIRE parcels carry none. Smart Data Models has no cadastral parcel (its AgriParcel is a farmed field), so the class follows INSPIRE's CadastralParcel and the SDM conventions.",
       "properties": {
         "areaValue": {
           "description": "The parcel's area as the cadastre states it, in square metres (INSPIRE `areaValue`), measured in the national plane projection; a geodesic area of the outline differs by a few tenths of a percent.",
@@ -314,7 +314,7 @@
               "type": "null"
             }
           ],
-          "description": "The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress, T-4329); a field the source leaves out is absent, never guessed.",
+          "description": "The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed.",
           "x-ngsi-ld-kind": "Property"
         },
         "allowedVehicleType": {
@@ -519,7 +519,7 @@
               "type": "null"
             }
           ],
-          "description": "The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress, T-4329); a field the source leaves out is absent, never guessed.",
+          "description": "The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed.",
           "x-ngsi-ld-kind": "Property"
         },
         "dataProvider": {
@@ -683,7 +683,7 @@
     },
     "Organization": {
       "additionalProperties": false,
-      "description": "One school or school facility in the city, from the national school map: its pupils, its staff and its budget, counts only. The FIWARE Smart Data Model Organization (T-4329): no published model is a school.",
+      "description": "One school or school facility in the city, from the national school map: its pupils, its staff and its budget, counts only. The FIWARE Smart Data Model Organization: no published model is a school.",
       "properties": {
         "address": {
           "anyOf": [
@@ -694,7 +694,7 @@
               "type": "null"
             }
           ],
-          "description": "The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress, T-4329); a field the source leaves out is absent, never guessed.",
+          "description": "The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed.",
           "x-ngsi-ld-kind": "Property"
         },
         "annualBudget": {
@@ -861,7 +861,7 @@
               "type": "null"
             }
           ],
-          "description": "The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress, T-4329); a field the source leaves out is absent, never guessed.",
+          "description": "The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed.",
           "x-ngsi-ld-kind": "Property"
         },
         "category": {

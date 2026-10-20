@@ -13,7 +13,7 @@ What the region's register space carries side by side (DM-01, DM-61): the outlin
 
 ### AdministrativeArea
 
-One district (okres) or municipality (obec) of the region, its outline and its code, as the Smart Data Model extension AdministrativeArea (PointOfInterest base, T-4338).
+One district (okres) or municipality (obec) of the region, its outline and its code, as the Smart Data Model extension AdministrativeArea (PointOfInterest base).
 
 IRI: `jc:AdministrativeArea`
 
@@ -21,12 +21,12 @@ Specialises `Entity`.
 
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
-| `name` | Property | `string` |  |  | `schema:name` | The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is (T-4523). |
+| `name` | Property | `string` |  |  | `schema:name` | The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is. |
 | `areaCode` | Property | `string` | yes |  | `jc:areaCode` | The area's statistical code: LAU 1 (`SK0321`) for a district, LAU 2 (`SK0321508438`) for a municipality, the same codes the Statistical Office's cubes carry in `refArea`. |
 | `divisionLevel` | Property | [`DivisionLevel`](#divisionlevel) | yes |  | `jc:divisionLevel` | Which tier of the territorial division the area is. |
 | `refParentArea` | Relationship | [`AdministrativeArea`](#administrativearea) |  |  | `jc:refParentArea` | The district a municipality lies in; absent on a district. |
 | `surfaceArea` | Property | `float` |  | m2 | `jc:surfaceArea` | The area's surface as the cadastre states it. |
-| `isPartOf` | Property | `uri` |  |  | `jc:isPartOf` | The catalogue dataset the record belongs to, which tells the region's districts from its municipalities in one type (T-4523). |
+| `isPartOf` | Property | `uri` |  |  | `jc:isPartOf` | The catalogue dataset the record belongs to, which tells the region's districts from its municipalities in one type. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `childAreas` | Relationship | [`AdministrativeArea`](#administrativearea) (list) |  |  | `jc:childAreas` | The municipalities of a district, computed from their refParentArea and never stored. |
@@ -38,7 +38,7 @@ Specialises `Entity`.
 
 ### PublicOrganization
 
-One organisation the region founded: a secondary school, a social-care home, a theatre, a museum or an office. The FIWARE Smart Data Model CPSV-AP PublicOrganization (T-4329).
+One organisation the region founded: a secondary school, a social-care home, a theatre, a museum or an office. The FIWARE Smart Data Model CPSV-AP PublicOrganization.
 
 IRI: `sdm-cpsv:PublicOrganization`
 
@@ -46,13 +46,13 @@ Specialises `Entity`.
 
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
-| `name` | Property | `string` |  |  | `schema:name` | The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is (T-4523). |
+| `name` | Property | `string` |  |  | `schema:name` | The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is. |
 | `preferredLabel` | Property | `string` |  |  | `sdm-cpsv:preferredLabel` | The organisation's official name, as CPSV-AP's PublicOrganization requires it. |
 | `spatial` | Property | `string` (list) |  |  | `sdm-cpsv:spatial` | The municipality the organisation is in, by name, as CPSV-AP's PublicOrganization requires it. |
 | `alternateName` | Property | `string` |  |  | `schema:alternateName` | The shorter name the organisation goes by, when it differs from the official one. |
 | `legalId` | Property | `string` |  |  | `jc:legalId` | The body's identification number (IČO) in the Slovak register of legal persons. |
 | `organizationCategory` | Property | [`OrganizationCategory`](#organizationcategory) | yes |  | `jc:organizationCategory` | The field the region founded the organisation for. |
-| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the register publishes it, field by field (Smart Data Models' common PostalAddress, T-4329); a field the register leaves out is absent, never guessed. |
+| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the register publishes it, field by field (Smart Data Models' common PostalAddress); a field the register leaves out is absent, never guessed. |
 | `refMunicipality` | Relationship | [`AdministrativeArea`](#administrativearea) |  |  | `jc:refMunicipality` | The municipality the record lies in. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
@@ -63,7 +63,7 @@ Specialises `Entity`.
 
 ### PointOfInterest
 
-One hospital (by its facility number in the health-care register) or one registered social service a municipality, a town or the region provides; `category` says which. The FIWARE Smart Data Model PointOfInterest (T-4329): no published model is a hospital or a social service. Private providers of social services are not in the space.
+One hospital (by its facility number in the health-care register) or one registered social service a municipality, a town or the region provides; `category` says which. The FIWARE Smart Data Model PointOfInterest: no published model is a hospital or a social service. Private providers of social services are not in the space.
 
 IRI: `sdm-poi:PointOfInterest`
 
@@ -71,8 +71,8 @@ Specialises `Entity`.
 
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
-| `name` | Property | `string` |  |  | `schema:name` | The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is (T-4523). |
-| `category` | Property | [`PlaceCategory`](#placecategory) (list) | yes |  | `sdm-poi:category` | What kind of place it is: `hospital` or `socialService`. The two registers share the Smart Data Model PointOfInterest, and an application asks for one with `q=category=="hospital"` (T-4329). |
+| `name` | Property | `string` |  |  | `schema:name` | The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is. |
+| `category` | Property | [`PlaceCategory`](#placecategory) (list) | yes |  | `sdm-poi:category` | What kind of place it is: `hospital` or `socialService`. The two registers share the Smart Data Model PointOfInterest, and an application asks for one with `q=category=="hospital"`. |
 | `hospitalKind` | Property | [`HospitalKind`](#hospitalkind) |  |  | `jc:hospitalKind` | Whether the hospital is a general one or specialises in some fields. |
 | `operatorName` | Property | `string` |  |  | `jc:operatorName` | The legal person that runs it, as the register names it. |
 | `medicalSpecialties` | Property | `string` |  |  | `jc:medicalSpecialties` | The fields of medicine the hospital is licensed for, with their codes, as the register lists them. |
@@ -82,7 +82,7 @@ Specialises `Entity`.
 | `capacity` | Property | `integer` |  |  | `jc:capacity` | How many people the service may take at once, as registered; absent for a service registered without one. |
 | `providerKind` | Property | [`ProviderKind`](#providerkind) |  |  | `jc:providerKind` | Which public body provides the service. |
 | `legalId` | Property | `string` |  |  | `jc:legalId` | The body's identification number (IČO) in the Slovak register of legal persons. |
-| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the register publishes it, field by field (Smart Data Models' common PostalAddress, T-4329); a field the register leaves out is absent, never guessed. |
+| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the register publishes it, field by field (Smart Data Models' common PostalAddress); a field the register leaves out is absent, never guessed. |
 | `districtName` | Property | `string` |  |  | `jc:districtName` | The district the record lies in, by name, as the publisher writes it. |
 | `url` | Property | `string` |  |  | `schema:url` | The web page the publisher gives for it. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
@@ -107,7 +107,7 @@ IRI: `schema:PostalAddress`
 
 ### Bridge
 
-One bridge of the road network in the region, its road, its age, its size and who manages it, as the Smart Data Model extension Bridge (PointOfInterest base, T-4338).
+One bridge of the road network in the region, its road, its age, its size and who manages it, as the Smart Data Model extension Bridge (PointOfInterest base).
 
 IRI: `jc:Bridge`
 
@@ -115,7 +115,7 @@ Specialises `Entity`.
 
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
-| `name` | Property | `string` |  |  | `schema:name` | The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is (T-4523). |
+| `name` | Property | `string` |  |  | `schema:name` | The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is. |
 | `bridgeCode` | Property | `string` | yes |  | `jc:bridgeCode` | The bridge's number in the national road databank (Cestná databanka), such as `M9673`. |
 | `roadClass` | Property | [`RoadClass`](#roadclass) |  |  | `jc:roadClass` | The class of the road the bridge carries. |
 | `roadNumber` | Property | `string` |  |  | `jc:roadNumber` | The number of the road the bridge carries, such as `66b`. |

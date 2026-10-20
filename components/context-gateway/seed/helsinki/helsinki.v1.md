@@ -83,7 +83,7 @@ Specialises `Entity`.
 
 ### Article
 
-One item of the City of Helsinki's news feed, as the Smart Data Model extension Article (CPSV-AP Evidence base, T-4338).
+One item of the City of Helsinki's news feed, as the Smart Data Model extension Article (CPSV-AP Evidence base).
 
 IRI: `jc:Article`
 
@@ -227,7 +227,7 @@ Specialises `Entity`.
 
 ### OnStreetParking
 
-One street parking area of the city with its outline (T-4329): a parking area of the city's parking guide with the cars it holds when the city has estimated it (category `public`), a parking fee zone (`feeCharged`) or a resident parking zone (`forResidents`), a zone with its code and rules.
+One street parking area of the city with its outline: a parking area of the city's parking guide with the cars it holds when the city has estimated it (category `public`), a parking fee zone (`feeCharged`) or a resident parking zone (`forResidents`), a zone with its code and rules.
 
 IRI: `sdm:OnStreetParking`
 
@@ -250,7 +250,7 @@ Specialises `Entity`.
 
 ### OffStreetParking
 
-One park and ride site of the HSL area from Fintraffic's LIIPI register (T-3894), where it is, what it holds, whether it is open, the free spaces when it reports them, and its station.
+One park and ride site of the HSL area from Fintraffic's LIIPI register, where it is, what it holds, whether it is open, the free spaces when it reports them, and its station.
 
 IRI: `sdm:OffStreetParking`
 
@@ -274,7 +274,7 @@ Specialises `Entity`.
 
 ### CityWork
 
-One permit of the city's public-area register: an excavation, a temporary traffic arrangement or an event, with every area it covers as one outline. The applicant and the contractor are left out, because they can name a person. The Smart Data Model of works that occupy the street (T-4329); an event's permit covers its build and teardown on it.
+One permit of the city's public-area register: an excavation, a temporary traffic arrangement or an event, with every area it covers as one outline. The applicant and the contractor are left out, because they can name a person. The Smart Data Model of works that occupy the street; an event's permit covers its build and teardown on it.
 
 IRI: `sdm:CityWork`
 
@@ -300,7 +300,7 @@ Specialises `Entity`.
 
 ### AdministrativeArea
 
-One district or sub-district of Helsinki, its outline and its code, as the Smart Data Model extension AdministrativeArea (PointOfInterest base, T-4338).
+One district or sub-district of Helsinki, its outline and its code, as the Smart Data Model extension AdministrativeArea (PointOfInterest base).
 
 IRI: `jc:AdministrativeArea`
 
@@ -348,7 +348,7 @@ Specialises `Entity`.
 
 ### PublicTransportRoute
 
-One HSL line in one direction: its number, where it runs to, its stops in order and the line through them. A line with several variants has one entity per variant. The Smart Data Model's generic public transport route (T-4329); GtfsRoute is the line without a direction.
+One HSL line in one direction: its number, where it runs to, its stops in order and the line through them. A line with several variants has one entity per variant. The Smart Data Model's generic public transport route; GtfsRoute is the line without a direction.
 
 IRI: `sdm:PublicTransportRoute`
 

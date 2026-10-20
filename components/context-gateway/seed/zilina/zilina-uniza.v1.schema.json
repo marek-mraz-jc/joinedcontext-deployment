@@ -5,7 +5,7 @@
   "definitions": {
     "Article": {
       "additionalProperties": false,
-      "description": "One openly licensed work of the University of \u017dilina's digital library, as the Smart Data Model extension Article (CPSV-AP Evidence base, T-4338).",
+      "description": "One openly licensed work of the University of \u017dilina's digital library, as the Smart Data Model extension Article (CPSV-AP Evidence base).",
       "properties": {
         "dataProvider": {
           "description": "Who publishes the record, with the credit its licence asks for.",

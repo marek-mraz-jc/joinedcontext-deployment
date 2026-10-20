@@ -5,7 +5,7 @@
   "definitions": {
     "AdministrativeArea": {
       "additionalProperties": false,
-      "description": "One district (okres) or municipality (obec) of the region, its outline and its code, as the Smart Data Model extension AdministrativeArea (PointOfInterest base, T-4338).",
+      "description": "One district (okres) or municipality (obec) of the region, its outline and its code, as the Smart Data Model extension AdministrativeArea (PointOfInterest base).",
       "properties": {
         "areaCode": {
           "description": "The area's statistical code: LAU 1 (`SK0321`) for a district, LAU 2 (`SK0321508438`) for a municipality, the same codes the Statistical Office's cubes carry in `refArea`.",
@@ -32,7 +32,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "isPartOf": {
-          "description": "The catalogue dataset the record belongs to, which tells the region's districts from its municipalities in one type (T-4523).",
+          "description": "The catalogue dataset the record belongs to, which tells the region's districts from its municipalities in one type.",
           "format": "uri",
           "type": [
             "string",
@@ -69,7 +69,7 @@
           "x-ngsi-ld-kind": "GeoProperty"
         },
         "name": {
-          "description": "The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is (T-4523).",
+          "description": "The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is.",
           "type": [
             "string",
             "null"
@@ -136,7 +136,7 @@
     },
     "Bridge": {
       "additionalProperties": false,
-      "description": "One bridge of the road network in the region, its road, its age, its size and who manages it, as the Smart Data Model extension Bridge (PointOfInterest base, T-4338).",
+      "description": "One bridge of the road network in the region, its road, its age, its size and who manages it, as the Smart Data Model extension Bridge (PointOfInterest base).",
       "properties": {
         "bridgeCode": {
           "description": "The bridge's number in the national road databank (Cestn\u00e1 databanka), such as `M9673`.",
@@ -219,7 +219,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "name": {
-          "description": "The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is (T-4523).",
+          "description": "The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is.",
           "type": [
             "string",
             "null"
@@ -437,7 +437,7 @@
     },
     "PointOfInterest": {
       "additionalProperties": false,
-      "description": "One hospital (by its facility number in the health-care register) or one registered social service a municipality, a town or the region provides; `category` says which. The FIWARE Smart Data Model PointOfInterest (T-4329): no published model is a hospital or a social service. Private providers of social services are not in the space.",
+      "description": "One hospital (by its facility number in the health-care register) or one registered social service a municipality, a town or the region provides; `category` says which. The FIWARE Smart Data Model PointOfInterest: no published model is a hospital or a social service. Private providers of social services are not in the space.",
       "properties": {
         "address": {
           "anyOf": [
@@ -448,7 +448,7 @@
               "type": "null"
             }
           ],
-          "description": "The postal address as the register publishes it, field by field (Smart Data Models' common PostalAddress, T-4329); a field the register leaves out is absent, never guessed.",
+          "description": "The postal address as the register publishes it, field by field (Smart Data Models' common PostalAddress); a field the register leaves out is absent, never guessed.",
           "x-ngsi-ld-kind": "Property"
         },
         "capacity": {
@@ -461,7 +461,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "category": {
-          "description": "What kind of place it is: `hospital` or `socialService`. The two registers share the Smart Data Model PointOfInterest, and an application asks for one with `q=category==\"hospital\"` (T-4329).",
+          "description": "What kind of place it is: `hospital` or `socialService`. The two registers share the Smart Data Model PointOfInterest, and an application asks for one with `q=category==\"hospital\"`.",
           "items": {
             "$ref": "#/definitions/PlaceCategory"
           },
@@ -540,7 +540,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "name": {
-          "description": "The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is (T-4523).",
+          "description": "The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is.",
           "type": [
             "string",
             "null"
@@ -678,7 +678,7 @@
     },
     "PublicOrganization": {
       "additionalProperties": false,
-      "description": "One organisation the region founded: a secondary school, a social-care home, a theatre, a museum or an office. The FIWARE Smart Data Model CPSV-AP PublicOrganization (T-4329).",
+      "description": "One organisation the region founded: a secondary school, a social-care home, a theatre, a museum or an office. The FIWARE Smart Data Model CPSV-AP PublicOrganization.",
       "properties": {
         "address": {
           "anyOf": [
@@ -689,7 +689,7 @@
               "type": "null"
             }
           ],
-          "description": "The postal address as the register publishes it, field by field (Smart Data Models' common PostalAddress, T-4329); a field the register leaves out is absent, never guessed.",
+          "description": "The postal address as the register publishes it, field by field (Smart Data Models' common PostalAddress); a field the register leaves out is absent, never guessed.",
           "x-ngsi-ld-kind": "Property"
         },
         "alternateName": {
@@ -751,7 +751,7 @@
           "x-ngsi-ld-kind": "GeoProperty"
         },
         "name": {
-          "description": "The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is (T-4523).",
+          "description": "The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is.",
           "type": [
             "string",
             "null"

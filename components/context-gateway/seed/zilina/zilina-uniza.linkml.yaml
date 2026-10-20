@@ -93,7 +93,7 @@ classes:
     class_uri: jc:Article
     description: >-
       One openly licensed work of the University of Žilina's digital library, as the Smart Data
-      Model extension Article (CPSV-AP Evidence base, T-4338).
+      Model extension Article (CPSV-AP Evidence base).
     is_a: Entity
     annotations:
       upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Article

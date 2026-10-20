@@ -40,7 +40,7 @@ The unit is on the Property and not on the slot, because one cube serves several
 different units. `unitCode` carries the UN/CEFACT common code and `unitText` carries the
 publisher's own words, which is where a scale factor like "v tis. m3" survives.
 
-The class IRI is the Smart Data Model's `KeyPerformanceIndicator` (T-4329), and the model deliberately declares no Data
+The class IRI is the Smart Data Model's `KeyPerformanceIndicator`, and the model deliberately declares no Data
 Structure Definition: DM-60 puts the observations of a declared DSD in the project's indicator
 space, which would leave the raw space holding nothing. DM-60 is the upgrade the day an
 indicator has to be sliced by a dimension.

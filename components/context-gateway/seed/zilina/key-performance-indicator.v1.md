@@ -4,7 +4,7 @@ The model the indicator spaces of `bbsk` and `banskabystrica` publish, generated
 `key-performance-indicator.linkml.yaml`. One class, `KeyPerformanceIndicator`, specialising the
 shared `Entity` of `ngsi-ld-core`. It states the contract the platform already enforces:
 `schemas/kinds/KeyPerformanceIndicator.json` closes the object and requires every attribute
-below (Development/10 §4).
+below.
 
 | Attribute | NGSI-LD kind | Range | Unit | IRI |
 |---|---|---|---|---|
@@ -30,8 +30,8 @@ that view computes from the value and its own threshold. An entity carrying eith
 
 The territory is the last segment of `{localId}`, and therefore of `name`. There is no attribute
 for it: the region has roughly eight times the city's population, so the same question gives two
-very different answers and the territory is what separates them (Development/11 §1).
+very different answers and the territory is what separates them.
 
 A window with no reading in it carries `not measured` in `currentValue.value` and keeps its
 `calculationPeriod`. It is never a zero — a zero reads as a measurement, and an empty 24-hour
-mean shown as one reads as clean air (Development/10 §5).
+mean shown as one reads as clean air.

@@ -5,7 +5,7 @@
   "definitions": {
     "AdministrativeArea": {
       "additionalProperties": false,
-      "description": "One of the 57 city districts (m\u011bstsk\u00e9 \u010d\u00e1sti) of Prague, its outline and its code, as the Smart Data Model extension AdministrativeArea (PointOfInterest base, T-4338).",
+      "description": "One of the 57 city districts (m\u011bstsk\u00e9 \u010d\u00e1sti) of Prague, its outline and its code, as the Smart Data Model extension AdministrativeArea (PointOfInterest base).",
       "properties": {
         "dataProvider": {
           "description": "Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data.",
@@ -395,7 +395,7 @@
     },
     "BudgetLine": {
       "additionalProperties": false,
-      "description": "One line of the city budget of the City of Prague (Magistr\u00e1t hl. m. Prahy), in the national budget classification, with the approved and the adjusted amount, as the Smart Data Model extension BudgetLine (CPSV-AP Cost base, T-4338).",
+      "description": "One line of the city budget of the City of Prague (Magistr\u00e1t hl. m. Prahy), in the national budget classification, with the approved and the adjusted amount, as the Smart Data Model extension BudgetLine (CPSV-AP Cost base).",
       "properties": {
         "adjustedAmount": {
           "description": "The amount after the year's budget changes so far, in the same unit as the approved one.",
@@ -716,7 +716,7 @@
               "type": "null"
             }
           ],
-          "description": "The Smart Data Models PostalAddress (T-4329): the street address as the publisher writes it, one line, in `streetAddress`, and the city and country every Prague source shares.",
+          "description": "The Smart Data Models PostalAddress: the street address as the publisher writes it, one line, in `streetAddress`, and the city and country every Prague source shares.",
           "x-ngsi-ld-kind": "Property"
         },
         "capacity": {
