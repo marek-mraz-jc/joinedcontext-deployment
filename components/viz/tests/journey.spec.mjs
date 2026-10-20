@@ -143,14 +143,16 @@ export async function serve(context, { trustless = false } = {}) {
     if (url.hostname === `assistant.${DOMAIN}` || url.hostname === "evil.example") {
       // The assistant's widget as it frames a chart (T-4657), and a stranger doing the same.
       const shown = SHOWN[url.pathname.slice(1)];
+      // ?widget: the frame as widget.css and widget.js size it (360px, clamped to 120..900).
+      const widget = url.searchParams.has("widget");
       return route.fulfill({
         status: 200, contentType: "text/html; charset=utf-8",
-        body: `<!doctype html><title>widget</title><iframe id="viz" style="width:100%;height:200px;border:0"
+        body: `<!doctype html><title>widget</title><iframe id="viz" style="width:100%;height:${widget ? 360 : 200}px;border:0"
           sandbox="allow-scripts allow-same-origin allow-downloads allow-popups allow-popups-to-escape-sandbox" src="https://${VIZ}/#show"></iframe>
           <script>
           const f = document.getElementById("viz");
           f.addEventListener("load", () => f.contentWindow.postMessage(${JSON.stringify(shown)}, "https://${VIZ}"));
-          addEventListener("message", (e) => { if (e.origin === "https://${VIZ}" && e.data.type === "jc-viz-height") f.style.height = e.data.height + "px"; });
+          addEventListener("message", (e) => { if (e.origin === "https://${VIZ}" && e.data.type === "jc-viz-height") f.style.height = ${widget ? "Math.min(Math.max(Math.round(e.data.height), 120), 900)" : "e.data.height"} + "px"; });
           </script>`
       });
     }
@@ -281,6 +283,29 @@ test("show: a map spec draws on our basemap, and a click opens the popup as text
   expect(errors).toEqual([]);
   await expect.poll(async () => page.locator("#viz").evaluate((f) => f.style.height)).not.toBe("200px");
 });
+
+// T-4811: in the widget's 360px frame the map and its hint fit, so no frame scrolls inside the chat.
+for (const [name, width] of [["desktop", 1280], ["phone", 400]]) {
+  test(`show: the map fits the widget's frame with no inner scrollbar (${name})`, async ({ page, context }, info) => {
+    await page.setViewportSize({ width, height: 800 });
+    await serve(context);
+    await page.goto(`https://assistant.${DOMAIN}/map?widget`);
+    await expect.poll(() => page.frames().some((f) => f.url().endsWith("/map.html")), { timeout: 20000 }).toBe(true);
+    const map = page.frames().find((f) => f.url().endsWith("/map.html"));
+    await expect.poll(() => map.evaluate(() => self.jcMapReady === true), { timeout: 20000 }).toBe(true);
+    const hint = page.frameLocator("#viz").frameLocator("#map").locator("#hint");
+    await expect(hint).toHaveText("Kliknite na bod alebo stlačte Enter.");
+    await expect(hint).toBeInViewport({ ratio: 1 });
+    const host = page.frames().find((f) => f.url().endsWith("/#show"));
+    const overflow = (f) => f.evaluate(() => document.scrollingElement.scrollHeight - document.scrollingElement.clientHeight);
+    // Heights settle by message: wait a little, then neither frame may hold more than it shows.
+    await page.waitForTimeout(500);
+    expect(await overflow(map)).toBeLessThanOrEqual(0);
+    expect(await overflow(host)).toBeLessThanOrEqual(0);
+    expect(await page.locator("#viz").evaluate((f) => f.getBoundingClientRect().height)).toBe(360);
+    await page.locator("#viz").screenshot({ path: info.outputPath(`map-${name}.png`) });
+  });
+}
 
 test("show: a Vega spec with its rows draws in the sandboxed renderer", async ({ page, context }) => {
   const requests = await serve(context);
