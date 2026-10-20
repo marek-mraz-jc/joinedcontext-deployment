@@ -31,6 +31,7 @@ from __future__ import annotations
 import argparse
 import getpass
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -228,12 +229,25 @@ class Upgrade:
         return ["helmfile", "-f", str(tree / "deployment/helmfile.yaml"), "-e", self.env, verb,
                 "--concurrency", str(self.concurrency)]
 
+    def instance(self, tree: Path) -> str:
+        """The environment's `global.instanceSlug`, else the defaults' one, as helmfile merges
+        them: the namespace prefix wait-rollouts and smoke read. Environment `testing` installs
+        instance `dev`, `production` instance `jc` (ci-full 39342677129)."""
+        for f in (tree / "deployment/environments" / self.env / "global.yaml.gotmpl",
+                  tree / "defaults/environment/global.yaml"):
+            found = re.search(r"^  instanceSlug:\s*['\"]?([a-z0-9-]+)", f.read_text(), re.M) if f.is_file() else None
+            if found:
+                return found[1]
+        return self.env
+
     # 5. and 6.
 
     def apply(self, tree: Path, release: Release, domain: str) -> bool:
         before = json.loads(run(["helm", "list", "-A", "-o", "json"]))
+        slug = self.instance(tree)
+        os.environ.setdefault("JC_INSTANCE", slug)  # smoke.sh's cluster-side checks
         ok = stream(self.helmfile(tree, "sync"), cwd=tree) and stream(
-            [str(tree / "scripts/wait-rollouts.sh"), self.env], cwd=tree)
+            [str(tree / "scripts/wait-rollouts.sh"), slug], cwd=tree)
         for step in release.steps if ok else []:
             print(f"step {step['name']}", flush=True)
             ok = stream(["bash", step["run"]], cwd=tree)
