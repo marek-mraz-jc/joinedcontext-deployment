@@ -11,4 +11,4 @@ model-tools:
     # (T-3703, 7f3a8c9); platform 2883bd0: JsonProperty (T-3891) and lifecycle fields (T-3899). Digest from image run's model-tools job for that commit.
     # platform cbd6f94: the same tools on Debian 13 (trixie), T-4126.
     # Digest read from the registry for the tag named after the commit; the `main` tag moves.
-    digest: 'sha256:62c6fefe9120052648357bdfcab08b70886cbabaec168dec9fdb04ac3f848039'
+    digest: 'sha256:6d4aca6eb432c70a81656915a542c9b92f0f14d9e75301dbde2422a14931d68c'
