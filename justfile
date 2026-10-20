@@ -490,6 +490,9 @@ _smoke domain namespace:
 	# 50 requests a minute, 10 minutes at most; its table lands in .smoke/.
 	echo "catalogue"
 	python3 scripts/smoke-catalogue.py "{{ domain }}" "{{ namespace }}" || rc=1
+	# Rows of every public Endpoint x type link the dataset of their space and type (T-4802).
+	echo "source links"
+	python3 scripts/smoke-source-links.py "{{ domain }}" "{{ namespace }}" || rc=1
 	# A CronJob whose newest run failed (T-4385): a harvest dead since the night is no green smoke.
 	echo "cron jobs"
 	kubectl -n "{{ namespace }}" get jobs -o json | python3 scripts/failed-jobs.py || rc=1
