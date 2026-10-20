@@ -140,8 +140,16 @@ def test_only_the_endpoint_surface_passes_a_websocket_upgrade(apisix_config):
     (platform T-3885); every other route keeps APISIX's default and drops the upgrade."""
     _, parsed = apisix_config
     upgraded = sorted(r["id"] for r in parsed.get("routes", []) if r.get("enable_websocket"))
-    # T-4630: and the same surface on the data host api.{domain}.
-    assert upgraded == ["api-context-endpoint", "context-endpoint", "context-endpoint-portal"]
+    # T-4630: and the same surface on the data host api.{domain}. T-4873: each has a `-ws` sibling
+    # that takes `{endpoint}/ws` alone, so the open-socket limit applies to the socket only.
+    assert upgraded == [
+        "api-context-endpoint",
+        "api-context-endpoint-ws",
+        "context-endpoint",
+        "context-endpoint-portal",
+        "context-endpoint-portal-ws",
+        "context-endpoint-ws",
+    ]
 
 
 @requires_helmfile
