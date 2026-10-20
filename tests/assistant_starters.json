@@ -1,6 +1,35 @@
 {
  "starters": [
   {
+   "id": "bbsk-sk-hours",
+   "assistant": "bbsk-demo",
+   "lang": "sk",
+   "q": "Aké sú úradné hodiny Úradu BBSK a kde sídli?",
+   "must": [
+    [
+     "8:00"
+    ],
+    [
+     "15:00"
+    ],
+    [
+     "7:30"
+    ],
+    [
+     "15:30"
+    ],
+    [
+     "Námestie SNP 23"
+    ]
+   ],
+   "links": [
+    "https://opendata.{domain}/dataset/bbsk-uradne-hodiny-c912ed",
+    "https://opendata.{domain}/dataset/bbsk-kontaktne-miesta-2128a0"
+   ],
+   "reference": "Podateľňa a sociálne služby pondelok až piatok 8:00 až 15:00, zdravotníctvo pondelok až štvrtok 7:30 až 15:30 (14 riadkov OfficeHours); sídlo Úradu BBSK Námestie SNP 23, 974 01 Banská Bystrica (PointOfInterest kontaktne-miesta-10).",
+   "source": "prod Endpoint 6b4yqhzqieutqcoeew5rnxrx5udqeert (bbsk-otvorene-data), types OfficeHours (count 14) and PointOfInterest of dataset bbsk-kontaktne-miesta-2128a0, read 2026-10-19T20:55Z"
+  },
+  {
    "id": "bbsk-sk-timetables",
    "assistant": "bbsk-demo",
    "lang": "sk",
@@ -38,6 +67,35 @@
    ],
    "reference": "Register mostov kraja (bbsk-mosty) má 1 651 mostov; 32 z nich je postavených pred rokom 1900. Banskobystrická regionálna správa ciest z nich spravuje 1 037 (20 pred rokom 1900).",
    "source": "prod Endpoint omto6qk5sfn5ft7zl5pdiaxunj2ljnae, type Bridge: 1 651 rows, of them yearBuilt < 1900: 32 (the oldest 1800); read 2026-10-20T00:25Z"
+  },
+  {
+   "id": "bbsk-en-hours",
+   "assistant": "bbsk-demo",
+   "lang": "en",
+   "q": "What are the office hours of the BBSK Office and where is it?",
+   "must": [
+    [
+     "8:00"
+    ],
+    [
+     "15:00"
+    ],
+    [
+     "7:30"
+    ],
+    [
+     "15:30"
+    ],
+    [
+     "Námestie SNP 23"
+    ]
+   ],
+   "links": [
+    "https://opendata.{domain}/dataset/bbsk-uradne-hodiny-c912ed",
+    "https://opendata.{domain}/dataset/bbsk-kontaktne-miesta-2128a0"
+   ],
+   "reference": "Podateľňa a sociálne služby pondelok až piatok 8:00 až 15:00, zdravotníctvo pondelok až štvrtok 7:30 až 15:30 (14 riadkov OfficeHours); sídlo Úradu BBSK Námestie SNP 23, 974 01 Banská Bystrica (PointOfInterest kontaktne-miesta-10).",
+   "source": "prod Endpoint 6b4yqhzqieutqcoeew5rnxrx5udqeert (bbsk-otvorene-data), types OfficeHours (count 14) and PointOfInterest of dataset bbsk-kontaktne-miesta-2128a0, read 2026-10-19T20:55Z"
   },
   {
    "id": "bbsk-en-timetables",
