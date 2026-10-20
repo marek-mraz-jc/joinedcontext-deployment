@@ -113,5 +113,11 @@ context-broker:
     # Antares dev 0109b05 (dev-16, T-4804 over 6230e20): entity pages without limit and temporal
     # reads without lastN answer 100; the ceilings stay 1,000; /q/health publishes the limits.
     # No migration.
-    tag: 'dev-16'
-    digest: 'sha256:dea5b73f78765cfb6c8690abb65f597fd1b73d26c9592546fa1f79e78768007c'
+    # Antares dev 53ab566 (dev-17, train 1838 T-4837 with T-4823's e110589 over 0109b05): every
+    # write path takes the entity members (expiresAt among them) out of the Attribute names a view
+    # judges, so a pipeline's expiresAt is no longer refused through an endpoint view; Attribute
+    # expiresAt through views and the sweep's prune. Migration 0014 adds entities.attrs_expire_at,
+    # a plain CREATE INDEX (writes wait) and a per-Tenant backfill: roll it with the broker scaled
+    # to 0, as 0013. Rollback: dev-16 (0014 only adds a column and an index).
+    tag: 'dev-17'
+    digest: 'sha256:e452f3205718ed0003075f3f72f0c019161d6e30f5e4eacd327a4032dbb15fff'
