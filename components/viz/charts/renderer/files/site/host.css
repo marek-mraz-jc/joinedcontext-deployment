@@ -10,4 +10,5 @@ a { color: #1d4ed8; }
 /* In the catalogue the dataset page shows the title, the description and the link itself; they
    stay in the document as its text alternative. */
 .inline main { padding: 0; }
-.inline .caption { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* T-4811: pinned to the top with no margin, so the hidden caption below the frame adds no scroll height. */
+.inline .caption { position: absolute; top: 0; left: 0; margin: 0; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
