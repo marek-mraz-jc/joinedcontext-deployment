@@ -28,3 +28,11 @@ Each one gets the release `context-broker-{name}`, its own CloudNativePG cluster
 `networkpolicies.yaml.gotmpl`: the gateway, the Portal and Prometheus reach the broker, and only
 its own broker reaches its database (`policies/brokers.rego`). The gateway and the Portal find it
 through `JC_GATEWAY_BROKER_URL_TEMPLATE` and `JC_PORTAL_BROKER_URL_TEMPLATE`.
+
+With the Linkerd mesh on, every broker also gets a Linkerd `Server` on 9090 with
+`accessPolicy: deny` and an `AuthorizationPolicy` that admits the `context-gateway` and `portal`
+ServiceAccounts alone (T-4875). The broker believes the `x-jc-*` subject headers a caller sends,
+and a meshed pod's connection lands on the proxy port the NetworkPolicy opens, so the proxy is what
+refuses a forged subject from any other pod. `policies/brokers.rego` refuses a broker
+`MeshTLSAuthentication` that names anyone else; Prometheus cannot scrape a meshed broker until its
+metrics move to a port of their own.

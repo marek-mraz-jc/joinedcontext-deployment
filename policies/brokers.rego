@@ -47,3 +47,38 @@ deny contains msg if {
 	owner != name
 	msg := sprintf("NetworkPolicy/%s: the broker %s reaches the database of %s", [input.metadata.name, name, owner])
 }
+
+# A broker port answers the gateway and the Portal alone inside the mesh (T-4875): the broker
+# believes the x-jc-* subject a caller sends, so any other identity on its Server could speak for
+# anyone. A broker's MeshTLSAuthentication names those two ServiceAccounts and its own (a call to
+# itself through its Service, which carries no subject), nothing else.
+broker_callers := {"context-gateway", "portal"}
+
+broker_self(ref) if {
+	ref.name == trim_suffix(input.metadata.name, "-api-clients")
+	object.get(ref, "namespace", input.metadata.namespace) == input.metadata.namespace
+}
+
+deny contains msg if {
+	input.kind == "MeshTLSAuthentication"
+	startswith(input.metadata.name, "context-broker")
+	some ref in input.spec.identityRefs
+	not ref.kind == "ServiceAccount"
+	msg := sprintf("MeshTLSAuthentication/%s: a broker admits ServiceAccounts alone, not %s", [input.metadata.name, ref.kind])
+}
+
+deny contains msg if {
+	input.kind == "MeshTLSAuthentication"
+	startswith(input.metadata.name, "context-broker")
+	some ref in input.spec.identityRefs
+	not broker_callers[ref.name]
+	not broker_self(ref)
+	msg := sprintf("MeshTLSAuthentication/%s: the broker admits %s/%s, outside the gateway and the Portal", [input.metadata.name, object.get(ref, "namespace", ""), ref.name])
+}
+
+deny contains msg if {
+	input.kind == "MeshTLSAuthentication"
+	startswith(input.metadata.name, "context-broker")
+	count(object.get(input.spec, "identities", [])) > 0
+	msg := sprintf("MeshTLSAuthentication/%s: a broker names its callers by ServiceAccount, not by identity pattern", [input.metadata.name])
+}

@@ -34,6 +34,12 @@ metadata:
     {{- include "workload.labels" . | nindent 4 }}
 spec:
   identityRefs:
+    {{- if $auth.includeSelf }}
+    # The workload's own identity, for a call it makes to itself through its Service.
+    - kind: ServiceAccount
+      name: {{ include "workload.serviceAccountName" . }}
+      namespace: {{ .Release.Namespace }}
+    {{- end }}
     {{- range $auth.clients }}
     - kind: ServiceAccount
       name: {{ required "meshAuthorization.clients[].serviceAccount" .serviceAccount }}
