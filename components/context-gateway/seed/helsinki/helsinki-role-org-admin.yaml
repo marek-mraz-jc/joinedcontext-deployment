@@ -47,6 +47,11 @@ spec:
         # writes groups too; without it Organization → Groups refused its own administrator
         # (PF-62, T-2625).
         - Group
+        # Administration lists both as its own sections: without them its administrator met a
+        # missing page on Environments and a refused "New agent profile" (T-4831). Environment
+        # stays a red-lane kind, which this role is the one to approve (CC-73, CC-70).
+        - AgentProfile
+        - Environment
         - Subscription
         - Entity
         - Dashboard
