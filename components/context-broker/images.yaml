@@ -105,5 +105,7 @@ context-broker:
     # migration.
     # Antares dev 2fb7fae (dev-13, T-4794 over a53c40c): temporal.rs only, with history, erasure
     # and temporal-window tests. No migration.
-    tag: 'dev-13'
-    digest: 'sha256:d56d854fb4cfdad7b098ff50f9c61827fb6faf6e664a755c9cd1cb3b967faa7e'
+    # Antares dev ec5be07 (dev-14, T-4803 over 2fb7fae): linkml-model keeps permissible-value
+    # annotations, so the schema PUT of T-4803's model-tools carries sk enum labels. No migration.
+    tag: 'dev-14'
+    digest: 'sha256:09c51b06ab44068bd71098d51001a23491c23ed4ebd9658c61c02009f1e40d46'
