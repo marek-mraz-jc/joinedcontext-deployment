@@ -1315,7 +1315,7 @@ else
 		cb_health=$(curl -s --max-time 2 "http://127.0.0.1:$cb_port/q/health" 2>/dev/null) && [ -n "$cb_health" ] && break
 		sleep 1
 	done
-	for surface in views mcp access ws ogc; do
+	for surface in views mcp access ws ogc ical; do
 		if printf '%s' "$cb_health" | python3 -c 'import json,sys; sys.exit(0 if sys.argv[1] in (json.load(sys.stdin).get("surfaces") or {}) else 1)' "$surface" 2>/dev/null; then
 			ok "the broker mounts the $surface surface"
 		else
@@ -1324,6 +1324,27 @@ else
 	done
 	kill "$cb_forward" 2>/dev/null
 fi
+
+echo "events calendar"
+# T-4895: the region's and the country's events as a calendar a person subscribes to, read
+# anonymously, and no write for anyone but the pipelines. The slugs are the seed's own files.
+events_seed="$(dirname "$0")/../components/context-gateway/seed/bbsk"
+for ev in podujatia podujatia-slovensko; do
+	ev_slug=$(sed -n 's/^ *slug: *//p' "$events_seed/bbsk-endpoint-$ev.yaml" 2>/dev/null | head -1)
+	if [ -z "$ev_slug" ]; then
+		skip "events calendar bbsk-$ev (no seed manifest beside this script)"
+		continue
+	fi
+	ics=$(curl -sS --max-time 30 "$api/api/endpoint/$ev_slug/ical/v1/events.ics" 2>/dev/null || true)
+	if [ "${ics:0:17}" = $'BEGIN:VCALENDAR\r\n' ] && [[ $ics == *$'END:VCALENDAR\r' ]]; then
+		ok "bbsk-$ev serves its events as an iCalendar feed"
+	else
+		ko "bbsk-$ev serves no iCalendar feed at /ical/v1/events.ics: ${ics:0:120}"
+	fi
+	status 403 "bbsk-$ev refuses an anonymous write" -X POST -H 'Content-Type: application/json' \
+		-d '{"id":"urn:ngsi-ld:Event:smoke-anonymous-write","type":"Event","name":{"type":"Property","value":"x"}}' \
+		"$api/api/endpoint/$ev_slug/ngsi-ld/v1/entities"
+done
 
 echo "functions"
 # jc-functions (SDK-22, SDK-23) takes the Portal alone, so the smoke reaches its Service over a

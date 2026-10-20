@@ -418,3 +418,17 @@ bbsk-assistant-data-eval-argon.yaml: projects/bbsk/assistant/deployments/data-ev
 # The website eval's copy and its planted page (T-4688); removed after the runs.
 bbsk-assistant-web-eval-gemini.yaml: projects/bbsk/assistant/deployments/web-eval-gemini.yaml
 bbsk-knowledge-eval-uploads.yaml: projects/bbsk/assistant/sources/eval-uploads.yaml
+# Public events of Slovakia in one space, the region a scope view of it (T-4895): two catalogue
+# datasets, each with its NGSI-LD, OGC Features and iCalendar doors.
+bbsk-space-podujatia.yaml: projects/bbsk/spaces/bbsk-podujatia/space.yaml
+bbsk-datamodel-podujatia.yaml: projects/bbsk/spaces/bbsk-podujatia/datamodels/bbsk-podujatia.yaml
+bbsk-podujatia.linkml.yaml: projects/bbsk/spaces/bbsk-podujatia/datamodels/bbsk-podujatia.linkml.yaml
+bbsk-podujatia.v1.schema.json: projects/bbsk/spaces/bbsk-podujatia/datamodels/bbsk-podujatia.v1.schema.json
+bbsk-podujatia.v1.context.jsonld: projects/bbsk/spaces/bbsk-podujatia/datamodels/bbsk-podujatia.v1.context.jsonld
+bbsk-podujatia.v1.example.jsonld: projects/bbsk/spaces/bbsk-podujatia/datamodels/bbsk-podujatia.v1.example.jsonld
+bbsk-podujatia.v1.md: projects/bbsk/spaces/bbsk-podujatia/datamodels/bbsk-podujatia.v1.md
+bbsk-endpoint-podujatia.yaml: projects/bbsk/spaces/bbsk-podujatia/endpoints/bbsk-podujatia.yaml
+bbsk-endpoint-podujatia-slovensko.yaml: projects/bbsk/spaces/bbsk-podujatia/endpoints/bbsk-podujatia-slovensko.yaml
+bbsk-policy-podujatia-pipelines-write.yaml: projects/bbsk/spaces/bbsk-podujatia/policies/podujatia-pipelines-write.yaml
+bbsk-policy-podujatia-read.yaml: projects/bbsk/spaces/bbsk-podujatia/policies/podujatia-read.yaml
+bbsk-policy-podujatia-kraj-read.yaml: projects/bbsk/spaces/bbsk-podujatia/policies/podujatia-kraj-read.yaml

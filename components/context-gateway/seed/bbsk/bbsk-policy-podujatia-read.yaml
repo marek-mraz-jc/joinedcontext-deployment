@@ -1,0 +1,16 @@
+apiVersion: joinedcontext.com/v1alpha1
+kind: Policy
+metadata:
+  name: podujatia-read
+  namespace: bbsk
+  title: { sk: "Verejné čítanie: podujatia na Slovensku" }
+spec:
+  contextSpaceRef: { kind: ContextSpace, name: bbsk-podujatia }
+  assigner: did:web:bbsk.sk
+  assignee: { kind: role, id: public }
+  # The reads, the discovery (EP-116) and the subscriptions of the Endpoint bbsk-podujatia-slovensko,
+  # Event alone; no entity write for anyone but the pipelines (T-4895).
+  operations: [retrieveOps, retrieveEntityTypes, retrieveEntityTypeDetails, retrieveEntityTypeInfo, retrieveAttrTypes, retrieveAttrTypeDetails, retrieveAttrTypeInfo, createSubscription, retrieveSubscription, updateSubscription, deleteSubscription]
+  information:
+    - entities:
+        - type: Event
