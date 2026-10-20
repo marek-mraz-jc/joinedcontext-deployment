@@ -233,3 +233,53 @@ def test_a_workload_with_a_token_or_the_node_is_refused_to_the_portal(workload_p
 def test_someone_elses_workload_is_not_the_policys_business(workload_policy, tmp_path):
     resource = workload(automountServiceAccountToken=True)
     assert judged(workload_policy, resource, tmp_path, username="system:serviceaccount:dev:someone") == "skip"
+
+
+@pytest.fixture(scope="module")
+def secrets_policy(tmp_path_factory):
+    return rendered(tmp_path_factory, "secrets-policy.yaml")
+
+
+def secret(name: str, ns: str = "dev", kind: str = "Opaque") -> dict:
+    return {"apiVersion": "v1", "kind": "Secret", "type": kind, "metadata": {"name": name, "namespace": ns}}
+
+
+# What the Portal hands over outside an apps namespace (joinedcontext-portal pipeline_secrets.rs,
+# artifact_store.rs, apps/build_pods.rs).
+@pytest.mark.parametrize("name", ["pipeline-secrets", "artifact-store-reader-hel", "build-bikes-42", "apps-host-1-store"])
+@pytest.mark.parametrize("operation", ["CREATE", "UPDATE"])
+def test_the_portal_may_write_the_secrets_it_hands_over(secrets_policy, tmp_path, name, operation):
+    assert judged(secrets_policy, secret(name), tmp_path, operation=operation) == "pass"
+
+
+@pytest.mark.parametrize(
+    "resource",
+    [
+        secret("postgres-cluster-app"),
+        secret("postgres-cluster-superuser"),
+        secret("keycloak-admin"),
+        secret("gitea-admin"),
+        secret("gitea-runner-registration"),
+        secret("artifact-store-root"),
+        secret("artifact-store-reader-hel", kind="kubernetes.io/service-account-token"),
+        secret("build-x-1", kind="kubernetes.io/dockerconfigjson"),
+    ],
+    ids=["database-app", "database-superuser", "keycloak-admin", "forge-admin", "runner-registration",
+         "artifact-store-root", "service-account-token-type", "dockerconfig-type"],
+)
+@pytest.mark.parametrize("operation", ["CREATE", "UPDATE"])
+def test_a_platform_secret_or_a_token_type_is_refused_to_the_portal(secrets_policy, tmp_path, resource, operation):
+    """T-4798: the release namespace holds the platform's credentials. The Portal's Role there
+    grants `patch` without names (RBAC has no prefix), so this policy is what keeps a server-side
+    apply from overwriting one, and a token-typed Secret from handing it another account's token."""
+    assert judged(secrets_policy, resource, tmp_path, operation=operation) == "fail"
+
+
+def test_in_a_projects_apps_namespace_secrets_are_not_the_policys_business(secrets_policy, tmp_path):
+    resource = secret("app-air-endpoint", ns="dev-helsinki-apps")
+    assert judged(secrets_policy, resource, tmp_path) == "skip"
+
+
+def test_someone_elses_secret_is_not_the_policys_business(secrets_policy, tmp_path):
+    resource = secret("keycloak-admin")
+    assert judged(secrets_policy, resource, tmp_path, username="system:serviceaccount:dev:someone") == "skip"

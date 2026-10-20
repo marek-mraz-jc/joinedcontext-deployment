@@ -29,12 +29,21 @@ rbac:
     - apiGroups: [""]
       resources: ["services"]
       verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-    # Secrets by name only (T-2479): the reconciler reads back the ones it wrote, applies (patch,
-    # create for a new one) and deletes them, and never lists or watches. Without `list` a
-    # compromised Portal cannot enumerate the namespace's Secrets; it must already know a name.
+    # Secrets (T-2479, T-4798). This namespace holds the platform's credentials (database,
+    # Keycloak, forge), whose names are in the charts, so the Portal reads one Secret here by
+    # name: the pull Secret it copies into each apps namespace. It applies (patch, create for a
+    # new one) the Secrets it hands over, `pipeline-secrets` and `artifact-store-reader-{org}`,
+    # and deletes none. RBAC cannot name a prefix: the admission policy
+    # `{release}-portal-secrets` (charts/namespaces) bounds what it may write to those names.
+    {{- if has "gitea" .Values.components }}
     - apiGroups: [""]
       resources: ["secrets"]
-      verbs: ["get", "create", "patch", "delete"]
+      resourceNames: ["app-registry"]
+      verbs: ["get"]
+    {{- end }}
+    - apiGroups: [""]
+      resources: ["secrets"]
+      verbs: ["create", "patch"]
     - apiGroups: ["networking.k8s.io"]
       resources: ["networkpolicies"]
       verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
