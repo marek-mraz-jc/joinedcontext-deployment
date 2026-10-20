@@ -85,6 +85,16 @@ kubectl get clusters.postgresql.cnpg.io -A -o jsonpath='{range .items[*]}{.metad
 		kubectl -n "$ns" wait "clusters.postgresql.cnpg.io/${name}" --for=condition=ContinuousArchiving --timeout=300s
 	done
 
+# The upgrade's smoke runs scripts/smoke.sh from here, which checks every host over a verified
+# chain (ci-full 39347776680: 39 checks answered 000). Each host the edge serves resolves to the
+# k3d edge, and the harness's self-signed CA (cert-manager/ca-secret) is trusted beside the
+# system roots, for curl, Python and helm alike; verification stays on.
+./scripts/k3d-edge-hosts.sh "$DOMAIN" | sed 's/^/127.0.0.1 /' | sudo tee -a /etc/hosts >/dev/null
+kubectl -n cert-manager get secret ca-secret -o 'jsonpath={.data.tls\.crt}' | base64 -d >"$WORK/edge-ca.pem"
+[ -s "$WORK/edge-ca.pem" ] || { echo "no CA certificate in cert-manager/ca-secret" >&2; exit 1; }
+cat /etc/ssl/certs/ca-certificates.crt "$WORK/edge-ca.pem" >"$WORK/ca-bundle.pem"
+export CURL_CA_BUNDLE="$WORK/ca-bundle.pem" SSL_CERT_FILE="$WORK/ca-bundle.pem"
+
 record() { kubectl get configmap -A --field-selector metadata.name=jc-release -o jsonpath='{.items[0].data.version}'; }
 
 # 4. green
