@@ -88,6 +88,7 @@ def repo(tmp_path):
     shutil.copy(ROOT / "scripts/upgrade.py", repo / "scripts/upgrade.py")
     (repo / "scripts/wait-rollouts.sh").write_text('#!/bin/sh\necho "wait-rollouts $1"\nexit 0\n')
     (repo / "scripts/smoke.sh").write_text('#!/bin/sh\necho "smoke $1"\nexit "${FAKE_SMOKE_RC:-0}"\n')
+    (repo / "scripts/edge-smoke.sh").write_text('#!/bin/sh\necho "edge-smoke $1 $2"\nexit 0\n')
     (repo / "releases/steps").mkdir(parents=True)
     (repo / "releases/v1.1.0.md").write_text(NOTES)
     (repo / "releases/steps/v1.1.0-reindex.sh").write_text('touch "$FAKE_DIR/step-ran"\n')
@@ -209,7 +210,27 @@ def test_a_failed_sync_rolls_back_without_running_the_steps(repo):
     assert "RED: rolling back" in result.stdout
 
 
+def test_the_named_smoke_of_the_release_gates_the_run(repo):
+    # ci-full 39362707152 (T-4795): the k3d upgrade job gates on scripts/edge-smoke.sh; smoke.sh
+    # stays the default for a live installation.
+    result, calls = upgrade_run(repo, "prod", "v1.1.0", "--smoke", "scripts/edge-smoke.sh", smoke=1)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "edge-smoke https://city.example https://idm.city.example" in result.stdout
+    assert "smoke https://city.example\n" not in result.stdout
+    assert len(applied(calls, "ConfigMap")) == 1
+
+
+def test_a_smoke_the_release_does_not_carry_is_refused_before_the_sync(repo):
+    result, calls = upgrade_run(repo, "prod", "v1.1.0", "--smoke", "scripts/missing.sh")
+    assert result.returncode == 1
+    assert "v1.1.0 has no scripts/missing.sh" in result.stderr
+    assert not [c for c in calls if c[0] == "helmfile" and "sync" in c]
+
+
 @pytest.mark.parametrize("args, message", [
+    (["prod", "v1.1.0", "--smoke", "../outside.sh"], "is not a script scripts/<name>.sh"),
+    (["prod", "v1.1.0", "--smoke", "/bin/true"], "is not a script scripts/<name>.sh"),
+    (["prod", "v1.1.0", "--smoke", "scripts/../../x.sh"], "is not a script scripts/<name>.sh"),
     (["dev", "v1.1.0"], "dev is applied with `just dev-apply`"),
     (["prod", "1.1.0"], "is not a release tag"),
     (["prod", "v9.9.9"], "failed"),

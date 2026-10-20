@@ -2,7 +2,7 @@
 """Update an installation to a release in one command (T-3794).
 
     scripts/upgrade.py <environment> <version> [--check] [--i-have-a-backup] [--min-free-gib N]
-                       [--domain D] [--timeout-minutes N]
+                       [--domain D] [--timeout-minutes N] [--smoke scripts/<name>.sh]
 
 In order, stopping at the first refusal:
 
@@ -16,7 +16,8 @@ In order, stopping at the first refusal:
 4. the release is checked out into a temporary worktree with this checkout's `deployment/`
    copied in, so the operator's checkout never moves, and `helmfile diff` is shown;
 5. `helmfile sync`, the rollouts awaited, the release's steps run in order, then the smoke test
-   against the installation's own domain;
+   against the installation's own domain (`--smoke`, a script of the release's own tree,
+   `scripts/smoke.sh` unless named);
 6. green: the version is recorded in `jc-release`. Red: every helm release that changed is
    rolled back to its previous revision, and the database step is printed; nothing is deleted.
 
@@ -45,6 +46,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 VERSION = re.compile(r"^v\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$")
 RECORD = "jc-release"
+SMOKE = re.compile(r"^scripts/[a-z0-9][a-z0-9-]*\.sh$")
 GIB = 1024**3
 
 
@@ -137,6 +139,9 @@ class Upgrade:
         self.domain = args.domain
         self.timeout = args.timeout_minutes * 60
         self.concurrency = args.concurrency
+        if not SMOKE.match(args.smoke):
+            raise Refused(f"--smoke {args.smoke!r} is not a script scripts/<name>.sh of the release")
+        self.smoke = args.smoke
         self.backups: list[str] = []
 
     # 1. the release
@@ -246,6 +251,8 @@ class Upgrade:
         before = json.loads(run(["helm", "list", "-A", "-o", "json"]))
         slug = self.instance(tree)
         os.environ.setdefault("JC_INSTANCE", slug)  # smoke.sh's cluster-side checks
+        if not (tree / self.smoke).is_file():
+            raise Refused(f"{self.version} has no {self.smoke}; nothing was applied")
         ok = stream(self.helmfile(tree, "sync"), cwd=tree) and stream(
             [str(tree / "scripts/wait-rollouts.sh"), slug], cwd=tree)
         for step in release.steps if ok else []:
@@ -254,7 +261,7 @@ class Upgrade:
             if not ok:
                 print(f"step {step['name']} failed", flush=True)
                 break
-        ok = ok and stream([str(tree / "scripts/smoke.sh"), f"https://{domain}", f"https://idm.{domain}"], cwd=tree)
+        ok = ok and stream([str(tree / self.smoke), f"https://{domain}", f"https://idm.{domain}"], cwd=tree)
         if ok:
             try:
                 self.record()
@@ -325,6 +332,8 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--domain", default="", help="the installation's apex; read from apisix-edge when empty")
     p.add_argument("--timeout-minutes", type=int, default=30)
     p.add_argument("--concurrency", type=int, default=4)
+    p.add_argument("--smoke", default="scripts/smoke.sh",
+                   help="the release's smoke script, run with the apex and identity URLs")
     return p
 
 
