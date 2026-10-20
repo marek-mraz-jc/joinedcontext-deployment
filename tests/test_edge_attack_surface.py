@@ -158,6 +158,10 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "context-endpoint's bulk exports (T-4717): the same chain, 10 at once per client",
     },
+    "context-endpoint-ws": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "context-endpoint's WebSocket (T-4903): the same chain, its own 300 s read timeout",
+    },
     "context-mcp-hub": {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "the MCP hub (EP-87): the gateway verifies the bearer and decides each call as the named Endpoint's own",
@@ -185,6 +189,10 @@ ROUTE_CLASSES = {
     "context-endpoint-portal-bulk": {
         "reach": EDGE_SESSION, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "context-endpoint-portal's bulk exports (T-4717): the same chain, 10 at once per client",
+    },
+    "context-endpoint-portal-ws": {
+        "reach": EDGE_SESSION, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "context-endpoint-portal's WebSocket (T-4903): the same chain, its own 300 s read timeout",
     },
     "gitea-forge": {
         "reach": UPSTREAM, "cacheable": False, "framing": "SAMEORIGIN",
@@ -253,6 +261,10 @@ ROUTE_CLASSES = {
     "api-context-endpoint-bulk": {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "api-context-endpoint's bulk exports (T-4717): the same chain, 10 at once per client",
+    },
+    "api-context-endpoint-ws": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "api-context-endpoint's WebSocket (T-4903): the same chain, its own 300 s read timeout",
     },
     "api-mcp-hub": {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",

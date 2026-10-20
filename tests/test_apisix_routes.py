@@ -140,8 +140,16 @@ def test_only_the_endpoint_surface_passes_a_websocket_upgrade(apisix_config):
     (platform T-3885); every other route keeps APISIX's default and drops the upgrade."""
     _, parsed = apisix_config
     upgraded = sorted(r["id"] for r in parsed.get("routes", []) if r.get("enable_websocket"))
-    # T-4630: and the same surface on the data host api.{domain}.
-    assert upgraded == ["api-context-endpoint", "context-endpoint", "context-endpoint-portal"]
+    # T-4630: and the same surface on the data host api.{domain}; T-4903: on routes of their own,
+    # matched on the Upgrade header, so a plain read never gets the WebSocket's 300 s.
+    assert upgraded == ["api-context-endpoint-ws", "context-endpoint-portal-ws", "context-endpoint-ws"]
+    routes = {r["id"]: r for r in parsed.get("routes", [])}
+    for route_id in upgraded:
+        route, parent = routes[route_id], routes[route_id.removesuffix("-ws")]
+        assert route["vars"] == [["http_upgrade", "~*", "^websocket$"]], route_id
+        assert route["methods"] == ["GET"], route_id
+        assert route["uri"] == parent["uri"] and route["priority"] > parent["priority"], route_id
+        assert route.get("plugin_config_id") == parent.get("plugin_config_id"), route_id
 
 
 @requires_helmfile

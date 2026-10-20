@@ -25,6 +25,7 @@ ON_THE_DATA_HOST = {
     "api-context-space-read": ("/cs/*", "context-space-read"),
     "api-catalog-feed": ("/catalog*", "catalog-feed"),
     "api-context-endpoint": ("/api/endpoint/*", "context-endpoint"),
+    "api-context-endpoint-ws": ("/api/endpoint/*", "context-endpoint-ws"),
     "api-mcp-hub": ("/api/mcp*", "context-mcp-hub"),
     "api-mcp-named": ("/api/mcp/*", "context-mcp-named"),
 }
@@ -63,7 +64,7 @@ def test_the_data_host_serves_the_four_surfaces_on_the_apex_chains(apisix_config
         assert route.get("vars") == apex.get("vars") and route.get("methods") == apex.get("methods"), route_id
         assert route.get("plugins") == apex.get("plugins"), route_id
         assert all(node.startswith("context-gateway.") for node in upstreams[route_id]["nodes"]), route_id
-    assert routes["api-context-endpoint"].get("enable_websocket") is True
+    assert routes["api-context-endpoint-ws"].get("enable_websocket") is True
 
 
 @requires_helmfile

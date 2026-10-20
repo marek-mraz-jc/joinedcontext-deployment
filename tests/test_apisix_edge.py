@@ -261,11 +261,17 @@ def test_every_rate_limit_rejects_with_429(plugin_configs):
 
 
 def test_gateway_upstreams_carry_streaming_timeouts(upstreams):
-    """T-0030: five minutes to read, and a pool sized for long-lived connections."""
-    for upstream_id in GATEWAY_UPSTREAMS:
+    """T-0030: five minutes to read, and a pool sized for long-lived connections. T-4903: on the
+    Endpoint surface only the WebSocket and the bulk exports keep five minutes; the plain route,
+    whose reads the gateway ends at 10 s, reads for 60 s."""
+    reads = {"context-space": 300, "context-endpoint": 60, "context-endpoint-ws": 300,
+             "context-endpoint-bulk": 300, "api-context-endpoint": 60, "api-context-endpoint-ws": 300,
+             "context-endpoint-portal": 60, "context-endpoint-portal-ws": 300}
+    for upstream_id, read in reads.items():
         upstream = upstreams[upstream_id]
-        assert upstream["timeout"] == {"connect": 6, "send": 60, "read": 300}, upstream_id
-        assert upstream["keepalive_pool"]["size"] == 320, upstream_id
+        assert upstream["timeout"] == {"connect": 6, "send": 60, "read": read}, upstream_id
+        if upstream_id != "context-endpoint-bulk":
+            assert upstream["keepalive_pool"]["size"] == 320, upstream_id
 
 
 def test_gateway_routes_stream_unbuffered(plugin_configs):
