@@ -27,7 +27,7 @@ Specialises `Entity`.
 | `endDate` | Property | `datetime` |  |  | `schema:endDate` | When the event ends, as `startDate`: the published last day at its end time, or at local midnight when no time is published. |
 | `endTime` | Property | `string` |  |  | `jc:endTime` | The time the event ends, local time in Banská Bystrica (Europe/Bratislava), `HH:MM`. |
 | `eventCategory` | Property | [`EventCategory`](#eventcategory) | yes |  | `jc:eventCategory` | The kind of event, from the city's own categories. |
-| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress, T-4329); a field the source leaves out is absent, never guessed. |
+| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed. |
 | `url` | Property | `string` |  |  | `schema:url` | The web page the publisher gives for it. |
 | `dateModified` | Property | `datetime` |  |  | `sdm:dateModified` | When the publisher last changed the record. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
@@ -39,7 +39,7 @@ Specialises `Entity`.
 
 ### Organization
 
-One school or school facility in the city, from the national school map: its pupils, its staff and its budget, counts only. The FIWARE Smart Data Model Organization (T-4329): no published model is a school.
+One school or school facility in the city, from the national school map: its pupils, its staff and its budget, counts only. The FIWARE Smart Data Model Organization: no published model is a school.
 
 IRI: `sdm-org:Organization`
 
@@ -49,7 +49,7 @@ Specialises `Entity`.
 |---|---|---|---|---|---|---|
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
 | `schoolCode` | Property | `string` | yes |  | `jc:schoolCode` | The school's EDUID in the national register of schools and school facilities. |
-| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress, T-4329); a field the source leaves out is absent, never guessed. |
+| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed. |
 | `url` | Property | `string` |  |  | `schema:url` | The web page the publisher gives for it. |
 | `teachingLanguage` | Property | `string` |  |  | `jc:teachingLanguage` | The language of instruction, in the register's words. |
 | `pupilCount` | Property | `integer` |  |  | `jc:pupilCount` | How many pupils or children the school or facility has, a count and never a name. |
@@ -140,7 +140,7 @@ Specialises `Entity`.
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
 | `category` | Property | `string` (list) |  |  | `sdm-poi:category` | What the place is, as OpenStreetMap tags it: `pharmacy`, `hospital` or `clinic` from its `amenity`, and `defibrillator` from `emergency=defibrillator`. |
 | `openingHours` | Property | `string` |  |  | `schema:openingHours` | The opening hours exactly as OpenStreetMap's `opening_hours` tag gives them, in its own syntax (for example `Mo-Fr 07:30-18:00; Sa 08:00-12:00`); never reinterpreted. |
-| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress, T-4329); a field the source leaves out is absent, never guessed. |
+| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
@@ -164,7 +164,7 @@ Specialises `Entity`.
 | `allowedVehicleType` | Property | `string` (list) |  |  | `sdm-transport:allowedVehicleType` | The vehicles the station charges, from the OpenStreetMap tags `motorcar`, `bicycle`, `motorcycle`, `bus` and `hgv` set to yes (car, bicycle, motorcycle, bus, truck); absent when the map sets none. |
 | `operator` | Property | `string` |  |  | `sdm-transport:operator` | Who runs the station, as OpenStreetMap's `operator` tag names it. |
 | `openingHours` | Property | `string` |  |  | `schema:openingHours` | The opening hours exactly as OpenStreetMap's `opening_hours` tag gives them, in its own syntax (for example `Mo-Fr 07:30-18:00; Sa 08:00-12:00`); never reinterpreted. |
-| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress, T-4329); a field the source leaves out is absent, never guessed. |
+| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
@@ -174,7 +174,7 @@ Specialises `Entity`.
 
 ### CadastralParcel
 
-One parcel of the cadastre of Slovakia in Banská Bystrica (T-4697): its number, register, cadastral area, the area the cadastre states and its outline, from the INSPIRE Cadastral Parcels service of ÚGKK SR (CC BY 4.0), refreshed weekly. No owner and no other personal data: the INSPIRE parcels carry none. Smart Data Models has no cadastral parcel (its AgriParcel is a farmed field), so the class follows INSPIRE's CadastralParcel and the SDM conventions.
+One parcel of the cadastre of Slovakia in Banská Bystrica: its number, register, cadastral area, the area the cadastre states and its outline, from the INSPIRE Cadastral Parcels service of ÚGKK SR (CC BY 4.0), refreshed weekly. No owner and no other personal data: the INSPIRE parcels carry none. Smart Data Models has no cadastral parcel (its AgriParcel is a farmed field), so the class follows INSPIRE's CadastralParcel and the SDM conventions.
 
 IRI: `jc:CadastralParcel`
 

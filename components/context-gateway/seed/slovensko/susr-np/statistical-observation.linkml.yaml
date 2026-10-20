@@ -6,8 +6,7 @@ description: >-
   A territory code, a period, the publisher's own indicator code, the remaining dimensions of
   the cube and the number, with the request that produced it. Nothing is renamed and nothing is
   recomputed on the way in, so a row can always be traced back to the URL it came from. The
-  type is the FIWARE Smart Data Model `KeyPerformanceIndicator` (dataModel.KeyPerformanceIndicator,
-  T-4329) and the number its `kpiValue`; the indicators computed from these rows are the same
+  type is the FIWARE Smart Data Model `KeyPerformanceIndicator` (dataModel.KeyPerformanceIndicator) and the number its `kpiValue`; the indicators computed from these rows are the same
   type in the project's indicator space (PF-54, PF-55).
 
   It is deliberately not a Data Structure Definition in the sense of DM-60: a declared DSD puts
@@ -110,8 +109,8 @@ slots:
     slot_uri: jc:isPartOf
     description: >-
       The catalogue dataset the cell belongs to, the page of its ŠÚ SR table, where its licence
-      and its other cells are (T-4390). Never `dataset`: the NGSI-LD core @context protects that
-      term (T-4289).
+      and its other cells are. Never `dataset`: the NGSI-LD core @context protects that
+      term.
     range: uri
     required: true
     annotations:

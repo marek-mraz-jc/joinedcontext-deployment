@@ -2,7 +2,7 @@ id: https://joinedcontext.com/models/slovensko/catalog
 name: catalog
 title: Open data catalogue
 description: >-
-  The types of the catalogue space (DM-61, T-4500, T-4525, T-4746, EP-140): one Smart Data Models
+  The types of the catalogue space (DM-61, EP-140): one Smart Data Models
   DCAT-AP Dataset per public CKAN dataset, one Organization per CKAN organization that publishes
   one, one DataService per public Endpoint and a Dataset of its own for an Endpoint no CKAN
   dataset names, IRIs cited rather than minted (DM-04, DM-16).

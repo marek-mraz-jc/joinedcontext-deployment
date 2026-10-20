@@ -13,7 +13,7 @@ What the university's space carries (DM-01, DM-61): one entity per item of DREPO
 
 ### Article
 
-One openly licensed work of the University of Žilina's digital library, as the Smart Data Model extension Article (CPSV-AP Evidence base, T-4338).
+One openly licensed work of the University of Žilina's digital library, as the Smart Data Model extension Article (CPSV-AP Evidence base).
 
 IRI: `jc:Article`
 

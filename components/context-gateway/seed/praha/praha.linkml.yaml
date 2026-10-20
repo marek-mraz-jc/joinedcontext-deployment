@@ -40,7 +40,7 @@ slots:
   address:
     slot_uri: schema:address
     description: >-
-      The Smart Data Models PostalAddress (T-4329): the street address as the publisher writes it,
+      The Smart Data Models PostalAddress: the street address as the publisher writes it,
       one line, in `streetAddress`, and the city and country every Prague source shares.
     range: PostalAddress
     inlined: true
@@ -478,7 +478,7 @@ classes:
     class_uri: jc:AdministrativeArea
     description: >-
       One of the 57 city districts (městské části) of Prague, its outline and its code, as the
-      Smart Data Model extension AdministrativeArea (PointOfInterest base, T-4338).
+      Smart Data Model extension AdministrativeArea (PointOfInterest base).
     is_a: Entity
     annotations:
       upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/AdministrativeArea
@@ -493,7 +493,7 @@ classes:
     description: >-
       One line of the city budget of the City of Prague (Magistrát hl. m. Prahy), in the national
       budget classification, with the approved and the adjusted amount, as the Smart Data Model
-      extension BudgetLine (CPSV-AP Cost base, T-4338).
+      extension BudgetLine (CPSV-AP Cost base).
     is_a: Entity
     annotations:
       upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/BudgetLine

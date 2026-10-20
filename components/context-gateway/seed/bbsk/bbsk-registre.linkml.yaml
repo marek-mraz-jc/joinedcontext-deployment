@@ -24,7 +24,7 @@ imports:
 slots:
   name:
     slot_uri: schema:name
-    description: The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is (T-4523).
+    description: The name as the publisher writes it, in Slovak; a string, as every Smart Data Model's `name` is.
     range: string
     annotations:
       label: { tag: label, value: { sk: "Názov", cs: "Název", en: "Name", de: "Name" } }
@@ -40,8 +40,7 @@ slots:
   address:
     slot_uri: schema:address
     description: >-
-      The postal address as the register publishes it, field by field (Smart Data Models' common
-      PostalAddress, T-4329); a field the register leaves out is absent, never guessed.
+      The postal address as the register publishes it, field by field (Smart Data Models' common PostalAddress); a field the register leaves out is absent, never guessed.
     range: PostalAddress
     inlined: true
     annotations:
@@ -77,7 +76,7 @@ slots:
     description: >-
       What kind of place it is: `hospital` or `socialService`. The two registers share the
       Smart Data Model PointOfInterest, and an application asks for one with
-      `q=category=="hospital"` (T-4329).
+      `q=category=="hospital"`.
     range: PlaceCategory
     multivalued: true
     required: true
@@ -126,7 +125,7 @@ slots:
       upstream_source: https://github.com/smart-data-models/data-models
   isPartOf:
     slot_uri: jc:isPartOf
-    description: The catalogue dataset the record belongs to, which tells the region's districts from its municipalities in one type (T-4523).
+    description: The catalogue dataset the record belongs to, which tells the region's districts from its municipalities in one type.
     range: uri
     annotations:
       label: { tag: label, value: { sk: "Dataset", cs: "Datová sada", en: "Dataset", de: "Datensatz" } }
@@ -353,7 +352,7 @@ slots:
 classes:
   AdministrativeArea:
     class_uri: jc:AdministrativeArea
-    description: One district (okres) or municipality (obec) of the region, its outline and its code, as the Smart Data Model extension AdministrativeArea (PointOfInterest base, T-4338).
+    description: One district (okres) or municipality (obec) of the region, its outline and its code, as the Smart Data Model extension AdministrativeArea (PointOfInterest base).
     is_a: Entity
     annotations:
       upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/AdministrativeArea
@@ -372,7 +371,7 @@ classes:
     class_uri: sdm-cpsv:PublicOrganization
     description: >-
       One organisation the region founded: a secondary school, a social-care home, a theatre, a
-      museum or an office. The FIWARE Smart Data Model CPSV-AP PublicOrganization (T-4329).
+      museum or an office. The FIWARE Smart Data Model CPSV-AP PublicOrganization.
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.CPSV-AP
@@ -392,7 +391,7 @@ classes:
     description: >-
       One hospital (by its facility number in the health-care register) or one registered social
       service a municipality, a town or the region provides; `category` says which. The FIWARE
-      Smart Data Model PointOfInterest (T-4329): no published model is a hospital or a social
+      Smart Data Model PointOfInterest: no published model is a hospital or a social
       service. Private providers of social services are not in the space.
     is_a: Entity
     annotations:
@@ -428,7 +427,7 @@ classes:
       - addressCountry
   Bridge:
     class_uri: jc:Bridge
-    description: One bridge of the road network in the region, its road, its age, its size and who manages it, as the Smart Data Model extension Bridge (PointOfInterest base, T-4338).
+    description: One bridge of the road network in the region, its road, its age, its size and who manages it, as the Smart Data Model extension Bridge (PointOfInterest base).
     is_a: Entity
     annotations:
       upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Bridge

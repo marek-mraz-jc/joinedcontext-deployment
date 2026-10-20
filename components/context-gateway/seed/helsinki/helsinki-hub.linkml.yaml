@@ -155,7 +155,7 @@ slots:
     slot_uri: jc:currentValue
     description: 'The number, with its unit on the Property as `unitCode`, a UN/CEFACT common code, and
       the instant it describes as `observedAt`. A window with no reading in it carries the string `not
-      measured` instead of a number, and never a zero: a zero reads as a measurement (Development/10 §5).'
+      measured` instead of a number, and never a zero: a zero reads as a measurement.'
     required: true
     range: Any
     inlined: true
@@ -179,7 +179,7 @@ slots:
     slot_uri: jc:calculationFormula
     description: 'How the value was computed, in words a reader can check the number against: the measure,
       the aggregation, the window and any divisor, such as `per km² of the district''s own area`.
-      English plain text: a table leaves it out, so a Slovak answer never shows English prose (T-4727).'
+      English plain text: a table leaves it out, so a Slovak answer never shows English prose.'
     required: true
     annotations:
       ngsi_ld_kind: Property
