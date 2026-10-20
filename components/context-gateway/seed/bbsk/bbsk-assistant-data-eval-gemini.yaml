@@ -134,18 +134,12 @@ spec:
   suggestions:
     sk:
       - "Koľko mostov je v registri mostov BBSK?"
-      - "Aká je teraz kvalita ovzdušia v B. Bystrici?"
-      - "Koľko obyvateľov má kraj BBSK podľa ukazovateľov?"
       - "Ako pripojím katalóg cez MCP do Clauda?"
     en:
       - "How many bridges are in the BBSK bridge register?"
-      - "Air quality in Banská Bystrica right now?"
-      - "How many people live in BBSK, per its indicators?"
       - "How do I add the catalogue to Claude via MCP?"
     fi:
       - "Montako siltaa BBSK:n siltarekisterissä on?"
-      - "Ilmanlaatu Banská Bystricassa nyt?"
-      - "BBSK:n asukasluku indikaattorien mukaan?"
       - "Miten yhdistän katalogin Claudeen MCP:n kautta?"
   disclaimer:
     sk: "Odpovede tvorí umelá inteligencia z katalógu a z otvorených dát jeho vydavateľov. Môžu obsahovať chyby, overte si ich v uvedených zdrojoch. Nezadávajte osobné údaje."

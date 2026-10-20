@@ -1,35 +1,6 @@
 {
  "starters": [
   {
-   "id": "bbsk-sk-hours",
-   "assistant": "bbsk-demo",
-   "lang": "sk",
-   "q": "Aké sú úradné hodiny Úradu BBSK a kde sídli?",
-   "must": [
-    [
-     "8:00"
-    ],
-    [
-     "15:00"
-    ],
-    [
-     "7:30"
-    ],
-    [
-     "15:30"
-    ],
-    [
-     "Námestie SNP 23"
-    ]
-   ],
-   "links": [
-    "https://opendata.{domain}/dataset/bbsk-uradne-hodiny-c912ed",
-    "https://opendata.{domain}/dataset/bbsk-kontaktne-miesta-2128a0"
-   ],
-   "reference": "Podateľňa a sociálne služby pondelok až piatok 8:00 až 15:00, zdravotníctvo pondelok až štvrtok 7:30 až 15:30 (14 riadkov OfficeHours); sídlo Úradu BBSK Námestie SNP 23, 974 01 Banská Bystrica (PointOfInterest kontaktne-miesta-10).",
-   "source": "prod Endpoint 6b4yqhzqieutqcoeew5rnxrx5udqeert (bbsk-otvorene-data), types OfficeHours (count 14) and PointOfInterest of dataset bbsk-kontaktne-miesta-2128a0, read 2026-10-19T20:55Z"
-  },
-  {
    "id": "bbsk-sk-timetables",
    "assistant": "bbsk-demo",
    "lang": "sk",
@@ -37,66 +8,36 @@
    "must": [
     [
      "idsbbsk.sk"
-    ],
-    [
-     "cp.sk"
     ]
    ],
    "links": [
-    "https://www.bbsk.sk/cestovne-poriadky"
+    "https://www.bbsk.sk/cestovne-poriadky",
+    "https://www.idsbbsk.sk"
    ],
-   "reference": "Stránka www.bbsk.sk/cestovne-poriadky odkazuje na IDS BBSK (idsbbsk.sk), cp.sk a celoštátny informačný systém portal.cp.sk.",
+   "reference": "Cestovné poriadky prímestských autobusov kraja sú na webe Integrovaného dopravného systému BBSK www.idsbbsk.sk; stránka www.bbsk.sk/cestovne-poriadky odkazuje naň (a na cp.sk).",
    "source": "https://www.bbsk.sk/cestovne-poriadky (bbsk/web, answer of 2026-10-19T20:50Z cited it)"
   },
   {
    "id": "bbsk-sk-bridges",
    "assistant": "bbsk-demo",
    "lang": "sk",
-   "q": "Koľko mostov spravuje kraj a koľko je starších ako 100 rokov?",
+   "q": "Koľko mostov je v registri mostov kraja a koľko je postavených pred rokom 1900?",
    "must": [
     [
-     "1037",
-     "1 037",
-     "1.037"
+     "1651",
+     "1 651",
+     "1,651",
+     "1.651"
     ],
     [
-     "48"
+     "32"
     ]
    ],
    "links": [
     "https://opendata.{domain}/dataset/bbsk-mosty"
    ],
-   "reference": "Banskobystrická regionálna správa ciest (oblasti JUH 393, SEVER 315, STRED 329) spravuje 1 037 mostov; 48 z nich je postavených pred rokom 1926 (yearBuilt < 1926). Celý register kraja má 1 651 mostov, 67 starších ako 100 rokov.",
-   "source": "prod Endpoint omto6qk5sfn5ft7zl5pdiaxunj2ljnae, type Bridge, 1 651 rows, managerName and yearBuilt of each, read 2026-10-19T21:00Z"
-  },
-  {
-   "id": "bbsk-en-hours",
-   "assistant": "bbsk-demo",
-   "lang": "en",
-   "q": "What are the office hours of the BBSK Office and where is it?",
-   "must": [
-    [
-     "8:00"
-    ],
-    [
-     "15:00"
-    ],
-    [
-     "7:30"
-    ],
-    [
-     "15:30"
-    ],
-    [
-     "Námestie SNP 23"
-    ]
-   ],
-   "links": [
-    "https://opendata.{domain}/dataset/bbsk-uradne-hodiny-c912ed",
-    "https://opendata.{domain}/dataset/bbsk-kontaktne-miesta-2128a0"
-   ],
-   "reference": "Podateľňa a sociálne služby pondelok až piatok 8:00 až 15:00, zdravotníctvo pondelok až štvrtok 7:30 až 15:30 (14 riadkov OfficeHours); sídlo Úradu BBSK Námestie SNP 23, 974 01 Banská Bystrica (PointOfInterest kontaktne-miesta-10).",
-   "source": "prod Endpoint 6b4yqhzqieutqcoeew5rnxrx5udqeert (bbsk-otvorene-data), types OfficeHours (count 14) and PointOfInterest of dataset bbsk-kontaktne-miesta-2128a0, read 2026-10-19T20:55Z"
+   "reference": "Register mostov kraja (bbsk-mosty) má 1 651 mostov; 32 z nich je postavených pred rokom 1900. Banskobystrická regionálna správa ciest z nich spravuje 1 037 (20 pred rokom 1900).",
+   "source": "prod Endpoint omto6qk5sfn5ft7zl5pdiaxunj2ljnae, type Bridge: 1 651 rows, of them yearBuilt < 1900: 32 (the oldest 1800); read 2026-10-20T00:25Z"
   },
   {
    "id": "bbsk-en-timetables",
@@ -106,37 +47,36 @@
    "must": [
     [
      "idsbbsk.sk"
-    ],
-    [
-     "cp.sk"
     ]
    ],
    "links": [
-    "https://www.bbsk.sk/cestovne-poriadky"
+    "https://www.bbsk.sk/cestovne-poriadky",
+    "https://www.idsbbsk.sk"
    ],
-   "reference": "Stránka www.bbsk.sk/cestovne-poriadky odkazuje na IDS BBSK (idsbbsk.sk), cp.sk a celoštátny informačný systém portal.cp.sk.",
+   "reference": "Cestovné poriadky prímestských autobusov kraja sú na webe Integrovaného dopravného systému BBSK www.idsbbsk.sk; stránka www.bbsk.sk/cestovne-poriadky odkazuje naň (a na cp.sk).",
    "source": "https://www.bbsk.sk/cestovne-poriadky (bbsk/web, answer of 2026-10-19T20:50Z cited it)"
   },
   {
    "id": "bbsk-en-bridges",
    "assistant": "bbsk-demo",
    "lang": "en",
-   "q": "How many bridges does the region manage, and how many are over 100 years old?",
+   "q": "How many bridges are in the region's bridge register, and how many were built before 1900?",
    "must": [
     [
-     "1037",
-     "1,037",
-     "1 037"
+     "1651",
+     "1 651",
+     "1,651",
+     "1.651"
     ],
     [
-     "48"
+     "32"
     ]
    ],
    "links": [
     "https://opendata.{domain}/dataset/bbsk-mosty"
    ],
-   "reference": "Banskobystrická regionálna správa ciest (oblasti JUH 393, SEVER 315, STRED 329) spravuje 1 037 mostov; 48 z nich je postavených pred rokom 1926 (yearBuilt < 1926). Celý register kraja má 1 651 mostov, 67 starších ako 100 rokov.",
-   "source": "prod Endpoint omto6qk5sfn5ft7zl5pdiaxunj2ljnae, type Bridge, 1 651 rows, managerName and yearBuilt of each, read 2026-10-19T21:00Z"
+   "reference": "Register mostov kraja (bbsk-mosty) má 1 651 mostov; 32 z nich je postavených pred rokom 1900. Banskobystrická regionálna správa ciest z nich spravuje 1 037 (20 pred rokom 1900).",
+   "source": "prod Endpoint omto6qk5sfn5ft7zl5pdiaxunj2ljnae, type Bridge: 1 651 rows, of them yearBuilt < 1900: 32 (the oldest 1800); read 2026-10-20T00:25Z"
   },
   {
    "id": "data-sk-bridges",
@@ -156,51 +96,6 @@
    ],
    "reference": "Register mostov Banskobystrického kraja eviduje 1 651 mostov.",
    "source": "prod Endpoint omto6qk5sfn5ft7zl5pdiaxunj2ljnae, type Bridge, NGSILD-Results-Count 1651, 2026-10-19T21:00Z; dataset bbsk-mosty"
-  },
-  {
-   "id": "data-sk-air",
-   "assistant": "data",
-   "lang": "sk",
-   "q": "Aká je teraz kvalita ovzdušia v B. Bystrici?",
-   "must": [
-    [
-     "PM10"
-    ],
-    [
-     "SK0263A"
-    ]
-   ],
-   "links": [
-    "https://opendata.{domain}/dataset/ovzdusie-sk"
-   ],
-   "reference": "Posledná hodina stanice SK0263A Banská Bystrica (mestské pozadie): PM10, PM2,5, NO2, O3 s časom merania; 2026-10-19T18:00Z PM10 14,64 µg/m³.",
-   "source": "prod Endpoint wtvuppkop6y3qv7bnvzqwifv4uts4e2k (ovzdusie-sk), entity SK0263A, value read when the eval asks",
-   "live": {
-    "url": "https://api.{domain}/api/endpoint/wtvuppkop6y3qv7bnvzqwifv4uts4e2k/ngsi-ld/v1/entities/urn:ngsi-ld:AirQualityObserved:joinedcontext.com:ovzdusie-sk:SK0263A",
-    "attr": "pm10"
-   }
-  },
-  {
-   "id": "data-sk-population",
-   "assistant": "data",
-   "lang": "sk",
-   "q": "Koľko obyvateľov má kraj BBSK podľa ukazovateľov?",
-   "must": [
-    [
-     "607581",
-     "607 581",
-     "607,581",
-     "607.581"
-    ],
-    [
-     "2025"
-    ]
-   ],
-   "links": [
-    "https://opendata.{domain}/dataset/bbsk-kpi"
-   ],
-   "reference": "607 581 obyvateľov k 31. 12. 2025 (ŠÚ SR, tabuľka om7102rr, ukazovateľ kraja obyvatelstvo-stav-kraj).",
-   "source": "prod Endpoint qfhhh5no5wz4lk3rfjisdtx3chiyfig3 (bbsk-kpi), KeyPerformanceIndicator obyvatelstvo-stav-kraj currentValue 607581, calculationPeriod 2025, read 2026-10-19T21:05Z"
   },
   {
    "id": "data-sk-mcp",
@@ -241,51 +136,6 @@
    "source": "prod Endpoint omto6qk5sfn5ft7zl5pdiaxunj2ljnae, type Bridge, NGSILD-Results-Count 1651, 2026-10-19T21:00Z; dataset bbsk-mosty"
   },
   {
-   "id": "data-en-air",
-   "assistant": "data",
-   "lang": "en",
-   "q": "Air quality in Banská Bystrica right now?",
-   "must": [
-    [
-     "PM10"
-    ],
-    [
-     "SK0263A"
-    ]
-   ],
-   "links": [
-    "https://opendata.{domain}/dataset/ovzdusie-sk"
-   ],
-   "reference": "Posledná hodina stanice SK0263A Banská Bystrica (mestské pozadie): PM10, PM2,5, NO2, O3 s časom merania; 2026-10-19T18:00Z PM10 14,64 µg/m³.",
-   "source": "prod Endpoint wtvuppkop6y3qv7bnvzqwifv4uts4e2k (ovzdusie-sk), entity SK0263A, value read when the eval asks",
-   "live": {
-    "url": "https://api.{domain}/api/endpoint/wtvuppkop6y3qv7bnvzqwifv4uts4e2k/ngsi-ld/v1/entities/urn:ngsi-ld:AirQualityObserved:joinedcontext.com:ovzdusie-sk:SK0263A",
-    "attr": "pm10"
-   }
-  },
-  {
-   "id": "data-en-population",
-   "assistant": "data",
-   "lang": "en",
-   "q": "How many people live in BBSK, per its indicators?",
-   "must": [
-    [
-     "607581",
-     "607 581",
-     "607,581",
-     "607.581"
-    ],
-    [
-     "2025"
-    ]
-   ],
-   "links": [
-    "https://opendata.{domain}/dataset/bbsk-kpi"
-   ],
-   "reference": "607 581 obyvateľov k 31. 12. 2025 (ŠÚ SR, tabuľka om7102rr, ukazovateľ kraja obyvatelstvo-stav-kraj).",
-   "source": "prod Endpoint qfhhh5no5wz4lk3rfjisdtx3chiyfig3 (bbsk-kpi), KeyPerformanceIndicator obyvatelstvo-stav-kraj currentValue 607581, calculationPeriod 2025, read 2026-10-19T21:05Z"
-  },
-  {
    "id": "data-en-mcp",
    "assistant": "data",
    "lang": "en",
@@ -322,51 +172,6 @@
    ],
    "reference": "Register mostov Banskobystrického kraja eviduje 1 651 mostov.",
    "source": "prod Endpoint omto6qk5sfn5ft7zl5pdiaxunj2ljnae, type Bridge, NGSILD-Results-Count 1651, 2026-10-19T21:00Z; dataset bbsk-mosty"
-  },
-  {
-   "id": "data-fi-air",
-   "assistant": "data",
-   "lang": "fi",
-   "q": "Ilmanlaatu Banská Bystricassa nyt?",
-   "must": [
-    [
-     "PM10"
-    ],
-    [
-     "SK0263A"
-    ]
-   ],
-   "links": [
-    "https://opendata.{domain}/dataset/ovzdusie-sk"
-   ],
-   "reference": "Posledná hodina stanice SK0263A Banská Bystrica (mestské pozadie): PM10, PM2,5, NO2, O3 s časom merania; 2026-10-19T18:00Z PM10 14,64 µg/m³.",
-   "source": "prod Endpoint wtvuppkop6y3qv7bnvzqwifv4uts4e2k (ovzdusie-sk), entity SK0263A, value read when the eval asks",
-   "live": {
-    "url": "https://api.{domain}/api/endpoint/wtvuppkop6y3qv7bnvzqwifv4uts4e2k/ngsi-ld/v1/entities/urn:ngsi-ld:AirQualityObserved:joinedcontext.com:ovzdusie-sk:SK0263A",
-    "attr": "pm10"
-   }
-  },
-  {
-   "id": "data-fi-population",
-   "assistant": "data",
-   "lang": "fi",
-   "q": "BBSK:n asukasluku indikaattorien mukaan?",
-   "must": [
-    [
-     "607581",
-     "607 581",
-     "607,581",
-     "607.581"
-    ],
-    [
-     "2025"
-    ]
-   ],
-   "links": [
-    "https://opendata.{domain}/dataset/bbsk-kpi"
-   ],
-   "reference": "607 581 obyvateľov k 31. 12. 2025 (ŠÚ SR, tabuľka om7102rr, ukazovateľ kraja obyvatelstvo-stav-kraj).",
-   "source": "prod Endpoint qfhhh5no5wz4lk3rfjisdtx3chiyfig3 (bbsk-kpi), KeyPerformanceIndicator obyvatelstvo-stav-kraj currentValue 607581, calculationPeriod 2025, read 2026-10-19T21:05Z"
   },
   {
    "id": "data-fi-mcp",
