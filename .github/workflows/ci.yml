@@ -98,6 +98,7 @@ jobs:
     # a61f0df0 and was cancelled, so main had no verdict (T-4553 follow-up).
     # Four since 2026-10-19: shard 1, which also runs gitleaks, the docs pin and the kyverno
     # tests, ran past 15 on 593e2acc, ade77e03 and b0c7f814 and main had no verdict (T-2985 push).
+    # Balanced by measured time since 2026-10-20: shard 4 ran past 15 on three main runs (T-4789).
     strategy: { fail-fast: false, matrix: { shard: [1, 2, 3, 4] } }
     name: tests (${{ matrix.shard }}/4)
     env: { KYVERNO_VERSION: v1.19.0, SOPS_VERSION: v3.13.3, AGE_VERSION: v1.2.1 }
@@ -184,7 +185,9 @@ jobs:
       # GitHub reports as "cancelled" and which hid a red test behind it (8m24s -> 2m45s on 4).
       # A module that rewrites deployment/environments/testing does it in its own copy of the tree
       # (own_tree), and each environment is rendered once for all workers (T-2895).
-      # Every test file lands in exactly one shard: line n of the sorted list in shard n mod 4 (4 for 0).
+      # Every test file lands in exactly one shard, balanced by the seconds in .ci/test-durations.json
+      # (scripts/ci/test-shard.py, T-4789: the positional split put 13.6 of 26 minutes in shard 4).
+      # The slowest durations go to the log; refresh the table with --record from a --durations=0 run.
       # T-4694: the platform commit components/ai/bundle.lock names, so tests/test_ai_app.py
       # rebuilds the standalone assistant's bundle and compares it with the committed one.
       - name: the platform commit of the ai bundle
@@ -193,4 +196,4 @@ jobs:
           git init -q "$RUNNER_TEMP/platform"
           git -C "$RUNNER_TEMP/platform" fetch -q --depth 1 https://github.com/marek-mraz-jc/joinedcontext-platform "$sha"
           echo "JC_PLATFORM_DIR=$RUNNER_TEMP/platform" >> "$GITHUB_ENV"
-      - run: pytest -q -n auto --dist loadgroup $(ls tests/test_*.py | sort | awk -v s=${{ matrix.shard }} 'NR % 4 == s % 4')
+      - run: pytest -q -n auto --dist loadgroup --durations=30 $(python3 scripts/ci/test-shard.py ${{ matrix.shard }} 4)
