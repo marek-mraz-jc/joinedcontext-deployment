@@ -103,5 +103,7 @@ context-broker:
     # Antares dev a53c40c (dev-12, train 0039 T-4773 T-4778 over dfbd3ad): antares-api split into
     # router/ops/notify modules (no logic change), SQL injection and RLS mutant-killing tests. No
     # migration.
-    tag: 'dev-12'
-    digest: 'sha256:8f40bd9d19148522fb3a4b16cb1362de808f230de0ca2ee374b70870bacb604d'
+    # Antares dev 2fb7fae (dev-13, T-4794 over a53c40c): temporal.rs only, with history, erasure
+    # and temporal-window tests. No migration.
+    tag: 'dev-13'
+    digest: 'sha256:d56d854fb4cfdad7b098ff50f9c61827fb6faf6e664a755c9cd1cb3b967faa7e'
