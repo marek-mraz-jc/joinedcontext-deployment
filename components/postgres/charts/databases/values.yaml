@@ -30,3 +30,7 @@ databases:
   #       credentialsSecret:
   #         name: 'apicurio-analytics-credentials'
   #         passwordKey: 'db-password'
+# pg_stat_statements (templates/stat-statements.yaml, T-4904): true when the cluster's parameters
+# make CNPG preload the library, so the Job waits for the restart that loads it.
+statStatements:
+  preloaded: false
