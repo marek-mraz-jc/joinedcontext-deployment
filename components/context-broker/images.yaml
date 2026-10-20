@@ -107,5 +107,8 @@ context-broker:
     # and temporal-window tests. No migration.
     # Antares dev ec5be07 (dev-14, T-4803 over 2fb7fae): linkml-model keeps permissible-value
     # annotations, so the schema PUT of T-4803's model-tools carries sk enum labels. No migration.
-    tag: 'dev-14'
-    digest: 'sha256:09c51b06ab44068bd71098d51001a23491c23ed4ebd9658c61c02009f1e40d46'
+    # Antares dev 6230e20 (dev-15, T-4800 over ec5be07): temporal values and entity pages up to
+    # 1,000 (ANTARES_TEMPORAL_INSTANCE_LIMIT / ANTARES_MAX_LIMIT), MCP names "more" and the
+    # hourly aggregation. No migration.
+    tag: 'dev-15'
+    digest: 'sha256:feacd14b2d6c4d9dd9de3d5cc15bf454710d5add1de18103f6472496fd101b0b'
