@@ -36,7 +36,7 @@ env:
   JC_ORG_DOMAIN: {{ $global.orgDomain | quote }}
   JC_GATEWAY_URL: "http://context-gateway.{{ index .Values "context-gateway" "gateway" "namespace" }}.svc.cluster.local:8080"
   # The same host without the scheme, for a seeded DataSource that reads the space back
-  # (helsinki-datasource-vehicles-live.yaml): a manifest URL must start with http://.
+  # (helsinki-pipeline-service-alerts-bento.yaml): a manifest URL must start with http://.
   JC_GATEWAY_HOST: "context-gateway.{{ index .Values "context-gateway" "gateway" "namespace" }}.svc.cluster.local:8080"
   # The public issuer, so the token's `iss` is the one the gateway verifies (KC_HOSTNAME).
   JC_TOKEN_URL: "https://idm.{{ $global.domain }}/realms/{{ $global.instanceSlug }}/protocol/openid-connect/token"

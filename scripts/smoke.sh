@@ -664,6 +664,45 @@ if has_route context-endpoint; then
 		if flowing BikeHireDockingStation 120; then ok "city bike stations are flowing into the space"; else ko "no BikeHireDockingStation entity after 120 s"; fi
 		if flowing Event 60; then ok "events are flowing into the space"; else ko "no Event entity after 60 s"; fi
 		if flowing Vehicle 30; then ok "buses are flowing into the space"; else skip "no Vehicle entity yet (HSL's trunk lines may be off the road at this hour)"; fi
+		# T-4823: a vehicle and a Fintraffic Alert leave by their own lifetime (`expiresAt`,
+		# NGSI-LD 4.22), which the broker hides from every read once it passes; no reaper pipeline
+		# deletes them. Each one read carries it: a vehicle's five minutes after its position, an
+		# Alert's no later than its validTo. One without it would stay after its feed went quiet.
+		lifetime=$(curl -sS --max-time 20 "$api/api/endpoint/$all/ngsi-ld/v1/entities?type=Vehicle,Alert&limit=1000&options=sysAttrs" 2>/dev/null |
+			python3 -c '
+import json, sys
+from datetime import datetime, timedelta
+def at(s):
+    return datetime.fromisoformat(str(s).replace("Z", "+00:00"))
+def value(e, name):
+    a = e.get(name)
+    return a.get("value") if isinstance(a, dict) else a
+try:
+    entities = json.load(sys.stdin)
+except ValueError:
+    print("ko the space did not answer with entities"); sys.exit()
+bad, read = [], 0
+for e in entities if isinstance(entities, list) else []:
+    if e.get("type") == "Alert" and value(e, "alertSource") != "Fintraffic":
+        continue
+    read += 1
+    try:
+        if e.get("type") == "Vehicle":
+            fine = at(e["expiresAt"]) - at(e["location"]["observedAt"]) <= timedelta(minutes=5)
+        else:
+            fine = "expiresAt" in e and (value(e, "validTo") is None or at(e["expiresAt"]) <= at(value(e, "validTo")))
+    except (KeyError, TypeError, ValueError):
+        fine = False
+    if not fine:
+        bad.append(e.get("id", "?"))
+print(f"ko {len(bad)} of {read} carry no lifetime, e.g. {bad[0]}" if bad else f"ok {read}")
+' 2>/dev/null || true)
+		case "$lifetime" in
+			"ok 0") skip "no vehicle or Fintraffic Alert to check the lifetime of" ;;
+			ok*) ok "every vehicle and Fintraffic Alert carries its expiresAt (${lifetime#ok })" ;;
+			"") ko "the lifetime check of vehicles and Alerts read nothing" ;;
+			*) ko "vehicles and Alerts: ${lifetime#ko }" ;;
+		esac
 	fi
 else
 	skip "helsinki endpoints (route context-endpoint not configured in this instance)"

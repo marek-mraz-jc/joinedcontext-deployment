@@ -4,8 +4,7 @@ Bento runs the committed mapping over HSL's whole alerts feed recorded on 2026-1
 `fixtures/helsinki/gtfs-rt/service-alerts.pb`) and over feeds the test encodes. The two calls to
 the gateway are the cut: the lookup of the lines and stops the space holds is answered by the
 test, and the withdrawal's mapping runs on its own over what the space holds and what the feed
-lists, as test_alerts_reaper does for Digitraffic's. Without a container runtime the Bento cases
-skip; the seed cases do not.
+lists. Without a container runtime the Bento cases skip; the seed cases do not.
 """
 
 import json

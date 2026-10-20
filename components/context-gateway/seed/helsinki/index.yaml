@@ -35,6 +35,7 @@ helsinki-policy-public-news.yaml: projects/helsinki/spaces/helsinki/policies/pub
 helsinki-policy-public-weather.yaml: projects/helsinki/spaces/helsinki/policies/public-weather.yaml
 helsinki-policy-public-alerts.yaml: projects/helsinki/spaces/helsinki/policies/public-alerts.yaml
 helsinki-policy-pipelines-write.yaml: projects/helsinki/spaces/helsinki/policies/pipelines-write.yaml
+helsinki-policy-pipelines-delete-alerts.yaml: projects/helsinki/spaces/helsinki/policies/pipelines-delete-alerts.yaml
 helsinki-kpi-space.yaml: projects/helsinki/spaces/helsinki-kpi/space.yaml
 helsinki-kpi-datamodel.yaml: projects/helsinki/spaces/helsinki-kpi/datamodels/helsinki-kpi.yaml
 helsinki-kpi.linkml.yaml: projects/helsinki/spaces/helsinki-kpi/datamodels/helsinki-kpi.linkml.yaml
@@ -51,8 +52,6 @@ helsinki-datasource-events.yaml: projects/helsinki/datasources/hel-linked-events
 helsinki-datasource-bikes.yaml: projects/helsinki/datasources/hsl-citybikes-gbfs.yaml
 helsinki-datasource-bikes-info.yaml: projects/helsinki/datasources/hsl-citybikes-gbfs-info.yaml
 helsinki-datasource-hfp.yaml: projects/helsinki/datasources/hsl-hfp.yaml
-helsinki-datasource-vehicles-live.yaml: projects/helsinki/datasources/helsinki-vehicles-live.yaml
-helsinki-datasource-alerts-live.yaml: projects/helsinki/datasources/helsinki-alerts-live.yaml
 helsinki-datasource-news-rss.yaml: projects/helsinki/datasources/hel-news-rss.yaml
 helsinki-datasource-road-weather.yaml: projects/helsinki/datasources/digitraffic-road-weather.yaml
 helsinki-datasource-traffic-messages.yaml: projects/helsinki/datasources/digitraffic-traffic-messages.yaml
@@ -61,11 +60,9 @@ helsinki-pipeline-events.yaml: projects/helsinki/pipelines/linked-events/pipelin
 helsinki-pipeline-bikes.yaml: projects/helsinki/pipelines/citybikes-gbfs/pipeline.yaml
 helsinki-pipeline-bikes-info.yaml: projects/helsinki/pipelines/citybikes-gbfs-info/pipeline.yaml
 helsinki-pipeline-hfp.yaml: projects/helsinki/pipelines/hsl-hfp-vehicles/pipeline.yaml
-helsinki-pipeline-vehicles-reaper.yaml: projects/helsinki/pipelines/vehicles-reaper/pipeline.yaml
 helsinki-pipeline-news.yaml: projects/helsinki/pipelines/hel-news/pipeline.yaml
 helsinki-pipeline-road-weather.yaml: projects/helsinki/pipelines/road-weather/pipeline.yaml
 helsinki-pipeline-traffic-messages.yaml: projects/helsinki/pipelines/traffic-messages/pipeline.yaml
-helsinki-pipeline-alerts-reaper.yaml: projects/helsinki/pipelines/alerts-reaper/pipeline.yaml
 helsinki-pipeline-air-quality.yaml: projects/helsinki/pipelines/air-quality/pipeline.yaml
 # The mapping of each pipeline, native Bento beside its manifest (PL-03): the reconciler renders
 # it into the resident stream (T-0647), so no stream is written twice.
@@ -73,11 +70,9 @@ helsinki-pipeline-events-bento.yaml: projects/helsinki/pipelines/linked-events/b
 helsinki-pipeline-bikes-bento.yaml: projects/helsinki/pipelines/citybikes-gbfs/bento.yaml
 helsinki-pipeline-bikes-info-bento.yaml: projects/helsinki/pipelines/citybikes-gbfs-info/bento.yaml
 helsinki-pipeline-hfp-bento.yaml: projects/helsinki/pipelines/hsl-hfp-vehicles/bento.yaml
-helsinki-pipeline-vehicles-reaper-bento.yaml: projects/helsinki/pipelines/vehicles-reaper/bento.yaml
 helsinki-pipeline-news-bento.yaml: projects/helsinki/pipelines/hel-news/bento.yaml
 helsinki-pipeline-road-weather-bento.yaml: projects/helsinki/pipelines/road-weather/bento.yaml
 helsinki-pipeline-traffic-messages-bento.yaml: projects/helsinki/pipelines/traffic-messages/bento.yaml
-helsinki-pipeline-alerts-reaper-bento.yaml: projects/helsinki/pipelines/alerts-reaper/bento.yaml
 helsinki-pipeline-air-quality-bento.yaml: projects/helsinki/pipelines/air-quality/bento.yaml
 helsinki-ckan-hel-fi.yaml: projects/helsinki/ckan/hel-fi.yaml
 helsinki-blueprint-http-json-feed.yaml: blueprints/http-json-feed/blueprint.yaml
