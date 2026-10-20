@@ -1,5 +1,18 @@
 ---
 {{- $global := .Values.global }}
+{{- $mesh := and ($global.serviceMesh.enable | default false) (eq ($global.serviceMesh.type | default "") "linkerd") }}
+{{- $gateway := dig "context-gateway" "gateway" dict .Values }}
+{{- $portal := dig "portal" "portal" dict .Values }}
+{{- /* The callers that may reach the broker port and speak for a person (T-4875): the gateway, which
+       verifies every token, and the Portal, which previews an Endpoint as its user. The same peers
+       as networkpolicies.yaml; the pipeline runner and every App go through the gateway. */}}
+{{- $callers := list }}
+{{- if dig "enabled" false $gateway }}
+{{- $callers = append $callers (dict "serviceAccount" "context-gateway" "namespace" $gateway.namespace) }}
+{{- end }}
+{{- if dig "enabled" false $portal }}
+{{- $callers = append $callers (dict "serviceAccount" "portal" "namespace" $portal.namespace) }}
+{{- end }}
 # Checklist:
 # - [x] Containers run as non-root with `readOnlyRootFilesystem`
 # - [x] Health probes -> /q/ready and /q/health
@@ -146,4 +159,17 @@ securityContext:
   {{ .Values.securityDefaults.securityContext | toYaml | nindent 2 }}
 
 serviceMesh:
-  enabled: {{ and ($global.serviceMesh.enable | default false) (eq ($global.serviceMesh.type | default "") "linkerd") }}
+  enabled: {{ $mesh }}
+
+# The broker port answers the gateway and the Portal alone (T-4875). The NetworkPolicy opens the
+# proxy port (4143) to them, but with the mesh on any meshed pod's connection lands on that proxy;
+# this Server makes the proxy refuse every other identity. Probes stay authorized (no HTTPRoute).
+# A Prometheus scrape of /q/metrics is refused with it until the metrics move to their own port;
+# no environment runs a Prometheus and the mesh together today.
+# The broker's own identity is admitted too: a federation registration the reconciler writes names
+# the broker's own Service, and a forward carries no subject header (Antares federation::forward).
+meshAuthorization:
+  port: 9090
+  includeSelf: true
+  clients:
+    {{- $callers | toYaml | nindent 4 }}

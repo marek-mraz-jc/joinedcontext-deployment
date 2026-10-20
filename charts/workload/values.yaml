@@ -137,3 +137,4 @@ serviceMesh:
 meshAuthorization:
   port: 0
   clients: []         # [{serviceAccount: <name>, namespace: <namespace>}]
+  includeSelf: false  # also admit the workload's own ServiceAccount
