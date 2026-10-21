@@ -18,7 +18,7 @@ import yaml
 
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed/bbsk"
 SPACE = "bbsk-podujatia"
-ENDPOINTS = {"bbsk-podujatia": "podujatia-kraj-read", "bbsk-podujatia-slovensko": "podujatia-read"}
+ENDPOINTS = {"bbsk-podujatia": "podujatia-kraj-read"}
 WRITE = "bbsk-podujatia-zapis"
 # EP-125's iCalendar requirement (platform crates/jc-core/src/kinds/endpoint.rs ICAL): the source
 # attribute of each RFC 5545 field, and the ones the model must mark required.
@@ -177,11 +177,11 @@ def test_the_pipelines_write_through_an_organization_endpoint_the_public_cannot_
     assert targets == {f"urn:ngsi-ld:Endpoint:bbsk.sk:{SPACE}:{WRITE}"}
 
 
-def test_the_region_is_a_scope_view_of_the_national_space():
-    """The events exist once (owner 2026-10-20): the region's dataset narrows by scope."""
+def test_the_region_reads_its_own_scope_and_the_national_store_is_its_own_space():
+    """The region's dataset narrows by scope; Slovakia's events live in slovensko-podujatia (T-5047)."""
     policies = of_space("Policy")
     assert policies["podujatia-kraj-read"]["spec"]["scopeQ"] == "/SK/BB/#"
-    assert "scopeQ" not in policies["podujatia-read"]["spec"]
+    assert "podujatia-read" not in policies
 
 
 def test_only_the_pipelines_write_and_never_delete():
@@ -198,7 +198,7 @@ def test_every_file_is_placed_by_the_index():
     # T-4896's pipelines and T-4897's App, placed outside spaces/ or tested on their own.
     generated = ("bbsk-datasource-", "bbsk-pipeline-", "bbsk-app-")
     ours = sorted(p.name for p in SEED.glob("bbsk-*podujatia*") if not p.name.startswith(generated))
-    assert len(ours) == 13
+    assert len(ours) == 11
     assert [f for f in ours if f not in index] == []
     assert {index[f].split("/spaces/")[1].split("/")[0] for f in ours} == {SPACE}
 

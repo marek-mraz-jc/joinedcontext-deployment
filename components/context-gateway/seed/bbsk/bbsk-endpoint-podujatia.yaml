@@ -1,4 +1,5 @@
-# The region's events (T-4895): the events of bbsk-podujatia whose scope is /SK/BB, read through a Policy that narrows the national space by scopeQ; the events exist once (owner 2026-10-20).
+# The region's events (T-4895): the events of bbsk-podujatia whose scope is /SK/BB, read through a Policy that narrows by scopeQ.
+# The space holds the region's own sources since T-5047; the national store is slovensko-podujatia in the Slovakia project.
 apiVersion: joinedcontext.com/v1alpha1
 kind: Endpoint
 metadata:
@@ -50,11 +51,21 @@ spec:
         description:
           sk: "Podujatia zo stránky https://www.detva.sk/kulturne-podujatia-0.html; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.detva.sk/kulturne-podujatia-0.html; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.dudince-mesto.sk/informacie/kalendar-akcii/"
+        title: { sk: "Dudince, dudince-mesto.sk", en: "Dudince, dudince-mesto.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.dudince-mesto.sk/informacie/kalendar-akcii/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.dudince-mesto.sk/informacie/kalendar-akcii/; no licence stated, facts only (name, time, place, link)."
       - url: "https://www.filakovo.sk/kalendar-podujati-0.html"
         title: { sk: "Fiľakovo, filakovo.sk", en: "Fiľakovo, filakovo.sk" }
         description:
           sk: "Podujatia zo stránky https://www.filakovo.sk/kalendar-podujati-0.html; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.filakovo.sk/kalendar-podujati-0.html; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.hrinova.sk/aktuality/kalendar-akcii/"
+        title: { sk: "Hriňová, hrinova.sk", en: "Hriňová, hrinova.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.hrinova.sk/aktuality/kalendar-akcii/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.hrinova.sk/aktuality/kalendar-akcii/; no licence stated, facts only (name, time, place, link)."
       - url: "https://www.jelsava.sk/kalendar-podujati-0.html"
         title: { sk: "Jelšava, jelsava.sk", en: "Jelšava, jelsava.sk" }
         description:
@@ -70,6 +81,11 @@ spec:
         description:
           sk: "Podujatia zo stránky https://www.lucenec.sk/-akcie-/.html; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.lucenec.sk/-akcie-/.html; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.poltar.sk/mesto/kalendar-akcii/"
+        title: { sk: "Poltár, poltar.sk", en: "Poltár, poltar.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.poltar.sk/mesto/kalendar-akcii/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.poltar.sk/mesto/kalendar-akcii/; no licence stated, facts only (name, time, place, link)."
       - url: "https://www.revuca.sk/kalendar-podujati-0-1.html"
         title: { sk: "Revúca, revuca.sk", en: "Revúca, revuca.sk" }
         description:
@@ -80,6 +96,11 @@ spec:
         description:
           sk: "Podujatia zo stránky https://www.rimavskasobota.sk/kultura-0.html; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.rimavskasobota.sk/kultura-0.html; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.tisovec.com/sk/aktuality/kalendar-akcii/"
+        title: { sk: "Tisovec, tisovec.com", en: "Tisovec, tisovec.com" }
+        description:
+          sk: "Podujatia zo stránky https://www.tisovec.com/sk/aktuality/kalendar-akcii/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.tisovec.com/sk/aktuality/kalendar-akcii/; no licence stated, facts only (name, time, place, link)."
       - url: "https://tornala.virtualne.sk/akcie-a-podujatia.html"
         title: { sk: "Tornaľa, tornala.virtualne.sk", en: "Tornaľa, tornala.virtualne.sk" }
         description:
@@ -110,4 +131,144 @@ spec:
         description:
           sk: "Podujatia zo stránky https://www.visitbanskabystrica.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.visitbanskabystrica.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.drazice.sk/events/"
+        title: { sk: "Dražice, drazice.sk", en: "Dražice, drazice.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.drazice.sk/events/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.drazice.sk/events/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://mostenica.eu/events/"
+        title: { sk: "Moštenica, mostenica.eu", en: "Moštenica, mostenica.eu" }
+        description:
+          sk: "Podujatia zo stránky https://mostenica.eu/events/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://mostenica.eu/events/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.obecpredajna.sk/events/"
+        title: { sk: "Predajná, obecpredajna.sk", en: "Predajná, obecpredajna.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.obecpredajna.sk/events/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.obecpredajna.sk/events/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.kraskovo.eu/events/"
+        title: { sk: "Kraskovo, kraskovo.eu", en: "Kraskovo, kraskovo.eu" }
+        description:
+          sk: "Podujatia zo stránky https://www.kraskovo.eu/events/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.kraskovo.eu/events/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://obecprsa.sk/events/"
+        title: { sk: "Prša, obecprsa.sk", en: "Prša, obecprsa.sk" }
+        description:
+          sk: "Podujatia zo stránky https://obecprsa.sk/events/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://obecprsa.sk/events/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.pliesovce.sk/"
+        title: { sk: "Pliešovce, pliesovce.sk", en: "Pliešovce, pliesovce.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.pliesovce.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.pliesovce.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://svkbb.eu/udalosti/"
+        title: { sk: "Banská Bystrica, svkbb.eu", en: "Banská Bystrica, svkbb.eu" }
+        description:
+          sk: "Podujatia zo stránky https://svkbb.eu/udalosti/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://svkbb.eu/udalosti/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.divadlozpasaze.sk/udalosti/"
+        title: { sk: "Banská Bystrica, divadlozpasaze.sk", en: "Banská Bystrica, divadlozpasaze.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.divadlozpasaze.sk/udalosti/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.divadlozpasaze.sk/udalosti/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.litterra.sk/udalosti/"
+        title: { sk: "Revúca, litterra.sk", en: "Revúca, litterra.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.litterra.sk/udalosti/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.litterra.sk/udalosti/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.strelniky.sk/obec/kalendar-podujati/"
+        title: { sk: "Strelníky, strelniky.sk", en: "Strelníky, strelniky.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.strelniky.sk/obec/kalendar-podujati/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.strelniky.sk/obec/kalendar-podujati/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.michalova.sk/aktuality/kalendar-akcii/"
+        title: { sk: "Michalová, michalova.sk", en: "Michalová, michalova.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.michalova.sk/aktuality/kalendar-akcii/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.michalova.sk/aktuality/kalendar-akcii/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.tuhar.sk/aktuality-1/kalendar-akcii/"
+        title: { sk: "Tuhár, tuhar.sk", en: "Tuhár, tuhar.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.tuhar.sk/aktuality-1/kalendar-akcii/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.tuhar.sk/aktuality-1/kalendar-akcii/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.obeclieskovec.sk/udalosti-v-obci/kalendar-akcii/"
+        title: { sk: "Lieskovec, obeclieskovec.sk", en: "Lieskovec, obeclieskovec.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.obeclieskovec.sk/udalosti-v-obci/kalendar-akcii/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.obeclieskovec.sk/udalosti-v-obci/kalendar-akcii/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.poniky.sk/aktualne/kalendar-akcii/"
+        title: { sk: "Poniky, poniky.sk", en: "Poniky, poniky.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.poniky.sk/aktualne/kalendar-akcii/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.poniky.sk/aktualne/kalendar-akcii/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.obecmedzibrod.sk/obec-2/zo-zivota-obce/kalendar-akcii/"
+        title: { sk: "Medzibrod, obecmedzibrod.sk", en: "Medzibrod, obecmedzibrod.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.obecmedzibrod.sk/obec-2/zo-zivota-obce/kalendar-akcii/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.obecmedzibrod.sk/obec-2/zo-zivota-obce/kalendar-akcii/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.obeckrivan.sk/obec-2/udalosti-v-obci/kalendar-akcii/"
+        title: { sk: "Kriváň, obeckrivan.sk", en: "Kriváň, obeckrivan.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.obeckrivan.sk/obec-2/udalosti-v-obci/kalendar-akcii/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.obeckrivan.sk/obec-2/udalosti-v-obci/kalendar-akcii/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.lubietova.sk/aktualne/kalendar/"
+        title: { sk: "Ľubietová, lubietova.sk", en: "Ľubietová, lubietova.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.lubietova.sk/aktualne/kalendar/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.lubietova.sk/aktualne/kalendar/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.obecdobraniva.sk/zivot-v-obci/kalendar-podujati/"
+        title: { sk: "Dobrá Niva, obecdobraniva.sk", en: "Dobrá Niva, obecdobraniva.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.obecdobraniva.sk/zivot-v-obci/kalendar-podujati/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.obecdobraniva.sk/zivot-v-obci/kalendar-podujati/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.spaniadolina.sk/podujatia/kalendar-akcii/"
+        title: { sk: "Špania Dolina, spaniadolina.sk", en: "Špania Dolina, spaniadolina.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.spaniadolina.sk/podujatia/kalendar-akcii/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.spaniadolina.sk/podujatia/kalendar-akcii/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.vhkalinka.eu/obec/odpadove-hospodarstvo/kalendar-vyvozu-odpadu/"
+        title: { sk: "Vígľašská Huta-Kalinka, vhkalinka.eu", en: "Vígľašská Huta-Kalinka, vhkalinka.eu" }
+        description:
+          sk: "Podujatia zo stránky https://www.vhkalinka.eu/obec/odpadove-hospodarstvo/kalendar-vyvozu-odpadu/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.vhkalinka.eu/obec/odpadove-hospodarstvo/kalendar-vyvozu-odpadu/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.hontiansketesare.sk/urad/kalendar-akcii/"
+        title: { sk: "Hontianske Tesáre, hontiansketesare.sk", en: "Hontianske Tesáre, hontiansketesare.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.hontiansketesare.sk/urad/kalendar-akcii/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.hontiansketesare.sk/urad/kalendar-akcii/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.moravce.sk/obec/kalendar-akcii/"
+        title: { sk: "Hontianske Moravce, moravce.sk", en: "Hontianske Moravce, moravce.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.moravce.sk/obec/kalendar-akcii/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.moravce.sk/obec/kalendar-akcii/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.polomka.sk/obec/kalendar-akcii/"
+        title: { sk: "Polomka, polomka.sk", en: "Polomka, polomka.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.polomka.sk/obec/kalendar-akcii/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.polomka.sk/obec/kalendar-akcii/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.halic.sk/obec-1/kalendar-akcii/"
+        title: { sk: "Halič, halic.sk", en: "Halič, halic.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.halic.sk/obec-1/kalendar-akcii/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.halic.sk/obec-1/kalendar-akcii/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.jasenie.sk/obcan/kalendar-akcii/"
+        title: { sk: "Jasenie, jasenie.sk", en: "Jasenie, jasenie.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.jasenie.sk/obcan/kalendar-akcii/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.jasenie.sk/obcan/kalendar-akcii/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.harmanec.sk/udalosti-v-obci/kam-za-kulturou/"
+        title: { sk: "Harmanec, harmanec.sk", en: "Harmanec, harmanec.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.harmanec.sk/udalosti-v-obci/kam-za-kulturou/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.harmanec.sk/udalosti-v-obci/kam-za-kulturou/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.breziny.sk/aktuality/kalendar-akcii/"
+        title: { sk: "Breziny, breziny.sk", en: "Breziny, breziny.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.breziny.sk/aktuality/kalendar-akcii/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.breziny.sk/aktuality/kalendar-akcii/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.jesenske.sk/udalosti-v-obci/kalendar-akcii/"
+        title: { sk: "Jesenské, jesenske.sk", en: "Jesenské, jesenske.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.jesenske.sk/udalosti-v-obci/kalendar-akcii/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.jesenske.sk/udalosti-v-obci/kalendar-akcii/; no licence stated, facts only (name, time, place, link)."
     # END sources generated by seeds/bbsk-events/generate.py

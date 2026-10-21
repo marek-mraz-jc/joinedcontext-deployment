@@ -67,9 +67,10 @@ pipeline:
           r.end.apply("unix") + if r.end.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") { 86400 } else { 0 }
         } else { r.start.apply("unix").(s -> if s != null { s + 86400 } else { null }) }
       }))
-      # Only upcoming events (owner 2026-10-20): one whose end is past is never loaded. A record
-      # with no readable start stays, so the model check refuses it where the run report shows it.
-      let upcoming = $records.filter(r -> r._end == null || r._end >= $now)
+      # Only upcoming events (owner 2026-10-20): one whose end (plus the store's grace, a day in the national
+      # store) is past is never loaded. A record with no readable start stays, so the model check refuses it
+      # where the run report shows it.
+      let upcoming = $records.filter(r -> r._end == null || r._end + 0 >= $now)
       let dated = $upcoming.filter(r -> r._start != null).sort_by(r -> r._start)
       root = $dated.slice(0, [$dated.length(), 100].min()).concat($upcoming.filter(r -> r._start == null))
   - unarchive:
@@ -107,6 +108,10 @@ pipeline:
         "addressRegion": "Banskobystrický kraj",
         "addressCountry": "SK"
       }.filter(kv -> kv.value != null && kv.value != "")
+      let now = timestamp_unix()
+      let lease = null
+      let ends = if this._end == null { null } else { this._end + 0 }
+      let expires = if $lease == null { $ends } else if $ends == null { $now + $lease } else { [$ends, $now + $lease].min() }
       root = {
         "id": "urn:ngsi-ld:Event:%s:%s".format(env("JC_SPACE"), $key.hash("sha256").encode("hex").slice(0, 16)),
         "type": "Event",
@@ -128,8 +133,9 @@ pipeline:
         "sourceId": this.sourceId.string().catch(null).apply("prop"),
         "dataProvider": { "type": "Property", "value": "Fiľakovo, filakovo.sk (licencia neuvedená)" },
         "dateModified": this.modified.ts_format("2006-01-02T15:04:05Z", "UTC").catch(null).apply("prop"),
-        # The event leaves the space when it is over (owner 2026-10-20, DM-130).
-        "expiresAt": this._end.ts_format("2006-01-02T15:04:05Z", "UTC").catch(null)
+        # The event leaves the space when it is over (owner 2026-10-20, DM-130), or, in a store with a lease, when
+        # no run has seen it for the lease: an event its source dropped or cancelled ends too (T-5047).
+        "expiresAt": $expires.ts_format("2006-01-02T15:04:05Z", "UTC").catch(null)
       }.filter(kv -> kv.value != null)
   - archive:
       format: json_array

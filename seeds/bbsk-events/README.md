@@ -125,3 +125,48 @@ one entity; writes `expiresAt` at the event's end (start + 1 day without an end)
 - Each run is daily, staggered 00:00-02:34 UTC (01:00-05:00 in Bratislava, winter and summer); the Portal's
   run-now button starts one source.
 - Not built yet: `wp-rss` (Sliač writes its dates only in free text) and every `pipeline-html` row (one parser per CMS).
+
+## The national store (T-5047)
+
+Since 2026-10-21 (owner: "a second store of all events across the whole Slovakia ... at least 100 sources ...
+synchronized, up to date") `generate.py` writes two stores from the same inventory:
+
+| store | project / space | sources | cadence | an event leaves |
+|---|---|---|---|---|
+| region | `bbsk` / `bbsk-podujatia` | the BBSK rows | daily, 00:00-02:59 UTC | at its end |
+| national | `slovensko` / `slovensko-podujatia` | every kept row | feeds every 3 h; Lego and WEBY calendars daily, spread over the day | a day after its end, or 8 h (daily: 52 h) after the last run that listed it |
+
+The national store's pipelines write through `slovensko-podujatia-zapis` (audience organization, no policyRef);
+people read `slovensko-podujatia` (NGSI-LD, OGC, iCal, CSV, OData, WebSocket, MCP; CKAN dataset "Podujatia na
+Slovensku" in the `slovensko` catalogue). The lease ends an event its source dropped or cancelled, because
+`spec.expiry` is refused where several pipelines write one space.
+
+One template per source kind, a source is one DataSource + one Pipeline naming its kind:
+
+| feed kind | templates (`pipelines/`) | what it reads |
+|---|---|---|
+| `lego-html` | `lego-html` | Lego CMS calendar list; each event page's `data-date-start`/`data-date-end` and `class="venue"`, 3 s apart (the CMS's robots.txt asks Crawl-Delay 3) |
+| `lsvr-rest`, `eventon-rest`, `mec-rest`, `wp-rest-jsonld` | `wp-list` + `jsonld-pages` | WordPress REST list (50 newest), each event page's schema.org Event JSON-LD, 1 s apart |
+| `wp-rss-jsonld` | `rss-list` + `jsonld-pages` | RSS/Atom of event posts, each post's JSON-LD |
+| `jsonld` | `page-jsonld` | the events page's own JSON-LD; a page without any JSON-LD fails the run |
+| `tribe-rest`, `ical`, `weby-feed`, `wp-rest-sc` | as above (T-4896) | |
+
+The 182 rows marked `found by T-5047 from Wikidata P856` come from probing the website of every Slovak
+municipality on Wikidata (2,859 sites, `P782` LAU code, region from its NUTS 3 prefix) and 254 museums,
+galleries, theatres, libraries and culture centres: robots.txt first, then `/wp-json/` (The Events Calendar, LSVR,
+EventON, MEC routes), `get_rss.php?id=3_atom` (WEBY) and the Lego `bundles/kalendar` calendar page. A row was
+kept only when its feed parsed and listed at least one event on 2026-10-21. 89 WEBY sites serve an empty
+`id=3` feed and stay out.
+
+Decisions (worker-t5047, owner may override):
+
+- GPS stays required with no town centroids (owner 2026-10-20): most new sources give a venue name only, so their
+  events reach the space once `venues.csv` holds their venue; until then the run report lists them as refused.
+- No conditional GET: a one-shot run keeps no state between runs to remember an ETag, and each run is one list
+  request plus at most 50 page reads at 1-3 s.
+- No paging: a store keeps the 100 soonest events per source; The Events Calendar answers upcoming events by start
+  (`start_date=now`) and a WordPress list its newest posts, which hold the upcoming ones.
+- Duplicates collapse by id (name, start, town hash, as T-4895's model states): one entity, the last source's link.
+  A sameAs relation across sources within 200 m needs a cross-source pass over the space, which a per-source
+  one-shot run cannot do.
+- Free-text dates stay out: `wp-rest` (detail HTML), `wp-rss` and `joomla-rss` rows need one parser per site.

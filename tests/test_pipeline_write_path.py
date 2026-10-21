@@ -7,7 +7,7 @@ jc-core/src/kinds/pipeline_identity.rs). The gateway (context-gateway/src/store.
 derived Policies to an Endpoint only when it names no `policyRef` and is not an App's generated
 Endpoint: a `policyRef` binds the one Policy it names, an App's Endpoint its own grants. A Pipeline
 aimed at such an Endpoint gets a view without batch writes, and every upsert answers 404 (the
-28 bbsk podujatia-* pipelines aimed at the public read Endpoint bbsk-podujatia-slovensko).
+28 bbsk podujatia-* pipelines aimed at the public read Endpoint bbsk-podujatia-slovensko, retired by T-5047).
 """
 
 from pathlib import Path
@@ -65,5 +65,5 @@ def test_a_pipelines_target_endpoint_binds_its_derived_write_policy(path, projec
 
 def test_a_policy_ref_endpoint_refuses_the_target_a_pipeline_needs():
     """The check above fails on the defect it guards: the read Endpoint the pipelines named before."""
-    spec = ENDPOINTS[("bbsk", "bbsk-podujatia-slovensko")]
+    spec = ENDPOINTS[("slovensko", "slovensko-podujatia")]
     assert spec["audience"] == "public" and "policyRef" in spec
