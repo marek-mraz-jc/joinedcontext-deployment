@@ -150,9 +150,9 @@ def test_a_model_that_lacks_the_type_is_a_ko():
     assert rows["air"]["model"] == "ko: no model lists AirQualityObserved"
 
 
-def test_a_dataset_without_a_datastore_table_is_a_ko():
+def test_a_dataset_without_a_datastore_table_is_a_warning_not_a_ko():
     rows, _ = table(world([package("air", "a1", "AirQualityObserved", datastore="")], ["a1"]))
-    assert rows["air"]["datastore"] == "ko: no datastore table"
+    assert rows["air"]["datastore"] == "warn: no datastore table"
 
 
 def test_a_datastore_ten_percent_off_is_a_ko_and_within_one_percent_is_ok():
@@ -280,15 +280,23 @@ def test_the_slow_checks_rotate_least_recently_checked_first(tmp_path):
 
 
 def test_a_run_writes_one_table_and_exits_one_on_a_ko(tmp_path, capsys):
-    p = package("air", "a1", "AirQualityObserved", datastore="")
-    fake = Fake(world([p], ["a1"]))
+    fake = Fake(world([package("air", "a1", "AirQualityObserved")], []))
     assert smoke.run(DOMAIN, "prod", tmp_path, fake.client(), "20261019T060000Z") == 1
     table_path = tmp_path / "smoke-catalogue-prod-20261019T060000Z.tsv"
     rows = list(csv.DictReader(table_path.open(), delimiter="\t"))
-    assert rows[0]["datastore"] == "ko: no datastore table"
+    assert rows[0]["inventory"] == "ko: its Endpoint is not in the public DCAT feed"
     out = capsys.readouterr().out
-    assert "  FAIL  catalogue air (a1): datastore no datastore table" in out
+    assert "  FAIL  catalogue air (a1): inventory its Endpoint is not in the public DCAT feed" in out
     assert "1 datasets, 0 complete, 1 ko" in out
+
+
+def test_a_missing_datastore_table_warns_and_exits_zero(tmp_path, capsys):
+    """T-5060 removes the DataStore: a dataset without a table is printed as a warning, not a ko."""
+    fake = Fake(world([package("air", "a1", "AirQualityObserved", datastore="")], ["a1"]))
+    assert smoke.run(DOMAIN, "prod", tmp_path, fake.client(), "20261019T060000Z") == 0
+    out = capsys.readouterr().out
+    assert "  warn  catalogue air (a1): datastore no datastore table" in out
+    assert "1 datasets, 1 complete, 0 ko" in out
 
 
 def test_a_clean_run_exits_zero(tmp_path, capsys):
