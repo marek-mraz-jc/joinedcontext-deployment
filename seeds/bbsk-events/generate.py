@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Write one DataSource, Pipeline and mapping per kept events source (T-4896).
+"""Write one DataSource, Pipeline and mapping per kept events source and store (T-4896, T-5047).
 
-Reads sources.csv (T-4894's inventory of the Banská Bystrica Region), sources-sk.csv (T-4899's
-inventory of the rest of Slovakia) and venues.csv (venues checked by hand), takes the rows whose
-decision is `pipeline`, whose feed is https and whose feed kind has a template under pipelines/, and writes
-components/context-gateway/seed/bbsk/bbsk-{datasource,pipeline}-podujatia-<name>.yaml and its -bento.yaml plus
-their lines in that folder's index.yaml, and the list of sources with their licence into the
-catalogue block of the national and the regional Endpoint (T-4898). `--check` writes nothing and fails when a file differs.
+Reads sources.csv (T-4894's inventory of the Banská Bystrica Region), sources-sk.csv (T-4899's and
+T-5047's inventory of the rest of Slovakia) and venues.csv (venues checked by hand), takes the rows whose
+decision is `pipeline`, whose feed is https and whose feed kind has a template under pipelines/, and writes,
+per store of STORES, components/context-gateway/seed/<ns>/<ns>-{datasource,pipeline}-podujatia-<name>.yaml and
+its -bento.yaml plus their lines in that folder's index.yaml, and the list of sources with their licence into
+the catalogue block of the store's Endpoint (T-4898). The Banská Bystrica Region's store reads its own sources
+once a night; the national store (slovensko-podujatia) reads every source every 3 hours. `--check` writes
+nothing and fails when a file differs.
 
 Run: python3 seeds/bbsk-events/generate.py [--check]
 """
@@ -24,7 +26,6 @@ import yaml
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 SEED = ROOT / "components/context-gateway/seed/bbsk"
-INDEX = SEED / "index.yaml"
 TARGET = "urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-podujatia:bbsk-podujatia-zapis"
 UA = "joinedcontext-platform/1.0 (+https://dev.joinedcontext.com; public events)"
 REGION = "Banskobystrický kraj"
@@ -41,25 +42,66 @@ REGIONS = {
     "PO": ("PO", "Prešovský kraj"),
     "KE": ("KE", "Košický kraj"),
 }
-#: The Endpoints whose catalogue block lists the sources: the national one all, the region's its own.
-ENDPOINTS = {
-    "bbsk-endpoint-podujatia-slovensko.yaml": None,
-    "bbsk-endpoint-podujatia.yaml": "BBSK",
-}
-#: feed kind of the inventory -> template file under pipelines/.
+#: The two event stores (owner 2026-10-21, T-5047). Each lists the inventory regions it reads (None: all),
+#: its write Endpoint, its cadences and its grace. A cadence names the feed kinds it takes (None: the rest),
+#: how often a source runs, the window its runs are staggered over (minutes after 00:00 UTC) and its lease. An
+#: event leaves at its end + `grace` seconds, or `lease` seconds after the run that last saw it, whichever comes
+#: first (None: no lease). The lease is what ends an event its source dropped or cancelled: spec.expiry is
+#: refused where several pipelines write one space (pipeline_expiry::check).
+STORES = (
+    {
+        "ns": "bbsk",
+        "domain": "bbsk.sk",
+        "space": "bbsk-podujatia",
+        "regions": ("BBSK",),
+        "target": TARGET,
+        "endpoints": ("bbsk-endpoint-podujatia.yaml",),
+        "cadences": ({"kinds": None, "period": "24h", "every": 24, "window": 180, "lease": None},),
+        "grace": 0,
+    },
+    {
+        "ns": "slovensko",
+        "domain": "joinedcontext.com",
+        "space": "slovensko-podujatia",
+        "regions": None,
+        "target": "urn:ngsi-ld:Endpoint:joinedcontext.com:slovensko-podujatia:slovensko-podujatia-zapis",
+        "endpoints": ("slovensko-endpoint-podujatia.yaml",),
+        # A village's calendar page (Lego, WEBY) changes rarely and every run reads each event page 1-3 s
+        # apart: once a day, spread over the day. The feeds run every 3 hours. Each lease outlasts two missed
+        # runs, so a source down for one run keeps its events.
+        "cadences": (
+            {"kinds": ("lego-html", "weby-feed"), "period": "24h", "every": 24, "window": 1440, "lease": 52 * 3600},
+            {"kinds": None, "period": "3h", "every": 3, "window": 180, "lease": 8 * 3600},
+        ),
+        "grace": 86400,
+    },
+)
+#: feed kind of the inventory -> template files under pipelines/, run in this order.
 TEMPLATES = {
-    "wp-rest-sc": "wp-rest-sc",
-    "tribe-rest": "tribe-rest",
-    "ical": "ical",
-    "weby-feed": "weby-feed",
-    "mec-rest": "mec-jsonld",
+    "wp-rest-sc": ("wp-rest-sc",),
+    "tribe-rest": ("tribe-rest",),
+    "ical": ("ical",),
+    "weby-feed": ("weby-feed",),
+    "mec-rest": ("wp-list", "jsonld-pages"),
+    "lsvr-rest": ("wp-list", "jsonld-pages"),
+    "eventon-rest": ("wp-list", "jsonld-pages"),
+    "wp-rest-jsonld": ("wp-list", "jsonld-pages"),
+    "wp-rss-jsonld": ("rss-list", "jsonld-pages"),
+    "jsonld": ("page-jsonld",),
+    "lego-html": ("lego-html",),
 }
-#: Fewer bytes per run: the fields the template reads (WordPress `_fields`).
-TRIM = {"wp-rest-sc": "_fields=id,link,title,content,modified_gmt,meta_box"}
+#: Fewer bytes per run: the fields the template reads (WordPress `_fields`). The kinds that read each
+#: event's page list the 50 newest posts: every page read is one more request to a small town's site.
+_PAGES = "_fields=id,link,title,modified_gmt&per_page=50"
+TRIM = {
+    "wp-rest-sc": "_fields=id,link,title,content,modified_gmt,meta_box",
+    "mec-rest": _PAGES,
+    "lsvr-rest": _PAGES,
+    "eventon-rest": _PAGES,
+    "wp-rest-jsonld": _PAGES,
+}
 #: Upcoming events first where the feed sorts and filters itself (owner 2026-10-20).
 UPCOMING = {"tribe-rest": "start_date=now"}
-#: The night window the runs share, in minutes after 00:00 UTC (01:00-05:00 in Bratislava).
-WINDOW = 180
 INDEX_BEGIN = (
     "# BEGIN generated by seeds/bbsk-events/generate.py (T-4896): do not edit by hand"
 )
@@ -133,7 +175,11 @@ def venues_for(town_slug: str | None) -> list[dict]:
     return out
 
 
-def processors(row: dict) -> list:
+def cadence(row: dict, store: dict) -> dict:
+    return next(c for c in store["cadences"] if c["kinds"] is None or row["feed_kind"] in c["kinds"])
+
+
+def processors(row: dict, store: dict) -> list:
     """The template's steps then the common tail, each __NAME__ a JSON literal."""
     facts_only = not row["licence_terms"].startswith("CC-BY")
     values = {
@@ -151,11 +197,15 @@ def processors(row: dict) -> list:
         "__FACTS_ONLY__": "true" if facts_only else "false",
         "__HOST_RE__": re.escape(row["host"]).replace("\\", "\\\\"),
         "__HOST__": row["host"],
+        # The events list's own path: a Lego source reads only the event pages under it, never a sidebar's news.
+        "__LIST_PATH_RE__": re.escape(urlsplit(row["check_url"]).path).replace("\\", "\\\\"),
+        "__GRACE__": json.dumps(store["grace"]),
+        "__LEASE__": json.dumps(cadence(row, store)["lease"]),
     }
-    text = (HERE / "pipelines" / f"{TEMPLATES[row['feed_kind']]}.yaml").read_text(
-        encoding="utf-8"
+    text = "".join(
+        (HERE / "pipelines" / f"{name}.yaml").read_text(encoding="utf-8")
+        for name in (*TEMPLATES[row["feed_kind"]], "common")
     )
-    text += (HERE / "pipelines/common.yaml").read_text(encoding="utf-8")
     for name, value in values.items():
         text = text.replace(name, value)
     assert not re.search(r"__[A-Z_]+__", text), row["name"]
@@ -172,21 +222,33 @@ def provider(row: dict) -> str:
     return f"{row['town']}, {host} ({licence})"
 
 
-def documents(index: int, step: int, row: dict) -> dict[str, str]:
-    name, town = row["name"], row["town"]
+def feed_url(row: dict) -> str:
+    """The row's feed with the template's trims; a parameter the trim sets replaces the row's own."""
     url = row["check_url"]
     for extra in (TRIM, UPCOMING):
         if row["feed_kind"] in extra:
-            url += ("&" if "?" in url else "?") + extra[row["feed_kind"]]
-    # One run a day, staggered over 00:00-02:59 UTC, which is 01:00-05:00 in Bratislava in winter
-    # and in summer (owner 2026-10-20), so no two sources start in the same minute.
-    minute = index * step
+            for pair in extra[row["feed_kind"]].split("&"):
+                url = re.sub(r"([?&])" + re.escape(pair.split("=")[0]) + r"=[^&]*&?", r"\1", url).rstrip("&?")
+                url += ("&" if "?" in url else "?") + pair
+    return url
+
+
+def schedule(minute: int, every: int) -> str:
+    """Cron for a run at `minute` after 00:00 UTC, then every `every` hours that day."""
+    hour = str(minute // 60) if every == 24 else f"{minute // 60}-23/{every}"
+    return f"{minute % 60} {hour} * * *"
+
+
+def documents(minute: int, row: dict, store: dict) -> dict[str, str]:
+    name, town, ns = row["name"], row["town"], store["ns"]
+    url = feed_url(row)
+    plan = cadence(row, store)
     datasource = {
         "apiVersion": "joinedcontext.com/v1alpha1",
         "kind": "DataSource",
         "metadata": {
             "name": name,
-            "namespace": "bbsk",
+            "namespace": ns,
             "title": {
                 "sk": f"Podujatia: {town} ({row['feed_kind']})",
                 "en": f"Events: {town} ({row['feed_kind']})",
@@ -207,15 +269,15 @@ def documents(index: int, step: int, row: dict) -> dict[str, str]:
         "kind": "Pipeline",
         "metadata": {
             "name": name,
-            "namespace": "bbsk",
+            "namespace": ns,
             "title": {"sk": f"Podujatia: {town}", "en": f"Events: {town}"},
         },
         "spec": {
             "class": "auto",
-            "period": "24h",
-            "schedule": f"{minute % 60} {minute // 60} * * *",
+            "period": plan["period"],
+            "schedule": schedule(minute, plan["every"]),
             "source": {"dataSourceRef": {"kind": "DataSource", "name": name}},
-            "targetEndpoint": TARGET,
+            "targetEndpoint": store["target"],
             "output": {"type": "Event", "mode": "upsert"},
             "quotas": {"maxMemoryMb": 128, "cpuMillicores": 100},
         },
@@ -224,14 +286,14 @@ def documents(index: int, step: int, row: dict) -> dict[str, str]:
         f"# Generated by seeds/bbsk-events/generate.py from the inventory row {town} ({row['feed_kind']}),\n"
         f"# read {row['read_on']}: {row['events_url']} (T-4896). Do not edit: change the template or the CSV.\n"
     )
-    bento = {"pipeline": {"processors": processors(row)}}
+    bento = {"pipeline": {"processors": processors(row, store)}}
     dump = lambda d: yaml.dump(
         d, Dumper=Dumper, allow_unicode=True, sort_keys=False, width=120
     )
     return {
-        f"bbsk-datasource-{name}.yaml": head + dump(datasource),
-        f"bbsk-pipeline-{name}.yaml": head + dump(pipeline),
-        f"bbsk-pipeline-{name}-bento.yaml": head + dump(bento),
+        f"{ns}-datasource-{name}.yaml": head + dump(datasource),
+        f"{ns}-pipeline-{name}.yaml": head + dump(pipeline),
+        f"{ns}-pipeline-{name}-bento.yaml": head + dump(bento),
     }
 
 
@@ -239,16 +301,19 @@ def accept(kind: str) -> str:
     return {
         "ical": "text/calendar",
         "weby-feed": "application/rss+xml, application/atom+xml, application/xml",
+        "jsonld": "text/html",
+        "lego-html": "text/html",
+        "wp-rss-jsonld": "application/rss+xml, application/atom+xml, application/xml",
     }.get(kind, "application/json")
 
 
-def index_lines(rows: list[dict]) -> list[str]:
+def index_lines(rows: list[dict], ns: str) -> list[str]:
     lines = [INDEX_BEGIN]
     for row in rows:
         lines += [
-            f"bbsk-datasource-{row['name']}.yaml: projects/bbsk/datasources/{row['name']}.yaml",
-            f"bbsk-pipeline-{row['name']}.yaml: projects/bbsk/pipelines/{row['name']}/pipeline.yaml",
-            f"bbsk-pipeline-{row['name']}-bento.yaml: projects/bbsk/pipelines/{row['name']}/bento.yaml",
+            f"{ns}-datasource-{row['name']}.yaml: projects/{ns}/datasources/{row['name']}.yaml",
+            f"{ns}-pipeline-{row['name']}.yaml: projects/{ns}/pipelines/{row['name']}/pipeline.yaml",
+            f"{ns}-pipeline-{row['name']}-bento.yaml: projects/{ns}/pipelines/{row['name']}/bento.yaml",
         ]
     return lines + [INDEX_END]
 
@@ -293,30 +358,38 @@ def with_block(text: str, begin: str, end: str, block: str) -> str:
     return text.rstrip("\n") + "\n" + block
 
 
-def main(check: bool) -> int:
-    rows = kept_sources()
-    assert len(rows) <= WINDOW, "more sources than minutes in the night window"
-    step = WINDOW // len(rows)
+def store_rows(store: dict) -> list[dict]:
+    return [r for r in kept_sources() if store["regions"] is None or r["region"] in store["regions"]]
+
+
+def wanted_files() -> tuple[dict[Path, str], list[Path]]:
+    """Every generated file with its text, and the generated files on disk no store wants any more."""
     wanted: dict[Path, str] = {}
-    for i, row in enumerate(rows):
-        for file, text in documents(i, step, row).items():
-            wanted[SEED / file] = text
-    for file, region in ENDPOINTS.items():
-        listed = [r for r in rows if region is None or r["region"] == region]
-        path = SEED / file
-        block = "\n".join(catalogue_sources(listed)) + "\n"
-        wanted[path] = with_block(
-            path.read_text(encoding="utf-8"), SOURCES_BEGIN, SOURCES_END, block
-        )
-    block = "\n".join(index_lines(rows)) + "\n"
-    wanted[INDEX] = with_block(
-        INDEX.read_text(encoding="utf-8"), INDEX_BEGIN, INDEX_END, block
-    )
-    ours = [
-        *SEED.glob("bbsk-datasource-podujatia-*.yaml"),
-        *SEED.glob("bbsk-pipeline-podujatia-*.yaml"),
-    ]
-    stale = [p for p in ours if p not in wanted]
+    ours: list[Path] = []
+    for store in STORES:
+        ns, seed = store["ns"], ROOT / "components/context-gateway/seed" / store["ns"]
+        rows = store_rows(store)
+        # Each cadence's runs are staggered over its window, so no two of them start in the same minute; the
+        # bbsk night window is 00:00-02:59 UTC, 01:00-05:00 in Bratislava in winter and summer (owner 2026-10-20).
+        for plan in store["cadences"]:
+            mine = [r for r in rows if cadence(r, store) is plan]
+            assert len(mine) <= plan["window"], f"{ns}: more sources than minutes in a window"
+            for i, row in enumerate(mine):
+                for file, text in documents(i * plan["window"] // len(mine), row, store).items():
+                    wanted[seed / file] = text
+        for file in store["endpoints"]:
+            path = seed / file
+            block = "\n".join(catalogue_sources(rows)) + "\n"
+            wanted[path] = with_block(path.read_text(encoding="utf-8"), SOURCES_BEGIN, SOURCES_END, block)
+        index = seed / "index.yaml"
+        block = "\n".join(index_lines(rows, ns)) + "\n"
+        wanted[index] = with_block(index.read_text(encoding="utf-8"), INDEX_BEGIN, INDEX_END, block)
+        ours += [*seed.glob(f"{ns}-datasource-podujatia-*.yaml"), *seed.glob(f"{ns}-pipeline-podujatia-*.yaml")]
+    return wanted, [p for p in ours if p not in wanted]
+
+
+def main(check: bool) -> int:
+    wanted, stale = wanted_files()
     differ = [
         p
         for p, t in wanted.items()
@@ -330,7 +403,8 @@ def main(check: bool) -> int:
         p.unlink()
     for p in differ:
         p.write_text(wanted[p], encoding="utf-8")
-    print(f"{len(rows)} sources, {len(differ)} files written, {len(stale)} removed")
+    counts = ", ".join(f"{s['ns']} {len(store_rows(s))}" for s in STORES)
+    print(f"sources: {counts}; {len(differ)} files written, {len(stale)} removed")
     return 0
 
 
