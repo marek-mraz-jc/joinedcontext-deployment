@@ -9,6 +9,9 @@ pipeline:
         root = this.features.or([]).filter(f -> f.id.or("").re_match("^[0-9a-f-]{36}$") && f.geometry.or(null) != null).map_each(f -> {
           "id": "urn:ngsi-ld:%v:%v:%v:parkkiopas-%v".format("OnStreetParking", env("JC_ORG_DOMAIN"), env("JC_SPACE"), f.id),
           "type": "OnStreetParking",
+          # The guide names no area: its id's first block tells one from the next on a map or in a list (T-4745).
+          "name": { "type": "LanguageProperty", "languageMap": {
+            "fi": "Pysäköintialue %v".format(f.id.slice(0, 8)), "en": "Parking area %v".format(f.id.slice(0, 8)) } },
           "category": { "type": "Property", "value": ["public"] },
           "location": { "type": "GeoProperty", "value": f.geometry },
           "totalSpotNumber": if f.properties.capacity_estimate.or(null) == null { null } else {

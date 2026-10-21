@@ -110,6 +110,9 @@ def test_the_areas_of_one_application_are_one_permit_with_every_outline(written)
     assert permit["refDistrict"] == {
         "type": "Relationship", "object": f"urn:ngsi-ld:AdministrativeArea:hel.fi:helsinki:district-{number}",
     }
+    # The register names none of these permits: each reads its address instead (T-4745).
+    assert permit["name"]["languageMap"]["fi"] == "Rapparinkuja 8b"
+    assert all(e["name"]["languageMap"]["fi"] for e in written["excavation"])
 
 
 @requires_docker
@@ -180,6 +183,10 @@ def test_a_beach_sensor_without_a_reading_has_no_temperature_and_points_at_its_b
 @requires_docker
 def test_a_parking_area_the_city_has_not_estimated_has_no_capacity_rather_than_zero(written):
     assert sorted("totalSpotNumber" in e for e in written["parking-areas"]) == [False, True, True]
+    # The guide names no area; its id's first block does (T-4745).
+    for e in written["parking-areas"]:
+        block = e["id"].rsplit("parkkiopas-", 1)[1][:8]
+        assert e["name"]["languageMap"] == {"fi": f"Pysäköintialue {block}", "en": f"Parking area {block}"}
 
 
 @requires_docker
