@@ -19,9 +19,10 @@ postgres:
             # The planner's guess of what is cached: shared_buffers plus the page cache the
             # cgroup lets the pod keep.
             effective_cache_size: "1536MB"
-            # Per sort or hash node: 16MB x 2 nodes x the broker's 20 connections is 640MB at the
-            # worst moment, inside what the limit leaves.
-            work_mem: "16MB"
+            # Per sort or hash node. 16MB OOMKilled the instance at 2026-10-21 00:21Z (1695Mi of
+            # 2Gi an hour later): the broker's 20 connections are not the only ones, the portal,
+            # Keycloak and the pipelines sort too. 8MB halves the worst moment.
+            work_mem: "8MB"
             maintenance_work_mem: "128MB"
             track_io_timing: "on"
             log_min_duration_statement: "500ms"

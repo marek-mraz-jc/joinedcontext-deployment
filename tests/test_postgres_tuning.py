@@ -20,7 +20,7 @@ ROLE_JOB_IMAGE = f"{IMAGES['roleJob']['repository']}@{IMAGES['roleJob']['digest'
 DEV_PARAMETERS = {
     "shared_buffers": "512MB",
     "effective_cache_size": "1536MB",
-    "work_mem": "16MB",
+    "work_mem": "8MB",
     "maintenance_work_mem": "128MB",
     "track_io_timing": "on",
     "log_min_duration_statement": "500ms",
