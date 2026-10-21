@@ -24,9 +24,10 @@ repositories:
     {{- end }}
   {{- end }}
 {{- end }}
+{{- $dbChart := index $root.charts $component "db" }}
 {{- if $root.global.contextBrokers }}
-  - name: cc2-cnpg
-    url: https://cloudnative-pg.github.io/charts
+  - name: cc2-{{ index (splitList "/" $dbChart.chart) 0 }}
+    url: {{ $dbChart.repository }}
 {{- end }}
 
 releases:
@@ -122,8 +123,8 @@ releases:
       release: {{ $db }}
       broker: {{ $name }}
     namespace: {{ $broker.namespace }}
-    chart: cc2-cnpg/cluster
-    version: '0.7.0'
+    chart: cc2-{{ $dbChart.chart }}
+    version: {{ $dbChart.version | quote }}
     createNamespace: {{ $root.global.createNamespaces }}
     installed: {{ $broker.enabled }}
     values:
