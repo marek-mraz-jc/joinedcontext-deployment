@@ -1,0 +1,18 @@
+# The write door of bbsk-podujatia (T-5033): the podujatia-* pipelines upsert through it. Each Pipeline writes as
+# its own derived account pl-{pipeline} under a derived Policy (PL-19, PL-20), and an Endpoint binds those only
+# without a policyRef, as helsinki-all and zilina-mesto do; the public Endpoints keep their read policyRef.
+# Writes here are granted to the pipelines' accounts alone; the audience keeps out anyone outside the organization.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: bbsk-podujatia-zapis
+  namespace: bbsk
+  title: { sk: "Podujatia: zápis kanálov", en: "Events: pipeline writes" }
+  description:
+    sk: "Interný vstup, cez ktorý zberné kanály zapisujú podujatia; čítajú sa cez verejné Endpointy bbsk-podujatia a bbsk-podujatia-slovensko."
+    en: "The internal door the ingestion pipelines write the events through; people read them through the public Endpoints bbsk-podujatia and bbsk-podujatia-slovensko."
+spec:
+  contextSpaceRef: bbsk-podujatia
+  slug: xfkyiscytdlbjkx4ija36etw3sreihhw
+  audience: organization
+  enabledRepresentations: [ngsi-ld]

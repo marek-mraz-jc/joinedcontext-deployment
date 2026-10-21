@@ -19,6 +19,7 @@ import yaml
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed/bbsk"
 SPACE = "bbsk-podujatia"
 ENDPOINTS = {"bbsk-podujatia": "podujatia-kraj-read", "bbsk-podujatia-slovensko": "podujatia-read"}
+WRITE = "bbsk-podujatia-zapis"
 # EP-125's iCalendar requirement (platform crates/jc-core/src/kinds/endpoint.rs ICAL): the source
 # attribute of each RFC 5545 field, and the ones the model must mark required.
 ICAL_SOURCES = {"startDate", "name", "endDate", "description", "address", "location", "url"}
@@ -145,8 +146,9 @@ def test_a_point_outside_slovakia_is_flagged():
 
 
 def test_two_endpoints_serve_the_calendar_and_event_alone():
-    # The dashboard's own endpoint is the Portal's to compile (T-4897), tested below.
-    endpoints = {n: e for n, e in of_space("Endpoint").items() if not n.startswith("app-")}
+    # The dashboard's own endpoint is the Portal's to compile (T-4897), tested below; the write
+    # door is tested on its own.
+    endpoints = {n: e for n, e in of_space("Endpoint").items() if not n.startswith("app-") and n != WRITE}
     policies = of_space("Policy")
     assert set(endpoints) == set(ENDPOINTS)
     for name, policy in ENDPOINTS.items():
@@ -160,6 +162,19 @@ def test_two_endpoints_serve_the_calendar_and_event_alone():
         assert not [op for op in read["operations"] if op.endswith(("Batch", "Entity", "Attrs", "Temporal")) or op == "writeOps"]
     assert {e["spec"]["slug"] for e in endpoints.values()}.isdisjoint(
         {d["spec"].get("slug") for _, d in manifests() if d["kind"] == "Endpoint" and space_of(d) != SPACE})
+
+
+def test_the_pipelines_write_through_an_organization_endpoint_the_public_cannot_reach():
+    """T-5033: each pipeline writes as its derived account pl-{pipeline} under a derived Policy, which
+    an Endpoint binds only without a policyRef; the public read Endpoints keep theirs, so the
+    pipelines write through their own door, which serves no anonymous caller and no calendar."""
+    spec = of_space("Endpoint")[WRITE]["spec"]
+    assert spec["audience"] == "organization"
+    assert "policyRef" not in spec and "publish" not in spec and "catalog" not in spec
+    assert spec["enabledRepresentations"] == ["ngsi-ld"]
+    targets = {d["spec"]["targetEndpoint"] for _, d in manifests() if d["kind"] == "Pipeline"
+               and d["metadata"]["name"].startswith("podujatia-")}
+    assert targets == {f"urn:ngsi-ld:Endpoint:bbsk.sk:{SPACE}:{WRITE}"}
 
 
 def test_the_region_is_a_scope_view_of_the_national_space():
@@ -183,7 +198,7 @@ def test_every_file_is_placed_by_the_index():
     # T-4896's pipelines and T-4897's App, placed outside spaces/ or tested on their own.
     generated = ("bbsk-datasource-", "bbsk-pipeline-", "bbsk-app-")
     ours = sorted(p.name for p in SEED.glob("bbsk-*podujatia*") if not p.name.startswith(generated))
-    assert len(ours) == 12
+    assert len(ours) == 13
     assert [f for f in ours if f not in index] == []
     assert {index[f].split("/spaces/")[1].split("/")[0] for f in ours} == {SPACE}
 
