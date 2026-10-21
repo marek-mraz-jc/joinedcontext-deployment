@@ -33,7 +33,9 @@ def helsinki() -> dict:
 
 def test_a_vehicle_is_kept_five_minutes_after_its_last_report_and_an_hour_of_its_track():
     (vehicle,) = [rule for rule in helsinki()["retention"] if rule["entityType"] == "Vehicle"]
-    assert vehicle == {"entityType": "Vehicle", "current": "PT5M", "history": "PT1H"}
+    assert {k: v for k, v in vehicle.items() if k != "attributes"} == {"entityType": "Vehicle", "current": "PT5M", "history": "PT1H"}
+    # The three that say what a vehicle is, written without an observedAt, record a change (T-4844).
+    assert set(vehicle["attributes"]) == {"fleetVehicleId", "transportMode", "vehicleType"}
 
 
 def test_no_vehicle_of_any_space_keeps_more_than_an_hour_of_track():

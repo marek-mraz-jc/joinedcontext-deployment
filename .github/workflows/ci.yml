@@ -197,3 +197,14 @@ jobs:
           git -C "$RUNNER_TEMP/platform" fetch -q --depth 1 https://github.com/marek-mraz-jc/joinedcontext-platform "$sha"
           echo "JC_PLATFORM_DIR=$RUNNER_TEMP/platform" >> "$GITHUB_ENV"
       - run: pytest -q -n auto --dist loadgroup --durations=30 $(python3 scripts/ci/test-shard.py ${{ matrix.shard }} 4)
+      # How each seed pipeline creates history rows, per pipeline x type x attribute, with a verdict
+      # (T-4844); tests/test_temporal_audit.py fails on a row that is not ok, the report is the table.
+      - name: temporal audit of the seeds
+        if: matrix.shard == 1 && always()
+        run: python3 scripts/temporal-audit.py --out temporal-audit.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: matrix.shard == 1 && always()
+        with:
+          name: temporal-audit
+          path: temporal-audit.json
+          retention-days: 30

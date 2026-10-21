@@ -19,6 +19,12 @@ spec:
   retention:
     - entityType: AirQualityObserved
       history: P7D
+      # Written on every run without an observedAt: one row per change and one a day,
+      # not one per run (T-4844, DM-108, DM-109; scripts/temporal-audit.py).
+      attributes:
+        dateObserved: { record: onChange, heartbeat: P1D }
+        location: { record: onChange, heartbeat: P1D }
+        name: { record: onChange, heartbeat: P1D }
   # The space's place (T-4525): the catalogue's Dataset carries it, so georel=near finds the space.
   # Slovakia with a margin; a AirQualityObserved outside it is flagged, never refused (DM-87).
   quality:
