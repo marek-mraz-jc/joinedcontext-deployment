@@ -6,8 +6,8 @@ metadata:
   annotations:
     joinedcontext.com/generated-by: portal/app-reconciler
   title:
-    en: Events in the Banská Bystrica Region
-    sk: Podujatia v Banskobystrickom kraji
+    en: Events in the Banská Bystrica Region, for the events app
+    sk: Podujatia v Banskobystrickom kraji pre aplikáciu podujatí
 spec:
   audience: public
   callerRole: true
