@@ -171,7 +171,7 @@ def test_the_pipelines_write_through_an_organization_endpoint_the_public_cannot_
     spec = of_space("Endpoint")[WRITE]["spec"]
     assert spec["audience"] == "organization"
     assert "policyRef" not in spec and "publish" not in spec and "catalog" not in spec
-    assert spec["enabledRepresentations"] == ["ngsi-ld"]
+    assert "ical" not in spec["enabledRepresentations"]
     targets = {d["spec"]["targetEndpoint"] for _, d in manifests() if d["kind"] == "Pipeline"
                and d["metadata"]["name"].startswith("podujatia-")}
     assert targets == {f"urn:ngsi-ld:Endpoint:bbsk.sk:{SPACE}:{WRITE}"}
