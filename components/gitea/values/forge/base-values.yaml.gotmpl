@@ -187,6 +187,10 @@ gitea:
       # no encryption`. Gitea defaults SSL_MODE to disable. `require` encrypts without
       # asking for a CA; the peer's identity is Linkerd's job.
       SSL_MODE: require
+      # Gitea opens connections without a ceiling by default and shares one Postgres with
+      # every other component: counted in tests/test_postgres_connection_budget.py (T-4933).
+      MAX_OPEN_CONNS: 3
+      MAX_IDLE_CONNS: 2
     service:
       DISABLE_REGISTRATION: true
       SHOW_REGISTRATION_BUTTON: false

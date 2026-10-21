@@ -29,7 +29,7 @@ DEV_PARAMETERS = {
 }
 
 # The development profile's sizing (T-4933), which dev, local and smartcity all render.
-PROFILE_PARAMETERS = {"max_connections": "50", "max_parallel_workers": "2", "autovacuum_work_mem": "64MB"}
+PROFILE_PARAMETERS = {"max_connections": "55", "max_parallel_workers": "2", "autovacuum_work_mem": "32MB"}
 
 requires_docker = pytest.mark.skipif(shutil.which("docker") is None, reason="docker not installed")
 

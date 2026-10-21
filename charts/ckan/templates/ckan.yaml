@@ -178,6 +178,17 @@ spec:
             # the same, because `datastore_search_sql` runs caller-supplied SQL on it.
             - name: CKAN_DATASTORE_READ_URL
               value: postgresql://{{ .Values.database.datastoreRead.user }}:$(DATASTORE_READ_PASSWORD)@{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.datastoreName }}
+            # Pool ceilings (values.yaml `database.pool`). `ckanext-envvars` strips the `CKAN___`
+            # prefix, so these land as `sqlalchemy.pool_size` and the DataStore's
+            # `ckan.datastore.sqlalchemy.pool_size`, both read when the engines are created.
+            - name: CKAN___SQLALCHEMY__POOL_SIZE
+              value: {{ .Values.database.pool.size | quote }}
+            - name: CKAN___SQLALCHEMY__MAX_OVERFLOW
+              value: {{ .Values.database.pool.maxOverflow | quote }}
+            - name: CKAN__DATASTORE__SQLALCHEMY__POOL_SIZE
+              value: {{ .Values.database.datastorePool.size | quote }}
+            - name: CKAN__DATASTORE__SQLALCHEMY__MAX_OVERFLOW
+              value: {{ .Values.database.datastorePool.maxOverflow | quote }}
             # Read by files/startup/00-secret-key.sh, not by CKAN: 2.11 has no
             # `CKAN___<OPTION>` env override, and a variable named `CKAN_*` would land in the
             # config under its own literal name instead of the option it looks like.
