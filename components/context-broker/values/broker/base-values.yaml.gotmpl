@@ -117,6 +117,12 @@ env:
   # grew ~30 GB a week and was never deleted. ANTARES_TEMPORAL_RETENTION_DAYS stays unset: it
   # drops whole weeks and would cut a type that keeps longer.
   ANTARES_RETENTION_HISTORY_DEFAULT: "P28D"
+  # History is opt-in (T-5056, DM-132): a type records only when its space, type rule or Entity gives
+  # it a history duration, observed by default; spaces without retention keep none.
+  ANTARES_TEMPORAL_RECORD: "ruled"
+  # Batch upserts commit asynchronously (T-5050, option A of T-5046): a Postgres crash can lose the
+  # last few hundred ms of batch writes, which the next run of a pipeline writes again; single writes stay durable.
+  ANTARES_PG_BATCH_ASYNC_COMMIT: "true"
   # The broker's PostgreSQL pool (default 20). A transaction cancelled under load leaves its slot
   # held (dev 2026-10-19: 18 of 20 slots idle on ROLLBACK for hours, every read 503 "database
   # overloaded"); 40 stretches the time to exhaustion until Antares returns them. PostgreSQL's

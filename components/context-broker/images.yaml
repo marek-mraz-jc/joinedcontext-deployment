@@ -124,5 +124,9 @@ context-broker:
     # 0015 adds a STORED generated column to entities (a full rewrite, 4 GB on dev) and plain indexes:
     # rolled with the broker at 0 in an announced window. Rollback: dev-17 (0015 only adds a column, a
     # function and indexes). Signed by ship.yml on dev at 58f5347.
-    tag: 'dev-19'
-    digest: 'sha256:90be5668cc1b2e2e74530916db60dfa2ab852400087b32d3d612d2867285f3e1'
+    # Antares dev 3c43f32 (dev-24, trains 2025-1 and 2049: T-5050 vehicle batch write path, T-5056 history
+    # opt-in, T-5063, T-4926): migration 0016 is CREATE STATISTICS only (no rewrite, no window). The image
+    # knows ANTARES_TEMPORAL_RECORD=ruled and ANTARES_PG_BATCH_ASYNC_COMMIT, set in base-values in this same
+    # commit. Rollback: dev-19 with both keys removed. Signed by ship.yml on dev at 3c43f32.
+    tag: 'dev-24'
+    digest: 'sha256:0ac41823dcf5983b9758f66c3fd16343ee052d317f2ee0c1769563c16ba930e8'
