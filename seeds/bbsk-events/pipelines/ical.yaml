@@ -1,6 +1,6 @@
 # iCalendar (RFC 5545), the export most calendar plugins offer (The Events Calendar's ?ical=1).
 # Lines are unfolded, each VEVENT read for DTSTART, DTEND, SUMMARY, LOCATION, GEO, URL,
-# CATEGORIES and UID; a whole-day DTEND is exclusive, so the event's last day is the day before.
+# ORGANIZER, CATEGORIES and UID; a whole-day DTEND is exclusive, so the event's last day is the day before.
 - mapping: |
     let text = content().string()
     root = if !$text.contains("BEGIN:VCALENDAR") { throw("the answer is no iCalendar") } else { $text.re_replace_all("\r\n", "\n").re_replace_all("\n[ \t]", "") }
@@ -24,6 +24,8 @@
       "lat": e.GEO.v.or("").split(";").index(0).catch(null),
       "lon": e.GEO.v.or("").split(";").index(1).catch(null),
       "url": e.URL.v.or(null),
+      # ORGANIZER;CN="Name":mailto:…: the common name only, never the address (RFC 5545 3.8.4.3).
+      "organizer": e.ORGANIZER.p.or("").re_find_object("CN=\"?(?P<n>[^\";:]+)").n.or(null).(n -> if n != null { { "name": n.apply("unescape") } } else { null }),
       "category": e.CATEGORIES.v.or(null).(s -> if s != null { s.apply("unescape") } else { null }),
       "description": e.DESCRIPTION.v.or(null).(s -> if s != null { s.apply("unescape") } else { null }),
       "sourceId": e.UID.v.or(null),

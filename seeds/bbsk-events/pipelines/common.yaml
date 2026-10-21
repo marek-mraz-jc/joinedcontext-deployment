@@ -1,7 +1,7 @@
 # The tail every events template ends with (T-4896). A template turns its feed into one array of
 # plain records: name, start, end (RFC 3339 with offset, or a bare date for a whole-day event),
-# venue, streetAddress, postalCode, locality, lat, lon, url, category, description, sourceId,
-# modified. This tail keeps the upcoming ones, the 100 soonest, and writes each as an Event.
+# venue, streetAddress, postalCode, locality, lat, lon, url, organizer ({name, url}), category,
+# description, sourceId, modified. This tail keeps the upcoming ones, the 100 soonest, and writes each as an Event.
 #
 # generate.py fills each double-underscored placeholder with a JSON literal, never with code.
 - mapping: |
@@ -58,6 +58,19 @@
       "addressRegion": __REGION__,
       "addressCountry": "SK"
     }.filter(kv -> kv.value != null && kv.value != "")
+    map link {
+      root = if this == null { null } else { this.string().trim().(u -> if u.re_match("^https?://[^\\s/@]+(/\\S*)?$") && u.length() <= 2000 { u } else { null }) }
+    }
+    # The organizer the feed names, else the body whose calendar this is (the inventory row); an aggregator's
+    # row names none, so its event without an organizer is refused (T-5081). Name and web site only: a feed's
+    # organizer e-mail or phone may be a person's and stays on the source's page.
+    map uncontact {
+      root = if this == null { null } else { this.re_replace_all("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "").re_replace_all("(\\+421|\\b0)[0-9][0-9 /]{7,}[0-9]", "").re_replace_all("(?i)\\b(tel|mobil|e-?mail|kontakt)\\.?:?", "").re_replace_all("\\s+", " ").re_replace_all("^[ ,;:-]+|[ ,;:-]+$", "").(t -> if t == "" { null } else { t }) }
+    }
+    let named = this.organizer.name.or(null).apply("text").apply("uncontact")
+    let organizer = if $named != null { { "name": $named.slice(0, [$named.length(), 300].min()), "url": this.organizer.url.or(null).apply("link") }.filter(kv -> kv.value != null) } else { __ORGANIZER__ }
+    # The event's own page, else the organizer's page listing its events: every event carries a link a person opens.
+    let link = this.url.apply("link").or(__LISTING__)
     let now = timestamp_unix()
     let lease = __LEASE__
     let ends = if this._end == null { null } else { this._end + __GRACE__ }
@@ -79,7 +92,8 @@
       # (integrator 2026-10-20, T-4894); its text stays on its own page.
       # Contact e-mails and phone numbers stay on the source's page: they may name a person.
       "description": if __FACTS_ONLY__ { null } else { this.description.apply("text").(d -> if d != null { d.re_replace_all("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "").re_replace_all("(\\+421|\\b0)[0-9][0-9 /]{7,}[0-9]", "").re_replace_all("\\s+", " ").trim() } else { null }).(d -> if d != null && d != "" { d.slice(0, [d.length(), 2000].min()) } else { null }).apply("prop") },
-      "url": this.url.apply("prop"),
+      "url": $link.apply("prop"),
+      "organizer": $organizer.apply("prop"),
       "source": { "type": "Property", "value": __SOURCE__ },
       "sourceId": this.sourceId.string().catch(null).apply("prop"),
       "dataProvider": { "type": "Property", "value": __PROVIDER__ },

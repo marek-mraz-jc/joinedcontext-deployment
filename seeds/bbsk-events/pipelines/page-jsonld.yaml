@@ -23,6 +23,7 @@
       "lat": loc.geo.latitude.or(null),
       "lon": loc.geo.longitude.or(null),
       "url": e.url.or(null),
+      "organizer": e.organizer.or(null).(o -> if o != null && o.type() == "array" { o.index(0).catch(null) } else { o }).(o -> if o != null && o.type() == "object" { { "name": o.name.or(null), "url": o.url.or(null) } } else { null }),
       "description": e.description.or(null),
       "sourceId": e.url.or(e."@id".or(null))
     })))

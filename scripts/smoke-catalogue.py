@@ -242,6 +242,10 @@ def skip(why: str) -> str:
     return f"skip: {why}"
 
 
+def warn(why: str) -> str:
+    return f"warn: {why}"
+
+
 def verdict(cell: str) -> str:
     return cell.split(":", 1)[0].split(" ", 1)[0]
 
@@ -711,8 +715,9 @@ class Run:
                 row["inventory"] = ko("its Endpoint is not in the public DCAT feed")
             else:
                 row["inventory"] = ok()
+            # The DataStore is on its way out (T-5060): a dataset without a table is reported, not failed.
             if not data.datastore:
-                row["datastore"] = ko("no datastore table")
+                row["datastore"] = warn("no datastore table")
         # Least recently checked first, the core as the slow checks: a run that ends early leaves
         # other datasets for the next one, not the same ones every time.
         checkable = sorted((d for d in datasets if d.slug),
@@ -808,6 +813,9 @@ def run(domain: str, env: str, out: Path, client: Client | None = None, now: str
         bad += bool(kos)
         if kos:
             print(f"  FAIL  catalogue {row['dataset']} ({row['endpoint']}): {'; '.join(kos)}")
+        warns = [f"{c} {row[c][6:]}" for c in COLUMNS if verdict(row[c]) == "warn"]
+        if warns:
+            print(f"  warn  catalogue {row['dataset']} ({row['endpoint']}): {'; '.join(warns)}")
     named = [r for r in rows if r["dataset"] != "(no dataset)"]
     complete = sum(all(verdict(r[c]) != "ko" for c in COLUMNS) for r in named)
     seconds = client.elapsed()
