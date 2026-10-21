@@ -39,7 +39,11 @@ spec:
         # The city's open registers (T-2787), each CC-BY-4.0 and free of personal data by their
         # mappings: the contact lines, applicants and contractors are never written.
         - type: PointOfInterest
-        - type: WaterQualityObserved
         - type: OnStreetParking
         - type: CityWork
         - type: AdministrativeArea
+    # Every attribute but refPointOfInterest, as public-water-quality (T-5089): a sensor's Service Map
+    # unit is often no entity a public Endpoint holds.
+    - entities:
+        - type: WaterQualityObserved
+      propertyNames: [dataProvider, dateObserved, location, name, source, temperature]
