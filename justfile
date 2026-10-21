@@ -624,6 +624,16 @@ dev-restore-drill portal_image='' out='deployment/restore-drill.json':
 	mkdir -p "$(dirname "{{ out }}")"
 	./scripts/restore-drill.py --out "{{ out }}" {{ if portal_image != '' { '--portal-image ' + portal_image } else { '' } }}
 
+# The recovery test (T-5117): under 50 reads and 5 writes a second, kill the broker, gateway, Portal
+# leader, Postgres primary and pipeline-runner one at a time; times, lost writes and stuck pipelines
+# in the summary. dev only; announce it with tasks/note first, dev answers errors meanwhile
+[group('dev cluster')]
+dev-chaos targets='broker,gateway,portal,postgres,pipeline-runner' out='deployment/chaos-recovery.json':
+	#!/usr/bin/env bash
+	set -euo pipefail
+	just _dev-guard
+	./scripts/chaos-recovery.py --targets "{{ targets }}" --out "{{ out }}"
+
 # Publish one check's summary to the Portal's Organization > Health tab (T-2803, OPS-53); run it
 # after tasks/file-failures, so the tasks it links exist; passed=true for the App probe's chips
 [group('dev cluster')]
