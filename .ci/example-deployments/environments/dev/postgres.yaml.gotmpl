@@ -21,10 +21,6 @@ postgres:
             # cgroup lets the pod keep.
             effective_cache_size: "1GB"
             work_mem: "4MB"
-            maintenance_work_mem: "128MB"
-            # Each of the 3 autovacuum workers takes maintenance_work_mem unless this caps it:
-            # 3 x 64MB instead of 3 x 128MB.
-            autovacuum_work_mem: "64MB"
             track_io_timing: "on"
             log_min_duration_statement: "500ms"
             # A slow statement is logged without its bind values: they carry entity data and,
