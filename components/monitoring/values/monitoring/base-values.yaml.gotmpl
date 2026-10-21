@@ -211,4 +211,21 @@ alertGroups:
           severity: warning
         annotations:
           summary: 'Less than 20% of the model key credit is left'
+      # T-4892 (PL-97, PL-100): a snapshot pipeline's source vs space, as its last complete run
+      # left it. Orphans go after `misses` nightly runs, so three days of them mean the deletes
+      # stall (a held run, a refused grant); refused records mean the space lacks what the source has.
+      - alert: PipelineOrphansStuck
+        expr: max by (project, pipeline) (jc_pipeline_orphans) > 0
+        for: 72h
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Pipeline {{`{{ $labels.pipeline }}`}} in {{`{{ $labels.project }}`}} keeps {{`{{ $value }}`}} entities its source dropped: open its Source vs space panel'
+      - alert: PipelineRecordsMissing
+        expr: max by (project, pipeline) (jc_pipeline_missing) > 10
+        for: 24h
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Pipeline {{`{{ $labels.pipeline }}`}} in {{`{{ $labels.project }}`}} could not write {{`{{ $value }}`}} records its source lists: see its rejected records'
   {{- end }}
