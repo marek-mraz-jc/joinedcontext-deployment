@@ -70,7 +70,7 @@ STORES = (
         # apart: once a day, spread over the day. The feeds run every 3 hours. Each lease outlasts two missed
         # runs, so a source down for one run keeps its events.
         "cadences": (
-            {"kinds": ("lego-html", "weby-feed"), "period": "24h", "every": 24, "window": 1440, "lease": 52 * 3600},
+            {"kinds": ("lego-html", "weby-feed", "umb-cms", "drupal-kalendar"), "period": "24h", "every": 24, "window": 1440, "lease": 52 * 3600},
             {"kinds": None, "period": "3h", "every": 3, "window": 180, "lease": 8 * 3600},
         ),
         "grace": 86400,
@@ -89,6 +89,8 @@ TEMPLATES = {
     "wp-rss-jsonld": ("rss-list", "jsonld-pages"),
     "jsonld": ("page-jsonld",),
     "lego-html": ("lego-html",),
+    "umb-cms": ("umb-cms",),
+    "drupal-kalendar": ("drupal-kalendar",),
 }
 #: Fewer bytes per run: the fields the template reads (WordPress `_fields`). The kinds that read each
 #: event's page list the 50 newest posts: every page read is one more request to a small town's site.
@@ -201,6 +203,7 @@ def processors(row: dict, store: dict) -> list:
         "__HOST__": row["host"],
         # The events list's own path: a Lego source reads only the event pages under it, never a sidebar's news.
         "__LIST_PATH_RE__": re.escape(urlsplit(row["check_url"]).path).replace("\\", "\\\\"),
+        "__LIST_PATH__": json.dumps(urlsplit(row["check_url"]).path),
         "__GRACE__": json.dumps(store["grace"]),
         "__LEASE__": json.dumps(cadence(row, store)["lease"]),
     }
@@ -330,6 +333,8 @@ def accept(kind: str) -> str:
         "weby-feed": "application/rss+xml, application/atom+xml, application/xml",
         "jsonld": "text/html",
         "lego-html": "text/html",
+        "umb-cms": "text/html",
+        "drupal-kalendar": "text/html",
         "wp-rss-jsonld": "application/rss+xml, application/atom+xml, application/xml",
     }.get(kind, "application/json")
 

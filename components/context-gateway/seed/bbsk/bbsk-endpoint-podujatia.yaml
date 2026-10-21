@@ -136,6 +136,51 @@ spec:
         description:
           sk: "Podujatia zo stránky https://www.vkmk.sk/podujatia.html; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.vkmk.sk/podujatia.html; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.umb.sk/kalendar-udalosti/"
+        title: { sk: "Banská Bystrica, umb.sk", en: "Banská Bystrica, umb.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.umb.sk/kalendar-udalosti/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.umb.sk/kalendar-udalosti/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.pdf.umb.sk/kalendar-udalosti/"
+        title: { sk: "Banská Bystrica, pdf.umb.sk", en: "Banská Bystrica, pdf.umb.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.pdf.umb.sk/kalendar-udalosti/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.pdf.umb.sk/kalendar-udalosti/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.ff.umb.sk/filozoficka-fakulta-umb/kalendar-udalosti/"
+        title: { sk: "Banská Bystrica, ff.umb.sk", en: "Banská Bystrica, ff.umb.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.ff.umb.sk/filozoficka-fakulta-umb/kalendar-udalosti/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.ff.umb.sk/filozoficka-fakulta-umb/kalendar-udalosti/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://fpvmv.umb.sk/kalendar"
+        title: { sk: "Banská Bystrica, fpvmv.umb.sk", en: "Banská Bystrica, fpvmv.umb.sk" }
+        description:
+          sk: "Podujatia zo stránky https://fpvmv.umb.sk/kalendar; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://fpvmv.umb.sk/kalendar; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.tuzvo.sk/sk/kalendar-podujati"
+        title: { sk: "Zvolen, tuzvo.sk", en: "Zvolen, tuzvo.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.tuzvo.sk/sk/kalendar-podujati; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.tuzvo.sk/sk/kalendar-podujati; no licence stated, facts only (name, time, place, link)."
+      - url: "https://lf.tuzvo.sk/sk/kalendar-podujati"
+        title: { sk: "Zvolen, lf.tuzvo.sk", en: "Zvolen, lf.tuzvo.sk" }
+        description:
+          sk: "Podujatia zo stránky https://lf.tuzvo.sk/sk/kalendar-podujati; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://lf.tuzvo.sk/sk/kalendar-podujati; no licence stated, facts only (name, time, place, link)."
+      - url: "https://df.tuzvo.sk/sk/kalendar-podujati"
+        title: { sk: "Zvolen, df.tuzvo.sk", en: "Zvolen, df.tuzvo.sk" }
+        description:
+          sk: "Podujatia zo stránky https://df.tuzvo.sk/sk/kalendar-podujati; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://df.tuzvo.sk/sk/kalendar-podujati; no licence stated, facts only (name, time, place, link)."
+      - url: "https://fee.tuzvo.sk/sk/kalendar-udalosti"
+        title: { sk: "Zvolen, fee.tuzvo.sk", en: "Zvolen, fee.tuzvo.sk" }
+        description:
+          sk: "Podujatia zo stránky https://fee.tuzvo.sk/sk/kalendar-udalosti; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://fee.tuzvo.sk/sk/kalendar-udalosti; no licence stated, facts only (name, time, place, link)."
+      - url: "https://ft.tuzvo.sk/sk/kalendar-udalosti"
+        title: { sk: "Zvolen, ft.tuzvo.sk", en: "Zvolen, ft.tuzvo.sk" }
+        description:
+          sk: "Podujatia zo stránky https://ft.tuzvo.sk/sk/kalendar-udalosti; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://ft.tuzvo.sk/sk/kalendar-udalosti; no licence stated, facts only (name, time, place, link)."
       - url: "https://www.drazice.sk/events/"
         title: { sk: "Dražice, drazice.sk", en: "Dražice, drazice.sk" }
         description:

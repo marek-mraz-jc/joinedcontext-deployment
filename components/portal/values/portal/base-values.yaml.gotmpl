@@ -23,12 +23,13 @@ serviceAccount:
 rbac:
   namespace: {{ $thisPortal.appsNamespace | quote }}
   rules:
+    # The release namespace holds the platform's own workloads; Apps go to `{release}-{project}-apps`
+    # under `{release}-portal-apps` (AP-116). Here the Portal only rolls the pipeline runner when its
+    # Secret changes (reconciler/daemon.rs), a server-side apply patch of that one Deployment (T-5094).
     - apiGroups: ["apps"]
       resources: ["deployments"]
-      verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-    - apiGroups: [""]
-      resources: ["services"]
-      verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+      resourceNames: ["pipeline-runner"]
+      verbs: ["get", "patch"]
     # Secrets (T-2479, T-4798). This namespace holds the platform's credentials (database,
     # Keycloak, forge), whose names are in the charts, so the Portal reads one Secret here by
     # name: the pull Secret it copies into each apps namespace. It applies (patch, create for a
@@ -44,9 +45,6 @@ rbac:
     - apiGroups: [""]
       resources: ["secrets"]
       verbs: ["create", "patch"]
-    - apiGroups: ["networking.k8s.io"]
-      resources: ["networkpolicies"]
-      verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 nameOverride: portal-portal
 
 {{- $branding := $global.branding | default dict }}
@@ -563,8 +561,9 @@ podAnnotations:
   # The justification belongs where it can be reviewed against the RBAC beside it.
   security.joinedcontext.com/api-access-reason: >-
     App reconciler: applies the four objects an App is made of — Deployment, Service, Secret and
-    NetworkPolicy — in the apps namespace only, under the Role in `rbac.rules` below (AP-13,
-    AP-15, AP-18, T-0411); and an App's build Job, its token Secret and its cache claim in the
+    NetworkPolicy — in each project's apps namespace, under the ClusterRole `portal-apps` bound
+    there (AP-13, AP-15, AP-18, AP-116); in its own namespace, under the Role in `rbac.rules`
+    below, only the pipeline runner's restart patch and the Secrets it hands over (T-5094); and an App's build Job, its token Secret and its cache claim in the
     runner's namespace, under the Role `portal-build-pods` there (AP-130, AP-131, T-2794). It
     reads and writes nothing else at the API server.
 

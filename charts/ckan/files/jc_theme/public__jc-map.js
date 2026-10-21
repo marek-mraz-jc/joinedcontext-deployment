@@ -41,7 +41,9 @@ async function start(box) {
   const [maplibre, enums] = await Promise.all([import(config.lib), enumWords(config.enums), firstPage]);
   if (!latest.features.length) await all;
   if (!latest.features.length) {
-    if (!card) note.textContent = config.t.map_failed;
+    // Nothing to draw is no failure: the embed page says so, the dataset page keeps the map hidden.
+    if (!card) note.textContent = config.t.map_empty || config.t.map_failed;
+    box.dataset.state = "empty";
     return;
   }
   if (card) card.hidden = false;
@@ -116,14 +118,25 @@ async function start(box) {
   put(latest);
   if (features.length !== firstCount) fit();
   done();
+  let asked = 0; // only the newest view's answer is drawn, however the answers overtake (T-5061)
   const load = async (bbox) => {
+    const mine = ++asked;
     box.dataset.state = "loading";
     note.textContent = config.t.map_loading;
-    put(await fetchAll(config.layers, bbox, () => {}));
+    const got = await fetchAll(config.layers, bbox, () => {});
+    if (mine !== asked) return;
+    put(got);
     done();
   };
   // Past the cap the view loads what it shows; under it everything is already here.
-  map.on("moveend", () => { if (capped) load(viewBox(map)).catch(() => { note.textContent = config.t.map_failed; }); });
+  // A move that ends on the view already asked for (a resize, a refit) asks nothing again.
+  let lastView = "";
+  map.on("moveend", () => {
+    const view = viewBox(map);
+    if (!capped || view.join(",") === lastView) return;
+    lastView = view.join(",");
+    load(view).catch(() => { note.textContent = config.t.map_failed; box.dataset.state = "failed"; });
+  });
 
   // Clusters as buttons with their count: no font to fetch, and a keyboard reaches each one.
   const markers = new Map();

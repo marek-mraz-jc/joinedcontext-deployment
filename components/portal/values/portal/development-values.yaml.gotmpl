@@ -10,8 +10,8 @@ replicaCount: 1
 resources:
   requests:
     cpu: 100m
-    # T-4473: dev, kubectl top 2026-10-17 21:22-22:22Z: median 205, peak 266Mi.
-    memory: 256Mi
+    # T-5113: kubectl top 2026-10-21 21:55-22:25Z: peak 301Mi on dev, 307Mi on prod.
+    memory: 320Mi
   limits:
     cpu: '1'
     # 1Gi: at 512Mi the kernel killed the Portal five times on 2026-09-25 (14:09 to 15:20Z)

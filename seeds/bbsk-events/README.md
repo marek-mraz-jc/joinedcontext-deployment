@@ -197,3 +197,37 @@ Mikuláša Kováča, WEBY, its address in the venue table); Šahy and Modrý Kam
 Teatro Tatro's EventON only past summer shows; `muzeum.sk` is the national museum in Bratislava. The other
 museums, galleries, theatres, universities and schools publish HTML only (UMB's six faculty sites share one
 CMS with `kalendar-udalosti`, TUZVO's five one with `kalendar-podujati`): those need an HTML kind per CMS.
+
+## Universities and geocoded venues (T-5083)
+
+Two HTML kinds read the university calendars that publish no feed, one template per CMS:
+
+| feed kind | template | sources | what it reads |
+|---|---|---|---|
+| `umb-cms` | `umb-cms` | umb.sk, pdf.umb.sk, ff.umb.sk | the calendar's `<h3 class="title">` links under the list path (the 50 soonest), each event page's `eventTable`: Začiatok, Koniec, Miesto, Usporiadateľ, Mesto; 1 s apart |
+| `drupal-kalendar` | `drupal-kalendar` | tuzvo.sk and its faculties lf, df, fee, ft | this month's list and the next (`?mini=YYYY-MM`), 10 s apart as robots.txt asks; start from the `content` attribute, Koniec, Miesto, Usporiadateľ, Zameranie; no event page |
+
+fpvmv.umb.sk serves an iCal feed (`kalendar/iCalFeed`) and runs as an `ical` row. ff.umb.sk and the four TUZVO
+faculties listed no event on 2026-10-21 but parse: their runs report 0 until they post one. Neither template reads
+a person: UMB's contact rows and TUZVO's "Odborný gestor" stay on the page. UMB's organizer placeholder `Iné`
+counts as none, so the university stands in. ef.umb.sk answers 403 and ftvs.umb.sk does not resolve.
+
+Not built: the WordPress `podujatie` post types of stredoslovenskemuzeum.sk, horehronskemuzeum.sk and
+muzeumkremnica.sk (no JSON-LD, dates in free text) and the WEBY `kalendar-podujati-0.html` pages; each needs its own
+parser and none reaches five sources of one CMS.
+
+`geocode-venues.py` fills `venues.csv` at inventory time, never from a pipeline: give it `town,place` rows (a run
+report's refused events, or the venue texts read while probing a source). It asks Nominatim one request a second with
+the inventory User-Agent, first for the whole text, then for each part holding a house number, then for the first
+part, each with the town. A hit counts only when it is a building, an amenity or an address in that town; a town, a
+district, a street or a hit in another town gives no row. Its rows say `nominatim` in `checked_by`; the rows checked
+against OpenStreetMap by a person say `hand`. On 2026-10-21 it placed 21 of the 39 venue texts that UMB, FPVaMV and
+TUZVO used in Banská Bystrica and Zvolen. The rest were online events, a room without an address ("TUZVO B8") or a
+building OSM does not name; two of those (Aula Beliana, Aula FPVaMV UMB) were added by hand from the address the
+same source writes elsewhere.
+
+```sh
+python3 seeds/bbsk-events/geocode-venues.py places.csv          # print the rows
+python3 seeds/bbsk-events/geocode-venues.py places.csv --write  # append them to venues.csv
+python3 seeds/bbsk-events/generate.py                           # then regenerate the seed
+```
