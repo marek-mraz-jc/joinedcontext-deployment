@@ -22,6 +22,8 @@ html { scroll-padding-top: calc(var(--ribbon) + 1rem); }
 body { margin: 0; padding-top: var(--ribbon); font: 300 1rem/1.7 var(--sans); color: var(--ink); background: var(--white); }
 a { color: var(--blue); text-decoration: none; }
 a:hover { color: var(--blue-dark); text-decoration: underline; }
+/* T-4996: a link inside running text is underlined, so it reads as a link without its colour (WCAG 1.4.1). */
+p a { text-decoration: underline; text-underline-offset: .15em; }
 a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px solid var(--red); outline-offset: 2px; }
 h1, h2, h3 { font-family: var(--display); font-weight: 700; line-height: 1.2; color: var(--ink); }
 ul { list-style: none; margin: 0; padding: 0; }
@@ -73,8 +75,7 @@ ul { list-style: none; margin: 0; padding: 0; }
    invitation, then the three white lists (owner 13:50Z item 7). */
 .hero { padding: 4rem 0 6rem; background: var(--blue-mid); color: var(--white); }
 .hero__ai { margin-bottom: 3.5rem; }
-.hero__ai .ai__tag { color: var(--blue-light); }
-.hero__ai h2 { color: var(--white); font-size: clamp(1.75rem, 3.5vw, 2.75rem); max-width: 40rem; margin: .25rem 0 1.75rem; }
+.hero__ai h1 { color: var(--white); font-size: clamp(1.75rem, 3.5vw, 2.75rem); max-width: 40rem; margin: .25rem 0 1.75rem; }
 .hero__ask, .jc-assistant > summary { display: inline-flex; align-items: center; gap: .6rem; border: 0; border-radius: 999px; font: 600 1rem/1.2 var(--sans); cursor: pointer; }
 .hero__ask { background: var(--white); color: var(--blue); padding: .9rem 1.6rem; }
 .hero__ask:hover { background: var(--blue-light); }
