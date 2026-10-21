@@ -13,3 +13,9 @@ spec:
   quotas:
     maxMemoryMb: 128
     cpuMillicores: 250
+  # A vehicle's end (PL-80, NGSI-LD 4.22 expiresAt): five minutes after the newest position it
+  # reports. Every write moves it on, so a vehicle that stops reporting leaves every read then
+  # and the broker's sweep deletes it (T-4823, T-4843).
+  lifetime:
+    - type: Vehicle
+      entity: { from: observedAt, plus: PT5M }

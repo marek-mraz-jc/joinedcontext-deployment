@@ -35,6 +35,10 @@ spec:
         name: { record: onChange, heartbeat: P7D }
         source: { record: onChange, heartbeat: P7D }
     - entityType: Alert
+      # The safety net for a writer that gives an Alert no end (DM-83 skips one with its own
+      # expiresAt): a Fintraffic situation without an end time leaves 30 days after its last
+      # write (T-4843); the HSL alerts are rewritten every minute or withdrawn.
+      current: P30D
       history: "off"
     - entityType: Article
       history: "off"

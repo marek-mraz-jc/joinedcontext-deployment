@@ -36,11 +36,12 @@ def frame(vehicle: int, phase: str, mode: str = "bus", oper: int = 22, route: st
     return json.dumps({"topic": topic(mode, oper, vehicle, route), "VP": vp})
 
 
-def pipeline(**extra) -> dict:
-    """The committed mapping behind a step that sets the topic as the runner's MQTT input does."""
+def pipeline(then: tuple[dict, ...] = (), **extra) -> dict:
+    """The committed mapping behind a step that sets the topic as the runner's MQTT input does,
+    and before the steps `then` (the reconciler's lifetime step, T-4843)."""
     committed = yaml.safe_load(MAPPING.read_text())["pipeline"]
     as_mqtt = {"mapping": 'meta mqtt_topic = this.topic\nroot = this.without("topic")'}
-    return {**committed, "processors": [as_mqtt, *committed["processors"]], **extra}
+    return {**committed, "processors": [as_mqtt, *committed["processors"], *then], **extra}
 
 
 def caches() -> list[dict]:
@@ -248,7 +249,7 @@ def test_an_admitted_bus_writes_one_report_in_thirty_seconds():
     assert {e["fleetVehicleId"]["value"] for e in written} == {"22-7"}
 
 
-def bento(frames: list[str], known: tuple[str, ...] = (), **extra) -> list[dict]:
+def bento(frames: list[str], known: tuple[str, ...] = (), then: tuple[dict, ...] = (), **extra) -> list[dict]:
     """The mapping over `frames`, the `gtfs` cache holding the URNs `known` as the daily GTFS read
     leaves them."""
     resources = yaml.safe_load(RESOURCES.read_text())["cache_resources"]
@@ -257,7 +258,7 @@ def bento(frames: list[str], known: tuple[str, ...] = (), **extra) -> list[dict]
             cache["memory"]["init_values"] = {urn: "1" for urn in known}
     config = {
         "input": {"stdin": {"scanner": {"lines": {}}}},
-        "pipeline": pipeline(**extra),
+        "pipeline": pipeline(then, **extra),
         "cache_resources": resources,
         "output": {"stdout": {"codec": "lines"}},
         "logger": {"level": "error"},
