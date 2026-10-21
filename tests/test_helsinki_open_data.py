@@ -180,6 +180,24 @@ def test_a_beach_sensor_without_a_reading_has_no_temperature_and_points_at_its_b
     assert reading["refPointOfInterest"]["object"].startswith("urn:ngsi-ld:PointOfInterest:hel.fi:helsinki:servicemap-")
 
 
+def public_water_quality() -> dict:
+    return yaml.safe_load((HELSINKI / "helsinki-policy-public-water-quality.yaml").read_text())["spec"]
+
+
+def test_the_public_beach_water_omits_the_link_to_a_unit_no_public_endpoint_holds():
+    """T-5089: 12 of 18 sensors name a Service Map unit the services pipeline never writes."""
+    (rule,) = public_water_quality()["information"]
+    assert "refPointOfInterest" not in rule["propertyNames"]
+    assert "relationshipNames" not in rule
+
+
+@requires_docker
+def test_the_public_beach_water_grants_every_other_attribute_the_pipeline_writes(written):
+    (rule,) = public_water_quality()["information"]
+    attrs = {a for e in written["beach-water"] for a in e} - {"id", "type", "refPointOfInterest"}
+    assert attrs == set(rule["propertyNames"])
+
+
 @requires_docker
 def test_a_parking_area_the_city_has_not_estimated_has_no_capacity_rather_than_zero(written):
     assert sorted("totalSpotNumber" in e for e in written["parking-areas"]) == [False, True, True]

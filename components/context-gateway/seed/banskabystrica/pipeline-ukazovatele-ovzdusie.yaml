@@ -10,19 +10,19 @@ kind: Pipeline
 metadata:
   name: ukazovatele-ovzdusie
   namespace: banskabystrica
-  title: { sk: "Ukazovatele ovzdušia", en: "Air quality indicators" }
+  title: { sk: Ukazovatele ovzdušia, en: Air quality indicators }
 spec:
   class: scheduled
-  schedule: "7 * * * *"
+  schedule: '7 * * * *'
   # Read through the space's own Endpoint and not the store, so the Policy applies to this
   # pipeline exactly as it applies to anybody else (PL-18, PF-39, PL-45).
   source:
     endpointRef: { kind: Endpoint, name: public-air }
-    query: { type: AirQualityObserved, attrs: [dateObserved, pm10, pm25] }
+    query:
+      type: AirQualityObserved
+      attrs: [dateObserved, pm10, pm25]
   targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-kpi:banskabystrica-kpi
-  output:
-    type: KeyPerformanceIndicator
-    mode: upsert
+  output: { type: KeyPerformanceIndicator, mode: upsert }
   compute:
     kind: bloblang
     bloblang: |

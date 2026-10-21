@@ -5,6 +5,7 @@ kind: Project
 metadata:
   name: sharing-other
   namespace: org
-  title: { en: "App sharing matrix, other project (test)" }
+  title:
+    en: App sharing matrix, other project (test)
 spec:
   organizationRef: hel

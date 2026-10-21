@@ -9,5 +9,4 @@ spec:
   subjects:
     - user: demo.author@hel.fi
   role: app-editor
-  scope:
-    project: sharing
+  scope: { project: sharing }

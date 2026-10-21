@@ -3,7 +3,7 @@ kind: Policy
 metadata:
   name: pipelines-write
   namespace: praha
-  title: { cs: "Kanály zapisují městská data", en: "The ingestion pipelines write the city space" }
+  title: { cs: Kanály zapisují městská data, en: The ingestion pipelines write the city space }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: praha-mesto }
   assigner: did:web:praha.eu

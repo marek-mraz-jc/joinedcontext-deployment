@@ -6,12 +6,12 @@ kind: KnowledgeSource
 metadata:
   name: data-portal
   namespace: praha
-  title: { cs: "Otevřená data hlavního města Prahy", en: "Prague's open datasets" }
+  title: { cs: Otevřená data hlavního města Prahy, en: Prague's open datasets }
 spec:
   source: ckan
   ckanInstanceRef: praha
   organizations: [praha]
-  schedule: "50 3 * * *"
+  schedule: '50 3 * * *'
   maxPages: 500
   languages: [cs, en]
   visibility: public

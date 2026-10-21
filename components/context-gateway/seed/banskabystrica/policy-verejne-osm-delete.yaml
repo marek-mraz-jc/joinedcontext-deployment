@@ -3,7 +3,9 @@ kind: Policy
 metadata:
   name: verejne-osm-delete
   namespace: banskabystrica
-  title: { sk: "Kanál OSM odstraňuje miesta, ktoré mapa už nemá", en: "The OSM pipeline removes the places the map no longer has" }
+  title:
+    sk: Kanál OSM odstraňuje miesta, ktoré mapa už nemá
+    en: The OSM pipeline removes the places the map no longer has
 spec:
   contextSpaceRef: { kind: ContextSpace, name: banskabystrica-verejne }
   assigner: did:web:banskabystrica.sk

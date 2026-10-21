@@ -9,9 +9,9 @@ kind: KnowledgeSource
 metadata:
   name: catalogue
   namespace: praha
-  title: { en: "Praha: the data catalogue" }
+  title: { en: 'Praha: the data catalogue' }
 spec:
   source: catalogue
-  schedule: "7 * * * *"
+  schedule: '7 * * * *'
   languages: [cs, en]
   visibility: public

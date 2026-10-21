@@ -5,7 +5,7 @@ kind: DataModel
 metadata:
   name: mobility
   namespace: helsinki-mobility
-  title: { en: "Mobility analytics" }
+  title: { en: Mobility analytics }
 spec:
   contextSpaceRef: mobility
   linkml: ./mobility.linkml.yaml

@@ -4,18 +4,14 @@ kind: Pipeline
 metadata:
   name: nemocnice
   namespace: bbsk
-  title: { sk: "Nemocnice v kraji", en: "Hospitals in the region" }
+  title: { sk: Nemocnice v kraji, en: Hospitals in the region }
 spec:
   class: auto
   # A register the region revises a few times a year: weekly is already more than it needs (PL-26).
   period: 168h
-  schedule: "49 3 * * 1"
+  schedule: '49 3 * * 1'
   source:
     dataSourceRef: { kind: DataSource, name: bbsk-nemocnice }
   targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-registre:bbsk-registre
-  output:
-    type: PointOfInterest
-    mode: upsert
-  quotas:
-    maxMemoryMb: 128
-    cpuMillicores: 100
+  output: { type: PointOfInterest, mode: upsert }
+  quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

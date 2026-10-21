@@ -8,11 +8,13 @@ kind: KnowledgeSource
 metadata:
   name: portal
   namespace: bbsk
-  title: { sk: "Všetky datasety katalógu opendata.dev", en: "Every dataset of the opendata.dev catalogue" }
+  title:
+    sk: Všetky datasety katalógu opendata.dev
+    en: Every dataset of the opendata.dev catalogue
 spec:
   source: ckan
   ckanInstanceRef: bbsk
-  schedule: "50 3 * * *"
+  schedule: '50 3 * * *'
   maxPages: 2000
   languages: [sk, cs, en, fi]
   visibility: public

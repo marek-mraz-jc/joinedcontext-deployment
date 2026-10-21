@@ -9,29 +9,40 @@ kind: Endpoint
 metadata:
   name: helsinki-bikes-ops
   namespace: helsinki
-  title: { en: "Helsinki city bike stations, operations" }
+  title:
+    en: Helsinki city bike stations, operations
 spec:
   contextSpaceRef: helsinki
   slug: ydp6nddchg4sewmylsiclg4377mlldrj
   audience: organization
   # `ogc-features` is the OGC API Features surface dev-smoke reads per Endpoint kind (T-3957).
   enabledRepresentations: [ngsi-ld, mcp, csv, ogc-features, websocket, odata]
-  projection: { hiddenAttributes: [contactPoint] }
+  projection:
+    hiddenAttributes: [contactPoint]
   catalog:
-    publisher: { name: { fi: "Helsingin kaupunki", sv: "Helsingfors stad", en: "City of Helsinki" }, uri: "https://www.hel.fi/" }
+    publisher:
+      name: { fi: Helsingin kaupunki, sv: Helsingfors stad, en: City of Helsinki }
+      uri: https://www.hel.fi/
     license: ODC_ODBL
-    attribution: { fi: "Sisältää Kaupunkipyörät-syötteen dataa (Inurba), ODbL 1.0", sv: "Innehåller data från stadscykelflödet (Inurba), ODbL 1.0", en: "Contains data from the City Bikes feed (Inurba), ODbL 1.0" }
+    attribution:
+      fi: Sisältää Kaupunkipyörät-syötteen dataa (Inurba), ODbL 1.0
+      sv: Innehåller data från stadscykelflödet (Inurba), ODbL 1.0
+      en: Contains data from the City Bikes feed (Inurba), ODbL 1.0
     themes: [TRAN]
     keywords:
-      fi: ["kaupunkipyörät", "pyöräasemat", "ylläpito"]
-      sv: ["stadscyklar", "cykelstationer", "drift"]
-      en: ["city bikes", "bike stations", "operations"]
+      fi: [kaupunkipyörät, pyöräasemat, ylläpito]
+      sv: [stadscyklar, cykelstationer, drift]
+      en: [city bikes, bike stations, operations]
     spatial:
       - FI1B1
-      - "http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/091"
+      - http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/091
     frequency: CONT
     source:
-      - url: "https://gbfs.theta.fifteen.eu/gbfs/2.2/helsinki/gbfs.json"
-        title: { fi: "Kaupunkipyörät, GBFS-syöte", en: "City Bikes (Helsinki), GBFS feed" }
-        description: { fi: "Operaattorin avoin GBFS 2.2 -syöte asemista ja niiden tilasta, ODbL 1.0.", en: "The operator's open GBFS 2.2 feed of stations and their status, ODbL 1.0." }
+      - url: https://gbfs.theta.fifteen.eu/gbfs/2.2/helsinki/gbfs.json
+        title:
+          fi: Kaupunkipyörät, GBFS-syöte
+          en: City Bikes (Helsinki), GBFS feed
+        description:
+          fi: Operaattorin avoin GBFS 2.2 -syöte asemista ja niiden tilasta, ODbL 1.0.
+          en: The operator's open GBFS 2.2 feed of stations and their status, ODbL 1.0.
     pipelineRef: { kind: Pipeline, name: citybikes-gbfs }

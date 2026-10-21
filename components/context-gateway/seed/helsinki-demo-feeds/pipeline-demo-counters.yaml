@@ -7,16 +7,13 @@ kind: Pipeline
 metadata:
   name: demo-counters
   namespace: helsinki
-  title: { en: "Demo feed counters as indicators (synthetic, not a city measurement)" }
+  title:
+    en: Demo feed counters as indicators (synthetic, not a city measurement)
 spec:
   class: auto
   source:
     dataSourceRef: { kind: DataSource, name: demo-feed-counters }
   # The KPI space's endpoint, where kpi-pipelines-write lets the pipelines account upsert.
   targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki-kpi:helsinki-kpi
-  output:
-    type: KeyPerformanceIndicator
-    mode: upsert
-  quotas:
-    maxMemoryMb: 64
-    cpuMillicores: 50
+  output: { type: KeyPerformanceIndicator, mode: upsert }
+  quotas: { maxMemoryMb: 64, cpuMillicores: 50 }

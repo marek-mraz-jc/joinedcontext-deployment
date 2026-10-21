@@ -6,7 +6,7 @@ kind: DataSource
 metadata:
   name: parkkiopas-parking-areas
   namespace: helsinki
-  title: { en: "Parking areas (Parkkiopas)", fi: "Pysäköintialueet (Parkkiopas)" }
+  title: { en: Parking areas (Parkkiopas), fi: Pysäköintialueet (Parkkiopas) }
 spec:
   type: http
   http:

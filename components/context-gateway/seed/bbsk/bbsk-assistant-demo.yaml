@@ -25,15 +25,29 @@ spec:
   # Each body's site, open-data portal and public Endpoints described from this repository. The
   # demo catalogue lists the same datasets the catalogue sources describe, so it is not crawled a
   # second time. The city's sources need its project in scope (MF-52).
-  sources: [web, data-portal, catalogue, banskabystrica/web, banskabystrica/data-portal, banskabystrica/catalogue]
-  scope: { projects: [banskabystrica] }
+  sources:
+    - web
+    - data-portal
+    - catalogue
+    - banskabystrica/web
+    - banskabystrica/data-portal
+    - banskabystrica/catalogue
+  scope:
+    projects: [banskabystrica]
   # Both bodies' data through one McpServer (T-4750): bbsk/kraj-a-mesto selects every public
   # Endpoint of their open-data spaces, with the server's one read-only tool set, `endpoint` a
   # parameter; tests/test_demo_bbsk.py holds the deployment to that server.
   mcpServer: bbsk/kraj-a-mesto
-  allowedOrigins: [https://bbsk.smartcity.joinedcontext.com, https://bbsk-demo.apps.dev.joinedcontext.com]
+  allowedOrigins:
+    - https://bbsk.smartcity.joinedcontext.com
+    - https://bbsk-demo.apps.dev.joinedcontext.com
   # T-4149 item 1 defaults. $1 a day, beside the public assistants inside the key's $5.
-  rateLimit: { requestsPerMinute: 30, perClientPerMinute: 10, perClientPerHour: 60, perClientPerDay: 200, streamsPerClient: 2 }
+  rateLimit:
+    requestsPerMinute: 30
+    perClientPerMinute: 10
+    perClientPerHour: 60
+    perClientPerDay: 200
+    streamsPerClient: 2
   budget:
     tokensPerDay: 5000000
     tokensPerConversation: 100000
@@ -48,11 +62,13 @@ spec:
   # T-4740 (owner 2026-10-19T13:50Z): "AI asistent" beside the chat icon, the landing page's blue
   # and type; the ribbon of the page already says DEMO.
   theme:
-    title: { sk: "AI asistent", en: "AI assistant" }
-    subtitle: { sk: "Ukážka · otvorené dáta kraja a mesta Banská Bystrica", en: "Demo · open data of the Banská Bystrica Region and City" }
-    primaryColor: "#264a96"
+    title: { sk: AI asistent, en: AI assistant }
+    subtitle:
+      sk: Ukážka · otvorené dáta kraja a mesta Banská Bystrica
+      en: Demo · open data of the Banská Bystrica Region and City
+    primaryColor: '#264a96'
     font: '"Roboto", "Helvetica Neue", Arial, system-ui, sans-serif'
-    greeting: "Dobrý deň! Toto je ukážka (DEMO), nie oficiálna služba BBSK. Opýtajte sa ma na otvorené dáta Banskobystrického samosprávneho kraja a mesta Banská Bystrica."
+    greeting: Dobrý deň! Toto je ukážka (DEMO), nie oficiálna služba BBSK. Opýtajte sa ma na otvorené dáta Banskobystrického samosprávneho kraja a mesta Banská Bystrica.
   # The starting cards (owner 2026-10-19T13:49Z, T-4769): the office's hours and seat from the open
   # data (OfficeHours and PointOfInterest of bbsk-otvorene-data, cited at their datasets
   # bbsk-uradne-hodiny-c912ed and bbsk-kontaktne-miesta-2128a0 since T-4793), the bus timetables
@@ -62,15 +78,15 @@ spec:
   # is off until it passes (owner's run 2026-10-19T16:22Z read Organization).
   suggestions:
     sk:
-      - "Aké sú úradné hodiny Úradu BBSK a kde sídli?"
-      - "Kde nájdem cestovné poriadky autobusov v kraji?"
-      - "Koľko mostov je v registri mostov kraja a koľko je postavených pred rokom 1900?"
+      - Aké sú úradné hodiny Úradu BBSK a kde sídli?
+      - Kde nájdem cestovné poriadky autobusov v kraji?
+      - Koľko mostov je v registri mostov kraja a koľko je postavených pred rokom 1900?
     en:
-      - "What are the office hours of the BBSK Office and where is it?"
-      - "Where can I find the region's bus timetables?"
-      - "How many bridges are in the region's bridge register, and how many were built before 1900?"
+      - What are the office hours of the BBSK Office and where is it?
+      - Where can I find the region's bus timetables?
+      - How many bridges are in the region's bridge register, and how many were built before 1900?
   disclaimer:
-    sk: "DEMO, nie oficiálna služba BBSK. Odpovede tvorí umelá inteligencia z verejných stránok a otvorených dát kraja a mesta Banská Bystrica. Môžu obsahovať chyby, overte si dôležité informácie v uvedených zdrojoch. Rozhovory uchovávame 90 dní na zlepšenie služby. Nezadávajte osobné údaje."
-    en: "DEMO, not an official BBSK service. Answers are written by AI from the public pages and open data of the region and the City of Banská Bystrica. They may contain mistakes; check important facts in the linked sources. Conversations are kept for 90 days to improve the service. Do not enter personal data."
+    sk: DEMO, nie oficiálna služba BBSK. Odpovede tvorí umelá inteligencia z verejných stránok a otvorených dát kraja a mesta Banská Bystrica. Môžu obsahovať chyby, overte si dôležité informácie v uvedených zdrojoch. Rozhovory uchovávame 90 dní na zlepšenie služby. Nezadávajte osobné údaje.
+    en: DEMO, not an official BBSK service. Answers are written by AI from the public pages and open data of the region and the City of Banská Bystrica. They may contain mistakes; check important facts in the linked sources. Conversations are kept for 90 days to improve the service. Do not enter personal data.
   languages: [sk, en]
   widget: { language: browser }

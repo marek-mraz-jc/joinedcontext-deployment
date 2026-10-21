@@ -17,12 +17,14 @@ kind: Pipeline
 metadata:
   name: public-air
   namespace: banskabystrica
-  title: { sk: "PM10 a PM2.5 na stanici SK0263A do datasetu Kvalita ovzdušia", en: "PM10 and PM2.5 at station SK0263A into the Air quality dataset" }
+  title:
+    sk: PM10 a PM2.5 na stanici SK0263A do datasetu Kvalita ovzdušia
+    en: PM10 and PM2.5 at station SK0263A into the Air quality dataset
 spec:
   class: auto
   # Five minutes after the verejne streams read the same files (PL-26).
   period: 1h
-  schedule: "45 * * * *"
+  schedule: '45 * * * *'
   sources:
     - dataSourceRef: { kind: DataSource, name: eea-sk0263a-pm10 }
     - dataSourceRef: { kind: DataSource, name: eea-sk0263a-pm25 }
@@ -30,8 +32,7 @@ spec:
     - processor:
         parquet_decode: {}
     - processor:
-        archive:
-          format: json_array
+        archive: { format: json_array }
     - kind: bloblang
       bloblang: |
         let station = "SK0263A"
@@ -61,6 +62,4 @@ spec:
   expiry:
     after: 7d
     types: [AirQualityObserved]
-  quotas:
-    maxMemoryMb: 128
-    cpuMillicores: 100
+  quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

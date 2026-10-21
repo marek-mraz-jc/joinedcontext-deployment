@@ -9,9 +9,9 @@ kind: KnowledgeSource
 metadata:
   name: catalogue
   namespace: bbsk
-  title: { en: "Banskobystrický samosprávny kraj: the data catalogue" }
+  title: { en: 'Banskobystrický samosprávny kraj: the data catalogue' }
 spec:
   source: catalogue
-  schedule: "7 * * * *"
+  schedule: '7 * * * *'
   languages: [sk, en]
   visibility: public

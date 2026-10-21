@@ -3,7 +3,7 @@ kind: Policy
 metadata:
   name: uniza-pipelines-write
   namespace: zilina
-  title: { sk: "Kanály zapisujú priestor zilina-uniza", en: "The pipelines write zilina-uniza" }
+  title: { sk: Kanály zapisujú priestor zilina-uniza, en: The pipelines write zilina-uniza }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: zilina-uniza }
   assigner: did:web:zilina.sk

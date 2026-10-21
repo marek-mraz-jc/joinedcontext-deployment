@@ -9,11 +9,12 @@ spec:
   # links deep, 500 pages, PDFs of at most 20 MB), read weekly; options: no website (datasets
   # and catalogue only), the university's site as well.
   source: website
-  startUrls: [https://www.zilina.sk/]
+  startUrls:
+    - https://www.zilina.sk/
   sitemap: true
   maxDepth: 3
   maxPages: 500
   pdf: { policy: include, maxBytes: 20971520, maxPages: 200 }
-  schedule: "15 3 * * 0"
+  schedule: '15 3 * * 0'
   languages: [sk]
   visibility: public

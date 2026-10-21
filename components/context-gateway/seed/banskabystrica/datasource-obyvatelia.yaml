@@ -4,7 +4,9 @@ kind: DataSource
 metadata:
   name: mesto-obyvatelia-vek
   namespace: banskabystrica
-  title: { sk: "Počet občanov podľa veku (Mesto Banská Bystrica)", en: "Citizens by age (City of Banská Bystrica)" }
+  title:
+    sk: Počet občanov podľa veku (Mesto Banská Bystrica)
+    en: Citizens by age (City of Banská Bystrica)
 spec:
   type: http
   http:

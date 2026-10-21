@@ -3,34 +3,29 @@ kind: Policy
 metadata:
   name: app-praha-odpad-1-viewer
   namespace: praha
-  annotations:
-    joinedcontext.com/generated-by: portal/app-reconciler
+  annotations: { joinedcontext.com/generated-by: portal/app-reconciler }
 spec:
   assignee:
     id: endpoint:praha/app-praha-odpad/viewer
     kind: role
   assigner: did:web:praha.eu
-  contextSpaceRef:
-    kind: ContextSpace
-    name: praha-mesto
+  contextSpaceRef: { kind: ContextSpace, name: praha-mesto }
   information:
-  - entities:
-    - type: WasteContainer
-    - type: WasteContainerIsle
-    propertyNames:
-    - containerCode
-    - wasteKind
-    - fillingLevel
-    - dateModified
-    - refWasteContainerIsle
-    - name
-    relationshipNames:
-    - containerCode
-    - wasteKind
-    - fillingLevel
-    - dateModified
-    - refWasteContainerIsle
-    - name
-  operations:
-  - queryEntity
-  - retrieveEntity
+    - entities:
+        - type: WasteContainer
+        - type: WasteContainerIsle
+      propertyNames:
+        - containerCode
+        - wasteKind
+        - fillingLevel
+        - dateModified
+        - refWasteContainerIsle
+        - name
+      relationshipNames:
+        - containerCode
+        - wasteKind
+        - fillingLevel
+        - dateModified
+        - refWasteContainerIsle
+        - name
+  operations: [queryEntity, retrieveEntity]

@@ -3,10 +3,10 @@ kind: Project
 metadata:
   name: zilina
   namespace: org
-  title: { sk: "Mesto Žilina a Žilinská univerzita", en: "City of Žilina and the University of Žilina" }
+  title: { sk: Mesto Žilina a Žilinská univerzita, en: City of Žilina and the University of Žilina }
   description:
-    sk: "Mesto s 79 617 obyvateľmi a jeho univerzita: otvorené dáta, ktoré o nich vychádzajú, a ukazovatele z nich."
-    en: "A city of 79 617 people and its university: the open data published about them, and the indicators computed from it."
+    sk: 'Mesto s 79 617 obyvateľmi a jeho univerzita: otvorené dáta, ktoré o nich vychádzajú, a ukazovatele z nich.'
+    en: 'A city of 79 617 people and its university: the open data published about them, and the indicators computed from it.'
 spec:
   organizationRef: hel
   # Who publishes this data, the did:web assigner of its Apps' Policies (PF-108); describes, grants nothing.
@@ -15,9 +15,9 @@ spec:
   # (EP-127, API/08 section 6). The desk is the installation's own, so no address is invented (T-4596).
   catalog:
     publisher:
-      name: { sk: "Mesto Žilina", en: "City of Žilina" }
-      uri: "https://data.gov.sk/id/legal-subject/00321796"
-    contactPoint: { name: "joinedcontext platform", email: hello@joinedcontext.com }
+      name: { sk: Mesto Žilina, en: City of Žilina }
+      uri: https://data.gov.sk/id/legal-subject/00321796
+    contactPoint: { name: joinedcontext platform, email: hello@joinedcontext.com }
   # The same quotas as every demo project (T-2873, PF-73): the mechanism stays, nobody reaches it.
   quotas:
     contextSpaces: 100

@@ -3,7 +3,9 @@ kind: Policy
 metadata:
   name: kpi-pipelines-write
   namespace: banskabystrica
-  title: { sk: "Kanál zapisuje ukazovatele mesta", en: "The computing pipeline writes the city's indicators" }
+  title:
+    sk: Kanál zapisuje ukazovatele mesta
+    en: The computing pipeline writes the city's indicators
 spec:
   contextSpaceRef: { kind: ContextSpace, name: banskabystrica-kpi }
   assigner: did:web:banskabystrica.sk

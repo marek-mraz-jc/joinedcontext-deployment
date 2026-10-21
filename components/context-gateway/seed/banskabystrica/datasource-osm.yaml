@@ -6,10 +6,10 @@ kind: DataSource
 metadata:
   name: osm-overpass
   namespace: banskabystrica
-  title: { sk: "OpenStreetMap (Overpass API)", en: "OpenStreetMap (Overpass API)" }
+  title: { sk: OpenStreetMap (Overpass API), en: OpenStreetMap (Overpass API) }
 spec:
   type: generate
   input:
     mapping: root = ""
     count: 1
-    interval: ""
+    interval: ''

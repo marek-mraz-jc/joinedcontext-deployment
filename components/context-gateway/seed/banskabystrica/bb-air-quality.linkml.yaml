@@ -92,10 +92,4 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
-    slots:
-      - name
-      - dateObserved
-      - pm10
-      - pm25
-      - reliability
-      - refDevice
+    slots: [name, dateObserved, pm10, pm25, reliability, refDevice]

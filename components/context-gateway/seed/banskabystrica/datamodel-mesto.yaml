@@ -7,7 +7,7 @@ kind: DataModel
 metadata:
   name: statistical-observation
   namespace: banskabystrica
-  title: { sk: "Štatistické pozorovanie", en: "Statistical observation" }
+  title: { sk: Štatistické pozorovanie, en: Statistical observation }
 spec:
   contextSpaceRef: banskabystrica-mesto
   linkml: ./statistical-observation.linkml.yaml

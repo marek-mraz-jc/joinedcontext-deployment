@@ -9,8 +9,7 @@ spec:
   sourceEndpointRef: helsinki-bikes
   entityType: BikeHireDockingStation
   style: circle
-  filter:
-    q: "availableBikeNumber>0"
+  filter: { q: availableBikeNumber>0 }
   colorBy:
     property: availableBikeNumber
     palette: YlOrRd
@@ -18,7 +17,4 @@ spec:
   sizeBy:
     property: availableBikeNumber
     range: [4, 14]
-  popupProperties:
-    - name
-    - availableBikeNumber
-    - freeSlotNumber
+  popupProperties: [name, availableBikeNumber, freeSlotNumber]

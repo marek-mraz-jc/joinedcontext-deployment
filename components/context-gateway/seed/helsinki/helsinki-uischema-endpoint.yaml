@@ -19,7 +19,6 @@ spec:
     name:
       placeholder: helsinki-parking
       help: Lowercase letters, digits and dashes. It is part of the endpoint's manifest path, not of its public address.
-    contextSpaceRef:
-      help: The endpoint serves the entities of this space and nothing else.
+    contextSpaceRef: { help: The endpoint serves the entities of this space and nothing else. }
     audience:
-      help: "public: anyone with the address. organization: every project of the organization. project-list: only the projects you pick."
+      help: 'public: anyone with the address. organization: every project of the organization. project-list: only the projects you pick.'

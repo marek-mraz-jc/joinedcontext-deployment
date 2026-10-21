@@ -3,7 +3,7 @@ kind: Project
 metadata:
   name: helsinki-mobility
   namespace: org
-  title: { en: "Mobility analytics", sk: "Analytika mobility" }
+  title: { en: Mobility analytics, sk: Analytika mobility }
 spec:
   organizationRef: hel
   # Owner, 2026-09-25 (T-2873): no demo work and no city dataset is refused by a quota, so every

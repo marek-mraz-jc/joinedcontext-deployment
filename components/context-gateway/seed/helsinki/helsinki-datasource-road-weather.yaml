@@ -6,7 +6,9 @@ kind: DataSource
 metadata:
   name: digitraffic-road-weather
   namespace: helsinki
-  title: { en: "Road weather stations (Fintraffic Digitraffic)", fi: "Tiesääasemat (Fintraffic Digitraffic)" }
+  title:
+    en: Road weather stations (Fintraffic Digitraffic)
+    fi: Tiesääasemat (Fintraffic Digitraffic)
 spec:
   type: http
   http:

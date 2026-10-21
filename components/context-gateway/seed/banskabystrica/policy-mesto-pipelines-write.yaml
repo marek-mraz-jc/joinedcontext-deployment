@@ -3,7 +3,9 @@ kind: Policy
 metadata:
   name: mesto-pipelines-write
   namespace: banskabystrica
-  title: { sk: "Kanály zapisujú zdrojový priestor mesta", en: "The ingestion pipelines write the city's raw space" }
+  title:
+    sk: Kanály zapisujú zdrojový priestor mesta
+    en: The ingestion pipelines write the city's raw space
 spec:
   contextSpaceRef: { kind: ContextSpace, name: banskabystrica-mesto }
   assigner: did:web:banskabystrica.sk

@@ -6,17 +6,13 @@ kind: Pipeline
 metadata:
   name: obyvatelia
   namespace: banskabystrica
-  title: { sk: "Počet občanov podľa veku", en: "Citizens by year of age" }
+  title: { sk: Počet občanov podľa veku, en: Citizens by year of age }
 spec:
   class: auto
   period: 24h
-  schedule: "53 3 * * *"
+  schedule: '53 3 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: mesto-obyvatelia-vek }
   targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-mesto:banskabystrica-mesto
-  output:
-    type: KeyPerformanceIndicator
-    mode: upsert
-  quotas:
-    maxMemoryMb: 128
-    cpuMillicores: 100
+  output: { type: KeyPerformanceIndicator, mode: upsert }
+  quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

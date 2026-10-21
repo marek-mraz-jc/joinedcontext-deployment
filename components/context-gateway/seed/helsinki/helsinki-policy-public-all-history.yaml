@@ -5,22 +5,15 @@ kind: Policy
 metadata:
   name: public-all-history
   namespace: helsinki
-  title:
-    en: 'Public read: everything in the space (history)'
+  title: { en: 'Public read: everything in the space (history)' }
 spec:
-  contextSpaceRef:
-    kind: ContextSpace
-    name: helsinki
+  contextSpaceRef: { kind: ContextSpace, name: helsinki }
   assigner: did:web:{orgDomain}
-  assignee:
-    kind: role
-    id: public
-  operations:
-  - queryTemporal
-  - retrieveTemporal
+  assignee: { kind: role, id: public }
+  operations: [queryTemporal, retrieveTemporal]
   temporalQ: timerel=after;timeAt=P-30D
   information:
-  - entities:
-    - type: BikeHireDockingStation
-    - type: OffStreetParking
-    - type: WaterQualityObserved
+    - entities:
+        - type: BikeHireDockingStation
+        - type: OffStreetParking
+        - type: WaterQualityObserved

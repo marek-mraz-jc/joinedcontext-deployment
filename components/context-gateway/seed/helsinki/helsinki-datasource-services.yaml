@@ -7,7 +7,9 @@ kind: DataSource
 metadata:
   name: hel-servicemap-units
   namespace: helsinki
-  title: { en: "City services: libraries, health stations, swimming halls, beaches, schools (Service Map)", fi: "Kaupungin palvelut (Palvelukartta)" }
+  title:
+    en: 'City services: libraries, health stations, swimming halls, beaches, schools (Service Map)'
+    fi: Kaupungin palvelut (Palvelukartta)
 spec:
   type: http
   http:

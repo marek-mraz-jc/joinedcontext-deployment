@@ -3,7 +3,7 @@ kind: Policy
 metadata:
   name: pipelines-write
   namespace: helsinki
-  title: { en: "The ingestion pipelines write the space" }
+  title: { en: The ingestion pipelines write the space }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: helsinki }
   assigner: did:web:{orgDomain}

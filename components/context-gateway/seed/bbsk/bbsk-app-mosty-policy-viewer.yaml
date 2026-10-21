@@ -3,43 +3,38 @@ kind: Policy
 metadata:
   name: app-bbsk-mosty-1-viewer
   namespace: bbsk
-  annotations:
-    joinedcontext.com/generated-by: portal/app-reconciler
+  annotations: { joinedcontext.com/generated-by: portal/app-reconciler }
 spec:
   assignee:
     id: endpoint:bbsk/app-bbsk-mosty/viewer
     kind: role
   assigner: did:web:bbsk.sk
-  contextSpaceRef:
-    kind: ContextSpace
-    name: bbsk-registre
+  contextSpaceRef: { kind: ContextSpace, name: bbsk-registre }
   information:
-  - entities:
-    - type: Bridge
-    propertyNames:
-    - name
-    - bridgeCode
-    - roadClass
-    - roadNumber
-    - yearBuilt
-    - spanCount
-    - bridgedLength
-    - structureMaterial
-    - heritageStatus
-    - managerName
-    - districtName
-    relationshipNames:
-    - name
-    - bridgeCode
-    - roadClass
-    - roadNumber
-    - yearBuilt
-    - spanCount
-    - bridgedLength
-    - structureMaterial
-    - heritageStatus
-    - managerName
-    - districtName
-  operations:
-  - queryEntity
-  - retrieveEntity
+    - entities:
+        - type: Bridge
+      propertyNames:
+        - name
+        - bridgeCode
+        - roadClass
+        - roadNumber
+        - yearBuilt
+        - spanCount
+        - bridgedLength
+        - structureMaterial
+        - heritageStatus
+        - managerName
+        - districtName
+      relationshipNames:
+        - name
+        - bridgeCode
+        - roadClass
+        - roadNumber
+        - yearBuilt
+        - spanCount
+        - bridgedLength
+        - structureMaterial
+        - heritageStatus
+        - managerName
+        - districtName
+  operations: [queryEntity, retrieveEntity]

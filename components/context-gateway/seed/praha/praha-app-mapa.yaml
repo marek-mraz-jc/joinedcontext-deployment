@@ -12,32 +12,39 @@ kind: App
 metadata:
   name: praha-mapa
   namespace: praha
+  title: { cs: Mapa Prahy, en: Map of Prague }
+  description:
+    cs: Školy, kultura, veřejné toalety, prodejní místa jízdenek PID a stanoviště tříděného odpadu na jedné mapě, s hledáním a detailem každého místa.
+    en: Schools, culture, public toilets, PID ticket points and recycling points on one map, with search and a detail of each place.
   annotations:
     # The Portal image ships this bundle (Dockerfile, /srv/apps), so the App names no
     # repository of its own; the Portal accepts the mark only where the bundle is (AP-87).
     joinedcontext.com/shipped-with: portal
-  title:
-    cs: "Mapa Prahy"
-    en: "Map of Prague"
-  description:
-    cs: "Školy, kultura, veřejné toalety, prodejní místa jízdenek PID a stanoviště tříděného odpadu na jedné mapě, s hledáním a detailem každého místa."
-    en: "Schools, culture, public toilets, PID ticket points and recycling points on one map, with search and a detail of each place."
 spec:
   kind: ui
   source:
     path: ./apps/praha-mapa
-  build:
-    node: "22"
+  build: { node: '22' }
   visibility: public
   lifecycle: published
   embeddable: true
   dataNeeds:
     # One space, two types, read only: the points of interest of the pipelines schools, culture,
     # toilets and ticket-points, and the isles of waste-stations (T-2785).
-    - contextSpaceRef:
-        kind: ContextSpace
-        name: praha-mesto
+    - contextSpaceRef: { kind: ContextSpace, name: praha-mesto }
       types: [PointOfInterest, WasteContainerIsle]
-      attrs: [name, location, address, url, serviceCategory, facilityType, openingHours, wheelchairAccessible, capacity, pupilCount, stationCode, accessRestriction]
+      attrs:
+        - name
+        - location
+        - address
+        - url
+        - serviceCategory
+        - facilityType
+        - openingHours
+        - wheelchairAccessible
+        - capacity
+        - pupilCount
+        - stationCode
+        - accessRestriction
       operations: [queryEntity, retrieveEntity]
       representations: [ngsi-ld, ogc-features]

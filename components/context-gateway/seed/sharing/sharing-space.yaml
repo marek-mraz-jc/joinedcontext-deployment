@@ -3,7 +3,7 @@ kind: ContextSpace
 metadata:
   name: sharing-bikes
   namespace: sharing
-  title: { en: "Sharing probe" }
+  title: { en: Sharing probe }
   description:
     en: "The App sharing matrix's space (T-4911): no data of its own, it reads the city-bike stations the helsinki project shares"
 spec:

@@ -7,7 +7,8 @@ kind: ContextSpace
 metadata:
   name: helsinki-hub
   namespace: helsinki
-  title: { en: "Helsinki, all of it" }
+  title:
+    en: Helsinki, all of it
   description:
     en: "One question over the city's live context and its indicators: this space holds registrations, never entities"
 spec:
@@ -23,4 +24,4 @@ spec:
     - entityType: KeyPerformanceIndicator
       history: P30D
     - entityType: Vehicle
-      history: "off"
+      history: 'off'

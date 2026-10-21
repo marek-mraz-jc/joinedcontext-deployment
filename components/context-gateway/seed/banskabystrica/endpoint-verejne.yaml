@@ -5,10 +5,12 @@ kind: Endpoint
 metadata:
   name: banskabystrica-verejne
   namespace: banskabystrica
-  title: { sk: "Banská Bystrica — verejné údaje", en: "Banská Bystrica, open data" }
+  title:
+    sk: Banská Bystrica — verejné údaje
+    en: Banská Bystrica, open data
   # The dataset's notes in the catalogue, through this endpoint's DCAT-AP record (EP-27).
   description:
-    sk: "Podujatia mesta, školy v meste, hodinové merania PM10, PM2.5, NO2 a O3 na stanici SK0263A a počasie na automatických staniciach SHMÚ Banská Bystrica - Zelená a Donovaly (každých päť minút). Zdroje: Mesto Banská Bystrica, Ministerstvo školstva SR (Digitálna mapa škôl), Európska environmentálna agentúra (údaje SHMÚ), Slovenský hydrometeorologický ústav; CC BY 4.0."
+    sk: 'Podujatia mesta, školy v meste, hodinové merania PM10, PM2.5, NO2 a O3 na stanici SK0263A a počasie na automatických staniciach SHMÚ Banská Bystrica - Zelená a Donovaly (každých päť minút). Zdroje: Mesto Banská Bystrica, Ministerstvo školstva SR (Digitálna mapa škôl), Európska environmentálna agentúra (údaje SHMÚ), Slovenský hydrometeorologický ústav; CC BY 4.0.'
     en: "The city's events, the schools in the city, hourly PM10, PM2.5, NO2 and O3 at station SK0263A, and the weather at SHMÚ's automatic stations Banská Bystrica - Zelená and Donovaly (every five minutes). Sources: the City of Banská Bystrica, the Slovak Ministry of Education (Digitálna mapa škôl), the European Environment Agency (SHMÚ's data), the Slovak Hydrometeorological Institute; CC BY 4.0."
 spec:
   contextSpaceRef: banskabystrica-verejne
@@ -31,13 +33,33 @@ spec:
     personalData: does-not-contain
     license: CC_BY_4_0
     attribution:
-      sk: "Zdroje: Mesto Banská Bystrica (podujatia), Ministerstvo školstva SR, Digitálna mapa škôl (školy), Európska environmentálna agentúra, údaje SHMÚ (ovzdušie), Slovenský hydrometeorologický ústav (počasie); CC BY 4.0"
+      sk: 'Zdroje: Mesto Banská Bystrica (podujatia), Ministerstvo školstva SR, Digitálna mapa škôl (školy), Európska environmentálna agentúra, údaje SHMÚ (ovzdušie), Slovenský hydrometeorologický ústav (počasie); CC BY 4.0'
       en: "Sources: City of Banská Bystrica (events), Slovak Ministry of Education, Digitálna mapa škôl (schools), European Environment Agency, SHMÚ's data (air), Slovak Hydrometeorological Institute (weather); CC BY 4.0"
     themes: [EDUC, ENVI, SOCI]
     keywords:
-      sk: ["podujatia", "školy", "kvalita ovzdušia", "PM10", "PM2.5", "NO2", "ozón", "počasie", "teplota", "Banská Bystrica"]
-      en: ["events", "schools", "air quality", "PM10", "PM2.5", "NO2", "ozone", "weather", "temperature", "Banská Bystrica"]
+      sk:
+        - podujatia
+        - školy
+        - kvalita ovzdušia
+        - PM10
+        - PM2.5
+        - NO2
+        - ozón
+        - počasie
+        - teplota
+        - Banská Bystrica
+      en:
+        - events
+        - schools
+        - air quality
+        - PM10
+        - PM2.5
+        - NO2
+        - ozone
+        - weather
+        - temperature
+        - Banská Bystrica
     spatial:
       - SK032
-      - "https://data.gov.sk/id/lau2/SK0321508438"
+      - https://data.gov.sk/id/lau2/SK0321508438
     frequency: CONT

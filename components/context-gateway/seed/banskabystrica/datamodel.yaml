@@ -3,7 +3,7 @@ kind: DataModel
 metadata:
   name: bb-air-quality
   namespace: banskabystrica
-  title: { sk: "Kvalita ovzdušia", en: "Air quality" }
+  title: { sk: Kvalita ovzdušia, en: Air quality }
 spec:
   contextSpaceRef: ovzdusie
   linkml: ./bb-air-quality.linkml.yaml

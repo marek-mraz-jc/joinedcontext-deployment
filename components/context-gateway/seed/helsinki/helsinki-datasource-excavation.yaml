@@ -7,7 +7,9 @@ kind: DataSource
 metadata:
   name: hel-allu-excavation
   namespace: helsinki
-  title: { en: "Excavation notices (public-area permits, Allu)", fi: "Kaivuilmoitukset (Allu)" }
+  title:
+    en: Excavation notices (public-area permits, Allu)
+    fi: Kaivuilmoitukset (Allu)
 spec:
   type: http
   http:

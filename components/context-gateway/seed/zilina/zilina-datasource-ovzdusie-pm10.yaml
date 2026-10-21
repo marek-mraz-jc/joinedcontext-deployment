@@ -4,7 +4,9 @@ kind: DataSource
 metadata:
   name: eea-sk0020a-pm10
   namespace: zilina
-  title: { sk: "PM10, SK0020A (EEA)", en: "PM10, SK0020A (EEA)" }
+  title:
+    sk: PM10, SK0020A (EEA)
+    en: PM10, SK0020A (EEA)
 spec:
   type: http
   http:

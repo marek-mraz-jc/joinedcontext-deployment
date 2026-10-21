@@ -9,8 +9,7 @@
 
 pipeline:
   processors:
-    - unarchive:
-        format: json_array
+    - unarchive: { format: json_array }
 
     - mapping: |
         let cube = "mesto-obyvatelia-vek"
@@ -41,5 +40,4 @@ pipeline:
           }
         }
 
-    - archive:
-        format: json_array
+    - archive: { format: json_array }

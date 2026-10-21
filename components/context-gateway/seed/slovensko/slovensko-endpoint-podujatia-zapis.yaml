@@ -7,10 +7,10 @@ kind: Endpoint
 metadata:
   name: slovensko-podujatia-zapis
   namespace: slovensko
-  title: { sk: "Podujatia na Slovensku: zápis kanálov", en: "Events in Slovakia: pipeline writes" }
+  title: { sk: 'Podujatia na Slovensku: zápis kanálov', en: 'Events in Slovakia: pipeline writes' }
   description:
-    sk: "Interný vstup, cez ktorý zberné kanály zapisujú podujatia; čítajú sa cez verejný Endpoint slovensko-podujatia."
-    en: "The internal door the ingestion pipelines write the events through; people read them through the public Endpoint slovensko-podujatia."
+    sk: Interný vstup, cez ktorý zberné kanály zapisujú podujatia; čítajú sa cez verejný Endpoint slovensko-podujatia.
+    en: The internal door the ingestion pipelines write the events through; people read them through the public Endpoint slovensko-podujatia.
 spec:
   contextSpaceRef: slovensko-podujatia
   slug: 5kmumrgpatf2xaclhqh5zbnzzvpkilcm

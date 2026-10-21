@@ -8,10 +8,10 @@ kind: ContextSpace
 metadata:
   name: catalog
   namespace: slovensko
-  title: { sk: "Katalóg otvorených dát", en: "Open data catalogue" }
+  title: { sk: Katalóg otvorených dát, en: Open data catalogue }
   description:
-    sk: "Každý verejný dataset platformy ako NGSI-LD entita Dataset, jeho vydavateľ ako Organization a každý jeho verejný prístupový bod ako DataService: názov, popis, téma, miesto, obdobie, typy a počty entít."
-    en: "Every public dataset of the platform as an NGSI-LD Dataset entity, its publisher as an Organization and each of its public Endpoints as a DataService: title, description, theme, place, time range, entity types and counts."
+    sk: 'Každý verejný dataset platformy ako NGSI-LD entita Dataset, jeho vydavateľ ako Organization a každý jeho verejný prístupový bod ako DataService: názov, popis, téma, miesto, obdobie, typy a počty entít.'
+    en: 'Every public dataset of the platform as an NGSI-LD Dataset entity, its publisher as an Organization and each of its public Endpoints as a DataService: title, description, theme, place, time range, entity types and counts.'
 spec:
   urnSegment: catalog
   dataModelRef: { kind: DataModel, name: catalog }
@@ -21,8 +21,8 @@ spec:
   # history (DM-82, T-4275).
   retention:
     - entityType: Dataset
-      history: "off"
+      history: 'off'
     - entityType: DataService
-      history: "off"
+      history: 'off'
     - entityType: Organization
-      history: "off"
+      history: 'off'

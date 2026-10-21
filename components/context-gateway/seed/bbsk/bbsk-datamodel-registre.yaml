@@ -3,7 +3,7 @@ kind: DataModel
 metadata:
   name: bbsk-registre
   namespace: bbsk
-  title: { sk: "Registre kraja", en: "Registers of the region" }
+  title: { sk: Registre kraja, en: Registers of the region }
 spec:
   contextSpaceRef: bbsk-registre
   linkml: ./bbsk-registre.linkml.yaml

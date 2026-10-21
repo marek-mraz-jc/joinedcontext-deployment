@@ -7,7 +7,7 @@ kind: Policy
 metadata:
   name: ovzdusie-pipelines-write
   namespace: banskabystrica
-  title: { sk: "Kanály zapisujú ovzdušie", en: "The ingestion pipelines write the air-quality space" }
+  title: { sk: Kanály zapisujú ovzdušie, en: The ingestion pipelines write the air-quality space }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: ovzdusie }
   assigner: did:web:banskabystrica.sk

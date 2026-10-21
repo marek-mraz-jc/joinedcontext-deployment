@@ -8,7 +8,9 @@ kind: ContextSpace
 metadata:
   name: banskabystrica-verejne
   namespace: banskabystrica
-  title: { sk: "Banská Bystrica — verejné údaje", en: "Banská Bystrica, open data" }
+  title:
+    sk: Banská Bystrica — verejné údaje
+    en: Banská Bystrica, open data
   description:
     sk: >-
       Podujatia mesta, školy a školské zariadenia v meste, hodinové merania prachových častíc, NO2
@@ -47,7 +49,7 @@ spec:
         source: { record: onChange, heartbeat: P7D }
         stationCode: { record: onChange, heartbeat: P7D }
     - entityType: Event
-      history: "off"
+      history: 'off'
     - entityType: WeatherObserved
       history: P30D
       # Written on every run without an observedAt: one row per change and one a week,
@@ -59,14 +61,14 @@ spec:
         name: { record: onChange, heartbeat: P7D }
         source: { record: onChange, heartbeat: P7D }
     - entityType: Organization
-      history: "off"
+      history: 'off'
     - entityType: PointOfInterest
-      history: "off"
+      history: 'off'
     - entityType: EVChargingStation
-      history: "off"
+      history: 'off'
     # Current state only (T-4697): 19,773 parcels and more to come, on a node near its memory.
     - entityType: CadastralParcel
-      history: "off"
+      history: 'off'
   # The space's place (T-4525): the catalogue's Dataset carries it, so georel=near finds the space.
   # the city of Banská Bystrica with a margin; a Event outside it is flagged, never refused (DM-87).
   quality:

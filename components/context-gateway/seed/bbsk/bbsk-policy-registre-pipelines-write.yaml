@@ -3,7 +3,7 @@ kind: Policy
 metadata:
   name: registre-pipelines-write
   namespace: bbsk
-  title: { sk: "Kanály zapisujú registre", en: "The ingestion pipelines write the registers" }
+  title: { sk: Kanály zapisujú registre, en: The ingestion pipelines write the registers }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: bbsk-registre }
   assigner: did:web:bbsk.sk

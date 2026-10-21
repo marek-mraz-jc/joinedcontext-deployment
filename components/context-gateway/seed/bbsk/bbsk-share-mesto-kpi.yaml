@@ -8,11 +8,9 @@ kind: SharedSpaceReference
 metadata:
   name: mesto-kpi
   namespace: bbsk
-  title: { sk: "Ukazovatele mesta Banská Bystrica", en: "Indicators of the city of Banská Bystrica" }
+  title: { sk: Ukazovatele mesta Banská Bystrica, en: Indicators of the city of Banská Bystrica }
 spec:
   alias: mesto-kpi
-  endpointRef:
-    project: banskabystrica
-    name: banskabystrica-kpi
+  endpointRef: { project: banskabystrica, name: banskabystrica-kpi }
   schedule:
     interval: 24h

@@ -7,14 +7,25 @@ kind: Policy
 metadata:
   name: public-hub
   namespace: helsinki
-  title: { en: "Public read: the whole city" }
+  title: { en: 'Public read: the whole city' }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: helsinki-hub }
   assigner: did:web:{orgDomain}
   assignee: { kind: role, id: public }
   # Discovery beside the reads (T-4258, EP-116): which types and attributes the Endpoint holds,
   # narrowed to this grant (EP-26), so an anonymous MCP client finds them before it queries.
-  operations: [retrieveOps, retrieveEntityTypes, retrieveEntityTypeDetails, retrieveEntityTypeInfo, retrieveAttrTypes, retrieveAttrTypeDetails, retrieveAttrTypeInfo, createSubscription, retrieveSubscription, updateSubscription, deleteSubscription]
+  operations:
+    - retrieveOps
+    - retrieveEntityTypes
+    - retrieveEntityTypeDetails
+    - retrieveEntityTypeInfo
+    - retrieveAttrTypes
+    - retrieveAttrTypeDetails
+    - retrieveAttrTypeInfo
+    - createSubscription
+    - retrieveSubscription
+    - updateSubscription
+    - deleteSubscription
   information:
     - entities:
         - type: Vehicle

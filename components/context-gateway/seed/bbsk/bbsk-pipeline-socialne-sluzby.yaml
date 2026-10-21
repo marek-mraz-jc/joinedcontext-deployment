@@ -4,18 +4,14 @@ kind: Pipeline
 metadata:
   name: socialne-sluzby
   namespace: bbsk
-  title: { sk: "Sociálne služby verejných poskytovateľov", en: "Social services of public providers" }
+  title: { sk: Sociálne služby verejných poskytovateľov, en: Social services of public providers }
 spec:
   class: auto
   # A register the region revises a few times a year: weekly is already more than it needs (PL-26).
   period: 168h
-  schedule: "53 3 * * 1"
+  schedule: '53 3 * * 1'
   source:
     dataSourceRef: { kind: DataSource, name: bbsk-socialne-sluzby }
   targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-registre:bbsk-registre
-  output:
-    type: PointOfInterest
-    mode: upsert
-  quotas:
-    maxMemoryMb: 128
-    cpuMillicores: 100
+  output: { type: PointOfInterest, mode: upsert }
+  quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

@@ -7,11 +7,8 @@ kind: CkanInstance
 metadata:
   name: zilina
   namespace: zilina
-  title: { sk: "Mesto Žilina a Žilinská univerzita", en: "City of Žilina and the University of Žilina" }
+  title: { sk: Mesto Žilina a Žilinská univerzita, en: City of Žilina and the University of Žilina }
 spec:
   url: https://opendata.dev.joinedcontext.com
   organizationDefault: zilina
-  apiTokenRef:
-    name: ckan-api-token
-    key: token
-    envVar: CKAN_API_TOKEN
+  apiTokenRef: { name: ckan-api-token, key: token, envVar: CKAN_API_TOKEN }

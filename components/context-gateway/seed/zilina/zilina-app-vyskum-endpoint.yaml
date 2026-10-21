@@ -6,20 +6,11 @@ kind: Endpoint
 metadata:
   name: app-zilina-vyskum
   namespace: zilina
-  annotations:
-    joinedcontext.com/generated-by: portal/app-reconciler
-  title:
-    en: Open research of the University of Žilina
-    sk: Otvorený výskum Žilinskej univerzity
+  title: { en: Open research of the University of Žilina, sk: Otvorený výskum Žilinskej univerzity }
+  annotations: { joinedcontext.com/generated-by: portal/app-reconciler }
 spec:
   audience: public
   callerRole: true
-  contextSpaceRef:
-    kind: ContextSpace
-    name: zilina-uniza
-  enabledRepresentations:
-  - ngsi-ld
-  - mcp
-  - ogc-features
-  - odata
+  contextSpaceRef: { kind: ContextSpace, name: zilina-uniza }
+  enabledRepresentations: [ngsi-ld, mcp, ogc-features, odata]
   slug: u2xp2bnmai7hyioora2qdvtphr
