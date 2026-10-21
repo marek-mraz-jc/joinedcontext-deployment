@@ -30,6 +30,7 @@ def test_writes_the_0_0_0_environment_the_harness_installs(tmp_path):
     assert g["instanceSlug"] == "dev"
     assert g["singleNamespace"] is True
     assert g["serviceMesh"]["enable"] is False
+    assert yaml.safe_load(out.read_text())["componentProfile"] == "full"  # T-4856
 
 
 def test_a_harness_without_the_overlay_is_refused(tmp_path):
