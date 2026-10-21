@@ -20,4 +20,4 @@ spec:
   information:
     - entities:
         - type: AirQualityObserved
-      propertyNames: [dateObserved, location, observedAt, pm10, pm25]
+      propertyNames: [dateObserved, location, name, observedAt, pm10, pm25]
