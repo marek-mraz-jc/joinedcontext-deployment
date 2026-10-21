@@ -133,6 +133,12 @@ upgrade environment version *flags:
 release-notes version:
 	./scripts/release-notes.py {{version}}
 
+# Cut the next release from main as pushed (T-4955): releases/<v>.md, its CHANGELOG.md section,
+# one commit and an annotated tag; prints the push (`--push` pushes both, never forced)
+[group('deployment')]
+release part *flags:
+	./scripts/release.py cut {{part}} {{flags}}
+
 # Deploy linkerd (idempotent — skips if the control plane is already installed)
 [group('deployment')]
 linkerd:
@@ -478,6 +484,8 @@ dev-apply:
 	just _dev-assemble
 	helmfile -f deployment/helmfile.yaml -e dev sync --concurrency {{helmfile_concurrency}}
 	./scripts/wait-rollouts.sh dev
+	# What dev runs now, who applied it and when (T-4955); dev-smoke prints it.
+	./scripts/release.py record dev dev
 
 # The checks dev-smoke and prod-smoke share, against one instance (its domain and namespace)
 [group('dev cluster')]
@@ -485,6 +493,7 @@ _smoke domain namespace:
 	#!/usr/bin/env bash
 	set -euo pipefail
 	rc=0
+	./scripts/release.py show "{{ namespace }}"
 	# One lookup, then every curl goes to that address (T-3420): the sandbox resolver stalls up
 	# to 15 s per lookup, which ate the 20 s request budget and failed checks the cluster passed.
 	# TLS is still verified per hostname; the wildcard record is checked here instead.
@@ -664,6 +673,10 @@ prod-apply:
 	#!/usr/bin/env bash
 	set -euo pipefail
 	just _prod-guard
+	# Only an annotated release tag on origin is applied (T-4955); a rollback checks out the
+	# previous tag and runs this recipe again.
+	tag=$(./scripts/release.py verify HEAD)
+	echo "applying release $tag to smartcity"
 	just _dev-assemble
 	# The public assistant is asked every 15 s while the rollouts run (T-4809, at most 40 questions);
 	# its summary line closes the apply's output on success and on failure, for the apply report.
@@ -673,6 +686,7 @@ prod-apply:
 	trap 'kill "$probe" 2>/dev/null; wait "$probe" 2>/dev/null; cat "$probe_log.summary"; echo "assistant probe log: $probe_log"' EXIT
 	helmfile -f deployment/helmfile.yaml -e smartcity sync --concurrency {{helmfile_concurrency}}
 	./scripts/wait-rollouts.sh smartcity
+	./scripts/release.py record smartcity smartcity
 
 # Verify the production instance (scripts/smoke.sh and the shared checks; no demo login exists there)
 [group('prod cluster')]
@@ -708,7 +722,7 @@ promote sha='origin/dev-green':
 		sha=$(git commit-tree "$sha^{tree}" -p origin/release -p "$sha" -m "promote $sha to production")
 	fi
 	git push origin "$sha:refs/heads/release"
-	git tag "$tag" "$sha" && git push -q origin "refs/tags/$tag"
+	git tag --annotate "$tag" "$sha" -m "promote $sha to production" && git push -q origin "refs/tags/$tag"
 	echo "promoted $sha as $tag"
 
 # A new commit on `release` with that tag's tree, so the branch only ever moves forward.

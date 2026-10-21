@@ -1,22 +1,23 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Bump PRs for what this repository pins (docs/analysis/iac-practices.md R1, R3, R4): remote chart versions in components/*/charts.yaml and the helmfiles, third-party images by tag and digest in components/*/images.yaml and the Dockerfiles, GitHub Actions by commit SHA, tool versions in tools.env. Nothing is proposed before it is 7 days old. Our own ghcr.io/marek-mraz-jc images are pinned by .github/workflows/pin-images.yml, not here.",
   "extends": [
     "config:recommended",
-    ":configMigration",
-    "customManagers:dockerfileVersions"
+    "helpers:pinGitHubActionDigests"
   ],
   "baseBranchPatterns": [
-    "staging"
+    "main"
   ],
   "enabledManagers": [
     "custom.regex",
     "dockerfile",
-    "gitlabci"
+    "github-actions",
+    "helmfile"
   ],
+  "minimumReleaseAge": "7 days",
+  "internalChecksFilter": "strict",
   "labels": [
-    "renovate",
-    "v::2",
-    "team devops"
+    "renovate"
   ],
   "prConcurrentLimit": 10,
   "prHourlyLimit": 5,
@@ -24,19 +25,16 @@
   "vulnerabilityAlerts": {
     "labels": [
       "renovate",
-      "security",
-      "v::2",
-      "team devops"
+      "security"
     ]
   },
   "separateMajorMinor": true,
-  "separateMultipleMajor": true,
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Helm charts from HTTP(S) repos in components/**/charts.yaml; the helmfile repository alias is stripped because chart names in the repo index do not contain it",
+      "description": "Helm charts from HTTP(S) repositories in components/*/charts.yaml; the helmfile repository alias is stripped because chart names in the repository index do not contain it",
       "managerFilePatterns": [
-        "/^components/.+/charts\\.yaml$/"
+        "/^components/[^/]+/charts\\.yaml$/"
       ],
       "matchStrings": [
         "repository:\\s*['\"]?(?<registryUrl>https?://[^\\s'\"]+)['\"]?\\s*\\n\\s*chart:\\s*['\"]?(?:[^\\s/'\"]+/)?(?<depName>[^\\s/'\"]+)['\"]?\\s*\\n\\s*version:\\s*['\"]?(?<currentValue>[^'\"\\n]+)['\"]?"
@@ -45,9 +43,9 @@
     },
     {
       "customType": "regex",
-      "description": "OCI Helm charts in components/**/charts.yaml (resolved as docker tags)",
+      "description": "OCI Helm charts in components/*/charts.yaml",
       "managerFilePatterns": [
-        "/^components/.+/charts\\.yaml$/"
+        "/^components/[^/]+/charts\\.yaml$/"
       ],
       "matchStrings": [
         "chart:\\s*['\"]?oci://(?<depName>[^\\s'\"]+)['\"]?\\s*\\n\\s*version:\\s*['\"]?(?<currentValue>[^'\"\\n]+)['\"]?"
@@ -57,75 +55,81 @@
     },
     {
       "customType": "regex",
-      "description": "Container images in components/**/images.yaml; tag must directly follow repository",
+      "description": "Container images in components/*/images.yaml: repository, tag and digest in that order, comment lines allowed between them; the PR moves tag and digest together",
       "managerFilePatterns": [
-        "/^components/.+/images\\.yaml$/"
+        "/^components/[^/]+/images\\.yaml$/"
       ],
       "matchStrings": [
-        "repository:\\s*['\"]?(?<depName>[^\\s'\"]+)['\"]?\\s*\\n\\s*tag:\\s*['\"]?(?<currentValue>[^'\"\\n]+)['\"]?"
+        "repository:\\s*['\"]?(?<depName>[^\\s'\"]+)['\"]?\\s*\\n(?:\\s*#[^\\n]*\\n)*\\s*tag:\\s*['\"]?(?<currentValue>[^\\s'\"]+)['\"]?\\s*\\n(?:\\s*#[^\\n]*\\n)*\\s*digest:\\s*['\"]?(?<currentDigest>sha256:[a-f0-9]{64})['\"]?"
       ],
       "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "description": "Tool versions in tools.env, each under a '# renovate:' comment naming its datasource",
+      "managerFilePatterns": [
+        "/^tools\\.env$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+)(?: extractVersion=(?<extractVersion>\\S+))?\\n[A-Z0-9_]+_VERSION=(?<currentValue>\\S+)"
+      ],
+      "extractVersionTemplate": "{{#if extractVersion}}{{{extractVersion}}}{{else}}^(?<version>.+)${{/if}}"
     }
   ],
   "packageRules": [
     {
-      "description": "Label update type: major",
+      "description": "Our own images: pin-images.yml pins them by digest on every build",
+      "matchPackageNames": [
+        "ghcr.io/marek-mraz-jc/**"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "One PR per kind for minor and patch bumps; majors stay one PR each",
       "matchUpdateTypes": [
-        "major"
-      ],
-      "addLabels": [
-        "major"
-      ]
-    },
-    {
-      "description": "Label update type: minor",
-      "matchUpdateTypes": [
-        "minor"
-      ],
-      "addLabels": [
-        "minor"
-      ]
-    },
-    {
-      "description": "Label update type: patch",
-      "matchUpdateTypes": [
-        "patch"
-      ],
-      "addLabels": [
-        "patch"
-      ]
-    },
-    {
-      "description": "Label Helm chart updates (incl. OCI charts, which use the docker datasource)",
-      "matchFileNames": [
-        "components/**/charts.yaml"
-      ],
-      "addLabels": [
-        "helm"
-      ]
-    },
-    {
-      "description": "Label container image updates (component images, base images, CI images)",
-      "matchDatasources": [
-        "docker"
+        "minor",
+        "patch",
+        "digest"
       ],
       "matchFileNames": [
-        "components/**/images.yaml",
-        "container-images/**",
-        ".gitlab-ci.yml"
+        "components/*/charts.yaml",
+        "components/*/helmfile.yaml.gotmpl",
+        ".ci/kyverno/**",
+        "demos/**"
       ],
-      "addLabels": [
-        "docker"
-      ]
+      "groupName": "helm charts"
     },
     {
-      "description": "Label tool versions pinned via renovate comments (GitHub releases/tags in containerfiles)",
-      "matchDatasources": [
-        "github-releases",
-        "github-tags"
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest"
       ],
+      "matchFileNames": [
+        "components/*/images.yaml",
+        "images/**"
+      ],
+      "groupName": "container images"
+    },
+    {
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest"
+      ],
+      "matchManagers": [
+        "github-actions"
+      ],
+      "groupName": "github actions"
+    },
+    {
+      "description": "A tool bump also needs its new sha256 in tools.env, which the PR leaves stale: CI fails at the download until a reviewer pins it",
+      "matchFileNames": [
+        "tools.env"
+      ],
+      "groupName": "ci tools",
       "addLabels": [
-        "github"
+        "needs-checksum"
       ]
     }
   ]

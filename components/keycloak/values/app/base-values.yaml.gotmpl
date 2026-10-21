@@ -43,6 +43,11 @@ image:
 extraEnv: |
   - name: KC_HOSTNAME_STRICT
     value: "false"
+  # The pool's default ceiling is 100. One shared Postgres has max_connections 50 on the
+  # development profile (T-4933); Keycloak grew to 10 there on 2026-10-21 and the other clients'
+  # token lookups were refused (53300). 8 is ample for one realm at this scale.
+  - name: KC_DB_POOL_MAX_SIZE
+    value: "8"
   - name: JGROUPS_DISCOVERY_PROTOCOL
     value: kubernetes.KUBE_PING
   - name: JGROUPS_DISCOVERY_PROPERTIES

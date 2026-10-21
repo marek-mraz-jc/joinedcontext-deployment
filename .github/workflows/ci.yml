@@ -13,33 +13,28 @@ permissions: { contents: read }
 # used to cancel the run before it, so main went an hour without a finished run. One run
 # finishes, the newest push waits behind it (GitHub keeps one pending run per group).
 concurrency: { group: "ci-${{ github.ref }}", cancel-in-progress: "${{ github.ref != 'refs/heads/main' }}" }
-env:
-  CONFTEST_VERSION: "0.69.0"
-  CONFTEST_CHECKSUM: "96fc2fbf11f0afde51256647127e6f00a64ce839a4d9a0a1aef2426c0e6f4b3f"
-  GITLEAKS_VERSION: "8.29.0"
-  GITLEAKS_CHECKSUM: "39e07ad810336fd0ae80d0bd61c60d0521f628173e7583583b5df4a38738522c"
-  # kubeconform schemas of custom resources, pinned to one commit of datreeio/CRDs-catalog (2026-10-08).
-  CRDS_CATALOG: "https://raw.githubusercontent.com/datreeio/CRDs-catalog/63669a570e231d4f1f8396d229a1de512bcf0a34/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
+# Every tool version and checksum comes from tools.env, loaded by .github/actions/tools (T-4954).
 jobs:
   render:
     runs-on: ubuntu-latest
     timeout-minutes: 25  # nine environments since T-4956, about 30 s each
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: helmfile/helmfile-action@1f44bcb43e5fb17ecb2685d8b6081ec5f6aa5fcf # v2.4.7
-        with: { helmfile-args: version, helmfile-version: v1.8.1 }
+      - uses: ./.github/actions/tools
       - uses: extractions/setup-just@f8a3cce218d9f83db3a2ecd90e41ac3de6cdfd9b # v3.1.0
       - name: kubeconform, conftest, gitleaks
         run: |
           set -eu
-          curl --fail --retry 3 --retry-all-errors -sSL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | tar xz
+          curl --fail --retry 3 --retry-all-errors -sSLo kubeconform.tar.gz "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz"
+          echo "${KUBECONFORM_CHECKSUM}  kubeconform.tar.gz" | sha256sum --check --status
+          tar xzf kubeconform.tar.gz kubeconform
           curl --fail --retry 3 --retry-all-errors -sSLo conftest.tar.gz "https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz"
           echo "${CONFTEST_CHECKSUM}  conftest.tar.gz" | sha256sum --check --status
           tar xzf conftest.tar.gz conftest
           curl --fail --retry 3 --retry-all-errors -sSLo gitleaks.tar.gz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
           echo "${GITLEAKS_CHECKSUM}  gitleaks.tar.gz" | sha256sum --check --status
           tar xzf gitleaks.tar.gz gitleaks
-          rm -f conftest.tar.gz gitleaks.tar.gz
+          rm -f kubeconform.tar.gz conftest.tar.gz gitleaks.tar.gz
       - name: helm lint every local chart
         # T-4956: lint plus values.schema.json against the chart's defaults, with its
         # ci/lint-values.yaml where the bare chart needs one; a chart vendored under another
@@ -63,14 +58,18 @@ jobs:
           set -eu
           mkdir -p /tmp/scan
           golden_red=""
+          # R1/R2: every remote chart pinned exactly in the file a reader sees, no helmfile.lock.
+          python3 scripts/ci/check-chart-pins.py --no-lock .
+          helmfile -f .ci/kyverno/helmfile.yaml.gotmpl list --output json | python3 scripts/ci/check-chart-pins.py -
           # minimal and broker-only: the two small component profiles (T-4856); dev and smartcity
           # (production) the hosted clusters (T-4956). smoke-test needs a CI pipeline's env.
           mapfile -t environments < .ci/golden/ENVIRONMENTS
           for env in "${environments[@]}"; do
             echo "::group::${env}"
             helmfile -f deployment/helmfile.yaml -e "${env}" repos
+            helmfile -f deployment/helmfile.yaml -e "${env}" list --output json | python3 scripts/ci/check-chart-pins.py -
             scripts/render.sh "${env}" "rendered-${env}.yaml"
-            ./kubeconform -strict -skip CustomResourceDefinition -schema-location default -schema-location "${CRDS_CATALOG}" -summary "rendered-${env}.yaml"
+            ./kubeconform -strict -kubernetes-version "${KUBERNETES_VERSION}" -skip CustomResourceDefinition -schema-location default -schema-location "https://raw.githubusercontent.com/datreeio/CRDs-catalog/${CRDS_CATALOG_COMMIT}/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json" -summary "rendered-${env}.yaml"
             python3 scripts/ci/check-image-digests.py "rendered-${env}.yaml"
             ./conftest test --all-namespaces -p policies "rendered-${env}.yaml"
             ! grep -i -E 'civitas' "rendered-${env}.yaml"
@@ -91,8 +90,9 @@ jobs:
           set -eu
           for env in dev smartcity; do
             echo "::group::demo-bbsk ${env}"
+            helmfile -f demos/bbsk/helmfile.yaml.gotmpl -e "${env}" list --output json | python3 scripts/ci/check-chart-pins.py -
             helmfile -f demos/bbsk/helmfile.yaml.gotmpl -e "${env}" template --skip-deps > "rendered-demo-bbsk-${env}.yaml"
-            ./kubeconform -strict -skip CustomResourceDefinition -schema-location default -schema-location "${CRDS_CATALOG}" -summary "rendered-demo-bbsk-${env}.yaml"
+            ./kubeconform -strict -kubernetes-version "${KUBERNETES_VERSION}" -skip CustomResourceDefinition -schema-location default -schema-location "https://raw.githubusercontent.com/datreeio/CRDs-catalog/${CRDS_CATALOG_COMMIT}/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json" -summary "rendered-demo-bbsk-${env}.yaml"
             python3 scripts/ci/check-image-digests.py "rendered-demo-bbsk-${env}.yaml"
             ./conftest test --all-namespaces -p policies "rendered-demo-bbsk-${env}.yaml"
             python3 scripts/check-rendered-secrets.py "rendered-demo-bbsk-${env}.yaml" /tmp/scan/rendered.yaml
@@ -121,25 +121,28 @@ jobs:
     # Balanced by measured time since 2026-10-20: shard 4 ran past 15 on three main runs (T-4789).
     strategy: { fail-fast: false, matrix: { shard: [1, 2, 3, 4] } }
     name: tests (${{ matrix.shard }}/4)
-    env: { KYVERNO_VERSION: v1.19.0, SOPS_VERSION: v3.13.3, AGE_VERSION: v1.2.1 }
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         # The whole history: a credential deleted in the last commit is still a credential.
         with: { fetch-depth: 0 }
-      - uses: helmfile/helmfile-action@1f44bcb43e5fb17ecb2685d8b6081ec5f6aa5fcf # v2.4.7
-        with: { helmfile-args: version, helmfile-version: v1.8.1 }
+      - uses: ./.github/actions/tools
       - uses: extractions/setup-just@f8a3cce218d9f83db3a2ecd90e41ac3de6cdfd9b # v3.1.0
       - name: kyverno cli
         run: |
-          curl --fail --retry 3 --retry-all-errors -sSL "https://github.com/kyverno/kyverno/releases/download/${KYVERNO_VERSION}/kyverno-cli_${KYVERNO_VERSION}_linux_x86_64.tar.gz" | tar xz kyverno
+          curl --fail --retry 3 --retry-all-errors -sSLo kyverno.tar.gz "https://github.com/kyverno/kyverno/releases/download/${KYVERNO_VERSION}/kyverno-cli_${KYVERNO_VERSION}_linux_x86_64.tar.gz"
+          echo "${KYVERNO_CHECKSUM}  kyverno.tar.gz" | sha256sum --check --status
+          tar xzf kyverno.tar.gz kyverno
           sudo install -m 0755 kyverno /usr/local/bin/kyverno
       - name: sops + age
         # tests/test_secrets.py round-trips a SOPS-encrypted environment secret; without
         # these two binaries that test would skip and the integration would go unproven.
         run: |
           curl --fail --retry 3 --retry-all-errors -sSL -o sops "https://github.com/getsops/sops/releases/download/${SOPS_VERSION}/sops-${SOPS_VERSION}.linux.amd64"
+          echo "${SOPS_CHECKSUM}  sops" | sha256sum --check --status
           sudo install -m 0755 sops /usr/local/bin/sops
-          curl --fail --retry 3 --retry-all-errors -sSL "https://github.com/FiloSottile/age/releases/download/${AGE_VERSION}/age-${AGE_VERSION}-linux-amd64.tar.gz" | tar xz
+          curl --fail --retry 3 --retry-all-errors -sSLo age.tar.gz "https://github.com/FiloSottile/age/releases/download/${AGE_VERSION}/age-${AGE_VERSION}-linux-amd64.tar.gz"
+          echo "${AGE_CHECKSUM}  age.tar.gz" | sha256sum --check --status
+          tar xzf age.tar.gz
           sudo install -m 0755 age/age age/age-keygen /usr/local/bin/
       - name: gitleaks + conftest
         # tests/test_reusable_workflows.py runs the shared secret ruleset against the shapes it
@@ -228,3 +231,13 @@ jobs:
           name: temporal-audit
           path: temporal-audit.json
           retention-days: 30
+  renovate:
+    # renovate.json is valid for the pinned Renovate (T-4954); a config Renovate rejects
+    # opens no update PR at all, which reads exactly like nothing to update.
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: ./.github/actions/tools
+        with: { helmfile: "false" }
+      - run: npx --yes --package "renovate@${RENOVATE_VERSION}" -- renovate-config-validator --strict renovate.json

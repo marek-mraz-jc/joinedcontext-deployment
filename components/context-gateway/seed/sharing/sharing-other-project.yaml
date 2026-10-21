@@ -8,12 +8,3 @@ metadata:
   title: { en: "App sharing matrix, other project (test)" }
 spec:
   organizationRef: hel
-  quotas:
-    contextSpaces: 1
-    residentPipelines: 1
-    publicEndpoints: 1
-    apps: 1
-    ingestEventsPerSecond: 1
-    agentRunsPerDay: 1
-    entitiesPerSpace: 1
-    requestsPerMinute: 60

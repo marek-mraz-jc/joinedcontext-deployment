@@ -115,6 +115,8 @@ def test_the_nightly_deployment_job_installs_every_tool_the_harness_demands():
     needed |= {"k3d", "curl"}  # added by the managed-cluster branch, which this job takes
     needed -= {"kubectl", "helm", "yq", "curl"}  # every GitHub runner image ships these
     job = yaml.safe_dump(k3d_deploy_job())
+    if "./.github/actions/tools" in job:
+        job += " helmfile"  # the local action installs it at the tools.env version (T-4954)
     for tool in sorted(needed):
         assert tool in job, f"the harness needs {tool} and the job never installs it"
 

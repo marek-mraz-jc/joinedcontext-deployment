@@ -130,15 +130,13 @@ context-endpoint:
   # context-endpoint-portal below, with the edge session turned into the bearer.
   host: '{{ .Values.global.domain }}'
   priority: 20
-  # `{endpoint}/ws`: the gateway forwards the upgrade to the broker view's WebSocket after it
-  # verified the bearer (platform T-3885); the read timeout outlives the broker's 30 s Ping.
-  websocket: true
+  # The plain reads and writes (T-4903): the gateway ends a read at 10 s and waits up to 10 s
+  # for write room, so 60 s is margin, never a read the broker spends minutes on. The WebSocket
+  # (`-ws`) and the bulk exports (`-bulk`) have routes of their own with 300 s.
   timeout:
     connect: 6
     send: 60
-    read: 300
-  # APISIX defaults to the same 320, but a long-lived streaming upstream is the one place
-  # where the pool size is a deliberate capacity decision rather than a default.
+    read: 60
   keepalivePool:
     size: 320
     idleTimeout: 60
@@ -199,6 +197,17 @@ context-mcp-named:
       rejected_code: 429
       policy: local
       show_limit_quota_header: true
+    # An MCP call is a JSON POST, which the chain's GET-only CORS refuses at the preflight: the
+    # Portal's public /connect page asks the server for its tools from portal.{domain} (T-4949).
+    # The same origins as the chain, never `*`; the route takes no bearer, so nothing a cookie or
+    # token could carry is shared.
+    cors:
+      allow_origins_by_regex:
+        - '^https://[^@/]+\.${DOMAIN_RE}$'
+      allow_methods: 'POST,OPTIONS'
+      allow_headers: 'Content-Type,Accept,Mcp-Protocol-Version,Mcp-Session-Id'
+      expose_headers: 'Mcp-Session-Id,Retry-After'
+      max_age: 600
   timeout:
     connect: 6
     send: 60
@@ -239,15 +248,13 @@ context-endpoint-portal:
   uri: '/api/endpoint/*'
   subDomain: portal
   priority: 20
-  # `{endpoint}/ws`: the gateway forwards the upgrade to the broker view's WebSocket after it
-  # verified the bearer (platform T-3885); the read timeout outlives the broker's 30 s Ping.
-  websocket: true
+  # The plain reads and writes (T-4903): the gateway ends a read at 10 s and waits up to 10 s
+  # for write room, so 60 s is margin, never a read the broker spends minutes on. The WebSocket
+  # (`-ws`) and the bulk exports (`-bulk`) have routes of their own with 300 s.
   timeout:
     connect: 6
     send: 60
-    read: 300
-  # APISIX defaults to the same 320, but a long-lived streaming upstream is the one place
-  # where the pool size is a deliberate capacity decision rather than a default.
+    read: 60
   keepalivePool:
     size: 320
     idleTimeout: 60
@@ -322,6 +329,12 @@ context-endpoint-ws:
     connect: 6
     send: 60
     read: 300
+  # APISIX defaults to the same 320, but a long-lived streaming upstream is the one place
+  # where the pool size is a deliberate capacity decision rather than a default.
+  keepalivePool:
+    size: 320
+    idleTimeout: 60
+    requests: 1000
   plugins:
     limit-conn:
       conn: 50
@@ -350,6 +363,12 @@ api-context-endpoint-ws:
     connect: 6
     send: 60
     read: 300
+  # APISIX defaults to the same 320, but a long-lived streaming upstream is the one place
+  # where the pool size is a deliberate capacity decision rather than a default.
+  keepalivePool:
+    size: 320
+    idleTimeout: 60
+    requests: 1000
   plugins:
     limit-conn:
       conn: 50
@@ -378,6 +397,12 @@ context-endpoint-portal-ws:
     connect: 6
     send: 60
     read: 300
+  # APISIX defaults to the same 320, but a long-lived streaming upstream is the one place
+  # where the pool size is a deliberate capacity decision rather than a default.
+  keepalivePool:
+    size: 320
+    idleTimeout: 60
+    requests: 1000
   plugins:
     limit-conn:
       conn: 50
@@ -405,11 +430,13 @@ api-context-endpoint:
   subDomain: api
   priority: 20
   pluginConfig: context-endpoint
-  websocket: true
+  # As context-endpoint: the plain reads and writes (T-4903): the gateway ends a read at 10 s and waits up to 10 s
+  # for write room, so 60 s is margin, never a read the broker spends minutes on. The WebSocket
+  # (`-ws`) and the bulk exports (`-bulk`) have routes of their own with 300 s.
   timeout:
     connect: 6
     send: 60
-    read: 300
+    read: 60
   keepalivePool:
     size: 320
     idleTimeout: 60
@@ -446,6 +473,17 @@ api-mcp-named:
       rejected_code: 429
       policy: local
       show_limit_quota_header: true
+    # An MCP call is a JSON POST, which the chain's GET-only CORS refuses at the preflight: the
+    # Portal's public /connect page asks the server for its tools from portal.{domain} (T-4949).
+    # The same origins as the chain, never `*`; the route takes no bearer, so nothing a cookie or
+    # token could carry is shared.
+    cors:
+      allow_origins_by_regex:
+        - '^https://[^@/]+\.${DOMAIN_RE}$'
+      allow_methods: 'POST,OPTIONS'
+      allow_headers: 'Content-Type,Accept,Mcp-Protocol-Version,Mcp-Session-Id'
+      expose_headers: 'Mcp-Session-Id,Retry-After'
+      max_age: 600
   timeout:
     connect: 6
     send: 60
