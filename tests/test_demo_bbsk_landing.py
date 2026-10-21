@@ -231,3 +231,21 @@ def test_the_launcher_and_the_dock_edge_never_show_a_red_focus_ring():
     launcher = rules[".jc-assistant > summary:focus-visible"]
     assert "outline: 3px solid var(--white)" in launcher and "var(--blue-dark)" in launcher
     assert "var(--red)" not in rules[".jc-dock-edge:focus-visible"]
+
+
+def test_the_page_passes_axe_s_heading_contrast_link_and_landmark_rules():
+    """T-4996 (axe on dev, journey 31): the page has one h1, the hero's DEMO tag is white on red
+    (light blue on red was 3.6:1), a link in running text is underlined, so it reads as a link
+    without its colour (1.8:1 against the notice's text), and the DEMO ribbon sits in the header
+    landmark. axe-core 4.13 on the page served from the folder: 0 violations at 1440 and 400."""
+    folder = ROOT / "demos/bbsk/chart/files/landing"
+    html = (folder / "index.html").read_text()
+    css = (folder / "landing.css").read_text()
+    assert html.count("<h1") == 1
+    assert html.index("<h1>AI asistent nad dátami vášho kraja") < html.index("<h2", html.index("<main"))
+    assert ".hero__ai h1 { color: var(--white);" in css and ".hero__ai h2" not in css
+    assert ".hero__ai .ai__tag" not in css, "the tag keeps .ai__tag's white on red"
+    assert "p a { text-decoration: underline;" in css
+    header = html.split('<header class="header">', 1)[1].split("</header>", 1)[0]
+    assert '<div class="ribbon" role="note">' in header
+    assert html.count('<div class="ribbon"') == 1

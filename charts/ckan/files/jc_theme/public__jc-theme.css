@@ -487,6 +487,7 @@ body.dt-view input[type="search"]::-webkit-search-cancel-button { display: none;
    shadow, its words upright again and on one line. Open, it is the ✕ below as before. */
 .jc-assistant:not([open]) > summary { block-size: 3rem; min-block-size: 0; padding-block: 0; margin-inline: .375rem; border-radius: 10px; transform: skewX(-14deg); white-space: nowrap; box-shadow: 0 4px 14px color-mix(in oklab, var(--jc-ink) 25%, transparent); }
 .jc-assistant:not([open]) > summary > span { display: inline-block; transform: skewX(14deg); }
+.jc-assistant-icon { display: none; }
 /* Open, the launcher goes: the ✕ in the chat's own header closes the panel (T-4635, the widget's
    embed mode), so no circle stays in the corner. */
 .jc-assistant[open] > summary { display: none; }
@@ -537,11 +538,16 @@ body:has(.jc-corner) { padding-block-end: 5rem; }
      label is longer than the room (German, or any label at 320px), the bar goes on a row of its
      own above the launcher, both inside the 1rem gutters, and the page keeps room for two rows. */
   .jc-corner { flex-wrap: wrap; justify-content: flex-end; max-inline-size: calc(100vw - 2rem); }
-  body:has(.jc-corner) { padding-block-end: 7.5rem; }
+  /* T-4996: closed, the launcher is a square chat icon the bar's height, its words kept for a screen
+     reader, so it covers a corner of a card instead of a card's line; bar and icon are one row at
+     every label and 320px, so the page keeps room for one row. */
+  body:has(.jc-corner) { padding-block-end: 4.5rem; }
   .jc-seg { inline-size: 1.4375rem; }
   .jc-seg .jc-ai-logo { inline-size: 1.125rem; block-size: 1.125rem; }
   .jc-brand img { block-size: 1.75rem; }
-  .jc-assistant:not([open]) > summary { block-size: 2.75rem; font-size: .9375rem; padding-inline: 1.125rem; }
+  .jc-assistant:not([open]) > summary { block-size: 2.75rem; inline-size: 2.75rem; padding-inline: 0; }
+  .jc-assistant:not([open]) > summary > span { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
+  .jc-assistant:not([open]) > summary > .jc-assistant-icon { display: block; inline-size: 1.375rem; block-size: 1.375rem; transform: skewX(14deg); }
   .jc-corner:has(.jc-assistant[open]) { z-index: 2000; }
   body:has(.jc-assistant[open]) { overflow: hidden; }
   .jc-assistant[open] { position: fixed; inset: 0; z-index: 2000; display: flex; flex-direction: column; background: var(--jc-surface); }
