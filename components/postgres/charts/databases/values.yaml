@@ -14,7 +14,7 @@ localBackup:
   keepDays: 7
   size: 10Gi
 databases:
-  []
+  {}
   # Example database configuration:
   # apicurio:
   #   name: 'apicurio'

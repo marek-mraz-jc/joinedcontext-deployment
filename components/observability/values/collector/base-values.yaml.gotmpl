@@ -65,11 +65,9 @@ envSecret:
     secret: keycloak-client-activity-ingest
     key: client-secret
 
+# The upstream image's own user; the collector writes nothing outside /tmp.
 podSecurityContext:
-  {{ .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}
-  # The upstream image's own user; the collector writes nothing outside /tmp.
-  runAsUser: 10001
-  fsGroup: 10001
+  {{ merge (dict "runAsUser" 10001 "fsGroup" 10001) .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}
 
 securityContext:
   {{ .Values.securityDefaults.securityContext | toYaml | nindent 2 }}

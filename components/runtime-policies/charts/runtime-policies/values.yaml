@@ -57,3 +57,7 @@ imageSignatures:
     attestationType: https://joinedcontext.com/attestations/full-tests/v1
     # promote.yml on main (platform, Portal); image-jc.yml on dev (the broker's nightly ETSI promote)
     subjectRegExp: "^https://github.com/marek-mraz-jc/[^/]+/\\.github/workflows/(promote\\.yml@refs/heads/main|image-jc\\.yml@refs/heads/dev)$"
+
+# The read-only identity of the nightly drift check (T-4956): get and list, no token Secret.
+driftReader:
+  enabled: true

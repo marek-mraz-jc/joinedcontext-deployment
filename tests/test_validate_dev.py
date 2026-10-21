@@ -35,24 +35,50 @@ dev, portal, Deployment (apps) has changed:
 +         replicas: 2
 dev, portal-extra, ConfigMap (v1) has been added:
 dev, portal, Deployment (apps) has changed:
+Comparing release=apisix, chart=charts/apisix
 """
 
 
 def test_no_diff_is_a_pass():
-    assert verdicts(vd.drift_results("", 0)) == {"drift": "pass"}
+    assert verdicts(vd.drift_results("", 0)) == {"drift/dev": "pass"}
 
 
-def test_each_drifted_object_is_one_fail_keyed_by_namespace_kind_name():
+def test_each_compared_release_is_one_result_and_a_drifting_one_fails_once():
+    # T-4956: one task per drifting release, closed when the release compares clean again.
     results = vd.drift_results(DIFF, 2)
-    assert verdicts(results) == {"drift/dev/Deployment/portal": "fail", "drift/dev/ConfigMap/portal-extra": "fail"}
-    titles = sorted(r["title"] for r in results)
-    assert titles == ["drift on dev: ConfigMap dev/portal-extra is in main but not on dev",
-                      "drift on dev: Deployment dev/portal differs from main"]
+    assert verdicts(results) == {"drift/dev/portal": "fail", "drift/dev/apisix": "pass"}
+    portal = next(r for r in results if r["key"] == "drift/dev/portal")
+    assert portal["title"] == "drift on dev: release portal differs from main (2 objects)"
+    assert "ConfigMap dev/portal-extra is in main but not on dev" in portal["detail"]
+    assert "Deployment dev/portal differs from main" in portal["detail"]
+
+
+def test_a_planted_kubectl_edit_shows_up_as_drift_of_its_release_on_prod():
+    # What helm-diff --three-way-merge prints after `kubectl scale deploy/ckan --replicas 3` on prod.
+    planted = "Comparing release=ckan, chart=charts/ckan\njc, ckan, Deployment (apps) has changed:\n-  replicas: 3\n+  replicas: 1\n"
+    assert verdicts(vd.drift_results(planted, 2, "smartcity")) == {"drift/smartcity/ckan": "fail"}
+    assert verdicts(vd.drift_results("Comparing release=ckan, chart=charts/ckan\n", 0, "smartcity")) == {
+        "drift/smartcity/ckan": "pass"}
+
+
+def test_the_diff_reads_live_objects_and_never_applies(monkeypatch):
+    seen = {}
+
+    def fake_run(argv, **kwargs):
+        seen["argv"] = argv
+        return type("Run", (), {"stdout": "", "stderr": "", "returncode": 0})()
+
+    monkeypatch.setattr(vd.subprocess, "run", fake_run)
+    vd.helmfile_diff("smartcity")
+    argv = seen["argv"]
+    assert argv[argv.index("-e") + 1] == "smartcity" and "diff" in argv
+    assert "--three-way-merge" in argv and "--suppress-secrets" in argv
+    assert not {"sync", "apply", "destroy"} & set(argv)
 
 
 @pytest.mark.parametrize("code,output", [(1, "Error: helm-diff plugin not installed"), (2, "changes, but no header")])
 def test_a_diff_that_did_not_run_or_cannot_be_read_is_an_error(code, output):
-    assert verdicts(vd.drift_results(output, code)) == {"drift": "error"}
+    assert verdicts(vd.drift_results(output, code)) == {"drift/dev": "error"}
 
 
 # --- images
@@ -311,15 +337,24 @@ def test_a_check_that_raises_is_an_error_result():
 
 
 def test_main_writes_a_summary_file_failures_accepts(tmp_path, monkeypatch):
-    monkeypatch.setattr(vd, "run_checks", lambda skip: [vd.result("drift", "pass", "dev matches main")])
+    monkeypatch.setattr(vd, "run_checks", lambda skip, env: [vd.result("drift", "pass", "dev matches main")])
     out = tmp_path / "summary.json"
     assert vd.main(["--out", str(out), "--skip", "images,probes"]) == 0
     summary = json.loads(out.read_text())
     assert summary["check"] == "deployment" and summary["repo"] == "joinedcontext-deployment"
     assert summary["results"][0] == {"key": "drift", "verdict": "pass", "title": "dev matches main", "detail": "", "evidence": ""}
 
-    monkeypatch.setattr(vd, "run_checks", lambda skip: [vd.result("drift", "error", "did not run")])
+    monkeypatch.setattr(vd, "run_checks", lambda skip, env: [vd.result("drift", "error", "did not run")])
     assert vd.main(["--out", str(out)]) == 1
+
+
+def test_prod_runs_the_drift_check_alone(tmp_path, monkeypatch):
+    seen = {}
+    monkeypatch.setattr(vd, "run_checks", lambda skip, env: seen.update(skip=skip, env=env) or [])
+    assert vd.main(["--out", str(tmp_path / "s.json"), "--env", "smartcity"]) == 0
+    assert seen == {"skip": set(vd.CHECKS) - {"drift"}, "env": "smartcity"}
+    with pytest.raises(SystemExit):
+        vd.main(["--out", str(tmp_path / "s.json"), "--env", "staging"])
 
 
 def test_an_unknown_check_name_is_refused(tmp_path):

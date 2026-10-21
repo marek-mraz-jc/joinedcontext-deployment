@@ -28,6 +28,9 @@ app.kubernetes.io/component: {{ .part }}
 
 {{/* `repo:tag@digest`, so what runs is the image that was reviewed (OPS-27). */}}
 {{- define "ckan.image" -}}
+{{- if not .repository -}}
+{{- fail "an image of the ckan chart has no repository: set its image.repository and image.digest (components/ckan/images.yaml)" -}}
+{{- end -}}
 {{- if .digest -}}
 {{ .repository }}:{{ .tag }}@{{ .digest }}
 {{- else -}}

@@ -155,9 +155,10 @@ extraVolumeMounts:
     mountPath: /var/run/secrets/antares/admin
     readOnly: true
 
+# The broker image runs as 65532; one key, merged, since a repeated YAML key is refused by
+# helmfile write-values (T-4956).
 podSecurityContext:
-  {{ .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}
-  runAsUser: 65532
+  {{ merge (dict "runAsUser" 65532) .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}
 
 securityContext:
   {{ .Values.securityDefaults.securityContext | toYaml | nindent 2 }}
