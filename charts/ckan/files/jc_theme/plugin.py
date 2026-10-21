@@ -338,6 +338,12 @@ STRINGS = {
         "cs": "Mapa nenačetla data; tabulka výše funguje.",
         "de": "Die Karte konnte ihre Daten nicht laden; die Tabelle oben funktioniert.",
     },
+    "map_empty": {
+        "en": "This dataset has no places to show on a map.",
+        "sk": "Tento dataset nemá miesta, ktoré by sa dali ukázať na mape.",
+        "cs": "Tato datová sada nemá místa, která by šla ukázat na mapě.",
+        "de": "Dieser Datensatz enthält keine Orte, die eine Karte zeigen könnte.",
+    },
     "map_close": {"en": "Close", "sk": "Zavrieť", "cs": "Zavřít", "de": "Schließen"},
     # The attributes after a feature's key ones (T-4672).
     "map_more": {"en": "More", "sk": "Viac", "cs": "Více", "de": "Mehr"},
@@ -1633,7 +1639,7 @@ def jc_map(pkg, resource_id=None):
         "title": pkg.get("title") or name,
         "dataset": toolkit.url_for("dataset.read", id=name, _external=True),
         "embed": toolkit.url_for("jc_pages.map", id=name, _external=True),
-        "t": {key: jc_t(key) for key in ("map_cap", "map_failed", "map_loading", "map_close", "map_panel",
+        "t": {key: jc_t(key) for key in ("map_cap", "map_failed", "map_empty", "map_loading", "map_close", "map_panel",
                                           "map_length", "map_area", "map_keys", "map_title", "map_more")},
     }
 

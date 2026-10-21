@@ -14,6 +14,7 @@ import textwrap
 from pathlib import Path
 
 import pytest
+import yaml
 
 NAME = "postgres-cluster-dr-drill"
 
@@ -39,23 +40,40 @@ def env_of(cronjob: dict) -> dict[str, str]:
     return {e["name"]: e["value"] for e in container["env"]}
 
 
+TARGET = "2026-10-21T21:00:00Z"
+
+
 def run(docs: list[dict], tmp_path: Path, rows: dict[str, tuple[str, str]], mem_mib: int = 8192,
-        ready: bool = True, **extra) -> tuple[int, dict, list[str]]:
-    """Runs the drill with a stub kubectl. `rows` maps a database to (source, copy) counts, a
-    copy of "" meaning the database is missing from the copy. Returns the exit code, the result
-    the script patched into its ConfigMap, and the stub's log of applies and deletes."""
+        ready: bool = True, tables: dict[str, tuple[str, str]] | None = None,
+        people: str = "3", schema: tuple[str, str] = ("20261001", "20261001"),
+        **extra) -> tuple[int, dict, list[str]]:
+    """Runs the drill with a stub kubectl. `rows` maps a database to (source, copy) totals, a
+    copy of "" meaning the database is missing from the copy; `tables` maps a database to the
+    (source, point-in-time copy) per-table answers, `name|count` lines, and defaults to one
+    table holding the source's total in both. `people` is what the copy's realm answers and
+    `schema` the Portal's (source, copy) migration. Returns the exit code, the result the
+    script patched into its ConfigMap, and the stub's log of creates and deletes; the
+    manifest of the n-th create is in `tmp_path / f"created.{n}"`."""
     script = one(docs, "ConfigMap", f"{NAME}-script")["data"]["dr-drill.sh"]
+    pitr = one(docs, "ConfigMap", f"{NAME}-script")["data"]["cluster-pitr.yaml"]
+    (tmp_path / "cluster-pitr.yaml").write_text(pitr)
     (tmp_path / "meminfo").write_text(f"MemTotal: 16000000 kB\nMemAvailable: {mem_mib * 1024} kB\n")
+    if tables is None:
+        tables = {db: (f"public.t|{source}", f"public.t|{source}") for db, (source, _) in rows.items()}
     for db, (source, copy) in rows.items():
         (tmp_path / f"postgres-cluster-1.{db}").write_text(source)
+        (tmp_path / f"postgres-cluster-1.{db}.tables").write_text(tables[db][0])
+        (tmp_path / f"postgres-cluster-1.{db}.schema").write_text(schema[0])
         if copy != "":
             (tmp_path / f"postgres-cluster-drill-1.{db}").write_text(copy)
+            (tmp_path / f"postgres-cluster-drill-1.{db}.tables").write_text(tables[db][1])
+            (tmp_path / f"postgres-cluster-drill-1.{db}.schema").write_text(schema[1])
     stub = tmp_path / "kubectl"
     stub.write_text(textwrap.dedent(f"""\
         #!/bin/sh
         d={tmp_path}
         case "$1" in
-          create) echo "create" >> $d/log ;;
+          create) echo "create" >> $d/log; n=$(grep -c create $d/log); cp "$3" $d/created.$n ;;
           delete) echo "delete $3" >> $d/log ;;
           wait) {"exit 0" if ready else "exit 1"} ;;
           get) echo postgres-cluster-1 ;;
@@ -65,6 +83,10 @@ def run(docs: list[dict], tmp_path: Path, rows: dict[str, tuple[str, str]], mem_
             case "$query" in
               *pg_last_xact_replay_timestamp*) echo 42 ;;
               *"FROM pg_database"*) printf '%s\\n' {" ".join(rows)} ;;
+              *clock_timestamp*) echo "{TARGET}|0/5000000" ;;
+              *"FROM realm"*) echo {people} ;;
+              *_sqlx_migrations*) cat "$d/$pod.$db.schema" ;;
+              *"ORDER BY 1") cat "$d/$pod.$db.tables" 2>/dev/null || {{ echo "no database $db" >&2; exit 2; }} ;;
               *) cat "$d/$pod.$db" 2>/dev/null || {{ echo "no database $db" >&2; exit 2; }} ;;
             esac ;;
           *) echo "stub kubectl: unexpected $*" >&2; exit 64 ;;
@@ -73,7 +95,8 @@ def run(docs: list[dict], tmp_path: Path, rows: dict[str, tuple[str, str]], mem_
     stub.chmod(stub.stat().st_mode | stat.S_IEXEC)
     env = {**os.environ, **env_of(one(docs, "CronJob", NAME)),
            "PATH": f"{tmp_path}:{os.environ['PATH']}", "MEMINFO": str(tmp_path / "meminfo"),
-           "POLL_SECONDS": "0", **extra}
+           "POLL_SECONDS": "0", "TARGET_SETTLE_SECONDS": "0", **extra}
+    script = script.replace("/opt/drill/cluster-pitr.yaml", str(tmp_path / "cluster-pitr.yaml"))
     result = subprocess.run(["sh", "-"], input=script.replace("/opt/drill/cluster.yaml", "/dev/null"),
                             text=True, capture_output=True, env=env, timeout=30)
     patched = json.loads((tmp_path / "result").read_text())["data"]
@@ -97,8 +120,40 @@ def test_a_full_restore_passes_with_rto_rpo_and_counts_read_from_the_clusters(pr
     assert result["result"] == "passed"
     assert result["rpoSeconds"] == "42" and result["rtoSeconds"].isdigit()
     assert result["detail"] == "portal=990/1000 keycloak=50/50"
-    assert log[0] == "delete postgres-cluster-drill" and "create" in log
+    assert log[0] == "delete postgres-cluster-drill" and log.count("create") == 2
     assert log[-1] == "delete postgres-cluster-drill", "the copy is deleted when the drill ends"
+    assert result["pitrTarget"] == TARGET and result["pitrRtoSeconds"].isdigit()
+    assert result["pitrDetail"] == "2 tables match"
+
+
+def test_the_second_restore_goes_back_to_the_instant_of_the_counts(production, tmp_path):
+    code, result, log = run(production, tmp_path, {"portal": ("5", "5")})
+    assert code == 0, result
+    first = (tmp_path / "created.1").read_text()
+    second = (tmp_path / "created.2").read_text()
+    assert first == "" and "recoveryTarget" not in first, "the first restore is the latest"
+    assert f'targetTime: "{TARGET}"' in second and "__TARGET_TIME__" not in second
+    assert log == ["delete postgres-cluster-drill", "create", "delete postgres-cluster-drill",
+                   "create", "delete postgres-cluster-drill"], "one copy at a time"
+
+
+def test_a_table_the_point_in_time_restore_lost_fails_the_drill(production, tmp_path):
+    tables = {"portal": ("public.a|100\npublic.b|7\npublic.c|1000", "public.a|100\npublic.c|985"),
+              "antares": ("public.entities|0", "public.entities|1")}
+    code, result, log = run(production, tmp_path, {"portal": ("1107", "1107"), "antares": ("0", "0")},
+                            tables=tables)
+    assert code != 0 and result["result"] == "failed"
+    assert result["pitrDetail"] == "short: portal.public.b(missing)", "one row and 1.5 % are within tolerance"
+    assert log[-1] == "delete postgres-cluster-drill"
+
+
+def test_a_copy_without_people_or_at_another_schema_fails(production, tmp_path):
+    code, result, _ = run(production, tmp_path, {"portal": ("9", "9"), "keycloak": ("9", "9")},
+                          people="0", schema=("20261001", "20260901"))
+    assert code != 0 and result["result"] == "failed"
+    assert "keycloak(no enabled person in an enabled realm)" in result["detail"]
+    assert "portal(schema 20260901 of 20261001)" in result["detail"]
+    assert result["pitrTarget"] == TARGET and result["pitrRtoSeconds"] == "", "no second restore"
 
 
 def test_a_database_short_of_rows_or_missing_fails_the_drill(production, tmp_path):
@@ -140,3 +195,8 @@ def test_the_job_is_held_to_its_own_names(production):
     copy = one(production, "ConfigMap", f"{NAME}-script")["data"]["cluster.yaml"]
     assert "ACCESS_SECRET_KEY" in copy and "serverName: postgres-cluster" in copy
     assert "joinedcontext.com/drill" in copy
+    assert "recoveryTarget" not in copy
+    pitr = one(production, "ConfigMap", f"{NAME}-script")["data"]["cluster-pitr.yaml"]
+    pitr = yaml.safe_load(pitr)
+    assert pitr["spec"]["bootstrap"]["recovery"].pop("recoveryTarget") == {"targetTime": "__TARGET_TIME__"}
+    assert pitr == yaml.safe_load(copy), "the two restores differ only in their target"

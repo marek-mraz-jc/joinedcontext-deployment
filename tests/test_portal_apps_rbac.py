@@ -1,10 +1,12 @@
 """What the Portal may write on the cluster, and where (T-0411, AP-13, AP-15, AP-18).
 
 The Portal's app reconciler applies a Deployment, a Service, a Secret and a NetworkPolicy per
-app. That is the largest privilege the platform hands any of its own workloads, so the grant is
-decided in the render and asserted here: one namespace, four resources, and a
-token mount without which the reconciler deploys nothing at all. Cluster-wide it may create a
-project's apps namespace and bind that role in it, fenced by an admission policy (AP-116, AP-117).
+app, in the project's apps namespace under the ClusterRole it binds there. That is the largest
+privilege the platform hands any of its own workloads, so the grant is decided in the render and
+asserted here: in its own namespace, which holds the platform's workloads, the pipeline runner's
+restart patch and the Secrets it hands over (T-5094), and a token mount without which the
+reconciler deploys nothing at all. Cluster-wide it may create a project's apps namespace and bind
+that role in it, fenced by an admission policy (AP-116, AP-117).
 """
 
 import shutil
@@ -21,9 +23,7 @@ requires_helmfile = pytest.mark.skipif(
 # Exactly what an App compiles into, and nothing else (Architecture/16 section 5).
 GRANTED = {
     ("apps", "deployments"),
-    ("", "services"),
     ("", "secrets"),
-    ("networking.k8s.io", "networkpolicies"),
 }
 
 
@@ -49,7 +49,7 @@ def portal_role(docs):
 
 @requires_helmfile
 @pytest.mark.parametrize("environment", ["local", "dev", "production"])
-def test_the_portal_may_write_four_kinds_in_one_namespace_and_nothing_else(
+def test_the_portal_may_roll_the_pipeline_runner_in_its_namespace_and_nothing_else(
     rendered, environment
 ):
     docs = rendered(environment)
@@ -61,7 +61,18 @@ def test_the_portal_may_write_four_kinds_in_one_namespace_and_nothing_else(
         for group in rule["apiGroups"]
         for resource in rule["resources"]
     }
-    assert granted == GRANTED, f"{environment}: the Portal's Role is not the app's four kinds"
+    assert granted == GRANTED, f"{environment}: the Portal's Role grants {granted}"
+    # The release namespace holds the platform's workloads: the Portal may roll the pipeline
+    # runner and touch no other Deployment, Service or NetworkPolicy there (T-5094).
+    deployments = [rule for rule in role["rules"] if "deployments" in rule["resources"]]
+    assert deployments == [
+        {
+            "apiGroups": ["apps"],
+            "resources": ["deployments"],
+            "resourceNames": ["pipeline-runner"],
+            "verbs": ["get", "patch"],
+        }
+    ], f"{environment}: the Portal may write {deployments}"
 
     # Cluster-wide only what creates a project's apps namespace (AP-116, AP-117), asserted below.
     cluster_wide = {

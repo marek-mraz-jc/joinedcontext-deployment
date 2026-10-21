@@ -595,3 +595,89 @@ def test_every_demo_person_a_seeded_app_admits_is_admitted_by_its_endpoint():
             assert groups & admitted, f"{meta['namespace']}/{meta['name']} admits {sorted(admitted)}; {person} is in {sorted(groups)}"
             checked += 1
     assert checked, "no seeded App endpoint was checked"
+
+
+def generated_policy(name, assignee, operations):
+    return (
+        "apiVersion: joinedcontext.com/v1alpha1\nkind: Policy\nmetadata:\n"
+        f"  name: {name}\n  namespace: helsinki\n  annotations:\n"
+        "    joinedcontext.com/generated-by: portal/app-reconciler\n"
+        f"spec:\n  assignee:\n    id: {assignee}\n    kind: role\n  operations: {operations}\n"
+    )
+
+
+@requires_helmfile
+def test_a_policy_the_app_no_longer_compiles_to_is_removed_and_nothing_else(script, tmp_path):
+    """T-5091: alerts-desk went read-only, and its old write Policy app-alerts-desk-2 stayed in the
+    repository, so every project member, the viewer included, could still create and update Alert.
+    The seed removes such a file; a hand-written one and another app's stay."""
+    forge, app = seeded(tmp_path)
+    with_grants(app)
+    held = {
+        # The app's own, compiled before and not any more: removed.
+        "projects/helsinki/policies/app-helsinki-bikes-2.yaml": generated_policy(
+            "app-helsinki-bikes-2", "endpoint:helsinki/app-helsinki-bikes", "[createEntity, updateAttrs]"),
+        "projects/helsinki/policies/app-helsinki-bikes-3-steward.yaml": generated_policy(
+            "app-helsinki-bikes-3-steward", "endpoint:helsinki/app-helsinki-bikes/steward", "[deleteEntity]"),
+        # Somebody's own Policy under the app's name prefix: kept.
+        "projects/helsinki/policies/app-helsinki-bikes-notes.yaml": (
+            "kind: Policy\nmetadata:\n  name: app-helsinki-bikes-notes\n"
+            "spec:\n  assignee:\n    id: endpoint:helsinki/app-helsinki-bikes\n    kind: role\n"),
+        # An app whose name starts the same: its grant is not this app's to remove.
+        "projects/helsinki/policies/app-helsinki-bikes-map-1.yaml": generated_policy(
+            "app-helsinki-bikes-map-1", "endpoint:helsinki/app-helsinki-bikes-map", "[queryEntity]"),
+    }
+    state = json.loads(forge.state.read_text())
+    state["contents"].update(held)
+    forge.state.write_text(json.dumps(state))
+
+    result = run(forge, script)
+    assert result.returncode == 0, result.stderr
+    left = set(forge.contents)
+    assert "projects/helsinki/policies/app-helsinki-bikes-1.yaml" in left
+    assert "projects/helsinki/policies/app-helsinki-bikes-2.yaml" not in left
+    assert "projects/helsinki/policies/app-helsinki-bikes-3-steward.yaml" not in left
+    assert "projects/helsinki/policies/app-helsinki-bikes-notes.yaml" in left
+    assert "projects/helsinki/policies/app-helsinki-bikes-map-1.yaml" in left
+    assert "app-helsinki-bikes-2.yaml removed" in result.stdout
+
+    again = run(forge, script)
+    assert again.returncode == 0, again.stderr
+    assert "the application no longer compiles to it" not in again.stdout
+
+
+READS = re.compile(r"^(query|retrieve)|^queryBatch$")
+
+
+def test_no_app_endpoint_policy_grants_a_write_to_everyone_it_admits_or_a_viewer():
+    """T-5091: a write granted to `endpoint:{project}/{app}` itself reaches every person the
+    endpoint admits, the project's viewers included (app-alerts-desk-2 on Alert, app-bbsk-zaznamy-2
+    on the steward's note). A write goes to a named role of the app, never `viewer`, held by a
+    group of its own, never the project's group."""
+    paths = [*sorted((ROOT / "components/context-gateway/seed").glob("*/*.yaml")),
+             *sorted(VENDORED.glob("*/grants/**/*.yaml"))]
+    docs = [doc for path in paths for doc in yaml.safe_load_all(path.read_text())
+            if isinstance(doc, dict) and "kind" in doc]
+    endpoints = {f"endpoint:{d['metadata']['namespace']}/{d['metadata']['name']}": d["spec"]
+                 for d in docs if d["kind"] == "Endpoint" and d["metadata"]["name"].startswith("app-")}
+    checked = 0
+    for policy in (d for d in docs if d["kind"] == "Policy"):
+        assignee = policy["spec"]["assignee"]["id"]
+        writes = [op for op in policy["spec"].get("operations", []) if not READS.search(op)
+                  and not op.endswith("Subscription")]
+        base = assignee.rsplit("/", 1)[0]
+        if not writes or not (assignee in endpoints or base in endpoints):
+            continue
+        name = policy["metadata"]["name"]
+        assert assignee not in endpoints, f"{name} grants {writes} to every caller of {assignee}"
+        role = assignee.rsplit("/", 1)[1]
+        spec = endpoints[base]
+        assert role != "viewer", f"{name} grants {writes} to the viewer role"
+        subjects = {role["name"]: role["subjects"] for role in spec.get("roles", [])}.get(role)
+        assert subjects, f"{name}: {base} names no subjects for the role {role}"
+        projects = {base.split(":")[1].split("/")[0], *spec.get("allowedProjects", [])}
+        for subject in subjects:
+            group = subject.get("group", "")
+            assert group not in projects and not group.endswith("-viewer"), f"{name}: {role} is held by {group}"
+        checked += 1
+    assert checked >= 5, checked
