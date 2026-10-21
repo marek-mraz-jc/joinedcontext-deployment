@@ -200,7 +200,7 @@ def test_the_served_page_answers_with_noindex_and_nothing_else_is_served(served)
 
 
 def test_the_snapshot_keeps_bbsk_sks_texts_links_to_its_pages_and_shows_no_logo(landing):
-    _, _, _, site, _ = landing
+    _, domain, _, site, _ = landing
     page = parse(site["index.html"])
     text = " ".join(page.text)
     # The home page's own sections and texts, as fetched on 2026-10-19.
@@ -212,7 +212,10 @@ def test_the_snapshot_keeps_bbsk_sks_texts_links_to_its_pages_and_shows_no_logo(
     assert len(theirs) > 50 and all(a.get("rel") == "noopener" for a in theirs)
     assert all(a.get("href", "").startswith(("https://", "#")) for a in page.links), "no relative link to a page this host lacks"
     # Ours is marked as ours, and the name stands where the logo was.
-    assert text.count("DEMO · pridané joinedcontext") == 3  # the hero, the cards, the MCP block
+    assert text.count("DEMO · pridané joinedcontext") == 4  # the hero, the cards, the calendar, the MCP block
+    # The calendar card opens the region's events dashboard on its App host (T-4897).
+    calendar = [a for a in page.links if "calendar" in a.get("class", "")]
+    assert [a.get("href") for a in calendar] == [f"https://bbsk-podujatia.apps.{domain}/"]
     assert "Banskobystrický samosprávny kraj · DEMO" in text
 
 
