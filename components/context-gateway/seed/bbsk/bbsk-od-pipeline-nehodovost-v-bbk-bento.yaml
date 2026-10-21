@@ -114,6 +114,7 @@ pipeline:
           "usmrteni": {"p": this.properties."Usmrtení".apply("integer"), "at": $at}.apply("stamped"),
           "priciny": this.properties."Príčiny".apply("string"),
           "skodaVEUR": {"p": this.properties."Škoda_v_EUR".apply("integer"), "at": $at}.apply("stamped"),
+          "name": ["Nehoda ", this.properties."Číslo_nehody".or("").string().trim()].join("").re_replace_all("\\s+", " ").re_replace_all("^[ ,:]+|[ ,:]+$", "").apply("string"),
           "status": { "type": "Property", "value": "archived" },
           "location": if this.geometry.or(null) == null { null } else { { "type": "GeoProperty", "value": this.geometry } },
           "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj (CC BY-SA 4.0)" },

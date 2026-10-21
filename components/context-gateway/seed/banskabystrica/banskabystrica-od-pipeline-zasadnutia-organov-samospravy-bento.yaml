@@ -77,6 +77,7 @@ pipeline:
           "rok": this."Rok".apply("integer"),
           "cZasadnutia": this."Č._zasadnutia".apply("integer"),
           "datumZasadnutia": this."Dátum_zasadnutia".apply("string"),
+          "name": [this."Orgán_samosprávy".or("").string().trim(), ", ", this."Dátum_zasadnutia".or("").string().trim()].join("").re_replace_all("\\s+", " ").re_replace_all("^[ ,:]+|[ ,:]+$", "").apply("string"),
           "dataProvider": { "type": "Property", "value": "Mesto Banská Bystrica (CC BY 4.0)" },
           "source": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/api/3/action/datastore_search?resource_id=93b1c198-87a6-4d71-920a-d777221b5035&limit=32000" },
           "isPartOf": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/dataset/bb-zasadnutia-organov-samospravy" }

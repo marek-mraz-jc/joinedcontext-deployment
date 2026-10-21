@@ -12,6 +12,9 @@ pipeline:
         root = this.features.or([]).filter(f -> f.properties.station_number.or("").string().trim().lowercase().replace_all("/ ", "-").replace_all("/-", "--").re_match("^[0-9a-z-]+$")).map_each(f -> f.properties.containers.or([]).filter(c -> c.is_monitored.or(false) == true && c.ksnko_id.or("").string().re_match("^[0-9]+$") && $kinds.get(c.trash_type.id.or("").string()) != null).map_each(c -> {
           "id": "urn:ngsi-ld:%v:%v:%v:ksnko-%v".format("WasteContainer", env("JC_ORG_DOMAIN"), env("JC_SPACE"), c.ksnko_id.string()),
           "type": "WasteContainer",
+          # The station's address and the waste the container takes, as Golemio names both (T-4745).
+          "name": if f.properties.name.or("").string().trim() == "" { null } else { { "type": "LanguageProperty", "languageMap": {
+            "cs": [f.properties.name.string().trim(), c.trash_type.description.or("").string().trim()].filter(t -> t != "").join(", ") } } },
           "containerCode": { "type": "Property", "value": c.ksnko_id.string() },
           "wasteKind": { "type": "Property", "value": $kinds.get(c.trash_type.id.string()) },
           "fillingLevel": if c.last_measurement.percent_calculated.type() == "number" && c.last_measurement.percent_calculated >= 0 && c.last_measurement.percent_calculated <= 100 { { "type": "Property", "value": c.last_measurement.percent_calculated / 100 } } else { null },

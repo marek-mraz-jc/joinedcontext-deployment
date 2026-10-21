@@ -355,6 +355,8 @@ def test_public_air_reads_each_file_into_the_one_station_as_verejne_decodes_it()
         assert ({"pm10", "pm25"} - {attribute}).isdisjoint(station)
         assert station[attribute] == verejne[attribute]
         assert station["dateObserved"] == verejne["dateObserved"]
+        # The catalogue smoke refuses a station without a name (T-4745); it is verejne's.
+        assert station["name"] == verejne["name"]
         assert set(station) - {"id", "type", "location"} <= model, set(station) - model
         assert not air_schema_errors(station), air_schema_errors(station)
 

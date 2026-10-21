@@ -29,7 +29,7 @@ def answer(status=200, body=b"", ctype=JSON, **kw):
 def package(name, slug, typ, ogc=True, ws=True, datastore="ds-" , host=None, region="SK032", org=""):
     base = f"https://{host or 'api.' + DOMAIN}/api/endpoint/{slug}/"
     resources = [
-        {"format": "NGSI-LD", "url": base + "ngsi-ld/v1/entities", "name": f"NGSI-LD API ({typ})"},
+        {"format": "NGSI-LD", "url": base + "ngsi-ld/v1/entities", "name": f"NGSI-LD API ({typ})", "id": f"ngsi-{name}"},
         {"format": "OData", "url": base + f"odata/v4/{typ}"},
         {"format": "MCP", "url": base + "mcp"},
         {"format": "CSV", "url": base + "file.csv"},
@@ -610,9 +610,21 @@ def test_a_dangling_relationship_is_a_ko_with_its_attribute():
     schema = model("Organization", "refPointOfInterest")
     over = {sample: answer(body=[beach], ctype=JSON), f"{API}/o1/schema/v1/model.schema.json": answer(body=schema)}
     rows, _ = table(world([p], ["o1"], overrides={**over, lookup: answer(body=[], ctype=JSON)}))
-    assert rows["schools"]["data"] == "ko: urn:ngsi-ld:Organization:1 refPointOfInterest points to no entity"
+    assert rows["schools"]["data"] == "ko: urn:ngsi-ld:Organization:1 refPointOfInterest points to no entity a public Endpoint holds"
     rows, _ = table(world([p], ["o1"], overrides={**over, lookup: answer(body=[{"id": poi}], ctype=JSON)}))
     assert rows["schools"]["data"] == "ok: 1 rows, inside SK032"
+    # A register's Endpoint serves its one type; the place it names sits behind the places' dataset (T-4745).
+    places = package("places", "p1", "PointOfInterest", org="helsinki")
+    elsewhere = [package(f"places-{n}", f"x{n}", "PointOfInterest", org="praha") for n in range(3)]
+    p["organization"] = {"name": "helsinki"}
+    there = f"{API}/p1/ngsi-ld/v1/entities?" + urllib.parse.urlencode({"type": "PointOfInterest", "id": poi, "limit": 1})
+    rows, _ = table(world([p, *elsewhere, places], ["o1", "p1", "x0", "x1", "x2"], overrides={
+        **over, lookup: answer(body=[], ctype=JSON), there: answer(body=[{"id": poi}], ctype=JSON)}))
+    assert rows["schools"]["data"] == "ok: 1 rows, inside SK032"
+    # A dataset whose Endpoint is not public holds nothing a visitor can follow.
+    rows, _ = table(world([p, places], ["o1"], overrides={
+        **over, lookup: answer(body=[], ctype=JSON), there: answer(body=[{"id": poi}], ctype=JSON)}))
+    assert rows["schools"]["data"].startswith("ko: urn:ngsi-ld:Organization:1 refPointOfInterest points to no entity")
 
 
 def test_a_relationship_that_is_no_urn_is_a_ko():
@@ -633,15 +645,25 @@ def test_a_type_the_endpoint_serves_without_a_model_is_a_ko():
     assert rows["air"]["model"] == "ko: served without a model: Device"
 
 
-def series_dataset(views):
+def series_model(dated="date-time"):
+    """A WaterQualityObserved model jcctl draws a chart of: a number and a date-time dateObserved."""
+    schema = model("WaterQualityObserved", "temperature", "dateObserved")
+    properties = schema["definitions"]["WaterQualityObserved"]["properties"]
+    properties["temperature"] = {"type": "number", "x-ngsi-ld-kind": "Property"}
+    properties["dateObserved"] = {"type": "string", "format": dated, "x-ngsi-ld-kind": "Property"}
+    return schema
+
+
+def series_dataset(views, first=(), schema=None):
     p = package("beach", "w1", "WaterQualityObserved")
     data = smoke.describe(p, DOMAIN)
-    observed = row("WaterQualityObserved", 1, temperature={"type": "Property", "value": 17.5,
-                                                           "observedAt": "2026-10-19T06:00:00Z"})
+    observed = row("WaterQualityObserved", 1, temperature={"type": "Property", "value": 17.5},
+                   dateObserved={"type": "Property", "value": "2026-10-19T06:00:00Z"})
     rows, _ = table(world([p], ["w1"], overrides={
         f"{API}/w1/ngsi-ld/v1/entities?" + urllib.parse.urlencode(smoke.sample_query(data)): answer(body=[observed], ctype=JSON),
-        f"{API}/w1/schema/v1/model.schema.json": answer(body=model("WaterQualityObserved", "temperature")),
-        f"{CKAN}/api/3/action/resource_view_list?id=ds-beach": answer(body={"result": views})}))
+        f"{API}/w1/schema/v1/model.schema.json": answer(body=schema or series_model()),
+        f"{CKAN}/api/3/action/resource_view_list?id=ds-beach": answer(body={"result": views}),
+        f"{CKAN}/api/3/action/resource_view_list?id=ngsi-beach": answer(body={"result": list(first)})}))
     return rows["beach"]["views"]
 
 
@@ -650,20 +672,33 @@ def test_a_water_quality_dataset_without_a_chart_view_is_a_ko():
     assert series_dataset([{"view_type": "datatables_view"}, {"view_type": "jc_visualization"}]) == "ok: table, chart"
 
 
+def test_the_chart_jcctl_hangs_off_the_first_resource_counts():
+    """publish_views puts every chart on the dataset's first resource, the NGSI-LD one (T-4745: 7 dev
+    datasets read ko with their charts in place)."""
+    chart = [{"view_type": "jc_visualization"}]
+    assert series_dataset([{"view_type": "datatables_view"}], first=chart) == "ok: table, chart"
+
+
+def test_a_model_without_a_dated_number_owes_no_chart():
+    """jcctl's series_charts draws only a number beside a date-time dateObserved; the smoke asks the same."""
+    assert series_dataset([{"view_type": "datatables_view"}], schema=series_model(dated="date")) == (
+        "ok: table; no chart: the WaterQualityObserved model has no number observed at a date-time dateObserved")
+
+
 def test_every_datastore_table_needs_a_table_view():
     assert series_dataset([{"view_type": "jc_visualization"}]) == "ko: no table view on 1 of 1 datastore tables"
 
 
 def test_a_register_without_a_value_over_time_needs_only_the_table():
     rows, _ = table(world([package("schools", "o1", "Organization")], ["o1"]))
-    assert rows["schools"]["views"] == "ok: table; no chart: no numeric value over time"
+    assert rows["schools"]["views"] == "ok: table; no chart: the Organization model has no number observed at a date-time dateObserved"
     nothing, _ = table(world([package("schools", "o1", "Organization", datastore="")], ["o1"]))
     assert nothing["schools"]["views"] == "skip: no datastore table"
 
 
 def test_a_count_without_a_time_is_no_series():
-    assert not smoke.series([row("Organization", pupils={"type": "Property", "value": 300})])
-    assert smoke.series([row("KeyPerformanceIndicator", kpiValue={"type": "Property", "value": 4.2},
-                             dateObserved={"type": "Property", "value": "2026-01-01"})])
-    assert not smoke.series([row("Organization", open={"type": "Property", "value": True,
-                                                       "observedAt": "2026-10-19T06:00:00Z"})])
+    beach = series_model()["definitions"]["WaterQualityObserved"]
+    assert smoke.series(beach)
+    assert not smoke.series({"properties": {"pupils": {"type": "integer", "x-ngsi-ld-kind": "Property"}}})
+    flag = {"type": "boolean", "x-ngsi-ld-kind": "Property"}
+    assert not smoke.series({"properties": {**beach["properties"], "temperature": flag}})

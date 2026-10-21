@@ -17,6 +17,10 @@
     "location": {
       "@id": "geojson:geometry"
     },
+    "name": {
+      "@container": "@language",
+      "@id": "schema:name"
+    },
     "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
     "observedAt": {
       "@id": "ngsi-ld:observedAt",

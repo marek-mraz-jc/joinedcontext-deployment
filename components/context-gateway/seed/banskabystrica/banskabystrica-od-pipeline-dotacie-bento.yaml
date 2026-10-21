@@ -83,6 +83,7 @@ pipeline:
           "ziadatel": this."Žiadateľ".apply("string"),
           "iCOZiadatela": this."IČO_žiadateľa".apply("string"),
           "pozadovaneProstriedky": this."Požadované_prostriedky".apply("string"),
+          "name": [this."Žiadateľ".or("").string().trim(), ", ", this."Akcia".or("").string().trim()].join("").re_replace_all("\\s+", " ").re_replace_all("^[ ,:]+|[ ,:]+$", "").apply("string"),
           "identifier": { "type": "Property", "value": $local },
           "dataProvider": { "type": "Property", "value": "Mesto Banská Bystrica (CC BY 4.0)" },
           "source": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/api/3/action/datastore_search?resource_id=7d9f3a85-c733-47bd-96cf-3f4fadab81eb&limit=32000" },

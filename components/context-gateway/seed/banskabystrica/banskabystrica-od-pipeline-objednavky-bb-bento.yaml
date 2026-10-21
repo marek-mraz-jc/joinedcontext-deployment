@@ -81,6 +81,7 @@ pipeline:
           "datumVystavenia": this."Dátum_vystavenia".apply("string"),
           "datumZverejnenia": this."Dátum_zverejnenia".apply("string"),
           "iCO": this."IČO".apply("string"),
+          "name": ["Objednávka ", this."Číslo_objednávky".or("").string().trim(), ": ", this."Text_objednávky".or("").string().trim()].join("").re_replace_all("\\s+", " ").re_replace_all("^[ ,:]+|[ ,:]+$", "").apply("string"),
           "dataProvider": { "type": "Property", "value": "Mesto Banská Bystrica (CC BY 4.0)" },
           "source": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/api/3/action/datastore_search?resource_id=dcd35739-3b47-4722-8c80-380d89d864e8&limit=32000" },
           "isPartOf": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/dataset/bb-objednavky-bb" }
