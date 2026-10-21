@@ -94,7 +94,7 @@
  "test_helsinki_seed_models.py": 0.1,
  "test_helsinki_service_alerts.py": 14.7,
  "test_helsinki_transport_endpoint.py": 0.1,
- "test_hfp_fleet_cap.py": 14.4,
+ "test_hfp_vehicles.py": 14.4,
  "test_hook_timeouts.py": 36.0,
  "test_image_pins.py": 0.0,
  "test_image_sbom.py": 0.0,

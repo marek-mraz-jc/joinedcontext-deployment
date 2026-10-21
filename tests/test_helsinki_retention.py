@@ -1,7 +1,7 @@
 """T-3904: the helsinki space keeps its transport data under retention and quality rules.
 
 The values are the owner's (DM-81, DM-86, ADR-N-046): a vehicle is gone five minutes after its
-last report and keeps an hour of track, never more (owner, T-4624); positions lie in what
+last report and keeps five minutes of track (owner, T-5046; an hour before, T-4624); positions lie in what
 HSL's feeds cover, speeds up to 160 km/h (the Sm5 commuter trains), and no report is ahead of the clock. Beside the
 vehicle only an Alert loses its current state, an hour after its last write, as the net for a writer that sets no end
 and for the Fintraffic Alerts written before their mapping gave each one (T-4843); no other type of the seed does.
@@ -32,11 +32,31 @@ def helsinki() -> dict:
     return spaces()["helsinki/helsinki"]["spec"]
 
 
-def test_a_vehicle_is_kept_five_minutes_after_its_last_report_and_an_hour_of_its_track():
+def test_a_vehicle_is_kept_five_minutes_after_its_last_report_and_five_minutes_of_its_track():
     (vehicle,) = [rule for rule in helsinki()["retention"] if rule["entityType"] == "Vehicle"]
-    assert {k: v for k, v in vehicle.items() if k != "attributes"} == {"entityType": "Vehicle", "current": "PT5M", "history": "PT1H"}
+    assert {k: v for k, v in vehicle.items() if k != "attributes"} == {"entityType": "Vehicle", "current": "PT5M", "history": "PT5M"}
     # The three that say what a vehicle is, written without an observedAt, record a change (T-4844).
-    assert set(vehicle["attributes"]) == {"fleetVehicleId", "transportMode", "vehicleType"}
+    assert {name: rule["heartbeat"] for name, rule in vehicle["attributes"].items() if "minDistance" not in rule
+            and "deadband" not in rule and name not in ("route", "onRoute", "nextStop")} == {
+        "fleetVehicleId": "PT15M", "transportMode": "PT15M", "vehicleType": "PT15M"}
+
+
+def test_a_vehicle_written_every_second_keeps_one_point_in_thirty_seconds():
+    """T-5046 (owner, option A): the position lands every second, the track keeps one point in
+    thirty seconds; only a new line or next stop records a row between two heartbeats."""
+    (vehicle,) = [rule for rule in helsinki()["retention"] if rule["entityType"] == "Vehicle"]
+    attributes = vehicle["attributes"]
+    model = yaml.safe_load((HELSINKI / "helsinki.linkml.yaml").read_text())
+    slots = set(model["classes"]["Vehicle"]["slots"]) | {"location"}
+    # Every attribute the mapping stamps with the report's observedAt has a rule, each a slot.
+    stamped = {"location", "speed", "heading", "delay", "occupancy", "route", "onRoute", "nextStop"}
+    assert stamped <= set(attributes) <= slots, set(attributes) - slots
+    for name in stamped:
+        assert attributes[name]["record"] == "onChange" and attributes[name]["heartbeat"] == "PT30S", name
+    # A real move or reading never crosses the band, so the heartbeat alone sets the rate.
+    assert attributes["location"]["minDistance"] >= 100_000
+    assert all(attributes[name]["deadband"] >= 1_000_000 for name in ("speed", "heading", "delay", "occupancy"))
+    assert not {"minDistance", "deadband"} & (set(attributes["route"]) | set(attributes["onRoute"]) | set(attributes["nextStop"]))
 
 
 def test_no_vehicle_of_any_space_keeps_more_than_an_hour_of_track():
