@@ -111,9 +111,12 @@ def test_a_browser_gets_a_page_in_its_language():
     assert sorted(pages) == ["cs", "de", "en", "sk"], sorted(pages)
     for lang, page in pages.items():
         assert f'<html lang="{lang}">' in page, lang
-        assert '<meta http-equiv="refresh" content="$sent_http_x_ratelimit_reset">' in page, lang
+        # T-5078: a timed reload the reader cannot stop fails WCAG 2.2.1 (axe meta-refresh,
+        # critical); the page names the seconds and links the same address instead.
+        assert "http-equiv" not in page.lower(), f"{lang}: no timed refresh"
         assert "$sent_http_x_ratelimit_reset s" in page, f"{lang}: the page says when"
-        assert "<script" not in page and "src=" not in page and "href=" not in page, f"{lang}: it loads nothing"
+        assert re.findall(r"<a [^>]*>", page) == ['<a href="">'], f"{lang}: one link, to the same address"
+        assert "<script" not in page and "src=" not in page and page.count("href=") == 1, f"{lang}: it loads nothing"
         for count in {str(block.get("count")) for _, _, block in limit_count_blocks()}:
             assert f" {count} " not in page, f"{lang}: the quota {count} is in the page"
     assert 'if ($http_accept ~* "text/html") {' in snippet
@@ -261,13 +264,14 @@ routes:
         assert "no-store" in headers["Cache-Control"], headers
 
         # T-4201: the same refusal, asked for by a Slovak browser, is a Slovak page that
-        # reloads when the window ends; a German one gets German, anyone else English.
+        # names when to try again; a German one gets German, anyone else English.
         page = {"Accept": "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"}
         status, headers, body = answer(url, {**page, "Accept-Language": "sk-SK,sk;q=0.9,en;q=0.8"})
         assert status == 429, body
         assert headers["Content-Type"] == "text/html; charset=utf-8", headers
         assert '<html lang="sk">' in body and "Príliš veľa požiadaviek" in body, body
-        assert f'content="{headers["Retry-After"]}"' in body, "the page reloads when the window ends"
+        assert f'o {headers["Retry-After"]} s' in body, "the page names the seconds Retry-After names"
+        assert "http-equiv" not in body and '<a href="">' in body, "no timed refresh, a link to load again"
         assert "default-src 'none'" in headers["Content-Security-Policy"], headers
         assert headers["X-Content-Type-Options"] == "nosniff", headers
         assert PROBLEM_TYPE not in body

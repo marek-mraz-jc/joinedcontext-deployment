@@ -297,6 +297,13 @@ STRINGS = {
     "assistant": {"en": "Ask the assistant", "sk": "Opýtajte sa asistenta", "cs": "Zeptejte se asistenta", "de": "Fragen Sie den Assistenten"},
     # The dataset page leads with its rows, then the downloads in three sections (T-3009).
     "preview": {"en": "The data", "sk": "Dáta", "cs": "Data", "de": "Die Daten"},
+    "explorer": {"en": "Live data", "sk": "Živé dáta", "cs": "Živá data", "de": "Live-Daten"},
+    "explorer_lead": {
+        "en": "Search, filter and map the entities straight from the published Endpoint; nothing is copied, so you always see the current data.",
+        "sk": "Hľadajte, filtrujte a zobrazte entity na mape priamo zo zverejneného Endpointu; nič sa nekopíruje, takže vždy vidíte aktuálne dáta.",
+        "cs": "Hledejte, filtrujte a zobrazte entity na mapě přímo ze zveřejněného Endpointu; nic se nekopíruje, takže vždy vidíte aktuální data.",
+        "de": "Entitäten direkt am veröffentlichten Endpoint suchen, filtern und auf der Karte zeigen; nichts wird kopiert, Sie sehen immer den aktuellen Stand.",
+    },
     "preview_lead": {
         "en": "Browse, search and sort the rows here, or download the whole table.",
         "sk": "Prezerajte, vyhľadávajte a triedte riadky priamo tu, alebo si stiahnite celú tabuľku.",
@@ -1447,6 +1454,28 @@ def jc_visualization(view):
             "package": view.get("package_id")}
 
 
+_API_ENDPOINT = re.compile(r"^https://api\.([a-z0-9.-]+)/api/endpoint/([a-z0-9]{16,64})/")
+
+
+def jc_explorer(pkg, resource=None):
+    """The live explorer of the dataset's Endpoint on viz.{domain} (T-5059): the frame's address,
+    named by the Endpoint's slug (and the resource's entity type, on a resource page), and its
+    origin for the frame's height. It reads the Endpoint itself, anonymously, so no row is copied
+    and the page asks no DataStore. None without a renderer or an Endpoint on api.{domain}."""
+    origin = jc_viz_origin()
+    live = jc_live(pkg)
+    match = _API_ENDPOINT.match((live or {}).get("url") or "")
+    if not origin or not match or match.group(1) != BRANDING.get("domain"):
+        return None
+    src = "%s/explore.html#%s&inline&lang=%s" % (origin, match.group(2), _language())
+    kind_type = jc_entity_type(resource) if resource else None
+    if not kind_type and resource and resource.get("datastore_active"):
+        kind_type = resource.get("name")
+    if kind_type and re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{0,127}", kind_type):
+        src += "&type=" + kind_type
+    return {"src": src, "origin": origin, "title": jc_t("explorer")}
+
+
 def jc_visualizations(pkg):
     """Every chart published on the dataset's resources, in the resources' order (ADR-N-053)."""
     out = []
@@ -2411,6 +2440,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_guide": jc_guide,
             "jc_previews": jc_previews,
             "jc_visualizations": jc_visualizations,
+            "jc_explorer": jc_explorer,
             "jc_map": jc_map,
             "jc_total": jc_total,
             "jc_number": jc_number,
