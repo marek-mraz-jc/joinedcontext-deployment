@@ -18,7 +18,7 @@ from datetime import UTC, datetime, timedelta
 import yaml
 from open_data import requires_docker, run_all
 from test_helsinki_open_data import HELSINKI
-from test_hfp_fleet_cap import bento, frame
+from test_hfp_vehicles import bento, frame
 
 LIFETIME = HELSINKI.parents[3] / "tests/fixtures/lifetime"
 
