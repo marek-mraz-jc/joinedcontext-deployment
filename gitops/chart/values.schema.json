@@ -16,6 +16,12 @@
     "environment": {
       "type": "string"
     },
+    "domain": {
+      "type": "string"
+    },
+    "realm": {
+      "type": "string"
+    },
     "namespaceAnnotations": {
       "type": "object"
     },

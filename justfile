@@ -258,7 +258,7 @@ golden-update:
 		python3 .ci/golden/list-objects.py "$out/$env.yaml" > ".ci/golden/$env.txt"
 	done
 	for env in dev smartcity; do
-		helmfile -f demos/bbsk/helmfile.yaml.gotmpl -e "$env" template --skip-deps -q > "$out/demo-bbsk-$env.yaml"
+		helmfile -f demos/bbsk/helmfile.yaml.gotmpl -e "$env" template --skip-deps -q --concurrency {{helmfile_concurrency}} >"$out/demo-bbsk-$env.yaml"
 		python3 .ci/golden/list-objects.py "$out/demo-bbsk-$env.yaml" > ".ci/golden/demo-bbsk-$env.txt"
 	done
 	wc -l .ci/golden/*.txt

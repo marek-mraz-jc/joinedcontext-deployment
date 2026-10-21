@@ -19,6 +19,9 @@
     "realm": {
       "type": "string"
     },
+    "namespaceAnnotations": {
+      "type": "object"
+    },
     "components": {
       "type": "array"
     },
