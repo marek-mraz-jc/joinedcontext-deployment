@@ -53,5 +53,6 @@ visitors share), one Endpoint per kind (misses a single broken Endpoint for good
 ## Security
 
 Anonymous only: no token, no Secret, no `envFrom`. Every URL is built from the https origins in
-`PROBE_TARGETS`, never taken from an answer; redirects are not followed. Egress is 443 to public
+`PROBE_TARGETS`, never taken from an answer, except the RDAP server, which the hourly expiry check
+takes from IANA's bootstrap answer (https only, no redirects, body capped); redirects are not followed. Egress is 443 to public
 addresses and the ingress controller, and CoreDNS; ingress only from Prometheus on 9100.

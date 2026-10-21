@@ -28,7 +28,8 @@ expiry alerts of T-5104.
     GET /healthz       200 while every target finished a round in the last three minutes
 
 PROBE_TARGETS is a JSON list of {name, api, catalogue, assistant, assistantId}; every URL is
-https and every probe URL is built from them, never taken from an answer.
+https and every probe URL is built from them, never taken from an answer. The one exception is
+the RDAP server, which comes from IANA's bootstrap answer: https only, no redirects, body capped.
 """
 
 import base64
