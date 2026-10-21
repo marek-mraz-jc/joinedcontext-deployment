@@ -1543,6 +1543,8 @@ def test_an_endpoint_address_is_read_by_its_path_not_its_format_label(theme):
     assert not theme.jc_is_api(_od(theme, "c"))
     assert theme.jc_format(_od(theme, "n")) == "NGSI-LD" and theme.jc_format(_od(theme, "w")) == "WebSocket"
     assert theme.jc_kind({"url": "https://dev.example/api/endpoint/x/schema/v1/model.schema.json"}) == "MODEL"
+    # The Endpoint's own DCAT-AP record (EP-143) is a door of the API, not a file.
+    assert theme.jc_kind({"url": "https://dev.example/api/endpoint/x/"}) == "DCAT"
     assert theme.jc_kind({"url": "javascript:alert(1)"}) is None and theme.jc_kind(None) is None
 
 
@@ -2254,6 +2256,16 @@ def test_the_view_type_is_never_offered_in_ckan_and_its_config_is_checked(theme)
             spec(bad)
     slug = info["schema"]["endpoint"][-1]
     assert slug(VIEW["endpoint"]) == VIEW["endpoint"]
+    # EP-144, T-4846: every field the publisher sends (jcctl VIEW_PAYLOAD) is CKAN core's or the
+    # schema's; any other field is refused as 409 `__extras`.
+    core = {"id", "resource_id", "view_type", "title", "description"}
+    sent = core | {"jc_name", "spec", "source", "endpoint"}
+    assert sent - core <= set(info["schema"]), sent - core - set(info["schema"])
+    name = info["schema"]["jc_name"][-1]
+    assert name("no2-now") == "no2-now" and name("auto-" + "a" * 58) == "auto-" + "a" * 58
+    for bad in ("No2", "-x", "x-", "a" * 64, "../x"):
+        with pytest.raises(theme.toolkit.Invalid):
+            name(bad)
     for bad in ("https://evil.example/", "../x", "ABC"):
         with pytest.raises(theme.toolkit.Invalid):
             slug(bad)

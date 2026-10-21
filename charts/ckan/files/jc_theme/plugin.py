@@ -930,7 +930,7 @@ def jc_live(pkg):
 
 # Where a resource belongs on the dataset page (T-3009). The model artifacts are published under
 # the endpoint's `/schema/` path; the API formats answer queries rather than being files.
-API_FORMATS = ("NGSI-LD", "WEBSOCKET", "MCP", "OGCFEAT", "ODATA", "STA")
+API_FORMATS = ("NGSI-LD", "WEBSOCKET", "MCP", "OGCFEAT", "ODATA", "STA", "DCAT")
 DATA_ORDER = ("CSV", "GEOJSON", "JSON", "XLSX", "PARQUET", "ZIP")
 
 
@@ -941,11 +941,11 @@ _ENDPOINT_PATH = re.compile(r"^/api/endpoint/[^/]+/(.*)$")
 _KIND_PREFIXES = (("ngsi-ld/", "NGSI-LD"), ("odata/", "ODATA"), ("ogc/", "OGCFEAT"), ("sta/", "STA"),
                   ("schema/", "MODEL"))
 # An Endpoint's door by its kind: product names, the same on a page in any language (T-4333).
-DOOR_NAMES = {"NGSI-LD": "NGSI-LD API", "WEBSOCKET": "WebSocket", "MCP": "Model Context Protocol",
+DOOR_NAMES = {"DCAT": "DCAT-AP record", "NGSI-LD": "NGSI-LD API", "WEBSOCKET": "WebSocket", "MCP": "Model Context Protocol",
               "OGCFEAT": "OGC API - Features", "ODATA": "OData v4", "STA": "SensorThings API",
               "CSV": "CSV", "JSON": "JSON", "GEOJSON": "GeoJSON", "XLSX": "Excel", "PARQUET": "Apache Parquet"}
 # The format as a reader reads it, on a chip and in the facts list.
-KIND_LABELS = {"NGSI-LD": "NGSI-LD", "WEBSOCKET": "WebSocket", "MCP": "MCP", "OGCFEAT": "OGC API",
+KIND_LABELS = {"DCAT": "DCAT-AP", "NGSI-LD": "NGSI-LD", "WEBSOCKET": "WebSocket", "MCP": "MCP", "OGCFEAT": "OGC API",
                "ODATA": "OData", "STA": "SensorThings", "CSV": "CSV", "JSON": "JSON",
                "GEOJSON": "GeoJSON", "XLSX": "Excel", "PARQUET": "Parquet"}
 
@@ -964,12 +964,14 @@ def _split(resource):
 
 
 def jc_kind(resource):
-    """NGSI-LD, MCP, WEBSOCKET, ODATA, OGCFEAT, STA, MODEL, or a file's CSV, JSON, GEOJSON, XLSX or PARQUET
-    for an Endpoint's address; None for anything else."""
+    """NGSI-LD, MCP, WEBSOCKET, ODATA, OGCFEAT, STA, MODEL, DCAT (the Endpoint's own record, EP-143), or a
+    file's CSV, JSON, GEOJSON, XLSX or PARQUET for an Endpoint's address; None for anything else."""
     split = _split(resource)
     if not split:
         return None
     rest = split[1].rstrip("/")
+    if not rest:
+        return "DCAT"
     for prefix, kind in _KIND_PREFIXES:
         if rest.startswith(prefix) or rest == prefix.rstrip("/"):
             return kind
@@ -1404,6 +1406,8 @@ def jc_previews(pkg):
 
 VIEW_ID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
 SLUG = re.compile(r"^[a-z0-9]{16,64}$")
+# A visualization's name on its Endpoint, a DNS label (EP-130): what the publisher matches its view by.
+VIEW_NAME = re.compile(r"^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$")
 SPEC_BYTES = 200 * 1024
 
 
@@ -1462,6 +1466,12 @@ def _viz_object(value):
     if not isinstance(value, str) or len(value.encode("utf-8")) > SPEC_BYTES or not isinstance(_json(value), dict):
         raise toolkit.Invalid("a JSON object of at most 200 KB")
     return value
+
+
+def _viz_name(value):
+    if value in (None, "") or (isinstance(value, str) and VIEW_NAME.match(value)):
+        return value
+    raise toolkit.Invalid("a visualization name: a DNS label")
 
 
 def _viz_slug(value):
@@ -2428,6 +2438,9 @@ class JcThemePlugin(plugins.SingletonPlugin):
         ignore, text = toolkit.get_validator("ignore_missing"), toolkit.get_validator("unicode_safe")
         schema = {name: [ignore, text, _viz_object] for name in ("spec", "source", "titles", "descriptions")}
         schema["endpoint"] = [ignore, text, _viz_slug]
+        # The publisher sends `jc_name` on every create and update (EP-144); without it here CKAN
+        # refused each view with 409 `__extras` (T-4846).
+        schema["jc_name"] = [ignore, text, _viz_name]
         return {"name": "jc_visualization", "title": "Visualization", "icon": "chart-line",
                 "iframed": False, "always_available": False, "preview_enabled": False, "schema": schema}
 
