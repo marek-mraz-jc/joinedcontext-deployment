@@ -36,7 +36,8 @@ pipeline:
           "status": $statuses.get(p.props.status.or("")).or(null),
           "start": p.props.get($start_fields.index(0)).apply("day").or(p.props.get($start_fields.index(1)).apply("day")),
           "end": p.props.get($end_fields.index(0)).apply("day").or(p.props.get($end_fields.index(1)).apply("day")),
-          "name": p.props.nimi.apply("text"),
+          # A permit the register leaves unnamed is named by its address, else its number (T-4745).
+          "name": p.props.nimi.apply("text").or(p.props.osoite.apply("text")).or(p.props.hakemustunnus),
           "purpose": p.props.tyon_tarkoitus.apply("text"),
           "address": p.props.osoite.apply("text"),
           "district": p.props.kaupunginosa.or("").re_find_all("^[0-9]+").index(0).or(null)

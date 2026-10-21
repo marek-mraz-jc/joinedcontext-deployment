@@ -49,6 +49,7 @@ spec:
         root = if $attribute == null || $latest == null { [] } else { [{
           "id": "urn:ngsi-ld:%v:%v:%v:eea-%v".format("AirQualityObserved", "banskabystrica.sk", env("JC_SPACE"), $station),
           "type": "AirQualityObserved",
+          "name": { "type": "LanguageProperty", "languageMap": { "sk": "Stanica SK0263A, mestské pozadie", "en": "Station SK0263A, urban background" } },
           $attribute: { "type": "Property", "value": $latest.Value.number(), "unitCode": "GQ", "observedAt": $latest.End.apply("instant") },
           "dateObserved": { "type": "Property", "value": $latest.End.apply("instant") },
           "location": { "type": "GeoProperty", "value": { "type": "Point", "coordinates": [19.115268, 48.733256] } }

@@ -72,6 +72,12 @@ slots:
       ngsi_ld_kind: Property
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
     slot_uri: https://smartdatamodels.org/dataModel.CPSV-AP/identifier
+  name:
+    description: The name, per language, as the publisher writes it.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
+    slot_uri: https://smartdatamodels.org/name
 classes:
   BudgetLine:
     class_uri: jc:BudgetLine
@@ -89,5 +95,6 @@ classes:
     - budgetPurpose
     - fiscalYear
     - identifier
+    - name
     annotations:
       upstream_source: https://smart-data-models.github.io/dataModel.CPSV-AP/Cost/schema.json

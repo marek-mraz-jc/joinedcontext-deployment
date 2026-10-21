@@ -9,6 +9,7 @@ class, `AirQualityObserved`, specialising the shared `Entity` of `ngsi-ld-core`.
 | `type` | Property | string | | `ngsi-ld:hasType` |
 | `location` | GeoProperty | GeoJSON geometry | | `geojson:geometry` |
 | `observedAt` | Property | datetime | | `ngsi-ld:observedAt` |
+| `name` | LanguageProperty | text per language | | `schema:name` |
 | `dateObserved` | Property | datetime | | `sdm:dateObserved` |
 | `pm10` | Property | float, ≥ 0 | µg/m³ (UN/CEFACT `GQ`) | `sdm:pm10` |
 | `pm25` | Property | float, ≥ 0 | µg/m³ (UN/CEFACT `GQ`) | `sdm:pm25` |

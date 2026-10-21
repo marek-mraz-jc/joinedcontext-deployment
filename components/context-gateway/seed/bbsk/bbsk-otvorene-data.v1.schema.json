@@ -7619,6 +7619,14 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "name": {
+          "description": "The source column `Miesto`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "nazovKlubu": {
           "description": "The source column `N\u00e1zov_klubu`.",
           "type": [
@@ -10760,6 +10768,14 @@
             "null"
           ],
           "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "description": "The source column `Miesto`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
         },
         "obdobie": {
           "description": "The source column `obdobie`.",

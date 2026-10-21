@@ -258,6 +258,7 @@ class Dataset:
     why: str = ""
     org: str = ""
     region: str = ""
+    first: str = ""
 
 
 def endpoint_slug(url: str) -> str:
@@ -272,6 +273,8 @@ def describe(package: dict, domain: str) -> Dataset:
     for extra in package.get("extras") or []:
         if extra.get("key") == "spatial_uri":
             data.region = (extra.get("value") or "").rstrip("/").rsplit("/", 1)[-1]
+    # jcctl hangs a chart view off the dataset's first resource (publish_views, T-4742).
+    data.first = ((package.get("resources") or [{}])[0] or {}).get("id") or ""
     for resource in package.get("resources", []):
         url, fmt = resource.get("url") or "", resource.get("format") or ""
         if resource.get("datastore_active"):
@@ -422,18 +425,18 @@ def relationships(rows: list) -> dict:
     return found
 
 
-def series(rows: list) -> bool:
-    """Whether the rows hold a numeric value observed at a time: a chart's subject."""
-    for row in rows:
-        if not isinstance(row, dict):
-            continue
-        dated = "dateObserved" in row
-        for attribute in row.values():
-            if isinstance(attribute, dict) and attribute.get("type") == "Property":
-                value = attribute.get("value")
-                if isinstance(value, (int, float)) and not isinstance(value, bool) and (dated or "observedAt" in attribute):
-                    return True
-    return False
+# How many other public Endpoints a dangling Relationship is looked up in.
+MAX_HOLDERS = 2
+
+
+def series(schema: dict) -> bool:
+    """Whether a type's JSON Schema holds a numeric Property observed at a date-time `dateObserved`: the
+    rule jcctl's series_charts draws a chart by when an Endpoint declares none (T-4742)."""
+    properties = schema.get("properties") or {}
+    if (properties.get("dateObserved") or {}).get("format") != "date-time":
+        return False
+    return any(p.get("x-ngsi-ld-kind") == "Property" and p.get("type") in ("number", "integer")
+               for p in properties.values() if isinstance(p, dict))
 
 
 class Run:
@@ -442,7 +445,9 @@ class Run:
         self.previous, self.previous_at, self.now = previous, previous_at, now
         self.counts = {}  # dataset -> (platform count, how)
         self.shared = {}  # (slug, type) -> datasets without isPartOf
+        self.holders = {}  # type -> (publisher, slug) of the public Endpoints whose dataset names it
         self.samples = {}  # dataset -> its NGSI-LD rows
+        self.schemas = {}  # dataset -> its type's JSON Schema
 
     def base(self, data: Dataset) -> str:
         return f"https://api.{self.domain}/api/endpoint/{data.slug}/"
@@ -537,6 +542,7 @@ class Run:
         if not isinstance(schema, dict):
             return ko(f"model.schema.json answered {answer.why()}, no {data.type}" if answer.status != 200
                       else f"model.schema.json defines no {data.type}")
+        self.schemas[data.name] = schema
         region = region_box(data.region)
         problems = row_problems(rows, data.type, schema, region) + self.dangling(data, rows)
         if problems:
@@ -553,41 +559,61 @@ class Run:
             if not kind:
                 problems += [f"{rid} {name} is no NGSI-LD URN" for rid, name in targets.values()]
                 continue
-            query = {"type": kind, "id": ",".join(sorted(targets)), "limit": min(len(targets), 1000)}
-            answer = self.client.fetch(self.base(data) + "ngsi-ld/v1/entities?" + urllib.parse.urlencode(query),
-                                       limit=MAX_INVENTORY)
-            body = answer.json() if answer.status == 200 else None
-            if not isinstance(body, list):
-                problems.append(f"{kind} answered {answer.why()}")
-                continue
-            held = {e.get("id") for e in body if isinstance(e, dict)}
-            problems += [f"{rid} {name} points to no entity" for target, (rid, name) in sorted(targets.items())
-                         if target not in held]
+            # The dataset's own Endpoint first, then each public one whose dataset is of that type: a
+            # register's Endpoint serves its one type, its areas sit behind the areas' (T-4344, T-4745).
+            # The same publisher's first: Helsinki's beaches name Helsinki's places, not Prague's.
+            others = [slug for org, slug in sorted(self.holders.get(kind, []), key=lambda h: h[0] != data.org)]
+            missing = dict(targets)
+            for slug in list(dict.fromkeys([data.slug, *others]))[:1 + MAX_HOLDERS]:
+                query = {"type": kind, "id": ",".join(sorted(missing)), "limit": min(len(missing), 1000)}
+                answer = self.client.fetch(f"https://api.{self.domain}/api/endpoint/{slug}/ngsi-ld/v1/entities?"
+                                           + urllib.parse.urlencode(query), limit=MAX_INVENTORY)
+                body = answer.json() if answer.status == 200 else None
+                if not isinstance(body, list):
+                    problems.append(f"{kind} answered {answer.why()}")
+                    missing = {}
+                    break
+                for e in body:
+                    if isinstance(e, dict):
+                        missing.pop(e.get("id"), None)
+                if not missing:
+                    break
+            problems += [f"{rid} {name} points to no entity a public Endpoint holds"
+                         for target, (rid, name) in sorted(missing.items())]
         return problems
 
     def views(self, data: Dataset) -> str:
         if not data.datastore:
             return skip("no datastore table")
-        kinds = []
+        kinds = {}
         for resource in data.datastore:
-            url = f"https://opendata.{self.domain}/api/3/action/resource_view_list?" + urllib.parse.urlencode(
-                {"id": resource})
-            answer = self.client.fetch(url)
-            views = (answer.json() or {}).get("result") if answer.status == 200 else None
-            if not isinstance(views, list):
-                return ko(f"resource_view_list answered {answer.why()}")
-            kinds.append({v.get("view_type") for v in views if isinstance(v, dict)})
-        tableless = sum("datatables_view" not in k for k in kinds)
+            kinds[resource] = self.view_types(resource)
+            if isinstance(kinds[resource], str):
+                return ko(kinds[resource])
+        tableless = sum("datatables_view" not in k for k in kinds.values())
         if tableless:
-            return ko(f"no table view on {tableless} of {len(kinds)} datastore tables")
-        rows = self.samples.get(data.name)
-        if rows is None:
-            return ok("table; chart not checked, no sample this run")
-        if not series(rows):
-            return ok("table; no chart: no numeric value over time")
-        if not any("jc_visualization" in k for k in kinds):
+            return ko(f"no table view on {tableless} of {len(data.datastore)} datastore tables")
+        schema = self.schemas.get(data.name)
+        if schema is None:
+            return ok("table; chart not checked, no model read this run")
+        if not series(schema):
+            return ok(f"table; no chart: the {data.type} model has no number observed at a date-time dateObserved")
+        if data.first and data.first not in kinds:
+            kinds[data.first] = self.view_types(data.first)
+            if isinstance(kinds[data.first], str):
+                return ko(kinds[data.first])
+        if not any("jc_visualization" in k for k in kinds.values()):
             return ko("a numeric value over time and no chart view")
         return ok("table, chart")
+
+    def view_types(self, resource: str):
+        """The view types CKAN lists on one resource, or why it answered no list."""
+        url = f"https://opendata.{self.domain}/api/3/action/resource_view_list?" + urllib.parse.urlencode({"id": resource})
+        answer = self.client.fetch(url)
+        views = (answer.json() or {}).get("result") if answer.status == 200 else None
+        if not isinstance(views, list):
+            return f"resource_view_list answered {answer.why()}"
+        return {v.get("view_type") for v in views if isinstance(v, dict)}
 
     def datastore(self, data: Dataset) -> str:
         # ponytail: the first datastore table only; a dataset of several tables compares one.
@@ -672,6 +698,9 @@ class Run:
 
     def table(self, datasets: list, public: set) -> list:
         rows = {}
+        for data in datasets:
+            if data.type and data.slug in public:
+                self.holders.setdefault(data.type, []).append((data.org, data.slug))
         for data in datasets:
             row = rows[data.name] = {"dataset": data.name, "endpoint": data.slug}
             if not data.slug:

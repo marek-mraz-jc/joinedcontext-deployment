@@ -453,6 +453,7 @@ classes:
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.WasteManagement
     slots:
+      - name
       - containerCode
       - wasteKind
       - fillingLevel
@@ -498,6 +499,7 @@ classes:
     annotations:
       upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/BudgetLine
     slots:
+      - name
       - identifier
       - fiscalYear
       - budgetArea

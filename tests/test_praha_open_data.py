@@ -205,6 +205,10 @@ def test_budget_codes_keep_their_padding_and_the_byte_order_mark_is_read(written
     assert school["approvedAmount"]["value"] == 1700 and school["adjustedAmount"]["value"] == 102413.6
     correction = lines["mhmp-2026-00-000000-0000-000000000"]
     assert "budgetArea" not in correction and correction["adjustedAmount"]["value"] == -0.03
+    # Each line reads what the money is for, the function and the item (T-4745).
+    assert school["name"]["languageMap"] == {"cs": "Střední odborné školy: Stavby"}
+    assert correction["name"]["languageMap"] == {"cs": "ČNB dotace OPP: neurčeno"}
+    assert not schema_errors(school)
     # The key the id ends in is the identifier the BudgetLine extension (CPSV-AP Cost base) requires.
     assert all(e["identifier"]["value"] == key for key, e in lines.items())
     assert recorded("budget.json").startswith(b"\xef\xbb\xbf")
@@ -280,6 +284,9 @@ def test_a_monitored_container_points_at_the_collection_point_the_ipr_feed_write
     metal = next(c for c in containers if c["id"].endswith(":ksnko-2"))
     assert metal["wasteKind"]["value"] == "metal" and metal["fillingLevel"]["value"] == 0.48
     assert metal["containerCode"]["value"] == "2" and metal["dateModified"]["value"] == "2026-09-25T10:35:39Z"
+    # The station's address and the waste it takes name the container (T-4745).
+    assert all(c["name"]["languageMap"]["cs"] for c in containers)
+    assert not schema_errors(metal)
 
 
 @requires_docker
