@@ -228,10 +228,13 @@ def test_the_janitor_reaches_journey_residue_and_nothing_seeded():
 
     # What the sweep found on dev on 2026-09-25 (ui/e2e/live/residue.spec.ts names the same).
     for name in ["t1588-mucg4n37", "t1589r-bikes", "t1550-1452", "bike-network-db-1101",
-                 "hsl-citybikes-draft-0837", "citybikes-0915", "bikes-regional-ab12", "large-map-city"]:
+                 "hsl-citybikes-draft-0837", "citybikes-0915", "bikes-regional-ab12", "large-map-city",
+                 # What T-4993 found on dev on 2026-10-21: journeys of four-digit tasks above T-1999.
+                 "t4843-ht6nrt", "t4668-model-0636", "t4869-files-mvhnojg5", "newuser-policy-mvfkrjlc"]:
         assert reached(name), f"{name} is residue the janitor cannot approve away"
     # `city-bikes` a take once created is the seeded dashboard now.
-    for name in ["helsinki", "city-bikes", "helsinki-t1588-x", "citybikes-09150", "t1588", "", "t1588-X"]:
+    for name in ["helsinki", "city-bikes", "helsinki-t1588-x", "citybikes-09150", "t1588", "", "t1588-X",
+                 "t48431-x", "newuser-policy-", "newuser-policy-A"]:
         assert not reached(name), f"{name} is not a journey's"
 
     apps = SEED.parent.parent / "gitea/apps"

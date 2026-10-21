@@ -298,7 +298,7 @@ org="${org:-hel.fi}"
 demo_login="${demo_user}@${org}"
 # What a live journey or a recorded take names as its own: the janitor role's pattern, which
 # tests/test_smoke_script.py holds equal to seed/helsinki/helsinki-role-janitor.yaml (T-2817).
-RESIDUE_NAMES='t1[0-9]{3}[a-z]?-[a-z0-9-]+|[a-z0-9-]+-[0-9]{4}|bikes-regional-[a-z0-9]+|large-map-city'
+RESIDUE_NAMES='t[0-9]{4}[a-z]?-[a-z0-9-]+|newuser-policy-[a-z0-9]+|[a-z0-9-]+-[0-9]{4}|bikes-regional-[a-z0-9]+|large-map-city'
 demo_token=""
 if [ -z "$demo_password" ]; then
 	skip "demo user login (no demo users seeded in this instance)"
