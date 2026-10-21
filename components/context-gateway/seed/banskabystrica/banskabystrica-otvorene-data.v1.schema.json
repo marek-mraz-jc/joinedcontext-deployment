@@ -679,6 +679,14 @@
           ],
           "x-ngsi-ld-kind": "GeoProperty"
         },
+        "name": {
+          "description": "The source column `title`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "observedAt": {
           "description": "When the observation the entity reports was made.",
           "format": "date-time",
@@ -1033,6 +1041,14 @@
         },
         "mena": {
           "description": "The source column `Mena`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "name": {
+          "description": "The source column `title`.",
           "type": [
             "string",
             "null"
@@ -1500,6 +1516,14 @@
           ],
           "x-ngsi-ld-kind": "GeoProperty"
         },
+        "name": {
+          "description": "The source column `title`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "observedAt": {
           "description": "When the observation the entity reports was made.",
           "format": "date-time",
@@ -1659,6 +1683,14 @@
         },
         "mena": {
           "description": "The source column `Mena`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "name": {
+          "description": "The source column `title`.",
           "type": [
             "string",
             "null"

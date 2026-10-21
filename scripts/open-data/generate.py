@@ -123,6 +123,17 @@ COMMON = {
 # A column whose attribute name is one of these keeps its value as `column<Name>`. `name` is the
 # model's own (the mapping renames a column to it, T-4319).
 TAKEN = {*COMMON, "location", "observedAt"}
+# The `name` of a public dataset whose source has no name column, built from its own columns: each
+# `{column}` is the row's value, and an empty one drops with the separators beside it (T-4745: the
+# catalogue smoke refuses an entity without a name). The row hash never reads it, so ids stay.
+NAMES = {
+    "bb-dotacie": "{Žiadateľ}, {Akcia}",
+    "bb-dtm-bb-register-statickej-dopravy": "{vrstva} {vrstva_id}",
+    "bb-objednavky-bb": "Objednávka {Číslo_objednávky}: {Text_objednávky}",
+    "bb-zasadnutia-organov-samospravy": "{Orgán_samosprávy}, {Dátum_zasadnutia}",
+    "bbsk-clenovia-samospravy-efc2f3": "{Titul_pred_menom} {Meno} {Priezvisko} {Titul_za_menom}",
+    "bbsk-nehodovost-v-bbk-0ea72d": "Nehoda {Číslo_nehody}",
+}
 # What a visitor reads for the common slots, in each language the widget speaks (T-4682).
 COMMON_LABELS = {
     "dataProvider": {"sk": "Poskytovateľ údajov", "cs": "Poskytovatel dat", "en": "Data provider", "de": "Datenanbieter"},
@@ -190,6 +201,13 @@ def ranges(entries: list[dict]) -> dict[str, str]:
 def q(text: str) -> str:
     """A bloblang string literal."""
     return json.dumps(text, ensure_ascii=False)
+
+
+def named(path: str, kind: str, template: str) -> str:
+    """A `NAMES` template as bloblang: the values joined, blank runs and edge separators trimmed."""
+    parts = re.split(r"\{([^}]+)\}", template)
+    read = [f"{column(path, kind, x)}.or(\"\").string().trim()" if i % 2 else q(x) for i, x in enumerate(parts) if x]
+    return f"[{', '.join(read)}].join(\"\").re_replace_all(\"\\\\s+\", \" \").re_replace_all(\"^[ ,:]+|[ ,:]+$\", \"\").apply(\"string\")"
 
 
 def column(path: str, kind: str, col: str) -> str:
@@ -358,7 +376,7 @@ map sjtsk_coords {{
 def entity(e: dict, slug: str, model_ranges: dict[str, str], source_url: str) -> str:
     kind = e["source"]["kind"]
     path = "this.properties" if kind in FEATURES else "this"
-    cols = {a: p["column"] for a, p in e["properties"].items()}
+    cols = {a: p["column"] for a, p in e["properties"].items() if "template" not in p}
     keys = e["entityId"].get("keys")
     if keys:
         local = "[" + ", ".join(column(path, kind, k) for k in keys) + "].map_each(v -> v.string()).join(\"-\")"
@@ -381,7 +399,7 @@ def entity(e: dict, slug: str, model_ranges: dict[str, str], source_url: str) ->
         # A column empty in a row gives way to the next the mapping names (`otherwise`, T-4319).
         read = [f"{column(path, kind, c)}.apply({q(model_ranges[attribute(a)].replace('-', '_'))})"
                 for c in [p["column"], *p.get("otherwise", [])]]
-        value = f"{'.or('.join(read)}{')' * (len(read) - 1)}"
+        value = named(path, kind, p["template"]) if "template" in p else f"{'.or('.join(read)}{')' * (len(read) - 1)}"
         # A number measured at the row's instant carries it; the instant's own column does not.
         if observed and p["column"] != observed and model_ranges[attribute(a)] in ("integer", "float"):
             value = f"{{\"p\": {value}, \"at\": $at}}.apply(\"stamped\")"
@@ -413,7 +431,7 @@ def esri_query(e: dict, offset: str, out_fields: str | None = None) -> str:
     s = e["source"]
     params = {
         "where": (e.get("rowFilter") or {}).get("where", "1=1"),
-        "outFields": out_fields or ",".join(p["column"] for p in e["properties"].values()),
+        "outFields": out_fields or ",".join(dict.fromkeys(p["column"] for p in e["properties"].values())),
         "returnGeometry": "true" if s.get("geometry") else "false",
         "outSR": "4326", "geometryPrecision": "6", "f": "geojson",
         "resultOffset": offset, "resultRecordCount": str(PAGE),
@@ -484,7 +502,7 @@ def source_url(e: dict) -> str:
         return s["url"]
     if s["kind"] == "ckan-datastore":
         return f"{CKAN}/api/3/action/datastore_search?resource_id={s['resource']}&limit=32000"
-    fields = ",".join(c for p in e["properties"].values() for c in [p["column"], *p.get("otherwise", [])])
+    fields = ",".join(dict.fromkeys(c for p in e["properties"].values() for c in [p["column"], *p.get("otherwise", [])]))
     return f"{s['url']}?per_page=100&_fields={fields}"
 
 
@@ -668,13 +686,19 @@ def linkml(project: str, space: str, entries: list[dict], model_ranges: dict[str
     columns: dict[str, str] = {}
     for e in entries:
         for a, p in e["properties"].items():
-            columns.setdefault(attribute(a), p["column"])
+            if "template" not in p:
+                columns.setdefault(attribute(a), p["column"])
+    for e in entries:
+        for a, p in e["properties"].items():
+            if "template" in p:
+                columns.setdefault(attribute(a), p["template"])
     for a in sorted(columns):
         r = model_ranges[a]
-        slots[a] = {"description": f"The source column `{columns[a]}`.",
+        built = "{" in columns[a]
+        slots[a] = {"description": f"Built from the source columns as `{columns[a]}`." if built else f"The source column `{columns[a]}`.",
                     **({"multivalued": True} if r == "string-list" else {"range": r} if r != "string" else {}),
                     "annotations": {"ngsi_ld_kind": "Property",
-                                    **({"label": {"sk": h}} if (h := heading(columns[a])) else {})}}
+                                    **({"label": {"sk": h}} if not built and (h := heading(columns[a])) else {})}}
     for e in entries:
         for a, v in (e.get("constants") or {}).items():
             slots.setdefault(a, {"description": f"`{v}` on every entity: the model requires it and no column holds it.",
@@ -852,6 +876,10 @@ def render() -> dict[Path, str]:
               and (e.get("existing") or {}).get("covers") != "whole"]
     for e in mapped:
         sdm_schema(e)
+        if e["name"] in NAMES and "name" not in e["properties"]:
+            template = NAMES[e["name"]]
+            e["properties"]["name"] = {"column": re.search(r"\{([^}]+)\}", template).group(1),
+                                       "template": template, "range": "string"}
     names = slugs(mapped)
     out: dict[Path, str] = {}
     for project in PROJECTS:
@@ -916,8 +944,8 @@ def extension_files(extensions: dict[str, dict], mapped: list[dict]) -> dict[Pat
             for a, p in e["properties"].items():
                 a = attribute(a)
                 columns.setdefault(a, [])
-                if p["column"] not in columns[a]:
-                    columns[a].append(p["column"])
+                if p.get("template", p["column"]) not in columns[a]:
+                    columns[a].append(p.get("template", p["column"]))
                 emitted.setdefault(a, set()).add(space_ranges[e["org"]][a])
         for a, cols in columns.items():
             described[a] = "The source column " + ", ".join(f"`{c}`" for c in cols) + "."

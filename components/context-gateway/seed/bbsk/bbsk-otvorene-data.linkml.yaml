@@ -2957,7 +2957,7 @@ slots:
       ngsi_ld_kind: Property
       label:
         sk: Miesto
-      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/context.jsonld
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/context.jsonld
     slot_uri: https://smartdatamodels.org/name
   nameLangua:
     description: The source column `nameLangua`.
@@ -7247,6 +7247,7 @@ classes:
     - funkcia
     - iCOSamospravy
     - meno
+    - name
     - nazovKlubu
     - nazovSamospravy
     - obvod
@@ -7635,6 +7636,7 @@ classes:
     - hmotnaSkoda
     - lahkoZraneni
     - lahkoZraneniUcastnici
+    - name
     - obdobie
     - parameter
     - pocetNehod

@@ -66,6 +66,12 @@ slots:
     description: The source column `Mena`.
     annotations:
       ngsi_ld_kind: Property
+  name:
+    description: 'The source column `Objednávka {Číslo_objednávky}: {Text_objednávky}`.'
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
+    slot_uri: https://smartdatamodels.org/name
   objednavkaSpolu:
     description: The source column `Objednávka_spolu`.
     annotations:
@@ -103,6 +109,7 @@ classes:
     - iCO
     - identifier
     - mena
+    - name
     - objednavkaSpolu
     - predmetObjednavky
     - rok
