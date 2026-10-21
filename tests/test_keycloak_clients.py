@@ -234,6 +234,25 @@ def test_no_other_client_holds_an_admin_api_role(rendered, env):
 
 
 @pytest.mark.parametrize("env", ["local", "production", "dev"])
+def test_the_reconciler_token_names_the_gateway_and_no_other_resource(rendered, env):
+    """T-4866: the reconciler writes declared Subscriptions, drift repairs and the catalogue
+    through the Context Gateway, which verifies the `context-gateway` audience; without it every
+    write answered 404 and no Subscription ever reached a space. The one audience it gains is the
+    gateway's: no broker, no jc-functions, no Portal API."""
+    realm = realm_of(rendered, env)
+    client = {c["clientId"]: c for c in realm["clients"]}["portal-reconciler"]
+    audiences = sorted(
+        m["config"]["included.custom.audience"]
+        for m in client.get("protocolMappers", [])
+        if m["protocolMapper"] == "oidc-audience-mapper"
+    )
+    assert audiences == ["context-gateway"], audiences
+    assert not client.get("optionalClientScopes", []) or not any(
+        s.startswith("context-broker-") for s in client["optionalClientScopes"]
+    ), client["optionalClientScopes"]
+
+
+@pytest.mark.parametrize("env", ["local", "production", "dev"])
 def test_the_group_reconciler_client_has_no_login_flow(rendered, env):
     """PF-63: the credential that writes group memberships logs nobody in — no code flow, no
     password grant, a service account and nothing else."""

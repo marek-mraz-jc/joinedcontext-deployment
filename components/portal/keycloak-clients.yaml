@@ -141,6 +141,21 @@ portal-reconciler:
     implicitFlowEnabled: false
     directAccessGrantsEnabled: false
     serviceAccountsEnabled: true
+    # The reconciler's writes into the spaces (declared Subscriptions, the seed entities put back
+    # after drift, the NGSI-LD catalogue) go through the Context Gateway as
+    # `service-account-portal-reconciler`, and each space's Policy decides them (Architecture/06,
+    # Architecture/21 §10). The gateway accepts a token only with its audience, so without this
+    # one every such write answered 404 (T-4866). An audience, no grant: what the account may do
+    # in a space is still only what a Policy names it for.
+    protocolMappers:
+      - name: context-gateway-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: context-gateway
+          access.token.claim: 'true'
+          id.token.claim: 'false'
 
 # `jcctl login` (T-2846, PF-45, MF-14): a person's token for the kubectl-shaped verbs, which call
 # the Portal resource API. RFC 8628's device flow, because a terminal has no browser to come back
