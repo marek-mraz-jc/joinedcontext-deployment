@@ -70,12 +70,22 @@ extraEnv:
         name: keycloak-user-initial
         key: password
   {{- end }}
-  {{- range $name, $_ := $this.demoUsers | default dict }}
+  {{- range $name, $user := $this.demoUsers | default dict }}
   - name: USER_PASSWORD_{{ $name | upper | replace "." "_" }}
     valueFrom:
       secretKeyRef:
         name: keycloak-user-{{ $name | replace "." "-" }}
         key: password
+  {{- /* The TOTP seed of a demo person who must sign in with a second factor (T-5120), generated
+         beside the password (defaults/environment/secrets.yaml.gotmpl); the journeys read it from
+         the same Secret. The role list is the composites of `mfa-required` below. */}}
+  {{- if or (has "portal-approver" ($user.realmRoles | default list)) (has "platform-admin" ($user.realmRoles | default list)) }}
+  - name: USER_TOTP_{{ $name | upper | replace "." "_" }}
+    valueFrom:
+      secretKeyRef:
+        name: keycloak-user-{{ $name | replace "." "-" }}
+        key: totp
+  {{- end }}
   {{- end }}
   {{- range $clientId, $client := .Values.keycloakClients }}
   {{- $rawValues := index $client "rawValues" | default dict }}
@@ -142,7 +152,9 @@ config:
       duplicateEmailsAllowed: false
       resetPasswordAllowed: true
       editUsernameAllowed: true
-      # TR-03187: Brute force protection enabled, lockout after 10 attempts
+      # TR-03187: Brute force protection enabled, lockout after 10 attempts. The 10th wrong
+      # password within 12 h locks the account for 60 s, each further 10 add 60 s up to 15 min;
+      # a login faster than 1 s after the last one waits 60 s (T-5120, components/keycloak/README.md).
       bruteForceProtected: true
       permanentLockout: false
       maxFailureWaitSeconds: 900
@@ -154,8 +166,9 @@ config:
       defaultRoles:
         - offline_access
         - uma_authorization
-      # TR-03187 AUT-7: Password policy — min 12 chars, upper, lower, digit
-      passwordPolicy: "length(12) and upperCase(1) and lowerCase(1) and digits(1)"
+      # TR-03187 AUT-7: Password policy — min 12 chars, upper, lower, digit; never the username
+      # or e-mail, none of the last 5 (T-5120).
+      passwordPolicy: "length(12) and upperCase(1) and lowerCase(1) and digits(1) and notUsername(undefined) and notEmail(undefined) and passwordHistory(5)"
       requiredCredentials:
         - password
       otpPolicyType: totp
@@ -490,6 +503,14 @@ config:
             - type: password
               value: "$(USER_PASSWORD_{{ $name | upper | replace "." "_" }})"
               temporary: false
+            {{- if or (has "portal-approver" ($user.realmRoles | default list)) (has "platform-admin" ($user.realmRoles | default list)) }}
+            {{- /* Keycloak keeps an OTP secret as the text itself and hashes its UTF-8 bytes; the
+                   journeys compute the code from the same text (T-5120). */}}
+            - type: otp
+              userLabel: journey seed
+              secretData: '{"value":"$(USER_TOTP_{{ $name | upper | replace "." "_" }})"}'
+              credentialData: '{"subType":"totp","digits":6,"counter":0,"period":30,"algorithm":"HmacSHA256"}'
+            {{- end }}
           realmRoles:
             {{- toYaml ($user.realmRoles | default list) | nindent 12 }}
           {{- /* `platformReaders: false` keeps a test person out of the default group (T-4911). */}}
@@ -692,10 +713,21 @@ config:
           # proposal; a user without it can browse and propose only.
           - name: portal-approver
             description: May approve and merge change proposals in the Portal
+            composite: true
+            composites:
+              realm: [mfa-required]
           # Administers the operator UIs: Argo CD's role:admin (components/gitops, ADR-N-056
           # §2.8) and Grafana's Admin. The owner grants it; nobody holds it by default.
           - name: platform-admin
             description: Administers the operator UIs (Argo CD, Grafana)
+            composite: true
+            composites:
+              realm: [mfa-required]
+          # Signs in with TOTP (T-5120): the browser flow's role condition reads it, and every
+          # role that approves or administers carries it as a composite. Granted on its own it
+          # puts any other person under the same rule.
+          - name: mfa-required
+            description: Must sign in with a second factor (TOTP)
         client:
           {{- range $clientId, $client := .Values.keycloakClients }}
           {{- if index $client "roles" }}
@@ -703,8 +735,20 @@ config:
             {{- index $client "roles" | toYaml | nindent 12 }}
           {{- end }}
           {{- end }}
-      # TR-03187 AUT-2: Custom browser flow with optional MFA (conditional on user config)
-      # If a user has TOTP or WebAuthn configured, they are prompted. Otherwise login proceeds without MFA.
+      # TR-03187 AUT-2: Custom browser flow (T-5120). A person holding `mfa-required` (every
+      # portal-approver and platform-admin) must give a TOTP code; one without a TOTP credential
+      # enrols at the next login (Keycloak's CONFIGURE_TOTP required action). Everyone else is
+      # asked for TOTP or WebAuthn only once they configured one. The two subflows exclude each
+      # other by the same role, so nobody is asked twice.
+      authenticatorConfig:
+        - alias: "mfa required"
+          config:
+            condUserRole: mfa-required
+            negate: "false"
+        - alias: "mfa not required"
+          config:
+            condUserRole: mfa-required
+            negate: "true"
       authenticationFlows:
         - alias: "custom browser"
           description: "Custom browser flow with conditional 2FA per TR-03187"
@@ -731,7 +775,7 @@ config:
               userSetupAllowed: false
               autheticatorFlow: true
         - alias: "custom browser forms"
-          description: "Username/password + conditional 2FA"
+          description: "Username/password, then the second factor the person's role or credentials ask for"
           providerId: "basic-flow"
           topLevel: false
           builtIn: false
@@ -745,15 +789,47 @@ config:
             - authenticatorFlow: true
               requirement: "CONDITIONAL"
               priority: 20
+              flowAlias: "custom browser required 2fa"
+              userSetupAllowed: false
+              autheticatorFlow: true
+            - authenticatorFlow: true
+              requirement: "CONDITIONAL"
+              priority: 30
               flowAlias: "custom browser 2fa"
               userSetupAllowed: false
               autheticatorFlow: true
-        - alias: "custom browser 2fa"
-          description: "Conditional 2FA — prompts only if user has TOTP or WebAuthn configured"
+        - alias: "custom browser required 2fa"
+          description: "TOTP for every holder of mfa-required; enrolment at the next login"
           providerId: "basic-flow"
           topLevel: false
           builtIn: false
           authenticationExecutions:
+            - authenticator: "conditional-user-role"
+              authenticatorFlow: false
+              authenticatorConfig: "mfa required"
+              requirement: "REQUIRED"
+              priority: 10
+              userSetupAllowed: false
+              autheticatorFlow: false
+            - authenticator: "auth-otp-form"
+              authenticatorFlow: false
+              requirement: "REQUIRED"
+              priority: 20
+              userSetupAllowed: false
+              autheticatorFlow: false
+        - alias: "custom browser 2fa"
+          description: "Optional 2FA: prompts only a person without mfa-required who configured TOTP or WebAuthn"
+          providerId: "basic-flow"
+          topLevel: false
+          builtIn: false
+          authenticationExecutions:
+            - authenticator: "conditional-user-role"
+              authenticatorFlow: false
+              authenticatorConfig: "mfa not required"
+              requirement: "REQUIRED"
+              priority: 5
+              userSetupAllowed: false
+              autheticatorFlow: false
             - authenticator: "conditional-user-configured"
               authenticatorFlow: false
               requirement: "REQUIRED"
