@@ -155,9 +155,9 @@ def test_a_dataset_without_a_datastore_table_is_a_warning_not_a_ko():
     assert rows["air"]["datastore"] == "warn: no datastore table"
 
 
-def test_a_datastore_ten_percent_off_is_a_ko_and_within_one_percent_is_ok():
+def test_a_datastore_ten_percent_off_is_a_warning_and_within_one_percent_is_ok():
     off, _ = table(world([package("air", "a1", "AirQualityObserved")], ["a1"], rows=100, datastore_total=90))
-    assert off["air"]["datastore"] == "ko: 90 rows, the platform holds 100 (OData @odata.count)"
+    assert off["air"]["datastore"] == "warn: 90 rows, the platform holds 100 (OData @odata.count)"
     near, _ = table(world([package("air", "a1", "AirQualityObserved")], ["a1"], rows=100, datastore_total=101))
     assert near["air"]["datastore"] == "ok: 101 rows = 100"
 
