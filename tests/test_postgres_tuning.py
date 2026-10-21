@@ -22,6 +22,7 @@ DEV_PARAMETERS = {
     "effective_cache_size": "1536MB",
     "work_mem": "8MB",
     "maintenance_work_mem": "128MB",
+    "autovacuum_work_mem": "64MB",
     "track_io_timing": "on",
     "log_min_duration_statement": "500ms",
     "log_parameter_max_length": "0",
