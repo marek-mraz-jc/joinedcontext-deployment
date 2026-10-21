@@ -43,7 +43,9 @@ pipeline:
         }
         let station = $stations.get(this.id.string())
         let sensors = this.sensorValues.or([]).map_each(v -> { v.name: v }).squash()
-        root = if $station == null { deleted() } else {
+        # A station Fintraffic lists with no sensors carries the epoch as its update time: no
+        # reading, so no entity that would claim one from 1970 (T-5020).
+        root = if $station == null || this.sensorValues.or([]).length() == 0 { deleted() } else {
           {
             "id": "urn:ngsi-ld:%v:%v:%v:road-%v".format("WeatherObserved", $domain, env("JC_SPACE"), this.id),
             "type": "WeatherObserved",

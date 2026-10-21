@@ -228,4 +228,14 @@ alertGroups:
           severity: warning
         annotations:
           summary: 'Pipeline {{`{{ $labels.pipeline }}`}} in {{`{{ $labels.project }}`}} could not write {{`{{ $value }}`}} records its source lists: see its rejected records'
+      # T-5020 (DM-74): the daily quality run found a running pipeline's newest entity older than
+      # its freshness target, the interval plus max(interval/12, 10 min): 2x a 10-min schedule.
+      # Dev's road weather read five weeks old before anyone looked.
+      - alert: PipelineDataStale
+        expr: max by (project, pipeline) (jc_pipeline_stale) == 1
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Pipeline {{`{{ $labels.pipeline }}`}} in {{`{{ $labels.project }}`}} has written nothing newer than its freshness target allows: check its runs and its source'
   {{- end }}
