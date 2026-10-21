@@ -28,6 +28,13 @@ REFERENCES = {
     "OffStreetParking": {"GtfsStation"},
     "WaterQualityObserved": {"PointOfInterest"},
     "CityWork": {"AdministrativeArea"},
+    # Citizen participation (T-5065): every record names its process; a Result its parent Result.
+    "Proposal": {"ParticipatoryProcess"},
+    "BudgetProject": {"ParticipatoryProcess"},
+    "Result": {"ParticipatoryProcess", "Result"},
+    "Meeting": {"ParticipatoryProcess"},
+    "Debate": {"ParticipatoryProcess"},
+    "Survey": {"ParticipatoryProcess"},
 }
 # What the bundles served before the split; none of them may be a dataset again.
 BUNDLES = {"praha-mesto", "helsinki-all", "banskabystrica-verejne", "zilina-verejne", "bbsk-registre"}
