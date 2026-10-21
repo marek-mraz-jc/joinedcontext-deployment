@@ -10,5 +10,4 @@ spec:
   subjects:
     - user: demo.steward@hel.fi
   role: steward
-  scope:
-    organization: hel
+  scope: { organization: hel }

@@ -5,17 +5,18 @@ kind: Endpoint
 metadata:
   name: helsinki-parking
   namespace: helsinki
-  title: { fi: "Pysäköintialueet ja -vyöhykkeet — Helsinki", en: "Parking areas and zones — Helsinki" }
+  title: { fi: Pysäköintialueet ja -vyöhykkeet — Helsinki, en: Parking areas and zones — Helsinki }
   description:
-    fi: "Pysäköintialueet Parkkioppaasta sekä pysäköinnin maksuvyöhykkeet ja asukas- ja yrityspysäköintivyöhykkeet. Lähde: Helsingin kaupunki, CC BY 4.0."
-    en: "Parking areas from the parking guide, and the parking fee zones and the resident and business parking zones. Source: City of Helsinki, CC BY 4.0."
+    fi: 'Pysäköintialueet Parkkioppaasta sekä pysäköinnin maksuvyöhykkeet ja asukas- ja yrityspysäköintivyöhykkeet. Lähde: Helsingin kaupunki, CC BY 4.0.'
+    en: 'Parking areas from the parking guide, and the parking fee zones and the resident and business parking zones. Source: City of Helsinki, CC BY 4.0.'
 spec:
   contextSpaceRef: helsinki
   slug: x6d6jph5t3tib5vr53kmiz2l5n3u3tnu
   audience: public
   policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki:public-parking
   # The contact lines stay in the space, as on helsinki-all (EP-61). A projection only narrows.
-  projection: { hiddenAttributes: [contactPoint] }
+  projection:
+    hiddenAttributes: [contactPoint]
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]
   publish:
     ckan:
@@ -23,26 +24,39 @@ spec:
       license: cc-by
       datastore: { representation: csv, refresh: onReconcile }
   catalog:
-    publisher: { name: { fi: "Helsingin kaupunki", sv: "Helsingfors stad", en: "City of Helsinki" }, uri: "https://www.hel.fi/" }
+    publisher:
+      name: { fi: Helsingin kaupunki, sv: Helsingfors stad, en: City of Helsinki }
+      uri: https://www.hel.fi/
     license: CC_BY_4_0
-    attribution: { fi: "Lähde: Helsingin kaupunki, CC BY 4.0", sv: "Källa: Helsingfors stad, CC BY 4.0", en: "Source: City of Helsinki, CC BY 4.0" }
+    attribution:
+      fi: 'Lähde: Helsingin kaupunki, CC BY 4.0'
+      sv: 'Källa: Helsingfors stad, CC BY 4.0'
+      en: 'Source: City of Helsinki, CC BY 4.0'
     themes: [TRAN]
     keywords:
-      fi: ["pysäköinti", "pysäköintialueet", "maksuvyöhykkeet", "asukaspysäköinti"]
-      sv: ["parkering", "parkeringsområden", "avgiftszoner", "boendeparkering"]
-      en: ["parking", "parking areas", "fee zones", "resident parking"]
+      fi: [pysäköinti, pysäköintialueet, maksuvyöhykkeet, asukaspysäköinti]
+      sv: [parkering, parkeringsområden, avgiftszoner, boendeparkering]
+      en: [parking, parking areas, fee zones, resident parking]
     spatial:
-      - "FI1B1"
-      - "http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/091"
+      - FI1B1
+      - http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/091
     frequency: WEEKLY
     source:
-      - url: "https://pubapi.parkkiopas.fi/public/v1/parking_area/?page_size=2000"
-        title: { fi: "Pysäköintialueet (Parkkiopas)", en: "Parking areas (Parkkiopas)" }
-        description: { fi: "Parkkioppaan julkinen rajapinta pysäköintialueista.", en: "The parking guide's public API of parking areas." }
-      - url: "https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application/json&srsName=EPSG:4326&typeNames=avoindata:Pysakoinnin_maksuvyohykkeet_alue"
-        title: { fi: "Pysäköinnin maksuvyöhykkeet", en: "Parking fee zones" }
-        description: { fi: "Helsingin karttapalvelun WFS-taso, GeoJSON.", en: "A WFS layer of the city's map service, as GeoJSON." }
-      - url: "https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application/json&srsName=EPSG:4326&typeNames=avoindata:Asukas_ja_yrityspysakointivyohykkeet_alue"
-        title: { fi: "Asukas- ja yrityspysäköintivyöhykkeet", en: "Resident and business parking zones" }
-        description: { fi: "Helsingin karttapalvelun WFS-taso, GeoJSON.", en: "A WFS layer of the city's map service, as GeoJSON." }
+      - url: https://pubapi.parkkiopas.fi/public/v1/parking_area/?page_size=2000
+        title: { fi: Pysäköintialueet (Parkkiopas), en: Parking areas (Parkkiopas) }
+        description:
+          fi: Parkkioppaan julkinen rajapinta pysäköintialueista.
+          en: The parking guide's public API of parking areas.
+      - url: https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application/json&srsName=EPSG:4326&typeNames=avoindata:Pysakoinnin_maksuvyohykkeet_alue
+        title: { fi: Pysäköinnin maksuvyöhykkeet, en: Parking fee zones }
+        description:
+          fi: Helsingin karttapalvelun WFS-taso, GeoJSON.
+          en: A WFS layer of the city's map service, as GeoJSON.
+      - url: https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application/json&srsName=EPSG:4326&typeNames=avoindata:Asukas_ja_yrityspysakointivyohykkeet_alue
+        title:
+          fi: Asukas- ja yrityspysäköintivyöhykkeet
+          en: Resident and business parking zones
+        description:
+          fi: Helsingin karttapalvelun WFS-taso, GeoJSON.
+          en: A WFS layer of the city's map service, as GeoJSON.
     pipelineRef: { kind: Pipeline, name: parking-areas }

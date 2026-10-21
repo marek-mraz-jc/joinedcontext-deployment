@@ -12,7 +12,7 @@ kind: DataSource
 metadata:
   name: golemio-park-and-ride
   namespace: praha
-  title: { en: "Park and ride occupancy (Golemio)", cs: "Obsazenost P+R (Golemio)" }
+  title: { en: Park and ride occupancy (Golemio), cs: Obsazenost P+R (Golemio) }
 spec:
   type: http
   http:

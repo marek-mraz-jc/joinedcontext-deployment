@@ -5,9 +5,9 @@ kind: Endpoint
 metadata:
   name: banskabystrica-pocasie
   namespace: banskabystrica
-  title: { sk: "Počasie — Banská Bystrica", en: "Weather — Banská Bystrica" }
+  title: { sk: Počasie — Banská Bystrica, en: Weather — Banská Bystrica }
   description:
-    sk: "Počasie na automatických staniciach SHMÚ Banská Bystrica - Zelená a Donovaly, každých päť minút. Zdroj: Slovenský hydrometeorologický ústav, CC BY 4.0."
+    sk: 'Počasie na automatických staniciach SHMÚ Banská Bystrica - Zelená a Donovaly, každých päť minút. Zdroj: Slovenský hydrometeorologický ústav, CC BY 4.0.'
     en: "The weather at SHMÚ's automatic stations Banská Bystrica - Zelená and Donovaly, every five minutes. Source: the Slovak Hydrometeorological Institute, CC BY 4.0."
 spec:
   contextSpaceRef: banskabystrica-verejne
@@ -25,13 +25,15 @@ spec:
     # Aggregates of public facilities and readings: no record names a person (T-4596).
     personalData: does-not-contain
     license: CC_BY_4_0
-    attribution: { sk: "Zdroj: Slovenský hydrometeorologický ústav, CC BY 4.0", en: "Source: Slovak Hydrometeorological Institute, CC BY 4.0" }
+    attribution:
+      sk: 'Zdroj: Slovenský hydrometeorologický ústav, CC BY 4.0'
+      en: 'Source: Slovak Hydrometeorological Institute, CC BY 4.0'
     themes: [ENVI]
     keywords:
-      sk: ["počasie", "teplota", "SHMÚ", "Banská Bystrica"]
-      en: ["weather", "temperature", "SHMÚ", "Banská Bystrica"]
+      sk: [počasie, teplota, SHMÚ, Banská Bystrica]
+      en: [weather, temperature, SHMÚ, Banská Bystrica]
     spatial:
-      - "SK032"
-      - "https://data.gov.sk/id/lau2/SK0321508438"
+      - SK032
+      - https://data.gov.sk/id/lau2/SK0321508438
     frequency: CONT
     pipelineRef: { kind: Pipeline, name: pocasie }

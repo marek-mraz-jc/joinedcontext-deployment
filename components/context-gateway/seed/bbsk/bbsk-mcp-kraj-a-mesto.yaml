@@ -10,10 +10,12 @@ metadata:
   name: kraj-a-mesto
   namespace: bbsk
   # What an AI client reads as serverInfo and initialize.instructions (EP-92).
-  title: { sk: "Banskobystrický kraj a mesto Banská Bystrica — otvorené údaje", en: "Banská Bystrica Region and City, open data" }
+  title:
+    sk: Banskobystrický kraj a mesto Banská Bystrica — otvorené údaje
+    en: Banská Bystrica Region and City, open data
   description:
-    sk: "Všetky verejné otvorené údaje Banskobystrického samosprávneho kraja a mesta Banská Bystrica na jednom mieste, len na čítanie. Každý nástroj berie `endpoint`; list_endpoints ich vymenuje. Pri citovaní uveďte zdroj, ktorý Endpoint menuje."
-    en: "Every public open dataset of the Banská Bystrica Self-Governing Region and the City of Banská Bystrica, Slovakia, read-only, in one server. Each tool takes an `endpoint`; list_endpoints names them. Start with list_types, then query_entities with a small limit. Texts are in Slovak. Credit the source each Endpoint names when you quote it."
+    sk: Všetky verejné otvorené údaje Banskobystrického samosprávneho kraja a mesta Banská Bystrica na jednom mieste, len na čítanie. Každý nástroj berie `endpoint`; list_endpoints ich vymenuje. Pri citovaní uveďte zdroj, ktorý Endpoint menuje.
+    en: Every public open dataset of the Banská Bystrica Self-Governing Region and the City of Banská Bystrica, Slovakia, read-only, in one server. Each tool takes an `endpoint`; list_endpoints names them. Start with list_types, then query_entities with a small limit. Texts are in Slovak. Credit the source each Endpoint names when you quote it.
 spec:
   select:
     spaces:

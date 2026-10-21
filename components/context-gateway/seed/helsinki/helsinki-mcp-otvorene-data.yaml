@@ -9,12 +9,16 @@ metadata:
   name: otvorene-data
   namespace: helsinki
   # What an AI client reads as serverInfo and initialize.instructions (EP-92).
-  title: { sk: "Helsinki — otvorené údaje", en: "Helsinki, open data" }
+  title:
+    sk: Helsinki — otvorené údaje
+    en: Helsinki, open data
   description:
-    sk: "Otvorené údaje Helsínk, len na čítanie: merania cestných meteostaníc v Helsinkách, Espoo a Vantaa a dnešné podujatia v meste. Zdroje: Fintraffic / digitraffic.fi, mesto Helsinki (Linked Events); CC BY 4.0. Pri citovaní uveďte zdroj."
+    sk: 'Otvorené údaje Helsínk, len na čítanie: merania cestných meteostaníc v Helsinkách, Espoo a Vantaa a dnešné podujatia v meste. Zdroje: Fintraffic / digitraffic.fi, mesto Helsinki (Linked Events); CC BY 4.0. Pri citovaní uveďte zdroj.'
     en: "Read-only open data of Helsinki: road weather station readings in Helsinki, Espoo and Vantaa (air and road temperature, wind, road conditions) and today's events in the city (name, time, venue, link). Start with list_types, then query_entities with a small limit. Sources: Fintraffic / digitraffic.fi and the City of Helsinki's Linked Events; CC BY 4.0, credit the source when you quote it."
 spec:
   members:
-    - { kind: Endpoint, name: helsinki-weather }
-    - { kind: Endpoint, name: helsinki-events }
+    - kind: Endpoint
+      name: helsinki-weather
+    - kind: Endpoint
+      name: helsinki-events
   audience: public

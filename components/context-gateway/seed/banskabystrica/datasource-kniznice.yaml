@@ -4,7 +4,9 @@ kind: DataSource
 metadata:
   name: susr-ku5008rr
   namespace: banskabystrica
-  title: { sk: "Knižnice (ŠÚ SR, ku5008rr)", en: "Libraries (ŠÚ SR, ku5008rr)" }
+  title:
+    sk: Knižnice (ŠÚ SR, ku5008rr)
+    en: Libraries (ŠÚ SR, ku5008rr)
 spec:
   type: http
   http:

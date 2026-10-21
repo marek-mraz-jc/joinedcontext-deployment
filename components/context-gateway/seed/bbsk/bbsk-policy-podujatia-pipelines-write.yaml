@@ -3,7 +3,7 @@ kind: Policy
 metadata:
   name: podujatia-pipelines-write
   namespace: bbsk
-  title: { sk: "Kanály zapisujú podujatia", en: "The ingestion pipelines write the events" }
+  title: { sk: Kanály zapisujú podujatia, en: The ingestion pipelines write the events }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: bbsk-podujatia }
   assigner: did:web:bbsk.sk

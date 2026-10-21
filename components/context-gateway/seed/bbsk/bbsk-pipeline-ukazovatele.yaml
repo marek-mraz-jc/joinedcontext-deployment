@@ -8,12 +8,12 @@ kind: Pipeline
 metadata:
   name: ukazovatele
   namespace: bbsk
-  title: { sk: "Ukazovatele kraja", en: "Region indicators" }
+  title: { sk: Ukazovatele kraja, en: Region indicators }
 spec:
   class: scheduled
   # Daily, though the cubes change weekly: a tick the runner misses (a restart, a stream
   # replaced at that minute) then costs a day of stale indicators, not a week (T-4081).
-  schedule: "11 4 * * *"
+  schedule: '11 4 * * *'
   # Read through the space's own Endpoint and not the store, so the Policy applies to this
   # pipeline exactly as it applies to anybody else (PL-18, PF-39, PL-45). Only the two cubes
   # the compute reads: bbsk-kraj holds ~7,700 rows of seven cubes, and an endpoint source is
@@ -21,11 +21,11 @@ spec:
   # "not measured" (T-3125).
   source:
     endpointRef: { kind: Endpoint, name: bbsk-kraj }
-    query: { type: KeyPerformanceIndicator, q: 'dataSet=="om7102rr","zp3803rs"' }
+    query:
+      type: KeyPerformanceIndicator
+      q: dataSet=="om7102rr","zp3803rs"
   targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-kpi:bbsk-kpi
-  output:
-    type: KeyPerformanceIndicator
-    mode: upsert
+  output: { type: KeyPerformanceIndicator, mode: upsert }
   # Every run rewrites every indicator its cubes carry, so one missing for three weeks is an
   # indicator the region stopped publishing: it is removed rather than shown with a stale value (PL-64).
   # Safe here and only here: this pipeline is the one writer of bbsk-kpi.

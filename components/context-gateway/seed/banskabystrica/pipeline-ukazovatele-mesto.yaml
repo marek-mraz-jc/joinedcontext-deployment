@@ -7,19 +7,17 @@ kind: Pipeline
 metadata:
   name: ukazovatele-mesto
   namespace: banskabystrica
-  title: { sk: "Ukazovatele mesta", en: "City indicators" }
+  title: { sk: Ukazovatele mesta, en: City indicators }
 spec:
   class: scheduled
-  schedule: "23 4 * * 1"
+  schedule: '23 4 * * 1'
   # Read through the space's own Endpoint and not the store, so the Policy applies to this
   # pipeline exactly as it applies to anybody else (PL-18, PF-39, PL-45).
   source:
     endpointRef: { kind: Endpoint, name: banskabystrica-mesto }
     query: { type: KeyPerformanceIndicator }
   targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-kpi:banskabystrica-kpi
-  output:
-    type: KeyPerformanceIndicator
-    mode: upsert
+  output: { type: KeyPerformanceIndicator, mode: upsert }
   compute:
     kind: bloblang
     bloblang: |

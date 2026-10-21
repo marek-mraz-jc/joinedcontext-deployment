@@ -8,5 +8,4 @@ spec:
   subjects:
     - user: demo.neighbour@hel.fi
   role: viewer
-  scope:
-    project: sharing-other
+  scope: { project: sharing-other }

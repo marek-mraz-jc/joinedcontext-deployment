@@ -8,10 +8,12 @@ kind: DataSource
 metadata:
   name: kataster-inspire
   namespace: banskabystrica
-  title: { sk: "Kataster nehnuteľností SR (INSPIRE, ÚGKK SR)", en: "Cadastre of Slovakia (INSPIRE, ÚGKK SR)" }
+  title:
+    sk: Kataster nehnuteľností SR (INSPIRE, ÚGKK SR)
+    en: Cadastre of Slovakia (INSPIRE, ÚGKK SR)
 spec:
   type: generate
   input:
     mapping: root = ""
     count: 1
-    interval: ""
+    interval: ''

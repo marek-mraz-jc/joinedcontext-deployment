@@ -34,4 +34,4 @@ spec:
       verbs: [approve, delete]
       constraints:
         - field: metadata.name
-          pattern: 't[0-9]{4}[a-z]?-[a-z0-9-]+|newuser-policy-[a-z0-9]+|[a-z0-9-]+-[0-9]{4}|bikes-regional-[a-z0-9]+|large-map-city'
+          pattern: t[0-9]{4}[a-z]?-[a-z0-9-]+|newuser-policy-[a-z0-9]+|[a-z0-9-]+-[0-9]{4}|bikes-regional-[a-z0-9]+|large-map-city

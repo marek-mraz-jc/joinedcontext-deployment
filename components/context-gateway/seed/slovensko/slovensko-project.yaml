@@ -6,10 +6,12 @@ kind: Project
 metadata:
   name: slovensko
   namespace: org
-  title: { sk: "Slovensko — otvorené dáta", en: "Slovakia, open data" }
+  title:
+    sk: Slovensko — otvorené dáta
+    en: Slovakia, open data
   description:
-    sk: "Otvorené dáta za celé Slovensko, ktoré platforma joinedcontext zbiera z národných a európskych zdrojov."
-    en: "Open data about the whole of Slovakia, which the joinedcontext platform collects from national and European sources."
+    sk: Otvorené dáta za celé Slovensko, ktoré platforma joinedcontext zbiera z národných a európskych zdrojov.
+    en: Open data about the whole of Slovakia, which the joinedcontext platform collects from national and European sources.
 spec:
   organizationRef: hel
   # Who publishes this data, the did:web assigner of its Apps' Policies (PF-108); describes, grants nothing.

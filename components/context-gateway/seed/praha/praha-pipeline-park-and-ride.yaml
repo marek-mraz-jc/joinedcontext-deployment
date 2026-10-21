@@ -4,18 +4,14 @@ kind: Pipeline
 metadata:
   name: park-and-ride
   namespace: praha
-  title: { en: "Park and ride car parks" }
+  title: { en: Park and ride car parks }
 spec:
   class: auto
   # The car parks change with construction; weekly is enough.
   period: 168h
-  schedule: "45 3 * * 1"
+  schedule: '45 3 * * 1'
   source:
     dataSourceRef: { kind: DataSource, name: ipr-park-and-ride }
   targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
-  output:
-    type: OffStreetParking
-    mode: upsert
-  quotas:
-    maxMemoryMb: 128
-    cpuMillicores: 100
+  output: { type: OffStreetParking, mode: upsert }
+  quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

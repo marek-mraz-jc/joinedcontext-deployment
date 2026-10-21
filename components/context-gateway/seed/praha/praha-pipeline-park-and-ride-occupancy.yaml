@@ -5,19 +5,15 @@ kind: Pipeline
 metadata:
   name: park-and-ride-occupancy
   namespace: praha
-  title: { en: "Park and ride occupancy" }
+  title: { en: Park and ride occupancy }
 spec:
   class: auto
   # TSK's counters report every few minutes; every five is what a driver deciding where to leave
   # the car needs.
   period: 5m
-  schedule: "*/5 * * * *"
+  schedule: '*/5 * * * *'
   source:
     dataSourceRef: { kind: DataSource, name: golemio-park-and-ride }
   targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
-  output:
-    type: OffStreetParking
-    mode: upsert
-  quotas:
-    maxMemoryMb: 64
-    cpuMillicores: 50
+  output: { type: OffStreetParking, mode: upsert }
+  quotas: { maxMemoryMb: 64, cpuMillicores: 50 }

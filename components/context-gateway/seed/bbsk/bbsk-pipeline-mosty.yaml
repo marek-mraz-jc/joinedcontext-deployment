@@ -4,18 +4,14 @@ kind: Pipeline
 metadata:
   name: mosty
   namespace: bbsk
-  title: { sk: "Mosty v kraji", en: "Bridges in the region" }
+  title: { sk: Mosty v kraji, en: Bridges in the region }
 spec:
   class: auto
   # A register the region revises a few times a year: weekly is already more than it needs (PL-26).
   period: 168h
-  schedule: "57 3 * * 1"
+  schedule: '57 3 * * 1'
   source:
     dataSourceRef: { kind: DataSource, name: bbsk-mosty }
   targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-registre:bbsk-registre
-  output:
-    type: Bridge
-    mode: upsert
-  quotas:
-    maxMemoryMb: 128
-    cpuMillicores: 100
+  output: { type: Bridge, mode: upsert }
+  quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

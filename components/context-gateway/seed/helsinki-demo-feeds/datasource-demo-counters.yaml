@@ -7,7 +7,7 @@ kind: DataSource
 metadata:
   name: demo-feed-counters
   namespace: helsinki
-  title: { en: "Demo feed: synthetic counters (not a city measurement)" }
+  title: { en: 'Demo feed: synthetic counters (not a city measurement)' }
 spec:
   type: nats
   input:

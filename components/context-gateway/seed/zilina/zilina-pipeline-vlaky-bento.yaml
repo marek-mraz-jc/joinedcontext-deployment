@@ -8,16 +8,14 @@
 
 pipeline:
   processors:
-    - unarchive:
-        format: zip
+    - unarchive: { format: zip }
     # The five tables the count reads; the rest of the timetable (2.3 MB unpacked) is dropped here.
     - mapping: |
         let tables = ["stops.txt", "trips.txt", "stop_times.txt", "calendar.txt", "calendar_dates.txt"]
         root = if !$tables.contains(@archive_filename) { deleted() } else {
           { "table": @archive_filename.trim_suffix(".txt"), "rows": content().string().trim_prefix("﻿").parse_csv() }
         }
-    - archive:
-        format: json_array
+    - archive: { format: json_array }
 
     - mapping: |
         let names = ["Žilina", "Žilina-zariečie", "Žilina-Solinky", "Bytčica", "Brodno"]

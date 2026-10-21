@@ -15,7 +15,7 @@ pipeline:
     # A body over 8 MiB is not the HSL area's register (1.0 MB): refused before parsing.
     - mapping: |
         root = if content().length() > 8388608 { throw("the facilities answer is %d bytes, more than the 8 MiB read".format(content().length())) } else { this }
-    - mutation: 'root = if errored() { deleted() }'
+    - mutation: root = if errored() { deleted() }
 
     - branch:
         request_map: 'root = { "type": "Query", "entities": [ { "type": "GtfsStation" } ], "attrs": [ "location" ] }'
@@ -24,8 +24,7 @@ pipeline:
               - http:
                   url: ${JC_GATEWAY_URL}/api/endpoint/si6epqkx364lprho5uaigutk274r5grb/ngsi-ld/v1/entityOperations/query?limit=1000&options=keyValues
                   verb: POST
-                  headers:
-                    Content-Type: application/json
+                  headers: { Content-Type: application/json }
                   oauth2:
                     enabled: true
                     client_key: ${JC_CLIENT_ID}
@@ -36,8 +35,8 @@ pipeline:
               - mapping: |
                   root = this.filter(s -> s.location.type.or("") == "Point").map_each(s -> { "id": s.id, "lon": s.location.coordinates.index(0), "lat": s.location.coordinates.index(1) })
           - catch:
-              - mapping: 'root = []'
-        result_map: 'root.stations = this'
+              - mapping: root = []
+        result_map: root.stations = this
 
     - mapping: |
         map nearest {
@@ -69,5 +68,4 @@ pipeline:
             "source": { "type": "Property", "value": "https://parking.fintraffic.fi/api/v1/facilities/" + f.id.string() }
           }).map_each(e -> e.assign({ "refNearestStation": if e.refNearestStation != null { { "type": "Relationship", "object": e.refNearestStation } } }).filter(a -> a.value != null))
 
-    - unarchive:
-        format: json_array
+    - unarchive: { format: json_array }

@@ -6,12 +6,10 @@ kind: App
 metadata:
   name: sharing-roles
   namespace: sharing
-  annotations:
-    joinedcontext.com/shipped-with: portal
-  title:
-    en: "Sharing probe (roles)"
+  title: { en: Sharing probe (roles) }
   description:
-    en: "Test page of the App sharing matrix, visibility roles: who opens it and how many city-bike stations it shows them."
+    en: 'Test page of the App sharing matrix, visibility roles: who opens it and how many city-bike stations it shows them.'
+  annotations: { joinedcontext.com/shipped-with: portal }
 spec:
   kind: ui
   source:
@@ -20,15 +18,14 @@ spec:
   lifecycle: published
   roles:
     - name: viewer
-      title: { en: "Viewer" }
-      description: "Opens the probe and reads the station count."
+      title: { en: Viewer }
+      description: Opens the probe and reads the station count.
   access:
     - role: viewer
-      subjects: [{ group: sharing-roles-viewer }]
+      subjects:
+        - group: sharing-roles-viewer
   dataNeeds:
-    - contextSpaceRef:
-        kind: ContextSpace
-        name: sharing-bikes
+    - contextSpaceRef: { kind: ContextSpace, name: sharing-bikes }
       types: [BikeHireDockingStation]
       attrs: [name, location]
       operations: [queryEntity, retrieveEntity]

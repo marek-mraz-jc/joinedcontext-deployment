@@ -6,12 +6,18 @@ kind: Policy
 metadata:
   name: bikes-ops-steward
   namespace: helsinki
-  title: { en: "The steward sets a station's status" }
+  title: { en: The steward sets a station's status }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: helsinki }
   assigner: did:web:{orgDomain}
   assignee: { kind: user, id: demo.steward@hel.fi }
-  operations: [retrieveOps, updateAttrs, createSubscription, retrieveSubscription, updateSubscription, deleteSubscription]
+  operations:
+    - retrieveOps
+    - updateAttrs
+    - createSubscription
+    - retrieveSubscription
+    - updateSubscription
+    - deleteSubscription
   information:
     - entities:
         - type: BikeHireDockingStation

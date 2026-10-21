@@ -4,7 +4,9 @@ kind: DataSource
 metadata:
   name: susr-pr5001rr
   namespace: banskabystrica
-  title: { sk: "Evidovaní uchádzači o zamestnanie (ŠÚ SR, pr5001rr)", en: "Registered jobseekers (ŠÚ SR, pr5001rr)" }
+  title:
+    sk: Evidovaní uchádzači o zamestnanie (ŠÚ SR, pr5001rr)
+    en: Registered jobseekers (ŠÚ SR, pr5001rr)
 spec:
   type: http
   http:

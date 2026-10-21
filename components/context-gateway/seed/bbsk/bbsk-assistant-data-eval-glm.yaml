@@ -35,81 +35,730 @@ spec:
     Postup pri číslach: nájdi dataset v katalógu, potom cez nástroje list_types a get_type zisti typ a atribúty a query_entities vráti hodnoty. Uveď vydavateľa a odkaz na dataset.
   # portal = every dataset of data.dev (CKAN, all organizations); catalogue = each body's public
   # Endpoints described from this repository.
-  sources: [portal, catalogue, banskabystrica/catalogue, zilina/catalogue, praha/catalogue, helsinki/catalogue, slovensko/catalogue, web, banskabystrica/web, zilina/web, praha/web, helsinki/web]
+  sources:
+    - portal
+    - catalogue
+    - banskabystrica/catalogue
+    - zilina/catalogue
+    - praha/catalogue
+    - helsinki/catalogue
+    - slovensko/catalogue
+    - web
+    - banskabystrica/web
+    - zilina/web
+    - praha/web
+    - helsinki/web
   # Read-only tools on every publisher's public open-data Endpoints: the members of each body's
   # public MCP server, and the city Endpoints its own public assistant reads (T-4256, T-4281).
   # `public-air` is no member: the smoke run and the ETSI suite write test entities through it.
   connectors:
-    - { endpoint: bbsk-registre, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: bbsk-kraj-verejne, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: bbsk-kpi, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: bbsk-otvorene-data, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: banskabystrica/banskabystrica-verejne, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: banskabystrica/banskabystrica-otvorene-data, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: zilina/zilina-verejne, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: zilina/zilina-kpi, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: zilina/zilina-uniza, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: praha/praha-mesto, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: helsinki/helsinki-weather, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: helsinki/helsinki-events, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: helsinki/helsinki-bikes, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: helsinki/helsinki-transport, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: helsinki/helsinki-beach-water, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/ovzdusie-sk, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/slovensko-podujatia, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/catalog, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-as, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-cr, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-cr-navstevnici, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-do, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-do-preprava, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-en, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-ik, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-kp, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-kp-priemysel, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-ku, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-kz, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-kz-zdravie, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-np, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-nu, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-nu-odvetvia, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-ob, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-od, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-og, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-om, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-om-pohyb, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-pl, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-pm, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-pm-ceny, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-pr, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-pr-mzdy, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-ps, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-ps-vydavky, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-ra, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-sk, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-so, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-sp, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-sp-jadrova, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-st, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-st-povolenia, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-sv, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-ts, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-vh, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-vt, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-vt-pracovnici, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-zd, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-zo, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-zo-kapitoly, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-zo-krajiny, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-zp, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-    - { endpoint: slovensko/susr-zp-emisie, tools: [list_types, get_type, list_attributes, describe_schema, query_entities, summarize, get_entity, query_temporal], timeoutSeconds: 20 }
-  scope: { projects: [banskabystrica, zilina, praha, helsinki, slovensko] }
-  allowedOrigins: [https://opendata.dev.joinedcontext.com]
+    - endpoint: bbsk-registre
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: bbsk-kraj-verejne
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: bbsk-kpi
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: bbsk-otvorene-data
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: banskabystrica/banskabystrica-verejne
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: banskabystrica/banskabystrica-otvorene-data
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: zilina/zilina-verejne
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: zilina/zilina-kpi
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: zilina/zilina-uniza
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: praha/praha-mesto
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: helsinki/helsinki-weather
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: helsinki/helsinki-events
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: helsinki/helsinki-bikes
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: helsinki/helsinki-transport
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: helsinki/helsinki-beach-water
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/ovzdusie-sk
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/slovensko-podujatia
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/catalog
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-as
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-cr
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-cr-navstevnici
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-do
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-do-preprava
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-en
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-ik
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-kp
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-kp-priemysel
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-ku
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-kz
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-kz-zdravie
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-np
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-nu
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-nu-odvetvia
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-ob
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-od
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-og
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-om
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-om-pohyb
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-pl
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-pm
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-pm-ceny
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-pr
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-pr-mzdy
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-ps
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-ps-vydavky
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-ra
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-sk
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-so
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-sp
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-sp-jadrova
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-st
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-st-povolenia
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-sv
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-ts
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-vh
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-vt
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-vt-pracovnici
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-zd
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-zo
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-zo-kapitoly
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-zo-krajiny
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-zp
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/susr-zp-emisie
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+  scope:
+    projects: [banskabystrica, zilina, praha, helsinki, slovensko]
+  allowedOrigins:
+    - https://opendata.dev.joinedcontext.com
   # The city assistants' limits (T-4149 item 1, T-4286: 300 questions per visitor a month by
   # default); $1 a day, inside the key's $5 with the four city assistants. One data question
   # over five publishers measured 33,744 tokens on dev (2026-10-16, 5 model calls), so a
   # conversation gets twice the cities' 40,000; the day's cost cap still binds first.
-  rateLimit: { requestsPerMinute: 30, perClientPerMinute: 10, perClientPerHour: 60, perClientPerDay: 200, streamsPerClient: 2 }
+  rateLimit:
+    requestsPerMinute: 30
+    perClientPerMinute: 10
+    perClientPerHour: 60
+    perClientPerDay: 200
+    streamsPerClient: 2
   budget:
     tokensPerDay: 5000000
     tokensPerConversation: 3000000
@@ -117,31 +766,33 @@ spec:
     outputTokensPerAnswer: 700
     messagesPerConversation: 30
     questionChars: 1000
-  model: { router: z-ai/glm-5.3, answer: z-ai/glm-5.3, provider: { order: [mistral, nebius], allowFallbacks: false } }
+  model:
+    router: z-ai/glm-5.3
+    answer: z-ai/glm-5.3
+    provider:
+      order: [mistral, nebius]
+      allowFallbacks: false
   # No city in the header or the greeting (owner: "nie pre konkrétne mesto"), and no host name
   # either (owner 2026-10-18: "remove data.dev and just write open data", T-4635); the widget
   # writes "Asistent"/"Assistant" beside the title. Title and greeting per language (T-4365).
   theme:
-    title:
-      sk: "Otvorené dáta"
-      en: "Open data"
-      fi: "Avoin data"
+    title: { sk: Otvorené dáta, en: Open data, fi: Avoin data }
     greeting:
-      sk: "Dobrý deň! Pýtajte sa na otvorené dáta zo všetkých miest a krajov v katalógu."
-      en: "Hello! Ask about the open data of every city and region in the catalogue."
-      fi: "Hei! Kysy kaikkien katalogin kaupunkien ja alueiden avoimesta datasta."
+      sk: Dobrý deň! Pýtajte sa na otvorené dáta zo všetkých miest a krajov v katalógu.
+      en: Hello! Ask about the open data of every city and region in the catalogue.
+      fi: Hei! Kysy kaikkien katalogin kaupunkien ja alueiden avoimesta datasta.
   suggestions:
     sk:
-      - "Koľko mostov je v registri mostov BBSK?"
-      - "Ako pripojím katalóg cez MCP do Clauda?"
+      - Koľko mostov je v registri mostov BBSK?
+      - Ako pripojím katalóg cez MCP do Clauda?
     en:
-      - "How many bridges are in the BBSK bridge register?"
-      - "How do I add the catalogue to Claude via MCP?"
+      - How many bridges are in the BBSK bridge register?
+      - How do I add the catalogue to Claude via MCP?
     fi:
-      - "Montako siltaa BBSK:n siltarekisterissä on?"
-      - "Miten yhdistän katalogin Claudeen MCP:n kautta?"
+      - Montako siltaa BBSK:n siltarekisterissä on?
+      - Miten yhdistän katalogin Claudeen MCP:n kautta?
   disclaimer:
-    sk: "Odpovede tvorí umelá inteligencia z katalógu a z otvorených dát jeho vydavateľov. Môžu obsahovať chyby, overte si ich v uvedených zdrojoch. Nezadávajte osobné údaje."
-    en: "Answers are written by AI from the catalogue and its publishers' open data. They may contain mistakes; check them in the linked sources. Do not enter personal data."
-    fi: "Vastaukset kirjoittaa tekoäly katalogista ja sen julkaisijoiden avoimesta datasta. Niissä voi olla virheitä; tarkista ne linkitetyistä lähteistä. Älä anna henkilötietoja."
+    sk: Odpovede tvorí umelá inteligencia z katalógu a z otvorených dát jeho vydavateľov. Môžu obsahovať chyby, overte si ich v uvedených zdrojoch. Nezadávajte osobné údaje.
+    en: Answers are written by AI from the catalogue and its publishers' open data. They may contain mistakes; check them in the linked sources. Do not enter personal data.
+    fi: Vastaukset kirjoittaa tekoäly katalogista ja sen julkaisijoiden avoimesta datasta. Niissä voi olla virheitä; tarkista ne linkitetyistä lähteistä. Älä anna henkilötietoja.
   languages: [sk, en, fi]

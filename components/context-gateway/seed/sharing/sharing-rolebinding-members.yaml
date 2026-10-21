@@ -9,5 +9,4 @@ spec:
     - user: demo.member@hel.fi
     - user: demo.author@hel.fi
   role: viewer
-  scope:
-    project: sharing
+  scope: { project: sharing }

@@ -4,7 +4,9 @@ kind: DataSource
 metadata:
   name: susr-om7103rr
   namespace: zilina
-  title: { sk: "Pohyb obyvateľstva v obciach (ŠÚ SR, om7103rr)", en: "Population movement in municipalities (ŠÚ SR, om7103rr)" }
+  title:
+    sk: Pohyb obyvateľstva v obciach (ŠÚ SR, om7103rr)
+    en: Population movement in municipalities (ŠÚ SR, om7103rr)
 spec:
   type: http
   http:

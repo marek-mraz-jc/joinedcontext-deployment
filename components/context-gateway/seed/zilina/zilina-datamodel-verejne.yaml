@@ -3,7 +3,7 @@ kind: DataModel
 metadata:
   name: zilina-verejne
   namespace: zilina
-  title: { sk: "Otvorené dáta Žiliny", en: "Open data of Žilina" }
+  title: { sk: Otvorené dáta Žiliny, en: Open data of Žilina }
 spec:
   contextSpaceRef: zilina-verejne
   linkml: ./zilina-verejne.linkml.yaml

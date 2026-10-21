@@ -3,7 +3,7 @@ kind: DataModel
 metadata:
   name: statistical-observation
   namespace: zilina
-  title: { sk: "Štatistické pozorovanie", en: "Statistical observation" }
+  title: { sk: Štatistické pozorovanie, en: Statistical observation }
 spec:
   contextSpaceRef: zilina-mesto
   linkml: ./statistical-observation.linkml.yaml

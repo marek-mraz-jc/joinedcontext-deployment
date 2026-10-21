@@ -4,16 +4,13 @@ kind: Pipeline
 metadata:
   name: liipi-utilizations
   namespace: helsinki
-  title: { en: "Park and ride free spaces into the space, every 5 min" }
+  title:
+    en: Park and ride free spaces into the space, every 5 min
 spec:
   class: auto
   period: 300s
   source:
     dataSourceRef: { kind: DataSource, name: liipi-utilizations }
   targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
-  output:
-    type: OffStreetParking
-    mode: upsert
-  quotas:
-    maxMemoryMb: 64
-    cpuMillicores: 100
+  output: { type: OffStreetParking, mode: upsert }
+  quotas: { maxMemoryMb: 64, cpuMillicores: 100 }

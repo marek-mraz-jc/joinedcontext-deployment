@@ -3,35 +3,23 @@ kind: Policy
 metadata:
   name: app-bbsk-zaznamy-1
   namespace: bbsk
-  annotations:
-    joinedcontext.com/generated-by: portal/app-reconciler
+  annotations: { joinedcontext.com/generated-by: portal/app-reconciler }
 spec:
   assignee:
     id: endpoint:bbsk/app-bbsk-zaznamy
     kind: role
   assigner: did:web:bbsk.sk
-  contextSpaceRef:
-    kind: ContextSpace
-    name: bbsk-kraj
+  contextSpaceRef: { kind: ContextSpace, name: bbsk-kraj }
   information:
-  - entities:
-    - type: KeyPerformanceIndicator
-    propertyNames:
-    - indicator
-    - refArea
-    - refPeriod
-    - kpiValue
-    - unitText
-    - dateObserved
-    - stewardNote
-    relationshipNames:
-    - indicator
-    - refArea
-    - refPeriod
-    - kpiValue
-    - unitText
-    - dateObserved
-    - stewardNote
-  operations:
-  - queryEntity
-  - retrieveEntity
+    - entities:
+        - type: KeyPerformanceIndicator
+      propertyNames: [indicator, refArea, refPeriod, kpiValue, unitText, dateObserved, stewardNote]
+      relationshipNames:
+        - indicator
+        - refArea
+        - refPeriod
+        - kpiValue
+        - unitText
+        - dateObserved
+        - stewardNote
+  operations: [queryEntity, retrieveEntity]

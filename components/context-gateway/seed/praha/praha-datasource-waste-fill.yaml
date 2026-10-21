@@ -12,7 +12,9 @@ kind: DataSource
 metadata:
   name: golemio-waste-containers
   namespace: praha
-  title: { en: "Waste container fill levels (Golemio)", cs: "Zaplněnost kontejnerů na tříděný odpad (Golemio)" }
+  title:
+    en: Waste container fill levels (Golemio)
+    cs: Zaplněnost kontejnerů na tříděný odpad (Golemio)
 spec:
   type: http
   http:

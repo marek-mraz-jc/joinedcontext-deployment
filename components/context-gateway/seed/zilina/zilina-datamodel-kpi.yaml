@@ -3,7 +3,7 @@ kind: DataModel
 metadata:
   name: key-performance-indicator
   namespace: zilina
-  title: { sk: "Ukazovateľ", en: "Indicator" }
+  title: { sk: Ukazovateľ, en: Indicator }
 spec:
   contextSpaceRef: zilina-kpi
   linkml: ./key-performance-indicator.linkml.yaml

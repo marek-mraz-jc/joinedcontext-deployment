@@ -15,8 +15,7 @@ pipeline:
     - mapping: |
         let pages = this._embedded.searchResult.page.totalPages.or(1).int64()
         root = if $pages <= 1 { [this] } else { [this].concat(range(1, $pages).map_each(p -> { "page": p })) }
-    - unarchive:
-        format: json_array
+    - unarchive: { format: json_array }
     - switch:
         - check: this.page.or(null) != null
           processors:
@@ -26,8 +25,7 @@ pipeline:
             - http:
                 url: https://dspace.uniza.sk/server/api/discover/search/objects?dsoType=ITEM&size=100&embed=owningCollection&page=${! @page }
                 verb: GET
-                headers:
-                  Accept: application/json
+                headers: { Accept: application/json }
                 timeout: 60s
                 retries: 2
                 rate_limit: pipeline_egress
@@ -37,8 +35,7 @@ pipeline:
 
     - mapping: |
         root = this._embedded.searchResult._embedded.objects.map_each(o -> o._embedded.indexableObject)
-    - unarchive:
-        format: json_array
+    - unarchive: { format: json_array }
 
     - mapping: |
         # CC BY and CC BY-SA in any version, CC0 and the Public Domain Mark: the licences that let
@@ -76,5 +73,4 @@ pipeline:
         }.filter(entry -> entry.value != null)
 
     # One request per run's batch rather than one per work.
-    - archive:
-        format: json_array
+    - archive: { format: json_array }

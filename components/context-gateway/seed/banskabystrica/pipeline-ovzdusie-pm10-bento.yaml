@@ -11,8 +11,7 @@
 pipeline:
   processors:
     - parquet_decode: {}
-    - archive:
-        format: json_array
+    - archive: { format: json_array }
     - mapping: |
         let attribute = "pm10"
         let station = "SK0263A"

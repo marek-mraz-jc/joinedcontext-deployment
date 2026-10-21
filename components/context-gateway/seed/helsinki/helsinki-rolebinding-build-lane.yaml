@@ -9,5 +9,4 @@ spec:
   subjects:
     - user: service-account-jc-build-lane
   role: build-lane
-  scope:
-    organization: hel
+  scope: { organization: hel }

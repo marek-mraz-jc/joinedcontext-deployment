@@ -26,8 +26,7 @@ pipeline:
           - http:
               url: https://rageo.minv.sk/opendata/dataset/address_by_lau2_SK031B517402.geojson
               verb: GET
-              headers:
-                Accept: application/geo+json
+              headers: { Accept: application/geo+json }
               timeout: 120s
               retries: 2
               rate_limit: pipeline_egress

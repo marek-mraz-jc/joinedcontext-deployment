@@ -62,7 +62,7 @@ def kataster(first: dict | None = None, status: int = 200, third: str | None = "
     threading.Thread(target=server.serve_forever, daemon=True).start()
     try:
         # The fetch goes to the stand-in; the `source` each parcel names stays the service's own.
-        text = MAPPING.read_text().replace(f'url: "{SERVICE}', f'url: "http://127.0.0.1:{server.server_port}')
+        text = MAPPING.read_text().replace(f'url: {SERVICE}', f'url: http://127.0.0.1:{server.server_port}')
         if third is not None:
             text = text.replace("let third = (timestamp_unix() / 28800).floor() % $thirds", f"let third = {third}")
         config = {

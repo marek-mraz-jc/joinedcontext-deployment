@@ -11,5 +11,4 @@ spec:
   subjects:
     - user: demo.approver@hel.fi
   role: approver
-  scope:
-    organization: hel
+  scope: { organization: hel }

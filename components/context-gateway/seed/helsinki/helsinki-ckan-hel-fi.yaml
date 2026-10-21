@@ -6,13 +6,10 @@ kind: CkanInstance
 metadata:
   name: hel-fi
   namespace: helsinki
-  title: { en: "Helsinki Region Context catalogue" }
+  title: { en: Helsinki Region Context catalogue }
 spec:
   url: https://opendata.dev.joinedcontext.com
   organizationDefault: hel-fi
   # The reconciler resolves the reference from the secret store; a run from a shell reads
   # the variable named here instead, which is how the integrator publishes from the sandbox.
-  apiTokenRef:
-    name: ckan-api-token
-    key: token
-    envVar: CKAN_API_TOKEN
+  apiTokenRef: { name: ckan-api-token, key: token, envVar: CKAN_API_TOKEN }

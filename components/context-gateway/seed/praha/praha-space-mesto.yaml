@@ -6,7 +6,7 @@ kind: ContextSpace
 metadata:
   name: praha-mesto
   namespace: praha
-  title: { cs: "Praha — městská data", en: "Prague city data" }
+  title: { cs: Praha — městská data, en: Prague city data }
   description:
     cs: >-
       Sdílená kola, kvalita ovzduší, městské části, školy, kultura, veřejné toalety, tříděný
@@ -31,7 +31,7 @@ spec:
   # other type keeps its current state only. Owners change it on the space's Retention tab.
   retention:
     - entityType: AdministrativeArea
-      history: "off"
+      history: 'off'
     - entityType: AirQualityObserved
       history: P30D
       # Written on every run without an observedAt: one row per change and one a week,
@@ -57,7 +57,7 @@ spec:
         status: { record: onChange, heartbeat: P7D }
         totalSlotNumber: { record: onChange, heartbeat: P7D }
     - entityType: BudgetLine
-      history: "off"
+      history: 'off'
     - entityType: OffStreetParking
       history: P30D
       # Written on every run without an observedAt: one row per change and one a week,
@@ -72,11 +72,11 @@ spec:
         source: { record: onChange, heartbeat: P7D }
         totalSpotNumber: { record: onChange, heartbeat: P7D }
     - entityType: PointOfInterest
-      history: "off"
+      history: 'off'
     - entityType: WasteContainer
-      history: "off"
+      history: 'off'
     - entityType: WasteContainerIsle
-      history: "off"
+      history: 'off'
   # The space's place (T-4525): the catalogue's Dataset carries it, so georel=near finds the space.
   # Prague with a margin; a BikeHireDockingStation outside it is flagged, never refused (DM-87).
   quality:

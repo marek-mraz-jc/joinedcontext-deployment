@@ -7,7 +7,9 @@ kind: DataSource
 metadata:
   name: ipr-waste-stations
   namespace: praha
-  title: { en: "Sorted-waste collection points (MHMP, IPR Praha)", cs: "Stanoviště tříděného odpadu (MHMP, IPR Praha)" }
+  title:
+    en: Sorted-waste collection points (MHMP, IPR Praha)
+    cs: Stanoviště tříděného odpadu (MHMP, IPR Praha)
 spec:
   type: http
   http:

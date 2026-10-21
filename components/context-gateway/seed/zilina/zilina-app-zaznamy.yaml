@@ -13,37 +13,46 @@ kind: App
 metadata:
   name: zilina-zaznamy
   namespace: zilina
+  title: { sk: Otvorené dáta o Žiline, en: Open data about Žilina }
+  description:
+    sk: Pamiatky, železničné stanice, ovzdušie a publikácie univerzity ako tabuľky s filtrom v každom stĺpci a celým súborom na stiahnutie.
+    en: Monuments, railway stations, air quality and the university's works as tables with a filter in each column and the whole dataset to download.
   annotations:
     # The Portal image ships this bundle (Dockerfile, /srv/apps), so the App names no
     # repository of its own; the Portal accepts the mark only where the bundle is (AP-87).
     joinedcontext.com/shipped-with: portal
-  title:
-    sk: "Otvorené dáta o Žiline"
-    en: "Open data about Žilina"
-  description:
-    sk: "Pamiatky, železničné stanice, ovzdušie a publikácie univerzity ako tabuľky s filtrom v každom stĺpci a celým súborom na stiahnutie."
-    en: "Monuments, railway stations, air quality and the university's works as tables with a filter in each column and the whole dataset to download."
 spec:
   kind: ui
   source:
     path: ./apps/zilina-zaznamy
-  build:
-    node: "22"
+  build: { node: '22' }
   visibility: public
   lifecycle: published
   embeddable: true
   dataNeeds:
     # Each dataset's columns (ui/src/datasets.ts), read only.
-    - contextSpaceRef:
-        kind: ContextSpace
-        name: zilina-verejne
+    - contextSpaceRef: { kind: ContextSpace, name: zilina-verejne }
       types: [PointOfInterest, GtfsStop, AirQualityObserved]
-      attrs: [name, monumentKind, architecturalStyle, constructionPeriod, cadastralArea, ownershipForm, monumentNumber, address, dailyDepartures, stopCode, pm10, pm25, no2, o3, co, dateObserved]
+      attrs:
+        - name
+        - monumentKind
+        - architecturalStyle
+        - constructionPeriod
+        - cadastralArea
+        - ownershipForm
+        - monumentNumber
+        - address
+        - dailyDepartures
+        - stopCode
+        - pm10
+        - pm25
+        - no2
+        - o3
+        - co
+        - dateObserved
       operations: [queryEntity, retrieveEntity]
       representations: [ngsi-ld, ogc-features]
-    - contextSpaceRef:
-        kind: ContextSpace
-        name: zilina-uniza
+    - contextSpaceRef: { kind: ContextSpace, name: zilina-uniza }
       types: [Article]
       attrs: [name, workType, yearPublished, isPartOf, publisher, license, url]
       operations: [queryEntity, retrieveEntity]

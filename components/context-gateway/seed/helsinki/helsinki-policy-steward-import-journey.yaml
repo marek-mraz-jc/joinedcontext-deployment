@@ -7,7 +7,7 @@ kind: Policy
 metadata:
   name: steward-import-journey
   namespace: helsinki
-  title: { en: "The steward imports and removes journey 41's test places" }
+  title: { en: The steward imports and removes journey 41's test places }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: helsinki }
   assigner: did:web:{orgDomain}
@@ -16,4 +16,4 @@ spec:
   information:
     - entities:
         - type: PointOfInterest
-          idPattern: "^urn:ngsi-ld:PointOfInterest:[a-z0-9.-]+:helsinki:j41-[a-z0-9-]+$"
+          idPattern: ^urn:ngsi-ld:PointOfInterest:[a-z0-9.-]+:helsinki:j41-[a-z0-9-]+$

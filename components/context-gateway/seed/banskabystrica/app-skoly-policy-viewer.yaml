@@ -3,35 +3,30 @@ kind: Policy
 metadata:
   name: app-banskabystrica-skoly-1-viewer
   namespace: banskabystrica
-  annotations:
-    joinedcontext.com/generated-by: portal/app-reconciler
+  annotations: { joinedcontext.com/generated-by: portal/app-reconciler }
 spec:
   assignee:
     id: endpoint:banskabystrica/app-banskabystrica-skoly/viewer
     kind: role
   assigner: did:web:banskabystrica.sk
-  contextSpaceRef:
-    kind: ContextSpace
-    name: banskabystrica-verejne
+  contextSpaceRef: { kind: ContextSpace, name: banskabystrica-verejne }
   information:
-  - entities:
-    - type: Organization
-    propertyNames:
-    - name
-    - address
-    - pupilCount
-    - teachingStaff
-    - nonTeachingStaff
-    - annualBudget
-    - budgetYear
-    relationshipNames:
-    - name
-    - address
-    - pupilCount
-    - teachingStaff
-    - nonTeachingStaff
-    - annualBudget
-    - budgetYear
-  operations:
-  - queryEntity
-  - retrieveEntity
+    - entities:
+        - type: Organization
+      propertyNames:
+        - name
+        - address
+        - pupilCount
+        - teachingStaff
+        - nonTeachingStaff
+        - annualBudget
+        - budgetYear
+      relationshipNames:
+        - name
+        - address
+        - pupilCount
+        - teachingStaff
+        - nonTeachingStaff
+        - annualBudget
+        - budgetYear
+  operations: [queryEntity, retrieveEntity]

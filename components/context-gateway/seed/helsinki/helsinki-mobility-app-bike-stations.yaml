@@ -15,30 +15,32 @@ kind: App
 metadata:
   name: bike-stations
   namespace: helsinki-mobility
+  title: { en: City bike stations, fi: Kaupunkipyöräasemat }
+  description:
+    en: Free bikes and free docks at every HSL city bike station on a map and in a searchable list, read from the stations the helsinki project shares.
+    fi: Vapaat pyörät ja telineet jokaisella HSL:n kaupunkipyöräasemalla kartalla ja haettavana listana helsinki-projektin jakamista asemista.
   annotations:
     # The Portal image ships this bundle (Dockerfile, /srv/apps), so the App names no
     # repository of its own; the Portal accepts the mark only where the bundle is (AP-87).
     joinedcontext.com/shipped-with: portal
-  title:
-    en: "City bike stations"
-    fi: "Kaupunkipyöräasemat"
-  description:
-    en: "Free bikes and free docks at every HSL city bike station on a map and in a searchable list, read from the stations the helsinki project shares."
-    fi: "Vapaat pyörät ja telineet jokaisella HSL:n kaupunkipyöräasemalla kartalla ja haettavana listana helsinki-projektin jakamista asemista."
 spec:
   kind: ui
   source:
     path: ./apps/bike-stations
-  build:
-    node: "22"
+  build: { node: '22' }
   visibility: project
   lifecycle: published
   embeddable: true
   dataNeeds:
-    - contextSpaceRef:
-        kind: ContextSpace
-        name: mobility
+    - contextSpaceRef: { kind: ContextSpace, name: mobility }
       types: [BikeHireDockingStation]
-      attrs: [name, location, availableBikeNumber, freeSlotNumber, totalSlotNumber, status, dateModified]
+      attrs:
+        - name
+        - location
+        - availableBikeNumber
+        - freeSlotNumber
+        - totalSlotNumber
+        - status
+        - dateModified
       operations: [queryEntity, retrieveEntity]
       representations: [ngsi-ld, ogc-features]

@@ -40,8 +40,7 @@ slots:
     slot_uri: jc:indicator
     description: The publisher's own code for the measure, such as `ODPAD_TONY_KM2`.
     required: true
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   refArea:
     slot_uri: sdmx-dim:refArea
     description: >-
@@ -65,8 +64,7 @@ slots:
       hyphen and in the cube's own dimension order, such as `1` for the solid-emissions
       pollutant. It is the tail of the `{localId}`, repeated here so a query can select a slice
       without matching on an id pattern. Absent when the table has no further dimension.
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   kpiValue:
     slot_uri: sdm-kpi:kpiValue
     description: >-
@@ -80,21 +78,18 @@ slots:
   unitText:
     slot_uri: jc:unitText
     description: The unit in the publisher's own words, such as `v tis. m3`, kept because a UN/CEFACT code loses the scale factor.
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   source:
     slot_uri: jc:source
     description: The exact URL the row was fetched from, with its query, so the cell can be fetched again.
     required: true
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   dateObserved:
     slot_uri: jc:dateObserved
     description: When the publisher last updated the table, as the table itself reports it.
     range: datetime
     required: true
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
 
   stewardNote:
     slot_uri: jc:stewardNote
@@ -104,9 +99,8 @@ slots:
       an application may offer it for editing without the next run silently taking the words
       back (AP-62, EP-14). Every figure beside it belongs to the publisher and is read-only.
       At most 500 characters and no angle brackets, because it is a note and not a document.
-    pattern: "^[^<>]{0,500}$"
-    annotations:
-      ngsi_ld_kind: Property
+    pattern: ^[^<>]{0,500}$
+    annotations: { ngsi_ld_kind: Property }
 
 classes:
   KeyPerformanceIndicator:

@@ -4,7 +4,8 @@ kind: Pipeline
 metadata:
   name: gtfs-shapes
   namespace: helsinki
-  title: { en: "HSL route shapes from GTFS, daily" }
+  title:
+    en: HSL route shapes from GTFS, daily
 spec:
   class: auto
   # Paused: the runner refuses shapes.txt until a member's inflate is bounded on its output
@@ -12,13 +13,11 @@ spec:
   enabled: false
   # Apart from transit-routes (Tuesdays 04:40), the other large mapping on the runner.
   period: 24h
-  schedule: "10 5 * * *"
+  schedule: '10 5 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: hsl-gtfs-shapes }
   targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
-  output:
-    type: GtfsShape
-    mode: upsert
+  output: { type: GtfsShape, mode: upsert }
   quotas:
     # 22 MB of CSV, cut per shape; Bento held 180 to 225 MB over its own baseline for it, for the
     # 4 s it runs (2026-10-12, Bento 1.22.0 locally, the member alone, three runs).

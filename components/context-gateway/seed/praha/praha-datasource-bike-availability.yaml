@@ -5,7 +5,9 @@ kind: DataSource
 metadata:
   name: nextbike-station-status
   namespace: praha
-  title: { en: "Bike availability (nextbike, GBFS)", cs: "Dostupnost kol (nextbike)" }
+  title:
+    en: Bike availability (nextbike, GBFS)
+    cs: Dostupnost kol (nextbike)
 spec:
   type: http
   http:

@@ -6,20 +6,11 @@ kind: Endpoint
 metadata:
   name: app-zilina-mapa
   namespace: zilina
-  annotations:
-    joinedcontext.com/generated-by: portal/app-reconciler
-  title:
-    en: Map of Žilina
-    sk: Mapa mesta Žilina
+  title: { en: Map of Žilina, sk: Mapa mesta Žilina }
+  annotations: { joinedcontext.com/generated-by: portal/app-reconciler }
 spec:
   audience: public
   callerRole: true
-  contextSpaceRef:
-    kind: ContextSpace
-    name: zilina-verejne
-  enabledRepresentations:
-  - ngsi-ld
-  - mcp
-  - ogc-features
-  - odata
+  contextSpaceRef: { kind: ContextSpace, name: zilina-verejne }
+  enabledRepresentations: [ngsi-ld, mcp, ogc-features, odata]
   slug: nepjcubhzaptj2qsytzkfk5htu

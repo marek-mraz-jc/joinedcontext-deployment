@@ -8,9 +8,7 @@
 pipeline:
   processors:
     # XML to JSON; the namespace prefixes (wfs:, BsWfs:, gml:) are dropped on the way.
-    - xml:
-        operator: to_json
-        cast: false
+    - xml: { operator: to_json, cast: false }
 
     - mapping: |
         let domain = env("JC_ORG_DOMAIN")

@@ -6,10 +6,10 @@ kind: Endpoint
 metadata:
   name: bbsk-registre
   namespace: bbsk
-  title: { sk: "Registre kraja", en: "Registers of the region" }
+  title: { sk: Registre kraja, en: Registers of the region }
   # The dataset's notes in the catalogue, through this endpoint's DCAT-AP record (EP-27).
   description:
-    sk: "Hranice okresov a obcí, organizácie kraja, nemocnice, sociálne služby verejných poskytovateľov a mosty. Zdroj: Banskobystrický samosprávny kraj, https://opendata.bbsk.sk/, CC BY-SA 4.0."
+    sk: 'Hranice okresov a obcí, organizácie kraja, nemocnice, sociálne služby verejných poskytovateľov a mosty. Zdroj: Banskobystrický samosprávny kraj, https://opendata.bbsk.sk/, CC BY-SA 4.0.'
     en: "District and municipality outlines, the region's organisations, hospitals, the social services of public providers and bridges. Source: Banská Bystrica Self-Governing Region, https://opendata.bbsk.sk/, CC BY-SA 4.0."
 spec:
   contextSpaceRef: bbsk-registre
@@ -27,15 +27,22 @@ spec:
     # Not a catalogue dataset: a door over the space; T-4344 split its types into datasets of their own, read by the Apps.
     # Its own record stays; the harvest feeds leave it out (EP-139, T-4744).
     harvest: false
-    publisher: { name: { sk: "Banskobystrický samosprávny kraj", en: "Banská Bystrica Self-Governing Region" }, uri: "https://www.bbsk.sk/" }
+    publisher:
+      name: { sk: Banskobystrický samosprávny kraj, en: Banská Bystrica Self-Governing Region }
+      uri: https://www.bbsk.sk/
     license: CC_BYSA_4_0
     attribution:
-      sk: "Zdroj: Banskobystrický samosprávny kraj, https://opendata.bbsk.sk/, CC BY-SA 4.0"
-      en: "Source: Banská Bystrica Self-Governing Region, https://opendata.bbsk.sk/, CC BY-SA 4.0"
+      sk: 'Zdroj: Banskobystrický samosprávny kraj, https://opendata.bbsk.sk/, CC BY-SA 4.0'
+      en: 'Source: Banská Bystrica Self-Governing Region, https://opendata.bbsk.sk/, CC BY-SA 4.0'
     themes: [REGI, GOVE, HEAL, SOCI, TRAN]
     keywords:
-      sk: ["hranice okresov", "obce", "organizácie kraja", "nemocnice", "sociálne služby", "mosty"]
-      en: ["district boundaries", "municipalities", "regional organisations", "hospitals", "social services", "bridges"]
-    spatial:
-      - SK032
+      sk: [hranice okresov, obce, organizácie kraja, nemocnice, sociálne služby, mosty]
+      en:
+        - district boundaries
+        - municipalities
+        - regional organisations
+        - hospitals
+        - social services
+        - bridges
+    spatial: [SK032]
     frequency: WEEKLY

@@ -7,6 +7,5 @@ metadata:
   namespace: org
 spec:
   rules:
-    - kinds:
-        - App
+    - kinds: [App]
       verbs: [propose]

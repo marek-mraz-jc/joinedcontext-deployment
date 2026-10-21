@@ -4,7 +4,9 @@ kind: DataSource
 metadata:
   name: eea-sk0020a-no2
   namespace: zilina
-  title: { sk: "NO2, SK0020A (EEA)", en: "NO2, SK0020A (EEA)" }
+  title:
+    sk: NO2, SK0020A (EEA)
+    en: NO2, SK0020A (EEA)
 spec:
   type: http
   http:

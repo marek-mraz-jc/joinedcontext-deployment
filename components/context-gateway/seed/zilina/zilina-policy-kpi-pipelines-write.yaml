@@ -3,7 +3,7 @@ kind: Policy
 metadata:
   name: kpi-pipelines-write
   namespace: zilina
-  title: { sk: "Kanály zapisujú priestor zilina-kpi", en: "The pipelines write zilina-kpi" }
+  title: { sk: Kanály zapisujú priestor zilina-kpi, en: The pipelines write zilina-kpi }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: zilina-kpi }
   assigner: did:web:zilina.sk

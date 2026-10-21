@@ -14,7 +14,9 @@ kind: Policy
 metadata:
   name: mesto-steward-read
   namespace: banskabystrica
-  title: { sk: "Správca údajov číta zdrojové riadky mesta", en: "The data steward reads the city's raw rows" }
+  title:
+    sk: Správca údajov číta zdrojové riadky mesta
+    en: The data steward reads the city's raw rows
 spec:
   contextSpaceRef: { kind: ContextSpace, name: banskabystrica-mesto }
   assigner: did:web:banskabystrica.sk
@@ -25,12 +27,28 @@ spec:
   # (helsinki-policy-bikes-ops-steward.yaml) names the person for the same reason, and
   # `{orgDomain}` is rendered out of every spec when the repository is loaded, by the
   # gateway as well as by jcctl (jcctl loader.rs `render_in_place`, CC-74).
-  assignee: { kind: user, id: "demo.steward@{orgDomain}" }
-  operations: [retrieveOps, createSubscription, retrieveSubscription, updateSubscription, deleteSubscription]
+  assignee:
+    kind: user
+    id: demo.steward@{orgDomain}
+  operations:
+    - retrieveOps
+    - createSubscription
+    - retrieveSubscription
+    - updateSubscription
+    - deleteSubscription
   information:
     - entities:
         - type: KeyPerformanceIndicator
       # The columns the records application shows and filters on. A filter names an attribute,
       # so an attribute missing here is a filter the endpoint refuses rather than answers.
       propertyNames:
-        [dataSet, indicator, refArea, refPeriod, dimensionKey, kpiValue, unitText, source, dateObserved, stewardNote]
+        - dataSet
+        - indicator
+        - refArea
+        - refPeriod
+        - dimensionKey
+        - kpiValue
+        - unitText
+        - source
+        - dateObserved
+        - stewardNote

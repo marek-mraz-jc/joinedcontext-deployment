@@ -4,7 +4,9 @@ kind: DataSource
 metadata:
   name: susr-pl5001rr
   namespace: banskabystrica
-  title: { sk: "Druhy pozemkov (ŠÚ SR, pl5001rr)", en: "Land by kind (ŠÚ SR, pl5001rr)" }
+  title:
+    sk: Druhy pozemkov (ŠÚ SR, pl5001rr)
+    en: Land by kind (ŠÚ SR, pl5001rr)
 spec:
   type: http
   http:

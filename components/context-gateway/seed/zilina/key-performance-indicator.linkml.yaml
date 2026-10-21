@@ -34,8 +34,7 @@ slots:
       The indicator's own name, equal to the `{localId}` of its id, so the territory is legible
       without parsing the URN.
     required: true
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   currentValue:
     slot_uri: jc:currentValue
     description: >-
@@ -60,8 +59,7 @@ slots:
     required: true
     range: CalculationPeriod
     inlined: true
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   calculationFormula:
     slot_uri: jc:calculationFormula
     description: >-
@@ -69,23 +67,19 @@ slots:
       the aggregation, the window and any divisor, such as `per km² of the district's own area`.
       English plain text: a table leaves it out, so a Slovak answer never shows English prose.
     required: true
-    annotations:
-      ngsi_ld_kind: Property
-      hidden: true
+    annotations: { ngsi_ld_kind: Property, hidden: true }
   derivedFrom:
     slot_uri: jc:derivedFrom
     description: >-
       The Endpoint the sources were read through, as its URN. The endpoint and not the space:
       what an indicator could see is what that endpoint's policy let it see.
     required: true
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   computedBy:
     slot_uri: jc:computedBy
     description: The Pipeline that computed it, as its URN.
     required: true
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   updatedAt:
     slot_uri: jc:updatedAt
     description: >-
@@ -94,8 +88,7 @@ slots:
       which is the visible fact that the source is static.
     range: datetime
     required: true
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   start:
     slot_uri: jc:start
     description: The first instant the window covers.
@@ -125,34 +118,62 @@ classes:
         rank: 1
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Názov", cs: "Název", fi: "Nimi", en: "Name" } }
+          label:
+            tag: label
+            value:
+              sk: Názov
+              cs: Název
+              fi: Nimi
+              en: Name
       currentValue:
         rank: 2
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Hodnota", cs: "Hodnota", fi: "Arvo", en: "Value" } }
+          label:
+            tag: label
+            value:
+              sk: Hodnota
+              cs: Hodnota
+              fi: Arvo
+              en: Value
       calculationPeriod:
         rank: 3
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Obdobie", cs: "Období", fi: "Jakso", en: "Period" } }
+          label:
+            tag: label
+            value:
+              sk: Obdobie
+              cs: Období
+              fi: Jakso
+              en: Period
       updatedAt:
         rank: 4
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Aktualizované", cs: "Aktualizováno", fi: "Päivitetty", en: "Updated" } }
+          label:
+            tag: label
+            value:
+              sk: Aktualizované
+              cs: Aktualizováno
+              fi: Päivitetty
+              en: Updated
       calculationFormula:
         annotations:
-          label: { tag: label, value: { sk: "Výpočet", cs: "Výpočet", fi: "Laskentakaava", en: "Formula" } }
+          label:
+            tag: label
+            value:
+              sk: Výpočet
+              cs: Výpočet
+              fi: Laskentakaava
+              en: Formula
 
   CalculationPeriod:
     class_uri: jc:CalculationPeriod
     description: >-
       The value of `calculationPeriod`: the window an indicator covers, never an entity of
       its own.
-    slots:
-      - start
-      - end
+    slots: [start, end]
 
   Any:
     class_uri: linkml:Any

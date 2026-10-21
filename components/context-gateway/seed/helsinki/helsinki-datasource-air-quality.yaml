@@ -7,7 +7,9 @@ kind: DataSource
 metadata:
   name: fmi-air-quality
   namespace: helsinki
-  title: { en: "Air quality stations (FMI open data)", fi: "Ilmanlaadun mittausasemat (Ilmatieteen laitos)" }
+  title:
+    en: Air quality stations (FMI open data)
+    fi: Ilmanlaadun mittausasemat (Ilmatieteen laitos)
 spec:
   type: http
   http:

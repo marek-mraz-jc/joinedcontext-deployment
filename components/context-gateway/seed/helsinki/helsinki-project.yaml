@@ -3,6 +3,6 @@ kind: Project
 metadata:
   name: helsinki
   namespace: org
-  title: { en: "Helsinki", sk: "Helsinki" }
+  title: { en: Helsinki, sk: Helsinki }
 spec:
   organizationRef: hel

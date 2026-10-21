@@ -4,10 +4,12 @@ kind: ContextSpace
 metadata:
   name: ovzdusie-sk
   namespace: slovensko
-  title: { sk: "Kvalita ovzdušia — Slovensko", en: "Air quality, Slovakia" }
+  title:
+    sk: Kvalita ovzdušia — Slovensko
+    en: Air quality, Slovakia
   description:
-    sk: "Hodinové koncentrácie PM10, PM2,5, NO2 a O3 na všetkých staniciach monitorovania kvality ovzdušia na Slovensku."
-    en: "Hourly concentrations of PM10, PM2.5, NO2 and O3 at every air-quality monitoring station in Slovakia."
+    sk: Hodinové koncentrácie PM10, PM2,5, NO2 a O3 na všetkých staniciach monitorovania kvality ovzdušia na Slovensku.
+    en: Hourly concentrations of PM10, PM2.5, NO2 and O3 at every air-quality monitoring station in Slovakia.
 spec:
   # The space name is the segment its ids carry, pinned so it cannot drift (PF-84).
   urnSegment: ovzdusie-sk

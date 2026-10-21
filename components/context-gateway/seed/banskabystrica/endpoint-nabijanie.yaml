@@ -7,10 +7,10 @@ kind: Endpoint
 metadata:
   name: banskabystrica-nabijanie
   namespace: banskabystrica
-  title: { sk: "Nabíjacie stanice — Banská Bystrica", en: "Charging stations — Banská Bystrica" }
+  title: { sk: Nabíjacie stanice — Banská Bystrica, en: Charging stations — Banská Bystrica }
   description:
-    sk: "Nabíjacie stanice pre elektromobily a elektrobicykle v okrese Banská Bystrica, ako ich mapuje OpenStreetMap, s typmi zásuviek a kapacitou, kde ich mapa uvádza, týždenne. © prispievatelia OpenStreetMap, ODbL 1.0."
-    en: "The charging stations for electric cars and bicycles in the district of Banská Bystrica as OpenStreetMap maps them, with socket types and capacity where the map gives them, weekly. © OpenStreetMap contributors, ODbL 1.0."
+    sk: Nabíjacie stanice pre elektromobily a elektrobicykle v okrese Banská Bystrica, ako ich mapuje OpenStreetMap, s typmi zásuviek a kapacitou, kde ich mapa uvádza, týždenne. © prispievatelia OpenStreetMap, ODbL 1.0.
+    en: The charging stations for electric cars and bicycles in the district of Banská Bystrica as OpenStreetMap maps them, with socket types and capacity where the map gives them, weekly. © OpenStreetMap contributors, ODbL 1.0.
 spec:
   contextSpaceRef: banskabystrica-verejne
   slug: plgaltgaom2rbfbpsnc7xn7ifoamabun
@@ -27,12 +27,13 @@ spec:
     # Aggregates of public facilities and readings: no record names a person (T-4596).
     personalData: does-not-contain
     license: ODC_ODBL
-    attribution: { sk: "© prispievatelia OpenStreetMap, ODbL 1.0 (openstreetmap.org/copyright)", en: "© OpenStreetMap contributors, ODbL 1.0 (openstreetmap.org/copyright)" }
+    attribution:
+      sk: © prispievatelia OpenStreetMap, ODbL 1.0 (openstreetmap.org/copyright)
+      en: © OpenStreetMap contributors, ODbL 1.0 (openstreetmap.org/copyright)
     themes: [TRAN]
     keywords:
-      sk: ["nabíjacia stanica", "elektromobilita", "OpenStreetMap", "Banská Bystrica"]
-      en: ["charging station", "electric vehicles", "OpenStreetMap", "Banská Bystrica"]
-    spatial:
-      - "SK032"
+      sk: [nabíjacia stanica, elektromobilita, OpenStreetMap, Banská Bystrica]
+      en: [charging station, electric vehicles, OpenStreetMap, Banská Bystrica]
+    spatial: [SK032]
     frequency: WEEKLY
     pipelineRef: { kind: Pipeline, name: osm }
