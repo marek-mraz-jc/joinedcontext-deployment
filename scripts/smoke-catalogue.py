@@ -445,7 +445,7 @@ class Run:
         self.previous, self.previous_at, self.now = previous, previous_at, now
         self.counts = {}  # dataset -> (platform count, how)
         self.shared = {}  # (slug, type) -> datasets without isPartOf
-        self.holders = {}  # type -> the public Endpoints whose dataset names it
+        self.holders = {}  # type -> (publisher, slug) of the public Endpoints whose dataset names it
         self.samples = {}  # dataset -> its NGSI-LD rows
         self.schemas = {}  # dataset -> its type's JSON Schema
 
@@ -561,8 +561,10 @@ class Run:
                 continue
             # The dataset's own Endpoint first, then each public one whose dataset is of that type: a
             # register's Endpoint serves its one type, its areas sit behind the areas' (T-4344, T-4745).
+            # The same publisher's first: Helsinki's beaches name Helsinki's places, not Prague's.
+            others = [slug for org, slug in sorted(self.holders.get(kind, []), key=lambda h: h[0] != data.org)]
             missing = dict(targets)
-            for slug in dict.fromkeys([data.slug, *self.holders.get(kind, [])][:1 + MAX_HOLDERS]):
+            for slug in list(dict.fromkeys([data.slug, *others]))[:1 + MAX_HOLDERS]:
                 query = {"type": kind, "id": ",".join(sorted(missing)), "limit": min(len(missing), 1000)}
                 answer = self.client.fetch(f"https://api.{self.domain}/api/endpoint/{slug}/ngsi-ld/v1/entities?"
                                            + urllib.parse.urlencode(query), limit=MAX_INVENTORY)
@@ -698,7 +700,7 @@ class Run:
         rows = {}
         for data in datasets:
             if data.type and data.slug in public:
-                self.holders.setdefault(data.type, []).append(data.slug)
+                self.holders.setdefault(data.type, []).append((data.org, data.slug))
         for data in datasets:
             row = rows[data.name] = {"dataset": data.name, "endpoint": data.slug}
             if not data.slug:

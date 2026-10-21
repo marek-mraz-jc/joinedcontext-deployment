@@ -614,9 +614,11 @@ def test_a_dangling_relationship_is_a_ko_with_its_attribute():
     rows, _ = table(world([p], ["o1"], overrides={**over, lookup: answer(body=[{"id": poi}], ctype=JSON)}))
     assert rows["schools"]["data"] == "ok: 1 rows, inside SK032"
     # A register's Endpoint serves its one type; the place it names sits behind the places' dataset (T-4745).
-    places = package("places", "p1", "PointOfInterest")
+    places = package("places", "p1", "PointOfInterest", org="helsinki")
+    elsewhere = [package(f"places-{n}", f"x{n}", "PointOfInterest", org="praha") for n in range(3)]
+    p["organization"] = {"name": "helsinki"}
     there = f"{API}/p1/ngsi-ld/v1/entities?" + urllib.parse.urlencode({"type": "PointOfInterest", "id": poi, "limit": 1})
-    rows, _ = table(world([p, places], ["o1", "p1"], overrides={
+    rows, _ = table(world([p, *elsewhere, places], ["o1", "p1", "x0", "x1", "x2"], overrides={
         **over, lookup: answer(body=[], ctype=JSON), there: answer(body=[{"id": poi}], ctype=JSON)}))
     assert rows["schools"]["data"] == "ok: 1 rows, inside SK032"
     # A dataset whose Endpoint is not public holds nothing a visitor can follow.
