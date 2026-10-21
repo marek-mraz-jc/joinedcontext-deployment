@@ -13,14 +13,14 @@ jobs:
   scan:
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    env: { TRIVY_VERSION: 0.75.0 }
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: ./.github/actions/tools
+        with: { helmfile: "false" }
       - name: trivy
         run: |
           curl --fail --retry 3 --retry-all-errors -sSL -o trivy.tgz "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
-          curl --fail --retry 3 --retry-all-errors -sSL -o checksums.txt "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_checksums.txt"
-          grep " trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz$" checksums.txt | sed 's/ .*//' | sed "s/\$/  trivy.tgz/" | sha256sum -c -
+          echo "${TRIVY_CHECKSUM}  trivy.tgz" | sha256sum --check --status
           tar xzf trivy.tgz trivy && sudo install -m 0755 trivy /usr/local/bin/trivy
       - name: retry wrapper test
         run: scripts/trivy-scan-retry.test.sh
