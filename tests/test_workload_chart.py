@@ -81,6 +81,45 @@ def test_autoscaling_hpa_and_replicas(tmp_path):
 
 
 @requires_helm
+@pytest.mark.parametrize("values", [{"replicaCount": 2}, {"autoscaling": {"enabled": True, "minReplicas": 2}}])
+def test_replicas_spread_over_nodes_so_one_drain_never_takes_them_all(tmp_path, values):
+    pod = find_resource(render_workload(tmp_path, values), "Deployment")["spec"]["template"]["spec"]
+    [spread] = pod["topologySpreadConstraints"]
+    assert spread["topologyKey"] == "kubernetes.io/hostname"
+    assert spread["maxSkew"] == 1
+    # Soft: a one-node cluster (dev, today's prod) still schedules every replica.
+    assert spread["whenUnsatisfiable"] == "ScheduleAnyway"
+    assert spread["labelSelector"]["matchLabels"] == pod_selector(tmp_path)
+
+
+def pod_selector(tmp_path: Path) -> dict:
+    return find_resource(render_workload(tmp_path / "sel"), "Deployment")["spec"]["selector"]["matchLabels"]
+
+
+@requires_helm
+def test_a_single_replica_carries_no_spread(tmp_path):
+    pod = find_resource(render_workload(tmp_path), "Deployment")["spec"]["template"]["spec"]
+    assert "topologySpreadConstraints" not in pod
+
+
+@requires_helm
+def test_a_budget_that_leaves_room_for_one_eviction_renders(tmp_path):
+    docs = render_workload(tmp_path, {"replicaCount": 2, "podDisruptionBudget": {"enabled": True, "minAvailable": 1}})
+    assert find_resource(docs, "PodDisruptionBudget")["spec"]["minAvailable"] == 1
+
+
+@requires_helm
+@pytest.mark.parametrize("values", [
+    {"replicaCount": 1, "podDisruptionBudget": {"enabled": True, "minAvailable": 1}},
+    {"autoscaling": {"enabled": True, "minReplicas": 2}, "podDisruptionBudget": {"enabled": True, "minAvailable": 2}},
+])
+def test_a_budget_that_blocks_every_drain_is_refused(tmp_path, values):
+    with pytest.raises(subprocess.CalledProcessError) as err:
+        render_workload(tmp_path, values)
+    assert "no node can ever be drained" in err.value.stderr
+
+
+@requires_helm
 def test_env_raw_value_and_env_secret(tmp_path):
     values = {
         "env": {"ANTARES_DATABASE_URL": "postgresql://antares:$(PGPASSWORD)@localhost:5432/antares"},
