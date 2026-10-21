@@ -57,8 +57,10 @@ def changes(since: str | None) -> list[str]:
                           cwd=ROOT, capture_output=True, text=True, check=True).stdout.splitlines()
 
 
-def notes(version: str, since: str | None, pins: list[str], steps: list[dict], subjects: list[str]) -> str:
-    meta = {"version": version, "previous": since, "images": pins, "steps": steps}
+def notes(version: str, since: str | None, pins: list[str], steps: list[dict], subjects: list[str],
+          date: str | None = None) -> str:
+    meta = {"version": version, **({"date": date} if date else {}), "previous": since, "images": pins,
+            "steps": steps}
     body = [f"# Release {version}", "", f"Changes since {since or 'the first commit'}:", ""]
     body += [f"- {subject}" for subject in subjects] or ["- none"]
     body += ["", "## Steps after the apply", ""]
