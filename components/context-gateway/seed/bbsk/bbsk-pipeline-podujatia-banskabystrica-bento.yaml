@@ -88,8 +88,9 @@ pipeline:
       root = {
         "id": "urn:ngsi-ld:Event:%s:%s".format(env("JC_SPACE"), $key.hash("sha256").encode("hex").slice(0, 16)),
         "type": "Event",
-        # The scope comes from the inventory row's region and town, never from the feed (T-4898).
-        "scope": if $town != null { "/SK/BB" + "/" + $town } else { "/SK/BB" },
+        # The scope comes from the inventory row's region and town, never from the feed (T-4898). A
+        # scope level is letters, digits and "_" (CIM 009 4.18): the broker refuses a hyphen (T-5051).
+        "scope": if $town != null { "/SK/BB" + "/" + $town.replace_all("-", "_") } else { "/SK/BB" },
         "name": $name.apply("prop"),
         "startDate": this.start.apply("prop"),
         "endDate": this.end.apply("prop"),
