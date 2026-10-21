@@ -267,7 +267,7 @@ componentProfiles:
 # `rawValues` is merged last into that release's values.
 componentProfileValues:
   # For a 4 GB node. One CloudNativePG instance holds the three databases of Keycloak, the
-  # Portal and the broker; it keeps the development max_connections 50, whose worst case
+  # Portal and the broker; it keeps the development max_connections 55, whose worst case
   # (tests/test_postgres_memory_budget.py) needs the 2Gi limit, and asks for less of it.
   minimal:
     postgres:
