@@ -258,6 +258,16 @@ def test_an_unknown_road_class_is_left_out_and_a_bridge_without_a_number_is_drop
 
 
 @requires_docker
+def test_a_bridge_named_with_a_blank_reads_its_id():
+    """dev's M1020 came with an empty Názov_mosta and was written without a name (T-4745)."""
+    def edit(d):
+        d["features"][0]["properties"]["Názov_mosta"] = "  "
+    bridges = run("mosty", edited("mosty", edit))
+    code = json.loads(recorded("mosty"))["features"][0]["properties"]["ID_mosta"]
+    assert next(e for e in bridges if e["bridgeCode"]["value"] == code)["name"]["value"] == code
+
+
+@requires_docker
 def test_an_empty_answer_writes_nothing():
     for name in FEEDS:
         assert run(name, b'{"type": "FeatureCollection", "features": []}') == [], name

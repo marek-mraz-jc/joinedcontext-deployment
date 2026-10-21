@@ -425,6 +425,10 @@ def relationships(rows: list) -> dict:
     return found
 
 
+# How many other public Endpoints a dangling Relationship is looked up in.
+MAX_HOLDERS = 2
+
+
 def series(schema: dict) -> bool:
     """Whether a type's JSON Schema holds a numeric Property observed at a date-time `dateObserved`: the
     rule jcctl's series_charts draws a chart by when an Endpoint declares none (T-4742)."""
@@ -441,6 +445,7 @@ class Run:
         self.previous, self.previous_at, self.now = previous, previous_at, now
         self.counts = {}  # dataset -> (platform count, how)
         self.shared = {}  # (slug, type) -> datasets without isPartOf
+        self.holders = {}  # type -> the public Endpoints whose dataset names it
         self.samples = {}  # dataset -> its NGSI-LD rows
         self.schemas = {}  # dataset -> its type's JSON Schema
 
@@ -554,16 +559,25 @@ class Run:
             if not kind:
                 problems += [f"{rid} {name} is no NGSI-LD URN" for rid, name in targets.values()]
                 continue
-            query = {"type": kind, "id": ",".join(sorted(targets)), "limit": min(len(targets), 1000)}
-            answer = self.client.fetch(self.base(data) + "ngsi-ld/v1/entities?" + urllib.parse.urlencode(query),
-                                       limit=MAX_INVENTORY)
-            body = answer.json() if answer.status == 200 else None
-            if not isinstance(body, list):
-                problems.append(f"{kind} answered {answer.why()}")
-                continue
-            held = {e.get("id") for e in body if isinstance(e, dict)}
-            problems += [f"{rid} {name} points to no entity" for target, (rid, name) in sorted(targets.items())
-                         if target not in held]
+            # The dataset's own Endpoint first, then each public one whose dataset is of that type: a
+            # register's Endpoint serves its one type, its areas sit behind the areas' (T-4344, T-4745).
+            missing = dict(targets)
+            for slug in dict.fromkeys([data.slug, *self.holders.get(kind, [])][:1 + MAX_HOLDERS]):
+                query = {"type": kind, "id": ",".join(sorted(missing)), "limit": min(len(missing), 1000)}
+                answer = self.client.fetch(f"https://api.{self.domain}/api/endpoint/{slug}/ngsi-ld/v1/entities?"
+                                           + urllib.parse.urlencode(query), limit=MAX_INVENTORY)
+                body = answer.json() if answer.status == 200 else None
+                if not isinstance(body, list):
+                    problems.append(f"{kind} answered {answer.why()}")
+                    missing = {}
+                    break
+                for e in body:
+                    if isinstance(e, dict):
+                        missing.pop(e.get("id"), None)
+                if not missing:
+                    break
+            problems += [f"{rid} {name} points to no entity a public Endpoint holds"
+                         for target, (rid, name) in sorted(missing.items())]
         return problems
 
     def views(self, data: Dataset) -> str:
@@ -682,6 +696,9 @@ class Run:
 
     def table(self, datasets: list, public: set) -> list:
         rows = {}
+        for data in datasets:
+            if data.type and data.slug in public:
+                self.holders.setdefault(data.type, []).append(data.slug)
         for data in datasets:
             row = rows[data.name] = {"dataset": data.name, "endpoint": data.slug}
             if not data.slug:

@@ -610,9 +610,19 @@ def test_a_dangling_relationship_is_a_ko_with_its_attribute():
     schema = model("Organization", "refPointOfInterest")
     over = {sample: answer(body=[beach], ctype=JSON), f"{API}/o1/schema/v1/model.schema.json": answer(body=schema)}
     rows, _ = table(world([p], ["o1"], overrides={**over, lookup: answer(body=[], ctype=JSON)}))
-    assert rows["schools"]["data"] == "ko: urn:ngsi-ld:Organization:1 refPointOfInterest points to no entity"
+    assert rows["schools"]["data"] == "ko: urn:ngsi-ld:Organization:1 refPointOfInterest points to no entity a public Endpoint holds"
     rows, _ = table(world([p], ["o1"], overrides={**over, lookup: answer(body=[{"id": poi}], ctype=JSON)}))
     assert rows["schools"]["data"] == "ok: 1 rows, inside SK032"
+    # A register's Endpoint serves its one type; the place it names sits behind the places' dataset (T-4745).
+    places = package("places", "p1", "PointOfInterest")
+    there = f"{API}/p1/ngsi-ld/v1/entities?" + urllib.parse.urlencode({"type": "PointOfInterest", "id": poi, "limit": 1})
+    rows, _ = table(world([p, places], ["o1", "p1"], overrides={
+        **over, lookup: answer(body=[], ctype=JSON), there: answer(body=[{"id": poi}], ctype=JSON)}))
+    assert rows["schools"]["data"] == "ok: 1 rows, inside SK032"
+    # A dataset whose Endpoint is not public holds nothing a visitor can follow.
+    rows, _ = table(world([p, places], ["o1"], overrides={
+        **over, lookup: answer(body=[], ctype=JSON), there: answer(body=[{"id": poi}], ctype=JSON)}))
+    assert rows["schools"]["data"].startswith("ko: urn:ngsi-ld:Organization:1 refPointOfInterest points to no entity")
 
 
 def test_a_relationship_that_is_no_urn_is_a_ko():
