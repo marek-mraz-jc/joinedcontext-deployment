@@ -2,3 +2,5 @@
 probes:
   probe:
     chart: ../../charts/workload
+  status:
+    chart: ../../charts/workload

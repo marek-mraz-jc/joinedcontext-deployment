@@ -13,3 +13,6 @@ probes:
     # Other environments this cluster probes from outside, beside its own domain, so a cluster
     # that is down entirely goes red on the other one: [{name: smartcity, domain: smartcity.example}].
     peers: []
+  status:
+    enabled: true
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "probes") }}

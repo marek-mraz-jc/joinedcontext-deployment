@@ -6,7 +6,7 @@ One pod per cluster probes its own environment and the other one, through the pu
 a cluster that is down entirely still goes red on the other side. Per target and minute it
 spends at most PROBE_BUDGET requests, paced evenly over the minute:
 
-- the catalogue search (CKAN package_search) and the public assistant's config;
+- the catalogue search (CKAN package_search), the Portal's health and the public assistant's config;
 - the Endpoints' records, each refreshed once per PROBE_DISCOVERY_SECONDS: the catalogue's
   `endpoint` extra lists the public Endpoints, the record's distributions name the surfaces
   each one serves, and `ngsi-ld/v1/types` the entity type every query below asks for;
@@ -23,7 +23,7 @@ sends none; a reason is the probe's own short sentence, never a response body.
     GET /results.json  the newest result per target, Endpoint and surface (T-5102, T-5067)
     GET /healthz       200 while every target finished a round in the last three minutes
 
-PROBE_TARGETS is a JSON list of {name, api, catalogue, assistant, assistantId}; every URL is
+PROBE_TARGETS is a JSON list of {name, api, catalogue, portal, assistant, assistantId}; every URL is
 https and every probe URL is built from them, never taken from an answer.
 """
 
@@ -86,6 +86,13 @@ def check_assistant(status, headers, body):
     if status != 200:
         return f"status {status}"
     return None if isinstance(doc, dict) and doc.get("publicId") else "no assistant config"
+
+
+def check_portal(status, headers, body):
+    doc = _json(body)
+    if status != 200:
+        return f"status {status}"
+    return None if isinstance(doc, dict) and doc.get("status") == "ok" else "the Portal reports no ok health"
 
 
 def check_ngsi(status, headers, body):
@@ -175,6 +182,7 @@ def check_websocket(status, headers, body):
 CHECKS = {
     "catalogue": check_catalogue,
     "assistant": check_assistant,
+    "portal": check_portal,
     "ngsi-ld": check_ngsi,
     "odata": check_odata,
     "ogc": check_ogc,
@@ -279,7 +287,7 @@ def load_targets(text):
     for t in targets:
         if not isinstance(t, dict) or not NAME.match(str(t.get("name", ""))):
             raise ValueError(f"target name must match {NAME.pattern}: {t!r}")
-        for key in ("api", "catalogue", "assistant"):
+        for key in ("api", "catalogue", "portal", "assistant"):
             url = urllib.parse.urlsplit(str(t.get(key, "")))
             if url.scheme != "https" or not url.hostname or url.path not in ("", "/") or url.query:
                 raise ValueError(f"target {t['name']}: {key} must be an https origin")
@@ -381,7 +389,10 @@ class Prober:
         status, headers, body, secs = self._paced(
             self.get, f"{target['assistant']}/api/v1/d/{target['assistantId']}/config", None, {"Accept": "application/json"})
         self.record(name, "", "assistant", check_assistant(status, headers, body), secs)
-        spent += 2
+        status, headers, body, secs = self._paced(
+            self.get, f"{target['portal']}/api/v1/health", None, {"Accept": "application/json"})
+        self.record(name, "", "portal", check_portal(status, headers, body), secs)
+        spent += 3
         known = self.endpoints[name]
         # ponytail: one page of 1000 datasets; page with start= once a catalogue holds more.
         if self.clock() - self.listed_at.get(name, 0) >= self.discovery_seconds:

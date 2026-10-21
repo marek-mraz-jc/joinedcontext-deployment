@@ -14,6 +14,7 @@ address), paced evenly:
 | Surface | Request | Holds when |
 |---|---|---|
 | catalogue | `package_search?rows=1` on the CKAN host | `success` and a count above 0 |
+| portal | `/api/v1/health` on the Portal host | `status` is `ok` |
 | assistant | `/api/v1/d/{assistantId}/config` (no model call) | a config with `publicId` |
 | ngsi-ld | `entities?type={T}&limit=1&count=true` | one entity and `NGSILD-Results-Count` above 0 |
 | odata | `odata/v4/{T}?$top=1` | a row in `value` |
@@ -45,8 +46,36 @@ visitors share), one Endpoint per kind (misses a single broken Endpoint for good
   (T-5102) and the health log (T-5067). A reason is the probe's own sentence, never a response body.
 - `GET :9100/healthz`: 503 when a target finished no round for three minutes (the liveness probe).
 
+## Status page
+
+The `status` part serves the public status page on `status.{domain}` (T-5102, `files/status.py`, the
+same image). Once a minute it reads this environment's rows of `/results.json` from the probe beside
+it and shows each public surface as up (every probed Endpoint holds), degraded (some fail), down
+(all fail) or no data (nothing newer than 10 minutes). It counts the minute per surface and UTC day
+in `history.json` on its 64 Mi volume and draws 90 days per surface; uptime counts degraded minutes
+as available. `/` answers in Slovak or English by `Accept-Language`, `/sk/` and `/en/` in one
+language, `/status.json` the same states for machines.
+
+The page names failing Endpoints by their public catalogue slug and never shows a probe reason, a
+response body, a host or an address. Answers carry `Cache-Control: public, max-age=30,
+stale-while-revalidate=30, stale-if-error=86400`: a cache keeps the page through an outage of the
+pod, and a new outage still shows within two minutes (one probe round, one tick, 30 s of cache).
+
+Decided (worker-t5102, owner may override): the page reads the probe only, not the Portal's
+health_check rows (T-5067), because those are per project behind a login and have no public flag;
+options: a public flag on health_check rows read through the Portal (a second public reader of
+the Portal), the probe's results (the same surfaces, already anonymous).
+
+### Incident notes
+
+The deployer writes `files/incidents.yaml` (its header shows the fields); the next apply puts it on
+the page. An open incident (no `end`) stands at the top, a closed one stays 90 days. A malformed
+entry stops the pod at start with the field to fix, and `tests/test_status_page.py` holds the
+committed file to the same rules.
+
 ## Security
 
 Anonymous only: no token, no Secret, no `envFrom`. Every URL is built from the https origins in
 `PROBE_TARGETS`, never taken from an answer; redirects are not followed. Egress is 443 to public
-addresses and the ingress controller, and CoreDNS; ingress only from Prometheus on 9100.
+addresses and the ingress controller, and CoreDNS; ingress only from Prometheus and the status page
+on 9100. The status page takes ingress from the edge on 8080 only and dials the probe and CoreDNS.

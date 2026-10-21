@@ -238,6 +238,10 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": True, "framing": "DENY",
         "why": "the background map's tiles, style, fonts and sprites on tiles.{domain} (T-4638): public map data, read-only nginx answering GET/HEAD/preflight, the same files for everyone, its own larger bucket",
     },
+    "status-page": {
+        "reach": UPSTREAM, "cacheable": True, "framing": "DENY",
+        "why": "the public status page on status.{domain} (T-5102): surface states, 90-day uptime and incident notes, the same page for everyone, GET/HEAD only, no form, no cookie, no host or error body",
+    },
     "security-txt": {
         "reach": TERMINATES, "cacheable": False, "framing": "DENY",
         "why": "RFC 9116 security.txt is public by the RFC; the edge answers it and names only the reporting contact (T-1721)",
@@ -329,6 +333,10 @@ ROUTE_CLASSES = {
     "basemap": {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "the background map's tiles, style, fonts and sprites (T-4638): public map data under the OpenStreetMap licence, read-only, and nginx keeps them a day",
+    },
+    "status-page": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "the public status page (T-5102): states of the public surfaces, public by design; the page sets public, max-age=30 itself",
     },
     "ai": {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": FRAMED_BY_UPSTREAM,
