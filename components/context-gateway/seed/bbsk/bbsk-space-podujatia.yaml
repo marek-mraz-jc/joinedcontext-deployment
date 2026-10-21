@@ -6,7 +6,7 @@ kind: ContextSpace
 metadata:
   name: bbsk-podujatia
   namespace: bbsk
-  title: { sk: "Podujatia na Slovensku", en: "Events in Slovakia" }
+  title: { sk: Podujatia na Slovensku, en: Events in Slovakia }
   description:
     sk: >-
       Nadchádzajúce verejné podujatia miest, obcí, krajov a kultúrnych inštitúcií s časom a miestom
@@ -28,7 +28,7 @@ spec:
   # its end through the expiresAt its pipeline writes (T-4838).
   retention:
     - entityType: Event
-      history: "off"
+      history: 'off'
   # Slovakia with a margin: a point outside it is flagged (DM-87); the pipelines refuse it first.
   quality:
     - name: in-slovakia

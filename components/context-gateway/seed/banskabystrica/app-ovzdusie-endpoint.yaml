@@ -6,20 +6,11 @@ kind: Endpoint
 metadata:
   name: app-banskabystrica-ovzdusie
   namespace: banskabystrica
-  annotations:
-    joinedcontext.com/generated-by: portal/app-reconciler
-  title:
-    en: Air quality map of Banská Bystrica
-    sk: Mapa ovzdušia v Banskej Bystrici
+  title: { en: Air quality map of Banská Bystrica, sk: Mapa ovzdušia v Banskej Bystrici }
+  annotations: { joinedcontext.com/generated-by: portal/app-reconciler }
 spec:
   audience: public
   callerRole: true
-  contextSpaceRef:
-    kind: ContextSpace
-    name: banskabystrica-verejne
-  enabledRepresentations:
-  - ngsi-ld
-  - mcp
-  - ogc-features
-  - odata
+  contextSpaceRef: { kind: ContextSpace, name: banskabystrica-verejne }
+  enabledRepresentations: [ngsi-ld, mcp, ogc-features, odata]
   slug: 32ea6ze7db7g6u7qnlgezpwp75

@@ -5,9 +5,9 @@ kind: Endpoint
 metadata:
   name: banskabystrica-podujatia
   namespace: banskabystrica
-  title: { sk: "Podujatia — Banská Bystrica", en: "Events — Banská Bystrica" }
+  title: { sk: Podujatia — Banská Bystrica, en: Events — Banská Bystrica }
   description:
-    sk: "Podujatia mesta s miestom a časom konania. Zdroj: Mesto Banská Bystrica, CC BY 4.0."
+    sk: 'Podujatia mesta s miestom a časom konania. Zdroj: Mesto Banská Bystrica, CC BY 4.0.'
     en: "The city's events with their place and time. Source: the City of Banská Bystrica, CC BY 4.0."
 spec:
   contextSpaceRef: banskabystrica-verejne
@@ -25,13 +25,15 @@ spec:
     # Aggregates of public facilities and readings: no record names a person (T-4596).
     personalData: does-not-contain
     license: CC_BY_4_0
-    attribution: { sk: "Zdroj: Mesto Banská Bystrica, CC BY 4.0", en: "Source: City of Banská Bystrica, CC BY 4.0" }
+    attribution:
+      sk: 'Zdroj: Mesto Banská Bystrica, CC BY 4.0'
+      en: 'Source: City of Banská Bystrica, CC BY 4.0'
     themes: [SOCI, EDUC]
     keywords:
-      sk: ["podujatia", "kultúra", "Banská Bystrica"]
-      en: ["events", "culture", "Banská Bystrica"]
+      sk: [podujatia, kultúra, Banská Bystrica]
+      en: [events, culture, Banská Bystrica]
     spatial:
-      - "SK032"
-      - "https://data.gov.sk/id/lau2/SK0321508438"
+      - SK032
+      - https://data.gov.sk/id/lau2/SK0321508438
     frequency: DAILY
     pipelineRef: { kind: Pipeline, name: podujatia }

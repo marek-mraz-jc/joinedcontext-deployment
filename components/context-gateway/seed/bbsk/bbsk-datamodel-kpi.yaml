@@ -7,7 +7,7 @@ kind: DataModel
 metadata:
   name: key-performance-indicator
   namespace: bbsk
-  title: { sk: "Ukazovateľ", en: "Indicator" }
+  title: { sk: Ukazovateľ, en: Indicator }
 spec:
   contextSpaceRef: bbsk-kpi
   linkml: ./key-performance-indicator.linkml.yaml

@@ -4,18 +4,14 @@ kind: Pipeline
 metadata:
   name: prirastok
   namespace: zilina
-  title: { sk: "Prírastok obyvateľov mesta", en: "Population increase of the city" }
+  title: { sk: Prírastok obyvateľov mesta, en: Population increase of the city }
 spec:
   class: auto
   # Annual or quarterly data: a weekly read is already far more often than it changes (PL-26, PL-27).
   period: 168h
-  schedule: "15 5 * * 1"
+  schedule: '15 5 * * 1'
   source:
     dataSourceRef: { kind: DataSource, name: susr-om7105rr }
   targetEndpoint: urn:ngsi-ld:Endpoint:zilina.sk:zilina-mesto:zilina-mesto
-  output:
-    type: KeyPerformanceIndicator
-    mode: upsert
-  quotas:
-    maxMemoryMb: 128
-    cpuMillicores: 100
+  output: { type: KeyPerformanceIndicator, mode: upsert }
+  quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

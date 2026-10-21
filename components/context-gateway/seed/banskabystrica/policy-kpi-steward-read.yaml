@@ -13,12 +13,21 @@ kind: Policy
 metadata:
   name: kpi-steward-read
   namespace: banskabystrica
-  title: { sk: "Správca údajov číta ukazovatele mesta", en: "The data steward reads the city's indicators" }
+  title:
+    sk: Správca údajov číta ukazovatele mesta
+    en: The data steward reads the city's indicators
 spec:
   contextSpaceRef: { kind: ContextSpace, name: banskabystrica-kpi }
   assigner: did:web:banskabystrica.sk
-  assignee: { kind: user, id: "demo.steward@{orgDomain}" }
-  operations: [retrieveOps, createSubscription, retrieveSubscription, updateSubscription, deleteSubscription]
+  assignee:
+    kind: user
+    id: demo.steward@{orgDomain}
+  operations:
+    - retrieveOps
+    - createSubscription
+    - retrieveSubscription
+    - updateSubscription
+    - deleteSubscription
   information:
     - entities:
         - type: KeyPerformanceIndicator

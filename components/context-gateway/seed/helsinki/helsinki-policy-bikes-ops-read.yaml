@@ -10,12 +10,17 @@ kind: Policy
 metadata:
   name: bikes-ops-read
   namespace: helsinki
-  title: { en: "The city's people read the bike stations" }
+  title: { en: The city's people read the bike stations }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: helsinki }
   assigner: did:web:{orgDomain}
   assignee: { kind: group, id: helsinki }
-  operations: [retrieveOps, createSubscription, retrieveSubscription, updateSubscription, deleteSubscription]
+  operations:
+    - retrieveOps
+    - createSubscription
+    - retrieveSubscription
+    - updateSubscription
+    - deleteSubscription
   information:
     - entities:
         - type: BikeHireDockingStation

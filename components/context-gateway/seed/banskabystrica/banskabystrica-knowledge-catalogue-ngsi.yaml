@@ -9,9 +9,9 @@ kind: KnowledgeSource
 metadata:
   name: catalogue
   namespace: banskabystrica
-  title: { en: "Mesto Banská Bystrica: the data catalogue" }
+  title: { en: 'Mesto Banská Bystrica: the data catalogue' }
 spec:
   source: catalogue
-  schedule: "7 * * * *"
+  schedule: '7 * * * *'
   languages: [sk, en]
   visibility: public

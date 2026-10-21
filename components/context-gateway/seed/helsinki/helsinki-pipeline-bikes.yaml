@@ -3,7 +3,7 @@ kind: Pipeline
 metadata:
   name: citybikes-gbfs
   namespace: helsinki
-  title: { en: "City bike docking stations from the GBFS station status feed" }
+  title: { en: City bike docking stations from the GBFS station status feed }
 spec:
   class: auto
   period: 60s
@@ -11,6 +11,4 @@ spec:
     dataSourceRef: { kind: DataSource, name: hsl-citybikes-gbfs }
   # Every stream writes through the one endpoint that evaluates the pipelines-write Policy.
   targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all
-  quotas:
-    maxMemoryMb: 64
-    cpuMillicores: 100
+  quotas: { maxMemoryMb: 64, cpuMillicores: 100 }

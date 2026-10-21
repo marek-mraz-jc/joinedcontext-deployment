@@ -6,12 +6,12 @@ kind: KnowledgeSource
 metadata:
   name: data-portal
   namespace: zilina
-  title: { sk: "Otvorené údaje mesta Žilina a Žilinskej univerzity", en: "Žilina's open datasets" }
+  title: { sk: Otvorené údaje mesta Žilina a Žilinskej univerzity, en: Žilina's open datasets }
 spec:
   source: ckan
   ckanInstanceRef: zilina
   organizations: [zilina]
-  schedule: "55 3 * * *"
+  schedule: '55 3 * * *'
   maxPages: 500
   languages: [sk, en]
   visibility: public

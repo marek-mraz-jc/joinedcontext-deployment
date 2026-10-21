@@ -4,18 +4,14 @@ kind: Pipeline
 metadata:
   name: beach-water
   namespace: helsinki
-  title: { en: "Beach water temperature" }
+  title: { en: Beach water temperature }
 spec:
   class: auto
   # The sensors report about every half hour and the file is rebuilt hourly; twice an hour catches each reading within half an hour.
   period: 30m
-  schedule: "*/30 * * * *"
+  schedule: '*/30 * * * *'
   source:
     dataSourceRef: { kind: DataSource, name: fvh-uiras-beaches }
   targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
-  output:
-    type: WaterQualityObserved
-    mode: upsert
-  quotas:
-    maxMemoryMb: 128
-    cpuMillicores: 100
+  output: { type: WaterQualityObserved, mode: upsert }
+  quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

@@ -16,22 +16,19 @@ kind: App
 metadata:
   name: banskabystrica-zaznamy
   namespace: banskabystrica
+  title: { sk: Záznamy mesta Banská Bystrica, en: Records of the city of Banská Bystrica }
+  description:
+    sk: Zverejnené štatistické riadky mesta po stranách, s filtrom v každom stĺpci, ktorý zodpovie endpoint. Čísla patria vydavateľovi a sú len na čítanie; upraviť sa dá poznámka správcu.
+    en: The city's published statistical rows by the page, with a filter on every column that the endpoint answers itself. The figures belong to the publisher and are read-only; the steward's note is what can be edited.
   annotations:
     # The Portal image ships this bundle (Dockerfile, /srv/apps), so the App names no
     # repository of its own; the Portal accepts the mark only where the bundle is (AP-87).
     joinedcontext.com/shipped-with: portal
-  title:
-    sk: "Záznamy mesta Banská Bystrica"
-    en: "Records of the city of Banská Bystrica"
-  description:
-    sk: "Zverejnené štatistické riadky mesta po stranách, s filtrom v každom stĺpci, ktorý zodpovie endpoint. Čísla patria vydavateľovi a sú len na čítanie; upraviť sa dá poznámka správcu."
-    en: "The city's published statistical rows by the page, with a filter on every column that the endpoint answers itself. The figures belong to the publisher and are read-only; the steward's note is what can be edited."
 spec:
   kind: ui
   source:
     path: ./apps/banskabystrica-zaznamy
-  build:
-    node: "22"
+  build: { node: '22' }
   # Not public: the rows are somebody else's published data mirrored here, and the endpoint's
   # audience is `organization` (AP-18).
   visibility: project
@@ -40,9 +37,7 @@ spec:
   dataNeeds:
     # One space, one type, and one write on one attribute — which is what puts this publication
     # in the red lane on purpose (AP-09, AP-39).
-    - contextSpaceRef:
-        kind: ContextSpace
-        name: banskabystrica-mesto
+    - contextSpaceRef: { kind: ContextSpace, name: banskabystrica-mesto }
       types: [KeyPerformanceIndicator]
       # The columns the table shows and filters on, and the one attribute it writes. A filter
       # names an attribute, so an attribute missing here is a filter the endpoint refuses.
@@ -52,9 +47,7 @@ spec:
     # The one write, a need of its own: a need's attrs bound every operation it names, so the
     # write named beside the columns above would let a person type over a published figure the
     # next pipeline run overwrites (AP-62, T-3596).
-    - contextSpaceRef:
-        kind: ContextSpace
-        name: banskabystrica-mesto
+    - contextSpaceRef: { kind: ContextSpace, name: banskabystrica-mesto }
       types: [KeyPerformanceIndicator]
       attrs: [stewardNote]
       operations: [updateAttrs]

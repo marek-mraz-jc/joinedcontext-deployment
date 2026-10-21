@@ -4,10 +4,12 @@ kind: ContextSpace
 metadata:
   name: zilina-verejne
   namespace: zilina
-  title: { sk: "Žilina — verejné dáta", en: "Žilina, public data" }
+  title:
+    sk: Žilina — verejné dáta
+    en: Žilina, public data
   description:
-    sk: "Kvalita ovzdušia, kultúrne pamiatky a železničné stanice mesta Žilina z otvorených dát EEA, Pamiatkového úradu a ŽSR."
-    en: "Air quality, cultural monuments and railway stations of Žilina from the open data of the EEA, the Monuments Board and ŽSR."
+    sk: Kvalita ovzdušia, kultúrne pamiatky a železničné stanice mesta Žilina z otvorených dát EEA, Pamiatkového úradu a ŽSR.
+    en: Air quality, cultural monuments and railway stations of Žilina from the open data of the EEA, the Monuments Board and ŽSR.
 spec:
   # The space name is the segment its ids carry, pinned so it cannot drift (PF-84).
   urnSegment: zilina-verejne
@@ -30,9 +32,9 @@ spec:
         source: { record: onChange, heartbeat: P7D }
         stationCode: { record: onChange, heartbeat: P7D }
     - entityType: GtfsStop
-      history: "off"
+      history: 'off'
     - entityType: PointOfInterest
-      history: "off"
+      history: 'off'
   # The space's place (T-4525): the catalogue's Dataset carries it, so georel=near finds the space.
   # the city of Žilina with a margin; a PointOfInterest outside it is flagged, never refused (DM-87).
   quality:

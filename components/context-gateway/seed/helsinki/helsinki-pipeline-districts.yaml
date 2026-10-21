@@ -4,18 +4,14 @@ kind: Pipeline
 metadata:
   name: districts
   namespace: helsinki
-  title: { en: "City districts" }
+  title: { en: City districts }
 spec:
   class: auto
   # The division changes a few times a decade; weekly is already more than it needs.
   period: 168h
-  schedule: "50 3 * * 1"
+  schedule: '50 3 * * 1'
   source:
     dataSourceRef: { kind: DataSource, name: hel-districts }
   targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
-  output:
-    type: AdministrativeArea
-    mode: upsert
-  quotas:
-    maxMemoryMb: 128
-    cpuMillicores: 100
+  output: { type: AdministrativeArea, mode: upsert }
+  quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

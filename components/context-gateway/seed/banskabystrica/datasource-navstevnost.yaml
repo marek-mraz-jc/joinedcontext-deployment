@@ -4,7 +4,9 @@ kind: DataSource
 metadata:
   name: susr-cr3803mr
   namespace: banskabystrica
-  title: { sk: "Návštevnosť ubytovacích zariadení v obciach (ŠÚ SR, cr3803mr)", en: "Visitors to accommodation in municipalities (ŠÚ SR, cr3803mr)" }
+  title:
+    sk: Návštevnosť ubytovacích zariadení v obciach (ŠÚ SR, cr3803mr)
+    en: Visitors to accommodation in municipalities (ŠÚ SR, cr3803mr)
 spec:
   type: http
   http:

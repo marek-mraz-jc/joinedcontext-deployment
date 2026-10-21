@@ -8,7 +8,9 @@ kind: DataSource
 metadata:
   name: hsl-routes
   namespace: helsinki
-  title: { en: "HSL lines and their stops", fi: "HSL:n pysäkit linjoittain" }
+  title:
+    en: HSL lines and their stops
+    fi: HSL:n pysäkit linjoittain
 spec:
   type: http
   http:

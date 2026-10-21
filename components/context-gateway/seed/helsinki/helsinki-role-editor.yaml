@@ -37,6 +37,5 @@ spec:
     # Granting a role is proposing a binding, and it is never this role's to decide: what the
     # holder may hand out is bounded by the verbs they hold themselves (PF-50), and somebody
     # else approves the grant.
-    - kinds:
-        - RoleBinding
+    - kinds: [RoleBinding]
       verbs: [propose]

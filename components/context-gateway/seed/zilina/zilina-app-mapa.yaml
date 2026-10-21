@@ -12,32 +12,43 @@ kind: App
 metadata:
   name: zilina-mapa
   namespace: zilina
+  title: { sk: Mapa mesta Žilina, en: Map of Žilina }
+  description:
+    sk: Kultúrne pamiatky mesta, železničné stanice s počtom odchodov vlakov dnes a meranie ovzdušia na jednej mape, s vyhľadávaním a detailom miesta.
+    en: The city's cultural monuments, its railway stations with the trains leaving today and the air-quality station on one map, with search and a detail of each place.
   annotations:
     # The Portal image ships this bundle (Dockerfile, /srv/apps), so the App names no
     # repository of its own; the Portal accepts the mark only where the bundle is (AP-87).
     joinedcontext.com/shipped-with: portal
-  title:
-    sk: "Mapa mesta Žilina"
-    en: "Map of Žilina"
-  description:
-    sk: "Kultúrne pamiatky mesta, železničné stanice s počtom odchodov vlakov dnes a meranie ovzdušia na jednej mape, s vyhľadávaním a detailom miesta."
-    en: "The city's cultural monuments, its railway stations with the trains leaving today and the air-quality station on one map, with search and a detail of each place."
 spec:
   kind: ui
   source:
     path: ./apps/zilina-mapa
-  build:
-    node: "22"
+  build: { node: '22' }
   visibility: public
   lifecycle: published
   embeddable: true
   dataNeeds:
     # One space, three types, read only: the monuments of pamiatky, the stations of vlaky and the
     # station of ovzdusie-* (T-3138); the attributes the screen shows.
-    - contextSpaceRef:
-        kind: ContextSpace
-        name: zilina-verejne
+    - contextSpaceRef: { kind: ContextSpace, name: zilina-verejne }
       types: [PointOfInterest, GtfsStop, AirQualityObserved]
-      attrs: [name, location, address, monumentNumber, monumentKind, architecturalStyle, constructionPeriod, cadastralArea, ownershipForm, dailyDepartures, dateObserved, pm10, pm25, no2, o3, co]
+      attrs:
+        - name
+        - location
+        - address
+        - monumentNumber
+        - monumentKind
+        - architecturalStyle
+        - constructionPeriod
+        - cadastralArea
+        - ownershipForm
+        - dailyDepartures
+        - dateObserved
+        - pm10
+        - pm25
+        - no2
+        - o3
+        - co
       operations: [queryEntity, retrieveEntity]
       representations: [ngsi-ld, ogc-features]

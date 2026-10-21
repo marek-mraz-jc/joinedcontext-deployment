@@ -10,5 +10,4 @@ spec:
   subjects:
     - user: demo.janitor@hel.fi
   role: janitor
-  scope:
-    project: helsinki
+  scope: { project: helsinki }

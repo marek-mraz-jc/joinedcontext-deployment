@@ -47,7 +47,7 @@ pipeline:
     # error for the loser; a single-threaded slot stage (the runner's `pipeline.threads`, which
     # the Portal does not pass through yet) removes it if a restart burst ever matters.
     - branch:
-        request_map: 'root = ""'
+        request_map: root = ""
         processors:
           # Slot "0" is none; Bento reads an empty metadata value as absent.
           - mapping: |
@@ -58,63 +58,63 @@ pipeline:
           - cache:
               resource: fleet
               operator: exists
-              key: 'veh-${! meta("key") }'
+              key: veh-${! meta("key") }
           - switch:
-              - check: 'content().string() == "true"'
+              - check: content().string() == "true"
                 processors:
                   - try:
                       - cache:
                           resource: fleet
                           operator: get
-                          key: 'veh-${! meta("key") }'
-                      - mapping: 'meta held = content().string()'
+                          key: veh-${! meta("key") }
+                      - mapping: meta held = content().string()
                       - cache:
                           resource: fleet
                           operator: get
-                          key: 'slot-${! meta("mode") }-${! meta("held") }'
+                          key: slot-${! meta("mode") }-${! meta("held") }
                       - mapping: |
                           meta slot = if content().string() == meta("vehicle") { meta("held") } else { "0" }
                   - catch:
-                      - mapping: 'root = ""'
+                      - mapping: root = ""
           # Otherwise the first free one.
           - while:
               # The largest cap.
               max_loops: 30
-              check: 'meta("slot") == "0" && meta("probe").number() <= meta("cap").number()'
+              check: meta("slot") == "0" && meta("probe").number() <= meta("cap").number()
               processors:
                 - cache:
                     resource: fleet
                     operator: exists
-                    key: 'slot-${! meta("mode") }-${! meta("probe") }'
+                    key: slot-${! meta("mode") }-${! meta("probe") }
                 - switch:
-                    - check: 'content().string() == "false"'
+                    - check: content().string() == "false"
                       processors:
                         - try:
                             - cache:
                                 resource: fleet
                                 operator: add
-                                key: 'slot-${! meta("mode") }-${! meta("probe") }'
-                                value: '${! meta("vehicle") }'
-                            - mapping: 'meta slot = meta("probe")'
+                                key: slot-${! meta("mode") }-${! meta("probe") }
+                                value: ${! meta("vehicle") }
+                            - mapping: meta slot = meta("probe")
                         - catch:
-                            - mapping: 'root = ""'
-                - mapping: 'meta probe = (meta("probe").number() + 1).string()'
+                            - mapping: root = ""
+                - mapping: meta probe = (meta("probe").number() + 1).string()
           # A holder's keys live as long as it reports.
           - switch:
-              - check: 'meta("slot") != "0"'
+              - check: meta("slot") != "0"
                 processors:
                   - cache:
                       resource: fleet
                       operator: set
-                      key: 'veh-${! meta("key") }'
-                      value: '${! meta("slot") }'
+                      key: veh-${! meta("key") }
+                      value: ${! meta("slot") }
                   - cache:
                       resource: fleet
                       operator: set
-                      key: 'slot-${! meta("mode") }-${! meta("slot") }'
-                      value: '${! meta("vehicle") }'
-          - mapping: 'root = meta("slot")'
-        result_map: 'meta slot = content().string()'
+                      key: slot-${! meta("mode") }-${! meta("slot") }
+                      value: ${! meta("vehicle") }
+          - mapping: root = meta("slot")
+        result_map: meta slot = content().string()
     - mapping: |
         root = if meta("slot").or("0").re_match("^[1-9][0-9]*$") { this } else { deleted() }
 
@@ -140,21 +140,21 @@ pipeline:
         meta route_urn = if $route == "" { "none" } else { $urn.format("GtfsRoute", $route) }
         meta stop_urn = if !$next_stop.re_match("^[0-9]+$") { "none" } else { $urn.format("GtfsStop", $next_stop) }
     - branch:
-        request_map: 'root = ""'
+        request_map: root = ""
         processors:
           - cache:
               resource: gtfs
               operator: exists
-              key: '${! meta("route_urn") }'
-        result_map: 'meta route_known = content().string()'
+              key: ${! meta("route_urn") }
+        result_map: meta route_known = content().string()
     - branch:
-        request_map: 'root = ""'
+        request_map: root = ""
         processors:
           - cache:
               resource: gtfs
               operator: exists
-              key: '${! meta("stop_urn") }'
-        result_map: 'meta stop_known = content().string()'
+              key: ${! meta("stop_urn") }
+        result_map: meta stop_known = content().string()
 
     # The vehicle's lifetime is the pipeline's spec.lifetime (PL-80, T-4843): five minutes after
     # the position it reports, which every write moves on. A report whose time cannot be read

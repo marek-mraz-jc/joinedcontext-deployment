@@ -4,7 +4,9 @@ kind: DataSource
 metadata:
   name: susr-sv5002rr
   namespace: zilina
-  title: { sk: "Základné školy (ŠÚ SR, sv5002rr)", en: "Basic schools (ŠÚ SR, sv5002rr)" }
+  title:
+    sk: Základné školy (ŠÚ SR, sv5002rr)
+    en: Basic schools (ŠÚ SR, sv5002rr)
 spec:
   type: http
   http:

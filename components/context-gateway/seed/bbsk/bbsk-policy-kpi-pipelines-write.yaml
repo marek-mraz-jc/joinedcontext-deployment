@@ -3,7 +3,7 @@ kind: Policy
 metadata:
   name: kpi-pipelines-write
   namespace: bbsk
-  title: { sk: "Kanál zapisuje ukazovatele", en: "The computing pipeline writes the indicators" }
+  title: { sk: Kanál zapisuje ukazovatele, en: The computing pipeline writes the indicators }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: bbsk-kpi }
   assigner: did:web:bbsk.sk

@@ -5,11 +5,8 @@ kind: CkanInstance
 metadata:
   name: praha
   namespace: praha
-  title: { cs: "Hlavní město Praha", en: "City of Prague" }
+  title: { cs: Hlavní město Praha, en: City of Prague }
 spec:
   url: https://opendata.dev.joinedcontext.com
   organizationDefault: praha
-  apiTokenRef:
-    name: ckan-api-token
-    key: token
-    envVar: CKAN_API_TOKEN
+  apiTokenRef: { name: ckan-api-token, key: token, envVar: CKAN_API_TOKEN }

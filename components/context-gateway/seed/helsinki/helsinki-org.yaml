@@ -3,7 +3,7 @@ kind: Organization
 metadata:
   name: hel
   namespace: org
-  title: { en: "City of Helsinki", fi: "Helsingin kaupunki", sk: "Mesto Helsinki" }
+  title: { en: City of Helsinki, fi: Helsingin kaupunki, sk: Mesto Helsinki }
 spec:
   domain: hel.fi
   # fi: the city's own language, so its models are titled in Finnish (T-4829).

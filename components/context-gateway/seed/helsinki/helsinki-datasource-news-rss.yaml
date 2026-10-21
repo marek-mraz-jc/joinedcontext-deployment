@@ -4,7 +4,7 @@ kind: DataSource
 metadata:
   name: hel-news-rss
   namespace: helsinki
-  title: { en: "Helsinki city news (hel.fi RSS)", fi: "Helsingin kaupungin uutiset (hel.fi RSS)" }
+  title: { en: Helsinki city news (hel.fi RSS), fi: Helsingin kaupungin uutiset (hel.fi RSS) }
 spec:
   type: http
   http:

@@ -6,7 +6,7 @@ kind: DataModel
 metadata:
   name: helsinki-kpi
   namespace: helsinki
-  title: { en: "Indicator" }
+  title: { en: Indicator }
 spec:
   contextSpaceRef: helsinki-kpi
   linkml: ./helsinki-kpi.linkml.yaml

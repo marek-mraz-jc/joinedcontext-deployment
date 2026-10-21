@@ -7,7 +7,7 @@ kind: DataSource
 metadata:
   name: zsr-gtfs
   namespace: zilina
-  title: { sk: "Grafikon vlakovej dopravy (GTFS)", en: "Train timetable (GTFS)" }
+  title: { sk: Grafikon vlakovej dopravy (GTFS), en: Train timetable (GTFS) }
 spec:
   type: http
   http:

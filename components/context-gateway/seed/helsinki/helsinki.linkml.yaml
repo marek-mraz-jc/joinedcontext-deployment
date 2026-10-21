@@ -107,7 +107,14 @@ slots:
     description: The open-data service the entity was read from.
     range: uri
     annotations:
-      label: { tag: label, value: { sk: "Zdroj", cs: "Zdroj", fi: "Lähde", en: "Source", de: "Quelle" } }
+      label:
+        tag: label
+        value:
+          sk: Zdroj
+          cs: Zdroj
+          fi: Lähde
+          en: Source
+          de: Quelle
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
   availableBikeNumber:
@@ -148,7 +155,14 @@ slots:
     description: When the publisher last changed the record, or the station last reported.
     range: datetime
     annotations:
-      label: { tag: label, value: { sk: "Zmenené", cs: "Změněno", fi: "Muokattu", en: "Modified", de: "Geändert" } }
+      label:
+        tag: label
+        value:
+          sk: Zmenené
+          cs: Změněno
+          fi: Muokattu
+          en: Modified
+          de: Geändert
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
   speed:
@@ -156,8 +170,7 @@ slots:
     description: Ground speed of the vehicle.
     range: float
     minimum_value: 0
-    unit:
-      ucum_code: m/s
+    unit: { ucum_code: m/s }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
@@ -167,8 +180,7 @@ slots:
     range: float
     minimum_value: 0
     maximum_value: 360
-    unit:
-      ucum_code: deg
+    unit: { ucum_code: deg }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
@@ -188,7 +200,14 @@ slots:
     slot_uri: sdm:fleetVehicleId
     description: The operator and vehicle number HSL publishes, operator-vehicle.
     annotations:
-      label: { tag: label, value: { sk: "Číslo vozidla", cs: "Číslo vozidla", fi: "Kalustonumero", en: "Fleet number", de: "Wagennummer" } }
+      label:
+        tag: label
+        value:
+          sk: Číslo vozidla
+          cs: Číslo vozidla
+          fi: Kalustonumero
+          en: Fleet number
+          de: Wagennummer
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   url:
@@ -225,8 +244,7 @@ slots:
       The temperature the station measures: the air at a road weather station, the water at a
       beach sensor.
     range: float
-    unit:
-      ucum_code: Cel
+    unit: { ucum_code: Cel }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
@@ -234,8 +252,7 @@ slots:
     slot_uri: sdm:roadSurfaceTemperature
     description: Temperature of the road surface at the station.
     range: float
-    unit:
-      ucum_code: Cel
+    unit: { ucum_code: Cel }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
@@ -253,8 +270,7 @@ slots:
     description: Mean wind speed at the station.
     range: float
     minimum_value: 0
-    unit:
-      ucum_code: m/s
+    unit: { ucum_code: m/s }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
@@ -264,8 +280,7 @@ slots:
     range: float
     minimum_value: 0
     maximum_value: 360
-    unit:
-      ucum_code: deg
+    unit: { ucum_code: deg }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
@@ -274,8 +289,7 @@ slots:
     description: Precipitation intensity at the station, millimetres per hour.
     range: float
     minimum_value: 0
-    unit:
-      ucum_code: mm/h
+    unit: { ucum_code: mm/h }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
@@ -309,13 +323,11 @@ slots:
   effect:
     slot_uri: jc:effect
     description: What an HSL service alert does to the service, as GTFS-RT names it, such as DETOUR or REDUCED_SERVICE.
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   cause:
     slot_uri: jc:cause
     description: Why an HSL service alert is in force, as GTFS-RT names it, such as CONSTRUCTION or MAINTENANCE.
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   severity:
     slot_uri: sdm:severity
     description: How much the alert matters, informational, medium or high (GTFS-RT INFO, WARNING, SEVERE).
@@ -329,9 +341,7 @@ slots:
     multivalued: true
     inverse: routeAlerts
     inlined: false
-    annotations:
-      ngsi_ld_kind: Relationship
-      on_delete: set-null
+    annotations: { ngsi_ld_kind: Relationship, on_delete: set-null }
   refStop:
     slot_uri: jc:refStop
     description: The stops an HSL service alert affects, each a GtfsStop of this space.
@@ -339,9 +349,7 @@ slots:
     multivalued: true
     inverse: stopAlerts
     inlined: false
-    annotations:
-      ngsi_ld_kind: Relationship
-      on_delete: set-null
+    annotations: { ngsi_ld_kind: Relationship, on_delete: set-null }
     # T-3893: a vehicle's links to the line it runs and the stop it is at or heading to. They name
     # entities by URN and point outside the model (uriorcurie): the hub carries Vehicle slot for
     # slot without the GTFS classes (DM-61), and a vehicle is written even before the day's GTFS
@@ -351,7 +359,14 @@ slots:
     description: The line the vehicle is running, the URN of a GtfsRoute of this space.
     range: uriorcurie
     annotations:
-      label: { tag: label, value: { sk: "Na trase", cs: "Na trase", fi: "Reitillä", en: "On route", de: "Auf der Strecke" } }
+      label:
+        tag: label
+        value:
+          sk: Na trase
+          cs: Na trase
+          fi: Reitillä
+          en: On route
+          de: Auf der Strecke
       ngsi_ld_kind: Relationship
   nextStop:
     slot_uri: jc:nextStop
@@ -359,26 +374,21 @@ slots:
       The stop the vehicle stands at or comes to next, the URN of a GtfsStop of this space; HSL
       moves it on at each departure from or passing of a stop.
     range: uriorcurie
-    annotations:
-      ngsi_ld_kind: Relationship
+    annotations: { ngsi_ld_kind: Relationship }
   delay:
     slot_uri: jc:delay
     description: Seconds behind the timetable, negative when ahead (HSL's dl with the sign turned).
     range: integer
-    unit:
-      ucum_code: s
-    annotations:
-      ngsi_ld_kind: Property
+    unit: { ucum_code: s }
+    annotations: { ngsi_ld_kind: Property }
   occupancy:
     slot_uri: jc:occupancy
     description: How full the vehicle is, in percent; HSL sends 0 (room) or 100 (full).
     range: integer
     minimum_value: 0
     maximum_value: 100
-    unit:
-      ucum_code: '%'
-    annotations:
-      ngsi_ld_kind: Property
+    unit: { ucum_code: '%' }
+    annotations: { ngsi_ld_kind: Property }
   routeAlerts:
     slot_uri: jc:routeAlerts
     description: The HSL service alerts on the line, computed from their refRoute and never stored.
@@ -386,8 +396,7 @@ slots:
     multivalued: true
     inverse: refRoute
     inlined: false
-    annotations:
-      ngsi_ld_kind: Relationship
+    annotations: { ngsi_ld_kind: Relationship }
   stopAlerts:
     slot_uri: jc:stopAlerts
     description: The HSL service alerts on the stop, computed from their refStop and never stored.
@@ -395,16 +404,14 @@ slots:
     multivalued: true
     inverse: refStop
     inlined: false
-    annotations:
-      ngsi_ld_kind: Relationship
+    annotations: { ngsi_ld_kind: Relationship }
   unknownReference:
     slot_uri: jc:unknownReference
     description: >-
       What an HSL service alert names that this space holds no entity for, as `route:<id>` or
       `stop:<id>`, kept as text rather than as a relationship that would point at nothing.
     multivalued: true
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   validFrom:
     slot_uri: sdm:validFrom
     description: When the situation starts.
@@ -424,8 +431,7 @@ slots:
     description: Particulate matter up to 10 µm, the hour's mean at the station.
     range: float
     minimum_value: 0
-    unit:
-      ucum_code: ug/m3
+    unit: { ucum_code: ug/m3 }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
@@ -434,8 +440,7 @@ slots:
     description: Particulate matter up to 2.5 µm, the hour's mean at the station.
     range: float
     minimum_value: 0
-    unit:
-      ucum_code: ug/m3
+    unit: { ucum_code: ug/m3 }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
@@ -454,7 +459,14 @@ slots:
       Who publishes the data the entity was read from, as an application credits it beside the
       licence (CC BY 4.0 for every feed of this space).
     annotations:
-      label: { tag: label, value: { sk: "Poskytovateľ", cs: "Poskytovatel", fi: "Tarjoaja", en: "Provider", de: "Anbieter" } }
+      label:
+        tag: label
+        value:
+          sk: Poskytovateľ
+          cs: Poskytovatel
+          fi: Tarjoaja
+          en: Provider
+          de: Anbieter
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
   openingHours:
@@ -470,8 +482,7 @@ slots:
     description: Which of the city's services the place is, from the service register's own codes.
     range: ServiceCategory
     required: true
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   refPointOfInterest:
     slot_uri: sdm:refPointOfInterest
     description: The place in the city's service register the sensor stands at.
@@ -493,68 +504,58 @@ slots:
   zoneCode:
     slot_uri: jc:zoneCode
     description: The zone's own code, a fee zone number or a resident permit letter, as the signs show it.
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   permitKind:
     slot_uri: jc:permitKind
     description: What the permit lets its holder do on the public area.
     range: PermitKind
     required: true
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   permitNumber:
     slot_uri: jc:permitNumber
     description: The application number the city's permit register gives the permit, such as KP1900206-23.
     required: true
-    pattern: "^[A-Z]{2}[0-9]{7}(-[0-9]+)?$"
-    annotations:
-      ngsi_ld_kind: Property
+    pattern: ^[A-Z]{2}[0-9]{7}(-[0-9]+)?$
+    annotations: { ngsi_ld_kind: Property }
   permitStatus:
     slot_uri: jc:permitStatus
     description: Where the permitted work or event stands today.
     range: PermitStatus
     required: true
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   permitStart:
     slot_uri: jc:permitStart
     description: The first day the permit covers.
     range: date
     required: true
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   permitEnd:
     slot_uri: jc:permitEnd
     description: The last day the permit covers.
     range: date
     required: true
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   refDistrict:
     slot_uri: jc:refDistrict
     description: The district the record lies in.
     range: AdministrativeArea
     inverse: publicAreaPermits
     inlined: false
-    annotations:
-      ngsi_ld_kind: Relationship
-      on_delete: restrict
+    annotations: { ngsi_ld_kind: Relationship, on_delete: restrict }
   districtCode:
     slot_uri: jc:districtCode
     description: >-
       The city's own code of the area: the district number, or for a sub-district the full
       ten-digit code the city's statistics use for it.
     required: true
-    pattern: "^[0-9]{1,10}$"
-    annotations:
-      ngsi_ld_kind: Property
+    pattern: ^[0-9]{1,10}$
+    annotations: { ngsi_ld_kind: Property }
   divisionLevel:
     slot_uri: jc:divisionLevel
     description: Which of the city's two divisions the area belongs to.
     range: DivisionLevel
     required: true
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   stewardNote:
     slot_uri: jc:stewardNote
     description: >-
@@ -562,9 +563,16 @@ slots:
       ask. No pipeline writes it and no pipeline overwrites it, so an application may offer it
       for editing without the next run taking the words back (AP-62). At most 500 characters
       and no angle brackets, because it is a note and not a document.
-    pattern: "^[^<>]{0,500}$"
+    pattern: ^[^<>]{0,500}$
     annotations:
-      label: { tag: label, value: { sk: "Poznámka správcu", cs: "Poznámka správce", fi: "Ylläpitäjän huomautus", en: "Steward note", de: "Hinweis der Datenpflege" } }
+      label:
+        tag: label
+        value:
+          sk: Poznámka správcu
+          cs: Poznámka správce
+          fi: Ylläpitäjän huomautus
+          en: Steward note
+          de: Hinweis der Datenpflege
       ngsi_ld_kind: Property
   waterQualityObservations:
     slot_uri: jc:waterQualityObservations
@@ -573,8 +581,7 @@ slots:
     multivalued: true
     inverse: refPointOfInterest
     inlined: false
-    annotations:
-      ngsi_ld_kind: Relationship
+    annotations: { ngsi_ld_kind: Relationship }
   publicAreaPermits:
     slot_uri: jc:publicAreaPermits
     description: The public-area permits that lie in this district, computed from their refDistrict and never stored.
@@ -582,43 +589,44 @@ slots:
     multivalued: true
     inverse: refDistrict
     inlined: false
-    annotations:
-      ngsi_ld_kind: Relationship
+    annotations: { ngsi_ld_kind: Relationship }
   stopCode:
     slot_uri: jc:stopCode
     description: The code on the stop's sign, such as H2014; empty for a stop HSL gives none.
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   fareZone:
     slot_uri: jc:fareZone
     description: The HSL fare zone the stop lies in, A to D; none for a stop beyond HSL's zones.
-    pattern: "^[A-Z]$"
-    annotations:
-      ngsi_ld_kind: Property
+    pattern: ^[A-Z]$
+    annotations: { ngsi_ld_kind: Property }
   routeShortName:
     slot_uri: jc:routeShortName
     description: The line number riders see, such as 4 or 550.
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   headsign:
     slot_uri: jc:headsign
     description: Where the line runs to in this direction, as its sign shows it.
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   directionId:
     slot_uri: jc:directionId
     description: HSL's direction of the line, 1 or 2.
     range: integer
     minimum_value: 1
     maximum_value: 2
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   transportMode:
     slot_uri: jc:transportMode
     description: What serves the stop or runs the line.
     range: TransportMode
     annotations:
-      label: { tag: label, value: { sk: "Druh dopravy", cs: "Druh dopravy", fi: "Kulkumuoto", en: "Transport mode", de: "Verkehrsmittel" } }
+      label:
+        tag: label
+        value:
+          sk: Druh dopravy
+          cs: Druh dopravy
+          fi: Kulkumuoto
+          en: Transport mode
+          de: Verkehrsmittel
       ngsi_ld_kind: Property
   transportationType:
     slot_uri: sdm:transportationType
@@ -638,8 +646,7 @@ slots:
       The stops the line serves in this direction, in order, each the GTFS stop id that ends
       the id of a GtfsStop of this space.
     multivalued: true
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   availableSpotNumber:
     slot_uri: sdm:availableSpotNumber
     description: Free spaces at the park and ride site when it last reported, LIIPI's spacesAvailable.
@@ -660,17 +667,14 @@ slots:
     description: >-
       The built capacity per kind of space, as LIIPI names them in lower case (car, disabled,
       bicycle, electricCar, motorcycle, bicycleSecureSpace), each a count.
-    annotations:
-      ngsi_ld_kind: JsonProperty
+    annotations: { ngsi_ld_kind: JsonProperty }
   refNearestStation:
     slot_uri: jc:refNearestStation
     description: The HSL station within 500 m of the park and ride site, the nearest one, a GtfsStation of this space.
     range: GtfsStation
     inverse: nearbyParking
     inlined: false
-    annotations:
-      ngsi_ld_kind: Relationship
-      on_delete: set-null
+    annotations: { ngsi_ld_kind: Relationship, on_delete: set-null }
   nearbyParking:
     slot_uri: jc:nearbyParking
     description: The park and ride sites whose nearest station this is, computed from their refNearestStation and never stored.
@@ -678,8 +682,7 @@ slots:
     multivalued: true
     inverse: refNearestStation
     inlined: false
-    annotations:
-      ngsi_ld_kind: Relationship
+    annotations: { ngsi_ld_kind: Relationship }
   departures:
     slot_uri: jc:departures
     description: >-
@@ -688,12 +691,11 @@ slots:
       and its `status` (scheduled, skipped or canceled), and `delay` in seconds with the
       `scheduled` time it implies when HSL sends one. Set every 30 s for a curated set of stops
       from HSL's GTFS-RT trip updates; empty after five minutes without a feed.
-    annotations:
-      ngsi_ld_kind: JsonProperty
+    annotations: { ngsi_ld_kind: JsonProperty }
   wheelChairAccessible:
     slot_uri: sdm:wheelChairAccessible
     description: Whether a wheelchair can board here, GTFS's wheelchair_boarding; 0 unknown, 1 possible, 2 not possible.
-    pattern: "^[012]$"
+    pattern: ^[012]$
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
@@ -758,7 +760,7 @@ slots:
     description: >-
       GTFS's basic route type: 0 a tram, 1 the metro, 2 a train, 3 a bus, 4 a ferry. HSL's
       extended codes (109, 700s, 900) are written as the basic one they extend.
-    pattern: "^[0-7]$"
+    pattern: ^[0-7]$
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
@@ -778,8 +780,7 @@ slots:
     multivalued: true
     inverse: operatedBy
     inlined: false
-    annotations:
-      ngsi_ld_kind: Relationship
+    annotations: { ngsi_ld_kind: Relationship }
   distanceTravelled:
     slot_uri: sdm:distanceTravelled
     description: The distance along the shape at each point of its line, in kilometres.
@@ -796,47 +797,88 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Event
-    slots:
-      - name
-      - description
-      - startDate
-      - endDate
-      - eventStatus
-      - address
-      - contactPoint
-      - source
+    slots: [name, description, startDate, endDate, eventStatus, address, contactPoint, source]
     slot_usage:
       name:
         rank: 1
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Názov", cs: "Název", fi: "Nimi", en: "Name", de: "Name" } }
+          label:
+            tag: label
+            value:
+              sk: Názov
+              cs: Název
+              fi: Nimi
+              en: Name
+              de: Name
       startDate:
         rank: 2
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Začiatok", cs: "Začátek", fi: "Alkaa", en: "Start", de: "Beginn" } }
+          label:
+            tag: label
+            value:
+              sk: Začiatok
+              cs: Začátek
+              fi: Alkaa
+              en: Start
+              de: Beginn
       endDate:
         rank: 3
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Koniec", cs: "Konec", fi: "Päättyy", en: "End", de: "Ende" } }
+          label:
+            tag: label
+            value:
+              sk: Koniec
+              cs: Konec
+              fi: Päättyy
+              en: End
+              de: Ende
       address:
         rank: 4
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Adresa", cs: "Adresa", fi: "Osoite", en: "Address", de: "Adresse" } }
+          label:
+            tag: label
+            value:
+              sk: Adresa
+              cs: Adresa
+              fi: Osoite
+              en: Address
+              de: Adresse
       eventStatus:
         rank: 5
         annotations:
-          label: { tag: label, value: { sk: "Stav", cs: "Stav", fi: "Tila", en: "Status", de: "Status" } }
+          label:
+            tag: label
+            value:
+              sk: Stav
+              cs: Stav
+              fi: Tila
+              en: Status
+              de: Status
       description:
         rank: 6
         annotations:
-          label: { tag: label, value: { sk: "Popis", cs: "Popis", fi: "Kuvaus", en: "Description", de: "Beschreibung" } }
+          label:
+            tag: label
+            value:
+              sk: Popis
+              cs: Popis
+              fi: Kuvaus
+              en: Description
+              de: Beschreibung
       contactPoint:
         annotations:
-          label: { tag: label, value: { sk: "Kontakt", cs: "Kontakt", fi: "Yhteystiedot", en: "Contact", de: "Kontakt" } }
+          label:
+            tag: label
+            value:
+              sk: Kontakt
+              cs: Kontakt
+              fi: Yhteystiedot
+              en: Contact
+              de: Kontakt
   BikeHireDockingStation:
     class_uri: sdm:BikeHireDockingStation
     description: One HSL city bike station, its position and what it holds right now.
@@ -856,26 +898,61 @@ classes:
         rank: 1
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Názov", cs: "Název", fi: "Nimi", en: "Name", de: "Name" } }
+          label:
+            tag: label
+            value:
+              sk: Názov
+              cs: Název
+              fi: Nimi
+              en: Name
+              de: Name
       availableBikeNumber:
         rank: 2
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Voľné bicykle", cs: "Volná kola", fi: "Vapaat pyörät", en: "Bikes available", de: "Verfügbare Räder" } }
+          label:
+            tag: label
+            value:
+              sk: Voľné bicykle
+              cs: Volná kola
+              fi: Vapaat pyörät
+              en: Bikes available
+              de: Verfügbare Räder
       freeSlotNumber:
         rank: 3
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Voľné stojany", cs: "Volné stojany", fi: "Vapaat paikat", en: "Free slots", de: "Freie Plätze" } }
+          label:
+            tag: label
+            value:
+              sk: Voľné stojany
+              cs: Volné stojany
+              fi: Vapaat paikat
+              en: Free slots
+              de: Freie Plätze
       totalSlotNumber:
         rank: 4
         annotations:
-          label: { tag: label, value: { sk: "Stojany spolu", cs: "Stojanů celkem", fi: "Paikkoja yhteensä", en: "Total slots", de: "Plätze insgesamt" } }
+          label:
+            tag: label
+            value:
+              sk: Stojany spolu
+              cs: Stojanů celkem
+              fi: Paikkoja yhteensä
+              en: Total slots
+              de: Plätze insgesamt
       status:
         rank: 5
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Stav", cs: "Stav", fi: "Tila", en: "Status", de: "Status" } }
+          label:
+            tag: label
+            value:
+              sk: Stav
+              cs: Stav
+              fi: Tila
+              en: Status
+              de: Status
   Vehicle:
     class_uri: sdm:Vehicle
     description: One HSL bus, tram, metro, train or ferry in service, where it is, how fast it moves and how late it runs.
@@ -898,33 +975,82 @@ classes:
         rank: 1
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Linka", cs: "Linka", fi: "Linja", en: "Route", de: "Linie" } }
+          label:
+            tag: label
+            value:
+              sk: Linka
+              cs: Linka
+              fi: Linja
+              en: Route
+              de: Linie
       vehicleType:
         rank: 2
         annotations:
-          label: { tag: label, value: { sk: "Typ vozidla", cs: "Typ vozidla", fi: "Ajoneuvotyyppi", en: "Vehicle type", de: "Fahrzeugtyp" } }
+          label:
+            tag: label
+            value:
+              sk: Typ vozidla
+              cs: Typ vozidla
+              fi: Ajoneuvotyyppi
+              en: Vehicle type
+              de: Fahrzeugtyp
       nextStop:
         rank: 3
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Ďalšia zastávka", cs: "Další zastávka", fi: "Seuraava pysäkki", en: "Next stop", de: "Nächste Haltestelle" } }
+          label:
+            tag: label
+            value:
+              sk: Ďalšia zastávka
+              cs: Další zastávka
+              fi: Seuraava pysäkki
+              en: Next stop
+              de: Nächste Haltestelle
       delay:
         rank: 4
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Meškanie", cs: "Zpoždění", fi: "Myöhästyminen", en: "Delay", de: "Verspätung" } }
+          label:
+            tag: label
+            value:
+              sk: Meškanie
+              cs: Zpoždění
+              fi: Myöhästyminen
+              en: Delay
+              de: Verspätung
       speed:
         rank: 5
         annotations:
-          label: { tag: label, value: { sk: "Rýchlosť", cs: "Rychlost", fi: "Nopeus", en: "Speed", de: "Geschwindigkeit" } }
+          label:
+            tag: label
+            value:
+              sk: Rýchlosť
+              cs: Rychlost
+              fi: Nopeus
+              en: Speed
+              de: Geschwindigkeit
       occupancy:
         rank: 6
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Obsadenosť", cs: "Obsazenost", fi: "Kuormitus", en: "Occupancy", de: "Auslastung" } }
+          label:
+            tag: label
+            value:
+              sk: Obsadenosť
+              cs: Obsazenost
+              fi: Kuormitus
+              en: Occupancy
+              de: Auslastung
       heading:
         annotations:
-          label: { tag: label, value: { sk: "Smer", cs: "Směr", fi: "Suunta", en: "Heading", de: "Fahrtrichtung" } }
+          label:
+            tag: label
+            value:
+              sk: Smer
+              cs: Směr
+              fi: Suunta
+              en: Heading
+              de: Fahrtrichtung
   Article:
     class_uri: jc:Article
     description: >-
@@ -933,14 +1059,7 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Article
-    slots:
-      - identifier
-      - name
-      - description
-      - url
-      - datePublished
-      - image
-      - source
+    slots: [identifier, name, description, url, datePublished, image, source]
   WeatherObserved:
     class_uri: sdm:WeatherObserved
     description: One Fintraffic road weather station around Helsinki and its latest readings.
@@ -962,36 +1081,92 @@ classes:
         rank: 1
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Názov", cs: "Název", fi: "Nimi", en: "Name", de: "Name" } }
+          label:
+            tag: label
+            value:
+              sk: Názov
+              cs: Název
+              fi: Nimi
+              en: Name
+              de: Name
       dateObserved:
         rank: 2
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Čas merania", cs: "Čas měření", fi: "Mittausaika", en: "Observed", de: "Gemessen" } }
+          label:
+            tag: label
+            value:
+              sk: Čas merania
+              cs: Čas měření
+              fi: Mittausaika
+              en: Observed
+              de: Gemessen
       temperature:
         rank: 3
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Teplota", cs: "Teplota", fi: "Lämpötila", en: "Temperature", de: "Temperatur" } }
+          label:
+            tag: label
+            value:
+              sk: Teplota
+              cs: Teplota
+              fi: Lämpötila
+              en: Temperature
+              de: Temperatur
       roadSurfaceTemperature:
         rank: 4
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Teplota vozovky", cs: "Teplota vozovky", fi: "Tienpinnan lämpötila", en: "Road surface temperature", de: "Fahrbahntemperatur" } }
+          label:
+            tag: label
+            value:
+              sk: Teplota vozovky
+              cs: Teplota vozovky
+              fi: Tienpinnan lämpötila
+              en: Road surface temperature
+              de: Fahrbahntemperatur
       precipitation:
         rank: 5
         annotations:
-          label: { tag: label, value: { sk: "Zrážky", cs: "Srážky", fi: "Sademäärä", en: "Precipitation", de: "Niederschlag" } }
+          label:
+            tag: label
+            value:
+              sk: Zrážky
+              cs: Srážky
+              fi: Sademäärä
+              en: Precipitation
+              de: Niederschlag
       windSpeed:
         rank: 6
         annotations:
-          label: { tag: label, value: { sk: "Rýchlosť vetra", cs: "Rychlost větru", fi: "Tuulen nopeus", en: "Wind speed", de: "Windgeschwindigkeit" } }
+          label:
+            tag: label
+            value:
+              sk: Rýchlosť vetra
+              cs: Rychlost větru
+              fi: Tuulen nopeus
+              en: Wind speed
+              de: Windgeschwindigkeit
       relativeHumidity:
         annotations:
-          label: { tag: label, value: { sk: "Vlhkosť", cs: "Vlhkost", fi: "Kosteus", en: "Humidity", de: "Luftfeuchtigkeit" } }
+          label:
+            tag: label
+            value:
+              sk: Vlhkosť
+              cs: Vlhkost
+              fi: Kosteus
+              en: Humidity
+              de: Luftfeuchtigkeit
       windDirection:
         annotations:
-          label: { tag: label, value: { sk: "Smer vetra", cs: "Směr větru", fi: "Tuulen suunta", en: "Wind direction", de: "Windrichtung" } }
+          label:
+            tag: label
+            value:
+              sk: Smer vetra
+              cs: Směr větru
+              fi: Tuulen suunta
+              en: Wind direction
+              de: Windrichtung
   Alert:
     class_uri: sdm:Alert
     description: >-
@@ -1025,39 +1200,67 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
-    slots:
-      - name
-      - dateObserved
-      - pm10
-      - pm25
-      - airQualityIndex
-      - stewardNote
-      - source
+    slots: [name, dateObserved, pm10, pm25, airQualityIndex, stewardNote, source]
     slot_usage:
       name:
         rank: 1
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Názov", cs: "Název", fi: "Nimi", en: "Name", de: "Name" } }
+          label:
+            tag: label
+            value:
+              sk: Názov
+              cs: Název
+              fi: Nimi
+              en: Name
+              de: Name
       dateObserved:
         rank: 2
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Čas merania", cs: "Čas měření", fi: "Mittausaika", en: "Observed", de: "Gemessen" } }
+          label:
+            tag: label
+            value:
+              sk: Čas merania
+              cs: Čas měření
+              fi: Mittausaika
+              en: Observed
+              de: Gemessen
       airQualityIndex:
         rank: 3
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Index kvality ovzdušia", cs: "Index kvality ovzduší", fi: "Ilmanlaatuindeksi", en: "Air quality index", de: "Luftqualitätsindex" } }
+          label:
+            tag: label
+            value:
+              sk: Index kvality ovzdušia
+              cs: Index kvality ovzduší
+              fi: Ilmanlaatuindeksi
+              en: Air quality index
+              de: Luftqualitätsindex
       pm10:
         rank: 4
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "PM10", cs: "PM10", fi: "PM10", en: "PM10", de: "PM10" } }
+          label:
+            tag: label
+            value:
+              sk: PM10
+              cs: PM10
+              fi: PM10
+              en: PM10
+              de: PM10
       pm25:
         rank: 5
         annotations:
-          label: { tag: label, value: { sk: "PM2,5", cs: "PM2,5", fi: "PM2,5", en: "PM2.5", de: "PM2,5" } }
+          label:
+            tag: label
+            value:
+              sk: PM2,5
+              cs: PM2,5
+              fi: PM2,5
+              en: PM2.5
+              de: PM2,5
   PointOfInterest:
     class_uri: sdm:PointOfInterest
     description: >-
@@ -1085,13 +1288,7 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
-    slots:
-      - name
-      - temperature
-      - dateObserved
-      - refPointOfInterest
-      - dataProvider
-      - source
+    slots: [name, temperature, dateObserved, refPointOfInterest, dataProvider, source]
   OnStreetParking:
     class_uri: sdm:OnStreetParking
     description: >-
@@ -1102,15 +1299,7 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Parking
-    slots:
-      - name
-      - category
-      - totalSpotNumber
-      - zoneCode
-      - description
-      - url
-      - dataProvider
-      - source
+    slots: [name, category, totalSpotNumber, zoneCode, description, url, dataProvider, source]
     slot_usage:
       category:
         description: Which of the city's street parking layers the area belongs to, in the Smart Data Model's own words.
@@ -1165,13 +1354,7 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/AdministrativeArea
-    slots:
-      - name
-      - districtCode
-      - divisionLevel
-      - dataProvider
-      - source
-      - publicAreaPermits
+    slots: [name, districtCode, divisionLevel, dataProvider, source, publicAreaPermits]
   GtfsStop:
     class_uri: sdm:GtfsStop
     description: One HSL stop or station platform, where it is, its sign's code and its fare zone.
@@ -1233,15 +1416,7 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
-    slots:
-      - agencyName
-      - page
-      - timezone
-      - language
-      - phone
-      - routes
-      - dataProvider
-      - source
+    slots: [agencyName, page, timezone, language, phone, routes, dataProvider, source]
   GtfsRoute:
     class_uri: sdm:GtfsRoute
     description: >-
@@ -1268,11 +1443,7 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
-    slots:
-      - name
-      - distanceTravelled
-      - dataProvider
-      - source
+    slots: [name, distanceTravelled, dataProvider, source]
 
   PostalAddress:
     class_uri: schema:PostalAddress
@@ -1281,52 +1452,36 @@ classes:
       common schema).
     annotations:
       upstream_source: https://schema.org/PostalAddress
-    slots:
-      - streetAddress
-      - postalCode
-      - addressLocality
-      - addressCountry
+    slots: [streetAddress, postalCode, addressLocality, addressCountry]
 
 enums:
   ServiceCategory:
     permissible_values:
-      library:
-        description: A public library.
-      healthStation:
-        description: A health station.
-      swimmingHall:
-        description: An indoor swimming hall.
-      beach:
-        description: A public beach.
-      school:
-        description: A comprehensive school.
+      library: { description: A public library. }
+      healthStation: { description: A health station. }
+      swimmingHall: { description: An indoor swimming hall. }
+      beach: { description: A public beach. }
+      school: { description: A comprehensive school. }
   StreetParkingCategory:
     description: The OnStreetParking `category` values the city's layers use, a subset of the Smart Data Model's enum.
     permissible_values:
       public:
         description: A parking area of the parking guide, open to anyone.
-      feeCharged:
-        description: A parking fee zone; parking costs by the hour.
+      feeCharged: { description: A parking fee zone; parking costs by the hour. }
       forResidents:
         description: A resident parking zone; residents and businesses of the zone park on its permit.
   PermitKind:
     permissible_values:
-      excavation:
-        description: Digging on a street or a park.
+      excavation: { description: Digging on a street or a park. }
       trafficArrangement:
         description: A temporary change to traffic, such as a closed lane.
-      event:
-        description: An event held on a public area.
+      event: { description: An event held on a public area. }
   PermitStatus:
     permissible_values:
-      upcoming:
-        description: Granted and not started.
-      ongoing:
-        description: The work or the event is going on.
-      setup:
-        description: The event's structures are being built.
-      teardown:
-        description: The event's structures are being taken down.
+      upcoming: { description: Granted and not started. }
+      ongoing: { description: The work or the event is going on. }
+      setup: { description: The event's structures are being built. }
+      teardown: { description: The event's structures are being taken down. }
   DivisionLevel:
     permissible_values:
       district:
@@ -1335,13 +1490,8 @@ enums:
         description: A sub-district (osa-alue), the unit the city's statistics use.
   TransportMode:
     permissible_values:
-      bus:
-        description: A bus.
-      tram:
-        description: A tram.
-      metro:
-        description: The metro.
-      train:
-        description: A commuter train.
-      ferry:
-        description: A ferry.
+      bus: { description: A bus. }
+      tram: { description: A tram. }
+      metro: { description: The metro. }
+      train: { description: A commuter train. }
+      ferry: { description: A ferry. }

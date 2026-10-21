@@ -5,9 +5,11 @@ kind: Endpoint
 metadata:
   name: bbsk-hranice
   namespace: bbsk
-  title: { sk: "Hranice okresov a obcí — Banskobystrický kraj", en: "District and municipality boundaries — Banská Bystrica Region" }
+  title:
+    sk: Hranice okresov a obcí — Banskobystrický kraj
+    en: District and municipality boundaries — Banská Bystrica Region
   description:
-    sk: "Hranice okresov a obcí kraja. Zdroj: Banskobystrický samosprávny kraj, CC BY-SA 4.0."
+    sk: 'Hranice okresov a obcí kraja. Zdroj: Banskobystrický samosprávny kraj, CC BY-SA 4.0.'
     en: "The outlines of the region's districts and municipalities. Source: Banská Bystrica Self-Governing Region, CC BY-SA 4.0."
 spec:
   contextSpaceRef: bbsk-registre
@@ -21,14 +23,17 @@ spec:
       license: cc-by-sa
       datastore: { representation: csv, refresh: onReconcile }
   catalog:
-    publisher: { name: { sk: "Banskobystrický samosprávny kraj", en: "Banská Bystrica Self-Governing Region" }, uri: "https://www.bbsk.sk/" }
+    publisher:
+      name: { sk: Banskobystrický samosprávny kraj, en: Banská Bystrica Self-Governing Region }
+      uri: https://www.bbsk.sk/
     license: CC_BYSA_4_0
-    attribution: { sk: "Zdroj: Banskobystrický samosprávny kraj, https://opendata.bbsk.sk/, CC BY-SA 4.0", en: "Source: Banská Bystrica Self-Governing Region, https://opendata.bbsk.sk/, CC BY-SA 4.0" }
+    attribution:
+      sk: 'Zdroj: Banskobystrický samosprávny kraj, https://opendata.bbsk.sk/, CC BY-SA 4.0'
+      en: 'Source: Banská Bystrica Self-Governing Region, https://opendata.bbsk.sk/, CC BY-SA 4.0'
     themes: [REGI]
     keywords:
-      sk: ["hranice okresov", "obce"]
-      en: ["district boundaries", "municipalities"]
-    spatial:
-      - "SK032"
+      sk: [hranice okresov, obce]
+      en: [district boundaries, municipalities]
+    spatial: [SK032]
     frequency: ANNUAL
     pipelineRef: { kind: Pipeline, name: okresy }

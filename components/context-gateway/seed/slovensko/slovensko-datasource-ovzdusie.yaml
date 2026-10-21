@@ -7,7 +7,9 @@ kind: DataSource
 metadata:
   name: eea-sk-stations
   namespace: slovensko
-  title: { sk: "Kvalita ovzdušia, stanice SR", en: "Air quality, Slovak stations" }
+  title:
+    sk: Kvalita ovzdušia, stanice SR
+    en: Air quality, Slovak stations
 spec:
   type: http
   http:

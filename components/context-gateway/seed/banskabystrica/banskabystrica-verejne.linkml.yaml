@@ -73,7 +73,14 @@ slots:
       Who publishes the data the entity was read from, with the credit its licence asks for, as
       an application shows it beside the data.
     annotations:
-      label: { tag: label, value: { sk: "Poskytovateľ", cs: "Poskytovatel", fi: "Tarjoaja", en: "Provider", de: "Anbieter" } }
+      label:
+        tag: label
+        value:
+          sk: Poskytovateľ
+          cs: Poskytovatel
+          fi: Tarjoaja
+          en: Provider
+          de: Anbieter
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
   source:
@@ -81,7 +88,14 @@ slots:
     description: The open-data service the entity was read from.
     range: uri
     annotations:
-      label: { tag: label, value: { sk: "Zdroj", cs: "Zdroj", fi: "Lähde", en: "Source", de: "Quelle" } }
+      label:
+        tag: label
+        value:
+          sk: Zdroj
+          cs: Zdroj
+          fi: Lähde
+          en: Source
+          de: Quelle
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
   dateModified:
@@ -89,7 +103,14 @@ slots:
     description: When the publisher last changed the record.
     range: datetime
     annotations:
-      label: { tag: label, value: { sk: "Zmenené", cs: "Změněno", fi: "Muokattu", en: "Modified", de: "Geändert" } }
+      label:
+        tag: label
+        value:
+          sk: Zmenené
+          cs: Změněno
+          fi: Muokattu
+          en: Modified
+          de: Geändert
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
   startDate:
@@ -114,84 +135,73 @@ slots:
   startTime:
     slot_uri: jc:startTime
     description: The time the event starts, local time in Banská Bystrica (Europe/Bratislava), `HH:MM`.
-    pattern: "^[0-2][0-9]:[0-5][0-9]$"
+    pattern: ^[0-2][0-9]:[0-5][0-9]$
     examples:
-      - value: "16:00"
-    annotations:
-      ngsi_ld_kind: Property
+      - value: '16:00'
+    annotations: { ngsi_ld_kind: Property }
   endTime:
     slot_uri: jc:endTime
     description: The time the event ends, local time in Banská Bystrica (Europe/Bratislava), `HH:MM`.
-    pattern: "^[0-2][0-9]:[0-5][0-9]$"
+    pattern: ^[0-2][0-9]:[0-5][0-9]$
     examples:
-      - value: "19:00"
-    annotations:
-      ngsi_ld_kind: Property
+      - value: '19:00'
+    annotations: { ngsi_ld_kind: Property }
   eventCategory:
     slot_uri: jc:eventCategory
     description: The kind of event, from the city's own categories.
     range: EventCategory
     required: true
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   schoolCode:
     slot_uri: jc:schoolCode
     description: The school's EDUID in the national register of schools and school facilities.
     required: true
-    pattern: "^[0-9]{9}$"
+    pattern: ^[0-9]{9}$
     examples:
-      - value: "100009329"
-    annotations:
-      ngsi_ld_kind: Property
+      - value: '100009329'
+    annotations: { ngsi_ld_kind: Property }
   teachingLanguage:
     slot_uri: jc:teachingLanguage
     description: The language of instruction, in the register's words.
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   pupilCount:
     slot_uri: jc:pupilCount
     description: How many pupils or children the school or facility has, a count and never a name.
     range: integer
     minimum_value: 0
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   teachingStaff:
     slot_uri: jc:teachingStaff
     description: Teaching staff, in full-time equivalents.
     range: float
     minimum_value: 0
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   nonTeachingStaff:
     slot_uri: jc:nonTeachingStaff
     description: Non-teaching staff, in full-time equivalents.
     range: float
     minimum_value: 0
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   annualBudget:
     slot_uri: jc:annualBudget
     description: The school's budget for `budgetYear`, in euro.
     range: float
     minimum_value: 0
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   budgetYear:
     slot_uri: jc:budgetYear
     description: The year `annualBudget` is for, as the school map's column names it.
     range: integer
     minimum_value: 2000
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   stationCode:
     slot_uri: jc:stationCode
     description: The station's EoI code in the European air-quality network, such as `SK0263A`.
     required: true
-    pattern: "^SK[0-9]{4}A$"
+    pattern: ^SK[0-9]{4}A$
     examples:
       - value: SK0263A
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   dateObserved:
     slot_uri: sdm:dateObserved
     description: >-
@@ -206,8 +216,7 @@ slots:
     description: Particulate matter up to 10 µm, the hour's mean at the station.
     range: float
     minimum_value: 0
-    unit:
-      ucum_code: ug/m3
+    unit: { ucum_code: ug/m3 }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
@@ -216,8 +225,7 @@ slots:
     description: Particulate matter up to 2.5 µm, the hour's mean at the station.
     range: float
     minimum_value: 0
-    unit:
-      ucum_code: ug/m3
+    unit: { ucum_code: ug/m3 }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
@@ -227,8 +235,7 @@ slots:
     description: Nitrogen dioxide, the hour's mean at the station.
     range: float
     minimum_value: 0
-    unit:
-      ucum_code: ug/m3
+    unit: { ucum_code: ug/m3 }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
@@ -237,8 +244,7 @@ slots:
     description: Ozone, the hour's mean at the station.
     range: float
     minimum_value: 0
-    unit:
-      ucum_code: ug/m3
+    unit: { ucum_code: ug/m3 }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
@@ -246,8 +252,7 @@ slots:
     slot_uri: sdm:temperature
     description: Air temperature 2 m above the ground, the minute's mean.
     range: float
-    unit:
-      ucum_code: Cel
+    unit: { ucum_code: Cel }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
@@ -265,8 +270,7 @@ slots:
     description: Air pressure at the station, the minute's mean.
     range: float
     minimum_value: 0
-    unit:
-      ucum_code: hPa
+    unit: { ucum_code: hPa }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
@@ -275,8 +279,7 @@ slots:
     description: Wind speed, the minute's scalar mean.
     range: float
     minimum_value: 0
-    unit:
-      ucum_code: m/s
+    unit: { ucum_code: m/s }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
@@ -286,8 +289,7 @@ slots:
     range: float
     minimum_value: 0
     maximum_value: 360
-    unit:
-      ucum_code: deg
+    unit: { ucum_code: deg }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
@@ -296,8 +298,7 @@ slots:
     description: Rain and melted snow over the ten minutes up to `dateObserved`.
     range: float
     minimum_value: 0
-    unit:
-      ucum_code: mm
+    unit: { ucum_code: mm }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
@@ -308,8 +309,7 @@ slots:
       the station measures (5, 10, 20, 50 and 100 cm, SHMÚ's `t_pod5` to `t_pod100`), each told
       apart by its datasetId, `urn:ngsi-ld:Dataset:shmu:soil-depth-{cm}cm`.
     range: float
-    unit:
-      ucum_code: Cel
+    unit: { ucum_code: Cel }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.ParksAndGardens
@@ -319,9 +319,7 @@ slots:
       What the place is, as OpenStreetMap tags it: `pharmacy`, `hospital` or `clinic` from its
       `amenity`, and `defibrillator` from `emergency=defibrillator`.
     multivalued: true
-    annotations:
-      ngsi_ld_kind: Property
-      upstream_source: dataModel.PointOfInterest
+    annotations: { ngsi_ld_kind: Property, upstream_source: dataModel.PointOfInterest }
   openingHours:
     slot_uri: schema:openingHours
     description: >-
@@ -338,9 +336,7 @@ slots:
       schuko Wall_Euro, type1 J-1772, tesla_supercharger Tesla, any other Other); absent when
       the map names none.
     multivalued: true
-    annotations:
-      ngsi_ld_kind: Property
-      upstream_source: dataModel.Transportation
+    annotations: { ngsi_ld_kind: Property, upstream_source: dataModel.Transportation }
   capacity:
     slot_uri: sdm-transport:capacity
     description: >-
@@ -348,9 +344,7 @@ slots:
       of its socket counts when it has none; absent when the map gives neither.
     range: integer
     minimum_value: 1
-    annotations:
-      ngsi_ld_kind: Property
-      upstream_source: dataModel.Transportation
+    annotations: { ngsi_ld_kind: Property, upstream_source: dataModel.Transportation }
   allowedVehicleType:
     slot_uri: sdm-transport:allowedVehicleType
     description: >-
@@ -358,15 +352,11 @@ slots:
       `motorcycle`, `bus` and `hgv` set to yes (car, bicycle, motorcycle, bus, truck); absent
       when the map sets none.
     multivalued: true
-    annotations:
-      ngsi_ld_kind: Property
-      upstream_source: dataModel.Transportation
+    annotations: { ngsi_ld_kind: Property, upstream_source: dataModel.Transportation }
   operator:
     slot_uri: sdm-transport:operator
     description: Who runs the station, as OpenStreetMap's `operator` tag names it.
-    annotations:
-      ngsi_ld_kind: Property
-      upstream_source: dataModel.Transportation
+    annotations: { ngsi_ld_kind: Property, upstream_source: dataModel.Transportation }
 
   parcelNumber:
     slot_uri: jc:parcelNumber
@@ -375,7 +365,7 @@ slots:
       number, a slash and the subdivision. Unique only together with the cadastral area and the
       register.
     required: true
-    pattern: "^[0-9]+(/[0-9]+)?$"
+    pattern: ^[0-9]+(/[0-9]+)?$
     examples:
       - value: 1266/16
     annotations:
@@ -388,30 +378,28 @@ slots:
       `E` for the parcels of the original land plots (KN-E).
     required: true
     range: CadastralRegister
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   cadastralAreaCode:
     slot_uri: jc:cadastralAreaCode
     description: The six-digit code of the cadastral area (katastrálne územie) the parcel lies in, `801062`.
     required: true
-    pattern: "^[0-9]{6}$"
+    pattern: ^[0-9]{6}$
     examples:
-      - value: "801062"
+      - value: '801062'
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://inspire.ec.europa.eu/id/document/tg/cp
   cadastralAreaName:
     slot_uri: jc:cadastralAreaName
     description: The name of that cadastral area, `Banská Bystrica`.
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   nationalCadastralReference:
     slot_uri: jc:nationalCadastralReference
     description: >-
       The parcel's reference in the national cadastre, as INSPIRE publishes it: the cadastral
       area's code, the parcel number and the register, `801062_1266/16.C`.
     required: true
-    pattern: "^[0-9]{6}_[0-9]+(/[0-9]+)?\\.[CE]$"
+    pattern: ^[0-9]{6}_[0-9]+(/[0-9]+)?\.[CE]$
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://inspire.ec.europa.eu/id/document/tg/cp
@@ -423,8 +411,7 @@ slots:
       tenths of a percent.
     range: float
     minimum_value: 0
-    unit:
-      ucum_code: m2
+    unit: { ucum_code: m2 }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://inspire.ec.europa.eu/id/document/tg/cp
@@ -453,37 +440,93 @@ classes:
         rank: 1
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Názov", cs: "Název", fi: "Nimi", en: "Name", de: "Name" } }
+          label:
+            tag: label
+            value:
+              sk: Názov
+              cs: Název
+              fi: Nimi
+              en: Name
+              de: Name
       startDate:
         rank: 2
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Začiatok", cs: "Začátek", fi: "Alkaa", en: "Start", de: "Beginn" } }
+          label:
+            tag: label
+            value:
+              sk: Začiatok
+              cs: Začátek
+              fi: Alkaa
+              en: Start
+              de: Beginn
       startTime:
         rank: 3
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Čas začiatku", cs: "Čas začátku", fi: "Alkamisaika", en: "Start time", de: "Startzeit" } }
+          label:
+            tag: label
+            value:
+              sk: Čas začiatku
+              cs: Čas začátku
+              fi: Alkamisaika
+              en: Start time
+              de: Startzeit
       endDate:
         rank: 4
         annotations:
-          label: { tag: label, value: { sk: "Koniec", cs: "Konec", fi: "Päättyy", en: "End", de: "Ende" } }
+          label:
+            tag: label
+            value:
+              sk: Koniec
+              cs: Konec
+              fi: Päättyy
+              en: End
+              de: Ende
       endTime:
         rank: 5
         annotations:
-          label: { tag: label, value: { sk: "Čas konca", cs: "Čas konce", fi: "Päättymisaika", en: "End time", de: "Endzeit" } }
+          label:
+            tag: label
+            value:
+              sk: Čas konca
+              cs: Čas konce
+              fi: Päättymisaika
+              en: End time
+              de: Endzeit
       address:
         rank: 6
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Adresa", cs: "Adresa", fi: "Osoite", en: "Address", de: "Adresse" } }
+          label:
+            tag: label
+            value:
+              sk: Adresa
+              cs: Adresa
+              fi: Osoite
+              en: Address
+              de: Adresse
       eventCategory:
         rank: 7
         annotations:
-          label: { tag: label, value: { sk: "Kategória", cs: "Kategorie", fi: "Luokka", en: "Category", de: "Kategorie" } }
+          label:
+            tag: label
+            value:
+              sk: Kategória
+              cs: Kategorie
+              fi: Luokka
+              en: Category
+              de: Kategorie
       url:
         annotations:
-          label: { tag: label, value: { sk: "Odkaz", cs: "Odkaz", fi: "Linkki", en: "Link", de: "Link" } }
+          label:
+            tag: label
+            value:
+              sk: Odkaz
+              cs: Odkaz
+              fi: Linkki
+              en: Link
+              de: Link
   Organization:
     class_uri: sdm-org:Organization
     description: >-
@@ -513,59 +556,95 @@ classes:
       common schema).
     annotations:
       upstream_source: https://schema.org/PostalAddress
-    slots:
-      - streetAddress
-      - postalCode
-      - addressLocality
-      - addressCountry
+    slots: [streetAddress, postalCode, addressLocality, addressCountry]
   AirQualityObserved:
     class_uri: sdm:AirQualityObserved
     description: One air-quality station in the city and the latest hourly means it reported.
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
-    slots:
-      - name
-      - stationCode
-      - dateObserved
-      - pm10
-      - pm25
-      - no2
-      - o3
-      - dataProvider
-      - source
+    slots: [name, stationCode, dateObserved, pm10, pm25, no2, o3, dataProvider, source]
     slot_usage:
       name:
         rank: 1
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Názov", cs: "Název", fi: "Nimi", en: "Name", de: "Name" } }
+          label:
+            tag: label
+            value:
+              sk: Názov
+              cs: Název
+              fi: Nimi
+              en: Name
+              de: Name
       dateObserved:
         rank: 2
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Čas merania", cs: "Čas měření", fi: "Mittausaika", en: "Observed", de: "Gemessen" } }
+          label:
+            tag: label
+            value:
+              sk: Čas merania
+              cs: Čas měření
+              fi: Mittausaika
+              en: Observed
+              de: Gemessen
       pm10:
         rank: 3
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "PM10", cs: "PM10", fi: "PM10", en: "PM10", de: "PM10" } }
+          label:
+            tag: label
+            value:
+              sk: PM10
+              cs: PM10
+              fi: PM10
+              en: PM10
+              de: PM10
       pm25:
         rank: 4
         annotations:
-          label: { tag: label, value: { sk: "PM2,5", cs: "PM2,5", fi: "PM2,5", en: "PM2.5", de: "PM2,5" } }
+          label:
+            tag: label
+            value:
+              sk: PM2,5
+              cs: PM2,5
+              fi: PM2,5
+              en: PM2.5
+              de: PM2,5
       no2:
         rank: 5
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "NO₂", cs: "NO₂", fi: "NO₂", en: "NO₂", de: "NO₂" } }
+          label:
+            tag: label
+            value:
+              sk: NO₂
+              cs: NO₂
+              fi: NO₂
+              en: NO₂
+              de: NO₂
       o3:
         rank: 6
         annotations:
-          label: { tag: label, value: { sk: "O₃", cs: "O₃", fi: "O₃", en: "O₃", de: "O₃" } }
+          label:
+            tag: label
+            value:
+              sk: O₃
+              cs: O₃
+              fi: O₃
+              en: O₃
+              de: O₃
       stationCode:
         annotations:
-          label: { tag: label, value: { sk: "Kód stanice", cs: "Kód stanice", fi: "Asematunnus", en: "Station code", de: "Stationscode" } }
+          label:
+            tag: label
+            value:
+              sk: Kód stanice
+              cs: Kód stanice
+              fi: Asematunnus
+              en: Station code
+              de: Stationscode
   WeatherObserved:
     class_uri: sdm:WeatherObserved
     description: >-
@@ -591,39 +670,102 @@ classes:
         rank: 1
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Názov", cs: "Název", fi: "Nimi", en: "Name", de: "Name" } }
+          label:
+            tag: label
+            value:
+              sk: Názov
+              cs: Název
+              fi: Nimi
+              en: Name
+              de: Name
       dateObserved:
         rank: 2
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Čas merania", cs: "Čas měření", fi: "Mittausaika", en: "Observed", de: "Gemessen" } }
+          label:
+            tag: label
+            value:
+              sk: Čas merania
+              cs: Čas měření
+              fi: Mittausaika
+              en: Observed
+              de: Gemessen
       temperature:
         rank: 3
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Teplota", cs: "Teplota", fi: "Lämpötila", en: "Temperature", de: "Temperatur" } }
+          label:
+            tag: label
+            value:
+              sk: Teplota
+              cs: Teplota
+              fi: Lämpötila
+              en: Temperature
+              de: Temperatur
       precipitation:
         rank: 4
         annotations:
           summary: true
-          label: { tag: label, value: { sk: "Zrážky", cs: "Srážky", fi: "Sademäärä", en: "Precipitation", de: "Niederschlag" } }
+          label:
+            tag: label
+            value:
+              sk: Zrážky
+              cs: Srážky
+              fi: Sademäärä
+              en: Precipitation
+              de: Niederschlag
       windSpeed:
         rank: 5
         annotations:
-          label: { tag: label, value: { sk: "Rýchlosť vetra", cs: "Rychlost větru", fi: "Tuulen nopeus", en: "Wind speed", de: "Windgeschwindigkeit" } }
+          label:
+            tag: label
+            value:
+              sk: Rýchlosť vetra
+              cs: Rychlost větru
+              fi: Tuulen nopeus
+              en: Wind speed
+              de: Windgeschwindigkeit
       relativeHumidity:
         rank: 6
         annotations:
-          label: { tag: label, value: { sk: "Vlhkosť", cs: "Vlhkost", fi: "Kosteus", en: "Humidity", de: "Luftfeuchtigkeit" } }
+          label:
+            tag: label
+            value:
+              sk: Vlhkosť
+              cs: Vlhkost
+              fi: Kosteus
+              en: Humidity
+              de: Luftfeuchtigkeit
       atmosphericPressure:
         annotations:
-          label: { tag: label, value: { sk: "Tlak", cs: "Tlak", fi: "Ilmanpaine", en: "Pressure", de: "Luftdruck" } }
+          label:
+            tag: label
+            value:
+              sk: Tlak
+              cs: Tlak
+              fi: Ilmanpaine
+              en: Pressure
+              de: Luftdruck
       windDirection:
         annotations:
-          label: { tag: label, value: { sk: "Smer vetra", cs: "Směr větru", fi: "Tuulen suunta", en: "Wind direction", de: "Windrichtung" } }
+          label:
+            tag: label
+            value:
+              sk: Smer vetra
+              cs: Směr větru
+              fi: Tuulen suunta
+              en: Wind direction
+              de: Windrichtung
       soilTemperature:
         annotations:
-          label: { tag: label, value: { sk: "Teplota pôdy", cs: "Teplota půdy", fi: "Maan lämpötila", en: "Soil temperature", de: "Bodentemperatur" } }
+          label:
+            tag: label
+            value:
+              sk: Teplota pôdy
+              cs: Teplota půdy
+              fi: Maan lämpötila
+              en: Soil temperature
+              de: Bodentemperatur
   PointOfInterest:
     class_uri: sdm:PointOfInterest
     description: >-
@@ -632,13 +774,7 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.PointOfInterest
-    slots:
-      - name
-      - category
-      - openingHours
-      - address
-      - dataProvider
-      - source
+    slots: [name, category, openingHours, address, dataProvider, source]
   EVChargingStation:
     class_uri: sdm:EVChargingStation
     description: >-
@@ -688,12 +824,9 @@ enums:
         description: Music, dance and theatre (Hudba, tanec, divadlo).
       museumsGalleriesLibraries:
         description: Museums, galleries and libraries (Múzeá, galérie, knižnice).
-      sport:
-        description: Sport (Športové).
-      exhibition:
-        description: Exhibitions (Výstavy).
-      other:
-        description: Any other event (Iné podujatia).
+      sport: { description: Sport (Športové). }
+      exhibition: { description: Exhibitions (Výstavy). }
+      other: { description: Any other event (Iné podujatia). }
   CadastralRegister:
     permissible_values:
       C:

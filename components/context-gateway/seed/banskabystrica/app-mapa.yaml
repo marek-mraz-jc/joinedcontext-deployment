@@ -13,22 +13,19 @@ kind: App
 metadata:
   name: banskabystrica-mapa
   namespace: banskabystrica
+  title: { sk: Mapa mesta Banská Bystrica, en: Map of Banská Bystrica }
+  description:
+    sk: Podujatia mesta, školy z Digitálnej mapy škôl a meranie ovzdušia na jednej mape, s vyhľadávaním a detailom miesta.
+    en: The city's events, the schools of the national school map and the air-quality station on one map, with search and a detail of each place.
   annotations:
     # The Portal image ships this bundle (Dockerfile, /srv/apps), so the App names no
     # repository of its own; the Portal accepts the mark only where the bundle is (AP-87).
     joinedcontext.com/shipped-with: portal
-  title:
-    sk: "Mapa mesta Banská Bystrica"
-    en: "Map of Banská Bystrica"
-  description:
-    sk: "Podujatia mesta, školy z Digitálnej mapy škôl a meranie ovzdušia na jednej mape, s vyhľadávaním a detailom miesta."
-    en: "The city's events, the schools of the national school map and the air-quality station on one map, with search and a detail of each place."
 spec:
   kind: ui
   source:
     path: ./apps/banskabystrica-mapa
-  build:
-    node: "22"
+  build: { node: '22' }
   # The space and its endpoint are public, and the map is the city's own publication.
   visibility: public
   lifecycle: published
@@ -36,10 +33,21 @@ spec:
   dataNeeds:
     # One space, three types, read only: the events of the pipeline podujatia, the schools of
     # skoly and the station of ovzdusie-pm10 (T-2781, T-2949); the attributes the screen shows.
-    - contextSpaceRef:
-        kind: ContextSpace
-        name: banskabystrica-verejne
+    - contextSpaceRef: { kind: ContextSpace, name: banskabystrica-verejne }
       types: [Event, Organization, AirQualityObserved]
-      attrs: [name, location, address, url, startDate, endDate, startTime, eventCategory, pupilCount, teachingLanguage, dateObserved, pm10, pm25]
+      attrs:
+        - name
+        - location
+        - address
+        - url
+        - startDate
+        - endDate
+        - startTime
+        - eventCategory
+        - pupilCount
+        - teachingLanguage
+        - dateObserved
+        - pm10
+        - pm25
       operations: [queryEntity, retrieveEntity]
       representations: [ngsi-ld, ogc-features]

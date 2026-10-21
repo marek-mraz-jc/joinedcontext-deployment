@@ -6,12 +6,14 @@ kind: KnowledgeSource
 metadata:
   name: data-portal
   namespace: bbsk
-  title: { sk: "Otvorené údaje Banskobystrického samosprávneho kraja", en: "The region's open datasets" }
+  title:
+    sk: Otvorené údaje Banskobystrického samosprávneho kraja
+    en: The region's open datasets
 spec:
   source: ckan
   ckanInstanceRef: bbsk
   organizations: [bbsk]
-  schedule: "45 3 * * *"
+  schedule: '45 3 * * *'
   maxPages: 500
   languages: [sk, en]
   visibility: public

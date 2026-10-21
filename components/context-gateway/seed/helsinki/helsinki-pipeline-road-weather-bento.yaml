@@ -7,8 +7,7 @@ pipeline:
   processors:
     - mapping: |
         root = this.stations
-    - unarchive:
-        format: json_array
+    - unarchive: { format: json_array }
 
     - mapping: |
         let domain = env("JC_ORG_DOMAIN")
@@ -77,5 +76,4 @@ pipeline:
           }.filter(entry -> entry.value != null)
         }
 
-    - archive:
-        format: json_array
+    - archive: { format: json_array }

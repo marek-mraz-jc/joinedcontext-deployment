@@ -5,7 +5,7 @@ kind: DataSource
 metadata:
   name: hel-parking-fee-zones
   namespace: helsinki
-  title: { en: "Parking fee zones", fi: "Pysäköinnin maksuvyöhykkeet" }
+  title: { en: Parking fee zones, fi: Pysäköinnin maksuvyöhykkeet }
 spec:
   type: http
   http:

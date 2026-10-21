@@ -4,7 +4,9 @@ kind: DataSource
 metadata:
   name: susr-st3004rr
   namespace: bbsk
-  title: { sk: "Byty – vybrané ukazovatele (ŠÚ SR, st3004rr)", en: "Dwellings, selected indicators (ŠÚ SR, st3004rr)" }
+  title:
+    sk: Byty – vybrané ukazovatele (ŠÚ SR, st3004rr)
+    en: Dwellings, selected indicators (ŠÚ SR, st3004rr)
 spec:
   type: http
   http:

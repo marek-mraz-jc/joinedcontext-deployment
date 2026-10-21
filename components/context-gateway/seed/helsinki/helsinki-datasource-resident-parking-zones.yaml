@@ -6,7 +6,7 @@ kind: DataSource
 metadata:
   name: hel-resident-parking-zones
   namespace: helsinki
-  title: { en: "Resident and business parking zones", fi: "Asukas- ja yrityspysäköintivyöhykkeet" }
+  title: { en: Resident and business parking zones, fi: Asukas- ja yrityspysäköintivyöhykkeet }
 spec:
   type: http
   http:

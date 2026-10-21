@@ -8,8 +8,7 @@ pipeline:
   processors:
     - mapping: |
         root = this.data.stations
-    - unarchive:
-        format: json_array
+    - unarchive: { format: json_array }
 
     # A station that is not installed is a station the operator has taken out of the ground.
     - mapping: |
@@ -38,5 +37,4 @@ pipeline:
         }
 
     # One request per run rather than one per station.
-    - archive:
-        format: json_array
+    - archive: { format: json_array }

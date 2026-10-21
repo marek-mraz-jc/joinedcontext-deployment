@@ -7,7 +7,9 @@ kind: DataSource
 metadata:
   name: hsl-hfp
   namespace: helsinki
-  title: { en: "HSL high-frequency positioning: bus 550, tram 4, metro, Suomenlinna ferry", fi: "HSL:n suurtaajuinen paikannus: bussi 550, raitiovaunu 4, metro, Suomenlinnan lautta" }
+  title:
+    en: 'HSL high-frequency positioning: bus 550, tram 4, metro, Suomenlinna ferry'
+    fi: 'HSL:n suurtaajuinen paikannus: bussi 550, raitiovaunu 4, metro, Suomenlinnan lautta'
 spec:
   type: mqtt
   mqtt:
