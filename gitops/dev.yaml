@@ -31,3 +31,4 @@ components:
 - {name: basemap, component: basemap, namespace: dev, wave: 24}
 - {name: viz, component: viz, namespace: dev, wave: 25}
 - {name: ai, component: ai, namespace: dev, wave: 26}
+- {name: probes, component: probes, namespace: dev, wave: 27}

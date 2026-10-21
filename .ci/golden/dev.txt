@@ -42,6 +42,7 @@ apps/v1/Deployment dev/pipeline-runner
 apps/v1/Deployment dev/pipeline-tokens
 apps/v1/Deployment dev/portal
 apps/v1/Deployment dev/postgres-operator-cloudnative-pg
+apps/v1/Deployment dev/probe
 apps/v1/Deployment dev/viz-renderer
 apps/v1/Deployment dev/wasm-host-tokens
 apps/v1/StatefulSet dev/artifact-store
@@ -164,6 +165,7 @@ networking.k8s.io/v1/NetworkPolicy dev/default-deny-networkpolicies
 networking.k8s.io/v1/NetworkPolicy dev/default-deny-pipeline-runner
 networking.k8s.io/v1/NetworkPolicy dev/default-deny-portal
 networking.k8s.io/v1/NetworkPolicy dev/default-deny-postgres
+networking.k8s.io/v1/NetworkPolicy dev/default-deny-probes
 networking.k8s.io/v1/NetworkPolicy dev/default-deny-runtime-policies
 networking.k8s.io/v1/NetworkPolicy dev/default-deny-secrets
 networking.k8s.io/v1/NetworkPolicy dev/default-deny-viz
@@ -276,6 +278,8 @@ networking.k8s.io/v1/NetworkPolicy dev/postgres-linkerd-from-portal
 networking.k8s.io/v1/NetworkPolicy dev/postgres-operator-egress
 networking.k8s.io/v1/NetworkPolicy dev/postgres-operator-linkerd
 networking.k8s.io/v1/NetworkPolicy dev/postgres-operator-webhook
+networking.k8s.io/v1/NetworkPolicy dev/probe
+networking.k8s.io/v1/NetworkPolicy dev/probe-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy dev/role-setup-linkerd
 networking.k8s.io/v1/NetworkPolicy dev/runner-to-mqtt-brokers
 networking.k8s.io/v1/NetworkPolicy dev/runner-to-mqtt-brokers-linkerd
@@ -438,6 +442,7 @@ v1/ConfigMap dev/portal-branding
 v1/ConfigMap dev/postgres-cluster-dr-drill
 v1/ConfigMap dev/postgres-cluster-dr-drill-script
 v1/ConfigMap dev/postgres-cluster-monitoring-logical-replication
+v1/ConfigMap dev/probe
 v1/ConfigMap dev/viz-renderer
 v1/ConfigMap dev/viz-renderer-site
 v1/ConfigMap kube-system/local-path-config
@@ -524,6 +529,7 @@ v1/Service dev/pipeline-runner
 v1/Service dev/pipeline-runner-pods
 v1/Service dev/pipeline-tokens
 v1/Service dev/portal
+v1/Service dev/probe
 v1/Service dev/viz-renderer
 v1/Service dev/wasm-host-tokens
 v1/ServiceAccount dev/agent-proxy
@@ -552,4 +558,5 @@ v1/ServiceAccount dev/portal
 v1/ServiceAccount dev/portal-reconciler
 v1/ServiceAccount dev/postgres-cluster-dr-drill
 v1/ServiceAccount dev/postgres-operator-cloudnative-pg
+v1/ServiceAccount dev/probe
 v1/ServiceAccount dev/wasm-host-tokens
