@@ -140,16 +140,16 @@ def test_only_the_endpoint_surface_passes_a_websocket_upgrade(apisix_config):
     (platform T-3885); every other route keeps APISIX's default and drops the upgrade."""
     _, parsed = apisix_config
     upgraded = sorted(r["id"] for r in parsed.get("routes", []) if r.get("enable_websocket"))
-    # T-4630: and the same surface on the data host api.{domain}. T-4873: each has a `-ws` sibling
-    # that takes `{endpoint}/ws` alone, so the open-socket limit applies to the socket only.
-    assert upgraded == [
-        "api-context-endpoint",
-        "api-context-endpoint-ws",
-        "context-endpoint",
-        "context-endpoint-portal",
-        "context-endpoint-portal-ws",
-        "context-endpoint-ws",
-    ]
+    # T-4630: and the same surface on the data host api.{domain}. T-4873: on `-ws` routes of their
+    # own that take `{endpoint}/ws` alone, so the open-socket limit applies to the socket only;
+    # T-4903: and only they keep the 300 s read timeout, a plain read never gets it.
+    assert upgraded == ["api-context-endpoint-ws", "context-endpoint-portal-ws", "context-endpoint-ws"]
+    routes = {r["id"]: r for r in parsed.get("routes", [])}
+    for route_id in upgraded:
+        route, parent = routes[route_id], routes[route_id.removesuffix("-ws")]
+        assert route["vars"] == [["uri", "~~", "^/api/endpoint/[^/]+/ws$"]], route_id
+        assert route["uri"] == parent["uri"] and route["priority"] > parent["priority"], route_id
+        assert route.get("plugin_config_id") == parent.get("plugin_config_id"), route_id
 
 
 @requires_helmfile
