@@ -243,15 +243,25 @@ update-components:
 		fi; \
 	done
 
-# Refresh .ci/golden/local.txt after an intentional change to the rendered output
+# Refresh .ci/golden/<env>.txt for every environment ci.yml renders, after an intentional change
 [group('test & lint')]
 golden-update:
 	#!/usr/bin/env bash
 	set -euo pipefail
 	just _dev-assemble
-	scripts/render.sh local /tmp/golden-local.yaml --deployed >/dev/null
-	python3 .ci/golden/list-objects.py /tmp/golden-local.yaml > .ci/golden/local.txt
-	wc -l .ci/golden/local.txt
+	out=$(mktemp -d -t golden.XXXXXX)
+	trap 'rm -rf "$out"' EXIT
+	mapfile -t environments < .ci/golden/ENVIRONMENTS
+	for env in "${environments[@]}"; do
+		helmfile -f deployment/helmfile.yaml -e "$env" repos >/dev/null
+		scripts/render.sh "$env" "$out/$env.yaml"
+		python3 .ci/golden/list-objects.py "$out/$env.yaml" > ".ci/golden/$env.txt"
+	done
+	for env in dev smartcity; do
+		helmfile -f demos/bbsk/helmfile.yaml.gotmpl -e "$env" template --skip-deps -q > "$out/demo-bbsk-$env.yaml"
+		python3 .ci/golden/list-objects.py "$out/demo-bbsk-$env.yaml" > ".ci/golden/demo-bbsk-$env.txt"
+	done
+	wc -l .ci/golden/*.txt
 
 # Verify Kyverno policies
 [group('test & lint')]
@@ -558,6 +568,51 @@ dev-validate out='deployment/validate-dev.json':
 	just _dev-guard
 	just _dev-assemble
 	./scripts/validate-dev.py --out "{{ out }}"
+
+# Nightly drift (T-4956): helmfile diff --three-way-merge of dev or smartcity (production) under
+# a read-only token (jc-drift-reader, get/list, 30 min). One result per release in <out>; hand it
+# to tasks/file-failures, which files one task per drifting release. Never applies anything.
+[group('dev cluster')]
+drift env out='':
+	#!/usr/bin/env bash
+	set -euo pipefail
+	case "{{ env }}" in
+		dev) just _dev-guard ;;
+		smartcity) just _prod-guard ;;
+		*) echo "drift: environment must be dev or smartcity, not '{{ env }}'" >&2; exit 2 ;;
+	esac
+	just _dev-assemble
+	out="{{ out }}"; out="${out:-deployment/drift-{{ env }}.json}"
+	ns=$(kubectl get serviceaccounts -A --field-selector metadata.name=jc-drift-reader -o jsonpath='{.items[0].metadata.namespace}')
+	[ -n "$ns" ] || { echo "drift: no jc-drift-reader ServiceAccount on the cluster; apply runtime-policies first" >&2; exit 1; }
+	server=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
+	ca=$(kubectl config view --minify --raw -o jsonpath='{.clusters[0].cluster.certificate-authority-data}')
+	token=$(kubectl -n "$ns" create token jc-drift-reader --duration 30m)
+	umask 077
+	ro=$(mktemp -t drift-kubeconfig.XXXXXX)
+	trap 'rm -f "$ro"' EXIT
+	cat > "$ro" <<KUBECONFIG
+	apiVersion: v1
+	kind: Config
+	clusters: [{name: c, cluster: {server: "$server", certificate-authority-data: "$ca"}}]
+	users: [{name: drift-reader, user: {token: "$token"}}]
+	contexts: [{name: drift, context: {cluster: c, user: drift-reader}}]
+	current-context: drift
+	KUBECONFIG
+	unset token
+	# Refuse to run with anything that can write: the check reads, it never applies.
+	for verb in create patch delete; do
+		if [ "$(KUBECONFIG="$ro" kubectl auth can-i "$verb" deployments -A 2>/dev/null)" != no ]; then
+			echo "drift: the drift identity can $verb deployments; refusing" >&2; exit 1
+		fi
+	done
+	# Nor anything beyond object reads: nodes/proxy is the kubelet API (exec over a GET).
+	for sub in nodes/proxy services/proxy pods/log; do
+		if [ "$(KUBECONFIG="$ro" kubectl auth can-i get "$sub" -A 2>/dev/null)" != no ]; then
+			echo "drift: the drift identity can get $sub; refusing" >&2; exit 1
+		fi
+	done
+	KUBECONFIG="$ro" ./scripts/validate-dev.py --env "{{ env }}" --skip images,expiry,kyverno,probes --out "$out"
 
 # The monthly restore drill (T-2802): dev's databases copied into a throwaway namespace, counted,
 # timed and deleted; with a pinned portal image, its migrations run against the copy

@@ -27,6 +27,9 @@ DERIVED_KEYS = {"client-secret": 32}
 # component `secrets.yaml`. The names are read, not matched by prefix: a generated
 # `keycloak-user-*` Secret for a user that file does not name still fails.
 DEMO_USER_KEYS = {"password": 32}
+# The owner's login of a production realm with dev's seeds (T-4678): declared in
+# defaults/environment/secrets.yaml.gotmpl, rendered by smartcity alone.
+OWNER_ACCOUNT = {"keycloak-user-initial": {"password": 32}}
 # Every further catalogue (global.catalogues, T-4636) gets the default instance's CKAN Secrets
 # under its own name, `<family>-<catalogue>` (defaults/environment/secrets.yaml.gotmpl), so each is
 # held to the length components/ckan/secrets.yaml declares for its family.
@@ -67,7 +70,7 @@ def demo_user_declarations(components_dir: Path) -> dict[str, dict[str, int]]:
 def main() -> int:
     rendered = Path(sys.argv[1])
     components = Path(sys.argv[2]) if len(sys.argv) > 2 else Path("components")
-    declared = declarations(components) | demo_user_declarations(components)
+    declared = declarations(components) | demo_user_declarations(components) | OWNER_ACCOUNT
 
     docs = [d for d in yaml.safe_load_all(rendered.read_text()) if isinstance(d, dict)]
     generated = [

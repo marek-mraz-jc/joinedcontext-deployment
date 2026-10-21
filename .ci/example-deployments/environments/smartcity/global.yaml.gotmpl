@@ -4,6 +4,11 @@
 # same platform and seeds as dev under the production profile. 12 vCPU / 24 GB on one node, so
 # single replicas and one PostgreSQL instance; the daily backups are the recovery path.
 
+# Shared value files of the hosted clusters dev and smartcity (T-4956): environments/_layers/hosted,
+# loaded after defaults/environment and before this environment's own files, which win.
+environmentLayers:
+  - hosted
+
 components:
   - prepare
   # The local-path helper's SELinux type, so released volumes delete on the MicroOS node (T-3431).

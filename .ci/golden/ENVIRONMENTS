@@ -1,0 +1,9 @@
+local
+production
+staging
+dev
+smartcity
+recovery-test
+addons
+minimal
+broker-only

@@ -36,7 +36,7 @@ def enable(tree):
 
 
 def without_dev_switch(tree):
-    (tree / "deployment/environments/dev/wasm-host.yaml.gotmpl").unlink()
+    (tree / "deployment/environments/_layers/hosted/wasm-host.yaml.gotmpl").unlink()
 
 
 def test_off_by_default_no_service_no_namespace_and_no_token_url(rendered_variant):

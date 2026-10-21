@@ -139,6 +139,25 @@ environment; every change passes validation before any apply, and CI fails when 
   Renovate cannot compute a release asset's checksum; options were the release's own checksum
   file (rejected: it trusts the same release it checks) or no checksum (rejected: R3).
 
+## 7. Closed by T-4956
+
+- R5: `environments/_layers/hosted/` holds the five value files dev and smartcity shared byte for
+  byte; each names the layer in `environmentLayers` (`_layers/README.md`). ckan and global differ
+  by domain and stay per environment: an environment file cannot read `global.domain`.
+- R6: each of the 29 local charts has a strict `values.schema.json` (`additionalProperties:
+  false`); Helm enforces it on every template and sync. `tests/test_values_schemas.py` plants a
+  typo per chart.
+- R8: ci.yml runs `helm lint` on every local chart and kubeconform without
+  `-ignore-missing-schemas`, custom resources against the CRDs catalog at `CRDS_CATALOG_COMMIT` in tools.env.
+  `helmfile lint` is left out: it repeats the render with the same schemas and needs every
+  remote chart again.
+- R9: `.ci/golden/<env>.txt` for the nine environments in `.ci/golden/ENVIRONMENTS` plus the
+  BBSK demo; smartcity (production) is rendered in CI for the first time.
+- R10: `just drift dev|smartcity` runs `helmfile diff --three-way-merge` (live objects, so a
+  `kubectl edit` shows) under a 30-minute token of `jc-drift-reader` (get and list only) and
+  refuses to run when that identity can write; one result per release for `tasks/file-failures`.
+- R15: apps-db and wasm-host have a README; the test asks every component for one.
+
 ## Related
 
 - joinedcontext-docs `Deployment/06-updating.md` (the update procedure)

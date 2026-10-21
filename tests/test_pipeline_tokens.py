@@ -80,7 +80,7 @@ def test_switched_on_the_service_mints_only_in_the_pipelines_namespace_with_its_
 
 
 def without_dev_switch(tree):
-    (tree / "deployment/environments/dev/pipeline-runner.yaml.gotmpl").unlink()
+    (tree / "deployment/environments/_layers/hosted/pipeline-runner.yaml.gotmpl").unlink()
 
 
 def test_switched_on_the_portal_keeps_the_pipelines_accounts_there_and_nothing_else(rendered_variant):
@@ -152,7 +152,7 @@ def test_the_streams_switch_alone_switches_nothing(rendered_variant):
     """`identities.streams` without the token service would send every stream to a service that
     is not there: the Portal keeps the project client."""
     def streams_only(tree):
-        path = tree / "deployment/environments/dev/pipeline-runner.yaml.gotmpl"
+        path = tree / "deployment/environments/_layers/hosted/pipeline-runner.yaml.gotmpl"
         path.write_text("---\npipeline-runner:\n  identities:\n    streams: true\n")
 
     portal = one(rendered_variant("dev", streams_only), "Deployment", "portal")

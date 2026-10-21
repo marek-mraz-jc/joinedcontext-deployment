@@ -162,8 +162,10 @@ def test_the_portal_syncs_every_2_minutes(smartcity):
     assert env["JC_PORTAL_SYNC_INTERVAL"] == "120"
 
 # smartcity's copies of dev's environment files, which differ from dev's in the domain alone.
-# global and portal carry the instance's own choices and are tested above instead.
-COPIES = ["ckan", "gitea", "gitea-runner", "node-storage", "pipeline-runner", "wasm-host"]
+# global and portal carry the instance's own choices and are tested above instead; the files
+# both hold byte for byte live once in environments/_layers/hosted (T-4956,
+# tests/test_values_schemas.py).
+COPIES = ["ckan"]
 
 
 @pytest.mark.parametrize("name", COPIES)

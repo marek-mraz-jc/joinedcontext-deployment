@@ -7,6 +7,10 @@ environments:
   {{ . }}:
     values:
       - defaults/environment/*.yaml.gotmpl
+      {{- /* Shared layers the environment names (T-4956, environments/_layers/README.md). */}}
+      {{- range ($.Values | get "environmentLayers" list) }}
+      - deployment/environments/_layers/{{ . }}/*.yaml.gotmpl
+      {{- end }}
       - deployment/environments/{{ . }}/*.yaml.gotmpl
   {{- end }}
 ---

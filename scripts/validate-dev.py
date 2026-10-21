@@ -7,7 +7,8 @@ The hourly batch runs it after `just dev-apply` (`just dev-validate`) and hands 
 `tasks/file-failures`, which files one task per new failure. It reads the cluster and changes
 nothing but the probe pod it starts and deletes:
 
-- drift: `helmfile diff` of the assembled dev environment is empty;
+- drift: `helmfile diff --three-way-merge` of the assembled environment is empty, one result
+  per release; `--env smartcity` (production) runs this check alone (`just drift <env>`);
 - images: every container of a platform pod is pinned by digest, and every image of ours
   passes `cosign verify` for the identity the image workflows sign with (keyless);
 - probes: from the internet, the node's internal ports are closed and 443 answers; from a
@@ -39,6 +40,8 @@ from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parent.parent
 CHECKS = ("drift", "images", "expiry", "kyverno", "probes")
+# smartcity is the production environment (`just prod-apply`).
+ENVS = ("dev", "smartcity")
 PLATFORM_NS = re.compile(r"^(dev|dev-[a-z0-9-]+|jc-operators)$")
 TLS_NS = re.compile(r"^(dev|dev-[a-z0-9-]+|jc-operators|linkerd)$")
 CERT_DAYS = 21
@@ -52,8 +55,9 @@ SIGNER_IDENTITY = r"^https://github\.com/marek-mraz(-jc)?/"
 CLOSED_PORTS = (5432, 9080, 9180, 4143, 10250, 2379, 2380, 8080)
 OPEN_PORT = 443
 PROBE_IMAGE = "docker.io/busybox:1.38@sha256:dc2d74b28e4cf8984fa52af1f39bc7c3d9c73760b41a74d629f5d11b1ab28616"
-DRIFT = {"changed": "differs from main", "been added": "is in main but not on dev",
-         "been removed": "is on dev but not in main"}
+DRIFT = {"changed": "differs from main", "been added": "is in main but not on {env}",
+         "been removed": "is on {env} but not in main"}
+COMPARING = re.compile(r"^Comparing release=([^,\s]+)")
 DIFF_HEADER = re.compile(r"^(\S+), (\S+), (\S+) \(([^)]*)\) has (changed|been added|been removed):")
 
 
@@ -76,23 +80,37 @@ def repository(image: str) -> str:
 # --- drift ------------------------------------------------------------------------------------
 
 
-def drift_results(output: str, code: int) -> list[dict]:
-    """`helmfile diff --detailed-exitcode`: 0 is no change, 2 is a change, anything else broke."""
-    if code == 0:
-        return [result("drift", "pass", "dev matches main")]
-    changes = sorted({(m[1], m[3], m[2], m[5]) for m in map(DIFF_HEADER.match, output.splitlines()) if m})
-    if code != 2 or not changes:
+def drift_results(output: str, code: int, env: str = "dev") -> list[dict]:
+    """`helmfile diff --detailed-exitcode`: 0 is no change, 2 is a change, anything else broke.
+
+    One result per release helmfile compared (T-4956): tasks/file-failures files one task per
+    drifting release and closes it when that release compares clean again.
+    """
+    releases: dict[str, set[str]] = {}
+    current = ""
+    for line in output.splitlines():
+        if m := COMPARING.match(line):
+            current = m[1]
+            releases.setdefault(current, set())
+        elif (m := DIFF_HEADER.match(line)) and current:
+            releases[current].add(f"{m[3]} {m[1]}/{m[2]} {DRIFT[m[5]].format(env=env)}")
+    drifting = {name: objects for name, objects in releases.items() if objects}
+    if code not in (0, 2) or (code == 2 and not drifting):
         tail = " ".join(output.strip().splitlines()[-3:])
-        return [result("drift", "error", "helmfile diff of dev did not run", f"exit {code}: {tail}")]
+        return [result(f"drift/{env}", "error", f"helmfile diff of {env} did not run", f"exit {code}: {tail}")]
+    if not releases:
+        return [result(f"drift/{env}", "pass", f"{env} matches main")]
     return [
         result(
-            f"drift/{ns}/{kind}/{name}",
-            "fail",
-            f"drift on dev: {kind} {ns}/{name} {DRIFT[how]}",
-            "helmfile diff against main is not empty: a hand change on the cluster, or a merge "
-            "not applied. `just dev-apply` restores main; a change that belongs goes into Git.",
+            f"drift/{env}/{name}",
+            "fail" if objects else "pass",
+            f"drift on {env}: release {name} differs from main ({len(objects)} objects)" if objects
+            else f"release {name} on {env} matches main",
+            "helmfile diff --three-way-merge against main is not empty: a hand change on the cluster, "
+            f"or a merge not applied. `just {'dev-apply' if env == 'dev' else 'prod-apply'}` restores main; "
+            "a change that belongs goes into Git. Objects: " + "; ".join(sorted(objects)) if objects else "",
         )
-        for ns, kind, name, how in changes
+        for name, objects in sorted(releases.items())
     ]
 
 
@@ -400,13 +418,13 @@ def guarded(name: str, check) -> list[dict]:
     try:
         return check()
     except (RuntimeError, OSError, ValueError, KeyError, subprocess.TimeoutExpired) as error:
-        return [result(f"{name}/run", "error", f"the {name} check of dev did not run", str(error)[-300:])]
+        return [result(f"{name}/run", "error", f"the {name} check did not run", str(error)[-300:])]
 
 
-def run_checks(skip: set[str]) -> list[dict]:
+def run_checks(skip: set[str], env: str = "dev") -> list[dict]:
     now = datetime.now(UTC)
     checks = {
-        "drift": lambda: drift_results(*helmfile_diff()),
+        "drift": lambda: drift_results(*helmfile_diff(env), env),
         "images": lambda: image_results(pod_images(json.loads(kubectl("get", "pods", "-A", "-o", "json"))), cosign_verify),
         "expiry": lambda: cert_results(tls_certs(), now) + backup_results(
             json.loads(kubectl("get", "clusters.postgresql.cnpg.io", "-A", "-o", "json")), now),
@@ -419,11 +437,14 @@ def run_checks(skip: set[str]) -> list[dict]:
     return [r for name, check in checks.items() if name not in skip for r in guarded(name, check)]
 
 
-def helmfile_diff() -> tuple[str, int]:
+def helmfile_diff(env: str) -> tuple[str, int]:
+    # --three-way-merge compares with the live objects, not only with Helm's stored manifest:
+    # without it a `kubectl edit` on the cluster never shows up as drift (T-4956).
     run = subprocess.run(
-        ["helmfile", "-f", "deployment/helmfile.yaml", "-e", "dev", "diff",
-         "--detailed-exitcode", "--suppress-secrets", "--context", "0"],
-        cwd=ROOT, capture_output=True, text=True, timeout=900,
+        ["helmfile", "-f", "deployment/helmfile.yaml", "-e", env, "diff",
+         "--detailed-exitcode", "--suppress-secrets", "--context", "0",
+         "--diff-args", "--three-way-merge"],
+        cwd=ROOT, capture_output=True, text=True, timeout=900, check=False,
     )
     return run.stdout + run.stderr, run.returncode
 
@@ -440,11 +461,16 @@ def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--out", required=True, type=Path, help="where the summary JSON goes")
     parser.add_argument("--skip", default="", help=f"comma-separated checks to leave out: {','.join(CHECKS)}")
+    parser.add_argument("--env", default="dev", choices=ENVS,
+                        help="the environment to read; any but dev runs the drift check alone")
     args = parser.parse_args(argv)
     skip = {s for s in args.skip.split(",") if s}
     if unknown := skip - set(CHECKS):
         parser.error(f"unknown check(s): {', '.join(sorted(unknown))}")
-    results = run_checks(skip)
+    if args.env != "dev":
+        # The namespace patterns of the other checks are dev's; prod is read for drift only.
+        skip |= set(CHECKS) - {"drift"}
+    results = run_checks(skip, args.env)
     summary = {
         "check": "deployment",
         "repo": "joinedcontext-deployment",

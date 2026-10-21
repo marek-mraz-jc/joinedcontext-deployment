@@ -30,7 +30,7 @@ def policies(tmp_path_factory):
     """The two operator policies as the chart renders them for an enforcing environment."""
     out = tmp_path_factory.mktemp("policies") / "policies.yaml"
     rendered = subprocess.run(
-        ["helm", "template", "runtime-policies", str(CHART),
+        ["helm", "template", "runtime-policies", str(CHART), "--set", "driftReader.enabled=false",
          "--set", "failureAction=Enforce", "--set", "linkerd.enabled=false",
          "--set", "cnpgOperatorNamespace=dev", "--namespace", "dev"],
         capture_output=True, text=True, check=True,
@@ -100,7 +100,7 @@ def pod_security(tmp_path_factory):
     environment's — exist only after the template has run."""
     out = tmp_path_factory.mktemp("pod-security") / "policies.yaml"
     rendered = subprocess.run(
-        ["helm", "template", "runtime-policies", str(CHART),
+        ["helm", "template", "runtime-policies", str(CHART), "--set", "driftReader.enabled=false",
          "--set", "failureAction=Enforce", "--set", "linkerd.enabled=false",
          "--set", "operators.enabled=false", "--set", "podSecurity.namespaces={dev}",
          "--namespace", "dev"],
@@ -133,7 +133,7 @@ def test_no_pod_security_policy_is_rendered_without_a_namespace_to_apply_it_to(t
     """A ClusterPolicy with no namespace scope matches every namespace, including the ones
     the cluster distribution owns. Rendering nothing is the safe answer."""
     rendered = subprocess.run(
-        ["helm", "template", "runtime-policies", str(CHART),
+        ["helm", "template", "runtime-policies", str(CHART), "--set", "driftReader.enabled=false",
          "--set", "failureAction=Enforce", "--set", "linkerd.enabled=false",
          "--set", "operators.enabled=false", "--namespace", "dev"],
         capture_output=True, text=True, check=True,
@@ -423,7 +423,7 @@ def test_a_staged_rule_reports_in_audit_whatever_the_environment_enforces(pod_se
 def test_a_rule_both_staged_and_promoted_fails_the_render():
     """A name in both lists would render twice with two actions; the render refuses it."""
     result = subprocess.run(
-        ["helm", "template", "runtime-policies", str(CHART),
+        ["helm", "template", "runtime-policies", str(CHART), "--set", "driftReader.enabled=false",
          "--set", "linkerd.enabled=false", "--set", "operators.enabled=false",
          "--set", "podSecurity.namespaces={dev}",
          "--set", "podSecurity.policies={require-image-checksum}", "--namespace", "dev"],
@@ -457,7 +457,7 @@ def production_tier(tmp_path_factory):
     """The chart with the production tier switched on, as the first labelled environment will."""
     out = tmp_path_factory.mktemp("production-tier") / "policies.yaml"
     out.write_text(subprocess.run(
-        ["helm", "template", "runtime-policies", str(CHART),
+        ["helm", "template", "runtime-policies", str(CHART), "--set", "driftReader.enabled=false",
          "--set", "failureAction=Enforce", "--set", "linkerd.enabled=false",
          "--set", "operators.enabled=false", "--set", "podSecurity.namespaces={dev}",
          "--set", "imageSignatures.productionTier.enabled=true", "--namespace", "dev"],
@@ -587,3 +587,39 @@ def test_a_signed_dev_image_is_refused_only_in_a_production_tier_namespace(produ
                          capture_output=True, text=True, timeout=120).stdout
     assert ("require-full-tests-in-production -> resource ns/Pod/gw failed" in out) is refused, out
     assert "error: 0" in out, out
+
+
+def plural(kind: str) -> str:
+    kind = kind.lower()
+    if kind.endswith("y"):
+        return kind[:-1] + "ies"
+    return kind + ("es" if kind.endswith("s") else "s")
+
+
+@requires_helm
+def test_the_drift_reader_reads_each_rendered_kind_and_nothing_beyond_objects():
+    # T-4956 review: resources '*' also grants nodes/proxy (kubelet exec over GET), services/proxy
+    # and pods/log. The role names each kind the environments render, get and list only.
+    rendered = subprocess.run(
+        ["helm", "template", "runtime-policies", str(CHART), "--namespace", "dev"],
+        capture_output=True, text=True, check=True,
+    ).stdout
+    role = next(d for d in yaml.safe_load_all(rendered)
+                if d and d["kind"] == "ClusterRole" and d["metadata"]["name"] == "jc-drift-reader")
+    granted = set()
+    for rule in role["rules"]:
+        assert rule["verbs"] == ["get", "list"], rule
+        assert "*" not in rule["apiGroups"] and "*" not in rule["resources"], rule
+        assert "resourceNames" not in rule and "nonResourceURLs" not in rule, rule
+        for resource in rule["resources"]:
+            assert "/" not in resource, f"subresource {resource} (proxy, exec, attach, portforward, log)"
+            granted |= {(group, resource) for group in rule["apiGroups"]}
+    rendered_kinds = set()
+    for golden in (PROJECT_ROOT / ".ci/golden").glob("*.txt"):
+        for line in golden.read_text().splitlines():
+            api_version, _, kind = line.split()[0].rpartition("/")
+            group = api_version.rpartition("/")[0] if "/" in api_version else ""
+            rendered_kinds.add((group, plural(kind)))
+    assert rendered_kinds, "no golden render to compare with"
+    assert rendered_kinds - granted == set(), "kinds helm diff must read"
+    assert granted - rendered_kinds == set(), "grants no environment renders"
