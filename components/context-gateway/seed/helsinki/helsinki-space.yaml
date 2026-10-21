@@ -36,9 +36,10 @@ spec:
         source: { record: onChange, heartbeat: P7D }
     - entityType: Alert
       # The safety net for a writer that gives an Alert no end (DM-83 skips one with its own
-      # expiresAt): it leaves 30 days after its last write (T-4843); the Fintraffic Alerts carry
-      # their own end, the HSL alerts are rewritten every minute or withdrawn.
-      current: P30D
+      # expiresAt): it leaves an hour after its last write, the lease the Fintraffic mapping
+      # gives its own Alerts, so the Fintraffic Alerts written before that mapping (T-4823) end
+      # too (T-4843). The HSL alerts are rewritten every minute or withdrawn.
+      current: PT1H
       history: "off"
     - entityType: Article
       history: "off"

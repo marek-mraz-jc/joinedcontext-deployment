@@ -57,10 +57,10 @@ def test_no_mapping_of_a_pipeline_with_a_lifetime_writes_expires_at_itself():
         assert not assigned.search(code), mapping.name
 
 
-def test_the_space_removes_an_alert_its_writer_gave_no_end_30_days_after_its_last_write():
+def test_the_space_removes_an_alert_its_writer_gave_no_end_an_hour_after_its_last_write():
     space = yaml.safe_load((HELSINKI / "helsinki-space.yaml").read_text())
     rules = {r["entityType"]: r for r in space["spec"]["retention"]}
-    assert rules["Alert"]["current"] == "P30D"
+    assert rules["Alert"]["current"] == "PT1H"
     assert rules["Vehicle"]["current"] == "PT5M"
 
 
