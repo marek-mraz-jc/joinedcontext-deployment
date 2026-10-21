@@ -1100,8 +1100,7 @@ spec:
                 # CC-61, AP-96): the gateway reads grants from the repository alone, so an App
                 # seeded without them reads nothing. Compiled by the Portal (apps/<name>/grants,
                 # reference_apps_tests), one file each, named by its layout-1 path.
-                # ponytail: a grant the app stops compiling to is left behind; the Portal's
-                # door removes it on the app's next proposal.
+                # A grant the app stops compiling to is removed below (T-5091).
                 # The App's default groups (users/groups/, AP-118) are organization files and
                 # stay in the organization repository whatever the layout.
                 for f in "$dir"grants__*; do
@@ -1131,6 +1130,46 @@ spec:
                   esac
                   echo "app $app: $gpath committed"
                 done
+
+                # A Policy the app compiled to once and does not any more (T-5091): left behind,
+                # app-alerts-desk-2 kept letting every project member, the viewer included, write
+                # Alert a month after the desk turned read-only. In each folder the app's Policies
+                # go to, a file named for the app that the seed no longer carries is removed when
+                # the Portal generated it and its assignee is this app's endpoint role; a hand-written
+                # Policy, or one of an app whose name merely starts the same, stays.
+                for f in "$dir"grants__*; do
+                  [ -f "$f" ] || continue
+                  gpath=$(basename "$f" | sed -e 's/^grants__//' -e 's/__/\//g')
+                  [ "$LAYOUT" = 2 ] && gpath=${gpath#projects/$APPS_PROJECT/}
+                  echo "$gpath"
+                done > $WORK/app-grants
+                grep -E '(^|/)policies/[^/]+$' $WORK/app-grants | sed 's|/[^/]*$||' | sort -u > $WORK/app-grant-dirs
+                while IFS= read -r gdir; do
+                  status=$(portal_code GET "/api/v1/repos/$ORG/$app_home/contents/$gdir?ref=$BRANCH")
+                  case "$status" in
+                    200) ;;
+                    *) echo "listing $gdir failed: $status" >&2; cat $WORK/body >&2; exit 1 ;;
+                  esac
+                  sed 's/}, *{/}\n{/g' $WORK/body \
+                    | sed -n "s|.*\"path\": *\"\($gdir/app-$app-[^\"/]*\.yaml\)\".*|\1|p" > $WORK/app-stale
+                  while IFS= read -r gpath; do
+                    grep -qxF "$gpath" $WORK/app-grants && continue
+                    status=$(portal_code GET "/api/v1/repos/$ORG/$app_home/contents/$gpath?ref=$BRANCH")
+                    [ "$status" = 200 ] || { echo "reading $gpath failed: $status" >&2; exit 1; }
+                    gsha=$(sed -n 's/.*"sha": *"\([0-9a-f]\{40\}\)".*/\1/p' $WORK/body | head -1)
+                    sed -n 's/.*"content": *"\([^"]*\)".*/\1/p' $WORK/body | sed 's/\\n//g' | base64 -d > $WORK/app-stale-file
+                    if ! grep -q '^kind: *Policy *$' $WORK/app-stale-file \
+                      || ! grep -q '^    joinedcontext.com/generated-by: *portal/app-reconciler *$' $WORK/app-stale-file \
+                      || ! grep -Eq "^    id: *endpoint:[^/[:space:]]+/app-$app(/[^/[:space:]]+)? *\$" $WORK/app-stale-file; then
+                      echo "app $app: $gpath is not a grant the Portal compiled for it; left alone"
+                      continue
+                    fi
+                    status=$(portal_code DELETE "/api/v1/repos/$ORG/$app_home/contents/$gpath" \
+                      -d "{\"branch\":\"$BRANCH\",\"sha\":\"$gsha\",\"message\":\"seed: the $app application no longer grants $gpath\"}")
+                    [ "$status" = 200 ] || { echo "removing $gpath failed: $status" >&2; cat $WORK/body >&2; exit 1; }
+                    echo "app $app: $gpath removed, the application no longer compiles to it"
+                  done < $WORK/app-stale
+                done < $WORK/app-grant-dirs
               done
 
               # The body file has held a token; the volume is an emptyDir that dies with the

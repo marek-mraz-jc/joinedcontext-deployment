@@ -652,7 +652,8 @@ def test_the_served_body_limit_starts_at_the_server_blocks_ceiling(apisix_config
         if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "apisix-standalone-base"
     )
     rules = {r["id"]: r for r in yaml.safe_load(cm["data"]["apisix.yaml"]).get("global_rules", [])}
-    assert set(rules) == {"edge-body"}, rules
+    # `edge-headers` (T-5107) is the header floor; tests/test_apisix_edge.py holds its body.
+    assert set(rules) == {"edge-body", "edge-headers"}, rules
     assert rules["edge-body"]["plugins"] == {"client-control": {"max_body_size": ceiling}}
     assert ceiling == 16 * 1024 * 1024, "the catalog default of spec.limits.edge.maxRequestBodyMegabytes"
 

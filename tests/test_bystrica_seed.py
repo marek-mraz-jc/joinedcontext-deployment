@@ -574,13 +574,21 @@ def test_the_regions_records_are_seeded_with_the_endpoint_and_policy_the_portal_
     assert endpoint["spec"]["allowedProjects"] == ["bbsk"]
 
     # One Policy per need, each exactly its need: the columns to read, and the note alone to write.
-    role = {"kind": "role", "id": "endpoint:bbsk/app-bbsk-zaznamy"}
+    # A need with `roles` goes to that role of the endpoint alone (AP-96): the note to the
+    # steward, never to every member the endpoint admits (T-5091).
+    def name(n, need):
+        return "-".join([f"app-bbsk-zaznamy-{n}", *need.get("roles", [])])
+
+    def assignee(need):
+        return "/".join(["endpoint:bbsk/app-bbsk-zaznamy", *need.get("roles", [])])
+
     grants = {doc["metadata"]["name"]: doc for _, doc in manifests(REGION, "Policy")
-              if doc["spec"]["assignee"] == role}
+              if doc["spec"]["assignee"]["id"].startswith("endpoint:bbsk/app-bbsk-zaznamy")}
     needs = app["spec"]["dataNeeds"]
-    assert sorted(grants) == [f"app-bbsk-zaznamy-{n}" for n in range(1, len(needs) + 1)]
+    assert sorted(grants) == sorted(name(n, need) for n, need in enumerate(needs, 1))
     for n, need in enumerate(needs, 1):
-        grant = grants[f"app-bbsk-zaznamy-{n}"]
+        grant = grants[name(n, need)]
+        assert grant["spec"]["assignee"] == {"kind": "role", "id": assignee(need)}
         assert grant["metadata"]["annotations"] == generated
         spec = grant["spec"]
         assert spec["contextSpaceRef"]["name"] == need["contextSpaceRef"]["name"] == space
@@ -595,6 +603,9 @@ def test_the_regions_records_are_seeded_with_the_endpoint_and_policy_the_portal_
     index = yaml.safe_load((REGION / "index.yaml").read_text())
     assert index["bbsk-app-zaznamy.yaml"] == "projects/bbsk/apps/bbsk-zaznamy/app.yaml"
     assert index["bbsk-app-zaznamy-endpoint.yaml"].startswith(f"projects/bbsk/spaces/{space}/endpoints/")
+    assert index["bbsk-app-zaznamy-policy-note.yaml"].endswith("/app-bbsk-zaznamy-2-steward.yaml")
+    endpoint_roles = {role["name"]: role["subjects"] for role in endpoint["spec"]["roles"]}
+    assert endpoint_roles == {"steward": [{"group": "bbsk-zaznamy-steward"}]}
     for key in ("bbsk-app-zaznamy-policy.yaml", "bbsk-app-zaznamy-policy-note.yaml"):
         assert index[key].startswith(f"projects/bbsk/spaces/{space}/policies/"), key
 

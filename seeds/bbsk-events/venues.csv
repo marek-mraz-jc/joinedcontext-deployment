@@ -1,35 +1,58 @@
-town,match,regional,venue,streetAddress,addressLocality,lat,lon,osm,checked_on
-detva,dom kultúry a. sládkoviča v detve,y,Dom kultúry A. Sládkoviča,Obrancov mieru 871/1,Detva,48.5419222,19.4074269,way/292648504,2026-10-20
-detva,zimný štadión v detve,y,Zimný štadión,M. R. Štefánika,Detva,48.5497865,19.4125602,way/46896068,2026-10-20
-detva,amfiteáter,n,Amfiteáter,,Detva,48.5736489,19.4212542,way/80041978,2026-10-20
-lucenec,kino apollo v lučenci,y,Kino Apollo,Novohradská 2978/5,Lučenec,48.3319139,19.6642043,node/59772282,2026-10-20
-lucenec,mestské múzeum lučenec/radnica- dr. herza 1 lučenec,n,Mestské múzeum Lučenec (Radnica),Dr. Herza 1,Lučenec,48.3275449,19.6685542,node/6773922278,2026-10-20
-lucenec,radnica lučenec- dr. herza 1 lučenec,n,Radnica Lučenec,Dr. Herza 1,Lučenec,48.3275449,19.6685542,node/6773922278,2026-10-20
-lucenec,synagóga lučenec,y,Synagóga Lučenec,Adyho,Lučenec,48.3250515,19.6670861,way/59707419,2026-10-20
-lucenec,tržnica lučenec,n,Mestská tržnica,Vajanského 2996/11,Lučenec,48.3264228,19.6679618,way/41201602,2026-10-20
-lucenec,mestská tržnica lučenec,n,Mestská tržnica,Vajanského 2996/11,Lučenec,48.3264228,19.6679618,way/41201602,2026-10-20
-velky-krtis,kino baník veľký krtíš,y,Kino Baník,Námestie A. H. Škultétyho 738/4,Veľký Krtíš,48.2079533,19.348242,node/170971283,2026-10-20
-zvolen,sng zvolen,y,SNG – Zvolenský zámok,Námestie SNP 594/1,Zvolen,48.5729001,19.1276837,relation/69079,2026-10-20
-zvolen,zvolenský zámok,y,SNG – Zvolenský zámok,Námestie SNP 594/1,Zvolen,48.5729001,19.1276837,relation/69079,2026-10-20
-banska-stiavnica,art café,n,Art Café,Akademická 327/2,Banská Štiavnica,48.4585939,18.8960644,way/60876167,2026-10-20
-bratislava,divadlo gunagu,n,Divadlo GUnaGU,Františkánske námestie 7,Bratislava,48.1441205,17.1078533,node/1470667811,2026-10-21
-piestany,dom umenia piešťany,n,Dom umenia Piešťany,Nábrežie Ivana Krasku 4256/1A,Piešťany,48.5923954,17.8400391,way/58419890,2026-10-21
-senica,kino mladosť,n,Kino Mladosť,Námestie oslobodenia 11/17,Senica,48.68002,17.3668825,node/2306702238,2026-10-21
-senica,dom kultúry,n,Dom kultúry (Mestské kultúrne stredisko),Námestie oslobodenia 11/17,Senica,48.6799501,17.3665963,way/226122828,2026-10-21
-senica,záhorské osvetové stredisko,n,Záhorské osvetové stredisko,Vajanského 19/5,Senica,48.6769068,17.3680276,way/226119296,2026-10-21
-senica,zimný štadión senica,n,Zimný štadión Senica,Sadová 638/43,Senica,48.6854824,17.3764989,way/226123131,2026-10-21
-senica,záhorská knižnica,n,Záhorská knižnica,Vajanského 28/2,Senica,48.6778774,17.3685138,way/226119288,2026-10-21
-senica,centrum voľného času,n,Centrum voľného času,Sadová 646/8,Senica,48.6833427,17.3720938,node/5843764758,2026-10-21
-senica,záhorská galéria jána mudrocha,n,Záhorská galéria Jána Mudrocha,Sadová 619/3,Senica,48.6835792,17.3689059,node/7266423772,2026-10-21
-senica,múzeum senica,n,Múzeum Senica,Štefánikova 724/20,Senica,48.6806994,17.3731383,way/226119670,2026-10-21
-sobotiste,kultúrny dom aničky jurkovičovej sobotište,n,Kultúrny dom Aničky Jurkovičovej,,Sobotište,48.7309886,17.4074186,way/172054631,2026-10-21
-sobotiste,habánsky mlyn – nádvorie,n,Habánsky mlyn,,Sobotište,48.7330587,17.4037285,way/172055578,2026-10-21
-kolarovo,aa vmk,n,Kultúrny dom (Városi Művelődési Központ),Kostolné námestie 860/4,Kolárovo,47.9172502,17.9948644,node/2096774698,2026-10-21
-levice,levická synagóga,n,Levická synagóga,Kálmána Kittenbergera 3191/1,Levice,48.2211713,18.6036172,way/58398452,2026-10-21
-levice,oddelenie beletrie tekovská knižnica,n,"Tekovská knižnica, oddelenie beletrie",Holubyho 573/6,Levice,48.2193176,18.6055654,node/1256686063,2026-10-21
-levice,galéria jozefa nécseyho levický hrad,n,"Galéria Jozefa Nécseyho, Dobóovský kaštieľ",Sv. Michala 2431/40,Levice,48.2212596,18.6016142,way/1378178980,2026-10-21
-levice,tekovské múzeum v leviciach,n,Tekovské múzeum v Leviciach,Sv. Michala,Levice,48.2214082,18.6005873,node/506574685,2026-10-21
-kosice,historická sála hlavná 27,n,"Východoslovenská galéria, Historická sála",Hlavná 110/27,Košice,48.7198959,21.2591497,node/691083875,2026-10-21
-kosice,východoslovenská galéria hlavná 27,n,Východoslovenská galéria,Hlavná 110/27,Košice,48.7198959,21.2591497,node/691083875,2026-10-21
-kosice,východoslovenská galéria alžbetina 22,n,Východoslovenská galéria,Alžbetina 670/22,Košice,48.7192637,21.2553209,way/48286955,2026-10-21
-banska-bystrica,jilemnického 48 banská bystrica,n,Verejná knižnica Mikuláša Kováča,Jilemnického 48,Banská Bystrica,48.7303957,19.1271483,way/66072050,2026-10-21
+town,match,regional,venue,streetAddress,addressLocality,lat,lon,osm,checked_on,checked_by
+detva,dom kultúry a. sládkoviča v detve,y,Dom kultúry A. Sládkoviča,Obrancov mieru 871/1,Detva,48.5419222,19.4074269,way/292648504,2026-10-20,hand
+detva,zimný štadión v detve,y,Zimný štadión,M. R. Štefánika,Detva,48.5497865,19.4125602,way/46896068,2026-10-20,hand
+detva,amfiteáter,n,Amfiteáter,,Detva,48.5736489,19.4212542,way/80041978,2026-10-20,hand
+lucenec,kino apollo v lučenci,y,Kino Apollo,Novohradská 2978/5,Lučenec,48.3319139,19.6642043,node/59772282,2026-10-20,hand
+lucenec,mestské múzeum lučenec/radnica- dr. herza 1 lučenec,n,Mestské múzeum Lučenec (Radnica),Dr. Herza 1,Lučenec,48.3275449,19.6685542,node/6773922278,2026-10-20,hand
+lucenec,radnica lučenec- dr. herza 1 lučenec,n,Radnica Lučenec,Dr. Herza 1,Lučenec,48.3275449,19.6685542,node/6773922278,2026-10-20,hand
+lucenec,synagóga lučenec,y,Synagóga Lučenec,Adyho,Lučenec,48.3250515,19.6670861,way/59707419,2026-10-20,hand
+lucenec,tržnica lučenec,n,Mestská tržnica,Vajanského 2996/11,Lučenec,48.3264228,19.6679618,way/41201602,2026-10-20,hand
+lucenec,mestská tržnica lučenec,n,Mestská tržnica,Vajanského 2996/11,Lučenec,48.3264228,19.6679618,way/41201602,2026-10-20,hand
+velky-krtis,kino baník veľký krtíš,y,Kino Baník,Námestie A. H. Škultétyho 738/4,Veľký Krtíš,48.2079533,19.348242,node/170971283,2026-10-20,hand
+zvolen,sng zvolen,y,SNG – Zvolenský zámok,Námestie SNP 594/1,Zvolen,48.5729001,19.1276837,relation/69079,2026-10-20,hand
+zvolen,zvolenský zámok,y,SNG – Zvolenský zámok,Námestie SNP 594/1,Zvolen,48.5729001,19.1276837,relation/69079,2026-10-20,hand
+banska-stiavnica,art café,n,Art Café,Akademická 327/2,Banská Štiavnica,48.4585939,18.8960644,way/60876167,2026-10-20,hand
+bratislava,divadlo gunagu,n,Divadlo GUnaGU,Františkánske námestie 7,Bratislava,48.1441205,17.1078533,node/1470667811,2026-10-21,hand
+piestany,dom umenia piešťany,n,Dom umenia Piešťany,Nábrežie Ivana Krasku 4256/1A,Piešťany,48.5923954,17.8400391,way/58419890,2026-10-21,hand
+senica,kino mladosť,n,Kino Mladosť,Námestie oslobodenia 11/17,Senica,48.68002,17.3668825,node/2306702238,2026-10-21,hand
+senica,dom kultúry,n,Dom kultúry (Mestské kultúrne stredisko),Námestie oslobodenia 11/17,Senica,48.6799501,17.3665963,way/226122828,2026-10-21,hand
+senica,záhorské osvetové stredisko,n,Záhorské osvetové stredisko,Vajanského 19/5,Senica,48.6769068,17.3680276,way/226119296,2026-10-21,hand
+senica,zimný štadión senica,n,Zimný štadión Senica,Sadová 638/43,Senica,48.6854824,17.3764989,way/226123131,2026-10-21,hand
+senica,záhorská knižnica,n,Záhorská knižnica,Vajanského 28/2,Senica,48.6778774,17.3685138,way/226119288,2026-10-21,hand
+senica,centrum voľného času,n,Centrum voľného času,Sadová 646/8,Senica,48.6833427,17.3720938,node/5843764758,2026-10-21,hand
+senica,záhorská galéria jána mudrocha,n,Záhorská galéria Jána Mudrocha,Sadová 619/3,Senica,48.6835792,17.3689059,node/7266423772,2026-10-21,hand
+senica,múzeum senica,n,Múzeum Senica,Štefánikova 724/20,Senica,48.6806994,17.3731383,way/226119670,2026-10-21,hand
+sobotiste,kultúrny dom aničky jurkovičovej sobotište,n,Kultúrny dom Aničky Jurkovičovej,,Sobotište,48.7309886,17.4074186,way/172054631,2026-10-21,hand
+sobotiste,habánsky mlyn – nádvorie,n,Habánsky mlyn,,Sobotište,48.7330587,17.4037285,way/172055578,2026-10-21,hand
+kolarovo,aa vmk,n,Kultúrny dom (Városi Művelődési Központ),Kostolné námestie 860/4,Kolárovo,47.9172502,17.9948644,node/2096774698,2026-10-21,hand
+levice,levická synagóga,n,Levická synagóga,Kálmána Kittenbergera 3191/1,Levice,48.2211713,18.6036172,way/58398452,2026-10-21,hand
+levice,oddelenie beletrie tekovská knižnica,n,"Tekovská knižnica, oddelenie beletrie",Holubyho 573/6,Levice,48.2193176,18.6055654,node/1256686063,2026-10-21,hand
+levice,galéria jozefa nécseyho levický hrad,n,"Galéria Jozefa Nécseyho, Dobóovský kaštieľ",Sv. Michala 2431/40,Levice,48.2212596,18.6016142,way/1378178980,2026-10-21,hand
+levice,tekovské múzeum v leviciach,n,Tekovské múzeum v Leviciach,Sv. Michala,Levice,48.2214082,18.6005873,node/506574685,2026-10-21,hand
+kosice,historická sála hlavná 27,n,"Východoslovenská galéria, Historická sála",Hlavná 110/27,Košice,48.7198959,21.2591497,node/691083875,2026-10-21,hand
+kosice,východoslovenská galéria hlavná 27,n,Východoslovenská galéria,Hlavná 110/27,Košice,48.7198959,21.2591497,node/691083875,2026-10-21,hand
+kosice,východoslovenská galéria alžbetina 22,n,Východoslovenská galéria,Alžbetina 670/22,Košice,48.7192637,21.2553209,way/48286955,2026-10-21,hand
+banska-bystrica,jilemnického 48 banská bystrica,n,Verejná knižnica Mikuláša Kováča,Jilemnického 48,Banská Bystrica,48.7303957,19.1271483,way/66072050,2026-10-21,hand
+zvolen,tuzvo,n,TUZVO,Študentská 2117/27,Zvolen,48.5725862,19.1147562,way/127509795,2026-10-21,nominatim
+zvolen,arborétum borová hora,n,Arborétum Borová hora,,Zvolen,48.5947396,19.1351858,node/3480637559,2026-10-21,nominatim
+zvolen,fee,n,FEE,Študentská,Zvolen,48.5729663,19.1165987,way/127509199,2026-10-21,nominatim
+zvolen,fee e214,n,FEE E214,Študentská,Zvolen,48.5729663,19.1165987,way/127509199,2026-10-21,nominatim
+zvolen,fakulta techniky,n,Fakulta techniky,Študentská,Zvolen,48.5737029,19.1160245,way/127315110,2026-10-21,nominatim
+zvolen,šd ľ. štúra študentská 17 zvolen,n,"ŠD Ľ. Štúra, Študentská 17, Zvolen",Študentská 1734/17,Zvolen,48.5738159,19.1205560,node/2923068012,2026-10-21,nominatim
+banska-bystrica,cpdv umb cesta na amfiteáter 1 učebňa č. 507,n,"CPDV UMB, Cesta na amfiteáter 1 (nová budova EF UMB), učebňa č. 507 (5. poschodie, za dverami vedľa výťahov)",Cesta na amfiteáter 2728/1,Banská Bystrica,48.7395768,19.1376321,way/61153499,2026-10-21,nominatim
+banska-bystrica,štúdio tanca komenského 837,n,"Štúdio tanca, Komenského 837",Komenského,Banská Bystrica,48.7427551,19.1483760,node/2430303154,2026-10-21,nominatim
+banska-bystrica,cesta na amfiteáter 1 aula rotunda,n,"Cesta na amfiteáter 1, Aula Rotunda",Cesta na amfiteáter 2728/1,Banská Bystrica,48.7395768,19.1376321,way/61153499,2026-10-21,nominatim
+banska-bystrica,veľká zasadačka a veľký študijný hub tajovského 40,n,"Veľká zasadačka a veľký študijný hub, Tajovského 40 (SĎ 1)",Tajovského 3767/40,Banská Bystrica,48.7421184,19.1212729,relation/19288857,2026-10-21,nominatim
+banska-bystrica,fpvamv umb kuzmányho 1,n,"FPVaMV UMB, Kuzmányho 1",Karola Kuzmányho 220/1,Banská Bystrica,48.7327705,19.1452633,way/24682799,2026-10-21,nominatim
+banska-bystrica,v-klub umb tajovského 40,n,"V-Klub UMB, Tajovského 40",Tajovského 3767/40,Banská Bystrica,48.7421184,19.1212729,relation/19288857,2026-10-21,nominatim
+banska-bystrica,europa shopping center,n,Europa shopping center,Na Troskách 14180/25,Banská Bystrica,48.7302094,19.1358859,way/173424504,2026-10-21,nominatim
+banska-bystrica,športový areál baseline švermova 6515/38a,n,"Športový areál BASELINE, Švermova 6515/38A",Švermova 6515/38A,Banská Bystrica,48.7348153,19.1258807,way/867501358,2026-10-21,nominatim
+banska-bystrica,tipsport aréna banská bystrica,n,Tipsport Aréna Banská Bystrica,Hronské predmestie,Banská Bystrica,48.7338929,19.1558658,way/104534560,2026-10-21,nominatim
+banska-bystrica,aula beliana tajovského 40 banská bystrica.,n,"aula Beliana, Tajovského 40, Banská Bystrica.",Tajovského 3767/40,Banská Bystrica,48.7421184,19.1212729,relation/19288857,2026-10-21,nominatim
+banska-bystrica,telocvičňa ftvšaz umb tajovského 40,n,"Telocvičňa FTVŠaZ UMB, Tajovského 40",Tajovského 3767/40,Banská Bystrica,48.7421184,19.1212729,relation/19288857,2026-10-21,nominatim
+banska-bystrica,atletický štadión umb tajovského 57,n,"Atletický štadión UMB, Tajovského 57",Tajovského 14450/57,Banská Bystrica,48.7402926,19.1202203,way/77972404,2026-10-21,nominatim
+banska-bystrica,stará tržnica,n,Stará Tržnica,Námestie Štefana Moyzesa 1093/29,Banská Bystrica,48.7371097,19.1458585,way/53441093,2026-10-21,nominatim
+banska-bystrica,emerge hub tajovského 40,n,"EMERGE HUB, Tajovského 40",Tajovského 3767/40,Banská Bystrica,48.7421184,19.1212729,relation/19288857,2026-10-21,nominatim
+banska-bystrica,park pod pamätníkom snp,n,Park pod Pamätníkom SNP,,Banská Bystrica,48.7351892,19.1507932,way/104532876,2026-10-21,nominatim
+banska-bystrica,aula beliana,n,Aula Beliana,Tajovského 3767/40,Banská Bystrica,48.7421184,19.1212729,relation/19288857,2026-10-21,hand
+banska-bystrica,aula fpvamv umb,n,Aula FPVaMV UMB,Karola Kuzmányho 220/1,Banská Bystrica,48.7327705,19.1452633,way/24682799,2026-10-21,hand

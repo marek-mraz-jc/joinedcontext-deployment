@@ -90,3 +90,13 @@ def test_the_locked_platform_commit_builds_the_committed_bundle(tmp_path):
     for path in SITE.iterdir():
         assert (out / path.name).read_bytes() == path.read_bytes(), f"{path.name} differs from platform {sha}"
     assert sorted(p.name for p in out.iterdir()) == sorted(p.name for p in SITE.iterdir())
+
+
+def test_every_answer_of_the_server_states_the_header_floor(dev):
+    """T-5107 (ZAP 10055, 10063): nginx drops the server's add_header in a location that sets its
+    own, so the page restates Permissions-Policy, and the default policy names the directives that
+    do not fall back to default-src."""
+    conf = one(dev, "ConfigMap", "ai-app")["data"]["default.conf"]
+    assert conf.count("add_header Content-Security-Policy") == conf.count("add_header Permissions-Policy") == 2
+    default = re.search(r"\n    add_header Content-Security-Policy \"([^\"]+)\"", conf).group(1)
+    assert default == "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"

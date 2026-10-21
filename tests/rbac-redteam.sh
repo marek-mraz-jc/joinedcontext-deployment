@@ -73,7 +73,8 @@ k apply -f - >/dev/null <<-'EOF'
 	rules:
 	  - apiGroups: [apps]
 	    resources: [deployments]
-	    verbs: [get, list, watch, create, update, patch, delete]
+	    resourceNames: [pipeline-runner]
+	    verbs: [get, patch]
 	  - apiGroups: [batch]
 	    resources: [jobs]
 	    verbs: [get, create, patch, delete]
@@ -95,6 +96,11 @@ k apply -f - >/dev/null <<-'EOF'
 	kind: Secret
 	metadata: {name: db-keycloak, namespace: dev}
 	stringData: {password: platform-credential}
+	---
+	apiVersion: v1
+	kind: Service
+	metadata: {name: broker, namespace: dev}
+	spec: {ports: [{port: 80}]}
 	---
 	apiVersion: v1
 	kind: Namespace
@@ -154,8 +160,8 @@ RESTRICTED=("pod-security.kubernetes.io/enforce: restricted" "pod-security.kuber
 binding() { # binding <namespace> <role kind> <role name> <subject sa namespace> <subject sa name>
 	printf 'apiVersion: rbac.authorization.k8s.io/v1\nkind: RoleBinding\nmetadata: {name: joinedcontext-portal, namespace: %s}\nroleRef: {apiGroup: rbac.authorization.k8s.io, kind: %s, name: %s}\nsubjects: [{kind: ServiceAccount, namespace: %s, name: %s}]\n' "$@"
 }
-deployment() { # deployment <pod spec fields as one YAML flow map body>
-	printf 'apiVersion: apps/v1\nkind: Deployment\nmetadata: {name: probe, namespace: dev}\nspec:\n  selector: {matchLabels: {app: probe}}\n  template:\n    metadata: {labels: {app: probe}}\n    spec: {%s, containers: [{name: c, image: registry.k8s.io/pause:3.10}]}\n' "$1"
+deployment() { # deployment <pod spec fields as one YAML flow map body> [name [namespace]]
+	printf 'apiVersion: apps/v1\nkind: Deployment\nmetadata: {name: %s, namespace: %s}\nspec:\n  selector: {matchLabels: {app: probe}}\n  template:\n    metadata: {labels: {app: probe}}\n    spec: {%s, containers: [{name: c, image: registry.k8s.io/pause:3.10}]}\n' "${2:-probe}" "${3:-dev-ovzdusie-apps}" "$1"
 }
 
 echo "== Portal ServiceAccount: what RBAC alone grants"
@@ -189,7 +195,19 @@ refused "bind cluster-admin in its apps namespace" "$PORTAL" apply -f <(binding 
 refused "bind portal-apps to another subject" "$PORTAL" apply -f <(binding dev-ovzdusie-apps ClusterRole dev-portal-apps dev-ovzdusie-apps default)
 allowed "bind portal-apps to itself in its apps namespace" "$PORTAL" apply -f <(binding dev-ovzdusie-apps ClusterRole dev-portal-apps dev portal)
 
-echo "== Portal ServiceAccount: workloads"
+echo "== Portal ServiceAccount: platform workloads in the release namespace (T-5094)"
+cannot "create deployments in dev" "$PORTAL" create deployments -n dev
+cannot "patch another Deployment in dev" "$PORTAL" patch deployments/broker -n dev
+cannot "delete the pipeline runner" "$PORTAL" delete deployments/pipeline-runner -n dev
+cannot "delete services in dev" "$PORTAL" delete services -n dev
+cannot "patch services in dev" "$PORTAL" patch services/broker -n dev
+cannot "delete networkpolicies in dev" "$PORTAL" delete networkpolicies -n dev
+cannot "create networkpolicies in dev" "$PORTAL" create networkpolicies -n dev
+deployment "automountServiceAccountToken: false" pipeline-runner dev | k apply -f - >/dev/null
+EXPECT=forbidden refused "create a Deployment in dev" "$PORTAL" apply --server-side -f <(deployment "automountServiceAccountToken: false" probe dev)
+allowed "roll the pipeline runner" "$PORTAL" apply --server-side --force-conflicts --field-manager=portal-app-reconciler -f <(printf 'apiVersion: apps/v1\nkind: Deployment\nmetadata: {name: pipeline-runner, namespace: dev}\nspec: {template: {metadata: {annotations: {joinedcontext.com/pipeline-secrets: f1}}}}\n')
+
+echo "== Portal ServiceAccount: workloads in its apps namespace"
 export EXPECT=dev-portal-workloads
 refused "Deployment as the restore drill with its token" "$PORTAL" apply -f <(deployment "serviceAccountName: postgres-cluster-dr-drill, automountServiceAccountToken: true")
 refused "Deployment with a projected token" "$PORTAL" apply -f <(deployment "automountServiceAccountToken: false, volumes: [{name: t, projected: {sources: [{serviceAccountToken: {path: t}}]}}]")

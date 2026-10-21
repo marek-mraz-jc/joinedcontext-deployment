@@ -338,6 +338,12 @@ STRINGS = {
         "cs": "Mapa nenačetla data; tabulka výše funguje.",
         "de": "Die Karte konnte ihre Daten nicht laden; die Tabelle oben funktioniert.",
     },
+    "map_empty": {
+        "en": "This dataset has no places to show on a map.",
+        "sk": "Tento dataset nemá miesta, ktoré by sa dali ukázať na mape.",
+        "cs": "Tato datová sada nemá místa, která by šla ukázat na mapě.",
+        "de": "Dieser Datensatz enthält keine Orte, die eine Karte zeigen könnte.",
+    },
     "map_close": {"en": "Close", "sk": "Zavrieť", "cs": "Zavřít", "de": "Schließen"},
     # The attributes after a feature's key ones (T-4672).
     "map_more": {"en": "More", "sk": "Viac", "cs": "Více", "de": "Mehr"},
@@ -1633,7 +1639,7 @@ def jc_map(pkg, resource_id=None):
         "title": pkg.get("title") or name,
         "dataset": toolkit.url_for("dataset.read", id=name, _external=True),
         "embed": toolkit.url_for("jc_pages.map", id=name, _external=True),
-        "t": {key: jc_t(key) for key in ("map_cap", "map_failed", "map_loading", "map_close", "map_panel",
+        "t": {key: jc_t(key) for key in ("map_cap", "map_failed", "map_empty", "map_loading", "map_close", "map_panel",
                                           "map_length", "map_area", "map_keys", "map_title", "map_more")},
     }
 
@@ -2256,6 +2262,68 @@ PAGES = {
                   "Chybné číslo v datasete: oznámte ho aj jeho vydavateľovi, uvedenému na stránke datasetu."]),
         ]},
     },
+    # The accessibility statement (T-5108): Act 95/2019 and Decree 78/2020 ask a public body for
+    # one, in the model of EU decision 2018/1523. The Portal serves the same statement at its own
+    # /accessibility (portal ui/src/pages/accessibility). The contact is the template's.
+    "accessibility": {
+        "en": {"title": "Accessibility statement", "sections": [
+            ("", ["We want everyone to be able to use this catalogue, including people who work only with a "
+                  "keyboard, a screen reader or magnification."]),
+            ("Legal basis", ["Accessibility is governed by Act No. 95/2019 Coll. on information technologies in "
+                             "public administration and Decree No. 78/2020 Coll. on standards for public "
+                             "administration information technologies, which take WCAG 2.1 level AA (EN 301 549) "
+                             "as the standard."]),
+            ("Compliance status", ["This catalogue is partially compliant with WCAG 2.1 level AA. The content "
+                                   "listed below is not yet fully accessible."]),
+            ("Content that is not accessible", [
+                "Maps show places only as a picture. The same places, with their addresses and coordinates, are "
+                "in the dataset's table and in its download.",
+                "Charts show numbers only as a picture. The same numbers are in the dataset's table and in its "
+                "download.",
+                "The test with the NVDA and VoiceOver screen readers has not been done yet; a screen reader may "
+                "read some controls unclearly.",
+                "Other parties make the AI assistant window and the files publishers upload (PDF, spreadsheets); "
+                "we cannot vouch for their accessibility."]),
+            ("How we checked", ["By self-assessment. The axe-core tool checks the catalogue's home page, its "
+                                "search, a dataset and this page on every automatic run, and the run fails on "
+                                "any serious or critical finding. We went through them with a keyboard only."]),
+            ("Date", ["This statement was prepared on 21 October 2026 and last reviewed on 21 October 2026."]),
+            ("Feedback", ["Did you meet a barrier? Write to the contact below with the page's address and what "
+                          "you tried to do."]),
+            ("Enforcement", ["If our answer does not satisfy you, turn to the Ministry of Investments, Regional "
+                             "Development and Informatization of the Slovak Republic, which oversees the "
+                             "accessibility of public administration websites."]),
+        ]},
+        "sk": {"title": "Vyhlásenie o prístupnosti", "sections": [
+            ("", ["Chceme, aby tento katalóg mohol používať každý, aj človek, ktorý pracuje iba s klávesnicou, "
+                  "s čítačkou obrazovky alebo so zväčšením."]),
+            ("Právny rámec", ["Prístupnosť upravuje zákon č. 95/2019 Z. z. o informačných technológiách vo "
+                              "verejnej správe a vyhláška č. 78/2020 Z. z. o štandardoch pre informačné "
+                              "technológie verejnej správy, ktorá za štandard berie WCAG 2.1 na úrovni AA "
+                              "(EN 301 549)."]),
+            ("Stav súladu", ["Katalóg je čiastočne v súlade s WCAG 2.1 na úrovni AA. Obsah uvedený nižšie "
+                             "zatiaľ nie je úplne prístupný."]),
+            ("Neprístupný obsah", [
+                "Mapy ukazujú miesta iba ako obrázok. Tie isté miesta s adresami a súradnicami sú v tabuľke "
+                "datasetu a v jeho súbore na stiahnutie.",
+                "Grafy ukazujú čísla iba ako obrázok. Tie isté čísla sú v tabuľke datasetu a v jeho súbore na "
+                "stiahnutie.",
+                "Test s čítačkami obrazovky NVDA a VoiceOver ešte neprebehol; čítačka môže niektoré ovládacie "
+                "prvky prečítať nezrozumiteľne.",
+                "Okno AI asistenta a súbory, ktoré nahrávajú vydavatelia (PDF, tabuľky), pripravujú iní; ich "
+                "prístupnosť nevieme zaručiť."]),
+            ("Ako sme prístupnosť overili", ["Vlastným hodnotením. Nástroj axe-core pri každom automatickom "
+                                             "behu kontroluje úvodnú stránku katalógu, jeho vyhľadávanie, jeden "
+                                             "dataset a túto stránku a beh zlyhá pri každom závažnom alebo "
+                                             "kritickom náleze. Prešli sme ich iba klávesnicou."]),
+            ("Dátum", ["Vyhlásenie bolo pripravené 21. októbra 2026 a naposledy preskúmané 21. októbra 2026."]),
+            ("Spätná väzba", ["Narazili ste na bariéru? Napíšte na kontakt nižšie adresu stránky a čo ste "
+                              "chceli urobiť."]),
+            ("Vymáhanie", ["Ak vás naša odpoveď neuspokojí, obráťte sa na Ministerstvo investícií, regionálneho "
+                           "rozvoja a informatizácie Slovenskej republiky, ktoré dohliada na prístupnosť "
+                           "webových sídiel verejnej správy."]),
+        ]},
+    },
 }
 
 
@@ -2486,7 +2554,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
         return {"viz": jc_visualization(data_dict.get("resource_view"))}
 
     def get_blueprint(self):
-        """/connector, /privacy, /terms and /support (T-4315), one template for all four,
+        """/connector, /privacy, /terms, /support (T-4315) and /accessibility (T-5108), one template for all five,
         /assistants (T-4585), a guide per assistant at /assistants/{id} (T-4643) and
         /map/{dataset} (T-4639)."""
         from flask import Blueprint

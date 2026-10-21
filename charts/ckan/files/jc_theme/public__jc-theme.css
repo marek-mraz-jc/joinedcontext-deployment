@@ -674,9 +674,14 @@ body.dt-view .dataTables_filter label::after { content: none; }
 }
 /* The map as a page of its own, framed by another site: the map and two links, nothing else. */
 body.jc-embed { margin: 0; background: var(--jc-surface); }
+/* The page of its own loads no Bootstrap: its keys line stays for screen readers only (T-5061). */
+.jc-embed .visually-hidden { position: absolute; inline-size: 1px; block-size: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .jc-map-page { display: flex; flex-direction: column; height: 100vh; }
 .jc-map-page .jc-map { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .jc-map-page .jc-map-area { flex: 1; height: auto; min-height: 12rem; }
+/* T-5061: on the page of its own the note always floats over the map. In the flow it changed the
+   map's height whenever it came and went, and every resize past the cap asked the Endpoint again. */
+.jc-map-page .jc-map-note { position: absolute; z-index: 2; top: .75rem; inset-inline-start: .75rem; max-inline-size: calc(100% - 4rem); margin: 0; padding: .25rem .75rem; background: var(--jc-surface); color: var(--jc-ink); border: 1px solid var(--jc-border); border-radius: 999px; box-shadow: var(--jc-shadow-2); }
 .jc-map-links { display: flex; flex-wrap: wrap; gap: .25rem 1rem; margin: 0; padding: .5rem .75rem; font-size: .875rem; border-top: 1px solid var(--jc-border); }
 
 /* ---- Use it in your AI assistant (T-4585) ------------------------------------------------ */

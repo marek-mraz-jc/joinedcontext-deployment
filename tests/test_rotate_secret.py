@@ -9,8 +9,11 @@ line, the output or the log.
 
 import json
 import os
+import re
 import subprocess
 from pathlib import Path
+
+import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = PROJECT_ROOT / "scripts" / "rotate-secret.sh"
@@ -56,12 +59,17 @@ elif "patch" in args and "secret" in args:
     # A value may only arrive on stdin; the json removal carries no value at all.
     if "--patch-file" in args and args[args.index("--patch-file") + 1] == "/dev/stdin":
         data = json.loads(sys.stdin.read())["data"]
-        state.setdefault("previous", {})[ns] = base64.b64decode(data["previous"]).decode()
+        if "previous" in data:
+            state.setdefault("previous", {})[ns] = base64.b64decode(data["previous"]).decode()
+        else:
+            state["copies"][ns] = base64.b64decode(data["key"]).decode()
     elif args[args.index("-p") + 1] == '[{"op":"remove","path":"/data/previous"}]':
         del state["previous"][ns]
     else:
         sys.exit(1)
     save()
+elif "get" in args and "serviceaccount" in args:
+    sys.stdout.write(state.get("saRelease", ""))
 elif "get" in args and "deployment,statefulset,daemonset" in args:
     print(json.dumps({"items": state.get("workloads", {}).get(ns, [])}))
 elif "rollout" in args:
@@ -83,7 +91,7 @@ args = sys.argv[1:]
 with open(os.environ["STUB_CALLS"], "a") as log:
     log.write("helmfile " + " ".join(args) + "\n")
 selector = args[args.index("-l") + 1]
-if selector.startswith("secret-name=") or selector == "release=gitea-bootstrap":
+if selector.startswith("secret-name=") or selector in ("release=gitea-bootstrap", "release=" + state.get("saRelease", "-")):
     value = state["regenerate"]
     for ns in state["copies"]:
         state["copies"][ns] = value
@@ -105,10 +113,14 @@ stdin = sys.stdin.read()
 if "client_secret@-" in args:
     value = stdin
 elif "-K" in args:
-    value = stdin.split("Authorization: token ", 1)[1].rsplit('"', 1)[0]
+    value = stdin.split("Authorization: ", 1)[1].rsplit('"', 1)[0]
+    for scheme in ("token ", "Bearer "):
+        value = value.removeprefix(scheme)
 else:
     sys.exit(2)
-sys.stdout.write("200" if value == state["accepted"] else "401")
+refusal = "403" if any("api_token_list" in a for a in args) else "401"
+accepted = state.get("acceptedAlso", []) + [state["accepted"]]
+sys.stdout.write("200" if value in accepted else refusal)
 '''
 
 
@@ -157,7 +169,7 @@ CLIENT = ("--instance", "dev", "--secret", "keycloak-client-portal-api", "--idm"
 
 def test_what_the_platform_does_not_generate_is_refused_and_nothing_is_touched(tmp_path):
     """OPS-45: the administrators and operator-supplied keys have their own runbook."""
-    for name in ("gitea-admin-credentials", "keycloak-admin-user", "agent-runner-model-key"):
+    for name in ("gitea-admin-credentials", "keycloak-admin-user", "agent-runner-model-key", "keycloak-smtp"):
         result, calls, _ = run(tmp_path, {}, "--instance", "dev", "--secret", name)
         assert result.returncode == 2, name
         assert "Runbook 5" in result.stderr
@@ -310,3 +322,103 @@ def test_the_portal_reads_the_retired_session_key_and_starts_without_one(rendere
         "name": "portal-cookie-key", "key": "previous", "optional": True,
     }
     assert "optional" not in env["JC_PORTAL_COOKIE_KEY"]["valueFrom"]["secretKeyRef"], "the active key stays required"
+
+
+# T-5106: the catalogue token, the model key and the dry run of every class.
+
+CATALOGUE = ("--instance", "dev", "--secret", "ckan-api-token", "--catalogue", "https://opendata.x")
+
+
+def model_key(tmp_path: Path, value: str = NEW) -> tuple[str, ...]:
+    key_file = tmp_path / "new-key"
+    key_file.write_text(value + "\n")
+    return ("--instance", "dev", "--secret", "agent-runner-model-key", "--from-file", str(key_file),
+            "--model-base", "https://openrouter.x/api/v1")
+
+
+CHANGES = re.compile(r" (delete|patch|rollout) ")
+
+
+def test_the_catalogue_token_is_minted_again_by_its_release_and_the_old_one_is_refused(tmp_path):
+    """The token Job's ServiceAccount names the release; CKAN refuses a revoked token as anonymous (403)."""
+    state = {"copies": {"ckan": OLD}, "release": "", "saRelease": "ckan-catalogue", "pushedBy": "release",
+             "workloads": {"ckan": [deployment("portal", "ckan-api-token")]}}
+    result, calls, after = run(tmp_path, state, *CATALOGUE)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert any(c.startswith("helmfile") and "-l release=ckan-catalogue sync" in c for c in calls)
+    assert after["copies"] == {"ckan": NEW} and after["accepted"] == NEW
+    assert any("rollout restart deployment/portal" in c for c in calls)
+    assert any("api_token_list" in c for c in calls)
+    assert "the old value is refused" in result.stdout
+
+
+def test_a_catalogue_token_without_its_release_is_never_deleted(tmp_path):
+    state = {"copies": {"ckan": OLD}, "release": "", "saRelease": ""}
+    result, calls, after = run(tmp_path, state, *CATALOGUE)
+    assert result.returncode == 2 and "no catalogue release" in result.stderr
+    assert after["copies"] == {"ckan": OLD}
+    assert not any(CHANGES.search(c) or c.startswith("helmfile") for c in calls)
+
+
+def test_a_catalogue_token_needs_the_catalogue_to_measure_at(tmp_path):
+    result, calls, _ = run(tmp_path, {}, "--instance", "dev", "--secret", "ckan-api-token")
+    assert result.returncode == 2 and "--catalogue" in result.stderr and calls == []
+
+
+def test_the_model_key_from_a_file_replaces_every_copy_and_its_readers_restart(tmp_path):
+    """The owner's new key is measured at the provider first; the old one stays until the owner deletes it."""
+    state = {"copies": {"agent-runner": OLD}, "release": "", "acceptedAlso": [NEW],
+             "workloads": {"agent-runner": [deployment("agent-proxy", "agent-runner-model-key")]}}
+    result, calls, after = run(tmp_path, state, *model_key(tmp_path))
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert after["copies"] == {"agent-runner": NEW}
+    assert any("rollout restart deployment/agent-proxy" in c for c in calls)
+    assert "delete it in the provider's account" in result.stdout
+    assert not any(c.startswith("helmfile") for c in calls) and not any(" delete " in c for c in calls)
+
+
+def test_a_model_key_the_provider_refuses_changes_nothing(tmp_path):
+    state = {"copies": {"agent-runner": OLD}, "release": ""}
+    result, calls, after = run(tmp_path, state, *model_key(tmp_path))
+    assert result.returncode == 2 and "nothing changed" in result.stderr
+    assert after["copies"] == {"agent-runner": OLD}
+    assert not any("patch" in c or "rollout" in c for c in calls)
+
+
+def test_a_model_key_file_with_the_key_in_use_changes_nothing(tmp_path):
+    state = {"copies": {"agent-runner": OLD}, "release": ""}
+    result, _, after = run(tmp_path, state, *model_key(tmp_path, OLD))
+    assert result.returncode == 2 and "already in use" in result.stderr
+    assert after["copies"] == {"agent-runner": OLD}
+
+
+def test_from_file_is_refused_for_a_generated_secret(tmp_path):
+    key_file = tmp_path / "k"
+    key_file.write_text(NEW)
+    result, calls, _ = run(tmp_path, {}, "--instance", "dev", "--secret", "db-portal", "--from-file", str(key_file))
+    assert result.returncode == 2 and calls == []
+
+
+DRY_RUNS = {
+    "client": ({}, CLIENT),
+    "database": ({"pushedBy": "generator"}, ("--instance", "dev", "--secret", "db-portal")),
+    "forge": ({}, ("--instance", "dev", "--secret", "gitea-token-gateway", "--forge", "https://x/git")),
+    "session key": ({}, ("--instance", "dev", "--secret", "portal-cookie-key")),
+    "catalogue": ({"release": "", "saRelease": "ckan-catalogue"}, CATALOGUE),
+    "model key": ({"release": ""}, None),
+}
+
+
+@pytest.mark.parametrize("kind", sorted(DRY_RUNS))
+def test_a_dry_run_prints_the_plan_and_changes_nothing(tmp_path, kind):
+    """T-5106: every recipe's dry run reads the cluster, names what it would do, and writes nothing."""
+    state, args = DRY_RUNS[kind]
+    args = args or model_key(tmp_path)
+    state = {"workloads": {"portal": [deployment("reader", "x")]}, **state}
+    result, calls, after = run(tmp_path, state, *args, "--dry-run")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "dry run: nothing changed" in result.stdout
+    assert "would" in result.stdout
+    assert not any(c.startswith(("helmfile", "curl")) for c in calls)
+    assert not any(CHANGES.search(c) for c in calls)
+    assert all(v == OLD for v in after["copies"].values()) and after["accepted"] == OLD

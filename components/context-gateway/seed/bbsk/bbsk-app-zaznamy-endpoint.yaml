@@ -11,4 +11,8 @@ spec:
   callerRole: true
   contextSpaceRef: { kind: ContextSpace, name: bbsk-kraj }
   enabledRepresentations: [ngsi-ld, mcp, ogc-features, odata]
+  roles:
+    - name: steward
+      subjects:
+        - group: bbsk-zaznamy-steward
   slug: 66kkv3xr4lau6pjg2i5ef5lonc

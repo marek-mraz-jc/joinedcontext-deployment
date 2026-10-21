@@ -634,6 +634,59 @@ dev-chaos targets='broker,gateway,portal,postgres,pipeline-runner' out='deployme
 	just _dev-guard
 	./scripts/chaos-recovery.py --targets "{{ targets }}" --out "{{ out }}"
 
+# Rotate one credential on dev without downtime (T-5106, OPS-45, Operations/01 Runbook 5):
+# scripts/rotate-secret.sh deletes it, applies what makes it again, restarts its readers and
+# measures the old value refused; dry=true prints that plan and changes nothing
+[group('dev cluster')]
+_dev-rotate secret dry *args:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	just _dev-guard
+	just _dev-assemble
+	./scripts/rotate-secret.sh --instance dev --secret "{{ secret }}" {{ args }} {{ if dry == 'true' { '--dry-run' } else { '' } }}
+
+# A Keycloak client's secret, pushed to the realm by keycloak-config-cli
+[group('dev cluster')]
+dev-rotate-client client='activity-ingest' dry='false':
+	just _dev-rotate "keycloak-client-{{ client }}" "{{ dry }}" --idm "https://idm.{{ dev_domain }}" --realm dev
+
+# A database role's password, applied by CloudNativePG
+[group('dev cluster')]
+dev-rotate-db role='portal' dry='false':
+	just _dev-rotate "db-{{ role }}" "{{ dry }}"
+
+# A forge token, minted again by the forge bootstrap
+[group('dev cluster')]
+dev-rotate-forge-token holder='gateway' dry='false':
+	just _dev-rotate "gitea-token-{{ holder }}" "{{ dry }}" --forge "https://{{ dev_domain }}/git"
+
+# The catalogue's API token, revoked and minted again by the catalogue's token Job
+[group('dev cluster')]
+dev-rotate-ckan-token dry='false':
+	just _dev-rotate ckan-api-token "{{ dry }}" --catalogue "https://opendata.{{ dev_domain }}"
+
+# The model key: the owner creates a new key at the provider and passes its file; delete the old
+# key in the provider's account afterwards
+[group('dev cluster')]
+dev-rotate-model-key file dry='false':
+	just _dev-rotate agent-runner-model-key "{{ dry }}" --from-file "{{ file }}" --model-base https://openrouter.ai/api/v1
+
+# The quarterly rotation drill (T-5106): one credential of each kind, with probes read every 2 s;
+# the summary goes to the Health tab, which marks the drill stale when none ran for two months
+[group('dev cluster')]
+dev-rotation-drill model_key_file='' dry='false' out='deployment/rotation-drill.json':
+	#!/usr/bin/env bash
+	set -euo pipefail
+	just _dev-guard
+	just _dev-assemble
+	mkdir -p "$(dirname "{{ out }}")"
+	rc=0
+	./scripts/rotation-drill.py --instance dev --domain "{{ dev_domain }}" --realm dev --out "{{ out }}" \
+		{{ if model_key_file != '' { '--model-key-file ' + model_key_file } else { '' } }} \
+		{{ if dry == 'true' { '--dry-run' } else { '' } }} || rc=$?
+	[ "{{ dry }}" = true ] || ./scripts/publish-health.py "{{ out }}" --every-hours 744
+	exit "$rc"
+
 # Publish one check's summary to the Portal's Organization > Health tab (T-2803, OPS-53); run it
 # after tasks/file-failures, so the tasks it links exist; passed=true for the App probe's chips
 [group('dev cluster')]

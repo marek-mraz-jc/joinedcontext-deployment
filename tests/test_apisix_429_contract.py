@@ -428,3 +428,38 @@ routes:
         assert call(base, {"Authorization": "Bearer token"}) == 502
         status, _, _ = answer(base + "/api/mcp")
         assert status == 502, "the hub itself is not this route's"
+
+
+def test_the_pinned_image_puts_the_header_floor_on_every_answer(tmp_path, rendered):
+    """T-5107 (ZAP 10035, 10063): the committed `edge-headers` global rule on the pinned image. The
+    edge's own 404 for an address no route serves carries HSTS, nosniff and the Permissions-Policy;
+    a route's own Permissions-Policy is the one sent; an App's host gets none from the edge."""
+    cm = next(
+        d for d in rendered("local")
+        if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "apisix-standalone-base"
+    )
+    rule = next(r for r in yaml.safe_load(cm["data"]["apisix.yaml"])["global_rules"] if r["id"] == "edge-headers")
+    apps = re.search(r'local apps = "\.(apps\.[a-z0-9.-]+)"', "".join(rule["plugins"]["serverless-post-function"]["functions"])).group(1)
+    rules = yaml.safe_dump({
+        "global_rules": [rule],
+        "routes": [{
+            "uri": "/own",
+            "plugins": {
+                "fault-injection": {"abort": {"http_status": 200, "body": "ok"}},
+                "response-rewrite": {"headers": {"set": {"Permissions-Policy": "geolocation=(self)"}}},
+            },
+            "upstream": {"nodes": {"127.0.0.1:9": 1}, "type": "roundrobin"},
+        }],
+    }) + "#END\n"
+    floor = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    with pinned_apisix(tmp_path, rules) as base:
+        status, headers, _ = answer(base + "/no-route-serves-this")
+        assert status == 404
+        assert headers["Strict-Transport-Security"] == "max-age=31536000; includeSubDomains; preload"
+        assert headers["X-Content-Type-Options"] == "nosniff"
+        assert headers["Permissions-Policy"] == floor
+        status, headers, _ = answer(base + "/own")
+        assert (status, headers["Permissions-Policy"]) == (200, "geolocation=(self)")
+        status, headers, _ = answer(base + "/no-route-serves-this", {"Host": f"map.{apps}"})
+        assert status == 404 and "Permissions-Policy" not in headers
+        assert headers["Strict-Transport-Security"].startswith("max-age=31536000")
