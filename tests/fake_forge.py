@@ -353,7 +353,16 @@ def answer(call: dict, state: dict) -> tuple[int, str]:
         file_path = unquote(contents.group(2))
         held = files.get(file_path)
         if method == "GET":
-            return (200, json.dumps(blob(file_path, held))) if held is not None else (404, "{}")
+            if held is not None:
+                return 200, json.dumps(blob(file_path, held))
+            # A folder: Gitea answers the entries directly under it, without their content.
+            prefix = file_path.rstrip("/") + "/"
+            entries = [
+                {**{k: v for k, v in blob(path, text).items() if k != "content"}, "type": "file"}
+                for path, text in sorted(files.items())
+                if path.startswith(prefix) and "/" not in path[len(prefix):]
+            ]
+            return (200, json.dumps(entries)) if entries else (404, "{}")
         body = json.loads(call["data"])
         if method == "POST":
             if held is not None:

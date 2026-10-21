@@ -21,4 +21,8 @@ spec:
   - mcp
   - ogc-features
   - odata
+  roles:
+  - name: steward
+    subjects:
+    - group: bbsk-zaznamy-steward
   slug: 66kkv3xr4lau6pjg2i5ef5lonc
