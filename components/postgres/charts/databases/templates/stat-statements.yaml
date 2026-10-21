@@ -90,7 +90,7 @@ spec:
           while read -r db; do
             echo "pg_stat_statements in ${db}"
             psql -v ON_ERROR_STOP=1 -d "$db" <<-'EOSQL'
-              DO $$
+              DO $grants$
               DECLARE
                 ext oid;
                 obj record;
@@ -127,7 +127,7 @@ spec:
                   RAISE EXCEPTION 'pg_stat_statements still grants PUBLIC access in %', current_database();
                 END IF;
               END
-              $$;
+              $grants$;
           EOSQL
           done </tmp/dbs
           echo "pg_stat_statements: superuser and pg_read_all_stats only"
