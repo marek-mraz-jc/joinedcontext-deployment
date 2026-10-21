@@ -180,3 +180,46 @@ def test_workflows_take_tool_versions_from_tools_env():
             "LINKERD2_VERSION"
         }
         assert not written, f"{workflow.name}: {written} belongs in tools.env"
+
+
+def remote_charts(node) -> int:
+    """Chart entries pulled from an HTTP(S) repository (`repository` + `chart` + `version`)."""
+    if isinstance(node, dict):
+        own = int(
+            str(node.get("repository", "")).startswith("http")
+            and "chart" in node
+            and "version" in node
+        )
+        return own + sum(remote_charts(v) for v in node.values())
+    return 0
+
+
+def test_renovate_matches_every_remote_chart_in_charts_yaml():
+    """T-5019: each repository chart pin sits where Renovate's regex finds it."""
+    config = json.loads((ROOT / "renovate.json").read_text())
+    manager = next(
+        m
+        for m in config["customManagers"]
+        if "/^components/[^/]+/charts\\.yaml$/" in m["managerFilePatterns"]
+        and "helm" == m["datasourceTemplate"]
+    )
+    pattern = re.compile(manager["matchStrings"][0].replace("(?<", "(?P<"))
+    files = sorted(ROOT.glob("components/*/charts.yaml"))
+    found = [m.groupdict() for f in files for m in pattern.finditer(f.read_text())]
+    declared = sum(
+        remote_charts(doc) for f in files for doc in yaml.safe_load_all(f.read_text())
+    )
+    assert len(found) == declared
+    broker = pattern.findall((ROOT / "components/context-broker/charts.yaml").read_text())
+    assert [(depName, version) for _, depName, version in broker] == [("cluster", "0.7.0")]
+
+
+def test_no_helmfile_pins_a_repository_chart_inline():
+    """T-5019: a remote chart's version comes from components/*/charts.yaml, never a literal in a helmfile."""
+    inline = re.compile(r"chart:\s*['\"]?cc2-[\w.-]+/[\w.-]+['\"]?\s*\n\s*version:\s*['\"]?\d")
+    offenders = [
+        str(f.relative_to(ROOT))
+        for f in sorted(ROOT.glob("components/*/helmfile.yaml.gotmpl"))
+        if inline.search(f.read_text())
+    ]
+    assert offenders == []

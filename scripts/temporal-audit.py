@@ -230,6 +230,30 @@ def model_slots(folder: Path, project: str, space: str, model: str | None) -> di
     return {}
 
 
+def mode_words(mode: dict) -> str:
+    """One PL-80 end-time mode in words: `from` a field (`plus`, `notAfter`), `rolling` or `at`."""
+    if "from" in mode:
+        return " ".join([f"from {mode['from']}"] + [f"{k} {mode[k]}" for k in ("plus", "notAfter") if mode.get(k)])
+    if "rolling" in mode:
+        return f"rolling {mode['rolling']}"
+    if "at" in mode:
+        return f"at {mode['at']}"
+    return "unknown mode"
+
+
+def lifetime_of(spec: dict) -> list[str]:
+    """What ends a pipeline's entities: each `spec.lifetime` entry (PL-80) and the `expiry` window (PL-64)."""
+    out = set()
+    for lt in spec.get("lifetime") or []:
+        if lt.get("entity"):
+            out.add(f"{lt.get('type')}: {mode_words(lt['entity'])}")
+        for attrs in lt.get("attributes") or []:
+            out.add(f"{lt.get('type')}.{','.join(attrs.get('names') or [])}: {mode_words(attrs)}")
+    if spec.get("expiry"):
+        out.add(f"expiry {(spec['expiry'] or {}).get('after')}")
+    return sorted(out)
+
+
 def audit_folder(folder: Path) -> list[dict]:
     docs = load_folder(folder)
     spaces = {(d["metadata"]["namespace"], d["metadata"]["name"]): d for _, d, _ in docs if isinstance(d, dict) and d.get("kind") == "ContextSpace"}
@@ -251,8 +275,7 @@ def audit_folder(folder: Path) -> list[dict]:
                 targets.append((space, out.get("type")))
         if not targets:
             continue
-        lifetime = sorted({lt.get("after") or lt.get("until") or "set" for lt in spec.get("lifetime") or []}
-                          | ({(spec.get("expiry") or {}).get("after")} if spec.get("expiry") else set()))
+        lifetime = lifetime_of(spec)
         text = mapping_text(spec, bento_file.read_text() if bento_file else None)
         if '"expiresAt"' in text:
             lifetime.append("expiresAt in mapping")
@@ -297,6 +320,8 @@ def main(argv: list[str]) -> int:
     rows = audit(args.seed)
     counts = {v: sum(r["verdict"] == v for r in rows) for v in VERDICTS}
     args.out.write_text(json.dumps({"rows": rows, "verdicts": counts}, indent=1, ensure_ascii=False) + "\n")
+    for (project, space, pipeline), lifetime in sorted({(r["project"], r["space"], r["pipeline"]): r["lifetime"] for r in rows}.items()):
+        print(f'lifetime {project}/{space} {pipeline}: {"; ".join(lifetime) or "none"}')
     for r in rows:
         if r["verdict"] != "ok":
             print(f'{r["verdict"]:20} {r["project"]}/{r["pipeline"]} {r["entityType"]}.{r["attribute"]} '

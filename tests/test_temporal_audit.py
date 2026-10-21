@@ -87,3 +87,31 @@ def test_the_report_holds_no_value_of_the_data():
     assert keys == {"project", "space", "pipeline", "entityType", "attribute", "record", "observedAt", "unitCode",
                     "datasetId", "history", "lifetime", "verdict"}
     assert {s for r in rows for s in r["observedAt"]} <= {"mapped", "constant", "received"}
+
+
+def test_each_lifetime_mode_reads_as_pl80_defines_it():
+    """T-5019: `from`, `rolling` and `at`, for the whole entity and for some attributes, plus the expiry."""
+    spec = {
+        "lifetime": [
+            {"type": "Vehicle", "entity": {"from": "observedAt", "plus": "PT5M", "notAfter": "PT1H"}},
+            {"type": "Sensor", "entity": {"rolling": "PT10M"}},
+            {"type": "Event", "entity": {"at": "2027-01-01T00:00:00+01:00"},
+             "attributes": [{"names": ["status", "note"], "rolling": "P1D"}, {"names": ["endDate"], "from": "endDate"}]},
+        ],
+        "expiry": {"after": "14d", "types": ["Vehicle"]},
+    }
+    assert audit.lifetime_of(spec) == [
+        "Event.endDate: from endDate",
+        "Event.status,note: rolling P1D",
+        "Event: at 2027-01-01T00:00:00+01:00",
+        "Sensor: rolling PT10M",
+        "Vehicle: from observedAt plus PT5M notAfter PT1H",
+        "expiry 14d",
+    ]
+    assert audit.lifetime_of({}) == []
+
+
+def test_the_seed_vehicles_report_their_real_lifetime():
+    rows = [r for r in audit.audit(audit.SEED) if r["pipeline"] == "hsl-hfp-vehicles"]
+    assert rows and all("Vehicle: from observedAt plus PT5M" in r["lifetime"] for r in rows)
+    assert not any("set" in r["lifetime"] for r in audit.audit(audit.SEED))
