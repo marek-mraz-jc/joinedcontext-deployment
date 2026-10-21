@@ -1,0 +1,22 @@
+name: tools
+description: >-
+  Load tools.env into the job environment and install helmfile, helm and helm-diff at the versions
+  it pins (docs/analysis/iac-practices.md R3). Run it right after actions/checkout; later steps read
+  the other versions and checksums from env.
+inputs:
+  helmfile:
+    description: "false loads tools.env only, for a job that does not render"
+    default: "true"
+runs:
+  using: composite
+  steps:
+    - name: load tools.env
+      shell: bash
+      run: grep -E '^[A-Z0-9_]+=[^ ]+$' "${GITHUB_WORKSPACE}/tools.env" >> "$GITHUB_ENV"
+    - if: inputs.helmfile == 'true'
+      uses: helmfile/helmfile-action@1f44bcb43e5fb17ecb2685d8b6081ec5f6aa5fcf # v2.4.7
+      with:
+        helmfile-args: version
+        helmfile-version: ${{ env.HELMFILE_VERSION }}
+        helm-version: ${{ env.HELM_VERSION }}
+        helm-plugins: https://github.com/databus23/helm-diff@${{ env.HELM_DIFF_VERSION }}
