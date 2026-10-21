@@ -88,7 +88,7 @@
                route shares a chain and counts a bucket of its own (T-2892). */}}
         {{- with $config.plugins }}
         plugins:
-{{ toYaml . | indent 10 }}
+{{ toYaml . | replace "${DOMAIN_RE}" ($.Values.domain | replace "." "[.]") | indent 10 }}
         {{- end }}
 {{- end }}
     #END
