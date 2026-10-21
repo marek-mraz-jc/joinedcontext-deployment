@@ -48,8 +48,13 @@ def test_the_walk_finds_the_endpoints():
     assert {"helsinki", "praha-mesto", "bbsk-kraj"} <= {space for _, _, space, _ in found}
 
 
+# A pipelines' write door serves NGSI-LD to its writers and nothing to readers (T-5033).
+WRITE_DOORS = {"bbsk-podujatia-zapis"}
+
+
 def test_every_endpoint_serves_mcp():
-    missing = [f"{path}: {name}" for path, name, _, served in endpoints() if "mcp" not in served]
+    missing = [f"{path}: {name}" for path, name, _, served in endpoints()
+               if "mcp" not in served and name not in WRITE_DOORS]
     assert not missing, missing
 
 

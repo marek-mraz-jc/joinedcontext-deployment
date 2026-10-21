@@ -11,6 +11,8 @@ from pathlib import Path
 import yaml
 
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
+# A pipelines' write door serves NGSI-LD to its writers and nothing to readers (T-5033).
+WRITE_DOORS = {"bbsk-podujatia-zapis"}
 SUBSCRIPTIONS = {"createSubscription", "retrieveSubscription", "updateSubscription", "deleteSubscription"}
 READS = {"retrieveOps", "queryEntity", "retrieveEntity"}
 # The only entity write a reader Policy holds: a steward's correction of a docking station.
@@ -57,6 +59,8 @@ def test_every_seeded_endpoint_serves_websocket_and_ogc_features():
     endpoints = manifests("Endpoint")
     assert len(endpoints) >= 23
     for path, doc in endpoints:
+        if doc["metadata"]["name"] in WRITE_DOORS:
+            continue
         assert {"websocket", "ogc-features"} <= set(doc["spec"]["enabledRepresentations"]), path.name
 
 
