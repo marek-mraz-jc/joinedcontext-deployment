@@ -22,7 +22,8 @@ jobs:
       - uses: sigstore/cosign-installer@7e8b541eb2e61bf99390e1afd4be13a184e9ebc5 # v3.10.1
       - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with: { registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}" }
-      - name: pin, render, commit
+      - run: pip install --quiet pyyaml
+      - name: pin, render, check the docs, commit
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -36,6 +37,13 @@ jobs:
             helmfile -f deployment/helmfile.yaml -e dev repos >/dev/null
             if ! scripts/render.sh dev /tmp/rendered-dev.yaml >/dev/null; then
               echo "::error::$message: the dev render fails, nothing pinned"
+              git checkout -- components
+              continue
+            fi
+            # The bot's push starts no ci run, so the docs check ci runs is repeated here: a code
+            # head whose docs are not pinned yet (portal scripts/public-docs.sh) waits (T-4931).
+            if ! scripts/check-docs-pin.sh; then
+              echo "::error::$message: the pinned docs do not hold for this code, nothing pinned"
               git checkout -- components
               continue
             fi
