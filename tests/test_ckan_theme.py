@@ -153,7 +153,9 @@ def test_a_bare_dataset_shows_only_what_it_has_and_the_publisher_falls_back_to_t
     bare = {"organization": {"name": "helsinki", "title": "City of Helsinki"}}
     assert theme.jc_about(bare) == [("Publisher", "City of Helsinki", None)]
     assert theme.jc_live({}) is None and theme.jc_resource_sections({}) == [] and theme.jc_more({}) == []
-    assert theme.jc_previews({}) == [] and theme.jc_formats({}) == []
+    assert theme.jc_formats({}) == []
+    # T-5060: CKAN holds no rows, so the theme has no table preview, row total or view lookup.
+    assert not any(hasattr(theme, name) for name in ("jc_previews", "jc_total", "_display_fields", "_leaf"))
 
 
 def test_a_link_that_is_not_http_is_shown_as_text(theme):
@@ -219,7 +221,7 @@ def test_the_attribution_and_the_original_data_are_about_rows_and_never_more_det
 
 SCHEMA = "https://dev.example/api/endpoint/praha/schema/v1/"
 
-# The resources `jcctl` publishes for an Endpoint, in its order: the DataStore table last.
+# The resources `jcctl` publishes for an Endpoint, in its order (T-5060: no DataStore table).
 PUBLISHED_RESOURCES = [
     {"id": "r-ngsi", "name": "NGSI-LD API", "format": "NGSI-LD", "url": ENDPOINT + "ngsi-ld/v1/"},
     {"id": "r-csv", "name": "CSV", "format": "CSV", "url": ENDPOINT + "file.csv"},
@@ -228,23 +230,21 @@ PUBLISHED_RESOURCES = [
     {"id": "r-shacl", "name": "model.shacl.ttl", "format": "SHACL", "url": SCHEMA + "model.shacl.ttl"},
     {"id": "r-ctx", "name": "context.jsonld", "format": "JSON-LD", "url": SCHEMA + "context.jsonld?v=1"},
     {"id": "r-odd", "name": "Unlabelled", "format": "", "url": ENDPOINT + "other"},
-    {"id": "r-table", "name": "DataStore", "format": "CSV", "url": "https://data.dev.example/datastore/dump/r-table",
-     "datastore_active": True},
 ]
 
 
-def test_the_datastore_table_leads_the_files_and_the_model_is_a_section_of_its_own(theme):
-    """T-3009: the DataStore resource was the last of fourteen links; it leads the data now."""
+def test_the_files_and_the_model_are_sections_of_their_own(theme):
+    """T-3009, T-5060: the files lead the data (there is no DataStore table to lead them); the model
+    is a section of its own."""
     sections = theme.jc_resource_sections({"resources": PUBLISHED_RESOURCES})
     ids = {s["key"]: [i["resource"]["id"] for i in s["items"]] for s in sections}
     assert [s["key"] for s in sections] == ["data", "api", "schema"]
-    assert ids["data"] == ["r-table", "r-csv", "r-odd"]
+    assert ids["data"] == ["r-csv", "r-odd"]
     assert ids["api"] == ["r-ngsi", "r-mcp"]
     # Everything under the Endpoint's /schema/ path is the model, whatever format it names.
     assert sorted(ids["schema"]) == ["r-ctx", "r-index", "r-shacl"]
     data = sections[0]["items"]
-    assert data[0]["what"] == "The table above, as one file"
-    assert data[1]["what"] == "A table for a spreadsheet"
+    assert data[0]["what"] == "A table for a spreadsheet"
     assert data[-1]["format"] == "—" and data[-1]["what"] == ""
     assert sections[2]["title"] == "Data model" and sections[1]["lead"]
 
@@ -255,56 +255,24 @@ def test_a_dataset_with_only_files_has_one_section_and_a_search_result_names_no_
     assert theme.jc_formats({"resources": PUBLISHED_RESOURCES}) == ["CSV", "NGSI-LD", "MCP"]
 
 
-# Since T-3012 the mirror writes one DataStore table per entity type, named by the type and
-# with no format of its own.
-TYPE_TABLES = [
-    {"id": "t-bikes", "name": "BikeHireDockingStation", "format": "", "url": "https://data.dev.example/datastore/dump/t-bikes",
-     "datastore_active": True},
-    {"id": "t-air", "name": "AirQualityObserved", "format": "", "url": "https://data.dev.example/datastore/dump/t-air",
-     "datastore_active": True},
-]
-
-
-def test_the_page_frames_every_type_table_with_its_row_count(theme):
-    rows = {"t-air": 300, "t-bikes": 24808, "r-table": 5}
-    theme.page.actions = {
-        "resource_view_list": lambda d: [{"id": "v-image", "view_type": "image_view"},
-                                         {"id": "v-" + d["id"], "view_type": "datatables_view"}],
-        "datastore_search": lambda d: {"total": rows[d["resource_id"]]} if d["limit"] == 0 else {},
-    }
-    previews = theme.jc_previews({"resources": PUBLISHED_RESOURCES[:3] + TYPE_TABLES})
-    assert [p["resource"]["id"] for p in previews] == ["t-air", "t-bikes"]
-    assert [p["view"]["id"] for p in previews] == ["v-t-air", "v-t-bikes"]
-    assert theme.jc_total(previews) == 25108 and theme.jc_number(25108) == "25\u202f108"
-    # A table the mirror wrote without a format downloads as CSV and says what it is.
-    data = theme.jc_resource_sections({"resources": TYPE_TABLES})[0]["items"]
-    assert [(i["format"], i["what"]) for i in data] == [("CSV", "The table above, as one file")] * 2
-
-
-def test_a_table_without_a_view_or_a_count_still_shows_and_says_so(theme):
-    theme.page.actions = {
-        "resource_view_list": theme.toolkit.NotAuthorized(),
-        "datastore_search": theme.toolkit.ObjectNotFound(),
-    }
-    previews = theme.jc_previews({"resources": PUBLISHED_RESOURCES})
-    assert previews == [{"resource": PUBLISHED_RESOURCES[-1], "view": None, "total": None}]
-    assert theme.jc_total(previews) is None and theme.jc_total([]) is None
-    assert theme.jc_number(None) == "" and theme.jc_number("x") == ""
+def test_a_resource_is_never_told_apart_by_a_datastore_flag(theme):
+    """T-5060: a leftover `datastore_active` resource of an older harvest is an ordinary file; it
+    neither leads the list nor changes its format or its words."""
+    old = {"id": "t-air", "name": "AirQualityObserved", "format": "CSV",
+           "url": "https://data.dev.example/other/t-air", "datastore_active": True}
+    plain = dict(old, id="t-plain")
+    del plain["datastore_active"]
+    data = theme.jc_resource_sections({"resources": [plain, old]})[0]["items"]
+    assert sorted(i["resource"]["id"] for i in data) == ["t-air", "t-plain"]
+    assert {(i["format"], i["what"]) for i in data} == {("CSV", "A table for a spreadsheet")}
     read = (THEME / "templates__package__read.html").read_text()
-    assert "h.jc_t('no_view')" in read and "total is not none" in read and "preview.total is not none" in read
+    for gone in ("jc-table", "jc-grid", "h.jc_previews", "h.jc_total", "preview.total", "jc_t('rows')"):
+        assert gone not in read, gone
 
 
-def test_only_the_first_table_is_open_so_the_others_load_nothing_until_asked():
+def test_the_explorer_comes_before_the_about_list_on_the_dataset_page():
     read = (THEME / "templates__package__read.html").read_text()
-    assert '<details class="jc-table"{% if loop.first %} open{% endif %}>' in read
-    assert 'loading="lazy"' in read
-
-
-def test_the_table_comes_before_the_about_list_on_the_dataset_page():
-    read = (THEME / "templates__package__read.html").read_text()
-    assert read.index("h.jc_previews(pkg)") < read.index("h.jc_about(pkg)") < read.index("h.jc_live(pkg)")
-    # The framed table carries a title a screen reader announces.
-    assert re.search(r"<iframe[^>]*title=\"\{\{ h.jc_t\('table_title'\) \}\}: \{\{ name \}\}", read)
+    assert read.index("h.jc_explorer(pkg)") < read.index("h.jc_about(pkg)") < read.index("h.jc_live(pkg)")
 
 
 def test_the_mcp_panel_names_the_installation_s_hub_and_nothing_else(theme):
@@ -1215,7 +1183,7 @@ def test_a_row_count_takes_its_language_s_plural(theme, lang, counts):
         assert theme.jc_rows(count) == words
     assert theme.jc_rows(None) == ""
     read = (THEME / "templates__package__read.html").read_text()
-    assert "h.jc_t('rows')" not in read and read.count("h.jc_rows(") == 2
+    assert "h.jc_t('rows')" not in read and "h.jc_rows(" not in read, "T-5060: the page counts no rows of its own"
 
 
 def test_usage_reads_as_markdown_and_its_commands_wrap(theme):
@@ -1524,8 +1492,6 @@ OD_PKG = {"name": "bb", "title": "Prírastky a úbytky občanov", "resources": [
      "url": "wss://dev.example/api/endpoint/4ysiqy53qik5qyvawwaj7wgylpt4uoxa/ws"},
     {"id": "o", "name": "OData v4 (StatisticalObservation)", "format": "JSON", "resource_type": "api",
      "url": OD + "odata/v4/StatisticalObservation"},
-    {"id": "t", "name": "Prírastky a úbytky občanov (tabuľka)", "format": "CSV", "datastore_active": True,
-     "url": "https://data.dev.example/datastore/dump/t"},
     {"id": "p", "name": "Prírastky a úbytky občanov", "format": "JSON",
      "url": "https://egov.banskabystrica.sk/Default.aspx?NavigationState=890"},
 ]}
@@ -1537,7 +1503,7 @@ def _od(theme, rid):
 
 def test_an_endpoint_address_is_read_by_its_path_not_its_format_label(theme):
     kinds = {r["id"]: theme.jc_kind(r) for r in OD_PKG["resources"]}
-    assert kinds == {"n": "NGSI-LD", "c": "CSV", "m": "MCP", "w": "WEBSOCKET", "o": "ODATA", "t": None, "p": None}
+    assert kinds == {"n": "NGSI-LD", "c": "CSV", "m": "MCP", "w": "WEBSOCKET", "o": "ODATA", "p": None}
     assert theme.jc_is_api(_od(theme, "n")) and theme.jc_is_api(_od(theme, "m"))
     # A file the Endpoint renders is a file, whatever resource_type the harvest wrote.
     assert not theme.jc_is_api(_od(theme, "c"))
@@ -1551,14 +1517,14 @@ def test_an_endpoint_address_is_read_by_its_path_not_its_format_label(theme):
 def test_the_resource_list_groups_and_names_the_type_once(theme):
     sections = {s["key"]: s for s in theme.jc_resource_sections(OD_PKG)}
     assert [i["resource"]["id"] for i in sections["api"]["items"]] == ["n", "w", "m", "o"]
-    assert {i["resource"]["id"] for i in sections["data"]["items"]} == {"c", "t"}
+    assert {i["resource"]["id"] for i in sections["data"]["items"]} == {"c"}
     # The harvest's link to the publisher's page is opened at the publisher, not a twin download.
     assert [i["resource"]["id"] for i in sections["source"]["items"]] == ["p"]
     labels = {r["id"]: theme.jc_resource_label(r, OD_PKG) for r in OD_PKG["resources"]}
     assert not any("(StatisticalObservation)" in label for label in labels.values()), labels
     assert labels["n"] == "NGSI-LD API" and labels["m"] == "Model Context Protocol"
-    # The publisher's own page, named after the dataset, no longer reads as a twin of the table.
-    assert labels["p"] == "On the publisher's site" and labels["t"] == "The publisher's original table"
+    # The publisher's own page, named after the dataset, reads as a link to the publisher (T-4333).
+    assert labels["p"] == "On the publisher's site"
     # A file or a socket is named by what is in it; its chip already names the format.
     assert labels["c"] == "All records as a table" and labels["w"] == "Live changes"
     # Each of the platform's files says what it is for, so none reads as a twin of another.
@@ -1637,7 +1603,7 @@ def test_each_kind_shows_how_to_use_it_and_a_private_one_sends_the_token(theme):
     assert ws.startswith("websocat --protocol ngsi-ld-ws 'wss://") and '"entities":[{"type":"StatisticalObservation"}]' in ws
     private = dict(_od(theme, "n"), description="Send `Authorization: Bearer $TOKEN`.")
     assert '-H "Authorization: Bearer $TOKEN"' in theme.jc_examples(private)[0]["code"]
-    assert theme.jc_examples(_od(theme, "t")) == [] and theme.jc_examples({}) == []
+    assert theme.jc_examples(_od(theme, "p")) == [] and theme.jc_examples({}) == []
     parquet = theme.jc_examples(dict(_od(theme, "c"), url=OD + "file.parquet"))[0]["code"]
     assert parquet == "curl -L -o data.parquet '%sfile.parquet'" % OD
     ids = [e["id"] for e in mcp]
@@ -1712,12 +1678,12 @@ def test_a_file_follows_its_format_s_rfc_and_an_api_base_lists_its_types(theme):
     assert theme.jc_preview({"url": OD + "odata/v4/"}) is None and theme.jc_preview({"url": OD + "ogc/features/"}) is None
 
 
-def test_a_short_table_gets_a_short_frame_and_the_live_address_wraps():
+def test_the_live_address_wraps():
     css = (THEME / "public__jc-theme.css").read_text()
     # `.jc-live pre` paints commands dark; the address box stays light, its text readable (T-4333).
     assert ".jc-live .jc-live-url { padding: .5rem .75rem; background: var(--jc-surface); color: var(--jc-ink);" in css
     page = (THEME / "templates__package__read.html").read_text()
-    assert 'style="--jc-rows: {{ [preview.total or 20, 20]|min }}"' in page
+    assert "--jc-rows" not in page, "T-5060: no framed table, so no frame height"
     assert '<pre id="jc-live-url"' in page and 'readonly value="{{ live.url }}"' not in page
     css = (THEME / "public__jc-theme.css").read_text()
     assert "calc(15rem + var(--jc-rows, 20) * 2.6rem)" in css
@@ -2315,8 +2281,9 @@ def test_ckan_answers_cors_for_the_renderer_alone(rendered):
 MAP_PKG = {"name": "pocasie", "title": "Počasie", "resources": [
     {"id": "o", "format": "OGCFEAT", "url": "https://dev.example/api/endpoint/abc/ogc/features/"},
     {"id": "x", "format": "OGCFEAT", "url": "https://elsewhere.example/api/endpoint/abc/ogc/features/"},
-    {"id": "w", "name": "WeatherObserved", "datastore_active": True},
-    {"id": "b", "name": "not a type", "datastore_active": True},
+    {"id": "w", "name": "NGSI-LD API (WeatherObserved)", "format": "NGSI-LD",
+     "url": "https://dev.example/api/endpoint/abc/ngsi-ld/v1/entities?type=WeatherObserved"},
+    {"id": "b", "name": "not a type", "format": "CSV", "url": "https://dev.example/api/endpoint/abc/file.csv"},
     {"id": "c", "name": "CSV"},
 ]}
 
@@ -2327,28 +2294,30 @@ def mapped(theme, tmp_path, monkeypatch):
     vendor.mkdir()
     monkeypatch.setattr(theme, "VENDOR", str(vendor))
     theme.toolkit.url_for = lambda route, **kw: "https://data.dev.example/%s/%s" % (route, kw["id"])
-    theme.page.actions["datastore_search"] = lambda d: {"total": 0, "fields": []}
     return theme
 
 
-def test_the_map_reads_each_table_s_type_from_the_dataset_s_own_ogc_features(mapped):
+def test_the_map_pairs_each_entity_type_of_the_dataset_with_its_own_ogc_features(mapped):
     config = mapped.jc_map(MAP_PKG)
     base = "https://dev.example/api/endpoint/abc/ogc/features/collections/WeatherObserved"
     assert config["layers"] == [{"type": "WeatherObserved", "items": base + "/items", "schema": base + "/schema"}]
     assert config["lib"] == "/maplibre-gl-6.14.0/maplibre-gl.mjs"
     assert config["embed"] == "https://data.dev.example/jc_pages.map/pocasie"
     assert config["title"] == "Počasie" and set(config["t"]) >= {"map_cap", "map_close", "map_area"}
-    # One table only, by its resource id; a dataset filter on a shared Endpoint stays on the items.
+    # One type only, by the id of the resource that names it; a dataset filter on a shared Endpoint
+    # stays on the items, and a resource already at /collections/<Type>/items is used as it is.
     assert mapped.jc_map(MAP_PKG, resource_id="b") is None
+    assert mapped.jc_map(MAP_PKG, resource_id="w")["layers"] == config["layers"]
     shared = {"name": "od", "resources": [
         {"format": "OGCFEAT", "url": "https://dev.example/api/endpoint/od/ogc/features/collections/Obs/items?isPartOf=urn%3Ax"},
-        {"id": "s", "name": "Obs", "datastore_active": True}, {"id": "t", "name": "Other", "datastore_active": True}]}
+        {"id": "s", "name": "OData v4 (Obs)", "format": "OData", "url": "https://dev.example/api/endpoint/od/odata/v4/Obs"},
+        {"id": "t", "name": "OData v4 (Other)", "format": "OData", "url": "https://dev.example/api/endpoint/od/odata/v4/Other"}]}
     layers = mapped.jc_map(shared)["layers"]
     assert layers == [{"type": "Obs", "items": "https://dev.example/api/endpoint/od/ogc/features/collections/Obs/items?isPartOf=urn%3Ax",
                        "schema": "https://dev.example/api/endpoint/od/ogc/features/collections/Obs/schema"}]
 
 
-def test_no_map_without_the_library_an_ogc_address_on_our_host_or_a_table(mapped, monkeypatch):
+def test_no_map_without_the_library_an_ogc_address_on_our_host_or_an_entity_type(mapped, monkeypatch):
     assert mapped.jc_map({"resources": [r for r in MAP_PKG["resources"] if r["id"] != "o"]}) is None
     assert mapped.jc_map({"resources": [r for r in MAP_PKG["resources"] if r["id"] != "w"]}) is None
     assert mapped.jc_map(None) is None
@@ -2418,7 +2387,7 @@ def test_the_map_library_is_pinned_by_checksum_and_served_where_the_theme_asks()
 
 def test_the_map_card_stays_hidden_until_a_feature_has_a_geometry():
     page = (THEME / "templates__package__read.html").read_text()
-    assert '<details class="jc-table jc-map-card" open hidden>' in page
+    assert "jc-map-card" not in page, "T-5060: the card needed a table beside it; the map page frames it alone"
     assert "<script type=\"module\" src=\"{{ h.url_for_static('/jc-map.js') }}\"></script>" in page
     script = (THEME / "public__jc-map.js").read_text()
     assert script.index("if (!latest.features.length) {") < script.index("card.hidden = false")
@@ -2554,23 +2523,13 @@ def test_without_the_tables_order_the_panel_still_shows_every_value():
     assert len(out["rows"]) == 8 and out["more"] == [] and out["rows"][0][0] == "Data provider"
 
 
-def test_the_map_layer_carries_the_order_labels_and_key_flags_of_its_table(mapped):
+def test_the_map_layer_carries_no_fields_of_a_table(mapped):
+    """T-5060: there is no DataStore table to read the order, labels and key flags from; a layer is its
+    type and its two addresses, and the popup falls back to the schema and the data model's labels."""
     mapped.page.actions["datastore_search"] = lambda d: {"total": 2, "fields": [
-        {"id": "entity_id", "type": "text", "info": {"label": "Identifikátor"}},
-        {"id": "name.languageMap.sk", "type": "text", "info": {"label": "Názov", "labels": {"sk": "Názov", "en": "Name"}, "summary": True}},
-        {"id": "address.value.streetAddress", "type": "text", "info": {"label": "Ulica", "labels": {"sk": "Ulica"}}},
-        {"id": "address.value", "type": "text", "info": {"label": "Adresa", "labels": {"sk": "Adresa", "en": "Address"}}},
-        {"id": "_id", "type": "int"},
-    ]}
-    assert mapped.jc_map(MAP_PKG)["layers"][0]["fields"] == [
-        {"a": "name", "l": {"sk": "Názov", "en": "Name"}, "s": True},
-        {"a": "address", "l": {"sk": "Adresa", "en": "Address"}, "s": False},
-    ]
-    # A table the publisher wrote before T-4672 carries no labels: no fields, the popup's fallback.
-    mapped.page.actions["datastore_search"] = lambda d: {"fields": [{"id": "name.value", "type": "text", "info": {"label": "Názov"}}]}
-    assert "fields" not in mapped.jc_map(MAP_PKG)["layers"][0]
-    mapped.page.actions["datastore_search"] = mapped.toolkit.NotAuthorized()
-    assert "fields" not in mapped.jc_map(MAP_PKG)["layers"][0]
+        {"id": "name.languageMap.sk", "type": "text", "info": {"label": "Názov", "summary": True}}]}
+    for layer in mapped.jc_map(MAP_PKG)["layers"]:
+        assert set(layer) == {"type", "items", "schema"}
 
 
 def test_the_map_page_loads_the_labels_and_the_basemap_from_our_hosts_only():
@@ -2787,8 +2746,14 @@ def test_the_explorer_frames_the_endpoint_by_its_slug_and_the_resource_by_its_ty
     assert explorer["origin"] == "https://viz.dev.example" and explorer["title"] == "Živé dáta"
     odata = {"url": "https://api.dev.example/api/endpoint/scsd2eehkx42n53z2zyd6vshfh7s7irf/odata/v4/BikeHireDockingStation"}
     assert theme.jc_explorer(EXPLORED, odata)["src"].endswith("&type=BikeHireDockingStation")
+    # A table an older publish run left (T-5060 step 4) still names its type until the catalogue drops it.
     table = {"url": "https://opendata.dev.example/datastore/dump/x", "datastore_active": True, "name": "WeatherObserved"}
     assert theme.jc_explorer(EXPLORED, table)["src"].endswith("&type=WeatherObserved")
+    # A plain resource's name is no type; only its address, or the door named after its type, says so.
+    plain = {"url": "https://opendata.dev.example/x", "name": "WeatherObserved"}
+    assert "&type=" not in theme.jc_explorer(EXPLORED, plain)["src"]
+    door = {"url": "https://api.dev.example/api/endpoint/x/mcp", "name": "Model Context Protocol (WeatherObserved)"}
+    assert theme.jc_explorer(EXPLORED, door)["src"].endswith("&type=WeatherObserved")
     # A name that is no entity type never reaches the frame's address.
     odd = {"url": "https://opendata.dev.example/x", "datastore_active": True, "name": "Teploty & tlak"}
     assert "&type=" not in theme.jc_explorer(EXPLORED, odd)["src"]
@@ -2807,9 +2772,9 @@ def test_the_explorer_is_left_out_for_an_endpoint_off_the_platform_api(theme, en
     assert theme.jc_explorer({}) is None
 
 
-def test_an_endpoint_s_dataset_page_opens_the_explorer_and_asks_no_datastore():
+def test_a_dataset_page_opens_the_explorer_and_asks_no_datastore():
     read = (THEME / "templates__package__read.html").read_text()
-    assert "{% set previews = [] if explorer else h.jc_previews(pkg) %}" in read
+    assert "h.jc_previews" not in read and "h.jc_total" not in read, "T-5060: no table preview to fall back to"
     assert read.index("h.jc_explorer(pkg)") < read.index("h.jc_about(pkg)")
     snippet = (THEME / "templates__package__snippets__jc_explorer.html").read_text()
     assert 'data-jc-viz="{{ explorer.origin }}"' in snippet and 'title="{{ explorer.title }}"' in snippet

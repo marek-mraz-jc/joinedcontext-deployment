@@ -19,7 +19,6 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: banskabystrica }
       license: cc-by
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     # The publisher and contact desk are the Project's spec.catalog, its registry IRI (T-4596).
     # Aggregates of public facilities and readings: no record names a person (T-4596).

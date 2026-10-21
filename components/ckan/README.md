@@ -60,14 +60,11 @@ of `files/harvest-nkod.py`:
 - fetches each distribution once over https, only from `allowedHosts`, redirects included, with
   TLS verification on. An HTML or PDF answer where JSON is declared is not ingested, a non-ASCII
   URL is percent-encoded, and string values are trimmed;
-- skips the titles under `skip` (a link to another dataset's file, personal data) and drops the
-  rows of a `requireColumn` table that have no value in that column. A filtered table is
-  published without the original file, which still holds those rows;
+- skips the titles under `skip` (a link to another dataset's file, personal data);
 - writes each dataset into the source's organization with its licence, publisher and `modified`,
-  each file as a link and each flat JSON table as a DataStore table (CKAN also serves it as CSV),
+  with the platform's distributions of its converted rows and no table of rows (T-5060),
   then withdraws what an earlier run harvested and the publisher no longer lists;
-- checks every ingested dataset (title, licence, a format on each resource, the row count of each
-  table), prints the count per state with each skipped title and its reason, and exits 1 when a
+- checks every ingested dataset (title, licence, a format on each resource), prints the count per state with each skipped title and its reason, and exits 1 when a
   check fails. An empty catalogue answer deletes nothing.
 
 It writes with the publisher token above and mounts no Kubernetes token. Its egress is DNS, the
@@ -127,8 +124,8 @@ and the stylesheet mixes every other shade from them with `color-mix()`, the way
 `tokens.css` does, so it holds no colour of its own and a second city restyles the catalogue from
 this block alone. CKAN's own teal, which its Bootstrap build writes into dozens of rules, is
 restated on the brand there too. Pages the theme lays out itself: the home page (hero, search,
-recently updated datasets, publishers and keywords), the dataset page (every DataStore table, one per
-entity type, framed first with its row count, the first open, then About, the live API, and the resources in three sections: files,
+recently updated datasets, publishers and keywords), the dataset page (the live explorer of its Endpoint
+first, T-5059, then About, the live API, and the resources in three sections: files,
 APIs, and the folded data model), the resource rows, the search results and the footer.
 
 `jc_theme` is the first plugin in `ckan.plugins`: the first plugin's templates win, and the theme

@@ -386,9 +386,9 @@ def test_the_raw_endpoints_stay_closed_to_the_public_while_the_note_opens():
 def test_a_public_endpoint_serves_a_tabular_representation_and_says_what_it_is():
     """T-2432, EP-62..EP-64: what the open-data catalogue needs from a public endpoint.
 
-    A dataset's preview, its filtered API and SQL over its rows are the CKAN DataStore sheet, and
-    the sheet is filled by reading the endpoint's own tabular representation as an ordinary
-    consumer. An endpoint that serves none can carry links and nothing else. The dataset's title
+    A dataset's preview and its filtered API are the endpoint's own (the CKAN DataStore sheet is
+    gone, T-5060). An endpoint that serves no tabular representation can carry links and nothing
+    else. The dataset's title
     and notes are the endpoint's `metadata.title` and `metadata.description`, mapped through its
     DCAT-AP record, so an endpoint without them lands in the catalogue named after its manifest.
     """
@@ -686,9 +686,8 @@ def test_only_the_cleared_endpoints_publish_each_to_its_own_bodys_catalogue():
             # Each body lands in its own organization, never in hel-fi's.
             assert instance["metadata"]["namespace"] == project
             assert ckan.get("organization", instance["spec"]["organizationDefault"]) == project
-            # A DataStore sheet is read through a representation the endpoint serves.
-            if "datastore" in ckan:
-                assert ckan["datastore"]["representation"] in endpoint["spec"]["enabledRepresentations"]
+            # T-5060: no DataStore sheet is requested of any endpoint.
+            assert "datastore" not in ckan, endpoint["metadata"]["name"]
             # The token is a reference, never a value.
             assert set(instance["spec"]["apiTokenRef"]) <= {"name", "key", "envVar"}
     assert published == CLEARED

@@ -777,8 +777,8 @@ def jc_created(pkg):
 
 def jc_updated(pkg):
     """When its data or description last changed (T-4644): the publisher's `modified` for a
-    harvested record, else CKAN's own, which a live Endpoint's DataStore mirror moves with every
-    data change and a run that changed nothing leaves alone."""
+    harvested record, else CKAN's own, which a publish run moves when the Endpoint's
+    description changed and leaves alone otherwise."""
     return _when(pkg, "modified", "metadata_modified")
 
 
@@ -1009,12 +1009,12 @@ def _section(resource):
 
 
 def _order(resource):
-    """The DataStore table first (it is the data a reader came for), then files by format."""
+    """Files by format, then the APIs, in reading order."""
     kind = jc_kind(resource)
     name = kind if kind and kind != "MODEL" else (resource.get("format") or "").strip().upper()
     known = DATA_ORDER.index(name) if name in DATA_ORDER else len(DATA_ORDER)
     api = API_FORMATS.index(name) if name in API_FORMATS else len(API_FORMATS)
-    return (not resource.get("datastore_active"), known, api, name, resource.get("name") or "")
+    return (known, api, name, resource.get("name") or "")
 
 
 def jc_is_api(resource):
@@ -1089,11 +1089,6 @@ def jc_resource_sections(pkg):
         kind = jc_kind(resource)
         name = KIND_LABELS.get(kind) or (resource.get("format") or "").strip()
         words = FORMATS.get(kind or name.upper()) or {}
-        if resource.get("datastore_active"):
-            # A DataStore table downloads as CSV, whatever format its resource names (T-3012
-            # writes its tables with none).
-            name = name or "CSV"
-            words = STRINGS["table_what"]
         sections["source" if jc_is_source(resource, pkg) else _section(resource)].append({
             "resource": resource,
             "format": name or "—",
@@ -1141,9 +1136,6 @@ def jc_resource_label(resource, pkg=None):
         # entity type once in the page header instead of on every entry: the harvest wrote
         # "NGSI-LD API (StatisticalObservation)", jcctl "Live updates over WebSocket" (T-4333).
         return DOOR_NAMES[kind]
-    elif (resource or {}).get("datastore_active") and pkg and rest.startswith((pkg.get("title") or "\0").strip() + " ("):
-        # A harvested table is named "{dataset} (tabuľka)", in Slovak on every page (T-4333).
-        return jc_t("original_table")
     elif jc_is_source(resource, pkg):
         # The harvest names the publisher's own page after the dataset, so it read as a twin of
         # the table (T-4333).
@@ -1154,7 +1146,7 @@ def jc_resource_label(resource, pkg=None):
 def _off_platform(resource):
     """Whether a resource is a link to somewhere other than the platform and this catalogue."""
     resource = resource or {}
-    if resource.get("datastore_active") or resource.get("url_type") == "upload":
+    if resource.get("url_type") == "upload":
         return False
     try:
         host = urlsplit(resource.get("url") or "").hostname or ""
@@ -1208,14 +1200,14 @@ def jc_what(resource):
 
 
 def jc_format(resource):
-    """The format a reader is shown: the kind of an Endpoint's address, CSV for a DataStore
-    table, the format the resource names otherwise."""
+    """The format a reader is shown: the kind of an Endpoint's address, the format the
+    resource names otherwise."""
     resource = resource or {}
     kind = jc_kind(resource)
     if kind in KIND_LABELS:
         return KIND_LABELS[kind]
     name = (resource.get("format") or "").strip()
-    return name or ("CSV" if resource.get("datastore_active") else "")
+    return name
 
 
 def jc_address(resource):
@@ -1390,27 +1382,6 @@ def jc_dates(resource):
     return rows
 
 
-def jc_previews(pkg):
-    """The dataset's DataStore tables for the page itself, one per entity type since T-3012, in
-    the order `_order` gives them: each resource with its table view (None when nobody created
-    one) and its number of rows (None when the DataStore does not say)."""
-    out = []
-    for resource in sorted((pkg or {}).get("resources") or [], key=_order):
-        if not resource.get("datastore_active"):
-            continue
-        try:
-            views = toolkit.get_action("resource_view_list")({}, {"id": resource["id"]})
-        except (toolkit.ObjectNotFound, toolkit.NotAuthorized):
-            views = []
-        view = next((v for v in views or [] if v.get("view_type") == "datatables_view"), None)
-        try:
-            total = toolkit.get_action("datastore_search")({}, {"resource_id": resource["id"], "limit": 0}).get("total")
-        except (toolkit.ObjectNotFound, toolkit.NotAuthorized, toolkit.ValidationError):
-            total = None
-        out.append({"resource": resource, "view": view, "total": total})
-    return out
-
-
 VIEW_ID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
 SLUG = re.compile(r"^[a-z0-9]{16,64}$")
 # A visualization's name on its Endpoint, a DNS label (EP-130): what the publisher matches its view by.
@@ -1461,7 +1432,7 @@ def jc_explorer(pkg, resource=None):
     """The live explorer of the dataset's Endpoint on viz.{domain} (T-5059): the frame's address,
     named by the Endpoint's slug (and the resource's entity type, on a resource page), and its
     origin for the frame's height. It reads the Endpoint itself, anonymously, so no row is copied
-    and the page asks no DataStore. None without a renderer or an Endpoint on api.{domain}."""
+    (T-5060). None without a renderer or an Endpoint on api.{domain}."""
     origin = jc_viz_origin()
     live = jc_live(pkg)
     match = _API_ENDPOINT.match((live or {}).get("url") or "")
@@ -1470,6 +1441,7 @@ def jc_explorer(pkg, resource=None):
     src = "%s/explore.html#%s&inline&lang=%s" % (origin, match.group(2), _language())
     kind_type = jc_entity_type(resource) if resource else None
     if not kind_type and resource and resource.get("datastore_active"):
+        # A table an older publish run left, until the catalogue drops them (T-5060 step 4).
         kind_type = resource.get("name")
     if kind_type and re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{0,127}", kind_type):
         src += "&type=" + kind_type
@@ -1534,53 +1506,10 @@ def _basemap():
 BASEMAP = _basemap()
 
 
-def _leaf(column):
-    """The innermost named part of a DataStore column: `streetAddress` of
-    `address.value.streetAddress`, `name` of `name.languageMap.sk` (jc-core's field_order::leaf)."""
-    parts = [part.split("[")[0] for part in column.split(".")]
-    found = parts[0]
-    skip = False
-    for part in parts[1:]:
-        if skip:
-            skip = False
-        elif part == "languageMap":
-            skip = True
-        elif part not in ("value", "object", ""):
-            found = part
-    return found
-
-
-def _display_fields(resource_id):
-    """The order, labels and key attributes the publisher wrote into a DataStore table's data
-    dictionary (T-4672, DM-98…DM-101): one entry per attribute in the table's column order, `a`
-    the attribute, `l` its labels per language, `s` whether it is a key attribute. None when the
-    DataStore does not answer or the table carries none."""
-    try:
-        fields = toolkit.get_action("datastore_search")({}, {"resource_id": resource_id, "limit": 0}).get("fields") or []
-    except (toolkit.ObjectNotFound, toolkit.NotAuthorized, toolkit.ValidationError):
-        return None
-    out = []
-    for field in fields:
-        column = str(field.get("id") or "")
-        attribute = column.split(".")[0].split("[")[0]
-        if not attribute or attribute.startswith("_") or attribute == "entity_id":
-            continue
-        info = field.get("info") if isinstance(field.get("info"), dict) else {}
-        entry = next((e for e in out if e["a"] == attribute), None)
-        if entry is None:
-            entry = {"a": attribute, "l": {}, "s": False}
-            out.append(entry)
-        labels = info.get("labels")
-        if _leaf(column) == attribute and isinstance(labels, dict):
-            entry["l"] = {str(k): str(v) for k, v in labels.items() if isinstance(v, str)}
-        entry["s"] = entry["s"] or info.get("summary") is True
-    return out if any(e["l"] or e["s"] for e in out) else None
-
-
 def jc_map(pkg, resource_id=None):
-    """What the dataset's map reads (T-4639): per DataStore table, the OGC API Features items of
-    its entity type on the dataset's own Endpoint, with the collection's schema for units, or
-    only `resource_id`'s. The reader's browser asks each for one feature and shows the map only
+    """What the dataset's map reads (T-4639, T-5060): per OGC API Features resource of the
+    dataset's own Endpoint, the items of its entity type with the collection's schema for units,
+    or only `resource_id`'s. The reader's browser asks each for one feature and shows the map only
     when one has a geometry. None without such an address or without the map library."""
     pkg = pkg or {}
     if not os.path.isdir(VENDOR):
@@ -1595,13 +1524,17 @@ def jc_map(pkg, resource_id=None):
         if jc_kind(resource) != "OGCFEAT" or not (url.startswith("https://") and domain and (host == domain or host.endswith("." + domain))):
             continue
         bases.append(parts)
-    layers = []
+    # The entity types the dataset's own addresses name (an OData path, an NGSI-LD `type`, a door
+    # named after its type), in the resources' order.
+    types = []
     for resource in resources:
-        kind_type = resource.get("name") or ""
-        if not resource.get("datastore_active") or (resource_id and resource.get("id") != resource_id):
+        kind_type = jc_entity_type(resource) or ""
+        if resource_id and resource.get("id") != resource_id:
             continue
-        if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*", kind_type):
-            continue
+        if re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*", kind_type) and kind_type not in types:
+            types.append(kind_type)
+    layers = []
+    for kind_type in types:
         for parts in bases:
             path = parts.path.rstrip("/")
             if path.endswith("/items"):
@@ -1610,15 +1543,11 @@ def jc_map(pkg, resource_id=None):
                 collection = path[:-len("/items")]
             else:
                 collection = "%s/collections/%s" % (path, kind_type)
-            layer = {
+            layers.append({
                 "type": kind_type,
                 "items": urlunsplit(parts._replace(path=collection + "/items")),
                 "schema": urlunsplit(parts._replace(path=collection + "/schema", query="")),
-            }
-            fields = _display_fields(resource.get("id"))
-            if fields:
-                layer["fields"] = fields
-            layers.append(layer)
+            })
             break
     if not layers:
         return None
@@ -1651,12 +1580,6 @@ def jc_map_page(id, resource_id=None):
         return toolkit.abort(404)
     page = toolkit.render("jc/map.html", {"pkg": pkg, "jc_map_config": config})
     return page, 200, {"Content-Security-Policy": MAP_CSP}
-
-
-def jc_total(previews):
-    """All rows of the tables, or None when any table's count is unknown."""
-    totals = [p["total"] for p in previews or []]
-    return sum(totals) if totals and all(isinstance(t, int) for t in totals) else None
 
 
 def jc_formats(pkg):
@@ -2438,11 +2361,9 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_dates": jc_dates,
             "jc_usage": jc_usage,
             "jc_guide": jc_guide,
-            "jc_previews": jc_previews,
             "jc_visualizations": jc_visualizations,
             "jc_explorer": jc_explorer,
             "jc_map": jc_map,
-            "jc_total": jc_total,
             "jc_number": jc_number,
             "jc_rows": jc_rows,
             "jc_formats": jc_formats,

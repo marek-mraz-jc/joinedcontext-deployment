@@ -38,7 +38,7 @@ pipeline:
         map uri {
           root = this.apply("string")
         }
-        # An Esri date is milliseconds since the epoch; a DataStore or WordPress one is text.
+        # An Esri date is milliseconds since the epoch; a WordPress one is text.
         # `match` rebinds `this` to what it matches, so the value is named first.
         map datetime {
           let x = this

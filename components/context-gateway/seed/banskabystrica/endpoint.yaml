@@ -16,10 +16,8 @@ spec:
   contextSpaceRef: ovzdusie
   slug: mluyob4nz52lok3ssk7pgn5vwt
   audience: public
-  # `csv` is what a tabular consumer reads, and what the catalogue's DataStore sheet is filled
-  # from: the sheet is read through this representation as an ordinary consumer, so an endpoint
-  # that serves none can carry no preview, no filtered API and no SQL over its rows (EP-64,
-  # Architecture/21 §3, T-2432). `xlsx` is the same rows for a person who opens them in a
+  # `csv` is what a tabular consumer reads; the catalogue's preview reads this Endpoint live and
+  # copies no rows (EP-64, Architecture/21 §3, T-5060). `xlsx` is the same rows for a person who opens them in a
   # spreadsheet; `zip` is left out, a third copy of the same readings nobody rebuilds.
   # `ogc-features` is the OGC API Features surface dev-smoke reads per Endpoint kind (T-3957).
   enabledRepresentations: [ngsi-ld, csv, mcp, ogc-features, websocket, odata]
@@ -30,7 +28,6 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: banskabystrica }
       license: cc-by
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     # The publisher and contact desk are the Project's spec.catalog, its registry IRI (T-4596).
     # Aggregates of public facilities and readings: no record names a person (T-4596).

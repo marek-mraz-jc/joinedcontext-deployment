@@ -11,9 +11,8 @@ Runs as `python3 -c` in the catalogue's image, from the `harvest` CronJob. One r
    configuration says must carry an identifier (an IČO) are dropped without one;
 3. writes each ingested dataset whose rows were converted to NGSI-LD into CKAN with its licence,
    the original publisher and its `modified`, the platform's distributions and data model
-   (od-standards.py, EP-118) in place of the source's file links, and every JSON table of 50 MB
-   or less as a DataStore table, which CKAN also serves as CSV; a dataset whose files hold no
-   such table gets the Endpoint's own rows as its table instead (T-4742);
+   (od-standards.py, EP-118) in place of the source's file links; CKAN holds no rows, the
+   Endpoint is the data (T-5060);
 4. deletes a dataset an earlier run harvested that the publisher no longer lists or whose rows
    are not converted, unless no dataset is converted at all (a broken run), checks every
    ingested dataset (title, licence, a format on each resource, every link answered 200, every
@@ -201,41 +200,19 @@ def names(found):
             (slug(ds)[:91] + "-" + iri.rsplit("/", 1)[-1][:8]) for iri, ds in found.items()}
 
 
-# --- 2. what the files hold, corrected -----------------------------------------------------------
-
-def table(body, title):
-    """The JSON array of flat records a city file holds, trimmed, with the rows the
-    configuration says must carry an identifier dropped when they do not. None if it is not one."""
-    try:
-        rows = json.loads(body.decode("utf-8-sig"))
-    except (UnicodeDecodeError, ValueError):
-        return None
-    if not isinstance(rows, list) or not rows or not all(isinstance(r, dict) for r in rows):
-        return None
-    if any(isinstance(v, (dict, list)) for r in rows for v in r.values()):
-        return None
-    rows = [{str(k).strip(): (v.strip() if isinstance(v, str) else v) for k, v in r.items()} for r in rows]
-    column = CONFIG.get("requireColumn", {}).get(title)
-    dropped = 0
-    if column:
-        kept = [r for r in rows if str(r.get(column) or "").strip()]
-        dropped, rows = len(rows) - len(kept), kept
-    return rows, dropped
-
-
 def assess(ds):
-    """Decides one dataset: (state, reason, resources, tables). Only `ingested` is written."""
+    """Decides one dataset: (state, reason, resources), `resources` the distributions that answer.
+    Only `ingested` is written."""
     skip = CONFIG.get("skip", {}).get(ds["title"])
     if skip:
-        return skip["state"], skip["reason"], [], []
+        return skip["state"], skip["reason"], []
     dists = list(ds["distributions"].values())
     if not dists:
-        return "empty", "no distribution with a download URL", [], []
+        return "empty", "no distribution with a download URL", []
     licence_id = licence(dists)
     if not licence_id:
-        return "licence", "no open licence in legislation:termsOfUse", [], []
-    resources, tables, refusals, seen = [], [], [], set()
-    filtered = ds["title"] in CONFIG.get("requireColumn", {})
+        return "licence", "no open licence in legislation:termsOfUse", []
+    resources, refusals, seen = [], [], set()
     for dist in dists:
         url = corrected_url(dist["url"])
         if url in seen:
@@ -260,31 +237,19 @@ def assess(ds):
         if kind == "application/pdf":
             refusals.append(("pdf", f"declared {dist['format']}, {url} serves a PDF"))
             continue
-        if dist["format"] == "JSON":
-            parsed = table(body, ds["title"])
-            if parsed is not None:
-                rows, dropped = parsed
-                tables.append({"name": f"{dist['title']} (tabuľka)", "rows": rows, "dropped": dropped})
-        # A file whose rows were filtered is published only as the filtered table: linking the
-        # original would publish the rows that were dropped.
-        if not (filtered and dist["format"] == "JSON"):
-            resources.append({"name": dist["title"], "url": url, "format": dist["format"] or kind,
-                              "mimetype": kind or None})
-    if not resources and not tables:
+        resources.append({"name": dist["title"], "url": url, "format": dist["format"] or kind,
+                          "mimetype": kind or None})
+    if not resources:
         state, reason = refusals[0] if refusals else ("empty", "nothing to publish")
-        return state, reason, [], []
-    return "ingested", licence_id, resources, tables
+        return state, reason, []
+    return "ingested", licence_id, resources
 
 
 # --- 3. what CKAN holds --------------------------------------------------------------------------
 
-def package(ds, name, licence_id, distributions, tables):
-    dropped = sum(t["dropped"] for t in tables)
+def package(ds, name, licence_id, distributions):
     notes = [ds["description"] or ds["title"],
              f"Zdroj: Národný katalóg otvorených dát, {ds['landing'] or ds['iri']}."]
-    if dropped:
-        notes.append(f"Z tabuľky sú vynechané riadky bez údaja {CONFIG['requireColumn'][ds['title']]} "
-                     f"({dropped}), ktoré môžu označovať fyzickú osobu.")
     tags = [{"name": t[:100]} for t in sorted(ds["keywords"]) if re.fullmatch(r"[\w .-]{2,100}", t)]
     extras = {"harvest_source": CONFIG["source"], "source_uri": ds["iri"],
               "publisher_name": CONFIG["publisherName"], "publisher_uri": CONFIG["publisher"],
@@ -294,30 +259,23 @@ def package(ds, name, licence_id, distributions, tables):
             "url": ds["landing"] or ds["iri"],
             "extras": [{"key": k, "value": v} for k, v in extras.items() if v] + od_extras(name),
             # The platform's own distributions of the converted rows and their data model, never the
-            # source's file links (EP-118, T-4324); the DataStore tables follow in `upsert`.
+            # source's file links (EP-118, T-4324). A `package_update` with this list drops the
+            # tables an older run wrote (T-5060).
             "resources": distributions}
 
 
-def upsert(desired, tables):
+def upsert(desired):
     """Creates the dataset or updates it in place, never delete and create; a run whose source
     changed nothing writes nothing, so `metadata_modified` moves only with the data (T-4644)."""
-    digest = hashlib.sha256(json.dumps([desired, [t["rows"] for t in tables]], sort_keys=True,
-                                       ensure_ascii=False).encode()).hexdigest()
+    digest = hashlib.sha256(json.dumps(desired, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
     desired["extras"].append({"key": "harvest_hash", "value": digest})
     live = ckan("package_show", {"id": desired["name"]})
     if live is not None and live.get("state") == "active" and {"key": "harvest_hash", "value": digest} in live.get("extras", []):
-        existing = {r["name"]: r["id"] for r in live.get("resources", []) if r.get("url_type") == "datastore"}
-        if all(t["name"] in existing for t in tables):
-            for t in tables:
-                t["resource_id"] = existing[t["name"]]
-            return
+        return
     if live is None:
-        live = ckan("package_create", desired)
+        ckan("package_create", desired)
     else:
-        payload = dict(desired, id=live["id"], state="active")
-        payload["resources"] = desired["resources"] + od_datastore_resources(live, tables)
-        live = ckan("package_update", payload)
-    od_write_tables(ckan, live, tables)
+        ckan("package_update", dict(desired, id=live["id"], state="active"))
 
 
 def harvested_names():
@@ -332,18 +290,14 @@ def harvested_names():
             return names
 
 
-def verify(desired, tables):
-    """The defects a reader would hit: missing title or licence, a resource without a format, a
-    table that lost rows. Every link resource was fetched with 200 in `assess` already."""
+def verify(desired):
+    """The defects a reader would hit: missing title or licence, a resource without a format.
+    Every link resource was fetched with 200 in `assess` already."""
     live = ckan("package_show", {"id": desired["name"]})
     problems = []
     if not live.get("title") or not live.get("license_id"):
         problems.append("title or licence missing")
     problems += [f"resource {r['name']} has no format" for r in live["resources"] if not r.get("format")]
-    for t in tables:
-        total = ckan("datastore_search", {"resource_id": t["resource_id"], "limit": 0})["total"]
-        if total != len(t["rows"]):
-            problems.append(f"table {t['name']} holds {total} rows, {len(t['rows'])} expected")
     return problems
 
 
@@ -369,20 +323,14 @@ def main():
         if not converted[ds["iri"]]:
             states.setdefault("not-converted", []).append((ds["title"], "not converted to NGSI-LD, so not listed (EP-118)"))
             continue
-        state, reason, _, tables = assess(ds)
+        state, reason, _ = assess(ds)
         states.setdefault(state, []).append((ds["title"], reason))
         if state != "ingested":
             continue
-        tables = [t for t in tables if len(json.dumps(t["rows"], ensure_ascii=False).encode()) <= OD_MAX_SHEET_BYTES]
-        if not tables:
-            # Every public dataset has an active DataStore (T-4742): the Endpoint's rows.
-            sheet = od_sheet(named[ds["iri"]])
-            tables = [sheet] if sheet else []
-        desired = package(ds, named[ds["iri"]], reason, converted[ds["iri"]], tables)
-        upsert(desired, tables)
-        od_table_views(ckan, tables)
+        desired = package(ds, named[ds["iri"]], reason, converted[ds["iri"]])
+        upsert(desired)
         kept.add(desired["name"])
-        problems += [f"{ds['title']}: {p}" for p in verify(desired, tables)]
+        problems += [f"{ds['title']}: {p}" for p in verify(desired)]
     for name in sorted(harvested_names() - kept):
         ckan("package_delete", {"id": name})
         states.setdefault("withdrawn", []).append((name, "no longer ingested from the catalogue"))

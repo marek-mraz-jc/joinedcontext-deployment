@@ -26,7 +26,7 @@ def answer(status=200, body=b"", ctype=JSON, **kw):
     return smoke.Answer(status, ctype, body, **kw)
 
 
-def package(name, slug, typ, ogc=True, ws=True, datastore="ds-" , host=None, region="SK032", org=""):
+def package(name, slug, typ, ogc=True, ws=True, host=None, region="SK032", org=""):
     base = f"https://{host or 'api.' + DOMAIN}/api/endpoint/{slug}/"
     resources = [
         {"format": "NGSI-LD", "url": base + "ngsi-ld/v1/entities", "name": f"NGSI-LD API ({typ})", "id": f"ngsi-{name}"},
@@ -39,9 +39,6 @@ def package(name, slug, typ, ogc=True, ws=True, datastore="ds-" , host=None, reg
         resources.append({"format": "OGCFEAT", "url": base + f"ogc/features/collections/{typ}/items"})
     if ws:
         resources.append({"format": "WebSocket", "url": "wss" + base[5:] + "ws"})
-    if datastore:
-        resources.append({"format": "CSV", "url": f"{CKAN}/datastore/dump/{datastore}{name}",
-                          "datastore_active": True, "id": f"{datastore}{name}"})
     extras = [{"key": "spatial_uri", "value": f"http://data.europa.eu/nuts/code/{region}"}] if region else []
     return {"name": name, "resources": resources, "extras": extras, "organization": {"name": org}}
 
@@ -59,7 +56,7 @@ def model(typ, *attrs, required=()):
                                   **({"required": list(required)} if required else {})}}}
 
 
-def world(packages, public, rows=10, datastore_total=10, overrides=None):
+def world(packages, public, rows=10, overrides=None):
     """The answers of a healthy installation for these datasets, with `overrides` by URL."""
     answers = {
         f"{CKAN}/api/3/action/package_search?rows=1000&start=0":
@@ -85,11 +82,6 @@ def world(packages, public, rows=10, datastore_total=10, overrides=None):
         if "OGCFEAT" in data.formats:  # CKAN's /map/ is a 404 without one (jc_map_page)
             answers[f"{CKAN}/map/{p['name']}"] = answer(body=b"<div data-jc-map='{&#34;layers&#34;: [{}]}'>",
                                                         ctype="text/html")
-        for ds in data.datastore:
-            answers[f"{CKAN}/api/3/action/datastore_search?resource_id={ds}&limit=0"] = answer(
-                body={"result": {"total": datastore_total}})
-            answers[f"{CKAN}/api/3/action/resource_view_list?id={ds}"] = answer(
-                body={"result": [{"view_type": "datatables_view"}]})
     answers.update(overrides or {})
     return answers
 
@@ -150,29 +142,13 @@ def test_a_model_that_lacks_the_type_is_a_ko():
     assert rows["air"]["model"] == "ko: no model lists AirQualityObserved"
 
 
-def test_a_dataset_without_a_datastore_table_is_a_ko():
-    rows, _ = table(world([package("air", "a1", "AirQualityObserved", datastore="")], ["a1"]))
-    assert rows["air"]["datastore"] == "ko: no datastore table"
-
-
-def test_a_datastore_ten_percent_off_is_a_ko_and_within_one_percent_is_ok():
-    off, _ = table(world([package("air", "a1", "AirQualityObserved")], ["a1"], rows=100, datastore_total=90))
-    assert off["air"]["datastore"] == "ko: 90 rows, the platform holds 100 (OData @odata.count)"
-    near, _ = table(world([package("air", "a1", "AirQualityObserved")], ["a1"], rows=100, datastore_total=101))
-    assert near["air"]["datastore"] == "ok: 101 rows = 100"
-
-
-def test_a_shared_type_is_compared_by_its_own_is_part_of_or_not_at_all():
-    a, b = package("one", "s1", "Person"), package("two", "s1", "Person")
-    rows, _ = table(world([a, b], ["s1"], rows=50, datastore_total=7))
-    assert rows["one"]["datastore"] == "ok: 7 rows; not compared, Person is shared by 2 datasets"
-    c = package("three", "s2", "Road")
-    c["resources"] = [dict(r, url=r["url"] + "?isPartOf=https%3A%2F%2Fx%2Fdataset%2Fthree")
-                      if r["format"] == "OGCFEAT" else r for r in c["resources"]]
-    url = f"{API}/s2/ogc/features/collections/Road/items?limit=1&isPartOf=https%3A%2F%2Fx%2Fdataset%2Fthree"
-    rows, _ = table(world([c], ["s2"], rows=500, datastore_total=7,
-                          overrides={url: answer(body={"features": [{}], "numberMatched": 7}, ctype=GEO)}))
-    assert rows["three"]["datastore"] == "ok: 7 rows = 7"
+def test_a_dataset_has_no_datastore_column_and_the_catalogue_is_never_asked_for_one():
+    """CKAN holds no rows (T-5060): no datastore verdict, no datastore_* request, no datastore resource."""
+    p = package("air", "a1", "AirQualityObserved")
+    rows, fake = table(world([p], ["a1"]))
+    assert "datastore" not in rows["air"] and "datastore" not in smoke.COLUMNS
+    assert not any("datastore" in url for _, url in fake.sent)
+    assert not any("datastore" in r["url"] for r in p["resources"])
 
 
 def test_a_dev_host_in_the_production_catalogue_is_a_ko():
@@ -271,23 +247,23 @@ def test_the_slow_checks_rotate_least_recently_checked_first(tmp_path):
         writer.writerow({"dataset": "d0", **{c: "ok" for c in smoke.COLUMNS}})
         writer.writerow({"dataset": "d1", **{c: "ok" for c in smoke.COLUMNS},
                          **{c: "not this run (last: 20261019T030000Z ko)" for c in smoke.ROTATING}})
-    # 2 inventory + 3 × 8 core requests shared nothing (types, the JSON Schema and the views the
-    # last three): 26, then room for one dataset's 4 slow checks.
-    rows, fake = table(world(packages, ["e0", "e1", "e2"]), tmp_path=tmp_path, budget=30)
+    # 2 inventory + 3 × 7 core requests shared nothing (types, the JSON Schema and the views the
+    # last three): 23, then room for one dataset's 3 slow checks (T-5060: no datastore requests).
+    rows, fake = table(world(packages, ["e0", "e1", "e2"]), tmp_path=tmp_path, budget=26)
     assert smoke.verdict(rows["d2"]["csv"]) == "ok", "never checked goes first"
     assert rows["d1"]["csv"] == "not this run (last: 20261019T030000Z ko)", "the carried time stays"
     assert rows["d0"]["csv"] == "not this run (last: 20261019T050000Z ok)"
 
 
 def test_a_run_writes_one_table_and_exits_one_on_a_ko(tmp_path, capsys):
-    p = package("air", "a1", "AirQualityObserved", datastore="")
-    fake = Fake(world([p], ["a1"]))
+    p = package("air", "a1", "AirQualityObserved")
+    fake = Fake(world([p], ["a1"], overrides={f"{API}/a1/schema/index.json": answer(404)}))
     assert smoke.run(DOMAIN, "prod", tmp_path, fake.client(), "20261019T060000Z") == 1
     table_path = tmp_path / "smoke-catalogue-prod-20261019T060000Z.tsv"
     rows = list(csv.DictReader(table_path.open(), delimiter="\t"))
-    assert rows[0]["datastore"] == "ko: no datastore table"
+    assert rows[0]["model"].startswith("ko: schema/index.json answered 404")
     out = capsys.readouterr().out
-    assert "  FAIL  catalogue air (a1): datastore no datastore table" in out
+    assert "  FAIL  catalogue air (a1): model schema/index.json answered 404" in out
     assert "1 datasets, 0 complete, 1 ko" in out
 
 
@@ -654,7 +630,7 @@ def series_model(dated="date-time"):
     return schema
 
 
-def series_dataset(views, first=(), schema=None):
+def series_dataset(views, schema=None):
     p = package("beach", "w1", "WaterQualityObserved")
     data = smoke.describe(p, DOMAIN)
     observed = row("WaterQualityObserved", 1, temperature={"type": "Property", "value": 17.5},
@@ -662,38 +638,33 @@ def series_dataset(views, first=(), schema=None):
     rows, _ = table(world([p], ["w1"], overrides={
         f"{API}/w1/ngsi-ld/v1/entities?" + urllib.parse.urlencode(smoke.sample_query(data)): answer(body=[observed], ctype=JSON),
         f"{API}/w1/schema/v1/model.schema.json": answer(body=schema or series_model()),
-        f"{CKAN}/api/3/action/resource_view_list?id=ds-beach": answer(body={"result": views}),
-        f"{CKAN}/api/3/action/resource_view_list?id=ngsi-beach": answer(body={"result": list(first)})}))
+        f"{CKAN}/api/3/action/resource_view_list?id=ngsi-beach": answer(body={"result": list(views)})}))
     return rows["beach"]["views"]
 
 
 def test_a_water_quality_dataset_without_a_chart_view_is_a_ko():
-    assert series_dataset([{"view_type": "datatables_view"}]) == "ko: a numeric value over time and no chart view"
-    assert series_dataset([{"view_type": "datatables_view"}, {"view_type": "jc_visualization"}]) == "ok: table, chart"
+    assert series_dataset([]) == "ko: a numeric value over time and no chart view"
+    assert series_dataset([{"view_type": "image_view"}]) == "ko: a numeric value over time and no chart view"
+    assert series_dataset([{"view_type": "jc_visualization"}]) == "ok: chart"
 
 
 def test_the_chart_jcctl_hangs_off_the_first_resource_counts():
-    """publish_views puts every chart on the dataset's first resource, the NGSI-LD one (T-4745: 7 dev
-    datasets read ko with their charts in place)."""
-    chart = [{"view_type": "jc_visualization"}]
-    assert series_dataset([{"view_type": "datatables_view"}], first=chart) == "ok: table, chart"
+    """publish_views puts every chart on the dataset's first resource, the NGSI-LD one (T-4745); that is
+    the only resource the views column reads, and CKAN has no table view to ask for (T-5060)."""
+    p = package("beach", "w1", "WaterQualityObserved")
+    assert p["resources"][0]["id"] == "ngsi-beach"
+    assert series_dataset([{"view_type": "jc_visualization"}]) == "ok: chart"
 
 
 def test_a_model_without_a_dated_number_owes_no_chart():
     """jcctl's series_charts draws only a number beside a date-time dateObserved; the smoke asks the same."""
-    assert series_dataset([{"view_type": "datatables_view"}], schema=series_model(dated="date")) == (
-        "ok: table; no chart: the WaterQualityObserved model has no number observed at a date-time dateObserved")
+    assert series_dataset([], schema=series_model(dated="date")) == (
+        "ok: no chart: the WaterQualityObserved model has no number observed at a date-time dateObserved")
 
 
-def test_every_datastore_table_needs_a_table_view():
-    assert series_dataset([{"view_type": "jc_visualization"}]) == "ko: no table view on 1 of 1 datastore tables"
-
-
-def test_a_register_without_a_value_over_time_needs_only_the_table():
+def test_a_register_without_a_value_over_time_owes_no_chart_and_no_table():
     rows, _ = table(world([package("schools", "o1", "Organization")], ["o1"]))
-    assert rows["schools"]["views"] == "ok: table; no chart: the Organization model has no number observed at a date-time dateObserved"
-    nothing, _ = table(world([package("schools", "o1", "Organization", datastore="")], ["o1"]))
-    assert nothing["schools"]["views"] == "skip: no datastore table"
+    assert rows["schools"]["views"] == "ok: no chart: the Organization model has no number observed at a date-time dateObserved"
 
 
 def test_a_count_without_a_time_is_no_series():

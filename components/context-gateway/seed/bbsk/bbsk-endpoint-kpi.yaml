@@ -21,13 +21,12 @@ spec:
   # assistant's connectors (T-4167); the gateway lists a member only when it serves MCP.
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]
   # The catalogue entry the region cleared (EP-62..EP-65, T-2407): region-level aggregates only,
-  # no person and no address, in the region's own organization with a DataStore sheet.
+  # no person and no address, in the region's own organization.
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: bbsk }
       # CC-BY 4.0, chosen by the owner on 2026-09-21 (T-2407, T-2465).
       license: cc-by
-      datastore: { representation: csv, refresh: onReconcile }
   # Computed from `bbsk-kraj`, whose CC BY-SA 4.0 inputs pass the share-alike duty on.
   catalog:
     publisher: { name: { sk: "Banskobystrický samosprávny kraj", en: "Banská Bystrica Self-Governing Region" }, uri: "https://www.bbsk.sk/" }

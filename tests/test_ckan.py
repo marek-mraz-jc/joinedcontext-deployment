@@ -498,7 +498,7 @@ def test_the_harvest_writes_with_the_token_and_reaches_only_public_443(rendered)
     assert env["CKAN_API_TOKEN"]["valueFrom"]["secretKeyRef"] == {"name": "ckan-api-token", "key": "token"}
     config = json.loads(env["HARVEST_CONFIG"]["value"])
     assert config["source"] == "nkod-banskabystrica" and config["organization"] == "banskabystrica"
-    assert config["requireColumn"]["Objednávky BB"] == "IČO"
+    assert "requireColumn" not in config, "T-5060: no row is copied, so none is dropped for a missing identifier"
     assert "Evidencia psov" in config["skip"]
     assert "def main():" in container["args"][0]
 

@@ -339,8 +339,7 @@ function makePanel(box, config, map) {
 }
 
 // A feature's properties as rows a person reads, in the order, with the labels and the key
-// attributes the publisher wrote into the layer's DataStore table from the data model (T-4672,
-// `fields` of `config.layers[n]`): the page's language of a name as the title, the key attributes
+// attributes of `fields` of `config.layers[n]` when a layer carries them (T-4672): the page's language of a name as the title, the key attributes
 // as `rows` and the rest as `more`; an attribute the table does not carry is not shown. Without
 // them every value shows in the Endpoint's order under its name spelt as words. The start takes
 // its time along, numbers their unit, a code reads as words, an http(s) address is a link, and the

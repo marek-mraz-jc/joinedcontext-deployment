@@ -469,7 +469,6 @@ spec:
     ckan:
       instanceRef: {{ kind: CkanInstance, name: slovensko }}
       license: cc-by-sa
-      datastore: {{ representation: csv, refresh: onReconcile }}
   catalog:
     publisher: {{ name: {{ sk: "Platforma joinedcontext", en: "The joinedcontext platform" }}, uri: "https://dev.joinedcontext.com/" }}
     contactPoint: {{ name: {q(CONTACT["name"])}, email: {CONTACT["email"]} }}

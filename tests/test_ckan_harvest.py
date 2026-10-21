@@ -1,6 +1,7 @@
 """The catalogue harvest (T-4151): `charts/ckan/files/harvest-nkod.py` against a fake NKOD, fake
-publisher files and a fake CKAN that keep what the real ones decide: a DataStore table belongs to a
-resource, `package_update` replaces the resource list, `package_delete` only marks. The SPARQL rows
+publisher files and a fake CKAN that keep what the real ones decide: `package_update` replaces the resource list,
+`package_delete` only marks, and the DataStore is gone (T-5060): the fake refuses every `datastore_*`
+action, so a run that copies a row into CKAN fails. The SPARQL rows
 and files are shaped like the city's own, fetched on 2026-10-15 (docs
 Research/banska-bystrica-open-data-sources.md §6 to §8), and cut to a few rows. Nothing here needs
 a cluster or the network.
@@ -36,7 +37,6 @@ CONFIG = {
         "Ulice": {"state": "mislinked", "reason": "not ingested, link points to Počet občanov podľa dňa narodenia"},
         "Evidencia psov": {"state": "personal", "reason": "not ingested, locates each dog owner"},
     },
-    "requireColumn": {"Objednávky BB": "IČO"},
 }
 
 AGES = [{"Vek": "0", "Počet_občanov_v_danom_veku": "612 ", "Počet_mužov": "301", "Počet_žien": "311"},
@@ -91,8 +91,7 @@ CATALOGUE = (
 
 class FakeCkan:
     def __init__(self):
-        self.packages, self.tables, self.organizations, self.calls = {}, {}, set(), []
-        self.views = []
+        self.packages, self.organizations, self.calls = {}, set(), []
         self.next_id = 0
 
     def new_id(self):
@@ -101,6 +100,7 @@ class FakeCkan:
 
     def __call__(self, action, payload):
         self.calls.append(action)
+        assert not action.startswith(("datastore", "resource_view")), f"{action}: CKAN holds no rows (T-5060)"
         return getattr(self, action)(payload)
 
     def organization_show(self, p):
@@ -124,11 +124,6 @@ class FakeCkan:
         return package
 
     def package_update(self, p):
-        live = self.package_show({"id": p["id"]})
-        kept = {r["id"] for r in p["resources"] if r.get("id")}
-        for r in live["resources"]:
-            if r["id"] not in kept:
-                self.tables.pop(r["id"], None)  # CKAN drops a table with its resource
         package = dict(p, resources=self._resources(p["id"], p["resources"]))
         self.packages[p["name"]] = package
         return package
@@ -141,35 +136,6 @@ class FakeCkan:
         names = [v["name"] for v in self.packages.values() if v["state"] == "active" and any(
             e == {"key": "harvest_source", "value": "nkod-banskabystrica"} for e in v.get("extras", []))]
         return {"count": len(names), "results": [{"name": n} for n in names][p["start"]:p["start"] + p["rows"]]}
-
-    def datastore_create(self, p):
-        assert p["force"] is True
-        if "resource" in p:
-            package = self.package_show({"id": p["resource"]["package_id"]})
-            resource = dict(p["resource"], id=self.new_id(), url_type="datastore", url="https://x/dump")
-            package["resources"].append(resource)
-            rid = resource["id"]
-        else:
-            rid = p["resource_id"]
-            assert rid not in self.tables, "datastore_create on a live table"
-        self.tables[rid] = {"fields": p["fields"], "records": list(p["records"])}
-        return {"resource_id": rid}
-
-    def datastore_upsert(self, p):
-        self.tables[p["resource_id"]]["records"] += p["records"]
-
-    def datastore_delete(self, p):
-        self.tables.pop(p["resource_id"])
-
-    def datastore_search(self, p):
-        return {"total": len(self.tables[p["resource_id"]]["records"])}
-
-    def resource_view_list(self, p):
-        return [v for v in self.views if v["resource_id"] == p["id"]]
-
-    def resource_view_create(self, p):
-        self.views.append(dict(p, id=self.new_id()))
-        return self.views[-1]
 
 
 class Response(io.BytesIO):
@@ -222,19 +188,6 @@ class EveryName(dict):
                 "dataset": f"https://opendata.dev.joinedcontext.com/dataset/{name}"}
 
 
-# What an Endpoint's file.csv answers (T-4742): one row unless a test names the URL in SHEETS.
-SHEET = b"id,name\r\nurn:ngsi-ld:T:1,Prvy\r\n"
-SHEETS = {}
-
-
-def endpoint_file(url, accept="application/json", limit=1 << 30):
-    """od_read as the gateway answers it, refusing what is over `limit` as the real one does."""
-    body = SHEETS.get(url, SHEET)
-    if len(body) > limit:
-        raise ValueError(f"{url}: answered more than {limit} bytes")
-    return body
-
-
 def model_index(endpoint):
     return [{"version": 1, "types": ["T", "KeyPerformanceIndicator"],
              "artifacts": {f: {"bytes": 10, "sha256": f"sha-{f}", "type": "text/plain"} for f in ARTEFACTS}}]
@@ -252,7 +205,6 @@ def load(monkeypatch, catalogue=CATALOGUE, config=CONFIG, mapped=True):
     harvest.OPENER = FakeWeb(harvest)
     harvest.sparql = lambda query: [{k: {"value": v} for k, v in row.items()} for row in catalogue]
     harvest.od_models = model_index
-    harvest.od_read = endpoint_file
     if mapped:
         # Every dataset's rows are converted unless the test says otherwise (T-4324).
         harvest.OD_DATASETS = EveryName()
@@ -288,15 +240,14 @@ def test_a_run_ingests_what_the_files_hold_and_lists_every_skip_with_its_reason(
     assert extras["source_uri"] == "https://data.gov.sk/set/veku"
     # T-4765: the Endpoint under the key jcctl's publisher writes, its trailing slash included.
     assert extras["endpoint"] == "https://api.dev.joinedcontext.com/api/endpoint/ep/"
-    # EP-118: the platform's distributions and data model, the DataStore table last; no source link.
+    # EP-118: the platform's distributions and data model, no source link and no copy of the rows.
     assert [r["format"] for r in ages["resources"]] == [
         "NGSI-LD", "CSV", "OData", "MCP", "WebSocket",
-        "JSON Schema", "JSON-LD", "LinkML", "Markdown", "OWL", "RDF", "SHACL", "CSV"]
-    assert not any(r["url"].startswith(EGOV) for r in ages["resources"] if r.get("url_type") != "datastore")
-    table = fake.tables[ages["resources"][-1]["id"]]
-    # Trimmed and typed: the count is a number, and the stray space is gone.
-    assert table["records"][0]["Počet_občanov_v_danom_veku"] == 612
-    assert [f["type"] for f in table["fields"]] == ["int", "int", "int", "int"]
+        "JSON Schema", "JSON-LD", "LinkML", "Markdown", "OWL", "RDF", "SHACL"]
+    assert not any(r["url"].startswith(EGOV) for r in ages["resources"])
+    # T-5060: no DataStore action was ever called and no resource is a table.
+    assert not [c for c in fake.calls if c.startswith("datastore")]
+    assert not any(r.get("url_type") == "datastore" for p in fake.packages.values() for r in p["resources"])
 
     # The licence of the map data is the stricter one, and no ZIP is listed (EP-118).
     streets = fake.packages["bb-dtm-bb-register-ulic"]
@@ -312,35 +263,29 @@ def test_a_run_ingests_what_the_files_hold_and_lists_every_skip_with_its_reason(
     assert all(method == "HEAD" for method, url in requests if url.endswith(".zip"))
 
 
-def test_rows_without_an_identifier_are_not_published_in_any_resource(monkeypatch, capsys):
-    """§8: an order without an IČO can name a natural person. The table drops it, the original
-    file is not linked (it still holds the row), and the description says how many were left out."""
+def test_no_row_of_a_source_is_copied_into_the_catalogue(monkeypatch, capsys):
+    """§8 (T-5060): an order without an IČO can name a natural person. CKAN holds no rows at all now,
+    so the person is nowhere in it; the Endpoint and its Policy are the only data surface."""
     harvest = load(monkeypatch)
     assert harvest.main() == 0
-    orders = harvest.ckan.packages["bb-objednavky-bb"]
-    assert [r.get("url_type") for r in orders["resources"]].count("datastore") == 1
-    assert orders["resources"][-1]["url_type"] == "datastore"
-    records = harvest.ckan.tables[orders["resources"][-1]["id"]]["records"]
-    assert [r["Dodávateľ"] for r in records] == ["Firma s.r.o.", "Iná a.s."]
-    # An IČO keeps its leading zeros: it is an identifier, not a number.
-    assert records[0]["IČO"] == "00313271"
     assert "Ján Novák" not in json.dumps(harvest.ckan.packages, ensure_ascii=False)
-    assert "vynechané riadky bez údaja IČO (1)" in orders["notes"]
+    assert "Firma s.r.o." not in json.dumps(harvest.ckan.packages, ensure_ascii=False)
+    assert "vynechané riadky" not in harvest.ckan.packages["bb-objednavky-bb"]["notes"]
+    assert not [c for c in harvest.ckan.calls if c.startswith(("datastore", "resource_view"))]
 
 
-def test_a_second_run_replaces_the_tables_instead_of_adding_new_ones(monkeypatch, capsys):
+def test_a_second_run_rewrites_the_same_dataset_instead_of_adding_new_ones(monkeypatch, capsys):
     harvest = load(monkeypatch)
     assert harvest.main() == 0
-    tables = set(harvest.ckan.tables)
+    names = set(harvest.ckan.packages)
     first = len(harvest.ckan.calls)
     grown = AGES + [{"Vek": "2", "Počet_občanov_v_danom_veku": "1", "Počet_mužov": "1", "Počet_žien": "0"}]
     monkeypatch.setitem(WEB, EGOV + "920:0::plac1140:_144053_5_8", (200, "application/json", json.dumps(grown).encode()))
     assert harvest.main() == 0
-    assert set(harvest.ckan.tables) == tables, "a rerun added or lost a table"
+    assert set(harvest.ckan.packages) == names, "a rerun added or lost a dataset"
     assert "package_create" not in harvest.ckan.calls[first:]
     ages = harvest.ckan.packages["bb-pocet-obcanov-podla-veku"]["resources"]
-    assert [r.get("url_type") for r in ages] == [None] * 12 + ["datastore"]
-    assert len(harvest.ckan.tables[ages[-1]["id"]]["records"]) == 3
+    assert [r.get("url_type") for r in ages] == [None] * 12
 
 
 def test_a_run_over_an_unchanged_source_writes_nothing(monkeypatch, capsys):
@@ -354,19 +299,28 @@ def test_a_run_over_an_unchanged_source_writes_nothing(monkeypatch, capsys):
 
 
 def test_a_changed_source_updates_in_place_and_keeps_the_dataset_and_its_issued(monkeypatch, capsys):
+    """T-5060: CKAN holds no rows, so a changed file alone writes nothing; a newer `modified` in the
+    catalogue updates the dataset in place."""
     rows = [dict(r, issued="2019-04-02T10:00:00Z") for r in CATALOGUE]
     harvest = load(monkeypatch, catalogue=rows)
     assert harvest.main() == 0
-    ages = harvest.ckan.packages["bb-pocet-obcanov-podla-veku"]
-    identity, first = ages["id"], len(harvest.ckan.calls)
+    fake = harvest.ckan
+    identity, first = fake.packages["bb-pocet-obcanov-podla-veku"]["id"], len(fake.calls)
     grown = AGES + [{"Vek": "2", "Počet_občanov_v_danom_veku": "1", "Počet_mužov": "1", "Počet_žien": "0"}]
     monkeypatch.setitem(WEB, EGOV + "920:0::plac1140:_144053_5_8", (200, "application/json", json.dumps(grown).encode()))
     assert harvest.main() == 0
-    calls = harvest.ckan.calls[first:]
+    assert not [c for c in fake.calls[first:] if c in ("package_create", "package_update", "package_delete")]
+    newer = [dict(r, modified="2026-10-20T08:00:00Z") if r["title"] == "Počet občanov podľa veku" else r for r in rows]
+    harvest = load(monkeypatch, catalogue=newer)
+    harvest.ckan = fake
+    first = len(fake.calls)
+    assert harvest.main() == 0
+    calls = fake.calls[first:]
     assert "package_create" not in calls and "package_delete" not in calls and calls.count("package_update") == 1
-    ages = harvest.ckan.packages["bb-pocet-obcanov-podla-veku"]
+    ages = fake.packages["bb-pocet-obcanov-podla-veku"]
     assert ages["id"] == identity
     assert {"key": "issued", "value": "2019-04-02T10:00:00Z"} in ages["extras"]
+    assert {"key": "modified", "value": "2026-10-20T08:00:00Z"} in ages["extras"]
 
 
 def test_a_withdrawn_dataset_that_returns_is_updated_never_created_again(monkeypatch, capsys):
@@ -420,15 +374,6 @@ def test_a_source_off_the_allowlist_or_on_plain_http_is_never_fetched(monkeypatc
     assert harvest.ckan.packages == {}
 
 
-def test_a_table_that_lost_rows_fails_the_run(monkeypatch, capsys):
-    harvest = load(monkeypatch)
-    real = harvest.ckan.datastore_search
-    harvest.ckan.datastore_search = lambda p: {"total": real(p)["total"] - 1}
-    assert harvest.main() == 1
-    assert "check failed: Počet občanov podľa veku: table Počet občanov podľa veku (tabuľka) holds 1 rows, 2 expected" \
-        in capsys.readouterr().err
-
-
 def test_the_token_is_never_printed(monkeypatch, capsys):
     harvest = load(monkeypatch)
     harvest.main()
@@ -444,10 +389,10 @@ def test_two_titles_that_fold_to_one_name_keep_apart(monkeypatch, capsys):
     assert set(harvest.ckan.packages) == {"bb-skoly-aaaaaaaa", "bb-skoly-bbbbbbbb"}
 
 
-def test_only_a_converted_dataset_is_listed_with_its_apis_model_and_table(monkeypatch, capsys):
+def test_only_a_converted_dataset_is_listed_with_its_apis_and_model(monkeypatch, capsys):
     """T-4279, EP-118 (T-4324): the mapping names the age table only. Its page lists the NGSI-LD
     API and the files filtered to its rows, OData, MCP and the WebSocket for the type, then the data
-    model in seven formalisms, then its DataStore table; no GeoJSON or OGC, the rows have no
+    model in seven formalisms; no DataStore table (T-5060), no GeoJSON or OGC, the rows have no
     location. Every dataset nobody mapped is not listed, and named so."""
     monkeypatch.setenv("OD_GATEWAY", "https://api.dev.joinedcontext.com/")
     monkeypatch.setenv("OD_DATASETS", json.dumps({"bb-pocet-obcanov-podla-veku": {
@@ -461,8 +406,8 @@ def test_only_a_converted_dataset_is_listed_with_its_apis_model_and_table(monkey
     ages = harvest.ckan.packages["bb-pocet-obcanov-podla-veku"]["resources"]
     assert [r["format"] for r in ages] == [
         "NGSI-LD", "CSV", "OData", "MCP", "WebSocket",
-        "JSON Schema", "JSON-LD", "LinkML", "Markdown", "OWL", "RDF", "SHACL", "CSV"]
-    assert ages[-1].get("url_type") == "datastore", "the table moved off the end of the list"
+        "JSON Schema", "JSON-LD", "LinkML", "Markdown", "OWL", "RDF", "SHACL"]
+    assert ages[-1]["format"] == "SHACL" and not any(r.get("url_type") == "datastore" for r in ages)
     assert ages[0]["url"] == ("https://api.dev.joinedcontext.com/api/endpoint/abc/ngsi-ld/v1/entities?type=KeyPerformanceIndicator"
                               "&q=isPartOf%3D%3D%22https%3A%2F%2Fopendata.dev.joinedcontext.com%2Fdataset%2Fbb-pocet-obcanov-podla-veku%22")
     assert ages[0]["conforms_to"].startswith("https://www.etsi.org/")
@@ -496,14 +441,6 @@ def test_a_dataset_unmapped_after_a_run_is_withdrawn_and_none_mapped_withdraws_n
     assert harvest.ckan.packages["bb-podujatia"]["state"] == "active"
 
 
-def test_a_table_over_50_mb_is_not_kept(monkeypatch, capsys):
-    harvest = load(monkeypatch)
-    # Over the limit both the source's table and the Endpoint's sheet are left out.
-    monkeypatch.setattr(harvest, "OD_MAX_SHEET_BYTES", 10)
-    assert harvest.main() == 0
-    assert not any(r.get("url_type") == "datastore" for p in harvest.ckan.packages.values() for r in p["resources"])
-
-
 def test_a_refused_connection_to_the_catalogue_is_tried_again_and_other_errors_are_not(monkeypatch):
     """A new pod is refused until the network-policy controller admits it (prod demo-bbsk)."""
     harvest = load(monkeypatch)
@@ -531,40 +468,14 @@ def test_a_refused_connection_to_the_catalogue_is_tried_again_and_other_errors_a
         harvest.ckan("organization_show", {"id": "bb"})
 
 
-def test_a_dataset_whose_files_hold_no_table_gets_its_endpoint_rows_and_a_source_table_stays(monkeypatch, capsys):
-    """T-4742: bb-dtm-bb-register-statickej-dopravy listed ZIPs only, so it had no DataStore and
-    showed datastore_active=false. Every ingested dataset now holds exactly one table: its JSON
-    file's, or else the rows its Endpoint serves anonymously, filtered to the dataset."""
+def test_the_harvest_never_calls_a_datastore_or_a_view_action(monkeypatch, capsys):
+    """T-5060: a dataset whose files hold no table, one that holds rows and one that holds personal
+    data all list the same platform distributions; none gets a table, a table view or a hidden flag."""
     harvest = load(monkeypatch)
-    url = ("https://api.dev.joinedcontext.com/api/endpoint/ep/file.csv?type=T&q="
-           + urllib.parse.quote('isPartOf=="https://opendata.dev.joinedcontext.com/dataset/bb-dtm-bb-register-ulic"', safe=""))
-    monkeypatch.setitem(SHEETS, url, b"id,length\r\nurn:ngsi-ld:T:u1,120\r\nurn:ngsi-ld:T:u2,\r\n")
     assert harvest.main() == 0
     fake = harvest.ckan
+    assert set(fake.calls) <= {"organization_show", "organization_create", "package_show", "package_create",
+                               "package_update", "package_search", "package_delete"}, set(fake.calls)
     for name, package in fake.packages.items():
-        assert [r.get("url_type") for r in package["resources"]].count("datastore") == 1, name
-    streets = fake.packages["bb-dtm-bb-register-ulic"]["resources"][-1]
-    assert streets["name"] == "T"
-    assert fake.tables[streets["id"]] == {"fields": [{"id": "id", "type": "text"}, {"id": "length", "type": "int"}],
-                                          "records": [{"id": "urn:ngsi-ld:T:u1", "length": 120},
-                                                      {"id": "urn:ngsi-ld:T:u2", "length": None}]}
-    ages = fake.packages["bb-pocet-obcanov-podla-veku"]["resources"][-1]
-    assert ages["name"] != "T", "a source table was replaced by the Endpoint's"
-    # Every table, the source's ones included, has its one table view.
-    tables = {r["id"] for p in fake.packages.values() for r in p["resources"] if r.get("url_type") == "datastore"}
-    assert sorted(v["resource_id"] for v in fake.views) == sorted(tables)
-    assert {v["view_type"] for v in fake.views} == {"datatables_view"}
-
-
-def test_a_hidden_dataset_without_a_table_stays_without_one(monkeypatch, capsys):
-    harvest = load(monkeypatch)
-    harvest.OD_HIDDEN = {"bb-dtm-bb-polohopis"}
-    assert harvest.main() == 0
-    assert not any(r.get("url_type") == "datastore" for r in harvest.ckan.packages["bb-dtm-bb-polohopis"]["resources"])
-    assert any(r.get("url_type") == "datastore" for r in harvest.ckan.packages["bb-dtm-bb-register-ulic"]["resources"])
-
-
-def test_a_column_is_int_only_when_every_value_fits_ckans_int(monkeypatch):
-    harvest = load(monkeypatch)
-    rows = [{"n": "2147483647", "big": "1760889600000", "ico": "00313271", "neg": "-5"}, {"n": "", "big": "1", "ico": "1", "neg": "0"}]
-    assert [f["type"] for f in harvest.od_fields(rows)] == ["int", "text", "text", "int"]
+        assert not any(r.get("url_type") == "datastore" for r in package["resources"]), name
+    assert not hasattr(harvest, "OD_HIDDEN") and not hasattr(harvest, "od_fields") and not hasattr(harvest, "table")

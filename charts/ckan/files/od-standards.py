@@ -10,15 +10,9 @@ whether its type holds only its rows on that Endpoint (`sole`).
 `OD_GATEWAY` is the public base the Endpoints answer under; without it no dataset gains any.
 A dataset with no distributions is withdrawn by the harvest (EP-118, T-4324): the catalogue lists
 NGSI-LD data with all its doors and its data model, or not at all.
-
-Every public converted dataset also gets a DataStore table (T-4742): the rows its Endpoint serves
-anonymously as `file.csv`, so the sheet holds no attribute the Policy hides. `OD_HIDDEN` lists the
-datasets the publish gate hides (T-4318); they get no sheet.
+CKAN holds no rows of any of them: the Endpoint is the data (T-5060).
 """
-import csv as _csv
-import io as _io
 import json as _json
-import re as _re
 import os as _os
 import sys as _sys
 import time as _time
@@ -28,7 +22,6 @@ import urllib.request as _request
 
 OD_DATASETS = _json.loads(_os.environ.get("OD_DATASETS") or "{}")
 OD_GATEWAY = (_os.environ.get("OD_GATEWAY") or "").rstrip("/")
-OD_HIDDEN = set(_json.loads(_os.environ.get("OD_HIDDEN") or "[]"))
 
 # (path under the Endpoint, name, format, media type, conformsTo, how it keeps the dataset's rows, what
 # its rows must have for it to be listed: a `location`, a `series` of measured numbers, or nothing).
@@ -185,95 +178,3 @@ def od_standards(name):
             resource["conforms_to"] = conforms
         out.append(resource)
     return out + model
-
-
-# A DataStore table larger than this is not kept: EP-118 lists whole files up to 50 MB only.
-OD_MAX_SHEET_BYTES = 50 * 1024 * 1024
-
-
-def od_sheet(name):
-    """The DataStore table of CKAN dataset `name` (T-4742): `{name, header, rows, dropped}` from
-    the `file.csv` its Endpoint serves anonymously, filtered as its CSV distribution is, so the
-    sheet carries only what the public may read. None when the rows were not converted, the
-    publish gate hides the dataset (T-4318), or the Endpoint refuses the file for good (too
-    large: a 4xx, said on stderr). An outage or a 429 raises: a live sheet is never dropped
-    because one read failed."""
-    entry = OD_DATASETS.get(name)
-    if not entry or not OD_GATEWAY or name in OD_HIDDEN:
-        return None
-    url = _od_address(entry, "file.csv", _od_filter(entry, "q"))
-    try:
-        body = od_read(url, "text/csv", OD_MAX_SHEET_BYTES)
-    except (_error.HTTPError, ValueError) as error:
-        if isinstance(error, _error.HTTPError) and _od_transient(error):
-            raise
-        print(f"{name}: no sheet, {url} answered {error}", file=_sys.stderr)
-        return None
-    reader = _csv.DictReader(_io.StringIO(body.decode("utf-8-sig")))
-    rows = [{k: v for k, v in row.items() if k is not None} for row in reader]
-    # Named by its entity type, as jcctl names an Endpoint's tables: the theme draws the dataset's
-    # map from a table of that name and the OGC API Features distribution (T-4639).
-    return {"name": entry["type"], "header": list(reader.fieldnames or []), "rows": rows, "dropped": 0}
-
-
-OD_INTEGER = _re.compile(r"-?(0|[1-9][0-9]*)")
-OD_CHUNK = 5000
-
-
-def od_fields(rows, header=()):
-    """DataStore fields in the file's column order; a column is int only when every value is a
-    plain integer without a leading zero that fits CKAN's 32-bit `int`, so an IČO, a postcode or
-    a millisecond timestamp stays text. No column at all is one text column `empty`, since CKAN
-    refuses a table without fields."""
-    names = list(dict.fromkeys([*header, *(k for r in rows for k in r)]))
-    out = []
-    for name in names:
-        values = [r.get(name) for r in rows if r.get(name) not in (None, "")]
-        whole = values and all((isinstance(v, int) or (isinstance(v, str) and OD_INTEGER.fullmatch(v)))
-                               and -2**31 <= int(v) < 2**31 for v in values)
-        out.append({"id": name, "type": "int" if whole else "text"})
-    return out or [{"id": "empty", "type": "text"}]
-
-
-def od_records(rows, columns):
-    ints = {c["id"] for c in columns if c["type"] == "int"}
-    return [{k: (int(v) if k in ints and v not in (None, "") else (None if v == "" else v)) for k, v in r.items()}
-            for r in rows]
-
-
-def od_datastore_resources(live, tables):
-    """The live DataStore resources of `tables` by name: what a `package_update`, which replaces
-    the resource list, carries over by id, or CKAN drops them with their rows."""
-    names = {t["name"] for t in tables}
-    return [r for r in live.get("resources", []) if r.get("url_type") == "datastore" and r["name"] in names]
-
-
-def od_write_tables(call, live, tables):
-    """Writes each table into package `live` through `call(action, payload)`: a live table of the
-    same name is replaced, any other is created as a CSV resource. An empty table is still
-    created, so the dataset's sheet is active with 0 rows. Sets each table's `resource_id`."""
-    existing = {r["name"]: r["id"] for r in live.get("resources", []) if r.get("url_type") == "datastore"}
-    for t in tables:
-        columns = od_fields(t["rows"], t.get("header", ()))
-        rows = od_records(t["rows"], columns)
-        if t["name"] in existing:
-            target = {"resource_id": existing[t["name"]]}
-            call("datastore_delete", dict(target, force=True))
-        else:
-            target = {"resource": {"package_id": live["id"], "name": t["name"], "format": "CSV"}}
-        created = call("datastore_create", dict(target, force=True, fields=columns, records=rows[:OD_CHUNK]))
-        for start in range(OD_CHUNK, len(rows), OD_CHUNK):
-            call("datastore_upsert", {"resource_id": created["resource_id"], "method": "insert",
-                                      "force": True, "records": rows[start:start + OD_CHUNK]})
-        t["resource_id"] = created["resource_id"]
-
-
-def od_table_views(call, tables):
-    """A table view on each table (T-4742): CKAN keeps a resource's views when its table is
-    replaced, but a table written before it had any, or whose view somebody deleted, has none and
-    shows no rows on its page. Asked each run, created only when missing."""
-    for t in tables:
-        views = call("resource_view_list", {"id": t["resource_id"]}) or []
-        if not any(v.get("view_type") == "datatables_view" for v in views):
-            call("resource_view_create", {"resource_id": t["resource_id"], "view_type": "datatables_view",
-                                          "title": "Tabuľka"})

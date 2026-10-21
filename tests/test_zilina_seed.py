@@ -167,7 +167,7 @@ def test_every_public_space_is_published_to_the_projects_catalogue_with_its_reco
         spec = endpoint["spec"]
         assert set(endpoint["metadata"]["description"]) == {"sk", "en"}, name
         assert spec["publish"]["ckan"]["instanceRef"] == {"kind": "CkanInstance", "name": "zilina"}
-        assert spec["publish"]["ckan"]["datastore"] == {"representation": "csv", "refresh": "onReconcile"}
+        assert "datastore" not in spec["publish"]["ckan"], f"{name}: CKAN holds no rows (T-5060)"
         catalog = spec["catalog"]
         # The CKAN licence is the record's licence: ShareAlike data is never offered as plain CC BY.
         assert spec["publish"]["ckan"]["license"] == CKAN_LICENCE[catalog["license"]], name

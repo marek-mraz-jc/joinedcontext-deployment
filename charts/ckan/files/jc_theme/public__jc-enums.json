@@ -1,5 +1,5 @@
 {
-  "$comment": "The map popup's words for code values of a category (T-4639, T-4672): the theme's own. The order and labels of attributes come from each DataStore table's data dictionary, which the publisher writes from the data model.",
+  "$comment": "The map popup's words for code values of a category (T-4639, T-4672): the theme's own.",
   "enums": {
     "museumsGalleriesLibraries": {
       "sk": "Múzeá, galérie, knižnice",

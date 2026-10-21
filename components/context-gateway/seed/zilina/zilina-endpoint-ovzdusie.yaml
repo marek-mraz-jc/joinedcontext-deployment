@@ -19,7 +19,6 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: zilina }
       license: cc-by
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher: { name: { sk: "Projekt Žilina, platforma joinedcontext", en: "The Žilina project, joinedcontext platform" }, uri: "https://dev.joinedcontext.com/" }
     license: CC_BY_4_0

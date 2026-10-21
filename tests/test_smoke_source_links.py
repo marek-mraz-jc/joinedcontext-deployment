@@ -22,8 +22,7 @@ def mosty(example):
     return {"name": "bbsk-mosty", "extras": [{"key": "endpoint", "value": f"{base}/"}], "resources": [
         {"url": f"{base}/ngsi-ld/v1/", "description":
             f"The first ten:\n\n    curl '{base}/ngsi-ld/v1/entities?type={example}&limit=10'\n"},
-        {"url": f"{base}/odata/v4/", "description": "OData"},
-        {"url": f"https://opendata.{DOMAIN}/datastore/dump/1", "name": "Bridge"}]}
+        {"url": f"{base}/odata/v4/", "description": "OData"}]}
 
 
 def answers(example):

@@ -182,7 +182,7 @@ for (const name of Object.keys(EXPECT)) {
 }
 
 for (const viewer of ["anonymous", "signed-in"]) {
-  test(`${viewer}: the explorer sends no Authorization, no cookie and never asks the DataStore`, async ({ page, context }) => {
+  test(`${viewer}: the explorer sends no Authorization, no cookie and never asks CKAN's Action API`, async ({ page, context }) => {
     if (viewer === "signed-in") {
       // The catalogue's session cookie and a token in the page's storage: neither may reach the API.
       await context.addCookies([{ name: "ckan", value: "session-xyz", domain: CATALOGUE, path: "/", secure: true, httpOnly: true },
@@ -200,7 +200,7 @@ for (const viewer of ["anonymous", "signed-in"]) {
       expect(c.headers.authorization).toBeUndefined();
       expect(c.headers.cookie).toBeUndefined();
     }
-    expect(requests.filter((r) => /datastore_/.test(r.url.pathname))).toEqual([]);
+    expect(requests.filter((r) => /\/api\/3\/action\//.test(r.url.pathname))).toEqual([]);
     await shot(page, `viewer-${viewer}`);
   });
 }

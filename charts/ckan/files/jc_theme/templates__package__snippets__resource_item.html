@@ -11,7 +11,7 @@
   <div>
     {# The format sits beside the name (T-4066): a column of its own stood empty beside a long usage text. #}
     <div class="jc-resource-head">
-      <span class="jc-chip{% if res.datastore_active %} jc-chip-primary{% endif %}" data-format="{{ (res.format or 'data').lower() }}">{{ jc_format or h.get_translated(res, 'format') or '—' }}</span>
+      <span class="jc-chip" data-format="{{ (res.format or 'data').lower() }}">{{ jc_format or h.get_translated(res, 'format') or '—' }}</span>
       <a class="heading" href="{{ url }}">{{ name }}</a>
     </div>
     {% set what = h.jc_what(res) if kind else jc_what %}

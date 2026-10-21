@@ -17,7 +17,6 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: zilina }
       license: cc-by
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher: { name: { sk: "Žilinská univerzita v Žiline", en: "University of Žilina" }, uri: "https://www.uniza.sk/" }
     license: CC_BY_4_0

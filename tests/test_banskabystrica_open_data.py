@@ -294,8 +294,7 @@ def test_the_space_is_public_and_published_under_cc_by():
         assert spec["audience"] == "public" and spec["contextSpaceRef"] == SPACE, part
         assert spec["publish"]["ckan"] == {
             "instanceRef": {"kind": "CkanInstance", "name": "banskabystrica"}, "license": "cc-by",
-            "datastore": {"representation": "csv", "refresh": "onReconcile"},
-        }, part
+        }, part  # T-5060: no "datastore" member, CKAN holds no rows
         assert spec["catalog"]["license"] == "CC_BY_4_0", part
         policy = manifest(f"policy-{part}-read.yaml")["spec"]
         assert spec["policyRef"] == f"urn:ngsi-ld:Policy:banskabystrica.sk:{SPACE}:{part}-read", part

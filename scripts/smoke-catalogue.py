@@ -6,8 +6,9 @@
 
 Reads only public data, anonymously: CKAN's package_search and the gateway's DCAT feed for the
 inventory, then per dataset NGSI-LD, MCP, OData, OGC API Features, the data model, a sample of
-rows against it with its relationships, and the CKAN views (every run), and the datastore count,
-WebSocket, map and CSV (rotating, least recently checked first).
+rows against it with its relationships, and the CKAN chart view (every run), and WebSocket, map
+and CSV (rotating, least recently checked first). CKAN holds no rows (T-5060), so no table is
+compared.
 One request at a time, at most 50 a minute, 500 a run and 10 minutes (owner limit, T-4716).
 Writes `<out-dir>/smoke-catalogue-<env>-<time>.tsv` (default out-dir `.smoke`) and exits 1
 on any ko. Testing/05 §4.1 is the contract.
@@ -45,7 +46,7 @@ RETRIES = 3
 # rotation reads the previous table (gitignored).
 DEFAULT_OUT = ".smoke"
 CORE = ["ngsi-ld", "mcp", "odata", "ogc", "model", "data", "views"]
-ROTATING = ["datastore", "websocket", "map", "csv"]
+ROTATING = ["websocket", "map", "csv"]
 COLUMNS = ["inventory", *CORE, *ROTATING]
 MCP_LIST = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "tools/list"}).encode()
 NOT_THIS_RUN = re.compile(r"not this run \(last: (\S+) (\w+)\)")
@@ -252,7 +253,6 @@ class Dataset:
     slug: str = ""
     type: str = ""
     formats: dict = None
-    datastore: list = None
     part_of: str = ""
     foreign: list = None
     why: str = ""
@@ -267,8 +267,8 @@ def endpoint_slug(url: str) -> str:
 
 
 def describe(package: dict, domain: str) -> Dataset:
-    """What one CKAN dataset says about itself: its Endpoint, type, distributions, datastore."""
-    data = Dataset(package["name"], formats={}, datastore=[], foreign=[],
+    """What one CKAN dataset says about itself: its Endpoint, type, distributions."""
+    data = Dataset(package["name"], formats={}, foreign=[],
                    org=(package.get("organization") or {}).get("name") or "")
     for extra in package.get("extras") or []:
         if extra.get("key") == "spatial_uri":
@@ -277,8 +277,6 @@ def describe(package: dict, domain: str) -> Dataset:
     data.first = ((package.get("resources") or [{}])[0] or {}).get("id") or ""
     for resource in package.get("resources", []):
         url, fmt = resource.get("url") or "", resource.get("format") or ""
-        if resource.get("datastore_active"):
-            data.datastore.append(resource["id"])
         if "/api/endpoint/" not in url:
             continue
         host = urllib.parse.urlsplit(url).hostname or ""
@@ -583,28 +581,19 @@ class Run:
         return problems
 
     def views(self, data: Dataset) -> str:
-        if not data.datastore:
-            return skip("no datastore table")
-        kinds = {}
-        for resource in data.datastore:
-            kinds[resource] = self.view_types(resource)
-            if isinstance(kinds[resource], str):
-                return ko(kinds[resource])
-        tableless = sum("datatables_view" not in k for k in kinds.values())
-        if tableless:
-            return ko(f"no table view on {tableless} of {len(data.datastore)} datastore tables")
         schema = self.schemas.get(data.name)
         if schema is None:
-            return ok("table; chart not checked, no model read this run")
+            return ok("chart not checked, no model read this run")
         if not series(schema):
-            return ok(f"table; no chart: the {data.type} model has no number observed at a date-time dateObserved")
-        if data.first and data.first not in kinds:
-            kinds[data.first] = self.view_types(data.first)
-            if isinstance(kinds[data.first], str):
-                return ko(kinds[data.first])
-        if not any("jc_visualization" in k for k in kinds.values()):
+            return ok(f"no chart: the {data.type} model has no number observed at a date-time dateObserved")
+        if not data.first:
+            return ko("a numeric value over time and no resource to hang its chart on")
+        kinds = self.view_types(data.first)
+        if isinstance(kinds, str):
+            return ko(kinds)
+        if "jc_visualization" not in kinds:
             return ko("a numeric value over time and no chart view")
-        return ok("table, chart")
+        return ok("chart")
 
     def view_types(self, resource: str):
         """The view types CKAN lists on one resource, or why it answered no list."""
@@ -614,26 +603,6 @@ class Run:
         if not isinstance(views, list):
             return f"resource_view_list answered {answer.why()}"
         return {v.get("view_type") for v in views if isinstance(v, dict)}
-
-    def datastore(self, data: Dataset) -> str:
-        # ponytail: the first datastore table only; a dataset of several tables compares one.
-        url = f"https://opendata.{self.domain}/api/3/action/datastore_search?" + urllib.parse.urlencode(
-            {"resource_id": data.datastore[0], "limit": 0})
-        answer = self.client.fetch(url)
-        total = ((answer.json() or {}).get("result") or {}).get("total") if answer.status == 200 else None
-        if not isinstance(total, int):
-            return ko(f"datastore_search answered {answer.why()}")
-        if total < 1:
-            return ko("the datastore table is empty")
-        others = self.shared.get((data.slug, data.type), [])
-        if not data.part_of and len(others) > 1:
-            return ok(f"{total} rows; not compared, {data.type} is shared by {len(others)} datasets")
-        if data.name not in self.counts:
-            return skip(f"{total} rows; no platform count to compare (OData or OGC ko)")
-        count, how = self.counts[data.name]
-        if abs(total - count) > TOLERANCE * max(count, 1):
-            return ko(f"{total} rows, the platform holds {count} ({how})")
-        return ok(f"{total} rows = {count}")
 
     def websocket(self, data: Dataset) -> str:
         url = "wss" + (self.base(data) + "ws")[5:]
@@ -711,8 +680,6 @@ class Run:
                 row["inventory"] = ko("its Endpoint is not in the public DCAT feed")
             else:
                 row["inventory"] = ok()
-            if not data.datastore:
-                row["datastore"] = ko("no datastore table")
         # Least recently checked first, the core as the slow checks: a run that ends early leaves
         # other datasets for the next one, not the same ones every time.
         checkable = sorted((d for d in datasets if d.slug),
