@@ -29,15 +29,21 @@ Two documents, two origins of trust:
   `connect-src https://tiles.{domain}` alone, every popup value set as text, Enter opens the
   feature nearest the middle.
 
-- **The explorer** (`/explore.html#{slug}&inline&lang=sk&type=T`, `explore.js`, T-5059). The
-  catalogue's dataset and resource pages frame it for every Endpoint: a table of the entities with
-  paging (NGSI-LD `limit`/`offset`/`count`), search and per-attribute filters, a column picker, a
-  detail dialog with the same query's NGSI-LD, OData, OGC and CSV addresses, and a map of the same
-  query as GeoJSON within the map's view (at most 1000 a view). It reads `api.{domain}`
-  anonymously and copies nothing. A filter becomes `q` only from the attribute names the Endpoint's
-  `types?details=true` lists, with typed and escaped values (`buildQ`). Only the catalogue may
-  frame it (`frame-ancestors https://opendata.{domain}`); it connects to the API and the tiles.
-  The broker ignores `orderBy` today, so a column sorts the page on screen and says so.
+- **The explorer** (`/explore.html#{slug}&inline&lang=sk&type=T&q=…&sort=attr;desc`, `explore.js`,
+  T-5059, T-5082). The catalogue's dataset and resource pages frame it for every Endpoint. Its table
+  is the Portal's Endpoint "Data" view, the same React component (`EndpointDataView`), built from
+  one Portal commit into `/explorer/explorer.js` and `explorer.css` by
+  `scripts/viz-explorer-bundle.sh` (`images/viz/explorer/SHA256SUMS` names the commit; the image
+  checks the sums). It reads `https://api.{domain}/api/endpoint/{slug}/` without a cookie or token:
+  the schema's types and Fields (type and description per column), the grid's filters and search
+  as NGSI-LD `q`, the order as `orderBy` (every row, on the server), paging with `count`, a full
+  window and "Download these rows as CSV" (`file.csv` with the same `q` and `orderBy`). The Portal
+  page shows the same view with the person's session. `explore.js` keeps the address (type, query
+  and order in the hash, so a link opens the same view), a map of the same query as GeoJSON within
+  the map's view (at most 1000 a view) and the Data API dialog with the query's NGSI-LD, OData, OGC
+  and CSV addresses. Only the catalogue may frame it (`frame-ancestors https://opendata.{domain}`);
+  it connects to the API and the tiles. A Portal change reaches the catalogue when the bundle is
+  rebuilt from it and the image pinned (`images.yaml`).
 
 The Vega, MapLibre 6.14.0 and pmtiles 4.5.0 builds are the npm releases byte for byte
 (`images/viz/vendor/SHA256SUMS`), served from this host: no CDN. They are baked into the image
@@ -51,4 +57,6 @@ Tests: `tests/test_viz.py` (render, headers, checksums, and `node --test` on
 `components/viz/tests/*.test.mjs`); the browser journey `components/viz/tests/journey.spec.mjs`
 runs the good specs and the hostile ones with the hosts routed to these files, and
 `explore.spec.mjs` runs the explorer over viewer, width, theme, language, data shape and failure,
-leaving a screenshot of each state in `components/viz/tests/test-results/explore/`.
+a shared link's query and order, Fields, the full window and the Data API dialog, leaving a
+screenshot of each state in `components/viz/tests/test-results/explore/`. It serves
+`images/viz/explorer/`, so run `scripts/viz-explorer-bundle.sh` first after a Portal change.
