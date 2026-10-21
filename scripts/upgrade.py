@@ -278,6 +278,8 @@ class Upgrade:
         manifest = {"apiVersion": "v1", "kind": "ConfigMap",
                     "metadata": {"name": RECORD, "namespace": namespace},
                     "data": {"version": self.version, "appliedAt": f"{datetime.now(UTC):%Y-%m-%dT%H:%M:%SZ}",
+                             "commit": run(["git", "rev-parse", f"{self.version}^{{commit}}"], cwd=ROOT).strip(),
+                             "environment": self.env, "appliedBy": getpass.getuser(),
                              "backups": ",".join(self.backups)}}
         run(["kubectl", "apply", "-f", "-"], stdin=json.dumps(manifest))
 
