@@ -8,11 +8,11 @@ metadata:
 spec:
   organizationRef: hel
   quotas:
-    contextSpaces: 1
-    residentPipelines: 1
-    publicEndpoints: 5
-    apps: 5
-    ingestEventsPerSecond: 1
-    agentRunsPerDay: 1
-    entitiesPerSpace: 1000
-    requestsPerMinute: 600
+    contextSpaces: 100
+    residentPipelines: 100
+    publicEndpoints: 100
+    apps: 100
+    ingestEventsPerSecond: 500
+    agentRunsPerDay: 2000
+    entitiesPerSpace: 1000000
+    requestsPerMinute: 6000
