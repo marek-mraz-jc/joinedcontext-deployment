@@ -21,7 +21,7 @@
           <li><a href="{{ h.url_for('home.about') }}">{{ h.jc_t('about_site') }}</a></li>
           {% if h.jc_portal_url() %}<li><a href="{{ h.jc_portal_url() }}">{{ h.jc_t('portal') }}</a></li>{% endif %}
           <li><a href="{{ h.url_for('home.about') }}#api">{{ h.jc_t('catalogue_api') }}</a></li>
-          {% for name in ('connector', 'privacy', 'terms', 'support') %}
+          {% for name in ('connector', 'privacy', 'terms', 'support', 'accessibility') %}
             <li><a href="{{ h.url_for('jc_pages.' ~ name) }}">{{ h.jc_page(name).title }}</a></li>
           {% endfor %}
         {% endblock %}

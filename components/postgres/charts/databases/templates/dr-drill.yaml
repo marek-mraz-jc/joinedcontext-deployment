@@ -1,7 +1,7 @@
 {{- /*
-The monthly restore drill (OPS-11, OPS-12, T-0046): a CronJob restores the latest base backup
-and WAL of the cluster into a throwaway Cluster `{cluster}-drill` beside it, compares row
-counts, records RTO and RPO in the ConfigMap `{cluster}-dr-drill` and deletes the copy. The
+The monthly restore drill (OPS-11, OPS-12, T-0046, T-5101): a CronJob restores the archive of
+the cluster into a throwaway Cluster `{cluster}-drill` beside it, to its end and then to a point
+in time, compares row counts, records RTO and RPO in the ConfigMap `{cluster}-dr-drill` and deletes the copy. The
 copy lives in the source's namespace, so the job needs a Role there and never a ClusterRole.
 */ -}}
 {{- with .Values.drDrill }}
@@ -95,7 +95,10 @@ metadata:
 data:
   dr-drill.sh: |
     {{- $.Files.Get "files/dr-drill.sh" | nindent 4 }}
-  cluster.yaml: |
+  {{- /* The latest restore, and the point-in-time one whose target the script fills in. */}}
+  {{- $d := . }}
+  {{- range $file, $target := dict "cluster.yaml" "" "cluster-pitr.yaml" "__TARGET_TIME__" }}
+  {{ $file }}: |
     apiVersion: postgresql.cnpg.io/v1
     kind: Cluster
     metadata:
@@ -112,10 +115,10 @@ data:
           own Cluster resource and reports instance status back to the operator.
     spec:
       instances: 1
-      imageName: {{ .clusterImage }}
+      imageName: {{ $d.clusterImage }}
       storage:
-        size: {{ .storageSize }}
-        {{- with .storageClass }}
+        size: {{ $d.storageSize }}
+        {{- with $d.storageClass }}
         storageClass: {{ . }}
         {{- end }}
       resources:
@@ -124,21 +127,26 @@ data:
       bootstrap:
         recovery:
           source: origin
+          {{- with $target }}
+          recoveryTarget:
+            targetTime: {{ . | quote }}
+          {{- end }}
       externalClusters:
         - name: origin
           barmanObjectStore:
             serverName: {{ $.Values.cluster.name }}
-            destinationPath: {{ .backups.destinationPath | quote }}
-            {{- with .backups.endpointURL }}
+            destinationPath: {{ $d.backups.destinationPath | quote }}
+            {{- with $d.backups.endpointURL }}
             endpointURL: {{ . | quote }}
             {{- end }}
             s3Credentials:
               accessKeyId:
-                name: {{ .backups.existingSecret }}
+                name: {{ $d.backups.existingSecret }}
                 key: ACCESS_KEY_ID
               secretAccessKey:
-                name: {{ .backups.existingSecret }}
+                name: {{ $d.backups.existingSecret }}
                 key: ACCESS_SECRET_KEY
+  {{- end }}
 ---
 apiVersion: batch/v1
 kind: CronJob

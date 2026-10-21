@@ -33,6 +33,16 @@ spec:
   # audience is `organization` (AP-18).
   visibility: project
   lifecycle: published
+  # Every member of the project reads the table; only a steward writes the note (T-5091: the
+  # write sat on the caller role, so the project's viewers could type notes too).
+  roles:
+    - name: steward
+      title: { sk: Správca, en: Steward }
+      description: Also writes the steward's note on a record.
+  access:
+    - role: steward
+      subjects:
+        - group: bbsk-zaznamy-steward
   embeddable: true
   dataNeeds:
     # One space, one type, and one write on one attribute — which is what puts this publication
@@ -52,3 +62,4 @@ spec:
       attrs: [stewardNote]
       operations: [updateAttrs]
       representations: [ngsi-ld]
+      roles: [steward]

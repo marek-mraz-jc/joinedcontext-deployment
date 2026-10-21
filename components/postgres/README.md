@@ -91,18 +91,32 @@ deleting the damaged cluster, watching the replay — is Runbook 6 in the operat
 ## Restore drill
 
 A CronJob (`postgres-cluster-dr-drill`, 04:00 UTC on the 1st, `postgres.databases.drDrill`)
-proves the archive restores (OPS-11, OPS-12, T-0046):
+proves the archive restores, to its end and to a point in time (OPS-11, OPS-12, T-0046,
+T-5101):
 
 1. It waits while the node has less than `minMemAvailableMiB` available, at most
    `timeoutMinutes`, and otherwise records `skipped`.
-2. It restores the latest base backup and WAL into the throwaway Cluster
-   `postgres-cluster-drill` beside the source (one instance, 1 GiB memory limit).
-3. It counts every database's rows on the source's primary and on the copy through
-   `kubectl exec`; a copy short by more than `tolerancePercent`, or missing a database, fails.
-4. It records RTO (the restore's time to Ready) and RPO (now minus the last replayed
-   transaction), as one JSON line (`"event":"dr-drill"`) in its log and in the ConfigMap
-   `postgres-cluster-dr-drill` (`result`, `rtoSeconds`, `rpoSeconds`, `at`, `detail`).
-5. It deletes the copy however the drill ends; a copy a crashed drill left is deleted first.
+2. It counts every table of every database on the source's primary, notes the instant after
+   the last count and switches the WAL segment, so that instant reaches the archive at once.
+3. It restores the latest base backup and WAL into the throwaway Cluster
+   `postgres-cluster-drill` beside the source (one instance, 1 GiB memory limit), and compares
+   each database's total rows with the source's: a copy short by more than `tolerancePercent`,
+   or missing a database, fails. The copy must also hold an enabled person in an enabled realm
+   (`keycloak`) and the Portal's schema at the source's last migration (`portal`,
+   `_sqlx_migrations`).
+4. It deletes that copy and restores again under the same name, this time to the instant of
+   step 2 (`recoveryTarget.targetTime`): the point-in-time restore. Every table must hold the
+   count step 2 read, within `tolerancePercent` and at least one row (a commit between a
+   table's count and the instant lands in the copy).
+5. It records RTO (each restore's time to Ready) and RPO (now minus the last transaction the
+   latest restore replayed), as one JSON line (`"event":"dr-drill"`) in its log and in the
+   ConfigMap `postgres-cluster-dr-drill` (`result`, `rtoSeconds`, `rpoSeconds`, `detail` for
+   the latest restore; `pitrTarget`, `pitrRtoSeconds`, `pitrDetail` for the point in time;
+   `at`).
+6. It deletes the copy however the drill ends; a copy a crashed drill left is deleted first.
+
+The restores run one after the other, so the node never holds two copies. smartcity (prod)
+renders the same CronJob: it drills the day `postgres.cluster.backups` is on there (T-5101).
 
 Without `backups.enabled` there is no archive, and the drill records `no-backup` ("no off-site
 backup to drill") and creates nothing. Run it by hand with
