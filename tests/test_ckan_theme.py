@@ -1464,10 +1464,10 @@ def test_the_connector_privacy_terms_and_support_pages_read_in_slovak_and_englis
     branding.write_text(json.dumps({"domain": "dev.example", "contactEmail": "hello@dev.example"}))
     theme.BRANDING = theme._load()
     theme.page.lang = lang
-    for name in ("connector", "privacy", "terms", "support"):
+    for name in ("connector", "privacy", "terms", "support", "accessibility"):
         page = theme.jc_page(name)
         assert page["title"] == theme.PAGES[name][lang]["title"] and page["sections"], name
-        assert page["email"] == "hello@dev.example" and page["pages"] == ["connector", "privacy", "terms", "support"]
+        assert page["email"] == "hello@dev.example" and page["pages"] == ["connector", "privacy", "terms", "support", "accessibility"]
         text = " ".join(p for s in page["sections"] for p in s["paragraphs"])
         assert "{" not in text and not re.search(r"(?i)bearer|token|api[_-]?key|password", text), name
     assert "https://api.dev.example/api/mcp" in " ".join(theme.jc_page("connector")["sections"][0]["paragraphs"])
@@ -1500,7 +1500,7 @@ def test_the_four_pages_are_routes_of_one_template_and_every_page_links_them(the
     monkeypatch.setitem(sys.modules, "flask", types.SimpleNamespace(Blueprint=Blueprint))
     theme.toolkit.render = lambda template, extra: (template, extra)
     blueprint = theme.JcThemePlugin().get_blueprint()
-    assert blueprint.name == "jc_pages" and sorted(rules) == ["/assistants", "/assistants/<id>", "/connector", "/map/<id>", "/map/<id>/<resource_id>", "/privacy", "/support", "/terms"]
+    assert blueprint.name == "jc_pages" and sorted(rules) == ["/accessibility", "/assistants", "/assistants/<id>", "/connector", "/map/<id>", "/map/<id>/<resource_id>", "/privacy", "/support", "/terms"]
     assert rules["/assistants"][0] == "assistants" and rules["/assistants"][1]() == ("jc/assistants.html", {})
     assert rules["/assistants/<id>"] == ("guide", theme.jc_guide_page)
     endpoint, view = rules["/privacy"]
@@ -1508,7 +1508,7 @@ def test_the_four_pages_are_routes_of_one_template_and_every_page_links_them(the
     template = (THEME / "templates__jc__page.html").read_text()
     assert "h.jc_page(jc_name)" in template and 'snippet "snippets/jc_mcp_install.html"' in template
     footer = (THEME / "footer.html").read_text()
-    assert "('connector', 'privacy', 'terms', 'support')" in footer and "h.url_for('jc_pages.' ~ name)" in footer
+    assert "('connector', 'privacy', 'terms', 'support', 'accessibility')" in footer and "h.url_for('jc_pages.' ~ name)" in footer
 
 # T-4333: a resource page reads what an Endpoint's address is from its path, says it in the page's
 # language, shows an API's live rows and how to use it, and offers a file its one Download.
@@ -2818,3 +2818,23 @@ def test_an_endpoint_s_dataset_page_opens_the_explorer_and_asks_no_datastore():
     assert "h.jc_explorer(pkg, res)" in resource and "{% if not explorer and (resource_views" in resource
     assert "{% set preview = none if explorer else h.jc_preview(res) %}" in resource
     assert "jc-viz.js" in read and "jc-viz.js" in resource, "the frame's height comes from jc-viz.js"
+
+
+def test_the_publishers_picture_link_is_not_a_second_nameless_stop_for_a_keyboard():
+    """T-5108: axe link-name (serious) on every dataset page; the name link beside it carries the name."""
+    snippet = (THEME / "templates__package__snippets__jc_publisher.html").read_text()
+    image = re.search(r'<a [^>]*class="jc-publisher-image"[^>]*>', snippet).group(0)
+    assert 'tabindex="-1"' in image and 'aria-hidden="true"' in image
+    assert 'class="jc-publisher-name">{{ organization.title or organization.name }}</a>' in snippet
+
+
+def test_the_accessibility_statement_names_status_gaps_method_date_and_enforcement(theme):
+    """T-5108: the parts EU decision 2018/1523 asks of a statement, in Slovak and English."""
+    for lang in ("en", "sk"):
+        theme.page.lang = lang
+        page = theme.jc_page("accessibility")
+        text = " ".join(p for s in page["sections"] for p in s["paragraphs"])
+        assert "95/2019" in text and "78/2020" in text and "WCAG 2.1" in text and "2026" in text
+        assert len(page["sections"]) == 8 and len(page["sections"][3]["paragraphs"]) == 4
+    footer = (THEME / "footer.html").read_text()
+    assert "'accessibility')" in footer
