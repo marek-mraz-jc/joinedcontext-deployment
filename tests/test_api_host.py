@@ -171,3 +171,21 @@ def test_what_the_platform_hands_out_names_the_data_host(rendered):
     env = {e["name"]: e.get("value") for d in docs if d.get("kind") == "Deployment"
            for c in d["spec"]["template"]["spec"]["containers"] for e in c.get("env", [])}
     assert env["JC_ASSISTANT_ENDPOINT_URL"] == "https://api.dev.joinedcontext.com"
+
+
+@requires_helmfile
+def test_the_named_mcp_servers_answer_a_platform_page_post_and_no_other_origin(apisix_config):
+    # The Portal's /connect page posts `initialize` and `tools/list` from portal.{domain} (T-4949):
+    # the preflight passes for the platform's own hosts only, with the domain's dots escaped.
+    routes, plugins, _ = parsed_routes(apisix_config)
+    for route_id in ("api-mcp-named", "context-mcp-named"):
+        cors = routes[route_id]["plugins"]["cors"]
+        assert cors["allow_methods"] == "POST,OPTIONS", route_id
+        assert "Content-Type" in cors["allow_headers"].split(","), route_id
+        assert cors.get("allow_origins", "") != "*" and "allow_credential" not in cors, route_id
+        [pattern] = cors["allow_origins_by_regex"]
+        assert pattern == "^https://[^@/]+\\." + LOCAL_DOMAIN.replace(".", "[.]") + "$", route_id
+        assert routes[route_id]["vars"] == [NO_BEARER], route_id
+    # The hub, which takes a bearer, keeps the chain's GET-only CORS.
+    assert "cors" not in (routes["api-mcp-hub"].get("plugins") or {})
+    assert plugins["context-endpoint"]["cors"]["allow_methods"] == "GET,HEAD,OPTIONS"

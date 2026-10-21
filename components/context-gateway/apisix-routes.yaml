@@ -199,6 +199,17 @@ context-mcp-named:
       rejected_code: 429
       policy: local
       show_limit_quota_header: true
+    # An MCP call is a JSON POST, which the chain's GET-only CORS refuses at the preflight: the
+    # Portal's public /connect page asks the server for its tools from portal.{domain} (T-4949).
+    # The same origins as the chain, never `*`; the route takes no bearer, so nothing a cookie or
+    # token could carry is shared.
+    cors:
+      allow_origins_by_regex:
+        - '^https://[^@/]+\.${DOMAIN_RE}$'
+      allow_methods: 'POST,OPTIONS'
+      allow_headers: 'Content-Type,Accept,Mcp-Protocol-Version,Mcp-Session-Id'
+      expose_headers: 'Mcp-Session-Id,Retry-After'
+      max_age: 600
   timeout:
     connect: 6
     send: 60
@@ -446,6 +457,17 @@ api-mcp-named:
       rejected_code: 429
       policy: local
       show_limit_quota_header: true
+    # An MCP call is a JSON POST, which the chain's GET-only CORS refuses at the preflight: the
+    # Portal's public /connect page asks the server for its tools from portal.{domain} (T-4949).
+    # The same origins as the chain, never `*`; the route takes no bearer, so nothing a cookie or
+    # token could carry is shared.
+    cors:
+      allow_origins_by_regex:
+        - '^https://[^@/]+\.${DOMAIN_RE}$'
+      allow_methods: 'POST,OPTIONS'
+      allow_headers: 'Content-Type,Accept,Mcp-Protocol-Version,Mcp-Session-Id'
+      expose_headers: 'Mcp-Session-Id,Retry-After'
+      max_age: 600
   timeout:
     connect: 6
     send: 60
