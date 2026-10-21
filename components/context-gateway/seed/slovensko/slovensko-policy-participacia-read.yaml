@@ -4,12 +4,23 @@ kind: Policy
 metadata:
   name: participacia-read
   namespace: slovensko
-  title: { sk: "Verejné čítanie: participácia občanov", en: "Public read: citizen participation" }
+  title: { sk: 'Verejné čítanie: participácia občanov', en: 'Public read: citizen participation' }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: slovensko-participacia }
   assigner: did:web:joinedcontext.com
   assignee: { kind: role, id: public }
-  operations: [retrieveOps, retrieveEntityTypes, retrieveEntityTypeDetails, retrieveEntityTypeInfo, retrieveAttrTypes, retrieveAttrTypeDetails, retrieveAttrTypeInfo, createSubscription, retrieveSubscription, updateSubscription, deleteSubscription]
+  operations:
+    - retrieveOps
+    - retrieveEntityTypes
+    - retrieveEntityTypeDetails
+    - retrieveEntityTypeInfo
+    - retrieveAttrTypes
+    - retrieveAttrTypeDetails
+    - retrieveAttrTypeInfo
+    - createSubscription
+    - retrieveSubscription
+    - updateSubscription
+    - deleteSubscription
   information:
     - entities:
         - type: ParticipatoryProcess

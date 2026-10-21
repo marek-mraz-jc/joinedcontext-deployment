@@ -3,7 +3,7 @@ kind: DataModel
 metadata:
   name: slovensko-participacia
   namespace: slovensko
-  title: { sk: "Participácia občanov", en: "Citizen participation" }
+  title: { sk: Participácia občanov, en: Citizen participation }
 spec:
   contextSpaceRef: slovensko-participacia
   linkml: ./slovensko-participacia.linkml.yaml

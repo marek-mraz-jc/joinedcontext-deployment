@@ -6,7 +6,7 @@ kind: ContextSpace
 metadata:
   name: slovensko-participacia
   namespace: slovensko
-  title: { sk: "Participácia občanov na Slovensku", en: "Citizen participation in Slovakia" }
+  title: { sk: Participácia občanov na Slovensku, en: Citizen participation in Slovakia }
   description:
     sk: >-
       Participatívne procesy, návrhy občanov, projekty participatívneho rozpočtu, výsledky, stretnutia, diskusie
@@ -29,16 +29,16 @@ spec:
   # the space through the rolling expiresAt its pipeline writes when no run has seen it for three days.
   retention:
     - entityType: ParticipatoryProcess
-      history: "off"
+      history: 'off'
     - entityType: Proposal
-      history: "off"
+      history: 'off'
     - entityType: BudgetProject
-      history: "off"
+      history: 'off'
     - entityType: Result
-      history: "off"
+      history: 'off'
     - entityType: Meeting
-      history: "off"
+      history: 'off'
     - entityType: Debate
-      history: "off"
+      history: 'off'
     - entityType: Survey
-      history: "off"
+      history: 'off'
