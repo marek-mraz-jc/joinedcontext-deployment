@@ -42,6 +42,14 @@ serviceMonitors:
     path: /q/metrics
   {{- end }}
   {{- end }}
+  {{- if has "probes" $components }}
+  # The synthetic probes' results (T-5103): jc_probe_up per target, Endpoint and surface.
+  - name: probe
+    namespace: {{ index $root "probes" "probe" "namespace" }}
+    selector:
+      app.kubernetes.io/name: probes-probe
+    port: metrics
+  {{- end }}
   {{- if has "portal" $components }}
   - name: portal
     namespace: {{ index $root "portal" "portal" "namespace" }}
@@ -103,6 +111,26 @@ alertGroups:
           severity: warning
         annotations:
           summary: 'APISIX edge 5xx error rate exceeded 1%'
+  {{- end }}
+  {{- if has "probes" $components }}
+  # T-5103: what a visitor sees through the public hosts. A surface failing everywhere is red in
+  # the probe's first minute, so `for: 1m` turns it red within two.
+  - name: synthetic-probes
+    rules:
+      - alert: ProbeSurfaceDown
+        expr: jc_probe_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: '{{`{{ $labels.surface }}`}} of {{`{{ $labels.endpoint }}`}} on {{`{{ $labels.target }}`}} fails its synthetic probe (GET /results.json on the probe pod names the reason)'
+      - alert: ProbeStalled
+        expr: time() - jc_probe_round_timestamp_seconds > 180
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'The synthetic probe of {{`{{ $labels.target }}`}} finished no round for three minutes'
   {{- end }}
   {{- if has "context-gateway" $components }}
   # T-4873, API/07 §3: the WebSocket limits at work. Each fires on a client held to its share,
