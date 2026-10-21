@@ -116,8 +116,31 @@ environment; every change passes validation before any apply, and CI fails when 
   `just upgrade`); validation chain R3, R6, R8, R9 closes the remaining steps (T-4954, T-4956);
   a reviewed diff before apply is R10 plus `upgrade.py`'s diff step (T-4955 makes prod apply a tag).
 
+## 6. How R1, R3 and R4 hold (T-4954)
+
+- R1, R2: `scripts/ci/check-chart-pins.py` reads `helmfile list --output json` of every
+  environment, the BBSK demo and `.ci/kyverno` in ci.yml and fails on a remote chart without one
+  exact `X.Y.Z` version; `--no-lock .` fails on any `helmfile.lock`. `check-image-digests.py`
+  keeps failing on a tag-only image. `tests/test_pins.py` plants both.
+- R3: [tools.env](../../tools.env) holds every tool version and the sha256 of every download;
+  `.github/actions/tools` loads it and installs helmfile, helm and helm-diff at those versions.
+  kubeconform now validates against the cluster's Kubernetes version (1.33.7) instead of the
+  schema repository's `master`.
+- R4: `renovate.json` targets `main` with `minimumReleaseAge: 7 days` and four managers this
+  repository has: the regex managers (charts.yaml, images.yaml with tag + digest, tools.env),
+  `helmfile`, `dockerfile`, `github-actions`. Minor, patch and digest bumps come grouped per
+  kind (helm charts, container images, github actions, ci tools); a major is its own PR. Our own
+  `ghcr.io/marek-mraz-jc` images stay with `pin-images.yml`. ci.yml's `renovate` job runs
+  `renovate-config-validator --strict` at the pinned Renovate version.
+- Decided (worker-t4954, owner may override): no `helm-values` manager, because no values file
+  in this repository names an image (each local chart's `image:` is empty and filled from
+  `components/*/images.yaml`); an enabled manager with nothing to read is noise. A tools.env
+  bump PR leaves the checksum stale and fails CI until a reviewer pins the new sha256, because
+  Renovate cannot compute a release asset's checksum; options were the release's own checksum
+  file (rejected: it trusts the same release it checks) or no checksum (rejected: R3).
+
 ## Related
 
 - joinedcontext-docs `Deployment/06-updating.md` (the update procedure)
 - [scripts/upgrade.py](../../scripts/upgrade.py), [scripts/validate-dev.py](../../scripts/validate-dev.py)
-- [renovate.json](../../renovate.json), [.github/workflows/ci.yml](../../.github/workflows/ci.yml)
+- [renovate.json](../../renovate.json), [.github/workflows/ci.yml](../../.github/workflows/ci.yml), [tools.env](../../tools.env)
