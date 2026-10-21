@@ -16,7 +16,7 @@ spec:
     dataSourceRef:
       kind: DataSource
       name: podujatia-rimavskasobota
-  targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-podujatia:bbsk-podujatia-slovensko
+  targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-podujatia:bbsk-podujatia-zapis
   output:
     type: Event
     mode: upsert

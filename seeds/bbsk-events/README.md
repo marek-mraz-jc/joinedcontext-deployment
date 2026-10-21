@@ -98,6 +98,11 @@ python3 seeds/bbsk-events/check-sources.py --all    # skip rows too
 `index.yaml`. Change a template, `sources.csv` or `venues.csv`, then run `python3 seeds/bbsk-events/generate.py`;
 `tests/test_bbsk_events_pipelines.py` fails while the seed differs from what the script writes.
 
+Every Pipeline writes through `bbsk-podujatia-zapis` (T-5033): audience `organization`, no `policyRef`, so the gateway
+binds each pipeline's derived write Policy (`pl-<pipeline>`, PL-20) there. The public Endpoints `bbsk-podujatia` and
+`bbsk-podujatia-slovensko` name a read `policyRef` and serve no write; a pipeline aimed at one gets 404 on every upsert.
+`tests/test_pipeline_write_path.py` holds every seeded Pipeline to that rule.
+
 | Template (`pipelines/`) | Feed kind | Sources | Where the date and the place come from |
 |---|---|---|---|
 | `wp-rest-sc.yaml` | wp-rest-sc | Banská Bystrica | Meta Box fields, GPS included |

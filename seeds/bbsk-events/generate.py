@@ -25,7 +25,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 SEED = ROOT / "components/context-gateway/seed/bbsk"
 INDEX = SEED / "index.yaml"
-TARGET = "urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-podujatia:bbsk-podujatia-slovensko"
+TARGET = "urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-podujatia:bbsk-podujatia-zapis"
 UA = "joinedcontext-platform/1.0 (+https://dev.joinedcontext.com; public events)"
 REGION = "Banskobystrický kraj"
 #: The inventories, each with the region code of its rows' scope /SK/{code}/{town}.

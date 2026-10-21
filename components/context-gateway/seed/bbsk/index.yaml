@@ -429,6 +429,7 @@ bbsk-podujatia.v1.example.jsonld: projects/bbsk/spaces/bbsk-podujatia/datamodels
 bbsk-podujatia.v1.md: projects/bbsk/spaces/bbsk-podujatia/datamodels/bbsk-podujatia.v1.md
 bbsk-endpoint-podujatia.yaml: projects/bbsk/spaces/bbsk-podujatia/endpoints/bbsk-podujatia.yaml
 bbsk-endpoint-podujatia-slovensko.yaml: projects/bbsk/spaces/bbsk-podujatia/endpoints/bbsk-podujatia-slovensko.yaml
+bbsk-endpoint-podujatia-zapis.yaml: projects/bbsk/spaces/bbsk-podujatia/endpoints/bbsk-podujatia-zapis.yaml
 bbsk-policy-podujatia-pipelines-write.yaml: projects/bbsk/spaces/bbsk-podujatia/policies/podujatia-pipelines-write.yaml
 bbsk-policy-podujatia-read.yaml: projects/bbsk/spaces/bbsk-podujatia/policies/podujatia-read.yaml
 bbsk-policy-podujatia-kraj-read.yaml: projects/bbsk/spaces/bbsk-podujatia/policies/podujatia-kraj-read.yaml
