@@ -1,0 +1,4 @@
+---
+probes:
+  probe:
+    chart: ../../charts/workload

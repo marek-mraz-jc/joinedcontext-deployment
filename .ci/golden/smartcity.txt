@@ -38,6 +38,7 @@ apps/v1/Deployment smartcity/pipeline-runner
 apps/v1/Deployment smartcity/pipeline-tokens
 apps/v1/Deployment smartcity/portal
 apps/v1/Deployment smartcity/postgres-operator-cloudnative-pg
+apps/v1/Deployment smartcity/probe
 apps/v1/Deployment smartcity/viz-renderer
 apps/v1/Deployment smartcity/wasm-host-tokens
 apps/v1/StatefulSet smartcity/artifact-store
@@ -155,6 +156,7 @@ networking.k8s.io/v1/NetworkPolicy smartcity/default-deny-networkpolicies
 networking.k8s.io/v1/NetworkPolicy smartcity/default-deny-pipeline-runner
 networking.k8s.io/v1/NetworkPolicy smartcity/default-deny-portal
 networking.k8s.io/v1/NetworkPolicy smartcity/default-deny-postgres
+networking.k8s.io/v1/NetworkPolicy smartcity/default-deny-probes
 networking.k8s.io/v1/NetworkPolicy smartcity/default-deny-runtime-policies
 networking.k8s.io/v1/NetworkPolicy smartcity/default-deny-secrets
 networking.k8s.io/v1/NetworkPolicy smartcity/default-deny-viz
@@ -259,6 +261,8 @@ networking.k8s.io/v1/NetworkPolicy smartcity/postgres-linkerd-from-portal
 networking.k8s.io/v1/NetworkPolicy smartcity/postgres-operator-egress
 networking.k8s.io/v1/NetworkPolicy smartcity/postgres-operator-linkerd
 networking.k8s.io/v1/NetworkPolicy smartcity/postgres-operator-webhook
+networking.k8s.io/v1/NetworkPolicy smartcity/probe
+networking.k8s.io/v1/NetworkPolicy smartcity/probe-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy smartcity/role-setup-linkerd
 networking.k8s.io/v1/NetworkPolicy smartcity/runner-to-mqtt-brokers
 networking.k8s.io/v1/NetworkPolicy smartcity/runner-to-mqtt-brokers-linkerd
@@ -417,6 +421,7 @@ v1/ConfigMap smartcity/portal-branding
 v1/ConfigMap smartcity/postgres-cluster-dr-drill
 v1/ConfigMap smartcity/postgres-cluster-dr-drill-script
 v1/ConfigMap smartcity/postgres-cluster-monitoring-logical-replication
+v1/ConfigMap smartcity/probe
 v1/ConfigMap smartcity/viz-renderer
 v1/ConfigMap smartcity/viz-renderer-site
 v1/LimitRange smartcity-app-tests/app-tests
@@ -489,6 +494,7 @@ v1/Service smartcity/pipeline-runner
 v1/Service smartcity/pipeline-runner-pods
 v1/Service smartcity/pipeline-tokens
 v1/Service smartcity/portal
+v1/Service smartcity/probe
 v1/Service smartcity/viz-renderer
 v1/Service smartcity/wasm-host-tokens
 v1/ServiceAccount smartcity/agent-proxy
@@ -514,4 +520,5 @@ v1/ServiceAccount smartcity/portal
 v1/ServiceAccount smartcity/portal-reconciler
 v1/ServiceAccount smartcity/postgres-cluster-dr-drill
 v1/ServiceAccount smartcity/postgres-operator-cloudnative-pg
+v1/ServiceAccount smartcity/probe
 v1/ServiceAccount smartcity/wasm-host-tokens

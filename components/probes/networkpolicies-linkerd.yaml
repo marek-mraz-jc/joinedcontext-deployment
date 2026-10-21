@@ -1,0 +1,20 @@
+---
+# The probe's mesh proxy reaches the control plane for its identity and destination lookups;
+# its outbound calls to the public hosts leave on the egress of networkpolicies.yaml.
+probe-linkerd-control-plane:
+  podSelector:
+    app.kubernetes.io/name: probes-probe
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: linkerd
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 8086
+        - protocol: TCP
+          port: 8090
