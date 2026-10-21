@@ -7,10 +7,10 @@ kind: Endpoint
 metadata:
   name: bbsk-podujatia-zapis
   namespace: bbsk
-  title: { sk: 'Podujatia: zápis kanálov', en: 'Events: pipeline writes' }
+  title: { sk: "Podujatia: zápis kanálov", en: "Events: pipeline writes" }
   description:
-    sk: Interný vstup, cez ktorý zberné kanály zapisujú podujatia; čítajú sa cez verejné Endpointy bbsk-podujatia a bbsk-podujatia-slovensko.
-    en: The internal door the ingestion pipelines write the events through; people read them through the public Endpoints bbsk-podujatia and bbsk-podujatia-slovensko.
+    sk: "Interný vstup, cez ktorý zberné kanály zapisujú podujatia; čítajú sa cez verejný Endpoint bbsk-podujatia."
+    en: "The internal door the ingestion pipelines write the events through; people read them through the public Endpoint bbsk-podujatia."
 spec:
   contextSpaceRef: bbsk-podujatia
   slug: xfkyiscytdlbjkx4ija36etw3sreihhw

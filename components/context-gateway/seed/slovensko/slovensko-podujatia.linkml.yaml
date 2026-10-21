@@ -1,0 +1,288 @@
+id: https://joinedcontext.com/models/slovensko/slovensko-podujatia
+name: slovensko-podujatia
+title: Events in Slovakia
+description: >-
+  One public event as a town, a region or a cultural body announces it on its web site or feed:
+  what it is, when it starts and ends, and where, as a GPS point. The class is
+  schema.org's Event under the names Smart Data Models and schema.org use, so the space's
+  iCalendar surface (RFC 5545, EP-125) reads it as published: `id` the UID, `name` the SUMMARY,
+  `startDate` and `endDate` DTSTART and DTEND, `description`, `address`, `location` and `url`
+  DESCRIPTION, LOCATION, GEO and URL. An event without a name, a start or a point in Slovakia
+  is refused by the pipeline and never reaches the space (owner 2026-10-20). One event announced
+  by two sources is one entity: its id is
+  `urn:ngsi-ld:Event:slovensko-podujatia:` followed by the first 16 hex digits of the SHA-256 of
+  `lower(trim(name)) | startDate | lower(addressLocality)`, so the second source overwrites the
+  first rather than adding a copy.
+license: https://joinedcontext.com/licenses/cc-by-4.0
+prefixes:
+  linkml: https://w3id.org/linkml/
+  jc: https://joinedcontext.com/models/
+  sdm: https://smartdatamodels.org/
+  schema: https://schema.org/
+  ngsi-ld: https://uri.etsi.org/ngsi-ld/
+default_prefix: sdm
+default_range: string
+imports:
+  - linkml:types
+  - ngsi-ld-core
+
+slots:
+  name:
+    slot_uri: schema:name
+    description: The title of the event as the source writes it, in Slovak.
+    range: string
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Názov
+          cs: Název
+          en: Name
+          de: Name
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/name
+  description:
+    slot_uri: schema:description
+    description: What the source says about the event, as plain text without markup.
+    range: string
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Popis
+          cs: Popis
+          en: Description
+          de: Beschreibung
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/description
+  startDate:
+    slot_uri: schema:startDate
+    description: >-
+      When the event starts: an RFC 3339 instant with its offset (`2026-11-14T19:00:00+01:00`,
+      Europe/Bratislava as the source publishes it), or a date alone (`2026-11-14`) for an event
+      that lasts whole days.
+    range: string
+    pattern: ^[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}(:[0-9]{2}(\.[0-9]+)?)?(Z|[+-][0-9]{2}:[0-9]{2}))?$
+    examples:
+      - value: '2026-11-14T19:00:00+01:00'
+      - value: '2026-11-14'
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Začiatok
+          cs: Začátek
+          en: Start
+          de: Beginn
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/startDate
+  endDate:
+    slot_uri: schema:endDate
+    description: >-
+      When the event ends, written as `startDate`; for a whole-day event its last day,
+      inclusive. Absent when the source gives no end: the calendar then shows the start alone.
+    range: string
+    pattern: ^[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}(:[0-9]{2}(\.[0-9]+)?)?(Z|[+-][0-9]{2}:[0-9]{2}))?$
+    examples:
+      - value: '2026-11-14T22:00:00+01:00'
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Koniec
+          cs: Konec
+          en: End
+          de: Ende
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/endDate
+  venue:
+    slot_uri: jc:venue
+    description: The name of the place, as the source writes it (a hall, a square, a museum).
+    range: string
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Miesto konania
+          cs: Místo konání
+          en: Venue
+          de: Veranstaltungsort
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/location
+  address:
+    slot_uri: schema:address
+    description: >-
+      The postal address of the venue, field by field (Smart Data Models' common PostalAddress);
+      `addressLocality` is the town a calendar filters on. A field the source leaves out is absent,
+      never guessed.
+    range: PostalAddress
+    inlined: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Adresa
+          cs: Adresa
+          en: Address
+          de: Adresse
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models/blob/master/common-schema.json
+  streetAddress:
+    slot_uri: schema:streetAddress
+    description: The street and the house number.
+    annotations:
+      upstream_source: https://schema.org/streetAddress
+  postalCode:
+    slot_uri: schema:postalCode
+    description: The postal code.
+    annotations:
+      upstream_source: https://schema.org/postalCode
+  addressLocality:
+    slot_uri: schema:addressLocality
+    description: The town or the municipality, by its Slovak name with diacritics (`Banská Bystrica`).
+    annotations:
+      upstream_source: https://schema.org/addressLocality
+  addressRegion:
+    slot_uri: schema:addressRegion
+    description: The self-governing region, by its Slovak name (`Banskobystrický kraj`).
+    annotations:
+      upstream_source: https://schema.org/addressRegion
+  addressCountry:
+    slot_uri: schema:addressCountry
+    description: The country, as an ISO 3166-1 alpha-2 code.
+    annotations:
+      upstream_source: https://schema.org/addressCountry
+  eventCategory:
+    slot_uri: jc:eventCategory
+    description: The kind of event in the source's own words (`koncert`, `výstava`, `šport`).
+    range: string
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Kategória
+          cs: Kategorie
+          en: Category
+          de: Kategorie
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/eventType
+  url:
+    slot_uri: schema:url
+    description: The page of the event at its source, where a person reads more or buys a ticket.
+    range: uri
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Odkaz
+          cs: Odkaz
+          en: Link
+          de: Link
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/url
+  source:
+    slot_uri: sdm:source
+    description: The feed or the page the pipeline read the event from.
+    range: uri
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Zdroj
+          cs: Zdroj
+          en: Source
+          de: Quelle
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
+  sourceId:
+    slot_uri: jc:sourceId
+    description: The event's own identifier at its source, so a record can be traced back.
+    range: string
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Identifikátor v zdroji
+          cs: Identifikátor ve zdroji
+          en: Source id
+          de: Quell-ID
+      ngsi_ld_kind: Property
+  dataProvider:
+    slot_uri: sdm:dataProvider
+    description: Who announced the event (the town, the region, the cultural body), as the credit names it.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Poskytovateľ
+          cs: Poskytovatel
+          en: Provider
+          de: Anbieter
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
+  dateModified:
+    slot_uri: sdm:dateModified
+    description: When the source last changed the record.
+    range: datetime
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Zmenené
+          cs: Změněno
+          en: Modified
+          de: Geändert
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
+
+classes:
+  Event:
+    class_uri: schema:Event
+    description: >-
+      One public event: its name, its start and its place as a GPS point are required (owner
+      2026-10-20), the rest is kept where the source gives it.
+    is_a: Entity
+    annotations:
+      upstream_source: https://schema.org/Event
+    slots:
+      - name
+      - startDate
+      - endDate
+      - location
+      - venue
+      - address
+      - eventCategory
+      - description
+      - url
+      - dataProvider
+      - source
+      - sourceId
+      - dateModified
+    slot_usage:
+      name:
+        required: true
+        rank: 1
+        annotations: { summary: true }
+      startDate:
+        required: true
+        rank: 2
+        annotations: { summary: true }
+      endDate: { rank: 3 }
+      location:
+        required: true
+        description: >-
+          Where the event takes place, a GeoJSON Point in WGS 84 inside Slovakia (longitude 16.8
+          to 22.6, latitude 47.7 to 49.7), from the source or from the venue table checked by hand;
+          never a town's centre.
+        rank: 4
+      venue:
+        rank: 5
+        annotations: { summary: true }
+      address: { rank: 6 }
+      eventCategory:
+        rank: 7
+        annotations: { summary: true }
+  PostalAddress:
+    class_uri: schema:PostalAddress
+    description: The value of `address`, never an entity of its own.
+    slots: [streetAddress, postalCode, addressLocality, addressRegion, addressCountry]

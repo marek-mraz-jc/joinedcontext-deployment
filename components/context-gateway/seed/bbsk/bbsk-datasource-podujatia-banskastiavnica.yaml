@@ -11,7 +11,7 @@ metadata:
 spec:
   type: http
   http:
-    url: https://www.banskastiavnica.travel/wp-json/wp/v2/mec-events?per_page=100
+    url: https://www.banskastiavnica.travel/wp-json/wp/v2/mec-events?_fields=id,link,title,modified_gmt&per_page=50
     verb: GET
     headers:
       User-Agent: joinedcontext-platform/1.0 (+https://dev.joinedcontext.com; public events)

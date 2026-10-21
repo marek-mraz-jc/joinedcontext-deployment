@@ -30,13 +30,14 @@ GENERATED = {
         "*/*-od-*",
         "*/*-otvorene-data.linkml.yaml",
     ],
-    "scripts/open-data/datacube.py": ["slovensko/susr-*/*"],
+    # The DATAcube topics and the model files it copies into each of them byte for byte.
+    "scripts/open-data/datacube.py": ["slovensko/susr*/*"],
     "scripts/air-sk/generate.py": ["slovensko/slovensko-pipeline-ovzdusie-bento.yaml"],
     "seeds/bbsk-events/generate.py": [
-        "bbsk/bbsk-datasource-podujatia-*",
-        "bbsk/bbsk-pipeline-podujatia-*",
+        "*/*-datasource-podujatia-*",
+        "*/*-pipeline-podujatia-*",
         # A hand-written Endpoint whose `source:` list the generator writes between its markers.
-        "bbsk/bbsk-endpoint-podujatia*",
+        "*/*-endpoint-podujatia*",
     ],
 }
 
