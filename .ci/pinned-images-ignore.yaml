@@ -1135,3 +1135,15 @@
   reason: "1.22.0 is the newest Bento release (ghcr.io tags, 2026-10-11) and still carries these Go module and standard library findings: 5 fixable HIGH findings where 1.21.1 had 18 (trivy 0.70.0)."
   task: T-3870
   expires: 2026-11-10
+# ghcr.io/cloudnative-pg/postgis: certifi 2026.10.19 carries the fix and is two days old, inside the seven-day dependency cooldown (eligible 2026-10-26); the image is re-pinned once it carries it.
+- cve: GHSA-6q48-6c7w-9gw2
+  image: ghcr.io/cloudnative-pg/postgis
+  reason: "certifi 2026.10.19 carries the fix and is two days old, inside the seven-day dependency cooldown (eligible 2026-10-26); the image is re-pinned once it carries it."
+  task: T-5053
+  expires: 2026-11-04
+# ghcr.io/marek-mraz-jc/joinedcontext-ckan: certifi 2026.10.19 carries the fix and is two days old, inside the seven-day dependency cooldown (eligible 2026-10-26); the image is re-pinned once it carries it.
+- cve: GHSA-6q48-6c7w-9gw2
+  image: ghcr.io/marek-mraz-jc/joinedcontext-ckan
+  reason: "certifi 2026.10.19 carries the fix and is two days old, inside the seven-day dependency cooldown (eligible 2026-10-26); the image is re-pinned once it carries it."
+  task: T-5053
+  expires: 2026-11-04
