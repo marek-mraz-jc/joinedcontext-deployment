@@ -121,7 +121,8 @@ bbsk-app-mosty-group-viewer.yaml: users/groups/bbsk-mosty-viewer.yaml
 bbsk-app-zaznamy.yaml: projects/bbsk/apps/bbsk-zaznamy/app.yaml
 bbsk-app-zaznamy-endpoint.yaml: projects/bbsk/spaces/bbsk-kraj/endpoints/app-bbsk-zaznamy.yaml
 bbsk-app-zaznamy-policy.yaml: projects/bbsk/spaces/bbsk-kraj/policies/app-bbsk-zaznamy-1.yaml
-bbsk-app-zaznamy-policy-note.yaml: projects/bbsk/spaces/bbsk-kraj/policies/app-bbsk-zaznamy-2.yaml
+bbsk-app-zaznamy-policy-note.yaml: projects/bbsk/spaces/bbsk-kraj/policies/app-bbsk-zaznamy-2-steward.yaml
+bbsk-app-zaznamy-group-steward.yaml: users/groups/bbsk-zaznamy-steward.yaml
 # The region's website as a knowledge source (T-3067, user decision 2026-10-07).
 bbsk-knowledge-web.yaml: projects/bbsk/assistant/sources/web.yaml
 bbsk-knowledge-catalogue-ngsi.yaml: projects/bbsk/assistant/sources/catalogue.yaml
