@@ -32,7 +32,8 @@ RUN pip install --no-cache-dir --upgrade \
         'wheel>=0.46.2' \
         'jaraco.context>=6.1.0' \
         'setuptools>=78.1.1' \
-        'msgpack>=1.2.1'
+        'msgpack>=1.2.1' \
+        'certifi>=2026.10.19'
 
 # The table view showed only `_id`, `entity_id` and `type` (T-3047): every other DataStore column
 # of a published endpoint is named after its NGSI-LD path (`dataProvider.value`), and CKAN 2.11's
