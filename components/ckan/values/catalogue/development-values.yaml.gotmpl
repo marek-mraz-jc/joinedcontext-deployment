@@ -11,8 +11,8 @@ ckan:
   resources:
     requests:
       cpu: 200m
-      # T-4473: dev, kubectl top 2026-10-17 21:22-22:22Z: median 267, peak 273Mi.
-      memory: 352Mi
+      # T-5113: kubectl top 2026-10-21 21:55-22:25Z: p95 445Mi on dev, 403Mi on prod.
+      memory: 448Mi
     limits:
       cpu: '2'
       memory: 2Gi
@@ -25,7 +25,9 @@ solr:
   resources:
     requests:
       cpu: 100m
-      memory: 512Mi
+      # T-5113: kubectl top 2026-10-21 21:55-22:25Z: 593Mi on dev, 760Mi on prod (256m heap,
+      # the rest JVM metaspace, threads and Lucene's mapped segments).
+      memory: 768Mi
     limits:
       cpu: '1'
       memory: 1Gi
