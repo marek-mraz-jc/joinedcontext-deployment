@@ -134,6 +134,9 @@ LICENCE = {"cc-by": "CC BY 4.0", "cc-by-sa": "CC BY-SA 4.0"}
 # current state only (T-4275, DM-82). The space's owner changes either on its Retention tab.
 MEASURED = {"AirQualityObserved", "WeatherObserved", "WaterQualityObserved", "KeyPerformanceIndicator",
             "OffStreetParking", "ParkingArea", "BikeHireDockingStation"}
+# A measured type's history: every run re-reads the whole table and maps no observedAt, so a row is
+# kept when a value changes and once a week, never once per run (T-4844, DM-108, DM-109).
+RECORDED = {"history": "P30D", "record": "onChange", "heartbeat": "P7D"}
 # The source kinds whose rows are GeoJSON features: the columns sit under `properties`.
 FEATURES = {"esri-featureserver", "esri-layers", "zip-geojson"}
 # The kinds read from an ArcGIS query, whose geometry the server sends in WGS 84.
@@ -734,7 +737,7 @@ def project_files(project: str, entries: list[dict], names: dict[str, str]) -> d
         {**head, "kind": "ContextSpace", "metadata": {**meta(space, p["title"]), "description": p["about"]},
          "spec": {"urnSegment": space, "isSandbox": False, "dataModelRef": {"kind": "DataModel", "name": space},
                   "defaultLocale": "sk",
-                  "retention": [{"entityType": t, "history": "P30D" if t in MEASURED else "off"} for t in types]}
+                  "retention": [{"entityType": t, **RECORDED} if t in MEASURED else {"entityType": t, "history": "off"} for t in types]}
          | area_rule(p, entries)})
     files[f"{pre}datamodel.yaml"] = manifest(
         "The one model of the space (DM-61), generated with it.",

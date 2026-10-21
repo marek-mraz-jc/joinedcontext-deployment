@@ -20,3 +20,13 @@ spec:
   retention:
     - entityType: KeyPerformanceIndicator
       history: P30D
+      # Written on every run without an observedAt: one row per change and one a week,
+      # not one per run (T-4844, DM-108, DM-109; scripts/temporal-audit.py).
+      attributes:
+        calculationFormula: { record: onChange, heartbeat: P7D }
+        calculationPeriod: { record: onChange, heartbeat: P7D }
+        computedBy: { record: onChange, heartbeat: P7D }
+        currentValue: { record: onChange, heartbeat: P7D }
+        derivedFrom: { record: onChange, heartbeat: P7D }
+        name: { record: onChange, heartbeat: P7D }
+        updatedAt: { record: onChange, heartbeat: P7D }
