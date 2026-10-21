@@ -1,0 +1,49 @@
+# Reads each listed event's page, which carries the event as schema.org Event JSON-LD: one page of the
+# source's own host at a time, a second apart (T-4896, T-5047). LSVR leaves startDate empty on a recurring
+# event: that record has no start and the model refuses it into the run report.
+- branch:
+    # Only a page of the source's own host: the path is checked before the request and the host is fixed in
+    # the url below, so an item can never send the run to another host.
+    request_map: |
+      let path = this.url.or("").re_find_object("^__HOST_RE__/(?P<p>[A-Za-z0-9._~%/-]{1,300})$").p.or(null)
+      root = if $path == null || $path.contains("..") { deleted() } else { "" }
+      meta event_path = $path
+    processors:
+      - sleep:
+          duration: 1s
+      - http:
+          url: __HOST__/${! @event_path }
+          verb: GET
+          headers:
+            User-Agent: joinedcontext-platform/1.0 (+https://dev.joinedcontext.com; public events)
+            Accept: text/html
+          timeout: 20s
+          retries: 1
+    result_map: |
+      # schema.org writes a local time with or without its offset, LSVR with a space for the T: a time without an
+      # offset is Bratislava's.
+      map at {
+        let s = this.or("").string().trim().re_replace_all("([+-][0-9]{2})([0-9]{2})$", "$1:$2")
+        let v = if $s.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:") { $s.slice(0, 10) + "T" + $s.slice(11) } else { $s }
+        let local = $v.re_find_object("^(?P<t>[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2})(:[0-9]{2})?$").t.or(null)
+        root = if $v.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") || $v.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}(:[0-9]{2})?([.][0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})$") { $v } else if $local != null { $local + ":00" + ($local + ":00Z").ts_format("-07:00", "Europe/Bratislava") } else { null }
+      }
+      let blocks = content().string().re_find_all_object("<script[^>]*application/ld\\+json[^>]*>(?P<j>[\\s\\S]*?)</script>").map_each(m -> m.j.parse_json().catch(null)).filter(j -> j != null)
+      let nodes = $blocks.map_each(j -> if j.type() == "array" { j } else if j."@graph".or(null) != null { j."@graph" } else { [j] }).flatten()
+      let ld = $nodes.filter(n -> n.type() == "object" && n."@type".or("").string().re_match("Event")).index(0).catch(null)
+      let loc = $ld.location.or(null).(l -> if l != null && l.type() == "array" { l.index(0).catch(null) } else { l })
+      let adr = $loc.address.or(null)
+      let start = $ld.startDate.or(null).apply("at")
+      let end = $ld.endDate.or(null).apply("at")
+      root.start = $start
+      # A plugin writes the end equal to the start when the author gave none: that is no end.
+      root.end = if $end != $start { $end } else { null }
+      root.venue = $loc.name.or(null)
+      root.streetAddress = if $adr != null && $adr.type() == "string" { $adr } else { $adr.streetAddress.or(null) }
+      root.postalCode = if $adr != null && $adr.type() == "object" { $adr.postalCode.or(null) } else { null }
+      root.locality = if $adr != null && $adr.type() == "object" { $adr.addressLocality.or(null) } else { null }
+      root.lat = $loc.geo.latitude.or(null)
+      root.lon = $loc.geo.longitude.or(null)
+      root.description = $ld.description.or(null)
+- archive:
+    format: json_array

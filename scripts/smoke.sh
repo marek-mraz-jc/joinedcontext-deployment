@@ -1329,22 +1329,23 @@ else
 fi
 
 echo "events calendar"
-# T-4895: the region's and the country's events as a calendar a person subscribes to, read
+# T-4895, T-5047: the region's and the country's events as a calendar a person subscribes to, read
 # anonymously, and no write for anyone but the pipelines. The slugs are the seed's own files.
-events_seed="$(dirname "$0")/../components/context-gateway/seed/bbsk"
-for ev in podujatia podujatia-slovensko; do
-	ev_slug=$(sed -n 's/^ *slug: *//p' "$events_seed/bbsk-endpoint-$ev.yaml" 2>/dev/null | head -1)
+events_seed="$(dirname "$0")/../components/context-gateway/seed"
+for ev_file in bbsk/bbsk-endpoint-podujatia.yaml slovensko/slovensko-endpoint-podujatia.yaml; do
+	ev=$(sed -n 's/^  name: *//p' "$events_seed/$ev_file" 2>/dev/null | head -1)
+	ev_slug=$(sed -n 's/^ *slug: *//p' "$events_seed/$ev_file" 2>/dev/null | head -1)
 	if [ -z "$ev_slug" ]; then
-		skip "events calendar bbsk-$ev (no seed manifest beside this script)"
+		skip "events calendar $ev_file (no seed manifest beside this script)"
 		continue
 	fi
 	ics=$(curl -sS --max-time 30 "$api/api/endpoint/$ev_slug/ical/v1/events.ics" 2>/dev/null || true)
 	if [ "${ics:0:17}" = $'BEGIN:VCALENDAR\r\n' ] && [[ $ics == *$'END:VCALENDAR\r' ]]; then
-		ok "bbsk-$ev serves its events as an iCalendar feed"
+		ok "$ev serves its events as an iCalendar feed"
 	else
-		ko "bbsk-$ev serves no iCalendar feed at /ical/v1/events.ics: ${ics:0:120}"
+		ko "$ev serves no iCalendar feed at /ical/v1/events.ics: ${ics:0:120}"
 	fi
-	status 403 "bbsk-$ev refuses an anonymous write" -X POST -H 'Content-Type: application/json' \
+	status 403 "$ev refuses an anonymous write" -X POST -H 'Content-Type: application/json' \
 		-d '{"id":"urn:ngsi-ld:Event:smoke-anonymous-write","type":"Event","name":{"type":"Property","value":"x"}}' \
 		"$api/api/endpoint/$ev_slug/ngsi-ld/v1/entities"
 done

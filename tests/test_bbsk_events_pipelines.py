@@ -1,4 +1,5 @@
-"""The events pipelines of the Banská Bystrica Region, one per kept source (T-4896, PL-43).
+"""The events pipelines, one per kept source and store: the Banská Bystrica Region's (T-4896, PL-43) and the
+national store slovensko-podujatia (T-5047).
 
 Each template runs in Bento over a feed recorded from its publisher on 2026-10-20
 (fixtures/bbsk-events/), with the detail pages a template reads served from the recording and the
@@ -29,6 +30,7 @@ pytestmark = pytest.mark.xdist_group("docker-bbsk-events-pipelines")
 
 ROOT = Path(__file__).resolve().parent.parent
 SEED = ROOT / "components/context-gateway/seed/bbsk"
+NATIONAL = ROOT / "components/context-gateway/seed/slovensko"
 EVENTS = ROOT / "seeds/bbsk-events"
 FIXTURES = Path(__file__).resolve().parent / "fixtures/bbsk-events"
 BENTO = "ghcr.io/warpstreamlabs/bento:1.22.0@sha256:ef674bebae45793c982c350d8f37c2c7661133c1dc65a5517fb977b36dc09841"
@@ -51,10 +53,18 @@ import generate
 SCOPE = re.compile(r"(/[^\W\d_]\w*)+")
 
 
-def processors(name: str) -> list:
+def processors(name: str, ns: str = "bbsk") -> list:
     return yaml.safe_load(
-        (SEED / f"bbsk-pipeline-podujatia-{name}-bento.yaml").read_text()
+        (ROOT / "components/context-gateway/seed" / ns / f"{ns}-pipeline-podujatia-{name}-bento.yaml").read_text()
     )["pipeline"]["processors"]
+
+
+def template(kind: str, host: str, store: str = "slovensko", region: str = "BA", town: str = "Častá", path: str = "/") -> list:
+    """A kind's generated steps for a made-up row, so a template is tested apart from the inventory."""
+    row = {"feed_kind": kind, "host": f"https://{host}", "town": town, "town_slug": generate.slug(town),
+           "region": region, "events_url": f"https://{host}/", "check_url": f"https://{host}{path}", "licence_terms": "no licence stated",
+           "scope": generate.REGIONS[region][0], "region_name": generate.REGIONS[region][1]}
+    return generate.processors(row, next(s for s in generate.STORES if s["ns"] == store))
 
 
 def offline(steps: list, pages: dict) -> list:
@@ -74,7 +84,7 @@ def offline(steps: list, pages: dict) -> list:
             step["branch"]["processors"] = [
                 {
                     "mapping": (
-                        f'let p = {table}.filter(x -> x.path == "/akcia/" + @event_path || x.path == "/events/" + @event_path).index(0).catch(null)\n'
+                        f'let p = {table}.filter(x -> x.path == "/akcia/" + @event_path || x.path == "/events/" + @event_path || x.path == "/" + @event_path || x.path == @event_path).index(0).catch(null)\n'
                         'root = if $p == null { throw("no recorded page for %v".format(@event_path)) } else { $p.page }'
                     )
                 }
@@ -82,7 +92,8 @@ def offline(steps: list, pages: dict) -> list:
     return steps
 
 
-def run(steps: list, payload: str) -> list:
+def run(steps: list, payload: str, space: str = "bbsk-podujatia", refused: bool = False) -> list:
+    """The records the steps write; `refused` expects the run to fail with an error and write nothing."""
     with tempfile.TemporaryDirectory(dir="/tmp") as directory:
         work = Path(directory)
         work.chmod(0o777)
@@ -115,7 +126,7 @@ def run(steps: list, payload: str) -> list:
                 "-e",
                 "JC_ORG_DOMAIN=bbsk.sk",
                 "-e",
-                "JC_SPACE=bbsk-podujatia",
+                f"JC_SPACE={space}",
                 BENTO,
                 "-c",
                 "/w/cfg.yaml",
@@ -125,7 +136,11 @@ def run(steps: list, payload: str) -> list:
             timeout=240,
             check=False,
         )
-        assert "level=error" not in result.stderr, result.stderr[-2000:]
+        # A fixture records some of a feed's pages; the stub's refusal for the others is no error of the template.
+        log = "\n".join(line for line in (result.stdout + result.stderr).splitlines() if "no recorded page" not in line)
+        assert ("level=error" in log) == refused, log[-2000:]
+        if refused:
+            return []
         produced = work / "out.json"
         lines = produced.read_text().splitlines() if produced.is_file() else []
         entities = [e for line in lines if line.strip() for e in json.loads(line)]
@@ -183,44 +198,61 @@ def test_the_seed_is_what_the_templates_and_the_inventory_generate():
 def test_every_kept_source_with_a_template_has_its_pipeline_and_the_rest_are_named():
     rows = [
         r
-        for r in csv.DictReader((EVENTS / "sources.csv").open(encoding="utf-8"))
+        for f in generate.INVENTORIES
+        for r in csv.DictReader((EVENTS / f).open(encoding="utf-8"))
         if r["decision"] == "pipeline"
     ]
     built = {r["check_url"] for r in generate.kept_sources()}
     without = sorted({r["feed_kind"] for r in rows if r["check_url"] not in built})
-    # Sliač's RSS holds its date only in free text; T-4896 says which rows wait and why.
-    assert without == ["wp-rss"]
-    assert len(built) >= 15
+    # Free-text dates (wp-rss, joomla-rss, most wp-rest event pages) need one parser per site, and the runner
+    # reads https only (Betliar's iCal is http); T-5047 says which rows wait and why.
+    assert without == ["ical", "joomla-rss", "wp-rest", "wp-rss"]
     towns = {r["town"] for r in generate.kept_sources()} - {generate.REGION}
-    assert len(towns) >= 10
+    assert len(towns) >= 60
+
+
+def test_the_national_store_reads_at_least_100_sources_from_all_eight_regions():
+    rows = generate.store_rows(generate.STORES[1])
+    assert len(rows) >= 100
+    by_region = {code: sum(r["region"] == code for r in rows) for code in generate.REGIONS}
+    assert all(n >= 6 for n in by_region.values()), by_region
+    assert len(list(p for p in NATIONAL.glob("slovensko-pipeline-podujatia-*.yaml") if not p.name.endswith("-bento.yaml"))) == len(rows)
+
+
+def test_every_kept_source_names_its_licence_and_robots_reading():
+    for row in generate.kept_sources():
+        assert row["licence_terms"].strip(), row["name"]
+        assert row["robots_allows"].startswith("y"), row["name"]
+        assert row["read_on"] >= "2026-10-20", row["name"]
 
 
 def test_every_http_input_is_https_to_its_inventory_host_with_a_timeout():
     hosts = {
         generate.urlsplit(r["check_url"]).hostname for r in generate.kept_sources()
     }
-    for path in SEED.glob("bbsk-datasource-podujatia-*.yaml"):
+    for path in [*SEED.glob("bbsk-datasource-podujatia-*.yaml"), *NATIONAL.glob("slovensko-datasource-podujatia-*.yaml")]:
         http = yaml.safe_load(path.read_text())["spec"]["http"]
         assert (
             http["url"].startswith("https://")
             and generate.urlsplit(http["url"]).hostname in hosts
         ), path.name
         assert http["timeout"] == "30s" and "authorization" not in http, path.name
-    for path in SEED.glob("bbsk-pipeline-podujatia-*-bento.yaml"):
+    for path in [*SEED.glob("bbsk-pipeline-podujatia-*-bento.yaml"), *NATIONAL.glob("slovensko-pipeline-podujatia-*-bento.yaml")]:
         for step in yaml.safe_load(path.read_text())["pipeline"]["processors"]:
             if "branch" in step:
                 http = step["branch"]["processors"][1]["http"]
-                assert http["url"].split("${!")[0].count("/") >= 4, (
-                    path.name
-                )  # scheme, host and a fixed path
-                assert http["timeout"] == "20s" and step["branch"]["processors"][0] == {
-                    "sleep": {"duration": "1s"}
-                }
+                # The source's own host, fixed: the item's path is checked by the request_map before the request.
+                fixed = http["url"].split("${!")[0]
+                assert generate.urlsplit(fixed).hostname in hosts and fixed.count("/") >= 3, path.name
+                # One request a second, three where the CMS's robots.txt asks Crawl-Delay 3 (Lego).
+                assert http["timeout"] == "20s" and step["branch"]["processors"][0] in (
+                    {"sleep": {"duration": "1s"}}, {"sleep": {"duration": "3s"}}
+                )
 
 
 def test_each_source_runs_once_a_day_in_its_own_night_minute_into_the_events_space():
     minutes = []
-    for path in SEED.glob("bbsk-pipeline-podujatia-*[!o].yaml"):
+    for path in (p for p in SEED.glob("bbsk-pipeline-podujatia-*.yaml") if not p.name.endswith("-bento.yaml")):
         spec = yaml.safe_load(path.read_text())["spec"]
         assert spec["targetEndpoint"] == generate.TARGET and spec["output"] == {
             "type": "Event",
@@ -233,12 +265,32 @@ def test_each_source_runs_once_a_day_in_its_own_night_minute_into_the_events_spa
     assert len(set(minutes)) == len(minutes) and max(minutes) < 180
 
 
+def test_each_national_feed_runs_every_3_hours_and_each_village_calendar_daily_in_its_own_minute():
+    target = generate.STORES[1]["target"]
+    assert target == "urn:ngsi-ld:Endpoint:joinedcontext.com:slovensko-podujatia:slovensko-podujatia-zapis"
+    starts = {"3h": [], "24h": []}
+    for path in (p for p in NATIONAL.glob("slovensko-pipeline-podujatia-*.yaml") if not p.name.endswith("-bento.yaml")):
+        spec = yaml.safe_load(path.read_text())["spec"]
+        kind = yaml.safe_load(NATIONAL.joinpath(path.name.replace("-pipeline-", "-datasource-")).read_text())["metadata"]["title"]["en"]
+        daily = kind.endswith(("(lego-html)", "(weby-feed)"))
+        assert spec["targetEndpoint"] == target and spec["period"] == ("24h" if daily else "3h"), path.name
+        minute, hour, *rest = spec["schedule"].split()
+        assert rest == ["*", "*", "*"], path.name
+        if daily:
+            assert hour.isdigit(), path.name
+        else:
+            assert hour.endswith("-23/3"), path.name
+        starts[spec["period"]].append(int(hour.split("-")[0]) * 60 + int(minute))
+    assert len(set(starts["3h"])) == len(starts["3h"]) and max(starts["3h"]) < 180
+    assert len(set(starts["24h"])) == len(starts["24h"]) and max(starts["24h"]) < 1440
+
+
 # --- the templates in Bento ---------------------------------------------------------------------------------
 
 
 @requires_docker
 def test_bento_lints_every_generated_stream():
-    for path in sorted(SEED.glob("bbsk-pipeline-podujatia-*-bento.yaml")):
+    for path in sorted([*SEED.glob("bbsk-pipeline-podujatia-*-bento.yaml"), *NATIONAL.glob("slovensko-pipeline-podujatia-*-bento.yaml")]):
         cfg = {
             "input": {"stdin": {}},
             "pipeline": yaml.safe_load(path.read_text())["pipeline"],
@@ -429,14 +481,16 @@ def test_an_event_without_gps_name_or_start_is_refused_by_the_model():
 # --- the national space (T-4898) ----------------------------------------------------------------------------
 
 
-def test_every_source_writes_its_own_region_and_only_bbsk_sources_reach_the_regions_view():
-    """The BBSK Endpoint reads scopeQ /SK/BB/# of the national space: a source elsewhere must never
-    write under /SK/BB, and the scope comes from the inventory row, not from the feed."""
+def test_every_source_writes_its_own_region_and_only_bbsk_sources_reach_the_regions_store():
+    """A source elsewhere never writes under /SK/BB, and the scope comes from the inventory row, not from the
+    feed; the region's own store holds its own sources alone (T-5047)."""
     regions = {r["region"] for r in generate.kept_sources()}
-    assert "BBSK" in regions and len(regions) >= 5
+    assert regions == set(generate.REGIONS)
+    bbsk = {p.name for p in SEED.glob("bbsk-pipeline-podujatia-*-bento.yaml")}
+    assert bbsk == {f"bbsk-pipeline-{r['name']}-bento.yaml" for r in generate.kept_sources() if r["region"] == "BBSK"}
     for row in generate.kept_sources():
         code, name = generate.REGIONS[row["region"]]
-        text = (SEED / f"bbsk-pipeline-{row['name']}-bento.yaml").read_text()
+        text = (NATIONAL / f"slovensko-pipeline-{row['name']}-bento.yaml").read_text()
         assert (
             f'"scope": if $town != null {{ "/SK/{code}" + "/" + $town.replace_all("-", "_") }}'
             in text
@@ -467,7 +521,7 @@ def test_an_events_calendar_time_without_seconds_is_read():
     feed["events"][0].update(
         start_date="2026-11-03 19:00", end_date="2026-11-03 20:40:00"
     )
-    entities = run(offline(processors("visithumenne"), {}), json.dumps(feed))
+    entities = run(offline(processors("visithumenne", "slovensko"), {}), json.dumps(feed), "slovensko-podujatia")
     assert [e["startDate"]["value"] for e in entities] == ["2026-11-03T19:00:00+01:00"]
     assert entities[0]["endDate"]["value"] == "2026-11-03T20:40:00+01:00"
     assert entities[0]["scope"] == "/SK/PO/humenne"
@@ -479,7 +533,7 @@ def test_each_dataset_lists_its_sources_with_their_licence():
         return {s["url"]: s for s in spec["catalog"]["source"]}
 
     kept = generate.kept_sources()
-    national = listed("bbsk-endpoint-podujatia-slovensko.yaml")
+    national = {s["url"]: s for s in yaml.safe_load((NATIONAL / "slovensko-endpoint-podujatia.yaml").read_text())["spec"]["catalog"]["source"]}
     region = listed("bbsk-endpoint-podujatia.yaml")
     assert set(national) == {r["events_url"] for r in kept}
     assert set(region) == {r["events_url"] for r in kept if r["region"] == "BBSK"}
@@ -496,7 +550,8 @@ def test_a_source_outside_the_region_lands_in_its_own_region_at_its_venue():
     # Recorded 2026-10-21 (start_date=now): four events at Dom umenia, one with no venue.
     out = {
         e["sourceId"]["value"]: e
-        for e in pipeline("domumenia-piestany", "piestany-tribe.json")
+        for e in run(offline(processors("domumenia-piestany", "slovensko"), {}),
+                     (FIXTURES / "piestany-tribe.json").read_text(), "slovensko-podujatia")
     }
     assert len(out) == 5
     placed = [e for e in out.values() if "location" in e]
@@ -509,3 +564,103 @@ def test_a_source_outside_the_region_lands_in_its_own_region_at_its_venue():
         assert VALID.is_valid(key_values(e)), e["name"]
     (unplaced,) = [e for e in out.values() if "location" not in e]
     assert not VALID.is_valid(key_values(unplaced))
+
+
+# --- the national store's adapters (T-5047) -----------------------------------------------------------------
+
+
+def national(kind: str, host: str, payload: str, pages: str | None = None, refused: bool = False, path: str = "/") -> list:
+    recorded = json.loads((FIXTURES / "pages" / pages).read_text()) if pages else {}
+    return run(offline(template(kind, host, path=path), recorded), payload, "slovensko-podujatia", refused)
+
+
+@requires_docker
+def test_lsvr_events_take_their_dates_from_the_pages_json_ld_written_with_a_space():
+    # Recorded 2026-10-21 from casta.sk: LSVR writes "2026-12-31 23:59:00", Bratislava's wall time.
+    out = {e["name"]["value"]: e for e in national("lsvr-rest", "www.casta.sk", (FIXTURES / "casta-lsvr.json").read_text(), "lsvr.json")}
+    assert len(out) == 3
+    toast = out["Novoročný prípitok v obci"]
+    assert toast["startDate"]["value"] == "2026-12-31T23:59:00+01:00"
+    assert toast["endDate"]["value"] == "2027-01-01T03:00:00+01:00"
+    assert toast["id"].startswith("urn:ngsi-ld:Event:slovensko-podujatia:") and toast["scope"] == "/SK/BA/casta"
+    # Častá's venues are not in the table checked by hand: no point, so the model refuses them (owner 2026-10-20).
+    assert all("location" not in e for e in out.values())
+
+
+@requires_docker
+def test_a_national_event_leaves_a_day_after_its_end_or_8_hours_after_the_last_run_that_saw_it():
+    out = {e["name"]["value"]: e for e in national("lsvr-rest", "www.casta.sk", (FIXTURES / "casta-lsvr.json").read_text(), "lsvr.json")}
+    lease = datetime.fromtimestamp(NOW + 8 * 3600, UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    # Every event here ends later than the lease, so the lease decides: a source that drops it ends it in 8 h.
+    assert {e["expiresAt"] for e in out.values()} == {lease}
+    day = datetime.fromtimestamp(NOW, UTC)
+
+    def ended(hours_ago: int) -> list:
+        item = [{"id": 9, "link": "https://www.casta.sk/events/vcera/", "title": {"rendered": "Včera"}, "modified_gmt": None}]
+        at = lambda h: (day - timedelta(hours=h)).strftime("%Y-%m-%dT%H:%M:%S+00:00")
+        page = '<script type="application/ld+json">{"@type":"Event","startDate":"%s","endDate":"%s"}</script>' % (
+            at(hours_ago + 2), at(hours_ago))
+        return run(offline(template("lsvr-rest", "www.casta.sk"), {"/events/vcera/": page}), json.dumps(item), "slovensko-podujatia")
+
+    # An event that ended 20 hours ago stays until a day after its end, earlier than the lease; one that ended
+    # 25 hours ago is past its day and never loaded.
+    (yesterday,) = ended(20)
+    assert yesterday["expiresAt"] == (day + timedelta(hours=4)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    assert ended(25) == []
+
+
+@requires_docker
+def test_a_wordpress_list_that_is_no_list_fails_the_run_and_an_empty_one_writes_nothing():
+    national("lsvr-rest", "www.casta.sk", '{"code":"rest_no_route"}', refused=True)
+    assert national("lsvr-rest", "www.casta.sk", "[]") == []
+
+
+@requires_docker
+def test_an_item_off_the_sources_host_or_with_dot_segments_is_never_fetched():
+    items = [{"id": 1, "link": "https://www.casta.sk@attacker.example/events/x/", "title": {"rendered": "A"}},
+             {"id": 2, "link": "https://www.casta.sk/events/../../etc/", "title": {"rendered": "B"}}]
+    out = national("lsvr-rest", "www.casta.sk", json.dumps(items))
+    assert len(out) == 2 and all("startDate" not in e for e in out)
+
+
+@requires_docker
+def test_an_rss_feed_of_event_posts_reads_each_posts_json_ld():
+    rss = """<?xml version="1.0"?><rss version="2.0"><channel><title>Podujatia</title>
+<item><title>Novoročný prípitok v obci</title><link>https://www.casta.sk/events/novorocny-pripitok-v-obci-2/</link><guid>p-1</guid></item>
+</channel></rss>"""
+    (e,) = national("wp-rss-jsonld", "www.casta.sk", rss, "lsvr.json")
+    assert e["startDate"]["value"] == "2026-12-31T23:59:00+01:00" and e["sourceId"]["value"] == "p-1"
+    national("wp-rss-jsonld", "www.casta.sk", "<html>not a feed</html>", refused=True)
+
+
+@requires_docker
+def test_lego_events_read_each_pages_machine_readable_time_and_venue():
+    # Recorded 2026-10-21 from jaslovske-bohunice.sk (Lego CMS); the Christmas market page is that page with
+    # its title and time changed, so one event is past and one upcoming on the fixtures' day.
+    html = (FIXTURES / "jaslovske-bohunice-lego.html").read_text()
+    out = national("lego-html", "www.jaslovske-bohunice.sk", html, "lego.json", path="/zivot-v-obci/najblizsie-podujatia/")
+    # The off-host and the news link are never read; the seniors' afternoon of 18 October stays its day of grace.
+    by_name = {e["name"]["value"]: e for e in out}
+    assert set(by_name) == {"Vianočné trhy", "Posedenie dôchodcov"}
+    market = by_name["Vianočné trhy"]
+    assert market["name"]["value"] == "Vianočné trhy"
+    assert market["startDate"]["value"] == "2026-12-12T10:00:00+01:00"
+    assert market["endDate"]["value"] == "2026-12-12T18:00:00+01:00"
+    assert market["venue"]["value"] == "Športový areál ŠK Blava - športová hala č.2"
+    assert market["eventCategory"]["value"] == "ostatné (akcie pre seniorov)"
+    assert "description" not in market  # no licence stated: facts only
+    assert national("lego-html", "www.jaslovske-bohunice.sk", "<html><body>Žiadne podujatia</body></html>") == []
+
+
+@requires_docker
+def test_a_page_with_its_events_as_json_ld_gives_each_event_and_a_page_without_json_ld_fails():
+    page = """<html><script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage"},
+{"@type":"MusicEvent","name":"Lúčnica: Vianoce","startDate":"2026-12-20T19:00","url":"https://www.lucnica.sk/vianoce",
+ "location":{"@type":"Place","name":"Istropolis","address":{"@type":"PostalAddress","streetAddress":"Trnavské mýto 1",
+ "addressLocality":"Bratislava"},"geo":{"latitude":48.1601,"longitude":17.1290}}}]}</script>
+<script type="application/ld+json">not json</script></html>"""
+    (e,) = national("jsonld", "www.lucnica.sk", page)
+    assert e["startDate"]["value"] == "2026-12-20T19:00:00+01:00"
+    assert e["location"]["value"]["coordinates"] == [17.129, 48.1601]
+    assert e["address"]["value"]["streetAddress"] == "Trnavské mýto 1" and VALID.is_valid(key_values(e))
+    national("jsonld", "www.lucnica.sk", "<html><body>Warning: require_once()</body></html>", refused=True)

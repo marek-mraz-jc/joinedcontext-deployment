@@ -346,10 +346,10 @@ def sandbox(tmp_path: Path, spec: dict) -> dict:
     (scripts / "smoke.sh").write_text(SMOKE.read_text())
     (scripts / "smoke.sh").chmod(0o755)
     # The events calendars' Endpoints, whose slugs the smoke reads from the seed beside it (T-4895).
-    seed = tmp_path / "components/context-gateway/seed/bbsk"
-    seed.mkdir(parents=True, exist_ok=True)
-    for name in ("bbsk-endpoint-podujatia.yaml", "bbsk-endpoint-podujatia-slovensko.yaml"):
-        (seed / name).write_text((PROJECT_ROOT / "components/context-gateway/seed/bbsk" / name).read_text())
+    for name in ("bbsk/bbsk-endpoint-podujatia.yaml", "slovensko/slovensko-endpoint-podujatia.yaml"):
+        seed = tmp_path / "components/context-gateway/seed" / name
+        seed.parent.mkdir(parents=True, exist_ok=True)
+        seed.write_text((PROJECT_ROOT / "components/context-gateway/seed" / name).read_text())
     (scripts / "wait-rollouts.sh").write_text(ROLLOUTS_STUB)
     (scripts / "wait-rollouts.sh").chmod(0o755)
     (scripts / "smoke-ws.py").write_text(WS_STUB)
@@ -608,7 +608,7 @@ def test_full_platform_passes(tmp_path):
     assert "ok    agent proxy client mints tokens with audience context-gateway" in result.stdout
     assert "ok    helsinki-bikes does not serve events" in result.stdout
     assert "ok    bbsk-podujatia serves its events as an iCalendar feed" in result.stdout
-    assert "ok    bbsk-podujatia-slovensko refuses an anonymous write (403)" in result.stdout
+    assert "ok    slovensko-podujatia refuses an anonymous write (403)" in result.stdout
     assert "ok    the broker mounts the ical surface" in result.stdout
     assert "ok    helsinki-transport opens its WebSocket anonymously and subscribes to Vehicle (101 201)" in result.stdout
     assert "ok    city bike stations are flowing into the space" in result.stdout
