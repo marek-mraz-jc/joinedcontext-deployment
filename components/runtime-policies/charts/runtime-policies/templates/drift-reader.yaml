@@ -1,0 +1,36 @@
+{{- /*
+  The identity of the nightly drift check (T-4956, `just drift <env>`): `helmfile diff
+  --three-way-merge` reads Helm's release Secrets and the live objects, and nothing more.
+  Verbs get and list only, so the identity cannot create, change or delete anything. It holds
+  no long-lived token: `just drift` mints one with `kubectl create token --duration 30m`.
+*/}}
+{{- if .Values.driftReader.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jc-drift-reader
+  namespace: {{ .Release.Namespace }}
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: jc-drift-reader
+rules:
+  - apiGroups: ['*']
+    resources: ['*']
+    verbs: [get, list]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: jc-drift-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: jc-drift-reader
+subjects:
+  - kind: ServiceAccount
+    name: jc-drift-reader
+    namespace: {{ .Release.Namespace }}
+{{- end }}

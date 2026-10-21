@@ -18,10 +18,12 @@ env:
   CONFTEST_CHECKSUM: "96fc2fbf11f0afde51256647127e6f00a64ce839a4d9a0a1aef2426c0e6f4b3f"
   GITLEAKS_VERSION: "8.29.0"
   GITLEAKS_CHECKSUM: "39e07ad810336fd0ae80d0bd61c60d0521f628173e7583583b5df4a38738522c"
+  # kubeconform schemas of custom resources, pinned to one commit of datreeio/CRDs-catalog (2026-10-08).
+  CRDS_CATALOG: "https://raw.githubusercontent.com/datreeio/CRDs-catalog/63669a570e231d4f1f8396d229a1de512bcf0a34/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
 jobs:
   render:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25  # nine environments since T-4956, about 30 s each
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: helmfile/helmfile-action@1f44bcb43e5fb17ecb2685d8b6081ec5f6aa5fcf # v2.4.7
@@ -38,29 +40,50 @@ jobs:
           echo "${GITLEAKS_CHECKSUM}  gitleaks.tar.gz" | sha256sum --check --status
           tar xzf gitleaks.tar.gz gitleaks
           rm -f conftest.tar.gz gitleaks.tar.gz
+      - name: helm lint every local chart
+        # T-4956: lint plus values.schema.json against the chart's defaults, with its
+        # ci/lint-values.yaml where the bare chart needs one; a chart vendored under another
+        # chart's charts/ is upstream's and left out.
+        run: |
+          set -eu
+          git ls-files '*Chart.yaml' | awk -F/ '{n=0; for (i=1;i<=NF;i++) if ($i=="charts") n++; if (n<=1) print}' \
+            | xargs -n1 dirname | while read -r chart; do
+                if [ -f "${chart}/ci/lint-values.yaml" ]; then helm lint --quiet "${chart}" -f "${chart}/ci/lint-values.yaml"
+                else helm lint --quiet "${chart}"; fi
+              done
       - run: just _dev-assemble
       - name: render and gate every environment
         # Per environment: helmfile template, kubeconform -strict, every container pinned by
         # digest (OPS-28, SEC-GAP-03), the four security properties Kyverno asserts at admission
         # (policies/workloads.rego: TS-18, TS-19, CC-12), no legacy name, no plaintext secret,
-        # generated secrets long enough.
+        # generated secrets long enough, and the objects of .ci/golden/<env>.txt (T-4956).
+        # Custom resources validate against the CRDs catalog pinned to one commit; only the CRD
+        # objects themselves have no schema there.
         run: |
           set -eu
           mkdir -p /tmp/scan
-          # minimal and broker-only: the two small component profiles (T-4856).
-          for env in local production dev addons minimal broker-only; do
+          golden_red=""
+          # minimal and broker-only: the two small component profiles (T-4856); dev and smartcity
+          # (production) the hosted clusters (T-4956). smoke-test needs a CI pipeline's env.
+          mapfile -t environments < .ci/golden/ENVIRONMENTS
+          for env in "${environments[@]}"; do
             echo "::group::${env}"
             helmfile -f deployment/helmfile.yaml -e "${env}" repos
             scripts/render.sh "${env}" "rendered-${env}.yaml"
-            ./kubeconform -strict -ignore-missing-schemas -summary "rendered-${env}.yaml"
+            ./kubeconform -strict -skip CustomResourceDefinition -schema-location default -schema-location "${CRDS_CATALOG}" -summary "rendered-${env}.yaml"
             python3 scripts/ci/check-image-digests.py "rendered-${env}.yaml"
             ./conftest test --all-namespaces -p policies "rendered-${env}.yaml"
             ! grep -i -E 'civitas' "rendered-${env}.yaml"
             python3 scripts/check-rendered-secrets.py "rendered-${env}.yaml" /tmp/scan/rendered.yaml
             ./gitleaks detect --no-git --source /tmp/scan --config .ci/gitleaks-rendered.toml --redact --exit-code 1
             python3 scripts/check-secrets.py "rendered-${env}.yaml"
+            python3 .ci/golden/list-objects.py "rendered-${env}.yaml" | diff -u ".ci/golden/${env}.txt" - || golden_red="${golden_red} ${env}"
             echo "::endgroup::"
           done
+          if [ -n "${golden_red}" ]; then
+            echo "::error::the rendered objects of${golden_red} changed. Review the diff above and run 'just golden-update'."
+            exit 1
+          fi
       - name: render and gate the BBSK demo
         # T-4687: demos/bbsk/ is its own helmfile outside the platform's environments, held to the
         # same gates: kubeconform, digest pins, the admission policies, no plaintext secret.
@@ -69,22 +92,18 @@ jobs:
           for env in dev smartcity; do
             echo "::group::demo-bbsk ${env}"
             helmfile -f demos/bbsk/helmfile.yaml.gotmpl -e "${env}" template --skip-deps > "rendered-demo-bbsk-${env}.yaml"
-            ./kubeconform -strict -ignore-missing-schemas -summary "rendered-demo-bbsk-${env}.yaml"
+            ./kubeconform -strict -skip CustomResourceDefinition -schema-location default -schema-location "${CRDS_CATALOG}" -summary "rendered-demo-bbsk-${env}.yaml"
             python3 scripts/ci/check-image-digests.py "rendered-demo-bbsk-${env}.yaml"
             ./conftest test --all-namespaces -p policies "rendered-demo-bbsk-${env}.yaml"
             python3 scripts/check-rendered-secrets.py "rendered-demo-bbsk-${env}.yaml" /tmp/scan/rendered.yaml
             ./gitleaks detect --no-git --source /tmp/scan --config .ci/gitleaks-rendered.toml --redact --exit-code 1
             python3 scripts/check-secrets.py "rendered-demo-bbsk-${env}.yaml"
+            python3 .ci/golden/list-objects.py "rendered-demo-bbsk-${env}.yaml" | diff -u ".ci/golden/demo-bbsk-${env}.txt" - || {
+              echo "::error::the rendered objects of demo-bbsk ${env} changed. Review the diff and run 'just golden-update'."
+              exit 1
+            }
             echo "::endgroup::"
           done
-      - name: rendered objects match the golden list
-        run: |
-          scripts/render.sh local golden-check.yaml --deployed >/dev/null
-          python3 .ci/golden/list-objects.py golden-check.yaml > golden-now.txt
-          diff -u .ci/golden/local.txt golden-now.txt || {
-            echo "::error::the rendered local environment changed. Review the diff and run 'just golden-update'."
-            exit 1
-          }
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: rendered

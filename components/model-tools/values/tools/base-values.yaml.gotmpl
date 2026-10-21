@@ -53,10 +53,9 @@ env:
   # read-only, so it gets the pod's tmp volume (nothing there outlives the pod).
   PYSTOW_HOME: /tmp/pystow
 
+# The image's own user (tools/model-tools/Dockerfile: `useradd --uid 10001`).
 podSecurityContext:
-  {{ .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}
-  # The image's own user (tools/model-tools/Dockerfile: `useradd --uid 10001`).
-  runAsUser: 10001
+  {{ merge (dict "runAsUser" 10001) .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}
 
 securityContext:
   {{ .Values.securityDefaults.securityContext | toYaml | nindent 2 }}

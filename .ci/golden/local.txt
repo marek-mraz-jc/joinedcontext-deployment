@@ -193,12 +193,14 @@ postgresql.cnpg.io/v1/Database local/antares
 postgresql.cnpg.io/v1/Database local/gitea
 postgresql.cnpg.io/v1/Database local/keycloak
 postgresql.cnpg.io/v1/Database local/portal
+rbac.authorization.k8s.io/v1/ClusterRole -/jc-drift-reader
 rbac.authorization.k8s.io/v1/ClusterRole -/local-portal-apps
 rbac.authorization.k8s.io/v1/ClusterRole -/local-portal-namespaces
 rbac.authorization.k8s.io/v1/ClusterRole -/postgres-operator-cloudnative-pg
 rbac.authorization.k8s.io/v1/ClusterRole -/postgres-operator-cloudnative-pg-edit
 rbac.authorization.k8s.io/v1/ClusterRole -/postgres-operator-cloudnative-pg-view
 rbac.authorization.k8s.io/v1/ClusterRole -/sandbox-reaper-reaper
+rbac.authorization.k8s.io/v1/ClusterRoleBinding -/jc-drift-reader
 rbac.authorization.k8s.io/v1/ClusterRoleBinding -/local-portal-namespaces
 rbac.authorization.k8s.io/v1/ClusterRoleBinding -/postgres-operator-cloudnative-pg
 rbac.authorization.k8s.io/v1/ClusterRoleBinding -/sandbox-reaper-reaper
@@ -345,6 +347,7 @@ v1/ServiceAccount local/gitea
 v1/ServiceAccount local/gitea-bootstrap
 v1/ServiceAccount local/gitea-bootstrap-lane-token
 v1/ServiceAccount local/gitea-runner
+v1/ServiceAccount local/jc-drift-reader
 v1/ServiceAccount local/keycloak-app-keycloakx
 v1/ServiceAccount local/observability-collector
 v1/ServiceAccount local/pipeline-runner

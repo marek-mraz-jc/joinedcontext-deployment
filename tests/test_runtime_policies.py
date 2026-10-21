@@ -30,7 +30,7 @@ def policies(tmp_path_factory):
     """The two operator policies as the chart renders them for an enforcing environment."""
     out = tmp_path_factory.mktemp("policies") / "policies.yaml"
     rendered = subprocess.run(
-        ["helm", "template", "runtime-policies", str(CHART),
+        ["helm", "template", "runtime-policies", str(CHART), "--set", "driftReader.enabled=false",
          "--set", "failureAction=Enforce", "--set", "linkerd.enabled=false",
          "--set", "cnpgOperatorNamespace=dev", "--namespace", "dev"],
         capture_output=True, text=True, check=True,
@@ -100,7 +100,7 @@ def pod_security(tmp_path_factory):
     environment's — exist only after the template has run."""
     out = tmp_path_factory.mktemp("pod-security") / "policies.yaml"
     rendered = subprocess.run(
-        ["helm", "template", "runtime-policies", str(CHART),
+        ["helm", "template", "runtime-policies", str(CHART), "--set", "driftReader.enabled=false",
          "--set", "failureAction=Enforce", "--set", "linkerd.enabled=false",
          "--set", "operators.enabled=false", "--set", "podSecurity.namespaces={dev}",
          "--namespace", "dev"],
@@ -133,7 +133,7 @@ def test_no_pod_security_policy_is_rendered_without_a_namespace_to_apply_it_to(t
     """A ClusterPolicy with no namespace scope matches every namespace, including the ones
     the cluster distribution owns. Rendering nothing is the safe answer."""
     rendered = subprocess.run(
-        ["helm", "template", "runtime-policies", str(CHART),
+        ["helm", "template", "runtime-policies", str(CHART), "--set", "driftReader.enabled=false",
          "--set", "failureAction=Enforce", "--set", "linkerd.enabled=false",
          "--set", "operators.enabled=false", "--namespace", "dev"],
         capture_output=True, text=True, check=True,
@@ -423,7 +423,7 @@ def test_a_staged_rule_reports_in_audit_whatever_the_environment_enforces(pod_se
 def test_a_rule_both_staged_and_promoted_fails_the_render():
     """A name in both lists would render twice with two actions; the render refuses it."""
     result = subprocess.run(
-        ["helm", "template", "runtime-policies", str(CHART),
+        ["helm", "template", "runtime-policies", str(CHART), "--set", "driftReader.enabled=false",
          "--set", "linkerd.enabled=false", "--set", "operators.enabled=false",
          "--set", "podSecurity.namespaces={dev}",
          "--set", "podSecurity.policies={require-image-checksum}", "--namespace", "dev"],
@@ -457,7 +457,7 @@ def production_tier(tmp_path_factory):
     """The chart with the production tier switched on, as the first labelled environment will."""
     out = tmp_path_factory.mktemp("production-tier") / "policies.yaml"
     out.write_text(subprocess.run(
-        ["helm", "template", "runtime-policies", str(CHART),
+        ["helm", "template", "runtime-policies", str(CHART), "--set", "driftReader.enabled=false",
          "--set", "failureAction=Enforce", "--set", "linkerd.enabled=false",
          "--set", "operators.enabled=false", "--set", "podSecurity.namespaces={dev}",
          "--set", "imageSignatures.productionTier.enabled=true", "--namespace", "dev"],

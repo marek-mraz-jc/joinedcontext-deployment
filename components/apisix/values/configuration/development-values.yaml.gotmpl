@@ -1,10 +1,4 @@
 ---
-# Development profile specific values for apisixConfiguration
-
-resources:
-  limits:
-    cpu: 100m
-    memory: 64Mi
-  requests:
-    cpu: 10m
-    memory: 16Mi
+# The configuration chart runs no pod, so the development profile sets nothing here (T-4956: the
+# resources that stood here were read by no template).
+{}

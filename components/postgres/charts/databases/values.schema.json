@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "values of databases (T-4956: an unknown key is a typo and fails the render)",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "cluster": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "roleJob": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "image": {
+          "type": "string"
+        }
+      }
+    },
+    "localBackup": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "schedule": {
+          "type": "string"
+        },
+        "keepDays": {
+          "type": "number"
+        },
+        "size": {
+          "type": "string"
+        }
+      }
+    },
+    "databases": {
+      "type": "object",
+      "description": "one entry per database: name, user, additionalRoles, extensions"
+    },
+    "statStatements": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "preloaded": {
+          "type": "boolean"
+        }
+      }
+    },
+    "global": {
+      "type": "object"
+    },
+    "drDrill": {
+      "type": "object"
+    },
+    "securityDefaults": {
+      "type": "object"
+    }
+  }
+}

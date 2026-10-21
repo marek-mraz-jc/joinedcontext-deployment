@@ -534,8 +534,7 @@ configMap:
 {{- end }}
 
 podSecurityContext:
-  {{ .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}
-  runAsUser: 1000
+  {{ merge (dict "runAsUser" 1000) .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}
 
 securityContext:
   {{ .Values.securityDefaults.securityContext | toYaml | nindent 2 }}
