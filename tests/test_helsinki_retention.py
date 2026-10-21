@@ -2,8 +2,9 @@
 
 The values are the owner's (DM-81, DM-86, ADR-N-046): a vehicle is gone five minutes after its
 last report and keeps an hour of track, never more (owner, T-4624); positions lie in what
-HSL's feeds cover, speeds up to 160 km/h (the Sm5 commuter trains), and no report is ahead of the clock. No other type
-of the seed loses its current state.
+HSL's feeds cover, speeds up to 160 km/h (the Sm5 commuter trains), and no report is ahead of the clock. Beside the
+vehicle only an Alert loses its current state, 30 days after its last write, as the net for a writer that sets no end
+(T-4843); no other type of the seed does.
 """
 
 import csv
@@ -48,7 +49,9 @@ def test_no_vehicle_of_any_space_keeps_more_than_an_hour_of_track():
 def test_no_other_type_loses_its_current_state():
     losing = [(name, rule["entityType"]) for name, space in spaces().items()
               for rule in space["spec"].get("retention", []) if "current" in rule]
-    assert losing == [("helsinki/helsinki", "Vehicle")]
+    assert sorted(losing) == [("helsinki/helsinki", "Alert"), ("helsinki/helsinki", "Vehicle")]
+    (alert,) = [rule for rule in helsinki()["retention"] if rule["entityType"] == "Alert"]
+    assert alert == {"entityType": "Alert", "current": "P30D", "history": "off"}
 
 
 def test_each_rule_reads_a_slot_of_its_class_and_names_itself_once():
