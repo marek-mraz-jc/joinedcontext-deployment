@@ -175,6 +175,12 @@ def test_the_pipelines_write_through_an_organization_endpoint_the_public_cannot_
     targets = {d["spec"]["targetEndpoint"] for _, d in manifests() if d["kind"] == "Pipeline"
                and d["metadata"]["name"].startswith("podujatia-")}
     assert targets == {f"urn:ngsi-ld:Endpoint:bbsk.sk:{SPACE}:{WRITE}"}
+    # jc-core pipeline_identity::derive grants pl-{pipeline} upsertBatch/createBatch/queryBatch of the
+    # output type in the target's space, deleteBatch only with spec.expiry: Event writes, no delete.
+    for _, d in manifests():
+        if d["kind"] == "Pipeline" and d["metadata"]["name"].startswith("podujatia-"):
+            assert d["spec"]["output"] == {"type": "Event", "mode": "upsert"}, d["metadata"]["name"]
+            assert "expiry" not in d["spec"] and "outputs" not in d["spec"], d["metadata"]["name"]
 
 
 def test_the_region_is_a_scope_view_of_the_national_space():

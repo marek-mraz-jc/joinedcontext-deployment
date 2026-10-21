@@ -10,12 +10,12 @@ metadata:
   description:
     sk: >-
       Nadchádzajúce verejné podujatia miest, obcí, krajov a kultúrnych inštitúcií s časom a miestom
-      konania (GPS). Každé podujatie má rozsah /SK/{kraj}/{obec}, napríklad /SK/BB/banska-bystrica,
+      konania (GPS). Každé podujatie má rozsah /SK/{kraj}/{obec}, napríklad /SK/BB/banska_bystrica,
       a zostáva v priestore do svojho konca. Zdroj: webové stránky a kanály, ktoré podujatie zverejnili.
     en: >-
       Upcoming public events of towns, municipalities, regions and cultural bodies with their time
       and place (GPS). Each event carries the scope /SK/{region}/{municipality}, for example
-      /SK/BB/banska-bystrica, and stays in the space until it ends. Source: the web sites and feeds
+      /SK/BB/banska_bystrica, and stays in the space until it ends. Source: the web sites and feeds
       that announced it.
 spec:
   # The space name is the segment its ids carry, pinned so it cannot drift (PF-84).

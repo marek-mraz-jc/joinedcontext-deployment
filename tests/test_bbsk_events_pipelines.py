@@ -13,6 +13,7 @@ import copy
 import csv
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -44,6 +45,10 @@ requires_docker = pytest.mark.skipif(
 
 sys.path.insert(0, str(EVENTS))
 import generate
+
+#: CIM 009 4.18: [/] ScopeLevel *(/ScopeLevel), ScopeLevel = unicodeLetter *(letter/digit/_). The broker
+#: refuses any other scope, and a refused upsert member answers 403 AccessDenied (T-5051).
+SCOPE = re.compile(r"(/[^\W\d_]\w*)+")
 
 
 def processors(name: str) -> list:
@@ -123,7 +128,10 @@ def run(steps: list, payload: str) -> list:
         assert "level=error" not in result.stderr, result.stderr[-2000:]
         produced = work / "out.json"
         lines = produced.read_text().splitlines() if produced.is_file() else []
-        return [e for line in lines if line.strip() for e in json.loads(line)]
+        entities = [e for line in lines if line.strip() for e in json.loads(line)]
+        for e in entities:
+            assert SCOPE.fullmatch(e["scope"]), e["scope"]
+        return entities
 
 
 def pipeline(name: str, fixture: str, pages: str | None = None) -> list:
@@ -251,7 +259,7 @@ def test_bento_lints_every_generated_stream():
 def test_banska_bystrica_wordpress_events_carry_their_own_gps():
     entities = pipeline("banskabystrica", "banskabystrica-wp-rest.json")
     assert entities and all(
-        e["type"] == "Event" and e["scope"] == "/SK/BB/banska-bystrica"
+        e["type"] == "Event" and e["scope"] == "/SK/BB/banska_bystrica"
         for e in entities
     )
     for e in entities:
@@ -429,11 +437,40 @@ def test_every_source_writes_its_own_region_and_only_bbsk_sources_reach_the_regi
     for row in generate.kept_sources():
         code, name = generate.REGIONS[row["region"]]
         text = (SEED / f"bbsk-pipeline-{row['name']}-bento.yaml").read_text()
-        assert f'"scope": if $town != null {{ "/SK/{code}" + "/" + $town }}' in text, (
-            row["name"]
-        )
+        assert (
+            f'"scope": if $town != null {{ "/SK/{code}" + "/" + $town.replace_all("-", "_") }}'
+            in text
+        ), row["name"]
         assert f'"addressRegion": "{name}"' in text, row["name"]
         assert ('"/SK/BB"' in text) == (row["region"] == "BBSK"), row["name"]
+
+
+def test_every_scope_a_pipeline_can_write_is_a_valid_ngsi_ld_scope():
+    """The town comes from the inventory row or the venue table, both slugs with hyphens; the
+    template writes them with "_", so the broker takes the scope (T-5051: six sources got 403)."""
+    towns = {r["town_slug"] for r in generate.kept_sources()} - {None}
+    with (EVENTS / "venues.csv").open(encoding="utf-8") as f:
+        towns |= {v["town"] for v in csv.DictReader(f)}
+    assert "banska-bystrica" in towns and "velky-krtis" in towns
+    for row in generate.kept_sources():
+        code, _ = generate.REGIONS[row["region"]]
+        assert SCOPE.fullmatch(f"/SK/{code}")
+    for town in towns:
+        assert SCOPE.fullmatch("/SK/BB/" + town.replace("-", "_")), town
+
+
+@requires_docker
+def test_an_events_calendar_time_without_seconds_is_read():
+    """visithumenne.sk writes "2026-11-03 19:00": before T-5051 the template failed on it and the
+    unchanged object reached the tail, which wants an array ("expected array value, got object")."""
+    feed = json.loads((FIXTURES / "visitbanskabystrica-tribe.json").read_text())
+    feed["events"][0].update(
+        start_date="2026-11-03 19:00", end_date="2026-11-03 20:40:00"
+    )
+    entities = run(offline(processors("visithumenne"), {}), json.dumps(feed))
+    assert [e["startDate"]["value"] for e in entities] == ["2026-11-03T19:00:00+01:00"]
+    assert entities[0]["endDate"]["value"] == "2026-11-03T20:40:00+01:00"
+    assert entities[0]["scope"] == "/SK/PO/humenne"
 
 
 def test_each_dataset_lists_its_sources_with_their_licence():
