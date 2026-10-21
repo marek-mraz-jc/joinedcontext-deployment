@@ -255,6 +255,14 @@ def test_the_assistant_alerts_read_the_portals_own_series(production):
     assert dead["labels"]["severity"] == "critical"
     low = rules["ModelKeyCreditLow"]
     assert "jc_model_key_remaining / jc_model_key_limit" in low["expr"] and low["expr"].endswith("< 0.2")
+    # T-4892: a snapshot pipeline whose orphans outlive its delete rule, or whose source lists
+    # records the space never took, tells somebody, per project and pipeline.
+    stuck = rules["PipelineOrphansStuck"]
+    assert stuck["expr"] == "max by (project, pipeline) (jc_pipeline_orphans) > 0"
+    assert stuck["for"] == "72h"
+    missing = rules["PipelineRecordsMissing"]
+    assert missing["expr"] == "max by (project, pipeline) (jc_pipeline_missing) > 10"
+    assert "{{ $labels.pipeline }}" in missing["annotations"]["summary"]
 
 
 def test_metrics_stay_inside_the_cluster(production):
