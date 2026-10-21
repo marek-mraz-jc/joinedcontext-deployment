@@ -54,13 +54,14 @@
       "streetAddress": this.streetAddress.apply("text").or($known.streetAddress.or(null)),
       "postalCode": this.postalCode.apply("text"),
       "addressLocality": $locality,
-      "addressRegion": "Banskobystrický kraj",
+      "addressRegion": __REGION__,
       "addressCountry": "SK"
     }.filter(kv -> kv.value != null && kv.value != "")
     root = {
       "id": "urn:ngsi-ld:Event:%s:%s".format(env("JC_SPACE"), $key.hash("sha256").encode("hex").slice(0, 16)),
       "type": "Event",
-      "scope": if $town != null { "/SK/BB/" + $town } else { "/SK/BB" },
+      # The scope comes from the inventory row's region and town, never from the feed (T-4898).
+      "scope": if $town != null { __SCOPE__ + "/" + $town } else { __SCOPE__ },
       "name": $name.apply("prop"),
       "startDate": this.start.apply("prop"),
       "endDate": this.end.apply("prop"),
