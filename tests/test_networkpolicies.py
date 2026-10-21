@@ -630,7 +630,9 @@ def test_prometheus_is_admitted_to_the_scraped_workloads_from_its_own_namespace_
             "matchLabels": {"kubernetes.io/metadata.name": "monitoring"}
         }, (name, peer)
     ports = {(name, tuple(p)) for name, _, _, p in found}
-    assert ("context-broker", (9090,)) in ports, ports
+    # T-5095: the broker's metrics port alone; 9090 is the API and its admin surface.
+    assert ("context-broker", (9464,)) in ports, ports
+    assert not [p for name, pods, _, p in found if (pods or "").startswith("context-broker") and 9090 in p], found
     assert ("context-gateway", (8080,)) in ports, ports
 
 

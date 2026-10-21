@@ -27,18 +27,18 @@ serviceMonitors:
     namespace: {{ index $root "context-broker" "broker" "namespace" }}
     selector:
       app.kubernetes.io/name: context-broker-broker
-    port: http
-    # Antares serves its Prometheus text under the `/q` surface beside /q/health and
-    # /q/ready, not at the root /metrics this template defaults to (T-0463). The recorder is
-    # armed by ANTARES_TELEMETRY in components/context-broker; without it this path answers
-    # 404 as well.
+    # Antares serves its Prometheus text at /q/metrics, not at the root /metrics this template
+    # defaults to (T-0463), and on its own port (ANTARES_METRICS_PORT, T-5095): the API port
+    # answers /q/metrics 404. The recorder is armed by ANTARES_TELEMETRY in
+    # components/context-broker; without it this path answers 404 as well.
+    port: metrics
     path: /q/metrics
   {{- range $b := $root.global.contextBrokers | default list }}
   - name: context-broker-{{ $b.name }}
     namespace: {{ index $root "context-broker" "broker" "namespace" }}
     selector:
       app.kubernetes.io/name: context-broker-{{ $b.name }}
-    port: http
+    port: metrics
     path: /q/metrics
   {{- end }}
   {{- end }}

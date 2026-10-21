@@ -177,7 +177,7 @@ def test_prometheus_scrapes_each_broker_where_monitoring_is_deployed(tmp_path_fa
     for name in ("broker", *OTHER):
         monitor = monitors["context-broker" if name == "broker" else f"context-broker-{name}"]
         assert monitor["selector"]["matchLabels"] == {"app.kubernetes.io/name": f"context-broker-{name}"}
-        assert [(e["port"], e["path"]) for e in monitor["endpoints"]] == [("http", "/q/metrics")]
+        assert [(e["port"], e["path"]) for e in monitor["endpoints"]] == [("metrics", "/q/metrics")]
 
 
 @pytest.mark.parametrize("brokers, reason", [
