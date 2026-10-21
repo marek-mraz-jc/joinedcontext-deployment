@@ -55,5 +55,7 @@
       root.end = if $to != null { $to } else if $time.or("").re_find_all("[0-9]{1,2}:[0-9]{2}").length() > 1 { { "date": $from, "time": $time, "n": 1 }.apply("at") } else { null }
       root.venue = { "page": $page, "cls": "place" }.apply("field")
       root.category = { "page": $page, "cls": "kat" }.apply("field")
+      # "Usporiadateľ: Mesto Lučenec, LUKUS": who runs the event (T-5081).
+      root.organizer = { "page": $page, "cls": "usp" }.apply("field").(o -> if o != null { { "name": o } } else { null })
 - archive:
     format: json_array

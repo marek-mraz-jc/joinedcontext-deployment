@@ -45,5 +45,7 @@
       root.lat = $loc.geo.latitude.or(null)
       root.lon = $loc.geo.longitude.or(null)
       root.description = $ld.description.or(null)
+      # schema.org organizer: an Organization or a Person, one or a list; its name and url only.
+      root.organizer = $ld.organizer.or(null).(o -> if o != null && o.type() == "array" { o.index(0).catch(null) } else { o }).(o -> if o != null && o.type() == "object" { { "name": o.name.or(null), "url": o.url.or(null) } } else { null })
 - archive:
     format: json_array

@@ -71,6 +71,7 @@ def event(**changes):
         "address": {"addressLocality": "Banská Bystrica", "addressRegion": "Banskobystrický kraj", "addressCountry": "SK"},
         "eventCategory": "trhy",
         "url": "https://www.banskabystrica.sk/podujatia/vianocne-trhy/",
+        "organizer": {"name": "Mesto Banská Bystrica", "url": "https://www.banskabystrica.sk"},
         "source": "https://www.banskabystrica.sk/wp-json/tribe/events/v1/events",
         "sourceId": "4711",
     }
@@ -100,17 +101,22 @@ def test_the_space_names_its_one_model_and_keeps_no_history():
 
 def test_the_event_class_fits_the_ical_surface_and_the_owners_required_fields():
     """EP-125 refuses `ical` on a model whose Event leaves name or startDate optional; the owner
-    adds the GPS point (2026-10-20). jcctl validate applies the first rule to the Endpoints."""
+    adds the GPS point (2026-10-20), the organizer and a link (2026-10-21, T-5081). jcctl validate
+    applies the first rule to the Endpoints."""
     cls = LINKML["classes"]["Event"]
     assert cls["class_uri"] == "schema:Event"
     required = {s for s, u in cls["slot_usage"].items() if u.get("required")}
-    assert required == ICAL_REQUIRED | {"location"}
+    assert required == ICAL_REQUIRED | {"location", "organizer", "url"}
     assert ICAL_SOURCES - {"location"} <= set(cls["slots"]) | {"location"}
-    assert set(SCHEMA["definitions"]["Event"]["required"]) == {"id", "type", "name", "startDate", "location"}
+    assert set(SCHEMA["definitions"]["Event"]["required"]) == {"id", "type", "name", "startDate", "location", "organizer", "url"}
+    # The organizer is a name and maybe a web site, nothing else: no person's e-mail or phone fits it.
+    organizer = SCHEMA["definitions"]["Organizer"]
+    assert (organizer["required"], set(organizer["properties"]), organizer["additionalProperties"]) == (["name"], {"name", "url"}, False)
     # schema.org names, the ones the surface reads (antares-ical mapping.rs).
     slots = LINKML["slots"]
     assert {slots[s]["slot_uri"] for s in ("name", "startDate", "endDate", "description", "url")} == {
         "schema:name", "schema:startDate", "schema:endDate", "schema:description", "schema:url"}
+    assert slots["organizer"]["slot_uri"] == "schema:organizer"
 
 
 @pytest.mark.parametrize("fixture", [
@@ -119,7 +125,7 @@ def test_the_event_class_fits_the_ical_surface_and_the_owners_required_fields():
     pytest.param(event(startDate="2026-07-24", endDate="2026-07-26"), id="multi-day"),
     pytest.param(event(startDate="2026-03-29T01:30:00+01:00", endDate="2026-03-29T03:30:00+02:00"), id="across the DST change"),
     pytest.param(event(endDate=None), id="missing end"),
-    pytest.param(event(endDate=None, venue=None, address=None, url=None, eventCategory=None), id="the three required alone"),
+    pytest.param(event(endDate=None, venue=None, address=None, eventCategory=None, organizer={"name": "Stredoslovenské múzeum"}), id="the required alone"),
 ])
 def test_an_event_the_calendar_serves_is_valid(fixture):
     assert list(VALID.iter_errors(fixture)) == []
@@ -130,12 +136,16 @@ def test_an_event_the_calendar_serves_is_valid(fixture):
     pytest.param(event(name=None), "'name' is a required property", id="no name"),
     pytest.param(event(startDate=None), "'startDate' is a required property", id="no start"),
     pytest.param(event(location=None), "'location' is a required property", id="no GPS"),
+    pytest.param(event(organizer=None), "'organizer' is a required property", id="no organizer"),
+    pytest.param(event(organizer={"url": "https://www.umb.sk"}), "'name' is a required property", id="an organizer without a name"),
+    pytest.param(event(organizer={"name": "Ján Novák", "email": "jan@example.sk"}), "Additional properties", id="an organizer with an e-mail"),
+    pytest.param(event(url=None), "'url' is a required property", id="no link"),
     pytest.param(event(startDate="5. 12. 2026"), "does not match", id="a start that is no date"),
     pytest.param(event(startDate="2026-12-05T10:00:00"), "does not match", id="a time without its offset"),
     pytest.param(event(startDate="2026-12-05T10:00"), "does not match", id="a time without offset or seconds"),
     pytest.param(event(location={"type": "Point"}), "'coordinates' is a required property", id="a point without coordinates"),
 ])
-def test_an_event_without_a_name_a_start_or_a_point_is_refused(fixture, why):
+def test_an_event_without_a_name_a_start_a_point_an_organizer_or_a_link_is_refused(fixture, why):
     errors = [e.message for e in VALID.iter_errors(fixture)]
     assert any(why in m for m in errors), errors
 

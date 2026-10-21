@@ -7,8 +7,9 @@ description: >-
   schema.org's Event under the names Smart Data Models and schema.org use, so the space's
   iCalendar surface (RFC 5545, EP-125) reads it as published: `id` the UID, `name` the SUMMARY,
   `startDate` and `endDate` DTSTART and DTEND, `description`, `address`, `location` and `url`
-  DESCRIPTION, LOCATION, GEO and URL. An event without a name, a start or a point in Slovakia
-  is refused by the pipeline and never reaches the space (owner 2026-10-20). One event announced
+  DESCRIPTION, LOCATION, GEO and URL, `organizer` ORGANIZER. An event without a name, a start, a
+  point in Slovakia, an organizer or a link is refused by the pipeline and never reaches the space
+  (owner 2026-10-20, 2026-10-21). One event announced
   by two sources is one entity: its id is
   `urn:ngsi-ld:Event:slovensko-podujatia:` followed by the first 16 hex digits of the SHA-256 of
   `lower(trim(name)) | startDate | lower(addressLocality)`, so the second source overwrites the
@@ -168,7 +169,9 @@ slots:
       upstream_source: https://schema.org/eventType
   url:
     slot_uri: schema:url
-    description: The page of the event at its source, where a person reads more or buys a ticket.
+    description: >-
+      An http(s) link a person opens: the page of the event at its source, where they read more or
+      buy a ticket, else the organizer's page that lists its events.
     range: uri
     annotations:
       label:
@@ -180,6 +183,24 @@ slots:
           de: Link
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/url
+  organizer:
+    slot_uri: schema:organizer
+    description: >-
+      Who runs the event: the museum, the school, the town or the named performer, never the feed or
+      the aggregator that announced it (that is `dataProvider`). Its name and its web site only, never
+      a person's e-mail or phone.
+    range: Organizer
+    inlined: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Organizátor
+          cs: Pořadatel
+          en: Organizer
+          de: Veranstalter
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/organizer
   source:
     slot_uri: sdm:source
     description: The feed or the page the pipeline read the event from.
@@ -239,8 +260,8 @@ classes:
   Event:
     class_uri: schema:Event
     description: >-
-      One public event: its name, its start and its place as a GPS point are required (owner
-      2026-10-20), the rest is kept where the source gives it.
+      One public event: its name, its start, its place as a GPS point, its organizer and a link are
+      required (owner 2026-10-20, 2026-10-21), the rest is kept where the source gives it.
     is_a: Entity
     annotations:
       upstream_source: https://schema.org/Event
@@ -253,6 +274,7 @@ classes:
       - address
       - eventCategory
       - description
+      - organizer
       - url
       - dataProvider
       - source
@@ -282,7 +304,22 @@ classes:
       eventCategory:
         rank: 7
         annotations: { summary: true }
+      organizer:
+        required: true
+        rank: 8
+        annotations: { summary: true }
+      url: { required: true, rank: 9 }
   PostalAddress:
     class_uri: schema:PostalAddress
     description: The value of `address`, never an entity of its own.
     slots: [streetAddress, postalCode, addressLocality, addressRegion, addressCountry]
+  Organizer:
+    class_uri: schema:Organization
+    description: The value of `organizer`, never an entity of its own.
+    slots: [name, url]
+    slot_usage:
+      name:
+        required: true
+        description: The organizer's name as the source writes it (`Stredoslovenské múzeum`).
+      url:
+        description: The organizer's own web site, when the source names it.

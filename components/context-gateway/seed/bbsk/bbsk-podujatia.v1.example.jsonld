@@ -21,6 +21,10 @@
   },
   "name": "name",
   "observedAt": "2026-01-01T00:00:00Z",
+  "organizer": {
+    "name": "name",
+    "url": "url"
+  },
   "source": "source",
   "sourceId": "sourceId",
   "startDate": "2026-11-14T19:00:00+01:00",

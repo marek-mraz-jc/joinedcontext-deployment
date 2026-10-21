@@ -59,9 +59,11 @@ def processors(name: str, ns: str = "bbsk") -> list:
     )["pipeline"]["processors"]
 
 
-def template(kind: str, host: str, store: str = "slovensko", region: str = "BA", town: str = "Častá", path: str = "/") -> list:
+def template(kind: str, host: str, store: str = "slovensko", region: str = "BA", town: str = "Častá", path: str = "/",
+             org_type: str = "municipality") -> list:
     """A kind's generated steps for a made-up row, so a template is tested apart from the inventory."""
     row = {"feed_kind": kind, "host": f"https://{host}", "town": town, "town_slug": generate.slug(town),
+           "org_type": org_type, "site": f"https://{host}",
            "region": region, "events_url": f"https://{host}/", "check_url": f"https://{host}{path}", "licence_terms": "no licence stated",
            "scope": generate.REGIONS[region][0], "region_name": generate.REGIONS[region][1]}
     return generate.processors(row, next(s for s in generate.STORES if s["ns"] == store))
@@ -576,9 +578,10 @@ def test_a_source_outside_the_region_lands_in_its_own_region_at_its_venue():
 # --- the national store's adapters (T-5047) -----------------------------------------------------------------
 
 
-def national(kind: str, host: str, payload: str, pages: str | None = None, refused: bool = False, path: str = "/") -> list:
+def national(kind: str, host: str, payload: str, pages: str | None = None, refused: bool = False, path: str = "/",
+             org_type: str = "municipality") -> list:
     recorded = json.loads((FIXTURES / "pages" / pages).read_text()) if pages else {}
-    return run(offline(template(kind, host, path=path), recorded), payload, "slovensko-podujatia", refused)
+    return run(offline(template(kind, host, path=path, org_type=org_type), recorded), payload, "slovensko-podujatia", refused)
 
 
 @requires_docker
@@ -671,3 +674,80 @@ def test_a_page_with_its_events_as_json_ld_gives_each_event_and_a_page_without_j
     assert e["location"]["value"]["coordinates"] == [17.129, 48.1601]
     assert e["address"]["value"]["streetAddress"] == "Trnavské mýto 1" and VALID.is_valid(key_values(e))
     national("jsonld", "www.lucnica.sk", "<html><body>Warning: require_once()</body></html>", refused=True)
+
+
+# --- organizer and link (T-5081) -----------------------------------------------------------------------------
+
+
+def tribe_event(i: int, organizer: list | dict, url: str | None = "default") -> dict:
+    day = (datetime.fromtimestamp(NOW, UTC) + timedelta(days=5)).strftime("%Y-%m-%d")
+    return {
+        "id": i, "title": f"Koncert {i}", "start_date": f"{day} 19:00:00", "end_date": f"{day} 21:00:00", "all_day": False,
+        "url": f"https://www.casta.sk/udalost/koncert-{i}/" if url == "default" else url,
+        "venue": {"venue": "Kultúrny dom", "address": "Hlavná 1", "city": "Častá", "geo_lat": "48.39", "geo_lng": "17.35"},
+        "organizer": organizer,
+    }
+
+
+@requires_docker
+def test_the_events_calendar_organizer_gives_its_name_and_web_site_and_never_a_contact():
+    feed = {"events": [
+        tribe_event(1, [{"organizer": "Stredoslovenské múzeum", "website": "https://www.stredoslovenskemuzeum.sk",
+                         "email": "info@muzeum.sk", "phone": "+421 48 412 58 97"}]),
+        tribe_event(2, [{"organizer": "Ján Novák, tel. 0905 123 456, jan.novak@example.sk", "website": "mailto:jan@example.sk"}]),
+        tribe_event(3, []),
+    ]}
+    out = {e["sourceId"]["value"]: e for e in national("tribe-rest", "www.casta.sk", json.dumps(feed))}
+    assert out["1"]["organizer"]["value"] == {"name": "Stredoslovenské múzeum", "url": "https://www.stredoslovenskemuzeum.sk"}
+    # A contact typed into the name is cut out; a mailto: is no web site.
+    assert out["2"]["organizer"]["value"] == {"name": "Ján Novák"}
+    # The feed names no organizer: the municipality whose calendar it is runs the event.
+    assert out["3"]["organizer"]["value"] == {"name": "Obec Častá", "url": "https://www.casta.sk"}
+    for e in out.values():
+        assert VALID.is_valid(key_values(e)), list(VALID.iter_errors(key_values(e)))
+        assert "@" not in json.dumps(e["organizer"]) and "0905" not in json.dumps(e["organizer"])
+
+
+@requires_docker
+def test_an_aggregators_event_without_an_organizer_is_refused_by_the_model():
+    feed = {"events": [tribe_event(1, []), tribe_event(2, {"organizer": "Divadlo J. G. Tajovského", "website": ""})]}
+    out = {e["sourceId"]["value"]: e for e in national("tribe-rest", "www.casta.sk", json.dumps(feed),
+                                                       org_type="tourism organisation (OOCR Test)")}
+    assert "organizer" not in out["1"] and not VALID.is_valid(key_values(out["1"]))
+    assert out["2"]["organizer"]["value"] == {"name": "Divadlo J. G. Tajovského"} and VALID.is_valid(key_values(out["2"]))
+
+
+@requires_docker
+def test_an_event_without_its_own_page_links_to_the_organizers_listing_page():
+    feed = {"events": [tribe_event(1, [], url=None), tribe_event(2, [], url="javascript:alert(1)")]}
+    for e in national("tribe-rest", "www.casta.sk", json.dumps(feed)):
+        assert e["url"]["value"] == "https://www.casta.sk/" and VALID.is_valid(key_values(e))
+
+
+@requires_docker
+def test_json_ld_organizer_and_weby_usporiadatel_and_ical_organizer_are_read():
+    page = """<script type="application/ld+json">{"@type":"Event","name":"Prednáška","startDate":"2026-11-20T17:00",
+ "url":"https://www.lucnica.sk/p","organizer":[{"@type":"Organization","name":"Univerzita Mateja Bela","url":"https://www.umb.sk",
+ "email":"x@umb.sk"}],"location":{"name":"Aula","geo":{"latitude":48.73,"longitude":19.15}}}</script>"""
+    (e,) = national("jsonld", "www.lucnica.sk", page)
+    assert e["organizer"]["value"] == {"name": "Univerzita Mateja Bela", "url": "https://www.umb.sk"}
+    # MEC writes the café that runs the evening as its organizer.
+    mec = {x["name"]["value"]: x for x in pipeline("banskastiavnica", "banskastiavnica-mec.json", "mec.json")}
+    assert mec["Vedatour / Vedátor v Art Cafe"]["organizer"]["value"]["name"] == "Art Café"
+    lucenec = {x["name"]["value"]: x for x in pipeline("lucenec", "lucenec-atom.xml", "weby.json")}
+    assert lucenec["SILNÉ REČI"]["organizer"]["value"] == {"name": "Mesto Lučenec"}
+    ics = "\r\n".join(["BEGIN:VCALENDAR", "BEGIN:VEVENT", "UID:u-1", "SUMMARY:Jarmok", "DTSTART:20261125T090000Z",
+                        'ORGANIZER;CN="Mesto Zvolen":mailto:podatelna@zvolen.sk', "GEO:48.57;19.12",
+                        "URL:https://www.zvolen.sk/jarmok", "END:VEVENT", "END:VCALENDAR"])
+    (ev,) = national("ical", "www.zvolen.sk", ics)
+    assert ev["organizer"]["value"] == {"name": "Mesto Zvolen"} and "podatelna" not in json.dumps(ev)
+    assert VALID.is_valid(key_values(ev))
+
+
+def test_every_source_names_an_organizer_unless_it_is_an_aggregator():
+    for row in generate.kept_sources():
+        organizer = generate.organizer(row)
+        if generate.AGGREGATORS.match(row["org_type"]):
+            assert organizer is None, row["name"]
+        else:
+            assert organizer and organizer["name"] and organizer["url"].startswith("https://"), row["name"]
