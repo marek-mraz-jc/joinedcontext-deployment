@@ -492,9 +492,12 @@ config:
               temporary: false
           realmRoles:
             {{- toYaml ($user.realmRoles | default list) | nindent 12 }}
+          {{- /* `platformReaders: false` keeps a test person out of the default group (T-4911). */}}
+          {{- $readers := ne (toString (index $user "platformReaders")) "false" }}
+          {{- $groups := concat (ternary (list "platform-readers") (list) $readers) (index $user "groups" | default list) }}
           groups:
-            - /platform-readers
-            {{- range (index $user "groups" | default list) }}
+            {{- if not $groups }} []{{ end }}
+            {{- range $groups }}
             - /{{ . }}
             {{- end }}
         {{- end }}

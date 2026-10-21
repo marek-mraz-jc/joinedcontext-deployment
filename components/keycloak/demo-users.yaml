@@ -61,3 +61,38 @@ demo.probe:
   lastName: Probe
   realmRoles: []
   groups: [banskabystrica, bbsk, helsinki, helsinki-mobility, praha, slovensko]
+# The App sharing matrix's test people (T-4911, components/context-gateway/seed/sharing/README.md).
+# `platformReaders: false` keeps each out of the realm's default group: its organization-wide
+# `viewer` binding would make every one of them a reader of every project and hide the difference
+# the matrix measures. What each may do is the binding or group the seed gives them, on the public
+# city-bike stations only; none holds a realm role.
+demo.outsider:
+  firstName: Sharing
+  lastName: Outsider
+  realmRoles: []
+  groups: []
+  platformReaders: false
+demo.neighbour:
+  firstName: Sharing
+  lastName: Neighbour
+  realmRoles: []
+  groups: [sharing-other]
+  platformReaders: false
+demo.member:
+  firstName: Sharing
+  lastName: Member
+  realmRoles: []
+  groups: [sharing]
+  platformReaders: false
+demo.author:
+  firstName: Sharing
+  lastName: Author
+  realmRoles: []
+  groups: [sharing]
+  platformReaders: false
+demo.bearer:
+  firstName: Sharing
+  lastName: Bearer
+  realmRoles: []
+  groups: []
+  platformReaders: false

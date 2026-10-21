@@ -78,6 +78,16 @@ seed:
 {{ readFile (printf "../../../context-gateway/seed/slovensko/%s" $file) | indent 4 }}
 {{- end }}
 {{- end }}
+{{- if eq .Values.global.profile "development" }}
+  # The App sharing matrix (T-4911): its test people's bindings and the roles App's default group,
+  # development profile only, like the people themselves (components/keycloak/demo-users.yaml).
+{{- range $file, $path := readFile "../../../context-gateway/seed/sharing/index.yaml" | fromYaml }}
+{{- if regexMatch "^projects/[^/]+/." $path }}{{ $_ := set $projects (index (splitList "/" $path) 1) true }}{{ else }}
+  {{ $path | replace "/" "__" }}: |
+{{ readFile (printf "../../../context-gateway/seed/sharing/%s" $file) | indent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}
 {{- if has "agent-runner" .Values.components }}
   # The builder profile the Portal loads for every agent run (AG-26): organization scope,
   # so it is committed by the forge seed and not by the gateway's own table.
@@ -91,6 +101,7 @@ seed:
 {{- /* The ConfigMaps values/seed renders, named by the same layout (values/seed-layout.tpl, T-4431). */}}
 {{- $sources := list "context-gateway/seed/helsinki" "context-gateway/seed/banskabystrica" "context-gateway/seed/bbsk" "context-gateway/seed/praha" "context-gateway/seed/zilina" "context-gateway/seed/slovensko" }}
 {{- if has "agent-runner" .Values.components }}{{ $sources = append $sources "agent-runner/seed" }}{{ end }}
+{{- if eq .Values.global.profile "development" }}{{ $sources = append $sources "context-gateway/seed/sharing" }}{{ end }}
 {{- $assistants := tpl (printf "%s{{ include \"gitea.catalogueAssistants\" . }}" (readFile "../seed-layout.tpl")) (dict "values" .Values) | fromJson }}
 {{- range $path, $_ := $assistants }}{{ $_ := set $projects (index (splitList "/" $path) 1) true }}{{ end }}
 {{- $layout := tpl (printf "%s{{ include \"gitea.seedLayout\" . }}" (readFile "../seed-layout.tpl")) (dict "sources" $sources "extra" $assistants) | fromJson }}

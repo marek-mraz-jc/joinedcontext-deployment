@@ -1,0 +1,28 @@
+# The App sharing matrix (T-4911): one of five copies of the sharing-probe bundle the Portal image
+# ships (portal apps/sharing-probe); the five differ only in visibility.
+# Only its author opens it: the owner annotation, or for a seeded App without one whoever may propose an App in sharing (demo.author).
+apiVersion: joinedcontext.com/v1alpha1
+kind: App
+metadata:
+  name: sharing-private
+  namespace: sharing
+  annotations:
+    joinedcontext.com/shipped-with: portal
+  title:
+    en: "Sharing probe (private)"
+  description:
+    en: "Test page of the App sharing matrix, visibility private: who opens it and how many city-bike stations it shows them."
+spec:
+  kind: ui
+  source:
+    path: ./apps/sharing-private
+  visibility: private
+  lifecycle: published
+  dataNeeds:
+    - contextSpaceRef:
+        kind: ContextSpace
+        name: sharing-bikes
+      types: [BikeHireDockingStation]
+      attrs: [name, location]
+      operations: [queryEntity, retrieveEntity]
+      representations: [ngsi-ld]
