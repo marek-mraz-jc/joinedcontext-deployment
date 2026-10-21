@@ -15,4 +15,4 @@ spec:
   contextSpaceRef: bbsk-podujatia
   slug: xfkyiscytdlbjkx4ija36etw3sreihhw
   audience: organization
-  enabledRepresentations: [ngsi-ld]
+  enabledRepresentations: [ngsi-ld, websocket, ogc-features, mcp]
