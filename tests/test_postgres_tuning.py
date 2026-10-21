@@ -72,6 +72,13 @@ def test_the_job_waits_for_the_library_on_dev(rendered):
 
 
 @requires_docker
+def test_the_script_survives_kubernetes_variable_expansion(rendered):
+    # Kubernetes turns $$ into $ in command/args, so DO $$ ... $$
+    # reached psql as DO $ and the hook failed on dev; a named dollar quote passes unchanged.
+    script = stat_statements_job(rendered("dev"))["command"][2]
+    assert "$$" not in script
+
+
 def test_application_logins_cannot_read_the_statistics(rendered):
     script = stat_statements_job(rendered("dev"))["command"][2]
     harness = """
