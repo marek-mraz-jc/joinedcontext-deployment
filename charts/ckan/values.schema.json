@@ -232,6 +232,34 @@
               }
             }
           }
+        },
+        "pool": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "size": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maxOverflow": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "datastorePool": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "size": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maxOverflow": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
         }
       }
     },
