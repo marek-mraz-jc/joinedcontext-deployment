@@ -246,9 +246,9 @@ def test_every_http_input_is_https_to_its_inventory_host_with_a_timeout():
                 # The source's own host, fixed: the item's path is checked by the request_map before the request.
                 fixed = http["url"].split("${!")[0]
                 assert generate.urlsplit(fixed).hostname in hosts and fixed.count("/") >= 3, path.name
-                # One request a second, three where the CMS's robots.txt asks Crawl-Delay 3 (Lego).
+                # One request a second, three or ten where the CMS's robots.txt asks Crawl-Delay 3 (Lego) or 10 (TUZVO).
                 assert http["timeout"] == "20s" and step["branch"]["processors"][0] in (
-                    {"sleep": {"duration": "1s"}}, {"sleep": {"duration": "3s"}}
+                    {"sleep": {"duration": "1s"}}, {"sleep": {"duration": "3s"}}, {"sleep": {"duration": "10s"}}
                 )
 
 
@@ -274,7 +274,7 @@ def test_each_national_feed_runs_every_3_hours_and_each_village_calendar_daily_i
     for path in (p for p in NATIONAL.glob("slovensko-pipeline-podujatia-*.yaml") if not p.name.endswith("-bento.yaml")):
         spec = yaml.safe_load(path.read_text())["spec"]
         kind = yaml.safe_load(NATIONAL.joinpath(path.name.replace("-pipeline-", "-datasource-")).read_text())["metadata"]["title"]["en"]
-        daily = kind.endswith(("(lego-html)", "(weby-feed)"))
+        daily = kind.endswith(("(lego-html)", "(weby-feed)", "(umb-cms)", "(drupal-kalendar)"))
         assert spec["targetEndpoint"] == target and spec["period"] == ("24h" if daily else "3h"), path.name
         minute, hour, *rest = spec["schedule"].split()
         assert rest == ["*", "*", "*"], path.name
@@ -751,3 +751,67 @@ def test_every_source_names_an_organizer_unless_it_is_an_aggregator():
             assert organizer is None, row["name"]
         else:
             assert organizer and organizer["name"] and organizer["url"].startswith("https://"), row["name"]
+
+
+# --- HTML kinds of the universities and geocoded venues (T-5083) --------------------------------------------
+
+
+def bbsk_html(kind: str, host: str, town: str, path: str, org_type: str, payload: str, pages: str) -> dict:
+    steps = template(kind, host, store="bbsk", region="BBSK", town=town, path=path, org_type=org_type)
+    recorded = json.loads((FIXTURES / "pages" / pages).read_text())
+    return {e["name"]["value"]: e for e in run(offline(steps, recorded), payload)}
+
+
+@requires_docker
+def test_umb_events_read_each_pages_event_table_and_place_it_by_the_geocoded_venue():
+    # Recorded 2026-10-21 from umb.sk; the third page has a made-up contact row added, which is never read.
+    out = bbsk_html("umb-cms", "www.umb.sk", "Banská Bystrica", "/kalendar-udalosti/",
+                    "university (Univerzita Mateja Bela v Banskej Bystrici)",
+                    (FIXTURES / "umb-kalendar.html").read_text(), "umb.json")
+    # The menu link without an h3 title, the off-host and the off-path links are never read.
+    assert set(out) == {"GAUDEAMUS BRNO", "Školenie: Od konfliktu k porozumeniu: Ako vystúpiť z dramatického trojuholníka",
+                        "Občianske fórum 2026"}
+    school = out["Školenie: Od konfliktu k porozumeniu: Ako vystúpiť z dramatického trojuholníka"]
+    assert school["startDate"]["value"] == "2026-10-27T13:30:00+01:00"
+    assert school["endDate"]["value"] == "2026-10-27T15:30:00+01:00"
+    assert school["organizer"]["value"] == {"name": "Centrum podpory a ďalšieho vzdelávania UMB"}
+    # The room text matches the venue geocoded from its address, never the town's centre.
+    assert school["location"]["value"]["coordinates"] == [19.1376321, 48.7395768]
+    assert school["url"]["value"].startswith("https://www.umb.sk/kalendar-udalosti/skolenie-")
+    forum = out["Občianske fórum 2026"]
+    assert VALID.is_valid(key_values(forum)), list(VALID.iter_errors(key_values(forum)))
+    assert "nováková" not in json.dumps(forum, ensure_ascii=False).lower() and "@" not in json.dumps(forum)
+    # A fair in Brno: no venue of Banská Bystrica's table, so no point and the model refuses it. "Iné" is no
+    # organizer: the university whose calendar it is stands in.
+    brno = out["GAUDEAMUS BRNO"]
+    assert brno["address"]["value"]["addressLocality"] == "Brno" and "location" not in brno
+    assert not VALID.is_valid(key_values(brno))
+    assert brno["organizer"]["value"] == {"name": "Univerzita Mateja Bela v Banskej Bystrici", "url": "https://www.umb.sk"}
+
+
+@requires_docker
+def test_tuzvo_events_come_from_this_and_the_next_months_list_without_the_persons_named():
+    # Recorded 2026-10-21 from tuzvo.sk, the persons' names replaced; November repeats one October event.
+    out = bbsk_html("drupal-kalendar", "www.tuzvo.sk", "Zvolen", "/sk/kalendar-podujati",
+                    "university (Technická univerzita vo Zvolene)",
+                    (FIXTURES / "tuzvo-kalendar.html").read_text(), "tuzvo.json")
+    assert "Krajina - človek - kultúra" in out and "Výstava plodov starých odrôd ovocných drevín" in out
+    assert len(out) == len({e["id"] for e in out.values()})
+    fair = out["Výstava plodov starých odrôd ovocných drevín"]
+    assert fair["startDate"]["value"] == "2026-11-04T09:00:00+01:00"
+    assert fair["venue"]["value"] == "FEE E214" and fair["eventCategory"]["value"]
+    assert fair["organizer"]["value"]["name"] and fair["url"]["value"].startswith("https://www.tuzvo.sk/sk/")
+    assert fair["location"]["value"]["coordinates"] == [19.1165987, 48.5729663]
+    assert "Test Osoba" not in json.dumps(out, ensure_ascii=False)
+    # A venue nobody geocoded (ÚTVŠ) gives no point; the event is refused, never put at Zvolen's centre.
+    sport = out["Súčasné trendy v športe, pohybových aktivitách a životnom štýle"]
+    assert "location" not in sport and not VALID.is_valid(key_values(sport))
+
+
+def test_the_next_month_is_read_from_the_same_list_page_10_seconds_later():
+    steps = template("drupal-kalendar", "www.tuzvo.sk", store="bbsk", region="BBSK", town="Zvolen",
+                     path="/sk/kalendar-podujati", org_type="university (Technická univerzita vo Zvolene)")
+    (branch,) = [s["branch"] for s in steps if "branch" in s]
+    assert branch["processors"][0] == {"sleep": {"duration": "10s"}}
+    assert branch["processors"][1]["http"]["url"] == "https://www.tuzvo.sk/${! @event_path }"
+    assert '"/sk/kalendar-podujati".trim_prefix("/") + "?mini="' in branch["request_map"]
