@@ -18,6 +18,14 @@ pipeline:
         let starts = $announcement.timeAndDuration.startTime.or(null)
         let ends = $announcement.timeAndDuration.endTime.or(null)
         let geometry = this.geometry.or(null)
+        # `expiresAt` (NGSI-LD 4.22): the Alert leaves every read when its validTo passes, and an
+        # hour after the feed last listed it, whichever comes first. The feed lists only running
+        # situations and this pipeline reads it every ten minutes, so each run moves the hour on
+        # for every situation still running, and one that ended early or carries no end time
+        # goes an hour after it left (T-4823; the alerts reaper did this before). A feed outage
+        # longer than the hour empties the desk until the feed answers again.
+        let lease = now().ts_unix() + 3600
+        let expires = if $ends == null { $lease } else { [$ends.ts_unix().catch($lease), $lease].min() }
         # The Smart Data Models code: a road work is roadWorks; an announcement is carAccident
         # or roadClosed when its features say so, and has no code otherwise.
         let features = $announcement.features.or([]).map_each(f -> f.name.or("").string())
@@ -26,6 +34,7 @@ pipeline:
           {
             "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Alert", $domain, env("JC_SPACE"), this.properties.situationId),
             "type": "Alert",
+            "expiresAt": $expires.ts_format("2006-01-02T15:04:05Z", "UTC"),
             "category": { "type": "Property", "value": "traffic" },
             "subCategory": if $code == null { null } else { { "type": "Property", "value": $code } },
             "alertSource": { "type": "Property", "value": "Fintraffic" },

@@ -14,13 +14,3 @@ spec:
   quotas:
     maxMemoryMb: 128
     cpuMillicores: 100
-  # An Alert's end (PL-80, NGSI-LD 4.22 expiresAt): its validTo, and no later than an hour after
-  # the run that wrote it. The feed lists only running situations and this pipeline reads it every
-  # ten minutes, so each run moves the hour on for a situation still running, and one that ended
-  # early goes an hour after it left (T-4823, T-4843). A feed outage longer than the hour empties
-  # the desk until the feed answers again. A situation without an end time gets no end here
-  # (the run counts it under lifetime-from); the space's Alert rule removes it 30 days after its
-  # last write.
-  lifetime:
-    - type: Alert
-      entity: { from: validTo, notAfter: PT1H }
