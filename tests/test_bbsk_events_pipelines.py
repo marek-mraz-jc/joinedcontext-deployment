@@ -290,21 +290,28 @@ def test_each_national_feed_runs_every_3_hours_and_each_village_calendar_daily_i
 
 @requires_docker
 def test_bento_lints_every_generated_stream():
-    for path in sorted([*SEED.glob("bbsk-pipeline-podujatia-*-bento.yaml"), *NATIONAL.glob("slovensko-pipeline-podujatia-*-bento.yaml")]):
-        cfg = {
-            "input": {"stdin": {}},
-            "pipeline": yaml.safe_load(path.read_text())["pipeline"],
-            "output": {"stdout": {}},
-        }
+    """One Bento lint over every stream: a container per stream took minutes for the ~290 generated pipelines."""
+    paths = sorted([*SEED.glob("bbsk-pipeline-podujatia-*-bento.yaml"), *NATIONAL.glob("slovensko-pipeline-podujatia-*-bento.yaml")])
+    assert paths
+    with tempfile.TemporaryDirectory(dir="/tmp") as directory:
+        work = Path(directory)
+        work.chmod(0o777)
+        for path in paths:
+            cfg = {
+                "input": {"stdin": {}},
+                "pipeline": yaml.safe_load(path.read_text())["pipeline"],
+                "output": {"stdout": {}},
+            }
+            (work / path.name).write_text(yaml.safe_dump(cfg, allow_unicode=True))
+            (work / path.name).chmod(0o666)
         result = subprocess.run(
-            ["docker", "run", "--rm", "-i", BENTO, "lint", "/dev/stdin"],
-            input=yaml.safe_dump(cfg, allow_unicode=True),
+            ["docker", "run", "--rm", "-v", f"{work}:/w", BENTO, "lint", *(f"/w/{p.name}" for p in paths)],
             capture_output=True,
             text=True,
-            timeout=120,
+            timeout=240,
             check=False,
         )
-        assert result.returncode == 0, f"{path.name}: {result.stdout}{result.stderr}"
+    assert result.returncode == 0, f"{result.stdout}{result.stderr}"
 
 
 @requires_docker
