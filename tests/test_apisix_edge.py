@@ -233,8 +233,10 @@ def test_space_reads_and_writes_count_apart(rendered):
     for route in routes.values():
         if route["id"] in ANONYMOUS_ROUTE_LIMITS:
             # A fixed per-IP count for callers without a bearer (T-4141): no rate class, so the
-            # Portal never rewrites it, and nothing beside the count.
-            assert "labels" not in route and set(route["plugins"]) == {"limit-count"}, route["id"]
+            # Portal never rewrites it, and nothing beside the count; the named MCP servers also
+            # answer the platform's own pages cross-origin (T-4949).
+            cors = {"cors"} if route["id"] in ("context-mcp-named", "api-mcp-named") else set()
+            assert "labels" not in route and set(route["plugins"]) == {"limit-count"} | cors, route["id"]
             limit = route["plugins"]["limit-count"]
             assert (limit["count"], limit["key"]) == (ANONYMOUS_ROUTE_LIMITS[route["id"]], "remote_addr")
             assert route["vars"] == [["http_authorization", "!", "~~", "."]], route["id"]
