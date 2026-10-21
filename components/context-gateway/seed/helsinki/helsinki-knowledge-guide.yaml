@@ -8,7 +8,7 @@ kind: KnowledgeSource
 metadata:
   name: guide
   namespace: helsinki
-  title: { en: "The platform's User Guide" }
+  title: { en: The platform's User Guide }
 spec:
   source: guide
   languages: [en]

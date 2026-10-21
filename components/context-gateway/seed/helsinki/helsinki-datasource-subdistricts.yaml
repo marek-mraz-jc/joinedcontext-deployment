@@ -5,7 +5,9 @@ kind: DataSource
 metadata:
   name: hel-subdistricts
   namespace: helsinki
-  title: { en: "City sub-districts (osa-alueet)", fi: "Piirijako, osa-alueet" }
+  title:
+    en: City sub-districts (osa-alueet)
+    fi: Piirijako, osa-alueet
 spec:
   type: http
   http:

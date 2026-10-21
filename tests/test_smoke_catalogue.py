@@ -256,14 +256,13 @@ def test_the_slow_checks_rotate_least_recently_checked_first(tmp_path):
 
 
 def test_a_run_writes_one_table_and_exits_one_on_a_ko(tmp_path, capsys):
-    p = package("air", "a1", "AirQualityObserved")
-    fake = Fake(world([p], ["a1"], overrides={f"{API}/a1/schema/index.json": answer(404)}))
+    fake = Fake(world([package("air", "a1", "AirQualityObserved")], []))
     assert smoke.run(DOMAIN, "prod", tmp_path, fake.client(), "20261019T060000Z") == 1
     table_path = tmp_path / "smoke-catalogue-prod-20261019T060000Z.tsv"
     rows = list(csv.DictReader(table_path.open(), delimiter="\t"))
-    assert rows[0]["model"].startswith("ko: schema/index.json answered 404")
+    assert rows[0]["inventory"] == "ko: its Endpoint is not in the public DCAT feed"
     out = capsys.readouterr().out
-    assert "  FAIL  catalogue air (a1): model schema/index.json answered 404" in out
+    assert "  FAIL  catalogue air (a1): inventory its Endpoint is not in the public DCAT feed" in out
     assert "1 datasets, 0 complete, 1 ko" in out
 
 

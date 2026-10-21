@@ -3,7 +3,7 @@ kind: Policy
 metadata:
   name: pipelines-write
   namespace: bbsk
-  title: { sk: "Kanály zapisujú zdrojový priestor", en: "The ingestion pipelines write the raw space" }
+  title: { sk: Kanály zapisujú zdrojový priestor, en: The ingestion pipelines write the raw space }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: bbsk-kraj }
   assigner: did:web:bbsk.sk

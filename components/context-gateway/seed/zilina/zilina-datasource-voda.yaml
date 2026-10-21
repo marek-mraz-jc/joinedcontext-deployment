@@ -4,7 +4,9 @@ kind: DataSource
 metadata:
   name: susr-vh5003rr
   namespace: zilina
-  title: { sk: "Spotreba pitnej vody (ŠÚ SR, vh5003rr)", en: "Drinking water consumption (ŠÚ SR, vh5003rr)" }
+  title:
+    sk: Spotreba pitnej vody (ŠÚ SR, vh5003rr)
+    en: Drinking water consumption (ŠÚ SR, vh5003rr)
 spec:
   type: http
   http:

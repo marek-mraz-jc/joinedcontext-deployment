@@ -131,6 +131,11 @@ spec:
         description:
           sk: "Podujatia zo stránky https://www.visitbanskabystrica.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.visitbanskabystrica.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.vkmk.sk/podujatia.html"
+        title: { sk: "Banská Bystrica, vkmk.sk", en: "Banská Bystrica, vkmk.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.vkmk.sk/podujatia.html; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.vkmk.sk/podujatia.html; no licence stated, facts only (name, time, place, link)."
       - url: "https://gunagu.sk/"
         title: { sk: "Bratislava, gunagu.sk", en: "Bratislava, gunagu.sk" }
         description:

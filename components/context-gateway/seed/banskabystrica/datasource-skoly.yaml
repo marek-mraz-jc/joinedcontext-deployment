@@ -4,7 +4,9 @@ kind: DataSource
 metadata:
   name: minedu-mapa-skol
   namespace: banskabystrica
-  title: { sk: "Digitálna mapa škôl (MŠVVaM SR)", en: "Organization map (Slovak Ministry of Education)" }
+  title:
+    sk: Digitálna mapa škôl (MŠVVaM SR)
+    en: Organization map (Slovak Ministry of Education)
 spec:
   type: http
   http:

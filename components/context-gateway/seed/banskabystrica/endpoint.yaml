@@ -8,10 +8,10 @@ metadata:
   # What the dataset page and the endpoint's own DCAT-AP record show: `dct:title` and
   # `dct:description` are read from here (EP-27), and the catalogue maps them to the dataset's
   # title and notes. Slovak first: the space's own locale is `sk`.
-  title: { sk: "Kvalita ovzdušia v Banskej Bystrici", en: "Air quality in Banská Bystrica" }
+  title: { sk: Kvalita ovzdušia v Banskej Bystrici, en: Air quality in Banská Bystrica }
   description:
-    sk: "Hodinové merania kvality ovzdušia na stanici SK0263A v Banskej Bystrici (mestské pozadie, SHMÚ), ako ich zverejňuje Európska environmentálna agentúra: PM10, PM2.5 a čas merania. Licencia CC BY 4.0, držiteľ autorských práv EEA."
-    en: "Hourly air-quality readings at station SK0263A in Banská Bystrica (urban background, SHMÚ) as the European Environment Agency republishes them: PM10, PM2.5 and the time of the reading. CC BY 4.0, copyright holder EEA."
+    sk: 'Hodinové merania kvality ovzdušia na stanici SK0263A v Banskej Bystrici (mestské pozadie, SHMÚ), ako ich zverejňuje Európska environmentálna agentúra: PM10, PM2.5 a čas merania. Licencia CC BY 4.0, držiteľ autorských práv EEA.'
+    en: 'Hourly air-quality readings at station SK0263A in Banská Bystrica (urban background, SHMÚ) as the European Environment Agency republishes them: PM10, PM2.5 and the time of the reading. CC BY 4.0, copyright holder EEA.'
 spec:
   contextSpaceRef: ovzdusie
   slug: mluyob4nz52lok3ssk7pgn5vwt
@@ -37,8 +37,8 @@ spec:
     # The EEA streams renew the reading every hour.
     frequency: HOURLY
     keywords:
-      sk: ["kvalita ovzdušia", "PM10", "PM2.5", "Banská Bystrica"]
-      en: ["air quality", "PM10", "PM2.5", "Banská Bystrica"]
+      sk: [kvalita ovzdušia, PM10, PM2.5, Banská Bystrica]
+      en: [air quality, PM10, PM2.5, Banská Bystrica]
     spatial:
       - SK032
-      - "https://data.gov.sk/id/lau2/SK0321508438"
+      - https://data.gov.sk/id/lau2/SK0321508438

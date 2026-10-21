@@ -3,7 +3,7 @@ kind: Policy
 metadata:
   name: pipelines-write
   namespace: slovensko
-  title: { sk: "Kanály zapisujú ovzdušie", en: "The pipelines write the air-quality space" }
+  title: { sk: Kanály zapisujú ovzdušie, en: The pipelines write the air-quality space }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: ovzdusie-sk }
   assigner: did:web:joinedcontext.com

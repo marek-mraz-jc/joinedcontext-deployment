@@ -4,7 +4,9 @@ kind: DataSource
 metadata:
   name: susr-cr3809qr
   namespace: zilina
-  title: { sk: "Kapacity ubytovacích zariadení v obciach (ŠÚ SR, cr3809qr)", en: "Accommodation capacity in municipalities (ŠÚ SR, cr3809qr)" }
+  title:
+    sk: Kapacity ubytovacích zariadení v obciach (ŠÚ SR, cr3809qr)
+    en: Accommodation capacity in municipalities (ŠÚ SR, cr3809qr)
 spec:
   type: http
   http:

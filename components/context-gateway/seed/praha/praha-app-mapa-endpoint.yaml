@@ -3,20 +3,11 @@ kind: Endpoint
 metadata:
   name: app-praha-mapa
   namespace: praha
-  annotations:
-    joinedcontext.com/generated-by: portal/app-reconciler
-  title:
-    cs: Mapa Prahy
-    en: Map of Prague
+  title: { cs: Mapa Prahy, en: Map of Prague }
+  annotations: { joinedcontext.com/generated-by: portal/app-reconciler }
 spec:
   audience: public
   callerRole: true
-  contextSpaceRef:
-    kind: ContextSpace
-    name: praha-mesto
-  enabledRepresentations:
-  - ngsi-ld
-  - mcp
-  - ogc-features
-  - odata
+  contextSpaceRef: { kind: ContextSpace, name: praha-mesto }
+  enabledRepresentations: [ngsi-ld, mcp, ogc-features, odata]
   slug: qb3wx7nc5ztk2pmyr6hjd4vae2

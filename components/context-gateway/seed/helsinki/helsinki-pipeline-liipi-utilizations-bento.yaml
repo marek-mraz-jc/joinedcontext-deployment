@@ -12,7 +12,7 @@ pipeline:
   processors:
     - mapping: |
         root = if content().length() > 1048576 { throw("the utilizations answer is %d bytes, more than the 1 MiB read".format(content().length())) } else { this }
-    - mutation: 'root = if errored() { deleted() }'
+    - mutation: root = if errored() { deleted() }
 
     - mapping: |
         let urn = "urn:ngsi-ld:OffStreetParking:%v:%v:liipi-%v"
@@ -36,8 +36,7 @@ pipeline:
               - http:
                   url: ${JC_GATEWAY_URL}/api/endpoint/si6epqkx364lprho5uaigutk274r5grb/ngsi-ld/v1/entityOperations/query?limit=1000&options=keyValues
                   verb: POST
-                  headers:
-                    Content-Type: application/json
+                  headers: { Content-Type: application/json }
                   oauth2:
                     enabled: true
                     client_key: ${JC_CLIENT_ID}
@@ -48,7 +47,7 @@ pipeline:
               - mapping: 'root = { "held": this.map_each(e -> e.id) }'
           - catch:
               - mapping: 'root = { "failed": true }'
-        result_map: 'root.known = this'
+        result_map: root.known = this
 
     - mapping: |
         let held = this.known.held.or([])
@@ -60,5 +59,4 @@ pipeline:
           })
         }
 
-    - unarchive:
-        format: json_array
+    - unarchive: { format: json_array }

@@ -12,32 +12,55 @@ kind: App
 metadata:
   name: bbsk-data
   namespace: bbsk
+  title: { sk: Registre Banskobystrického kraja, en: Registers of the Banská Bystrica region }
+  description:
+    sk: 'Nemocnice, sociálne služby, mosty, organizácie a územné členenie kraja v tabuľkách: filter na každom stĺpci, hodnoty číselníkov na výber, detail riadku a stiahnutie v CSV a GeoJSON.'
+    en: "The region's hospitals, social services, bridges, organizations and territorial division as tables: a filter on every column, code lists picked, each row whole, and a CSV or GeoJSON download."
   annotations:
     # The Portal image ships this bundle (Dockerfile, /srv/apps), so the App names no
     # repository of its own; the Portal accepts the mark only where the bundle is (AP-87).
     joinedcontext.com/shipped-with: portal
-  title:
-    sk: "Registre Banskobystrického kraja"
-    en: "Registers of the Banská Bystrica region"
-  description:
-    sk: "Nemocnice, sociálne služby, mosty, organizácie a územné členenie kraja v tabuľkách: filter na každom stĺpci, hodnoty číselníkov na výber, detail riadku a stiahnutie v CSV a GeoJSON."
-    en: "The region's hospitals, social services, bridges, organizations and territorial division as tables: a filter on every column, code lists picked, each row whole, and a CSV or GeoJSON download."
 spec:
   kind: ui
   source:
     path: ./apps/bbsk-data
-  build:
-    node: "22"
+  build: { node: '22' }
   visibility: public
   lifecycle: published
   embeddable: true
   dataNeeds:
     # The five registers of the region's public space with every column the grids show; the
     # downloads are the endpoint's own files, under the same grant (API/02 §3, §4).
-    - contextSpaceRef:
-        kind: ContextSpace
-        name: bbsk-registre
+    - contextSpaceRef: { kind: ContextSpace, name: bbsk-registre }
       types: [PointOfInterest, Bridge, PublicOrganization, AdministrativeArea]
-      attrs: [name, category, hospitalKind, operatorName, medicalSpecialties, address, legalId, serviceKind, serviceForm, targetGroup, capacity, providerKind, districtName, url, bridgeCode, roadClass, roadNumber, yearBuilt, spanCount, bridgedLength, structureMaterial, heritageStatus, managerName, alternateName, organizationCategory, areaCode, divisionLevel, surfaceArea]
+      attrs:
+        - name
+        - category
+        - hospitalKind
+        - operatorName
+        - medicalSpecialties
+        - address
+        - legalId
+        - serviceKind
+        - serviceForm
+        - targetGroup
+        - capacity
+        - providerKind
+        - districtName
+        - url
+        - bridgeCode
+        - roadClass
+        - roadNumber
+        - yearBuilt
+        - spanCount
+        - bridgedLength
+        - structureMaterial
+        - heritageStatus
+        - managerName
+        - alternateName
+        - organizationCategory
+        - areaCode
+        - divisionLevel
+        - surfaceArea
       operations: [queryEntity, retrieveEntity]
       representations: [ngsi-ld, csv, ogc-features]

@@ -5,9 +5,9 @@ kind: ContextSpace
 metadata:
   name: helsinki-kpi
   namespace: helsinki
-  title: { en: "Helsinki indicators" }
+  title: { en: Helsinki indicators }
   description:
-    en: "Key performance indicators computed from the city context: one entity per indicator, with its formula and its sources"
+    en: 'Key performance indicators computed from the city context: one entity per indicator, with its formula and its sources'
 spec:
   # Pinned so no entity id changes: the space predates rendered segments (PF-84).
   urnSegment: helsinki-kpi

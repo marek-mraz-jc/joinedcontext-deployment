@@ -170,3 +170,30 @@ Decisions (worker-t5047, owner may override):
   A sameAs relation across sources within 200 m needs a cross-source pass over the space, which a per-source
   one-shot run cannot do.
 - Free-text dates stay out: `wp-rest` (detail HTML), `wp-rss` and `joomla-rss` rows need one parser per site.
+
+## Organizer and link (T-5081)
+
+Both stores require `organizer` (schema:organizer: `name`, maybe `url`) and `url` (an http(s) link) beside
+name, start and GPS; a record without one is refused into the run report. `source` and `dataProvider` stay as
+provenance: who published the feed is not who runs the event.
+
+- The organizer comes from the feed where it names one: The Events Calendar's `organizer` and `website`,
+  schema.org `organizer` (Organization or Person, the first of a list) on JSON-LD pages, WEBY's `Usporiadateľ`
+  field, iCal `ORGANIZER;CN=`. Only the name and the web site are kept; an e-mail, a phone number or a
+  `tel.`/`kontakt` label typed into the name is cut, and a `mailto:` is no web site.
+- Else the body whose calendar it is (`generate.py organizer()`): the name in `org_type (Name)`, `Mesto {town}`
+  for a town, `Obec {town}` for a municipality, with the inventory's site. A tourism organisation or a region
+  announces other bodies' events, so its rows name none: their events without a feed organizer are refused.
+- `url` is the event's page, else the source's events page (`events_url`). A link that is no absolute http(s)
+  URL (a `javascript:` or relative link) counts as none.
+
+Sources (2026-10-21): 143 BBSK candidates beyond T-5047's (museums, galleries, theatres, libraries, osvetové
+strediská, culture centres, UMB/AU/TUZVO and their faculties, gymnáziá, OOCR, clubs and venues) were probed
+with `/workspace/evidence/T-5081/probe.py` (robots.txt first, 1 s per host, the pipelines' User-Agent): The
+Events Calendar REST, `/wp-json/` namespaces, `?ical=1`, WEBY `get_rss.php?id=3_atom`, Lego calendars and
+schema.org Event JSON-LD on the home page and on up to four event-looking pages. 81 answered over https; 10
+showed a machine-readable event list, 6 of them already kept. One new source is kept (Verejná knižnica
+Mikuláša Kováča, WEBY, its address in the venue table); Šahy and Modrý Kameň list only past or 2028 items and
+Teatro Tatro's EventON only past summer shows; `muzeum.sk` is the national museum in Bratislava. The other
+museums, galleries, theatres, universities and schools publish HTML only (UMB's six faculty sites share one
+CMS with `kalendar-udalosti`, TUZVO's five one with `kalendar-podujati`): those need an HTML kind per CMS.

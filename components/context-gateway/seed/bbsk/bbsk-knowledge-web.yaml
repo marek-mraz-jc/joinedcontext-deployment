@@ -11,11 +11,12 @@ spec:
   # (717 of them answer, 2026-10-19), and at 500 the crawl stopped before the Festbus, the
   # anti-bullying page and the roads list the website eval asks about (T-4688).
   source: website
-  startUrls: [https://www.bbsk.sk/]
+  startUrls:
+    - https://www.bbsk.sk/
   sitemap: true
   maxDepth: 3
   maxPages: 800
   pdf: { policy: include, maxBytes: 20971520, maxPages: 200 }
-  schedule: "0 3 * * 0"
+  schedule: '0 3 * * 0'
   languages: [sk]
   visibility: public

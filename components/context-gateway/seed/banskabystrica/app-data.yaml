@@ -13,32 +13,45 @@ kind: App
 metadata:
   name: banskabystrica-data
   namespace: banskabystrica
+  title: { sk: Dáta mesta Banská Bystrica, en: Data of Banská Bystrica }
+  description:
+    sk: 'Podujatia, školy a ovzdušie mesta v tabuľkách: filter na každom stĺpci, druh podujatia na výber, detail riadku a stiahnutie v CSV a GeoJSON.'
+    en: "The city's events, schools and air quality as tables: a filter on every column, the kind of event picked from a list, each row whole, and a CSV or GeoJSON download."
   annotations:
     # The Portal image ships this bundle (Dockerfile, /srv/apps), so the App names no
     # repository of its own; the Portal accepts the mark only where the bundle is (AP-87).
     joinedcontext.com/shipped-with: portal
-  title:
-    sk: "Dáta mesta Banská Bystrica"
-    en: "Data of Banská Bystrica"
-  description:
-    sk: "Podujatia, školy a ovzdušie mesta v tabuľkách: filter na každom stĺpci, druh podujatia na výber, detail riadku a stiahnutie v CSV a GeoJSON."
-    en: "The city's events, schools and air quality as tables: a filter on every column, the kind of event picked from a list, each row whole, and a CSV or GeoJSON download."
 spec:
   kind: ui
   source:
     path: ./apps/banskabystrica-data
-  build:
-    node: "22"
+  build: { node: '22' }
   visibility: public
   lifecycle: published
   embeddable: true
   dataNeeds:
     # The three types of the city's public space with every column the grids show; the downloads
     # are the endpoint's own files, under the same grant (API/02 §3, §4).
-    - contextSpaceRef:
-        kind: ContextSpace
-        name: banskabystrica-verejne
+    - contextSpaceRef: { kind: ContextSpace, name: banskabystrica-verejne }
       types: [Event, Organization, AirQualityObserved]
-      attrs: [name, startDate, endDate, startTime, eventCategory, address, url, schoolCode, teachingLanguage, pupilCount, teachingStaff, nonTeachingStaff, annualBudget, budgetYear, stationCode, dateObserved, pm10, pm25]
+      attrs:
+        - name
+        - startDate
+        - endDate
+        - startTime
+        - eventCategory
+        - address
+        - url
+        - schoolCode
+        - teachingLanguage
+        - pupilCount
+        - teachingStaff
+        - nonTeachingStaff
+        - annualBudget
+        - budgetYear
+        - stationCode
+        - dateObserved
+        - pm10
+        - pm25
       operations: [queryEntity, retrieveEntity]
       representations: [ngsi-ld, csv, ogc-features]

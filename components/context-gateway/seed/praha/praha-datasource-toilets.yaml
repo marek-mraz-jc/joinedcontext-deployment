@@ -7,7 +7,7 @@ kind: DataSource
 metadata:
   name: ipr-toilets
   namespace: praha
-  title: { en: "Public toilets (IPR Praha)", cs: "Veřejné toalety (IPR Praha)" }
+  title: { en: Public toilets (IPR Praha), cs: Veřejné toalety (IPR Praha) }
 spec:
   type: http
   http:

@@ -492,6 +492,9 @@ bbsk-pipeline-podujatia-centralslovakia-bento.yaml: projects/bbsk/pipelines/podu
 bbsk-datasource-podujatia-visitbanskabystrica.yaml: projects/bbsk/datasources/podujatia-visitbanskabystrica.yaml
 bbsk-pipeline-podujatia-visitbanskabystrica.yaml: projects/bbsk/pipelines/podujatia-visitbanskabystrica/pipeline.yaml
 bbsk-pipeline-podujatia-visitbanskabystrica-bento.yaml: projects/bbsk/pipelines/podujatia-visitbanskabystrica/bento.yaml
+bbsk-datasource-podujatia-vkmk.yaml: projects/bbsk/datasources/podujatia-vkmk.yaml
+bbsk-pipeline-podujatia-vkmk.yaml: projects/bbsk/pipelines/podujatia-vkmk/pipeline.yaml
+bbsk-pipeline-podujatia-vkmk-bento.yaml: projects/bbsk/pipelines/podujatia-vkmk/bento.yaml
 bbsk-datasource-podujatia-drazice.yaml: projects/bbsk/datasources/podujatia-drazice.yaml
 bbsk-pipeline-podujatia-drazice.yaml: projects/bbsk/pipelines/podujatia-drazice/pipeline.yaml
 bbsk-pipeline-podujatia-drazice-bento.yaml: projects/bbsk/pipelines/podujatia-drazice/bento.yaml

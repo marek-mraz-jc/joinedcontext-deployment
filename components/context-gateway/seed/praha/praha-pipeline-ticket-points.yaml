@@ -4,18 +4,14 @@ kind: Pipeline
 metadata:
   name: ticket-points
   namespace: praha
-  title: { en: "PID ticket points" }
+  title: { en: PID ticket points }
 spec:
   class: auto
   # ROPID updates the register about monthly; a nightly read is enough.
   period: 24h
-  schedule: "50 3 * * *"
+  schedule: '50 3 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: pid-ticket-points }
   targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
-  output:
-    type: PointOfInterest
-    mode: upsert
-  quotas:
-    maxMemoryMb: 128
-    cpuMillicores: 100
+  output: { type: PointOfInterest, mode: upsert }
+  quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

@@ -39,8 +39,7 @@ pipeline:
         let third = (timestamp_unix() / 28800).floor() % $thirds
         let size = ($pages / $thirds).ceil()
         root = $zones.keys().sort().map_each(code -> range($third * $size, [($third + 1) * $size, $pages].min(), 1).map_each(page -> { "code": code, "name": $zones.get(code), "start": page * 1000, "pages": $pages })).flatten()
-    - unarchive:
-        format: json_array
+    - unarchive: { format: json_array }
     - mapping: |
         meta code = this.code
         meta zone = this.name
@@ -49,7 +48,7 @@ pipeline:
         meta filter = "nationalCadastralReference LIKE '%v_%%'".format(this.code).escape_url_query()
         root = ""
     - http:
-        url: "https://inspirews.skgeodesy.sk/geoserver/cp/ogc/features/v1/collections/cp:CP.CadastralParcel/items?filter=${! @filter }&filter-lang=cql-text&limit=1000&startIndex=${! @start }"
+        url: https://inspirews.skgeodesy.sk/geoserver/cp/ogc/features/v1/collections/cp:CP.CadastralParcel/items?filter=${! @filter }&filter-lang=cql-text&limit=1000&startIndex=${! @start }
         verb: GET
         headers:
           Accept: application/geo+json

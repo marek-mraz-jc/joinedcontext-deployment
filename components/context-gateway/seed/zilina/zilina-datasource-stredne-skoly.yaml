@@ -4,7 +4,9 @@ kind: DataSource
 metadata:
   name: susr-sv5004rr
   namespace: zilina
-  title: { sk: "Stredné odborné školy (ŠÚ SR, sv5004rr)", en: "Secondary vocational schools (ŠÚ SR, sv5004rr)" }
+  title:
+    sk: Stredné odborné školy (ŠÚ SR, sv5004rr)
+    en: Secondary vocational schools (ŠÚ SR, sv5004rr)
 spec:
   type: http
   http:

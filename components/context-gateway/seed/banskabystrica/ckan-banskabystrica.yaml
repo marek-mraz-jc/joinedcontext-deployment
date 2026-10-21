@@ -6,11 +6,8 @@ kind: CkanInstance
 metadata:
   name: banskabystrica
   namespace: banskabystrica
-  title: { sk: "Mesto Banská Bystrica", en: "City of Banská Bystrica" }
+  title: { sk: Mesto Banská Bystrica, en: City of Banská Bystrica }
 spec:
   url: https://opendata.dev.joinedcontext.com
   organizationDefault: banskabystrica
-  apiTokenRef:
-    name: ckan-api-token
-    key: token
-    envVar: CKAN_API_TOKEN
+  apiTokenRef: { name: ckan-api-token, key: token, envVar: CKAN_API_TOKEN }

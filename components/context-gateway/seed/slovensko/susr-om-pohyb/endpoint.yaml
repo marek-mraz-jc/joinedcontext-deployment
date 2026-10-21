@@ -39,3 +39,9 @@ spec:
         title: { sk: "Prehľad pohybu obyvateľstva - SR-oblasť-kraj-okres, m-v (ročne)", en: "Population Change - SR-Area-Reg-District, U-R (yearly)" }
         description: { sk: "Tabuľka om7104rr v DATAcube Štatistického úradu SR: Prehľad pohybu obyvateľstva - SR-oblasť-kraj-okres, m-v (ročne)", en: "Table om7104rr of the Statistical Office of the SR on DATAcube: Population Change - SR-Area-Reg-District, U-R (yearly)" }
     pipelineRef: { kind: Pipeline, name: susr-om-pohyb }
+    visualizations:
+      - name: om2801ms-rocne
+        title: { sk: "Pohyb obyvateľstva za SR podľa rokov", en: "Population change in Slovakia by year" }
+        description: { sk: "Súčet mesačných hodnôt tabuľky om2801ms za celú SR v každom roku, jedna čiara na ukazovateľ.", en: "The monthly values of table om2801ms for the whole of Slovakia summed per year, one line per indicator." }
+        data: {"source": "odata", "entitySet": "KeyPerformanceIndicator", "$filter": "dataSet eq 'om2801ms' and refArea eq 'SK0'", "$select": "refPeriod,kpiValue,name"}
+        spec: {"$schema": "https://vega.github.io/schema/vega-lite/v5.json", "data": {"name": "source"}, "mark": {"type": "line", "point": true}, "encoding": {"x": {"field": "refPeriod", "type": "ordinal", "title": null}, "y": {"aggregate": "sum", "field": "kpiValue", "type": "quantitative", "title": null}, "color": {"field": "name", "type": "nominal", "title": null}, "tooltip": [{"field": "name", "type": "nominal"}, {"field": "refPeriod", "type": "ordinal"}, {"aggregate": "sum", "field": "kpiValue", "type": "quantitative", "format": ",d"}]}}

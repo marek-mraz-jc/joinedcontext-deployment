@@ -7,7 +7,7 @@ kind: DataSource
 metadata:
   name: ipr-park-and-ride
   namespace: praha
-  title: { en: "Park and ride car parks (IPR Praha)", cs: "Parkoviště P+R (IPR Praha)" }
+  title: { en: Park and ride car parks (IPR Praha), cs: Parkoviště P+R (IPR Praha) }
 spec:
   type: http
   http:

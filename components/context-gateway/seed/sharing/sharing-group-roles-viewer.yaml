@@ -5,9 +5,8 @@ kind: Group
 metadata:
   name: sharing-roles-viewer
   namespace: org
-  annotations:
-    joinedcontext.com/app: sharing/sharing-roles
+  annotations: { joinedcontext.com/app: sharing/sharing-roles }
 spec:
   description: The viewers of sharing-roles, its default group.
   members:
-  - user: demo.bearer@hel.fi
+    - user: demo.bearer@hel.fi

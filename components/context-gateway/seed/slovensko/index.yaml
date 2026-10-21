@@ -642,6 +642,9 @@ slovensko-pipeline-podujatia-centralslovakia-bento.yaml: projects/slovensko/pipe
 slovensko-datasource-podujatia-visitbanskabystrica.yaml: projects/slovensko/datasources/podujatia-visitbanskabystrica.yaml
 slovensko-pipeline-podujatia-visitbanskabystrica.yaml: projects/slovensko/pipelines/podujatia-visitbanskabystrica/pipeline.yaml
 slovensko-pipeline-podujatia-visitbanskabystrica-bento.yaml: projects/slovensko/pipelines/podujatia-visitbanskabystrica/bento.yaml
+slovensko-datasource-podujatia-vkmk.yaml: projects/slovensko/datasources/podujatia-vkmk.yaml
+slovensko-pipeline-podujatia-vkmk.yaml: projects/slovensko/pipelines/podujatia-vkmk/pipeline.yaml
+slovensko-pipeline-podujatia-vkmk-bento.yaml: projects/slovensko/pipelines/podujatia-vkmk/bento.yaml
 slovensko-datasource-podujatia-gunagu.yaml: projects/slovensko/datasources/podujatia-gunagu.yaml
 slovensko-pipeline-podujatia-gunagu.yaml: projects/slovensko/pipelines/podujatia-gunagu/pipeline.yaml
 slovensko-pipeline-podujatia-gunagu-bento.yaml: projects/slovensko/pipelines/podujatia-gunagu/bento.yaml

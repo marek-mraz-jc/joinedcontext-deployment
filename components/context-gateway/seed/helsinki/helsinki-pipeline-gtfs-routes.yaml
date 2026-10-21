@@ -5,18 +5,17 @@ kind: Pipeline
 metadata:
   name: gtfs-routes
   namespace: helsinki
-  title: { en: "HSL agencies and lines from GTFS, daily" }
+  title:
+    en: HSL agencies and lines from GTFS, daily
 spec:
   class: auto
   # After the stops, from the same daily feed.
   period: 24h
-  schedule: "30 4 * * *"
+  schedule: '30 4 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: hsl-gtfs-routes }
   targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
-  output:
-    type: GtfsRoute
-    mode: upsert
+  output: { type: GtfsRoute, mode: upsert }
   quotas:
     # 47 kB of CSV; Bento held about 2 MB over its own baseline for it (2026-10-12).
     maxMemoryMb: 64

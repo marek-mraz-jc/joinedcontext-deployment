@@ -7,12 +7,12 @@ kind: Pipeline
 metadata:
   name: ukazovatele
   namespace: zilina
-  title: { sk: "Ukazovatele mesta", en: "City indicators" }
+  title: { sk: Ukazovatele mesta, en: City indicators }
 spec:
   class: scheduled
   # After the cube pipelines' weekly reads (Monday 02:00 to 03:30 UTC), and daily, so a tick the
   # runner misses (a restart, a stream replaced at that minute) costs a day, not a week (T-4081).
-  schedule: "17 5 * * *"
+  schedule: '17 5 * * *'
   # Read through the space's own Endpoint and not the store, so the Policy applies to this
   # pipeline exactly as it applies to anybody else (PL-18, PF-39, PL-45). Only the rows the six
   # indicators read: the five cubes hold ~3 300 rows, these indicators about 1 000.
@@ -20,11 +20,9 @@ spec:
     endpointRef: { kind: Endpoint, name: zilina-mesto }
     query:
       type: KeyPerformanceIndicator
-      q: 'dataSet=="om7101qr","om7052rr","om7105rr","pr5001rr","cr3803mr";indicator=="IN010115","IN010087","IN010089","IN010082","U15061","U_CR_0005"'
+      q: dataSet=="om7101qr","om7052rr","om7105rr","pr5001rr","cr3803mr";indicator=="IN010115","IN010087","IN010089","IN010082","U15061","U_CR_0005"
   targetEndpoint: urn:ngsi-ld:Endpoint:zilina.sk:zilina-kpi:zilina-kpi
-  output:
-    type: KeyPerformanceIndicator
-    mode: upsert
+  output: { type: KeyPerformanceIndicator, mode: upsert }
   # Every run rewrites each of the six its cube carries, so one missing for three weeks is an
   # indicator the city stopped publishing: it is removed rather than shown with a stale value (PL-64). Safe here and
   # only here: this pipeline is the one writer of zilina-kpi.

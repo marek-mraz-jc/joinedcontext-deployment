@@ -4,7 +4,9 @@ kind: DataSource
 metadata:
   name: susr-np3110rr
   namespace: bbsk
-  title: { sk: "Mzdy podľa ekonomickej činnosti (ŠÚ SR, np3110rr)", en: "Wages by economic activity (ŠÚ SR, np3110rr)" }
+  title:
+    sk: Mzdy podľa ekonomickej činnosti (ŠÚ SR, np3110rr)
+    en: Wages by economic activity (ŠÚ SR, np3110rr)
 spec:
   type: http
   http:

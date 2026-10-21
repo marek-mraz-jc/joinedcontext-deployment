@@ -4,10 +4,12 @@ kind: ContextSpace
 metadata:
   name: zilina-uniza
   namespace: zilina
-  title: { sk: "Žilinská univerzita — výskum", en: "University of Žilina, research" }
+  title:
+    sk: Žilinská univerzita — výskum
+    en: University of Žilina, research
   description:
-    sk: "Otvorene licencované diela Žilinskej univerzity z digitálnej knižnice DREPO."
-    en: "The openly licensed works of the University of Žilina from its digital library DREPO."
+    sk: Otvorene licencované diela Žilinskej univerzity z digitálnej knižnice DREPO.
+    en: The openly licensed works of the University of Žilina from its digital library DREPO.
 spec:
   # The space name is the segment its ids carry, pinned so it cannot drift (PF-84).
   urnSegment: zilina-uniza
@@ -19,4 +21,4 @@ spec:
   # other type keeps its current state only. Owners change it on the space's Retention tab.
   retention:
     - entityType: Article
-      history: "off"
+      history: 'off'

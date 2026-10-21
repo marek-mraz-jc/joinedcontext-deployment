@@ -5,7 +5,9 @@ kind: DataSource
 metadata:
   name: liipi-utilizations
   namespace: helsinki
-  title: { en: "Park and ride free spaces (Fintraffic LIIPI)", fi: "Liityntäpysäköinnin vapaat paikat (Fintraffic LIIPI)" }
+  title:
+    en: Park and ride free spaces (Fintraffic LIIPI)
+    fi: Liityntäpysäköinnin vapaat paikat (Fintraffic LIIPI)
 spec:
   type: http
   http:

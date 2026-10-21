@@ -5,18 +5,14 @@ kind: Pipeline
 metadata:
   name: pocasie
   namespace: banskabystrica
-  title: { sk: "Počasie na staniciach SHMÚ", en: "Weather at the SHMÚ stations" }
+  title: { sk: Počasie na staniciach SHMÚ, en: Weather at the SHMÚ stations }
 spec:
   class: auto
   period: 5m
   # SHMÚ writes a file every five minutes; two minutes later it is on the server.
-  schedule: "2-59/5 * * * *"
+  schedule: '2-59/5 * * * *'
   source:
     dataSourceRef: { kind: DataSource, name: shmu-aws1min }
   targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-verejne:banskabystrica-verejne
-  output:
-    type: WeatherObserved
-    mode: upsert
-  quotas:
-    maxMemoryMb: 128
-    cpuMillicores: 100
+  output: { type: WeatherObserved, mode: upsert }
+  quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

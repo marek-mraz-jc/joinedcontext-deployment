@@ -3,7 +3,7 @@ kind: DataModel
 metadata:
   name: zilina-uniza
   namespace: zilina
-  title: { sk: "Otvorený výskum UNIZA", en: "Open research of UNIZA" }
+  title: { sk: Otvorený výskum UNIZA, en: Open research of UNIZA }
 spec:
   contextSpaceRef: zilina-uniza
   linkml: ./zilina-uniza.linkml.yaml

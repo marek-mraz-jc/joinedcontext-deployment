@@ -3,7 +3,7 @@ kind: Policy
 metadata:
   name: pipelines-delete-alerts
   namespace: helsinki
-  title: { en: "The service-alerts pipeline removes the HSL alerts HSL withdrew" }
+  title: { en: The service-alerts pipeline removes the HSL alerts HSL withdrew }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: helsinki }
   assigner: did:web:{orgDomain}

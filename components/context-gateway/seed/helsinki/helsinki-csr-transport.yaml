@@ -7,7 +7,7 @@ kind: ContextSourceRegistration
 metadata:
   name: transport
   namespace: helsinki
-  title: { en: "HSL trunk-line buses" }
+  title: { en: HSL trunk-line buses }
 spec:
   contextSpaceRef: helsinki-hub
   endpointRef: { kind: Endpoint, name: helsinki-transport }

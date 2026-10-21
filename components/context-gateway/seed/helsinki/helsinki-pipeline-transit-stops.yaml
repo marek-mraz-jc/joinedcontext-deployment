@@ -5,18 +5,17 @@ kind: Pipeline
 metadata:
   name: transit-stops
   namespace: helsinki
-  title: { en: "HSL stops, platforms and stations, daily" }
+  title:
+    en: HSL stops, platforms and stations, daily
 spec:
   class: auto
   # HSL publishes the feed daily (feed_info.txt); a moved or new stop is in by the next morning.
   period: 24h
-  schedule: "20 4 * * *"
+  schedule: '20 4 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: hsl-gtfs-stops }
   targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
-  output:
-    type: GtfsStop
-    mode: upsert
+  output: { type: GtfsStop, mode: upsert }
   quotas:
     # 1.1 MB of CSV parsed at once; Bento held 120 to 135 MB over its own baseline for it
     # (2026-10-12, Bento 1.22.0 locally, the member alone).

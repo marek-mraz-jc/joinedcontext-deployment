@@ -4,7 +4,9 @@ kind: DataSource
 metadata:
   name: susr-om7102rr
   namespace: bbsk
-  title: { sk: "Stav obyvateľstva (ŠÚ SR, om7102rr)", en: "Resident population (ŠÚ SR, om7102rr)" }
+  title:
+    sk: Stav obyvateľstva (ŠÚ SR, om7102rr)
+    en: Resident population (ŠÚ SR, om7102rr)
 spec:
   type: http
   http:

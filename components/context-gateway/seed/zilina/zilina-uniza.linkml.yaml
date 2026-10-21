@@ -36,22 +36,19 @@ slots:
   workType:
     slot_uri: jc:workType
     description: What the work is, in the repository's words (Article, Conference paper, Thesis, …).
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   yearPublished:
     slot_uri: jc:yearPublished
     description: The year the work was issued.
     range: integer
     minimum_value: 1900
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   isPartOf:
     slot_uri: schema:isPartOf
     description: >-
       The repository collection the work was deposited in, as DREPO names it: a journal issue,
       a proceedings volume or a series (`Krízový manažment - Ročník 24.; Číslo 2/2025`).
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   publisher:
     slot_uri: schema:publisher
     description: Who issued the work, as the repository records it.

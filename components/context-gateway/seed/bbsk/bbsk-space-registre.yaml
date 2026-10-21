@@ -7,7 +7,9 @@ kind: ContextSpace
 metadata:
   name: bbsk-registre
   namespace: bbsk
-  title: { sk: "Banskobystrický kraj — registre", en: "Banská Bystrica Region, registers" }
+  title:
+    sk: Banskobystrický kraj — registre
+    en: Banská Bystrica Region, registers
   description:
     sk: >-
       Hranice okresov a obcí, organizácie v zriaďovateľskej pôsobnosti kraja, nemocnice, sociálne
@@ -28,13 +30,13 @@ spec:
   # other type keeps its current state only. Owners change it on the space's Retention tab.
   retention:
     - entityType: AdministrativeArea
-      history: "off"
+      history: 'off'
     - entityType: Bridge
-      history: "off"
+      history: 'off'
     - entityType: PublicOrganization
-      history: "off"
+      history: 'off'
     - entityType: PointOfInterest
-      history: "off"
+      history: 'off'
   # The space's place (T-4525): the catalogue's Dataset carries it, so georel=near finds the space.
   # the Banská Bystrica Region with a margin; a PublicOrganization outside it is flagged, never refused (DM-87).
   quality:

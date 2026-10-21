@@ -5,12 +5,9 @@ metadata:
   name: city-bikes
   namespace: helsinki
 spec:
-  title:
-    en: "Helsinki city bikes"
-    fi: "Helsingin kaupunkipyörät"
+  title: { en: Helsinki city bikes, fi: Helsingin kaupunkipyörät }
   visibility: public
   pages:
-    - title: "Stations"
+    - title: Stations
       layout: full-map
-      layers:
-        - bike-stations
+      layers: [bike-stations]

@@ -4,18 +4,14 @@ kind: Pipeline
 metadata:
   name: organizacie
   namespace: bbsk
-  title: { sk: "Organizácie kraja", en: "Organisations of the region" }
+  title: { sk: Organizácie kraja, en: Organisations of the region }
 spec:
   class: auto
   # A register the region revises a few times a year: weekly is already more than it needs (PL-26).
   period: 168h
-  schedule: "45 3 * * 1"
+  schedule: '45 3 * * 1'
   source:
     dataSourceRef: { kind: DataSource, name: bbsk-organizacie }
   targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-registre:bbsk-registre
-  output:
-    type: PublicOrganization
-    mode: upsert
-  quotas:
-    maxMemoryMb: 128
-    cpuMillicores: 100
+  output: { type: PublicOrganization, mode: upsert }
+  quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

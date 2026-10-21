@@ -194,6 +194,8 @@ def processors(row: dict, store: dict) -> list:
         "__REGION__": json.dumps(row["region_name"], ensure_ascii=False),
         "__SOURCE__": json.dumps(row["events_url"], ensure_ascii=False),
         "__PROVIDER__": json.dumps(provider(row), ensure_ascii=False),
+        "__ORGANIZER__": json.dumps(organizer(row), ensure_ascii=False),
+        "__LISTING__": json.dumps(row["events_url"], ensure_ascii=False),
         "__FACTS_ONLY__": "true" if facts_only else "false",
         "__HOST_RE__": re.escape(row["host"]).replace("\\", "\\\\"),
         "__HOST__": row["host"],
@@ -220,6 +222,31 @@ def provider(row: dict) -> str:
         else "licencia neuvedená"
     )
     return f"{row['town']}, {host} ({licence})"
+
+
+#: Inventory bodies that announce other bodies' events: their calendar names no organizer of its own (T-5081).
+AGGREGATORS = re.compile(r"^(regional )?tourism organisation|^region\b")
+
+
+def organizer(row: dict) -> dict | None:
+    """Who runs an event its feed names no organizer for: the body whose calendar it is, never an aggregator.
+
+    The museum, theatre or school of `org_type (Name)`, else the town (`Mesto`) or the municipality (`Obec`,
+    a town is one too by law), with its web site.
+    """
+    kind = row["org_type"]
+    if AGGREGATORS.match(kind):
+        return None
+    named = re.fullmatch(r"[^(]+\((.+)\)", kind)
+    if named:
+        name = named.group(1).strip()
+    elif kind == "town":
+        name = f"Mesto {row['town']}"
+    elif kind in ("municipality", "village"):
+        name = f"Obec {row['town']}"
+    else:
+        return None
+    return {"name": name, "url": row["site"]}
 
 
 def feed_url(row: dict) -> str:

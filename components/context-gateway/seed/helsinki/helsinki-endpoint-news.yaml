@@ -3,10 +3,10 @@ kind: Endpoint
 metadata:
   name: helsinki-news
   namespace: helsinki
+  title: { en: Helsinki city news }
   description:
-    fi: "Helsingin kaupungin uutiset ja tiedotteet hel.fi-sivustolta. Lähde: Helsingin kaupunki, CC BY 4.0."
+    fi: 'Helsingin kaupungin uutiset ja tiedotteet hel.fi-sivustolta. Lähde: Helsingin kaupunki, CC BY 4.0.'
     en: "The City of Helsinki's news and announcements from hel.fi. Source: City of Helsinki, CC BY 4.0."
-  title: { en: "Helsinki city news" }
 spec:
   contextSpaceRef: helsinki
   slug: t2vph7knk35vyjoxzqwhjldnls6nhcmj
@@ -20,20 +20,29 @@ spec:
       instanceRef: { kind: CkanInstance, name: hel-fi }
       license: cc-by
   catalog:
-    publisher: { name: { fi: "Helsingin kaupunki", sv: "Helsingfors stad", en: "City of Helsinki" }, uri: "https://www.hel.fi/" }
+    publisher:
+      name: { fi: Helsingin kaupunki, sv: Helsingfors stad, en: City of Helsinki }
+      uri: https://www.hel.fi/
     license: CC_BY_4_0
-    attribution: { fi: "Lähde: Helsingin kaupunki, hel.fi, CC BY 4.0", sv: "Källa: Helsingfors stad, hel.fi, CC BY 4.0", en: "Source: City of Helsinki, hel.fi, CC BY 4.0" }
+    attribution:
+      fi: 'Lähde: Helsingin kaupunki, hel.fi, CC BY 4.0'
+      sv: 'Källa: Helsingfors stad, hel.fi, CC BY 4.0'
+      en: 'Source: City of Helsinki, hel.fi, CC BY 4.0'
     themes: [GOVE]
     keywords:
-      fi: ["uutiset", "kaupunki", "tiedotteet"]
-      sv: ["nyheter", "staden", "meddelanden"]
-      en: ["news", "city", "announcements"]
+      fi: [uutiset, kaupunki, tiedotteet]
+      sv: [nyheter, staden, meddelanden]
+      en: [news, city, announcements]
     spatial:
       - FI1B1
-      - "http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/091"
+      - http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/091
     frequency: HOURLY
     source:
-      - url: "https://hri.fi/data/en_GB/dataset/helsingin-hel-fi-sivuston-avoin-rajapinta-uutisille"
-        title: { fi: "Hel.fi-sivuston avoin rajapinta uutisille", en: "Open API for the news of hel.fi" }
-        description: { fi: "Helsingin kaupungin uutiset RSS-syötteenä, CC BY 4.0.", en: "The City of Helsinki's news as an RSS feed, CC BY 4.0." }
+      - url: https://hri.fi/data/en_GB/dataset/helsingin-hel-fi-sivuston-avoin-rajapinta-uutisille
+        title:
+          fi: Hel.fi-sivuston avoin rajapinta uutisille
+          en: Open API for the news of hel.fi
+        description:
+          fi: Helsingin kaupungin uutiset RSS-syötteenä, CC BY 4.0.
+          en: The City of Helsinki's news as an RSS feed, CC BY 4.0.
     pipelineRef: { kind: Pipeline, name: hel-news }

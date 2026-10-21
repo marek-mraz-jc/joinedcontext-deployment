@@ -36,28 +36,25 @@ pipeline:
     # A body too large or not a feed is dropped here, as the runner drops a failed fetch (the error
     # stays counted in processor_error): nothing below may read it as an empty feed and clear the
     # stops.
-    - mutation: 'root = if errored() { deleted() }'
+    - mutation: root = if errored() { deleted() }
 
     # The five minutes an empty feed keeps the departures already written.
     - branch:
-        request_map: 'root = if this.entity.or([]).length() > 0 { "fresh" } else { "empty" }'
+        request_map: root = if this.entity.or([]).length() > 0 { "fresh" } else { "empty" }
         processors:
           - switch:
-              - check: 'content().string() == "fresh"'
+              - check: content().string() == "fresh"
                 processors:
                   - cache:
                       resource: departures
                       operator: set
                       key: trip-updates
-                      value: "1"
-                  - mapping: 'root = "write"'
+                      value: '1'
+                  - mapping: root = "write"
               - processors:
-                  - cache:
-                      resource: departures
-                      operator: exists
-                      key: trip-updates
-                  - mapping: 'root = if content().string() == "true" { "keep" } else { "write" }'
-        result_map: 'meta departures = content().string()'
+                  - cache: { resource: departures, operator: exists, key: trip-updates }
+                  - mapping: root = if content().string() == "true" { "keep" } else { "write" }
+        result_map: meta departures = content().string()
     # A mutation, not a mapping: `root = this` deep-copies the whole decoded feed (T-4071).
     - mutation: |
         root = if meta("departures") == "keep" { deleted() }
@@ -129,5 +126,4 @@ pipeline:
             "observedAt": $at
           }
         })
-    - unarchive:
-        format: json_array
+    - unarchive: { format: json_array }

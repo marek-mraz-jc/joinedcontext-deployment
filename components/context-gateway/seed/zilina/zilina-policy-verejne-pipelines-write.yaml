@@ -3,7 +3,7 @@ kind: Policy
 metadata:
   name: verejne-pipelines-write
   namespace: zilina
-  title: { sk: "Kanály zapisujú priestor zilina-verejne", en: "The pipelines write zilina-verejne" }
+  title: { sk: Kanály zapisujú priestor zilina-verejne, en: The pipelines write zilina-verejne }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: zilina-verejne }
   assigner: did:web:zilina.sk

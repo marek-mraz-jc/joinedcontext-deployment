@@ -5,7 +5,9 @@ kind: DataSource
 metadata:
   name: chmi-air-quality
   namespace: praha
-  title: { en: "Air quality, hourly means (ČHMÚ)", cs: "Kvalita ovzduší, hodinové průměry (ČHMÚ)" }
+  title:
+    en: Air quality, hourly means (ČHMÚ)
+    cs: Kvalita ovzduší, hodinové průměry (ČHMÚ)
 spec:
   type: http
   http:

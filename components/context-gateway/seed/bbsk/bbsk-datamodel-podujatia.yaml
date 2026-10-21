@@ -3,7 +3,7 @@ kind: DataModel
 metadata:
   name: bbsk-podujatia
   namespace: bbsk
-  title: { sk: "Podujatia", en: "Events" }
+  title: { sk: Podujatia, en: Events }
 spec:
   contextSpaceRef: bbsk-podujatia
   linkml: ./bbsk-podujatia.linkml.yaml

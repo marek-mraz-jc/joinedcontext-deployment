@@ -4,18 +4,14 @@ kind: Pipeline
 metadata:
   name: bike-availability
   namespace: praha
-  title: { en: "Bike availability" }
+  title: { en: Bike availability }
 spec:
   class: auto
   # Every five minutes: 1580 stations at the publisher's 60 s would be five times the writes for a number a rider reads at the station anyway (Development/12 §4).
   period: 5m
-  schedule: "*/5 * * * *"
+  schedule: '*/5 * * * *'
   source:
     dataSourceRef: { kind: DataSource, name: nextbike-station-status }
   targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
-  output:
-    type: BikeHireDockingStation
-    mode: upsert
-  quotas:
-    maxMemoryMb: 128
-    cpuMillicores: 100
+  output: { type: BikeHireDockingStation, mode: upsert }
+  quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

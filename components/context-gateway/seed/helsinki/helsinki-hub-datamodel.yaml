@@ -6,7 +6,7 @@ kind: DataModel
 metadata:
   name: helsinki-hub
   namespace: helsinki
-  title: { en: "Helsinki hub" }
+  title: { en: Helsinki hub }
 spec:
   contextSpaceRef: helsinki-hub
   linkml: ./helsinki-hub.linkml.yaml

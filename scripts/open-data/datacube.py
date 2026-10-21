@@ -114,7 +114,10 @@ TOPICS = [
     {"name": "susr-od", "theme": "od", "title": {"sk": "Mzdy vo vybraných odvetviach", "en": "Wages in selected branches"}, "cubes": ["od0008ms"]},
     {"name": "susr-og", "theme": "og", "title": {"sk": "Ekonomické subjekty podľa právnej formy", "en": "Business units by legal form"}, "cubes": ["og2019qs"]},
     {"name": "susr-om", "theme": "om", "title": {"sk": "Stav obyvateľstva", "en": "Population"}, "cubes": ["om2019rs"]},
-    {"name": "susr-om-pohyb", "theme": "om", "title": {"sk": "Pohyb obyvateľstva", "en": "Population change"}, "cubes": ["om2801ms", "om7104rr"]},
+    # 136,202 rows: its file.csv is over the Endpoint's download cap (413), so no DataStore mirror, and the
+    # national monthly table, summed per year, is its chart (T-5089).
+    {"name": "susr-om-pohyb", "theme": "om", "title": {"sk": "Pohyb obyvateľstva", "en": "Population change"}, "cubes": ["om2801ms", "om7104rr"],
+     "mirror": False, "chart": "om2801ms"},
     {"name": "susr-pl", "theme": "pl", "title": {"sk": "Hospodárske zvieratá", "en": "Livestock"}, "cubes": ["pl2016rs"]},
     {"name": "susr-pm", "theme": "pm", "title": {"sk": "Priemyselná produkcia", "en": "Industrial production"}, "cubes": ["pm0043ms"]},
     {"name": "susr-pm-ceny", "theme": "pm", "title": {"sk": "Ceny priemyselných výrobcov", "en": "Industrial producer prices"}, "cubes": ["pm0048ms"]},
@@ -393,6 +396,39 @@ def source_names(d: dict, parts: dict[str, list[tuple[str, int]]]) -> list[str]:
     return [f"susr-{d['code']}"] if n == 1 else [f"susr-{d['code']}-{i}" for i in range(1, n + 1)]
 
 
+def chart(topic: dict) -> str:
+    """The topic's declared chart: each indicator of one table for the whole country, summed per year.
+
+    jcctl draws a chart by itself only from the DataStore mirror's model, and over a history these
+    spaces do not keep (history off), so a topic without a mirror declares its chart here (T-5089).
+    """
+    cube = topic.get("chart")
+    if not cube:
+        return ""
+    spec = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "data": {"name": "source"},
+        "mark": {"type": "line", "point": True},
+        "encoding": {
+            "x": {"field": "refPeriod", "type": "ordinal", "title": None},
+            "y": {"aggregate": "sum", "field": "kpiValue", "type": "quantitative", "title": None},
+            "color": {"field": "name", "type": "nominal", "title": None},
+            "tooltip": [{"field": "name", "type": "nominal"}, {"field": "refPeriod", "type": "ordinal"},
+                        {"aggregate": "sum", "field": "kpiValue", "type": "quantitative", "format": ",d"}],
+        },
+    }
+    data = {"source": "odata", "entitySet": TYPE, "$filter": f"dataSet eq '{cube}' and refArea eq 'SK0'",
+            "$select": "refPeriod,kpiValue,name"}
+    t = topic["title"]
+    return f"""
+    visualizations:
+      - name: {cube}-rocne
+        title: {{ sk: {q(t['sk'] + ' za SR podľa rokov')}, en: {q(t['en'] + ' in Slovakia by year')} }}
+        description: {{ sk: {q(f'Súčet mesačných hodnôt tabuľky {cube} za celú SR v každom roku, jedna čiara na ukazovateľ.')}, en: {q(f'The monthly values of table {cube} for the whole of Slovakia summed per year, one line per indicator.')} }}
+        data: {json.dumps(data, ensure_ascii=False)}
+        spec: {json.dumps(spec, ensure_ascii=False)}"""
+
+
 def topic_files(topic: dict, ds: list[dict], parts: dict[str, list[tuple[str, int]]], slug: str, index: int) -> dict[str, str]:
     theme, space, t = topic["theme"], topic["name"], topic["title"]
     name, eu = THEMES[theme]
@@ -410,6 +446,7 @@ def topic_files(topic: dict, ds: list[dict], parts: dict[str, list[tuple[str, in
     # The topic's most frequent cadence.
     sources_ = "\n".join(source(d) for d in ds)
     frequency = next((FREQUENCY[c] for c in "mqr" if any(d["code"][6] == c for d in ds)), "ANNUAL")
+    mirror = "      datastore: { representation: csv, refresh: onReconcile }\n" if topic.get("mirror", True) else ""
     files = {
         "space.yaml": f"""{BEGIN}
 # ŠÚ SR's DATAcube {tables} (theme `{theme}`), every cell a KeyPerformanceIndicator.
@@ -469,7 +506,11 @@ spec:
     ckan:
       instanceRef: {{ kind: CkanInstance, name: slovensko }}
       license: cc-by-sa
+<<<<<<< HEAD
   catalog:
+=======
+{mirror}  catalog:
+>>>>>>> origin/main
     publisher: {{ name: {{ sk: "Platforma joinedcontext", en: "The joinedcontext platform" }}, uri: "https://dev.joinedcontext.com/" }}
     contactPoint: {{ name: {q(CONTACT["name"])}, email: {CONTACT["email"]} }}
     license: CC_BYSA_4_0
@@ -485,7 +526,7 @@ spec:
     frequency: {frequency}
     source:
 {sources_}
-    pipelineRef: {{ kind: Pipeline, name: {space} }}
+    pipelineRef: {{ kind: Pipeline, name: {space} }}{chart(topic)}
 """,
         "policy-pipelines-write.yaml": f"""{BEGIN}
 {head}

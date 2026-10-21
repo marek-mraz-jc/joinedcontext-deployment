@@ -4,7 +4,9 @@ kind: DataSource
 metadata:
   name: susr-sv5001rr
   namespace: zilina
-  title: { sk: "Materské školy (ŠÚ SR, sv5001rr)", en: "Kindergartens (ŠÚ SR, sv5001rr)" }
+  title:
+    sk: Materské školy (ŠÚ SR, sv5001rr)
+    en: Kindergartens (ŠÚ SR, sv5001rr)
 spec:
   type: http
   http:

@@ -4,7 +4,7 @@ kind: Project
 metadata:
   name: sharing
   namespace: org
-  title: { en: "App sharing matrix (test)" }
+  title: { en: App sharing matrix (test) }
 spec:
   organizationRef: hel
   quotas:

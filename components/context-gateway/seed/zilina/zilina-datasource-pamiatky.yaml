@@ -7,7 +7,9 @@ kind: DataSource
 metadata:
   name: mksr-pamiatky-zsk
   namespace: zilina
-  title: { sk: "Register nehnuteľných NKP, Žilinský kraj", en: "Register of immovable national cultural monuments, Žilina region" }
+  title:
+    sk: Register nehnuteľných NKP, Žilinský kraj
+    en: Register of immovable national cultural monuments, Žilina region
 spec:
   type: http
   http:

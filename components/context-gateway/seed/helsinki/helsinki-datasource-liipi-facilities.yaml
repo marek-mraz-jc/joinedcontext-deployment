@@ -6,7 +6,9 @@ kind: DataSource
 metadata:
   name: liipi-facilities
   namespace: helsinki
-  title: { en: "Park and ride facilities of the HSL area (Fintraffic LIIPI)", fi: "HSL-alueen liityntäpysäköintipaikat (Fintraffic LIIPI)" }
+  title:
+    en: Park and ride facilities of the HSL area (Fintraffic LIIPI)
+    fi: HSL-alueen liityntäpysäköintipaikat (Fintraffic LIIPI)
 spec:
   type: http
   http:

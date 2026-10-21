@@ -6,7 +6,7 @@ kind: DataSource
 metadata:
   name: hel-linked-events
   namespace: helsinki
-  title: { en: "Helsinki events (Linked Events)", fi: "Helsingin tapahtumat (Linked Events)" }
+  title: { en: Helsinki events (Linked Events), fi: Helsingin tapahtumat (Linked Events) }
 spec:
   type: http
   http:

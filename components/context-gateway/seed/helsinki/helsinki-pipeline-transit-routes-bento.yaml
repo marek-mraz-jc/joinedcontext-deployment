@@ -10,12 +10,10 @@ pipeline:
   processors:
     - mapping: |
         root = this.features.or([]).filter(f -> f.properties.route_vari.or("").string().trim() != "" && f.properties.stop_id.or("").string().trim() != "" && f.properties.stop_seque.type() == "number" && f.geometry.type.or("") == "Point")
-    - unarchive:
-        format: json_array
+    - unarchive: { format: json_array }
     - group_by_value:
-        value: '${! json("properties.route_vari") }'
-    - archive:
-        format: json_array
+        value: ${! json("properties.route_vari") }
+    - archive: { format: json_array }
     - mapping: |
         map mode {
           root = match this.string() {

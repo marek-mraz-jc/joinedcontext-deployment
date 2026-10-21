@@ -20,6 +20,8 @@
       "lat": if e.venue.type() == "object" { e.venue.geo_lat.or(null) } else { null },
       "lon": if e.venue.type() == "object" { e.venue.geo_lng.or(null) } else { null },
       "url": e.url.or(null),
+      # The plugin's organizer: its name (`organizer`) and its web site; its e-mail and phone stay out.
+      "organizer": e.organizer.or([]).(o -> if o.type() == "array" { o.index(0).catch(null) } else { o }).(o -> if o != null && o.type() == "object" { { "name": o.organizer.or(null), "url": o.website.or(null) } } else { null }),
       "category": e.categories.or([]).map_each(c -> c.name.or("")).filter(c -> c != "").join(", "),
       "description": e.description.or(null),
       "sourceId": e.id.or(null),

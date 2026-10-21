@@ -360,7 +360,11 @@
       var from = state.rows.length ? state.offset + 1 : 0;
       var to = state.offset + state.rows.length;
       var n = new Intl.NumberFormat(t.locale);
+<<<<<<< HEAD
       // CKAN's table preview words, so the catalogue reads as it always did.
+=======
+      // the CKAN table preview wording, so the catalogue reads as it always did.
+>>>>>>> origin/main
       return say(state.total === null ? t.showingOpen : t.showing, { from: n.format(from), to: n.format(to), total: state.total === null ? "" : n.format(state.total) });
     }
 
@@ -561,7 +565,11 @@
     SIZES.forEach(function (n) { size.appendChild(el("option", { value: String(n), text: String(n) })); });
     size.addEventListener("change", function () { state.limit = +size.value; state.offset = 0; load(); });
     $("retry").addEventListener("click", function () { (state.type ? load : start)(); });
+<<<<<<< HEAD
     // Data API: where CKAN listed its own row search, the same query's addresses on the Endpoint.
+=======
+    // Data API: the same query's addresses on the Endpoint.
+>>>>>>> origin/main
     $("data-api").addEventListener("click", function () {
       $("detail-title").textContent = t.dataApi;
       $("detail-list").textContent = "";

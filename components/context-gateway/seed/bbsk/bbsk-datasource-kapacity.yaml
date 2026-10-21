@@ -4,7 +4,9 @@ kind: DataSource
 metadata:
   name: susr-cr3807qr
   namespace: bbsk
-  title: { sk: "Návštevnosť, tržby a kapacity UZ – okresy (ŠÚ SR, cr3807qr)", en: "Accommodation visitors, revenue and capacity, districts (ŠÚ SR, cr3807qr)" }
+  title:
+    sk: Návštevnosť, tržby a kapacity UZ – okresy (ŠÚ SR, cr3807qr)
+    en: Accommodation visitors, revenue and capacity, districts (ŠÚ SR, cr3807qr)
 spec:
   type: http
   http:

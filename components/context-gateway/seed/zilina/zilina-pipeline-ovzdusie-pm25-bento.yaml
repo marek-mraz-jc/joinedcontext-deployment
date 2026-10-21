@@ -11,8 +11,7 @@
 pipeline:
   processors:
     - parquet_decode: {}
-    - archive:
-        format: json_array
+    - archive: { format: json_array }
     # The empty-read guard (T-3138): a station file without a record is the service failing, not
     # the air clearing, so the run fails where it can be seen instead of writing nothing.
     - mapping: |

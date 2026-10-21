@@ -64,7 +64,7 @@
     },
     "Event": {
       "additionalProperties": false,
-      "description": "One public event: its name, its start and its place as a GPS point are required (owner 2026-10-20), the rest is kept where the source gives it.",
+      "description": "One public event: its name, its start, its place as a GPS point, its organizer and a link are required (owner 2026-10-20, 2026-10-21), the rest is kept where the source gives it.",
       "properties": {
         "address": {
           "anyOf": [
@@ -164,6 +164,11 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "organizer": {
+          "$ref": "#/definitions/Organizer",
+          "description": "Who runs the event: the museum, the school, the town or the named performer, never the feed or the aggregator that announced it (that is `dataProvider`). Its name and its web site only, never a person's e-mail or phone.",
+          "x-ngsi-ld-kind": "Property"
+        },
         "source": {
           "description": "The feed or the page the pipeline read the event from.",
           "format": "uri",
@@ -193,12 +198,9 @@
           "x-ngsi-ld-kind": "Property"
         },
         "url": {
-          "description": "The page of the event at its source, where a person reads more or buys a ticket.",
+          "description": "An http(s) link a person opens: the page of the event at its source, where they read more or buy a ticket, else the organizer's page that lists its events.",
           "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": "string",
           "x-ngsi-ld-kind": "Property"
         },
         "venue": {
@@ -214,10 +216,37 @@
         "name",
         "startDate",
         "location",
+        "organizer",
+        "url",
         "id",
         "type"
       ],
       "title": "Event",
+      "type": "object"
+    },
+    "Organizer": {
+      "additionalProperties": false,
+      "description": "The value of `organizer`, never an entity of its own.",
+      "properties": {
+        "name": {
+          "description": "The organizer's name as the source writes it (`Stredoslovenské múzeum`).",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "url": {
+          "description": "The organizer's own web site, when the source names it.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "Organizer",
       "type": "object"
     },
     "PostalAddress": {

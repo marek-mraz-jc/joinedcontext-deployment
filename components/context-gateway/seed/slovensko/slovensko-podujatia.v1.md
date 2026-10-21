@@ -3,7 +3,7 @@
 <!-- Generated from the LinkML source by Model Tools. Do not edit: `jcctl model
      generate` overwrites this file and CI fails on any difference (DM-01, DM-02). -->
 
-One public event as a town, a region or a cultural body announces it on its web site or feed: what it is, when it starts and ends, and where, as a GPS point. The class is schema.org's Event under the names Smart Data Models and schema.org use, so the space's iCalendar surface (RFC 5545, EP-125) reads it as published: `id` the UID, `name` the SUMMARY, `startDate` and `endDate` DTSTART and DTEND, `description`, `address`, `location` and `url` DESCRIPTION, LOCATION, GEO and URL. An event without a name, a start or a point in Slovakia is refused by the pipeline and never reaches the space (owner 2026-10-20). One event announced by two sources is one entity: its id is `urn:ngsi-ld:Event:slovensko-podujatia:` followed by the first 16 hex digits of the SHA-256 of `lower(trim(name)) \| startDate \| lower(addressLocality)`, so the second source overwrites the first rather than adding a copy.
+One public event as a town, a region or a cultural body announces it on its web site or feed: what it is, when it starts and ends, and where, as a GPS point. The class is schema.org's Event under the names Smart Data Models and schema.org use, so the space's iCalendar surface (RFC 5545, EP-125) reads it as published: `id` the UID, `name` the SUMMARY, `startDate` and `endDate` DTSTART and DTEND, `description`, `address`, `location` and `url` DESCRIPTION, LOCATION, GEO and URL, `organizer` ORGANIZER. An event without a name, a start, a point in Slovakia, an organizer or a link is refused by the pipeline and never reaches the space (owner 2026-10-20, 2026-10-21). One event announced by two sources is one entity: its id is `urn:ngsi-ld:Event:slovensko-podujatia:` followed by the first 16 hex digits of the SHA-256 of `lower(trim(name)) \| startDate \| lower(addressLocality)`, so the second source overwrites the first rather than adding a copy.
 
 - Namespace: `https://joinedcontext.com/models/slovensko/slovensko-podujatia`
 - Rendered by: `linkml-1.11.1`
@@ -13,7 +13,7 @@ One public event as a town, a region or a cultural body announces it on its web 
 
 ### Event
 
-One public event: its name, its start and its place as a GPS point are required (owner 2026-10-20), the rest is kept where the source gives it.
+One public event: its name, its start, its place as a GPS point, its organizer and a link are required (owner 2026-10-20, 2026-10-21), the rest is kept where the source gives it.
 
 IRI: `schema:Event`
 
@@ -29,7 +29,8 @@ Specialises `Entity`.
 | `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address of the venue, field by field (Smart Data Models' common PostalAddress); `addressLocality` is the town a calendar filters on. A field the source leaves out is absent, never guessed. |
 | `eventCategory` | Property | `string` |  |  | `jc:eventCategory` | The kind of event in the source's own words (`koncert`, `výstava`, `šport`). |
 | `description` | Property | `string` |  |  | `schema:description` | What the source says about the event, as plain text without markup. |
-| `url` | Property | `uri` |  |  | `schema:url` | The page of the event at its source, where a person reads more or buys a ticket. |
+| `organizer` | Property | [`Organizer`](#organizer) | yes |  | `schema:organizer` | Who runs the event: the museum, the school, the town or the named performer, never the feed or the aggregator that announced it (that is `dataProvider`). Its name and its web site only, never a person's e-mail or phone. |
+| `url` | Property | `uri` | yes |  | `schema:url` | An http(s) link a person opens: the page of the event at its source, where they read more or buy a ticket, else the organizer's page that lists its events. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who announced the event (the town, the region, the cultural body), as the credit names it. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The feed or the page the pipeline read the event from. |
 | `sourceId` | Property | `string` |  |  | `jc:sourceId` | The event's own identifier at its source, so a record can be traced back. |
@@ -51,6 +52,17 @@ IRI: `schema:PostalAddress`
 | `addressLocality` | Property | `string` |  |  | `schema:addressLocality` | The town or the municipality, by its Slovak name with diacritics (`Banská Bystrica`). |
 | `addressRegion` | Property | `string` |  |  | `schema:addressRegion` | The self-governing region, by its Slovak name (`Banskobystrický kraj`). |
 | `addressCountry` | Property | `string` |  |  | `schema:addressCountry` | The country, as an ISO 3166-1 alpha-2 code. |
+
+### Organizer
+
+The value of `organizer`, never an entity of its own.
+
+IRI: `schema:Organization`
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | Property | `string` | yes |  | `schema:name` | The organizer's name as the source writes it (`Stredoslovenské múzeum`). |
+| `url` | Property | `uri` |  |  | `schema:url` | The organizer's own web site, when the source names it. |
 
 ### Entity
 

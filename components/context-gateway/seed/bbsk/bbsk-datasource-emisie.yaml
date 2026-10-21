@@ -4,7 +4,9 @@ kind: DataSource
 metadata:
   name: susr-zp3803rs
   namespace: bbsk
-  title: { sk: "Emisie znečisťujúcich látok (ŠÚ SR, zp3803rs)", en: "Pollutant emissions (ŠÚ SR, zp3803rs)" }
+  title:
+    sk: Emisie znečisťujúcich látok (ŠÚ SR, zp3803rs)
+    en: Pollutant emissions (ŠÚ SR, zp3803rs)
 spec:
   type: http
   http:

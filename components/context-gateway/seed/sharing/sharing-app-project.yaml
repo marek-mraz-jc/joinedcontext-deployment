@@ -6,12 +6,10 @@ kind: App
 metadata:
   name: sharing-project
   namespace: sharing
-  annotations:
-    joinedcontext.com/shipped-with: portal
-  title:
-    en: "Sharing probe (project)"
+  title: { en: Sharing probe (project) }
   description:
-    en: "Test page of the App sharing matrix, visibility project: who opens it and how many city-bike stations it shows them."
+    en: 'Test page of the App sharing matrix, visibility project: who opens it and how many city-bike stations it shows them.'
+  annotations: { joinedcontext.com/shipped-with: portal }
 spec:
   kind: ui
   source:
@@ -19,9 +17,7 @@ spec:
   visibility: project
   lifecycle: published
   dataNeeds:
-    - contextSpaceRef:
-        kind: ContextSpace
-        name: sharing-bikes
+    - contextSpaceRef: { kind: ContextSpace, name: sharing-bikes }
       types: [BikeHireDockingStation]
       attrs: [name, location]
       operations: [queryEntity, retrieveEntity]
