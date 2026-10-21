@@ -24,7 +24,7 @@ import re
 import pytest
 from test_postgres_tuning import cluster
 
-ENVIRONMENTS = ["local", "dev", "smartcity", "staging", "production"]
+ENVIRONMENTS = ["local", "dev", "smartcity", "staging", "production", "minimal", "broker-only"]
 PER_PROCESS_MIB = 19
 OTHER_SHARED_MIB = 30
 SHARE_OF_LIMIT = 0.8

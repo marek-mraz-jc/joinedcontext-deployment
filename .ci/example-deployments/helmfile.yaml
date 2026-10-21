@@ -22,6 +22,11 @@ environments:
   # The render surface of the optional add-ons; see environments/addons/global.yaml.gotmpl.
   addons:
     values: []
+  # The two small component profiles (T-4856); see environments/minimal and broker-only.
+  minimal:
+    values: []
+  broker-only:
+    values: []
 ---
 helmfiles:
   - path: '../helmfile-root.yaml.gotmpl'
@@ -36,3 +41,5 @@ helmfiles:
           - smartcity
           - recovery-test
           - addons
+          - minimal
+          - broker-only

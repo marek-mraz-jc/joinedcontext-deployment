@@ -47,7 +47,8 @@ jobs:
         run: |
           set -eu
           mkdir -p /tmp/scan
-          for env in local production dev addons; do
+          # minimal and broker-only: the two small component profiles (T-4856).
+          for env in local production dev addons minimal broker-only; do
             echo "::group::${env}"
             helmfile -f deployment/helmfile.yaml -e "${env}" repos
             scripts/render.sh "${env}" "rendered-${env}.yaml"
