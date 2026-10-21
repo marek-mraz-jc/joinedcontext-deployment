@@ -2,7 +2,7 @@ id: https://banskabystrica.sk/models/ovzdusie/bb-air-quality
 name: bb-air-quality
 title: Air quality observed in Banská Bystrica
 description: >-
-  The air-quality observation the `ovzdusie` space publishes (DM-01, DM-09). Five own slots on
+  The air-quality observation the `ovzdusie` space publishes (DM-01, DM-09). Six own slots on
   top of the four every entity inherits from `ngsi-ld-core`; the IRIs are Smart Data Models'
   and ETSI's, cited rather than minted, so a federation partner reading this model reads the
   same terms it already knows (DM-04, DM-16).
@@ -23,6 +23,12 @@ imports:
   - ngsi-ld-core
 
 slots:
+  name:
+    slot_uri: schema:name
+    description: The station's name, per language, as the readings of verejne name it (T-4745).
+    annotations:
+      ngsi_ld_kind: LanguageProperty
+      upstream_source: https://schema.org/name
   dateObserved:
     slot_uri: sdm:dateObserved
     description: When the reading was taken, ISO 8601 with a time zone.
@@ -87,6 +93,7 @@ classes:
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
     slots:
+      - name
       - dateObserved
       - pm10
       - pm25
