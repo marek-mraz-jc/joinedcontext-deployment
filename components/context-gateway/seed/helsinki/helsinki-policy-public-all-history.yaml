@@ -16,4 +16,6 @@ spec:
     - entities:
         - type: BikeHireDockingStation
         - type: OffStreetParking
+    - entities:
         - type: WaterQualityObserved
+      propertyNames: [dataProvider, dateObserved, location, name, source, temperature]
