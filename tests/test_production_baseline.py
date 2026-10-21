@@ -263,6 +263,12 @@ def test_the_assistant_alerts_read_the_portals_own_series(production):
     missing = rules["PipelineRecordsMissing"]
     assert missing["expr"] == "max by (project, pipeline) (jc_pipeline_missing) > 10"
     assert "{{ $labels.pipeline }}" in missing["annotations"]["summary"]
+    # T-5020: a running pipeline whose newest entity is older than its freshness target tells
+    # somebody, from the gauge the Portal's quality run sets.
+    stale = rules["PipelineDataStale"]
+    assert stale["expr"] == "max by (project, pipeline) (jc_pipeline_stale) == 1"
+    assert stale["labels"]["severity"] == "warning"
+    assert "{{ $labels.pipeline }}" in stale["annotations"]["summary"]
 
 
 def test_metrics_stay_inside_the_cluster(production):
