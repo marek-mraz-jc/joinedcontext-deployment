@@ -94,6 +94,19 @@ pipeline:
         "addressRegion": "Bratislavský kraj",
         "addressCountry": "SK"
       }.filter(kv -> kv.value != null && kv.value != "")
+      map link {
+        root = if this == null { null } else { this.string().trim().(u -> if u.re_match("^https?://[^\\s/@]+(/\\S*)?$") && u.length() <= 2000 { u } else { null }) }
+      }
+      # The organizer the feed names, else the body whose calendar this is (the inventory row); an aggregator's
+      # row names none, so its event without an organizer is refused (T-5081). Name and web site only: a feed's
+      # organizer e-mail or phone may be a person's and stays on the source's page.
+      map uncontact {
+        root = if this == null { null } else { this.re_replace_all("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "").re_replace_all("(\\+421|\\b0)[0-9][0-9 /]{7,}[0-9]", "").re_replace_all("(?i)\\b(tel|mobil|e-?mail|kontakt)\\.?:?", "").re_replace_all("\\s+", " ").re_replace_all("^[ ,;:-]+|[ ,;:-]+$", "").(t -> if t == "" { null } else { t }) }
+      }
+      let named = this.organizer.name.or(null).apply("text").apply("uncontact")
+      let organizer = if $named != null { { "name": $named.slice(0, [$named.length(), 300].min()), "url": this.organizer.url.or(null).apply("link") }.filter(kv -> kv.value != null) } else { {"name": "Obec Jablonec", "url": "https://www.jablonec.sk"} }
+      # The event's own page, else the organizer's page listing its events: every event carries a link a person opens.
+      let link = this.url.apply("link").or("https://www.jablonec.sk/udalosti/kalendar-akcii/")
       let now = timestamp_unix()
       let lease = 187200
       let ends = if this._end == null { null } else { this._end + 86400 }
@@ -115,7 +128,8 @@ pipeline:
         # (integrator 2026-10-20, T-4894); its text stays on its own page.
         # Contact e-mails and phone numbers stay on the source's page: they may name a person.
         "description": if true { null } else { this.description.apply("text").(d -> if d != null { d.re_replace_all("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "").re_replace_all("(\\+421|\\b0)[0-9][0-9 /]{7,}[0-9]", "").re_replace_all("\\s+", " ").trim() } else { null }).(d -> if d != null && d != "" { d.slice(0, [d.length(), 2000].min()) } else { null }).apply("prop") },
-        "url": this.url.apply("prop"),
+        "url": $link.apply("prop"),
+        "organizer": $organizer.apply("prop"),
         "source": { "type": "Property", "value": "https://www.jablonec.sk/udalosti/kalendar-akcii/" },
         "sourceId": this.sourceId.string().catch(null).apply("prop"),
         "dataProvider": { "type": "Property", "value": "Jablonec, jablonec.sk (licencia neuvedená)" },

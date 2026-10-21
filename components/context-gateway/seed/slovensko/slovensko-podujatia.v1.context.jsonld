@@ -7,6 +7,9 @@
     "Event": {
       "@id": "schema:Event"
     },
+    "Organizer": {
+      "@id": "schema:Organization"
+    },
     "PostalAddress": {
       "@id": "schema:PostalAddress"
     },
@@ -52,6 +55,9 @@
     "observedAt": {
       "@id": "ngsi-ld:observedAt",
       "@type": "xsd:dateTime"
+    },
+    "organizer": {
+      "@id": "schema:organizer"
     },
     "postalCode": {
       "@id": "schema:postalCode"
