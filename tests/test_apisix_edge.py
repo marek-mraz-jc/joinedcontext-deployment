@@ -608,3 +608,24 @@ def test_without_the_app_wildcard_nothing_of_it_renders(rendered):
         assert wildcard_objects(docs) == {}, env
         ingress = edge_objects(docs)["Ingress"]["spec"]
         assert not any("*" in rule["host"] for rule in ingress["rules"]), env
+
+
+def test_every_answer_gets_the_header_floor_where_nothing_set_it(rendered):
+    """T-5107 (ZAP 10035, 10063): a global rule adds HSTS, nosniff and a Permissions-Policy to an
+    answer that has none, the edge's own 404 for an address no route serves included; it never
+    replaces what the upstream or the route set, and leaves an App's host its own policy."""
+    cm = next(
+        d for d in rendered("local")
+        if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "apisix-standalone-base"
+    )
+    rules = {r["id"]: r["plugins"] for r in yaml.safe_load(cm["data"]["apisix.yaml"])["global_rules"]}
+    post = rules["edge-headers"]["serverless-post-function"]
+    assert post["phase"] == "header_filter"
+    lua = "".join(post["functions"])
+    for header, value in (
+        ("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload"),
+        ("X-Content-Type-Options", "nosniff"),
+        ("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=(), usb=()"),
+    ):
+        assert f'h["{header}"] == nil' in lua and f'h["{header}"] = "{value}"' in lua, header
+    assert re.search(r'local apps = "\.apps\.[a-z0-9.-]+"', lua), "the App hosts keep their own policy"

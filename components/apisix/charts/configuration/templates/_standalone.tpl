@@ -27,6 +27,29 @@
         plugins:
           client-control:
             max_body_size: {{ mul (int .Values.maxRequestBodyMegabytes) 1048576 }}
+    {{- /* T-5107 (ZAP baseline): the floor of every answer, the edge's own 404 for an address no
+           route serves included, added only where nothing upstream or on the route set it. An
+           App on its own host chooses its own Permissions-Policy (a map App asks for location). */}}
+      - id: edge-headers
+        plugins:
+          serverless-post-function:
+            phase: header_filter
+            functions:
+              - >-
+                return function()
+                  local h = ngx.header
+                  if h["Strict-Transport-Security"] == nil then
+                    h["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+                  end
+                  if h["X-Content-Type-Options"] == nil then
+                    h["X-Content-Type-Options"] = "nosniff"
+                  end
+                  local host = ngx.var.host or ""
+                  local apps = ".apps.{{ .Values.domain }}"
+                  if h["Permissions-Policy"] == nil and host:sub(-#apps) ~= apps then
+                    h["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+                  end
+                end
     upstreams:
 {{- range $id, $config := .Values.routes }}
       - id: {{ $id }}
