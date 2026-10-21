@@ -55,10 +55,11 @@ postgres:
       schedule: '30 2 * * *'
       keepDays: 7
       size: 10Gi
-    # The monthly restore drill (OPS-11, OPS-12, T-0046): restores the latest base backup and
-    # WAL from the archive above into a throwaway Cluster `{cluster}-drill`, compares every
-    # database's row count with the source, measures RTO and RPO, writes the result into the
-    # ConfigMap `{cluster}-dr-drill` and one JSON line into its log, and deletes the copy. With
+    # The monthly restore drill (OPS-11, OPS-12, T-0046, T-5101): restores the archive above
+    # into a throwaway Cluster `{cluster}-drill` twice, to its end and to the instant the drill
+    # counted the source's tables, compares the row counts, measures RTO and RPO, writes the
+    # result into the ConfigMap `{cluster}-dr-drill` and one JSON line into its log, and
+    # deletes the copy. With
     # `backups.enabled: false` it restores nothing and records "no off-site backup to drill".
     drDrill:
       enabled: true
