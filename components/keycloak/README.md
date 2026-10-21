@@ -20,6 +20,7 @@ The realm import (`values/config/base-values.yaml.gotmpl`) sets the same rules o
 | Setting | Value |
 |---|---|
 | Second factor | TOTP required for every holder of realm role `mfa-required`: portal-approver and platform-admin carry it as a composite, and it can be granted to anyone directly. A holder without TOTP enrols at the next login (Keycloak's CONFIGURE_TOTP page). Everyone else is asked for TOTP or WebAuthn only once they configured one. |
+| Password grant | Flow `custom direct grant` asks the same: a holder of `mfa-required` sends `totp=<code>` with the password, and one who has not enrolled gets no token (Keycloak answers `unknown_error` and logs an AuthenticationFlowException of direct-grant-validate-otp; enrolment happens in the browser). Everyone else sends a code only once they configured TOTP. |
 | TOTP | HMAC-SHA256, 6 digits, 30 s, look-ahead 1. Use an app that honours the algorithm (FreeOTP, Aegis, 1Password, KeePassXC); some versions of Google Authenticator compute SHA-1 codes and every code fails. |
 | Brute force | The 10th wrong password within 12 h locks the account for 60 s; every further 10 add 60 s, up to 15 min. A retry faster than 1 s after a failure waits 60 s. Never a permanent lockout. |
 | Password policy | 12+ characters with an upper, a lower and a digit; not the username, not the e-mail, none of the last 5. |
@@ -40,6 +41,8 @@ scripts/keycloak-login-journey.py --base https://<keycloak host> --realm <slug> 
 export KC_ADMIN_USER=... KC_ADMIN_PASSWORD=...           # keycloak-admin-user
 scripts/keycloak-login-journey.py --base https://<keycloak host> --admin-base http://localhost:8080 --realm <slug> enrol
 scripts/keycloak-login-journey.py --base https://<keycloak host> --admin-base http://localhost:8080 --realm <slug> lockout
+export JC_GRANT_CLIENT_ID=apisix-gateway JC_GRANT_CLIENT_SECRET=...  # its client Secret
+scripts/keycloak-login-journey.py --base https://<keycloak host> --admin-base http://localhost:8080 --realm <slug> grant
 ```
 
 ### Break-glass
@@ -50,8 +53,10 @@ which lives outside every repository; the password is never written down anywher
 
 ```bash
 kubectl port-forward -n <slug> svc/keycloak-app-keycloakx-http 8080:80 &
-kubectl exec -n <slug> deploy/keycloak-app-keycloakx -- /opt/keycloak/bin/kcadm.sh config credentials \
-  --server http://localhost:8080 --realm master --user admin --password "$ADMIN_PASSWORD"
+# -it and no --password: kcadm prompts for it, so the password stays out of every process list
+# and shell history.
+kubectl exec -it -n <slug> deploy/keycloak-app-keycloakx -- /opt/keycloak/bin/kcadm.sh config credentials \
+  --server http://localhost:8080 --realm master --user admin
 # lift a lockout:            kcadm.sh delete attack-detection/brute-force/users/<user-id> -r <slug>
 # make a lost TOTP re-enrol: kcadm.sh delete users/<user-id>/credentials/<otp-credential-id> -r <slug>
 ```

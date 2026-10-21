@@ -328,7 +328,10 @@ config:
       # TR-03187 AUT-2: Custom browser flow with conditional 2FA
       browserFlow: custom browser
       registrationFlow: registration
-      directGrantFlow: direct grant
+      # The password grant (directAccessGrantsEnabled clients, e.g. apisix-gateway) asks the same
+      # second factor as the browser (T-5120); Keycloak's built-in "direct grant" asks it only of
+      # people who enrolled one.
+      directGrantFlow: custom direct grant
       resetCredentialsFlow: reset credentials
       clientAuthenticationFlow: clients
       dockerAuthenticationFlow: docker auth
@@ -812,6 +815,80 @@ config:
               userSetupAllowed: false
               autheticatorFlow: false
             - authenticator: "auth-otp-form"
+              authenticatorFlow: false
+              requirement: "REQUIRED"
+              priority: 20
+              userSetupAllowed: false
+              autheticatorFlow: false
+        - alias: "custom direct grant"
+          description: "Password grant: username, password, then TOTP of every mfa-required holder"
+          providerId: "basic-flow"
+          topLevel: true
+          builtIn: false
+          authenticationExecutions:
+            - authenticator: "direct-grant-validate-username"
+              authenticatorFlow: false
+              requirement: "REQUIRED"
+              priority: 10
+              userSetupAllowed: false
+              autheticatorFlow: false
+            - authenticator: "direct-grant-validate-password"
+              authenticatorFlow: false
+              requirement: "REQUIRED"
+              priority: 20
+              userSetupAllowed: false
+              autheticatorFlow: false
+            - authenticatorFlow: true
+              requirement: "CONDITIONAL"
+              priority: 30
+              flowAlias: "custom direct grant required otp"
+              userSetupAllowed: false
+              autheticatorFlow: true
+            - authenticatorFlow: true
+              requirement: "CONDITIONAL"
+              priority: 40
+              flowAlias: "custom direct grant otp"
+              userSetupAllowed: false
+              autheticatorFlow: true
+        - alias: "custom direct grant required otp"
+          description: "TOTP for every holder of mfa-required; one not yet enrolled gets no token"
+          providerId: "basic-flow"
+          topLevel: false
+          builtIn: false
+          authenticationExecutions:
+            - authenticator: "conditional-user-role"
+              authenticatorFlow: false
+              authenticatorConfig: "mfa required"
+              requirement: "REQUIRED"
+              priority: 10
+              userSetupAllowed: false
+              autheticatorFlow: false
+            - authenticator: "direct-grant-validate-otp"
+              authenticatorFlow: false
+              requirement: "REQUIRED"
+              priority: 20
+              userSetupAllowed: false
+              autheticatorFlow: false
+        - alias: "custom direct grant otp"
+          description: "Optional TOTP: asked of a person without mfa-required who configured one"
+          providerId: "basic-flow"
+          topLevel: false
+          builtIn: false
+          authenticationExecutions:
+            - authenticator: "conditional-user-role"
+              authenticatorFlow: false
+              authenticatorConfig: "mfa not required"
+              requirement: "REQUIRED"
+              priority: 5
+              userSetupAllowed: false
+              autheticatorFlow: false
+            - authenticator: "conditional-user-configured"
+              authenticatorFlow: false
+              requirement: "REQUIRED"
+              priority: 10
+              userSetupAllowed: false
+              autheticatorFlow: false
+            - authenticator: "direct-grant-validate-otp"
               authenticatorFlow: false
               requirement: "REQUIRED"
               priority: 20

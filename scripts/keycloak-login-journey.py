@@ -5,11 +5,13 @@
   plain    a person without it signs in with the password alone
   enrol    a throwaway holder of `mfa-required` without TOTP is sent to enrolment
   lockout  a throwaway person is locked after 10 wrong passwords, the right one is refused
+  grant    a throwaway holder of `mfa-required` without TOTP gets no token by password grant
 
 Secrets come from the environment, never argv: JC_LOGIN_PASSWORD and JC_LOGIN_TOTP (the seed
 in Secret keycloak-user-<name>, key `totp`) for steward/plain; KC_ADMIN_USER and
 KC_ADMIN_PASSWORD (Secret keycloak-admin-user) for the throwaway checks, which delete their
-user again whatever the outcome.
+user again whatever the outcome; JC_GRANT_CLIENT_ID and JC_GRANT_CLIENT_SECRET (a client with
+direct access grants, e.g. apisix-gateway) for grant.
 
   scripts/keycloak-login-journey.py --base https://idp.example --realm dev steward --user demo.steward@hel.fi
 """
@@ -23,6 +25,7 @@ import secrets
 import struct
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -96,10 +99,33 @@ def landed(page, base: str, realm: str) -> bool:
     return page.url.startswith(f"{base}/realms/{realm}/account") and not page.locator("#kc-form-login, #kc-otp-login-form").count()
 
 
+def password_grant(base: str, realm: str, username: str, password: str) -> dict:
+    form = {"grant_type": "password", "client_id": env("JC_GRANT_CLIENT_ID"),
+            "client_secret": env("JC_GRANT_CLIENT_SECRET"), "username": username, "password": password}
+    req = urllib.request.Request(f"{base}/realms/{realm}/protocol/openid-connect/token",
+                                 data=urllib.parse.urlencode(form).encode())
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            return json.load(resp)
+    except urllib.error.HTTPError as err:
+        return json.load(err)
+
+
 def run(args) -> list[str]:
+    failures: list[str] = []
+    if args.check == "grant":
+        admin = Admin(args.admin_base or args.base, args.realm)
+        uid, email, password = admin.throwaway("mfa-required")
+        try:
+            answer = password_grant(args.base, args.realm, email, password)
+            if "access_token" in answer:
+                failures.append("a holder of mfa-required without TOTP got a token by password alone")
+        finally:
+            admin.call("DELETE", f"/users/{uid}")
+        return failures
+
     from playwright.sync_api import sync_playwright
 
-    failures: list[str] = []
     with sync_playwright() as pw:
         browser = pw.chromium.launch()
         page = browser.new_context(locale="en").new_page()
@@ -159,7 +185,7 @@ def main() -> int:
     parser.add_argument("--realm", required=True)
     parser.add_argument("--user", help="the person for steward/plain")
     parser.add_argument("--screenshot", help="PNG of the last page")
-    parser.add_argument("check", choices=["steward", "plain", "enrol", "lockout"])
+    parser.add_argument("check", choices=["steward", "plain", "enrol", "lockout", "grant"])
     args = parser.parse_args()
     args.base = args.base.rstrip("/")
     if args.check in ("steward", "plain") and not args.user:

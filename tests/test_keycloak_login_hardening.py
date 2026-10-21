@@ -148,3 +148,25 @@ def test_the_config_cli_reads_each_seed_from_its_secret(env_docs):
                     assert ref["key"] == "totp" and ref["name"].startswith("keycloak-user-"), (env, name)
             return
     pytest.fail(f"no keycloak-config-cli Job in the {env} render")
+
+
+def test_the_password_grant_demands_totp_of_mfa_required(realm):
+    # Keycloak's built-in "direct grant" asks OTP only of people who enrolled one, so a new
+    # approver would get a password-only token from apisix-gateway; the custom flow refuses it.
+    assert realm["directGrantFlow"] == "custom direct grant"
+    assert flow(realm, "custom direct grant")["topLevel"] is True
+    assert steps(realm, "custom direct grant") == [
+        ("direct-grant-validate-username", "REQUIRED", None),
+        ("direct-grant-validate-password", "REQUIRED", None),
+        ("custom direct grant required otp", "CONDITIONAL", None),
+        ("custom direct grant otp", "CONDITIONAL", None),
+    ]
+    assert steps(realm, "custom direct grant required otp") == [
+        ("conditional-user-role", "REQUIRED", "mfa required"),
+        ("direct-grant-validate-otp", "REQUIRED", None),
+    ]
+    assert steps(realm, "custom direct grant otp") == [
+        ("conditional-user-role", "REQUIRED", "mfa not required"),
+        ("conditional-user-configured", "REQUIRED", None),
+        ("direct-grant-validate-otp", "REQUIRED", None),
+    ]
