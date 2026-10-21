@@ -240,4 +240,6 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: ./.github/actions/tools
         with: { helmfile: "false" }
-      - run: npx --yes --package "renovate@${RENOVATE_VERSION}" -- renovate-config-validator --strict renovate.json
+      # npx resolves renovate's dependency ranges afresh each run: --before keeps it to releases
+      # 7 days old (the owner's cooldown), so a version npm published seconds ago cannot 404 (run 39658420429).
+      - run: npx --yes --before="$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)" --package "renovate@${RENOVATE_VERSION}" -- renovate-config-validator --strict renovate.json
