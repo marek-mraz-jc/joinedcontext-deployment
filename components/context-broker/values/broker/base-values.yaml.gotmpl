@@ -115,7 +115,8 @@ env:
   # The broker's PostgreSQL pool (default 20). A transaction cancelled under load leaves its slot
   # held (dev 2026-10-19: 18 of 20 slots idle on ROLLBACK for hours, every read 503 "database
   # overloaded"); 40 stretches the time to exhaustion until Antares returns them. PostgreSQL's
-  # max_connections is 100, about 26 used by the other databases.
+  # max_connections is 100, about 26 used by the other databases; the
+  # development profile's 2Gi Postgres holds 50 and a pool of 22 (T-4933).
   ANTARES_PG_POOL: "40"
   # The browser Origin the gateway forwards to the MCP surface (MC8, T-3814): rmcp refuses every
   # request whose Origin is not listed, so unset the Portal's MCP page got 403. The Portal and

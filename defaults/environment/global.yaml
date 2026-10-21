@@ -234,6 +234,92 @@ global:
     enabled: true
     failureAction: Enforce
 
+# Which set of components to deploy (T-4856): `full` deploys the `components` list below (or
+# the environment's own); `minimal` and `broker-only` deploy their list in `componentProfiles`
+# instead, so a small node gets a small platform without an edited list. Measured footprints:
+# docs Deployment/ "Component profiles".
+componentProfile: full
+componentProfiles:
+  # The platform people log in to: the broker behind the Portal, Keycloak and the APISIX edge,
+  # with the NetworkPolicies, the Kyverno runtime policies and TLS at the edge kept. Without the
+  # forge, pipelines, gateway, MQTT, model tools, catalogue and monitoring.
+  minimal:
+    - prepare
+    - secrets
+    - networkpolicies
+    - runtime-policies
+    - postgres
+    - keycloak
+    - apisix
+    - context-broker
+    - portal
+  # A bare NGSI-LD broker on its database. Nothing authenticates a request in front of it: the
+  # broker has no Service outside the cluster and its NetworkPolicies admit no client namespace,
+  # so it answers only `kubectl port-forward` or a workload the operator lets in.
+  broker-only:
+    - prepare
+    - secrets
+    - networkpolicies
+    - postgres
+    - context-broker
+# What a profile changes besides the list: sizes for the smaller node it is for, merged under
+# the environment's values (an environment that sets the same key keeps its own). Each part's
+# `rawValues` is merged last into that release's values.
+componentProfileValues:
+  # For a 4 GB node. One CloudNativePG instance holds the three databases of Keycloak, the
+  # Portal and the broker; it keeps the development max_connections 50, whose worst case
+  # (tests/test_postgres_memory_budget.py) needs the 2Gi limit, and asks for less of it.
+  minimal:
+    postgres:
+      cluster:
+        rawValues:
+          cluster:
+            resources:
+              requests: {memory: 768Mi}
+    context-broker:
+      broker:
+        rawValues:
+          resources:
+            requests: {memory: 256Mi}
+  # For a 1 GB node: the operator, one database and the broker ask for 512Mi together. 16
+  # connections are the broker's pool of 10, CloudNativePG's 3 reserved ones and 3 spare; with
+  # 64MB shared buffers and two autovacuum workers the worst case is about 700MiB, under 80 %
+  # of the 1Gi limit.
+  broker-only:
+    postgres:
+      cluster:
+        rawValues:
+          cluster:
+            resources:
+              requests: {cpu: 50m, memory: 256Mi}
+              limits: {memory: 1Gi}
+            postgresql:
+              parameters:
+                max_connections: "16"
+                shared_buffers: "64MB"
+                autovacuum_max_workers: "2"
+    context-broker:
+      broker:
+        rawValues:
+          resources:
+            requests: {memory: 128Mi}
+            limits: {memory: 512Mi}
+          env:
+            ANTARES_PG_POOL: "10"
+# The components each one cannot run without. A render whose component list (any profile, an
+# environment's own list included) deploys one of these keys without all of its values fails.
+componentDependencies:
+  postgres: [secrets]
+  keycloak: [postgres, secrets]
+  apisix: [keycloak, secrets]
+  context-broker: [postgres, secrets, networkpolicies]
+  portal: [postgres, keycloak, apisix, context-broker, secrets]
+  gitea: [postgres, keycloak, apisix]
+  gitea-runner: [gitea]
+  context-gateway: [context-broker, keycloak]
+  mqtt-brokers: [context-gateway, pipeline-runner]
+  observability: [portal, keycloak]
+
 # List of components to deploy (order matters for dependencies)
 # To "disable" a component, remove it from the list.
 # To add custom components/addons, add them to the list.
