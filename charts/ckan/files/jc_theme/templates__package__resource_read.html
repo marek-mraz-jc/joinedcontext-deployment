@@ -79,11 +79,19 @@
 #}
 {% block resource_view_content %}
   {% set api = h.jc_is_api(res) %}
-  {% if resource_views or (not api and h.check_access('resource_view_create', {'resource_id': resource.id})) %}
+  {# T-5059: an Endpoint's table or query resource opens the live explorer of its entity type
+     instead of a DataStore view or a five-row preview. #}
+  {% set explorer = h.jc_explorer(pkg, res) if (res.datastore_active or h.jc_kind(res) in ('NGSI-LD', 'OGCFEAT', 'ODATA', 'STA')) else none %}
+  {% if explorer %}
+    <div class="resource-view jc-api">
+      {% snippet 'package/snippets/jc_explorer.html', explorer=explorer %}
+    </div>
+  {% endif %}
+  {% if not explorer and (resource_views or (not api and h.check_access('resource_view_create', {'resource_id': resource.id}))) %}
     {{ super() }}
   {% elif api %}
     <div class="resource-view jc-api">
-      {% set preview = h.jc_preview(res) %}
+      {% set preview = none if explorer else h.jc_preview(res) %}
       {% if preview %}
         <section class="jc-live-rows" data-jc-preview="{{ preview.url }}" data-jc-kind="{{ preview.kind }}"
                  data-jc-failed="{{ h.jc_t('preview_failed') }}" data-jc-empty="{{ h.jc_t('preview_empty') }}"
