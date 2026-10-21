@@ -55,3 +55,27 @@ def test_the_live_vehicles_reach_a_map_over_the_endpoints_public_websocket():
     # T-4067: the same vehicles as OGC API Features, for QGIS and the open data portal.
     assert "ogc-features" in endpoint["enabledRepresentations"]
     assert endpoint["audience"] == "public"
+
+
+READS = {"retrieveOps", "retrieveEntityTypes", "retrieveEntityTypeDetails", "retrieveEntityTypeInfo",
+         "retrieveAttrTypes", "retrieveAttrTypeDetails", "retrieveAttrTypeInfo", "queryTemporal", "retrieveTemporal",
+         "createSubscription", "retrieveSubscription", "updateSubscription", "deleteSubscription"}
+
+
+def test_only_the_pipelines_account_writes_a_vehicle_and_through_the_write_endpoint():
+    """T-5046: every HSL vehicle lands through the hsl-hfp-vehicles pipeline's door only. Its
+    target binds the pipeline's derived Policy (no policyRef, T-5033), and every Policy of the space
+    that lets anyone change a Vehicle is the pipelines account's; the public reads every mode."""
+    pipeline = load("helsinki-pipeline-hfp.yaml")["spec"]
+    assert pipeline["targetEndpoint"] == "urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all"
+    assert "policyRef" not in load("helsinki-endpoint-all.yaml")["spec"]
+    writers = []
+    for path in sorted(HELSINKI.glob("helsinki-policy-*.yaml")):
+        spec = load(path.name)["spec"]
+        types = {entity.get("type") for rule in spec.get("information", []) for entity in rule.get("entities", [])}
+        if set(spec["operations"]) - READS and (not types or "Vehicle" in types):
+            writers.append((path.name, spec["assignee"]))
+    assert writers == [("helsinki-policy-pipelines-write.yaml", {"kind": "serviceAccount", "id": "pipelines"})]
+    (vehicle,) = [entity for rule in load("helsinki-policy-public-transport.yaml")["spec"]["information"]
+                  for entity in rule["entities"] if entity["type"] == "Vehicle"]
+    assert vehicle == {"type": "Vehicle"}
