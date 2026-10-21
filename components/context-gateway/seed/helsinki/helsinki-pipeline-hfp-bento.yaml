@@ -1,131 +1,56 @@
-# The mapping of the hsl-hfp-vehicles pipeline (PL-03): HSL vehicles from the high-frequency
-# positioning broker, the five lines its DataSource names (T-4624), capped per
-# mode (PL-22, T-3893): 30 buses, 30 trams, 10 metros, 15 trains, 5 ferries at a time. An
-# admitted vehicle reports about once a second; one report in thirty seconds of it is written
-# (T-4624: a write a second per vehicle, 811 upserts in two minutes, held every broker connection
-# and starved the visitors' reads). The
-# reconciler renders the MQTT input of the hsl-hfp DataSource in front and the endpoint upsert
-# after (PL-39, PL-16); the `fleet` cache is the runner's resource.
+# The mapping of the hsl-hfp-vehicles pipeline (PL-03): every HSL vehicle from the
+# high-frequency positioning broker at its current position, every second (owner, T-5046,
+# option A), each report a write a subscriber is notified of. The whole feed is about 1,000 frames a second in the evening and 2,000 at peak,
+# one a second per vehicle. The reconciler renders the MQTT input of the hsl-hfp DataSource in
+# front, in batches of up to 1,000 frames or one second (T-5046), and the endpoint upsert
+# after, one write per batch (PL-39, PL-16). The space keeps one history point per vehicle in
+# thirty seconds (its retention rule), not one per write.
 
 pipeline:
   processors:
-    # One topic tree carries several frame kinds; only a VP frame is a position report.
-    - mapping: |
-        root = if this.exists("VP") { this.VP } else { deleted() }
-
-    # A report without a GPS fix (`loc: "ODO"`, lat and long null) says nothing about where the
-    # bus is: it is dropped here, before it takes a fleet slot, instead of failing the build
-    # below and piling up as a rejected record (T-3129).
-    - mapping: |
-        root = if this.lat.type() == "number" && this.long.type() == "number" { this } else { deleted() }
-
-    # The vehicle this frame belongs to: operator and vehicle number, the local part of its URN.
-    # Its mode, and the stop it is at or comes to next, are only in the topic:
+    # What a frame is comes from its topic, read before the frame is parsed:
     # /hfp/v2/journey/ongoing/vp/<mode>/<oper>/<veh>/<route>/<dir>/<headsign>/<start>/<next stop>/…
-    # A mode without a cap (a topic outside the DataSource's list) gets none and is dropped below.
-    - mapping: |
+    # A frame over 4 KiB (a VP frame is about 300 bytes) or of a mode the Vehicle model does
+    # not name is dropped here. HSL's U-line and robot buses are buses.
+    - mutation: |
         let topic = meta("mqtt_topic").or("").split("/")
-        meta vehicle = "%v-%v".format(this.oper, this.veh)
-        let mode = $topic.index(6).catch("")
+        let mode = {"bus": "bus", "ubus": "bus", "robot": "bus", "tram": "tram", "metro": "metro", "train": "train", "ferry": "ferry"}.get($topic.index(6).catch("")).or("")
+        let oper = $topic.index(7).catch("").re_match("^[0-9]{1,6}$")
+        let veh = $topic.index(8).catch("").re_match("^[0-9]{1,6}$")
         meta mode = $mode
-        meta cap = {"bus": "30", "tram": "30", "metro": "10", "train": "15", "ferry": "5"}.get($mode).or("0")
+        meta vehicle = if $oper && $veh { "%v-%v".format($topic.index(7).number(), $topic.index(8).number()) } else { "" }
         meta next_stop = $topic.index(13).catch("")
+        root = if $mode == "" || !($oper && $veh) || content().length() > 4096 { deleted() }
 
-    # The cap: per mode, `slot-<mode>-1` … `slot-<mode>-<cap>` in the `fleet` cache, each held by
-    # the vehicle that took it for as long as that vehicle keeps reporting. Every frame of a holder
-    # refreshes its two keys, a vehicle silent for the cache's ttl frees its slot, and a new one
-    # takes the first free slot of its mode or none while its mode's are all held; a full mode
-    # never takes another mode's slot. A slot is taken with `add`, which fails on a held key,
-    # so two buses never share one. (`counter()` handed the slots out once: half an hour after a
-    # start every bus drew a number above thirty and the feed went silent, T-2961.)
-    #
-    # Every lookup asks `exists` first: a `get` of a missing key and an `add` on a held one are
-    # errors to Bento, counted in `processor_error` even when caught, and probing that way made
-    # 5.4 million errors of 792 thousand frames on dev (T-3186). What is left inside `try` fails
-    # only when another frame wins the same key between the two calls.
-    # ponytail: two new buses racing for one free slot on two runner threads still count one
-    # error for the loser; a single-threaded slot stage (the runner's `pipeline.threads`, which
-    # the Portal does not pass through yet) removes it if a restart burst ever matters.
-    - branch:
-        request_map: root = ""
-        processors:
-          # Slot "0" is none; Bento reads an empty metadata value as absent.
-          - mapping: |
-              meta slot = "0"
-              meta probe = "1"
-              meta key = "%v-%v".format(meta("mode"), meta("vehicle"))
-          # The slot this bus holds, if the slot still names it.
-          - cache:
-              resource: fleet
-              operator: exists
-              key: veh-${! meta("key") }
-          - switch:
-              - check: content().string() == "true"
-                processors:
-                  - try:
-                      - cache:
-                          resource: fleet
-                          operator: get
-                          key: veh-${! meta("key") }
-                      - mapping: meta held = content().string()
-                      - cache:
-                          resource: fleet
-                          operator: get
-                          key: slot-${! meta("mode") }-${! meta("held") }
-                      - mapping: |
-                          meta slot = if content().string() == meta("vehicle") { meta("held") } else { "0" }
-                  - catch:
-                      - mapping: root = ""
-          # Otherwise the first free one.
-          - while:
-              # The largest cap.
-              max_loops: 30
-              check: meta("slot") == "0" && meta("probe").number() <= meta("cap").number()
-              processors:
-                - cache:
-                    resource: fleet
-                    operator: exists
-                    key: slot-${! meta("mode") }-${! meta("probe") }
-                - switch:
-                    - check: content().string() == "false"
-                      processors:
-                        - try:
-                            - cache:
-                                resource: fleet
-                                operator: add
-                                key: slot-${! meta("mode") }-${! meta("probe") }
-                                value: ${! meta("vehicle") }
-                            - mapping: meta slot = meta("probe")
-                        - catch:
-                            - mapping: root = ""
-                - mapping: meta probe = (meta("probe").number() + 1).string()
-          # A holder's keys live as long as it reports.
-          - switch:
-              - check: meta("slot") != "0"
-                processors:
-                  - cache:
-                      resource: fleet
-                      operator: set
-                      key: veh-${! meta("key") }
-                      value: ${! meta("slot") }
-                  - cache:
-                      resource: fleet
-                      operator: set
-                      key: slot-${! meta("mode") }-${! meta("slot") }
-                      value: ${! meta("vehicle") }
-          - mapping: root = meta("slot")
-        result_map: meta slot = content().string()
+    # Only a VP frame with a GPS fix is a position (T-3129: `loc: "ODO"` reports carry null
+    # lat and long); a frame that is not JSON is dropped. Only the fields the Vehicle is built
+    # from are kept, with what the topic said, since the batch below keeps no metadata.
     - mapping: |
-        root = if meta("slot").or("0").re_match("^[1-9][0-9]*$") { this } else { deleted() }
+        let vp = this.VP.catch(null)
+        root = if $vp.type() != "object" || $vp.lat.type() != "number" || $vp.long.type() != "number" { deleted() } else { {
+          "lat": $vp.lat, "long": $vp.long, "spd": $vp.spd, "hdg": $vp.hdg, "tst": $vp.tst, "route": $vp.route,
+          "dl": $vp.dl, "occu": $vp.occu,
+          "_mode": meta("mode"), "_vehicle": meta("vehicle"), "_next_stop": meta("next_stop")
+        } }
 
-    # One report in thirty seconds per vehicle (T-4624): the one stamped on second :00 or :30. A
-    # vehicle reports about once a second, so each hits both, with no state to keep; one that
-    # misses a few is still refreshed well inside the five minutes its space keeps it. Every
-    # frame above has already refreshed its slot.
-    # ponytail: no "only when it moved" test, which needs the last position per vehicle in a
-    # cache; a parked bus is one write in thirty seconds.
+    # Every second of every vehicle, oldest first (T-5046, owner: a subscriber gets every
+    # per-second change): two reports of one vehicle stamped in the same second are one, the
+    # newer. The broker applies the same id twice in one batch in that order (NGSI-LD 4.6.6).
+    - archive: { format: json_array }
     - mapping: |
-        root = if this.tst.or("").string().slice(17, 19).number().catch(1) % 30 == 0 { this } else { deleted() }
+        let newest = this.sort_by(v -> 0 - v.tst.ts_unix_nano().catch(0))
+        root = $newest.unique(v -> v._mode + "-" + v._vehicle + "@" + v.tst.string().slice(0, 19).catch("")).sort_by(v -> v.tst.ts_unix_nano().catch(0))
+    - unarchive: { format: json_array }
+
+    # The safety valve for a feed flood (T-5046): a position waits for its token, 5,000 a
+    # second, two and a half times HSL's peak. A flood slows the read of this stream to that
+    # rate instead of reaching the gateway or the node.
+    - rate_limit: { resource: hfp_vehicles }
+    - mutation: |
+        meta mode = this._mode
+        meta vehicle = this._vehicle
+        meta next_stop = this._next_stop
+        root = this.without("_mode", "_vehicle", "_next_stop")
 
     # onRoute and nextStop name the GTFS line and stop by HSL's ids (T-3890), and only ones the
     # daily GTFS read wrote into the space: the view refuses a whole Vehicle whose relationship
