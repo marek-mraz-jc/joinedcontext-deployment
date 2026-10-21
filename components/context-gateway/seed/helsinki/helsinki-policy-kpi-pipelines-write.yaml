@@ -3,7 +3,7 @@ kind: Policy
 metadata:
   name: kpi-pipelines-write
   namespace: helsinki
-  title: { en: "The KPI pipelines write the indicator space" }
+  title: { en: The KPI pipelines write the indicator space }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: helsinki-kpi }
   assigner: did:web:{orgDomain}

@@ -4,7 +4,9 @@ kind: DataSource
 metadata:
   name: susr-om7052rr
   namespace: zilina
-  title: { sk: "Indexy vekového zloženia (ŠÚ SR, om7052rr)", en: "Age-structure indices (ŠÚ SR, om7052rr)" }
+  title:
+    sk: Indexy vekového zloženia (ŠÚ SR, om7052rr)
+    en: Age-structure indices (ŠÚ SR, om7052rr)
 spec:
   type: http
   http:

@@ -4,7 +4,7 @@ kind: DataSource
 metadata:
   name: hsl-citybikes-gbfs
   namespace: helsinki
-  title: { en: "City bike station status (GBFS)", fi: "Kaupunkipyöräasemien tila (GBFS)" }
+  title: { en: City bike station status (GBFS), fi: Kaupunkipyöräasemien tila (GBFS) }
 spec:
   type: http
   http:

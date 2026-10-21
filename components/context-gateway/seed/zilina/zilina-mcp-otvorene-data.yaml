@@ -9,13 +9,18 @@ metadata:
   name: otvorene-data
   namespace: zilina
   # What an AI client reads as serverInfo and initialize.instructions (EP-92).
-  title: { sk: "Žilina — otvorené údaje", en: "Žilina, open data" }
+  title:
+    sk: Žilina — otvorené údaje
+    en: Žilina, open data
   description:
-    sk: "Otvorené údaje mesta Žilina, len na čítanie: hodinové merania ovzdušia na stanici SK0020A, národné kultúrne pamiatky, železničné stanice s odchodmi vlakov, šesť ukazovateľov mesta zo ŠÚ SR a otvorene licencované práce Žilinskej univerzity (DREPO). Zdroje: Európska environmentálna agentúra (údaje SHMÚ), Pamiatkový úrad SR, ŽSR, Štatistický úrad SR, Žilinská univerzita. Pri citovaní uveďte zdroj."
+    sk: 'Otvorené údaje mesta Žilina, len na čítanie: hodinové merania ovzdušia na stanici SK0020A, národné kultúrne pamiatky, železničné stanice s odchodmi vlakov, šesť ukazovateľov mesta zo ŠÚ SR a otvorene licencované práce Žilinskej univerzity (DREPO). Zdroje: Európska environmentálna agentúra (údaje SHMÚ), Pamiatkový úrad SR, ŽSR, Štatistický úrad SR, Žilinská univerzita. Pri citovaní uveďte zdroj.'
     en: "Read-only open data of the City of Žilina, Slovakia: hourly air quality at station SK0020A, the city's national cultural monuments, its railway stations with the trains leaving each day, six city indicators computed from the Statistical Office's data, and the openly licensed works of the University of Žilina's repository (DREPO). Start with list_types, then query_entities with a small limit. Texts are in Slovak. Credit the source each Endpoint names when you quote it."
 spec:
   members:
-    - { kind: Endpoint, name: zilina-verejne }
-    - { kind: Endpoint, name: zilina-kpi }
-    - { kind: Endpoint, name: zilina-uniza }
+    - kind: Endpoint
+      name: zilina-verejne
+    - kind: Endpoint
+      name: zilina-kpi
+    - kind: Endpoint
+      name: zilina-uniza
   audience: public

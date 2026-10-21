@@ -4,7 +4,9 @@ kind: DataSource
 metadata:
   name: susr-om7105rr
   namespace: zilina
-  title: { sk: "Prírastok obyvateľov (ŠÚ SR, om7105rr)", en: "Population increase (ŠÚ SR, om7105rr)" }
+  title:
+    sk: Prírastok obyvateľov (ŠÚ SR, om7105rr)
+    en: Population increase (ŠÚ SR, om7105rr)
 spec:
   type: http
   http:

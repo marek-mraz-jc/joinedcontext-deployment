@@ -5,9 +5,9 @@ kind: Endpoint
 metadata:
   name: bbsk-mosty
   namespace: bbsk
-  title: { sk: "Mosty — Banskobystrický kraj", en: "Bridges — Banská Bystrica Region" }
+  title: { sk: Mosty — Banskobystrický kraj, en: Bridges — Banská Bystrica Region }
   description:
-    sk: "Mosty na cestách kraja. Zdroj: Banskobystrický samosprávny kraj, CC BY-SA 4.0."
+    sk: 'Mosty na cestách kraja. Zdroj: Banskobystrický samosprávny kraj, CC BY-SA 4.0.'
     en: "The bridges on the region's roads. Source: Banská Bystrica Self-Governing Region, CC BY-SA 4.0."
 spec:
   contextSpaceRef: bbsk-registre
@@ -21,14 +21,17 @@ spec:
       license: cc-by-sa
       datastore: { representation: csv, refresh: onReconcile }
   catalog:
-    publisher: { name: { sk: "Banskobystrický samosprávny kraj", en: "Banská Bystrica Self-Governing Region" }, uri: "https://www.bbsk.sk/" }
+    publisher:
+      name: { sk: Banskobystrický samosprávny kraj, en: Banská Bystrica Self-Governing Region }
+      uri: https://www.bbsk.sk/
     license: CC_BYSA_4_0
-    attribution: { sk: "Zdroj: Banskobystrický samosprávny kraj, https://opendata.bbsk.sk/, CC BY-SA 4.0", en: "Source: Banská Bystrica Self-Governing Region, https://opendata.bbsk.sk/, CC BY-SA 4.0" }
+    attribution:
+      sk: 'Zdroj: Banskobystrický samosprávny kraj, https://opendata.bbsk.sk/, CC BY-SA 4.0'
+      en: 'Source: Banská Bystrica Self-Governing Region, https://opendata.bbsk.sk/, CC BY-SA 4.0'
     themes: [TRAN]
     keywords:
-      sk: ["mosty", "cesty"]
-      en: ["bridges", "roads"]
-    spatial:
-      - "SK032"
+      sk: [mosty, cesty]
+      en: [bridges, roads]
+    spatial: [SK032]
     frequency: WEEKLY
     pipelineRef: { kind: Pipeline, name: mosty }

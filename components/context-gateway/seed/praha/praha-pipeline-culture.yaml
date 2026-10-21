@@ -4,18 +4,14 @@ kind: Pipeline
 metadata:
   name: culture
   namespace: praha
-  title: { en: "Cultural venues" }
+  title: { en: Cultural venues }
 spec:
   class: auto
   # The register is updated a few times a year; weekly is enough.
   period: 168h
-  schedule: "30 3 * * 1"
+  schedule: '30 3 * * 1'
   source:
     dataSourceRef: { kind: DataSource, name: ipr-culture }
   targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
-  output:
-    type: PointOfInterest
-    mode: upsert
-  quotas:
-    maxMemoryMb: 128
-    cpuMillicores: 100
+  output: { type: PointOfInterest, mode: upsert }
+  quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

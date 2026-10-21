@@ -3,7 +3,7 @@ kind: DataModel
 metadata:
   name: sharing-bikes
   namespace: sharing
-  title: { en: "Sharing probe" }
+  title: { en: Sharing probe }
 spec:
   contextSpaceRef: sharing-bikes
   linkml: ./sharing-bikes.linkml.yaml

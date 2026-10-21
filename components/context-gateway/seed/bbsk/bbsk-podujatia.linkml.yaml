@@ -33,7 +33,13 @@ slots:
     description: The title of the event as the source writes it, in Slovak.
     range: string
     annotations:
-      label: { tag: label, value: { sk: "Názov", cs: "Název", en: "Name", de: "Name" } }
+      label:
+        tag: label
+        value:
+          sk: Názov
+          cs: Název
+          en: Name
+          de: Name
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/name
   description:
@@ -41,7 +47,13 @@ slots:
     description: What the source says about the event, as plain text without markup.
     range: string
     annotations:
-      label: { tag: label, value: { sk: "Popis", cs: "Popis", en: "Description", de: "Beschreibung" } }
+      label:
+        tag: label
+        value:
+          sk: Popis
+          cs: Popis
+          en: Description
+          de: Beschreibung
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/description
   startDate:
@@ -51,12 +63,18 @@ slots:
       Europe/Bratislava as the source publishes it), or a date alone (`2026-11-14`) for an event
       that lasts whole days.
     range: string
-    pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}(:[0-9]{2}(\\.[0-9]+)?)?(Z|[+-][0-9]{2}:[0-9]{2}))?$"
+    pattern: ^[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}(:[0-9]{2}(\.[0-9]+)?)?(Z|[+-][0-9]{2}:[0-9]{2}))?$
     examples:
-      - value: "2026-11-14T19:00:00+01:00"
-      - value: "2026-11-14"
+      - value: '2026-11-14T19:00:00+01:00'
+      - value: '2026-11-14'
     annotations:
-      label: { tag: label, value: { sk: "Začiatok", cs: "Začátek", en: "Start", de: "Beginn" } }
+      label:
+        tag: label
+        value:
+          sk: Začiatok
+          cs: Začátek
+          en: Start
+          de: Beginn
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/startDate
   endDate:
@@ -65,11 +83,17 @@ slots:
       When the event ends, written as `startDate`; for a whole-day event its last day,
       inclusive. Absent when the source gives no end: the calendar then shows the start alone.
     range: string
-    pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}(:[0-9]{2}(\\.[0-9]+)?)?(Z|[+-][0-9]{2}:[0-9]{2}))?$"
+    pattern: ^[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}(:[0-9]{2}(\.[0-9]+)?)?(Z|[+-][0-9]{2}:[0-9]{2}))?$
     examples:
-      - value: "2026-11-14T22:00:00+01:00"
+      - value: '2026-11-14T22:00:00+01:00'
     annotations:
-      label: { tag: label, value: { sk: "Koniec", cs: "Konec", en: "End", de: "Ende" } }
+      label:
+        tag: label
+        value:
+          sk: Koniec
+          cs: Konec
+          en: End
+          de: Ende
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/endDate
   venue:
@@ -77,7 +101,13 @@ slots:
     description: The name of the place, as the source writes it (a hall, a square, a museum).
     range: string
     annotations:
-      label: { tag: label, value: { sk: "Miesto konania", cs: "Místo konání", en: "Venue", de: "Veranstaltungsort" } }
+      label:
+        tag: label
+        value:
+          sk: Miesto konania
+          cs: Místo konání
+          en: Venue
+          de: Veranstaltungsort
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/location
   address:
@@ -89,7 +119,13 @@ slots:
     range: PostalAddress
     inlined: true
     annotations:
-      label: { tag: label, value: { sk: "Adresa", cs: "Adresa", en: "Address", de: "Adresse" } }
+      label:
+        tag: label
+        value:
+          sk: Adresa
+          cs: Adresa
+          en: Address
+          de: Adresse
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models/blob/master/common-schema.json
   streetAddress:
@@ -122,7 +158,13 @@ slots:
     description: The kind of event in the source's own words (`koncert`, `výstava`, `šport`).
     range: string
     annotations:
-      label: { tag: label, value: { sk: "Kategória", cs: "Kategorie", en: "Category", de: "Kategorie" } }
+      label:
+        tag: label
+        value:
+          sk: Kategória
+          cs: Kategorie
+          en: Category
+          de: Kategorie
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/eventType
   url:
@@ -132,7 +174,13 @@ slots:
       buy a ticket, else the organizer's page that lists its events.
     range: uri
     annotations:
-      label: { tag: label, value: { sk: "Odkaz", cs: "Odkaz", en: "Link", de: "Link" } }
+      label:
+        tag: label
+        value:
+          sk: Odkaz
+          cs: Odkaz
+          en: Link
+          de: Link
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/url
   organizer:
@@ -144,7 +192,13 @@ slots:
     range: Organizer
     inlined: true
     annotations:
-      label: { tag: label, value: { sk: "Organizátor", cs: "Pořadatel", en: "Organizer", de: "Veranstalter" } }
+      label:
+        tag: label
+        value:
+          sk: Organizátor
+          cs: Pořadatel
+          en: Organizer
+          de: Veranstalter
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/organizer
   source:
@@ -152,7 +206,13 @@ slots:
     description: The feed or the page the pipeline read the event from.
     range: uri
     annotations:
-      label: { tag: label, value: { sk: "Zdroj", cs: "Zdroj", en: "Source", de: "Quelle" } }
+      label:
+        tag: label
+        value:
+          sk: Zdroj
+          cs: Zdroj
+          en: Source
+          de: Quelle
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
   sourceId:
@@ -160,13 +220,25 @@ slots:
     description: The event's own identifier at its source, so a record can be traced back.
     range: string
     annotations:
-      label: { tag: label, value: { sk: "Identifikátor v zdroji", cs: "Identifikátor ve zdroji", en: "Source id", de: "Quell-ID" } }
+      label:
+        tag: label
+        value:
+          sk: Identifikátor v zdroji
+          cs: Identifikátor ve zdroji
+          en: Source id
+          de: Quell-ID
       ngsi_ld_kind: Property
   dataProvider:
     slot_uri: sdm:dataProvider
     description: Who announced the event (the town, the region, the cultural body), as the credit names it.
     annotations:
-      label: { tag: label, value: { sk: "Poskytovateľ", cs: "Poskytovatel", en: "Provider", de: "Anbieter" } }
+      label:
+        tag: label
+        value:
+          sk: Poskytovateľ
+          cs: Poskytovatel
+          en: Provider
+          de: Anbieter
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
   dateModified:
@@ -174,7 +246,13 @@ slots:
     description: When the source last changed the record.
     range: datetime
     annotations:
-      label: { tag: label, value: { sk: "Zmenené", cs: "Změněno", en: "Modified", de: "Geändert" } }
+      label:
+        tag: label
+        value:
+          sk: Zmenené
+          cs: Změněno
+          en: Modified
+          de: Geändert
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
 
@@ -206,15 +284,12 @@ classes:
       name:
         required: true
         rank: 1
-        annotations:
-          summary: true
+        annotations: { summary: true }
       startDate:
         required: true
         rank: 2
-        annotations:
-          summary: true
-      endDate:
-        rank: 3
+        annotations: { summary: true }
+      endDate: { rank: 3 }
       location:
         required: true
         description: >-
@@ -224,37 +299,24 @@ classes:
         rank: 4
       venue:
         rank: 5
-        annotations:
-          summary: true
-      address:
-        rank: 6
+        annotations: { summary: true }
+      address: { rank: 6 }
       eventCategory:
         rank: 7
-        annotations:
-          summary: true
+        annotations: { summary: true }
       organizer:
         required: true
         rank: 8
-        annotations:
-          summary: true
-      url:
-        required: true
-        rank: 9
+        annotations: { summary: true }
+      url: { required: true, rank: 9 }
   PostalAddress:
     class_uri: schema:PostalAddress
     description: The value of `address`, never an entity of its own.
-    slots:
-      - streetAddress
-      - postalCode
-      - addressLocality
-      - addressRegion
-      - addressCountry
+    slots: [streetAddress, postalCode, addressLocality, addressRegion, addressCountry]
   Organizer:
     class_uri: schema:Organization
     description: The value of `organizer`, never an entity of its own.
-    slots:
-      - name
-      - url
+    slots: [name, url]
     slot_usage:
       name:
         required: true

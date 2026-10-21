@@ -5,10 +5,10 @@ kind: Endpoint
 metadata:
   name: banskabystrica-skoly
   namespace: banskabystrica
-  title: { sk: "Školy — Banská Bystrica", en: "Schools — Banská Bystrica" }
+  title: { sk: Školy — Banská Bystrica, en: Schools — Banská Bystrica }
   description:
-    sk: "Školy v meste z Digitálnej mapy škôl. Zdroj: Ministerstvo školstva SR, CC BY 4.0."
-    en: "The schools in the city from the Digitálna mapa škôl. Source: the Slovak Ministry of Education, CC BY 4.0."
+    sk: 'Školy v meste z Digitálnej mapy škôl. Zdroj: Ministerstvo školstva SR, CC BY 4.0.'
+    en: 'The schools in the city from the Digitálna mapa škôl. Source: the Slovak Ministry of Education, CC BY 4.0.'
 spec:
   contextSpaceRef: banskabystrica-verejne
   slug: bkc4g3zfirh6zae3owdike7am2upayjs
@@ -25,13 +25,15 @@ spec:
     # Aggregates of public facilities and readings: no record names a person (T-4596).
     personalData: does-not-contain
     license: CC_BY_4_0
-    attribution: { sk: "Zdroj: Ministerstvo školstva SR, Digitálna mapa škôl, CC BY 4.0", en: "Source: Slovak Ministry of Education, Digitálna mapa škôl, CC BY 4.0" }
+    attribution:
+      sk: 'Zdroj: Ministerstvo školstva SR, Digitálna mapa škôl, CC BY 4.0'
+      en: 'Source: Slovak Ministry of Education, Digitálna mapa škôl, CC BY 4.0'
     themes: [EDUC]
     keywords:
-      sk: ["školy", "vzdelávanie", "Banská Bystrica"]
-      en: ["schools", "education", "Banská Bystrica"]
+      sk: [školy, vzdelávanie, Banská Bystrica]
+      en: [schools, education, Banská Bystrica]
     spatial:
-      - "SK032"
-      - "https://data.gov.sk/id/lau2/SK0321508438"
+      - SK032
+      - https://data.gov.sk/id/lau2/SK0321508438
     frequency: ANNUAL
     pipelineRef: { kind: Pipeline, name: skoly }

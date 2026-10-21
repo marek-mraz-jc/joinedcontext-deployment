@@ -4,7 +4,9 @@ kind: DataSource
 metadata:
   name: eea-sk0020a-o3
   namespace: zilina
-  title: { sk: "O3, SK0020A (EEA)", en: "O3, SK0020A (EEA)" }
+  title:
+    sk: O3, SK0020A (EEA)
+    en: O3, SK0020A (EEA)
 spec:
   type: http
   http:

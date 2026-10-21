@@ -5,19 +5,15 @@ kind: Pipeline
 metadata:
   name: waste-fill
   namespace: praha
-  title: { en: "Waste container fill levels" }
+  title: { en: Waste container fill levels }
 spec:
   class: auto
   # The sensors report a few times a day; hourly keeps the last reading without refetching 7 MB
   # for nothing.
   period: 1h
-  schedule: "20 * * * *"
+  schedule: '20 * * * *'
   source:
     dataSourceRef: { kind: DataSource, name: golemio-waste-containers }
   targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
-  output:
-    type: WasteContainer
-    mode: upsert
-  quotas:
-    maxMemoryMb: 256
-    cpuMillicores: 100
+  output: { type: WasteContainer, mode: upsert }
+  quotas: { maxMemoryMb: 256, cpuMillicores: 100 }

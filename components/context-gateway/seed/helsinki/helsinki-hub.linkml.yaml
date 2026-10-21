@@ -51,9 +51,7 @@ classes:
     description: >-
       The value of `calculationPeriod`: the window an indicator covers, never an entity of
       its own.
-    slots:
-      - start
-      - end
+    slots: [start, end]
   Any:
     class_uri: linkml:Any
     description: >-
@@ -69,14 +67,28 @@ slots:
     description: What serves the stop or runs the line.
     range: TransportMode
     annotations:
-      label: { tag: label, value: { sk: "Druh dopravy", cs: "Druh dopravy", fi: "Kulkumuoto", en: "Transport mode", de: "Verkehrsmittel" } }
+      label:
+        tag: label
+        value:
+          sk: Druh dopravy
+          cs: Druh dopravy
+          fi: Kulkumuoto
+          en: Transport mode
+          de: Verkehrsmittel
       ngsi_ld_kind: Property
   onRoute:
     slot_uri: jc:onRoute
     description: The line the vehicle is running, the URN of a GtfsRoute of this space.
     range: uriorcurie
     annotations:
-      label: { tag: label, value: { sk: "Na trase", cs: "Na trase", fi: "Reitillä", en: "On route", de: "Auf der Strecke" } }
+      label:
+        tag: label
+        value:
+          sk: Na trase
+          cs: Na trase
+          fi: Reitillä
+          en: On route
+          de: Auf der Strecke
       ngsi_ld_kind: Relationship
   nextStop:
     slot_uri: jc:nextStop
@@ -84,33 +96,27 @@ slots:
       The stop the vehicle stands at or comes to next, the URN of a GtfsStop of this space; HSL
       moves it on at each departure from or passing of a stop.
     range: uriorcurie
-    annotations:
-      ngsi_ld_kind: Relationship
+    annotations: { ngsi_ld_kind: Relationship }
   delay:
     slot_uri: jc:delay
     description: Seconds behind the timetable, negative when ahead (HSL's dl with the sign turned).
     range: integer
-    unit:
-      ucum_code: s
-    annotations:
-      ngsi_ld_kind: Property
+    unit: { ucum_code: s }
+    annotations: { ngsi_ld_kind: Property }
   occupancy:
     slot_uri: jc:occupancy
     description: How full the vehicle is, in percent; HSL sends 0 (room) or 100 (full).
     range: integer
     minimum_value: 0
     maximum_value: 100
-    unit:
-      ucum_code: '%'
-    annotations:
-      ngsi_ld_kind: Property
+    unit: { ucum_code: '%' }
+    annotations: { ngsi_ld_kind: Property }
   speed:
     slot_uri: sdm:speed
     description: Ground speed of the vehicle.
     range: float
     minimum_value: 0
-    unit:
-      ucum_code: m/s
+    unit: { ucum_code: m/s }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
@@ -120,8 +126,7 @@ slots:
     range: float
     minimum_value: 0
     maximum_value: 360
-    unit:
-      ucum_code: deg
+    unit: { ucum_code: deg }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
@@ -141,21 +146,24 @@ slots:
     slot_uri: sdm:fleetVehicleId
     description: The operator and vehicle number HSL publishes, operator-vehicle.
     annotations:
-      label: { tag: label, value: { sk: "Číslo vozidla", cs: "Číslo vozidla", fi: "Kalustonumero", en: "Fleet number", de: "Wagennummer" } }
+      label:
+        tag: label
+        value:
+          sk: Číslo vozidla
+          cs: Číslo vozidla
+          fi: Kalustonumero
+          en: Fleet number
+          de: Wagennummer
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   name:
     slot_uri: jc:name
-    description: The indicator's own name, equal to the `{localId}` of its id, so the territory is legible
-      without parsing the URN.
+    description: The indicator's own name, equal to the `{localId}` of its id, so the territory is legible without parsing the URN.
     required: true
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   currentValue:
     slot_uri: jc:currentValue
-    description: 'The number, with its unit on the Property as `unitCode`, a UN/CEFACT common code, and
-      the instant it describes as `observedAt`. A window with no reading in it carries the string `not
-      measured` instead of a number, and never a zero: a zero reads as a measurement.'
+    description: 'The number, with its unit on the Property as `unitCode`, a UN/CEFACT common code, and the instant it describes as `observedAt`. A window with no reading in it carries the string `not measured` instead of a number, and never a zero: a zero reads as a measurement.'
     required: true
     range: Any
     inlined: true
@@ -167,45 +175,32 @@ slots:
       upstream_source: https://vocabulary.uncefact.org/UnitMeasureCode#
   calculationPeriod:
     slot_uri: jc:calculationPeriod
-    description: The window the value actually covers, as `{ start, end }` RFC 3339 instants. It is the
-      window the pipeline used and not the one it was asked for, so the distance between `calculationPeriod.end`
-      and `updatedAt` is how stale the source is.
+    description: The window the value actually covers, as `{ start, end }` RFC 3339 instants. It is the window the pipeline used and not the one it was asked for, so the distance between `calculationPeriod.end` and `updatedAt` is how stale the source is.
     required: true
     range: CalculationPeriod
     inlined: true
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   calculationFormula:
     slot_uri: jc:calculationFormula
-    description: 'How the value was computed, in words a reader can check the number against: the measure,
-      the aggregation, the window and any divisor, such as `per km² of the district''s own area`.
-      English plain text: a table leaves it out, so a Slovak answer never shows English prose.'
+    description: "How the value was computed, in words a reader can check the number against: the measure, the aggregation, the window and any divisor, such as `per km² of the district's own area`. English plain text: a table leaves it out, so a Slovak answer never shows English prose."
     required: true
-    annotations:
-      ngsi_ld_kind: Property
-      hidden: true
+    annotations: { ngsi_ld_kind: Property, hidden: true }
   derivedFrom:
     slot_uri: jc:derivedFrom
-    description: 'The Endpoint the sources were read through, as its URN. The endpoint and not the space:
-      what an indicator could see is what that endpoint''s policy let it see.'
+    description: "The Endpoint the sources were read through, as its URN. The endpoint and not the space: what an indicator could see is what that endpoint's policy let it see."
     required: true
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   computedBy:
     slot_uri: jc:computedBy
     description: The Pipeline that computed it, as its URN.
     required: true
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   updatedAt:
     slot_uri: jc:updatedAt
-    description: 'When the pipeline last ran, as an NGSI-LD DateTime. It is the run and not the window:
-      an indicator whose source stopped moving keeps its window and gains a newer `updatedAt`, which is
-      the visible fact that the source is static.'
+    description: 'When the pipeline last ran, as an NGSI-LD DateTime. It is the run and not the window: an indicator whose source stopped moving keeps its window and gains a newer `updatedAt`, which is the visible fact that the source is static.'
     range: datetime
     required: true
-    annotations:
-      ngsi_ld_kind: Property
+    annotations: { ngsi_ld_kind: Property }
   start:
     slot_uri: jc:start
     description: The first instant the window covers.
@@ -219,13 +214,8 @@ slots:
 enums:
   TransportMode:
     permissible_values:
-      bus:
-        description: A bus.
-      tram:
-        description: A tram.
-      metro:
-        description: The metro.
-      train:
-        description: A commuter train.
-      ferry:
-        description: A ferry.
+      bus: { description: A bus. }
+      tram: { description: A tram. }
+      metro: { description: The metro. }
+      train: { description: A commuter train. }
+      ferry: { description: A ferry. }

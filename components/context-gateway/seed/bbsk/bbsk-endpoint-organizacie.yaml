@@ -5,10 +5,12 @@ kind: Endpoint
 metadata:
   name: bbsk-organizacie
   namespace: bbsk
-  title: { sk: "Organizácie kraja — Banskobystrický kraj", en: "Regional organisations — Banská Bystrica Region" }
+  title:
+    sk: Organizácie kraja — Banskobystrický kraj
+    en: Regional organisations — Banská Bystrica Region
   description:
-    sk: "Organizácie v zriaďovateľskej pôsobnosti kraja. Zdroj: Banskobystrický samosprávny kraj, CC BY-SA 4.0."
-    en: "The organisations the region founded. Source: Banská Bystrica Self-Governing Region, CC BY-SA 4.0."
+    sk: 'Organizácie v zriaďovateľskej pôsobnosti kraja. Zdroj: Banskobystrický samosprávny kraj, CC BY-SA 4.0.'
+    en: 'The organisations the region founded. Source: Banská Bystrica Self-Governing Region, CC BY-SA 4.0.'
 spec:
   contextSpaceRef: bbsk-registre
   slug: nkojudgn32ub5upzjuu74xm52svhtwpy
@@ -21,14 +23,17 @@ spec:
       license: cc-by-sa
       datastore: { representation: csv, refresh: onReconcile }
   catalog:
-    publisher: { name: { sk: "Banskobystrický samosprávny kraj", en: "Banská Bystrica Self-Governing Region" }, uri: "https://www.bbsk.sk/" }
+    publisher:
+      name: { sk: Banskobystrický samosprávny kraj, en: Banská Bystrica Self-Governing Region }
+      uri: https://www.bbsk.sk/
     license: CC_BYSA_4_0
-    attribution: { sk: "Zdroj: Banskobystrický samosprávny kraj, https://opendata.bbsk.sk/, CC BY-SA 4.0", en: "Source: Banská Bystrica Self-Governing Region, https://opendata.bbsk.sk/, CC BY-SA 4.0" }
+    attribution:
+      sk: 'Zdroj: Banskobystrický samosprávny kraj, https://opendata.bbsk.sk/, CC BY-SA 4.0'
+      en: 'Source: Banská Bystrica Self-Governing Region, https://opendata.bbsk.sk/, CC BY-SA 4.0'
     themes: [GOVE]
     keywords:
-      sk: ["organizácie kraja", "verejná správa"]
-      en: ["regional organisations", "public administration"]
-    spatial:
-      - "SK032"
+      sk: [organizácie kraja, verejná správa]
+      en: [regional organisations, public administration]
+    spatial: [SK032]
     frequency: WEEKLY
     pipelineRef: { kind: Pipeline, name: organizacie }

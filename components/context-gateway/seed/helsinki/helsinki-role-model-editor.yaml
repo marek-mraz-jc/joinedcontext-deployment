@@ -7,7 +7,5 @@ metadata:
   namespace: org
 spec:
   rules:
-    - kinds:
-        - DataModel
-        - Mapping
+    - kinds: [DataModel, Mapping]
       verbs: [propose]

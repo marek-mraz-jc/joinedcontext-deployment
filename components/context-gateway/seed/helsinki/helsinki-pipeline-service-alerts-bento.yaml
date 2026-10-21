@@ -34,7 +34,7 @@ pipeline:
 
     # A body too large or not a feed is dropped, as the runner drops a failed fetch: it must never
     # read as an empty feed, which withdraws every HSL alert.
-    - mutation: 'root = if errored() { deleted() }'
+    - mutation: root = if errored() { deleted() }
 
     # The lines and stops the alerts name, as the ids the space would hold them under.
     - mapping: |
@@ -59,8 +59,7 @@ pipeline:
               - http:
                   url: ${JC_GATEWAY_URL}/api/endpoint/si6epqkx364lprho5uaigutk274r5grb/ngsi-ld/v1/entityOperations/query?limit=1000&options=keyValues
                   verb: POST
-                  headers:
-                    Content-Type: application/json
+                  headers: { Content-Type: application/json }
                   oauth2:
                     enabled: true
                     client_key: ${JC_CLIENT_ID}
@@ -71,7 +70,7 @@ pipeline:
               - mapping: 'root = { "held": this.map_each(e -> e.id) }'
           - catch:
               - mapping: 'root = { "failed": true }'
-        result_map: 'root.known = this'
+        result_map: root.known = this
     - mapping: |
         root = if this.known.failed.or(false) { deleted() } else { this }
 
@@ -134,7 +133,7 @@ pipeline:
         processors:
           - try:
               - branch:
-                  request_map: 'root = ""'
+                  request_map: root = ""
                   processors:
                     - http:
                         url: http://${JC_GATEWAY_HOST}/api/endpoint/dhiw4735mzyvwkrmszljpxcvvgv32q33/ngsi-ld/v1/entities?type=Alert&limit=1000&options=keyValues&attrs=source
@@ -142,19 +141,18 @@ pipeline:
                         headers: { Accept: application/json }
                         timeout: 20s
                         rate_limit: pipeline_egress
-                  result_map: 'root.held = this'
+                  result_map: root.held = this
               - mapping: |
                   let source = "https://realtime.hsl.fi/realtime/service-alerts/v2/hsl"
                   let current = this.current
                   root = this.held.or([]).filter(a -> a.source.or("") == $source && !$current.contains(a.id.or(""))).map_each(a -> a.id)
               - switch:
-                  - check: 'this.length() > 0'
+                  - check: this.length() > 0
                     processors:
                       - http:
                           url: ${JC_GATEWAY_URL}/api/endpoint/si6epqkx364lprho5uaigutk274r5grb/ngsi-ld/v1/entityOperations/delete
                           verb: POST
-                          headers:
-                            Content-Type: application/json
+                          headers: { Content-Type: application/json }
                           oauth2:
                             enabled: true
                             client_key: ${JC_CLIENT_ID}
@@ -163,7 +161,6 @@ pipeline:
                           timeout: 30s
                           rate_limit: pipeline_egress
           - catch:
-              - mapping: 'root = {}'
+              - mapping: root = {}
 
-    - unarchive:
-        format: json_array
+    - unarchive: { format: json_array }

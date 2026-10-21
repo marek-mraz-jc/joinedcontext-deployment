@@ -4,7 +4,9 @@ kind: DataSource
 metadata:
   name: susr-cr3802mr
   namespace: bbsk
-  title: { sk: "Návštevnosť ubytovacích zariadení – okresy (ŠÚ SR, cr3802mr)", en: "Visitors to accommodation, districts (ŠÚ SR, cr3802mr)" }
+  title:
+    sk: Návštevnosť ubytovacích zariadení – okresy (ŠÚ SR, cr3802mr)
+    en: Visitors to accommodation, districts (ŠÚ SR, cr3802mr)
 spec:
   type: http
   http:

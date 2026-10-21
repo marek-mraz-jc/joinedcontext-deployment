@@ -6,16 +6,15 @@ kind: Pipeline
 metadata:
   name: hsl-service-alerts
   namespace: helsinki
-  title: { en: "HSL service alerts into the space, every 60 s" }
+  title:
+    en: HSL service alerts into the space, every 60 s
 spec:
   class: auto
   period: 60s
   source:
     dataSourceRef: { kind: DataSource, name: hsl-service-alerts }
   targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
-  output:
-    type: Alert
-    mode: upsert
+  output: { type: Alert, mode: upsert }
   quotas:
     # 21 kB of protobuf; Bento held a few MB over its baseline for it (2026-10-12).
     maxMemoryMb: 64

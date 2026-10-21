@@ -4,16 +4,13 @@
 
 pipeline:
   processors:
-    - xml:
-        operator: to_json
-        cast: false
+    - xml: { operator: to_json, cast: false }
 
     # One item is an object, several are an array.
     - mapping: |
         let items = this.rss.channel.item.or([])
         root = if $items.type() == "array" { $items } else { [$items] }
-    - unarchive:
-        format: json_array
+    - unarchive: { format: json_array }
 
     - mapping: |
         let domain = env("JC_ORG_DOMAIN")
@@ -40,5 +37,4 @@ pipeline:
           }.filter(entry -> entry.value != null)
         }
 
-    - archive:
-        format: json_array
+    - archive: { format: json_array }

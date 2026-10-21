@@ -7,7 +7,7 @@ kind: DataSource
 metadata:
   name: ipr-schools
   namespace: praha
-  title: { en: "School facilities (IPR Praha)", cs: "Školská zařízení (IPR Praha)" }
+  title: { en: School facilities (IPR Praha), cs: Školská zařízení (IPR Praha) }
 spec:
   type: http
   http:

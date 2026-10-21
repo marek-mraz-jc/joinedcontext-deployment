@@ -7,7 +7,7 @@ kind: DataModel
 metadata:
   name: catalog
   namespace: slovensko
-  title: { sk: "Katalóg otvorených dát", en: "Open data catalogue" }
+  title: { sk: Katalóg otvorených dát, en: Open data catalogue }
 spec:
   contextSpaceRef: catalog
   linkml: ./catalog.linkml.yaml

@@ -12,37 +12,33 @@ kind: App
 metadata:
   name: praha-odpad
   namespace: praha
+  title: { cs: Tříděný odpad Prahy, en: Prague recycling }
+  description:
+    cs: 'Pracoviště svozu: zaplněnost kontejnerů se senzorem, stáří posledního měření a stanoviště, nejplnější a nejdéle neměřená desetina ve městě a tabulka ke stažení.'
+    en: 'A collection desk: how full the sensor containers are, how old their last reading is and where they stand, the fullest and longest-unread tenth of the city, and the table as a download.'
   annotations:
     # The Portal image ships this bundle (Dockerfile, /srv/apps), so the App names no
     # repository of its own; the Portal accepts the mark only where the bundle is (AP-87).
     joinedcontext.com/shipped-with: portal
-  title:
-    cs: "Tříděný odpad Prahy"
-    en: "Prague recycling"
-  description:
-    cs: "Pracoviště svozu: zaplněnost kontejnerů se senzorem, stáří posledního měření a stanoviště, nejplnější a nejdéle neměřená desetina ve městě a tabulka ke stažení."
-    en: "A collection desk: how full the sensor containers are, how old their last reading is and where they stand, the fullest and longest-unread tenth of the city, and the table as a download."
 spec:
   kind: ui
   source:
     path: ./apps/praha-odpad
-  build:
-    node: "22"
+  build: { node: '22' }
   visibility: roles
   lifecycle: published
   roles:
     - name: viewer
-      title: { cs: "Čtenář", en: "Viewer" }
-      description: "Reads every container's fill level and downloads the table."
+      title: { cs: Čtenář, en: Viewer }
+      description: Reads every container's fill level and downloads the table.
   # grants/users/groups/ (AP-118, ADR-N-031): who holds a role is that group's members.
   access:
     - role: viewer
-      subjects: [{ group: praha-odpad-viewer }]
+      subjects:
+        - group: praha-odpad-viewer
   dataNeeds:
     # The sensor containers of waste-fill and the names of the isles they stand at (T-2785).
-    - contextSpaceRef:
-        kind: ContextSpace
-        name: praha-mesto
+    - contextSpaceRef: { kind: ContextSpace, name: praha-mesto }
       types: [WasteContainer, WasteContainerIsle]
       attrs: [containerCode, wasteKind, fillingLevel, dateModified, refWasteContainerIsle, name]
       operations: [queryEntity, retrieveEntity]

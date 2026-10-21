@@ -5,7 +5,9 @@ kind: DataSource
 metadata:
   name: digitraffic-traffic-messages
   namespace: helsinki
-  title: { en: "Road works and traffic announcements (Fintraffic Digitraffic)", fi: "Tietyöt ja liikennetiedotteet (Fintraffic Digitraffic)" }
+  title:
+    en: Road works and traffic announcements (Fintraffic Digitraffic)
+    fi: Tietyöt ja liikennetiedotteet (Fintraffic Digitraffic)
 spec:
   type: http
   http:

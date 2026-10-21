@@ -4,7 +4,7 @@ kind: DataSource
 metadata:
   name: mesto-podujatia
   namespace: banskabystrica
-  title: { sk: "Podujatia (Mesto Banská Bystrica)", en: "Events (City of Banská Bystrica)" }
+  title: { sk: Podujatia (Mesto Banská Bystrica), en: Events (City of Banská Bystrica) }
 spec:
   type: http
   http:

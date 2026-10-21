@@ -4,18 +4,14 @@ kind: Pipeline
 metadata:
   name: ubytovanie
   namespace: banskabystrica
-  title: { sk: "Ubytovacie kapacity mesta", en: "Accommodation capacity of the city" }
+  title: { sk: Ubytovacie kapacity mesta, en: Accommodation capacity of the city }
 spec:
   class: auto
   # Annual or quarterly data: a weekly read is already far more often than it changes (PL-26, PL-27).
   period: 168h
-  schedule: "19 4 * * 1"
+  schedule: '19 4 * * 1'
   source:
     dataSourceRef: { kind: DataSource, name: susr-cr3809qr }
   targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-mesto:banskabystrica-mesto
-  output:
-    type: KeyPerformanceIndicator
-    mode: upsert
-  quotas:
-    maxMemoryMb: 128
-    cpuMillicores: 100
+  output: { type: KeyPerformanceIndicator, mode: upsert }
+  quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

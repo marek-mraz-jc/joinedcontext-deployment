@@ -11,7 +11,9 @@ kind: DataSource
 metadata:
   name: hsl-gtfs-stops
   namespace: helsinki
-  title: { en: "HSL GTFS stops and stations", fi: "HSL:n GTFS-pysäkit" }
+  title:
+    en: HSL GTFS stops and stations
+    fi: HSL:n GTFS-pysäkit
 spec:
   type: http
   http:

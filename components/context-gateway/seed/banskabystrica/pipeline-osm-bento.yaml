@@ -129,8 +129,7 @@ pipeline:
           - http:
               url: ${JC_GATEWAY_URL}/api/endpoint/rpfqszwlbp5bonvg7kckhdsne5qedjor/ngsi-ld/v1/entityOperations/query?limit=1000&options=keyValues
               verb: POST
-              headers:
-                Content-Type: application/json
+              headers: { Content-Type: application/json }
               oauth2:
                 enabled: true
                 client_key: ${JC_CLIENT_ID}
@@ -146,8 +145,7 @@ pipeline:
           - http:
               url: ${JC_GATEWAY_URL}/api/endpoint/rpfqszwlbp5bonvg7kckhdsne5qedjor/ngsi-ld/v1/entityOperations/delete
               verb: POST
-              headers:
-                Content-Type: application/json
+              headers: { Content-Type: application/json }
               oauth2:
                 enabled: true
                 client_key: ${JC_CLIENT_ID}

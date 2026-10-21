@@ -6,7 +6,7 @@ kind: DataSource
 metadata:
   name: hel-districts
   namespace: helsinki
-  title: { en: "City districts (kaupunginosat)", fi: "Kaupunginosajako" }
+  title: { en: City districts (kaupunginosat), fi: Kaupunginosajako }
 spec:
   type: http
   http:

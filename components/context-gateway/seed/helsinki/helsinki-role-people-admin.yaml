@@ -8,6 +8,5 @@ metadata:
   namespace: org
 spec:
   rules:
-    - kinds:
-        - Person
+    - kinds: [Person]
       verbs: [read, create, update, disable, delete]

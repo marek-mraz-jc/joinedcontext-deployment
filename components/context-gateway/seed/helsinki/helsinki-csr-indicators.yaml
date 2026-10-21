@@ -6,7 +6,7 @@ kind: ContextSourceRegistration
 metadata:
   name: indicators
   namespace: helsinki
-  title: { en: "Helsinki indicators" }
+  title: { en: Helsinki indicators }
 spec:
   contextSpaceRef: helsinki-hub
   endpointRef: { kind: Endpoint, name: helsinki-kpi }

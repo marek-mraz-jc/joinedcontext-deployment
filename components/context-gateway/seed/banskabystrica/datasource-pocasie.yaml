@@ -10,10 +10,10 @@ kind: DataSource
 metadata:
   name: shmu-aws1min
   namespace: banskabystrica
-  title: { sk: "Automatické meteorologické stanice SHMÚ", en: "SHMÚ automatic weather stations" }
+  title: { sk: Automatické meteorologické stanice SHMÚ, en: SHMÚ automatic weather stations }
 spec:
   type: generate
   input:
     mapping: root = ""
     count: 1
-    interval: ""
+    interval: ''

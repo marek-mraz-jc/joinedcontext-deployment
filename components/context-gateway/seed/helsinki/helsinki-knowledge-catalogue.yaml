@@ -8,11 +8,11 @@ kind: KnowledgeSource
 metadata:
   name: data-portal
   namespace: helsinki
-  title: { en: "The data portal's public datasets" }
+  title: { en: The data portal's public datasets }
 spec:
   source: ckan
   ckanInstanceRef: hel-fi
-  schedule: "20 3 * * *"
+  schedule: '20 3 * * *'
   maxPages: 2000
   languages: [sk, cs, en, fi]
   visibility: public

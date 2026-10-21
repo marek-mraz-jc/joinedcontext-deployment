@@ -37,8 +37,7 @@ slots:
     description: Particulate matter up to 10 µm, the hour's mean at the station.
     range: float
     minimum_value: 0
-    unit:
-      ucum_code: ug/m3
+    unit: { ucum_code: ug/m3 }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
@@ -47,8 +46,7 @@ slots:
     description: Particulate matter up to 2.5 µm, the hour's mean at the station.
     range: float
     minimum_value: 0
-    unit:
-      ucum_code: ug/m3
+    unit: { ucum_code: ug/m3 }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
@@ -57,8 +55,7 @@ slots:
     description: Nitrogen dioxide, the hour's mean at the station.
     range: float
     minimum_value: 0
-    unit:
-      ucum_code: ug/m3
+    unit: { ucum_code: ug/m3 }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
@@ -67,8 +64,7 @@ slots:
     description: Ozone, the hour's mean at the station.
     range: float
     minimum_value: 0
-    unit:
-      ucum_code: ug/m3
+    unit: { ucum_code: ug/m3 }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
@@ -80,10 +76,4 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
-    slots:
-      - name
-      - dateObserved
-      - pm10
-      - pm25
-      - no2
-      - o3
+    slots: [name, dateObserved, pm10, pm25, no2, o3]

@@ -7,7 +7,7 @@ kind: DataSource
 metadata:
   name: ipr-districts
   namespace: praha
-  title: { en: "City districts (IPR Praha)", cs: "Městské části (IPR Praha)" }
+  title: { en: City districts (IPR Praha), cs: Městské části (IPR Praha) }
 spec:
   type: http
   http:

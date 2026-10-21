@@ -12,30 +12,25 @@ kind: App
 metadata:
   name: zilina-ukazovatele
   namespace: zilina
+  title: { sk: Ukazovatele mesta Žilina, en: Indicators of the city of Žilina }
+  description:
+    sk: Obyvatelia, prírastok, priemerný vek, index starnutia, uchádzači o zamestnanie a návštevníci mesta z údajov ŠÚ SR, každé číslo so svojím obdobím a výpočtom.
+    en: Residents, population change, mean age, ageing index, jobseekers and visitors of the city from the Statistical Office's data, each number with its period and how it is computed.
   annotations:
     # The Portal image ships this bundle (Dockerfile, /srv/apps), so the App names no
     # repository of its own; the Portal accepts the mark only where the bundle is (AP-87).
     joinedcontext.com/shipped-with: portal
-  title:
-    sk: "Ukazovatele mesta Žilina"
-    en: "Indicators of the city of Žilina"
-  description:
-    sk: "Obyvatelia, prírastok, priemerný vek, index starnutia, uchádzači o zamestnanie a návštevníci mesta z údajov ŠÚ SR, každé číslo so svojím obdobím a výpočtom."
-    en: "Residents, population change, mean age, ageing index, jobseekers and visitors of the city from the Statistical Office's data, each number with its period and how it is computed."
 spec:
   kind: ui
   source:
     path: ./apps/zilina-ukazovatele
-  build:
-    node: "22"
+  build: { node: '22' }
   visibility: public
   lifecycle: published
   embeddable: true
   dataNeeds:
     # The six indicators of the pipeline ukazovatele (Development/13), read only.
-    - contextSpaceRef:
-        kind: ContextSpace
-        name: zilina-kpi
+    - contextSpaceRef: { kind: ContextSpace, name: zilina-kpi }
       types: [KeyPerformanceIndicator]
       attrs: [name, currentValue, calculationPeriod, calculationFormula, updatedAt]
       operations: [queryEntity, retrieveEntity]

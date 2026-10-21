@@ -3,7 +3,8 @@ kind: Policy
 metadata:
   name: public-transport
   namespace: helsinki
-  title: { en: "Public read: HSL vehicles, stops, lines, departures, service alerts and park and ride" }
+  title:
+    en: 'Public read: HSL vehicles, stops, lines, departures, service alerts and park and ride'
 spec:
   contextSpaceRef: { kind: ContextSpace, name: helsinki }
   assigner: did:web:{orgDomain}
@@ -13,7 +14,18 @@ spec:
   # they open is held to the same notification-address checks as every other (T-1302, GW27).
   # Discovery beside the reads (T-4258, EP-116): which types and attributes the Endpoint holds,
   # narrowed to this grant (EP-26), so an anonymous MCP client finds them before it queries.
-  operations: [retrieveOps, retrieveEntityTypes, retrieveEntityTypeDetails, retrieveEntityTypeInfo, retrieveAttrTypes, retrieveAttrTypeDetails, retrieveAttrTypeInfo, createSubscription, retrieveSubscription, updateSubscription, deleteSubscription]
+  operations:
+    - retrieveOps
+    - retrieveEntityTypes
+    - retrieveEntityTypeDetails
+    - retrieveEntityTypeInfo
+    - retrieveAttrTypes
+    - retrieveAttrTypeDetails
+    - retrieveAttrTypeInfo
+    - createSubscription
+    - retrieveSubscription
+    - updateSubscription
+    - deleteSubscription
   information:
     - entities:
         - type: Vehicle

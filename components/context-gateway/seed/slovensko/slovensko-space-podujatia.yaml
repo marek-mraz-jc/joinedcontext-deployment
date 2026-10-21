@@ -6,7 +6,7 @@ kind: ContextSpace
 metadata:
   name: slovensko-podujatia
   namespace: slovensko
-  title: { sk: "Podujatia na Slovensku", en: "Events in Slovakia" }
+  title: { sk: Podujatia na Slovensku, en: Events in Slovakia }
   description:
     sk: >-
       Nadchádzajúce verejné podujatia miest, obcí, krajov a kultúrnych inštitúcií všetkých ôsmich krajov s časom
@@ -28,7 +28,7 @@ spec:
   # Current state only (DM-82): an event leaves the space through the rolling expiresAt its pipeline writes.
   retention:
     - entityType: Event
-      history: "off"
+      history: 'off'
   # Slovakia with a margin: a point outside it is flagged (DM-87); the pipelines refuse it first.
   quality:
     - name: in-slovakia

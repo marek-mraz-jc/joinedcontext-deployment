@@ -7,12 +7,12 @@ kind: KnowledgeSource
 metadata:
   name: data-portal
   namespace: banskabystrica
-  title: { sk: "Otvorené údaje mesta Banská Bystrica", en: "The city's open datasets" }
+  title: { sk: Otvorené údaje mesta Banská Bystrica, en: The city's open datasets }
 spec:
   source: ckan
   ckanInstanceRef: banskabystrica
   organizations: [banskabystrica]
-  schedule: "40 3 * * *"
+  schedule: '40 3 * * *'
   maxPages: 500
   languages: [sk, en]
   visibility: public

@@ -4,7 +4,9 @@ kind: DataSource
 metadata:
   name: susr-om7006rr
   namespace: zilina
-  title: { sk: "Vekové skupiny (ŠÚ SR, om7006rr)", en: "Age groups (ŠÚ SR, om7006rr)" }
+  title:
+    sk: Vekové skupiny (ŠÚ SR, om7006rr)
+    en: Age groups (ŠÚ SR, om7006rr)
 spec:
   type: http
   http:

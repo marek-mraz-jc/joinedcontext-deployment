@@ -12,5 +12,4 @@ spec:
   subjects:
     - user: demo.editor@hel.fi
   role: editor
-  scope:
-    organization: hel
+  scope: { organization: hel }

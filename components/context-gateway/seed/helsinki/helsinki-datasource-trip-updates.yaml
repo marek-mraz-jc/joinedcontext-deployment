@@ -6,7 +6,9 @@ kind: DataSource
 metadata:
   name: hsl-trip-updates
   namespace: helsinki
-  title: { en: "HSL real-time trip updates (GTFS-RT)", fi: "HSL:n reaaliaikaiset vuoropäivitykset (GTFS-RT)" }
+  title:
+    en: HSL real-time trip updates (GTFS-RT)
+    fi: HSL:n reaaliaikaiset vuoropäivitykset (GTFS-RT)
 spec:
   type: http
   http:

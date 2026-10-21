@@ -3,7 +3,9 @@ kind: Policy
 metadata:
   name: verejne-pipelines-write
   namespace: banskabystrica
-  title: { sk: "Kanály zapisujú verejné údaje mesta", en: "The ingestion pipelines write the city's open data" }
+  title:
+    sk: Kanály zapisujú verejné údaje mesta
+    en: The ingestion pipelines write the city's open data
 spec:
   contextSpaceRef: { kind: ContextSpace, name: banskabystrica-verejne }
   assigner: did:web:banskabystrica.sk

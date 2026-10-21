@@ -4,7 +4,9 @@ kind: DataSource
 metadata:
   name: susr-sv5003rr
   namespace: zilina
-  title: { sk: "Gymnáziá (ŠÚ SR, sv5003rr)", en: "Grammar schools (ŠÚ SR, sv5003rr)" }
+  title:
+    sk: Gymnáziá (ŠÚ SR, sv5003rr)
+    en: Grammar schools (ŠÚ SR, sv5003rr)
 spec:
   type: http
   http:

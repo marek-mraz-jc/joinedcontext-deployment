@@ -3,7 +3,7 @@ kind: ContextSpace
 metadata:
   name: helsinki
   namespace: helsinki
-  title: { en: "Helsinki city context", fi: "Helsingin kaupunkikonteksti" }
+  title: { en: Helsinki city context, fi: Helsingin kaupunkikonteksti }
   description:
     en: >-
       Today's events, the city bike stations, the buses of four trunk lines, and the city's open
@@ -24,7 +24,7 @@ spec:
   # its feed (its expiresAt, or the service-alerts withdrawal). Owners change it on the space's Retention tab.
   retention:
     - entityType: AdministrativeArea
-      history: "off"
+      history: 'off'
     - entityType: AirQualityObserved
       history: P30D
       # Written on every run without an observedAt: one row per change and one a week,
@@ -40,9 +40,9 @@ spec:
       # gives its own Alerts, so the Fintraffic Alerts written before that mapping (T-4823) end
       # too (T-4843). The HSL alerts are rewritten every minute or withdrawn.
       current: PT1H
-      history: "off"
+      history: 'off'
     - entityType: Article
-      history: "off"
+      history: 'off'
     - entityType: BikeHireDockingStation
       history: P30D
       # A station's bikes, free slots, slots and status are levels a write repeats every
@@ -52,19 +52,19 @@ spec:
       record: onChange
       heartbeat: PT1H
     - entityType: CityWork
-      history: "off"
+      history: 'off'
     - entityType: Event
-      history: "off"
+      history: 'off'
     - entityType: GtfsAgency
-      history: "off"
+      history: 'off'
     - entityType: GtfsRoute
-      history: "off"
+      history: 'off'
     - entityType: GtfsShape
-      history: "off"
+      history: 'off'
     - entityType: GtfsStation
-      history: "off"
+      history: 'off'
     - entityType: GtfsStop
-      history: "off"
+      history: 'off'
     - entityType: OffStreetParking
       history: P30D
       # Written on every run without an observedAt: one row per change and one a week,
@@ -80,11 +80,11 @@ spec:
         status: { record: onChange, heartbeat: P7D }
         totalSpotNumber: { record: onChange, heartbeat: P7D }
     - entityType: OnStreetParking
-      history: "off"
+      history: 'off'
     - entityType: PointOfInterest
-      history: "off"
+      history: 'off'
     - entityType: PublicTransportRoute
-      history: "off"
+      history: 'off'
     - entityType: Vehicle
       current: PT5M
       # Five minutes of track (owner, T-5046); the broker's minute sweep deletes the older rows.

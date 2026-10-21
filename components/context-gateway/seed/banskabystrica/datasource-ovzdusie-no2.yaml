@@ -4,7 +4,9 @@ kind: DataSource
 metadata:
   name: eea-sk0263a-no2
   namespace: banskabystrica
-  title: { sk: "NO2, SK0263A (EEA)", en: "NO2, SK0263A (EEA)" }
+  title:
+    sk: NO2, SK0263A (EEA)
+    en: NO2, SK0263A (EEA)
 spec:
   type: http
   http:

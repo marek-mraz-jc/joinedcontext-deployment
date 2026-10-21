@@ -6,16 +6,15 @@ kind: Pipeline
 metadata:
   name: hsl-departures
   namespace: helsinki
-  title: { en: "HSL departures of the busiest stops, every 30 s" }
+  title:
+    en: HSL departures of the busiest stops, every 30 s
 spec:
   class: auto
   period: 30s
   source:
     dataSourceRef: { kind: DataSource, name: hsl-trip-updates }
   targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
-  output:
-    type: GtfsStop
-    mode: upsert
+  output: { type: GtfsStop, mode: upsert }
   quotas:
     # The day's feed decoded is about 5 MB of JSON; measured locally under 64 MB over Bento's
     # baseline (see the README's GTFS-RT section).

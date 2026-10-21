@@ -3,13 +3,13 @@ kind: Project
 metadata:
   name: banskabystrica
   namespace: org
+  title: { sk: Mesto Banská Bystrica, en: City of Banská Bystrica }
+  description:
+    sk: Mesto so 72 123 obyvateľmi; publikuje to, čo patrí mestu. Kraj je samostatný projekt `bbsk`.
+    en: 'The city: 72 123 people, publishing what a city owns. The region is its own project, `bbsk`.'
   # The sample of real open data the first-run checklist offers every newcomer (PF-109, T-3234):
   # every signed-in person reads it through `viewers`; the label grants nothing more.
-  labels: { joinedcontext.com/sample: "true" }
-  title: { sk: "Mesto Banská Bystrica", en: "City of Banská Bystrica" }
-  description:
-    sk: "Mesto so 72 123 obyvateľmi; publikuje to, čo patrí mestu. Kraj je samostatný projekt `bbsk`."
-    en: "The city: 72 123 people, publishing what a city owns. The region is its own project, `bbsk`."
+  labels: { joinedcontext.com/sample: 'true' }
 spec:
   organizationRef: hel
   # Who publishes this data, the did:web assigner of its Apps' Policies (PF-108); describes, grants nothing.
@@ -18,9 +18,9 @@ spec:
   # (EP-127, API/08 section 6). The desk is the installation's own, so no address is invented (T-4596).
   catalog:
     publisher:
-      name: { sk: "Mesto Banská Bystrica", en: "City of Banská Bystrica" }
-      uri: "https://data.gov.sk/id/legal-subject/00313271"
-    contactPoint: { name: "joinedcontext platform", email: hello@joinedcontext.com }
+      name: { sk: Mesto Banská Bystrica, en: City of Banská Bystrica }
+      uri: https://data.gov.sk/id/legal-subject/00313271
+    contactPoint: { name: joinedcontext platform, email: hello@joinedcontext.com }
   # Owner, 2026-09-25 (T-2873): no demo work and no city dataset is refused by a quota, so every
   # project allows 100 of each countable kind and runtime ceilings nobody reaches (PF-73). The
   # quota stays as the mechanism; what the node holds is the operator's bounds file (PF-97).

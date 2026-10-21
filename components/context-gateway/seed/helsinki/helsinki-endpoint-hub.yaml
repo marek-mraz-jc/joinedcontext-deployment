@@ -7,7 +7,8 @@ kind: Endpoint
 metadata:
   name: helsinki-hub
   namespace: helsinki
-  title: { en: "Helsinki, all of it" }
+  title:
+    en: Helsinki, all of it
 spec:
   contextSpaceRef: helsinki-hub
   slug: hub7kq3zr5mx2vwt6nbc4pjd7fgs3a2y
@@ -20,14 +21,16 @@ spec:
     # Not a catalogue dataset: one door over two spaces whose types are datasets of their own, read by the Apps.
     # Its own record stays; the harvest feeds leave it out (EP-139, T-4744).
     harvest: false
-    publisher: { name: { fi: "Helsingin kaupunki", sv: "Helsingfors stad", en: "City of Helsinki" }, uri: "https://www.hel.fi/" }
+    publisher:
+      name: { fi: Helsingin kaupunki, sv: Helsingfors stad, en: City of Helsinki }
+      uri: https://www.hel.fi/
     themes: [TRAN, REGI]
     keywords:
-      fi: ["joukkoliikenne", "tunnusluvut"]
-      sv: ["kollektivtrafik", "nyckeltal"]
-      en: ["public transport", "indicators"]
+      fi: [joukkoliikenne, tunnusluvut]
+      sv: [kollektivtrafik, nyckeltal]
+      en: [public transport, indicators]
     spatial:
       - FI1B1
-      - "http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/091"
-      - "http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/049"
-      - "http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/092"
+      - http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/091
+      - http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/049
+      - http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/092

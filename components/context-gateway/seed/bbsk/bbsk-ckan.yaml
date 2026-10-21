@@ -6,11 +6,8 @@ kind: CkanInstance
 metadata:
   name: bbsk
   namespace: bbsk
-  title: { sk: "Banskobystrický samosprávny kraj", en: "Banská Bystrica Self-Governing Region" }
+  title: { sk: Banskobystrický samosprávny kraj, en: Banská Bystrica Self-Governing Region }
 spec:
   url: https://opendata.dev.joinedcontext.com
   organizationDefault: bbsk
-  apiTokenRef:
-    name: ckan-api-token
-    key: token
-    envVar: CKAN_API_TOKEN
+  apiTokenRef: { name: ckan-api-token, key: token, envVar: CKAN_API_TOKEN }

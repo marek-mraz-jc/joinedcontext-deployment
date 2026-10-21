@@ -3,15 +3,32 @@ kind: DataModel
 metadata:
   name: helsinki
   namespace: helsinki
-  title: { en: "Helsinki city context" }
+  title: { en: Helsinki city context }
 spec:
   contextSpaceRef: helsinki
   linkml: ./helsinki.linkml.yaml
   version: 1.8.0
   lifecycle: published
-  classes: [Event, BikeHireDockingStation, Vehicle, Article, WeatherObserved, Alert, AirQualityObserved,
-    PointOfInterest, WaterQualityObserved, OnStreetParking, CityWork, AdministrativeArea, GtfsStop, PublicTransportRoute,
-    GtfsStation, GtfsAgency, GtfsRoute, GtfsShape, OffStreetParking]
+  classes:
+    - Event
+    - BikeHireDockingStation
+    - Vehicle
+    - Article
+    - WeatherObserved
+    - Alert
+    - AirQualityObserved
+    - PointOfInterest
+    - WaterQualityObserved
+    - OnStreetParking
+    - CityWork
+    - AdministrativeArea
+    - GtfsStop
+    - PublicTransportRoute
+    - GtfsStation
+    - GtfsAgency
+    - GtfsRoute
+    - GtfsShape
+    - OffStreetParking
   artifacts:
     jsonSchema: ./helsinki.v1.schema.json
     context: ./helsinki.v1.context.jsonld

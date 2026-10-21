@@ -6,33 +6,16 @@ kind: Policy
 metadata:
   name: app-banskabystrica-ovzdusie-1
   namespace: banskabystrica
-  annotations:
-    joinedcontext.com/generated-by: portal/app-reconciler
+  annotations: { joinedcontext.com/generated-by: portal/app-reconciler }
 spec:
   assignee:
     id: endpoint:banskabystrica/app-banskabystrica-ovzdusie
     kind: role
   assigner: did:web:banskabystrica.sk
-  contextSpaceRef:
-    kind: ContextSpace
-    name: banskabystrica-verejne
+  contextSpaceRef: { kind: ContextSpace, name: banskabystrica-verejne }
   information:
-  - entities:
-    - type: AirQualityObserved
-    propertyNames:
-    - name
-    - dateObserved
-    - location
-    - pm10
-    - pm25
-    - dataProvider
-    relationshipNames:
-    - name
-    - dateObserved
-    - location
-    - pm10
-    - pm25
-    - dataProvider
-  operations:
-  - queryEntity
-  - retrieveEntity
+    - entities:
+        - type: AirQualityObserved
+      propertyNames: [name, dateObserved, location, pm10, pm25, dataProvider]
+      relationshipNames: [name, dateObserved, location, pm10, pm25, dataProvider]
+  operations: [queryEntity, retrieveEntity]

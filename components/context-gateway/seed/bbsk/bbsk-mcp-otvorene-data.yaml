@@ -10,14 +10,20 @@ metadata:
   name: otvorene-data
   namespace: bbsk
   # What an AI client reads as serverInfo and initialize.instructions (EP-92).
-  title: { sk: "Banskobystrický samosprávny kraj — otvorené údaje", en: "Banská Bystrica Region, open data" }
+  title:
+    sk: Banskobystrický samosprávny kraj — otvorené údaje
+    en: Banská Bystrica Region, open data
   description:
-    sk: "Otvorené údaje Banskobystrického samosprávneho kraja, len na čítanie: registre kraja (okresy, obce, organizácie, nemocnice, sociálne služby, mosty), ročné údaje ŠÚ SR za kraj a okresy, ukazovatele kraja a všetky ďalšie tabuľky portálu opendata.bbsk.sk (sčítanie, školy, cesty a mosty, zmluvy, faktúry, dotácie, zastupiteľstvo, investície, zdravotníctvo). Zdroje: Banskobystrický samosprávny kraj, Štatistický úrad SR; CC BY-SA 4.0. Pri citovaní uveďte zdroj."
+    sk: 'Otvorené údaje Banskobystrického samosprávneho kraja, len na čítanie: registre kraja (okresy, obce, organizácie, nemocnice, sociálne služby, mosty), ročné údaje ŠÚ SR za kraj a okresy, ukazovatele kraja a všetky ďalšie tabuľky portálu opendata.bbsk.sk (sčítanie, školy, cesty a mosty, zmluvy, faktúry, dotácie, zastupiteľstvo, investície, zdravotníctvo). Zdroje: Banskobystrický samosprávny kraj, Štatistický úrad SR; CC BY-SA 4.0. Pri citovaní uveďte zdroj.'
     en: "Read-only open data of the Banská Bystrica Self-Governing Region (BBSK), Slovakia: its registers (districts, municipalities, the region's organisations, hospitals, social services, bridges), the Statistical Office's yearly figures for the region and its districts, the region's indicators, and every other table of its open-data portal (census, schools, roads and bridges, contracts, invoices, grants, the council, investments, health care), each entity linking its catalogue page in `isPartOf`. Each tool answers per Endpoint. Start with list_types, then query_entities with a small limit. Texts are in Slovak. Sources: BBSK (https://opendata.bbsk.sk/) and the Statistical Office of the Slovak Republic; CC BY-SA 4.0, credit the source when you quote it."
 spec:
   members:
-    - { kind: Endpoint, name: bbsk-registre }
-    - { kind: Endpoint, name: bbsk-kraj-verejne }
-    - { kind: Endpoint, name: bbsk-kpi }
-    - { kind: Endpoint, name: bbsk-otvorene-data }
+    - kind: Endpoint
+      name: bbsk-registre
+    - kind: Endpoint
+      name: bbsk-kraj-verejne
+    - kind: Endpoint
+      name: bbsk-kpi
+    - kind: Endpoint
+      name: bbsk-otvorene-data
   audience: public

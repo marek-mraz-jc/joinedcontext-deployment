@@ -13,5 +13,4 @@ spec:
     - group: platform-readers
       source: provider
   role: viewer
-  scope:
-    organization: hel
+  scope: { organization: hel }

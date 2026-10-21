@@ -5,7 +5,9 @@ kind: DataSource
 metadata:
   name: hsl-service-alerts
   namespace: helsinki
-  title: { en: "HSL service alerts (GTFS-RT)", fi: "HSL:n häiriötiedotteet (GTFS-RT)" }
+  title:
+    en: HSL service alerts (GTFS-RT)
+    fi: HSL:n häiriötiedotteet (GTFS-RT)
 spec:
   type: http
   http:
