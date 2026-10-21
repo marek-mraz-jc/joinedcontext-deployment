@@ -606,6 +606,12 @@ drift env out='':
 			echo "drift: the drift identity can $verb deployments; refusing" >&2; exit 1
 		fi
 	done
+	# Nor anything beyond object reads: nodes/proxy is the kubelet API (exec over a GET).
+	for sub in nodes/proxy services/proxy pods/log; do
+		if [ "$(KUBECONFIG="$ro" kubectl auth can-i get "$sub" -A 2>/dev/null)" != no ]; then
+			echo "drift: the drift identity can get $sub; refusing" >&2; exit 1
+		fi
+	done
 	KUBECONFIG="$ro" ./scripts/validate-dev.py --env "{{ env }}" --skip images,expiry,kyverno,probes --out "$out"
 
 # The monthly restore drill (T-2802): dev's databases copied into a throwaway namespace, counted,

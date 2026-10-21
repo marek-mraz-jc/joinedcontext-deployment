@@ -587,3 +587,39 @@ def test_a_signed_dev_image_is_refused_only_in_a_production_tier_namespace(produ
                          capture_output=True, text=True, timeout=120).stdout
     assert ("require-full-tests-in-production -> resource ns/Pod/gw failed" in out) is refused, out
     assert "error: 0" in out, out
+
+
+def plural(kind: str) -> str:
+    kind = kind.lower()
+    if kind.endswith("y"):
+        return kind[:-1] + "ies"
+    return kind + ("es" if kind.endswith("s") else "s")
+
+
+@requires_helm
+def test_the_drift_reader_reads_each_rendered_kind_and_nothing_beyond_objects():
+    # T-4956 review: resources '*' also grants nodes/proxy (kubelet exec over GET), services/proxy
+    # and pods/log. The role names each kind the environments render, get and list only.
+    rendered = subprocess.run(
+        ["helm", "template", "runtime-policies", str(CHART), "--namespace", "dev"],
+        capture_output=True, text=True, check=True,
+    ).stdout
+    role = next(d for d in yaml.safe_load_all(rendered)
+                if d and d["kind"] == "ClusterRole" and d["metadata"]["name"] == "jc-drift-reader")
+    granted = set()
+    for rule in role["rules"]:
+        assert rule["verbs"] == ["get", "list"], rule
+        assert "*" not in rule["apiGroups"] and "*" not in rule["resources"], rule
+        assert "resourceNames" not in rule and "nonResourceURLs" not in rule, rule
+        for resource in rule["resources"]:
+            assert "/" not in resource, f"subresource {resource} (proxy, exec, attach, portforward, log)"
+            granted |= {(group, resource) for group in rule["apiGroups"]}
+    rendered_kinds = set()
+    for golden in (PROJECT_ROOT / ".ci/golden").glob("*.txt"):
+        for line in golden.read_text().splitlines():
+            api_version, _, kind = line.split()[0].rpartition("/")
+            group = api_version.rpartition("/")[0] if "/" in api_version else ""
+            rendered_kinds.add((group, plural(kind)))
+    assert rendered_kinds, "no golden render to compare with"
+    assert rendered_kinds - granted == set(), "kinds helm diff must read"
+    assert granted - rendered_kinds == set(), "grants no environment renders"
