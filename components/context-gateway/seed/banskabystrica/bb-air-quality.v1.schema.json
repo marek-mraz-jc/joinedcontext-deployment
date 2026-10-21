@@ -50,7 +50,7 @@
           "additionalProperties": {
             "type": "string"
           },
-          "description": "The station's name, per language, as the readings of verejne name it (T-4745).",
+          "description": "The station's name, per language, as the readings of verejne name it.",
           "type": [
             "object",
             "null"
