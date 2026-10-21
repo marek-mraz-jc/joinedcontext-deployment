@@ -155,7 +155,9 @@ env:
   (dict "name" "HOME" "value" "/tmp") }}
 {{- $gitSyncSecurity := dict "runAsNonRoot" true "runAsUser" 65533 "runAsGroup" 65533 "allowPrivilegeEscalation" false "readOnlyRootFilesystem" true "capabilities" (dict "drop" (list "ALL")) "seccompProfile" (dict "type" "RuntimeDefault") }}
 {{- $gitSyncMounts := list (dict "name" "repo" "mountPath" "/repo") (dict "name" "tmp" "mountPath" "/tmp") }}
-{{- $gitSyncResources := dict "requests" (dict "cpu" "10m" "memory" "32Mi") "limits" (dict "cpu" "200m" "memory" "128Mi") }}
+{{- /* T-5113: prod's checkouts sidecar held 107-109Mi of 128Mi (2026-10-21); the jc-assistant
+       pod's git-sync, same image and repo, was OOMKilled at 128Mi. */}}
+{{- $gitSyncResources := dict "requests" (dict "cpu" "10m" "memory" "128Mi") "limits" (dict "cpu" "200m" "memory" "256Mi") }}
 {{- $layout2 := eq (toString ($global.configRepo.layout | default 1)) "2" }}
 {{- $checkouts := index .Values.images "context-gateway" "checkouts" }}
 {{- $checkoutsArgs := list "--org-dir" "/repo/current" "--projects-dir" "/projects" "--forge" (printf "http://gitea-http.%s.svc.cluster.local:3000/%s" .Values.gitea.forge.namespace $global.configRepo.owner) "--token-file" "/var/run/forge/token" }}

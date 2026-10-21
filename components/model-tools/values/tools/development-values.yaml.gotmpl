@@ -10,8 +10,9 @@ replicaCount: 1
 resources:
   requests:
     cpu: 100m
-    # T-4473: dev, kubectl top 2026-10-17 21:22-22:22Z: median 725, peak 735Mi, idle.
-    memory: 768Mi
+    # T-5113: kubectl top 2026-10-21 21:55-22:25Z: peak 183Mi on dev, 90Mi on prod, idle
+    # (T-4473 saw 725Mi); the limit leaves a generate run its room.
+    memory: 256Mi
   limits:
     cpu: '1'
     memory: 1Gi
