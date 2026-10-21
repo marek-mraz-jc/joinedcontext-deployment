@@ -2773,3 +2773,48 @@ def test_every_attribute_the_map_popup_shows_has_a_label_in_sk_cs_en_and_de(seed
             if gaps:
                 missing.append(f"{name}.{slot}: {sorted(gaps)}")
     assert not missing, missing
+
+
+# --- T-5059: an Endpoint's dataset opens the live explorer on viz.{domain}; nothing is copied ----
+
+EXPLORED = {"extras": [{"key": "endpoint", "value": "https://api.dev.example/api/endpoint/scsd2eehkx42n53z2zyd6vshfh7s7irf/"}]}
+
+
+def test_the_explorer_frames_the_endpoint_by_its_slug_and_the_resource_by_its_type(theme):
+    theme.page.lang = "sk"
+    explorer = theme.jc_explorer(EXPLORED)
+    assert explorer["src"] == "https://viz.dev.example/explore.html#scsd2eehkx42n53z2zyd6vshfh7s7irf&inline&lang=sk"
+    assert explorer["origin"] == "https://viz.dev.example" and explorer["title"] == "Živé dáta"
+    odata = {"url": "https://api.dev.example/api/endpoint/scsd2eehkx42n53z2zyd6vshfh7s7irf/odata/v4/BikeHireDockingStation"}
+    assert theme.jc_explorer(EXPLORED, odata)["src"].endswith("&type=BikeHireDockingStation")
+    table = {"url": "https://opendata.dev.example/datastore/dump/x", "datastore_active": True, "name": "WeatherObserved"}
+    assert theme.jc_explorer(EXPLORED, table)["src"].endswith("&type=WeatherObserved")
+    # A name that is no entity type never reaches the frame's address.
+    odd = {"url": "https://opendata.dev.example/x", "datastore_active": True, "name": "Teploty & tlak"}
+    assert "&type=" not in theme.jc_explorer(EXPLORED, odd)["src"]
+    theme.page.lang = "fi"
+
+
+@pytest.mark.parametrize("endpoint", [
+    "https://api.evil.example/api/endpoint/scsd2eehkx42n53z2zyd6vshfh7s7irf/",
+    "https://broker.dev.example/api/endpoint/scsd2eehkx42n53z2zyd6vshfh7s7irf/",
+    "https://api.dev.example/api/endpoint/SHORT/",
+    "http://api.dev.example/api/endpoint/scsd2eehkx42n53z2zyd6vshfh7s7irf/",
+    "https://api.dev.example.evil.example/api/endpoint/scsd2eehkx42n53z2zyd6vshfh7s7irf/",
+])
+def test_the_explorer_is_left_out_for_an_endpoint_off_the_platform_api(theme, endpoint):
+    assert theme.jc_explorer({"extras": [{"key": "endpoint", "value": endpoint}]}) is None
+    assert theme.jc_explorer({}) is None
+
+
+def test_an_endpoint_s_dataset_page_opens_the_explorer_and_asks_no_datastore():
+    read = (THEME / "templates__package__read.html").read_text()
+    assert "{% set previews = [] if explorer else h.jc_previews(pkg) %}" in read
+    assert read.index("h.jc_explorer(pkg)") < read.index("h.jc_about(pkg)")
+    snippet = (THEME / "templates__package__snippets__jc_explorer.html").read_text()
+    assert 'data-jc-viz="{{ explorer.origin }}"' in snippet and 'title="{{ explorer.title }}"' in snippet
+    assert 'referrerpolicy="no-referrer"' in snippet and "allow-top-navigation" not in snippet
+    resource = (THEME / "templates__package__resource_read.html").read_text()
+    assert "h.jc_explorer(pkg, res)" in resource and "{% if not explorer and (resource_views" in resource
+    assert "{% set preview = none if explorer else h.jc_preview(res) %}" in resource
+    assert "jc-viz.js" in read and "jc-viz.js" in resource, "the frame's height comes from jc-viz.js"
