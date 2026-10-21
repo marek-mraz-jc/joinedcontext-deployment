@@ -114,6 +114,15 @@ def human_users(realm):
     }
 
 
+SHARING_PEOPLE = {
+    "demo.outsider@hel.fi": [],
+    "demo.neighbour@hel.fi": ["/sharing-other"],
+    "demo.member@hel.fi": ["/sharing"],
+    "demo.author@hel.fi": ["/sharing"],
+    "demo.bearer@hel.fi": [],
+}
+
+
 def test_development_profile_seeds_the_demo_users(rendered):
     realm = realm_of(rendered, "dev")
     users = human_users(realm)
@@ -127,6 +136,7 @@ def test_development_profile_seeds_the_demo_users(rendered):
         "demo.editor@hel.fi",
         "demo.janitor@hel.fi",
         "demo.probe@hel.fi",
+        *SHARING_PEOPLE,
     }
     assert users["demo.steward@hel.fi"]["realmRoles"] == ["portal-approver"]
     assert users["demo.approver@hel.fi"]["realmRoles"] == ["portal-approver"]
@@ -140,6 +150,11 @@ def test_development_profile_seeds_the_demo_users(rendered):
     )
     # The App probe (T-2795, AP-136) decides nothing; its groups are the ones Apps admit by.
     assert users["demo.probe@hel.fi"]["realmRoles"] == []
+    # The App sharing matrix's people (T-4911): no realm role, and out of `platform-readers`, whose
+    # organization-wide viewer binding would make each a reader of every project.
+    for name, groups in SHARING_PEOPLE.items():
+        assert users[name]["realmRoles"] == [], name
+        assert users[name]["groups"] == groups, name
     assert "portal-approver" in {r["name"] for r in realm["roles"]["realm"]}
     assert realm["registrationEmailAsUsername"] is True
     for user in users.values():
@@ -164,6 +179,7 @@ def test_demo_passwords_are_generated_per_cluster(rendered):
         "keycloak-user-demo-editor",
         "keycloak-user-demo-janitor",
         "keycloak-user-demo-probe",
+        *("keycloak-user-" + name.split("@")[0].replace(".", "-") for name in SHARING_PEOPLE),
     }
     for secret in secrets.values():
         assert secret["metadata"]["annotations"]["helm.sh/resource-policy"] == "keep"

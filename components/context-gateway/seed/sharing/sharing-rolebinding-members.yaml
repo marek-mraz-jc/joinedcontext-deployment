@@ -1,0 +1,13 @@
+# Who reads the project sharing (T-4911): its member and its author, nobody organization-wide.
+apiVersion: joinedcontext.com/v1alpha1
+kind: RoleBinding
+metadata:
+  name: sharing-members
+  namespace: org
+spec:
+  subjects:
+    - user: demo.member@hel.fi
+    - user: demo.author@hel.fi
+  role: viewer
+  scope:
+    project: sharing

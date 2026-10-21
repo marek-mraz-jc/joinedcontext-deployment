@@ -1,0 +1,19 @@
+# The project of the matrix's "same organization, other project" person (T-4911): it holds
+# nothing; demo.neighbour's one binding is here.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Project
+metadata:
+  name: sharing-other
+  namespace: org
+  title: { en: "App sharing matrix, other project (test)" }
+spec:
+  organizationRef: hel
+  quotas:
+    contextSpaces: 1
+    residentPipelines: 1
+    publicEndpoints: 1
+    apps: 1
+    ingestEventsPerSecond: 1
+    agentRunsPerDay: 1
+    entitiesPerSpace: 1
+    requestsPerMinute: 60

@@ -8,6 +8,8 @@
 {{- $seed := dict }}
 {{- $sources := list "context-gateway/seed/helsinki" "context-gateway/seed/banskabystrica" "context-gateway/seed/bbsk" "context-gateway/seed/praha" "context-gateway/seed/zilina" "context-gateway/seed/slovensko" }}
 {{- if has "agent-runner" .Values.components }}{{ $sources = append $sources "agent-runner/seed" }}{{ end }}
+{{- /* The App sharing matrix's test project and people (T-4911): development profile only. */}}
+{{- if eq .Values.global.profile "development" }}{{ $sources = append $sources "context-gateway/seed/sharing" }}{{ end }}
 {{- /* The test objects of the seeds, which a production instance reading these values never holds
        (T-4678): the eval copies of assistants, the eval-uploads source and the conformance
        suite's account and policy. */}}

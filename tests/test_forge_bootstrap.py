@@ -317,9 +317,15 @@ def test_a_signed_in_person_lands_in_a_forge_team_that_reads(local, job, script)
     parsed = json.loads(base64.b64decode(realm["data"]["local.json"]))
     assert {"name": "platform-readers", "path": "/platform-readers"} in parsed["groups"]
     assert "/platform-readers" in parsed["defaultGroups"], "anyone created later joins it too"
-    assert all("/platform-readers" in user.get("groups", [])
-               for user in parsed["users"] if "credentials" in user), \
-        "a demo login is created by this same import, which defaultGroups does not reach"
+    # The App sharing matrix's people stay out of it on purpose (T-4911, `platformReaders: false`).
+    outside = {name for name, person in yaml.safe_load(
+        (Path(__file__).resolve().parent.parent / "components/keycloak/demo-users.yaml").read_text()
+    ).items() if person.get("platformReaders") is False}
+    assert outside, "the sharing matrix's people are seeded"
+    for user in parsed["users"]:
+        if "credentials" in user:
+            assert ("/platform-readers" in user.get("groups", [])) != (user["username"].split("@")[0] in outside), \
+                "a demo login is created by this same import, which defaultGroups does not reach"
     gitea = next(c for c in parsed["clients"] if c["clientId"] == "gitea")
     mapper = next(m for m in gitea["protocolMappers"]
                   if m["protocolMapper"] == "oidc-group-membership-mapper")
