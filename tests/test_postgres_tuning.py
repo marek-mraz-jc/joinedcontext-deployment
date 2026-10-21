@@ -21,14 +21,15 @@ DEV_PARAMETERS = {
     "shared_buffers": "128MB",
     "effective_cache_size": "1GB",
     "work_mem": "4MB",
-    "maintenance_work_mem": "128MB",
-    "autovacuum_work_mem": "64MB",
     "track_io_timing": "on",
     "log_min_duration_statement": "500ms",
     "log_parameter_max_length": "0",
     "pg_stat_statements.track": "top",
     "pg_stat_statements.max": "5000",
 }
+
+# The development profile's sizing (T-4933), which dev, local and smartcity all render.
+PROFILE_PARAMETERS = {"max_connections": "50", "max_parallel_workers": "2", "autovacuum_work_mem": "64MB"}
 
 requires_docker = pytest.mark.skipif(shutil.which("docker") is None, reason="docker not installed")
 
@@ -51,7 +52,7 @@ def env_of(container: dict) -> dict:
 
 def test_dev_postgres_carries_the_broker_sizing(rendered):
     spec = cluster(rendered("dev"))["spec"]
-    assert spec["postgresql"]["parameters"] == DEV_PARAMETERS
+    assert spec["postgresql"]["parameters"] == PROFILE_PARAMETERS | DEV_PARAMETERS
     # The overlay adds parameters and nothing else: the TLS-only pg_hba of the base stays.
     assert spec["postgresql"]["pg_hba"] == ["hostnossl all all all reject", "hostssl all all all scram-sha-256"]
     # The limit is unchanged: the node has no memory to give it.
@@ -60,7 +61,7 @@ def test_dev_postgres_carries_the_broker_sizing(rendered):
 
 def test_prod_waits_for_the_dev_measurement(rendered):
     parameters = cluster(rendered("smartcity"))["spec"]["postgresql"].get("parameters", {})
-    assert not set(parameters) & set(DEV_PARAMETERS)
+    assert parameters == PROFILE_PARAMETERS
     assert env_of(stat_statements_job(rendered("smartcity")))["PRELOADED"] == "false"
 
 

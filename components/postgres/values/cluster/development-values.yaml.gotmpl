@@ -33,5 +33,17 @@ cluster:
       cpu: '6'
       memory: 2Gi
 
+  # Sized so the worst case stays under 80 % of the 2Gi limit (T-4933, the sum in
+  # tests/test_postgres_memory_budget.py): every process holds about 19MiB of its own, so the
+  # number of processes is the lever, not shared_buffers. 50 connections: the broker's 22, the
+  # Portal, CKAN, Keycloak, Gitea and the rest about 20, CNPG's 3 reserved ones, a few spare.
+  # CNPG starts 32 parallel workers by default, each a full process; 2 keep one big scan
+  # parallel. Each autovacuum worker takes 64MB instead of maintenance_work_mem.
+  postgresql:
+    parameters:
+      max_connections: "50"
+      max_parallel_workers: "2"
+      autovacuum_work_mem: "64MB"
+
   storage:
     size: 1Gi

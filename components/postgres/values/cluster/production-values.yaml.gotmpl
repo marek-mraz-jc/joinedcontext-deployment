@@ -28,7 +28,9 @@ cluster:
 
   postgresql:
     parameters:
-      max_connections: "500"
+      # 250, not 500: each connection holds about 19MiB of its own, and 500 of them are 11GiB in
+      # an 8Gi pod (T-4933, tests/test_postgres_memory_budget.py).
+      max_connections: "250"
       max_worker_processes: "4"
 
   monitoring:
