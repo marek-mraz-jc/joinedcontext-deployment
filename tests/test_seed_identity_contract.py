@@ -63,8 +63,9 @@ def test_helsinki_policies_name_the_organization_by_placeholder():
     # mobility project's station App's, seeded in this folder with the rest of hel.fi (T-3185),
     # and the members' read on the operations endpoint (bikes-ops-read, T-3957), and one public
     # read per dataset split out of helsinki-all (T-4344), and the history of helsinki-all's types
-    # that keep one (T-4372), and the pipelines' delete of withdrawn Alerts (T-4823).
-    assert len(policies) == 23
+    # that keep one (T-4372), and the pipelines' delete of withdrawn Alerts (T-4823), and the
+    # steward's import of journey 41's test places (T-4867).
+    assert len(policies) == 24
     for path, policy in policies:
         assert policy["spec"]["assigner"] == "did:web:{orgDomain}", path.name
 
