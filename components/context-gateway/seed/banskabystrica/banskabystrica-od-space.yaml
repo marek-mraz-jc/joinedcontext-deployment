@@ -35,8 +35,12 @@ spec:
     history: 'off'
   - entityType: KeyPerformanceIndicator
     history: P30D
+    record: onChange
+    heartbeat: P7D
   - entityType: OffStreetParking
     history: P30D
+    record: onChange
+    heartbeat: P7D
   - entityType: PurchaseOrder
     history: 'off'
   quality:

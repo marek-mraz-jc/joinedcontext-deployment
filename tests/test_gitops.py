@@ -503,3 +503,10 @@ def test_a_portal_commit_that_built_no_builder_keeps_the_pinned_builders(tmp_pat
     assert "no builder image" not in script.stderr and "no portal image" not in script.stderr
     pulls = [line for line in log.read_text().splitlines() if line.startswith("pull")]
     assert pulls == [f"pull -q ghcr.io/marek-mraz-jc/joinedcontext-app-builder@{kept}"], log.read_text()
+
+
+def test_the_pin_bot_checks_the_docs_pin_before_it_commits():
+    # T-4931: the bot's push starts no ci run, and it pinned platform 8f28b80 over docs that did
+    # not list the gateway's new variables; deployment main went red on its next commit.
+    step = (ROOT / ".github/workflows/pin-images.yml").read_text()
+    assert step.index("scripts/check-docs-pin.sh") < step.index('git commit -q -m "$message"')

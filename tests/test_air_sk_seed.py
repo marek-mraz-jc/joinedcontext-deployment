@@ -188,7 +188,10 @@ def test_every_entity_is_the_official_smart_data_model():
 
 def test_the_space_keeps_a_week_and_the_endpoint_serves_every_surface_without_naming_the_source():
     space = yaml.safe_load((SEED / "slovensko-space-ovzdusie.yaml").read_text())
-    assert space["spec"]["retention"] == [{"entityType": "AirQualityObserved", "history": "P7D"}]
+    (rule,) = space["spec"]["retention"]
+    assert {k: v for k, v in rule.items() if k != "attributes"} == {"entityType": "AirQualityObserved", "history": "P7D"}
+    # What a station is, written without an observedAt, records a change and a daily row (T-4844).
+    assert all(a == {"record": "onChange", "heartbeat": "P1D"} for a in rule["attributes"].values())
     endpoint = yaml.safe_load((SEED / "slovensko-endpoint-ovzdusie.yaml").read_text())
     assert endpoint["spec"]["audience"] == "public"
     assert {"ngsi-ld", "mcp", "websocket", "csv", "ogc-features"} <= set(endpoint["spec"]["enabledRepresentations"])
