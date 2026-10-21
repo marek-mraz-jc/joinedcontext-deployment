@@ -416,3 +416,59 @@ def test_an_event_without_gps_name_or_start_is_refused_by_the_model():
         and "name" not in out["2"]
         and "startDate" not in out["3"]
     )
+
+
+# --- the national space (T-4898) ----------------------------------------------------------------------------
+
+
+def test_every_source_writes_its_own_region_and_only_bbsk_sources_reach_the_regions_view():
+    """The BBSK Endpoint reads scopeQ /SK/BB/# of the national space: a source elsewhere must never
+    write under /SK/BB, and the scope comes from the inventory row, not from the feed."""
+    regions = {r["region"] for r in generate.kept_sources()}
+    assert "BBSK" in regions and len(regions) >= 5
+    for row in generate.kept_sources():
+        code, name = generate.REGIONS[row["region"]]
+        text = (SEED / f"bbsk-pipeline-{row['name']}-bento.yaml").read_text()
+        assert f'"scope": if $town != null {{ "/SK/{code}" + "/" + $town }}' in text, (
+            row["name"]
+        )
+        assert f'"addressRegion": "{name}"' in text, row["name"]
+        assert ('"/SK/BB"' in text) == (row["region"] == "BBSK"), row["name"]
+
+
+def test_each_dataset_lists_its_sources_with_their_licence():
+    def listed(file: str) -> dict:
+        spec = yaml.safe_load((SEED / file).read_text())["spec"]
+        return {s["url"]: s for s in spec["catalog"]["source"]}
+
+    kept = generate.kept_sources()
+    national = listed("bbsk-endpoint-podujatia-slovensko.yaml")
+    region = listed("bbsk-endpoint-podujatia.yaml")
+    assert set(national) == {r["events_url"] for r in kept}
+    assert set(region) == {r["events_url"] for r in kept if r["region"] == "BBSK"}
+    for row in kept:
+        text = national[row["events_url"]]["description"]["en"]
+        if row["licence_terms"].startswith("CC-BY"):
+            assert "licence CC-BY" in text, row["name"]
+        else:
+            assert "no licence stated, facts only" in text, row["name"]
+
+
+@requires_docker
+def test_a_source_outside_the_region_lands_in_its_own_region_at_its_venue():
+    # Recorded 2026-10-21 (start_date=now): four events at Dom umenia, one with no venue.
+    out = {
+        e["sourceId"]["value"]: e
+        for e in pipeline("domumenia-piestany", "piestany-tribe.json")
+    }
+    assert len(out) == 5
+    placed = [e for e in out.values() if "location" in e]
+    assert len(placed) == 4
+    for e in placed:
+        assert e["scope"] == "/SK/TT/piestany"
+        assert e["location"]["value"]["coordinates"] == [17.8400391, 48.5923954]
+        assert e["address"]["value"]["addressRegion"] == "Trnavský kraj"
+        assert "description" not in e  # no licence stated: facts only
+        assert VALID.is_valid(key_values(e)), e["name"]
+    (unplaced,) = [e for e in out.values() if "location" not in e]
+    assert not VALID.is_valid(key_values(unplaced))
