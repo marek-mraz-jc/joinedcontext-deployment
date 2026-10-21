@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="light dark">
+<title>Live data</title>
+<link rel="stylesheet" href="vendor/maplibre-gl-6.14.0.css">
+<link rel="stylesheet" href="explore.css">
+<script src="vendor/pmtiles-4.5.0.js" defer></script>
+<script src="explore.js" defer></script>
+</head>
+<body>
+<main>
+  <h1 id="title" data-t="title"></h1>
+  <div id="app">
+    <form id="controls" role="search" novalidate>
+      <p id="type-field" class="field" hidden>
+        <label for="type" data-t="type"></label>
+        <select id="type"></select>
+      </p>
+      <p class="field grow">
+        <label for="search" data-t="search"></label>
+        <input id="search" type="search" maxlength="200" autocomplete="off">
+        <span id="search-hint" class="hint" data-t="searchHint"></span>
+      </p>
+      <fieldset class="filters">
+        <legend data-t="filters"></legend>
+        <div id="filter-list"></div>
+        <button type="button" id="add-filter" class="secondary" data-t="addFilter"></button>
+      </fieldset>
+      <div class="actions">
+        <button type="submit" class="primary" data-t="apply"></button>
+        <button type="button" id="reset" class="secondary" data-t="reset"></button>
+        <button type="button" id="data-api" class="secondary" data-t="dataApi"></button>
+        <details class="columns">
+          <summary data-t="columns"></summary>
+          <p class="hint" data-t="columnsHint"></p>
+          <div id="columns-list"></div>
+        </details>
+      </div>
+    </form>
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+    <p><button type="button" id="retry" class="secondary" data-t="retry" hidden></button></p>
+    <div id="results" hidden>
+      <section aria-labelledby="table-title">
+        <h2 id="table-title" class="sr-only" data-t="table"></h2>
+        <div class="scroll" tabindex="0" role="region" aria-labelledby="table-title">
+          <table id="table"></table>
+        </div>
+        <nav class="pager" aria-label="Pages">
+          <button type="button" id="prev" class="secondary" data-t="prev"></button>
+          <span id="range" aria-hidden="true"></span>
+          <button type="button" id="next" class="secondary" data-t="next"></button>
+          <label for="size" data-t="perPage"></label>
+          <select id="size"></select>
+        </nav>
+      </section>
+      <section id="map-section" aria-labelledby="map-title" hidden>
+        <h2 id="map-title" data-t="map"></h2>
+        <div id="map" role="region" aria-labelledby="map-title" aria-describedby="map-note"></div>
+        <p id="map-note" class="hint" data-t="mapHint"></p>
+      </section>
+    </div>
+  </div>
+</main>
+<dialog id="detail" aria-labelledby="detail-title">
+  <div class="detail-head">
+    <h2 id="detail-title"></h2>
+    <button type="button" id="detail-close" class="secondary" data-t="close"></button>
+  </div>
+  <dl id="detail-list"></dl>
+  <h3 data-t="links"></h3>
+  <ul id="detail-links"></ul>
+</dialog>
+</body>
+</html>
