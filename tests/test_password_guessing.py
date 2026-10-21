@@ -12,10 +12,10 @@ assertion here reads the rendered deployment and needs no running system: the su
 of the fast lane and is replayed on every commit rather than on a cluster somebody remembers
 to point it at.
 
-What the file does *not* claim: that a second factor is required of an administrator. It is
-offered and prompted for whoever enrolled one, which is what
-`test_an_administrator_who_enrolled_a_second_factor_is_always_asked_for_it` asserts. Making it
-mandatory is T-2351.
+A second factor is required of every holder of `mfa-required` (approvers and platform
+administrators, T-5120: tests/test_keycloak_login_hardening.py) and prompted for anyone else who
+enrolled one, which is what
+`test_an_administrator_who_enrolled_a_second_factor_is_always_asked_for_it` asserts.
 """
 
 import base64
@@ -87,8 +87,10 @@ def test_a_thousand_guesses_against_one_account_are_stopped_after_ten(rendered, 
 @pytest.mark.parametrize("env", ENVIRONMENTS)
 def test_a_guessed_password_is_long_enough_for_the_guessing_to_be_hopeless(rendered, env):
     """TR-03187 AUT-7: the platform realm requires twelve characters of three classes, and the
-    master realm — where the administrators are — twenty of four."""
-    platform_policy = "length(12) and upperCase(1) and lowerCase(1) and digits(1)"
+    master realm — where the administrators are — twenty of four. The platform realm also refuses
+    the username, the e-mail and the last five passwords (T-5120)."""
+    platform_policy = ("length(12) and upperCase(1) and lowerCase(1) and digits(1) and notUsername(undefined)"
+                       " and notEmail(undefined) and passwordHistory(5)")
     master_policy = "length(20) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1)"
     found = realms(rendered, env)
     for name, realm in found.items():
@@ -162,7 +164,9 @@ def test_no_realm_carries_a_password_anybody_could_read(rendered, env):
     for name, realm in realms(rendered, env).items():
         for username, user in people(realm).items():
             for credential in user.get("credentials", []):
-                assert credential["value"].startswith("$(USER_PASSWORD_"), (
+                # A TOTP seed (T-5120) is a credential as well: its secretData is a placeholder too.
+                secret = credential.get("value") or json.loads(credential["secretData"])["value"]
+                assert secret.startswith(("$(USER_PASSWORD_", "$(USER_TOTP_")), (
                     f"{env}/{name}/{username} carries a literal credential"
                 )
 
@@ -205,10 +209,8 @@ def test_the_administrator_password_is_generated_per_cluster_and_never_written_d
 def test_an_administrator_who_enrolled_a_second_factor_is_always_asked_for_it(rendered, env):
     """TR-03187 AUT-2: the platform realm's browser flow ends in a conditional second factor.
 
-    Conditional, not required: whoever enrolled TOTP or a security key is asked for it on every
-    login, and whoever did not is not. Making it mandatory for administrators is T-2351; this
-    test is the floor that says the flow is wired at all, so that change is one requirement
-    level and not a new flow.
+    Whoever enrolled TOTP or a security key is asked for it on every login; a holder of
+    `mfa-required` must give TOTP whether enrolled or not (T-5120, its own subflow).
     """
     realm = platform_realm(rendered, env)
     assert realm["browserFlow"] == "custom browser"
