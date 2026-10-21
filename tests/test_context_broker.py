@@ -71,6 +71,16 @@ def test_the_broker_answers_its_probes_on_its_own_port(dev):
 
 
 @requires_helmfile
+def test_liveness_waits_an_hour_for_a_migration_on_boot(dev):
+    """The broker migrates before it listens (T-4852): without a startup probe, liveness kills a
+    pod 55 s into a long migration and every restart begins it again."""
+    (container,) = pod_of(dev)["containers"]
+    startup = container["startupProbe"]
+    assert startup["httpGet"] == container["livenessProbe"]["httpGet"]
+    assert startup["periodSeconds"] * startup["failureThreshold"] >= 3600
+
+
+@requires_helmfile
 def test_the_broker_has_limits_that_fit_the_16_gb_node(dev):
     (container,) = pod_of(dev)["containers"]
     resources = container["resources"]
