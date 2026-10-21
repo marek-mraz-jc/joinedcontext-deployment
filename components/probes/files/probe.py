@@ -19,6 +19,10 @@ GeoJSON FeatureCollection with a Feature, a CSV header with `id`, a VEVENT, MCP 
 WebSocket 101 whose first message is `x-welcome`. Anonymous only: the probe holds no token and
 sends none; a reason is the probe's own short sentence, never a response body.
 
+Once an hour it also reads, from the same outside view, when each host's TLS certificate and each
+registered domain expire (the domain from RDAP, its server from IANA's bootstrap list), for the
+expiry alerts of T-5104.
+
     GET /metrics       Prometheus text (jc_probe_*)
     GET /results.json  the newest result per target, Endpoint and surface (T-5102, T-5067)
     GET /healthz       200 while every target finished a round in the last three minutes
@@ -39,6 +43,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 USER_AGENT = "jc-synthetic-probe/1 (T-5103)"
@@ -47,6 +52,10 @@ BODY_CAP = 256 * 1024
 NAME = re.compile(r"^[a-z0-9][a-z0-9-]{0,39}$")
 SLUG = re.compile(r"^[a-z0-9]{1,64}$")
 TYPE = re.compile(r"^[A-Za-z][A-Za-z0-9_]{0,99}$")
+# Latency buckets of jc_probe_request_duration_seconds; 0.5 is the p95 objective of T-5104.
+BUCKETS = (0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0)
+EXPIRY_SECONDS = 3600
+RDAP_BOOTSTRAP = "https://data.iana.org/rdap/dns.json"
 # The surface paths of jc-dcat's Representation::Served (platform crates/jc-dcat/src/lib.rs).
 SURFACES = {
     "ngsi-ld/v1/": "ngsi-ld",
@@ -271,6 +280,43 @@ def websocket(url):
 # ---- targets, discovery and the round
 
 
+def tls_not_after(host):
+    """When the certificate `host` serves on 443 expires; 0 when it fails verification (expired or
+    wrong), None when nothing answered, so a network blip never reads as an expired certificate."""
+    try:
+        with socket.create_connection((host, 443), timeout=TIMEOUT) as raw, \
+                ssl.create_default_context().wrap_socket(raw, server_hostname=host) as tls:
+            return ssl.cert_time_to_seconds(tls.getpeercert()["notAfter"])
+    except ssl.SSLCertVerificationError:
+        return 0.0
+    except (OSError, KeyError, ValueError):
+        return None
+
+
+def registered_domain(host):
+    # ponytail: the last two labels; a two-label suffix (.co.uk) needs the public suffix list.
+    return ".".join(host.split(".")[-2:])
+
+
+def domain_not_after(domain, get=fetch):
+    """The registration's RDAP `expiration` event as a timestamp, None when no answer holds one."""
+    status, _, body, _ = get(RDAP_BOOTSTRAP, None, {"Accept": "application/json"}, 1024 * 1024)
+    services = (_json(body) or {}).get("services") if status == 200 and isinstance(_json(body), dict) else None
+    tld = domain.rsplit(".", 1)[-1]
+    base = next((urls[0] for tlds, urls in services or [] if tld in tlds and urls and str(urls[0]).startswith("https://")), None)
+    if base is None:
+        return None
+    status, _, body, _ = get(f"{base.rstrip('/')}/domain/{domain}", None, {"Accept": "application/rdap+json"})
+    doc = _json(body) if status == 200 else None
+    for event in (doc or {}).get("events") or [] if isinstance(doc, dict) else []:
+        if isinstance(event, dict) and event.get("eventAction") == "expiration":
+            try:
+                return datetime.fromisoformat(str(event.get("eventDate"))).timestamp()
+            except ValueError:
+                return None
+    return None
+
+
 def load_targets(text):
     """PROBE_TARGETS, validated: a bad entry stops the pod at start instead of probing elsewhere."""
     targets = json.loads(text)
@@ -351,11 +397,14 @@ def plan(budget, kinds, cursors, holders):
 
 
 class Prober:
-    def __init__(self, targets, budget, discovery_seconds, clock=time.time, sleep=time.sleep, get=fetch, ws=websocket):
+    def __init__(self, targets, budget, discovery_seconds, clock=time.time, sleep=time.sleep, get=fetch, ws=websocket,
+                 tls=tls_not_after, domain=domain_not_after):
         self.targets, self.budget, self.discovery_seconds = targets, budget, discovery_seconds
-        self.clock, self.sleep, self.get, self.ws = clock, sleep, get, ws
+        self.clock, self.sleep, self.get, self.ws, self.tls, self.domain = clock, sleep, get, ws, tls, domain
         self.lock = threading.Lock()
         self.results = {}  # (target, endpoint, surface) -> {ok, reason, seconds, at}
+        self.counts = {}  # (target, surface) -> {failures, buckets, sum, count}: the SLO's events
+        self.expiry = {}  # ("cert", host) or ("domain", domain) -> expiry timestamp
         self.rounds = {}  # target -> time of the last finished round
         self.endpoints = {t["name"]: {} for t in targets}  # target -> slug -> {surfaces, type, at}
         self.listed_at = {}
@@ -367,6 +416,21 @@ class Prober:
             self.results[(target, endpoint, surface)] = {
                 "ok": reason is None, "reason": reason, "seconds": round(seconds, 3), "at": self.clock(),
             }
+            c = self.counts.setdefault((target, surface), {"failures": 0, "buckets": [0] * len(BUCKETS), "sum": 0.0, "count": 0})
+            c["failures"] += 0 if reason is None else 1
+            c["count"] += 1
+            c["sum"] += seconds
+            for i, bound in enumerate(BUCKETS):
+                c["buckets"][i] += 1 if seconds <= bound else 0
+
+    def expiries(self, target):
+        """Certificate expiry of the target's hosts and its registered domain; a None keeps the last."""
+        hosts = sorted({urllib.parse.urlsplit(target[k]).hostname for k in ("api", "catalogue", "assistant")})
+        found = {("cert", h): self.tls(h) for h in hosts}
+        for name in sorted({registered_domain(h) for h in hosts}):
+            found[("domain", name)] = self.domain(name, self.get)
+        with self.lock:
+            self.expiry.update({k: v for k, v in found.items() if v is not None})
 
     def _paced(self, call, *args):
         start = time.monotonic()
@@ -435,8 +499,12 @@ class Prober:
             self.rounds[name] = self.clock()
 
     def run(self, target):
+        checked = 0.0
         while True:
             try:
+                if self.clock() - checked >= EXPIRY_SECONDS:
+                    checked = self.clock()
+                    self.expiries(target)
                 self.round(target)
             except Exception as err:  # noqa: BLE001 (one bad answer must not stop the probe)
                 print(json.dumps({"target": target["name"], "error": type(err).__name__}), file=sys.stderr, flush=True)
@@ -449,6 +517,8 @@ class Prober:
         with self.lock:
             items = sorted(self.results.items())
             rounds = dict(self.rounds)
+            counts = {k: {**v, "buckets": list(v["buckets"])} for k, v in sorted(self.counts.items())}
+            expiry = sorted(self.expiry.items())
         out = [
             "# HELP jc_probe_up 1 when the newest probe of the surface held, 0 when it did not.",
             "# TYPE jc_probe_up gauge",
@@ -472,6 +542,23 @@ class Prober:
         out += ["# HELP jc_probe_round_timestamp_seconds When the target's newest round finished.",
                 "# TYPE jc_probe_round_timestamp_seconds gauge"]
         out += [f'jc_probe_round_timestamp_seconds{{target="{esc(t)}"}} {int(at)}' for t, at in sorted(rounds.items())]
+        out += ["# HELP jc_probe_failures_total Probes of the surface that failed their check.",
+                "# TYPE jc_probe_failures_total counter"]
+        out += [f'jc_probe_failures_total{{target="{esc(t)}",surface="{esc(s)}"}} {c["failures"]}' for (t, s), c in counts.items()]
+        out += ["# HELP jc_probe_request_duration_seconds Seconds each probe of the surface took.",
+                "# TYPE jc_probe_request_duration_seconds histogram"]
+        for (t, s), c in counts.items():
+            label = f'target="{esc(t)}",surface="{esc(s)}"'
+            out += [f'jc_probe_request_duration_seconds_bucket{{{label},le="{b}"}} {n}' for b, n in zip(BUCKETS, c["buckets"])]
+            out += [f'jc_probe_request_duration_seconds_bucket{{{label},le="+Inf"}} {c["count"]}',
+                    f"jc_probe_request_duration_seconds_sum{{{label}}} {round(c['sum'], 3)}",
+                    f"jc_probe_request_duration_seconds_count{{{label}}} {c['count']}"]
+        out += ["# HELP jc_probe_tls_cert_expiry_timestamp_seconds When the host's certificate expires (0: it fails verification).",
+                "# TYPE jc_probe_tls_cert_expiry_timestamp_seconds gauge"]
+        out += [f'jc_probe_tls_cert_expiry_timestamp_seconds{{host="{esc(n)}"}} {int(v)}' for (k, n), v in expiry if k == "cert"]
+        out += ["# HELP jc_probe_domain_expiry_timestamp_seconds When the domain's registration expires (RDAP).",
+                "# TYPE jc_probe_domain_expiry_timestamp_seconds gauge"]
+        out += [f'jc_probe_domain_expiry_timestamp_seconds{{domain="{esc(n)}"}} {int(v)}' for (k, n), v in expiry if k == "domain"]
         return "\n".join(out) + "\n"
 
     def snapshot(self):

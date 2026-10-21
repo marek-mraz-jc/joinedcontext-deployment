@@ -179,6 +179,7 @@ jobs:
         # tests/test_ckan_dcat.py serializes DCAT-AP in the catalogue image (T-3010);
         # tests/test_gitops.py runs Argo CD's helmfile plugin in its sidecar image (T-4674);
         # tests/test_manifest_format.py runs `jcctl fmt --check` in the checkouts image (T-5052).
+        # tests/test_alert_rules.py runs `promtool test rules` in the Prometheus image (T-5104).
         # Pulled here so a registry failure reads as a registry failure rather than as a red
         # test.
         run: |
@@ -187,6 +188,8 @@ jobs:
           for component, part in (("observability", "collector"), ("audit-logging", "collector"), ("ckan", "catalogue"), ("gitops", "helmfile"), ("context-gateway", "checkouts")):
               i = yaml.safe_load(open(f"components/{component}/images.yaml"))[component][part]
               print(f"{i['repository']}:{i['tag']}@{i['digest']}")
+          import re
+          print(re.search(r'^IMAGE = "(.+)"$', open("tests/test_alert_rules.py").read(), re.M).group(1))
           EOF
           xargs -r -n1 docker pull --quiet < /tmp/test-images
       - name: assemble deployment dir and add the chart repos
