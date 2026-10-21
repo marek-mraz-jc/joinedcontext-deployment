@@ -24,6 +24,7 @@ root = {
   "speed": if this.spd.type() != "number" { deleted() } else { {
     "type": "Property", "value": this.spd, "unitCode": "MTS", "observedAt": this.tst
   } },
+  # "ghost": { "type": "Property" } in a comment
   "mode": { "type": "Property", "value": "bus" },
   "fixed": { "type": "Property", "value": 1, "observedAt": "2026-01-01T00:00:00Z" },
   "stamped": { "type": "Property", "value": 1, "observedAt": now() },

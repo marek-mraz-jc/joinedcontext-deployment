@@ -132,7 +132,7 @@ def scan(text: str, default_type: str | None) -> dict[tuple[str, str], dict]:
     found: dict[tuple[str, str], dict] = {}
     entity_type = default_type
     for m in re.finditer(r'"type"\s*:\s*"([A-Za-z_][\w-]*)"', text):
-        if blank[m.start() + 1] != " ":  # inside another string literal or a comment
+        if blank[m.start()] != '"':  # inside another string literal or a comment
             continue
         name = m.group(1)
         if name in GEOJSON:
