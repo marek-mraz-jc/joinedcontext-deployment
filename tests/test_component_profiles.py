@@ -85,6 +85,28 @@ def test_broker_only_reaches_the_broker_from_inside_the_cluster_only(rendered):
     assert broker_rules == [], broker_rules
 
 
+def broker_env(docs):
+    deployment = next(d for d in docs if d.get("kind") == "Deployment"
+                      and d["spec"]["template"]["metadata"]["labels"].get("app.kubernetes.io/name")
+                      == BROKER_POD["app.kubernetes.io/name"])
+    container = deployment["spec"]["template"]["spec"]["containers"][0]
+    return {e["name"]: e.get("value") for e in container.get("env", [])}
+
+
+@requires_helmfile
+@pytest.mark.parametrize("profile, policy, surfaces", [
+    ("broker-only", "allow-all", "admin"),
+    ("minimal", "joinedcontext", None),
+])
+def test_a_profile_decides_requests_by_what_stands_in_front(rendered, profile, policy, surfaces):
+    """broker-only has no gateway to name the caller, so the joinedcontext engine would refuse
+    every NGSI-LD request (ci-full 39537767356: 403 AccessDenied); it serves the bare NGSI-LD API
+    under the broker's own engine. minimal keeps the gateway's engine."""
+    env = broker_env(rendered(profile))
+    assert env.get("ANTARES_POLICY") == policy
+    if surfaces:
+        assert env.get("ANTARES_API_SURFACES") == surfaces
+
 def list_releases(tree, values):
     env_dir = tree / "deployment/environments/testing"
     shutil.rmtree(env_dir, ignore_errors=True)
