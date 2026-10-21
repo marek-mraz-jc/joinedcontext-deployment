@@ -18,9 +18,9 @@ IMAGES = yaml.safe_load((ROOT / "components/postgres/images.yaml").read_text())[
 ROLE_JOB_IMAGE = f"{IMAGES['roleJob']['repository']}@{IMAGES['roleJob']['digest']}"
 
 DEV_PARAMETERS = {
-    "shared_buffers": "512MB",
-    "effective_cache_size": "1536MB",
-    "work_mem": "8MB",
+    "shared_buffers": "128MB",
+    "effective_cache_size": "1GB",
+    "work_mem": "4MB",
     "maintenance_work_mem": "128MB",
     "autovacuum_work_mem": "64MB",
     "track_io_timing": "on",
@@ -54,7 +54,7 @@ def test_dev_postgres_carries_the_broker_sizing(rendered):
     assert spec["postgresql"]["parameters"] == DEV_PARAMETERS
     # The overlay adds parameters and nothing else: the TLS-only pg_hba of the base stays.
     assert spec["postgresql"]["pg_hba"] == ["hostnossl all all all reject", "hostssl all all all scram-sha-256"]
-    # shared_buffers is a quarter of the limit; the limit itself is unchanged (no node memory).
+    # The limit is unchanged: the node has no memory to give it.
     assert spec["resources"]["limits"]["memory"] == "2Gi"
 
 
