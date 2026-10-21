@@ -306,6 +306,12 @@ componentProfileValues:
             limits: {memory: 512Mi}
           env:
             ANTARES_PG_POOL: "10"
+            # No gateway forwards a verified caller here, so the joinedcontext engine would refuse
+            # every request as the cluster's own (403 AccessDenied, ci-full 39537767356). The
+            # broker's stock engine and the NGSI-LD API alone (`admin` = health and metrics):
+            # the NetworkPolicies are the access control of this profile.
+            ANTARES_POLICY: "allow-all"
+            ANTARES_API_SURFACES: "admin"
 # The components each one cannot run without. A render whose component list (any profile, an
 # environment's own list included) deploys one of these keys without all of its values fails.
 componentDependencies:
