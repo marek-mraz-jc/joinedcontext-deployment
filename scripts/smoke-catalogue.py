@@ -620,15 +620,16 @@ class Run:
         return {v.get("view_type") for v in views if isinstance(v, dict)}
 
     def datastore(self, data: Dataset) -> str:
+        # The DataStore is on its way out (T-5060): what its table gets wrong is a warning, never a ko.
         # ponytail: the first datastore table only; a dataset of several tables compares one.
         url = f"https://opendata.{self.domain}/api/3/action/datastore_search?" + urllib.parse.urlencode(
             {"resource_id": data.datastore[0], "limit": 0})
         answer = self.client.fetch(url)
         total = ((answer.json() or {}).get("result") or {}).get("total") if answer.status == 200 else None
         if not isinstance(total, int):
-            return ko(f"datastore_search answered {answer.why()}")
+            return warn(f"datastore_search answered {answer.why()}")
         if total < 1:
-            return ko("the datastore table is empty")
+            return warn("the datastore table is empty")
         others = self.shared.get((data.slug, data.type), [])
         if not data.part_of and len(others) > 1:
             return ok(f"{total} rows; not compared, {data.type} is shared by {len(others)} datasets")
@@ -636,7 +637,7 @@ class Run:
             return skip(f"{total} rows; no platform count to compare (OData or OGC ko)")
         count, how = self.counts[data.name]
         if abs(total - count) > TOLERANCE * max(count, 1):
-            return ko(f"{total} rows, the platform holds {count} ({how})")
+            return warn(f"{total} rows, the platform holds {count} ({how})")
         return ok(f"{total} rows = {count}")
 
     def websocket(self, data: Dataset) -> str:
@@ -715,7 +716,6 @@ class Run:
                 row["inventory"] = ko("its Endpoint is not in the public DCAT feed")
             else:
                 row["inventory"] = ok()
-            # The DataStore is on its way out (T-5060): a dataset without a table is reported, not failed.
             if not data.datastore:
                 row["datastore"] = warn("no datastore table")
         # Least recently checked first, the core as the slow checks: a run that ends early leaves
