@@ -156,14 +156,11 @@ pipeline:
               key: '${! meta("stop_urn") }'
         result_map: 'meta stop_known = content().string()'
 
-    # `expiresAt` (NGSI-LD 4.22) is the vehicle's lifetime: five minutes after the position it
-    # reports. Every write moves it on, so a vehicle that stops reporting leaves every read when
-    # it passes and the broker's sweep deletes it (T-4823; a reaper pipeline did this before). A
-    # report whose time cannot be read would live forever and is dropped.
+    # The vehicle's lifetime is the pipeline's spec.lifetime (PL-80, T-4843): five minutes after
+    # the position it reports, which every write moves on. A report whose time cannot be read
+    # would get no end and live forever, so it is dropped here.
     - mapping: |
-        let expires = this.tst.ts_parse("2006-01-02T15:04:05.999Z07:00").ts_add_iso8601("PT5M").ts_format("2006-01-02T15:04:05.000Z", "UTC").catch("")
-        meta expires = $expires
-        root = if $expires == "" { deleted() } else { this }
+        root = if this.tst.ts_parse("2006-01-02T15:04:05.999Z07:00").catch(null) == null { deleted() } else { this }
 
     # The entity. The domain comes from the deployment, never from this file (PF-44, PF-42).
     - mapping: |
@@ -173,7 +170,6 @@ pipeline:
         root = {
           "id": $id,
           "type": "Vehicle",
-          "expiresAt": meta("expires"),
           "location": {
             "type": "GeoProperty",
             "value": { "type": "Point", "coordinates": [ this.long.number(), this.lat.number() ] },
