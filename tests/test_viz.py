@@ -118,6 +118,14 @@ def test_each_page_carries_the_headers_that_keep_a_spec_harmless(dev):
     vendor = conf.split("location /vendor/")[1]
     assert 'add_header Cache-Control "public, max-age=31536000, immutable" always;' in vendor
     assert "max-age=86400" not in vendor
+    # T-5059: the explorer reads the API and the tiles, and only the catalogue may frame it.
+    explore = csp(conf, "/explore.html")
+    assert "connect-src https://api.dev.joinedcontext.com https://tiles.dev.joinedcontext.com;" in explore
+    assert "frame-ancestors https://opendata.dev.joinedcontext.com" in explore and "frame-ancestors *" not in explore
+    assert f"script-src https://{HOST};" in explore and "unsafe-eval" not in explore and "base-uri 'none'" in explore
+    explorejs = (FILES / "site/explore.js").read_text()
+    assert 'credentials: "omit"' in explorejs and "innerHTML" not in explorejs and "Authorization" not in explorejs
+    assert "datastore" not in explorejs
     mapped_page = (FILES / "site/map.html").read_text()
     assert '<link rel="modulepreload" href="/vendor/maplibre-gl-6.14.0.mjs">' in mapped_page
     assert "maplibre-gl-6.14.0.mjs" in (FILES / "site/map.js").read_text(), "the preload names the module map.js imports"
@@ -140,7 +148,7 @@ def test_the_renderer_draws_through_the_interpreter_and_loads_nothing():
 
 def test_the_refusal_list_and_the_host_page_logic_under_node():
     tests = sorted(str(p) for p in (COMPONENT / "tests").glob("*.test.mjs"))
-    assert len(tests) == 3
+    assert len(tests) == 4
     run = subprocess.run(["node", "--test", *tests], capture_output=True, text=True, timeout=120)
     assert run.returncode == 0, run.stdout[-4000:] + run.stderr[-2000:]
 

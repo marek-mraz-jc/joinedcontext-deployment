@@ -8,7 +8,11 @@
 
 {% block package_notes %}
   {{ super() }}
-  {% set previews = h.jc_previews(pkg) %}
+  {# T-5059: an Endpoint's dataset opens its live explorer, read from the Endpoint itself; the
+     DataStore tables below are only for a dataset without one. #}
+  {% set explorer = h.jc_explorer(pkg) %}
+  {% set previews = [] if explorer else h.jc_previews(pkg) %}
+  {% snippet 'package/snippets/jc_explorer.html', explorer=explorer %}
   {% if previews %}
     {% set total = h.jc_total(previews) %}
     <section class="jc-preview" aria-labelledby="jc-preview-title">
