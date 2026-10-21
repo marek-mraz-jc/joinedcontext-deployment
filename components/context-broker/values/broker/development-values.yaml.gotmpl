@@ -24,4 +24,7 @@ env:
   # own (T-4933): the base pool of 40 was 760MiB of it, and Postgres was OOMKilled nine times when
   # shared_buffers grew beside it. 22 is nearly three times the 8 statements dev ran at once
   # under the night load; a pool that runs dry pages through antares_pg_pool_timeouts_total.
-  ANTARES_PG_POOL: "22"
+  # 16, not 22: with max_connections 50 (3 kept for superusers) the other databases held 24 and
+  # Postgres refused Gitea's token lookups (53300, 124 times in 30 min on 2026-10-21 05:2xZ), so
+  # every Gitea token answered 401 and a new Portal never finished its first sync.
+  ANTARES_PG_POOL: "16"
