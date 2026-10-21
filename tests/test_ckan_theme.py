@@ -966,7 +966,7 @@ def test_the_footer_offers_the_assistant_as_a_disclosure_a_keyboard_opens():
     footer = (THEME / "footer.html").read_text()
     assert "{% set widget = h.jc_assistant_widget(publisher) %}" in footer
     assert "{% set publisher = pkg_dict.organization.name if pkg_dict is defined" in footer
-    assert '<details class="jc-assistant" id="jc-assistant">' in footer and "<summary><span>{{ h.jc_t('assistant') }}</span></summary>" in footer
+    assert '<details class="jc-assistant" id="jc-assistant">' in footer and "<span>{{ h.jc_t('assistant') }}</span></summary>" in footer
     assert 'title="{{ h.jc_t(\'assistant\') }}"' in footer and 'loading="lazy"' in footer
     assert 'referrerpolicy="no-referrer"' in footer
     # T-4280: the chat opens in Slovak or the visitor's own choice in it; the page's language
@@ -2069,7 +2069,7 @@ def test_the_closed_launcher_takes_the_bar_s_shape_and_the_open_one_does_not():
         assert "[open]" not in rule.split("{", 1)[0] or ":not([open])" in rule, rule
     assert "transition" not in closed and "animation" not in closed
     phone = (THEME / "public__jc-theme.css").read_text().split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
-    assert ".jc-assistant:not([open]) > summary { block-size: 2.75rem; font-size: .9375rem; padding-inline: 1.125rem; }" in phone
+    assert ".jc-assistant:not([open]) > summary { block-size: 2.75rem; inline-size: 2.75rem; padding-inline: 0; }" in phone
     # the closed summary's focus ring stays: no rule takes the outline away
     assert ".jc-assistant > summary:focus-visible { outline: 3px solid var(--jc-accent); outline-offset: 2px; }" in css
     assert "outline: none" not in closed and "outline: 0" not in closed
@@ -2080,13 +2080,33 @@ def test_the_corner_stays_inside_the_gutters_whatever_the_label():
     On a phone the corner is at most the screen less the two 1rem gutters and wraps the bar onto
     a row above the launcher instead of pushing it off the left edge; the page keeps room for
     the second row. Measured on data.dev (Playwright, every label, 390/375/360/320): sk and cs
-    keep one row down to 375, en to 360, and no box leaves [16, width - 16]."""
+    keep one row down to 375, en to 360, and no box leaves [16, width - 16]. Since T-4996 the
+    phone's launcher is an icon, so one row holds at 320 too."""
     phone = (THEME / "public__jc-theme.css").read_text().split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
     assert ".jc-corner { flex-wrap: wrap; justify-content: flex-end; max-inline-size: calc(100vw - 2rem); }" in phone
-    assert "body:has(.jc-corner) { padding-block-end: 7.5rem; }" in phone
+    assert "body:has(.jc-corner) { padding-block-end: 4.5rem; }" in phone  # T-4996: one row
     assert ".jc-seg { inline-size: 1.4375rem; }" in phone
     # the launcher itself never wraps its words: the corner wraps, not the label
     assert "white-space: nowrap;" in desktop_css().split(".jc-assistant:not([open]) > summary { ", 1)[1].split("}", 1)[0]
+
+
+def test_on_a_phone_the_closed_launcher_is_an_icon_that_keeps_its_name():
+    """T-4996: at 400px the worded launcher covered dataset cards' chips and text. On a phone the
+    closed launcher is a square chat icon of the bar's height; its words stay in the summary,
+    clipped for the eye only, so a screen reader still names the button; the page's end keeps room
+    for the one row the corner now needs."""
+    footer = (THEME / "footer.html").read_text()
+    summary = footer.split("<summary>", 1)[1].split("</summary>", 1)[0]
+    assert '<svg class="jc-assistant-icon" aria-hidden="true" focusable="false"' in summary
+    assert summary.endswith("<span>{{ h.jc_t('assistant') }}</span>")
+    css = (THEME / "public__jc-theme.css").read_text()
+    assert ".jc-assistant-icon { display: none; }" in desktop_css()
+    phone = css.split("@media (max-width: 40rem) {", 1)[1].split("\n}\n", 1)[0]
+    clipped = phone.split(".jc-assistant:not([open]) > summary > span { ", 1)[1].split("}", 1)[0]
+    assert "clip-path: inset(50%);" in clipped and "inline-size: 1px;" in clipped
+    assert "display: none" not in clipped, "the name must stay in the accessibility tree"
+    assert ".jc-assistant:not([open]) > summary > .jc-assistant-icon { display: block;" in phone
+    assert "body:has(.jc-corner) { padding-block-end: 4.5rem; }" in phone
 
 
 def _with_branding(theme, monkeypatch, tmp_path, block):
