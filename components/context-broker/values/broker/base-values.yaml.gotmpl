@@ -53,6 +53,11 @@ probes:
     timeoutSeconds: 3
     failureThreshold: 3
     initialDelaySeconds: 10
+  # The broker migrates its database before it listens; 0015 rewrites the entities table, minutes on
+  # dev. Liveness waits up to an hour for the first /q/health (T-4852).
+  startup:
+    periodSeconds: 15
+    failureThreshold: 240
 
 envSecret:
   PGPASSWORD:

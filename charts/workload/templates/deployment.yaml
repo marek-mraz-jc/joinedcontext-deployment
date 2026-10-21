@@ -109,6 +109,16 @@ spec:
             {{- if .Values.probes.readiness.initialDelaySeconds }}
             initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
             {{- end }}
+          {{- with .Values.probes.startup }}
+          # Holds liveness off while the process prepares before it listens (a migration on boot).
+          startupProbe:
+            httpGet:
+              path: {{ $.Values.probes.liveness.path | default "/" }}
+              port: {{ $.Values.containerPort }}
+            periodSeconds: {{ .periodSeconds | default 15 }}
+            timeoutSeconds: {{ .timeoutSeconds | default 3 }}
+            failureThreshold: {{ .failureThreshold }}
+          {{- end }}
           livenessProbe:
             httpGet:
               path: {{ .Values.probes.liveness.path | default "/" }}
