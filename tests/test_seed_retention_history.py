@@ -1,4 +1,4 @@
-"""T-5056: history is opt-in (the broker runs ANTARES_TEMPORAL_RECORD=ruled), so a seeded retention rule says what it
+"""T-5056, DM-132: history is opt-in (the broker runs ANTARES_TEMPORAL_RECORD=ruled), so a seeded retention rule says what it
 keeps: a duration, `forever` or `off`. A rule that names a type without `history` would record nothing and read as if it
 kept something; a type no rule names records nothing at all.
 """
