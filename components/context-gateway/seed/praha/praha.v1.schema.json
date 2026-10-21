@@ -484,6 +484,17 @@
           ],
           "x-ngsi-ld-kind": "GeoProperty"
         },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language, as the publisher writes it.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
         "observedAt": {
           "description": "When the observation the entity reports was made.",
           "format": "date-time",
@@ -1005,6 +1016,17 @@
             "null"
           ],
           "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language, as the publisher writes it.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
         },
         "observedAt": {
           "description": "When the observation the entity reports was made.",

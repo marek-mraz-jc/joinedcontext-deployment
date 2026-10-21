@@ -651,6 +651,7 @@ classes:
     - isPartOf
     - cZasadnutia
     - datumZasadnutia
+    - name
     - organSamospravy
     - rok
     annotations:
@@ -687,6 +688,7 @@ classes:
     - iCOZiadatela
     - identifier
     - mena
+    - name
     - pozadovaneProstriedky
     - rokDotacie
     - schvProstr
@@ -744,6 +746,7 @@ classes:
     - datumzmeny
     - ics
     - idzmeny
+    - name
     - popisobjektu
     - prevazujicipovrch
     - urovenumisteniobjektuzps
@@ -764,6 +767,7 @@ classes:
     - iCO
     - identifier
     - mena
+    - name
     - objednavkaSpolu
     - textObjednavky
     annotations:

@@ -458,6 +458,7 @@ def test_a_corrected_accident_keeps_its_id_and_the_constant_its_model_requires()
         f"urn:ngsi-ld:RoadAccident:bbsk.sk:bbsk-otvorene-data:nehodovost-v-bbk-{r['properties']['Číslo_nehody']}"
         for r in rows]
     assert all(e["status"]["value"] == "archived" for e in first)
+    assert [e["name"]["value"] for e in first] == [f"Nehoda {r['properties']['Číslo_nehody']}" for r in rows]
     # An Esri date is the instant every number of the accident was observed at (T-4288).
     for e, r in zip(first, rows):
         at = datetime.fromtimestamp(r["properties"]["Dátum_a_čas"] / 1000, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -527,6 +528,18 @@ def test_every_article_has_a_name_from_its_title_or_else_its_slug():
     assert [e["url"]["value"] for e in entities] == [p["link"] for p in posts]
     assert all("<" not in e["content"]["value"] and "&#" not in e["content"]["value"] for e in entities)
     assert valid("banskabystrica", entities)
+
+
+def test_every_built_name_reads_columns_its_dataset_has():
+    """A NAMES template names a mapped dataset without a name column, and each `{column}` is one its rows
+    carry (T-4745); a typo would name every row by the template's text alone."""
+    by_name = {e["name"]: e for e in SEEDED}
+    for dataset, template in generate.NAMES.items():
+        e = by_name[dataset]
+        assert "name" not in {a for a, p in e["properties"].items() if "template" not in p}, dataset
+        known = {c for p in e["properties"].values() for c in [p["column"], *p.get("otherwise", [])]}
+        known |= set(e["entityId"].get("keys") or []) | {"vrstva", "vrstva_id"}
+        assert set(re.findall(r"\{([^}]+)\}", template)) <= known, dataset
 
 
 @requires_docker
@@ -937,6 +950,13 @@ def test_a_grant_without_a_number_takes_its_row_hash_as_the_identifier_its_base_
     for e in entities:
         assert e["type"] == "Grant" and e["id"].endswith(":" + e["identifier"]["value"])
     assert valid("banskabystrica", entities)
+    # The catalogue smoke refuses a row without a name: the grantee and the action, in one space (T-4745).
+    assert [e["name"]["value"] for e in entities] == [
+        "OZcentrumBB.sk, VMČ č. 1 - akcie realizované z dotácie", "OZcentrumBB.sk, VMČ č. 2 - akcie realizované z dotácie",
+        "Spoločenstvo Rudlová-Sásová, VMČ č. 3 - akcie realizované z dotácie"]
+    # The row hash reads no built name, so the ids are the ones the rows had before it (T-4745).
+    assert [e["id"].rsplit("-", 1)[1] for e in entities] == [
+        "e9820d62e1557e2e74f4f7ef", "d329e36821d1b7c102f467ba", "2c93b454fd99200364743c45"]
 
 
 # T-4385: what each publisher's catalogue holds once its harvest ran whole. A harvest lists a

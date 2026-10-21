@@ -392,6 +392,8 @@ v1/ConfigMap dev/gitea-sample-apps-kpi-forecast
 v1/ConfigMap dev/gitea-sample-apps-news-topics
 v1/ConfigMap dev/gitea-sample-apps-transit-reach
 v1/ConfigMap dev/gitea-seed-s1-banskabystrica
+v1/ConfigMap dev/gitea-seed-s1-banskabystrica--2
+v1/ConfigMap dev/gitea-seed-s1-banskabystrica--3
 v1/ConfigMap dev/gitea-seed-s1-slovensko--13
 v1/ConfigMap dev/gitea-seed-s1-slovensko--17
 v1/ConfigMap dev/gitea-seed-s2-bbsk

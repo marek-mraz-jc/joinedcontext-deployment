@@ -89,6 +89,7 @@ pipeline:
           "nazovKlubu": this.properties."Názov_klubu".apply("string"),
           "voFunkciiOd": this.properties."Vo_funkcii_od".apply("datetime"),
           "voFunkciiDo": this.properties."Vo_funkcii_do".apply("string"),
+          "name": [this.properties."Titul_pred_menom".or("").string().trim(), " ", this.properties."Meno".or("").string().trim(), " ", this.properties."Priezvisko".or("").string().trim(), " ", this.properties."Titul_za_menom".or("").string().trim()].join("").re_replace_all("\\s+", " ").re_replace_all("^[ ,:]+|[ ,:]+$", "").apply("string"),
           "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj (CC BY-SA 4.0)" },
           "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/%C4%8Clenovia_samospr%C3%A1vy/FeatureServer/0/query?where=1%3D1&outFields=I%C4%8CO_samospr%C3%A1vy,N%C3%A1zov_samospr%C3%A1vy,Org%C3%A1n_samospr%C3%A1vy,Titul_pred_menom,Meno,Priezvisko,Titul_za_menom,Funkcia,Obvod,N%C3%A1zov_klubu,Vo_funkcii_od,Vo_funkcii_do&returnGeometry=false&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },
           "isPartOf": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/dataset/bbsk-clenovia-samospravy-efc2f3" }

@@ -119,5 +119,10 @@ context-broker:
     # expiresAt through views and the sweep's prune. Migration 0014 adds entities.attrs_expire_at,
     # a plain CREATE INDEX (writes wait) and a per-Tenant backfill: roll it with the broker scaled
     # to 0, as 0013. Rollback: dev-16 (0014 only adds a column and an index).
-    tag: 'dev-17'
-    digest: 'sha256:e452f3205718ed0003075f3f72f0c019161d6e30f5e4eacd327a4032dbb15fff'
+    # Antares dev 58f5347 (dev-19, trains 0800 and 1352: T-4852 T-4855 T-4906 T-4916 T-4978 and others
+    # over 53ab566): history retention drops whole weekly partitions (T-4906), RLS index paths. Migration
+    # 0015 adds a STORED generated column to entities (a full rewrite, 4 GB on dev) and plain indexes:
+    # rolled with the broker at 0 in an announced window. Rollback: dev-17 (0015 only adds a column, a
+    # function and indexes). Signed by ship.yml on dev at 58f5347.
+    tag: 'dev-19'
+    digest: 'sha256:90be5668cc1b2e2e74530916db60dfa2ab852400087b32d3d612d2867285f3e1'

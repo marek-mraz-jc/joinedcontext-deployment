@@ -46,6 +46,17 @@
           ],
           "x-ngsi-ld-kind": "GeoProperty"
         },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The station's name, per language, as the readings of verejne name it (T-4745).",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
         "observedAt": {
           "description": "When the observation the entity reports was made.",
           "format": "date-time",

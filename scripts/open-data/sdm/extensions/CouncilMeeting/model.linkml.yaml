@@ -72,6 +72,12 @@ slots:
     description: The source column `IČO_samosprávy`.
     annotations:
       ngsi_ld_kind: Property
+  name:
+    description: The source column `{Orgán_samosprávy}, {Dátum_zasadnutia}`.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.TourismDestinations/6d78cb4ff0c1a7d16dc0c1bab7266e40d4b3a00c/context.jsonld
+    slot_uri: https://smartdatamodels.org/name
   nazovSamospravy:
     description: The source column `Názov_samosprávy`.
     annotations:
@@ -103,6 +109,7 @@ classes:
     - hyperlinkNaVysledkyHlasovani
     - hyperlinkNaZapisnicu
     - iCOSamospravy
+    - name
     - nazovSamospravy
     - organSamospravy
     - rok
