@@ -306,6 +306,7 @@ v1/Service jc/observability-collector
 v1/Service jc/pipeline-runner
 v1/Service jc/pipeline-runner-pods
 v1/Service jc/portal
+v1/Service jc/portal-pods
 v1/ServiceAccount jc/apisix
 v1/ServiceAccount jc/artifact-store
 v1/ServiceAccount jc/audit-logging-collector-vector
