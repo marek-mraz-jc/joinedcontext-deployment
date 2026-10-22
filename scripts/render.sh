@@ -16,7 +16,21 @@ for a in "$@"; do
 	if [ "$a" = "--deployed" ]; then deployed_only=true; else args+=("$a"); fi
 done
 
-helmfile -f deployment/helmfile.yaml -e "$env" template --skip-deps -q "${args[@]+"${args[@]}"}" > "$out"
+# Remote charts are pulled on every render; one TCP reset from the chart host failed a
+# whole ci shard (T-5183). Retry only network errors, at most three attempts, so a
+# template or values error still fails at once.
+transient='connection reset by peer|i/o timeout|TLS handshake timeout|unexpected EOF|Client\.Timeout exceeded|(502|503|504) (Bad Gateway|Service Unavailable|Gateway Timeout)'
+errlog="$(mktemp)"
+trap 'rm -f "$errlog"' EXIT
+attempt=1
+until helmfile -f deployment/helmfile.yaml -e "$env" template --skip-deps -q "${args[@]+"${args[@]}"}" > "$out" 2> "$errlog"; do
+	cat "$errlog" >&2
+	if [ "$attempt" -ge 3 ] || ! grep -qE "$transient" "$errlog"; then exit 1; fi
+	echo "render.sh: network error pulling a chart, attempt $attempt of 3 failed, retrying in $((attempt * 3)) s" >&2
+	sleep $((attempt * 3))
+	attempt=$((attempt + 1))
+done
+cat "$errlog" >&2
 
 if [ "$deployed_only" = true ]; then
 	python3 - "$out" <<'PY'
