@@ -2,9 +2,8 @@
 # the one member of the daily feed by its byte range (PL-72). No key. CC-BY-4.0 (HSL open data).
 # T-3890.
 #
-# shapes.txt is 4.2 MB packed, 22 MB inflated. The runner reads a deflated member only when 1032
-# times its packed size fits maxBytes (T-3951), which 4.2 MB never does under the 256 MiB cap, so
-# the gtfs-shapes pipeline stays paused until the inflate is bounded on its output (T-3953).
+# shapes.txt is 4.2 MB packed, 22 MB inflated. The runner inflates a member bounded on its output
+# (T-3953): a member past maxBytes is refused, so the 32 MiB below reads it whole.
 apiVersion: joinedcontext.com/v1alpha1
 kind: DataSource
 metadata:
