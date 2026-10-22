@@ -118,10 +118,11 @@ test("Data API lists the view's addresses, CSV with its query and order", async 
   await expect(f.getByRole("grid")).toBeVisible({ timeout: 20000 });
   await f.locator("#data-api").click();
   const links = f.locator("#detail-links a");
-  await expect(links).toHaveCount(5);
+  await expect(links).toHaveCount(6);
   const csv = await links.nth(3).getAttribute("href");
   expect(csv).toBe(`https://${API}/api/endpoint/${SLUGS.point}/file.csv?type=BikeHireDockingStation&q=status%3D%3D%22working%22&orderBy=availableBikeNumber%3Bdesc`);
-  expect(await links.nth(4).getAttribute("href")).toMatch(/explore\.html#.*sort=availableBikeNumber%3Bdesc/);
+  expect(await links.nth(4).getAttribute("href")).toBe(`https://${API}/api/endpoint/${SLUGS.point}/ogc/features/collections/BikeHireDockingStation/tiles/WebMercatorQuad`);
+  expect(await links.nth(5).getAttribute("href")).toMatch(/explore\.html#.*sort=availableBikeNumber%3Bdesc/);
   await shot(page, "data-api-1440");
   await f.locator("#detail-close").click();
   await expect(f.locator("#data-api")).toBeFocused();
@@ -159,4 +160,35 @@ test("the map asks the grid's query within its view as GeoJSON", async ({ page, 
   await open(page, "point", { extra: "&q=" + encodeURIComponent('status=="working"') });
   await expect(frame(page).locator("#map-section")).toBeVisible({ timeout: 20000 });
   await expect.poll(() => apiCalls(requests).some((r) => r.headers.accept === "application/geo+json" && r.url.searchParams.get("georel") === "within" && r.url.searchParams.get("q") === 'status=="working"')).toBe(true);
+});
+
+test("past 1000 in view the map draws the type's vector tiles; a point opens its entity (T-5189)", async ({ page, context }) => {
+  for (const width of [1440, 400]) {
+    const requests = await serve(context);
+    await open(page, "tiled", { width });
+    const f = frame(page);
+    await expect(f.locator("#map-section")).toBeVisible({ timeout: 20000 });
+    const tiles = () => apiCalls(requests).filter((r) => /\/tiles\/WebMercatorQuad\/\d+\/\d+\/\d+$/.test(r.url.pathname));
+    await expect.poll(tiles, { timeout: 20000 }).not.toHaveLength(0);
+    const inner = page.frame({ url: /explore\.html/ });
+    await expect.poll(() => inner.evaluate(() => self.jcExploreMap.queryRenderedFeatures({ layers: ["jc-tile-point"] }).length), { timeout: 20000 }).toBeGreaterThan(0);
+    await expect(f.locator("#map-note")).toHaveText(/Click a point/);
+    for (const r of tiles()) {
+      expect(r.url.search).toBe("");
+      expect(r.headers.authorization).toBeUndefined();
+      expect(r.headers.cookie).toBeUndefined();
+    }
+    await shot(page, `tiled-${width}`);
+    const at = await inner.evaluate(() => {
+      const m = self.jcExploreMap;
+      const hit = m.queryRenderedFeatures({ layers: ["jc-tile-point"] })[0];
+      const q = m.project(hit.geometry.coordinates);
+      return { x: Math.round(q.x), y: Math.round(q.y) };
+    });
+    await f.locator("#map canvas").click({ position: at });
+    await expect(f.locator("#detail-title")).toHaveText(/^Station \d$/);
+    expect(apiCalls(requests).some((r) => /\/ngsi-ld\/v1\/entities\/urn%3Angsi-ld%3ABikeHireDockingStation/.test(r.url.pathname))).toBe(true);
+    await shot(page, `tiled-detail-${width}`);
+    await context.unrouteAll({ behavior: "ignoreErrors" });
+  }
 });

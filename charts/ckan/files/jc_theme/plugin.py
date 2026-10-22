@@ -1677,6 +1677,10 @@ def jc_map(pkg, resource_id=None):
                 "items": urlunsplit(parts._replace(path=collection + "/items")),
                 "schema": urlunsplit(parts._replace(path=collection + "/schema", query="")),
             }
+            # Past the cap the map draws the collection's vector tiles (T-5189). A tile takes no
+            # query, so a layer narrowed to one dataset of a shared Endpoint keeps its items.
+            if not parts.query:
+                layer["tiles"] = urlunsplit(parts._replace(path=collection + "/tiles/WebMercatorQuad"))
             fields = _display_fields(resource.get("id"))
             if fields:
                 layer["fields"] = fields

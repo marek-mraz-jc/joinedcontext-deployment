@@ -11,7 +11,7 @@ metadata:
 spec:
   class: auto
   period: 24h
-  schedule: 6 1 * * *
+  schedule: 7 1 * * *
   source:
     dataSourceRef:
       kind: DataSource

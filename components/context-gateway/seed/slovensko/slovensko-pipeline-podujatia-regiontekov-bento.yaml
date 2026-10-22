@@ -64,9 +64,13 @@ pipeline:
       let name = this.name.apply("text")
       let venue_text = this.venue.apply("text")
       let venue_key = if $venue_text != null { $venue_text.apply("key") } else { "" }
-      let known = $venues.filter(v -> v.match == $venue_key).index(0).catch(null)
-      # GPS from the feed, else from the venue table checked by hand; never a town's centre (owner
-      # 2026-10-20). An event with neither keeps no location and the model check refuses it.
+      let place = $venues.filter(v -> v.match == $venue_key).index(0).catch(null)
+      # An event that names no place, or only the town or its organizer, takes its organizer's own address
+      # (homes.csv, owner 2026-10-22: "or the institution's address"); its venue stays as the source wrote it.
+      let home = if $place == null && ($venue_key == "" || ["levice"].contains($venue_key)) { null } else { null }
+      let known = $place.or($home)
+      # GPS from the feed, else from the venue table, else from the organizer's address; never a town's centre
+      # (owner 2026-10-20). An event with none is kept without a location and counted (owner 2026-10-22).
       let lat = this.lat.number().catch($known.lat.or(null))
       let lon = this.lon.number().catch($known.lon.or(null))
       let point = if $lat != null && $lon != null && $lat >= 47.7 && $lat <= 49.7 && $lon >= 16.8 && $lon <= 22.6 { { "type": "Point", "coordinates": [$lon, $lat] } } else { null }
@@ -87,7 +91,7 @@ pipeline:
         root = if this == null { null } else { this.string().trim().(u -> if u.re_match("^https?://[^\\s/@]+(/\\S*)?$") && u.length() <= 2000 { u } else { null }) }
       }
       # The organizer the feed names, else the body whose calendar this is (the inventory row); an aggregator's
-      # row names none, so its event without an organizer is refused (T-5081). Name and web site only: a feed's
+      # row names none, so its event keeps no organizer (owner 2026-10-22: optional). Name and web site only: a feed's
       # organizer e-mail or phone may be a person's and stays on the source's page.
       map uncontact {
         root = if this == null { null } else { this.re_replace_all("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "").re_replace_all("(\\+421|\\b0)[0-9][0-9 /]{7,}[0-9]", "").re_replace_all("(?i)\\b(tel|mobil|e-?mail|kontakt)\\.?:?", "").re_replace_all("\\s+", " ").re_replace_all("^[ ,;:-]+|[ ,;:-]+$", "").(t -> if t == "" { null } else { t }) }
@@ -110,7 +114,7 @@ pipeline:
         "startDate": this.start.apply("prop"),
         "endDate": this.end.apply("prop"),
         "location": if $point != null { { "type": "GeoProperty", "value": $point } } else { null },
-        "venue": $known.venue.or($venue_text).apply("prop"),
+        "venue": $place.venue.or($venue_text).apply("prop"),
         "address": { "type": "Property", "value": $address },
         "eventCategory": this.category.apply("text").apply("prop"),
         # A source that states no licence gives its facts only: what, when, where and the link back

@@ -4,6 +4,7 @@ import { readFileSync, mkdirSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { mvt } from "./mvt.mjs";
 
 export const here = path.dirname(fileURLToPath(import.meta.url));
 const chart = path.join(here, "../charts/renderer");
@@ -54,6 +55,8 @@ export const DATA = {
   nogeo: { type: "KeyPerformanceIndicator", rows: [1, 2, 3, 4].map(kpi) },
   zero: { type: "KeyPerformanceIndicator", rows: [], sample: [kpi(1)] }, // the schema lists attributes, the broker holds none
   one: { type: "BikeHireDockingStation", rows: [bike(7)] },
+  // T-5189: more than the map's 1000 in view, so the map draws the type's vector tiles.
+  tiled: { type: "BikeHireDockingStation", count: 50000, tiles: true, rows: [1, 2, 3].map((i) => bike(i)) },
   many: { type: "KeyPerformanceIndicator", count: 12345, rows: null },
   long: { type: "Event", rows: [{ id: "urn:ngsi-ld:Event:bbsk:" + "x".repeat(80), type: "Event", name: "Festival " + "veľmi dlhý názov podujatia ".repeat(6),
     description: "Opis <img src=x onerror=alert(1)> ".repeat(20), url: "https://www.bbsk.sk/podujatia/" + "a-b-c-".repeat(30), startDate: "2026-11-01T18:00:00Z" }] },
@@ -149,6 +152,23 @@ export async function serve(context) {
         body: JSON.stringify({ version: 8, sources: {}, layers: [{ id: "paper", type: "background", paint: { "background-color": "#e8ecef" } }] }) });
     }
     if (url.hostname === API) {
+      const t = /^\/api\/endpoint\/([a-z0-9]+)\/ogc\/features\/collections\/([A-Za-z]+)\/tiles\/WebMercatorQuad(?:\/(\d+)\/(\d+)\/(\d+))?$/.exec(url.pathname);
+      const one = /^\/api\/endpoint\/([a-z0-9]+)\/ngsi-ld\/v1\/entities\/([^/]+)$/.exec(url.pathname);
+      const own = t ? DATA[key(t[1])] : one ? DATA[key(one[1])] : null;
+      if (t && (!own || !own.tiles || own.type !== t[2])) return route.fulfill({ status: 404, headers: cors, body: "{}" });
+      if (t && !t[3]) {
+        return route.fulfill({ status: 200, contentType: "application/json", headers: cors, body: JSON.stringify({ dataType: "vector", links: [{ rel: "item",
+          type: "application/vnd.mapbox-vector-tile", templated: true, href: `https://${API}${url.pathname}/{tileMatrix}/{tileRow}/{tileCol}` }] }) });
+      }
+      if (t) {
+        const body = mvt(own.type, own.rows.map((r) => ({ id: r.id, geometry: r.location, properties: {} })), +t[3], +t[5], +t[4]);
+        return route.fulfill(body ? { status: 200, contentType: "application/vnd.mapbox-vector-tile", headers: cors, body } : { status: 204, headers: cors });
+      }
+      if (one) {
+        const r = own && (own.rows || []).find((x) => x.id === decodeURIComponent(one[2]));
+        return r ? route.fulfill({ status: 200, contentType: "application/json", headers: cors, body: JSON.stringify(localized(r, url.searchParams.get("lang"))) })
+          : route.fulfill({ status: 404, headers: cors, body: "{}" });
+      }
       const m = /^\/api\/endpoint\/([a-z0-9]+)\/(ngsi-ld\/v1\/types|ngsi-ld\/v1\/entities|schema\/index\.json|schema\/v1\/json-schema|schema\/v1\/model\.linkml\.yaml)$/.exec(url.pathname);
       const name = m && key(m[1]);
       if (!name) return route.fulfill({ status: 404, headers: cors, body: "{}" });

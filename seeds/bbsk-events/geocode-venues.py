@@ -43,7 +43,8 @@ AREAS = {
     "city_district", "district", "county", "state", "region", "country", "postcode", "locality", "road",
     "isolated_dwelling", "farm", "allotments", "square",
 }
-REFUSED_CATEGORIES = {"boundary", "highway", "landuse", "natural", "waterway", "railway", "route"}
+#: A `place` is a settlement or a part of one (cadastral_community is the village itself); `information` a map board.
+REFUSED_CATEGORIES = {"boundary", "highway", "landuse", "natural", "waterway", "railway", "route", "place", "information"}
 #: Slovakia's bounding box, the one the events' common mapping keeps too.
 LAT = (47.7, 49.7)
 LON = (16.8, 22.6)
@@ -85,6 +86,8 @@ def accepted(hit: dict, town: str) -> str | None:
     category, kind = hit.get("category") or hit.get("class"), hit.get("type")
     if category in REFUSED_CATEGORIES or kind in AREAS or hit.get("addresstype") in AREAS:
         return f"{category}/{kind} is an area or a line, no venue"
+    if (hit.get("name") or "").casefold() == town.casefold():
+        return f"{hit.get('name')} is the town itself, no venue"
     found = locality(hit.get("address") or {})
     if not found or found.casefold() != town.casefold():
         return f"in {found or 'no town'}, not in {town}"

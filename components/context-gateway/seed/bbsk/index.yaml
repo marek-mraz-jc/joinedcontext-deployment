@@ -580,9 +580,6 @@ bbsk-pipeline-podujatia-obecdobraniva-bento.yaml: projects/bbsk/pipelines/poduja
 bbsk-datasource-podujatia-spaniadolina.yaml: projects/bbsk/datasources/podujatia-spaniadolina.yaml
 bbsk-pipeline-podujatia-spaniadolina.yaml: projects/bbsk/pipelines/podujatia-spaniadolina/pipeline.yaml
 bbsk-pipeline-podujatia-spaniadolina-bento.yaml: projects/bbsk/pipelines/podujatia-spaniadolina/bento.yaml
-bbsk-datasource-podujatia-vhkalinka.yaml: projects/bbsk/datasources/podujatia-vhkalinka.yaml
-bbsk-pipeline-podujatia-vhkalinka.yaml: projects/bbsk/pipelines/podujatia-vhkalinka/pipeline.yaml
-bbsk-pipeline-podujatia-vhkalinka-bento.yaml: projects/bbsk/pipelines/podujatia-vhkalinka/bento.yaml
 bbsk-datasource-podujatia-hontiansketesare.yaml: projects/bbsk/datasources/podujatia-hontiansketesare.yaml
 bbsk-pipeline-podujatia-hontiansketesare.yaml: projects/bbsk/pipelines/podujatia-hontiansketesare/pipeline.yaml
 bbsk-pipeline-podujatia-hontiansketesare-bento.yaml: projects/bbsk/pipelines/podujatia-hontiansketesare/bento.yaml
