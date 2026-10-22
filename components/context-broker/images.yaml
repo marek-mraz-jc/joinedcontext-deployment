@@ -140,5 +140,8 @@ context-broker:
     # no-op on a database with history, the maintenance job builds {partition}_u_time CONCURRENTLY and swaps
     # per partition, ~7.6 GB a week until the swap (dev disk 56 % at the pin); T-4919 ordered OData reads).
     # Rollback: dev-30 (0017 rollback compatible). Signed by ship.yml on dev at 5dea7dd.
-    tag: 'dev-32'
-    digest: 'sha256:24a912753a906e2fce6ea16217d3fab625c06df79c4a302f9df51e69a237b2db'
+    # Antares dev 27d8e07 (dev-35, trains 0552, 0552-2 and 0730 over 5dea7dd: T-5100 OGC history collections, T-4921
+    # WebSocket hub fan-out and notification throttle, T-4920 T-5092 T-5190 tests/docs/CI). No migration, no new
+    # runtime key. Rollback: dev-32. Signed by ship.yml on dev at 27d8e07.
+    tag: 'dev-35'
+    digest: 'sha256:0d8d27d9f8303ecd9ba188308f92f54482aa07179e0be626067a6e6f9d0dddd5'
