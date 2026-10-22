@@ -49,7 +49,7 @@ rules:
     resources: [clusterpolicies]
     verbs: [get, list]
   - apiGroups: [monitoring.coreos.com]
-    resources: [podmonitors, prometheusrules, servicemonitors]
+    resources: [alertmanagers, podmonitors, prometheuses, prometheusrules, servicemonitors]
     verbs: [get, list]
   - apiGroups: [networking.k8s.io]
     resources: [ingresses, networkpolicies]

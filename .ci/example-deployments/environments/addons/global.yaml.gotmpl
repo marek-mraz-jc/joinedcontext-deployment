@@ -15,6 +15,9 @@ components:
   - prepare
   - secrets
   - networkpolicies
+  # The Prometheus the dashboards read (T-5154): dev and smartcity deploy it; this render holds
+  # it to the same base policies as the add-ons around it.
+  - prometheus
   # The realm's own database. Keycloak addresses it by name in its values, so the render
   # needs the component even though nothing here is deployed.
   - postgres
@@ -53,7 +56,6 @@ grafana:
     enabled: true
   grafana:
     enabled: true
-    # The Prometheus that scrapes this installation. This repository deploys none: the
-    # monitoring component writes scrape configuration and alert rules for an Operator that
-    # is already on the cluster, and this is that same Prometheus, read back.
-    prometheusUrl: 'http://prometheus-operated.monitoring.svc.cluster.local:9090'
+    # The Prometheus that scrapes this installation: the prometheus component's (T-5154), named
+    # here as an operator would name one this repository does not deploy.
+    prometheusUrl: 'http://prometheus-operated.addons.svc.cluster.local:9090'

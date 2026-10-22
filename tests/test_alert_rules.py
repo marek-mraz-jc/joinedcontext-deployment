@@ -12,7 +12,7 @@ import subprocess
 
 import pytest
 import yaml
-from conftest import PROJECT_ROOT, set_global
+from conftest import PROJECT_ROOT
 
 pytestmark = pytest.mark.xdist_group("docker-promtool")
 
@@ -21,23 +21,10 @@ IMAGE = "docker.io/prom/prometheus:v3.5.0@sha256:63805ebb8d2b3920190daf1cb14a608
 TESTS = PROJECT_ROOT / "tests/promtool/alerts.test.yaml"
 
 
-RENDERED = []
-
-
-def with_monitoring(tree):
-    set_global(tree, "metrics.enabled", True)
-    path = tree / "deployment/environments/dev/global.yaml.gotmpl"
-    text = path.read_text()
-    assert "\n  - probes\n" in text, "dev no longer lists the probes"
-    path.write_text(text.replace("\n  - probes\n", "\n  - probes\n  - monitoring\n", 1))
-
-
 @pytest.fixture
-def groups(rendered_variant):
-    # `rendered_variant` is per test; the render (a minute) is kept for the module's other tests.
-    if not RENDERED:
-        RENDERED.append(rendered_variant("dev", with_monitoring))
-    docs = RENDERED[0]
+def groups(rendered):
+    # dev lists the monitoring component with metrics on since T-5154.
+    docs = rendered("dev")
     rules = [d for d in docs if d.get("kind") == "PrometheusRule" and d["metadata"]["name"].startswith("monitoring-")]
     assert len(rules) == 1, [d["metadata"]["name"] for d in rules]
     return rules[0]["spec"]["groups"]
