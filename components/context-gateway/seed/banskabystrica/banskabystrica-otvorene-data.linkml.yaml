@@ -680,6 +680,71 @@ slots:
         tag: label
         value:
           sk: Zomrelých Ž
+  cASTOBCE:
+    description: An attribute an earlier version of the mapping wrote; the next run removes it.
+    deprecated: No mapping writes it any more; kept so a replace may remove it.
+    annotations:
+      ngsi_ld_kind: Property
+  castObce:
+    description: An attribute an earlier version of the mapping wrote; the next run removes it.
+    deprecated: No mapping writes it any more; kept so a replace may remove it.
+    annotations:
+      ngsi_ld_kind: Property
+  dataset:
+    description: An attribute an earlier version of the mapping wrote; the next run removes it.
+    deprecated: No mapping writes it any more; kept so a replace may remove it.
+    annotations:
+      ngsi_ld_kind: Property
+  oBEC:
+    description: An attribute an earlier version of the mapping wrote; the next run removes it.
+    deprecated: No mapping writes it any more; kept so a replace may remove it.
+    annotations:
+      ngsi_ld_kind: Property
+  obec:
+    description: An attribute an earlier version of the mapping wrote; the next run removes it.
+    deprecated: No mapping writes it any more; kept so a replace may remove it.
+    annotations:
+      ngsi_ld_kind: Property
+  pSC:
+    description: An attribute an earlier version of the mapping wrote; the next run removes it.
+    deprecated: No mapping writes it any more; kept so a replace may remove it.
+    annotations:
+      ngsi_ld_kind: Property
+  uLICA:
+    description: An attribute an earlier version of the mapping wrote; the next run removes it.
+    deprecated: No mapping writes it any more; kept so a replace may remove it.
+    annotations:
+      ngsi_ld_kind: Property
+  ulica:
+    description: An attribute an earlier version of the mapping wrote; the next run removes it.
+    deprecated: No mapping writes it any more; kept so a replace may remove it.
+    annotations:
+      ngsi_ld_kind: Property
+  link:
+    description: An attribute an earlier version of the mapping wrote; the next run removes it.
+    deprecated: No mapping writes it any more; kept so a replace may remove it.
+    annotations:
+      ngsi_ld_kind: Property
+  sourceId:
+    description: An attribute an earlier version of the mapping wrote; the next run removes it.
+    deprecated: No mapping writes it any more; kept so a replace may remove it.
+    annotations:
+      ngsi_ld_kind: Property
+  title:
+    description: An attribute an earlier version of the mapping wrote; the next run removes it.
+    deprecated: No mapping writes it any more; kept so a replace may remove it.
+    annotations:
+      ngsi_ld_kind: Property
+  centralneCisloZmluvy:
+    description: An attribute an earlier version of the mapping wrote; the next run removes it.
+    deprecated: No mapping writes it any more; kept so a replace may remove it.
+    annotations:
+      ngsi_ld_kind: Property
+  cisloObjednavky:
+    description: An attribute an earlier version of the mapping wrote; the next run removes it.
+    deprecated: No mapping writes it any more; kept so a replace may remove it.
+    annotations:
+      ngsi_ld_kind: Property
 classes:
   Address:
     class_uri: https://smartdatamodels.org/dataModel.CPSV-AP/Address
@@ -690,19 +755,25 @@ classes:
     - source
     - isPartOf
     - addressArea
+    - cASTOBCE
     - cOID
+    - castObce
     - dPOSTA
+    - dataset
     - iD
     - idRegad
     - kRAJ
     - kRAJID
+    - oBEC
     - oBECID
     - oKRES
     - oKRESID
     - oRIENTC
     - oRIENTCC
     - oRIENTCP
+    - obec
     - orientC
+    - pSC
     - postCode
     - postName
     - sCHRANKY
@@ -710,7 +781,9 @@ classes:
     - supC
     - tYPBUDOVY
     - thoroughfare
+    - uLICA
     - uLICAID
+    - ulica
     - zSJ
     - zSJID
     annotations:
@@ -724,10 +797,14 @@ classes:
     - source
     - isPartOf
     - content
+    - dataset
     - dateGmt
     - identifier
+    - link
     - modifiedGmt
     - name
+    - sourceId
+    - title
     - url
     annotations:
       upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Article/context.jsonld
@@ -740,6 +817,8 @@ classes:
     - source
     - isPartOf
     - cenaCelkom
+    - centralneCisloZmluvy
+    - dataset
     - datumPodpisu
     - datumZverejnenia
     - druh
@@ -762,6 +841,7 @@ classes:
     - source
     - isPartOf
     - cZasadnutia
+    - dataset
     - datumZasadnutia
     - name
     - organSamospravy
@@ -776,6 +856,7 @@ classes:
     - dataProvider
     - source
     - isPartOf
+    - dataset
     - datumplatnosti
     - datumvkladu
     - datumzmeny
@@ -796,6 +877,7 @@ classes:
     - source
     - isPartOf
     - akcia
+    - dataset
     - druh
     - iCOZiadatela
     - identifier
@@ -818,6 +900,7 @@ classes:
     - dataProvider
     - source
     - isPartOf
+    - dataset
     - den
     - narodenych
     - narodenychM
@@ -853,6 +936,7 @@ classes:
     - dataProvider
     - source
     - isPartOf
+    - dataset
     - datumplatnosti
     - datumvkladu
     - datumzmeny
@@ -873,6 +957,8 @@ classes:
     - dataProvider
     - source
     - isPartOf
+    - cisloObjednavky
+    - dataset
     - datumVystavenia
     - datumZverejnenia
     - dodavatel

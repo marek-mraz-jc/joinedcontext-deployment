@@ -6,7 +6,7 @@
 The open data of the city of Banská Bystrica from the catalogue: registers and tables (addresses, contracts, orders, grants, council meetings, greenery, parking) and the city's news (Aktuality) as Articles.
 
 - Namespace: `https://joinedcontext.com/models/banskabystrica/banskabystrica-otvorene-data`
-- Rendered by: `linkml-1.11.1`
+- Rendered by: `linkml-1.12.0`
 - License: https://joinedcontext.com/licenses/cc-by-4.0
 
 ## Classes
@@ -25,19 +25,25 @@ Specialises `Entity`.
 | `source` | Property | `uri` |  |  | `sdm:source` | The service the row was read from. |
 | `isPartOf` | Property | `uri` |  |  | `jc:isPartOf` | The catalogue dataset the row belongs to, where its licence and its other rows are. |
 | `addressArea` | Property | `string` (list) |  |  | `sdm:dataModel.CPSV-AP/addressArea` | The source column `Časť_obce`. |
+| `cASTOBCE` | Property | `string` |  |  | `jc:cASTOBCE` | An attribute an earlier version of the mapping wrote; the next run removes it. |
 | `cOID` | Property | `integer` |  |  | `jc:cOID` | The source column `CO_ID`. |
+| `castObce` | Property | `string` |  |  | `jc:castObce` | An attribute an earlier version of the mapping wrote; the next run removes it. |
 | `dPOSTA` | Property | `string` |  |  | `jc:dPOSTA` | The source column `DPOSTA`. |
+| `dataset` | Property | `string` |  |  | `jc:dataset` | An attribute an earlier version of the mapping wrote; the next run removes it. |
 | `iD` | Property | `float` |  |  | `jc:iD` | The source column `ID`. |
 | `idRegad` | Property | `string` |  |  | `jc:idRegad` | The source column `id_regad`. |
 | `kRAJ` | Property | `string` |  |  | `jc:kRAJ` | The source column `KRAJ`. |
 | `kRAJID` | Property | `integer` |  |  | `jc:kRAJID` | The source column `KRAJ_ID`. |
+| `oBEC` | Property | `string` |  |  | `jc:oBEC` | An attribute an earlier version of the mapping wrote; the next run removes it. |
 | `oBECID` | Property | `integer` |  |  | `jc:oBECID` | The source column `OBEC_ID`. |
 | `oKRES` | Property | `string` |  |  | `jc:oKRES` | The source column `OKRES`. |
 | `oKRESID` | Property | `integer` |  |  | `jc:oKRESID` | The source column `OKRES_ID`. |
 | `oRIENTC` | Property | `string` |  |  | `jc:oRIENTC` | The source column `ORIENT_C`. |
 | `oRIENTCC` | Property | `string` |  |  | `jc:oRIENTCC` | The source column `ORIENT_C_C`. |
 | `oRIENTCP` | Property | `string` |  |  | `jc:oRIENTCP` | The source column `ORIENT_C_P`. |
+| `obec` | Property | `string` |  |  | `jc:obec` | An attribute an earlier version of the mapping wrote; the next run removes it. |
 | `orientC` | Property | `string` |  |  | `jc:orientC` | The source column `Orient._č.`. |
+| `pSC` | Property | `string` |  |  | `jc:pSC` | An attribute an earlier version of the mapping wrote; the next run removes it. |
 | `postCode` | Property | `string` (list) |  |  | `sdm:dataModel.CPSV-AP/postCode` | The source column `PSC`. |
 | `postName` | Property | `string` (list) |  |  | `sdm:dataModel.CPSV-AP/postName` | The source column `Obec`. |
 | `sCHRANKY` | Property | `integer` |  |  | `jc:sCHRANKY` | The source column `SCHRANKY`. |
@@ -45,7 +51,9 @@ Specialises `Entity`.
 | `supC` | Property | `string` |  |  | `jc:supC` | The source column `Súp._č.`. |
 | `tYPBUDOVY` | Property | `integer` |  |  | `jc:tYPBUDOVY` | The source column `TYP_BUDOVY`. |
 | `thoroughfare` | Property | `string` (list) |  |  | `sdm:dataModel.CPSV-AP/thoroughfare` | The source column `Ulica`. |
+| `uLICA` | Property | `string` |  |  | `jc:uLICA` | An attribute an earlier version of the mapping wrote; the next run removes it. |
 | `uLICAID` | Property | `integer` |  |  | `jc:uLICAID` | The source column `ULICA_ID`. |
+| `ulica` | Property | `string` |  |  | `jc:ulica` | An attribute an earlier version of the mapping wrote; the next run removes it. |
 | `zSJ` | Property | `string` |  |  | `jc:zSJ` | The source column `ZSJ`. |
 | `zSJID` | Property | `float` |  |  | `jc:zSJID` | The source column `ZSJ_ID`. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
@@ -67,10 +75,14 @@ Specialises `Entity`.
 | `source` | Property | `uri` |  |  | `sdm:source` | The service the row was read from. |
 | `isPartOf` | Property | `uri` |  |  | `jc:isPartOf` | The catalogue dataset the row belongs to, where its licence and its other rows are. |
 | `content` | Property | `string` |  |  | `jc:content` | The source column `content`. |
+| `dataset` | Property | `string` |  |  | `jc:dataset` | An attribute an earlier version of the mapping wrote; the next run removes it. |
 | `dateGmt` | Property | `datetime` |  |  | `jc:dateGmt` | The source column `date_gmt`. |
 | `identifier` | Property | `string` |  |  | `sdm:dataModel.CPSV-AP/identifier` | The source column `id`. |
+| `link` | Property | `string` |  |  | `jc:link` | An attribute an earlier version of the mapping wrote; the next run removes it. |
 | `modifiedGmt` | Property | `datetime` |  |  | `jc:modifiedGmt` | The source column `modified_gmt`. |
 | `name` | Property | `string` |  |  | `sdm:name` | The source column `title`. |
+| `sourceId` | Property | `string` |  |  | `jc:sourceId` | An attribute an earlier version of the mapping wrote; the next run removes it. |
+| `title` | Property | `string` |  |  | `jc:title` | An attribute an earlier version of the mapping wrote; the next run removes it. |
 | `url` | Property | `uri` |  |  | `jc:url` | The source column `link`. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
 | `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
@@ -91,6 +103,8 @@ Specialises `Entity`.
 | `source` | Property | `uri` |  |  | `sdm:source` | The service the row was read from. |
 | `isPartOf` | Property | `uri` |  |  | `jc:isPartOf` | The catalogue dataset the row belongs to, where its licence and its other rows are. |
 | `cenaCelkom` | Property | `string` |  |  | `jc:cenaCelkom` | The source column `Cena_celkom`. |
+| `centralneCisloZmluvy` | Property | `string` |  |  | `jc:centralneCisloZmluvy` | An attribute an earlier version of the mapping wrote; the next run removes it. |
+| `dataset` | Property | `string` |  |  | `jc:dataset` | An attribute an earlier version of the mapping wrote; the next run removes it. |
 | `datumPodpisu` | Property | `string` |  |  | `jc:datumPodpisu` | The source column `Dátum_podpisu`. |
 | `datumZverejnenia` | Property | `string` |  |  | `jc:datumZverejnenia` | The source column `Dátum_zverejnenia`. |
 | `druh` | Property | `string` |  |  | `jc:druh` | The source column `Druh`. |
@@ -121,7 +135,9 @@ Specialises `Entity`.
 | `source` | Property | `uri` |  |  | `sdm:source` | The service the row was read from. |
 | `isPartOf` | Property | `uri` |  |  | `jc:isPartOf` | The catalogue dataset the row belongs to, where its licence and its other rows are. |
 | `cZasadnutia` | Property | `integer` |  |  | `jc:cZasadnutia` | The source column `Č._zasadnutia`. |
+| `dataset` | Property | `string` |  |  | `jc:dataset` | An attribute an earlier version of the mapping wrote; the next run removes it. |
 | `datumZasadnutia` | Property | `string` |  |  | `jc:datumZasadnutia` | The source column `Dátum_zasadnutia`. |
+| `name` | Property | `string` |  |  | `sdm:name` | The source column `title`. |
 | `organSamospravy` | Property | `string` |  |  | `jc:organSamospravy` | The source column `Orgán_samosprávy`. |
 | `rok` | Property | `integer` |  |  | `jc:rok` | The source column `Rok`. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
@@ -142,6 +158,7 @@ Specialises `Entity`.
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who published the row, with the credit its licence asks for. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The service the row was read from. |
 | `isPartOf` | Property | `uri` |  |  | `jc:isPartOf` | The catalogue dataset the row belongs to, where its licence and its other rows are. |
+| `dataset` | Property | `string` |  |  | `jc:dataset` | An attribute an earlier version of the mapping wrote; the next run removes it. |
 | `datumplatnosti` | Property | `datetime` |  |  | `jc:datumplatnosti` | The source column `datumplatnosti`. |
 | `datumvkladu` | Property | `datetime` |  |  | `jc:datumvkladu` | The source column `datumvkladu`. |
 | `datumzmeny` | Property | `datetime` |  |  | `jc:datumzmeny` | The source column `datumzmeny`. |
@@ -170,10 +187,12 @@ Specialises `Entity`.
 | `source` | Property | `uri` |  |  | `sdm:source` | The service the row was read from. |
 | `isPartOf` | Property | `uri` |  |  | `jc:isPartOf` | The catalogue dataset the row belongs to, where its licence and its other rows are. |
 | `akcia` | Property | `string` |  |  | `jc:akcia` | The source column `Akcia`. |
+| `dataset` | Property | `string` |  |  | `jc:dataset` | An attribute an earlier version of the mapping wrote; the next run removes it. |
 | `druh` | Property | `string` |  |  | `jc:druh` | The source column `Druh`. |
 | `iCOZiadatela` | Property | `string` |  |  | `jc:iCOZiadatela` | The source column `IČO_žiadateľa`. |
 | `identifier` | Property | `string` |  |  | `sdm:dataModel.CPSV-AP/identifier` | The source column `id`. |
 | `mena` | Property | `string` |  |  | `jc:mena` | The source column `Mena`. |
+| `name` | Property | `string` |  |  | `sdm:name` | The source column `title`. |
 | `pozadovaneProstriedky` | Property | `string` |  |  | `jc:pozadovaneProstriedky` | The source column `Požadované_prostriedky`. |
 | `rokDotacie` | Property | `integer` |  |  | `jc:rokDotacie` | The source column `Rok_dotácie`. |
 | `schvProstr` | Property | `string` |  |  | `jc:schvProstr` | The source column `Schv._prostr.`. |
@@ -198,6 +217,7 @@ Specialises `Entity`.
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who published the row, with the credit its licence asks for. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The service the row was read from. |
 | `isPartOf` | Property | `uri` |  |  | `jc:isPartOf` | The catalogue dataset the row belongs to, where its licence and its other rows are. |
+| `dataset` | Property | `string` |  |  | `jc:dataset` | An attribute an earlier version of the mapping wrote; the next run removes it. |
 | `den` | Property | `string` |  |  | `jc:den` | The source column `Deň`. |
 | `narodenych` | Property | `integer` |  |  | `jc:narodenych` | The source column `Narodených`. |
 | `narodenychM` | Property | `integer` |  |  | `jc:narodenychM` | The source column `Narodených_M`. |
@@ -241,11 +261,13 @@ Specialises `Entity`.
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who published the row, with the credit its licence asks for. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The service the row was read from. |
 | `isPartOf` | Property | `uri` |  |  | `jc:isPartOf` | The catalogue dataset the row belongs to, where its licence and its other rows are. |
+| `dataset` | Property | `string` |  |  | `jc:dataset` | An attribute an earlier version of the mapping wrote; the next run removes it. |
 | `datumplatnosti` | Property | `datetime` |  |  | `jc:datumplatnosti` | The source column `datumplatnosti`. |
 | `datumvkladu` | Property | `datetime` |  |  | `jc:datumvkladu` | The source column `datumvkladu`. |
 | `datumzmeny` | Property | `datetime` |  |  | `jc:datumzmeny` | The source column `datumzmeny`. |
 | `ics` | Property | `string` |  |  | `jc:ics` | The source column `ics`. |
 | `idzmeny` | Property | `string` |  |  | `jc:idzmeny` | The source column `idzmeny`. |
+| `name` | Property | `string` |  |  | `sdm:name` | The source column `title`. |
 | `popisobjektu` | Property | `string` |  |  | `jc:popisobjektu` | The source column `popisobjektu`. |
 | `prevazujicipovrch` | Property | `integer` |  |  | `jc:prevazujicipovrch` | The source column `prevazujicipovrch`. |
 | `urovenumisteniobjektuzps` | Property | `integer` |  |  | `jc:urovenumisteniobjektuzps` | The source column `urovenumisteniobjektuzps`. |
@@ -268,12 +290,15 @@ Specialises `Entity`.
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who published the row, with the credit its licence asks for. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The service the row was read from. |
 | `isPartOf` | Property | `uri` |  |  | `jc:isPartOf` | The catalogue dataset the row belongs to, where its licence and its other rows are. |
+| `cisloObjednavky` | Property | `string` |  |  | `jc:cisloObjednavky` | An attribute an earlier version of the mapping wrote; the next run removes it. |
+| `dataset` | Property | `string` |  |  | `jc:dataset` | An attribute an earlier version of the mapping wrote; the next run removes it. |
 | `datumVystavenia` | Property | `string` |  |  | `jc:datumVystavenia` | The source column `Dátum_vystavenia`. |
 | `datumZverejnenia` | Property | `string` |  |  | `jc:datumZverejnenia` | The source column `Dátum_zverejnenia`. |
 | `dodavatel` | Property | `string` |  |  | `jc:dodavatel` | The source column `Dodávateľ`. |
 | `iCO` | Property | `string` |  |  | `jc:iCO` | The source column `IČO`. |
 | `identifier` | Property | `string` |  |  | `sdm:dataModel.CPSV-AP/identifier` | The source column `id`. |
 | `mena` | Property | `string` |  |  | `jc:mena` | The source column `Mena`. |
+| `name` | Property | `string` |  |  | `sdm:name` | The source column `title`. |
 | `objednavkaSpolu` | Property | `string` |  |  | `jc:objednavkaSpolu` | The source column `Objednávka_spolu`. |
 | `textObjednavky` | Property | `string` |  |  | `jc:textObjednavky` | The source column `Text_objednávky`. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
