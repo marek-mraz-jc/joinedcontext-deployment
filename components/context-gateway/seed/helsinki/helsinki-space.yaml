@@ -54,6 +54,10 @@ spec:
     - entityType: CityWork
       history: 'off'
     - entityType: Event
+      # The linked-events pipeline rewrites every event that has not ended each night (T-5257): an
+      # event leaves 30 days after its last write, so a past event stays a month and a cancelled
+      # or withdrawn one does not linger.
+      current: P30D
       history: 'off'
     - entityType: GtfsAgency
       history: 'off'
@@ -82,8 +86,16 @@ spec:
     - entityType: OnStreetParking
       history: 'off'
     - entityType: PointOfInterest
+      # The services pipeline rewrites every unit of the register each night (T-5257): a unit the
+      # register drops leaves 30 days after its last write; a month of failed runs is visible long before.
+      current: P30D
       history: 'off'
     - entityType: PublicTransportRoute
+      history: 'off'
+    # A report's current state; the feedback system keeps its own history (T-5257). The nightly run
+    # rewrites 90 days: a report the city unpublishes or moderates leaves 120 days after its last write.
+    - entityType: ServiceRequest
+      current: P120D
       history: 'off'
     - entityType: Vehicle
       current: PT5M

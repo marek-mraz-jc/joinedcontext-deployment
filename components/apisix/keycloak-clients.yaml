@@ -227,6 +227,14 @@ edge:
           included.custom.audience: zq6avaaqv3d7ma2avz7rvkwtxelaxkc4
           access.token.claim: 'true'
           id.token.claim: 'false'
+      - name: helsinki-feedback-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: gv24bicwway4foznuszsagmzydzk3e2z
+          access.token.claim: 'true'
+          id.token.claim: 'false'
       - name: helsinki-bikes-audience
         protocol: openid-connect
         protocolMapper: oidc-audience-mapper
