@@ -69,6 +69,8 @@ CHOSEN = {
     # Žilina's buses keep an hour of track (T-4624) and its counters a month of hours (T-5232).
     ("zilina/zilina-doprava", "Vehicle"): "PT1H",
     ("zilina/zilina-doprava", "TrafficFlowObserved"): "P30D",
+    # Barcelona's street sections keep a month of traffic states (T-5262, as Žilina's counters).
+    ("barcelona/barcelona", "TrafficFlowObserved"): "P30D",
 }
 
 

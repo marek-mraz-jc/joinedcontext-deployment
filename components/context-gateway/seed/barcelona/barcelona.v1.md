@@ -3,7 +3,7 @@
 <!-- Generated from the LinkML source by Model Tools. Do not edit: `jcctl model
      generate` overwrites this file and CI fails on any difference (DM-01, DM-02). -->
 
-What the space barcelona carries (DM-01, DM-61): the open data of Barcelona City Council (Open Data BCN) as Smart Data Models types, their IRIs cited rather than minted (DM-04, DM-16). The first type is AirQualityObserved, one entity per station of the city's air-quality network with the hourly mean of each pollutant it measures; each Open Data BCN batch adds its own classes. Transport (T-5262): TrafficFlowObserved, the traffic state of each street section the city reports every five minutes, and OnStreetParking, each regulated surface parking section (blue, green, loading and bus zones).
+What the space barcelona carries (DM-01, DM-61): the open data of Barcelona City Council (Open Data BCN) as Smart Data Models types, their IRIs cited rather than minted (DM-04, DM-16). The first type is AirQualityObserved, one entity per station of the city's air-quality network with the hourly mean of each pollutant it measures; each Open Data BCN batch adds its own classes. Transport: TrafficFlowObserved, the traffic state of each street section the city reports every five minutes, and OnStreetParking, each regulated surface parking section (blue, green, loading and bus zones).
 
 - Namespace: `https://joinedcontext.com/models/barcelona/barcelona`
 - Rendered by: `linkml-1.12.0`

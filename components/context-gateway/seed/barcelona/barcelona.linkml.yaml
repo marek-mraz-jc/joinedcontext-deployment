@@ -6,7 +6,7 @@ description: >-
   (Open Data BCN) as Smart Data Models types, their IRIs cited rather than minted (DM-04, DM-16).
   The first type is AirQualityObserved, one entity per station of the city's air-quality
   network with the hourly mean of each pollutant it measures; each Open Data BCN batch adds its
-  own classes. Transport (T-5262): TrafficFlowObserved, the traffic state of each street
+  own classes. Transport: TrafficFlowObserved, the traffic state of each street
   section the city reports every five minutes, and OnStreetParking, each regulated surface
   parking section (blue, green, loading and bus zones).
 license: https://joinedcontext.com/licenses/cc-by-4.0

@@ -325,6 +325,7 @@ v1/Secret local/keycloak-client-activity-ingest
 v1/Secret local/keycloak-client-apisix-gateway
 v1/Secret local/keycloak-client-banskabystrica-conformance
 v1/Secret local/keycloak-client-banskabystrica-pipelines
+v1/Secret local/keycloak-client-barcelona-pipelines
 v1/Secret local/keycloak-client-bbsk-pipelines
 v1/Secret local/keycloak-client-edge
 v1/Secret local/keycloak-client-gitea

@@ -473,6 +473,7 @@ v1/Secret smartcity/gitea-inline-config
 v1/Secret smartcity/keycloak-admin-user
 v1/Secret smartcity/keycloak-client-apisix-gateway
 v1/Secret smartcity/keycloak-client-banskabystrica-pipelines
+v1/Secret smartcity/keycloak-client-barcelona-pipelines
 v1/Secret smartcity/keycloak-client-bbsk-pipelines
 v1/Secret smartcity/keycloak-client-ckan
 v1/Secret smartcity/keycloak-client-edge
