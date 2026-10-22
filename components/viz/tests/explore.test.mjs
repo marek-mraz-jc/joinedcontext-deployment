@@ -10,7 +10,7 @@ const x = require("../charts/renderer/files/site/explore.js");
 
 test("the hash names one Endpoint and its options; anything else is dropped", () => {
   assert.deepEqual(x.parseHash("#scsd2eehkx42n53z2zyd6vshfh7s7irf&lang=sk&type=Bike&inline&theme=dark"),
-    { slug: "scsd2eehkx42n53z2zyd6vshfh7s7irf", lang: "sk", type: "Bike", inline: true, theme: "dark", q: null, sort: null });
+    { slug: "scsd2eehkx42n53z2zyd6vshfh7s7irf", lang: "sk", type: "Bike", inline: true, theme: "dark", q: null, sort: null, dataset: null, view: null });
   assert.equal(x.parseHash("#../evil"), null);
   assert.equal(x.parseHash(""), null);
   const odd = x.parseHash("#scsd2eehkx42n53z2zyd6vshfh7s7irf&type=a;b&lang=english&theme=red");
@@ -20,7 +20,7 @@ test("the hash names one Endpoint and its options; anything else is dropped", ()
 });
 
 test("a shared view's query and order come back from the hash they were written to", () => {
-  const view = { slug: "scsd2eehkx42n53z2zyd6vshfh7s7irf", inline: true, lang: "sk", theme: null, type: "Bike", q: 'name~=".*ivo.*";bikes>=5', sort: "bikes;desc" };
+  const view = { slug: "scsd2eehkx42n53z2zyd6vshfh7s7irf", inline: true, lang: "sk", theme: null, type: "Bike", q: 'name~=".*ivo.*";bikes>=5', sort: "bikes;desc", dataset: null, view: null };
   assert.deepEqual(x.parseHash(x.hashOf(view)), view);
   assert.equal(x.hashOf({ slug: "scsd2eehkx42n53z2zyd6vshfh7s7irf" }), "#scsd2eehkx42n53z2zyd6vshfh7s7irf");
   const bad = x.parseHash("#scsd2eehkx42n53z2zyd6vshfh7s7irf&sort=a;sideways&q=%E0%A4%A&type=Bike");

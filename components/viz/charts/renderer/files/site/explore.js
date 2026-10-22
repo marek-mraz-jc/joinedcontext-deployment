@@ -23,7 +23,15 @@
       noWidget: "The table could not start. Reload the page; if it stays, the catalogue's administrators can see why in the browser console.",
       mapHint: "Click a point to open its details. The table lists the same entities.", mapCap: "The map shows the first {n} of {total} in view; zoom in for the rest.",
       mapNone: "No entity of this query has a location.", links: "This query elsewhere", entityLink: "This entity in NGSI-LD", queryLink: "This query in NGSI-LD",
-      viewLink: "This view (type, filter and order)", yes: "yes", no: "no"
+      viewLink: "This view (type, filter and order)", yes: "yes", no: "no",
+      embed: "Embed", embedLead: "Put this live table on your own website. It keeps reading the current data; nothing is copied.",
+      embedKind: "Code", iframe: "Frame (recommended)", component: "Web component", kindHint: "A frame needs no script and works in a WordPress \u201cCustom HTML\u201d block; the web component grows to its content.",
+      viewLabel: "Shows", viewBoth: "Table and map", viewTable: "Table only", viewHint: "The map appears only where the entities have a location.",
+      langLabel: "Language", langHint: "The widget's labels, e.g. Slovenčina for a Slovak site.", themeLabel: "Colours", themeAuto: "The visitor's setting", themeLight: "Light", themeDark: "Dark", themeHint: "Light or dark, or as the visitor's device is set.",
+      heightLabel: "Height in pixels", heightHint: "From 240 to 2000, e.g. 640.", keep: "Keep the current filter and order", keepHint: "Visitors start from this view: {view}", keepNone: "No filter or order is set: visitors see every entity.",
+      filterIs: "filter {q}", orderIs: "ordered by {col}", desc: " (descending)",
+      code: "Code to paste", copy: "Copy code", copied: "Copied. Paste it into your page's HTML.", copySelect: "Selected: press Ctrl+C to copy.", preview: "Open the widget alone",
+      invalid: "Check this setting: {why}.", source: "Source", licence: "Licence", licenceSee: "see the dataset", catalogue: "open data catalogue"
     },
     sk: {
       title: "Živé dáta", loading: "Načítavam živé dáta…", dataApi: "Dátové API", close: "Zavrieť", map: "Mapa", detail: "Detail",
@@ -32,7 +40,15 @@
       noWidget: "Tabuľka sa nespustila. Načítajte stránku znova; ak to pretrváva, správcovia katalógu vidia príčinu v konzole prehliadača.",
       mapHint: "Kliknite na bod a otvorí sa jeho detail. Tabuľka uvádza tie isté entity.", mapCap: "Mapa ukazuje prvých {n} z {total} vo výreze; priblížte pre ďalšie.",
       mapNone: "Žiadna entita tohto dopytu nemá polohu.", links: "Tento dopyt inde", entityLink: "Táto entita v NGSI-LD", queryLink: "Tento dopyt v NGSI-LD",
-      viewLink: "Toto zobrazenie (typ, filter a poradie)", yes: "áno", no: "nie"
+      viewLink: "Toto zobrazenie (typ, filter a poradie)", yes: "áno", no: "nie",
+      embed: "Vložiť na web", embedLead: "Dajte túto živú tabuľku na svoj web. Stále číta aktuálne dáta; nič sa nekopíruje.",
+      embedKind: "Kód", iframe: "Rámec (odporúčané)", component: "Webový komponent", kindHint: "Rámec nepotrebuje skript a funguje vo WordPress bloku \u201eVlastné HTML\u201c; webový komponent sa prispôsobí výške obsahu.",
+      viewLabel: "Zobrazí", viewBoth: "Tabuľku a mapu", viewTable: "Len tabuľku", viewHint: "Mapa sa zobrazí, len ak entity majú polohu.",
+      langLabel: "Jazyk", langHint: "Popisy widgetu, napr. Slovenčina pre slovenský web.", themeLabel: "Farby", themeAuto: "Podľa návštevníka", themeLight: "Svetlé", themeDark: "Tmavé", themeHint: "Svetlé alebo tmavé, alebo podľa nastavenia zariadenia návštevníka.",
+      heightLabel: "Výška v pixeloch", heightHint: "Od 240 do 2000, napr. 640.", keep: "Zachovať aktuálny filter a poradie", keepHint: "Návštevníci začnú s týmto zobrazením: {view}", keepNone: "Nie je nastavený filter ani poradie: návštevníci uvidia všetky entity.",
+      filterIs: "filter {q}", orderIs: "zoradené podľa {col}", desc: " (zostupne)",
+      code: "Kód na vloženie", copy: "Kopírovať kód", copied: "Skopírované. Vložte ho do HTML svojej stránky.", copySelect: "Označené: skopírujte stlačením Ctrl+C.", preview: "Otvoriť samotný widget",
+      invalid: "Skontrolujte toto nastavenie: {why}.", source: "Zdroj", licence: "Licencia", licenceSee: "pozri dataset", catalogue: "katalóg otvorených dát"
     }
   };
 
@@ -40,14 +56,15 @@
   var MAX_Q = 2000;
 
   // `#{slug}`, then `&lang=sk`, `&type=T`, `&inline`, `&theme=dark|light`, `&q=…` (the NGSI-LD
-  // query, URI-encoded) and `&sort=attr;desc` in any order. The view checks the order against
-  // the type's columns again; the Endpoint checks q.
+  // query, URI-encoded), `&sort=attr;desc` and, as embed.js writes them (T-5129), `&dataset=name`
+  // and `&view=table` in any order. The view checks the order against the type's columns again;
+  // the Endpoint checks q.
   function parseHash(hash) {
     var parts = String(hash || "").replace(/^#/, "").split("&");
     if (!SLUG.test(parts[0])) return null;
-    var out = { slug: parts[0], lang: null, type: null, inline: false, theme: null, q: null, sort: null };
+    var out = { slug: parts[0], lang: null, type: null, inline: false, theme: null, q: null, sort: null, dataset: null, view: null };
     parts.slice(1).forEach(function (p) {
-      var m = /^(lang|type|theme|q|sort)=(.+)$/.exec(p);
+      var m = /^(lang|type|theme|q|sort|dataset|view)=(.+)$/.exec(p);
       var v = null;
       try { v = m && decodeURIComponent(m[2]); } catch (e) { v = null; }
       if (p === "inline") out.inline = true;
@@ -57,6 +74,8 @@
       else if (m[1] === "theme" && /^(dark|light)$/.test(v)) out.theme = v;
       else if (m[1] === "q" && v.length <= MAX_Q) out.q = v;
       else if (m[1] === "sort" && ORDER.test(v)) out.sort = v;
+      else if (m[1] === "dataset" && /^[a-z0-9_-]{2,100}$/.test(v)) out.dataset = v;
+      else if (m[1] === "view" && v === "table") out.view = v;
     });
     return out;
   }
@@ -65,7 +84,7 @@
   function hashOf(where) {
     var out = "#" + where.slug;
     if (where.inline) out += "&inline";
-    ["lang", "theme", "type", "q", "sort"].forEach(function (k) {
+    ["dataset", "lang", "theme", "view", "type", "q", "sort"].forEach(function (k) {
       if (where[k]) out += "&" + k + "=" + encodeURIComponent(where[k]);
     });
     return out;
@@ -164,6 +183,10 @@
     if (where && where.theme) document.documentElement.setAttribute("data-theme", where.theme);
     if (where && where.inline) document.body.classList.add("inline");
     var $ = function (id) { return document.getElementById(id); };
+    // /embed.html is this page on another site (T-5129): it names its source and licence, and
+    // offers no Embed button of its own.
+    var embedded = /\/embed\.html$/.test(location.pathname);
+    $("embed-open").hidden = embedded || !where;
     var status = $("status");
     Array.prototype.forEach.call(document.querySelectorAll("[data-t]"), function (n) { n.textContent = t[n.getAttribute("data-t")]; });
 
@@ -238,7 +261,7 @@
     function drawMap() {
       var section = $("map-section");
       var info = state.types.filter(function (x) { return x.typeName === state.type; })[0];
-      var geo = !!info && (info.attributeNames || []).indexOf("location") >= 0;
+      var geo = where.view !== "table" && !!info && (info.attributeNames || []).indexOf("location") >= 0;
       section.hidden = !geo;
       if (!geo) return;
       if (state.map) return mapMoved();
@@ -312,7 +335,7 @@
       state.type = next.type || null;
       state.q = next.q || "";
       state.sort = next.sort || null;
-      history.replaceState(null, "", hashOf({ slug: where.slug, inline: where.inline, lang: where.lang, theme: where.theme, type: state.type, q: state.q, sort: state.sort }));
+      history.replaceState(null, "", hashOf({ slug: where.slug, inline: where.inline, lang: where.lang, theme: where.theme, dataset: where.dataset, view: where.view, type: state.type, q: state.q, sort: state.sort }));
       if (moved) drawMap();
     }
 
@@ -325,6 +348,78 @@
       $("detail").returnFocus = $("data-api");
       $("detail").showModal();
     });
+    // The source line of an embed: the dataset's title, publisher and licence from the catalogue,
+    // shown only when that dataset names this very Endpoint; else the catalogue itself.
+    function attribute() {
+      var catalogue = "https://opendata." + location.hostname.replace(/^viz\./, "");
+      var line = $("attribution");
+      var draw = function (title, href, publisher, licence, licenceHref) {
+        line.textContent = "";
+        line.appendChild(document.createTextNode(t.source + ": "));
+        line.appendChild(el("a", { href: href, target: "_blank", rel: "noopener noreferrer", text: title }));
+        if (publisher) line.appendChild(document.createTextNode(" · " + publisher));
+        line.appendChild(document.createTextNode(" · " + t.licence + ": "));
+        line.appendChild(licenceHref ? el("a", { href: licenceHref, target: "_blank", rel: "noopener noreferrer", text: licence }) : document.createTextNode(licence));
+        line.hidden = false;
+        height();
+      };
+      draw(catalogue.replace("https://", "") + " – " + t.catalogue, catalogue + "/", null, t.licenceSee, null);
+      if (!where.dataset) return;
+      get(catalogue + "/api/3/action/package_show?id=" + encodeURIComponent(where.dataset)).then(function (answer) {
+        var pkg = answer.body && answer.body.success && answer.body.result;
+        var extra = ((pkg && pkg.extras) || []).filter(function (x) { return x && x.key === "endpoint"; })[0];
+        if (!pkg || !extra || String(extra.value).replace(/\/?$/, "/") !== api) return;
+        var href = catalogue + "/dataset/" + where.dataset;
+        var licenceHref = /^https?:\/\//.test(pkg.license_url || "") ? pkg.license_url : null;
+        draw(String(pkg.title || where.dataset), href, pkg.organization && pkg.organization.title ? String(pkg.organization.title) : null,
+          pkg.license_title ? String(pkg.license_title) : t.licenceSee, licenceHref || (pkg.license_title ? null : href));
+      }, function () {});
+    }
+
+    // The Embed dialog (T-5129): the code for this Endpoint, type and, if kept, the view's filter and order.
+    function embedCode() {
+      var E = root.jcEmbed;
+      var keep = $("embed-keep").checked;
+      var o = { slug: where.slug, dataset: where.dataset, type: state.type, lang: $("embed-lang").value, view: $("embed-view").value,
+        theme: $("embed-theme").value || null, height: $("embed-height").value, q: keep ? state.q : "", sort: keep ? state.sort : null };
+      var words = [];
+      if (state.q) words.push(say(t.filterIs, { q: state.q }));
+      if (state.sort) words.push(say(t.orderIs, { col: state.sort.split(";")[0] }) + (/;desc$/.test(state.sort) ? t.desc : ""));
+      $("embed-keep-hint").textContent = words.length ? say(t.keepHint, { view: words.join("; ") }) : t.keepNone;
+      $("embed-copied").textContent = "";
+      try {
+        $("embed-code").value = E.snippet($("embed-form").querySelector("input[name=kind]:checked").value, o, location.origin, t.title + (state.type ? ": " + state.type : ""));
+        $("embed-preview").href = location.origin + "/embed.html" + E.hash(o);
+        $("embed-error").hidden = true;
+        $("embed-height").removeAttribute("aria-invalid");
+        $("embed-copy").disabled = false;
+      } catch (e) {
+        $("embed-error").textContent = say(t.invalid, { why: e.message });
+        $("embed-error").hidden = false;
+        if (/^height/.test(e.message)) $("embed-height").setAttribute("aria-invalid", "true");
+        $("embed-code").value = "";
+        $("embed-copy").disabled = true;
+      }
+    }
+
+    $("embed-open").addEventListener("click", function () {
+      $("embed-lang").value = lang;
+      embedCode();
+      $("embed").showModal();
+    });
+    $("embed-form").addEventListener("input", embedCode);
+    $("embed-form").addEventListener("change", embedCode);
+    $("embed-form").addEventListener("submit", function (e) { e.preventDefault(); });
+    $("embed-copy").addEventListener("click", function () {
+      var code = $("embed-code");
+      var said = function (text) { $("embed-copied").textContent = text; };
+      var select = function () { code.focus(); code.select(); said(t.copySelect); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code.value).then(function () { said(t.copied); }, select);
+      else select();
+    });
+    $("embed-close").addEventListener("click", function () { $("embed").close(); });
+    $("embed").addEventListener("close", function () { $("embed-open").focus(); });
+    if (embedded) attribute();
     $("detail-close").addEventListener("click", function () { $("detail").close(); });
     $("detail").addEventListener("close", function () { var f = $("detail").returnFocus; if (f && f.focus) f.focus(); });
     window.addEventListener("resize", height);

@@ -1514,6 +1514,9 @@ def jc_explorer(pkg, resource=None):
     if not origin or not match or match.group(1) != BRANDING.get("domain"):
         return None
     src = "%s/explore.html#%s&inline&lang=%s" % (origin, match.group(2), _language())
+    # The dataset's name gives the explorer's Embed code its source and licence line (T-5129).
+    if re.fullmatch(r"[a-z0-9_-]{2,100}", (pkg or {}).get("name") or ""):
+        src += "&dataset=" + pkg["name"]
     kind_type = jc_entity_type(resource) if resource else None
     if not kind_type and resource and resource.get("datastore_active"):
         kind_type = resource.get("name")
