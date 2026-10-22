@@ -112,9 +112,11 @@ def test_row_level_security_is_required(dev):
 @requires_helmfile
 def test_the_gateway_and_the_portal_address_the_port_the_service_serves(dev):
     service = one(dev, "Service", "context-broker")
-    (port,) = service["spec"]["ports"]
+    # The API port by name: the Service also carries the metrics port (T-5095), which serves no API.
+    (port,) = [p for p in service["spec"]["ports"] if p["name"] == "http"]
     (container,) = pod_of(dev)["containers"]
-    assert port["targetPort"] == container["ports"][0]["containerPort"]
+    (api,) = [p for p in container["ports"] if p["name"] == "http"]
+    assert port["targetPort"] == api["containerPort"]
     address = f"http://context-broker.dev.svc.cluster.local:{port['port']}"
     gateway = one(dev, "Deployment", "context-gateway")["spec"]["template"]["spec"]["containers"][0]
     portal = one(dev, "Deployment", "portal")["spec"]["template"]["spec"]["containers"][0]
