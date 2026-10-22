@@ -825,3 +825,39 @@ def test_the_next_month_is_read_from_the_same_list_page_10_seconds_later():
     assert branch["processors"][0] == {"sleep": {"duration": "10s"}}
     assert branch["processors"][1]["http"]["url"] == "https://www.tuzvo.sk/${! @event_path }"
     assert '"/sk/kalendar-podujati".trim_prefix("/") + "?mini="' in branch["request_map"]
+
+
+@requires_docker
+def test_an_event_naming_no_place_or_only_the_town_takes_its_organizers_address():
+    # T-5135, owner 2026-10-22: GPS from the source, the venue table, or the institution's address; never a town centre.
+    def event(i: int, venue) -> dict:
+        e = tribe_event(i, [], url=f"https://svkbb.eu/udalosti/e-{i}/")
+        e["venue"] = venue
+        return e
+
+    feed = {"events": [
+        event(1, []),
+        event(2, {"venue": "Banská Bystrica", "city": "Banská Bystrica"}),
+        event(3, {"venue": "Neznáma sála", "city": "Banská Bystrica"}),
+        event(4, {"venue": "Záhrada", "city": "Banská Bystrica", "geo_lat": "48.7336", "geo_lng": "19.1423"}),
+    ]}
+    steps = offline(processors("svkbb"), {})
+    out = {e["name"]["value"]: e for e in run(steps, json.dumps(feed))}
+    library = [19.1436671, 48.7373616]
+    assert out["Koncert 1"]["location"]["value"]["coordinates"] == library and "venue" not in out["Koncert 1"]
+    assert out["Koncert 1"]["address"]["value"]["streetAddress"] == "Lazovná 240/9"
+    assert out["Koncert 2"]["location"]["value"]["coordinates"] == library
+    assert out["Koncert 2"]["venue"]["value"] == "Banská Bystrica", "the venue stays as the source wrote it"
+    assert "location" not in out["Koncert 3"], "a place nobody placed gets no point, never the organizer's"
+    assert out["Koncert 4"]["location"]["value"]["coordinates"] == [19.1423, 48.7336]
+    assert all(VALID.is_valid(key_values(e)) for e in out.values())
+
+
+def test_every_home_names_one_venue_of_a_kept_source_and_no_aggregator():
+    homes = list(csv.DictReader((EVENTS / "homes.csv").open(encoding="utf-8")))
+    kept = {r["events_url"]: r for r in generate.kept_sources()}
+    assert homes and len({h["events_url"] for h in homes}) == len(homes)
+    for h in homes:
+        assert h["events_url"] in kept, h
+        assert generate.organizer(kept[h["events_url"]]) is not None, f"an aggregator has no address of its own: {h}"
+        assert generate.home(kept[h["events_url"]])["match"] == h["match"]

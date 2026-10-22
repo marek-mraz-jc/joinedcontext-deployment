@@ -233,3 +233,40 @@ python3 seeds/bbsk-events/geocode-venues.py places.csv          # print the rows
 python3 seeds/bbsk-events/geocode-venues.py places.csv --write  # append them to venues.csv
 python3 seeds/bbsk-events/generate.py                           # then regenerate the seed
 ```
+
+## GPS share and the organizer's address (T-5135)
+
+`report.py` reads a store through its public NGSI-LD API and prints per source the events, how many carry a
+point, and where each point came from: `feed`, a venues.csv row checked by a person (`hand`) or by
+geocode-venues.py (`nominatim`), or the source's own address (`home`). Its last line is the store's share with
+GPS, which the owner holds at >= 90 % (2026-10-22). `--places` writes the venues of the events without a point
+as geocode-venues.py's input:
+
+```sh
+python3 seeds/bbsk-events/report.py --url https://api.dev.joinedcontext.com/api/endpoint/<slug>/ngsi-ld/v1 --places places.csv
+python3 seeds/bbsk-events/geocode-venues.py places.csv     # review each row against OSM, then --write
+python3 seeds/bbsk-events/generate.py
+```
+
+`homes.csv` names, per source, the venues.csv row of the body whose calendar it is: the library, the
+university, the theatre, the town or village office. An event that names no place, or names only the town or
+its organizer ("Obec Strelníky", "Ľubietová"), takes that address as its point; its `venue` stays as the source
+wrote it. An event naming a place nobody placed keeps no point, and an aggregator (a tourism organisation or the
+region) has no home. Decided (worker-t5135, owner may override): the town or village office counts as the
+institution's address for a municipality's calendar, because the owner's rule names "the institution's
+address" beside the venue table; options: home only for museums, libraries, theatres and universities.
+
+geocode-venues.py refuses a `place` hit (Nominatim answered "Ľubietová" with the village's cadastral community)
+and a map board, as it refuses a town. The rows of 2026-10-22 placed the venues dev's events named that
+OpenStreetMap holds; the hit "Dom kultúry ŽSR" for "Dom kultúry Podborová" was dropped as another building.
+
+Not placed on 2026-10-22, nothing in OpenStreetMap to point at: Poniky's parts, Spoločenský dom and Komunitné
+centrum Predajná, the Kultúrny dom of Medzibrod, Žarnovica, Tuhár and Halič, MsKS Hriňová's halls, the Obecný
+úrad of Hontianske Moravce, Športová hala Arena (Lučenec), Baňa Starovšechsvätých, and online or "see the poster"
+places. Each one needs a person to set its point from the building on the map (`checked_by` `hand`).
+
+Kinds not built, refuted on 2026-10-22: WEBY's `kalendar-podujati-0.html` is an editor page holding PDF and
+image posters (filakovo.sk, jelsava.sk, revuca.sk), not a list; stredoslovenskemuzeum.sk and muzeumkremnica.sk
+have no `podujatie` post type, and horehronskemuzeum.sk writes the date only in the post's prose or poster.
+Five municipal waste collection calendars (vhkalinka.eu and four outside the region) listed pickups as events:
+they are `skip` now.

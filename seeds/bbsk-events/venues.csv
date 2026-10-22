@@ -56,3 +56,44 @@ banska-bystrica,emerge hub tajovského 40,n,"EMERGE HUB, Tajovského 40",Tajovsk
 banska-bystrica,park pod pamätníkom snp,n,Park pod Pamätníkom SNP,,Banská Bystrica,48.7351892,19.1507932,way/104532876,2026-10-21,nominatim
 banska-bystrica,aula beliana,n,Aula Beliana,Tajovského 3767/40,Banská Bystrica,48.7421184,19.1212729,relation/19288857,2026-10-21,hand
 banska-bystrica,aula fpvamv umb,n,Aula FPVaMV UMB,Karola Kuzmányho 220/1,Banská Bystrica,48.7327705,19.1452633,way/24682799,2026-10-21,hand
+banska-stiavnica,evanjelický kostol,n,Evanjelický kostol,Radničné námestie 106/13,Banská Štiavnica,48.4585269,18.8928204,way/60875188,2026-10-22,nominatim
+banska-stiavnica,kino akademik,n,Kino Akademik,Radničné námestie,Banská Štiavnica,48.4591918,18.8924892,node/1305253378,2026-10-22,nominatim
+banska-stiavnica,kultúrne centrum,n,Kultúrne centrum,Kammerhofská 177/1,Banská Štiavnica,48.4581933,18.8962585,way/60874164,2026-10-22,nominatim
+banska-stiavnica,nový zámok,n,Nový zámok,Novozámocká 149/22,Banská Štiavnica,48.4557658,18.8961575,way/52128919,2026-10-22,nominatim
+banska-stiavnica,starý zámok,n,Starý zámok,Starozámocká,Banská Štiavnica,48.4595334,18.8909934,way/1490512231,2026-10-22,nominatim
+banska-stiavnica,terasa u blaškov,n,Terasa u Blaškov,2533,Banská Štiavnica,48.4045959,18.8558536,node/4317597593,2026-10-22,nominatim
+revuca,litterra,n,LITTERRA,Železničná 260/27,Revúca,48.6807599,20.1122026,node/12282370128,2026-10-22,nominatim
+lucenec,synagóga lučenec radnica lučenec,n,"Synagóga Lučenec, Radnica Lučenec",Adyho,Lučenec,48.3250515,19.6670861,way/59707419,2026-10-22,nominatim
+poltar,kultúrny dom,n,Kultúrny dom,Slobody 492/24,Poltár,48.4313985,19.7916769,way/60041219,2026-10-22,nominatim
+banska-bystrica,rudohorská 23/a banská bystrica,n,"Rudohorská 23/A, Banská Bystrica",Rudohorská 23A,Banská Bystrica,48.7569918,19.1656690,node/5832047740,2026-10-22,nominatim
+zvolen,stará radnica nám. snp 21/31 zvolen - prízemie,n,"Stará radnica, Nám. SNP 21/31, Zvolen - prízemie",Námestie SNP 21/31,Zvolen,48.5768616,19.1251732,way/127509716,2026-10-22,nominatim
+banska-bystrica,štátna vedecká knižnica,n,Štátna vedecká knižnica,Lazovná 240/9,Banská Bystrica,48.7373616,19.1436671,node/388597048,2026-10-22,nominatim
+banska-bystrica,univerzita mateja bela,n,Univerzita Mateja Bela,Národná 739/12,Banská Bystrica,48.7331796,19.1455309,way/52738308,2026-10-22,nominatim
+banska-bystrica,pedagogická fakulta umb,n,Pedagogická fakulta UMB,Ružová 4038/13,Banská Bystrica,48.7512092,19.1550149,way/85777364,2026-10-22,nominatim
+banska-bystrica,záhrada – centrum nezávislej kultúry,n,Záhrada – Centrum nezávislej kultúry,Dolná 167/34,Banská Bystrica,48.7336704,19.1423806,way/61154567,2026-10-22,nominatim
+banska-bystrica,thurzov dom námesie snp 4 banská bystrica,y,Thurzov dom,Námestie SNP 4/4,Banská Bystrica,48.7351155,19.1455954,node/2246848534,2026-10-22,nominatim
+banska-stiavnica,múzeum vo svätom antone,n,Múzeum vo Svätom Antone,,Svätý Anton,48.4213955,18.9431833,relation/974504,2026-10-22,nominatim
+revuca,konferenčná sála litterra,n,Konferenčná sála Litterra,Železničná 260/27,Revúca,48.6807599,20.1122026,node/12282370128,2026-10-22,nominatim
+zvolen,technická univerzita vo zvolene,n,Technická univerzita vo Zvolene,T. G. Masaryka 8026/24,Zvolen,48.5721115,19.1179432,node/561281295,2026-10-22,nominatim
+zvolen,technická univerzita vo zvolene - vestibul,n,Technická univerzita vo Zvolene - vestibul,T. G. Masaryka 8026/24,Zvolen,48.5721115,19.1179432,node/561281295,2026-10-22,nominatim
+zvolen,sldk informačno-vedecké centrum,n,"SLDK, Informačno-vedecké centrum",T. G. Masaryka 8026/24,Zvolen,48.5721115,19.1179432,node/561281295,2026-10-22,nominatim
+zvolen,sng zvolenský zámok,n,SNG Zvolenský zámok,Námestie SNP 594/1,Zvolen,48.5729001,19.1276837,relation/69079,2026-10-22,nominatim
+zvolen,zimný štadión vo zvolen,n,Zimný štadión Zvolen,Pod Dráhami 2292/21,Zvolen,48.5662224,19.1209496,way/173518854,2026-10-22,nominatim
+halic,múzeum csontváry a kaviareň céder,n,Múzeum Csontváry,Mieru,Halič,48.3543776,19.5731775,node/13596568488,2026-10-22,nominatim
+hrinova,mestský úrad hriňová,n,Mestský úrad Hriňová,Partizánska 1612/5,Hriňová,48.5751556,19.5239070,way/61748025,2026-10-22,nominatim
+poltar,mestský úrad poltár,n,Mestský úrad Poltár,Železničná 489/1,Poltár,48.4326603,19.7938318,node/836263843,2026-10-22,nominatim
+drazice,obecný úrad dražice,n,Obecný úrad Dražice,,Dražice,48.4365511,20.0643738,node/13902175957,2026-10-22,nominatim
+kraskovo,obecný úrad kraskovo,n,Obecný úrad Kraskovo,,Kraskovo,48.5012231,19.9895046,node/14019581137,2026-10-22,nominatim
+mostenica,obecný úrad moštenica,n,Obecný úrad Moštenica,,Moštenica,48.8076127,19.2923174,node/836263526,2026-10-22,nominatim
+jesenske,obecný úrad jesenské,n,Obecný úrad Jesenské,Sobotská 10/1,Jesenské,48.3053402,20.0749598,node/13945547447,2026-10-22,nominatim
+predajna,obecný úrad predajná,n,Obecný úrad Predajná,,Predajná,48.8144554,19.4627969,node/549362193,2026-10-22,nominatim
+prsa,obecný úrad prša,n,Obecný úrad Prša,,Prša,48.3000502,19.7917208,node/11649090950,2026-10-22,nominatim
+strelniky,obecný úrad strelníky,n,Obecný úrad Strelníky,,Strelníky,48.7227280,19.3935746,node/836268186,2026-10-22,nominatim
+lubietova,obecný úrad ľubietová,n,Obecný úrad Ľubietová,Námestie V. Dunajského 1/1,Ľubietová,48.7459388,19.3621751,way/180460822,2026-10-22,nominatim
+medzibrod,obecný úrad medzibrod,n,Obecný úrad Medzibrod,Námestie hrdinov SNP 1/1,Medzibrod,48.7921843,19.3521331,way/73265471,2026-10-22,nominatim
+dobra-niva,obecný úrad dobrá niva,n,Obecný úrad Dobrá Niva,Námestie Slov. nár. povst. 47/9,Dobrá Niva,48.4701697,19.1055249,way/71431450,2026-10-22,nominatim
+dobra-niva,kultúrny dom,n,Kultúrny dom Dobrá Niva,Námestie Slov. nár. povst. 217/2,Dobrá Niva,48.4707889,19.1066170,way/71431271,2026-10-22,nominatim
+breziny,kultúrny dom dobrá niva,n,Kultúrny dom Dobrá Niva,Námestie Slov. nár. povst. 217/2,Dobrá Niva,48.4707889,19.1066170,way/71431271,2026-10-22,nominatim
+pliesovce,obecný úrad pliešovce,n,Obecný úrad Pliešovce,Hviezdoslavova 1/2,Pliešovce,48.4245250,19.1560412,way/288589979,2026-10-22,nominatim
+zvolen,divadlo jozefa gregora tajovského,n,Divadlo Jozefa Gregora Tajovského,,Zvolen,48.5786614,19.1270324,node/313179869,2026-10-22,nominatim
+velky-krtis,kultúrny dom veľký krtíš,n,Kultúrny dom Veľký Krtíš (Mestské kultúrne stredisko),Námestie A. H. Škultétyho,Veľký Krtíš,48.2077730,19.3481718,node/2650365876,2026-10-22,nominatim

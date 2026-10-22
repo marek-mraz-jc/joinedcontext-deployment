@@ -46,6 +46,16 @@ def test_a_town_a_street_or_a_district_is_no_venue():
         assert row is None and "no venue" in note
 
 
+def test_the_village_itself_or_a_map_board_named_like_it_is_no_venue():
+    # T-5135: Nominatim answered "Ľubietová" with the cadastral community and "Hriňová" with a map board.
+    for answer in (hit("place", "cadastral_community", "Ľubietová", name="Ľubietová"),
+                   hit("information", "map", "Ľubietová", name="Ľubietová"),
+                   hit("tourism", "museum", "Ľubietová", name="Ľubietová")):
+        answer["name"] = answer["address"].pop("name")
+        row, note, _ = run({"Ľubietová, Ľubietová": [answer]}, "Ľubietová", "Ľubietová")
+        assert row is None and "no venue" in note, note
+
+
 def test_a_venue_of_the_same_name_in_another_town_or_outside_slovakia_is_refused():
     row, note, _ = run({"Kino, Zvolen": [hit("amenity", "cinema", "Detva")]}, "Kino", "Zvolen")
     assert row is None and note == "in Detva, not in Zvolen"
