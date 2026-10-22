@@ -132,5 +132,9 @@ context-broker:
     # Vehicle batches stop writing a row per ~4.5 s, and the retention sweep runs what waited longest first with
     # 5 s per delete statement; T-5062 T-5088 T-5099 T-5105 T-5121): no migration, no new runtime key.
     # Rollback: dev-24. Signed by ship.yml on dev at 2cbf46f.
-    tag: 'dev-27'
-    digest: 'sha256:b1fe055ee0c773735e70b9a36c0803933d4fee75ac635a5176915339ee394cd1'
+    # Antares dev 5337d72 (dev-30, trains 0147, 0151 and 0313 over 2cbf46f: T-5167 an attribute whose type changes
+    # replaces its instance, so no value sits beside a languageMap; T-5095 the image knows ANTARES_METRICS_PORT
+    # (unset here, metrics stay on the API port until T-5095's deployment half); T-4918 docs, T-5105 tests).
+    # No migration. Rollback: dev-27. Signed by ship.yml on dev at 5337d72.
+    tag: 'dev-30'
+    digest: 'sha256:469dc623763fe7b8b9095dbab2066387bc780e191dc9bb7614dd415258818b62'
