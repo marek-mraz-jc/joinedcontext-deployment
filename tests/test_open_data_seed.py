@@ -1024,3 +1024,26 @@ _:y sh:maxCount 1 ; sh:path ex:b .
     once = a.read_text()
     subprocess.run([sys.executable, "-c", generate.CANONICAL, str(a)], check=True)
     assert a.read_text() == once
+
+
+def test_every_seed_model_writes_an_annotation_map_as_a_tag_and_a_value():
+    """T-5167: LinkML reads a bare `label: {sk: ...}` as the annotation's own fields and refuses the
+    whole model, so Model Tools compiled no broker schema for the bb and bbsk spaces after T-4682 and
+    dev kept serving the models of before it (no `name` on six types). A map goes under `value`."""
+    allowed = {"tag", "value", "annotations", "extensions"}
+
+    def bare(node, where):
+        if isinstance(node, dict):
+            for key, value in (node.get("annotations") or {}).items() if isinstance(node.get("annotations"), dict) else ():
+                if isinstance(value, dict) and ("value" not in value or set(value) - allowed):
+                    yield f"{where}.annotations.{key}"
+            for key, value in node.items():
+                yield from bare(value, f"{where}.{key}")
+        elif isinstance(node, list):
+            for i, value in enumerate(node):
+                yield from bare(value, f"{where}[{i}]")
+
+    models = sorted(SEED.glob("**/*.linkml.yaml"))
+    assert models
+    found = [w for m in models for w in bare(yaml.safe_load(m.read_text()), m.relative_to(SEED).as_posix())]
+    assert not found, found[:5]

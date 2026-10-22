@@ -476,8 +476,12 @@ def test_every_pipeline_names_a_data_source_and_an_endpoint_the_seed_holds():
                 # attribute the table dropped leaves at the next run (T-4407, PL-79). The OSM
                 # pipeline is the sole writer of its osm- entities too, so a tag the map drops
                 # (an opening_hours removed) leaves the entity the same way (T-4514), and so is
-                # the cadastre's of its parcels (T-4697).
-                assert output["mode"] == ("replace" if name.startswith("od-") or name in ("osm", "kataster") else "upsert"), name
+                # the cadastre's of its parcels (T-4697). Each bbsk register is a full snapshot
+                # its pipeline alone writes, and replace rewrites an attribute a retyped write
+                # had merged key by key (T-5167).
+                registers = ("mosty", "obce", "okresy", "nemocnice", "socialne-sluzby", "organizacie")
+                sole = name.startswith("od-") or name in ("osm", "kataster", *registers)
+                assert output["mode"] == ("replace" if sole else "upsert"), name
 
 
 def test_a_pipeline_is_fed_by_a_data_source_or_by_a_query_and_the_files_beside_it_say_which():

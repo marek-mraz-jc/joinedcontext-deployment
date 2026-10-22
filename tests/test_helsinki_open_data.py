@@ -116,6 +116,21 @@ def test_the_areas_of_one_application_are_one_permit_with_every_outline(written)
 
 
 @requires_docker
+@pytest.mark.parametrize("feed", ["excavation", "traffic-arrangements", "area-events"])
+def test_a_permit_expires_when_its_end_day_ends_or_a_day_after_the_layer_last_listed_it(written, feed):
+    """T-5167: a permit the layer dropped stayed in the space with its last state; the catalogue sampled
+    such rows. Each run moves the lease a day on, and an ended permit expires at the end of its day."""
+    from datetime import datetime, timedelta, timezone
+
+    now = datetime.now(timezone.utc)
+    for permit in written[feed]:
+        expires = datetime.strptime(permit["expiresAt"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+        end = datetime.strptime(permit["permitEnd"]["value"] + "T23:59:59Z", "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+        assert expires == min(end, expires) and expires <= now + timedelta(days=1, minutes=5), permit["id"]
+        assert expires == end or expires >= now + timedelta(days=1, minutes=-5), permit["id"]
+
+
+@requires_docker
 def test_an_event_without_build_dates_is_covered_by_its_own_days(written):
     events = {e["permitNumber"]["value"]: e for e in written["area-events"]}
     for area in fixture("area-events.json")["features"]:

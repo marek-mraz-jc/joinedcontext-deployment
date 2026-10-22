@@ -678,11 +678,17 @@ def sdm_iris(entries: list[dict]) -> dict[str, tuple[str, str]]:
     return iris
 
 
+def label(texts: dict) -> dict:
+    """A slot's label in each language as a LinkML annotation: an explicit tag and value, since LinkML
+    reads a bare `{sk: ...}` map as the annotation's own fields and refuses the model (T-5167)."""
+    return {"tag": "label", "value": texts}
+
+
 def linkml(project: str, space: str, entries: list[dict], model_ranges: dict[str, str]) -> str:
     slots: dict[str, dict] = {}
     for a, (r, d) in COMMON.items():
         slots[a] = {"description": d, **({"range": r} if r != "string" else {}),
-                    "annotations": {"ngsi_ld_kind": "Property", "label": COMMON_LABELS[a]}}
+                    "annotations": {"ngsi_ld_kind": "Property", "label": label(COMMON_LABELS[a])}}
     columns: dict[str, str] = {}
     for e in entries:
         for a, p in e["properties"].items():
@@ -698,7 +704,7 @@ def linkml(project: str, space: str, entries: list[dict], model_ranges: dict[str
         slots[a] = {"description": f"Built from the source columns as `{columns[a]}`." if built else f"The source column `{columns[a]}`.",
                     **({"multivalued": True} if r == "string-list" else {"range": r} if r != "string" else {}),
                     "annotations": {"ngsi_ld_kind": "Property",
-                                    **({"label": {"sk": h}} if not built and (h := heading(columns[a])) else {})}}
+                                    **({"label": label({"sk": h})} if not built and (h := heading(columns[a])) else {})}}
     for e in entries:
         for a, v in (e.get("constants") or {}).items():
             slots.setdefault(a, {"description": f"`{v}` on every entity: the model requires it and no column holds it.",
