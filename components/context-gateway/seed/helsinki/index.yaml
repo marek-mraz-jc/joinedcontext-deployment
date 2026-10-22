@@ -101,6 +101,7 @@ helsinki-role-ckan-admin-banskabystrica-banskabystrica.yaml: users/roles/ckan-ad
 helsinki-role-ckan-admin-bbsk-bbsk.yaml: users/roles/ckan-admin-bbsk-bbsk.yaml
 helsinki-role-ckan-admin-praha-praha.yaml: users/roles/ckan-admin-praha-praha.yaml
 helsinki-role-ckan-admin-zilina-zilina.yaml: users/roles/ckan-admin-zilina-zilina.yaml
+helsinki-role-ckan-admin-barcelona-barcelona.yaml: users/roles/ckan-admin-barcelona-barcelona.yaml
 helsinki-role-ckan-admin-slovensko-slovensko.yaml: users/roles/ckan-admin-slovensko-slovensko.yaml
 helsinki-role-model-editor.yaml: users/roles/model-editor.yaml
 helsinki-role-pipeline-editor.yaml: users/roles/pipeline-editor.yaml
