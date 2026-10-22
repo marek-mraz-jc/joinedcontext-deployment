@@ -159,6 +159,20 @@ def test_each_listener_admits_one_mesh_identity(docs):
             assert authentications[f"{release}-{listener}"]["spec"]["identityRefs"] == [identity]
 
 
+def test_the_internal_listener_admits_the_portals_capture_subscriber_when_named(tmp_path):
+    """ADR-N-048 §2.10, T-4880: with the Portal named, 1883 admits its identity beside the
+    runner's; 1884 still admits Traefik alone."""
+    rendered = [d for d in yaml.safe_load_all(helm({**BASE, **PORTAL}, tmp_path).stdout) if d]
+    authentications = of(rendered, "MeshTLSAuthentication")
+    for release in RELEASES:
+        assert authentications[f"{release}-internal"]["spec"]["identityRefs"] == [
+            {"kind": "ServiceAccount", "name": "pipeline-runner", "namespace": "jc-pipeline-runner"},
+            {"kind": "ServiceAccount", "name": "portal", "namespace": "jc-portal"},
+        ]
+        assert authentications[f"{release}-external"]["spec"]["identityRefs"] == [
+            {"kind": "ServiceAccount", "name": "traefik", "namespace": "traefik"}]
+
+
 @pytest.mark.parametrize("brokers, message", [
     ([{"project": "helsinki", "name": "cameras"}] * 2, "two brokers answer on cameras.helsinki.mqtt.dev.example.org"),
     ([{"project": "p" * 40, "name": "n" * 30}], "longer than a DNS label"),
@@ -327,8 +341,9 @@ def test_only_brokers_reach_8082_and_only_the_runner_and_traefik_reach_a_broker(
     assert set(by_port) == {1883, 1884, 6060}
     assert by_port[6060][0]["podSelector"]["matchLabels"] == {"app.kubernetes.io/name": "portal-portal"}
     egress = one(local, "NetworkPolicy", "portal-to-mqtt-brokers")["spec"]
-    assert [p["port"] for rule in egress["egress"] for p in rule["ports"]] == [6060]
-    assert by_port[1883][0]["podSelector"]["matchLabels"] == {"app.kubernetes.io/name": "pipeline-runner-runner"}
+    assert [p["port"] for rule in egress["egress"] for p in rule["ports"]] == [6060, 1883]
+    assert [peer["podSelector"]["matchLabels"] for peer in by_port[1883]] == [
+        {"app.kubernetes.io/name": "pipeline-runner-runner"}, {"app.kubernetes.io/name": "portal-portal"}]
     assert by_port[1884][0]["podSelector"]["matchLabels"] == {"app.kubernetes.io/name": "traefik"}
     internal = one(local, "NetworkPolicy", "gateway-from-mqtt-brokers")["spec"]
     (rule,) = internal["ingress"]
@@ -368,3 +383,15 @@ def test_the_gateway_admits_the_tokenless_runner_from_its_pods_only(local):
     headless = [d["metadata"]["name"] for d in local if d.get("kind") == "Service" and d["spec"].get("clusterIP") == "None"
                 and d["metadata"]["name"].startswith("pipeline-runner")]
     assert headless == [name]
+
+
+def test_the_gateway_admits_the_portals_capture_subscriber_from_its_pods_only(local):
+    """ADR-N-048 §2.10, T-4880: the Portal's headless Service lists the Portal's pods alone."""
+    host = env_of(one(local, "Deployment", "context-gateway"))["JC_GATEWAY_MQTT_PORTAL_HOST"]
+    name, namespace = host.split(".")[:2]
+    pods = one(local, "Service", name)
+    assert pods["metadata"]["namespace"] == namespace
+    assert pods["spec"]["clusterIP"] == "None" and pods["spec"]["publishNotReadyAddresses"] is True
+    portal = one(local, "Deployment", "portal")
+    assert pods["spec"]["selector"] == portal["spec"]["selector"]["matchLabels"]
+    assert portal["metadata"]["namespace"] == namespace
