@@ -1,8 +1,0 @@
----
-probes:
-  probe:
-    # Production also probes dev from outside, so a dev cluster that is down entirely still goes
-    # red here (T-5103); dev probes production the same way.
-    peers:
-      - name: dev
-        domain: dev.joinedcontext.com

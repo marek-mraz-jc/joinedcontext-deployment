@@ -3,8 +3,9 @@
 Synthetic probes of every public surface, through the public hosts, every minute (T-5103).
 
 One pod per cluster (`probe`, Python standard library on the official slim image) probes its own
-environment and each `peers` entry, so a cluster that is down entirely still goes red on the other
-one: dev probes smartcity and smartcity probes dev.
+environment and each `peers` entry. dev peers with smartcity, so a production cluster that is down
+entirely still goes red on dev; smartcity has no peer, since the production render names no dev host
+(tests/test_smartcity.py).
 
 ## What it checks
 

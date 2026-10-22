@@ -2,7 +2,7 @@
 probes:
   probe:
     # dev also probes production from outside, so a production cluster that is down entirely
-    # still goes red here (T-5103); smartcity probes dev the same way.
+    # still goes red here (T-5103). smartcity has no peer: production names no dev host.
     peers:
       - name: smartcity
         domain: smartcity.joinedcontext.com
