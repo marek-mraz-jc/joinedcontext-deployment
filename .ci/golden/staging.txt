@@ -289,6 +289,7 @@ v1/Service staging/observability-collector
 v1/Service staging/pipeline-runner
 v1/Service staging/pipeline-runner-pods
 v1/Service staging/portal
+v1/Service staging/portal-pods
 v1/ServiceAccount staging/apisix
 v1/ServiceAccount staging/artifact-store
 v1/ServiceAccount staging/context-broker

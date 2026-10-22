@@ -549,6 +549,7 @@ v1/Service dev/pipeline-runner
 v1/Service dev/pipeline-runner-pods
 v1/Service dev/pipeline-tokens
 v1/Service dev/portal
+v1/Service dev/portal-pods
 v1/Service dev/probe
 v1/Service dev/status-page
 v1/Service dev/viz-renderer
