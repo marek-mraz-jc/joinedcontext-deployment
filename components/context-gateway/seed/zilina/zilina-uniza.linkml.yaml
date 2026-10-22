@@ -46,6 +46,13 @@ slots:
   isPartOf:
     slot_uri: schema:isPartOf
     description: >-
+      The address of the repository collection the work was deposited in
+      (`https://dspace.uniza.sk/handle/hdluniza/556`).
+    range: uri
+    annotations: { ngsi_ld_kind: Property }
+  collectionName:
+    slot_uri: jc:collectionName
+    description: >-
       The repository collection the work was deposited in, as DREPO names it: a journal issue,
       a proceedings volume or a series (`Krízový manažment - Ročník 24.; Číslo 2/2025`).
     annotations: { ngsi_ld_kind: Property }
@@ -100,6 +107,7 @@ classes:
       - workType
       - yearPublished
       - isPartOf
+      - collectionName
       - publisher
       - license
       - url

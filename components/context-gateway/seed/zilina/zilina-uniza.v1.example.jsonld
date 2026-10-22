@@ -1,4 +1,5 @@
 {
+  "collectionName": "collectionName",
   "dataProvider": "dataProvider",
   "id": "urn:ngsi-ld:Article:joinedcontext.com:example:1",
   "identifier": "identifier",
