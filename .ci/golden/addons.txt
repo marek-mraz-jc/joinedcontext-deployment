@@ -33,6 +33,7 @@ batch/v1/Job addons/keycloak-config-keycloak-config-cli
 batch/v1/Job addons/postgres-cluster-stat-statements
 batch/v1/Job argocd/argocd-redis-secret-init
 cert-manager.io/v1/Certificate addons/apisix-edge
+monitoring.coreos.com/v1/PrometheusRule addons/postgres-cluster-alert-rules
 monitoring.coreos.com/v1/ServiceMonitor addons/apisix
 monitoring.coreos.com/v1/ServiceMonitor addons/keycloak-app-keycloakx-keycloakx
 networking.k8s.io/v1/Ingress -/apisix

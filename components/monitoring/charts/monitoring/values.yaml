@@ -14,6 +14,10 @@ scrapeTimeout: 10s
 #   path:      metrics path, /metrics unless the exporter says otherwise
 serviceMonitors: []
 
+# Targets without a Service of their own (the CloudNativePG instances): the same fields as a
+# ServiceMonitor, the selector matching pod labels. Each renders one PodMonitor.
+podMonitors: []
+
 # Alerting rules, grouped. Each group is `{name, rules: [...]}` in the Prometheus Operator's
 # own shape, so a rule is copied from a runbook without translation.
 alertGroups: []
