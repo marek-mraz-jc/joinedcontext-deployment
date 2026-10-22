@@ -1,6 +1,11 @@
 ---
 probes:
   probe:
+    # A quarter of the default pace on dev (T-5179, 2026-10-22): at 120 a minute per target the probe's
+    # WebSocket opens (~21/min) and file.csv reads (~20/min) drove the 1Gi gateway into an OOM loop
+    # (14 restarts 03:50-05:10Z; flat at 179Mi with the probe at 0). Back to the default once the
+    # gateway bounds what a fan-out start and a download hold.
+    budget: 30
     # dev also probes production from outside, so a production cluster that is down entirely
     # still goes red here (T-5103). smartcity has no peer: production names no dev host.
     peers:
