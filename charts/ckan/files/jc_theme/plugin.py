@@ -408,6 +408,7 @@ STRINGS = {
     "section_api": {"en": "API and live access", "sk": "API a živý prístup", "cs": "API a živý přístup", "de": "API und Live-Zugriff", "hu": "API és élő hozzáférés"},
     "usage": {"en": "How to use it", "sk": "Ako to použiť", "cs": "Jak to použít", "de": "So verwenden Sie es", "hu": "Hogyan használja"},
     "guide": {"en": "The WebSocket guide: messages, limits and examples", "sk": "Príručka k WebSocketu: správy, limity a príklady", "cs": "Průvodce WebSocketem: zprávy, limity a příklady", "de": "Die WebSocket-Anleitung: Nachrichten, Grenzen und Beispiele", "hu": "A WebSocket-útmutató: üzenetek, korlátok és példák"},
+    "developer_page": {"en": "Developer page: every surface with code samples, try-it, licence and rate limit", "sk": "Stránka pre vývojárov: každé rozhranie s ukážkami kódu, vyskúšaním, licenciou a limitom požiadaviek", "cs": "Stránka pro vývojáře: každé rozhraní s ukázkami kódu, vyzkoušením, licencí a limitem požadavků", "de": "Entwicklerseite: jede Schnittstelle mit Codebeispielen, Ausprobieren, Lizenz und Anfragelimit", "hu": "Fejlesztői oldal: minden interfész kódpéldákkal, kipróbálással, licenccel és kéréskorláttal"},
     "snippet": {"en": "Command to copy", "sk": "Príkaz na skopírovanie", "cs": "Příkaz ke zkopírování", "de": "Befehl zum Kopieren", "hu": "Másolható parancs"},
     "mcp": {"en": "Connect an AI assistant", "sk": "Pripojte AI asistenta", "cs": "Připojte AI asistenta", "de": "KI-Assistenten verbinden", "hu": "AI-asszisztens csatlakoztatása"},
     "mcp_lead": {
@@ -1521,6 +1522,16 @@ def jc_explorer(pkg, resource=None):
     return {"src": src, "origin": origin, "title": jc_t("explorer")}
 
 
+def jc_developer_page(pkg):
+    """The Portal's developer page of the dataset's public Endpoint (T-5111): `/d/{slug}` on
+    portal.{domain}, named by the slug of the Endpoint address on api.{domain}; None otherwise."""
+    match = _API_ENDPOINT.match((jc_live(pkg) or {}).get("url") or "")
+    portal = jc_portal_url()
+    if not portal or not match or match.group(1) != BRANDING.get("domain"):
+        return None
+    return "%sd/%s?lang=%s" % (portal, match.group(2), _language())
+
+
 def jc_visualizations(pkg):
     """Every chart published on the dataset's resources, in the resources' order (ADR-N-053)."""
     out = []
@@ -2545,6 +2556,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_dates": jc_dates,
             "jc_usage": jc_usage,
             "jc_guide": jc_guide,
+            "jc_developer_page": jc_developer_page,
             "jc_previews": jc_previews,
             "jc_visualizations": jc_visualizations,
             "jc_explorer": jc_explorer,
