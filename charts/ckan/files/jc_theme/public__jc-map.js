@@ -5,6 +5,8 @@
 
 const PAGE = 1000; // features per request: the Endpoint takes seconds per request, not per feature
 const CAP = 5000; // features per view
+const TILE_CAP = 10000; // features per vector tile (Antares tiles::MAX_FEATURES)
+const MVT = "application/vnd.mapbox-vector-tile";
 const UNITS = { Cel: "°C", deg: "°", "m/s": "m/s", hPa: "hPa", mm: "mm", m: "m", km: "km", "%": "%" };
 const HIDDEN = new Set(["id", "type", "@context", "location", "geometry"]);
 
@@ -35,10 +37,16 @@ async function start(box) {
   let shown = null; // draws `latest` once the map is up
   let arrived;
   const firstPage = new Promise((resolve) => { arrived = resolve; });
-  const all = fetchAll(config.layers, null, (got) => { latest = got; arrived(); if (shown) shown(got); });
+  const templates = Promise.all(config.layers.map(tileTemplate));
+  // Past the cap, paging stops at the first page once every layer has a tileset (T-5189).
+  const tileable = (matched) => matched > CAP && templates.then((t) => t.every(Boolean));
+  const all = fetchAll(config.layers, null, (got) => { latest = got; arrived(); if (shown) shown(got); }, tileable);
   all.then(arrived, arrived);
   const units = schemas(config.layers);
-  const [maplibre, enums] = await Promise.all([import(config.lib), enumWords(config.enums), firstPage]);
+  const [maplibre, enums, tiles] = await Promise.all([import(config.lib), enumWords(config.enums), templates, firstPage]);
+  // Past the cap the map draws every layer's vector tiles (T-5189): the Endpoint cuts each view
+  // to the tiles it shows, so 100 000 features pan like 100. Only when each layer has a tileset.
+  const tiled = latest.matched > CAP && tiles.every(Boolean);
   if (!latest.features.length) await all;
   if (!latest.features.length) {
     // Nothing to draw is no failure: the embed page says so, the dataset page keeps the map hidden.
@@ -84,6 +92,33 @@ async function start(box) {
     filter: ["all", is("Point", "MultiPoint"), ["!", ["has", "point_count"]]],
     paint: { "circle-color": colour, "circle-radius": ["case", selected, 9, 6], "circle-stroke-color": "#fff", "circle-stroke-width": 2 } });
   const clickable = ["jc-fill", "jc-line", "jc-point"];
+  if (tiled) {
+    tiles.forEach((template, i) => {
+      const source = "jc-tiles-" + i;
+      const layer = config.layers[i].type;
+      // A tile names each feature by its URN in `id`: the selected state and the panel use it.
+      map.addSource(source, { type: "vector", tiles: [template], minzoom: 0, maxzoom: 16, promoteId: "id" });
+      const of = { source, "source-layer": layer };
+      map.addLayer(Object.assign({ id: source + "-fill", type: "fill", filter: is("Polygon", "MultiPolygon"),
+        paint: { "fill-color": colour, "fill-opacity": ["case", selected, 0.45, 0.15] } }, of));
+      map.addLayer(Object.assign({ id: source + "-outline", type: "line", filter: is("Polygon", "MultiPolygon"),
+        paint: { "line-color": colour, "line-width": ["case", selected, 3, 1] } }, of));
+      map.addLayer(Object.assign({ id: source + "-line", type: "line", filter: is("LineString", "MultiLineString"),
+        paint: { "line-color": colour, "line-width": ["case", selected, 6, 3] } }, of));
+      map.addLayer(Object.assign({ id: source + "-point", type: "circle", filter: is("Point", "MultiPoint"),
+        paint: { "circle-color": colour, "circle-radius": ["case", selected, 9, 5], "circle-stroke-color": "#fff", "circle-stroke-width": 1.5 } }, of));
+      clickable.push(source + "-fill", source + "-line", source + "-point");
+    });
+  }
+  // The whole feature behind a drawn one: in memory, or from the Endpoint for a tile's (a tile
+  // carries the part inside it, and length and area need all of it).
+  const open = async (hit) => {
+    const tile = /^jc-tiles-(\d+)$/.exec(hit.source);
+    if (!tile) return panel.open(hit, features[hit.properties._n], schemasOf);
+    const layer = Number(tile[1]);
+    const whole = await getJson(itemUrl(config.layers[layer].items, hit.properties.id)).catch(() => null);
+    if (whole && whole.geometry) panel.open(hit, Object.assign(whole, { properties: Object.assign({}, whole.properties, { _layer: layer, _id: whole.id || "" }) }), schemasOf);
+  };
 
   let features = [];
   let capped = false;
@@ -99,25 +134,40 @@ async function start(box) {
     if (bounds) map.fitBounds(bounds, { padding: 48, maxZoom: 15, duration: 0 });
   };
   const done = () => {
-    note.textContent = capped ? config.t.map_cap.replace("{n}", CAP.toLocaleString(config.lang)) : "";
+    // A tile holds at most TILE_CAP features; below zoom 12 (tiles wider than ~10 km) one may be cut.
+    const cap = tiled ? (latest.matched > TILE_CAP && map.getZoom() < 12 ? TILE_CAP : 0) : capped ? CAP : 0;
+    note.textContent = cap ? config.t.map_cap.replace("{n}", cap.toLocaleString(config.lang)) : "";
     box.dataset.state = "ready";
   };
-  put(latest);
-  fit();
-  shown = put;
-  box.jcMap = map; // a journey test projects features to click from it
+  if (tiled) {
+    put({ features: [], capped: false });
+    features = latest.features; // only for the first view's bounds
+    fit();
+    features = [];
+    box.jcMap = map;
+    box.dataset.tiled = "true";
+    done();
+    map.on("zoomend", done);
+  } else {
+    put(latest);
+    fit();
+    shown = put;
+    box.jcMap = map; // a journey test projects features to click from it
+  }
   const firstCount = features.length;
   try {
-    await all;
+    if (!tiled) await all;
   } catch {
     note.textContent = config.t.map_failed;
     box.dataset.state = "failed";
     return;
   }
   shown = null;
-  put(latest);
-  if (features.length !== firstCount) fit();
-  done();
+  if (!tiled) {
+    put(latest);
+    if (features.length !== firstCount) fit();
+    done();
+  }
   let asked = 0; // only the newest view's answer is drawn, however the answers overtake (T-5061)
   const load = async (bbox) => {
     const mine = ++asked;
@@ -179,14 +229,14 @@ async function start(box) {
     const { x, y } = e.point;
     const hit = map.queryRenderedFeatures(e.point, { layers: clickable })[0]
       || map.queryRenderedFeatures([[x - 8, y - 8], [x + 8, y + 8]], { layers: clickable })[0];
-    if (hit) panel.open(hit, features[hit.properties._n], schemasOf);
+    if (hit) open(hit);
   });
   // Enter opens what sits in the middle of the view; the arrows and +/- are MapLibre's own.
   map.getCanvas().addEventListener("keydown", (e) => {
     if (e.key !== "Enter") return;
     const { x, y } = map.project(map.getCenter());
     const hit = map.queryRenderedFeatures([[x - 12, y - 12], [x + 12, y + 12]], { layers: clickable })[0];
-    if (hit) panel.open(hit, features[hit.properties._n], schemasOf);
+    if (hit) open(hit);
   });
 }
 
@@ -216,20 +266,28 @@ function withParams(url, params) {
 // Every layer's features, page by page along the `next` links, at most CAP in all, handed to
 // `onPage` after each page. A `next` link is followed only on the same address, so a response
 // cannot send the browser elsewhere.
-async function fetchAll(layers, bbox, onPage) {
+async function fetchAll(layers, bbox, onPage, enough) {
   const features = [];
+  let matched = 0; // the first page's numberMatched of each layer read so far
   for (const [index, layer] of layers.entries()) {
     const base = new URL(layer.items);
     let url = withParams(layer.items, bbox ? { limit: String(PAGE), bbox: bbox.join(",") } : { limit: String(PAGE) });
+    let first = true;
     while (url && features.length < CAP) {
       const page = await getJson(url);
+      if (first) matched += Number.isFinite(page.numberMatched) ? page.numberMatched : (page.features || []).length;
+      const opening = first;
+      first = false;
       for (const f of page.features || []) {
         if (!f || !f.geometry || features.length >= CAP) continue;
         // The drawn feature is cut to its tile; `_n` finds the whole one for length and area.
         f.properties = Object.assign({}, f.properties, { _layer: index, _id: f.id || "", _n: features.length });
         features.push(f);
       }
-      onPage({ features: features.slice(), capped: features.length >= CAP });
+      onPage({ features: features.slice(), capped: features.length >= CAP, matched });
+      if (index === 0 && opening && enough && (await enough(matched))) {
+        return { features, capped: false, matched };
+      }
       const next = (page.links || []).find((l) => l.rel === "next");
       url = null;
       if (next && next.href) {
@@ -237,9 +295,46 @@ async function fetchAll(layers, bbox, onPage) {
         if (candidate.origin === base.origin && candidate.pathname === base.pathname) url = candidate.href;
       }
     }
-    if (features.length >= CAP) return { features, capped: true };
+    if (features.length >= CAP) return { features, capped: true, matched };
   }
-  return { features, capped: false };
+  return { features, capped: false, matched };
+}
+
+// A layer's vector tile address for MapLibre ({z}/{x}/{y}), from its tileset's `item` link, or
+// null: no tileset, an answer that fails, or a template off the collection's own tiles path (a
+// response cannot point the browser at another host).
+export async function tileTemplate(layer) {
+  if (!layer.tiles) return null;
+  try {
+    const tileset = await getJson(layer.tiles);
+    return templateOf(tileset, layer.tiles);
+  } catch {
+    return null;
+  }
+}
+
+export function templateOf(tileset, at) {
+  const item = ((tileset && tileset.links) || []).find((l) => l && l.rel === "item" && l.type === MVT && typeof l.href === "string");
+  if (!item) return null;
+  const own = new URL(at);
+  const href = item.href.replace("{tileMatrix}", "{z}").replace("{tileRow}", "{y}").replace("{tileCol}", "{x}");
+  if (!/\{z\}\/\{y\}\/\{x\}$/.test(href) || /[{}]/.test(href.slice(0, -"{z}/{y}/{x}".length))) return null;
+  let url;
+  try {
+    url = new URL(href.slice(0, -"{z}/{y}/{x}".length), own);
+  } catch {
+    return null;
+  }
+  if (url.origin !== own.origin || url.pathname !== own.pathname + "/" || url.search || url.hash) return null;
+  return url.href + "{z}/{y}/{x}";
+}
+
+// One feature of a layer's collection by its URN, on the items path the layer reads.
+export function itemUrl(items, id) {
+  const url = new URL(items);
+  url.search = "";
+  url.pathname = url.pathname.replace(/\/$/, "") + "/" + encodeURIComponent(String(id));
+  return url.href;
 }
 
 // The view as a bbox the Endpoint accepts: inside the world, six decimals.
@@ -318,7 +413,7 @@ function makePanel(box, config, map) {
     open(drawn, feature, units) {
       if (!feature) return;
       if (selected) map.setFeatureState(selected, { selected: false });
-      selected = { source: drawn.source, id: drawn.id };
+      selected = { source: drawn.source, sourceLayer: drawn.sourceLayer, id: drawn.id };
       map.setFeatureState(selected, { selected: true });
       const schema = units[feature.properties._layer] || {};
       const rows = describe(feature, schema, config);

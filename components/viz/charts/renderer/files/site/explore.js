@@ -14,6 +14,7 @@
   var DATE = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})?)?$/;
   var TIMEOUT_MS = 15000;
   var MAP_LIMIT = 1000;
+  var MVT = "application/vnd.mapbox-vector-tile";
   var COLOUR = "#1f5fae";
   var TEXT = {
     en: {
@@ -115,6 +116,26 @@
     return { georel: "within", geometry: "Polygon", coordinates: JSON.stringify([[[w, s], [e, s], [e, n], [w, n], [w, s]]]) };
   }
 
+  // The collection's tileset address under the Endpoint (T-5189, Antares antares-ogc tiles).
+  function tilesetUrl(api, type) {
+    return api + "ogc/features/collections/" + encodeURIComponent(type) + "/tiles/WebMercatorQuad";
+  }
+
+  // A tileset's MVT item template as MapLibre's {z}/{y}/{x}, or null when it is missing or leaves
+  // the tileset's own path (another host, the broker's address, another collection, a query).
+  function templateOf(tileset, at) {
+    var item = ((tileset && tileset.links) || []).filter(function (l) { return l && l.rel === "item" && l.type === MVT && typeof l.href === "string"; })[0];
+    if (!item) return null;
+    var tail = "{z}/{y}/{x}";
+    var href = item.href.replace("{tileMatrix}", "{z}").replace("{tileRow}", "{y}").replace("{tileCol}", "{x}");
+    if (href.slice(-tail.length) !== tail || /[{}]/.test(href.slice(0, -tail.length))) return null;
+    var url;
+    try { url = new URL(href.slice(0, -tail.length), at); } catch (e) { return null; }
+    var own = new URL(at);
+    if (url.origin !== own.origin || url.pathname !== own.pathname + "/" || url.search || url.hash) return null;
+    return url.href + tail;
+  }
+
   // The same rows elsewhere: the entity, the query, OData, OGC API Features and CSV of its type.
   function links(api, type, q, order, id) {
     var out = [];
@@ -123,6 +144,7 @@
     out.push({ key: "OData v4", href: api + "odata/v4/" + type });
     out.push({ key: "OGC API - Features", href: api + "ogc/features/collections/" + type + "/items" });
     out.push({ key: "CSV", href: api + "file.csv?" + params({ type: type, q: q, orderBy: order }) });
+    out.push({ key: "OGC API - Tiles", href: tilesetUrl(api, type) });
     return out;
   }
 
@@ -209,7 +231,7 @@
       return tell(t.noAddress, "error");
     }
     var api = base(location.hostname, where.slug);
-    var state = { types: [], type: where.type, q: where.q || "", sort: where.sort, map: null, mapData: null, mapAsk: 0 };
+    var state = { types: [], type: where.type, q: where.q || "", sort: where.sort, map: null, mapData: null, mapAsk: 0, tiled: null, tilesets: {} };
 
     // Every request: anonymous, no referrer, given up after 15 seconds; a non-2xx is an Error with its status.
     function get(url, accept) {
@@ -268,9 +290,19 @@
       import(MAPLIBRE).then(function (maplibre) {
         maplibre.setWorkerUrl(WORKER);
         if (root.pmtiles) maplibre.addProtocol("pmtiles", new root.pmtiles.Protocol().tile);
+        // The Endpoint's vector tiles, read like every other request here: anonymous, no referrer.
+        maplibre.addProtocol("jc-tile", function (request, controller) {
+          return fetch(request.url.replace(/^jc-tile:/, "https:"), { credentials: "omit", referrerPolicy: "no-referrer", signal: controller.signal, headers: { Accept: MVT } })
+            .then(function (r) {
+              if (r.status === 204) return { data: new ArrayBuffer(0) };
+              if (!r.ok) throw new Error("HTTP " + r.status);
+              return r.arrayBuffer().then(function (data) { return { data: data }; });
+            });
+        });
         var domain = location.hostname.replace(/^viz\./, "");
         var map = new maplibre.Map({ container: "map", style: "https://tiles." + domain + "/styles/light-" + (lang === "sk" ? "sk" : "en") + ".json", attributionControl: false, center: [17.1, 48.15], zoom: 4 });
         state.map = map;
+        root.jcExploreMap = map; // for the browser journey
         state.maplibre = maplibre;
         map.addControl(new maplibre.NavigationControl({ showCompass: false }));
         map.addControl(new maplibre.AttributionControl({ compact: true }));
@@ -283,6 +315,17 @@
             map.on("click", layer, function (e) {
               var f = (state.mapData || []).filter(function (x) { return x.id === e.features[0].properties.jcId; })[0];
               if (f) detail(Object.assign({ id: f.id }, f.properties), map.getCanvas());
+            });
+            map.on("mouseenter", layer, function () { map.getCanvas().style.cursor = "pointer"; });
+            map.on("mouseleave", layer, function () { map.getCanvas().style.cursor = ""; });
+          });
+          TILE_LAYERS.forEach(function (layer) {
+            map.on("click", layer, function (e) {
+              var id = e.features[0].properties.id;
+              if (typeof id !== "string") return;
+              get(api + "ngsi-ld/v1/entities/" + encodeURIComponent(id) + "?" + params({ format: "keyValues", lang: lang })).then(function (answer) {
+                if (answer.body && answer.body.id === id) detail(answer.body, map.getCanvas());
+              }, function (err) { $("map-note").textContent = failure(err); });
             });
             map.on("mouseenter", layer, function () { map.getCanvas().style.cursor = "pointer"; });
             map.on("mouseleave", layer, function () { map.getCanvas().style.cursor = ""; });
@@ -310,9 +353,40 @@
       }, function () {});
     }
 
+    // Past MAP_LIMIT and with no filter (a tile takes no query), the map draws the type's vector
+    // tiles: the Endpoint cuts every view to its tiles, so 100 000 entities pan like 100.
+    var TILE_LAYERS = ["jc-tile-fill", "jc-tile-line", "jc-tile-point"];
+    function untile() {
+      var map = state.map;
+      TILE_LAYERS.forEach(function (l) { if (map.getLayer(l)) map.removeLayer(l); });
+      if (map.getSource("jc-tiles")) map.removeSource("jc-tiles");
+      state.tiled = null;
+    }
+    function tile(type) {
+      var at = tilesetUrl(api, type);
+      var known = state.tilesets[type] || (state.tilesets[type] = get(at).then(function (a) { return templateOf(a.body, at); }, function () { return null; }));
+      return known.then(function (template) {
+        var map = state.map;
+        if (!template || state.type !== type || state.q || state.tiled === type) return !!template && state.tiled === type;
+        untile();
+        var is = function (types) { return ["in", ["geometry-type"], ["literal", types]]; };
+        map.addSource("jc-tiles", { type: "vector", tiles: [template.replace(/^https:/, "jc-tile:")], minzoom: 0, maxzoom: 16 });
+        var of = function (layer) { return Object.assign(layer, { source: "jc-tiles", "source-layer": type }); };
+        map.addLayer(of({ id: "jc-tile-fill", type: "fill", filter: is(["Polygon", "MultiPolygon"]), paint: { "fill-color": COLOUR, "fill-opacity": 0.25 } }));
+        map.addLayer(of({ id: "jc-tile-line", type: "line", filter: ["!", is(["Point", "MultiPoint"])], paint: { "line-color": COLOUR, "line-width": 2 } }));
+        map.addLayer(of({ id: "jc-tile-point", type: "circle", filter: is(["Point", "MultiPoint"]), paint: { "circle-color": COLOUR, "circle-radius": 5, "circle-stroke-color": "#fff", "circle-stroke-width": 1.5 } }));
+        map.getSource("jc").setData({ type: "FeatureCollection", features: [] });
+        state.mapData = [];
+        state.tiled = type;
+        return true;
+      });
+    }
+
     function mapMoved() {
       var map = state.map;
       if (!map || !map.getSource("jc")) return;
+      if (state.tiled && (state.tiled !== state.type || state.q)) untile();
+      if (state.tiled) return;
       var b = map.getBounds();
       var query = Object.assign({ type: state.type, q: state.q, limit: MAP_LIMIT, count: "true", lang: lang, format: "keyValues" }, bboxQuery([b.getWest(), b.getSouth(), b.getEast(), b.getNorth()]));
       var asked = ++state.mapAsk;
@@ -325,6 +399,9 @@
         }) });
         var total = answer.count === null ? features.length : +answer.count;
         $("map-note").textContent = !features.length ? t.mapNone : total > features.length ? say(t.mapCap, { n: features.length, total: total }) : t.mapHint;
+        if (total > features.length && !state.q) {
+          tile(state.type).then(function (on) { if (on && asked === state.mapAsk) $("map-note").textContent = t.mapHint; });
+        }
       }, function (e) { if (asked === state.mapAsk) $("map-note").textContent = failure(e); });
     }
     state.mapAsk = 0;
@@ -446,7 +523,7 @@
     height();
   }
 
-  root.jcExplore = { parseHash: parseHash, hashOf: hashOf, base: base, entitiesUrl: entitiesUrl, bboxQuery: bboxQuery, links: links, show: show, TEXT: TEXT };
+  root.jcExplore = { parseHash: parseHash, hashOf: hashOf, base: base, entitiesUrl: entitiesUrl, bboxQuery: bboxQuery, links: links, templateOf: templateOf, tilesetUrl: tilesetUrl, show: show, TEXT: TEXT };
   if (typeof module === "object" && module.exports) module.exports = root.jcExplore;
   else if (typeof document !== "undefined") main();
 })(typeof self !== "undefined" ? self : this);

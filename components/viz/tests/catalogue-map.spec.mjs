@@ -11,6 +11,7 @@ import { readFileSync, mkdirSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { mvt } from "./mvt.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const theme = path.join(here, "../../../charts/ckan/files/jc_theme");
@@ -31,6 +32,9 @@ const TEXT = {
 };
 
 const MANY = 12000;
+let TILED = null; // built at first use: dock() is defined below
+const MVT = "application/vnd.mapbox-vector-tile";
+
 const dock = (i) => ({ type: "Feature", id: `urn:ngsi-ld:BikeHireDockingStation:hel:${i}`,
   geometry: { type: "Point", coordinates: [24.7 + (i % 120) * 0.004, 60.1 + Math.floor(i / 120) * 0.002] },
   properties: { name: `Asema ${i}`, availableBikeNumber: i % 20, status: "working" } });
@@ -46,6 +50,8 @@ const DATA = {
   polygons: { type: "AdministrativeArea", all: () => Array.from({ length: 15 }, (_, i) => area(i)) },
   empty: { type: "BikeHireDockingStation", all: () => [] },
   many: { type: "BikeHireDockingStation", all: () => Array.from({ length: MANY }, (_, i) => dock(i)) },
+  // T-5189: past the cap with a tileset, the map draws the Endpoint's vector tiles.
+  tiled: { type: "BikeHireDockingStation", tiles: true, all: () => (TILED = TILED || Array.from({ length: 60000 }, (_, i) => dock(i))) },
   failing: { type: "BikeHireDockingStation", status: 502 }
 };
 
@@ -59,7 +65,8 @@ function page(html, lang) {
 function mapHtml(kind) {
   const type = DATA[kind].type;
   const config = {
-    layers: [{ type, items: `${OGC}/${type}/items`, schema: `${OGC}/${type}/schema` }], basemap: {},
+    layers: [Object.assign({ type, items: `${OGC}/${type}/items`, schema: `${OGC}/${type}/schema` },
+      DATA[kind].tiles ? { tiles: `${OGC}/${type}/tiles/WebMercatorQuad` } : {})], basemap: {},
     lib: "/maplibre-gl-6.14.0/maplibre-gl.mjs", pmtiles: "", enums: "/jc-enums.json", lang: "en", title: `Dataset ${kind}`,
     dataset: `${CATALOGUE}/dataset/${kind}`, embed: `${CATALOGUE}/map/${kind}`, t: TEXT
   };
@@ -91,6 +98,21 @@ async function route(browserPage, kind) {
       const data = DATA[kind];
       if (data.status) return send(JSON.stringify({ code: "BadGateway", description: "upstream" }), "application/json", data.status);
       let all = data.all();
+      const tile = /\/tiles\/WebMercatorQuad(?:\/(\d+)\/(\d+)\/(\d+))?$/.exec(url.pathname);
+      if (tile && !data.tiles) return send("", "text/plain", 404);
+      if (tile && !tile[1]) {
+        return send(JSON.stringify({ dataType: "vector", links: [{ rel: "item", type: MVT, templated: true,
+          href: `${OGC}/${data.type}/tiles/WebMercatorQuad/{tileMatrix}/{tileRow}/{tileCol}` }] }), "application/json");
+      }
+      if (tile) {
+        const body = mvt(data.type, all, Number(tile[1]), Number(tile[3]), Number(tile[2]));
+        return body ? r.fulfill({ status: 200, contentType: MVT, body }) : r.fulfill({ status: 204 });
+      }
+      const one = /\/items\/([^/]+)$/.exec(url.pathname);
+      if (one) {
+        const f = all.find((x) => x.id === decodeURIComponent(one[1]));
+        return f ? send(JSON.stringify(f), "application/geo+json") : send("{}", "application/json", 404);
+      }
       const bbox = url.searchParams.get("bbox");
       if (bbox) {
         const [w, s, e, n] = bbox.split(",").map(Number);
@@ -114,6 +136,7 @@ async function route(browserPage, kind) {
 
 const NOTE = {
   points: /^$/, polygons: /^$/, many: /^Showing the first 5,000; zoom in to see the rest\.$/,
+  tiled: /^Showing the first 10,000; zoom in to see the rest\.$/,
   empty: /^This dataset has no places to show on a map\.$/, failing: /^The map could not load its data/
 };
 
@@ -128,7 +151,7 @@ for (const kind of Object.keys(DATA)) {
         const box = p.locator(".jc-map");
         const note = p.locator(".jc-map-note");
         await expect(note).toHaveText(NOTE[kind], { timeout: 30000 });
-        if (kind === "points" || kind === "polygons" || kind === "many") {
+        if (kind === "points" || kind === "polygons" || kind === "many" || kind === "tiled") {
           await expect(box).toHaveAttribute("data-state", "ready");
           await expect(p.locator(".jc-map-area canvas")).toBeVisible();
         }
@@ -150,6 +173,31 @@ for (const kind of Object.keys(DATA)) {
           const settled = asked.length;
           await p.waitForTimeout(2000);
           expect(asked.length).toBe(settled);
+        }
+        if (kind === "tiled") {
+          // One page for the first view, then tiles only: no bbox reads, no paging to the cap.
+          await expect(box).toHaveAttribute("data-tiled", "true");
+          const tiles = () => asked.filter((a) => /\/tiles\/WebMercatorQuad\/\d+\/\d+\/\d+$/.test(a.url.pathname));
+          await expect.poll(() => tiles().length).toBeGreaterThan(0);
+          for (const a of tiles()) expect(a.url.search).toBe("");
+          await p.evaluate(() => { const m = document.querySelector(".jc-map").jcMap; m.jumpTo({ center: [24.75, 60.12], zoom: 15 }); });
+          await expect.poll(() => p.evaluate(() => document.querySelector(".jc-map").jcMap.queryRenderedFeatures({ layers: ["jc-tiles-0-point"] }).length), { timeout: 15000 }).toBeGreaterThan(0);
+          // Close in, no tile is cut: the cap note goes.
+          await expect(note).toHaveText(/^$/);
+          const items = asked.filter((a) => a.url.pathname.endsWith("/items"));
+          expect(items.length).toBeLessThanOrEqual(2);
+          expect(items.filter((a) => a.url.searchParams.has("bbox"))).toHaveLength(0);
+          // A click on a tile's point opens the whole feature, read by its URN.
+          const at = await p.evaluate(() => {
+            const m = document.querySelector(".jc-map").jcMap;
+            const f = m.queryRenderedFeatures({ layers: ["jc-tiles-0-point"] })[0];
+            const q = m.project(f.geometry.coordinates);
+            const r = m.getCanvas().getBoundingClientRect();
+            return { x: r.left + q.x, y: r.top + q.y, id: f.properties.id };
+          });
+          await p.mouse.click(at.x, at.y);
+          await expect(p.locator(".jc-map-panel h3")).toHaveText(/^Asema \d+$/);
+          expect(asked.some((a) => a.url.pathname.endsWith("/items/" + encodeURIComponent(at.id)))).toBe(true);
         }
         for (const a of asked) {
           expect(a.headers.authorization).toBeUndefined();
