@@ -4,6 +4,9 @@ Prometheus Operator scrape configuration and edge alerting for the platform (OPS
 
 The component deploys no workload. It renders one `ServiceMonitor` per platform component that
 exports Prometheus metrics on its Service and has no monitor of its own, and the `PrometheusRule` of the edge runbook.
+The CloudNativePG instances (`postgres-cluster`, `apps-db`) get a `PodMonitor` on their exporter port `metrics`
+(:9187); the cnpg/cluster chart keeps its own rules, among them the connections alert at 80 % of
+`max_connections` (T-5125), and its PodMonitor stays off because it sets no interval.
 
 APISIX is not in the target list: its own chart renders a `ServiceMonitor` for port 9091
 (`/apisix/prometheus/metrics`) as soon as metrics are enabled, so a second monitor here would

@@ -13,6 +13,9 @@
     "serviceMonitors": {
       "type": "array"
     },
+    "podMonitors": {
+      "type": "array"
+    },
     "alertGroups": {
       "type": "array"
     },

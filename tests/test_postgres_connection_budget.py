@@ -14,6 +14,9 @@ below with its source), multiplies by replicas, and asserts
 The 20 % headroom covers short-lived logins: a rolling update's second pod (pools open
 lazily, so it starts near empty), init containers and Jobs that run a CLI, the CNPG operator's
 own checks. A role this test does not know fails it: name its ceiling here before it ships.
+
+T-5125: the ceilings also stay at or under ALERT_SHARE of max_connections, the threshold of the CNPG
+chart's CNPGClusterHighConnectionsWarning, so that alert fires only for a client nobody counted.
 """
 
 import math
@@ -23,6 +26,7 @@ import pytest
 
 ENVIRONMENTS = ["local", "dev", "smartcity", "staging", "production", "minimal", "broker-only"]
 HEADROOM = 1.2
+ALERT_SHARE = 0.8  # CNPGClusterHighConnectionsWarning, charts/cluster prometheus_rules (cnpg/cluster 0.7.0)
 SUPERUSER_RESERVED_DEFAULT = 3
 # Ceilings compiled into the programs (sqlx PgPoolOptions::max_connections):
 # joinedcontext-portal src/db.rs and joinedcontext-platform crates/assistant/src/bin/jc-assistant.rs.
@@ -134,7 +138,8 @@ def budget(docs: list[dict]) -> tuple[dict[str, int], int, int]:
 
 
 def fits(pools: dict[str, int], reserved: int, max_connections: int) -> bool:
-    return math.ceil(sum(pools.values()) * HEADROOM) + reserved <= max_connections
+    total = sum(pools.values())
+    return math.ceil(total * HEADROOM) + reserved <= max_connections and total <= ALERT_SHARE * max_connections
 
 
 def test_the_sum_counts_what_starved_gitea():
@@ -144,6 +149,8 @@ def test_the_sum_counts_what_starved_gitea():
                 "portal": 5, "assistant": 4, "gitea": 0}
     assert not fits(t13097d3, SUPERUSER_RESERVED_DEFAULT, 50)
     assert fits({"antares": 16, "keycloak": 7, "ckan": 8, "portal": 5, "assistant": 4, "gitea": 3}, 3, 55)
+    # 45 of 55 passes the headroom (54 + 0) but holds the warning alert's 80 % (44) at every peak.
+    assert not fits({"antares": 18, "keycloak": 7, "ckan": 8, "portal": 5, "assistant": 4, "gitea": 3}, 0, 55)
 
 
 @pytest.mark.parametrize("env", ENVIRONMENTS)
@@ -154,3 +161,30 @@ def test_every_client_pool_fits_max_connections(rendered, env):
     pools, reserved, max_connections = budget(docs)
     need = math.ceil(sum(pools.values()) * HEADROOM) + reserved
     assert need <= max_connections, f"{env}: pools {pools} x {HEADROOM} + {reserved} reserved = {need} > max_connections {max_connections}"
+    total = sum(pools.values())
+    assert total <= ALERT_SHARE * max_connections, f"{env}: pools {pools} = {total} pass {ALERT_SHARE:.0%} of max_connections {max_connections}, where CNPGClusterHighConnectionsWarning fires"
+
+
+@pytest.mark.parametrize("env", ENVIRONMENTS)
+def test_every_cnpg_cluster_is_scraped_and_alerts_on_connections_where_prometheus_watches(rendered, env):
+    # cluster.monitoring.enabled follows global.metrics.enabled. Production 2026-10-22 set the key
+    # the chart does not read (monitoring.enablePodMonitor) and rendered neither (T-5125).
+    docs = rendered(env)
+    clusters = [d["metadata"]["name"] for d in docs if d.get("kind") == "Cluster" and d["apiVersion"].startswith("postgresql.cnpg.io/")]
+    if not clusters:
+        pytest.skip(f"{env} renders no CNPG Cluster")
+    watched = any(d.get("kind") == "ServiceMonitor" for d in docs)
+    for name in clusters:
+        monitors = [d for d in docs if d.get("kind") == "PodMonitor" and d["spec"]["selector"]["matchLabels"].get("cnpg.io/cluster") == name]
+        rules = {
+            r["alert"]: r["expr"]
+            for d in docs if d.get("kind") == "PrometheusRule" and d["metadata"]["name"] == f"{name}-alert-rules"
+            for g in d["spec"]["groups"] for r in g["rules"]
+        }
+        if not watched:
+            # No Prometheus Operator CRDs where metrics are off: a PodMonitor would fail the apply.
+            assert not monitors and not rules, f"{env}: {name} renders monitoring while global.metrics.enabled is false"
+            continue
+        assert [e["port"] for m in monitors for e in m["spec"]["podMetricsEndpoints"]] == ["metrics"], f"{env}: {name} has no PodMonitor"
+        warning = rules.get("CNPGClusterHighConnectionsWarning", "")
+        assert "max_connections" in warning and warning.rstrip().endswith(f"> {ALERT_SHARE * 100:.0f}"), f"{env}: {name} has no 80 % connection alert"
