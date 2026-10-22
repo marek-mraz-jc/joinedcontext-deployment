@@ -177,6 +177,7 @@ jobs:
         # config and one record through the allow-list (T-0349); tests/test_audit_logging.py
         # runs `vector validate` and `vector test` on the rendered audit transform (T-0052);
         # tests/test_ckan_dcat.py serializes DCAT-AP in the catalogue image (T-3010);
+        # tests/test_ckan_search_sk.py measures Slovak search recall in the catalogue's Solr (T-5116);
         # tests/test_gitops.py runs Argo CD's helmfile plugin in its sidecar image (T-4674);
         # tests/test_manifest_format.py runs `jcctl fmt --check` in the checkouts image (T-5052).
         # tests/test_alert_rules.py runs `promtool test rules` in the Prometheus image (T-5104).
@@ -185,7 +186,7 @@ jobs:
         run: |
           python3 - <<'EOF' > /tmp/test-images
           import yaml
-          for component, part in (("observability", "collector"), ("audit-logging", "collector"), ("ckan", "catalogue"), ("gitops", "helmfile"), ("context-gateway", "checkouts")):
+          for component, part in (("observability", "collector"), ("audit-logging", "collector"), ("ckan", "catalogue"), ("ckan", "solr"), ("gitops", "helmfile"), ("context-gateway", "checkouts")):
               i = yaml.safe_load(open(f"components/{component}/images.yaml"))[component][part]
               print(f"{i['repository']}:{i['tag']}@{i['digest']}")
           import re

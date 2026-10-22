@@ -1898,6 +1898,11 @@ SLAVIC_ENDINGS = ("iach", "ách", "ami", "ých", "ými", "ého", "ému", "ia", "
                   "om", "ov", "ou", "ím", "ým", "a", "á", "e", "é", "ě", "i", "í", "o", "u", "ú", "y", "ý")
 
 
+# The endings whose vowel drops when the word declines (T-5116): "dôchodok" is "dôchodky",
+# "lekáreň" "lekárne", "Lučenec" "Lučenca", so the word's own prefix misses every other form.
+FLEETING = (("ok", "k"), ("ek", "k"), ("ec", "c"), ("eň", "n"))
+
+
 def jc_stem(word):
     """`(word OR stem*)` for a word of four letters or more, else the word (T-4239, T-4387). The
     catalogue's Solr stems in English, so "ovzdušie" missed every "ovzdušia". Any word, since a
@@ -1909,6 +1914,9 @@ def jc_stem(word):
     for ending in SLAVIC_ENDINGS:
         if word.lower().endswith(ending) and len(word) - len(ending) >= 4:
             return "(%s OR %s*)" % (word, word[: -len(ending)])
+    for ending, rest in FLEETING:
+        if word.lower().endswith(ending) and len(word) - 1 >= 5:
+            return "(%s OR %s* OR %s%s*)" % (word, word, word[: -len(ending)], rest)
     return "(%s OR %s*)" % (word, word)
 
 
