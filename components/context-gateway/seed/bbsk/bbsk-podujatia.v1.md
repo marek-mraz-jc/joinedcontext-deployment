@@ -27,7 +27,10 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the event takes place, a GeoJSON Point in WGS 84 inside Slovakia (longitude 16.8 to 22.6, latitude 47.7 to 49.7), from the source or from the venue table checked by hand; never a town's centre. |
 | `venue` | Property | `string` |  |  | `jc:venue` | The name of the place, as the source writes it (a hall, a square, a museum). |
 | `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address of the venue, field by field (Smart Data Models' common PostalAddress); `addressLocality` is the town a calendar filters on. A field the source leaves out is absent, never guessed. |
-| `eventCategory` | Property | `string` |  |  | `jc:eventCategory` | The kind of event in the source's own words (`koncert`, `výstava`, `šport`). |
+| `category` | Property | [`EventCategory`](#eventcategory) (list) |  |  | `sdm:category` | The event's main category, one code of the platform's list of 15 (docs API/12-event-categories.md), picked by the rule table seeds/event-categories.json from the source's own word, the name or the kind of body that announced it (`music`, `sport`). A list of one, as Smart Data Models' Event writes `category`; absent when no rule names the event. |
+| `eventCategory` | Property | `string` |  |  | `jc:eventCategory` | The kind of event in the source's own words (`koncert`, `výstava`, `šport`), kept so `category` can be traced back to it. |
+| `audience` | Property | [`EventAudience`](#eventaudience) (list) |  |  | `sdm:audience` | Who the event is for, in Smart Data Models' Event codes; set with the category `children-family`, `children` when the source or the name says children, else `family`. |
+| `categorySource` | Property | `string` |  |  | `jc:categorySource` | How `category` was picked; `rule` is the rule table, the only way today. |
 | `description` | Property | `string` |  |  | `schema:description` | What the source says about the event, as plain text without markup. |
 | `organizer` | Property | [`Organizer`](#organizer) |  |  | `schema:organizer` | Who runs the event: the museum, the school, the town or the named performer, never the feed or the aggregator that announced it (that is `dataProvider`). Its name and its web site only, never a person's e-mail or phone. |
 | `url` | Property | `uri` | yes |  | `schema:url` | An http(s) link a person opens: the page of the event at its source, where they read more or buy a ticket, else the organizer's page that lists its events. |
@@ -76,3 +79,32 @@ IRI: `ngsi-ld:Entity`
 | `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+## Enumerations
+
+### EventCategory
+
+| Value | Meaning |
+|---|---|
+| `sport` |  |
+| `outdoor-nature` | Smart Data Models category outdoorActivities, excursion. |
+| `film` | Smart Data Models category spectacle. |
+| `theatre-dance` | Smart Data Models category spectacle. |
+| `music` | Smart Data Models category spectacle. |
+| `festival-fair` | Smart Data Models category spectacle. |
+| `food-market` | Smart Data Models category gastronomy, shopping. |
+| `exhibition-museum` | Smart Data Models category museum. |
+| `history-heritage` | Smart Data Models category history. |
+| `faith-tradition` | Smart Data Models category religiousWorship. |
+| `education-talk` |  |
+| `children-family` |  |
+| `hobby-workshop` |  |
+| `health-wellness` | Smart Data Models category wellness. |
+| `community-civic` |  |
+
+### EventAudience
+
+| Value | Meaning |
+|---|---|
+| `children` |  |
+| `family` |  |
