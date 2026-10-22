@@ -134,6 +134,21 @@ NAMES = {
     "bbsk-clenovia-samospravy-efc2f3": "{Titul_pred_menom} {Meno} {Priezvisko} {Titul_za_menom}",
     "bbsk-nehodovost-v-bbk-0ea72d": "Nehoda {Číslo_nehody}",
 }
+# Attributes an earlier mapping wrote and the current one no longer does, per project and type ("*": every
+# type). The od-* pipelines write in mode replace (PL-79), and a replace through the Endpoint's view counts
+# every stored Attribute as written; one the view does not show refuses the whole write (ADR-0023 rule 7),
+# so the Entities written before the rename failed every run (T-5236). The model keeps each such name as a
+# deprecated slot: the view then lets the next replace remove it, and no form asks for it.
+# ponytail: kept until every environment's od-* runs have replaced each stored Entity once; then emptied.
+RETIRED = {
+    "banskabystrica": {
+        "*": ["dataset"],
+        "Address": ["cASTOBCE", "castObce", "oBEC", "obec", "pSC", "uLICA", "ulica"],
+        "Article": ["link", "sourceId", "title"],
+        "Contract": ["centralneCisloZmluvy"],
+        "PurchaseOrder": ["cisloObjednavky"],
+    },
+}
 # What a visitor reads for the common slots, in each language the widget speaks (T-4682).
 COMMON_LABELS = {
     "dataProvider": {"sk": "Poskytovateľ údajov", "cs": "Poskytovatel dat", "en": "Data provider", "de": "Datenanbieter"},
@@ -725,6 +740,13 @@ def linkml(project: str, space: str, entries: list[dict], model_ranges: dict[str
         c["titles"].append(e["title"])
         own = [*map(attribute, e["properties"]), *(e.get("constants") or {}), *(["identifier"] if e.get("identifierFromId") else [])]
         c["slots"] += [a for a in own if a not in c["slots"]]
+    retired = RETIRED.get(project, {})
+    for t, c in classes.items():
+        for a in sorted({*retired.get("*", []), *retired.get(t, [])} - set(c["slots"])):
+            slots.setdefault(a, {"description": "An attribute an earlier version of the mapping wrote; the next run removes it.",
+                                 "deprecated": "No mapping writes it any more; kept so a replace may remove it.",
+                                 "annotations": {"ngsi_ld_kind": "Property"}})
+            c["slots"].append(a)
     for c in classes.values():
         titles = c.pop("titles")
         c["description"] = "One row of " + "; ".join(sorted(set(titles)))[:400] + "."

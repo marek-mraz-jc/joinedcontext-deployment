@@ -37,6 +37,9 @@
     "akcia": {
       "@id": "jc:akcia"
     },
+    "cASTOBCE": {
+      "@id": "jc:cASTOBCE"
+    },
     "cOID": {
       "@id": "jc:cOID",
       "@type": "xsd:integer"
@@ -45,8 +48,17 @@
       "@id": "jc:cZasadnutia",
       "@type": "xsd:integer"
     },
+    "castObce": {
+      "@id": "jc:castObce"
+    },
     "cenaCelkom": {
       "@id": "jc:cenaCelkom"
+    },
+    "centralneCisloZmluvy": {
+      "@id": "jc:centralneCisloZmluvy"
+    },
+    "cisloObjednavky": {
+      "@id": "jc:cisloObjednavky"
     },
     "content": {
       "@id": "jc:content"
@@ -56,6 +68,9 @@
     },
     "dataProvider": {
       "@id": "sdm:dataProvider"
+    },
+    "dataset": {
+      "@id": "jc:dataset"
     },
     "dateGmt": {
       "@id": "jc:dateGmt",
@@ -133,6 +148,9 @@
       "@id": "jc:kRAJID",
       "@type": "xsd:integer"
     },
+    "link": {
+      "@id": "jc:link"
+    },
     "linkml": "https://w3id.org/linkml/",
     "location": {
       "@id": "geojson:geometry"
@@ -160,6 +178,9 @@
       "@type": "xsd:integer"
     },
     "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
+    "oBEC": {
+      "@id": "jc:oBEC"
+    },
     "oBECID": {
       "@id": "jc:oBECID",
       "@type": "xsd:integer"
@@ -179,6 +200,9 @@
     },
     "oRIENTCP": {
       "@id": "jc:oRIENTCP"
+    },
+    "obec": {
+      "@id": "jc:obec"
     },
     "objednavkaSpolu": {
       "@id": "jc:objednavkaSpolu"
@@ -204,6 +228,9 @@
     },
     "orientC": {
       "@id": "jc:orientC"
+    },
+    "pSC": {
+      "@id": "jc:pSC"
     },
     "pocet": {
       "@id": "jc:pocet",
@@ -284,6 +311,9 @@
       "@id": "sdm:source",
       "@type": "xsd:anyURI"
     },
+    "sourceId": {
+      "@id": "jc:sourceId"
+    },
     "stavVybav": {
       "@id": "jc:stavVybav"
     },
@@ -300,6 +330,9 @@
     "thoroughfare": {
       "@id": "sdm:dataModel.CPSV-AP/thoroughfare"
     },
+    "title": {
+      "@id": "jc:title"
+    },
     "typ": {
       "@id": "jc:typ"
     },
@@ -307,6 +340,9 @@
     "typudrzovanezelene": {
       "@id": "jc:typudrzovanezelene",
       "@type": "xsd:integer"
+    },
+    "uLICA": {
+      "@id": "jc:uLICA"
     },
     "uLICAID": {
       "@id": "jc:uLICAID",
@@ -320,6 +356,9 @@
     },
     "ubytokZeny": {
       "@id": "jc:ubytokZeny"
+    },
+    "ulica": {
+      "@id": "jc:ulica"
     },
     "url": {
       "@id": "jc:url",
@@ -366,5 +405,5 @@
       "@type": "xsd:integer"
     }
   },
-  "x-generator-version": "linkml-1.11.1"
+  "x-generator-version": "linkml-1.12.0"
 }

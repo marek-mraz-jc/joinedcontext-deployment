@@ -13,6 +13,7 @@ are what stops the four mappings drifting apart.
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -565,3 +566,51 @@ def test_no_pipeline_of_the_two_slovak_bodies_mints_helsinkis_domain():
     for path in files:
         text = path.read_text()
         assert "JC_ORG_DOMAIN" not in text and "hel.fi" not in text, path.name
+
+
+def view_slots(model: dict, cls: str) -> set[str]:
+    """What the Endpoint's view lets a write name for `cls`, as the Portal lists a type shown whole: the
+    class's slots and those of every ancestor and mixin, plus the core `location` (reconciler views.rs
+    `class_slots`, `NGSI_LD_CORE`)."""
+    classes, seen, todo, out = model["classes"], set(), [cls], {"location"}
+    while todo:
+        name = todo.pop()
+        if name in seen or name not in classes:
+            continue
+        seen.add(name)
+        out |= set(classes[name].get("slots") or []) | set(classes[name].get("attributes") or {})
+        todo += [classes[name].get("is_a"), *(classes[name].get("mixins") or [])]
+    return out
+
+
+def written(bento: Path) -> set[str]:
+    """The Attribute names a generated od-* mapping writes: the keys of its entity object."""
+    return set(re.findall(r'^ {10}"([A-Za-z]\w*)": ', bento.read_text(), re.MULTILINE)) - {"id", "type"}
+
+
+@pytest.mark.parametrize("project", ["banskabystrica", "bbsk"])
+def test_every_od_mapping_writes_only_attributes_its_view_lists(project):
+    # The gateway forwards an od-* write through the Endpoint's view, and the broker refuses a write
+    # naming an Attribute the view does not show, the whole batch row (ADR-0023 rule 7, T-5236).
+    model = yaml.safe_load((SEED / project / f"{project}-otvorene-data.linkml.yaml").read_text())
+    pipelines = sorted((SEED / project).glob(f"{project}-od-pipeline-*-bento.yaml"))
+    assert pipelines
+    for bento in pipelines:
+        spec = yaml.safe_load(bento.with_name(bento.name.replace("-bento.yaml", ".yaml")).read_text())["spec"]
+        cls = spec["output"]["type"]
+        assert written(bento), bento.name
+        assert not written(bento) - view_slots(model, cls), (bento.name, cls)
+
+
+def test_a_replace_may_remove_what_an_earlier_mapping_wrote():
+    # Dev, 2026-10-22: od-dotacie, od-objednavky-bb and od-zasadnutia-organov-samospravy failed every
+    # row since mode replace (PL-79): their Entities, written on 2026-10-16, still hold `dataset`
+    # (renamed isPartOf on 2026-10-17), and a replace through the view names every stored Attribute.
+    # The old aktuality Articles hold `title` (T-4569). The view must list them so the replace removes them.
+    model = yaml.safe_load((SEED / "banskabystrica/banskabystrica-otvorene-data.linkml.yaml").read_text())
+    for cls in ("Grant", "PurchaseOrder", "CouncilMeeting", "Contract", "Address", "Article"):
+        assert "dataset" in view_slots(model, cls), cls
+    assert "cisloObjednavky" in view_slots(model, "PurchaseOrder")
+    assert "title" in view_slots(model, "Article")
+    for name in ("dataset", "title", "cisloObjednavky"):
+        assert model["slots"][name].get("deprecated"), name
