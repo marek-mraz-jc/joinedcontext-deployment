@@ -63,6 +63,17 @@ spec:
       automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
       enableServiceLinks: {{ .Values.enableServiceLinks }}
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{- if or .Values.autoscaling.enabled (gt (int .Values.replicaCount) 1) }}
+      # Spread the replicas over the nodes, so draining one node never takes them all (T-5128).
+      # ScheduleAnyway keeps a one-node cluster schedulable.
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              {{- include "workload.selectorLabels" . | nindent 14 }}
+      {{- end }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       {{- with .Values.extraInitContainers }}
