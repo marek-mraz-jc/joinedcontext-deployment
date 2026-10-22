@@ -258,7 +258,7 @@ spec:
 {{- range $listener := list (dict "name" "internal" "port" 1883 "sa" $root.Values.runner.serviceAccount "ns" $root.Values.runner.namespace) (dict "name" "external" "port" 1884 "sa" $root.Values.ingress.serviceAccount "ns" $root.Values.ingress.namespace) }}
 {{- $server := printf "%s-%s" $.release $listener.name }}
 ---
-# {{ $listener.port }} refuses every identity but the one below, whatever the NetworkPolicy lets through.
+# {{ $listener.port }} refuses every identity but the ones below, whatever the NetworkPolicy lets through.
 apiVersion: policy.linkerd.io/v1beta3
 kind: Server
 metadata:
@@ -289,6 +289,14 @@ spec:
     - kind: ServiceAccount
       name: {{ required "the client's ServiceAccount" $listener.sa }}
       namespace: {{ required "the client's namespace" $listener.ns }}
+    {{- if and (eq $listener.name "internal") $root.Values.portal.namespace }}
+    {{- /* The Portal's capture subscriber (ADR-N-048 §2.10, T-4880). The gateway admits it on a
+           `capture` broker only, with subscribe and no publish; on every other broker its
+           CONNECT is refused, so the mesh letting it reach 1883 grants it nothing there. */}}
+    - kind: ServiceAccount
+      name: {{ required "portal.serviceAccount" $root.Values.portal.serviceAccount }}
+      namespace: {{ $root.Values.portal.namespace }}
+    {{- end }}
 ---
 apiVersion: policy.linkerd.io/v1alpha1
 kind: AuthorizationPolicy

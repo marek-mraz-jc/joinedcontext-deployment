@@ -611,6 +611,21 @@ def test_lsvr_events_take_their_dates_from_the_pages_json_ld_written_with_a_spac
 
 
 @requires_docker
+def test_a_printed_date_with_a_leading_zero_day_or_month_is_read():
+    # int64() reads "08" and "09" as octal: before T-5287 each such event failed its branch and was never written.
+    printed = {"a": "09. 08. 2026", "b": "08. 09. 2026", "c": "01. 10. 2026"}
+    items = [{"id": i, "link": f"https://www.casta.sk/events/{k}/", "title": {"rendered": f"Podujatie {k}"}, "modified_gmt": None}
+             for i, k in enumerate(printed)]
+    pages = {f"/events/{k}/": '<ul class="post__info"><li class="post__info-item post__info-item--date">'
+             f'<p class="post__info-item-text">{v}</p></li></ul>' for k, v in printed.items()}
+    # The clock sits before every date, so none of them is past and dropped.
+    steps = json.loads(json.dumps(offline(template("lsvr-rest", "www.casta.sk"), pages)).replace(
+        f"let now = {NOW}", f"let now = {int(datetime(2026, 8, 1, tzinfo=UTC).timestamp())}"))
+    out = {e["name"]["value"]: e["startDate"]["value"] for e in run(steps, json.dumps(items), "slovensko-podujatia")}
+    assert out == {"Podujatie a": "2026-08-09", "Podujatie b": "2026-09-08", "Podujatie c": "2026-10-01"}
+
+
+@requires_docker
 def test_a_national_event_leaves_a_day_after_its_end_or_8_hours_after_the_last_run_that_saw_it():
     out = {e["name"]["value"]: e for e in national("lsvr-rest", "www.casta.sk", (FIXTURES / "casta-lsvr.json").read_text(), "lsvr.json")}
     lease = datetime.fromtimestamp(NOW + 8 * 3600, UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
