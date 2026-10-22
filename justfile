@@ -696,6 +696,12 @@ dev-publish-health summary every_hours passed='false':
 	just _dev-guard
 	./scripts/publish-health.py "{{ summary }}" --every-hours "{{ every_hours }}" {{ if passed == 'true' { '--passed' } else { '' } }}
 
+# Count each city's validated Smart Data Models datasets against its target of 100 (T-5275); run it
+# after dev-apply. Read-only and anonymous; exits 1 when a dataset that passed before fails now
+[group('dev cluster')]
+dev-open-data-scoreboard out='../evidence/open-data-scoreboard' *cities:
+	python3 scripts/open-data-scoreboard.py "{{ dev_domain }}" "{{ out }}" {{ cities }}
+
 # Pin the portal and both app-builder images to one portal commit, checked against the seeded
 # workflows (T-2633); run it the moment the portal's image.yml publishes, then dev-apply
 [group('dev cluster')]
