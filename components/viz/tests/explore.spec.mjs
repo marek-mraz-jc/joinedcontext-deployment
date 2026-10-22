@@ -104,7 +104,7 @@ test("a shared link opens its query and order, and a header sorts every row thro
   const f = frame(page);
   await expect(f.getByRole("grid")).toBeVisible({ timeout: 20000 });
   await expect.poll(() => entityCalls(requests).some((r) => r.url.searchParams.get("orderBy") === "availableBikeNumber" && r.url.searchParams.get("q") === 'status=="working"')).toBe(true);
-  const sort = f.getByRole("button", { name: /availableBikeNumber/ }).first();
+  const sort = f.getByRole("button", { name: /Available bike number/ }).first();
   await sort.click();
   await expect.poll(() => entityCalls(requests).some((r) => r.url.searchParams.get("orderBy") === "availableBikeNumber;desc")).toBe(true);
   await expect.poll(async () => decodeURIComponent(await f.locator("html").evaluate(() => location.hash))).toContain("sort=availableBikeNumber;desc");
@@ -128,12 +128,12 @@ test("Data API lists the view's addresses, CSV with its query and order", async 
 });
 
 for (const width of [1440, 400]) {
-  test(`${width}: Fields names each column's type and description; the full window opens and leaves by Escape`, async ({ page, context }) => {
+  test(`${width}: Columns names each column's type and description; the full window opens and leaves by Escape`, async ({ page, context }) => {
     await serve(context);
     await open(page, "point", { width });
     const f = frame(page);
     await expect(f.getByRole("grid")).toBeVisible({ timeout: 20000 });
-    await f.getByText("Fields", { exact: true }).first().click();
+    await f.getByText("Columns", { exact: true }).first().click();
     await expect(f.getByText("The availableBikeNumber of the BikeHireDockingStation")).toBeVisible();
     await shot(page, `fields-${width}`);
     await f.getByRole("button", { name: "Full window" }).click();

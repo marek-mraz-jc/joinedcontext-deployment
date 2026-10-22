@@ -197,6 +197,16 @@
       if (window.parent !== window) window.parent.postMessage({ type: "jc-viz-height", height: h }, "*");
     }
     if (typeof ResizeObserver === "function") new ResizeObserver(height).observe(document.querySelector("main"));
+    // The slice of this frame the reader sees, from the page around it (T-5192): dialogs open there.
+    window.addEventListener("message", function (event) {
+      var d = event.data || {};
+      if (event.source !== window.parent || window.parent === window || d.type !== "jc-viz-viewport") return;
+      if (typeof d.top !== "number" || typeof d.height !== "number" || !isFinite(d.top) || !isFinite(d.height)) return;
+      var top = Math.max(0, Math.min(d.top, document.documentElement.scrollHeight));
+      var h = Math.max(120, Math.min(d.height, 4000));
+      document.documentElement.style.setProperty("--jc-vv-top", Math.round(top) + "px");
+      document.documentElement.style.setProperty("--jc-vv-height", Math.round(h) + "px");
+    });
 
     function tell(text, kind) {
       status.textContent = text || "";
@@ -265,6 +275,9 @@
       section.hidden = !geo;
       if (!geo) return;
       if (state.map) return mapMoved();
+      // One map: a second call while MapLibre still loads waits for the first (T-5192 drew two).
+      if (state.mapLoading) return;
+      state.mapLoading = true;
       import(MAPLIBRE).then(function (maplibre) {
         maplibre.setWorkerUrl(WORKER);
         if (root.pmtiles) maplibre.addProtocol("pmtiles", new root.pmtiles.Protocol().tile);

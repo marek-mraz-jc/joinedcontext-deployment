@@ -219,6 +219,7 @@ STRINGS = {
     "licence": {"en": "Licence", "sk": "Licencia", "cs": "Licence", "de": "Lizenz", "hu": "Licenc"},
     "attribution": {"en": "Attribution", "sk": "Uvedenie zdroja", "cs": "Uvedení zdroje", "de": "Quellenangabe", "hu": "Forrásmegjelölés"},
     "source": {"en": "Original data", "sk": "Pôvodné dáta", "cs": "Původní data", "de": "Ursprüngliche Daten", "hu": "Eredeti adatok"},
+    "sources_all": {"en": "Show all ({n})", "sk": "Zobraziť všetky ({n})", "cs": "Zobrazit všechny ({n})", "de": "Alle anzeigen ({n})", "hu": "Mind megjelenítése ({n})"},
     "topic": {"en": "Topic", "sk": "Téma", "cs": "Téma", "de": "Thema", "hu": "Téma"},
     "keywords": {"en": "Keywords", "sk": "Kľúčové slová", "cs": "Klíčová slova", "de": "Schlagwörter", "hu": "Kulcsszavak"},
     "format": {"en": "Format", "sk": "Formát", "cs": "Formát", "de": "Format", "hu": "Formátum"},
@@ -1513,7 +1514,9 @@ def jc_explorer(pkg, resource=None):
     match = _API_ENDPOINT.match((live or {}).get("url") or "")
     if not origin or not match or match.group(1) != BRANDING.get("domain"):
         return None
-    src = "%s/explore.html#%s&inline&lang=%s" % (origin, match.group(2), _language())
+    # The catalogue is drawn light only: the widget takes the host's scheme, never the reader's
+    # system one, or its rows go dark on a light page (T-5192).
+    src = "%s/explore.html#%s&inline&lang=%s&theme=light" % (origin, match.group(2), _language())
     # The dataset's name gives the explorer's Embed code its source and licence line (T-5129).
     if re.fullmatch(r"[a-z0-9_-]{2,100}", (pkg or {}).get("name") or ""):
         src += "&dataset=" + pkg["name"]

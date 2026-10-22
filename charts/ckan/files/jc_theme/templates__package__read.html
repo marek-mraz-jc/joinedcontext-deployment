@@ -76,9 +76,24 @@
     <section class="jc-about" aria-labelledby="jc-about-title">
       <h2 id="jc-about-title">{{ h.jc_t('about') }}</h2>
       <dl class="jc-about-list">
+        {#- Dozens of sources (one per town feed, T-5192) fold into one row with a disclosure, so
+            the licence and the contact stay in view; up to three stay rows of their own. -#}
+        {% set source_label = h.jc_t('source') %}
+        {% set sources = about | selectattr(0, 'equalto', source_label) | list %}
+        {% set fold = namespace(done=false) %}
         {% for label, text, link in about %}
+          {% if label == source_label and sources | length > 3 %}
+            {% if not fold.done %}
+              {% set fold.done = true %}
+              <dt>{{ label }}</dt>
+              <dd><details class="jc-about-sources"><summary>{{ h.jc_t('sources_all').replace('{n}', sources | length | string) }}</summary>
+                <ul>{% for _, s_text, s_link in sources %}<li>{% if s_link %}<a href="{{ s_link }}" rel="noopener">{{ s_text }}</a>{% else %}{{ s_text }}{% endif %}</li>{% endfor %}</ul>
+              </details></dd>
+            {% endif %}
+          {% else %}
           <dt>{{ label }}</dt>
           <dd>{% if link %}<a href="{{ link }}" rel="noopener">{{ text }}</a>{% else %}{{ text }}{% endif %}</dd>
+          {% endif %}
         {% endfor %}
       </dl>
     </section>

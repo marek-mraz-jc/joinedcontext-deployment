@@ -265,6 +265,9 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://schema.org/Event
+      # How the catalogue's table opens (T-5192): from today on, soonest first, the undated last.
+      view_order_by: startDate
+      view_upcoming: startDate
     slots:
       - name
       - startDate

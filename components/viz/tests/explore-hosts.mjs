@@ -27,6 +27,23 @@ const bike = (i, extra = {}) => ({
   location: { type: "Point", coordinates: [24.95 + i / 100, 60.155 + i / 200] }, ...extra
 });
 const square = (x, y) => ({ type: "Polygon", coordinates: [[[x, y], [x + 0.05, y], [x + 0.05, y + 0.03], [x, y + 0.03], [x, y]]] });
+// The model as Model Tools publishes it: class attributes with ranks, labels as JSON text.
+const label = (sk, en) => `{tag: label, value: '${JSON.stringify({ sk, en })}'}`;
+const EVENT_MODEL = `id: https://example.test/events
+name: events
+classes:
+  Event:
+    annotations: {view_order_by: startDate, view_upcoming: startDate}
+    attributes:
+      name: {rank: 1, annotations: {label: ${label("Názov", "Name")}}}
+      startDate: {rank: 2, annotations: {label: ${label("Začiatok", "Start")}}}
+      location: {rank: 4, annotations: {ngsi_ld_kind: {tag: ngsi_ld_kind, value: GeoProperty}}}
+      venue: {rank: 5, annotations: {label: ${label("Miesto", "Venue")}}}
+      address: {rank: 6, annotations: {label: ${label("Adresa", "Address")}}}
+      organizer: {rank: 8, annotations: {label: ${label("Organizátor", "Organizer")}}}
+      url: {rank: 9, annotations: {label: ${label("Web", "Web")}}}
+      dataProvider: {range: string}
+`;
 const kpi = (i) => ({
   id: `urn:ngsi-ld:KeyPerformanceIndicator:susr:pl2016rs-${i}`, type: "KeyPerformanceIndicator", name: "Stavy hospodárskych zvierat k 31.12.",
   kpiValue: 1330091 + i, refArea: "SK0", refPeriod: String(1970 + (i % 50)), dataSet: "pl2016rs"
@@ -42,7 +59,20 @@ export const DATA = {
     description: "Opis <img src=x onerror=alert(1)> ".repeat(20), url: "https://www.bbsk.sk/podujatia/" + "a-b-c-".repeat(30), startDate: "2026-11-01T18:00:00Z" }] },
   multi: { type: "WeatherObserved", rows: [{ id: "urn:ngsi-ld:WeatherObserved:shmu:11894", type: "WeatherObserved", name: { languageMap: { sk: "Stanica Donovaly", en: "Donovaly station" } },
     temperature: [11.5, 12.1], address: { addressLocality: "Donovaly", postalCode: "97639" }, refDevice: "urn:ngsi-ld:Device:1" }] },
-  notypes: { types: [] }
+  notypes: { types: [] },
+  // T-5192: the bbsk-podujatia shape, 30 events with a published model; one name and one venue of
+  // 500 characters, a third without a start, and the model's ranks and labels.
+  events: { type: "Event", ownQuery: true, model: EVENT_MODEL, rows: Array.from({ length: 30 }, (_, i) => ({
+    id: `urn:ngsi-ld:Event:bbsk:${i}`, type: "Event",
+    name: i === 0 ? "Koncert " + "dlhý názov ".repeat(45) : `Podujatie ${i + 1}`,
+    ...(i % 3 === 2 ? {} : { startDate: `2026-11-${String((i % 28) + 1).padStart(2, "0")}T18:00:00+01:00` }),
+    venue: i === 1 ? "Sála " + "veľká ".repeat(80) : "Kino Baník",
+    address: "Námestie SNP 14, Banská Bystrica",
+    organizer: "Mestské kultúrne stredisko",
+    url: `https://www.bbsk.sk/podujatia/${i}`,
+    dataProvider: "Banská Bystrica, bbsk.sk (licencia neuvedená)",
+    location: { type: "Point", coordinates: [19.14 + i / 200, 48.73 + i / 400] }
+  })) }
 };
 export const SLUGS = Object.fromEntries(Object.keys(DATA).map((k) => [k, (k + "slug").padEnd(32, "0").slice(0, 32)]));
 const FAIL = { forbidden: 403, missing: 404, gateway: 502, slow: 0 };
@@ -62,7 +92,8 @@ const localized = (r, lang) => Object.fromEntries(Object.entries(r).map(([k, v])
 const manyRows = (offset, limit) => Array.from({ length: Math.max(0, Math.min(limit, 12345 - offset)) }, (_, i) => kpi(offset + i + 1));
 
 // The Endpoint's JSON Schema as the gateway serves it: one definition, a type and a description per attribute.
-const kindOf = (v) => (typeof v === "number" ? { type: "number" } : typeof v === "string" && /^\d{4}-\d{2}-\d{2}T/.test(v) ? { type: "string", format: "date-time" } : { type: "string" });
+const kindOf = (v) => (typeof v === "number" ? { type: "number" } : typeof v === "string" && /^\d{4}-\d{2}-\d{2}T/.test(v) ? { type: "string", format: "date-time" }
+  : typeof v === "string" && /^https:\/\//.test(v) ? { type: "string", format: "uri" } : { type: "string" });
 const schemaOf = (d) => {
   const sample = d.sample || d.rows || manyRows(0, 5);
   const properties = Object.fromEntries(attrs(sample).map((a) => [a, { ...kindOf(sample.find((r) => r[a] !== undefined)[a]), description: `The ${a} of the ${d.type}` }]));
@@ -118,7 +149,7 @@ export async function serve(context) {
         body: JSON.stringify({ version: 8, sources: {}, layers: [{ id: "paper", type: "background", paint: { "background-color": "#e8ecef" } }] }) });
     }
     if (url.hostname === API) {
-      const m = /^\/api\/endpoint\/([a-z0-9]+)\/(ngsi-ld\/v1\/types|ngsi-ld\/v1\/entities|schema\/index\.json|schema\/v1\/json-schema)$/.exec(url.pathname);
+      const m = /^\/api\/endpoint\/([a-z0-9]+)\/(ngsi-ld\/v1\/types|ngsi-ld\/v1\/entities|schema\/index\.json|schema\/v1\/json-schema|schema\/v1\/model\.linkml\.yaml)$/.exec(url.pathname);
       const name = m && key(m[1]);
       if (!name) return route.fulfill({ status: 404, headers: cors, body: "{}" });
       if (name in FAIL) {
@@ -130,6 +161,9 @@ export async function serve(context) {
         headers: { ...cors, ...(count === undefined ? {} : { "NGSILD-Results-Count": String(count) }) }, body: JSON.stringify(body) });
       if (m[2] === "schema/index.json") return json({ models: d.types ? [] : [{ name: d.type, version: 1 }] });
       if (m[2] === "schema/v1/json-schema") return json(d.types ? { $defs: {} } : schemaOf(d));
+      if (m[2] === "schema/v1/model.linkml.yaml") {
+        return d.model ? route.fulfill({ status: 200, contentType: "text/yaml", headers: cors, body: d.model }) : route.fulfill({ status: 404, headers: cors, body: "" });
+      }
       if (m[2].endsWith("types")) {
         if (d.types) return json(d.types);
         const sample = d.sample || d.rows || manyRows(0, 5);
@@ -140,7 +174,7 @@ export async function serve(context) {
       const limit = +(p.get("limit") || 20);
       let rows = d.rows || manyRows(offset, limit);
       let count = d.count ?? rows.length;
-      if (p.get("q")) { rows = rows.slice(0, 1); count = rows.length; }
+      if (p.get("q") && !d.ownQuery) { rows = rows.slice(0, 1); count = rows.length; }
       rows = ordered(rows, p.get("orderBy"));
       if (d.rows) rows = rows.slice(offset, offset + limit);
       if (request.headers().accept === "application/geo+json") {
