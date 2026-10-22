@@ -3,6 +3,10 @@ does. The suite runs the real script and the real curl against a local stub of t
 Keycloak, with a stub `kubectl` that hands out the password."""
 
 import base64
+import hashlib
+import hmac
+import struct
+import time
 import io
 import os
 import tarfile
@@ -24,11 +28,21 @@ PROJECT_REPO = "/git/joinedcontext/helsinki"
 PROTECTED_FORM = ('<div class="ui radio checkbox disabled"><input name="commit_choice" value="direct">'
                   "Not allowed to commit directly to branch because: User cannot push to branch</div>"
                   '<input name="commit_choice" value="commit-to-new-branch" checked>')
+SEED = "journeySeed0123456789abcdefABCDEF"
+OTP_FORM = ('<html><form id="kc-otp-login-form" action="{base}/kc/otp?session_code=c&amp;tab_id=d" '
+            'method="post"></form>{error}</html>')
 APP_NAME = "helsinki_map-alerts"
 APPS_ORG = "joinedcontext-apps"
 FORM = ('<html><form id="kc-form-login" onsubmit="return true;" '
         'action="{base}/kc/authenticate?session_code=a&amp;tab_id=b" method="post"></form>'
         '{error}</html>')
+
+
+def totp(seed, at):
+    """RFC 6238 HMAC-SHA256, 30 s, 6 digits over the seed's UTF-8 bytes; vector in the test below."""
+    mac = hmac.new(seed.encode(), struct.pack(">Q", at // 30), hashlib.sha256).digest()
+    offset = mac[-1] & 0x0F
+    return str((struct.unpack(">I", mac[offset:offset + 4])[0] & 0x7FFFFFFF) % 10**6).zfill(6)
 
 
 def archive():
@@ -49,7 +63,8 @@ def serve(mode):
     apart (the Apps live in an organization of their own, T-2969) | apart-no-team (that
     organization has no readers team, T-3030) | apart-no-repos (it holds no repository while
     the project declares an App) | protected (layout 2: demo.steward gets the form of a protected
-    main) | protected-all (so does demo.viewer)."""
+    main) | protected-all (so does demo.viewer) | otp (Keycloak asks demo.steward for a TOTP code,
+    T-5120)."""
     forks = []
     org = APPS_ORG if mode.startswith("apart") else "joinedcontext"
     APP = f"/git/{org}/{APP_NAME}"
@@ -142,8 +157,17 @@ def serve(mode):
                     forks.append(self.path)
                     return self.send(303, headers=[("Location", "/git/")])
                 return self.send(400, '{"errorMessage":"The owner has already reached the limit of 0 repositories."}')
+            if self.path.startswith("/kc/otp"):
+                # The code of this step or the one before, as Keycloak's look-ahead window of 1.
+                now = int(time.time())
+                if body.get("otp", [""])[0] in (totp(SEED, now), totp(SEED, now - 30)):
+                    return self.send(302, headers=[("Location", "/git/user/oauth2/keycloak/callback?code=demo.steward")])
+                err = '<span id="input-error-otp-code" class="kc-feedback">Invalid authenticator code.</span>'
+                return self.send(200, OTP_FORM.format(base=self.base(), error=err))
             if body.get("password") == [PASSWORD] and body["username"][0].endswith("@hel.fi"):
                 who = body["username"][0].split("@")[0]
+                if mode == "otp" and who == "demo.steward":
+                    return self.send(200, OTP_FORM.format(base=self.base(), error=""))
                 return self.send(302, headers=[("Location", f"/git/user/oauth2/keycloak/callback?code={who}")])
             err = '<span id="input-error" class="kc-feedback">Invalid username or password.</span>'
             self.send(200, FORM.format(base=self.base(), error=err))
@@ -153,7 +177,7 @@ def serve(mode):
     return server
 
 
-def run(tmp_path, mode, password=PASSWORD, **extra):
+def run(tmp_path, mode, password=PASSWORD, seed=SEED, **extra):
     server = serve(mode)
     kubectl = tmp_path / "kubectl"
     encoded = base64.b64encode(password.encode()).decode() if password else ""
@@ -162,6 +186,7 @@ def run(tmp_path, mode, password=PASSWORD, **extra):
     kubectl.write_text(
         '#!/bin/sh\ncase "$*" in\n'
         f'  *gitea-runner-registration*) printf %s "{owner}";;\n'
+        f'  *data.totp*) printf %s "{base64.b64encode(seed.encode()).decode()}";;\n'
         f'  *secret*) printf %s "{encoded}";;\nesac\n'
     )
     kubectl.chmod(0o755)
@@ -326,3 +351,27 @@ def test_declared_apps_with_no_repository_fail(tmp_path):
     r = run(tmp_path, "apart-no-repos")
     assert r.returncode == 1, r.stdout + r.stderr
     assert f"FAIL  helsinki declares Apps (map-alerts) and no reader lists a repository of {APPS_ORG}" in r.stdout
+
+
+def test_the_totp_helper_matches_the_rfc_6238_sha256_vector():
+    # RFC 6238 appendix B, SHA-256 seed, T = 59 s: 46119246 (8 digits), 119246 in 6.
+    assert totp("12345678901234567890123456789012", 59) == "119246"
+
+
+def test_a_steward_asked_for_totp_answers_with_the_seed_and_never_prints_it(tmp_path):
+    r = run(tmp_path, "otp")
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "ok    demo.steward signs in to the forge through Keycloak" in r.stdout
+    assert SEED not in r.stdout + r.stderr
+
+
+def test_a_wrong_seed_fails_with_the_keycloak_message(tmp_path):
+    r = run(tmp_path, "otp", seed="another-seed-entirely")
+    assert r.returncode == 1
+    assert "Invalid authenticator code." in r.stdout
+
+
+def test_a_missing_totp_seed_fails_naming_the_secret(tmp_path):
+    r = run(tmp_path, "otp", seed="")
+    assert r.returncode == 1
+    assert "holds no totp seed" in r.stdout
