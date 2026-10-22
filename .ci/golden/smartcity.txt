@@ -403,8 +403,7 @@ v1/ConfigMap smartcity/gitea-seed-s4-bbsk--4
 v1/ConfigMap smartcity/gitea-seed-s4-bbsk--5
 v1/ConfigMap smartcity/gitea-seed-s4-bbsk--6
 v1/ConfigMap smartcity/gitea-seed-s4-bbsk--7
-v1/ConfigMap smartcity/gitea-seed-s4-slovensko--17
-v1/ConfigMap smartcity/gitea-seed-s4-slovensko--22
+v1/ConfigMap smartcity/gitea-seed-s4-slovensko--16
 v1/ConfigMap smartcity/gitea-seed-s5-bbsk--10
 v1/ConfigMap smartcity/gitea-seed-s5-bbsk--11
 v1/ConfigMap smartcity/gitea-seed-s5-bbsk--12
@@ -418,7 +417,8 @@ v1/ConfigMap smartcity/gitea-seed-s6-slovensko--8
 v1/ConfigMap smartcity/gitea-seed-s6-zilina
 v1/ConfigMap smartcity/gitea-seed-s7-helsinki
 v1/ConfigMap smartcity/gitea-seed-s7-slovensko--10
-v1/ConfigMap smartcity/gitea-seed-s7-slovensko--16
+v1/ConfigMap smartcity/gitea-seed-s7-slovensko--17
+v1/ConfigMap smartcity/gitea-seed-s7-slovensko--22
 v1/ConfigMap smartcity/gitea-seed-s7-slovensko--9
 v1/ConfigMap smartcity/gitea-seed-s8-helsinki-mobility
 v1/ConfigMap smartcity/gitea-seed-s8-praha
