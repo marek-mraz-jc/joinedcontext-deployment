@@ -7,9 +7,9 @@ description: >-
   schema.org's Event under the names Smart Data Models and schema.org use, so the space's
   iCalendar surface (RFC 5545, EP-125) reads it as published: `id` the UID, `name` the SUMMARY,
   `startDate` and `endDate` DTSTART and DTEND, `description`, `address`, `location` and `url`
-  DESCRIPTION, LOCATION, GEO and URL, `organizer` ORGANIZER. An event without a name, a start, a
-  point in Slovakia, an organizer or a link is refused by the pipeline and never reaches the space
-  (owner 2026-10-20, 2026-10-21). One event announced
+  DESCRIPTION, LOCATION, GEO and URL, `organizer` ORGANIZER. An event without a name, a start or
+  a link is refused by the pipeline and never reaches the space (owner 2026-10-20, 2026-10-22); its
+  point and organizer are kept where known. One event announced
   by two sources is one entity: its id is
   `urn:ngsi-ld:Event:bbsk-podujatia:` followed by the first 16 hex digits of the SHA-256 of
   `name | start | lower(addressLocality)` (the name in lower case with only its letters and digits,
@@ -242,6 +242,23 @@ slots:
           de: Anbieter
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
+  locationPrecision:
+    slot_uri: jc:locationPrecision
+    description: >-
+      How close `location` is to the venue: `source` the publisher's own point, `building` the venue's building
+      (the address register or a venue checked against OpenStreetMap), `office` the organizer's or the town's
+      office standing in for a venue nobody placed, `centre` the town's centre. A map draws `office` and `centre`
+      as approximate.
+    range: LocationPrecision
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Presnosť polohy
+          cs: Přesnost polohy
+          en: Location precision
+          de: Genauigkeit des Orts
+      ngsi_ld_kind: Property
   dateModified:
     slot_uri: sdm:dateModified
     description: When the source last changed the record.
@@ -287,6 +304,7 @@ classes:
       - startDate
       - endDate
       - location
+      - locationPrecision
       - venue
       - address
       - eventCategory
@@ -310,8 +328,9 @@ classes:
       location:
         description: >-
           Where the event takes place, a GeoJSON Point in WGS 84 inside Slovakia (longitude 16.8
-          to 22.6, latitude 47.7 to 49.7), from the source or from the venue table checked by hand;
-          never a town's centre.
+          to 22.6, latitude 47.7 to 49.7): the source's own point, the venue's building, else the
+          organizer's or the town's office or the town's centre, as `locationPrecision` says (owner 2026-10-21:
+          at least 90 % of events with a point).
         rank: 4
       venue:
         rank: 5
@@ -338,3 +357,48 @@ classes:
         description: The organizer's name as the source writes it (`Stredoslovenské múzeum`).
       url:
         description: The organizer's own web site, when the source names it.
+
+enums:
+  LocationPrecision:
+    description: How close an event's point is to its venue; office and centre are approximate.
+    permissible_values:
+      source:
+        description: The point the publisher gives.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Podľa zdroja
+              cs: Podle zdroje
+              en: From the source
+              de: Laut Quelle
+      building:
+        description: The venue's building.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Budova
+              cs: Budova
+              en: Building
+              de: Gebäude
+      office:
+        description: The organizer's or the town's office, approximate.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Približne, úrad
+              cs: Přibližně, úřad
+              en: Approximate, office
+              de: Ungefähr, Amt
+      centre:
+        description: The town's centre, approximate.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Približne, stred obce
+              cs: Přibližně, střed obce
+              en: Approximate, town centre
+              de: Ungefähr, Ortsmitte
