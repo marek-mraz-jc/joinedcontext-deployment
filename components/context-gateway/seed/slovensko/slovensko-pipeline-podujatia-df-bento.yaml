@@ -78,13 +78,17 @@ pipeline:
       map prop {
         root = if this == null { null } else { { "type": "Property", "value": this } }
       }
-      let venues = [{"match":"sng zvolen","town":"zvolen","venue":"SNG – Zvolenský zámok","streetAddress":"Námestie SNP 594/1","addressLocality":"Zvolen","lat":48.5729001,"lon":19.1276837},{"match":"zvolenský zámok","town":"zvolen","venue":"SNG – Zvolenský zámok","streetAddress":"Námestie SNP 594/1","addressLocality":"Zvolen","lat":48.5729001,"lon":19.1276837},{"match":"tuzvo","town":"zvolen","venue":"TUZVO","streetAddress":"Študentská 2117/27","addressLocality":"Zvolen","lat":48.5725862,"lon":19.1147562},{"match":"arborétum borová hora","town":"zvolen","venue":"Arborétum Borová hora","streetAddress":null,"addressLocality":"Zvolen","lat":48.5947396,"lon":19.1351858},{"match":"fee","town":"zvolen","venue":"FEE","streetAddress":"Študentská","addressLocality":"Zvolen","lat":48.5729663,"lon":19.1165987},{"match":"fee e214","town":"zvolen","venue":"FEE E214","streetAddress":"Študentská","addressLocality":"Zvolen","lat":48.5729663,"lon":19.1165987},{"match":"fakulta techniky","town":"zvolen","venue":"Fakulta techniky","streetAddress":"Študentská","addressLocality":"Zvolen","lat":48.5737029,"lon":19.1160245},{"match":"šd ľ. štúra študentská 17 zvolen","town":"zvolen","venue":"ŠD Ľ. Štúra, Študentská 17, Zvolen","streetAddress":"Študentská 1734/17","addressLocality":"Zvolen","lat":48.5738159,"lon":19.120556}]
+      let venues = [{"match":"sng zvolen","town":"zvolen","venue":"SNG – Zvolenský zámok","streetAddress":"Námestie SNP 594/1","addressLocality":"Zvolen","lat":48.5729001,"lon":19.1276837},{"match":"zvolenský zámok","town":"zvolen","venue":"SNG – Zvolenský zámok","streetAddress":"Námestie SNP 594/1","addressLocality":"Zvolen","lat":48.5729001,"lon":19.1276837},{"match":"tuzvo","town":"zvolen","venue":"TUZVO","streetAddress":"Študentská 2117/27","addressLocality":"Zvolen","lat":48.5725862,"lon":19.1147562},{"match":"arborétum borová hora","town":"zvolen","venue":"Arborétum Borová hora","streetAddress":null,"addressLocality":"Zvolen","lat":48.5947396,"lon":19.1351858},{"match":"fee","town":"zvolen","venue":"FEE","streetAddress":"Študentská","addressLocality":"Zvolen","lat":48.5729663,"lon":19.1165987},{"match":"fee e214","town":"zvolen","venue":"FEE E214","streetAddress":"Študentská","addressLocality":"Zvolen","lat":48.5729663,"lon":19.1165987},{"match":"fakulta techniky","town":"zvolen","venue":"Fakulta techniky","streetAddress":"Študentská","addressLocality":"Zvolen","lat":48.5737029,"lon":19.1160245},{"match":"šd ľ. štúra študentská 17 zvolen","town":"zvolen","venue":"ŠD Ľ. Štúra, Študentská 17, Zvolen","streetAddress":"Študentská 1734/17","addressLocality":"Zvolen","lat":48.5738159,"lon":19.120556},{"match":"stará radnica nám. snp 21/31 zvolen - prízemie","town":"zvolen","venue":"Stará radnica, Nám. SNP 21/31, Zvolen - prízemie","streetAddress":"Námestie SNP 21/31","addressLocality":"Zvolen","lat":48.5768616,"lon":19.1251732},{"match":"technická univerzita vo zvolene","town":"zvolen","venue":"Technická univerzita vo Zvolene","streetAddress":"T. G. Masaryka 8026/24","addressLocality":"Zvolen","lat":48.5721115,"lon":19.1179432},{"match":"technická univerzita vo zvolene - vestibul","town":"zvolen","venue":"Technická univerzita vo Zvolene - vestibul","streetAddress":"T. G. Masaryka 8026/24","addressLocality":"Zvolen","lat":48.5721115,"lon":19.1179432},{"match":"sldk informačno-vedecké centrum","town":"zvolen","venue":"SLDK, Informačno-vedecké centrum","streetAddress":"T. G. Masaryka 8026/24","addressLocality":"Zvolen","lat":48.5721115,"lon":19.1179432},{"match":"sng zvolenský zámok","town":"zvolen","venue":"SNG Zvolenský zámok","streetAddress":"Námestie SNP 594/1","addressLocality":"Zvolen","lat":48.5729001,"lon":19.1276837},{"match":"zimný štadión vo zvolen","town":"zvolen","venue":"Zimný štadión Zvolen","streetAddress":"Pod Dráhami 2292/21","addressLocality":"Zvolen","lat":48.5662224,"lon":19.1209496},{"match":"divadlo jozefa gregora tajovského","town":"zvolen","venue":"Divadlo Jozefa Gregora Tajovského","streetAddress":null,"addressLocality":"Zvolen","lat":48.5786614,"lon":19.1270324}]
       let name = this.name.apply("text")
       let venue_text = this.venue.apply("text")
       let venue_key = if $venue_text != null { $venue_text.apply("key") } else { "" }
-      let known = $venues.filter(v -> v.match == $venue_key).index(0).catch(null)
-      # GPS from the feed, else from the venue table checked by hand; never a town's centre (owner
-      # 2026-10-20). An event with neither keeps no location and the model check refuses it.
+      let place = $venues.filter(v -> v.match == $venue_key).index(0).catch(null)
+      # An event that names no place, or only the town or its organizer, takes its organizer's own address
+      # (homes.csv, owner 2026-10-22: "or the institution's address"); its venue stays as the source wrote it.
+      let home = if $place == null && ($venue_key == "" || ["drevárska fakulta tuzvo", "zvolen"].contains($venue_key)) { null } else { null }
+      let known = $place.or($home)
+      # GPS from the feed, else from the venue table, else from the organizer's address; never a town's centre
+      # (owner 2026-10-20). An event with none is kept without a location and counted (owner 2026-10-22).
       let lat = this.lat.number().catch($known.lat.or(null))
       let lon = this.lon.number().catch($known.lon.or(null))
       let point = if $lat != null && $lon != null && $lat >= 47.7 && $lat <= 49.7 && $lon >= 16.8 && $lon <= 22.6 { { "type": "Point", "coordinates": [$lon, $lat] } } else { null }
@@ -105,7 +109,7 @@ pipeline:
         root = if this == null { null } else { this.string().trim().(u -> if u.re_match("^https?://[^\\s/@]+(/\\S*)?$") && u.length() <= 2000 { u } else { null }) }
       }
       # The organizer the feed names, else the body whose calendar this is (the inventory row); an aggregator's
-      # row names none, so its event without an organizer is refused (T-5081). Name and web site only: a feed's
+      # row names none, so its event keeps no organizer (owner 2026-10-22: optional). Name and web site only: a feed's
       # organizer e-mail or phone may be a person's and stays on the source's page.
       map uncontact {
         root = if this == null { null } else { this.re_replace_all("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "").re_replace_all("(\\+421|\\b0)[0-9][0-9 /]{7,}[0-9]", "").re_replace_all("(?i)\\b(tel|mobil|e-?mail|kontakt)\\.?:?", "").re_replace_all("\\s+", " ").re_replace_all("^[ ,;:-]+|[ ,;:-]+$", "").(t -> if t == "" { null } else { t }) }
@@ -128,7 +132,7 @@ pipeline:
         "startDate": this.start.apply("prop"),
         "endDate": this.end.apply("prop"),
         "location": if $point != null { { "type": "GeoProperty", "value": $point } } else { null },
-        "venue": $known.venue.or($venue_text).apply("prop"),
+        "venue": $place.venue.or($venue_text).apply("prop"),
         "address": { "type": "Property", "value": $address },
         "eventCategory": this.category.apply("text").apply("prop"),
         # A source that states no licence gives its facts only: what, when, where and the link back

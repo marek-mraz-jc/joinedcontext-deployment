@@ -4,8 +4,8 @@ national store slovensko-podujatia (T-5047).
 Each template runs in Bento over a feed recorded from its publisher on 2026-10-20
 (fixtures/bbsk-events/), with the detail pages a template reads served from the recording and the
 clock pinned to that day, so the cases do not age. What reaches the Endpoint is checked against
-the Event model of T-4895: an event without a name, a start or a GPS point is refused there and
-lands in the run's rejected list (PL-62), never in the space.
+the Event model: an event without a name, a start or a link is refused there and lands in the run's
+rejected list (PL-62), never in the space; one without a GPS point or an organizer is kept (owner 2026-10-22).
 
 Without a container runtime the Bento cases skip; the seed and inventory cases do not.
 """
@@ -375,9 +375,9 @@ def test_weby_feeds_read_each_event_page_and_place_it_by_the_venue_table():
         apollo["venue"]["value"] == "Kino Apollo"
         and apollo["scope"] == "/SK/BB/lucenec"
     )
-    # A venue nobody checked by hand gives no point, so the model refuses the event (owner 2026-10-20).
+    # A venue nobody checked by hand gives no point, never the town's centre; the event is kept (owner 2026-10-22).
     arena = lucenec["Futsalová Liga majstrov"]
-    assert "location" not in arena and not VALID.is_valid(key_values(arena))
+    assert "location" not in arena and VALID.is_valid(key_values(arena))
     zvolen = {
         e["name"]["value"]: e
         for e in pipeline("zvolen", "zvolen-rss1.xml", "weby.json")
@@ -463,7 +463,7 @@ def test_one_event_announced_by_two_sources_is_one_entity():
 
 
 @requires_docker
-def test_an_event_without_gps_name_or_start_is_refused_by_the_model():
+def test_an_event_without_name_or_start_is_refused_and_one_without_gps_kept():
     day = datetime.fromtimestamp(NOW, UTC) + timedelta(days=3)
     no_gps = wp_event(1, day)
     no_gps["meta_box"]["coordinates"] = None
@@ -477,8 +477,8 @@ def test_an_event_without_gps_name_or_start_is_refused_by_the_model():
             json.dumps([no_gps, no_name, no_start, wp_event(4, day)]),
         )
     }
-    assert VALID.is_valid(key_values(out["4"]))
-    for refused in ("1", "2", "3"):
+    assert VALID.is_valid(key_values(out["4"])) and VALID.is_valid(key_values(out["1"]))
+    for refused in ("2", "3"):
         assert not VALID.is_valid(key_values(out[refused])), refused
     assert (
         "location" not in out["1"]
@@ -572,7 +572,7 @@ def test_a_source_outside_the_region_lands_in_its_own_region_at_its_venue():
         assert "description" not in e  # no licence stated: facts only
         assert VALID.is_valid(key_values(e)), e["name"]
     (unplaced,) = [e for e in out.values() if "location" not in e]
-    assert not VALID.is_valid(key_values(unplaced))
+    assert VALID.is_valid(key_values(unplaced))
 
 
 # --- the national store's adapters (T-5047) -----------------------------------------------------------------
@@ -593,7 +593,7 @@ def test_lsvr_events_take_their_dates_from_the_pages_json_ld_written_with_a_spac
     assert toast["startDate"]["value"] == "2026-12-31T23:59:00+01:00"
     assert toast["endDate"]["value"] == "2027-01-01T03:00:00+01:00"
     assert toast["id"].startswith("urn:ngsi-ld:Event:slovensko-podujatia:") and toast["scope"] == "/SK/BA/casta"
-    # Častá's venues are not in the table checked by hand: no point, so the model refuses them (owner 2026-10-20).
+    # Častá's venues are not in the table checked by hand: no point, never the village centre (owner 2026-10-20).
     assert all("location" not in e for e in out.values())
 
 
@@ -617,6 +617,16 @@ def test_a_national_event_leaves_a_day_after_its_end_or_8_hours_after_the_last_r
     (yesterday,) = ended(20)
     assert yesterday["expiresAt"] == (day + timedelta(hours=4)).strftime("%Y-%m-%dT%H:%M:%SZ")
     assert ended(25) == []
+
+
+@requires_docker
+def test_a_region_event_leaves_52_hours_after_the_last_run_that_saw_it():
+    # T-5081: without a lease a region event the model now refuses (or its source dropped) stayed half until its end.
+    steps = template("lsvr-rest", "www.casta.sk", store="bbsk", region="BBSK")
+    pages = json.loads((FIXTURES / "pages" / "lsvr.json").read_text())
+    out = run(offline(steps, pages), (FIXTURES / "casta-lsvr.json").read_text())
+    lease = datetime.fromtimestamp(NOW + 52 * 3600, UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    assert out and {e["expiresAt"] for e in out} == {lease}
 
 
 @requires_docker
@@ -709,11 +719,11 @@ def test_the_events_calendar_organizer_gives_its_name_and_web_site_and_never_a_c
 
 
 @requires_docker
-def test_an_aggregators_event_without_an_organizer_is_refused_by_the_model():
+def test_an_aggregators_event_keeps_no_organizer_and_is_kept():
     feed = {"events": [tribe_event(1, []), tribe_event(2, {"organizer": "Divadlo J. G. Tajovského", "website": ""})]}
     out = {e["sourceId"]["value"]: e for e in national("tribe-rest", "www.casta.sk", json.dumps(feed),
                                                        org_type="tourism organisation (OOCR Test)")}
-    assert "organizer" not in out["1"] and not VALID.is_valid(key_values(out["1"]))
+    assert "organizer" not in out["1"] and VALID.is_valid(key_values(out["1"]))
     assert out["2"]["organizer"]["value"] == {"name": "Divadlo J. G. Tajovského"} and VALID.is_valid(key_values(out["2"]))
 
 
@@ -781,11 +791,11 @@ def test_umb_events_read_each_pages_event_table_and_place_it_by_the_geocoded_ven
     forum = out["Občianske fórum 2026"]
     assert VALID.is_valid(key_values(forum)), list(VALID.iter_errors(key_values(forum)))
     assert "nováková" not in json.dumps(forum, ensure_ascii=False).lower() and "@" not in json.dumps(forum)
-    # A fair in Brno: no venue of Banská Bystrica's table, so no point and the model refuses it. "Iné" is no
+    # A fair in Brno: no venue of Banská Bystrica's table, so no point; the event is kept. "Iné" is no
     # organizer: the university whose calendar it is stands in.
     brno = out["GAUDEAMUS BRNO"]
     assert brno["address"]["value"]["addressLocality"] == "Brno" and "location" not in brno
-    assert not VALID.is_valid(key_values(brno))
+    assert VALID.is_valid(key_values(brno))
     assert brno["organizer"]["value"] == {"name": "Univerzita Mateja Bela v Banskej Bystrici", "url": "https://www.umb.sk"}
 
 
@@ -803,9 +813,9 @@ def test_tuzvo_events_come_from_this_and_the_next_months_list_without_the_person
     assert fair["organizer"]["value"]["name"] and fair["url"]["value"].startswith("https://www.tuzvo.sk/sk/")
     assert fair["location"]["value"]["coordinates"] == [19.1165987, 48.5729663]
     assert "Test Osoba" not in json.dumps(out, ensure_ascii=False)
-    # A venue nobody geocoded (ÚTVŠ) gives no point; the event is refused, never put at Zvolen's centre.
+    # A venue nobody geocoded (ÚTVŠ) gives no point; the event is kept without one, never put at Zvolen's centre.
     sport = out["Súčasné trendy v športe, pohybových aktivitách a životnom štýle"]
-    assert "location" not in sport and not VALID.is_valid(key_values(sport))
+    assert "location" not in sport and VALID.is_valid(key_values(sport))
 
 
 def test_the_next_month_is_read_from_the_same_list_page_10_seconds_later():
@@ -815,3 +825,39 @@ def test_the_next_month_is_read_from_the_same_list_page_10_seconds_later():
     assert branch["processors"][0] == {"sleep": {"duration": "10s"}}
     assert branch["processors"][1]["http"]["url"] == "https://www.tuzvo.sk/${! @event_path }"
     assert '"/sk/kalendar-podujati".trim_prefix("/") + "?mini="' in branch["request_map"]
+
+
+@requires_docker
+def test_an_event_naming_no_place_or_only_the_town_takes_its_organizers_address():
+    # T-5135, owner 2026-10-22: GPS from the source, the venue table, or the institution's address; never a town centre.
+    def event(i: int, venue) -> dict:
+        e = tribe_event(i, [], url=f"https://svkbb.eu/udalosti/e-{i}/")
+        e["venue"] = venue
+        return e
+
+    feed = {"events": [
+        event(1, []),
+        event(2, {"venue": "Banská Bystrica", "city": "Banská Bystrica"}),
+        event(3, {"venue": "Neznáma sála", "city": "Banská Bystrica"}),
+        event(4, {"venue": "Záhrada", "city": "Banská Bystrica", "geo_lat": "48.7336", "geo_lng": "19.1423"}),
+    ]}
+    steps = offline(processors("svkbb"), {})
+    out = {e["name"]["value"]: e for e in run(steps, json.dumps(feed))}
+    library = [19.1436671, 48.7373616]
+    assert out["Koncert 1"]["location"]["value"]["coordinates"] == library and "venue" not in out["Koncert 1"]
+    assert out["Koncert 1"]["address"]["value"]["streetAddress"] == "Lazovná 240/9"
+    assert out["Koncert 2"]["location"]["value"]["coordinates"] == library
+    assert out["Koncert 2"]["venue"]["value"] == "Banská Bystrica", "the venue stays as the source wrote it"
+    assert "location" not in out["Koncert 3"], "a place nobody placed gets no point, never the organizer's"
+    assert out["Koncert 4"]["location"]["value"]["coordinates"] == [19.1423, 48.7336]
+    assert all(VALID.is_valid(key_values(e)) for e in out.values())
+
+
+def test_every_home_names_one_venue_of_a_kept_source_and_no_aggregator():
+    homes = list(csv.DictReader((EVENTS / "homes.csv").open(encoding="utf-8")))
+    kept = {r["events_url"]: r for r in generate.kept_sources()}
+    assert homes and len({h["events_url"] for h in homes}) == len(homes)
+    for h in homes:
+        assert h["events_url"] in kept, h
+        assert generate.organizer(kept[h["events_url"]]) is not None, f"an aggregator has no address of its own: {h}"
+        assert generate.home(kept[h["events_url"]])["match"] == h["match"]

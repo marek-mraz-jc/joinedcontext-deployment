@@ -56,7 +56,10 @@ STORES = (
         "regions": ("BBSK",),
         "target": TARGET,
         "endpoints": ("bbsk-endpoint-podujatia.yaml",),
-        "cadences": ({"kinds": None, "period": "24h", "every": 24, "window": 180, "lease": None},),
+        # Daily, and the same 52 h lease as the national store's daily sources (T-5081): an event its source
+        # dropped, or whose new record the model now refuses (no GPS, start or organizer), leaves within two
+        # missed runs instead of staying half until its end.
+        "cadences": ({"kinds": None, "period": "24h", "every": 24, "window": 180, "lease": 52 * 3600},),
         "grace": 0,
     },
     {
@@ -158,23 +161,42 @@ def kept_sources() -> list[dict]:
     return kept
 
 
+def venue(v: dict) -> dict:
+    return {
+        "match": v["match"],
+        "town": v["town"],
+        "venue": v["venue"],
+        "streetAddress": v["streetAddress"] or None,
+        "addressLocality": v["addressLocality"],
+        "lat": float(v["lat"]),
+        "lon": float(v["lon"]),
+    }
+
+
 def venues_for(town_slug: str | None) -> list[dict]:
-    out = []
-    for v in csv.DictReader((HERE / "venues.csv").open(encoding="utf-8")):
-        if v["town"] != town_slug and not (town_slug is None and v["regional"] == "y"):
-            continue
-        out.append(
-            {
-                "match": v["match"],
-                "town": v["town"],
-                "venue": v["venue"],
-                "streetAddress": v["streetAddress"] or None,
-                "addressLocality": v["addressLocality"],
-                "lat": float(v["lat"]),
-                "lon": float(v["lon"]),
-            }
-        )
-    return out
+    rows = csv.DictReader((HERE / "venues.csv").open(encoding="utf-8"))
+    return [
+        venue(v)
+        for v in rows
+        if v["town"] == town_slug or (town_slug is None and v["regional"] == "y")
+    ]
+
+
+def home(row: dict) -> dict | None:
+    """The source's own address (homes.csv -> a venues.csv row): the point of an event that names no place (T-5135)."""
+    for h in csv.DictReader((HERE / "homes.csv").open(encoding="utf-8")):
+        if h["events_url"] == row["events_url"]:
+            rows = csv.DictReader((HERE / "venues.csv").open(encoding="utf-8"))
+            found = [venue(v) for v in rows if (v["town"], v["match"]) == (h["town"], h["match"])]
+            assert len(found) == 1, f"homes.csv names no venues.csv row: {h}"
+            return found[0]
+    return None
+
+
+def key(text: str) -> str:
+    """A place text's match key, as pipelines/common.yaml computes it."""
+    text = re.sub(r"\([^)]*\)", " ", text.lower())
+    return re.sub(r"\s+", " ", re.sub(r"[,;]", " ", text)).strip()
 
 
 def cadence(row: dict, store: dict) -> dict:
@@ -192,6 +214,11 @@ def processors(row: dict, store: dict) -> list:
             None if row["town_slug"] is None else row["town"], ensure_ascii=False
         ),
         "__TOWN_SLUG__": json.dumps(row["town_slug"]),
+        "__HOME__": json.dumps(home(row), ensure_ascii=False, separators=(",", ":")),
+        # A place text that is only the town's or the organizer's own name names no place of its own.
+        "__SELF__": json.dumps(
+            sorted({key(row["town"]), *([key(organizer(row)["name"])] if organizer(row) else [])}), ensure_ascii=False
+        ),
         "__SCOPE__": json.dumps("/SK/" + row["scope"]),
         "__REGION__": json.dumps(row["region_name"], ensure_ascii=False),
         "__SOURCE__": json.dumps(row["events_url"], ensure_ascii=False),

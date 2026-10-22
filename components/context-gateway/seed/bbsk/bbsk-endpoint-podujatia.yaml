@@ -276,11 +276,6 @@ spec:
         description:
           sk: "Podujatia zo stránky https://www.spaniadolina.sk/podujatia/kalendar-akcii/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.spaniadolina.sk/podujatia/kalendar-akcii/; no licence stated, facts only (name, time, place, link)."
-      - url: "https://www.vhkalinka.eu/obec/odpadove-hospodarstvo/kalendar-vyvozu-odpadu/"
-        title: { sk: "Vígľašská Huta-Kalinka, vhkalinka.eu", en: "Vígľašská Huta-Kalinka, vhkalinka.eu" }
-        description:
-          sk: "Podujatia zo stránky https://www.vhkalinka.eu/obec/odpadove-hospodarstvo/kalendar-vyvozu-odpadu/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
-          en: "Events from https://www.vhkalinka.eu/obec/odpadove-hospodarstvo/kalendar-vyvozu-odpadu/; no licence stated, facts only (name, time, place, link)."
       - url: "https://www.hontiansketesare.sk/urad/kalendar-akcii/"
         title: { sk: "Hontianske Tesáre, hontiansketesare.sk", en: "Hontianske Tesáre, hontiansketesare.sk" }
         description:

@@ -117,7 +117,7 @@ one entity; writes `expiresAt` at the event's end (start + 1 day without an end)
 
 - `venues.csv` holds venues checked by hand against OpenStreetMap (the object's id in `osm`), matched by the place
   text in lower case without parentheses and commas, per town; `regional=y` rows also serve the region's iCal feed.
-  A venue nobody checked gives no point, and the Event model refuses the event into the run's rejected list.
+  A venue nobody checked gives no point, never a town's centre; the event is kept without one (owner 2026-10-22).
   Not found as the named building on 2026-10-20: Kultúrny dom Veľký Krtíš, Kultúrny dom v Žarnovici, Dom kultúry
   Podborová (Zvolen), Športová hala Arena (Lučenec).
 - A source with no licence stated gives facts only (name, time, place, link back), never its description;
@@ -133,7 +133,7 @@ synchronized, up to date") `generate.py` writes two stores from the same invento
 
 | store | project / space | sources | cadence | an event leaves |
 |---|---|---|---|---|
-| region | `bbsk` / `bbsk-podujatia` | the BBSK rows | daily, 00:00-02:59 UTC | at its end |
+| region | `bbsk` / `bbsk-podujatia` | the BBSK rows | daily, 00:00-02:59 UTC | at its end, or 52 h after the last run that listed it (T-5081: an event the model now refuses leaves too) |
 | national | `slovensko` / `slovensko-podujatia` | every kept row | feeds every 3 h; Lego and WEBY calendars daily, spread over the day | a day after its end, or 8 h (daily: 52 h) after the last run that listed it |
 
 The national store's pipelines write through `slovensko-podujatia-zapis` (audience organization, no policyRef);
@@ -173,8 +173,10 @@ Decisions (worker-t5047, owner may override):
 
 ## Organizer and link (T-5081)
 
-Both stores require `organizer` (schema:organizer: `name`, maybe `url`) and `url` (an http(s) link) beside
-name, start and GPS; a record without one is refused into the run report. `source` and `dataProvider` stay as
+Both stores require name, start and `url` (an http(s) link); a record without one is refused into the run
+report. GPS and `organizer` (schema:organizer: `name`, maybe `url`) are kept where known and never refuse an event
+(owner 2026-10-22). The Portal stages each DataModel's JSON Schema, so the runner's stage holds records to the
+whole model (T-5081; before that it checked id and type alone). `source` and `dataProvider` stay as
 provenance: who published the feed is not who runs the event.
 
 - The organizer comes from the feed where it names one: The Events Calendar's `organizer` and `website`,
@@ -183,7 +185,7 @@ provenance: who published the feed is not who runs the event.
   `tel.`/`kontakt` label typed into the name is cut, and a `mailto:` is no web site.
 - Else the body whose calendar it is (`generate.py organizer()`): the name in `org_type (Name)`, `Mesto {town}`
   for a town, `Obec {town}` for a municipality, with the inventory's site. A tourism organisation or a region
-  announces other bodies' events, so its rows name none: their events without a feed organizer are refused.
+  announces other bodies' events, so its rows name none: their events without a feed organizer keep none.
 - `url` is the event's page, else the source's events page (`events_url`). A link that is no absolute http(s)
   URL (a `javascript:` or relative link) counts as none.
 
@@ -231,3 +233,40 @@ python3 seeds/bbsk-events/geocode-venues.py places.csv          # print the rows
 python3 seeds/bbsk-events/geocode-venues.py places.csv --write  # append them to venues.csv
 python3 seeds/bbsk-events/generate.py                           # then regenerate the seed
 ```
+
+## GPS share and the organizer's address (T-5135)
+
+`report.py` reads a store through its public NGSI-LD API and prints per source the events, how many carry a
+point, and where each point came from: `feed`, a venues.csv row checked by a person (`hand`) or by
+geocode-venues.py (`nominatim`), or the source's own address (`home`). Its last line is the store's share with
+GPS, which the owner holds at >= 90 % (2026-10-22). `--places` writes the venues of the events without a point
+as geocode-venues.py's input:
+
+```sh
+python3 seeds/bbsk-events/report.py --url https://api.dev.joinedcontext.com/api/endpoint/<slug>/ngsi-ld/v1 --places places.csv
+python3 seeds/bbsk-events/geocode-venues.py places.csv     # review each row against OSM, then --write
+python3 seeds/bbsk-events/generate.py
+```
+
+`homes.csv` names, per source, the venues.csv row of the body whose calendar it is: the library, the
+university, the theatre, the town or village office. An event that names no place, or names only the town or
+its organizer ("Obec Strelníky", "Ľubietová"), takes that address as its point; its `venue` stays as the source
+wrote it. An event naming a place nobody placed keeps no point, and an aggregator (a tourism organisation or the
+region) has no home. Decided (worker-t5135, owner may override): the town or village office counts as the
+institution's address for a municipality's calendar, because the owner's rule names "the institution's
+address" beside the venue table; options: home only for museums, libraries, theatres and universities.
+
+geocode-venues.py refuses a `place` hit (Nominatim answered "Ľubietová" with the village's cadastral community)
+and a map board, as it refuses a town. The rows of 2026-10-22 placed the venues dev's events named that
+OpenStreetMap holds; the hit "Dom kultúry ŽSR" for "Dom kultúry Podborová" was dropped as another building.
+
+Not placed on 2026-10-22, nothing in OpenStreetMap to point at: Poniky's parts, Spoločenský dom and Komunitné
+centrum Predajná, the Kultúrny dom of Medzibrod, Žarnovica, Tuhár and Halič, MsKS Hriňová's halls, the Obecný
+úrad of Hontianske Moravce, Športová hala Arena (Lučenec), Baňa Starovšechsvätých, and online or "see the poster"
+places. Each one needs a person to set its point from the building on the map (`checked_by` `hand`).
+
+Kinds not built, refuted on 2026-10-22: WEBY's `kalendar-podujati-0.html` is an editor page holding PDF and
+image posters (filakovo.sk, jelsava.sk, revuca.sk), not a list; stredoslovenskemuzeum.sk and muzeumkremnica.sk
+have no `podujatie` post type, and horehronskemuzeum.sk writes the date only in the post's prose or poster.
+Five municipal waste collection calendars (vhkalinka.eu and four outside the region) listed pickups as events:
+they are `skip` now.

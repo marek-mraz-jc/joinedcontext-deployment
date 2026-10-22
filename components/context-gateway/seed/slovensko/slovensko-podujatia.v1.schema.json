@@ -64,7 +64,7 @@
     },
     "Event": {
       "additionalProperties": false,
-      "description": "One public event: its name, its start, its place as a GPS point, its organizer and a link are required (owner 2026-10-20, 2026-10-21), the rest is kept where the source gives it.",
+      "description": "One public event: its name, its start and a link are required (owner 2026-10-22); its place as a GPS point is expected and filled from the source or the venue table, its organizer kept where the source names one, the rest kept where the source gives it.",
       "properties": {
         "address": {
           "anyOf": [
@@ -147,7 +147,10 @@
             "type",
             "coordinates"
           ],
-          "type": "object",
+          "type": [
+            "object",
+            "null"
+          ],
           "x-ngsi-ld-kind": "GeoProperty"
         },
         "name": {
@@ -165,7 +168,14 @@
           "x-ngsi-ld-kind": "Property"
         },
         "organizer": {
-          "$ref": "#/definitions/Organizer",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Organizer"
+            },
+            {
+              "type": "null"
+            }
+          ],
           "description": "Who runs the event: the museum, the school, the town or the named performer, never the feed or the aggregator that announced it (that is `dataProvider`). Its name and its web site only, never a person's e-mail or phone.",
           "x-ngsi-ld-kind": "Property"
         },
@@ -215,8 +225,6 @@
       "required": [
         "name",
         "startDate",
-        "location",
-        "organizer",
         "url",
         "id",
         "type"

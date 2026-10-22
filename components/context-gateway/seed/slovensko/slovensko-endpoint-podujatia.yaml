@@ -687,11 +687,6 @@ spec:
         description:
           sk: "Podujatia zo stránky https://www.turzovka.sk/kultura/kalendar-podujati/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.turzovka.sk/kultura/kalendar-podujati/; no licence stated, facts only (name, time, place, link)."
-      - url: "https://www.plevnik-drienove.sk/obec-2/odpadove-hospodarstvo/kalendar-odvozu-odpadov/"
-        title: { sk: "Plevník-Drienové, plevnik-drienove.sk", en: "Plevník-Drienové, plevnik-drienove.sk" }
-        description:
-          sk: "Podujatia zo stránky https://www.plevnik-drienove.sk/obec-2/odpadove-hospodarstvo/kalendar-odvozu-odpadov/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
-          en: "Events from https://www.plevnik-drienove.sk/obec-2/odpadove-hospodarstvo/kalendar-odvozu-odpadov/; no licence stated, facts only (name, time, place, link)."
       - url: "https://www.zelenec.sk/zivot-v-obci/kalendar-akcii/"
         title: { sk: "Zeleneč, zelenec.sk", en: "Zeleneč, zelenec.sk" }
         description:
@@ -757,11 +752,6 @@ spec:
         description:
           sk: "Podujatia zo stránky https://www.obecstrezenice.sk/obcan/kalendar-akcii/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.obecstrezenice.sk/obcan/kalendar-akcii/; no licence stated, facts only (name, time, place, link)."
-      - url: "https://www.novabosaca.sk/samosprava/odpady/zvoz-odpadov/"
-        title: { sk: "Nová Bošáca, novabosaca.sk", en: "Nová Bošáca, novabosaca.sk" }
-        description:
-          sk: "Podujatia zo stránky https://www.novabosaca.sk/samosprava/odpady/zvoz-odpadov/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
-          en: "Events from https://www.novabosaca.sk/samosprava/odpady/zvoz-odpadov/; no licence stated, facts only (name, time, place, link)."
       - url: "https://www.dlhanadvahom.eu/zivot-v-obci/kalendar-akcii-1/"
         title: { sk: "Dlhá nad Váhom, dlhanadvahom.eu", en: "Dlhá nad Váhom, dlhanadvahom.eu" }
         description:
@@ -807,11 +797,6 @@ spec:
         description:
           sk: "Podujatia zo stránky https://www.soblahov.sk/aktuality/kalendar-akcii/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.soblahov.sk/aktuality/kalendar-akcii/; no licence stated, facts only (name, time, place, link)."
-      - url: "https://www.vhkalinka.eu/obec/odpadove-hospodarstvo/kalendar-vyvozu-odpadu/"
-        title: { sk: "Vígľašská Huta-Kalinka, vhkalinka.eu", en: "Vígľašská Huta-Kalinka, vhkalinka.eu" }
-        description:
-          sk: "Podujatia zo stránky https://www.vhkalinka.eu/obec/odpadove-hospodarstvo/kalendar-vyvozu-odpadu/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
-          en: "Events from https://www.vhkalinka.eu/obec/odpadove-hospodarstvo/kalendar-vyvozu-odpadu/; no licence stated, facts only (name, time, place, link)."
       - url: "https://www.jasenov.sk/zivot-v-obci/kalendar-akcii/"
         title: { sk: "Jasenov, jasenov.sk", en: "Jasenov, jasenov.sk" }
         description:
@@ -1032,11 +1017,6 @@ spec:
         description:
           sk: "Podujatia zo stránky https://www.kamenicanadhronom.sk/obec/kalendar-akcii/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.kamenicanadhronom.sk/obec/kalendar-akcii/; no licence stated, facts only (name, time, place, link)."
-      - url: "https://www.obecplavevozokany.sk/obec/pre-obcanov-obce/odpadove-hospodarstvo/"
-        title: { sk: "Plavé Vozokany, obecplavevozokany.sk", en: "Plavé Vozokany, obecplavevozokany.sk" }
-        description:
-          sk: "Podujatia zo stránky https://www.obecplavevozokany.sk/obec/pre-obcanov-obce/odpadove-hospodarstvo/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
-          en: "Events from https://www.obecplavevozokany.sk/obec/pre-obcanov-obce/odpadove-hospodarstvo/; no licence stated, facts only (name, time, place, link)."
       - url: "https://www.visnove.sk/spravodajstvo/kalendar-akcii/"
         title: { sk: "Višňové, visnove.sk", en: "Višňové, visnove.sk" }
         description:
@@ -1202,11 +1182,6 @@ spec:
         description:
           sk: "Podujatia zo stránky https://www.banov.sk/zivot-v-obci/kalendar-udalosti/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.banov.sk/zivot-v-obci/kalendar-udalosti/; no licence stated, facts only (name, time, place, link)."
-      - url: "https://www.nizna.sk/aktuality/kalendare/odvoz-odpadu/"
-        title: { sk: "Nižná, nizna.sk", en: "Nižná, nizna.sk" }
-        description:
-          sk: "Podujatia zo stránky https://www.nizna.sk/aktuality/kalendare/odvoz-odpadu/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
-          en: "Events from https://www.nizna.sk/aktuality/kalendare/odvoz-odpadu/; no licence stated, facts only (name, time, place, link)."
       - url: "https://www.rakovecnadondavou.sk/obec/kalendar-akcii/"
         title: { sk: "Rakovec nad Ondavou, rakovecnadondavou.sk", en: "Rakovec nad Ondavou, rakovecnadondavou.sk" }
         description:

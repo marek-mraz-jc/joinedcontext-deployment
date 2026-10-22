@@ -975,9 +975,6 @@ slovensko-pipeline-podujatia-mestosastinstraze-bento.yaml: projects/slovensko/pi
 slovensko-datasource-podujatia-turzovka.yaml: projects/slovensko/datasources/podujatia-turzovka.yaml
 slovensko-pipeline-podujatia-turzovka.yaml: projects/slovensko/pipelines/podujatia-turzovka/pipeline.yaml
 slovensko-pipeline-podujatia-turzovka-bento.yaml: projects/slovensko/pipelines/podujatia-turzovka/bento.yaml
-slovensko-datasource-podujatia-plevnik-drienove.yaml: projects/slovensko/datasources/podujatia-plevnik-drienove.yaml
-slovensko-pipeline-podujatia-plevnik-drienove.yaml: projects/slovensko/pipelines/podujatia-plevnik-drienove/pipeline.yaml
-slovensko-pipeline-podujatia-plevnik-drienove-bento.yaml: projects/slovensko/pipelines/podujatia-plevnik-drienove/bento.yaml
 slovensko-datasource-podujatia-zelenec.yaml: projects/slovensko/datasources/podujatia-zelenec.yaml
 slovensko-pipeline-podujatia-zelenec.yaml: projects/slovensko/pipelines/podujatia-zelenec/pipeline.yaml
 slovensko-pipeline-podujatia-zelenec-bento.yaml: projects/slovensko/pipelines/podujatia-zelenec/bento.yaml
@@ -1017,9 +1014,6 @@ slovensko-pipeline-podujatia-marianka-bento.yaml: projects/slovensko/pipelines/p
 slovensko-datasource-podujatia-obecstrezenice.yaml: projects/slovensko/datasources/podujatia-obecstrezenice.yaml
 slovensko-pipeline-podujatia-obecstrezenice.yaml: projects/slovensko/pipelines/podujatia-obecstrezenice/pipeline.yaml
 slovensko-pipeline-podujatia-obecstrezenice-bento.yaml: projects/slovensko/pipelines/podujatia-obecstrezenice/bento.yaml
-slovensko-datasource-podujatia-novabosaca.yaml: projects/slovensko/datasources/podujatia-novabosaca.yaml
-slovensko-pipeline-podujatia-novabosaca.yaml: projects/slovensko/pipelines/podujatia-novabosaca/pipeline.yaml
-slovensko-pipeline-podujatia-novabosaca-bento.yaml: projects/slovensko/pipelines/podujatia-novabosaca/bento.yaml
 slovensko-datasource-podujatia-dlhanadvahom.yaml: projects/slovensko/datasources/podujatia-dlhanadvahom.yaml
 slovensko-pipeline-podujatia-dlhanadvahom.yaml: projects/slovensko/pipelines/podujatia-dlhanadvahom/pipeline.yaml
 slovensko-pipeline-podujatia-dlhanadvahom-bento.yaml: projects/slovensko/pipelines/podujatia-dlhanadvahom/bento.yaml
@@ -1047,9 +1041,6 @@ slovensko-pipeline-podujatia-spaniadolina-bento.yaml: projects/slovensko/pipelin
 slovensko-datasource-podujatia-soblahov.yaml: projects/slovensko/datasources/podujatia-soblahov.yaml
 slovensko-pipeline-podujatia-soblahov.yaml: projects/slovensko/pipelines/podujatia-soblahov/pipeline.yaml
 slovensko-pipeline-podujatia-soblahov-bento.yaml: projects/slovensko/pipelines/podujatia-soblahov/bento.yaml
-slovensko-datasource-podujatia-vhkalinka.yaml: projects/slovensko/datasources/podujatia-vhkalinka.yaml
-slovensko-pipeline-podujatia-vhkalinka.yaml: projects/slovensko/pipelines/podujatia-vhkalinka/pipeline.yaml
-slovensko-pipeline-podujatia-vhkalinka-bento.yaml: projects/slovensko/pipelines/podujatia-vhkalinka/bento.yaml
 slovensko-datasource-podujatia-jasenov.yaml: projects/slovensko/datasources/podujatia-jasenov.yaml
 slovensko-pipeline-podujatia-jasenov.yaml: projects/slovensko/pipelines/podujatia-jasenov/pipeline.yaml
 slovensko-pipeline-podujatia-jasenov-bento.yaml: projects/slovensko/pipelines/podujatia-jasenov/bento.yaml
@@ -1182,9 +1173,6 @@ slovensko-pipeline-podujatia-biskupice-bento.yaml: projects/slovensko/pipelines/
 slovensko-datasource-podujatia-kamenicanadhronom.yaml: projects/slovensko/datasources/podujatia-kamenicanadhronom.yaml
 slovensko-pipeline-podujatia-kamenicanadhronom.yaml: projects/slovensko/pipelines/podujatia-kamenicanadhronom/pipeline.yaml
 slovensko-pipeline-podujatia-kamenicanadhronom-bento.yaml: projects/slovensko/pipelines/podujatia-kamenicanadhronom/bento.yaml
-slovensko-datasource-podujatia-obecplavevozokany.yaml: projects/slovensko/datasources/podujatia-obecplavevozokany.yaml
-slovensko-pipeline-podujatia-obecplavevozokany.yaml: projects/slovensko/pipelines/podujatia-obecplavevozokany/pipeline.yaml
-slovensko-pipeline-podujatia-obecplavevozokany-bento.yaml: projects/slovensko/pipelines/podujatia-obecplavevozokany/bento.yaml
 slovensko-datasource-podujatia-visnove.yaml: projects/slovensko/datasources/podujatia-visnove.yaml
 slovensko-pipeline-podujatia-visnove.yaml: projects/slovensko/pipelines/podujatia-visnove/pipeline.yaml
 slovensko-pipeline-podujatia-visnove-bento.yaml: projects/slovensko/pipelines/podujatia-visnove/bento.yaml
@@ -1284,9 +1272,6 @@ slovensko-pipeline-podujatia-svit-bento.yaml: projects/slovensko/pipelines/poduj
 slovensko-datasource-podujatia-banov.yaml: projects/slovensko/datasources/podujatia-banov.yaml
 slovensko-pipeline-podujatia-banov.yaml: projects/slovensko/pipelines/podujatia-banov/pipeline.yaml
 slovensko-pipeline-podujatia-banov-bento.yaml: projects/slovensko/pipelines/podujatia-banov/bento.yaml
-slovensko-datasource-podujatia-nizna.yaml: projects/slovensko/datasources/podujatia-nizna.yaml
-slovensko-pipeline-podujatia-nizna.yaml: projects/slovensko/pipelines/podujatia-nizna/pipeline.yaml
-slovensko-pipeline-podujatia-nizna-bento.yaml: projects/slovensko/pipelines/podujatia-nizna/bento.yaml
 slovensko-datasource-podujatia-rakovecnadondavou.yaml: projects/slovensko/datasources/podujatia-rakovecnadondavou.yaml
 slovensko-pipeline-podujatia-rakovecnadondavou.yaml: projects/slovensko/pipelines/podujatia-rakovecnadondavou/pipeline.yaml
 slovensko-pipeline-podujatia-rakovecnadondavou-bento.yaml: projects/slovensko/pipelines/podujatia-rakovecnadondavou/bento.yaml
