@@ -198,6 +198,24 @@
   "long": "24.96318"
  },
  {
+  "service_request_id": "9000006",
+  "status_notes": "<div>Hei!</div><div>&nbsp;</div><div>Korjattu 22.10.2026. Lisätietoja: katu.valo@hel.fi, puh. 09 310 31940.</div><div>&nbsp;</div><div>Ystävällisin terveisin</div><div>Matti Virtanen</div><div>liikenneinsinööri</div>",
+  "service_name": "",
+  "service_code": null,
+  "status": "CLOSED",
+  "description": "Katuvalo rikki.\nSoittakaa 040 123 4567 tai +358 9 310 12345, maija.meikalainen@example.fi\nTerveisin\nMaija Meikäläinen",
+  "agency_responsible": "",
+  "service_notice": "",
+  "requested_datetime": "2026-10-20T10:48:29Z",
+  "updated_datetime": "2026-10-21T09:28:17Z",
+  "expected_datetime": null,
+  "address": "Hakaniemenranta",
+  "media_url": null,
+  "extended_attributes": null,
+  "lat": "60.17948",
+  "long": "24.96318"
+ },
+ {
   "service_request_id": "3578445",
   "status_notes": null,
   "service_name": "",

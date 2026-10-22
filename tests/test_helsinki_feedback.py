@@ -3,8 +3,8 @@
 Bento runs the committed mapping over six reports recorded from the Open311 Issue Reporting API on
 2026-10-22 (`fixtures/helsinki/open311/requests.json`, with the services list beside it) and six
 rows the test made from the first: a point in Tampere, a swapped latitude and longitude, a report
-filed in 2099, a status Open311 does not name, a sector code the services list does not hold and
-a report listed twice. The request per date window is the cut: the test answers it with the
+filed in 2099, a status Open311 does not name, a sector code the services list does not hold, a report
+listed twice and one whose text and HTML answer carry an email, a phone number and a signed name. The request per date window is the cut: the test answers it with the
 recorded list. Without a container runtime the Bento cases skip.
 """
 
@@ -54,7 +54,7 @@ def test_recorded_reports_map_to_valid_service_requests_and_bad_rows_are_counted
     assert len(windows) in (2, 15)
     reports = {e["id"]: e for e in windows[0]}
     assert sorted(reports) == sorted(URN.format(n) for n in (
-        "3578865", "3578445", "3579320", "3577836", "3582455", "3576064", "9000001", "9000002", "9000005"))
+        "3578865", "3578445", "3579320", "3577836", "3582455", "3576064", "9000001", "9000002", "9000005", "9000006"))
     counted = ('by reason {\\"duplicate\\":1,\\"filed in the future\\":1,\\"no position (kept without a point)\\":1,'
                '\\"outside Helsinki (kept without a point)\\":2,\\"unknown status\\":1}')
     assert counted in log, log
@@ -72,6 +72,12 @@ def test_recorded_reports_map_to_valid_service_requests_and_bad_rows_are_counted
     assert reports[URN.format("3576064")]["service_name"]["value"] == "General and other feedback"
     assert "location" not in reports[URN.format("3582455")], "a report filed with no point keeps none"
     assert "location" not in reports[URN.format("9000001")] and "location" not in reports[URN.format("9000002")]
+    answer = reports[URN.format("3579320")]["status_notes"]["value"]
+    assert "<" not in answer and "&nbsp;" not in answer and answer.startswith("Hei!\nKyseinen kohta")
+    private = reports[URN.format("9000006")]
+    text, notes = private["description"]["languageMap"]["@none"], private["status_notes"]["value"]
+    assert text == "Katuvalo rikki.\nSoittakaa [phone removed] tai [phone removed], [email removed]", text
+    assert notes == "Hei!\nKorjattu 22.10.2026. Lisätietoja: [email removed], puh. [phone removed].", notes
     unknown = reports[URN.format("9000005")]
     assert unknown["service_code"]["value"] == "9999" and "service_name" not in unknown
 
