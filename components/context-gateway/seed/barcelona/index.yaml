@@ -1,0 +1,22 @@
+# file in this folder -> its path in the configuration repository (jc-core PATH_TEMPLATEs), read
+# by the forge bootstrap's seed (components/gitea/values/bootstrap/development-values).
+# Ajuntament de Barcelona as an Organization of its own (ADR-N-058, T-5260), its administrator
+# and its readers; the bindings end at this Organization (PF-123).
+barcelona-org.yaml: organizations/barcelona.yaml
+barcelona-rolebinding-admins.yaml: users/assignments/barcelona-admins.yaml
+barcelona-rolebinding-viewers.yaml: users/assignments/barcelona-viewers.yaml
+# The project barcelona: one space of Open Data BCN as Smart Data Models, its one door, the
+# pipelines' account and Policy, and the CKAN organisation its datasets publish to.
+barcelona-project.yaml: projects/barcelona/project.yaml
+barcelona-serviceaccount-pipelines.yaml: projects/barcelona/access/serviceaccounts/pipelines.yaml
+barcelona-ckan.yaml: projects/barcelona/ckan/barcelona.yaml
+barcelona-space.yaml: projects/barcelona/spaces/barcelona/space.yaml
+barcelona-datamodel.yaml: projects/barcelona/spaces/barcelona/datamodels/barcelona.yaml
+barcelona.linkml.yaml: projects/barcelona/spaces/barcelona/datamodels/barcelona.linkml.yaml
+barcelona.v1.schema.json: projects/barcelona/spaces/barcelona/datamodels/barcelona.v1.schema.json
+barcelona.v1.context.jsonld: projects/barcelona/spaces/barcelona/datamodels/barcelona.v1.context.jsonld
+barcelona.v1.example.jsonld: projects/barcelona/spaces/barcelona/datamodels/barcelona.v1.example.jsonld
+barcelona.v1.md: projects/barcelona/spaces/barcelona/datamodels/barcelona.v1.md
+barcelona-endpoint.yaml: projects/barcelona/spaces/barcelona/endpoints/barcelona.yaml
+barcelona-policy-pipelines-write.yaml: projects/barcelona/spaces/barcelona/policies/pipelines-write.yaml
+barcelona-policy-public-read.yaml: projects/barcelona/spaces/barcelona/policies/public-read.yaml
