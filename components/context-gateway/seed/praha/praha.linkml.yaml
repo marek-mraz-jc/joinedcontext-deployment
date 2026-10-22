@@ -650,11 +650,14 @@ enums:
       publicToilet: { description: A public toilet. }
       ticketSale: { description: A place that sells public transport tickets. }
       library: { description: A branch of the Municipal Library of Prague. }
-      municipalAuthority: { description: The office of a city district or of the city (úřad městské části). }
-      police: { description: A station or desk of the Municipal Police of Prague (Městská policie). }
+      municipalAuthority:
+        description: The office of a city district or of the city (úřad městské části).
+      police:
+        description: A station or desk of the Municipal Police of Prague (Městská policie).
       garden: { description: A public garden or park of the city. }
       playground: { description: A public children's playground. }
-      wasteCollectionYard: { description: A waste collection yard (sběrný dvůr) that takes bulky and hazardous waste. }
+      wasteCollectionYard:
+        description: A waste collection yard (sběrný dvůr) that takes bulky and hazardous waste.
   WasteAccess:
     permissible_values:
       public: { description: Anyone may use it (volně). }

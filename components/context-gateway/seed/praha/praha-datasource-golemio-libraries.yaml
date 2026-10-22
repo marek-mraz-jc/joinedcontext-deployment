@@ -6,7 +6,9 @@ kind: DataSource
 metadata:
   name: golemio-libraries
   namespace: praha
-  title: { en: Municipal Library branches (Golemio), cs: Pobočky Městské knihovny v Praze (Golemio) }
+  title:
+    en: Municipal Library branches (Golemio)
+    cs: Pobočky Městské knihovny v Praze (Golemio)
 spec:
   type: http
   http:
