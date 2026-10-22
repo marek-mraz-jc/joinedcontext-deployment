@@ -103,6 +103,8 @@ DATA.presented = {
   ...DATA.events,
   model: EVENT_MODEL.replace("{view_order_by: startDate, view_upcoming: startDate}", "{view_order_by: startDate, view_filter: startDate>=today, view_page_length: 10}")
 };
+// T-5197, API/11 EP-164: the presented events, with the Endpoint's table start above the model's.
+DATA.publishedtable = { ...DATA.presented, widget: { map: {}, table: { Event: { filter: "startDate>=today+7d", pageLength: 20, columns: ["name", "startDate"] } } } };
 DATA.stations = { type: "Station", geo: ["location", "observationSpace"], model: STATION_MODEL, rows: Array.from({ length: 12 }, (_, i) => station(i)) };
 // T-5239: the same stations, with the publisher's map defaults the Portal hands over at widget.json.
 DATA.publishedmap = { ...DATA.stations, widget: { map: { Station: { colour: "open", popup: ["url"], cluster: false } } } };
