@@ -29,7 +29,9 @@ address), paced evenly:
 The public Endpoints come from the catalogue's `endpoint` extra; each Endpoint's record lists the
 surfaces it serves (`dcat:distribution`), and `ngsi-ld/v1/types` gives the type `{T}`. A record is
 read again every `discoverySeconds` (900). Each surface kind probes its next Endpoints round robin:
-a kind broken everywhere is red in the first minute; one Endpoint's surface within
+every kind gets at least one probe each round even when the budget is smaller than the kinds, and at
+least one record is refreshed each round (T-5184); a kind broken everywhere is red in the first
+minute; one Endpoint's surface within
 `ceil(endpoints x kinds / budget)` minutes (about 6 for 80 Endpoints at 120).
 
 Decided (worker-t5103, owner may override): round robin under a per-target budget instead of every
@@ -59,7 +61,9 @@ same image). Once a minute it reads this environment's rows of `/results.json` f
 it and shows each public surface as up (every probed Endpoint holds), degraded (some fail), down
 (all fail) or no data (nothing newer than 10 minutes). It counts the minute per surface and UTC day
 in `history.json` on its 64 Mi volume and draws 90 days per surface; uptime counts degraded minutes
-as available. `/` answers in Slovak or English by `Accept-Language`, `/sk/` and `/en/` in one
+as available. The uptime label names the days actually measured ("99.9 % uptime over 3 days", 90 at
+most): days before a surface's first sample stay grey and count nowhere (T-5184). One rule decides
+"no data" (`current()`), and the page and `status.json` render the same result of it. `/` answers in Slovak or English by `Accept-Language`, `/sk/` and `/en/` in one
 language, `/status.json` the same states for machines.
 
 The page names failing Endpoints by their public catalogue slug and never shows a probe reason, a
@@ -72,10 +76,19 @@ health_check rows (T-5067), because those are per project behind a login and hav
 options: a public flag on health_check rows read through the Portal (a second public reader of
 the Portal), the probe's results (the same surfaces, already anonymous).
 
-### Incident notes
+### Incidents
+
+The page opens an incident itself when a surface is down or degraded for 3 minutes in a row, adds
+each further surface that reaches 3 bad minutes while it is open, and closes it after every one of
+its surfaces was up for 10 minutes in a row; its end is the last bad minute (T-5184). A minute
+without probe data changes neither count. The title ("Interfaces down" or "Interfaces degraded")
+and the note come from fixed sk/en templates in `status.py`; the surfaces are the page's own names.
+The state lives in `watch.json` beside the history, so a restart keeps an open incident; a damaged
+file starts a new watch. `status.json` marks these entries `"automatic": true`.
 
 The deployer writes `files/incidents.yaml` (its header shows the fields); the next apply puts it on
-the page. An open incident (no `end`) stands at the top, a closed one stays 90 days. A malformed
+the page. An open incident (no `end`) stands at the top, a closed one stays 90 days. A note that covers an automatic incident's surfaces
+at an overlapping time replaces the automatic text. A malformed
 entry stops the pod at start with the field to fix, and `tests/test_status_page.py` holds the
 committed file to the same rules.
 

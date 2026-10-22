@@ -148,8 +148,10 @@ def test_render_shows_every_surface_with_its_state_and_90_days_in_both_languages
     for names in status.SURFACES.values():
         assert f"<h3>{names['sk']}</h3>" in sk and f"<h3>{names['en']}</h3>" in en
     assert sk.count('class="bar ') == 90 * len(status.SURFACES)
-    assert "99.96 % uptime over 90 days" in en
-    assert "99.96 % dostupnosť za 90 dní" in sk
+    # The label names the days measured (two here), never 90 before 90 days exist (T-5184).
+    assert "99.96 % uptime over 2 days" in en and "uptime over 90 days" not in en
+    assert "99.96 % dostupnosť za 2 dni" in sk
+    assert "Zatiaľ bez meraní" in sk and "No measurements yet" in en
     assert 'href="/en/"' in sk and 'href="/sk/"' in en
     assert '<meta http-equiv="refresh" content="60">' in sk
 
@@ -243,6 +245,133 @@ def test_routes_negotiate_cache_and_refuse_the_rest(tmp_path):
     clock.now += 181
     assert pg.answer("/healthz", None)[0] == 503
     assert "default-src 'none'" in status.CSP and "frame-ancestors 'none'" in status.CSP
+
+
+def test_uptime_days_count_from_the_first_sample_and_cap_at_90():
+    history = {"sta": {"2026-10-22": [0, 0, 0], "2026-10-19": [10, 0, 0], "2026-10-21": [5, 0, 5]}}
+    assert status.measured_days(history, "sta", NOW) == 3, "from 10-19 to today 10-21; an empty future day counts nothing"
+    assert status.measured_days(history, "odata", NOW) == 0
+    assert status.measured_days({"sta": {"2026-01-01": [1, 0, 0]}}, "sta", NOW) == 90
+    assert status.measured_days({"sta": {"2026-10-21": [1, 0, 0]}}, "sta", NOW) == 1
+    assert [status.days_text("sk", n) for n in (1, 2, 4, 5, 90)] == ["1 deň", "2 dni", "4 dni", "5 dní", "90 dní"]
+    assert [status.days_text("en", n) for n in (1, 2)] == ["1 day", "2 days"]
+    assert status.total_uptime(history, "sta") == pytest.approx(75.0), "days before the first sample count nowhere"
+    doc = status.machine(status.current(healthy(), "dev", NOW), history, [], NOW)
+    sta = next(c for c in doc["surfaces"] if c["id"] == "sta")
+    assert sta["uptimeDays"] == 3 and sta["uptime"] == pytest.approx(75.0) and "uptime90" not in sta
+
+
+def test_page_and_status_json_agree_on_every_surface_state_including_no_data():
+    rows = [r for r in healthy() if r["surface"] not in ("sta", "ical")]
+    rows += [row("sta", True, A, at=NOW - status.STALE_SECONDS - 1), row("ical", False, A)]
+    states = status.current(rows, "dev", NOW)
+    doc = status.machine(states, {}, [], NOW)
+    for lang in ("sk", "en"):
+        html = status.render(lang, "dev.joinedcontext.com", states, {}, [], NOW)
+        shown = dict(re.findall(r'<h3>([^<]+)</h3><span class="state ([a-z]+)"', html))
+        assert {s: shown[names[lang]] for s, names in status.SURFACES.items()} == {c["id"]: c["state"] for c in doc["surfaces"]}
+    assert {c["id"]: c["state"] for c in doc["surfaces"]}["sta"] == "unknown"
+
+
+def minute(clock, pg, down=(), degraded=(), unknown=()):
+    """One probe round and one tick: `down` surfaces fail everywhere, `degraded` on one Endpoint."""
+    clock.now += 60
+    rows = []
+    for r in healthy():
+        if r["surface"] in unknown:
+            continue
+        ok = r["ok"] and r["surface"] not in down and not (r["surface"] in degraded and r["endpoint"] == B)
+        rows.append({**r, "ok": ok, "at": clock.now})
+    pg.get = lambda: {"results": rows}
+    pg.tick()
+    return json.loads(pg.answer("/status.json", None)[2])
+
+
+def test_an_outage_of_three_minutes_opens_an_incident_and_ten_green_minutes_close_it(tmp_path):
+    clock = Clock(NOW)
+    pg = status.Page("dev", "dev.joinedcontext.com", "http://probe.test/results.json", [], str(tmp_path), clock=clock,
+                     get=lambda: {"results": healthy()})
+    # Two bad minutes, a green one, two bad again: no run of three, no incident.
+    for down in (["mcp"], ["mcp"], [], ["mcp"], ["mcp"]):
+        assert minute(clock, pg, down=down)["incidents"] == []
+    first_bad = clock.now - 60
+    doc = minute(clock, pg, down=["mcp"], degraded=["odata"])
+    assert [i["id"] for i in doc["incidents"]] == [f"auto-{dt.datetime.fromtimestamp(first_bad, dt.UTC):%Y%m%d-%H%M}"]
+    incident = doc["incidents"][0]
+    assert incident["automatic"] is True and incident["end"] is None and incident["surfaces"] == ["mcp"]
+    assert incident["title"] == {"sk": "Rozhrania mimo prevádzky", "en": "Interfaces down"}
+    assert incident["start"] == dt.datetime.fromtimestamp(first_bad, dt.UTC).isoformat().replace("+00:00", "Z")
+    en = pg.answer("/en/", None)[2].decode()
+    assert "Ongoing incidents" in en and "Interfaces down" in en and "opened this entry automatically" in en
+    assert "Prebiehajúce udalosti" in pg.answer("/sk/", None)[2].decode()
+    # odata joins once its own run reaches three minutes; an unknown minute (probe silent) changes nothing.
+    minute(clock, pg, down=["mcp"], degraded=["odata"])
+    minute(clock, pg, unknown=list(status.SURFACES))
+    doc = minute(clock, pg, degraded=["odata"])
+    assert doc["incidents"][0]["surfaces"] == ["odata", "mcp"] and doc["incidents"][0]["end"] is None
+    last_bad = clock.now
+    # A restart keeps the open incident; nine green minutes keep it open, the tenth closes it.
+    pg = status.Page("dev", "dev.joinedcontext.com", "http://probe.test/results.json", [], str(tmp_path), clock=clock,
+                     get=lambda: {"results": []})
+    for _ in range(9):
+        assert minute(clock, pg)["incidents"][0]["end"] is None
+    doc = minute(clock, pg)
+    closed = doc["incidents"][0]
+    assert closed["end"] == dt.datetime.fromtimestamp(last_bad + 60, dt.UTC).isoformat().replace("+00:00", "Z")
+    assert closed["note"]["en"].endswith("closed this entry automatically.")
+    en = pg.answer("/en/", None)[2].decode()
+    assert "Ongoing incidents" not in en and "Incidents in the last 90 days" in en and "Interfaces down" in en
+    assert "No incidents reported" not in en
+    # A closed incident leaves the page after 90 days.
+    clock.now += 91 * 86400
+    assert minute(clock, pg)["incidents"] == []
+
+
+def test_a_degraded_only_outage_is_titled_degraded_and_a_damaged_watch_file_starts_fresh(tmp_path):
+    clock = Clock(NOW)
+    pg = status.Page("dev", "dev.joinedcontext.com", "http://probe.test/results.json", [], str(tmp_path), clock=clock,
+                     get=lambda: {"results": healthy()})
+    for _ in range(3):
+        doc = minute(clock, pg, degraded=["csv"])
+    assert doc["incidents"][0]["title"]["sk"] == "Rozhrania čiastočne obmedzené"
+    (tmp_path / "watch.json").write_text('{"runs": {"csv": [3, 0]}, "open": {"id": "../x", "surfaces": ["csv"]}, "closed": []}')
+    again = status.Page("dev", "dev.joinedcontext.com", "http://probe.test/results.json", [], str(tmp_path), clock=clock,
+                        get=lambda: {"results": []})
+    assert again.watch == status.new_watch()
+    for text in ("", "[]", "{not json", '{"runs": 1, "open": null, "closed": []}'):
+        assert status.load_watch(text) == status.new_watch()
+
+
+def test_a_hand_note_over_the_same_surfaces_and_time_replaces_the_automatic_text():
+    watch = status.new_watch()
+    states = status.current(healthy(), "dev", NOW)
+    bad = {**states, "odata": {**states["odata"], "state": "down"}}
+    for i in range(3):
+        status.watch_minute(watch, bad, NOW + 60 * i)
+    notes = status.load_incidents(json.dumps(INCIDENTS), "dev")
+    shown = status.incidents_shown(notes, watch)
+    assert not any(i["automatic"] for i in shown), "the deployer's open odata note covers it"
+    other = status.load_incidents(json.dumps({"incidents": [{**INCIDENTS["incidents"][0], "surfaces": ["ogc"]}]}), "dev")
+    assert [i["automatic"] for i in status.incidents_shown(other, watch)] == [True, False], "another surface: both stand"
+    earlier = status.load_incidents(json.dumps({"incidents": [{**INCIDENTS["incidents"][0], "start": "2026-10-20T01:00:00Z",
+                                                               "end": "2026-10-20T02:00:00Z"}]}), "dev")
+    assert any(i["automatic"] for i in status.incidents_shown(earlier, watch)), "no overlap: the automatic text stays"
+
+
+def test_the_automatic_text_holds_no_host_address_or_reason(tmp_path):
+    secret = "status 500 from 10.43.0.17 context-gateway.jc-dev.svc.cluster.local"
+    clock = Clock(NOW)
+    pg = status.Page("dev", "dev.joinedcontext.com", "http://probe.test/results.json", [], str(tmp_path), clock=clock,
+                     get=lambda: {"results": []})
+    for _ in range(4):
+        clock.now += 60
+        rows = [{**r, "ok": False, "reason": secret, "at": clock.now} for r in healthy()]
+        pg.get = lambda rows=rows: {"results": rows}
+        pg.tick()
+    texts = [pg.answer(p, None)[2].decode() for p in ("/sk/", "/en/", "/status.json")] + [(tmp_path / "watch.json").read_text()]
+    assert all("10.43." not in t and "svc.cluster" not in t and "status 500" not in t for t in texts)
+    flat = json.dumps(status.AUTO_TEXT)
+    assert not re.search(r"https?:|\.svc|\d+\.\d+\.\d+\.\d+|joinedcontext\.com", flat)
 
 
 # ---- rendered
