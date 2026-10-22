@@ -365,6 +365,7 @@ v1/Service local/observability-collector
 v1/Service local/pipeline-runner
 v1/Service local/pipeline-runner-pods
 v1/Service local/portal
+v1/Service local/portal-pods
 v1/ServiceAccount local/apisix
 v1/ServiceAccount local/artifact-store
 v1/ServiceAccount local/context-broker
