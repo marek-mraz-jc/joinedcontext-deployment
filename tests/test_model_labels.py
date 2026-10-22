@@ -25,7 +25,7 @@ def label(node: dict | None) -> dict | None:
     return found.get("value", found) if isinstance(found, dict) else None
 
 
-@pytest.mark.parametrize("model", ["bbsk/bbsk-registre", "zilina/zilina-verejne"])
+@pytest.mark.parametrize("model", ["bbsk/bbsk-registre", "zilina/zilina-verejne", "zilina/zilina-doprava"])
 def test_every_slot_and_enum_value_of_a_hand_model_reads_in_sk_and_en(model):
     schema = yaml.safe_load((SEED / f"{model}.linkml.yaml").read_text())
     for name, slot in schema["slots"].items():

@@ -63,3 +63,32 @@ def test_a_seeded_pair_with_one_title_is_refused(tmp_path):
     (other / "a.yaml").write_text(endpoint("eea", {"en": "Air quality in Banská Bystrica"}))
     assert shared_titles(organization) == ["mesto [en] 'air quality in banská bystrica': a.yaml: eea, b.yaml: app"]
     assert shared_titles(other) == []
+
+
+def broken_titles(root: Path) -> list[str]:
+    """Every seeded metadata.title that is not one text or a map of 2-letter language to a text.
+    An unquoted comma in a flow map splits `{en: Traffic counters, last full hour}` into a second
+    key with a null value."""
+    broken = []
+    for path in sorted(root.rglob("*.yaml")):
+        try:
+            documents = list(yaml.safe_load_all(path.read_text()))
+        except yaml.YAMLError:
+            continue
+        for document in documents:
+            if not isinstance(document, dict) or "title" not in (document.get("metadata") or {}):
+                continue
+            title = document["metadata"]["title"]
+            texts = title if isinstance(title, dict) else {"en": title}
+            if not texts or any(not (isinstance(k, str) and len(k) == 2 and isinstance(v, str) and v.strip()) for k, v in texts.items()):
+                broken.append(f"{path.relative_to(root)}: {title!r}")
+    return broken
+
+
+def test_every_seeded_title_is_a_text_per_language():
+    assert broken_titles(SEED) == []
+
+
+def test_a_title_split_by_a_comma_is_refused(tmp_path):
+    (tmp_path / "p.yaml").write_text("metadata:\n  title: { sk: Sčítače, en: Traffic counters, last full hour }\n")
+    assert len(broken_titles(tmp_path)) == 1
