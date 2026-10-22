@@ -1,0 +1,18 @@
+# One TrafficFlowObserved per counting station and direction of `lidotiku-traffic-counters` with
+# yesterday's count, once a day after the city's API has closed the day (T-5253). Each run reads
+# one small answer per station.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: traffic-counters
+  namespace: helsinki
+  title: { en: Motor vehicles counted per day }
+spec:
+  class: auto
+  period: 24h
+  schedule: '40 1 * * *'
+  source:
+    dataSourceRef: { kind: DataSource, name: lidotiku-traffic-counters }
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
+  output: { type: TrafficFlowObserved, mode: upsert }
+  quotas: { maxMemoryMb: 128, cpuMillicores: 100 }
