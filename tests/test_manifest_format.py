@@ -39,6 +39,11 @@ GENERATED = {
         # A hand-written Endpoint whose `source:` list the generator writes between its markers.
         "*/*-endpoint-podujatia*",
     ],
+    "seeds/decidim/generate.py": [
+        "slovensko/slovensko-*-decidim-*",
+        # A hand-written Endpoint whose `source:` list the generator writes between its markers.
+        "slovensko/slovensko-endpoint-participacia.yaml",
+    ],
 }
 
 
