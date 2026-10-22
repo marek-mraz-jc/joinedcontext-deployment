@@ -1435,6 +1435,20 @@ def test_the_folded_word_and_the_singular_ask_for_the_plurals_stem(theme, one, o
         assert asked(one) == asked(other) == stem
 
 
+# T-5116: Slovak drops the vowel of -ok, -ek, -ec and -eň when the word declines, so the word's own
+# prefix missed "dôchodky", "lekárne" and "Lučenca"; a short word ("deň") keeps its own prefix.
+@pytest.mark.parametrize("asked, searched", [
+    ("dôchodok", "(dôchodok OR dôchodok* OR dôchodk*)"),
+    ("lekáreň", "(lekáreň OR lekáreň* OR lekárn*)"),
+    ("Lučenec", "(Lučenec OR Lučenec* OR Lučenc*)"),
+    ("výsledok", "(výsledok OR výsledok* OR výsledk*)"),
+    ("deň", "deň"),
+    ("potok", "(potok OR potok*)"),
+])
+def test_a_fleeting_vowel_word_asks_for_its_declined_stem(theme, asked, searched):
+    assert theme.jc_search_words(asked) == searched
+
+
 @pytest.mark.parametrize("word", ["air", "bus", "ľad", "x2", "2024", "-draft", "co2"])
 def test_a_short_or_not_alphabetic_word_is_searched_as_written(theme, word):
     assert theme.jc_search_words(word) == word
