@@ -128,5 +128,9 @@ context-broker:
     # opt-in, T-5063, T-4926): migration 0016 is CREATE STATISTICS only (no rewrite, no window). The image
     # knows ANTARES_TEMPORAL_RECORD=ruled and ANTARES_PG_BATCH_ASYNC_COMMIT, set in base-values in this same
     # commit. Rollback: dev-19 with both keys removed. Signed by ship.yml on dev at 3c43f32.
-    tag: 'dev-24'
-    digest: 'sha256:0ac41823dcf5983b9758f66c3fd16343ee052d317f2ee0c1769563c16ba930e8'
+    # Antares dev 2cbf46f (dev-27, trains 2117, 2305 and 0017: T-5157 onChange judges late instances so retried
+    # Vehicle batches stop writing a row per ~4.5 s, and the retention sweep runs what waited longest first with
+    # 5 s per delete statement; T-5062 T-5088 T-5099 T-5105 T-5121): no migration, no new runtime key.
+    # Rollback: dev-24. Signed by ship.yml on dev at 2cbf46f.
+    tag: 'dev-27'
+    digest: 'sha256:b1fe055ee0c773735e70b9a36c0803933d4fee75ac635a5176915339ee394cd1'
