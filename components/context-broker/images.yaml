@@ -148,5 +148,8 @@ context-broker:
     # Antares dev 2acd15b (dev-37, over 4e68f99: T-5136 typed location paths under RLS). Migration 0018 adds two
     # btree indexes on entities without CONCURRENTLY (591 074 rows, 1.7 GB on dev: seconds of write lock); pooled sessions
     # set max_parallel_workers_per_gather=0. Rollback: dev-36 (0018 rollback compatible). Signed by ship.yml on dev at 2acd15b.
-    tag: 'dev-37'
-    digest: 'sha256:6783d98c5a5faebc4214176e620cc494183fac5128b8863c3401f8d833c714a8'
+    # Antares dev 73f3d24 (dev-39, over 2acd15b: T-5207 versioned mapping contracts, T-5202 the feed surface, built with
+    # FEATURES ...,ical,feed so ANTARES_API_SURFACES may name feed; T-5211 T-5198 CI). No migration, no new runtime key.
+    # Rollback: dev-37 (only while ANTARES_API_SURFACES does not name feed). Signed by ship.yml on dev at 73f3d24.
+    tag: 'dev-39'
+    digest: 'sha256:8fe90968034701cc66b2f79ee9f2a4a8a26c1377203e17ac8d3b85ba1c8bf994'
