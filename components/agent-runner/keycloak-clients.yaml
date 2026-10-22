@@ -120,6 +120,14 @@ helsinki-agent-proxy:
           included.custom.audience: 6wrymzu5x2uwjo2xqei66ppw53mafvbu
           access.token.claim: 'true'
           id.token.claim: 'false'
+      - name: helsinki-air-quality-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: jtjnhkaau64zmzz5csmcwem52icvufy2
+          access.token.claim: 'true'
+          id.token.claim: 'false'
       - name: helsinki-alerts-audience
         protocol: openid-connect
         protocolMapper: oidc-audience-mapper
