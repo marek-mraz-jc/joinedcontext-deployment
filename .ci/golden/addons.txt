@@ -186,7 +186,6 @@ v1/ConfigMap argocd/argocd-rbac-cm
 v1/ConfigMap argocd/argocd-redis-health-configmap
 v1/ConfigMap argocd/argocd-ssh-known-hosts-cm
 v1/ConfigMap argocd/argocd-tls-certs-cm
-v1/Secret addons/alertmanager-prometheus
 v1/Secret addons/apisix-oidc-session
 v1/Secret addons/apisix-standalone-config
 v1/Secret addons/db-keycloak

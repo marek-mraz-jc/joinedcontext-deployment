@@ -532,7 +532,6 @@ v1/PersistentVolumeClaim dev/gitea-shared-storage
 v1/PersistentVolumeClaim dev/pipeline-runner-files
 v1/PersistentVolumeClaim dev/status-page-files
 v1/ResourceQuota dev-app-tests/app-tests
-v1/Secret dev/alertmanager-prometheus
 v1/Secret dev/apisix-oidc-session
 v1/Secret dev/apisix-standalone-config
 v1/Secret dev/apps-host-0-db

@@ -169,10 +169,13 @@ alertmanager:
   enabled: true
   ingress:
     enabled: false
-  # The chart's default route sends everything to the `null` receiver: nothing leaves the
-  # cluster. Delivery is the cluster-watch host job reading /api/v2/alerts through
+  # No config Secret: the operator finds none and runs Alertmanager on its default
+  # configuration, one route to the `null` receiver, so nothing leaves the cluster and no
+  # Secret reaches the rendered manifests (gitleaks reads any Secret `data:` as a credential).
+  # Delivery is the cluster-watch host job reading /api/v2/alerts through
   # scripts/alert-notes.py, which keeps only allow-listed labels (components/monitoring/README.md).
   alertmanagerSpec:
+    useExistingSecret: true
     image:
       {{- include "prometheus.image" $images.alertmanager | nindent 6 }}
     replicas: 1

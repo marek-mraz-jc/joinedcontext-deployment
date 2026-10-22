@@ -511,7 +511,6 @@ v1/PersistentVolumeClaim smartcity/pipeline-runner-files
 v1/PersistentVolumeClaim smartcity/postgres-cluster-local-backup
 v1/PersistentVolumeClaim smartcity/status-page-files
 v1/ResourceQuota smartcity-app-tests/app-tests
-v1/Secret smartcity/alertmanager-prometheus
 v1/Secret smartcity/apisix-oidc-session
 v1/Secret smartcity/apisix-standalone-config
 v1/Secret smartcity/apps-host-0-db
