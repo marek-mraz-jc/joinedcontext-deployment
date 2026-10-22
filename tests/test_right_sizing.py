@@ -1,4 +1,4 @@
-"""T-5113: memory requests from measured use on dev and prod, limits never removed.
+"""T-5113, T-5282: memory requests from measured use on dev and prod, limits never removed.
 
 dev and smartcity (prod) both render the development profile, so one value sizes both
 clusters; the request is the higher of the two measurements (the table is in T-5113 and in
@@ -14,10 +14,13 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (kind, workload, container): (memory request, memory limit)
 SIZES = {
-    ("Deployment", "model-tools", "model-tools-tools"): ("256Mi", "1Gi"),
+    ("Deployment", "model-tools", "model-tools-tools"): ("320Mi", "1Gi"),
     ("Deployment", "ckan", "ckan"): ("448Mi", "2Gi"),
     ("StatefulSet", "ckan-solr", "solr"): ("768Mi", "1Gi"),
-    ("Deployment", "portal", "portal-portal"): ("320Mi", "1536Mi"),
+    ("Deployment", "portal", "portal-portal"): ("576Mi", "1536Mi"),
+    ("Deployment", "jc-assistant", "assistant-worker"): ("768Mi", "1Gi"),
+    ("StatefulSet", "keycloak-app-keycloakx", "keycloak"): ("928Mi", "2048Mi"),
+    ("Deployment", "jc-wasm-host-0", "wasm-host-shard"): ("64Mi", "1Gi"),
     ("Deployment", "context-gateway", "git-sync"): ("128Mi", "256Mi"),
     ("Deployment", "context-gateway", "checkouts"): ("128Mi", "256Mi"),
     ("Deployment", "jc-assistant", "git-sync"): ("64Mi", "256Mi"),
