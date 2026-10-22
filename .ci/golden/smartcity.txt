@@ -508,6 +508,7 @@ v1/Service smartcity/pipeline-runner
 v1/Service smartcity/pipeline-runner-pods
 v1/Service smartcity/pipeline-tokens
 v1/Service smartcity/portal
+v1/Service smartcity/portal-pods
 v1/Service smartcity/probe
 v1/Service smartcity/status-page
 v1/Service smartcity/viz-renderer
