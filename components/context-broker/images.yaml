@@ -136,5 +136,9 @@ context-broker:
     # replaces its instance, so no value sits beside a languageMap; T-5095 the image knows ANTARES_METRICS_PORT
     # (unset here, metrics stay on the API port until T-5095's deployment half); T-4918 docs, T-5105 tests).
     # No migration. Rollback: dev-27. Signed by ship.yml on dev at 5337d72.
-    tag: 'dev-30'
-    digest: 'sha256:469dc623763fe7b8b9095dbab2066387bc780e191dc9bb7614dd415258818b62'
+    # Antares dev 5dea7dd (dev-32, trains 0427 and 0508 over 5337d72: T-5057 one history btree; migration 0017 is a
+    # no-op on a database with history, the maintenance job builds {partition}_u_time CONCURRENTLY and swaps
+    # per partition, ~7.6 GB a week until the swap (dev disk 56 % at the pin); T-4919 ordered OData reads).
+    # Rollback: dev-30 (0017 rollback compatible). Signed by ship.yml on dev at 5dea7dd.
+    tag: 'dev-32'
+    digest: 'sha256:24a912753a906e2fce6ea16217d3fab625c06df79c4a302f9df51e69a237b2db'
