@@ -6,6 +6,9 @@ metadata:
   title: { en: City of Helsinki, fi: Helsingin kaupunki, sk: Mesto Helsinki }
 spec:
   domain: hel.fi
+  # The installation's Organization (PF-121, ADR-N-058): it owns the repository, the gateway's
+  # {orgDomain} and the installation-wide kinds; organizations/zilina.yaml is the second one.
+  installation: true
   # fi: the city's own language, so its models are titled in Finnish (T-4829).
   locales: [en, fi, sk]
   defaultLocale: en

@@ -151,5 +151,9 @@ context-broker:
     # Antares dev 73f3d24 (dev-39, over 2acd15b: T-5207 versioned mapping contracts, T-5202 the feed surface, built with
     # FEATURES ...,ical,feed so ANTARES_API_SURFACES may name feed; T-5211 T-5198 CI). No migration, no new runtime key.
     # Rollback: dev-37 (only while ANTARES_API_SURFACES does not name feed). Signed by ship.yml on dev at 73f3d24.
-    tag: 'dev-39'
-    digest: 'sha256:8fe90968034701cc66b2f79ee9f2a4a8a26c1377203e17ac8d3b85ba1c8bf994'
+    # Antares dev 5ed44bf (dev-42, over 73f3d24: T-5234 fat LTO, T-5131 T-5193 history ids and entity indexes, T-5204
+    # HEAD Content-Length, T-5205 STA Thing/properties/type filter, T-5206; same FEATURES ...,ical,feed). Migration 0019
+    # drops the unused GIN i_entities_jsonb (no data). No new runtime key. Rollback: dev-39 (0019 rollback compatible).
+    # Signed by ship.yml on dev at 5ed44bf (dispatched run 39834395804; the train push started no run).
+    tag: 'dev-42'
+    digest: 'sha256:6c1f9c783e201d1762f430843f73660b9fafaf3f6d4a9e352700b4352e4647b6'
