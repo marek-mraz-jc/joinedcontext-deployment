@@ -54,6 +54,14 @@ demo.zilina:
   lastName: Admin
   realmRoles: [portal-approver]
   groups: [zilina]
+# Ajuntament de Barcelona's organization administrator (ADR-N-058, T-5260): org-admin of the
+# Organization `barcelona` alone (seed/barcelona/barcelona-rolebinding-admins.yaml), as demo.zilina
+# is of Žilina; the group is the Organization's subtree root and project barcelona's own.
+demo.barcelona:
+  firstName: Barcelona
+  lastName: Admin
+  realmRoles: [portal-approver]
+  groups: [barcelona]
 # The residue sweep's approver (T-2627): bound to `janitor` alone, which approves and deletes only
 # journey- and take-named resources of helsinki. No realm role and no project group, so the
 # gateway admits it to no context data.
