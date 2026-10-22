@@ -14,6 +14,9 @@
 
 pipeline:
   processors:
+    # A response size cap: the count caps below bound the work only once the answer is parsed.
+    - mapping: |
+        root = if content().length() > 1048576 { throw("the portal answered %v bytes; more than 1048576 is not the car park list".format(content().length())) } else { this }
     - mapping: |
         let n = if this.type() == "array" { this.length() } else { 0 }
         root = if $n == 0 { throw("the portal listed no car park") } else if $n > 500 { throw("the portal listed %v car parks; more than 500 is not Žilina's answer".format($n)) } else { this }

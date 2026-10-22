@@ -3,7 +3,7 @@ kind: DataModel
 metadata:
   name: zilina-doprava
   namespace: zilina
-  title: { sk: Doprava a mesto naživo, en: Mobility of Žilina, live: null }
+  title: { sk: Doprava a mesto naživo, en: 'Mobility of Žilina, live' }
 spec:
   contextSpaceRef: zilina-doprava
   linkml: ./zilina-doprava.linkml.yaml

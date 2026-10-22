@@ -18,6 +18,9 @@
 
 pipeline:
   processors:
+    # A response size cap: the count caps below bound the work only once the answer is parsed.
+    - mapping: |
+        root = if content().length() > 1048576 { throw("the portal answered %v bytes; more than 1048576 is not the vehicle list".format(content().length())) } else { this }
     - mapping: |
         let n = if this.type() == "array" { this.length() } else { -1 }
         root = if $n < 0 { throw("the portal's vehicle list is not a list") } else if $n > 500 { throw("the portal listed %v vehicles; more than 500 is not DPMŽ's fleet".format($n)) } else { this }

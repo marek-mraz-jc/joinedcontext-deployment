@@ -35,6 +35,8 @@ pipeline:
             retries: 1
             rate_limit: zilina_opendata
         - mapping: |
+            root = if content().length() > 2097152 { throw("the portal answered %v bytes; more than 2097152 is not the counter register".format(content().length())) } else { this }
+        - mapping: |
             let counters = this.or([]).filter(f -> f.properties.item.class.or("") == "TrafficCounter" && f.properties.item.operatingStatus.or("") == "Active" && f.properties.item.id.or("").string().re_match("^[0-9a-f]{24}$") && f.geometry.coordinates.type() == "array" && f.geometry.coordinates.length() == 2)
             let hour = (now().ts_unix() / 3600).floor() * 3600
             root = if $counters.length() == 0 { throw("the portal listed no active traffic counter") } else { $counters.slice(0, 100).map_each(f -> {
@@ -55,6 +57,8 @@ pipeline:
                     User-Agent: joinedcontext-zilina/1.0 (+https://dev.joinedcontext.com)
                   timeout: 30s
                   rate_limit: zilina_opendata
+              - mapping: |
+                  root = if content().length() > 262144 { throw("the portal answered %v bytes; more than 262144 is not one counter's hour".format(content().length())) } else { this }
               # A counter whose own hour is refused answers no bucket instead of failing the run.
               - catch:
                   - mapping: root = []

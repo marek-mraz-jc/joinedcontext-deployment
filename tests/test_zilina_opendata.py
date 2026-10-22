@@ -56,6 +56,7 @@ class Portal(http.server.BaseHTTPRequestHandler):
     answers instead; `seen` keeps every body the pipeline posted."""
 
     fail: ClassVar[dict[str, int]] = {}
+    oversize: ClassVar[set[str]] = set()
     seen: ClassVar[list[tuple[str, dict]]] = []
 
     def do_POST(self):
@@ -73,6 +74,12 @@ class Portal(http.server.BaseHTTPRequestHandler):
             "/api/datasets/v1/core/geojson/items": "counters.json",
             "/api/datasets/v1/traffic-counters/vehicles/hourly": "hourly.json",
         }
+        if path in Portal.oversize:
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(b"[" + b"0," * 1_100_000 + b"0]")
+            return
         if path not in recordings or (path.endswith("/items") and body != {"classes": "TrafficCounter"}):
             self.send_error(404)
             return
@@ -85,16 +92,17 @@ class Portal(http.server.BaseHTTPRequestHandler):
         pass
 
 
-def run(pipeline: str, document: bytes, fail: dict[str, int] | None = None) -> tuple[list[dict], list[str]]:
+def run(pipeline: str, document: bytes, fail: dict[str, int] | None = None, oversize: frozenset[str] = frozenset(),
+        now: str = NOW) -> tuple[list[dict], list[str]]:
     """The mapping over `document`, its clock set to NOW and its portal calls answered by `Portal`.
     Returns the entities written and the errors of the messages the runner would refuse."""
-    Portal.fail, Portal.seen = fail or {}, []
+    Portal.fail, Portal.oversize, Portal.seen = fail or {}, set(oversize), []
     server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Portal)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     try:
         text = bento(pipeline).read_text()
         text = text.replace(f"{PORTAL}/api/", f"http://127.0.0.1:{server.server_port}/api/")
-        text = text.replace("now()", f'"{NOW}".ts_parse("2006-01-02T15:04:05Z07:00")')
+        text = text.replace("now()", f'"{now}".ts_parse("2006-01-02T15:04:05Z07:00")')
         processors = yaml.safe_load(text)["pipeline"]["processors"]
         # The runner refuses an errored message (the run fails, nothing is written): shown here.
         processors.append({"mapping": 'root = if errored() { {"__error": error()} } else { this }'})
@@ -272,7 +280,53 @@ def test_an_empty_night_writes_no_vehicle_and_does_not_fail():
     assert run("mhd-vozidla", b"[]") == ([], [])
 
 
+@requires_docker
+@pytest.mark.parametrize("pipeline,cap,items", [("parkovanie", 1048576, 400), ("mhd-vozidla", 1048576, 400), ("svietidla", 16777216, 2000)])
+def test_an_answer_over_its_size_cap_fails_the_run_and_writes_nothing(pipeline, cap, items):
+    # Long texts: as many as every count cap allows, over the byte cap together.
+    entities, errors = run(pipeline, json.dumps(["x" * (cap // items + 1)] * items).encode())
+    assert entities == [] and errors and f"more than {cap}" in errors[0]
+
+
+@requires_docker
+def test_a_counter_register_over_its_size_cap_fails_the_run():
+    entities, errors = run("scitace", recorded("scitace"), oversize=frozenset({"/api/datasets/v1/core/geojson/items"}))
+    assert entities == [] and errors and "more than 2097152" in errors[0]
+
+
+@requires_docker
+def test_a_counter_hour_over_its_size_cap_is_left_out():
+    oversize = frozenset({"/api/datasets/v1/traffic-counters/vehicles/hourly"})
+    assert run("scitace", recorded("scitace"), oversize=oversize) == ([], [])
+
+
 # --- history: on change, never per read ------------------------------------------------------
+
+
+def recorded_values(entity: dict) -> dict:
+    """What record: onChange compares: each attribute's value, without its observedAt and
+    without the attributes the space records never."""
+    never = {name for name, rule in retention(entity["type"]).get("attributes", {}).items() if rule == {"record": "never"}}
+    return {k: v.get("value", v.get("languageMap", v.get("object"))) if isinstance(v, dict) else v
+            for k, v in entity.items() if k not in never}
+
+
+def retention(kind: str) -> dict:
+    return {r["entityType"]: r for r in manifest("zilina-space-doprava.yaml")["spec"]["retention"]}[kind]
+
+
+@requires_docker
+def test_an_equal_reading_writes_no_history_row_and_a_changed_one_writes_one():
+    first, _ = run("parkovanie", recorded("parkovanie"))
+    again, _ = run("parkovanie", recorded("parkovanie"), now="2026-10-22T13:25:00Z")
+    assert first[0]["dateObserved"] != again[0]["dateObserved"], "the read's own time moved"
+    assert recorded_values(first[0]) == recorded_values(again[0]), "an equal count records no row"
+    source = json.loads(recorded("parkovanie"))
+    source[0]["occupancy"]["overall"]["free"] = 51
+    changed, _ = run("parkovanie", json.dumps(source).encode(), now="2026-10-22T13:25:00Z")
+    differ = {k for k, v in recorded_values(changed[0]).items() if recorded_values(first[0]).get(k) != v}
+    assert differ == {"availableSpotNumber", "occupiedSpotNumber"}, "one changed count records one row per attribute"
+
 
 
 def test_live_counts_are_recorded_on_change_and_hours_once_each():

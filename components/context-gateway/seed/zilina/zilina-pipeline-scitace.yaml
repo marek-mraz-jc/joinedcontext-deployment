@@ -5,10 +5,8 @@ metadata:
   name: scitace
   namespace: zilina
   title:
-    sk: Sčítače dopravy
-    posledná hodina: null
-    en: Traffic counters
-    last full hour: null
+    sk: 'Sčítače dopravy, posledná hodina'
+    en: 'Traffic counters, last full hour'
 spec:
   class: auto
   # The portal closes an hour bucket a few minutes after the hour; minute 12 finds the last one closed.
