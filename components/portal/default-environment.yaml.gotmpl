@@ -33,6 +33,15 @@ portal:
       # second (T-4717). The bound holds the catalog's default of 5000 too, which the Portal
       # writes over the chart's count of every chain labelled publicEndpoint.
       spec.limits.edge.requestsPerMinute.publicEndpoint: { max: 600 }
+    # The price table of Administration → Costs (T-5126): what the cloud bills a month, without
+    # VAT, which the Portal splits per project. Empty, the page says no table is set. Fill it per
+    # environment from the invoice and check it with the Portal's scripts/cost-reconcile.mjs, e.g.
+    #   currency: EUR
+    #   perUsd: 0.86          # EUR for one US dollar, for the assistants' model spend
+    #   nodes: [{ name: cpx42 nbg1, monthly: 30.00 }]
+    #   volumes: [{ name: postgres, gigabytes: 300, monthlyPerGigabyte: 0.044 }]
+    #   fixed: [{ name: primary IPv4, monthly: 0.50 }]
+    costPrices: {}
   # Mailpit, where App mail lands on an installation whose relay is not named yet (T-3583): the
   # Portal sends to it in the clear inside the namespace, it keeps the messages in memory and
   # reaches nothing. Off here; an environment turns it on, or names a relay instead in the Secret
