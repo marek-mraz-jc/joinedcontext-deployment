@@ -391,8 +391,10 @@ def surface_request(api, slug, kind, entity_type):
 
 def plan(budget, kinds, cursors, holders):
     """Which Endpoints each surface kind probes this round: `budget` split over the kinds, each
-    taking its next Endpoints round robin; `cursors` carries the position to the next round."""
-    if not kinds or budget <= 0:
+    taking its next Endpoints round robin; `cursors` carries the position to the next round.
+    Every kind gets one probe even when the budget is smaller than the kinds (T-5184): a kind
+    left out for a round would go stale on the status page."""
+    if not kinds:
         return []
     share = max(1, budget // len(kinds))
     picks = []
@@ -402,7 +404,7 @@ def plan(budget, kinds, cursors, holders):
         start = cursors.get(kind, 0) % len(slugs)
         picks += [(kind, slugs[(start + i) % len(slugs)]) for i in range(take)]
         cursors[kind] = start + take
-    return picks[:budget] if len(picks) > budget else picks
+    return picks
 
 
 class Prober:
@@ -475,12 +477,13 @@ class Prober:
                 for slug in listed:
                     known.setdefault(slug, {"surfaces": [], "type": None, "at": 0})
                 self.listed_at[name] = self.clock()
-        # Up to a quarter of the budget refreshes the oldest records; the rest probes.
+        # Up to a quarter of the budget refreshes the oldest records, at least one a round; the rest probes.
+        refreshed = 0
         for slug in sorted(known, key=lambda s: known[s]["at"]):
-            if self.clock() - known[slug]["at"] < self.discovery_seconds or spent + 2 > self.budget // 4:
+            if self.clock() - known[slug]["at"] < self.discovery_seconds or (refreshed and spent + 2 > self.budget // 4):
                 break
             status, _, body, _ = self._paced(self.get, f"{api}/api/endpoint/{slug}", None, {"Accept": "application/ld+json"})
-            spent += 1
+            spent, refreshed = spent + 1, refreshed + 1
             if status != 200:
                 continue
             surfaces = record_surfaces(api, slug, _json(body))

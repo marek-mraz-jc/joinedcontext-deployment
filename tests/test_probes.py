@@ -124,7 +124,9 @@ def test_plan_probes_every_kind_each_round_and_walks_every_endpoint():
         assert {k for k, _ in picks} == {"mcp", "ogc"}
         seen |= set(picks)
     assert seen == {(k, e) for k, slugs in holders.items() for e in slugs}
-    assert probe.plan(0, ["ogc"], {}, holders) == []
+    # A budget below the kinds still probes each kind once (T-5184).
+    assert probe.plan(1, sorted(holders), {}, holders) == [("mcp", "e0"), ("ogc", "e0")]
+    assert probe.plan(5, [], {}, holders) == []
 
 
 class FakeClock:
@@ -196,6 +198,43 @@ def test_a_round_probes_every_surface_within_budget_and_a_broken_one_goes_red_th
     prober.round(TARGET)
     assert all(r["ok"] for r in prober.snapshot())
     assert prober.healthy()
+
+
+@pytest.mark.parametrize("budget", [12, 30])
+def test_every_kind_is_probed_in_each_round_with_80_endpoints(budget):
+    """T-5184: at the dev budget of 30 (and the floor of 12) with 80 Endpoints serving every surface,
+    each round probes every kind, while the records are still being discovered and after."""
+    clock = FakeClock()
+    get, ws, _ = recorded_internet()
+    slugs = [f"e{i:02d}" for i in range(80)]
+    calls = []
+
+    def many(url, data=None, headers=None, cap=probe.BODY_CAP):
+        calls.append(url)
+        if "package_search" in url and "fl=" in url:
+            listed = [{"endpoint": f"{API}/api/endpoint/{s}/"} for s in slugs]
+            return 200, JSON, j({"success": True, "result": {"results": listed}}), 0.1
+        slug = next((s for s in slugs if f"/api/endpoint/{s}" in url), None)
+        if slug and url.endswith(f"/api/endpoint/{slug}"):
+            record = {"dcat:distribution": [{"dcat:accessURL": f"{API}/api/endpoint/{slug}/{p}"} for p in probe.SURFACES]}
+            return 200, JSON, j(record), 0.1
+        return get(url.replace(f"/endpoint/{slug}/", f"/endpoint/{SLUG}/") if slug else url, data, headers, cap)
+
+    def many_ws(url):
+        calls.append(url)
+        return ws(url)
+
+    prober = probe.Prober([TARGET], budget, 900, clock=clock, sleep=clock.sleep, get=many, ws=many_ws)
+    for _ in range(20):
+        calls.clear()
+        before = clock.now
+        prober.round(TARGET)
+        probed = {kind for kind, marker in [("ngsi-ld", "/entities?"), ("odata", "/odata/"), ("ogc", "/ogc/"), ("sta", "/sta/"),
+                                            ("csv", "file.csv"), ("ical", ".ics"), ("mcp", "/mcp"), ("websocket", "/ws")]
+                  if any(marker in c for c in calls)}
+        assert probed == set(probe.SURFACES.values())
+        fresh = {r["surface"] for r in prober.snapshot() if r["at"] >= before}
+        assert fresh == set(probe.SURFACES.values()) | {"catalogue", "assistant", "portal"}
 
 
 def test_an_endpoint_gone_from_the_catalogue_leaves_the_results():

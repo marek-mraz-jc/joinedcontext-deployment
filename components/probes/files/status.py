@@ -4,24 +4,27 @@
 
 Once a minute it reads the synthetic probe's /results.json (T-5103) inside the cluster, keeps the
 newest state of this environment's public surfaces, adds the minute to a 90-day history on its
-volume and renders the page in Slovak and English with the deployer's incident notes:
+volume and renders the page in Slovak and English with the incidents: the deployer's notes and the
+ones the page opens itself when a surface stays down or degraded (T-5184):
 
     GET /            the page in the visitor's language (Accept-Language, Slovak by default)
     GET /sk/ /en/    the page in one language
     GET /status.css  its stylesheet
-    GET /status.json the same states for machines: surface, state, 90-day uptime, incidents
+    GET /status.json the same states for machines: surface, state, uptime over the measured days, incidents
     GET /healthz     200 while a page was rendered in the last three minutes
 
 A surface is up when every probed Endpoint holds, degraded when some fail, down when all fail and
-unknown when the probe reported nothing for it in STALE_SECONDS. The page shows states, counts and
-the Endpoints' public catalogue names only: never a probe reason, a response body, a host or an
-address. Read only, no login, GET and HEAD.
+unknown when the probe reported nothing for it in STALE_SECONDS; current() is that one rule, and the
+page and status.json render the same result of it. A surface down or degraded for AUTO_OPEN_MINUTES
+opens an automatic incident, AUTO_CLOSE_MINUTES up close it; its text comes from fixed templates.
+The page shows states, counts and the Endpoints' public catalogue names only: never a probe reason,
+a response body, a host or an address. Read only, no login, GET and HEAD.
 
 STATUS_TARGET    the probe target that is this environment (the first label of its domain)
 STATUS_DOMAIN    its public domain, shown in the heading
 STATUS_PROBE_URL the probe's in-cluster results URL (http://probe.<ns>.svc.cluster.local:9100/results.json)
 STATUS_INCIDENTS the incident notes as JSON (files/incidents.yaml, converted at render)
-STATUS_DATA      the volume holding history.json
+STATUS_DATA      the volume holding history.json and watch.json (the automatic incidents)
 """
 
 import datetime as dt
@@ -37,6 +40,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 DAYS = 90
 STALE_SECONDS = 600
+AUTO_OPEN_MINUTES = 3
+AUTO_CLOSE_MINUTES = 10
 RESULTS_CAP = 4 * 1024 * 1024
 SLUG = re.compile(r"^[a-z0-9]{1,64}$")
 INCIDENT_ID = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
@@ -64,8 +69,8 @@ TEXT = {
         "some_down": "Niektoré rozhrania sú mimo prevádzky", "no_data": "Sonda zatiaľ neposlala výsledky",
         "checked": "Naposledy overené {time} UTC",
         "surfaces": "Rozhrania",
-        "uptime": "{pct} % dostupnosť za {days} dní",
-        "uptime_none": "Za {days} dní zatiaľ bez meraní",
+        "uptime": "{pct} % dostupnosť za {days}",
+        "uptime_none": "Zatiaľ bez meraní",
         "endpoints": "{ok} z {total} zdrojov odpovedá správne",
         "failing": "Neodpovedajú: {names}",
         "more": "a {n} ďalších",
@@ -84,8 +89,8 @@ TEXT = {
         "some_down": "Some interfaces are down", "no_data": "The probe has not reported yet",
         "checked": "Last checked {time} UTC",
         "surfaces": "Interfaces",
-        "uptime": "{pct} % uptime over {days} days",
-        "uptime_none": "No measurements in {days} days yet",
+        "uptime": "{pct} % uptime over {days}",
+        "uptime_none": "No measurements yet",
         "endpoints": "{ok} of {total} sources answer correctly",
         "failing": "Not answering: {names}",
         "more": "and {n} more",
@@ -95,6 +100,19 @@ TEXT = {
         "since": "since {start} UTC", "between": "{start} – {end} UTC", "affects": "Affects: {names}",
         "legend": "Day colour: green no outage, yellow at least 99 % uptime, red below 99 %, grey no measurements.",
         "other": "Slovensky", "machine": "Machine readable: status.json",
+    },
+}
+# The automatic incidents' only public text (T-5184): no host, address, reason or person.
+AUTO_TEXT = {
+    "title": {
+        "down": {"sk": "Rozhrania mimo prevádzky", "en": "Interfaces down"},
+        "degraded": {"sk": "Rozhrania čiastočne obmedzené", "en": "Interfaces degraded"},
+    },
+    "note": {
+        "open": {"sk": "Sonda zistila problém sama a otvorila tento záznam automaticky. Prešetrujeme ho.",
+                 "en": "The probe detected the problem and opened this entry automatically. We are looking into it."},
+        "closed": {"sk": "Sonda zistila problém sama; po 10 minútach bez chyby záznam automaticky uzavrela.",
+                   "en": "The probe detected the problem; after 10 minutes without an error it closed this entry automatically."},
     },
 }
 CACHE = "public, max-age=30, stale-while-revalidate=30, stale-if-error=86400"
@@ -183,6 +201,21 @@ def days_of(history, surface, now):
     return [(d.isoformat(), days.get(d.isoformat(), [0, 0, 0])) for d in (today - dt.timedelta(days=n) for n in range(DAYS - 1, -1, -1))]
 
 
+def measured_days(history, surface, now):
+    """Days from the surface's first measured minute to today, at most DAYS; 0 before any."""
+    measured = [d for d, counts in history.get(surface, {}).items() if sum(counts)]
+    if not measured:
+        return 0
+    today = dt.datetime.fromtimestamp(now, dt.UTC).date()
+    return max(1, min(DAYS, (today - dt.date.fromisoformat(min(measured))).days + 1))
+
+
+def days_text(lang, n):
+    if lang == "en":
+        return "1 day" if n == 1 else f"{n} days"
+    return "1 deň" if n == 1 else f"{n} dni" if 2 <= n <= 4 else f"{n} dní"
+
+
 def total_uptime(history, surface):
     sums = [sum(c[i] for c in history.get(surface, {}).values()) for i in range(3)]
     return uptime(sums)
@@ -261,6 +294,81 @@ def split_incidents(incidents, now):
     return ongoing, past
 
 
+# ---- automatic incidents: {runs: surface -> [bad, up] consecutive minutes, open: incident | None, closed: [...]}
+
+
+def new_watch():
+    return {"runs": {}, "open": None, "closed": []}
+
+
+def _auto_entry(item):
+    if not isinstance(item, dict) or not INCIDENT_ID.match(str(item.get("id", ""))) or item.get("worst") not in AUTO_TEXT["title"]:
+        raise ValueError("incident")
+    surfaces = item.get("surfaces")
+    if not isinstance(surfaces, list) or not surfaces or not set(surfaces) <= set(SURFACES):
+        raise ValueError("surfaces")
+    times = [item.get("start"), item.get("lastBad")] + ([item["end"]] if "end" in item else [])
+    if not all(isinstance(t, (int, float)) for t in times):
+        raise ValueError("time")
+    return {k: item[k] for k in ("id", "start", "lastBad", "worst", "surfaces", "end") if k in item}
+
+
+def load_watch(text):
+    """The stored automatic incidents; a damaged file starts a new watch, never stops the page."""
+    try:
+        doc = json.loads(text)
+        runs = {s: [int(r[0]), int(r[1])] for s, r in doc["runs"].items() if s in SURFACES and len(r) == 2}
+        return {"runs": runs, "open": None if doc["open"] is None else _auto_entry(doc["open"]),
+                "closed": [_auto_entry(i) for i in doc["closed"] if "end" in i]}
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+        return new_watch()
+
+
+def watch_minute(watch, states, now):
+    """Advance the automatic incidents by one minute of `states`. An unknown minute changes no run:
+    no answer from the probe proves neither an outage nor a recovery."""
+    runs = watch["runs"]
+    for surface, cell in states.items():
+        bad, good = runs.get(surface, [0, 0])
+        if cell["state"] in ("down", "degraded"):
+            runs[surface] = [bad + 1, 0]
+        elif cell["state"] == "up":
+            runs[surface] = [0, good + 1]
+    failing = [s for s in SURFACES if runs.get(s, [0, 0])[0] >= AUTO_OPEN_MINUTES]
+    if failing and watch["open"] is None:
+        start = min(now - 60 * (runs[s][0] - 1) for s in failing)
+        stamp = dt.datetime.fromtimestamp(start, dt.UTC).strftime("%Y%m%d-%H%M")
+        watch["open"] = {"id": f"auto-{stamp}", "start": start, "lastBad": now, "worst": "degraded", "surfaces": []}
+    incident = watch["open"]
+    if incident is not None:
+        incident["surfaces"] = [s for s in SURFACES if s in incident["surfaces"] or s in failing]
+        bad_now = [s for s in incident["surfaces"] if states.get(s, {}).get("state") in ("down", "degraded")]
+        if bad_now:
+            incident["lastBad"] = now
+        if any(states[s]["state"] == "down" for s in bad_now):
+            incident["worst"] = "down"
+        if all(runs.get(s, [0, 0])[1] >= AUTO_CLOSE_MINUTES for s in incident["surfaces"]):
+            watch["closed"].insert(0, {**incident, "end": incident["lastBad"] + 60})
+            watch["open"] = None
+    watch["closed"] = [i for i in watch["closed"] if now - i["end"] <= DAYS * 86400]
+    return watch
+
+
+def incidents_shown(notes, watch):
+    """The deployer's notes and the automatic incidents, newest first. A note that covers an
+    automatic incident's surfaces at an overlapping time replaces its text."""
+    auto = [{"id": i["id"], "start": i["start"], "end": i.get("end"), "surfaces": i["surfaces"],
+             "title": AUTO_TEXT["title"][i["worst"]], "note": AUTO_TEXT["note"]["closed" if "end" in i else "open"],
+             "automatic": True} for i in ([watch["open"]] if watch["open"] else []) + watch["closed"]]
+
+    def covered(a):
+        return any(set(a["surfaces"]) <= set(n["surfaces"]) and n["start"] <= (a["end"] or float("inf"))
+                   and a["start"] <= (n["end"] or float("inf")) for n in notes)
+
+    shown = [{**n, "automatic": False} for n in notes] + [a for a in auto if not covered(a)]
+    return sorted(shown, key=lambda i: i["start"], reverse=True)
+
+
 # ---- rendering
 
 
@@ -313,7 +421,8 @@ def render(lang, domain, states, history, incidents, now):
     for surface, names in SURFACES.items():
         cell = states[surface]
         total = total_uptime(history, surface)
-        summary = t["uptime"].format(pct=pct(total), days=DAYS) if total is not None else t["uptime_none"].format(days=DAYS)
+        summary = t["uptime"].format(pct=pct(total), days=days_text(lang, measured_days(history, surface, now))) \
+            if total is not None else t["uptime_none"]
         out.append(f'<li class="surface"><div class="row"><h3>{e(names[lang])}</h3>'
                    f'<span class="state {cell["state"]}"><span class="dot" aria-hidden="true"></span>{e(t[cell["state"]])}</span></div>')
         if cell["ok"] < cell["total"]:
@@ -360,9 +469,10 @@ def machine(states, history, incidents, now):
         "generatedAt": iso(now),
         "status": overall(states),
         "surfaces": [{"id": s, "state": states[s]["state"], "ok": states[s]["ok"], "total": states[s]["total"],
-                      "uptime90": total_uptime(history, s)} for s in SURFACES],
+                      "uptime": total_uptime(history, s), "uptimeDays": measured_days(history, s, now)} for s in SURFACES],
         "incidents": [{"id": i["id"], "start": iso(i["start"]), "end": iso(i["end"]), "surfaces": i["surfaces"],
-                       "title": i["title"], "note": i["note"]} for i in incidents if now - (i["end"] or now) <= DAYS * 86400],
+                       "title": i["title"], "note": i["note"], "automatic": i.get("automatic", False)}
+                      for i in incidents if now - (i["end"] or now) <= DAYS * 86400],
     }
 
 
@@ -409,14 +519,17 @@ class Page:
         self.incidents, self.data_dir, self.clock = incidents, data_dir, clock
         self.get = get or self._fetch
         self.lock = threading.Lock()
-        path = os.path.join(data_dir, "history.json")
-        try:
-            with open(path, encoding="utf-8") as f:
-                self.history = load_history(f.read())
-        except FileNotFoundError:
-            self.history = {}
+        self.history = load_history(self._read("history.json") or "{}")
+        self.watch = load_watch(self._read("watch.json") or "")
         self.files, self.rendered_at = {}, None
         self.tick(count=False)
+
+    def _read(self, name):
+        try:
+            with open(os.path.join(self.data_dir, name), encoding="utf-8") as f:
+                return f.read()
+        except FileNotFoundError:
+            return None
 
     def _fetch(self):
         with urllib.request.urlopen(self.probe_url, timeout=10) as answer:
@@ -433,25 +546,28 @@ class Page:
         states = current(results, self.target, now)
         if count:
             add_minute(self.history, states, now)
-            self._save()
+            watch_minute(self.watch, states, now)
+            self._save("history.json", self.history)
+            self._save("watch.json", self.watch)
+        incidents = incidents_shown(self.incidents, self.watch)
         files = {
-            "/sk/": (render("sk", self.domain, states, self.history, self.incidents, now).encode(), "text/html; charset=utf-8"),
-            "/en/": (render("en", self.domain, states, self.history, self.incidents, now).encode(), "text/html; charset=utf-8"),
+            "/sk/": (render("sk", self.domain, states, self.history, incidents, now).encode(), "text/html; charset=utf-8"),
+            "/en/": (render("en", self.domain, states, self.history, incidents, now).encode(), "text/html; charset=utf-8"),
             "/status.css": (CSS.encode(), "text/css; charset=utf-8"),
-            "/status.json": (json.dumps(machine(states, self.history, self.incidents, now)).encode(), "application/json"),
+            "/status.json": (json.dumps(machine(states, self.history, incidents, now)).encode(), "application/json"),
         }
         with self.lock:
             self.files, self.rendered_at = files, now
 
-    def _save(self):
-        path = os.path.join(self.data_dir, "history.json")
+    def _save(self, name, doc):
+        path = os.path.join(self.data_dir, name)
         tmp = path + ".tmp"
         try:
             with open(tmp, "w", encoding="utf-8") as f:
-                json.dump(self.history, f, separators=(",", ":"))
+                json.dump(doc, f, separators=(",", ":"))
             os.replace(tmp, path)
         except OSError as err:
-            print(json.dumps({"error": "history not saved", "kind": type(err).__name__}), file=sys.stderr, flush=True)
+            print(json.dumps({"error": f"{name} not saved", "kind": type(err).__name__}), file=sys.stderr, flush=True)
 
     def answer(self, path, accept_language):
         """(status, content type, body, extra headers) for a GET of `path`."""
