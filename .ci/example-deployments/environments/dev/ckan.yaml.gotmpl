@@ -9,7 +9,7 @@ ckan:
     # Finnish bodies, so the catalogue offers their languages while the Portal stays English.
     languages:
       default: sk
-      offered: [sk, en, cs, fi]
+      offered: [sk, en, cs, fi, hu]
     # The catalogue's name (owner, 2026-10-18: "remove data.dev and just write open data", T-4636).
     site:
       title:
@@ -17,6 +17,7 @@ ckan:
         en: Open data
         cs: Otevřená data
         fi: Avoin data
+        hu: Nyílt adatok
       # Owner 2026-10-19 (T-4733): the catalogue and every dataset went public three weeks back.
       issued: "2026-09-28"
     samples:
@@ -74,6 +75,8 @@ ckan:
         - slovensko/ovzdusie-sk
         # Events in Slovakia (T-5047): every kept source of all eight regions.
         - slovensko/slovensko-podujatia
+        # Citizen participation (T-5065): the towns' Decidim processes, proposals and budgets.
+        - slovensko/slovensko-participacia
         # The NGSI-LD catalogue (T-4746, EP-140): "which organizations publish data" and one
         # publisher's datasets are one query_entities on it.
         - slovensko/catalog

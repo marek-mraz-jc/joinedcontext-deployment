@@ -29,6 +29,7 @@ ENTITY = {"id": "urn:ngsi-ld:Address:x:1", "type": "Address", "postCode": {"type
 GOOD = {
     "catalogue": (200, JSON, j({"success": True, "result": {"count": 1, "results": [{"name": "praha-parkoviste-pr"}]}})),
     "assistant": (200, JSON, j({"publicId": "data", "title": {"en": "Open data"}})),
+    "portal": (200, JSON, j({"name": "joinedcontext-portal", "version": "0.1.0", "status": "ok"})),
     "ngsi-ld": (200, {**JSON, "ngsild-results-count": "10027"}, j([ENTITY])),
     "odata": (200, JSON, j({"@odata.context": "$metadata#Address", "value": [{"id": "urn:ngsi-ld:Address:x:1"}]})),
     "ogc": (200, {"content-type": "application/geo+json"}, j({
@@ -46,6 +47,7 @@ BAD = {
     "catalogue": [(503, JSON, b"<html>"), (200, JSON, j({"success": True, "result": {"count": 0, "results": []}})),
                   (200, JSON, j({"success": False}))],
     "assistant": [(404, JSON, PROBLEM), (200, JSON, j({}))],
+    "portal": [(502, JSON, b"<html>"), (200, JSON, j({"status": "degraded"})), (200, JSON, b"ok")],
     "ngsi-ld": [(400, JSON, PROBLEM), (200, JSON, j([])), (200, JSON, j([ENTITY])),
                 (200, {**JSON, "ngsild-results-count": "0"}, j([ENTITY])), (200, JSON, b"{not json")],
     "odata": [(500, JSON, PROBLEM), (200, JSON, j({"value": []})), (200, JSON, j([]))],
@@ -82,9 +84,9 @@ def test_mcp_answered_as_a_server_sent_event_holds():
 
 def test_targets_accept_https_origins_only():
     good = [{"name": "dev", "api": "https://api.dev.example/", "catalogue": "https://opendata.dev.example",
-             "assistant": "https://assistant.dev.example", "assistantId": "data"}]
+             "portal": "https://portal.dev.example", "assistant": "https://assistant.dev.example", "assistantId": "data"}]
     assert probe.load_targets(json.dumps(good))[0]["api"] == "https://api.dev.example"
-    for key, value in [("api", "http://api.dev.example"), ("catalogue", "https://x.example/path"),
+    for key, value in [("api", "http://api.dev.example"), ("catalogue", "https://x.example/path"), ("portal", "https://portal.dev.example/?x=1"),
                        ("assistant", "file:///etc/passwd"), ("name", "Dev Cluster"), ("assistantId", "../x")]:
         with pytest.raises(ValueError):
             probe.load_targets(json.dumps([{**good[0], key: value}]))
@@ -143,14 +145,15 @@ def recorded_internet(broken=frozenset()):
 
     def get(url, data=None, headers=None, cap=probe.BODY_CAP):
         calls.append(url)
-        assert url.startswith(("https://api.example.org/", "https://opendata.example.org/", "https://assistant.example.org/"))
+        assert url.startswith(("https://api.example.org/", "https://opendata.example.org/", "https://assistant.example.org/",
+                               "https://portal.example.org/"))
         if "package_search" in url and "fl=" in url:
             return 200, JSON, j({"success": True, "result": {"results": [{"endpoint": f"{API}/api/endpoint/{SLUG}/"}]}}), 0.1
         if url.endswith(f"/api/endpoint/{SLUG}"):
             return 200, JSON, j(record), 0.1
         if url.endswith("/ngsi-ld/v1/types"):
             return 200, JSON, j({"typeList": ["Address"]}), 0.1
-        kind = next(k for k, marker in [("catalogue", "package_search"), ("assistant", "/config"), ("ngsi-ld", "/entities?"),
+        kind = next(k for k, marker in [("catalogue", "package_search"), ("assistant", "/config"), ("portal", "/api/v1/health"), ("ngsi-ld", "/entities?"),
                                         ("odata", "/odata/"), ("ogc", "/ogc/"), ("sta", "/sta/"), ("csv", "file.csv"),
                                         ("ical", ".ics"), ("mcp", "/mcp")] if marker in url)
         return (503, JSON, b"down", 0.1) if kind in broken else (*GOOD[kind], 0.2)
@@ -162,7 +165,8 @@ def recorded_internet(broken=frozenset()):
     return get, ws, calls
 
 
-TARGET = {"name": "dev", "api": API, "catalogue": "https://opendata.example.org", "assistant": "https://assistant.example.org",
+TARGET = {"name": "dev", "api": API, "catalogue": "https://opendata.example.org", "portal": "https://portal.example.org",
+          "assistant": "https://assistant.example.org",
           "assistantId": "data"}
 
 
@@ -174,7 +178,7 @@ def test_a_round_probes_every_surface_within_budget_and_a_broken_one_goes_red_th
     assert len(calls) <= 30
     assert clock.now - 1_000_000.0 == pytest.approx(len(calls) * 2.0, abs=0.1)  # paced 60 s / 30 requests
     results = {(r["endpoint"], r["surface"]): r for r in prober.snapshot()}
-    assert set(results) == {(None, "catalogue"), (None, "assistant")} | {(SLUG, s) for s in probe.SURFACES.values()}
+    assert set(results) == {(None, "catalogue"), (None, "assistant"), (None, "portal")} | {(SLUG, s) for s in probe.SURFACES.values()}
     assert all(r["ok"] for r in results.values())
 
     broken_get, broken_ws, _ = recorded_internet(broken={"odata", "websocket"})

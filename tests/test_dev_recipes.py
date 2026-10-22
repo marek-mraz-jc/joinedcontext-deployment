@@ -64,7 +64,7 @@ def test_guard_accepts_the_dev_cluster(tmp_path):
 
 
 @requires_just
-@pytest.mark.parametrize("recipe", ["dev-apply", "dev-smoke", "dev-validate", "dev-restore-drill", "dev-destroy",
+@pytest.mark.parametrize("recipe", ["dev-apply", "dev-smoke", "dev-validate", "dev-restore-drill", "dev-chaos", "dev-destroy",
                                     "dev-publish-health s.json 1", "dev-publish-health s.json 1 true",
                                     "dev-rotate-client", "dev-rotate-db ckan true", "dev-rotate-forge-token",
                                     "dev-rotate-ckan-token true", "dev-rotate-model-key key.txt true",

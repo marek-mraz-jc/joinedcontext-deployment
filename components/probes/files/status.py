@@ -1,0 +1,537 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: EUPL-1.2
+"""The public status page, status.{domain} (T-5102).
+
+Once a minute it reads the synthetic probe's /results.json (T-5103) inside the cluster, keeps the
+newest state of this environment's public surfaces, adds the minute to a 90-day history on its
+volume and renders the page in Slovak and English with the deployer's incident notes:
+
+    GET /            the page in the visitor's language (Accept-Language, Slovak by default)
+    GET /sk/ /en/    the page in one language
+    GET /status.css  its stylesheet
+    GET /status.json the same states for machines: surface, state, 90-day uptime, incidents
+    GET /healthz     200 while a page was rendered in the last three minutes
+
+A surface is up when every probed Endpoint holds, degraded when some fail, down when all fail and
+unknown when the probe reported nothing for it in STALE_SECONDS. The page shows states, counts and
+the Endpoints' public catalogue names only: never a probe reason, a response body, a host or an
+address. Read only, no login, GET and HEAD.
+
+STATUS_TARGET    the probe target that is this environment (the first label of its domain)
+STATUS_DOMAIN    its public domain, shown in the heading
+STATUS_PROBE_URL the probe's in-cluster results URL (http://probe.<ns>.svc.cluster.local:9100/results.json)
+STATUS_INCIDENTS the incident notes as JSON (files/incidents.yaml, converted at render)
+STATUS_DATA      the volume holding history.json
+"""
+
+import datetime as dt
+import html
+import json
+import os
+import re
+import sys
+import threading
+import time
+import urllib.request
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+DAYS = 90
+STALE_SECONDS = 600
+RESULTS_CAP = 4 * 1024 * 1024
+SLUG = re.compile(r"^[a-z0-9]{1,64}$")
+INCIDENT_ID = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
+STATES = ("up", "degraded", "down", "unknown")
+# Shown in this order; the surface names of probe.py.
+SURFACES = {
+    "catalogue": {"sk": "Katalóg otvorených dát", "en": "Open data catalogue"},
+    "portal": {"sk": "Portál", "en": "Portal"},
+    "ngsi-ld": {"sk": "NGSI-LD API", "en": "NGSI-LD API"},
+    "odata": {"sk": "OData", "en": "OData"},
+    "ogc": {"sk": "OGC API Features", "en": "OGC API Features"},
+    "sta": {"sk": "SensorThings API", "en": "SensorThings API"},
+    "websocket": {"sk": "WebSocket (živé zmeny)", "en": "WebSocket (live changes)"},
+    "mcp": {"sk": "MCP pre asistentov AI", "en": "MCP for AI assistants"},
+    "assistant": {"sk": "Asistent", "en": "Assistant"},
+    "csv": {"sk": "Súbory CSV", "en": "CSV files"},
+    "ical": {"sk": "Kalendáre iCal", "en": "iCal calendars"},
+}
+TEXT = {
+    "sk": {
+        "title": "Stav platformy",
+        "lede": "Každú minútu skúšame verejné rozhrania zvonku, tak ako ich používa návštevník. Stránka sa obnovuje sama.",
+        "up": "V prevádzke", "degraded": "Čiastočne obmedzené", "down": "Mimo prevádzky", "unknown": "Bez údajov",
+        "all_up": "Všetko je v prevádzke", "some_degraded": "Niektoré rozhrania sú obmedzené",
+        "some_down": "Niektoré rozhrania sú mimo prevádzky", "no_data": "Sonda zatiaľ neposlala výsledky",
+        "checked": "Naposledy overené {time} UTC",
+        "surfaces": "Rozhrania",
+        "uptime": "{pct} % dostupnosť za {days} dní",
+        "uptime_none": "Za {days} dní zatiaľ bez meraní",
+        "endpoints": "{ok} z {total} zdrojov odpovedá správne",
+        "failing": "Neodpovedajú: {names}",
+        "more": "a {n} ďalších",
+        "day_none": "{date}: bez meraní", "day": "{date}: {pct} % dostupnosť",
+        "days_ago": "pred {days} dňami", "today": "dnes",
+        "ongoing": "Prebiehajúce udalosti", "past": "Udalosti za posledných {days} dní", "no_incidents": "Za posledných {days} dní žiadne hlásené udalosti.",
+        "since": "od {start} UTC", "between": "{start} – {end} UTC", "affects": "Týka sa: {names}",
+        "legend": "Farba dňa: zelená bez výpadku, žltá dostupnosť aspoň 99 %, červená menej ako 99 %, sivá bez meraní.",
+        "other": "English", "machine": "Strojovo čitateľné: status.json",
+    },
+    "en": {
+        "title": "Platform status",
+        "lede": "Every minute we try the public interfaces from outside, the way a visitor uses them. The page refreshes itself.",
+        "up": "Operational", "degraded": "Degraded", "down": "Down", "unknown": "No data",
+        "all_up": "All systems operational", "some_degraded": "Some interfaces are degraded",
+        "some_down": "Some interfaces are down", "no_data": "The probe has not reported yet",
+        "checked": "Last checked {time} UTC",
+        "surfaces": "Interfaces",
+        "uptime": "{pct} % uptime over {days} days",
+        "uptime_none": "No measurements in {days} days yet",
+        "endpoints": "{ok} of {total} sources answer correctly",
+        "failing": "Not answering: {names}",
+        "more": "and {n} more",
+        "day_none": "{date}: no measurements", "day": "{date}: {pct} % uptime",
+        "days_ago": "{days} days ago", "today": "today",
+        "ongoing": "Ongoing incidents", "past": "Incidents in the last {days} days", "no_incidents": "No incidents reported in the last {days} days.",
+        "since": "since {start} UTC", "between": "{start} – {end} UTC", "affects": "Affects: {names}",
+        "legend": "Day colour: green no outage, yellow at least 99 % uptime, red below 99 %, grey no measurements.",
+        "other": "Slovensky", "machine": "Machine readable: status.json",
+    },
+}
+CACHE = "public, max-age=30, stale-while-revalidate=30, stale-if-error=86400"
+CSP = "default-src 'none'; style-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+
+
+# ---- states
+
+
+def current(results, target, now):
+    """{surface: {state, ok, total, failing}} of `target` from the probe's results.json rows."""
+    out = {s: {"state": "unknown", "ok": 0, "total": 0, "failing": []} for s in SURFACES}
+    for row in results if isinstance(results, list) else []:
+        if not isinstance(row, dict) or row.get("target") != target or row.get("surface") not in SURFACES:
+            continue
+        at = row.get("at")
+        if not isinstance(at, (int, float)) or now - at > STALE_SECONDS:
+            continue
+        cell = out[row["surface"]]
+        cell["total"] += 1
+        if row.get("ok") is True:
+            cell["ok"] += 1
+        elif isinstance(row.get("endpoint"), str) and SLUG.match(row["endpoint"]):
+            cell["failing"].append(row["endpoint"])
+    for cell in out.values():
+        cell["failing"].sort()
+        if cell["total"]:
+            cell["state"] = "up" if cell["ok"] == cell["total"] else "degraded" if cell["ok"] else "down"
+    return out
+
+
+def overall(states):
+    seen = {c["state"] for c in states.values()}
+    if seen == {"unknown"}:
+        return "no_data"
+    return "some_down" if "down" in seen else "some_degraded" if "degraded" in seen else "all_up"
+
+
+# ---- history: surface -> UTC date -> [up, degraded, down] minutes
+
+
+def load_history(text):
+    """The stored history, keeping only well-formed cells: a damaged file costs history, never the page."""
+    try:
+        doc = json.loads(text)
+    except ValueError:
+        return {}
+    out = {}
+    for surface, days in (doc.items() if isinstance(doc, dict) else []):
+        if surface not in SURFACES or not isinstance(days, dict):
+            continue
+        for day, counts in days.items():
+            try:
+                dt.date.fromisoformat(day)
+            except (TypeError, ValueError):
+                continue
+            if isinstance(counts, list) and len(counts) == 3 and all(isinstance(n, int) and n >= 0 for n in counts):
+                out.setdefault(surface, {})[day] = counts
+    return out
+
+
+def add_minute(history, states, now):
+    """Count this minute per surface and drop days older than DAYS; unknown minutes count nowhere."""
+    today = dt.datetime.fromtimestamp(now, dt.UTC).date()
+    oldest = (today - dt.timedelta(days=DAYS - 1)).isoformat()
+    for surface, cell in states.items():
+        if cell["state"] in ("up", "degraded", "down"):
+            counts = history.setdefault(surface, {}).setdefault(today.isoformat(), [0, 0, 0])
+            counts[("up", "degraded", "down").index(cell["state"])] += 1
+    for days in history.values():
+        for day in [d for d in days if d < oldest]:
+            del days[day]
+    return history
+
+
+def uptime(counts):
+    """Share of measured minutes that were not down, in percent; None without a measurement."""
+    up, degraded, down = counts
+    total = up + degraded + down
+    return None if total == 0 else 100.0 * (up + degraded) / total
+
+
+def days_of(history, surface, now):
+    today = dt.datetime.fromtimestamp(now, dt.UTC).date()
+    days = history.get(surface, {})
+    return [(d.isoformat(), days.get(d.isoformat(), [0, 0, 0])) for d in (today - dt.timedelta(days=n) for n in range(DAYS - 1, -1, -1))]
+
+
+def total_uptime(history, surface):
+    sums = [sum(c[i] for c in history.get(surface, {}).values()) for i in range(3)]
+    return uptime(sums)
+
+
+def pct(value):
+    """99.95 for the page: two decimals, never a rounded-up 100 for a day with an outage."""
+    floor = int(value * 100) / 100
+    return f"{floor:.2f}".rstrip("0").rstrip(".")
+
+
+# ---- incidents
+
+
+def _instant(value, what):
+    if not isinstance(value, str):
+        raise ValueError(f"{what} must be an ISO 8601 time in UTC such as 2026-10-21T20:15:00Z")
+    try:
+        parsed = dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as err:
+        raise ValueError(f"{what} {value!r} is no ISO 8601 time such as 2026-10-21T20:15:00Z") from err
+    if parsed.tzinfo is None:
+        raise ValueError(f"{what} {value!r} needs a zone, write it in UTC with Z")
+    return parsed.timestamp()
+
+
+def _texts(value, what):
+    if not isinstance(value, dict) or set(value) != {"sk", "en"}:
+        raise ValueError(f"{what} needs exactly an sk and an en text")
+    for lang, text in value.items():
+        if not isinstance(text, str) or not text.strip() or len(text) > 2000:
+            raise ValueError(f"{what}.{lang} must be 1..2000 characters")
+    return value
+
+
+def load_incidents(text, environment):
+    """The deployer's notes (files/incidents.yaml as JSON) for this environment, newest first.
+
+    A malformed note stops the pod at start with the field to fix, as a bad probe target does;
+    the render test holds the committed file to the same rules.
+    """
+    doc = json.loads(text) if text else {}
+    items = (doc or {}).get("incidents") if isinstance(doc, dict) else None
+    if items is None:
+        items = []
+    if not isinstance(items, list):
+        raise ValueError("incidents must be a list")
+    out, ids = [], set()
+    for i, item in enumerate(items):
+        where = f"incidents[{i}]"
+        if not isinstance(item, dict) or set(item) - {"id", "environments", "start", "end", "surfaces", "title", "note"}:
+            raise ValueError(f"{where}: keys are id, environments, start, end, surfaces, title, note")
+        if not INCIDENT_ID.match(str(item.get("id", ""))) or item["id"] in ids:
+            raise ValueError(f"{where}.id must be a unique lower-case name such as 2026-10-21-odata-timeouts")
+        ids.add(item["id"])
+        envs = item.get("environments")
+        if not isinstance(envs, list) or not envs or not all(isinstance(e, str) for e in envs):
+            raise ValueError(f"{where}.environments must list the environments it concerns, such as [dev]")
+        surfaces = item.get("surfaces")
+        if not isinstance(surfaces, list) or not surfaces or not set(surfaces) <= set(SURFACES):
+            raise ValueError(f"{where}.surfaces must list surfaces of {', '.join(SURFACES)}")
+        start = _instant(item.get("start"), f"{where}.start")
+        end = _instant(item["end"], f"{where}.end") if item.get("end") is not None else None
+        if end is not None and end < start:
+            raise ValueError(f"{where}.end lies before its start")
+        entry = {"id": item["id"], "start": start, "end": end, "surfaces": [s for s in SURFACES if s in surfaces],
+                 "title": _texts(item.get("title"), f"{where}.title"), "note": _texts(item.get("note"), f"{where}.note")}
+        if environment in envs:
+            out.append(entry)
+    return sorted(out, key=lambda e: e["start"], reverse=True)
+
+
+def split_incidents(incidents, now):
+    ongoing = [i for i in incidents if i["start"] <= now and (i["end"] is None or i["end"] > now)]
+    past = [i for i in incidents if i["end"] is not None and i["end"] <= now and now - i["end"] <= DAYS * 86400]
+    return ongoing, past
+
+
+# ---- rendering
+
+
+def _utc(ts):
+    return dt.datetime.fromtimestamp(ts, dt.UTC).strftime("%Y-%m-%d %H:%M")
+
+
+def _day_class(counts):
+    value = uptime(counts)
+    if value is None:
+        return "none"
+    return "up" if counts[2] == 0 else "degraded" if value >= 99 else "down"
+
+
+def render(lang, domain, states, history, incidents, now):
+    t, e = TEXT[lang], html.escape
+    other = "en" if lang == "sk" else "sk"
+    head = overall(states)
+    banner = {"all_up": "up", "some_degraded": "degraded", "some_down": "down", "no_data": "unknown"}[head]
+    out = [
+        "<!doctype html>",
+        f'<html lang="{lang}">',
+        "<head>",
+        '<meta charset="utf-8">',
+        '<meta name="viewport" content="width=device-width, initial-scale=1">',
+        '<meta http-equiv="refresh" content="60">',
+        '<meta name="color-scheme" content="light dark">',
+        f"<title>{e(t['title'])} · {e(domain)}</title>",
+        '<link rel="stylesheet" href="/status.css">',
+        f'<link rel="alternate" hreflang="{other}" href="/{other}/">',
+        "</head>",
+        "<body>",
+        '<main class="wrap">',
+        '<header class="top">',
+        f"<div><h1>{e(t['title'])}</h1><p class=\"domain\">{e(domain)}</p></div>",
+        f'<a class="lang" href="/{other}/" hreflang="{other}" lang="{other}">{e(t["other"])}</a>',
+        "</header>",
+        f'<p class="lede">{e(t["lede"])}</p>',
+        f'<section class="banner {banner}" role="status" aria-live="polite">',
+        f'<strong><span class="dot" aria-hidden="true"></span>{e(t[head])}</strong>',
+        f'<span class="checked">{e(t["checked"].format(time=_utc(now)))}</span>',
+        "</section>",
+    ]
+    ongoing, past = split_incidents(incidents, now)
+    if ongoing:
+        out.append(f'<section aria-labelledby="ongoing"><h2 id="ongoing">{e(t["ongoing"])}</h2>')
+        out += [_incident(i, lang, ongoing=True) for i in ongoing]
+        out.append("</section>")
+    out.append(f'<section aria-labelledby="surfaces"><h2 id="surfaces">{e(t["surfaces"])}</h2><ul class="surfaces">')
+    for surface, names in SURFACES.items():
+        cell = states[surface]
+        total = total_uptime(history, surface)
+        summary = t["uptime"].format(pct=pct(total), days=DAYS) if total is not None else t["uptime_none"].format(days=DAYS)
+        out.append(f'<li class="surface"><div class="row"><h3>{e(names[lang])}</h3>'
+                   f'<span class="state {cell["state"]}"><span class="dot" aria-hidden="true"></span>{e(t[cell["state"]])}</span></div>')
+        if cell["ok"] < cell["total"]:
+            out.append(f'<p class="detail">{e(t["endpoints"].format(ok=cell["ok"], total=cell["total"]))}</p>')
+        if cell["failing"]:
+            names_shown = ", ".join(cell["failing"][:5])
+            if len(cell["failing"]) > 5:
+                names_shown += " " + t["more"].format(n=len(cell["failing"]) - 5)
+            out.append(f'<p class="detail">{e(t["failing"].format(names=names_shown))}</p>')
+        out.append(f'<p class="uptime">{e(summary)}</p><div class="bars" aria-hidden="true">')
+        for day, counts in days_of(history, surface, now):
+            value = uptime(counts)
+            label = t["day_none"].format(date=day) if value is None else t["day"].format(date=day, pct=pct(value))
+            out.append(f'<span class="bar {_day_class(counts)}" title="{e(label)}"></span>')
+        out.append(f'</div><div class="axis" aria-hidden="true"><span>{e(t["days_ago"].format(days=DAYS))}</span>'
+                   f'<span>{e(t["today"])}</span></div></li>')
+    out.append(f'</ul><p class="legend">{e(t["legend"])}</p></section>')
+    out.append(f'<section aria-labelledby="past"><h2 id="past">{e(t["past"].format(days=DAYS))}</h2>')
+    if past:
+        out += [_incident(i, lang, ongoing=False) for i in past]
+    else:
+        out.append(f'<p class="empty">{e(t["no_incidents"].format(days=DAYS))}</p>')
+    out.append("</section>")
+    out.append(f'<footer><a href="/status.json">{e(t["machine"])}</a></footer>')
+    out += ["</main>", "</body>", "</html>", ""]
+    return "\n".join(out)
+
+
+def _incident(incident, lang, ongoing):
+    t, e = TEXT[lang], html.escape
+    when = t["since"].format(start=_utc(incident["start"])) if ongoing else t["between"].format(
+        start=_utc(incident["start"]), end=_utc(incident["end"]))
+    names = ", ".join(SURFACES[s][lang] for s in incident["surfaces"])
+    return (f'<article class="incident{" ongoing" if ongoing else ""}"><h3>{e(incident["title"][lang])}</h3>'
+            f'<p class="when"><time datetime="{dt.datetime.fromtimestamp(incident["start"], dt.UTC).isoformat()}">'
+            f'{e(when)}</time></p><p>{e(incident["note"][lang])}</p><p class="affects">{e(t["affects"].format(names=names))}</p></article>')
+
+
+def machine(states, history, incidents, now):
+    def iso(ts):
+        return None if ts is None else dt.datetime.fromtimestamp(ts, dt.UTC).isoformat().replace("+00:00", "Z")
+
+    return {
+        "generatedAt": iso(now),
+        "status": overall(states),
+        "surfaces": [{"id": s, "state": states[s]["state"], "ok": states[s]["ok"], "total": states[s]["total"],
+                      "uptime90": total_uptime(history, s)} for s in SURFACES],
+        "incidents": [{"id": i["id"], "start": iso(i["start"]), "end": iso(i["end"]), "surfaces": i["surfaces"],
+                       "title": i["title"], "note": i["note"]} for i in incidents if now - (i["end"] or now) <= DAYS * 86400],
+    }
+
+
+CSS = """:root{--bg:#f7f8fa;--card:#fff;--text:#1b1f24;--muted:#57606a;--line:#d8dee4;--up:#1a7f37;--degraded:#9a6700;
+--down:#cf222e;--none:#d0d7de;--focus:#0969da;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#0d1117;--card:#161b22;--text:#e6edf3;--muted:#9da7b3;--line:#30363d;
+--up:#3fb950;--degraded:#d29922;--down:#f85149;--none:#30363d;--focus:#58a6ff;color-scheme:dark}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);
+font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:56rem;margin:0 auto;padding:2rem 1rem 3rem}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap}
+h1{margin:0;font-size:1.75rem}h2{font-size:1.15rem;margin:2rem 0 .75rem}h3{margin:0;font-size:1rem}
+.domain,.lede,.checked,.detail,.uptime,.legend,.axis,.when,.affects,.empty{color:var(--muted)}
+.domain{margin:.25rem 0 0}.lede{margin:1rem 0}
+a{color:var(--focus)}a:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.lang{padding:.4rem .8rem;border:1px solid var(--line);border-radius:.5rem;background:var(--card);text-decoration:none}
+.banner{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem 1rem;padding:1rem 1.25rem;border-radius:.75rem;
+background:var(--card);border:1px solid var(--line);border-left:6px solid var(--none)}
+.banner.up{border-left-color:var(--up)}.banner.degraded{border-left-color:var(--degraded)}.banner.down{border-left-color:var(--down)}
+.banner strong{display:inline-flex;align-items:center;gap:.6rem;font-size:1.1rem}.checked{margin-left:auto;font-size:.9rem}
+.dot{display:inline-block;width:.7rem;height:.7rem;border-radius:50%;background:var(--none);flex:none}
+.up .dot{background:var(--up)}.degraded .dot{background:var(--degraded)}.down .dot{background:var(--down)}
+.surfaces{list-style:none;margin:0;padding:0;display:grid;gap:.75rem}
+.surface,.incident{background:var(--card);border:1px solid var(--line);border-radius:.75rem;padding:1rem 1.25rem}
+.row{display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap}
+.state{display:inline-flex;align-items:center;gap:.4rem;font-weight:600}
+.state.up{color:var(--up)}.state.degraded{color:var(--degraded)}.state.down{color:var(--down)}.state.unknown{color:var(--muted)}
+.detail,.uptime{margin:.35rem 0 0;font-size:.9rem;overflow-wrap:anywhere}
+.bars{display:grid;grid-template-columns:repeat(90,1fr);gap:1px;height:2rem;margin-top:.5rem}
+.bar{border-radius:1px;background:var(--none)}.bar.up{background:var(--up)}.bar.degraded{background:var(--degraded)}
+.bar.down{background:var(--down)}
+.axis{display:flex;justify-content:space-between;font-size:.8rem;margin-top:.25rem}
+.incident{margin-bottom:.75rem}.incident.ongoing{border-left:6px solid var(--degraded)}
+.incident p{margin:.35rem 0 0}.legend{font-size:.85rem}footer{margin-top:2rem;font-size:.9rem}
+"""
+
+
+# ---- server
+
+
+class Page:
+    def __init__(self, target, domain, probe_url, incidents, data_dir, clock=time.time, get=None):
+        self.target, self.domain, self.probe_url = target, domain, probe_url
+        self.incidents, self.data_dir, self.clock = incidents, data_dir, clock
+        self.get = get or self._fetch
+        self.lock = threading.Lock()
+        path = os.path.join(data_dir, "history.json")
+        try:
+            with open(path, encoding="utf-8") as f:
+                self.history = load_history(f.read())
+        except FileNotFoundError:
+            self.history = {}
+        self.files, self.rendered_at = {}, None
+        self.tick(count=False)
+
+    def _fetch(self):
+        with urllib.request.urlopen(self.probe_url, timeout=10) as answer:
+            return json.loads(answer.read(RESULTS_CAP + 1)[:RESULTS_CAP])
+
+    def tick(self, count=True):
+        now = self.clock()
+        try:
+            results = (self.get() or {}).get("results")
+        except (OSError, ValueError, AttributeError) as err:
+            # The probe is unreachable: the surfaces' state is unknown, never "up".
+            print(json.dumps({"error": "probe results unavailable", "kind": type(err).__name__}), file=sys.stderr, flush=True)
+            results = []
+        states = current(results, self.target, now)
+        if count:
+            add_minute(self.history, states, now)
+            self._save()
+        files = {
+            "/sk/": (render("sk", self.domain, states, self.history, self.incidents, now).encode(), "text/html; charset=utf-8"),
+            "/en/": (render("en", self.domain, states, self.history, self.incidents, now).encode(), "text/html; charset=utf-8"),
+            "/status.css": (CSS.encode(), "text/css; charset=utf-8"),
+            "/status.json": (json.dumps(machine(states, self.history, self.incidents, now)).encode(), "application/json"),
+        }
+        with self.lock:
+            self.files, self.rendered_at = files, now
+
+    def _save(self):
+        path = os.path.join(self.data_dir, "history.json")
+        tmp = path + ".tmp"
+        try:
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(self.history, f, separators=(",", ":"))
+            os.replace(tmp, path)
+        except OSError as err:
+            print(json.dumps({"error": "history not saved", "kind": type(err).__name__}), file=sys.stderr, flush=True)
+
+    def answer(self, path, accept_language):
+        """(status, content type, body, extra headers) for a GET of `path`."""
+        path = path.split("?", 1)[0]
+        if path == "/healthz":
+            ok = self.rendered_at is not None and self.clock() - self.rendered_at < 180
+            return (200, "text/plain", b"ok", {}) if ok else (503, "text/plain", b"no page rendered for three minutes", {})
+        extra = {"Cache-Control": CACHE}
+        if path in ("/", "/index.html"):
+            path, extra["Vary"] = f"/{prefer(accept_language)}/", "Accept-Language"
+        elif path in ("/sk", "/en"):
+            return 308, "text/plain", b"", {"Location": path + "/"}
+        with self.lock:
+            found = self.files.get(path)
+        if found is None:
+            return 404, "text/plain; charset=utf-8", b"not found", {}
+        return 200, found[1], found[0], extra
+
+    def run(self):
+        while True:
+            time.sleep(60 - time.time() % 60)
+            try:
+                self.tick()
+            except Exception as err:  # noqa: BLE001 (one bad minute must not stop the page)
+                print(json.dumps({"error": "tick failed", "kind": type(err).__name__}), file=sys.stderr, flush=True)
+
+
+def prefer(accept_language):
+    """sk or en from an Accept-Language header; Slovak unless English ranks higher."""
+    best, best_q = "sk", -1.0
+    for part in (accept_language or "").split(",")[:20]:
+        tag, _, params = part.strip().partition(";")
+        lang = tag.strip().lower().split("-")[0]
+        if lang not in ("sk", "en"):
+            continue
+        q = 1.0
+        if params.strip().startswith("q="):
+            try:
+                q = float(params.strip()[2:])
+            except ValueError:
+                continue
+        if q > best_q:
+            best, best_q = lang, q
+    return best
+
+
+def serve(page, port):
+    class Handler(BaseHTTPRequestHandler):
+        def _reply(self, head_only):
+            status, kind, body, extra = page.answer(self.path, self.headers.get("Accept-Language"))
+            self.send_response(status)
+            self.send_header("Content-Type", kind)
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Content-Security-Policy", CSP)
+            self.send_header("X-Content-Type-Options", "nosniff")
+            for name, value in extra.items():
+                self.send_header(name, value)
+            self.end_headers()
+            if not head_only:
+                self.wfile.write(body)
+
+        def do_GET(self):
+            self._reply(False)
+
+        def do_HEAD(self):
+            self._reply(True)
+
+        def log_message(self, *args):
+            pass
+
+    ThreadingHTTPServer(("0.0.0.0", port), Handler).serve_forever()
+
+
+def main():
+    page = Page(os.environ["STATUS_TARGET"], os.environ["STATUS_DOMAIN"], os.environ["STATUS_PROBE_URL"],
+                load_incidents(os.environ.get("STATUS_INCIDENTS", ""), os.environ["STATUS_TARGET"]),
+                os.environ.get("STATUS_DATA", "/data"))
+    threading.Thread(target=page.run, daemon=True).start()
+    serve(page, int(os.environ.get("STATUS_PORT", "8080")))
+
+
+if __name__ == "__main__":
+    main()

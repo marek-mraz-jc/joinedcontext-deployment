@@ -89,7 +89,8 @@
   edge.tabIndex = 0;
   edge.setAttribute("role", "separator");
   edge.setAttribute("aria-orientation", "vertical");
-  edge.setAttribute("aria-label", /^cs/.test(root.lang) ? "Šířka asistenta" : /^en/.test(root.lang) ? "Assistant width" : "Šírka asistenta");
+  var widths = { en: "Assistant width", cs: "Šířka asistenta", de: "Breite des Assistenten", hu: "Az asszisztens szélessége" };
+  edge.setAttribute("aria-label", widths[String(root.lang).slice(0, 2)] || "Šírka asistenta");
   function width(px, keep) {
     var most = Math.max(360, Math.floor(window.innerWidth / 2));
     var w = Math.round(Math.min(Math.max(px, 360), most));

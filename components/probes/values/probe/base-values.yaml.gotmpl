@@ -22,12 +22,12 @@ image:
 
 command: ["python3", "/etc/probe/probe.py"]
 
-{{- /* This cluster's own hosts first, then each peer's: api., the catalogue's subDomain and assistant. */}}
+{{- /* This cluster's own hosts first, then each peer's: api., the catalogue's subDomain, portal. and assistant. */}}
 {{- $catalogue := ((.Values.ckan | default dict).catalogue | default dict).subDomain | default "opendata" }}
 {{- $targets := list }}
 {{- $envs := prepend ($probe.peers | default list) (dict "name" (splitList "." $global.domain | first) "domain" $global.domain) }}
 {{- range $envs }}
-{{- $targets = append $targets (dict "name" .name "api" (printf "https://api.%s" .domain) "catalogue" (printf "https://%s.%s" $catalogue .domain) "assistant" (printf "https://assistant.%s" .domain) "assistantId" $probe.assistantId) }}
+{{- $targets = append $targets (dict "name" .name "api" (printf "https://api.%s" .domain) "catalogue" (printf "https://%s.%s" $catalogue .domain) "portal" (printf "https://portal.%s" .domain) "assistant" (printf "https://assistant.%s" .domain) "assistantId" $probe.assistantId) }}
 {{- end }}
 env:
   PROBE_TARGETS: {{ $targets | toJson | quote }}
