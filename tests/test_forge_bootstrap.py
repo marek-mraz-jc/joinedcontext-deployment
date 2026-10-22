@@ -382,7 +382,9 @@ def test_the_seed_carries_the_organization_its_settings_and_a_project_manifest(l
     organizations = {
         key: yaml.safe_load(text) for key, text in seed.items() if key.startswith("organizations__")
     }
-    assert set(organizations) == {"organizations__hel.yaml", "organizations__zilina.yaml"}
+    assert set(organizations) == {
+        "organizations__hel.yaml", "organizations__zilina.yaml", "organizations__barcelona.yaml",
+    }
     by_name = {o["metadata"]["name"]: o for o in organizations.values()}
     assert [n for n, o in by_name.items() if o["spec"].get("installation")] == ["hel"], (
         "exactly one installation Organization (PF-121)"
@@ -414,10 +416,11 @@ def test_the_seed_carries_the_organization_its_settings_and_a_project_manifest(l
             assert domain == owner["spec"]["domain"] or domain.endswith("." + owner["spec"]["domain"]), (
                 f"project {project!r} publishes under its Organization's domain (PF-122)"
             )
-    assert yaml.safe_load(seed["projects__zilina__project.yaml"])["spec"]["organizationRef"] == "zilina"
+    for own in ("zilina", "barcelona"):
+        assert yaml.safe_load(seed[f"projects__{own}__project.yaml"])["spec"]["organizationRef"] == own
     assert {
         yaml.safe_load(seed[f"projects__{p}__project.yaml"])["spec"]["organizationRef"]
-        for p in projects - {"zilina"}
+        for p in projects - {"zilina", "barcelona"}
     } == {"hel"}, "the other demo projects stay under hel (ADR-N-058)"
 
 
@@ -634,15 +637,17 @@ def test_each_organization_has_its_keycloak_subtree_and_administrator(local):
         and d["metadata"]["name"].endswith("keycloak-config-cli-config-realms")
     )
     parsed = json.loads(base64.b64decode(realm["data"]["local.json"]))
-    assert {"name": "zilina", "path": "/zilina"} in parsed["groups"]
-    admin = next(u for u in parsed["users"] if u["username"].startswith("demo.zilina@"))
-    assert "/zilina" in admin["groups"]
-    assert "portal-approver" in admin["realmRoles"]
-    assert any(c["type"] == "otp" and c.get("id") for c in admin["credentials"]), "seeded OTP keeps an id (T-5214)"
-
     seed = seed_configmap(local)["data"]
-    viewers = yaml.safe_load(seed["users__assignments__zilina-viewers.yaml"])
-    assert viewers["spec"]["subjects"] == [{"group": "zilina", "source": "provider"}]
-    admins = yaml.safe_load(seed["users__assignments__zilina-admins.yaml"])
-    assert admins["spec"]["subjects"] == [{"user": "demo.zilina@hel.fi"}], "the dev realm's name of the person"
-    assert admins["spec"]["scope"] == {"organization": "zilina"}
+    # Barcelona's the same way (T-5260).
+    for name in ("zilina", "barcelona"):
+        assert {"name": name, "path": f"/{name}"} in parsed["groups"]
+        admin = next(u for u in parsed["users"] if u["username"].startswith(f"demo.{name}@"))
+        assert f"/{name}" in admin["groups"]
+        assert "portal-approver" in admin["realmRoles"]
+        assert any(c["type"] == "otp" and c.get("id") for c in admin["credentials"]), "seeded OTP keeps an id (T-5214)"
+
+        viewers = yaml.safe_load(seed[f"users__assignments__{name}-viewers.yaml"])
+        assert viewers["spec"]["subjects"] == [{"group": name, "source": "provider"}]
+        admins = yaml.safe_load(seed[f"users__assignments__{name}-admins.yaml"])
+        assert admins["spec"]["subjects"] == [{"user": f"demo.{name}@hel.fi"}], "the dev realm's name of the person"
+        assert admins["spec"]["scope"] == {"organization": name}
