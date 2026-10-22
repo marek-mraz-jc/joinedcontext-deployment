@@ -49,7 +49,7 @@ OD_STANDARDS = [
      "http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core", "ogc", "location"),
     ("odata/v4/{type}", "OData v4", "OData", "application/json", "https://docs.oasis-open.org/odata/odata/v4.01/", "odata", None),
     ("sta/v1.1/Datastreams", "SensorThings API", "STA", "application/json", "http://www.opengis.net/spec/iot_sensing/1.1",
-     "odata", "series"),
+     "sta", "series"),
     ("mcp", "Model Context Protocol", "MCP", "application/json", "https://modelcontextprotocol.io/specification", None, None),
     ("ws", "WebSocket", "WebSocket", "application/json", None, None, None),
 ]
@@ -120,9 +120,14 @@ def od_model_files(root, endpoint, kind):
             for file, label in OD_MODEL_FILES.items()]
 
 
+def _odata(text):
+    """An OData string literal's text: a quote written twice (OData 4.01 ABNF `SQUOTE-in-string`)."""
+    return text.replace("'", "''")
+
+
 def _od_address(entry, path, filtered):
     """The URL of `path` under the dataset's Endpoint, keeping only its rows the way `filtered`
-    says (`q`, `ogc`, `odata`) or every row of its type (None)."""
+    says (`q`, `ogc`, `odata`, `sta`) or every row of its type (None)."""
     root = f"{OD_GATEWAY}/api/endpoint/{entry['endpoint']}/"
     dataset = entry["dataset"]
     mine = {
@@ -131,8 +136,13 @@ def _od_address(entry, path, filtered):
         # OData string literals double a quote (OData 4.01 ABNF `SQUOTE-in-string`); a space is
         # %20, since `+` is a space only in form encoding, not in OData's URL conventions. SensorThings
         # is OData too: the gateway reads this `$filter` as the same `q` (T-4288).
-        "odata": _parse.urlencode({"$filter": "isPartOf eq '" + dataset.replace("'", "''") + "'"},
+        "odata": _parse.urlencode({"$filter": "isPartOf eq '" + _odata(dataset) + "'"},
                                   quote_via=_parse.quote),
+        # SensorThings names a Datastream's Entity Attribute through its Thing, and its type narrows
+        # the read to that type: a bare `isPartOf` scanned every type and timed out (T-5205).
+        "sta": _parse.urlencode({"$filter": f"Thing/properties/type eq '{_odata(entry['type'])}'"
+                                            f" and Thing/properties/isPartOf eq '{_odata(dataset)}'"},
+                                quote_via=_parse.quote),
     }
     url = root + path.replace("{type}", _parse.quote(entry["type"]))
     if path == "ws":

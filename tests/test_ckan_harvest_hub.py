@@ -287,7 +287,8 @@ def test_a_converted_dataset_lists_the_platform_apis_and_its_model_and_an_unconv
     # T-4288: a dataset of measured numbers also lists SensorThings, its Datastreams over the same rows.
     monkeypatch.setitem(OD_DATASETS, package["name"], dict(entry, series=True))
     sta = next(r for r in harvest.od_standards(package["name"]) if r["format"] == "STA")
-    assert sta["url"] == root + "sta/v1.1/Datastreams?%24filter=isPartOf%20eq%20%27" + dataset + "%27"
+    assert sta["url"] == (root + "sta/v1.1/Datastreams?%24filter=Thing%2Fproperties%2Ftype%20eq%20%27"
+                          + quote(entry["type"]) + "%27%20and%20Thing%2Fproperties%2FisPartOf%20eq%20%27" + dataset + "%27")
     assert sta["conforms_to"] == "http://www.opengis.net/spec/iot_sensing/1.1" and sta["description"].startswith("These rows")
     monkeypatch.setitem(OD_DATASETS, package["name"], entry)
     assert "STA" not in [r["format"] for r in harvest.od_standards(package["name"])], "no series, no SensorThings"
