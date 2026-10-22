@@ -146,3 +146,36 @@ zilina-endpoint-pamiatky.yaml: projects/zilina/spaces/zilina-verejne/endpoints/z
 zilina-policy-pamiatky-read.yaml: projects/zilina/spaces/zilina-verejne/policies/pamiatky-read.yaml
 zilina-endpoint-stanice.yaml: projects/zilina/spaces/zilina-verejne/endpoints/zilina-zeleznicne-stanice.yaml
 zilina-policy-stanice-read.yaml: projects/zilina/spaces/zilina-verejne/policies/stanice-read.yaml
+# The city's own open data portal (opendata.zilina.sk, T-5232): car parks, buses and trolleybuses,
+# traffic counters and street lights, live, in one space; seeds/zilina-opendata/inventory.csv
+# accounts for every dataset of the portal.
+zilina-space-doprava.yaml: projects/zilina/spaces/zilina-doprava/space.yaml
+zilina-datamodel-doprava.yaml: projects/zilina/spaces/zilina-doprava/datamodels/zilina-doprava.yaml
+zilina-doprava.linkml.yaml: projects/zilina/spaces/zilina-doprava/datamodels/zilina-doprava.linkml.yaml
+zilina-doprava.v1.schema.json: projects/zilina/spaces/zilina-doprava/datamodels/zilina-doprava.v1.schema.json
+zilina-doprava.v1.context.jsonld: projects/zilina/spaces/zilina-doprava/datamodels/zilina-doprava.v1.context.jsonld
+zilina-doprava.v1.example.jsonld: projects/zilina/spaces/zilina-doprava/datamodels/zilina-doprava.v1.example.jsonld
+zilina-doprava.v1.md: projects/zilina/spaces/zilina-doprava/datamodels/zilina-doprava.v1.md
+zilina-endpoint-doprava.yaml: projects/zilina/spaces/zilina-doprava/endpoints/zilina-doprava.yaml
+zilina-policy-doprava-pipelines-write.yaml: projects/zilina/spaces/zilina-doprava/policies/doprava-pipelines-write.yaml
+zilina-endpoint-parkoviska.yaml: projects/zilina/spaces/zilina-doprava/endpoints/zilina-parkoviska.yaml
+zilina-policy-parkoviska-read.yaml: projects/zilina/spaces/zilina-doprava/policies/parkoviska-read.yaml
+zilina-endpoint-mhd.yaml: projects/zilina/spaces/zilina-doprava/endpoints/zilina-mhd.yaml
+zilina-policy-mhd-read.yaml: projects/zilina/spaces/zilina-doprava/policies/mhd-read.yaml
+zilina-endpoint-scitace.yaml: projects/zilina/spaces/zilina-doprava/endpoints/zilina-scitace.yaml
+zilina-policy-scitace-read.yaml: projects/zilina/spaces/zilina-doprava/policies/scitace-read.yaml
+zilina-endpoint-svietidla.yaml: projects/zilina/spaces/zilina-doprava/endpoints/zilina-svietidla.yaml
+zilina-policy-svietidla-read.yaml: projects/zilina/spaces/zilina-doprava/policies/svietidla-read.yaml
+zilina-datasource-parkovanie.yaml: projects/zilina/datasources/zilina-opendata-parkoviska.yaml
+zilina-datasource-mhd-vozidla.yaml: projects/zilina/datasources/zilina-opendata-mhd-vozidla.yaml
+zilina-datasource-scitace.yaml: projects/zilina/datasources/zilina-opendata-portal.yaml
+zilina-datasource-svietidla.yaml: projects/zilina/datasources/zilina-opendata-svietidla.yaml
+zilina-pipeline-parkovanie.yaml: projects/zilina/pipelines/parkovanie/pipeline.yaml
+zilina-pipeline-parkovanie-bento.yaml: projects/zilina/pipelines/parkovanie/bento.yaml
+zilina-pipeline-mhd-vozidla.yaml: projects/zilina/pipelines/mhd-vozidla/pipeline.yaml
+zilina-pipeline-mhd-vozidla-bento.yaml: projects/zilina/pipelines/mhd-vozidla/bento.yaml
+zilina-pipeline-scitace.yaml: projects/zilina/pipelines/scitace/pipeline.yaml
+zilina-pipeline-scitace-bento.yaml: projects/zilina/pipelines/scitace/bento.yaml
+zilina-pipeline-svietidla.yaml: projects/zilina/pipelines/svietidla/pipeline.yaml
+zilina-pipeline-svietidla-bento.yaml: projects/zilina/pipelines/svietidla/bento.yaml
+zilina-policy-doprava-read.yaml: projects/zilina/spaces/zilina-doprava/policies/doprava-read.yaml
