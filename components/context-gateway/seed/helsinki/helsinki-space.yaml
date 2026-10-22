@@ -65,6 +65,10 @@ spec:
       history: 'off'
     - entityType: GtfsStop
       history: 'off'
+    # Official statistics, one row per period (T-5258): ten years, the longest a duration may
+    # be (DM-82); the source keeps every earlier period.
+    - entityType: KeyPerformanceIndicator
+      history: P3650D
     - entityType: OffStreetParking
       history: P30D
       # Written on every run without an observedAt: one row per change and one a week,

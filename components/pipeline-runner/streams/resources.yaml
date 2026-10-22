@@ -32,6 +32,12 @@ rate_limit_resources:
     local:
       count: 1
       interval: 1s
+  # helsinki statistics: the city's statistics service (stat.hel.fi PXWEB) is called at most once
+  # a second, one table after another (T-5258).
+  - label: hel_stat
+    local:
+      count: 1
+      interval: 1s
   # hsl-hfp-vehicles: the most positions it writes a second (T-5046), two and a half times
   # HSL's peak of about 2,000 vehicles; a flood of frames waits here instead of reaching the
   # gateway.

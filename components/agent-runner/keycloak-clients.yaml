@@ -137,6 +137,47 @@ helsinki-agent-proxy:
           included.custom.audience: w5vgo2mi6phigetdq3pvvcjgznw73hji
           access.token.claim: 'true'
           id.token.claim: 'false'
+      # The area statistics, one Endpoint per theme (T-5258).
+      - name: helsinki-statistics-population-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: hb4cgyuttzzhtgxangivybcsvjx747ui
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-statistics-housing-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: fxokhhdfi5kf2sahspabslnxd2ahhr7c
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-statistics-employment-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: yvvjivtkvjt7bitgrg34s442gerqo4k2
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-statistics-income-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: ciub7zhdbmaqh2gg3e4yau6f6bjvuoax
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-statistics-education-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: cparzbvehzoznbb2nuiyzkeudohmdhsq
+          access.token.claim: 'true'
+          id.token.claim: 'false'
       - name: helsinki-parking-audience
         protocol: openid-connect
         protocolMapper: oidc-audience-mapper
