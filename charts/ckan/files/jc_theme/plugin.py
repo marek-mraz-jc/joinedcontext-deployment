@@ -1709,6 +1709,127 @@ def jc_map_page(id, resource_id=None):
     return page, 200, {"Content-Security-Policy": MAP_CSP}
 
 
+def _site_url():
+    return (toolkit.config.get("ckan.site_url") or "").rstrip("/")
+
+
+def _json_in_script(value):
+    """JSON a `<script>` element cannot be closed by: a dataset's words are the publisher's."""
+    text = json.dumps(value, ensure_ascii=False, sort_keys=True)
+    return text.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+
+
+def jc_schema_org_dict(pkg):
+    """The dataset as a schema.org Dataset (T-5123), the record a search engine's dataset index
+    reads. Everything comes from the dataset: no value of its own, a field the dataset lacks is
+    left out and scripts/check-schema-org.py names it."""
+    extras = _extras(pkg)
+    site = _site_url()
+    url = "%s/dataset/%s" % (site, pkg.get("name"))
+    organization = pkg.get("organization") or {}
+    creator = {"@type": "Organization", "name": extras.get("publisher_name") or organization.get("title")}
+    if _is_url(extras.get("publisher_uri")):
+        creator["sameAs"] = extras["publisher_uri"]
+    record = {
+        "@context": "https://schema.org/",
+        "@type": "Dataset",
+        "@id": url,
+        "url": url,
+        "name": pkg.get("title") or pkg.get("name"),
+        # Google takes 50 to 5000 characters.
+        "description": (pkg.get("notes") or pkg.get("title") or "")[:5000],
+        "identifier": extras.get("identifier") or pkg.get("id"),
+        "isAccessibleForFree": True,
+        "creator": creator,
+        "publisher": creator,
+        "includedInDataCatalog": {"@type": "DataCatalog", "name": jc_site_title(), "url": site + "/"},
+        "keywords": [t.get("display_name") or t.get("name") for t in pkg.get("tags") or []],
+        "datePublished": extras.get("issued") or pkg.get("metadata_created"),
+        "dateModified": extras.get("modified") or pkg.get("metadata_modified"),
+    }
+    licence = extras.get("license_url") or pkg.get("license_url")
+    if _is_url(licence):
+        record["license"] = licence
+    coverage = extras.get("spatial_uri")
+    if _is_url(coverage):
+        nuts = re.search(r"/nuts/code/([A-Z]{2}[0-9A-Z]{0,3})$", coverage)
+        names = NUTS_NAMES.get(nuts.group(1)) if nuts else None
+        name = (names.get(_language()) or names["en"]) if names else ("NUTS " + nuts.group(1) if nuts else coverage)
+        record["spatialCoverage"] = {"@type": "Place", "name": name, "sameAs": coverage}
+    # An ISO 8601 interval; a dataset that is still updated runs from its start to "..".
+    start = extras.get("temporal_start") or (record["datePublished"] or "")[:10]
+    if start:
+        record["temporalCoverage"] = "%s/%s" % (start, extras.get("temporal_end") or "..")
+    record["distribution"] = [
+        {"@type": "DataDownload", "name": r.get("name") or r.get("format"), "contentUrl": r["url"],
+         "encodingFormat": r.get("mimetype") or r.get("format")}
+        for r in pkg.get("resources") or [] if _is_url(r.get("url")) and (r.get("mimetype") or r.get("format"))
+    ]
+    return {k: v for k, v in record.items() if v not in (None, "", [])}
+
+
+def jc_schema_org(pkg):
+    """The `application/ld+json` text of a dataset page."""
+    return _json_in_script(jc_schema_org_dict(pkg))
+
+
+# A sitemap file holds at most 50 000 addresses (sitemaps.org).
+SITEMAP_MAX = 50000
+
+
+def jc_sitemap_entries(search=None, organizations=None):
+    """(address, last change) of each public dataset and each organization (T-5123). The search
+    is anonymous and asks for no private or draft dataset, and the hidden ones (T-4318) are left
+    out whoever asks, so the file never names what an anonymous reader cannot open."""
+    search = search or toolkit.get_action("package_search")
+    organizations = organizations or toolkit.get_action("organization_list")
+    site = _site_url()
+    entries, start = [], 0
+    while len(entries) < SITEMAP_MAX:
+        page = search({"user": "", "ignore_auth": False}, {
+            "q": "*:*", "fq": "+dataset_type:dataset", "rows": 1000, "start": start, "sort": "name asc",
+            "include_private": False, "include_drafts": False, "fl": ["name", "metadata_modified"]})
+        results = page.get("results") or []
+        for pkg in results:
+            if pkg.get("name") in HIDDEN:
+                continue
+            # Solr's date comes back as text or, through pysolr, a datetime: its first ten characters either way.
+            entries.append(("%s/dataset/%s" % (site, pkg["name"]), str(pkg.get("metadata_modified") or "")[:10]))
+        start += len(results)
+        if not results or start >= page.get("count", 0):
+            break
+    for name in organizations({"user": "", "ignore_auth": False}, {"all_fields": False}):
+        entries.append(("%s/organization/%s" % (site, name), ""))
+    return entries[:SITEMAP_MAX]
+
+
+def jc_sitemap_xml(entries):
+    lines = ['<?xml version="1.0" encoding="UTF-8"?>',
+             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for loc, modified in entries:
+        lastmod = "<lastmod>%s</lastmod>" % html.escape(modified) if re.fullmatch(r"\d{4}-\d{2}-\d{2}", modified) else ""
+        lines.append("<url><loc>%s</loc>%s</url>" % (html.escape(loc), lastmod))
+    lines.append("</urlset>")
+    return "\n".join(lines) + "\n"
+
+
+def jc_robots_txt():
+    """CKAN's own rules and the sitemap; a demo that asks search engines to stay out (T-4687)
+    closes the whole site instead."""
+    if BRANDING.get("noindex"):
+        return "User-agent: *\nDisallow: /\n"
+    return ("User-agent: *\nDisallow: /dataset/rate/\nDisallow: /revision/\nDisallow: /dataset/*/history\n"
+            "Disallow: /api/\nCrawl-Delay: 10\n\nSitemap: %s/sitemap.xml\n" % _site_url())
+
+
+def jc_sitemap_page():
+    return jc_sitemap_xml(jc_sitemap_entries()), 200, {"Content-Type": "application/xml; charset=utf-8"}
+
+
+def jc_robots_page():
+    return jc_robots_txt(), 200, {"Content-Type": "text/plain; charset=utf-8"}
+
+
 def jc_total(previews):
     """All rows of the tables, or None when any table's count is unknown."""
     totals = [p["total"] for p in previews or []]
@@ -1777,6 +1898,11 @@ SLAVIC_ENDINGS = ("iach", "ách", "ami", "ých", "ými", "ého", "ému", "ia", "
                   "om", "ov", "ou", "ím", "ým", "a", "á", "e", "é", "ě", "i", "í", "o", "u", "ú", "y", "ý")
 
 
+# The endings whose vowel drops when the word declines (T-5116): "dôchodok" is "dôchodky",
+# "lekáreň" "lekárne", "Lučenec" "Lučenca", so the word's own prefix misses every other form.
+FLEETING = (("ok", "k"), ("ek", "k"), ("ec", "c"), ("eň", "n"))
+
+
 def jc_stem(word):
     """`(word OR stem*)` for a word of four letters or more, else the word (T-4239, T-4387). The
     catalogue's Solr stems in English, so "ovzdušie" missed every "ovzdušia". Any word, since a
@@ -1788,6 +1914,9 @@ def jc_stem(word):
     for ending in SLAVIC_ENDINGS:
         if word.lower().endswith(ending) and len(word) - len(ending) >= 4:
             return "(%s OR %s*)" % (word, word[: -len(ending)])
+    for ending, rest in FLEETING:
+        if word.lower().endswith(ending) and len(word) - 1 >= 5:
+            return "(%s OR %s* OR %s%s*)" % (word, word, word[: -len(ending)], rest)
     return "(%s OR %s*)" % (word, word)
 
 
@@ -2565,6 +2694,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_number": jc_number,
             "jc_rows": jc_rows,
             "jc_formats": jc_formats,
+            "jc_schema_org": jc_schema_org,
             "jc_recent": jc_recent,
             "jc_portal_url": jc_portal_url,
             "jc_mcp_install": jc_mcp_install,
@@ -2607,7 +2737,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
     def get_blueprint(self):
         """/connector, /privacy, /terms, /support (T-4315) and /accessibility (T-5108), one template for all five,
         /assistants (T-4585), a guide per assistant at /assistants/{id} (T-4643) and
-        /map/{dataset} (T-4639)."""
+        /map/{dataset} (T-4639), /sitemap.xml and /robots.txt (T-5123)."""
         from flask import Blueprint
 
         blueprint = Blueprint("jc_pages", self.__module__)
@@ -2618,6 +2748,9 @@ class JcThemePlugin(plugins.SingletonPlugin):
         # The framable map of a dataset, or of one of its tables (T-4639).
         blueprint.add_url_rule("/map/<id>", "map", jc_map_page)
         blueprint.add_url_rule("/map/<id>/<resource_id>", "map_resource", jc_map_page)
+        # Datasets findable from outside (T-5123).
+        blueprint.add_url_rule("/sitemap.xml", "sitemap", jc_sitemap_page)
+        blueprint.add_url_rule("/robots.txt", "robots", jc_robots_page)
         return blueprint
 
     def before_dataset_search(self, search_params):

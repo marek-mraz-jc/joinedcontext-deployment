@@ -10,6 +10,14 @@ apisix:
     # (T-0929). k3s and kube-hetzner both hand pods 10.42.0.0/16; a cluster with another pod
     # network overrides this in its environment.
     trustedProxyCidr: "10.42.0.0/16"
+    # The maintenance switch (T-5119): during a planned window the deployer lists the
+    # subdomains whose service is off (`context`, `portal`, ...), and the edge answers every
+    # request to those hosts with a 503, `Retry-After: retryAfterSeconds`, a maintenance page
+    # for a browser and Problem Details for a client, without reaching the upstream. Empty is
+    # off. Set it in the environment's values and apply apisix; clear it after the window.
+    maintenance:
+      hosts: []
+      retryAfterSeconds: 900
   configuration:
     enabled: true
     namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "apisix") }}

@@ -27,6 +27,20 @@
         plugins:
           client-control:
             max_body_size: {{ mul (int .Values.maxRequestBodyMegabytes) 1048576 }}
+    {{- /* T-5119: an address no route serves. APISIX runs the global rules and then writes
+           `{"error_msg":"404 Route Not Found"}` itself; a bare 404 here instead lands on the
+           server block's error page (a page or Problem Details, like every other edge error). */}}
+      - id: edge-not-found
+        plugins:
+          serverless-pre-function:
+            phase: access
+            functions:
+              - >-
+                return function(conf, ctx)
+                  if ctx.matched_route == nil then
+                    return ngx.exit(404)
+                  end
+                end
     {{- /* T-5107 (ZAP baseline): the floor of every answer, the edge's own 404 for an address no
            route serves included, added only where nothing upstream or on the route set it. An
            App on its own host chooses its own Permissions-Policy (a map App asks for location). */}}
