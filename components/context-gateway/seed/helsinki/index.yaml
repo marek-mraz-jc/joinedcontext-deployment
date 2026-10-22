@@ -166,6 +166,20 @@ helsinki-pipeline-districts-bento.yaml: projects/helsinki/pipelines/districts/be
 helsinki-pipeline-subdistricts-bento.yaml: projects/helsinki/pipelines/subdistricts/bento.yaml
 helsinki-pipeline-fee-parking-zones-bento.yaml: projects/helsinki/pipelines/fee-parking-zones/bento.yaml
 helsinki-pipeline-resident-parking-zones-bento.yaml: projects/helsinki/pipelines/resident-parking-zones/bento.yaml
+# HSL's network registers (T-5254): fare zones, ticket sales points, City Bike Vantaa's stations and the
+# boardings per stop, which go to the indicator space.
+helsinki-datasource-fare-zones.yaml: projects/helsinki/datasources/hsl-fare-zones.yaml
+helsinki-datasource-sales-points.yaml: projects/helsinki/datasources/hsl-sales-points.yaml
+helsinki-datasource-vantaa-bikes.yaml: projects/helsinki/datasources/hsl-vantaa-bikes.yaml
+helsinki-datasource-stop-boardings.yaml: projects/helsinki/datasources/hsl-stop-boardings.yaml
+helsinki-pipeline-fare-zones.yaml: projects/helsinki/pipelines/fare-zones/pipeline.yaml
+helsinki-pipeline-sales-points.yaml: projects/helsinki/pipelines/sales-points/pipeline.yaml
+helsinki-pipeline-vantaa-bikes.yaml: projects/helsinki/pipelines/vantaa-bikes/pipeline.yaml
+helsinki-pipeline-stop-boardings.yaml: projects/helsinki/pipelines/stop-boardings/pipeline.yaml
+helsinki-pipeline-fare-zones-bento.yaml: projects/helsinki/pipelines/fare-zones/bento.yaml
+helsinki-pipeline-sales-points-bento.yaml: projects/helsinki/pipelines/sales-points/bento.yaml
+helsinki-pipeline-vantaa-bikes-bento.yaml: projects/helsinki/pipelines/vantaa-bikes/bento.yaml
+helsinki-pipeline-stop-boardings-bento.yaml: projects/helsinki/pipelines/stop-boardings/bento.yaml
 # HSL's stops and lines (T-3356): the network transit-reach routes over, beside the live vehicles.
 helsinki-datasource-transit-stops.yaml: projects/helsinki/datasources/hsl-gtfs-stops.yaml
 helsinki-datasource-transit-routes.yaml: projects/helsinki/datasources/hsl-routes.yaml
