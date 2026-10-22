@@ -24,6 +24,8 @@ import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 THEME = PROJECT_ROOT / "charts/ckan/files/jc_theme"
+# The Portal's four languages and Hungarian for southern BBSK (T-5115).
+LANGUAGES = {"en", "sk", "cs", "de", "hu"}
 
 
 @pytest.fixture
@@ -483,7 +485,7 @@ def test_each_resource_has_its_one_action_named_for_a_screen_reader():
 
 
 @pytest.mark.parametrize("lang, words", [
-    ("sk", ("Vydavateľ", "Denne")), ("cs_CZ", ("Vydavatel", "Denně")), ("de", ("Herausgeber", "Täglich")), ("fi", ("Publisher", "Every day")),
+    ("sk", ("Vydavateľ", "Denne")), ("cs_CZ", ("Vydavatel", "Denně")), ("de", ("Herausgeber", "Täglich")), ("hu", ("Kiadó", "Naponta")), ("fi", ("Publisher", "Every day")),
 ])
 def test_the_page_language_picks_the_words_and_an_unknown_one_reads_english(theme, lang, words):
     theme.page.lang = lang
@@ -492,12 +494,48 @@ def test_the_page_language_picks_the_words_and_an_unknown_one_reads_english(them
     assert words[1] in rows.values()
 
 
-def test_every_word_of_the_theme_is_in_all_four_languages(theme):
-    for table in (theme.STRINGS, theme.FORMATS, theme.MODEL_FILES):
+def test_every_word_of_the_theme_is_in_every_language(theme):
+    """T-5115: the CI check that fails on a missing key, empty text or an untranslated placeholder."""
+    tables = {"STRINGS": theme.STRINGS, "FORMATS": theme.FORMATS, "MODEL_FILES": theme.MODEL_FILES,
+              "EXTRA_LABELS": theme.EXTRA_LABELS, "NUTS_NAMES": theme.NUTS_NAMES,
+              "FREQUENCIES": {key: words for key, (words, _) in theme.FREQUENCIES.items()}}
+    for name, table in tables.items():
         for key, words in table.items():
-            assert set(words) == {"en", "sk", "cs", "de"}, key
-    for key, (words, _) in theme.FREQUENCIES.items():
-        assert set(words) == {"en", "sk", "cs", "de"}, key
+            assert set(words) == LANGUAGES, (name, key)
+            assert all(words.values()), (name, key)
+            placeholders = set(re.findall(r"\{\w+\}", str(words["en"])))
+            for lang, text in words.items():
+                assert set(re.findall(r"\{\w+\}", str(text))) == placeholders, (name, key, lang)
+
+
+def test_no_word_of_the_theme_is_defined_twice():
+    """T-5115: a second "guide" entry silently replaced the WebSocket guide's link text with "Guide"."""
+    import ast
+
+    tree = ast.parse((THEME / "plugin.py").read_text())
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and isinstance(node.value, ast.Dict):
+            keys = [k.value for k in node.value.keys if isinstance(k, ast.Constant)]
+            assert len(keys) == len(set(keys)), (node.targets[0].id, sorted({k for k in keys if keys.count(k) > 1}))
+
+
+def test_the_websocket_guide_and_the_assistant_guide_keep_their_own_words(theme):
+    theme.page.lang = "en"
+    assert theme.jc_t("guide") == "The WebSocket guide: messages, limits and examples"
+    assert theme.jc_t("guide_open") == "Guide"
+    theme.page.lang = "hu"
+    assert theme.jc_t("guide_open") == "Útmutató" and theme.jc_t("tagline").startswith("Böngéssze")
+
+
+def test_hungarian_is_offered_where_bbsk_s_catalogue_runs():
+    """T-5115: southern BBSK reads Hungarian; CKAN 2.11 ships `hu`, so offering it cannot stop CKAN."""
+    values = yaml.safe_load((PROJECT_ROOT / "charts/ckan/values.yaml").read_text())
+    assert "hu" in values["ckan"]["locales"]["offered"]
+    for env in ("dev", "smartcity"):
+        text = (PROJECT_ROOT / f".ci/example-deployments/environments/{env}/ckan.yaml.gotmpl").read_text()
+        assert "offered: [sk, en, cs, fi, hu]" in text and "hu: Nyílt adatok" in text, env
+    demo = (PROJECT_ROOT / "demos/bbsk/values/ckan.yaml.gotmpl").read_text()
+    assert demo.count("offered: [sk, hu, en]") == 2
 
 
 def test_the_search_filters_are_named_in_plain_words(theme):
@@ -1206,6 +1244,8 @@ def test_an_api_resource_page_shows_its_usage_where_ckan_said_no_view():
     ("sk", {1: "1 riadok", 3: "3 riadky", 5: "5 riadkov"}),
     ("cs_CZ", {1: "1 řádek", 4: "4 řádky", 12: "12 řádků"}),
     ("de", {1: "1 Zeile", 2: "2 Zeilen"}),
+    # Hungarian keeps the noun singular after a number.
+    ("hu", {1: "1 sor", 3: "3 sor", 5: "5 sor"}),
     ("fi", {1: "1 row", 7: "7 rows"}),
 ])
 def test_a_row_count_takes_its_language_s_plural(theme, lang, counts):
@@ -1799,9 +1839,9 @@ def test_the_assistants_page_reads_in_slovak(theme):
     assert not [k for k, words in theme.STRINGS.items()
                 if re.search(r"Pridať do|Add to|Přidat do|^Zu \w+ hinzufügen", " ".join(map(str, words.values())))]
     for key in ("assistants", "assistants_lead", "connector_status", "store_address", "for_developers", "coming_soon",
-                "copy", "any_client", "guide", "guide_title", "guide_who", "guide_steps", "guide_try",
+                "copy", "any_client", "guide_open", "guide_title", "guide_who", "guide_steps", "guide_try",
                 "guide_example", "guide_good", "guide_trouble", "guide_checked", "guide_back"):
-        assert set(theme.STRINGS[key]) == {"en", "sk", "cs", "de"}, key
+        assert set(theme.STRINGS[key]) == LANGUAGES, key
         # T-4628: the owner read English store words inside the Slovak steps.
         assert "Add custom" not in theme.STRINGS[key]["sk"] and "Create as" not in theme.STRINGS[key]["sk"], key
 
@@ -1866,7 +1906,7 @@ def render(template, theme, **context):
     return env.get_template(template).render(h=h, **context)
 
 
-@pytest.mark.parametrize("lang", ["sk", "en", "cs", "de"])
+@pytest.mark.parametrize("lang", ["sk", "en", "cs", "de", "hu"])
 def test_each_assistant_card_is_its_logo_its_name_and_its_guide(theme, lang):
     """T-4628, T-4735, the owner: "there should be just návod/guide", no store link. T-4609
     printed `card.copy` as "<built-in method copy …>": Jinja reads a dict's method before its key."""
@@ -1952,7 +1992,7 @@ def test_the_note_is_calm_and_every_language_has_its_words(theme):
     rule = re.search(r"^\.jc-connector-note \{([^}]*)\}", css, re.M).group(1)
     assert "var(--jc-primary-soft)" in rule and "danger" not in rule and "red" not in rule
     for key in ("connector_note", "connector_why", "guide_use"):
-        assert set(theme.STRINGS[key]) == {"en", "sk", "cs", "de"}, key
+        assert set(theme.STRINGS[key]) == LANGUAGES, key
     assert all("{connector}" in words for words in theme.STRINGS["guide_use"].values())
     # The instance's own question, named: dev asks about Helsinki's air (T-4636 keeps cities out of the theme).
     theme.BRANDING["samples"] = {"sk": ["Aká je teraz kvalita ovzdušia v Helsinkách?"]}
@@ -2722,7 +2762,7 @@ def test_the_assistants_page_lists_the_hub_s_websites_and_drops_a_malformed_entr
     template = (THEME / "templates__jc__assistants.html").read_text()
     assert "{% if page.sources %}" in template and 'aria-labelledby="jc-assistant-sources"' in template
     for key in ("assistants_sources", "assistants_sources_lead", "assistants_source_languages"):
-        assert set(theme.STRINGS[key]) == {"en", "sk", "cs", "de"}, key
+        assert set(theme.STRINGS[key]) == LANGUAGES, key
 
 
 def test_dev_lists_the_hub_s_knowledge_sources_as_the_seed_declares_them():
