@@ -9,11 +9,18 @@ mqtt-brokers:
     - Ingress
     - Egress
   ingress:
+    # The runner, and the Portal's capture subscriber (ADR-N-048 §2.10, T-4880): the chart's
+    # Linkerd Server admits both identities, the gateway grants the Portal subscribe on a
+    # capture broker only.
     - from:
         - podSelector:
             matchLabels:
               app.kubernetes.io/name: pipeline-runner-runner
           componentNamespace: pipeline-runner
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: portal-portal
+          componentNamespace: portal
       ports:
         - protocol: TCP
           port: 1883
@@ -98,7 +105,7 @@ runner-to-mqtt-brokers:
         - protocol: TCP
           port: 1883
 
-# The Portal's side of 6060.
+# The Portal's side of 6060, and of 1883 for its capture subscriber.
 portal-to-mqtt-brokers:
   componentNamespace: portal
   podSelector:
@@ -114,3 +121,5 @@ portal-to-mqtt-brokers:
       ports:
         - protocol: TCP
           port: 6060
+        - protocol: TCP
+          port: 1883
