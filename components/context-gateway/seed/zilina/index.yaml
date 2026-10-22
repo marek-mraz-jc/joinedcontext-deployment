@@ -3,6 +3,11 @@
 # Žilina project (T-3137): the city's ŠÚ SR rows, its public map data, the university's works and
 # the indicators, one model per space; the sources are joinedcontext-docs
 # Research/zilina-open-data-sources.md.
+# Mesto Žilina as an Organization of its own (ADR-N-058, T-5242), its administrator and its
+# readers; the bindings end at this Organization (PF-123).
+zilina-org.yaml: organizations/zilina.yaml
+zilina-rolebinding-admins.yaml: users/assignments/zilina-admins.yaml
+zilina-rolebinding-viewers.yaml: users/assignments/zilina-viewers.yaml
 zilina-project.yaml: projects/zilina/project.yaml
 zilina-serviceaccount-pipelines.yaml: projects/zilina/access/serviceaccounts/pipelines.yaml
 zilina-ckan.yaml: projects/zilina/ckan/zilina.yaml
