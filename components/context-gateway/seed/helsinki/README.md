@@ -38,6 +38,27 @@ the written gaps (address as text, closed by T-3949 with a PostalAddress; Alert'
 Event's single eventStatus; a beach sensor with no reading this season); AirQualityObserved,
 Vehicle and GtfsRoute had no entities to read.
 
+## Plausibility of the data (T-5259)
+
+`tests/helsinki/plausible.py <public endpoint>` reads every entity of the same types and counts
+what a schema cannot see: a point outside the capital-region box (HSL's area and the ends of its
+trains and regional buses, plus 1 km), at 0,0 or with longitude and latitude swapped; a value
+outside its physical range or above its capacity; an observation or issue stamp more than a day
+ahead; two entities of one name (and stop code, start or headsign) within 20 m; a `ref*` into a
+type that holds no such id; and entities unmodified for seven days. Run on dev 2026-10-22 18:16Z:
+
+- Alert: 4 HSL alerts announced for a later period carried that start as `dateIssued`; the
+  mapping now takes the feed's time until the period begins.
+- GtfsStop: 280 stops HSL's `stops.txt` no longer lists, last written 2026-10-11/13, and 22 of the
+  76 same-name, same-code pairs are those; the other 54 are HSL's own (a bus and a tram stop id at
+  one kerb). PointOfInterest 4, BikeHireDockingStation 2 and Event 21 such leftovers too; the ids
+  are in `/workspace/evidence/T-5259/orphans-2026-10-22.json`. An `upsert` pipeline never deletes.
+- AirQualityObserved had no public Endpoint (11 stations live, read only by the data app): it is
+  `helsinki-air-quality` now. GtfsShape had none because its pipeline was paused for T-3953, which
+  is done: it runs. Vehicle (HFP) had none at the time of the run (T-5247).
+- GtfsStation and GtfsAgency unmodified since 2026-10-12: their values have not changed, and all
+  122 stations match `stops.txt`.
+
 ## HSL sources and the load budget (T-3889)
 
 Measured 2026-10-12 00:28Z (03:28 in Helsinki, so the realtime feeds are at their night size) with
