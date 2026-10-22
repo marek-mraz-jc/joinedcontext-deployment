@@ -104,6 +104,9 @@ MIXED_BOUND = {"helsinki/public-transport", "helsinki/public-hub"}
 # cheaper to read than a month of a sensor's: they read all of it (T-5258).
 WHOLE_HISTORY = {f"helsinki/public-statistics-{theme}" for theme in
                  ("population", "housing", "employment", "income", "education")}
+# The heat vulnerability index (one period) and the monthly energy use of the service properties
+# are such series too (T-5278).
+WHOLE_HISTORY |= {"helsinki/public-heat-vulnerability", "helsinki/public-service-property-energy"}
 
 
 def public_policies():

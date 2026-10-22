@@ -253,3 +253,15 @@ helsinki-endpoint-statistics-income.yaml: projects/helsinki/spaces/helsinki/endp
 helsinki-policy-public-statistics-income.yaml: projects/helsinki/spaces/helsinki/policies/public-statistics-income.yaml
 helsinki-endpoint-statistics-education.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-statistics-education.yaml
 helsinki-policy-public-statistics-education.yaml: projects/helsinki/spaces/helsinki/policies/public-statistics-education.yaml
+# Heat vulnerability index and service property energy use (T-5278): one pipeline, one Endpoint and
+# one public Policy each.
+helsinki-datasource-heat-vulnerability.yaml: projects/helsinki/datasources/hel-heat-vulnerability.yaml
+helsinki-pipeline-heat-vulnerability.yaml: projects/helsinki/pipelines/heat-vulnerability/pipeline.yaml
+helsinki-pipeline-heat-vulnerability-bento.yaml: projects/helsinki/pipelines/heat-vulnerability/bento.yaml
+helsinki-endpoint-heat-vulnerability.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-heat-vulnerability.yaml
+helsinki-policy-public-heat-vulnerability.yaml: projects/helsinki/spaces/helsinki/policies/public-heat-vulnerability.yaml
+helsinki-datasource-service-property-energy.yaml: projects/helsinki/datasources/hel-nuuka-properties.yaml
+helsinki-pipeline-service-property-energy.yaml: projects/helsinki/pipelines/service-property-energy/pipeline.yaml
+helsinki-pipeline-service-property-energy-bento.yaml: projects/helsinki/pipelines/service-property-energy/bento.yaml
+helsinki-endpoint-service-property-energy.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-service-property-energy.yaml
+helsinki-policy-public-service-property-energy.yaml: projects/helsinki/spaces/helsinki/policies/public-service-property-energy.yaml
