@@ -77,6 +77,11 @@ export const DATA = {
     location: { type: "Point", coordinates: [19.14 + i / 200, 48.73 + i / 400] }
   })) }
 };
+// T-5196, DM-134: the same events, presented by the model alone: a default filter, 10 rows a page.
+DATA.presented = {
+  ...DATA.events,
+  model: EVENT_MODEL.replace("{view_order_by: startDate, view_upcoming: startDate}", "{view_order_by: startDate, view_filter: startDate>=today, view_page_length: 10}")
+};
 export const SLUGS = Object.fromEntries(Object.keys(DATA).map((k) => [k, (k + "slug").padEnd(32, "0").slice(0, 32)]));
 const FAIL = { forbidden: 403, missing: 404, gateway: 502, slow: 0 };
 for (const k of Object.keys(FAIL)) SLUGS[k] = (k + "fail").padEnd(32, "0").slice(0, 32);
