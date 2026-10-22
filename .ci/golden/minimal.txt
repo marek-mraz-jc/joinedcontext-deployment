@@ -159,6 +159,7 @@ v1/Service minimal/context-broker
 v1/Service minimal/keycloak-app-keycloakx-headless
 v1/Service minimal/keycloak-app-keycloakx-http
 v1/Service minimal/portal
+v1/Service minimal/portal-pods
 v1/ServiceAccount minimal/apisix
 v1/ServiceAccount minimal/context-broker
 v1/ServiceAccount minimal/jc-drift-reader

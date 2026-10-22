@@ -12,6 +12,11 @@
 
 fullnameOverride: portal
 
+# The Portal's pods by address: the gateway admits the Portal's tokenless MQTT capture subscriber
+# only from what this name resolves to (JC_GATEWAY_MQTT_PORTAL_HOST, ADR-N-048 §2.10, T-4880).
+headlessService:
+  name: portal-pods
+
 # The reconciler applies an App's four objects, so this pod needs an identity at the API server
 # and a Role that grants those four kinds in one namespace and nothing else (AP-13, T-0411).
 # Without the token the client finds no ServiceAccount mount and deploys nothing, which is the
