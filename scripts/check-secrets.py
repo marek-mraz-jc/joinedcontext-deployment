@@ -27,6 +27,9 @@ DERIVED_KEYS = {"client-secret": 32}
 # component `secrets.yaml`. The names are read, not matched by prefix: a generated
 # `keycloak-user-*` Secret for a user that file does not name still fails.
 DEMO_USER_KEYS = {"password": 32}
+# A demo person whose realm role carries `mfa-required` has a TOTP seed beside it (T-5120).
+MFA_ROLES = {"portal-approver", "platform-admin"}
+MFA_SEED_KEYS = {"totp": 32}
 # The owner's login of a production realm with dev's seeds (T-4678): declared in
 # defaults/environment/secrets.yaml.gotmpl, rendered by smartcity alone.
 OWNER_ACCOUNT = {"keycloak-user-initial": {"password": 32}}
@@ -64,7 +67,11 @@ def demo_user_declarations(components_dir: Path) -> dict[str, dict[str, int]]:
     if not path.exists():
         return {}
     users = yaml.safe_load(path.read_text()) or {}
-    return {f"keycloak-user-{name.replace('.', '-')}": dict(DEMO_USER_KEYS) for name in users}
+    return {
+        f"keycloak-user-{name.replace('.', '-')}": DEMO_USER_KEYS
+        | (MFA_SEED_KEYS if MFA_ROLES & set((user or {}).get("realmRoles") or []) else {})
+        for name, user in users.items()
+    }
 
 
 def main() -> int:

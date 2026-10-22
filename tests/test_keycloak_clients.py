@@ -163,10 +163,12 @@ def test_development_profile_seeds_the_demo_users(rendered):
         # uses email as username, and the import aborts before it sets any password (T-0366).
         assert user["username"] == user["email"]
         assert user["requiredActions"] == [], "a required action would block the demo login"
-        (credential,) = user["credentials"]
+        credential, *otp = user["credentials"]
         # Security line of T-0248: the password is a per-cluster Secret substituted at import
         # time, never a literal in the rendered realm.
         assert credential["value"].startswith("$(USER_PASSWORD_") and credential["temporary"] is False
+        # The approvers sign in with TOTP (T-5120): one seeded credential, by variable as well.
+        assert [c["type"] for c in otp] == (["otp"] if user["realmRoles"] else [])
 
 
 def test_demo_passwords_are_generated_per_cluster(rendered):
@@ -183,7 +185,9 @@ def test_demo_passwords_are_generated_per_cluster(rendered):
     }
     for secret in secrets.values():
         assert secret["metadata"]["annotations"]["helm.sh/resource-policy"] == "keep"
-        assert list(secret["data"]) == ["password"]
+        # The approvers' TOTP seed sits beside the password (T-5120).
+        approver = secret["metadata"]["name"] in ("keycloak-user-demo-steward", "keycloak-user-demo-approver")
+        assert sorted(secret["data"]) == (["password", "totp"] if approver else ["password"])
 
 
 def test_production_seeds_no_human_users(rendered):
