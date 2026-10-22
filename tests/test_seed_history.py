@@ -66,6 +66,9 @@ CHOSEN = {
     ("slovensko/ovzdusie-sk", "AirQualityObserved"): "P7D",
     # A vehicle keeps five minutes of track (T-5046, owner 2026-10-21; an hour before, T-4624).
     ("helsinki/helsinki", "Vehicle"): "PT5M",
+    # Žilina's buses keep an hour of track (T-4624) and its counters a month of hours (T-5232).
+    ("zilina/zilina-doprava", "Vehicle"): "PT1H",
+    ("zilina/zilina-doprava", "TrafficFlowObserved"): "P30D",
 }
 
 
