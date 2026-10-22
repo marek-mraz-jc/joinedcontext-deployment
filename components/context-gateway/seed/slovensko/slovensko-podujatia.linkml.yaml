@@ -266,9 +266,11 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://schema.org/Event
-      # How the catalogue's table opens (T-5192): from today on, soonest first, the undated last.
+      # How the catalogue's table opens (DM-133, DM-134): the default filter shows as filled inputs
+      # the reader can clear, soonest first, 20 rows a page. A publisher edits these in the Portal.
       view_order_by: startDate
-      view_upcoming: startDate
+      view_filter: startDate>=today
+      view_page_length: 20
     slots:
       - name
       - startDate

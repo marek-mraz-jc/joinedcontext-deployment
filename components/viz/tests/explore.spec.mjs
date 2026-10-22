@@ -26,7 +26,7 @@ const rows = (f) => f.getByRole("grid").locator("tbody tr");
 // What each data set shows once loaded: data rows in the grid, whether a map appears, a text it says.
 const EXPECT = {
   point: { rows: 3, map: true }, polygon: { rows: 2, map: true }, nogeo: { rows: 4, map: false }, zero: { rows: 0, map: false, says: { en: /No entities/, sk: /Žiadne entity/ } },
-  one: { rows: 1, map: true }, many: { rows: 25, map: false, says: { en: /12345 matching/, sk: /12345 vyhovujúcich/ } },
+  one: { rows: 1, map: true }, many: { rows: 20, map: false, says: { en: /12345 matching/, sk: /12345 vyhovujúcich/ } },
   long: { rows: 1, map: false }, multi: { rows: 1, map: false }, notypes: { rows: null, map: false }
 };
 const THEMED = new Set(["point", "many"]);
@@ -149,9 +149,9 @@ test("paging walks a large Endpoint by offset with its count", async ({ page, co
   const requests = await serve(context);
   await open(page, "many");
   const f = frame(page);
-  await expect(rows(f)).toHaveCount(25, { timeout: 20000 });
+  await expect(rows(f)).toHaveCount(20, { timeout: 20000 });
   await f.getByRole("button", { name: /Next/ }).first().click();
-  await expect.poll(() => entityCalls(requests).some((r) => r.url.searchParams.get("offset") === "25")).toBe(true);
+  await expect.poll(() => entityCalls(requests).some((r) => r.url.searchParams.get("offset") === "20")).toBe(true);
   await shot(page, "paged-1440");
 });
 

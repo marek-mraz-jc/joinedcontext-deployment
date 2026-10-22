@@ -24,7 +24,7 @@ for (const width of [1440, 400]) {
           const f = frame(page);
           const grid = f.getByRole("grid");
           await expect(grid).toBeVisible({ timeout: 20000 });
-          await expect(grid.locator("tbody tr")).toHaveCount(25);
+          await expect(grid.locator("tbody tr")).toHaveCount(20);
           // Titles and order from the model; the GeoProperty and the unranked provider stay out.
           const heads = (await grid.locator("thead tr").first().locator("th").allInnerTexts()).map((t) => t.replace(/[⋮↑↓]/g, "").trim());
           expect(heads).toEqual(LABELS[lang]);
@@ -99,8 +99,8 @@ for (const width of [1440, 400]) {
     await page.goto(`https://${CATALOGUE}/dataset/events?lang=sk`);
     const f = frame(page);
     const rows = f.getByRole("grid").locator("tbody tr");
-    await expect(rows).toHaveCount(25);
-    const last = rows.nth(20).getByRole("button", { name: /^Otvoriť:/ });
+    await expect(rows).toHaveCount(20);
+    const last = rows.nth(18).getByRole("button", { name: /^Otvoriť:/ });
     await last.scrollIntoViewIfNeeded();
     await page.waitForTimeout(300);
     await last.click();
@@ -113,5 +113,28 @@ for (const width of [1440, 400]) {
     await page.screenshot({ path: path.join(shots, `widget-${width}-dialog.png`) });
     await page.keyboard.press("Escape");
     await expect(f.locator("dialog[open]")).toHaveCount(0);
+  });
+}
+
+// T-5196, DM-134: a model's default filter opens as filled inputs the reader can clear, with its page
+// length and a numbered pager; nothing in the widget names the type.
+for (const width of [1440, 400]) {
+  test(`presented ${width}: the default filter fills the inputs, reset clears them`, async ({ page, context }) => {
+    const requests = await serve(context);
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(`https://${CATALOGUE}/dataset/presented?lang=sk`);
+    const f = frame(page);
+    const grid = f.getByRole("grid");
+    await expect(grid.locator("tbody tr")).toHaveCount(10, { timeout: 20000 });
+    await expect(f.getByRole("combobox", { name: "Záznamov na stranu" })).toHaveValue("10");
+    const op = f.getByRole("combobox", { name: "Filter: Začiatok" });
+    await expect(op).toHaveValue("gte");
+    await expect.poll(() => requests.some((r) => /^startDate>=\d{4}-\d{2}-\d{2}$/.test(r.url.searchParams.get("q") ?? ""))).toBe(true);
+    await expect(f.getByRole("button", { name: "Strana 2" })).toBeVisible();
+    await page.screenshot({ path: path.join(shots, `presented-${width}-default.png`), fullPage: true });
+    await f.getByRole("button", { name: "Zrušiť filtre" }).click();
+    await expect(op).toHaveValue("");
+    await expect(f.getByRole("button", { name: "Zrušiť filtre" })).toHaveCount(0);
+    await page.screenshot({ path: path.join(shots, `presented-${width}-reset.png`), fullPage: true });
   });
 }
