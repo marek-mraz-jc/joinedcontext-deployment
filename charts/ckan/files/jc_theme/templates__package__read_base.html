@@ -8,11 +8,16 @@
 {% block head_extras %}
   {{- super() }}
   <script type="application/ld+json">{{ h.jc_schema_org(pkg) | safe }}</script>
+  {# A feed reader given this page finds each feed output (EP-150, T-5203). #}
+  {% for feed in h.jc_subscriptions(pkg).news %}
+  <link rel="alternate" type="{{ feed.mimetype }}" title="{{ feed.name }}" href="{{ feed.url }}">
+  {% endfor %}
 {% endblock %}
 {% block pre_primary %}
   {% if pkg.organization %}
     {% snippet "package/snippets/jc_publisher.html", organization=h.get_organization(pkg.organization.id) %}
   {% endif %}
+  {% snippet "package/snippets/jc_subscribe.html", subscriptions=h.jc_subscriptions(pkg) %}
 {% endblock %}
 {% block secondary %}{% endblock %}
 {% block primary %}

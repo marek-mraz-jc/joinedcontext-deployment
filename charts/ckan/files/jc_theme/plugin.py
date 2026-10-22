@@ -525,6 +525,16 @@ STRINGS = {
     "nav_datasets": {"en": "Datasets", "sk": "Datasety", "cs": "Datové sady", "de": "Datensätze", "hu": "Adatkészletek"},
     "nav_publishers": {"en": "Publishers", "sk": "Vydavatelia", "cs": "Vydavatelé", "de": "Herausgeber", "hu": "Kiadók"},
     "nav_topics": {"en": "Topics", "sk": "Témy", "cs": "Témata", "de": "Themen", "hu": "Témák"},
+    "subscribe": {"en": "Subscribe", "sk": "Odoberať", "cs": "Odebírat", "de": "Abonnieren", "hu": "Feliratkozás"},
+    "subscribe_calendar": {"en": "Calendar", "sk": "Kalendár", "cs": "Kalendář", "de": "Kalender", "hu": "Naptár"},
+    "subscribe_news": {"en": "News", "sk": "Novinky", "cs": "Novinky", "de": "Neuigkeiten", "hu": "Hírek"},
+    "subscribe_hint": {
+        "en": "Copy an address into a feed reader or a calendar, for example Feedly or Google Calendar; new items appear by themselves.",
+        "sk": "Skopírujte adresu do čítačky noviniek alebo kalendára, napríklad Feedly alebo Google Kalendár; nové položky sa objavia samy.",
+        "cs": "Zkopírujte adresu do čtečky novinek nebo kalendáře, například Feedly nebo Google Kalendář; nové položky se objeví samy.",
+        "de": "Kopieren Sie eine Adresse in einen Feedreader oder Kalender, zum Beispiel Feedly oder Google Kalender; neue Einträge erscheinen von selbst.",
+        "hu": "Másolja a címet egy hírolvasóba vagy naptárba, például a Feedlybe vagy a Google Naptárba; az új elemek maguktól megjelennek.",
+    },
     "search_publishers": {"en": "Search publishers…", "sk": "Hľadať vydavateľov…",
                           "cs": "Hledat vydavatele…", "de": "Herausgeber suchen…", "hu": "Kiadók keresése…"},
     "search_topics": {"en": "Search topics…", "sk": "Hľadať témy…", "cs": "Hledat témata…",
@@ -2631,6 +2641,82 @@ def jc_clean_dataset(pkg):
     return pkg
 
 
+# The media types of what a person subscribes to (EP-125, EP-150): a calendar, or a feed of news.
+CALENDAR_TYPES = {"text/calendar"}
+FEED_TYPES = {"application/atom+xml", "application/rss+xml", "application/feed+json"}
+
+
+def jc_subscriptions(pkg):
+    """The dataset's calendar and feed resources, as `jcctl` publishes them one per output and
+    format (T-5203): `{"calendar": [...], "news": [...]}`, each item `name`, `url` (https only)
+    and `mimetype`. Both empty for a dataset whose items do not appear over time."""
+    found = {"calendar": [], "news": []}
+    for resource in (pkg or {}).get("resources") or []:
+        mimetype = (resource.get("mimetype") or "").split(";")[0].strip().lower()
+        url = resource.get("url") or ""
+        if urlsplit(url).scheme != "https":
+            continue
+        group = "calendar" if mimetype in CALENDAR_TYPES else "news" if mimetype in FEED_TYPES else None
+        if group:
+            found[group].append({"name": resource.get("name") or url, "url": url, "mimetype": mimetype})
+    return found
+
+
+def _feed_href(href, site_url):
+    """A link of CKAN's own feed made right (T-5203): absolute on `ckan.site_url`, and CKAN
+    2.11's `?query=page&query=2` (views/feed.py `_feed_url`) and float `page=5.0` as `?page=2`."""
+    if not href:
+        return href
+    parts = urlsplit(href)
+    pairs = parse_qs(parts.query, keep_blank_values=True)
+    if list(pairs) == ["query"] and len(pairs["query"]) % 2 == 0:
+        flat = pairs["query"]
+        pairs = {flat[i]: [flat[i + 1]] for i in range(0, len(flat), 2)}
+    if "page" in pairs:
+        try:
+            pairs["page"] = [str(int(float(pairs["page"][0])))]
+        except ValueError:
+            pairs.pop("page")
+    query = urlencode([(key, value) for key, values in pairs.items() for value in values])
+    base = urlsplit(site_url.rstrip("/") + "/") if site_url else None
+    scheme = parts.scheme or (base.scheme if base else "")
+    netloc = parts.netloc or (base.netloc if base else "")
+    return urlunsplit((scheme, netloc, parts.path, query, parts.fragment))
+
+
+def jc_feed_class(base, site_url, language, author):
+    """CKAN's Atom feed class (`ckan.views.feed.CKANFeed`) with the catalogue's language, the
+    catalogue as the feed's author, every link absolute and paging links a reader can follow, and
+    each entry's publisher as its author and its page as its link (T-5203)."""
+
+    class JcFeed(base):
+        def __init__(self, *args, **kwargs):
+            kwargs["language"] = language or kwargs.get("language")
+            kwargs["author_name"] = author or kwargs.get("author_name")
+            for key in ("feed_link", "feed_url", "previous_page", "next_page", "first_page", "last_page"):
+                if kwargs.get(key):
+                    kwargs[key] = _feed_href(kwargs[key], site_url)
+            if len(args) > 1:
+                args = (args[0], _feed_href(args[1], site_url)) + tuple(args[2:])
+            super().__init__(*args, **kwargs)
+
+        def add_item(self, **kwargs):
+            publisher = kwargs.pop("jc_publisher", None)
+            page = kwargs.pop("jc_page", None)
+            if page:
+                kwargs["link"] = page
+            if publisher:
+                kwargs["author_name"] = publisher
+                kwargs.pop("author_email", None)
+            elif not kwargs.get("author_name"):
+                kwargs.pop("author_name", None)
+            if not kwargs.get("author_email"):
+                kwargs.pop("author_email", None)
+            super().add_item(**kwargs)
+
+    return JcFeed
+
+
 class JcThemePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.ITemplateHelpers)
@@ -2638,6 +2724,27 @@ class JcThemePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IPackageController, inherit=True)
     plugins.implements(plugins.IBlueprint)
     plugins.implements(plugins.IResourceView, inherit=True)
+    plugins.implements(plugins.IFeed, inherit=True)
+
+    # CKAN's catalogue feed /feeds/dataset.atom (T-5203).
+    def get_feed_class(self):
+        from ckan.views.feed import CKANFeed
+
+        config = toolkit.config
+        site_title = jc_site_title((BRANDING.get("languages") or {}).get("default"))
+        return jc_feed_class(
+            CKANFeed,
+            config.get("ckan.site_url") or "",
+            config.get("ckan.locale_default") or "en",
+            site_title or config.get("ckan.site_title"),
+        )
+
+    def get_item_additional_fields(self, pkg):
+        fields = {"jc_page": toolkit.url_for("dataset.read", id=pkg.get("name") or pkg["id"], _external=True)}
+        publisher = (pkg.get("organization") or {}).get("title")
+        if publisher:
+            fields["jc_publisher"] = publisher
+        return fields
 
     def update_config(self, config):
         toolkit.add_template_directory(config, "templates")
@@ -2696,6 +2803,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_usage": jc_usage,
             "jc_guide": jc_guide,
             "jc_developer_page": jc_developer_page,
+            "jc_subscriptions": jc_subscriptions,
             "jc_previews": jc_previews,
             "jc_visualizations": jc_visualizations,
             "jc_explorer": jc_explorer,
