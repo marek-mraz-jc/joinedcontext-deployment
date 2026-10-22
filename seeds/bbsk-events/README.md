@@ -117,7 +117,7 @@ one entity; writes `expiresAt` at the event's end (start + 1 day without an end)
 
 - `venues.csv` holds venues checked by hand against OpenStreetMap (the object's id in `osm`), matched by the place
   text in lower case without parentheses and commas, per town; `regional=y` rows also serve the region's iCal feed.
-  A venue nobody checked gives no point, and the Event model refuses the event into the run's rejected list.
+  A venue nobody checked gives no point, never a town's centre; the event is kept without one (owner 2026-10-22).
   Not found as the named building on 2026-10-20: Kultúrny dom Veľký Krtíš, Kultúrny dom v Žarnovici, Dom kultúry
   Podborová (Zvolen), Športová hala Arena (Lučenec).
 - A source with no licence stated gives facts only (name, time, place, link back), never its description;
@@ -133,7 +133,7 @@ synchronized, up to date") `generate.py` writes two stores from the same invento
 
 | store | project / space | sources | cadence | an event leaves |
 |---|---|---|---|---|
-| region | `bbsk` / `bbsk-podujatia` | the BBSK rows | daily, 00:00-02:59 UTC | at its end |
+| region | `bbsk` / `bbsk-podujatia` | the BBSK rows | daily, 00:00-02:59 UTC | at its end, or 52 h after the last run that listed it (T-5081: an event the model now refuses leaves too) |
 | national | `slovensko` / `slovensko-podujatia` | every kept row | feeds every 3 h; Lego and WEBY calendars daily, spread over the day | a day after its end, or 8 h (daily: 52 h) after the last run that listed it |
 
 The national store's pipelines write through `slovensko-podujatia-zapis` (audience organization, no policyRef);
@@ -173,8 +173,10 @@ Decisions (worker-t5047, owner may override):
 
 ## Organizer and link (T-5081)
 
-Both stores require `organizer` (schema:organizer: `name`, maybe `url`) and `url` (an http(s) link) beside
-name, start and GPS; a record without one is refused into the run report. `source` and `dataProvider` stay as
+Both stores require name, start and `url` (an http(s) link); a record without one is refused into the run
+report. GPS and `organizer` (schema:organizer: `name`, maybe `url`) are kept where known and never refuse an event
+(owner 2026-10-22). The Portal stages each DataModel's JSON Schema, so the runner's stage holds records to the
+whole model (T-5081; before that it checked id and type alone). `source` and `dataProvider` stay as
 provenance: who published the feed is not who runs the event.
 
 - The organizer comes from the feed where it names one: The Events Calendar's `organizer` and `website`,
@@ -183,7 +185,7 @@ provenance: who published the feed is not who runs the event.
   `tel.`/`kontakt` label typed into the name is cut, and a `mailto:` is no web site.
 - Else the body whose calendar it is (`generate.py organizer()`): the name in `org_type (Name)`, `Mesto {town}`
   for a town, `Obec {town}` for a municipality, with the inventory's site. A tourism organisation or a region
-  announces other bodies' events, so its rows name none: their events without a feed organizer are refused.
+  announces other bodies' events, so its rows name none: their events without a feed organizer keep none.
 - `url` is the event's page, else the source's events page (`events_url`). A link that is no absolute http(s)
   URL (a `javascript:` or relative link) counts as none.
 

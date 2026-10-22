@@ -13,7 +13,7 @@ One public event as a town, a region or a cultural body announces it on its web 
 
 ### Event
 
-One public event: its name, its start, its place as a GPS point, its organizer and a link are required (owner 2026-10-20, 2026-10-21), the rest is kept where the source gives it.
+One public event: its name, its start and a link are required (owner 2026-10-22); its place as a GPS point is expected and filled from the source or the venue table, its organizer kept where the source names one, the rest kept where the source gives it.
 
 IRI: `schema:Event`
 
@@ -24,12 +24,12 @@ Specialises `Entity`.
 | `name` | Property | `string` | yes |  | `schema:name` | The title of the event as the source writes it, in Slovak. |
 | `startDate` | Property | `string` | yes |  | `schema:startDate` | When the event starts: an RFC 3339 instant with its offset (`2026-11-14T19:00:00+01:00`, Europe/Bratislava as the source publishes it), or a date alone (`2026-11-14`) for an event that lasts whole days. |
 | `endDate` | Property | `string` |  |  | `schema:endDate` | When the event ends, written as `startDate`; for a whole-day event its last day, inclusive. Absent when the source gives no end: the calendar then shows the start alone. |
-| `location` | GeoProperty | `string` | yes |  | `geojson:geometry` | Where the event takes place, a GeoJSON Point in WGS 84 inside Slovakia (longitude 16.8 to 22.6, latitude 47.7 to 49.7), from the source or from the venue table checked by hand; never a town's centre. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the event takes place, a GeoJSON Point in WGS 84 inside Slovakia (longitude 16.8 to 22.6, latitude 47.7 to 49.7), from the source or from the venue table checked by hand; never a town's centre. |
 | `venue` | Property | `string` |  |  | `jc:venue` | The name of the place, as the source writes it (a hall, a square, a museum). |
 | `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address of the venue, field by field (Smart Data Models' common PostalAddress); `addressLocality` is the town a calendar filters on. A field the source leaves out is absent, never guessed. |
 | `eventCategory` | Property | `string` |  |  | `jc:eventCategory` | The kind of event in the source's own words (`koncert`, `výstava`, `šport`). |
 | `description` | Property | `string` |  |  | `schema:description` | What the source says about the event, as plain text without markup. |
-| `organizer` | Property | [`Organizer`](#organizer) | yes |  | `schema:organizer` | Who runs the event: the museum, the school, the town or the named performer, never the feed or the aggregator that announced it (that is `dataProvider`). Its name and its web site only, never a person's e-mail or phone. |
+| `organizer` | Property | [`Organizer`](#organizer) |  |  | `schema:organizer` | Who runs the event: the museum, the school, the town or the named performer, never the feed or the aggregator that announced it (that is `dataProvider`). Its name and its web site only, never a person's e-mail or phone. |
 | `url` | Property | `uri` | yes |  | `schema:url` | An http(s) link a person opens: the page of the event at its source, where they read more or buy a ticket, else the organizer's page that lists its events. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who announced the event (the town, the region, the cultural body), as the credit names it. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The feed or the page the pipeline read the event from. |
