@@ -384,16 +384,16 @@ def test_the_pin_waits_for_a_green_ci_and_refuses_an_image_image_yml_did_not_sig
 
     def fake(*args, check=True):
         calls.append(args[0])
-        out = {"git": f"{commit}\trefs/heads/main\n", "gh": json.dumps(fake.ci),
+        out = {"gh": json.dumps(fake.ci),
                "docker": "Name: x\nMediaType: y\nDigest:    sha256:" + "b" * 64 + "\n"}.get(args[0], "")
         return subprocess.CompletedProcess(args, 0 if args[0] != "cosign" else fake.cosign, out, "")
 
     monkeypatch.setattr(module, "run", fake)
     monkeypatch.setattr(module, "pin_files", lambda pins: pytest.fail("pinned"))
-    fake.ci, fake.cosign = [{"status": "in_progress", "conclusion": ""}], 0
+    fake.ci, fake.cosign = [{"status": "in_progress", "conclusion": "", "headSha": commit}], 0
     module.main("platform")
     assert "docker" not in calls and "ci is not green" in capsys.readouterr().err
-    fake.ci, fake.cosign = [{"status": "completed", "conclusion": "success"}], 1
+    fake.ci, fake.cosign = [{"status": "completed", "conclusion": "success", "headSha": commit}], 1
     with pytest.raises(SystemExit, match="no signature"):
         module.main("platform")
 
@@ -410,14 +410,13 @@ def test_a_red_image_build_or_a_refusing_pin_portal_pins_nothing_and_says_so(mon
         if args[0] == "gh":
             workflow = args[args.index("--workflow") + 1]
             return subprocess.CompletedProcess(args, 0, json.dumps(runs[workflow]), "")
-        out = {"git": f"{commit}\trefs/heads/main\n",
-               "docker": "Name: x\nMediaType: y\nDigest:    sha256:" + "d" * 64 + "\n"}.get(args[0], "")
+        out = {"docker": "Name: x\nMediaType: y\nDigest:    sha256:" + "d" * 64 + "\n"}.get(args[0], "")
         return subprocess.CompletedProcess(args, 0, out, "")
 
     monkeypatch.setattr(module, "run", fake)
     monkeypatch.setattr(module, "pin_files", lambda pins: pytest.fail("pinned"))
-    ok = [{"status": "completed", "conclusion": "success"}]
-    runs.update({"ci.yml": ok, "image.yml": [{"status": "completed", "conclusion": "failure"}]})
+    ok = [{"status": "completed", "conclusion": "success", "headSha": commit}]
+    runs.update({"ci.yml": ok, "image.yml": [{"status": "completed", "conclusion": "failure", "headSha": commit}]})
     module.main("portal")
     captured = capsys.readouterr()
     assert "image.yml is not green" in captured.err and captured.out == ""
@@ -438,6 +437,27 @@ def test_a_red_image_build_or_a_refusing_pin_portal_pins_nothing_and_says_so(mon
     env = dict(os.environ, PATH=f"{bin_dir}:{os.environ['PATH']}")
     script = real_run([str(ROOT / "scripts/pin-portal.sh"), commit], env=env, capture_output=True, text=True)
     assert script.returncode == 1 and "no portal image is published" in script.stderr
+
+
+def test_the_pin_takes_the_commit_of_the_newest_green_image_build_not_the_head_of_main(monkeypatch):
+    """T-4696: image.yml builds once an hour, so main's head usually has no images; the pin asks
+    GitHub for the newest green image.yml run on main and pins its commit, or says there is none."""
+    module = _pin_images()
+    asked = []
+
+    def fake(*args, check=True):
+        asked.append(args)
+        return subprocess.CompletedProcess(args, 0, fake.out, "")
+
+    monkeypatch.setattr(module, "run", fake)
+    fake.out = json.dumps([{"headSha": "e" * 40}])
+    assert module.built("joinedcontext-platform") == "e" * 40
+    query = asked[-1]
+    assert query[0] == "gh" and query[query.index("--workflow") + 1] == "image.yml"
+    assert query[query.index("--branch") + 1] == "main" and query[query.index("--status") + 1] == "success"
+    fake.out = "[]"
+    with pytest.raises(SystemExit, match="no green image.yml run on main"):
+        module.built("joinedcontext-platform")
 
 
 @pytest.mark.skipif(shutil.which("just") is None, reason="just not installed")
