@@ -758,6 +758,15 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "dateModified": {
+          "description": "When the publisher's station, counter or sensor last reported the values beside it.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "facilityType": {
           "description": "The publisher's own word for the kind of place, such as Mateřská škola or ticketMachine.",
           "type": [
@@ -922,7 +931,13 @@
         "school",
         "culture",
         "publicToilet",
-        "ticketSale"
+        "ticketSale",
+        "library",
+        "municipalAuthority",
+        "police",
+        "garden",
+        "playground",
+        "wasteCollectionYard"
       ],
       "title": "ServiceCategory",
       "type": "string"
