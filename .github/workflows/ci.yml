@@ -111,7 +111,7 @@ jobs:
           retention-days: 3
   tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 15  # ran 9m40 a run on 2026-09-25 and timed out at 10; back under budget is T-2895
+    timeout-minutes: 20  # ran 9m40 a run on 2026-09-25 and timed out at 10; back under budget is T-2895
     # Two shards of the test files: one job ran 9 to 14.5 minutes and timed out at 15 on 39ada09
     # (T-3732); the time is spread over many 20-30 s renders, so halving the files halves it.
     # Three since 2026-10-18: shard 2 passed 11 min on 4cce5812, then ran past 15 on e0ee3611 and
@@ -119,6 +119,8 @@ jobs:
     # Four since 2026-10-19: shard 1, which also runs gitleaks, the docs pin and the kyverno
     # tests, ran past 15 on 593e2acc, ade77e03 and b0c7f814 and main had no verdict (T-2985 push).
     # Balanced by measured time since 2026-10-20: shard 4 ran past 15 on three main runs (T-4789).
+    # 20 since 2026-10-22: shard 1 (pytest at 76 % after 12.5 min, its kyverno and gitleaks steps 4 min more)
+    # was cancelled at 15 on 9a0ed939 and 68c4e0d7 and main had no verdict; same files, none skipped.
     strategy: { fail-fast: false, matrix: { shard: [1, 2, 3, 4] } }
     name: tests (${{ matrix.shard }}/4)
     steps:
