@@ -104,7 +104,11 @@ env:
   # `ical` mounts /x/views/{view}/ical/v1/events.ics, the iCalendar feed of a view's Events (Antares
   # T-4487, in the jc image's features since dev-3) that the gateway forwards an Endpoint's /ical/v1
   # to; without it every calendar URL answered 404 (T-4895).
-  ANTARES_API_SURFACES: "admin,views,mcp,access,ws,ws-views,ogc,linkml,odata,sta,ical"
+  # `feed` mounts /x/views/{view}/feed/v1/{name}/{atom.xml|rss.xml|feed.json}, the Atom, RSS and
+  # JSON Feed outputs a view's representations.feed lists (Antares T-5202, off for a view with
+  # none). The broker exits on a surface its image lacks: this merges after the broker pin whose
+  # image-jc FEATURES carry `feed`.
+  ANTARES_API_SURFACES: "admin,views,mcp,access,ws,ws-views,ogc,linkml,odata,sta,ical,feed"
   # The MCP surface answers the Host names listed here alone (rmcp's DNS-rebinding guard, MC8);
   # unset it answers loopback only, and the gateway's hop (JC_GATEWAY_BROKER_URL, T-3647) got 403.
   ANTARES_MCP_ALLOWED_HOSTS: "context-broker.{{ (index .Values "context-broker" "broker" "namespace") }}.svc.cluster.local:8080"
