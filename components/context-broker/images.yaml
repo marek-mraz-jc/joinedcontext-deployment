@@ -143,5 +143,7 @@ context-broker:
     # Antares dev 27d8e07 (dev-35, trains 0552, 0552-2 and 0730 over 5dea7dd: T-5100 OGC history collections, T-4921
     # WebSocket hub fan-out and notification throttle, T-4920 T-5092 T-5190 tests/docs/CI). No migration, no new
     # runtime key. Rollback: dev-32. Signed by ship.yml on dev at 27d8e07.
-    tag: 'dev-35'
-    digest: 'sha256:0d8d27d9f8303ecd9ba188308f92f54482aa07179e0be626067a6e6f9d0dddd5'
+    # Antares dev 4e68f99 (dev-36, train 0709 over 27d8e07: T-5157 a retention step that fails rests and halves its
+    # batch, slow steps are logged). No migration, no new runtime key. Rollback: dev-35. Signed by ship.yml on dev at 4e68f99.
+    tag: 'dev-36'
+    digest: 'sha256:e160f83dbb4650962d7bcbeb49fb86a8a8ef5cb904881390b07736d32e7cec52'
