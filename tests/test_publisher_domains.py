@@ -10,7 +10,7 @@ import yaml
 
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
 DOMAINS = {"zilina": "zilina.sk", "banskabystrica": "banskabystrica.sk", "bbsk": "bbsk.sk",
-           "praha": "praha.eu", "slovensko": "joinedcontext.com"}
+           "praha": "praha.eu", "slovensko": "joinedcontext.com", "barcelona": "barcelona.cat"}
 
 
 def test_each_publishers_policies_name_its_own_domain():
