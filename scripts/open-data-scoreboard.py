@@ -409,8 +409,11 @@ def run(domain: str, out: Path, cities: list, client=None, now: datetime | None 
                   for c, d in sorted(passed_before - listed) if c in cities]
     (out / f"{now:%Y-%m-%d}.md").write_text(markdown(rows, cities, now, domain, client.count))
     passing = {c: sorted(r["dataset"] for r in rows if r["city"] == c and passes(r)) for c in cities}
-    # A dataset this run did not reach keeps its earlier verdict.
+    # A dataset this run did not reach, or a city it left out, keeps its earlier verdict.
     for city, names in (before.get("passing") or {}).items():
+        if city not in cities:
+            passing[city] = names
+            continue
         unreached = {r["dataset"] for r in rows if r["city"] == city and NOT_RUN in r.values()}
         passing[city] = sorted(set(passing.get(city, [])) | (set(names) & unreached))
     state.write_text(json.dumps({"at": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "passing": passing}, indent=2) + "\n")

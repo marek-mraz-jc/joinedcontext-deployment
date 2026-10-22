@@ -58,7 +58,7 @@ class Recorded:
         parts = urllib.parse.urlsplit(url)
         query = urllib.parse.parse_qs(parts.query)
         if parts.path.endswith("package_search"):
-            names = sorted(set(DATASETS) - self.drop)
+            names = sorted(set(DATASETS) - self.drop) if query["fq"] == ['organization:"praha"'] else []
             return answer({"result": {"count": len(names), "results": [package(n, n) for n in names]}})
         slug = parts.path.split("/")[3]
         rows = DATASETS[slug] if slug not in self.fail else [parking(slug, 1, total=-1)]
@@ -101,6 +101,22 @@ def test_a_dataset_that_passed_before_and_fails_now_exits_1(tmp_path):
 def test_a_passing_dataset_gone_from_the_catalogue_exits_1(tmp_path):
     assert board.run(DOMAIN, tmp_path, ["praha"], Recorded(), NOW) == 0
     assert board.run(DOMAIN, tmp_path, ["praha"], Recorded(drop={"good"}), NOW) == 1
+
+
+def test_a_subset_run_keeps_the_other_cities_verdicts(tmp_path):
+    assert board.run(DOMAIN, tmp_path, ["praha"], Recorded(), NOW) == 0
+    assert board.run(DOMAIN, tmp_path, ["helsinki"], Recorded(), NOW) == 0
+    assert json.loads((tmp_path / "latest.json").read_text())["passing"] == {"helsinki": [], "praha": ["good"]}
+    assert board.run(DOMAIN, tmp_path, list(board.CITIES), Recorded(fail={"good"}), NOW) == 1
+
+
+def test_a_city_without_a_catalogue_organisation_counts_0(tmp_path):
+    assert board.run(DOMAIN, tmp_path, ["barcelona", "bratislava"], Recorded(), NOW) == 0
+    text = (tmp_path / "2026-10-22.md").read_text()
+    assert "| barcelona | 0 | 100 | 100 | 0 |" in text
+    assert "| bratislava | 0 | 100 | 100 | 0 |" in text
+    assert "No CKAN dataset of barcelona yet." in text
+    assert json.loads((tmp_path / "latest.json").read_text())["passing"] == {"barcelona": [], "bratislava": []}
 
 
 def test_validation_flags_area_range_and_duplicate():
