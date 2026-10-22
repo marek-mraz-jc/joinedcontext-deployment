@@ -268,6 +268,19 @@ def test_a_bridge_named_with_a_blank_reads_its_id():
 
 
 @requires_docker
+def test_no_attribute_carries_an_empty_language_text_or_two_shapes_at_once(written):
+    """dev's M1020 held name {"type": "Property", "value": …, "languageMap": {"sk": ""}} (T-5167)."""
+    for name, entities in written.items():
+        for entity in entities:
+            for attr, value in entity.items():
+                if not isinstance(value, dict):
+                    continue
+                assert not ("value" in value and "languageMap" in value), (name, entity["id"], attr)
+                texts = value.get("languageMap", {}).values()
+                assert all(isinstance(t, str) and t.strip() for t in texts), (name, entity["id"], attr)
+
+
+@requires_docker
 def test_an_empty_answer_writes_nothing():
     for name in FEEDS:
         assert run(name, b'{"type": "FeatureCollection", "features": []}') == [], name
@@ -298,7 +311,8 @@ def test_every_feed_is_seeded_as_a_datasource_a_pipeline_and_a_mapping():
         pipeline = manifest(f"bbsk-pipeline-{name}.yaml")
         datasource = manifest(f"bbsk-datasource-{name}.yaml")
         assert pipeline["spec"]["source"]["dataSourceRef"]["name"] == datasource["metadata"]["name"]
-        assert pipeline["spec"]["output"] == {"type": kind, "mode": "upsert"}
+        # Replace, so a retyped or dropped attribute leaves at the next run (PL-79, T-5167).
+        assert pipeline["spec"]["output"] == {"type": kind, "mode": "replace"}
         assert pipeline["spec"]["targetEndpoint"] == "urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-registre:bbsk-registre"
         assert pipeline["spec"]["quotas"]["maxMemoryMb"] <= 256
         assert kind in model["spec"]["classes"] and kind in readable and kind in writable
