@@ -25,6 +25,7 @@
       mapHint: "Click a point to open its details. The table lists the same entities.", mapCap: "The map shows the first {n} of {total} in view; zoom in for the rest.",
       mapNone: "No entity of this query has a location.", links: "This query elsewhere", entityLink: "This entity in NGSI-LD", queryLink: "This query in NGSI-LD",
       viewLink: "This view (type, filter and order)", yes: "yes", no: "no",
+      cardYes: "Yes", cardNo: "No", dev: "For developers", onMap: "Show on the map", idLabel: "Identifier", typeLabel: "Type", placeMap: "Location map",
       embed: "Embed", embedLead: "Put this live table on your own website. It keeps reading the current data; nothing is copied.",
       embedKind: "Code", iframe: "Frame (recommended)", component: "Web component", kindHint: "A frame needs no script and works in a WordPress \u201cCustom HTML\u201d block; the web component grows to its content.",
       viewLabel: "Shows", viewBoth: "Table and map", viewTable: "Table only", viewHint: "The map appears only where the entities have a location.",
@@ -42,6 +43,7 @@
       mapHint: "Kliknite na bod a otvorí sa jeho detail. Tabuľka uvádza tie isté entity.", mapCap: "Mapa ukazuje prvých {n} z {total} vo výreze; priblížte pre ďalšie.",
       mapNone: "Žiadna entita tohto dopytu nemá polohu.", links: "Tento dopyt inde", entityLink: "Táto entita v NGSI-LD", queryLink: "Tento dopyt v NGSI-LD",
       viewLink: "Toto zobrazenie (typ, filter a poradie)", yes: "áno", no: "nie",
+      cardYes: "Áno", cardNo: "Nie", dev: "Pre vývojárov", onMap: "Zobraziť na mape", idLabel: "Identifikátor", typeLabel: "Typ", placeMap: "Mapa miesta",
       embed: "Vložiť na web", embedLead: "Dajte túto živú tabuľku na svoj web. Stále číta aktuálne dáta; nič sa nekopíruje.",
       embedKind: "Kód", iframe: "Rámec (odporúčané)", component: "Webový komponent", kindHint: "Rámec nepotrebuje skript a funguje vo WordPress bloku \u201eVlastné HTML\u201c; webový komponent sa prispôsobí výške obsahu.",
       viewLabel: "Zobrazí", viewBoth: "Tabuľku a mapu", viewTable: "Len tabuľku", viewHint: "Mapa sa zobrazí, len ak entity majú polohu.",
@@ -56,19 +58,20 @@
   var ORDER = /^(id|[A-Za-z][A-Za-z0-9_]{0,127})(;(asc|desc))?$/;
   var MAX_Q = 2000;
 
-  // `#{slug}`, then `&lang=sk`, `&type=T`, `&inline`, `&theme=dark|light`, `&q=…` (the NGSI-LD
+  // `#{slug}`, then `&lang=sk`, `&type=T`, `&inline`, `&all` (the reader removed the default filter, DM-135), `&theme=dark|light`, `&q=…` (the NGSI-LD
   // query, URI-encoded), `&sort=attr;desc` and, as embed.js writes them (T-5129), `&dataset=name`
   // and `&view=table` in any order. The view checks the order against the type's columns again;
   // the Endpoint checks q.
   function parseHash(hash) {
     var parts = String(hash || "").replace(/^#/, "").split("&");
     if (!SLUG.test(parts[0])) return null;
-    var out = { slug: parts[0], lang: null, type: null, inline: false, theme: null, q: null, sort: null, dataset: null, view: null };
+    var out = { slug: parts[0], lang: null, type: null, inline: false, theme: null, q: null, sort: null, dataset: null, view: null, all: false };
     parts.slice(1).forEach(function (p) {
       var m = /^(lang|type|theme|q|sort|dataset|view)=(.+)$/.exec(p);
       var v = null;
       try { v = m && decodeURIComponent(m[2]); } catch (e) { v = null; }
       if (p === "inline") out.inline = true;
+      else if (p === "all") out.all = true;
       else if (!m || v === null) return;
       else if (m[1] === "lang" && /^[a-z]{2}$/.test(v)) out.lang = v;
       else if (m[1] === "type" && NAME.test(v)) out.type = v;
@@ -85,6 +88,7 @@
   function hashOf(where) {
     var out = "#" + where.slug;
     if (where.inline) out += "&inline";
+    if (where.all) out += "&all";
     ["dataset", "lang", "theme", "view", "type", "q", "sort"].forEach(function (k) {
       if (where[k]) out += "&" + k + "=" + encodeURIComponent(where[k]);
     });
@@ -176,6 +180,99 @@
     return String(text).replace(/\{(\w+)\}/g, function (_, k) { return vars && vars[k] !== undefined ? vars[k] : ""; });
   }
 
+  // ---- the row card (DM-135, T-5231) ----
+
+  // What a reader never needs in the card's body: the NGSI-LD members and the record's own stamps.
+  var SYSTEM = { id: 1, type: 1, "@context": 1, dateCreated: 1, dateModified: 1 };
+
+  // A key the model gives no label: dailyDepartures -> Daily departures.
+  function humanise(key) {
+    var words = String(key).replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/[_-]+/g, " ").trim().toLowerCase();
+    return words ? words.charAt(0).toUpperCase() + words.slice(1) : String(key);
+  }
+
+  function isGeo(value) {
+    return !!value && typeof value === "object" && typeof value.type === "string" && Array.isArray(value.coordinates);
+  }
+
+  // A web address as its host (data.slovensko.sk), or null for anything but http(s).
+  function hostOf(value) {
+    if (typeof value !== "string" || !/^https?:\/\/[^\s]+$/i.test(value.trim())) return null;
+    try { return new URL(value.trim()).hostname.replace(/^www\./, ""); } catch (e) { return null; }
+  }
+
+  // One value as a reader reads it: local dates, numbers and units of the page's language, enum
+  // titles, Áno/Nie, a web address by its host. An address object reads as its parts, never its keys.
+  function cardValue(value, field, t) {
+    field = field || {};
+    if (value === null || value === undefined || value === "") return null;
+    if (typeof value === "boolean") return { text: value ? t.cardYes : t.cardNo };
+    if (typeof value === "number") {
+      var n = new Intl.NumberFormat(t.locale, { maximumFractionDigits: 6 }).format(value);
+      return { text: field.unit ? n + "\u00a0" + field.unit : n };
+    }
+    if (typeof value === "string") {
+      if (field.titles && Object.prototype.hasOwnProperty.call(field.titles, value)) return { text: field.titles[value] };
+      if (DATE.test(value) && !isNaN(Date.parse(value))) {
+        var timed = value.indexOf("T") > 0;
+        var o = timed ? { dateStyle: "medium", timeStyle: "short" } : { dateStyle: "medium", timeZone: "UTC" };
+        if (timed && t.timeZone) o.timeZone = t.timeZone;
+        return { text: new Intl.DateTimeFormat(t.locale, o).format(Date.parse(timed || value.length > 10 ? value : value + "T00:00:00Z")) };
+      }
+      var host = hostOf(value);
+      return host ? { text: host, href: value.trim() } : { text: field.unit ? value + "\u00a0" + field.unit : value };
+    }
+    if (Array.isArray(value)) {
+      var items = value.map(function (v) { return cardValue(v, field, t); }).filter(Boolean);
+      return items.length ? { text: items.map(function (i) { return i.text; }).join(", "), href: items.length === 1 ? items[0].href : undefined } : null;
+    }
+    if (value.languageMap && typeof value.languageMap === "object") {
+      var m = value.languageMap;
+      return cardValue(m[t.lang] || m[Object.keys(m)[0]], field, t);
+    }
+    if (value["@value"] !== undefined) return cardValue(value["@value"], field, t);
+    if (isGeo(value)) return null;
+    var parts = Object.keys(value).map(function (k) { var v = cardValue(value[k], {}, t); return v && v.text; }).filter(Boolean);
+    return parts.length ? { text: parts.join(", ") } : null;
+  }
+
+  // The card of one row (keyValues): the type's label and the title, the values in the model's
+  // order under its labels, the first geometry for the small map, the source line, and what goes
+  // under "For developers". `card` is the Portal view's RowCard of this type, or null.
+  function cardOf(row, card, t) {
+    var fields = {};
+    ((card && card.fields) || []).forEach(function (f) { if (f && typeof f.name === "string") fields[f.name] = f; });
+    var titleKey = (card && card.title) || "name";
+    var title = cardValue(row[titleKey], fields[titleKey], t);
+    var keys = ((card && card.fields) || []).map(function (f) { return f.name; }).filter(function (k) { return Object.prototype.hasOwnProperty.call(row, k); });
+    Object.keys(row).forEach(function (k) { if (keys.indexOf(k) < 0) keys.push(k); });
+    var out = {
+      typeLabel: (card && card.type === row.type && card.typeLabel) || humanise(row.type || ""),
+      title: (title && title.text) || String(row.id || ""),
+      fields: [], geo: null, source: null,
+      dev: [{ label: t.idLabel, text: String(row.id || "") }, { label: t.typeLabel, text: String(row.type || "") }]
+    };
+    var label = function (k) { return (fields[k] && fields[k].label) || humanise(k); };
+    keys.forEach(function (k) {
+      var v = row[k];
+      if (k === "id" || k === "type" || k === "@context") return;
+      if (isGeo(v)) { if (!out.geo) out.geo = v; return; }
+      var said = cardValue(v, fields[k], t);
+      if (!said) return;
+      if (SYSTEM[k] || (fields[k] && fields[k].hidden)) return out.dev.push({ label: label(k), text: said.text });
+      if (k === titleKey) return;
+      if (k === "source" || k === "dataProvider") {
+        out.source = out.source || {};
+        if (k === "dataProvider") out.source.provider = said.text;
+        else if (said.href) { out.source.href = said.href; out.source.host = said.text; }
+        else out.source.text = said.text;
+        return;
+      }
+      out.fields.push({ label: label(k), text: said.text, href: said.href });
+    });
+    return out;
+  }
+
   // ---- the page ----
 
   function el(tag, attrs, children) {
@@ -189,10 +286,11 @@
     return node;
   }
 
-  function valueNode(value, t) {
-    var said = show(value, t);
-    if (!said.href) return document.createTextNode(said.text);
-    return el("a", { href: said.href, target: "_blank", rel: "noopener noreferrer", text: said.text });
+  // Text, or a link through the one safe path: http(s) only, a new tab, no opener and no referrer.
+  function linkOrText(said) {
+    var safe = said.href && hostOf(said.href) ? said.href : null;
+    if (!safe) return document.createTextNode(said.text);
+    return el("a", { href: safe, target: "_blank", rel: "noopener noreferrer", text: said.text, title: safe });
   }
 
   function main() {
@@ -211,6 +309,7 @@
     $("embed-open").hidden = embedded || !where;
     var status = $("status");
     Array.prototype.forEach.call(document.querySelectorAll("[data-t]"), function (n) { n.textContent = t[n.getAttribute("data-t")]; });
+    Array.prototype.forEach.call(document.querySelectorAll("[data-t-label]"), function (n) { n.setAttribute("aria-label", t[n.getAttribute("data-t-label")]); });
 
     // The catalogue sizes the frame from this message. The content's own box, not the document's:
     // the view's stylesheet makes html as tall as the frame, which would hold the frame at its size.
@@ -241,7 +340,7 @@
       return tell(t.noAddress, "error");
     }
     var api = base(location.hostname, where.slug);
-    var state = { types: [], type: where.type, q: where.q || "", sort: where.sort, map: null, mapData: null, mapAsk: 0, tiled: null, tilesets: {} };
+    var state = { types: [], type: where.type, q: where.q || "", sort: where.sort, all: where.all, card: null, map: null, mapData: null, mapAsk: 0, tiled: null, tilesets: {} };
 
     // Every request: anonymous, no referrer, given up after 15 seconds; a non-2xx is an Error with its status.
     function get(url, accept) {
@@ -265,20 +364,81 @@
       return s ? t.failed[s] || say(t.failed.other, { status: s }) : say(t.failed.other, { status: "–" });
     }
 
+    // One row as a reader's card (DM-135): the type's label above its title, the values under the
+    // model's labels, a small map of its place, one source line, and the rest folded for developers.
     function detail(row, from) {
-      var dialog = $("detail");
-      $("detail-title").textContent = row.name !== undefined ? show(row.name, t).text : row.id;
+      var card = cardOf(row, state.card, t);
+      $("detail-type").textContent = card.typeLabel;
+      $("detail-type").hidden = !card.typeLabel;
+      $("detail-title").textContent = card.title;
       var list = $("detail-list");
       list.textContent = "";
-      list.appendChild(el("dt", { text: "id" }));
-      list.appendChild(el("dd", { text: row.id }));
-      Object.keys(row).filter(function (k) { return k !== "id" && k !== "@context"; }).forEach(function (k) {
-        list.appendChild(el("dt", { text: k }));
-        list.appendChild(el("dd", {}, [valueNode(row[k], t)]));
+      card.fields.forEach(function (f) {
+        list.appendChild(el("div", { class: "card-row" }, [el("dt", { text: f.label }), el("dd", {}, [linkOrText(f)])]));
       });
+      var source = $("detail-source");
+      source.textContent = "";
+      source.hidden = !card.source;
+      if (card.source) {
+        source.appendChild(document.createTextNode(t.source + ": "));
+        var bits = [card.source.provider, card.source.text].filter(Boolean);
+        if (bits.length) source.appendChild(document.createTextNode(bits.join(" · ")));
+        if (card.source.href) {
+          if (bits.length) source.appendChild(document.createTextNode(" · "));
+          source.appendChild(linkOrText({ text: card.source.host, href: card.source.href }));
+        }
+      }
+      var dev = $("detail-dev-list");
+      dev.textContent = "";
+      card.dev.forEach(function (d) { dev.appendChild(el("div", { class: "card-row" }, [el("dt", { text: d.label }), el("dd", { text: d.text })])); });
+      $("detail-dev").hidden = false;
+      $("detail-dev").open = false;
       linkList(row.id);
-      dialog.returnFocus = from;
-      dialog.showModal();
+      placeMap(card.geo);
+      dialog(from);
+    }
+
+    // The small map of the card: the main map's style, one marker, no gestures; "Show on the map"
+    // closes the card and brings the main map to the place.
+    function placeMap(geo) {
+      var box = $("detail-map");
+      var go = $("detail-onmap");
+      if (state.cardMap) { state.cardMap.remove(); state.cardMap = null; }
+      var at = null;
+      if (geo) { at = geo.coordinates; while (Array.isArray(at[0])) at = at[0]; }
+      var ok = !!at && typeof at[0] === "number" && typeof at[1] === "number" && Math.abs(at[0]) <= 180 && Math.abs(at[1]) <= 90;
+      box.hidden = !ok;
+      go.hidden = !ok || $("map-section").hidden || !state.map;
+      go.onclick = ok ? function () {
+        $("detail").close();
+        $("map-section").scrollIntoView({ block: "center" });
+        state.map.jumpTo({ center: [at[0], at[1]], zoom: Math.max(state.map.getZoom(), 15) });
+      } : null;
+      if (!ok) return;
+      import(MAPLIBRE).then(function (maplibre) {
+        if (box.hidden || !$("detail").open) return;
+        maplibre.setWorkerUrl(WORKER);
+        var domain = location.hostname.replace(/^viz\./, "");
+        var m = new maplibre.Map({ container: box, style: "https://tiles." + domain + "/styles/light-" + (lang === "sk" ? "sk" : "en") + ".json", center: [at[0], at[1]], zoom: 15, interactive: false, attributionControl: false });
+        m.addControl(new maplibre.AttributionControl({ compact: true }));
+        new maplibre.Marker({ color: COLOUR }).setLngLat([at[0], at[1]]).addTo(m);
+        state.cardMap = m;
+      }, function () { box.hidden = true; });
+    }
+
+    // Open the card in the middle of what the reader sees (explore.css) and give focus back on close.
+    function dialog(from) {
+      $("detail").returnFocus = from;
+      if (!$("detail").open) $("detail").showModal();
+      $("detail").scrollTop = 0;
+    }
+
+    // A row the table opened: read it as keyValues in the page's language, as a tile click does.
+    function openRow(id) {
+      var from = document.activeElement;
+      get(api + "ngsi-ld/v1/entities/" + encodeURIComponent(id) + "?" + params({ format: "keyValues", lang: lang })).then(function (answer) {
+        if (answer.body && answer.body.id === id) detail(answer.body, from);
+      }, function (err) { tell(failure(err), "error"); });
     }
 
     function linkList(id) {
@@ -327,7 +487,7 @@
           ["jc-point", "jc-line", "jc-fill"].forEach(function (layer) {
             map.on("click", layer, function (e) {
               var f = (state.mapData || []).filter(function (x) { return x.id === e.features[0].properties.jcId; })[0];
-              if (f) detail(Object.assign({ id: f.id }, f.properties), map.getCanvas());
+              if (f) detail(Object.assign({ id: f.id, location: f.geometry }, f.properties), map.getCanvas());
             });
             map.on("mouseenter", layer, function () { map.getCanvas().style.cursor = "pointer"; });
             map.on("mouseleave", layer, function () { map.getCanvas().style.cursor = ""; });
@@ -425,18 +585,23 @@
       state.type = next.type || null;
       state.q = next.q || "";
       state.sort = next.sort || null;
-      history.replaceState(null, "", hashOf({ slug: where.slug, inline: where.inline, lang: where.lang, theme: where.theme, dataset: where.dataset, view: where.view, type: state.type, q: state.q, sort: state.sort }));
+      state.all = next.noDefault === true;
+      history.replaceState(null, "", hashOf({ slug: where.slug, inline: where.inline, all: state.all, lang: where.lang, theme: where.theme, dataset: where.dataset, view: where.view, type: state.type, q: state.q, sort: state.sort }));
       if (moved) drawMap();
     }
 
+    // The query's API addresses: the same dialog, developers' content open.
     $("data-api").addEventListener("click", function () {
+      $("detail-type").hidden = true;
       $("detail-title").textContent = t.dataApi;
       $("detail-list").textContent = "";
-      $("detail-list").appendChild(el("dt", { text: "q" }));
-      $("detail-list").appendChild(el("dd", { text: state.q || "–" }));
+      $("detail-list").appendChild(el("div", { class: "card-row" }, [el("dt", { text: "q" }), el("dd", { text: state.q || "–" })]));
+      $("detail-source").hidden = true;
+      $("detail-dev-list").textContent = "";
+      $("detail-dev").open = true;
       linkList(null);
-      $("detail").returnFocus = $("data-api");
-      $("detail").showModal();
+      placeMap(null);
+      dialog($("data-api"));
     });
     // The source line of an embed: the dataset's title, publisher and licence from the catalogue,
     // shown only when that dataset names this very Endpoint; else the catalogue itself.
@@ -511,6 +676,27 @@
     $("embed").addEventListener("close", function () { $("embed-open").focus(); });
     if (embedded) attribute();
     $("detail-close").addEventListener("click", function () { $("detail").close(); });
+    // A click on the backdrop (the dialog box itself, outside its content) closes it, as Esc does.
+    // Tab cycles inside: in a frame the browser's own modal trap lets focus out to the host page.
+    ["detail", "embed"].forEach(function (id) {
+      $(id).addEventListener("keydown", function (event) {
+        if (event.key !== "Tab") return;
+        var all = Array.prototype.filter.call($(id).querySelectorAll("a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex='-1'])"), function (n) {
+          // A closed fold keeps boxes for its content in Chromium, yet nothing in it takes focus but its summary.
+          var fold = n.closest("details:not([open])");
+          return !n.disabled && n.getClientRects().length > 0 && (!fold || n.parentElement === fold && n.tagName === "SUMMARY");
+        });
+        if (!all.length) return;
+        var first = all[0], last = all[all.length - 1];
+        if (event.shiftKey && (document.activeElement === first || !$(id).contains(document.activeElement))) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && (document.activeElement === last || !$(id).contains(document.activeElement))) { event.preventDefault(); first.focus(); }
+      });
+      $(id).addEventListener("click", function (event) {
+        if (event.target !== $(id)) return;
+        var r = $(id).getBoundingClientRect();
+        if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) $(id).close();
+      });
+    });
     $("detail").addEventListener("close", function () { var f = $("detail").returnFocus; if (f && f.focus) f.focus(); });
     window.addEventListener("resize", height);
 
@@ -526,8 +712,10 @@
         origin: "https://api." + String(location.hostname).replace(/^viz\./, ""),
         slug: where.slug,
         lang: lang,
-        link: { type: where.type || undefined, q: where.q || undefined, sort: where.sort || undefined },
+        link: { type: where.type || undefined, q: where.q || undefined, sort: where.sort || undefined, noDefault: where.all || undefined },
         onLink: onLink,
+        onCard: function (card) { state.card = card; },
+        onOpenRow: openRow,
         csv: true
       });
     } catch (e) {
@@ -536,7 +724,7 @@
     height();
   }
 
-  root.jcExplore = { parseHash: parseHash, hashOf: hashOf, base: base, entitiesUrl: entitiesUrl, bboxQuery: bboxQuery, links: links, templateOf: templateOf, tilesetUrl: tilesetUrl, show: show, TEXT: TEXT };
+  root.jcExplore = { parseHash: parseHash, hashOf: hashOf, base: base, entitiesUrl: entitiesUrl, bboxQuery: bboxQuery, links: links, templateOf: templateOf, tilesetUrl: tilesetUrl, show: show, cardValue: cardValue, cardOf: cardOf, hostOf: hostOf, humanise: humanise, TEXT: TEXT };
   if (typeof module === "object" && module.exports) module.exports = root.jcExplore;
   else if (typeof document !== "undefined") main();
 })(typeof self !== "undefined" ? self : this);

@@ -272,6 +272,16 @@ classes:
       view_order_by: startDate
       view_filter: startDate>=today
       view_page_length: 20
+      # What a reader reads first (owner 2026-10-22, T-5231): name, start, place, organizer; the
+      # rest is one tick away in the table and in the row card. The class label names the type.
+      view_columns: name,startDate,venue,organizer
+      label:
+        tag: label
+        value:
+          sk: Podujatie
+          cs: Akce
+          en: Event
+          de: Veranstaltung
     slots:
       - name
       - startDate
