@@ -259,6 +259,39 @@ slots:
           en: Location precision
           de: Genauigkeit des Orts
       ngsi_ld_kind: Property
+  areaServed:
+    slot_uri: sdm:areaServed
+    description: >-
+      The municipality the event or the venue belongs to, by its official name (`Detva`, `Košice`): the key a count or
+      a filter per town reads, on every event (DM-136).
+    range: string
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Obec
+          cs: Obec
+          en: Municipality
+          de: Gemeinde
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models/blob/master/common-schema.json
+  refPointOfInterest:
+    slot_uri: sdm:refPointOfInterest
+    description: >-
+      The venue as a PointOfInterest of this space, when the venue table placed the event; every event held
+      there links the same one (DM-136).
+    range: PointOfInterest
+    inlined: false
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Miesto
+          cs: Místo
+          en: Place
+          de: Ort
+      ngsi_ld_kind: Relationship
+      upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
   dateModified:
     slot_uri: sdm:dateModified
     description: When the source last changed the record.
@@ -306,6 +339,8 @@ classes:
       - location
       - locationPrecision
       - venue
+      - refPointOfInterest
+      - areaServed
       - address
       - eventCategory
       - description
@@ -343,6 +378,31 @@ classes:
         rank: 8
         annotations: { summary: true }
       url: { required: true, rank: 9 }
+  PointOfInterest:
+    class_uri: sdm:PointOfInterest
+    description: >-
+      One venue of the venue table (seeds/bbsk-events/venues.csv): a hall, a square, a museum where events take
+      place, one entity per real place (table rows of one name within 50 m are one venue), its id the OpenStreetMap
+      object of its building or a hash of its town, name and point (DM-136).
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.PointOfInterest
+      view_columns: name,areaServed,address
+      label:
+        tag: label
+        value:
+          sk: Miesto konania
+          cs: Místo konání
+          en: Venue
+          de: Veranstaltungsort
+    slots: [name, location, address, areaServed, source, dataProvider]
+    slot_usage:
+      name:
+        required: true
+        description: The venue's name (`Dom kultúry A. Sládkoviča`).
+      location:
+        required: true
+        description: The venue's building as a GeoJSON Point in WGS 84 inside Slovakia.
   PostalAddress:
     class_uri: schema:PostalAddress
     description: The value of `address`, never an entity of its own.

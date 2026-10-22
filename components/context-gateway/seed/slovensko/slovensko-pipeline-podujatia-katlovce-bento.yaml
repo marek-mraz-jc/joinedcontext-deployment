@@ -120,20 +120,23 @@ pipeline:
       map prop {
         root = if this == null { null } else { { "type": "Property", "value": this } }
       }
-      let venues = [{"match":"obecný úrad kátlovce","town":"katlovce","venue":"Obecný úrad kátlovce","streetAddress":null,"addressLocality":"Kátlovce","lat":48.526602,"lon":17.6094739},{"match":"kostol ducha svätého","town":"katlovce","venue":"Kostol Ducha Svätého","streetAddress":"Kátlovce 199","addressLocality":"Kátlovce","lat":48.52567,"lon":17.608278},{"match":"kultúrny dom kátlovce","town":"katlovce","venue":"Kultúrny dom Kátlovce","streetAddress":"Kátlovce 1","addressLocality":"Kátlovce","lat":48.52663,"lon":17.60951},{"match":"multifunkčné ihrisko","town":"katlovce","venue":"Multifunkčné ihrisko","streetAddress":"Kátlovce 195","addressLocality":"Kátlovce","lat":48.525837,"lon":17.609901},{"match":"obecná pivnica","town":"katlovce","venue":"Obecná pivnica","streetAddress":"Kátlovce 318","addressLocality":"Kátlovce","lat":48.52671,"lon":17.608887},{"match":"požiarna zbrojnica","town":"katlovce","venue":"Požiarna zbrojnica","streetAddress":"Kátlovce 331","addressLocality":"Kátlovce","lat":48.526466,"lon":17.608843},{"match":"telocvičňa","town":"katlovce","venue":"Telocvičňa","streetAddress":"Kátlovce 332","addressLocality":"Kátlovce","lat":48.52686,"lon":17.608593},{"match":"športový areál tj fc kátlovce","town":"katlovce","venue":"Športový areál TJ FC Kátlovce","streetAddress":"Kátlovce 200","addressLocality":"Kátlovce","lat":48.52755,"lon":17.607367}]
+      let venues = [{"poi":"osm-node-1417430947","match":"obecný úrad kátlovce","town":"katlovce","venue":"Obecný úrad kátlovce","streetAddress":null,"addressLocality":"Kátlovce","lat":48.526602,"lon":17.6094739},{"poi":"osm-ra-31314437","match":"kostol ducha svätého","town":"katlovce","venue":"Kostol Ducha Svätého","streetAddress":"Kátlovce 199","addressLocality":"Kátlovce","lat":48.52567,"lon":17.608278},{"poi":"osm-ra-31312611","match":"kultúrny dom kátlovce","town":"katlovce","venue":"Kultúrny dom Kátlovce","streetAddress":"Kátlovce 1","addressLocality":"Kátlovce","lat":48.52663,"lon":17.60951},{"poi":"osm-ra-31314393","match":"multifunkčné ihrisko","town":"katlovce","venue":"Multifunkčné ihrisko","streetAddress":"Kátlovce 195","addressLocality":"Kátlovce","lat":48.525837,"lon":17.609901},{"poi":"osm-ra-31314910","match":"obecná pivnica","town":"katlovce","venue":"Obecná pivnica","streetAddress":"Kátlovce 318","addressLocality":"Kátlovce","lat":48.52671,"lon":17.608887},{"poi":"osm-ra-5211001268","match":"požiarna zbrojnica","town":"katlovce","venue":"Požiarna zbrojnica","streetAddress":"Kátlovce 331","addressLocality":"Kátlovce","lat":48.526466,"lon":17.608843},{"poi":"osm-ra-5211001279","match":"telocvičňa","town":"katlovce","venue":"Telocvičňa","streetAddress":"Kátlovce 332","addressLocality":"Kátlovce","lat":48.52686,"lon":17.608593},{"poi":"osm-ra-31314448","match":"športový areál tj fc kátlovce","town":"katlovce","venue":"Športový areál TJ FC Kátlovce","streetAddress":"Kátlovce 200","addressLocality":"Kátlovce","lat":48.52755,"lon":17.607367}]
       let name = this.name.apply("text")
       let venue_text = this.venue.apply("text")
       let venue_key = if $venue_text != null { $venue_text.apply("key") } else { "" }
       let place = $venues.filter(v -> v.match == $venue_key).index(0).catch(null)
       # An event that names no place, or only the town or its organizer, takes its organizer's own address
       # (homes.csv, owner 2026-10-22: "or the institution's address"); its venue stays as the source wrote it.
-      let home = if $place == null && ($venue_key == "" || ["celá obec", "kátlovce", "kátlovce - celá obec", "mesto", "mesto kátlovce", "mestský úrad", "mestský úrad kátlovce", "obec", "obec kátlovce", "obecný úrad", "obecný úrad kátlovce", "v obci"].contains($venue_key)) { {"match":"obecný úrad kátlovce","town":"katlovce","venue":"Obecný úrad kátlovce","streetAddress":null,"addressLocality":"Kátlovce","lat":48.526602,"lon":17.6094739} } else { null }
+      let home = if $place == null && ($venue_key == "" || ["celá obec", "kátlovce", "kátlovce - celá obec", "mesto", "mesto kátlovce", "mestský úrad", "mestský úrad kátlovce", "obec", "obec kátlovce", "obecný úrad", "obecný úrad kátlovce", "v obci"].contains($venue_key)) { {"poi":"osm-node-1417430947","match":"obecný úrad kátlovce","town":"katlovce","venue":"Obecný úrad kátlovce","streetAddress":null,"addressLocality":"Kátlovce","lat":48.526602,"lon":17.6094739} } else { null }
       let known = $place.or($home)
       # The feed's town, unless it names a district or a region (geocode pilot 2026-10-22: "okres Myjava").
       let feed_locality = this.locality.apply("text").(l -> if l != null && l.re_match("(?i)^okres\\s|\\skraj$") { null } else { l })
       let locality = $feed_locality.or($known.addressLocality.or("Kátlovce"))
       # An event with no known venue takes its town's office, else the town's centre (towns.csv, T-5240), labelled so.
-      let area = if $known == null && $locality != null { [["Kátlovce","katlovce",48.5266,17.60947,"office"]].filter(t -> t.index(0).lowercase() == $locality.lowercase()).map_each(t -> { "town": t.index(1), "lat": t.index(2), "lon": t.index(3), "precision": t.index(4) }).index(0).catch(null) } else { null }
+      let hit = if $locality != null { [["Kátlovce","katlovce",48.5266,17.60947,"office"]].filter(t -> t.index(0).lowercase() == $locality.lowercase()).index(0).catch(null) } else { null }
+      let area = if $known == null && $hit != null { { "town": $hit.index(1), "lat": $hit.index(2), "lon": $hit.index(3), "precision": $hit.index(4) } } else { null }
+      # The municipality by its official name, on every event (DM-136): the town table's, the venue's, else the feed's.
+      let municipality = if $hit != null { $hit.index(0) } else { $known.addressLocality.or($locality) }
       # GPS from the feed, else from the venue table, else from the organizer's address, else from the town; the
       # precision says which (owner 2026-10-21: at least 90 % with a point; approximate points labelled).
       let feed_lat = this.lat.number().catch(null)
@@ -190,6 +193,9 @@ pipeline:
         "location": if $point != null { { "type": "GeoProperty", "value": $point } } else { null },
         "locationPrecision": if $point != null { { "type": "Property", "value": $pick.precision } } else { null },
         "venue": $place.venue.or($venue_text).apply("prop"),
+        # The venue table's place as its PointOfInterest, which the store's miesta-podujati pipeline writes (DM-136).
+        "refPointOfInterest": if $place != null { { "type": "Relationship", "object": "urn:ngsi-ld:PointOfInterest:%s:%s".format(env("JC_SPACE"), $place.poi) } } else { null },
+        "areaServed": $municipality.apply("prop"),
         "address": { "type": "Property", "value": $address },
         "eventCategory": this.category.apply("text").apply("prop"),
         # A source that states no licence gives its facts only: what, when, where and the link back

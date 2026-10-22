@@ -9,7 +9,7 @@ spec:
   assigner: did:web:bbsk.sk
   assignee: { kind: role, id: public }
   # The Endpoint bbsk-podujatia reads the region's events of the national space by their scope: the
-  # events exist once, the region is a view (owner 2026-10-20). Event alone, no entity write.
+  # events exist once, the region is a view (owner 2026-10-20). Events and their venues, no entity write.
   operations:
     - retrieveOps
     - retrieveEntityTypes
@@ -25,4 +25,5 @@ spec:
   information:
     - entities:
         - type: Event
+        - type: PointOfInterest
   scopeQ: /SK/BB/#
