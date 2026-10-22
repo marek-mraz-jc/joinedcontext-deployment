@@ -10,7 +10,7 @@ const x = require("../charts/renderer/files/site/explore.js");
 
 test("the hash names one Endpoint and its options; anything else is dropped", () => {
   assert.deepEqual(x.parseHash("#scsd2eehkx42n53z2zyd6vshfh7s7irf&lang=sk&type=Bike&inline&theme=dark"),
-    { slug: "scsd2eehkx42n53z2zyd6vshfh7s7irf", lang: "sk", type: "Bike", inline: true, theme: "dark", q: null, sort: null, dataset: null, view: null, all: false });
+    { slug: "scsd2eehkx42n53z2zyd6vshfh7s7irf", lang: "sk", type: "Bike", inline: true, theme: "dark", q: null, sort: null, dataset: null, view: null, all: false, geo: null, color: null, pop: null, cluster: null });
   assert.equal(x.parseHash("#../evil"), null);
   assert.equal(x.parseHash(""), null);
   const odd = x.parseHash("#scsd2eehkx42n53z2zyd6vshfh7s7irf&type=a;b&lang=english&theme=red");
@@ -20,7 +20,7 @@ test("the hash names one Endpoint and its options; anything else is dropped", ()
 });
 
 test("a shared view's query and order come back from the hash they were written to", () => {
-  const view = { slug: "scsd2eehkx42n53z2zyd6vshfh7s7irf", inline: true, all: false, lang: "sk", theme: null, type: "Bike", q: 'name~=".*ivo.*";bikes>=5', sort: "bikes;desc", dataset: null, view: null };
+  const view = { slug: "scsd2eehkx42n53z2zyd6vshfh7s7irf", inline: true, all: false, lang: "sk", theme: null, type: "Bike", q: 'name~=".*ivo.*";bikes>=5', sort: "bikes;desc", dataset: null, view: null, geo: null, color: null, pop: null, cluster: null };
   assert.deepEqual(x.parseHash(x.hashOf(view)), view);
   assert.equal(x.hashOf({ slug: "scsd2eehkx42n53z2zyd6vshfh7s7irf" }), "#scsd2eehkx42n53z2zyd6vshfh7s7irf");
   const bad = x.parseHash("#scsd2eehkx42n53z2zyd6vshfh7s7irf&sort=a;sideways&q=%E0%A4%A&type=Bike");
@@ -156,7 +156,62 @@ test("a javascript: or data: value renders as text, never a link", () => {
 });
 
 test("the removed default filter rides in the hash", () => {
-  const view = { slug: "scsd2eehkx42n53z2zyd6vshfh7s7irf", inline: false, all: true, lang: null, theme: null, type: "Event", q: null, sort: null, dataset: null, view: null };
+  const view = { slug: "scsd2eehkx42n53z2zyd6vshfh7s7irf", inline: false, all: true, lang: null, theme: null, type: "Event", q: null, sort: null, dataset: null, view: null, geo: null, color: null, pop: null, cluster: null };
   assert.equal(x.hashOf(view), "#scsd2eehkx42n53z2zyd6vshfh7s7irf&all&type=Event");
   assert.deepEqual(x.parseHash(x.hashOf(view)), view);
+});
+
+// T-5233: the default NGSI-LD to map mapping and the reader's choice in the address.
+const detailsOf = (attrs) => ({ typeName: "T", attributeDetails: Object.entries(attrs).map(([attributeName, kind]) => ({ attributeName, attributeTypes: [kind] })) });
+const stationCard = { type: "Station", typeLabel: "Stanica", title: "name", fields: [
+  { name: "name", label: "Názov" }, { name: "observationSpace", label: "Priestor pozorovania" }, { name: "location", label: "Poloha" },
+  { name: "startDate", label: "Začiatok", kind: "date-time" }, { name: "address", label: "Adresa" }, { name: "url", label: "Web", kind: "uri" },
+  { name: "status", label: "Stav", titles: { open: "Otvorené", closed: "Zatvorené" } }, { name: "secret", label: "Interné", hidden: true }
+] };
+
+test("the map draws location, else the first GeoProperty in model order, else nothing", () => {
+  assert.deepEqual(x.geoProps(detailsOf({ observationSpace: "GeoProperty", name: "Property", location: "GeoProperty" }), stationCard), ["location", "observationSpace"]);
+  assert.deepEqual(x.geoProps(detailsOf({ operationSpace: "GeoProperty", observationSpace: "GeoProperty" }), stationCard), ["observationSpace", "operationSpace"]);
+  assert.deepEqual(x.geoProps(detailsOf({ name: "Property", refArea: "Relationship" }), stationCard), []);
+  // A broker that lists only attribute names: location when the type has one.
+  assert.deepEqual(x.geoProps({ typeName: "T", attributeNames: ["name", "location"] }, null), ["location"]);
+  assert.deepEqual(x.geoProps({ attributeDetails: [{ attributeName: "../x", attributeTypes: ["GeoProperty"] }] }, null), []);
+});
+
+test("the default bubble holds the card's time, place and link; colour fields are enums and booleans", () => {
+  const o = x.mapOptions(["location", "observationSpace"], stationCard);
+  assert.deepEqual(o.defaults, { geo: "location", color: "type", pop: ["startDate", "address", "url"], cluster: true });
+  assert.deepEqual(o.colors, ["none", "type", "status"]);
+  assert.deepEqual(o.pops, ["startDate", "address", "url", "status"]);
+  assert.equal(o.labels.observationSpace, "Priestor pozorovania");
+  assert.deepEqual(x.mapOptions(["location"], null).defaults, { geo: "location", color: "type", pop: [], cluster: true });
+});
+
+test("a choice from the address is kept only when the model offers it; the rest falls back", () => {
+  const o = x.mapOptions(["location", "observationSpace"], stationCard);
+  const kept = x.mapChoice({ geo: "observationSpace", color: "status", pop: ["url"], cluster: false }, o);
+  assert.deepEqual(kept, { choice: { geo: "observationSpace", color: "status", pop: ["url"], cluster: false }, unknown: [] });
+  const odd = x.mapChoice({ geo: "secretArea", color: "secret", pop: ["url", "nothing"] }, o);
+  assert.deepEqual(odd.choice, o.defaults);
+  assert.deepEqual(odd.unknown, ["geo", "color", "pop"]);
+  const view = { slug: "scsd2eehkx42n53z2zyd6vshfh7s7irf", inline: false, all: false, lang: null, theme: null, type: "Station", q: null, sort: null, dataset: null, view: null,
+    geo: "observationSpace", color: "status", pop: [], cluster: false };
+  assert.deepEqual(x.parseHash(x.hashOf(view)), view);
+  const bad = x.parseHash("#scsd2eehkx42n53z2zyd6vshfh7s7irf&geo=a%22b&color=x;y&pop=a,,b&cluster=yes");
+  assert.deepEqual([bad.geo, bad.color, bad.pop, bad.cluster], [null, null, null, null]);
+});
+
+test("a Polygon draws as an area, MultiPoints split into clusterable points, colours follow the field", () => {
+  const t = { ...x.TEXT.sk, lang: "sk", locale: "sk-SK" };
+  const area = { id: "a", geometry: { type: "Polygon", coordinates: [[[0, 0], [1, 0], [1, 1], [0, 0]]] }, properties: { type: "Station", status: "open" } };
+  const many = { id: "m", geometry: { type: "MultiPoint", coordinates: [[1, 1], [2, 2]] }, properties: { type: "Station", status: "closed" } };
+  const parts = x.splitPoints([area, many]);
+  assert.deepEqual(parts.shapes.map((f) => f.id), ["a"]);
+  assert.deepEqual(parts.points.map((f) => f.geometry.coordinates), [[1, 1], [2, 2]]);
+  const c = x.colourClasses([area, many], "status", stationCard, t);
+  assert.notEqual(c.colours[0], c.colours[1]);
+  assert.deepEqual(c.legend.map((l) => l.label), ["Otvorené", "Zatvorené"]);
+  assert.deepEqual(x.colourClasses([area, many], "type", stationCard, t).legend, []); // one type: no legend
+  assert.equal(x.countLine(t, { inView: 412, total: 1680, none: 96 }), "Na mape 412 z 1 680 · 96 bez polohy");
+  assert.match(x.countLine({ ...x.TEXT.en, locale: "en-GB" }, { inView: 5, total: 50000, none: 0, tiled: true }), /^On the map 5 of 50,000 · 0 without a location · drawn as tiles$/);
 });

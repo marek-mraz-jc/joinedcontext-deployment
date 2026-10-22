@@ -33,7 +33,14 @@
       heightLabel: "Height in pixels", heightHint: "From 240 to 2000, e.g. 640.", keep: "Keep the current filter and order", keepHint: "Visitors start from this view: {view}", keepNone: "No filter or order is set: visitors see every entity.",
       filterIs: "filter {q}", orderIs: "ordered by {col}", desc: " (descending)",
       code: "Code to paste", copy: "Copy code", copied: "Copied. Paste it into your page's HTML.", copySelect: "Selected: press Ctrl+C to copy.", preview: "Open the widget alone",
-      invalid: "Check this setting: {why}.", source: "Source", licence: "Licence", licenceSee: "see the dataset", catalogue: "open data catalogue"
+      invalid: "Check this setting: {why}.", source: "Source", licence: "Licence", licenceSee: "see the dataset", catalogue: "open data catalogue",
+      count: "On the map {n} of {total} · {none} without a location", countTiles: " · drawn as tiles", other: "Other",
+      panelOpen: "Map settings", panel: "Map settings", geoLabel: "Location from", geoHint: "Which place of the entity the map draws, e.g. Location.",
+      colorLabel: "Colour by", colorNone: "One colour", colorType: "Type", colorHint: "Points take a colour per value, e.g. Status; the legend is under the map.",
+      popLabel: "In the bubble", popHint: "What a pointer over a point shows besides the title, e.g. Start and Web.",
+      clusterLabel: "Group points", clusterHint: "Above 200 points in view, nearby points merge into a bubble with their count.",
+      reset: "Reset to default", fallback: "The link names a map setting this type does not have ({what}); the map shows its default.", remove: "Remove {what}",
+      chipGeo: "Location from: {v}", chipColor: "Colour by: {v}", chipPop: "In the bubble: {v}", chipCluster: "Group points: {v}", popNone: "title only", detailOpen: "Click for details"
     },
     sk: {
       title: "Živé dáta", loading: "Načítavam živé dáta…", dataApi: "Dátové API", close: "Zavrieť", map: "Mapa", detail: "Detail",
@@ -51,7 +58,14 @@
       heightLabel: "Výška v pixeloch", heightHint: "Od 240 do 2000, napr. 640.", keep: "Zachovať aktuálny filter a poradie", keepHint: "Návštevníci začnú s týmto zobrazením: {view}", keepNone: "Nie je nastavený filter ani poradie: návštevníci uvidia všetky entity.",
       filterIs: "filter {q}", orderIs: "zoradené podľa {col}", desc: " (zostupne)",
       code: "Kód na vloženie", copy: "Kopírovať kód", copied: "Skopírované. Vložte ho do HTML svojej stránky.", copySelect: "Označené: skopírujte stlačením Ctrl+C.", preview: "Otvoriť samotný widget",
-      invalid: "Skontrolujte toto nastavenie: {why}.", source: "Zdroj", licence: "Licencia", licenceSee: "pozri dataset", catalogue: "katalóg otvorených dát"
+      invalid: "Skontrolujte toto nastavenie: {why}.", source: "Zdroj", licence: "Licencia", licenceSee: "pozri dataset", catalogue: "katalóg otvorených dát",
+      count: "Na mape {n} z {total} · {none} bez polohy", countTiles: " · kreslené ako dlaždice", other: "Iné",
+      panelOpen: "Nastaviť mapu", panel: "Nastavenie mapy", geoLabel: "Poloha z", geoHint: "Ktoré miesto entity mapa kreslí, napr. Poloha.",
+      colorLabel: "Farba podľa", colorNone: "Jedna farba", colorType: "Typ", colorHint: "Body dostanú farbu podľa hodnoty, napr. Stav; legenda je pod mapou.",
+      popLabel: "V bubline", popHint: "Čo ukáže kurzor nad bodom okrem názvu, napr. Začiatok a Web.",
+      clusterLabel: "Zoskupovať body", clusterHint: "Nad 200 bodov vo výreze sa blízke body spoja do bubliny s ich počtom.",
+      reset: "Obnoviť predvolené", fallback: "Odkaz uvádza nastavenie mapy, ktoré tento typ nemá ({what}); mapa ukazuje predvolené.", remove: "Odstrániť {what}",
+      chipGeo: "Poloha z: {v}", chipColor: "Farba podľa: {v}", chipPop: "V bubline: {v}", chipCluster: "Zoskupovať body: {v}", popNone: "len názov", detailOpen: "Kliknutím otvoríte detail"
     }
   };
 
@@ -59,15 +73,16 @@
   var MAX_Q = 2000;
 
   // `#{slug}`, then `&lang=sk`, `&type=T`, `&inline`, `&all` (the reader removed the default filter, DM-135), `&theme=dark|light`, `&q=…` (the NGSI-LD
-  // query, URI-encoded), `&sort=attr;desc` and, as embed.js writes them (T-5129), `&dataset=name`
-  // and `&view=table` in any order. The view checks the order against the type's columns again;
+  // query, URI-encoded), `&sort=attr;desc`, the reader's map (T-5233: `&geo=slot`, `&color=none|type|slot`,
+  // `&pop=a,b` or `&pop=-`, `&cluster=0|1`; their slots are checked against the model by mapChoice) and,
+  // as embed.js writes them (T-5129), `&dataset=name` and `&view=table` in any order. The view checks the order against the type's columns again;
   // the Endpoint checks q.
   function parseHash(hash) {
     var parts = String(hash || "").replace(/^#/, "").split("&");
     if (!SLUG.test(parts[0])) return null;
-    var out = { slug: parts[0], lang: null, type: null, inline: false, theme: null, q: null, sort: null, dataset: null, view: null, all: false };
+    var out = { slug: parts[0], lang: null, type: null, inline: false, theme: null, q: null, sort: null, dataset: null, view: null, all: false, geo: null, color: null, pop: null, cluster: null };
     parts.slice(1).forEach(function (p) {
-      var m = /^(lang|type|theme|q|sort|dataset|view)=(.+)$/.exec(p);
+      var m = /^(lang|type|theme|q|sort|dataset|view|geo|color|pop|cluster)=(.+)$/.exec(p);
       var v = null;
       try { v = m && decodeURIComponent(m[2]); } catch (e) { v = null; }
       if (p === "inline") out.inline = true;
@@ -80,6 +95,11 @@
       else if (m[1] === "sort" && ORDER.test(v)) out.sort = v;
       else if (m[1] === "dataset" && /^[a-z0-9_-]{2,100}$/.test(v)) out.dataset = v;
       else if (m[1] === "view" && v === "table") out.view = v;
+      else if (m[1] === "geo" && NAME.test(v)) out.geo = v;
+      else if (m[1] === "color" && NAME.test(v)) out.color = v;
+      else if (m[1] === "pop" && v === "-") out.pop = [];
+      else if (m[1] === "pop" && /^[A-Za-z][A-Za-z0-9_]{0,127}(,[A-Za-z][A-Za-z0-9_]{0,127}){0,19}$/.test(v)) out.pop = v.split(",");
+      else if (m[1] === "cluster" && /^[01]$/.test(v)) out.cluster = v === "1";
     });
     return out;
   }
@@ -89,9 +109,11 @@
     var out = "#" + where.slug;
     if (where.inline) out += "&inline";
     if (where.all) out += "&all";
-    ["dataset", "lang", "theme", "view", "type", "q", "sort"].forEach(function (k) {
+    ["dataset", "lang", "theme", "view", "type", "q", "sort", "geo", "color"].forEach(function (k) {
       if (where[k]) out += "&" + k + "=" + encodeURIComponent(where[k]);
     });
+    if (Array.isArray(where.pop)) out += "&pop=" + (where.pop.length ? where.pop.map(encodeURIComponent).join(",") : "-");
+    if (typeof where.cluster === "boolean") out += "&cluster=" + (where.cluster ? "1" : "0");
     return out;
   }
 
@@ -273,6 +295,103 @@
     return out;
   }
 
+  // ---- the map's default mapping and the reader's choice (T-5233, DM-136, API/11 "Map fallback") ----
+
+  var PALETTE = ["#1f5fae", "#c2410c", "#15803d", "#7e22ce", "#b91c1c", "#0e7490", "#a16207", "#be185d"];
+  var GREY = "#6b7280";
+  var CLUSTER_ABOVE = 200;
+  var PLACE = ["address", "venue", "addressLocality", "place", "locationName"];
+
+  // The GeoProperties of a type as the broker lists them (GET /types/{type}, attributeDetails), in the
+  // mapping's order: the core location, then the model's order, then by name. A broker that lists only
+  // attributeNames yields location when it has one.
+  function geoProps(info, card) {
+    var names = ((info && info.attributeDetails) || []).filter(function (a) {
+      return a && NAME.test(a.attributeName || "") && Array.isArray(a.attributeTypes) && a.attributeTypes.indexOf("GeoProperty") >= 0;
+    }).map(function (a) { return a.attributeName; });
+    if (!names.length && info && (info.attributeNames || []).indexOf("location") >= 0) names = ["location"];
+    var order = ((card && card.fields) || []).map(function (f) { return f.name; });
+    var rank = function (n) { return n === "location" ? -1 : order.indexOf(n) < 0 ? order.length : order.indexOf(n); };
+    return names.sort(function (a, b) { return rank(a) - rank(b) || (a < b ? -1 : a > b ? 1 : 0); });
+  }
+
+  // What a reader may pick on a type's map, from the model's slots alone, and the default the map
+  // starts from: the first geometry, a colour per type, the card's roles (time, place, link) in the
+  // bubble, clusters on.
+  function mapOptions(geos, card) {
+    var fields = ((card && card.fields) || []).filter(function (f) {
+      return f && NAME.test(f.name || "") && !SYSTEM[f.name] && !f.hidden && geos.indexOf(f.name) < 0 && f.name !== (card.title || "name");
+    });
+    var named = function (test) { return fields.filter(test).map(function (f) { return f.name; })[0]; };
+    var pop = [
+      named(function (f) { return f.kind === "date-time" || f.kind === "date"; }),
+      named(function (f) { return PLACE.indexOf(f.name) >= 0; }),
+      named(function (f) { return f.kind === "uri" || f.name === "url"; })
+    ].filter(Boolean);
+    return {
+      geos: geos,
+      colors: ["none", "type"].concat(fields.filter(function (f) { return f.titles || f.kind === "boolean"; }).map(function (f) { return f.name; })),
+      pops: fields.map(function (f) { return f.name; }),
+      labels: ((card && card.fields) || []).reduce(function (m, f) { if (f && f.name) m[f.name] = f.label || humanise(f.name); return m; }, {}),
+      defaults: { geo: geos[0] || null, color: "type", pop: pop, cluster: true }
+    };
+  }
+
+  // The reader's choice from the address, each value kept only when the type's model offers it;
+  // `unknown` names the settings that fell back to the default.
+  function mapChoice(raw, o) {
+    var d = o.defaults, out = { geo: d.geo, color: d.color, pop: d.pop.slice(), cluster: d.cluster }, unknown = [];
+    raw = raw || {};
+    if (raw.geo) { if (o.geos.indexOf(raw.geo) >= 0) out.geo = raw.geo; else unknown.push("geo"); }
+    if (raw.color) { if (o.colors.indexOf(raw.color) >= 0) out.color = raw.color; else unknown.push("color"); }
+    if (Array.isArray(raw.pop)) {
+      if (raw.pop.every(function (n) { return o.pops.indexOf(n) >= 0; })) out.pop = raw.pop.slice(); else unknown.push("pop");
+    }
+    if (typeof raw.cluster === "boolean") out.cluster = raw.cluster;
+    return { choice: out, unknown: unknown };
+  }
+
+  // A feature's colour class: its type, or the reader's field read as the card reads it; the first
+  // eight values in view get the palette, the rest grey under "Other".
+  function colourClasses(features, color, card, t) {
+    var field = ((card && card.fields) || []).filter(function (f) { return f.name === color; })[0];
+    var seen = [], legend = [];
+    var classOf = function (props) {
+      if (color === "none") return "";
+      var v = color === "type" ? props.type : props[color];
+      var said = color === "type" ? { text: (card && card.type === v && card.typeLabel) || humanise(v || "") } : cardValue(v, field, t);
+      return said ? said.text : "–";
+    };
+    var classes = features.map(function (f) {
+      var c = classOf(f.properties || {});
+      if (seen.indexOf(c) < 0) seen.push(c);
+      return c;
+    });
+    var colours = {};
+    seen.forEach(function (c, i) { colours[c] = i < PALETTE.length ? PALETTE[i] : GREY; });
+    seen.slice(0, PALETTE.length).forEach(function (c) { legend.push({ label: c, colour: colours[c] }); });
+    if (seen.length > PALETTE.length) legend.push({ label: t.other, colour: GREY });
+    return { colours: classes.map(function (c) { return colours[c]; }), legend: seen.length > 1 ? legend : [] };
+  }
+
+  // MultiPoints become one point each, so every point can join a cluster; the rest stay whole.
+  function splitPoints(features) {
+    var points = [], shapes = [];
+    features.forEach(function (f) {
+      var g = f.geometry;
+      if (g.type === "Point") points.push(f);
+      else if (g.type === "MultiPoint") g.coordinates.forEach(function (c) { points.push(Object.assign({}, f, { geometry: { type: "Point", coordinates: c } })); });
+      else shapes.push(f);
+    });
+    return { points: points, shapes: shapes };
+  }
+
+  // "Na mape 412 z 1 680 · 96 bez polohy", numbers in the page's language.
+  function countLine(t, c) {
+    var n = function (v) { return new Intl.NumberFormat(t.locale).format(v); };
+    return say(t.count, { n: n(c.inView), total: n(c.total), none: n(Math.max(0, c.none)) }) + (c.tiled ? t.countTiles : "");
+  }
+
   // ---- the page ----
 
   function el(tag, attrs, children) {
@@ -340,7 +459,9 @@
       return tell(t.noAddress, "error");
     }
     var api = base(location.hostname, where.slug);
-    var state = { types: [], type: where.type, q: where.q || "", sort: where.sort, all: where.all, card: null, map: null, mapData: null, mapAsk: 0, tiled: null, tilesets: {} };
+    var state = { types: [], type: where.type, q: where.q || "", sort: where.sort, all: where.all, card: null, map: null, mapData: null, mapAsk: 0, tiled: null, tilesets: {},
+      infos: {}, mapping: null, mapRaw: {}, countKey: null, total: null, none: null, inView: null };
+    ["geo", "color", "pop", "cluster"].forEach(function (k) { if (where[k] !== null) state.mapRaw[k] = where[k]; });
 
     // Every request: anonymous, no referrer, given up after 15 seconds; a non-2xx is an Error with its status.
     function get(url, accept) {
@@ -449,14 +570,44 @@
       });
     }
 
-    // The map: geo+json of the same query within the view, at most MAP_LIMIT features a view.
+    // The type's own description (GET /types/{type}): which of its attributes are GeoProperties.
+    function typeInfo(type) {
+      return state.infos[type] || (state.infos[type] = get(api + "ngsi-ld/v1/types/" + encodeURIComponent(type)).then(function (a) { return a.body; }, function () { return null; }));
+    }
+
+    // The map of the same query within the view, drawn by the default mapping or the reader's choice
+    // (T-5233): the map shows only when the type has a GeoProperty.
     function drawMap() {
       var section = $("map-section");
-      var info = state.types.filter(function (x) { return x.typeName === state.type; })[0];
-      var geo = where.view !== "table" && !!info && (info.attributeNames || []).indexOf("location") >= 0;
-      section.hidden = !geo;
-      if (!geo) return;
-      if (state.map) return mapMoved();
+      var type = state.type;
+      var listed = state.types.filter(function (x) { return x.typeName === type; })[0];
+      if (where.view === "table" || !listed) { section.hidden = true; return; }
+      typeInfo(type).then(function (info) {
+        if (state.type !== type) return;
+        var card = state.card && state.card.type === type ? state.card : null;
+        var geos = geoProps(info && info.attributeDetails ? info : listed, card);
+        section.hidden = !geos.length;
+        if (!geos.length) return;
+        var o = mapOptions(geos, card);
+        var picked = mapChoice(state.mapRaw, o);
+        var moved = state.mapping && state.mapping.choice.geo !== picked.choice.geo;
+        state.mapping = { options: o, choice: picked.choice, card: card };
+        // Only with the model in hand is a slot the address names known to be wrong: drop it, say so.
+        if (card && picked.unknown.length) {
+          picked.unknown.forEach(function (k) { delete state.mapRaw[k]; });
+          $("map-fallback").textContent = say(t.fallback, { what: picked.unknown.map(function (k) { return t[k + "Label"]; }).join(", ") });
+          $("map-fallback").hidden = false;
+          address();
+        }
+        panel();
+        // Another geometry: the map opens where it is, as the first view did.
+        if (state.map && moved && state.map.getSource("jc")) return fitFirst().then(mapMoved);
+        if (state.map) return mapMoved();
+        startMap();
+      });
+    }
+
+    function startMap() {
       // One map: a second call while MapLibre still loads waits for the first (T-5192 drew two).
       if (state.mapLoading) return;
       state.mapLoading = true;
@@ -480,18 +631,33 @@
         map.addControl(new maplibre.NavigationControl({ showCompass: false }));
         map.addControl(new maplibre.AttributionControl({ compact: true }));
         map.once("load", function () {
-          map.addSource("jc", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
-          map.addLayer({ id: "jc-fill", type: "fill", source: "jc", filter: ["in", ["geometry-type"], ["literal", ["Polygon", "MultiPolygon"]]], paint: { "fill-color": COLOUR, "fill-opacity": 0.25 } });
-          map.addLayer({ id: "jc-line", type: "line", source: "jc", filter: ["!", ["in", ["geometry-type"], ["literal", ["Point", "MultiPoint"]]]], paint: { "line-color": COLOUR, "line-width": 2 } });
-          map.addLayer({ id: "jc-point", type: "circle", source: "jc", filter: ["in", ["geometry-type"], ["literal", ["Point", "MultiPoint"]]], paint: { "circle-color": COLOUR, "circle-radius": 6, "circle-stroke-color": "#fff", "circle-stroke-width": 2 } });
+          // Lines and areas in "jc", points in "jc-pts", which clusters above CLUSTER_ABOVE in view.
+          var empty = { type: "FeatureCollection", features: [] };
+          var colour = ["coalesce", ["get", "jcColour"], COLOUR];
+          map.addSource("jc", { type: "geojson", data: empty });
+          map.addSource("jc-pts", { type: "geojson", data: empty, cluster: false, clusterRadius: 50, clusterMaxZoom: 14 });
+          map.addLayer({ id: "jc-fill", type: "fill", source: "jc", filter: ["in", ["geometry-type"], ["literal", ["Polygon", "MultiPolygon"]]], paint: { "fill-color": colour, "fill-opacity": 0.25 } });
+          map.addLayer({ id: "jc-line", type: "line", source: "jc", paint: { "line-color": colour, "line-width": 2 } });
+          map.addLayer({ id: "jc-cluster", type: "circle", source: "jc-pts", filter: ["has", "point_count"], paint: { "circle-color": COLOUR, "circle-opacity": 0.85, "circle-radius": ["step", ["get", "point_count"], 14, 50, 18, 200, 24], "circle-stroke-color": "#fff", "circle-stroke-width": 2 } });
+          // The count on a cluster needs the style's glyphs; the basemap styles have them.
+          if (map.getStyle().glyphs) map.addLayer({ id: "jc-cluster-count", type: "symbol", source: "jc-pts", filter: ["has", "point_count"], layout: { "text-field": ["get", "point_count_abbreviated"], "text-size": 12 }, paint: { "text-color": "#fff" } });
+          map.addLayer({ id: "jc-point", type: "circle", source: "jc-pts", filter: ["!", ["has", "point_count"]], paint: { "circle-color": colour, "circle-radius": 6, "circle-stroke-color": "#fff", "circle-stroke-width": 2 } });
           ["jc-point", "jc-line", "jc-fill"].forEach(function (layer) {
             map.on("click", layer, function (e) {
               var f = (state.mapData || []).filter(function (x) { return x.id === e.features[0].properties.jcId; })[0];
               if (f) detail(Object.assign({ id: f.id, location: f.geometry }, f.properties), map.getCanvas());
             });
-            map.on("mouseenter", layer, function () { map.getCanvas().style.cursor = "pointer"; });
-            map.on("mouseleave", layer, function () { map.getCanvas().style.cursor = ""; });
+            map.on("mouseenter", layer, function (e) { map.getCanvas().style.cursor = "pointer"; bubble(e); });
+            map.on("mouseleave", layer, function () { map.getCanvas().style.cursor = ""; if (state.popup) state.popup.remove(); });
           });
+          map.on("click", "jc-cluster", function (e) {
+            var c = e.features[0];
+            Promise.resolve(map.getSource("jc-pts").getClusterExpansionZoom(c.properties.cluster_id)).then(function (z) {
+              map.easeTo({ center: c.geometry.coordinates, zoom: z });
+            }, function () {});
+          });
+          map.on("mouseenter", "jc-cluster", function () { map.getCanvas().style.cursor = "pointer"; });
+          map.on("mouseleave", "jc-cluster", function () { map.getCanvas().style.cursor = ""; });
           TILE_LAYERS.forEach(function (layer) {
             map.on("click", layer, function (e) {
               var id = e.features[0].properties.id;
@@ -511,7 +677,7 @@
 
     // The first view: the bounds of the query's first page, so the map opens where the data is.
     function fitFirst() {
-      var url = entitiesUrl(api, { type: state.type, q: state.q, limit: 25, lang: lang, format: "keyValues" });
+      var url = entitiesUrl(api, Object.assign({ type: state.type, q: state.q, limit: 25, lang: lang, format: "keyValues" }, ownGeo()));
       return get(url, "application/geo+json").then(function (answer) {
         var all = [];
         ((answer.body && answer.body.features) || []).forEach(function (f) {
@@ -540,7 +706,7 @@
       var known = state.tilesets[type] || (state.tilesets[type] = get(at).then(function (a) { return templateOf(a.body, at); }, function () { return null; }));
       return known.then(function (template) {
         var map = state.map;
-        if (!template || state.type !== type || state.q || state.tiled === type) return !!template && state.tiled === type;
+        if (!template || state.type !== type || state.q || geoOf() !== "location" || state.tiled === type) return !!template && state.tiled === type;
         untile();
         var is = function (types) { return ["in", ["geometry-type"], ["literal", types]]; };
         map.addSource("jc-tiles", { type: "vector", tiles: [template.replace(/^https:/, "jc-tile:")], minzoom: 0, maxzoom: 16 });
@@ -549,28 +715,103 @@
         map.addLayer(of({ id: "jc-tile-line", type: "line", filter: ["!", is(["Point", "MultiPoint"])], paint: { "line-color": COLOUR, "line-width": 2 } }));
         map.addLayer(of({ id: "jc-tile-point", type: "circle", filter: is(["Point", "MultiPoint"]), paint: { "circle-color": COLOUR, "circle-radius": 5, "circle-stroke-color": "#fff", "circle-stroke-width": 1.5 } }));
         map.getSource("jc").setData({ type: "FeatureCollection", features: [] });
+        map.getSource("jc-pts").setData({ type: "FeatureCollection", features: [] });
+        legend([]);
         state.mapData = [];
         state.tiled = type;
+        showCount();
         return true;
       });
     }
 
+    // The geometry the map draws; a GeoProperty other than location is named to the broker (6.3.15).
+    function geoOf() { return state.mapping ? state.mapping.choice.geo : "location"; }
+    function ownGeo() { var g = geoOf(); return g === "location" ? {} : { geoproperty: g, geometryProperty: g }; }
+
+    // The count line's totals for the query: every row, and the rows without the drawn geometry.
+    function counts() {
+      var geo = geoOf(), key = [state.type, state.q, geo].join("\u0000");
+      if (state.countKey === key) return;
+      state.countKey = key;
+      state.total = state.none = null;
+      var ask = function (q) { return get(entitiesUrl(api, { type: state.type, q: q, limit: 0, count: "true" })).then(function (a) { return a.count === null ? null : +a.count; }); };
+      Promise.all([ask(state.q), ask((state.q ? "(" + state.q + ");" : "") + "!" + geo)]).then(function (c) {
+        if (state.countKey !== key) return;
+        state.total = c[0];
+        state.none = c[1];
+        showCount();
+      }, function () {});
+    }
+    function showCount() {
+      var ok = [state.inView, state.total, state.none].every(function (v) { return typeof v === "number" && isFinite(v); });
+      $("map-count").hidden = !ok;
+      if (ok) $("map-count").textContent = countLine(t, { inView: state.inView, total: state.total, none: state.none, tiled: !!state.tiled });
+    }
+
+    // The features of the view, coloured by the reader's field, points clustered when they are many.
+    function paint(features) {
+      var m = state.mapping, map = state.map;
+      var c = colourClasses(features, m.choice.color, m.card, t);
+      var parts = splitPoints(features.map(function (f, i) { return { type: "Feature", geometry: f.geometry, properties: { jcId: f.id, jcColour: c.colours[i] } }; }));
+      var fc = function (list) { return { type: "FeatureCollection", features: list }; };
+      map.getSource("jc").setData(fc(parts.shapes));
+      var pts = map.getSource("jc-pts");
+      if (pts.setClusterOptions) pts.setClusterOptions({ cluster: m.choice.cluster && parts.points.length > CLUSTER_ABOVE, clusterRadius: 50, clusterMaxZoom: 14 });
+      pts.setData(fc(parts.points));
+      legend(c.legend);
+    }
+    function legend(items) {
+      var list = $("map-legend");
+      list.textContent = "";
+      items.forEach(function (i) {
+        var swatch = el("span", { class: "swatch", "aria-hidden": "true" });
+        swatch.style.backgroundColor = i.colour; // CSSOM, which the page's CSP allows where a style attribute is not
+        list.appendChild(el("li", {}, [swatch, document.createTextNode(i.label)]));
+      });
+      list.hidden = !items.length;
+    }
+
+    // The bubble over a feature: its title and the reader's fields, read as the card reads them.
+    function bubble(e) {
+      var m = state.mapping;
+      var f = m && (state.mapData || []).filter(function (x) { return x.id === e.features[0].properties.jcId; })[0];
+      if (!f) return;
+      var props = f.properties || {}, fields = {};
+      ((m.card && m.card.fields) || []).forEach(function (x) { fields[x.name] = x; });
+      var titleKey = (m.card && m.card.title) || "name";
+      var title = cardValue(props[titleKey], fields[titleKey], t);
+      var box = el("div", { class: "map-bubble" }, [el("strong", { text: (title && title.text) || String(f.id) })]);
+      m.choice.pop.forEach(function (k) {
+        var v = cardValue(props[k], fields[k], t);
+        if (v) box.appendChild(el("div", {}, [el("span", { class: "muted", text: (m.options.labels[k] || humanise(k)) + ": " }), document.createTextNode(v.text)]));
+      });
+      box.appendChild(el("div", { class: "muted", text: t.detailOpen }));
+      state.popup = state.popup || new state.maplibre.Popup({ closeButton: false, closeOnClick: false, offset: 10, maxWidth: "280px" });
+      state.popup.setLngLat(e.lngLat).setDOMContent(box).addTo(state.map);
+    }
+
     function mapMoved() {
       var map = state.map;
-      if (!map || !map.getSource("jc")) return;
-      if (state.tiled && (state.tiled !== state.type || state.q)) untile();
-      if (state.tiled) return;
+      if (!map || !map.getSource("jc") || !state.mapping) return;
+      if (state.tiled && (state.tiled !== state.type || state.q || geoOf() !== "location")) untile();
+      counts();
       var b = map.getBounds();
-      var query = Object.assign({ type: state.type, q: state.q, limit: MAP_LIMIT, count: "true", lang: lang, format: "keyValues" }, bboxQuery([b.getWest(), b.getSouth(), b.getEast(), b.getNorth()]));
+      var box = Object.assign(bboxQuery([b.getWest(), b.getSouth(), b.getEast(), b.getNorth()]), ownGeo());
       var asked = ++state.mapAsk;
+      var shown = function (n) { if (asked === state.mapAsk) { state.inView = n; showCount(); } };
+      // Tiles draw the view themselves; the count in view still comes from the query.
+      if (state.tiled) {
+        get(entitiesUrl(api, Object.assign({ type: state.type, limit: 0, count: "true" }, box))).then(function (a) { if (a.count !== null) shown(+a.count); }, function () {});
+        return;
+      }
+      var query = Object.assign({ type: state.type, q: state.q, limit: MAP_LIMIT, count: "true", lang: lang, format: "keyValues" }, box);
       get(entitiesUrl(api, query), "application/geo+json").then(function (answer) {
         if (asked !== state.mapAsk) return;
-        var features = ((answer.body && answer.body.features) || []).filter(function (f) { return f && f.geometry; });
+        var features = ((answer.body && answer.body.features) || []).filter(function (f) { return f && f.geometry && typeof f.geometry.type === "string"; });
         state.mapData = features;
-        map.getSource("jc").setData({ type: "FeatureCollection", features: features.map(function (f) {
-          return { type: "Feature", geometry: f.geometry, properties: { jcId: f.id } };
-        }) });
+        paint(features);
         var total = answer.count === null ? features.length : +answer.count;
+        shown(total);
         $("map-note").textContent = !features.length ? t.mapNone : total > features.length ? say(t.mapCap, { n: features.length, total: total }) : t.mapHint;
         if (total > features.length && !state.q) {
           tile(state.type).then(function (on) { if (on && asked === state.mapAsk) $("map-note").textContent = t.mapHint; });
@@ -579,14 +820,89 @@
     }
     state.mapAsk = 0;
 
+    // The address of the view: the table's type, query and order, and the reader's map choices.
+    function address() {
+      var r = state.mapRaw;
+      history.replaceState(null, "", hashOf({ slug: where.slug, inline: where.inline, all: state.all, lang: where.lang, theme: where.theme, dataset: where.dataset, view: where.view,
+        type: state.type, q: state.q, sort: state.sort, geo: r.geo, color: r.color, pop: r.pop, cluster: r.cluster }));
+    }
+
+    // The Mapa panel (T-5233): the reader's geometry, colour, bubble fields and clustering, each a
+    // chip with × beside the map and in the address; reset brings back the default.
+    function panel() {
+      var m = state.mapping, o = m.options, c = m.choice, r = state.mapRaw;
+      var name = function (k) { return o.labels[k] || humanise(k); };
+      var colourName = function (v) { return v === "none" ? t.colorNone : v === "type" ? t.colorType : name(v); };
+      var fill = function (select, values, label, value) {
+        select.textContent = "";
+        values.forEach(function (v) { select.appendChild(el("option", { value: v, text: label(v) })); });
+        select.value = value;
+      };
+      fill($("map-geo"), o.geos, name, c.geo);
+      fill($("map-color"), o.colors, colourName, c.color);
+      var pops = $("map-pop-list");
+      pops.textContent = "";
+      o.pops.forEach(function (k) {
+        pops.appendChild(el("label", { class: "check" }, [el("input", { type: "checkbox", value: k, checked: c.pop.indexOf(k) >= 0, "aria-describedby": "map-pop-hint" }), document.createTextNode(" " + name(k))]));
+      });
+      $("map-cluster").checked = c.cluster;
+      var chips = $("map-chips");
+      chips.textContent = "";
+      var said = {
+        geo: function () { return say(t.chipGeo, { v: name(c.geo) }); },
+        color: function () { return say(t.chipColor, { v: colourName(c.color) }); },
+        pop: function () { return say(t.chipPop, { v: c.pop.length ? c.pop.map(name).join(", ") : t.popNone }); },
+        cluster: function () { return say(t.chipCluster, { v: c.cluster ? t.cardYes : t.cardNo }); }
+      };
+      ["geo", "color", "pop", "cluster"].filter(function (k) { return r[k] !== undefined && r[k] !== null; }).forEach(function (k) {
+        var text = said[k]();
+        var chip = el("button", { type: "button", class: "chip", "aria-label": say(t.remove, { what: text }) }, [document.createTextNode(text + " "), el("span", { "aria-hidden": "true", text: "×" })]);
+        chip.addEventListener("click", function () { delete state.mapRaw[k]; changed(); $("map-panel-open").focus(); });
+        chips.appendChild(chip);
+      });
+      $("map-reset").hidden = !chips.childNodes.length;
+    }
+
+    // A control moved: keep what differs from the default, write the address, redraw.
+    function changed() {
+      address();
+      drawMap();
+    }
+    function fromPanel() {
+      var d = state.mapping.options.defaults, r = {};
+      var pop = Array.prototype.filter.call($("map-pop-list").querySelectorAll("input"), function (i) { return i.checked; }).map(function (i) { return i.value; });
+      if ($("map-geo").value !== d.geo) r.geo = $("map-geo").value;
+      if ($("map-color").value !== d.color) r.color = $("map-color").value;
+      if (pop.join(",") !== d.pop.join(",")) r.pop = pop;
+      if ($("map-cluster").checked !== d.cluster) r.cluster = $("map-cluster").checked;
+      state.mapRaw = r;
+      $("map-fallback").hidden = true;
+      changed();
+    }
+    $("map-panel").addEventListener("change", fromPanel);
+    $("map-panel-open").addEventListener("click", function () {
+      var open = $("map-panel").hidden;
+      $("map-panel").hidden = !open;
+      $("map-panel-open").setAttribute("aria-expanded", String(open));
+      height();
+    });
+    $("map-reset").addEventListener("click", function () {
+      state.mapRaw = {};
+      $("map-fallback").hidden = true;
+      changed();
+      $("map-panel-open").focus();
+    });
+
     // The view says which type, query and order it shows: the address, the map and the API links follow.
     function onLink(next) {
       var moved = next.type !== state.type || (next.q || "") !== state.q;
+      // A map choice names the slots of one type: another type starts from its own default.
+      if (state.type && next.type !== state.type) state.mapRaw = {};
       state.type = next.type || null;
       state.q = next.q || "";
       state.sort = next.sort || null;
       state.all = next.noDefault === true;
-      history.replaceState(null, "", hashOf({ slug: where.slug, inline: where.inline, all: state.all, lang: where.lang, theme: where.theme, dataset: where.dataset, view: where.view, type: state.type, q: state.q, sort: state.sort }));
+      address();
       if (moved) drawMap();
     }
 
@@ -714,7 +1030,10 @@
         lang: lang,
         link: { type: where.type || undefined, q: where.q || undefined, sort: where.sort || undefined, noDefault: where.all || undefined },
         onLink: onLink,
-        onCard: function (card) { state.card = card; },
+        onCard: function (card) {
+          state.card = card;
+          if (card && card.type === state.type) drawMap();
+        },
         onOpenRow: openRow,
         csv: true
       });
@@ -724,7 +1043,7 @@
     height();
   }
 
-  root.jcExplore = { parseHash: parseHash, hashOf: hashOf, base: base, entitiesUrl: entitiesUrl, bboxQuery: bboxQuery, links: links, templateOf: templateOf, tilesetUrl: tilesetUrl, show: show, cardValue: cardValue, cardOf: cardOf, hostOf: hostOf, humanise: humanise, TEXT: TEXT };
+  root.jcExplore = { parseHash: parseHash, hashOf: hashOf, base: base, entitiesUrl: entitiesUrl, bboxQuery: bboxQuery, links: links, templateOf: templateOf, tilesetUrl: tilesetUrl, geoProps: geoProps, mapOptions: mapOptions, mapChoice: mapChoice, colourClasses: colourClasses, splitPoints: splitPoints, countLine: countLine, show: show, cardValue: cardValue, cardOf: cardOf, hostOf: hostOf, humanise: humanise, TEXT: TEXT };
   if (typeof module === "object" && module.exports) module.exports = root.jcExplore;
   else if (typeof document !== "undefined") main();
 })(typeof self !== "undefined" ? self : this);
