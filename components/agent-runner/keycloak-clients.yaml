@@ -169,6 +169,14 @@ helsinki-agent-proxy:
           included.custom.audience: zq6avaaqv3d7ma2avz7rvkwtxelaxkc4
           access.token.claim: 'true'
           id.token.claim: 'false'
+      - name: helsinki-street-cleaning-air-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: p2qfrq3sxuoif6okjzhrp4jwul3eeowd
+          access.token.claim: 'true'
+          id.token.claim: 'false'
       # The hub (seed/helsinki/helsinki-endpoint-hub.yaml, T-1209): one door over the live
       # context and the indicators beside it, which is the endpoint a run picks when the
       # question spans both (EP-70).
