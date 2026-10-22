@@ -116,6 +116,45 @@ for (const width of [1440, 400]) {
   });
 }
 
+// T-5134: the organizer reads as its name linked to its web site, in the table and in the row's card; the
+// event's own url links too; an organizer without a web site stays text. Links open a new tab.
+for (const width of [1440, 400]) {
+  test(`events ${width}: the organizer and the event's url are links in the table and the card`, async ({ page, context }) => {
+    await serve(context);
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(`https://${CATALOGUE}/dataset/events?lang=sk`);
+    const f = frame(page);
+    const rows = f.getByRole("grid").locator("tbody tr");
+    await expect(rows).toHaveCount(20);
+    const organizers = f.getByRole("grid").getByRole("link", { name: "Mestské kultúrne stredisko" });
+    await expect(organizers.first()).toHaveAttribute("href", "https://www.mksbb.sk/");
+    await expect(organizers.first()).toHaveAttribute("rel", "noopener noreferrer");
+    await expect(organizers.first()).toHaveAttribute("target", "_blank");
+    expect(await organizers.count()).toBeGreaterThan(0);
+    expect(await organizers.count()).toBeLessThan(20);
+    await expect(f.getByRole("grid").locator('a[href^="https://www.bbsk.sk/podujatia/"]').first()).toBeVisible();
+    await expect(f.getByRole("grid").getByText(/name: |url: /)).toHaveCount(0);
+    await page.screenshot({ path: path.join(shots, `organizer-${width}-table.png`), fullPage: true });
+    const orgLink = f.getByRole("link", { name: "Mestské kultúrne stredisko" });
+    const open = rows.filter({ has: orgLink }).first().getByRole("button", { name: /^Otvoriť:/ });
+    await open.scrollIntoViewIfNeeded();
+    await open.click();
+    const dialog = f.locator("dialog[open]");
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole("link", { name: "Mestské kultúrne stredisko" })).toHaveAttribute("href", "https://www.mksbb.sk/");
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: path.join(shots, `organizer-${width}-card.png`) });
+    await page.keyboard.press("Escape");
+    const plain = rows.filter({ hasNot: orgLink }).first().getByRole("button", { name: /^Otvoriť:/ });
+    await plain.scrollIntoViewIfNeeded();
+    await plain.click();
+    await expect(f.locator("dialog[open]")).toBeVisible();
+    await expect(f.locator("dialog[open]").getByText("Mestské kultúrne stredisko")).toBeVisible();
+    await expect(f.locator("dialog[open]").getByRole("link", { name: "Mestské kultúrne stredisko" })).toHaveCount(0);
+    await page.screenshot({ path: path.join(shots, `organizer-${width}-card-no-url.png`) });
+  });
+}
+
 // T-5196, DM-134: a model's default filter opens as filled inputs the reader can clear, with its page
 // length and a numbered pager; nothing in the widget names the type.
 for (const width of [1440, 400]) {

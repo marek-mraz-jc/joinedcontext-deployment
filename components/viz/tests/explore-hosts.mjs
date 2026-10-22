@@ -71,7 +71,8 @@ export const DATA = {
     ...(i % 3 === 2 ? {} : { startDate: `2026-11-${String((i % 28) + 1).padStart(2, "0")}T18:00:00+01:00` }),
     venue: i === 1 ? "Sála " + "veľká ".repeat(80) : "Kino Baník",
     address: "Námestie SNP 14, Banská Bystrica",
-    organizer: "Mestské kultúrne stredisko",
+    // T-5134: the model's organizer object; every third one names no web site and reads as text.
+    organizer: i % 3 === 1 ? { name: "Mestské kultúrne stredisko" } : { name: "Mestské kultúrne stredisko", url: "https://www.mksbb.sk/" },
     url: `https://www.bbsk.sk/podujatia/${i}`,
     dataProvider: "Banská Bystrica, bbsk.sk (licencia neuvedená)",
     location: { type: "Point", coordinates: [19.14 + i / 200, 48.73 + i / 400] }
