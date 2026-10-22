@@ -36,12 +36,22 @@
 </main>
 <dialog id="detail" aria-labelledby="detail-title">
   <div class="detail-head">
-    <h2 id="detail-title"></h2>
+    <div>
+      <p id="detail-type" class="card-type" hidden></p>
+      <h2 id="detail-title"></h2>
+    </div>
     <button type="button" id="detail-close" class="page-button" data-t="close"></button>
   </div>
-  <dl id="detail-list"></dl>
-  <h3 data-t="links"></h3>
-  <ul id="detail-links"></ul>
+  <div id="detail-map" class="card-map" role="img" data-t-label="placeMap" hidden></div>
+  <button type="button" id="detail-onmap" class="page-button card-onmap" data-t="onMap" hidden></button>
+  <dl id="detail-list" class="card-list"></dl>
+  <p id="detail-source" class="card-source" hidden></p>
+  <details id="detail-dev" class="card-dev">
+    <summary data-t="dev"></summary>
+    <dl id="detail-dev-list" class="card-list"></dl>
+    <h3 data-t="links"></h3>
+    <ul id="detail-links"></ul>
+  </details>
 </dialog>
 <dialog id="embed" aria-labelledby="embed-title" aria-describedby="embed-lead">
   <div class="detail-head">

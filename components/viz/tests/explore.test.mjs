@@ -10,7 +10,7 @@ const x = require("../charts/renderer/files/site/explore.js");
 
 test("the hash names one Endpoint and its options; anything else is dropped", () => {
   assert.deepEqual(x.parseHash("#scsd2eehkx42n53z2zyd6vshfh7s7irf&lang=sk&type=Bike&inline&theme=dark"),
-    { slug: "scsd2eehkx42n53z2zyd6vshfh7s7irf", lang: "sk", type: "Bike", inline: true, theme: "dark", q: null, sort: null, dataset: null, view: null });
+    { slug: "scsd2eehkx42n53z2zyd6vshfh7s7irf", lang: "sk", type: "Bike", inline: true, theme: "dark", q: null, sort: null, dataset: null, view: null, all: false });
   assert.equal(x.parseHash("#../evil"), null);
   assert.equal(x.parseHash(""), null);
   const odd = x.parseHash("#scsd2eehkx42n53z2zyd6vshfh7s7irf&type=a;b&lang=english&theme=red");
@@ -20,7 +20,7 @@ test("the hash names one Endpoint and its options; anything else is dropped", ()
 });
 
 test("a shared view's query and order come back from the hash they were written to", () => {
-  const view = { slug: "scsd2eehkx42n53z2zyd6vshfh7s7irf", inline: true, lang: "sk", theme: null, type: "Bike", q: 'name~=".*ivo.*";bikes>=5', sort: "bikes;desc", dataset: null, view: null };
+  const view = { slug: "scsd2eehkx42n53z2zyd6vshfh7s7irf", inline: true, all: false, lang: "sk", theme: null, type: "Bike", q: 'name~=".*ivo.*";bikes>=5', sort: "bikes;desc", dataset: null, view: null };
   assert.deepEqual(x.parseHash(x.hashOf(view)), view);
   assert.equal(x.hashOf({ slug: "scsd2eehkx42n53z2zyd6vshfh7s7irf" }), "#scsd2eehkx42n53z2zyd6vshfh7s7irf");
   const bad = x.parseHash("#scsd2eehkx42n53z2zyd6vshfh7s7irf&sort=a;sideways&q=%E0%A4%A&type=Bike");
@@ -88,4 +88,75 @@ test("the map's tiles come only from the type's own tileset path (T-5189)", () =
   assert.equal(of(at + "/{tileMatrix}/{tileCol}/{tileRow}"), null);
   assert.equal(of(at + "/{tileMatrix}/{tileRow}/{tileCol}", "application/json"), null);
   assert.equal(x.templateOf(null, at), null);
+});
+
+// DM-135 (T-5231): the row card a reader opens from the table or the map.
+const T = { ...x.TEXT.sk, lang: "sk", locale: "sk-SK", timeZone: "Europe/Bratislava" };
+const STOP = {
+  type: "GtfsStop", typeLabel: "Železničná stanica", title: "name",
+  fields: [
+    { name: "name", label: "Názov" },
+    { name: "dailyDepartures", label: "Odchody za deň", kind: "integer" },
+    { name: "wheelchair", label: "Bezbariérová" },
+    { name: "mode", label: "Druh", titles: { rail: "Vlak" } },
+    { name: "stopCode", label: "Kód zastávky", hidden: true }
+  ]
+};
+
+test("the card takes labels and order from the model and hides id, type, empty and system values", () => {
+  const row = {
+    id: "urn:ngsi-ld:GtfsStop:zilina-zariecie", type: "GtfsStop", "@context": "x", stopCode: "ZZ",
+    mode: "rail", wheelchair: true, dailyDepartures: 1234, name: "Žilina-Záriečie", note: "", platformCount: null,
+    location: { type: "Point", coordinates: [18.73109, 49.21933] }, dateModified: "2026-10-22T11:00:00Z",
+    source: "https://data.slovensko.sk/datasety/abc?x=1", dataProvider: "ŽSR"
+  };
+  const card = x.cardOf(row, STOP, T);
+  assert.equal(card.typeLabel, "Železničná stanica");
+  assert.equal(card.title, "Žilina-Záriečie");
+  assert.deepEqual(card.fields.map((f) => f.label), ["Odchody za deň", "Bezbariérová", "Druh"]);
+  assert.equal(card.fields[0].text.replace(/\s/g, " "), "1 234");
+  assert.equal(card.fields[1].text, "Áno");
+  assert.equal(card.fields[2].text, "Vlak");
+  assert.deepEqual(card.geo, row.location);
+  assert.deepEqual(card.source, { provider: "ŽSR", href: "https://data.slovensko.sk/datasety/abc?x=1", host: "data.slovensko.sk" });
+  assert.deepEqual(card.dev.map((d) => d.label), ["Identifikátor", "Typ", "Kód zastávky", "Date modified"]);
+  assert.equal(JSON.stringify(card.fields).includes("urn:ngsi-ld"), false);
+});
+
+test("a type with no labels falls back to humanised keys and its type name made readable", () => {
+  const card = x.cardOf({ id: "urn:ngsi-ld:GtfsStop:1", type: "GtfsStop", dailyDepartures: 3 }, null, T);
+  assert.equal(card.typeLabel, "Gtfs stop");
+  assert.equal(card.title, "urn:ngsi-ld:GtfsStop:1");
+  assert.deepEqual(card.fields, [{ label: "Daily departures", text: "3", href: undefined }]);
+  assert.equal(x.humanise("dailyDepartures"), "Daily departures");
+  // Another type's card is never used for its labels.
+  assert.equal(x.cardOf({ id: "a", type: "Event" }, STOP, T).typeLabel, "Event");
+});
+
+test("card values: local dates, units, an address by its parts, a web address by its host", () => {
+  assert.equal(x.cardValue("2026-11-14T18:00:00Z", {}, T).text.replace(/\s/g, " "), "14. 11. 2026, 19:00");
+  assert.equal(x.cardValue("2026-11-14", {}, T).text.replace(/\s/g, " "), "14. 11. 2026");
+  assert.equal(x.cardValue(21.5, { unit: "°C" }, T).text, "21,5 °C");
+  assert.equal(x.cardValue({ streetAddress: "Hlavná 1", addressLocality: "Žilina" }, {}, T).text, "Hlavná 1, Žilina");
+  assert.deepEqual(x.cardValue("https://www.zilina.sk/podujatia/1", {}, T), { text: "zilina.sk", href: "https://www.zilina.sk/podujatia/1" });
+  assert.equal(x.cardValue({ languageMap: { en: "Station", sk: "Stanica" } }, {}, T).text, "Stanica");
+  assert.equal(x.cardValue(false, {}, T).text, "Nie");
+  assert.equal(x.cardValue([], {}, T), null);
+});
+
+test("a javascript: or data: value renders as text, never a link", () => {
+  for (const bad of ["javascript:alert(1)", "data:text/html,<b>x</b>", "JaVaScRiPt:alert(1)", "https://a b"]) {
+    const said = x.cardValue(bad, {}, T);
+    assert.equal(said.href, undefined, bad);
+    assert.equal(said.text, bad);
+    assert.equal(x.hostOf(bad), null);
+  }
+  const card = x.cardOf({ id: "a", type: "T", source: "javascript:alert(1)" }, null, T);
+  assert.deepEqual(card.source, { text: "javascript:alert(1)" });
+});
+
+test("the removed default filter rides in the hash", () => {
+  const view = { slug: "scsd2eehkx42n53z2zyd6vshfh7s7irf", inline: false, all: true, lang: null, theme: null, type: "Event", q: null, sort: null, dataset: null, view: null };
+  assert.equal(x.hashOf(view), "#scsd2eehkx42n53z2zyd6vshfh7s7irf&all&type=Event");
+  assert.deepEqual(x.parseHash(x.hashOf(view)), view);
 });
