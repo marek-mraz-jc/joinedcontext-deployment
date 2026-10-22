@@ -2873,7 +2873,7 @@ EXPLORED = {"extras": [{"key": "endpoint", "value": "https://api.dev.example/api
 def test_the_explorer_frames_the_endpoint_by_its_slug_and_the_resource_by_its_type(theme):
     theme.page.lang = "sk"
     explorer = theme.jc_explorer(EXPLORED)
-    assert explorer["src"] == "https://viz.dev.example/explore.html#scsd2eehkx42n53z2zyd6vshfh7s7irf&inline&lang=sk"
+    assert explorer["src"] == "https://viz.dev.example/explore.html#scsd2eehkx42n53z2zyd6vshfh7s7irf&inline&lang=sk&theme=light"
     assert explorer["origin"] == "https://viz.dev.example" and explorer["title"] == "Živé dáta"
     odata = {"url": "https://api.dev.example/api/endpoint/scsd2eehkx42n53z2zyd6vshfh7s7irf/odata/v4/BikeHireDockingStation"}
     assert theme.jc_explorer(EXPLORED, odata)["src"].endswith("&type=BikeHireDockingStation")
@@ -2889,7 +2889,7 @@ def test_the_explorer_frame_names_the_dataset_for_its_embed_code(theme):
     """T-5129: the explorer's Embed code names the dataset, whose title and licence the embed shows."""
     theme.page.lang = "sk"
     named = dict(EXPLORED, name="bike-stations")
-    assert theme.jc_explorer(named)["src"] == "https://viz.dev.example/explore.html#scsd2eehkx42n53z2zyd6vshfh7s7irf&inline&lang=sk&dataset=bike-stations"
+    assert theme.jc_explorer(named)["src"] == "https://viz.dev.example/explore.html#scsd2eehkx42n53z2zyd6vshfh7s7irf&inline&lang=sk&theme=light&dataset=bike-stations"
     assert "&dataset=" not in theme.jc_explorer(dict(EXPLORED, name="Bike & stations"))["src"]
     theme.page.lang = "fi"
     snippet = (THEME / "templates__package__snippets__jc_explorer.html").read_text()
@@ -3086,3 +3086,33 @@ def test_robots_names_the_sitemap_and_a_noindex_demo_closes_the_site(site, monke
     assert re.findall(r"(?im)^sitemap:\s*(\S+)", robots) == ["https://opendata.dev.example/sitemap.xml"]
     monkeypatch.setitem(site.BRANDING, "noindex", True)
     assert site.jc_robots_txt() == "User-agent: *\nDisallow: /\n"
+
+
+@pytest.mark.parametrize("count, folded", [(3, False), (4, True), (60, True)])
+def test_about_folds_many_sources_into_one_disclosure(theme, count, folded):
+    """T-5192: bbsk-podujatia listed ~60 "Original data" rows before its licence and contact. More
+    than three fold into one row with a count, the rows before and after stay where they were."""
+    jinja2 = pytest.importorskip("jinja2")
+    theme.page.lang = "sk"
+    read = (THEME / "templates__package__read.html").read_text()
+    block = read[read.index('<dl class="jc-about-list">'):read.index("</dl>") + len("</dl>")]
+    source = theme.jc_t("source")
+    about = ([(theme.jc_t("publisher"), "BBSK", None)]
+             + [(source, "Mesto %d" % i, "https://mesto%d.sk/podujatia" % i) for i in range(count)]
+             + [(theme.jc_t("contact"), "joinedcontext", None)])
+    html = jinja2.Environment(autoescape=True).from_string(block).render(
+        about=about, h=types.SimpleNamespace(jc_t=theme.jc_t))
+    assert html.count("<dt>") == (3 if folded else count + 2)
+    assert html.count('<details class="jc-about-sources">') == (1 if folded else 0)
+    assert html.count('href="https://mesto') == count
+    if folded:
+        assert "Zobraziť všetky (%d)" % count in html
+        assert html.index("Vydavateľ") < html.index("jc-about-sources") < html.index("joinedcontext")
+
+
+def test_viz_frames_are_sized_by_content_and_hear_the_visible_slice():
+    """T-5192: a 2000 px cap cut the live data widget's map off; the frame now takes its content's
+    height up to a runaway guard, and tells the frame which slice the reader sees."""
+    script = (THEME / "public__jc-viz.js").read_text()
+    assert "var JC_VIZ_MAX = 20000;" in script and "2000)" not in script
+    assert 'type: "jc-viz-viewport"' in script and 'frame.getAttribute("data-jc-viz"))' in script
