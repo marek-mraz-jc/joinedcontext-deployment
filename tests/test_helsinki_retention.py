@@ -69,7 +69,15 @@ def test_no_vehicle_of_any_space_keeps_more_than_an_hour_of_track():
 def test_no_other_type_loses_its_current_state():
     losing = [(name, rule["entityType"]) for name, space in spaces().items()
               for rule in space["spec"].get("retention", []) if "current" in rule]
-    assert sorted(losing) == [("helsinki/helsinki", "Alert"), ("helsinki/helsinki", "Vehicle")]
+    assert sorted(losing) == [
+        ("helsinki/helsinki", "Alert"), ("helsinki/helsinki", "Event"),
+        ("helsinki/helsinki", "PointOfInterest"), ("helsinki/helsinki", "Vehicle")]
+    # T-5257: the nightly sweep rewrites every event that has not ended, so only a past or
+    # withdrawn one reaches its 30 days.
+    (event,) = [rule for rule in helsinki()["retention"] if rule["entityType"] == "Event"]
+    assert event == {"entityType": "Event", "current": "P30D", "history": "off"}
+    (unit,) = [rule for rule in helsinki()["retention"] if rule["entityType"] == "PointOfInterest"]
+    assert unit == {"entityType": "PointOfInterest", "current": "P30D", "history": "off"}
     (alert,) = [rule for rule in helsinki()["retention"] if rule["entityType"] == "Alert"]
     assert alert == {"entityType": "Alert", "current": "PT1H", "history": "off"}
 

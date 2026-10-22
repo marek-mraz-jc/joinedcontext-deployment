@@ -456,6 +456,58 @@
     "xsd": "http://www.w3.org/2001/XMLSchema#",
     "zoneCode": {
       "@id": "jc:zoneCode"
+    },
+    "ServiceRequest": {
+      "@id": "sdm:service_requests"
+    },
+    "address_string": {
+      "@id": "sdm:address_string"
+    },
+    "agency_responsible": {
+      "@id": "sdm:agency_responsible"
+    },
+    "expected_datetime": {
+      "@id": "sdm:expected_datetime",
+      "@type": "xsd:dateTime"
+    },
+    "isAccessibleForFree": {
+      "@id": "schema:isAccessibleForFree",
+      "@type": "xsd:boolean"
+    },
+    "requested_datetime": {
+      "@id": "sdm:requested_datetime",
+      "@type": "xsd:dateTime"
+    },
+    "service_code": {
+      "@id": "sdm:service_code"
+    },
+    "service_name": {
+      "@id": "sdm:service_name"
+    },
+    "service_request_id": {
+      "@id": "sdm:service_request_id"
+    },
+    "status_notes": {
+      "@id": "sdm:status_notes"
+    },
+    "subEvent": {
+      "@id": "sdm:subEvent",
+      "@type": "@id"
+    },
+    "superEvent": {
+      "@id": "sdm:superEvent",
+      "@type": "@id"
+    },
+    "thematic": {
+      "@id": "sdm:thematic"
+    },
+    "updated_datetime": {
+      "@id": "sdm:updated_datetime",
+      "@type": "xsd:dateTime"
+    },
+    "webSite": {
+      "@id": "sdm:webSite",
+      "@type": "xsd:anyURI"
     }
   },
   "x-generator-version": "linkml-1.11.1"
