@@ -515,6 +515,7 @@ v1/Secret dev/keycloak-user-demo-outsider
 v1/Secret dev/keycloak-user-demo-probe
 v1/Secret dev/keycloak-user-demo-steward
 v1/Secret dev/keycloak-user-demo-viewer
+v1/Secret dev/keycloak-user-demo-zilina
 v1/Secret dev/portal-cookie-key
 v1/Service dev/agent-proxy
 v1/Service dev/ai-app

@@ -8,7 +8,8 @@ metadata:
     sk: 'Mesto s 79 617 obyvateľmi a jeho univerzita: otvorené dáta, ktoré o nich vychádzajú, a ukazovatele z nich.'
     en: 'A city of 79 617 people and its university: the open data published about them, and the indicators computed from it.'
 spec:
-  organizationRef: hel
+  # Mesto Žilina's own Organization since ADR-N-058 (T-5242): Helsinki's administrators hold nothing here.
+  organizationRef: zilina
   # Who publishes this data, the did:web assigner of its Apps' Policies (PF-108); describes, grants nothing.
   domain: zilina.sk
   # The body that publishes the project's catalogue /catalog/zilina.jsonld, by its registry IRI
