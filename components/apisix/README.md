@@ -130,3 +130,28 @@ Before turning it on, once per installation (Deployment/01 §2 has the full reci
 
 Check it with `openssl s_client -connect <ingress>:443 -servername anything.apps.<domain>`: the
 subject is `CN = *.apps.<domain>`, for a host no App was ever published on too.
+
+## Error pages and maintenance (T-5119)
+
+When the edge answers by itself (no route for the address 404, a plugin failure 500, an
+upstream that is down or slow 502/503/504, a rate limit 429), a browser gets a page in its
+language (Slovak for `sk` and `cs`, else English) and every other client RFC 9457 Problem
+Details with a type from the platform's catalogue (API/00 §4). A 502/503/504 carries
+`Retry-After: 30`. An answer an upstream wrote passes through unchanged. The pages and the
+handlers live in the `httpEnd` and `httpSrv` snippets of `values/apisix/base-values.yaml.gotmpl`.
+
+Planned window, for example the broker migration on dev:
+
+1. In the environment's values, list the subdomains whose service is off:
+   ```yaml
+   apisix:
+     apisix:
+       maintenance:
+         hosts: [context]        # subdomain names, for example portal, context, data
+         retryAfterSeconds: 900  # 1..86400, what Retry-After tells clients
+   ```
+2. Apply apisix (`JUST_NO_DOTENV=true just sync-component <env> apisix`). Every request to those hosts gets a
+   503 with `Retry-After`, a maintenance page or Problem Details, and never reaches the upstream.
+3. After the window set `hosts: []` and apply again.
+
+`tests/test_edge_error_pages.py` runs the pinned image with both snippets and checks each answer.

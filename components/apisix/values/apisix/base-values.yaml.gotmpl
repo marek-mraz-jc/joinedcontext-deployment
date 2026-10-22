@@ -190,6 +190,51 @@ apisix:
         # controller sets to the address it accepted the connection from and overwrites on
         # every request, so a client cannot forge it.
         set_real_ip_from {{ $this.trustedProxyCidr }};
+        # The edge's own error answers (T-5119): what nginx answers itself when no route matches
+        # (404), a plugin fails (500), the upstream is down or slow (502, 503, 504), or a host is
+        # in maintenance. An answer an upstream wrote passes untouched (`proxy_intercept_errors`
+        # is off). These maps live here because `map` is an http-block directive; nginx evaluates
+        # one only when an error page reads it. `$jc_refusal` is set per request in the server
+        # block below; a Czech reader gets the Slovak page.
+        map $jc_refusal $jc_page_not_found {
+          ~^html_(sk|cs) '<!doctype html><html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Táto stránka neexistuje</title><style>body{font:16px/1.5 system-ui,sans-serif;margin:0;padding:24px;color:#1a1a1a;background:#f6f6f6}main{max-width:36rem;margin:10vh auto;background:#fff;border:1px solid #ddd;border-radius:8px;padding:24px}h1{font-size:1.4rem;margin:0 0 8px}</style></head><body><main><h1>Táto stránka neexistuje</h1><p>Na tejto adrese nie je žiadna stránka ani služba platformy. Skontrolujte adresu alebo začnite na úvodnej stránke.</p><p><a href="/">Prejsť na úvodnú stránku</a></p></main></body></html>';
+          default '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>This page does not exist</title><style>body{font:16px/1.5 system-ui,sans-serif;margin:0;padding:24px;color:#1a1a1a;background:#f6f6f6}main{max-width:36rem;margin:10vh auto;background:#fff;border:1px solid #ddd;border-radius:8px;padding:24px}h1{font-size:1.4rem;margin:0 0 8px}</style></head><body><main><h1>This page does not exist</h1><p>No page or service of the platform lives at this address. Check the address, or start from the home page.</p><p><a href="/">Go to the home page</a></p></main></body></html>';
+        }
+        map $jc_refusal $jc_page_error {
+          ~^html_(sk|cs) '<!doctype html><html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nastala chyba</title><style>body{font:16px/1.5 system-ui,sans-serif;margin:0;padding:24px;color:#1a1a1a;background:#f6f6f6}main{max-width:36rem;margin:10vh auto;background:#fff;border:1px solid #ddd;border-radius:8px;padding:24px}h1{font-size:1.4rem;margin:0 0 8px}</style></head><body><main><h1>Nastala chyba</h1><p>Požiadavku sa nepodarilo vybaviť pre chybu na strane platformy. Skúste to znova o chvíľu; ak chyba pretrváva, napíšte správcovi platformy.</p><p><a href="">Načítať stránku znova</a></p></main></body></html>';
+          default '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Something went wrong</title><style>body{font:16px/1.5 system-ui,sans-serif;margin:0;padding:24px;color:#1a1a1a;background:#f6f6f6}main{max-width:36rem;margin:10vh auto;background:#fff;border:1px solid #ddd;border-radius:8px;padding:24px}h1{font-size:1.4rem;margin:0 0 8px}</style></head><body><main><h1>Something went wrong</h1><p>The platform could not complete the request because of an error on its side. Try again in a moment; if it keeps happening, tell the administrator of the platform.</p><p><a href="">Load the page again</a></p></main></body></html>';
+        }
+        map $jc_refusal $jc_page_unavailable {
+          ~^html_(sk|cs) '<!doctype html><html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Služba je dočasne nedostupná</title><style>body{font:16px/1.5 system-ui,sans-serif;margin:0;padding:24px;color:#1a1a1a;background:#f6f6f6}main{max-width:36rem;margin:10vh auto;background:#fff;border:1px solid #ddd;border-radius:8px;padding:24px}h1{font-size:1.4rem;margin:0 0 8px}</style></head><body><main><h1>Služba je dočasne nedostupná</h1><p>Služba na tejto adrese práve neodpovedá, napríklad počas aktualizácie. Zvyčajne je späť do niekoľkých minút. Skúste to znova o chvíľu.</p><p><a href="">Načítať stránku znova</a></p></main></body></html>';
+          default '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>The service is temporarily unavailable</title><style>body{font:16px/1.5 system-ui,sans-serif;margin:0;padding:24px;color:#1a1a1a;background:#f6f6f6}main{max-width:36rem;margin:10vh auto;background:#fff;border:1px solid #ddd;border-radius:8px;padding:24px}h1{font-size:1.4rem;margin:0 0 8px}</style></head><body><main><h1>The service is temporarily unavailable</h1><p>The service at this address is not answering right now, for example during an update. It is usually back within a few minutes. Try again in a moment.</p><p><a href="">Load the page again</a></p></main></body></html>';
+        }
+        map $jc_refusal $jc_page_maintenance {
+          ~^html_(sk|cs) '<!doctype html><html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Prebieha plánovaná údržba</title><style>body{font:16px/1.5 system-ui,sans-serif;margin:0;padding:24px;color:#1a1a1a;background:#f6f6f6}main{max-width:36rem;margin:10vh auto;background:#fff;border:1px solid #ddd;border-radius:8px;padding:24px}h1{font-size:1.4rem;margin:0 0 8px}</style></head><body><main><h1>Prebieha plánovaná údržba</h1><p>Táto služba je počas plánovanej údržby vypnutá. Vaše údaje sú v bezpečí. Skúste to znova o niekoľko minút.</p><p><a href="">Načítať stránku znova</a></p></main></body></html>';
+          default '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Planned maintenance in progress</title><style>body{font:16px/1.5 system-ui,sans-serif;margin:0;padding:24px;color:#1a1a1a;background:#f6f6f6}main{max-width:36rem;margin:10vh auto;background:#fff;border:1px solid #ddd;border-radius:8px;padding:24px}h1{font-size:1.4rem;margin:0 0 8px}</style></head><body><main><h1>Planned maintenance in progress</h1><p>This service is switched off during planned maintenance. Your data is safe. Try again in a few minutes.</p><p><a href="">Load the page again</a></p></main></body></html>';
+        }
+        map $jc_refusal $jc_page_format {
+          ~^html html;
+          default json;
+        }
+        # Host -> seconds for `Retry-After` while the host is in maintenance; empty is open.
+        {{- $maintenance := $this.maintenance | default dict }}
+        {{- $retry := int ($maintenance.retryAfterSeconds | default 900) }}
+        {{- if or (lt $retry 1) (gt $retry 86400) }}
+        {{- fail (printf "apisix.apisix.maintenance.retryAfterSeconds must be 1..86400 seconds, got %v" $maintenance.retryAfterSeconds) }}
+        {{- end }}
+        map $host $jc_maintenance {
+          default "";
+        {{- range $host := ($maintenance.hosts | default list) }}
+        {{- if not (regexMatch "^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$" (toString $host)) }}
+        {{- fail (printf "apisix.apisix.maintenance.hosts: %q is not a subdomain name (for example: portal)" (toString $host)) }}
+        {{- end }}
+          {{ $host }}.{{ $global.domain }} {{ $retry }};
+        {{- end }}
+        }
+        map $jc_maintenance $jc_retry_after {
+          "" 30;
+          default $jc_maintenance;
+        }
       # The body ceiling belongs here, in the server block, and not above: APISIX's own
       # `client_max_body_size 0` is already in the http block and nginx refuses to start on a
       # duplicate in the same block (T-2263). `0` reads as "no limit" for a body with a
@@ -322,6 +367,150 @@ apisix:
           add_header Cache-Control "no-store, no-cache, must-revalidate" always;
           add_header Content-Security-Policy "frame-ancestors 'none'; object-src 'none'; base-uri 'self'" always;
           return 429 '{"type":"https://joinedcontext.com/errors/too-many-requests","title":"Too Many Requests","status":429,"detail":"the rate limit of this route was reached; retry after the window in the Retry-After header. To read a whole dataset, download it once: every Endpoint serves {endpoint}/file.csv, and every catalogue dataset its datastore dump"}';
+        }
+        # T-5119: the edge's own 404, 500, 502, 503 and 504, and the maintenance switch, in the
+        # same two shapes as the 429 above: a page in the reader's language (sk, else en) for a
+        # browser, RFC 9457 Problem Details for everybody else. Neither names a route, a
+        # service, an upstream address or an nginx version (R20); the maps that hold the pages
+        # are in the http block. The 404 is the one APISIX answers for an address no route
+        # serves (the global rule `edge-not-found` turns its JSON into a bare 404 that lands
+        # here). A 502, 503 or 504 says when to try again; the maintenance 503 says what the
+        # deployer set, the others 30 s. The maintenance return comes after every `set` above,
+        # because a `return` ends the server's rewrite phase.
+        error_page 404 = @jc_404_$jc_page_format;
+        error_page 500 = @jc_500_$jc_page_format;
+        error_page 502 = @jc_502_$jc_page_format;
+        error_page 503 = @jc_503_$jc_page_format;
+        error_page 504 = @jc_504_$jc_page_format;
+        if ($jc_maintenance) {
+          return 503;
+        }
+        location @jc_404_html {
+          internal;
+          default_type text/html;
+          charset utf-8;
+          add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+          add_header X-Content-Type-Options "nosniff" always;
+          add_header X-Frame-Options "DENY" always;
+          add_header Referrer-Policy "no-referrer" always;
+          add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+          add_header Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'" always;
+          return 404 $jc_page_not_found;
+        }
+        location @jc_404_json {
+          internal;
+          default_type application/problem+json;
+          add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+          add_header X-Content-Type-Options "nosniff" always;
+          add_header X-Frame-Options "DENY" always;
+          add_header Referrer-Policy "no-referrer" always;
+          add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+          add_header Content-Security-Policy "frame-ancestors 'none'; object-src 'none'; base-uri 'self'" always;
+          return 404 '{"type":"https://joinedcontext.com/errors/resource-not-found","title":"Not Found","status":404,"detail":"no page or API of the platform lives at this address"}';
+        }
+        location @jc_500_html {
+          internal;
+          default_type text/html;
+          charset utf-8;
+          add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+          add_header X-Content-Type-Options "nosniff" always;
+          add_header X-Frame-Options "DENY" always;
+          add_header Referrer-Policy "no-referrer" always;
+          add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+          add_header Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'" always;
+          return 500 $jc_page_error;
+        }
+        location @jc_500_json {
+          internal;
+          default_type application/problem+json;
+          add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+          add_header X-Content-Type-Options "nosniff" always;
+          add_header X-Frame-Options "DENY" always;
+          add_header Referrer-Policy "no-referrer" always;
+          add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+          add_header Content-Security-Policy "frame-ancestors 'none'; object-src 'none'; base-uri 'self'" always;
+          return 500 '{"type":"https://joinedcontext.com/errors/internal-error","title":"Internal Server Error","status":500,"detail":"the platform could not complete the request; retry later"}';
+        }
+        location @jc_502_html {
+          internal;
+          default_type text/html;
+          charset utf-8;
+          add_header Retry-After $jc_retry_after always;
+          add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+          add_header X-Content-Type-Options "nosniff" always;
+          add_header X-Frame-Options "DENY" always;
+          add_header Referrer-Policy "no-referrer" always;
+          add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+          add_header Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'" always;
+          return 502 $jc_page_unavailable;
+        }
+        location @jc_502_json {
+          internal;
+          default_type application/problem+json;
+          add_header Retry-After $jc_retry_after always;
+          add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+          add_header X-Content-Type-Options "nosniff" always;
+          add_header X-Frame-Options "DENY" always;
+          add_header Referrer-Policy "no-referrer" always;
+          add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+          add_header Content-Security-Policy "frame-ancestors 'none'; object-src 'none'; base-uri 'self'" always;
+          return 502 '{"type":"https://joinedcontext.com/errors/upstream-unavailable","title":"Bad Gateway","status":502,"detail":"the service behind this address is not answering; retry after the seconds in the Retry-After header"}';
+        }
+        location @jc_503_html {
+          internal;
+          default_type text/html;
+          charset utf-8;
+          add_header Retry-After $jc_retry_after always;
+          add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+          add_header X-Content-Type-Options "nosniff" always;
+          add_header X-Frame-Options "DENY" always;
+          add_header Referrer-Policy "no-referrer" always;
+          add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+          add_header Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'" always;
+          if ($jc_maintenance) {
+            return 503 $jc_page_maintenance;
+          }
+          return 503 $jc_page_unavailable;
+        }
+        location @jc_503_json {
+          internal;
+          default_type application/problem+json;
+          add_header Retry-After $jc_retry_after always;
+          add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+          add_header X-Content-Type-Options "nosniff" always;
+          add_header X-Frame-Options "DENY" always;
+          add_header Referrer-Policy "no-referrer" always;
+          add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+          add_header Content-Security-Policy "frame-ancestors 'none'; object-src 'none'; base-uri 'self'" always;
+          if ($jc_maintenance) {
+            return 503 '{"type":"https://joinedcontext.com/errors/service-unavailable","title":"Service Unavailable","status":503,"detail":"the service behind this address is off for planned maintenance; retry after the seconds in the Retry-After header"}';
+          }
+          return 503 '{"type":"https://joinedcontext.com/errors/service-unavailable","title":"Service Unavailable","status":503,"detail":"the service behind this address is not answering; retry after the seconds in the Retry-After header"}';
+        }
+        location @jc_504_html {
+          internal;
+          default_type text/html;
+          charset utf-8;
+          add_header Retry-After $jc_retry_after always;
+          add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+          add_header X-Content-Type-Options "nosniff" always;
+          add_header X-Frame-Options "DENY" always;
+          add_header Referrer-Policy "no-referrer" always;
+          add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+          add_header Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'" always;
+          return 504 $jc_page_unavailable;
+        }
+        location @jc_504_json {
+          internal;
+          default_type application/problem+json;
+          add_header Retry-After $jc_retry_after always;
+          add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+          add_header X-Content-Type-Options "nosniff" always;
+          add_header X-Frame-Options "DENY" always;
+          add_header Referrer-Policy "no-referrer" always;
+          add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+          add_header Content-Security-Policy "frame-ancestors 'none'; object-src 'none'; base-uri 'self'" always;
+          return 504 '{"type":"https://joinedcontext.com/errors/delivery-timeout","title":"Gateway Timeout","status":504,"detail":"the service behind this address is not answering; retry after the seconds in the Retry-After header"}';
         }
 ingress:
   enabled: true

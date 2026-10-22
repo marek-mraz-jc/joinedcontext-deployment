@@ -51,6 +51,24 @@ def server_snippet() -> str:
     return "\n".join(body)
 
 
+def http_end_snippet(maintenance: dict[str, int] | None = None) -> str:
+    """The `httpEnd` snippet (the edge's http block) as the chart renders it for a test: the
+    template's control lines dropped, the trusted proxy range filled in, and `maintenance`
+    (host -> Retry-After seconds) written into the map the switch renders (T-5119)."""
+    lines = VALUES.read_text().splitlines()
+    start = next(i for i, line in enumerate(lines) if line.strip() == "httpEnd: |")
+    body = []
+    for line in lines[start + 1 :]:
+        if line.strip() and not line.startswith("        "):
+            break
+        if line.strip().startswith("{{"):
+            continue
+        body.append(line[8:].replace("{{ $this.trustedProxyCidr }}", "10.42.0.0/16"))
+    text = "\n".join(body)
+    hosts = "".join(f"\n  {host} {seconds};" for host, seconds in (maintenance or {}).items())
+    return text.replace('map $host $jc_maintenance {\n  default "";', 'map $host $jc_maintenance {\n  default "";' + hosts)
+
+
 def limit_count_blocks() -> list[tuple[str, str, dict]]:
     """Every `limit-count` configuration of the edge, with the file and entry it belongs to."""
     found = []
@@ -167,7 +185,7 @@ def answer(url: str, headers: dict[str, str] | None = None) -> tuple[int, dict[s
 
 
 @contextlib.contextmanager
-def pinned_apisix(tmp_path: Path, rules: str):
+def pinned_apisix(tmp_path: Path, rules: str, maintenance: dict[str, int] | None = None):
     """The pinned image serving these standalone rules behind the edge's server block; yields
     the base URL once it answers, and removes the container afterwards."""
     if not shutil.which("docker"):
@@ -182,6 +200,8 @@ def pinned_apisix(tmp_path: Path, rules: str):
         "  error_log_level: warn\n"
         "  http_server_configuration_snippet: |\n"
         + "".join(f"    {line}\n" for line in server_snippet().splitlines())
+        + "  http_end_configuration_snippet: |\n"
+        + "".join(f"    {line}\n" for line in http_end_snippet(maintenance).splitlines())
     )
     (tmp_path / "apisix.yaml").write_text(rules)
     name = f"apisix-429-contract-{port}"
@@ -243,8 +263,7 @@ routes:
         url = base + "/probe"
         status, headers, body = answer(url)
         assert status == 502, f"the first request is inside the limit: {status} {body}"
-        assert "problem+json" not in headers.get("Content-Type", ""), headers
-        assert PROBLEM_TYPE not in body, "an answer that is not a refusal is left alone"
+        assert PROBLEM_TYPE not in body, "an answer that is not a refusal is not the refusal"
 
         status, headers, body = answer(url)
         assert status == 429, body
