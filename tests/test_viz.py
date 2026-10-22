@@ -146,6 +146,29 @@ def test_the_renderer_draws_through_the_interpreter_and_loads_nothing():
     assert "event.source !== window.parent || event.origin !== location.origin" in mapjs
 
 
+EXPLORER = ROOT / "images/viz/explorer"
+
+
+def test_the_explorer_table_is_one_portal_commit_and_rides_in_the_image():
+    # T-5082: explore.html's table is the Portal's Endpoint data view, built by
+    # scripts/viz-explorer-bundle.sh; SHA256SUMS names the Portal commit and every file's sum.
+    text = (EXPLORER / "SHA256SUMS").read_text()
+    assert re.match(r"# portal: [0-9a-f]{40}\n", text)
+    sums = [line.split() for line in text.splitlines() if line and not line.startswith("#")]
+    assert sorted(name for _, name in sums) == ["explorer.css", "explorer.js"]
+    assert sorted(p.name for p in EXPLORER.iterdir()) == ["SHA256SUMS", "explorer.css", "explorer.js"]
+    for digest, name in sums:
+        assert hashlib.sha256((EXPLORER / name).read_bytes()).hexdigest() == digest, name
+    html = (FILES / "site/explore.html").read_text()
+    assert '<script src="explorer/explorer.js" defer></script>' in html
+    assert html.index("explorer/explorer.js") < html.index('src="explore.js"')
+    dockerfile = (VENDOR.parent / "Dockerfile").read_text()
+    assert "COPY explorer/ /srv/explorer/" in dockerfile and "cd /srv/explorer && grep -v '^#' SHA256SUMS | sha256sum -c -" in dockerfile
+    assert "alias /srv/explorer/;" in (FILES / "nginx.conf").read_text()
+    # The view reads the API without a cookie: no credentials: "include" anywhere in the bundle.
+    assert not re.search(r"credentials:\s*[`\"']include", (EXPLORER / "explorer.js").read_text())
+
+
 def test_the_refusal_list_and_the_host_page_logic_under_node():
     tests = sorted(str(p) for p in (COMPONENT / "tests").glob("*.test.mjs"))
     assert len(tests) == 4
